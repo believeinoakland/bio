@@ -69,6 +69,10 @@ test("R4: a proposed edge may be severed, an entry with no note line gains one, 
 
 test("R4: the refusals in order — the selection, NO_SUCH_PROJECT (absent or unseen alike), NOT_A_PROJECT (an inquiry included), the actor joined, NO_REASON, BAD_REASON", async () => {
   const { w, p, h } = await setup();
+  /* D54's negative controls: projects an administrator sees whole, one set discoverable and a hidden one it is invited to. */
+  const disc = w.project("Open door", "ann", { visibility: "discoverable" });
+  const invited = w.project("Invited", "ann");
+  assert.equal(w.membership.projectInvite({ projectId: invited, handle: "adm", by: "ann" }).ok, true);
   for (const act of ["sever", "reinstate"]) {
     assert.equal(w.cit[act]({ project: p, handle: "sel-000000000000000000000000", ...ANN, reason: "" }).reason, "NO_SUCH_SELECTION");
     const hv = await w.select(["INFO-2026-0001"], { viewer: V("vera"), owner: "v" });
@@ -79,8 +83,17 @@ test("R4: the refusals in order — the selection, NO_SUCH_PROJECT (absent or un
     const onQ = w.cit[act]({ project: "INQ-2026-0001", handle: h, ...ANN, reason: "" });
     assert.deepEqual([onQ.reason, onQ.got], ["NOT_A_PROJECT", "inquiry"]);
     const ha = await w.select(["INFO-2026-0001"], { viewer: V("adm"), owner: "a" });
+    /* D54: an administrator neither invited nor joined to the hidden project sees it at EXISTENCE only: membership's
+       existence answer (its R77, with the owners' handles), before position; seen whole, it is refused by position. */
+    const snap = w.snapshot();
     const adm = w.cit[act]({ project: p, handle: ha, viewer: V("adm"), owner: "a", identity: V("adm"), reason: "" });
-    assert.deepEqual([adm.reason, adm.act], ["PROJECT_ACT_NOT_A_PARTICIPANT", act]);
+    assert.deepEqual(adm, w.membership.existenceAct(p, V("adm")), `${act}: membership's one answer`);
+    assert.deepEqual([adm.reason, adm.owners], ["PROJECT_SEEN_NOT_A_PARTICIPANT", ["ann"]]);
+    assert.deepEqual(w.snapshot(), snap, `${act} at EXISTENCE writes nothing`);
+    for (const at of [disc, invited]) {
+      const seen = w.cit[act]({ project: at, handle: ha, viewer: V("adm"), owner: "a", identity: V("adm"), reason: "" });
+      assert.deepEqual([seen.reason, seen.act], ["PROJECT_ACT_NOT_A_PARTICIPANT", act], at);
+    }
     for (const reason of ["", "   ", null, undefined])
       assert.equal(w.cit[act]({ project: p, handle: h, ...ANN, reason }).reason, "NO_REASON");
     for (const reason of ["x".repeat(EDGE_REASON_MAX + 1), 'a"b', "a\\b", "a\nb"])

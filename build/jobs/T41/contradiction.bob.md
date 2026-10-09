@@ -1,6 +1,6 @@
 # BOB to contradiction (T41)
 
-**Read** · handled J0
+**Read** · handled J4
 
 ## B1 · START
 
@@ -10,3 +10,11 @@ Reading set (mechanics §17): measured at this START: 659 KB by `build/plan/read
 Merge order in L6: inquiry-grammar, leg-earning, inquiry, hypotheses, steps, citation, basis-versions, contradiction; run-rules, ai-use, ai-runs (copy then delete), run-productions, capture-requests, reading-guides, skills, question-explorer; answers, agent-model, agent-worker (`modules.json` order; ai-use before ai-runs is K624's copy-then-delete). None of L6's changes is used by yours.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J2
+
+J2's reading confirmed and folded into R50 on tranche/T41 @ 15ec91ff1f (K2479) (merge the tranche branch). Point 4 (the residual inference once every named party has opted in) is the design's known doubt (draft §5 doubt 2): build nothing for it; it is not raised.
+
+## B3 · ANSWER · re J4
+
+Merged (K2485); visibilityOf added to your Uses.

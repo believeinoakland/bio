@@ -15,7 +15,7 @@ What each AI account has spent and may spend. It counts each use against the acc
 Terms. An **owner** is the holder of one AI account: `group` (its administrators act), `project:<id>` (any one of its owners acts) or `member:<id>` (that member alone acts) (`credentials` R54–R56). A **use** is a `credentials.USE_KINDS` entry (`ask`, `draft`, `run`, `standing`, `explore`). A **limit** is `{owner, scope, unit, period, amount, inclusive}`. A **period** is the current local `day` or `month` of the group's calendar (`civil-time`); a month's limit resets on the 1st. With no limit set, nothing is capped here (a provider's own spend limit answers as `ai-runs` states). `viewer` and `by` are the control plane's stamps. Every refusal names `code` and carries its row's `check` and `translation` (R8).
 
 **Counting** (`countUsage`)
-- **R1** (was `ai-runs` R48, R49; B8) *(not yet met: T41)* `countUsage({owner, member, use, mode, model, usage, calls, at})` is called in the caller's transaction.
+- **R1** (was `ai-runs` R48, R49; B8) `countUsage({owner, member, use, mode, model, usage, calls, at})` is called in the caller's transaction.
   - `owner` is `group`, `project:<id>` or `member:<id>`.
   - `usage` is `agent-model` R5's shape plus `estimated_cost_usd` (its R13).
   - It adds to the counter `ai_usage`, kept per owner, member, local day (`civil-time.localDay`) and `use`: the token sums, `calls` (a `null` counted as one), and `estimated_cost_usd`. `countAskUsage({member, mode, usage, calls, at})` (was `ai-runs` R48's; K2400) counts an ask or a draft (no run) the same way, with `mode` `ask` or `draft` and its owner as `accountFor` answered it; any other `mode` is refused `AI_RUN_CONSUME_INVALID`. It sums the figure `usage` carries and never reads a price table (`agent-model` R13 prices a `null` figure on `apikey`; K2376).
@@ -24,7 +24,7 @@ Terms. An **owner** is the holder of one AI account: `group` (its administrators
   - Rows from before T40 are kept with owner "not recorded" and count toward no limit.
 
 **Limits** (`aiLimitSet`)
-- **R2** (D39; B4; was `ai-runs` R50's setting half) *(not yet met: T41)* `aiLimitSet({owner, scope, unit, period, amount, inclusive?, by})`.
+- **R2** (D39; B4; was `ai-runs` R50's setting half) `aiLimitSet({owner, scope, unit, period, amount, inclusive?, by})`.
   - `scope` is `overall`, a `USE_KINDS` entry, or (A4) `per_member` for a group or project account.
   - `unit` is `usd`, `tokens` or `calls`. `usd` on a member's sign-in is refused `LIMIT_UNIT_UNAVAILABLE`.
   - `period` is `day` or `month`.
@@ -36,7 +36,7 @@ Terms. An **owner** is the holder of one AI account: `group` (its administrators
   - The migration writes today's ceilings as B4 says: a member's own daily ceiling becomes that member's account's `overall` day limits in tokens and calls; the copy-wide ceiling becomes the group account's `per_member` day limits.
 
 **Judging** (`useCheck`)
-- **R3** (D38 C, D39; B3, B5; was `ai-runs` R50's judging half) *(not yet met: T41)* `useCheck({owner, member, use, at})` answers `null` or `AI_LIMIT_REACHED` with `{whose, scope, unit, period}` and its plain-words row, naming no cost.
+- **R3** (D38 C, D39; B3, B5; was `ai-runs` R50's judging half) `useCheck({owner, member, use, at})` answers `null` or `AI_LIMIT_REACHED` with `{whose, scope, unit, period}` and its plain-words row, naming no cost.
   - It refuses when, for the current period, any of these has reached its amount:
     - the owner's `use` limit;
     - its `overall` limit, counted over the uses that are not exclusive, unless `use`'s limit is exclusive;
@@ -46,24 +46,24 @@ Terms. An **owner** is the holder of one AI account: `group` (its administrators
   - It writes nothing and never throws. A counter that cannot be read answers the refusal (fail closed).
 
 **Reads** (`aiUsage`, `aiUsageMine`, `limitsReached`)
-- **R4** (was `ai-runs` R51; B8) *(not yet met: T41)* `aiUsage({owner, viewer, month})` answers that account's owners the month's use per `use`, summed over members and naming none. Anyone else is refused as R2 refuses. `aiUsageMine({viewer, day?, month?})` answers a member their own use per payer and per use, against each limit that bound them, (T41, D12; amended) a cost per answer only to the paying account's owners (R10, R11); nobody sees another member's spending. Neither writes.
-- **R5** (B7) *(not yet met: T41)* `limitsReached({viewer, at})` answers, for each account the viewer owns, each limit first reached in its current period: `{owner, scope, unit, period, period_start, reached_at}`, with a stable key per owner, limit and period. It is for `notice-producers` R16, writes nothing and never throws.
+- **R4** (was `ai-runs` R51; B8) `aiUsage({owner, viewer, month})` answers that account's owners the month's use per `use`, summed over members and naming none. Anyone else is refused as R2 refuses. `aiUsageMine({viewer, day?, month?})` answers a member their own use per payer and per use, against each limit that bound them, (T41, D12; amended) a cost per answer only to the paying account's owners (R10, R11); nobody sees another member's spending. Neither writes.
+- **R5** (B7) `limitsReached({viewer, at})` answers, for each account the viewer owns, each limit first reached in its current period: `{owner, scope, unit, period, period_start, reached_at}`, with a stable key per owner, limit and period. It is for `notice-producers` R16, writes nothing and never throws.
 
 **Exploring** (`exploreAllowed`, `exploreAsk`, `exploreAsksPending`, `exploreApprove`)
-- **R6** (A5, K2350; B6) *(not yet met: T41)* `exploreAllowed({owner, question, at})` is for the explorer (B9). It answers `null`, `{ask: true}`, or a refusal:
+- **R6** (A5, K2350; B6) `exploreAllowed({owner, question, at})` is for the explorer (B9). It answers `null`, `{ask: true}`, or a refusal:
   - `EXPLORE_NOT_ENABLED` when the owner's `explore` is `no`;
   - `{ask: true}` when it is `ask` and the owner has not approved exploring for that local day (R9);
   - R3's `AI_LIMIT_REACHED` (its `overall` limit and its `explore` limit, B5);
   - `credentials.aiKeptAway({use: "explore"})`;
-  - the question outside the owner's scope (B6; `connections.citesInto` for a project), or every project it is drawn on keeping its material from `explore` (`credentials.projectsKeptAway`).
+  - the question outside the owner's scope (B6; `connections.citesInto` for a project), refused `EXPLORE_OUT_OF_SCOPE` (C-143.5; the group's scope is every question the record holds, a project's those whose `citesInto(question).confirmed` holds it, a member's none until D36 is settled; K2480), or every project it is drawn on keeping its material from `explore` (`credentials.projectsKeptAway`).
   - With `null` it also answers `label: {kind: "machine", enabled_by: owner}`, which the explorer attaches to what it offers.
-- **R9** (A5, K2350; K2376 (2)) *(not yet met: T41)* `exploreAsk({owner, at, what})` records, for an owner whose `explore` is `ask`, at most one pending ask a local day, stating what is worth exploring; `exploreAsksPending({viewer, at})` answers them to that account's owners, and `notice-producers` R16 makes each one "Ask" queue item (DEC-69, DEC-94's form; its words the design stream's; `queue` R1 gains the kinds, K2376); `exploreApprove({owner, day, by})`, by one of those owners, approves exploring for that day; silence means no. A second ask that day answers the first's key and mints nothing. Refusals as R2's for who may act. `exploreAsksPending` writes nothing and never throws. (T41, D12; amended) Each Ask item states the questions and R10's rough cost.
+- **R9** (A5, K2350; K2376 (2)) `exploreAsk({owner, at, what})` records, for an owner whose `explore` is `ask`, at most one pending ask a local day, stating what is worth exploring; `exploreAsksPending({viewer, at})` answers them to that account's owners, and `notice-producers` R16 makes each one "Ask" queue item (DEC-69, DEC-94's form; its words the design stream's; `queue` R1 gains the kinds, K2376); `exploreApprove({owner, day, by})`, by one of those owners, approves exploring for that day; silence means no. A second ask that day answers the first's key and mints nothing. Refusals as R2's for who may act. `exploreAsksPending` writes nothing and never throws. (T41, D12; amended) Each Ask item states the questions and R10's rough cost.
 
 **Cost before and after** (`estimate`, `actualOf`; T41-22; D12)
-- **R10** *(not yet met: T41)* (D12) `estimate({owner, use, mode, count?, at})` answers, before an AI act or exploring run (or a batch, `ai-runs` R74), a range `{low, high, unit}` from that account's measured runs of that use and mode, or `"not known yet"` until enough are measured (the count BOB's); money where the account reports cost, tokens and calls on a subscription; answered only to the account's owners.
-- **R11** *(not yet met: T41)* (D12) `actualOf({run | act, viewer})` answers the actual cost after, as R10's units, only to the paying account's owners; F11's "never shown" retires for those owners only.
-- **R12** *(not yet met: T41)* (DEC-188, owed: the panel's reads; K2448) `aiLimits({owner, viewer})` (`op=ailimits`, declared by `op-declarations` R41) answers each limit set on one account (R2's table: scope, use, unit, period, inclusive or on top), with its use in the current period (R5's sums, naming no member) and its history (set, changed, removed; who and when), to that account's owners only (`credentials` R60's owners: the member, the project's owners, or administrators for the group's key); anyone else is refused as `credentials` R60 refuses them, writing nothing.
-- **R13** *(not yet met: T41)* (DEC-188 (7); K2448) The member-facing sentence of each refusal is read by key from the design stream's `words.json`: `AI_LIMIT_REACHED` as `ai.refused.limit`, `ai.refused.limit.overall` or `ai.refused.limit.member` by its scope, `{whose}` filled from `ai.whose.group`, `ai.whose.project` or `ai.whose.own`, never a cost; `AI_LIMIT_INVALID` as `ai.refused.limitinvalid`; `LIMIT_UNIT_UNAVAILABLE` as `ai.refused.unitunavailable`; `EXPLORE_NOT_ENABLED` as `ai.refused.explorenotenabled`; R9's Ask item as `ai.queue.exploreask`. A key the words file lacks fails its test, never a fallback sentence.
+- **R10** (D12) `estimate({owner, use, mode, count?, at})` answers, before an AI act or exploring run (or a batch, `ai-runs` R74), a range `{low, high, unit}` ("enough" is 5 measured acts of that use and mode; the range the least and greatest per-act figure over the owner's latest 20, times `count`; unit `usd` only when every act in the sample stated a cost; BOB's count, K2480) from that account's measured runs of that use and mode, or `"not known yet"` until enough are measured (the count BOB's); money where the account reports cost, tokens and calls on a subscription; answered only to the account's owners.
+- **R11** (D12) `actualOf({run | act, viewer})` answers the actual cost after, as R10's units, only to the paying account's owners; F11's "never shown" retires for those owners only.
+- **R12** (DEC-188, owed: the panel's reads; K2448) `aiLimits({owner, viewer})` (`op=ailimits`, declared by `op-declarations` R41) answers each limit set on one account (R2's table: scope, use, unit, period, inclusive or on top), with its use in the current period (R5's sums, naming no member) and its history (set, changed, removed; who and when), to that account's owners only (`credentials` R60's owners: the member, the project's owners, or administrators for the group's key); anyone else is refused as `credentials` R60 refuses them, writing nothing.
+- **R13** (DEC-188 (7); K2448) The member-facing sentence of each refusal is read by key from the design stream's `words.json`: `AI_LIMIT_REACHED` as `ai.refused.limit`, `ai.refused.limit.overall` or `ai.refused.limit.member` by its scope, `{whose}` filled from `ai.whose.group`, `ai.whose.project` or `ai.whose.own`, never a cost; `AI_LIMIT_INVALID` as `ai.refused.limitinvalid`; `LIMIT_UNIT_UNAVAILABLE` as `ai.refused.unitunavailable`; `EXPLORE_NOT_ENABLED` as `ai.refused.explorenotenabled`; R9's Ask item as `ai.queue.exploreask`. A key the words file lacks fails its test, never a fallback sentence.
 
 ## Private
 
@@ -79,8 +79,8 @@ Terms. An **owner** is the holder of one AI account: `group` (its administrators
 
 ### Invariants
 
-- **R7** *(not yet met: T41)* The tables (`ai_usage`, `ai_limits` and their history) are declared through `record-core.declareTable`: `export: "admin-only"`, `sight: "group"`, purged only with the whole store. A project's limits are deleted with its project.
-- **R8** *(not yet met: T41)* Each code it mints is an invariant with its test (K6), its rows in its own `checks.mjs`: `AI_LIMIT_REACHED` (carrying `whose`, `group`, `project` or `own`, `scope` and `period`; it replaces `AI_USE_CEILING_REACHED` and `AI_USE_COPY_CEILING_REACHED`, retired in `run-rules` R20), `AI_LIMIT_INVALID`, `LIMIT_UNIT_UNAVAILABLE` and `EXPLORE_NOT_ENABLED` (B11; K231), each taking the next free number of this module's family at the job's START and awaiting promotion's stamp (T41).
+- **R7** The tables (`ai_usage`, `ai_limits` and their history) are declared through `record-core.declareTable`: `export: "admin-only"`, `sight: "group"`, purged only with the whole store. A project's limits are deleted with its project.
+- **R8** Each code it mints is an invariant with its test (K6), its rows in its own `checks.mjs`: `AI_LIMIT_REACHED` (carrying `whose`, `group`, `project` or `own`, `scope` and `period`; it replaces `AI_USE_CEILING_REACHED` and `AI_USE_COPY_CEILING_REACHED`, retired in `run-rules` R20), `AI_LIMIT_INVALID`, `LIMIT_UNIT_UNAVAILABLE` and `EXPLORE_NOT_ENABLED` (B11; K231), each taking the next free number of this module's family at the job's START and awaiting promotion's stamp (T41).
 
 ### Satisfies
 

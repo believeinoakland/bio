@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { MACHINE, sha } from "./fixture.mjs";
 import { seeded, cand, recommend, RUN, PRINCIPAL, IQ, INFO, CID, M1 } from "./seed.mjs";
 import { contradictionOps, CONTRADICTION_TABLES, ACCEPTANCE_REVIEW, RECOMMEND_PROMPT, RECOMMEND_PROMPT_SHA256,
-         CONTRADICTION_ABSENCE, CONTRADICTION_PAIR_CHECKS, CONTRADICTION_CANDIDATE_CHECKS, NOTICE_SENTENCE } from "../../../src/contradiction/index.mjs";
+         CONTRADICTION_ABSENCE, CONTRADICTION_PAIR_CHECKS, CONTRADICTION_CANDIDATE_CHECKS, NOTICE_SENTENCE, NOTICE_NAMED_SENTENCE } from "../../../src/contradiction/index.mjs";
 
 test("R39: acceptance per coordinate — offered, accepted, chosen unaided, chose otherwise — counts only; review due at 95% over at least 30 offered, PROVISIONAL", () => {
   const w = seeded();
@@ -136,7 +136,7 @@ test("R23: no place is named in the module's behaviour or outward text, the N345
   const w = seeded();
   const duty = cand(w, "K2", "record");
   const texts = [JSON.stringify(w.c.candidatesFor({ on: { candidate: duty }, viewer: M1 })), JSON.stringify(CONTRADICTION_ABSENCE),
-                 JSON.stringify(CONTRADICTION_PAIR_CHECKS), JSON.stringify(CONTRADICTION_CANDIDATE_CHECKS), NOTICE_SENTENCE,
+                 JSON.stringify(CONTRADICTION_PAIR_CHECKS), JSON.stringify(CONTRADICTION_CANDIDATE_CHECKS), NOTICE_SENTENCE, NOTICE_NAMED_SENTENCE,
                  RECOMMEND_PROMPT, JSON.stringify(w.c.dismiss({ candidate: duty, reason: "x", viewer: M1, author: M1 }))];
   for (const t of texts) assert.doesNotMatch(t, /oakland|alameda|california|berkeley|san francisco|\bcounty of\b|\bcity of\b/i);
 });
