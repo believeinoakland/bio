@@ -154,3 +154,16 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H32 · 2026-10-09 · publishing, bias and other groups' cases: D56–D62 put to Bob
 
 **Carries:** working document §2.12 summarises the ruled and built publication path, bias disclosure and case import (for the canon draft, a new section). Questions with Bob: D56 to D62, listed in DECISIONS.md. Notes for BOB, not Bob's: Publication's "Incomplete sections" line still says §5 is "NONE of it is built", but `case-authoring` R34 and `ratification` R2–R5 are met, so the line is stale. Declared Bias's regrade and rerun are prose only. `answers` R3–R4's sentence check is the base for D56's check of case prose.
+
+## H33 · 2026-10-09 · D56–D62 ruled; D63 follow-up
+
+**Carries (requirements must say):**
+- **D56:** the system drafts the case's account, possibly in several framings, labelled as the system's. A member writes the account. Before publication every sentence is checked against what it cites. An unsupported sentence must be tied to evidence or removed. A sentence the record contradicts is refused. Only framing following a printed bias statement may stay, marked in the text. An unsupported claim is never relabelled as bias ("Lying is not simply bias"). This amends Case Making §4a and AI Roles rule 9 for the account. The check builds on `answers` R3–R4.
+- **D57 B:** no stories, context or human-interest accounts in a case.
+- **D58 A:** disclosure of the bias in force is still required. Bias-carried framing is optional, and must be marked and tied to a printed statement.
+- **D59 A:** regrade. Applied bias statements are recorded at the legs and conclusions they touch and carried in the case file. The checker takes a lens (as published, removed, or the reader's own) and reports per finding against the bar, stating canon's limit. This comes after steps and the explorer.
+- **D60 B:** a group-set rule for required approvers before signing, off by default.
+- **D61:** the publisher chooses whether a reviewer's comments go into the case. A reviewer left out may add them after publication through the outside-response ("decorate") mechanism, the Publication §5D docket. Canon's open "does an objection travel" is ruled no, not automatically.
+- **D62 A:** accept the whole case in one act or finding by finding. The importer's lens is applied in assessment once D59 exists.
+
+**Open:** D63, whether the four canon-required statements stay (rec A).
