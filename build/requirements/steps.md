@@ -19,7 +19,7 @@ Terms. A **step** is `STP-` (`record-grammar` R51). Its **place** is exactly one
 - **R1** *(not yet met: T41)* (D32, D35, D44) `stepCreate({place, work, byWhen?, project?, by})` records a step at `planned`. `work` is the doer's words on what the work is (1–500 characters); no purpose, method or parent field is held. `project`, when given, is the project the step is taken in. Refusals in order: `STEP_NO_WORK`; `STEP_BAD_PLACE` (no place, more than one kind, or an empty list); a question the caller may not see, or not an inquiry, answered as absent (`NO_SUCH_BUNDLE`); a project (place or `project`) at `EXISTENCE` `PROJECT_SEEN_NOT_A_PARTICIPANT`, at `NONE` as absent, and a caller not joined `PROJECT_ACT_NOT_A_PARTICIPANT` (`membership` R44, R55); `byWhen` malformed (R12). A machine credential may create a step only for a run it holds, with doer `system` and that run's `enabled_by`, and only R8 permitting. Answers `{ok, step, place, at}`.
 - **R2** *(not yet met: T41)* (D35, D40) A viewer sees a step when: question-placed, she may see at least one of its referring questions; project-placed, she is at `FULL` sight of the project; group-placed, she is an active member. Any other step answers exactly as one that does not exist, and is counted nowhere.
 - **R3** *(not yet met: T41)* (D41 as revised by H38, D64) A question-placed step names its doer by handle, and names the project it was taken in only while that project is not hidden (`membership` R85) and the viewer may see its name (`membership` R44); a step taken in a hidden project, or in none, names no project. No answer about a step counts or implies a hidden project, and the answer is the same whether a step was taken in a hidden project or in none.
-- **R4** *(not yet met: T41)* Reads: `step({step, viewer})`; `stepsOn({question, viewer, state?, after?, limit?})` (the work done on a question, D45); `stepsIn({project, viewer, …})`; `stepsOfGroup({viewer, …})`. Each answers `{step, place, work, doer, taken_in, state, outcomes, byWhen, waits, learned, cost, later_found, at}`, `taken_in` as R3 allows, bounded (default 200, at most 1,000, `truncated`, `next`). Never throws.
+- **R4** *(not yet met: T41)* Reads: `step({step, viewer})`; `stepsOn({question, viewer, state?, after?, limit?})` (the work done on a question, D45); `stepsIn({project, viewer, …})`; `stepsOfGroup({viewer, …})`. Each answers `{step, place, work, doer, taken_in, state, outcomes, byWhen, waits, learned, cost, later_found, at}`, `taken_in` as R3 allows; `stepsOn`'s header answers the question's `projects`, `leg-earning` R14's answer for that viewer (`inquiry` R60's share, K2472); bounded (default 200, at most 1,000, `truncated`, `next`). Never throws.
 
 #### State, outcome, deletion
 
@@ -62,7 +62,7 @@ Terms. A **step** is `STP-` (`record-grammar` R51). Its **place** is exactly one
 
 #### Several AI steps at once (D7)
 
-- **R25** *(not yet met: T41)* `stepsRunAI({steps, owner, by})`, a member's act over steps she may see, opens one bounded AI run per step through `ai-runs` R74 under one estimate (`ai-use` R10), each run a system step of its own (R1); a run that reaches a limit sets its own step aside with the reason (R5) while the others go on.
+- **R25** *(retired: moved to `ai-runs` R74, T41; the batch act must sit after `ai-runs`, which uses this module, K2472)*
 
 #### Registrations and counts
 

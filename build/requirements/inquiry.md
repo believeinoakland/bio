@@ -43,7 +43,8 @@ Terms. An **inquiry** is a bundle of type `inquiry` (a legacy `focus` or `proble
 - **R17** *(retired: moved to `leg-earning` R5, K617, K1505 (1), T33-45)*
 - **R18** `exclusionsNaming(targetId, viewer)` answers every exclusion (`inquiry_exclusions`) naming the target that the viewer may see, each with its inquiry, edition, description, reason, author and date, in (inquiry, ord) order, read at most 500 rows per statement; an empty id answers an empty list and an absent viewer fails closed (R33). For `publication` (its R12). (Its T10 retirement is withdrawn: `publication` calls it; K335.)
 - **R19** `stateHistory(id)` answers the inquiry's state transitions, each with who took it and when, so a reopened finding can say who reopened it.
-- **R60** *(not yet met: T41)* (H38) Every read that answers a question to a member (its document, `stepsOn`'s header, the question's search row) answers `projects`, `leg-earning` R14's answer for that viewer.
+- **R60** *(not yet met: T41)* (H38) Every read that answers a question to a member (its document and the question's search row; `stepsOn`'s header is `steps` R4's share, K2472) answers `projects`, `leg-earning` R14's answer for that viewer.
+- **R61** *(not yet met: T41)* (D59; inquiry-grammar R18's store-side share; K2472) When a leg carries `bias_applied`, the act that records it asks `bias.statementInForce` (its R49) for each `statement` at the inquiry's project scope (or `instance`), the acting member as viewer; one not in force (`in_force` false or null) is refused `BIAS_APPLICATION_NOT_IN_FORCE` inside `BASIS_REFUSED`, naming the leg and the statement, and nothing is written. `biasNotInForce({statement, where})`, exported and pure, is that refusal's one spelling (K231): its row is this module's, and `basis-versions` R48 and `case-disclosures` R31 answer through it.
 
 **Acts on an inquiry**
 
