@@ -83,7 +83,7 @@ Terms as `membership` states them (administrators, `by` the control plane's stam
   - Every account holds a switch for each kind except `explore`, which holds `no`, `ask` or `yes` (B6, default `no`), plus `suggestions`: a member's own reference and a member's sign-in (closing K2275's gap), the project key and the group key.
   - `accountUsesSet({owner, switch, on, by})` sets one, `owner` spelled as `ai-use` R1's (`group`, `project:<id>`, `member:<id>`). A member's own account is set by that member only (R22's refusals). The project key is set by an owner (R54's refusals). The group key is set by an active administrator (R33's refusals). Any other name is refused `UNKNOWN_SWITCH`. For `switch: "explore"`, `on` is one of `no`, `ask`, `yes`; for any other switch a boolean; any other value is refused `SWITCH_VALUE_INVALID`, naming the values the switch takes.
   - Defaults: `ask`, `draft` and `run` on; `standing` and `suggestions` off.
-  - A sign-in's `standing` switch is held, but R32 keeps refusing a sign-in's standing questions `STANDING_SWITCH_OFF` while N796 is held with Bob (K2334, K2376).
+  - A sign-in's `standing` switch works as every account's does, off by default and set only by that member's own act: R32 no longer refuses a sign-in's standing questions for being a sign-in (Bob, N796, K2425). *(not yet met: T41)*
   - R25's and R37's `suggestions` and `standing` switches become two of these, with their stored values kept. `groupKeySwitches()` and R32's standing check read them unchanged.
 
 **A connected subscription (N678's share; DEC-156; K1819, K1922)**
