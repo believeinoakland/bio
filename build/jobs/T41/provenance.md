@@ -68,3 +68,11 @@ Two readings of R63, and one gap between R63 and capture R86. I carry on with my
 - (c) `op=recordcapturedlocator` (this module's R53 arm) passes a caller's body to `recordReceipt`, so whoever holds that op could write an upload receipt naming any `by`. That is pre-existing for every via. Which credential reaches the op is op-declarations' (R53).
 
 Size (session_01RyvfASFN7ZibC8F4dKNdSS): test runs 12, module lines 2849
+
+## J2 · REPORT
+
+Found in other modules, for capture R86's users:
+(a) leg-earning `src/leg-earning/index.mjs`:629 words every `CAPTURE_RECEIVED_NOT_FETCHED` route as "received through the doorbell"; an upload (provenance R63, same basis) would be described as a doorbell knock.
+(b) provenance-routes `src/provenance-routes/index.mjs`:143 builds a doorbell document's one-hop chain from `source.receipt.knock_id`; R86's upload document (`origin.kind` `upload`, `source.receipt` without `knock_id`) falls to the generic path; whether it needs its own hop from the upload receipt is provenance-routes' (R1).
+(c) This module's own `op=recordcapturedlocator` (R53) passes the body to `recordReceipt`, so a caller holding that op can write `via: "upload"` with any `by` (pre-existing for every via; who reaches the op is op-declarations'). Worth a look when the upload op is declared at L11.
+For capture R86: the receipt's sightings are answered as `uploads: [{by, statement, at}]` on R16/R60 rows (null on other routes); `recordReceipt({..., via: "upload", by, statement})`; R47's payload carries `by` and `statement`.
