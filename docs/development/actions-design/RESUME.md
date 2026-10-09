@@ -32,4 +32,5 @@ The investigation lane, branch `design/investigation`, `docs/development/investi
 
 ## State
 
-- 2026-10-09: started; RESUME and HANDOFF H1 written. Next: step 1 research.
+- 2026-10-09: started; RESUME and HANDOFF H1 written.
+- 2026-10-09: step 1 under way. Six readers write `research/R1`–`R6`: R1 core canon (Action, Case Making, Investigation, Ladders), R2 other canon, R3 rulings (incl. UX DECs), R4 the old action-design lane, R5 the action modules (requirements, code, tests run), R6 adjacent modules and what a member can do today. Next: read them, write the step-1/2 synthesis into the working page `actions-design.html`, render for Bob.
