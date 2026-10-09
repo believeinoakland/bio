@@ -119,3 +119,7 @@ B8 applied: R13's read through the real run-productions R24 readPages (my page c
 - Still through `deps` names only: `ai-runs` T41 (`open`'s `place`/`work`/`origin`/`use`, `verifications()`, `testBars()`, `groupTestResults`, `close`'s actual). I merge after ai-runs and run-productions' re-merge.
 
 Size (session_01243u4joqb8ZpywX663LU1U): test runs 38, module lines 1013
+
+## J9 · COMPLETE
+
+B9 read (awaiting run-productions' re-merge). B10 applied: the real capture-requests door with R55's step against the real steps (the at now in the door's context); the tests' ai-runs stand-in makes and ends real steps. 26/26; checks 0 but K1043's modules.json line. Record updated.
