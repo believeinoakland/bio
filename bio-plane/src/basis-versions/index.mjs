@@ -36,6 +36,10 @@ import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal } from "../me
 import { promotionOf, EDGE_REASON_MAX } from "../promotion/index.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog } from "../promotion/text.mjs";
 import { inquiryOf, legCapped, actNoBasis } from "../inquiry/index.mjs";
+/* R48: inquiry's one spelling of a bias application not in force (its R61), read through the namespace so this module
+   links before inquiry exports it (T41's same-layer order); see `biasNotInForceOf` below. */
+import * as inquiryFace from "../inquiry/index.mjs";
+import { biasOf } from "../bias/index.mjs";
 /* The extent grammar is content's face (N99): its `extentRelation` holds D-670's space rule and the `envelope` kind,
    which the retired check catalogue's copy (legacy-checks) did not. */
 import { contentOf, mintLabel, contentMintState, CONTENT_MINTED_BY_PLANE, legContentId, legExtent, canonicalExtent,
@@ -71,6 +75,11 @@ export const TESTIMONY_REACH_DEPTH = 64;
 export const VERSION_REASON_MAX = 500;
 /** R12 (C-25.32): the shortest reason the version grammar stores on a state that needs one (C-25.19's floor). */
 export const VERSION_REASON_MIN = 8;
+/** R48: a conclusion's bias applications — the effects a conclusion may record, the entries one carries at most, and
+ *  the longest statement id the frontmatter holds verbatim. */
+export const CONCLUSION_BIAS_EFFECTS = Object.freeze(["inference_refused", "scrutiny_raised"]);
+export const CONCLUSION_BIAS_MAX = 32;
+export const BIAS_STATEMENT_MAX = 200;
 /** R14: the six acts and the state each moves a version to; `current` and `hide` move none. */
 export const VERSION_ACT_TO = Object.freeze({
   accept: "accepted", reject: "rejected", consider: "considering", revert: "suggested", current: null, hide: null,
@@ -105,10 +114,68 @@ const INQUIRY_TYPES = JSON.stringify(["inquiry", ...Object.keys(LEGACY_TYPE_ALIA
 const drawsOn = (fm, inquiryId) => (Array.isArray(fm?.references) ? fm.references : []).some((x) =>
   x && typeof x === "object" && x.rel === "cites" && x.status !== "severed" && String(x.target ?? "").trim() === inquiryId);
 
+/* R48: inquiry R61's `biasNotInForce({statement, where})`, the refusal's one spelling (K231). Until inquiry exports it
+   (T41: inquiry merges before this module and reaches it by CHANGE), a bridge answers the same code; it is removed
+   at that CHANGE. */
+const biasNotInForceOf = () => (typeof inquiryFace.biasNotInForce === "function" ? inquiryFace.biasNotInForce
+  : ({ statement, where }) => ({ ok: false, reason: "BIAS_APPLICATION_NOT_IN_FORCE", code: "BIAS_APPLICATION_NOT_IN_FORCE",
+                                 statement, where,
+                                 detail: `bias statement '${String(statement ?? "").slice(0, 80)}' is not in the lens in `
+                                       + `force for ${where}, so it cannot be recorded as applied there` }));
+
+/* R48: a conclusion's `bias_applied`, as a caller sends it (an array, or its JSON from a query string), judged against
+   inquiry-grammar R18's shape with a conclusion's own effects: `{entries}` (empty when none was sent) or `{refused}`. A
+   statement is held verbatim by the restricted frontmatter (no escapes), so one it cannot hold is refused, never
+   rewritten. */
+function conclusionBiasApplied(raw) {
+  const bad = (detail) => ({ refused: { ok: false, reason: "BAD_BIAS_APPLIED", detail } });
+  if (raw === undefined || raw === null || raw === "") return { entries: [] };
+  let list = raw;
+  if (typeof raw === "string") {
+    try { list = JSON.parse(raw); } catch { return bad("bias_applied is a JSON list of {statement, effect}, and this is not JSON"); }
+  }
+  if (!Array.isArray(list)) return bad("bias_applied is a list of {statement, effect}");
+  if (list.length > CONCLUSION_BIAS_MAX) return bad(`a conclusion records at most ${CONCLUSION_BIAS_MAX} bias applications`);
+  const entries = [], seen = new Set();
+  for (let i = 0; i < list.length; i++) {
+    const e = list[i];
+    if (!e || typeof e !== "object" || Array.isArray(e)) return bad(`bias_applied[${i}] is not a {statement, effect}`);
+    const extra = Object.keys(e).filter((k) => k !== "statement" && k !== "effect").sort();
+    if (extra.length)
+      return bad(`bias_applied[${i}] names ${extra.map((k) => `'${k}'`).join(", ")}: a conclusion's bias application `
+               + "carries a statement and an effect only (from and to belong to grade_lowered, a leg's effect)");
+    const statement = typeof e.statement === "string" ? e.statement.trim() : "";
+    if (!statement || statement.length > BIAS_STATEMENT_MAX || /["\\\r\n#]/.test(statement))
+      return bad(`bias_applied[${i}]'s statement is the id of a bias statement in force: a non-empty string of at most `
+               + `${BIAS_STATEMENT_MAX} characters with no quote, backslash, line break or comment mark`);
+    if (!CONCLUSION_BIAS_EFFECTS.includes(e.effect))
+      return bad(`bias_applied[${i}]'s effect is one of ${CONCLUSION_BIAS_EFFECTS.join(", ")}: what a declared bias did `
+               + "to this conclusion");
+    const key = `${statement}\u0000${e.effect}`;
+    if (seen.has(key)) return bad(`bias_applied[${i}] repeats statement '${statement.slice(0, 80)}' with effect ${e.effect}`);
+    seen.add(key);
+    entries.push({ statement, effect: e.effect });
+  }
+  return { entries };
+}
+
+/* R48, R22: a conclusion row's bias applications as `appendConclusionEntry` writes them (`bias_<n>_statement`,
+   `bias_<n>_effect`, numbered from 1), in order; a malformed pair is carried as written, never dropped. */
+function biasAppliedIn(r) {
+  const out = [];
+  for (let n = 1; n <= CONCLUSION_BIAS_MAX; n++) {
+    const st = r[`bias_${n}_statement`], ef = r[`bias_${n}_effect`];
+    if (st === undefined && ef === undefined) break;
+    out.push({ statement: typeof st === "string" ? st : null, effect: typeof ef === "string" ? ef : null });
+  }
+  return out;
+}
+
 export class BasisVersions {
   #candidateSource = null;   // R25's extract arm: {module, fn}
 
-  constructor({ storage, record, membership, promotion, content, inquiry = null, acceptedWork = null, now } = {}) {
+  constructor({ storage, record, membership, promotion, content, inquiry = null, acceptedWork = null, bias = null,
+                now } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -118,6 +185,8 @@ export class BasisVersions {
     this.inquiry = inquiry;
     /* R3 (N522): accepted-work's instance on the same host, whose leg check (its R3) the promotion check asks */
     this.acceptedWork = acceptedWork;
+    /* R48: bias's `statementInForce` (its R49), an instance or a function answering one, reached on first use */
+    this.biasSource = bias;
     this.now = typeof now === "function" ? now : () => stampInstant("second");
   }
 
@@ -491,7 +560,9 @@ export class BasisVersions {
                        falsifier: s(r.falsifier) ?? "",
                        falsifier_override: s(r.falsifier_override_by)
                          ? { by: s(r.falsifier_override_by), at: s(r.falsifier_override_at) } : null,
-                       commentary: commentary ? { text: commentary, by, at, evidence: false } : null });
+                       commentary: commentary ? { text: commentary, by, at, evidence: false } : null,
+                       /* R48: what a declared bias did to this conclusion, and the lens it was checked against */
+                       bias_applied: biasAppliedIn(r), bias_lens_sha: s(r.bias_statements_sha) });
       } else if (act === "withdrawn") {
         history.push({ ...base, act: "withdrawn", state: "withdrawn", version: s(r.withdraws_version),
                        withdraws_at: s(r.withdraws_at), reason: s(r.reason) ?? "" });
@@ -963,7 +1034,7 @@ export class BasisVersions {
    *  Without one, the question moves to `concluded` naming the reading whose claim it adopts (item 6). `withdraw: true`
    *  enters `withdrawConclusion` after the ONE machine fence both acts share (C-32.2). */
   conclude({ target, conclusion = "", falsifier = "", noFalsifier = false, version = "",
-             project = null, commentary = "", reason = "", withdraw = false,
+             project = null, commentary = "", reason = "", withdraw = false, biasApplied = null,
              viewer = null, author = null, identity = null } = {}) {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-conclude — REC-64/C-32.2. */
@@ -1014,6 +1085,14 @@ export class BasisVersions {
         return { ok: false, reason: `BAD_${name.toUpperCase()}`,
                  detail: `${name} is at most ${VERSION_REASON_MAX} characters and cannot contain a `
                        + `quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes` };
+    /* R48: the bias applications' shape, with the other malformed fields; only a project's conclusion carries them */
+    const bias = conclusionBiasApplied(biasApplied);
+    if (bias.refused) return bias.refused;
+    if (bias.entries.length && !pid)
+      return { ok: false, reason: "BAD_BIAS_APPLIED",
+               detail: "bias applications are recorded with a PROJECT's conclusion and checked against that project's "
+                     + "lens in force; a conclusion drawn with no project carries none. Conclude for a project "
+                     + "(project=), or send no bias_applied." };
     if (!target)
       return { ok: false, reason: "NO_TARGET", detail: "a conclusion answers ONE question: pass target=<inquiry id>" };
     /* an inquiry the viewer may not see answers exactly as an absent one */
@@ -1119,12 +1198,26 @@ export class BasisVersions {
                       + "Add a basis[] leg (and the same target in references[]) first.", { target });
 
     if (pid) {
+      /* R48: each statement asked of bias R49 at the project's scope, the acting member as viewer; the first not in
+         force (false or undetermined) refused through inquiry R61's one spelling, and nothing written */
+      let lensSha = null;
+      for (const e of bias.entries) {
+        const ans = this.#statementInForce({ statement: e.statement, scope: { type: "project", id: pid }, viewer });
+        if (!ans || ans.in_force !== true) {
+          const where = `the conclusion of ${pid} on ${target}`;
+          const r = biasNotInForceOf()({ statement: e.statement, where });
+          const refusal = r && r.ok === false ? r
+            : { ok: false, reason: "BIAS_APPLICATION_NOT_IN_FORCE", code: "BIAS_APPLICATION_NOT_IN_FORCE", findings: [r] };
+          return { ...refusal, target, project: pid, statement: e.statement, in_force: ans ? ans.in_force ?? null : null };
+        }
+        lensSha ??= typeof ans.statements_sha === "string" ? ans.statements_sha : null;
+      }
       const when = this.now();
       const priorRec = this.conclusionRecordOf(pid, target, viewer);
       const prior = priorRec.history.length ? priorRec.history[priorRec.history.length - 1] : null;
       const w = this.#setProjectConclusion(projRow, target, {
         act: "concluded", version: adopted.version, claim: adopted.claim, falsifier: fals, noFals,
-        commentary: comm, who, when });
+        commentary: comm, bias: bias.entries, biasSha: lensSha, who, when });
       if (!w.ok) return { ...w, target, project: pid };
       return { ok: true, target, project: pid, relationship: "project", to: "concluded",
                inquiry_state: b.current_state, inquiry_moved: false,
@@ -1132,6 +1225,7 @@ export class BasisVersions {
                falsifier: fals, basis_legs: adopted.leg_count,
                falsifier_override: noFals ? { by: who, at: when } : null,
                commentary: comm ? { text: comm, by: who, at: when, evidence: false } : null,
+               bias_applied: bias.entries, bias_lens_sha: bias.entries.length ? lensSha : null,
                prior: prior ? { act: prior.act, version: prior.version, claim: prior.claim, at: prior.at, by: prior.by } : null,
                history_length: priorRec.history.length + 1, author: who, at: when, weight: "single" };
     }
@@ -1181,6 +1275,16 @@ export class BasisVersions {
              author: who, at: when, weight: "single" };
   }
 
+  /* R48: bias R49's answer, through the instance or function the factory handed; a source that throws or is absent
+     answers undetermined (null), which refuses as not in force. */
+  #statementInForce(args) {
+    try {
+      let src = this.biasSource;
+      if (typeof src === "function" && typeof src.statementInForce !== "function") src = this.biasSource = src();
+      return src && typeof src.statementInForce === "function" ? src.statementInForce(args) : null;
+    } catch { return null; }
+  }
+
   /* The conclusion record's ONE writer (R18, R20, R21), paired with `conclusionRecordOf`, its one reader: it only ever
      appends, then promotes the PROJECT. */
   #setProjectConclusion(projectRow, inquiryId, f) {
@@ -1207,7 +1311,9 @@ export class BasisVersions {
         + `Changes: this project concluded ${inquiryId} on reading '${f.version}', adopting its claim.\n`
         + `Claim: ${f.claim}\n`
         + (f.noFals ? `Falsifier: NO FALSIFIER STATED — recorded by ${f.who} at ${f.when}\n` : `Falsifier: ${f.falsifier}\n`)
-        + (f.commentary ? `Commentary (${f.who}, not evidence): ${f.commentary}\n` : ""));
+        + (f.commentary ? `Commentary (${f.who}, not evidence): ${f.commentary}\n` : "")
+        + (f.bias && f.bias.length
+          ? `Bias applied: ${f.bias.map((e) => `${e.statement} (${e.effect})`).join("; ")}\n` : ""));
     return this.#repromote({ bundleId: pid, base: projectRow.bundle_sha, text, when: f.when, author: f.who,
       meta: { object_type: pfm.object_type ?? "project", title: pfm.title, current_state: pfm.current_state ?? "forming",
               prior_state: pfm.prior_state ?? null, created: pfm.created, last_updated: f.when,
@@ -1713,7 +1819,10 @@ export function basisVersionsOf(host, deps) {
     /* R3 (N522): accepted-work's instance (its R3 is an instance method, K1307), unless a test passes its own */
     const acceptedWork = d.acceptedWork && typeof d.acceptedWork.acceptedLegRefusals === "function" ? d.acceptedWork
       : acceptedWorkOf(host, { record, membership, promotion });
-    bv = new BasisVersions({ ...d, inquiry, acceptedWork, storage: d.storage || host.storage, record, membership, promotion, content });
+    /* R48: bias's instance on the same host (its R49), reached on first use so this module's start creates none */
+    const bias = d.bias || (() => biasOf(host, { record, membership, promotion }));
+    bv = new BasisVersions({ ...d, inquiry, acceptedWork, bias, storage: d.storage || host.storage, record, membership,
+                             promotion, content });
     instances.set(host, bv);
     record.declarePurge("basis-versions", BASIS_VERSIONS_TABLES);
     registerBasisVersionGrammar(record);   /* R43: the version grammar in the C-2.8 slot, after inquiry-grammar's */
@@ -1763,7 +1872,10 @@ export function basisVersionsOps(bv, url, body) {
     /* `no_falsifier` is the member's own assertion, so it arrives from the caller; the stamps are identity only */
     conclude: () => bv.conclude({ target: q("target"), conclusion: q("conclusion"), falsifier: q("falsifier"),
                                   noFalsifier: q("no_falsifier"), project: q("project"), commentary: q("commentary"),
-                                  version: q("version"), viewer: q("viewer"), author: q("author"), identity: q("identity") }),
+                                  version: q("version"),
+                                  /* R48: the list from the body, else its JSON from the query */
+                                  biasApplied: b && b.bias_applied !== undefined ? b.bias_applied : q("bias_applied"),
+                                  viewer: q("viewer"), author: q("author"), identity: q("identity") }),
     withdrawconclusion: () => bv.conclude({ withdraw: true, target: q("target"), project: q("project"), reason: q("reason"),
                                             viewer: q("viewer"), author: q("author"), identity: q("identity") }),
   };

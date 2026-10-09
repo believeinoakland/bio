@@ -129,6 +129,10 @@ export function appendConclusionEntry(text, inquiryId, f) {
        `    claim: ${q(f.claim)}`, `    falsifier: ${q(f.falsifier)}`,
        ...(f.noFals ? [`    falsifier_override_by: ${q(f.who)}`, `    falsifier_override_at: ${q(f.when)}`] : []),
        ...(f.commentary ? [`    commentary: ${q(f.commentary)}`] : []),
+       /* R48: the restricted grammar has no list inside a row, so each bias application is a numbered pair */
+       ...(f.bias || []).flatMap((e, i) => [`    bias_${i + 1}_statement: ${q(e.statement)}`,
+                                            `    bias_${i + 1}_effect: ${q(e.effect)}`]),
+       ...(f.bias && f.bias.length && f.biasSha ? [`    bias_statements_sha: ${q(f.biasSha)}`] : []),
        `    at: ${q(f.when)}`, `    by: ${q(f.who)}`];
   const at = blockAt(lines, end, "conclusions");
   if (at === -1) return [...lines.slice(0, end), "conclusions:", ...block, ...lines.slice(end)].join("\n");
