@@ -1,6 +1,6 @@
 # progressions (T41)
 
-**Status** · session_01LZyVTWVwnV72eYeLbeyQAm · depth 2 · COMPLETE · handled B1
+**Status** · session_01LZyVTWVwnV72eYeLbeyQAm · depth 2 · COMPLETE · handled B2
 
 ## Completion (PROGRESSIONS #11)
 
