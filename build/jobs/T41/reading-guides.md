@@ -50,3 +50,7 @@ Size (session_01RMvYVRFkcmUHsvFuW1MH5Z): test runs 16, module lines 949
 ## J2 · REPORT
 
 answer-envelope (R2, R7): once BOB writes reading-guides' paths into modules.json, its CHECK_FAMILY_FILES does not reach src/reading-guides/checks.mjs (family C-144), so 'CHECK_FAMILIES is total' and the case-carriage test that re-asserts totality turn red (24/4 against 26/2 today). Fix is answer-envelope's: add ["src/reading-guides/checks.mjs", READING_GUIDES] after capture-requests, before skilldoctrine.mjs. Also row-census lists my 18 rows C-144.1–.18 as arrived (rule 4 item 2; named awaiting stamp in my record).
+
+## J3 · COMPLETE
+
+T41-26 done: R1–R12 met, family C-144 per B2, 'may' dropped. 42/42 tests; format, architecture, coverage (12/12), ownership 0 failures with paths ["bio-plane/src/reading-guides/"] and tests ["bio-plane/test/m/reading-guides/"] for modules.json (K1043). Rows C-144.1–.18 awaiting stamp. Record: Completion section.
