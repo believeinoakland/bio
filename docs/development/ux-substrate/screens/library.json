@@ -613,14 +613,14 @@
       },
       {
        "screen": "connect",
-       "act": "aiceilingset",
-       "what": "Set your daily limit.",
-       "why": "It caps what the assistant can spend on your account each day. An administrator may set a lower one for the group."
+       "act": "owed:ailimitset DEC-188",
+       "what": "Set a limit on your account, if you want one: for everything or for one use, a day or a month.",
+       "why": "It binds only your own account. The group's and a project's limits never bind it."
       },
       {
        "screen": "connect",
-       "act": "accountswitchset",
-       "what": "Choose whether the assistant may suggest things without being asked. It is off unless you turn it on.",
+       "act": "owed:accountusesset DEC-188",
+       "what": "Choose what your account pays for, and whether the assistant may suggest things without being asked. Suggestions are off unless you turn them on.",
        "why": "Some members want suggestions; others want quiet."
       },
       {
