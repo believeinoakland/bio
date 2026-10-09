@@ -61,3 +61,7 @@
 4. P6: membership is 3,621 lines (`src/membership/`, all three files), up from 3,306 + ~250 planned.
 
 Size (session_01McN1vbMjCkAoS6fsP6jmCx): test runs 16, module lines 3621
+
+## J1 · REPORT
+
+(1) op-declarations t33.test.mjs R19 red from this merge until T40-23: membership's ops map serves handlecheck and handlechange, which have no spec until op-declarations R42 (L11). Admission R3/R22 (T40-18a), affordances, op-grades and control-plane R70 owe the same ops in L11. (2) Rows awaiting promotion's stamp (T40-4): C-56.2's where moved to notTheOwner > is-not-the-owner; new C-96.48 HANDLE_CHECK_PAUSED, C-96.49 HANDLE_CHANGE_NOT_A_MEMBER, C-96.50 HANDLE_FIXED, C-96.51 HANDLE_CHANGE_UNCHECKED. (3) The plane bundle is stale (rule 4 item 7); not written by me. (4) P6: membership is now 3,621 lines.
