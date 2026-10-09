@@ -24,7 +24,7 @@ test("R1: exploreDue, exploreWake and exploreTick for the scheduler; exploreAllo
 test("R1: a refusal from exploreAllowed opens nothing and the next owner is asked; {ask: true} records exploreAsk with the questions and their estimate, and nothing runs that day without approval", () => {
   const w = world().standard();
   w.question(Q2, { recipients: ["alice"] });
-  w.drawing[Q] = [PROJ];
+  w.draw(Q, PROJ);
   w.project(PROJ, ["alice"], { owners: ["alice"] });
   w.explore.group = "no";
   w.explore[`project:${PROJ}`] = "ask";

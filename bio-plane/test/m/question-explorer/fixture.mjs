@@ -14,6 +14,7 @@ import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
+import { legEarningOf } from "../../../src/leg-earning/index.mjs";
 import { questionExplorerOf } from "../../../src/question-explorer/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
@@ -60,6 +61,8 @@ export function storage() {
 const CONTRACT_TABLES = `
 CREATE TABLE IF NOT EXISTS entities (entity_id TEXT PRIMARY KEY, kind TEXT NOT NULL, at TEXT);
 CREATE TABLE IF NOT EXISTS resolutions (capture_sha TEXT, bundle_id TEXT, ref TEXT, entity_id TEXT, grade TEXT, established INTEGER);
+CREATE TABLE IF NOT EXISTS refs (bundle_id TEXT NOT NULL, target_id TEXT NOT NULL, kind TEXT NOT NULL DEFAULT '',
+  PRIMARY KEY (bundle_id, target_id, kind));
 CREATE TABLE IF NOT EXISTS content (content_id TEXT PRIMARY KEY, capture_sha TEXT, bundle_id TEXT, extent_kind TEXT, extent TEXT,
   ref TEXT, stale INTEGER, minted_by TEXT, cited_as TEXT, chain_kind TEXT);
 `;
@@ -90,7 +93,7 @@ export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiU
   const note = (name, a) => calls.push({ name, a });
   const w = {
     st, host, record, membership, credentials, clock, calls,
-    recipients: {}, drawing: {}, subjects: {}, asserted: {}, conns: [], captures: {}, held: new Set(),
+    recipients: {}, subjects: {}, asserted: {}, conns: [], captures: {}, held: new Set(),
     explore: {}, approved: new Set(), steps: [], runs: new Map(), bounds: new Map(),
     testBar: { part: "explore", set: "civicsmith", set_version: "1", false_alarm_rate: 0.1, passed: true, graded_by: "harness" },
     deployed: new Set(["investigate", "explore"]), groupResults: [], openRefuse: null, stepRefuse: null,
@@ -164,6 +167,7 @@ export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiU
     },
   };
   const connections = {
+    edgeSevered: () => false,
     asserted(a) { note("asserted", a); return { ok: true, member: w.asserted[a.bundleId] || [], source: [], containment: [] }; },
     read(a) {
       note("connRead", a);
@@ -180,11 +184,10 @@ export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiU
     },
   };
   const inquiry = { subjectEntityOf: (id) => w.subjects[id] ?? null };
-  const legEarning = {
-    projectsDrawingOnPaged(a) { return { projects: (w.drawing[a.id] || []).map((id) => ({ id })), cursor: null }; },
-    projectsDrawingOn(id) { return { projects: (w.drawing[id] || []).map((x) => ({ id: x })) }; },
-    basisFor(id) { return { ok: true, bundleId: id, legs: [{ target: DOC }] }; },
-  };
+  /* leg-earning is the real module (merged, K2485): its R13 pages over connections' `refs` read contract (R58), with
+     the stand-in's `edgeSevered` (R22) answering every edge live; its R4 `basisFor` over its own `inquiry_basis`. */
+  const legEarning = legEarningOf(host, { record, membership, connections,
+                                          promotion: { fact: () => ({ ok: false }) }, content: {} });
   const basisVersions = { currentOf: (p) => ({ current: `reading of ${p}` }) };
 
   const p = questionExplorerOf(host, {
@@ -195,7 +198,7 @@ export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiU
     now: () => Date.parse(clock.now),
   });
   p.migrate();
-  Object.assign(w, { p, stepsApi: steps, aiUse, aiRuns, captureRequests, connections, retrieval });
+  Object.assign(w, { p, legEarning, stepsApi: steps, aiUse, aiRuns, captureRequests, connections, retrieval });
 
   let rev = 0;
   w.bundle = (id, type, text, { project = null, state = null } = {}) => {
@@ -229,6 +232,8 @@ export function world({ gateOpen = true, steps: withSteps = true, aiUse: withAiU
                  ON CONFLICT(project_id) DO UPDATE SET setting=excluded.setting`, id, setting);
     return id;
   };
+  /* A project draws on a question: its document cites it (connections' `refs`, R58). */
+  w.draw = (question, project) => st.sql.exec(`INSERT OR IGNORE INTO refs (bundle_id, target_id, kind) VALUES (?, ?, 'cites')`, project, question);
   w.doc = (id, cap, { project = null } = {}) => { w.bundle(id, "information", null, { project }); w.captures[cap] = id; return cap; };
   w.entity = (id, kind) => { st.sql.exec(`INSERT OR REPLACE INTO entities (entity_id, kind, at) VALUES (?, ?, 't')`, id, kind); return id; };
   w.resolve = (cap, bundleId, entity) =>

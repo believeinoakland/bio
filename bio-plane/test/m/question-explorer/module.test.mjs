@@ -9,6 +9,8 @@ test("R9, R10, R13: each refusal this module mints is its own row, frozen, with 
   assert.deepEqual([...QE.EXPLORE_CHECK_KEYS], Object.keys(QE.EXPLORE_CHECKS));
   for (const code of ["EXPLORE_PERSON_NOT_TIED", "EXPLORE_PERSON_CAP_REACHED", "EXPLORE_READ_KEPT_AWAY", "EXPLORE_PAGES_BOUND"])
     assert.ok(QE.EXPLORE_CHECKS[code], code);
+  assert.deepEqual(Object.values(QE.EXPLORE_CHECKS).map((r) => r.check),
+                   QE.EXPLORE_CHECK_KEYS.map((_, i) => `C-145.${i + 1}`), "family C-145, numbered in order (K2482)");
   for (const [code, row] of Object.entries(QE.EXPLORE_CHECKS)) {
     assert.match(row.where, /^src\/question-explorer\/index\.mjs \w+/, code);
     assert.ok(row.translation.length > 30 && !/[A-Z]{4,}_/.test(row.translation), `${code}: plain words`);
@@ -19,7 +21,7 @@ test("R9, R10, R13: each refusal this module mints is its own row, frozen, with 
   const w = world().standard();
   const o = w.openRun("group");
   const r = w.p.look({ run: o.run, entity: "ENT-2026-19999", caller: CALLER });
-  assert.equal(r.translation, QE.EXPLORE_CHECKS.EXPLORE_PERSON_NOT_TIED.translation);
+  assert.deepEqual([r.check, r.translation], [QE.EXPLORE_CHECKS.EXPLORE_PERSON_NOT_TIED.check, QE.EXPLORE_CHECKS.EXPLORE_PERSON_NOT_TIED.translation]);
 });
 
 test("the module's tables are declared to record-core's purge by the question they serve (and a find by its documents): a question's purge takes its own rows, a document's purge its finds", () => {

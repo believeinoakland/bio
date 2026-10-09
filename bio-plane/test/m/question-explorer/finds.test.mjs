@@ -12,7 +12,8 @@ const gauge = (w, run, over = {}) =>
 test("R4: each find (a capture, content row or connection the run located) is gauged supports, cuts_against or unclear against the question's live basis, answered {bearing, how, false_alarm_rate, gold_set, label: machine, enabled_by}", () => {
   const w = world().standard();
   w.project(PROJ, ["alice"], { owners: ["alice"], setting: "discoverable" });
-  w.drawing[Q] = [PROJ];
+  w.draw(Q, PROJ);
+  w.legEarning.writeBasis(Q, [{ target: DOC, role: "supports" }]);
   const o = w.openRun("group");
   const a = gauge(w, o.run);
   assert.deepEqual(a.gauge, { bearing: "supports", how: "the minutes record the vote", false_alarm_rate: 0.1,
@@ -54,7 +55,7 @@ test("R5: findsFor answers each find, once (keyed per find and question), to eac
   w.doc(HDOC, HCAP, { project: HPROJ });
   w.recipients[Q] = ["alice", "bob", "dana"];
   w.project(PROJ, ["alice"], { owners: ["alice"] });
-  w.drawing[Q] = [PROJ];
+  w.draw(Q, PROJ);
   w.explore.group = "no";
   const o = w.openRun(`project:${PROJ}`);
   gauge(w, o.run);
@@ -77,7 +78,7 @@ test("R5: a recipient who may not see the question, or the document a find rests
   w.project(HPROJ, ["bob"]);
   w.doc(HDOC, HCAP, { project: HPROJ });
   w.recipients[Q] = ["alice", "bob"];
-  w.drawing[Q] = [HPROJ];
+  w.draw(Q, HPROJ);
   w.explore.group = "no";
   const o = w.openRun(`project:${HPROJ}`);
   w.p.find({ run: o.run, kind: "capture", ref: HCAP, bearing: "unclear", how: "a mention", caller: CALLER });
@@ -89,7 +90,7 @@ test("R6: a find's only doors are a member's: dismiss (the queue's in a drawing 
   const w = world().standard();
   w.recipients[Q] = ["alice", "bob"];
   w.project(PROJ, ["alice"], { owners: ["alice"], setting: "discoverable" });
-  w.drawing[Q] = [PROJ];
+  w.draw(Q, PROJ);
   const o = w.openRun("group");
   const { find } = gauge(w, o.run);
   const doors = w.p.findDoors({ find, question: Q, viewer: "member:alice" });
@@ -110,6 +111,13 @@ test("R6: a find's only doors are a member's: dismiss (the queue's in a drawing 
   /* Edited carries her words; own_instead carries none. */
   const ed = w.p.findAccept({ find, question: Q, form: "edited", edit: "my reading of it", by: "member:bob" });
   assert.equal(ed.leg.note, "my reading of it");
+  w.content("CNT-1", DOC2, CAP2);
+  const passage = w.p.find({ run: o.run, kind: "content", ref: "CNT-1", bearing: "unclear", how: "a passage", caller: CALLER }).find;
+  assert.deepEqual(w.p.findAccept({ find: passage, question: Q, form: "as_proposed", by: "member:alice" }).leg,
+                   { question: Q, target: DOC2, content_id: "CNT-1", note: "a passage" }, "a passage's leg names its document and row");
+  assert.equal(w.p.findAccept({ find: passage, question: Q, form: "own_instead", by: "member:bob" }).leg, null, "her own instead: no leg proposed");
+  const own = w.p.findAccept({ find, question: Q, form: "own_instead", by: "member:carol" });
+  assert.equal(own.code, "EXPLORE_NO_SUCH_FIND", "carol is not a recipient");
   assert.deepEqual(ACCEPTANCE_FORMS, ["as_proposed", "edited", "own_instead"]);
   /* Negative controls: a machine, an unknown form, `edited` without words, a find not offered. */
   assert.equal(w.p.findAccept({ find, question: Q, form: "as_proposed", by: CALLER }).code, "EXPLORE_ACCEPT_INVALID");
@@ -122,7 +130,7 @@ test("R6: a follower outside every drawing project mutes a find; a participant o
   const w = world().standard();
   w.recipients[Q] = ["alice", "bob"];
   w.project(PROJ, ["alice"], { owners: ["alice"], setting: "discoverable" });
-  w.drawing[Q] = [PROJ];
+  w.draw(Q, PROJ);
   const o = w.openRun("group");
   const { find } = gauge(w, o.run);
   assert.equal(w.p.findMute({ find, question: Q, by: "member:bob" }).muted, true);

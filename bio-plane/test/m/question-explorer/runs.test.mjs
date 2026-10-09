@@ -17,7 +17,7 @@ test("R3: it reads within its principal's sight: the group's, what every member 
   const w2 = world().standard();
   w2.project(HPROJ, ["bob"], { owners: ["bob"] });
   w2.doc(HDOC, HCAP, { project: HPROJ });
-  w2.drawing[Q] = [HPROJ];
+  w2.draw(Q, HPROJ);
   w2.explore.group = "no";
   const p = w2.openRun(`project:${HPROJ}`);
   assert.equal(w2.p.find({ run: p.run, kind: "capture", ref: HCAP, bearing: "unclear", how: "a mention", caller: CALLER }).ok, true);
@@ -116,7 +116,7 @@ const sha64 = (i) => String(i).padStart(64, "0");
 test("R12: at its close each run carries ai-runs R76's actual cost, answered to the paying account's owners only", () => {
   const w = world().standard();
   w.project(PROJ, ["alice", "bob"], { owners: ["alice"] });
-  w.drawing[Q] = [PROJ];
+  w.draw(Q, PROJ);
   w.explore.group = "no";
   const o = w.openRun(`project:${PROJ}`);
   w.p.end({ run: o.run, caller: CALLER });
@@ -147,7 +147,7 @@ test("R13: a run reads inside a held document a few pages at a time within its p
   const w3 = world().standard();
   w3.project(PROJ, ["alice"], { owners: ["alice"] });
   w3.doc(HDOC, HCAP, { project: PROJ });
-  w3.drawing[Q] = [PROJ];
+  w3.draw(Q, PROJ);
   w3.explore.group = "no";
   const o3 = w3.openRun(`project:${PROJ}`);
   assert.equal(w3.p.read({ run: o3.run, bundleId: HDOC, pages: 1, caller: CALLER }).ok, true);

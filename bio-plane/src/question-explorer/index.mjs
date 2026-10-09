@@ -123,7 +123,7 @@ export class QuestionExplorer {
 
   #refuse(code, detail, extra) {
     const row = EXPLORE_CHECKS[code];
-    return { ok: false, reason: code, code, translation: row.translation, detail, ...(extra || {}) };
+    return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...(extra || {}) };
   }
 
   #iso(at) {
@@ -134,7 +134,10 @@ export class QuestionExplorer {
   /** The group's local day for an instant (`civil-time`; the zone `retrieval` R69 answers, else UTC). */
   #day(iso) {
     let zone = "UTC";
-    try { const z = this.retrieval && typeof this.retrieval.zone === "function" ? this.retrieval.zone() : null; if (typeof z === "string" && z) zone = z; } catch { /* UTC */ }
+    try {
+      const z = this.retrieval && typeof this.retrieval.zone === "function" ? this.retrieval.zone() : null;
+      if (typeof z === "string" && z) zone = z;
+    } catch { /* UTC */ }
     const d = localDay(iso, zone);
     return typeof d === "string" ? d : localDay(iso, "UTC");
   }
@@ -180,8 +183,9 @@ export class QuestionExplorer {
   /** R2: the distinct captures resolving to an entity (`entities` R35's `resolutions`). */
   #resolved(entity) {
     if (!entity) return 0;
-    try { return Number(this.#one(`SELECT COUNT(DISTINCT capture_sha) AS n FROM resolutions WHERE entity_id=?`, entity)?.n ?? 0); }
-    catch { return 0; }
+    try {
+      return Number(this.#one(`SELECT COUNT(DISTINCT capture_sha) AS n FROM resolutions WHERE entity_id=?`, entity)?.n ?? 0);
+    } catch { return 0; }
   }
 
   /** `steps` R17's recipients of a question, as bare member ids, every page read (at most 1,000). */
@@ -193,30 +197,31 @@ export class QuestionExplorer {
       let r;
       try { r = this.steps.findRecipients({ question, after, limit: 100 }); } catch { break; }
       const list = Array.isArray(r) ? r : (r && (r.recipients || r.members)) || [];
-      for (const m of list) { const id = bareMember(typeof m === "string" && !m.startsWith("member:") ? `member:${m}` : (m && m.member) || m); if (id) out.add(id); }
+      for (const m of list) {
+        const raw = typeof m === "string" ? m : m && typeof m.member === "string" ? m.member : "";
+        const id = bareMember(raw.startsWith("member:") ? raw : `member:${raw}`);
+        if (id) out.add(id);
+      }
       after = r && !Array.isArray(r) ? (r.next ?? null) : null;
       if (!after) break;
     }
     return [...out].sort();
   }
 
-  /** The projects drawing on a question (`leg-earning` R13, else its R7's first 32). */
+  /** The projects drawing on a question (`leg-earning` R13, every page; at most 2,000). In-process only. */
   #drawing(question) {
+    const out = [];
     try {
-      if (typeof this.legEarning.projectsDrawingOnPaged === "function") {
-        const out = [];
-        let after = null;
-        for (let i = 0; i < 4; i++) {
-          const r = this.legEarning.projectsDrawingOnPaged({ id: question, after, limit: 500 });
-          for (const p of (r && r.projects) || []) out.push(typeof p === "string" ? p : p.id);
-          after = r && r.cursor ? r.cursor : null;
-          if (!after) break;
-        }
-        return out;
+      let after = null;
+      for (let i = 0; i < 4; i++) {
+        const r = this.legEarning.projectsDrawingOnPaged({ id: question, after, limit: 500 });
+        if (!r || r.ok === false) break;
+        out.push(...r.projects);
+        after = r.cursor;
+        if (!after) break;
       }
-      const r = this.legEarning.projectsDrawingOn(question);
-      return ((r && r.projects) || (Array.isArray(r) ? r : [])).map((p) => (typeof p === "string" ? p : p.id));
-    } catch { return []; }
+    } catch { /* none read */ }
+    return out;
   }
 
   /** R3: whether a bundle is within the paying owner's sight: a member's account, that member's; a project's, its
@@ -250,8 +255,11 @@ export class QuestionExplorer {
   #liveRun(run, caller) {
     const r = typeof run === "string" ? this.#one(`SELECT * FROM explore_runs WHERE run=?`, run.trim()) : null;
     const gate = r ? runRules.runPrincipalGate({ caller, principal: this.principal, act: "exploring a question" }) : null;
-    if (!r || gate) return { refusal: this.#refuse("EXPLORE_NO_RUN", "an exploring run this module opened, held by the caller", { run: run ?? null }) };
-    if (r.ended) return { refusal: this.#refuse("EXPLORE_RUN_ENDED", `the run ended ${r.ended}`, { run: r.run, ended: r.ended }) };
+    if (!r || gate)
+      return { refusal: this.#refuse("EXPLORE_NO_RUN", "an exploring run this module opened, held by the caller",
+                                     { run: run ?? null }) };
+    if (r.ended)
+      return { refusal: this.#refuse("EXPLORE_RUN_ENDED", `the run ended ${r.ended}`, { run: r.run, ended: r.ended }) };
     return { run: r };
   }
 
@@ -292,9 +300,10 @@ export class QuestionExplorer {
       const q = this.#question(c.bundle_id);
       if (!q) continue;
       /* R9 holds before R2: a question about a person no member tied to it is never chosen. */
-      if (q.subject && this.#kindOf(q.subject) !== null && this.#kindOf(q.subject) === "person"
-          && !this.#tiedPersons(q).has(q.subject)) continue;
-      if (q.subject && this.#kindOf(q.subject) === null && q.surfacedBy !== "human") continue;
+      if (q.subject) {
+        const kind = this.#kindOf(q.subject);
+        if ((kind === "person" || kind === null) && !this.#tiedPersons(q).has(q.subject)) continue;
+      }
       if (this.#one(`SELECT 1 AS x FROM explore_runs WHERE question=? AND day=?`, q.id, day)) continue;
       const seen = this.#resolved(q.subject);
       const last = this.#one(`SELECT seen FROM explore_runs WHERE question=? ORDER BY opened_at DESC LIMIT 1`, q.id);
@@ -324,7 +333,9 @@ export class QuestionExplorer {
     return null;
   }
 
-  #considered(question, owner, day) { return this.#one(`SELECT outcome, at FROM explore_considered WHERE question=? AND owner=? AND day=?`, question, owner, day); }
+  #considered(question, owner, day) {
+    return this.#one(`SELECT outcome, at FROM explore_considered WHERE question=? AND owner=? AND day=?`, question, owner, day);
+  }
   #consider(question, owner, day, outcome, at) {
     this.sql.exec(`INSERT INTO explore_considered (question, owner, day, outcome, at) VALUES (?,?,?,?,?)
                    ON CONFLICT(question, owner, day) DO UPDATE SET outcome=excluded.outcome, at=excluded.at`,
@@ -357,7 +368,10 @@ export class QuestionExplorer {
       let next = this.#due(iso).length ? t : null;
       if (next === null) {
         const asks = this.#rows(`SELECT at FROM explore_considered WHERE day=? AND outcome='ask'`, this.#day(iso));
-        for (const a of asks) { const w = Math.max(t, Date.parse(a.at) + EXPLORE_ASK_RECHECK_MS); if (next === null || w < next) next = w; }
+        for (const a of asks) {
+          const w = Math.max(t, Date.parse(a.at) + EXPLORE_ASK_RECHECK_MS);
+          if (next === null || w < next) next = w;
+        }
       }
       if (next === null) return null;
       return typeof now === "number" ? next : stampInstant("second", next);
@@ -391,7 +405,11 @@ export class QuestionExplorer {
           asks.get(owner).push(w.question);
           continue;
         }
-        if (a !== null && (a.ok === false || a.code || a.reason)) { this.#consider(w.question, owner, day, "refused", at); out.refused += 1; continue; }
+        if (a !== null && (a.ok === false || a.code || a.reason)) {
+          this.#consider(w.question, owner, day, "refused", at);
+          out.refused += 1;
+          continue;
+        }
         const label = (a && a.label) || { kind: "machine", enabled_by: owner };
         const opened = this.#open(w, owner, label, at, day);
         if (opened.ok) { this.#consider(w.question, owner, day, "opened", at); out.opened.push(opened); break; }
@@ -517,7 +535,10 @@ export class QuestionExplorer {
       } catch { currents.push({ project: p, current: null }); }
     }
     let legs = null;
-    try { const b = this.legEarning.basisFor(question, { limit: 1000 }); legs = b && Array.isArray(b.legs) ? b.legs.length : null; } catch { legs = null; }
+    try {
+      const b = this.legEarning.basisFor(question, { limit: 1000 });
+      legs = b && Array.isArray(b.legs) ? b.legs.length : null;
+    } catch { legs = null; }
     return { currents, legs };
   }
 
@@ -547,7 +568,7 @@ export class QuestionExplorer {
                   g.false_alarm_rate, g.gold_set, json(this.#liveBasis(r.question)), r.owner, iso);
     let tied = false;
     try {
-      const t = this.steps.recordProduct({ step: r.step, record: kind === "connection" ? loc.ref : loc.ref, kind, by: this.principal });
+      const t = this.steps.recordProduct({ step: r.step, record: loc.ref, kind, by: this.principal });
       tied = !(t && t.ok === false);
     } catch { tied = false; }
     return { ...this.#findAnswer(find, r), tied, already: false };
@@ -714,13 +735,18 @@ export class QuestionExplorer {
       const out = [];
       let truncated = false;
       for (const f of this.#rows(`SELECT * FROM explore_finds ORDER BY at DESC, find LIMIT 5000`)) {
-        if (this.#one(`SELECT 1 AS x FROM explore_doors WHERE find=? AND question=? AND member=?`, f.find, f.question, member)) continue;
+        if (this.#doored(f, member)) continue;
         if (!this.#offeredTo(f, member, ctx)) continue;
         if (out.length >= n) { truncated = true; break; }
         out.push(this.#item(f, viewer));
       }
       return { ok: true, finds: out, truncated };
     } catch { return { ok: true, finds: [], truncated: false }; }
+  }
+
+  /** Whether a member already muted or accepted a find (R6): it is then offered to her no more. */
+  #doored(f, member) {
+    return !!this.#one(`SELECT 1 AS x FROM explore_doors WHERE find=? AND question=? AND member=?`, f.find, f.question, member);
   }
 
   #item(f, viewer) {
@@ -737,7 +763,7 @@ export class QuestionExplorer {
     if (!member || isMachineIdentity(String(by)) || !this.gate().open) return null;
     const f = typeof find === "string" ? this.#one(`SELECT * FROM explore_finds WHERE find=? AND question=?`, find, String(question ?? "")) : null;
     if (!f || !this.#offeredTo(f, member, { recipients: new Map() })) return null;
-    if (this.#one(`SELECT 1 AS x FROM explore_doors WHERE find=? AND question=? AND member=?`, f.find, f.question, member)) return null;
+    if (this.#doored(f, member)) return null;
     return { f, member };
   }
 
@@ -769,7 +795,7 @@ export class QuestionExplorer {
     this.sql.exec(`INSERT INTO explore_doors (find, question, member, door, record, at) VALUES (?,?,?,?,?,?)
                    ON CONFLICT(find, question, member) DO UPDATE SET door=excluded.door, record=excluded.record, at=excluded.at`,
                   o.f.find, o.f.question, o.member, "accepted", json(rec), rec.at ?? this.#iso(at));
-    const target = o.f.kind === "capture" || o.f.kind === "connection" ? o.f.bundle_id : o.f.kind === "content" ? o.f.ref : null;
+    const target = o.f.kind === "page" ? null : o.f.bundle_id;
     const leg = form === "own_instead" || !target ? null
       : { question: o.f.question, target, ...(o.f.kind === "content" ? { content_id: o.f.ref } : {}),
           note: form === "edited" ? str(edit) : o.f.how };

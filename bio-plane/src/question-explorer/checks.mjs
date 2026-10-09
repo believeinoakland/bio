@@ -1,9 +1,12 @@
-/* question-explorer's refusal rows (requirements: `build/requirements/question-explorer.md`). Each code is minted by
- * this module alone, at the site its `where` names, and carries a plain-words translation that names no place, no
- * project and no cost (R8, R12). The codes of the providers this module relays (`ai-use`'s, `credentials`',
+/* question-explorer's refusal rows (requirements: `build/requirements/question-explorer.md`), family C-145 (K2482).
+ * Each code is minted by this module alone, at the site its `where` names, and carries a plain-words translation that
+ * names no place, no project and no cost (R8, R12). The codes of the providers this module relays (`ai-use`'s, `credentials`',
  * `capture-requests`', `steps`') are theirs and never copied here. */
 
-const row = (where, translation) => Object.freeze({ where: `src/question-explorer/index.mjs ${where}`, translation });
+/* The family is C-145 (K2482): each row's number is its place in this table, never reused. */
+let n = 0;
+const row = (where, translation) => Object.freeze({ check: `C-145.${++n}`, where: `src/question-explorer/index.mjs ${where}`,
+                                                    translation });
 
 export const EXPLORE_CHECKS = Object.freeze({
   /* R9: a look aimed at a person no member tied to the question. Recorded on the run; the run goes on. */
