@@ -1,0 +1,12 @@
+# BOB to promotion (T40)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T40), layer 2, promotion: T40-4 (the stamp). Read also the plan's "Rules at the opening" (rule 4 (2)), K2370, K2377, K2378 (their lines in `build/rulings.md`) and your T39 record `build/jobs/T39/promotion.md` (the last stamp, as the pattern).
+Your requirements: `build/requirements/promotion.md` (read whole); no requirement changes. The stamp: stamp every row awaiting stamp at T39's close (among them C-122.7, C-141.11 `DOCUMENT_COPY_NO_STORE`, case-disclosures' C-120.20–.22) and the rows T40's L1–L2 jobs minted (membership's C-96 handle codes, R126; credentials' new codes; any row record-grammar or pdf-reader changed); move `CATALOG_VERSION` and re-pin `ROW_CENSUS` (R34, R50); any pinned digest moves in its owner's job. You start now, but stamp the rows only after BOB tells you membership and credentials are merged: then merge `tranche/T40` into your branch and stamp what is there. This clears rule 4 item 2's T39 and L1–L2 share; rows T40's L3+ jobs add wait for T41's stamp.
+Reading set (mechanics §17): measured at this START: 446 KB by `build/plan/reading-sets.py`, an over-estimate (it counts each used module's whole public part): read as mechanics §3 asks (each used module's Purpose and the services your Uses names). Measure that set, with your tests, first. At most 300 KB: read it whole and state so in your record. Over: (1) trim nothing; (2) no further split in T40; (3) read whole yourself your requirements, layer 2's row of `build/layers.md`, the code and tests your entry changes and the used services your Uses names, and have your own workers read the rest of your code and tests in full and write the summary this task needs (each statement citing file and line), told the task, the requirements it serves and what follows; state in your record what you read whole, the summary's size and what it cites, and whether anything it left out mattered (K2304). This step is required, not optional.
+Merge order in L2: membership, credentials, promotion last (it stamps the rows).
+Inherited reds: the plan's rule 4 list as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
