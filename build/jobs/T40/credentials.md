@@ -2,6 +2,37 @@
 
 **Status** · session_01WnUBG32qScjJuitEhktbaJ · depth 2 · RUNNING until 2026-10-09T01:12:57Z (the users' suites (39 modules' tests, against the change)) · handled B2
 
+## Completion (CREDENTIALS #10)
+
+**Reading set** (mechanics §17, K2304): measured over 300 KB (own code 176 KB, own tests 302 KB). Read whole myself: `build/requirements/credentials.md`; layer 2's row of `build/layers.md`; the plan's entry T40-3, its rules at the opening and doubt 3; K2350, K2352, K2353, K2373, K2376, K2394, K2395, K2404; membership's Purpose and the services my Uses names (R44, R54, R55, R77, R122, R127, with their code); `draft-T40-N812.md` §0–B; all of `index.mjs`, `schema.mjs`, `checks.mjs`, `fixture.mjs`; and the tests my entry changes (account, group-key, grant, keys, rows-ops, seam, t35-misc, t36, t37, t38). A worker read the other nine test files whole (ai, converts, keyed, own-keys, signin, status-at, t35-signin, t35-tally) and wrote a 6 KB summary citing file:line for each test and a "could break" list (snapshot tests, stub cores, the old `ai_grants` table, route-key filters). Nothing it left out mattered: all nine passed unchanged.
+
+**Entries applied (T40-3, N812).**
+- R55: `USE_KINDS`, `EXPLORE_VALUES`, `USE_SWITCHES` exported and frozen; every account (member's reference, member's sign-in, project account, group key) holds `use_ask`, `use_draft`, `use_run`, `standing`, `suggestions`, `explore` (additive columns, defaults kept: R25/R37's stored values unchanged); `accountUsesSet({owner, switch, on, by})` with the three owner spellings; `SWITCH_VALUE_INVALID` (C-29.36). R25/R37's acts set their two as it does (non-boolean now refused, was "only true is on"); removing the group key turns every switch off (R37); R23 and R34 answer `uses`.
+- R54: `projectKeySet`, `projectSigninSet` (`PROJECT_NOT_SOLE_MEMBER` C-29.34, `SIGNIN_NOT_CONNECTED` C-29.35), `projectAccountRemove`, `projectAccountSwitch`, `projectAccountState`; sight before position (NONE absent, EXISTENCE C-70.1, then `notTheOwner`); the sign-in serves only while its member is the sole participant (`joinedParticipants`, R127; fail closed without it); cleared with the member's sign-in and revocation.
+- R56: `accountFor` takes `act.project`; the cascade project → own (reference, else sign-in) → group; the chosen account is the one used (`AI_USE_SWITCHED_OFF` C-29.37, `whose`, never moves on); `level: "project"` carries `project`. R24 admits `draft`; R27 takes `project` and refuses through the cascade.
+- R57: `aiKeepAwaySet` takes `uses`, `aiKeepAwayState` answers it; `projectAiKeepAwaySet`/`State`; `aiKeptAway({project, use})` (`PROJECT_AI_KEPT_AWAY` C-29.38, fail closed); `projectsKeptAway({use})`. AI_KEEP_AWAY_NO_REASON's region moved to `#keepAwayReason` (shared by R51 and R57): a `where` change for T40-4.
+- R58: `projectKeyNotice`, `projectKeyNoticeSeen`, `PROJECT_KEY_NOTICE_DUE` (C-29.39). R59: `projectAccountsSuspended({viewer, at})`.
+- R30: `project_accounts`, `project_account_acts`, `project_key_notices`, `project_keep_away` declared `purge: "clear"` keyed by `project_id` (K2404 (3)), never exported (the limits admin-only).
+- Routes: `accountusesset`, `projectkeyset`, `projectsigninset`, `projectaccountremove`, `projectaccountswitch`, `projectaccountstate`, `projectkeynotice`, `projectkeynoticeseen`, `projectaikeepaway`, `projectaikeepawaystate`; `aigrantmint` carries `project`.
+- Rows for T40-4's stamp: new C-29.34–.39; C-29.21 UNKNOWN_SWITCH re-worded (one switch per kind of use); C-29.32's `where` moved.
+- Purpose comment updated. Doubt 3 (K2376 (3)): a sign-in holds `standing`; R32 still refuses its standing questions `STANDING_SWITCH_OFF` (tested).
+
+**Readings recorded (BOB's, K2404):** removing the group key turns every R55 switch off and a later set keeps them off (R37 literal); a key replacing a project's sign-in is a new account (off, defaults); `accountUsesSet` on the group may precede a key (as R37's), on a project or a member needs an account (`NO_ACCOUNT`); `projectKeyNoticeSeen` needs a joined project; `projectsKeptAway` answers null when unreadable.
+
+**Tests.** New `t40.test.mjs` (21 tests, each new id with a negative control, K874). Existing tests updated only where the amended requirements changed the contract: state shapes gained `uses`; `standing` off by default now governs `accountFor` (R56); non-boolean switch values refused; group key removal turns all off; ops list, rows list, declared tables, C-29.32's `where`; fixture's `bundles` gained `project` and project helpers.
+
+**Ran** (with membership's T40-M files from `job/T40/membership` in the tree, uncommitted, for `notTheOwner` and `joinedParticipants`):
+- `node --test test/m/credentials/`: tests 156, pass 156, fail 0.
+- No layer tests named in the manifest.
+- Users' suites (39 modules whose `uses` names credentials): all green except (a) mine: `answers` standing.test.mjs:122 and :273 (R19: `accountFor` now refuses a standing act `AI_USE_SWITCHED_OFF` when the chosen account's `standing` switch is off, before R32; answers maps that code to `no_account`, and its sign-in arm expects `accountFor` to answer the sign-in for a standing act); `op-declarations` t35.test.mjs:196 (R30/R6: my ten new ops have no spec yet, op-declarations' and control-plane's L11 shares); (b) red on `tranche/T40` without my change too, not mine: case-authoring R29, R34; affordances R48; op-declarations R19/R6, R21 ×3; answer-envelope R2/R7.
+- Checks: `format` 0 failures; `architecture` credentials 0 failures; `coverage` 58 of 58; `ownership` 14 files, 0 failures.
+
+**Deferred.** None in this module. After membership merges: merge `tranche/T40`, switch `#notTheOwner` to membership's named export (its fallback goes), rerun module and users' tests, then COMPLETE.
+
+**Found in other modules.** `answers` R19 (two tests above): the fix is answers' (map `AI_USE_SWITCHED_OFF` for a standing act to `switch_off`, and its sign-in arm to the earlier refusal), or BOB's ruling if a standing act should not be gated by R55 in `accountFor`. `op-declarations`/`control-plane`: specs for the ten new ops. Generated artifacts staled by my change: the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`), regenerated at layer close.
+
+Size (session_01WnUBG32qScjJuitEhktbaJ): test runs 12, module lines 3551
+
 ## J1 · QUESTION
 
 Four readings; I carry on with each meanwhile. Only (1) decides what I build for R54's sole-member rule and R59.
