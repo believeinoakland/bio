@@ -2,7 +2,9 @@
    answers an archive's entries as R38 recorded them, and `memberOf(captureSha)` every archive a capture was filed from or
    found in. At the module's interface: the acquisition instance's own methods, over archives captured and opened through
    `acquire` (fixture.mjs `run`). Sight is membership's one rule (its R43) over record-core's `bundles`: a bundle row is
-   written for an archive the record has promoted, and two of membership's tables, as its rule reads them. */
+   written for an archive the record has promoted, and three of membership's tables (its R120 read contract), as its rule
+   reads them. Since D54 (K2408, K2442) an administrator, the founder included, sees a hidden project's contents only as a
+   participant; a project `project_sight` does not hold reads hidden. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, run, sha } from "./fixture.mjs";
@@ -20,7 +22,13 @@ const row = (code) => ({ check: ARCHIVE_CHECKS[code].check, translation: ARCHIVE
 function sight(w) {
   w.rows("CREATE TABLE IF NOT EXISTS members (member_id TEXT PRIMARY KEY, role TEXT, status TEXT)");
   w.rows("CREATE TABLE IF NOT EXISTS project_participants (project_id TEXT, member_id TEXT)");
+  w.rows("CREATE TABLE IF NOT EXISTS project_sight (project_id TEXT PRIMARY KEY, setting TEXT)");
   return {
+    admin(member) { w.rows("INSERT INTO members (member_id, role, status) VALUES (?, 'admin', 'active')", member); },
+    set(project, setting) {
+      w.rows("INSERT INTO project_sight (project_id, setting) VALUES (?, ?) ON CONFLICT(project_id) DO UPDATE SET setting=excluded.setting",
+             project, setting);
+    },
     bundle(id, project = null) {
       w.rows(`INSERT INTO bundles (bundle_id, object_type, group_id, current_state, created, last_updated, bundle_sha, project)
               VALUES (?, 'information', 'g', 'collected', 'T', 'T', 'x', ?)`, id, project);
@@ -134,29 +142,44 @@ test("R41: a waiting entry names the limit or budget it waits on with its figure
   assert.deepEqual([deep.archive.opened, deep.entries.map((e) => [e.state, e.waiting_on, e.limit])], [false, [["waiting", "ARCHIVE_DEPTH_MAX", ARCHIVE_DEPTH_MAX]]]);
 });
 
-test("R41: refusals: BAD_SHA; ARCHIVE_NOT_HELD, the same answer for an archive not held and for one whose home the viewer may not see (membership R43); an entry's bundle the viewer may not see is answered null", async () => {
+test("R41: refusals: BAD_SHA; ARCHIVE_NOT_HELD, the same answer for an archive not held and for one whose home the viewer may not see (membership R43), an administrator and the founder neither invited nor joined to a hidden project included (D54); an entry's bundle the viewer may not see is answered null", async () => {
   const w = world();
   const s = sight(w);
   const z = makeZip([{ name: "a", data: "fenced" }, { name: "b", data: "open" }]);
   await capture(w, z);
   s.bundle("PROJ-1"); s.bundle("INFO-1", "PROJ-1"); s.bundle("INFO-2"); s.bundle("INFO-3", "PROJ-1");
+  s.set("PROJ-1", "hidden");
   w.prov.homes[sha("fenced")] = "INFO-3"; w.prov.homes[sha("open")] = "INFO-2";
   s.join("PROJ-1", "insider");
+  s.admin("boss"); s.admin("joiner"); s.join("PROJ-1", "joiner");
   for (const bad of [null, "", "z".repeat(64), 1]) assert.equal((await w.acq.archiveList({ archiveSha: bad, viewer: ADMIN })).reason, "BAD_SHA");
   const unheld = await w.acq.archiveList({ archiveSha: "a".repeat(64), viewer: ADMIN });
   assert.deepEqual([unheld.ok, unheld.reason, unheld.check, unheld.translation], [false, "ARCHIVE_NOT_HELD", row("ARCHIVE_NOT_HELD").check, row("ARCHIVE_NOT_HELD").translation]);
-  /* the archive's home belongs to a project the outsider is not in */
+  /* the archive's home belongs to a hidden project: an outsider, an active administrator and the founder (either
+     spelling) neither invited nor joined to it are answered exactly as for an archive not held (D54) */
   w.prov.homes[sha(z)] = "INFO-1";
-  const hidden = await w.acq.archiveList({ archiveSha: sha(z), viewer: "member:outsider" });
   const norm = (x) => JSON.stringify({ ...x, archive: undefined });
-  assert.equal(norm(hidden), norm(unheld), "the same answer, so the two cannot be told apart");
+  for (const viewer of ["member:outsider", "member:boss", "admin", "member:admin"])
+    assert.equal(norm(await w.acq.archiveList({ archiveSha: sha(z), viewer })), norm(unheld), `${viewer}: the same answer, so the two cannot be told apart`);
   assert.equal((await w.acq.archiveList({ archiveSha: sha(z), viewer: "nobody-recognised" })).reason, "ARCHIVE_NOT_HELD");
-  /* negative control: a participant sees it, and an entry's bundle is answered only where the viewer may see it */
-  const insider = await w.acq.archiveList({ archiveSha: sha(z), viewer: "member:insider" });
-  assert.deepEqual(insider.entries.map((e) => e.bundle), ["INFO-3", "INFO-2"]);
+  /* negative controls: a participant, an administrator who joined, and a machine credential see it, each entry's bundle
+     answered; a project the sight index does not hold reads hidden, as membership R43 states */
+  for (const viewer of ["member:insider", "member:joiner", ADMIN])
+    assert.deepEqual((await w.acq.archiveList({ archiveSha: sha(z), viewer })).entries.map((e) => e.bundle), ["INFO-3", "INFO-2"], viewer);
+  w.rows("DELETE FROM project_sight WHERE project_id = 'PROJ-1'");
+  assert.equal((await w.acq.archiveList({ archiveSha: sha(z), viewer: "member:boss" })).reason, "ARCHIVE_NOT_HELD", "unindexed reads hidden");
+  /* a discoverable project stays seen whole by administrators, the founder included, and never by an outsider */
+  s.set("PROJ-1", "discoverable");
+  for (const viewer of ["member:boss", "admin", "member:admin"])
+    assert.deepEqual((await w.acq.archiveList({ archiveSha: sha(z), viewer })).entries.map((e) => e.bundle), ["INFO-3", "INFO-2"], viewer);
+  assert.equal((await w.acq.archiveList({ archiveSha: sha(z), viewer: "member:outsider" })).reason, "ARCHIVE_NOT_HELD");
+  /* an entry's bundle: answered only where the viewer may see it */
+  s.set("PROJ-1", "hidden");
   w.prov.homes[sha(z)] = "INFO-2";
-  const outsider = await w.acq.archiveList({ archiveSha: sha(z), viewer: "member:outsider" });
-  assert.deepEqual(outsider.entries.map((e) => e.bundle), [null, "INFO-2"], "the fenced file's bundle is null for the outsider");
+  for (const viewer of ["member:outsider", "member:boss", "admin"])
+    assert.deepEqual((await w.acq.archiveList({ archiveSha: sha(z), viewer })).entries.map((e) => e.bundle), [null, "INFO-2"], `${viewer}: the fenced file's bundle is null`);
+  assert.deepEqual((await w.acq.archiveList({ archiveSha: sha(z), viewer: "member:insider" })).entries.map((e) => e.bundle), ["INFO-3", "INFO-2"],
+                   "negative control: a participant is answered it");
 });
 
 test("R41: memberOf answers every archive a capture was filed from or found in, `[]` for none; it writes nothing and never throws", async () => {
@@ -250,11 +273,19 @@ test("R41: an office file opened before T36 (R38 now refuses one, K2100) is stil
   const hidden = docxOf("hidden");
   await w.b.put(`bio/captures/${sha(hidden)}`, hidden);
   w.prov.recordReceipt({ address: URL1, addressNorm: URL1, captureSha: sha(hidden), retrieved: "2026-01-01T00:00:00Z", via: "direct" });
-  s.bundle("PROJ-9"); s.bundle("INFO-9", "PROJ-9");
+  s.bundle("PROJ-9"); s.bundle("INFO-9", "PROJ-9"); s.set("PROJ-9", "hidden");
   w.prov.homes[sha(hidden)] = "INFO-9";
-  const r = await w.acq.archiveList({ archiveSha: sha(hidden), viewer: "member:outsider" });
-  assert.deepEqual([r.reason, r.check, "format" in r], ["ARCHIVE_NOT_HELD", row("ARCHIVE_NOT_HELD").check, false]);
-  /* negative control: a project participant is told what it is */
+  s.admin("boss");
+  /* an outsider, and (D54) an administrator and the founder neither invited nor joined to the hidden project */
+  for (const viewer of ["member:outsider", "member:boss", "admin", "member:admin"]) {
+    const r = await w.acq.archiveList({ archiveSha: sha(hidden), viewer });
+    assert.deepEqual([r.reason, r.check, "format" in r, "part" in r], ["ARCHIVE_NOT_HELD", row("ARCHIVE_NOT_HELD").check, false, false], viewer);
+  }
+  /* negative controls: a project participant is told what it is; so is an administrator once the project is discoverable */
   s.join("PROJ-9", "insider");
   assert.equal((await w.acq.archiveList({ archiveSha: sha(hidden), viewer: "member:insider" })).reason, "NOT_AN_ARCHIVE");
+  s.set("PROJ-9", "discoverable");
+  for (const viewer of ["member:boss", "admin"])
+    assert.equal((await w.acq.archiveList({ archiveSha: sha(hidden), viewer })).reason, "NOT_AN_ARCHIVE", viewer);
+  assert.equal((await w.acq.archiveList({ archiveSha: sha(hidden), viewer: "member:outsider" })).reason, "ARCHIVE_NOT_HELD");
 });
