@@ -67,7 +67,10 @@ export function world(deps = {}) {
   const registry = deps.registry ?? createRegistry();
   let tick = 0;
   const clock = () => new Date(Date.parse(NOW) + 1000 * tick++).toISOString();
-  const h = hypothesesOf(host, { record, membership, promotion, registry, now: clock, ...deps });
+  /* R19: inquiry's record read for its person test (`personFacts`); a world here holds no entities, so it names none
+     unless a test gives its own (the real inquiry needs the modules beneath it, which this world does not build). */
+  const inquiry = deps.inquiry ?? { personFacts: () => [] };
+  const h = hypothesesOf(host, { record, membership, promotion, registry, now: clock, ...deps, inquiry });
   for (const [m, role] of [["ann", "member"], ["outsider", "member"], ["boss", "admin"]])
     st.sql.exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES (?, 'c', ?, 'active', '2026-01-01', '2026-01-01')`, m, role);
   let n = 0;

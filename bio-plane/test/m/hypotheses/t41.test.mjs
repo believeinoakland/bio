@@ -244,15 +244,28 @@ test("R19 a note naming a person in no public role carries inquiry R59's warning
   assert.deepEqual([t.h.noteShare({ note: n, project: PROJ, by: ANN }).ok], [true]);
 });
 
-test("R19 with no test injected, noteShare asks inquiry R59's own personWarning (K2479) and answers and records exactly what it answers (red until inquiry's T41 merge exports it)", () => {
-  assert.equal(typeof inquiryModule.personWarning, "function", "inquiry exports personWarning (its R59)");
-  const w = setup();
-  for (const text of [`I think ${E3} is behind it.`, "The minutes were late."]) {
+test("R19 with no stand-in test, noteShare asks inquiry R59's own personWarning (K2479) over inquiry's facts for the persons the note names (personFacts, read as its author), answering and recording exactly what it answers; a person in a public role, or none named, warns nothing", () => {
+  const ROE = { entity_id: "ENT-2026-0003", kind: "person", label: "Jane Roe", public_role: false, named: true };
+  const CLERK = { entity_id: "ENT-2026-0004", kind: "person", label: "Kim Clerk", public_role: true, named: true };
+  const asked = [];
+  const personFacts = ({ text, viewer }) => { asked.push([text, viewer]); return [ROE, CLERK].filter((e) => text.includes(e.label)); };
+  const w = setup({ inquiry: { personFacts } });
+  const cases = [["Jane Roe was at the meeting.", true], ["Kim Clerk signed it.", false], ["The minutes were late.", false]];
+  for (const [text, warns] of cases) {
     const n = w.h.noteWrite({ text, by: ANN }).note;
     const r = w.h.noteShare({ note: n, project: PROJ, by: ANN });
-    const expected = inquiryModule.personWarning({ text, entities: [], viewer: ANN }) ?? null;
+    const expected = inquiryModule.personWarning({ text, entities: personFacts({ text, viewer: ANN }), viewer: ANN });
     assert.deepEqual([r.ok, r.warning ?? null], [true, expected], text);
+    assert.equal(expected !== null, warns, text);
+    assert.deepEqual(asked.at(-2), [text, ANN], "asked of the note's words, as its author");
   }
+  const [warned] = w.h.sharesOf({ project: PROJ, viewer: VERA }).shares.filter((s) => s.warning);
+  assert.deepEqual([warned.text, warned.warning.code, warned.warning.persons], ["Jane Roe was at the meeting.", "PERSON_IN_NO_PUBLIC_ROLE", [{ entity_id: ROE.entity_id, label: "Jane Roe" }]]);
+  /* a read that throws warns nothing and refuses nothing */
+  const t = setup({ inquiry: { personFacts: () => { throw new Error("boom"); } } });
+  const n = t.h.noteWrite({ text: "Jane Roe again.", by: ANN }).note;
+  const x = t.h.noteShare({ note: n, project: PROJ, by: ANN });
+  assert.deepEqual([x.ok, "warning" in x], [true, false]);
 });
 
 /* ---- R20 ---------------------------------------------------------------------------------------------------------- */
