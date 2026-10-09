@@ -37,7 +37,7 @@ test("R17: findRecipients: joined participants of every drawing project, less wh
   assert.deepEqual([p.recipients, p.truncated, p.next], [["ann"], true, { after: "ann" }]);
   assert.deepEqual(w.s.findRecipients({ question: Q, limit: 1, after: "ann" }).recipients, ["bob"]);
   /* a failed read answers no list, never a partial one */
-  const f = world({ legEarning: null });
+  const f = world({ legEarning: {} });
   assert.equal(f.s.findRecipients({ question: Q }).ok, false);
   void CAT; void OUT; void PH;
 });
@@ -53,9 +53,8 @@ test("R23: a PRESENT at a subject a step's look found absent gives the step a la
   const lookRow = w.rows(`SELECT * FROM observation_log WHERE authority = ?`, id)[0];
   assert.deepEqual(w.s.step({ step: id, viewer: ANN }).later_found, []);
   /* what arrives: a capture filed in a bundle everyone sees */
-  w.st.db.exec(`CREATE TABLE register (capture_sha TEXT PRIMARY KEY, bundle_id TEXT NOT NULL)`);
   w.bundle("INFO-2026-0001-doc", { type: "information" });
-  w.rows(`INSERT INTO register VALUES (?, ?)`, "c".repeat(64), "INFO-2026-0001-doc");
+  w.capture("c".repeat(64), "INFO-2026-0001-doc");
   assert.equal(w.observationLog.observe({ actor_class: "plane", authority_kind: "acquire", authority: "INFO-2026-0001-doc", level: "document",
     subject_kind: "address", subject: "https://example.org/contract.pdf", state: "PRESENT", result_kind: "capture", result_ref: "c".repeat(64), detail: "new" }), null);
   const lf = w.s.step({ step: id, viewer: ANN }).later_found;
@@ -75,7 +74,7 @@ test("R23: a PRESENT at a subject a step's look found absent gives the step a la
   const s2 = w.step({ work: "other", by: ANN });
   w.observationLog.observe({ ...look, authority: s2, subject: "https://example.org/b.pdf", state: "LOOKED_INDETERMINATE", condition: null });
   w.bundle("INFO-2026-0002-hid", { type: "information", project: PH });
-  w.rows(`INSERT INTO register VALUES (?, ?)`, "d".repeat(64), "INFO-2026-0002-hid");
+  w.capture("d".repeat(64), "INFO-2026-0002-hid");
   w.observationLog.observe({ actor_class: "plane", authority_kind: "acquire", authority: "INFO-2026-0002-hid", level: "document",
     subject_kind: "address", subject: "https://example.org/b.pdf", state: "PRESENT", result_kind: "capture", result_ref: "d".repeat(64), detail: "new" });
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM step_later_found WHERE step_id = ?`, s2)[0].n, 1, "the entry is kept");

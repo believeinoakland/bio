@@ -128,7 +128,7 @@ test("R4: the reads answer the step's fields, stepsOn's header the question's pr
   /* a state filter */
   assert.equal(w.s.stepsOn({ question: Q, viewer: ANN, state: "underway" }).steps.length, 0);
   /* never throws, whatever it is handed; leg-earning absent answers the header undetermined */
-  const bare = world({ legEarning: null });
+  const bare = world({ legEarning: {} });
   bare.step();
   assert.equal(bare.s.stepsOn({ question: Q, viewer: ANN }).projects.undetermined, true);
   for (const bad of [undefined, null, 5, {}, { question: {} }]) assert.doesNotThrow(() => w.s.stepsOn(bad ?? undefined));

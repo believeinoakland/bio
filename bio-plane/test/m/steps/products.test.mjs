@@ -18,11 +18,9 @@ test("R9: a member ties a record she may see; the in-process door ties what its 
   assert.equal(w.s.stepProduct({ step: id, record: SHA, by: BOB }).code, "STEP_BAD_PRODUCT", "a digest names its kind");
   assert.equal(w.s.stepProduct({ step: id, record: { kind: "capture", id: "short" }, by: BOB }).code, "STEP_BAD_PRODUCT");
   /* capture, content and a derived connection, each by its own sight */
-  w.st.db.exec(`CREATE TABLE register (capture_sha TEXT PRIMARY KEY, bundle_id TEXT NOT NULL)`);
-  w.st.db.exec(`CREATE TABLE content (content_id TEXT PRIMARY KEY, bundle_id TEXT)`);
-  w.rows(`INSERT INTO register VALUES (?, ?)`, SHA, "INFO-2026-0001-doc");
-  w.rows(`INSERT INTO register VALUES (?, ?)`, SHA2, "INFO-2026-0002-hid");
-  w.rows(`INSERT INTO content VALUES (?, ?)`, SHA, "INFO-2026-0001-doc");
+  w.capture(SHA, "INFO-2026-0001-doc");
+  w.capture(SHA2, "INFO-2026-0002-hid");
+  w.passage(SHA, SHA, "INFO-2026-0001-doc");
   assert.equal(w.s.stepProduct({ step: id, record: { kind: "capture", id: SHA }, by: BOB }).ok, true);
   assert.equal(w.s.stepProduct({ step: id, record: { kind: "capture", id: SHA2 }, by: BOB }).code, "NO_SUCH_PRODUCT");
   assert.equal(w.s.stepProduct({ step: id, record: { kind: "content", id: SHA }, by: BOB }).ok, true);

@@ -1,13 +1,19 @@
 /* steps over the modules it uses, each the real one (record-core, membership, promotion, observation-log), on a real
    SQLite database (node:sqlite) standing in for a Durable Object's storage, at the plane's shape (`sql.exec` answers a
-   cursor). `leg-earning`'s R13 and R14 are not yet merged (same layer, T41): `draws` stands in for them, answering
-   exactly as their requirements say (every project drawing on a question, paged; the ones not hidden, to a viewer who
-   sees the question), until the real module reaches this job. Every test drives `steps` at its interface. */
+   cursor). `leg-earning` is the real one too (its R13 and R14, merged K2485), over the real `connections`, with the
+   modules it is made over; a project draws on a question when its document holds a `cites` reference to it
+   (`connections`' `refs`, written here as its projection writes them). Every test drives `steps` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
+import { provenanceOf } from "../../../src/provenance/index.mjs";
+import { contentOf } from "../../../src/content/index.mjs";
+import { extractionOf } from "../../../src/extraction/index.mjs";
+import { entitiesOf } from "../../../src/entities/index.mjs";
+import { connectionsOf } from "../../../src/connections/index.mjs";
+import { legEarningOf } from "../../../src/leg-earning/index.mjs";
 import { stepsOf, STEPS_TABLES, FOLLOWS_TABLE } from "../../../src/steps/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -64,31 +70,28 @@ export function world(opts = {}) {
   promotion.registerFact("caseMember", "publication", () => false);
   const observationLog = observationLogOf(host, { record, membership, provenance: null, extraction: null, now: () => Date.parse(clockNow()) });
   observationLog.migrate();
-  /* the stand-in for leg-earning R13, R14 */
-  const draws = new Map();
-  const drawing = (q) => [...(draws.get(q) ?? [])].sort();
-  const standIn = {
-    projectsDrawingOnPaged({ id, after = null, limit = 500 }) {
-      const all = drawing(id).filter((p) => !after || p > after);
-      const page = all.slice(0, limit);
-      return { projects: page.map((p) => ({ id: p })), cursor: all.length > limit ? page[page.length - 1] : null };
-    },
-    projectsShownOn({ id, viewer }) {
-      if (!membership.inSight(id, viewer)) return { projects: [], truncated: false };
-      return { projects: drawing(id).filter((p) => membership.visibilityOf(p) === "discoverable")
-        .map((p) => ({ id: p, name: record.bundleInfo(p)?.title ?? null })), truncated: false };
-    },
-  };
+  const prov = provenanceOf(host, { record, membership, promotion, now: () => NOW });
+  prov.migrate();
+  const extraction = extractionOf(host, { record, membership, calibration: { onCalibration() { return { ok: true }; } } });
+  extraction.migrate();
+  const content = contentOf(host, { record, membership, provenance: prov, extraction, now: () => NOW });
+  content.migrate();
+  const entities = entitiesOf(host, { record, membership, provenance: prov, now: () => NOW });
+  entities.migrate();
+  const connections = connectionsOf(host, { record, membership, promotion, content, extraction, capture: {}, entities });
+  connections.migrate();
+  const legEarning = opts.legEarning !== undefined ? opts.legEarning
+    : legEarningOf(host, { record, membership, promotion, content, connections, entities, provenance: prov, now: () => NOW });
   let tick = 0;
   function clockNow() { return w ? w.clock : NOW; }
   const w = {
-    st, host, record, membership, promotion, observationLog, draws, clock: NOW,
+    st, host, record, membership, promotion, observationLog, legEarning, clock: NOW,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     tick() { tick++; },
   };
   const now = () => { const t = Date.parse(w.clock) + 1000 * tick++; return new Date(t).toISOString(); };
   const view = opts.zone === false ? () => null : () => ({ time_zone: { value: "America/Los_Angeles" } });
-  w.s = stepsOf(host, { record, membership, promotion, observationLog, legEarning: opts.legEarning === undefined ? standIn : opts.legEarning, view, now });
+  w.s = stepsOf(host, { record, membership, promotion, observationLog, legEarning, view, now });
   for (const [m, role] of [["ann", "member"], ["bob", "member"], ["cat", "member"], ["dan", "member"], ["out", "member"], ["boss", "admin"]])
     st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, created, updated) VALUES (?, 'c', ?, ?, 'active', '2026-01-01', '2026-01-01')`, m, `${m}-h`, role);
   w.bundle = (id, { type = "inquiry", project = "", title = `t ${id}` } = {}) => {
@@ -110,7 +113,8 @@ export function world(opts = {}) {
   w.project(PH, "hidden", "cat", "Hidden Project");
   w.project(PD, "discoverable", "dan", "Project Dee");
   w.bundle(Q); w.bundle(Q2); w.bundle(QP1, { project: P1 }); w.bundle(QH, { project: PH });
-  w.draw = (q, ...ps) => { const s = draws.get(q) ?? new Set(); for (const p of ps) s.add(p); draws.set(q, s); };
+  /** Projects drawing on a question: each project's document cites it (connections' `refs`, R19's projection). */
+  w.draw = (q, ...ps) => { for (const p of ps) st.sql.exec(`INSERT OR IGNORE INTO refs (bundle_id, target_id, kind) VALUES (?, ?, 'cites')`, p, q); };
   /* a machine holding run R1 for Ann */
   w.runs = () => w.s.registerRunHolder("ai-runs", (by, run) => (by === AI && run === "RUN-1" ? { enabled_by: "ann-h's assistant", principal: ANN } : null));
   /** A step, created by `by` (Ann by default), its id; throws when refused. */
@@ -121,6 +125,12 @@ export function world(opts = {}) {
   };
   w.promote = (id, legs) => promotion.promote({ bundleId: id, base: null, snapKey: `k-${id}`, author: ANN,
     files: [{ path: "bundle.md", text: inquiryMd(id, legs) }], meta: { object_type: "inquiry" } });
+  /** A capture filed in a bundle (provenance's `register`, R48), and a passage of it (content's `content`, R45), as
+   *  their owners write them. */
+  w.capture = (sha, bundle) => st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered)
+                                            VALUES (?, ?, 'd.pdf', 'binary', 1, ?)`, sha, bundle, NOW);
+  w.passage = (id, sha, bundle) => st.sql.exec(`INSERT INTO content (content_id, capture_sha, bundle_id, extent_kind, extent, ref, minted_by, at)
+                                                VALUES (?, ?, ?, 'document', '{}', 'whole', 'plane', ?)`, id, sha, bundle, NOW);
   w.tables = () => [...STEPS_TABLES.map((t) => t.name), FOLLOWS_TABLE];
   /** Every row of every steps table, for "nothing was written". */
   w.snapshot = () => JSON.stringify(w.tables().map((t) => w.rows(`SELECT * FROM ${t}`)));
