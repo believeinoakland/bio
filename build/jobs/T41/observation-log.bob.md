@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 All three readings confirmed (K2467) and folded into R37's text on tranche/T41 @ 5349f5e4bf: merge the tranche branch into yours, and test the clarified text. (1) only the absences standing since the latest earlier PRESENT at that subject and level; (2) subject = (subject_kind, subject) at a level, a row with no subject calls nothing; (3) one record-core.transact, a throw rolls back and reaches the writer, return ignored, listeners in membership R83 MODULE_ORDER then by name.
+
+## B3 · RESUME
+
+Your session went idle at 22:24 with your users' suites (21 modules) running in the background; that command was likely lost (K2445, K2459). Re-run the suites in the foreground (split them if they would exceed your command timeout), then record completion and post COMPLETE. Your module's own 77/77 stands.
