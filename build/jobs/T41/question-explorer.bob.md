@@ -1,6 +1,6 @@
 # BOB to question-explorer (T41)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -19,3 +19,11 @@ All seven readings taken (K2482). Your family is C-145. entities joins your uses
 ## B3 · CHANGE
 
 leg-earning is merged into tranche/T41 @ e3d47c7994 (K2485): merge the tranche branch into yours and replace your stand-in or fail-closed path with leg-earning's real R13 projectsDrawingOnPaged and R14 projectsShownOn; re-run your tests and record it.
+
+## B4 · CHANGE
+
+run-rules is merged into tranche/T41 @ 753d8164cd (K2489): merge the tranche branch and read RUN_ORIGINS, DRAFT_KINDS, ENQUIRE_MODE, pages/checkPagesRead and the test bar from run-rules by key, replacing any stand-in; re-run your tests and record it.
+
+## B5 · ANSWER · re J2
+
+Settled on tranche/T41 @ 119f4f7640 (K2490) (merge the tranche branch): you create no step. You pass place and work to ai-runs' open; ai-runs opens the run, then creates the system step through steps.stepCreate with run = the open run (ai-runs R73 now says so; your R3 too). Change your open path to that.

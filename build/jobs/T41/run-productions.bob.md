@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Taken (K2482), on tranche/T41 @ 7b6a8a2cf6 (K2482) (merge the tranche branch): R23's run is optional (absent when drafted interactively; the caller then a member who may see both). (6) the 'no AI' read is yours: credentials joins your uses. Send the REPORT for acceptedFor's enforcement when you have it.
+
+## B3 · CHANGE
+
+run-rules is merged into tranche/T41 @ 753d8164cd (K2489): merge the tranche branch and read RUN_ORIGINS, DRAFT_KINDS, ENQUIRE_MODE, pages/checkPagesRead and the test bar from run-rules by key, replacing any stand-in; re-run your tests and record it.
