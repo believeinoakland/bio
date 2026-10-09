@@ -190,6 +190,7 @@ interface is the members below and nothing else; every other field is private.
 - **R31** `pageDict(pageIdx)` returns the resolved dict (`map`) of the page at 0-based `pageIdx` in page
   order; `null` when `pageIdx` is not an integer in `[0, pageCount)` or the page object is unresolvable.
   Its result is a valid `pageMap` for `pageShowsText` (R15).
+- **R38** (T40; N813, K2351, K2390) A string value the reader answers is `{t:"str", v, raw}`: `raw` is the string's bytes exactly as the file states them (a literal's escapes and a hex string's digits decoded, an odd final hex digit read as followed by 0, per the PDF syntax), as a `Uint8Array`; `v` is its text, UTF-16BE decoded after the `FE FF` mark when `raw` begins with it, otherwise each byte as one code unit. A caller that writes a string back writes `raw`, so no string, binary or odd-length, loses or changes a byte.
 - **R20** `resolve(v)` follows an indirect-reference chain (`{t:"ref", n, g}`) up to 64 hops and
   returns the resolved value, or `null` for an unresolvable reference, a reference cycle beyond the cap,
   or a non-reference value passed through unchanged.
@@ -204,7 +205,7 @@ interface is the members below and nothing else; every other field is private.
   deflate stream with no zlib header) and PNG-un-predicted per `/DecodeParms /Predictor` (≥10; the
   `/Colors`, `/Columns`, `/BitsPerComponent` it names, defaulting 1/1/8) when every filter in the chain
   is `FlateDecode`/`Fl`; `null` for any other filter, an unreadable stream, or a decode failure — the
-  caller treats `null` as "cannot resolve," never as empty bytes.
+  caller treats `null` as "cannot resolve," never as empty bytes. `streamDecoded` is asynchronous: it answers a Promise of those bytes or `null`, and never rejects (T40; N813, K2390).
 - **R23** `isEncrypted()` reports whether any object in the file carries `/Filter /Standard` with a
   numeric `/R` (the Standard Security Handler dictionary, which the standard requires stay
   unencrypted); cached after the first call.

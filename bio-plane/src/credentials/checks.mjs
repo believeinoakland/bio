@@ -163,8 +163,10 @@ export const ACCOUNT_CHECKS = Object.freeze({
   }),
   UNKNOWN_SWITCH: Object.freeze({
     check: 'C-29.21', where: at("#switchName", "is-account-switch"),
-    translation: 'That is not one of the assistant\'s switches. There are two: suggestions, and standing questions. '
-      + 'Nothing was changed.',
+    /* T40 (T40-3; R55): re-worded, an account now holds a switch for each kind of use. Awaiting promotion's stamp
+       (T40-4). */
+    translation: 'That is not one of the assistant\'s switches for this account. There is one for each kind of use '
+      + '(asking, drafting, runs, standing questions and exploring), and one for suggestions. Nothing was changed.',
   }),
   ACCOUNT_SEAL_UNAVAILABLE: Object.freeze({
     check: 'C-29.22', where: at("#sealRefusal", "is-seal-bound"),
@@ -216,8 +218,44 @@ export const ACCOUNT_CHECKS = Object.freeze({
       + 'account and not your own. An administrator turned this on and gave the reason shown. If you think this '
       + 'should change, ask an administrator. Nothing was sent.',
   }),
+  /* T40 (T40-3; N812, D34, D38, K2352, K2353, K2404): a project's account (R54), the switches' values (R55), the
+     account used (R56), a project's material limit (R57) and its key's notice (R58), the next free numbers of C-29 at
+     the job's START (C-29.34–.39). New rows, awaiting promotion's stamp (T40-4). */
+  PROJECT_NOT_SOLE_MEMBER: Object.freeze({
+    check: 'C-29.34', where: at("projectSigninSet", "is-project-sole-member"),
+    translation: 'Your own Claude sign-in can pay for a project only while you are its only member. This project has '
+      + 'other members, so it can use an Anthropic API key instead. Nothing was changed.',
+  }),
+  SIGNIN_NOT_CONNECTED: Object.freeze({
+    check: 'C-29.35', where: at("projectSigninSet", "is-signin-connected"),
+    translation: 'You have not connected your Claude subscription, so there is no sign-in of yours to use for this '
+      + 'project. Sign in with your Claude subscription through Claude Code first. Nothing was changed.',
+  }),
+  SWITCH_VALUE_INVALID: Object.freeze({
+    check: 'C-29.36', where: at("#valueInvalid", "is-switch-value"),
+    translation: 'That is not a value this setting takes. Exploring takes no, ask every day or yes; every other '
+      + 'switch is on or off; a limit on material names the kinds of use it covers. Nothing was changed.',
+  }),
+  AI_USE_SWITCHED_OFF: Object.freeze({
+    check: 'C-29.37', where: at("#switchedOff", "is-use-switched-on"),
+    translation: 'The Claude account that pays for this is switched off for this kind of use, so the assistant was not '
+      + 'used. Whoever holds that account can switch it on. Nothing was sent.',
+  }),
+  PROJECT_AI_KEPT_AWAY: Object.freeze({
+    check: 'C-29.38', where: at("aiKeptAway", "is-project-kept-away"),
+    translation: 'This project keeps its material away from the assistant for this kind of use, so no assistant was '
+      + 'used. One of its owners turned this on and gave the reason shown. If you think this should change, ask an '
+      + 'owner of the project. Nothing was sent.',
+  }),
+  PROJECT_KEY_NOTICE_DUE: Object.freeze({
+    check: 'C-29.39', where: at("#projectNoticeDue", "is-project-key-notice-seen"),
+    translation: 'Before the assistant answers you under this project\'s account, read one short notice: your '
+      + 'questions, and the material read to answer them, go to Anthropic under the project\'s API account. Confirm '
+      + 'you have read it, then ask again. Nothing was sent.',
+  }),
+  /* T40 (T40-3): its `where` moves to `#keepAwayReason`, the one site R51 and R57 share (a row change for T40-4). */
   AI_KEEP_AWAY_NO_REASON: Object.freeze({
-    check: 'C-29.32', where: at("aiKeepAwaySet", "is-keep-away-reason"),
+    check: 'C-29.32', where: at("#keepAwayReason", "is-keep-away-reason"),
     translation: 'Keeping the group\'s material away from every assistant needs a reason, which every member will '
       + 'read: from 1 to 2,000 characters. Nothing was changed.',
   }),

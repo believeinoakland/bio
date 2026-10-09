@@ -22,6 +22,7 @@
 | `docs/architecture/BIO_Intake_Doctrine_v1_1.md` | whole | how material enters the record: provenance, the intake contract, capture grades |
 | `docs/architecture/BIO_Membership_Architecture_v2.md` | whole | members, administrators, capabilities, invitations, projects, verified export |
 | `docs/architecture/BIO_Case_Making_v0_1.md` | whole except §2's action paragraphs and §THE ACTION PLAN (history since K608; `BIO_Action_v0_1.md` governs them) | the inquiry, the claim, the case |
+| `docs/architecture/BIO_Investigation_v0_1.md` | whole | the project as an investigation (under construct 8): the objective and its condition, steps, saving steps and questions, the system's part, AI use, the first message, narrative and evidence, people, and what is new in publishing a case (K2417, K2419, K2420) |
 | `docs/architecture/BIO_Action_v0_1.md` | whole | the Action layer (construct 16): standards, determinations, consequences, action plans, actions, filings and communications, escalation (K608 (1); its working papers in `docs/development/action-design/`) |
 | `docs/architecture/BIO_Declared_Bias_v0_1.md` | whole | bias as a declared, justified construct; hunch debt; masking safeguards |
 | `docs/architecture/BIO_Interaction_Constructs_v0_1.md` | whole | QUEUE and ACT, the rung ladder, UNDETERMINED as a display primitive |

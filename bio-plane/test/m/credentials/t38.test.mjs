@@ -48,8 +48,9 @@ test("R22 the kind is `apikey` only: `subscription` (and any other) is refused U
 test("R35 R43 a member with no reference of their own who is connected is answered {kind: signin, level: member, member}, carrying no secret, for each of their own acts; their own key comes first, the sign-in before the group key (no notice asked); it writes nothing", async () => {
   const w = await world().group("ann", "bob");
   w.c.subscriptionConnected({ member: "ann" });
+  w.c.accountUsesSet({ owner: "member:ann", switch: "standing", on: true, by: "ann" });   /* R55: standing off by default */
   const before = w.snapshot();
-  for (const kind of ["ask", "run", "standing"])
+  for (const kind of ["ask", "draft", "run", "standing"])
     for (const [member, actor] of [["ann", "ann"], ["member:ann", "ann"], ["ann", "member:ann"]]) {
       const r = await w.c.accountFor({ member, act: { kind, member: actor } });
       assert.deepEqual(r, signin("ann"), `${kind} ${member} ${actor}`);
@@ -120,9 +121,10 @@ test("R35 R23 R24 R25 a `subscription` reference stored before T38 is never answ
   assert.equal((await w.c.aiGrantAdmit({ token: bobStanding, op: "search" })).ok, true, "another member's standing grant stands");
   for (const id of ["ann", "cy"])
     assert.deepEqual(w.c.accountReferenceState({ member: id, viewer: id }),
-      { ok: true, held: false, kind: null, set_at: null, suggestions: false, standing: false,
-        subscription: id === "cy" ? { connected: true, since: w.c.accountReferenceState({ member: "cy", viewer: "cy" }).subscription.since }
-                                  : { connected: false, since: null } }, id);
+      { ok: true, held: false, kind: null, set_at: null, suggestions: false, standing: false, uses: null,
+        subscription: id === "cy" ? { connected: true, since: w.c.accountReferenceState({ member: "cy", viewer: "cy" }).subscription.since,
+                                      uses: { ask: true, draft: true, run: true, standing: false, explore: "no", suggestions: false } }
+                                  : { connected: false, since: null, uses: null } }, id);
   assert.deepEqual(await w.c.accountFor({ member: "bob", act: ask("bob") }), { ok: true, kind: "apikey", level: "member", key: "sk-bob" });
   const after = w.snapshot();
   w.c.migrate();

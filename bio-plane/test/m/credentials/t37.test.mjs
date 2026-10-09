@@ -186,7 +186,7 @@ test("R35 aiKeptAway answers null while the group does not keep its material awa
   assert.deepEqual(shape(k), row(ACCOUNT_CHECKS, "AI_KEPT_AWAY"));
   assert.deepEqual(Object.keys(k).sort(), ["check", "code", "detail", "keep_away", "ok", "reason", "translation"]);
   assert.deepEqual(k.keep_away, { reason: "A confidentiality order.", set_by: "second", set_at: set.set_at });
-  const { on, ...state } = w.c.aiKeepAwayState();
+  const { on, uses, ...state } = w.c.aiKeepAwayState();
   assert.deepEqual([on, k.keep_away], [true, state]);
   assert.equal(ACCOUNT_CHECKS.AI_KEPT_AWAY.where, "src/credentials/index.mjs aiKeptAway > is-kept-away");
   for (const r of [await w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
@@ -216,7 +216,7 @@ test("R35 aiKeptAway fails closed: when the setting cannot be read it answers th
 
 test("R51 keep-away's reason refusal is AI_KEEP_AWAY_NO_REASON on row C-29.32, its number unmoved; the module holds no `NO_REASON` code of its own, so progressions' NO_REASON (C-100.18) reads its own row", () => {
   assert.deepEqual([ACCOUNT_CHECKS.AI_KEEP_AWAY_NO_REASON.check, ACCOUNT_CHECKS.AI_KEEP_AWAY_NO_REASON.where],
-    ["C-29.32", "src/credentials/index.mjs aiKeepAwaySet > is-keep-away-reason"]);
+    ["C-29.32", "src/credentials/index.mjs #keepAwayReason > is-keep-away-reason"]);   /* T40: shared with R57's project limit */
   for (const f of [ACCOUNT_CHECKS, AI_CREDENTIAL_CHECKS, SIGN_IN_CHECKS]) assert.ok(!("NO_REASON" in f));
 });
 

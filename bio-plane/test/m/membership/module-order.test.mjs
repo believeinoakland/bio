@@ -58,13 +58,16 @@ const SINCE_T33 = [["sheet-worker", "file-scanner", "record-core"], ["capture", 
                    ["membership", "project-roster", "credentials"],
                    /* T39-M (N806, N807; K657, K2333, K2343): `doc-clean` directly after `image-cover` in layer 1,
                       `setup-words` directly before `instance-setup` in layer 11. */
-                   ["image-cover", "doc-clean", "pdf-worker"], ["setup-page", "setup-words", "instance-setup"]];
+                   ["image-cover", "doc-clean", "pdf-worker"], ["setup-page", "setup-words", "instance-setup"],
+                   /* T40-M (N812 B10; K657, K2373, K2389): `ai-use` directly after `run-rules` in layer 6. */
+                   ["run-rules", "ai-use", "ai-runs"]];
 /* Listed in the file before its job builds it (K1043's form: empty `paths`), tolerated by name until that merge
    (T33-19a's rule). The T33, T36 and T38 modules so tolerated have all merged (T38's `file-safety` and
-   `project-roster` among them), so none is tolerated any longer; T39-M (K2343): `setup-words`, until its L11 job. */
-const NOT_YET_BUILT = ["setup-words"];
+   `project-roster` among them), so none is tolerated any longer; T39-M (K2343): `setup-words`, until its L11 job;
+   T40-M (K2373): `ai-use`, until its L6 job (T40-7). */
+const NOT_YET_BUILT = ["setup-words", "ai-use"];
 
-test("R83 T36-6 T37-44 T38-4 T39-M MODULE_ORDER holds the modules added since T33 in the file's places: file-scanner, file-safety, law-relations, op-grades, answer-envelope, store-door, image-cover, project-roster, doc-clean, setup-words", async () => {
+test("R83 T36-6 T37-44 T38-4 T39-M T40-M MODULE_ORDER holds the modules added since T33 in the file's places: file-scanner, file-safety, law-relations, op-grades, answer-envelope, store-door, image-cover, project-roster, doc-clean, setup-words, ai-use", async () => {
   const modules = await modulesJson();
   const layerOf = new Map(modules.map((m) => [m.id, m.layer]));
   for (const [before, id, after] of SINCE_T33) {
@@ -72,7 +75,7 @@ test("R83 T36-6 T37-44 T38-4 T39-M MODULE_ORDER holds the modules added since T3
     assert.ok(at > 0, `${id} is held`);
     assert.deepEqual(MODULE_ORDER.slice(at - 1, at + 2), [before, id, after], `${before} → ${id} → ${after}`);
   }
-  assert.deepEqual(SINCE_T33.map(([, id]) => layerOf.get(id)), [1, 3, 5, 11, 11, 11, 1, 2, 1, 11], "each in its layer");
+  assert.deepEqual(SINCE_T33.map(([, id]) => layerOf.get(id)), [1, 3, 5, 11, 11, 11, 1, 2, 1, 11, 6], "each in its layer");
 });
 
 test("R83 T33-19a MODULE_ORDER holds plan T33's order: the new modules in their places, local-facts and standards in layer 5, observation-log after connections", async () => {
@@ -92,7 +95,7 @@ test("R83 T33-19a MODULE_ORDER holds plan T33's order: the new modules in their 
   for (const id of T33_NEW) assert.ok(MODULE_ORDER.includes(id), `${id} is held in its place`);
 });
 
-test("R83 T33-19a T39-M every module MODULE_ORDER holds is built, its paths on disk; a module listed before its job merges (setup-words) is named as not yet built, by name, and fails nothing", async (t) => {
+test("R83 T33-19a T39-M T40-M every module MODULE_ORDER holds is built, its paths on disk; a module listed before its job merges (setup-words, ai-use) is named as not yet built, by name, and fails nothing", async (t) => {
   const modules = await modulesJson();
   const notYet = [];
   for (const m of modules) {

@@ -1,6 +1,6 @@
 # op-grades — requirements
 
-**Status** · In force: split from `affordances` by copy for size (K617, K1907, K1974), meaning unchanged: R1–R18, R21 and R22 marked "was" and retired there; R19 and R20 copies of `affordances` R22 and R25, stated in both. Last changed T35 (R22 names the 25 ops graded from their owners and no longer `agentpack`, K2049, K2059; R4, R21 name `standardrelease`, K2052); every requirement met (OP-GRADES #1, K2059). Last changed T37 (T37-26: R18, R25, R26 amended; R27 new; N669, N708, N757, N776; DEC-181; K2171, K2175, K2201); marked not yet met (T37). Last changed T38 (T38-14: R27 amended, R28 new; N788; DEC-183; K2300); marked not yet met (T38).
+**Status** · In force: split from `affordances` by copy for size (K617, K1907, K1974), meaning unchanged: R1–R18, R21 and R22 marked "was" and retired there; R19 and R20 copies of `affordances` R22 and R25, stated in both. Last changed T35 (R22 names the 25 ops graded from their owners and no longer `agentpack`, K2049, K2059; R4, R21 name `standardrelease`, K2052); every requirement met (OP-GRADES #1, K2059). Last changed T37 (T37-26: R18, R25, R26 amended; R27 new; N669, N708, N757, N776; DEC-181; K2171, K2175, K2201); marked not yet met (T37). Last changed T38 (T38-14: R27 amended, R28 new; N788; DEC-183; K2300); marked not yet met (T38). Last changed T40 (T40-18: R29 new, the handle ops' grades; N797, N799; DEC-184, DEC-186; K2394); marked not yet met (T40). N812's ops' grades are fixed at L11's START.
 
 **Size (P6).** About 1,905 lines copied (1,432 from `affordances.mjs`, 473 from `t33.mjs` and `t34.mjs`), about 1,930 with headers; about 2,080 after T35's share (a `t35.mjs` beside `t34.mjs`). Well under 4,000.
 
@@ -123,6 +123,9 @@ Terms. A **rung** is one of `RUNG_LADDER`. A **ground** is one of `RUNG_ABSENCE_
   - `RUNGS` assigns `reasoned` to `obscuremarkwithdraw`: `case-carriage` R14 refuses it without a reason (`WITHDRAW_NO_REASON`, C-141.10, which joins `JUSTIFICATION_REFUSALS`), and a withdrawal is recorded beside the mark, never erased. `obscuremark` leaves `RUNG_ABSENT` and `RUNGS` assigns it `reversible`: a published act (`obscuremarkwithdraw`) takes a mark back (R3), and the mark is kept.
   - `NON_ACTS` gives `obscuremarkwithdraw` "photo-directed: keyed by a photo's capture and one mark, reached from the Photos step; a member's reasoned withdrawal of a mark, recorded beside it, never erased; moves no bundle".
   - Neither is in `MACHINE_REFUSALS`, which holds only `ACTS` (R5, `affordances` R20): `case-carriage` refuses a machine by name itself (`MACHINE_CANNOT_WITHDRAW_MARK`, C-141.7). By R18 both carry `phone: true`. No vocabulary or prompt is added.
+
+**T40's grades** (N797, N799; DEC-184, DEC-186; K2394)
+- **R29** (N797, N799; `op-declarations` R42) *(not yet met: T41)* The handle ops, by R5 and R3, `affordances` R12's totality holding over them: `RUNG_ABSENT` holds `handlechange`, ground `caller-owned`, as `setpassword` (R27): a member's own handle, asking no reason; `NON_ACTS` gives it "member-directed: the caller's own handle, changeable until their work is first in a published case; earlier handles kept and shown as formerly; moves no bundle", and `handlecheck` "read: whether a handle is free, taken or not allowed, never who holds it". Neither is in `MACHINE_REFUSALS` (`membership` refuses a machine by its own code, R124). By R18 both carry `phone: true`.
 
 ## Private
 

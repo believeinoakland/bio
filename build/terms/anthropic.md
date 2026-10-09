@@ -142,7 +142,7 @@ Sources, with the date each page states:
   > Workspaces provide a way to organize your API usage within an organization. Use workspaces to separate different projects, environments, or teams while maintaining centralized billing and administration.
 
   > **API keys** can be scoped to a single workspace. In this case, they can only access resources within that workspace.
-- **Bears on:** one Console organization may hold separate keys per project or team, billed centrally: permitted (a project-level key is excluded by Bob's choice, not by this page).
+- **Bears on:** one Console organization may hold separate keys per project or team, billed centrally: permitted (a project may hold one, by Bob's choice, K2353).
 
 ## Claude Code run inside a product
 
@@ -319,6 +319,6 @@ Questions the pages read on 2026-10-06 do not answer, which matter to this produ
 
 Product limits Bob ruled. They are cited to his rulings, never to this register, and no statement presents them as Anthropic's.
 
-- **The subscription token is member-level** (K1547, K1755: Bob, "we'll also support a per-member subscription token that will only be used by that member"; "Only the subscription token was limited to the member; I didn't limit API keys"). For Free, Pro and Max the terms also bar sharing (AT-3, AT-16); for Team and Enterprise the pages are silent (U-1). The product limit holds on every plan by Bob's choice.
-- **There is no project-level Claude account** (K1502, "Own subscriptions only", whose project clause K1755 left standing: "the rest of K1502 stands"). No Anthropic page forbids a project-scoped API key (AT-13); the product has none by Bob's choice.
+- **The subscription token is member-level** (K1547, K1755: Bob, "we'll also support a per-member subscription token that will only be used by that member"; "Only the subscription token was limited to the member; I didn't limit API keys"). For Free, Pro and Max the terms also bar sharing (AT-3, AT-16); for Team and Enterprise the pages are silent (U-1). The product limit holds on every plan by Bob's choice; a project with one member may use that member's own (K2353).
+- **A project's account** (K2353: Bob, "A project can have a personal subscription key if the member is the only member of that project, but with more than 1 member only be an API key is allowed"; replacing K1502's project clause and K2352 (1)). A project-scoped API key is one the pages permit (AT-13), subject to U-3 and U-4, as the group key is. A sole member's own subscription serving their own project is that member's own use, not making the account available to anyone else (AT-3, AT-16 as K2353 reads them); unattended use on it is U-5's question.
 - For reference, **the group-level API key** is also Bob's choice (K1755); it is one the terms permit (AT-9, AT-10), subject to U-3 and U-4.

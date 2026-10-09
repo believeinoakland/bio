@@ -5,7 +5,12 @@ var LINK_TYPES = ["anchor", "intra", "deferred", "refused"];
 
 // ../bio-plane/src/pdfstructure.mjs
 var PDF_LINK_TYPES = [...LINK_TYPES, "undetermined"];
-var LATIN1 = new TextDecoder("latin1");
+function binaryString(u8) {
+  if (!(u8 instanceof Uint8Array)) return "";
+  let out = "";
+  for (let i = 0; i < u8.length; i += 8192) out += String.fromCharCode.apply(null, u8.subarray(i, i + 8192));
+  return out;
+}
 function isWhitespace(c) {
   return c === 0 || c === 9 || c === 10 || c === 12 || c === 13 || c === 32;
 }
@@ -183,75 +188,23 @@ function tryParseRef(s, pos) {
   return { value: { t: "ref", n: parseInt(m[1], 10), g: parseInt(m[2], 10) }, pos: pos + m[0].length };
 }
 function parseLiteralString(s, pos) {
-  pos++;
-  let out = "", depth = 1;
-  while (pos < s.length) {
-    const c = s.charCodeAt(pos);
-    if (c === 92) {
-      const n = s[pos + 1];
-      const map = { n: "\n", r: "\r", t: "	", b: "\b", f: "\f", "(": "(", ")": ")", "\\": "\\" };
-      if (n in map) {
-        out += map[n];
-        pos += 2;
-        continue;
-      }
-      if (n >= "0" && n <= "7") {
-        let oct = "";
-        let p = pos + 1;
-        while (p < s.length && oct.length < 3 && s[p] >= "0" && s[p] <= "7") {
-          oct += s[p];
-          p++;
-        }
-        out += String.fromCharCode(parseInt(oct, 8) & 255);
-        pos = p;
-        continue;
-      }
-      pos += 2;
-      continue;
-    }
-    if (c === 40) {
-      depth++;
-      out += "(";
-      pos++;
-      continue;
-    }
-    if (c === 41) {
-      depth--;
-      if (depth === 0) {
-        pos++;
-        break;
-      }
-      out += ")";
-      pos++;
-      continue;
-    }
-    out += s[pos];
-    pos++;
-  }
-  return { value: { t: "str", v: decodePdfText(out) }, pos };
+  const r = readLiteralBytes(s, pos);
+  return { value: strValue(r.bytes), pos: r.pos };
 }
 function parseHexString(s, pos) {
-  pos++;
-  let hex = "";
-  while (pos < s.length && s.charCodeAt(pos) !== 62) {
-    const c = s[pos];
-    if (/[0-9a-fA-F]/.test(c)) hex += c;
-    pos++;
-  }
-  pos++;
-  if (hex.length % 2) hex += "0";
-  let raw = "";
-  for (let i = 0; i < hex.length; i += 2) raw += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-  return { value: { t: "str", v: decodePdfText(raw) }, pos };
+  const r = readHexBytes(s, pos);
+  return { value: strValue(r.bytes), pos: r.pos };
+}
+function strValue(raw) {
+  return { t: "str", v: decodePdfText(raw), raw };
 }
 function decodePdfText(raw) {
-  if (raw.charCodeAt(0) === 254 && raw.charCodeAt(1) === 255) {
+  if (raw[0] === 254 && raw[1] === 255) {
     let out = "";
-    for (let i = 2; i + 1 < raw.length; i += 2)
-      out += String.fromCharCode(raw.charCodeAt(i) << 8 | raw.charCodeAt(i + 1));
+    for (let i = 2; i + 1 < raw.length; i += 2) out += String.fromCharCode(raw[i] << 8 | raw[i + 1]);
     return out;
   }
-  return raw;
+  return binaryString(raw);
 }
 function parseArray(buf, s, pos) {
   pos++;
@@ -305,7 +258,7 @@ function parseDict(buf, s, pos) {
 var PdfDoc = class {
   constructor(bytes) {
     this.bytes = bytes;
-    this.s = LATIN1.decode(bytes);
+    this.s = binaryString(bytes);
     this._objs = /* @__PURE__ */ new Map();
     this._gens = /* @__PURE__ */ new Map();
     this.pageIndexByObj = /* @__PURE__ */ new Map();
@@ -359,8 +312,10 @@ var PdfDoc = class {
    *  resolves to an integer; otherwise we scan to the next `endstream`, which
    *  is the lenient recovery path. */
   streamRawBytes(streamObj) {
-    if (!streamObj || streamObj.t !== "stream") return null;
+    if (!streamObj || streamObj.t !== "stream" || !streamObj.dict || typeof streamObj.dict !== "object") return null;
+    if (!(this.bytes instanceof Uint8Array)) return null;
     const start = streamObj.start;
+    if (!Number.isInteger(start) || start < 0 || start > this.bytes.length) return null;
     let end;
     const len = this.resolve(streamObj.dict.Length);
     if (typeof len === "number" && len >= 0 && start + len <= this.bytes.length) {
@@ -381,14 +336,23 @@ var PdfDoc = class {
     if (this.s.charCodeAt(e - 1) === 13) e--;
     return e;
   }
-  /** Decompress a stream's bytes if its filter chain is (Flate). Returns null
-   *  for anything else, which the callers treat as "cannot resolve" -> the doc
-   *  degrades to undetermined rather than crashing. */
+  /** Decompress a stream's bytes if its filter chain is (Flate). Answers a
+   *  Promise of the bytes, or of null for anything else, which the callers
+   *  treat as "cannot resolve" -> the doc degrades to undetermined rather than
+   *  crashing. The Promise never rejects (R22): whatever goes wrong inside is
+   *  that null. */
   async streamDecoded(streamObj) {
+    try {
+      return await this._streamDecoded(streamObj);
+    } catch {
+      return null;
+    }
+  }
+  async _streamDecoded(streamObj) {
     const raw = this.streamRawBytes(streamObj);
     if (!raw) return null;
     const filter = this.resolve(streamObj.dict.Filter);
-    const names = !filter ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f) => f && f.t === "name" ? f.v : null) : [];
+    const names = filter == null ? [] : filter.t === "name" ? [filter.v] : filter.t === "arr" ? filter.items.map((f) => f && f.t === "name" ? f.v : null) : [null];
     if (names.length === 0) return raw;
     if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null;
     const inflated = await inflate(raw);
@@ -433,7 +397,7 @@ var PdfDoc = class {
         this.note("objstm_undecodable");
         continue;
       }
-      const inner = LATIN1.decode(data);
+      const inner = binaryString(data);
       const n = numberVal(this.resolve(st.dict.N));
       const first = numberVal(this.resolve(st.dict.First));
       if (n == null || first == null) continue;
@@ -721,6 +685,10 @@ function readLiteralBytes(s, pos) {
   while (pos < s.length) {
     const c = s.charCodeAt(pos);
     if (c === 92) {
+      if (pos + 1 >= s.length) {
+        pos++;
+        break;
+      }
       const nc = s.charCodeAt(pos + 1);
       if (nc in simple) {
         bytes.push(simple[nc]);
@@ -749,6 +717,11 @@ function readLiteralBytes(s, pos) {
       pos += 2;
       continue;
     }
+    if (c === 13) {
+      bytes.push(10);
+      pos += s.charCodeAt(pos + 1) === 10 ? 2 : 1;
+      continue;
+    }
     if (c === 40) {
       depth++;
       bytes.push(40);
@@ -768,7 +741,7 @@ function readLiteralBytes(s, pos) {
     bytes.push(c);
     pos++;
   }
-  return { bytes, pos };
+  return { bytes: Uint8Array.from(bytes), pos };
 }
 function readHexBytes(s, pos) {
   pos++;
@@ -780,8 +753,8 @@ function readHexBytes(s, pos) {
   }
   pos++;
   if (hex.length % 2) hex += "0";
-  const bytes = [];
-  for (let i = 0; i < hex.length; i += 2) bytes.push(parseInt(hex.substr(i, 2), 16));
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
   return { bytes, pos };
 }
 function readContentName(s, pos) {
@@ -867,7 +840,7 @@ async function pageShowsText(doc, pageMap) {
       }
       const formRes = doc.dictOf(st.dict.Resources) || resources;
       if (await walk(
-        LATIN1.decode(data),
+        binaryString(data),
         formRes,
         depth + 1,
         key != null ? [...formChain, key] : formChain
@@ -928,7 +901,7 @@ async function decodeContentStreams(doc, contents) {
     if (!st || st.t !== "stream") continue;
     const data = await doc.streamDecoded(st);
     if (!data) return { text: null };
-    parts.push(LATIN1.decode(data));
+    parts.push(binaryString(data));
   }
   return { text: parts.join("\n") };
 }
@@ -998,7 +971,7 @@ async function pdfPageImages(doc, pageIdx) {
             const m = matrixOf(doc, st.dict.Matrix) || [1, 0, 0, 1, 0, 0];
             const formRes = doc.dictOf(st.dict.Resources) || resources;
             await walk(
-              LATIN1.decode(data),
+              binaryString(data),
               formRes,
               mulMatrix(m, ctm),
               depth + 1,
@@ -1043,7 +1016,7 @@ async function loadPdf(bytes) {
 }
 async function openPdf(bytes) {
   if (!(bytes instanceof Uint8Array)) return null;
-  if (!/%PDF-\d+\.\d+/.test(LATIN1.decode(bytes.subarray(0, 1024)))) return null;
+  if (!/%PDF-\d+\.\d+/.test(binaryString(bytes.subarray(0, 1024)))) return null;
   return loadPdf(bytes);
 }
 
@@ -4669,7 +4642,7 @@ function b2(ref, a0, color) {
 }
 
 // ../pdf-worker/src/pagepixels.mjs
-var LATIN12 = new TextDecoder("latin1");
+var LATIN1 = new TextDecoder("latin1");
 var REFUSALS = {
   NOT_A_PDF: "the bytes do not carry a %PDF- header",
   ENCRYPTED: "the document is encrypted; streams are ciphertext to this reader",
@@ -4731,7 +4704,7 @@ async function pageContentText(doc, pageMap) {
     const st = doc.resolve(v);
     if (!st || st.t !== "stream") return;
     const data = await doc.streamDecoded(st);
-    if (data) parts.push(LATIN12.decode(data));
+    if (data) parts.push(LATIN1.decode(data));
   };
   if (c && c.t === "arr") {
     for (const it of c.items) await one(it);

@@ -95,8 +95,8 @@ test("R22 R25 accountReferenceRemove: the same refusals, by the member's own act
   assert.equal(w.snapshot(), before, "no refusal writes");
   assert.deepEqual(w.c.accountReferenceRemove({ member: "ann", by: "ann" }), { ok: true, removed: true });
   assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "member:ann" }),
-    { ok: true, held: false, kind: null, set_at: null, suggestions: false, standing: false,
-      subscription: { connected: false, since: null } });
+    { ok: true, held: false, kind: null, set_at: null, suggestions: false, standing: false, uses: null,
+      subscription: { connected: false, since: null, uses: null } });
   assert.deepEqual(w.c.accountReferenceRemove({ member: "ann", by: "ann" }), { ok: true, removed: false });
   assert.equal((await w.c.accountReferenceFor({ member: "ann", act: { kind: "ask", member: "ann" } })).reason, "NO_ACCOUNT");
   /* a new reference starts with both switches off */
@@ -142,7 +142,8 @@ test("R23 the reference, an API key, is sealed under its member: stored only enc
     }
     for (const id of ["ann", "bob"]) {
       const row = w.row(`SELECT * FROM account_references WHERE member_id=?`, id);
-      assert.deepEqual(Object.keys(row).sort(), ["iv", "kind", "member_id", "sealed", "set_at", "standing", "suggestions"]);
+      assert.deepEqual(Object.keys(row).sort(), ["explore", "iv", "kind", "member_id", "sealed", "set_at", "standing", "suggestions",
+        "use_ask", "use_draft", "use_run"]);
     }
     assert.equal(w.row(`SELECT kind FROM account_references WHERE member_id='bob'`).kind, "apikey");
     assert.equal(w.c.accountReferenceState({ member: "bob", viewer: "member:bob" }).kind, "apikey");
@@ -153,7 +154,8 @@ test("R23 the reference, an API key, is sealed under its member: stored only enc
     /* state: the member alone, by either spelling; any other viewer NOT_YOUR_ACCOUNT, writing nothing */
     const mine = w.c.accountReferenceState({ member: "ann", viewer: "member:ann" });
     assert.deepEqual({ ...mine, set_at: null }, { ok: true, held: true, kind: "apikey", set_at: null, suggestions: true, standing: false,
-      subscription: { connected: false, since: null } });
+      uses: { ask: true, draft: true, run: true, standing: false, explore: "no", suggestions: true },
+      subscription: { connected: false, since: null, uses: null } });
     assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }), mine);
     const before = w.snapshot();
     for (const viewer of ["bob", "second", "admin", "member:admin", "class:admin", "class:ai", "", null, undefined])
@@ -185,14 +187,14 @@ test("R23 with no seal secret bound a reference is neither stored nor read (ACCO
 test("R24 accountReferenceFor unseals a key only for the member's own ask, run or standing question; any other act NOT_YOUR_ACCOUNT; none NO_ACCOUNT by name", async () => {
   const w = await accountWorld();
   await set(w, "ann", "ann");
-  for (const kind of ["ask", "run", "standing"])
+  for (const kind of ["ask", "draft", "run", "standing"])
     for (const member of ["ann", "member:ann"])
       assert.deepEqual(await w.c.accountReferenceFor({ member: "ann", act: { kind, member } }),
         { ok: true, kind: "apikey", secret: SENTINEL }, `${kind} ${member}`);
   const before = w.snapshot();
   for (const act of [null, undefined, {}, { kind: "ask" }, { kind: "ask", member: "bob" }, { kind: "run", member: "second" },
                      { kind: "standing", member: "admin" }, { kind: "export", member: "ann" }, { kind: "ask", member: "class:ai" },
-                     { kind: "run", member: "organisation" }, "ask"])
+                     { kind: "run", member: "organisation" }, "ask", { kind: "explore", member: "ann" }])
     assert.deepEqual(shape(await w.c.accountReferenceFor({ member: "ann", act })), refusal("NOT_YOUR_ACCOUNT"), JSON.stringify(act));
   const none = await w.c.accountReferenceFor({ member: "bob", act: { kind: "run", member: "bob" } });
   assert.deepEqual([shape(none), none.member], [refusal("NO_ACCOUNT"), "bob"]);
@@ -234,8 +236,12 @@ test("R25 accountSwitchSet: two switches, off by default, set only by the member
   assert.deepEqual([st("ann"), st("bob")], [[true, false], [false, false]], "the member's own, nobody else's");
   w.c.accountSwitchSet({ member: "ann", switch: "standing", on: true, by: "member:ann" });
   assert.deepEqual(st("ann"), [true, true]);
-  /* only `true` is on */
-  w.c.accountSwitchSet({ member: "ann", switch: "standing", on: "yes", by: "ann" });
+  /* (T40; R55) a value that is not a boolean is SWITCH_VALUE_INVALID, writing nothing */
+  const held = w.snapshot();
+  for (const on of ["yes", 1, null, undefined, "ask"])
+    assert.deepEqual(shape(w.c.accountSwitchSet({ member: "ann", switch: "standing", on, by: "ann" })), refusal("SWITCH_VALUE_INVALID"), String(on));
+  assert.equal(w.snapshot(), held);
+  w.c.accountSwitchSet({ member: "ann", switch: "standing", on: false, by: "ann" });
   assert.deepEqual(st("ann"), [true, false]);
   /* a replacement keeps them; removal turns both off */
   await w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "sk-2", by: "ann" });

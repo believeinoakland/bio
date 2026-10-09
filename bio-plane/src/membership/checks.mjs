@@ -35,6 +35,16 @@
 
 const at = (fn, region) => `src/membership/index.mjs ${fn} > ${region}`;
 
+/* R123, R124 (DEC-184, DEC-186): the handle words of `words.json` (`docs/development/ux-substrate/screens/words.json`),
+   each `en` verbatim, read by key; placeholders (`{handle}`, `{group}`, `{suggestion}`, `{case}`) are left for the
+   screen. `handle.changeable` and `handle.formerly` are the screens' own words and are not held here (R123). */
+export const HANDLE_WORDS = Object.freeze({
+  'handle.free': '{handle} is free in {group}',
+  'handle.taken': '{handle} is already taken in {group}. Try another, such as {suggestion}.',
+  'handle.characters': 'A handle uses only lower-case letters, digits and hyphens.',
+  'handle.fixed': 'Your handle is fixed: your work is in a published case ({case}).',
+});
+
 export const MEMBERSHIP_CHECKS = Object.freeze({
   NOT_AN_ADMIN: Object.freeze({
     check: 'C-96.1', where: at("notAnAdmin", "is-custodial-admin"),
@@ -204,6 +214,35 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
     translation: 'No member of your group answers to the name or id given. Nothing was changed. Check the name, or '
       + 'add the person as a member first.',
   }),
+  /* ===== T40 (T40-M; N797, N799; DEC-184, DEC-186; K2394; R126): a member's handle, checked as it is typed (R123) and
+     changed by its member (R124). The next free numbers of C-96, this module's family for the acts on a member's own
+     row (K107 (3), K174; C-96.47 the last held at the job's START). Each code is minted at one site, the region its
+     `where` names. ===== */
+  /* R123 (K1881): the check's protective window, 60 checks in any 10 minutes per invitation or member. */
+  HANDLE_CHECK_PAUSED: Object.freeze({
+    check: 'C-96.48', where: at("handleCheck", "is-handle-check-window"),
+    translation: 'Too many handles were checked in a short time, so this one was not checked. Wait a few minutes and '
+      + 'try again. Nothing was changed.',
+  }),
+  /* R124: only an active member changes a handle, and only their own. */
+  HANDLE_CHANGE_NOT_A_MEMBER: Object.freeze({
+    check: 'C-96.49', where: at("handleChange", "is-handle-change-member"),
+    translation: 'A handle is changed by the member it belongs to, signed in as themselves, and the account asking is '
+      + 'not an active member of this group. Nothing was changed.',
+  }),
+  /* R124, R125 (DEC-186 (1)): fixed once the member's work is in a published case. The translation is `words.json`'s
+     `handle.fixed`, read by key, `{case}` the case named. */
+  HANDLE_FIXED: Object.freeze({
+    check: 'C-96.50', where: at("handleChange", "is-handle-fixed"),
+    translation: HANDLE_WORDS['handle.fixed'],
+  }),
+  /* R124: the guard could not answer (none registered, a throw, or an answer it does not give), so the change fails
+     closed. BOB's draft, re-wordable by the UX stream. */
+  HANDLE_CHANGE_UNCHECKED: Object.freeze({
+    check: 'C-96.51', where: at("handleChange", "is-handle-fixed"),
+    translation: 'Whether your work is in a published case could not be checked, so your handle was not changed. Try '
+      + 'again.',
+  }),
 });
 
 /* ===== T19 layer 2: membership's families, COPIED from the check catalogue with their names, ids, `where`s and
@@ -343,9 +382,11 @@ export const PROJECT_AUTHORITY_CHECKS = {
       + 'have not joined it, and seeing a project does not let you change it — administrators included. '
       + 'Nothing was changed. Ask an owner of the project to invite you, then join it.',
   },
+  /* T40 (R122; N812, K231): minted at one site, `notTheOwner`, which `projectAuthority` (R55) and `credentials`
+     (its R54–R57) answer through; the row's `where` moved there, its words unchanged. */
   PROJECT_ACT_NOT_THE_OWNER: {
     check: 'C-56.2',
-    where: 'src/membership/index.mjs projectAuthority > is-project-authority',
+    where: 'src/membership/index.mjs notTheOwner > is-not-the-owner',
     translation: 'Only an owner of this project can do that. You are not one of its owners, and seeing '
       + 'a project does not let you direct it — administrators included. Nothing was changed.',
   },

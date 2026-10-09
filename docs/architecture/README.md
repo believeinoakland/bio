@@ -85,6 +85,13 @@ release and its namespaces, the fleet as a membership rule, the installer's cont
 with the group's account, the deploy-to-serve ladder, and multi-instance isolation as
 planned.
 
+**BIO_Investigation_v0_1** — the project as an investigation, at level 1 under
+construct 8 (in force, approved by Bob 2026-10-09: K2417, K2419, K2420): the objective
+and its condition as the measure, steps and where they are seen, saving steps and
+questions, the system's part and AI use, where a first message leads, narrative and
+evidence, people, and what is new in publishing a case. It cites the canon that rules
+everything else and was approved with amendments to nine other documents.
+
 **BIO_Functional_Architecture_v3** — the three concurrent layers,
 Information, Analysis, and Action, with every function a group needs mapped
 to a layer, the AI skills that support each, and where human judgment is

@@ -10,7 +10,7 @@
 import { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, ID_PREFIXES } from './ids.mjs';
 import { OBJECT_TYPES, normalizeType } from './types.mjs';
 import { CORE_FIELDS, FORBIDDEN_ALIASES, parseFrontmatter } from './frontmatter.mjs';
-import { HEADINGS, HEADINGS_WHEN, isCaseMemberBytes, vocabFor, STATES, sectionText } from './document.mjs';
+import { HEADINGS, HEADINGS_WHEN, isCaseMemberBytes, STATES, sectionText } from './document.mjs';
 
 // ---------------------------------------------------------------------------
 // Finding helper
@@ -141,6 +141,14 @@ function checkIdentity(ctx, findings) {
    and a prefix outside R1's set implies none, exactly as before the new keys. */
 const BUNDLE_TYPES = Object.fromEntries(ID_PREFIXES.map((p) => [p, OBJECT_TYPES[p]]));
 
+/* T40 (N809, K2390; R39): A TYPE IS ONE OF THE TABLES' OWN KEYS. `vocabFor` answers an inherited key too (R34), so an
+   `object_type` of `toString`, `constructor` or `__proto__` read `HEADINGS` and `STATES` as a function or
+   `Object.prototype`, and `checkBundle` threw on the bytes instead of answering them. Here the declared spelling and
+   then the normalized type are looked up by own key only, so such a type is unknown exactly as `memo` is: C-2.5, and no
+   heading or state arm. The id prefix's implied type is read the same way. */
+const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+const typeVocab = (table, t) => (own(table, t) ? table[t] : own(table, normalizeType(t)) ? table[normalizeType(t)] : undefined);
+
 function checkFrontmatterContract(ctx, findings) {
   const fm = ctx.fm;
   if (!fm) return;
@@ -155,7 +163,7 @@ function checkFrontmatterContract(ctx, findings) {
     findings.push(f('C-2.5', 'error', `object_type '${ot}' is not a known type`));
   } else {
     const prefix = fm.id && String(fm.id).split('-')[0];
-    const wantType = BUNDLE_TYPES[prefix];
+    const wantType = own(BUNDLE_TYPES, prefix) ? BUNDLE_TYPES[prefix] : undefined;
     if (wantType && wantType !== normalizeType(ot)) findings.push(f('C-2.5', 'error', `id prefix '${prefix}' implies '${wantType}' but object_type is '${ot}'`));
     const schema = fm.schema;
     /* N-A1 (T18): a type name may hold `_` (`action_plan`, the first that does), so the stamp's type part does too. */
@@ -180,13 +188,14 @@ function checkFrontmatterContract(ctx, findings) {
 function checkHeadings(ctx, findings) {
   const ot = ctx.fm?.object_type;
   /* Normalisation site 1 (REC-10): through the catalog's own alias
-     machinery, never a raw table lookup patched with duplicate keys. */
-  const required = vocabFor(HEADINGS, ot);
+     machinery, never a raw table lookup patched with duplicate keys; by own
+     key only (`typeVocab`, R39). */
+  const required = typeVocab(HEADINGS, ot);
   if (!required) return; // type invalid; C-2.5 already fired
   /* REC-14: the state-conditional canon. Permitted in every state, required in
-     the states that name it — read through vocabFor like the base set, so a
+     the states that name it — read through typeVocab like the base set, so a
      legacy focus/problem document is judged by its own contract here too. */
-  const conditional = vocabFor(HEADINGS_WHEN, ot) || [];
+  const conditional = typeVocab(HEADINGS_WHEN, ot) || [];
   const canonical = [...required, ...conditional.map(c => c.heading)];
   const present = (ctx.body.match(/^## .*$/gm) || []).map(h => h.trimEnd());
   for (const h of required) {
@@ -211,7 +220,7 @@ function checkStateLegality(ctx, findings) {
   /* Normalisation site 1 (REC-10), same as checkHeadings: the second rename
      patched this lookup with STATES.problem = STATES.focus instead of
      normalising, and DATA-MODEL.md §2.7 measured what that costs. */
-  const spec = vocabFor(STATES, ot);
+  const spec = typeVocab(STATES, ot);
   if (!spec) return;
   const cur = ctx.fm.current_state;
   /* CASE-4 / DEC-72: `legacy` is READ HERE AND NOWHERE ELSE, which is the point

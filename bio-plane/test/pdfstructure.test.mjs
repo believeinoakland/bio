@@ -971,12 +971,21 @@ console.log("\n--- D-502 ON THE REAL AGENDA: the token M-133 named is gone, and 
      one baseline, a 391.1 pt jump, and the glue M-133 counted. Measured on this
      file, D-481 -> D-502: lower->upper glue tokens 43 -> 11, words 8,489 ->
      8,538, LINES 1,495 -> 1,495 and non-whitespace characters 51,060 -> 51,060.
-     Nothing was decoded that was not decoded before; runs were separated. */
+     Nothing was decoded that was not decoded before; runs were separated.
+     N813 (T40) then MOVED the character figure, and only it: the reader had
+     read bytes through `TextDecoder("latin1")`, which is windows-1252, so the
+     agenda's 45 shown codes in 0x80-0x9F (bullets, curly quotes, apostrophes)
+     reached the CMap as other numbers and fell out as `unmapped_code`. Read as
+     the bytes they are they decode: 51,060 -> 51,105 non-whitespace characters,
+     45 markers -> 0, lines and glue unmoved. */
   const agenda = await extractPdfStructure(
     new Uint8Array(readFileSync(new URL("./fixtures/legistar-agenda-1425405.pdf", import.meta.url))));
   const doc = agenda.text.document;
-  t("the fixture really is the agenda: 33 pages and 51,060 non-whitespace characters",
-    [agenda.pages, doc.replace(/\s/g, "").length], [33, 51060]);
+  t("the fixture really is the agenda: 33 pages and 51,105 non-whitespace characters",
+    [agenda.pages, doc.replace(/\s/g, "").length], [33, 51105]);
+  t("N813: every shown code decodes, those in 0x80-0x9F included (no unmapped_code)",
+    agenda.text.undetermined.filter((m) => m.reason === "unmapped_code").length, 0);
+  t("N813: ...and they read as what they are", /Council\u2019s/.test(doc) && /\u2022 To observe/.test(doc), true);
   t("`OaklandPrinted` — the token M-133 named — does not occur", /OaklandPrinted/.test(doc), false);
   t("...and the two runs it was made of are both there, separated",
     /City of Oakland Printed on /.test(doc), true);
@@ -1130,14 +1139,14 @@ console.log("\n--- D-517 ON THE REAL DOCUMENTS: what left the corpus is whitespa
      rule never runs on that class at all. M-133's own agenda holds its glue at
      5 and loses no word because nothing here can touch it — not because the
      threshold was chosen for it. The committed agenda's own arms above (1,495
-     lines, 51,060 non-whitespace characters, glue 11) are that guard; this one
+     lines, 51,105 non-whitespace characters since N813, glue 11) are that guard; this one
      adds the multiple-space count, which a change that merely stripped double
      spaces everywhere would have moved. */
   const agenda = await docOf("./fixtures/legistar-agenda-1425405.pdf");
   t("the agenda keeps all 39 multiple-space runs the DOCUMENT wrote: nothing was stripped wholesale",
     (agenda.match(/[^\s] {2,}[^\s]/g) || []).length, 39);
-  t("...and its characters are unmoved at 60,797, the figure D-502 left",
-    agenda.length, 60797);
+  t("...and its characters are unmoved at 60,842: D-502's 60,797 and the 45 codes N813 decodes",
+    agenda.length, 60842);
 }
 
 console.log(`\npdfstructure: ${pass} passed, ${fail} failed`);
