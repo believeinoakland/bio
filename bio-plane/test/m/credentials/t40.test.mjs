@@ -157,8 +157,13 @@ test("R54 the acts on a project's account are an owner's: a project the caller c
   ];
   const before = w.snapshot();
   for (const [i, a] of acts.entries()) {
-    for (const by of ["bob", "second", "admin", "class:admin", "class:ai", null, ""])
+    for (const by of ["bob", "class:admin", "class:ai", null, ""])
       assert.deepEqual(await a(by, "P"), notTheOwner(by, "P"), `${i} ${String(by)}`);
+    /* (T41; D54, K2442) an administrator neither invited nor joined sees a hidden project at existence: C-70.1 */
+    for (const by of ["second", "admin"]) {
+      const seen = await a(by, "P");
+      assert.deepEqual([seen.reason, seen.check, seen.project], ["PROJECT_SEEN_NOT_A_PARTICIPANT", "C-70.1", "P"], `${i} ${by}`);
+    }
     assert.deepEqual(await a("eve", "P"), noSuchProject("P"), `${i}: a hidden project eve cannot see`);
     assert.deepEqual(await a("ann", "NOPE"), noSuchProject("NOPE"), `${i}: no such project`);
     const ex = await a("ann", "D");
@@ -287,8 +292,10 @@ test("R54 projectAccountRemove and projectAccountSwitch act on whichever account
   const owner = w.c.projectAccountState({ project: "P", viewer: "member:ann" });
   assert.deepEqual(Object.keys(owner).sort(), ["by", "held", "kind", "ok", "on", "serving", "set_at", "uses"]);
   assert.deepEqual(w.c.projectAccountState({ project: "P", viewer: "bob" }), { ok: true, on: true, serving: true });
-  for (const viewer of ["eve", "second", "admin", "class:admin", null])
+  for (const viewer of ["eve", "class:admin", null])
     assert.deepEqual(w.c.projectAccountState({ project: "P", viewer }), noSuchProject("P"), String(viewer));
+  for (const viewer of ["second", "admin"])   /* (T41; D54) an administrator: at existence */
+    assert.equal(w.c.projectAccountState({ project: "P", viewer }).reason, "PROJECT_SEEN_NOT_A_PARTICIPANT", viewer);
   assert.equal(w.c.projectAccountState({ project: "D", viewer: "ann" }).reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
   assert.equal(w.snapshot(), before, "it writes nothing");
   assert.deepEqual(w.c.projectAccountRemove({ project: "P", by: "ann" }), { ok: true, removed: true });
@@ -330,7 +337,8 @@ test("R56 accountFor's cascade answers the first account held and on: the projec
   assert.deepEqual(await w.c.accountFor({ member: "eve", act: act("ask", "eve", "NOPE") }), noSuchProject("NOPE"));
   assert.equal((await w.c.accountFor({ member: "eve", act: act("ask", "eve", "D") })).reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
   const notJoined = await w.c.accountFor({ member: "second", act: act("ask", "second", "P") });
-  assert.deepEqual([notJoined.reason, notJoined.project], ["PROJECT_ACT_NOT_A_PARTICIPANT", "P"], "an administrator sees and has not joined");
+  assert.deepEqual([notJoined.reason, notJoined.project], ["PROJECT_SEEN_NOT_A_PARTICIPANT", "P"],
+    "(T41; D54) an administrator neither invited nor joined sees a hidden project at existence");
   assert.equal((await w.c.accountFor({ member: "eve", act: act("ask", "eve", "P") })).reason, "PROJECT_ACT_NOT_A_PARTICIPANT", "invited, not joined");
   for (const project of [7, {}, ""]) assert.equal((await w.c.accountFor({ member: "bob", act: act("ask", "bob", project) })).reason, "NO_SUCH_PROJECT");
   assert.equal(w.snapshot(), before, "it writes nothing");
@@ -528,7 +536,8 @@ test("R57 projectAiKeepAwaySet is an owner's act (R54's refusals) under R51's re
     const st = w.c.projectAiKeepAwayState({ project: "P", viewer });
     assert.deepEqual([st.ok, st.on, st.uses, st.reason, st.set_by], [true, true, ["explore"], "no exploring here", "ann"], viewer);
   }
-  for (const viewer of ["eve", "second", "class:admin", null]) assert.deepEqual(w.c.projectAiKeepAwayState({ project: "P", viewer }), noSuchProject("P"));
+  for (const viewer of ["eve", "class:admin", null]) assert.deepEqual(w.c.projectAiKeepAwayState({ project: "P", viewer }), noSuchProject("P"));
+  assert.equal(w.c.projectAiKeepAwayState({ project: "P", viewer: "second" }).reason, "PROJECT_SEEN_NOT_A_PARTICIPANT", "(T41; D54)");
   assert.equal(w.core.declared.get("project_keep_away").classes.export, "admin-only", "declared as R51's");
 });
 
