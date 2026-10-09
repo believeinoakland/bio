@@ -15,3 +15,7 @@
 **Deferred.** None. **Found in other modules.** None. **Generated artifacts:** none made stale (tests only).
 
 Size (session_0118UenKBjeUnhTTyRDVfooR): test runs 5, module lines 50
+
+## J1 · COMPLETE
+
+T41-12a complete (19d18af2ac): the selections.test.mjs N352 test (R17, R21, R29, R60) is re-stated for D54. An administrator and the founder neither invited nor joined to the hidden project lose its index row and selection bytes as an outsider does. Negative controls: an invited administrator, and a discoverable project, read whole. Tests only; no code or requirement change. retrieval 168/168; format, architecture, coverage (77/77) and ownership 0 failures. The reading set was over 300 KB, so it was read per (3) with one worker summary; nothing it left out mattered. Record: build/jobs/T41/retrieval.md, Completion section.
