@@ -89,3 +89,7 @@ B6 applied: real steps via stepsOf (factory and tests; findRecipients' {after} c
 - Still through `deps` names only: `ai-runs` T41 (`open`'s `place`/`work`/`origin`/`use`, `verifications()`, `testBars()`, `groupTestResults`, `close`'s actual), `capture-requests` R55's `step`. I merge after ai-runs, run-productions and capture-requests, each reaching me by CHANGE.
 
 Size (session_01243u4joqb8ZpywX663LU1U): test runs 31, module lines 1049
+
+## J6 · COMPLETE
+
+B7 applied: real ai-use (exploreAllowed's {ok, ask, label}, exploreAsk's what as the question list, estimate read as the account's owner); a member's own account is out of exploring's scope in ai-use, so R3's sign-in test runs through a project's sole-member sign-in account. 26/26; checks 0 but K1043's modules.json line. Record updated.
