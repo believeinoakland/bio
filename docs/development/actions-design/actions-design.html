@@ -57,18 +57,21 @@ td.id{font:600 .8rem var(--mono);color:var(--accent);white-space:nowrap}
 .uc li{counter-increment:u;display:grid;grid-template-columns:2.2rem minmax(0,1fr);gap:.3rem}
 .uc li::before{content:"U" counter(u);font:600 .82rem var(--mono);color:var(--accent);padding-top:.15rem}
 code{font:400 .86em var(--mono)}
+.q{border-top:1px solid var(--rule);margin-top:1.6rem}
+.q h3{margin-top:1rem}
+.rec{background:var(--okbg);border-radius:6px;padding:.6rem .9rem}
 </style>
 <main>
 <h1>Actions Design</h1>
-<p class="meta">The design of actions in Civicsmith · working file for Bob · 9 October 2026 · page 1: what exists and what is missing</p>
+<p class="meta">The design of actions in Civicsmith · working file for Bob · 9 October 2026 · research, use cases, and decisions for Bob</p>
 <p class="lede">How Civicsmith supports a group from the moment it suspects something is wrong (or working), through planning, preparing, deciding and sending, to tracking the response and recording how it ended. This lane works through actions as deeply as the investigation lane worked through investigations, and ends with a canon draft and requirements.</p>
 
 <div class="now">
-<p><b>Where we are.</b> Step 1 (research) and step 2 (the map of what is built against what canon and your rulings require) are done. This page reports them.</p>
+<p><b>Where we are.</b> Steps 1–3 are done: what exists, what is built against what is required, and twenty real situations traced end to end.</p>
 <ul>
-<li><b>Nothing to decide on this page.</b> The questions that need you come with the use cases and the design (steps 3 and 4), each with options and a recommendation.</li>
-<li><b>The main finding:</b> the machinery behind actions is built and passes its tests, but a member can reach almost none of it. What exists was designed around one kind of group doing one kind of thing: a group acting against a government office over a breach. Your direction asks for more than that.</li>
-<li><b>Next:</b> about twenty concrete situations real groups face (section 6), each traced through what Civicsmith does today and what it should do.</li>
+<li><b>Sixteen decisions are waiting for you</b> in <a href="#decide">section 7</a>, each with options, examples and a recommendation. D1–D4 matter most: between them they touch fourteen of the twenty situations.</li>
+<li><b>The main finding still stands.</b> The machinery is built and tested, but members can't reach it. The design must also widen actions beyond one kind of group acting on a breach.</li>
+<li><b>Next:</b> with your answers, the design itself (step 4), then a canon draft for your approval (step 5).</li>
 </ul>
 </div>
 
@@ -78,7 +81,8 @@ code{font:400 .86em var(--mono)}
 <li><a href="#built">What is built</a></li>
 <li><a href="#gaps">The gaps</a></li>
 <li><a href="#settled">Readings settled here</a></li>
-<li><a href="#next">The use cases to come</a></li>
+<li><a href="#cases">The twenty use cases</a></li>
+<li><a href="#decide">Decisions for you</a></li>
 <li><a href="#record">The research record</a></li>
 </ol></nav>
 
@@ -202,32 +206,240 @@ code{font:400 .86em var(--mono)}
 <div><b>Case Making's plan sections are history.</b><p>Where Case Making and the Action canon differ (the decision tree, resources, the gate on unestablished steps), the Action canon governs, as you approved. Case Making stays as the reasoning behind it.</p></div>
 </div>
 
-<h2 id="next">6 · The use cases to come</h2>
-<p>Step 3 traces each situation through what a member can do in Civicsmith today and what Civicsmith should do. Each draws on things real groups do: law firms, auditors' offices, newsrooms and community activists, per your 5 October rule. Some use the Grandview example from the investigation design.</p>
-<ol class="uc">
-<li>A records request: from an investigation's gap to the reply, a fee quote, a partial denial, and an appeal.</li>
-<li>A request for comment to an official before the group publishes.</li>
-<li>A complaint to an oversight office, such as the City Auditor's whistleblower line, and following what it did.</li>
-<li>Public comment at a council meeting: preparing, a time limit, getting on the record, and what the minutes show.</li>
-<li>Testimony before a state body, with written comments filed by a deadline.</li>
-<li>A grand jury complaint, and the mandated reply months later.</li>
-<li>A demand letter that cites the law (cure and correct under the Brown Act) and its response window.</li>
-<li>Handing a case to a lawyer: the counsel packet, exhibit grades, and the lawyer's own timetable.</li>
-<li>Escalation through the seven stages when the city doesn't answer.</li>
-<li>Working with a reporter: a tip, an embargo, the story, and the city's response.</li>
-<li>An awareness campaign on a bond measure, with flyers, a community meeting and a "working on" notice.</li>
-<li>A success story: thanking a department that fixed what it was asked to fix.</li>
-<li>Meeting the official: requesting a meeting, preparing for it, and recording what was said and agreed.</li>
-<li>A coalition with another group acting on the same finding.</li>
-<li>The group under pressure: a threatening letter, a litigation hold, and the record as evidence.</li>
-<li>Follow-up on outcomes: did the city do what it said, and when does the group stop watching?</li>
-<li>A new member picking up a half-run plan.</li>
-<li>The member who never uses the assistant, doing every use case above unaided (your D42).</li>
-<li>The same records request in another state: what jurisdiction data must supply.</li>
-<li>A plan started at the first suspicion, before anything is published.</li>
-</ol>
+<h2 id="cases">6 · The twenty use cases</h2>
+<p>Each situation was traced through what a member can do today and what Civicsmith should do. The traces draw on what law firms, auditors' offices, newsrooms and community activists actually do, per your 5 October rule, and cite the real deadlines and their law. The full traces are in the research record (U1–U20).</p>
+<p>The pattern is the same in nearly all twenty. Most of the machinery is built, but a member can't reach it. Where something is missing, it is usually one of three things:</p>
+<ul class="plain">
+<li>jurisdiction facts the profile doesn't hold;</li>
+<li>a way for an action to end honestly;</li>
+<li>a rule saying which outward acts your breach rule holds back.</li>
+</ul>
+<div class="wrap"><table>
+<thead><tr><th>#</th><th>situation</th><th>today</th><th>what Civicsmith should do</th></tr></thead>
+<tbody>
+<tr><td class="id">U1</td><td>A records request for Measure U invoices. It meets an extension, a fee quote and a partial denial, then reconsideration, mediation by the Ethics Commission and a court petition.</td><td>Create it, name the laws, type a date, log what was sent and received. The addressee can only be "undetermined".</td><td>One thread holding every stage with its date and the law behind it. Deadlines computed from the day it was received. Each reply shown beside the law's text. The routes after a denial listed in the profile's order, never ranked.</td></tr>
+<tr><td class="id">U2</td><td>A request for comment to two city offices before publishing. One office replies in part; the other is silent.</td><td>Create it, type the window, log the reply.</td><td>Build the request from the chosen findings and show the window. Lay out the reply claim by claim. At signing, show which requests are still open, as facts.</td></tr>
+<tr><td class="id">U3</td><td>A complaint to the City Auditor's whistleblower line from a member who works for the city, followed for eight months.</td><td>An "other" action, sent only if the member openly overrides the breach rule.</td><td>Show the oversight offices and what each takes, as facts. Keep the whistleblower in her hidden project. Record the office's statuses in its own words.</td></tr>
+<tr><td class="id">U4</td><td>Public comment at a Council meeting, spoken and written, then checked against the minutes.</td><td>A public-comment action, and afterwards a log entry.</td><td>The meeting and agenda item come from the body the group follows. Show cut-off times and the speaker limit with their sources. Lay the minutes beside what was said.</td></tr>
+<tr><td class="id">U5</td><td>Testimony and written comment at the state utilities commission, and whether to become a formal party.</td><td>A public-comment action with a typed deadline.</td><td>Follow the proceeding with its own dates. List the ways to take part and the duties each brings. Show the group's own obligations as "our deadlines".</td></tr>
+<tr><td class="id">U6</td><td>A complaint to the county civil grand jury, and the City's legally required reply months later.</td><td>A grand-jury action, logged.</td><td>Keep it confidential, off everything published. When a report names the City, propose its reply duties. Lay out the reply finding by finding.</td></tr>
+<tr><td class="id">U7</td><td>A Brown Act demand to cure and correct. The group has 30 days to send it, the City 30 days to answer, then 15 days to sue.</td><td>Possible only by openly overriding the breach rule. The override's disclosure is then printed first on the letter, and the action can never join escalation.</td><td>Show the window beside the refusal. A quick route to a short published case and a determination. The three dates offered with their citations.</td></tr>
+<tr><td class="id">U8</td><td>Handing the case to a lawyer: the counsel packet, exhibit grades, the lawyer's dates, privilege.</td><td>Type the lawyer's dates. The packet and hold are built but have no screen.</td><td>A screen for handing the case to counsel, with a checklist of gaps. Keep counsel's advice privileged. A group planning to sue can place its own hold.</td></tr>
+<tr><td class="id">U9</td><td>Escalating through the seven stages when the school district doesn't answer.</td><td>Nothing: no escalation act can be reached.</td><td>One view of the seven stages, beside the plan. An honest ending: compliance restored, harm addressed, or "stopped" with a reason.</td></tr>
+<tr><td class="id">U10</td><td>A tip to a reporter with an embargo, then the story and the district's statement.</td><td>A press action, a review copy, and publishing "now" only.</td><td>Write down the embargo terms and publish at the agreed time. Link the district's quote to the request it answers.</td></tr>
+<tr><td class="id">U11</td><td>An awareness campaign on a bond measure: a flyer, a community meeting, a "working on" notice.</td><td>A media action addressed to an audience.</td><td>Tie the message, sentence by sentence, to the published case. Show the election rules as information. A shape for a meeting the group hosts.</td></tr>
+<tr><td class="id">U12</td><td>Thanking a department that fixed what it was asked to fix.</td><td>An action to the office.</td><td>Recognition as its own kind of action, resting on a compliant determination. A success record for each matter.</td></tr>
+<tr><td class="id">U13</td><td>A meeting with the Director, who promises out loud to finish the paving by June.</td><td>A member's account of the meeting.</td><td>A meeting shape, with commitments recorded "as heard" and then confirmed in writing. A confirmed promise is watched as a duty the body owes.</td></tr>
+<tr><td class="id">U14</td><td>Two groups send one joint letter, and a tenants' union signs on.</td><td>Each group writes its own action; the partners appear only in prose.</td><td>Record the partners. One text approved in each group's copy, with matching fingerprints.</td></tr>
+<tr><td class="id">U15</td><td>A contractor's lawyer threatens suit, and an official demands a home address.</td><td>A letter that isn't a reply to an action has nowhere to go.</td><td>Record pressure wherever it arrives. A hold with a notice to members. A counsel packet built for the group's defence.</td></tr>
+<tr><td class="id">U16</td><td>Following the City's promises after a grand jury report.</td><td>Log the response. An escalation can never end if the City fixes the problem by a new act.</td><td>Propose each promise as a duty with its date. Let a curing act count. A closing summary. An explicit choice to keep watching or stop.</td></tr>
+<tr><td class="id">U17</td><td>A new member picks up a plan after the main member leaves.</td><td>To-dos still go to the member who left.</td><td>A "where it stands" page. Any member may take up a dated item by one act. Status reports serve as a hand-over memo.</td></tr>
+<tr><td class="id">U18</td><td>A member who never uses the assistant does U1, U4, U7 and U9 by hand.</td><td>Blank pages and typed dates.</td><td>Approved templates, computed dates, procedure guides and wizards. Everything she needs comes from the record and the profile, not from AI.</td></tr>
+<tr><td class="id">U19</td><td>The same records request in Houston and in Albany.</td><td>Every date reads "undetermined".</td><td>Each state's rules come from its own sourced profile. Deadlines that bind the group itself, and rulings by a third party, have a place.</td></tr>
+<tr><td class="id">U20</td><td>A plan opened at the first suspicion: a request, a request for comment, a tip, a lawyer, a demand.</td><td>The tip and the demand are held back; briefing the lawyer is refused.</td><td>Evidence-seeking acts leave freely, and the plan shows its "hunch debt". The window shows beside the refusal. Counsel can be briefed at any stage.</td></tr>
+</tbody></table></div>
 
-<h2 id="record">7 · The research record</h2>
+<h2 id="decide">7 · Decisions for you</h2>
+<p>The use cases raised 46 questions. Many overlapped, so they are merged here into sixteen. D1–D4 unblock the most design: between them they touch fourteen of the twenty use cases. D5–D8 shape how actions end and what members are given. D9–D16 are narrower. Each has a recommendation, and every recommendation was checked against your rulings. Where a worker's first recommendation conflicted with one of them, the conflict is noted and the recommendation corrected.</p>
+<p class="note">You can answer briefly, for example "D1 c, D2 c, D3 as recommended". Questions you'd rather take later can wait; the design proceeds on the others.</p>
+
+<div class="q" id="d1"><h3>D1 · Asking or asserting: which outward acts your breach rule holds back</h3>
+<p><b>Background.</b> You ruled on 30 September that an action claiming a breach is held back until the group has published a finding and a member has determined the breach. A member may go ahead anyway by an open act with a reason, and that disclosure then goes on everything prepared from it. Records requests and requests for comment are never held back. The rule doesn't say where three common acts fall:</p>
+<ul class="plain">
+<li>A complaint to an oversight office (the Auditor's hotline, the grand jury) that asks the office to look, often before the group has published anything. These offices often ask complainants not to go public first.</li>
+<li>Enforcing the group's own records request, through mediation or a court petition. Here the only "breach" is what the group's own dated letters show.</li>
+<li>A joint letter or public comment that repeats the group's case.</li>
+</ul>
+<p>Today a single switch the member sets decides it. If she sets it, a confidential complaint goes out with "rests on an unestablished premise" at its head. If she doesn't, nothing checks the text.</p>
+<p><b>Options.</b></p>
+<ul class="plain">
+<li><b>(a) Every such act is a breach claim.</b> The Auditor complaint carries the override disclosure. To ask for mediation, the group must first publish "the City withheld the emails" as a case.</li>
+<li><b>(b) All of them are evidence-seeking and never held back,</b> whatever they say.</li>
+<li><b>(c) Draw the line by what the text does.</b> Asking an office to examine something, or enforcing the group's own request from its own dated record, is never held back. A sentence that asserts a breach as the group's finding still needs a finding and a determination, or your open override. Before approval, sentences that read as assertions are pointed out. The member either rewrites each one, or confirms in her own recorded words that the act only asks, or treats the act as a breach claim.<br>For example, this goes out freely: "five purchase orders, consecutive numbers, same vendor, each just below the bid threshold; we ask the Auditor to examine them." But "the City routinely hides records" would be pointed out.</li>
+</ul>
+<p><b>Trade-offs.</b> (a) makes the most ordinary first moves of real groups slow and public, and turns your override into a routine click. (b) lets a group file accusations under the label "please examine". (c) is how auditors and inspectors want complaints written, and it keeps your standard exactly where the group makes its own claim. It adds one thing for the member to read before approving.</p>
+<p class="rec"><b>Recommendation: (c).</b> One rule answers all four use cases, and it works for a member without the assistant: the pointing-out can come from a fixed list of phrasings as well as from AI. <i>Checked:</i> a worker proposed that flagged sentences be "flagged, never blocked". That would let assertions through with neither a determination nor your override, so the member must resolve each one, and her confirmation is recorded.</p></div>
+
+<div class="q" id="d2"><h3>D2 · Checking what the group sends against the record</h3>
+<p><b>Background.</b> You ruled that a published case's account is checked sentence by sentence. A sentence the record doesn't support is pointed out; one the record contradicts is refused ("lying is not bias"). Nothing the group sends is checked: letters, complaints, flyers, testimony. Yet that is where a group is most exposed to a defamation claim, especially before anything is published.</p>
+<p><b>Options.</b></p>
+<ul class="plain">
+<li><b>(a) No check.</b> The sender is responsible.</li>
+<li><b>(b) Point out only.</b> Nothing is refused.</li>
+<li><b>(c) The case check, with your open-override pattern.</b> Unsupported sentences are pointed out. A sentence the record contradicts is held back by default, and the member may still send it only by an open act with a reason. Questions are never pointed out, because asking is not asserting. Claims about what a body did rest on the published case or on the group's own dated letters. Statements about what the group itself is doing need neither.<br>For example, each of a flyer's three facts links to a finding. "They lost track of $X" is pointed out, because the finding says "reports not filed for two years".</li>
+</ul>
+<p><b>Trade-offs.</b> (a) leaves the group exposed where it is most at risk. (b) lets a sentence the group's own record contradicts go out under its name. (c) applies the standard you already set for cases to everything that carries the group's name, and the member still decides.</p>
+<p class="rec"><b>Recommendation: (c).</b> <i>Checked:</i> a worker proposed refusing contradicted sentences outright. Because a tool must never have the final word on an action, the recommendation uses your hold-by-default, override-openly pattern instead. A member without the assistant still gets the check against the record: each claim is linked to its finding, and a claim with no link is pointed out.</p></div>
+
+<div class="q" id="d3"><h3>D3 · When the law gives fewer days than it takes to publish</h3>
+<p><b>Background.</b> A Brown Act demand to cure and correct must be sent within 30 days of the improper action. Under your rule, a demand that claims a breach needs a published finding and a determination, or the open override. Today the override's disclosure is printed first on the letter the City reads. Your 30 September ruling also says an overridden action can never join escalation, even after the group later makes the determination. Nothing shows the member how many days remain.</p>
+<p><b>Options.</b></p>
+<ul class="plain">
+<li><b>(a) Keep the override as the only path, and show the window beside the refusal.</b> For example: "Due 5 Nov (30 days, Gov. Code §54960.1). Publish and determine first, or proceed with a stated reason, disclosed on the letter."</li>
+<li><b>(b) As (a), plus a quick route.</b> Civicsmith helps the group publish a short one-finding case (agenda, video, minutes) and determine it within days. No publication check is waived. For example: published on day 4, determined on day 5, demand sent on day 6, no override.</li>
+<li><b>(c) Keep the disclosure on the group's own copy only,</b> not on the letter.</li>
+<li><b>(d) Let an action sent under override join escalation</b> once a determination is later made, with the override kept in its history.</li>
+</ul>
+<p><b>Trade-offs.</b> (a) is honest, but it forces a choice between a weakened letter and a missed window. (b) keeps your standard and fits the work, since these cases are usually small and documentary. (c) breaks your rule that a departure is visible to every reader, and the City is the reader that matters. (d) removes a trap, but it changes part of your 30 September ruling.</p>
+<p class="rec"><b>Recommendation: (b) together with (d).</b> Not (c).</p></div>
+
+<div class="q" id="d4"><h3>D4 · What stays inside the group</h3>
+<p><b>Background.</b> You ruled that nothing non-public leaves by a system path and that a plan is never published. But the group's list of "what we did" includes every letter on every action, and it can be frozen into a published case's timeline. So today a confidential grand jury complaint, or a lawyer's advice recorded on an action, could reach a published timeline. Counsel's advice is also visible to every member who can see the action, which can waive privilege. Nothing says what the record may hold about a member who is herself the whistleblower. Promises the group made to people (an embargo time, a source's anonymity) have no place to be recorded, so a newcomer can break one without knowing.</p>
+<p><b>Options.</b></p>
+<ul class="plain">
+<li><b>(a) Three scopes, each set by a member's act with a reason.</b>
+<ul class="plain">
+<li>A <i>confidential act</i> never appears in anything published, but is seen inside the group like any action. For example, the case timeline shows the letters to the Director but not the grand jury complaint.</li>
+<li>A <i>counsel matter</i> is its own project, which members join. Only its members see counsel's correspondence and dates, it is never published or used as evidence, and its packets carry a privilege marking.</li>
+<li>A <i>member's own role as a source</i> stays in her hidden project. The group's complaint rests on the documents she chooses to share.</li>
+</ul>
+Promises made to people are recorded as notes on the action, which every participant sees.</li>
+<li><b>(b) Redact instead of excluding.</b> The timeline shows "12 Oct · confidential referral", which still reveals that a referral exists.</li>
+<li><b>(c) No special rules.</b> Members leave things out by hand and keep counsel outside Civicsmith.</li>
+</ul>
+<p><b>Trade-offs.</b> (a) costs three small marks and closes the one leak path that four use cases share. (b) is weaker for confidential referrals. (c) relies on memory, against a timeline the system assembles automatically.</p>
+<p class="rec"><b>Recommendation: (a).</b> <i>Checked:</i> a worker proposed "members the group names" for counsel matters. That would filter sight by a member attribute, which your rules forbid. Making the counsel matter a project its members join uses the same mechanism hidden projects already use.</p></div>
+
+<div class="q" id="d5"><h3>D5 · When a breach is over</h3>
+<p><b>Background.</b> Your escalation ends when compliance is restored and the consequences are addressed. As built, "restored" requires a compliant determination of the same act. But most breaches are past acts (a transfer in 2025) cured by a later act (a restoring transfer in 2028), so most escalations can never end; they stay "paused". Nothing says what "addressed" means when harm can't be undone, such as a year in portable classrooms. And because a determination rests on a published finding, recording that the City fixed it means publishing again.</p>
+<p><b>Options.</b></p>
+<ul class="plain">
+<li><b>Restoring compliance.</b>
+<ul class="plain">
+<li>(a) Keep "the same act".</li>
+<li>(b) <b>A curing act counts.</b> A later act of the same office, determined compliant against the same standard and linked by a member as the cure. For example: "Resolution 2028-031 restoring $X".</li>
+<li>(c) A member closes the escalation with a reason, without any determination.</li>
+</ul></li>
+<li><b>Harm addressed.</b>
+<ul class="plain">
+<li>(a) <b>A member's reasoned statement with evidence for each part,</b> with optional plain words offered: remedied, mitigated, compensated, acknowledged, cannot be undone. For example: "Mitigated: monthly reporting adopted; the lost year cannot be restored."</li>
+<li>(b) A fixed list only.</li>
+<li>(c) End on compliance alone.</li>
+</ul></li>
+<li><b>Publishing again.</b>
+<ul class="plain">
+<li>(a) Always.</li>
+<li>(b) <b>A dated outcome entry on the published case at once,</b> and the determination with the next edition.</li>
+<li>(c) Allow a compliant determination on unpublished findings.</li>
+</ul></li>
+</ul>
+<p><b>Trade-offs.</b> Keeping "the same act" makes your "until compliance is restored" unreachable for most breaches. Closing without a determination lowers your rule that compliance is recorded as carefully as noncompliance. A fixed list forces a label where judgement is needed. Allowing a determination on unpublished findings breaks the layer's contract.</p>
+<p class="rec"><b>Recommendation: the curing act (b); a reasoned statement with optional words (a); an outcome entry first, then the determination with the next edition (b).</b> None of these is a score.</p></div>
+
+<div class="q" id="d6"><h3>D6 · How a plan and a pursuit end, and how watching stops</h3>
+<p><b>Background.</b> You ruled that compliance counts and that success stories are actions. Today a plan closes with a reason only. An escalation can be paused, but not honestly stopped without winning. A success's effect has nowhere to go, because consequences exist only for breaches. And what a group set running (following a body, watching a page, a promised date) runs until someone remembers it.</p>
+<p><b>Options and the recommendation for each:</b></p>
+<ul class="plain">
+<li><b>Stopping without winning.</b> Recommended: <b>"stopped pursuing", with a reason</b>, a state never read as success and open to reopening. For example: "Stopped March 2027: the oversight committee took the matter over." The alternatives are pause only, or close the plan and leave the escalation paused.</li>
+<li><b>What a closed plan records.</b> Recommended: <b>the reason, plus a closing summary computed from the record</b> for each matter. It covers determinations, whether compliance was restored, consequences addressed, how each action and escalation ended, promises kept, and what is still watched. It is never published, and the member may add her own note. Rejected: letting the member rate each matter "achieved / partly / not", because that is the significance score your rules keep out.</li>
+<li><b>A success's effect.</b> Recommended: <b>a success record for each matter</b>, the member's statement on evidence, with optional figures from cited sources. It never claims the group caused the fix unless evidence beyond the group's own act shows it. The alternatives are the action's ending only, or widening consequences to include benefits.</li>
+<li><b>Stopping watching.</b> Recommended: <b>at plan close, the plan offers once</b> to keep each watch until a date the member picks, or to stop it, and every watch shows its end date. Rejected: an automatic sunset, which would be the machine deciding; and silent watching, which hides what is still running.</li>
+</ul></div>
+
+<div class="q" id="d7"><h3>D7 · When an official's spoken promise binds the body</h3>
+<p><b>Background.</b> Standards include an office's public commitments, and a later breach claim can rest on one. A deputy director saying "the remaining streets will be done by June" in a private meeting is narrative until it is in the record. The investigation design already draws the line between an account and evidence.</p>
+<p><b>Options.</b></p>
+<ul class="plain">
+<li><b>(a) Only once the body confirms it in writing or states it publicly.</b> Until then it is kept "as heard" in each member's own account. The group's confirming letter asks the office to correct the summary, and silence is recorded as a dated fact. For example, the Director's reply confirms "by June", and a member adopts it as a duty to watch.</li>
+<li><b>(b) The group's confirming letter suffices</b> if the office doesn't correct it within 14 days.</li>
+<li><b>(c) Any member's account may serve,</b> labelled as testimony.</li>
+</ul>
+<p><b>Trade-offs.</b> (b) is how lawyers write, but silence is not agreement, and a breach claim could then rest on a sentence nobody can check. (c) invites weak claims.</p>
+<p class="rec"><b>Recommendation: (a), with the office's silence recorded as a dated fact</b>, which may be published as such: "we wrote on 3 October asking the Department to correct our summary; no reply by 17 October".</p></div>
+
+<div class="q" id="d8"><h3>D8 · Starting texts, procedure guides and legal facts for every member</h3>
+<p><b>Background.</b> You set a formal authoring, approval and attribution process for filing templates. You ruled legal information yes, legal advice no, and never "what to file". You also ruled that both audiences must be optimally served. Today no template exists; the approved "Get a record" path names one that was never written. So a member without the assistant writes every request, demand and comment from a blank page. Oakland's is the only real profile, and elsewhere every date reads "undetermined".</p>
+<p><b>Options and the recommendation for each:</b></p>
+<ul class="plain">
+<li><b>Templates.</b> Recommended: <b>Civicsmith ships a small Tier 1 set for each profile</b>, under your process: written by a named person from public sources, reviewed by a professional, approved and attributed. The set is a records request, a follow-up when a date passes, a reconsideration letter, a mediation request, written public comment, a grand jury complaint and a Brown Act demand. A template is offered only after the member has chosen the act, so it never says what to file. The alternatives are groups writing their own over time (which fails your D42), or court-petition templates as well (better left until your deferred licensed certification).</li>
+<li><b>Guides.</b> Recommended: <b>a sourced guide for each kind of action and each profile, labelled "legal information, not legal advice".</b> It says what replies to expect and what each route is, in the profile's order and unranked. Members read it, and the assistant reads it as its source.</li>
+<li><b>Facts at the moment they matter.</b> Recommended: <b>shown with citations only when relevant.</b> Examples: the lobbyist threshold when a paid attendee joins a meeting; the all-party consent law before recording; the anti-SLAPP window after a threat. Whether a protection actually applies waits for the question you deferred ("if this finding holds, what could we do").</li>
+<li><b>Other states.</b> Recommended: <b>support a state when a group there asks, and extend the profile's design now</b> so the first group outside California isn't blocked. Rejected: a generic "any state" fallback, which breaks "a missing fact reads undetermined, never a default".</li>
+<li><b>Who writes a jurisdiction's rules.</b> Recommended: <b>a member drafts a rule with its primary source, a second member confirms it</b> (a professional for Tier 2 and 3 matters), and it applies in that group at once. It may then be offered to the shared profile.</li>
+</ul></div>
+
+<div class="q" id="d9"><h3>D9 · Briefing a lawyer before anything is determined, and for the group's defence</h3>
+<p><b>Background.</b> Civicsmith assembles a counsel packet: facts, chronology, exhibits with their grades, standards, candidate theories and deadlines. It is never published and never fileable. As built, it needs a determination or the open override. But lawyers want to be consulted early, and a group that is threatened or sued needs the same packet for its defence, where no determination applies. Today a defence packet would be labelled "a breach claim on an unestablished premise".</p>
+<p><b>Options.</b> (a) Keep it as built. (b) <b>A briefing at any stage without the override,</b> showing each matter's support ("1 suspected, hypothetical"), plus <b>a defence purpose</b>. A defence packet holds each challenged statement with its finding and sources, the pressure received, and the defence deadlines with citations. (c) Early briefings for Tier 3 only, and no defence packet.</p>
+<p class="rec"><b>Recommendation: (b).</b> Your breach rule sits at the outward act. A packet goes only to the group's own lawyer by a member's hand and asserts nothing outward, so the rule does not apply. The packet never says "you have a claim".</p></div>
+
+<div class="q" id="d10"><h3>D10 · The litigation hold: who places it, and what it reaches</h3>
+<p><b>Background.</b> You ruled that nothing named in a hold may be purged. Today a hold can be placed only from a threatening letter on an action. A letter about the published case raises none, and a group planning to sue has no way to place one. A real hold also reaches members' own email, texts and chats, which Civicsmith cannot and must not watch.</p>
+<p><b>Options.</b></p>
+<ul class="plain">
+<li><b>Who may place it.</b> (a) <b>Any member who can see the action or case, with a reason</b> such as "we anticipate litigation". (b) Only from a counsel matter. (c) No change.</li>
+<li><b>What it reaches.</b>
+<ul class="plain">
+<li>(a) <b>A hold notice to members,</b> prepared when the hold is placed and sent by a member's own hand. It lists in plain words what to keep: email, texts, chats with disappearing messages turned off, notes, photos. There is no tracking of who read or complied.</li>
+<li>(b) As (a), and each member records "I have read it".</li>
+<li>(c) Civicsmith's own material only.</li>
+</ul></li>
+</ul>
+<p class="rec"><b>Recommendation: (a) and (a).</b> Option (b) on reach is rejected, because a record per member is the measuring of members your rules exclude.</p></div>
+
+<div class="q" id="d11"><h3>D11 · Where the no-policy line falls: testimony and elections</h3>
+<p><b>Background.</b> Your rule: Civicsmith takes no position on what policy should be. Groups may testify, and may support legislation that restores or enforces an existing requirement. Policy advocacy and candidate support are not actions. Two places test this:</p>
+<ul class="plain">
+<li>Testimony at the utilities commission almost always touches policy, though the group's finding is factual.</li>
+<li>Near an election, a group telling voters what the record shows about the last bond can become a campaign committee under state law if it spends money urging a vote.</li>
+</ul>
+<p><b>Options.</b></p>
+<ul class="plain">
+<li><b>Testimony.</b>
+<ul class="plain">
+<li>(a) Only enforcement testimony that rests on a determination.</li>
+<li>(b) <b>Factual testimony on any matter, plus asking a body to examine or apply an existing requirement,</b> without asking for a policy outcome. For example: "The City paid $X for these 14 projects (exhibits A–D); we ask the Commission to examine whether the same projects are in the utility's request."</li>
+<li>(c) Any position, disclosed as the group's own view.</li>
+</ul></li>
+<li><b>Elections.</b>
+<ul class="plain">
+<li>(A) <b>Inform, and fence the assistant.</b> When a message names a pending measure or candidate, a short notice says Civicsmith takes no position on how to vote and that spending on vote-urging material may be campaign activity (with the citation). The assistant never drafts vote advice. The approving member states that the message urges no vote; if she says it does, it is not recorded or stamped as the group's action.</li>
+<li>(B) Refuse any message containing vote words.</li>
+<li>(C) Nothing special.</li>
+</ul></li>
+</ul>
+<p class="rec"><b>Recommendation: testimony (b); elections (A).</b> <i>Checked:</i> a worker proposed that nothing be refused. Your rule says vote advocacy is not an action, so Civicsmith should not stamp one as the group's. The member's own statement keeps this her decision rather than a word filter.</p></div>
+
+<div class="q" id="d12"><h3>D12 · Who speaks and who is named</h3>
+<p><b>Background.</b> An action commits the group. But a member speaking at a council meeting is also a resident exercising her own right, often at two minutes' notice. Actions are addressed to roles, never private individuals, yet a tip goes to a named journalist the group needs to remember. And thanking a department may mean naming the staff who did the work.</p>
+<p><b>Options and the recommendation for each:</b></p>
+<ul class="plain">
+<li><b>Public comment:</b> <b>the member chooses when preparing.</b> "For the group" means approved, stamped, and held to your rules. "As myself" means kept in her own notes, with no group stamp. The alternatives are always the group's act, which is too heavy for live speech, or always her own, which lets the group's name be used without its standard.</li>
+<li><b>The reporter:</b> <b>addressed by role and outlet, with the journalist's name kept inside the group as "who holds the role"</b>, the same way an office shows its holder. It is never published by the system.</li>
+<li><b>Terms with the press:</b> <b>a terms note on each press action</b>, for example "on the record; embargo 22 Oct 06:00". Rejected: a named-spokesperson setting, which would be a member attribute deciding who may act.</li>
+<li><b>Thanks:</b> <b>the text may name staff acting in their official roles</b>, with a reminder that public thanks names them publicly. Requiring each person's consent would treat public employees as private individuals.</li>
+</ul></div>
+
+<div class="q" id="d13"><h3>D13 · The other side's words</h3>
+<p><b>Background.</b> Canon says third parties' words leave Civicsmith only by their own act. Newsrooms and auditors routinely publish an office's reply to a request for comment, because fairness requires it. Separately, your right-of-reply rule is a declaration, not a gate, so a group could sign its case on day 9 of a 10-day window without noticing.</p>
+<p><b>Options.</b></p>
+<ul class="plain">
+<li><b>Quoting a reply.</b> (a) Only with the office's express consent. (b) <b>On the record unless the reply says otherwise,</b> with that rule stated in the request itself, so the office answers knowing it. (c) Always attached in full.</li>
+<li><b>At signing.</b> (a) Nothing. (b) <b>A plain fact line for each open request.</b> For example: "You asked the Director of Transportation on 15 Oct; the window closes 25 Oct; the reply received 23 Oct answers 2 of 4 claims." (c) As (b), and signing while a window is open asks for a reason.</li>
+</ul>
+<p class="rec"><b>Recommendation: (b) and (b).</b> The same pattern, a fact comparison shown once and never a judgement, also serves the minutes beside the group's comment.</p></div>
+
+<div class="q" id="d14"><h3>D14 · When a member leaves</h3>
+<p><b>Background.</b> Reminders belong to each member. To-dos about an action or plan go to whoever created it, so when she leaves they go to her or to no one clearly. You ruled out assignees in a plan. A law firm never lets a deadline live in one person's calendar.</p>
+<p><b>Options.</b></p>
+<ul class="plain">
+<li><b>Her dates.</b> (a) Nothing changes. (b) <b>The owners are told once which dated items went to her, and any member may "take up" an item by one recorded act.</b> Taking up changes where its to-dos go, and nobody assigns anybody. (c) Automatic reassignment to the owners.</li>
+<li><b>Learning where things stand.</b> (a) The plan page and history. (b) A computed "where it stands" page: waits with their basis, next dates, holds, overrides, and declined options with their reasons. (c) <b>As (b), plus plan status reports</b> drafted from the record and edited by a member, never required and never published.</li>
+</ul>
+<p class="rec"><b>Recommendation: (b) and (c).</b> Taking up is a member choosing for herself where her own to-dos arrive, so it isn't an assignee.</p></div>
+
+<div class="q" id="d15"><h3>D15 · Becoming a formal party before a venue</h3>
+<p><b>Background.</b> At the utilities commission, public comments are read but are not evidence; a party's comments are formally considered. Party status brings legal duties: service, deadlines, and reporting contacts with decision-makers within three working days. It sometimes brings compensation from the utility. Records laws in other states also put deadlines on the requester.</p>
+<p><b>Options.</b> (a) Public comment only; party status stays outside Civicsmith. (b) <b>Support party participation as a Tier 2 action</b> with its advisory and the counsel packet offered. The group's own duties are held as "our deadlines", with reminders only as asked. (c) As (b), plus intervenor compensation claims.</p>
+<p class="rec"><b>Recommendation: (b) now, (c) when a group asks.</b> This is the area you work in. Your judgement on how groups really take part in commission proceedings would sharpen this one.</p></div>
+
+<div class="q" id="d16"><h3>D16 · Coalitions: lift part of your deferral now?</h3>
+<p><b>Background.</b> On 30 September you deferred joint action with another group until a coalition asks. The use cases show that sign-on letters and joint testimony are ordinary. The first level needs no machinery between groups: a partners field, one text approved in each group's copy with a matching fingerprint, and each signatory added by its own organisation's act. But no group can ask while it has no screen to ask through.</p>
+<p><b>Options.</b> (a) Design and build the first level with the first action screens. (b) <b>Record partners now, and design joint approval now</b> to build with the screens. (c) Keep everything deferred.</p>
+<p><b>A second question.</b> May a group make a breach claim about a body using another group's findings it has accepted? Recommended: <b>those findings may support the group's own, but its determination rests on its own published findings</b> about a body it examined.</p>
+<p class="rec"><b>Recommendation: (b).</b></p></div>
+
+<h2 id="record">8 · The research record</h2>
 <p class="note">For BOB and a successor. These are the six reports on branch <code>design/actions</code> under <code>docs/development/actions-design/research/</code>. Each was read in full, with its sources cited.</p>
 <ul class="plain note">
 <li><b>R1:</b> the core canon (Action, Case Making, Investigation, Capability Ladders). It covers 18 tensions and about 20 words with several meanings.</li>
@@ -236,5 +448,7 @@ code{font:400 .86em var(--mono)}
 <li><b>R4:</b> the 29–30 September action-design lane: your rulings word for word, its design, and what reached requirements.</li>
 <li><b>R5:</b> the eleven action modules, each requirement against the code and tests, with the tests run.</li>
 <li><b>R6:</b> the neighbouring modules, the layering, and what a member can actually do today.</li>
+<li><b>U1–U5, U6–U10, U11–U15, U16–U20:</b> the twenty traced use cases, with practice, the law, today, what Civicsmith should do, the gaps, and 46 candidate questions.</li>
+<li><b>S1:</b> the synthesis: the use-case table, the sixteen decisions, 27 details for BOB, 19 defects, and the capabilities needed.</li>
 </ul>
 </main>

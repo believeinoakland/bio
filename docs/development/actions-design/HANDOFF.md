@@ -25,3 +25,13 @@ Numbered entries; BOB answers each in rulings (K). Decision states live in `DECI
 4. Where Case Making's action sections and Action v0.1 differ (decision tree vs scenarios, resources, the established-step gate), Action governs (Action §5 #13).
 
 **Next:** step 3, twenty use cases (listed on the page, section 6).
+
+## H3 · 2026-10-09 · step 3 done: twenty use cases; sixteen decisions put to Bob
+
+**Carries:** the twenty use cases traced (`research/U1-U5.md` … `U16-U20.md`) and their synthesis `research/S1-synthesis.md`; the working page (same URL) now has the use-case table (§6) and D1–D16 put to Bob (§7), registered in `DECISIONS.md`. No ruling yet.
+
+**For BOB now (no ruling from Bob needed):**
+- S1 §C: 27 lower-level details with proposed settlements (BOB's or this lane's; the lane will fold the design-level ones into step 4).
+- S1 §D: 19 defects and record corrections. The ones a tranche may want: the old add form sends a bare-name counterparty that actions R63 refuses, so old-interface actions can only be "undetermined"; the queue shows action to-dos with no door to answer them; wizard `@records-request` names a template that doesn't exist; `filings` R8 refuses a counsel packet without a determination (a defence packet is mislabelled); escalation's "same act" rule (R14, conformance Terms) means a breach cured by a new act can never end; to-dos route to a departed member (queue-producers R15–R18 "else" unspecified); actions R66 puts every correspondence entry in the "what we did" lane, which a published timeline can freeze (K1494) — confidential referrals and counsel advice can leak; a docket legal-pressure mark raises no hold; the Oakland profile has no 2027 holidays and no Brown Act, §933/§933.05, Clerk, PEC or state-body data.
+- Earlier corrections to page 1 made: `records_request` is built (action-grammar R3); the "UTC overdue" ladder note is likely stale (K1657).
+- D3 (d) revises K600 (a)'s "an overridden action never joins an escalation", recorded as Bob's; it is put to him as a change to his own ruling.
