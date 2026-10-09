@@ -681,8 +681,18 @@ test("R69 (N388, REC-30): captureAccountsOf answers by the caller's viewer throu
   const { c, d, open, loose } = sightWorld();
   const nothing = (x) => ({ captureSha: x, actors: [], accounts: [] });
   const sees = (x, viewer) => c.captureAccountsOf(x, { viewer }).accounts.length === 1;
-  /* the participant, the founder, an administrator's machine credential: the project's capture is seen */
-  for (const v of ["member:m1", "admin", "class:admin", "class:ai"]) assert.equal(sees(d, v), true, v);
+  /* the participant and a machine credential: the project's capture is seen */
+  for (const v of ["member:m1", "class:admin", "class:ai"]) assert.equal(sees(d, v), true, v);
+  /* D54 (K2408, K2442): the project holds no sight setting, so it is hidden; the founder, neither invited nor joined,
+     sees it only at EXISTENCE (membership R43), never its contents: its capture reads as one never recorded */
+  for (const v of ["admin", "member:admin"]) assert.deepEqual(c.captureAccountsOf(d, { viewer: v }), nothing(d), v);
+  /* the controls: the founder sees it once the project is discoverable (D54 leaves those unchanged), and once joined */
+  const s = sightWorld();
+  s.s.sql.exec(`INSERT INTO project_sight (project_id, setting) VALUES ('PROJ-2026-0001', 'discoverable')`);
+  for (const v of ["admin", "member:admin"]) assert.equal(s.c.captureAccountsOf(s.d, { viewer: v }).accounts.length, 1, `discoverable: ${v}`);
+  const j = sightWorld();
+  j.s.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, created, updated) VALUES ('PROJ-2026-0001', 'admin', 'active', '2026-01-01', '2026-01-01')`);
+  assert.equal(j.c.captureAccountsOf(j.d, { viewer: "admin" }).accounts.length, 1, "joined: the founder");
   /* a member not in the project, and a viewer the gate does not recognise: nothing, exactly as for a capture never recorded */
   for (const v of ["member:m2", "", "junk", null]) {
     assert.deepEqual(c.captureAccountsOf(d, { viewer: v }), nothing(d), String(v));

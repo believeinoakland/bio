@@ -107,6 +107,42 @@ test("R77 (DEC-97 (1)): heldCaptures lists the Information documents at collecte
   assert.deepEqual(everything(rows), before, "nothing written");
 });
 
+/* T41-8 (N822; D54, K2408, K2442): an administrator, the founder included, neither invited nor joined to a HIDDEN project
+   sees it only at EXISTENCE (membership R43), never its contents; a discoverable project is seen as before. */
+test("R77 R76 (D54): an administrator or the founder not in a hidden project sees none of its held documents and no grade note of its captures; once the project is discoverable, or they join it, they see them", async () => {
+  const world = (sight) => {
+    const f = heldWorld();
+    f.s.sql.exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES ('m3', 'c', 'admin', 'active', '2026-01-01', '2026-01-01')`);
+    /* the project's capture held, as R76's first test holds one, through provenance's answer */
+    f.c.provenance.registerHolds = ({ sha: x }) => ({ ok: true, sha: x, asked: true, registered: x === H("4"), acquired: false });
+    if (sight) f.s.sql.exec(`INSERT INTO project_sight (project_id, setting) VALUES ('PROJ-1', ?)`, sight);
+    return f;
+  };
+  const ADMINS = ["member:m3", "admin", "member:admin"];
+  for (const sight of [null, "hidden"]) {
+    const { c, rows } = world(sight);
+    const before = everything(rows);
+    for (const viewer of ADMINS) {
+      assert.deepEqual(ids(await c.heldCaptures({ viewer, now: NOW })), ["INFO-1", "INFO-2", "INFO-3"], `${sight}: ${viewer}`);
+      assert.deepEqual(ids(await c.heldCaptures({ viewer, now: NOW, project: "PROJ-1" })), [], `${sight}: ${viewer}, filtered to the project`);
+      assert.equal((await c.gradeNoteOf({ captureSha: H("4"), viewer })).note, null, `${sight}: ${viewer}, the project's capture reads as not held`);
+    }
+    assert.equal((await c.gradeNoteOf({ captureSha: H("4"), viewer: "member:m1" })).note, ACQUIRE_GRADE_NOTE, "control: the participant has its note");
+    assert.deepEqual(everything(rows), before, "nothing written");
+  }
+  /* the controls: discoverable, every administrator sees the project's document; a participant sees it whatever the setting */
+  const open = world("discoverable");
+  for (const viewer of ADMINS) {
+    assert.deepEqual(ids(await open.c.heldCaptures({ viewer, now: NOW, project: "PROJ-1" })), ["INFO-4"], `discoverable: ${viewer}`);
+    assert.equal((await open.c.gradeNoteOf({ captureSha: H("4"), viewer })).note, ACQUIRE_GRADE_NOTE, `discoverable: ${viewer}`);
+  }
+  const joined = world("hidden");
+  for (const m of ["m3", "admin"])
+    joined.s.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, created, updated) VALUES ('PROJ-1', ?, 'active', '2026-01-01', '2026-01-01')`, m);
+  for (const viewer of ADMINS) assert.deepEqual(ids(await joined.c.heldCaptures({ viewer, now: NOW, project: "PROJ-1" })), ["INFO-4"], `joined: ${viewer}`);
+  assert.deepEqual(ids(await joined.c.heldCaptures({ viewer: "member:m1", now: NOW, project: "PROJ-1" })), ["INFO-4"], "the participant");
+});
+
 test("R77: heldCaptures filters by the member who captured a document and by project, sorts by age, source or project either way (none last), and pages by `after` over every row once", async () => {
   const { c } = heldWorld();
   const v = { viewer: "member:m1", now: NOW };
