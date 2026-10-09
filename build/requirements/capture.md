@@ -140,7 +140,7 @@ Terms. The **document address** is what the record identifies the document by; t
 - `membership`: the member session stamp for the inbox (R32, R80); the viewer's sight (its R43) for R76 and R77.
 - `credentials`: `attestingKeys` (its R11; R69). (T35) `securityCount` (its R44; R85).
 - `host-governor`: `governedFetch`, `governorAdmit`, `governorReport`, `governorConfig`, `governorState`.
-- `provenance`: `recordReceipt` (R65, R86), `homeOf` (R27's target home; R32's `project` sort; R77's project), `DOORBELL_VIA`.
+- `provenance`: `recordReceipt` (R65, R86), `receiptsOfCapture` (R60; R76's received routes), `homeOf` (R27's target home; R32's `project` sort; R77's project), `DOORBELL_VIA`.
 - `attestation`: `attest` (R68; `provenance`'s before N512's split).
 - `signatures`: `verifySshsig`, `captureAccountStatement`, `NS_RATIFY` (R69).
 - `jurisdictions`, `format-registry`, `docprofile`, `capture-sources`: used by the acquisition act, now `acquisition`'s (K649 (1)); this module reaches them only through it.

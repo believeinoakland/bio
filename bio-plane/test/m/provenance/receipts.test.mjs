@@ -16,7 +16,7 @@ test("R13: one row per (address, capture, via); a repeat widens the interval and
   let row = w.row(`SELECT * FROM captured_locators`);
   assert.deepEqual({ ...row }, { address_norm: "e.org/doc", address: "https://E.org/doc", capture_sha: s, via: "direct",
     retrieval_locator: "https://e.org/doc?export", first_retrieved: T(5), last_retrieved: T(5), observations: 1,
-    reputation: null });
+    reputation: null, uploads: null });
   w.prov.recordReceipt({ addressNorm: "e.org/doc", captureSha: s, retrieved: T(3) });
   w.prov.recordReceipt({ addressNorm: "e.org/doc", captureSha: s, retrieved: T(9) });
   row = w.row(`SELECT * FROM captured_locators`);
@@ -98,7 +98,8 @@ test("R47: listeners run in the receipt's transaction in the modules' order; one
                    "modules the order does not name run in the order they registered");
   assert.match(r.listeners.find((l) => l.module === "capture").error, /boom/);
   assert.deepEqual(seen[0][1], { address: "https://e.org/a", address_norm: "e.org/a", capture_sha: sha("a"), via: "direct",
-    retrieval_locator: "https://e.org/a", retrieved: T(4), observation: "new", reputation: null, context: { actor: "x" } });
+    retrieval_locator: "https://e.org/a", retrieved: T(4), observation: "new", reputation: null, by: null, statement: null,
+    context: { actor: "x" } });
   /* Inside the same transaction: a listener that writes, in a receipt that is rolled back, leaves nothing. */
   const w2 = world();
   w2.st.sql.exec(`CREATE TABLE listened (n INTEGER)`);
