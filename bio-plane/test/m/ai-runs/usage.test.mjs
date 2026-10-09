@@ -92,7 +92,7 @@ test("R48: a usage entry not of that shape refuses the whole tick as R3 refuses 
   assert.equal((await w.runs.tick({ run: "R404", viewer: "admin", caller: ORG, usage: "x" })).found, false);
   assert.equal((await w.runs.tick({ run: "R1", viewer: "admin", caller: "class:ai/other", usage: "x" })).code, "AI_RUN_NOT_PRINCIPAL");
   /* a run carrying no member account (opened before T33-50) cannot have calls counted: refused by name, nothing written */
-  w.sql.exec(`UPDATE ai_runs SET principal_claude = 'instance' WHERE run = 'R1'`);
+  w.sql.exec(`UPDATE ai_runs SET principal_claude = 'instance', principal_claude_ref = NULL WHERE run = 'R1'`);
   const was = w.dump() + JSON.stringify(usageRows(w));
   const legacy = await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: at("00:09:00"), usage: [call()], log: [look] });
   assert.equal(legacy.ticked, false);
@@ -349,7 +349,7 @@ test("R48, R50 (N588): a ceiling on calls is reached by the calls a conversation
   refused(w.runs.aiUseCheck({ member: "member:bob", at: at("00:09:00") }), "AI_USE_CEILING_REACHED");
 });
 
-test("R52 (K1755): a member with no account of their own is served by the group's API key while it is held and on — the run opens as that member's act (principal_claude their own id), its use counted to their day and held by the ceiling in force for them, the copy's included; the key off or removed, AI_NO_ACCOUNT; credentials' other refusals (the key's notice unread) relayed as given; nothing written on any refusal", async () => {
+test("R52 (K1755): a member with no account of their own is served by the group's API key while it is held and on — the run opens as that member's act (principal_claude the group's key, principal_claude_ref the member, T41), its use counted to their day and held by the ceiling in force for them, the copy's included; the key off or removed, AI_NO_ACCOUNT; credentials' other refusals (the key's notice unread) relayed as given; nothing written on any refusal", async () => {
   const w = await useWorld();
   const C = w.credentials;
   const danOpen = (run, over = {}) => w.runs.open(OPEN({ run, contextType: "project", contextId: PROJ, actor: "dan", viewer: "member:dan",
@@ -374,7 +374,9 @@ test("R52 (K1755): a member with no account of their own is served by the group'
   assert.equal(w.runs.aiUseCheck({ member: "member:dan", at: T0 }), null);
   const o = await danOpen("D1");
   assert.equal(o.started, true, JSON.stringify(o).slice(0, 300));
-  assert.equal(w.row(`SELECT principal_claude FROM ai_runs WHERE run='D1'`).principal_claude, "member:dan");
+  /* R52 (T41): the paying owner is the group's key, and the act is dan's */
+  assert.deepEqual(w.row(`SELECT principal_claude, principal_claude_ref FROM ai_runs WHERE run='D1'`),
+    { principal_claude: "group", principal_claude_ref: "member:dan" });
   assert.equal(JSON.stringify(w.rows(`SELECT * FROM ai_runs`)).includes("group-key-secret"), false, "the key enters no record");
   assert.equal(JSON.stringify(o).includes("group-key-secret"), false);
   /* its use is dan's, on dan's day */
@@ -401,12 +403,13 @@ test("R52 (K1755): a member with no account of their own is served by the group'
 test("R53: the module's tables are declared explicitly through record-core's declareTable — ai_usage and ai_ceilings admin-only, group sight, purged only with the whole store; ai_runs, ai_run_bounds and inquiry_run_surfacings with a run's sight, as R38 purges them", async () => {
   const w = await useWorld();
   const decl = Object.fromEntries(w.record.declaredTables().filter((t) => t.module === "ai-runs").map((t) => [t.name, t]));
-  assert.deepEqual(Object.keys(decl).sort(), ["ai_ceilings", "ai_mode_verifications", "ai_run_bounds", "ai_runs", "ai_usage",
-                                               "inquiry_run_surfacings"]);
+  assert.deepEqual(Object.keys(decl).sort(), ["ai_ceilings", "ai_group_tests", "ai_mode_verifications", "ai_run_bounds", "ai_run_looks",
+                                               "ai_runs", "ai_test_bar", "ai_usage", "inquiry_run_surfacings"]);
   for (const t of Object.values(decl))
     assert.deepEqual([t.purge, t.expunge, t.export, t.derive, t.version_chain], ["clear", "none", "admin-only", "stored", false], t.name);
-  assert.deepEqual(["ai_usage", "ai_ceilings", "ai_mode_verifications"].map((n) => [decl[n].sight, decl[n].keys]),
-                   [["group", []], ["group", []], ["group", []]]);
+  /* T41: R73's step looks and R75's test bar and group test matters, group-wide, as the verifications are */
+  const groupWide = ["ai_usage", "ai_ceilings", "ai_mode_verifications", "ai_run_looks", "ai_test_bar", "ai_group_tests"];
+  assert.deepEqual(groupWide.map((n) => [decl[n].sight, decl[n].keys]), groupWide.map(() => ["group", []]));
   assert.deepEqual(["ai_runs", "ai_run_bounds", "inquiry_run_surfacings"].map((n) => decl[n].sight), ["bundle", "bundle", "bundle"]);
   assert.deepEqual([decl.ai_runs.keys, decl.ai_run_bounds.keys, decl.inquiry_run_surfacings.keys], [[], [], undefined]);
   /* a bundle's purge leaves the counter and the ceilings; the whole store's clears them */

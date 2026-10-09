@@ -2,7 +2,10 @@
  * module's extraction; `ai_usage` and `ai_ceilings` added by T33-50. `lens_at_open`, `rerun_of` and `plan` (R46) are additive columns of the store's migration; they are part of the
  * table here, and `migrate` adds them to a table created before them. */
 export const AI_RUNS_TABLES = Object.freeze(["ai_runs", "ai_run_bounds", "inquiry_run_surfacings", "ai_usage", "ai_ceilings",
-  "ai_mode_verifications"]);
+  "ai_mode_verifications", "ai_run_looks", "ai_test_bar", "ai_group_tests"]);
+/* T41 (T41-23): `step`, `origin` (R73), `cost` (R76, the run's own sums of its ticks' usage) and `actual` (R76, fixed at
+   its close) are additive columns, added by `migrate` to a table created before them. */
+export const AI_RUNS_ADDED_COLUMNS = Object.freeze(["lens_at_open", "rerun_of", "plan", "step", "origin", "cost", "actual"]);
 
 export const AI_RUNS_SCHEMA = `
 
@@ -60,7 +63,11 @@ CREATE TABLE IF NOT EXISTS ai_runs (
   lens_at_open          TEXT,
   rerun_of              TEXT,
   -- R46 (K660): the plan a run in mode 'plan' works on, stored verbatim; NULL for every other run.
-  plan                  TEXT
+  plan                  TEXT,
+  step                  TEXT,
+  origin                TEXT,
+  cost                  TEXT,
+  actual                TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_runs_expires ON ai_runs(status, expires);
 CREATE INDEX IF NOT EXISTS ai_runs_context ON ai_runs(context_id);
@@ -132,6 +139,34 @@ CREATE TABLE IF NOT EXISTS ai_ceilings (
 
 -- K1606 (run-rules R19; VF-4): THE ACT THAT RECORDS A MODE'S FIRST LIVE RUN VERIFIED, by a member, with what they saw.
 -- Append-only: the chain that lets the next mode deploy is read from these rows, never from a parameter.
+-- R73: a step-run's looks are the step's rows of the observation log (authority kind step); each is tied to the run that
+-- made it here, so the run's log (R24) and its rollup (R14) read its own looks and no other run's.
+CREATE TABLE IF NOT EXISTS ai_run_looks (
+  seq  INTEGER PRIMARY KEY,
+  run  TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS ai_run_looks_run ON ai_run_looks(run, seq);
+-- R75: an AI part's result on a test set (Civicsmith's frozen set, or a group's own), written by the harness; figures only,
+-- never a transcript.
+CREATE TABLE IF NOT EXISTS ai_test_bar (
+  seq               INTEGER PRIMARY KEY AUTOINCREMENT,
+  part              TEXT NOT NULL,
+  set_name          TEXT NOT NULL,
+  set_version       TEXT NOT NULL,
+  false_alarm_rate  REAL NOT NULL,
+  passed            INTEGER NOT NULL,
+  graded_by         TEXT NOT NULL,
+  at                TEXT NOT NULL
+);
+-- R75: a group's own test investigations, each a matter with the answers its members wrote.
+CREATE TABLE IF NOT EXISTS ai_group_tests (
+  part     TEXT NOT NULL,
+  matter   TEXT NOT NULL,
+  answers  TEXT NOT NULL,
+  by       TEXT NOT NULL,
+  at       TEXT NOT NULL,
+  PRIMARY KEY (part, matter)
+);
 CREATE TABLE IF NOT EXISTS ai_mode_verifications (
   mode         TEXT NOT NULL,
   run          TEXT NOT NULL,

@@ -36,7 +36,8 @@ test("R19: absent or invisible {found: false, session: null}; otherwise the sess
   assert.deepEqual([s.id, s.label, s.mode, s.status, s.ticks, s.created, s.updated, s.expires],
                    ["R1", "L", "check", "running", 1, T0, T0, "2026-07-01T01:00:00Z"]);
   assert.deepEqual(s.context, { type: "inquiry", id: INQ });
-  assert.deepEqual(s.principal, { plane: ORG, claude: "member:ann", ref: "acct-1", skill: "bio@1" });
+  /* R52 (T41): `ref` is the member whose act the run is, never the opener's own word ("acct-1" was offered) */
+  assert.deepEqual(s.principal, { plane: ORG, claude: "member:ann", ref: "member:ann", skill: "bio@1" });
   assert.deepEqual(s.budget, [{ bound: "fetches", allowed: 4, consumed: 0, unit: null }]);
   assert.equal(s.condition, null);
   await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, state: { todo: ["a", "b"], page: 3 } });
