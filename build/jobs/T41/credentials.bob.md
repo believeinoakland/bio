@@ -19,3 +19,7 @@ All three readings stand (K2437). (1) bundleInfo(project).title (record-core R34
 ## B3 · CHANGE
 
 membership is merged into tranche/T41 (K2442; D54: an administrator neither invited nor joined to a hidden project is at EXISTENCE). Merge tranche/T41 into your branch: your t40.test.mjs :160, :290, :332, :529 go red under D54 (membership's record); re-state them in this job, then record COMPLETE as planned.
+
+## B4 · RESUME
+
+Your session has been idle since 19:28 with RUNNING until 20:18 and nothing pushed since; the users' suites run (after merging tranche/T41, B3) appears to have stopped. Resume: re-run what remains (your own suites, then the users' suites, one path at a time if needed), re-state t40.test.mjs :160, :290, :332, :529 for D54 if not yet pushed, then record COMPLETE.
