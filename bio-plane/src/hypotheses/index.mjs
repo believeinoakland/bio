@@ -10,24 +10,30 @@
  *                                                         hypothesis or on a derived connection carrying a lead
  *   noteWrite, noteRevise, notesOf, noteTurn, noteDelete  a member's own notes, answered to their author alone;
  *   (R11–R15)                                             revised in place and deleted for good (DEC-144)
+ *   hypothesisPropose, hypothesisTakeUp,                  the system's proposals, stored apart and labelled the
+ *   hypothesisSetAside, proposalsOf (R16–R18)             system's; a member takes one up as hers or sets it aside
+ *   noteShare, noteUnshare, sharesOf (R19–R21)            a copy of a note's words shared with a project, withdrawable
  *   hypothesesOps (R7)                                    the route arms
  *
  * SHAPE (K61, K1563 (1)). `hypothesesOf(host, deps)` answers the one instance per host; making it creates and declares
  * the tables (R10, R15) and registers the leg check with `promotion`. `deps` may give `record`, `membership`,
  * `promotion`, `explore` (whose `rederive` R6 asks), `calculations` (whose synchronous `gradeFactsOf` R6's calculation
  * arm asks; absent, the host's instance, reached when first asked), `registry` (a connection registry other than the
- * default, for a test) and `now` (a clock answering an ISO instant). */
-import { isHypothesisId, isMachineIdentity, idPattern } from "../record-grammar/index.mjs";
+ * default, for a test), `now` (a clock answering an ISO instant), `personWarning` (inquiry R59's person test, R19's
+ * warning; `({text, viewer})` → null or the warning) and `shareId` (a share's id maker, for a test). */
+import { isHypothesisId, isMachineIdentity, idPattern, ACCEPTANCE_FORMS, acceptanceRecord } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, Membership } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { BOUNDS, HUNCH_LABEL, defaultRegistry, isRecordId } from "../connection-grammar/index.mjs";
 import { exploreOf } from "../explore/index.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
-import { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES, NOTES_SCHEMA, NOTES_TABLES, NOTES_ADDED_COLUMNS, NOTE_NUMBERS_TABLE } from "./schema.mjs";
+import { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES, NOTES_SCHEMA, NOTES_TABLES, NOTES_ADDED_COLUMNS, NOTE_NUMBERS_TABLE,
+         PROPOSALS_SCHEMA, PROPOSALS_TABLE, SHARES_SCHEMA, SHARES_TABLE } from "./schema.mjs";
 import { HYPOTHESES_CHECKS } from "./checks.mjs";
 
-export { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES, NOTES_SCHEMA, NOTES_TABLES, NOTE_NUMBERS_TABLE, HYPOTHESES_CHECKS };
+export { HYPOTHESES_SCHEMA, HYPOTHESES_TABLES, NOTES_SCHEMA, NOTES_TABLES, NOTE_NUMBERS_TABLE, HYPOTHESES_CHECKS,
+         PROPOSALS_TABLE, SHARES_TABLE };
 
 /** The module's name: its tables' declarer, its promotion step and the connection owner of `hunch` (R4, R10). */
 export const OWNER = "hypotheses";
@@ -59,6 +65,18 @@ export const NOTE_MAX_BYTES = 131072;
 export const NOTE_TURNS = Object.freeze(["observation", "hunch", "question"]);
 /** R12: the page of notes: 200 by default, clamped 1…1000. */
 export const NOTES_LIMIT = Object.freeze({ default: 200, max: 1000 });
+/** R16: the label every proposal of the system's carries, and the heading it is answered under. */
+export const SYSTEM_LABEL = "the system's";
+export const PROPOSALS_HEADING = "The system's proposals";
+/** R16: a proposal's `how` and `run`, at most. */
+export const HOW_MAX = 4000;
+export const RUN_MAX = 200;
+/** R19: a shared note's labels: hers, and narrative. */
+export const SHARE_KIND = "narrative";
+/** R21: a page of a project's standing shares, at most. */
+export const SHARES_MAX = 200;
+/** R19: a share's id, opaque and never a record id (`record-grammar` holds no prefix for it). */
+export const SHARE_ID_RE = /^share:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const UTF8 = new TextEncoder();
 const HUNCH_VALID = Object.freeze({ from: null, to: null, precision: "day", zone: "UTC" });
 
@@ -114,9 +132,10 @@ export function hypothesesOf(host, deps = {}) {
 }
 
 export class Hypotheses {
-  #sql; #record; #membership; #explore; #host; #calculations; #registry; #now;
+  #sql; #record; #membership; #explore; #host; #calculations; #registry; #now; #personWarning; #shareId;
 
-  constructor(storage, { record, membership, explore = null, host = null, calculations = null, registry = defaultRegistry, now = null }) {
+  constructor(storage, { record, membership, explore = null, host = null, calculations = null, registry = defaultRegistry, now = null,
+                         personWarning = null, shareId = null }) {
     this.#sql = storage.sql;
     this.#record = record;
     this.#membership = membership;
@@ -125,6 +144,8 @@ export class Hypotheses {
     this.#calculations = calculations;
     this.#registry = registry;
     this.#now = typeof now === "function" ? now : () => new Date().toISOString();
+    this.#personWarning = typeof personWarning === "function" ? personWarning : null;
+    this.#shareId = typeof shareId === "function" ? shareId : () => `share:${crypto.randomUUID()}`;
   }
 
   #rows(q, ...a) { return [...this.#sql.exec(q, ...a)]; }
@@ -135,7 +156,7 @@ export class Hypotheses {
   /** The tables and their declaration (R10), and, for a registry other than the default (a test's), the owner bound to
    *  this instance (R4). Idempotent; a refused declaration is a defect of the wiring and throws. */
   migrate() {
-    const bare = (HYPOTHESES_SCHEMA + NOTES_SCHEMA).split("\n").map((l) => l.replace(/--.*$/, "")).join("\n");
+    const bare = (HYPOTHESES_SCHEMA + NOTES_SCHEMA + PROPOSALS_SCHEMA + SHARES_SCHEMA).split("\n").map((l) => l.replace(/--.*$/, "")).join("\n");
     for (const st of bare.split(";")) { const t = st.trim(); if (t) this.#sql.exec(t); }
     /* A copy whose notes table predates a column gains it here (`revised`, T35). */
     for (const [table, column, decl] of NOTES_ADDED_COLUMNS) {
@@ -148,9 +169,14 @@ export class Hypotheses {
                    keys: ["bundle_id"] };
     /* R15: a member's notes, their author's alone and never exported, held in the group's copy like every table. */
     const notes = { purge: "clear", expunge: "none", export: "never", sight: "owner", derive: "stored", version_chain: false, keys: [] };
+    /* R19: a project's shares, sight the project's, purged with it, never exported (never published, DEC-136 (3)). */
+    const shares = { purge: "clear", expunge: "none", export: "never", sight: "bundle", derive: "stored", version_chain: false,
+                     keys: ["project_id"] };
     const d = this.#record.declareTable(OWNER, [...HYPOTHESES_TABLES.map((name) => ({ ...base, name })),
                                                 ...NOTES_TABLES.map((name) => ({ ...notes, name })),
-                                                { ...notes, name: NOTE_NUMBERS_TABLE, purge: "exempt" }]);
+                                                { ...notes, name: NOTE_NUMBERS_TABLE, purge: "exempt" },
+                                                { ...base, name: PROPOSALS_TABLE },
+                                                { ...shares, name: SHARES_TABLE }]);
     if (d && d.ok === false) throw new Error(`hypotheses: declareTable refused: ${d.reason}`);
     if (this.#registry !== defaultRegistry && !this.#registry.owners().some((o) => o.owner === OWNER)) {
       const r = this.#registry.registerOwner({ owner: OWNER, kinds: [...HUNCH_KINDS], neighbours: (a) => this.neighbours(a) });
@@ -314,9 +340,13 @@ export class Hypotheses {
                                 WHERE hypothesis_id = ? ORDER BY seq`, r.hypothesis_id)
       .map((h) => ({ act: h.act, by: h.by_actor, at: h.at, ...(h.statement !== null ? { statement: h.statement } : {}),
                      ...(h.about_json !== null ? { about: parse(h.about_json) } : {}), ...(h.reason !== null ? { reason: h.reason } : {}) }));
+    /* R17: a hypothesis a member took up from the system's proposal notes that it came from the system */
+    const p = this.#one(`SELECT proposal_id, how, false_alarm_rate, acceptance_json FROM ${PROPOSALS_TABLE} WHERE taken_as = ?`, r.hypothesis_id);
+    const from = p ? { came_from: { source: SYSTEM_LABEL, proposal: p.proposal_id, form: parse(p.acceptance_json)?.form ?? null,
+                                    how: p.how, false_alarm_rate: Number(p.false_alarm_rate) } } : {};
     return { hypothesis_id: r.hypothesis_id, inquiry: r.bundle_id, kind: r.kind, label: HYPOTHESIS_LABEL, fact: false, grade: null,
              statement: r.statement, about: parse(r.about_json), held_by: r.held_by, held_at: r.held_at,
-             status: r.withdrawn ? "withdrawn" : "live", history };
+             status: r.withdrawn ? "withdrawn" : "live", ...from, history };
   }
 
   /** R3: `read({hypothesisId, viewer})`. */
@@ -325,12 +355,126 @@ export class Hypotheses {
     return r ? { ok: true, hypothesis: this.#view(r) } : Hypotheses.#noSuch(hypothesisId);
   }
 
-  /** R3: `hypothesesOf({inquiry, viewer})`: every hypothesis the inquiry holds, withdrawn ones marked, in the order held. */
+  /** R3: `hypothesesOf({inquiry, viewer})`: every hypothesis the inquiry holds, withdrawn ones marked, in the order held;
+   *  (R16) the system's proposals beside them under a heading of their own, never among the held. */
   hypothesesOf({ inquiry = null, viewer = null } = {}) {
     const q = this.#inquiry(inquiry, viewer);
     if (q.refusal) return q.refusal;
     const rows = this.#rows(`SELECT * FROM hypotheses WHERE bundle_id = ? ORDER BY held_at, hypothesis_id`, inquiry);
-    return { ok: true, inquiry, label: HYPOTHESIS_LABEL, hypotheses: rows.map((r) => this.#view(r)) };
+    return { ok: true, inquiry, label: HYPOTHESIS_LABEL, hypotheses: rows.map((r) => this.#view(r)),
+             system_proposals: { heading: PROPOSALS_HEADING, label: SYSTEM_LABEL, items: this.#proposalRows(inquiry, null).map((p) => Hypotheses.#proposalView(p)) } };
+  }
+
+  /* ---- the system's proposals (R16–R18; D33, D46 A, D3, K1473) ---- */
+
+  #proposalRows(inquiry, run) {
+    return run ? this.#rows(`SELECT * FROM ${PROPOSALS_TABLE} WHERE bundle_id = ? AND run = ? ORDER BY proposed_at, proposal_id`, inquiry, run)
+               : this.#rows(`SELECT * FROM ${PROPOSALS_TABLE} WHERE bundle_id = ? ORDER BY proposed_at, proposal_id`, inquiry);
+  }
+
+  /* One proposal as every read answers it: the system's, how it was worked out and its false-alarm rate, never a fact,
+     no grade; a taken-up one names who took it up and as what, a set-aside one who set it aside and why (R18). */
+  static #proposalView(p) {
+    const status = p.state;
+    const acceptance = parse(p.acceptance_json);
+    return { proposal: p.proposal_id, inquiry: p.bundle_id, kind: p.kind, label: SYSTEM_LABEL, by: SYSTEM_LABEL, fact: false, grade: null,
+             statement: p.statement, about: parse(p.about_json), how: p.how, false_alarm_rate: Number(p.false_alarm_rate), run: p.run,
+             at: p.proposed_at, status,
+             ...(status === "taken_up" ? { taken_up: { by: p.acted_by, at: p.acted_at, form: acceptance?.form ?? null, hypothesis_id: p.taken_as } } : {}),
+             ...(status === "set_aside" ? { set_aside: { by: p.acted_by, at: p.acted_at, reason: p.reason } } : {}) };
+  }
+
+  /** R16: `hypothesisPropose({inquiry, kind, statement, about, how, false_alarm_rate, run})`, the machine's only door:
+   *  stored apart from what members hold, labelled the system's with how it was worked out and its measured false-alarm
+   *  rate. Refusals in order, each writing nothing: `NO_SUCH_BUNDLE` (no inquiry by that id), `NOT_AN_INQUIRY`,
+   *  `UNKNOWN_HYPOTHESIS_KIND`, `HYPOTHESIS_NO_STATEMENT`, `BAD_ABOUT`, `PROPOSAL_NO_HOW`, `PROPOSAL_NO_RATE`,
+   *  `PROPOSAL_NO_RUN`. Answers `{ok, proposal, kind, label: "the system's", at}`. */
+  hypothesisPropose({ inquiry = null, kind = null, statement = null, about = null, how = null, false_alarm_rate = null, run = null } = {}) {
+    const b = filled(inquiry) ? this.#record.bundleInfo(inquiry) : null;
+    if (!b) return refuse("NO_SUCH_BUNDLE", "no inquiry by that id is held", { inquiry: filled(inquiry) ? inquiry : null });
+    if (b.type !== "inquiry") return refuse("NOT_AN_INQUIRY", `${inquiry} is a ${b.type}, not an inquiry`, { inquiry });
+    if (!HYPOTHESIS_KINDS.includes(kind))
+      return refuse("UNKNOWN_HYPOTHESIS_KIND", `a hypothesis is one of ${HYPOTHESIS_KINDS.join(", ")}`, { kinds: [...HYPOTHESIS_KINDS] });
+    if (!filled(statement)) return refuse("HYPOTHESIS_NO_STATEMENT", "a proposal states what the system suggests");
+    const a = Hypotheses.#about(kind, about);
+    if (a.refusal) return a.refusal;
+    if (!filled(how)) return refuse("PROPOSAL_NO_HOW", "a proposal of the system's says how it was worked out");
+    const rate = typeof false_alarm_rate === "number" ? false_alarm_rate : NaN;
+    if (!Number.isFinite(rate) || rate < 0 || rate > 1)
+      return refuse("PROPOSAL_NO_RATE", "a proposal of the system's carries its measured false-alarm rate, a number from 0 to 1", { false_alarm_rate: false_alarm_rate ?? null });
+    if (!filled(run)) return refuse("PROPOSAL_NO_RUN", "a proposal of the system's names the run that made it");
+    const at = this.#now();
+    return this.#record.transact(() => {
+      const id = this.#record.allocId("HYP", at.slice(0, 4));
+      if (!id || !id.id) return id;
+      this.#sql.exec(`INSERT INTO ${PROPOSALS_TABLE} (proposal_id, bundle_id, kind, statement, about_json, how, false_alarm_rate, run, proposed_at)
+                      VALUES (?,?,?,?,?,?,?,?,?)`, id.id, inquiry, kind, statement.trim().slice(0, STATEMENT_MAX), json(a.about),
+                     how.trim().slice(0, HOW_MAX), rate, run.trim().slice(0, RUN_MAX), at);
+      return { ok: true, proposal: id.id, kind, label: SYSTEM_LABEL, at };
+    });
+  }
+
+  /** R16: `proposalsOf({inquiry, viewer, run?})`: the system's proposals in an inquiry the viewer sees, under their own
+   *  heading, in the order proposed; with `run`, that run's alone (offered with its finds). */
+  proposalsOf({ inquiry = null, viewer = null, run = null } = {}) {
+    const q = this.#inquiry(inquiry, viewer);
+    if (q.refusal) return q.refusal;
+    return { ok: true, inquiry, heading: PROPOSALS_HEADING, label: SYSTEM_LABEL,
+             proposals: this.#proposalRows(inquiry, filled(run) ? run : null).map((p) => Hypotheses.#proposalView(p)) };
+  }
+
+  /* The proposal `id` names when `by` may see its inquiry, a member's act, and open: `{row}` or `{refusal}`. */
+  #openProposal(id, by) {
+    const p = isHypothesisId(id) ? this.#one(`SELECT * FROM ${PROPOSALS_TABLE} WHERE proposal_id = ?`, id) : null;
+    if (!p || !this.#membership.inSight(p.bundle_id, by))
+      return { refusal: refuse("NO_SUCH_PROPOSAL", "no proposal by that id is held, or it is not one you may see", { proposal: filled(id) ? id : null }) };
+    if (isMachineIdentity(by)) return { refusal: refuse("MACHINE_CANNOT_HYPOTHESISE", "the act's stamp is a machine's; only a member takes up or sets aside the system's proposal (K1473)") };
+    return { row: p };
+  }
+  static #notOpen(p) {
+    return refuse("PROPOSAL_NOT_OPEN", `${p.proposal_id} was already ${p.state === "taken_up" ? "taken up" : "set aside"}`,
+                  { proposal: p.proposal_id, status: p.state });
+  }
+
+  /** R17: `hypothesisTakeUp({proposal, form, statement?, by})`, a member's act (`record-grammar` R52): holds the proposal
+   *  by R1 as hers (`as_proposed` in its words, `edited` or `own_instead` in hers), noting it came from the system.
+   *  Refusals in order, each writing nothing: `NO_SUCH_PROPOSAL`, `MACHINE_CANNOT_HYPOTHESISE`, `PROPOSAL_FORM_UNKNOWN`,
+   *  `PROPOSAL_NOT_OPEN`, `HYPOTHESIS_NO_STATEMENT` (an edited or own statement absent), then R1's own, unchanged. */
+  hypothesisTakeUp({ proposal = null, form = null, statement = null, by = null } = {}) {
+    const m = this.#openProposal(proposal, by);
+    if (m.refusal) return m.refusal;
+    const p = m.row;
+    if (!ACCEPTANCE_FORMS.includes(form))
+      return refuse("PROPOSAL_FORM_UNKNOWN", `taking up is one of ${ACCEPTANCE_FORMS.join(", ")}`, { forms: [...ACCEPTANCE_FORMS] });
+    if (p.state !== "open") return Hypotheses.#notOpen(p);
+    if (form !== "as_proposed" && !filled(statement))
+      return refuse("HYPOTHESIS_NO_STATEMENT", `taking up ${form === "edited" ? "edited" : "with your own instead"} states the hypothesis in your own words`);
+    const words = form === "as_proposed" ? p.statement : statement;
+    return this.#record.transact(() => {
+      const h = this.hold({ inquiry: p.bundle_id, kind: p.kind, statement: words, about: parse(p.about_json), by });
+      if (!h || h.ok !== true) return h;
+      const acceptance = acceptanceRecord({ proposal: p.proposal_id, form, by, at: h.at.replace(/\.\d+Z$/, "Z"), kind: "hypothesis" });
+      this.#sql.exec(`UPDATE ${PROPOSALS_TABLE} SET state = 'taken_up', acted_by = ?, acted_at = ?, acceptance_json = ?, taken_as = ? WHERE proposal_id = ?`,
+                     by, h.at, json(acceptance), h.hypothesis_id, p.proposal_id);
+      return { ...h, proposal: p.proposal_id, form, came_from: SYSTEM_LABEL, acceptance };
+    });
+  }
+
+  /** R18: `hypothesisSetAside({proposal, reason, by})`, a member's act: the proposal stays readable, with who set it
+   *  aside, when and why. Refusals in order, each writing nothing: `NO_SUCH_PROPOSAL`, `MACHINE_CANNOT_HYPOTHESISE`,
+   *  `PROPOSAL_NO_REASON`, `PROPOSAL_NOT_OPEN`. */
+  hypothesisSetAside({ proposal = null, reason = null, by = null } = {}) {
+    const m = this.#openProposal(proposal, by);
+    if (m.refusal) return m.refusal;
+    const p = m.row;
+    if (!filled(reason)) return refuse("PROPOSAL_NO_REASON", "setting the system's proposal aside says why, in the member's words");
+    if (p.state !== "open") return Hypotheses.#notOpen(p);
+    const at = this.#now();
+    const why = reason.trim().slice(0, REASON_MAX);
+    return this.#record.transact(() => {
+      this.#sql.exec(`UPDATE ${PROPOSALS_TABLE} SET state = 'set_aside', acted_by = ?, acted_at = ?, reason = ? WHERE proposal_id = ?`, by, at, why, p.proposal_id);
+      return { ok: true, proposal: p.proposal_id, label: SYSTEM_LABEL, set_aside: { by, at, reason: why } };
+    });
   }
 
   /* ---- the hunch hops (R4) ---- */
@@ -506,6 +650,67 @@ export class Hypotheses {
     return this.#record.transact(() => append(id));
   }
 
+  /* ---- a note shared with a project (R19–R21; D18) ---- */
+
+  /** R19: `noteShare({note, project, by})` by the note's author, a joined participant of `project`: copies the note's
+   *  current words into a share of that project, labelled hers and narrative; the note itself is unchanged and the share
+   *  holds no sign of which note it was. A note naming a person in no public role carries `inquiry` R59's warning,
+   *  never a refusal. Refusals in order, each writing nothing: `MACHINE_CANNOT_NOTE`; `NO_SUCH_NOTE`; membership's
+   *  `PROJECT_ACT_NOT_A_PARTICIPANT` (its R55; an unknown or unseen project alike). */
+  noteShare({ note = null, project = null, by = null } = {}) {
+    const member = this.#noteMember(by);
+    if (!member) return refuse("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a note's author shares it");
+    const n = this.#ownNote(note, member);
+    if (!n) return Hypotheses.#noSuchNote(note);
+    const proj = filled(project) ? project.trim() : "";
+    const denied = this.#membership.projectAuthority(proj, by, "joined", "noteshare");
+    if (denied) return denied;
+    let warning = null;
+    if (this.#personWarning) { try { warning = this.#personWarning({ text: n.text, viewer: by }) ?? null; } catch { warning = null; } }
+    const at = this.#now();
+    const share = this.#shareId();
+    return this.#record.transact(() => {
+      this.#sql.exec(`INSERT INTO ${SHARES_TABLE} (share_id, project_id, member, text, warning_json, shared_at) VALUES (?,?,?,?,?,?)`,
+                     share, proj, member, n.text, warning ? json(warning) : null, at);
+      return { ok: true, share, project: proj, at, by: member, kind: SHARE_KIND, ...(warning ? { warning } : {}) };
+    });
+  }
+
+  /** R20: `noteUnshare({share, by})` by its author withdraws it: its words leave every answer; the project's record keeps
+   *  that she shared a note on that date and withdrew it on that date, without its words. Refusals in order, each writing
+   *  nothing: `MACHINE_CANNOT_NOTE`; `NO_SUCH_SHARE` (absent, withdrawn or another's, one answer). */
+  noteUnshare({ share = null, by = null } = {}) {
+    const member = this.#noteMember(by);
+    if (!member) return refuse("MACHINE_CANNOT_NOTE", "the act's stamp names no member; only a share's author withdraws it");
+    const s = typeof share === "string" && SHARE_ID_RE.test(share.trim())
+      ? this.#one(`SELECT * FROM ${SHARES_TABLE} WHERE share_id = ? AND member = ? AND withdrawn_at IS NULL`, share.trim(), member) : null;
+    if (!s) return refuse("NO_SUCH_SHARE", "no share of yours stands by that id", { share: typeof share === "string" ? share : null });
+    const at = this.#now();
+    return this.#record.transact(() => {
+      this.#sql.exec(`UPDATE ${SHARES_TABLE} SET text = NULL, warning_json = NULL, withdrawn_at = ? WHERE share_id = ?`, at, s.share_id);
+      return { ok: true, share: s.share_id, withdrawn: at };
+    });
+  }
+
+  /** R21: `sharesOf({project, viewer})`: to the project's joined participants, its standing shares, newest first, at most
+   *  200, each hers and narrative, never evidence; and the record of withdrawn ones, without their words (R20). Any other
+   *  viewer, and none, reads exactly as a project with no shares. */
+  sharesOf({ project = null, viewer = null } = {}) {
+    const proj = filled(project) ? project.trim() : null;
+    const empty = { ok: true, project: proj, shares: [], truncated: false, withdrawn: [] };
+    const member = this.#noteMember(viewer);
+    if (!member || !proj || !this.#membership.isJoinedParticipant(proj, member)) return empty;
+    const rows = this.#rows(`SELECT * FROM ${SHARES_TABLE} WHERE project_id = ? AND withdrawn_at IS NULL ORDER BY shared_at DESC, share_id DESC LIMIT ?`,
+                            proj, SHARES_MAX + 1);
+    const gone = this.#rows(`SELECT share_id, member, shared_at, withdrawn_at FROM ${SHARES_TABLE} WHERE project_id = ? AND withdrawn_at IS NOT NULL
+                             ORDER BY withdrawn_at DESC, share_id DESC LIMIT ?`, proj, SHARES_MAX);
+    return { ok: true, project: proj,
+             shares: rows.slice(0, SHARES_MAX).map((r) => ({ share: r.share_id, by: r.member, text: r.text, at: r.shared_at, kind: SHARE_KIND,
+                                                            evidence: false, ...(r.warning_json ? { warning: parse(r.warning_json) } : {}) })),
+             truncated: rows.length > SHARES_MAX,
+             withdrawn: gone.map((r) => ({ share: r.share_id, by: r.member, shared: r.shared_at, withdrawn: r.withdrawn_at })) };
+  }
+
   /* ---- the leg check (R5, R6) ---- */
 
   /** R5, R6: for each leg, a finding when it rests on a hypothesis, or on a derived connection that is a lead or that
@@ -535,6 +740,10 @@ export class Hypotheses {
     if (isHypothesisId(target))
       return finding("HYPOTHESIS_NOT_A_LEG", `the leg rests on ${target}, a hypothesis: hypotheses are held in the working inquiry, never as a leg (K1467)`);
     /* END DEC-49 REGION is-hypothesis-leg */
+    /* DEC-49 REGION is-narrative-leg */
+    if (typeof target === "string" && SHARE_ID_RE.test(target))
+      return finding("NARRATIVE_NOT_A_LEG", `the leg rests on ${target}, a member's shared note: narrative, never a leg (D18)`);
+    /* END DEC-49 REGION is-narrative-leg */
     if (typeof target === "string" && DERIVED_ID_RE.test(target)) return this.#judgeDerived(target, derivationOf(leg), viewer, scope, "the leg");
     if (typeof target === "string" && CALC_RE && CALC_RE.test(target)) return this.#judgeCalculation(target, viewer, scope);
     return null;
@@ -655,7 +864,8 @@ function stringsIn(v, out = []) {
 /* ---- the ops map (R7) ---- */
 
 /** R7: the route arms, keyed by op name, each a function of no arguments: the hypotheses' four and the notes' five
- *  (three since T34; `noterevise`, `notedelete` since T35, DEC-144). An act's arguments come from the body, whose `by` is the control plane's stamp; a read's from `url`'s
+ *  (three since T34; `noterevise`, `notedelete` since T35, DEC-144); since T41, `hypothesistakeup` (R17) and the shares'
+ *  `noteshare`, `noteunshare` and `shares` (R19–R21), as `op-declarations` R43 names them. An act's arguments come from the body, whose `by` is the control plane's stamp; a read's from `url`'s
  *  query, the `viewer` stamp among them, never the body. */
 export function hypothesesOps(hypotheses, url, body) {
   const q = (k) => url.searchParams.get(k);
@@ -671,5 +881,9 @@ export function hypothesesOps(hypotheses, url, body) {
     noteturn: () => hypotheses.noteTurn(b),
     noterevise: () => hypotheses.noteRevise(b),
     notedelete: () => hypotheses.noteDelete(b),
+    hypothesistakeup: () => hypotheses.hypothesisTakeUp(b),
+    noteshare: () => hypotheses.noteShare(b),
+    noteunshare: () => hypotheses.noteUnshare(b),
+    shares: () => hypotheses.sharesOf({ project: q("project"), viewer: q("viewer") }),
   };
 }
