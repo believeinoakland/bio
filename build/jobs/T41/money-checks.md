@@ -9,7 +9,7 @@
 - `run.test.mjs` R6 (N607) (was :135): `bob`, an administrator neither invited nor joined to the hidden alpha, is refused the switch, nothing is written and the detector still runs; joined to alpha (still at `FULL`), his switch-off stands and the run goes over nothing, as before.
 - The fixture gains `participate(project, member, state)` (joined or invited) and `discoverable(project, owner)`. No product code and no requirement changed.
 
-**Deferred.** None of the entry. Two flaws in this module's own code, not fixed because neither is in my requirements' text (BOB's, reported as J2):
+**Deferred.** None of the entry. Two flaws in this module's own code, not fixed because neither is in my requirements' text (BOB's, reported as J1):
 1. Every read and act naming a project (`switchDetector` index.mjs:508, `noticed` :775) answers a caller at `EXISTENCE` with `NO_SUCH_PROJECT` (`noSuchProject`), where membership's Terms and R44 (and R77, "every act … asks it") call for `PROJECT_SEEN_NOT_A_PARTICIPANT` (C-70.1, with `owners` for an administrator at a hidden project's `EXISTENCE`). Pre-dates D54 (a member outside a discoverable project got the same). My new assertions check `ok: false` and no contents, not the code, so they hold either way.
 2. `switchDetector` admits any viewer R43 lets see the project (index.mjs:508), so an active administrator outside a discoverable project may switch a detector there; membership R60 says an administrator's sight is never a position and their only project act is `project-roster` R5. R5 here says only "a member's act per project".
 
