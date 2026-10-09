@@ -1,3 +1,8 @@
 # extraction (T41)
 
 **Status** · session_01JGmpMryVXRkDRTjTm7xrXJ · depth 2 · WORKING · handled B1
+
+## J1 · QUESTION
+
+R42 (D4) interface, my best reading; I am building it now and will bring it in line with your answer.
+`proposedReadingGrade(entry, capture?)` and `checkProposedRef(entry, capture?)` stay pure. `capture` is `{text, ceiling}`, read by the CALLER from the record, never from the proposal: `text` the capture's extracted text at the entry's extent, `ceiling` the capture's own grade letter (or null, undetermined). A quote is verified when the entry carries `quote` (a non-empty string), a position (`source`, readable by `readingSource`), and `quote` is a byte-exact substring of `capture.text` (no folding of case, whitespace or Unicode form). A verified quote earns `capture.ceiling` (so it may also be weaker than B; null stays null, stated), with `verified_quote: true` and `check: [{kind: "date"|"number", text, at}]`, every date and number in the quote read by code (digits, currency, percents, ISO/slashed/month-name dates, spelled-out cardinals). Without `capture`, or with any of those unmet, the grade is exactly as before (B/C/null, `verified_quote: false`, `check: []`), so run-productions' current call is unchanged. PROPOSAL_ABOVE_CEILING refuses a grade above B unless verified, and above `capture.ceiling` when verified. PROPOSAL_NAMES_NOTHING is unchanged (a ref with neither kind+key nor label is still refused, verified quote or not). The read of `{text, ceiling}` is the caller's (run-productions R21/R11, T41-24): this module adds no store read for it; `unitsOf` (R36) already gives the text by extent. Say if you want a store-side helper here instead.
