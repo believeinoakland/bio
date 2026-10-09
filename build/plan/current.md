@@ -74,7 +74,7 @@ No merge order (independent).
 - **T40-20 · notice-producers** · (N812) R16 (limit reached, project account suspended) · draft C.
 - **T40-21 · queue** · (N814) `op=proposedispose` takes the project arm always (R27); R20–R21's shared move kept only for a question no project draws on · K2371 · req: BOB's wording, to draft before L11's START. Also N812's new item kinds in R1 (see doubts).
 - **T40-22 · instance-setup** · (N812) R65, R67 · draft C · only after T39-16a/b (T39 L11's split, K2337): 3,299 → ~3,305.
-- **T40-23 · op-declarations** · (`t35.test.mjs`:196: credentials' ten new ops have no specs, red accepted by name until this merge, K2412) (N812) R41's ops, `aiceilingset`/`aicopyceilingset` retired; (N797, N799) `handlecheck`, `handlechange` · draft C; handle ops to draft · **P6:** 3,283 → ~3,430.
+- **T40-23 · op-declarations** · (`t33.test.mjs` R19: membership's `handlecheck`, `handlechange` have no spec until R42, K2413) (`t35.test.mjs`:196: credentials' ten new ops have no specs, red accepted by name until this merge, K2412) (N812) R41's ops, `aiceilingset`/`aicopyceilingset` retired; (N797, N799) `handlecheck`, `handlechange` · draft C; handle ops to draft · **P6:** 3,283 → ~3,430.
 - **T40-24 · store-door** · (N812) R10 · draft C.
 - **T40-25 · control-plane** · (N812) R69; (N797, N799) the handle ops' routes (`handlecheck` before sign-in, with an invitation) · draft C; to draft · **P6:** 3,270 → ~3,370.
 - **T40-26 · plane** · (N812) composes `ai-use`; (N799) registers publication's guard with membership; whatever L1–L8's new codes owe (answer-envelope shares among them) · fixed at L11's START from the merged codes.
