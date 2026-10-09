@@ -15,10 +15,12 @@
  *   query                query-language's `savedForm` (its R30).
  *   relations, zone      each a function: the relations and the zone, used only where `retrieval` gives none.
  *   credentials          whether the group keeps its material away from AI (its R35, `aiKeptAway`, the one site of
- *                        `AI_KEPT_AWAY`, K231), the account that serves the author (its R35, `accountFor`) and the
- *                        standing question's grant (its R32, `aiGrantMintStanding`), for R19.
- *   ceilingRefusal       `(member, at)` → null or ai-runs' ceiling refusal (`aiUseCheck`, its R50, R52), handed in by
- *                        the composition root (T39; N803, K2304): read for every account, a sign-in's included.
+ *                        `AI_KEPT_AWAY`, K231), the account that serves an act (its R56, `accountFor`), the standing
+ *                        question's grant (its R32, `aiGrantMintStanding`), for R19, and the projects kept away from a
+ *                        use (its R57, `projectsKeptAway`), for R30's widening of R2.
+ *   useCheck             `({owner, member, use, at})` → null or `AI_LIMIT_REACHED` (`ai-use.useCheck`, its R3), handed
+ *                        in by the composition root: the paying account's limits, in place of the ceiling (R30), read
+ *                        for every account, a sign-in's included.
  *   combine              `jurisdictions.combine` (default), over the active profiles (`record-core` R26).
  *   now                  the module's clock, an ISO instant (default: the wall clock).
  *
@@ -44,9 +46,10 @@ export { ASK_SCOPE, askAdmits, draftAdmits, scrubRead } from "./scope.mjs";
 export { ReadLog, textOf } from "./readlog.mjs";
 export { checkAnswer, shapeRefusal, figuresIn, ANSWER_FIELDS, SENTENCE_KINDS, RULE_LABELS, ANSWER_LABEL, LEVELS,
          ABSENCE_TERMS } from "./check.mjs";
+export { checkSentences, verdictIn, VERDICT_WORDS, CAUSE_MARKERS, BASIS_KINDS, LOOKED_STATES } from "./sentences.mjs";
 export { BUILT_IN_SERVICES, RULE_SERVICE_NAMES } from "./rules.mjs";
-export { CADENCES, STANDING_TICK_MAX, STANDING_ANSWERS_MAX, STANDING_LABEL, STANDING_AI_SETTING, STANDING_FIND_MAX,
-         STANDING_FIND_KEYS_MAX, STANDING_FIND_CAPTURES_MAX, STANDING_FIND_LABEL, FIND_ORIGIN, nextDueDay, memberOf }
+export { CADENCES, STANDING_TICK_MAX, STANDING_ANSWERS_MAX, STANDING_LABEL, STANDING_AI_SETTING, STANDING_USE, STANDING_FIND_MAX,
+         STANDING_FIND_KEYS_MAX, STANDING_FIND_CAPTURES_MAX, STANDING_FIND_LABEL, FIND_ORIGIN, nextDueDay, memberOf, ownerOf }
   from "./standing.mjs";
 export { ANSWERS_SCHEMA, ANSWERS_TABLES } from "./schema.mjs";
 
@@ -54,6 +57,8 @@ export { ANSWERS_SCHEMA, ANSWERS_TABLES } from "./schema.mjs";
 export const RULE_SERVICES_SETTING = "answers_rule_services";
 /** R13: the modes a tally is kept per. */
 export const ASK_MODES = Object.freeze(["ask", "standing"]);
+/** R30: the uses a grant reads under (credentials' `USE_KINDS` that mint an ask's or a standing question's grant). */
+export const GRANT_USES = Object.freeze(["ask", "draft", "standing"]);
 /** The most read logs held at once (each lives at most a grant's life). */
 const LOGS_MAX = 512;
 
@@ -80,7 +85,7 @@ export class Answers {
   /** A dependency named in `deps`: an object, or a function answering one, read once. */
   dep(name) {
     if (name === "query") return this.deps.query ?? { savedForm };
-    if (name === "ceilingRefusal") return this.deps.ceilingRefusal ?? null;
+    if (name === "useCheck") return this.deps.useCheck ?? null;
     if (this.resolved.has(name)) return this.resolved.get(name);
     const d = this.deps[name];
     let v = null;
@@ -141,37 +146,49 @@ export class Answers {
     return (k && this.logs.get(k)) || new ReadLog({ grant: grant ?? null });
   }
 
-  #logFor(grant, viewer) {
+  #logFor(grant, viewer, use = "ask") {
     const k = this.#key(grant);
     if (!k || !filled(viewer)) return null;
     const nowMs = Date.parse(this.now());
     this.#sweepLogs(nowMs);
     let l = this.logs.get(k);
     if (!l) {
-      l = new ReadLog({ grant, viewer, at: this.now() });
+      l = new ReadLog({ grant, viewer, at: this.now(), use: GRANT_USES.includes(use) ? use : "ask" });
       l.expires = nowMs + AI_GRANT_TTL_SECONDS * 1000;
       this.logs.set(k, l);
     }
     return l.viewer === viewer ? l : null;
   }
 
-  /** R2: whether an id names a held bundle the viewer may not see. */
-  hidden(viewer) {
+  /** R2, R30: whether an id names a held bundle the viewer may not see, or one of a project that keeps its material
+   *  away from AI for `use` (`credentials.projectsKeptAway`, its R57: the project's own bundle or one it holds). When
+   *  the limits cannot be read, every project's bundle is dropped (fail closed). */
+  hidden(viewer, use = "ask") {
+    const creds = this.dep("credentials");
+    let away = [];
+    try { away = creds && typeof creds.projectsKeptAway === "function" ? creds.projectsKeptAway({ use }) : []; } catch { away = null; }
+    const kept = Array.isArray(away) ? new Set(away) : null;
     return (id) => {
-      if (typeof this.record.bundleInfo !== "function" || !this.record.bundleInfo(id)) return false;
-      return !this.membership.inSight(id, viewer);
+      const info = typeof this.record.bundleInfo === "function" ? this.record.bundleInfo(id) : null;
+      if (!info) return false;
+      if (!this.membership.inSight(id, viewer)) return true;
+      const project = info.type === "project" ? info.id : info.project;
+      if (!project) return false;
+      return kept === null || kept.has(project);
     };
   }
 
-  /** R1, R2: a read served under a grant: refused outside ASK_SCOPE; otherwise its answer scrubbed of ties, source
-   *  links and hidden rows, recorded in the grant's read log, and answered as recorded. Writes no row (R14). */
-  logRead({ grant = null, op = null, args = null, answer = null, viewer = null } = {}) {
+  /** R1, R2, R30: a read served under a grant: refused outside ASK_SCOPE; otherwise its answer scrubbed of ties, source
+   *  links, hidden rows and the rows of projects kept away from AI for the grant's use (`ask` unless named: `draft`,
+   *  or `standing` for R19's run, fixed when the grant's log opens), recorded in the grant's read log, and answered as
+   *  recorded. Writes no row (R14). */
+  logRead({ grant = null, op = null, args = null, answer = null, viewer = null, use = "ask" } = {}) {
     if (!askAdmits(op)) return { ok: false, reason: "GRANT_OP_REFUSED", code: "GRANT_OP_REFUSED", op: op ?? null,
                                  detail: "an ask reads only the asking scope's reads" };
-    const log = this.#logFor(grant, viewer);
+    const log = this.#logFor(grant, viewer, use);
     if (!log) return { ok: false, reason: "GRANT_OP_REFUSED", code: "GRANT_OP_REFUSED", op,
                        detail: "a read under a grant names the grant and its member" };
-    const clean = scrubRead(answer, this.hidden(viewer));
+    const clean = scrubRead(answer, this.hidden(viewer, log.use));
     log.add(op, args, clean, this.now());
     return clean;
   }
@@ -217,8 +234,40 @@ export class Answers {
           label: r.label ?? null, as_of: asOf,
           ...(r.quote_only !== undefined ? { quote_only: r.quote_only } : {}), ...(r.limits ? { limits: r.limits } : {}) };
     const log = grant ? this.#logFor(grant, viewer) : null;
-    if (log) return log.addRule(scrubRead(answer, this.hidden(viewer)), asOf);
+    if (log) return log.addRule(scrubRead(answer, this.hidden(viewer, log.use)), asOf);
     return answer;
+  }
+
+  /* ===================================================================== *
+   * AN ASK'S ACCOUNT (R30; D38, B3)
+   * ===================================================================== */
+
+  /** R30: the account that serves a member's ask, `credentials.accountFor` asked with kind `ask` and the ask's
+   *  `project` (one the member has joined: credentials R56 refuses any other, `PROJECT_ACT_NOT_A_PARTICIPANT`, or as
+   *  absent), then judged by `ai-use.useCheck` for the account chosen, in place of the ceiling. Answers
+   *  `{ok: true, account, owner}` (`owner` the paying account, as `ai-use` R1 spells it) or the refusal unchanged
+   *  (`AI_KEPT_AWAY`, `PROJECT_AI_KEPT_AWAY`, `AI_USE_SWITCHED_OFF`, `NO_ACCOUNT`, `AI_LIMIT_REACHED`, ...). A limit that
+   *  cannot be judged, or an account that cannot be read, refuses with no row (`LIMITS_UNREADABLE`,
+   *  `ACCOUNT_UNREADABLE`: the deployment's fault, fail closed). Writes nothing; never throws. */
+  async askAccount({ member = null, project = null, at = null } = {}) {
+    const creds = this.dep("credentials");
+    const act = { kind: "ask", member, ...(project !== null && project !== undefined ? { project } : {}) };
+    let account = null;
+    try { account = creds && typeof creds.accountFor === "function" ? await creds.accountFor({ member, act }) : null; }
+    catch { account = null; }
+    if (!account || account.ok !== true)
+      return account && account.ok === false ? account
+        : { ok: false, reason: "ACCOUNT_UNREADABLE", detail: "the account that would serve this ask could not be read; nothing was used" };
+    const owner = S.ownerOf(account, member);
+    const check = this.dep("useCheck");
+    let limit;
+    try { limit = typeof check === "function" ? await check({ owner, member: S.memberOf(member) ?? member, use: "ask",
+                                                                at: filled(at) ? at : this.now() }) : undefined; }
+    catch { limit = undefined; }
+    if (limit === undefined) return { ok: false, reason: "LIMITS_UNREADABLE",
+                                      detail: "the limits of the account that would pay for this ask could not be read; nothing was used" };
+    if (limit && limit.ok === false) return limit;
+    return { ok: true, account, owner };
   }
 
   /* ===================================================================== *

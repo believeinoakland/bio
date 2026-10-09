@@ -1,10 +1,10 @@
 /* Standing questions (R15–R21), at the interface, over the real retrieval (its saved-query runner, R70), duties and
-   credentials. The scheduler's tick is driven with the test's clock; the ceiling (ai-runs' `aiUseCheck`, which the
-   composition root hands in as `ceilingRefusal`) and the standing answerer are the test's providers (J1 (5)). The copy
+   credentials. The scheduler's tick is driven with the test's clock; the paying account's limits (`ai-use.useCheck`,
+   which the composition root hands in as `useCheck`, R30) and the standing answerer are the test's providers (J1 (5)). The copy
    is in the test profile's zone, so "today" is a local day. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { answersWorld, answer, V } from "./fixture.mjs";
+import { answersWorld, answer, V, LIMIT } from "./fixture.mjs";
 import { ANSWERS_CHECKS, STANDING_LABEL, STANDING_TICK_MAX, nextDueDay } from "../../../src/answers/index.mjs";
 
 const BOB = V("bob"), CAROL = V("carol"), ALICE = V("alice");
@@ -81,7 +81,7 @@ test("R17 due at its cadence from its last run (local day); the tick re-runs eac
   const big = await w.a.standingTick(w.clock.now);
   assert.equal(big.ran.length, STANDING_TICK_MAX); assert.equal(big.remaining, 3);
   assert.equal(big.ran[0].id, q.id, "the question due since 10-06 runs before those due since 10-08");
-  assert.equal(w.ceiling.asked.length, 0, "no model call: nothing was found new, nothing asked of the ceiling");
+  assert.equal(w.limit.asked.length, 0, "no model call: nothing was found new, no limit asked");
 });
 
 test("R18 a run finds something new when its result holds an id the previous run's did not, or an occurrence it reads changed state; a first run finds nothing; a run with nothing new records only that it ran", async () => {
@@ -119,7 +119,7 @@ test("R18 a run finds something new when its result holds an id the previous run
   assert.deepEqual(f.occurrences, [{ occurrence: `${duty.dutyId}/${duty.key}`, from: "pending", to: "overdue" }]);
 });
 
-test("R19 the AI half answers new finds only when the copy's switch, the author's switch, an account serving the author (their own or the group's key) and the use ceiling all allow; then read-only under the grant credentials mints for the standing question, its answer passing R4; otherwise no model call and what held it back is named", async () => {
+test("R19 R30 the AI half answers new finds only when the copy's switch, keep-away, an account serving the author's standing act (their own or the group's key, its standing use on) and that account's limits (ai-use.useCheck, kind standing, no project) all allow; then read-only under the grant credentials mints for the standing question, its answer passing R4; otherwise no model call and what held it back is named", async () => {
   const w = answersWorld();
   const calls = [];
   const q = set(w);
@@ -150,12 +150,19 @@ test("R19 the AI half answers new finds only when the copy's switch, the author'
   assert.equal(w.a.registerStandingAnswerer("other", async () => ({})).reason, "LISTENER_DECLARED");
   assert.deepEqual(await step(), { condition: "no_account" }, "no reference of bob's own and no group key");
   await w.credentials.accountReferenceSet({ member: "bob", kind: "apikey", secret: "sk-test", by: BOB });
+  /* his account's standing use is off (credentials R55's default): the account chosen is the one used (R56) */
   assert.deepEqual(await step(), { condition: "switch_off", switch: "member" });
-  assert.equal((await w.credentials.accountSwitchSet({ member: "bob", switch: "standing", on: true, by: BOB })).ok, true);
-  w.ceiling.refusal = { ok: false, code: "AI_USE_CEILING_REACHED", translation: "You have reached your own daily limit." };
-  assert.deepEqual(await step(), { condition: "ceiling", code: "AI_USE_CEILING_REACHED", translation: "You have reached your own daily limit." });
-  assert.equal(w.ceiling.asked.at(-1).member, "bob");
-  w.ceiling.refusal = null;
+  assert.equal(w.credentials.accountUsesSet({ owner: "member:bob", switch: "standing", on: true, by: BOB }).ok, true);
+  /* R30: the paying account's limits, ai-use.useCheck, in place of the ceiling */
+  w.limit.refusal = LIMIT;
+  assert.deepEqual(await step(), { condition: "limit", code: "AI_LIMIT_REACHED", translation: LIMIT.translation });
+  const asked = w.limit.asked.at(-1);
+  assert.deepEqual([asked.owner, asked.member, asked.use, asked.at], ["member:bob", "bob", "standing", w.clock.now]);
+  /* a limit that cannot be judged holds it back (fail closed): the negative control of the check itself */
+  w.limit.refusal = null;
+  w.a.deps.useCheck = () => { throw new Error("the counter is down"); };
+  assert.deepEqual(await step(), { condition: "limit", code: null, translation: null });
+  w.a.deps.useCheck = (a) => { w.limit.asked.push(a); return w.limit.refusal; };
   assert.equal(calls.length, 0, "no model call while any condition holds it back");
   assert.equal(grants(), 0, "no grant is minted while any condition holds it back");
   assert.equal(await step(), null);
@@ -176,16 +183,46 @@ test("R19 the AI half answers new finds only when the copy's switch, the author'
   assert.equal((await w.credentials.groupKeySet({ key: "sk-group", by: ALICE })).ok, true);
   assert.deepEqual(await step(CAROL), { condition: "no_account" }, "held but off");
   assert.equal((await w.credentials.groupKeySwitch({ on: true, by: ALICE })).ok, true);
+  assert.deepEqual(await step(CAROL), { condition: "switch_off", switch: "group" }, "the group key's own standing use");
+  assert.equal(w.credentials.accountUsesSet({ owner: "group", switch: "standing", on: true, by: ALICE }).ok, true);
   const due = await step(CAROL);
   assert.equal(due.condition, "no_account"); assert.equal(due.code, "GROUP_KEY_NOTICE_DUE"); assert.ok(due.translation);
   assert.equal((await w.credentials.groupKeyNoticeSeen({ member: "carol", by: CAROL })).ok, true);
-  assert.deepEqual(await step(CAROL), { condition: "switch_off", switch: "group" }, "the group key's own standing switch");
-  assert.equal((await w.credentials.groupSwitchSet({ switch: "standing", on: true, by: ALICE })).ok, true);
   assert.equal(await step(CAROL), null);
   assert.equal(calls.at(-1).author, CAROL); assert.equal(calls.at(-1).held.member, "carol");
+  assert.deepEqual([w.limit.asked.at(-1).owner, w.limit.asked.at(-1).member], ["group", "carol"], "the group's limits judge the group key");
 });
 
-test("R19 keep-away (credentials R35's aiKeptAway, read after the copy's switch and before any account): kept_away with the refusal's code and translation only; no account read, no grant minted, no ceiling asked, no model called; the finds still told once; an unreadable setting the same; keep-away off answers as before", async () => {
+test("R30 a standing question's AI half asks accountFor with kind standing and no project, and keep-away for the standing use", async () => {
+  const w = answersWorld();
+  const seen = [];
+  const real = w.credentials;
+  w.a.deps.credentials = new Proxy(real, { get: (t, k) => { const v = t[k]; return typeof v === "function"
+    ? (...a) => { seen.push([String(k), a[0]]); return v.apply(t, a); } : v; } });
+  w.a.resolved.delete("credentials");
+  assert.equal(w.a.standingAiSwitch({ on: true, by: ALICE }).ok, true);
+  w.a.registerStandingAnswerer("agent-worker", async () => answer());
+  const q = set(w);
+  await w.a.standingTick(w.clock.now);
+  w.document("budget one", { title: "Budget one" });
+  day(w, "2026-10-06");
+  await w.a.standingTick(w.clock.now);
+  const acct = seen.filter(([k]) => k === "accountFor").map(([, a]) => a);
+  assert.equal(acct.length, 1);
+  assert.deepEqual(acct[0], { member: BOB, act: { kind: "standing", member: BOB } }, "kind standing, no project (K2348)");
+  assert.deepEqual(seen.filter(([k]) => k === "aiKeptAway").map(([, a]) => a), [{ use: "standing" }]);
+  /* keep-away for asks only does not hold a standing question back; for standing it does */
+  assert.equal((await real.aiKeepAwaySet({ on: true, uses: ["ask"], reason: "Asks are paused.", by: ALICE })).ok, true);
+  w.document("budget two", { title: "Budget two" });
+  day(w, "2026-10-07");
+  assert.deepEqual((await w.a.standingTick(w.clock.now)).ran.find((x) => x.id === q.id).held_back, { condition: "no_account" });
+  assert.equal((await real.aiKeepAwaySet({ on: true, uses: ["standing"], reason: "Standing paused.", by: ALICE })).ok, true);
+  w.document("budget three", { title: "Budget three" });
+  day(w, "2026-10-08");
+  assert.equal((await w.a.standingTick(w.clock.now)).ran.find((x) => x.id === q.id).held_back.condition, "kept_away");
+});
+
+test("R19 keep-away (credentials R35's aiKeptAway, read after the copy's switch and before any account): kept_away with the refusal's code and translation only; no account read, no grant minted, no limit asked, no model called; the finds still told once; an unreadable setting the same; keep-away off answers as before", async () => {
   const w = answersWorld();
   const calls = [], touched = [];
   const real = w.credentials;
@@ -203,11 +240,11 @@ test("R19 keep-away (credentials R35's aiKeptAway, read after the copy's switch 
     return mine.held_back;
   };
   const grants = () => w.rows(`SELECT * FROM ai_grants`).length;
-  /* every other condition would let it run: the copy's switch, the answerer, bob's own reference and its standing switch */
+  /* every other condition would let it run: the copy's switch, the answerer, bob's own reference and its standing use */
   assert.equal(w.a.standingAiSwitch({ on: true, by: ALICE }).ok, true);
   w.a.registerStandingAnswerer("agent-worker", async (x) => { calls.push(x); return answer(); });
   await real.accountReferenceSet({ member: "bob", kind: "apikey", secret: "sk-test", by: BOB });
-  assert.equal((await real.accountSwitchSet({ member: "bob", switch: "standing", on: true, by: BOB })).ok, true);
+  assert.equal(real.accountUsesSet({ owner: "member:bob", switch: "standing", on: true, by: BOB }).ok, true);
   /* the copy's switch is read first: off, keep-away is not read at all */
   assert.equal((await real.aiKeepAwaySet({ on: true, reason: "We are reviewing what the assistant may read.", by: ALICE })).ok, true);
   w.record.setSetting("answers_standing_ai", false, "admin");
@@ -220,7 +257,7 @@ test("R19 keep-away (credentials R35's aiKeptAway, read after the copy's switch 
   const held = await step();
   assert.deepEqual(held, kept, "the refusal's code and translation only: not its reason, who or when");
   assert.deepEqual(touched, ["aiKeptAway"], "no account is read and no grant asked for");
-  assert.equal(grants(), 0); assert.equal(calls.length, 0); assert.equal(w.ceiling.asked.length, 0);
+  assert.equal(grants(), 0); assert.equal(calls.length, 0); assert.equal(w.limit.asked.length, 0);
   /* the run's new finds reach the author once, as R26's do: answer null */
   const entries = w.a.standingAnswersFor({ member: BOB }).entries;
   const e = entries.at(-1);
@@ -243,7 +280,7 @@ test("R19 keep-away (credentials R35's aiKeptAway, read after the copy's switch 
   assert.equal(await step(), null);
 });
 
-test("R19 keep-away is never reported as no_account, nor an account's refusal as kept_away: keep-away turned on between the read and accountFor or R32 is kept_away; accountFor's own refusals stay no_account; a credentials that cannot answer keep-away is kept away, fail closed", async () => {
+test("R19 keep-away is never reported as no_account, nor an account's refusal as kept_away: keep-away turned on between the read and accountFor or R32 is kept_away; accountFor's own refusals stay no_account; a use switched off is switch_off naming the account; a credentials that cannot answer keep-away is kept away, fail closed", async () => {
   const w = answersWorld();
   const q = set(w);
   await w.a.standingTick(w.clock.now);
@@ -264,27 +301,31 @@ test("R19 keep-away is never reported as no_account, nor an account's refusal as
                                 aiGrantMintStanding: async () => ROW }), kept, "R32's AI_KEPT_AWAY");
   assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: async () => ({ ok: false, code: "NO_ACCOUNT" }) }),
                    { condition: "no_account" }, "keep-away off: no account is no_account");
+  const off = (whose) => ({ ok: false, code: "AI_USE_SWITCHED_OFF", whose, use: "standing", translation: "Off." });
+  for (const [whose, sw] of [["own", "member"], ["group", "group"]])
+    assert.deepEqual(await step({ aiKeptAway: () => null, accountFor: async () => off(whose) }),
+                     { condition: "switch_off", switch: sw }, `credentials R56 for the ${whose} account`);
   for (const creds of [null, { accountFor: async () => ({ ok: true }) }, { aiKeptAway: () => { throw new Error("down"); } },
                        { aiKeptAway: () => undefined }])
     assert.deepEqual(await step(creds), { condition: "kept_away", code: null, translation: null }, "fail closed, no row to carry");
   assert.equal(calls.length, 0);
 });
 
-test("R19 the sign-in arm (T39; N803, K2304, K2343): an author served by their own Claude sign-in has the ceiling read as for any account, then R32 refuses STANDING_SWITCH_OFF (N796 held): held back {switch_off, member}, never no_account or kept_away; no account carried, no grant minted, no model called; the finds told once, answer null", async () => {
+test("R19 the sign-in arm (N796, Bob K2425; credentials R32, R55): an author served by their own Claude sign-in with its standing use off is held back {switch_off, member}, never no_account or kept_away, no grant, no model; with it on, the grant is minted for the sign-in and the AI half runs as for the author's reference, its limits read as for any account", async () => {
   const w = answersWorld();
   const calls = [], touched = [];
   const real = w.credentials;
   w.a.deps.credentials = new Proxy(real, { get: (t, k) => { const v = t[k]; return typeof v === "function" ? (...a) => { touched.push(String(k)); return v.apply(t, a); } : v; } });
   w.a.resolved.delete("credentials");
-  /* every condition but the sign-in's missing switch would let it run: the copy's switch and the answerer */
   assert.equal(w.a.standingAiSwitch({ on: true, by: ALICE }).ok, true);
-  w.a.registerStandingAnswerer("agent-worker", async (x) => { calls.push(x); return answer(); });
+  w.a.registerStandingAnswerer("agent-worker", async (x) => {
+    calls.push({ ...x, held: await real.aiGrantHeld({ token: x.grant }) });
+    w.a.logRead({ grant: x.grant, viewer: x.author, op: "search", args: {}, answer: { ok: true, hits: [{ bundle_id: x.finds.ids[0], title: "Budget" }] } });
+    return answer({ holdings: [{ address: x.finds.ids[0], quote: "Budget" }],
+                    sentences: [{ text: "A new budget document is held.", kind: "quote", support: ["h1"] }] });
+  });
   /* carol holds no reference of her own and the group no key: her sign-in is what serves her (credentials R35, R43) */
   assert.equal((await real.subscriptionConnected({ member: "carol" })).ok, true);
-  const acct = await real.accountFor({ member: "carol", act: { kind: "standing", member: CAROL } });
-  assert.deepEqual([acct.ok, acct.kind, acct.level, acct.member], [true, "signin", "member", "carol"]);
-  const minted = await real.aiGrantMintStanding({ member: CAROL, question: "q" });
-  assert.equal(minted.code ?? minted.reason, "STANDING_SWITCH_OFF", "R32 refuses a sign-in's standing question");
   const q = set(w, { author: CAROL });
   await w.a.standingTick(w.clock.now);
   let n = 0;
@@ -298,24 +339,34 @@ test("R19 the sign-in arm (T39; N803, K2304, K2343): an author served by their o
   };
   const grants = () => w.rows(`SELECT * FROM ai_grants`).length;
   const held = { condition: "switch_off", switch: "member" };
+  /* off, its default: held back, the account chosen being the one used (credentials R56) */
   assert.deepEqual(await step(), held);
-  assert.deepEqual(touched, ["aiKeptAway", "accountFor", "aiGrantMintStanding"], "keep-away, the account, then the grant");
-  assert.deepEqual(w.ceiling.asked.map((x) => x.member), ["carol"], "the ceiling read as for any account, before the grant");
-  assert.equal(calls.length, 0, "no model called"); assert.equal(grants(), 0, "no grant minted");
-  /* the ceiling's refusal holds it back first, as for any account */
-  w.ceiling.refusal = { ok: false, code: "AI_USE_CEILING_REACHED", translation: "You have reached your own daily limit." };
-  assert.deepEqual(await step(), { condition: "ceiling", code: "AI_USE_CEILING_REACHED", translation: "You have reached your own daily limit." });
-  assert.deepEqual(touched, ["aiKeptAway", "accountFor"], "no grant asked for past the ceiling");
-  w.ceiling.refusal = null;
-  assert.deepEqual(await step(), held);
-  /* the run's new finds reach the author once, as R26's do: answer null, and nothing of the account is kept */
+  assert.deepEqual(touched, ["aiKeptAway", "accountFor"], "keep-away, then the account; no grant asked for");
+  assert.equal(w.limit.asked.length, 0); assert.equal(calls.length, 0, "no model called"); assert.equal(grants(), 0, "no grant minted");
+  /* and where the account answers the sign-in but R32 refuses its standing switch: the same hold */
+  const signin = { ...real, aiKeptAway: () => null, accountFor: async () => ({ ok: true, kind: "signin", level: "member", member: "carol" }),
+                   aiGrantMintStanding: async () => ({ ok: false, code: "STANDING_SWITCH_OFF", translation: "Off." }) };
+  w.a.deps.credentials = signin; w.a.resolved.delete("credentials");
+  assert.deepEqual(await step(), held, "R32's STANDING_SWITCH_OFF");
+  assert.equal(calls.length, 0);
+  w.a.deps.credentials = new Proxy(real, { get: (t, k) => { const v = t[k]; return typeof v === "function" ? (...a) => { touched.push(String(k)); return v.apply(t, a); } : v; } });
+  w.a.resolved.delete("credentials");
   const entries = w.a.standingAnswersFor({ member: CAROL }).entries;
-  assert.equal(entries.length, 3);
-  for (const e of entries) { assert.equal(e.answer, null); assert.equal(e.finds.ids.length, 1); assert.equal(e.label, STANDING_LABEL); }
-  assert.deepEqual(entries.at(-1).held_back, held);
-  assert.deepEqual(w.a.standingAnswersFor({ member: CAROL, after: entries.at(-1).run }).entries, [], "told once");
+  assert.equal(entries.length, 2);
+  for (const e of entries) { assert.equal(e.answer, null); assert.equal(e.finds.ids.length, 1); assert.deepEqual(e.held_back, held); }
   assert.doesNotMatch(JSON.stringify(w.rows(`SELECT * FROM standing_runs`)), /signin|no_account|kept_away/);
-  assert.equal(calls.length, 0); assert.equal(grants(), 0);
+  /* on, by her own act: the grant is minted for her sign-in and the model stub is called once */
+  assert.equal(real.accountUsesSet({ owner: "member:carol", switch: "standing", on: true, by: CAROL }).ok, true);
+  w.limit.refusal = LIMIT;
+  assert.deepEqual(await step(), { condition: "limit", code: "AI_LIMIT_REACHED", translation: LIMIT.translation }, "its limits read as for any account");
+  assert.equal(w.limit.asked.at(-1).owner, "member:carol");
+  w.limit.refusal = null;
+  assert.equal(await step(), null);
+  assert.deepEqual(touched.filter((k) => k !== "aiGrantHeld"), ["aiKeptAway", "accountFor", "aiGrantMintStanding", "projectsKeptAway"]);
+  assert.equal(calls.length, 1); assert.equal(grants(), 1);
+  assert.equal(calls[0].held.ok, true); assert.equal(calls[0].held.member, "carol");
+  const last = w.a.standingAnswersFor({ member: CAROL }).entries.at(-1);
+  assert.equal(last.held_back, null); assert.equal(last.answer.sentences[0].text, "A new budget document is held.");
 });
 
 test("R20 standingAnswersFor answers a member's own new-find runs, once each, in run order after `after`, at most 200, with a cursor, labelled machine work from the standing question; nothing of another member's", async () => {
@@ -358,7 +409,7 @@ test("R21 a standing question reads only the asking scope's reads: no capture re
   /* the saved search (ASK_SCOPE's `search`), the relations and zone it is checked and run with (retrieval R69, R72),
      which read no record; with the copy's switch off, nothing else */
   assert.deepEqual([...new Set(touched)].sort(), ["retrieval.relations", "retrieval.runSaved", "retrieval.zone"]);
-  assert.equal(w.ceiling.asked.length, 0);
+  assert.equal(w.limit.asked.length, 0);
 });
 
 test("R26 a standing question runs for a member no account serves as for any member: set, run, seen and ended with no account; new finds reach them once as a list, answer null, no model called", async () => {
@@ -383,7 +434,7 @@ test("R26 a standing question runs for a member no account serves as for any mem
   assert.equal(mine.new_found, true);
   assert.deepEqual(mine.held_back, { condition: "no_account" });
   assert.equal(calls.length, 0, "read by no model");
-  assert.equal(w.ceiling.asked.filter((x) => x.member === "carol").length, 0);
+  assert.equal(w.limit.asked.filter((x) => x.member === "carol").length, 0);
   const got = w.a.standingAnswersFor({ member: CAROL });
   assert.equal(got.entries.length, 1, "one entry for the run");
   assert.deepEqual(got.entries[0].finds, { ids: [two.bundleId], occurrences: [] });
