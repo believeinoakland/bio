@@ -114,3 +114,7 @@ Numbered entries; BOB answers each in rulings (K) on `tranche/T<n>`. Decision st
 ## H22 · 2026-10-09 · canon approval withdrawn from Bob's document (K2410)
 
 **Carries:** per K2410 (Bob: "I'm also hesitant to start building what might change significantly"), the canon approval is removed from the working document; the lane works through the remaining open decisions (batch 1 D3, D4, D12, D2 with Bob now; batches 2 and 3 to follow; D1 restated last), then presents the whole design for Bob's review. Rulings keep arriving here for BOB's drafts.
+
+## H23 · 2026-10-09 · D3 and D4 ruled
+
+**Carries:** D3 A: one accepting act for every investigation proposal (as proposed / edited / my own instead, recorded), any joined member of a drawing project may act, vouching statements re-authored, acceptance measured group-wide only. D4 A in Bob's words ("why would there be any reason for the evidence grade to fall?"): a verified-quote fact keeps the document's grade; numbers and dates read by code and checked by the member; meaning by the member's acceptance; AI-read image text stays undetermined until measured (D21). **Requirements must change:** `extraction` R43 (no B cap on verified-quote proposals); canon `BIO_Assistant_and_AI_Roles_v0_1.md` §2 EXTRACT "never A" and rule 3's machine-work grade wording, for verified quotes. D12 and D2 still with Bob.

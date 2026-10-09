@@ -109,12 +109,10 @@ details.canon code{font:.85em var(--mono);overflow-wrap:anywhere}
 <div class="now">
 <p><b>Open with you</b> (<a href="#questions">section 6</a>):</p>
 <ul>
-<li><b>D3</b> · one way to accept what the system proposes</li>
-<li><b>D4</b> · how strong a fact is when the AI found it</li>
 <li><b>D12</b> · showing what AI work will cost, before it runs</li>
 <li><b>D2</b> · letting the AI read inside a document</li>
 </ul>
-<p>The four are the first batch of the decisions that were waiting in section 7; the rest follow in two more batches. A short answer is enough, for example "D3: A, D4: A, D12: A, D2: A".</p>
+<p>These are what remains of the first batch of the decisions that were waiting in section 7; the rest follow in two more batches. A short answer is enough, for example "D12: A, D2: A".</p>
 <p class="note">As you asked, nothing of the investigation design is built until every open question is answered and you have reviewed the design as a whole. BOB keeps a canon text of it current; that comes to you only after your review.</p>
 </div>
 
@@ -193,6 +191,8 @@ details.canon code{font:.85em var(--mono);overflow-wrap:anywhere}
 </div>
 <div class="gate">A member's act decides<small>dismiss the information, or add it to the evidence on the question, by its grade and the rules of evidence</small></div>
 <ul class="plain">
+<li><b>Accepting what the system proposes:</b> one act for every kind of proposal (a find, a hunch, a proposed question or step, the reading of a passage). The member takes it up as proposed, edited, or writes her own instead, and the record keeps which. Any joined member of a project drawing on the question may act on it. Where accepting would make her vouch for a legal or authored statement, she writes it in her own words. How often each kind is accepted unchanged is measured across the group only, never per member.</li>
+<li><b>A fact the AI found loses no strength for that.</b> When the publisher's own words are in the document, checked there by code, and any number or date in them is read there by code and checked by the member, the evidence carries the document's own grade. The machine only pointed. What the passage means is the member's judgement when she accepts it. Only text the AI read from a picture of a page, where the words themselves may be misread, is weaker until measured (D21).</li>
 <li>The system's <b>judgement of a find</b> is a labelled signal, shown with how it was worked out and its measured rate of false alarms. It is never a grade, never a stored score, and never used to hide or rank what members see.</li>
 <li>The system's <b>hunches and hypotheses</b> are kept apart from members', under a heading of their own on the question, seen by everyone who sees the question and offered alongside its finds. They are never facts. A member who takes one up holds it as her own, noted as having come from the system. The members' own list holds only what members hold.</li>
 <li><b>Who receives a find:</b> the joined members of every project that draws on the question. Each receives it once, in her queue, never by email. Each may stop following a question, or start following one. Nobody receives anything she may not already see.</li>
@@ -389,32 +389,9 @@ details.canon code{font:.85em var(--mono);overflow-wrap:anywhere}
 
 <p><b>The decisions from section 7, now being taken up</b>, in three batches so that each gets full context. This first batch is what the question explorer, built next, needs.</p>
 
-<div class="slip"><span class="id">D3 · One way to accept what the system proposes</span>
-<p><b>Background.</b> The system will propose many kinds of things: finds on a question, its own hunches, questions drawn from a member's words, steps, the reading of a passage, a link between a document and a question. Today each kind has its own accepting act (accept a basis, dispose of a queue item, adopt a plan option), and the one general rule covers only contradictions (your DEC-77). Members have to learn a different act for each, and the record does not show how much a member changed what the machine offered.</p>
-<p><b>Proposed.</b> Every proposal is taken up by the same act, in one of three ways: <b>as proposed</b>, <b>edited</b>, or <b>my own instead</b> (the member writes her own and sets the proposal aside). The record keeps which. Any joined member of a project drawing on the question may act on a proposal, not only the member whose account paid for it. One limit: where accepting would make her vouch for a legal or authored statement (which law applies, a conclusion, a reason), she writes it in her own words; a prefilled sentence is never accepted as hers, as already ruled ("the machine never writes the member's reason"). How often each kind is accepted unchanged is measured across the group only, never per member, to judge whether that kind of proposal is good enough.</p>
-<p><b>Example.</b> The system offers a board agenda as cutting against the district's account; Maria adds it to the evidence as proposed. It proposes the question "When did the district first know?"; she rewords it, and the record says edited.</p>
-<ol>
-<li><b>A · One act for everything the system proposes,</b> as above.</li>
-<li><b>B · Each kind keeps its own act.</b></li>
-</ol>
-<p><b>Trade-offs.</b> B needs no new design but leaves members with many acts and no record of their edits. A is learned once, works the same by hand and with the assistant, and gives an honest measure of how good each kind of proposal is.</p>
-<p class="rec">Recommended: A.</p></div>
 
-<div class="slip"><span class="id">D4 · How strong a fact is when the AI found it</span>
-<p><b>Background.</b> Evidence carries a grade, A to D. Today anything the machine read is capped at B, because it is machine work. But often the AI only points: it finds the passage in the district's own signed contract that says "540 calendar days". Those are the district's words, and code can check that they are really there in the document.</p>
-<p><b>Proposed: split the fact into three parts.</b></p>
-<ul class="plain">
-<li><b>The quote:</b> the publisher's own words, checked by code to be in the document, keeps the document's own grade.</li>
-<li><b>Any number or date in it</b> is read by code, not by the AI.</li>
-<li><b>What it means</b> ("this is the contract time") is the member's judgement, made when she accepts it, and recorded as proposed or edited (D3).</li>
-</ul>
-<p>Text the AI read from a picture of a page is different, since the words themselves may be wrong. It stays undetermined until measured (D21, in the next batch).</p>
-<ol>
-<li><b>A · The split, as above.</b></li>
-<li><b>B · Everything the AI found stays capped at B.</b></li>
-</ol>
-<p><b>Trade-offs.</b> B is simpler, but it tells members that a district's own signed contract is weaker evidence because a machine found the page. A keeps grades honest: the machine never vouches for anything, code checks the words, and the member owns the meaning.</p>
-<p class="rec">Recommended: A.</p></div>
+
+
 
 <div class="slip"><span class="id">D12 · Showing what AI work will cost, before it runs</span>
 <p><b>Background.</b> Your AI-use rulings give each account (group, project, member) limits, and track use over time; "Ask every day" already promises a rough cost. What is not yet ruled is an estimate shown before an AI act. The first AI design recorded cost and never showed it; that rule has to go.</p>
@@ -458,8 +435,8 @@ details.canon code{font:.85em var(--mono);overflow-wrap:anywhere}
 <tr><th>id</th><th>what it is about</th><th>where it stands</th></tr>
 <tr><td class="id">D1</td><td>The new parts the engine needs. Steps, the question explorer and the investigation view are approved (D51); a separate record of why each document is held is dropped (D50). What remains: a library of reading guides, an AI planner and an AI reading flow.</td><td>partly answered</td></tr>
 <tr><td class="id">D2</td><td>Letting the AI read a held document's text in bounded slices, returning only proposals tied to quotes; the canon says a sub-session never hands back documents.</td><td>open now, batch 1</td></tr>
-<tr><td class="id">D3</td><td>One way to accept anything the system proposes, recording whether it was accepted as proposed, edited, or written by the member herself.</td><td>open now, batch 1</td></tr>
-<tr><td class="id">D4</td><td>How strong a fact is when the AI found it: the quote keeps the document's grade; what it means is the member's judgment.</td><td>open now, batch 1</td></tr>
+<tr><td class="id">D3</td><td>One way to accept anything the system proposes, recording whether it was accepted as proposed, edited, or written by the member herself.</td><td>ruled A, see 2.4</td></tr>
+<tr><td class="id">D4</td><td>How strong a fact is when the AI found it: the quote keeps the document's grade; what it means is the member's judgment.</td><td>ruled A, see 2.4</td></tr>
 <tr><td class="id">D7</td><td>What permits targeted AI work. Your AI-use rules now answer most of this; what remains is whether holding a document for a purpose is itself enough to read it.</td><td>batch 2</td></tr>
 <tr><td class="id">D8</td><td>Reading guides for recurring documents: Civicsmith's and each group's, approved only after measured use.</td><td>batch 3</td></tr>
 <tr><td class="id">D12</td><td>Showing a rough cost before AI work. Tracking after the fact is answered by your AI-use rules.</td><td>open now, batch 1</td></tr>
@@ -593,6 +570,7 @@ details.canon code{font:.85em var(--mono);overflow-wrap:anywhere}
 <p>Members should meet one meaning each for "finding" (a concluded question) and "basis" (what a question rests on). The design stream will draw the other words.</p>
 
 <h2 id="words">9 · Your rulings, in your words</h2>
+<blockquote><p>"D3: A." On D4: "If it says it in the documents (both the publisher's own words, and checked by code to be in the document) and a number or date that's also really there and checked by the member, then why would there be any reason for the evidence grade to fall?"</p><cite>D3, D4 · 9 Oct</cite></blockquote>
 <blockquote><p>"D54: B." (Administrators see a hidden project's existence, name and owners; its contents only if its owners add them.)</p><cite>D54 · 9 Oct</cite></blockquote>
 <blockquote><p>"D52: B. D53: A. D13: B. D14: C." (A first message leads to one of six places; a member's own matter is helped in her hidden project; people through their part in a public matter, never a private life, the system never exploring a person on its own; Civicsmith's test investigations gate every AI part, and a group may add its own.)</p><cite>D52, D53, D13, D14 · 9 Oct</cite></blockquote>
 <blockquote><p>"D46: A. D47: B. D48: as recommended. D49: A. D50: as recommended. D51: A." (The system's hunches kept apart; each question records a shared step's outcome; a milestone met only by this project's conclusions and ended steps; a cost message carries its writer's handle; why a document is held is read from provenance; three new parts approved.)</p><cite>D46–D51 · 9 Oct</cite></blockquote>
@@ -617,12 +595,15 @@ details.canon code{font:.85em var(--mono);overflow-wrap:anywhere}
 <p><span class="tag t-ruled">ruled</span> by you · <span class="tag t-set">settled</span> from canon · <span class="tag t-open">open</span> · <span class="tag t-later">later</span> · <span class="tag t-off">withdrawn</span></p>
 <div class="wrap"><table>
 <tr><th>id</th><th>subject</th><th>state</th></tr>
-<tr><td class="id">D1–D4</td><td>the engine's parts; AI reading text; one way to accept; grade of an AI-found fact</td><td><span class="tag t-later">later</span></td></tr>
+<tr><td class="id">D1</td><td>the engine's parts</td><td><span class="tag t-later">later</span></td></tr>
+<tr><td class="id">D2</td><td>the AI reading inside a document</td><td><span class="tag t-open">open</span></td></tr>
+<tr><td class="id">D3</td><td>one way to accept what the system proposes</td><td><span class="tag t-ruled">ruled</span> A</td></tr>
+<tr><td class="id">D4</td><td>a fact the AI found keeps the document's grade</td><td><span class="tag t-ruled">ruled</span> A</td></tr>
 <tr><td class="id">D5</td><td>why a document is held, stated when captured, is part of its provenance</td><td><span class="tag t-set">settled</span> K2064</td></tr>
 <tr><td class="id">D6</td><td>the system's own explanations and hypotheses</td><td><span class="tag t-ruled">ruled</span> by D33</td></tr>
 <tr><td class="id">D7–D8</td><td>what permits targeted AI work; reading guides</td><td><span class="tag t-later">later</span></td></tr>
 <tr><td class="id">D9–D11</td><td>a contract is a standard; school districts covered; every AI part tested first</td><td><span class="tag t-set">settled</span> K2064</td></tr>
-<tr><td class="id">D12</td><td>cost shown before AI work</td><td><span class="tag t-later">later</span></td></tr>
+<tr><td class="id">D12</td><td>cost shown before AI work</td><td><span class="tag t-open">open</span></td></tr>
 <tr><td class="id">D13</td><td>the fence against investigating private people</td><td><span class="tag t-ruled</span> B</td></tr>
 <tr><td class="id">D14</td><td>test investigations an AI part must pass</td><td><span class="tag t-ruled</span> C</td></tr>
 <tr><td class="id">D15</td><td>working material never published</td><td><span class="tag t-set">settled</span> K2064</td></tr>
