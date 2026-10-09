@@ -43,3 +43,7 @@ The alternative: R10 literal (the administrator's request is written, and the ow
 ## J2 · REPORT
 
 Built and pushed (1767f4ff69 and the record after it): R5 reachable at an administrator's EXISTENCE of a hidden project, R1 and R14 at FULL, R10 per K2437; tests visibility-directory, requests, figures-purge (and roster, ownership, which assumed the same FULL sight) re-stated for an administrator neither invited nor joined, each with a negative control, plus a new R5 (D54) test. Checks format, architecture, coverage (20 of 20), ownership: 0 failures. Against a local stand-in for membership's D54 (never committed) the suite is 31 pass; on today's membership 12 fail, all D54 assertions, waiting on T41-3. Tell me when membership is merged: I merge tranche/T41, run the tests against it and record COMPLETE.
+
+## J3 · COMPLETE
+
+T41-4 complete on job/T41/project-roster (tranche/T41 merged at 1250436679): 31 of 31 pass against the merged membership; every D54 red B3 listed is re-stated and green (record, Completion); checks format, architecture, coverage (20 of 20), ownership: 0 failures. Users' suites: the same 4 reds as tranche/T41 alone (answer-envelope R7/R2 x2, plane R12 bias x2), not this job's. R10's met sentence (K2437) is in the record for you to fold.
