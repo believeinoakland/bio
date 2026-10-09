@@ -27,11 +27,12 @@ test("R3: it reads within its principal's sight: the group's, what every member 
 test("R3: it asks to capture only through capture-requests, each request carrying the step; an address the record does not hold is named to the members R5 reaches, who capture it", async () => {
   const w = await world().standard();
   const o = await w.openRun("group");
-  w.held.add("https://example.org/held");
+  w.hold("https://example.org/held");
   const ok = w.p.capture({ run: o.run, address: "https://example.org/held", caller: CALLER });
   assert.equal(ok.ok, true);
-  const [req] = w.calledAs("captureRequest");
-  assert.deepEqual([req.args.run, req.args.target, req.args.step, req.args.address], [o.run, Q, o.step, "https://example.org/held"]);
+  /* The real capture-requests holds the request, carrying the run, the question and the step (its R55). */
+  const rows = w.rows(`SELECT run, target, step, address FROM capture_requests`);
+  assert.deepEqual(rows.map((r) => [r.run, r.target, r.step, r.address]), [[o.run, Q, o.step, "https://example.org/held"]]);
   assert.equal(w.count("explore_finds"), 0, "a held address is asked, not named");
   /* Negative control: an address the record does not hold is refused there and named to the members here. */
   const not = w.p.capture({ run: o.run, address: "https://elsewhere.example/page", caller: CALLER });
@@ -42,7 +43,7 @@ test("R3: it asks to capture only through capture-requests, each request carryin
   assert.equal(w.p.findsFor({ viewer: "member:bob" }).finds.length, 0, "only to the members R5 reaches");
   /* Not a run the caller holds: refused, nothing asked. */
   assert.equal(w.p.capture({ run: o.run, address: "https://example.org/held", caller: "member:alice" }).code, "EXPLORE_NO_RUN");
-  assert.equal(w.calledAs("captureRequest").length, 2);
+  assert.equal(w.count("capture_requests"), 1, "the refused and the unheld asked nothing");
 });
 
 test("R8: a run stopped by a limit ends its step set_aside with the reason; only its enabling owner is told; no place is named", async () => {

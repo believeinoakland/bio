@@ -610,9 +610,8 @@ export class QuestionExplorer {
     if (!this.captureRequests || typeof this.captureRequests.captureRequest !== "function")
       return this.#refuse("EXPLORE_NO_RUN", "the capture door is not in place", { run: r.run });
     const asked = this.captureRequests.captureRequest(
-      { run: r.run, address, target: r.question, purpose: purpose ?? "exploring the question", render, step: r.step,
-        ...(at ? { at } : {}) },
-      { viewer: this.principal, caller: caller ?? this.principal });
+      { run: r.run, address, target: r.question, purpose: purpose ?? "exploring the question", render, step: r.step },
+      { viewer: this.principal, caller: caller ?? this.principal, ...(at ? { at } : {}) });
     if (asked && asked.ok === false && asked.code === "CAPTURE_REQUEST_ADDRESS_NOT_HELD" && typeof address === "string") {
       const iso = this.#iso(at);
       const ref = address.trim().slice(0, 2048);

@@ -18,6 +18,7 @@ import { legEarningOf } from "../../../src/leg-earning/index.mjs";
 import { stepsOf } from "../../../src/steps/index.mjs";
 import { aiUseOf } from "../../../src/ai-use/index.mjs";
 import { runProductionsOf } from "../../../src/run-productions/index.mjs";
+import { captureRequestsOf } from "../../../src/capture-requests/index.mjs";
 import { questionExplorerOf } from "../../../src/question-explorer/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
@@ -71,6 +72,10 @@ CREATE TABLE IF NOT EXISTS entities (entity_id TEXT PRIMARY KEY, kind TEXT NOT N
 CREATE TABLE IF NOT EXISTS resolutions (capture_sha TEXT, bundle_id TEXT, ref TEXT, entity_id TEXT, grade TEXT, established INTEGER);
 CREATE TABLE IF NOT EXISTS refs (bundle_id TEXT NOT NULL, target_id TEXT NOT NULL, kind TEXT NOT NULL DEFAULT '',
   PRIMARY KEY (bundle_id, target_id, kind));
+CREATE TABLE IF NOT EXISTS register (capture_sha TEXT PRIMARY KEY, bundle_id TEXT NOT NULL, path TEXT, encoding TEXT,
+  bytes INTEGER, registered TEXT, authored INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS captured_locators (capture_sha TEXT, address TEXT, retrieval_locator TEXT, address_norm TEXT);
+CREATE TABLE IF NOT EXISTS links (address TEXT, fragment TEXT, source_capture TEXT, address_norm TEXT);
 CREATE TABLE IF NOT EXISTS content (content_id TEXT PRIMARY KEY, capture_sha TEXT, bundle_id TEXT, extent_kind TEXT, extent TEXT,
   ref TEXT, stale INTEGER, minted_by TEXT, cited_as TEXT, chain_kind TEXT);
 `;
@@ -102,10 +107,10 @@ export function world({ gateOpen = true, testSet = TEST_SET } = {}) {
   const w = {
     st, host, record, membership, credentials, clock, calls,
     subjects: {}, units: {}, asserted: {}, conns: [], captures: {}, held: new Set(),
-    steps: [], runs: new Map(), bounds: new Map(),
+    runs: new Map(), bounds: new Map(),
     /* What the record holds for the deploy gate (run-rules R19, R75's records) over a test set with one matter. */
     testBars: [bar("investigate"), bar("explore")], verifications: [VERIFIED_CHECK],
-    groupResults: [], openRefuse: null, stepRefuse: null,
+    groupResults: [], openRefuse: null,
     row: (q, ...a) => [...st.sql.exec(q, ...a)][0] ?? null,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => [...st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)][0].n,
@@ -119,29 +124,18 @@ export function world({ gateOpen = true, testSet = TEST_SET } = {}) {
   };
   if (!gateOpen) w.testBars = [];
 
-  /* What ai-runs does with a run's system step (its R73: created once the run is open, ended at its close), recorded
-     here as the stand-in ai-runs' own calls; the real `steps` (merged, K2491) answers `findRecipients`. */
-  const steps = {
-    stepCreate(a) {
-      note("stepCreate", a);
-      if (w.stepRefuse) return w.stepRefuse;
-      const step = `STP-2026-${String(w.steps.length + 1).padStart(5, "0")}`;
-      w.steps.push({ step, ...a, state: "planned" });
-      return { ok: true, step, place: a.place, at: clock.now };
-    },
-    stepEnd(a) { note("stepEnd", a); const s = w.steps.find((x) => x.step === a.step); if (s) s.state = a.end; return { ok: true }; },
-  };
   const aiRuns = {
-    /* R73 (K2490): the run opens first, then its system step is created through steps.stepCreate with `run` the open
-       run; the answer names the step. */
+    /* R73 (K2490): the run opens first, then its system step is created through the real steps' stepCreate with `run`
+       the open run (steps R1's machine arm, held through the run holder the fixture registers as ai-runs would); the
+       answer names the step. */
     open(a) {
       note("open", a);
       if (w.openRefuse) return w.openRefuse;
       w.runs.set(a.run, { ...a, status: "running" });
       for (const b of a.bounds || []) w.bounds.set(`${a.run}|${b.bound}`, { allowed: b.allowed, consumed: 0 });
-      const made = steps.stepCreate({ place: a.place, work: a.work, by: a.principalPlane, run: a.run,
-                                      enabled_by: a.enabledBy && a.enabledBy.enabled_by });
-      if (!made.ok) return made;
+      note("stepCreate", { place: a.place, work: a.work, by: a.principalPlane, run: a.run });
+      const made = realSteps.stepCreate({ place: a.place, work: a.work, by: a.principalPlane, run: a.run });
+      if (!made || made.ok === false) { w.runs.delete(a.run); return made; }
       w.runs.get(a.run).step = made.step;
       return { ok: true, run: a.run, status: "running", step: made.step };
     },
@@ -151,7 +145,10 @@ export function world({ gateOpen = true, testSet = TEST_SET } = {}) {
       const r = w.runs.get(a.run);
       if (r) {
         r.status = "stopped";
-        steps.stepEnd({ step: r.step, end: a.stepEnd, ...(a.stepEnd === "set_aside" ? { reason: a.reason } : {}), by: r.principalPlane });
+        const end = { step: r.step, end: a.stepEnd, ...(a.stepEnd === "set_aside" ? { reason: a.reason } : {}), by: r.principalPlane };
+        note("stepEnd", end);
+        const e = realSteps.stepEnd(end);
+        if (!e || e.ok === false) throw new Error(`stepEnd: ${JSON.stringify(e)}`);
       }
       return { ok: true, run: a.run, actual: { usd: 0.42 } };
     },
@@ -171,14 +168,6 @@ export function world({ gateOpen = true, testSet = TEST_SET } = {}) {
       return null;
     },
     groupTestResults(a) { note("groupTestResults", a); return { ok: true, part: a.part, results: w.groupResults }; },
-  };
-  const captureRequests = {
-    captureRequest(args, ctx) {
-      note("captureRequest", { args, ctx });
-      if (!w.held.has(args.address))
-        return { ok: false, code: "CAPTURE_REQUEST_ADDRESS_NOT_HELD", reason: "CAPTURE_REQUEST_ADDRESS_NOT_HELD" };
-      return { ok: true, request: "CR-1", requested: true, already: false, step: args.step };
-    },
   };
   const connections = {
     edgeSevered: () => false,
@@ -217,6 +206,19 @@ export function world({ gateOpen = true, testSet = TEST_SET } = {}) {
   const realAiUse = aiUseOf(host, { record, membership, credentials, connections, zone: "UTC" });
   const aiUse = Object.fromEntries(["exploreAllowed", "exploreAsk", "estimate", "exploreApprove", "exploreAsksPending"]
     .map((k) => [k, (a) => { note(k, a); return realAiUse[k](a); }]));
+  /* ai-runs holds its runs (the run holder steps R1 asks for a machine's step, registered as ai-runs registers it). */
+  realSteps.registerRunHolder("ai-runs", (by, run) => {
+    const r = w.runs.get(run);
+    return r && r.principalPlane === String(by).replace(/\/.*$/, "") ? { principal: r.principalPlane, enabled_by: r.enabledBy?.enabled_by ?? null } : null;
+  });
+  /* capture-requests is the real module (merged, K2504): its door (R1–R9), R49's held-address rule over provenance's
+     `captured_locators` and `register` read contracts, and R55's `step`, read through the real steps. Its other
+     providers (the observation log, the governor, capture, promotion, inquiry, standards) are not reached by the door. */
+  const captureRequests = captureRequestsOf(host, {
+    record, membership, runs: aiRuns, steps: realSteps, credentials,
+    observations: { registerAuthority: () => ({ ok: true }) }, governor: {}, capture: {}, promotion: {}, inquiry: {},
+    standards: () => ({}) });
+  captureRequests.migrate();
   /* run-productions is the real module (merged, K2499): R24 `readPages` over the real credentials' limits and
      ai-runs' bounds (the stand-in's `runFor`, `boundOf`, `consumeBound`), a document's capture and its text units
      answered by content's and extraction's stand-ins (`w.units`). */
@@ -235,7 +237,7 @@ export function world({ gateOpen = true, testSet = TEST_SET } = {}) {
     now: () => Date.parse(clock.now),
   });
   p.migrate();
-  Object.assign(w, { p, legEarning, steps: w.steps, realSteps, stepsApi: steps, aiUse, realAiUse, aiRuns, captureRequests, connections, retrieval });
+  Object.assign(w, { p, legEarning, realSteps, aiUse, realAiUse, aiRuns, captureRequests, connections, retrieval });
 
   let rev = 0;
   w.bundle = (id, type, text, { project = null, state = null } = {}) => {
@@ -276,11 +278,16 @@ export function world({ gateOpen = true, testSet = TEST_SET } = {}) {
       if (!r || r.ok === false) throw new Error(`follow ${m}: ${JSON.stringify(r)}`);
     }
   };
+  /* An address the record already holds: an acquisition receipt's (provenance's `captured_locators`) for a capture
+     registered to a document (capture-requests R49). */
+  w.hold = (address, cap = CAP) => st.sql.exec(`INSERT INTO captured_locators (capture_sha, address, retrieval_locator, address_norm)
+                                                VALUES (?, ?, ?, ?)`, cap, address, address, new URL(address).toString());
   /* A project draws on a question: its document cites it (connections' `refs`, R58). */
   w.draw = (question, project) => st.sql.exec(`INSERT OR IGNORE INTO refs (bundle_id, target_id, kind) VALUES (?, ?, 'cites')`, project, question);
   w.doc = (id, cap, { project = null, pages = 3 } = {}) => {
     w.bundle(id, "information", null, { project });
     w.captures[cap] = id;
+    st.sql.exec(`INSERT OR IGNORE INTO register (capture_sha, bundle_id, path, registered) VALUES (?, ?, ?, 't')`, cap, id, `snapshots/${id}`);
     w.units[cap] = Array.from({ length: pages }, (_, i) => ({ extent: { kind: "pdf-page", page: i }, ref: `page ${i + 1}`, text: `text of page ${i + 1}` }));
     return cap;
   };

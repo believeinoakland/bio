@@ -93,7 +93,9 @@ test("R3: the run opens through ai-runs in the investigate run path, origin expl
   assert.deepEqual(open.enabledBy, { kind: "machine", enabled_by: "group" });
   assert.deepEqual(open.bounds.map((b) => b.bound), EXPLORE_BOUNDS.map((b) => b.bound));
   assert.ok(open.bounds.some((b) => b.bound === "pages"), "R13's pages bound declared");
-  assert.equal(o.step, "STP-2026-00001", "the step ai-runs created, kept with the run");
+  assert.match(o.step, /^STP-/);
+  assert.equal(o.step, w.runs.get(o.run).step, "the step ai-runs created, kept with the run");
+  assert.deepEqual(w.realSteps.step({ step: o.step, viewer: "member:alice" }).place, { questions: [Q] }, "a step on the question, in the real steps");
   assert.equal(w.calledAs("stepCreate")[0].run, o.run, "created for the open run");
   /* Negative controls: a refused open, and an open that answers no step, leave no run. */
   const w2 = await world().standard();
