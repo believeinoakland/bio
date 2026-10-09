@@ -276,6 +276,25 @@ test("R15 R16 R8 (meaningread) a meaning row whose bundle the viewer may not see
   assert.deepEqual([run("member:dave", "levels"), run("member:carol", "levels")],
     [[{ documents: 1, documents_with_rows: 1 }], [{ documents: 2, documents_with_rows: 2 }]]);
   for (const mode of [undefined, "count", "levels", "axis"]) assert.deepEqual(run("nobody", mode).filter((r) => r.n || r.documents || r.bundle_id || r.capture_sha), [], String(mode));
+  /* D54 (membership R43): PRJ is hidden (the index holds no setting for it), so an administrator neither invited nor
+     joined, the founder included in both spellings, is withheld its row and its count exactly as dave is. */
+  w.member("erin", "admin"); w.member("fay", "admin");
+  w.participate("PRJ", "fay", "invited");
+  const withheld = ["admin", "member:admin", "member:erin"];
+  for (const v of withheld) {
+    assert.deepEqual(uniq(run(v).map((r) => r.bundle_id)), ["DOC"], `${v}: a hidden project's row is withheld`);
+    assert.deepEqual([run(v, "count"), run(v, "levels")], [[{ n: 1 }], [{ documents: 1, documents_with_rows: 1 }]], v);
+  }
+  /* Controls: an administrator invited to it sees it whole; set discoverable, every administrator does, a member not. */
+  assert.deepEqual(uniq(run("member:fay").map((r) => r.bundle_id)), ["DOC", "PRJ"], "an invited administrator");
+  w.sight("PRJ", "hidden");
+  assert.deepEqual(uniq(run("member:erin").map((r) => r.bundle_id)), ["DOC"], "hidden, as the index says");
+  w.sight("PRJ", "discoverable");
+  for (const v of withheld) {
+    assert.deepEqual(uniq(run(v).map((r) => r.bundle_id)), ["DOC", "PRJ"], `${v}: a discoverable project at FULL`);
+    assert.deepEqual([run(v, "count"), run(v, "levels")], [[{ n: 2 }], [{ documents: 2, documents_with_rows: 2 }]], v);
+  }
+  assert.deepEqual(uniq(run("member:dave").map((r) => r.bundle_id)), ["DOC"], "a member who is no administrator: unchanged");
 });
 
 /* ---- passage-arm ---- */

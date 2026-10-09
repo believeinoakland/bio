@@ -299,7 +299,7 @@ test("R60: counts(hid) answers {indexed, selections, selectionItems}; hid leaves
   assert.deepEqual(w.retrieval.counts(), { indexed: 5, selections: null, selectionItems: 4 });
 });
 
-test("R17, R21, R29, R60 (N352): each subtraction of what a viewer may not see is membership's hiddenBundles set — the index check's indexed figure and the selection bytes equal the figures taken through it, for every kind of viewer", async () => {
+test("R17, R21, R29, R60 (N352): each subtraction of what a viewer may not see is membership's hiddenBundles set — the index check's indexed figure and the selection bytes equal the figures taken through it, for every kind of viewer; an administrator and the founder neither invited nor joined to a hidden project lose it as an outsider does (D54), an invited administrator and a discoverable project read whole", async () => {
   const w = many(3, world({ members: ["ann", "vera"], admins: ["adele"] }));
   const proj = w.project("Hidden", "ann");
   await w.retrieval.selectionCreate({ owner: "o", viewer: V("ann"), ids: ["INFO-001", proj] });
@@ -308,27 +308,45 @@ test("R17, R21, R29, R60 (N352): each subtraction of what a viewer may not see i
   const bytesThrough = (hid) => w.row(`SELECT COALESCE(SUM(length(bundle_id)+length(bundle_sha)+8), 0) b FROM selection_items`
     + (hid ? ` WHERE bundle_id NOT IN ${hid.sql}` : ""), ...(hid ? hid.args : [])).b;
   const whole = w.retrieval.counts();
-  const seen = {};
+  const viewers = [V("ann"), V("vera"), V("adele"), "admin", "class:member", null, "", "somebody"];
   /* A participant, a member outside the project, an administrator, the founder, a machine credential, and the
      viewers the gate refuses (absent, empty, unrecognised). */
-  for (const viewer of [V("ann"), V("vera"), V("adele"), "admin", "class:member", null, "", "somebody"]) {
-    const hid = hiddenBundles(viewer);
-    const check = w.retrieval.searchIndexCheck({ viewer });
-    assert.equal(check.counts.indexed, w.retrieval.counts(hid).indexed, `indexed ${viewer}`);
-    const list = w.retrieval.selectionList({ owner: "o", viewer });
-    assert.equal(list.bytes, bytesThrough(hid), `bytes ${viewer}`);
-    seen[String(viewer)] = [check.counts.indexed, list.bytes];
-  }
-  /* The set moves the figures as R43 says: the project's rows leave only for vera; a refused viewer loses every
-     claimed row and keeps the orphan; the see-all viewers read whole. */
+  const figures = () => {
+    const seen = {};
+    for (const viewer of viewers) {
+      const hid = hiddenBundles(viewer);
+      const check = w.retrieval.searchIndexCheck({ viewer });
+      assert.equal(check.counts.indexed, w.retrieval.counts(hid).indexed, `indexed ${viewer}`);
+      const list = w.retrieval.selectionList({ owner: "o", viewer });
+      assert.equal(list.bytes, bytesThrough(hid), `bytes ${viewer}`);
+      seen[String(viewer)] = [check.counts.indexed, list.bytes];
+    }
+    return seen;
+  };
+  /* The set moves the figures as R43 says (D54, K2408): the hidden project's rows leave for vera, and for the
+     administrator adele and the founder, neither invited nor joined to it, exactly as for vera; a refused viewer loses
+     every claimed row and keeps the orphan; the participant and the machine credential read whole. */
   const all = bytesThrough(null);
+  const outside = [whole.indexed - 1, bytesThrough(hiddenBundles(V("vera")))];
+  assert.ok(outside[1] < all);
+  let seen = figures();
   assert.deepEqual(seen[V("ann")], [whole.indexed, all]);
-  assert.deepEqual(seen[V("adele")], [whole.indexed, all]);
-  assert.deepEqual(seen.admin, [whole.indexed, all]);
   assert.deepEqual(seen["class:member"], [whole.indexed, all]);
-  assert.deepEqual(seen[V("vera")], [whole.indexed - 1, bytesThrough(hiddenBundles(V("vera")))]);
-  assert.ok(seen[V("vera")][1] < all);
+  for (const v of [V("vera"), V("adele"), "admin"]) assert.deepEqual(seen[v], outside, `outside the hidden project: ${v}`);
   for (const v of ["null", "", "somebody"]) assert.deepEqual(seen[v], [1, 0], `refused viewer ${v}: only the orphan`);
+  /* Negative control: invited to the hidden project, the administrator reads it whole again; the founder and vera,
+     still outside it, do not. */
+  assert.equal(w.membership.projectInvite({ projectId: proj, handle: "adele", by: "ann", viewer: V("ann") }).ok, true);
+  seen = figures();
+  assert.deepEqual(seen[V("adele")], [whole.indexed, all], "an invited administrator");
+  for (const v of [V("vera"), "admin"]) assert.deepEqual(seen[v], outside, `still outside: ${v}`);
+  /* Negative control: set discoverable by its owner, the project is read whole by every administrator, the founder
+     included (D54 covers hidden projects only), and still not by vera, a member outside it. */
+  assert.equal(w.membership.projectVisibilitySet({ projectId: proj, setting: "discoverable", by: "ann", viewer: V("ann") }).ok, true);
+  seen = figures();
+  for (const v of [V("ann"), V("adele"), "admin", "class:member"]) assert.deepEqual(seen[v], [whole.indexed, all], `discoverable: ${v}`);
+  assert.deepEqual(seen[V("vera")], outside, "discoverable: an outsider still does not see it");
+  for (const v of ["null", "", "somebody"]) assert.deepEqual(seen[v], [1, 0], `discoverable: refused viewer ${v}`);
   /* An internal call (no viewer passed) stays whole. */
   assert.equal(w.retrieval.selectionList({ owner: "o" }).bytes, all);
 });

@@ -67,12 +67,13 @@ Terms. A **version** is a `basis_versions[]` row `{name, description, claim?, re
 - **R47** (K861, plane R10) The module exports a figure source shaped as `record-core` R63's `counts(hid)`, with its key list, for `plane` to register under this module's name: `basisVersions`, the rows of `inquiry_basis_versions` less the rows whose `bundle_id` is in `hid`, and `basisVersionLegs`, the rows of `inquiry_basis_version_legs` less the rows whose `bundle_id` or `target_id` is in `hid`, a NULL key naming no bundle (so never dropped by `hid`); a null `hid` counts whole. The module registers nothing itself.
 
 **A conclusion's bias applications** (T41-19; D59)
-- **R48** *(not yet met: T41)* (D59) A conclusion may carry `bias_applied` in `inquiry-grammar` R18's shape for the conclusion's claim (`inference_refused`, `scrutiny_raised`), recorded with the conclusion and read back by `conclusionRecordOf`.
+- **R48** *(not yet met: T41)* (D59) A conclusion may carry `bias_applied` in `inquiry-grammar` R18's shape for the conclusion's claim (`inference_refused`, `scrutiny_raised`), recorded with the conclusion and read back by `conclusionRecordOf`. Each `statement` is asked of `bias.statementInForce` (its R49) at the conclusion's project scope, the acting member as viewer; one not in force (false or null) is refused through `inquiry.biasNotInForce` (its R61), and nothing is written (K2472).
 
 ## Private
 
 ### Uses
 
+- `bias`: `statementInForce` (its R49; R48; K2472). A new `modules.json` edge; `bias` is earlier (layer 5). `inquiry`: `biasNotInForce` (its R61; R48).
 - `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `record-core`: `recordOf(ctx)`, `declarePurge`, the `bundles` read contract.
 - `membership`: `viewerPredicate`, `inSight` (R80), `existenceAct`, `projectAuthority`; `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202).

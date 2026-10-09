@@ -1,6 +1,7 @@
 /* query-language's tests run the compiled statements against a real SQLite (node:sqlite, FTS5) holding the
    tables the statements name, each with the columns its owner's read contract states (record-core R37's
-   `bundles` (its `project` included, N426: membership's gate fences by it) and `bundles_fts`, membership's `members` and `project_participants`, content R45,
+   `bundles` (its `project` included, N426: membership's gate fences by it) and `bundles_fts`, membership's `members`,
+   `project_participants` and `project_sight` (its R120; R85's index, which the gate reads since D54), content R45,
    extraction's `capture_text` and its index, entities' `resolutions`, inquiry's `inquiry_basis`, basis-versions'
    `inquiry_basis_version_legs`, provenance's `register`, extraction's `readings`, the `observation_log`).
    The module holds no database: every test compiles a plan at the interface and runs what it returns.
@@ -46,6 +47,8 @@ export function world({ projection = null, fields = null } = {}) {
   db.exec(`CREATE VIRTUAL TABLE bundles_fts USING fts5(${FTS_COLUMNS.join(", ")}, tokenize='unicode61')`);
   db.exec(`CREATE TABLE members (member_id TEXT PRIMARY KEY, role TEXT, status TEXT);
     CREATE TABLE project_participants (project_id TEXT, member_id TEXT, state TEXT);
+    CREATE TABLE project_sight (project_id TEXT PRIMARY KEY,
+      setting TEXT NOT NULL CHECK (setting IN ('discoverable','hidden')));
     CREATE TABLE content (content_id TEXT PRIMARY KEY, capture_sha TEXT, bundle_id TEXT, extent_kind TEXT, extent TEXT,
       ref TEXT, chain TEXT, derivation_cap TEXT, page_count INTEGER, minted_by TEXT, at TEXT, stale INTEGER DEFAULT 0,
       cited_as TEXT NOT NULL DEFAULT 'text', chain_kind TEXT);
@@ -102,6 +105,12 @@ export function world({ projection = null, fields = null } = {}) {
     },
     participate(project, member, state = "joined") {
       db.prepare(`INSERT INTO project_participants VALUES (?,?,?)`).run(project, member, state);
+    },
+    /* membership R85/R120: a project's visibility as its index holds it; a project the index does not hold reads
+       hidden (D54: administrators see it only as participants). */
+    sight(project, setting) {
+      db.prepare(`INSERT INTO project_sight (project_id, setting) VALUES (?,?)
+                  ON CONFLICT(project_id) DO UPDATE SET setting = excluded.setting`).run(project, setting);
     },
     insert(table, row) {
       const keys = Object.keys(row);

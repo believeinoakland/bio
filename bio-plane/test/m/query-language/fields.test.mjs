@@ -25,8 +25,13 @@ function corpus(w) {
   w.bundle("I1", { title: "a document", body: "water water", schema_id: "s1" });
   w.bundle("PR", { type: "project", title: "hidden", body: "water", inquiry_capture_strength: "A",
     inquiry_connection_strength: "B", inquiry_basis_count: 5 });
+  /* D54 (membership R43): PR is hidden (the index holds no setting for it), PD discoverable; erin is an administrator. */
+  w.member("erin", "admin");
+  w.bundle("PD", { type: "project", title: "open", body: "water", inquiry_capture_strength: "B", inquiry_basis_count: 1 });
+  w.sight("PD", "discoverable");
   w.insert("inquiry_basis", { bundle_id: "Q1", ord: 0, target_id: "I1", grade_source: "hunch", grade: "B" });
   w.insert("inquiry_basis", { bundle_id: "Q2", ord: 0, target_id: "PR", grade_source: "documented" });
+  w.insert("inquiry_basis", { bundle_id: "Q4", ord: 0, target_id: "PD", grade_source: "documented" });
   w.insert("capture_text", { capture_sha: "s", bundle_id: "I1", extent_kind: "pdf-page", extent: "{}", ref: "p1",
     seq: 0, text: "the culvert failed", chain_kind: "ocr" });
   w.insert("register", { capture_sha: "s", bundle_id: "I1", registered: "t" });
@@ -38,6 +43,8 @@ const QUERIES = ["", "capture:A", "capture:b", "capture:<=B", "connection:C", "c
   "(capture:A OR connection:C) -legs:1", "leg:hunch capture:B", "passage:culvert legs:>0", "state:open capture:<=C",
   "sort:capture:asc", "sort:-legs water", "sort:connection:desc has:legs"];
 const ROWS = [null, "leg", "passage"];
+/* A machine credential, a member, the founder and an administrator (D54), and no viewer. */
+const VIEWERS = [V, "member:ann", "admin", "member:erin", null];
 const OPTS = [{}, { sort: "capture", dir: "asc" }, { sort: "connection", dir: "desc" }, { sort: "legs", dir: "asc" },
   { sort: "legs" }, { facets: ["capture", "connection", "legs", "type"] }, { facets: ["legs", "state"] },
   { ids: ["Q1", "Q3", "PR"] }];
@@ -54,7 +61,7 @@ test("R26 a field held in a later module's table is read through the relation th
   ];
   let compared = 0;
   for (const { name, held, second } of cases)
-    for (const viewer of [V, "member:ann", null])
+    for (const viewer of VIEWERS)
       for (const q of QUERIES)
         for (const rows of ROWS)
           for (const o of OPTS) {
@@ -84,6 +91,17 @@ test("R26 a field held in a later module's table is read through the relation th
             });
           }
   assert.ok(compared > 10000, `${compared} statements compared`);
+  /* D54 through the relations: the hidden PR is withheld from the founder and an administrator as from ann, on a
+     filter, a sort and a facet over a named field; the discoverable PD is theirs, and not ann's. */
+  for (const { held, second } of cases)
+    for (const [viewer, want] of [[V, ["PD", "PR"]], ["member:ann", []], ["admin", ["PD"]], ["member:erin", ["PD"]]]) {
+      const projects = (o) => held.all(compile({ q: "capture:<=B type:project", viewer, ...o }, second).statements.page())
+        .map((r) => r.bundle_id).sort();
+      assert.deepEqual(projects({}), want, viewer);
+      assert.deepEqual(projects({ sort: "legs" }), want, `${viewer} sorted`);
+      const facet = held.all(compile({ q: "type:project", viewer, facets: ["capture"] }, second).statements.facets()[0]);
+      assert.equal(facet.reduce((n, r) => n + r.n, 0), want.length, `${viewer} faceted`);
+    }
   /* The relations are read only when given, and only by the caller's names. */
   const reads = (q, second, o = {}) => everyStatement(compile({ q, viewer: V, ...o }, second)).map(([, s]) => s.sql).join("\n");
   assert.ok(!/rel_legs|rel_strength/.test(reads("capture:A legs:2", {}, { sort: "legs", facets: ["capture"] })));
