@@ -26,6 +26,7 @@ import { basisVersionsOf, versionsIn, versionAsWritten, isBoilerplate } from "..
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { runPrincipalGate } from "../run-rules/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
+import { credentialsOf } from "../credentials/index.mjs";
 import { EXTRACT_RUN_MODE, proposalChain, checkProposedRef, proposedReadingGrade, mintRatio } from "../extractrun.mjs";
 import { readingSource, readingSourceJson, readingSourceFromColumns, describeChain, captureBound } from "../textchain.mjs";
 import { parseFrontmatter, normalizeType, OBJECT_TYPES, canonicalJson, isMachineIdentity, MACHINE_CLASS_PREFIX,
@@ -146,7 +147,7 @@ export class RunProductions {
     this.citation = citation;
     this.basisVersions = basisVersions;
     /* T41-24: extraction's store half for a capture's text units (its R36) and the references its readers found (its
-       R58); steps' `recordProduct` (its R9) and credentials' `aiKeptAway` (its R57), each null until given. */
+       R58); credentials' `aiKeptAway` (its R57); steps' `recordProduct` (its R9), null until given. */
     this.extraction = extraction;
     this.steps = steps;
     this.credentials = credentials;
@@ -608,7 +609,12 @@ export class RunProductions {
   /** THE RUN EVERY PRODUCTION NAMES (R10, R15, R23, R24): sight, then position, then status (REC-165), asked here once
    *  for every op that produces under a run, so each code has one site. An invisible run answers the SAME NO_SUCH_RUN a
    *  never-minted id gets, but for the id (§7.9). Answers `{run, runId}` or `{refusal}`. */
-  #productionRun({ run, viewer = null, caller = null, act, note }) {
+  #productionRun({ run, viewer = null, caller = null, act, note, memberMay = false }) {
+    /* R23 (K2482): a note drafted interactively (run-rules R25's draft kind) names no run, and is then a member's own
+       act: `{run: null}` for a member caller, never for a machine or an unstamped one. */
+    const who = nonBlank(caller);
+    if (memberMay && (run === null || run === undefined || run === "") && who && !isMachineIdentity(who))
+      return { run: null, runId: null };
     /* DEC-49 REGION is-production-run */
     if (typeof run !== "string" || !run.trim())
       return { refusal: this.#refuse("NO_RUN",
@@ -1029,11 +1035,9 @@ export class RunProductions {
     const { bundle, sha } = doc;
     /* "NO AI" IS ASKED BEFORE THE BOUND, so a document kept from the AI is refused however much the run may read. The
        refusal is credentials', relayed whole. */
-    if (this.credentials && typeof this.credentials.aiKeptAway === "function") {
-      const kept = this.credentials.aiKeptAway({ ...(bundle.project ? { project: bundle.project } : {}), use: "read" });
-      if (kept) return { ...kept, ok: false, reason: kept.reason ?? kept.code, code: kept.code ?? kept.reason,
-                         run: runId, bundle_id: bundleId };
-    }
+    const kept = this.credentials.aiKeptAway({ ...(bundle.project ? { project: bundle.project } : {}), use: "read" });
+    if (kept) return { ...kept, ok: false, reason: kept.reason ?? kept.code, code: kept.code ?? kept.reason,
+                       run: runId, bundle_id: bundleId };
     let units = [], state = null;
     try {
       const u = this.extraction ? this.extraction.unitsOf(sha) : null;
@@ -1182,13 +1186,14 @@ export class RunProductions {
   }
 
   /** op=bearingnote — R23 (D22): A NOTE ON WHAT A DOCUMENT SAYS ABOUT A QUESTION, AND WHAT IT DOES NOT, written by a run
-   *  its caller holds (R15). Each sentence `{text, quote, source}` is kept only when its quote passes extraction R42's
+   *  its caller holds (R15), or, drafted interactively with no run (run-rules R25; K2482), by the member who asked, who
+   *  may see both the document and the question. Each sentence `{text, quote, source}` is kept only when its quote passes extraction R42's
    *  byte-exact check against the record's text at its place, as R21 hands it; a sentence that cannot be tied is left
    *  out and said so. It is stored apart (never a content row, never a proposal, with no id a leg accepts) and read
    *  only beside its source (`bearingNotes`). */
-  bearingNote({ capture, question, run, sentences, viewer = null, caller = null, at = null } = {}) {
+  bearingNote({ capture, question, run = null, sentences, viewer = null, caller = null, at = null } = {}) {
     const held = this.#productionRun({ run, viewer, caller, act: "writing a note on a document under a run",
-                                      note: "a note names a run its caller holds. Nothing was kept" });
+                                      note: "a note names a run its caller holds. Nothing was kept", memberMay: true });
     if (held.refusal) return held.refusal;
     const { runId } = held;
     const gate = viewerPredicate(viewer);
@@ -1322,8 +1327,10 @@ export function runProductionsOf(host, deps) {
                              citation: d.citation || citationOf(host, { record, membership, content }),
                              basisVersions: d.basisVersions || basisVersionsOf(host, { record, membership, content }),
                              extraction: d.extraction || extractionOf(host, { record, membership }),
-                             /* T41-24: steps (R21) and credentials (R24's "no AI") are given until their edges land. */
-                             steps: d.steps || null, credentials: d.credentials || null,
+                             /* T41-24: R24's "no AI" read is this module's (K2482); steps (R21) is given until its edge
+                                lands. */
+                             credentials: d.credentials || credentialsOf(host, { record, membership }),
+                             steps: d.steps || null,
                              now: d.now || null });
     instances.set(host, p);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);

@@ -178,10 +178,10 @@ CREATE TABLE IF NOT EXISTS bearing_notes (
   capture_sha  TEXT NOT NULL,
   bundle_id    TEXT NOT NULL,
   question     TEXT NOT NULL,
-  run          TEXT NOT NULL,
+  run          TEXT,              -- NULL when a member drafted it interactively (run-rules R25, K2482)
   sentences    TEXT NOT NULL,     -- JSON: [{text, quote, position, figures}], the tied ones in the order given
   left_out     INTEGER NOT NULL,  -- how many sentences could not be tied
-  written_by   TEXT NOT NULL,     -- the run's caller, stamped
+  written_by   TEXT NOT NULL,     -- the run's caller, or the member who drafted it, stamped
   at           TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS bearing_notes_bundle ON bearing_notes(bundle_id);

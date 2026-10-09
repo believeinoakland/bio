@@ -5,8 +5,8 @@
    (R26 `candidatePair`, R27 `candidateIndependence`), citation (R5 `retiredNotCitable`), basis-versions (R5
    `basisVersionsOf`, R9 `basisVersions`, R28 `appendVersion`, R40 `onCandidates`), connections (R22 `citesInto`),
    and content's own two providers (extraction's readings, provenance's `capturesOf`), extraction's units (its R36),
-   steps' `recordProduct` (its R9) and, when a test gives one, credentials' `aiKeptAway` (its R57). Every stand-in
-   records the calls
+   steps' `recordProduct` (its R9); credentials is the real module (its R57 `aiKeptAway`, reached through its
+   factory). Every stand-in records the calls
    made to it. Bundles and their files are written as record-core's read contract holds them (its R37), and the tables
    later modules own that this module reads under their read contracts (inquiry R40, basis-versions R38) are created
    here in their stated columns (inquiry_basis is leg-earning's since K1505 (2), its R12), and extraction's own tables from its schema (so a test can show a production writes
@@ -17,6 +17,7 @@ import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { contentOf } from "../../../src/content/index.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { citationOf } from "../../../src/citation/index.mjs";
 import { versionsIn } from "../../../src/basis-versions/index.mjs";
@@ -123,8 +124,7 @@ export const basisVersionsOf = (fm) => versionsIn(fm);
  *  plane reaches them), strength over an inquiry stand-in (its R13 registry, R14 `legCapped`, R16 `basisFor`) whose
  *  capture ceilings the test sets in `w.ceilings`. `aiRuns: null` leaves ai-runs to this module's factory (the real
  *  module, over its own tables). */
-export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven, steps: stepsGiven = undefined,
-                        credentials = null } = {}) {
+export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven, steps: stepsGiven = undefined } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -151,6 +151,9 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven, 
   };
   const content = contentOf(host, { record, membership, provenance: prov, extraction, now: () => clock.now });
   content.migrate();
+  /* credentials, the real module over its own tables (its R57 `aiKeptAway`, read by R24). */
+  const credentials = credentialsOf(host, { record, membership });
+  credentials.migrate();
 
   const calls = [];
   const note = (name, a) => { calls.push({ name, a }); };
@@ -266,7 +269,7 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven, 
   };
   const p = runProductionsOf(host, { record, membership, content, connections, extraction,
                                      ...(aiRunsGiven === null ? {} : { aiRuns }),
-                                     basisVersions, ...(steps ? { steps } : {}), ...(credentials ? { credentials } : {}),
+                                     basisVersions, ...(steps ? { steps } : {}),
                                      ...(real ? {} : { strength, citation }), now: () => Date.parse(clock.now) });
   p.migrate();
 
@@ -289,7 +292,7 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven, 
 
   const w = {
     st, host, record, membership, prov, registered, content, p, clock, ex, calls, runs, bounds, aiRuns, strength,
-    citation, retired, connections, cites, basisVersions, candidateSources, ceilings, steps, stepsHeld, ties,
+    citation, retired, connections, cites, basisVersions, candidateSources, ceilings, steps, stepsHeld, ties, credentials,
     versions: {}, authors: {}, ats: {}, legsOf: {}, groundsOf: {},
     row: (qq, ...a) => [...st.sql.exec(qq, ...a)][0] ?? null,
     rows: (qq, ...a) => [...st.sql.exec(qq, ...a)],
