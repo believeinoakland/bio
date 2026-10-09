@@ -113,8 +113,9 @@ export const renderRefusal = (code, state) => ({ status: 409, body: { ok: false,
                                                                      ...(state ? { render: { state } } : {}) } });
 
 /** A world: the record's modules, the capture stand-in, a table of runs, and capture-requests over them. `group` is
- *  the instance's recorded producing group (promotion R13; null: none recorded). */
-export function world({ env = ENV, configured, credentials = true, group = "test-group", order, standards } = {}) {
+ *  the instance's recorded producing group (promotion R13; null: none recorded). `steps` (R55) is `steps`' instance as a
+ *  stand-in the test scripts (K61), absent unless given. */
+export function world({ env = ENV, configured, credentials = true, group = "test-group", order, standards, steps } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -170,7 +171,8 @@ export function world({ env = ENV, configured, credentials = true, group = "test
                                        env, now, storeName: "bio", aiRuns, promotion, inquiry,
                                        ...(configured !== undefined ? { configured } : {}),
                                        ...(order !== undefined ? { order } : {}),
-                                       ...(standards !== undefined ? { standards } : {}) });
+                                       ...(standards !== undefined ? { standards } : {}),
+                                       ...(steps !== undefined ? { steps } : {}) });
   cr.migrate();
   const w = {
     st, host, record, membership, promotion, obs, governor, creds, capture, runs, cr, clock, waitRegs, agents, asked,
