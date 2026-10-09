@@ -57,3 +57,7 @@ Three things for you:
 (1) J1 (5) narrowed after a flaw the tests found: bytes merely in the evidence store no longer count as held. An upload rolled back by `within` (or an unwritten receipt) leaves its bytes content-addressed in the store, and its retry answered `existed: true` and could never be filed. `existed` is now the register or a receipt naming the digest (provenance R5), which is R86's "bytes the record already holds". Tested.
 (2) R76 (this module, a requirement change, so yours): `gradeNoteOf` answers `ACQUIRE_GRADE_NOTE` ("Grade B: bytes as fetched…") for any held capture, so a pulled knock's capture and now an upload's carry a note that says the bytes were fetched, which provenance R51/R63 says they were not. A fix: R76 answers, for a capture whose receipts are all received routes (`doorbell`, `upload`), a received-material note (or null). Not built: R76's text asks for the acquire note.
 (3) P6: capture is 4,053 lines, past the 4,000 at which you report a module.
+
+## J3 · REPORT
+
+B4 applied and pushed: tranche/T41 merged; R76 answers null for a capture whose every receipt is doorbell or upload (negative controls: a fetched receipt beside them, and a capture held with no receipt, keep the note), read through provenance R60 receiptsOfCapture, a use capture's Uses list does not yet name (please add); UPLOAD_MAX removed, R86 imports acquisition's CAPTURE_MAX. Suite 172/172; format, architecture, coverage 59/59, ownership 0 failures. Still waiting only on provenance's merge for COMPLETE.
