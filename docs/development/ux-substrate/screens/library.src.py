@@ -111,8 +111,8 @@ wiz('Connect your Claude account', 'connect', False, [
  ('connect', 'disclosureshown', 'Read what connecting means.', 'Your questions, and what is read to answer them, go to Anthropic under your own account.'),
  ('connect', 'owed:subscriptionsignin DEC-156', 'To connect your Claude subscription, open Anthropic\'s sign-in page, sign in and approve. Or use an API key, or skip.', 'You sign in on Anthropic\'s own page; Civicsmith never sees your Claude password. Skipping is a real choice: every journey stays open.'),
  ('connect', 'accountreferenceset', 'Copy the code Anthropic\'s page shows you, paste it here, and connect.', 'Your subscription then serves only your own questions. You can disconnect at any time.'),
- ('connect', 'aiceilingset', 'Set your daily limit.', 'It caps what the assistant can spend on your account each day. An administrator may set a lower one for the group.'),
- ('connect', 'accountswitchset', 'Choose whether the assistant may suggest things without being asked. It is off unless you turn it on.', 'Some members want suggestions; others want quiet.'),
+ ('connect', 'owed:ailimitset DEC-188', 'Set a limit on your account, if you want one: for everything or for one use, a day or a month.', 'It binds only your own account. The group\'s and a project\'s limits never bind it.'),
+ ('connect', 'owed:accountusesset DEC-188', 'Choose what your account pays for, and whether the assistant may suggest things without being asked. Suggestions are off unless you turn them on.', 'Some members want suggestions; others want quiet.'),
  ('connect', 'accountreferenceremove', 'You can disconnect at any time, here.', 'Disconnecting removes the key or token from your group\'s Civicsmith.'),
 ], [4, 17])
 

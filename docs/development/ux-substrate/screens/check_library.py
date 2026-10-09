@@ -44,7 +44,7 @@ def load(src, name):
     return g[name]
 
 def main():
-    ref = sys.argv[sys.argv.index('--ref') + 1] if '--ref' in sys.argv else 'origin/tranche/T37'
+    ref = sys.argv[sys.argv.index('--ref') + 1] if '--ref' in sys.argv else 'origin/main'
     ref, declared, functions = op_universe(ref)
     screens, lib = load('registry.src.py', 'S'), load('library.src.py', 'L')
     fails, warns, owed = [], [], {}
