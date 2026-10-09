@@ -2,6 +2,34 @@
 
 **Status** · session_01F49HyE7q1ujmY5kG2zBxiu · depth 2 · WORKING · handled B4
 
+## Completion (INQUIRY #16)
+
+**Entry applied:** T41-15 whole, with B2 (K2479), B3 (K2480) and B4 (K2485).
+- **R39** (K2371, K2436; H10, H38): `dispose` refuses `DRAWN_ON_BY_A_PROJECT` (C-106.2, row in `INQUIRY_DISPOSE_CHECKS`, translation `words.json`'s `question.refused.drawnon` read by key through `QUESTION_WORDS`, `key` on the answer) only when `leg-earning.projectsShownOn` (R14, merged, B4) shows the caller a project drawing on a member; offenders `{id, projects: [{id, name}], truncated?}`, never a hidden project, no count. A member drawn on only by hidden projects, or by none, moves on its own state, the answer identical. A failed R14 read refuses `PROJECTS_UNDETERMINED` (J1 (4), confirmed). `DRAWN_ON_BY_SEVERAL_PROJECTS` and C-106.1 retired (no reference anywhere in the product).
+- **R54**: `inquiry_dated_waits.set_in` (added idempotently to an older table), from the package's `setIn`, kept only for a project the author may see; kept with the wait while text and date are unchanged. `datedWaits` answers it.
+- **R55** (D17): `questionWaits({question, viewer, asOf?})`, op `questionwaits`: each open wait with text, description, date, state (waiting/due/ended/undetermined; the setter's look not answered), `set_by_handle` (`members.handle`), `set_in: {id, name}` only while discoverable and in the viewer's sight; R33's absent answer otherwise; with R60's `projects`.
+- **R59** (D13): pure exports `personsInNoPublicRole({text, entities})` and `personWarning({text, entities, viewer})` → null or `{code: PERSON_IN_NO_PUBLIC_ROLE, key: question.warning.person, translation, persons}`; the instance's `personFacts({text, subject, viewer})` reads the record's facts behind it. **What I read as a public role (K2479):** a `person` entity holds one when `lines` holds, not withdrawn, a line from it of kind `holds`, `responsible_for` or `acts_for` to an `office` (an office it holds, is responsible for or speaks for), or of kind `belongs_to` or `seat_on` to a `body` whose sector is `government` (`PUBLIC_ROLE_LINES`); no such line, a withdrawn one, or a company body is no public role. Named persons: the subject entity, an `ENT-` id in the question, and a live alias matching a run of at most 8 of the question's first 120 words (`entities.entitiesByAlias`). At a promotion that creates a question or revises its question or subject, the answer carries `warning` (never a finding, nothing refused), recorded in `inquiry_person_warnings` (declared to purge) with her choice `went_on` (package `personWarningSeen: true`), `warned_at_act`, or `pending` for a machine, carried once to the member who next promotes it. Words are BOB's draft (`INQUIRY_WARNINGS`) until `words.json` holds the key.
+- **R60** (H38): `projects` (R14 for that viewer; null with `projects_undetermined` when unreadable) on the question's document (this module's retrieval R56 decoration), `stateHistory` with a viewer, `documentWaits` per question and `questionWaits`; `projectsOf(id, viewer)` exported for callers. The search row is retrieval's (N830).
+- **R61** (D59): `biasNotInForce({statement, where, inForce, scope})`, pure, the one spelling of `BIAS_APPLICATION_NOT_IN_FORCE` (C-2.19, the next of this module's C-2 family; `INQUIRY_BIAS_CHECKS`; awaits the stamp); `biasAppliedFindings({legs, project, viewer})` asks `bias.statementInForce` per statement at the project scope (else instance), fail closed (null, a throw, another shape, no bias bound); run in the promotion's check over the document's legs, inside `BASIS_REFUSED`, replay exempt.
+- **K2442 / D54**: the finding's lens (`index.mjs`, was :750) is read as `INTERNAL_VIEWER` (`class:daemon`), never `admin`.
+
+**D54 tests re-stated** (with negative controls): `exports.test.mjs` R52 (1) (the founder blind to the hidden project's replay; the project set discoverable, the founder sees it whole and bob still not); `findings.test.mjs` both R53 tests (the lens read as the internal viewer) and a new R53 D54 test (a hidden project's manifest recorded; the founder and an outsider fenced; the participant reads it).
+
+**Deferred:** R61 reads a leg's applications itself (a parsed `bias_applied` list or the `bias_<n>_statement` keys, K2479) until inquiry-grammar merges; then through its `readBiasApplied` (awaiting that CHANGE).
+
+**Found in other modules:** none new beyond J1 (2) (retrieval's search row, N830). Stale artifacts: the plane bundle (`bio-plane/dist/`) now stale for inquiry's source; not written here (mechanics §14).
+
+**Final `uses`** for BOB to apply: today's list plus `lines` (R59; K2480). `architecture.mjs` reports one failure until then: `test/m/inquiry/person-warning.test.mjs` imports `lines`.
+
+**Reading (mechanics §17, K2304):** the measured set was over 300 KB (863 KB by `reading-sets.py`; my code and tests alone about 545 KB). Read whole myself: `build/requirements/inquiry.md`; layer 6's row of `build/layers.md`; `inquiry/index.mjs` (all of it); the tests changed (`fixture.mjs`, `dispose`, `waits`, `exports`, `findings`; `document-waits` and `promotion` at the lines changed); the used services the entry names (leg-earning R7, R13, R14; bias R49 and `biasManifest`, `statementInForce`; inquiry-grammar R18; membership R43, R44, R85, R120 and `viewerPredicate`, `sight`; entities' Terms, R6, R35; lines' Terms, R1–R17; steps R3–R4; retrieval R56; words.json's key). A worker read the rest in full (`checks`, `contradiction`, `grammar`, `schema`, `text`.mjs and the other 20 test files, about 251 KB) and wrote a 14.6 KB summary citing file and line (the dated-waits schema and its additive migration, the tests constraining `dispose` (raise.test.mjs), the promotion answer (testimony-inherited.test.mjs:170: no warning in `findings`), the decoration (facts.test.mjs:140) and the row tables (contradiction.test.mjs:275, grammar.test.mjs:177)); nothing it left out mattered.
+
+**Tests and checks** (on `job/T41/inquiry` after merging the tranche @ B4):
+- `node --test test/m/inquiry/`: tests 194, pass 193, fail 0, todo 1 (the todo predates this job). At START: 176, 172 pass, 3 fail (the three D54 reds), 1 todo.
+- Users of inquiry (33 modules' `tests` paths): 3081 tests, 92 fail on this branch against 93 on `tranche/T41` with the same suites; no new red, one fixed (plane's R12 bias registration test).
+- `format`: 0 failures. `architecture`: 1 failure (the `lines` use above, BOB's to apply). `coverage`: 52 of 52 live ids named, 0 failures. `ownership`: 0 failures.
+
+Size (session_01F49HyE7q1ujmY5kG2zBxiu): test runs 24, module lines 3,689
+
 ## J1 · QUESTION
 
 Four readings I am building on now; each is my best reading, and I carry on with the rest of the job meanwhile.
