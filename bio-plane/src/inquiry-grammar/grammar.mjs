@@ -1,5 +1,5 @@
 /* inquiry-grammar — THE GRAMMAR OF AN INQUIRY DOCUMENT (requirements: `build/requirements/inquiry-grammar.md` R1–R5,
- * R8–R17; T19 layer 6, K766; R11 at T28, N522; R12–R16 at T33; R17 at T34, N582).
+ * R8–R18; T19 layer 6, K766; R11 at T28, N522; R12–R16 at T33; R17 at T34, N582; R18 at T41, D59).
  *
  * MOVED FROM THE CHECK CATALOGUE (`checks/bio-checks.mjs`, legacy-checks) UNCHANGED: the C-2.8 entry arm and the
  * division block (`checkInquiryExtension`, `checkDividedExtension`), the recheck coverage (C-15.1,
@@ -633,6 +633,8 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
       if (leg.note !== undefined && leg.note !== null && typeof leg.note !== 'string') {
         findings.push(f('C-2.8', 'error', `basis[${i}].note is not a string`));
       }
+      /* R18 (D59): a bias application is judged on a derived leg as on any leg. */
+      biasAppliedFindings(label, leg, findings);
       continue;
     }
     const t = leg.target;
@@ -787,6 +789,9 @@ export function checkInquiryBasis(fm, findings, publishedRegistry, earnedRegistr
     if (leg.note !== undefined && leg.note !== null && typeof leg.note !== 'string') {
       findings.push(f('C-2.8', 'error', `basis[${i}].note is not a string`));
     }
+    /* R18 (D59): the bias statements applied at this leg, their form only; it moves no grade, so the grade arms around
+       it judge the leg's stated grade exactly as without it. */
+    biasAppliedFindings(label, leg, findings);
     /* REC-84 / IC-84 (1): THE EXTENT, at C-2.8 and through the ONE checker. The
        bundle-id target grammar above is KEPT exactly as it was — the leg still
        names a document or another question — and this adds WHICH PART of it.
@@ -1646,4 +1651,210 @@ function derivedLegRefusal(message, repairs) {
   /* DEC-49 REGION is-derived-leg-form */
   return refusal("DERIVED_LEG_MALFORMED");
   /* END DEC-49 REGION is-derived-leg-form */
+}
+
+
+/* =====================================================================
+ * T41-13 (D59; K2448, K2472, K2474, K2479) — A BIAS STATEMENT APPLIED AT A LEG (R18).
+ *
+ * A member reading a leg through the project's declared bias may record that a statement of that lens bore on it:
+ * `[{statement, effect, from?, to?}]`. The record keeps the application beside the leg so a reader (and the standalone
+ * checker, under a lens of its own) can see which statement moved what, and redo the reading without it.
+ *
+ * ONE ENCODING (K2479). A leg is an item of `basis[]`, and a list item holds scalars only (record-grammar R7), so the
+ * list is written on the leg as numbered scalar keys, `bias_<n>_statement`, `bias_<n>_effect`, `bias_<n>_from` and
+ * `bias_<n>_to`, `n` from 1 and contiguous, as R17 flattens a derivation. `flattenBiasApplied` writes it and
+ * `readBiasApplied` reads it back; `basis-versions` R48 uses the same pair for a conclusion row. A `bias_applied` key on
+ * a row is not the encoding and is refused, so the record holds one spelling of one fact.
+ *
+ * WHAT IS JUDGED HERE IS THE FORM AND NOTHING ELSE. `statement` is the statement's id as its lens holds it, the author's
+ * own string (bias R16, R49; no minted form, K2474), so it is asked only to be a non-empty string a front-matter scalar
+ * can carry (at most 200 characters, no quote, backslash, newline or `#`); whether it is in force for the inquiry's
+ * project lens is `inquiry` R61's store-side check, since this module reads no record (R9). `effect` names what the
+ * statement did: `grade_lowered` (with the `from` and `to` letters, a lowering), `leg_excluded` or
+ * `inference_refused`. The shape is closed, at most 32 applications, no statement and effect twice.
+ *
+ * IT MOVES NO GRADE. The leg's stated grade is the member's and is judged by R4's arms exactly as without it; a
+ * `grade_lowered` row is not compared with that grade, and nothing here derives one from the other.
+ * ===================================================================== */
+
+/** R18: the effects a bias application at a leg may name, in R18's order. */
+export const BIAS_EFFECTS = Object.freeze(['grade_lowered', 'leg_excluded', 'inference_refused']);
+
+/* R18: the fields an application carries, in the order the encoding writes them; the caps K2479 sets. */
+const BIAS_APPLICATION_KEYS = Object.freeze(['statement', 'effect', 'from', 'to']);
+const BIAS_MAX = 32, BIAS_STATEMENT_MAX = 200;
+/* a key of the encoding: `bias_<digits>_<rest>`; any other `bias_` key (a conclusion row's `bias_statements_sha`) is
+   not this encoding's */
+const BIAS_KEY_RE = /^bias_(\d+)_(.*)$/s;
+const isCanonicalN = (d) => /^[1-9]\d*$/.test(d);
+const plainObject = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+
+/** R18 (K2479): the applications list written as the encoding's keys, `{bias_1_statement, bias_1_effect, bias_1_from?,
+ *  bias_1_to?, bias_2_…}`, numbered from 1 in list order, each field present on its item copied as it is (absent,
+ *  undefined, left out). `{}` for absent, null, '' or an empty list; null when the value cannot be written so (not a
+ *  list, an item not an object, or a field outside the four), so nothing it answers loses part of what it was handed.
+ *  It judges nothing else: `biasAppliedFindings` judges what it wrote. Pure; never throws. */
+export function flattenBiasApplied(list) {
+  if (!carries(list)) return {};
+  if (!Array.isArray(list)) return null;
+  const out = {};
+  for (let j = 0; j < list.length; j++) {
+    const a = list[j];
+    if (!plainObject(a) || Object.keys(a).some((k) => !BIAS_APPLICATION_KEYS.includes(k))) return null;
+    for (const k of BIAS_APPLICATION_KEYS) if (a[k] !== undefined) out[`bias_${j + 1}_${k}`] = a[k];
+  }
+  return out;
+}
+
+/** R18 (K2479): the applications a row (a leg, or a conclusion row) carries in the encoding, as a list in number order,
+ *  each `{statement?, effect?, from?, to?}` with the fields its keys state. `[]` for a row with none, or anything that is
+ *  not a row. Keys outside the encoding's form, and gaps in the numbering, are not read here (they are
+ *  `biasAppliedFindings`' departures). Pure; never throws. */
+export function readBiasApplied(row) {
+  if (!plainObject(row)) return [];
+  const byN = new Map();
+  for (const k of Object.keys(row)) {
+    const m = BIAS_KEY_RE.exec(k);
+    if (!m || !isCanonicalN(m[1]) || !BIAS_APPLICATION_KEYS.includes(m[2])) continue;
+    const n = Number(m[1]);
+    if (!byN.has(n)) byN.set(n, {});
+    byN.get(n)[m[2]] = row[k];
+  }
+  return [...byN.keys()].sort((a, b) => a - b).map((n) => {
+    const e = byN.get(n), o = {};
+    for (const k of BIAS_APPLICATION_KEYS) if (k in e) o[k] = e[k];
+    return o;
+  });
+}
+
+/** R18: the bias applications `value` holds, judged as R18's shape. `value` is a row (a leg, or a conclusion row: any
+ *  object that is not a list) carrying them in the encoding, or the list itself (as `flattenBiasApplied` takes it).
+ *  None, an empty list, or a row with no key of the encoding applies nothing and gains nothing. Otherwise one `checkId`
+ *  error, code BIAS_APPLICATION_MALFORMED, per departure, each naming `label` and the key or item:
+ *    - a row: a `bias_applied` key (not the encoding); a `bias_<digits>_…` key whose number is not 1, 2, … written
+ *      plainly or whose field is not one of the four; numbers that are not contiguous from 1;
+ *    - a list: not a list; an item not an object; a field outside the four;
+ *    - either: more than 32 applications; a `statement` that is not a non-empty string, or one longer than 200
+ *      characters or holding a quote, backslash, newline or `#`; an `effect` not one of `effects`; on `grade_lowered`,
+ *      a `from` or `to` not one of the grades, or a `to` not weaker than its `from`; on any other effect, a `from` or
+ *      `to` at all; a statement applied with the same effect twice.
+ *  `effects` and `checkId` let a grammar at another grain (`basis-versions` R48, a conclusion's) use the same shape
+ *  with its own effects and rule; the code and its row are this module's. Answers the number of departures. Pure;
+ *  never throws; reads no record and no lens. */
+export function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, checkId = INQUIRY_GRAMMAR_CHECKS.BIAS_APPLICATION_MALFORMED.check } = {}) {
+  let n = 0;
+  const refuse = (message, repairs) => { findings.push(biasApplicationRefusal(checkId, message, repairs)); n++; };
+  const FORM = 'bias_<n>_statement, bias_<n>_effect, bias_<n>_from, bias_<n>_to, n from 1';
+  let entries;          // [{a, item, field}] to judge, in order
+  if (plainObject(value)) {
+    if (carries(value.bias_applied)) {
+      refuse(`${label}.bias_applied is not how a bias application is written: each one is written beside the other fields as numbered keys, ${FORM}`,
+        [`write each application as ${FORM}, and remove bias_applied from ${label}`]);
+    }
+    const numbers = new Set();
+    for (const k of Object.keys(value)) {
+      const m = BIAS_KEY_RE.exec(k);
+      if (!m) continue;
+      const shown = k.slice(0, 60);
+      if (!isCanonicalN(m[1])) {
+        refuse(`${label}.${shown} is not a key of a bias application: its number is written 1, 2, 3 and so on`,
+          [`renumber ${shown} on ${label}, the applications numbered from 1`]);
+      } else if (!BIAS_APPLICATION_KEYS.includes(m[2])) {
+        refuse(`${label}.${shown} is not a key of a bias application, which writes ${BIAS_APPLICATION_KEYS.join(', ')} only`,
+          [`remove ${shown} from ${label}`]);
+      } else numbers.add(Number(m[1]));
+    }
+    const top = numbers.size ? Math.max(...numbers) : 0;
+    if (numbers.size !== top) {
+      const gaps = [];
+      for (let i = 1; i <= top && gaps.length < 5; i++) if (!numbers.has(i)) gaps.push(i);
+      refuse(`${label}'s bias applications are numbered up to ${top} with ${gaps.join(', ')}${gaps.length === 5 ? ' and more' : ''} missing: they are numbered from 1 with none left out, so a reader can tell none was dropped`,
+        [`renumber the bias_<n>_ keys on ${label} 1, 2, 3 and so on`]);
+    }
+    const ordered = [...numbers].sort((x, y) => x - y);
+    entries = readBiasApplied(value).map((a, j) => ({ a, item: `${label}.bias_${ordered[j]}`,
+      field: (k) => `${label}.bias_${ordered[j]}_${k}` }));
+  } else {
+    if (!carries(value) || (Array.isArray(value) && value.length === 0)) return 0;
+    const at = `${label}.bias_applied`;
+    if (!Array.isArray(value)) {
+      refuse(`${at} is not a list: it lists each bias statement applied here, one {statement, effect} each`,
+        [`make ${at} a list of {statement, effect} items, or drop it — where no statement was applied there is none`]);
+      return n;
+    }
+    entries = [];
+    value.forEach((a, j) => {
+      const item = `${at}[${j}]`;
+      if (!plainObject(a)) {
+        refuse(`${item} is not an object: an application names the statement applied and its effect, {statement, effect}`,
+          [`state ${item} as {statement, effect}, with from and to when the effect is grade_lowered`]);
+        return;
+      }
+      for (const k of Object.keys(a)) {
+        if (!BIAS_APPLICATION_KEYS.includes(k)) {
+          refuse(`${item}.${k.slice(0, 40)} is not part of a bias application, which carries ${BIAS_APPLICATION_KEYS.join(', ')} only`,
+            [`remove ${k.slice(0, 40)} from ${item}`]);
+        }
+      }
+      entries.push({ a, item, field: (k) => `${item}.${k}` });
+    });
+  }
+  const count = Array.isArray(value) ? value.length : entries.length;
+  if (count > BIAS_MAX) {
+    refuse(`${label} carries ${count} bias applications: at most ${BIAS_MAX} are recorded in one place`,
+      [`keep the ${BIAS_MAX} applications that bear on it, or divide the question`]);
+  }
+  const seen = new Map();          // `${statement}\u0000${effect}` -> the item that applied it first
+  for (const { a, item, field } of entries) {
+    const st = a.statement;
+    if (typeof st !== 'string' || st.trim() === '') {
+      refuse(`${field('statement')} is missing or empty: an application names the bias statement applied, by its id as the project's declared bias holds it`,
+        [`state ${field('statement')}, the id of the statement in the project's declared bias`]);
+    } else if ([...st].length > BIAS_STATEMENT_MAX || /["'\\\r\n#]/.test(st)) {
+      refuse(`${field('statement')} cannot be written in the record: a statement id is at most ${BIAS_STATEMENT_MAX} characters, with no quote, backslash, newline or #`,
+        [`name the statement by an id of at most ${BIAS_STATEMENT_MAX} characters without those marks, as the declared bias holds it`]);
+    }
+    const effect = a.effect;
+    if (typeof effect !== 'string' || !effects.includes(effect)) {
+      refuse(`${field('effect')} '${String(effect).slice(0, 40)}' is not one of: ${effects.join(', ')}`,
+        [`state what the statement did: ${effects.join(', ')}`]);
+      continue;
+    }
+    if (effect === 'grade_lowered') {
+      const okFrom = BASIS_GRADES.includes(a.from), okTo = BASIS_GRADES.includes(a.to);
+      if (!okFrom) refuse(`${field('from')} '${String(a.from).slice(0, 40)}' is not one of: ${BASIS_GRADES.join(', ')}: a lowered grade names the letter it was lowered from`,
+        [`state ${field('from')}, the grade before the statement was applied`]);
+      if (!okTo) refuse(`${field('to')} '${String(a.to).slice(0, 40)}' is not one of: ${BASIS_GRADES.join(', ')}: a lowered grade names the letter it was lowered to`,
+        [`state ${field('to')}, the grade after the statement was applied`]);
+      if (okFrom && okTo && BASIS_GRADES.indexOf(a.to) <= BASIS_GRADES.indexOf(a.from)) {
+        refuse(`${item} lowers the grade from ${a.from} to ${a.to}, which is not lower: a statement applied as grade_lowered names a weaker letter than the one it started from`,
+          [`state the letters the grade moved between, ${field('to')} weaker than ${field('from')}`,
+           'or name another effect — a statement that changed no letter did not lower one']);
+      }
+    } else {
+      for (const k of ['from', 'to']) {
+        if (carries(a[k])) refuse(`${field(k)} is set on a ${effect} application: only grade_lowered names the letters a grade moved between`,
+          [`remove ${field(k)}`]);
+      }
+    }
+    if (typeof st === 'string' && st.trim() !== '') {
+      const key = `${st}\u0000${effect}`;
+      if (seen.has(key)) {
+        refuse(`${item} applies the statement ${st.slice(0, 60)} as ${effect} a second time (${seen.get(key)} already does): one statement's one effect here is recorded once`,
+          [`remove ${item}`]);
+      } else seen.set(key, item);
+    }
+  }
+  return n;
+}
+
+/** R18: the one site BIAS_APPLICATION_MALFORMED is minted: the rule (`checkId`) is the caller's, the code and its row
+ *  this module's. */
+function biasApplicationRefusal(checkId, message, repairs) {
+  /* The family helper, by name: DEC-49's guard judges `refusal("CODE"` at the site. */
+  const refusal = (code) => f(checkId, 'error', message, repairs, code);
+  /* DEC-49 REGION is-bias-application-form */
+  return refusal("BIAS_APPLICATION_MALFORMED");
+  /* END DEC-49 REGION is-bias-application-form */
 }
