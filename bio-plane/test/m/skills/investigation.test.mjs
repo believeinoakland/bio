@@ -11,6 +11,8 @@ import { INVESTIGATION_SOURCE, INTAKE_QUESTIONS, INTAKE_SENTENCE, ENQUIRE_CLAUSE
          accountCheckLayer, readingGuideLayer, judgementLayers, controlFlowAuthority, CONDUCT_CHECK_REGISTRATION }
   from "../../../src/skilldoctrine.mjs";
 import { checkGuide, registerConductCheck, conductCheckHolder } from "../../../src/reading-guides/index.mjs";
+import { ENQUIRE_MODE, RUN_ORIGINS, DRAFT_MODE, DRAFT_KINDS, DRAFT_REACH, RUN_BOUNDS, DEPLOYMENT_SEQUENCE }
+  from "../../../src/run-rules/index.mjs";
 import { ROOT, read, foundIn, section, canonDocuments, published } from "./fixture.mjs";
 
 const CANON = () => read(INVESTIGATION_SOURCE);
@@ -78,6 +80,10 @@ test("R41 INTAKE_QUESTIONS is the interview's six questions, one frozen list, ea
                     /Rumours become leads, never questions aimed at a person/, /warned at the act, and decides/])
     assert.ok(ENQUIRE_CLAUSES.some((c) => re.test(c.text)), String(re));
   assert.match(layer.load_when, /interviews a member at intake/);
+  /* run-rules R24: the mode, read from run-rules, the interactive mode that is no run. */
+  assert.equal(layer.body.mode, ENQUIRE_MODE.mode);
+  assert.equal(layer.body.mode, "enquire");
+  assert.equal(ENQUIRE_MODE.writes_run_row, false);
 });
 
 test("R42 the explore layer reuses the investigate mode's instructions by their keys and adds the rules for exploring: capture only what the record points to, never a person on its own", () => {
@@ -86,6 +92,11 @@ test("R42 the explore layer reuses the investigate mode's instructions by their 
   assert.deepEqual(layer, exploreLayer());
   assert.equal(layer.sourcing, "authored");
   assert.deepEqual(layer.body.reuses, Object.keys(judgementLayers()), "named by key, never copied");
+  /* run-rules R23: the explorer's origin, and the investigate mode it reuses, both read from run-rules. */
+  assert.equal(layer.body.origin, "explore");
+  assert.ok(RUN_ORIGINS.includes(layer.body.origin) && layer.body.origin !== RUN_ORIGINS[0], "not the member's origin");
+  assert.equal(layer.body.mode, "investigate");
+  assert.equal(layer.body.mode, DEPLOYMENT_SEQUENCE.order[1]);
   for (const k of layer.body.reuses) {
     assert.ok(k in pack.disclosed, `${k} is a layer of the pack`);
     assert.equal(typeof layer.body[k], "undefined", `${k}'s body is not carried twice`);
@@ -104,6 +115,8 @@ test("R42 the reading layer: reading inside a document the group holds, every pr
   assert.deepEqual(layer, readingLayer());
   assert.equal(layer.sourcing, "authored");
   assert.equal(layer.body.clauses, READING_CLAUSES);
+  assert.equal(layer.body.bound, RUN_BOUNDS.pages, "run-rules R26's reading bound, as run-rules describes it");
+  assert.equal(typeof layer.body.bound, "string");
   for (const re of [/a few pages at a time, within a reading limit, and never one under a "no AI" limit/,
                     /tied to its exact quote, labelled as the system's work, and taken up by a member's act/,
                     /keeps the document's capture grade/, /never grades one D/, /any sentence that cannot be tied is left out/,
@@ -121,6 +134,13 @@ test("R44 the case_account and account_check layers: the account drafted only fr
     assert.equal(SOURCING[k], "authored");
   }
   assert.equal(pack.disclosed.case_account.body.clauses, CASE_ACCOUNT_CLAUSES);
+  /* run-rules R25: each layer is a draft kind of its own, in the draft mode, its reach the case's own record. */
+  for (const k of ["case_account", "account_check"]) {
+    assert.ok(DRAFT_KINDS.includes(k), `${k} is a draft kind`);
+    assert.equal(pack.disclosed[k].body.mode, DRAFT_MODE.mode);
+    assert.equal(pack.disclosed[k].body.reach, DRAFT_REACH[k]);
+    assert.equal(pack.disclosed[k].body.reach.scope, "case_record");
+  }
   assert.equal(pack.disclosed.account_check.body.clauses, ACCOUNT_CHECK_CLAUSES);
   assert.ok(CASE_ACCOUNT_CLAUSES.some((c) => /drafts the case's written account from the evidence/.test(c.text)
     && /in time order, by question, by rule/.test(c.text) && /each labelled as the system's/.test(c.text)));

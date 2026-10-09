@@ -96,6 +96,9 @@ import { checkGuide, registerConductCheck } from "./reading-guides/index.mjs";
    N156, K617): read from it, never copied. */
 import { AI_RUN_CHECKS, DEPLOYMENT_SEQUENCE, DEPLOYED_MODES, DRAFT_MODE, GATE_ADDRESS, SEQUENCING_SOURCE,
          SEQUENCING_ALSO_NAMED_IN } from "./run-rules/index.mjs";
+/* T41 (run-rules R23–R26): the interview's mode, the explorer's origin, the system's draft kinds and their reach, and the
+   reading bound, each read by key, never typed (R23). */
+import { ENQUIRE_MODE, RUN_ORIGINS, DRAFT_REACH, RUN_BOUNDS } from "./run-rules/index.mjs";
 export { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE, SEQUENCING_ALSO_NAMED_IN };
 
 /* C-22.7 IS NAMED HERE BY KEY (R25; K194, K333), selected from `run-rules`'
@@ -1800,6 +1803,8 @@ export function enquireLayer() {
     load_when: "the run interviews a member at intake, or turns a member's words into proposed questions and steps",
     sourcing: "authored",
     body: {
+      /* run-rules R24: the mode the interview is answered in; its reach, bounds and flag are run-rules'. */
+      mode: ENQUIRE_MODE.mode,
       questions: INTAKE_QUESTIONS,
       clauses: ENQUIRE_CLAUSES,
       source: INVESTIGATION_SOURCE,
@@ -1815,6 +1820,10 @@ export function exploreLayer() {
     load_when: "the system explores a question no member asked it to, where an account owner has turned exploring on",
     sourcing: "authored",
     body: {
+      /* run-rules R23: the explorer's runs carry the origin after every member-started run's (`RUN_ORIGINS`' first),
+         in the mode the law lookup reads from the order, the one after the first deployed (R18). */
+      origin: RUN_ORIGINS[RUN_ORIGINS.length - 1],
+      mode: LEGAL_LOOKUP_MODE,
       reuses: Object.keys(judgementLayers()),
       clauses: EXPLORE_CLAUSES,
       source: INVESTIGATION_SOURCE,
@@ -1829,6 +1838,8 @@ export function readingLayer() {
     load_when: "the run reads inside a document the group holds, a few pages at a time, or writes a note beside a source",
     sourcing: "authored",
     body: {
+      /* run-rules R26: the reading bound, its description as run-rules holds it; the bounds layer carries them all. */
+      bound: RUN_BOUNDS.pages,
       clauses: READING_CLAUSES,
       source: INVESTIGATION_SOURCE,
       note: INSTRUCTION_NOTE,
@@ -1842,6 +1853,9 @@ export function caseAccountLayer() {
     load_when: "the run drafts a case's written account from its evidence",
     sourcing: "authored",
     body: {
+      /* run-rules R25: a draft of its own kind, in the draft mode, reaching the case's own record only. */
+      mode: DRAFT_MODE.mode,
+      reach: DRAFT_REACH.case_account,
       clauses: CASE_ACCOUNT_CLAUSES,
       source: INVESTIGATION_SOURCE,
       note: INSTRUCTION_NOTE,
@@ -1855,6 +1869,9 @@ export function accountCheckLayer() {
     load_when: "the run checks each sentence of a member's account of a case against the evidence it cites",
     sourcing: "authored",
     body: {
+      /* run-rules R25: a draft of its own kind, in the draft mode, reaching the case's own record only. */
+      mode: DRAFT_MODE.mode,
+      reach: DRAFT_REACH.account_check,
       clauses: ACCOUNT_CHECK_CLAUSES,
       source: INVESTIGATION_SOURCE,
       note: INSTRUCTION_NOTE,
