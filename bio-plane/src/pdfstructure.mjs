@@ -60,7 +60,17 @@ export const PDF_LINK_TYPES = [...LINK_TYPES, "undetermined"];
  * Byte helpers
  * ------------------------------------------------------------------ */
 
-const LATIN1 = new TextDecoder("latin1");
+/** Bytes as a string of one code unit per byte, each unit the byte's value
+ *  (N813). Not `TextDecoder("latin1")`: that label is windows-1252, which
+ *  reads 0x80-0x9F as other code points (0x80 as U+20AC), so a string's or a
+ *  shown run's bytes in that range came back changed. Anything that is not a
+ *  Uint8Array reads as no bytes. */
+function binaryString(u8) {
+  if (!(u8 instanceof Uint8Array)) return "";
+  let out = "";
+  for (let i = 0; i < u8.length; i += 8192) out += String.fromCharCode.apply(null, u8.subarray(i, i + 8192));
+  return out;
+}
 
 function isWhitespace(c) {
   return c === 0x00 || c === 0x09 || c === 0x0a || c === 0x0c || c === 0x0d || c === 0x20;
@@ -192,7 +202,7 @@ function unpredict(data, { predictor = 1, colors = 1, columns = 1, bpc = 8 } = {
  * Values are tagged so a name is never confused with a string and a reference
  * is never confused with two numbers:
  *   name   { t:"name", v }
- *   str    { t:"str",  v }            (decoded text; enough for URIs/dest names)
+ *   str    { t:"str",  v, raw }       (R38: `raw` the exact bytes, `v` the text)
  *   ref    { t:"ref",  n, g }
  *   dict   { t:"dict", map:{name->value} }
  *   arr    { t:"arr",  items:[...] }
@@ -274,57 +284,37 @@ function tryParseRef(s, pos) {
   return { value: { t: "ref", n: parseInt(m[1], 10), g: parseInt(m[2], 10) }, pos: pos + m[0].length };
 }
 
+/* R38 (N813) — A STRING IS ITS BYTES, AND ITS TEXT BESIDE THEM.
+ *
+ * A string value carries `raw`, the bytes the file states (escapes and hex
+ * digits decoded, read by the same two readers the content lexer uses), and
+ * `v`, the text read from them. `v` is a reading, not the value: a binary
+ * string (an /ID, an encryption /O or /U) or an odd-length UTF-16 one cannot
+ * survive a trip through text, so a caller that writes a string back writes
+ * `raw`, and no byte is lost or changed. */
 function parseLiteralString(s, pos) {
-  pos++; // skip (
-  let out = "", depth = 1;
-  while (pos < s.length) {
-    const c = s.charCodeAt(pos);
-    if (c === 0x5c) { // backslash escape
-      const n = s[pos + 1];
-      const map = { n: "\n", r: "\r", t: "\t", b: "\b", f: "\f", "(": "(", ")": ")", "\\": "\\" };
-      if (n in map) { out += map[n]; pos += 2; continue; }
-      if (n >= "0" && n <= "7") { // octal
-        let oct = "";
-        let p = pos + 1;
-        while (p < s.length && oct.length < 3 && s[p] >= "0" && s[p] <= "7") { oct += s[p]; p++; }
-        out += String.fromCharCode(parseInt(oct, 8) & 0xff);
-        pos = p; continue;
-      }
-      pos += 2; continue; // line continuation or unknown: drop
-    }
-    if (c === 0x28) { depth++; out += "("; pos++; continue; }
-    if (c === 0x29) { depth--; if (depth === 0) { pos++; break; } out += ")"; pos++; continue; }
-    out += s[pos]; pos++;
-  }
-  return { value: { t: "str", v: decodePdfText(out) }, pos };
+  const r = readLiteralBytes(s, pos);
+  return { value: strValue(r.bytes), pos: r.pos };
 }
 
 function parseHexString(s, pos) {
-  pos++; // skip <
-  let hex = "";
-  while (pos < s.length && s.charCodeAt(pos) !== 0x3e) {
-    const c = s[pos];
-    if (/[0-9a-fA-F]/.test(c)) hex += c;
-    pos++;
-  }
-  pos++; // skip >
-  if (hex.length % 2) hex += "0";
-  let raw = "";
-  for (let i = 0; i < hex.length; i += 2) raw += String.fromCharCode(parseInt(hex.substr(i, 2), 16));
-  return { value: { t: "str", v: decodePdfText(raw) }, pos };
+  const r = readHexBytes(s, pos);
+  return { value: strValue(r.bytes), pos: r.pos };
 }
 
-/** PDF text strings are either PDFDocEncoding (~Latin1 for our purposes) or
- *  UTF-16BE with a BOM. URIs and destination names are ASCII in practice; this
- *  handles the BOM case so a UTF-16 URI is not read as mojibake. */
+function strValue(raw) {
+  return { t: "str", v: decodePdfText(raw), raw };
+}
+
+/** A string's text (R38): UTF-16BE after the `FE FF` mark (a trailing odd byte
+ *  has no unit and is left to `raw`), otherwise each byte as one code unit. */
 function decodePdfText(raw) {
-  if (raw.charCodeAt(0) === 0xfe && raw.charCodeAt(1) === 0xff) {
+  if (raw[0] === 0xfe && raw[1] === 0xff) {
     let out = "";
-    for (let i = 2; i + 1 < raw.length; i += 2)
-      out += String.fromCharCode((raw.charCodeAt(i) << 8) | raw.charCodeAt(i + 1));
+    for (let i = 2; i + 1 < raw.length; i += 2) out += String.fromCharCode((raw[i] << 8) | raw[i + 1]);
     return out;
   }
-  return raw;
+  return binaryString(raw);
 }
 
 function parseArray(buf, s, pos) {
@@ -380,7 +370,7 @@ function parseDict(buf, s, pos) {
 export class PdfDoc {
   constructor(bytes) {
     this.bytes = bytes;
-    this.s = LATIN1.decode(bytes);
+    this.s = binaryString(bytes);
     this._objs = new Map();          // num -> value
     this._gens = new Map();          // num -> the generation its winning definition states
     this.pageIndexByObj = new Map(); // page object num -> 0-based index
@@ -437,8 +427,10 @@ export class PdfDoc {
    *  resolves to an integer; otherwise we scan to the next `endstream`, which
    *  is the lenient recovery path. */
   streamRawBytes(streamObj) {
-    if (!streamObj || streamObj.t !== "stream") return null;
+    if (!streamObj || streamObj.t !== "stream" || !streamObj.dict || typeof streamObj.dict !== "object") return null;
+    if (!(this.bytes instanceof Uint8Array)) return null;
     const start = streamObj.start;
+    if (!Number.isInteger(start) || start < 0 || start > this.bytes.length) return null;
     let end;
     const len = this.resolve(streamObj.dict.Length);
     if (typeof len === "number" && len >= 0 && start + len <= this.bytes.length) {
@@ -463,16 +455,28 @@ export class PdfDoc {
     return e;
   }
 
-  /** Decompress a stream's bytes if its filter chain is (Flate). Returns null
-   *  for anything else, which the callers treat as "cannot resolve" -> the doc
-   *  degrades to undetermined rather than crashing. */
+  /** Decompress a stream's bytes if its filter chain is (Flate). Answers a
+   *  Promise of the bytes, or of null for anything else, which the callers
+   *  treat as "cannot resolve" -> the doc degrades to undetermined rather than
+   *  crashing. The Promise never rejects (R22): whatever goes wrong inside is
+   *  that null. */
   async streamDecoded(streamObj) {
+    try {
+      return await this._streamDecoded(streamObj);
+    } catch {
+      return null;
+    }
+  }
+
+  async _streamDecoded(streamObj) {
     const raw = this.streamRawBytes(streamObj);
     if (!raw) return null;
     const filter = this.resolve(streamObj.dict.Filter);
-    const names = !filter ? [] :
+    /* A /Filter that is neither a name nor an array names no filter this can
+       apply, so it is not read as none (R22: null for any other filter). */
+    const names = filter == null ? [] :
       filter.t === "name" ? [filter.v] :
-      filter.t === "arr" ? filter.items.map((f) => (f && f.t === "name" ? f.v : null)) : [];
+      filter.t === "arr" ? filter.items.map((f) => (f && f.t === "name" ? f.v : null)) : [null];
     if (names.length === 0) return raw; // unfiltered
     if (!names.every((n) => n === "FlateDecode" || n === "Fl")) return null; // not our phase-1 job
     const inflated = await inflate(raw);
@@ -516,7 +520,7 @@ export class PdfDoc {
     for (const st of streams) {
       const data = await this.streamDecoded(st);
       if (!data) { this.note("objstm_undecodable"); continue; }
-      const inner = LATIN1.decode(data);
+      const inner = binaryString(data);
       const n = numberVal(this.resolve(st.dict.N));
       const first = numberVal(this.resolve(st.dict.First));
       if (n == null || first == null) continue;
@@ -1092,9 +1096,13 @@ function textShowBytes(toks) {
   return n;
 }
 
-/** Read a literal ( … ) string as RAW BYTES (0-255), honouring PDF escapes and
- *  nested parens. Unlike parseLiteralString this does not decode to text — the
- *  bytes are the codes the font maps. */
+/** Read a literal ( … ) string as its BYTES, per ISO 32000-1 §7.3.4.2: the
+ *  escapes decoded, `\` before an end-of-line a continuation (CR LF is one
+ *  end-of-line), an unknown escape the character after it, nested parens kept,
+ *  and an end-of-line written without a backslash (CR, LF or CR LF) one 0x0A.
+ *  The one literal reader: object strings (R38) and the content lexer's shown
+ *  runs, whose bytes are the codes the font maps. `s` is one unit per byte
+ *  (`binaryString`). */
 function readLiteralBytes(s, pos) {
   pos++; // (
   const bytes = [];
@@ -1103,6 +1111,7 @@ function readLiteralBytes(s, pos) {
   while (pos < s.length) {
     const c = s.charCodeAt(pos);
     if (c === 0x5c) { // backslash
+      if (pos + 1 >= s.length) { pos++; break; }
       const nc = s.charCodeAt(pos + 1);
       if (nc in simple) { bytes.push(simple[nc]); pos += 2; continue; }
       if (nc >= 0x30 && nc <= 0x37) { // octal, up to 3 digits
@@ -1114,14 +1123,16 @@ function readLiteralBytes(s, pos) {
       if (nc === 0x0d) { pos += s.charCodeAt(pos + 2) === 0x0a ? 3 : 2; continue; }
       bytes.push(nc); pos += 2; continue;                            // unknown escape: literal next
     }
+    if (c === 0x0d) { bytes.push(0x0a); pos += s.charCodeAt(pos + 1) === 0x0a ? 2 : 1; continue; }
     if (c === 0x28) { depth++; bytes.push(0x28); pos++; continue; }
     if (c === 0x29) { depth--; if (depth === 0) { pos++; break; } bytes.push(0x29); pos++; continue; }
     bytes.push(c); pos++;
   }
-  return { bytes, pos };
+  return { bytes: Uint8Array.from(bytes), pos };
 }
 
-/** Read a < … > hex string as raw bytes. */
+/** Read a < … > hex string as its bytes: whitespace (and any other non-digit)
+ *  skipped, an odd final digit read as followed by 0. */
 function readHexBytes(s, pos) {
   pos++; // <
   let hex = "";
@@ -1132,8 +1143,8 @@ function readHexBytes(s, pos) {
   }
   pos++; // >
   if (hex.length % 2) hex += "0";
-  const bytes = [];
-  for (let i = 0; i < hex.length; i += 2) bytes.push(parseInt(hex.substr(i, 2), 16));
+  const bytes = new Uint8Array(hex.length / 2);
+  for (let i = 0; i < hex.length; i += 2) bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
   return { bytes, pos };
 }
 
@@ -1277,7 +1288,7 @@ async function loadFont(doc, fontVal) {
   if (tu && tu.t === "stream") {
     const data = await doc.streamDecoded(tu);
     if (data) {
-      const parsed = parseToUnicodeCMap(LATIN1.decode(data));
+      const parsed = parseToUnicodeCMap(binaryString(data));
       if (parsed.map.size) { toUni = parsed.map; width = parsed.width; }
     }
   }
@@ -1456,7 +1467,7 @@ async function pageContent(doc, pageMap) {
   for (const st of streams) {
     if (st && st.t === "stream") {
       const data = await doc.streamDecoded(st);
-      if (data) parts.push(LATIN1.decode(data));
+      if (data) parts.push(binaryString(data));
       else { doc.note("content_stream_undecodable"); unread.push("content_stream_undecodable"); }
     } else {
       unread.push("content_stream_unresolvable");
@@ -2083,7 +2094,7 @@ async function extractPageText(doc, pageIdx, pageMap, fontCache) {
       undetermined.push({ page: pageIdx, reason: "form_stream_undecodable", font: null, codes: "", count: 0 });
       return;
     }
-    const formToks = tokenizeContent(LATIN1.decode(data));
+    const formToks = tokenizeContent(binaryString(data));
     if (depth >= FORM_DEPTH_LIMIT || (key != null && formChain.includes(key))) {
       const unread = textShowBytes(formToks);
       if (unread > 0) {
@@ -2213,7 +2224,7 @@ export async function pageShowsText(doc, pageMap) {
       const data = await doc.streamDecoded(st);
       if (!data) { unread = true; continue; }
       const formRes = doc.dictOf(st.dict.Resources) || resources;
-      if (await walk(LATIN1.decode(data), formRes, depth + 1,
+      if (await walk(binaryString(data), formRes, depth + 1,
                      key != null ? [...formChain, key] : formChain)) return true;
     }
     return false;
@@ -2451,7 +2462,7 @@ async function decodeContentStreams(doc, contents) {
     if (!st || st.t !== "stream") continue;
     const data = await doc.streamDecoded(st);
     if (!data) return { text: null };
-    parts.push(LATIN1.decode(data));
+    parts.push(binaryString(data));
   }
   return { text: parts.join("\n") };
 }
@@ -2531,7 +2542,7 @@ export async function pdfPageImages(doc, pageIdx) {
             if (!data) throw new Error(`form_stream_undecodable:page ${pageIdx}`);
             const m = matrixOf(doc, st.dict.Matrix) || [1, 0, 0, 1, 0, 0];
             const formRes = doc.dictOf(st.dict.Resources) || resources;
-            await walk(LATIN1.decode(data), formRes, mulMatrix(m, ctm), depth + 1,
+            await walk(binaryString(data), formRes, mulMatrix(m, ctm), depth + 1,
                        key != null ? [...formChain, key] : formChain);
           }
           break;
@@ -3000,7 +3011,7 @@ async function loadPdf(bytes) {
  *  first 1024 bytes. Never throws. */
 export async function openPdf(bytes) {
   if (!(bytes instanceof Uint8Array)) return null;
-  if (!/%PDF-\d+\.\d+/.test(LATIN1.decode(bytes.subarray(0, 1024)))) return null;
+  if (!/%PDF-\d+\.\d+/.test(binaryString(bytes.subarray(0, 1024)))) return null;
   return loadPdf(bytes);
 }
 
@@ -3008,7 +3019,7 @@ export async function extractPdfStructure(bytes) {
   if (!(bytes instanceof Uint8Array)) {
     return { ok: false, container: "pdf", reason: "NOT_BYTES" };
   }
-  const header = LATIN1.decode(bytes.subarray(0, 1024));
+  const header = binaryString(bytes.subarray(0, 1024));
   const sig = /%PDF-(\d+\.\d+)/.exec(header);
   if (!sig) {
     return { ok: false, container: "pdf", reason: "NOT_A_PDF" };
