@@ -3,7 +3,7 @@
 Worker draft for BOB on `tranche/T40`, refolded from the design of record (`docs/development/investigation-design/investigation-design.html` on `design/investigation`; https://claude.ai/artifact/QjSSFHE78G9PtwKhpW5ZEo) by the placement plan of its HANDOFF H40, which Bob confirmed (H41). Three parts:
 - **Part 1** is the whole text of `docs/architecture/BIO_Investigation_v0_1.md`, between the BEGIN and END markers. It states only what is new to investigations and cites canon for everything already ruled.
 - **Part 2** lists the amendments to existing canon approved with that text, each with its document, section, exact old text and exact new text.
-- **Part 3** lists what could not be placed, and where the design conflicts with canon as read.
+- **Part 3** records that the points once listed there are answered and folded.
 
 On Bob's approval BOB places Part 1, lists it in `docs/architecture/README.md` and `requirements/README.md`, applies Part 2 (updating each amended document's Status date), and records the result once in `build/rulings.md`.
 
@@ -15,7 +15,7 @@ On Bob's approval BOB places Part 1, lists it in `docs/architecture/README.md` a
 
 # BIO Investigation v0.1: the project as an investigation
 
-**Status** · Draft for Bob's approval; the design of record approved by Bob 2026-10-09 (K2417). This is the design of record, `investigation-design.html` on branch `design/investigation`, put into canon by the placement Bob confirmed (H40, H41): this document states in full only what is new to investigations, and cites the canon document that already rules everything else. It is approved together with amendments to other canon documents (System Design §1; Membership §4, §7.3, §7.9, §7.14; Case Making §4a; AI Roles rule 9; Action §3; Content Framework invariant 7; Capability Ladders §9.4, §9.5 L4; Declared Bias, regrade), and K1481 is amended by a ruling. Each amendment lives in its own document. Complete for the design of record, apart from the sections listed below. Text marked *[detail]* is a detail the design lane settled within Bob's rulings. Bob's history of rulings is in the lane's `DECISIONS.md` and `HANDOFF.md`, which are not canon. as of 2026-10-09
+**Status** · Draft for Bob's approval; the design of record approved by Bob 2026-10-09 (K2417). This is the design of record, `investigation-design.html` on branch `design/investigation`, put into canon by the placement Bob confirmed (H40, H41): this document states in full only what is new to investigations, and cites the canon document that already rules everything else. It is approved together with amendments to other canon documents (System Design §1; Membership §4, §7's opening, §7.3, §7.8, §7.9, §7.14; Case Making §4a; AI Roles §2 EXTRACT, rules 3, 9 and 11, §7.3; Action §3; Content Framework invariant 7; Capability Ladders §2, §9.4, §9.5 L4 and L5; Declared Bias, regrade; and `INVESTIGATIVE-SESSION.md` §14b.1), and K1481 is amended by a ruling. Each amendment lives in its own document. Complete for the design of record, apart from the sections listed below. Text marked *[detail]* is a detail the design lane settled within Bob's rulings. Bob's history of rulings is in the lane's `DECISIONS.md` and `HANDOFF.md`, which are not canon. as of 2026-10-09
 
 **Place in the system** · Level 1, under construct 8 of `BIO_System_Design.md` §3 (intent and inquiry). It sits between a project's questions and the evidence members add to them. It depends on these documents and does not restate them: `BIO_System_Design.md` §1 (why Civicsmith exists); `BIO_Case_Making_v0_1.md` (the inquiry, the leg, the basis, the conclusion, the case as a production); `BIO_Content_Framework_v0_10.md` §8.1 and §14.4 (grades, testimony) and §12 (an objective's condition); `BIO_Membership_Architecture_v2.md` §7 (projects, owners, participants, discoverable or hidden); `BIO_Capability_Ladders_v0_1.md` §2 and §10 (AI accounts, limits, exploring, machine signals, hypotheses); `BIO_Assistant_and_AI_Roles_v0_1.md` §3 (the AI's rules); `BIO_Declared_Bias_v0_1.md` (bias, hunches, regrade); and `BIO_Publication_v0_1.md` (publication, editions, the docket, import). `BIO_Action_v0_1.md` begins where this ends. The requirements that cite it are T41's `steps`, `question-explorer` and `investigation` (`build/plan/draft-T41-investigation.md`).
 
@@ -66,7 +66,7 @@ The machine proposes. A member accepts on the evidence, and the record shows the
 - **The objective is the measure throughout, and the evidence decides it.** An investigation gathers information to make a determination: whether a contract award was made properly, whether there is a legal justification for a transfer, whether the city is meeting its stated standards. At every point the question is whether the objective has been met, whether or not every question has been answered. That is decided by rigorous assessment of the evidence, never by anyone's say-so.
 - **The objective's condition** states what the record must hold for the matter to be decided, not which answer is hoped for. For example: for every contract award in the period, the solicitation and the public vote, or a records request answered that none exists, each at the project's required grade. Progress toward the condition is computed from the record, never reported by a member. What falls short is listed as gaps, and the gaps are the work list. An objective with no such condition is shown as one whose progress cannot be computed, never as met. No member act declares an objective met.
 - When the record holds what the objective needs, the matter can be determined: award by award, against the rule that binds it, as complied, did not comply, or unclear (Action §3). An investigation that shows a rule was followed or broken has met its objective either way. Compliance is recorded with the same care (Action §4 rule 4).
-- Members draw legs on what the record holds, each with its grade, and conclude questions. A conclusion always shows its strength beside the project's bar. The bar gates publication and claims that a rule was broken (Publication §3; Action §4 rule 2). It never gates drawing a leg or concluding.
+- Members draw legs on what the record holds, each with its grade, and conclude questions. A conclusion always shows its strength beside the project's bar. The bar gates publication (Publication §3). A claim that a rule was broken rests on a determination (Action §4 rule 2). The bar never gates drawing a leg or concluding.
 - Members write the objective and its condition, and may revise them with a reason as the case develops. Finds that cut against what members expect are shown as prominently as those that support it (Content Framework invariant 7, as amended).
 - The project's page always shows the objective, its condition, and where the evidence stands: for it, against it, and the gaps.
 - **A question can serve several projects and objectives.** Each project has its own relationship with a question: it draws on it, it may hold its own conclusion on it, and it may defer or dismiss it. One project's deferral or dismissal never affects another project.
@@ -153,7 +153,7 @@ Groups vary from no AI at all to wanting all it can offer, and a group and its m
 
 - **What a member recalls of what others said or did is narrative.** The intake interview and a member's story are kept in her own words. They are valuable because they say where to look. But memory is not always exact, and a member's recollection of what a public body said is not the body's statement. What she saw or heard herself, and a source's own account, can be recorded as testimony: evidence, labelled with whose word it is (Content Framework §8.1, §14.4). Everything else must be found in the record.
 - **A claim in the narrative becomes something to find.** When a member says "the district said the campus would be closed for one school year", the system (or the member, by hand) turns it into a step: find where the district said it (a newsletter, a board item, the bond materials). Until it is found, the claim is shown as the member recalls it, never as what the district said.
-- **A member who was there** (she heard it said at a board meeting) may record it as her own firsthand account. That is evidence, graded as testimony and labelled as her account. The grade says it rests on her word and is harder for others to check, not that it is less true. Corroboration strengthens it. An anonymous account is corroborated before a finding rests on it (Publication §5C).
+- **A member who was there** (she heard it said at a board meeting) may record it as her own firsthand account. That is evidence, graded as testimony and labelled as her account. The grade says it rests on her word and is harder for others to check, not that it is less true. Corroboration strengthens it. An anonymous account is corroborated before a finding rests on it (Publication §3 rule 7, DEC-102).
 - **A private note may be shared with a project the member is in.** Its participants see it, in her words and labelled as hers. It is narrative, never evidence, and never published. She may withdraw it, and the record says it was shared and withdrawn. If it names a person in no public role, she is warned at the act (§9).
 - **In an answer, each baseline names what it rests on:** a document, a member's firsthand account, or "as recalled", with whether anyone has looked ("not yet looked for", or "looked for and not found", saying where).
 
@@ -178,13 +178,13 @@ Groups vary from no AI at all to wanting all it can offer, and a group and its m
 Publication's checks, the five screens, signing in the owner's browser, scheduled publishing, editions, the docket and withdrawal are Publication §3, §5, §5A and §5D. The review copy, and the second member's disclosed check of what was left out, are Publication §3 rule 11 and §6A. The printed bias and the owner's acknowledgement are Declared Bias (DEC-103). Importing and recreating a case is Publication §5C. What follows is new.
 
 - **The case's account, and nothing but evidence.** The system drafts the case's written account from the evidence, and may offer more than one framing (in time order, by question, by rule), each labelled as the system's. The member writes the account, from a draft or from nothing, and it is published as hers. Before publication, every sentence is checked against the evidence it cites. A sentence the evidence does not support is flagged: she ties it to evidence or removes it. A sentence the record contradicts is refused outright. Only framing that follows a documented bias statement may stay, marked as such in the text. An unsupported claim cannot be relabelled as bias. Lying is not bias.
-- **The case's statements about itself** (what it says; why this subject; what was left out, and why; and, for a correction, what changed) are held to the same check.
+- **The case's statements about itself** (what it says; why this subject; its scope; what was left out, and why; the bias acknowledgement; and, for a new edition, what changed) are held to the same check.
 - **No stories.** A case carries no stories, context or human-interest accounts, however relevant. In Bob's words: "There are other publications where those stories belong - in a Civicsmith published case is not one of those places."
 - **Bias in the case.** Printing the bias in force stays required (Declared Bias, DEC-103). Framing carried under it is optional, and is allowed only when marked in the text and tied to a bias statement printed in the case.
 - **Readers' re-check under another lens.** When a bias statement is applied (more scrutiny on a source, an inference blocked), the leg or conclusion it touches records that statement, and the case file carries those records. The standalone checker takes a lens: as published, bias removed, or the reader's own. For each finding it reports whether the finding still meets the bar, and which statements made the difference. Every report states the honest limit: a re-check re-weighs the analysis that exists, but cannot write what another lens would have written. This is Declared Bias's regrade, ruled to be built.
 - **Approval.** A group may set its own rule requiring the approval of one or more named members before any of its cases is signed. The rule is off by default, so a group of one is never blocked.
 - **Reviewers.** A body of evidence may hold more than a case needs. The publisher decides which evidence to cite and which to leave out, and states what was left out. A reviewer may disagree. The publisher decides whether to include a reviewer's comments in the case. A reviewer whose comments were not included may add them to the published case afterwards, as anyone outside may (Publication §5D). A reviewer's objection does not travel with the case automatically.
-- **Accepting another group's case.** After import and recreation (Publication §5C), a group may accept finding by finding, or accept the whole case in one act: every finding that recreated, with one reason, and those that did not listed. Once readers can re-check under a lens, the importing group's own lens is applied in its assessment. An accepted finding becomes read-only evidence in the importer's record, marked as another group's, and is never stronger than the edition it came from. If the source withdraws or revises, the acceptance is raised for re-evaluation.
+- **Accepting another group's case.** After import and recreation (Publication §5C), a group may accept finding by finding, or accept the whole case in one act: every finding that recreated, with one reason; findings that recreated in part are included only where she states their gaps in that act (Publication §5C); those that did not recreate are listed and never accepted. Once readers can re-check under a lens, the importing group's own lens is applied in its assessment. An accepted finding becomes read-only evidence in the importer's record, marked as another group's, and is never stronger than the edition it came from. If the source withdraws or revises, the acceptance is raised for re-evaluation.
 
 <!-- END BIO_Investigation_v0_1.md -->
 
@@ -334,19 +334,104 @@ In **Incomplete sections**, old:
 New:
 > - §Differential traversal and the cross-group rerun and §Sequencing — regrade is ruled to be built (D59, 2026-10-09) and is not built; rerun is prose only; "Not a build order"; no op exists.
 
+### O. `BIO_Membership_Architecture_v2.md` §4, §7's opening and §7.8: administrators' sight elsewhere (D54)
+
+D54 is Bob's later ruling; these passages still give administrators sight of every project.
+
+§4, the last sentence of the paragraph amended by B, old:
+> Sight and authority are separated here on purpose: the custodial role can audit everything and direct nothing.
+
+New:
+> Sight and authority are separated here on purpose: the custodial role can audit what 7.3 lets it see (every discoverable project in full; of a hidden project it was not added to, its existence, name and owners, D54, 2026-10-09) and direct nothing.
+
+§7's bullet "SIGHT IS NOT AUTHORITY", which quotes that sentence, old:
+> (§4: *"Sight and authority are separated here on purpose: the custodial role can audit everything and direct nothing"*; the single exception is §7.13)
+
+New:
+> (§4: *"Sight and authority are separated here on purpose: the custodial role can audit what 7.3 lets it see … and direct nothing"*; the single exception is §7.13)
+
+§7's opening, under "Authority over a project belongs to its owners.", old:
+> They see everything and direct nothing, and the single narrow exception is 7.13.
+
+New:
+> They see projects as 7.3 says (every discoverable project in full; of a hidden project they were not added to, its existence, name and owners, D54, 2026-10-09) and direct nothing, and the single narrow exception is 7.13.
+
+§7.8, old:
+> Administrators see all of them, and every entry in the administrator's roster lists the projects that member participates in.
+
+New:
+> Administrators see them as 7.3 says, and the administrator's roster lists, for each member, the projects that member participates in that the administrator can see in full (D54, 2026-10-09).
+
+### P. `BIO_Assistant_and_AI_Roles_v0_1.md` §2 EXTRACT, §3 rule 3 and §7.3: a verified quote keeps the document's grade (D4)
+
+§2, the EXTRACT row, old:
+> graded by what it names and never A, labelled on every surface.
+
+New:
+> graded by what it names and never A, except that a verified quote keeps the document's capture grade (rule 3; Bob, 2026-10-09, D4), labelled on every surface.
+
+§3 rule 3, old:
+> **Machine work is labelled and graded as machine work.** (DEC-24 rule 3.) Machine-read text is never presented as publisher text (DEC-4);
+
+New:
+> **Machine work is labelled and graded as machine work.** (DEC-24 rule 3.) Machine-read text is never presented as publisher text (DEC-4); a passage the machine proposes whose words are the publisher's own, checked by code to be in the document, with any number or date in it read there by code and checked by the member, keeps the document's own capture grade, and what it means is the member's reading at acceptance (Bob, 2026-10-09, D4; `BIO_Investigation_v0_1.md` §5), while text the AI read from a picture of a page is graded "undetermined" until its accuracy is measured (D21);
+
+§7.3, in the paragraph on Bob's 5.7, old:
+> a proposed reading with an `ai(function)` step, graded by what it names and never A;
+
+New:
+> a proposed reading with an `ai(function)` step, graded by what it names and never A, except that a verified quote keeps the document's capture grade (rule 3, D4);
+
+### Q. K1481 restated with exploring (D39): `BIO_Assistant_and_AI_Roles_v0_1.md` §7.3 and `BIO_Capability_Ladders_v0_1.md` §2 and §9.5 L5
+
+AI Roles §7.3 point 7, old:
+> That question is now ruled: no. Every AI run but a member-authored standing question starts at a member's act (K1481), and extraction is targeted at a member's request (K1468).
+
+New:
+> That question is now ruled: no. Every AI run but a member-authored standing question, and exploring that an account owner has enabled (K1481 as amended by D39, 2026-10-09; Capability Ladders §2, §10, K2350), starts at a member's act, and extraction is targeted at a member's request (K1468).
+
+AI Roles, **Incomplete sections**, the §7.3 bullet, old:
+> A project may not stand an EXTRACT run unattended: every AI run but a member's standing question starts at a member's act (K1481), and extraction is targeted, at a member's request (K1468).
+
+New:
+> A project may not stand an EXTRACT run unattended: every AI run but a member's standing question, and exploring that an account owner has enabled (K1481 as amended by D39; K2350), starts at a member's act, and extraction is targeted, at a member's request (K1468).
+
+Capability Ladders §2, the bullet "*Standing questions (L5) are built mechanical-first:*", old:
+> and every other AI run still starts at a member's act (K1481; §9.5).
+
+New:
+> and every other AI run, apart from exploring an account owner has enabled (below; K2350, D39), still starts at a member's act (K1481; §9.5).
+
+Capability Ladders §9.5, L5, *Ruled*, old:
+> Every other AI run still starts only at a member's act.
+
+New:
+> Every other AI run still starts only at a member's act, apart from exploring that an account owner has enabled, within that account's overall and exploring limits (K1481 as amended by D39, 2026-10-09; §2, §10, K2350).
+
+### R. `BIO_Assistant_and_AI_Roles_v0_1.md` §3 rule 11 and `docs/development/INVESTIGATIVE-SESSION.md` §14b.1: bounded reading and transcribing pictures of pages (D2, D21; H24)
+
+AI Roles rule 11, old:
+> The assistant reads inside a file only as the text the plane's readers extracted from it, and is told the file's active list (its macros, scripts and embedded files) as a fact about the file; it never opens an embedded file, runs a macro or asks for a file's bytes.
+
+New:
+> The assistant reads inside a file only as the text the plane's readers extracted from it, a few pages at a time within a reading limit, and never a document under a "no AI" limit (Bob, 2026-10-09, D2; `BIO_Investigation_v0_1.md` §6); as it reads it proposes passages worth citing and the connections they make, each tied to its exact quote, labelled as the system's work and taken up only by a member's act. A page that is only a picture, which the plane's own text recognition cannot read, may be sent to the AI for transcription on the paying account and within its limits; the text is labelled as the AI's reading and graded "undetermined" until its accuracy is measured, and a member who checks a passage against the page may confirm it to the document's grade (D21). It is told the file's active list (its macros, scripts and embedded files) as a fact about the file; it never opens an embedded file, runs a macro or asks for a file's bytes.
+
+INVESTIGATIVE-SESSION.md §14b.1 (CONTEXT ECONOMY), after the anchor sentences:
+> **The consequence for the fan-out is a rule, not a preference: a sub-session that returns documents rather than reports has defeated the architecture.** Its contract is a REPORT with a citation, and the parent re-reads by address if it needs the bytes.
+
+add:
+> **Loosened for spans, Bob, 2026-10-09 (D2; H24 of the investigation design; `BIO_Investigation_v0_1.md` §6).** A run may read bounded text spans of one held document, a few pages at a time within a reading limit and never under a "no AI" limit, and returns proposals only: passages worth citing and the connections they make, each tied to its exact quote, labelled as the system's work and taken up only by a member's act. A span travels inside a proposal as its quote, never as the document; the rule above holds for everything else.
+
+### S. `BIO_Capability_Ladders_v0_1.md` §9.4, *Cost*: cost shown to the payer (D12)
+
+Old:
+> administrators see monthly use per mode, members no per-answer cost, K1450
+
+New:
+> administrators see monthly use per mode, K1450; before an AI act or an exploring run its paying account's owners see an estimate as a range, or "not known yet" until enough runs are measured, and after it the actual cost, runs and tokens in place of money on a subscription, and nobody sees another member's spending (Bob, 2026-10-09, D12; `BIO_Investigation_v0_1.md` §6), which replaces K1450's "no per-answer cost"
+
 ---
 
 ## Part 3 · Not placed, or in conflict with canon as read
 
-1. **Membership still gives administrators full sight elsewhere (D54).** H40 lists §4, §7.3, §7.9 and §7.14 only. These passages conflict too: §7.8, "Administrators see all of them, and every entry in the administrator's roster lists the projects that member participates in." (it would list hidden projects' participants); §7's opening, "They see everything and direct nothing"; and §4's "the custodial role can audit everything and direct nothing". Proposed for §7.8: "Administrators see them as 7.3 says, and the administrator's roster lists, for each member, the projects that member participates in that the administrator can see in full." The two doctrine sentences are Bob's words, so they are left for BOB to word or to put to Bob.
-2. **Amendment F is placed by me.** No canon states D41's principle, so I placed H38 as an exception in Membership §7.14. BOB should confirm the placement.
-3. **The AI's grade for a found fact (D4) conflicts with AI Roles.** §2's EXTRACT row says a proposed reading is "graded by what it names and never A", and rule 3 grades machine work as machine work. The design (§5 of Part 1) keeps the document's capture grade for a verified quote. H23 named both texts, but H40 does not list them.
-4. **K1481 is restated in canon without exploring.** AI Roles §7.3 point 7 ("Every AI run but a member-authored standing question starts at a member's act (K1481)") and Capability Ladders §9.5 L5 ("Every other AI run still starts only at a member's act") need M's exception. §10 and §2 already carry it.
-5. **AI reading inside documents (D2, D21) conflicts with AI Roles rule 11.** Rule 11 says the assistant reads inside a file only as text the plane's readers extracted, while D21 has the AI transcribe pictures of pages. H24's loosening of `INVESTIGATIVE-SESSION.md` §14b.1 is not in H40's list either.
-6. **Cost shown to members (D12) conflicts with Capability Ladders §9.4.** Its Cost paragraph says "members no per-answer cost (K1450)", but D12 shows the estimate and the actual cost to the paying account's owners.
-7. **The breach gate.** The design says "Only conclusions that meet the bar can carry … a claim that a rule was broken". Action §4 rule 2 lets a member pass that gate openly with a stated reason. Part 1 cites Action §4 rule 2 and does not restate the gate.
-8. **Inconsistencies inside the design.** The §1.5 chain diagram still says questions are "Shared across projects without showing which"; Part 1 follows §1.1 (H38). §1.12 also lists the authored statements twice, differently: with "its scope" and "the bias acknowledgement" in the refusal list, and with "for a correction, what changed" in the account paragraph. Part 1 cites Publication for which statements are required and applies the check to all of them.
-9. **Recreated in part.** Whole-case acceptance (D62) takes "every finding that recreated". Publication §5C also allows accepting a finding that recreated in part, with its gaps stated. Whether whole-case acceptance includes those findings is not said.
-10. **Member-facing names (D23)** are not ruled and are not in the design. Part 1 lists them as incomplete.
-11. **Read as no conflict.** Step costs, milestones and status reports against Action §4 rule 8 ("no budgets": the action plan only) and Capability Ladders §10 ("no drift into … case management"). System Design §1's "tell a story" against D57: Case Making §4a's story/narrative distinction covers it, and amendment G says so.
-
+All points answered by INVESTIGATION-DESIGN (H42) and folded.
