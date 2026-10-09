@@ -64,3 +64,9 @@
 - Generated artifacts staled: the plane bundle (accepted red 12).
 
 Size (session_011HAMj6VLhgKZ4DeMarJYTz): test runs 24, module lines 3690
+
+## J1 · COMPLETE
+
+T41-3 complete (job/T41/membership, pushed). D54: R43 founder and administrators see a hidden project and its bundles only as participants (discoverable unchanged); R44 EXISTENCE's second form; R77 C-70.1 carries `owners` for that case (C-70.1's translation re-worded for both forms); R88 hiddenBundles null only for machines; R18 roster by the reading administrator's sight (op=memberlist reads `viewer`); R60 rescueRefusal and sight reachable at EXISTENCE; R120 migration a no-op (project_sight holds no per-member admission; boot reindex byte-identical). R83 MODULE_ORDER re-pinned (five new modules; clears rule 4 item 5). R123/R124/R126 the three handle refusals read handle.refused.* by key; paused answer carries `minutes`. Rows for T41-6's stamp: C-70.1, C-96.48, C-96.49, C-96.51.
+membership 198/198; format, architecture, coverage (94/94), ownership 0 failures.
+Users' suites (91 modules, 102 paths): 147 new reds, all from D54 (rule 4 (11)), listed by module with file:line in the record's Completion; query-language's 6 are its fixture lacking `project_sight`. Product code using the founder viewer `"admin"` as a see-all read, now blind to hidden projects: network-notices/index.mjs:187, case-authoring/index.mjs:974 and :1735, inquiry/index.mjs:750, ai-runs/index.mjs:201. control-plane should stamp `viewer` on op=memberlist (R18). Plane bundle stale. Record: build/jobs/T41/membership.md.
