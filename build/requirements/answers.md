@@ -1,6 +1,6 @@
 # answers — requirements
 
-**Status** · In force: reviewed (K1505; banner cleared K1599); a new module (K1439; T33-53). Built switched off (Rule 7): the AI half of standing questions until the 150-question bar is met (M-Q9, T33-D10). Last changed T35 (T35-47: R1 amended; R28, R29 new); every requirement met (K1991). Last changed T37 (T37-15: R1, R19 amended; N765, N669; K231, K2130, K2175, K2200); those marked not yet met (T37).
+**Status** · In force: reviewed (K1505; banner cleared K1599); a new module (K1439; T33-53). Built switched off (Rule 7): the AI half of standing questions until the 150-question bar is met (M-Q9, T33-D10). Last changed T35 (T35-47: R1 amended; R28, R29 new); every requirement met (K1991). Last changed T37 (T37-15: R1, R19 amended; N765, N669; K231, K2130, K2175, K2200); those marked not yet met (T37). Last changed T40 (T40-9: R30 new, an ask's project, `accountFor` by kind, `useCheck`, R2's kept-away rows; N812; K2373, K2394); those marked not yet met (T40).
 
 **Size (P6).** About 1,500–2,500 lines (entries C P6 table; ladders §9.4 L1). Under 4,000.
 
@@ -61,6 +61,15 @@ Terms. An **ask** is one member's question, answered under a **grant**: `credent
 - **R28** (N698; DEC-164 (6); K1865, K1481) A **standing find** is a standing question whose search is a find, not a saved query: `standingQuestionSet` (R15) also takes `find: {scope, kinds}` in place of `query`, in the form `retrieval.findIn` takes them (a capture, a selection or enumerated set, or a project's holdings; the kinds DEC-164 (2) names; a selection is frozen at set time into the enumerated ids it then holds, read through `retrieval.selectionRead` (its R77), never `selectionResolve`, so setting a find extends no selection's life and each refusal (`NO_SUCH_SELECTION`, `NOT_YOURS`, `SCOPE_TOO_LARGE` over 200) writes nothing, since a selection expires and a standing find outlives it, K1982; T36: N729, K1991), set by the member's own act from "Find in this" ("Keep finding this as documents arrive"); `question` is then optional, the member's "For which question" (DEC-164 (5)) or null. Refusals, each writing nothing, beside R15's: both `query` and `find`, or neither, `STANDING_NEEDS_SEARCH`; a `find` that `retrieval.findIn` refuses, with that refusal. Its cadence, end, sight and ending are R15–R17's. Each run calls `retrieval.findIn` under its author's sight at that moment and records the matches' extents; a match is new when its extent was not in the previous run's matches (R18's rule; a first run finds nothing new). No model is ever called for a standing find, whatever the switches (R19 does not apply), and it needs no account (as R26). New matches reach the author once, as R20's one entry for that run: `finds` the new matches, each with its words, extent and `origin: "search"` (the "Found by search" mark, never "machine work"), at most 500 per entry with `truncated` and the count of the rest, and `answer` null. A find records nothing else: no match becomes content but by the recording act that makes that kind of content (DEC-164 (4)).
 - **R29** (DEC-149, Bob's "S4: B"; K1779, K1785) Every member-facing string this module answers (the `translation` of each of its rows, every refusal's `detail`, `reason` and `condition`) calls the group's own Civicsmith "your group's Civicsmith", or is reworded so it needs no name, and never "copy", "instance", "plane" or "server" for it. The sweep's rows for this module (`build/plan/draft-T35-dec149-l1-l7.md`) are `checks.mjs`:26 (C-135.6), :30 (C-135.8), `index.mjs`:202 and `rules.mjs`:60, :83: 5 rows, each applied where it lands and named by a test. Codes, op names, field names and comments are not member-facing and stay.
 
+#### Accounts and limits (T40; N812; K2373)
+
+- **R30** (D38; B3) *(not yet met: T40)*
+  - An ask carries an optional `project` (one the member has joined) and calls `accountFor` with kind `ask`.
+  - A standing question's AI half calls it with kind `standing`, without `project` (K2348: standing questions unchanged otherwise).
+  - Each is judged by `ai-use.useCheck` in place of the ceiling.
+  - R2 widens: every read under a grant also removes the rows of projects `credentials.projectsKeptAway({use})` names, before the read log records them. A count counts none of them.
+  - R19's conditions read `AI_LIMIT_REACHED` where they read the ceiling.
+
 ## Private
 
 ### Uses
@@ -69,6 +78,7 @@ Rule 3's list: `retrieval`, `query-language` (the saved-query form; search), `ob
 **Not in Rule 3, needed by this draft (open):** `civil-time` (R9, R13, R17: the local day and the deadline computation), `entities` (R10, the registry reads), `membership` (R13's administrator test; R16's sight), `record-core` (`declareTable`, `transact`, `stampInstant`).
 **T34 (T34-36):** `credentials` (`aiGrantMintStanding`, its R32, for R19; `AI_GRANT_OPS`, its R28, for R1's copy test; the author's account and standing switch). **T37 (T37-15):** `credentials.aiKeptAway()` (its R35), for R19's `kept_away`; never `instance-setup`'s `assistantGate` or `ASSISTANT_OFF`. `run-rules` R22 (the translation draft's reach), for R1.
 **T35 (T35-47):** `retrieval.findIn` (its T35 R, T35-37) for R28.
+**T40 (T40-9):** `ai-use`: `useCheck` (its R3), for R30; `credentials.projectsKeptAway` (its R57), for R30's widening of R2.
 
 ### Invariants
 

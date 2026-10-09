@@ -79,6 +79,8 @@ No merge order (independent).
 - **T40-25 · control-plane** · (N812) R69; (N797, N799) the handle ops' routes (`handlecheck` before sign-in, with an invitation) · draft C; to draft · **P6:** 3,270 → ~3,370.
 - **T40-26 · plane** · (N812) composes `ai-use`; (N799) registers publication's guard with membership; whatever L1–L8's new codes owe (answer-envelope shares among them) · fixed at L11's START from the merged codes.
 
+**L11 STARTs (K2400):** control-plane R69, R70 and notice-producers R16 are already named by older tests of other modules, so the coverage check reads them green: each START requires an explicit test naming each (K874).
+
 **L11 merge order (part E):** `modules.json` order; plane last.
 
 ## Left out of T40 (one hard reason each)
