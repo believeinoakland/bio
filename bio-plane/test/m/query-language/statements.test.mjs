@@ -107,20 +107,35 @@ test("R11 relevance is over the rows the viewer may see, only the order is publi
   w.bundle("B", { body: "water water budget shortfall" });
   w.bundle("C", { body: "budget alone and budget again" });
   w.bundle("P1", { type: "project", body: "water water water water" });
+  /* D54 (membership R43): the projects are hidden, so an administrator neither invited nor joined, the founder
+     included, is as blind to them as ann, and the same rule holds for each. */
+  w.member("erin", "admin");
   const ann = { q: "water budget", viewer: "member:ann", implicitOp: "or" };
-  const before = w.run(ann).rows;
-  assert.ok(!before.some((r) => r.bundle_id === "P1"));
-  assert.ok(!before.some((r) => "score" in r), "no score is published");
+  const viewers = ["member:ann", "admin", "member:erin"];
+  const before = Object.fromEntries(viewers.map((v) => [v, w.run({ ...ann, viewer: v }).rows]));
+  for (const v of viewers) {
+    assert.ok(!before[v].some((r) => r.bundle_id === "P1"), v);
+    assert.ok(!before[v].some((r) => "score" in r), "no score is published");
+    assert.deepEqual(before[v], before["member:ann"], `${v} sees what ann sees`);
+  }
   w.revise("P1", { body: "budget ".repeat(40) });
   w.bundle("P2", { type: "project", body: "water ".repeat(30) });
   w.bundle("P3", { type: "project", body: "budget budget" });
-  assert.deepEqual(w.run(ann).rows, before, "hidden bundles move neither the order nor the snippets");
-  const ids = w.run(ann, "ids").rows;
+  for (const v of viewers)
+    assert.deepEqual(w.run({ ...ann, viewer: v }).rows, before[v], `${v}: hidden bundles move neither the order nor the snippets`);
+  const ids = Object.fromEntries(viewers.map((v) => [v, w.run({ ...ann, viewer: v }, "ids").rows]));
   w.revise("P2", { body: "budget" });
-  assert.deepEqual(w.run(ann, "ids").rows, ids);
+  for (const v of viewers) assert.deepEqual(w.run({ ...ann, viewer: v }, "ids").rows, ids[v], v);
   /* Seen by a viewer who may see the projects, the order does move: the formula reads the viewer's rows. */
   const all = w.run({ ...ann, viewer: V }).rows.map((r) => r.bundle_id);
   assert.ok(all.includes("P1"));
+  /* The control: P1 set discoverable is seen by the administrators (and still not by ann), and moves their order. */
+  w.sight("P1", "discoverable");
+  for (const v of ["admin", "member:erin"]) {
+    const got = w.run({ ...ann, viewer: v }).rows.map((r) => r.bundle_id);
+    assert.ok(got.includes("P1") && !got.includes("P2") && !got.includes("P3"), `${v}: ${got}`);
+  }
+  assert.ok(!w.run(ann).rows.some((r) => r.bundle_id === "P1"), "a member who is no administrator: unchanged");
   const many = compile({ q: "a b c d e f g h i", viewer: V });
   assert.ok(many.warnings.includes(`relevance weighs these 9 terms as one: more than ${RANK_ATOMS_MAX} are not weighed separately`));
   assert.deepEqual(compile({ q: "a b c d e f g h", viewer: V }).warnings, []);
@@ -213,6 +228,25 @@ test("R15 rows=<arm>: the whole meaning set of each bundle in scope, the gate on
   assert.deepEqual(Object.keys(r.rows[0]), ["bundle_id", "bundle_type", ...MEANING.leg.row, ...MEANING.leg.rowJoin.cols,
     "target_id_present"]);
   assert.deepEqual(w.run({ q: "leg:hunch", viewer: "member:ann", rows: "leg" }, "meaning", { mode: "count" }).rows, [{ n: 6 }]);
+  /* D54 (membership R43): PR is hidden, so the founder and an administrator neither invited nor joined answer as ann
+     does, on the owner and on the named bundle; invited, or with PR discoverable, an administrator has it whole. */
+  w.member("erin", "admin"); w.member("fay", "admin");
+  w.participate("PR", "fay", "invited");
+  const legsOf = (viewer) => w.run({ q: "leg:hunch", viewer, rows: "leg" }, "meaning").rows.map((x) => `${x.bundle_id}/${x.ord}`);
+  const countOf = (viewer) => w.run({ q: "leg:hunch", viewer, rows: "leg" }, "meaning", { mode: "count" }).rows;
+  const hidden = ["Q1/0", "Q1/1", "Q1/2", "Q1/3", "Q1/4", "Q2/1"];
+  const whole = ["PR/0", "Q1/0", "Q1/1", "Q1/2", "Q1/3", "Q1/4", "Q2/0", "Q2/1"];
+  for (const v of ["admin", "member:admin", "member:erin"]) {
+    assert.deepEqual(legsOf(v), hidden, `${v}: a hidden project is withheld`);
+    assert.deepEqual(countOf(v), [{ n: 6 }], v);
+  }
+  assert.deepEqual([legsOf("member:fay"), countOf("member:fay")], [whole, [{ n: 8 }]], "an invited administrator");
+  w.sight("PR", "discoverable");
+  for (const v of ["admin", "member:admin", "member:erin"]) {
+    assert.deepEqual(legsOf(v), whole, `${v}: a discoverable project at FULL`);
+    assert.deepEqual(countOf(v), [{ n: 8 }], v);
+  }
+  assert.deepEqual(legsOf("member:ann"), hidden, "a member who is no administrator: unchanged");
   const all = w.run({ q: "", viewer: V, rows: "leg" }, "meaning");
   assert.deepEqual(all.rows.map((x) => `${x.bundle_id}/${x.ord}`),
     ["PR/0", "Q1/0", "Q1/1", "Q1/2", "Q1/3", "Q1/4", "Q2/0", "Q2/1"], "ordered by the bundle, then the arm's identity");
