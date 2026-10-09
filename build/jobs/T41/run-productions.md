@@ -90,3 +90,7 @@ T41-24 applied (R21–R24; K2482's bearing-note run optional and credentials for
 ## J4 · COMPLETE
 
 B3 and B4 applied: R24's no-AI judgement is run-rules' checkPagesRead over credentials R57's limits (fails closed), pages read by key; the real steps through stepsOf, ties now {kind: capture|content} as steps' recordProduct takes them (found by driving it). run-productions 52/52; users' suites unchanged but answer-envelope's totality list missing steps', ai-use's and reading-guides' new families (not mine); format 0, coverage 24/24, ownership 0; architecture 4, exactly the steps and credentials imports awaiting their edges at my merge. Record updated; branch pushed.
+
+## J5 · COMPLETE
+
+B5 applied (K2496 (2)): R21's ceiling is leg-earning's earned capture ceiling for the document, route included (unreadable: null, never B); R23 checks against the same; tested route-bound C, control direct B, unreadable null. B3, B4 applied earlier (J4). run-productions 53/53; users' suites unchanged (none mine); format 0, coverage 24/24, ownership 0; architecture 5, exactly the steps, credentials and leg-earning imports awaiting their edges. Record updated; branch pushed.
