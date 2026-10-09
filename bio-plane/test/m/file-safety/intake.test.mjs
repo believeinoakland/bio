@@ -102,7 +102,26 @@ test("R2: `verdictNotes` answers the capture's notes oldest first, each {note_id
   assert.equal(hidden.code, "FILE_NOT_HELD");
   assert.deepEqual({ ...hidden, captureSha: null }, { ...never, captureSha: null });
   assert.equal(w.fs.verdictNotes({ captureSha: s, viewer: "" }).code, "FILE_NOT_HELD", "an unstamped viewer sees nothing");
-  assert.equal(w.fs.verdictNotes({ captureSha: s, viewer: "member:boss" }).ok, true, "an administrator sees every capture");
+  /* D54 (membership R43, R44): PROJ-1 has no visibility recorded, so it is hidden; an administrator, the founder included,
+     neither invited nor joined to it sees it at EXISTENCE only, never a capture inside it: exactly as an absent one */
+  for (const admin of ["member:boss", "admin", "member:admin"]) {
+    const x = w.fs.verdictNotes({ captureSha: s, viewer: admin });
+    assert.equal(x.code, "FILE_NOT_HELD", `${admin} is neither invited nor joined to the hidden project`);
+    assert.deepEqual({ ...x, captureSha: null }, { ...w.fs.verdictNotes({ captureSha: sha("never held either"), viewer: admin }), captureSha: null });
+  }
+  /* negative controls: the same administrator sees the capture once joined to the hidden project, and sees a capture in a
+     discoverable project it takes no part in (discoverable projects unchanged by D54); a member outside the
+     discoverable project still does not see inside it (EXISTENCE never widens a read) */
+  w.exec(`INSERT INTO project_participants (project_id, member_id, state, created, updated) VALUES ('PROJ-1', 'boss', 'joined', '2026-01-01', '2026-01-01')`);
+  assert.equal(w.fs.verdictNotes({ captureSha: s, viewer: "member:boss" }).ok, true, "an administrator joined to the hidden project sees its capture");
+  assert.equal(w.fs.verdictNotes({ captureSha: s, viewer: "admin" }).code, "FILE_NOT_HELD", "the founder, not joined, still does not");
+  w.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version)
+          VALUES ('PROJ-2', 'project', 'g', 'p', 'active', '2026-01-01', '2026-01-01', 'x', 1)`);
+  assert.equal(w.membership.projectCreated({ projectId: "PROJ-2", ownerId: "m1", visibility: "discoverable", by: "m1" }).setting, "discoverable");
+  w.home(t, "INFO-Q", { project: "PROJ-2" });
+  for (const admin of ["member:boss", "admin"])
+    assert.equal(w.fs.verdictNotes({ captureSha: t, viewer: admin }).ok, true, `${admin} sees a capture in a discoverable project`);
+  assert.equal(w.fs.verdictNotes({ captureSha: t, viewer: "member:m2" }).code, "FILE_NOT_HELD", "a member outside it does not");
 });
 
 test("R3: notes are append-only — no act of this module changes or removes one (scan, hold, release, render, re-scan), a re-scan adds one, and `unknown`, `suspicious` and `not_scanned` are never read as clean (no path opens the original on them)", async () => {
