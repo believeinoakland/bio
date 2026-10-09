@@ -1,6 +1,6 @@
 # capture (T41)
 
-**Status** · session_01DfzCz7CLFcSqit28SNzCXp · depth 2 · WAITING ON BOB (J2) · handled B3
+**Status** · session_01DfzCz7CLFcSqit28SNzCXp · depth 2 · WORKING · handled B3
 
 ## Completion (CAPTURE #25)
 
