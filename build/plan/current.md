@@ -131,6 +131,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 - **T41-47 · actions** · (N822) R52–R60: the hold reads and notices answered at `EXISTENCE` of a hidden project with what each already names, never contents; `t34` re-stated · req: §3.5, BOB's wording. (N823, K2438) `t34.test.mjs`'s stub of `publication.scheduleEdition` re-pointed to publish-schedule.
 - **T41-48 · filings** (tests only) · (was T40-9a; N819) `outward.test.mjs`:136's fixture · K2387.
 - **T41-48a · filing-templates** (tests only) · (N822, K2442) re-state for D54 the tests rule 4 (11) lists.
+- **T41-48b · action-plans** · (Bob's Actions D17, K2443) R34: the tray lists every proposal of a planning run, no cut-off, no paging (the `after` cursor and `PROPOSALS_CURSOR_REFUSED` retired; `op=planproposals` and `planRead` answer whole) · req: R34 as amended · L11 shares: op-declarations (the op's `after` parameter), affordances if its help names five.
 
 ### L10
 - **T41-49 · scheduler** · (N820) R26 registers `question-explorer`'s consumer and `investigation`'s quiet check; (N823) publish-schedule's wake (R71) re-pointed · req: §3.6.
