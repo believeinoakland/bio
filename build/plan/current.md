@@ -72,7 +72,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 ### L3
 - **T41-7a · provenance** · (T41-8a's provider; K2434) R63 new: route `upload` (`UPLOAD_VIA`) graded as the doorbell's received material, not fetched, R42's `origin.kind` `upload` with `origin_statement` · req: R63 · merges before T41-8.
 - **T41-7 · capture-sources** · (N822) R58 amended (BOB's wording, K2434): an administrator sees a `project` credential only at `FULL` sight of its project; tests assuming an administrator's `FULL` sight re-stated · req: R58.
-- **T41-7b · provenance-routes** (tests only) · (N822, K2442) `marked`:126, `table`:40 re-stated for D54 (rule 4 (11)).
+- **T41-7b · provenance-routes** (tests only) · (N822, K2442) `marked`:126, `table`:40 re-stated for D54 (rule 4 (11)). (K2457, re-opened) an upload document (`origin.kind` `upload`) gets its own one-hop chain from its upload receipt (R1), as the doorbell's from its knock.
 - **T41-8b · acquisition** (tests only) · (N822, K2442) `archivelist`:156, :259 re-stated for D54. (N825, K2453) exports `CAPTURE_MAX` (R10); capture reads it.
 - **T41-8 · capture** · (N822) `held` tests re-stated (an administrator not added sees a hidden project at `EXISTENCE`) · tests only unless R-text names administrators' sight. (K2442) also `knocker`:685.
 - **T41-8a · capture** · (N821 upload; Bob D42 "upload: A", K2425) a member uploads a file she holds: graded received from the member (as the doorbell's material, never fetched, K509 (3)), attributed to her, with her statement of where it came from; stored and profiled as any capture; a later public fetch of the same bytes strengthens it · req: capture R86 (K2434; names `uploadCapture`, `via: "upload"`, address `upload:<sha256>`, method `uploaded`, `UPLOAD_NO_STATEMENT`) · uses provenance R63 (T41-7a) · L11 shares: op-declarations (the op), control-plane (route), affordances (help), store-door if the size path needs it.
@@ -93,7 +93,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 
 ### L6
 - **T41-13 · inquiry-grammar** · (D59) R18 `bias_applied` on a leg · req: §3.6.
-- **T41-14 · leg-earning** · (D36, D29, H38, D64, D21) R13 `projectsDrawingOnPaged`, R14 `projectsShownOn`, R15 the AI transcription's ceiling · req: §3.6.
+- **T41-14 · leg-earning** · (D36, D29, H38, D64, D21) R13 `projectsDrawingOnPaged`, R14 `projectsShownOn`, R15 the AI transcription's ceiling · req: §3.6. (K2457) `index.mjs`:629 words every `CAPTURE_RECEIVED_NOT_FETCHED` route as the doorbell: an upload (provenance R63) is named as an upload.
 - **T41-15 · inquiry** · (was T40-5; N814) R39 re-written (each project's own deferral and dismissal; K2371) and (N820; H38) R39 amended (names only non-hidden drawing projects; a question drawn on only by hidden projects moved on its own state); R55 amended (D17), R59 (D13 warning), R60 (`projects` on every read); (DEC-188 (7)) `question.refused.drawnon` by key · K2371, K2418 · req: R39 folded (K2436), R54 `set_in`, R55, R59, R60 as §3.6 · 3,294 → ~3,420. (K2442) `inquiry/index.mjs`:750 reads `biasManifest` as the founder (`"admin"`), now blind to hidden projects: an internal read takes no viewer or a machine one.
 - **T41-16 · hypotheses** · (D33, D46 A, D18) R16–R21, R14 amended · req: §3.6 · 810 → ~1,080.
 - **T41-17 · steps (new)** · (N820; D27–D50, H38, H39, D64) R1–R27 · req: §3.1 · ~2,150; if it grows past ~2,500, the cost relay, follows and later-found move to a module directly after it (BOB's, at the job's report).
@@ -154,7 +154,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 - **T41-55 · queue** · (was T40-21; N814, N812) `op=proposedispose` project arm; R1 kinds; (N820) R1, R52 · req: applied, §3.6.
 - **T41-56 · setup-words** · (DEC-188; U142) R1/R2: `WORD_ROWS` re-frozen at the commit DEC-188 merged (PR #19; 1,006 words, 388 protected), R1's counts stated anew · req: BOB's wording naming the commit. (DEC-188 (8), K2435) the `act.accountswitchset.*`, `act.groupswitchset.*` rows re-pointed to `accountusesset`.
 - **T41-57 · instance-setup** · (was T40-22) R65, R67.
-- **T41-58 · op-declarations** · (was T40-23) R41, R42; the reds of rule 4 (7); (N820) R43; (DEC-188 (8)) `accountswitchset` and `groupswitchset` retire to `accountusesset` · **P6:** 3,283 → ~3,680: measured at START, reported before building if it would pass ~4,000.
+- **T41-58 · op-declarations** · (was T40-23) R41, R42; the reds of rule 4 (7); (N820) R43; (DEC-188 (8)) `accountswitchset` and `groupswitchset` retire to `accountusesset` · **P6:** 3,283 → ~3,680: measured at START, reported before building if it would pass ~4,000. (K2457) `op=recordcapturedlocator` (provenance R53) lets its holder write `via: "upload"` with any `by`: declare it so only capture R86 writes upload receipts.
 - **T41-59 · admission** · (was T40-18a; N797) `handlecheck` public, R22's count; (DEC-188 (8)) R19's list drops `groupswitchset`.
 - **T41-60 · answer-envelope** · (K2428) its C-120 case-disclosures test (`R2, R7 … .20–.22`) red on `tranche/T41` since T40's stamp: re-pin; and re-pin C-35.13's translation re-worded by TEXT-CHAIN #7 (K2428) · (N820) families gain the new modules' and amended modules' check rows · fixed at L11's START from the merged codes.
 - **T41-61 · store-door** · (was T40-24) R10.
