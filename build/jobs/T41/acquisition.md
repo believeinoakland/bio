@@ -25,3 +25,7 @@ Size (session_01EA4bemqG5MNcZ6DDzxcD2d): test runs 7, module lines 2
 ## J1 · COMPLETE
 
 T41-8b complete (bbfb6aea95): archivelist R41's two tests re-stated for D54 with negative controls (cause: the test's membership stand-in lacked project_sight). Tests only, no code or requirement change. acquisition 157/157; format, architecture, coverage (45/45), ownership 0 failures. Reading set over 300 KB: read per (3), two worker summaries; nothing left out mattered. Record: build/jobs/T41/acquisition.md, Completion section.
+
+## J2 · COMPLETE
+
+B2 applied (1b06fbbd6b): CAPTURE_MAX (256 MiB) exported from acquisition index.mjs, the one constant R10 enforces; new R10 test: export = 256 MiB, a body of exactly CAPTURE_MAX filed, one byte more TOO_LARGE with maxBytes = CAPTURE_MAX, stream cancelled. acquisition 158/158; checks 0 failures (coverage 45/45). capture's suite: 156/157, the one red R69 captureAccountsOf is red on tranche/T41 alone too (capture's D54). Plane bundle stale (layer close).
