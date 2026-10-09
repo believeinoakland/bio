@@ -196,6 +196,9 @@ export const OBSERVATION_AUTHORITY_KINDS = {
   derive:    "a derivation over extracted content (REC-95)",
   lead:      "a member's LEAD -- the authored act that puts a name behind a negative answer (D-194, Program B)",
   objective: "a standing objective your group's Civicsmith is monitoring for",
+  /* T41-11 (R1, R13): a step's look (`steps` R9). A step id names no bundle; who sees the row is `steps`' answer,
+     through the resolver it registers for this kind (its R18). */
+  step:      "a step a member or your group's Civicsmith took in pursuit of a question, and the look it made",
 };
 
 /* WHAT THE SUBJECT IS. `unstated` is the sixth and it is NOT in design section

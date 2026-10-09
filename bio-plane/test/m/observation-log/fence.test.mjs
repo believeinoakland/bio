@@ -92,22 +92,24 @@ test("R13 a lead, an objective and any other kind withhold the row from every id
   const { w } = fenced();
   for (const k of ["lead", "objective", "member", "gremlin"]) {
     assert.equal(sees(w, entry({ authority_kind: k, authority: "x" }), V("inner")), false, k);
-    assert.equal(sees(w, entry({ authority_kind: k, authority: "x" }), "admin"), true, "the founder's credential names no person here");
+    /* D54 (K2408, K2442): the founder's viewer names a person, so it is an identified viewer like any other */
+    assert.equal(sees(w, entry({ authority_kind: k, authority: "x" }), "admin"), false, `${k}: the founder is a person`);
+    assert.equal(sees(w, entry({ authority_kind: k, authority: "x" }), MACHINE), true, "a credential with no person behind it");
   }
   for (const k of Object.keys(OBSERVATION_AUTHORITY_KINDS)) {
     const v = sees(w, entry({ authority_kind: k, authority: "INFO-2026-0001" }), V("outer"));
-    assert.equal(v, !["lead", "objective"].includes(k), k);   // run and sweep with no resolver: a bundle of that id
+    assert.equal(v, !["lead", "objective"].includes(k), k);   // run, sweep and step with no resolver: a bundle of that id
   }
 });
 
-test("R13 registerAuthority: one resolver for `sweep` and one for `run`; any other kind AUTHORITY_NOT_RESOLVABLE; a second registration or no function refused through membership's listenerRefusal with {kind}; the row is withheld whole", () => {
+test("R13 registerAuthority: one resolver each for `sweep`, `run` and `step`; any other kind AUTHORITY_NOT_RESOLVABLE; a second registration or no function refused through membership's listenerRefusal with {kind}; the row is withheld whole", () => {
   const { w, hidden } = fenced();
-  assert.deepEqual([...RESOLVED_AUTHORITY_KINDS], ["sweep", "run"]);
+  assert.deepEqual([...RESOLVED_AUTHORITY_KINDS], ["sweep", "run", "step"]);
   for (const k of [...Object.keys(OBSERVATION_AUTHORITY_KINDS).filter((k) => !RESOLVED_AUTHORITY_KINDS.includes(k)), "gremlin", null]) {
     const r = w.obs.registerAuthority(k, () => []);
     assert.deepEqual([r.ok, r.reason], [false, "AUTHORITY_NOT_RESOLVABLE"], String(k));
-    // its detail names the two kinds and says "record", never "bundle" (N458)
-    assert.match(r.detail, /^a resolver is registered for one of sweep, run; the records every other authority kind names are fixed/);
+    // its detail names the three kinds and says "record", never "bundle" (N458)
+    assert.match(r.detail, /^a resolver is registered for one of sweep, run, step; the records every other authority kind names are fixed/);
     assert.doesNotMatch(r.detail, /bundle/i);
   }
   // no function: membership R81's malformed refusal, the kind beside it, and nothing registered
@@ -129,4 +131,82 @@ test("R13 registerAuthority: one resolver for `sweep` and one for `run`; any oth
   assert.equal(typeof w.obs.rowVisible(r, V("outer")), "boolean");
   assert.deepEqual(r, copy);
   assert.equal(w.obs.rowVisible(null, V("outer")), false);
+});
+
+/* T41-11: authority kind `step` (R1, R13), resolved by `steps` R18 (a layer 6 module not yet built: the kind is accepted
+   and named here; what it answers is that module's). */
+test("R13 step: withheld with no resolver (a step id is no bundle); then what the registered resolver answers (does the viewer see the step); its yes never overrides a hidden referent; registered once, held under `steps`", () => {
+  const { w, hidden } = fenced();
+  const row = entry({ authority_kind: "step", authority: "STP-2026-0001" });
+  assert.equal(sees(w, row, V("inner")), false, "no resolver, no bundle of that id: withheld");
+  assert.equal(sees(w, row, MACHINE), true, "a credential with no person behind it sees every row");
+  const asked = [];
+  assert.deepEqual(w.obs.registerAuthority("step", (s, viewer) => { asked.push([s, viewer]); return viewer === V("inner"); }),
+    { ok: true, kind: "step" });
+  assert.equal(sees(w, row, V("inner")), true);
+  assert.equal(sees(w, row, V("outer")), false, "negative control: the resolver's no withholds");
+  assert.deepEqual(asked[0], ["STP-2026-0001", V("inner")]);
+  assert.equal(sees(w, entry({ authority_kind: "step", authority: "STP-2026-0001", result_kind: "capture", result_ref: hidden }), V("outer")),
+    false, "the resolver's yes does not override a hidden referent");
+  const again = w.obs.registerAuthority("step", () => true);
+  assert.deepEqual([again.ok, again.code, again.kind, again.module], [false, "LISTENER_DECLARED", "step", "steps"]);
+  // negative control: the step resolver answers only `step` rows
+  assert.equal(sees(w, entry({ authority_kind: "run", authority: "STP-2026-0001" }), V("inner")), false);
+});
+
+/* D54 (Bob's "D54: B", K2408; membership R43, R44, K2442): an administrator, the founder included, neither invited nor
+   joined to a HIDDEN project sees it only at EXISTENCE, never its contents; so every row naming it is withheld whole.
+   A discoverable project, and an invited administrator, stay at FULL (negative controls). */
+function d54() {
+  const { w, open, hidden } = fenced();
+  for (const id of ["adm", "adm-inv"])
+    w.st.sql.exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES (?, ?, 'admin', 'active', 't', 't')`, id, id);
+  w.participant("PROJ-H", "adm-inv", "invited");
+  const disc = w.projectDoc("PROJ-D", "discoverable bytes");
+  w.st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated) VALUES ('PROJ-D', 'own', 'joined', 1, 't', 't')`);
+  const set = w.membership.projectVisibilitySet({ projectId: "PROJ-D", setting: "discoverable", reason: "open to the group", by: "own" });
+  assert.equal(set.ok, true, JSON.stringify(set));
+  return { w, open, hidden, disc };
+}
+
+test("R13 D54: the founder and an administrator neither invited nor joined see no row naming a hidden project (its capture or its id as the authority, at every bundle-named kind); an invited administrator and the founder invited still do", () => {
+  const { w, hidden } = d54();
+  const rows = [entry({ authority: null, result_kind: "capture", result_ref: hidden }),
+                ...["ratify", "link", "acquire", "extract", "derive"].flatMap((k) => [
+                  entry({ authority_kind: k, authority: "PROJ-H" }), entry({ authority_kind: k, authority: hidden })]),
+                entry({ authority_kind: "sweep", authority: "PROJ-H" }), entry({ authority_kind: "run", authority: "PROJ-H" })];
+  for (const r of rows) {
+    const k = `${r.authority_kind}:${r.authority ?? r.result_ref}`;
+    assert.equal(sees(w, r, "admin"), false, `founder, ${k}`);
+    assert.equal(sees(w, r, V("admin")), false, `founder as member:admin, ${k}`);
+    assert.equal(sees(w, r, V("adm")), false, `administrator, ${k}`);
+    assert.equal(sees(w, r, V("adm-inv")), true, `negative control: an invited administrator, ${k}`);
+    assert.equal(sees(w, r, V("inner")), true, `negative control: a joined participant, ${k}`);
+    assert.equal(sees(w, r, MACHINE), true, `negative control: no person behind it, ${k}`);
+  }
+  w.participant("PROJ-H", "admin", "invited");
+  for (const r of rows) assert.equal(sees(w, r, "admin"), true, "negative control: the founder invited");
+});
+
+test("R13 D54 negative control: a discoverable project's rows stay at FULL for the founder and every administrator, and stay withheld from a member outside it", () => {
+  const { w, disc } = d54();
+  const rows = [entry({ authority: null, result_kind: "capture", result_ref: disc }),
+                ...["ratify", "link", "acquire", "extract", "derive"].map((k) => entry({ authority_kind: k, authority: "PROJ-D" }))];
+  for (const r of rows) {
+    for (const v of ["admin", V("adm"), V("adm-inv")]) assert.equal(sees(w, r, v), true, String(v));
+    assert.equal(sees(w, r, V("outer")), false, "a member outside a discoverable project sees its existence, never a row");
+  }
+});
+
+test("R13 D54: a registered resolver's yes (sweep, run, step) never opens a hidden project's referent to an administrator not invited or joined", () => {
+  const { w, hidden } = d54();
+  w.obs.registerAuthority("sweep", () => ["INFO-2026-0001"]);
+  w.obs.registerAuthority("run", () => true);
+  w.obs.registerAuthority("step", () => true);
+  for (const k of ["sweep", "run", "step"]) {
+    const r = entry({ authority_kind: k, authority: "X-1", result_kind: "capture", result_ref: hidden });
+    assert.equal(sees(w, r, "admin"), false, k);
+    assert.equal(sees(w, r, V("adm")), false, k);
+    assert.equal(sees(w, r, V("adm-inv")), true, `negative control: ${k}`);
+  }
 });

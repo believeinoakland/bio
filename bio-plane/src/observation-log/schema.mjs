@@ -60,10 +60,10 @@ CREATE TABLE IF NOT EXISTS observation_log (
   at             TEXT NOT NULL,
   actor_class    TEXT NOT NULL,     -- plane | machine | member
   actor          TEXT,              -- a machine credential or a member id. NULL is the plane own scheduler
-  authority_kind TEXT NOT NULL,     -- run | sweep | link | ratify | acquire | extract | derive | lead | objective
+  authority_kind TEXT NOT NULL,     -- run | sweep | link | ratify | acquire | extract | derive | lead | objective | step
   authority      TEXT,              -- the run id, the sweep request id, the document a link came from, the lead id
   level          TEXT NOT NULL,     -- internet | document | content | meaning
-  subject_kind   TEXT NOT NULL,     -- address | capture | extent | entity | description | unstated
+  subject_kind   TEXT NOT NULL,     -- address | capture | extent | entity | description | unstated | reference
   subject        TEXT,              -- the normalised address, the capture_sha, the canonical extent, the entity id, or a member words. See the nullability note above
   state          TEXT NOT NULL,     -- LOOKED_ABSENT | LOOKED_INDETERMINATE | partial | PRESENT. NEVER_LOOKED is the ABSENCE of a row
   governed       INTEGER NOT NULL DEFAULT 0,

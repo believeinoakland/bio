@@ -6,13 +6,13 @@ import { world } from "./fixture.mjs";
 
 const sentence = (s) => typeof s === "string" && s.trim().length > 10;
 
-test("R1 the vocabulary: the four levels, the states with NEVER_LOOKED named, the actor classes, the nine authority kinds, the seven subject kinds, each with a sentence", () => {
+test("R1 the vocabulary: the four levels, the states with NEVER_LOOKED named, the actor classes, the ten authority kinds (T41: `step`), the seven subject kinds, each with a sentence", () => {
   assert.deepEqual(Object.keys(ol.OBSERVATION_LEVELS).sort(), ["content", "document", "internet", "meaning"]);
   assert.deepEqual(Object.keys(ol.OBSERVATION_STATES).sort(),
     ["LOOKED_ABSENT", "LOOKED_INDETERMINATE", "NEVER_LOOKED", "PRESENT", "partial"]);
   assert.deepEqual(Object.keys(ol.OBSERVATION_ACTOR_CLASSES).sort(), ["machine", "member", "plane"]);
   assert.deepEqual(Object.keys(ol.OBSERVATION_AUTHORITY_KINDS).sort(),
-    ["acquire", "derive", "extract", "lead", "link", "objective", "ratify", "run", "sweep"]);
+    ["acquire", "derive", "extract", "lead", "link", "objective", "ratify", "run", "step", "sweep"]);
   assert.deepEqual(Object.keys(ol.OBSERVATION_SUBJECT_KINDS).sort(),
     ["address", "capture", "description", "entity", "extent", "reference", "unstated"]);
   for (const v of [ol.OBSERVATION_LEVELS, ol.OBSERVATION_STATES, ol.OBSERVATION_ACTOR_CLASSES,
