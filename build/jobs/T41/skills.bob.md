@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 382 KB by `build/plan/read
 Merge order in L6: inquiry-grammar, leg-earning, inquiry, hypotheses, steps, citation, basis-versions, contradiction; run-rules, ai-use, ai-runs (copy then delete), run-productions, capture-requests, reading-guides, skills, question-explorer; answers, agent-model, agent-worker (`modules.json` order; ai-use before ai-runs is K624's copy-then-delete). You merge after reading-guides (T41-26). Same-layer providers you use: reading-guides (R4, R5, `registerConductCheck`), run-rules (R24, R25). Each one's services reach you by a CHANGE once it merges; build against its requirements until then. Add the `uses` edge to `reading-guides` (§3.6's edge list) in your record, for BOB to apply at your merge.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+All five readings confirmed (K2479). reading-guides and run-rules reach you by CHANGE at their merges; wire the registration, checkGuide and the uses edge then.
