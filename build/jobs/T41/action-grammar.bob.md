@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 CHANGE (K2552, from ACTIONS #14 J1): build R13's `seeksFindings(fm, facts, findings)` over `facts` keyed by progression key, each `{found, stages: [stage_key…]}` as `progressions.readProgression` answers (a key not held reads `found: false`, a finding of its own); each finding carries its row's `code` and `check`. Name the row's code in your record. actions R70/R71 build on exactly this.
+
+## B3 · ANSWER · re J1
+
+J1 confirmed (K2553), superseding B2's shape: (1) C-94.5's re-wording naming `none_exists` stands (a CHANGED row, rule 4 (2)). (2) Your shape governs: `facts.stages` = `{[progressionKey]: [stage_key…]}`, `null` for one not found, absent not judged; findings `check: "C-117.29"`, `code: "SEEKS_REFUSED"`, one per fault as you list; `seeksOf` as read. ACTIONS #14 is told to hand that shape.
