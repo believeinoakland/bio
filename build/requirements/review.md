@@ -57,7 +57,7 @@ Terms. A **draft** is `{draft_id, project_id, case_id, params, created_by, creat
 
 **Approvals before signing, and the review comments a case carries** (T41; N820; `draft-T41-investigation.md` §3.6; K2405, K2417, K2418; D60, D61)
 - **R30** *(not yet met: T41)* (D60) `approvalRuleSet({approvers, by})` by an active administrator: one or more named members whose approval is required before any of the group's cases is signed; `null` turns it off (the default), so a group of one is never blocked. Each set is appended with who and when.
-- **R31** *(not yet met: T41)* (D60) `caseApprove({case, edition, docSha, reason?, by})` by a named approver who may see the case's project; refused `NOT_AN_APPROVER` otherwise; a later document (another `doc_sha`) needs a new approval.
+- **R31** *(not yet met: T41)* (D60) `caseApprove({case, edition, docSha, reason?, by})` by a named approver who may see the case's project; refused `NOT_AN_APPROVER` otherwise; a later document (another `doc_sha`) needs a new approval. (K2528) `docSha` is the approval digest, `case-grammar` R26's `approvalSubjectSha` of the document.
 - **R32** *(not yet met: T41)* At start it registers R30–R31 with `ratification` R50.
 - **R33** *(not yet met: T41)* (D61) `reviewCommentsFor({case, edition, viewer})`, registered at start with `case-authoring.registerReviewComments` (its R66; K2483), lists the comments on the case's review copies for the publisher's choice; after publication, each reviewer whose comments were left out and who is a member is told once (`notice-producers`) that they were not included and that a response may be filed in the case's docket (`docket` R1, as anyone outside may).
 

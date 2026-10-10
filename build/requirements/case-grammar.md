@@ -131,8 +131,8 @@ The case document's grammar, one spelling for every module: the formats and thei
 
 - **R23** *(not yet met: T41)* (D56, D58) The case document's `account:` block: one row per sentence `{ord, text, cites, kind, bias_statement?, began_as}`, `cites` the findings, legs, passages or materials it rests on, `kind` `account` or one of the four statements (D63), `bias_statement` set only for framing marked as following a printed bias statement, `began_as` `member` or `machine_draft` with the draft named; `accountLines`, `accountOf`. The body prints the account with each bias-framed sentence marked in the text.
 - **R24** *(not yet met: T41)* (D59) The `bias_applications:` block: one row per application recorded at a leg or conclusion of a finding a member's chain reaches (`inquiry-grammar` R18, `basis-versions` R48), `{finding, ord?, target, statement, effect, from, to}`; `biasApplicationsOf`.
-- **R25** *(not yet met: T41)* (D61) The `review_comments:` block: the reviewers' comments the publisher chose to include, each `{reviewer, text, at}` as `review` holds it; and `review_comments_left_out`, the count left out, stated. `reviewCommentsOf`.
-- **R26** *(not yet met: T41)* (D60) The `approvals:` block: the group's approval rule in force at signing and each approval `{by, at}`; `approvalsOf`.
+- **R25** *(not yet met: T41)* (D61) The `review_comments:` block: the reviewers' comments the publisher chose to include, each `{reviewer, text, at}` as `review` holds it; and `review_comments_left_out`, the count left out, stated, or null when it could not be determined (K2533). `reviewCommentsOf`.
+- **R26** *(not yet met: T41)* (D60) The `approvals:` block: the group's approval rule in force at signing and each approval `{by, at}`; `approvalsOf`. (K2528) `approvalSubjectSha(text)` answers the sha-256 of a case document with its R26 block (`approval_rule`, `approvals:`) removed, so an approval names the document as the approver saw it, and the same digest is computed before and after the block is written.
 
 ## Private
 

@@ -11,3 +11,5 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 **From T41-23 (ai-runs) merge (K2514, AI-RUNS #16 J6).** `store.mjs`:219 (`ceilingRefusal`) calls ai-runs' removed ceiling path: compose `ai-use` `useCheck`/`countUsage` (with K2500's owed text).
 
 **From INVESTIGATION #1 J2 (K2525).** Register `investigation.registerRunHolder("ai-runs", (by, run) => …)` over ai-runs' run holder (ai-runs is earlier than investigation and cannot register itself); until then `planPropose` and the assistant's `claimFindStep` answer `PLAN_NOT_YOUR_RUN`. Compose `investigation` (`investigationOf(host, deps)`, its 11 tables).
+
+**From CASE-CARRIAGE #7 J1 (K2534).** Red inherited: `t39.test.mjs`:78 (R18, its no-bucket arm): with no bucket bound `copyWake` answers null (K2380); re-state it.
