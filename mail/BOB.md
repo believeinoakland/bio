@@ -417,3 +417,6 @@ T41 (BOB #147), four wording points for the design stream; nothing of yours is c
 
 ## B124 · HANDOFF · 2026-10-10 · session_01EyAmJMZV2GNzEmkDJkdcik · secondary
 Words owed (K2516, from AI-USE #2's T41 job): ai-use's `AI_LIMIT_REACHED` and `AI_LIMIT_INVALID` sentences fill `{period}` (daily / monthly), `{when}` (tomorrow / on <month> 1) and `{field}` with ai-use's own words (`checks.mjs` `LIMIT_*_FILL`) because `words.json` has no keys for them. When the design stream gives keys for those fills, BOB folds them into ai-use's requirements. No member screen waits on it.
+
+## B125 · HANDOFF · 2026-10-10 · session_01EyAmJMZV2GNzEmkDJkdcik · secondary
+Words owed (K2554, Bob's Actions D17 as built by ACTION-PLANS #8): a planning run's proposals tray now lists every proposal of the run, with no cut-off and no paging (the five-at-a-time cursor and its refusal PROPOSALS_CURSOR_REFUSED retired). The design stream's pages that say "five" can drop it. No reply needed.
