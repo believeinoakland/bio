@@ -61,6 +61,11 @@
 - New test in `photos.test.mjs` covers a marked photo, a photo with nothing to obscure and a member document's copy, with negative controls.
 - case-authoring's suite is unchanged by it.
 
+**CHANGE B7 (K2549), case-import, case-checker, ratification and publication merged:** applied.
+- I merged `tranche/T41` @ 3c877f0a1d and re-ran on the merged tip.
+- New `account.test.mjs` arm over the real `case-checker.checkAccount`, with no stand-in: each arm as it judges, `printed` from the lens, a statement's uncited sentence exempt (K2533), with a negative control.
+- case-authoring's suite on the merged tip, compared with the tip without my change: mine adds `invariants`:76 and `photos`:76 and clears `photos`:101, as recorded below. Every other red there is on the tip without me (publication and publish-schedule's merges, rule 4 (13)).
+
 **case-authoring's suite after B5**, for its job:
 - new since J2: `photos.test.mjs`:76, R34's Photos step. A copy with nothing to obscure now carries `PUBLISHED_LABEL` (R29), where it was null.
 - rule 4 (19): `photos.test.mjs`:60 and `documents.test.mjs`:147.
@@ -80,8 +85,8 @@
 - **Read by a worker, whole:** `accepted.mjs`, `people.mjs`, `document.mjs`, and the tests captures, imported, people, tensions, hunch, seam and carries. Its summary is about 8 KB, every statement citing file:line. It covered each file's exports and tests, every assertion my change could break, R23's service enumeration in seam, and flaws.
 - **Did anything left out matter?** No. The summary's two flaws are handled (`accepted.mjs`:75 fixed; `document.mjs` reported above).
 
-**Tests and checks run** (re-run after B6, the four checks 0 failures again):
-- `node --test bio-plane/test/m/case-disclosures/*.test.mjs`, file by file: pass 104, fail 0 (after B6).
+**Tests and checks run** (re-run after B7, the four checks 0 failures again):
+- `node --test bio-plane/test/m/case-disclosures/*.test.mjs`, file by file: pass 105, fail 0 (after B7, on the merged tip).
 - No layer tests are named in the manifest.
 - case-authoring's suite, compared above.
 - answer-envelope `families.test.mjs`: pass 10, fail 3. Row census: fail 1, as above.
@@ -90,7 +95,7 @@
 - `checks/coverage.mjs bio case-disclosures`: 31 of 31 live ids named, 0 failures.
 - `checks/ownership.mjs bio case-disclosures tranche/T41`: 9 files, 0 failures.
 
-Size (session_01LY8Zq25Bmbg74LWk3TRP5f): test runs 19, module lines 2,387
+Size (session_01LY8Zq25Bmbg74LWk3TRP5f): test runs 21, module lines 2,387
 
 ## J1 · QUESTION
 

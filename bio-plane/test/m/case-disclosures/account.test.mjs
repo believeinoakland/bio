@@ -267,3 +267,29 @@ test("R30, R31 over case-grammar's real blocks (its R23, R24): an account writte
   assert.deepEqual(biasApplicationsOf(b.fm(doc(biasApplicationsLines(out.rows)).text)), out.rows);
   assert.deepEqual(out.rows.map((x) => [x.target, x.ord, x.effect]), [["leg", 0, "grade_lowered"], ["conclusion", null, "scrutiny_raised"]]);
 });
+
+test("R30 over the real case-checker.checkAccount (its R24, K2531): the five arms as it judges them, printed from this case's lens, a statement's uncited sentence not refused by the first arm (K2533), and an account that holds refused nothing", () => {
+  const w = world(); w.member("alice");                      /* no stand-in: the real case-checker */
+  w.lens.byScope.set(LENS.id, new Set(["S1"]));
+  const PASSAGE = "The lease was approved without a vote on March 3, 2024, for $4,200, by Jane Doe of the Parks Board.";
+  const P1 = { kind: "passage", ref: "P1", ord: null };
+  const cited = [{ ...P1, text: PASSAGE }];
+  const row = (ord, text, cites, more = {}) => ({ ord, text, cites, kind: "account", began_as: "member", ...more });
+  const account = [
+    row(1, "The lease was approved without a vote.", [P1]),
+    row(2, "The lease was approved for $9,999.", [P1]),
+    row(3, "The vendor was favoured.", []),
+    row(4, "This group expects a vendor to be favoured.", [], { bias_statement: "S7" }),
+    row(5, "Jane Doe favoured the vendor.", [], { bias_statement: "S1" }),
+  ];
+  const statements = [{ ord: 6, text: "This case looks at one lease.", cites: [], kind: "statement", began_as: "member" }];
+  const r = w.cd.accountJudged({ account, statements, cited, lens: LENS, conclusions: [], viewer: V("alice") });
+  assert.deepEqual(r.printed, ["S1"]);
+  assert.deepEqual(r.refusals.map((x) => [x.reason, x.sentences.map((s) => s.ord)]), [
+    ["ACCOUNT_SENTENCE_UNSUPPORTED", [3]], ["ACCOUNT_FACT_NOT_IN_CITED", [2]], ["ACCOUNT_BIAS_NOT_PRINTED", [4]],
+    ["ACCOUNT_CLAIM_NOT_BIAS", [5]]]);
+  for (const x of r.refusals) refused(x, x.reason);
+  /* negative control: the account that holds, with S7 printed */
+  w.lens.byScope.set(LENS.id, new Set(["S1", "S7"]));
+  assert.deepEqual(w.cd.accountJudged({ account: [account[0], account[3]], statements, cited, lens: LENS, conclusions: [], viewer: V("alice") }).refusals, []);
+});
