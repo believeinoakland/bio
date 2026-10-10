@@ -64,3 +64,7 @@ Readings I am building on (T41-39); answer only where you read otherwise.
 ## J2 · COMPLETE
 
 T41-39 complete (B2–B4 applied: digest and carried arms, approvalsInForce, the real publish-schedule). Completion in this record: 232 pass, 1 red by name (scheduled-commit.test.mjs:102, C-122.6 by key, until T41-36 merges); run with case-grammar's job branch merged temporarily, since R49 imports its approvalSubjectSha and approvalsOf (my branch loads once T41-34 merges). Users' suites: no new red. Checks 0 failures. Uses unchanged. 3,735 lines.
+
+## J3 · COMPLETE
+
+Re B5 (K2543): merged tranche/T41 @ e2f3e4b7f7. ratification 233 pass, 0 fail (the C-122.6 by-key test now green). Users' suites unchanged against the tip except actions t34.test.mjs:219 (R69 against R45): its :204 stub of publication.scheduleEdition is no longer called, so it is red from my merge until T41-47 (plan rule 4 (13), map §6). Checks 0 failures. Record updated.
