@@ -107,3 +107,7 @@ Found in other modules (my record's Completion has the detail):
 ## J3 · COMPLETE
 
 T41-42 complete; the record's Completion has the detail. K2531 and K2533 (B2, B3) are applied. Checks: format, architecture, coverage (31 of 31) and ownership all have 0 failures. Module tests: pass 99, fail 3. The three reds (`photos.test.mjs`:46, :66, :252) wait on case-carriage (R11's label words and `PUBLISHED_LABEL`) and case-grammar (R12's `marked` read back), both earlier in L8's merge order. Send a CHANGE once they merge, and I will merge the tranche, switch `PUBLISHED_LABEL` to a named import and re-run. Final `uses` are unchanged from `modules.json`. Size: 2,374 lines.
+
+## J4 · COMPLETE
+
+B4 (K2537) applied, re-completed. I merged tranche/T41. R31's rows are now case-grammar R24's exactly (target leg|conclusion, a conclusion's ord null), and R30 takes R23's {kind, ref, ord} cites. A new round-trip test runs through the real accountLines/accountOf and biasApplicationsLines/biasApplicationsOf. documents.test.mjs R7 is re-stated for marked (rule 4 (19)), and photos.test.mjs R7 is green. Module tests: pass 101, fail 2. Both reds (photos.test.mjs :46, :66) wait on case-carriage T41-35 (R11's OBSCURED_LABEL words, PUBLISHED_LABEL). Checks: format, architecture, coverage (31 of 31) and ownership all have 0 failures. Size: 2,379 lines.
