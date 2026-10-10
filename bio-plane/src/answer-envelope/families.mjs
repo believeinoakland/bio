@@ -63,16 +63,28 @@ import * as INQUIRY_GRAMMAR from "../inquiry-grammar/checks.mjs";
 import * as ACCEPTED_WORK from "../accepted-work/checks.mjs";
 import * as INQUIRY from "../inquiry/index.mjs";
 import * as HYPOTHESES from "../hypotheses/checks.mjs";
+/* T41 (R10; K2405, K2418, K2480, K2487, K2488, K2532, K2566; N820): T41's new families, each in its module's place in the
+   module order: steps' C-142 (after hypotheses, before citation), ai-use's C-143 (after run-rules, before
+   run-productions; ai-runs between them holds no file of families), reading-guides' C-144 (after capture-requests, before
+   skills), question-explorer's C-145 (after skills, before answers), investigation's C-146 (after intent, before
+   reevaluation) and publish-schedule's C-122.5 (moved from publication with its raiser; directly after publication,
+   before docket). A code an earlier family already holds keeps that family's row (steps' C-142.3, C-142.28;
+   investigation's C-146.10, C-146.21, C-146.26) until N843 re-codes them; no new family takes a code from a later one. */
+import * as STEPS from "../steps/checks.mjs";
 import * as CITATION from "../citation/checks.mjs";
 import * as BASIS_VERSIONS from "../basis-versions/checks.mjs";
 import * as STRENGTH from "../strength/checks.mjs";
 import * as CONTRADICTION from "../contradiction/checks.mjs";
 import * as RUN_RULES from "../run-rules/checks.mjs";
+import * as AI_USE from "../ai-use/checks.mjs";
 import * as RUN_PRODUCTIONS from "../run-productions/checks.mjs";
 import * as CAPTURE_REQUESTS from "../capture-requests/checks.mjs";
+import * as READING_GUIDES from "../reading-guides/checks.mjs";
 import * as SKILLS from "../skilldoctrine.mjs";
+import * as QUESTION_EXPLORER from "../question-explorer/checks.mjs";
 import * as ANSWERS from "../answers/checks.mjs";
 import * as INTENT from "../intent/checks.mjs";
+import * as INVESTIGATION from "../investigation/checks.mjs";
 import * as REEVALUATION from "../reevaluation/checks.mjs";
 /* K2226 (T37-50; R7): case-carriage's C-141 (`CASE_CARRIAGE_CHECKS`, the refusals of `obscuremark` and, since T39,
    `copyBatch`'s C-141.11), in its place in the module order (directly after reevaluation, before case-tensions). Since
@@ -81,6 +93,7 @@ import * as REEVALUATION from "../reevaluation/checks.mjs";
 import * as CASE_CARRIAGE from "../case-carriage/checks.mjs";
 import * as CASE_TENSIONS from "../case-tensions/checks.mjs";
 import * as PUBLICATION from "../publication/checks.mjs";
+import * as PUBLISH_SCHEDULE from "../publish-schedule/checks.mjs";
 /* K1280, N526, N533, K1331 (R7): docket's C-129, in its place in the module order (directly after publication). Its
    pressure codes are its own since N526 and N533 (`MACHINE_CANNOT_MARK_DOCKET_PRESSURE`, `DOCKET_PRESSURE_MARKED`,
    `DOCKET_PRESSURE_REFUSED`; C-129.10, .12, .13), so no code is in both docket's and action-grammar's families, and
@@ -161,20 +174,26 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/accepted-work/checks.mjs", ACCEPTED_WORK],
   ["src/inquiry/index.mjs", INQUIRY],
   ["src/hypotheses/checks.mjs", HYPOTHESES],
+  ["src/steps/checks.mjs", STEPS],
   ["src/citation/checks.mjs", CITATION],
   ["src/basis-versions/checks.mjs", BASIS_VERSIONS],
   ["src/strength/checks.mjs", STRENGTH],
   ["src/contradiction/checks.mjs", CONTRADICTION],
   ["src/run-rules/checks.mjs", RUN_RULES],
+  ["src/ai-use/checks.mjs", AI_USE],
   ["src/run-productions/checks.mjs", RUN_PRODUCTIONS],
   ["src/capture-requests/checks.mjs", CAPTURE_REQUESTS],
+  ["src/reading-guides/checks.mjs", READING_GUIDES],
   ["src/skilldoctrine.mjs", SKILLS],
+  ["src/question-explorer/checks.mjs", QUESTION_EXPLORER],
   ["src/answers/checks.mjs", ANSWERS],
   ["src/intent/checks.mjs", INTENT],
+  ["src/investigation/checks.mjs", INVESTIGATION],
   ["src/reevaluation/checks.mjs", REEVALUATION],
   ["src/case-carriage/checks.mjs", CASE_CARRIAGE],
   ["src/case-tensions/checks.mjs", CASE_TENSIONS],
   ["src/publication/checks.mjs", PUBLICATION],
+  ["src/publish-schedule/checks.mjs", PUBLISH_SCHEDULE],
   ["src/docket/checks.mjs", DOCKET],
   ["src/public-read/checks.mjs", PUBLIC_READ],
   ["src/network-notices/checks.mjs", NETWORK_NOTICES],
