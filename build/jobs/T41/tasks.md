@@ -40,3 +40,7 @@ Size (session_01CGQvEK47xJQsjUXGG7z93f): test runs 11, module lines 1451
 ## J1 · COMPLETE
 
 T41-61a done. I re-stated check.test.mjs:38 for D54, adding negative controls (the project discoverable; the administrator invited, the founder joined), and added an R9 D54 test. No product code changed: the module has no see-all read as the founder. Tests 104/104; checks 0 failures; coverage 18/18. Uses unchanged. Two requirement-level findings, R1's admin fallback and R3's admin override against D54/R60, are in my record under Completion.
+
+## J2 · COMPLETE · re B2
+
+B2 CHANGE (K2575) applied. R1: the administrator fallback takes the earliest active administrator R80 admits to the subject, else unassigned. R3: the administrator override needs R80 sight, else NO_SUCH_TASK (never TASK_NOT_YOURS). Each has an explicit test with controls (discoverable; invited/joined; a subject in no project); check.test's two R3 lines re-stated. 106/106; checks 0 failures; coverage 18/18. Uses unchanged. The K2575 marks are yours to strike.
