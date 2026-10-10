@@ -89,11 +89,7 @@ const IN_PROCESS = { inquiry: ["basis", "restson"], entities: ["readingnameplan"
                        /* membership's own hop, called inside `projectCreated` (R6's store-internal list, K1864) */
                        "projectclaimowner"],
                      /* publication's internal hops (its R15; D-734) and its reads served by public-read */
-                     publication: ["recordcasemanifest", "publishedtargets", "casedocfacts", "publishedcasedoctext"],
-                     /* T41: the five ops reading-guides' map serves that no requirement here declares (R43 names its six;
-                        R2, R6, R12's machine draft, the export to Civicsmith and three reads): no spec, so the door
-                        answers each as an op with no spec, until BOB's answer to OP-DECLARATIONS #16 J1 */
-                     "reading-guides": ["guidepropose", "guideproposetocivicsmith", "guidefor", "guide", "guideproposals"] };
+                     publication: ["recordcasemanifest", "publishedtargets", "casedocfacts", "publishedcasedoctext"] };
 /* The family ops whose arm another L11 job serves (R6's other half holds at the layer's close): the control plane
    routes these to their owner's in-process services (K1601; action-clocks R2's `clockpropose`, capture-requests R46,
    answers' `ask`), instance-setup builds its two (T33-87). */

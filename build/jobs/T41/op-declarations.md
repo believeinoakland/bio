@@ -77,3 +77,22 @@ Found in other modules (record, Completion): (a) capture's map has no captureupl
 ## J3 · COMPLETE
 
 T41-58 done: R41, R42, R43 (78 ops, with K2486, K2496, K2560, K2561, K2569, K2570), R45, R46, R20/R24/R25 clauses; retirements; R34 for every new member op. 128/128; format, coverage (45/45), ownership 0; architecture 2 (uses, for BOB). Inherited reds of rule 4 (7), (10), (12), (20) cleared; (15) cleared but for control-plane's own ARMS list. J1's readings stand open (only (1) could change the build). Record: Completion.
+
+## B3, B4 applied
+
+- B3 (K2584, J1 answered): reading-guides' other five ops are declared:
+  - `guideproposetocivicsmith`: a member's act, body `by`, `contribute`.
+  - `guidepropose`: kind `runact`, as `extractpropose` (any credential, `contribute`), stamped `principal` and `viewer`, plus the body's `by`. reading-guides R12 takes the proposer from the body, and an unstamped body `by` would be the caller's own. Its arm reads no query `principal`, so the door hands the run in the body (control-plane R71).
+  - `guidefor`, `guide`, `guideproposals`: session reads, `viewer`.
+  - The five are named in `ACT_HELP_ABSENT`: the three reads under the read ground, the two acts under "unexplained".
+  - (2)–(8) confirmed.
+- B4 (K2585):
+  - (a), (c), (d), (e) were already so.
+  - (b) `capturestepproduct` has no spec and is in no table; asserted in `t41` R46.
+  - (f) is the door's own (`handlechange`'s and `captureupload`'s `by` are declared stamps).
+- Re-run:
+  - `op-declarations` tests 128/128.
+  - format 0, coverage 45/45, ownership 0.
+  - architecture 6 failures, all the `uses` edges already named in the Completion (`reading-guides`, `run-productions`, `provenance`, `action-plans`). Module lines 3,417.
+
+Size (session_01HSBgxknUm7jJ6a36oW3vEv): test runs 19, module lines 3417

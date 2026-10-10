@@ -113,6 +113,9 @@ const R43 = {
   /* reading-guides (R2–R8) */
   guidedraft: BODYACT("reading-guides"), guidereview: BODYACT("reading-guides"), guideoffer: BODYACT("reading-guides"),
   guideadopt: BODYACT("reading-guides"), guideretire: BODYACT("reading-guides"), guides: READ("reading-guides"),
+  /* K2584 (J1 (1)): reading-guides' map's other five */
+  guideproposetocivicsmith: BODYACT("reading-guides"), guidepropose: ["reading-guides", "runact", ["bodyBy", "principal", "viewer"]],
+  guidefor: READ("reading-guides"), guide: READ("reading-guides"), guideproposals: READ("reading-guides"),
   accountpropose: ACT("case-authoring"), accountdrafts: READ("case-authoring"),
   approvalruleset: ["review", "admin", ["by", "viewer"]], caseapprove: ACT("review"), reviewcomments: READ("review"),
   aiestimate: READ("ai-use"), aiactual: READ("ai-use"),
@@ -205,11 +208,11 @@ test("R42 (N797, N799; DEC-184, DEC-186; K2574): handlecheck public (classes nul
 /* ---------- R43 ---------- */
 
 test("R43 (N820; K2405, K2418, K2486, K2496, K2525, K2529, K2560, K2561, K2569, K2570): every op R43 names has the spec, row, stamps and sets of its kind — a session's only (machineClasses []), acts by stamped (the body's for hypotheses' and reading-guides'), reads viewer stamped — in its owner's family, in neither bearer fence, not on AI_GRANT_OPS, in no act list (negative control: a drifted spec is seen)", () => {
-  assert.equal(Object.keys(R43).length, 78);
+  assert.equal(Object.keys(R43).length, 83);
   for (const [op, want] of Object.entries(R43)) holds(op, want);
   /* sessions only: every op but the two R43 declares as another's (readpages as extractpropose, actionseekspropose as
      actionlawspropose) refuses every bearer */
-  for (const op of Object.keys(R43).filter((o) => !["readpages", "actionseekspropose"].includes(o)))
+  for (const op of Object.keys(R43).filter((o) => !["readpages", "guidepropose", "actionseekspropose"].includes(o)))
     assert.deepEqual([...OPS[op].machineClasses], [], op);
   /* acts mutate, reads do not */
   for (const op of Object.keys(R43)) assert.equal(stamps(op).includes("viewer") && !OPS[op].mutating, !OPS[op].mutating, op);
@@ -219,6 +222,8 @@ test("R43 (N820; K2405, K2418, K2486, K2496, K2525, K2529, K2560, K2561, K2569, 
 
 test("R43 (K2496, K2561): readpages is declared as extractpropose is — its classes, mutating, contribute, the run's principal and the viewer stamped; actionseekspropose as actionlawspropose — any credential, mutating, contribute, both sets, proposer stamped from the caller; each reaches its owner's map where the owner reads it, target and seeks the body's (negative control: a query copy of seeks is overridden)", async () => {
   assert.deepEqual(plain(OPS.readpages), plain(OPS.extractpropose));
+  assert.deepEqual(plain(OPS.guidepropose), plain(OPS.extractpropose));
+  assert.equal(NEEDS.guidepropose, NEEDS.extractpropose);
   assert.equal(NEEDS.readpages, NEEDS.extractpropose);
   assert.ok(both("readpages") && both("extractpropose"));
   assert.deepEqual(plain(OPS.actionseekspropose), plain(OPS.actionlawspropose));
@@ -245,13 +250,16 @@ test("R43, R4, R6: each R43 op whose owner exports a map is served by it and its
     for (const k of st) {
       if (k === "viewer" && OPS[op].mutating) continue;   /* an act's actor is its by; the viewer beside it is the family's */
       if (op === "acceptancecounts") continue;            /* its counts name no member and take no viewer (run-productions R22) */
+      /* reading-guides' machine draft takes its proposer and run from the body (its R12): the principal stamp is the
+         door's to hand there (control-plane R71); the body's by is driven */
+      if (op === "guidepropose" && k === "principal") continue;
       const where = k === "bodyBy" ? { body: { by: SENT } } : { query: { [k]: SENT } };
       assert.ok(await reaches(map, op, where), `${op}: ${k} does not reach`);
       driven++;
     }
     assert.equal(await reaches(map, op, { query: { nosuchstamp: SENT } }), false, `${op}: any key reaches`);
   }
-  assert.equal(driven, 17, `${driven} stamps driven`);
+  assert.equal(driven, 22, `${driven} stamps driven`);
   /* the door's own map: none of these owners exports an arm for its R43 ops */
   for (const op of ["aiestimate", "aiactual"]) assert.ok(!keysOf(aiUseOps).includes(op), op);
   for (const op of ["stepsrunai", "grouptestset", "grouptestresults"]) assert.ok(!keysOf(aiRunsOps).includes(op), op);
@@ -281,6 +289,8 @@ test("R45 (T41-8a; capture R86; K2458, K2484): captureupload — a member's sess
 test("R46 (K2457, K2443, K2554): recordcapturedlocator is a store-internal route — provenance's map serves it, it has no spec and is in no table, so the door answers any caller's request as an op with no spec and no caller writes a receipt, an upload's or any other (only capture R86 writes upload receipts); planproposals takes no after parameter: action-plans' arm hands its owner none (negative control: a declared op is in a table)", async () => {
   assert.ok(keysOf((s, u, b) => provenanceOps(s, u, b, { observer: "x" })).includes("recordcapturedlocator"));
   assert.ok(inNoTable("recordcapturedlocator"), "recordcapturedlocator is declared");
+  /* K2585 (R6): `capturestepproduct`, the door's tie of a capture to its step after it lands, is store-internal too */
+  assert.ok(inNoTable("capturestepproduct"), "capturestepproduct is declared");
   assert.equal(ACT_GATE.mode("recordcapturedlocator"), "machine");
   assert.equal(await reaches(actionPlansOps, "planproposals", { query: { after: SENT } }), false, "planproposals passes after");
   assert.ok(await reaches(actionPlansOps, "planproposals", { query: { plan: SENT } }));
