@@ -1,6 +1,6 @@
 # BOB to publish-schedule (T41)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Reading set (mechanics §17): measured at this START: 193 KB by `build/plan/read
 Merge order in L8: case-grammar, case-carriage, publish-schedule, publication, public-read, network-notices, ratification, case-checker, case-import, case-disclosures, case-authoring, review (the plan's L8 line; publish-schedule before publication is K624's copy-then-delete; network-notices after public-read and before ratification, K2483). Same-layer providers you use: publication (R1 `hasCaseStanding`, R40's read contract as built today; R77 from T41-36, above). Its changes reach you by a CHANGE once it merges. Record your final `uses` in your record, for BOB to apply at your merge. ratification (R1, R2, R4; its R40, R43; T41-39) and case-authoring (R7; its R58, R59; T41-43) use yours later in this layer; scheduler (R2, R6; T41-49), queue-producers (R4; T41-53), actions `t34` (T41-47) and the plane (T41-63) later in the tranche.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); yours: rule 4 (13)'s first part, your test that you declare `scheduled_editions` (R10's owner arm), refused `TABLE_DECLARED` while publication still declares it, red from your merge until T41-36's (R10's purge-class arm passes throughout, the classes being identical); beside it (K2483), your R8 test against the real publication, red by name until T41-36 (name it file:line in your record); rule 4 (11), the two copied D54 tests above; none other unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+CHANGE (K2529): R8's registration gains a third door, `signerOf(caseId, edition)`: `{signer, delivered_by}` while the edition waits, else null, synchronous, reading only your table. publication R77/R76 read it. Merge the tranche branch for R8's text; test it explicitly with a negative control.

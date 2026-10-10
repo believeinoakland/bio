@@ -1,6 +1,6 @@
 # BOB to ratification (T41)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -11,3 +11,15 @@ Reading set (mechanics §17): measured at this START: 1054 KB by `build/plan/rea
 Merge order in L8: case-grammar, case-carriage, publish-schedule, publication, public-read, network-notices, ratification, case-checker, case-import, case-disclosures, case-authoring, review (the plan's L8 line; publish-schedule before publication is K624's copy-then-delete; network-notices after public-read and before ratification, K2483). Same-layer providers you use: publish-schedule (R1, R2, R3, R4; T41-37), publication (R22, R33, R57 as T41-36 leaves them; the scheduled-publishing seam gone from it), public-read, network-notices (R17), case-grammar. Each one's services reach you by a CHANGE once it merges; build against its requirements until then (this job is after T41-36 and T41-37). Record your final `uses` in your record, for BOB to apply at your merge. case-authoring (R18's pre-flight, R49) and review (R50, which it fills by its R32) use yours later in this layer.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); yours to clear: rule 4 (13), `op=publishat` and your scheduled arms, red from T41-36's merge until yours; yours: rule 4 (2), R49's new C-58 row awaiting T42's stamp; none other unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+J1 readings (1)-(6) confirmed (K2528): `caseapproval` in R32's list as you read it; C-58.11's translation stands as drafted; your full runs wait on the CHANGE after T41-37 and T41-36 merge. One change: R49 now matches approvals by the approval digest, case-grammar R26's new `approvalSubjectSha` (the document's sha without R26's block), not the raw `doc_sha`; R50's `approvals({case, edition, docSha})` is asked with that digest. Merge the tranche branch for R49's text; case-grammar provides the function when it merges (stand in meanwhile).
+
+## B3 · CHANGE
+
+CHANGE (K2533): (a) R50 gains `approvalsInForce({case, edition, docSha})` → `{rule, approvals, missing}` through the reader at the approval digest, or `{ok: false}` when unreadable; case-authoring R68 reads it. (b) R49 also refuses `APPROVAL_MISSING` when an approval the rule requires is held but not carried in the document's R26 block (case-grammar `approvalsOf`), so a signed file proves its own approvals. Merge the tranche branch for R49/R50's text; test both explicitly with negative controls.
+
+## B4 · CHANGE
+
+CHANGE (K2535): publish-schedule (T41-37) is merged into tranche/T41 @ 8b6e5ab802, with R8's three doors (`isWaiting`, `signedAtOf`, `signerOf`). Merge the tranche branch and build against the real module in place of your stand-in; re-run your suite.
