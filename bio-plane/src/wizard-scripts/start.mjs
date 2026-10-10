@@ -23,6 +23,8 @@ export const MATCHES_MAX = 20;
 /** R28: the most parts of one message read. */
 export const PARTS_MAX = 50;
 
+import { rowOf } from "./checks.mjs";
+
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const line = (v, max = 200) => (typeof v === "string" && v.trim() ? v.trim().slice(0, max) : null);
 
@@ -57,4 +59,29 @@ export function proposeStart({ parts = [] } = {}) {
     projects.get(key).questions.push(i);
   });
   return { ok: true, proposals: [...projects.values(), ...leads], label: { kind: "machine" }, decides: "member" };
+}
+
+/** R28 (pure; K2574): the check the door runs on any proposal the assistant makes for a message, against its own reading
+ *  `parts`: `{ok: true}`, or `START_RUMOUR_AS_QUESTION` naming the first rumour part a `project` proposal holds as one
+ *  of its questions (a rumour is proposed as a lead, never as a question aimed at a person). A proposal that is not one
+ *  answers `{ok: true}` with nothing to check; one that cannot be read through is refused (fail closed). Writes nothing;
+ *  never throws. */
+export function checkStartProposal({ proposal = null, parts = [] } = {}) {
+  try {
+    const list = Array.isArray(parts) ? parts : [];
+    const proposals = isObj(proposal) && Array.isArray(proposal.proposals) ? proposal.proposals : Array.isArray(proposal) ? proposal : [];
+    for (const p of proposals) {
+      if (!isObj(p) || p.route !== "project" || !Array.isArray(p.questions)) continue;
+      const i = p.questions.find((q) => Number.isInteger(q) && isObj(list[q]) && list[q].rumour === true);
+      /* DEC-49 REGION is-start-rumour */
+      if (i !== undefined) return rumourRefusal(i);
+      /* END DEC-49 REGION is-start-rumour */
+    }
+    return { ok: true };
+  } catch { return rumourRefusal(null); }
+}
+function rumourRefusal(part) {
+  const row = rowOf("START_RUMOUR_AS_QUESTION");
+  return { ok: false, reason: "START_RUMOUR_AS_QUESTION", code: "START_RUMOUR_AS_QUESTION", check: row.check, translation: row.translation,
+           part, detail: "a rumour part is proposed as a question: it is proposed as a lead" };
 }

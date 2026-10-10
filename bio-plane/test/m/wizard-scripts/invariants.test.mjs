@@ -140,7 +140,7 @@ test("R20 each refusal carries its row from this module's own family C-131, each
   for (const [code, r] of rows) {
     assert.match(r.check, /^C-131\.\d+$/, code);
     assert.ok(typeof r.translation === "string" && r.translation.length > 10, code);
-    assert.match(r.where, /^src\/wizard-scripts\/(index|writing-help)\.mjs \S+ > is-[a-z-]+$/, code);
+    assert.match(r.where, /^src\/wizard-scripts\/(index|writing-help|start)\.mjs \S+ > is-[a-z-]+$/, code);
   }
   assert.equal(new Set(nums).size, nums.length, "each number once");
   assert.deepEqual(nums.map((c) => Number(c.split(".")[1])).sort((x, y) => x - y), nums.map((_, i) => i + 1));

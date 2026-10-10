@@ -96,3 +96,20 @@ test("R28 proposeStart: a message read as tangled is proposed as one project wit
   const op = wz.wizardScriptsOps(w.wz, new URL(`https://x/?viewer=${encodeURIComponent(F)}`), { message: "a tangle", parts: [{ subject: "Fence" }] }).startfrom();
   assert.deepEqual(op.proposal.proposals, [{ route: "project", subject: "Fence", questions: [0] }]);
 });
+
+test("R28 checkStartProposal (K2574): a proposal holding a rumour part among a project's questions is refused START_RUMOUR_AS_QUESTION (C-131.42), naming the part; proposeStart's own proposals pass; a rumour as a lead passes; one that cannot be read through is refused; writes nothing", () => {
+  const parts = [{ subject: "Fence" }, { subject: "Fence", rumour: true }, { subject: "Library" }];
+  const r = wz.checkStartProposal({ proposal: { proposals: [{ route: "project", subject: "Fence", questions: [0, 1] }] }, parts });
+  const row = wz.WIZARD_SCRIPTS_CHECKS.START_RUMOUR_AS_QUESTION;
+  assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.part], [false, "START_RUMOUR_AS_QUESTION", "START_RUMOUR_AS_QUESTION", "C-131.42", row.translation, 1]);
+  assert.equal(row.check, "C-131.42");
+  assert.match(row.where, /^src\/wizard-scripts\/start\.mjs checkStartProposal > is-start-rumour$/);
+  /* negative controls */
+  assert.deepEqual(wz.checkStartProposal({ proposal: wz.proposeStart({ parts }), parts }), { ok: true }, "proposeStart's own");
+  assert.deepEqual(wz.checkStartProposal({ proposal: [{ route: "lead", part: 1 }, { route: "project", questions: [0, 2] }], parts }), { ok: true });
+  assert.deepEqual(wz.checkStartProposal({ proposal: [{ route: "project", questions: [1] }], parts: [{ subject: "Fence", rumour: "yes" }, { subject: "x" }] }), { ok: true },
+                   "only a part read as a rumour");
+  for (const odd of [undefined, {}, { proposal: null }]) assert.deepEqual(wz.checkStartProposal(odd), { ok: true }, "nothing to check");
+  const trap = { proposals: [{ route: "project", get questions() { throw new Error("x"); } }] };
+  assert.deepEqual([wz.checkStartProposal({ proposal: trap, parts }).code, wz.checkStartProposal({ proposal: trap, parts }).part], ["START_RUMOUR_AS_QUESTION", null], "fail closed");
+});
