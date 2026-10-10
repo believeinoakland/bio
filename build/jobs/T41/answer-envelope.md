@@ -25,4 +25,4 @@
 - `case-carriage` 70/0 (its re-assertion of totality green). Users `control-plane` 191 pass/4 fail, `plane` 147/8, `store-door` 36/5: the same counts on `tranche/T41` without my change (ai account and draft routes, inherited; none touches the families).
 - `checks/format.mjs`: 0 failures; `checks/architecture.mjs answer-envelope`: 6 failures, the six `uses` above; `checks/coverage.mjs answer-envelope`: 10 of 10 live ids named, 0 failures; `checks/ownership.mjs answer-envelope tranche/T41`: 0 failures.
 
-Size (session_017cmBYso32d54JzyLxFv27Q): test runs 14, module lines 777
+Size (session_017cmBYso32d54JzyLxFv27Q): test runs 14, module lines 836
