@@ -12,6 +12,7 @@ import { AI_GRANT_OPS } from "../../bio-plane/src/credentials/index.mjs";
 import { ASK_SCOPE } from "../../bio-plane/src/answers/scope.mjs";
 import { ASK_BOUNDS } from "../../bio-plane/src/run-rules/index.mjs";
 import { MODEL_ENDPOINT, MODEL_FOR_MODE, USAGE_FIGURES } from "../../agent-model/src/model.mjs";
+import { ESTIMATE } from "../../agent-model/src/outcome.mjs";
 import { MEMBER } from "./account.mjs";
 
 let pass = 0, fail = 0;
@@ -56,7 +57,7 @@ function plane(cfg = {}) {
       case "askusage": return ok({ ok: true });
       case "whoami": return ok({ tokenClass: "ai", session: false, member: null });
       case "airun": return ok({ found: true, session: { id: "RUN-A", mode: "check", status: S.status, max_passes: 1,
-        principal: { plane: MEMBER, claude: MEMBER, skill: PACK.version }, context: { type: "inquiry", id: "INQ-1" },
+        principal: { plane: MEMBER, claude: MEMBER, ref: MEMBER, skill: PACK.version }, context: { type: "inquiry", id: "INQ-1" },
         budget: [{ bound: "fetches", allowed: 9 }, { bound: "subsessions", allowed: 9 }, { bound: "wallclock", allowed: 9e5 },
                  { bound: "runtime", allowed: 900 }].map((b) => ({ ...b, consumed: 0 })) } });
       case "airunlog": return ok({ found: true, entries: [], truncated: false });
@@ -188,11 +189,14 @@ section("R54 · interpret, read through the grant, compose, check, and return on
   /* agent-model R6: on the API-key path each request answered counts one call, so each conversation's `calls` is the
      number of requests the model API received for it (reading's offer `done_reading`, composing's `answer`). */
   const requests = (tool) => r.model.filter((c) => (c.body.tools || []).some((x) => x.name === tool)).length;
-  t("R54 (N588): each conversation's usage is reported for mode ask, with its model, its five figures and its calls "
-    + "exactly as agent-model R6 answers them (one per model call that reached the provider)",
+  /* agent-model R13 (T40; K2376): on the API-key path its usage adds the copy's estimate beside the five figures. */
+  const FIGURES = [...USAGE_FIGURES, ESTIMATE];
+  t("R54 (N588): each conversation's usage is reported for mode ask, with its model, its figures (agent-model R13's "
+    + "estimate on the API-key path included) and its calls exactly as agent-model R6 answers them (one per model call "
+    + "that reached the provider)",
     usage.map((u) => [u.mode, u.model, Object.keys(u.usage), u.calls]),
-    [["ask", MODEL_FOR_MODE.ask, USAGE_FIGURES, requests("done_reading")],
-     ["ask", MODEL_FOR_MODE.ask, USAGE_FIGURES, requests("answer")]]);
+    [["ask", MODEL_FOR_MODE.ask, FIGURES, requests("done_reading")],
+     ["ask", MODEL_FOR_MODE.ask, FIGURES, requests("answer")]]);
   t("R54: the turns ran through agent-model under the member's own reference, mode ask's model",
     [[...new Set(r.model.map((c) => c.url))], [...new Set(r.model.map((c) => c.key))], [...new Set(r.model.map((c) => c.body.model))]],
     [[MODEL_ENDPOINT], [SECRET], [MODEL_FOR_MODE.ask]]);
@@ -353,7 +357,7 @@ section("R58, R36 · a run's model half: turns through agent-model, usage report
     ticks.filter((x) => !x.body.usage).length > 0 && ticks.filter((x) => x.body.usage).every((x) => x.body.usage.length > 0), true);
   const v = await (await worker.fetch(new Request("http://agent-worker/version"), { VERSION: "ask", PLANE: plane().binding })).json();
   t("R58: GET /version answers the one statement of when model turns run",
-    /exactly when the Claude account that serves the member's act \(the member's own reference, or the group's API key\) arrives/
+    /exactly when the Claude account that serves the member's act \(the member's own reference or sign-in, a project's account, or the group's API key\) arrives/
       .test(v.model_turns ?? ""), true);
   const all = TRANSCRIPTS;
   t("R36: no answer or event carried the grant, the ai credential, the member's secret or the group's key",

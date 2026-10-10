@@ -696,7 +696,7 @@ export default {
     if (op === "airun")
       return Response.json({ ok: true, result: { run: url.searchParams.get("run"), found: true, session: {
         id: url.searchParams.get("run"), mode: CFG.mode || "check", status: S.status,
-        principal: { plane: "member:ruth", claude: CFG.payer ?? "member:ruth" },
+        principal: { plane: "member:ruth", claude: CFG.payer ?? "member:ruth", ref: CFG.payer ?? "member:ruth" },
         context: runCtx(CFG),
         max_passes: CFG.maxPasses || 1,
         budget: Object.entries(S.budget).map(([bound, b]) => ({ bound, allowed: b.allowed, consumed: b.consumed, unit: null })),
