@@ -813,7 +813,7 @@ export const ACTS = [
      act's PARAMETER, as `withdrawconclusion` and `versioncurrent` leave WHICH project to theirs.
      `concludes_for_project` is the positional fact (D-310's shape) — the caller has JOINED some
      project it can see that live-cites the question — so a stranger, an invited member who never
-     joined, an administrator who sees every project and joined none, and a machine credential
+     joined, an administrator who joined none (seeing it whole if discoverable, D54), and a machine credential
      (null) are not offered what the store would refuse them for every `project=` they could name.
      NO EDGE IS ADDED, AND THAT IS THE LIAR THIS REFUSES: a `concluded -> concluded` edge would
      publish the act to everybody and let the NO-PROJECT relationship conclude twice, re-opening a
@@ -1266,8 +1266,9 @@ export const ACTS = [
   /* REC-134 / C-56: `f.project_participant !== false` on the PROJECT arm of cite, sever and
      reinstate, and only there. Each of the three edits the project's own document, and the
      store now refuses an actor who has not JOINED that project (`#projectAuthority`, §7.5) —
-     which reaches every administrator, because an administrator SEES every project and so
-     reached these acts through the sight gate alone. Offering them to such a caller would be
+     which reaches every administrator, because an administrator SEES every discoverable project
+     (and, at a hidden one's EXISTENCE, is answered facts with `project_participant: false`, D54)
+     and so reached these acts through the sight gate alone. Offering them to such a caller would be
      the pre-flight disagreeing with the refusal it fronts (DEC-8). `!== false` for D-310's
      reason exactly: the fact is three-valued and a caller with no roster position (a `class:*`
      credential) reads null and is byte-unchanged. The information and question arms are not

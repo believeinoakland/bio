@@ -42,6 +42,18 @@ import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS, T35_CONSEQUENCE_STATEMENTS } 
    `t36.mjs`; each grade is pinned below by name, as its owner's requirements give it, never read back from the table. */
 import { T36_RUNGS, T36_RUNG_ABSENT, T36_NON_ACTS, T36_CONSEQUENCE_STATEMENTS } from "../../../src/op-grades/t36.mjs";
 import { T37_RUNGS, T37_RUNG_ABSENT } from "../../../src/op-grades/t37.mjs";
+/* T41 (op-grades R29, R30; K2569, K2570): the handle ops and the ops op-declarations R41, R43 and R45 declare, graded in
+   op-grades' `t41.mjs`; each grade is pinned below by name, as op-grades R30 words it, never read back from the table. */
+import { T41_RUNGS, T41_RUNG_ABSENT } from "../../../src/op-grades/t41.mjs";
+const T41_REASONED = ["projectaikeepaway", "milestoneremove", "milestoneitemremove", "projectclosewithgaps",
+  "hypothesissetaside", "guidereview", "guideretire", "stepaccept"];
+const T41_REVERSIBLE = ["stepcreate", "stepstart", "stepend", "stepwait", "stepwaitremove", "stepcostadd", "stepcostremove",
+  "questionfollow", "stepsrunai", "milestoneset", "milestonerevise", "hypothesistakeup", "noteshare", "noteunshare",
+  "approvalruleset", "actionseekspropose", "stepoutcome", "stepbywhen"];
+const T41_UNDETERMINED = ["stepdelete", "steprefer", "stepproduct", "costmessage", "findaccept", "reportkeep",
+  "interviewkeep", "narrativeclaim", "claimfindstep", "claimfound", "planaccept", "projectwatch", "proposalaccept",
+  "bearingnote", "guidedraft", "guideoffer", "guideadopt", "accountpropose", "caseapprove", "grouptestset",
+  "captureupload", "steplearn"];
 
 test("R1: ACTS holds exactly the object-directed acts, each at its weight", () => {
   const W = {
@@ -170,6 +182,11 @@ test("R2 R35 R37 R38: the rung ladder, low to high, and RUNGS' assignment — DE
      `reversible`; pinned by name */
   want.reasoned.push("obscuremarkwithdraw");
   want.reversible.push("obscuremark");
+  /* op-grades R30 (T41): the eight that ask the member's reason, each backed by its owner's refusal (t41-backing.test.mjs),
+     and the eighteen each taken back by a further act; pinned by name */
+  assert.deepEqual(Object.keys(T41_RUNGS).sort(), [...T41_REASONED, ...T41_REVERSIBLE].sort());
+  want.reasoned.push(...T41_REASONED);
+  want.reversible.push(...T41_REVERSIBLE);
   for (const [a, op] of Object.entries(OP_ALIASES)) if (Object.hasOwn(RUNGS, op)) want[RUNGS[op]].push(a);
   for (const k of Object.keys(want)) want[k].sort();
   assert.deepEqual(bandsOf(RUNGS), want);
@@ -510,15 +527,18 @@ test("R27 R32 R34 R35 R37: no op is graded `undetermined` that the rulings moved
     /* op-grades R27 (T37): the assistant's labelled translation drafts and a member's "looks wrong", none asking a
        reason and none taken back (instance-setup's T37 requirements); `obscuremark` left for `RUNGS` in T38 (R28) */
     "translationdraft", "translationmark",
+    /* op-grades R30 (T41): the ops it grades `undetermined` on R27's rule (t41.mjs), pinned by name */
+    ...T41_UNDETERMINED,
     ...Object.keys(OP_ALIASES).filter((a) => RUNG_ABSENT[OP_ALIASES[a]]?.ground === "undetermined")];
   const undetermined = undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op));
   for (const op of LATER) assert.equal(RUNG_ABSENT[op]?.ground, "undetermined", op);
   assert.deepEqual(undetermined, [...R27_LEFT].sort());
   assert.equal(undetermined.length, 21, "R27's count: DEC-88 moved 57 of the 78 into RUNGS");
   assert.equal(undeterminedOf(RUNG_ABSENT).length, LATER.length + 21,
-    "R27's count: 21, with R32's, R34's, R35's and R37's, and R40's, R45's, T36's and T37's beside them");
+    "R27's count: 21, with R32's, R34's, R35's and R37's, and R40's, R45's, T36's, T37's and T41's beside them");
   assert.deepEqual(undeterminedOf(T36_RUNG_ABSENT), ["deepercheck", "safecopyrequest"]);
   assert.deepEqual(undeterminedOf(T37_RUNG_ABSENT), ["translationdraft", "translationmark"]);
+  assert.deepEqual(undeterminedOf(T41_RUNG_ABSENT), [...T41_UNDETERMINED].sort());
   assert.equal(Object.hasOwn(RUNG_ABSENT, "obscuremark"), false, "obscuremark is graded since T38 (op-grades R28)");
   /* negative control: one of T37's two left out of the pinned list is seen among the rest */
   assert.deepEqual(undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op) || op === "translationmark")
