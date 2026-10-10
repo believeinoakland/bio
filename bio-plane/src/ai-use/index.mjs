@@ -25,9 +25,11 @@ import { connectionsOf } from "../connections/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { AI_RUNS_CHECKS } from "../run-rules/index.mjs";
 import { AI_USE_SCHEMA, AI_USE_TABLES } from "./schema.mjs";
-import { AI_USE_CHECKS, AI_USE_WORDS, LIMIT_WORD_BY_SCOPE, WHOSE_WORD } from "./checks.mjs";
+import { AI_USE_CHECKS, AI_USE_WORDS, LIMIT_WORD_BY_SCOPE, WHOSE_WORD, LIMIT_PERIOD_FILL, LIMIT_WHEN_FILL, MONTH_NAMES,
+  LIMIT_FIELD_FILL } from "./checks.mjs";
 export { AI_USE_SCHEMA, AI_USE_TABLES } from "./schema.mjs";
-export { AI_USE_CHECKS, AI_USE_WORDS, LIMIT_WORD_BY_SCOPE, WHOSE_WORD } from "./checks.mjs";
+export { AI_USE_CHECKS, AI_USE_WORDS, LIMIT_WORD_BY_SCOPE, WHOSE_WORD, LIMIT_PERIOD_FILL, LIMIT_WHEN_FILL, MONTH_NAMES,
+  LIMIT_FIELD_FILL } from "./checks.mjs";
 
 /** R1 (was ai-runs R48): the figures of one conversation's `usage`, as `agent-model` returns them (its R5, R6: the sum
  *  over its model calls), plus `estimated_cost_usd` (its R13): token figures whole numbers, the costs dollar amounts,
@@ -159,14 +161,29 @@ export class AiUse {
     return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra };
   }
 
-  /** R13: `AI_LIMIT_REACHED`, the one site that mints it (K231): its sentence read by its scope, `{whose}` filled from
-   *  `ai.whose.*`; never a cost. `lim` null is R3's fail-closed answer (no account named, or the counter unreadable),
-   *  read as the overall one. */
+  /** R13 (K2514): `AI_LIMIT_REACHED`'s sentence for `lim` reached in the period starting `start`, read by its scope and
+   *  answered whole, so every caller relays a filled sentence: `{whose}` from `ai.whose.*`, `{use}` from
+   *  `ai.use.<use>.name`, `{period}` and `{when}` from this module's fills; never a cost. With no `lim` (R3 failing
+   *  closed) the overall sentence, `{period}` dropped and `{when}` the unjudged fill. */
+  static #limitSentence(key, whose, lim, use, start) {
+    const name = AI_USE_WORDS[`ai.use.${use}.name`];
+    let when = LIMIT_WHEN_FILL.unjudged;
+    if (lim && lim.period === "day") when = LIMIT_WHEN_FILL.day;
+    if (lim && lim.period === "month" && /^\d{4}-\d{2}/.test(start || ""))
+      when = LIMIT_WHEN_FILL.month.replace("{month}", MONTH_NAMES[Number(start.slice(5, 7)) % 12]);
+    return AI_USE_WORDS[key].replace("{whose}", AI_USE_WORDS[WHOSE_WORD[whose || "group"]])
+      .replace(lim ? "{period}" : "{period} ", lim ? LIMIT_PERIOD_FILL[lim.period] : "")
+      .replace("{use}", name ? name.charAt(0).toLowerCase() + name.slice(1) : "this use").replace("{when}", when);
+  }
+
+  /** R13: `AI_LIMIT_REACHED`, the one site that mints it (K231): its sentence read by its scope and filled whole
+   *  (`#limitSentence`); never a cost. `lim` null is R3's fail-closed answer (no account named, or the counter
+   *  unreadable), read as the overall one. */
   #limitReached(p, lim, use, start, why = null) {
     const whose = p ? whoseOf(p) : null;
     const scope = lim ? lim.scope : "overall";
     const key = LIMIT_WORD_BY_SCOPE[scope] || "ai.refused.limit";
-    const translation = AI_USE_WORDS[key].replace("{whose}", AI_USE_WORDS[WHOSE_WORD[whose || "group"]]);
+    const translation = AiUse.#limitSentence(key, whose, lim, use, start);
     /* DEC-49 REGION is-ai-limit-reached */
     return { ...this.#refuse("AI_LIMIT_REACHED", lim ? `${p.owner}'s ${lim.period} limit (${scope}, in ${lim.unit}) is `
       + `reached for the period from ${start}. Nothing was started.` : `${why} Nothing was started.`), translation, word: key,
@@ -174,10 +191,11 @@ export class AiUse {
     /* END DEC-49 REGION is-ai-limit-reached */
   }
 
-  /** R2: an invalid limit, naming the field. */
+  /** R2: an invalid limit, naming the field, its sentence's `{field}` filled (R13, K2514). */
   #invalid(field, detail) {
+    const translation = AI_USE_WORDS["ai.refused.limitinvalid"].replace("{field}", LIMIT_FIELD_FILL[field] || field);
     /* DEC-49 REGION is-ai-limit-invalid */
-    return this.#refuse("AI_LIMIT_INVALID", `${detail} Nothing was changed.`, { field, word: "ai.refused.limitinvalid" });
+    return this.#refuse("AI_LIMIT_INVALID", `${detail} Nothing was changed.`, { field, word: "ai.refused.limitinvalid", translation });
     /* END DEC-49 REGION is-ai-limit-invalid */
   }
 

@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, standard, WORDS } from "./fixture.mjs";
-import { AI_USE_CHECKS } from "../../../src/ai-use/index.mjs";
+import { AI_USE_CHECKS, LIMIT_FIELD_FILL } from "../../../src/ai-use/index.mjs";
 import { AI_RUNS_CHECKS } from "../../../src/run-rules/index.mjs";
 
 const AT = "2026-10-09T12:00:00Z";
@@ -49,7 +49,7 @@ test("R2 scope is overall, a USE_KINDS entry, or per_member for a group or proje
     if ("amount" in over && over.amount === undefined) delete a.amount;
     const r = w.u.aiLimitSet(a);
     assert.deepEqual([r.ok, r.code, r.check, r.field], [false, "AI_LIMIT_INVALID", "C-143.2", field], JSON.stringify(over));
-    assert.equal(r.translation, WORDS["ai.refused.limitinvalid"]);
+    assert.equal(r.translation, WORDS["ai.refused.limitinvalid"].replace("{field}", LIMIT_FIELD_FILL[field]));
   }
   assert.equal(w.snapshot(), before);
   /* negative controls: each field's good values are taken */
@@ -131,7 +131,8 @@ test("R3 useCheck answers null under every limit, and AI_LIMIT_REACHED once the 
   w.count("project:P", "bob", "ask");
   const r = check(w, "project:P", "bob", "ask");
   assert.deepEqual([r.code, r.whose, r.scope, r.unit, r.period, r.use], ["AI_LIMIT_REACHED", "project", "ask", "calls", "day", "ask"]);
-  assert.equal(r.translation, WORDS["ai.refused.limit"].replace("{whose}", WORDS["ai.whose.project"]));
+  assert.equal(r.translation, "The assistant stopped here: this project's daily limit for asking is reached. It works again tomorrow. "
+    + "Everything else works as usual.");
   assert.doesNotMatch(r.translation + r.detail, /\$|usd|cost/i);
   /* the next local day it passes again */
   assert.equal(check(w, "project:P", "bob", "ask", "2026-10-10T12:00:00Z"), null);
@@ -167,7 +168,8 @@ test("R3 per_member: a group or project account's per-member limit is counted ov
   w.count("group", "bob", "ask", { calls: 2 });
   const r = check(w, "group", "bob", "ask");
   assert.deepEqual([r.code, r.scope, r.whose], ["AI_LIMIT_REACHED", "per_member", "group"]);
-  assert.equal(r.translation, WORDS["ai.refused.limit.member"].replace("{whose}", WORDS["ai.whose.group"]));
+  assert.equal(r.translation, "The assistant stopped here: you have used the daily amount each member may use of your group's account. "
+    + "It works again tomorrow. Everything else works as usual.");
   assert.equal(check(w, "group", "cy", "ask"), null, "another member's use of the account is theirs");
   /* negative control: bob's use paid by his project is not the group account's */
   w.count("project:P", "cy", "ask", { calls: 5 });

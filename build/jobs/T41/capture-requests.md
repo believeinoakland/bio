@@ -1,6 +1,23 @@
 # capture-requests (T41)
 
-**Status** · session_01Y176r2DgXuBjQoTamPdKfb · depth 2 · COMPLETE · handled B3
+**Status** · session_01F53hF4viv8F8bxe3JE1BHx · depth 2 · COMPLETE · handled B4
+
+## Completion (CAPTURE-REQUESTS #16, B4)
+
+**Reading set.** B4 is test-only: read whole `plane.test.mjs` (the five tests B4 names), `test/m/ai-runs/world.mjs` (the bar B4 points to), run-rules' `test-set.mjs` and `test-bar.mjs` (R19's gate), ai-runs' `testBarRecord`, `testBarRecords`, `#partDeployable`, the open's mode gate and `aiRunsOf`, the plane `Store`'s constructor and migration and record-core's `recordOf`/`evidenceStore`. The rest of the reading set is as #15 recorded; nothing in my code or other tests changed.
+
+**B4 applied (K2514).** `plane.test.mjs` runs the real plane in Miniflare, where no `deps.testSet` can be handed in, and `testBarRecord` is reached by no route. Pre-seeding ai-runs' instance before the Store builds was tried and rejected: its constructor builds record-core and other modules eagerly, before the plane hands them their bindings (the evidence bucket went missing, C-68.1). Instead, the new `test/m/capture-requests/plane-world.mjs` `planeEntry()` copies `src/` to a scratch directory (the repository's other directories, which `src/` imports from, are symlinked beside it, not copied). In the copy, Civicsmith's set holds one matter (as ai-runs' world's `TEST_SET`). The added entry module is the plane's own door and `Store`, which, once built, records a passing result per part through ai-runs R75's `testBarRecord`. `dispose()` removes the copy after the tests. Test-only; no module code changed. Negative control: with the copy's set left empty, the runs are refused `AI_RUN_MODE_NOT_DEPLOYED` (C-109.1) again.
+
+**Ran.**
+- `node --test test/m/capture-requests/`: tests 108, pass 108, fail 0 (before B4: 103/5, the five B4 named).
+- No layer tests named in the manifest. No service I provide changed, so no users' suites re-run.
+- Checks: `format` 0 failures; `architecture` 0 failures; `coverage` 55 of 55; `ownership` 0 failures.
+
+**Deferred.** None.
+
+**Found in other modules.** None against their requirements. Note: while `CIVICSMITH_TEST_SET` holds no matter (N829), a deployed plane opens no run in any mode, and a plane test can hold a bar only by a copy as here. Other Miniflare plane tests that open a run (e.g. `scheduler`'s) face the same. Two scratch copies from my failed attempts remain in the container's temp directory (my deletion was refused); they are outside the repository.
+
+Size (session_01F53hF4viv8F8bxe3JE1BHx): test runs 7, module lines 2537
 
 ## Completion (CAPTURE-REQUESTS #15)
 
@@ -44,3 +61,7 @@ R55's seam with `steps` (not yet built; its requirements name no signatures for 
 ## J2 · COMPLETE
 
 T41-25 applied: R55 (step on a request, refused as absent C-28.34; the capture tied by steps.recordProduct; capture_request registered as an arrival source), on the real steps after B3. Tests 108/0; users' suites' 25 reds identical on tranche/T41; checks format 0, coverage 55/55, ownership 0, architecture 0 once the uses edge capture-requests → steps is applied (2 failures until then, both that edge). Record: Completion (CAPTURE-REQUESTS #15).
+
+## J3 · COMPLETE
+
+B4 applied (K2514): plane.test.mjs's five runs now open on a passing test bar. The Miniflare plane takes no deps.testSet, so plane-world.mjs runs a scratch copy of src/ whose Civicsmith set holds one matter, its Store recording a passing bar per part through ai-runs R75's testBarRecord. Test-only; negative control (empty set) refused C-109.1. Tests 108/0; checks format 0, architecture 0, coverage 55/55, ownership 0. Record: Completion (CAPTURE-REQUESTS #16, B4).

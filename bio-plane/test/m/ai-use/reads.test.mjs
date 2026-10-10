@@ -155,9 +155,65 @@ test("R13 each refusal's member-facing sentence is read by key from words.json, 
   w.count("member:ann", "ann", "ask", { cost: 0.5 });
   const r = w.u.useCheck({ owner: "member:ann", member: "ann", use: "ask", at: AT });
   assert.equal(r.word, "ai.refused.limit");
-  assert.equal(r.translation, WORDS["ai.refused.limit"].replace("{whose}", WORDS["ai.whose.own"]));
+  assert.equal(r.translation, "The assistant stopped here: your own daily limit for asking is reached. It works again tomorrow. "
+    + "Everything else works as usual.");
   assert.doesNotMatch(r.translation, /0\.5|\$|cent|dollar/i, "never a cost");
   /* negative control: a different scope reads a different key */
   assert.equal(w.u.useCheck({ owner: "member:ann", member: "ann", use: "draft", at: AT }).word, "ai.refused.limit.overall");
   assert.equal(w.u.aiLimitSet({ owner: "member:ann", scope: "ask", unit: "x", period: "day", amount: 1, by: "ann" }).word, "ai.refused.limitinvalid");
+});
+
+test("R13 (K2514) every refusal's sentence reaches its caller whole, no placeholder left: AI_LIMIT_REACHED for every owner, scope and period with {whose}, {use}, {period} and {when} filled (daily: tomorrow; monthly: the 1st of the next month, December's in January), also when R3 fails closed; AI_LIMIT_INVALID with {field} filled for every field", async () => {
+  const PLACEHOLDER = /\{[A-Za-z_]+\}/;
+  /* negative control: the words file's own sentences carry placeholders, so the test can see one left */
+  for (const key of ["ai.refused.limit", "ai.refused.limit.overall", "ai.refused.limit.member", "ai.refused.limitinvalid"])
+    assert.match(WORDS[key], PLACEHOLDER, key);
+  const USE_WORD = { ask: "asking", draft: "drafting", run: "runs", standing: "standing questions", explore: "exploring" };
+  const PERIOD_WORD = { day: "daily", month: "monthly" };
+  const expected = (scope, whose, use, period, when) => WORDS[scope === "overall" ? "ai.refused.limit.overall"
+    : scope === "per_member" ? "ai.refused.limit.member" : "ai.refused.limit"]
+    .replace("{whose}", WORDS[`ai.whose.${whose}`]).replace("{use}", USE_WORD[use]).replace("{period}", PERIOD_WORD[period])
+    .replace("{when}", when);
+  const w = await standard();
+  const owners = [["group", "admin", "bob", "group"], ["project:P", "ann", "bob", "project"], ["member:ann", "ann", "ann", "own"]];
+  for (const [owner, by, member] of owners)
+    assert.equal(w.c.accountUsesSet({ owner, switch: "explore", on: "yes", by }).ok, true, owner);
+  let seen = 0;
+  for (const [at, monthWhen] of [["2026-10-09T12:00:00Z", "on November 1"], ["2026-12-15T12:00:00Z", "on January 1"]]) {
+    for (const [owner, by, member, whose] of owners) {
+      for (const use of Object.keys(USE_WORD)) w.count(owner, member, use, { at });
+      const scopes = [...Object.keys(USE_WORD), "overall", ...(whose === "own" ? [] : ["per_member"])];
+      for (const scope of scopes) for (const period of ["day", "month"]) {
+        assert.equal(w.u.aiLimitSet({ owner, scope, unit: "calls", period, amount: 1, by, at }).ok, true);
+        for (const use of scope in USE_WORD ? [scope] : Object.keys(USE_WORD)) {
+          const r = w.u.useCheck({ owner, member, use, at });
+          assert.deepEqual([r.code, r.scope, r.period, r.whose], ["AI_LIMIT_REACHED", scope, period, whose], `${owner} ${scope} ${period} ${use}`);
+          assert.equal(r.translation, expected(scope, whose, use, period, period === "day" ? "tomorrow" : monthWhen), `${owner} ${scope} ${period} ${use}`);
+          assert.doesNotMatch(r.translation, PLACEHOLDER);
+          seen++;
+        }
+        w.u.aiLimitSet({ owner, scope, unit: "calls", period, amount: null, by, at });
+      }
+    }
+  }
+  assert.equal(seen, 2 * (2 * 2 * (5 + 5 + 5) + 2 * (5 + 5)), "every owner, scope, period and use was judged");
+  /* R3 failing closed names no limit: {period} dropped, {when} the unjudged fill */
+  for (const r of [w.u.useCheck({ owner: "nobody", member: "bob", use: "ask" }), w.u.useCheck({ owner: "group", member: "bob", use: "chat" })]) {
+    assert.equal(r.code, "AI_LIMIT_REACHED");
+    assert.equal(r.translation, "The assistant stopped here: your group's limit is reached. It works again once its use can be checked. "
+      + "Everything else works as usual.");
+  }
+  /* AI_LIMIT_INVALID: {field} filled for every field it names, the limit's and the estimate's */
+  const invalid = [w.u.aiLimitSet({ owner: "x", by: "admin" }), w.u.aiLimitSet({ owner: "group", scope: "x", by: "admin" }),
+    w.u.aiLimitSet({ owner: "group", scope: "ask", unit: "x", by: "admin" }),
+    w.u.aiLimitSet({ owner: "group", scope: "ask", unit: "calls", period: "x", by: "admin" }),
+    w.u.aiLimitSet({ owner: "group", scope: "ask", unit: "calls", period: "day", amount: 0, by: "admin" }),
+    w.u.aiLimitSet({ owner: "group", scope: "overall", unit: "calls", period: "day", amount: 1, inclusive: false, by: "admin" }),
+    w.u.estimate({ owner: "group", use: "x", viewer: "admin" }), w.u.estimate({ owner: "group", use: "ask", count: 0, viewer: "admin" })];
+  assert.deepEqual(invalid.map((r) => r.field), ["owner", "scope", "unit", "period", "amount", "inclusive", "use", "count"]);
+  for (const r of invalid) {
+    assert.equal(r.code, "AI_LIMIT_INVALID");
+    assert.ok(r.translation.startsWith("That limit can't be set: ") && !PLACEHOLDER.test(r.translation), r.translation);
+  }
+  assert.equal(new Set(invalid.map((r) => r.translation)).size, invalid.length, "each field fills its own words");
 });
