@@ -1,6 +1,6 @@
 # case-grammar (T41)
 
-**Status** · session_01GiDdoJfVAxVEHu47GsComE · depth 2 · COMPLETE · handled B3
+**Status** · session_01GiDdoJfVAxVEHu47GsComE · depth 2 · COMPLETE · handled B4
 
 ## Completion (CASE-GRAMMAR #13)
 
@@ -12,6 +12,8 @@
 
 - **CHANGE B3 (K2533):** R25's `review_comments_left_out` may be null, a count that could not be determined: written and read null (the writer already did), rendered "How many reviewers' comments were left out is not stated."; tested with a negative control (0 and 2 stay counts). `tranche/T41` merged for R25's text.
 
+- **CHANGE B4 (K2538):** R14's re-worded clause (a material carried as its copy printed with its label and as travelling with the case, never "NOT INCLUDED"). `completeEditionOf` already met it: a row stating `obscured` is listed by the copy, unmarked or cleaned-copy line and its label, never by the included / not-included line (`complete.mjs`, the materials section; since T37). No code changed, so every pinned hash holds; an explicit test added (`marked.test.mjs`, "R14 (K2538; DEC-185 (1))": a marked photo, an unmarked one with its label, a cleaned member document, each labelled and carried, none "not included"; negative control: an observation not included still says so). The sentence CASE-DISCLOSURES #8 J2 (4) found, "NOT INCLUDED: only its fingerprint, origin and archived copy travel", is `case-disclosures`' own `carriesBodyLines` (`bio-plane/src/case-disclosures/document.mjs`:112), the signed document's body, not this module's: REPORT in J5.
+
 **Deferred:** none.
 
 **Reading set (mechanics §17, K2304).** Measured over 300 KB (code ~179 KB, tests ~361 KB with the goldens). Read whole myself: `build/requirements/case-grammar.md`; layer 8's row and the publication-split section of `build/layers.md`; the Purpose and the used services of `record-grammar` (`parseFrontmatter` R6–R11, `idPattern`), `calc-grammar` (`resultKey`), `strength` (`gradingMethodText` R31); the plan's T41-34 entry, rule 4 and L8 text owed; `draft-T41-investigation.md` §1, §2 and §3.6's publishing lines; K2394, K2400, K2451; the code and tests the entry changes: `index.mjs`, `materials.mjs`, `blocks.mjs`, `formats.mjs`, `casefile.mjs`, `complete.mjs`, `facts.mjs`, `helpers.mjs`, `casefile-fixture.mjs`, `obscured.test.mjs`, `complete.test.mjs`. Two workers read the rest whole and summarised it: (1) `calculations`, `edition`, `facts`, `people`, `reference`, `standing`, `subject`, `tensions`, `timeline` `.mjs` and the ten matching tests (`calculations`, `citations`, `edition`, `facts`, `invariants`, `people`, `reference`, `sections`, `subject`, `timeline`), about 2,400 words, each statement citing file:line; (2) `casefile.test.mjs` and `formats.test.mjs`, about 1,500 words, citing file:line. Nothing they left out mattered: they named the constraints that bound the work (R7's place-name sweep over every non-function export and the fixture's edition, `invariants.test.mjs`:38–63; the exhaustive `CASE_FILE_KINDS` and format lists, `casefile.test.mjs`:246–265, `formats.test.mjs`:27; the exact-value pattern, `facts.mjs`:34–49), and each holds. The goldens (`complete-v6-golden.json`, `complete-v7-pre-t37-golden.json`) were used as pinned bytes, not read.
@@ -22,11 +24,11 @@
 - J1's approval circularity (review R31, ratification R49, case-authoring R68), ruled by K2528 with `approvalSubjectSha`.
 
 **Tests and checks.**
-- `node --test bio-plane/test/m/case-grammar/*.test.mjs`: tests 124, pass 124, fail 0 (104 before; new `account.test.mjs` 16, `marked.test.mjs` 4; `obscured.test.mjs`'s expectations gained `marked`).
+- `node --test bio-plane/test/m/case-grammar/*.test.mjs`: tests 125, pass 125, fail 0 (104 before; new `account.test.mjs` 16, `marked.test.mjs` 5; `obscured.test.mjs`'s expectations gained `marked`).
 - Users of case-grammar, this branch against `origin/tranche/T41` (pass/fail): case-carriage 63/4 vs 64/3; case-tensions 23/0 = ; publication 134/5 = ; docket 59/0 = ; public-read 154/2 vs 156/0; case-catalogue 16/0 = ; ratification 220/0 = ; case-checker 60/1 vs 61/0; case-import 88/0 = ; case-disclosures 78/3 vs 80/1; case-authoring 162/7 vs 164/5. Every added failure is listed above; the others are inherited and unchanged.
 - `node checks/format.mjs`: 145 modules, 144 requirements files; 0 failures. `architecture.mjs . case-grammar`: 36 product files, 115 relative imports; 0 failures. `coverage.mjs . case-grammar`: 26 of 26 live requirement ids named by a test; 0 failures. `ownership.mjs . case-grammar tranche/T41`: 0 failures.
 
-Size (session_01GiDdoJfVAxVEHu47GsComE): test runs 16, module lines 2,657
+Size (session_01GiDdoJfVAxVEHu47GsComE): test runs 19, module lines 2,657
 
 ## J1 · QUESTION
 
