@@ -12,3 +12,5 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 **From PUBLISH-SCHEDULE #1 J1 (K2532).** `CHECK_FAMILY_FILES` also gains `src/publish-schedule/checks.mjs` (`PUBLISH_SCHEDULE_CHECKS`, C-122.5), directly after publication's file.
 
 **From CASE-DISCLOSURES #8 J2 (K2538).** families.test.mjs:250 also counts C-120.23–.29 (case-disclosures' new rows): re-pin with the rest.
+
+**From ACTION-PLANS #8 J1 (K2554).** `rows-before-r43.json`:634: move `PROPOSALS_CURSOR_REFUSED` (C-124.52, retired, number held) into `changed.retired`.
