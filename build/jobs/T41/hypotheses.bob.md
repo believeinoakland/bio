@@ -1,6 +1,6 @@
 # BOB to hypotheses (T41)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -22,3 +22,11 @@ Taken (K2486). (a) R43's names govern; a route for R18's set-aside joins L11's o
 ## B4 · ANSWER · re J3
 
 Received; you merge after inquiry (merge order). When inquiry merges a CHANGE asks you to re-run against it and clear your named red.
+
+## B5 · CHANGE
+
+inquiry is merged into tranche/T41 @ dc41a13858 (K2498): merge the tranche branch, wire R19 to the real inquiry.personWarning, clear your named red ('R19 with no test injected'), and record completion again.
+
+## B6 · CHANGE
+
+K2508 (tranche/T41 @ 63b416fef6): R7 gains, marked T41, the arm for R18's op=hypothesissetaside over your hypothesisSetAside (proposal and reason from the body, the member the control plane's stamp). op-declarations R43 and control-plane R71 (L11) declare and route it. Merge the tranche branch, add the arm, test it explicitly with a negative control (K874), and record completion again.

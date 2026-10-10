@@ -26,14 +26,14 @@ test("R13 counts per local day and mode: asks answered, refused by code, sentenc
   const r = await ask(w);
   assert.deepEqual(r.withheld.map((x) => x.code), ["ANSWER_RULE_NOT_PLANE"]);
   w.a.check({ grant: "g-ask", viewer: BOB, answer: { not: "an answer" } });
-  w.a.countAsk({ outcome: "refused", codes: ["AI_USE_CEILING_REACHED"], mode: "ask", at: "2026-10-06T02:00:00Z" });
+  w.a.countAsk({ outcome: "refused", codes: ["AI_LIMIT_REACHED"], mode: "ask", at: "2026-10-06T02:00:00Z" });
   assert.equal(w.a.countAsk({ outcome: "maybe", mode: "ask" }).ok, false);
   const t = w.a.tallies({ viewer: ALICE });
   assert.equal(t.ok, true);
   /* 01:00Z and 02:00Z on 6 October are 5 October in the profile's zone */
   assert.deepEqual(t.tallies.map((x) => [x.day, x.mode, x.kind, x.code, x.n]), [
     ["2026-10-05", "ask", "answered", "", 1],
-    ["2026-10-05", "ask", "refused", "AI_USE_CEILING_REACHED", 1],
+    ["2026-10-05", "ask", "refused", "AI_LIMIT_REACHED", 1],
     ["2026-10-05", "ask", "refused", "ANSWER_MALFORMED", 1],
     ["2026-10-05", "ask", "withheld", "ANSWER_RULE_NOT_PLANE", 1],
   ]);

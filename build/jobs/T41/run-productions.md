@@ -1,0 +1,113 @@
+# run-productions (T41)
+
+**Status** · session_012FXyapfXzBKoA3m8DhRQoh · depth 2 · COMPLETE · handled B6
+
+## Completion (RUN-PRODUCTIONS #8)
+
+**Entry applied: T41-24** (R21–R24; D2, D3, D4, D22; K2463, K2472; my J1 readings taken in K2482, with `bearingNote`'s `run` optional). Code in `bio-plane/src/run-productions/` (`index.mjs`, `checks.mjs`, `schema.mjs`, new `reading.mjs`); tests in `bio-plane/test/m/run-productions/` (`fixture.mjs`, `module.test.mjs`, new `reading.test.mjs`).
+- **R21.** `extractPropose` takes `connections` and `step` beside `refs`. A passage's `quote` is checked by extraction R42 against `{text, ceiling}` read from the record: `text` the `capture_text` unit containing the place (`extraction.unitsOf`, asked only after the batch's viewer gate; a sheet cell's unit is the range holding it), `ceiling` `text-chain.captureBound` over the capture's chain. A verified quote keeps that ceiling (B, weaker, or null stated) with its figures named; the proposal row stores `id` (`prp:` + SHA-256), `quote`, `verified`, `figures`, `why`, `step`. A connection (`body`, `person`, `document`, `question`) is graded from how its link is established: A a reference the readers found in this capture (`reading_refs`), B a shared identifier in the quote, C a name or a date in the quote; a quote not the record's text leaves it null, stated; anything else is refused, so never D and never offered. A person needs `role`. `step` is tied through `steps.recordProduct` (the capture read and each passage newly minted) inside the batch's transaction; a refusal rolls the batch back and is relayed. `extractProposals` lists the connections beside the passages, through the same gate.
+- **R22.** `proposalAccept({proposal, form, edit?, by, viewer})`, one per member per proposal, recorded by `record-grammar.acceptanceRecord`; a project run's proposal needs a joined participant (`membership.projectAuthority`, relayed). `acceptedFor({proposal | content_id, by})` answers whether a leg may cite it as hers; `acceptanceCounts()` per kind and form, group-wide, naming nothing.
+- **R23.** `bearingNote({capture, question, run?, sentences, caller, viewer})`: each sentence kept only when its quote passes R42's check at its place, the rest left out and named; none tied is refused. With no `run`, a member's own interactive draft (K2482); a machine or an unstamped caller is `NO_RUN`. Stored in `bearing_notes` only (no content row, no proposal, an id no leg accepts) and read beside its source by `bearingNotes({bundleId, question?, viewer})`.
+- **R24.** `readPages({run, bundleId, from, viewer, caller})`: a run in mode `extract` or `investigate` reads at most 5 pages a call (a pdf page, a slide, a sheet, or 40 paragraphs), spent through `ai-runs` `consumeBound(run, "pages", n)`; a page read before under the run is free; a slice the bound cuts stops with `stopped: "pages"` and how far it read; a spent bound is refused saying how far. A document under a "no AI" limit covering `read` is refused first (`credentials.aiKeptAway`, relayed; K2482).
+- **Rows.** C-104.13–C-104.31, in this module's C-104 family. The run's three codes (C-104.2–.4) and the document's two (C-104.9–.10) now have one site each, in the helpers every production asks (`productionRun`, `heldDocument`); their translations (and C-104.8's) were re-worded to be true at every site.
+- **Tables.** `proposed_connections`, `proposal_acceptances`, `bearing_notes` (purged by document and by question), `run_pages_read`; all declared to purge. `proposed_readings` gains six columns and a nullable `earned`. A store holding the old table is rebuilt once, every row kept and named (tested).
+- **Ops** (in `runProductionsOps`): `readpages`, `proposalaccept`, `acceptancecounts`, `bearingnote`, `bearingnotes`; `extractpropose` carries `connections` and `step`.
+
+**Improvement in my own module.** Each code the run and document checks mint used to be written in `extractPropose` alone; R23 and R24 ask the same checks. I moved them into one helper each, so every code still has exactly one site.
+
+**Edges for BOB to apply at my merge** (`modules.json`): `credentials` (K2482; `architecture` reports the import until it lands) and `steps` (B1). Until steps merges, I take it through `deps.steps`; the factory then gives `null`, and a named step is refused `STEP_UNREADABLE`. Its CHANGE wires `stepsOf`.
+
+**Found in other modules** (REPORT J2):
+1. *R22's "only then may a leg cite it as hers"*: `acceptedFor` is provided, but enforcement belongs where a leg is written. That is `citation` (the cite act), `inquiry` (the basis gate) and `basis-versions` (a version's legs), and all three are earlier in the order than run-productions. They need a registration seam (citation or inquiry offering, say, `onMachinePassage(module, fn)`, which run-productions fills with `acceptedFor`, as `basis-versions.onCandidates` is filled), or the check must sit at a later layer.
+2. *D4's "the document's capture grade"*: I read the ceiling as `captureBound(chain)` with the bytes' default B. A route that binds the bytes below B is not applied: `leg-earning`'s `earned` applies it (an archive replay, provenance R25/R26), but provenance and leg-earning are not my uses. This needs a `leg-earning` edge (earlier in layer 6) if Bob's D4 means the route too. An unmeasured text layer's ceiling is undetermined by the record's own rule, so a verified quote on it earns null, stated.
+3. *op-declarations R43 and control-plane R71* name `proposalaccept` and `bearingnote`; `readpages`, `acceptancecounts` and `bearingnotes` are also needed (R24's read, R22's counts, R23's read beside the source).
+4. *My requirements' wording* (BOB's): R17 names two tables, and there are now six. The Uses line gains `extraction.unitsOf` and the `readings`/`reading_refs` read contract (R58), `text-chain.captureBound`, record-grammar's `idPattern`, `isStepId`, `sha256HexSync` and `ACCEPTANCE_FORMS`/`acceptanceRecord`, `membership.projectAuthority`, `credentials.aiKeptAway` and `steps.recordProduct`.
+5. *Generated artifact staled*: `bio-plane/dist/bio-plane.bundled.mjs` (+ `.bundle.json`), for layer close. The row census (`test/system/row-census.test.mjs`, red on `tranche/T41` before and after) needs promotion's stamp for the new and re-worded rows.
+
+**Deferred:** nothing.
+
+**Reading set (§17).** I measured it at about 254 KB, under 300 KB: my requirements (16 KB), my code (91 KB) and tests (90 KB), and each used module's Purpose plus the named services' requirement text (57 KB). I read all of that whole myself, plus layer 6's row of `build/layers.md`, my plan entry, K2448, K2463 and K2472, `build/jobs/T41/extraction.md` (R42's signature), the draft's §3.6, and the code of the services I call (`extractrun.mjs`'s grade and check, `textchain.mjs`'s `readingSource`, `captureBound`, `isTranscribed`, extraction's `unitsOf`, credentials' `aiKeptAway`, membership's `projectAuthority`, record-grammar's acceptance). No workers.
+
+**Tests and checks run:**
+- `node --test test/m/run-productions/`: tests 52, pass 52, fail 0 (39 at START). Each of R21–R24 is tested explicitly with negative controls. Two mutation checks (the unit-containing rule, and the connection's verified quote) each turned a test red.
+- Users' tests (`bio-plane`): skills 93/1, answer-envelope 26/2, store-door 41/0, control-plane 195/0, plane 147/8, migrate-released 1/0, row-census 0/1. Every red is identical on `tranche/T41` without my change (run in a worktree), so none is mine. Layer tests: none named in the manifest.
+- `format`: 145 modules, 144 requirements files; 0 failures.
+- `architecture`: 9 product files, 48 relative imports; 2 failures, both the `credentials` import (K2482's edge, not yet in `modules.json`).
+- `coverage`: 24 of 24 live requirement ids named by a test; 0 failures.
+- `ownership`: 7 files changed by run-productions between tranche/T41 and HEAD; 0 failures.
+
+Size (session_012FXyapfXzBKoA3m8DhRQoh): test runs 26, module lines 2199
+
+## CHANGE B3, B4 (RUN-PRODUCTIONS #8)
+
+**B3** (run-rules merged, K2489). R24's "no AI" judgement is now run-rules' `checkPagesRead({limits})`. Its `AI_RUN_READ_NO_AI` (C-22.23) is relayed whole. The limits are read from credentials R57: the group's (`aiKeepAwayState`) and the document's project's (`projectsKeptAway({use: "read"})`). A limit that cannot be read is held as on, so the read fails closed. The `pages` bound is read by key from `RUN_BOUNDS`. Of RUN_ORIGINS, DRAFT_KINDS and ENQUIRE_MODE I hold none and had no stand-in to replace. The test now expects run-rules' row in place of credentials' `PROJECT_AI_KEPT_AWAY`.
+
+**B4** (steps merged, K2491).
+- The factory reaches `stepsOf(host)`, and the tests drive the real steps: a step is made by `stepCreate`, and its ties are read back through `productsOf`.
+- Found by driving it: steps' `recordProduct` takes a capture or content row as `{kind, id}` (a bare string names a record id). The stand-in had accepted bare digests, so I now pass `{kind: "capture"}` and `{kind: "content"}`.
+- With a provider always present, `STEP_UNREADABLE` now means a malformed step name only.
+- Observation-log is not my use, so the fixture hands steps a stand-in of the registrations it makes there.
+
+**Edges to apply at my merge:** `steps` and `credentials`. `architecture` reports exactly these imports (4 failures: `index.mjs` and `fixture.mjs`, each importing the two), and nothing else.
+
+**Re-run:** `node --test test/m/run-productions/` gives 52 tests, 52 pass, 0 fail. Users' suites: skills 105/0, store-door 41/0, control-plane 195/0, plane 147/8 (unchanged), answer-envelope 24/4. The answer-envelope reds are the totality list missing the newly merged steps', ai-use's and reading-guides' families, not mine. `format` 0, `coverage` 24/24, `ownership` 0.
+
+Size (session_012FXyapfXzBKoA3m8DhRQoh): test runs 34, module lines 2211
+
+## ANSWER B5 (RUN-PRODUCTIONS #8)
+
+**K2496 (2) applied.** R21's `{text, ceiling}` now takes the ceiling as the record's own for the capture, route included. It is `leg-earning.earned(null, [document]).earned.capture[document].grade`, asked once a batch. R23's quotes are checked against the same text and ceiling. A ceiling that cannot be read is null (undetermined), never the bytes' B. `text-chain.captureBound` is no longer called here.
+
+The factory reaches `legEarningOf(host)`. The tests use a stand-in of leg-earning R1's answer: the weaker of a route's grade and `captureBound` over the chain. A new test checks three cases: a capture whose route earns C keeps C; the control, a direct fetch, keeps B; an unreadable ceiling earns null.
+
+(1) N834, (3), (4) and (5) are BOB's, as answered. B3 and B4 were already applied (J4).
+
+**Edges to apply at my merge:** `steps`, `credentials` and `leg-earning`. `architecture` reports exactly these imports (5 failures) and nothing else.
+
+**Re-run:** `node --test test/m/run-productions/` gives 53 tests, 53 pass, 0 fail. Users' suites are unchanged from J4: skills 105/0, store-door 41/0, control-plane 195/0, plane 147/8, answer-envelope 24/4 (none mine). `format` 0, `coverage` 24/24, `ownership` 0.
+
+Size (session_012FXyapfXzBKoA3m8DhRQoh): test runs 38, module lines 2222
+
+## CHANGE B6 (RUN-PRODUCTIONS #8)
+
+**K2502 applied.** R21 now also admits an investigate-mode run that carries a step, as an exploring run (question-explorer R13) does: `extractPropose` takes it as it takes an extract run, and ties the step. An investigate run that names no step is still refused `NOT_AN_EXTRACT_RUN`, and the detail says it named no step. A run of any other mode is refused even when it names a step. C-104.5's translation now says an exploring investigation proposes only for the step it serves.
+
+A new test covers both sides: the negative controls (no step, an empty step, a check-mode run with a step, each writing nothing) and the success arm (passage verified, connection graded B, capture and content tied to the real step).
+
+**Re-run:**
+- `node --test test/m/run-productions/` gives 54 tests, 54 pass, 0 fail.
+- Users' suites: skills 105/0, store-door 41/0, plane 148/7, answer-envelope 24/4, control-plane 194/1. The control-plane red is `r53-routes`:67, hypotheses' ops (K2502's rule 4 (15)). None is mine.
+- `format` 0, `architecture` 0 (the edges are now in `modules.json`), `coverage` 24/24, `ownership` 0.
+
+Size (session_012FXyapfXzBKoA3m8DhRQoh): test runs 40, module lines 2231
+
+## J1 · QUESTION
+
+R21–R24, my best readings; I am building on them now and will bring the work in line with your answer.
+1. R23's input. `bearingNote({capture, question, run})` names no sentences. I read it as `bearingNote({capture, question, run, sentences: [{text, quote, source}], caller, viewer})`: R15 holds (a running run whose principal is the caller; any mode), `capture` a sha the record holds for an information bundle the viewer may see (its bundle read from extraction's `readings` read contract, R58), `question` an inquiry the viewer may see. Each sentence is kept only when its quote passes extraction R42's byte-exact check against the unit containing its `source` (as R21 hands it); the rest are left out and counted (`left_out`). A note with no sentence kept is refused, nothing stored. Read beside the source by `bearingNotes({bundleId, question?, viewer})`; never a content row, never in `proposed_readings`, never a leg target (no id form a leg accepts). run-rules R25 makes `bearing_note` a draft kind (interactive, no run): I read that as the drafting, and R23 as its store, which still names a run (R15). If the draft path has no run, say so and I make `run` optional with the caller a member.
+2. R21's connections, in `extractPropose`'s same call and transaction: `connections: [{to, to_kind, quote, source, how, key?, name?, role?}]`, `to_kind` one of `body`, `person`, `document`, `question`. `to` for a document or question is a bundle id of that type the viewer may see (absent and invisible alike); for a body or person an `ENT-` id by record-grammar's form only (entities is not my use); a person carries `role` (the public role the quote shows), refused without it. The grade is computed (AI Roles rule 3, Investigation §5): `how: "source_link"` naming a reference the registered readers found in this capture (extraction R58 `reading_refs`) earns A; `"shared_identifier"` with `key` appearing in the quote, B; `"name"` or `"date"` with `name` appearing in the quote, C; anything else is refused (`CONNECTION_NOT_ESTABLISHED`), so the machine never mints D, and a caller-offered grade is refused `GRADE_OFFERED`. A quote that fails R42's check grades the connection null (undetermined, stated), never refused, so a quote past the unit's cap is kept unverified. New codes in a new family of my rows (C-104.13 onward, unless you want another number).
+3. R21's capture for R42 (K2463): `{text, ceiling}` where `text` is the `capture_text` unit (extraction `unitsOf`) containing the place (same page, paragraph or slide; a sheet range holding the cell), read after the batch's viewer gate; `ceiling` is `text-chain.captureBound(chain)` over the capture's chain (`content.contentContextFor`), at most B. That adds `unitsOf` and `captureBound` to my Uses line (both are in modules I already use).
+4. The step (R21, steps R9): one optional `step` per call (`isStepId`); inside the transaction I call `steps.recordProduct({step, record, by})` for the capture digest read and each content id newly minted, and store `step` on every proposal row; a refusal from it rolls the batch back and is relayed whole. A proposed connection is not a connections-module record, so it is not tied itself. Until steps merges I take it through `deps.steps` (no import); with no step given nothing is tied.
+5. R22: `proposalAccept({proposal, form, edit?, by, viewer})`. Proposal ids are minted here (`prp:` + hex for a passage, `prc:` + hex for a connection, sha256 of run, capture and key). `by` a member who may see the document, and, when the run's context is a project, a joined participant (`membership.projectAuthority`, R55); anyone else answered as absent or refused as R55 refuses. `as_proposed` records the proposal's meaning; `edited` and `own_instead` require `edit` (her words, 1–2,000 characters), `own_instead` marking the machine's reading set aside. One acceptance per member per proposal (`acceptanceRecord`, record-grammar R52; `ACCEPT_MUST_REAUTHOR` does not apply: a passage or connection is not a vouching statement). "Only then may a leg cite it as hers": I provide `acceptedFor({content_id | proposal, by})`; enforcing it where a leg is written is not my module's, so I REPORT it. `acceptanceCounts()` answers `{passage: {as_proposed, edited, own_instead}, connection: {...}}`, naming nothing else.
+6. R24: `readPages({run, bundleId, from, viewer, caller})` (op `readpages`): R15; mode `extract` or `investigate`; the `pages` bound read and spent through `ai-runs.boundOf`/`consumeBound` as `mints` is (none or 0 refused; reached refused saying how far it read); at most 5 pages a call ("a few"), trimmed at the bound with `stopped: "pages"` and `read_to`/`next_from`/`page_count`; a page is a pdf page, a slide, a sheet unit, or 40 paragraphs of a document; a page already read under the run is not charged again. The "no AI" refusal (run-rules R26, credentials R57 `aiKeptAway({project, use: "read"})`): my module does not use `credentials`. My reading: the read is mine, so I ask it here; add the `credentials` edge (layer 2, earlier) at my merge; I take it through `deps.credentials` until you say. If it is ai-runs' instead, say so and I drop it.
+7. Edges for my merge: `steps` (B1), and `credentials` if 6 stands.
+
+## J2 · REPORT
+
+Found applying T41-24 (record, 'Found in other modules'). (1) R22's 'only then may a leg cite it as hers': I provide acceptedFor({proposal | content_id, by}); enforcement sits where a leg is written (citation's cite, inquiry's basis gate, basis-versions' version legs), all earlier than me, so they need a registration seam (e.g. onMachinePassage(module, fn), filled with acceptedFor as onCandidates is) or a later-layer check. (2) D4's capture grade: I use text-chain.captureBound(chain) with the bytes' B; a route binding below B (provenance R25/R26, applied by leg-earning's earned) is not applied: a leg-earning edge if D4 means the route too. An unmeasured text layer's ceiling is undetermined by the record's rule, so its verified quote earns null, stated. (3) op-declarations R43 and control-plane R71 also need readpages, acceptancecounts and bearingnotes. (4) My requirements' wording: R17 now six tables; Uses gains extraction.unitsOf and the readings/reading_refs read contract, text-chain.captureBound, record-grammar idPattern/isStepId/sha256HexSync/acceptance, membership.projectAuthority, credentials.aiKeptAway, steps.recordProduct. (5) Staled: bio-plane/dist/bio-plane.bundled.mjs (+ .bundle.json); the row census (red on tranche/T41 already) needs promotion's stamp for C-104.13–.31 and the re-worded C-104.2–.4, .8.
+
+## J3 · COMPLETE
+
+T41-24 applied (R21–R24; K2482's bearing-note run optional and credentials for the 'no AI' read). run-productions 52/52 (39 at START), negative controls per requirement; users' suites' reds all identical on tranche/T41; format 0, coverage 24/24, ownership 0; architecture 2, both the credentials import awaiting K2482's edge in modules.json; edges to apply at my merge: credentials, steps (steps through deps.steps until its CHANGE). Branch job/T41/run-productions pushed.
+
+## J4 · COMPLETE
+
+B3 and B4 applied: R24's no-AI judgement is run-rules' checkPagesRead over credentials R57's limits (fails closed), pages read by key; the real steps through stepsOf, ties now {kind: capture|content} as steps' recordProduct takes them (found by driving it). run-productions 52/52; users' suites unchanged but answer-envelope's totality list missing steps', ai-use's and reading-guides' new families (not mine); format 0, coverage 24/24, ownership 0; architecture 4, exactly the steps and credentials imports awaiting their edges at my merge. Record updated; branch pushed.
+
+## J5 · COMPLETE
+
+B5 applied (K2496 (2)): R21's ceiling is leg-earning's earned capture ceiling for the document, route included (unreadable: null, never B); R23 checks against the same; tested route-bound C, control direct B, unreadable null. B3, B4 applied earlier (J4). run-productions 53/53; users' suites unchanged (none mine); format 0, coverage 24/24, ownership 0; architecture 5, exactly the steps, credentials and leg-earning imports awaiting their edges. Record updated; branch pushed.
+
+## J6 · COMPLETE
+
+B6 applied (K2502): extractPropose admits an investigate-mode run carrying a step, the step tied; an investigate run with no step (or an empty one) and a run of another mode with a step stay NOT_AN_EXTRACT_RUN, nothing written (tested both sides, real steps). run-productions 54/54; users' suites: control-plane r53-routes:67 (hypotheses' ops, K2502's rule 4 (15)) and the earlier answer-envelope/plane reds, none mine; format, architecture, coverage 24/24, ownership: 0. Record updated; branch pushed.

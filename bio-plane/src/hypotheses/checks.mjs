@@ -6,7 +6,8 @@
  * translations unchanged); the leg rows (R5, R6) are carried inside `BASIS_REFUSED` by the check this module registers
  * with `promotion`; the notes' rows (R11, R13; T34, K1807) answer a member's own notes, and (T35, DEC-144) C-134.13–C-134.16 name
  * `noteRevise` and `noteDelete` too, with no new code. Rows changed or added in T34 and T35 await
- * `promotion`'s next stamp. No translation names a place. This file imports nothing. */
+ * `promotion`'s next stamp; (T41) C-134.20–C-134.28 the system's proposals and a note's share, awaiting the stamp too. No
+ * translation names a place. This file imports nothing. */
 
 const act = (fn) => `src/hypotheses/index.mjs ${fn}`;
 const acts = (...fns) => fns.map(act).join("; ");
@@ -51,4 +52,23 @@ export const HYPOTHESES_CHECKS = {
     translation: "Name what you made from this note by the record's own id: the observation or the question your act made. Nothing was written." },
   NOTE_TOO_LONG_FOR_HUNCH: { check: "C-134.19", where: act("noteTurn"),
     translation: "This note is longer than a hunch can hold. Hold a shorter hunch in your own words, and keep the note as it is. Nothing was written, and nothing was cut." },
+  /* T41 (T41-16; D33, D46 A, D3, D18): the system's proposals (R16–R18) and a note's share (R19–R21) */
+  PROPOSAL_NO_HOW: { check: "C-134.20", where: act("hypothesisPropose"),
+    translation: "A proposal of the system's says how it was worked out. Nothing was written." },
+  PROPOSAL_NO_RATE: { check: "C-134.21", where: act("hypothesisPropose"),
+    translation: "A proposal of the system's carries its measured false-alarm rate, a share between 0 and 1. Nothing was written." },
+  PROPOSAL_NO_RUN: { check: "C-134.22", where: act("hypothesisPropose"),
+    translation: "A proposal of the system's names the run that made it. Nothing was written." },
+  NO_SUCH_PROPOSAL: { check: "C-134.23", where: acts("hypothesisTakeUp", "hypothesisSetAside"),
+    translation: "There is no proposal here by that id that you can see. Nothing was written." },
+  PROPOSAL_NOT_OPEN: { check: "C-134.24", where: acts("hypothesisTakeUp", "hypothesisSetAside"),
+    translation: "This proposal was already taken up or set aside. Nothing was written." },
+  PROPOSAL_FORM_UNKNOWN: { check: "C-134.25", where: act("hypothesisTakeUp"),
+    translation: "Take a proposal up as proposed, take it up edited, or write your own instead. Nothing was written." },
+  PROPOSAL_NO_REASON: { check: "C-134.26", where: act("hypothesisSetAside"),
+    translation: "Say why you are setting this proposal aside. Nothing was written." },
+  NO_SUCH_SHARE: { check: "C-134.27", where: act("noteUnshare"),
+    translation: "There is no share of yours standing by that id. Nothing was written." },
+  NARRATIVE_NOT_A_LEG: { check: "C-134.28", where: `${leg} > is-narrative-leg`,
+    translation: "A shared note is a member's narrative, never something a finding rests on. Rest the finding on evidence. Nothing was written." },
 };

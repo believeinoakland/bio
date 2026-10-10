@@ -68,7 +68,8 @@ test("R11: the table holds exactly the rows the pure rules mint (each where nami
   for (const [code, row] of Object.entries(AI_RUNS_CHECKS)) wellFormed(code, row);
   for (const [code, [, site]] of Object.entries(MINTED_HERE)) assert.ok(AI_RUNS_CHECKS[code].where.startsWith(site), code);
   for (const code of [...Object.keys(AI_RUNS_C22), ...Object.keys(AI_RUNS_ACTS), ...Object.keys(PLANNING), ...Object.keys(USE)])
-    assert.match(AI_RUNS_CHECKS[code].where, /^src\/ai-runs\/index\.mjs /, `${code} is minted by ai-runs`);
+    assert.match(AI_RUNS_CHECKS[code].where, code === "NOT_YOUR_CEILING" ? /^src\/ai-use\/index\.mjs / : /^src\/ai-runs\/index\.mjs /,
+      `${code} is minted by ${code === "NOT_YOUR_CEILING" ? "ai-use (its R2; B6)" : "ai-runs"}`);
   /* the families as published, one object across them */
   assert.deepEqual(Object.keys(AI_RUN_OWN_CHECKS).sort(), [...Object.keys(MINTED_HERE), ...Object.keys(AI_RUNS_C22)].sort());
   assert.equal(Object.keys(AI_RUN_ACT_SHAPE_CHECKS).length, 6);
@@ -150,7 +151,7 @@ test("R12: no place is named in the module's behaviour or outward text — its r
   assert.equal(PLACE.test("the City of Anywhere"), true);
 });
 
-test("R20: AI_NO_ACCOUNT, R18's AI_RUN_NOT_A_MEMBER_ACT and NOT_YOUR_CEILING are rows of the table, each with its number and a plain-words translation naming no cost (D12: a cost is answered only to the paying account's owners, by ai-use R10, R11, and these rows are read by any member); minted by ai-runs and answers and read here by key", () => {
+test("R20: AI_NO_ACCOUNT, R18's AI_RUN_NOT_A_MEMBER_ACT and NOT_YOUR_CEILING are rows of the table, each with its number and a plain-words translation naming no cost (D12: a cost is answered only to the paying account's owners, by ai-use R10, R11, and these rows are read by any member); minted by ai-runs and answers (NOT_YOUR_CEILING by ai-use, B6) and read here by key", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(AI_USE_CHECKS).map(([c, r]) => [c, r.check])), USE);
   const all = { ...AI_USE_CHECKS, AI_RUN_NOT_A_MEMBER_ACT: AI_RUN_OWN_CHECKS.AI_RUN_NOT_A_MEMBER_ACT };
   for (const [code, row] of Object.entries(all)) {
@@ -163,7 +164,9 @@ test("R20: AI_NO_ACCOUNT, R18's AI_RUN_NOT_A_MEMBER_ACT and NOT_YOUR_CEILING are
     assert.doesNotMatch(row.translation, /\$|\bcost|\bprice|\bcharge|\bdollar|\bspend|\bbill|\btokens?\b|\bcredit/i, code);
     assert.doesNotMatch(row.translation, /\b[A-Z][A-Z_]{3,}\b/, `${code}: plain words, no machine word`);
   }
-  for (const code of Object.keys(USE)) assert.match(AI_USE_CHECKS[code].where, /^src\/ai-runs\/index\.mjs /);
+  /* B6 (K2514): AI_NO_ACCOUNT is minted by ai-runs (and answers); NOT_YOUR_CEILING by ai-use alone (its R2) */
+  assert.match(AI_USE_CHECKS.AI_NO_ACCOUNT.where, /^src\/ai-runs\/index\.mjs /);
+  assert.match(AI_USE_CHECKS.NOT_YOUR_CEILING.where, /^src\/ai-use\/index\.mjs /);
   assert.match(AI_RUN_OWN_CHECKS.AI_RUN_NOT_A_MEMBER_ACT.where, /^src\/run-rules\/rules\.mjs startAllowed, called from src\/ai-runs\/index\.mjs .* answers$/);
   assert.match(AI_USE_CHECKS.AI_NO_ACCOUNT.translation, /Claude account or an API key of your own/);
   /* K1755: the group's API key, held by an administrator and switched on, also serves a member; the row says both */
@@ -173,7 +176,11 @@ test("R20: AI_NO_ACCOUNT, R18's AI_RUN_NOT_A_MEMBER_ACT and NOT_YOUR_CEILING are
   assert.doesNotMatch(AI_USE_CHECKS.AI_NO_ACCOUNT.translation, /works only on the account of the member who asks/);
   assert.match(AI_USE_CHECKS.NOT_YOUR_CEILING.translation, /theirs alone to set or look at/);
   /* K1610: the copy's ceiling is refused NOT_AN_ADMIN, so this row names neither it nor its setter */
-  assert.equal(AI_USE_CHECKS.NOT_YOUR_CEILING.where, "src/ai-runs/index.mjs aiCeilingSet and aiUsageMine");
+  assert.equal(AI_USE_CHECKS.NOT_YOUR_CEILING.where, "src/ai-use/index.mjs aiLimitSet, aiUsage, exploreApprove, estimate and "
+    + "aiLimits (a member's account, its owner bar) and aiUsageMine, reached from op=ailimitset, op=aiusage, op=exploreapprove, "
+    + "op=ailimits and ai-runs' batch estimate");
+  /* B6: the retired ceiling acts of ai-runs are named nowhere in the row */
+  assert.doesNotMatch(AI_USE_CHECKS.NOT_YOUR_CEILING.where, /ai-runs\/|aiCeilingSet/);
   assert.doesNotMatch(AI_USE_CHECKS.NOT_YOUR_CEILING.where + AI_USE_CHECKS.NOT_YOUR_CEILING.translation, /aiCopyCeilingSet|administrator|copy/);
   const texts = Object.values(all).map((r) => r.translation);
   assert.equal(new Set(texts).size, texts.length);

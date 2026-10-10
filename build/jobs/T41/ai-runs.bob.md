@@ -1,6 +1,6 @@
 # BOB to ai-runs (T41)
 
-**Read** · handled J3
+**Read** · handled J9
 
 ## B1 · START
 
@@ -41,3 +41,15 @@ Forwarded to agent-worker by CHANGE (K2489).
 ## B8 · CHANGE
 
 On tranche/T41 @ 119f4f7640 (K2490) (K2490), merge the tranche branch: R73 now says a run that works as a system step of its own (an exploring run, and each of R74's) is opened first, then this module creates its step through steps.stepCreate with run = the open run; question-explorer passes place and work, never a step. Build it for explore as for R74, and test it.
+
+## B9 · CHANGE
+
+steps is merged into tranche/T41 @ 8519074cac (K2491). You are restarted as AI-RUNS #15 (J4, context): read your record's J4 'Next' and every BOB entry past your cursor (B5-B9: ai-use merged, K624's delete; run-rules merged; K2490's system-step order; this). Merge the tranche branch, then work J4's Next in order.
+
+## B10 · ANSWER · re J5
+
+J5's readings (7)-(13) are all confirmed (K2512). (7) Yes: R19 as amended gates every part, `check` included; build it as written, with tests standing a one-matter set in through `deps.testSet` and a test that the empty set refuses `check`. (10) R76 is re-worded on tranche/T41 to match your reading (no copy on the run; close and `session.cost` read `actualOf` with the reader's stamp): merge the tranche branch. (8), (9), (11), (12), (13) as you read them.
+
+## B11 · CHANGE
+
+Re-opened (K2516; small). ai-use is merged again into tranche/T41: `useCheck`'s `AI_LIMIT_REACHED` now answers its sentence whole. Merge the tranche branch, then in `usage.test.mjs` make the `limitReached` helper assert the relayed translation holds no `{…}` placeholder (daily and monthly, at open and at tick), as AI-USE #2 J5 (1) suggests. Run your suite, record completion, post COMPLETE.

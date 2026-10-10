@@ -1,6 +1,6 @@
 # run-rules (T41)
 
-**Status** · session_01MJD7M5yyv8XhLzeyFoE89c · depth 2 · COMPLETE · handled B4
+**Status** · session_0187g19zrVQbrTr8ZXnFsYpZ · depth 2 · COMPLETE · handled B6
 
 ## J1 · QUESTION
 
@@ -40,3 +40,21 @@ Four readings of R19/R20 I am building on now (best reading each; tell me if any
 **Tests and checks:** `node --test bio-plane/test/m/run-rules/`: 41 pass, 0 fail. No layer tests in the manifest. `format`: 0 failures; `architecture`: 0 failures; `coverage`: 26 of 26 live ids, 0 failures; `ownership`: 0 failures.
 
 Size (session_01MJD7M5yyv8XhLzeyFoE89c): test runs 9, module lines 2329
+
+## J3 · COMPLETE
+
+**Completion of B6's CHANGE (K2514).** Merged `tranche/T41` @ 9741f67aad. B5 read (an answer to J2; nothing to apply).
+
+**Applied** (`bio-plane/src/run-rules/checks.mjs`, rows' `where` only; numbers, codes and translations unchanged):
+- `NOT_YOUR_CEILING` (C-109.11): now `src/ai-use/index.mjs aiLimitSet, aiUsage, exploreApprove, estimate and aiLimits (a member's account, its owner bar) and aiUsageMine, reached from op=ailimitset, op=aiusage, op=exploreapprove, op=ailimits and ai-runs' batch estimate` — every site ai-use mints it (its `#ownerBar`/`#accountsBar` for a member's account, and `aiUsageMine`). The family's header says ai-use mints it.
+- `AI_RUN_EXPLORE_NEEDS_STEP` (C-22.26): `src/ai-runs/index.mjs open > is-airun-open-step, reached from op=airunopen with origin explore` (minted only there, for an explore origin).
+- `AI_RUN_STEP_UNKNOWN` (C-22.28): `src/ai-runs/index.mjs open > is-airun-open-step and its own step's steps check, reached from op=airunopen; and openMany, for each step of a member's batch she cannot see` — no longer tied to exploring.
+- Re-pinned: `table.test.mjs` R11 (NOT_YOUR_CEILING's site is ai-use, the rest ai-runs) and R20 (exact `where`, and no ai-runs/`aiCeilingSet` in it); `t41.test.mjs` B3/B4 test (each row's region and, for C-22.28, `openMany`; not "exploring").
+
+**Deferred:** none new (the set's matters stay as J2).
+
+**For BOB:** R20's text in `build/requirements/run-rules.md` still says the rows are "minted by `ai-runs` and `answers`"; `NOT_YOUR_CEILING` is now minted by `ai-use` alone (its R2). A wording amendment, BOB's. Stale generated artifacts still carry the old row (`agent-worker/dist`, `bio-plane/dist`, `release/` bundles, `newgroup/src/release.mjs`): not mine (§14), regenerate at L6's close, as J2.
+
+**Tests and checks:** `node --test bio-plane/test/m/run-rules/`: 41 pass, 0 fail. No layer tests in the manifest. No ai-runs or ai-use test reads these rows' `where` (searched). `format`: 0 failures; `architecture`: 0 failures; `coverage`: 26 of 26 live ids, 0 failures; `ownership`: 4 files, 0 failures.
+
+Size (session_0187g19zrVQbrTr8ZXnFsYpZ): test runs 4, module lines 2337

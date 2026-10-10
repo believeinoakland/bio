@@ -36,7 +36,8 @@ test("R19: absent or invisible {found: false, session: null}; otherwise the sess
   assert.deepEqual([s.id, s.label, s.mode, s.status, s.ticks, s.created, s.updated, s.expires],
                    ["R1", "L", "check", "running", 1, T0, T0, "2026-07-01T01:00:00Z"]);
   assert.deepEqual(s.context, { type: "inquiry", id: INQ });
-  assert.deepEqual(s.principal, { plane: ORG, claude: "member:ann", ref: "acct-1", skill: "bio@1" });
+  /* R52 (T41): `ref` is the member whose act the run is, never the opener's own word ("acct-1" was offered) */
+  assert.deepEqual(s.principal, { plane: ORG, claude: "member:ann", ref: "member:ann", skill: "bio@1" });
   assert.deepEqual(s.budget, [{ bound: "fetches", allowed: 4, consumed: 0, unit: null }]);
   assert.equal(s.condition, null);
   await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, state: { todo: ["a", "b"], page: 3 } });
@@ -125,7 +126,10 @@ test("R20: the lens block — manifest in force or stated absent or unreadable, 
 
 test("R21: the bar — recorded, none-recorded, context-has-no-project, names-no-axis or unreadable, with its sentence; the pair only when recorded, an unnamed axis null, never filled in", async () => {
   const w = await readWorld();
-  const std = async (o) => { const run = `S${Math.random()}`; await w.runs.open(OPEN({ run, ...o })); return (await w.runs.read({ run, viewer: "admin" })).session.standard; };
+  /* bob, joined to PROJ, reads every case (D54, K2442: the founder outside PROJ reads its runs as absent, asserted below) */
+  const std = async (o) => { const run = `S${Math.random()}`; await w.runs.open(OPEN({ run, ...o }));
+    if (o.contextId === PROJ) assert.equal((await w.runs.read({ run, viewer: "admin" })).found, false, "D54");
+    return (await w.runs.read({ run, viewer: "member:bob" })).session.standard; };
   const proj = { contextType: "project", contextId: PROJ, actor: "bob", viewer: "member:bob", principalPlane: "member:bob" };
   const cases = [
     [{ ...proj, standardPair: '{"capture":"B","connection":" C "}' }, "recorded", { capture: "B", connection: "C" }],
@@ -167,7 +171,10 @@ test("R22: the runs in a context — no type C-36.1, an unknown one C-36.2, no i
   const empty = await w.runs.listInContext({ contextType: "project", contextId: "PROJ-2026-0404", viewer: "member:dan", limit: 1 });
   assert.deepEqual({ ...hidden, context: null }, { ...empty, context: null });
   assert.deepEqual([hidden.count, hidden.truncated], [0, false]);
-  assert.equal((await w.runs.listInContext({ contextType: "project", contextId: HIDDEN, viewer: "admin" })).count, 1);
+  assert.equal((await w.runs.listInContext({ contextType: "project", contextId: HIDDEN, viewer: "member:ann" })).count, 1, "control: its owner");
+  /* D54 (K2442): the founder, neither invited nor joined, lists none of a hidden project's runs, as dan does */
+  const founder = await w.runs.listInContext({ contextType: "project", contextId: HIDDEN, viewer: "admin", limit: 1 });
+  assert.deepEqual({ ...founder, context: null }, { ...hidden, context: null }, "D54: byte for byte as an outsider");
 });
 
 test("R23, R34: the spawn payload — absent or invisible found false; the search half carries context, mode, skill, bar and budget and no lens field at all; the compose half adds R20's block; the budget capped at the bound count", async () => {

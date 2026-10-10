@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { civicsmithUserAgent } from "../../../src/acquisition/index.mjs";
+import { planeEntry } from "./plane-world.mjs";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "src");
 const sha = (v) => createHash("sha256").update(v).digest("hex");
@@ -17,9 +18,12 @@ const SEEN = [], AGENTS = new Map();
 const HELD = ["https://src.example.org/a.pdf", "https://spine.example.org/spine.pdf", "https://down.example.org/gone.pdf",
               "https://up.example.org/doc.pdf", "https://up.example.org/member-browser.pdf",
               "https://up.example.org/held-for.pdf"];
+/* B4 (K2514): the plane as `src/` builds it, its Civicsmith set holding one matter and a passing test bar held on it
+   (run-rules R19 as amended), `plane-world.mjs` */
+const PLANE = planeEntry();
 const mf = new Miniflare({
-  modules: true, modulesRoot: "/", scriptPath: join(SRC, "plane", "index.mjs"),
-  script: readFileSync(join(SRC, "plane", "index.mjs"), "utf8"), modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
+  modules: true, modulesRoot: "/", scriptPath: PLANE.entry,
+  script: readFileSync(PLANE.entry, "utf8"), modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } }, r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-cr", MEMBER_TOKEN: "mem-cr", PROBE_TOKEN: "prb-cr", DAEMON_TOKEN: "dmn-cr",
@@ -41,7 +45,7 @@ const mf = new Miniflare({
     return new Response(new Uint8Array(512).map((_, i) => i % 251), { headers: { "content-type": "application/pdf" } });
   },
 });
-after(() => mf.dispose());
+after(async () => { await mf.dispose(); PLANE.dispose(); });
 
 const unwrap = (r) => (r && typeof r === "object" && "result" in r ? r.result : r);
 /* admission R20 (T36-36, K2166; C-38.10): a credential is read only from the Authorization header or the body, never

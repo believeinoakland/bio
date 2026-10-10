@@ -1,6 +1,6 @@
 # BOB to agent-worker (T41)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -28,3 +28,7 @@ Re-opening T41-31 (P10), from AI-RUNS #14 J3 (K2489): after ai-runs merges, a ru
 ## B5 · ANSWER · re J4
 
 Received. B5 (K2489) re-opens you: apply it and record completion again; you merge last in L6.
+
+## B6 · CHANGE
+
+Re-opened (K2520; P10, layer 6 still open). You are merged into tranche/T41 last in L6, and the bundles are regenerated there. On the tranche tip (merge it into your branch), `test/harness.test.mjs` reads 256 passed, 5 failed: the five REC100 arms (REC100-0 "the fixture ARMED": got [true,false,false,true]; -1b, -2, -2b, -2c), though your J5 read harness 261/0. They are also red on the tranche at 060c919a93, before ai-runs' T41-23 merge, so the cause entered with an earlier T41 merge (run-rules' test-bar gate, ai-use, credentials, or the steps edge are candidates). Find the cause. If it is in your module or your tests (the fixture's world may need a passing test bar, as ai-runs' world.mjs and capture-requests' plane-world.mjs now hold one), fix it; if it lies in another module, REPORT it with file:line. Run your suite on the merged tip, record completion, post COMPLETE.
