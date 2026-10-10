@@ -1,0 +1,39 @@
+# BOB to op-grades (T41)
+
+**Read** · handled J3
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T41), layer 11, op-grades: T41-51 (was T40-18; fixed at L11's START). Read also K1974 and K2484 (their lines in `build/rulings.md`).
+Your requirements: `build/requirements/op-grades.md` (read whole). Marked `*(not yet met: T41)*`: R29 (N797, N799; `op-declarations` R42) the handle ops by R5 and R3, `affordances` R12's totality holding over them: `RUNG_ABSENT` holds `handlechange`, ground `caller-owned`, as `setpassword`, asking no reason; `NON_ACTS` gives its sentence and `handlecheck`'s (a read: free, taken or not allowed, never who holds it); neither in `MACHINE_REFUSALS`; by R18 both `phone: true`; R30 (was `affordances` R50's text; K1974, K2484) every op `op-declarations` R41, R43 and R45 declares graded by R5 and R3, the totality holding, each grade read from its owner's requirements; `RUNGS` assigns `reasoned` to `stepdelete`, `noteunshare` and `caseapprove`; the other grades as their owners state them; (DEC-188 (8)) `aiceilingset`, `aicopyceilingset`, `accountswitchset` and `groupswitchset` leave `RUNG_ABSENT` and `NON_ACTS`, as `assistantset` left them. Test each explicitly, with a negative control (K874). The plan's applied L11 line (K2484) gives you "affordances R50's grades (op-grades' since K1974)".
+(Filled below, K2569.)
+op-declarations (T41-58) declares these ops after you merge: grade them by name from their owners' requirements and test the totality with a stand-in declared table; the real totality test runs again at op-declarations' merge. Your tests naming the removed ops (grep at this drafting): `owners.test.mjs`:152 (`accountswitchset`), :155 (`aiceilingset`, `aicopyceilingset`), :267 (`groupswitchset`), :280 (`accountswitchset`): re-state them for R30.
+Reading set (mechanics §17): measured at this START: 284 KB by `build/plan/reading-sets.py`, within the 300 KB limit (an over-estimate: it counts each used module's whole public part; read as mechanics §3 asks, each used module's Purpose and the services your Uses names): read it whole, with your tests, and state so in your record.
+Merge order in L11: wizard-scripts, op-grades, affordances, tasks, queue-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, control-plane, plane (`modules.json` order, the plan's L11 line; plane last; tasks (T41-61a) merges at its `modules.json` place, after affordances, whatever its number). Layer 10 is merged into `tranche/T41` before this START: build on it as merged. Same-layer providers you use: none. affordances (T41-52), control-plane (T41-62) and plane (T41-63) use yours later in this layer. Record your final `uses` in your record, for BOB to apply at your merge.
+Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); yours: none named for op-grades; none other unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+**From T41-23 (ai-runs) merge (K2514, AI-RUNS #16 J6).** `t33.mjs`:154–155, :363–364 and `owners.test.mjs`:155 grade the retired ops: re-grade as ai-use's (`ailimitset`, `aiusage`).
+
+
+**From the investigation map (K2560).** investigation's ops in R43 (with the four reads K2560 adds): `milestoneremove`, `milestoneitemremove` and `projectclosewithgaps` require a reason in code (`investigation` idx:408, :424; the close's `reason` an enum, `note` free text): `reasoned` candidates for R30; the rest read from `investigation`'s requirements, which state no grades.
+
+
+**From ACTIONS #14 J2 (K2561).** `actions` R73 adds `actionseekspropose` (`actionSeeksPropose({target, seeks, proposer, viewer})`), a proposal as `actionlawspropose` is: any credential, `proposer` stamped from the caller (session or machine), mutating, `target` and `seeks` body fields. Declare and route it as `actionlawspropose` is.
+
+
+**Filled (K2569, a worker's full read of the owners' requirements and code):** R30 now lists every grade. The draft's `reasoned` for `stepdelete`, `noteunshare` and `caseapprove` had no backing reason in the merged owners (steps R6 per Bob's D28 A deletes an untouched step outright; `noteUnshare` takes no reason; `caseApprove`'s reason is optional): re-graded by R3 as R30 states. Also owed: R29's `handlecheck` and `handlechange` (absent today); remove the four retired ops from the grade tables and from `owners.test.mjs`:152, :155, :267, :280.
+
+
+**K2570.** Ten more member ops, found unrouted after the merges and placed in this layer: acts `stepoutcome`, `steplearn`, `stepbywhen`, `findmute`; reads `stepproposals`, `costmessages`, `questionfollowstate`, `stepproducts`, `recordsteps`, `finddoors` (op-declarations R43, control-plane R71, op-grades R30 name them).
+
+
+**Marked at this START (K2573, re-taken after L10's merge):** R29, R30. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
+
+## B2 · ANSWER · re J1
+
+ANSWER J1 (K2574): your best reading stands. R29 keeps `NON_ACTS.handlecheck` with its sentence; op-declarations R42 now says `handlecheck`'s `NEEDS` row is `null` (as `noticespublic`'s), and OP-DECLARATIONS #16 is told. Test against your reading; the totality goes green when op-declarations merges.
+
+## B3 · CHANGE
+
+CHANGE (K2584): your R30 on `tranche/T41` gains the five reading-guides ops op-declarations now declares: `guidepropose` graded as `extractpropose` is; `guideproposetocivicsmith` `undetermined` (as `guideoffer`); `guidefor`, `guide`, `guideproposals` `NON_ACTS` reads. Merge the tranche into your branch, add them with tests (negative control, K874), and post COMPLETE again; you merge again then.
