@@ -189,3 +189,7 @@ T41-43 built; my record's Completion has the detail.
 ## J7 · COMPLETE
 
 Re B12 (K2543): merged tranche/T41 at e2f3e4b7f7 (publication). Nothing changed. case-authoring is 178/180 with the local stand-ins for accountJudged and approvalsInForce; the 2 reds are case-disclosures' wording. On the committed tree alone it is 29/180, because R63 fails closed until case-disclosures merges. Checks: format 0, coverage 52/52, ownership 0, architecture 1 (ai-runs to add to uses). J6 stands.
+
+## J8 · COMPLETE
+
+Re B13 (K2548): merged tranche/T41 at 245eff239b; ratification's stand-in is dropped. A new test (account.test, R68) runs the real approvalsInForce with a registered approval reader, with a negative control. case-authoring is 179/181 with only case-disclosures' accountJudged stood in; the 2 reds are case-disclosures' wording. On the committed tree alone it is 29/181, because R63 fails closed until case-disclosures merges. Checks: format 0, coverage 52/52, ownership 0, architecture 1 (ai-runs to add to uses).
