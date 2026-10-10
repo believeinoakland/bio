@@ -40,6 +40,7 @@ import { captureRequestsOf } from "../../../src/capture-requests/index.mjs";
 import { intentOf } from "../../../src/intent/index.mjs";
 import { captureOf, captureOps } from "../../../src/capture/index.mjs";
 import { instanceSetupOf } from "../../../src/setup.mjs";
+import { answersOf } from "../../../src/answers/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 function cursor(rows) {
@@ -121,6 +122,9 @@ export async function record({ step = false, probes = {}, sealSecret = null } = 
                    basisVersionsOf(ctx), inquiryOf(ctx), captureOf(ctx), extractionOf(ctx), observationLogOf(ctx), runProductionsOf(ctx),
                    captureRequestsOf(ctx), aiRunsOf(ctx, env), entitiesOf(ctx), contradictionOf(ctx), progressionsOf(ctx), biasOf(ctx),
                    intentOf(ctx), retrievalOf(ctx)]) m.migrate();
+  /* T41 (R10, R11; K2500): answers as the composition root builds it (plane R21), handed credentials for its account
+     reads (its R30) and its keep-away rows (its R2); its limits are ai-use's on this host (its default) */
+  answersOf(ctx, { record, membership: membershipOf(ctx), credentials: credentialsOf(ctx) });
   /* instance-setup started, as the composition root starts it: it provides the producing group a promotion reads */
   await instanceSetupOf(ctx, env).start();
   const store = { routes: (url, body, grant) => ({ ...captureOps(captureOf(ctx), url, body, env),

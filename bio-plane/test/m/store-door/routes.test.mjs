@@ -7,10 +7,11 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { D, go, quietly } from "./harness.mjs";
 const { record } = await import("./record.mjs");
-const { credentialsOf } = await import("../../../src/credentials/index.mjs");
+const { credentialsOf, ACCOUNT_CHECKS } = await import("../../../src/credentials/index.mjs");
 const { membershipOf } = await import("../../../src/membership/index.mjs");
 const { instanceSetupOf } = await import("../../../src/setup.mjs");
-const { aiRunsOf } = await import("../../../src/ai-runs/index.mjs");
+const { aiUseOf } = await import("../../../src/ai-use/index.mjs");
+const { answersOf } = await import("../../../src/answers/index.mjs");
 const { wizardScriptsOf } = await import("../../../src/wizard-scripts/index.mjs");
 const { queueOps } = await import("../../../src/queue/index.mjs");
 const { tasksOps } = await import("../../../src/tasks/index.mjs");
@@ -93,7 +94,8 @@ test("R8 (was control-plane R50's store half; wizard-scripts R16): the store-int
 /* A record with a claimed founder, the members `ann` (an administrator) and `bea` and `cal` (members), and the three drafts'
    first two handlers replaced by recorders, so what the door hands each is seen whatever its owner answers; `translationdraft`'s
    own (instance-setup's `translationDraftRefusal` and `translationDraft`) recorded as asked and answering as they do; and
-   every account read and use check counted, so a gate that read none is seen. */
+   every account read, every `answers.askAccount` asked and every ai-use limit judged counted, so a gate that read none is
+   seen. */
 async function drafts() {
   const r = await record({ sealSecret: "store-door-test-seal-secret-00002" });
   const C = credentialsOf(r.ctx), mb = membershipOf(r.ctx);
@@ -105,58 +107,96 @@ async function drafts() {
   }
   const seen = [];
   instanceSetupOf(r.ctx).groupDescriptionDraft = (args) => { seen.push(["groupdescriptiondraft", args]); return { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE" }; };
-  wizardScriptsOf(r.ctx).writingHelp = (args) => { seen.push(["writinghelp", args]); return { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE" }; };
+  /* writinghelp's handler is wizard-scripts' own, wrapped (K2574): the door hands it the account's or limit's refusal as
+     `assistant.refusal`, which it orders among its own (its R27); `handed` records what it was handed, `seen` only an
+     admitted call (one with no refusal handed) */
+  const W = wizardScriptsOf(r.ctx), realHelp = W.writingHelp.bind(W), handed = [];
+  W.writingHelp = (args) => { handed.push(args); if (!args.assistant?.refusal) seen.push(["writinghelp", args]); return realHelp(args); };
   /* translationdraft's handler is instance-setup's own (T37-30): wrapped, never replaced, so what it is handed is seen and
      what it answers is its own */
   const setup = instanceSetupOf(r.ctx), firstAsked = [];
   const realFirst = setup.translationDraftRefusal.bind(setup), realDraft = setup.translationDraft.bind(setup);
   setup.translationDraftRefusal = (args) => { firstAsked.push(args); return realFirst(args); };
   setup.translationDraft = (args) => { seen.push(["translationdraft", args]); return realDraft(args); };
-  const reads = { account: 0, use: 0 };
-  const accountFor = C.accountFor.bind(C), runs = aiRunsOf(r.ctx), useCheck = runs.aiUseCheck.bind(runs);
+  const reads = { account: 0, use: 0 }, asked = [];
+  const accountFor = C.accountFor.bind(C), U = aiUseOf(r.ctx), useCheck = U.useCheck.bind(U);
+  const A = answersOf(r.ctx), askAccount = A.askAccount.bind(A);
   C.accountFor = (a) => { reads.account++; return accountFor(a); };
-  runs.aiUseCheck = (a) => { reads.use++; return useCheck(a); };
+  U.useCheck = (a) => { reads.use++; return useCheck(a); };
+  A.askAccount = (a) => { asked.push(a); return askAccount(a); };
   const code = (a) => a.json.result.code ?? a.json.result.reason;
-  return { r, C, seen, code, firstAsked, reads };
+  /* a draft's use, counted to the account that paid through the door's own `askusage` (R11) */
+  const spend = (member, calls) => r.go(`askusage?viewer=member:${member}`, "POST", { mode: "draft", usage: USE, calls });
+  return { r, C, U, seen, handed, code, firstAsked, reads, asked, spend };
 }
 
-/* The group's keep-away, credentials' (its R51; DEC-172), which R10 reads through `credentials.aiKeptAway()` (its R35)
-   and from which instance-setup derives `assistantState()` (its R53; K2162): keep-away off is the assistant on. */
-function assistant(r, on) {
-  const k = credentialsOf(r.ctx).aiKeepAwaySet(on ? { on: false, by: "ann" } : { on: true, reason: "kept away for this test", by: "ann" });
+/* The group's keep-away, credentials' (its R51, R57; DEC-172), which R10 reads through
+   `credentials.aiKeptAway({use: "draft"})` (its R35) and from which instance-setup derives `assistantState()` (its R53;
+   K2162): keep-away off is the assistant on. `uses`, the kinds it covers (all when absent). */
+function assistant(r, on, uses = null) {
+  const k = credentialsOf(r.ctx).aiKeepAwaySet(on ? { on: false, by: "ann" }
+    : { on: true, reason: "kept away for this test", by: "ann", ...(uses ? { uses } : {}) });
   assert.equal(k.ok, true, JSON.stringify(k));
-  const setup = instanceSetupOf(r.ctx);
-  assert.equal(setup.assistantState().on, on);
+  if (!uses) assert.equal(instanceSetupOf(r.ctx).assistantState().on, on);
 }
+const DAY_CALLS = (owner, amount, by) => ({ owner, scope: "overall", unit: "calls", period: "day", amount, by });
 
-test("R10 (N765; credentials R35; run-rules R20; ai-runs R50, R52; membership R84): before either draft's handler the door answers, in order, `groupdescriptiondraft`'s NOT_AN_ADMIN, AI_KEPT_AWAY as `credentials.aiKeptAway()` answers it (its row and keep-away reason; no account read, no use checked), AI_NO_ACCOUNT, the member's and the copy's ceilings, and credentials' own refusal of the account (the group key's notice unread), each before any handler is asked (negative control: once every one is cleared the handler is reached)", async () => {
-  const { r, C, seen, code, reads } = await drafts();
+test("R10 (N765, N812; K2373, K2500; credentials R35, R56, R57; answers R30; ai-use R3; membership R84): before either draft's handler the door answers, in order, `groupdescriptiondraft`'s NOT_AN_ADMIN; AI_KEPT_AWAY as `credentials.aiKeptAway({use: \"draft\"})` answers it (its row and reason; no account read, no limit judged); then `answers.askAccount({member, kind: \"draft\"})`'s refusal as given — NO_ACCOUNT (credentials' own row), AI_USE_SWITCHED_OFF (before the limit, and with no limit judged), AI_LIMIT_REACHED, its fail-closed LIMITS_UNREADABLE, and credentials' own (the group key's notice unread) — each before any handler is asked, and for `writinghelp` handed to its handler as `assistant.refusal` with no account (K2574; wizard-scripts R27), keep-away answered first at the door (negative controls: a keep-away covering only asks keeps no draft away; once every refusal is cleared the handlers are reached)", async () => {
+  const { r, C, U, seen, handed, code, reads, asked, spend } = await drafts();
+  /* (K2574; wizard-scripts R27) what writinghelp's handler was last handed: the door's account or limit refusal in
+     `assistant.refusal`, with no account */
+  const handedRefusal = () => { const h = handed.at(-1).assistant; return [h.on, h.account, h.refusal.code ?? h.refusal.reason]; };
   const gdd = (by) => r.go(`groupdescriptiondraft?by=${by}&viewer=${by}`, "POST", { answers: [{ question: "q", text: "t" }] });
   const help = (by) => r.go(`writinghelp?by=${by}&viewer=${by}`, "POST", { op: "notewrite", field: "text", told: "what I saw" });
   /* NOT_AN_ADMIN first, whatever else holds, keep-away included */
   assistant(r, false);
   for (const by of ["member:bea", "class:admin", ""]) assert.equal(code(await gdd(by)), "NOT_AN_ADMIN", by);
-  /* kept away: credentials' one refusal as given, and nothing read past it */
-  const away = C.aiKeptAway();
-  assert.equal(away.reason, "AI_KEPT_AWAY");
-  assert.equal(away.keep_away.reason, "kept away for this test");
+  /* kept away: credentials' one refusal for a draft as given, and nothing read past it */
+  const away = C.aiKeptAway({ use: "draft" });
+  assert.deepEqual([away.reason, away.keep_away.reason], ["AI_KEPT_AWAY", "kept away for this test"]);
   assert.deepEqual((await gdd("member:ann")).json.result, away);
   assert.deepEqual((await help("member:bea")).json.result, away);
-  assert.deepEqual(reads, { account: 0, use: 0 }, "under keep-away no account is read");
+  assert.deepEqual([reads, asked, handed], [{ account: 0, use: 0 }, [], []], "under keep-away no account is read, and the door answers first");
+  /* the use is the draft's: kept away from drafts alone refuses; kept away from asks alone does not (negative control) */
+  assistant(r, false, ["draft"]);
+  assert.equal(C.aiKeptAway({ use: "ask" }), null);
+  assert.deepEqual((await help("member:bea")).json.result, C.aiKeptAway({ use: "draft" }));
+  assert.deepEqual(reads, { account: 0, use: 0 });
+  assistant(r, false, ["ask"]);
+  assert.equal(C.aiKeptAway({ use: "ask" }).reason, "AI_KEPT_AWAY");
+  /* the door's own gate (groupdescriptiondraft's handler adds no keep-away of its own; writinghelp's handler asks its own,
+     wizard-scripts R24, reported to BOB) */
+  assert.equal(code(await gdd("member:ann")), "NO_ACCOUNT", "an ask's keep-away keeps no draft away");
   assistant(r, true);
-  /* no account serves */
-  assert.equal(code(await gdd("member:ann")), "AI_NO_ACCOUNT");
-  assert.equal(code(await help("member:bea")), "AI_NO_ACCOUNT");
-  /* the member's own account, then their own ceiling, then the copy's */
+  /* no account serves: askAccount's refusal, asked for the stamped member with kind draft, and no limit judged */
+  asked.length = 0; reads.use = 0;
+  const noAccount = (await gdd("member:ann")).json.result;
+  assert.deepEqual([noAccount.code, noAccount.check, noAccount.translation], ["NO_ACCOUNT", ACCOUNT_CHECKS.NO_ACCOUNT.check,
+                   ACCOUNT_CHECKS.NO_ACCOUNT.translation], "credentials' own row, as given");
+  assert.equal(code(await help("member:bea")), "NO_ACCOUNT");
+  assert.deepEqual(handedRefusal(), [true, null, "NO_ACCOUNT"]);
+  assert.deepEqual(asked, [{ member: "member:ann", kind: "draft" }, { member: "member:bea", kind: "draft" }]);
+  assert.equal(reads.use, 0);
+  /* the member's own account: its draft switch off refuses before its limit, which is not judged */
   assert.equal((await C.accountReferenceSet({ member: "member:bea", kind: "apikey", secret: "sk-bea-own", by: "member:bea" })).ok, true);
-  const runs = aiRunsOf(r.ctx);
-  runs.countAskUsage({ member: "member:bea", mode: "ask", usage: USE, calls: 2 });
-  assert.equal(runs.aiCeilingSet({ member: "member:bea", calls: 2, by: "member:bea" }).ok, true);
-  assert.equal(code(await help("member:bea")), "AI_USE_CEILING_REACHED");
-  assert.equal(runs.aiCeilingSet({ member: "member:bea", calls: null, by: "member:bea" }).ok, true);
-  assert.equal(runs.aiCopyCeilingSet({ calls: 2, by: "admin" }).ok, true);
-  assert.equal(code(await help("member:bea")), "AI_USE_COPY_CEILING_REACHED");
-  assert.equal(runs.aiCopyCeilingSet({ calls: null, by: "admin" }).ok, true);
+  assert.equal((await spend("bea", 2)).json.result.ok, true);
+  assert.equal(U.aiLimitSet(DAY_CALLS("member:bea", 2, "member:bea")).ok, true);
+  assert.equal(C.accountUsesSet({ owner: "member:bea", switch: "draft", on: false, by: "member:bea" }).ok, true);
+  reads.use = 0;
+  const off = (await help("member:bea")).json.result;
+  assert.deepEqual([off.code, off.whose, off.use, reads.use], ["AI_USE_SWITCHED_OFF", "own", "draft", 0]);
+  assert.deepEqual(handedRefusal(), [true, null, "AI_USE_SWITCHED_OFF"]);
+  assert.equal(C.accountUsesSet({ owner: "member:bea", switch: "draft", on: true, by: "member:bea" }).ok, true);
+  /* then ai-use's limit of the account that pays, AI_LIMIT_REACHED with its scope, naming no cost */
+  const lim = (await help("member:bea")).json.result;
+  assert.deepEqual([lim.code, lim.scope, lim.unit, lim.period], ["AI_LIMIT_REACHED", "overall", "calls", "day"], JSON.stringify(lim));
+  assert.equal(reads.use, 1);
+  assert.deepEqual(handedRefusal(), [true, null, "AI_LIMIT_REACHED"]);
+  assert.equal(U.aiLimitSet(DAY_CALLS("member:bea", null, "member:bea")).ok, true);
+  /* a limit that cannot be judged refuses, fail closed */
+  U.useCheck = () => { throw new Error("counter unreadable"); };
+  assert.equal(code(await help("member:bea")), "LIMITS_UNREADABLE");
+  delete U.useCheck;
   /* the group's key held and on, its notice unread by ann: credentials' own refusal, relayed with its row */
   assert.equal((await C.groupKeySet({ key: "sk-group-key", by: "admin" })).ok, true);
   assert.equal(C.groupKeySwitch({ on: true, by: "admin" }).ok, true);
@@ -171,8 +211,8 @@ test("R10 (N765; credentials R35; run-rules R20; ai-runs R50, R52; membership R8
   assert.deepEqual(seen.map(([op]) => op), ["groupdescriptiondraft", "writinghelp"]);
 });
 
-test("R10 (N669, N765; K2200, K2201, K2238; instance-setup R67): `translationdraft`, in both directions, answers instance-setup's own first refusal (`translationDraftRefusal`, asked with the body's `language`, `direction`, `keys`, `key` and the stamped `by`) before anything of the door's — TRANSLATION_DIRECTION_UNKNOWN, TRANSLATION_NOT_GRANTED, and NOT_AN_ADMIN for `to_english` — kept away or not; then AI_KEPT_AWAY as credentials answers it, no account read and no draft routed; then AI_NO_ACCOUNT and the ceilings; admitted, instance-setup's `translationDraft` receives those arguments and `assistant: {on, account: {kind, level}}`, a caller's `assistant` never read and no key handed, and answers its words (negative control: a granted speaker clears the first refusal)", async () => {
-  const { r, C, seen, code, firstAsked, reads } = await drafts();
+test("R10 (N669, N765, N812; K2200, K2201, K2238, K2500; instance-setup R67; answers R30): `translationdraft`, in both directions, answers instance-setup's own first refusal (`translationDraftRefusal`, asked with the body's `language`, `direction`, `keys`, `key` and the stamped `by`) before anything of the door's — TRANSLATION_DIRECTION_UNKNOWN, TRANSLATION_NOT_GRANTED, and NOT_AN_ADMIN for `to_english` — kept away or not; then AI_KEPT_AWAY as `credentials.aiKeptAway({use: \"draft\"})` answers it, no account read and no draft routed; then `answers.askAccount`'s refusals for kind draft, NO_ACCOUNT and AI_LIMIT_REACHED; admitted, instance-setup's `translationDraft` receives those arguments and `assistant: {on, account: {kind, level}}`, a caller's `assistant` never read and no key handed, and answers its words (negative control: a granted speaker clears the first refusal)", async () => {
+  const { r, C, U, seen, code, firstAsked, reads, asked, spend } = await drafts();
   const setup = instanceSetupOf(r.ctx);
   /* `by` as control-plane stamps it, the folded member id; `viewer` the member */
   const draft = (by, body) => r.go(`translationdraft?by=${by}&viewer=member:${by}`, "POST", body);
@@ -188,7 +228,7 @@ test("R10 (N669, N765; K2200, K2201, K2238; instance-setup R67): `translationdra
     assert.equal(code(await draft(by, body)), reason, JSON.stringify(body));
     assert.deepEqual(firstAsked, [want(body, by)]);
   }
-  assert.deepEqual([reads, seen], [{ account: 0, use: 0 }, []]);
+  assert.deepEqual([reads, asked, seen], [{ account: 0, use: 0 }, [], []]);
   /* negative control: a granted speaker clears it, and meets keep-away; an awaiting kept word clears to_english's */
   const g = setup.translationGrant({ member: "bea", language: "es", by: "ann" });
   assert.equal(g.ok, true, JSON.stringify(g));
@@ -196,18 +236,18 @@ test("R10 (N669, N765; K2200, K2201, K2238; instance-setup R67): `translationdra
   assert.deepEqual([kept.ok, kept.state], [true, "awaiting"], JSON.stringify(kept));
   const TO_LANG2 = { language: "es", direction: "to_language" };
   for (const [body, by] of [[TO_LANG2, "bea"], [TO_EN, "ann"]])
-    assert.deepEqual((await draft(by, body)).json.result, C.aiKeptAway(), body.direction);
-  assert.deepEqual([reads, seen], [{ account: 0, use: 0 }, []], "under keep-away no account is read and no draft routed");
+    assert.deepEqual((await draft(by, body)).json.result, C.aiKeptAway({ use: "draft" }), body.direction);
+  assert.deepEqual([reads, asked, seen], [{ account: 0, use: 0 }, [], []], "under keep-away no account is read and no draft routed");
   assistant(r, true);
-  /* then the account and the ceilings */
-  assert.equal(code(await draft("ann", TO_EN)), "AI_NO_ACCOUNT");
+  /* then the account and its limit, as answers judges them for a draft */
+  assert.equal(code(await draft("ann", TO_EN)), "NO_ACCOUNT");
+  assert.deepEqual(asked, [{ member: "ann", kind: "draft" }]);
   for (const m of ["ann", "bea"])
     assert.equal((await C.accountReferenceSet({ member: `member:${m}`, kind: "apikey", secret: `sk-${m}-own-secret`, by: `member:${m}` })).ok, true);
-  const runs = aiRunsOf(r.ctx);
-  runs.countAskUsage({ member: "member:bea", mode: "draft", usage: USE, calls: 2 });
-  assert.equal(runs.aiCopyCeilingSet({ calls: 2, by: "admin" }).ok, true);
-  assert.equal(code(await draft("bea", TO_LANG2)), "AI_USE_COPY_CEILING_REACHED");
-  assert.equal(runs.aiCopyCeilingSet({ calls: null, by: "admin" }).ok, true);
+  assert.equal((await spend("bea", 2)).json.result.ok, true);
+  assert.equal(U.aiLimitSet(DAY_CALLS("member:bea", 2, "member:bea")).ok, true);
+  assert.equal(code(await draft("bea", TO_LANG2)), "AI_LIMIT_REACHED");
+  assert.equal(U.aiLimitSet(DAY_CALLS("member:bea", null, "member:bea")).ok, true);
   assert.deepEqual(seen, [], "no draft routed before every refusal is cleared");
   /* admitted, both directions: instance-setup's own answer, the words the door sends to the assistant */
   const forged = { on: true, account: { kind: "apikey", level: "member", key: "sk-forged" } };

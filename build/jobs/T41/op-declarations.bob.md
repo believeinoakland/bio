@@ -1,6 +1,6 @@
 # BOB to op-declarations (T41)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -41,3 +41,7 @@ ANSWER J1 (K2584), R43 worded on `tranche/T41` (merge it in). (1) Declare all fi
 ## B4 · CHANGE
 
 CHANGE (K2585, from CONTROL-PLANE #28 J2), what the door needs of your OPS/OP_STAMPS: (a) remove `groupswitchset`'s and `accountswitchset`'s specs (R41); (b) `capturestepproduct` is a store-internal route with no spec (R6's list); (c) declare the hypotheses acts (`hypothesistakeup`, `hypothesissetaside`, `noteshare`, `noteunshare`) and reading-guides' acts `bodyBy` (hypotheses' family form; their owners read `by` from the body); (d) `stepsrunai` stamps `principal` and `viewer` beside `by`; (e) `readpages` stamps `principal` and `viewer`; (f) the door stamps `handlechange`'s and `captureupload`'s `by` itself as the bare member id. control-plane waits on your merge.
+
+## B5 · CHANGE
+
+CHANGE (K2593): affordances, tasks and queue are merged into `tranche/T41` (with op-grades, wizard-scripts, notice-producers, setup-words, queue-producers before them). Merge the tranche into your branch before your next completion; re-run your tests on it.

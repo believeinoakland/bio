@@ -126,6 +126,8 @@ export function defaultFakes() {
     bias: { uncleared: () => ({ debts: [], limit: 200, truncated: false }),
             settled: ({ limit }) => ({ debts: [], limit, truncated: false }) },
     publication: { caseTensions: () => ({ ok: true, cases: [], limit: 200, cursor: null }) },
+    /* publish-schedule (queue-producers R37, K2582): no edition scheduled until a test says otherwise. */
+    publishSchedule: { scheduledEditions: () => ({ ok: true, editions: [], limit: 500, cursor: null }) },
     /* corpus-export R2 (queue-producers R2, N483): the export log, empty until a test says otherwise. */
     corpusExport: { exportLog: () => ({ ok: true, exports: [], limit: 200, truncated: false }) },
     /* network-notices R22 (queue-producers R27): no notice on any project until a test says otherwise. */
