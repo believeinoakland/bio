@@ -130,3 +130,19 @@ test("R11: a money-detector item is marked \"Hint · machine work\" in its summa
   assert.equal(it.kind, "money-detector-noticed");
   assert.equal(it.id, `FINDING::money-detector-noticed::${d.detector_id}::${it.subject.id}`);
 });
+
+test("R3 R7 (D54; N822, K2408): an administrator at a hidden project's EXISTENCE is told nothing of its contents: no detector item of that project and none asked of it; the control: joined, the same administrator receives it", () => {
+  const { w, d } = setup();
+  gate(w, d, 0.1);
+  const asked = [];
+  const real = w.c;
+  const moneyChecks = { noticed: (a) => { asked.push([a.viewer, a.project]); return real.noticed(a); } };
+  const read = (m) => reader(fresh(w.host, { membership: w.membership, moneyChecks })).read(m, { now: NOW });
+  assert.equal(w.membership.sight(P, ADMIN_BOB), "existence", "bob, an administrator, sees only that the hidden project exists");
+  const r = read("bob");
+  assert.deepEqual(ofKind(r, "money-detector-noticed"), []);
+  assert.deepEqual(asked.filter(([v]) => v === ADMIN_BOB), [], "nothing is asked of the hidden project for him");
+  assert.ok(!texts(r).some((t) => t.includes(P)), "nothing names it");
+  w.st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, created, updated) VALUES (?,?,?,?,?)`, P, "bob", "joined", NOW, NOW);
+  assert.equal(ofKind(read("bob"), "money-detector-noticed").length, 1, "negative control: joined, he is a member of it and receives it");
+});
