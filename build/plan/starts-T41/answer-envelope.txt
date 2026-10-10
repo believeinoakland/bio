@@ -8,3 +8,5 @@ Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at yo
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
 
 **From INVESTIGATION #1 J2 (K2525).** Add `bio-plane/src/investigation/checks.mjs` (`INVESTIGATION_CHECKS`, family C-146) to `CHECK_FAMILY_FILES` (rule 4 (16)).
+
+**From PUBLISH-SCHEDULE #1 J1 (K2532).** `CHECK_FAMILY_FILES` also gains `src/publish-schedule/checks.mjs` (`PUBLISH_SCHEDULE_CHECKS`, C-122.5), directly after publication's file.
