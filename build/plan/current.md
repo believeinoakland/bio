@@ -154,6 +154,8 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 ### L10
 - **T41-49 · scheduler** · (N820) R26 registers `question-explorer`'s consumer and `investigation`'s quiet check; (N823) publish-schedule's wake (R71) re-pointed · req: §3.6.
 
+- **T41-49a · monitoring** · (K2524; investigation R18's watch, H28) R70: watched projects' sources watched and an arrival reported through `investigation.watchArrival`; `uses` gains `investigation` · req: R70, BOB's wording · after L7 (investigation merged).
+
 ### L11
 - **T41-50 · wizard-scripts** · (was T40-17) R27; (N821, D52, D53) R23 amended (one front door, six routes; `FRONT_DOORS` filled from the design stream's doors when given), R28; (DEC-188 (8)) the Connect wizard and `screen-registry` use `ailimitset`, `accountusesset` in place of `aiceilingset`, `aicopyceilingset`, `accountswitchset`, `groupswitchset` · req: applied, §3.6; DEC-188's share BOB's wording · 2,379 → ~2,450.
 - **T41-51 · op-grades** · (was T40-18) the new ops' grades (N797, N799, N812, N820's) · fixed at L11's START.
@@ -173,7 +175,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 
 **L11 STARTs (K874, K2400):** control-plane R69, R70 and notice-producers R16 each need an explicit test. **L11 merge order:** `modules.json` order; plane last.
 
-**Counts:** L1 2 · L2 4 · L3 2 · L4 2 · L5 2 · L6 19 · L7 2 · L8 11 · L9 7 · L10 1 · L11 14 = 66 jobs (L9 counted anew at K2505: 6 listed plus action-grammar) (T40's 29 unstarted entries all carried, renumbered).
+**Counts:** L1 2 · L2 4 · L3 2 · L4 2 · L5 2 · L6 19 · L7 2 · L8 11 · L9 7 · L10 1 · L11 14 = 67 jobs (L10 2 with T41-49a, K2524) (L9 counted anew at K2505: 6 listed plus action-grammar) (T40's 29 unstarted entries all carried, renumbered).
 
 ## Left out of T41 (one hard reason each, re-tested today)
 
