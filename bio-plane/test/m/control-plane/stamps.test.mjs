@@ -129,6 +129,12 @@ async function forgedSweep(onlyDeclaring) {
     ops++;
     for (const x of inner) {
       for (const k of QUERY_STAMPS) if (x.params[k] === FORGED) leaks.push(`${op}?${k} (${c.name})`);
+      /* R72 (capture R86; K2458): `captureupload`'s body is the file's bytes, never fields, streamed through unread: its
+         stamps are the query's (swept above), and the bytes reach capture exactly as sent */
+      if (x.route === op && RAW_BODY_OPS.includes(op)) {
+        assert.deepEqual(x.body, { ...b, note: "kept" }, `${op}: the bytes as sent`);
+        continue;
+      }
       if (x.body && typeof x.body === "object") {
         for (const k of BODY_STAMPS) if (x.body[k] === FORGED) leaks.push(`${op}#${k} (${c.name})`);
         if (x.route === op && !["aicredentialmint"].includes(op)) assert.equal(x.body.note, "kept", `${op}: the rest of the body is the caller's`);
@@ -137,6 +143,9 @@ async function forgedSweep(onlyDeclaring) {
   }
   return { ops, leaks };
 }
+
+/* the ops whose request body is a file's raw bytes, not fields (R72) */
+const RAW_BODY_OPS = ["captureupload"];
 
 test("R17: for every op, every stamp the caller sends (query or body) is deleted before the op's declared stamps are set", async () => {
   const { ops, leaks } = await forgedSweep(false);
