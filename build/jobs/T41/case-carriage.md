@@ -67,3 +67,16 @@ Users' tests reddened by K2380 (N816), as designed: with no evidence store or bu
 ## J2 · COMPLETE
 
 T41-35 applied: R11 (photo.obscured.label, photo.published.label by key; PUBLISHED_LABEL exported; a copy's stored label OBSCURED_LABEL when it covers an area, else PUBLISHED_LABEL), R14 (C-141.7–.10 by key, fills photo/member/date carried in the answer), R15 (copyWake null while unbound), R18 (onReceipt refusal a start-up fault, faults(), logged), D54 three tests re-stated with negative controls. case-carriage 70/70; checks format 0, architecture 0, coverage 18/18, ownership 0 (7 files). Final uses unchanged. Two users' reds by K2380 in REPORT J1. No CHECK_FAMILIES re-assertion exists in my tests (rule 4 (16)). Copies held at <store>/obscured/<sha> as before. Record: build/jobs/T41/case-carriage.md, Completion.
+
+## CHANGE B2 (K2537)
+
+- **Merge.** `tranche/T41` is merged in at 7fe0e94f76 and later, bringing case-grammar T41-34. This module already calls the real `materialsOf`, `extractedTextOf`, `acceptedWorkOf`, `caseDocumentBlocks` and `sourceRowsStanding`, so no stand-in was replaced.
+- **Rule 4 (19).** `obscured.test.mjs`:29 is re-stated for R12's `marked`:
+  - stated `true` reads `true`;
+  - stated `false` with `PUBLISHED_LABEL` reads `false`;
+  - absent with a label reads `true` (read by the label);
+  - negative control: absent with a null label (an edition signed before T40) reads `false`.
+- **Tests.** case-carriage: 70 tests, 70 pass, 0 fail.
+- **Checks.** `format` 0, `architecture` 0, `coverage` 18 of 18, `ownership` 8 files, 0 failures.
+
+Size (session_01PJqPaLJoAV9fTX9bSpNA4s): test runs 12, module lines 1383
