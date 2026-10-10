@@ -50,7 +50,7 @@ function drive(w, code, draftId) {
     case "REVIEW_NO_GRANT": return w.r.act({ act: "revoke", author: "ann" });
     case "REVIEW_NO_COMMENT_TEXT": return w.r.comment({ draft: draftId, viewer: V("ann"), text: "" });
     case "APPROVAL_RULE_BAD_APPROVERS": return w.r.approvalRuleSet({ approvers: [], by: "adm" });
-    case "NOT_AN_APPROVER": return w.r.caseApprove({ case: "CASE-2026-0009", edition: 2, docSha: SECRET(7), by: "out" });
+    case "CASE_NOT_AN_APPROVER": return w.r.caseApprove({ case: "CASE-2026-0009", edition: 2, docSha: SECRET(7), by: "out" });
     case "APPROVAL_NO_SUCH_DOCUMENT":
       approvable(w);
       return w.r.caseApprove({ case: "CASE-2026-0009", edition: 2, docSha: SECRET(7), by: "ann" });
@@ -109,7 +109,7 @@ test("R23, R27, R30, R31: C-87.1–C-87.11 and C-32.16 held here with their ids 
     REVIEW_NOT_PROJECT_OWNER: "C-87.3", REVIEW_NO_PROJECT: "C-87.4", REVIEW_DRAFT_CHANGES_PROJECT: "C-87.5",
     REVIEW_NO_SUCH_CASE: "C-87.6", REVIEW_DRAFT_TOO_LARGE: "C-87.7", REVIEW_NO_RECIPIENT: "C-87.8", REVIEW_NO_SECRET: "C-87.9",
     REVIEW_NO_GRANT: "C-87.10", REVIEW_NO_COMMENT_TEXT: "C-87.11", APPROVAL_RULE_BAD_APPROVERS: "C-87.13",
-    NOT_AN_APPROVER: "C-87.14", APPROVAL_NO_SUCH_DOCUMENT: "C-87.15", APPROVAL_REASON_TOO_LONG: "C-87.16" };
+    CASE_NOT_AN_APPROVER: "C-87.14", APPROVAL_NO_SUCH_DOCUMENT: "C-87.15", APPROVAL_REASON_TOO_LONG: "C-87.16" };
   assert.deepEqual(Object.fromEntries(Object.entries(REVIEW_COPY_CHECKS).map(([k, v]) => [k, v.check])), want);
   assert.ok(Object.isFrozen(REVIEW_COPY_CHECKS));
   /* R27 (N322): C-87.12 retired into record-core's C-59.6; its number is not reused here */

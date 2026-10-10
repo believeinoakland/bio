@@ -148,7 +148,7 @@ export const REVIEW_COPY_CHECKS = Object.freeze({
     translation: 'Name the people whose approval every case needs before it is signed: one or more active members '
       + 'of the group, at most 50. To stop requiring approvals, turn the rule off instead. Nothing was changed.',
   },
-  NOT_AN_APPROVER: {
+  CASE_NOT_AN_APPROVER: {
     check: 'C-87.14',
     where: at('caseApprove', 'is-not-an-approver'),
     translation: 'You are not one of the people the group named to approve its cases before they are signed, or '

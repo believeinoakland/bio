@@ -50,21 +50,21 @@ test("R30: an active administrator sets the approval rule, null turns it off (th
      [null, "adm", "2026-09-28T02:00:00.000Z"], ['["bea"]', "adm", "2026-09-28T03:00:00.000Z"]], "appended, never replaced");
 });
 
-test("R31: a named approver who may see the case's project approves one document at its approval digest (K2528); NOT_AN_APPROVER otherwise; a later document needs a new approval", () => {
+test("R31: a named approver who may see the case's project approves one document at its approval digest (K2528); CASE_NOT_AN_APPROVER otherwise; a later document needs a new approval", () => {
   const w = standard();
   w.publishedCase(CASE, P, 1);
   const textA = `---\ncase: ${CASE}\napproval_rule:\n  approvers: [ann]\n---\ndoc A`;
   const A = w.caseDocument(CASE, 2, { text: textA });
   const approve = (by, extra = {}) => w.r.caseApprove({ case: CASE, edition: 2, docSha: A, by, ...extra });
   /* no rule: nobody is an approver */
-  refused(approve("ann"), "NOT_AN_APPROVER");
+  refused(approve("ann"), "CASE_NOT_AN_APPROVER");
   w.r.approvalRuleSet({ approvers: ["ann", "ivy", "out", "adm", "quinn"], by: "adm" });
   /* not named, named without sight of hidden P (D54: an administrator neither invited nor joined), a machine, no
      such case, and no case: one answer, byte-identical */
   const no = [approve("bea"), approve("out"), approve("adm"), approve("quinn"), approve("class:admin"), approve(null),
               w.r.caseApprove({ case: "CASE-2026-0404", edition: 1, docSha: A, by: "ann" }),
               w.r.caseApprove({ edition: 2, docSha: A, by: "ann" })];
-  for (const r of no) refused(r, "NOT_AN_APPROVER");
+  for (const r of no) refused(r, "CASE_NOT_AN_APPROVER");
   assert.equal(new Set(no.map((r) => JSON.stringify(r))).size, 1, "no oracle for which condition held");
   /* the document: a doc_sha not held at that case edition, malformed, or an edition that is not one */
   /* the stored doc_sha is not the approval digest (K2528): it names nothing to approve */
@@ -72,7 +72,7 @@ test("R31: a named approver who may see the case's project approves one document
   assert.notEqual(stored, A);
   for (const [edition, docSha] of [[2, sha("doc B")], [2, stored], [1, A], [2, "x"], [2, A.toUpperCase()], [0, A], ["two", A], [null, A]])
     refused(w.r.caseApprove({ case: CASE, edition, docSha, by: "ann" }), "APPROVAL_NO_SUCH_DOCUMENT");
-  refused(w.r.caseApprove({ case: CASE, edition: 2, docSha: "x", by: "bea" }), "NOT_AN_APPROVER");  // the approver first
+  refused(w.r.caseApprove({ case: CASE, edition: 2, docSha: "x", by: "bea" }), "CASE_NOT_AN_APPROVER");  // the approver first
   /* the reason: trimmed, at most 4,000 */
   refused(approve("ann", { reason: "r".repeat(APPROVAL_REASON_MAX + 1) }), "APPROVAL_REASON_TOO_LONG");
   assert.equal(w.count("case_approvals"), 0, "a refused approval writes nothing");
@@ -102,7 +102,7 @@ test("R31: a named approver who may see the case's project approves one document
   assert.deepEqual(w.r.approvalsOf({ case: CASE, edition: 2, docSha: B }).map((x) => x.by), ["ann"]);
   /* an approver struck from the rule approves no more */
   w.r.approvalRuleSet({ approvers: ["ivy"], by: "adm" });
-  refused(w.r.caseApprove({ case: CASE, edition: 2, docSha: B, by: "ann" }), "NOT_AN_APPROVER");
+  refused(w.r.caseApprove({ case: CASE, edition: 2, docSha: B, by: "ann" }), "CASE_NOT_AN_APPROVER");
 });
 
 test("R32: at start the rule and approvals are registered once with ratification's approval reader (its R50)", () => {

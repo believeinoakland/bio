@@ -801,7 +801,7 @@ export class Review {
     /* DEC-49 REGION is-not-an-approver */
     if (!who || isMachineIdentity(who) || !rule || !rule.approvers.includes(who) || !project
         || !this.membership.inSight(project, `member:${who}`))
-      return refusal("NOT_AN_APPROVER",
+      return refusal("CASE_NOT_AN_APPROVER",
                "an approval is given by a member the group's approval rule names, of a case whose project "
              + "they can see; a case you cannot see is answered exactly as one that does not exist. Nothing "
              + "was recorded.");
