@@ -43,7 +43,7 @@ One worker read `schema.mjs`, `archive`, `hold`, `obscured` and `rereads` whole 
 
 **Rule 4 (16).** I own no re-assertion of answer-envelope's `CHECK_FAMILIES is total` test: no test under `bio-plane/test/m/case-carriage/` names `CHECK_FAMILIES` or `CHECK_FAMILY_FILES`. That test is answer-envelope's (`families.test.mjs`, `catalogue-end.test.mjs`) and is not mine to fix (T41-60).
 
-**Found in other modules (REPORT J2).** Two users' tests go red by K2380's change, as designed. With no store bound, `copyWake` answers null, so scheduler R25 does not fire the `doccopy` consumer and `onAlarm`'s answer has no `doccopy`. Each must be re-stated in its owner's job:
+**Found in other modules (REPORT J1).** Two users' tests go red by K2380's change, as designed. With no store bound, `copyWake` answers null, so scheduler R25 does not fire the `doccopy` consumer and `onAlarm`'s answer has no `doccopy`. Each must be re-stated in its owner's job:
 - scheduler `copies.test.mjs`:225 (R25);
 - plane `t39.test.mjs`:78 (R18 (T39)), its negative-control arm "no bucket bound … DOCUMENT_COPY_NO_STORE".
 
