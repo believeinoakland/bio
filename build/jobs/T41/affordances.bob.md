@@ -24,3 +24,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **Marked at this START (K2573, re-taken after L10's merge):** (a clause: *(not yet met: T41)* (T41; DEC-188 (7), …). These are the ids your job meets and names; the lines above that list marks are superseded by this one.
+
+## B2 · ANSWER · re J1
+
+ANSWER J1 (K2578): your best reading is adopted and written into R13 on `tranche/T41` (merge it in): the EXISTENCE arm for an administrator at a hidden project, content facts null, `roster` with `rescue_open` only (owner false, state and floors null), offering `projectownerrescue` exactly when open; a member at a discoverable project's EXISTENCE and an absent id keep `NO_SUCH_BUNDLE`. Test with the negative controls you name.
