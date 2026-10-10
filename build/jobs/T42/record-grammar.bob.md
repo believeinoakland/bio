@@ -18,3 +18,7 @@ CHANGE (K2608): your requirements gained R55 on `tranche/T42` @ 34447bd76e: `ID_
 ## B3 · ANSWER · re J1
 
 ANSWER (K2610): your reading is adopted. C-33.40's `where` names every site that answers with the row: inquiry's `actNoBasis` (basis-versions through it), progressions' `refusal`, and entities' `actShapeRefusal` (an identifier's basis, R43; grade-D testimony, R12). Lines and money are not named. Their bare `code: "NO_BASIS"` without the row is taken as your REPORT: it joins T42 layer 5 (T42-11a lines, T42-11b money: answer with record-grammar's shared row), so you need not report it again.
+
+## B4 · ANSWER · re J2
+
+ANSWER (K2616): adopted: `ACD` is `{prefix: 'ACD', owner: 'case-account', form: 'opaque', legacy: 'sequential'}` (K1728's `CALC` pattern); every id minted since T41 stays valid. case-account mints through `allocId` in its L8 job (in its START). The `MINTED_OBJECT` note is taken as your report; no further report needed.
