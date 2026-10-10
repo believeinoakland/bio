@@ -60,3 +60,13 @@ Adds to J1 (replaces nothing in it).
 
     My reading: `publishCase` hands R30 the statements uncited (`cites: []`), and case-disclosures decides how an uncited statement is judged. Its other arms still run on them: a fact not in what is cited, a contradiction of the record, a bias claim. That leaves "cites nothing" refusing only an `account` sentence. If instead the statements must cite, R63/R65 need an input for their citations (for example `statementCites: {statement: [...], subject_justification: [...], excluded: [[...]], what_changed: [...]}`), and that is a requirement change for you to word. Please carry the answer to case-disclosures (T41-42) too.
 11. **R65 re-states two tests.** `standards.test.mjs`:79 (R60) passes `subject_entity`, `subjects` and `subjectEntity` to show a caller cannot set the subject, and `invariants.test.mjs`:48 (R25) sends `statement_by` and `statementBy` in the body. Under R65 both are refused `CASE_FIELD_NOT_ALLOWED`, naming the keys. I re-state both to expect that refusal: it is stronger than ignoring the keys. Each keeps a negative control, the same act without the extra keys publishing with the subject or writer read from the record.
+
+## J3 · QUESTION
+
+One open point from B3 (K2531); building on my reading meanwhile.
+
+**Where the `account_check` flags are held.** B3 asks me to pass R30 the flags `[{kind: "account_check", ord, text, cites}]` "from what you already read", but nothing I read holds them. They are an AI run's draft of kind `account_check` (run-rules R25, skills R44), and no requirement names who stores them; my R64 stores only `case_account` drafts.
+
+My reading: `accountPropose` also takes `kind: "account_check"` (default `case_account`) with `flags: [{ord, text, cites}]` in place of `text`. It is stored in the same append-only table, labelled machine work, and listed by `accountDrafts`. `publishCase` passes R30 the flags of every `account_check` draft of this case proposed after the account draft it names (or all of them with none named), in proposal order. That is one more argument shape on R64; please word it, or name the owner of the flags.
+
+Until you answer, `publishCase` passes the flags this table holds (none, unless proposed so), and every other part of R63–R68 stands.
