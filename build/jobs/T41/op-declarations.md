@@ -73,3 +73,7 @@ Size (session_01HSBgxknUm7jJ6a36oW3vEv): test runs 16, module lines 3411
 ## J2 · REPORT
 
 Found in other modules (record, Completion): (a) capture's map has no captureupload arm though control-plane R72 routes it there; (b) plane composes neither aiUseOps, readingGuidesOps nor publishScheduleOps (publicationOps no longer serves the set-time ops); (c) admission R19's and control-plane R56/R30's tests still name groupswitchset, and control-plane r53-routes' ARMS names accountswitchset, aiceilingset, aicopyceilingset: red at my merge by the provided DEC-188 (8) retirement, theirs to restate (r53-routes' hypotheses part is cleared); (d) ai-use R10 gives estimate no viewer, the code takes one; (e) no requirement says which steps method op=steps calls (control-plane R71's routing); (f) reading-guides' five undeclared ops (J1 (1)). Final uses: add reading-guides, run-productions, steps, question-explorer, investigation, leg-earning, case-authoring, review, provenance, action-plans (architecture fails on the first two until applied).
+
+## J3 · COMPLETE
+
+T41-58 done: R41, R42, R43 (78 ops, with K2486, K2496, K2560, K2561, K2569, K2570), R45, R46, R20/R24/R25 clauses; retirements; R34 for every new member op. 128/128; format, coverage (45/45), ownership 0; architecture 2 (uses, for BOB). Inherited reds of rule 4 (7), (10), (12), (20) cleared; (15) cleared but for control-plane's own ARMS list. J1's readings stand open (only (1) could change the build). Record: Completion.
