@@ -22,6 +22,8 @@
 
 **Uses (final):** unchanged: record-grammar, runtime-limits, membership, op-declarations, credentials, capture, record-core.
 
+**B4 (K2593):** `tranche/T41` merged (`f0b5103338`, affordances, tasks, queue and the modules before them); tests unchanged: 41, 37 pass, the same 4 red waiting only on op-declarations; checks format, architecture, coverage, ownership 0 failures.
+
 **Next:** on the CHANGE that brings op-declarations' merge (B2), merge `tranche/T41`, re-run the tests and checks, complete.
 
 ## J1 · QUESTION
