@@ -1,7 +1,7 @@
 /* wizard-scripts: the registry form the assistant reads (R21), at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, draft, approved, restart, V, MACHINE, STEPS, step, SCREENS, LIBRARY, OFFERED_TEMPLATE } from "./fixture.mjs";
+import { seeded, draft, approved, restart, discoverable, V, MACHINE, STEPS, step, SCREENS, LIBRARY, OFFERED_TEMPLATE } from "./fixture.mjs";
 import * as wz from "../../../src/wizard-scripts/index.mjs";
 
 const A = V("alice"), F = V("frank"), E = V("erin"), D = V("dave"), C = V("carol");
@@ -16,8 +16,9 @@ const asR11 = (x, screen, viewer) => x.wizardsAt({ screen, viewer }).scripts.map
 /* A world with every case R11 distinguishes: offered scripts of P (one with each draft kind), of Q, a group-wide one,
    the library's, a submitted, a withdrawn and a retired version, an updated version, a broken one, and drafts of
    several authors. */
-function rich() {
+function rich({ open = true } = {}) {
   const w = seeded();
+  if (open) w.join(w.P, "erin", "invited");   /* D54: the administrator who widens is invited to P, so sees it whole */
   const drafts = approved(w, { name: "Drafts of each kind", steps: [
     step("case-home", "casenote", { draft: { text: "Our own words, never shown" } }),
     step("filing-draft", "filingsave", { draft: { template: OFFERED_TEMPLATE } }),
@@ -29,7 +30,8 @@ function rich() {
   w.wz.wizardSubmit({ version: n2.version, author: F, viewer: F });
   w.wz.wizardApprove({ version: n2.version, by: A, viewer: A });
   const wide = approved(w, { name: "Group-wide" });
-  w.wz.wizardApprove({ version: wide.version, widen: true, by: E, viewer: E });
+  if (open) w.wz.wizardApprove({ version: wide.version, widen: true, by: E, viewer: E });
+  else { discoverable(w); w.wz.wizardApprove({ version: wide.version, widen: true, by: E, viewer: E }); }
   const retired = approved(w, { name: "Retired" });
   w.wz.wizardRetire({ script: retired.script, reason: "old", by: A, viewer: A });
   const sub = draft(w, { name: "Submitted" }); w.wz.wizardSubmit({ version: sub.version, author: F, viewer: F });
@@ -40,9 +42,18 @@ function rich() {
   return { w, drafts, onFiling, old, n2, wide, retired, sub, gone, mine, alices, qs };
 }
 
-test("R21 wizardRegistry answers every registered screen and, for each, exactly the scripts R11 answers to that viewer on it, each {id, version, name, start, steps: [{screen, act, what, why, via}], origin, based_on}, the viewer's own drafts marked draft: true, for every viewer", () => {
+test("R21 wizardRegistry answers every registered screen and, for each, exactly the scripts R11 answers to that viewer on it, each {id, version, name, start, steps: [{screen, act, what, why, via}], origin, based_on}, the viewer's own drafts marked draft: true, for every viewer; D54: an administrator neither invited nor joined to hidden P is offered none of its scripts but the group-wide one", () => {
   const x = rich();
   const { w } = x;
+  /* D54 (K2408): a second world where erin is not invited; P hidden until the widening, then discoverable */
+  const y = rich({ open: false });
+  const onY = (viewer) => y.w.wz.wizardRegistry({ viewer }).screens.find((s) => s.id === "case-home").scripts.map((s) => s.version);
+  assert.ok(onY(E).includes(y.drafts.version), "D54 control: P discoverable, an administrator sees it whole");
+  const z = seeded();
+  const zd = approved(z, { name: "Hidden" });
+  assert.deepEqual(z.wz.wizardRegistry({ viewer: E }).screens.find((s) => s.id === "case-home").scripts.map((s) => s.id), [LIBRARY[0].id],
+                   "D54: hidden P, erin uninvited: the library's only");
+  assert.ok(z.wz.wizardRegistry({ viewer: A }).screens.find((s) => s.id === "case-home").scripts.some((s) => s.version === zd.version));
   for (const viewer of VIEWERS) {
     const r = w.wz.wizardRegistry({ viewer });
     assert.deepEqual([r.ok, r.registered], [true, true], String(viewer));
