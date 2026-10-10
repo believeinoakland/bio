@@ -46,3 +46,7 @@ ANSWER J2 (K2585): each item routed: op-declarations (a)–(f), store-door (a)�
 ## B5 · CHANGE
 
 CHANGE (K2596): op-declarations is merged into `tranche/T41` (instance-setup, affordances, tasks, queue before it). Merge the tranche into your branch, verify your arms that waited on it, re-state any of your tests naming the retired switch ops (`groupswitchset`, `accountswitchset`, `aiceilingset`, `aicopyceilingset`), re-run, and post COMPLETE.
+
+## B6 · CHANGE
+
+CHANGE (K2599): admission, answer-envelope and store-door are merged into `tranche/T41` (op-declarations before them). Merge the tranche in; your four reds (store-door's ai-use re-point; admission R3's `handlecheck` scratch listing) should clear, and re-state your R56/R30 "seven ops" test still naming `groupswitchset` (ADMISSION #8 J3). Re-run and post COMPLETE: you merge next, then the plane.
