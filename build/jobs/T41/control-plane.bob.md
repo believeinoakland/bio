@@ -34,3 +34,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 ANSWER J1 (K2576): your reading confirmed and written into R73 on `tranche/T41` (merge it in): the `project` query parameter, else a top-level `project` string in the body, trimmed, ≤ 200; the caller's `setIn` always deleted first; `personWarningSeen` `true` only on a member's own session whose body states it. Also merge for R71's K2569/K2570 additions if your START predates them (it carries them as notes).
+
+## B3 · CHANGE
+
+CHANGE (K2579): op-grades is merged into `tranche/T41` (R29, R30; DEC-188 (8) removes `aiceilingset`, `aicopyceilingset`, `accountswitchset`, `groupswitchset` from its tables). Merge the tranche into your branch. Its J2 names your tests it stales (rule 4 (22), listed in `build/jobs/T41/op-grades.md`): affordances: `t33`, `t34`, `act-help.mjs` :52, :66, :67 (retired keys), the ladder and R27 counts; control-plane: `totality`, `r53-routes`, `t34-routes`. Clear yours in this job.
