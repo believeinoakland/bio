@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 J1's four readings confirmed (K2523). (1) Yes, `registerProjectDisposition(module, fn)` as you read it, (a) alone with none registered. No next.md entry is needed: queue runs in this tranche's L11 (T41-55), so its START now carries the owed registration (queue registers the project arm of `op=proposedispose` with your `registerProjectDisposition`); name the signature exactly in your record. (2) Yes: `reason` from intent R29's `CLOSED_REASONS`, optional `note`, a joined participant, gaps kept in your table, the close a revision through `promotion`; `projectWatch` read by monitoring through `watchedProjects()` (monitoring's reopening is not in T41: report it at completion for next.md). (3) Yes: the interview keyed by its project-placed step; no new prefix. (4) Yes: drop `hypotheses`, add `promotion` and `provenance` (both earlier in the order).
+
+## B3 · CHANGE
+
+CHANGE (K2524): your R18 gains `watchArrival({project, source, at})`, for `monitoring` only (it joins T41 at layer 10 as T41-49a and calls it): it records that a source a watched project keeps watching brought something new; the project's work reads reopened (no longer quiet, so a later quiet spell prompts again); the arrival is answered with the project's reads; a project not watched is refused, writing nothing. Merge the tranche branch (the text is in `build/requirements/investigation.md` R18), build and test it explicitly with a negative control.
