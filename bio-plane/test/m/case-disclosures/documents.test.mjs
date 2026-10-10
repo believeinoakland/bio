@@ -2,10 +2,13 @@
    judged by the state `case-carriage.documentCopy` (its R16) answers — `undetermined` refused DOCUMENT_COPY_UNDETERMINED
    whichever chain reaches it; `pending` refused DOCUMENT_COPY_PENDING and `refused` DOCUMENT_NOT_CLEANABLE when a
    load-bearing chain reaches it, else listed `included: false` with no `obscured`; `copy` carried as its cleaned copy
-   (`included: false`, `obscured: {copy, label: COPY_CLEANED_LABEL}`); `clean` and `public` by what is held. R7: the copy
-   row. R22: the three rows and BOB's draft words. `documentCopy` is the fixture's stand-in at its ruled interface. */
+   (`included: false`, `obscured: {copy, label: COPY_CLEANED_LABEL, label_key: "document.cleaned.label"}`, K2483);
+   `clean` and `public` by what is held. R7: the copy row `{copy, label}`. R22: the three rows, two of them reading
+   `words.json`'s `document.refused.clean` and `document.refused.pending` by key (DEC-188 (7)). `documentCopy` is the
+   fixture's stand-in at its ruled interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { world, V, sha } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, DOCUMENT_WORDS, DOCUMENT_STATES, documentRead } from "../../../src/case-disclosures/index.mjs";
 import { COPY_CLEANED_LABEL, OBSCURED_LABEL } from "../../../src/case-carriage/index.mjs";
@@ -19,6 +22,11 @@ const AT = "2026-09-28T01:00:00Z";
 /* doc-clean's refusals by name (its R3), as case-carriage R16 relays them in `refused.code` */
 const CLEAN_REFUSALS = ["ENCRYPTED", "EMBEDDED_FILE", "IMAGE_NOT_CLEANABLE", "HTML_EMBEDS_IMAGE", "NOT_A_CLEANABLE_FORMAT",
                         "DOCUMENT_TOO_LARGE", "DOCUMENT_UNREADABLE"];
+const WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8"));
+const wordOf = (key) => (Array.isArray(WORDS) ? WORDS : WORDS.words || Object.values(WORDS).find(Array.isArray)).find((w) => w && w.key === key);
+/* R6 (K2483): a member document's copy, as R6 answers it; R7's row drops the key */
+const CLEANED = (copy) => ({ copy, label: COPY_CLEANED_LABEL, label_key: "document.cleaned.label" });
+const OBSCURED = (copy) => ({ copy, label: OBSCURED_LABEL, marked: true, label_key: "photo.obscured.label" });
 const copyOf = (copy) => ({ state: "copy", copy, refused: null });
 const refusedBy = (code) => ({ state: "refused", copy: null, refused: { code, detail: `doc-clean refused: ${code}` } });
 function refused(r, code) {
@@ -30,11 +38,17 @@ function setup() { const w = world(); for (const m of ["alice", "bo"]) w.member(
 const judged = (w, members, supporting = [], viewer = V("alice")) =>
   w.cd.materialsJudged(w.prepared(members), w.roles(members, supporting), viewer);
 
-test("R22: DOCUMENT_COPY_UNDETERMINED, DOCUMENT_COPY_PENDING and DOCUMENT_NOT_CLEANABLE are rows of this family with BOB's draft words; DOCUMENT_WORDS holds the drafts of document.refused.clean and document.refused.pending once, each naming {document}, and the rows read them by key", () => {
-  assert.deepEqual(DOCUMENT_WORDS, {
-    "document.refused.clean": "A document a member supplied can't be cleaned of the details that could show who made it: {document}. Capture it from where it was published, supply a plainer copy, or stop relying on it.",
-    "document.refused.pending": "The publication copy of a document a member supplied is still being made: {document}. Try again in a few minutes.",
-  });
+test("R22: DOCUMENT_COPY_UNDETERMINED, DOCUMENT_COPY_PENDING and DOCUMENT_NOT_CLEANABLE are rows of this family; DOCUMENT_COPY_PENDING's and DOCUMENT_NOT_CLEANABLE's words are words.json's document.refused.pending and document.refused.clean (DEC-188 (7)), read by key, verbatim, each naming {document}, held once in DOCUMENT_WORDS; document.cleaned.label is case-carriage's words, answered by its key", () => {
+  assert.deepEqual(Object.keys(DOCUMENT_WORDS), ["document.refused.clean", "document.refused.pending"]);
+  for (const key of Object.keys(DOCUMENT_WORDS)) {
+    const w = wordOf(key);
+    assert.ok(w, key);
+    assert.equal(DOCUMENT_WORDS[key], w.en, key);
+    assert.ok(w.en.includes("{document}"), key);
+  }
+  /* protected as words.json states it: `clean` protected; `pending` held unprotected there (reported to BOB, J1) */
+  assert.deepEqual(Object.keys(DOCUMENT_WORDS).map((k) => wordOf(k).protected), [true, false]);
+  assert.equal(COPY_CLEANED_LABEL, wordOf("document.cleaned.label").en, "the cleaned copy's label is case-carriage's, by its key");
   assert.ok(Object.isFrozen(DOCUMENT_WORDS));
   assert.equal(CASE_DISCLOSURE_CHECKS.DOCUMENT_NOT_CLEANABLE.translation, DOCUMENT_WORDS["document.refused.clean"]);
   assert.equal(CASE_DISCLOSURE_CHECKS.DOCUMENT_COPY_PENDING.translation, DOCUMENT_WORDS["document.refused.pending"]);
@@ -43,7 +57,7 @@ test("R22: DOCUMENT_COPY_UNDETERMINED, DOCUMENT_COPY_PENDING and DOCUMENT_NOT_CL
     "the label is case-carriage's own, not a photo's");
 });
 
-test("R6 (copy): a member document whose copy state is copy is answered included: false with obscured {copy, label: COPY_CLEANED_LABEL}, held whole or not, load-bearing or supporting; it is presentable through its copy and never RELIED_ON_NOT_PRESENTABLE; documentCopy is asked once per document that is no photo, and never of a photo or an observation; nothing is written", () => {
+test("R6 (copy): a member document whose copy state is copy is answered included: false with obscured {copy, label: COPY_CLEANED_LABEL, label_key: document.cleaned.label}, held whole or not, load-bearing or supporting; it is presentable through its copy and never RELIED_ON_NOT_PRESENTABLE; documentCopy is asked once per document that is no photo, and never of a photo or an observation; nothing is written", () => {
   const w = setup();
   const a = w.doc(DOC), b = w.doc(DOC2, {}, { indexed: false }), p = w.doc(DOC3), o = w.doc(DOC4), plain = w.doc(DOC5);
   w.st.sql.exec(`UPDATE register SET authored=1 WHERE bundle_id=?`, DOC4);
@@ -57,9 +71,9 @@ test("R6 (copy): a member document whose copy state is copy is answered included
     const r = judged(w, [Q], supporting);
     assert.deepEqual(r.refusals, [], JSON.stringify(supporting));
     assert.deepEqual(r.materials.map((m) => [m.ref, m.kind, m.included, m.obscured]), [
-      [DOC, "document", false, { copy: COPY, label: COPY_CLEANED_LABEL }],
-      [DOC2, "document", false, { copy: COPY2, label: COPY_CLEANED_LABEL }],
-      [DOC3, "document", false, { copy: COPY, label: OBSCURED_LABEL }],
+      [DOC, "document", false, CLEANED(COPY)],
+      [DOC2, "document", false, CLEANED(COPY2)],
+      [DOC3, "document", false, OBSCURED(COPY)],
       [DOC4, "observation", true, null],
       [DOC5, "document", true, null]]);
     assert.equal(r.materials[0].held.whole, true, "held whole, and still carried only as its copy");
@@ -261,7 +275,7 @@ test("R6, R7 over the real case-carriage (its R15, R16): a member document (no r
   assert.equal(b.copied, 1, JSON.stringify(b));
   r = judged(w, [Q]);
   assert.deepEqual(r.refusals, []);
-  assert.deepEqual(r.materials[1].obscured, { copy: sha(copied), label: COPY_CLEANED_LABEL });
+  assert.deepEqual(r.materials[1].obscured, CLEANED(sha(copied)));
   assert.equal(r.materials[1].included, false);
   const out = w.cd.disclosureBlocks({ reached: r, project: "PROJ-x", author: "alice", at: AT });
   assert.deepEqual([out.materials.rows[1].sha, out.materials.rows[1].obscured], [member, { copy: sha(copied), label: COPY_CLEANED_LABEL }]);

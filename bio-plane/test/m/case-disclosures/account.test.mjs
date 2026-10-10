@@ -1,0 +1,210 @@
+/* case-disclosures (T41; N820; D56–D59, D63; K2405, K2418, K2471, K2472): the account and the bias applications.
+   R30: `accountJudged` judges every sentence of the account and of the four statements through `case-checker.checkAccount`
+   (its R24, a stand-in at its ruled input here: case-checker's T41 entry builds it), with `printed` the statements
+   `bias.statementInForce` (its R49; the fixture's `lensStandIn`) answers in force in this case's lens; its departures in
+   R30's arm order, a check that cannot be run failing closed, and each `account_check` flag the member has not answered.
+   R31: `biasApplicationsOf` answers `case-grammar` R24's rows for every finding a member's chain reaches, and refuses an
+   application not in force through inquiry's one test and spelling (its R61, `biasNotInForce`), over the real inquiry. */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { world, V } from "./fixture.mjs";
+import { CASE_DISCLOSURE_CHECKS, ACCOUNT_ARMS } from "../../../src/case-disclosures/index.mjs";
+import { INQUIRY_BIAS_CHECKS } from "../../../src/inquiry/checks.mjs";
+
+const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
+const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q3 = "INQ-2026-0003-q";
+const LENS = { type: "project", id: "PROJ-2026-0001" };
+function refused(r, code) {
+  assert.equal(r.ok, false, JSON.stringify(r).slice(0, 400));
+  assert.deepEqual([r.reason, r.code, r.check, r.translation],
+    [code, code, CASE_DISCLOSURE_CHECKS[code].check, CASE_DISCLOSURE_CHECKS[code].translation]);
+}
+const ACCOUNT = [
+  { ord: 1, text: "The council awarded the contract on 3 May.", cites: ["h1"], kind: "account", began_as: "member" },
+  { ord: 2, text: "Read through the lens of procurement scrutiny, the timing stands out.", cites: [], kind: "account",
+    bias_statement: "S-scrutiny", began_as: "member" },
+  { ord: 3, text: "The award followed the minutes.", cites: ["h2"], kind: "account", began_as: "machine_draft" },
+];
+const STATEMENTS = [
+  { ord: 4, text: "The case says the award followed the minutes.", cites: ["h2"], kind: "statement" },
+  { ord: 5, text: "The subject was chosen for its spending.", cites: ["h1"], kind: "subject_justification" },
+  { ord: 6, text: "Nothing was left out.", cites: [], kind: "excluded" },
+  { ord: 7, text: "First edition.", cites: [], kind: "what_changed" },
+];
+/* `case-checker.checkAccount` at its ruled input (its R24), scripted: `departures` answered, each call kept */
+function checker(departures = []) {
+  const c = { calls: [], answer: null };
+  c.checkAccount = (args) => { c.calls.push(args); return c.answer ?? { ok: true, departures }; };
+  return c;
+}
+function setup(departures) {
+  const ck = checker(departures);
+  const w = world({ deps: { caseChecker: ck } });
+  w.member("alice");
+  return { w, ck };
+}
+const judge = (w, extra = {}) => w.cd.accountJudged({ account: ACCOUNT, statements: STATEMENTS, cited: { holdings: [] },
+  lens: LENS, conclusions: [{ finding: Q, claim: "the award followed the minutes" }], viewer: V("alice"), ...extra });
+
+test("R30: accountJudged hands case-checker's checkAccount every sentence of the account and of the four statements, what they cite as the caller read it, the record's conclusions, and printed — the statements the sentences frame by that bias.statementInForce answers in force in this case's lens, asked as the viewer; it writes nothing", () => {
+  const { w, ck } = setup([]);
+  w.lens.byScope.set(LENS.id, new Set(["S-scrutiny"]));
+  const before = w.snapshot();
+  const r = judge(w);
+  assert.deepEqual(r.refusals, []);
+  assert.equal(ck.calls.length, 1);
+  assert.deepEqual(ck.calls[0].account.map((x) => [x.ord, x.kind, x.text]),
+    [...ACCOUNT, ...STATEMENTS].map((x) => [x.ord, x.kind, x.text]), "the account and the four statements, every sentence");
+  assert.deepEqual(ck.calls[0].cited, { holdings: [] });
+  assert.deepEqual(ck.calls[0].conclusions, [{ finding: Q, claim: "the award followed the minutes" }]);
+  assert.deepEqual([ck.calls[0].printed, r.printed], [["S-scrutiny"], ["S-scrutiny"]]);
+  assert.deepEqual(w.lens.asked, [{ statement: "S-scrutiny", scope: LENS, viewer: V("alice") }]);
+  assert.deepEqual(w.snapshot(), before, "nothing written");
+  /* negative control: a statement not in this case's lens is not printed */
+  const n = setup([]); n.w.lens.byScope.set(LENS.id, new Set(["S-other"]));
+  judge(n.w);
+  assert.deepEqual(n.ck.calls[0].printed, []);
+  const u = setup([]); u.w.lens.read = () => ({ ok: true, in_force: null });
+  judge(u.w);
+  assert.deepEqual(u.ck.calls[0].printed, [], "an undetermined lens prints nothing");
+});
+
+test("R30 (ACCOUNT_SENTENCE_UNSUPPORTED, ACCOUNT_FACT_NOT_IN_CITED, ACCOUNT_CONTRADICTED_BY_RECORD, ACCOUNT_BIAS_NOT_PRINTED, ACCOUNT_CLAIM_NOT_BIAS): each arm checkAccount departs on is refused with its C-120 row, naming each sentence (its ord, kind and text), in R30's order whatever the departures' order; a sentence that departs on two arms is named under each; none departing, nothing is refused", () => {
+  assert.deepEqual(ACCOUNT_ARMS, ["ACCOUNT_SENTENCE_UNSUPPORTED", "ACCOUNT_FACT_NOT_IN_CITED", "ACCOUNT_CONTRADICTED_BY_RECORD",
+    "ACCOUNT_BIAS_NOT_PRINTED", "ACCOUNT_CLAIM_NOT_BIAS"]);
+  for (const code of ACCOUNT_ARMS) {
+    const { w } = setup([{ ord: 3, code }, { ord: 6, code }, { ord: 3, code }]);
+    const r = judge(w);
+    assert.equal(r.refusals.length, 1, code);
+    refused(r.refusals[0], code);
+    assert.deepEqual(r.refusals[0].sentences, [{ ord: 3, kind: "account", text: ACCOUNT[2].text },
+      { ord: 6, kind: "excluded", text: STATEMENTS[2].text }], code);
+    assert.ok(r.refusals[0].detail.includes("sentence 3") && r.refusals[0].detail.endsWith("Nothing was written."), code);
+    /* negative control: the same account, nothing departing */
+    assert.deepEqual(judge(setup([]).w).refusals, [], code);
+  }
+  const { w } = setup([...ACCOUNT_ARMS].reverse().map((code, i) => ({ ord: 1 + (i % 3), code })).concat([{ ord: 2, code: "ACCOUNT_CLAIM_NOT_BIAS" }]));
+  const r = judge(w);
+  assert.deepEqual(r.refusals.map((x) => x.reason), ACCOUNT_ARMS);
+  assert.deepEqual(r.refusals[4].sentences.map((x) => x.ord), [1, 2]);
+});
+
+test("R30 (ACCOUNT_CHECK_UNDETERMINED): a check that cannot be run — no checkAccount, one that throws, a refusal, an answer of another shape, a departure on a code that is no arm's or on a sentence the account does not hold — fails closed, alone among the arms, naming every sentence; an empty account asks nothing to stand", () => {
+  const answers = {
+    "no checkAccount": null,
+    throws: () => { throw new Error("down"); },
+    refuses: () => ({ ok: false, reason: "ACCOUNT_MALFORMED", field: "account" }),
+    "another shape": () => ({ ok: true }),
+    "an unknown code": () => ({ ok: true, departures: [{ ord: 1, code: "ANSWER_CITES_UNREAD" }] }),
+    "an unknown sentence": () => ({ ok: true, departures: [{ ord: 99, code: "ACCOUNT_SENTENCE_UNSUPPORTED" }] }),
+  };
+  for (const [why, fn] of Object.entries(answers)) {
+    const w = world({ deps: { caseChecker: fn ? { checkAccount: fn } : {} } });
+    const r = judge(w);
+    assert.equal(r.refusals.length, 1, why);
+    refused(r.refusals[0], "ACCOUNT_CHECK_UNDETERMINED");
+    assert.deepEqual(r.refusals[0].sentences.map((x) => x.ord), [1, 2, 3, 4, 5, 6, 7], why);
+  }
+  assert.deepEqual(world({ deps: { caseChecker: {} } }).cd.accountJudged({ account: [], cited: {} }).refusals, []);
+  /* negative control: the check run, nothing departing */
+  assert.deepEqual(judge(setup([]).w).refusals, []);
+});
+
+test("R30 (ACCOUNT_FLAG_UNANSWERED): each account_check flag (run-rules R25's draft kind) whose sentence still stands as flagged — its text, citing nothing it did not cite when flagged — is refused after the arms, naming the sentence; removing the sentence or tying it to evidence it did not cite answers the flag; a malformed flags list is BAD_COMPLETENESS naming the field, alone", () => {
+  const flag = (text, cites) => ({ kind: "account_check", ord: 1, text, cites });
+  const { w } = setup([{ ord: 1, code: "ACCOUNT_FACT_NOT_IN_CITED" }]);
+  const r = judge(w, { flags: [flag(ACCOUNT[0].text, ["h1"]), flag(ACCOUNT[2].text, ["h2"])] });
+  assert.deepEqual(r.refusals.map((x) => x.reason), ["ACCOUNT_FACT_NOT_IN_CITED", "ACCOUNT_FLAG_UNANSWERED"]);
+  refused(r.refusals[1], "ACCOUNT_FLAG_UNANSWERED");
+  assert.deepEqual(r.refusals[1].sentences, [{ ord: 1, kind: "account", text: ACCOUNT[0].text }, { ord: 3, kind: "account", text: ACCOUNT[2].text }]);
+  /* answered: removed, or tied to evidence it did not cite */
+  const ok = setup([]).w;
+  assert.deepEqual(judge(ok, { flags: [flag("A sentence since removed.", []), flag(ACCOUNT[0].text, [])] }).refusals, []);
+  /* malformed */
+  for (const [flags, field] of [["x", "flags"], [[null], "flags[0]"], [[{ kind: "case_account", text: "t", cites: [] }], "flags[0]"],
+                                [[{ kind: "account_check", text: "", cites: [] }], "flags[0]"], [[{ kind: "account_check", text: "t", cites: "h1" }], "flags[0]"]]) {
+    const b = judge(setup([]).w, { flags });
+    assert.deepEqual([b.refusals.length, b.refusals[0].reason, b.refusals[0].field], [1, "BAD_COMPLETENESS", field], JSON.stringify(flags));
+  }
+});
+
+test("R30: a malformed account or statements list is BAD_COMPLETENESS naming the field, alone, and checkAccount is not asked; the sentences answered carry their ord, cites and bias statement as given", () => {
+  for (const [args, field] of [[{ account: "x" }, "account"], [{ account: [{ ord: 1, text: "" }] }, "account[0]"],
+                               [{ account: [{ ord: 1, text: "t", cites: "h1" }] }, "account[0]"],
+                               [{ account: [{ ord: 1, text: "t", cites: [], bias_statement: 3 }] }, "account[0]"],
+                               [{ account: ACCOUNT, statements: {} }, "statements"]]) {
+    const { w, ck } = setup([]);
+    const r = w.cd.accountJudged({ cited: {}, ...args });
+    assert.deepEqual([r.refusals.length, r.refusals[0].reason, r.refusals[0].field, ck.calls.length], [1, "BAD_COMPLETENESS", field, 0], field);
+  }
+  const { w } = setup([]);
+  const r = w.cd.accountJudged({ account: ACCOUNT, cited: {} });
+  assert.deepEqual(r.sentences.map((x) => [x.ord, x.cites, x.bias_statement]), [[1, ["h1"], null], [2, [], "S-scrutiny"], [3, ["h2"], null]]);
+});
+
+test("R31: biasApplicationsOf answers case-grammar R24's rows {finding, ord, target, statement, effect, from, to} for every application on a leg of every finding a member's chain reaches, as the viewer sees the record; each statement in force (inquiry R61's test, at the finding's scope) is not refused; it writes nothing", () => {
+  const w = world(); w.member("alice");
+  w.lens.inForce = new Set(["S1", "S2"]);
+  w.doc(DOC); w.doc(DOC2);
+  w.finding(Q2, [{ target: DOC2, bias_1_statement: "S2", bias_1_effect: "grade_lowered", bias_1_from: "A", bias_1_to: "B" }]);
+  w.finding(Q, [{ target: DOC, bias_1_statement: "S1", bias_1_effect: "leg_excluded" }, { target: Q2 }]);
+  const before = w.snapshot(), asked = w.lens.asked.length;
+  const r = w.cd.biasApplicationsOf(w.prepared([Q]), V("alice"));
+  assert.deepEqual(r.refusals, []);
+  assert.deepEqual(r.unread, []);
+  assert.deepEqual(r.rows, [
+    { finding: Q, ord: 0, target: DOC, statement: "S1", effect: "leg_excluded", from: null, to: null },
+    { finding: Q2, ord: 0, target: DOC2, statement: "S2", effect: "grade_lowered", from: "A", to: "B" }]);
+  assert.deepEqual(w.lens.asked.slice(asked).map((a) => [a.statement, a.viewer]), [["S1", V("alice")], ["S2", V("alice")]],
+    "inquiry's test asked, as the viewer");
+  assert.deepEqual(w.snapshot(), before, "nothing written");
+  /* negative control: no finding reached carries an application */
+  const n = world(); n.member("alice"); n.doc(DOC); n.finding(Q3, [{ target: DOC }]);
+  assert.deepEqual(n.cd.biasApplicationsOf(n.prepared([Q3]), V("alice")), { refusals: [], rows: [], unread: [] });
+});
+
+test("R31 (BIAS_APPLICATION_NOT_IN_FORCE): an application whose statement is no longer in force, or whose standing cannot be read, is named and refused through inquiry's biasNotInForce (its R61: its row C-2.19, never re-derived here), naming the finding, the leg and the statement; a test that cannot be had fails closed the same way", () => {
+  const w = world(); w.member("alice");
+  w.lens.inForce = new Set(["S1", "S2"]);
+  w.doc(DOC); w.doc(DOC2);
+  w.finding(Q2, [{ target: DOC2, bias_1_statement: "S2", bias_1_effect: "leg_excluded" }]);
+  w.finding(Q, [{ target: DOC, bias_1_statement: "S1", bias_1_effect: "leg_excluded" }, { target: Q2 }]);
+  w.lens.inForce = new Set(["S1"]);
+  const r = w.cd.biasApplicationsOf(w.prepared([Q]), V("alice"));
+  assert.equal(r.refusals.length, 1);
+  const x = r.refusals[0];
+  assert.deepEqual([x.ok, x.reason, x.code, x.check, x.translation, x.finding, x.statement, x.where, x.in_force],
+    [false, "BIAS_APPLICATION_NOT_IN_FORCE", "BIAS_APPLICATION_NOT_IN_FORCE", INQUIRY_BIAS_CHECKS.BIAS_APPLICATION_NOT_IN_FORCE.check,
+     INQUIRY_BIAS_CHECKS.BIAS_APPLICATION_NOT_IN_FORCE.translation, Q2, "S2", "basis[0].bias_applied[0]", false]);
+  assert.equal(r.rows.length, 2, "the rows are answered beside the refusal");
+  /* undetermined standing */
+  w.lens.read = () => ({ ok: true, in_force: null });
+  assert.deepEqual(w.cd.biasApplicationsOf(w.prepared([Q]), V("alice")).refusals.map((y) => [y.finding, y.statement, y.in_force]),
+    [[Q, "S1", null], [Q2, "S2", null]]);
+  /* no test to be had: inquiry's test throws */
+  const t = world({ deps: { inquiry: { biasAppliedFindings: () => { throw new Error("down"); } } } });
+  t.member("alice"); t.lens.inForce = new Set(["S1"]); t.doc(DOC);
+  t.finding(Q, [{ target: DOC, bias_1_statement: "S1", bias_1_effect: "leg_excluded" }]);
+  assert.deepEqual(t.cd.biasApplicationsOf(t.prepared([Q]), V("alice")).refusals.map((y) => [y.reason, y.check, y.statement, y.in_force]),
+    [["BIAS_APPLICATION_NOT_IN_FORCE", "C-2.19", "S1", null]]);
+  /* negative control: back in force */
+  w.lens.read = null; w.lens.inForce = new Set(["S1", "S2"]);
+  assert.deepEqual(w.cd.biasApplicationsOf(w.prepared([Q]), V("alice")).refusals, []);
+});
+
+test("R31: a finding the chain reaches that the viewer may not see is not followed and its applications are not answered (R8, R17; the members are case-authoring R4's, already seen); one whose document cannot be read is stated unread, never filled", () => {
+  const w = world(); w.member("alice"); w.member("bo");
+  w.lens.inForce = new Set(["S1", "S2"]);
+  w.doc(DOC); w.doc(DOC2);
+  w.finding(Q2, [{ target: DOC2, bias_1_statement: "S2", bias_1_effect: "leg_excluded" }]);
+  w.finding(Q, [{ target: DOC, bias_1_statement: "S1", bias_1_effect: "leg_excluded" }, { target: Q2 }]);
+  const H = w.project("Hidden", "bo", []);
+  w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, H, Q2);
+  assert.deepEqual(w.cd.biasApplicationsOf(w.prepared([Q]), V("alice")).rows.map((x) => x.finding), [Q],
+    "alice does not see H's finding: not followed, its application not answered");
+  assert.deepEqual(w.cd.biasApplicationsOf(w.prepared([Q]), V("bo")).rows.map((x) => x.finding), [Q, Q2],
+    "negative control: bo sees it");
+  const u = world({ deps: { record: { readFile: () => { throw new Error("down"); } } } });
+  u.member("alice"); u.doc(DOC); u.finding(Q, [{ target: DOC }]);
+  assert.deepEqual(u.cd.biasApplicationsOf(u.prepared([Q]), V("alice")).unread.map((x) => x.finding), [Q]);
+});
