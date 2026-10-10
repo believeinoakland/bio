@@ -225,11 +225,9 @@ function purgeHoldRefusal(store, url) {
 /* R11 (K1674; answers R1, R2): a read served under an ask's grant (the Worker's `grant` stamp) is recorded in the grant's
    read log through `store.logRead` (answers' `logRead`, handed by plane), its answer scrubbed there and answered as
    recorded; `rule` records its own (answers R7). A read that cannot be recorded throws to R6's catch, so it is never
-   answered unrecorded. (T41; K2500; answers R2 as its R30 widens it) Each read is recorded with the grant's `use`,
-   `draft` for a grant minted for a draft and else `ask`, so the rows of the projects kept away from that use are removed
-   before the log records them: the use is the one `store.grantUse(grant)` answers (handed by plane, which mints a
-   draft's grant, its R33), `ask` when no reader is handed or it answers anything but `draft`; a reader that throws is a
-   read that cannot be recorded (R6).
+   answered unrecorded. (T41; K2500, K2574; answers R2 as its R30 widens it) Which `use` a grant's reads are
+   recorded under (`draft` for a draft's grant, else `ask`) is the plane's: the `logRead` it hands records it (its R33),
+   so the door passes the entry as it always has and adds no `use`.
    R9 (F1; K1874, K1943, K2038, K2041): a credential reaches this door in a header of the request, never in its address:
    `x-bio-session` (a stamped session, and the token admission asks `session` to resolve), `x-bio-grant` (an ask's grant)
    and `x-bio-credential-sha` (the digest admission asks `aicredentiallook` to resolve). A `grant` in the query is not the
@@ -258,14 +256,10 @@ function handOn(req, url) {
     if (v !== null) for (const k of keys) url.searchParams.set(k, v);
   }
 }
-function grantUse(store, grant) {
-  return typeof store.grantUse === "function" && store.grantUse(grant) === "draft" ? "draft" : "ask";
-}
 function underGrant(store, grant, asked, op, body, answer) {
   if (!grant || op === "rule" || !askAdmits(op)) return answer;
   const { grant: _g, viewer, ...args } = asked;
-  return store.logRead({ grant, op, args: { ...args, ...(body && typeof body === "object" ? body : {}) }, answer, viewer,
-                         use: grantUse(store, grant) });
+  return store.logRead({ grant, op, args: { ...args, ...(body && typeof body === "object" ? body : {}) }, answer, viewer });
 }
 
 /* R10 (DEC-152, DEC-153, DEC-172; K1755, K1837, K231, K2200, K2201; T40: N812, K2373; T41: K2500): THE ASSISTANT,
@@ -278,7 +272,11 @@ function underGrant(store, grant, asked, op, body, answer) {
    with kind `draft`, then `ai-use.useCheck`), its refusal relayed as given (`AI_NO_ACCOUNT`, `AI_USE_SWITCHED_OFF`,
    `AI_LIMIT_REACHED`, its fail-closed `LIMITS_UNREADABLE` or `ACCOUNT_UNREADABLE`, or credentials' own, such as a key's
    notice due). Admitted, the handler receives `{on, account: {kind, level}}`: `on` as instance-setup's `assistantState()`
-   answers it (its R53, R55), and which account serves, never the key, which stays in credentials. */
+   answers it (its R53, R55), and which account serves, never the key, which stays in credentials. (K2574; wizard-scripts
+   R27) For `writinghelp` alone the account's or limit's refusal is not answered here: it is handed to `writingHelp` as
+   `assistant.refusal` (`{on, account: null, refusal}`), which orders it among its own refusals; keep-away stays first,
+   at the door. So `assistantFor` answers `{refusal}` (keep-away), `{declined, on}` (askAccount's refusal) or
+   `{assistant}`. */
 const ACCOUNT_UNREAD = Object.freeze({ ok: false, reason: "ACCOUNT_UNREADABLE",
   detail: "the account that would serve this draft could not be read; nothing was used" });
 async function assistantFor(ctx, by) {
@@ -286,9 +284,10 @@ async function assistantFor(ctx, by) {
   const away = credentialsOf(ctx).aiKeptAway({ use: "draft" });
   if (away) return { refusal: away };
   const served = await answersOf(ctx).askAccount({ member, kind: "draft" });
-  if (!served || served.ok !== true) return { refusal: served || ACCOUNT_UNREAD };
+  const on = instanceSetupOf(ctx).assistantState().on;
+  if (!served || served.ok !== true) return { declined: served || ACCOUNT_UNREAD, on };
   const { account } = served;
-  return { assistant: { on: instanceSetupOf(ctx).assistantState().on, account: { kind: account.kind, level: account.level } } };
+  return { assistant: { on, account: { kind: account.kind, level: account.level } } };
 }
 
 /* R11 (K1685; T41: K2400, K2514, K2500): an ask's use, counted by ai-use (its R1's `countAskUsage`) to the account that
@@ -311,6 +310,7 @@ function adminRefusal(ctx, by) {
    `store.namespace()` (the object's own name, plane R2) and `store.purgeHeld({bundleId})` (`actions`' R60 reader, plane
    R14), each a function asked at a purge and never before, for R4. The headers' credentials (R9) are set on the URL the
    map receives, and the grant is also handed as its third argument, which this module's `askcheck` (R11) reads. */
+export const STREAMED_BODY_OPS = Object.freeze(["captureupload"]);
 export async function dispatch(req, store) {
   const url = new URL(req.url);
   const op = url.pathname.slice(1);
@@ -318,7 +318,10 @@ export async function dispatch(req, store) {
      exception (error 1101) rather than a BIO refusal. An absent body is null, which is what a GET already passes; a
      body that is present but not JSON is refused by name. */
   let body = null;
-  if (req.method === "POST") {
+  /* R11 (K2585; control-plane R72): an upload's body is the request's own stream, handed on unread (never parsed, never
+     BAD_JSON), so `captureupload`'s arm streams it to capture as its `bytes`. */
+  if (req.method === "POST" && STREAMED_BODY_OPS.includes(op)) body = req.body;
+  else if (req.method === "POST") {
     const raw = await req.text();
     if (raw.trim() !== "") {
       try { body = JSON.parse(raw); }
@@ -417,7 +420,7 @@ export function controlPlaneRoutes(ctx, url, body, grant = null) {
       const first = adminRefusal(ctx, q("by"));
       if (first) return first;
       const a = await assistantFor(ctx, q("by"));
-      return a.refusal ?? instanceSetupOf(ctx).groupDescriptionDraft({ answers: b.answers, assistant: a.assistant,
+      return a.refusal ?? a.declined ?? instanceSetupOf(ctx).groupDescriptionDraft({ answers: b.answers, assistant: a.assistant,
                                                                        viewer: q("viewer"), by: q("by") });
     },
     /* R10 (N669; K2200, K2201): both directions; instance-setup's own first refusal (the direction, the language, a
@@ -428,12 +431,15 @@ export function controlPlaneRoutes(ctx, url, body, grant = null) {
       const first = setup.translationDraftRefusal(args);
       if (first) return first;
       const a = await assistantFor(ctx, q("by"));
-      return a.refusal ?? setup.translationDraft({ ...args, assistant: a.assistant });
+      return a.refusal ?? a.declined ?? setup.translationDraft({ ...args, assistant: a.assistant });
     },
+    /* (K2574; wizard-scripts R27) keep-away first, here; the account's or limit's refusal handed on as `assistant.refusal` */
     writinghelp: async () => {
       const a = await assistantFor(ctx, q("by"));
-      return a.refusal ?? wizardScriptsOf(ctx).writingHelp({ op: b.op, field: b.field, told: b.told, draftHeld: b.draftHeld,
-                                                             assistant: a.assistant, by: q("by"), viewer: q("viewer") });
+      if (a.refusal) return a.refusal;
+      const assistant = a.assistant ?? { on: a.on, account: null, refusal: a.declined };
+      return wizardScriptsOf(ctx).writingHelp({ op: b.op, field: b.field, told: b.told, draftHeld: b.draftHeld,
+                                                assistant, by: q("by"), viewer: q("viewer") });
     },
     inboxpullfile: () => pullAndFile({ capture: captureOf(ctx), promotion: promotionOf(ctx), record: recordOf(ctx),
                                        provenance: provenanceOf(ctx) },

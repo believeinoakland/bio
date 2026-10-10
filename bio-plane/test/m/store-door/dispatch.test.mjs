@@ -335,7 +335,7 @@ test("R11 (K1674; answers R1, R2, R7): a read the store serves under a grant is 
   assert.equal(askAdmits("askceiling"), false);
   const a = await go(logging, "search?viewer=member:ann&q=x", { method: "POST", headers: G, body: JSON.stringify({ limit: 5 }) });
   assert.deepEqual(a.json, { ok: true, result: { rows: ["INQ-1"], scrubbed: true } });
-  assert.deepEqual(logged, [{ grant: "G1", op: "search", args: { q: "x", limit: 5 }, answer: { rows: ["INQ-1", "MTI-2026-0001"] }, viewer: "member:ann", use: "ask" }]);
+  assert.deepEqual(logged, [{ grant: "G1", op: "search", args: { q: "x", limit: 5 }, answer: { rows: ["INQ-1", "MTI-2026-0001"] }, viewer: "member:ann" }]);
   for (const [path, headers] of [["search?viewer=member:ann&q=x", {}], ["rule?viewer=member:ann", G], ["askceiling?viewer=member:ann", G]]) {
     const r = await go(logging, path, { headers });
     assert.equal(r.json.ok, true, path);
@@ -349,38 +349,33 @@ test("R11 (K1674; answers R1, R2, R7): a read the store serves under a grant is 
   assert.deepEqual([thrown.status, thrown.json.reason], [500, "STORE_INTERNAL_ERROR"]);
 });
 
-test("R11 (T41; K2500; answers R2 as its R30 widens it; plane R33): each read under a grant is recorded with the grant's `use` — `draft` exactly when `store.grantUse(grant)` answers `draft`, else `ask` (no reader handed, or any other answer) — and a reader that throws is a read that cannot be recorded, answered as R6 states; over a real record the use reaches answers' read log, so a draft's grant reads under `draft` (negative control: an ask's grant reads under `ask`)", async () => {
-  const logged = [], askedUse = [];
-  const store = (grantUse) => ({
-    routes: () => ({ search: () => ({ rows: ["INQ-1"] }) }),
-    membership: () => ({ visibilityOf: () => "hidden", existenceAct: () => null }),
-    logRead: (e) => { logged.push(e); return e.answer; },
-    ...(grantUse === undefined ? {} : { grantUse: (g) => { askedUse.push(g); return typeof grantUse === "function" ? grantUse(g) : grantUse; } }),
-  });
-  const G = (g) => ({ headers: { [GRANT_HEADER]: g } });
-  for (const [reader, want] of [["draft", "draft"], ["ask", "ask"], [undefined, "ask"], [null, "ask"], ["DRAFT", "ask"],
-                                ["standing", "ask"], [{}, "ask"], [(g) => (g === "G-D" ? "draft" : "ask"), "draft"]]) {
-    logged.length = 0; askedUse.length = 0;
-    const r = await go(store(reader), "search?viewer=member:ann&q=x", G("G-D"));
-    assert.deepEqual([r.status, r.json.result], [200, { rows: ["INQ-1"] }], String(reader));
-    assert.deepEqual(logged.map((e) => [e.grant, e.use]), [["G-D", want]], String(reader));
-    assert.deepEqual(askedUse, reader === undefined ? [] : ["G-D"], "the reader is asked of the header's grant");
-  }
-  /* no grant, nothing logged and the reader not asked */
-  logged.length = 0; askedUse.length = 0;
-  await go(store("draft"), "search?viewer=member:ann&q=x");
-  assert.deepEqual([logged, askedUse], [[], []]);
-  /* a reader that throws: R6, never an unrecorded answer */
-  const { value: t } = await quietly(() => go(store(() => { throw new Error("grant table unreadable"); }), "search?viewer=member:ann", G("G-D")));
-  assert.deepEqual([t.status, t.json.reason], [500, "STORE_INTERNAL_ERROR"]);
-  /* over a real record: the use is the one answers' read log keeps for the grant */
+test("R11 (K2574; plane R33): the door adds no `use` to a read's entry — which use a grant's reads carry is the plane's `logRead` — so the entry is the grant, op, arguments, answer and viewer alone, whatever else the store holds (negative control: over a real record answers' read log opens under `ask` when no use is passed)", async () => {
+  const logged = [];
+  const store = { routes: () => ({ search: () => ({ rows: [] }) }), membership: () => ({ visibilityOf: () => "hidden", existenceAct: () => null }),
+                  logRead: (e) => { logged.push(e); return e.answer; }, grantUse: () => "draft" };
+  await go(store, "search?viewer=member:ann&q=x", { headers: { [GRANT_HEADER]: "G-D" } });
+  assert.deepEqual(logged.map((e) => Object.keys(e).sort()), [["answer", "args", "grant", "op", "viewer"]]);
   const r = await record();
   const { answersOf } = await import("../../../src/answers/index.mjs");
   const A = answersOf(r.ctx);
-  const real = { routes: () => ({ search: () => ({ rows: [] }) }), membership: () => ({ visibilityOf: () => "hidden", existenceAct: () => null }),
-                 logRead: (e) => A.logRead(e), grantUse: (g) => (g === "G-DRAFT" ? "draft" : "ask") };
-  for (const g of ["G-DRAFT", "G-ASK"]) assert.equal((await go(real, "search?viewer=member:ann&q=x", G(g))).status, 200, g);
-  assert.deepEqual([A.readLog("G-DRAFT").use, A.readLog("G-ASK").use], ["draft", "ask"]);
+  await go({ ...store, logRead: (e) => A.logRead(e) }, "search?viewer=member:ann&q=x", { headers: { [GRANT_HEADER]: "G-A" } });
+  assert.equal(A.readLog("G-A").use, "ask");
+});
+
+test("R11 (K2585; control-plane R72; capture R86): `captureupload`'s POST body is handed to the route map unread, as the request's own stream — never JSON-parsed or refused BAD_JSON — and its bytes reach the route unchanged (negative control: the same bytes on any other op are BAD_JSON)", async () => {
+  assert.deepEqual(D.STREAMED_BODY_OPS, ["captureupload"]);
+  const BYTES = new Uint8Array([0x7b, 0x00, 0xff, 0x25, 0x50, 0x44, 0x46, 0x0a]);
+  const got = [];
+  const store = { membership: () => null,
+    routes: (url, body) => ({ captureupload: async () => {
+      got.push({ stream: body instanceof ReadableStream, locked: body.locked, by: url.searchParams.get("by") });
+      return { ok: true, bytes: [...new Uint8Array(await new Response(body).arrayBuffer())] };
+    }, other: () => ({ ok: true }) }) };
+  const r = await go(store, "captureupload?by=member:ann&statement=s", { method: "POST", body: BYTES });
+  assert.deepEqual([r.status, r.json], [200, { ok: true, result: { ok: true, bytes: [...BYTES] } }]);
+  assert.deepEqual(got, [{ stream: true, locked: false, by: "member:ann" }]);
+  const n = await go(store, "other", { method: "POST", body: BYTES });
+  assert.deepEqual([n.status, n.json.reason], [400, "BAD_JSON"]);
 });
 
 test("R11 (K1674, K1685, K1798, K1986; T41: K2400, K2500, K2514; credentials R28; answers R30, R4; ai-use R1): the ask's store-internal routes, each its owner's with the member the stamped viewer — `aigrantadmit` answers credentials' own words; `askceiling` answers `answers.askAccount({member, kind: \"ask\"})`'s refusal as given (NO_ACCOUNT, AI_KEPT_AWAY, AI_USE_SWITCHED_OFF, AI_LIMIT_REACHED) and `{ok: true}` when an account serves under its limits; `askusage` counts through ai-use's `countAskUsage` with the mode it is given (`ask` when none; ai-use refuses one that is neither `ask` nor `draft`) and the ask's `calls`, to the paying account `credentials.accountFor` answers for that mode (\"not recorded\" when none serves); `askcheck` answers' check over the grant's read log (negative control: a name no module serves is R1's refusal)", async () => {

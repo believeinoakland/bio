@@ -107,7 +107,11 @@ async function drafts() {
   }
   const seen = [];
   instanceSetupOf(r.ctx).groupDescriptionDraft = (args) => { seen.push(["groupdescriptiondraft", args]); return { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE" }; };
-  wizardScriptsOf(r.ctx).writingHelp = (args) => { seen.push(["writinghelp", args]); return { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE" }; };
+  /* writinghelp's handler is wizard-scripts' own, wrapped (K2574): the door hands it the account's or limit's refusal as
+     `assistant.refusal`, which it orders among its own (its R27); `handed` records what it was handed, `seen` only an
+     admitted call (one with no refusal handed) */
+  const W = wizardScriptsOf(r.ctx), realHelp = W.writingHelp.bind(W), handed = [];
+  W.writingHelp = (args) => { handed.push(args); if (!args.assistant?.refusal) seen.push(["writinghelp", args]); return realHelp(args); };
   /* translationdraft's handler is instance-setup's own (T37-30): wrapped, never replaced, so what it is handed is seen and
      what it answers is its own */
   const setup = instanceSetupOf(r.ctx), firstAsked = [];
@@ -123,7 +127,7 @@ async function drafts() {
   const code = (a) => a.json.result.code ?? a.json.result.reason;
   /* a draft's use, counted to the account that paid through the door's own `askusage` (R11) */
   const spend = (member, calls) => r.go(`askusage?viewer=member:${member}`, "POST", { mode: "draft", usage: USE, calls });
-  return { r, C, U, seen, code, firstAsked, reads, asked, spend };
+  return { r, C, U, seen, handed, code, firstAsked, reads, asked, spend };
 }
 
 /* The group's keep-away, credentials' (its R51, R57; DEC-172), which R10 reads through
@@ -137,8 +141,11 @@ function assistant(r, on, uses = null) {
 }
 const DAY_CALLS = (owner, amount, by) => ({ owner, scope: "overall", unit: "calls", period: "day", amount, by });
 
-test("R10 (N765, N812; K2373, K2500; credentials R35, R56, R57; answers R30; ai-use R3; membership R84): before either draft's handler the door answers, in order, `groupdescriptiondraft`'s NOT_AN_ADMIN; AI_KEPT_AWAY as `credentials.aiKeptAway({use: \"draft\"})` answers it (its row and reason; no account read, no limit judged); then `answers.askAccount({member, kind: \"draft\"})`'s refusal as given — NO_ACCOUNT (credentials' own row), AI_USE_SWITCHED_OFF (before the limit, and with no limit judged), AI_LIMIT_REACHED, its fail-closed LIMITS_UNREADABLE, and credentials' own (the group key's notice unread) — each before any handler is asked (negative controls: a keep-away covering only asks keeps no draft away; once every refusal is cleared the handlers are reached)", async () => {
-  const { r, C, U, seen, code, reads, asked, spend } = await drafts();
+test("R10 (N765, N812; K2373, K2500; credentials R35, R56, R57; answers R30; ai-use R3; membership R84): before either draft's handler the door answers, in order, `groupdescriptiondraft`'s NOT_AN_ADMIN; AI_KEPT_AWAY as `credentials.aiKeptAway({use: \"draft\"})` answers it (its row and reason; no account read, no limit judged); then `answers.askAccount({member, kind: \"draft\"})`'s refusal as given — NO_ACCOUNT (credentials' own row), AI_USE_SWITCHED_OFF (before the limit, and with no limit judged), AI_LIMIT_REACHED, its fail-closed LIMITS_UNREADABLE, and credentials' own (the group key's notice unread) — each before any handler is asked, and for `writinghelp` handed to its handler as `assistant.refusal` with no account (K2574; wizard-scripts R27), keep-away answered first at the door (negative controls: a keep-away covering only asks keeps no draft away; once every refusal is cleared the handlers are reached)", async () => {
+  const { r, C, U, seen, handed, code, reads, asked, spend } = await drafts();
+  /* (K2574; wizard-scripts R27) what writinghelp's handler was last handed: the door's account or limit refusal in
+     `assistant.refusal`, with no account */
+  const handedRefusal = () => { const h = handed.at(-1).assistant; return [h.on, h.account, h.refusal.code ?? h.refusal.reason]; };
   const gdd = (by) => r.go(`groupdescriptiondraft?by=${by}&viewer=${by}`, "POST", { answers: [{ question: "q", text: "t" }] });
   const help = (by) => r.go(`writinghelp?by=${by}&viewer=${by}`, "POST", { op: "notewrite", field: "text", told: "what I saw" });
   /* NOT_AN_ADMIN first, whatever else holds, keep-away included */
@@ -149,7 +156,7 @@ test("R10 (N765, N812; K2373, K2500; credentials R35, R56, R57; answers R30; ai-
   assert.deepEqual([away.reason, away.keep_away.reason], ["AI_KEPT_AWAY", "kept away for this test"]);
   assert.deepEqual((await gdd("member:ann")).json.result, away);
   assert.deepEqual((await help("member:bea")).json.result, away);
-  assert.deepEqual([reads, asked], [{ account: 0, use: 0 }, []], "under keep-away no account is read");
+  assert.deepEqual([reads, asked, handed], [{ account: 0, use: 0 }, [], []], "under keep-away no account is read, and the door answers first");
   /* the use is the draft's: kept away from drafts alone refuses; kept away from asks alone does not (negative control) */
   assistant(r, false, ["draft"]);
   assert.equal(C.aiKeptAway({ use: "ask" }), null);
@@ -157,7 +164,9 @@ test("R10 (N765, N812; K2373, K2500; credentials R35, R56, R57; answers R30; ai-
   assert.deepEqual(reads, { account: 0, use: 0 });
   assistant(r, false, ["ask"]);
   assert.equal(C.aiKeptAway({ use: "ask" }).reason, "AI_KEPT_AWAY");
-  assert.equal(code(await help("member:bea")), "NO_ACCOUNT", "an ask's keep-away keeps no draft away");
+  /* the door's own gate (groupdescriptiondraft's handler adds no keep-away of its own; writinghelp's handler asks its own,
+     wizard-scripts R24, reported to BOB) */
+  assert.equal(code(await gdd("member:ann")), "NO_ACCOUNT", "an ask's keep-away keeps no draft away");
   assistant(r, true);
   /* no account serves: askAccount's refusal, asked for the stamped member with kind draft, and no limit judged */
   asked.length = 0; reads.use = 0;
@@ -165,6 +174,7 @@ test("R10 (N765, N812; K2373, K2500; credentials R35, R56, R57; answers R30; ai-
   assert.deepEqual([noAccount.code, noAccount.check, noAccount.translation], ["NO_ACCOUNT", ACCOUNT_CHECKS.NO_ACCOUNT.check,
                    ACCOUNT_CHECKS.NO_ACCOUNT.translation], "credentials' own row, as given");
   assert.equal(code(await help("member:bea")), "NO_ACCOUNT");
+  assert.deepEqual(handedRefusal(), [true, null, "NO_ACCOUNT"]);
   assert.deepEqual(asked, [{ member: "member:ann", kind: "draft" }, { member: "member:bea", kind: "draft" }]);
   assert.equal(reads.use, 0);
   /* the member's own account: its draft switch off refuses before its limit, which is not judged */
@@ -175,11 +185,13 @@ test("R10 (N765, N812; K2373, K2500; credentials R35, R56, R57; answers R30; ai-
   reads.use = 0;
   const off = (await help("member:bea")).json.result;
   assert.deepEqual([off.code, off.whose, off.use, reads.use], ["AI_USE_SWITCHED_OFF", "own", "draft", 0]);
+  assert.deepEqual(handedRefusal(), [true, null, "AI_USE_SWITCHED_OFF"]);
   assert.equal(C.accountUsesSet({ owner: "member:bea", switch: "draft", on: true, by: "member:bea" }).ok, true);
   /* then ai-use's limit of the account that pays, AI_LIMIT_REACHED with its scope, naming no cost */
   const lim = (await help("member:bea")).json.result;
   assert.deepEqual([lim.code, lim.scope, lim.unit, lim.period], ["AI_LIMIT_REACHED", "overall", "calls", "day"], JSON.stringify(lim));
   assert.equal(reads.use, 1);
+  assert.deepEqual(handedRefusal(), [true, null, "AI_LIMIT_REACHED"]);
   assert.equal(U.aiLimitSet(DAY_CALLS("member:bea", null, "member:bea")).ok, true);
   /* a limit that cannot be judged refuses, fail closed */
   U.useCheck = () => { throw new Error("counter unreadable"); };
