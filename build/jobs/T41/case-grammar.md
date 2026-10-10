@@ -62,3 +62,7 @@ CHANGE B3 (K2533) applied on job/T41/case-grammar @ 0c1dd263c4, tranche/T41 merg
 ## J5 · REPORT
 
 B4's gap is not in case-grammar: "NOT INCLUDED: only its fingerprint, origin and archived copy travel" is case-disclosures' carriesBodyLines (bio-plane/src/case-disclosures/document.mjs:112), the body of the signed case document, which prints m.included only and ignores obscured. case-grammar's completeEditionOf already prints a carried copy by its copy line and its label, never as not included (since T37), now pinned by an explicit R14 (K2538) test. The fix belongs to case-disclosures' job (print a row stating obscured with its label and as travelling).
+
+## J6 · COMPLETE
+
+CHANGE B4 (K2538) on job/T41/case-grammar @ e0315281e4, tranche/T41 merged: R14's clause already met by completeEditionOf; no code changed, every pinned hash holds; explicit test with a negative control added. case-grammar 125/125; format, architecture, coverage (26 of 26), ownership 0 failures. The gap itself is case-disclosures' (J5).
