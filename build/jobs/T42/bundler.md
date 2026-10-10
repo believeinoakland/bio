@@ -29,7 +29,7 @@ Across six runs the plane read 441–1,359 ms, the spread coming from machine lo
 
 **Deferred.** None.
 
-**Found (REPORT J2).** The plane's start-up is past R31's 500 ms warning on this container, and some runs pass the platform's 1 s. Compiling its size dominates, not its global scope. K2547 makes splitting the plane Bob's architecture question; this is BOB's to weigh with the size watch. One caveat: Cloudflare measures start-up in workerd, not Node, so the platform's own figure may differ. A `wrangler deploy --dry-run` measurement is the next release's (plan T42-2).
+**Found (REPORT J1).** The plane's start-up is past R31's 500 ms warning on this container, and some runs pass the platform's 1 s. Compiling its size dominates, not its global scope. K2547 makes splitting the plane Bob's architecture question; this is BOB's to weigh with the size watch. One caveat: Cloudflare measures start-up in workerd, not Node, so the platform's own figure may differ. A `wrangler deploy --dry-run` measurement is the next release's (plan T42-2).
 
 **Ran.**
 - `node --test bio-plane/test/system/fleetbundles.test.mjs` (after `npm ci` in agent-runner `--ignore-scripts`, sheet-worker, and file-scanner `--ignore-scripts`): `fleetbundles: 149 pass, 0 fail`, no SKIP.
