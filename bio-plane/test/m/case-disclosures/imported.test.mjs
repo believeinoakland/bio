@@ -191,3 +191,15 @@ test("R14 (real case-import): a flag raised by flagImported is FLAG_NOT_DISCLOSE
   assert.equal(w.imports.clearFlag({ flag: f.flag, reason: "page 3 re-read and right", by: V("bob"), viewer: V("bob") }).ok, true);
   refused(w.cd.flagsJudged(editions, [{ flag: f.flag }]).refusals[0], "FLAG_DISCLOSURE_NOT_STANDING");
 });
+
+test("R14, R23: an edition named with no refs, or an open flag that is no object, never throws — the flag is still answered open (its ref null) and must still be disclosed; the garbage flag states nothing", () => {
+  const w = world({ deps: { caseImport: { openFlagsOn: () => ({ ok: true, complete: true, flags: [null, 7, { flag: "F1", issue: "i" }] }) } } });
+  for (const eds of [[{ import: "i", edition: 1 }], [{ import: "i", edition: 1, refs: [] }], [{ import: "i", edition: 1, refs: [null] }]]) {
+    let r;
+    assert.doesNotThrow(() => { r = w.cd.flagsJudged(eds, null); }, JSON.stringify(eds));
+    refused(r.refusals[0], "FLAG_NOT_DISCLOSED");
+    assert.deepEqual(r.refusals[0].undisclosed.map((f) => [f.flag, f.ref]), [["F1", null]]);
+    /* negative control: disclosed */
+    assert.deepEqual(w.cd.flagsJudged(eds, [{ flag: "F1" }]).refusals, []);
+  }
+});

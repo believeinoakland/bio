@@ -38,15 +38,24 @@ const ROWS = [
   /* T38 (DEC-183; K2220, K2303): C-120.17 re-worded to `words.json`'s `photo.refused.format`, verbatim */
   ["PHOTO_NOT_COVERABLE", "C-120.17", "materialsJudged", "This photo's format can't be obscured: {photo}. Capture it again as an ordinary photo, or stop relying on it."],
   ["PHOTO_MARKS_UNDETERMINED", "C-120.18", "materialsJudged", "A photo this case relies on could not be checked for the people and number plates marked in it, so what the published case would show of it is not known. Try again. Nothing was written."],
-  /* T38 (DEC-183 (1); K2220, K2303): R6's PHOTO_UNCHECKED, numbered provisionally until its stamp, `photo.refused.unchecked` verbatim */
-  ["PHOTO_UNCHECKED", "C-120.19", "materialsJudged", "Signing waits until every photo the case relies on is checked: {photo}."],
-  /* T39 (N806; K2333): R6's member-document rows, numbered provisionally until their stamp, BOB's drafts */
+  /* T38 (DEC-183 (1); K2220, K2303): R6's PHOTO_UNCHECKED, `photo.refused.unchecked` verbatim, re-worded by DEC-187 (1) (T40) */
+  ["PHOTO_UNCHECKED", "C-120.19", "materialsJudged", "Signing waits until every photo in the case is checked, including one that only supports a finding: {photo}."],
+  /* T39 (N806; K2333): R6's member-document rows, numbered provisionally until their stamp; .21 and .22 `words.json`'s
+     `document.refused.pending` and `document.refused.clean` verbatim (T41; DEC-188 (7)) */
   ["DOCUMENT_COPY_UNDETERMINED", "C-120.20", "materialsJudged", "A document this case relies on could not be checked for the details a member's file can carry, so what the published case would show of it is not known. Try again. Nothing was written."],
   ["DOCUMENT_COPY_PENDING", "C-120.21", "materialsJudged", "The publication copy of a document a member supplied is still being made: {document}. Try again in a few minutes."],
   ["DOCUMENT_NOT_CLEANABLE", "C-120.22", "materialsJudged", "A document a member supplied can't be cleaned of the details that could show who made it: {document}. Capture it from where it was published, supply a plainer copy, or stop relying on it."],
+  /* T41 (N820; D56–D58, D63; K2471): R30's rows, in its order, numbered provisionally until T42's stamp; drafts */
+  ["ACCOUNT_SENTENCE_UNSUPPORTED", "C-120.23", "accountJudged", "A sentence of the account rests on nothing it cites. Cite what it rests on, mark it as following a printed bias statement, or take it out. Nothing was written."],
+  ["ACCOUNT_FACT_NOT_IN_CITED", "C-120.24", "accountJudged", "A sentence of the account states a figure, date, name or quotation that what it cites does not hold. Say only what it cites holds, or cite what holds it. Nothing was written."],
+  ["ACCOUNT_CONTRADICTED_BY_RECORD", "C-120.25", "accountJudged", "A sentence of the account says something other than the record holds: a finding's conclusion or a determination, or a leg that cuts against it read as support. It cannot be tied to evidence. Say what the record holds, or take it out. Nothing was written."],
+  ["ACCOUNT_BIAS_NOT_PRINTED", "C-120.26", "accountJudged", "A sentence of the account is framed by a bias statement this case's lens does not print. Frame it by a statement the lens prints, or write it without the framing. Nothing was written."],
+  ["ACCOUNT_CLAIM_NOT_BIAS", "C-120.27", "accountJudged", "A sentence marked as following a bias statement states a fact: a figure, date, name, quotation or a finding's outcome. Lying is not bias. Cite what the fact rests on, or take it out. Nothing was written."],
+  ["ACCOUNT_FLAG_UNANSWERED", "C-120.28", "accountJudged", "The machine flagged a sentence of the account as not supported by what it cites, and the flag is not answered. Tie the sentence to evidence, or take it out. Nothing was written."],
+  ["ACCOUNT_CHECK_UNDETERMINED", "C-120.29", "accountJudged", "The account could not be checked against what it cites, so whether every sentence stands is not known. Try again. Nothing was written."],
 ];
 
-test("R22: C-120.1–C-120.8, C-120.10–C-120.13 and the new rows C-120.14–C-120.16 (R25's PERSON_BASIS_UNRECORDED and PERSON_BASIS_NOT_STANDING, R27's TIE_ATTESTATION_MISSING) C-120.17–C-120.18 (R6's PHOTO_NOT_COVERABLE and PHOTO_MARKS_UNDETERMINED), C-120.19 (R6's PHOTO_UNCHECKED, T38) and C-120.20–C-120.22 (R6's DOCUMENT_COPY_UNDETERMINED, DOCUMENT_COPY_PENDING and DOCUMENT_NOT_CLEANABLE, T39) are this module's own table (CASE_DISCLOSURE_CHECKS), ids, codes and translations as the requirements state them word for word, each `where` naming this module's raising method; C-120.9 is never used", () => {
+test("R22: C-120.1–C-120.8, C-120.10–C-120.13 and the new rows C-120.14–C-120.16 (R25's PERSON_BASIS_UNRECORDED and PERSON_BASIS_NOT_STANDING, R27's TIE_ATTESTATION_MISSING) C-120.17–C-120.18 (R6's PHOTO_NOT_COVERABLE and PHOTO_MARKS_UNDETERMINED), C-120.19 (R6's PHOTO_UNCHECKED, T38), C-120.20–C-120.22 (R6's DOCUMENT_COPY_UNDETERMINED, DOCUMENT_COPY_PENDING and DOCUMENT_NOT_CLEANABLE, T39) and C-120.23–C-120.29 (R30's ACCOUNT_SENTENCE_UNSUPPORTED, ACCOUNT_FACT_NOT_IN_CITED, ACCOUNT_CONTRADICTED_BY_RECORD, ACCOUNT_BIAS_NOT_PRINTED, ACCOUNT_CLAIM_NOT_BIAS, ACCOUNT_FLAG_UNANSWERED and ACCOUNT_CHECK_UNDETERMINED, T41) are this module's own table (CASE_DISCLOSURE_CHECKS), ids, codes and translations as the requirements state them word for word, each `where` naming this module's raising method; C-120.9 is never used", () => {
   assert.deepEqual(Object.keys(CASE_DISCLOSURE_CHECKS), ROWS.map(([code]) => code));
   assert.ok(Object.isFrozen(CASE_DISCLOSURE_CHECKS));
   const w = world();
@@ -135,6 +144,18 @@ test("R22: each row's method raises its code, with the row's check and translati
   /* C-120.16 */
   assert.deepEqual(raised(pj.tieAttestationJudged(["alice"], { named: [], entities: [] }, [], [], V("alice")).refusals), [row("TIE_ATTESTATION_MISSING")]);
   assert.deepEqual(pj.tieAttestationJudged(["alice"], { named: [], entities: [] }, [], [{ signer: "alice", at: T0 }], V("alice")).refusals, []);
+  /* C-120.23–C-120.29: each arm `checkAccount` answers, the unanswered flag, and a check that cannot be run */
+  const S = [{ ord: 1, text: "The council met.", cites: ["h1"] }];
+  const acct = (departures, flags = null) => world({ deps: { caseChecker: { checkAccount: () => ({ ok: true, departures }) },
+    bias: { statementInForce: () => ({ ok: true, in_force: true }) } } }).cd.accountJudged({ account: S, cited: {}, flags });
+  for (const code of CD.ACCOUNT_ARMS) {
+    assert.deepEqual(raised(acct([{ ord: 1, code }]).refusals), [row(code)], code);
+    assert.deepEqual(acct([]).refusals, [], `${code}: none departs`);
+  }
+  assert.deepEqual(raised(acct([], [{ kind: "account_check", ord: 1, text: "The council met.", cites: ["h1"] }]).refusals), [row("ACCOUNT_FLAG_UNANSWERED")]);
+  assert.deepEqual(acct([], [{ kind: "account_check", ord: 1, text: "The council met.", cites: [] }]).refusals, [], "tied to evidence");
+  const un = world({ deps: { caseChecker: { checkAccount: () => ({ ok: false, reason: "ACCOUNT_MALFORMED" }) } } }).cd;
+  assert.deepEqual(raised(un.accountJudged({ account: S, cited: {} }).refusals), [row("ACCOUNT_CHECK_UNDETERMINED")]);
 });
 
 /* ---------------------------------------------------------------- R21 */
@@ -176,7 +197,8 @@ test("R23: every service is synchronous, and none throws when every module it re
                  caseImport: { acceptanceOf: boom, openFlagsOn: boom, importedCase: boom },
                  entities: { readEntity: boom }, events: { readEvent: boom }, lines: { readLine: boom, structureAt: boom },
                  money: { readFact: boom }, people: { identityOf: boom, interestsOf: boom, personAt: boom, tiesConcerning: boom },
-                 membership: { memberFacts: boom }, caseCarriage: { photoMarks: boom, documentCopy: boom } };
+                 membership: { memberFacts: boom }, caseCarriage: { photoMarks: boom, documentCopy: boom },
+                 bias: { statementInForce: boom }, caseChecker: { checkAccount: boom } };
   const w = world({ deps: { ...deps, record: { readFile: boom } } });
   w.member("alice"); w.doc(DOC); w.finding(Q, [{ target: DOC }]);
   const prep = w.prepared([Q]), roles = w.roles([Q]);
@@ -205,6 +227,9 @@ test("R23: every service is synchronous, and none throws when every module it re
     disclosureBlocks: () => w.cd.disclosureBlocks({ resting: [{ member: Q, capture: "e".repeat(64) }],
       reached: { materials: [{ ref: DOC, kind: "document", sha: "e".repeat(64), held: { text_sha: null }, included: false, rests_under: "supporting" }] },
       author: "alice", at: T0 }),
+    accountJudged: () => w.cd.accountJudged({ account: [{ ord: 1, text: "It met.", cites: ["h1"], bias_statement: "S1" }],
+      cited: {}, lens: "instance", flags: [{ kind: "account_check", ord: 1, text: "It met.", cites: ["h1"] }], viewer: V("alice") }),
+    biasApplicationsOf: () => w.cd.biasApplicationsOf(prep, V("alice")),
   };
   const services = Object.getOwnPropertyNames(Object.getPrototypeOf(w.cd)).filter((k) => k !== "constructor"
     && typeof Object.getOwnPropertyDescriptor(Object.getPrototypeOf(w.cd), k).value === "function");
@@ -229,6 +254,11 @@ test("R23: every service is synchronous, and none throws when every module it re
   assert.deepEqual(calls.peopleNamed().unresolved.map((u) => u.ref), ["EVT-2026-0001", "MNY-2026-0001", "ENT-2026-0001"], "each failed read stated, never dropped");
   assert.equal(calls.peopleJudged().refusals[0].reason, "PERSON_BASIS_NOT_STANDING", "a basis whose read fails does not stand");
   assert.deepEqual(calls.tieAttestationJudged().undetermined.map((u) => u.signer), ["alice"], "a ties read that fails is stated undetermined");
+  assert.deepEqual(calls.accountJudged().refusals.map((r) => r.reason), ["ACCOUNT_CHECK_UNDETERMINED", "ACCOUNT_FLAG_UNANSWERED"],
+    "a check that cannot be run fails closed; the flags are still judged");
+  assert.deepEqual(calls.accountJudged().printed, [], "a lens read that fails prints nothing");
+  assert.deepEqual([calls.biasApplicationsOf().refusals, calls.biasApplicationsOf().unread.map((u) => u.finding)], [[], [Q]],
+    "a document that cannot be read is stated unread");
 });
 
 test("R23: it writes nothing of its own and holds no table — creating it adds no table and declares nothing to purge; every judgment leaves the store as it found it, the one write it reaches (sources' minted id) inside the caller's transaction, which rolls it back", () => {

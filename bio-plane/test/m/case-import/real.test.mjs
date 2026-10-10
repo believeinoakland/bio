@@ -4,9 +4,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { rowOk, seeded, V } from "./fixture.mjs";
-import { caseFile, MEMO, MEMO_BYTES, MINUTES, A, C, GROUP, CASE, CALC, CALC_INPUT, CALC_INPUT_SHA, calcRow } from "../case-checker/fixture.mjs";
-import { caseFilePath } from "../../../src/case-grammar/index.mjs";
-import { checkCaseFile } from "../../../src/case-checker/index.mjs";
+import { caseFile, MEMO, MEMO_BYTES, MINUTES, A, B, C, GROUP, CASE, CALC, CALC_INPUT, CALC_INPUT_SHA, calcRow } from "../case-checker/fixture.mjs";
+import { caseFilePath, biasApplicationsLines } from "../../../src/case-grammar/index.mjs";
+import { checkCaseFile, reweigh, LENS_LIMIT_STATEMENT } from "../../../src/case-checker/index.mjs";
+import { LENS_UNDETERMINED } from "../../../src/case-import/index.mjs";
 import { importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 
 const imp = (w, cf, who = "alice") => w.ci.importCaseFile({ parts: cf.parts, by: V(who), viewer: V(who) });
@@ -110,4 +111,53 @@ test("R21 R3 R5 under the real case-checker: a carried calculation recreates her
   const k = done.recreation.calculations[0].checker;
   assert.ok(["agrees", "not_recomputed"].includes(k.result), JSON.stringify(k));
   assert.deepEqual(k, { result: k.result, agrees_with_this_copy: k.result === "agrees" });
+});
+
+/* R23 over the real `case-checker.reweigh` (its R23; K2529) and `case-grammar.biasApplicationsOf` (its R24): the
+   fixture's memo leg of B was lowered from A to B by statement S1, as published; A rests on B. */
+const S1 = "S1";
+const PUBLISHED = { finding: B, ord: 1, target: "leg", statement: S1, effect: "grade_lowered", from: "A", to: "B" };
+const EXCLUDED = { finding: A, ord: 0, target: "leg", statement: "S2", effect: "leg_excluded", from: null, to: null };
+
+test("R23 over the real re-weighing: statements in force keep the case's applications of them as published; one not in force reads as removed, through every finding resting on it; undetermined is stated, never false", async () => {
+  const w = seeded({ realChecker: true });
+  const cf = caseFile({ docLines: biasApplicationsLines([PUBLISHED, EXCLUDED]) });
+  const r = await imp(w, cf);
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  const read = () => w.ci.importedCase({ import: r.import, viewer: V("bob") }).edition;
+  const by = (e) => Object.fromEntries(e.findings.map((f) => [f.finding, f]));
+  const direct = await checkCaseFile({ parts: cf.parts });
+  /* both in force: every finding re-weighs to its recorded (as-published) pair, the excluded leg included */
+  w.lens.inForce.set(S1, true).set("S2", true);
+  let e = read();
+  for (const f of e.findings) {
+    assert.equal(f.own_lens.determined, true, f.finding);
+    assert.deepEqual(f.own_lens.pair, f.pair, f.finding);
+    assert.deepEqual(f.own_lens.changed_by, [], f.finding);
+  }
+  assert.deepEqual(by(e)[B].own_lens.applications.in_force, [PUBLISHED]);
+  assert.equal(e.own_lens.limit, LENS_LIMIT_STATEMENT, "the limit the checker states");
+  /* S1 not in force: B's lowered leg reads as removed, and A takes it through B: as the checker answers the same lens */
+  w.lens.inForce.set(S1, false);
+  e = read();
+  const same = reweigh({ parts: cf.parts, answer: direct, lens: { statements: ["S2"], applications: [] } });
+  const want = Object.fromEntries(same.findings.map((f) => [f.finding, f]));
+  assert.deepEqual(by(e)[B].own_lens.pair.connection, { state: "graded", grade: "A" });
+  assert.deepEqual(by(e)[B].own_lens.applications.removed, [PUBLISHED]);
+  for (const id of [A, B, C]) {
+    assert.deepEqual(by(e)[id].own_lens.pair, want[id].pair, id);
+    assert.deepEqual(by(e)[id].own_lens.bar_met, want[id].bar_met, id);
+    assert.deepEqual(by(e)[id].own_lens.lens_changes, want[id].lens_changes, id);
+  }
+  assert.deepEqual(by(e)[A].own_lens.changed_by, [S1], "A changed through B");
+  assert.deepEqual(by(e)[B].pair, direct.findings.find((f) => f.finding === B).pair, "the recorded pair beside it stands");
+  /* S1 undetermined: B and A (through B) answer no pair and no bar_met, stated; C, resting on neither, is re-weighed */
+  w.lens.inForce.set(S1, null);
+  e = read();
+  for (const id of [A, B]) {
+    assert.equal(by(e)[id].own_lens.determined, false, id);
+    assert.equal(by(e)[id].own_lens.stated, LENS_UNDETERMINED, id);
+    assert.equal(by(e)[id].own_lens.bar_met, null, id);
+  }
+  assert.equal(by(e)[C].own_lens.determined, true);
 });

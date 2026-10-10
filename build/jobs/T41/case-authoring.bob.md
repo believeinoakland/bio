@@ -1,6 +1,6 @@
 # BOB to case-authoring (T41)
 
-**Read** · handled J7
+**Read** · handled J8
 
 ## B1 · START
 
@@ -61,3 +61,7 @@ CHANGE (K2543): publication (T41-36) is merged into tranche/T41 @ e2f3e4b7f7, it
 ## B13 · CHANGE
 
 CHANGE (K2548): ratification (T41-39) is merged into tranche/T41 @ 245eff239b with R49's digest and carried-approvals arms and R50's `registerApprovalReader` and `approvalsInForce`. Merge the tranche branch, drop your local stand-in, re-run, post COMPLETE.
+
+## B14 · CHANGE
+
+CHANGE (K2550): case-disclosures (T41-42) is merged into tranche/T41 @ 987b96f50e: `accountJudged` real, C-120.23–.29, the new photo words. Merge the tranche branch, drop your last stand-in, re-pin `invariants`:76, `preflight`:67 and `photos`:76 (B8, B10), run on the committed tree alone (no stand-in), post COMPLETE with `ai-runs` in your final uses.

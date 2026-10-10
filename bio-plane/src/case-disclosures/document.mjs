@@ -95,6 +95,13 @@ function attesterWords(a, group) {
     + (a.signature ? ", with their signature" : "");
 }
 
+/* R7 (T41; K2541; DEC-185 (1)): a material R6 carries as its copy (`obscured`, a photo's or a member document's) travels
+   with the case as that copy, printed with the copy's fingerprint and, word for word, the label shown beside it; never
+   as "NOT INCLUDED". Only a row stating `obscured` prints so, so every row without it renders byte for byte as before. */
+const copyCarried = (o) => !!o && typeof o === "object" && typeof o.copy === "string" && o.copy !== "";
+const copyWords = (o) => `travels with this case as its copy, fingerprint ${o.copy}, the original kept by the group`
+  + (typeof o.label === "string" && o.label ? `, shown with the label "${o.label}"` : "");
+
 export function carriesBodyLines(method, materials, group) {
   const rows = materials && Array.isArray(materials.rows) ? materials.rows : [];
   const att = materials && Array.isArray(materials.attestations) ? materials.attestations : [];
@@ -109,7 +116,9 @@ export function carriesBodyLines(method, materials, group) {
          + "with its fingerprint, origin and archived copy.", "",
          ...rows.flatMap((m) => [
            `- ${m.ref}, ${MATERIAL_KIND_WORDS[m.kind] ?? m.kind}, fingerprint ${m.sha}: `
-             + (m.included ? "travels whole with this case" : "NOT INCLUDED: only its fingerprint, origin and archived copy travel")
+             + (m.included ? "travels whole with this case"
+                : copyCarried(m.obscured) ? copyWords(m.obscured)
+                : "NOT INCLUDED: only its fingerprint, origin and archived copy travel")
              + `; relied on by ${m.rests_under === "load_bearing" ? "a load-bearing" : "only a supporting"} finding`
              + `; origin ${m.origin ?? "not stated"}; archived copy ${m.archived_copy ?? "none held"}`
              + (m.text_sha ? `; extracted text ${m.text_sha}` : "") + ".",
