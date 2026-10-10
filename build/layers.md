@@ -6,12 +6,12 @@
 | --- | --- | --- | --- | --- |
 | 1 | Foundations | 5, and shared libraries | No access to the record. Pure libraries, or standalone workers that take bytes and return results. | record-grammar, jurisdictions, civil-time, calc-grammar, connection-grammar, test-support, runtime-limits, signatures, bundler, court-citations, id-spaces, subresources, ooxml, office-readers, odf-reader, pdf-reader, format-registry, text-chain, site-profiles, docprofile, doctypes, legistar-reader, roster-reader, court-doctypes, budget-doctypes, image-codecs, pdf-pixels, image-cover, doc-clean, pdf-worker, ocr-worker, sheet-worker, file-scanner |
 | 2 | Record and authority | 3, 1 | Owns storage, id allocation, leases, audit and purge; the member, the capability and the fence; the one write path that promotes and checks a bundle. | record-core, membership, project-roster, credentials, promotion |
-| 3 | Intake and provenance | 2 | Material enters only with provenance; a hop attests bytes, URL and time, no more. | host-governor, provenance, attestation, provenance-routes, capture-sources, acquisition, capture, file-safety, sources |
+| 3 | Intake and provenance | 2 | Material enters only with provenance; a hop attests bytes, URL and time, no more. | host-governor, provenance, attestation, provenance-routes, capture-sources, acquisition, capture, doorbell, file-safety, sources |
 | 4 | Content | 4, 5 | Readings are made from captured bytes; content is the reference to a part of a document, minted over them. | calibration, reading-pipeline, extraction, content |
 | 5 | Meaning, bias and retrieval | 6, 7, 9 | Everything derived over content, with its grade; the four-level search, which says at which level absence was found; law and local facts held over captured content (K1438). | entities, events, lines, local-facts, connections, observation-log, law-relations, standards, progressions, money, money-checks, duties, people, explore, bias, query-language, retrieval, calculations, workbooks |
 | 6 | Inquiry and the assistant | 8, 11 | The inquiry and its legs, findings, basis versions and strength; the AI finds, pursues, extracts and checks, and never attests or concludes. | inquiry-grammar, accepted-work, leg-earning, inquiry, hypotheses, steps, citation, basis-versions, strength, contradiction, run-rules, ai-use, ai-runs, run-productions, capture-requests, reading-guides, skills, question-explorer, answers, agent-harness, agent-model, agent-runner, agent-worker |
 | 7 | Understanding | Content Framework §12, and 8 | What the investigation below has established: the group's intent, with progress computed against the record, and which findings still stand when their basis changes. | intent, investigation, reevaluation |
-| 8 | Publication | 16 | What the group stands behind leaves one way. | case-grammar, corpus-export, case-carriage, case-tensions, publication, publish-schedule, docket, public-read, project-stage, network-notices, case-catalogue, ratification, case-checker, case-import, case-disclosures, case-authoring, review |
+| 8 | Publication | 16 | What the group stands behind leaves one way. | case-grammar, corpus-export, case-carriage, case-tensions, publication, publish-schedule, docket, public-read, project-stage, network-notices, case-catalogue, ratification, case-checker, case-import, case-disclosures, case-authoring, case-account, review |
 | 9 | Action | 16 (`BIO_Action_v0_1.md`); Functional Architecture "Layer 3: Action"; Design Requirements §7–§8 | An action rests on the record, and one asserting a breach rests on a published finding and a standard held in the record; the group plans and decides every act, the AI proposes and prepares and never files or sends; compliance is recorded as carefully as noncompliance; every deadline names its basis. | conformance, consequences, action-grammar, actions, action-clocks, filing-templates, filings, escalation, action-plans |
 | 10 | Operations | 10, 14 | The instance keeps itself current unattended, and watches the actions' clocks and the government's response. | monitoring, following, link-sweep, scheduler |
 | 11 | Interface and distribution | 12, 15 | The ops, the member surfaces and the installer. Nothing below depends on them. | wizard-scripts, op-grades, affordances, tasks, machinery-producers, queue-producers, notice-producers, queue, setup-page, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, control-plane, plane, legacy-ui, installer |
@@ -295,3 +295,22 @@ Uses: `steps` uses record-grammar, civil-time, record-core, membership, promotio
 | publish-schedule | Publishing a signed case edition at a set time: the waiting edition and its table (`scheduled_editions`), the publisher registered at start, moving and cancelling, the schedule's read, the wake for `scheduler`, the waiting-edition read for `case-authoring`. It reads `case_documents` to see a commit; ratification's publisher commits (K2438). | `publication/schedule.mjs` (312 lines), `scheduled_editions` and its schema share; `publication` R66–R71, R74 |
 
 Uses: `publish-schedule` uses civil-time, jurisdictions, record-core, membership and publication (K2438). `ratification` (`op=publishat`, R42's publisher), `case-authoring` (R58, R59), `scheduler` (R71's wake), `queue-producers` (R37), `actions` (a test) and `plane` re-point to it in their T41 jobs; publication reaches its waiting editions through the registration `registerWaitingEditions` (K31's pattern).
+
+## Layer 3: capture's second split (K617, K624, K625; N826; T42)
+
+`capture` measures 4,059 lines over its own paths (K1821), past K617's ~4,000 after T41's upload (R86), so its doorbell moves out, with no requirement changing meaning. `doorbell` is a product module with no `from`, built by copy (K624) in its own T42 job; capture's T42 job retires the moved ids and keeps its copy, unused by new code, until its next job deletes it once every user has re-pointed (K625: the plane's door imports capture's file until plane's layer-11 job). Map: `build/extraction/capture-split.md` (its doubts settled at T42's opening, K2607).
+
+| module | what it does | source |
+| --- | --- | --- |
+| doorbell | The public intake by which anyone, with no account, hands the group material (Intake Doctrine §2a): the knock, its rate and refusals (C-85), the member's inbox over it with its read, resolve and pull into the record, the knocker secret and pseudonym, and the two tallies. | capture R30–R32, R47–R54, R56, R65–R67, R70–R72, R80, R85 (moved as doorbell R1–R20) |
+
+Uses: `doorbell` uses record-core, membership, credentials, provenance, acquisition, capture and test-support. `sources` (layer 3), `actions` (layer 9), `answer-envelope`, `store-door` and `plane` (layer 11) re-point to it in their T42 jobs.
+
+## Layer 8: case-authoring's third split (K617, K624; N839; T42)
+
+`case-authoring` measures 4,131 lines over its own paths (K1821) after T41's account work, so the account (R63–R68: the system's drafts of a case's account and its checks, the reader, their helpers) moves out, with no requirement changing meaning. `case-account` is a product module with no `from`, built by copy (K624) in its own T42 job, directly after `case-authoring`. Map: `build/extraction/case-account-split.md`.
+
+| module | what it does | source |
+| --- | --- | --- |
+| case-account | A case's account: the system's drafts of it and its checks (labelled machine work), the member writing her own from a draft or from nothing, and the reader over them. | case-authoring R63–R68 |
+
