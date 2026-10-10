@@ -162,6 +162,16 @@ export const QUEUE_OBLIGATION_KINDS = {
      by a mute: taken and recorded (op=checktake, op=checkrecord), or left (op=taskresolve closes this member's own). */
   "check-requested":             "a project owner asked for a check, by an expertise you declared or by name, on something "
                               + "you can see; take it (op=checktake), or leave it (DEC-135) — LIVE: tasks R14",
+  /* T41 (R1; N820, K2418, K2484; notice-producers R17): what a member asked for or set herself on a step or a milestone
+     has come. Hers alone, never muted: a step past the date she set leaves when the step is ended (op=stepend, R52), and
+     a reminder she asked for is answered with another reminder or none, and it is told on its day only (steps R12,
+     investigation R3; DEC-94). Their producer is `notice-producers`' (its R17). */
+  "step-date-due":               "a step you set a date on has passed that date and is not ended; end it (op=stepend) "
+                              + "or set a new date — LIVE: notice-producers R17",
+  "step-reminder":               "a reminder you asked for on a step's date; answer it with another reminder or none "
+                              + "(op=stepreminder, DEC-94) — LIVE: notice-producers R17",
+  "milestone-reminder":          "a reminder you asked for on a milestone (DEC-94); answer it with another reminder or "
+                              + "none (op=milestonereminder) — LIVE: notice-producers R17",
 };
 
 export const QUEUE_FINDING_KINDS = {
@@ -318,6 +328,32 @@ export const QUEUE_FINDING_KINDS = {
                               + "open (DEC-169) — LIVE: notice-producers R14",
   "security-tool-off":          "one of the group's security tools was switched off because it did not confirm its private "
                               + "mode (K1929) — LIVE: notice-producers R15",
+  /* T40 (R1; N812, K2376 (2), K2394; notice-producers R16): what the AI accounts did, each told to whom it concerns.
+     The words members see are the design stream's (`words.json`, read by key by notice-producers); these sentences are
+     the catalogue's. None names a member. */
+  "explore-ask":                "one of your accounts may explore today; approve it or let the day pass "
+                              + "(op=exploreapprove) — LIVE: notice-producers R16",
+  "ai-limit-reached":           "a limit of an account you own was reached in this period — LIVE: notice-producers R16",
+  "project-account-suspended":  "a project's sign-in account stopped serving because a second member joined "
+                              + "— LIVE: notice-producers R16",
+  /* T41 (R1; N820, K2418, K2484; notice-producers R17): what the investigation's work noticed, each told once and each
+     disposed of by a project (R52), or quieted by its recipient where no project holds it. */
+  "question-find":              "the machine found something that may bear on a question you follow; labelled as the "
+                              + "machine's work — accept it, hold it as a hypothesis, or plan a step "
+                              + "— LIVE: notice-producers R17",
+  "step-later-found":           "something a step looked for and did not find has since arrived; the step's look stays "
+                              + "as it was, dated — LIVE: notice-producers R17",
+  "milestone-overdue":          "a milestone of a project you take part in has passed its date "
+                              + "— LIVE: notice-producers R17",
+  "project-quiet":              "a project you take part in has gone quiet: its objective, its condition and what the "
+                              + "record still lacks; write it up, keep watching, close it with its gaps, or revise the "
+                              + "objective — LIVE: notice-producers R17",
+  "step-cost-shared":           "a costed step serves questions several projects you own draw on; the sharing projects "
+                              + "are named — LIVE: notice-producers R17",
+  "step-cost-message":          "an owner of another project sharing a costed step sent you a message about its cost "
+                              + "— LIVE: notice-producers R17",
+  "review-comment-left-out":    "your comments on a case's review copy were not included in its published edition; you "
+                              + "may file a response in its docket — LIVE: notice-producers R17",
 };
 
 /* THE N-NUMBERS — the catalogue's STABLE IDS, allocated when a generator is built and not before

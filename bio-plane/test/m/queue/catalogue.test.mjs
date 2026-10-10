@@ -19,7 +19,9 @@ const OBLIGATION = ["authority-undetermined", "bias-debt", "endorsement-owed", "
   /* T33-83 (notice-producers R6; K1505 (15), K1594 (3)) */
   "inquiry-recheck-due",
   /* T34-53 (tasks R14; DEC-135 (2)) */
-  "check-requested"];
+  "check-requested",
+  /* T41 (notice-producers R17; N820, K2418, K2484) */
+  "step-date-due", "step-reminder", "milestone-reminder"];
 /* R1's twenty-nine, `cardinality_exceeded` (N107, K209), `newer-capture-affects-reference` (N172), N345's five, the two
    docket kinds (queue-producers R31, DEC-116 items 3, 7) and the released hold (queue-producers R29, DEC-113) among
    them. */
@@ -36,7 +38,12 @@ const FINDING = ["missing_predecessor", "overdue_successor", "temporal-expectati
   /* T33-83 (notice-producers R2, R3, R4; K1491, K1481) */
   "interest-check-noticed", "money-detector-noticed", "standing-answer",
   /* T36-46 (notice-producers R12–R15; DEC-165 (7), DEC-145 (5), DEC-169 (4), K1929) */
-  "security-level-high", "policy-changed-noticed", "scan-found", "security-tool-off"];
+  "security-level-high", "policy-changed-noticed", "scan-found", "security-tool-off",
+  /* T40 (notice-producers R16; N812, K2376 (2)) */
+  "explore-ask", "ai-limit-reached", "project-account-suspended",
+  /* T41 (notice-producers R17; N820, K2418, K2484) */
+  "question-find", "step-later-found", "milestone-overdue", "project-quiet", "step-cost-shared", "step-cost-message",
+  "review-comment-left-out"];
 /* observation-log's twenty (R5): its twelve, the five sweep kinds (link-sweep R11, queue-producers R26) and the three
    notice kinds (network-notices R12, R13, queue-producers R27) its R33 added in T23 (K1099); and the overdue action
    clock (K611). */

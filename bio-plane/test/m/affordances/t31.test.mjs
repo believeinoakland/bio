@@ -175,7 +175,8 @@ test("R38 R2 R7 R12 R27: importwatch and importunwatch are `reversible`, each wi
   const table = ["importwatch", "importunwatch"].map((op) => ({ op, mutating: true, gated: true }));
   const r = unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
-  assert.deepEqual(r.stale.filter((op) => op.endsWith("watch")), []);
+  /* the two by name: T41's `projectwatch` (op-grades R30) is another module's op, outside this table */
+  assert.deepEqual(r.stale.filter((op) => ["importwatch", "importunwatch"].includes(op)), []);
   assert.deepEqual(["importwatch", "importunwatch"].filter((op) => !unaccounted([]).stale.includes(op)), []);
 });
 

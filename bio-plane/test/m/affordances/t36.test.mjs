@@ -1,5 +1,6 @@
-/* affordances, T36 (T36-31; N726, DEC-174 (3), DEC-99; T37-27: N776, DEC-182; T38-31: DEC-183, K2300): R48, the one table of what each act does, checked against the
-   design stream's own file entry by entry, and R49, its publication in the answer with no target, the very object. */
+/* affordances, T36 (T36-31; N726, DEC-174 (3), DEC-99; T37-27: N776, DEC-182; T38-31: DEC-183, K2300; T41-52: DEC-188 (7), (8), U145, K2484): R48,
+   the one table of what each act does, checked against the design stream's own file entry by entry, and R49, its publication in the answer with
+   no target, the very object. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -8,13 +9,15 @@ import * as G from "../../../src/op-grades/index.mjs";
 
 const { ACT_HELP, affordancesAnswer } = A;
 const DESIGN_FILE = new URL("../../../../docs/development/ux-substrate/screens/mock-acts.js", import.meta.url);
-/* PR #15's file (`c848b56671`), byte-identical on the tranche: a plain script declaring `const ACT_HELP`. */
+/* PR #19's file (`3660c18803`), byte-identical on the tranche: a plain script declaring `const ACT_HELP`. */
 const DESIGN = new Function(readFileSync(DESIGN_FILE, "utf8") + "; return ACT_HELP;")();
 
-/* R48's named keys, re-stated from the file at `c848b56671` (T38-31; before it `e08cd35ecb`, T37-27). PR #14 withdrew the five op-less texts and
-   `claimidentity`'s, and dropped `assistantset` (DEC-182 (1)–(3)): none is in the design, and none is held. */
+/* R48's named keys, re-stated from the file at `3660c18803` (T41-52; before it `c848b56671`, T38-31; `e08cd35ecb`, T37-27). PR #14 withdrew the
+   five op-less texts and `claimidentity`'s, and dropped `assistantset` (DEC-182 (1)–(3)): none is in the design, and none is held. */
 const WITHDRAWN = ["projectcreated", "countask", "registerproceeding", "deadlinecompute", "claimidentity"];
 const RETIRED = ["assistantset"];
+/* DEC-188 (8): ops retired in T41 (to `accountusesset`, `ailimitset`) whose texts the file still gives; no longer declared, so not held. */
+const RETIRED_IN_T41 = ["aiceilingset", "aicopyceilingset", "accountswitchset", "groupswitchset"];
 const OWED_DECLARED_IN_T36 = ["aikeepaway", "openoriginal", "openwithwarning", "safeview", "deepercheck", "releasescanhold",
   "securitytooladd", "securitytooltest", "securitytoolremove", "archivelist", "findin", "groupdescriptiondraft",
   "memberlanguageset", "notedelete", "noterevise", "publishat", "securitymap", "startfrom", "writinghelp"];
@@ -24,7 +27,10 @@ const OWED_DECLARED_IN_T37 = ["subscriptionsignin", "setpassword", "obscuremark"
   "translationadopt", "translationconfirm", "translationrevert"];
 /* The owed act op-declarations declares in T38 (T38-15, its R40), PR #15's new text (DEC-183 (2)), held under its op. */
 const OWED_DECLARED_IN_T38 = ["obscuremarkwithdraw"];
-const OWED_DECLARED = [...OWED_DECLARED_IN_T36, ...OWED_DECLARED_IN_T37, ...OWED_DECLARED_IN_T38];
+/* The owed acts op-declarations declares in T41 (its R41, DEC-188 (7); its R42, the handle ops), PR #19's new texts, held under their ops. */
+const OWED_DECLARED_IN_T41 = ["accountusesset", "ailimitset", "projectkeyset", "projectsigninset", "projectaccountswitch",
+  "projectaccountremove", "projectkeynoticeseen", "projectaikeepaway", "exploreapprove", "handlechange", "handlecheck"];
+const OWED_DECLARED = [...OWED_DECLARED_IN_T36, ...OWED_DECLARED_IN_T37, ...OWED_DECLARED_IN_T38, ...OWED_DECLARED_IN_T41];
 const OWED_UNDECLARED = ["infolevelset"];
 /* The design's ops that no `NEEDS` row gates (reads and doors before a session: the install, the self-test, the
    invitation, the searches, the public reads), so `op-grades`' gated totality names none of them. */
@@ -34,27 +40,38 @@ const { OP_ALIASES } = G;
 const gradedOrPublished = (op) => [G.RUNGS, G.RUNG_ABSENT, G.NON_ACTS].some((t) => Object.hasOwn(t, op))
   || [...A.ACTS, ...A.CAPTURE_ACTS, ...A.PER_ITEM_ACTS].some((a) => a.id === op);
 
-/* R48's reading of a design key: the key it is held under. */
+/* R48's reading of a design key: the key it is held under, or null when it is not held (a retired op). */
 const heldAs = (k) => {
+  if (RETIRED_IN_T41.includes(k)) return null;
   if (k.startsWith("owed_")) return OWED_DECLARED.includes(k.slice(5)) ? k.slice(5) : k;
   return Object.hasOwn(OP_ALIASES, k) ? OP_ALIASES[k] : k;
 };
+/* R48 as a check over a table: the design's entries R48 holds, each under its key, verbatim, in the design's order. */
+const expected = () => Object.entries(DESIGN).flatMap(([k, text]) => (heldAs(k) === null ? [] : [[heldAs(k), text]]));
+const meetsR48 = (table) => {
+  try { assert.deepEqual(Object.entries(table), expected()); return true; } catch { return false; }
+};
 
-test("R48: ACT_HELP is a frozen module constant holding exactly the design's 204 texts (PR #15, c848b56671), verbatim, "
+test("R48: ACT_HELP is a frozen module constant holding exactly the 211 of the design's 215 texts (PR #19, 3660c18803) R48 holds, verbatim, "
    + "each under the key R48 reads it as, in the design's order: aliases under their op, the nineteen owed acts declared "
-   + "in T36, the eight declared in T37 and obscuremarkwithdraw declared in T38 under their op, infolevelset still under "
-   + "owed_<op>; setpassword's PR #15 text; the withdrawn texts and assistantset nowhere", () => {
+   + "in T36, the eight declared in T37, obscuremarkwithdraw declared in T38 and the eleven declared in T41 (op-declarations R41, R42) under their op, "
+   + "infolevelset still under owed_<op>; aikeepaway's and groupkeyset's texts as PR #19 re-words them; the retired aiceilingset, aicopyceilingset, "
+   + "accountswitchset and groupswitchset, the withdrawn texts and assistantset nowhere; a table departing from any of these is seen (K874)", () => {
   assert.ok(Object.isFrozen(ACT_HELP));
-  assert.equal(Object.keys(DESIGN).length, 204);
+  assert.equal(Object.keys(DESIGN).length, 215);
   for (const k of [...WITHDRAWN, ...RETIRED]) {
     assert.equal(Object.hasOwn(DESIGN, k), false, `${k} is withdrawn from the design`);
     assert.equal(Object.hasOwn(ACT_HELP, k), false, `${k} is not held`);
   }
-  const expected = Object.entries(DESIGN).map(([k, text]) => [heldAs(k), text]);
-  assert.deepEqual(Object.entries(ACT_HELP), expected);
-  /* the arithmetic: every one of the 204 held, no two under one key */
-  assert.equal(Object.keys(ACT_HELP).length, 204);
-  assert.equal(new Set(expected.map(([k]) => k)).size, 204);
+  for (const k of RETIRED_IN_T41) {
+    assert.ok(Object.hasOwn(DESIGN, k), `the design still gives ${k} a text`);
+    assert.equal(Object.hasOwn(ACT_HELP, k), false, `${k} is retired and not held`);
+    assert.equal(Object.hasOwn(ACT_HELP, `owed_${k}`), false, k);
+  }
+  assert.ok(meetsR48(ACT_HELP));
+  /* the arithmetic: 215 in the design, four retired, every other one held, no two under one key */
+  assert.equal(Object.keys(ACT_HELP).length, 211);
+  assert.equal(new Set(expected().map(([k]) => k)).size, 211);
   for (const t of Object.values(ACT_HELP)) assert.ok(typeof t === "string" && t.trim().length > 0);
   /* DEC-182 (1), (4) and DEC-180: `clockpropose` has its own text; setpassword and obscuremark are owed */
   assert.equal(ACT_HELP.clockpropose, DESIGN.clockpropose);
@@ -64,15 +81,37 @@ test("R48: ACT_HELP is a frozen module constant holding exactly the design's 204
   assert.equal(ACT_HELP.obscuremarkwithdraw, DESIGN.owed_obscuremarkwithdraw);
   assert.match(ACT_HELP.setpassword, /^Changes your password\. Every other session signed in as you ends/);
   assert.equal(ACT_HELP.owed_infolevelset, DESIGN.owed_infolevelset);
+  /* DEC-188 (7), U145: PR #19's eleven new texts, each under its op */
+  for (const op of OWED_DECLARED_IN_T41) assert.equal(ACT_HELP[op], DESIGN[`owed_${op}`], op);
+  assert.match(ACT_HELP.ailimitset, /^Sets or removes one limit on this account/);
+  assert.match(ACT_HELP.handlecheck, /It never says who has a handle\.$/);
+  /* PR #19's re-wordings: aikeepaway (its owed_ text) binds every account; groupkeyset pays last */
+  assert.equal(ACT_HELP.aikeepaway, DESIGN.owed_aikeepaway);
+  assert.match(ACT_HELP.aikeepaway, /^Keeps the group's material away from AI, for every use or the ones you choose\. It binds every account/);
+  assert.equal(ACT_HELP.groupkeyset, DESIGN.groupkeyset);
+  assert.match(ACT_HELP.groupkeyset, /It pays for a member's act when neither a project's account nor the member's own serves it\.$/);
+
+  /* negative controls (K874): each way a table can depart from R48 is seen by the same check */
+  const variants = {
+    "a retired op's text held": { ...ACT_HELP, aiceilingset: DESIGN.aiceilingset },
+    "a retired op's text held under owed_": { ...ACT_HELP, owed_groupswitchset: DESIGN.groupswitchset },
+    "a T41 owed text held under owed_<op>": Object.fromEntries(Object.entries(ACT_HELP).map(([k, v]) => [k === "ailimitset" ? "owed_ailimitset" : k, v])),
+    "a T41 owed text missing": Object.fromEntries(Object.entries(ACT_HELP).filter(([k]) => k !== "handlecheck")),
+    "aikeepaway's earlier text": { ...ACT_HELP, aikeepaway: "Stops every assistant in the group, the group's and members' own. Members see your reason on Settings › The assistant." },
+    "groupkeyset's earlier text": { ...ACT_HELP, groupkeyset: "Holds one Anthropic API key for the group, sealed and never shown again. It serves members with no account of their own, at the group's cost." },
+    "a text re-worded here": { ...ACT_HELP, exploreapprove: ACT_HELP.exploreapprove.replace("today", "now") },
+    "the design's order lost": Object.fromEntries(Object.entries(ACT_HELP).reverse()),
+  };
+  for (const [what, table] of Object.entries(variants)) assert.equal(meetsR48(table), false, what);
 });
 
 test("R48: no key is an alias or a retired op; every alias the design explains is answered by its op's entry; the owed_ "
-   + "keys are exactly the owed acts op-declarations does not declare (infolevelset), none under a T36-, T37- or T38-declared op; every other "
+   + "keys are exactly the owed acts op-declarations does not declare (infolevelset), none under a T36-, T37-, T38- or T41-declared op; every other "
    + "key is an op op-grades grades or names, or one of the design's ungated ops", () => {
   const keys = Object.keys(ACT_HELP);
   for (const k of keys) {
     assert.equal(Object.hasOwn(OP_ALIASES, k), false, `${k} is no alias`);
-    assert.ok(![...WITHDRAWN, ...RETIRED].includes(k), `${k} is not held`);
+    assert.ok(![...WITHDRAWN, ...RETIRED, ...RETIRED_IN_T41].includes(k), `${k} is not held`);
   }
   /* each alias the design explains is answered by its op's entry, never as a second one */
   for (const [a, op] of Object.entries(OP_ALIASES)) if (Object.hasOwn(DESIGN, a)) assert.ok(Object.hasOwn(ACT_HELP, op), `${a} → ${op}`);
