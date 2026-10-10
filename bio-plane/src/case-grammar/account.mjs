@@ -149,7 +149,7 @@ export function biasApplicationsOf(fm) {
 const reviewCommentRow = (r) => ({ reviewer: str(r.reviewer), text: typeof r.text === "string" ? r.text : null, at: str(r.at) });
 
 /** R25: the `review_comments:` block and the count left out, from `{comments: [{reviewer, text, at}], left_out}`. The
- *  count is always stated: a count that is not a whole number is written null, undetermined. */
+ *  count is always stated: null when it could not be determined (K2533), as is a count that is not a whole number. */
 export function reviewCommentsLines(given) {
   const { comments = [], left_out: leftOut = null } = given && typeof given === "object" ? given : {};
   return [...exactRowsBlock("review_comments", each(comments, reviewCommentRow), REVIEW_COMMENT_FIELDS),

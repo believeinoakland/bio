@@ -308,3 +308,25 @@ test("R26 (K2528) negative controls: any other change to the document changes th
   assert.equal(CG.approvalSubjectSha(""), sha(""));
   assert.equal(CG.approvalSubjectSha("approvals: []\nno front matter"), sha("approvals: []\nno front matter"), "no front matter: nothing removed");
 });
+
+test("R25 (K2533) review_comments_left_out null, a count that could not be determined, is written null and read null, and the edition says it is not stated; a count stays a count", () => {
+  const lines = CG.reviewCommentsLines({ comments: REVIEW_COMMENTS.comments, left_out: null });
+  assert.equal(lines.at(-1), "review_comments_left_out: null");
+  const text = doc(V7, lines);
+  clean(text);
+  assert.deepEqual(CG.reviewCommentsOf(fmOf(text)), { comments: REVIEW_COMMENTS.comments, left_out: null });
+  assert.deepEqual(CG.reviewCommentsOf(fmOf(doc(V7, ["review_comments: []", "review_comments_left_out: null"]))), { comments: [], left_out: null },
+                   "the null alone still states the block");
+  const base = caseFileFixture({ fileFormat: CG.CASE_FILE_FORMAT });
+  const m = new Map(base.files);
+  m.set("case.md", base.files.get("case.md").replace("\nsearched:", `\n${lines.join("\n")}\nsearched:`));
+  const rc = section(CG.completeEditionOf(editionInput(base.manifest, m)), CG.REVIEW_COMMENTS_HEADING);
+  assert.equal(rc.includes(esc("How many reviewers' comments were left out is not stated.")), true);
+  /* negative control: a determined count, 0 included, is never read or rendered as undetermined */
+  for (const n of [0, 2]) {
+    assert.equal(CG.reviewCommentsOf(fmOf(doc(V7, CG.reviewCommentsLines({ comments: [], left_out: n })))).left_out, n);
+    const m2 = new Map(base.files);
+    m2.set("case.md", base.files.get("case.md").replace("\nsearched:", `\n${CG.reviewCommentsLines({ comments: [], left_out: n }).join("\n")}\nsearched:`));
+    assert.equal(section(CG.completeEditionOf(editionInput(base.manifest, m2)), CG.REVIEW_COMMENTS_HEADING).includes("not stated"), false, String(n));
+  }
+});
