@@ -1,4 +1,4 @@
-/* action-grammar R1–R12 at the module's interface. Every value, row, finding and reading is compared with what the code
+/* action-grammar R1–R13 at the module's interface. Every value, row, finding and reading is compared with what the code
    answered for the same input before the move (`golden.json`: `actions/checks.mjs` and the catalogue's vocabularies;
    K585 (2)): the same in check, severity, message, repairs and code, and in order. Negative controls state each arm's
    answer by hand. Pure functions, driven with documents; the time is handed in. */
@@ -15,8 +15,15 @@ const codes = (list) => list.map((x) => x.code);
 const audit = (fm, o = {}) => pushed((f) => AG.checkActionExtension({ fm, nowMs: NOW, zone: ZONE, ...o }, f));
 const TEST_VIEW = (() => { const c = J.combine(["test-port-ellery"]); assert.ok(c.ok); return c.view; })();
 
-test("R1, R2: every vocabulary and bound is exported with its value unchanged from before the move", () => {
-  assert.deepEqual(S.values, GOLDEN.values);
+/* R13 (T41-46a): the one value changed since the move: CORRESPONDENCE_OUTCOMES gained `none_exists`, appended. */
+const VALUES_NOW = (() => {
+  const v = structuredClone(GOLDEN.values);
+  v.CORRESPONDENCE_OUTCOMES = [...v.CORRESPONDENCE_OUTCOMES, "none_exists"];
+  return v;
+})();
+
+test("R1, R2: every vocabulary and bound is exported with its value unchanged from before the move (R13's none_exists aside)", () => {
+  assert.deepEqual(S.values, VALUES_NOW);
   for (const n of VALUE_NAMES) assert.ok(n in AG, n);
   assert.deepEqual(AG.PRODUCT_KINDS, ["records_request", "request_for_comment", "other"]);
   assert.deepEqual(AG.ACTION_BASIS_KINDS, ["rests_on", "advances"]);
@@ -251,10 +258,22 @@ const T33_ROWS = {
   },
 };
 
-test("R9: the rows C-117.26 NO_SUBJECT (actions R62), C-117.27 MACHINE_CANNOT_SET_PROCEEDING and C-117.28 NOT_A_PROCEEDING (actions R65) are held in ACTION_CATALOGUE_CHECKS, each {check, where, translation} exactly, last and in that order, their wheres naming actions' minting sites; no other table holds them; their words name no op, ruling or check number", () => {
+/* R13 (T41-46a; H30 (1), K2505): the row of what a records request seeks, minted by this module's seeksFindings alone;
+   new in T41 layer 9, awaiting T42's stamp. */
+const T41_ROWS = {
+  SEEKS_REFUSED: {
+    check: "C-117.29",
+    where: "src/action-grammar/checks.mjs seeksFindings > is-seeks",
+    translation: "A records request may name the stages it asks the records for: one to twelve different entries, each naming a progression, an entity and a stage in at most 200 characters each, and each stage one its progression declares. Only a records request names them. This write named them otherwise, so nothing was written.",
+  },
+};
+/* R13: C-94.5's translation, which names the outcome vocabulary, names none_exists; a changed row, awaiting T42's stamp. */
+const C94_5_NOW = "An outcome is one of granted, denied, partial, reversed, affirmed, none_exists when the body says no responsive record exists, or none_stated when the body stated none.";
+
+test("R9: the rows C-117.26 NO_SUBJECT (actions R62), C-117.27 MACHINE_CANNOT_SET_PROCEEDING and C-117.28 NOT_A_PROCEEDING (actions R65) are held in ACTION_CATALOGUE_CHECKS, each {check, where, translation} exactly, in that order before T41's row, their wheres naming actions' minting sites; no other table holds them; their words name no op, ruling or check number", () => {
   const C = AG.ACTION_CATALOGUE_CHECKS;
   for (const [code, row] of Object.entries(T33_ROWS)) assert.deepEqual(C[code], row, code);
-  assert.deepEqual(Object.keys(C).slice(-3), Object.keys(T33_ROWS));
+  assert.deepEqual(Object.keys(C).slice(-4, -1), Object.keys(T33_ROWS));
   for (const n of ROW_NAMES) if (n !== "ACTION_CATALOGUE_CHECKS")
     for (const code of Object.keys(T33_ROWS)) assert.ok(!(code in AG[n]), `${code} in ${n}`);
   for (const row of Object.values(T33_ROWS)) assert.doesNotMatch(row.translation, /\b(bundle|op=|DEC-|C-\d|ENT-)/, row.check);
@@ -272,26 +291,28 @@ test("R9: the litigation-hold rows C-117.20 MACHINE_CANNOT_SET_HOLD, C-117.21 HO
 test("R9: the hold rows C-117.23 HOLD_RELEASE_IS_ITS_OWN_ACT, C-117.24 HOLD_PROJECTS_REFUSED, C-117.25 HOLD_ALREADY_RELEASED (DEC-113) are held in ACTION_CATALOGUE_CHECKS, each {check, where, translation} exactly, in that order before T33's rows, their wheres naming actions' actionHold and #holdProjects regions (K1281); no other table holds them", () => {
   const C = AG.ACTION_CATALOGUE_CHECKS;
   for (const [code, row] of Object.entries(DEC113_ROWS)) assert.deepEqual(C[code], row, code);
-  assert.deepEqual(Object.keys(C).slice(-9, -3), [...Object.keys(HOLD_ROWS), ...Object.keys(DEC113_ROWS)]);
+  assert.deepEqual(Object.keys(C).slice(-10, -4), [...Object.keys(HOLD_ROWS), ...Object.keys(DEC113_ROWS)]);
   for (const n of ROW_NAMES) if (n !== "ACTION_CATALOGUE_CHECKS")
     for (const code of Object.keys(DEC113_ROWS)) assert.ok(!(code in AG[n]), `${code} in ${n}`);
   for (const row of Object.values(DEC113_ROWS)) assert.doesNotMatch(row.translation, /\b(bundle|op=|DEC-|C-\d)/, row.check);
 });
 
-test("R9: every row is held as before the move, number and translation unchanged; C-73.6's where names its new site, C-117.11's names contactNotAMember (K837); C-117.5 is action-clocks', not here; C-117.20–.28 are added", () => {
+test("R9: every row is held as before the move, number and translation unchanged; C-73.6's where names its new site, C-117.11's names contactNotAMember (K837); C-117.5 is action-clocks', not here; C-117.20–.29 are added; C-94.5's translation names none_exists (R13)", () => {
   const expected = structuredClone(GOLDEN.rows);
   delete expected.ACTION_CATALOGUE_CHECKS.PENDING_CLOCKS_BAD_BEFORE;
-  Object.assign(expected.ACTION_CATALOGUE_CHECKS, structuredClone(HOLD_ROWS), structuredClone(DEC113_ROWS), structuredClone(T33_ROWS));
+  Object.assign(expected.ACTION_CATALOGUE_CHECKS, structuredClone(HOLD_ROWS), structuredClone(DEC113_ROWS), structuredClone(T33_ROWS),
+    structuredClone(T41_ROWS));
+  expected.LIFECYCLE_CHECKS.OUTCOME_NOT_IN_VOCABULARY.translation = C94_5_NOW;
   expected.GOVERNING_LAW_CHECKS.RECORDS_LAW_REFUSED.where = "src/action-grammar/checks.mjs recordsLawRefusal > is-records-law";
   expected.ACTION_CATALOGUE_CHECKS.CONTACT_NOT_A_MEMBER.where = "src/actions/index.mjs contactNotAMember > is-contact-member";
   assert.deepEqual(S.rows, expected);
   for (const n of ROW_NAMES) assert.ok(n in AG, n);
 });
 
-test("R9 by hand: the rows are exactly C-32.3, .4, .18, .19, .20; C-33.3–.9; C-72.1–.8; C-73.1–.6; C-90.1–.6; C-94.1–.12; C-101.1–.5; C-117.1–.4 and .6–.28, each {check, where, translation}", () => {
+test("R9 by hand: the rows are exactly C-32.3, .4, .18, .19, .20; C-33.3–.9; C-72.1–.8; C-73.1–.6; C-90.1–.6; C-94.1–.12; C-101.1–.5; C-117.1–.4 and .6–.29, each {check, where, translation}", () => {
   const range = (fam, a, b, skip = []) => Array.from({ length: b - a + 1 }, (_, i) => a + i).filter((n) => !skip.includes(n)).map((n) => `${fam}.${n}`);
   const want = ["C-32.3", "C-32.4", "C-32.18", "C-32.19", "C-32.20", ...range("C-33", 3, 9), ...range("C-72", 1, 8), ...range("C-73", 1, 6),
-    ...range("C-90", 1, 6), ...range("C-94", 1, 12), ...range("C-101", 1, 5), ...range("C-117", 1, 28, [5])].sort();
+    ...range("C-90", 1, 6), ...range("C-94", 1, 12), ...range("C-101", 1, 5), ...range("C-117", 1, 29, [5])].sort();
   const rows = ROW_NAMES.flatMap((n) => Object.values(AG[n]));
   assert.deepEqual(rows.map((r) => r.check).sort(), want);
   assert.equal(new Set(rows.map((r) => r.check)).size, rows.length, "no number twice");
