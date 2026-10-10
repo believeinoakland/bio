@@ -10,6 +10,8 @@
      missing and what differs, and its recomputed pair; a document supplied later whose SHA-256 a missing entry names
      fills that gap (its R9). It records each call.
    - `reevaluation.acceptanceWithdrawn` (its R31) and `citedCaseMoved` (its R33): recorders, which can be made to throw.
+   - R23's importer's lens: `bias.statementInForce` (its R49) and `case-checker`'s synchronous re-weighing under a
+     reader lens (its R23), each scripted through `w.lens`; the applications are case-grammar's own reading (its R24).
    Every test drives `case-import` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import assert from "node:assert/strict";
@@ -21,8 +23,9 @@ import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
 import { caseImportOf, CASE_IMPORT_CHECKS } from "../../../src/case-import/index.mjs";
 import { readCaseFile } from "../../../src/case-checker/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
-import { caseFilePath, casePartDigest, CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, CALCULATION_FIELDS }
-  from "../../../src/case-grammar/index.mjs";
+import { caseFilePath, casePartDigest, CASE_FILE_FORMAT, CASE_FILE_MANIFEST_PATH, CALCULATION_FIELDS, biasApplicationsLines,
+         biasApplicationsOf } from "../../../src/case-grammar/index.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 
 /* as workerd binds: an ArrayBuffer is a BLOB (node:sqlite takes it as a typed array), and a BLOB reads back as an
    ArrayBuffer */
@@ -111,11 +114,12 @@ export function findingText(id, pair = { capture: "B", connection: "C" }) {
 }
 /** The case document: its lens (`bias_manifest.statements_sha`) and the source's bar (`required_strength`). */
 export function caseDocText({ case: caseId = CASE, edition = 1, lens = LENS, bar = { capture: "B", connection: "B" }, note = "",
-                              calcs = null } = {}) {
+                              calcs = null, apps = null } = {}) {
   return ["---", "format: bio-case-document/6", `case_id: ${caseId}`, `case_edition: ${edition}`, "bias_manifest:",
           `  in_force: ${lens ? "true" : "false"}`, `  statements_sha: ${lens ?? "null"}`, "required_strength:",
           `  declared: ${bar ? "true" : "false"}`, `  capture: ${bar?.capture ?? "null"}`, `  connection: ${bar?.connection ?? "null"}`,
           ...(calcs ? calculationsBlock(calcs) : []),
+          ...(apps ? biasApplicationsLines(apps) : []),
           "---", "", `# Case ${caseId}`, note, ""].join("\n");
 }
 
@@ -137,10 +141,10 @@ export function calcInputAt(calc, hash) {
  *  document and its signature in part 1 and each other file in a part of its own. A document is a material, carried
  *  at `materials/<name>/document`. */
 export function caseFile({ group = SOURCE, case: caseId = CASE, edition = 1, lens = LENS, bar, note = "", findings = [F1, F2, F3],
-                           pairs = {}, documents = [], split = false, manifestExtra = {}, calcs = null, calcInputs = [] } = {}) {
+                           pairs = {}, documents = [], split = false, manifestExtra = {}, calcs = null, calcInputs = [], apps = null } = {}) {
   const at = (kind, key) => caseFilePath(kind, key);
   const files = [
-    { path: at("case_document"), kind: "case_document", bytes: bytes(caseDocText({ case: caseId, edition, lens, bar, note, calcs })) },
+    { path: at("case_document"), kind: "case_document", bytes: bytes(caseDocText({ case: caseId, edition, lens, bar, note, calcs, apps })) },
     { path: at("case_signature"), kind: "case_signature", bytes: bytes(`-----BEGIN SSH SIGNATURE-----\n${caseId}/${edition}\n`) },
     { path: at("complete_edition"), kind: "complete_edition", bytes: bytes(`<!doctype html><title>${caseId}</title>`) },
     ...findings.map((id) => ({ path: at("finding", id), kind: "finding", bytes: bytes(findingText(id, pairs[id])) })),
@@ -211,6 +215,40 @@ export function world({ minimal = false, realChecker = false } = {}) {
       }),
     };
   };
+  /* R23: the importer's lens. `bias.statementInForce` (its R49), answering each statement from `lens.inForce` (true,
+     false or null; false when unnamed); and, for the scripted checker's world, a stand-in for `case-checker.reweigh`
+     (its R23), answering as it answers (`findings[{finding, pair, bar_met, lens_changes}]`, `lens_statement`): each
+     application the case document carries (read by `case-grammar`'s `biasApplicationsOf`, its R24) whose statement the
+     reader lens does not name is reversed and named under `lens_changes` (the stand-in's convention: a reversed
+     `grade_lowered` restores the capture axis to `from`; any other effect leaves the pair). With `realChecker`, the real
+     `reweigh` re-weighs. Each records its calls. */
+  const lens = { inForce: new Map(), sha: "c3".repeat(32), asked: [], reweighed: [], throws: false, limit: "The checker's limit." };
+  const bias = { statementInForce({ statement, scope, viewer }) {
+    lens.asked.push({ statement, scope, viewer });
+    const v = lens.inForce.has(statement) ? lens.inForce.get(statement) : false;
+    return { ok: true, statement, scope: { type: "instance", id: "" }, in_force: v, kind: v ? "scrutiny" : null,
+             text: v ? `the text of ${statement}` : null, bundle_id: v ? "BIA-home" : null, level: v ? "group" : null, locked: v ? false : null,
+             statements_sha: v === null ? null : lens.sha, stated: v === null ? "undetermined" : v ? "in force" : "not in force" };
+  } };
+  const reweigh = ({ parts, documents = [], answer, lens: reader }) => {
+    lens.reweighed.push({ parts: parts.length, documents: documents.length, lens: reader });
+    if (lens.throws) throw new Error("re-weighing down");
+    if (lens.async) { lens.async = false; const r = reweigh({ parts, documents, answer, lens: reader }); lens.reweighed.pop(); return Promise.resolve(r); }
+    const held = new Set(reader.statements);
+    const doc = readCaseFile(parts).files.find((x) => x.kind === "case_document");
+    const carried = (doc && biasApplicationsOf(parseFrontmatter(new TextDecoder().decode(doc.content)).data)) || [];
+    return { lens: { name: "reader", statements: reader.statements, departure: null, not_applied: [] }, lens_statement: lens.limit,
+             findings: answer.findings.map((f) => {
+      const pair = f.pair ? JSON.parse(JSON.stringify(f.pair)) : null;
+      const changed = [];
+      for (const a of carried.filter((x) => x.finding === f.finding && !held.has(x.statement))) {
+        if (pair && a.effect === "grade_lowered") pair.capture = { state: "graded", grade: a.from };
+        changed.push({ ...a, how: "reversed" });
+      }
+      return { finding: f.finding, pair, bar_met: "not_asked", as_published: { pair: f.pair ?? null, bar_met: f.bar_met ?? null },
+               lens_changes: changed };
+    }) };
+  };
   const reeval = { told: [], throws: false,
     acceptanceWithdrawn(q) { reeval.told.push(q); if (reeval.throws) throw new Error("listeners down");
                              return { ok: true, told: true, kind: "acceptance", withdrawal: q.withdrawal, dependents: 0 }; },
@@ -219,7 +257,7 @@ export function world({ minimal = false, realChecker = false } = {}) {
     citedCaseMoved(q) { reeval.moved.push(q); if (reeval.movedThrows) throw new Error("moves listeners down");
                         return { ok: true, told: true, kind: "cited_case_moved", move: q.move.move, dependents: 0 }; } };
   const w = {
-    st, host, record, membership, strength, acceptedWork, clock, script, checker, reeval,
+    st, host, record, membership, strength, acceptedWork, clock, script, checker, reeval, lens,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     /** Every table's rows, for "nothing written", "append-only" and "byte-identical". */
@@ -240,7 +278,8 @@ export function world({ minimal = false, realChecker = false } = {}) {
     },
   };
   w.ci = caseImportOf(host, { record, membership, strength, acceptedWork, reevaluation: reeval,
-                              ...(realChecker ? {} : { checkCaseFile }), now: () => clock.now });
+                              ...(realChecker ? { bias } : { checkCaseFile, bias, reweigh }),
+                              now: () => clock.now });
   return w;
 }
 

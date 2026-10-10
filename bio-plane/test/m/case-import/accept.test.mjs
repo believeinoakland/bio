@@ -1,9 +1,10 @@
-/* case-import: completion by a fetched document (R5), acceptance (R6) and its withdrawal (R7), at the module's
+/* case-import: completion by a fetched document (R5), acceptance (R6), whole-case acceptance (R22) and its withdrawal (R7), at the module's
    interface. Every refusal is shown with its negative control. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { rowOk, refusedThenAccepted, seeded, imp, caseFile, V, MACHINE, F1, F2, F3, sha, bytes } from "./fixture.mjs";
 import { importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
+import { caseImportOps, NOT_ACCEPTED_WHY } from "../../../src/case-import/index.mjs";
 
 const LETTER = bytes("%PDF the letter the case relies on");
 const NOTE = bytes("%PDF a second document");
@@ -216,4 +217,96 @@ test("R7 after the withdrawal commits it calls reevaluation.acceptanceWithdrawn 
   const told = w.reeval.told.length;
   withdraw(w, a);
   assert.equal(w.reeval.told.length, told);
+});
+
+/* ================================================================ R22 (D62): whole-case acceptance */
+
+const all = (w, a, x = {}, who = "alice") => accept(w, a, { findings: "all", ...x }, who);
+
+test("R22 findings \"all\": one act and one reason accept every finding that recreated, and each recreated in part whose gaps are stated; the rest are answered with why", async () => {
+  /* no gaps stated: F1 (recreated) accepted; F2 (in part) and F3 (did not recreate) answered, each with why */
+  let w = seeded();
+  let a = (await scripted(w));
+  w.clock.now = Date.parse("2026-10-07T07:07:07Z");
+  const r = all(w, a);
+  assert.equal(r.ok, true);
+  assert.equal(r.scope, "all");
+  assert.deepEqual(r.findings, [{ finding: F1, ref: importedFindingRef(a.import, F1), result: "recreated" }]);
+  assert.deepEqual(r.not_accepted, [
+    { finding: F2, ref: importedFindingRef(a.import, F2), result: "recreated_in_part", why: NOT_ACCEPTED_WHY.gaps_unstated,
+      unstated: [{ entry: 0, missing: { sha: sha(LETTER), words: "the letter, fetch it" } }, { entry: 1, missing: { sha: sha(NOTE), words: "the note" } }] },
+    { finding: F3, ref: importedFindingRef(a.import, F3), result: "did_not_recreate", why: NOT_ACCEPTED_WHY.did_not_recreate }]);
+  /* every finding of the edition is answered exactly once, accepted or not */
+  const ids = w.ci.importedCase({ import: a.import, viewer: V("alice") }).edition.findings.map((f) => f.finding).sort();
+  assert.deepEqual([...r.findings, ...r.not_accepted].map((f) => f.finding).sort(), ids);
+  /* one act: one acceptance row, with its one reason, for exactly the findings accepted, recorded as R6 records one */
+  assert.equal(w.count("case_import_acceptances"), 1);
+  assert.deepEqual(w.ci.acceptanceOf({ import: a.import, edition: 1, finding: F1 }),
+                   { acceptance: r.acceptance, by: "alice", at: "2026-10-07T07:07:07Z", reason: "the chain holds",
+                     checked: "every passage against its document", gaps: [] });
+  assert.equal(w.ci.acceptanceOf({ import: a.import, edition: 1, finding: F2 }), null);
+  assert.equal(w.ci.acceptanceOf({ import: a.import, edition: 1, finding: F3 }), null);
+  assert.match(r.grades, /unchanged/);
+
+  /* with F2's gaps stated (in part, one stated, the other blank, is still unstated) */
+  w = seeded();
+  a = (await scripted(w));
+  const part = all(w, a, { gaps: { [F2]: ["we have not seen the letter", " "] } });
+  assert.deepEqual(part.findings.map((f) => f.finding), [F1]);
+  assert.deepEqual(part.not_accepted.find((f) => f.finding === F2).unstated, [{ entry: 1, missing: { sha: sha(NOTE), words: "the note" } }]);
+  w = seeded();
+  a = (await scripted(w));
+  const both = { [F2]: ["we have not seen the letter", "the note is not public"] };
+  const r2 = all(w, a, { gaps: both });
+  assert.deepEqual(r2.findings.map((f) => [f.finding, f.result]), [[F1, "recreated"], [F2, "recreated_in_part"]]);
+  assert.deepEqual(r2.not_accepted.map((f) => f.finding), [F3]);
+  assert.deepEqual(r2.gaps, both, "the gaps kept in the member's words");
+  assert.deepEqual(w.ci.acceptanceOf({ import: a.import, edition: 1, finding: F2 }).gaps, both[F2]);
+  assert.equal(w.ci.acceptanceOf({ import: a.import, edition: 1, finding: F1 }).acceptance,
+               w.ci.acceptanceOf({ import: a.import, edition: 1, finding: F2 }).acceptance, "one acceptance for both");
+  /* withdrawn as one acceptance (R7) */
+  assert.deepEqual(withdraw(w, a).refs, [importedFindingRef(a.import, F1), importedFindingRef(a.import, F2)]);
+});
+
+test("R22 \"all\" through the op, and as R6's refusals before it: the word as the op carries it; a list naming \"all\" names a finding, not every one", async () => {
+  const w = seeded();
+  const a = (await scripted(w));
+  const url = new URL(`https://x.test/?import=${a.import}&edition=1&findings=all&checked=c&reason=r&by=${V("bob")}&viewer=${V("bob")}`);
+  const r = caseImportOps(w.ci, url, {}).importaccept();
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.findings.map((f) => f.finding), [F1]);
+  /* R6's earlier refusals still come first */
+  (await refusedThenAccepted(w, async () => all(w, a, { reason: "" }), async () => all(w, a), "IMPORT_ACCEPT_NO_REASON"));
+  (await refusedThenAccepted(w, async () => all(w, a, { edition: 5 }), async () => all(w, a), "IMPORT_NO_SUCH_EDITION"));
+  (await refusedThenAccepted(w, async () => all(w, a, { by: MACHINE }), async () => all(w, a), "MACHINE_CANNOT_IMPORT"));
+  /* the negative control: "all" inside a list is a finding's name, and no finding is so named */
+  (await refusedThenAccepted(w, async () => accept(w, a, { findings: ["all"] }), async () => all(w, a), "IMPORT_NO_SUCH_FINDING"));
+});
+
+test("R22 \"all\" that would accept nothing writes nothing: IMPORT_ACCEPT_GAPS_UNSTATED when stating gaps would accept one, else IMPORT_ACCEPT_NOT_RECREATED, each finding named with why", async () => {
+  /* only F2 (in part) and F3 (did not recreate): nothing is accepted until F2's gaps are stated */
+  let w = seeded();
+  w.script.set(F2, { role: "supporting", result: "recreated_in_part", missing: [{ sha: sha(LETTER), words: "the letter" }], pair: null });
+  w.script.set(F3, { role: "load_bearing", result: "did_not_recreate", differs: [{ axis: "capture" }], pair: null });
+  let a = (await imp(w, caseFile({ findings: [F2, F3] })));
+  const r = (await refusedThenAccepted(w, async () => all(w, a), async () => all(w, a, { gaps: { [F2]: ["the letter is not public"] } }),
+                                       "IMPORT_ACCEPT_GAPS_UNSTATED"));
+  assert.deepEqual(r.unstated, [{ finding: F2, entry: 0, missing: { sha: sha(LETTER), words: "the letter" } }]);
+  assert.deepEqual(r.not_accepted.map((f) => [f.finding, f.why]),
+                   [[F2, NOT_ACCEPTED_WHY.gaps_unstated], [F3, NOT_ACCEPTED_WHY.did_not_recreate]]);
+  /* nothing recreated: edition 1 refused; the control, edition 2 where F2 recreates, accepted by the same call */
+  w = seeded();
+  w.script.set(F2, { role: "load_bearing", result: "did_not_recreate", differs: [{ axis: "capture" }], pair: null });
+  w.script.set(F3, { role: "load_bearing", result: "did_not_recreate", differs: [{ axis: "capture" }], pair: null });
+  a = (await imp(w, caseFile({ findings: [F2, F3] })));
+  w.script.set(F2, { role: "load_bearing", result: "recreated", pair: null });
+  (await imp(w, caseFile({ findings: [F2, F3], edition: 2 })));
+  const n = (await refusedThenAccepted(w, async () => all(w, a), async () => all(w, a, { edition: 2 }), "IMPORT_ACCEPT_NOT_RECREATED"));
+  assert.deepEqual(n.findings, [F2, F3]);
+  assert.deepEqual(n.not_accepted.map((f) => f.why), [NOT_ACCEPTED_WHY.did_not_recreate, NOT_ACCEPTED_WHY.did_not_recreate]);
+  /* an edition with no finding: IMPORT_NO_SUCH_FINDING; the control, an edition with one */
+  w = seeded();
+  a = (await imp(w, caseFile({ findings: [] })));
+  (await imp(w, caseFile({ findings: [F1], edition: 2 })));
+  (await refusedThenAccepted(w, async () => all(w, a), async () => all(w, a, { edition: 2 }), "IMPORT_NO_SUCH_FINDING"));
 });
