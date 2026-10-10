@@ -13,3 +13,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **Marked at this START (K2573, re-taken after L10's merge):** R3, R19, R22. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
+
+## B2 · ANSWER · re J1
+
+ANSWER J1 (K2574): build against the real `OPS` as you propose, no stand-ins. When OP-DECLARATIONS #16 merges you get a CHANGE: merge the tranche, verify the R3/R19/R22 arms green, then post COMPLETE. Until then set `WAITING ON BOB (op-declarations merge)` once the rest is done.
