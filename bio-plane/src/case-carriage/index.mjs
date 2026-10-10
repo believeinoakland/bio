@@ -66,10 +66,10 @@ import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { materialsOf, extractedTextOf, acceptedWorkOf as acceptedWorkBlocksOf, caseDocumentBlocks,
          sourceRowsStanding } from "../case-grammar/index.mjs";
 import { CASE_CARRIAGE_EXEMPT, CASE_CARRIAGE_MARK_TABLES, CASE_CARRIAGE_DOCUMENT_TABLES, migrateCaseCarriage } from "./schema.mjs";
-import { CASE_CARRIAGE_CHECKS, OBSCURED_LABEL, COPY_CLEANED_LABEL } from "./checks.mjs";
+import { CASE_CARRIAGE_CHECKS, OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "./checks.mjs";
 
 export { CASE_CARRIAGE_SCHEMA, CASE_CARRIAGE_EXEMPT, CASE_CARRIAGE_MARK_TABLES, CASE_CARRIAGE_DOCUMENT_TABLES } from "./schema.mjs";
-export { CASE_CARRIAGE_CHECKS, OBSCURED_LABEL, COPY_CLEANED_LABEL } from "./checks.mjs";
+export { CASE_CARRIAGE_CHECKS, CASE_CARRIAGE_WORDS, OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "./checks.mjs";
 
 /** R1: the most items one `unheld` answer names. */
 export const UNHELD_MAX = 1000;
@@ -136,6 +136,7 @@ export class CaseCarriage {
 
   #chains = new Map();   // R11: one derivation at a time per capture
   #copyWork = [];        // R17: the modules told when a member document is queued
+  #faults = [];          // R18: start-up faults, each `{notice, reason, detail}`
 
   constructor({ storage, record, membership = null, promotion = null, host = null, extraction = null, sources = null,
                 acceptedWork = null, now = null, bucket = null, store = null, cover = null, provenance = null,
@@ -647,10 +648,12 @@ export class CaseCarriage {
   async #withdraw(sha, id, reason, by) {
     const own = Number.isSafeInteger(id) && id > 0
       ? this.#one(`SELECT mark FROM photo_marks WHERE capture=? AND mark=?`, sha, id) : null;
-    if (!own) return refusal("NO_SUCH_MARK", "no mark of that number is on that photo", { capture: sha, mark: Number.isSafeInteger(id) ? id : null });
+    /* (T40; DEC-187 (3)) the words' `{photo}` is the photo named, carried beside them */
+    if (!own) return refusal("NO_SUCH_MARK", "no mark of that number is on that photo",
+                             { capture: sha, mark: Number.isSafeInteger(id) ? id : null, photo: sha });
     const prior = this.#one(`SELECT withdrawal, by, at FROM photo_mark_withdrawals WHERE mark=?`, id);
     if (prior) return refusal("MARK_ALREADY_WITHDRAWN", `mark ${id} was withdrawn at ${prior.at} by ${prior.by}`,
-                              { capture: sha, mark: id, withdrawn: { by: prior.by, at: prior.at } });
+                              { capture: sha, mark: id, withdrawn: { by: prior.by, at: prior.at }, member: prior.by, date: prior.at });
     if (!(typeof reason === "string" && reason.trim() && reason.length <= WITHDRAW_REASON_MAX))
       return refusal("WITHDRAW_NO_REASON", `a withdrawal gives a reason of 1 to ${WITHDRAW_REASON_MAX} characters`, { capture: sha, mark: id });
     const { marks } = this.#marksOf(sha);
@@ -748,10 +751,10 @@ export class CaseCarriage {
   }
 
   /* R11: the copy, held under its own digest at `<store>/obscured/<sha>`, labelled derived and naming its original,
-     with OBSCURED_LABEL only when it covers an area (T38; case-grammar R12: an unmarked copy has no label); never
+     its stored label OBSCURED_LABEL when it covers an area, else (T40; DEC-185 (1), K2248) PUBLISHED_LABEL; never
      registered, never a capture. True when held. */
   async #holdCopyBytes(copySha, bytes, original, covers) {
-    return this.#putDerived(copySha, bytes, { derived: "obscured", original, ...(covers ? { label: OBSCURED_LABEL } : {}) });
+    return this.#putDerived(copySha, bytes, { derived: "obscured", original, label: covers ? OBSCURED_LABEL : PUBLISHED_LABEL });
   }
 
   /* R11, R15: a derived copy's bytes at `<store>/obscured/<sha>` with its labels; true when held. */
@@ -906,13 +909,38 @@ export class CaseCarriage {
     return Number.isFinite(ms) ? ms : Date.now();
   }
 
-  /** R15 (T39): registers the receipt listener with provenance (its R47), once; the factory calls it at creation. */
+  /** R15 (T39), R18 (T40; N818, K2383): registers the receipt listener with provenance (its R47), once; the factory
+   *  calls it at creation. A refused registration (an answer that is not `{ok: true}`, one that throws, or no `onReceipt`
+   *  to ask) is a start-up fault: kept, answered by `faults()`, and logged, as `scheduler`'s are (its R23), never
+   *  ignored. Answers the registration's answer, or the refusal it stood for. */
   start() {
+    let r;
     try {
       const p = this.provenance;
-      if (p && typeof p.onReceipt === "function") return p.onReceipt("case-carriage", (e) => this.#onReceipt(e));
-    } catch { /* a listener that cannot register leaves receipts unchanged; R16's miss still queues */ }
-    return { ok: false };
+      r = p && typeof p.onReceipt === "function" ? p.onReceipt("case-carriage", (e) => this.#onReceipt(e))
+        : { ok: false, reason: "NO_RECEIPT_NOTICE", detail: "no provenance onReceipt to register the receipt listener with" };
+    } catch (e) {
+      r = { ok: false, reason: "REGISTRATION_THREW", detail: String((e && e.message) || e) };
+    }
+    if (!(r && typeof r === "object" && r.ok === true)) {
+      const refused = r && typeof r === "object" ? r : { ok: false, reason: "REGISTRATION_UNANSWERED", detail: `the registration answered ${String(r)}` };
+      this.#fault("onReceipt", refused);
+      return refused;
+    }
+    return r;
+  }
+
+  /* R18: a refused registration kept as a start-up fault and logged (as `scheduler` R23). */
+  #fault(notice, r) {
+    const fault = { notice, reason: r.reason ?? r.code ?? null, detail: typeof r.detail === "string" ? r.detail : r.detail ?? null };
+    this.#faults.push(fault);
+    try { console.error(`case-carriage: the ${notice} notice refused its registration`, JSON.stringify(fault)); } catch { /* logged where it can be */ }
+  }
+
+  /** R18 (T40; N818, K2383): the start-up faults, each `{notice: "onReceipt", reason, detail}`. Writes nothing; never
+   *  throws. */
+  faults() {
+    try { return this.#faults.map((f) => ({ ...f })); } catch { return []; }
   }
 
   /** R17 (T39; N806): a later module (`scheduler`, its R25) registers once at start to be told when a member document
@@ -1024,10 +1052,17 @@ export class CaseCarriage {
   /** R15 (T39; N806): when `copyBatch` next has work, as `file-safety` R39's wakes answer: null while nothing is queued;
    *  `now` while a queued document has not been tried since it was queued; else the earliest retry instant (its last
    *  try plus DOCUMENT_COPY_RETRY_MS), never before `now`. In the form `now` was given (milliseconds, or an ISO
-   *  string). The instants live in this module's tables, so the answer survives a restart. Writes nothing; never
-   *  throws (null when the queue cannot be read). */
+   *  string). The instants live in this module's tables, so the answer survives a restart. (T40; N816, K2380) While no
+   *  evidence store or bucket is bound it answers null, whatever is queued, as `copyBatch` would refuse
+   *  DOCUMENT_COPY_NO_STORE (as `file-safety` R39 answers no scan wake with no scanner bound); the next `onCopyWork`
+   *  notice (R17) or the instance's start reads it again. Writes nothing; never throws (null when the queue cannot be
+   *  read). */
   copyWake(now) {
     try {
+      if (!this.bucket) return null;
+      let ev = null;
+      try { ev = this.record.evidenceStore(); } catch { ev = null; }
+      if (!ev) return null;
       const n = typeof now === "number" ? now : typeof now === "string" ? Date.parse(now) : NaN;
       if (!Number.isFinite(n)) return null;
       const form = (ms) => (typeof now === "number" ? ms : new Date(ms).toISOString());

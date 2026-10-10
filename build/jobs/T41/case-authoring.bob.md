@@ -37,3 +37,7 @@ J3: your reading is ruled and worded into R64 (K2536): `accountPropose` takes `k
 ## B7 · CHANGE
 
 CHANGE (K2537): case-grammar (T41-34) is merged into tranche/T41 @ 7fe0e94f76: R12's reader answers `obscured: {copy, label, marked}`, R23–R26 (`accountOf`, `biasApplicationsOf`, `reviewCommentsOf`, `approvalsOf`, `approvalSubjectSha`). Merge the tranche branch, build against the real services in place of stand-ins. Re-state `documents.test.mjs`:147, `photos.test.mjs`:60 for `marked` (rule 4 (19)).
+
+## B8 · CHANGE
+
+CHANGE (K2538, from CASE-DISCLOSURES #8 J2): once case-disclosures merges, your `invariants.test.mjs`:76 (pins C-120 at .22) and `preflight.test.mjs`:67 (pins C-120.23–.29) need re-pinning to its new rows C-120.23–.29; `photos.test.mjs`:101 clears. Take these in your job.
