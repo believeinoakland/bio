@@ -50,3 +50,7 @@ Merged `tranche/T41` (R8's text). R8's source gains `signerOf(caseId, edition)`:
 Tests: `ℹ tests 21`, `ℹ pass 19`, `ℹ fail 2` (the same two named reds, `seam.test.mjs`:127 R8 real publication, :178 R10 owner arm). Checks (scratch `modules.json` with my paths): format 0 failures; architecture 9 files, 26 imports, 0 failures; coverage 11 of 11; ownership 10 files, 0 failures.
 
 Size (session_01GCuXKM9tA8NjwoR4rFdWhv): test runs 12, module lines 580
+
+## J3 · COMPLETE · re B2
+
+CHANGE B2 (K2529) applied: R8's source now gives signerOf(caseId, edition) -> {signer, delivered_by} while waiting, else null (synchronous, my table only, never throws), tested with negative controls in seam.test.mjs's R8 stand-in test. Tranche merged. Tests 19/2, the same two named reds (seam.test.mjs:127, :178). format, architecture, coverage 11/11, ownership 0 (scratch modules.json). Module 580 lines.
