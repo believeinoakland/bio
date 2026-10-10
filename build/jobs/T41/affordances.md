@@ -13,3 +13,50 @@ Found re-stating `plane.test.mjs`'s R18 roster test for D54: membership R60 (and
 **The other option:** keep R13 as written and narrow R18: the rescue is not offered through `op=affordances` at `EXISTENCE` (a surface offers it from the directory or roster read instead). Simpler, but an act the caller can take is absent from the one pre-flight (UI-KICKOFF: capabilities shape the interface).
 
 Requirement text needed either way (R13, R14 or R18). I carry on with the rest of the job on my reading.
+
+## Completion
+
+**Entries applied (T41-52).**
+- **R48 (DEC-188 (7), (8); U145; K2484).** `ACT_HELP` re-generated from `mock-acts.js` at `3660c18803` (PR #19, 215 entries) by a script that reproduces the T38 table from `c848b56671` exactly. It holds 211 texts. The eleven new `owed_` texts are held under their ops (`accountusesset`, `ailimitset`, `projectkeyset`, `projectsigninset`, `projectaccountswitch`, `projectaccountremove`, `projectkeynoticeseen`, `projectaikeepaway`, `exploreapprove`, `handlechange`, `handlecheck`). `aikeepaway` and `groupkeyset` carry PR #19's re-wordings. The four retired ops' texts (`aiceilingset`, `aicopyceilingset`, `accountswitchset`, `groupswitchset`) are left out. `t36.test.mjs` re-states the counts and named keys, with eight negative controls (K874).
+- **D54 (K2408, K2442) and J1 → R13 as amended (K2578).** `facts.mjs` gains the `EXISTENCE` arm: content facts null and `roster` with `rescue_open` only, so `projectownerrescue` is offered exactly where it is accepted (R18). One detail beyond R13's words: `project_participant` and `project_target_owner` are false, never null, at this arm. They are the caller's positions (R15), not the project's contents, and a null would offer `cite` (R10), which the act refuses there. The other positional facts are asked as R15 asks them.
+  - Re-stated for D54, each with negative controls (a discoverable project, an invited administrator, a non-administrator member, an absent id):
+    - `converts.test.mjs` (both reds, plus a new invited-administrator test);
+    - `plane.test.mjs`: the world builder invites with the owner's viewer; the content-fact tests read through a participant's sight; the roster read is the owner's; a new D54 test; R23 gains the founder's-sight line.
+  - The stale doctrine comments at `affordances.mjs` (conclude, cite) are re-worded.
+- **Retired ops and N823.**
+  - `t33.test.mjs`: credentials' `accountswitchset` and ai-runs' `aiceilingset`, `aicopyceilingset` are retired. `aiusage` is ai-use's now, its row still T33's. Hypotheses' five T41 ops are pinned.
+  - `t34.test.mjs`: `groupswitchset` is retired; the precedent pair is re-pointed to `reminderset`. R42 reads `publishatmove`, `publishatcancel` and `publishschedule` from publish-schedule's map (and checks they left publication's), clearing rule 4 (20)'s `t34`:35.
+  - `t31.test.mjs`: R38's stale filter names its two ops, not `*watch` (T41's `projectwatch`).
+- **The new ops (R12, R19, R41; op-grades R29, R30).**
+  - `catalogue.test.mjs`: the band set and R27's undetermined set gain T41's grades, pinned by name from op-grades R30's text (8 reasoned, 18 reversible, 22 undetermined).
+  - New `t41-backing.test.mjs`: R19, each of the eight `reasoned` ops driven at its owner's interface (credentials, investigation, hypotheses, reading-guides, steps), plus the list test.
+  - New `t41.test.mjs`: R12's totality and R41's explanation over T41's ops, and the retired four.
+  - `plane.test.mjs`'s "every reasoned op driven" list gains T41's.
+- **K2443 (five proposals).** No text of this module names five proposals: nothing changed.
+
+**Final `uses`** (for BOB to apply at merge). Add `steps`, `reading-guides`, `investigation` (each test-only, `t41-backing.test.mjs`'s fixtures; requirements Uses already names them, K2418) and `publish-schedule` (`t34.test.mjs`, its op map; N823). All four are earlier in the order. `question-explorer`, named in Uses, is not imported and needs no edge. With the four added, `architecture.mjs` reads 0 failures (checked with a local, reverted edit of `modules.json`). Without them it reads exactly those 4.
+
+**Reading set (mechanics §17, K2304).** The module's own code and tests alone are 595 KB, over 300 KB, so step (3) applied.
+- Read whole myself: `build/requirements/affordances.md`; layer 11's row of `build/layers.md` ("nothing below depends on them": the four new edges all point down); `act-help.mjs`, `facts.mjs`; the tests I changed (`t36`, `converts`, `plane`, `catalogue`, `t31`, `t33`, `t34`); the owners' tests and fixtures I drive (parts named in `t41-backing`); op-grades' `t41.mjs` diff; membership's sight services (`sight`, `#administratorView`, `visibilityOf`, `existenceAct`, `projectVisibilitySet`).
+- A worker read the rest in full (`affordances.mjs`, `door.mjs`, `words.mjs` and 13 test files). Its summary is 33.8 KB, every statement citing file and line; it is in my session's scratchpad.
+- What it found that mattered, all acted on: catalogue's closed band and R27 sets would break on T41's grades; no T41 reasoned backing existed; the stale "admin sees every project" comments. What it left out that mattered: nothing found.
+
+**Found in another module (REPORT).** None beyond the J1 question, now R13's.
+
+**Deferred.** None.
+
+**Tests and checks run** (on `job/T41/affordances` with `tranche/T41` merged, op-grades included; K2579).
+- This module (`bio-plane/test/m/affordances/`, 20 files): **242 pass, 0 fail.**
+  - On `tranche/T41` before this job: 186 pass, 34 fail (plane 28, converts 2, t33 1, t34 2, t36 1).
+  - Rule 4 (11)'s three D54 tests, rule 4 (12)'s `t33`:151 and `t34`:199, rule 4 (20)'s `t34`:35 and rule 4 (22)'s affordances share are all cleared.
+- Layer tests: none (manifest).
+- Users of the service I changed (`affordanceFacts`' EXISTENCE arm): tasks, queue (with `conclude-project`), op-declarations, store-door, control-plane, plane (with `migrate-released`); 112 files.
+  - My branch: 710 pass, 30 fail. The same tree without my change (`tranche/T41` at `61be02ae4d`): 710 pass, 30 fail, file for file identical.
+  - The 30 are the users' own reds, already on the tranche: rule 4 (12), (15), (17), (18), (20), (22), each until its own job.
+- Checks (`civicos-process`):
+  - `format`: 0 failures.
+  - `architecture affordances`: 4 failures, exactly the four new `uses` edges above; 0 once BOB applies them.
+  - `coverage affordances`: 34 of 34 live ids named, 0 failures.
+  - `ownership affordances tranche/T41`: 13 files, 0 failures.
+
+Size (session_01QdSkAamnkagsBNMwfgAvuB): test runs 34, module lines 2,330
