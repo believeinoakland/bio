@@ -14,7 +14,7 @@ import { readFileSync } from "node:fs";
 import { world, V, sha } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, PHOTO_NOT_COVERABLE_WORDS, PHOTO_UNCHECKED_WORDS, PHOTO_WORDS, PHOTO_STATES,
          photoRead } from "../../../src/case-disclosures/index.mjs";
-import * as CC from "../../../src/case-carriage/index.mjs";
+import { OBSCURED_LABEL, PUBLISHED_LABEL } from "../../../src/case-carriage/index.mjs";
 import { CASE_DOCUMENT_FORMAT, materialBlockLines, materialsOf } from "../../../src/case-grammar/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c", DOC4 = "INFO-2026-0004-d";
@@ -35,10 +35,9 @@ function refused(r, code) {
 function setup() { const w = world(); for (const m of ["alice", "bo"]) w.member(m); return w; }
 const judged = (w, members, supporting = [], viewer = V("alice")) =>
   w.cd.materialsJudged(w.prepared(members), w.roles(members, supporting), viewer);
-const { OBSCURED_LABEL } = CC;
 /* R6 (T40; DEC-185 (1); K2483): a photo's copy, marked or with nothing to obscure, as R6 answers it; R7's row drops the key */
 const OB = (copy) => ({ copy, label: OBSCURED_LABEL, marked: true, label_key: "photo.obscured.label" });
-const PUB = (copy) => ({ copy, label: CC.PUBLISHED_LABEL ?? null, marked: false, label_key: "photo.published.label" });
+const PUB = (copy) => ({ copy, label: PUBLISHED_LABEL, marked: false, label_key: "photo.published.label" });
 const rowOf = ({ label_key, ...o }) => o;
 const actor = (w, capture, who) => w.st.sql.exec(`INSERT INTO capture_actors (capture_sha, actor, at) VALUES (?, ?, ?)`,
                                                   capture, who, "2026-09-27T10:00:00Z");
@@ -58,7 +57,7 @@ test("R22: PHOTO_NOT_COVERABLE's and PHOTO_UNCHECKED's translations are words.js
   assert.equal(PHOTO_UNCHECKED_WORDS, wordOf("photo.refused.unchecked").en);
   assert.equal(CASE_DISCLOSURE_CHECKS.PHOTO_UNCHECKED.check, "C-120.19");
   assert.equal(OBSCURED_LABEL, wordOf("photo.obscured.label").en, "the label is case-carriage's, the same words");
-  assert.equal(CC.PUBLISHED_LABEL, wordOf("photo.published.label").en, "every other photo's label, case-carriage's (T40)");
+  assert.equal(PUBLISHED_LABEL, wordOf("photo.published.label").en, "every other photo's label, case-carriage's (T40)");
   assert.notEqual(PHOTO_WORDS["photo.refused.unchecked"], "Signing waits until every photo the case relies on is checked: {photo}.",
     "negative control: T38's words are gone");
 });
@@ -82,7 +81,7 @@ test("R6: a photo never travels whole — a marked photo with a copy is answered
   assert.deepEqual(w.snapshot(), before, "nothing written");
   /* supporting only: the same */
   assert.deepEqual(judged(w, [Q], [Q]).materials.map((m) => [m.included, m.obscured && m.obscured.label]),
-    [[false, OBSCURED_LABEL], [true, null], [false, CC.PUBLISHED_LABEL ?? null]]);
+    [[false, OBSCURED_LABEL], [true, null], [false, PUBLISHED_LABEL]]);
   /* negative control: the same document no photo and not held whole is C-120.8 */
   const c = setup(); c.doc(DOC, {}, { indexed: false }); c.finding(Q, [{ target: DOC }]);
   refused(judged(c, [Q]).refusals[0], "RELIED_ON_NOT_PRESENTABLE");
@@ -305,7 +304,7 @@ test("R29: photosOf answers the ceremony's Photos step over R6's materials — o
     ["marked", null, "UNSUPPORTED_JPEG_PROCESS", PHOTO_NOT_COVERABLE_WORDS, null]);
   assert.deepEqual([out.photos[2].state, out.photos[2].words, out.photos[2].taken_by, out.photos[2].relied_on_by],
     ["unchecked", PHOTO_UNCHECKED_WORDS, "alice", [{ target: Q2, role: "supporting" }]]);
-  assert.deepEqual([out.photos[3].state, out.photos[3].copy, out.photos[3].words], ["nothing_to_obscure", COPY2, CC.PUBLISHED_LABEL ?? null]);
+  assert.deepEqual([out.photos[3].state, out.photos[3].copy, out.photos[3].words], ["nothing_to_obscure", COPY2, PUBLISHED_LABEL]);
   const gate = wordOf("photo.step.gate").en;
   assert.ok(typeof gate === "string" && out.photos.every((p) => p.words !== gate) && !JSON.stringify(out).includes(gate),
     "the gate sentence is the screens', never this module's answer");
@@ -379,7 +378,7 @@ test("R6, R29 over the real case-carriage (its R10–R14): an unchecked photo is
   ({ r, photos } = view());
   assert.deepEqual(r.refusals, []);
   assert.deepEqual(r.materials[0].obscured, PUB(m2.copy.sha256));
-  assert.deepEqual(photos.photos.map((x) => [x.state, x.words]), [["nothing_to_obscure", CC.PUBLISHED_LABEL ?? null]]);
+  assert.deepEqual(photos.photos.map((x) => [x.state, x.words]), [["nothing_to_obscure", PUBLISHED_LABEL]]);
   /* a cover refused on a photo marked as having nothing to obscure */
   const p2 = w.doc(DOC3, {}, { name: "c1.png", text: "a second photo" });
   w.finding(Q2, [{ target: DOC3 }]);

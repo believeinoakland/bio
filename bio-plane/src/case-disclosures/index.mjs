@@ -80,7 +80,7 @@ import { eventsOf } from "../events/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { peopleOf as peopleModuleOf } from "../people/index.mjs";
-import * as caseCarriageModule from "../case-carriage/index.mjs";
+import { caseCarriageOf, OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "../case-carriage/index.mjs";
 import * as caseCheckerModule from "../case-checker/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 import { DRAFT_KINDS } from "../run-rules/index.mjs";
@@ -157,7 +157,7 @@ export class CaseDisclosures {
   get membership() { return this.#deps.membership ||= membershipOf(this.#deps.host); }
   /* R6, R29 (T37; N757): the marks on a photo and its copy (`case-carriage` R10); R6 (T39; N806): a member document's
      publication copy (its R16). */
-  get caseCarriage() { return this.#deps.caseCarriage ||= caseCarriageModule.caseCarriageOf(this.#deps.host); }
+  get caseCarriage() { return this.#deps.caseCarriage ||= caseCarriageOf(this.#deps.host); }
   /* R30 (T41): whether a statement is in the lens this case prints (`bias` R49); the account's five arms
      (`case-checker` R24, pure, imported unless a test passes its own). */
   get bias() { return this.#deps.bias ||= biasOf(this.#deps.host); }
@@ -463,7 +463,7 @@ export class CaseDisclosures {
       const obscured = isPhoto && photo.state !== "unchecked" && !photo.refused && photo.copy
         ? { copy: photo.copy, ...photoLabel(photo.state === "marked") }
         : document && document.state === "copy"
-          ? { copy: document.copy, label: caseCarriageModule.COPY_CLEANED_LABEL, label_key: "document.cleaned.label" }
+          ? { copy: document.copy, label: COPY_CLEANED_LABEL, label_key: "document.cleaned.label" }
           : null;
       const plain = !(photo && photo.unread) && !isPhoto && !(document && !AS_HELD.includes(document.state));
       return { ...m, held, included: plain && held.whole, obscured, photo, document };
@@ -1410,16 +1410,15 @@ export class CaseDisclosures {
 }
 
 /* R6, R29 (T40; DEC-185 (1); K2483): the label a photo's copy carries, `case-carriage`'s words (its R11), and the key a
-   reader's surface shows it by. `PUBLISHED_LABEL` is read off the module namespace while case-carriage's T41 entry adds
-   it (null until then, so no row claims words it does not hold). */
+   reader's surface shows it by. */
 /* R30: one cite as a comparable key, a string as itself and `case-grammar` R23's `{kind, ref, ord}` by those fields. */
 const citeKey = (c) => (typeof c === "string" ? c : JSON.stringify([c && c.kind ? c.kind : null, c && c.ref != null ? c.ref : null,
                                                                     c && c.ord != null ? c.ord : null]));
 
 function photoLabel(marked) {
   return marked
-    ? { label: caseCarriageModule.OBSCURED_LABEL, marked: true, label_key: "photo.obscured.label" }
-    : { label: caseCarriageModule.PUBLISHED_LABEL ?? null, marked: false, label_key: "photo.published.label" };
+    ? { label: OBSCURED_LABEL, marked: true, label_key: "photo.obscured.label" }
+    : { label: PUBLISHED_LABEL, marked: false, label_key: "photo.published.label" };
 }
 
 /* R6 (T39; N806): the publication-copy states (`case-carriage` R16) a document is judged in by what is held, as any

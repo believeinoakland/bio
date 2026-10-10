@@ -50,11 +50,16 @@
 - `photos.test.mjs` R7's round trip of `marked` is green.
 - `documents.test.mjs` R7 is re-stated (rule 4 (19)): R12 reads a member document's copy back `marked: true` by its label, while R7 writes it `{copy, label}`.
 
-**Waiting on case-carriage** (T41-35), 2 tests of `photos.test.mjs` red:
-- `:46`, R22: R11's `OBSCURED_LABEL` words;
-- `:66`, R6: `PUBLISHED_LABEL`.
+**CHANGE B5 (K2539), case-carriage merged:** applied.
+- I merged `tranche/T41`.
+- `OBSCURED_LABEL`, `PUBLISHED_LABEL` and `COPY_CLEANED_LABEL` are now imported by name, with no namespace reads left.
+- Every module test is green.
 
-Every other test is green. On its CHANGE I merge, switch `PUBLISHED_LABEL` to a named import and re-run.
+**case-authoring's suite after B5**, for its job:
+- new since J2: `photos.test.mjs`:76, R34's Photos step. A copy with nothing to obscure now carries `PUBLISHED_LABEL` (R29), where it was null.
+- rule 4 (19): `photos.test.mjs`:60 and `documents.test.mjs`:147.
+- reported in J2: `invariants`:76 and `preflight`:67.
+- not mine: `converts`:174, `statement`:59, `whatchanged`:154.
 
 **Reading set (K2304, START step 3).** My own code and tests alone are 374 KB, over 300 KB, so step (3) applied.
 - **Read whole myself:**
@@ -69,8 +74,8 @@ Every other test is green. On its CHANGE I merge, switch `PUBLISHED_LABEL` to a 
 - **Read by a worker, whole:** `accepted.mjs`, `people.mjs`, `document.mjs`, and the tests captures, imported, people, tensions, hunch, seam and carries. Its summary is about 8 KB, every statement citing file:line. It covered each file's exports and tests, every assertion my change could break, R23's service enumeration in seam, and flaws.
 - **Did anything left out matter?** No. The summary's two flaws are handled (`accepted.mjs`:75 fixed; `document.mjs` reported above).
 
-**Tests and checks run** (re-run after B4, the four checks 0 failures again):
-- `node --test bio-plane/test/m/case-disclosures/*.test.mjs`, file by file: pass 101, fail 2 (the two above, after B4).
+**Tests and checks run** (re-run after B5, the four checks 0 failures again):
+- `node --test bio-plane/test/m/case-disclosures/*.test.mjs`, file by file: pass 103, fail 0 (after B5).
 - No layer tests are named in the manifest.
 - case-authoring's suite, compared above.
 - answer-envelope `families.test.mjs`: pass 10, fail 3. Row census: fail 1, as above.
@@ -79,7 +84,7 @@ Every other test is green. On its CHANGE I merge, switch `PUBLISHED_LABEL` to a 
 - `checks/coverage.mjs bio case-disclosures`: 31 of 31 live ids named, 0 failures.
 - `checks/ownership.mjs bio case-disclosures tranche/T41`: 9 files, 0 failures.
 
-Size (session_01LY8Zq25Bmbg74LWk3TRP5f): test runs 15, module lines 2,379
+Size (session_01LY8Zq25Bmbg74LWk3TRP5f): test runs 17, module lines 2,378
 
 ## J1 · QUESTION
 
