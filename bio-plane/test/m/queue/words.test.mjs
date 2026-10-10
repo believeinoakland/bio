@@ -13,9 +13,10 @@ import { QUEUE_OBLIGATION_KINDS, QUEUE_FINDING_KINDS, QUEUE_CONDITION_KINDS, MUT
 
 const FACTS = { objective_gap: { bound: 50, truncated: false }, unattributed: { count: 1, inquiries: ["INQ-1"] },
                 contradiction: { bound: 50, truncated: false }, dispositions: [] };
-/* "condition" names a checkpoint's own condition and an objective's satisfaction condition in two kinds' sentences:
-   neither calls a status item a condition (R48), so exactly those two phrases are set aside before the sweep. */
-const NOT_A_SIGNAL = [/whether its condition was met/g, /satisfaction condition/g];
+/* "condition" names a checkpoint's own condition and an objective's satisfaction condition in three kinds' sentences
+   (project-quiet's since T41, R1's words, K2484): none calls a status item a condition (R48), so exactly those three
+   phrases are set aside before the sweep. */
+const NOT_A_SIGNAL = [/whether its condition was met/g, /satisfaction condition/g, /its objective, its condition and/g];
 const BANNED = /\b(obligation|condition|signal)s?\b/i;
 const offending = (text) => BANNED.test(NOT_A_SIGNAL.reduce((t, re) => t.replace(re, ""), String(text)));
 
@@ -135,7 +136,11 @@ test("R48: no refusal or answer of the acts, the mint or the sort says obligatio
   assert.equal(offending("a signal is a fact about our machinery"), true);
   assert.equal(offending("Signals"), true);
   assert.equal(offending("whether its condition was met"), false);
-  assert.deepEqual(vocab.filter((s) => BANNED.test(s)).length, 2, "only the checkpoint's and the objective's own condition");
+  assert.deepEqual(vocab.filter((s) => BANNED.test(s)).length, 3,
+    "only the checkpoint's, the objective's and the quiet project's objective's own condition (R1, K2484)");
+  assert.equal(vocab.filter((s) => BANNED.test(s) && /its objective, its condition and what the record still lacks/.test(s)).length, 1);
+  assert.equal(offending("its objective, its condition and what"), false);
+  assert.equal(offending("its condition is unknown"), true, "the set-aside is the phrase, not the word");
 });
 
 test("R12 (K1035): the newer-capture door says adopting takes a why and keeping's is optional; it requires the notice and names both acts", () => {

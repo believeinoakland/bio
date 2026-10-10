@@ -11,6 +11,11 @@
  * same: one decision (`proposal_dispositions` is keyed by the pair) governs one item (queue R32). When the stage also has a
  * missing-stage proposal, the finding joins that item, whose kind leads and whose basis names both.
  *
+ * R11 (K2581): what the item counts is counted over the instances the viewer may see, an instance seen when
+ * `subjectsOf` answers it at least one bundle: `n`, `overdue_count`, the grade and the cardinality group's
+ * `document_count`, and every sentence that counts them. A proposal or a group with no instance seen earns no item, so
+ * nothing about an instance the viewer may not see reaches it, as a count or otherwise.
+ *
  * PURE: no storage, no clock, no viewer. What needs them is the caller's, passed in: the subject bundles an instance
  * reaches through the viewer's gate, the homes of a set of subjects (queue R7) and the options on them (queue R12). */
 import { weakerGrade } from "../connections/index.mjs";
@@ -65,6 +70,31 @@ export function cardinalityGroups(feed) {
   return out.sort((a, b) => b.n - a.n || cmpKey(a, b));
 }
 
+/** R11 (K2581): the weakest grade across instances, null with `grade_determined: false` when any is undetermined. */
+function gradeOver(instances) {
+  const undetermined = instances.some((i) => !i.grade_determined || !i.grade);
+  return { grade_determined: !undetermined,
+           grade: undetermined ? null : instances.map((i) => i.grade).reduce((a, b) => weakerGrade(a, b)) };
+}
+
+/** R11 (K2581): a proposal recounted over the instances `seen` keeps; null when none is seen. */
+function proposalSeen(p, seen) {
+  const instances = (p.instances || []).filter(seen);
+  if (!instances.length) return null;
+  const overdue_count = instances.filter((i) => i.overdue === true).length;
+  const overdue = overdue_count > 0;
+  return { ...p, instances, n: instances.length, overdue_count, overdue, ...gradeOver(instances),
+           kinds: overdue ? ["missing_predecessor", "overdue_successor"] : ["missing_predecessor"] };
+}
+
+/** R11 (K2581): a cardinality group recounted over the instances `seen` keeps; null when none is seen. */
+function groupSeen(g, seen) {
+  const instances = g.instances.filter(seen);
+  if (!instances.length) return null;
+  return { ...g, instances, n: instances.length,
+           document_count: instances.reduce((s, i) => s + (Number(i.document_count) || 0), 0), ...gradeOver(instances) };
+}
+
 /** The cardinality sentence, in this module's words: never "required and absent". */
 export function cardinalityDetail(g) {
   const held = g.cardinality === "1" ? "exactly one" : "at most one";
@@ -84,7 +114,14 @@ export function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, sub
         if (!into.includes(b)) into.push(b);
     return into;
   };
-  const exceeded = new Map(cardinalityGroups(feed).map((g) => [g.key, g]));
+  /* R11 (K2581): an instance is seen when the viewer may see a bundle behind it; each count is over those alone */
+  const seenMemo = new Map();
+  const seen = (inst) => {
+    const k = `${inst.progression_key}\u0000${inst.entity_id}`;
+    if (!seenMemo.has(k)) seenMemo.set(k, (subjectsOf(inst.progression_key, inst.entity_id) || []).length > 0);
+    return seenMemo.get(k);
+  };
+  const exceeded = new Map(cardinalityGroups(feed).map((g) => groupSeen(g, seen)).filter(Boolean).map((g) => [g.key, g]));
   const items = [];
   const item = ({ key, kind, p, subjects, prior, summary, detail, basis }) => ({
     id: `FINDING::${key}`,
@@ -108,7 +145,9 @@ export function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, sub
     assignee_role: null,
     options: optionsOf(subjects),
   });
-  for (const p of (feed && Array.isArray(feed.proposals) ? feed.proposals : [])) {
+  for (const fp of (feed && Array.isArray(feed.proposals) ? feed.proposals : [])) {
+    const p = proposalSeen(fp, seen);
+    if (!p) continue;                // R11: no instance seen, no item (a seen cardinality group stands on its own below)
     const g = exceeded.get(p.key) || null;
     exceeded.delete(p.key);
     const subjects = subjectsFor(p.instances || []);

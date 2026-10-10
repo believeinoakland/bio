@@ -42,7 +42,7 @@ function concludedElsewhere() {
     state_by: "member:iris", state_at: T, state_reason: "" }), { basis: [{ target: DOC, role: "supports" }], refs: [DOC] }));
   for (const id of [Q, OPENQ]) assert.equal(w.inquiry(id, reading(id)).ok, true, id);
   /* P, iris's, cites both questions: jonah joins, vera is only invited. S, olga's, SEVERED its edge to Q; O, olga's,
-     cites only the document. omar is an administrator who sees every project and joined none. */
+     cites only the document. omar is an administrator who joined none: hidden, each project is his at EXISTENCE only (D54). */
   const P = w.project("Oversight", "iris", [Q, OPENQ]);
   const S = w.project("Severed", "olga", [], { severed: [Q] });
   const O = w.project("Elsewhere", "olga", []);
@@ -88,13 +88,38 @@ test("R14 R15 R23 R8: on a question concluded with no project, conclude is offer
   assert.deepEqual([d.weight, d.rung, d.mode, d.prompt], ["single", "reasoned", "session", null]);
 });
 
-test("R15 R23: concludes_for_project is asked of who the caller is, over the projects the viewer can see", () => {
-  const { a } = concludedElsewhere();
+test("R15 R23 (D54): concludes_for_project is asked of who the caller is, over the projects the viewer can see — an "
+   + "administrator's viewer, the founder's included, neither invited nor joined to a hidden project sees it only at "
+   + "EXISTENCE and so lends no sight of it; the same project set discoverable, or the administrator invited, is seen whole", () => {
+  const { w, a, P } = concludedElsewhere();
   const f = (viewer, identity) => a.affordanceFacts({ target: Q, viewer, identity }).concludes_for_project;
-  assert.equal(f("admin", V("jonah")), true, "an administrator's sight, asked as jonah");
+  const sight = (viewer) => w.membership.sight(P, viewer);
+  /* P is hidden (no setting): the founder and omar, an administrator who joined nothing, see it at EXISTENCE only */
+  assert.deepEqual([sight("admin"), sight(V("omar"))], ["existence", "existence"]);
+  assert.equal(f("admin", V("jonah")), false, "the founder's sight of a hidden project lends jonah none");
+  assert.equal(f(V("omar"), V("jonah")), false, "nor an administrator's");
+  assert.equal(f(V("jonah"), V("jonah")), true, "jonah's own sight: joined");
   assert.equal(f("admin", V("omar")), false, "the administrator's own identity joined nothing");
   assert.equal(f("admin", V("vera")), false);
   assert.equal(f(V("iris"), null), true, "identity absent: the viewer's own member");
+  /* negative control (K874): the owner sets P discoverable, and an administrator's viewer is at FULL again */
+  assert.equal(w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "iris", viewer: V("iris") }).ok, true);
+  assert.deepEqual([sight("admin"), sight(V("omar"))], ["full", "full"]);
+  assert.equal(f("admin", V("jonah")), true, "an administrator's sight of a discoverable project, asked as jonah");
+  assert.equal(f(V("omar"), V("jonah")), true);
+  assert.equal(f("admin", V("omar")), false, "still: the administrator's own identity joined nothing");
+});
+
+test("R15 R23 (D54): an administrator invited to a hidden project sees it whole, so its sight serves the caller's "
+   + "identity there; one not invited does not", () => {
+  const { w, a, P } = concludedElsewhere();
+  const f = (viewer, identity) => a.affordanceFacts({ target: Q, viewer, identity }).concludes_for_project;
+  assert.equal(w.membership.sight(P, V("omar")), "existence");
+  assert.equal(f(V("omar"), V("jonah")), false);
+  assert.equal(w.membership.projectInvite({ projectId: P, handle: "h_omar", by: "iris", viewer: V("iris") }).ok, true);
+  assert.equal(w.membership.sight(P, V("omar")), "full");
+  assert.equal(f(V("omar"), V("jonah")), true, "the invited administrator's sight, asked as jonah");
+  assert.equal(f(V("omar"), V("omar")), false, "invited is not joined: omar concludes for no project");
 });
 
 test("R14 R8: on an open question conclude is offered to every person, and withheld from a machine", () => {
@@ -142,21 +167,36 @@ function publishable() {
 }
 const GATE = { needs: () => "publish", mode: () => "session" };
 
-test("R8 R10 R14 R15 R18: publish is offered exactly where publishCase does not refuse the caller on position — the "
-   + "owner offered, a joined participant and an administrator owning nothing withheld — and the table is not uniform", () => {
+/* The refusals publishCase gives on the caller's position: not an owner (case-authoring), and, before it, sight of a
+   hidden project at EXISTENCE only (membership R44, R77; D54). */
+const POSITION = ["NOT_THE_PROJECT_OWNER", "PROJECT_SEEN_NOT_A_PARTICIPANT"];
+
+test("R8 R10 R14 R15 R18 (D54): publish is offered exactly where publishCase does not refuse the caller on position — the "
+   + "owner offered, a joined participant and an administrator owning nothing withheld — and the table is not uniform; "
+   + "the administrator, neither invited nor joined, is refused at the hidden project's EXISTENCE, and once the project "
+   + "is discoverable, as no owner", () => {
   const { w, P, as } = publishable();
-  const before = w.snapshot();
   /* the position half of the refusal alone: a ceremony with no statement, so an owner passes the authority fences and
      stops at NO_STATEMENT, and nothing is written */
   const probe = (m) => w.publish(P, m, [F], { statement: "" }).reason;
-  const rows = ["alice", "ruth", "omar"].map((m) => {
+  const table = () => ["alice", "ruth", "omar"].map((m) => {
     const f = as(m);
     return { m, owner: f.project_owner, offered: ids(f).includes("publish"), reason: probe(m) };
   });
-  assert.deepEqual(rows.map((r) => [r.m, r.owner, r.offered]), [["alice", true, true], ["ruth", false, false], ["omar", false, false]]);
-  for (const r of rows) assert.equal(r.offered, r.reason !== "NOT_THE_PROJECT_OWNER", `${r.m}: ${r.reason}`);
-  assert.deepEqual(rows.filter((r) => r.reason !== "NOT_THE_PROJECT_OWNER").map((r) => r.reason), ["NO_STATEMENT"],
-    "the one caller past the position fence is stopped by the ceremony, by name");
+  const check = (rows, omarReason) => {
+    assert.deepEqual(rows.map((r) => [r.m, r.owner, r.offered]), [["alice", true, true], ["ruth", false, false], ["omar", false, false]]);
+    for (const r of rows) assert.equal(r.offered, !POSITION.includes(r.reason), `${r.m}: ${r.reason}`);
+    assert.deepEqual(rows.map((r) => r.reason), ["NO_STATEMENT", "NOT_THE_PROJECT_OWNER", omarReason],
+      "the one caller past the position fence is stopped by the ceremony, by name");
+  };
+  let before = w.snapshot();
+  check(table(), "PROJECT_SEEN_NOT_A_PARTICIPANT");
+  assert.deepEqual(w.snapshot(), before, "nothing written");
+  /* negative control (K874): discoverable, the administrator sees the project whole, and is refused as no owner */
+  assert.equal(w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "alice", viewer: caFix.V("alice") }).ok, true);
+  assert.equal(w.membership.sight(P, caFix.V("omar")), "full");
+  before = w.snapshot();
+  check(table(), "NOT_THE_PROJECT_OWNER");
   assert.deepEqual(w.snapshot(), before, "nothing written");
 });
 

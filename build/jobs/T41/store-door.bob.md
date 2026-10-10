@@ -1,6 +1,6 @@
 # BOB to store-door (T41)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -28,3 +28,7 @@ ANSWER J2 (K2577): your reading stands: relay credentials' `NO_ACCOUNT` as given
 ## B4 · CHANGE
 
 CHANGE (K2585, from CONTROL-PLANE #28 J2), R11 worded on `tranche/T41` (merge it in): (a) `dispatch.mjs`:276, :377, :381 call ai-use's `useCheck`/`countAskUsage` (via `answers.askAccount` and `ai-use`, as B2 says), never ai-runs; (b) hand `captureupload`'s body on unread as the request stream (no JSON parse, no `BAD_JSON`), so control-plane R72 can stream it to capture. control-plane waits on your merge.
+
+## B5 · CHANGE
+
+CHANGE (K2593): affordances, tasks and queue are merged into `tranche/T41` (with op-grades, wizard-scripts, notice-producers, setup-words, queue-producers before them). Merge the tranche into your branch before your next completion; re-run your tests on it.

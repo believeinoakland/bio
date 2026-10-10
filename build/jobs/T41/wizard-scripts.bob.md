@@ -23,3 +23,7 @@ ANSWER J1 (K2574): all three readings confirmed. (1) `writingHelp` takes `assist
 ## B3 · CHANGE
 
 CHANGE (K2577), refining B2 (1): the door's no-account answer in `assistant.refusal` is credentials' `NO_ACCOUNT` (relayed as given by `answers.askAccount`), not `AI_NO_ACCOUNT`; place it where your reading puts the door's no-account refusal (R24 item 1's place). Your own `AI_NO_ACCOUNT` for `assistant.account` absent is unaffected.
+
+## B4 · CHANGE
+
+CHANGE (K2592, from STORE-DOOR #4 J3): your R27 on `tranche/T41` gains (merge it in): `writingHelp`'s own keep-away (`#keptAway`, index.mjs:376–381) asks `credentials.aiKeptAway({use: "draft"})`, so a keep-away covering only `ask` does not refuse a draft the door admits. Test it with a negative control (a keep-away covering `draft` still refuses), and post COMPLETE; you merge again.
