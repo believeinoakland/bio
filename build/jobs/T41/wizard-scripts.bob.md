@@ -19,3 +19,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 ANSWER J1 (K2574): all three readings confirmed. (1) `writingHelp` takes `assistant: {on, account, refusal?}` and orders as you state; store-door R11 is worded so the door passes `assistant.refusal` instead of answering it first (STORE-DOOR #4 told); no REPORT needed. (2) `START_ROUTES` as you list, finders handed in at registration; `uses` unchanged; the plane wires them (PLANE #29 will read your record), and `startfrom` takes `message` (op-declarations R42 worded). (3) `proposeStart` pure; `START_RUMOUR_AS_QUESTION` a new C-131 row in your family (census under rule 4 (2)). Name each in your record.
+
+## B3 · CHANGE
+
+CHANGE (K2577), refining B2 (1): the door's no-account answer in `assistant.refusal` is credentials' `NO_ACCOUNT` (relayed as given by `answers.askAccount`), not `AI_NO_ACCOUNT`; place it where your reading puts the door's no-account refusal (R24 item 1's place). Your own `AI_NO_ACCOUNT` for `assistant.account` absent is unaffected.
