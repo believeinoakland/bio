@@ -36,3 +36,7 @@
 - ownership vs `tranche/T41`: 6 files changed; 0 failures.
 
 Size (session_01GUbcYMEuosXQHJ9UMT6FdG): test runs 5, module lines 2775
+
+## J1 · COMPLETE
+
+T41-48b applied: R34's tray answers every proposal of a run in its order, no paging; planRead whole; C-124.52 PROPOSALS_CURSOR_REFUSED retired, number held. Module 63/63 pass; four checks 0 failures. For BOB: answer-envelope rows-before-r43.json:634 must move the code into changed.retired; row-census fixture :480; plane bundle stale; UX-stream docs still say five; op-declarations drops the after parameter (its R46). Details in my record.
