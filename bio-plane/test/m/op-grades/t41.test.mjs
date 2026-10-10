@@ -149,8 +149,8 @@ test("R29 R30: T41's tables hold exactly these ops, none both graded and stated 
 
 /* ---- the totality over a stand-in table (affordances R12's rule; K2507) -------------------------------------------- */
 /* The ops op-declarations R41, R42, R43 and R45 declare, with actionseekspropose, as `{op, mutating, gated}`: each act
-   mutating, `readpages` mutating (it spends a run's bound), every op gated by a NEEDS row. `handlecheck` is public; it is
-   held gated here on J1's reading (a `null` NEEDS row, as `noticespublic`'s), which BOB settles. */
+   mutating, `readpages` mutating (it spends a run's bound), every op gated by a NEEDS row. `handlecheck` is public, with a
+   `null` NEEDS row as `noticespublic`'s (op-declarations R42 as K2574 words it), so it is gated here. */
 const STAND_IN = [
   ...Object.keys(R30_WRITES).map((op) => ({ op, mutating: true, gated: true })),
   { op: "handlechange", mutating: true, gated: true },
