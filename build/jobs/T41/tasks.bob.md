@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **Marked at this START (K2573, re-taken after L10's merge):** none. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
+
+## B2 · CHANGE
+
+CHANGE (K2575): your two findings are taken into this job (P8, P19), not deferred. Your R1 and R3 on `tranche/T41` gain them (merge it in): R1's administrator fallback picks only an administrator membership R80 admits to the subject, else `unassigned`; R3's override requires the actor to see the subject (R80), else `NO_SUCH_TASK`, never `TASK_NOT_YOURS`. Test each explicitly with a negative control (K874), and post COMPLETE again.
