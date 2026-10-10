@@ -1,6 +1,6 @@
 # store-door (T41)
 
-**Status** · session_01PuHeVd3DfFWWwcgeAkRtmj · depth 2 · RUNNING until 2026-10-10T20:57:52Z (control-plane and plane tests (users of store-door)) · handled B4
+**Status** · session_01PuHeVd3DfFWWwcgeAkRtmj · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
