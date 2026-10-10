@@ -64,3 +64,7 @@ Merged `tranche/T41` (publication T41-36 merged, its copy deleted). PUBLICATION 
 Tests: publish-schedule `ℹ tests 22`, `ℹ pass 22`, `ℹ fail 0` (the two named reds of rule 4 (13)/K2483 are now green with publication's R77 and the table's declaration). publication's suite (its user of R8): 135 tests, 134 pass, 0 fail. Checks (committed `modules.json`, paths written by BOB): format 0 failures; architecture 9 files, 26 imports, 0 failures; coverage 11 of 11; ownership 3 files changed between tranche/T41 and HEAD, 0 failures.
 
 Size (session_01GCuXKM9tA8NjwoR4rFdWhv): test runs 16, module lines 585
+
+## J4 · COMPLETE · re B3
+
+CHANGE B3 (K2543) applied, tranche merged: (1) t34 R3 loop now calls w.ps[act] (my copy slip); (2) tell (R6) never throws: an unreadable wake tells nobody and the act stands; new test 'R6 the notice never throws' (table dropped before the queued notice; fails on the old tell) with a negative control. publish-schedule 22/22 pass (the two named reds now green); publication 134 pass, 0 fail. format 0, architecture 0, coverage 11/11, ownership 0 (3 files). Module 585 lines.
