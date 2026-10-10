@@ -1,6 +1,6 @@
 # conformance (T41)
 
-**Status** · session_019LCq6jQwSHCrrFFYXRcWYs · depth 2 · WORKING · handled B1
+**Status** · session_019LCq6jQwSHCrrFFYXRcWYs · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
