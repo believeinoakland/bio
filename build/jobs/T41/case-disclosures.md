@@ -116,3 +116,7 @@ T41-42 complete; the record's Completion has the detail. K2531 and K2533 (B2, B3
 ## J4 · COMPLETE
 
 B4 (K2537) applied, re-completed. I merged tranche/T41. R31's rows are now case-grammar R24's exactly (target leg|conclusion, a conclusion's ord null), and R30 takes R23's {kind, ref, ord} cites. A new round-trip test runs through the real accountLines/accountOf and biasApplicationsLines/biasApplicationsOf. documents.test.mjs R7 is re-stated for marked (rule 4 (19)), and photos.test.mjs R7 is green. Module tests: pass 101, fail 2. Both reds (photos.test.mjs :46, :66) wait on case-carriage T41-35 (R11's OBSCURED_LABEL words, PUBLISHED_LABEL). Checks: format, architecture, coverage (31 of 31) and ownership all have 0 failures. Size: 2,379 lines.
+
+## J5 · COMPLETE
+
+B5 (K2539) applied, re-completed. I merged tranche/T41, and the case-carriage labels are imported by name. Module tests: pass 103, fail 0. Checks: format, architecture, coverage (31 of 31) and ownership all have 0 failures. Size: 2,378 lines. New red in case-authoring since J2, its job's to take: photos.test.mjs:76 (R34's Photos step), where a copy with nothing to obscure now answers PUBLISHED_LABEL (R29). Its other reds are as recorded.
