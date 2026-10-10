@@ -34,7 +34,7 @@ My best reading, which I am building: `ACD` is `{prefix: 'ACD', owner: 'case-acc
   - **Generated artifacts staled (rule 4 (10); not mine to write, §14):** `case-checker` `program.test.mjs:19` (`program.mjs`); `system/fleetbundles.test.mjs` agent-worker (its bundle inlines `ids.mjs`); `system/newgroup-bundle-fresh.test.mjs` (C): fresh on the tranche, stale on mine (installer's bundle); the plane bundle.
   - **Red on the tranche without me (inherited):** membership `module-order.test.mjs:13`, `:107`, `t9-notice-sight-bounds.test.mjs:161`, progressions `order.test.mjs:16`, promotion `registry.test.mjs:58`, standards `reads.test.mjs:200` (rule 4 (5)); answer-envelope `catalogue-end.test.mjs:17` (rule 4 (6)).
   - **Load, not this change:** capture-requests `plane.test.mjs:167` failed under the two concurrent full runs and passes alone 3 of 3; its `:138`-family test failed on the base run only. The base run's two other reds (a temp-tree cleanup, a provenance `existed` arm) passed on mine.
-- Checks: `format` 0 failures; `architecture record-grammar` 0 failures; `coverage record-grammar` 0 failures (52 of 52 before R55); `ownership record-grammar tranche/T42` 0 failures (re-run at commit below).
+- Checks: `format` 0 failures; `architecture record-grammar` 0 failures; `coverage record-grammar` 53 of 53, 0 failures; `ownership record-grammar tranche/T42` 7 files, 0 failures.
 
 **Deferred.** None.
 
