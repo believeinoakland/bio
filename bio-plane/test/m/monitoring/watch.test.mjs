@@ -80,6 +80,11 @@ test("R70: a change tick on a source a watched project's intent R7 names is repo
   assert.deepEqual([(await tick(w, "INFO-2026-0001-agenda")).body.status, w.arrivals().length], ["removed", 0]);
   w.net.routes[LA] = new Error("connection reset");
   assert.equal((await tick(w, "INFO-2026-0001-agenda")).body.arrivals, null);
+  /* a governed look is no check of the source: refused HOST_COOLING_OFF, nothing reported */
+  w.gov.refuse.push("records.example.org");
+  w.net.routes[LA] = serve("agenda v9");
+  assert.equal((await tick(w, "INFO-2026-0001-agenda")).body.reason, "HOST_COOLING_OFF");
+  w.gov.refuse.length = 0;
   assert.deepEqual(w.arrivals(), []);
   assert.equal(w.inv.quietState({ project: P1, viewer: V("carol") }).quiet, true);
 
@@ -93,6 +98,15 @@ test("R70: a change tick on a source a watched project's intent R7 names is repo
   assert.deepEqual(w.arrivals(), [{ project_id: P1, source: normalizeAddress(LA), arrived_at: at }], "once for that look");
   const q = w.inv.quietState({ project: P1, viewer: V("carol") });
   assert.deepEqual([q.quiet, q.why], [false, "something arrived from a watched source"], "the project's work reads reopened");
+  /* a caller who may not see the project is not told of it, and it is reported all the same */
+  w.st.sql.exec(`UPDATE project_sight SET setting = 'hidden' WHERE project_id = ?`, P1);
+  w.clock.ms += 1000;
+  w.net.routes[LA] = serve("agenda v2b");
+  const unseen = await w.m.monitor({ bundleId: "INFO-2026-0001-agenda", viewer: V("dave"), actorClass: "member", actor: V("dave") });
+  assert.equal(w.membership.inSight(P1, V("dave")), false);
+  assert.deepEqual([unseen.body.status, unseen.body.arrivals], ["modified", { reported: [], failed: [] }]);
+  assert.equal(w.arrivals().length, 2, "reported to the hidden project all the same");
+  w.st.sql.exec(`UPDATE project_sight SET setting = 'discoverable' WHERE project_id = ?`, P1);
   /* monitoring decided nothing about the change: the tick's own record is R8's flag, as on any change */
   assert.equal(w.fm("INFO-2026-0001-agenda").reeval_pending.flag, true);
 
@@ -106,7 +120,7 @@ test("R70: a change tick on a source a watched project's intent R7 names is repo
   w.net.routes[LA] = serve("agenda v3");
   const after = await tick(w, "INFO-2026-0001-agenda");
   assert.deepEqual([after.body.status, after.body.arrivals], ["modified", { reported: [], failed: [] }]);
-  assert.equal(w.arrivals().length, 1, "a project no longer watched is no longer reported");
+  assert.equal(w.arrivals().length, 2, "a project no longer watched is no longer reported");
 });
 
 test("R70: such a source is found by a capture filed at the tick's address as well as by the document's own register, followed through intent R7's cursor to the end; each watched project naming it is told once; a refusal or an unreadable watch fails no tick", async () => {
@@ -143,21 +157,41 @@ test("R70: such a source is found by a capture filed at the tick's address as we
   w.clock.ms += 1000;
   w.net.routes[LC] = serve("contract v4");
   const r3 = await tick(w, "INFO-2026-0004-contract");
-  inv.watchArrival = watchArrival;
   assert.equal(r3.body.ok, true);
   assert.deepEqual(r3.body.arrivals.failed.map((x) => x.reason), ["ARRIVAL_BAD", "ARRIVAL_BAD"]);
+  /* and one that throws is carried as what it said, the tick still recorded */
+  inv.watchArrival = () => { throw new Error("investigation unavailable"); };
+  w.clock.ms += 1000;
+  w.net.routes[LC] = serve("contract v5");
+  const r4 = await tick(w, "INFO-2026-0004-contract");
+  inv.watchArrival = watchArrival;
+  assert.deepEqual([r4.body.ok, r4.body.status], [true, "modified"]);
+  assert.deepEqual(r4.body.arrivals.failed.map((x) => x.reason), ["investigation unavailable", "investigation unavailable"]);
+  assert.equal(w.arrivals().length, 3, "two at the first tick, P1's at the second; neither the refusal nor the throw recorded one");
+  /* a capture neither held by the ticked document nor filed at its address is not its source */
+  w.intent.watch[P1] = ["4".repeat(64)];
+  w.intent.watch[P3] = [];
+  w.clock.ms += 1000;
+  w.net.routes[LC] = serve("contract v6");
+  const r5 = await tick(w, "INFO-2026-0004-contract");
+  assert.deepEqual(r5.body.arrivals, { reported: [], failed: [] });
 });
 
-test("R70: the cadence tick's change ticks report as a caller's op=monitor does, the watched source checked at its own cadence", async () => {
+test("R70 R36: the cadence tick's change ticks report as a caller's op=monitor does, the watched source checked at its own cadence; a watched source that does not ask to be monitored is never fetched (R33's proposal stands)", async () => {
   const w = watchWorld();
   const P1 = project(w, "Cadence");
   const a = w.monitored("INFO-2026-0005-agenda", LA, "agenda v1", { freq: "daily" });
-  w.intent.watch[P1] = [a.cap];
+  const u = w.monitored("INFO-2026-0006-unwatched", LB, "budget v1", { enabled: false });
+  w.intent.watch[P1] = [a.cap, u.cap];
   assert.equal(w.inv.projectWatch({ project: P1, by: V("carol") }).ok, true);
   w.net.routes[LA] = serve("agenda v2");
   const t = await w.m.cadenceTick(w.clock.ms);
   assert.deepEqual(t.ticked.map((x) => [x.bundle, x.frequency, x.status]), [["INFO-2026-0005-agenda", "daily", "modified"]]);
   assert.deepEqual(w.arrivals().map((x) => x.project_id), [P1]);
+  assert.equal(w.net.seen.includes(LB), false, "watching adds no monitoring of an unmonitored source");
+  assert.deepEqual(w.m.watched({ project: P1 }).captures.map((c) => [c.bundle, c.monitored]).sort(),
+                   [["INFO-2026-0005-agenda", true], ["INFO-2026-0006-unwatched", false]]);
+  assert.deepEqual(w.m.proposals({ project: P1, viewer: DAEMON }).map((x) => x.basis.bundle), ["INFO-2026-0006-unwatched"]);
   /* not due again within its day: nothing fetched, nothing reported */
   w.clock.ms += 3600000;
   const t2 = await w.m.cadenceTick(w.clock.ms);

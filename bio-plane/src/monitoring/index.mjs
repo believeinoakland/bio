@@ -1134,8 +1134,12 @@ export class Monitoring {
 
     /* R70 (K2524): a look that recorded something new (a change tick) on a source a watched project keeps watching is
        reported to that project, once; what the change means is not this module's to say (Intake Doctrine §4). */
-    const arrivals = lookArgs.outcome === "changed" && observation && observation.written === true
+    const reached = lookArgs.outcome === "changed" && observation && observation.written === true
       ? this.#reportArrivals({ bundleId, address: addressNorm, at: checked }) : null;
+    /* The answer names only the projects the caller may see (a member's session reaches `op=monitor`); a hidden one is
+       reported to all the same, and never named or counted here (K391's rule). */
+    const sees = (x) => { try { return this.membership.inSight(x.project, viewer) === true; } catch { return false; } };
+    const arrivals = reached ? { ...reached, reported: reached.reported.filter(sees), failed: reached.failed.filter(sees) } : null;
 
     return answer({
       ok: !!promoted?.ok,
