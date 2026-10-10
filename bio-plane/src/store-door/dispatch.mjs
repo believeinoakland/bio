@@ -18,8 +18,8 @@ import { tasksOf, tasksOps } from "../tasks/index.mjs";
 import { affordancesOf, affordancesOps } from "../affordances.mjs";
 import { wizardScriptsOf } from "../wizard-scripts/index.mjs";
 import { askAdmits } from "../answers/scope.mjs";
-import { answersOf } from "../answers/index.mjs";
-import { aiRunsOf } from "../ai-runs/index.mjs";
+import { answersOf, ownerOf } from "../answers/index.mjs";
+import { aiUseOf } from "../ai-use/index.mjs";
 import { membershipOf, notAnAdmin } from "../membership/index.mjs";
 import { instanceSetupOf } from "../setup.mjs";
 import { DISPATCH_CHECKS } from "../answer-envelope/checks.mjs";
@@ -225,7 +225,11 @@ function purgeHoldRefusal(store, url) {
 /* R11 (K1674; answers R1, R2): a read served under an ask's grant (the Worker's `grant` stamp) is recorded in the grant's
    read log through `store.logRead` (answers' `logRead`, handed by plane), its answer scrubbed there and answered as
    recorded; `rule` records its own (answers R7). A read that cannot be recorded throws to R6's catch, so it is never
-   answered unrecorded.
+   answered unrecorded. (T41; K2500; answers R2 as its R30 widens it) Each read is recorded with the grant's `use`,
+   `draft` for a grant minted for a draft and else `ask`, so the rows of the projects kept away from that use are removed
+   before the log records them: the use is the one `store.grantUse(grant)` answers (handed by plane, which mints a
+   draft's grant, its R33), `ask` when no reader is handed or it answers anything but `draft`; a reader that throws is a
+   read that cannot be recorded (R6).
    R9 (F1; K1874, K1943, K2038, K2041): a credential reaches this door in a header of the request, never in its address:
    `x-bio-session` (a stamped session, and the token admission asks `session` to resolve), `x-bio-grant` (an ask's grant)
    and `x-bio-credential-sha` (the digest admission asks `aicredentiallook` to resolve). A `grant` in the query is not the
@@ -254,30 +258,48 @@ function handOn(req, url) {
     if (v !== null) for (const k of keys) url.searchParams.set(k, v);
   }
 }
+function grantUse(store, grant) {
+  return typeof store.grantUse === "function" && store.grantUse(grant) === "draft" ? "draft" : "ask";
+}
 function underGrant(store, grant, asked, op, body, answer) {
   if (!grant || op === "rule" || !askAdmits(op)) return answer;
   const { grant: _g, viewer, ...args } = asked;
-  return store.logRead({ grant, op, args: { ...args, ...(body && typeof body === "object" ? body : {}) }, answer, viewer });
+  return store.logRead({ grant, op, args: { ...args, ...(body && typeof body === "object" ? body : {}) }, answer, viewer,
+                         use: grantUse(store, grant) });
 }
 
-/* R10 (DEC-152, DEC-153, DEC-172; K1755, K1837, K231, K2200, K2201): THE ASSISTANT, RESOLVED PER ACT BEFORE A DRAFT'S
-   HANDLER. Each draft's handler refuses first by its own words (`groupdescriptiondraft`'s NOT_AN_ADMIN, membership's R84,
-   asked here; `translationdraft`'s, asked of instance-setup's own check). Then, for the stamped member `by`, in this order:
-   the group's keep-away, `AI_KEPT_AWAY` as `credentials.aiKeptAway()` answers it (its R35, the one site; N765: in place of
-   instance-setup's retired `ASSISTANT_OFF`), so under keep-away no account is read and no draft routed; ai-runs' check
-   before any model call, `AI_NO_ACCOUNT` and the two ceilings (its R50, R52); then the account credentials answers for the
-   member's act (its R35), any other refusal of it relayed as given. Admitted, the handler receives
-   `{on, account: {kind, level}}`: `on` as instance-setup's `assistantState()` answers it (its R53, R55), and which account
-   serves, never the key, which stays in credentials. */
+/* R10 (DEC-152, DEC-153, DEC-172; K1755, K1837, K231, K2200, K2201; T40: N812, K2373; T41: K2500): THE ASSISTANT,
+   RESOLVED PER ACT BEFORE A DRAFT'S HANDLER. Each draft's handler refuses first by its own words
+   (`groupdescriptiondraft`'s NOT_AN_ADMIN, membership's R84, asked here; `translationdraft`'s, asked of instance-setup's
+   own check). Then, for the stamped member `by`, in this order: the group's keep-away from drafts, `AI_KEPT_AWAY` as
+   `credentials.aiKeptAway({use: "draft"})` answers it (its R35, the one site; N765: in place of instance-setup's retired
+   `ASSISTANT_OFF`), so under keep-away no account is read and no draft routed; then the account that serves the member's
+   draft and its limit, as `answers.askAccount({member, kind: "draft"})` answers them (its R30: `credentials.accountFor`
+   with kind `draft`, then `ai-use.useCheck`), its refusal relayed as given (`AI_NO_ACCOUNT`, `AI_USE_SWITCHED_OFF`,
+   `AI_LIMIT_REACHED`, its fail-closed `LIMITS_UNREADABLE` or `ACCOUNT_UNREADABLE`, or credentials' own, such as a key's
+   notice due). Admitted, the handler receives `{on, account: {kind, level}}`: `on` as instance-setup's `assistantState()`
+   answers it (its R53, R55), and which account serves, never the key, which stays in credentials. */
+const ACCOUNT_UNREAD = Object.freeze({ ok: false, reason: "ACCOUNT_UNREADABLE",
+  detail: "the account that would serve this draft could not be read; nothing was used" });
 async function assistantFor(ctx, by) {
   const member = typeof by === "string" && by ? by : null;
-  const away = credentialsOf(ctx).aiKeptAway();
+  const away = credentialsOf(ctx).aiKeptAway({ use: "draft" });
   if (away) return { refusal: away };
-  const use = aiRunsOf(ctx).aiUseCheck({ member });
-  if (use) return { refusal: use };
-  const account = await credentialsOf(ctx).accountFor({ member, act: { kind: "ask", member } });
-  if (!account || account.ok !== true) return { refusal: account || { ok: false, reason: "NO_ACCOUNT" } };
+  const served = await answersOf(ctx).askAccount({ member, kind: "draft" });
+  if (!served || served.ok !== true) return { refusal: served || ACCOUNT_UNREAD };
+  const { account } = served;
   return { assistant: { on: instanceSetupOf(ctx).assistantState().on, account: { kind: account.kind, level: account.level } } };
+}
+
+/* R11 (K1685; T41: K2400, K2514, K2500): an ask's use, counted by ai-use (its R1's `countAskUsage`) to the account that
+   paid, its `owner` as `credentials.accountFor` answers it for the member's act of that mode (answers' `ownerOf`, ai-use
+   R1's spelling), "not recorded" when no account answers (ai-use counts it toward no limit). A mode that is neither an
+   ask's nor a draft's reads no account, and ai-use refuses it. */
+async function usageOwner(ctx, member, mode) {
+  if (mode !== "ask" && mode !== "draft") return null;
+  let account = null;
+  try { account = await credentialsOf(ctx).accountFor({ member, act: { kind: mode, member } }); } catch { account = null; }
+  return account && account.ok === true ? ownerOf(account, member) : null;
 }
 function adminRefusal(ctx, by) {
   const member = typeof by === "string" && by ? by : null;
@@ -371,14 +393,22 @@ export function controlPlaneRoutes(ctx, url, body, grant = null) {
        subscription fact, the member the stamped `by`. */
     aikeptaway: () => credentialsOf(ctx).aiKeptAway() ?? { ok: true },
     subscriptionconnected: () => credentialsOf(ctx).subscriptionConnected({ member: q("by") }),
-    /* R11 (K1685; agent-worker R54): the ask's own calls, each its owner's, the member the stamped viewer: the ceiling
-       before any model call (ai-runs R50's `aiUseCheck`; `{ok: true}` when under it), each call's use counted as an
-       ask's (its R48), and the answer checked over the grant's read log (answers R4), the grant the header's (R9). */
-    askceiling: () => aiRunsOf(ctx).aiUseCheck({ member: q("viewer") }) ?? { ok: true },
-    /* K1798 (ai-runs R48): `calls`, the model calls the usage covers, so an ask of N calls counts N (absent, one). */
-    /* K1986: the mode it is given (an ask's `ask`, a draft's `draft`, control-plane R57), `ask` when none is sent; ai-runs
-       refuses any other (its R48). */
-    askusage: () => aiRunsOf(ctx).countAskUsage({ member: q("viewer"), mode: b.mode ?? "ask", usage: b.usage ?? null, calls: b.calls }),
+    /* R11 (K1685; agent-worker R54; T41: K2500): the ask's own calls, each its owner's, the member the stamped viewer:
+       before any model call, the account that serves the ask and its limit (answers R30's `askAccount`, kind `ask`: its
+       refusal as given, `{ok: true}` when an account serves under its limits); each call's use counted (ai-use R1); and
+       the answer checked over the grant's read log (answers R4), the grant the header's (R9). */
+    askceiling: async () => {
+      const served = await answersOf(ctx).askAccount({ member: q("viewer"), kind: "ask" });
+      return served && served.ok === true ? { ok: true } : served || ACCOUNT_UNREAD;
+    },
+    /* K1798 (ai-use R1): `calls`, the model calls the usage covers, so an ask of N calls counts N (absent, one). */
+    /* K1986: the mode it is given (an ask's `ask`, a draft's `draft`, control-plane R57), `ask` when none is sent; ai-use
+       refuses any other (its R1). */
+    askusage: async () => {
+      const member = q("viewer"), mode = b.mode ?? "ask";
+      return aiUseOf(ctx).countAskUsage({ member, mode, usage: b.usage ?? null, calls: b.calls ?? null,
+                                          owner: await usageOwner(ctx, member, mode) });
+    },
     askcheck: () => answersOf(ctx).check({ answer: b.answer ?? null, grant, viewer: q("viewer"), mode: "ask" }),
     /* R10: the three drafts, routed here over their owners' map entries (plane spreads this map last), the handler's own
        first refusal and then the assistant resolved (`assistantFor`); the handler's own arguments from the body, the
