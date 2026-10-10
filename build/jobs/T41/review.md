@@ -43,3 +43,7 @@ Size (session_01DoW3RXN1QKQ4zf62pWZg41): test runs 20, module lines 1305
 ## J2 · REPORT
 
 Two wording points for review's requirements. (1) R31's refusal code is CASE_NOT_AN_APPROVER (C-87.14) as built: filing-templates already holds NOT_AN_APPROVER (C-125.24), and answer-envelope decorates by code, so the shared name turned its families.test.mjs K921 test red. Please re-word R31 (and any START or op text that names the code). (2) R23 lists C-87.1–C-87.11 and C-32.16, and R24 lists three tables. T41 adds C-87.13–C-87.16 (R30, R31) and the tables approval_rules and case_approvals (whole-store, as R24's). Fold them into R23/R24, or name them in R30/R31.
+
+## J3 · COMPLETE
+
+T41-44 complete: R9 (D54; 4 reds re-stated with controls), R30–R33 with B2 (K2528). review 45/45. format, coverage and ownership 0 failures; architecture fails only on the uses edges ratification and case-grammar (final uses in my record). Users' suites stay red, 125 tests, until ratification R50 and case-authoring R66 merge (registerApprovalReader is not a function). With those stubbed locally, their reds are only the tranche's own. Details and Size line in my record's Completion. REPORT J2: R31's code is CASE_NOT_AN_APPROVER (a collision with filing-templates).
