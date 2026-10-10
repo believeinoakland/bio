@@ -25,6 +25,6 @@
 - `checks/format.mjs`: 145 modules, 144 requirements files; 0 failures.
 - `checks/architecture.mjs consequences`: 11 product files, 49 relative imports; 0 failures.
 - `checks/coverage.mjs consequences`: 16 of 16 live requirement ids named by a test; 0 failures.
-- `checks/ownership.mjs consequences tranche/T41`: run after the commit, below.
+- `checks/ownership.mjs consequences tranche/T41`: 8 files changed; 0 failures.
 
 Size (session_01RtLmUT1q8BFu6o88GfAG8d): test runs 9, module lines 1443
