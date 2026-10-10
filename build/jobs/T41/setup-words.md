@@ -50,3 +50,7 @@ Size (session_01NKnQg9VJvQoZDWfwkYYHF4): test runs 6, module lines 1015
 ## J1 · REPORT
 
 Found in other modules, from T41-56: (1) instance-setup bio-plane/test/m/instance-setup/translations.test.mjs:469 (R74) asserts counts { missing: 919, shown: 1, awaiting: 1 }. That is the old list's 921 minus 2. With setup-words at 3660c18803 (1,006 words) it reads 1,004. Result: instance-setup 129 pass, 1 fail (130 pass on the tranche before my change). It is instance-setup's test, for its T41-57 job. (2) Generated artifact made stale: bio-plane/dist/bio-plane.bundled.mjs and .bundle.json (owner not_product) take setup-words as an input; it is regenerated at layer close.
+
+## J2 · COMPLETE
+
+T41-56 applied: WORD_ROWS at 3660c18803 (1,006 rows, 388 protected), with R1 and R2 marked met. R2 is built as K2484 applies it: the four retired-act .does rows are carried as the file gives them. The retired acts' label rows (K2514's old rows :213 etc.) are gone from the file itself, so nothing needed re-pointing. setup-words tests: 5 pass, 0 fail, each with negative controls. Checks: format, architecture, coverage (4/4) and ownership all 0 failures. Final uses: []. Found elsewhere: see J1 (one instance-setup count test is stale; the plane bundle is stale). Full details are in the record.
