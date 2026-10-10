@@ -2,6 +2,52 @@
 
 **Status** · session_01CSGGVWaWqeBwcqwfvQ31vc · depth 2 · WORKING · handled B0
 
+## Completion (RATIFICATION #23, T41-39)
+
+**Entry applied (T41-39; N811, N823, D60; K2370, K2438, K2471, K2528, K2533, K2535).**
+- **R40, R3, R43 (N823): re-pointed to `publish-schedule`.** `op=publishat` calls `publishSchedule.scheduleEdition` (its R1); R3's waiting arm reads `publishSchedule.scheduledEditions` (its R4); the factory creates `publish-schedule` (`publishScheduleOf(host, {record, membership, publication})`, lazily, or `deps.publishSchedule`) and registers R42 once with its `registerScheduledPublisher` (its R2). The `typeof … === "function"` guards on publication's copy are gone. R44's and the headers' wording name `publish-schedule` R1.
+- **R42 (N811; DEC-187 (4)):** the stop relays the commit's own C-122.6 code, check and translation (words.json `photo.refused.changed.signed`, by key, publication R33). The code already relayed it as given; the test now asserts the translation is that key's sentence, `{photo}` filled.
+- **R49 (D60; K2528, K2533): `APPROVAL_MISSING`, new row C-58.11** (in `RATIFY_SCOPE_CHECKS`; your draft translation; `where` `refusals.mjs approvalMissingRefusal > is-approval-missing`; awaiting T42's stamp, rule 4 (2)). It is asked:
+  - at `op=caseratify` and `op=publishat` after CASE_RATIFY_STALE and before NO_SIGNERS, through the new internal op `caseapproval` (R32's map);
+  - at the pre-flight after C-58.5 and before NO_ATTESTING_KEY, byte-identical to the act's refusal;
+  - at the scheduled publisher after the plan's refusals, as a `SCHEDULED_CHECK_REFUSED` stop with that cause.
+
+  Approvals are matched at the document's approval digest (`case-grammar.approvalSubjectSha`). An approver who has not approved is named in `missing`; an approval that is held but not carried in the document's own `approvals:` block (`case-grammar.approvalsOf`) is named in `not_carried`. Approvals that cannot be read refuse the act (fail closed), make the pre-flight PREFLIGHT_UNDETERMINED, and stop R42 as UNREADABLE. With no rule in force, nothing is asked.
+- **R50:**
+  - `registerApprovalReader({rule(), approvals({case, edition, docSha})})`, once; a second registration is refused `APPROVAL_READER_DECLARED`, a malformed one `MALFORMED`.
+  - (K2533) `approvalsInForce({case, edition, docSha})`, with `docSha` read as the approval digest, answers `{ok: true, rule, approvals, missing}` (with no rule: `rule: null`, nothing missing), or `{ok: false, reason: "APPROVALS_UNREADABLE"}`.
+  - `checked.approvals` is canonical `{rule, approvals}`. A waiting edition whose `checked` has no `approvals` part is read as no rule. A difference stops `SCHEDULED_CHECK_REFUSED` with `cause.code` `APPROVALS_CHANGED`, naming what changed.
+- **Tests re-pointed:** `schedule.test.mjs` uses a publish-schedule stand-in in place of publication's; `scheduled-commit.test.mjs` uses the real publish-schedule on the world's clock (the fixture creates it with `now: () => NOW`). New `approvals.test.mjs` has 13 tests (R49, R50, each with a negative control). The tests that list exact ops, relays, rows and parts are updated: `caseratify-op`, `relays` (nine relays), `retire` R32, `checks` R14, `schedule` R41.
+
+**Final `uses`:** unchanged; `publish-schedule` is already listed.
+
+**Reading set (mechanics §17).** Measured at about 700 KB (code 250 KB, tests 404 KB, requirements 50 KB), over 300 KB.
+- **Read whole myself:**
+  - my requirements;
+  - `publish-schedule.md`;
+  - the extraction map's §1–§6;
+  - publication R22, R33, R57, R77;
+  - case-grammar R26 (and `account.mjs` 170–230 on its job branch);
+  - review R30–R33;
+  - plan entries T41-34 to T41-44a;
+  - `index.mjs`, `schedule.mjs`, `ops.mjs`, `fixture.mjs`, `schedule.test.mjs`, `scheduled-commit.test.mjs`.
+- **Read by a worker, whole:** `release.mjs`, `retire.mjs`, `checks.mjs`, `refusals.mjs` and the 14 other test files. Its summary is about 245 lines, each statement citing file:line. It named the exact-list tests (`checks.test`:54–81, `retire.test`:290, `relays.test`:79–88) and the `publication: {}` worlds, all of which mattered and were handled. Nothing it left out mattered.
+
+**Deferred:** none.
+
+**Found in other modules:** none new. The two case-authoring R14 reds seen with case-grammar's job branch merged come from case-grammar's `marked: true` on `obscured`, not from this module.
+
+**Tests** (`node --test test/m/ratification/*.test.mjs` from `bio-plane/`, with `origin/job/T41/case-grammar` merged temporarily and the merge aborted, since R49 imports its `approvalSubjectSha` and `approvalsOf`): **232 pass, 1 fail.**
+- The red, by name: `scheduled-commit.test.mjs`:102, "R42 (T39, T40; N811, DEC-187 (4)) …". It is red until T41-36 merges, because publication's C-122.6 still answers its old translation.
+- On my branch alone, the suite cannot load until case-grammar (T41-34) merges: the imports name its R26 functions.
+- Earlier, over today's publication through a local, uncommitted stand-in of publish-schedule: 230 pass and that 1 fail.
+
+**Users' suites** (case-authoring, actions, affordances, answer-envelope, op-declarations, plane, compared by test name with `tranche/T41`): no new red. `publish-schedule`: 19 pass, 2 fail (its two named reds, unchanged).
+
+**Checks:** format 0 failures; architecture `ratification` 0 failures (28 product files, 148 relative imports); coverage 49 of 49 live ids, 0 failures; ownership 0 failures (14 files against `tranche/T41`).
+
+Size (session_01CSGGVWaWqeBwcqwfvQ31vc): test runs about 25, module lines 3,735
+
 ## J1 · QUESTION
 
 Readings I am building on (T41-39); answer only where you read otherwise.
