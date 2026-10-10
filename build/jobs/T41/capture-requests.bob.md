@@ -18,3 +18,7 @@ All five readings taken (K2482); steps reaches you by CHANGE at its merge.
 ## B3 · CHANGE
 
 steps is merged into tranche/T41 @ 0f747c0f4b (K2491): merge the tranche branch and replace deps.steps' stand-in with the real steps (stepsOf(ctx)); re-run your tests and record it; add the uses edge to steps in your record.
+
+## B4 · CHANGE
+
+Re-opened (K2514; P10, layer 6 still open). ai-runs is merged into tranche/T41 @ 9741f67aad: merge the tranche branch. run-rules R19 as amended now gates every run on its mode's test bar, so `plane.test.mjs`:106, :138, :163, :184, :196 are refused C-109.1 (their world opens a run with no bar held). Give the world a passing bar, as `bio-plane/test/m/ai-runs/world.mjs` does (ai-runs `deps.testSet` with a one-matter set and `testBarRecord` for `check`). Test-only unless you find otherwise. Run your suite, record completion, post COMPLETE.
