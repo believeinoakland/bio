@@ -114,3 +114,7 @@ B3 and B4 applied (record, 'B3, B4 applied'): reading-guides' five declared (gui
 - Module lines: 3,413.
 
 Size (session_01HSBgxknUm7jJ6a36oW3vEv): test runs 23, module lines 3413
+
+## J5 · COMPLETE
+
+B5 applied: tranche merged; the ten owed R41/R42 acts are now explained by affordances, so ACT_HELP_ABSENT's owed ground is gone. 128/128; op-grades 45/45; affordances 230/232 (its two reds identical on tranche/T41, not mine); admission's R19 groupswitchset red as reported. Checks as before (architecture: the uses edges only). Record: 'B5 applied'.
