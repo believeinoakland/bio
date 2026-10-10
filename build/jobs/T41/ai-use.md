@@ -48,6 +48,48 @@
 
 Size (session_01DYz6SJ2uB7j5P98MvAwUne): test runs 10, module lines 1093
 
+## Completion (AI-USE #2, B5 CHANGE; K2514)
+
+Merged `tranche/T41` (ai-runs merged @ 9741f67aad). Read whole: `build/requirements/ai-use.md`; my code (`index.mjs`, `checks.mjs`) and the tests the change touches (`fixture.mjs`, `limits.test.mjs`, `reads.test.mjs`); `words.json`'s `ai.*` entries; ai-runs' call sites (`open` :1145–1165, `tick` :1462–1490, `#useCheck` and `#shed` :2874–2895) and its `usage.test.mjs` limit tests.
+
+**Applied (B5).** `useCheck`'s `AI_LIMIT_REACHED` now answers its sentence whole. ai-runs' open and tick relay the refusal unchanged (`#shed` drops only `ok`), so every caller now gets a filled sentence. The fills:
+- `{whose}` from `ai.whose.*`, as before.
+- `{use}` from `words.json`'s `ai.use.<use>.name`, lower-cased in the sentence. The five keys are added to `AI_USE_WORDS`, verbatim.
+- `{period}` is `daily` or `monthly`, as the words file's own note on `ai.refused.limit` says.
+- `{when}` is `tomorrow` for a day's limit, or `on <next month> 1` for a month's (December's is January).
+- R3's fail-closed answer, which names no limit, drops `{period}`, and `{when}` reads "once its use can be checked".
+
+`words.json` gives no key for `{period}`, `{when}` or `{field}`, so their fills are this module's own (`LIMIT_PERIOD_FILL`, `LIMIT_WHEN_FILL`, `MONTH_NAMES`, `LIMIT_FIELD_FILL` in `checks.mjs`). The rows' own `translation` stays the words file's sentence, verbatim (R8).
+
+**A flaw of my own, fixed:** `AI_LIMIT_INVALID` reached its caller with `{field}` unfilled ("That limit can't be set: {field}."). It is now filled for every field it names (owner, scope, unit, period, amount, inclusive, and the estimate's use and count). The Ask item (`ai.queue.exploreask`) still leaves `{scope}` and `{account}`: it is a queue item that `notice-producers` renders, not a refusal relayed to a member.
+
+**Tests.** The three assertions that expected only `{whose}` filled now expect the whole sentence. One new R13 test checks all of the following:
+- every owner (group, project, own), every scope (the five uses, `overall`, `per_member`) and both periods, for every use each limit judges: 160 refusals, each compared to the exact expected sentence, none with a placeholder left;
+- October to November and December to January;
+- both fail-closed paths;
+- `AI_LIMIT_INVALID` for all eight fields, each with its own words;
+- negative control: the words file's raw sentences are seen to carry placeholders.
+
+**Through ai-runs' path.** My tests may not import ai-runs (later in the order: the architecture check), so I drove it from a scratch script over ai-runs' own `world.mjs`. Its open and tick refused with "The assistant stopped here: your own daily limit is reached. It works again tomorrow. Everything else works as usual.", and with a month's limit "… your own monthly limit is reached. It works again on August 1. …"; no placeholder was left. ai-runs' `usage.test.mjs` `limitReached` checks only that the translation is a string. A test asserting no placeholder there is ai-runs' to add (REPORT J6).
+
+**Ran.**
+- `node --test bio-plane/test/m/ai-use/`: tests 49, pass 49, fail 0.
+- Users of ai-use:
+  - ai-runs: 80 pass, 0 fail.
+  - answers: 58 pass, 0 fail.
+  - notice-producers: 74 pass, 0 fail.
+  - run-rules and reading-pipeline `transcribe` (they name these codes): 47 pass, 0 fail.
+  - op-declarations: 109 pass, 8 fail, the same 8 with my change stashed. They are layer-11 op and registry tests that predate this change and are not mine.
+- Checks: `format` 0 failures; `architecture` ai-use 0 (8 files, 26 imports); `coverage` 13 of 13; `ownership` 0 (after the commit).
+
+**Deferred.** None. **Generated artifacts:** none staled (nothing bundled imports ai-use).
+
+**Found in other modules (REPORT J6).**
+- `ai-runs`: its `limitReached` test helper could assert that no `{…}` placeholder is left in a relayed refusal.
+- The design stream: `words.json` has no keys for `{period}` (daily/monthly), `{when}` (tomorrow / on <month> 1) or `{field}`. ai-use fills them with its own words until keys exist.
+
+Size (session_011xdFFLsupbqxVmjj8ymA9A): test runs 9, module lines 1134
+
 ## J1 · QUESTION
 
 Seven points; I am building on each best reading now, and only (3) and (5) could change what I build next.
