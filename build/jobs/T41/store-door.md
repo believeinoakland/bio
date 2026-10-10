@@ -40,3 +40,7 @@ In addition to J1 (it replaces nothing there).
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs store-door`: 0 failures. `checks/coverage.mjs store-door`: 13 of 13 live ids named, 0 failures. `checks/ownership.mjs store-door tranche/T41`: 0 failures.
 
 Size (session_01PuHeVd3DfFWWwcgeAkRtmj): test runs 12, module lines 613
+
+## J3 · REPORT
+
+Two findings (record, Completion): (1) wizard-scripts: writingHelp's own keep-away (#keptAway, index.mjs:376-381) asks credentials.aiKeptAway() with no use, so a keep-away covering only ask (credentials R57) still refuses a writing-help draft that store-door R10 (aiKeptAway({use: "draft"})) admits; it should ask {use: "draft"}. (2) The plane bundle (bio-plane/dist/bio-plane.bundled.mjs) is staled by this change (dispatch.mjs).
