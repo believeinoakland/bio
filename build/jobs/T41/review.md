@@ -1,6 +1,6 @@
 # review (T41)
 
-**Status** · session_01DoW3RXN1QKQ4zf62pWZg41 · depth 2 · RUNNING until 2026-10-10T18:12:37Z (users' suites before/after (answer-envelope, control-plane, plane)) · handled B3
+**Status** · session_01DoW3RXN1QKQ4zf62pWZg41 · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
