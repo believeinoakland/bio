@@ -203,12 +203,17 @@ async function drafts() {
   }
   const seen = [];
   instanceSetupOf(r.ctx).groupDescriptionDraft = (args) => { seen.push(["groupdescriptiondraft", args]); return { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE" }; };
-  wizardScriptsOf(r.ctx).writingHelp = (args) => { seen.push(["writinghelp", args]); return { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE" }; };
+  /* (K2574; wizard-scripts R27) the door hands `writinghelp` an account's or a limit's refusal as `assistant.refusal`, and
+     the handler answers it among its own; the stand-in answers it first, as the handler does before any draft */
+  wizardScriptsOf(r.ctx).writingHelp = (args) => {
+    if (args.assistant && args.assistant.refusal) return args.assistant.refusal;
+    seen.push(["writinghelp", args]); return { ok: false, reason: "ASSISTANT_DRAFT_UNAVAILABLE" };
+  };
   const code = (a) => a.json.result.code ?? a.json.result.reason;
   return { r, C, seen, code };
 }
 
-test("R57 (instance-setup R55, R65; run-rules R20; ai-use R3; credentials R35, R36; T37: N765, K231): before either draft's handler the door answers, in order, `groupdescriptiondraft`'s NOT_AN_ADMIN, AI_KEPT_AWAY (credentials' one row, in place of ASSISTANT_OFF), AI_NO_ACCOUNT, the paying account's limit (ai-use R3's AI_LIMIT_REACHED, the retired ceilings' place), and credentials' own refusal of the account (the group key's notice unread), each before any handler is asked (negative control: once every one is cleared the handler is reached)", async () => {
+test("R57 (instance-setup R55, R65; run-rules R20; ai-use R3; credentials R35, R36; T37: N765, K231): before either draft's handler the door answers, in order, `groupdescriptiondraft`'s NOT_AN_ADMIN, AI_KEPT_AWAY (credentials' one row, in place of ASSISTANT_OFF), NO_ACCOUNT (credentials R35, was AI_NO_ACCOUNT), the paying account's limit (ai-use R3's AI_LIMIT_REACHED, the retired ceilings' place), and credentials' own refusal of the account (the group key's notice unread), each before any handler is asked (negative control: once every one is cleared the handler is reached)", async () => {
   const { r, C, seen, code } = await drafts();
   const gdd = (by) => r.go(`groupdescriptiondraft?by=${by}&viewer=${by}`, "POST", { answers: [{ question: "q", text: "t" }] });
   const help = (by) => r.go(`writinghelp?by=${by}&viewer=${by}`, "POST", { op: "notewrite", field: "text", told: "what I saw" });
@@ -224,9 +229,9 @@ test("R57 (instance-setup R55, R65; run-rules R20; ai-use R3; credentials R35, R
   assert.equal(code(await help("member:bea")), "AI_KEPT_AWAY");
   assert.equal(C.aiKeepAwaySet({ on: false, by: "admin" }).ok, true);
   /* no account serves */
-  assert.equal(code(await gdd("member:ann")), "AI_NO_ACCOUNT");
-  assert.equal(code(await help("member:bea")), "AI_NO_ACCOUNT");
-  /* the member's own account, then its own limit
+  assert.equal(code(await gdd("member:ann")), "NO_ACCOUNT");
+  assert.equal(code(await help("member:bea")), "NO_ACCOUNT");
+  /* the member's own account, then its own limit */
   assert.equal((await C.accountReferenceSet({ member: "member:bea", kind: "apikey", secret: "sk-bea-own", by: "member:bea" })).ok, true);
   /* (T41; K2488, rule 4 (10)) the retired ceilings are ai-use's limits: the paying account's own limit, reached, is
      `AI_LIMIT_REACHED` (ai-use R3, `useCheck`), then removed */
