@@ -349,35 +349,88 @@ test("R11 (K1674; answers R1, R2, R7): a read the store serves under a grant is 
   assert.deepEqual([thrown.status, thrown.json.reason], [500, "STORE_INTERNAL_ERROR"]);
 });
 
-test("R11 (K1674, K1685, K1798, K1986; credentials R28, ai-runs R48, R50, answers R4): the ask's store-internal routes, each its owner's with the member the stamped viewer — `aigrantadmit` answers credentials' own words, `askceiling` ai-runs' ceiling check (`{ok: true}` when under it), `askusage` ai-runs' counter with the mode it is given (`ask` when none; ai-runs refuses one that is neither `ask` nor `draft`) and the ask's `calls`, `askcheck` answers' check over the grant's read log (negative control: a name no module serves is R1's refusal)", async () => {
+test("R11 (K2574; plane R33): the door adds no `use` to a read's entry — which use a grant's reads carry is the plane's `logRead` — so the entry is the grant, op, arguments, answer and viewer alone, whatever else the store holds (negative control: over a real record answers' read log opens under `ask` when no use is passed)", async () => {
+  const logged = [];
+  const store = { routes: () => ({ search: () => ({ rows: [] }) }), membership: () => ({ visibilityOf: () => "hidden", existenceAct: () => null }),
+                  logRead: (e) => { logged.push(e); return e.answer; }, grantUse: () => "draft" };
+  await go(store, "search?viewer=member:ann&q=x", { headers: { [GRANT_HEADER]: "G-D" } });
+  assert.deepEqual(logged.map((e) => Object.keys(e).sort()), [["answer", "args", "grant", "op", "viewer"]]);
   const r = await record();
+  const { answersOf } = await import("../../../src/answers/index.mjs");
+  const A = answersOf(r.ctx);
+  await go({ ...store, logRead: (e) => A.logRead(e) }, "search?viewer=member:ann&q=x", { headers: { [GRANT_HEADER]: "G-A" } });
+  assert.equal(A.readLog("G-A").use, "ask");
+});
+
+test("R11 (K2585; control-plane R72; capture R86): `captureupload`'s POST body is handed to the route map unread, as the request's own stream — never JSON-parsed or refused BAD_JSON — and its bytes reach the route unchanged (negative control: the same bytes on any other op are BAD_JSON)", async () => {
+  assert.deepEqual(D.STREAMED_BODY_OPS, ["captureupload"]);
+  const BYTES = new Uint8Array([0x7b, 0x00, 0xff, 0x25, 0x50, 0x44, 0x46, 0x0a]);
+  const got = [];
+  const store = { membership: () => null,
+    routes: (url, body) => ({ captureupload: async () => {
+      got.push({ stream: body instanceof ReadableStream, locked: body.locked, by: url.searchParams.get("by") });
+      return { ok: true, bytes: [...new Uint8Array(await new Response(body).arrayBuffer())] };
+    }, other: () => ({ ok: true }) }) };
+  const r = await go(store, "captureupload?by=member:ann&statement=s", { method: "POST", body: BYTES });
+  assert.deepEqual([r.status, r.json], [200, { ok: true, result: { ok: true, bytes: [...BYTES] } }]);
+  assert.deepEqual(got, [{ stream: true, locked: false, by: "member:ann" }]);
+  const n = await go(store, "other", { method: "POST", body: BYTES });
+  assert.deepEqual([n.status, n.json.reason], [400, "BAD_JSON"]);
+});
+
+test("R11 (K1674, K1685, K1798, K1986; T41: K2400, K2500, K2514; credentials R28; answers R30, R4; ai-use R1): the ask's store-internal routes, each its owner's with the member the stamped viewer — `aigrantadmit` answers credentials' own words; `askceiling` answers `answers.askAccount({member, kind: \"ask\"})`'s refusal as given (NO_ACCOUNT, AI_KEPT_AWAY, AI_USE_SWITCHED_OFF, AI_LIMIT_REACHED) and `{ok: true}` when an account serves under its limits; `askusage` counts through ai-use's `countAskUsage` with the mode it is given (`ask` when none; ai-use refuses one that is neither `ask` nor `draft`) and the ask's `calls`, to the paying account `credentials.accountFor` answers for that mode (\"not recorded\" when none serves); `askcheck` answers' check over the grant's read log (negative control: a name no module serves is R1's refusal)", async () => {
+  const r = await record({ sealSecret: "store-door-test-seal-secret-00005" });
+  const { credentialsOf } = await import("../../../src/credentials/index.mjs");
+  const { membershipOf } = await import("../../../src/membership/index.mjs");
+  const { answersOf } = await import("../../../src/answers/index.mjs");
+  const { aiUseOf } = await import("../../../src/ai-use/index.mjs");
+  const C = credentialsOf(r.ctx), U = aiUseOf(r.ctx), A = answersOf(r.ctx);
+  await C.claim({ password: "founder-passphrase-1", tokenFp: "fp-1" });
+  for (const [id, role] of [["ann", "admin"], ["bea", "member"]]) {
+    const m = await membershipOf(r.ctx).memberAdd({ memberId: id, cover: `cover of ${id}`, role, capabilities: null, by: "admin" });
+    await membershipOf(r.ctx).enroll({ invite: m.invite, handle: id, password: `${id}-passphrase-x` });
+  }
   const a = await r.go("aigrantadmit", "POST", { token: "f".repeat(64), op: "search", write: false });
   assert.deepEqual([a.status, a.json.ok, a.json.result.ok, a.json.result.reason], [200, true, false, "GRANT_NOT_HELD"]);
   const u0 = await r.go("aigrantnothing", "POST", {});
   assert.deepEqual([u0.status, u0.json.error], [400, "unknown op: aigrantnothing"]);
-  const ceil = await r.go("askceiling?viewer=member:ann");
-  assert.deepEqual([ceil.status, ceil.json.ok, ceil.json.result.ok, ceil.json.result.reason], [200, true, false, "AI_NO_ACCOUNT"]);
-  const { aiRunsOf } = await import("../../../src/ai-runs/index.mjs");
-  const orig = aiRunsOf(r.ctx).aiUseCheck;
-  aiRunsOf(r.ctx).aiUseCheck = () => null;
-  assert.deepEqual((await r.go("askceiling?viewer=member:ann")).json.result, { ok: true }, "under the ceiling: {ok: true}");
-  aiRunsOf(r.ctx).aiUseCheck = orig;
+  /* askceiling: askAccount for an ask, the member the stamped viewer, whatever the body names */
+  const asked = [];
+  const askAccount = A.askAccount.bind(A);
+  A.askAccount = (x) => { asked.push(x); return askAccount(x); };
+  const ceiling = async () => (await r.go("askceiling?viewer=member:ann", "POST", { member: "member:bea", kind: "draft" })).json.result;
+  const none = await ceiling();
+  assert.deepEqual([none.ok, none.reason], [false, "NO_ACCOUNT"]);
+  assert.deepEqual(asked, [{ member: "member:ann", kind: "ask" }]);
+  assert.equal((await C.accountReferenceSet({ member: "member:ann", kind: "apikey", secret: "sk-ann-own", by: "member:ann" })).ok, true);
+  assert.deepEqual(await ceiling(), { ok: true }, "an account serves under its limits: {ok: true}");
+  assert.equal(C.accountUsesSet({ owner: "member:ann", switch: "ask", on: false, by: "member:ann" }).ok, true);
+  assert.equal((await ceiling()).code, "AI_USE_SWITCHED_OFF");
+  assert.equal(C.accountUsesSet({ owner: "member:ann", switch: "ask", on: true, by: "member:ann" }).ok, true);
+  assert.equal(C.aiKeepAwaySet({ on: true, reason: "kept away for this test", uses: ["ask"], by: "ann" }).ok, true);
+  assert.deepEqual(await ceiling(), C.aiKeptAway({ use: "ask" }));
+  assert.equal(C.aiKeepAwaySet({ on: false, by: "ann" }).ok, true);
+  A.askAccount = askAccount;
+  /* askusage: counted to the paying account, the member the stamped viewer, the mode the body's */
   const USE = { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, cache_creation_input_tokens: 0, total_cost_usd: null };
+  const rows = () => r.db.prepare("SELECT owner, member, mode, SUM(calls) calls FROM ai_usage GROUP BY owner, member, mode ORDER BY member, mode").all().map((x) => ({ ...x }));
   const u = await r.go("askusage?viewer=member:ann", "POST", { usage: USE });
-  assert.deepEqual([u.json.ok, u.json.result.ok, u.json.result.counted], [true, true, 1], JSON.stringify(u.json).slice(0, 300));
-  assert.deepEqual(r.db.prepare("SELECT member, mode FROM ai_usage").all().map((x) => [x.member, x.mode]), [["ann", "ask"]]);
+  assert.deepEqual([u.json.ok, u.json.result.ok, u.json.result.counted, u.json.result.owner], [true, true, 1, "member:ann"], JSON.stringify(u.json).slice(0, 300));
   const run = await r.go("askusage?viewer=member:ann", "POST", { mode: "run", usage: USE });
-  assert.equal(run.json.result.ok, false, "a run's mode is not an ask's use");
+  assert.deepEqual([run.json.result.ok, run.json.result.code], [false, "AI_RUN_CONSUME_INVALID"], "a run's mode is not an ask's use");
   const draft = await r.go("askusage?viewer=member:bea", "POST", { mode: "draft", usage: USE });
-  assert.equal(draft.json.result.ok, true, JSON.stringify(draft.json).slice(0, 300));
-  assert.deepEqual(r.db.prepare("SELECT member, mode FROM ai_usage ORDER BY member").all().map((x) => [x.member, x.mode]), [["ann", "ask"], ["bea", "draft"]]);
-  const calls = () => r.db.prepare("SELECT COALESCE(SUM(calls), 0) n FROM ai_usage WHERE member = 'ann'").get().n;
+  assert.deepEqual([draft.json.result.ok, draft.json.result.owner], [true, "not recorded"], "no account serves bea: counted toward no limit");
   assert.equal((await r.go("askusage?viewer=member:ann", "POST", { usage: USE, calls: 3 })).json.result.ok, true);
-  assert.equal(calls(), 4, "an ask of three calls counts three");
   assert.equal((await r.go("askusage?viewer=member:ann", "POST", { usage: USE, calls: 0 })).json.result.ok, false);
   assert.equal((await r.go("askusage?viewer=member:ann", "POST", { usage: { input_tokens: "lots" } })).json.result.ok, false);
   assert.equal((await r.go("askusage", "POST", { usage: USE })).json.result.ok, false, "no member, nothing counted");
-  assert.equal(calls(), 4, "a refused use counts nothing");
+  assert.deepEqual(rows(), [{ owner: "member:ann", member: "ann", mode: "ask", calls: 4 }, { owner: "not recorded", member: "bea", mode: "draft", calls: 1 }],
+                   "an ask of three calls counts three; a refused use counts nothing");
+  /* what askusage counted is what askceiling judges: the account's limit reached refuses the next ask */
+  assert.equal(U.aiLimitSet({ owner: "member:ann", scope: "overall", unit: "calls", period: "day", amount: 4, by: "member:ann" }).ok, true);
+  const lim = await ceiling();
+  assert.deepEqual([lim.ok, lim.code, lim.scope], [false, "AI_LIMIT_REACHED", "overall"]);
+  /* askcheck */
   const c = await r.go("askcheck?viewer=member:ann", "POST", { answer: { sentences: [] } }, { [GRANT_HEADER]: "G1" });
   assert.equal(c.status, 200, JSON.stringify(c.json).slice(0, 300));
   assert.equal(c.json.ok, true);
