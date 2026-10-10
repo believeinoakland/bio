@@ -634,7 +634,13 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     /* R26, R43 — D-276's class at the tick: a refusal of the whole tick nested in `result` is a refusal, never
        an entry that landed. */
     const tickAnswer = planeAnswer(tick, "airuntick");
-    if (tickAnswer.refused) {
+    /* R26: a tick the plane answered `found: false` (no such run, `ai-runs`) appended nothing: it is a refusal of the
+       tick in the plane's words, never an entry that landed (T41 B6: a run the plane never opened counted `logged`). */
+    const noRun = !tickAnswer.refused && tickAnswer.result?.found === false;
+    if (noRun) {
+      refusals.push({ at: "airuntick", code: tickAnswer.result.code ?? null, check: tickAnswer.result.check ?? null,
+                      plane: tick.body ?? null });
+    } else if (tickAnswer.refused) {
       /* R49: `AI_RUN_STATE_TOO_LARGE` (ai-runs R45) among them — a refusal of this tick, never the plane failing; the
          segment carries on. */
       refusals.push({ at: "airuntick", code: tickAnswer.refused.code, check: tickAnswer.refused.check,
@@ -1354,8 +1360,9 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
       if (tick.silent) return { silent: tick.silent };
       const t = tick.result ?? {};
       const bad = Array.isArray(t.refused) ? t.refused : [];
-      if (tick.refused || bad.length) {
-        for (const r of tick.refused ? [tick.refused] : bad)
+      /* R26: a tick answered `found: false` (no such run) appended nothing, so it is refused, never landed. */
+      if (tick.refused || bad.length || t.found === false) {
+        for (const r of tick.refused ? [tick.refused] : t.found === false ? [t] : bad)
           logSeq?.refused({ at: "airuntick.log", step: "fanout", to: "collect", level: contract.level,
                             code: r?.code ?? r?.reason ?? null, check: r?.check ?? null, plane: r?.plane ?? r ?? null });
       } else {

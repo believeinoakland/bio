@@ -114,6 +114,7 @@ import { RUN_BOUNDS, RUN_ENDINGS, runStatusFor, OBSERVATION_LEVELS, OBSERVATION_
 /* N421: the harness's exports, for the purity walk, and the member driven in this process for the op arms (A9). */
 import * as HARNESS from "../../agent-harness/src/harness.mjs";
 import { driveMember, SUBSESSION_LIMIT } from "./inprocess.mjs";
+import { planeEntry } from "./plane-world.mjs";
 
 let pass = 0, fail = 0;
 const t = (label, got, want) => {
@@ -1646,7 +1647,9 @@ console.log("\n--- FT4 · FL-12: an internet-level target files a request naming
  * ========================================================================= */
 console.log("\n--- R · REC-100: the step log meets the REAL plane's refusal (IC-130) ---");
 {
-  const PLANE_IDX_PATH = fileURLToPath(new URL("../../bio-plane/src/plane/index.mjs", import.meta.url));
+  /* T41 B6 (K2520): the real plane holds a passing test bar, or run-rules R19 refuses the fixture's run
+     AI_RUN_MODE_NOT_DEPLOYED (C-109.1) and REC100-0 reads its log empty; see `./plane-world.mjs`. */
+  const PLANE_WORLD = planeEntry();
   const RB = "INQ-2026-0918-rec100-aw";
   const PROMOTE = {
     bundleId: RB, base: null, snapKey: "20260918T090000Z_inbox", author: "ruth",
@@ -1733,7 +1736,7 @@ export default {
       { name: "plane-mock", modules: true, script: PLANE_MOCK,
         compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
         bindings: { MOCK: JSON.stringify(cfg) } },
-      { name: "real-plane", modules: true, modulesRoot: "/", scriptPath: PLANE_IDX_PATH, script: PLANE_INDEX,
+      { name: "real-plane", modules: true, modulesRoot: "/", scriptPath: PLANE_WORLD.path, script: PLANE_WORLD.script,
         compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
         durableObjects: { STORE: { className: "Store", useSQLite: true } },
         r2Buckets: ["CAPTURES", "PUBLISHED"],
@@ -1814,6 +1817,7 @@ export default {
       [entries.length + lr.length, entries.filter((e) => e.state === "NEVER_LOOKED").length], [sent, 0]);
     await mf.dispose();
   }
+  PLANE_WORLD.dispose();
 }
 
 console.log(`\nharness: ${pass} passed, ${fail} failed`);
