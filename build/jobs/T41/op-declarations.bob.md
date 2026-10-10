@@ -29,3 +29,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **Marked at this START (K2573, re-taken after L10's merge):** R20, (a clause: - the administrator's acts `groupkeyset`…), (a clause: - `publishat` (the ceremony's last act w…), R41, R42, R43, R45, R46. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
+
+## B2 · CHANGE
+
+CHANGE (K2574, K2569, K2570): your requirements on `tranche/T41` changed since your START; merge the tranche into your branch. R42: `handlecheck`'s `NEEDS` row is `null` (as `noticespublic`'s), so op-grades' `NON_ACTS` row stays valid; `startfrom` takes `message` from the body or query (wizard-scripts R23). R43 (already in your START's notes): `actionseekspropose` and the ten K2570 ops. admission (later in the order) tests against your `OPS` and waits on your merge.
