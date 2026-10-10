@@ -1,6 +1,6 @@
 # admission (T41)
 
-**Status** · session_01XRFXxX3r77uSXKpEg4sgCD · depth 2 · WAITING ON BOB (op-declarations merge) · handled B4
+**Status** · session_01XRFXxX3r77uSXKpEg4sgCD · depth 2 · WORKING · handled B4
 
 
 ## Record
