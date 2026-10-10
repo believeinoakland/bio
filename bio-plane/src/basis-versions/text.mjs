@@ -6,6 +6,8 @@
  * wrong guess would corrupt a document silently and the promotion would then hold the corruption. A ROW is `  - ` and its continuation lines, the only shape the
  * restricted parser reads and the only shape any writer in this tree emits. */
 
+import { flattenBiasApplied } from "../inquiry-grammar/index.mjs";
+
 /** Frontmatter-safe text: the restricted grammar has no escapes, so a derived string loses its line breaks, and a
  *  quote or backslash becomes an apostrophe. An authored field is refused by name before it gets here. */
 export function fmSafe(s) {
@@ -129,6 +131,9 @@ export function appendConclusionEntry(text, inquiryId, f) {
        `    claim: ${q(f.claim)}`, `    falsifier: ${q(f.falsifier)}`,
        ...(f.noFals ? [`    falsifier_override_by: ${q(f.who)}`, `    falsifier_override_at: ${q(f.when)}`] : []),
        ...(f.commentary ? [`    commentary: ${q(f.commentary)}`] : []),
+       /* R48: inquiry-grammar R18's one encoding, numbered scalar keys on the row (K2479) */
+       ...Object.entries(flattenBiasApplied(f.bias || []) || {}).map(([k, v]) => `    ${k}: ${q(v)}`),
+       ...(f.bias && f.bias.length && f.biasSha ? [`    bias_statements_sha: ${q(f.biasSha)}`] : []),
        `    at: ${q(f.when)}`, `    by: ${q(f.who)}`];
   const at = blockAt(lines, end, "conclusions");
   if (at === -1) return [...lines.slice(0, end), "conclusions:", ...block, ...lines.slice(end)].join("\n");

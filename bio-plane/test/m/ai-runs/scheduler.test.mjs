@@ -180,24 +180,35 @@ test("R18, R52 (K1514, K1615, K1755): a woken run is dispatched only when its pr
   assert.equal("secret" in aw.calls[1].body.account, false, "a sign-in carries no secret key");
   /* K1615 (agent-worker R56): the member's own suggestions switch rides with the reference — on when they turned it on */
   const on = await setup(env(aw), { principal: stamp });
-  assert.equal(on.credentials.accountSwitchSet({ member: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
+  /* (K2437, K2445) set by credentials' one act, `accountUsesSet` (R55), `accountSwitchSet` retired */
+  assert.equal(on.credentials.accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
   assert.equal((await decision(on)).dispatch.state, "DISPATCHED");
   assert.equal(aw.calls[2].body.account.suggestions, true);
   /* K1755: a member with no account of their own is served by the group's API key while it is held and on; the run is
-     still that member's (`member` names them), and the group key's own switch has no in-plane read for a member's act,
-     so it offers no suggestion (ai-runs #11 J1 (2)) */
-  const grp = await setup(env(aw), { principal: stamp, groupKey: true });
-  assert.equal(grp.credentials.groupSwitchSet({ switch: "suggestions", on: true, by: "admin" }).ok, true);
-  assert.equal((await decision(grp)).dispatch.state, "DISPATCHED");
+     still that member's (`member` names them). (T41; credentials R37, R55) The group key's own `suggestions` switch,
+     set by an administrator through `accountUsesSet`, rides with it, read through `groupKeySwitches()`: off by default
+     (control), on when set */
+  const grpOff = await setup(env(aw), { principal: stamp, groupKey: true });
+  assert.equal((await decision(grpOff)).dispatch.state, "DISPATCHED");
   assert.deepEqual(aw.calls[3].body.account, { kind: "apikey", level: "group", secret: "group-key-secret", member: "member:ann",
                                                suggestions: false });
+  const grp = await setup(env(aw), { principal: stamp, groupKey: true });
+  assert.equal(grp.credentials.accountUsesSet({ owner: "group", switch: "suggestions", on: true, by: "admin" }).ok, true);
+  assert.equal((await decision(grp)).dispatch.state, "DISPATCHED");
+  assert.deepEqual(aw.calls[4].body.account, { kind: "apikey", level: "group", secret: "group-key-secret", member: "member:ann",
+                                               suggestions: true });
+  /* and a sign-in's own switch (R55 closes K2275's gap): on when ann sets it */
+  const subOn = await setup(env(aw), { principal: stamp, signin: true });
+  assert.equal(subOn.credentials.accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
+  assert.equal((await decision(subOn)).dispatch.state, "DISPATCHED");
+  assert.deepEqual(aw.calls[5].body.account, { kind: "signin", level: "member", member: "member:ann", suggestions: true });
   for (const t of ["observation_log", "ai_runs"])
     assert.equal(JSON.stringify(grp.rows(`SELECT * FROM ${t}`)).includes("group-key-secret"), false, "the group key enters no record");
   /* and switched off, nothing serves her: withheld NO_ACCOUNT, the binding not called */
   const off = await setup(env(aw), { principal: stamp, groupKey: true });
   assert.equal(off.credentials.groupKeySwitch({ on: false, by: "admin" }).ok, true);
   assert.equal((await decision(off)).resume, "NO_ACCOUNT");
-  assert.equal(aw.calls.length, 4);
+  assert.equal(aw.calls.length, 6);
   /* every withheld ground, each named, none calling the binding */
   const calls = aw.calls.length;
   const gone = await setup(env(aw), { principal: stamp });

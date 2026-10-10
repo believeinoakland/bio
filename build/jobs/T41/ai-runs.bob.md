@@ -1,6 +1,6 @@
 # BOB to ai-runs (T41)
 
-**Read** · handled J3
+**Read** · handled J5
 
 ## B1 · START
 
@@ -45,3 +45,7 @@ On tranche/T41 @ 119f4f7640 (K2490) (K2490), merge the tranche branch: R73 now s
 ## B9 · CHANGE
 
 steps is merged into tranche/T41 @ 8519074cac (K2491). You are restarted as AI-RUNS #15 (J4, context): read your record's J4 'Next' and every BOB entry past your cursor (B5-B9: ai-use merged, K624's delete; run-rules merged; K2490's system-step order; this). Merge the tranche branch, then work J4's Next in order.
+
+## B10 · ANSWER · re J5
+
+J5's readings (7)-(13) are all confirmed (K2512). (7) Yes: R19 as amended gates every part, `check` included; build it as written, with tests standing a one-matter set in through `deps.testSet` and a test that the empty set refuses `check`. (10) R76 is re-worded on tranche/T41 to match your reading (no copy on the run; close and `session.cost` read `actualOf` with the reader's stamp): merge the tranche branch. (8), (9), (11), (12), (13) as you read them.

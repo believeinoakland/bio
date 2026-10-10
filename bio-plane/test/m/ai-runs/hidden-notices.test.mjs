@@ -6,7 +6,7 @@ import { hiddenRuns } from "../../../src/ai-runs/index.mjs";
 import { MODULE_ORDER, hiddenBundles } from "../../../src/membership/index.mjs";
 import { MACHINE_CLASS_PREFIX } from "../../../src/record-grammar/index.mjs";
 
-const HIDDEN = "PROJ-2026-0009";
+const HIDDEN = "PROJ-2026-0009", SHOWN = "PROJ-2026-0010";
 
 /** Runs over every kind of context sight can turn on, each with one log row, and rows no run wrote. */
 async function hiddenWorld() {
@@ -15,16 +15,19 @@ async function hiddenWorld() {
   w.bundle(INQ);
   w.project(PROJ, "ann", { joined: ["bob"] });
   w.project(HIDDEN, "ann");
+  /* D54's control: a discoverable project, which an administrator outside it still sees */
+  w.project(SHOWN, "ann", { discoverable: true });
   const look = { level: "document", subject: "https://example.org/x", state: "LOOKED_ABSENT", detail: "no" };
   const opened = [
     ["RI", {}],
     ["RP", { contextType: "project", contextId: PROJ, actor: "bob", viewer: "member:bob", principalPlane: "member:bob" }],
     ["RH", { contextType: "project", contextId: HIDDEN, actor: "ann", viewer: "member:ann", principalPlane: "member:ann" }],
+    ["RD", { contextType: "project", contextId: SHOWN, actor: "ann", viewer: "member:ann", principalPlane: "member:ann" }],
   ];
   for (const [run, o] of opened) {
     assert.equal((await w.runs.open(OPEN({ run, ...o }))).started, true, run);
     const p = o.principalPlane ?? ORG;
-    await w.runs.tick({ run, viewer: "admin", caller: p, actor: o.actor ?? "", log: [look] });
+    await w.runs.tick({ run, viewer: o.viewer ?? "admin", caller: p, actor: o.actor ?? "", log: [look] });
   }
   /* a run stored before REC-153, over a context bundle this record does not hold, and a row naming no run at all */
   w.sql.exec(`INSERT INTO ai_runs (run, status, context_type, context_id, principal_plane, principal_claude, created, updated,
@@ -51,7 +54,8 @@ test("R42: hiddenRuns(viewer) is the one tail over the run id that leaves out ex
     const kept = w.rows(`SELECT seq, authority_kind, authority FROM observation_log WHERE 1=1${t.sql} ORDER BY seq`, ...t.args);
     /* every row that is not a run's is kept, whoever asks */
     assert.deepEqual(kept.filter((r) => r.authority_kind !== "run").map((r) => r.seq), others, String(viewer));
-    const machine = typeof viewer === "string" && (viewer === "admin" || viewer.startsWith(MACHINE_CLASS_PREFIX));
+    /* D54 (K2442): the founder's viewer is no longer a see-all; only a machine credential has no person behind it */
+    const machine = typeof viewer === "string" && viewer.startsWith(MACHINE_CLASS_PREFIX);
     if (machine) assert.deepEqual(t, { sql: "", args: [] }, `${viewer}: no person behind it, the empty tail`);
     for (const run of runs) {
       const found = run != null && (await w.runs.read({ run, viewer })).found === true;
@@ -65,8 +69,12 @@ test("R42: hiddenRuns(viewer) is the one tail over the run id that leaves out ex
     return [...new Set(w.rows(`SELECT authority FROM observation_log WHERE authority_kind = 'run'${t.sql}`, ...t.args).map((r) => r.authority))].sort(); };
   assert.deepEqual(sees("member:dan"), ["RI"], "neither project is dan's, and RX's context is held by nothing");
   assert.deepEqual(sees("member:bob"), ["RI", "RP"]);
-  assert.deepEqual(sees("member:ann"), ["RH", "RI", "RP"]);
-  assert.deepEqual(sees("member:second"), ["RH", "RI", "RP"], "an active administrator sees every project");
+  assert.deepEqual(sees("member:ann"), ["RD", "RH", "RI", "RP"]);
+  /* D54 (K2442): an administrator, the founder included, neither invited nor joined, sees a hidden project at EXISTENCE
+     only, never its runs; a discoverable one (control) as before */
+  assert.deepEqual(sees("member:second"), ["RD", "RI"], "D54: an active administrator sees no hidden project's runs");
+  assert.deepEqual(sees("admin"), ["RD", "RI"], "D54: nor does the founder");
+  assert.notDeepEqual(hiddenRuns("admin"), { sql: "", args: [] }, "D54: the founder's tail is not the machine's empty one");
   for (const v of [undefined, null, "", "who-knows"]) assert.deepEqual(sees(v), [], `${String(v)}: fail closed`);
   /* pure over its argument and never throws */
   assert.deepEqual(hiddenRuns("member:dan"), hiddenRuns("member:dan"));
@@ -86,7 +94,7 @@ test("R42 (K333): hiddenRuns(viewer, column) is the same predicate over a column
   for (const viewer of viewers) {
     const t = hiddenRuns(viewer, "run");
     assert.deepEqual(Object.keys(t), ["sql", "args"]);
-    const machine = typeof viewer === "string" && (viewer === "admin" || viewer.startsWith(MACHINE_CLASS_PREFIX));
+    const machine = typeof viewer === "string" && viewer.startsWith(MACHINE_CLASS_PREFIX);
     const kept = w.rows(`SELECT run FROM ai_run_bounds WHERE 1=1${t.sql} ORDER BY run`, ...t.args).map((r) => r.run);
     const want = [];
     for (const run of w.rows(`SELECT run FROM ai_run_bounds ORDER BY run`).map((r) => r.run))
@@ -107,7 +115,7 @@ test("R42 (K333): hiddenRuns(viewer, column) is the same predicate over a column
       assert.deepEqual(w.rows(`SELECT run FROM ai_run_bounds WHERE 1=1${t.sql}`, ...t.args), []);
     }
   }
-  assert.equal(w.count("ai_runs"), 4, "nothing was dropped");
+  assert.equal(w.count("ai_runs"), 5, "nothing was dropped");
 });
 
 test("R38, R42 (D-113, D-486): the figures of this module's tables are registered with record-core (its R63) and taken through the caller's sight — aiRunBounds and aiRunLog keep exactly the rows R42's tail keeps, aiRuns and inquiryRunSurfacings drop the rows naming a hidden bundle, and no sight (hid null) counts whole", async () => {
@@ -119,7 +127,7 @@ test("R38, R42 (D-113, D-486): the figures of this module's tables are registere
   const KEYS = ["aiRuns", "aiRunBounds", "inquiryRunSurfacings", "aiRunLog"];
   const mine = (all) => Object.fromEntries(KEYS.map((k) => [k, all[k]]));
   const c = (q, ...a) => w.row(q, ...a).c;
-  const whole = { aiRuns: 4, aiRunBounds: 5, inquiryRunSurfacings: 3, aiRunLog: c(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'`) };
+  const whole = { aiRuns: 5, aiRunBounds: 5, inquiryRunSurfacings: 3, aiRunLog: c(`SELECT count(*) c FROM observation_log WHERE authority_kind = 'run'`) };
   assert.deepEqual(mine(w.record.counts(null)), whole, "no sight: whole");
   assert.deepEqual(Object.keys(w.record.counts(null)).filter((k) => KEYS.includes(k)), KEYS, "registered, in this order");
   for (const viewer of ["admin", "member:ann", "member:bob", "member:dan", "member:second", "member:nobody",

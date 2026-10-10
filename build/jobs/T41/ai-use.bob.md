@@ -23,3 +23,7 @@ Taken (K2486), with one correction: your family is C-143 (C-142 is steps'), so (
 ## B4 · ANSWER · re J4
 
 Merged (K2488); your J3 routed (ai-runs and answers by CHANGE, the rest to L11's text).
+
+## B5 · CHANGE
+
+Re-opened (K2514; P10, layer 6 still open). ai-runs is merged into tranche/T41 @ 9741f67aad: merge the tranche branch. AI-RUNS #16 J6 finds that `AI_LIMIT_REACHED`'s translation reaches a run's open and tick with `{period}` and `{when}` unfilled ("your own {period} limit is reached. It works again {when}."), against your R13. Make `useCheck`'s refusal carry what the translation needs (or the translation stand without it), so every caller, ai-runs' open and tick included, gets a filled sentence; test it through ai-runs' path. Run your suite and ai-runs', record completion, post COMPLETE.

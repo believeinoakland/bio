@@ -81,6 +81,10 @@ test("R30: each run is registered with bias as a work product — its context, m
   assert.deepEqual(await wp.read("R1"), { context: { type: "inquiry", id: INQ }, principal: null,
     lens: { basis: "at_open", statements_sha: null }, ranUnder: null, rerunOf: null, registered: T0 });
   /* `registered` is the run's own `created`, the open's instant to the second, for every run */
+  /* K2442: the read is internal (a machine viewer), so a run over a hidden project no administrator is in (RH) is read
+     whole, as every other run is (control: R1, over a question) */
+  assert.deepEqual((await wp.read("RH")).context, { type: "project", id: HIDDEN });
+  assert.equal((await w.runs.read({ run: "RH", viewer: "admin" })).found, false, "D54: the founder's own read sees it absent");
   for (const run of wp.list("", 50))
     assert.equal((await wp.read(run)).registered, w.row(`SELECT created FROM ai_runs WHERE run = ?`, run).created, run);
   /* through bias's own door: the sweep offers the scheduler's rank each product's context and its wait (bias R33) */
@@ -111,7 +115,11 @@ test("R36: the hidden-run predicate and the run resolver — retrieval's tail (R
     return w.rows(`SELECT authority FROM observation_log WHERE 1=1${t.sql} ORDER BY seq`, ...t.args).map((r) => r.authority); };
   assert.deepEqual(seen("member:dan"), ["R1"]);
   assert.deepEqual(seen("member:ann"), ["R1", "RH"]);
-  assert.deepEqual(seen("admin"), ["R1", "RH"]);
+  /* D54 (K2442): the founder, neither invited nor joined to HIDDEN, does not see RH's rows; an invited administrator does */
+  assert.deepEqual(seen("admin"), ["R1"]);
+  w.membership.projectInvite({ projectId: HIDDEN, handle: "second", by: "ann" });
+  w.membership.reindexProjectSight(HIDDEN);
+  assert.deepEqual(seen("member:second"), ["R1", "RH"], "control: an invited administrator sees it");
   assert.deepEqual(seen("who-knows"), [], "an unrecognised viewer sees no run, as R19 answers it none");
   const obs = observationLogOf(w.ctx);
   const rowOf = (run) => w.row(`SELECT * FROM observation_log WHERE authority = ?`, run);
