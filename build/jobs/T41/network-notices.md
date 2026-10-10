@@ -27,3 +27,11 @@ My best reading (built on it, nothing changed in code): the relayed refusal is m
 **Tests and checks:** `node --test bio-plane/test/m/network-notices/*.test.mjs`: tests 73, pass 73, fail 0 (was 72/66/6 at START). Layer tests: none named in `build/manifest.md`. No provided service changed, so no user's suite was run. `checks/format.mjs`: 145 modules, 144 requirements files; 0 failures. `checks/architecture.mjs`: 12 product files, 65 relative imports; 0 failures. `checks/coverage.mjs`: 30 of 30 live requirement ids named by a test; 0 failures. `checks/ownership.mjs … tranche/T41`: 4 files changed; 0 failures.
 
 Size (session_01GXCqPTAxKrSAfPYRLzkwSn): test runs 11, module lines 1413
+
+## J3 · COMPLETE
+
+**B2 applied (K2529).** Merged `tranche/T41` into my branch; read the re-worded R1, R22 and R25 whole. The code already meets them: `#sightRefusal` relays `membership.existenceAct`'s C-70.1 unchanged for either form of EXISTENCE, and `reads.test.mjs`'s R24 test asserts that relay (deep-equal to `existenceAct`) for the founder and an administrator at hidden P, with controls at FULL. No code or test change. Everything else as J2.
+
+**Tests and checks after the merge:** `node --test bio-plane/test/m/network-notices/*.test.mjs`: tests 73, pass 73, fail 0. `format`: 145 modules, 144 requirements files; 0 failures. `architecture`: 12 product files, 65 relative imports; 0 failures. `coverage`: 30 of 30 live requirement ids named by a test; 0 failures. `ownership … tranche/T41`: 4 files changed; 0 failures.
+
+Size (session_01GXCqPTAxKrSAfPYRLzkwSn): test runs 12, module lines 1413
