@@ -151,3 +151,35 @@ test("R19: projectStanding answers the objective and condition, progress (or tha
   assert.equal(w.inv.projectStanding({ project: P1, viewer: DAN }).code, "PROJECT_SEEN_NOT_A_PARTICIPANT");
   assert.equal(w.inv.projectStanding({ project: PH, viewer: ANN }).code, "NO_SUCH_PROJECT");
 });
+
+test("R18: watchArrival (K2524), for monitoring: something new from a watched project's source reopens its work, so a later quiet spell prompts again; answered with the project's reads; a project not watched is refused, writing nothing", () => {
+  const w = quietWorld();
+  const at = "2026-10-10T00:00:00Z";
+  const first = w.inv.quietPrompts({ viewer: ANN, at }).prompts[0];
+  /* the negative control: not watched, refused, nothing written */
+  const before = w.snapshot();
+  assert.equal(w.inv.watchArrival({ project: P1, source: "https://example.org/agenda", at }).code, "PROJECT_NOT_WATCHED");
+  assert.equal(w.inv.watchArrival({ project: "PROJ-2026-0099", source: "s", at }).code, "PROJECT_NOT_WATCHED");
+  assert.equal(w.snapshot(), before);
+  w.inv.projectWatch({ project: P1, by: ANN });
+  assert.equal(w.inv.watchArrival({ project: P1, source: "", at }).code, "ARRIVAL_BAD");
+  assert.equal(w.inv.watchArrival({ project: P1, source: "s", at: "today" }).code, "ARRIVAL_BAD");
+  assert.equal(w.inv.watchArrival({ project: P2, source: "s", at }).code, "PROJECT_NOT_WATCHED", "another project, not watched");
+  assert.equal(w.inv.quietState({ project: P1, viewer: ANN }).quiet, true);
+  const r = w.inv.watchArrival({ project: P1, source: "https://example.org/agenda", at });
+  assert.deepEqual([r.ok, r.reopened, r.arrival.source], [true, true, "https://example.org/agenda"]);
+  assert.deepEqual([r.reads.quiet.quiet, r.reads.quiet.why], [false, "something arrived from a watched source"], "the work reads reopened");
+  assert.equal(r.reads.standing.ok, true);
+  assert.equal(r.reads.milestones.ok, true);
+  assert.equal(w.inv.quietState({ project: P1, viewer: ANN }).quiet, false);
+  assert.deepEqual(w.inv.quietPrompts({ viewer: ANN, at }).prompts, []);
+  /* the members take it up, and the work goes quiet again: a new spell prompts again */
+  const s = w.step({ work: "Read the new agenda" });
+  w.end(s);
+  const again = w.inv.quietPrompts({ viewer: ANN, at }).prompts;
+  assert.equal(again.length, 1);
+  assert.notEqual(again[0].key, first.key);
+  /* a second member choosing to watch keeps it one watched project */
+  w.inv.projectWatch({ project: P1, by: BOB });
+  assert.equal(w.inv.watchedProjects().projects.length, 1);
+});

@@ -60,6 +60,10 @@ export const INVESTIGATION_CHECKS = {
     translation: "A project closes as resolved, superseded or abandoned. Nothing was written." },
   NARRATIVE_NOT_A_LEG: { check: "C-146.26", where: at("check"),
     translation: "An interview is a member's own account, which says where to look and is never what a finding rests on. Rest the finding on what was found in the record. Nothing was written." },
+  PROJECT_NOT_WATCHED: { check: "C-146.27", where: at("watchArrival"),
+    translation: "No member chose to keep watching this project's sources, so nothing that arrives reopens its work. Nothing was written." },
+  ARRIVAL_BAD: { check: "C-146.28", where: at("watchArrival"),
+    translation: "An arrival names the source that brought it and when, as an instant. Nothing was written." },
 };
 
 /** R22 (inquiry R59): the warning's shape is inquiry's (`PERSON_IN_NO_PUBLIC_ROLE`); this module mints no row for it. */

@@ -10,7 +10,7 @@
  *   firsthandAccount (R16)                                                a member who was there: provenance's testimony
  *   planPropose, planProposals, planAccept (R20)                          the assistant's planning proposals, accepted
  *   quietState, quietPrompts, projectWatch, projectCloseWithGaps,         when the work goes quiet, and where the evidence
- *   watchedProjects, projectStanding (R17–R19)                            stands
+ *   watchedProjects, watchArrival, projectStanding (R17–R19)              stands
  *   check (R12)                                                           registered with `promotion`
  *
  * SHAPE (K61). `investigationOf(host, deps)` answers the one instance per host; making it creates and declares the
@@ -1026,6 +1026,9 @@ export class Investigation {
     const steps = this.#workSteps(project, PLANE_VIEWER, qs);
     if (steps === null) return { quiet: false, undetermined: "the steps could not be read" };
     if (!steps.length) return { quiet: false, why: "no step has been taken" };
+    /* R18 (K2524): something arrived from a watched source, and no step has been taken since: the work is reopened */
+    const arrival = this.#one(`SELECT at FROM inv_watch_arrivals WHERE project_id = ? ORDER BY seq DESC LIMIT 1`, project);
+    if (arrival && !steps.some((s) => s.at >= arrival.at)) return { quiet: false, why: "something arrived from a watched source", reopened: true };
     if (steps.some((s) => !STEP_CLOSED.includes(s.state))) return { quiet: false, why: "a step is still open" };
     for (const q of qs) {
       let w = null;
@@ -1120,11 +1123,40 @@ export class Investigation {
   watchedProjects() {
     const out = [];
     for (const r of this.#rows(`SELECT project_id, MAX(at) AS at FROM inv_quiet_acts WHERE act = 'watch' GROUP BY project_id ORDER BY project_id`)) {
+      if (!this.#watched(r.project_id)) continue;
       let watch = null;
       try { watch = this.#intent.watchSet({ project: r.project_id }); } catch { watch = null; }
       out.push({ project: r.project_id, since: r.at, watch });
     }
     return { ok: true, projects: out };
+  }
+
+  /* R18: whether a member's latest door on the project is to watch it. */
+  #watched(project) {
+    const r = this.#one(`SELECT act FROM inv_quiet_acts WHERE project_id = ? ORDER BY seq DESC LIMIT 1`, project);
+    return !!r && r.act === "watch";
+  }
+
+  /** R18 (K2524): `watchArrival({project, source, at})`, for `monitoring` only: a source a watched project keeps
+   *  watching brought something new. The project's work reads reopened (no longer quiet, so a later quiet spell
+   *  prompts again), and the arrival is answered with the project's reads. A project not watched is refused, writing
+   *  nothing. */
+  watchArrival({ project = null, source = null, at = null } = {}) {
+    const src = typeof source === "string" ? source.trim() : isObj(source) ? json(source) : "";
+    if (!src || chars(src) > REASON_MAX || !filled(at) || !ISO.test(at)) return refuse("ARRIVAL_BAD", "an arrival is {project, source, at: an ISO instant}");
+    const b = filled(project) ? this.#record.bundleInfo(project) : null;
+    if (!b || b.type !== "project" || !this.#watched(project))
+      return refuse("PROJECT_NOT_WATCHED", "no member chose to watch this project's sources", { project: filled(project) ? project : null });
+    const when = this.#at();
+    const done = this.#record.transact(() => {
+      this.#sql.exec(`INSERT INTO inv_watch_arrivals (project_id, source, arrived_at, at) VALUES (?,?,?,?)`, project, src, at, when);
+      this.#spell(project, false);
+      return { ok: true };
+    });
+    if (!done || done.ok !== true) return done;
+    return { ok: true, project, arrival: { source: src, at }, reopened: true,
+             reads: { quiet: this.quietState({ project, viewer: PLANE_VIEWER }), standing: this.projectStanding({ project, viewer: PLANE_VIEWER }),
+                      milestones: this.milestonesOf({ project, viewer: PLANE_VIEWER }) } };
   }
 
   /** R18: `projectCloseWithGaps({project, reason, note?, by})`: the project closes with `closed_reason` `reason`
