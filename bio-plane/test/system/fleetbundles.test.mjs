@@ -79,6 +79,7 @@ import {
   REPO_ROOT, discoverMembers, buildMember, writeMember, verifyStatic, verifyFresh,
   freshBuildRunnable, unresolvableSpecifiers, sha256, fleetProvenance, memberPaths,
   planeMember, assetsOf, optionsFor, isContainer, isGuarded,
+  BUDGET, MIB, sizeVerdict, startVerdict, measureStart, budgetReport,
 } from "../../scripts/fleet-bundle.mjs";
 import { renderSignpage, SIGNPAGE_SRC, SIGNPAGE_OUT } from "../../scripts/embed-signpage.mjs";
 
@@ -240,7 +241,11 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      this suite reads (`agent-worker/dist/agent-worker.bundle.json`, rebuilt by T38-10; its staleness arm green). One
      renamed and nothing else moves: agent-model's `src/subscription.mjs` is now `src/signin.mjs` (T38-9), which
      agent-worker reaches across trees for the member's sign-in account (AGENT-WORKER #14, T38-10, N785). */
-  t("agent-worker's 23 inputs are all recorded — its seven own modules, agent-harness and agent-model across trees, the plane's denylist, run-rules with what it imports, and record-grammar through observation-log",
+  /* RE-PINNED 2026-10-10 (BUNDLER #14, T42-2; N836, K2520 (a), T42 rule 4 (8)): 23 -> 25 inputs, from the committed
+     manifest this suite reads (`agent-worker/dist/agent-worker.bundle.json`, rebuilt at T41 L6's close; its staleness
+     arm green). Two arrive and none leaves: run-rules' `test-bar.mjs` and `test-set.mjs`, which `run-rules/index.mjs`
+     imports since T41-21, so every member reaching run-rules builds them in. */
+  t("agent-worker's 25 inputs are all recorded — its seven own modules, agent-harness and agent-model across trees, the plane's denylist, run-rules with what it imports, and record-grammar through observation-log",
     (agent?.inputs || []).map((i) => i.path).sort(),
     [
      "../agent-harness/src/harness.mjs", "../agent-harness/src/subsession.mjs",
@@ -250,6 +255,7 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      "../bio-plane/src/record-grammar/actors.mjs", "../bio-plane/src/record-grammar/ids.mjs",
      "../bio-plane/src/run-rules/checks.mjs", "../bio-plane/src/run-rules/deployment.mjs", "../bio-plane/src/run-rules/index.mjs",
      "../bio-plane/src/run-rules/rules.mjs", "../bio-plane/src/run-rules/skill-version.mjs",
+     "../bio-plane/src/run-rules/test-bar.mjs", "../bio-plane/src/run-rules/test-set.mjs",
      "../bio-plane/src/tokens.mjs", "src/ask.mjs", "src/cascade.mjs", "src/draft.mjs", "src/index.mjs", "src/ops.mjs",
      "src/reads.mjs", "src/signin.mjs",
     ]);
@@ -700,6 +706,102 @@ console.log("\n--- 8 · THE PLANE ITSELF (FL-10, D-298): the same guard, because
     }
     const left = unresolvableSpecifiers(planeCommitted.toString("utf8"), plane.bundle.external);
     t("bio-plane: its committed artifact imports nothing outside its declared externals", left, []);
+  }
+}
+
+console.log("\n--- 9 · R31: every member's SIZE and START-UP against the fleet's budget, printed for the layer close ---");
+{
+  /* T42-2 (BUNDLER #14; N840, K2547): Cloudflare's limits are 64 MiB uncompressed per Worker and 1 s for the global
+     scope. The budget warns past 32 MiB and fails past 48 MiB, and warns past 500 ms; each member's figures are printed
+     here so BOB reports them at each layer close. The plane is measured beside the members: it is the one near a limit. */
+  t("R31: the budget is the one the requirement states — warn past 32 MiB, fail past 48 MiB, warn past 500 ms",
+    [BUDGET.sizeWarn, BUDGET.sizeFail, BUDGET.startWarnMs], [32 * 1024 * 1024, 48 * 1024 * 1024, 500]);
+  const measured = [];
+  for (const m of [...members.filter((x) => x.bundle), planeMember(REPO_ROOT)]) {
+    const r = await budgetReport(m);
+    console.log(`        ${r.line}`);
+    for (const w of r.warnings) console.log(`  WARN  ${w}`);
+    show(r.findings);
+    t(`R31: ${m.name}: its size and its start-up time are both MEASURED, and its size is within the 48 MiB budget`,
+      [typeof r.bytes, typeof r.ms, r.findings], ["number", "number", []]);
+    if (typeof r.bytes === "number" && typeof r.ms === "number") measured.push(m.name);
+  }
+  t("R31: every guarded member and the plane were measured — none left out of the figures BOB reports",
+    measured, [...members.filter((x) => x.bundle).map((x) => x.name), "bio-plane"]);
+}
+
+console.log("\n--- 9a · R31's NEGATIVE CONTROL: synthetic artifacts that a budget must fail, warn on, and pass ---");
+{
+  /* K874: the check is seen to fail on a subject this suite fully controls, on every run. Each arm names what must
+     fail and what must not. */
+  t("R31: past is strictly greater — 48 MiB exactly warns, one byte more fails; 32 MiB exactly passes, one byte more warns",
+    [48 * MIB, 48 * MIB + 1, 32 * MIB, 32 * MIB + 1].map((n) => sizeVerdict({ name: "x", bundle: null }, n).verdict),
+    ["warn", "fail", "ok", "warn"]);
+  t("R31: start-up past 500 ms warns and is never a failure; 500 ms exactly passes",
+    [startVerdict({ name: "x" }, 500).verdict, startVerdict({ name: "x" }, 500.5).verdict], ["ok", "warn"]);
+
+  const root = mkdtempSync(join(tmpdir(), "r31-budget-"));
+  try {
+    const dir = join(root, "r31-probe");
+    mkdirSync(join(dir, "dist"), { recursive: true });
+    mkdirSync(join(dir, "assets"), { recursive: true });
+    /* The smallest valid wasm module, and a data part: the platform hands both to the global scope ready. */
+    writeFileSync(join(dir, "assets/engine.wasm"), Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]));
+    writeFileSync(join(dir, "assets/model.bin"), Buffer.from("MODEL"));
+    const body = [
+      'import { DurableObject, env as ENV } from "cloudflare:workers";',
+      'import wasm from "../assets/engine.wasm";',
+      'import model from "../assets/model.bin";',
+      "globalThis.__r31Probe = (globalThis.__r31Probe || 0) + 1;",
+      "globalThis.__r31Seen = [typeof DurableObject, typeof ENV, wasm instanceof WebAssembly.Module, model instanceof ArrayBuffer && model.byteLength];",
+      "const t0 = Date.now(); while (Date.now() - t0 < 40) { /* a slow global scope */ }",
+      "export class Probe extends DurableObject {}",
+      "export default { fetch() { return new Response(\"ok\"); } };",
+      "",
+    ].join("\n");
+    const artifact = body + "/*" + "x".repeat(4000) + "*/\n";
+    writeFileSync(join(dir, "dist/probe.bundled.mjs"), artifact);
+    const probe = { name: "r31-probe", abs: dir,
+      bundle: { outfile: "dist/probe.bundled.mjs", assets: ["assets/engine.wasm", "assets/model.bin"] } };
+    const size = Buffer.byteLength(artifact);
+
+    const failing = await budgetReport(probe, { sizeWarn: 1000, sizeFail: 2000, startWarnMs: 60_000 });
+    t("R31: (a) an artifact past the FAIL budget fails, naming the member, its size and the budget",
+      [failing.size, failing.findings.length, failing.findings.every((f) => f.startsWith("r31-probe:")),
+       failing.findings.some((f) => f.includes(`${size} B`) && /past the fleet's size budget/.test(f))],
+      ["fail", 1, true, true]);
+    const warning = await budgetReport(probe, { sizeWarn: 1000, sizeFail: 10 * MIB, startWarnMs: 60_000 });
+    t("R31: (b) past the WARN budget only, it warns and does not fail",
+      [warning.size, warning.findings, warning.warnings.length, /past the warning budget/.test(warning.warnings[0] || "")],
+      ["warn", [], 1, true]);
+    const within = await budgetReport(probe, { sizeWarn: 10 * MIB, sizeFail: 20 * MIB, startWarnMs: 60_000 });
+    t("R31: (c) within both budgets, nothing fails and nothing warns (over-strictness)",
+      [within.size, within.start, within.findings, within.warnings], ["ok", "ok", [], []]);
+
+    const slow = await budgetReport(probe, { sizeWarn: 10 * MIB, sizeFail: 20 * MIB, startWarnMs: 10 });
+    t("R31: (d) a global scope slower than its budget warns, naming the member and the time, and never fails",
+      [slow.start, slow.findings, slow.ms >= 40, slow.warnings.some((w) => w.startsWith("r31-probe:") && /global scope took \d+ ms/.test(w))],
+      ["warn", [], true, true]);
+    t("R31: (e) the import really evaluated the artifact's global scope, with its cloudflare: names and its upload parts as the platform hands them",
+      globalThis.__r31Seen, ["function", "object", true, 5]);
+    const before = globalThis.__r31Probe;
+    const again = await measureStart(probe);
+    t("R31: (f) every measurement is a FRESH import — the global scope ran again, so no module cache can make it free",
+      [again.measured, globalThis.__r31Probe, again.ms >= 40], [true, before + 1, true]);
+    t("R31: (f) and the import hooks were removed after it — a cloudflare: import outside a measurement is Node's own refusal again",
+      await import("cloudflare:workers").then(() => "resolved", () => "refused"), "refused");
+
+    writeFileSync(join(dir, "dist/throws.bundled.mjs"), 'throw new Error("r31 boom");\nexport default {};\n');
+    const throws = await budgetReport({ ...probe, bundle: { outfile: "dist/throws.bundled.mjs" } });
+    t("R31: (g) an artifact whose global scope throws is UNMEASURED and fails by name — never a fast start by omission",
+      [throws.ms, throws.findings.length, throws.findings.some((f) => /r31 boom/.test(f) && /start-up time is unmeasured/.test(f))],
+      [null, 1, true]);
+    const gone = await budgetReport({ ...probe, bundle: { outfile: "dist/absent.bundled.mjs" } });
+    t("R31: (h) an artifact that is missing fails on its size and its start-up, never passes unmeasured",
+      [gone.bytes, gone.ms, gone.findings.length], [null, null, 2]);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+    delete globalThis.__r31Probe; delete globalThis.__r31Seen;
   }
 }
 
