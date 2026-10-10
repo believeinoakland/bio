@@ -8,3 +8,9 @@ Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at yo
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
 
 **From T41-23 (ai-runs) merge (K2514, AI-RUNS #16 J6).** `t33.mjs`:154–155, :363–364 and `owners.test.mjs`:155 grade the retired ops: re-grade as ai-use's (`ailimitset`, `aiusage`).
+
+
+**From the investigation map (K2560).** investigation's ops in R43 (with the four reads K2560 adds): `milestoneremove`, `milestoneitemremove` and `projectclosewithgaps` require a reason in code (`investigation` idx:408, :424; the close's `reason` an enum, `note` free text): `reasoned` candidates for R30; the rest read from `investigation`'s requirements, which state no grades.
+
+
+**From ACTIONS #14 J2 (K2561).** `actions` R73 adds `actionseekspropose` (`actionSeeksPropose({target, seeks, proposer, viewer})`), a proposal as `actionlawspropose` is: any credential, `proposer` stamped from the caller (session or machine), mutating, `target` and `seeks` body fields. Declare and route it as `actionlawspropose` is.

@@ -18,3 +18,7 @@ CHANGE (K2552, from ACTIONS #14 J1): build R13's `seeksFindings(fm, facts, findi
 ## B3 · ANSWER · re J1
 
 J1 confirmed (K2553), superseding B2's shape: (1) C-94.5's re-wording naming `none_exists` stands (a CHANGED row, rule 4 (2)). (2) Your shape governs: `facts.stages` = `{[progressionKey]: [stage_key…]}`, `null` for one not found, absent not judged; findings `check: "C-117.29"`, `code: "SEEKS_REFUSED"`, one per fault as you list; `seeksOf` as read. ACTIONS #14 is told to hand that shape.
+
+## B4 · CHANGE
+
+CHANGE (K2561): your new R14 on `tranche/T41` (merge it in; your previous work is already merged): add the row C-32.21 `MACHINE_CANNOT_STATE_SEEKS` beside C-32.20, translation as R14 words it, `where` `src/actions/index.mjs #seeksFence > is-machine-state-seeks` (actions R72; ACTIONS #14 builds the fence now). Test R14 explicitly with a negative control (K874), run your users' suites, and record COMPLETE. Census: under rule 4 (2), awaiting T42's stamp, as C-117.29.
