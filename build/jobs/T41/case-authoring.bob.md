@@ -1,6 +1,6 @@
 # BOB to case-authoring (T41)
 
-**Read** · handled J0
+**Read** · handled J6
 
 ## B1 · START
 
@@ -21,3 +21,39 @@ CHANGE (K2528): R68's pre-flight matches approvals by the approval digest, case-
 ## B3 · CHANGE
 
 CHANGE (K2531): case-disclosures R30/R31 take from their caller `conclusions` (each member's concluded state, `[{finding, claim, claim_state, legs}]`), `flags` (`[{kind: "account_check", ord, text, cites}]`) and, for R31, a conclusion's bias applications: the arg list is `{account, statements, cited, lens, conclusions, flags, viewer}`. Where your R63–R68 call R30/R31 (the pre-flight R34 among them), pass them from what you already read.
+
+## B4 · ANSWER · re J2
+
+J1 and J2 answered (K2533); merge the tranche branch for the new text. Confirmed as read: (1)-(4), (7), (9), (11); in (3) also pass `flags` (B3). (5) yes, null means undetermined (case-grammar told). (6) ratification R50 gains `approvalsInForce({case, edition, docSha})` → `{rule, approvals, missing}` or `{ok: false}`; read it (stand in until ratification merges, after you is not the case: ratification precedes you). (8) write R26's block at publishCase: the rule in force and the approvals held for the approval digest at that act (`approval_rule`, `approvals:`); later approvals are carried by preparing again; the pre-flight names that step while any required approval is not carried (R68 re-worded). (10) R63 gains optional `statementCites` (`{statement, subject_justification, excluded: [per item], what_changed}`, cites in R23's shape, written on the statement rows, empty when absent); case-disclosures' 'cites nothing' arm applies to account sentences only. Pre-START find: routed to case-disclosures.
+
+## B5 · CHANGE
+
+CHANGE (K2535): publish-schedule (T41-37) is merged into tranche/T41 @ 8b6e5ab802, with R8's three doors (`isWaiting`, `signedAtOf`, `signerOf`). Merge the tranche branch and build against the real module in place of your stand-in; re-run your suite.
+
+## B6 · ANSWER · re J3
+
+J3: your reading is ruled and worded into R64 (K2536): `accountPropose` takes `kind: "account_check"` with `flags` in place of `text`, same table, labelled machine work, listed by `accountDrafts`; `publishCase` passes R30 the flags of every `account_check` draft proposed after the named account draft (all with none named), in proposal order. Merge the tranche branch for the text.
+
+## B7 · CHANGE
+
+CHANGE (K2537): case-grammar (T41-34) is merged into tranche/T41 @ 7fe0e94f76: R12's reader answers `obscured: {copy, label, marked}`, R23–R26 (`accountOf`, `biasApplicationsOf`, `reviewCommentsOf`, `approvalsOf`, `approvalSubjectSha`). Merge the tranche branch, build against the real services in place of stand-ins. Re-state `documents.test.mjs`:147, `photos.test.mjs`:60 for `marked` (rule 4 (19)).
+
+## B8 · CHANGE
+
+CHANGE (K2538, from CASE-DISCLOSURES #8 J2): once case-disclosures merges, your `invariants.test.mjs`:76 (pins C-120 at .22) and `preflight.test.mjs`:67 (pins C-120.23–.29) need re-pinning to its new rows C-120.23–.29; `photos.test.mjs`:101 clears. Take these in your job.
+
+## B9 · ANSWER · re J4
+
+J4: yes, as you read it (K2540). R8's unsigned-preparation arm refuses only a preparation of another case or of another edition of this one; a preparation of this same case edition is replaced by the new one (R14, publication R21). R8 is re-worded on the tranche branch; build it, re-state waiting.test's after-cancel assertion (the act goes on and replaces), with the negative control you name. The record-grammar subject goes to next.md (N838); keep your own sentence meanwhile.
+
+## B10 · CHANGE
+
+CHANGE (K2541, from CASE-DISCLOSURES #8 J5): with case-carriage merged, a photo copy with nothing to obscure now answers `PUBLISHED_LABEL` (case-disclosures R29), so your `photos.test.mjs`:76 (R34's Photos step) needs re-stating. Take it with your other re-pins.
+
+## B11 · ANSWER · re J5
+
+J5: option 1 (K2542). Merge as is at 4,131; the split (the account to `case-account`, R63–R68, ~430 lines) is N839 in next.md, because its MODULE_ORDER entry is membership's (closed L2) and K624's copy-then-delete needs its own turn. J4 is answered (B9). Finish the CHANGEs you name, record the final uses (`ai-runs` added), and post COMPLETE.
+
+## B12 · CHANGE
+
+CHANGE (K2543): publication (T41-36) is merged into tranche/T41 @ e2f3e4b7f7, its scheduled-publishing copy deleted (R77's three doors filled by publish-schedule). Merge the tranche branch, re-run on the merged tip, and post COMPLETE again (your earlier COMPLETE stands if nothing changes).

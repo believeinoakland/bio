@@ -4,7 +4,9 @@
    deleted in T20; its ceremony, gate, container and signature arms are other modules' shares. Driven at the module's
    interface: `caseDocument`, `caseDocumentFacts`, `hasCaseStanding` and `op=casedocument`, with each viewer spelled as
    the control plane stamps it (membership R43's `viewerPredicate`; an `ai` credential stamps the principal membership
-   records for it, read back through credentials' `aiCredentialLook`). */
+   records for it, read back through credentials' `aiCredentialLook`). Since T41 (D54, K2408, K2442) an administrator
+   neither invited nor joined reads a hidden project's unsigned document as a stranger does, and a discoverable one's
+   whole. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, V, sha } from "./fixture.mjs";
@@ -70,16 +72,22 @@ function assertStranger(w, viewer, label) {
   assert.equal(w.p.hasCaseStanding(w.row(`SELECT * FROM case_documents WHERE edition=1`), viewer), false, `${label}: no standing`);
 }
 
-test("R1 R29 an unsigned case document answers the owner, an administrator, the MEMBER binding, an invited and a joined non-owner, and the owner's agent whole; each stranger byte for byte as a case never authored", () => {
+test("R1 R29 (D54) an unsigned case document answers the owner, an administrator at a discoverable project (never at a hidden one), the MEMBER binding, an invited and a joined non-owner, and the owner's agent whole; each stranger byte for byte as a case never authored", () => {
   const { w, proj, vicProj } = ceremony();
   const m = w.membership;
   /* the ground: the owner reads it, unsigned, and the baseline is a genuine not-found */
   assertReads(w, V("iris"), "the OWNER");
   assert.equal(w.p.caseDocument(CASE, 1, V("iris")).sig_armored, null);
   assert.equal(never(V("iris")).reason, "NO_CASE_DOCUMENT");
-  /* an ADMINISTRATOR with no role in the project (Membership v2 7.3: sees every project, directs none) */
+  /* an ADMINISTRATOR with no role in the project (D54, K2408: neither invited nor joined, an administrator sees a
+     hidden project at EXISTENCE only, never its contents): a stranger to its unsigned document while it is hidden; the
+     negative control, the same project set discoverable, is read whole (Membership v2 7.3: sees it, directs none) */
   assert.equal(m.participation(proj, "omar") ?? null, null, "(fixture) omar has no role in the project");
-  assertReads(w, V("omar"), "an active ADMINISTRATOR");
+  assert.equal(m.visibilityOf(proj), "hidden", "(fixture) a project is hidden until its owner says otherwise");
+  assertStranger(w, V("omar"), "an active ADMINISTRATOR, at a hidden project (D54)");
+  assert.equal(m.projectVisibilitySet({ projectId: proj, setting: "discoverable", by: "iris", viewer: V("iris") }).ok, true);
+  assertReads(w, V("omar"), "an active ADMINISTRATOR, at a discoverable project");
+  assert.equal(m.projectVisibilitySet({ projectId: proj, setting: "hidden", by: "iris", viewer: V("iris") }).ok, true);
   /* the instance-level MEMBER binding, and every machine class the plane stamps, see all working material */
   for (const cls of ["class:member", "class:admin", "class:daemon"]) {
     assert.equal(viewerPredicate(cls).scope, "member", `(fixture) ${cls} is the unfiltered scope`);
@@ -110,7 +118,7 @@ test("R1 R29 an unsigned case document answers the owner, an administrator, the 
     assertStranger(w, viewer, label);
 });
 
-test("R1 standing is required in every project the record names: an edition whose document names another project than the case's owner answers only a viewer seeing both", () => {
+test("R1 (D54) standing is required in every project the record names: an edition whose document names another project than the case's owner answers only a viewer seeing both", () => {
   const { w, proj, vicProj, roles } = ceremony();
   const m = w.membership;
   assert.equal(m.projectInvite({ projectId: proj, handle: "h_wen", by: "iris", viewer: V("iris") }).ok, true);
@@ -134,7 +142,14 @@ test("R1 standing is required in every project the record names: an edition whos
   stranger2(V("vic"), "the named project's owner, with no standing in the case's project");
   stranger2(V("wen"), "a joined participant of the case's project only");
   stranger2(agent(w, "iris"), "the case owner's agent");
-  reads2(V("omar"), "an active administrator sees both projects");
+  /* D54: an administrator in neither project sees neither while both are hidden; once both are discoverable, both */
+  stranger2(V("omar"), "an active administrator in neither hidden project");
+  for (const [p, owner] of [[proj, "iris"], [vicProj, "vic"]])
+    assert.equal(m.projectVisibilitySet({ projectId: p, setting: "discoverable", by: owner, viewer: V(owner) }).ok, true);
+  reads2(V("omar"), "an active administrator sees both projects once both are discoverable");
+  assert.equal(m.projectVisibilitySet({ projectId: vicProj, setting: "hidden", by: "vic", viewer: V("vic") }).ok, true);
+  stranger2(V("omar"), "the negative control: one of the two hidden again");
+  assert.equal(m.projectVisibilitySet({ projectId: proj, setting: "hidden", by: "iris", viewer: V("iris") }).ok, true);
   reads2("class:member", "the MEMBER binding");
   reads2(agent(w, "omar", "organisation"), "an organisation agent");
   /* a participant of BOTH reads it: vic invites wen into her project too */

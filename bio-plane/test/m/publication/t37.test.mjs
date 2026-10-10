@@ -129,7 +129,7 @@ test("R72 (T37) an unreadable content table states no capture and never refuses 
 
 const LAPSED = [{ ref: "INFO-2026-0001-minutes", sha: CAP1, why: "marked since the case was prepared" }];
 
-/* Its translation is `words.json`'s `photo.refused.changed` since T38 (DEC-183 (4)): `t38.test.mjs` checks it. */
+/* Its translation is `words.json`'s `photo.refused.changed.signed` since T41 (DEC-187 (4); was `photo.refused.changed`, T38): `t38.test.mjs` checks it. */
 test("R33 C-122.6 PHOTO_MARKS_CHANGED_SINCE is held in this module's C-122 family", () => {
   const row = rowOf("PHOTO_MARKS_CHANGED_SINCE");
   assert.deepEqual({ code: row.code, check: row.check }, { code: "PHOTO_MARKS_CHANGED_SINCE", check: "C-122.6" });

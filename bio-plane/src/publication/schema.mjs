@@ -9,8 +9,7 @@
  * `capture_attributions` `case-tensions`' since T33 (its R10; K1634), which creates and declares them with names and
  * columns unchanged. The derived and working tables (`published_edges`, `published_held_references`, unsigned
  * `case_documents` and their `case_exclusions`) are declared as the store declared them (K23). `scheduled_editions`
- * (R66–R69, T34) holds a signed edition waiting to be published at a set time: working material until published (R29),
- * so purged by the whole-store form except a published row, which keeps when its edition was signed (R70).
+ * (T34) is `publish-schedule`'s since T41 (its R10; K2438), which creates and declares it with its DDL unchanged.
  */
 
 export const PUBLICATION_SCHEMA = `
@@ -484,39 +483,6 @@ CREATE TABLE IF NOT EXISTS edition_stamps (
   stamped_at TEXT NOT NULL,
   PRIMARY KEY (case_id, edition, entry_seq)
 );
-
--- R66-R69 (DEC-147; K1790): A SIGNED CASE EDITION WAITING TO BE PUBLISHED AT A SET TIME. One row per setting, seq its
--- order; at most one row of a case edition is 'waiting' at a time. The signature is held HERE, beside the document and
--- never on it, so until the edition is published its document answers as an unsigned preparation (R29). at_date and
--- at_time are the local date and time as set, zone the group's zone they were read in, publish_at the instant they
--- resolve to (civil-time). checked is what the ceremony read at signing (canonical JSON, ratification R41), compared by
--- the publisher at the time; moves every earlier time with who moved it and when (JSON list). state leaves 'waiting'
--- once: 'published' (outcome_at the commit's instant), 'stopped' (reasons, JSON) or 'cancelled' (cancelled_by).
--- signed_at is the instant of the signature at the ceremony (R70), copied to the published_cases row at the commit. A row that did not publish is working material and
--- purged with the unsigned document it holds a signature for; a published row keeps when its edition was signed.
-CREATE TABLE IF NOT EXISTS scheduled_editions (
-  seq          INTEGER PRIMARY KEY AUTOINCREMENT,
-  case_id      TEXT NOT NULL,
-  edition      INTEGER NOT NULL,
-  doc_sha      TEXT NOT NULL,
-  sig_armored  TEXT NOT NULL,
-  signer       TEXT,
-  delivered_by TEXT,
-  signed_at    TEXT NOT NULL,
-  at_date      TEXT NOT NULL,
-  at_time      TEXT NOT NULL,
-  zone         TEXT NOT NULL,
-  publish_at   TEXT NOT NULL,
-  set_by       TEXT,
-  state        TEXT NOT NULL CHECK (state IN ('waiting','published','stopped','cancelled')),
-  checked      TEXT,
-  moves        TEXT NOT NULL DEFAULT '[]',
-  outcome_at   TEXT,
-  reasons      TEXT,
-  cancelled_by TEXT
-);
-CREATE INDEX IF NOT EXISTS scheduled_editions_case ON scheduled_editions(case_id, edition);
-CREATE INDEX IF NOT EXISTS scheduled_editions_due ON scheduled_editions(state, publish_at);
 `;
 
 /** R31 (K23): what purge clears, as the store declared it — `published_edges` keyed by either end, the unsigned case
@@ -526,8 +492,6 @@ export const PUBLICATION_TABLES = Object.freeze([
   { name: "published_held_references", keys: ["from_bundle", "to_bundle"] },
   { name: "case_documents", keys: [], whole: "ratified_at IS NULL" },
   { name: "case_exclusions", keys: [], whole: "NOT EXISTS (SELECT 1 FROM case_documents d WHERE d.case_id = case_exclusions.case_id AND d.edition = case_exclusions.edition)" },
-  /* R66 (R29): a signed edition not (yet) published is working material, cleared with its unsigned document. */
-  { name: "scheduled_editions", keys: [], whole: "state <> 'published'" },
 ]);
 /** R24, R31: the published bytes, never cleared by any purge. */
 export const PUBLICATION_EXEMPT = Object.freeze([
@@ -573,7 +537,7 @@ const ADDITIVE_COLUMNS = [
   ["case_documents", "draft_id", "TEXT"],
   /* R70, R40 (DEC-147 (5); K1826): WHEN A PUBLISHED CASE EDITION WAS SIGNED AND WHEN IT WAS PUBLISHED, on its
      `published_cases` row so a reader lists them in the row's own query. Written at the commit (a set time's signing,
-     else the commit's instant; the commit's instant). A row written before T34 is filled once below with its
+     R77's `signedAtOf`, else the commit's instant; the commit's instant). A row written before T34 is filled once below with its
      ratification instant in both, which it was, so neither is ever null. */
   ["published_cases", "signed_at", "TEXT"],
   ["published_cases", "published_at", "TEXT"],

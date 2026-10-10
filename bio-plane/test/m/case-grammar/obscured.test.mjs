@@ -35,13 +35,13 @@ test("R12 (T37) a document row stating obscured is written flat as obscured_copy
     const fm = fmOf(text);
     assert.deepEqual(Object.keys(fm.materials[0]), [...CG.MATERIAL_FIELDS, ...CG.MATERIAL_OBSCURED_FIELDS], "one flat row");
     const [row] = CG.materialsOf(fm).materials;
-    assert.deepEqual(row, { ...PHOTO_ROW, included: false, obscured: { copy: COPY, label: OBSCURED_LABEL } }, format);
+    assert.deepEqual(row, { ...PHOTO_ROW, included: false, obscured: { copy: COPY, label: OBSCURED_LABEL, marked: true } }, format);
     assert.equal(row.sha, sha(PHOTO_BYTES), "the original's fingerprint is kept");
   }
   /* in the document's order, beside rows that state none */
   const text = doc(CG.CASE_DOCUMENT_FORMAT, CG.materialBlockLines({ materials: [WHOLE, PHOTO_ROW], attestations: [] }));
   assert.deepEqual(CG.materialsOf(fmOf(text)).materials.map((r) => [r.ref, r.obscured]),
-                   [[MINUTES, null], [PHOTO, { copy: COPY, label: OBSCURED_LABEL }]]);
+                   [[MINUTES, null], [PHOTO, { copy: COPY, label: OBSCURED_LABEL, marked: true }]]);
 });
 
 test("R12 (T37) negative controls: a row without obscured is written byte for byte as before T37 and reads obscured: null; an observation row never states it; a malformed copy or label is written null, never guessed; never throws", () => {
@@ -61,11 +61,11 @@ test("R12 (T37) negative controls: a row without obscured is written byte for by
   assert.equal(CG.materialsOf(handWritten).materials[0].obscured, null, "an observation row's fields are not read");
   /* a copy that is not a SHA-256, or a label that is no sentence, is null: the copy is then missing (R13), never guessed */
   const bad = CG.materialsOf(fmOf(doc(CG.CASE_DOCUMENT_FORMAT, CG.materialsLines([{ ...PHOTO_ROW, obscured: { copy: "ABC", label: "  " } }]))));
-  assert.deepEqual(bad.materials[0].obscured, { copy: null, label: null });
+  assert.deepEqual(bad.materials[0].obscured, { copy: null, label: null, marked: false });
   assert.equal(bad.materials[0].included, false);
   /* one field stated states it, the other read null (undetermined) */
   assert.deepEqual(CG.materialsOf({ format: CG.CASE_DOCUMENT_FORMAT, materials: [{ ref: PHOTO, kind: "document", obscured_label: "L" }] })
-    .materials[0].obscured, { copy: null, label: "L" });
+    .materials[0].obscured, { copy: null, label: "L", marked: true });
   /* an older format carries no materials at all */
   assert.equal(CG.materialsOf(fmOf(doc("bio-case-document/5", CG.materialsLines([PHOTO_ROW])))), null);
   for (const odd of [null, 7, { format: CG.CASE_DOCUMENT_FORMAT, materials: [{ kind: "document", get obscured_copy() { throw new Error("boom"); } }] }])
@@ -86,7 +86,7 @@ test("R13 (T37) a bio-case-file/3 case file carrying a photo as its copy meets t
   assert.deepEqual(CG.caseFileEntryOf(copy.path), { kind: "obscured", ref: PHOTO });
   assert.equal(manifest.files.some((f) => f.path.startsWith(`materials/${PHOTO}/`) && f.kind !== "obscured"), false);
   const rows = rowsOf(manifest, files);
-  assert.deepEqual(rows.find((r) => r.ref === PHOTO).obscured, { copy: COPY, label: OBSCURED_LABEL });
+  assert.deepEqual(rows.find((r) => r.ref === PHOTO).obscured, { copy: COPY, label: OBSCURED_LABEL, marked: true });
   assert.deepEqual(CG.caseFileManifestCheck(manifest, { materials: rows }), []);
   assert.deepEqual(CG.caseFileManifestCheck(manifest), [], "the manifest alone");
 });
@@ -221,7 +221,7 @@ test("R12 (T38) an unmarked photo is stated obscured too: its row written includ
     const text = doc(format, [...lines, "material_attestations: []"]);
     clean(text);
     const [row] = CG.materialsOf(fmOf(text)).materials;
-    assert.deepEqual(row, { ...PLAIN_PHOTO_ROW, included: false, obscured: { copy: PLAIN_COPY, label: null } }, format);
+    assert.deepEqual(row, { ...PLAIN_PHOTO_ROW, included: false, obscured: { copy: PLAIN_COPY, label: null, marked: false } }, format);
     assert.equal(row.sha, sha(PLAIN_PHOTO_BYTES), "the original's fingerprint is kept");
   }
   /* a copy handed with no label, a null one or a blank one is written with the label null: a copy with nothing covered */
@@ -229,7 +229,7 @@ test("R12 (T38) an unmarked photo is stated obscured too: its row written includ
     assert.deepEqual(CG.materialsLines([{ ...PLAIN_PHOTO_ROW, obscured: { copy: PLAIN_COPY, label } }]), lines, String(label));
   /* no format change: an absent label line reads null, as a written null does */
   const absent = doc(CG.CASE_DOCUMENT_FORMAT, lines.filter((l) => !l.includes("obscured_label")));
-  assert.deepEqual(CG.materialsOf(fmOf(absent)).materials[0].obscured, { copy: PLAIN_COPY, label: null });
+  assert.deepEqual(CG.materialsOf(fmOf(absent)).materials[0].obscured, { copy: PLAIN_COPY, label: null, marked: false });
   assert.equal(CG.CASE_DOCUMENT_FORMAT, "bio-case-document/7");
   assert.equal(CG.CASE_FILE_FORMAT, "bio-case-file/3");
 });
@@ -240,7 +240,7 @@ test("R12 (T38) the label is case-carriage's OBSCURED_LABEL when the photo is ma
   const rows = CG.materialsOf(fmOf(files.get("case.md"))).materials;
   assert.deepEqual(rows.map((r) => [r.ref, r.included, r.obscured]), [
     [MINUTES, true, null], ["INFO-2026-0009-observation", false, null],
-    [PHOTO, false, { copy: COPY, label: OBSCURED_LABEL }], [PLAIN_PHOTO, false, { copy: PLAIN_COPY, label: null }]]);
+    [PHOTO, false, { copy: COPY, label: OBSCURED_LABEL, marked: true }], [PLAIN_PHOTO, false, { copy: PLAIN_COPY, label: null, marked: false }]]);
   /* every photo it carries is stated obscured, and travels as its copy alone: R13's rule holds for both */
   assert.deepEqual(CG.caseFileManifestCheck(manifest, { materials: rows }), []);
   assert.deepEqual(manifest.files.filter((f) => f.path.startsWith("materials/INFO-2026-000")).map((f) => [f.path, f.kind]).sort(),
@@ -298,7 +298,7 @@ test("R12 (T39) a member document's cleaned copy row: written flat as obscured_c
     const fm = fmOf(text);
     assert.deepEqual(Object.keys(fm.materials[0]), [...CG.MATERIAL_FIELDS, ...CG.MATERIAL_OBSCURED_FIELDS], "one flat row");
     const [row] = CG.materialsOf(fm).materials;
-    assert.deepEqual(row, { ...MEMBER_DOC_ROW, included: false, obscured: { copy: DOC_COPY, label: COPY_CLEANED_LABEL } }, format);
+    assert.deepEqual(row, { ...MEMBER_DOC_ROW, included: false, obscured: { copy: DOC_COPY, label: COPY_CLEANED_LABEL, marked: true } }, format);
     assert.equal(row.sha, sha(MEMBER_DOC_BYTES), "the original's fingerprint is kept");
   }
   /* no format change: the format written is still /7, the case file /3 */
@@ -308,8 +308,8 @@ test("R12 (T39) a member document's cleaned copy row: written flat as obscured_c
   const { files } = caseFileFixture({ photo: true, plainPhoto: true, memberDoc: true, fileFormat: CG.CASE_FILE_FORMAT });
   clean(files.get("case.md"));
   assert.deepEqual(CG.materialsOf(fmOf(files.get("case.md"))).materials.filter((r) => r.obscured).map((r) => [r.ref, r.included, r.obscured]), [
-    [PHOTO, false, { copy: COPY, label: OBSCURED_LABEL }], [PLAIN_PHOTO, false, { copy: sha(PLAIN_PHOTO_COPY_BYTES), label: null }],
-    [MEMBER_DOC, false, { copy: DOC_COPY, label: COPY_CLEANED_LABEL }]]);
+    [PHOTO, false, { copy: COPY, label: OBSCURED_LABEL, marked: true }], [PLAIN_PHOTO, false, { copy: sha(PLAIN_PHOTO_COPY_BYTES), label: null, marked: false }],
+    [MEMBER_DOC, false, { copy: DOC_COPY, label: COPY_CLEANED_LABEL, marked: true }]]);
   /* negative control: the same row handed no obscured travels as handed, and reads obscured: null */
   const { obscured, ...whole } = MEMBER_DOC_ROW;
   const back = CG.materialsOf(fmOf(doc(CG.CASE_DOCUMENT_FORMAT, CG.materialsLines([{ ...whole, included: true }])))).materials[0];
@@ -324,7 +324,7 @@ test("R13 (T39) a bio-case-file/3 case file carrying a member document as its cl
     assert.deepEqual(f && [f.path, f.sha256], [`materials/${MEMBER_DOC}/obscured`, copy], as);
     assert.equal(manifest.files.some((x) => x.path.startsWith(`materials/${MEMBER_DOC}/`) && x.kind !== "obscured"), false, "no file of the original");
     const rows = rowsOf(manifest, files);
-    assert.deepEqual(rows.find((r) => r.ref === MEMBER_DOC).obscured, { copy, label: COPY_CLEANED_LABEL });
+    assert.deepEqual(rows.find((r) => r.ref === MEMBER_DOC).obscured, { copy, label: COPY_CLEANED_LABEL, marked: true });
     assert.deepEqual(CG.caseFileManifestCheck(manifest, { materials: rows }), [], as);
     /* negative controls, each named */
     const unnamed = rows.map((r) => (r.ref === MEMBER_DOC ? { ...r, obscured: null } : r));

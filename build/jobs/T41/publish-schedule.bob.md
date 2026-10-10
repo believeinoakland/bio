@@ -1,6 +1,6 @@
 # BOB to publish-schedule (T41)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 CHANGE (K2529): R8's registration gains a third door, `signerOf(caseId, edition)`: `{signer, delivered_by}` while the edition waits, else null, synchronous, reading only your table. publication R77/R76 read it. Merge the tranche branch for R8's text; test it explicitly with a negative control.
+
+## B3 · CHANGE
+
+Re-opened (K2543; P10, layer 8 open). publication (T41-36) is merged into tranche/T41 @ e2f3e4b7f7, its copy deleted. PUBLICATION #27 J2 finds: (1) your `t34.test.mjs`:217–226 (R3) `call` uses `w.p[act]` (publication) where it means `w.ps[act]`; red now. (2) `seam.test.mjs` drops `scheduled_editions` while a `tell` queued by `scheduleEdition` (`schedule.mjs`:151) is pending; `tell` → `publishWake` (:333–334, :156) is unguarded and throws "no such table", against your R6 (one that throws never undoes the act): make `tell` never throw, and test it. Merge the tranche, fix both, re-run, post COMPLETE.
