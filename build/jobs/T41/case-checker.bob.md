@@ -23,3 +23,7 @@ J1 (1)-(6) confirmed (K2530), with one alignment: case-grammar R23's cites are `
 ## B4 · CHANGE
 
 CHANGE (K2531, from CASE-DISCLOSURES #8): fix R24's `checkAccount` answer as `{ok: true, departures: [{ord, code, detail?}]}`, one entry per sentence and arm that fails, `code` one of case-disclosures R30's five arm codes, `ord` the `account:` row's ord (case-grammar R23); malformed input `{ok: false, reason, field}`. Test that shape explicitly.
+
+## B5 · CHANGE
+
+CHANGE (K2537): case-grammar (T41-34) is merged into tranche/T41 @ 7fe0e94f76: R12's reader answers `obscured: {copy, label, marked}`, R23–R26 (`accountOf`, `biasApplicationsOf`, `reviewCommentsOf`, `approvalsOf`, `approvalSubjectSha`). Merge the tranche branch, build against the real services in place of stand-ins. Your R23–R24 read case-grammar's R23/R24 rows: switch to `accountOf` and `biasApplicationsOf`.
