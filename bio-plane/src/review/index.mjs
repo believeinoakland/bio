@@ -44,25 +44,32 @@
  *   caseTensions         `attributionInForce` (its R6, was publication R39; R16), read directly and never through
  *                        `publication`, which no longer answers it (its R61; T35-60, N597, K1643).
  *   caseAuthoring        `publishCase` (its R18; R13) and `statementAcknowledgements`, whose list carries its
- *                        `withheld_stated` sentence (its R20; R15).
+ *                        `withheld_stated` sentence (its R20; R15); `registerReviewComments` (its R66), filled at
+ *                        start with R33's `reviewCommentsFor` (K2483).
+ *   ratification         `registerApprovalReader` (its R50), filled at start with R30–R31's rule and approvals (R32).
+ *   caseGrammar          `reviewCommentsOf` (its R25), the comments a signed document carries (R33's left-out read);
+ *                        `approvalSubjectSha` (its R26; K2528), the digest an approval names (R31).
  *   now                  the clock for the instants it writes, an ISO string (default: the wall clock, to the ms).
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (`bundle_id`, `object_type`, `current_state`) and
  * `files` (`bundle_id`, `path`, `content`), its R37 (R12's findings, R19's project); publication's `cases`
- * (`case_id`, `project_id`) and `published_cases` (`case_id`, `edition`), its R40 (R3, R5).
+ * (`case_id`, `project_id`), `published_cases` (`case_id`, `edition`) and `case_documents` (`case_id`, `edition`,
+ * `doc_sha`, `text`, `draft_id`, `sig_armored`), its R40 (R3, R5, R31, R33).
  *
  * READ CONTRACT it states (R26): `case_drafts` (`draft_id`, `case_id`, `project_id`, `params`, `statement_by`,
  * `created_at`), on record-core R37's terms, which `case-authoring`'s acknowledgements read under `REVIEW_LIST_MAX`;
  * every write to it stays here. */
 
 import { recordOf, stampInstant, instantOrder, mintExhausted } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, notAnAdmin } from "../membership/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { caseTensionsOf } from "../case-tensions/index.mjs";
 import { caseAuthoringOf } from "../case-authoring/index.mjs";
-import { isMachineIdentity } from "../record-grammar/index.mjs";
+import { ratificationOf } from "../ratification/index.mjs";
+import * as caseGrammar from "../case-grammar/index.mjs";
+import { isMachineIdentity, parseFrontmatter } from "../record-grammar/index.mjs";
 import { REVIEW_COPY_CHECKS } from "./checks.mjs";
 import { REVIEW_TABLES, migrateReview } from "./schema.mjs";
 
@@ -78,6 +85,10 @@ export const REVIEW_DRAFT_MAX = 64 * 1024;
 export const REVIEW_TEXT_MAX = 4000;
 /** R6: a recipient's label. */
 export const REVIEW_RECIPIENT_MAX = 200;
+/** R30: the most approvers one rule names. */
+export const APPROVERS_MAX = 50;
+/** R31: an approval's reason, trimmed. */
+export const APPROVAL_REASON_MAX = 4000;
 /** R14, R19, R26: THE COPY'S LISTS ARE BOUNDED AND SAY SO. Comments, grants and drafts are read under this cap (one row
  *  over it to know), and an answer that hit it says so rather than presenting a page as the whole. `case-authoring`,
  *  earlier in the order, reads `case_drafts` under the same bound and keeps its own copy of it (K242). */
@@ -237,11 +248,13 @@ export class Review {
   #seeded = false;
 
   constructor({ storage, record, membership, host = null, strength = null, basisVersions = null, publication = null,
-                caseTensions = null, caseAuthoring = null, now = null } = {}) {
+                caseTensions = null, caseAuthoring = null, ratification = null, caseGrammar: grammar = null,
+                now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.#deps = { host, storage, strength, basisVersions, publication, caseTensions, caseAuthoring };
+    this.#deps = { host, storage, strength, basisVersions, publication, caseTensions, caseAuthoring, ratification,
+                   caseGrammar: grammar };
     this.now = typeof now === "function" ? now : () => stampInstant("millisecond");
   }
 
@@ -256,6 +269,9 @@ export class Review {
                                                               ...(basisVersions ? { basisVersions } : {}) });
   }
   get caseAuthoring() { return this.#deps.caseAuthoring ||= caseAuthoringOf(this.#deps.host); }
+  get ratification() { return this.#deps.ratification ||= ratificationOf(this.#deps.host); }
+  /* case-grammar is pure: its module, unless a test passed its own. */
+  get caseGrammar() { return this.#deps.caseGrammar || caseGrammar; }
 
   migrate() { migrateReview(this.sql); }
 
@@ -701,8 +717,10 @@ export class Review {
       /* END DEC-49 REGION is-review-comment-text */
     const when = this.#when();
     const grantId = grant ? grant.grant_id : null;
-    this.sql.exec(`INSERT INTO review_comments (draft_id,author_kind,author,grant_id,text,at) VALUES (?,?,?,?,?,?)`,
-                  d.draft_id, kind, author, grantId, body, when);
+    /* R33: the comment keeps the case identity its draft stands at now, as a grant does (R6). */
+    const ident = this.draftIdentity(d);
+    this.sql.exec(`INSERT INTO review_comments (draft_id,author_kind,author,grant_id,text,at,case_id,edition)
+                   VALUES (?,?,?,?,?,?,?,?)`, d.draft_id, kind, author, grantId, body, when, ident.caseId, ident.edition);
     const row = this.#one(`SELECT last_insert_rowid() AS id`);
     return { ok: true, comment: { comment_id: row ? row.id : null, draft_id: d.draft_id, author_kind: kind,
                                   author, grant_id: grantId, text: body, at: when } };
@@ -736,12 +754,208 @@ export class Review {
     return { ok: true, kind: "review-drafts", project: pid, drafts, count: drafts.length,
              total, limit: cap, truncated: total > drafts.length };
   }
+  /* ---- T41: approvals before signing (D60; R30–R32) and the review comments a case carries (D61; R33) ---- */
+
+  /** R30, R32: the rule in force, the latest set appended, or null when none was ever set or the latest turned it off. */
+  approvalRule() {
+    const r = this.#one(`SELECT approvers, set_by, set_at FROM approval_rules ORDER BY seq DESC LIMIT 1`);
+    if (!r || r.approvers == null) return null;
+    return { approvers: JSON.parse(r.approvers), set_by: r.set_by, set_at: r.set_at };
+  }
+
+  /** R30 (D60): an active administrator names the members whose approval every case of the group needs before it is
+   *  signed, or turns the rule off with `null` (the default, so a group of one is never blocked). Every set is
+   *  appended with who and when; nothing is replaced. */
+  approvalRuleSet({ approvers, by = null } = {}) {
+    const who = String(by ?? "").trim();
+    if (!who || isMachineIdentity(who) || !this.membership.isAdministrator(who))
+      return notAnAdmin(who || null, "set the group's approval rule");
+    let list = null;
+    if (approvers !== null) {
+      const ids = Array.isArray(approvers) ? approvers.map((a) => (typeof a === "string" ? a.trim() : "")) : [];
+      list = [...new Set(ids)];
+      const active = (id) => { const f = id ? this.membership.memberFacts(id) : null; return !!f && f.status === "active"; };
+      /* DEC-49 REGION is-approval-rule-approvers */
+      if (!ids.length || list.length > APPROVERS_MAX || !list.every(active))
+        return refusal("APPROVAL_RULE_BAD_APPROVERS",
+                 `an approval rule names one or more active members of the group by member id, at most `
+               + `${APPROVERS_MAX}; approvers: null turns the rule off. Nothing was changed.`);
+      /* END DEC-49 REGION is-approval-rule-approvers */
+    }
+    const when = this.#when();
+    this.sql.exec(`INSERT INTO approval_rules (approvers, set_by, set_at) VALUES (?,?,?)`,
+                  list ? JSON.stringify(list) : null, who, when);
+    return { ok: true, approvers: list, set_by: who, set_at: when,
+             stated: list ? `every case of the group needs the approval of ${list.join(", ")} before it is signed`
+                          : "the group requires no approvals before a case is signed" };
+  }
+
+  /** R31 (D60): a named approver who may see the case's project approves one case edition's document at its
+   *  approval digest (K2528); a later document needs a new approval. Not an approver, no rule, a case not seen and a case that does
+   *  not exist are one answer. */
+  caseApprove({ case: caseId = null, edition = null, docSha = null, reason = null, by = null } = {}) {
+    const who = String(by ?? "").trim();
+    const cid = String(caseId ?? "").trim();
+    const rule = this.approvalRule();
+    const project = cid ? this.#caseProject(cid) : null;
+    /* DEC-49 REGION is-not-an-approver */
+    if (!who || isMachineIdentity(who) || !rule || !rule.approvers.includes(who) || !project
+        || !this.membership.inSight(project, `member:${who}`))
+      return refusal("CASE_NOT_AN_APPROVER",
+               "an approval is given by a member the group's approval rule names, of a case whose project "
+             + "they can see; a case you cannot see is answered exactly as one that does not exist. Nothing "
+             + "was recorded.");
+    /* END DEC-49 REGION is-not-an-approver */
+    const ed = Number(edition);
+    const sha = String(docSha ?? "");
+    /* K2528: `docSha` is the APPROVAL DIGEST, case-grammar R26's `approvalSubjectSha` of the case edition's document
+       (its sha without the `approval_rule`/`approvals:` block), so the approval still names the document once that
+       block is written into it at signing. */
+    const doc = Number.isInteger(ed) && ed >= 1 && SECRET_SHA.test(sha)
+      ? this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, cid, ed) : null;
+    /* DEC-49 REGION is-approval-document */
+    if (!doc || this.caseGrammar.approvalSubjectSha(doc.text) !== sha)
+      return refusal("APPROVAL_NO_SUCH_DOCUMENT",
+               `no document of ${cid} edition ${Number.isInteger(ed) ? ed : "(none)"} has that approval digest `
+             + "(its sha without the approvals block); an approval names the document it approves. Nothing was "
+             + "recorded.", { caseId: cid });
+    /* END DEC-49 REGION is-approval-document */
+    const why = reason == null ? null : String(reason).trim() || null;
+    /* DEC-49 REGION is-approval-reason */
+    if (why && why.length > APPROVAL_REASON_MAX)
+      return refusal("APPROVAL_REASON_TOO_LONG",
+               `an approval's reason is at most ${APPROVAL_REASON_MAX} characters. Nothing was recorded.`);
+    /* END DEC-49 REGION is-approval-reason */
+    const held = this.#one(`SELECT approved_by, reason, at FROM case_approvals
+                            WHERE case_id=? AND edition=? AND doc_sha=? AND approved_by=?`, cid, ed, sha, who);
+    if (held) return { ok: true, existed: true, case: cid, edition: ed, docSha: sha, by: held.approved_by,
+                       reason: held.reason ?? null, at: held.at };
+    const when = this.#when();
+    this.sql.exec(`INSERT INTO case_approvals (case_id, edition, doc_sha, approved_by, reason, at) VALUES (?,?,?,?,?,?)`,
+                  cid, ed, sha, who, why, when);
+    return { ok: true, existed: false, case: cid, edition: ed, docSha: sha, by: who, reason: why, at: when };
+  }
+
+  /** R31, R32: the approvals of exactly one document, in the order given. */
+  approvalsOf({ case: caseId = null, edition = null, docSha = null } = {}) {
+    return this.#rows(`SELECT approved_by, reason, at FROM case_approvals WHERE case_id=? AND edition=? AND doc_sha=?
+                       ORDER BY seq`, String(caseId ?? "").trim(), Number(edition), String(docSha ?? ""))
+      .map((a) => ({ by: a.approved_by, at: a.at, reason: a.reason ?? null }));
+  }
+
+  /** R32: the reader `ratification` R50 takes, filled once at start. */
+  approvalReader() {
+    return { rule: () => this.approvalRule(), approvals: (args) => this.approvalsOf(args) };
+  }
+
+  /* R33: one comment row as a reader of the case sees it: a member by member id, a recipient by the grant's label. */
+  #reviewerRow(c) {
+    const recipient = c.author_kind === "recipient";
+    return { comment_id: c.comment_id, draft_id: c.draft_id, reviewer: recipient ? c.recipient : c.author,
+             reviewer_kind: recipient ? "recipient" : "member", text: c.text, at: c.at };
+  }
+
+  /** R33 (D61): THE COMMENTS ON A CASE EDITION'S REVIEW COPIES, for the publisher's choice (`case-authoring` R66 reads
+   *  it through `registerReviewComments`, filled at start): every comment made while its draft stood at (case,
+   *  edition), on a draft of that case's project, and, when `draft` is named (the draft `publishCase` binds), that
+   *  draft's comments made while it named no case, which is how a new or derived case's copies are reached. Fenced as
+   *  R9: a viewer without standing receives the dead answer. Bounded as R14. Writes nothing. */
+  reviewCommentsFor({ case: caseId = null, edition = null, viewer = null, draft = null, limit = null } = {}) {
+    const cid = String(caseId ?? "").trim() || null;
+    const ed = Number(edition);
+    const project = cid ? this.#caseProject(cid) : null;
+    const d = draft ? this.#draftRow(draft) : null;
+    if (draft && !d) return noReviewCopy();
+    if (!project && !d) return noReviewCopy();
+    for (const p of new Set([project, d && d.project_id].filter(Boolean)))
+      if (!this.seesProjectDrafts(p, viewer)) return noReviewCopy();
+    const arms = [], args = [];
+    if (project && Number.isInteger(ed) && ed >= 1) {
+      arms.push(`(c.case_id=? AND c.edition=? AND d.project_id=?)`);
+      args.push(cid, ed, project);
+    }
+    /* The named draft's comments made while it named no case: a draft standing at a named case is reached by the
+       first arm (case-authoring R9 refuses one standing at another), so this arm adds exactly what no case id reaches,
+       and R33's left-out read finds the same set again from the document's `draft_id`. */
+    if (d) {
+      arms.push(`(c.draft_id=? AND c.case_id IS NULL AND c.edition=1)`);
+      args.push(d.draft_id);
+    }
+    const cap = listCap(limit);
+    const rows = !arms.length ? [] : this.#rows(`SELECT c.comment_id, c.draft_id, c.author_kind, c.author, c.text, c.at,
+                                                       g.recipient FROM review_comments c
+                                                JOIN case_drafts d ON d.draft_id=c.draft_id
+                                                LEFT JOIN review_grants g ON g.grant_id=c.grant_id
+                                                WHERE ${arms.join(" OR ")} ORDER BY c.comment_id LIMIT ?`,
+                                               ...args, cap + 1);
+    const comments = rows.slice(0, cap).map((c) => this.#reviewerRow(c));
+    return { ok: true, kind: "review-comments", case: cid, edition: Number.isInteger(ed) ? ed : null,
+             draft: d ? d.draft_id : null, comments, count: comments.length, truncated: rows.length > cap,
+             limit: cap };
+  }
+
+  /* R33: the comments a signed document carries in its `review_comments:` block (`case-grammar` R25), or null when
+     the block cannot be read (no reader, no block, a format before it, or a throw), so a reviewer is never told a
+     comment was left out on a guess. */
+  #includedIn(text) {
+    const read = this.caseGrammar.reviewCommentsOf;
+    if (typeof read !== "function") return null;
+    try {
+      /* its R25 reads the document's parsed front matter (record-grammar's `parseFrontmatter`) */
+      const got = read(parseFrontmatter(String(text ?? "")).data);
+      const list = Array.isArray(got) ? got : got && (got.comments ?? got.included ?? got.review_comments);
+      return Array.isArray(list) ? list : null;
+    } catch { return null; }
+  }
+
+  /** R33 (D61): AFTER PUBLICATION, EACH MEMBER REVIEWER WHOSE COMMENTS WERE LEFT OUT IS TOLD ONCE (`notice-producers`
+   *  R17 reads this): for every published edition whose document is signed, the viewer's own member comments among
+   *  that edition's review copies (as R33's list reads them: made at that case edition, or on the draft the document
+   *  names while it named no case) that the document's `review_comments:` block does not carry, one item per case
+   *  edition, keyed so it is raised once. A recipient is not a member and is told nothing here. An edition whose block
+   *  cannot be read is counted `undetermined`, never told. Writes nothing. */
+  reviewCommentsLeftOut({ viewer = null, limit = null } = {}) {
+    const v = String(viewer ?? "");
+    const member = v.startsWith("member:") ? v.slice("member:".length).trim() : "";
+    const cap = listCap(limit);
+    const out = { ok: true, kind: "review-comments-left-out", member: member || null, items: [], undetermined: 0,
+                  truncated: false, limit: cap };
+    if (!member || isMachineIdentity(member)) return out;
+    const editions = this.#rows(`SELECT DISTINCT pc.case_id, pc.edition, cs.project_id, cd.text, cd.draft_id
+      FROM review_comments c JOIN case_drafts d ON d.draft_id=c.draft_id
+      JOIN case_documents cd ON cd.sig_armored IS NOT NULL
+        AND ((c.case_id IS NOT NULL AND cd.case_id=c.case_id AND cd.edition=c.edition)
+          OR (c.case_id IS NULL AND c.edition=1 AND cd.draft_id=c.draft_id))
+      JOIN published_cases pc ON pc.case_id=cd.case_id AND pc.edition=cd.edition
+      JOIN cases cs ON cs.case_id=cd.case_id
+      WHERE c.author_kind='member' AND c.author=? ORDER BY pc.case_id, pc.edition`, member);
+    for (const e of editions) {
+      const mine = this.#rows(`SELECT c.comment_id, c.draft_id, c.author_kind, c.author, c.text, c.at, NULL AS recipient
+        FROM review_comments c JOIN case_drafts d ON d.draft_id=c.draft_id
+        WHERE c.author_kind='member' AND c.author=?
+          AND ((c.case_id=? AND c.edition=? AND d.project_id=?) OR (c.draft_id=? AND c.case_id IS NULL AND c.edition=1))
+        ORDER BY c.comment_id`, member, e.case_id, e.edition, e.project_id, e.draft_id ?? null)
+        .map((c) => this.#reviewerRow(c));
+      if (!mine.length) continue;
+      const included = this.#includedIn(e.text);
+      if (!included) { out.undetermined++; continue; }
+      const carried = new Set(included.map((i) => JSON.stringify([i && i.reviewer, i && i.text, i && i.at])));
+      const left = mine.filter((c) => !carried.has(JSON.stringify([c.reviewer, c.text, c.at])));
+      if (!left.length) continue;
+      if (out.items.length === cap) { out.truncated = true; break; }
+      out.items.push({ key: `FINDING::review-comment-left-out::${e.case_id}::${e.edition}::${member}`,
+                       case: e.case_id, edition: Number(e.edition), project: e.project_id,
+                       left_out: left.length, comments: left.map((c) => c.comment_id) });
+    }
+    return out;
+  }
 }
 
 const instances = new WeakMap();
 
 /** K61: the one instance per host, created on the first call with `deps`. It creates its tables, declares them to
- *  purge (R24), and fills publication's review provider (publication R23), replacing legacy-store's fill (K206). */
+ *  purge (R24), and fills publication's review provider (publication R23), replacing legacy-store's fill (K206),
+ *  ratification's approval reader (R32) and case-authoring's review comments (R33). */
 export function reviewOf(host, deps) {
   let r = instances.get(host);
   if (!r) {
@@ -755,6 +969,10 @@ export function reviewOf(host, deps) {
     record.declarePurge("review", REVIEW_TABLES);
     r.seedLedger();
     r.publication.registerReviewProvider("review", r.provider());
+    /* R32 (D60): the approval rule and approvals, read by ratification's gates (its R49, R50). */
+    r.ratification.registerApprovalReader(r.approvalReader());
+    /* R33 (D61; K2483): the comments on a case's review copies, read by publishCase (case-authoring R66). */
+    r.caseAuthoring.registerReviewComments((args) => r.reviewCommentsFor(args));
   }
   return r;
 }
