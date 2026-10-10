@@ -1,7 +1,8 @@
 /* action-grammar — the action document's arms, readers and rows (requirements: `build/requirements/action-grammar.md`,
- * R1, R3, R7–R10, R12, R13; K6, K64).
+ * R1, R3, R7–R10, R12–R14; K6, K64).
  * Since T41 layer 9 (T41-46a; H30 (1), K2505): R13's `seeks` (`seeksOf`, `seeksFindings`, C-117.29 `SEEKS_REFUSED`) and the
- * outcome `none_exists` (C-94.5's translation names it; both awaiting T42's stamp).
+ * outcome `none_exists` (C-94.5's translation names it); R14's C-32.21 `MACHINE_CANNOT_STATE_SEEKS`, `actions`' fence (K2561);
+ * each awaiting T42's stamp.
  *
  * Copied from `actions/checks.mjs` in T19 layer 9 with its comments (that file is deleted since, K914; `actions` reads each
  * of these from here): the kinds this instance accepts (`actionKinds`, `kindReadsAsWritten`, `PRODUCT_KINDS`), the records law
@@ -1214,6 +1215,17 @@ export const RECORDS_LAW_FENCE_CHECKS = {
       + 'credential that asked here is an automated one: it can write the request as a records request that '
       + 'names no law, and it can propose the law for a member to consider, but it cannot state the law, and '
       + 'cannot change or remove one. Sign in to state the law yourself.',
+  },
+  /* R14 (T41; K2561): WHO STATES WHAT A RECORDS REQUEST SEEKS (R13's `seeks`), `actions`' fence (its R72), beside C-32.20.
+     A machine credential may propose the stages sought (`actions` R73); it may not state or change them. New in T41
+     layer 9; awaiting T42's stamp. */
+  MACHINE_CANNOT_STATE_SEEKS: {
+    check: 'C-32.21',
+    where: 'src/actions/index.mjs #seeksFence > is-machine-state-seeks',
+    translation: 'Which stages a records request asks the records for is a statement a member makes and answers for. '
+      + 'The credential that asked here is an automated one, or no member is named behind it: it can propose the stages '
+      + 'for a member to consider, but it cannot state or change what the request seeks. Nothing was written. Sign in to '
+      + 'state it yourself.',
   },
 };
 

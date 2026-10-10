@@ -205,3 +205,30 @@ test("R13, R10: seeksFindings and seeksOf read no record and change nothing: dee
     assert.doesNotThrow(() => { AG.seeksFindings(j, fx, []); AG.seeksOf(j); }, JSON.stringify([j, fx]));
   assert.deepEqual(audit(base({ seeks: [{ ...ITEM, stage: "appeal" }, null] })), [], "seeks is the write's to judge, not the audit's");
 });
+
+/* ------------------------------------------------------------------------------------------------ R14: the fence's row */
+
+test("R14: the row C-32.21 MACHINE_CANNOT_STATE_SEEKS is held in RECORDS_LAW_FENCE_CHECKS directly after C-32.20, {check, where, translation} exactly, its where naming actions' fence (#seeksFence > is-machine-state-seeks, actions R72), its words saying a machine or unstamped author may propose and may not state or change what a records request seeks; no other table holds it; negative controls: C-32.20 is unchanged and C-32.21 is held by no other code", () => {
+  const F = AG.RECORDS_LAW_FENCE_CHECKS;
+  assert.deepEqual(Object.keys(F), ["MACHINE_CANNOT_STATE_RECORDS_LAW", "MACHINE_CANNOT_STATE_SEEKS"]);
+  const row = F.MACHINE_CANNOT_STATE_SEEKS;
+  assert.deepEqual(Object.keys(row), ["check", "where", "translation"]);
+  assert.equal(row.check, "C-32.21");
+  assert.equal(row.where, "src/actions/index.mjs #seeksFence > is-machine-state-seeks");
+  assert.equal(row.translation, "Which stages a records request asks the records for is a statement a member makes and answers for. "
+    + "The credential that asked here is an automated one, or no member is named behind it: it can propose the stages for a member to "
+    + "consider, but it cannot state or change what the request seeks. Nothing was written. Sign in to state it yourself.");
+  assert.match(row.translation, /automated/);
+  assert.match(row.translation, /no member is named/);
+  assert.match(row.translation, /propose/);
+  assert.match(row.translation, /cannot state or change/);
+  assert.doesNotMatch(row.translation, /\b(bundle|op=|DEC-|C-\d|ENT-|Oakland|Alameda|California)/);
+  /* negative controls */
+  assert.equal(F.MACHINE_CANNOT_STATE_RECORDS_LAW.check, "C-32.20");
+  assert.equal(F.MACHINE_CANNOT_STATE_RECORDS_LAW.where, "src/actions/index.mjs #machineRecordsLawRefusal > is-machine-state-records-law");
+  const tables = ["ACTION_FENCE_CHECKS", "ACTION_ACT_CHECKS", "GOVERNING_LAW_CHECKS", "QUOTE_CHECKS", "LIFECYCLE_CHECKS",
+    "RISK_TIER_REVISION_CHECKS", "ACTION_CATALOGUE_CHECKS"];
+  for (const t of tables) assert.ok(!("MACHINE_CANNOT_STATE_SEEKS" in AG[t]), t);
+  const holders = [...tables, "RECORDS_LAW_FENCE_CHECKS"].flatMap((t) => Object.entries(AG[t])).filter(([, r]) => r.check === "C-32.21");
+  assert.deepEqual(holders.map(([c]) => c), ["MACHINE_CANNOT_STATE_SEEKS"]);
+});
