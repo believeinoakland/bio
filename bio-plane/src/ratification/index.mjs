@@ -159,7 +159,7 @@ export class Ratification {
   /* publish-schedule (N823), one per host: created here, by its first user, after publication (its Suggestions). */
   get publishSchedule() {
     return this.#deps.publishSchedule ||= publishScheduleOf(this.#deps.host,
-      { storage: { sql: this.sql }, record: this.record, membership: this.membership, publication: this.publication });
+      { record: this.record, membership: this.membership, publication: this.publication });
   }
   get credentials() {
     return this.#deps.credentials ||= credentialsOf(this.#deps.host, { record: this.record, membership: this.membership });

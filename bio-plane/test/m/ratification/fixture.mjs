@@ -18,6 +18,7 @@ import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { registerInquiryGrammar } from "../../../src/inquiry-grammar/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
+import { publishScheduleOf } from "../../../src/publish-schedule/index.mjs";
 import { ratificationOf, ratificationOps } from "../../../src/ratification/index.mjs";
 import { ratifyStatement, caseRatifyStatement, NS_RATIFY } from "../../../src/sshsig.mjs";
 import { methodBlockLines, materialBlockLines } from "../../../src/case-grammar/index.mjs";
@@ -224,9 +225,11 @@ export function world({ steer = {}, worker = null, carriage = null, schedule = n
   const r = ratificationOf(host, { storage: st, record, membership, credentials, promotion, provenance, inquiry,
                                    basisVersions, publication, caseTensions, capture, strength, reevaluation,
                                    networkNotices, people, money, ...(worker ? { worker } : {}),
-                                   /* publish-schedule (N823): a stand-in the test passes, else the real module this
-                                      module creates on the host (`w.schedule`) */
-                                   ...(schedule ? { publishSchedule: schedule } : {}) });
+                                   /* publish-schedule (N823): a stand-in the test passes, else the real module on
+                                      this host, on the world's clock (`w.schedule`), which ratification's factory
+                                      registers its publisher with (R43) */
+                                   publishSchedule: schedule || publishScheduleOf(host, { storage: st, record, membership,
+                                     publication, now: () => NOW }) });
   let n = 0;
   const w = {
     st, host, record, membership, credentials, promotion, r, schedule: r.publishSchedule, bv, key, registers, holds, evidence, pub, publication,
