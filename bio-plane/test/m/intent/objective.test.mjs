@@ -56,7 +56,7 @@ test("R22 C-2.9's objective arm moved to intent with its test: the bundle gramma
     "NO_SUCH_ASPIRATION", "INTENT_NO_REASON", "MACHINE_CANNOT_DECLARE_ASPIRATION", "NOT_YOURS",
     "NO_LESSON", "MACHINE_CANNOT_TRIAGE", "MACHINE_CANNOT_CHOOSE_THE_QUESTION", "PURSUIT_STATE_MOVE_UNDECLARED", "BAD_SCOPE",
     "NO_SUCH_PROPOSAL", "TRIAGE_ACT_UNKNOWN", "SOURCE_DECLARED", "SOURCE_MALFORMED", "PURSUIT_ENDED",
-    "ADOPTIONS_UNSPLICEABLE", "NO_NOTE"];
+    "ADOPTIONS_UNSPLICEABLE", "NO_NOTE", "NONE_EXISTS_READER_DECLARED", "NONE_EXISTS_READER_MALFORMED"];
   assert.deepEqual(Object.keys(INTENT_CHECKS).sort(), [...named].sort(), "a row for each, and no other");
   for (const code of named) {
     assert.ok(INTENT_CHECKS[code], `${code} has a row`);
@@ -289,11 +289,13 @@ test("R4 the filter: what the record evaluates narrows (entity_kind), what it ca
   assert.ok(moved.instances.meeting.some((x) => x.entity_id === "ENT-5"));
 });
 
-test("R5 each short instance names why: the stages missing, or the grade reached against the grade required and the weakest link; bundle ids the viewer may not see are null, counts and grades the same for every reader", async () => {
+test("R5 each short instance names why: the stages missing, or the grade reached against the grade required and the weakest link; bundle ids the viewer may not see are null, counts and grades the same for every reader (D54: an administrator sees a hidden project's bundle only when invited or joined)", async () => {
   const w = await measured();
   const P = w.P;
-  /* ENT-2's award document sits in a project bob does not participate in */
+  /* ENT-2's award document sits in a hidden project bob does not participate in; alice, an administrator, is invited
+     to it (D54: an administrator neither invited nor joined sees a hidden project at existence only) */
   const hidden = w.project("Elsewhere", "carol");
+  w.join(hidden, "alice", "invited");
   w.resolve("ent-2-award", hidden, "ENT-2", "C");
   assert.equal((await w.progressions.threadInstance({ progressionKey: "proc", entityId: "ENT-2", threadedBy: V("alice"),
     placements: [{ stage: "need", captureSha: "ent-2-need" }, { stage: "award", captureSha: "ent-2-award" }] })).ok, true);
@@ -314,6 +316,15 @@ test("R5 each short instance names why: the stages missing, or the grade reached
   assert.equal(docOf(bob).capture_sha, docOf(alice).capture_sha);
   for (const k of ["matched", "meeting", "satisfied"]) assert.equal(bob[k], alice[k]);
   assert.deepEqual(bob.short.map((x) => [x.entity_id, x.grade]), alice.short.map((x) => [x.entity_id, x.grade]));
+  /* D54: the same administrator, neither invited nor joined, sees the hidden project's bundle as bob does; the counts
+     and grades are unchanged */
+  w.st.sql.exec(`DELETE FROM project_participants WHERE project_id=? AND member_id='alice'`, hidden);
+  const blind = w.i.progress({ project: P, viewer: V("alice") });
+  assert.equal(docOf(blind).bundle_id, null, "an administrator neither invited nor joined to a hidden project may not");
+  for (const k of ["matched", "meeting", "satisfied"]) assert.equal(blind[k], bob[k]);
+  /* negative control: the project made discoverable, the administrator not added sees it again (D54 is hidden only) */
+  assert.equal(w.membership.projectVisibilitySet({ projectId: hidden, setting: "discoverable", by: "carol", viewer: V("carol") }).ok, true);
+  assert.equal(docOf(w.i.progress({ project: P, viewer: V("alice") })).bundle_id, hidden, "a discoverable project: unchanged");
 });
 
 test("R6 one gap per short instance: a missing stage names the progression, entity and stage; a short grade names the link to strengthen; each is an objective-gap proposal, offered in the proposals list", async () => {
