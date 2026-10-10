@@ -22,3 +22,7 @@ Improvement in my own module: a new R9 (D54) test in `inbox.test.mjs`. An admini
 - `format`: 145 modules, 144 requirements files; 0 failures. `architecture tasks`: 9 product files, 37 relative imports; 0 failures. `coverage tasks`: 18 of 18 live requirement ids named by a test; 0 failures. `ownership tasks tranche/T41`: 0 failures.
 
 Size (session_01CGQvEK47xJQsjUXGG7z93f): test runs 5, module lines 1444
+
+## J1 · COMPLETE
+
+T41-61a done. I re-stated check.test.mjs:38 for D54, adding negative controls (the project discoverable; the administrator invited, the founder joined), and added an R9 D54 test. No product code changed: the module has no see-all read as the founder. Tests 104/104; checks 0 failures; coverage 18/18. Uses unchanged. Two requirement-level findings, R1's admin fallback and R3's admin override against D54/R60, are in my record under Completion.
