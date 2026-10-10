@@ -28,3 +28,7 @@
 - `checks/ownership.mjs consequences tranche/T41`: 8 files changed; 0 failures.
 
 Size (session_01RtLmUT1q8BFu6o88GfAG8d): test runs 9, module lines 1443
+
+## J1 · COMPLETE
+
+T41-46 done, tests only: all nine D54 reds B1 named re-stated (record :39, :126, :220; addressed :47; assessed :163; computed :183; person :61, :82; reads :348), each asserting an administrator neither invited nor joined is answered as absent at hidden P's EXISTENCE, with a negative control (P discoverable, or carol invited) at FULL. Fixture gains discoverable() and invite(id). No product code changed: internal reads already use the machine viewer. 41/41; format, architecture, coverage (16/16), ownership: 0 failures. Uses unchanged. Record: build/jobs/T41/consequences.md.
