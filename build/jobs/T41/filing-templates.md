@@ -28,3 +28,7 @@
 - `checks/format.mjs`: 145 modules, 144 requirements files; 0 failures. `checks/architecture.mjs`: 11 product files, 34 relative imports; 0 failures. `checks/coverage.mjs`: 27 of 27 live requirement ids named by a test; 0 failures. `checks/ownership.mjs` against `tranche/T41`: 0 failures.
 
 Size (session_01NehprHgv3ad7XrEC8kKYLY): test runs 6, module lines 1787
+
+## J1 · COMPLETE
+
+T41-48a applied (tests only): the five rule 4 (11) reds (lifecycle:12, reads:188, :234, :298, :360) re-stated for D54, each with a negative control (invited administrator, or discoverable project); invariants R17's admin steps now assert ok (were silently refused since D54). No product change: no founder/admin see-all read here. No enumeration of action-grammar R13's outcomes or seeks. Uses unchanged. 56/56; checks 0 failures. Record: Completion.
