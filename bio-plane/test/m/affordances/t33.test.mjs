@@ -9,6 +9,7 @@ import * as G from "../../../src/op-grades/index.mjs";
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
 import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS } from "../../../src/op-grades/t35.mjs";
 import { T36_NON_ACTS } from "../../../src/op-grades/t36.mjs";
+import { T41_NON_ACTS } from "../../../src/op-grades/t41.mjs";
 import { composedVocabularies, plainWord } from "../../../src/affordances/words.mjs";
 import { affordancesOf } from "../../../src/affordances/facts.mjs";
 import { owners, kindOf } from "../../../src/connection-grammar/index.mjs";
@@ -90,7 +91,7 @@ const T33 = {
       lawpropose: "undetermined", courtlink: "reasoned", courttreat: "reasoned" },
     reads: ["inforceat", "standardsfor", "lawrelations", "lawaddresses", "stillstanding", "citationresolve"] },
   credentials: { map: credentialsOps, part: true, writes: { accountreferenceset: "credential",
-      accountreferenceremove: "credential", accountswitchset: "caller-owned", aigrantmint: "credential",
+      accountreferenceremove: "credential", aigrantmint: "credential",
       keyedserviceset: "credential", keyedserviceswitch: "substrate" }, reads: ["accountreference", "keyedservices"] },
   sources: { map: sourcesOps, part: true, writes: { sourcekeyed: "undetermined" }, reads: [] },
   entities: { map: entitiesOps, part: true, writes: { entityidentify: "reasoned" }, reads: [] },
@@ -99,8 +100,7 @@ const T33 = {
   actions: { map: actionsOps, part: true, writes: {}, reads: ["addresseesuggest"] },
   "action-clocks": { map: actionClocksOps, part: true, writes: { clockadopt: "undetermined" },
     reads: ["clocksics", "clocklateness"] },
-  "ai-runs": { map: aiRunsOps, part: true, writes: { aiceilingset: "caller-owned", aicopyceilingset: "substrate",
-      airunverify: "reasoned" }, reads: ["aiusage"] },
+  "ai-runs": { map: aiRunsOps, part: true, writes: { airunverify: "reasoned" }, reads: [] },
 };
 /* The ops T33's requirements name whose owners serve them in process but whose route arm is the wiring jobs' (op-declarations
    R17, K1601; instance-setup R50, R53): graded now so the table is total when they are routed. */
@@ -109,10 +109,14 @@ const UNROUTED = { clockpropose: "reversible", capturerequestplatformmark: "reve
   /* B3 (K1689): the ops op-declarations declares beside them */
   seatsseed: "substrate", disclosureshown: "caller-owned", ask: "caller-owned", askusage: "observational" };
 /* op-grades R25 (DEC-172 (5); T36-34): `assistantset`, graded `substrate` here since T33, is retired: it leaves RUNG_ABSENT
-   and NON_ACTS, so R12 reads no stale row for it. */
-const RETIRED = ["assistantset"];
+   and NON_ACTS, so R12 reads no stale row for it. (op-grades R30; DEC-188 (8); K2437, K2514) So are credentials'
+   `accountswitchset` (to `accountusesset`) and ai-runs' `aiceilingset` and `aicopyceilingset` (to ai-use's `ailimitset`),
+   each graded in op-grades' t41.mjs under the op that replaces it. */
+const RETIRED = ["assistantset", "accountswitchset", "aiceilingset", "aicopyceilingset"];
 const UNROUTED_READS = ["capturerequestplatformhosts", "assistantstate", "disclosureof",
-  "standardinforce" /* layer 9's read, gated since T33 (K1689) */];
+  "standardinforce" /* layer 9's read, gated since T33 (K1689) */,
+  /* (K2514) T33's read, ai-runs' until T41-23, now ai-use's (its R4), not in this module's uses: its row stays T33's */
+  "aiusage"];
 /* A write op-declarations gives no NEEDS row (UNATTENDED_BY_DECISION): ranked, never named in NON_ACTS (R12). */
 const UNGATED_WRITES = ["askusage"];
 /* R27's `reversible`: the published act of the owner that takes each result back. */
@@ -147,12 +151,17 @@ const T35_ADDS = { events: ["discretionrecord", "assessmentrecord", "usewithdraw
 /* K2120, K2121 (T36): calculations' spot-check visit and its read (its R38, R39; K2092), graded by op-grades R23 in its
    `t36.mjs`; pinned here so the map stays closed, each at its grade: the visit `reasoned`, the read none. */
 const T36_ADDS = { calculations: { spotcheckvisit: "reasoned", spotcheck: null } };
+/* T41 (op-declarations R43, K2486; hypotheses R17–R20): the ops hypotheses adds, graded by op-grades R30 in its `t41.mjs`;
+   pinned here so the map stays closed, each at its grade (the read `shares` none). */
+const T41_ADDS = { hypotheses: { hypothesistakeup: "reversible", hypothesissetaside: "reasoned", noteshare: "reversible",
+  noteunshare: "reversible", shares: null } };
 
 test("R40 R12: each new module's op map holds exactly the ops graded for it — T33's, and the ops T35 adds (K2049), each "
    + "named in op-grades' T35 table — and each earlier module's map holds the ops T33 adds to it", () => {
   for (const [name, m] of Object.entries(T33)) {
     const keys = keysOf(m.map);
-    const mine = [...Object.keys(m.writes), ...m.reads, ...(T35_ADDS[name] ?? []), ...Object.keys(T36_ADDS[name] ?? {})];
+    const mine = [...Object.keys(m.writes), ...m.reads, ...(T35_ADDS[name] ?? []), ...Object.keys(T36_ADDS[name] ?? {}),
+      ...Object.keys(T41_ADDS[name] ?? {})];
     if (m.part) assert.deepEqual(mine.filter((op) => !keys.includes(op)), [], name);
     else assert.deepEqual([...keys].sort(), [...mine].sort(), name);
   }
@@ -170,8 +179,15 @@ test("R40 R12: each new module's op map holds exactly the ops graded for it — 
     assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op);
     assert.equal(NON_ACTS[op].startsWith("read: "), rung === null, op);
   }
-  /* retired: graded and named nowhere */
+  for (const [op, rung] of Object.values(T41_ADDS).flatMap((ops) => Object.entries(ops))) {
+    assert.ok(Object.hasOwn(T41_NON_ACTS, op), op);
+    assert.equal(NON_ACTS[op], T41_NON_ACTS[op], op);
+    assert.equal(RUNGS[op], rung ?? undefined, op);
+    assert.equal(NON_ACTS[op].startsWith("read: "), rung === null, op);
+  }
+  /* retired: graded and named nowhere, and served by no owner's map */
   for (const op of RETIRED) assert.equal(gradeOf(op) === null && !Object.hasOwn(NON_ACTS, op), true, op);
+  for (const op of RETIRED) assert.ok(!keysOf(credentialsOps).includes(op) && !keysOf(aiRunsOps).includes(op), op);
 });
 
 test("R40 R3 R27: every write T33 adds carries the grade R27's rule gives it — a rung or one ground, never both — and "
