@@ -79,7 +79,7 @@ test("R34: steps gains photos after \"what you are leaving out\" — case-disclo
   const pre = w.ca.publishPreflight(args(P, [Q, Q2], { [Q]: "load_bearing", [Q2]: "supporting" }));
   assert.deepEqual(w.snapshot(), before, "nothing written");
   assert.deepEqual(pre.steps.map((s) => s.name), ["what becomes permanent", "what this rests on", "what you are leaving out",
-    "photos", "the edition this creates", "sign"]);
+    "photos", "the edition this creates", "the account", "approvals", "sign"]);
   const step = pre.steps[3];
   assert.equal(step.step, 4);
   assert.deepEqual(step.photos.map((p) => [p.ref, p.sha, p.state, p.copy, p.words, p.relied_on_by]), [
