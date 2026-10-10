@@ -17,3 +17,6 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **From ACTIONS #14 J2 (K2561).** `actions` R73 adds `actionseekspropose` (`actionSeeksPropose({target, seeks, proposer, viewer})`), a proposal as `actionlawspropose` is: any credential, `proposer` stamped from the caller (session or machine), mutating, `target` and `seeks` body fields. Declare and route it as `actionlawspropose` is.
+
+
+**K2570.** Ten more member ops, found unrouted after the merges and placed in this layer: acts `stepoutcome`, `steplearn`, `stepbywhen`, `findmute`; reads `stepproposals`, `costmessages`, `questionfollowstate`, `stepproducts`, `recordsteps`, `finddoors` (op-declarations R43, control-plane R71, op-grades R30 name them).

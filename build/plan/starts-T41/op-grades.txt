@@ -17,3 +17,6 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **Filled (K2569, a worker's full read of the owners' requirements and code):** R30 now lists every grade. The draft's `reasoned` for `stepdelete`, `noteunshare` and `caseapprove` had no backing reason in the merged owners (steps R6 per Bob's D28 A deletes an untouched step outright; `noteUnshare` takes no reason; `caseApprove`'s reason is optional): re-graded by R3 as R30 states. Also owed: R29's `handlecheck` and `handlechange` (absent today); remove the four retired ops from the grade tables and from `owners.test.mjs`:152, :155, :267, :280.
+
+
+**K2570.** Ten more member ops, found unrouted after the merges and placed in this layer: acts `stepoutcome`, `steplearn`, `stepbywhen`, `findmute`; reads `stepproposals`, `costmessages`, `questionfollowstate`, `stepproducts`, `recordsteps`, `finddoors` (op-declarations R43, control-plane R71, op-grades R30 name them).

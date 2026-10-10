@@ -12,3 +12,6 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 **From INVESTIGATION #1 J2 (K2525).** **Filled (K2560, from the merged `investigation`):** every op R43 names has its exported service; R43 gains the reads `claims`, `investigationproposals`, `quietstate`, `interviewform`; control-plane R71 now names each service and places the map for investigation, steps and question-explorer (none exports one) in control-plane's own paths; `milestonereminder`'s `at` is a body calendar day, not a stamp; the machine arms (`planPropose`, `claimfindstep` with `run`) are N842, not session ops. op-grades: `milestoneremove`, `milestoneitemremove` and `projectclosewithgaps` require a reason (`reason` an enum `resolved|superseded|abandoned` for the close, free text in `note`): grade them `reasoned`.
 
 **From REVIEW #11 J1 (K2529).** review R30 `approvalRuleSet` and R31 `caseApprove` have no op: declare (`approvalruleset`, `caseapprove`), route and help them; review R33's `reviewCommentsFor` takes an optional `draft`.
+
+
+**K2570.** Ten more member ops, found unrouted after the merges and placed in this layer: acts `stepoutcome`, `steplearn`, `stepbywhen`, `findmute`; reads `stepproposals`, `costmessages`, `questionfollowstate`, `stepproducts`, `recordsteps`, `finddoors` (op-declarations R43, control-plane R71, op-grades R30 name them).
