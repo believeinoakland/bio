@@ -33,6 +33,8 @@ function limitReached(r) {
   assert.equal(typeof r.check, "string");
   assert.equal(typeof r.translation, "string");
   for (const text of [r.translation, r.detail]) assert.equal(COST.test(text), false, text);
+  /* B11 (K2516; ai-use R13): its sentence whole, every `{…}` filled before it reaches a member */
+  assert.doesNotMatch(r.translation, /\{[^}]*\}/, r.translation);
 }
 /** K1450: a member is never told a cost; a refusal in plain words names none. */
 const COST = /\$|usd|cost|dollar|price/i;
@@ -162,6 +164,25 @@ test("R52 (B5): open asks ai-use.useCheck for the paying account and the member'
   assert.equal((await w.runs.open(OPEN({ run: "R2", rerunOf: "R404", at: at("00:03:00") }))).code, "AI_RUN_RERUN_UNKNOWN", "re-run first");
   /* the next local day the account is free again */
   assert.equal((await w.runs.open(OPEN({ run: "R3", at: "2026-07-02T00:00:00Z" }))).started, true);
+});
+
+test("R52 (B11, K2516): a monthly limit reached refuses the open and the tick AI_LIMIT_REACHED with its sentence whole (no `{…}` left), naming the month; control: under it both land", async () => {
+  const w = await useWorld();
+  limit(w, "member:ann", "member:ann", { period: "month", amount: 2 });
+  const first = await w.runs.open(OPEN({ at: at("00:01:00") }));
+  assert.equal(first.started, true, JSON.stringify(first).slice(0, 300));
+  assert.equal((await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: at("00:02:00"), usage: [call("check", {}, 2)] })).ticked, true);
+  /* later in the same month: the open and the tick both refused, each relayed whole */
+  const o = await w.runs.open(OPEN({ run: "R2", at: "2026-07-20T00:00:00Z" }));
+  assert.equal(o.started, false);
+  limitReached(o);
+  assert.equal(o.period, "month");
+  const t = await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: "2026-07-20T00:00:00Z" });
+  assert.equal(t.ticked, false);
+  limitReached(t);
+  assert.equal(t.period, "month");
+  /* the next month the account is free again */
+  assert.equal((await w.runs.open(OPEN({ run: "R3", at: "2026-08-01T12:00:00Z" }))).started, true);
 });
 
 test("R52, R72: a tick's usage is counted by ai-use under the run's paying owner, its member, use run and act the run's id, so actualOf answers the run's own measure; a malformed entry refuses the tick whole and counts nothing toward the act", async () => {
