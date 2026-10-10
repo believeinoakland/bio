@@ -251,3 +251,18 @@ test("R33 (K2500; store-door R11): a read under a grant the draft path minted is
   assert.equal(draftUse(x.ctx, mint.token), null);
   assert.equal(answersOf(x.ctx).readLog(mint.token).use, "ask");
 });
+
+test("R19, R30 (K2586; wizard-scripts R23): the front door's finder is registered with wizard-scripts at start, over the plane's steps and the record's search, so `startfrom` answers a group step whose work matches the message, as this viewer sees it; a viewer the gate does not know is answered none", async () => {
+  const x = await store();
+  x.ctx.storage.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+                          VALUES ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
+  const made = stepsOf(x.ctx).stepCreate({ place: { group: true }, work: "Ask the clerk for the 2025 contract file", by: "member:ann" });
+  assert.equal(made.ok, true, JSON.stringify(made).slice(0, 300));
+  const asked = await x.call(`/startfrom?viewer=member:ann`, { message: "ask the clerk for the 2025 contract file" });
+  assert.equal(asked.ok, true, JSON.stringify(asked).slice(0, 300));
+  assert.deepEqual(asked.matches.filter((m) => m.kind === "step"),
+                   [{ kind: "step", id: made.step, name: "Ask the clerk for the 2025 contract file" }]);
+  /* negative controls: a message nothing matches finds none, and a viewer the gate denies is asked no finder */
+  assert.deepEqual((await x.call(`/startfrom?viewer=member:ann`, { message: "zzz unrelated words qqq" })).matches, []);
+  assert.deepEqual((await x.call(`/startfrom?viewer=nobody`, { message: "ask the clerk for the 2025 contract file" })).matches, []);
+});

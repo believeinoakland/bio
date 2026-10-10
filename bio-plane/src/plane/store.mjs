@@ -102,7 +102,7 @@ import { archiveUnpackConsumer } from "./unpack.mjs";
 import { rosterSource } from "../../../roster-reader/index.mjs";
 import { credentialsOf as captureCredentialsOf } from "../capture-sources/credentials.mjs";
 import { registerReaders, rosterReads, ownHostsOf, officePorts, dutiesFactOf, retrievalTerms, sheetRecompute,
-         ratificationWorker } from "./wiring.mjs";
+         ratificationWorker, frontDoorFinder } from "./wiring.mjs";
 
 /* The name store-door's promotion step (its R5, was control-plane R42) is registered under (K2037). */
 const STEP = "store-door";
@@ -364,7 +364,9 @@ export class Store extends DurableObject {
        (affordances, queue-producers, control-plane). At creation it creates its tables, declares them to purge (K23) and
        registers its ids' seed; it is then registered, once and before the first request, with the bundle's screens and
        library, the member op table, the acts a machine is refused and the labelled machine drafts (its R13). */
-    wizardScriptsOf(ctx, { env }).wizardRegister(wizardRegistration());
+    wizardScriptsOf(ctx, { env }).wizardRegister(wizardRegistration({ door: {
+      /* K2586 (its R23): the front door's finder over the plane's steps and retrieval, asked at each `startfrom` */
+      findExisting: frontDoorFinder({ steps: () => stepsOf(ctx), retrieval: () => retrievalOf(ctx) }) } }));
     /* K2044, K2054 (admission R21): admission's door window, built at its place in layer 11 so its table is made and
        declared through record-core before the first request; its fingerprint is capture's (its R56). */
     admissionOf(ctx);
@@ -383,14 +385,20 @@ export class Store extends DurableObject {
        case-import its R35's watch items read. */
     /* R21 (T33-82; queue R51; K1683): notice-producers, over the instances it reads, handed to queue beside
        queue-producers' deps. */
+    /* K2586 (NOTICE-PRODUCERS #6 J2): handed every instance it reads, the plane's own, so no bare one built first by its
+       factory shadows them (a factory keeps the first instance per storage). */
     const noticeProducers = noticeProducersOf(ctx, { membership: membershipOf(ctx), people, moneyChecks: moneyChecksOf(ctx), duties,
-                                                     answers: answersOf(ctx), inquiry: inquiryOf(ctx) });
+      answers: answersOf(ctx), inquiry: inquiryOf(ctx), credentials: credentialsOf(ctx), following: followingOf(ctx), standards,
+      fileSafety, provenance, aiUse: aiUseOf(ctx), steps: stepsOf(ctx), questionExplorer, investigation: investigationOf(ctx),
+      review: reviewOf(ctx) });
     /* K1868 (2): queue-producers' one instance per storage, built here with the providers queue would hand it
        (`Queue.PRODUCER_DEPS`), since its factory reads its deps on the first call only; handed to queue as its producers
        and to instance-setup, whose start registers `placeArrivals` through it (instance-setup R62, queue-producers R38),
        so neither builds it bare. */
     /* R32: publish-schedule for queue-producers R37's scheduled items (passed on once queue lists it among its deps). */
-    const queueDeps = { env, filingTemplates, localFacts, docket, caseImport, noticeProducers, publishSchedule };
+    /* K2580 (QUEUE #22 J2): queue reads investigation (its project arm); handed the plane's one instance (R30). */
+    const queueDeps = { env, filingTemplates, localFacts, docket, caseImport, noticeProducers, publishSchedule,
+                        investigation: investigationOf(ctx) };
     const queueProducers = queueProducersOf(ctx, Object.fromEntries(
       Queue.PRODUCER_DEPS.filter((k) => queueDeps[k] !== undefined).map((k) => [k, queueDeps[k]])));
     queueOf(ctx, { ...queueDeps, producers: queueProducers }).migrate();
