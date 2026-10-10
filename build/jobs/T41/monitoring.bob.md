@@ -11,3 +11,7 @@ Reading set (mechanics §17): measure your set (your requirements, the used serv
 Merge order in L10: monitoring, scheduler (`modules.json` order; independent). Layers 7–9 are merged into `tranche/T41` before this START: build on them as merged. Record your final `uses` in your record, for BOB to apply at your merge.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none of yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+ANSWER J1 (K2568). All four readings confirmed as you state them: (1) R36 unchanged, watching adds no monitoring of an unmonitored source; (2) a look written `changed` (R11) is the change tick, from any `op=monitor`; other outcomes report nothing; (3) such a source by `watchSet` (to its end) or `captured_locators`; (4) `watchArrival` once per watched project per look, `watchedProjects()` read afresh, a refusal or throw never fails the tick, `arrivals: {reported, failed, unread?}` (null with no change) in `op=monitor`'s answer. Test each with a negative control (K874).
