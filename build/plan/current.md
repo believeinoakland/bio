@@ -19,7 +19,7 @@ It is the only module marked `legacy` in `modules.json`.
 ## Rules at the opening
 
 1. **Merge order** within a layer is `modules.json` order unless the layer says otherwise; a provider merges before its users; a module built by copy merges first in its layer (K624); promotion's stamp merges last in its layer (K425, K1680). Requirement text is written into each module's file before its layer's START (BOB's wording, P5); where a layer's text is owed, it is listed below and written before that START.
-2. **The opening's acts (K657, K1043; one act, K2607):** `modules.json` gains, with empty `paths` and `tests`, `doorbell` (layer 3, directly after `capture`; uses from `capture-split.md` §1) and `case-account` (layer 8, directly after `case-authoring`; its `uses` provisional, finalised from its map before L8's START); `layers.md` rows 3 and 8 list them, with a section each; membership R83's `MODULE_ORDER` names both (T42-3).
+2. **The opening's acts (K657, K1043; one act, K2607):** `modules.json` gains, with empty `paths` and `tests`, `doorbell` (layer 3, directly after `capture`; uses from `capture-split.md` §1) and `case-account` (layer 8, directly before `case-authoring`, K2608; `uses` from `case-account-split.md` §1); `layers.md` rows 3 and 8 list them, with a section each; membership R83's `MODULE_ORDER` names both (T42-3).
 3. **Capture's split, settled (K2607, the map's readings):** (1) K625's pattern: capture's T42 job retires the twenty moved ids and keeps its doorbell code as a named copy, unused by new code; its delete is T43's, once `sources`, `actions`, `answer-envelope`, `store-door` and `plane` have re-pointed; (2) the two copies run the same SQL on the same rows meanwhile, the litigation-hold reader registered only where `actions` registers it (fail closed elsewhere); (3) C-118.2, .3, .4, .7 move with their raisers, numbers kept; (4) doorbell's migrate treats `TABLE_DECLARED` by `capture` as held, its R25 ownership arm accepted red until capture's delete; (5) `doorbellOf` reads `captureOf(ctx).env`; (6) `doorbell` sits directly after `capture`; (7) R65's actor goes through `capture.recordCaptureActor` inside a nested `transact`; (8) capture R86 states its own fence and `within`; (9) the measure is 4,059.
 4. **Accepted reds at the opening** (from T41's Outcome; re-confirmed against `node checks/run.mjs` at the opening: format, architecture, channels 0 failures; coverage red only on rule 4 (1)):
    1. coverage: every id marked `*(not yet met: T42)*` until its module's merge;
@@ -42,7 +42,7 @@ It is the only module marked `legacy` in `modules.json`.
 ## Entries
 
 ### L1
-- **T42-1 · record-grammar** · (N838, K2540) R54: `PROPOSAL_STATES` gains `case_account` and `account_check`; (N827, K2467) C-33.40's `where` names progressions' raises of `NO_BASIS` beside inquiry's · req: R54, R29's amendment (written).
+- **T42-1 · record-grammar** · (N838, K2540) R54: `PROPOSAL_STATES` gains `case_account` and `account_check`; (N827, K2467) C-33.40's `where` names progressions' raises of `NO_BASIS` beside inquiry's; (N839, K2608) R55: `ID_TABLE` gains `ACD` (owner `case-account`), `ACCEPT_MUST_REAUTHOR`'s `where` names `case-account` R4 · req: R54, R55, R29's amendment (written).
 - **T42-2 · bundler** · (N836, K2520) `fleetbundles.test.mjs`:243 re-pinned from the committed manifest (25 inputs); (N840, K2547) R31: each member's uncompressed size against a budget (warn 32 MiB, fail 48 MiB) and its global-scope start time (warn 500 ms), printed · req: R31 (written). The plane's real start under `wrangler deploy --dry-run` is the next release's (a deployment).
 
 No merge order (independent).
@@ -63,7 +63,7 @@ No merge order (independent).
 
 ### L4
 - **T42-9 · reading-pipeline** · (N835, K2500) the paying owner spelled from the bare member id (ai-use R1) · req: from `draft-T42-reqs.md`.
-- **T42-10 · extraction** · (N832, K2484) the re-read takes `transcription` · req: from `draft-T42-transcribe.md`.
+- **T42-10 · extraction** · (N832, K2484) the re-read takes `transcription` · req: from `draft-T42-transcribe.md`; (N839, K2608) R58's read contract names `capture_text`, which `case-account` reads.
 
 ### L5
 - **T42-11 · retrieval** · (N830, K2480) a row-decoration registration on the search answer, for inquiry R60's `projects` · req: from `draft-T42-reqs.md`.
@@ -72,21 +72,22 @@ No merge order (independent).
 - **T42-12 · inquiry** · (N837, K2526) `personFacts` named in Provides with its own id and test; (N834, K2496) its `onMachinePassage` seam; (N830) its registration with retrieval's decoration.
 - **T42-13 · hypotheses** · (N843, K2566) re-codes its own conditions; stops decorating action-plans' and intent's refusals.
 - **T42-14 · steps** · (N843) its own `NO_SUCH_PROPOSAL` row.
-- **T42-15 · citation** · (N834) `onMachinePassage` seam.
+- **T42-15 · citation** · (N834, K2608) no seam of its own: `cite` writes legs through inquiry's check, so R1's relayed refusals gain inquiry R62's `MACHINE_PASSAGE_UNCHECKED`.
 - **T42-16 · basis-versions** · (N834) `onMachinePassage` seam.
 - **T42-17 · ai-use** · (N848, K2592) `migrate()` drops `ai_ceilings` after the carry (clears rule 4 (7)); (N831) reads `explore` through `credentials.accountUsesOf`.
 - **T42-18 · run-productions** · (N834) fills the three seams with `acceptedFor` (R22).
 - **T42-19 · question-explorer** · (N845, K2571) its factory migrates at creation.
 - **T42-20 · agent-worker** · (N832) `POST /transcribe` · req: from `draft-T42-transcribe.md`.
 
-**L6 merge order:** `modules.json` order; the three seam owners before run-productions.
+**L6 merge order:** `modules.json` order; inquiry and basis-versions (the seam owners) before run-productions. Text: `draft-T42-reqs.md`, its readings adopted (K2608): rows re-coded in place, numbers kept (K238).
 
 ### L7
 - **T42-21 · investigation** · (N843) its own codes for C-146.21 and C-146.26; (N846, K2572) R18 atomic arrival, `watchedProjects()` carries every source.
 
 ### L8
-- **T42-22 · case-account** (new; by copy, K624) · (N839, K2542) case-authoring R63–R68 moved; its drafts labelled through record-grammar R54 · req: `requirements/case-account.md` (BOB's, before L8's START) · merges first in L8.
-- **T42-23 · case-authoring** · (N839) R63–R68 retired "moved to case-account R<n>" and its copy deleted or kept per the map's reading on its later-layer users; (N838) any account label left here reads record-grammar R54 · after T42-22.
+- **T42-22 · case-account** (new; by copy, K624) · (N839, K2542, K2608) case-authoring R64, R66 and R63's account share moved (`case-account-split.md`); its drafts labelled through record-grammar R54 · req: `requirements/case-account.md` (BOB's, before L8's START) · merges first in L8.
+- **T42-23 · case-authoring** · (N839, K2608) R64, R66 retired "moved to case-account R<n>"; R63, R65, R67, R68 stay, re-pointed; new R69 (the order `publishCase` asks case-account in); bodies and tables deleted, three one-line pass-throughs kept (`accountPropose`, `accountDrafts`, `registerReviewComments`; K1333) until T43 (N850); `uses` gains `case-account`, loses `ai-runs` · after T42-22.
+- **T42-23a · review** · (N839, K2608) `reviewOf` registers its comments with `case-account` · after T42-22.
 
 ### L9
 - **T42-24 · conformance** · (N841, K2558) refusals ahead of the measures; `determinationsFor` batched · req: from `draft-T42-reqs.md`.
@@ -99,8 +100,8 @@ None.
 - **T42-26 · op-declarations** · (N832) declares `transcribe`; (N842) per `draft-T42-transcribe.md`.
 - **T42-27 · answer-envelope** · (N843) its two pins return to green (clears rule 4 (6)); (N826) `src/doorbell/checks.mjs` joins its family files after capture's.
 - **T42-28 · store-door** · (N826) `inboxpullfile` through `doorbell`.
-- **T42-29 · control-plane** · (N832) routes `transcribe`; (N826) wording; (N842) per the draft.
-- **T42-30 · plane** · (N826) builds `doorbellOf` after capture, migrates after it, spreads `doorbellOps`, its door uses `doorbellPublicOp`; (N832) composes `read`'s `transcription`.
+- **T42-29 · control-plane** · (N832) routes `transcribe`; (N826) wording; (N842) per the draft; (N839) `owner-ops.mjs` reaches `accountPropose`/`accountDrafts` through `of.caseAccount()`.
+- **T42-30 · plane** · (N826) builds `doorbellOf` after capture, migrates after it, spreads `doorbellOps`, its door uses `doorbellPublicOp`; (N832) composes `read`'s `transcription`; (N839) builds `caseAccountOf` before `caseAuthoringOf`.
 - L11 shares from the case-account map and the transcribe draft (op-grades, affordances, users of the account's ops) are added here before L11's START.
 
 **L11 merge order:** `modules.json` order; the plane last.
@@ -122,4 +123,4 @@ None.
 ## Doubts for BOB (best readings)
 
 1. **N842** (the assistant's door to `planPropose`, `claimFindStep`, `accountPropose`): read from the code at the opening (`draft-T42-transcribe.md`); in if the run must reach them, else re-worded in `next.md`.
-2. **case-authoring's delete** (N839): if a later-layer module imports the moved code, K625's pattern as capture's (delete in T43).
+2. **case-authoring's delete** (N839): settled (K2608): review, control-plane and plane call the moved code, so pass-throughs stay until T43 (N850).
