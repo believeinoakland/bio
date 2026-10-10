@@ -1,6 +1,6 @@
 # capture-requests (T41)
 
-**Status** · session_01F53hF4viv8F8bxe3JE1BHx · depth 2 · WORKING · handled B4
+**Status** · session_01F53hF4viv8F8bxe3JE1BHx · depth 2 · COMPLETE · handled B4
 
 ## Completion (CAPTURE-REQUESTS #16, B4)
 
