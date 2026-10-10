@@ -46,7 +46,9 @@
 
 **Checks:** format 0 failures; architecture `ratification` 0 failures (28 product files, 148 relative imports); coverage 49 of 49 live ids, 0 failures; ownership 0 failures (14 files against `tranche/T41`).
 
-Size (session_01CSGGVWaWqeBwcqwfvQ31vc): test runs about 25, module lines 3,735
+**Re-run on B5 (K2543), on `tranche/T41` @ e2f3e4b7f7 merged (publication T41-36 and case-grammar in):** `ratification` 233 pass, 0 fail; the C-122.6 by-key test is green. Users' suites compared by test name with the tranche tip: case-authoring, affordances, answer-envelope, op-declarations, plane and publish-schedule show no new red. One new red in `actions`: `t34.test.mjs`:219, "R69 against ratification R45". Its stub at :204 is `publication.scheduleEdition`, which this module no longer calls, so the real publish-schedule answers `PUBLISH_AT_NO_ZONE`. This is the plan's T41-47 re-point (rule 4 (13), the extraction map's §6 "actions `t34.test.mjs` 204"); it is red from my merge until T41-47. Checks: format, architecture, coverage (49 of 49) and ownership (14 files), each 0 failures.
+
+Size (session_01CSGGVWaWqeBwcqwfvQ31vc): test runs about 30, module lines 3,735
 
 ## J1 · QUESTION
 
