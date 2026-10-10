@@ -2,10 +2,12 @@
  * refusal this module answers carries its code, its catalogue row and the member's translation.
  *
  * C-122.1 (R51, N364) is a family of its own here: a case's sources; C-122.2 (R58, DEC-112) and C-122.3, C-122.4 (R59,
- * N522) join it at T28, C-122.5 (R67's stop when no publisher could check a waiting edition; R33, N687) at T35, and
+ * N522) join it at T28, C-122.5 (a waiting edition no publisher could check; N687) at T35, moved with its raiser to
+ * `publish-schedule` (its R9; T41, K2438), number and translation unchanged, so no row id is held twice, and
  * C-122.6 (R57's photo marks changed since preparation; N757, K2206) at T37, its translation `words.json`'s
- * `photo.refused.changed` since T38 (DEC-183 (4)), and C-122.7 (R57's member document copy changed since preparation;
- * N806, K2333) at T39.
+ * `photo.refused.changed` since T38 (DEC-183 (4)) and `photo.refused.changed.signed` since T41 (DEC-187 (4): answered at
+ * the commit, always after signing), and C-122.7 (R57's member document copy changed since preparation; N806, K2333) at
+ * T39, its translation `words.json`'s `document.refused.changed` since T41 (DEC-188 (7)), both read by key.
  * C-92.1–.9 and C-92.13 (the attribution act) moved with the act to `case-tensions` (its R9; T33-62, T33-63), numbers
  * and translations unchanged, and left this table, so no row id is held twice.
  *
@@ -20,6 +22,16 @@ export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V4,
          CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
          caseDocumentRequiresDisclosures, caseDocumentRequiresV4Disclosures,
          caseDocumentRequiresTensionSection } from "../case-grammar/index.mjs";
+
+/* R33 (DEC-187 (4), DEC-188 (7); K2483): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`)
+   this module's rows answer, each `en` verbatim (protected), read by key; `{photo}` is left for the screen, the answer
+   naming the photos. */
+export const PUBLICATION_WORDS = Object.freeze({
+  'photo.refused.changed.signed': 'This case wasn\'t published: a mark on {photo} changed after it was prepared. Prepare it '
+    + 'again, and sign it again.',
+  'document.refused.changed': 'A document a member supplied now needs a different publication copy from the one this '
+    + 'case was prepared with. Prepare the case again. Nothing was published.',
+});
 
 /* C-122 — A CASE'S SOURCES (R51; N364, DEC-78 item 5(d)), a new family held here: the one refusal of the commit that
    re-reads, at the signature, what the public may be told of each source the case document states. A consent withdrawn
@@ -55,35 +67,26 @@ export const CASE_SOURCES_CHECKS = {
     translation: "A flag was raised on another group's work this case rests on after the case was prepared, and the case "
       + 'must disclose it. Prepare the case again. Nothing was published.',
   },
-  /* C-122.5 (R33, R67; N687, K1839): a waiting edition taken at its time with no publisher able to check it (none
-     registered, one that throws, or one giving neither answer) is stopped, never published unchecked; the translation
-     is the one R67 already answered. */
-  SCHEDULED_CHECK_UNAVAILABLE: {
-    check: 'C-122.5',
-    where: 'src/publication/schedule.mjs unchecked > is-scheduled-check-available',
-    translation: 'This edition was not published at its set time, because the checks it needed then could not be run. '
-      + 'Nothing was published. Sign it again to publish it.',
-  },
   /* C-122.6 (R33, R57; N757, DEC-180 (4), K2206): a photo the case carries no longer matches its marks (its copy no
      longer the photo's current copy, a mark withdrawn since the case was prepared among them (case-carriage R14), a
      photo carried whole, or marks that cannot be read), read through case-carriage (its R13) at the commit; the remedy
-     is a new preparation. (T38; DEC-183 (4); K2291) The translation is `words.json`'s `photo.refused.changed`, quoted
-     verbatim (protected). */
+     is a new preparation. (T41; DEC-187 (4)) Answered at the commit, always after signing, so its translation is
+     `words.json`'s `photo.refused.changed.signed`, read by key; `photo.refused.changed` stays the screens' for the
+     moment before signing. */
   PHOTO_MARKS_CHANGED_SINCE: {
     check: 'C-122.6',
     where: 'src/publication/index.mjs commitCaseEdition > is-photo-marks-current',
-    translation: 'A mark changed after this case was prepared. Prepare it again before signing.',
+    translation: PUBLICATION_WORDS['photo.refused.changed.signed'],
   },
   /* C-122.7 (R33, R57; N806, K2333): a document a member supplied that the case carries is not carried as its current
      publication copy (a copy no longer the document's current copy, a document carried whole that needs a copy, or one
      whose state cannot be read), read through case-carriage's `document` rows (its R13) at the commit; the remedy is a
-     new preparation. The translation is BOB's draft, re-wordable by the UX stream (proposed key
-     `document.refused.changed`). */
+     new preparation. (T41; DEC-188 (7); K2483) Its translation is `words.json`'s `document.refused.changed`, read by
+     key. */
   DOCUMENT_COPY_CHANGED_SINCE: {
     check: 'C-122.7',
     where: 'src/publication/index.mjs commitCaseEdition > is-document-copy-current',
-    translation: 'A document a member supplied now needs a different publication copy from the one this case was '
-      + 'prepared with. Prepare the case again. Nothing was published.',
+    translation: PUBLICATION_WORDS['document.refused.changed'],
   },
 };
 

@@ -1,6 +1,6 @@
 # BOB to publication (T41)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Answered (K2529): cover the signer. R77's registration gains a third door, `signerOf(caseId, edition)` → `{signer, delivered_by}` while it waits, else null (null with none registered); publish-schedule R8 fills it (CHANGE sent to it). R76 matches a waiting edition's signer and deliverer through it. Your K2483 reading is ruled: R72's reads are made as `class:daemon` when no member signs (R72 re-worded; R75 follows R72). Merge the tranche branch for the text.
+
+## B3 · CHANGE
+
+CHANGE (K2535): publish-schedule (T41-37) is merged into tranche/T41 @ 8b6e5ab802, with R8's three doors (`isWaiting`, `signedAtOf`, `signerOf`). Merge the tranche branch and build against the real module in place of your stand-in; re-run your suite.

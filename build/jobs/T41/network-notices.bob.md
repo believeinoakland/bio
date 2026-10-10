@@ -1,6 +1,6 @@
 # BOB to network-notices (T41)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 J1 confirmed (K2529): D54 lets an administrator at a hidden project's existence learn its id, name and owners, so relaying membership's C-70.1 unchanged stands. R1, R22 and R25 are re-worded on the tranche branch to say so (either form of existence; R25 excepts membership's relayed refusal). No code change; merge the tranche branch, re-run your suite, and post COMPLETE again.
+
+## B3 · CHANGE
+
+CHANGE (K2543): publication (T41-36) is merged into tranche/T41 @ e2f3e4b7f7, its scheduled-publishing copy deleted (R77's three doors filled by publish-schedule). Merge the tranche branch, re-run on the merged tip, and post COMPLETE again (your earlier COMPLETE stands if nothing changes).

@@ -95,6 +95,22 @@ export function world() {
       if (!r.ok) throw new Error(`fixture registration refused: ${JSON.stringify(r)}`);
       return calls;
     },
+    /** (T41; D54, K2408) A project bundle, created as promotion creates one (membership R71): `owner` its sole owner,
+     *  `visibility` its first setting (none recorded is `hidden`, membership R45). */
+    project(id, { owner = "olive", visibility = null } = {}) {
+      const md = `---\nid: ${id}\nobject_type: project\n---\n`;
+      record.transact(() => record.commit({ bundleId: id, type: "project", title: `Project ${id}`, project: null,
+        snapKey: id, kind: "promotion", base: "", author: V(owner), writer: null, operation: null,
+        files: [{ path: "bundle.md", text: md, sha256: sha(md), bytes: Buffer.byteLength(md) }],
+        state: "active", priorState: null, group: "test-group", created: NOW, lastUpdated: NOW, criticality: null, at: NOW }));
+      const made = membership.projectCreated({ projectId: id, ownerId: owner, visibility, by: owner });
+      if (!made.ok) throw new Error(`fixture project refused: ${JSON.stringify(made)}`);
+      return id;
+    },
+    /** Fence a bundle inside a project (record-core R34's `project`, which membership R43 fences by). A project id no
+     *  project was made under has no participant and no setting, so it is hidden: since D54 (K2408) no viewer but a
+     *  machine sees the bundle, the founder's included. */
+    fence: (bundleId, projectId) => st.sql.exec(`UPDATE bundles SET project = ? WHERE bundle_id = ?`, projectId, bundleId),
     tables: () => w.rows(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`).map((r) => r.name),
     /** acquisition's record of an archive's listing (its R38), as a stand-in: `entries` `[{name, kind?, state?, sha256?}]`
      *  in index order (`kind` default `file`, `state` `filed` when a digest is given, else `waiting`), or the names of

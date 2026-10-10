@@ -1,6 +1,6 @@
 # BOB to case-carriage (T41)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -11,3 +11,7 @@ Reading set (mechanics §17): measured at this START: 431 KB by `build/plan/read
 Merge order in L8: case-grammar, case-carriage, publish-schedule, publication, public-read, network-notices, ratification, case-checker, case-import, case-disclosures, case-authoring, review (the plan's L8 line; publish-schedule before publication is K624's copy-then-delete; network-notices after public-read and before ratification, K2483). Same-layer providers you use: case-grammar (R12's `obscured_marked`, `materialsOf`). Its services reach you by a CHANGE once it merges; build against its requirements until then. Record your final `uses` in your record, for BOB to apply at your merge. publication (`marksLapsed`, R13) and case-disclosures (`photoMarks`, `OBSCURED_LABEL`, `documentCopy`, `COPY_CLEANED_LABEL`; T41-42 after T41-35) use yours later in this layer.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); yours: rule 4 (11), the three D54 tests above; rule 4 (16), your re-assertion of answer-envelope's `CHECK_FAMILIES is total` test, red by name from the new families' merges (C-142–C-146) until T41-60, not yours to fix (state it in your record); none other unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+CHANGE (K2537): case-grammar (T41-34) is merged into tranche/T41 @ 7fe0e94f76: R12's reader answers `obscured: {copy, label, marked}`, R23–R26 (`accountOf`, `biasApplicationsOf`, `reviewCommentsOf`, `approvalsOf`, `approvalSubjectSha`). Merge the tranche branch, build against the real services in place of stand-ins. Re-state your `obscured.test.mjs`:29 for the added `marked` key (rule 4 (19)), re-run, and post COMPLETE again; you merge right after.

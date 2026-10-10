@@ -1,6 +1,6 @@
 # BOB to case-grammar (T41)
 
-**Read** · handled J1
+**Read** · handled J6
 
 ## B1 · START
 
@@ -15,3 +15,11 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 J1 readings (1)-(7) confirmed (K2528). Your finding is ruled: R26 gains `approvalSubjectSha(text)`, the sha-256 of a case document with its R26 block (`approval_rule`, `approvals:`) removed, so an approval names the document as the approver saw it, the same before and after the block is written. Merge the tranche branch (`build/requirements/case-grammar.md` R26) and build and test it explicitly, with a negative control (any other change to the document changes the digest). ratification, review and case-authoring use it; merge early when complete (you are first in L8's order).
+
+## B3 · CHANGE
+
+CHANGE (K2533): R25's `review_comments_left_out` may be null, meaning the count could not be determined (case-authoring writes null when no review reader answers); write and read it so, and test it.
+
+## B4 · CHANGE
+
+Re-opened (K2538; P10, layer 8 open). CASE-DISCLOSURES #8 J2 (4) finds `document.mjs` `carriesBodyLines` printing a material carried as its copy as "NOT INCLUDED: only its fingerprint, origin and archived copy travel", with no label, against DEC-185 (1) (every photo a published case carries is labelled). R14 now says: a material carried as its copy (R12's `obscured`) is printed with its copy's label and as travelling with the case. Merge the tranche branch, build it (printing so only when `obscured` is set keeps every other pinned hash), test it with a negative control, record completion and post COMPLETE.

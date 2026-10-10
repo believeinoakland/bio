@@ -35,7 +35,7 @@ Every case-document table and every write to one stays `publication`'s (its R24)
 
 Terms are `publication`'s: a **case**, an **edition**, the **case document**. A **waiting edition** is a signed case edition this module holds to be published at a set time. Every refusal names `reason`; one with a catalogue row carries its `check`, `code` and `translation`.
 
-- **R1** *(not yet met: T41)* (was `publication` R66; DEC-147 (1), (2))
+- **R1** (was `publication` R66; DEC-147 (1), (2))
 
   `scheduleEdition({case, edition, docSha, signature, signer, deliveredBy, at, checked, by})` is called by the case ceremony (`ratification`, for `op=publishat`) in place of `publication` R22's commit, after every refusal that commit would make has passed, inside the caller's transaction.
 
@@ -55,7 +55,7 @@ Terms are `publication`'s: a **case**, an **edition**, the **case document**. A 
 
   The signature is held beside the document, never on it: until R2 publishes it, `publication` R1, R2, R12 and R29 answer the document as unsigned, so nothing of the edition is public.
 
-- **R2** *(not yet met: T41)* (was `publication` R67; DEC-147 (3), (5))
+- **R2** (was `publication` R67; DEC-147 (3), (5))
 
   `publishWake()` answers the earliest `publish_at` of a waiting edition, or null.
 
@@ -76,7 +76,7 @@ Terms are `publication`'s: a **case**, an **edition**, the **case document**. A 
 
   An edition taken after its time (a late alarm) is checked when it is taken, and keeps both its `publish_at` and its `published_at`.
 
-- **R3** *(not yet met: T41)* (was `publication` R68; DEC-147 (4))
+- **R3** (was `publication` R68; DEC-147 (4))
 
   `publishAtMove({case, edition, at, by})` (`op=publishatmove`) and `publishAtCancel({case, edition, by})` (`op=publishatcancel`), by an owner of the case's project (`membership.isProjectOwner`).
 
@@ -88,7 +88,7 @@ Terms are `publication`'s: a **case**, an **edition**, the **case document**. A 
 
   A move records the new `at` and `publish_at`, keeping each earlier time with who moved it and when. A cancel makes the edition `cancelled`, with who and when, and its document again an unsigned preparation (`publication` R21), the signature never committed. Each answers R4's entry for the edition.
 
-- **R4** *(not yet met: T41)* (was `publication` R69; DEC-147 (2))
+- **R4** (was `publication` R69; DEC-147 (2))
 
   `scheduledEditions({case?, state?, after, limit, viewer})` (`op=publishschedule`) answers `{editions: [{case, edition, project, state, signer, set_by, signed_at, at, publish_at, moves, outcome_at, reasons}], cursor}`:
   - `state` is `waiting`, `published`, `stopped` or `cancelled`;
@@ -99,7 +99,7 @@ Terms are `publication`'s: a **case**, an **edition**, the **case document**. A 
 
   A viewer without `publication` R1's standing in the case's project is answered as if none existed. Read as the plane (no `viewer`), it answers every edition, for `queue-producers` R37. It writes nothing.
 
-- **R5** *(not yet met: T41)* (was `publication` R70, its set-time share; DEC-147 (5))
+- **R5** (was `publication` R70, its set-time share; DEC-147 (5))
 
   An edition published at a set time was signed when R1 recorded its waiting edition (`signed_at`, the instant of the signature at the ceremony), not when it is committed.
 
@@ -107,7 +107,7 @@ Terms are `publication`'s: a **case**, an **edition**, the **case document**. A 
 
   An edition published at signing never passes through this module.
 
-- **R6** *(not yet met: T41)* (was `publication` R71; K1811, K1816; `scheduler` R22's wake)
+- **R6** (was `publication` R71; K1811, K1816; `scheduler` R22's wake)
 
   `onPublishScheduled(module, fn)` takes one registration per module, refused through `membership.listenerRefusal` (as `answers` R27). `fn({publishAt})` is called once with R2's `publishWake()` as it then stands (null when none waits), after the act's transaction, following any of these:
   - an edition is set to wait (R1);
@@ -116,13 +116,13 @@ Terms are `publication`'s: a **case**, an **edition**, the **case document**. A 
 
   `scheduler` then re-arms its alarm at once. A throwing `fn` never undoes the act, and the notice writes nothing.
 
-- **R7** *(not yet met: T41)* (was `publication` R74; N681; K1833)
+- **R7** (was `publication` R74; N681; K1833)
 
   `waitingEditionOf(caseId)` answers the case's one edition R1 holds `waiting`, as `{case, edition, doc_sha, at, publish_at}`. It answers null when none waits (none set, or each `published`, `stopped` or `cancelled`).
 
   It is viewer-free and in-process (no op): `case-authoring` calls it before its acts (its R58). It writes nothing and never throws (a malformed `caseId` answers null).
 
-- **R8** *(not yet met: T41)* (the seam with `publication`, K31's pattern; new in this split as `publication` R61 was in the fourth, carrying `publication` R21's waiting clause and R70's set-time share as built)
+- **R8** (the seam with `publication`, K31's pattern; new in this split as `publication` R61 was in the fourth, carrying `publication` R21's waiting clause and R70's set-time share as built)
 
   At its creation this module registers once, with `publication.registerWaitingEditions({isWaiting, signedAtOf, signerOf})` (`publication` R77; K2438), the source `publication` reads a waiting edition through:
   - `isWaiting(caseId, edition)`: true while that case edition's edition waits (R1), else false. `publication` R21 then counts its document as signed, neither replacing nor re-authoring it.
@@ -150,11 +150,11 @@ Terms are `publication`'s: a **case**, an **edition**, the **case document**. A 
 
 ### Invariants
 
-- **R9** *(not yet met: T41)* (was `publication` R33's C-122.5 share; N687, K1839) Each check this module raises is an invariant with its test (K6). C-122.5 `SCHEDULED_CHECK_UNAVAILABLE` (R2) moves here with its number and translation unchanged, and leaves `publication`'s table, so no row id is held twice. Its translation: "This edition was not published at its set time, because the checks it needed then could not be run. Nothing was published. Sign it again to publish it." A stopped edition's `reasons` carry its `check`. A change to the row moves `CATALOG_VERSION` (rule 17).
-- **R10** *(not yet met: T41)* (was `publication` R31's share; T34-79's table) This module declares `scheduled_editions` to `record-core`'s purge as the table was declared:
+- **R9** (was `publication` R33's C-122.5 share; N687, K1839) Each check this module raises is an invariant with its test (K6). C-122.5 `SCHEDULED_CHECK_UNAVAILABLE` (R2) moves here with its number and translation unchanged, and leaves `publication`'s table, so no row id is held twice. Its translation: "This edition was not published at its set time, because the checks it needed then could not be run. Nothing was published. Sign it again to publish it." A stopped edition's `reasons` carry its `check`. A change to the row moves `CATALOG_VERSION` (rule 17).
+- **R10** (was `publication` R31's share; T34-79's table) This module declares `scheduled_editions` to `record-core`'s purge as the table was declared:
   - A waiting, stopped or cancelled edition is working material (`publication` R29) and is cleared by the whole-store purge with the unsigned document it holds a signature for.
   - A published one is kept, since it holds when its edition was signed.
-- **R11** *(not yet met: T41)* (a copy of `publication` R34) No place is named in this module's behaviour or outward text.
+- **R11** (a copy of `publication` R34) No place is named in this module's behaviour or outward text.
 
 ### Satisfies
 
