@@ -69,6 +69,7 @@ Terms. An **ask** is one member's question, answered under a **grant**: `credent
   - Each is judged by `ai-use.useCheck` in place of the ceiling.
   - R2 widens: every read under a grant also removes the rows of projects `credentials.projectsKeptAway({use})` names, before the read log records them. A count counts none of them.
   - R19's conditions read `AI_LIMIT_REACHED` where they read the ceiling.
+  - *(not yet met: T41)* (K2508; `credentials` R24, `store-door` R10, `plane` R33) `askAccount({member, project?, at?, kind?})` takes `kind`, `ask` when absent, or `draft` for a draft, and judges the account and its limit for that kind (`credentials.accountFor`, `ai-use.useCheck`); any other `kind` is refused as `credentials` R24 refuses it.
 
 #### Baselines, verdict words and the sentence checks (T41-29; N820; K2405, K2418)
 
