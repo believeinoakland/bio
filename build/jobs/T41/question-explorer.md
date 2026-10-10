@@ -123,3 +123,11 @@ Size (session_01243u4joqb8ZpywX663LU1U): test runs 38, module lines 1013
 ## J9 · COMPLETE
 
 B9 read (awaiting run-productions' re-merge). B10 applied: the real capture-requests door with R55's step against the real steps (the at now in the door's context); the tests' ai-runs stand-in makes and ends real steps. 26/26; checks 0 but K1043's modules.json line. Record updated.
+
+## B11 applied (QUESTION-EXPLORER #1)
+
+- **B11 (K2506), run-productions re-merged:** R21 admits an investigate run carrying its step. New `propose({run, bundleId, fn, version, cap, refs, connections, caller})` (R13): after `read`'s own checks (the run held, the document in the paying account's sight, no limit keeping it from `explore`, now one shared `#readable`), it hands the batch to the real `run-productions.extractPropose` with `step` the run's step, `proposedBy` and `viewer` the run's principal. A proposed connection to a person first passes R9/R10's gate (`look`): a person no member tied refuses the whole batch `EXPLORE_PERSON_NOT_TIED`, recorded on the run, nothing proposed. `EXPLORE_BOUNDS` gains `mints` (50), which R21's proposals spend (its R10).
+- **Tests:** 27, pass 27, fail 0 (new R13 test over the real run-productions: a connection proposed under the step, earned C with its quote verified; a tied person proposed; an untied person refused with nothing written; a document kept from exploring refused). **Checks** (local copy with paths and final uses): format 0; architecture 8 files, 40 imports, 0; coverage 14 of 14; ownership 1, K1043's `modules.json` line.
+- Only `ai-runs` T41 remains through `deps` names.
+
+Size (session_01243u4joqb8ZpywX663LU1U): test runs 40, module lines 1044
