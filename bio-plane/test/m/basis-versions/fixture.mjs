@@ -45,7 +45,8 @@ export const LAYER = [{ step: "layer", tier: 1, container: "pdf", cap: null, mea
 export const V = (id) => `member:${id}`;
 export const MACHINE = "class:daemon";
 
-export function world({ now = "2026-09-28T01:00:00Z", caseMemberFact = true, withRetrieval = false, acceptedWork = null } = {}) {
+export function world({ now = "2026-09-28T01:00:00Z", caseMemberFact = true, withRetrieval = false, acceptedWork = null,
+                        bias = null } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -102,9 +103,10 @@ export function world({ now = "2026-09-28T01:00:00Z", caseMemberFact = true, wit
     ? retrievalOf(host, { record, membership, promotion, extraction: realEx, observation: {}, now: () => Date.parse(clock.now) })
     : null;
   if (retrieval) retrieval.migrate();
-  /* `acceptedWork`: accepted-work's leg check (its R3) as the test controls it; absent, accepted-work's own */
+  /* `acceptedWork`: accepted-work's leg check (its R3) as the test controls it; absent, accepted-work's own. `bias`:
+     bias's `statementInForce` (its R49, for R48) as the test controls it; absent, bias's own on this host */
   const bv = basisVersionsOf(host, { record, membership, promotion, content, inquiry, retrieval, now: () => clock.now,
-                                     ...(acceptedWork ? { acceptedWork } : {}) });
+                                     ...(acceptedWork ? { acceptedWork } : {}), ...(bias ? { bias } : {}) });
   bv.migrate();
   let n = 0;
   const w = {

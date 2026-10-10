@@ -275,8 +275,9 @@ const EXTRACT_PROPOSE_ROWS = {
   NOT_AN_EXTRACT_RUN: {
     check: 'C-104.5',
     where: 'src/run-productions/index.mjs extractPropose > is-extract-door',
-    translation: 'This investigation was not opened to read documents for what they name, so it cannot propose readings. '
-      + 'What an investigation may do is set when it is opened and never widened by its work. Nothing was proposed.',
+    translation: 'This investigation was not opened to read documents for what they name, so it cannot propose readings; '
+      + 'an investigation exploring a question proposes them only for the step it serves. What an investigation may do '
+      + 'is set when it is opened and never widened by its work. Nothing was proposed.',
   },
   NO_MINTS_BOUND: {
     check: 'C-104.6',
