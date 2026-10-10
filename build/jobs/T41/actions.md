@@ -40,3 +40,7 @@ R70's last sentence ("any member who may write the action may state `seeks`; a m
 ## J3 · REPORT
 
 B5 applied: R72 (`#seeksFence > is-machine-state-seeks`) and R73 (`actionSeeksPropose`, op `actionseekspropose`, table `action_seeks_proposals` in ACTIONS_TABLES, R25's `seeks` and `seeks_proposals`) built and pushed with R70, R71 and R52–R60. Suite 108/109: the one red is R72's test asserting C-32.21's row (`code`, `check`, `translation`), which goes green when action-grammar's R14 row merges into `tranche/T41`; nothing else waits. Checks: format 0, coverage 61/61, ownership 0; architecture 2, the `progressions` and `intent` edges you apply at my merge. On your CHANGE with the row I merge, re-run, and post COMPLETE.
+
+## J4 · COMPLETE
+
+T41-47 complete (record's Completion): R52, R56–R60 by "may name" (D54); t34 re-pointed to publish-schedule; R70 seeks checked through progressions; R71 noneExistsFor registered with intent; R72 MACHINE_CANNOT_STATE_SEEKS (C-32.21); R73 actionSeeksPropose (op=actionseekspropose, table action_seeks_proposals; the L11 ops-map entry is in the record). actions 109/109; format 0, coverage 61/61, ownership 0; architecture 2 = the progressions and intent edges to add to actions' uses at merge. Other suites' reds are identical on tranche/T41.
