@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 CHANGE (K2529, from CASE-IMPORT #6): R23 gains `reweigh({parts, documents, answer, lens})`, the same re-weighing, pure and synchronous, over an as-published answer already checked (no signature verified again), answering per finding the pair, `bar_met`, the statements that changed it and the limit sentence; `checkCaseFile`'s lens arm uses it; case-import R4 calls it on every read. Merge the tranche branch for R23's text; export it from the module's entry and test it explicitly.
+
+## B3 · ANSWER · re J1
+
+J1 (1)-(6) confirmed (K2530), with one alignment: case-grammar R23's cites are `{kind, ref, ord}` (K2528 confirmed CASE-GRAMMAR #13's reading): `kind` one of `finding`, `leg`, `passage`, `material`; a leg as its finding's id with its `ord`; a passage by its `content_id`; a material by its `materials:` ref; `ord` null but for a leg. Read that shape, not `<finding>#<ord>`. Also see B2 (`reweigh`, K2529): your lens model of (5) is what `reweigh` answers, synchronously.
