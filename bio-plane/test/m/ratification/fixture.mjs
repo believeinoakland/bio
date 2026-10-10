@@ -97,7 +97,7 @@ export const bucketOver = (m) => ({
   put: async (k, v) => { m.set(k, v instanceof Uint8Array ? v : new TextEncoder().encode(String(v))); },
 });
 
-export function world({ steer = {}, worker = null, carriage = null } = {}) {
+export function world({ steer = {}, worker = null, carriage = null, schedule = null } = {}) {
   const st = storage();
   const host = { storage: st };
   for (const t of bare(RECORD_SCHEMA).split(";")) if (t.trim()) st.db.exec(t);
@@ -176,7 +176,7 @@ export function world({ steer = {}, worker = null, carriage = null } = {}) {
     publishedRegistryFor: (id, targets) => ({ asked: [id, ...targets] }),
     publishedCaseRegistryFor: (ids) => ({ cases: ids }),
     commitCaseEdition: (a) => { pub.committed.push(a); return realPub.commitCaseEdition(a); },
-    /* a test's own stand-ins (T34-85: publication R66, R67, R69, R62 until publication's merge), present at creation */
+    /* a test's own stand-ins (publication R62), present at creation */
     ...steer,
   };
   const publication = new Proxy(steered, {
@@ -223,10 +223,13 @@ export function world({ steer = {}, worker = null, carriage = null } = {}) {
   const capture = { registerReader: (slot, module, fn) => (readers.push({ slot, module, fn }), { ok: true, slot, module }) };
   const r = ratificationOf(host, { storage: st, record, membership, credentials, promotion, provenance, inquiry,
                                    basisVersions, publication, caseTensions, capture, strength, reevaluation,
-                                   networkNotices, people, money, ...(worker ? { worker } : {}) });
+                                   networkNotices, people, money, ...(worker ? { worker } : {}),
+                                   /* publish-schedule (N823): a stand-in the test passes, else the real module this
+                                      module creates on the host (`w.schedule`) */
+                                   ...(schedule ? { publishSchedule: schedule } : {}) });
   let n = 0;
   const w = {
-    st, host, record, membership, credentials, promotion, r, bv, key, registers, holds, evidence, pub, publication,
+    st, host, record, membership, credentials, promotion, r, schedule: r.publishSchedule, bv, key, registers, holds, evidence, pub, publication,
     caseTensions, calls, readers, corroboration, corroborationAsked, levelMoves, sealCalls, realPub, ties, moneyFacts, tiesAsked,
     openSeals: async (a) => ({ ok: true, case: a.case, edition: a.edition, project: null, opened: [], attestation: null }),
     ops: {},   /* stand-ins for other modules' Durable Object ops, by name (the Worker half's tests) */

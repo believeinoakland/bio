@@ -147,3 +147,47 @@ export function noAttestingKeyRefusal(signer) {
     remedy: "Register a key of your own from your signed-in session (op=signerregister, credentials R9), or ask "
           + "an administrator to register one for you; then sign." };
 }
+
+/* R49 (T41; D60, N820) / C-58.11: the group's approval rule in force (R50's reader) names approvers who have not
+   approved this case edition's document at its `doc_sha`. `read` is `approvalsRead`'s answer: null (no rule, nothing
+   asked) answers null; `{unreadable}` refuses too, since an edition is never signed with its approvals unchecked. */
+export function approvalMissingRefusal(caseId, edition, docSha, read) {
+  if (!read || (!read.unreadable && !(Array.isArray(read.missing) && read.missing.length))) return null;
+  /* DEC-49 REGION is-approval-missing */
+  return { ok: false, reason: "APPROVAL_MISSING", ...rowOf("APPROVAL_MISSING"), caseId, edition, docSha: docSha ?? null,
+    approvers: read.approvers ?? null, missing: read.unreadable ? null : read.missing,
+    detail: read.unreadable
+      ? `the group's approval rule, or the approvals given for case ${caseId} edition ${edition}, could not be read `
+        + `(${read.unreadable}), so whether every required approver has approved this document is undetermined and it `
+        + `is not signed unchecked. Ask again. Nothing was signed.`
+      : `the group requires ${read.approvers.join(", ")} to approve a case before it is signed, and `
+        + `${read.missing.join(", ")} ${read.missing.length === 1 ? "has" : "have"} not approved case ${caseId} edition `
+        + `${edition} at this document (${String(docSha ?? "").slice(0, 12)}); an approval of an earlier version does `
+        + `not carry over. Nothing was signed.` };
+  /* END DEC-49 REGION is-approval-missing */
+}
+
+/* R50 (T41; D60): what the registered approval reader (`review`, its R32) answers for one case edition's document:
+   null when none is registered or its `rule()` names no approver (no rule in force, the default: nothing asked); else
+   `{approvers, approvals, missing}`, the approvers sorted, each approval `{by, at}` given at `docSha` sorted by `by`, and
+   the approvers with none (a `member:` prefix read as the member); `{unreadable}` when a door throws or answers neither
+   shape. `rule()` answers null, `{approvers: [ids]}` or the bare list; `approvals(...)` the list or `{approvals}`. */
+const memberOf = (v) => (typeof v === "string" && v.trim() ? v.trim().replace(/^member:/, "") : null);
+export function approvalsRead(reader, { caseId, edition, docSha }) {
+  if (!reader) return null;
+  let rule, given;
+  try { rule = reader.rule(); } catch (e) { return { unreadable: `the approval rule: ${String((e && e.message) || e).slice(0, 120)}` }; }
+  if (rule === null || rule === undefined) return null;
+  const named = Array.isArray(rule) ? rule : rule && typeof rule === "object" && Array.isArray(rule.approvers) ? rule.approvers : null;
+  if (!named || named.some((m) => !memberOf(m))) return { unreadable: "the approval rule" };
+  const approvers = [...new Set(named.map(memberOf))].sort();
+  if (!approvers.length) return null;
+  try { given = reader.approvals({ case: caseId, edition, docSha }); }
+  catch (e) { return { unreadable: `the approvals given: ${String((e && e.message) || e).slice(0, 120)}` }; }
+  const list = Array.isArray(given) ? given : given && typeof given === "object" && Array.isArray(given.approvals) ? given.approvals : null;
+  if (!list || list.some((a) => !a || typeof a !== "object" || !memberOf(a.by))) return { unreadable: "the approvals given" };
+  const approvals = list.map((a) => ({ by: memberOf(a.by), at: typeof a.at === "string" ? a.at : null }))
+    .sort((a, b) => (a.by < b.by ? -1 : a.by > b.by ? 1 : String(a.at) < String(b.at) ? -1 : 1));
+  const by = new Set(approvals.map((a) => a.by));
+  return { approvers, approvals, missing: approvers.filter((m) => !by.has(m)) };
+}

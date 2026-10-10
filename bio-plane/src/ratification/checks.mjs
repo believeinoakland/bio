@@ -6,8 +6,8 @@
  *
  * The rows moved here from the check catalogue (`legacy-checks`, K6, K94) with their ids, texts and translations
  * unchanged: C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.5, C-65.1 and C-92.10–C-92.12; copied in T18 (split
- * tables), C-32.1, C-33.10–C-33.12 (the bulk release) and C-102.10; and, new in T34 (DEC-147), C-58.6–C-58.10. A row's
- * `where` names the region in this module that mints it. */
+ * tables), C-32.1, C-33.10–C-33.12 (the bulk release) and C-102.10; new in T34 (DEC-147), C-58.6–C-58.10; and, new in
+ * T41 (D60), C-58.11. A row's `where` names the region in this module that mints it. */
 
 /* R8, R9 (K1824): the pure catalogue, never an index that imports store-bound code (K1317). */
 export * from "../case-catalogue/checks.mjs";
@@ -265,6 +265,15 @@ export const RATIFY_SCOPE_CHECKS = {
     translation: 'This edition was not published at its set time: a check made when it was signed no longer passes, '
       + 'or could not be made. The reason is given. Nothing was published. Prepare and sign the edition again to '
       + 'publish it.',
+  },
+  /* R49 (T41; D60, N820): the group's approvals before signing. BOB's draft, which the UX stream may re-word; a change
+     moves `CATALOG_VERSION` (rule 17). Awaiting T42's stamp (plan rule 4 (2)). */
+  APPROVAL_MISSING: {
+    check: 'C-58.11',
+    where: 'src/ratification/refusals.mjs approvalMissingRefusal > is-approval-missing',
+    translation: 'This case edition can\'t be signed yet: the group requires named members to approve a case before '
+      + 'it is signed, and some of them have not approved this version of it. They are named. Ask them to approve it, '
+      + 'then sign. Nothing was signed.',
   },
 };
 
