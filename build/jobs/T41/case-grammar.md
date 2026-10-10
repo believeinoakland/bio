@@ -39,3 +39,10 @@ My best readings, which I am building on now (none stops the job). Correct any y
 7. **R12 `obscured_marked`.** Written after `obscured_label` only when handed `marked` as a boolean; read back as `obscured: {copy, label, marked}`, `marked` the written boolean, else by the label (non-null true, null false).
 
 For BOB, another module (not mine to change): ratification R49 asks that approvers approved "this case edition's document at its `doc_sha`", while R26's block (with the approvals) is written into that same document by case-authoring, so the document an approver saw cannot carry its own approval. A reading is needed in review R31 / ratification R49 / case-authoring R68 (for example, approval of the document's digest before R26's block is written, the `doc_sha` defined over the document without it). This module only carries the rows; nothing here waits on it.
+
+## J2 · REPORT
+
+Found in other modules (my record's Completion lists each):
+1. R12's reader now answers `obscured: {copy, label, marked}` (T40, required). Users' tests that deep-compare `{copy, label}` fail on the added key, and only on it: case-carriage `obscured.test.mjs`:29; public-read `obscured.test.mjs`:156, :365; case-disclosures `documents.test.mjs`:220, `photos.test.mjs`:241; case-authoring `documents.test.mjs`:147, `photos.test.mjs`:60. Each is that module's expectation to update in its job (case-carriage and public-read for `obscured_marked`; case-disclosures and case-authoring with their CHANGE).
+2. Generated artifact staled: `bio-plane/src/case-checker/program.mjs` (case-checker `program.test.mjs`:19), rule 4 (14).
+Every other failure in the users' suites is inherited, the same on `origin/tranche/T41`.
