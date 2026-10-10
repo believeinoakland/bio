@@ -70,13 +70,13 @@ export const SHARED_ACT_CHECKS = Object.freeze({
      would make a member vouch for a legal or authored statement (an action's reason, a case statement, a testimony), is
      refused by the act's owner with this row, and only `edited` or `own_instead` lands (Investigation §5). The owners
      (`steps` R24, `hypotheses` R17, `run-productions` R22, `question-explorer` R6, `investigation` R12, R20,
-     `case-authoring` R64) read it from here and add no row of their own; the code is `ACCEPT_MUST_REAUTHOR`
+     `case-account` R4, case-authoring R64's account drafts moving there at L8; R55, K2608) read it from here and add no row of their own; the code is `ACCEPT_MUST_REAUTHOR`
      (acceptance.mjs). The translation states the meaning; the design stream words it later by key. */
   ACCEPT_MUST_REAUTHOR: {
     check: 'C-33.54',
     where: 'raised by the owner of each accepting act that would make a member vouch for a legal or authored statement '
-      + '(steps R24, hypotheses R17, run-productions R22, question-explorer R6, investigation R12 and R20, case-authoring '
-      + 'R64), from this shared row (record-grammar R52)',
+      + '(steps R24, hypotheses R17, run-productions R22, question-explorer R6, investigation R12 and R20, case-account '
+      + 'R4), from this shared row (record-grammar R52)',
     translation: 'Accepting this as it was proposed would make you vouch for words the machine wrote. Write it in your '
       + 'own words instead, by editing it or writing your own, and the record keeps that the words are yours.',
   },
