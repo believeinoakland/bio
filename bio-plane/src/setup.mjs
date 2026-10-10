@@ -1959,8 +1959,8 @@ export class InstanceSetup {
 
   /** R65, op=groupdescriptiondraft, which the door routes itself and calls here in-process (control-plane R57): `by` and
    *  `viewer` are its stamps (R29) and `assistant` is `{on, account}` as it resolved them (never the key); `answers` is
-   *  the request's. The refusals, in order: NOT_AN_ADMIN, AI_KEPT_AWAY (R55's gate), the door's AI_NO_ACCOUNT,
-   *  AI_USE_SWITCHED_OFF and AI_LIMIT_REACHED (T40: answered there, never minted here), GROUP_DRAFT_ANSWERS_MALFORMED or
+   *  the request's. The refusals, in order: NOT_AN_ADMIN, AI_KEPT_AWAY (R55's gate), the door's NO_ACCOUNT
+   *  (credentials', relayed as given, K2577), AI_USE_SWITCHED_OFF and AI_LIMIT_REACHED (T40: answered there, never minted here), GROUP_DRAFT_ANSWERS_MALFORMED or
    *  GROUP_DRAFT_NO_ANSWERS; then the draft, or, when the draft cannot be served, ASSISTANT_DRAFT_UNAVAILABLE. A draft
    *  carries no project (T40): a project's account handed in serves none. `turn` is the door's call to agent-worker's
    *  `/draft` (`{answers, account, holdings}` → `{focus, purpose, readLog}`), else the one this module was built with. */
@@ -2299,7 +2299,7 @@ export class InstanceSetup {
    *  kept word's `{key, en, text, protected}` (`to_english`). Writes nothing: the door hands the answered draft to
    *  `translationdraftrecord`. `assistant` is the door's `{on, account}`; a draft carries no project (T40), so a
    *  project's account handed in answers ASSISTANT_DRAFT_UNAVAILABLE with no words, nothing to draft on. The door's
-   *  AI_NO_ACCOUNT, AI_USE_SWITCHED_OFF and AI_LIMIT_REACHED are answered there, never minted here. */
+   *  NO_ACCOUNT (credentials', K2577), AI_USE_SWITCHED_OFF and AI_LIMIT_REACHED are answered there, never minted here. */
   translationDraft({ language = null, direction = undefined, keys = undefined, key = null, assistant = null, by = null } = {}) {
     const req = this.#draftRequest({ language, direction, keys, key, by });
     if (req.refused) return req.refused;

@@ -1,7 +1,7 @@
 /* T41-57 (was T40-22; N812, K2373, K2400): R65's and R67's T40 amendments at the module's interface. The account a
    draft runs on, and its limits for `draft`, are resolved at the door (store-door R10: `credentials.accountFor`, R56,
-   and `ai-use.useCheck`, R3), which answers AI_NO_ACCOUNT, AI_USE_SWITCHED_OFF and AI_LIMIT_REACHED in place of the
-   retired ceiling codes; this module mints none of them, and a draft carries no project: a project's account handed in
+   and `ai-use.useCheck`, R3), which answers credentials' NO_ACCOUNT (relayed as given, K2577), AI_USE_SWITCHED_OFF
+   and AI_LIMIT_REACHED in place of the retired ceiling codes; this module mints none of them, and a draft carries no project: a project's account handed in
    serves no draft, and nothing this module hands on or answers names a project. Each case has its negative control. */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -11,7 +11,7 @@ import { INSTANCE_SETUP_CHECKS, INTERFACE_WORDS } from "../../../src/setup.mjs";
 import { WIZARD_SCRIPTS_CHECKS } from "../../../src/wizard-scripts/index.mjs";
 
 /* The door's codes (T40) and the retired ceiling codes they replace. */
-const DOOR = ["AI_NO_ACCOUNT", "AI_USE_SWITCHED_OFF", "AI_LIMIT_REACHED"];
+const DOOR = ["NO_ACCOUNT", "AI_NO_ACCOUNT", "AI_USE_SWITCHED_OFF", "AI_LIMIT_REACHED"];
 const RETIRED = ["AI_USE_CEILING_REACHED", "AI_USE_COPY_CEILING_REACHED"];
 const ANSWERS = [{ question: "What does your group work on?", text: "We watch the port's budget." }];
 const GROUP = { kind: "apikey", level: "group" };
@@ -29,7 +29,7 @@ async function groupWorld() {
   return { ...w, asked };
 }
 
-test("R65 (T40: N812, K2373) the door's AI_NO_ACCOUNT, AI_USE_SWITCHED_OFF and AI_LIMIT_REACHED are answered there: this module holds no row for them nor for the retired ceiling codes, and no request answers one, at any stage of its own refusals or past them; its own order stands (NOT_AN_ADMIN, AI_KEPT_AWAY, then the answers' GROUP_DRAFT_NO_ANSWERS)", async () => {
+test("R65 (T40: N812, K2373) the door's NO_ACCOUNT (credentials', K2577; or AI_NO_ACCOUNT), AI_USE_SWITCHED_OFF and AI_LIMIT_REACHED are answered there: this module holds no row for them nor for the retired ceiling codes, and no request answers one, at any stage of its own refusals or past them; its own order stands (NOT_AN_ADMIN, AI_KEPT_AWAY, then the answers' GROUP_DRAFT_NO_ANSWERS)", async () => {
   for (const code of [...DOOR, ...RETIRED]) {
     assert.equal(Object.hasOwn(INSTANCE_SETUP_CHECKS, code), false, code);
     assert.equal(Object.hasOwn(WIZARD_SCRIPTS_CHECKS, code), false, `${code}: not the draft rows' either`);
@@ -91,7 +91,7 @@ async function translationWorld() {
   return { ...w, c };
 }
 
-test("R67 (T40: N812, K2373) store-door R10's AI_NO_ACCOUNT, AI_USE_SWITCHED_OFF and AI_LIMIT_REACHED follow R67's first refusals and are answered at the door: no request to translationDraft, translationDraftRefusal or translationDraftRecord answers one or a retired ceiling code, in either direction; the module's own order stands (direction, tag, machine, grant, word, then AI_KEPT_AWAY)", async () => {
+test("R67 (T40: N812, K2373) store-door R10's NO_ACCOUNT (credentials', K2577; or AI_NO_ACCOUNT), AI_USE_SWITCHED_OFF and AI_LIMIT_REACHED follow R67's first refusals and are answered at the door: no request to translationDraft, translationDraftRefusal or translationDraftRecord answers one or a retired ceiling code, in either direction; the module's own order stands (direction, tag, machine, grant, word, then AI_KEPT_AWAY)", async () => {
   const w = await translationWorld();
   const PROTECTED = INTERFACE_WORDS.find((x) => x.protected && !/\{/.test(x.en));
   w.m.translationAdopt({ language: "es", key: PROTECTED.key, text: "Escrito", by: "ruth" });
