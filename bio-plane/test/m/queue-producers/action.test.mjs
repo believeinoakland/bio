@@ -301,8 +301,20 @@ test("R29 (DEC-113): one FINDING litigation-hold-released per release actions.ho
   /* the negative controls (K874): invited to PRJ-1 she is at FULL there; PRJ-H set discoverable, at FULL there too */
   w.join("PRJ-1", "ada", { state: "invited" });
   assert.deepEqual(ids(w.read("ada")), all.slice(0, 3), "an invited administrator: every release on PRJ-1's actions");
+  /* K2581 (D54; membership R60; actions R59's "may name"): PRJ-H, hidden, which she sees only at EXISTENCE, is named to
+     her among the restarted projects by its id alone; the action in it stays withheld */
+  const adaAt = byId(w.read("ada"))["FINDING::litigation-hold-released::ACT-1::2::3"];
+  assert.deepEqual(adaAt.subject.restarted, ["PRJ-1", "PRJ-H"], "an administrator at a hidden project's EXISTENCE is told its id");
+  assert.deepEqual(adaAt.basis.restarted, ["PRJ-1", "PRJ-H"]);
+  assert.match(adaAt.detail, /restarts for PRJ-1, PRJ-H\./);
+  assert.ok(!JSON.stringify(w.read("ada")).includes("ACT-H"), "never its contents: the action in PRJ-H is no item and is named nowhere");
+  /* the negative controls: a member who is no administrator, at NONE of hidden PRJ-H, is not told it (below, after it is
+     discoverable, at its EXISTENCE, still not: "may name" is FULL or an administrator's EXISTENCE of a hidden project) */
+  assert.deepEqual(byId(w.read("alice"))["FINDING::litigation-hold-released::ACT-1::2::3"].subject.restarted, ["PRJ-1"]);
   w.discoverable("PRJ-H");
   assert.deepEqual(ids(w.read("ada")), all, "every administrator member who sees the projects: one item per release");
+  assert.deepEqual(byId(w.read("alice"))["FINDING::litigation-hold-released::ACT-1::2::3"].subject.restarted, ["PRJ-1"],
+    "a member at a discoverable project's EXISTENCE may not name it among the restarted projects");
   assert.deepEqual(ids(alice), ["FINDING::litigation-hold-released::ACT-1::2::3", "FINDING::litigation-hold-released::ACT-2::0::2"],
     "a placer, of the holds she placed, never one on an action she may not see, nor one she released and did not place");
   assert.deepEqual(ids(w.read("bob")), ["FINDING::litigation-hold-released::ACT-1::2::3", "FINDING::litigation-hold-released::ACT-1::4::7"]);

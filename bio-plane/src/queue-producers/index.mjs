@@ -2170,13 +2170,24 @@ export class QueueProducers {
    *  hold in place), keyed by the action, the entry's position and the statement's sequence, to every administrator
    *  member, or the `admin` machine credential as R14's, and to each member among the release's `placers`; to nobody
    *  else. Its subject the action, naming who released the hold, the reason, and the restarted projects this viewer may
-   *  see; homed as R15's (the action's project, as record-core's `bundleInfo` answers it), aged from the release. Raised once and never repeated: it leaves when its recipient disposes of
+   *  name (K2581: `actions` R59's "may name", R52: seen at FULL, or a hidden project an administrator sees at EXISTENCE,
+   *  membership R44, R60, D54, told by its id alone); homed as R15's (the action's project, as record-core's `bundleInfo` answers it), aged from the release. Raised once and never repeated: it leaves when its recipient disposes of
    *  it (queue's disposition), never by anything here. */
   #findingsHoldReleased(me, viewer, now) {
     const admin = me ? this.#isAdminMember(me) : viewer === `${MACHINE_CLASS_PREFIX}admin`;
     if (!me && !admin) return [];
     const page = this.#actionPages((after) => this.#actions.holdsReleased({ after, viewer }));
     const visible = this.#bundleRedactor(viewer);
+    /* K2581 (D54; membership R60): a restarted project this viewer may name: one it sees whole, or a hidden one an
+       administrator sees at EXISTENCE (its id, never its contents); a member at a discoverable project's EXISTENCE
+       may not (actions R52). */
+    const named = new Map();
+    const nameable = (p) => {
+      if (visible(p) !== null) return true;
+      if (!named.has(p)) named.set(p, this.#membership.sight(p, viewer) === "existence"
+        && this.#membership.visibilityOf(p) === "hidden");
+      return named.get(p);
+    };
     const person = (x) => typeof x === "string" && x.trim() && !x.startsWith(MACHINE_AUTHOR_PREFIX)
       && !x.startsWith(MACHINE_CLASS_PREFIX);
     const out = [];
@@ -2188,7 +2199,7 @@ export class QueueProducers {
       if (!admin && !placers.includes(me)) continue;
       if (admins === null) admins = this.#activeAdmins();
       const restarted = (Array.isArray(x.restarted) ? x.restarted : [])
-        .filter((p) => typeof p === "string" && p && visible(p) !== null);
+        .filter((p) => typeof p === "string" && p && nameable(p));
       const by = typeof x.released_by === "string" && x.released_by ? x.released_by : null;
       /* the action's project (record-core's `bundleInfo`), for R15's homes; withheld when this viewer may not see it */
       const info = this.#record.bundleInfo(x.action);
@@ -2207,7 +2218,7 @@ export class QueueProducers {
               + (x.reason ? `, because "${x.reason}"` : "") + ". "
               + (restarted.length
                 ? `Ordinary deletion restarts for ${restarted.join(", ")}.`
-                : "No project you can see restarts its ordinary deletion.")
+                : "No project you may name restarts its ordinary deletion.")
               + " This is told once, to the administrators and to whoever placed the hold.",
         basis: { source: "actions.holdsReleased", action: x.action, entry: x.ord, sequence: x.seq, released_by: by,
                  released_at: x.released_at ?? null, reason: x.reason ?? null, placers, restarted,

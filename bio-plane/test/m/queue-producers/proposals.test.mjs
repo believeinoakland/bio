@@ -193,11 +193,12 @@ test("R2, R10: a decision that applies removes the item; one about an earlier ve
 });
 
 test("R2: an overdue proposal leads with overdue_successor and says how many are past a deadline", () => {
-  const inst = (e) => ({ entity_id: e, progression_key: "p", definition_version: 3 });
+  /* each instance in progressions R18's published shape: its grade and whether it is past its deadline */
+  const inst = (e, overdue = true) => ({ entity_id: e, progression_key: "p", definition_version: 3, grade: "B", grade_determined: true, overdue });
   const feed = { instances: [], dispositions: [], proposals: [
     { key: "p::s", progression_key: "p", progression_label: "Flow", stage_key: "s", stage_label: "Stage", required: "always",
       definition_version: 3, surfaced_by: "machine", overdue: true, overdue_count: 2, n: 3, kinds: ["missing_predecessor", "overdue_successor"],
-      grade: "B", grade_determined: true, prior_disposition: null, instances: [inst("E1"), inst("E2"), inst("E3")] }] };
+      grade: "B", grade_determined: true, prior_disposition: null, instances: [inst("E1"), inst("E2"), inst("E3", false)] }] };
   const [it] = proposalFindingItems(feed, { subjectsOf: (pk, e) => [`${e}-a`, `${e}-b`, `${e}-c`], homesOf: () => ({}), optionsOf: () => [], subjectsMax: 8 });
   assert.equal(it.kind, "overdue_successor");
   assert.equal(it.detail, "3 instances of this progression reach 'Stage' without it, 2 past a declared deadline");
@@ -205,4 +206,39 @@ test("R2: an overdue proposal leads with overdue_successor and says how many are
   assert.equal(it.basis.overdue_count, 2);
   assert.equal(it.subject.bundles.length, 8, "at most eight subject bundles are named");
   assert.equal(proposalFindingItems({ proposals: [], instances: [] }, { subjectsOf: () => [], homesOf: () => ({}), optionsOf: () => [] }).length, 0);
+});
+
+test("R2, R11 (K2581): each proposal finding's counts are over the instances the viewer may see, and a finding with none seen is withheld; the negative control, every instance seen, counts all", () => {
+  const inst = (e, grade, overdue) => ({ entity_id: e, progression_key: "p", definition_version: 1, grade, grade_determined: true, overdue });
+  const card = (e, grade, docs) => ({ progression_key: "p", progression_label: "Flow", definition_version: 1, entity_id: e,
+    findings: [{ kind: CARDINALITY_EXCEEDED, stage_key: "c", stage_label: "Cap", cardinality: "1", document_count: docs, grade, grade_determined: true }] });
+  const feed = { dispositions: [],
+    instances: [card("E1", "B", 2), card("E9", "D", 7)],
+    proposals: [
+      { key: "p::s", progression_key: "p", progression_label: "Flow", stage_key: "s", stage_label: "Stage", required: "always",
+        definition_version: 1, surfaced_by: "machine", overdue: true, overdue_count: 2, n: 3, kinds: ["missing_predecessor", "overdue_successor"],
+        grade: "D", grade_determined: true, prior_disposition: null, instances: [inst("E1", "B", false), inst("E2", "A", false), inst("E9", "D", true)] },
+      { key: "p::t", progression_key: "p", progression_label: "Flow", stage_key: "t", stage_label: "Hidden stage", required: "always",
+        definition_version: 1, surfaced_by: "machine", overdue: true, overdue_count: 1, n: 1, kinds: ["missing_predecessor", "overdue_successor"],
+        grade: "D", grade_determined: true, prior_disposition: null, instances: [inst("E9", "D", true)] }] };
+  const run = (seenIds) => proposalFindingItems(feed, { subjectsOf: (pk, e) => (seenIds.includes(e) ? [`${e}-doc`] : []),
+    homesOf: () => ({}), optionsOf: () => [], subjectsMax: 8 });
+  /* E9 is behind bundles the viewer may not see */
+  const part = Object.fromEntries(run(["E1", "E2"]).map((i) => [i.id, i]));
+  assert.deepEqual(Object.keys(part).sort(), ["FINDING::p::c", "FINDING::p::s"], "the stage whose only instance is unseen earns no item");
+  const s = part["FINDING::p::s"];
+  assert.deepEqual([s.kind, s.basis.n, s.basis.overdue_count, s.basis.grade, s.basis.kinds],
+    ["missing_predecessor", 2, 0, "B", ["missing_predecessor"]], "n, overdue, grade and kind over the two seen instances only");
+  assert.equal(s.detail, "2 instances of this progression reach 'Stage' without it", "the sentence counts the seen instances");
+  const c = part["FINDING::p::c"];
+  assert.deepEqual([c.basis.n, c.basis.document_count, c.basis.grade], [1, 2, "B"], "the cardinality group over its one seen instance");
+  assert.match(c.detail, /^1 instance of this progression thread more than one document at 'Cap' \(2 in all\)/);
+  assert.ok(!/E9|7 in all|\b3 instances/.test(JSON.stringify(run(["E1", "E2"]))), "R11: nothing of the unseen instance is counted or named");
+  assert.equal(run([]).length, 0, "none seen: no item at all");
+  /* the negative control: every instance seen, the feed's own counts stand */
+  const all = Object.fromEntries(run(["E1", "E2", "E9"]).map((i) => [i.id, i]));
+  assert.deepEqual(Object.keys(all).sort(), ["FINDING::p::c", "FINDING::p::s", "FINDING::p::t"]);
+  assert.deepEqual([all["FINDING::p::s"].kind, all["FINDING::p::s"].basis.n, all["FINDING::p::s"].basis.overdue_count, all["FINDING::p::s"].basis.grade],
+    ["overdue_successor", 3, 1, "D"]);
+  assert.deepEqual([all["FINDING::p::c"].basis.n, all["FINDING::p::c"].basis.document_count, all["FINDING::p::c"].basis.grade], [2, 9, "D"]);
 });
