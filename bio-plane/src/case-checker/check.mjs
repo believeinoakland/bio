@@ -29,7 +29,8 @@ import { recomputePair, GRADING_METHOD_VERSIONS } from "../strength/method.mjs";
 import { checkCaseDocument } from "../case-catalogue/checks.mjs";
 import { caseFileManifestCheck, caseFileEntryOf, casePartDigest, CASE_FILE_MANIFEST_PATH, methodOf, materialsOf,
          acceptedWorkOf, standingOf, completeEditionOf, gradingFactsOf, passagesOf, GRADING_FACT_FIELDS,
-         PASSAGE_FIELDS, calculationsOf, calculationFileText, provOf, CASE_FILE_PROV_PATH, lensOf } from "../case-grammar/index.mjs";
+         PASSAGE_FIELDS, calculationsOf, calculationFileText, provOf, CASE_FILE_PROV_PATH, lensOf, accountOf,
+         biasApplicationsOf } from "../case-grammar/index.mjs";
 import { evaluate, resultKey, METHOD as CALC_METHOD } from "../calc-grammar/index.mjs";
 import { CATALOG_VERSION } from "../gate.mjs";
 import { readStoredZip, asBytes } from "./zip.mjs";
@@ -818,7 +819,7 @@ export function reweigh(args) {
       }
       if (legs) facts.set(id, { legs: legs.map(factFields) });
     }
-    const published = Array.isArray(fm.bias_applications) ? fm.bias_applications.map(applicationOf).filter(Boolean) : [];
+    const published = (biasApplicationsOf(fm) || []).map(applicationOf).filter(Boolean);
     const under = pairsUnderLens({ lens, facts, published, recompute: (legs) => grading.recompute(null, legs) });
     out.lens.not_applied = under.not_applied;
     const roster = Array.isArray(fm.case_findings) ? fm.case_findings.map(String) : [];
@@ -888,8 +889,8 @@ function standardsUseOf({ files, docText, materials, signedPassages, fileOf }) {
  *  file lacks is not judged: it is named, and that is a `missing` entry for the case. Each departure is a `differs`
  *  entry for the case naming its code. Null for a document with no `account:` block. Pure; never throws. */
 function accountUseOf({ fm, files, facts, materials, signedPassages, fileOf, caseLevel }) {
-  if (!Array.isArray(fm.account)) return null;
-  const rows = fm.account;
+  const rows = accountOf(fm);
+  if (!Array.isArray(rows)) return null;
   const cited = [], lacking = new Set();
   const conclRows = Array.isArray(fm.case_conclusions) ? fm.case_conclusions.filter(isObj) : [];
   for (const c of conclRows) if (str(c.target))

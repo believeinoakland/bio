@@ -27,10 +27,11 @@ const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const filled = (v) => typeof v === "string" && v.trim() !== "";
 const ordOf = (v) => (Number.isInteger(v) ? v : typeof v === "string" && /^\d+$/.test(v) ? Number(v) : null);
 
-/** An application row as `case-grammar` R24 states it, `{finding, ord, target, statement, effect, from, to}`, or null. */
+/** An application as `case-grammar` R24 states it (`biasApplicationsOf`), `{finding, ord, target, statement, effect, from,
+ *  to}`: `target` `leg` (with the leg's `ord`) or `conclusion`; or null when it is not one. */
 export function applicationOf(r) {
-  if (!plain(r) || !filled(r.statement) || !filled(r.effect)) return null;
-  return { finding: filled(r.finding) ? r.finding : null, ord: ordOf(r.ord), target: filled(r.target) ? r.target : null,
+  if (!plain(r) || !filled(r.statement) || !LENS_EFFECTS.includes(r.effect) || !["leg", "conclusion"].includes(r.target)) return null;
+  return { finding: filled(r.finding) ? r.finding : null, ord: r.target === "leg" ? ordOf(r.ord) : null, target: r.target,
            statement: r.statement, effect: r.effect, from: filled(r.from) ? r.from : null, to: filled(r.to) ? r.to : null };
 }
 
@@ -48,8 +49,8 @@ export function lensOfArg(lens) {
     "the lens given is not as_published, removed, or a reader's own {statements, applications}, so the case is answered as published" };
 }
 
-/* An application names a leg when it names its finding, its target and (when stated) its place. */
-const names = (a, finding, leg, ord) => a.finding === finding && a.target === String(leg.target ?? "") && (a.ord === null || a.ord === ord);
+/* An application names a leg when it is recorded at a leg of that finding, at that leg's place. */
+const names = (a, finding, ord) => a.target === "leg" && a.finding === finding && a.ord === ord;
 
 /** R23: each finding's pair under the lens. `facts` maps a finding to its legs (`{legs}`), each leg as R5 reads it;
  *  `published` the case's applications; `recompute(legs)` R5's recomputation (`{ok, pair}`). Answers `{pairs: Map(finding →
@@ -74,12 +75,12 @@ export function pairsUnderLens({ lens, facts, published, recompute }) {
       let leg = { ...leg0 };
       const ord = ordOf(leg0.ord) ?? k;
       let out = false;
-      for (const a of published) if (names(a, id, leg0, ord) && !keep(a)) {
+      for (const a of published) if (names(a, id, ord) && !keep(a)) {
         used.add(a);
         if (a.effect === "grade_lowered" && a.from !== null) { leg.grade = a.from; changed.push({ ...a, how: "reversed" }); }
         else if (a.effect === "leg_excluded" || a.effect === "inference_refused") changed.push({ ...a, how: "reversed" });
       }
-      for (const a of own) if (names(a, id, leg0, ord)) {
+      for (const a of own) if (names(a, id, ord)) {
         used.add(a);
         if (a.effect === "grade_lowered" && a.to !== null) { leg.grade = a.to; changed.push({ ...a, how: "applied" }); }
         else if (a.effect === "leg_excluded" || a.effect === "inference_refused") { out = true; changed.push({ ...a, how: "applied" }); }
@@ -101,7 +102,8 @@ export function pairsUnderLens({ lens, facts, published, recompute }) {
   }
   for (const id of facts.keys()) pairOf(id);
   for (const a of [...published.filter((x) => !keep(x)), ...own]) if (!used.has(a))
-    not_applied.push({ ...a, why: a.effect === "scrutiny_raised" ? "it raises scrutiny of a claim and moves no grade"
+    not_applied.push({ ...a, why: a.target === "conclusion" || a.effect === "scrutiny_raised"
+      ? "it is recorded at a conclusion's claim and moves no grade"
       : "it names no leg this case file carries, so it moves no grade here" });
   return { pairs, changes, not_applied };
 }

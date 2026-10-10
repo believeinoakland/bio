@@ -157,9 +157,8 @@ const FINDING = (ref) => ({ kind: "finding", ref, ord: null });
 const conclusionLines = [
   ...rows("case_conclusions", [{ target: A, claim: "The lease was approved without a vote", claim_state: "adopted", claim_detail: null },
                                { target: C, claim: null, claim_state: "undetermined", claim_detail: "the record cannot establish who watched" }])];
-const accountLines = (list) => ["account:", ...list.flatMap((r) => [
-  `  - ord: ${r.ord}`, `    text: "${r.text}"`, `    cites: '${JSON.stringify(r.cites)}'`, `    kind: account`,
-  `    bias_statement: ${r.bias_statement ? r.bias_statement : "null"}`, "    began_as: member"])];
+/* written as case-grammar R23 writes the block, read back by its accountOf */
+const accountLines = (list) => CG.accountLines(list.map((r) => ({ kind: "account", began_as: "member", bias_statement: null, ...r })));
 const LENS = [{ bundle: "BND-2026-0001", id: "S1", kind: "scrutiny", subject: "the vendor", text: "We check a vendor's word more closely.",
                 justification: "It misled us before.", citations: [] }];
 const offline = (account, opts = {}) => CC.checkCaseFile({ parts: caseFile({ docLines: [...conclusionLines, ...accountLines(account)], lens: LENS, ...opts }).parts });
@@ -209,7 +208,7 @@ test("R24 R1 R9: offline, a sentence citing material whose text the case file do
   assert.ok(byId(r)[C].missing.some((e) => e.check === "account" && /whose text this case file does not carry, so it is not judged/.test(e.detail)));
   assert.equal(byId(r)[C].result, "recreated_in_part");
   assert.equal((await CC.checkCaseFile({ parts: caseFile().parts })).account, null);
-  const unreadable = await CC.checkCaseFile({ parts: caseFile({ docLines: ["account:", "  - ord: 0", "    text: \"\""] }).parts });
+  const unreadable = await CC.checkCaseFile({ parts: caseFile({ docLines: CG.accountLines([{ ord: 0, text: null, cites: [], kind: "account", began_as: "member" }]) }).parts });
   assert.equal(unreadable.account.ok, false);
   assert.deepEqual(unreadable.account.malformed, { reason: "MALFORMED", field: "account[0]" });
   assert.ok(unreadable.findings.every((f) => f.differs.some((e) => e.check === "account" && /account cannot be read/.test(e.detail))));
