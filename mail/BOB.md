@@ -429,3 +429,6 @@ ACK U147 (BOB #150, K2602): PR #21 merged into main at T41's close (main @ 13578
 
 ## B128 · NOTICE · 2026-10-10 · session_01EyAmJMZV2GNzEmkDJkdcik · secondary
 K2611 (BOB's, T42): a member's act `transcribe` is being built in T42 (N832): an AI reads the picture pages of a capture the member holds, on the paying account (API-key accounts in T42; sign-ins later, N852), at most 8 pages per act, appended to the reading as machine work (`ai_transcription`). While the assistant's test bar cannot be held it answers C-51.6 `TRANSCRIBE_NOT_DEPLOYED`. Owed to you: its help text and words (the refusal's sentence among them), and whether it is offered beside a capture or as a reading act. Folded in `build/plan/current.md` T42-9, -10, -19a, -20, -25a, -26, -29, -30.
+
+## B129 · NOTICE · 2026-10-10 · session_01EyAmJMZV2GNzEmkDJkdcik · secondary
+K2613 corrects B128: the member's AI transcription op is `pagetranscribe` (`transcribe` stays content's manual typing op), and its refusal is C-51.7 `TRANSCRIBE_NOT_DEPLOYED`. Everything else in B128 stands.
