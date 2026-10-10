@@ -424,12 +424,12 @@ export class Scheduler {
         due: (now) => ms(o("caseCarriage").copyWake(now)), wake: (now) => ms(o("caseCarriage").copyWake(now)),
         tick: async () => ({ doccopy: await o("caseCarriage").copyBatch({}) }) };
     }
-    /* R26: question-explorer R1. `exploreDue(now)` counts the questions a tick would consider: any is now. Its wake is
-       `exploreWake(now)` (now while any is due; else an Ask's re-check, its own instant; else null), asked afresh every
-       time, so nothing is kept here (R7, R18). */
+    /* R26 (K2568): question-explorer R1. `exploreDue(now)` counts the questions a tick would consider: any is now. Its
+       wake is `exploreWake(now)` (now while any is due; else an Ask's re-check, its own instant; else null), asked afresh
+       every time, so nothing is kept here (R7, R18). No arming notice: the wake is weighed at every firing, arm and start. */
     if (this.#owners.questionExplorer) c["question-explore"] = {
       due: (now) => counted(o("questionExplorer").exploreDue(now), now),
-      wake: (now) => (counted(o("questionExplorer").exploreDue(now), now) !== null ? now : msOf(o("questionExplorer").exploreWake(now))),
+      wake: (now) => msOf(o("questionExplorer").exploreWake(now)),
       tick: async (now) => ({ explore: await o("questionExplorer").exploreTick(now) }) };
     return c;
   }
