@@ -9,7 +9,6 @@ import { world as stepsWorld, ANN, BOB, CAT, DAN, OUT, P1, P2, PH, PD, Q, Q2 } f
 import { world as invWorld, P1 as IP1, Q1 as IQ1, ANN as IANN, BOB as IBOB, OUT as IOUT, DAN as IDAN } from "../investigation/fixture.mjs";
 import { world as qeWorld, Q as QQ, PROJ, CAP, CALLER } from "../question-explorer/fixture.mjs";
 import { standard as reviewStandard, P as RP, Q as RQ, V, SECRET } from "../review/fixture.mjs";
-import { reviewCommentsLines, CASE_DOCUMENT_FORMAT } from "../../../src/case-grammar/index.mjs";
 import { fresh, reader, ofKind, sentences, texts } from "./fixture.mjs";
 import { NOTICE_KINDS, HINT_MARK, INVESTIGATION_ITEMS_MAX } from "../../../src/notice-producers/index.mjs";
 import { NOTICE_WORDS } from "../../../src/notice-producers/words.mjs";
@@ -182,7 +181,12 @@ test("R17 review-comment-left-out: one FINDING per entry review.reviewCommentsLe
   const A = w.r.act({ act: "draft", author: "ann", project: RP, statement: "S", caseId: CASE });
   const c1 = w.r.comment({ draft: A.draftId, viewer: V("ivy"), text: "first" }).comment;
   const c2 = w.r.comment({ draft: A.draftId, viewer: V("ivy"), text: "second" }).comment;
-  const block = (rows) => ["---", `format: ${CASE_DOCUMENT_FORMAT}`, ...reviewCommentsLines({ comments: rows, left_out: null }), "---", ""].join("\n");
+  /* the signed document's front matter as case-grammar R25 writes its review_comments block (format 7), held as data */
+  const q = (v) => `'${JSON.stringify(v)}'`;
+  const block = (rows) => ["---", "format: bio-case-document/7",
+    ...(rows.length ? ["review_comments:", ...rows.flatMap((r) => [`  - reviewer: ${q(r.reviewer)}`, `    text: ${q(r.text)}`, `    at: ${q(r.at)}`])]
+      : ["review_comments: []"]),
+    "review_comments_left_out: null", "---", ""].join("\n");
   const carry = (x) => ({ reviewer: x.author, text: x.text, at: x.at });
   const items = over(w, { review: w.r });
   const at = "2026-09-28T01:00:00Z";
