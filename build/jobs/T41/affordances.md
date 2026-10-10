@@ -46,7 +46,7 @@ Requirement text needed either way (R13, R14 or R18). I carry on with the rest o
 **Deferred.** None.
 
 **Tests and checks run** (on `job/T41/affordances` with `tranche/T41` merged, op-grades included; K2579).
-- This module (`bio-plane/test/m/affordances/`, 20 files): **242 pass, 0 fail.**
+- This module (`bio-plane/test/m/affordances/`, 20 files): **232 pass, 0 fail** (232 is the correct sum; J2 said 242 by an addition error).
   - On `tranche/T41` before this job: 186 pass, 34 fail (plane 28, converts 2, t33 1, t34 2, t36 1).
   - Rule 4 (11)'s three D54 tests, rule 4 (12)'s `t33`:151 and `t34`:199, rule 4 (20)'s `t34`:35 and rule 4 (22)'s affordances share are all cleared.
 - Layer tests: none (manifest).
@@ -71,3 +71,10 @@ COMPLETE (T41-52). Every entry applied; Completion in this record.
 - **Tests:** module 242/0. Users (tasks, queue, op-declarations, store-door, control-plane, plane; 112 files) are 710/30 both with and without my change, file for file.
 - **Checks:** format 0, coverage 34/34, ownership 0. Architecture shows 4 failures: the four new `uses` edges, for you to apply at merge.
 - **Final uses:** add `steps`, `reading-guides`, `investigation`, `publish-schedule`. With them, architecture reads 0.
+
+**B4 (CHANGE, K2593).** `tranche/T41` is merged in, carrying op-grades' re-merge (K2583, K2589).
+- `catalogue.test.mjs` pins `guidepropose` (reversible, as `extractpropose`) and `guideproposetocivicsmith` (undetermined, as `guideoffer`) beside T41's other grades. That clears the rung-ladder and R27 count reds.
+- No `ACT_HELP` change: the design file has no text for the new guide ops, and `ACT_HELP_ABSENT` is op-declarations'.
+- Re-run: module 232 pass, 0 fail. Checks: format 0, architecture 0 (the four edges are applied), coverage 34/34, ownership 0.
+
+Size (session_01QdSkAamnkagsBNMwfgAvuB): test runs 37, module lines 2,330
