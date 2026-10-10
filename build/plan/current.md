@@ -68,6 +68,9 @@ No merge order (independent).
 ### L5
 - **T42-11 · retrieval** · (N830, K2480) a row-decoration registration on the search answer, for inquiry R60's `projects` · req: from `draft-T42-reqs.md`.
 
+- **T42-11a · lines** · (K2610; RECORD-GRAMMAR #13 J1) its seven `NO_BASIS` refusals (`index.mjs`:420–470) answer with record-grammar's shared row C-33.40 (`SHARED_ACT_CHECKS`, R29), its translation included, not a bare code (K231).
+- **T42-11b · money** · (K2610) the same for `index.mjs`:1162.
+
 ### L6
 - **T42-12 · inquiry** · (N837, K2526) `personFacts` named in Provides with its own id and test; (N834, K2496) its `onMachinePassage` seam; (N830) its registration with retrieval's decoration.
 - **T42-13 · hypotheses** · (N843, K2566) re-codes its own conditions; stops decorating action-plans' and intent's refusals.
