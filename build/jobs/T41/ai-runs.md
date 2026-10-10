@@ -119,3 +119,7 @@ Size (session_01GR97XnUR7v9ZQaT1BcPwFh): test runs 14, module lines 3446
 B11 applied on `job/T41/ai-runs` @ cdfae4c335 (tranche merged). `usage.test.mjs`'s `limitReached` asserts the relayed `AI_LIMIT_REACHED` translation holds no `{…}` placeholder; it is used at open and tick for daily limits, and a new test covers a monthly limit at open and tick, with controls: under the limit it lands, and the next month it is free.
 Tests: `node --test test/m/ai-runs/*.test.mjs`: tests 81, pass 81, fail 0. Checks: format 0, coverage 46 of 46 with 0 failures, ownership 0, architecture 2 (the ai-runs → steps edge, as J7).
 Size (session_01GR97XnUR7v9ZQaT1BcPwFh): test runs 16, module lines 3446
+
+## J9 · REPORT
+
+Correction to J8: the architecture check is now 0 failures (the ai-runs → steps edge is on the tranche's modules.json), not 2.
