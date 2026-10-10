@@ -70,9 +70,12 @@ export function flagsJudged(reads, listed) {
         : !a ? "no answer" : a.complete === false || a.truncated ? "the read was incomplete" : a.reason || "the read failed" });
       continue;
     }
+    /* R23: an edition named with no refs, or a flag that is no object, states less and never throws */
+    const refs = Array.isArray(r.refs) ? r.refs.filter((x) => x && typeof x === "object") : [];
     for (const f of flags) {
+      if (!f || typeof f !== "object") continue;
       const finding = f.finding ?? null;
-      const ref = (finding && r.refs.find((x) => x.finding === finding)?.ref) || r.refs[0].ref;
+      const ref = (finding && refs.find((x) => x.finding === finding)?.ref) || (refs[0] ? refs[0].ref ?? null : null);
       open.push({ flag: str(f.flag ?? f.id), finding, issue: f.issue ?? null, at: f.at ?? null,
                   import: r.import, edition: r.edition, ref });
     }

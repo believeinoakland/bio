@@ -47,9 +47,10 @@ export function materialHeld(m, io) {
 }
 
 /** R7 (K1134 Q6, BOB's decision 15): the `materials:` and `material_attestations:` rows (`case-grammar` R12) for the
- *  materials `chainsOf` reached, each with what `materialHeld` found, and `obscured: {copy, label}` for a photo or a
- *  member document R6 carries as its copy, else null (T37, N757; T39, N806): its fingerprints, origin and archived copy
- *  stay the original's. `facts(sha)` is R2's read of a capture (grade,
+ *  materials `chainsOf` reached, each with what `materialHeld` found, and `obscured` for a photo or a member document R6
+ *  carries as its copy, else null (T37, N757; T39, N806): `{copy, label, marked}` for a photo (T40; DEC-185 (1)),
+ *  `{copy, label}` for a member document; R6's `label_key` is the reader's surface's and is not written. Its
+ *  fingerprints, origin and archived copy stay the original's. `facts(sha)` is R2's read of a capture (grade,
  *  co-attestation, signed accounts), `origin(sha)` its earliest captured address, `registered(sha)` its register row,
  *  `member(m)` the attesting member's row or rows as R10 states them, `group` the producing group's slug. Rows, in the
  *  materials' order:
@@ -65,7 +66,9 @@ export function materialRows(materials, { project, group, at, facts, origin, reg
     const f = m.kind === "document" ? facts(m.sha) : null;
     rows.push({ ref: m.ref, kind: m.kind, sha: m.sha, text_sha: m.held.text_sha, origin: origin(m.sha),
                 archived_copy: f ? f.co_archive ?? null : null, included: m.included, rests_under: m.rests_under,
-                obscured: m.obscured ? { copy: m.obscured.copy, label: m.obscured.label } : null });
+                obscured: m.obscured ? { copy: m.obscured.copy, label: m.obscured.label,
+                                         ...(typeof m.obscured.marked === "boolean" ? { marked: m.obscured.marked } : {}) }
+                  : null });
     attestations.push(...member(m, f).map((x) => ({ ref: m.ref, by_kind: "member", recorded_in: null, ...x })));
     if (f && f.timestamp_at)
       attestations.push({ ref: m.ref, by_kind: "co_attestation", by: "timestamp", level: null, at: f.timestamp_at,

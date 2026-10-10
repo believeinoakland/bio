@@ -18,21 +18,24 @@
  * photo a load-bearing finding relies on whose format cannot be covered, and a photo whose marks could not be read (R6;
  * N757, K2206). T38 adds a photo a case relies on that no standing mark has checked (R6; DEC-183 (1), K2303). T39 adds
  * a member document whose publication copy cannot be made, is still being made, or whose state cannot be read (R6;
- * N806; K2315, K2333). A change to any row moves `CATALOG_VERSION` (rule 17). */
+ * N806; K2315, K2333). T41 adds an account sentence that rests on nothing, states a fact not in what it cites, contradicts
+ * the record, frames by a statement the case's lens does not print, or calls a fact bias; a machine flag left unanswered;
+ * and an account that could not be checked (R30; D56–D58, D63; K2471). A change to any row moves `CATALOG_VERSION`
+ * (rule 17). */
 
-/** R22 (T38; DEC-183; K2220): the protected words of `words.json` (`docs/development/ux-substrate/screens/words.json`)
- *  this module answers, by their keys, each `en` verbatim; `{photo}` is the photo named. The rows' translations and
- *  R29's `words` are read from here by key, so each is held once. */
+/** R22 (T38; DEC-183; K2220; T40: DEC-187 (1), K2348 (1)): the protected words of `words.json`
+ *  (`docs/development/ux-substrate/screens/words.json`) this module answers, by their keys, each `en` verbatim; `{photo}`
+ *  is the photo named. The rows' translations and R29's `words` are read from here by key, so each is held once. */
 export const PHOTO_WORDS = Object.freeze({
   'photo.refused.format': 'This photo\'s format can\'t be obscured: {photo}. Capture it again as an ordinary photo, or '
     + 'stop relying on it.',
-  'photo.refused.unchecked': 'Signing waits until every photo the case relies on is checked: {photo}.',
+  'photo.refused.unchecked': 'Signing waits until every photo in the case is checked, including one that only supports a '
+    + 'finding: {photo}.',
 });
 
-/** R22 (T39; N806; K2333): BOB's drafts of the words `DOCUMENT_NOT_CLEANABLE` and `DOCUMENT_COPY_PENDING` answer, under
- *  the keys the UX stream is to hold (`document.refused.clean`, `document.refused.pending`), protected, `{document}` the
- *  document named. Until `words.json` holds the keys, this table holds the drafts; then each is read by key, as
- *  `PHOTO_WORDS` is. */
+/** R22 (T39; N806; K2333; T41: DEC-188 (7)): the words `DOCUMENT_NOT_CLEANABLE` and `DOCUMENT_COPY_PENDING` answer,
+ *  `words.json`'s `document.refused.clean` and `document.refused.pending` (C-120.22, C-120.21), read by key, each `en`
+ *  verbatim, `{document}` the document named; the UX stream re-words them there. */
 export const DOCUMENT_WORDS = Object.freeze({
   'document.refused.clean': 'A document a member supplied can\'t be cleaned of the details that could show who made it: '
     + '{document}. Capture it from where it was published, supply a plainer copy, or stop relying on it.',
@@ -193,4 +196,57 @@ export const CASE_DISCLOSURE_CHECKS = Object.freeze({
     where: at('materialsJudged', 'is-document-cleanable'),
     translation: DOCUMENT_WORDS['document.refused.clean'],
   },
+  /* R30 (T41; N820; D56–D58, D63; K2405, K2418, K2471): the account and the four statements say only what the record
+     holds. The five arms are judged by `case-checker.checkAccount` (its R24), one body of check code online and offline;
+     their rows, and the unanswered machine flag's, are this module's. An account the check could not be run over fails
+     closed (R23). New in T41, numbered provisionally C-120.23–C-120.29 in R30's order until promotion's stamp (T42); the
+     translations are drafts, re-wordable by the UX stream. */
+  ACCOUNT_SENTENCE_UNSUPPORTED: {
+    check: 'C-120.23',
+    where: at('accountJudged', 'is-account-sentence-supported'),
+    translation: 'A sentence of the account rests on nothing it cites. Cite what it rests on, mark it as following a '
+      + 'printed bias statement, or take it out. Nothing was written.',
+  },
+  ACCOUNT_FACT_NOT_IN_CITED: {
+    check: 'C-120.24',
+    where: at('accountJudged', 'is-account-fact-cited'),
+    translation: 'A sentence of the account states a figure, date, name or quotation that what it cites does not hold. '
+      + 'Say only what it cites holds, or cite what holds it. Nothing was written.',
+  },
+  ACCOUNT_CONTRADICTED_BY_RECORD: {
+    check: 'C-120.25',
+    where: at('accountJudged', 'is-account-consistent-with-record'),
+    translation: 'A sentence of the account says something other than the record holds: a finding\'s conclusion or a '
+      + 'determination, or a leg that cuts against it read as support. It cannot be tied to evidence. Say what the record '
+      + 'holds, or take it out. Nothing was written.',
+  },
+  ACCOUNT_BIAS_NOT_PRINTED: {
+    check: 'C-120.26',
+    where: at('accountJudged', 'is-account-bias-printed'),
+    translation: 'A sentence of the account is framed by a bias statement this case\'s lens does not print. Frame it by a '
+      + 'statement the lens prints, or write it without the framing. Nothing was written.',
+  },
+  ACCOUNT_CLAIM_NOT_BIAS: {
+    check: 'C-120.27',
+    where: at('accountJudged', 'is-account-bias-not-a-claim'),
+    translation: 'A sentence marked as following a bias statement states a fact: a figure, date, name, quotation or a '
+      + 'finding\'s outcome. Lying is not bias. Cite what the fact rests on, or take it out. Nothing was written.',
+  },
+  ACCOUNT_FLAG_UNANSWERED: {
+    check: 'C-120.28',
+    where: at('accountJudged', 'is-account-flag-answered'),
+    translation: 'The machine flagged a sentence of the account as not supported by what it cites, and the flag is not '
+      + 'answered. Tie the sentence to evidence, or take it out. Nothing was written.',
+  },
+  ACCOUNT_CHECK_UNDETERMINED: {
+    check: 'C-120.29',
+    where: at('accountJudged', 'is-account-checked'),
+    translation: 'The account could not be checked against what it cites, so whether every sentence stands is not '
+      + 'known. Try again. Nothing was written.',
+  },
 });
+
+/** R30: the account's arms, in R30's order: the five `case-checker.checkAccount` judges (its R24), then the unanswered
+ *  machine flag this module judges itself. */
+export const ACCOUNT_ARMS = Object.freeze(['ACCOUNT_SENTENCE_UNSUPPORTED', 'ACCOUNT_FACT_NOT_IN_CITED',
+  'ACCOUNT_CONTRADICTED_BY_RECORD', 'ACCOUNT_BIAS_NOT_PRINTED', 'ACCOUNT_CLAIM_NOT_BIAS']);
