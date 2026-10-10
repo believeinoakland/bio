@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #151 · session_01TNKsMjSu49MiEhsdjBhpvT · depth 1
 
-**Jobs** · 
+**Jobs** · record-grammar: RECORD-GRAMMAR #13 session_01TfvYox4Sw4X6dSjqk6M1oK
 
 **At T42's opening (K2607):** opened 2026-10-10 from `main` @ 65490c5e33 (T41 closed, K2603), with `tranche/T41`'s later build state merged in (K1703); Bob: "keep going until I tell you to pause" (K2605). Development runs through every layer; the 80% pause (K2341) and the account-switch rule stand.
 
