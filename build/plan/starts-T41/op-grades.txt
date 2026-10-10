@@ -11,3 +11,6 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **From the investigation map (K2560).** investigation's ops in R43 (with the four reads K2560 adds): `milestoneremove`, `milestoneitemremove` and `projectclosewithgaps` require a reason in code (`investigation` idx:408, :424; the close's `reason` an enum, `note` free text): `reasoned` candidates for R30; the rest read from `investigation`'s requirements, which state no grades.
+
+
+**From ACTIONS #14 J2 (K2561).** `actions` R73 adds `actionseekspropose` (`actionSeeksPropose({target, seeks, proposer, viewer})`), a proposal as `actionlawspropose` is: any credential, `proposer` stamped from the caller (session or machine), mutating, `target` and `seeks` body fields. Declare and route it as `actionlawspropose` is.

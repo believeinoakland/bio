@@ -14,3 +14,6 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 **From REVIEW #11 J1 (K2529).** review R30 `approvalRuleSet` and R31 `caseApprove` have no op: declare (`approvalruleset`, `caseapprove`), route and help them; review R33's `reviewCommentsFor` takes an optional `draft`.
 
 **From ACTION-PLANS #8 J1 (K2554).** `op=planproposals` drops its `after` parameter (action-plans R34, T41-48b): the tray answers whole.
+
+
+**From ACTIONS #14 J2 (K2561).** `actions` R73 adds `actionseekspropose` (`actionSeeksPropose({target, seeks, proposer, viewer})`), a proposal as `actionlawspropose` is: any credential, `proposer` stamped from the caller (session or machine), mutating, `target` and `seeks` body fields. Declare and route it as `actionlawspropose` is.
