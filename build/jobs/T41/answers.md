@@ -99,3 +99,7 @@ Results:
 - Format, architecture and ownership: 0 failures. Coverage: 33/33.
 - Final `uses`: the current list without `ai-runs`.
 - Generated artifact: the plane bundle is stale (J3).
+
+## J5 · COMPLETE
+
+B5 (K2508) applied after merging tranche/T41 @ 1d70351623. askAccount takes kind: ask when absent, or draft (ASK_ACCOUNT_KINDS). The account and its limit are judged for that kind. Any other kind is refused NOT_YOUR_ACCOUNT with credentials' row, before any account is read. Tested with negative controls: a draft is refused while its use is off or its limit reached, while an ask is still served; seven other kinds are refused. answers: 58/58. Format, architecture, coverage (33/33) and ownership: 0. The record's Completion section is updated.
