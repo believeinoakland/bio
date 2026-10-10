@@ -21,7 +21,7 @@
  * `deps` (each defaults to its module's instance on the same `ctx`, reached lazily when first asked):
  *   record, membership, credentials, provenance, captureRequests, basisVersions, progressions, aiRuns, bias, publication,
  *   corpusExport, reevaluation, intent, monitoring, contradiction, actionClocks, escalation, actionPlans, actions,
- *   filingTemplates, localFacts, docket, caseImport, wizardScripts, caseTensions   the providers; and `machinery`
+ *   filingTemplates, localFacts, docket, caseImport, wizardScripts, caseTensions, publishSchedule   the providers; and `machinery`
  *   (machinery-producers, K1850), built lazily over these same deps, so a dep a caller injects reaches it too (the
  *   moved producers' own: governor, capture, captureRequests, monitoring, linkSweep, networkNotices, actions).
  *
@@ -46,6 +46,7 @@ import { biasOf } from "../bias/index.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { caseTensionsOf } from "../case-tensions/index.mjs";
+import { publishScheduleOf } from "../publish-schedule/index.mjs";
 import { corpusExportOf, EXPORT_LOG_LIMIT_DEFAULT } from "../corpus-export/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { intentOf } from "../intent/index.mjs";
@@ -119,6 +120,8 @@ export class QueueProducers {
   /* N612 (K1505 (1)): a case's tensions after publication are case-tensions' (its R4, was publication R50). Its provider is
      registered by publication at start (K1505 (3)), so publication is reached first, as case-authoring does. */
   get #caseTensions() { return this.#dep("caseTensions", () => { void this.#publication; return caseTensionsOf(this.#host); }); }
+  /* N823 (K2438): a case edition set to publish at a time is publish-schedule's (its R4, was publication R69). */
+  get #publishSchedule() { return this.#dep("publishSchedule", () => publishScheduleOf(this.#host)); }
   /* R38: the read instance-setup registers at start (its R62), or null while none is. */
   #placeArrivals = null;
 
@@ -619,8 +622,9 @@ export class QueueProducers {
    *  `NOT IN`, an indexed subtraction SQLite materialises once per statement,
    *  never the per-row correlated gate the old paragraph rightly refused. Who
    *  is filtered is the gate's word, inherited rather than restated: a
-   *  credential the gate does not filter (scope `member`) and an enrolled
-   *  administrator get `hid` = nothing and the read they always got, and a
+   *  credential the gate does not filter (scope `member`) gets `hid` = nothing
+   *  and the read it always got; an administrator, the founder included, gets
+   *  the hidden projects it neither was invited to nor joined (D54), and a
    *  viewer SENT but unrecognised is DENY, so every bundle is hidden and the
    *  candidate set is empty — fails closed.
    *
@@ -3007,17 +3011,18 @@ export class QueueProducers {
   }
 
   /* ======================================================================
-   * DEC-147 · R37 — A CASE EDITION SIGNED TO PUBLISH AT A SET TIME (publication R66–R69; N662, K1784, K1785).
+     * DEC-147 · R37 — A CASE EDITION SIGNED TO PUBLISH AT A SET TIME (publish-schedule R1–R4, was publication R66–R69;
+   *   N662, K1784, K1785; N823, K2438).
    * DEC-150 (3) · R38 — A HELD PROFILE FOR THE PLACE THE GROUP NAMED (instance-setup R62; N665).
    * DEC-158 (4) · R39 — A COPIED WIZARD WHOSE BASE HAS A NEWER APPROVED VERSION (wizard-scripts R26; N679, K1818).
    * Each reads the one fact its owning module offers, derived on read and writing nothing, so an item leaves on the
    * first read after the fact stops holding; what is told once is raised once and leaves by its recipient's disposition.
    * ====================================================================== */
 
-  /** R37: the acts that answer a waiting edition (publication R68): moving its time, or cancelling it. */
+  /** R37: the acts that answer a waiting edition (publish-schedule R3): moving its time, or cancelling it. */
   static PUBLISH_AT_MOVE = Object.freeze({ id: "publishatmove", label: "Move the time it publishes", weight: "single" });
   static PUBLISH_AT_CANCEL = Object.freeze({ id: "publishatcancel", label: "Cancel publishing it at that time", weight: "single" });
-  /** R37: each state's class and kind (publication R67, R69); a cancelled edition earns no item. */
+  /** R37: each state's class and kind (publish-schedule R2, R4); a cancelled edition earns no item. */
   static SCHEDULED_KINDS = Object.freeze({
     waiting: Object.freeze(["CONDITION", "edition-scheduled"]),
     published: Object.freeze(["FINDING", "edition-published-as-scheduled"]),
@@ -3034,7 +3039,8 @@ export class QueueProducers {
     return typeof x === "string" && x.trim() !== "" && !x.startsWith(MACHINE_AUTHOR_PREFIX) && !x.startsWith(MACHINE_CLASS_PREFIX);
   }
 
-  /** R37: "<date>, <time>" as set, in the group's zone as R69 carries it, never converted (R36); null when unreadable. */
+  /** R37: "<date>, <time>" as set, in the group's zone as publish-schedule R4 carries it, never converted (R36); null when
+   *  unreadable. */
   static #setTime(at) {
     const a = at && typeof at === "object" ? at : {};
     return isCalendarDate(a.date) && typeof a.time === "string" && /^\d{2}:\d{2}$/.test(a.time) ? `${a.date}, ${a.time}` : null;
@@ -3046,8 +3052,8 @@ export class QueueProducers {
     return Number.isFinite(ms) ? { state: "determined", since: v, ms: Math.max(0, now - ms) } : { state: "undetermined", reason, detail };
   }
 
-  /** `edition-scheduled`, `edition-published-as-scheduled` and `scheduled-edition-stopped` (R37; publication R66–R69;
-   *  DEC-147 (2), (3), (5)): for each case edition `publication.scheduledEditions` answers read as the plane (its R69),
+  /** `edition-scheduled`, `edition-published-as-scheduled` and `scheduled-edition-stopped` (R37; publish-schedule R1–R4;
+   *  DEC-147 (2), (3), (5)): for each case edition `publishSchedule.scheduledEditions` answers read as the plane (its R4),
    *  paged by its cursor, items to the member who set its time and to the case's project's owners (membership R65), and
    *  to nobody else: a caller with no member is none of them. Each item's subject is the case edition, homed under the
    *  case's project (none when it has none), and a project this viewer may not see yields no item (R11).
@@ -3059,11 +3065,13 @@ export class QueueProducers {
    *  - once `stopped`, one FINDING keyed `FINDING::scheduled-edition-stopped::<case>@<edition>`, naming each reason in its
    *    own translation and saying nothing was published and publishing needs a new signing.
    *  The two findings are raised once and leave by their recipient's disposition (DEC-69, DEC-70). A cancelled edition
-   *  earns no item. */
+   *  earns no item.
+   *  The provider is asked whenever there is a member, never first tested for the read (N823): a provider that lost it
+   *  fails loudly rather than leaving every scheduled item silently unraised. */
   #scheduledEditionItems(me, viewer, now) {
-    if (!me || typeof this.#publication.scheduledEditions !== "function") return [];
+    if (!me) return [];
     const page = this.#actionPages((after) => {
-      const r = this.#publication.scheduledEditions({ after });
+      const r = this.#publishSchedule.scheduledEditions({ after });
       return r && Array.isArray(r.editions) ? { ...r, items: r.editions, truncated: !!r.cursor } : r;
     });
     const visible = this.#bundleRedactor(viewer);
@@ -3124,13 +3132,13 @@ export class QueueProducers {
         subject: { kind: "case_edition", id: `${e.case}@${edition}`, case: e.case, edition, project },
         summary,
         detail,
-        basis: { source: "publication.scheduledEditions", case: e.case, edition, project, state: e.state,
+        basis: { source: "publish-schedule.scheduledEditions", case: e.case, edition, project, state: e.state,
                  at: { date: at.date ?? null, time: at.time ?? null, zone }, publish_at: e.publish_at ?? null,
                  signed_at: e.signed_at ?? null, signer: e.signer ?? null, set_by: e.set_by ?? null, moves,
                  outcome_at: e.outcome_at ?? null, ...(kind === "scheduled-edition-stopped" ? { reasons } : {}),
                  recipients_rule: "setter_and_project_owners",
                  bound: { pages_bound: QueueProducers.QUEUE_ACTION_PAGES, truncated: page.truncated },
-                 detail: "a scheduled edition is publication's (its R66–R69): its time as set, in the group's zone, and "
+                 detail: "a scheduled edition is publish-schedule's (its R1–R4): its time as set, in the group's zone, and "
                        + "its outcome, read here as the plane and never stored. It goes to the member who set the time and "
                        + "to the case's project's owners, and to nobody else (DEC-147)." },
         age,
