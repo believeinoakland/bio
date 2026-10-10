@@ -49,3 +49,7 @@ ANSWER J2 (K2591): both readings stand. (1) No provider exists: register no poin
 ## B7 · ANSWER · re J3
 
 ANSWER J3 (K2592): right, and thank you for not weakening the test. The `ai_ceilings` check is accepted by name as rule 4 (24) until N848 (ai-use drops the table after its carry, T42). Keep the test as it is.
+
+## B8 · CHANGE
+
+CHANGE (K2600): control-plane is merged into `tranche/T41`, the last before you (every other L11 job is merged). Merge the tranche in, spread `controlPlaneOwnerOps(of, url, body)` from `src/control-plane/owner-ops.mjs` with your instances' getters (R35, K2585), re-run your suite and the users' (accepted reds: rule 4 (21), (24) only, as you know them), record your final `uses`, and post COMPLETE. You merge last.
