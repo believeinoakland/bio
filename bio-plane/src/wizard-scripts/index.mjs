@@ -39,13 +39,15 @@ import { WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLASSES, WIZARD_SCRIPTS_MIN
 import { CIVICSMITH_LIBRARY } from "./civicsmith-library.mjs";
 import { SCREEN_REGISTRY } from "./screen-registry.mjs";
 import { FRONT_DOORS } from "./front-doors.mjs";
+import { START_ROUTES, matchesOf, proposeStart } from "./start.mjs";
 import { helpRefusedActs, writingHelpAt, FIRSTHAND_ACTS, TOLD_MAX, WRITING_HELP_NAMED, KEPT_AWAY } from "./writing-help.mjs";
 
 export { WIZARD_SCRIPTS_CHECKS } from "./checks.mjs";
 export { WIZARD_SCRIPTS_SCHEMA, WIZARD_SCRIPTS_TABLES, WIZARD_SCRIPTS_TABLE_CLASSES } from "./schema.mjs";
-export { CIVICSMITH_LIBRARY, CIVICSMITH_LIBRARY_SOURCE, CIVICSMITH_LIBRARY_ADOPTED_SOURCE } from "./civicsmith-library.mjs";
+export { CIVICSMITH_LIBRARY, CIVICSMITH_LIBRARY_SOURCE, CIVICSMITH_LIBRARY_ADOPTED_SOURCES } from "./civicsmith-library.mjs";
 export { SCREEN_REGISTRY, SCREEN_REGISTRY_SOURCE } from "./screen-registry.mjs";
 export { FRONT_DOORS } from "./front-doors.mjs";
+export { START_ROUTES, MATCH_KINDS, MATCHES_MAX, PARTS_MAX, matchesOf, proposeStart, checkStartProposal } from "./start.mjs";
 export { checkDraft, writingHelpAt, helpRefusedActs, isReasonField, factsOf, sentencesOf, FIRSTHAND_ACTS, HELP_NAMED_REFUSED, HELP_SET_TIME_REFUSED,
          WRITING_HELP_NAMED, TOLD_MAX, KEPT_AWAY } from "./writing-help.mjs";
 
@@ -351,6 +353,7 @@ export class WizardScripts {
     this.now = typeof now === "function" ? now : null;
     this.env = env && typeof env === "object" ? env : {};
     this.reg = null;
+    this.door = null;   /* R23: the front door's finder and pointer, handed in at registration */
   }
 
   migrate() { migrateWizardScripts(this.sql); }
@@ -720,11 +723,16 @@ export class WizardScripts {
    *  script is checked again: one that fails is recorded `broken` with its first refusal, one that passes again is
    *  recorded as returned. */
   wizardRegister({ screens = SCREEN_REGISTRY, ops = null, machineRefused = [], machineDrafts = [], irreversible = [],
-                   library = CIVICSMITH_LIBRARY } = {}) {
+                   library = CIVICSMITH_LIBRARY, door = null } = {}) {
     /* DEC-49 REGION is-wizard-register */
     if (this.reg) return refuse("WIZARD_ALREADY_REGISTERED", "the registration is made once per construction, and it was");
     /* END DEC-49 REGION is-wizard-register */
     this.reg = normaliseRegistration({ screens, ops, machineRefused, machineDrafts, irreversible, library });
+    /* R23: `door.findExisting(message, viewer)` (the existing work matching a message: `steps`' `stepsLike` and the
+       record's search, as the plane composes them) and `door.pointer(viewer)` (the "not Civicsmith's" pointer, profile
+       data), each optional, K31's pattern */
+    const fn = (f) => (typeof f === "function" ? f : null);
+    this.door = isObj(door) ? { findExisting: fn(door.findExisting), pointer: fn(door.pointer) } : { findExisting: null, pointer: null };
     const broken = [], returned = [];
     const at = this.#when();
     for (const r of this.#rows(`SELECT script_id FROM wiz_scripts ORDER BY created_at, script_id`)) {
@@ -1286,18 +1294,29 @@ export class WizardScripts {
 
   /* ================================================================ R23: startFrom */
 
-  /** R23 (`op=startfrom`; DEC-129 (7), (2)): the first steps a member may take from the group's home: the offered
-   *  scripts this viewer may start (R11) of the Civicsmith library that are not required, and of the group's own, each
-   *  `{id, version, name, start}`, and `doors`, the design stream's front doors naming offered scripts only (a door
-   *  with none left out; `[]` until given). Needs no AI credential and no key; starts nothing, records no use, writes
-   *  nothing. */
-  startFrom({ viewer = null } = {}) {
+  /** R23 (`op=startfrom`; DEC-129 (7), (2); D52, D53): the first steps a member may take from the group's home, one
+   *  front door for both paths: `scripts`, the offered scripts this viewer may start (R11) of the Civicsmith library
+   *  that are not required, and of the group's own, each `{id, version, name, start}` (the guided starts); `doors`, the
+   *  design stream's front doors naming offered scripts only (a door with none left out; `[]` until given); `routes`,
+   *  the six places a first message leads to by the member's choice (`START_ROUTES`, "not Civicsmith's" carrying the
+   *  registered pointer for this viewer, or null); `blank: true` (a blank start is always allowed); `matches`, the
+   *  existing work the registered finder answers for `message` as this viewer may see it (`[]` with no message or no
+   *  finder); and, when the assistant's reading `parts` of the message is given, `proposal`, R28's. Needs no AI
+   *  credential and no key; starts nothing, records no use, writes nothing. */
+  startFrom({ viewer = null, message = null, parts = undefined } = {}) {
     const scripts = this.#offeredScripts(viewer).filter((x) => !(x.s.origin === "civicsmith" && x.s.required))
       .map((x) => ({ id: x.s.id, version: versionId(x.s.id, x.n), name: x.s.name, start: startOf(x.steps) }));
     const ids = new Set(scripts.map((x) => x.id));
     const doors = FRONT_DOORS.map((d) => ({ door: d.door, scripts: (Array.isArray(d.scripts) ? d.scripts : []).filter((id) => ids.has(id)) }))
       .filter((d) => d.scripts.length);
-    return { ok: true, scripts, doors };
+    const door = this.door || {};
+    const pointer = door.pointer ? this.#call(() => door.pointer(viewer)) ?? null : null;
+    const routes = START_ROUTES.map((r) => (r.route === "elsewhere" ? { ...r, pointer: isObj(pointer) || typeof pointer === "string" ? pointer : null } : r));
+    const asked = typeof message === "string" && message.trim() ? message.trim().slice(0, 4000) : null;
+    const matches = asked && door.findExisting && viewerPredicate(viewer).scope !== "DENY"
+      ? matchesOf(this.#call(() => door.findExisting(asked, viewer), [])) : [];
+    return { ok: true, scripts, doors, routes, blank: true, matches,
+             ...(parts !== undefined && parts !== null ? { proposal: proposeStart({ parts }) } : {}) };
   }
 
   /* ================================================================ R26: baseUpdates */
@@ -1393,24 +1412,35 @@ export class WizardScripts {
     return { named: WRITING_HELP_NAMED, machine_refused: reg ? [...reg.machineRefused] : [], irreversible: reg ? [...reg.irreversible] : [] };
   }
 
-  /** R27 (`op=writinghelp`): a member's request for a labelled draft in one own-words field: R24's refusals, then
-   *  `WRITING_HELP_NOTHING_TOLD`; past them, while the assistant's model turn does not exist (N686, T35; K1837),
-   *  `ASSISTANT_DRAFT_UNAVAILABLE`, the field unchanged. The door routes the op itself and calls this with the POST body's
-   *  `{op, field, told, draftHeld}`, its own `assistant` (`{on, account: {kind, level}}`, never the key) and the stamps
-   *  (B4, K1863 (7)); its refusals (keep-away, the account's, the ceilings) come first (`control-plane` R57). A
-   *  keep-away is answered as `credentials` answers it (its R35's row and `keep_away`, K231), never re-minted here.
-   *  Writes nothing. */
+  /** R27 (`op=writinghelp`): a member's request for a labelled draft in one own-words field. The door routes the op
+   *  itself and calls this with the POST body's `{op, field, told, draftHeld}`, its own `assistant` and the stamps (B4,
+   *  K1863 (7)). `assistant` is the door's resolution whole (`store-door` R10; `answers.askAccount`): `{on, account:
+   *  {kind, level}, refusal?}`, never the key, `refusal` the account's or its limit's answer when the door has one
+   *  (`AI_NO_ACCOUNT`, `AI_USE_SWITCHED_OFF`, `ai-use` R3's `AI_LIMIT_REACHED`, or a fail-closed one). Refusals, in R27's
+   *  order: R24's codes (a keep-away as `credentials` answers it, its R35's row and `keep_away`, K231; a door's
+   *  `AI_NO_ACCOUNT` as given, at R24 item 1's place); `WRITING_HELP_NOTHING_TOLD`; the door's other refusal as given,
+   *  before any model turn, never re-minted here; past them, while the assistant's model turn does not exist (N686;
+   *  K1837), `ASSISTANT_DRAFT_UNAVAILABLE`, the field unchanged. Writes nothing. */
   writingHelp(args = {}) {
     const { op = null, field = null, told = null, draftHeld = false, assistant = null } = isObj(args) ? args : {};
     const away = this.#keptAway();
-    const at = this.#helpAt({ op, field, draftHeld, assistant }, away);
+    const door = isObj(assistant) && isObj(assistant.refusal) && assistant.refusal.ok === false ? assistant.refusal : null;
+    const doorCode = door ? door.code ?? door.reason ?? null : null;
+    const noAccount = doorCode === "AI_NO_ACCOUNT" || doorCode === "NO_ACCOUNT";
+    /* R24 item 1 reads `account`; a door refusal of the limit or a switch is not "no account": it is answered later */
+    const seen = door && !noAccount ? { ...assistant, account: assistant.account || { refused: doorCode } } : assistant;
+    const at = this.#helpAt({ op, field, draftHeld, assistant: seen }, away);
     const asked = { op: typeof op === "string" ? op.slice(0, 80) : null };
     if (!at.offered && at.code === KEPT_AWAY && isObj(away) && away.ok === false) return { ...away, ...asked };
+    if (!at.offered && at.code === "AI_NO_ACCOUNT" && door && noAccount) return { ...door, ...asked };
     if (!at.offered) return refuse(at.code, "the assistant does not help word this field", asked);
     const text = typeof told === "string" ? told : Array.isArray(told) ? told.filter((x) => typeof x === "string").join("\n") : "";
     /* DEC-49 REGION is-writing-help-request */
     if (!text.trim() || text.length > TOLD_MAX)
       return refuse("WRITING_HELP_NOTHING_TOLD", `tell the assistant what to say, in 1 to ${TOLD_MAX} characters`, { max: TOLD_MAX });
+    /* END DEC-49 REGION is-writing-help-request */
+    if (door) return { ...door, ...asked };
+    /* DEC-49 REGION is-writing-help-request */
     return refuse("ASSISTANT_DRAFT_UNAVAILABLE", "the assistant's draft is not served yet: nothing was drafted and the field is unchanged",
                   { firsthand: FIRSTHAND_ACTS.includes(String(op).trim()) });
     /* END DEC-49 REGION is-writing-help-request */
@@ -1596,7 +1626,7 @@ export function wizardScriptsOps(m, url, body) {
     wizarddraft: () => m.wizardDraft({ project: pick("project"), name: pick("name"), recorded: b.recorded, from: pick("from"),
       copy: pick("copy"), author: q("author"), ...stamps }),
     wizardrevise: () => m.wizardRevise({ version: pick("version"), steps: b.steps, adopt: pick("adopt"), author: q("author"), ...stamps }),
-    startfrom: () => m.startFrom({ ...stamps }),
+    startfrom: () => m.startFrom({ message: pick("message"), parts: b.parts, ...stamps }),
     baseupdates: () => m.baseUpdates({ after: q("after"), limit: q("limit"), ...stamps }),
     wizardpropose: () => m.wizardPropose({ project: pick("project"), script: pick("script"), steps: b.steps, why: b.why ?? null,
       run: pick("run"), model: pick("model"), proposer: q("author"), ...stamps }),

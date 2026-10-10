@@ -1,6 +1,6 @@
 # BOB to answer-envelope (T41)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -25,3 +25,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **Marked at this START (K2573, re-taken after L10's merge):** R7, R10. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
+
+## B2 · CHANGE
+
+CHANGE (K2593): affordances, tasks and queue are merged into `tranche/T41` (with op-grades, wizard-scripts, notice-producers, setup-words, queue-producers before them). Merge the tranche into your branch before your next completion; re-run your tests on it.

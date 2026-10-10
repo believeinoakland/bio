@@ -1,9 +1,9 @@
-/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R15).
+/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R17).
  * A new seam after `queue-producers` with no copy (plan T33-82; Choices 8 and 23): each producer derives, on read and
  * writing nothing, the items one provider's facts earn for a viewer, naming each item's subjects and homes for `queue`
  * to home, offer, mint and publish, exactly as `queue-producers` does for the rest.
  *
- *   noticeItems    queue's one read of this module (R1): every item R2–R6, R12–R15 derive for a member and viewer, each homed
+ *   noticeItems    queue's one read of this module (R1): every item R2–R6, R12–R17 derive for a member and viewer, each homed
  *                  through queue's walk and carrying queue's options (both passed in), with `facts` stating each
  *                  producer's bound and `truncated`, and `failed`, the providers that threw.
  *
@@ -16,11 +16,23 @@
  *   R13 policy-changed-noticed   FINDING, following.policyChanges        a policy's silent change, DEC-145 (5)'s words
  *   R14 scan-found               FINDING, file-safety.scanFindings       a file held after a scan, to who may see it
  *   R15 security-tool-off        FINDING, file-safety.securityToolEvents a tool switched off, to administrators
+ *   R16 explore-ask              FINDING ("Ask"), ai-use.exploreAsksPending     an account's daily Ask, to its owners
+ *       ai-limit-reached         FINDING, ai-use.limitsReached                  a limit reached this period, to its owners
+ *       project-account-suspended FINDING, credentials.projectAccountsSuspended a project's sign-in stopped serving
+ *   R17 the investigation's items, each told once, keyed by its source's own key (N820; K2418, K2484):
+ *       question-find            FINDING, question-explorer.findsFor   "Hint · machine work"; `ai.label.explored` to the owners
+ *       step-later-found         FINDING, steps.laterFound
+ *       step-date-due, step-reminder  OBLIGATION, steps.stepsDue     to the setter, to the member who asked
+ *       step-cost-shared         FINDING, steps.costShares             to the sharing projects' owners
+ *       step-cost-message        FINDING, steps.costMessages           to the owners it was relayed to
+ *       milestone-overdue        FINDING, investigation.milestonesOverdue (and milestone-reminder, OBLIGATION)
+ *       project-quiet            FINDING, investigation.quietPrompts
+ *       review-comment-left-out  FINDING, review.reviewCommentsLeftOut
  *
  * REACHED as `noticeProducersOf(host, deps)` (K1563 (1)): one instance per Durable Object storage. It registers nothing
  * and holds no check row: it refuses nothing. `deps` (each defaults to its module's instance on the same host, reached
  * lazily when first asked): membership, people, moneyChecks, duties, answers, inquiry, credentials, following, standards,
- * fileSafety, provenance;
+ * fileSafety, provenance, aiUse (R16), steps, questionExplorer, investigation, review (R17);
  * and `view`, the jurisdiction view whose time zone R13's, R14's and R15's dates are read in (the profile's, when not given).
  *
  * R7 (queue's homes walk) and R12 (queue's options) stay in queue: `noticeItems` takes them as `homesOf(subjectIds)`
@@ -43,6 +55,13 @@ import { followingOf } from "../following/index.mjs";
 import { standardsOf } from "../standards/index.mjs";
 import { fileSafetyOf, findingKind } from "../file-safety/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
+import { aiUseOf } from "../ai-use/index.mjs";
+import { LIMIT_PERIOD_FILL, LIMIT_WHEN_FILL, MONTH_NAMES } from "../ai-use/checks.mjs";
+import { stepsOf } from "../steps/index.mjs";
+import { questionExplorerOf } from "../question-explorer/index.mjs";
+import { investigationOf } from "../investigation/index.mjs";
+import { reviewOf } from "../review/index.mjs";
+import { NOTICE_WORDS, wordsOf } from "./words.mjs";
 
 /* The walk queue passes in answers this shape; with none passed, an item is ungrouped rather than given a home. */
 const UNGROUPED = Object.freeze({ state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] });
@@ -98,13 +117,45 @@ export const NOTICE_KINDS = Object.freeze({
   "policy-changed-noticed": "FINDING",
   "scan-found": "FINDING",
   "security-tool-off": "FINDING",
+  /* R16 (queue R1, T40; K2376 (2), K2394) */
+  "explore-ask": "FINDING",
+  "ai-limit-reached": "FINDING",
+  "project-account-suspended": "FINDING",
+  /* R17 (queue R1, T41; K2418, K2484) */
+  "question-find": "FINDING",
+  "step-later-found": "FINDING",
+  "step-date-due": "OBLIGATION",
+  "step-reminder": "OBLIGATION",
+  "milestone-overdue": "FINDING",
+  "milestone-reminder": "OBLIGATION",
+  "project-quiet": "FINDING",
+  "step-cost-shared": "FINDING",
+  "step-cost-message": "FINDING",
+  "review-comment-left-out": "FINDING",
 });
+/** R16, R17: the items one read answers from each of their sources (as R13's and R14's bounds); `facts` states the
+ *  bound and `truncated` when a source answers more. */
+export const ACCOUNT_ITEMS_MAX = 200;
+export const INVESTIGATION_ITEMS_MAX = 200;
+/** R16 (J1): the fills of `ai.queue.limitreached` for a limit that is not one use's (`words.json` gives them no key). */
+export const LIMIT_FOR_EACH_MEMBER = " for each member";
+export const LIMIT_USES_OVERALL = "Uses counted in its overall limit";
+export const LIMIT_USES_PER_MEMBER = "Each member's uses";
+/** R16: the "Ask" item's label (an Ask, DEC-69's form), beside R16's two "Noticed" items' `noticed`. */
+export const ASK_LABEL = "ask";
+/** R16: the Ask's one act beside disposal: approve exploring on that account today (`ai-use` R9, `op=exploreapprove`). */
+export const EXPLORE_APPROVE = Object.freeze({ id: "exploreapprove", label: NOTICE_WORDS["act.owed_exploreapprove.label.queue"], weight: "single" });
 
 const HOUR_MS = 3600e3, DAY_MS = 24 * HOUR_MS;
 /* A provider's failure, named in `facts.failed` as the provider it came from (R1). */
 const failure = (provider) => Object.assign(new Error(`${provider} did not answer`), { provider });
 
 const filled = (v) => typeof v === "string" && v.trim() !== "";
+/* R16, R17: an item's key: `<CLASS>::<kind>::` and its source's own key, as given (a key already of that form is used whole). */
+const keyed = (cls, kind, key) => (String(key).startsWith(`${cls}::${kind}::`) ? String(key) : `${cls}::${kind}::${key}`);
+/* R16, R17: a source's list cut to its bound, and whether it was. */
+const cut = (list, bound) => ({ list: list.slice(0, bound), truncated: list.length > bound });
+const capital = (t) => (typeof t === "string" && t ? t[0].toUpperCase() + t.slice(1) : t);
 const bare = (m) => { const t = typeof m === "string" ? m.trim() : ""; const x = /^member:(.+)$/.exec(t); return x ? x[1] : t || null; };
 const isMachine = (m) => typeof m === "string" && (m.startsWith(MACHINE_AUTHOR_PREFIX) || m.startsWith(MACHINE_CLASS_PREFIX));
 const instantOf = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
@@ -151,6 +202,11 @@ export class NoticeProducers {
   get #standards() { return this.#dep("standards", () => standardsOf(this.#host)); }
   get #fileSafety() { return this.#dep("fileSafety", () => fileSafetyOf(this.#host)); }
   get #provenance() { return this.#dep("provenance", () => provenanceOf(this.#host)); }
+  get #aiUse() { return this.#dep("aiUse", () => aiUseOf(this.#host)); }
+  get #steps() { return this.#dep("steps", () => stepsOf(this.#host)); }
+  get #questionExplorer() { return this.#dep("questionExplorer", () => questionExplorerOf(this.#host)); }
+  get #investigation() { return this.#dep("investigation", () => investigationOf(this.#host)); }
+  get #review() { return this.#dep("review", () => reviewOf(this.#host)); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #homesOf(ids) { return this.#homesFn ? this.#homesFn(ids || []) : { ...UNGROUPED }; }
@@ -178,6 +234,17 @@ export class NoticeProducers {
       policy_change: { bound: POLICY_CHANGES_MAX, days: POLICY_CHANGE_DAYS, truncated: false },
       scan_found: { bound: SCAN_FINDINGS_MAX, days: SCAN_FINDINGS_DAYS, truncated: false },
       security_tool_off: { bound: TOOL_EVENTS_MAX, truncated: false },
+      explore_ask: { bound: ACCOUNT_ITEMS_MAX, truncated: false },
+      ai_limit: { bound: ACCOUNT_ITEMS_MAX, truncated: false },
+      signin_suspended: { bound: ACCOUNT_ITEMS_MAX, truncated: false },
+      question_find: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
+      step_later_found: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
+      step_due: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
+      step_cost_shared: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
+      step_cost_message: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
+      milestone: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
+      project_quiet: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
+      review_left_out: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
       failed,
     };
     const run = (provider, fn) => {
@@ -198,6 +265,17 @@ export class NoticeProducers {
       run("following", () => ({ fact: "policy_change", ...this.#policyChanges(me, viewer, at) }));
       run("file-safety", () => ({ fact: "scan_found", ...this.#scanFound(me, viewer, at) }));
       run("file-safety", () => ({ fact: "security_tool_off", ...this.#toolsOff(me, viewer, at) }));
+      run("ai-use", () => ({ fact: "explore_ask", ...this.#exploreAsks(me, viewer, at) }));
+      run("ai-use", () => ({ fact: "ai_limit", ...this.#limitsReached(me, viewer, at) }));
+      run("credentials", () => ({ fact: "signin_suspended", ...this.#accountsSuspended(me, viewer, at) }));
+      run("question-explorer", () => ({ fact: "question_find", ...this.#questionFinds(me, viewer, at) }));
+      run("steps", () => ({ fact: "step_later_found", ...this.#laterFound(me, viewer, at) }));
+      run("steps", () => ({ fact: "step_due", ...this.#stepsDue(me, viewer, at) }));
+      run("steps", () => ({ fact: "step_cost_shared", ...this.#costShares(me, viewer, at) }));
+      run("steps", () => ({ fact: "step_cost_message", ...this.#costMessages(me, viewer, at) }));
+      run("investigation", () => ({ fact: "milestone", ...this.#milestones(me, viewer, at) }));
+      run("investigation", () => ({ fact: "project_quiet", ...this.#quietPrompts(me, viewer, at) }));
+      run("review", () => ({ fact: "review_left_out", ...this.#reviewLeftOut(me, viewer, at) }));
       return { items, facts };
     } catch {
       return { items: [], facts: { ...facts, failed: [...new Set([...failed, "notice-producers"])] } };
@@ -409,14 +487,16 @@ export class NoticeProducers {
     return { items, facts: { truncated } };
   }
 
-  /** R4: what held the AI half back (answers R19), in plain words: the switch, the account or the ceiling's refusal.
-   *  The group's Civicsmith is "your group's Civicsmith" to the member (DEC-149, T34-87). */
+  /** R4: what held the AI half back (answers R19), in plain words: the switch, the account, or the paying account's
+   *  limit (`ai-use`'s `AI_LIMIT_REACHED`, its words as answers carries them; the retired ceiling's codes are gone,
+   *  run-rules R20). The group's Civicsmith is "your group's Civicsmith" to the member (DEC-149, T34-87). */
   static heldBackWords(h) {
     if (!h || typeof h !== "object") return "it was held back";
     if (h.condition === "switch_off") return h.switch === "member" ? "your own switch for standing questions is off"
       : "the assistant's half of standing questions is switched off in your group's Civicsmith";
     if (h.condition === "no_account") return "you have no account of your own set for the assistant";
-    if (h.condition === "ceiling") return filled(h.translation) ? h.translation.replace(/\.$/, "") : "your own use limit is reached";
+    if (h.condition === "limit") return filled(h.translation) ? h.translation.replace(/\.$/, "")
+      : "the limits of the account that would pay could not be checked";
     if (h.condition === "not_deployed") return "the assistant is not available in your group's Civicsmith";
     return filled(h.translation) ? h.translation.replace(/\.$/, "") : "it was held back";
   }
@@ -818,6 +898,332 @@ export class NoticeProducers {
       });
     }
     return { items, facts: { truncated } };
+  }
+
+  /* ================================================================== R16 · the AI accounts' items
+   * (ai-use R5, R9; credentials R59; B7, K2353, K2376, K2488; DEC-188 (6), (7)). Each read is the viewer's own: ai-use
+   * and credentials answer only the accounts and projects the viewer owns, so each item goes to this member alone. Each
+   * is keyed by its source's own stable key, read as given and never composed here (K2488), so `queue` mints it once per
+   * account, limit and period. Its words are `words.json`'s, by key (`words.mjs`), the placeholders filled here (J1): it
+   * names whose account, which use and the period's end, and never a member. A read answering `unreadable` is its
+   * provider's failure (R1), never read as no item. */
+  #exploreAsks(me, viewer, now) {
+    const r = this.#aiUse.exploreAsksPending({ viewer, at: instantOf(now) });
+    if (!r || r.ok !== true || r.unreadable === true || !Array.isArray(r.asks)) throw failure("ai-use");
+    const { list, truncated } = cut(r.asks.filter((a) => a && filled(a.key) && filled(a.owner)), ACCOUNT_ITEMS_MAX);
+    const items = list.map((a) => {
+      const o = this.#owner(a.owner, viewer);
+      const what = Array.isArray(a.what) ? a.what.filter(filled).join("; ") : filled(a.what) ? a.what : "";
+      const fills = { scope: o.scope, what, account: o.account };
+      const text = wordsOf("ai.queue.exploreask", fills);
+      return {
+        id: keyed("FINDING", "explore-ask", a.key), class: "FINDING", kind: "explore-ask",
+        label: ASK_LABEL, by: "the assistant's",
+        case: o.project ? this.#homesAt([o.project], viewer) : this.#homesOf([]),
+        subject: { kind: "ai_account", id: o.ref, day: a.day ?? null, questions: Array.isArray(a.what) ? [...a.what] : [] },
+        summary: text, detail: text, word: "ai.queue.exploreask", fills,
+        basis: { source: "ai-use.exploreAsksPending", key: a.key, owner: o.ref, day: a.day ?? null, asked_at: a.asked_at ?? null,
+                 estimate: a.estimate ?? null,
+                 detail: "an account's Ask is ai-use's (its R9): at most one a local day, answered to that account's owners; "
+                       + "silence means no." },
+        age: ageFrom(a.asked_at, now, "no_ask_instant"),
+        assignee: null, assignee_role: null,
+        recipients: [me],
+        options: [EXPLORE_APPROVE, ...this.#optionsOf(o.project ? [o.project] : [])],
+      };
+    });
+    return { items, facts: { truncated } };
+  }
+
+  #limitsReached(me, viewer, now) {
+    const r = this.#aiUse.limitsReached({ viewer, at: instantOf(now) });
+    if (!r || r.ok !== true || r.unreadable === true || !Array.isArray(r.reached)) throw failure("ai-use");
+    const ok = r.reached.filter((e) => e && filled(e.key) && filled(e.owner) && filled(e.scope)
+      && Object.prototype.hasOwnProperty.call(LIMIT_PERIOD_FILL, e.period));
+    const { list, truncated } = cut(ok, ACCOUNT_ITEMS_MAX);
+    const zone = this.#zone();
+    const items = list.map((e) => {
+      const o = this.#owner(e.owner, viewer);
+      const use = NOTICE_WORDS[`ai.use.${e.scope}.name`] ?? null;
+      const fills = {
+        account: capital(o.account), period: LIMIT_PERIOD_FILL[e.period],
+        for_use: e.scope === "overall" ? "" : e.scope === "per_member" ? LIMIT_FOR_EACH_MEMBER : use ? ` for ${use.toLowerCase()}` : "",
+        date: NoticeProducers.#localDate(e.reached_at, zone),
+        Uses: e.scope === "overall" ? LIMIT_USES_OVERALL : e.scope === "per_member" ? LIMIT_USES_PER_MEMBER : use ?? LIMIT_USES_OVERALL,
+        when: NoticeProducers.#periodEnd(e.period, e.period_start),
+      };
+      const text = wordsOf("ai.queue.limitreached", fills);
+      return {
+        id: keyed("FINDING", "ai-limit-reached", e.key), class: "FINDING", kind: "ai-limit-reached",
+        label: NOTICED_LABEL, by: "the group's Civicsmith",
+        case: o.project ? this.#homesAt([o.project], viewer) : this.#homesOf([]),
+        subject: { kind: "ai_account", id: o.ref, scope: e.scope, unit: e.unit ?? null, period: e.period, period_start: e.period_start ?? null },
+        summary: text, detail: text, word: "ai.queue.limitreached", fills,
+        basis: { source: "ai-use.limitsReached", key: e.key, owner: o.ref, scope: e.scope, unit: e.unit ?? null, period: e.period,
+                 period_start: e.period_start ?? null, reached_at: e.reached_at ?? null, zone,
+                 detail: "a limit first reached in its current period is ai-use's (its R5), answered to that account's "
+                       + "owners; it is told once a period, and names no member." },
+        age: ageFrom(e.reached_at, now, "no_reached_instant"),
+        assignee: null, assignee_role: null,
+        recipients: [me],
+        options: this.#optionsOf(o.project ? [o.project] : []),
+      };
+    });
+    return { items, facts: { truncated } };
+  }
+
+  #accountsSuspended(me, viewer, now) {
+    const r = this.#credentials.projectAccountsSuspended({ viewer, at: instantOf(now) });
+    if (!Array.isArray(r)) throw failure("credentials");
+    const { list, truncated } = cut(r.filter((e) => e && filled(e.key) && filled(e.project)), ACCOUNT_ITEMS_MAX);
+    const items = list.map((e) => {
+      const fills = { project: this.#projectName(e.project, viewer) ?? e.project };
+      const text = wordsOf("ai.queue.suspended", fills);
+      return {
+        id: keyed("FINDING", "project-account-suspended", e.key), class: "FINDING", kind: "project-account-suspended",
+        label: NOTICED_LABEL, by: "the group's Civicsmith",
+        case: this.#homesAt([e.project], viewer),
+        subject: { kind: "project", id: e.project, since: e.since ?? null },
+        summary: text, detail: text, word: "ai.queue.suspended", fills,
+        basis: { source: "credentials.projectAccountsSuspended", key: e.key, project: e.project, since: e.since ?? null,
+                 detail: "a project's sign-in account serves only while the project has one member (credentials R54, "
+                       + "R59); answered to the project's owners, naming no member." },
+        age: ageFrom(e.since, now, "no_suspension_instant"),
+        assignee: null, assignee_role: null,
+        recipients: [me],
+        options: this.#optionsOf([e.project]),
+      };
+    });
+    return { items, facts: { truncated } };
+  }
+
+  /** R16, R17: an AI account's owner as its words name it: `group`, `project:<id>` or `member:<id>` (ai-use's owners).
+   *  `ref` names it in an item without naming a member (`own` for a member's own account). */
+  #owner(owner, viewer) {
+    const s = typeof owner === "string" ? owner.trim() : "";
+    if (s === "group") return { ref: "group", project: null, scope: NOTICE_WORDS["ai.owner.group"],
+                                account: `${NOTICE_WORDS["ai.whose.group"]} account`, label: NOTICE_WORDS["ai.owner.group"] };
+    const p = /^project:(.+)$/.exec(s);
+    if (p) {
+      const name = this.#projectName(p[1], viewer) ?? p[1];
+      return { ref: `project:${p[1]}`, project: p[1], scope: name, account: `${name}'s account`, label: name };
+    }
+    const m = /^member:(.+)$/.exec(s);
+    let handle = null;
+    if (m) { try { handle = (this.#membership.memberFacts(m[1]) || {}).handle ?? null; } catch { handle = null; } }
+    return { ref: "own", project: null, scope: `${NOTICE_WORDS["ai.whose.own"]} questions`,
+             account: `${NOTICE_WORDS["ai.whose.own"]} account`, label: handle ?? NOTICE_WORDS["ai.whose.own"] };
+  }
+
+  /** A project's name (its bundle's title) when this viewer sees it, else null. */
+  #projectName(id, viewer) {
+    if (!filled(id)) return null;
+    const gate = viewerPredicate(viewer);
+    if (gate.scope === "DENY") return null;
+    const row = this.#rows(`SELECT b.title FROM bundles b WHERE b.bundle_id=? AND (${gate.scope === "member" ? "1=1" : gate.sql})`,
+      id, ...(gate.scope === "member" ? [] : gate.args))[0];
+    return row && filled(row.title) ? row.title : null;
+  }
+
+  /** R16: when a period's uses go on again: `tomorrow` for a day's, the first of the next month by name for a month's
+   *  (ai-use's own fills, R13, so the two modules say it one way). */
+  static #periodEnd(period, start) {
+    if (period === "day") return LIMIT_WHEN_FILL.day;
+    const m = typeof start === "string" ? Number(start.slice(5, 7)) : NaN;
+    const name = Number.isInteger(m) && m >= 1 && m <= 12 ? MONTH_NAMES[m % 12] : null;
+    return name ? LIMIT_WHEN_FILL.month.replace(/^on /, "").replace("{month}", name) : LIMIT_WHEN_FILL.unjudged;
+  }
+
+  /* ================================================================== R17 · the investigation's items
+   * (N820; K2405, K2417, K2418, K2484, K2525). Each source answers this viewer its own items, each with a stable key,
+   * told once (DEC-94): the item is keyed `<CLASS>::<kind>::<the source's key>`, the key as given (review's already has
+   * that form and is used whole). A source that throws or refuses contributes no item and is named in `facts.failed`;
+   * a source answering more than the bound is cut, `truncated` stated (as R13's). */
+  #questionFinds(me, viewer, now) {
+    const r = this.#questionExplorer.findsFor({ viewer, at: instantOf(now), limit: INVESTIGATION_ITEMS_MAX });
+    if (!r || r.ok !== true || !Array.isArray(r.finds)) throw failure("question-explorer");
+    const c = cut(r.finds.filter((f) => f && filled(f.key) && filled(f.question)), INVESTIGATION_ITEMS_MAX);
+    const items = c.list.map((f) => {
+      /* D64 (K2484): which account paid is answered only to its owners (question-explorer R5): only then the label
+         names it, `{owner}` from ai-use R6's `enabled_by` */
+      const owned = filled(f.enabled_by);
+      const label = owned ? wordsOf("ai.label.explored", { owner: this.#owner(f.enabled_by, viewer).label }) : "machine";
+      const says = filled(f.says) ? f.says : "The system found this while exploring the question.";
+      return {
+        id: keyed("FINDING", "question-find", f.key), class: "FINDING", kind: "question-find",
+        label, ...(owned ? { word: "ai.label.explored" } : {}), mark: HINT_MARK, by: "the system's",
+        case: this.#homesAt([f.question], viewer),
+        subject: { kind: "explore_find", id: f.find ?? null, question: f.question, ref: f.ref ?? null, find_kind: f.kind ?? null },
+        summary: `${HINT_MARK}: found while exploring ${f.question}`,
+        detail: `${HINT_MARK}. ${says}`,
+        basis: { source: "question-explorer.findsFor", key: f.key, find: f.find ?? null, question: f.question,
+                 bearing: f.bearing ?? null, how: f.how ?? null, false_alarm_rate: f.false_alarm_rate ?? null,
+                 gold_set: f.gold_set ?? null, ...(owned ? { enabled_by: f.enabled_by } : {}),
+                 detail: "a find is the system's work (question-explorer R5), offered once to each of the question's "
+                       + "recipients who may see it; it is not evidence until a member takes it in." },
+        age: ageFrom(f.at, now, "no_find_instant"),
+        assignee: null, assignee_role: null,
+        recipients: [me],
+        options: this.#optionsOf([f.question]),
+      };
+    });
+    return { items, facts: { truncated: c.truncated || r.truncated === true } };
+  }
+
+  #laterFound(me, viewer, now) {
+    const r = this.#steps.laterFound({ viewer, at: instantOf(now) });
+    if (!r || r.ok !== true || !Array.isArray(r.found)) throw failure("steps");
+    const c = cut(r.found.filter((e) => e && filled(e.key) && filled(e.step)), INVESTIGATION_ITEMS_MAX);
+    const items = c.list.map((e) => {
+      const qs = Array.isArray(e.questions) ? e.questions.filter(filled) : [];
+      return this.#r17Item(me, viewer, now, "FINDING", "step-later-found", e.key, {
+        homes: qs, at: e.at,
+        subject: { kind: "step", id: e.step, look: e.look ?? null, observation: e.observation ?? null, questions: qs },
+        summary: `Data a step looked for has arrived: ${e.step}`,
+        detail: "Something a step looked for and did not find has since arrived. The earlier look stays as it was; you may "
+              + "revise the step's outcome for its questions.",
+        basis: { source: "steps.laterFound", key: e.key, step: e.step, look: e.look ?? null, observation: e.observation ?? null,
+                 detail: "a later arrival is steps' (its R23): told once to each recipient of a referring question who may "
+                       + "see the step and what arrived, and to the member who did the step; no outcome moves by itself." },
+      });
+    });
+    return { items, facts: { truncated: c.truncated } };
+  }
+
+  #stepsDue(me, viewer, now) {
+    const r = this.#steps.stepsDue({ viewer, at: instantOf(now) });
+    if (!r || r.ok !== true || !Array.isArray(r.due)) throw failure("steps");
+    const c = cut(r.due.filter((e) => e && filled(e.key) && filled(e.step) && (e.kind === "past_date" || e.kind === "reminder")), INVESTIGATION_ITEMS_MAX);
+    const items = c.list.map((e) => {
+      const reminder = e.kind === "reminder";
+      return this.#r17Item(me, viewer, now, "OBLIGATION", reminder ? "step-reminder" : "step-date-due", e.key, {
+        homes: [], due: dayOf(e.date), day: dayOf(e.date),
+        subject: { kind: "step", id: e.step, work: e.work ?? null, date: e.date ?? null },
+        summary: reminder ? `A reminder you asked for: ${e.work ?? e.step}` : `A step you set a date for is past it: ${e.work ?? e.step}`,
+        detail: reminder ? `You asked to be reminded of this step on ${e.date}.`
+          : `You set this step to be done by ${e.date}, and it is not yet ended. This is told once.`,
+        basis: { source: "steps.stepsDue", key: e.key, step: e.step, kind: e.kind, date: e.date ?? null,
+                 detail: "a step's date and a reminder are steps' (its R12): told once, to the member who set the date or "
+                       + "asked for the reminder, and to nobody else." },
+      });
+    });
+    return { items, facts: { truncated: c.truncated, ...(r.undetermined === true ? { undetermined: r.why ?? true } : {}) } };
+  }
+
+  #costShares(me, viewer, now) {
+    const r = this.#steps.costShares({ viewer, at: instantOf(now) });
+    if (!r || r.ok !== true || !Array.isArray(r.shares)) throw failure("steps");
+    const c = cut(r.shares.filter((e) => e && filled(e.key) && filled(e.step)), INVESTIGATION_ITEMS_MAX);
+    const items = c.list.map((e) => {
+      const projects = Array.isArray(e.projects) ? e.projects.filter((p) => p && filled(p.id)) : [];
+      const totals = e.totals && typeof e.totals === "object" ? e.totals : {};
+      const money = Object.entries(totals).map(([cur, amt]) => `${amt} ${cur}`).join(", ");
+      return this.#r17Item(me, viewer, now, "FINDING", "step-cost-shared", e.key, {
+        homes: projects.map((p) => p.id),
+        subject: { kind: "step", id: e.step, totals, projects: projects.map((p) => ({ id: p.id, name: p.name ?? null })) },
+        summary: `A costed step is drawn on by ${projects.length} projects`,
+        detail: `This step's costs (${money || "none stated"}) serve questions that ${projects.map((p) => p.name ?? p.id).join(", ")} `
+              + "draw on. Civicsmith records no split and no payment; you may write to the other projects' owners.",
+        basis: { source: "steps.costShares", key: e.key, step: e.step, totals, projects: projects.map((p) => p.id),
+                 detail: "a shared cost is steps' (its R14): answered to each owner of each sharing project only, never "
+                       + "when any of them is hidden; told once per step, totals and project set." },
+      });
+    });
+    return { items, facts: { truncated: c.truncated } };
+  }
+
+  #costMessages(me, viewer, now) {
+    const r = this.#steps.costMessages({ viewer });
+    if (!r || r.ok !== true || !Array.isArray(r.messages)) throw failure("steps");
+    const ok = r.messages.filter((m) => m && (Number.isSafeInteger(m.message) || filled(m.message)) && filled(m.step));
+    const c = cut(ok, INVESTIGATION_ITEMS_MAX);
+    const items = c.list.map((m) => this.#r17Item(me, viewer, now, "FINDING", "step-cost-message", String(m.message), {
+      homes: [], at: m.at,
+      subject: { kind: "step", id: m.step, message: m.message },
+      summary: `A message about a shared cost from ${m.writer ?? "another project's owner"}`,
+      detail: `${m.writer ?? "Another project's owner"} wrote about a cost your project shares: ${m.text ?? ""}`,
+      basis: { source: "steps.costMessages", key: String(m.message), step: m.step, message: m.message,
+               detail: "a cost message is steps' (its R15): relayed once to the owners of each other sharing project, with "
+                     + "its writer's handle, naming no project unless its writer did." },
+    }));
+    return { items, facts: { truncated: c.truncated } };
+  }
+
+  #milestones(me, viewer, now) {
+    const r = this.#investigation.milestonesOverdue({ viewer, at: instantOf(now) });
+    if (!r || r.ok !== true || !Array.isArray(r.due)) throw failure("investigation");
+    const c = cut(r.due.filter((e) => e && filled(e.key) && (e.kind === "overdue" || e.kind === "reminder")), INVESTIGATION_ITEMS_MAX);
+    const items = c.list.map((e) => {
+      const reminder = e.kind === "reminder";
+      const name = e.name ?? `milestone ${e.milestone}`;
+      return this.#r17Item(me, viewer, now, reminder ? "OBLIGATION" : "FINDING", reminder ? "milestone-reminder" : "milestone-overdue", e.key, {
+        homes: filled(e.project) ? [e.project] : [], due: dayOf(e.date), day: dayOf(e.date),
+        subject: { kind: "milestone", id: e.milestone ?? null, project: e.project ?? null, name: e.name ?? null, date: e.date ?? null },
+        summary: reminder ? `A reminder you asked for: ${name}` : `A milestone has passed its date: ${name}`,
+        detail: reminder ? `You asked to be reminded of the milestone "${name}" today; its date is ${e.date}.`
+          : `The milestone "${name}" of a project you take part in was due on ${e.date}. This is told once.`,
+        basis: { source: "investigation.milestonesOverdue", key: e.key, kind: e.kind, milestone: e.milestone ?? null,
+                 project: e.project ?? null, date: e.date ?? null, state: e.state ?? null,
+                 detail: "a milestone overdue is investigation's (its R3): told once to each joined participant; a reminder "
+                       + "to the member who asked, on its day, and to nobody else." },
+      });
+    });
+    return { items, facts: { truncated: c.truncated, ...(r.undetermined === true ? { undetermined: r.why ?? true } : {}) } };
+  }
+
+  #quietPrompts(me, viewer, now) {
+    const r = this.#investigation.quietPrompts({ viewer, at: instantOf(now) });
+    if (!r || r.ok !== true || !Array.isArray(r.prompts)) throw failure("investigation");
+    const c = cut(r.prompts.filter((e) => e && filled(e.key) && filled(e.project)), INVESTIGATION_ITEMS_MAX);
+    const items = c.list.map((e) => {
+      const name = this.#projectName(e.project, viewer) ?? e.project;
+      const gaps = Array.isArray(e.gaps) ? e.gaps : [];
+      return this.#r17Item(me, viewer, now, "FINDING", "project-quiet", e.key, {
+        homes: [e.project],
+        subject: { kind: "project", id: e.project, spell: e.spell ?? null, objective: e.objective ?? null,
+                   condition: e.condition ?? null, gaps, doors: Array.isArray(e.doors) ? [...e.doors] : [] },
+        summary: `A project you take part in has gone quiet: ${name}`,
+        detail: `${name} has gone quiet. Its objective: ${e.objective ?? "not stated"}; its condition: ${e.condition ?? "not stated"}; `
+              + `the record still lacks ${gaps.length} ${gaps.length === 1 ? "thing" : "things"} it names. Write it up, keep `
+              + "watching, close it with its gaps, or revise the objective.",
+        basis: { source: "investigation.quietPrompts", key: e.key, project: e.project, spell: e.spell ?? null,
+                 progress: e.progress ?? null,
+                 detail: "a quiet spell is investigation's (its R18): told once per spell to the project's joined "
+                       + "participants; no member act declares the objective met." },
+      });
+    });
+    return { items, facts: { truncated: c.truncated } };
+  }
+
+  #reviewLeftOut(me, viewer, now) {
+    const r = this.#review.reviewCommentsLeftOut({ viewer, limit: INVESTIGATION_ITEMS_MAX });
+    if (!r || r.ok !== true || !Array.isArray(r.items)) throw failure("review");
+    const c = cut(r.items.filter((e) => e && filled(e.key) && filled(e.case)), INVESTIGATION_ITEMS_MAX);
+    const items = c.list.map((e) => this.#r17Item(me, viewer, now, "FINDING", "review-comment-left-out", e.key, {
+      homes: filled(e.project) ? [e.project] : [],
+      subject: { kind: "case", id: e.case, edition: e.edition ?? null, comments: Array.isArray(e.comments) ? [...e.comments] : [] },
+      summary: `Your comments on a review copy were not included: ${e.case}, edition ${e.edition}`,
+      detail: `${e.left_out ?? "Some"} of your comments on the review copy of ${e.case} were not included in its published `
+            + "edition. You may file a response in its docket.",
+      basis: { source: "review.reviewCommentsLeftOut", key: e.key, case: e.case, edition: e.edition ?? null, left_out: e.left_out ?? null,
+               detail: "a reviewer's comments left out are review's (its R33): told once to each member reviewer, who may "
+                     + "file a response in the case's docket." },
+    }));
+    return { items, facts: { truncated: c.truncated || r.truncated === true } };
+  }
+
+  /** R17: one item of `kind`, keyed by its source's key, to this member alone (each source answers the viewer's own). */
+  #r17Item(me, viewer, now, cls, kind, key, { homes = [], due = null, day = null, at = null, subject, summary, detail, basis }) {
+    return {
+      id: keyed(cls, kind, key), class: cls, kind,
+      case: homes.length ? this.#homesAt(homes, viewer) : this.#homesOf([]),
+      ...(due ? { due } : {}),
+      subject, summary, detail, basis,
+      age: day ? ageFrom(day, now, "no_due_day", this.#zone()) : ageFrom(at, now, "no_source_instant"),
+      assignee: null, assignee_role: null,
+      recipients: [me],
+      options: this.#optionsOf([subject.id].filter(filled)),
+    };
   }
 
   /** R14: whether this member is active (membership's member facts); a membership that throws is its failure. */

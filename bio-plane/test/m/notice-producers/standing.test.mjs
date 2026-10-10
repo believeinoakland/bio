@@ -63,8 +63,10 @@ test("R4: the detail names the new finds and the answer as answers holds it, or 
   const { NoticeProducers } = await import("../../../src/notice-producers/index.mjs");
   assert.equal(NoticeProducers.heldBackWords({ condition: "no_account" }), "you have no account of your own set for the assistant");
   assert.equal(NoticeProducers.heldBackWords({ condition: "switch_off", switch: "member" }), "your own switch for standing questions is off");
-  assert.equal(NoticeProducers.heldBackWords({ condition: "ceiling", code: "AI_USE_CEILING_REACHED", translation: "You have reached your own daily limit." }),
-               "You have reached your own daily limit");
+  /* the paying account's limit (ai-use R3, R13: AI_LIMIT_REACHED, its words carried as answers holds them) */
+  const limitWords = "The assistant stopped here: your own daily limit for standing questions is reached. It works again tomorrow. Everything else works as usual.";
+  assert.equal(NoticeProducers.heldBackWords({ condition: "limit", code: "AI_LIMIT_REACHED", translation: limitWords }), limitWords.replace(/\.$/, ""));
+  assert.equal(NoticeProducers.heldBackWords({ condition: "limit", code: null, translation: null }), "the limits of the account that would pay could not be checked");
   const n = (await import("./fixture.mjs")).fresh(w.host, { membership: w.membership, answers: { standingAnswersFor: () => ({ ok: true, cursor: null,
     entries: [{ question: { id: "STQ-1", question: "q?" }, run: 7, at: "2026-10-07T15:00:00Z", finds: { ids: ["a", "b"] },
                 answer: { sentences: [{ text: "A new budget document is held." }, null] }, held_back: null, withheld: [], label: "machine work, from your standing question" }] }) } });
@@ -101,6 +103,6 @@ test("R4 (DEC-149, T34-87): what held the AI half back calls the group's Civicsm
                "the assistant's half of standing questions is switched off in your group's Civicsmith");
   assert.equal(NoticeProducers.heldBackWords({ condition: "not_deployed" }), "the assistant is not available in your group's Civicsmith");
   for (const h of [null, {}, { condition: "switch_off", switch: "copy" }, { condition: "switch_off", switch: "member" }, { condition: "no_account" },
-                   { condition: "ceiling" }, { condition: "not_deployed" }, { condition: "other" }])
+                   { condition: "limit" }, { condition: "not_deployed" }, { condition: "other" }])
     assert.doesNotMatch(NoticeProducers.heldBackWords(h), /\b(this (copy|instance|plane)|the plane|server)\b/i, JSON.stringify(h));
 });

@@ -1,6 +1,6 @@
 # BOB to queue-producers (T41)
 
-**Read** · handled J0
+**Read** · handled J4
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **Marked at this START (K2573, re-taken after L10's merge):** R37. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
+
+## B2 · ANSWER · re J1
+
+ANSWER J1 (K2581), text on `tranche/T41` (merge it in). (1) "May name", as actions R59: re-gate `restarted` by actions' answer, so an administrator at a hidden project's EXISTENCE is told its id, never contents; test it with negative controls. (2) Confirmed, tests only. (3) Build it in this job: R11 binds; R2 (now marked) counts each proposal finding over the instances the recipient may see and withholds an item with none; test both with negative controls.
