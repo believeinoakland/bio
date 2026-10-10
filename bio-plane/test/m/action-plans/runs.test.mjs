@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, option, choose, V, MACHINE, AGENT, RUN_PRINCIPAL, by, OFFICE } from "./fixture.mjs";
-import { DISCLOSURE, noSuchPlan, actionPlansOf } from "../../../src/action-plans/index.mjs";
+import { DISCLOSURE, noSuchPlan, actionPlansOf, actionPlansOps } from "../../../src/action-plans/index.mjs";
 
 const code = (r) => r.code ?? r.reason;
 const propose = (w, run, extra = {}) => w.ap.optionPropose({ plan: w.PL, summary: "Ask the clerk", category: "awareness",
@@ -161,38 +161,76 @@ test("R24: a machine proposes and nothing else: optionPropose by a machine lands
     assert.equal(code(w.ap.planClose({ id: w.PL, reason: "r", author: empty, viewer: V("bob") })), "MACHINE_CANNOT_CLOSE_PLAN");
 });
 
-test("R34: the tray pages twelve proposals as five, five, two in submission order, no score; a foreign cursor and run refuse", async () => {
+test("R34: the tray answers every proposal of a planning run, twelve of twelve, in the run's order, strongest first, with no cut-off, no paging and no score; planRead answers each run whole (negative control: another run's proposals and a member's stay out, and a retired cursor pages nothing)", async () => {
   const w = seeded();
   opened(w);
   const { run } = w.openRun({ plan: w.PL, project: w.P, proposals: 20 });
-  for (let i = 1; i <= 12; i++) assert.equal((await propose(w, run, { summary: `P${i}` })).ok, true);
-  const p1 = w.ap.planProposals({ plan: w.PL, viewer: V("bob") });
-  assert.equal(p1.run, run, "run absent names the plan's most recent planning run");
-  assert.deepEqual(p1.proposals.map((x) => x.summary), ["P1", "P2", "P3", "P4", "P5"]);
-  const p2 = w.ap.planProposals({ plan: w.PL, after: p1.next, viewer: V("bob") });
-  assert.deepEqual(p2.proposals.map((x) => x.summary), ["P6", "P7", "P8", "P9", "P10"]);
-  const p3 = w.ap.planProposals({ plan: w.PL, run, after: p2.next, viewer: V("bob") });
-  assert.deepEqual(p3.proposals.map((x) => x.summary), ["P11", "P12"]);
-  assert.equal(p3.next, null);
-  for (const page of [p1, p2, p3]) for (const x of page.proposals) {
-    assert.equal(typeof x.adopted, "boolean");
-    for (const k of ["score", "rank", "strength", "order"]) assert.equal(k in x, false, k);
+  /* the run's order is the order of submission (R31), the assistant's order of strength: not the summaries' order */
+  const said = ["Kilo", "Alpha", "Lima", "Echo", "Bravo", "Juliet", "Delta", "India", "Charlie", "Hotel", "Foxtrot", "Golf"];
+  const ids = [];
+  for (const s of said) { const r = await propose(w, run, { summary: s }); assert.equal(r.ok, true); ids.push(r.proposal.id); }
+  /* a member's own proposal is no run's, and stays apart (R11) */
+  const mine = await w.ap.optionPropose({ plan: w.PL, summary: "Mine", category: "other", subjects: [w.S1], why: "w",
+    proposer: V("bob"), viewer: V("bob") });
+  assert.equal(mine.ok, true);
+  const adopted = w.ap.optionAdopt({ proposal: ids[3], ...by("bob") });
+  assert.equal(adopted.ok, true);
+  const t = w.ap.planProposals({ plan: w.PL, viewer: V("bob") });
+  assert.equal(t.ok, true);
+  assert.equal(t.run, run, "run absent names the plan's most recent planning run");
+  assert.deepEqual(t.proposals.map((x) => x.summary), said, "every proposal, in the run's order, none cut off");
+  assert.deepEqual(t.proposals.map((x) => x.id), ids);
+  assert.equal(t.proposals.length > 5, true, "more than the five the earlier tray showed");
+  assert.equal("next" in t, false, "no paging: no next");
+  assert.equal("after" in t, false);
+  assert.deepEqual(t.proposals.map((x) => x.adopted), said.map((_, i) => i === 3), "each says whether it has been adopted");
+  assert.equal(t.proposals[3].adopted_option, adopted.option);
+  for (const x of t.proposals) {
+    assert.equal(x.disclosure, DISCLOSURE(run, "planning@1"), "each as R32 answers it");
+    assert.equal(x.why, "The clerk holds the records"); assert.deepEqual(x.sources, [w.D]);
+    assert.equal(x.label.machine_work, true);
+    for (const k of ["score", "rank", "strength", "order", "run_ord", "position"]) assert.equal(k in x, false, k);
   }
-  assert.equal(code(w.ap.planProposals({ plan: w.PL, after: "RUN-9#5", viewer: V("bob") })), "PROPOSALS_CURSOR_REFUSED");
-  assert.equal(code(w.ap.planProposals({ plan: w.PL, after: `${run}#3`, viewer: V("bob") })), "PROPOSALS_CURSOR_REFUSED");
-  assert.equal(code(w.ap.planProposals({ plan: w.PL, after: "garbage", viewer: V("bob") })), "PROPOSALS_CURSOR_REFUSED");
-  assert.equal(code(w.ap.planProposals({ plan: w.PL, run: "RUN-404", viewer: V("bob") })), "PROPOSAL_RUN_OTHER_PLAN");
+  for (const k of ["score", "rank", "strength"]) assert.equal(JSON.stringify(t).includes(`"${k}"`), false, k);
+  /* no score, rank figure or strength is recorded: the stored columns hold none */
+  const cols = w.rows(`PRAGMA table_info(plan_option_proposals)`).map((c) => c.name);
+  for (const k of ["score", "rank", "strength", "significance", "priority"]) assert.equal(cols.includes(k), false, k);
+  /* the same answer when the run is named; the retired cursor is no parameter: it pages nothing and refuses nothing */
+  assert.deepEqual(w.ap.planProposals({ plan: w.PL, run, viewer: V("bob") }), t);
+  for (const after of [`${run}#5`, "garbage", "RUN-9#5"])
+    assert.deepEqual(w.ap.planProposals({ plan: w.PL, after, viewer: V("bob") }), t, after);
+  const opRead = actionPlansOps(w.ap, new URL(`https://x/?op=planproposals&viewer=${encodeURIComponent(V("bob"))}&plan=${w.PL}&after=${run}%235`), {});
+  assert.deepEqual(opRead.planproposals(), t, "op=planproposals answers the whole tray");
+  /* refusals: a plan the viewer may not see is absent; a run that is not a planning run of this plan */
   assert.deepEqual(w.ap.planProposals({ plan: w.PL, viewer: V("dave") }), noSuchPlan(w.PL));
-  /* planRead answers each planning run's first page and its next */
+  assert.deepEqual(w.ap.planProposals({ plan: "PLN-2026-0999-plan", viewer: V("bob") }), noSuchPlan("PLN-2026-0999-plan"));
+  assert.equal(code(w.ap.planProposals({ plan: w.PL, run: "RUN-404", viewer: V("bob") })), "PROPOSAL_RUN_OTHER_PLAN");
+  const plan2 = w.ap.planOpen({ project: w.P, subjects: [w.S2], title: "Other", ...by("bob") }).id;
+  const foreign = w.openRun({ plan: plan2, project: w.P });
+  for (let i = 1; i <= 7; i++) assert.equal((await propose(w, foreign.run, { plan: plan2, subjects: [w.S2], summary: `F${i}` })).ok, true);
+  assert.equal(code(w.ap.planProposals({ plan: w.PL, run: foreign.run, viewer: V("bob") })), "PROPOSAL_RUN_OTHER_PLAN");
+  /* negative control: a second run of this plan answers its own proposals only, and the first stays whole when named */
+  const second = w.openRun({ plan: w.PL, project: w.P, proposals: 20 });
+  for (let i = 1; i <= 6; i++) assert.equal((await propose(w, second.run, { summary: `S${i}` })).ok, true);
+  const t2 = w.ap.planProposals({ plan: w.PL, viewer: V("bob") });
+  assert.equal(t2.run, second.run, "the most recent planning run");
+  assert.deepEqual(t2.proposals.map((x) => x.summary), ["S1", "S2", "S3", "S4", "S5", "S6"]);
+  assert.deepEqual(w.ap.planProposals({ plan: w.PL, run, viewer: V("bob") }).proposals.map((x) => x.summary), said);
+  assert.deepEqual(w.ap.planProposals({ plan: plan2, viewer: V("bob") }).proposals.map((x) => x.summary),
+    ["F1", "F2", "F3", "F4", "F5", "F6", "F7"]);
+  /* planRead answers each planning run's proposals whole, beside the plan's other proposals */
   const read = w.ap.planRead({ id: w.PL, viewer: V("bob") });
-  assert.deepEqual(read.planning_runs.map((r) => [r.run, r.proposals.length, r.next]), [[run, 5, p1.next]]);
-  /* control: a run with no proposals answers an empty page and next null */
+  assert.deepEqual(read.planning_runs.map((r) => [r.run, r.proposals.map((x) => x.summary)]),
+    [[run, said], [second.run, ["S1", "S2", "S3", "S4", "S5", "S6"]]]);
+  for (const r of read.planning_runs) { assert.equal("next" in r, false); assert.deepEqual(r.proposals, w.ap.planProposals({ plan: w.PL, run: r.run, viewer: V("bob") }).proposals); }
+  assert.deepEqual(read.proposals.map((x) => x.summary), ["Mine"], "a member's proposal apart, in no run's tray");
+  /* control: a run with no proposals answers an empty tray */
   const empty = w.openRun({ plan: w.PL, project: w.P });
   const e = w.ap.planProposals({ plan: w.PL, viewer: V("bob") });
-  assert.equal(e.run, empty.run); assert.deepEqual(e.proposals, []); assert.equal(e.next, null);
+  assert.equal(e.run, empty.run); assert.deepEqual(e.proposals, []); assert.equal("next" in e, false);
   /* a plan with no planning run at all */
   const w2 = seeded();
   opened(w2);
   const none = w2.ap.planProposals({ plan: w2.PL, viewer: V("bob") });
-  assert.equal(none.run, null); assert.deepEqual(none.proposals, []); assert.equal(none.next, null);
+  assert.equal(none.ok, true); assert.equal(none.run, null); assert.deepEqual(none.proposals, []); assert.equal("next" in none, false);
 });

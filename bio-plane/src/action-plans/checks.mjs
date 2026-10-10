@@ -272,10 +272,8 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
       + 'plans or options you can see. One named is none of those here; one you may not see is answered as one that '
       + 'does not exist. Nothing was written.',
   },
-  PROPOSALS_CURSOR_REFUSED: {
-    check: 'C-124.52', where: at("planProposals", "is-cursor-given"),
-    translation: 'That page marker was not given by this list. Ask for the first page again. Nothing was read.',
-  },
+  /* C-124.52 (PROPOSALS_CURSOR_REFUSED) is RETIRED and its number is never reused (R34 as amended; Bob's Actions D17,
+     K2443): the tray answers every proposal of a planning run, with no `after` cursor to refuse. */
 
   /* ---- the record object (R27, R24): the plan's document ---- */
   MACHINE_CANNOT_WRITE_PLAN: {
