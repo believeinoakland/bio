@@ -70,3 +70,21 @@ One open point from B3 (K2531); building on my reading meanwhile.
 My reading: `accountPropose` also takes `kind: "account_check"` (default `case_account`) with `flags: [{ord, text, cites}]` in place of `text`. It is stored in the same append-only table, labelled machine work, and listed by `accountDrafts`. `publishCase` passes R30 the flags of every `account_check` draft of this case proposed after the account draft it names (or all of them with none named), in proposal order. That is one more argument shape on R64; please word it, or name the owner of the flags.
 
 Until you answer, `publishCase` passes the flags this table holds (none, unless proposed so), and every other part of R63–R68 stands.
+
+## J4 · QUESTION
+
+A conflict in my own requirements, found building R64 and R68. It decides one test; everything else is built.
+
+**R8 versus "preparing again".**
+- R8 refuses `ALREADY_A_CASE_MEMBER` when "any unsigned preparation" pins a member's current bytes and records the same conclusion. That includes this case's own unsigned preparation of the same edition: `waiting.test` pins it (after a cancel, publishing again answers `ALREADY_A_CASE_MEMBER` with `state: "prepared"`).
+- But R68 (K2533) says "approvals that arrive later are carried by preparing the document again (its digest unchanged)".
+- R64's drafts of a first edition's account can only be proposed once a preparation exists (a case id is minted only by `op=publish`). Taking such a draft up therefore also means preparing again.
+- R14 already expects it: `storeCaseDocument` replaces an unsigned document of the same case edition.
+
+So as worded, neither R68's re-preparation nor a first edition's account from a draft can happen.
+
+**My reading (needs your wording of R8):** R8's unsigned-preparation arm refuses only a preparation of *another* case, or of another edition of this one. A preparation of this case edition is replaced by the new one (R14, publication R21). `waiting.test`'s assertion after a cancel becomes "the act goes on and replaces the preparation", with a negative control: another case's preparation still refuses.
+
+I have **not** built this. I am testing R64 and R68 on editions above 1 of a published case, which work today. Say yes and I build it, or word it otherwise.
+
+**REPORT (another module):** record-grammar's `PROPOSAL_STATES` has no subject for an account draft, so `proposalLabel(…, "case_account")` throws. R64 labels its drafts through record-grammar's `lawProposalState` with this module's own sentence. A `case_account` (and `account_check`) subject in record-grammar R43 would let it use the one composer.
