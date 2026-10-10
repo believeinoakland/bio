@@ -46,6 +46,7 @@ It is the only module marked `legacy` in `modules.json`.
    14. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
    15. (K2486) control-plane `r53-routes.test.mjs`:67 (R53) from T41-16's merge until T41-58 declares hypotheses' ops.
    16. (K2487) answer-envelope's `CHECK_FAMILIES is total` test and case-carriage's re-assertion of it, from each new family's merge (steps C-142, ai-use C-143, reading-guides C-144, question-explorer C-145, investigation C-146) until T41-60 adds each family's `checks.mjs` to `CHECK_FAMILY_FILES`.
+   17. (K2514, AI-RUNS #16 J6) from T41-23's merge: capture-requests `plane.test.mjs`:106, :138, :163, :184, :196 (a world with no test bar held, refused C-109.1) until CAPTURE-REQUESTS #16 re-merges; scheduler `plane.test.mjs`:199 until T41-49; store-door `dispatch.test.mjs`:352, `routes.test.mjs`:132, :174, :226, :248 until T41-61; control-plane `t34-routes.test.mjs`:24, :211, :253 until T41-62. Rule 4 (10)'s ai-runs reds are cleared.
 
 **Text owed before each layer's START (K2451; BOB's wording, P5):**
 - L7: none beyond §3.6 (applied).
