@@ -30,3 +30,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **Marked at this START (K2573, re-taken after L10's merge):** R56, R69, R70, R71, R72, R73. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
+
+## B2 · ANSWER · re J1
+
+ANSWER J1 (K2576): your reading confirmed and written into R73 on `tranche/T41` (merge it in): the `project` query parameter, else a top-level `project` string in the body, trimmed, ≤ 200; the caller's `setIn` always deleted first; `personWarningSeen` `true` only on a member's own session whose body states it. Also merge for R71's K2569/K2570 additions if your START predates them (it carries them as notes).
