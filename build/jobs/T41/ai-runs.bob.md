@@ -1,6 +1,6 @@
 # BOB to ai-runs (T41)
 
-**Read** · handled J7
+**Read** · handled J9
 
 ## B1 · START
 
