@@ -38,11 +38,13 @@ Terms. **The doors** are `control-plane`'s Worker entry and `store-door`'s `disp
 - Used by `control-plane` (R1–R8), `store-door` (`DISPATCH_CHECKS`, R3, R6; R8's rows) and `plane` (`door.mjs`:24–25 and `index.mjs`:5–6: `json`, `doAnswer`, `storeSilent`, `storeRefusal`, `STORE_SILENT_*`, `requiredArgument`).
 - (T41; N820; K2418; `steps` a new `modules.json` edge, §3.6's list) `steps`, `reading-guides`, `question-explorer`, `investigation`: their check families, in `CHECK_FAMILY_FILES` at their places (R2, R7); the amended modules' new rows in their own families.
 - (T41; K2488) `ai-use`: `AI_USE_CHECKS` (`src/ai-use/checks.mjs`, its C-143 rows), in `CHECK_FAMILY_FILES` at its place (R2, R7).
+- (T41; K2532, K2566) `publish-schedule`: `PUBLISH_SCHEDULE_CHECKS` (`src/publish-schedule/checks.mjs`, C-122.5 moved from publication), in `CHECK_FAMILY_FILES` directly after publication's (R10).
 - (T36; K2130, K2152; red 11) `file-safety`: `FILE_SAFETY_CHECKS` (`src/file-safety/checks.mjs`, its R24), in `CHECK_FAMILY_FILES` at its place (R2, R7).
 
 ### Invariants
 
 - **R9** (copy of `control-plane` R33) No place is named in this module's behaviour or outward text.
+- **R10** *(not yet met: T41)* (T41-60; K2566; R2, R7) `CHECK_FAMILY_FILES` lists T41's new families at their `modules.json` places: `src/steps/checks.mjs` after hypotheses', before citation's; `src/ai-use/checks.mjs` after run-rules', before run-productions'; `src/reading-guides/checks.mjs` after capture-requests', before `skilldoctrine.mjs`; `src/question-explorer/checks.mjs` after `skilldoctrine.mjs`, before answers'; `src/investigation/checks.mjs` after intent's, before reevaluation's; `src/publish-schedule/checks.mjs` (C-122.5, moved) directly after publication's, before docket's. R7's "reads the same" holds over every code decorated at T41's opening except these, each named by a ruling: the re-worded rows C-35.13 (K2428), C-94.5 (K2553), C-70.1, C-22.9, C-22.14, C-104.2, .3, .4, .5 and .8 (their T41 jobs) read their new translations; C-124.52 (K2554) and C-106.1 (inquiry, T41) are retired. `PROPOSAL_NO_RUN` and `NO_SUCH_PROPOSAL`, which hypotheses' C-134.22 and C-134.23 now decorate ahead of action-plans' C-124.47 and intent's C-111.22, are not re-pinned: they stay red, accepted by name (rule 4 (21)), until N843 re-codes hypotheses' rows.
 
 ### Satisfies
 
