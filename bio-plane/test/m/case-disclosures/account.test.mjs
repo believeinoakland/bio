@@ -10,24 +10,27 @@ import assert from "node:assert/strict";
 import { world, V } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS, ACCOUNT_ARMS } from "../../../src/case-disclosures/index.mjs";
 import { INQUIRY_BIAS_CHECKS } from "../../../src/inquiry/checks.mjs";
+import { CASE_DOCUMENT_FORMAT, accountLines, accountOf, biasApplicationsLines, biasApplicationsOf } from "../../../src/case-grammar/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b";
 const Q = "INQ-2026-0001-q", Q2 = "INQ-2026-0002-q", Q3 = "INQ-2026-0003-q";
 const LENS = { type: "project", id: "PROJ-2026-0001" };
+/* `case-grammar` R23's cites, `{kind, ref, ord}` */
+const H1 = { kind: "passage", ref: "CNT-2026-0001" , ord: null }, H2 = { kind: "finding", ref: "INQ-2026-0001-q" , ord: null };
 function refused(r, code) {
   assert.equal(r.ok, false, JSON.stringify(r).slice(0, 400));
   assert.deepEqual([r.reason, r.code, r.check, r.translation],
     [code, code, CASE_DISCLOSURE_CHECKS[code].check, CASE_DISCLOSURE_CHECKS[code].translation]);
 }
 const ACCOUNT = [
-  { ord: 1, text: "The council awarded the contract on 3 May.", cites: ["h1"], kind: "account", began_as: "member" },
+  { ord: 1, text: "The council awarded the contract on 3 May.", cites: [H1], kind: "account", began_as: "member" },
   { ord: 2, text: "Read through the lens of procurement scrutiny, the timing stands out.", cites: [], kind: "account",
     bias_statement: "S-scrutiny", began_as: "member" },
-  { ord: 3, text: "The award followed the minutes.", cites: ["h2"], kind: "account", began_as: "machine_draft" },
+  { ord: 3, text: "The award followed the minutes.", cites: [H2], kind: "account", began_as: "machine_draft" },
 ];
 const STATEMENTS = [
-  { ord: 4, text: "The case says the award followed the minutes.", cites: ["h2"], kind: "statement" },
-  { ord: 5, text: "The subject was chosen for its spending.", cites: ["h1"], kind: "subject_justification" },
+  { ord: 4, text: "The case says the award followed the minutes.", cites: [H2], kind: "statement" },
+  { ord: 5, text: "The subject was chosen for its spending.", cites: [H1], kind: "subject_justification" },
   { ord: 6, text: "Nothing was left out.", cites: [], kind: "excluded" },
   { ord: 7, text: "First edition.", cites: [], kind: "what_changed" },
 ];
@@ -116,7 +119,7 @@ test("R30 (ACCOUNT_CHECK_UNDETERMINED): a check that cannot be run — no checkA
 test("R30 (ACCOUNT_FLAG_UNANSWERED): each account_check flag (run-rules R25's draft kind) whose sentence still stands as flagged — its text, citing nothing it did not cite when flagged — is refused after the arms, naming the sentence; removing the sentence or tying it to evidence it did not cite answers the flag; a malformed flags list is BAD_COMPLETENESS naming the field, alone", () => {
   const flag = (text, cites) => ({ kind: "account_check", ord: 1, text, cites });
   const { w } = setup([{ ord: 1, code: "ACCOUNT_FACT_NOT_IN_CITED" }]);
-  const r = judge(w, { flags: [flag(ACCOUNT[0].text, ["h1"]), flag(ACCOUNT[2].text, ["h2"])] });
+  const r = judge(w, { flags: [flag(ACCOUNT[0].text, [H1]), flag(ACCOUNT[2].text, [H2])] });
   assert.deepEqual(r.refusals.map((x) => x.reason), ["ACCOUNT_FACT_NOT_IN_CITED", "ACCOUNT_FLAG_UNANSWERED"]);
   refused(r.refusals[1], "ACCOUNT_FLAG_UNANSWERED");
   assert.deepEqual(r.refusals[1].sentences, [{ ord: 1, kind: "account", text: ACCOUNT[0].text }, { ord: 3, kind: "account", text: ACCOUNT[2].text }]);
@@ -125,7 +128,7 @@ test("R30 (ACCOUNT_FLAG_UNANSWERED): each account_check flag (run-rules R25's dr
   assert.deepEqual(judge(ok, { flags: [flag("A sentence since removed.", []), flag(ACCOUNT[0].text, [])] }).refusals, []);
   /* malformed */
   for (const [flags, field] of [["x", "flags"], [[null], "flags[0]"], [[{ kind: "case_account", text: "t", cites: [] }], "flags[0]"],
-                                [[{ kind: "account_check", text: "", cites: [] }], "flags[0]"], [[{ kind: "account_check", text: "t", cites: "h1" }], "flags[0]"]]) {
+                                [[{ kind: "account_check", text: "", cites: [] }], "flags[0]"], [[{ kind: "account_check", text: "t", cites: H1 }], "flags[0]"]]) {
     const b = judge(setup([]).w, { flags });
     assert.deepEqual([b.refusals.length, b.refusals[0].reason, b.refusals[0].field], [1, "BAD_COMPLETENESS", field], JSON.stringify(flags));
   }
@@ -133,7 +136,7 @@ test("R30 (ACCOUNT_FLAG_UNANSWERED): each account_check flag (run-rules R25's dr
 
 test("R30: a malformed account or statements list is BAD_COMPLETENESS naming the field, alone, and checkAccount is not asked; the sentences answered carry their ord, cites and bias statement as given", () => {
   for (const [args, field] of [[{ account: "x" }, "account"], [{ account: [{ ord: 1, text: "" }] }, "account[0]"],
-                               [{ account: [{ ord: 1, text: "t", cites: "h1" }] }, "account[0]"],
+                               [{ account: [{ ord: 1, text: "t", cites: H1 }] }, "account[0]"],
                                [{ account: [{ ord: 1, text: "t", cites: [], bias_statement: 3 }] }, "account[0]"],
                                [{ account: ACCOUNT, statements: {} }, "statements"]]) {
     const { w, ck } = setup([]);
@@ -142,10 +145,10 @@ test("R30: a malformed account or statements list is BAD_COMPLETENESS naming the
   }
   const { w } = setup([]);
   const r = w.cd.accountJudged({ account: ACCOUNT, cited: {} });
-  assert.deepEqual(r.sentences.map((x) => [x.ord, x.cites, x.bias_statement]), [[1, ["h1"], null], [2, [], "S-scrutiny"], [3, ["h2"], null]]);
+  assert.deepEqual(r.sentences.map((x) => [x.ord, x.cites, x.bias_statement]), [[1, [H1], null], [2, [], "S-scrutiny"], [3, [H2], null]]);
 });
 
-test("R31: biasApplicationsOf answers case-grammar R24's rows {finding, ord, target, statement, effect, from, to} for every application on a leg of every finding a member's chain reaches, as the viewer sees the record; each statement in force (inquiry R61's test, at the finding's scope) is not refused; it writes nothing", () => {
+test("R31: biasApplicationsOf answers case-grammar R24's rows {finding, ord, target: leg, statement, effect, from, to} for every application on a leg of every finding a member's chain reaches, as the viewer sees the record; each statement in force (inquiry R61's test, at the finding's scope) is not refused; it writes nothing", () => {
   const w = world(); w.member("alice");
   w.lens.inForce = new Set(["S1", "S2"]);
   w.doc(DOC); w.doc(DOC2);
@@ -156,8 +159,8 @@ test("R31: biasApplicationsOf answers case-grammar R24's rows {finding, ord, tar
   assert.deepEqual(r.refusals, []);
   assert.deepEqual(r.unread, []);
   assert.deepEqual(r.rows, [
-    { finding: Q, ord: 0, target: DOC, statement: "S1", effect: "leg_excluded", from: null, to: null },
-    { finding: Q2, ord: 0, target: DOC2, statement: "S2", effect: "grade_lowered", from: "A", to: "B" }]);
+    { finding: Q, ord: 0, target: "leg", statement: "S1", effect: "leg_excluded", from: null, to: null },
+    { finding: Q2, ord: 0, target: "leg", statement: "S2", effect: "grade_lowered", from: "A", to: "B" }]);
   assert.deepEqual(w.lens.asked.slice(asked).map((a) => [a.statement, a.viewer]), [["S1", V("alice")], ["S2", V("alice")]],
     "inquiry's test asked, as the viewer");
   assert.deepEqual(w.snapshot(), before, "nothing written");
@@ -223,7 +226,7 @@ test("R30 (K2533): ACCOUNT_SENTENCE_UNSUPPORTED refuses account sentences only �
   refused(judge(a.w).refusals[0], "ACCOUNT_SENTENCE_UNSUPPORTED");
 });
 
-test("R31 (K2531): a conclusion's applications, passed by the caller as basis-versions' conclusionRecordOf answers them, are answered as rows with no ord, target the finding, and judged by inquiry's same test at the conclusion's project scope; one not in force is refused through biasNotInForce at `conclusion`; a malformed list is BAD_COMPLETENESS, alone", () => {
+test("R31 (K2531): a conclusion's applications, passed by the caller as basis-versions' conclusionRecordOf answers them, are answered as rows with ord null and target conclusion, and judged by inquiry's same test at the conclusion's project scope; one not in force is refused through biasNotInForce at `conclusion`; a malformed list is BAD_COMPLETENESS, alone", () => {
   const w = world(); w.member("alice");
   w.doc(DOC); w.finding(Q, [{ target: DOC }]);
   w.lens.byScope.set("PROJ-2026-0001", new Set(["S1"]));
@@ -231,8 +234,8 @@ test("R31 (K2531): a conclusion's applications, passed by the caller as basis-ve
     bias_applied: [{ statement: "S1", effect: "inference_refused" }, { statement: "S9", effect: "inference_refused" }] }];
   const r = w.cd.biasApplicationsOf(w.prepared([Q]), V("alice"), conclusions);
   assert.deepEqual(r.rows, [
-    { finding: Q, target: Q, statement: "S1", effect: "inference_refused", from: null, to: null },
-    { finding: Q, target: Q, statement: "S9", effect: "inference_refused", from: null, to: null }]);
+    { finding: Q, ord: null, target: "conclusion", statement: "S1", effect: "inference_refused", from: null, to: null },
+    { finding: Q, ord: null, target: "conclusion", statement: "S9", effect: "inference_refused", from: null, to: null }]);
   assert.deepEqual(r.refusals.map((x) => [x.reason, x.check, x.finding, x.statement, x.where]),
     [["BIAS_APPLICATION_NOT_IN_FORCE", "C-2.19", Q, "S9", "conclusion.bias_applied[1]"]]);
   assert.deepEqual(w.lens.asked.slice(-2).map((a) => [a.statement, a.scope]),
@@ -244,4 +247,23 @@ test("R31 (K2531): a conclusion's applications, passed by the caller as basis-ve
     const b = w.cd.biasApplicationsOf(w.prepared([Q]), V("alice"), bad);
     assert.deepEqual([b.refusals.length, b.refusals[0].reason, b.refusals[0].field], [1, "BAD_COMPLETENESS", "conclusions"], JSON.stringify(bad));
   }
+});
+
+test("R30, R31 over case-grammar's real blocks (its R23, R24): an account written by accountLines and read back by accountOf is judged as given, its cites as R23 spells them; biasApplicationsOf's rows are R24's, written by biasApplicationsLines and read back by biasApplicationsOf unchanged", () => {
+  const doc = (lines) => ({ fm: null, text: ["---", `format: ${CASE_DOCUMENT_FORMAT}`, ...lines, "---", ""].join("\n") });
+  const { w, ck } = setup([{ ord: 2, code: "ACCOUNT_BIAS_NOT_PRINTED" }]);
+  const read = accountOf(w.fm(doc(accountLines([...ACCOUNT, ...STATEMENTS])).text));
+  assert.equal(read.length, 7);
+  const r = w.cd.accountJudged({ account: read.filter((x) => x.kind === "account"), statements: read.filter((x) => x.kind !== "account"),
+    cited: {}, lens: LENS, flags: [{ kind: "account_check", ord: 3, text: ACCOUNT[2].text, cites: [H2] }], viewer: V("alice") });
+  assert.deepEqual(ck.calls[0].account.map((x) => [x.ord, x.cites]), read.map((x) => [x.ord, x.cites]), "cites as R23 reads them");
+  assert.deepEqual(r.refusals.map((x) => x.reason), ["ACCOUNT_BIAS_NOT_PRINTED", "ACCOUNT_FLAG_UNANSWERED"]);
+  assert.deepEqual(r.refusals[1].sentences.map((x) => x.ord), [3], "a flag on R23's cites compares them by kind, ref and ord");
+  /* R31 */
+  const b = world(); b.member("alice"); b.lens.inForce = new Set(["S1"]); b.doc(DOC);
+  b.finding(Q, [{ target: DOC, bias_1_statement: "S1", bias_1_effect: "grade_lowered", bias_1_from: "A", bias_1_to: "B" }]);
+  const out = b.cd.biasApplicationsOf(b.prepared([Q]), V("alice"), [{ finding: Q, project: null, bias_applied: [{ statement: "S1", effect: "scrutiny_raised" }] }]);
+  assert.deepEqual(out.refusals, []);
+  assert.deepEqual(biasApplicationsOf(b.fm(doc(biasApplicationsLines(out.rows)).text)), out.rows);
+  assert.deepEqual(out.rows.map((x) => [x.target, x.ord, x.effect]), [["leg", 0, "grade_lowered"], ["conclusion", null, "scrutiny_raised"]]);
 });

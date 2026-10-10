@@ -253,7 +253,9 @@ test("R7: a member document R6 answers with obscured is written as a photo's cop
   assert.deepEqual([own(DOC), own(DOC2)], [["project", "group"], ["project", "group"]], "as any document's");
   const fm = w.fm(["---", `format: ${CASE_DOCUMENT_FORMAT}`,
     ...materialBlockLines({ materials: out.materials.rows, attestations: out.materials.attestations }), "---", ""].join("\n"));
-  assert.deepEqual(materialsOf(fm).materials, out.materials.rows);
+  /* case-grammar R12 (T40; K2537): a row without `obscured_marked` reads `marked` by its label, so a member document's
+     copy reads back marked: true; R7 writes it as {copy, label} */
+  assert.deepEqual(materialsOf(fm).materials, out.materials.rows.map((r) => (r.obscured ? { ...r, obscured: { ...r.obscured, marked: true } } : r)));
 });
 
 test("R6, R7 over the real case-carriage (its R15, R16): a member document (no receipt fetched it) is pending and refused DOCUMENT_COPY_PENDING until copyBatch derives its copy, then travels as its cleaned copy labelled COPY_CLEANED_LABEL; one doc-clean refuses is DOCUMENT_NOT_CLEANABLE with doc-clean's code; one with nothing to clean travels whole; a document this copy fetched is public and travels whole, never queued", async () => {

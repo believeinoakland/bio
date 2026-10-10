@@ -42,7 +42,19 @@
 5. `document.mjs` `carriesBodyLines` prints a material carried as its copy as "NOT INCLUDED: only its fingerprint, origin and archived copy travel", with no label. The signed body does not say the copy travels or show its label. R7 governs only the rows, so this is a gap against DEC-185 (1)'s intent, not a breach. Printing it only when `obscured` is set keeps every pinned hash. That needs requirement text first.
 6. words.json `document.refused.pending` is `protected: false` (J1 (5); noted to UX-DESIGN by BOB).
 
-**Waiting on providers** (build against requirements, per START): 3 tests of `photos.test.mjs` are red until case-carriage (T41-35: R11's `OBSCURED_LABEL` words and `PUBLISHED_LABEL`) and case-grammar (R12's `marked` read back) merge. They are `:46` R22 (label words), `:66` R6 (`PUBLISHED_LABEL`) and `:252` R7 (the round trip of `marked`). Every other test is green. I re-run them on the CHANGE that brings those merges.
+**CHANGE B4 (K2537), case-grammar merged:** applied.
+- I merged `tranche/T41`.
+- R31's rows now follow case-grammar R24 exactly: `target` is `"leg"` or `"conclusion"`, and a conclusion's `ord` is null.
+- R30 takes R23's cites (`{kind, ref, ord}`) and compares flags by them.
+- New round-trip test (`account.test.mjs`) through the real `accountLines`/`accountOf` and `biasApplicationsLines`/`biasApplicationsOf`.
+- `photos.test.mjs` R7's round trip of `marked` is green.
+- `documents.test.mjs` R7 is re-stated (rule 4 (19)): R12 reads a member document's copy back `marked: true` by its label, while R7 writes it `{copy, label}`.
+
+**Waiting on case-carriage** (T41-35), 2 tests of `photos.test.mjs` red:
+- `:46`, R22: R11's `OBSCURED_LABEL` words;
+- `:66`, R6: `PUBLISHED_LABEL`.
+
+Every other test is green. On its CHANGE I merge, switch `PUBLISHED_LABEL` to a named import and re-run.
 
 **Reading set (K2304, START step 3).** My own code and tests alone are 374 KB, over 300 KB, so step (3) applied.
 - **Read whole myself:**
@@ -57,8 +69,8 @@
 - **Read by a worker, whole:** `accepted.mjs`, `people.mjs`, `document.mjs`, and the tests captures, imported, people, tensions, hunch, seam and carries. Its summary is about 8 KB, every statement citing file:line. It covered each file's exports and tests, every assertion my change could break, R23's service enumeration in seam, and flaws.
 - **Did anything left out matter?** No. The summary's two flaws are handled (`accepted.mjs`:75 fixed; `document.mjs` reported above).
 
-**Tests and checks run:**
-- `node --test bio-plane/test/m/case-disclosures/*.test.mjs`, file by file: pass 99, fail 3 (the three above).
+**Tests and checks run** (re-run after B4, the four checks 0 failures again):
+- `node --test bio-plane/test/m/case-disclosures/*.test.mjs`, file by file: pass 101, fail 2 (the two above, after B4).
 - No layer tests are named in the manifest.
 - case-authoring's suite, compared above.
 - answer-envelope `families.test.mjs`: pass 10, fail 3. Row census: fail 1, as above.
@@ -67,7 +79,7 @@
 - `checks/coverage.mjs bio case-disclosures`: 31 of 31 live ids named, 0 failures.
 - `checks/ownership.mjs bio case-disclosures tranche/T41`: 9 files, 0 failures.
 
-Size (session_01LY8Zq25Bmbg74LWk3TRP5f): test runs 12, module lines 2,374
+Size (session_01LY8Zq25Bmbg74LWk3TRP5f): test runs 15, module lines 2,379
 
 ## J1 · QUESTION
 

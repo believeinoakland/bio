@@ -1167,7 +1167,7 @@ export class CaseDisclosures {
    *  cites nothing the other arms still judge it), so its departure on a statement's sentence is not one. A check that cannot be
    *  run (no `checkAccount`, a throw, any other answer, a code that is no arm's) fails closed:
    *  `ACCOUNT_CHECK_UNDETERMINED`, naming every sentence (R23). Then each `account_check` flag (`run-rules` R25's draft
-   *  kind) `{kind, ord, text, cites}` the member has not answered — the flagged sentence still stands with its text and
+   *  kind) `{kind, ord, text, cites}` (each cite as `case-grammar` R23 spells it, `{kind, ref, ord}`) the member has not answered — the flagged sentence still stands with its text and
    *  cites nothing it did not cite when flagged — is `ACCOUNT_FLAG_UNANSWERED`, naming it; removing the sentence, or tying
    *  it to evidence it did not cite, answers it. A malformed list is `BAD_COMPLETENESS` naming the field, alone. Answers
    *  `{refusals, sentences, printed}`. The answer's shape, `conclusions` and `flags` are K2531's. Writes nothing; never
@@ -1182,7 +1182,7 @@ export class CaseDisclosures {
       for (let i = 0; i < list.length; i++) {
         const r = list[i];
         if (!r || typeof r !== "object" || Array.isArray(r) || typeof r.text !== "string" || !r.text.trim()
-            || (r.cites != null && (!Array.isArray(r.cites) || r.cites.some((c) => typeof c !== "string")))
+            || (r.cites != null && (!Array.isArray(r.cites) || r.cites.some((c) => !c || (typeof c !== "string" && typeof c !== "object"))))
             || (r.bias_statement != null && typeof r.bias_statement !== "string"))
           return bad(`${field}[${i}]`, `${field}[${i}] is not a sentence {ord, text, cites, kind, bias_statement?}`);
         sentences.push({ ...r, ord: Number.isInteger(r.ord) ? r.ord : sentences.length + 1, text: r.text.trim(),
@@ -1257,8 +1257,8 @@ export class CaseDisclosures {
         if (!f || typeof f !== "object" || Array.isArray(f) || f.kind !== "account_check" || !DRAFT_KINDS.includes(f.kind)
             || typeof f.text !== "string" || !f.text.trim() || (f.cites != null && !Array.isArray(f.cites)))
           return bad(`flags[${i}]`, `flags[${i}] is not an account_check flag {kind, ord, text, cites}`);
-        const was = new Set(Array.isArray(f.cites) ? f.cites : []);
-        unanswered.push(...sentences.filter((x) => x.text === f.text.trim() && x.cites.every((c) => was.has(c))));
+        const was = new Set((Array.isArray(f.cites) ? f.cites : []).map(citeKey));
+        unanswered.push(...sentences.filter((x) => x.text === f.text.trim() && x.cites.every((c) => was.has(citeKey(c)))));
       }
       const n = marked([...new Map(unanswered.map((x) => [x.ord, x])).values()]);
       /* DEC-49 REGION is-account-flag-answered */
@@ -1273,14 +1273,15 @@ export class CaseDisclosures {
 
   /** R31 (T41; D59; K2472): the `bias_applications:` rows (`case-grammar` R24) of every finding a member's chain
    *  reaches (R8, as `viewer` sees the record): each application a leg of its live `bundle.md` carries (`inquiry-grammar`
-   *  R18's one encoding, `readBiasApplied`), `{finding, ord, target, statement, effect, from, to}`. Whether each statement
+   *  R18's one encoding, `readBiasApplied`), `{finding, ord, target: "leg", statement, effect, from, to}` in `case-grammar`
+   *  R24's fields. Whether each statement
    *  is in force is `inquiry`'s one test (`biasAppliedFindings`, its R61, at the finding's project scope as the viewer),
    *  never re-derived here; one not in force is answered as inquiry spells it (`biasNotInForce`, C-2.19), naming the
    *  finding, the leg and the statement. A test that cannot be had refuses each application through the same spelling
    *  (fail closed, R23). A reached finding whose document cannot be read is stated in `unread` (R18). A conclusion's
    *  applications live on the project's document (`basis-versions` R48), which this module does not read: the caller
    *  passes them (K2531), `conclusions: [{finding, project, bias_applied}]` as `basis-versions`' `conclusionRecordOf`
-   *  answers them, each answered as a row with no `ord`, `target` the finding, and judged by the same test at its
+   *  answers them, each answered as a row with `ord` null and `target: "conclusion"`, and judged by the same test at its
    *  project's scope. A malformed list is `BAD_COMPLETENESS` naming the field, alone. Answers `{refusals, rows,
    *  unread}`. Writes nothing; never throws. */
   biasApplicationsOf(prepared, viewer, conclusions = null) {
@@ -1303,8 +1304,8 @@ export class CaseDisclosures {
       const legs = Array.isArray(fm.basis) ? fm.basis : [];
       const project = typeof fm.project === "string" ? fm.project : null;
       const applied = legs.map((leg) => readBiasApplied(leg));
-      applied.forEach((list, ord) => list.forEach((a) => rows.push({ finding: id, ord, target: legs[ord] && legs[ord].target != null
-        ? String(legs[ord].target) : null, statement: a.statement ?? null, effect: a.effect ?? null, from: a.from ?? null, to: a.to ?? null })));
+      applied.forEach((list, ord) => list.forEach((a) => rows.push({ finding: id, ord, target: "leg", statement: a.statement ?? null,
+        effect: a.effect ?? null, from: a.from ?? null, to: a.to ?? null })));
       if (!applied.some((l) => l.length)) continue;
       let found = null;
       try { found = this.inquiry.biasAppliedFindings({ legs, project, viewer }); } catch { found = null; }
@@ -1319,8 +1320,8 @@ export class CaseDisclosures {
       const id = c.finding ?? c.inquiry, project = typeof c.project === "string" ? c.project : null;
       const list = Array.isArray(c.bias_applied) ? c.bias_applied : [];
       if (!list.length) continue;
-      for (const a of list) rows.push({ finding: id, target: id, statement: a.statement ?? null, effect: a.effect ?? null,
-                                        from: a.from ?? null, to: a.to ?? null });
+      for (const a of list) rows.push({ finding: id, ord: null, target: "conclusion", statement: a.statement ?? null,
+                                        effect: a.effect ?? null, from: a.from ?? null, to: a.to ?? null });
       let found = null;
       try { found = this.inquiry.biasAppliedFindings({ legs: [flattenBiasApplied(list)], project, viewer }); } catch { found = null; }
       if (!Array.isArray(found))
@@ -1411,6 +1412,10 @@ export class CaseDisclosures {
 /* R6, R29 (T40; DEC-185 (1); K2483): the label a photo's copy carries, `case-carriage`'s words (its R11), and the key a
    reader's surface shows it by. `PUBLISHED_LABEL` is read off the module namespace while case-carriage's T41 entry adds
    it (null until then, so no row claims words it does not hold). */
+/* R30: one cite as a comparable key, a string as itself and `case-grammar` R23's `{kind, ref, ord}` by those fields. */
+const citeKey = (c) => (typeof c === "string" ? c : JSON.stringify([c && c.kind ? c.kind : null, c && c.ref != null ? c.ref : null,
+                                                                    c && c.ord != null ? c.ord : null]));
+
 function photoLabel(marked) {
   return marked
     ? { label: caseCarriageModule.OBSCURED_LABEL, marked: true, label_key: "photo.obscured.label" }
