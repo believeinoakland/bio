@@ -137,6 +137,42 @@ test("R12 a project reaching closed while the notice is open gets a closed attes
   assert.equal(w.nn.noticesOf({ project: w.P, viewer: A }).notices[0].status, "stopped");
 });
 
+test("R1 R12 R14 R22 (D54, K2442) a HIDDEN project's close is read as an internal caller: the closed attestation, the seal skipped and NOTICE_PROJECT_CLOSED, while every member's own read stays fenced", async () => {
+  const w = seeded();
+  const LAST = monday(NOW) - WEEK;
+  /* P and Q are hidden (no owner made them discoverable), and the founder's viewer sees neither whole (D54) */
+  for (const pid of [w.P, w.Q]) {
+    assert.equal(w.membership.visibilityOf(pid), "hidden");
+    assert.equal(w.membership.sight(pid, "admin"), "existence");
+    assert.equal(w.projectStage.projectStage({ project: pid, viewer: "admin" }).reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
+  }
+  const p = await post(w), q = await post(w, { project: w.Q }, "dave");
+  w.act(w.P, LAST + DAY);
+  w.act(w.Q, LAST + DAY, { author: V("dave") });
+  w.close(w.P, { at: LAST + 2 * DAY });
+  /* the closed attestation, at once, for the closed hidden project only */
+  const t = await w.nn.attestTick();
+  assert.deepEqual(t.closed, [p.notice]);
+  assert.equal(w.nn.noticesOf({ project: w.P, viewer: A }).notices[0].status, "closed");
+  assert.equal(w.nn.noticesOf({ project: w.Q, viewer: V("dave") }).notices[0].status, "open", "not closed answers not closed");
+  /* the seal: the closed hidden project is never sealed; the open hidden one is */
+  const s = await w.nn.sealTick();
+  assert.deepEqual(s.sealed.map((x) => x.projects), [1]);
+  assert.deepEqual(w.rows(`SELECT project FROM nn_week_seals`).map((r) => r.project), [w.Q]);
+  /* the owner's change: refused as closed on P, accepted on Q; a stop of P's notice is still taken */
+  const closed = await prepare(w, { notice: p.notice, wording: "changed" });
+  assert.equal(closed.reason, "NOTICE_PROJECT_CLOSED");
+  assert.equal((await prepare(w, { project: w.Q, notice: q.notice, wording: "changed" }, "dave")).ok, true);
+  assert.equal((await prepare(w, { notice: p.notice, final: "stopped" })).ok, true);
+  /* the internal read widened no member's sight: each read is still fenced by its own viewer */
+  assert.equal(w.nn.noticesOf({ project: w.P, viewer: V("dave") }).reason, "NO_SUCH_PROJECT", "dave takes no part in P");
+  assert.equal(w.nn.noticesOf({ project: w.Q, viewer: A }).reason, "NO_SUCH_PROJECT", "alice takes no part in Q");
+  assert.equal((await prepare(w, { project: w.Q })).reason, "NO_SUCH_PROJECT");
+  const founder = w.nn.noticesOf({ project: w.P, viewer: "admin" });
+  assert.deepEqual([founder.reason, founder.check], ["PROJECT_SEEN_NOT_A_PARTICIPANT", "C-70.1"], "the founder at EXISTENCE");
+  assert.ok(!JSON.stringify(founder).includes("NOTE-"), "nothing of the notices");
+});
+
 test("R12 a lapse after two consecutive Dormant monthlies with no revision between; a revision between avoids it", async () => {
   const lapse = seeded();
   const one = await post(lapse);
