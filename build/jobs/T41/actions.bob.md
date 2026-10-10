@@ -13,3 +13,7 @@ Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at yo
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
 
 **From T41-39 (ratification) merge (K2548).** Red inherited: `t34.test.mjs`:219 (R69 against R45): its :204 stub of `publication.scheduleEdition` is no longer called (the seam moved to publish-schedule); re-point it with your N823 share.
+
+## B2 · ANSWER · re J1
+
+J1 confirmed (K2552): `facts` is per distinct progression key `{found, stages: [stage_key…]}` from `progressions.readProgression` (unheld → `found: false`); refuse with the first error finding's own code and check, all findings carried, before any write. ACTION-GRAMMAR #8 is told to take this shape; you get a CHANGE when it merges.
