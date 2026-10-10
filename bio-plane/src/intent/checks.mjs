@@ -148,6 +148,16 @@ export const INTENT_CHECKS = Object.freeze({
     translation: 'The project\'s record of adopted proposals is not in a shape the record can add to, so this '
       + 'adoption could not be written into it. Nothing was written.',
   },
+  NONE_EXISTS_READER_DECLARED: {
+    check: 'C-111.29', where: at("registerNoneExistsReader", "is-none-exists-once"),
+    translation: 'The reader of records requests answered that no such record exists is already registered. It '
+      + 'registers once, when your group\'s Civicsmith starts.',
+  },
+  NONE_EXISTS_READER_MALFORMED: {
+    check: 'C-111.30', where: at("registerNoneExistsReader", "is-none-exists-shaped"),
+    translation: 'The reader of records requests answered that no such record exists is a function. This '
+      + 'registration gives none.',
+  },
   NO_NOTE: {
     check: 'C-111.27', where: at("recordDeadEnd", "is-dead-end-noted"),
     translation: 'A dead end is recorded with what was tried and why it went nowhere, and nothing was written. '
