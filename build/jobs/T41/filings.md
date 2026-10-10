@@ -20,3 +20,7 @@
 - format: 145 modules, 144 requirements files; 0 failures. architecture: 17 product files, 75 relative imports; 0 failures. coverage: 32 of 32 live requirement ids named by a test; 0 failures. ownership: 0 failures.
 
 Size (session_01GjdoGzcDK1LZWPwK7SZa6n): test runs 6, module lines 2184
+
+## J1 · COMPLETE
+
+T41-48 done, tests only. fixture.mjs:98 w.doc(DOC, { fetched: false }) (publication's member-document option), so R25's ungraded exhibit reads null again; negative control at the end of outward.test.mjs's R25 test: a direct receipt for the same capture makes the next draft read B (= captureGrade). No product code changed; uses unchanged. filings 70/0; affordances backing.test.mjs (imports this fixture) 21/0; format 0, architecture 0, coverage 0 (32/32), ownership 0. Rule 4 (9) cleared. Details in my record.
