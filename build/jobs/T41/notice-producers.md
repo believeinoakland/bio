@@ -1,6 +1,6 @@
 # notice-producers (T41)
 
-**Status** · session_01Ktpm9VNdCcRPXAVDSh7PSu · depth 2 · WORKING · handled B3
+**Status** · session_01Ktpm9VNdCcRPXAVDSh7PSu · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
