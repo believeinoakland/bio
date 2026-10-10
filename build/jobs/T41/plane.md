@@ -41,3 +41,27 @@ Before my change, on `tranche/T41` @ `827b01abab` (a worktree, same test): the s
 **Final `uses`** (for BOB at merge): today's, plus `steps`, `reading-guides`, `question-explorer`, `investigation` (`ai-use`, `publish-schedule` already named).
 
 **Tests and checks run.** Plane module tests: 147/155 at the start (the 8 rule 4 reds), 165/165 now (`node --test test/m/plane/`, 10 new tests in `t41.test.mjs`). `test/system/migrate-released.test.mjs`: 584 pass, 1 fail (J3), the same as the tranche tip before my change. Users who build the plane: scheduler 129/129; control-plane 191/4 and store-door 36/5, failing only rule 4 (15), (17)'s named reds. Checks: format 0; architecture 4 (the four `uses` edges above, BOB's at merge); coverage 35/35, 0; ownership 0.
+
+## Completion (PLANE #29)
+
+**Entries applied:** everything in "Progress" above, and B8 (K2600, R35, K2585): `controlPlaneOwnerOps(of, url, body)` (`control-plane/owner-ops.mjs`) spread after admission's map and before store-door's, `of` the getters of the plane's own `aiUse`, `aiRuns`, `caseAuthoring`, `review`, `legEarning`, `capture`, `steps`, `investigation`, `questionExplorer`. No op of it collides with another map's. `maps.mjs` has a `control-plane` row at that place. B6 (K2591): no pointer registered (N847). B7 (K2592): `ai_ceilings` is rule 4 (24) until N848.
+
+**Deferred:** none.
+
+**Found in other modules:** ai-use leaves `ai_ceilings` after its carry (J3; N848).
+
+**Final `uses`** (for BOB at merge): today's list, plus `steps`, `reading-guides`, `question-explorer`, `investigation`. `ai-use`, `publish-schedule` and `control-plane` are already named.
+
+**Tests and checks run** on the merged tranche (`tranche/T41` with every other L11 job):
+- Plane module tests: 166/166 (`node --test bio-plane/test/m/plane/`; 147/155 at START, the 8 rule 4 reds re-stated; 11 new tests in `t41.test.mjs`).
+- `test/system/migrate-released.test.mjs`: 584 pass, 1 fail, rule 4 (24) (`ai_ceilings`).
+- Users' suites:
+  - 0 failures: control-plane 216/216, store-door 43/43, scheduler 129/129, op-declarations 128/128, affordances 232/232, queue 136/136, queue-producers 84/84, notice-producers 90/90, instance-setup 135/135, admission 41/41, wizard-scripts 76/76, op-grades 45/45, tasks 106/106, setup-words 5/5.
+  - answer-envelope 28/29: `catalogue-end`, rule 4 (21).
+- Checks:
+  - format: 0 failures.
+  - architecture: fails only on the four `uses` edges above, BOB's at merge (12 import lines).
+  - coverage: 35/35 ids, 0 failures.
+  - ownership: 0 failures.
+
+Size (session_011Rh5mYtXnbRop7kcnGcwb1): test runs 27, module lines 1520
