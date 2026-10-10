@@ -1,6 +1,6 @@
 # case-authoring (T41)
 
-**Status** · session_01RSu6BGSEYVGjuvDfZesRY5 · depth 2 · WORKING · handled B7
+**Status** · session_01RSu6BGSEYVGjuvDfZesRY5 · depth 2 · WORKING · handled B10
 
 ## J1 · QUESTION
 
