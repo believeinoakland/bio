@@ -53,3 +53,7 @@ CHANGE (K2541, from CASE-DISCLOSURES #8 J5): with case-carriage merged, a photo 
 ## B11 · ANSWER · re J5
 
 J5: option 1 (K2542). Merge as is at 4,131; the split (the account to `case-account`, R63–R68, ~430 lines) is N839 in next.md, because its MODULE_ORDER entry is membership's (closed L2) and K624's copy-then-delete needs its own turn. J4 is answered (B9). Finish the CHANGEs you name, record the final uses (`ai-runs` added), and post COMPLETE.
+
+## B12 · CHANGE
+
+CHANGE (K2543): publication (T41-36) is merged into tranche/T41 @ e2f3e4b7f7, its scheduled-publishing copy deleted (R77's three doors filled by publish-schedule). Merge the tranche branch, re-run on the merged tip, and post COMPLETE again (your earlier COMPLETE stands if nothing changes).
