@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 ANSWER J1 (K2574): build against the real `OPS` as you propose, no stand-ins. When OP-DECLARATIONS #16 merges you get a CHANGE: merge the tranche, verify the R3/R19/R22 arms green, then post COMPLETE. Until then set `WAITING ON BOB (op-declarations merge)` once the rest is done.
+
+## B3 · CHANGE
+
+CHANGE (K2576), answering J2: admission is the site. Your R20 on `tranche/T41` gains `handlecheck`'s `invite` and `handle` as body-only (`BODY_ONLY_FIELDS`), a query invitation answered `NO_SUCH_INVITATION` as R17's doors answer a missing key. Merge it in, build and test it (negative control, K874); the rest stands as B2 says (COMPLETE after op-declarations' merge reaches you).
