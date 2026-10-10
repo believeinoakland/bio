@@ -2,6 +2,35 @@
 
 **Status** · session_01WoUvbRKoQznX2cCJWJvBwg · depth 2 · RUNNING until 2026-10-10T20:08:48Z (users' suites: plane, control-plane) · handled B2
 
+## Completion (T41-49; SCHEDULER #34)
+
+**Entries applied.** T41-49 (N823, K2438, K2484; N820, K2568):
+- **R22, R9 (re-point).** `scheduled-publish` calls `publish-schedule` (its R2): `due`/`wake` `publishSchedule.publishWake()`, `tick` `publishSchedule.publishDue(now)`, key `scheduledpublish`; registered once with `publishSchedule.onPublishScheduled` (its R6) through `listenTo({publishSchedule})`. The owner key is `publishSchedule` (`schedulerOf` builds it with `publishScheduleOf(ctx)`). Clears rule 4 (13)'s scheduler share and rule 4 (20) (`index.mjs`:684's call at the plane's boot): plane, control-plane and scheduler suites build the plane again.
+- **R26.** Consumer `question-explore`, key `explore`, after `document-copy`: `due(now)` now when `exploreDue(now)` > 0, else null; `wake(now)` `exploreWake(now)`; `tick(now)` `exploreTick(now)`; no arming notice. investigation's quiet check: no consumer (computed on read). As answered in B2 (K2568).
+- **One detail of mine (BOB's to confirm at merge):** the scheduler never builds `question-explorer` itself. `questionExplorerOf(host)` declares its tables to purge but does not create them, so built from the scheduler's defaults in the plane (which does not yet build or migrate it) every purge read failed `no such table: explore_runs` (11 plane tests went red in my first run). It is taken, as `fileSafety` is, through `hand({questionExplorer})` or `schedulerOf(ctx, env, {questionExplorer})`, which the plane calls once it has built and migrated it (T41-63). Until then the consumer is absent in the running plane; it is tested against the real question-explorer in its own world.
+- **Inherited reds cleared.** `plane.test.mjs`:199 (R12): the suite runs on capture-requests' scratch plane (`test/m/capture-requests/plane-world.mjs`, K2514: one-matter Civicsmith set, a passing bar each part), the only way a running plane opens a run before N829. `copies.test.mjs`:225 (R25) re-stated: with no store bound `copyWake` is null, so document-copy is not due and nothing is derived; negative control: store bound again, the same firing copies it. `registry`, `files`, `copies` order tests re-stated for the appended consumer.
+
+**Final `uses`** (for BOB at merge): today's list less `publication` (nothing reads it: no import in `src/scheduler` or its tests) plus `question-explorer` (`explore.test.mjs` imports its fixture; architecture's one failure until the edge is applied). `investigation` not added (no consumer, K2568).
+
+**Deferred.** Nothing.
+
+**Found in other modules** (REPORT J3):
+- `question-explorer`: `questionExplorerOf` (`index.mjs`:868–891) declares its tables to purge at creation without creating them (`migrate()` is separate), so any host that builds it without migrating breaks every purge read; `publish-schedule`'s factory migrates at creation. Either migrate in the factory or document that the builder must.
+- `plane` (T41-63): build and migrate `question-explorer` and hand it to the scheduler (`schedulerOf(ctx, env, {questionExplorer})`), as it hands `fileSafety`; and build `publish-schedule` with its deps before the scheduler first reaches it (today the scheduler's default `publishScheduleOf(ctx)` is its first creation in the plane).
+- Generated artifact staled: the plane bundle (rule 4 (14)).
+
+**Reading set** (mechanics §17, over 300 KB: requirements 25 KB, code and tests 239 KB, used modules' Purposes 20 KB and services ~40 KB). Read whole myself: `build/requirements/scheduler.md`; layer 10's row of `build/layers.md`; plan entry T41-49 and rule 4; K2438, K2451, K2484; `src/scheduler/index.mjs`; the tests my entry changes (`t34`, `plane`, `copies`, `fixture`); publish-schedule's Purpose and R1–R8; question-explorer's Purpose and R1 with its `exploreDue`/`exploreWake`/`exploreTick` (`index.mjs`:345–437) and factory; investigation's Purpose, R18 and its quiet code (`index.mjs`:1019–1140). A worker read the other eight test files whole (`alarm`, `consumers`, `files`, `invariants`, `new-work`, `producers`, `rank`, `registry`) and wrote a ~8 KB summary citing file:line for every name of publication or owner keys, every full-list assertion on the order, keys and counts, every source or export read, the ids in titles and the fixtures used; it found the four assertions my append broke (registry :10–18, :130, :155; files :30), all re-stated. Nothing it left out mattered.
+
+**Tests run.**
+- `node --test bio-plane/test/m/scheduler/`: tests 129, pass 129, fail 0.
+- Users: `tasks`, `queue`, `instance-setup`, `control-plane`: pass 550, fail 5, each accepted: control-plane `r53-routes`:67 (rule 4 (15)), `t34-routes`:24, :211, :253 (rule 4 (17)); tasks `check.test.mjs`:44 (rule 4 (11), listed as :38).
+- `plane`: pass 147, fail 8, each accepted: `ask`:69, :182, :234, :264, :287, :301 (rule 4 (12)); `t39`:78 (rule 4 (18)); `findings`:83, failing at :88 (rule 4 (11)). Before my re-point every plane test was red (rule 4 (20)).
+- No layer tests in the manifest.
+
+**Checks.** format: 0 failures. architecture: 1 failure, `explore.test.mjs` imports question-explorer's fixture (the `uses` edge above, BOB's at merge). coverage: 26 of 26 live ids, 0 failures. ownership: 9 files, 0 failures.
+
+Size (session_01WoUvbRKoQznX2cCJWJvBwg): test runs 14, module lines 757
+
 ## J1 · QUESTION
 
 R26 is ambiguous in two places; my best reading of each, on which I carry on:

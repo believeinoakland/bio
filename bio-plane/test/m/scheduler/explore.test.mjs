@@ -3,7 +3,7 @@
    drive the real question-explorer in its own test world and read the alarm. Each with a negative control (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { SCHEDULER_ORDER, SCHEDULER_KEYS, RANKED, DAILY, Scheduler } from "../../../src/scheduler/index.mjs";
+import { SCHEDULER_ORDER, SCHEDULER_KEYS, RANKED, DAILY, Scheduler, schedulerOf } from "../../../src/scheduler/index.mjs";
 import { world, storage, NOW } from "./fixture.mjs";
 import { world as explorerWorld } from "../question-explorer/fixture.mjs";
 
@@ -107,4 +107,22 @@ test("R26, R7: against the real question-explorer, an Ask waits for its approval
   w.clock.now = "2026-10-10T10:00:00Z";
   const second = await s.onAlarm(RECHECK);
   assert.deepEqual(second.explore.opened.map((o) => o.owner), ["project:PROJ-2026-0001-p"]);
+});
+
+test("R26, R11: the plane hands question-explorer once it has built it (hand, or schedulerOf's deps.questionExplorer); the scheduler never builds it itself, so an unhanded instance has no question-explore consumer", async () => {
+  const w = await explorerWorld().standard();
+  await w.setExplore("group", "yes");
+  const T = Date.parse(w.clock.now);
+  /* Negative control: built with its default owners, nothing of question-explorer's is reached. */
+  const ctx = { storage: storage() };
+  const s = schedulerOf(ctx, null, { owners: {} });
+  assert.equal(s.consumers().includes("question-explore"), false, "not handed: absent");
+  assert.deepEqual(schedulerOf(ctx, null, { questionExplorer: w.p }).consumers(), ["question-explore"], "handed: present");
+  assert.equal(schedulerOf(ctx, null), s, "the one scheduler of the object");
+  assert.equal(await s.start(T), T, "the start weighs the handed consumer's wake");
+  const held = new Scheduler({ storage: storage(), owners: {} });
+  assert.deepEqual(held.hand({ questionExplorer: () => w.p }), { ok: true, handed: ["questionExplorer"] });
+  assert.deepEqual(held.hand({ questionExplorer: () => null }), { ok: true, handed: [] }, "an owner already held is kept");
+  assert.equal((await held.onAlarm(T)).explore.opened.length, 1);
+  assert.deepEqual(held.faults(), [], "no notice to register: no fault");
 });

@@ -41,7 +41,8 @@
  *  and wake `copyWake(now)` asked afresh each time from case-carriage's own tables, so nothing is kept here (R7, R18).
  *  At start it registers once with `case-carriage.onCopyWork` (its R17), whose call arms the alarm (R9).
  *
- *  T41-49 (R26; N820): `question-explore` closes the registry, calling `question-explorer` (its R1): due now while its
+ *  T41-49 (R26; N820, K2568): `question-explore` closes the registry, calling `question-explorer` (its R1), which the
+ *  plane hands this module (`hand`, or `schedulerOf`'s `deps.questionExplorer`) once it has built it: due now while its
  *  `exploreDue` counts any question due, its wake `exploreWake`, its tick `exploreTick`; every cadence, including an
  *  Ask's re-check, is question-explorer's (R7). `investigation`'s quiet check (its R18) is read by `notice-producers`
  *  when it asks; it offers this module no due, wake or tick, so no consumer of investigation's is registered here.
@@ -68,7 +69,6 @@ import { answersOf } from "../answers/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { followingOf } from "../following/index.mjs";
 import { publishScheduleOf } from "../publish-schedule/index.mjs";
-import { questionExplorerOf } from "../question-explorer/index.mjs";
 import { caseCarriageOf } from "../case-carriage/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { localDay, dayRange } from "../civil-time/index.mjs";
@@ -575,9 +575,9 @@ export class Scheduler {
     return await this.#reconcile(now, this.registry(probe), false);
   }
 
-  /** R24: the owners the plane builds and hands this module after construction (`fileSafety`, which needs the plane's
-   *  bindings), each an instance or a function answering it. An owner already held is kept. A `fileSafety` taken is
-   *  registered with once, through its `onFileWork` (its R40), R9's notice for the five: each call runs `arm` at once
+  /** R24, R26: the owners the plane builds and hands this module after construction (`fileSafety`, which needs the
+   *  plane's bindings; `questionExplorer`, whose tables the plane migrates), each an instance or a function answering
+   *  it. An owner already held is kept. A `fileSafety` taken is registered with once, through its `onFileWork` (its R40), R9's notice for the five: each call runs `arm` at once
    *  (told after the act commits, record-core's `afterCommit`), except inside a firing, whose own reconcile stands; a
    *  refused or impossible registration is a start-up fault (`faults()`), as R23's. Answers the names taken; the plane
    *  then starts the scheduler (R11), whose reconcile weighs the new consumers. */
@@ -725,7 +725,8 @@ const DAILY_OWNER = Object.freeze([["duty-transitions", "duties"], ["interest-ch
 const instances = new WeakMap();
 
 /** The one scheduler of a Durable Object (K61). `deps.owners` replaces the default owners (a test's); `deps.fileSafety`
- *  (R24) is handed to the instance, new or already made. */
+ *  (R24) and `deps.questionExplorer` (R26) are handed to the instance, new or already made. question-explorer is never
+ *  built here: the plane builds and migrates it, then hands it (its tables exist only once it has migrated them). */
 export function schedulerOf(ctx, env = null, deps = {}) {
   let s = instances.get(ctx);
   if (!s) {
@@ -738,7 +739,6 @@ export function schedulerOf(ctx, env = null, deps = {}) {
       duties: () => dutiesOf(ctx), people: () => peopleOf(ctx), moneyChecks: () => moneyChecksOf(ctx),
       answers: () => answersOf(ctx), inquiry: () => inquiryOf(ctx), following: () => followingOf(ctx),
       publishSchedule: () => publishScheduleOf(ctx), caseCarriage: () => caseCarriageOf(ctx),
-      questionExplorer: () => questionExplorerOf(ctx),
     };
     const zone = deps.zone || (() => viewZone(recordOf(ctx)));
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e, owners, zone });
@@ -752,5 +752,6 @@ export function schedulerOf(ctx, env = null, deps = {}) {
                    caseCarriage: caseCarriageOf(ctx) });
   }
   if (deps.fileSafety) s.hand({ fileSafety: deps.fileSafety });
+  if (deps.questionExplorer) s.hand({ questionExplorer: deps.questionExplorer });
   return s;
 }
