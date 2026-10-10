@@ -340,12 +340,21 @@ test("R15 R8: a newer capture of a withheld operand's document raises pat no cau
   assert.deepEqual([pat.computation.operands.map((o) => o.content), pat.out_of_view, holds(pat, h)], [[v], true, false]);
 });
 
-test("R13 R14: a part's CONS- object belongs to its determination's project, so it is fenced as the part's reads are", () => {
+test("R13 R14 (D54): a part's CONS- object belongs to its determination's project, so it is fenced as the part's reads are", () => {
   const w = r15();
   const id = w.part({ unit: "count", value: 2 }, { rationale: "r" });
   assert.equal(w.record.bundleInfo(id).project, w.P);
   assert.match(w.record.readFile(id, "bundle.md").text, new RegExp(`^project: "${w.P}"$`, "m"));
-  assert.deepEqual([V("alice"), V("pat"), V("carol"), V("bob")].map((v) => w.membership.inSight(id, v)), [true, true, true, false],
-                   "bob, outside P, is answered as for the part (NO_SUCH_PART), never shown the object");
+  /* D54 (K2408): P is hidden, so carol, an administrator neither invited nor joined, sees it only at EXISTENCE: the
+     object is fenced from her as from bob, and so is the part. */
+  const seers = () => [V("alice"), V("pat"), V("carol"), V("bob")].map((v) => w.membership.inSight(id, v));
+  assert.deepEqual(seers(), [true, true, false, false],
+                   "bob and carol, outside P, are answered as for the part (NO_SUCH_PART), never shown the object");
+  for (const v of ["bob", "carol"]) assert.equal(w.c.consequenceRead({ id, viewer: V(v) }).reason, "NO_SUCH_PART", v);
+  /* Negative control: P set discoverable, the administrator sees the object and the part; bob, a member outside it
+     (at EXISTENCE), still sees neither. */
+  w.discoverable();
+  assert.deepEqual(seers(), [true, true, true, false]);
+  assert.equal(w.c.consequenceRead({ id, viewer: V("carol") }).ok, true);
   assert.equal(w.c.consequenceRead({ id, viewer: V("bob") }).reason, "NO_SUCH_PART");
 });

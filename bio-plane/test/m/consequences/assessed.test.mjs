@@ -138,7 +138,7 @@ test("R5 R12 (N257): a part whose measure is zero answers causation not_applicab
   assert.equal(w.c.consequenceRead({ id: down.id, viewer: V("alice") }).part.basis_changed, undefined);
 });
 
-test("R6: a part is never edited; a revision records a successor with R1's refusals, and the earlier part stays readable", () => {
+test("R6 (D54): a part is never edited; a revision records a successor with R1's refusals, and the earlier part stays readable", () => {
   const w = setup();
   const first = w.c.consequenceRecord(w.base);
   const snap = JSON.stringify(w.c.consequenceRead({ id: first.id, viewer: V("alice") }).part.measure);
@@ -160,6 +160,10 @@ test("R6: a part is never edited; a revision records a successor with R1's refus
   assert.equal(w.c.consequenceRevise({ id: first.id, reason: "again", author: V("alice") }).reason, "ALREADY_SUPERSEDED");
   assert.equal(w.c.consequenceRevise({ id: rev.id, reason: "", author: V("alice") }).reason, "NO_REASON");
   assert.equal(w.c.consequenceRevise({ id: rev.id, reason: "x".repeat(REASON_MAX + 1), author: V("alice") }).reason, "BAD_REASON");
+  /* D54 (K2408): carol, an administrator neither invited nor joined, sees hidden P only at EXISTENCE, so its part is
+     absent to her; invited (not joined), she sees it whole and is refused for not having joined. */
+  assert.equal(w.c.consequenceRevise({ id: rev.id, reason: "r", author: V("carol") }).reason, "NO_SUCH_PART");
+  w.invite("carol");
   assert.equal(w.c.consequenceRevise({ id: rev.id, reason: "r", author: V("carol") }).reason, "CONSEQUENCE_NOT_A_PARTICIPANT");
   assert.equal(w.c.consequenceRevise({ id: rev.id, reason: "r", measure: { unit: "joy" }, author: V("alice") }).reason,
                "MEASURE_UNKNOWN_UNIT");

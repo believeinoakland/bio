@@ -1,5 +1,5 @@
 /* action-grammar — the action document's grammar as the catalogue held it (requirements:
- * `build/requirements/action-grammar.md`, R1–R6, R10).
+ * `build/requirements/action-grammar.md`, R1–R6, R10, R13).
  *
  * Moved from `legacy-checks` (`checks/bio-checks.mjs`) in T19 layer 9 with their comments, line for line: the action
  * vocabularies (`ACTION_KINDS`, `RISK_TIERS`, `riskTierState`, `lawProposalLabel`, `ACTION_BASIS_KINDS`,
@@ -366,7 +366,7 @@ export function quoteFindings(entries, i) {
  *    follows     the ORD of the earlier entry this one answers or follows. Required on every stage but
  *                `request`; an appeal names the DECISION it appeals (a received entry carrying an outcome).
  *    outcome     a decision's OUTCOME in the closed vocabulary (CORRESPONDENCE_OUTCOMES), as the body gave
- *                it — `none_stated` when it gave none. Only on a received entry; REQUIRED on the four
+ *                it — `none_stated` when it gave none, `none_exists` when it said no responsive record exists (R13). Only on a received entry; REQUIRED on the four
  *                decision stages, so a decision never reads as one whose outcome nobody recorded.
  *    exemptions  the exemptions a denial cited, VERBATIM as the body cited them. Received only.
  *    due_by      the date by which the NEXT stage is due, as a MEMBER states it, with
@@ -392,7 +392,9 @@ export const CORRESPONDENCE_STAGES = {
   received: ['acknowledgement', 'fee_estimate', 'fee_waiver_decision', 'extension_notice', 'production',
              'denial', 'appeal_decision', 'court_decision'],
 };
-export const CORRESPONDENCE_OUTCOMES = ['granted', 'denied', 'partial', 'reversed', 'affirmed', 'none_stated'];
+/* R13 (T41; H30 (1), intent R33, K2505): `none_exists`, the body's answer that no responsive record exists, is an outcome
+ * of a received decision as the others are; appended, so every earlier position stands. */
+export const CORRESPONDENCE_OUTCOMES = ['granted', 'denied', 'partial', 'reversed', 'affirmed', 'none_stated', 'none_exists'];
 export const DECISION_STAGES = ['fee_waiver_decision', 'denial', 'appeal_decision', 'court_decision'];
 export const LIFECYCLE_KEYS = ['stage', 'follows', 'outcome', 'exemptions', 'due_by', 'due_cite'];
 export function lifecycleFindings(entries, i) {
