@@ -80,3 +80,7 @@ T41-35 applied: R11 (photo.obscured.label, photo.published.label by key; PUBLISH
 - **Checks.** `format` 0, `architecture` 0, `coverage` 18 of 18, `ownership` 8 files, 0 failures.
 
 Size (session_01PJqPaLJoAV9fTX9bSpNA4s): test runs 12, module lines 1383
+
+## J3 · COMPLETE · re B2
+
+CHANGE B2 applied: tranche/T41 merged (case-grammar T41-34); obscured.test.mjs:29 re-stated for R12's marked (stated true/false, absent read by label, negative control: absent with null label reads false). case-carriage 70/70; checks format 0, architecture 0, coverage 18/18, ownership 0 (8 files). Everything else as J2 (REPORT J1 stands: scheduler copies.test.mjs:225 and plane t39.test.mjs:78 red by K2380). Final uses unchanged. Ready to merge.
