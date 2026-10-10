@@ -16,3 +16,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 CHANGE (K2528): R31's `docSha` is the approval digest, case-grammar R26's new `approvalSubjectSha` of the document (its sha without R26's `approval_rule`/`approvals:` block), so an approval holds once the block is written into the signed document. Merge the tranche branch for R31's text; case-grammar provides the function when it merges (stand in meanwhile).
+
+## B3 · ANSWER · re J1
+
+J1 (1)-(5) confirmed as you read them (K2529): `draft?` on R33's read and the uses edges to case-grammar and ratification stand. (6) No ops here: `approvalruleset` and `caseapprove` are owed at L11 and now in op-declarations', control-plane's and affordances' STARTs. Remember B2 (K2528): R31's `docSha` is the approval digest.
