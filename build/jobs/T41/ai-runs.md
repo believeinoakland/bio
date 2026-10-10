@@ -49,3 +49,21 @@ Cause: context (past half my window; mechanics §6.1). Restart me; everything is
 2. At ai-use's CHANGE: re-point to `aiUseOf`; `open`/`tick` ask `useCheck({owner, member, use: "run"})`; `tick` counts through `countUsage({owner, member, use: "run", act: run, ...})`; delete the R48–R52 block (:~2890–3150 now: `#count`, ceilings, `countAskUsage`, `aiUseCheck`, `aiCeilingSet`, `aiCopyCeilingSet`, `aiUsage`, `aiUsageMine`, `providerLimit` and their ops); drop `ai_usage`/`ai_ceilings` from `declareTable` and schema (R53); rework rows, transact, usage tests; list for rule 4 (10) every other module's test (file:line) calling those methods/ops.
 3. At steps' CHANGE: `#steps()` → `stepsOf(ctx)`; at run-rules': named imports of `RUN_ORIGINS`, `checkTestBarRecord`, and R19's `deployable` with the test bar; drop `#PENDING_ROWS`.
 4. Record completion (uses edge to `steps` and `ai-use` already present; add `steps` to `modules.json` uses at merge).
+
+## J5 · QUESTION
+
+AI-RUNS #16 (restarted; merged tranche @ ac777958ea). Readings for B5, B6, B8 and J4's Next; I carry on with each as stated.
+
+(7) B6's gate. `partDeployable` over `CIVICSMITH_TEST_SET` v1 (no matters, N829) is false for every part, so once R40 reads it no run opens in any mode, `check` included, until the set gains matters. Reading: apply it as B6 and run-rules R19 say; module tests stand a one-matter set in through `deps.testSet` (as `deps.deployedModes` stands in today) with a passing record for the modes they use, and a test proves the empty set refuses `check` (control: the bar held opens it). Tell me if `check` should keep the chain alone until N829 is settled.
+
+(8) A system step's actor. steps reads a member credential as a member (doer = that member) and `viewerPredicate` denies `member:<id>/<token>` as a viewer; R74's runs are a member's act under her credential. Reading: every system step this module makes (R74's and an exploring run's) is created and ended by the run's own system identity `class:daemon/<run>`; `runHolder(by, run)` answers it for a running run only, `{enabled_by: principal_claude, principal: the opener's viewer}` (`member:<id>`, or the machine class for `class:ai/<token>`). B2's build answered `principal_plane` there, which steps' sight refuses for a member credential; fixed with this.
+
+(9) steps R8 refuses a machine's step whose normalised work equals an open step on the same question, which R74's own member step always is. Reading: the system step's work is "AI run on <member step id>: <its work>" (at most 500 characters).
+
+(10) R76. `ai-use.actualOf` answers only the paying account's owners and nothing to a machine viewer, so the run cannot read its figures to keep them. Reading (one store, K2482): the run keeps no figures; close and R19's `session.cost` ask `actualOf({act: run, viewer})` with the reader's own stamp, `final: true` once the run has ended. #14's unmerged `actual` column is removed.
+
+(11) R74, a group-placed member step: that step is refused `AI_RUN_NO_CONTEXT` (C-33.30): a run sits in an inquiry or a project.
+
+(12) B5: `aiusage`, `aiceilingset`, `aicopyceilingset` leave `aiRunsOps`; `aiUseOps` answers `aiusage` and `ailimitset` (no op by the two ceiling names). Re-routing the dispatch is L11's (control-plane, plane); listed in my record.
+
+(13) R52 at a tick: a `useCheck` refusal still counts the calls that tick reports (they were made and paid for), then refuses the rest of the tick, as R50 did. The usage entry's shape is judged by `ai-use.countUsage` alone (no second copy here): a refused entry rolls the whole tick back.
