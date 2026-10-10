@@ -1,6 +1,6 @@
 # BOB to queue (T41)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -27,3 +27,7 @@ CHANGE (K2582, from QUEUE-PRODUCERS #14 J2): queue-producers' R37 now reads `pub
 ## B4 · CHANGE
 
 CHANGE (K2586, from NOTICE-PRODUCERS #6 J2; notice-producers is merged): your `test/m/queue/noticed.test.mjs`:295 goes red on the merged tranche (`facts.failed ["question-explorer"]`): your notices factory must hand stand-ins (or real instances) for `aiUse`, `steps`, `questionExplorer`, `investigation`, `review`. Merge `tranche/T41`, add them with B3's `publishSchedule` fake, re-run, and post COMPLETE.
+
+## B5 · CHANGE
+
+CHANGE (K2588): queue-producers is merged into `tranche/T41`. Merge the tranche in. Beside B3 and B4, two more of your tests are red on it (rule 4 (23)): `converts.test.mjs`:263 (fake at :264–267) and `feed.test.mjs`'s R6 limit test (fake at :13–16) fake a proposal with `n: 1, instances: []`, which progressions R18 never answers; give each one instance in R18's shape (`{progression_key, entity_id, grade, grade_determined, overdue}`) and a `progression_instances` row placing a bundle the reader sees (`world.mjs`:60), as queue-producers' own fakes do. Re-run and post COMPLETE.
