@@ -110,3 +110,7 @@ answer-envelope (T41-60): `catalogue-end.test.mjs` pins C-94.5 OUTCOME_NOT_IN_VO
 ## J3 · COMPLETE
 
 T41-46a done (R13), as confirmed in B3. Exports: `none_exists` in CORRESPONDENCE_OUTCOMES; `seeksOf`, `seeksFindings` (facts.stages shape per B3), `SEEKS_MAX`, `SEEKS_PART_MAX`. Row: C-117.29 `SEEKS_REFUSED` (`where` seeksFindings > is-seeks, minted here). C-94.5's translation is re-worded. Mine under rule 4 (2), awaiting T42's stamp: the census rows C-117.29 (arrived) and C-94.5 (changed); the plane bundle is staled (rule 4 (14)). `uses` unchanged. filing-templates is unaffected (it reads only RISK_TIERS). Tests: action-grammar 41/41. The users' suites fail exactly the same tests before and after the change. format, architecture, coverage (13/13) and ownership: 0 failures. Record: Completion, on job/T41/action-grammar @ b6dce8ecb5+.
+
+## J4 · COMPLETE
+
+B4 done (R14; K2561). Added row C-32.21 `MACHINE_CANNOT_STATE_SEEKS` in RECORDS_LAW_FENCE_CHECKS, directly after C-32.20; its `where` is `src/actions/index.mjs #seeksFence > is-machine-state-seeks`, with a translation in C-32.20's form. Tests: action-grammar 42/42, including R14 checked whole with negative controls. The users' suites fail exactly the same tests before and after the change (filing-templates is now 56/56). New census line: C-32.21 arrived, under rule 4 (2), awaiting T42's stamp. `uses` unchanged. format, architecture, coverage (14/14) and ownership: 0 failures. Record: Completion: B4.
