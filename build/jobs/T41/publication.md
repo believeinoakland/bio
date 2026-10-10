@@ -1,6 +1,6 @@
 # publication (T41)
 
-**Status** · session_01BKNMquTmjnJkVp4dFUpPPJ · depth 2 · WORKING · handled B0
+**Status** · session_01BKNMquTmjnJkVp4dFUpPPJ · depth 2 · RUNNING until 2026-10-10T17:53:47Z (users' suites, HEAD vs tranche/T41) · handled B0
 
 ## J1 · QUESTION
 
