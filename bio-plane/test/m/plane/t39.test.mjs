@@ -75,7 +75,7 @@ test("R18 (T39): the scheduler reaches the same case-carriage instance: its onCo
   assert.equal(cc.onCopyWork("zz-probe", () => null).ok, true);
 });
 
-test("R18 (T39): with `CAPTURES` bound and a member PDF queued, one onAlarm answers doccopy with copied: 1, and the copy lies under <namespace>/obscured/<sha> in that bucket; with no bucket bound it answers DOCUMENT_COPY_NO_STORE", async () => {
+test("R18 (T39): with `CAPTURES` bound and a member PDF queued, one onAlarm answers doccopy with copied: 1, and the copy lies under <namespace>/obscured/<sha> in that bucket; with no bucket bound (K2380) copyWake answers null, so the alarm takes no copy work and the document stays pending", async () => {
   for (const namespace of [null, "scratch"]) {
     const ns = namespace || "bio";
     const CAPTURES = bucketStandIn();
@@ -98,11 +98,15 @@ test("R18 (T39): with `CAPTURES` bound and a member PDF queued, one onAlarm answ
     assert.ok(CAPTURES.held.get(`${ns}/captures/${original}`).bytes.equals(bytes), "the original is unchanged");
     assert.deepEqual(queued(x), [], "nothing left queued");
   }
-  /* negative control: no evidence bucket bound, the consumer's answer is case-carriage's refusal and nothing is derived */
+  /* negative control (K2380; rule 4 (18)): no evidence bucket bound, case-carriage's copyWake answers null with work
+     queued, so the plane's alarm takes no copy work: no doccopy answer, nothing derived, the document still pending */
   const bare = await built();
   const s = sha("a member's file with nowhere to be copied from");
   receipt(bare, s, "doorbell");
+  assert.deepEqual(queued(bare), [s]);
+  assert.equal(caseCarriageOf(bare.ctx).copyWake(NOW), null, "nowhere to copy from: no wake");
   const r = await bare.s.onAlarm(NOW);
-  assert.deepEqual([r.doccopy?.ok, r.doccopy?.code], [false, "DOCUMENT_COPY_NO_STORE"], JSON.stringify(r.doccopy));
+  assert.equal(r.doccopy ?? null, null, JSON.stringify(r.doccopy));
   assert.equal(caseCarriageOf(bare.ctx).documentCopy(s).state, "pending");
+  assert.deepEqual(queued(bare), [s], "left queued for a bucket");
 });

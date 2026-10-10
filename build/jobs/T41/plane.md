@@ -1,0 +1,71 @@
+# plane (T41)
+
+**Status** · session_011Rh5mYtXnbRop7kcnGcwb1 · depth 2 · COMPLETE · handled B8
+
+## J1 · QUESTION
+
+R33 / store-door R11: who decides that a read under a draft's grant is logged with `use: "draft"`?
+
+The draft's grant is minted by `credentials.aiGrantMint`, which records it as kind `ask` (it takes no `use`); answers fixes a read log's `use` from the first `logRead` entry that opens it; store-door's `underGrant` (`dispatch.mjs`:257–261) calls `store.logRead({grant, op, args, answer, viewer})` with no `use`. Nothing in git records that a grant was minted for a draft, so store-door alone cannot know.
+
+My best reading (I am building it now): the plane owns it, since it mints the draft's grant and hands store-door its `logRead`. `draftOnObject` notes each grant it mints (in memory on the `bio` object, dropped when the grant's TTL passes; no table), and the `logRead` the plane hands to `dispatch` records with `use: "draft"` for a grant so noted, else the entry's own `use` (or `ask`). store-door need pass nothing new; if its job adds a `use` to the entry, a noted draft grant still reads as `draft`. Tested at the interface: a draft's reads leave out a project kept away from drafts (`credentials.projectsKeptAway({use: "draft"})`) and an ask's reads do not.
+
+Replace only if you rule otherwise (e.g. credentials minting a `draft`-kind grant, which is not my module).
+
+## J2 · QUESTION
+
+Two points from B4/B5, everything else in them applied (B3 investigation to queue; B5 the plane's instances to notice-producers; R33 as K2574 wrote it; R35's `aiUseOps`, `readingGuidesOps` with `groupSlug`; R30 investigation at boot):
+
+1. (B5, wizard-scripts R23) The front door's `findExisting` is wired (steps' `stepsLike`, then `retrieval.search`'s questions and projects, each under the viewer's gate; `wiring.mjs` `frontDoorFinder`; tested). Its `pointer(viewer)` is "profile data, never named in code", and I find no such data in the code: no jurisdiction profile, instance-setup read or setting carries a "not Civicsmith's" pointer. My reading: register no pointer (wizard-scripts answers null) until a module provides that data; nothing to build in the plane now. Tell me if a provider exists that I missed.
+
+2. (B4, R35) `controlPlaneOwnerOps` is in `src/control-plane/owner-ops.mjs`, not yet on `tranche/T41`. I cannot import it before it merges. My reading: I spread it (with `of` the getters `{aiUse, aiRuns, caseAuthoring, review, legEarning, capture, steps, investigation, questionExplorer}` over the plane's instances) and test it when control-plane's merge reaches me by CHANGE; until then the rest of the job is done and green (plane 165/165, checks 0 but architecture's four `uses` edges, which you apply at merge).
+
+## J3 · REPORT
+
+A red in my tests that is ai-use's (its R2, R7), not the plane's: `test/system/migrate-released.test.mjs`, "born on 0.80.0: and no table a fresh store lacks": a store written by release 0.80.0 keeps `ai_ceilings` after the current plane opens it; a fresh store has none (nothing creates it since T41-23 deleted ai-runs' copy). `ai-use.migrate()`'s `#carryCeilings` (`ai-use/index.mjs`:124–141) carries its rows into `ai_limits` once but never drops the table, as `#carryCounter` drops `ai_usage_before_t40` (:118). The other 584 checks of that suite pass.
+
+Before my change, on `tranche/T41` @ `827b01abab` (a worktree, same test): the same check red with `["ai_ceilings", "ai_usage"]` (ai-use was never migrated at boot, so the old `ai_usage` was never re-keyed). My composition of ai-use (R31) clears `ai_usage`; `ai_ceilings` stays red until ai-use drops it after the carry (or a ruling keeps it and the suite is re-stated by BOB). Not accepted by name in rule 4 that I can find; I have not weakened the test.
+
+## Progress (PLANE #29), before the control-plane spread
+
+**Reading set** (mechanics §17): requirements 28 KB, code 102 KB, tests 327 KB (457 KB, over 300 KB), so the over path (K2304). Read whole myself: `build/requirements/plane.md`; layer 11's row and the plane section of `build/layers.md`; the plan's entry T41-63 and rule 4 (10)–(20); K2373, K2408, K2437, K2438, K2442, K2445, K2484, K2488, K2489, K2500, K2514, K2525, K2534, K2560, K2567, K2571, K2573; `src/plane/store.mjs`, `ask.mjs`, `stats.mjs`, `index.mjs`, `wizards.mjs`; tests `ask`, `findings`, `t39`, `t33`, `fixture`, `maps`; and the used services my entry names: ai-use (`aiUseOf`, `aiUseOps`, `migrate`), publish-schedule (`publishScheduleOf`, ops), ratification R43 and its factory, steps (`stepsOf`, counts, `stepsLike`), reading-guides (`readingGuidesOf`, `groupSlug`, ops), question-explorer (`questionExplorerOf`, `migrate`), investigation (`investigationOf`, `registerRunHolder`, `planPropose`), answers R2, R30 (`askAccount`, `logRead`, `readLog`), credentials (`accountFor`, `aiGrantMint`, `accountUsesSet`, `projectsKeptAway`), scheduler (`schedulerOf`, `hand`), store-door R10, R11 (`underGrant`), notice-producers' deps, wizard-scripts R23 (`startFrom`, `door`). A worker read the rest of my code (`door.mjs`, `wiring.mjs`, `unpack.mjs`, `screens.mjs`) and every other test under `test/m/plane/` and `test/system/migrate-released.test.mjs` in full, and wrote a 28,780-byte summary citing file and line for each statement (route-map order pins, purge order, fixtures, `onAlarm` key pins). What it left out did not matter; its pins (`maps.mjs`, case-carriage directly after publication) shaped the route order.
+
+**Entries applied (T41-63).** R30: steps (before ai-use and ai-runs, with the plane's promotion and observation-log), reading-guides (after capture-requests), question-explorer (built, migrated at once, handed to `schedulerOf(ctx, env, {fileSafety, questionExplorer})`), investigation (after intent, on the plane's promotion), each migrated in R3's pass; `op=stats` carries `stepsAcceptedAsProposed`, `stepsAcceptedEdited`, `stepsAcceptedOwnInstead`. R31: `aiUseOf(ctx)` built directly before ai-runs with no zone, migrated before ai-runs' migration, `aiUseOps` before ai-runs' map. R32: `ratificationOf(ctx).publishSchedule` (ratification R43's instance) taken directly after ratification is built, migrated, handed to case-authoring and queue's deps; `publishScheduleOps` after case-carriage's map (R18 keeps case-carriage directly after publication's). R33: no `ceilingRefusal`; `askOnObject` (with an ask's `project`, carried from `askOp`) and `draftOnObject` take the account and limit from `answers.askAccount` (`kind` `ask`/`draft`) before any grant or post; the draft path notes its grants in memory (`draftUse`) and the `logRead` handed to store-door records `use: "draft"` for them (K2574). R34: `registerRunHolder("ai-runs", …)` over `aiRunsOf(ctx, env).runHolder`. R35: `readingGuidesOf(ctx, {groupSlug: () => instanceSetupOf(ctx, env).producingGroup()})`, `readingGuidesOps` routed after capture-requests'. B3 (K2580): queue handed the plane's investigation. B5 (K2586): notice-producers handed the plane's credentials, following, standards, fileSafety, provenance, aiUse, steps, questionExplorer, investigation, review; wizard-scripts registered with the front door's finder (`wiring.mjs` `frontDoorFinder`: steps' `stepsLike`, then retrieval's questions and projects under the viewer's gate); no pointer (K2591: N847). Inherited reds re-stated: `ask.test.mjs` :69, :182, :234, :264, :287, :301 to `accountUsesSet` (rule 4 (12)); `findings.test.mjs`:83 (its :88) for D54, the owner's sight, the founder `null` at a hidden project and the same lens once discoverable (rule 4 (11)); `t33.test.mjs` R23's administrator line re-stated as the machine class's whole read, plus a member administrator not on the hidden project who sees none of its roster (N822); `t39.test.mjs`:78 no-bucket arm (rule 4 (18)). `maps.mjs` gains publish-schedule, reading-guides and ai-use at their places.
+
+**Remaining:** B4's `controlPlaneOwnerOps` spread (R35, K2585), on control-plane's merge by CHANGE (K2591).
+
+**Deferred:** none.
+
+**Found in other modules:** ai-use's migration leaves `ai_ceilings` on a store older than T40 (`migrate-released`, born on 0.80.0), red at the tranche tip before my change too (J3).
+
+**Final `uses`** (for BOB at merge): today's, plus `steps`, `reading-guides`, `question-explorer`, `investigation` (`ai-use`, `publish-schedule` already named).
+
+**Tests and checks run.** Plane module tests: 147/155 at the start (the 8 rule 4 reds), 165/165 now (`node --test test/m/plane/`, 10 new tests in `t41.test.mjs`). `test/system/migrate-released.test.mjs`: 584 pass, 1 fail (J3), the same as the tranche tip before my change. Users who build the plane: scheduler 129/129; control-plane 191/4 and store-door 36/5, failing only rule 4 (15), (17)'s named reds. Checks: format 0; architecture 4 (the four `uses` edges above, BOB's at merge); coverage 35/35, 0; ownership 0.
+
+## Completion (PLANE #29)
+
+**Entries applied:** everything in "Progress" above, and B8 (K2600, R35, K2585): `controlPlaneOwnerOps(of, url, body)` (`control-plane/owner-ops.mjs`) spread after admission's map and before store-door's, `of` the getters of the plane's own `aiUse`, `aiRuns`, `caseAuthoring`, `review`, `legEarning`, `capture`, `steps`, `investigation`, `questionExplorer`. No op of it collides with another map's. `maps.mjs` has a `control-plane` row at that place. B6 (K2591): no pointer registered (N847). B7 (K2592): `ai_ceilings` is rule 4 (24) until N848.
+
+**Deferred:** none.
+
+**Found in other modules:** ai-use leaves `ai_ceilings` after its carry (J3; N848).
+
+**Final `uses`** (for BOB at merge): today's list, plus `steps`, `reading-guides`, `question-explorer`, `investigation`. `ai-use`, `publish-schedule` and `control-plane` are already named.
+
+**Tests and checks run** on the merged tranche (`tranche/T41` with every other L11 job):
+- Plane module tests: 166/166 (`node --test bio-plane/test/m/plane/`; 147/155 at START, the 8 rule 4 reds re-stated; 11 new tests in `t41.test.mjs`).
+- `test/system/migrate-released.test.mjs`: 584 pass, 1 fail, rule 4 (24) (`ai_ceilings`).
+- Users' suites:
+  - 0 failures: control-plane 216/216, store-door 43/43, scheduler 129/129, op-declarations 128/128, affordances 232/232, queue 136/136, queue-producers 84/84, notice-producers 90/90, instance-setup 135/135, admission 41/41, wizard-scripts 76/76, op-grades 45/45, tasks 106/106, setup-words 5/5.
+  - answer-envelope 28/29: `catalogue-end`, rule 4 (21).
+- Checks:
+  - format: 0 failures.
+  - architecture: fails only on the four `uses` edges above, BOB's at merge (12 import lines).
+  - coverage: 35/35 ids, 0 failures.
+  - ownership: 0 failures.
+
+Size (session_011Rh5mYtXnbRop7kcnGcwb1): test runs 27, module lines 1515
+
+## J4 · COMPLETE
+
+T41-63 complete, on the merged tranche. Plane module tests 166/166. migrate-released 584/1: rule 4 (24) only. Users' suites green except answer-envelope catalogue-end, rule 4 (21). B8 applied: controlPlaneOwnerOps spread over the plane's instances, tested. Checks: format 0, coverage 35/35, ownership 0; architecture fails only on the four uses edges (steps, reading-guides, question-explorer, investigation), recorded as my final uses for you to apply at merge. Completion section in my record.

@@ -213,3 +213,25 @@ export function ownHostsOf(identity, ownHostsVar = null, { log = logSkipped, cor
   } catch { /* an unreadable address gives nothing */ }
   return out;
 }
+
+/** (K2586; wizard-scripts R23, D52, D53) the front door's finder, `door.findExisting(message, viewer)`, registered with
+ *  `wizard-scripts` at start: the existing work a first message matches, as this viewer may see it, `[{kind, id, name}]`:
+ *  the steps whose work is like it (`steps.stepsLike`, its R7, through its own sight), then the questions and projects
+ *  the record's search finds for it (`retrieval.search`, its viewer gate, D-15), each kept once by wizard-scripts. Each
+ *  provider is asked of its getter at the call; one that throws or refuses contributes nothing. Writes nothing. */
+export const FRONT_DOOR_KINDS = Object.freeze({ inquiry: "question", project: "project" });
+export function frontDoorFinder({ steps, retrieval, limit = 20 }) {
+  return (message, viewer) => {
+    const out = [];
+    try {
+      const s = steps().stepsLike({ work: message, viewer });
+      for (const x of (s && s.ok === true && Array.isArray(s.steps) ? s.steps : [])) out.push({ kind: "step", id: x.step, name: x.work });
+    } catch { /* none from steps */ }
+    try {
+      const r = retrieval().search({ q: message, viewer, limit, facets: false, widen: false });
+      for (const h of (r && Array.isArray(r.hits) ? r.hits : []))
+        if (Object.hasOwn(FRONT_DOOR_KINDS, h.object_type)) out.push({ kind: FRONT_DOOR_KINDS[h.object_type], id: h.bundle_id, name: h.title });
+    } catch { /* none from the record's search */ }
+    return out;
+  };
+}

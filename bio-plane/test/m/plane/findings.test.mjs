@@ -12,6 +12,7 @@ import { recordOf } from "../../../src/record-core/index.mjs";
 import { biasOf, BIAS_DEBT_DELAY_MS, BIAS_DEBT_BATCH } from "../../../src/bias/index.mjs";
 import { inquiryFindings } from "../../../src/inquiry/index.mjs";
 import { instanceSetupOf } from "../../../src/setup.mjs";
+import { membershipOf } from "../../../src/membership/index.mjs";
 
 const GROUP = "lens-watch";
 const DOC = "INFO-2026-1201-doc", LENS = "BIAS-2026-1201-lens";
@@ -74,7 +75,14 @@ function world(x) {
       assert.equal(a.ok, true, JSON.stringify(a).slice(0, 400));
     },
     changeLens: () => lensAt("adopted", "proposed", TEXT1),
-    lensNow: () => bias.biasManifest({ scope: "project", scopeId: P, viewer: "admin", limit: 1 }).statements_sha,
+    /* D54 (K2408, K2442): read as the project's owner, a participant; the founder, neither invited nor joined, sees a
+       hidden project only at EXISTENCE (its id, name and owners), never its lens. */
+    lensNow: (viewer = "member:ruth") => bias.biasManifest({ scope: "project", scopeId: P, viewer, limit: 1 }).statements_sha,
+    discoverable() {
+      const r = membershipOf(x.ctx).projectVisibilitySet({ projectId: P, setting: "discoverable", reason: "open to the group",
+                                                           by: "ruth", viewer: "member:ruth" });
+      assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
+    },
     conclude(id) { promote(id, inquiryMd(id, P, false), "inquiry"); promote(id, inquiryMd(id, P, true), "inquiry"); },
     debt: (run) => [...x.ctx.storage.sql.exec(`SELECT * FROM bias_debts WHERE run = ?`, run)][0] ?? null,
   };
@@ -86,6 +94,11 @@ test("R12: on the composition root, a question concluded under its project's len
   w.adopt();
   const then = w.lensNow();
   assert.match(then, /^[0-9a-f]{64}$/);
+  /* D54 (K2408; N822): the founder, not on this hidden project, sees no lens of it; negative control: once the owner
+     makes it discoverable, the founder's sight of it is as before D54, the same lens */
+  assert.equal(w.lensNow("admin"), null, "a hidden project's contents are not the founder's to see");
+  w.discoverable();
+  assert.equal(w.lensNow("admin"), then, "a discoverable project: unchanged");
   const Q = "INQ-2026-1201-lens";
   w.conclude(Q);
   /* bias holds inquiry's findings as kind `finding`: the question's finding is offered, with the lens it was made under */
