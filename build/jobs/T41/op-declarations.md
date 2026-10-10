@@ -96,3 +96,7 @@ T41-58 done: R41, R42, R43 (78 ops, with K2486, K2496, K2560, K2561, K2569, K257
   - architecture 6 failures, all the `uses` edges already named in the Completion (`reading-guides`, `run-productions`, `provenance`, `action-plans`). Module lines 3,417.
 
 Size (session_01HSBgxknUm7jJ6a36oW3vEv): test runs 19, module lines 3417
+
+## J4 · COMPLETE
+
+B3 and B4 applied (record, 'B3, B4 applied'): reading-guides' five declared (guidepropose as extractpropose plus the body's by, since its owner reads the proposer from the body; guideproposetocivicsmith a member's act; three session reads); capturestepproduct store-internal, asserted. 128/128; format, coverage 45/45, ownership 0; architecture only the uses edges named (reading-guides, run-productions, provenance, action-plans).
