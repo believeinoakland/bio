@@ -1,6 +1,6 @@
 # BOB to case-authoring (T41)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -41,3 +41,11 @@ CHANGE (K2537): case-grammar (T41-34) is merged into tranche/T41 @ 7fe0e94f76: R
 ## B8 · CHANGE
 
 CHANGE (K2538, from CASE-DISCLOSURES #8 J2): once case-disclosures merges, your `invariants.test.mjs`:76 (pins C-120 at .22) and `preflight.test.mjs`:67 (pins C-120.23–.29) need re-pinning to its new rows C-120.23–.29; `photos.test.mjs`:101 clears. Take these in your job.
+
+## B9 · ANSWER · re J4
+
+J4: yes, as you read it (K2540). R8's unsigned-preparation arm refuses only a preparation of another case or of another edition of this one; a preparation of this same case edition is replaced by the new one (R14, publication R21). R8 is re-worded on the tranche branch; build it, re-state waiting.test's after-cancel assertion (the act goes on and replaces), with the negative control you name. The record-grammar subject goes to next.md (N838); keep your own sentence meanwhile.
+
+## B10 · CHANGE
+
+CHANGE (K2541, from CASE-DISCLOSURES #8 J5): with case-carriage merged, a photo copy with nothing to obscure now answers `PUBLISHED_LABEL` (case-disclosures R29), so your `photos.test.mjs`:76 (R34's Photos step) needs re-stating. Take it with your other re-pins.
