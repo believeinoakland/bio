@@ -114,12 +114,17 @@ export function pinnedNamespaceGate(url, op, spec) {
        R104), relayed by the door; admission's one limit is R21's per-source window, over every public op alike.
      - `groupkeyset` (R19): the group's API key is the body's; one sent in the query is gone, and the call answers as
        `credentials` answers an empty key (`NO_SECRET`). The session's `token` stays: the act is a session's own.
+     - `handlecheck` (R20, T41; K2576, op-declarations R42): its invitation and handle are the body's, so an invitation
+       is never kept in an address; one sent in the query is gone, and the call answers as `membership` answers a
+       missing invitation (`NO_SUCH_INVITATION`, its R123), as the doors answer a missing key. A member asking without
+       an invitation keeps its session (the token travels in the header or body, R20).
    Every other op's URL is left as it came. */
 export const PUBLIC_DOORS = Object.freeze(["joinlinkinvite", "websiteinvite"]);
 export const BODY_ONLY_FIELDS = Object.freeze({
   websiteinvite: Object.freeze(["cover", "key"]),
   joinlinkinvite: Object.freeze(["cover", "link"]),
   groupkeyset: Object.freeze(["key"]),
+  handlecheck: Object.freeze(["handle", "invite"]),
 });
 /* R20 (T36) — and a query `token` or `secret` is removed whatever the op: no credential is read from the address
    (`credentialAddressGate` has refused a request that names one before this runs), so none is kept there for a later

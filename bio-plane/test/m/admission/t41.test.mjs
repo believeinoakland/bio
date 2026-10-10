@@ -115,3 +115,34 @@ test("R22 (T41): op=handlecheck answered NO_SUCH_INVITATION is counted once as k
     assert.equal(env.calls.length, 0, `not counted: ${JSON.stringify(args)}`);
   }
 });
+
+/* ---------------------------------------------------------------------------------------------------------------- */
+
+test("R20 (T41; K2576, op-declarations R42): handlecheck's invite and handle are body-only — a query's copy is stripped before any reader of the URL, so a request naming its invitation only in the query reaches the op with none (membership then answers NO_SUCH_INVITATION, as R17's doors answer a missing key); the session a member asks with, and every other parameter, stay", async () => {
+  const INVITE = "inv_" + hex64(), HANDLE = "rosa-m";
+  assert.deepEqual([...A.BODY_ONLY_FIELDS.handlecheck].sort(), ["handle", "invite"]);
+  assert.ok(Object.isFrozen(A.BODY_ONLY_FIELDS.handlecheck));
+  /* at the gate */
+  const u = urlOf({ op: "handlecheck", invite: INVITE, handle: HANDLE, store: "scratch", x: "1" });
+  assert.equal(A.queryGate(u, "handlecheck"), null, "it never refuses");
+  assert.deepEqual(Object.fromEntries(u.searchParams), { op: "handlecheck", store: "scratch", x: "1" });
+  assert.equal(u.href.includes(INVITE) || u.href.includes(HANDLE), false);
+  /* through the door's order, for an invitee and a signed-in member alike */
+  const { env, S } = world();
+  for (const token of [undefined, S.ann]) for (const store of [undefined, "scratch"]) {
+    env.calls.length = 0;
+    const r = await gate(env, { op: "handlecheck", token, params: { invite: INVITE, handle: HANDLE, store } });
+    assert.equal(r.public, true);
+    assert.deepEqual([r.url.searchParams.has("invite"), r.url.searchParams.has("handle"), r.url.searchParams.get("store")], [false, false, store ?? null]);
+    assert.equal(JSON.stringify([...r.url.searchParams]).includes(INVITE), false);
+    if (token) assert.equal(r.credential.token, token, "the member's session is still presented (header), for the op's viewer");
+    for (const c of env.calls) assert.equal(c.href.includes(INVITE), false, "the invitation reaches no request's address");
+  }
+  /* negative controls: invitelook (not named body-only) keeps its query's invitation, and handlechange's handle is
+     the op's own concern (its URL is left as it came) */
+  for (const op of ["invitelook", "handlechange"]) {
+    const v = urlOf({ invite: INVITE, handle: HANDLE });
+    A.queryGate(v, op);
+    assert.deepEqual(Object.fromEntries(v.searchParams), { invite: INVITE, handle: HANDLE }, op);
+  }
+});
