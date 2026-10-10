@@ -194,6 +194,12 @@ export const WIZARD_SCRIPTS_CHECKS = Object.freeze({
     check: "C-131.41", where: at("writingHelp", "is-writing-help-request"),
     translation: "The assistant cannot draft this yet. Write it in your own words; nothing was changed.",
   },
+  /* T41 (T41-50; N820, D52; K2574): R28's check of a proposal made for a tangled message. BOB's draft. */
+  START_RUMOUR_AS_QUESTION: {
+    check: "C-131.42", where: at("checkStartProposal", "is-start-rumour", "start.mjs"),
+    translation: "A rumour is followed as a lead, never put as a question about a person. This proposal put one as a "
+      + "question, so it was not offered.",
+  },
 });
 
 /** The row a code names, or null for a code this module does not answer. */
