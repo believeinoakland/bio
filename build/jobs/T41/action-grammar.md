@@ -2,6 +2,74 @@
 
 **Status** · session_01X91czHYMgFDRuMpbnSJLFk · depth 2 · WORKING · handled B3
 
+## Completion
+
+**Entry applied:** T41-46a (H30 (1), intent R33; K2505): R13. My readings were confirmed by BOB in B3 (K2553), which supersedes B2's shape.
+- **The outcome.** `CORRESPONDENCE_OUTCOMES` gains `none_exists`, added at the end so every earlier position stays. It is a received decision's outcome like the others: `lifecycleFindings` judges it exactly as it judges `granted`.
+  - C-94.5 `OUTCOME_NOT_IN_VOCABULARY`'s translation now names `none_exists` (B3 (1)): "An outcome is one of granted, denied, partial, reversed, affirmed, none_exists when the body says no responsive record exists, or none_stated when the body stated none."
+  - Its finding names the vocabulary from the array, so the finding now ends "…, none_stated, none_exists".
+- **`seeks`.** New exports: `SEEKS_MAX` (12), `SEEKS_PART_MAX` (200), `seeksOf(fm)` and `seeksFindings(fm, facts, findings)`.
+  - `seeksOf` answers the distinct well-formed items in order, as copies. It answers `[]` when `seeks` is absent, is not a list, or sits on another kind than `records_request`.
+  - `seeksFindings` pushes one finding per fault:
+    - `seeks` on another kind (and nothing more is asked of it);
+    - not a list of 1 to 12 entries (`[]` is refused; absent or null is not);
+    - more than 12;
+    - each malformed item (exactly `{progression, entity, stage}`, each a non-empty string of at most 200 characters);
+    - each repeat of an earlier item;
+    - each item whose stage `facts` says its progression does not declare.
+  - **The `facts` shape** (B3 (2)) is `facts.stages = {[progressionKey]: [stage_key…]}`. `null` stands for a progression not found and is its own finding. A progression with no entry is not judged; only the object's own keys count.
+  - It reads no record. It is not asked by the audit (`checkActionExtension`), since R13 does not make it a C-2.10 arm.
+- **The new row is C-117.29, code `SEEKS_REFUSED`**, in `ACTION_CATALOGUE_CHECKS` (last). Its `where` is `src/action-grammar/checks.mjs seeksFindings > is-seeks`: it is minted here, inside a DEC-49 region, as C-73.6 is. Every finding carries `check: "C-117.29"` and `code: "SEEKS_REFUSED"`.
+
+**Reading set (§17).** I read all of it whole myself:
+- the requirements;
+- the Purpose and named services of `record-grammar`, `civil-time`, `jurisdictions`, `connections` and `inquiry-grammar`;
+- layer 9's contract and the action-grammar section of `layers.md`;
+- the module's code (`grammar.mjs`, `checks.mjs`, `index.mjs`) and its tests (`grammar.test.mjs`, `fixture.mjs`, `corpus.mjs`);
+- T41-46a and rule 4 in `plan/current.md`;
+- K2483, K2484 and K2505;
+- for R13's context: actions R70 and R71, intent R33 and progressions R5's terms.
+
+`golden.json` is a fixture. I did not read it whole: I searched only the lines my change touches (the outcome list and its finding). The set is within START's 239 KB measure.
+
+**Final `uses`:** unchanged: `record-grammar`, `jurisdictions`, `civil-time`, `connections`, `inquiry-grammar`. There is no edge to `progressions`, which the caller reads (actions R70).
+
+**What filing-templates reads (B1).** Nothing changes for it. It imports only `RISK_TIERS` from this module (`filing-templates/index.mjs`:39), and its suite's reds are the same with and without this change. `affordances` publishes `CORRESPONDENCE_OUTCOMES` as its `correspondence_outcomes` vocabulary, so it now carries `none_exists`. None of its tests pins that list.
+
+**Inherited reds, mine (rule 4 (2)):** the row census (`test/system/row-census.test.mjs`) reports exactly these two, both awaiting T42's stamp:
+- `arrived with no record: C-117.29 SEEKS_REFUSED` (new);
+- `changed with no record: C-94.5 OUTCOME_NOT_IN_VOCABULARY` (re-worded, B3 (1)).
+
+The plane bundle is staled (rule 4 (14)).
+
+**Deferred:** none.
+
+**Found in another module (REPORT J2):** answer-envelope's `catalogue-end.test.mjs` pins C-94.5's translation digest in `rows-before-r43.json` (`["C-94.5","4f2ee83d0d48dd33"]`). With the re-wording it reads `65a25bcf08b2ebd2`, so that pin must move with the row (`changed.note`, a re-wording under K2553).
+- The test is already red for rule 4 (16), so it shows no new failure today. Its failure detail names neither C-94.5 nor C-117.29.
+- It will name C-94.5 once T41-60 clears rule 4 (16), unless the pin is moved then.
+- C-117.29 reaches `CHECK_FAMILIES` through this module's file, which is already listed (`families.mjs`:188).
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/action-grammar/`: 41 tests, 41 pass, 0 fail.
+  - New file `seeks.test.mjs`: 12 tests naming R13. Each tests one part fully, with a negative control (K874).
+  - Changes to `grammar.test.mjs`: R1/R2 compare the vocabulary with `none_exists` appended; R9's rows add C-117.29 and C-94.5's new words; R9's census ranges now run to C-117.29.
+  - `fixture.mjs`: the recorded C-94.5 finding is compared with its grown vocabulary (`GROWN`, applied the way `REWORDED` is).
+- Mutation checks, each restored afterwards. Each of these broke `seeks.test.mjs`:
+  - dropping the repeat check: 3 fail;
+  - allowing 13 items: 1 fails;
+  - not judging a `null` progression: 1 fails;
+  - accepting `seeks: []`: 2 fail.
+- Users' suites (actions, action-clocks, filing-templates, escalation, affordances, setup-page, answer-envelope) and the row census, run before and after this change:
+  - The failing tests are identical by name, except for the census's two rows above.
+  - actions 95/96, action-clocks 55/55, filing-templates 49/56, escalation 63/63, affordances 186/220, setup-page 75/83 and answer-envelope 24/28 pass. Each red is pre-existing (rule 4's named reds).
+- Process checks:
+  - `format`: 145 modules, 144 requirements files; 0 failures.
+  - `architecture`: 7 product files, 14 relative imports; 0 failures.
+  - `coverage`: 13 of 13 live requirement ids named by a test; 0 failures.
+  - `ownership` (tranche/T41): 6 files; 0 failures.
+
+Size (session_01X91czHYMgFDRuMpbnSJLFk): test runs 16, module lines 1939
+
 ## J1 · QUESTION
 
 Q1 (R13; my best reading, being built now; the answer does not stop the job).
