@@ -38,3 +38,7 @@ Across six runs the plane read 441–1,359 ms, the spread coming from machine lo
 - Checks: `format` 0 failures; `architecture` bundler 0 failures; `coverage` bundler 31 of 31; `ownership` 0 failures (after the commit; see the commit).
 
 Size (session_01X5bkceFD2GHGbfimdSRiKL): test runs 4, module lines 3441
+
+## J1 · REPORT
+
+R31 finding (K2547's watch): the plane's global scope measures past R31's 500 ms warning here: 743 ms in the recorded run, 441-1,359 ms across six runs, some past the platform's 1 s. A CPU profile puts ~380 ms per import in compiling the 15 MiB source and ~60 ms in evaluating it, so size drives it. Measured in Node, not workerd; the platform's own figure is the next release's (wrangler --dry-run). Splitting the plane is Bob's question (K2547); yours to weigh. Every other member is under 70 ms and 2.5 MiB.
