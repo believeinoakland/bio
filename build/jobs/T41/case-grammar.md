@@ -1,6 +1,6 @@
 # case-grammar (T41)
 
-**Status** · session_01GiDdoJfVAxVEHu47GsComE · depth 2 · COMPLETE · handled B2
+**Status** · session_01GiDdoJfVAxVEHu47GsComE · depth 2 · COMPLETE · handled B3
 
 ## Completion (CASE-GRAMMAR #13)
 
@@ -9,6 +9,8 @@
 - **R13 (T41)**: R23–R26's blocks travel inside `case.md`; no file kind added (comment in `casefile.mjs`; tested).
 - **R14 (T40, T41)**: the copy line or the unmarked line picked by `marked`, then the label word for word when there is one; "The account" right after the claims (each bias-framed sentence marked, its statement named, with its kind, subject and text when the lens prints it; the four statements' rows not printed there), "What reviewers said" (the included comments and the count left out) and "Approvals" (the rule in force and each approval) right before "How to check this case yourself"; each section only when its block is carried, numbered as rendered. `complete.mjs`.
 - **R23–R26** in the new `account.mjs`, exact values as R17's (`facts.mjs`' `exact`), readers gated `/6`+ and null without the block: `accountLines`, `accountOf`, `accountSectionLines`, `accountBiasMark`; `biasApplicationsLines`, `biasApplicationsOf`; `reviewCommentsLines`, `reviewCommentsOf`; `approvalsLines`, `approvalsOf`, and (K2528) `approvalSubjectSha(text)`, the SHA-256 of the document with its front matter's `approval_rule` line and `approvals:` block removed. All re-exported by `index.mjs`.
+
+- **CHANGE B3 (K2533):** R25's `review_comments_left_out` may be null, a count that could not be determined: written and read null (the writer already did), rendered "How many reviewers' comments were left out is not stated."; tested with a negative control (0 and 2 stay counts). `tranche/T41` merged for R25's text.
 
 **Deferred:** none.
 
@@ -20,11 +22,11 @@
 - J1's approval circularity (review R31, ratification R49, case-authoring R68), ruled by K2528 with `approvalSubjectSha`.
 
 **Tests and checks.**
-- `node --test bio-plane/test/m/case-grammar/*.test.mjs`: tests 123, pass 123, fail 0 (104 before; new `account.test.mjs` 15, `marked.test.mjs` 4; `obscured.test.mjs`'s expectations gained `marked`).
+- `node --test bio-plane/test/m/case-grammar/*.test.mjs`: tests 124, pass 124, fail 0 (104 before; new `account.test.mjs` 16, `marked.test.mjs` 4; `obscured.test.mjs`'s expectations gained `marked`).
 - Users of case-grammar, this branch against `origin/tranche/T41` (pass/fail): case-carriage 63/4 vs 64/3; case-tensions 23/0 = ; publication 134/5 = ; docket 59/0 = ; public-read 154/2 vs 156/0; case-catalogue 16/0 = ; ratification 220/0 = ; case-checker 60/1 vs 61/0; case-import 88/0 = ; case-disclosures 78/3 vs 80/1; case-authoring 162/7 vs 164/5. Every added failure is listed above; the others are inherited and unchanged.
 - `node checks/format.mjs`: 145 modules, 144 requirements files; 0 failures. `architecture.mjs . case-grammar`: 36 product files, 115 relative imports; 0 failures. `coverage.mjs . case-grammar`: 26 of 26 live requirement ids named by a test; 0 failures. `ownership.mjs . case-grammar tranche/T41`: 0 failures.
 
-Size (session_01GiDdoJfVAxVEHu47GsComE): test runs 14, module lines 2,657
+Size (session_01GiDdoJfVAxVEHu47GsComE): test runs 16, module lines 2,657
 
 ## J1 · QUESTION
 
