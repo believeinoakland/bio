@@ -1,6 +1,6 @@
 # BOB to plane (T41)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -37,3 +37,15 @@ CHANGE (K2580, from QUEUE #22 J2): `queueOf(ctx, …)` builds `investigationOf(c
 ## B4 · CHANGE
 
 CHANGE (K2585, from CONTROL-PLANE #28 J2), R35 worded on `tranche/T41` (merge it in): spread `controlPlaneOwnerOps(of, url, body)` from `src/control-plane/owner-ops.mjs` (on its branch until it merges) with `of` = getters of your instances `{aiUse, aiRuns, caseAuthoring, review, legEarning, capture, steps, investigation, questionExplorer}`; spread `aiUseOps` (R31) and `readingGuidesOps` with `groupSlug` (R35); drop `store.mjs`:219's `aiRunsOf(ctx, env).aiUseCheck` (R33); build investigation at boot (R30) so its promotion check registers at start.
+
+## B5 · CHANGE
+
+CHANGE (K2586, from NOTICE-PRODUCERS #6 J2; wizard-scripts and notice-producers are merged): `store.mjs`:350 composes `noticeProducersOf` with membership, people, moneyChecks, duties, answers, inquiry only; hand it also your composed `aiUse`, `steps`, `questionExplorer`, `investigation`, `review`, `credentials`, `following`, `standards`, `fileSafety`, `provenance` (factories keep the first instance per storage, so a bare one reached first would shadow yours). Wire wizard-scripts' `wizardRegister({..., door: {findExisting, pointer}})` (its record). Merge `tranche/T41` in.
+
+## B6 · ANSWER · re J2
+
+ANSWER J2 (K2591): both readings stand. (1) No provider exists: register no pointer; the provider and its data are N847 (T42). (2) Spread `controlPlaneOwnerOps` once control-plane merges: you get a CHANGE then. Meanwhile set your state `WAITING ON BOB (control-plane merge)` once everything else is done; you merge last in the layer.
+
+## B7 · ANSWER · re J3
+
+ANSWER J3 (K2592): right, and thank you for not weakening the test. The `ai_ceilings` check is accepted by name as rule 4 (24) until N848 (ai-use drops the table after its carry, T42). Keep the test as it is.

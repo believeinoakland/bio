@@ -2,14 +2,15 @@
    proposal (R19), visibility and the refusal rows (R20), at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, draft, approved, V, MACHINE, STEPS, step, LIBRARY } from "./fixture.mjs";
+import { seeded, draft, approved, discoverable, V, MACHINE, STEPS, step, LIBRARY } from "./fixture.mjs";
 import * as wz from "../../../src/wizard-scripts/index.mjs";
 
 const A = V("alice"), B = V("bob"), F = V("frank"), E = V("erin"), D = V("dave");
 const row = (c) => wz.WIZARD_SCRIPTS_CHECKS[c];
 
-test("R18 nothing is deleted: every act appends; every name in attribution is held by value; the tables are this module's own, declared to purge, a project's purge clearing its scripts and nothing else", () => {
+test("R18 nothing is deleted: every act appends; every name in attribution is held by value; the tables are this module's own, declared to purge, a project's purge clearing its scripts and nothing else (the administrator invited to P, D54)", () => {
   const w = seeded();
+  w.join(w.P, "erin", "invited");   /* D54: an invited administrator sees hidden P whole */
   const counts = () => Object.fromEntries(wz.WIZARD_SCRIPTS_TABLES.map((t) => [t, w.count(t)]));
   let prev = counts();
   const grew = (why) => {
@@ -84,7 +85,7 @@ test("R19 a machine writes only a proposal: it never drafts, revises, submits, a
   assert.equal(sneaky.reason, "MACHINE_CANNOT_DRAFT_WIZARD");
 });
 
-test("R20 visibility: a project's script is seen by whoever may see the project; a group-wide or Civicsmith script by every member; every read and act answers a script the viewer may not see as absent, and no count names one", () => {
+test("R20 visibility: a project's script is seen by whoever may see the project; a group-wide or Civicsmith script by every member; every read and act answers a script the viewer may not see as absent, and no count names one; D54: to an administrator neither invited nor joined, a hidden project's scripts are absent everywhere, a discoverable project's seen whole", () => {
   const w = seeded();
   const a = approved(w);
   const s = draft(w, { name: "Sub" }); w.wz.wizardSubmit({ version: s.version, author: F, viewer: F });
@@ -108,6 +109,24 @@ test("R20 visibility: a project's script is seen by whoever may see the project;
   const dc = w.wz.wizardCandidates({ viewer: V("dave") });
   assert.ok(!JSON.stringify(dc).includes(a.script), "dave owns Q: candidates name no script he cannot see");
   assert.deepEqual(w.wz.wizardCheck({ steps: STEPS, viewer: D }).warnings, [], "no duplicate warning names a script he cannot see");
+  /* D54 (K2408): P is hidden and erin, an administrator, neither invited nor joined: every read and act answers absent */
+  absent(w.wz.wizardRead({ script: a.script, viewer: E }), "D54 read");
+  absent(w.wz.wizardApprove({ version: s.version, by: E, viewer: E }), "D54 approve");
+  absent(w.wz.wizardApprove({ version: a.version, widen: true, by: E, viewer: E }), "D54 widen");
+  absent(w.wz.wizardRetire({ script: a.script, reason: "r", by: E, viewer: E }), "D54 retire");
+  absent(w.wz.wizardUse({ script: a.script, viewer: E }), "D54 use");
+  absent(w.wz.wizardProgress({ script: a.script, version: a.version, event: "start", viewer: E }), "D54 progress");
+  assert.deepEqual(w.wz.wizards({ viewer: E }).scripts.map((x) => x.id), [LIBRARY[1].id, LIBRARY[0].id], "D54: the library's only");
+  assert.deepEqual(w.wz.submittedFor({ viewer: E }).entries, [], "D54");
+  assert.ok(!w.wz.wizardsAt({ screen: "case-home", viewer: E }).scripts.some((x) => x.id === a.script), "D54");
+  assert.ok(!JSON.stringify(w.wz.wizardCandidates({ viewer: E })).includes(a.script), "D54: candidates name none of P's");
+  assert.deepEqual(w.wz.wizardCheck({ steps: STEPS, viewer: E }).warnings, [], "D54: no duplicate warning names P's script");
+  /* control: P discoverable, an administrator sees it whole */
+  discoverable(w);
+  assert.equal(w.wz.wizardRead({ script: a.script, viewer: E }).ok, true, "D54 control: a discoverable project");
+  assert.ok(w.wz.wizards({ viewer: E }).scripts.some((x) => x.id === a.script));
+  assert.deepEqual(w.wz.wizardCheck({ steps: STEPS, viewer: E }).warnings.map((x) => x.code), ["WIZARD_DUPLICATE"]);
+  absent(w.wz.wizardRead({ script: a.script, viewer: D }), "a member outside a discoverable project sees no script of it");
   /* group-wide and Civicsmith: every member */
   w.wz.wizardApprove({ version: a.version, widen: true, by: E, viewer: E });
   assert.equal(w.wz.wizardRead({ script: a.script, viewer: D }).ok, true);
@@ -121,7 +140,7 @@ test("R20 each refusal carries its row from this module's own family C-131, each
   for (const [code, r] of rows) {
     assert.match(r.check, /^C-131\.\d+$/, code);
     assert.ok(typeof r.translation === "string" && r.translation.length > 10, code);
-    assert.match(r.where, /^src\/wizard-scripts\/(index|writing-help)\.mjs \S+ > is-[a-z-]+$/, code);
+    assert.match(r.where, /^src\/wizard-scripts\/(index|writing-help|start)\.mjs \S+ > is-[a-z-]+$/, code);
   }
   assert.equal(new Set(nums).size, nums.length, "each number once");
   assert.deepEqual(nums.map((c) => Number(c.split(".")[1])).sort((x, y) => x - y), nums.map((_, i) => i + 1));

@@ -1,11 +1,11 @@
 /* wizard-scripts: writes the carried data from the design stream's files (R13, R22; DEC-139 (5), DEC-148).
  *
  *   node bio-plane/src/wizard-scripts/build-data.mjs <registry.json> <registry-commit> <library.json> <library-commit>
- *                                                    [<newer-library.json> <newer-commit>]
+ *                                                    [<newer-library.json> <newer-commit>]...
  *
  * Reads each file as it stands at its own commit (the commits the job's START names: since T37 the registry re-taken
- * from PR #14's merge to `main`, `e08cd35ecb`; the library kept at `d129238bf3`, DEC-148's, until Bob approves a
- * version 2, R22, K1790; with a newer library, the versions BOB adopts from it, `LIBRARY_ADOPTED`, K2241) and writes `screen-registry.mjs` and
+ * from PR #19's merge to `main`, `3660c18803`, since T41; the library's version 1 kept at `d129238bf3`, DEC-148's,
+ * R22, K1790; with newer libraries, the versions BOB adopts from each, `LIBRARY_ADOPTED`, K2241) and writes `screen-registry.mjs` and
  * `civicsmith-library.mjs` beside this file, each naming its own source's commit, path and SHA-256. A run on the same
  * files writes the same bytes. Not part of the bundle: nothing imports it, and importing it (as a test that reads every
  * module file does) writes nothing: it runs only as a command. */
@@ -37,10 +37,12 @@ import { deepFreeze } from "./data.mjs";
 
 const COMMIT = /^[0-9a-f]{7,40}$/;
 
-function main([registryPath, registryCommit, libraryPath, libraryCommit, newerPath, newerCommit]) {
+function main([registryPath, registryCommit, libraryPath, libraryCommit, ...rest]) {
+  const pairs = [];
+  for (let i = 0; i < rest.length; i += 2) pairs.push({ path: rest[i], commit: rest[i + 1] });
   if (!registryPath || !libraryPath || !COMMIT.test(registryCommit || "") || !COMMIT.test(libraryCommit || "")
-      || (newerPath && !COMMIT.test(newerCommit || ""))) {
-    console.error("usage: build-data.mjs <registry.json> <registry-commit> <library.json> <library-commit> [<newer-library.json> <newer-commit>]");
+      || pairs.some((p) => !p.path || !COMMIT.test(p.commit || ""))) {
+    console.error("usage: build-data.mjs <registry.json> <registry-commit> <library.json> <library-commit> [<newer-library.json> <newer-commit>]...");
     process.exitCode = 2;
     return;
   }
@@ -48,8 +50,8 @@ function main([registryPath, registryCommit, libraryPath, libraryCommit, newerPa
   const regText = readFileSync(registryPath, "utf8");
   const libText = readFileSync(libraryPath, "utf8");
   const screens = screensFromFile(JSON.parse(regText));
-  const newText = newerPath ? readFileSync(newerPath, "utf8") : null;
-  const library = newText ? adoptedLibrary(JSON.parse(libText), libraryCommit, JSON.parse(newText), newerCommit)
+  const newer = pairs.map((p) => ({ ...p, text: readFileSync(p.path, "utf8") }));
+  const library = newer.length ? adoptedLibrary(JSON.parse(libText), libraryCommit, newer.map((n) => ({ file: JSON.parse(n.text), commit: n.commit })))
     : libraryFromFile(JSON.parse(libText), libraryCommit);
   writeFileSync(join(here, "screen-registry.mjs"), `${REGISTRY_HEAD}
 export const SCREEN_REGISTRY_SOURCE = deepFreeze(${JSON.stringify(source(registryCommit, "registry.json", regText))});
@@ -58,12 +60,14 @@ export const SCREEN_REGISTRY = deepFreeze(${lines(screens)});
 `);
   writeFileSync(join(here, "civicsmith-library.mjs"), `${LIBRARY_HEAD}
 export const CIVICSMITH_LIBRARY_SOURCE = deepFreeze(${JSON.stringify(source(libraryCommit, "library.json", libText))});
-${newText ? `\n/** R22 (K2241): the newer library BOB's adopted versions come from. */\nexport const CIVICSMITH_LIBRARY_ADOPTED_SOURCE = deepFreeze(${JSON.stringify(source(newerCommit, "library.json", newText))});\n` : ""}
+
+/** R22 (K2241): the newer libraries BOB's adopted versions come from, each at its own commit (\`LIBRARY_ADOPTED\`). */
+export const CIVICSMITH_LIBRARY_ADOPTED_SOURCES = deepFreeze(${lines(newer.map((n) => source(n.commit, "library.json", n.text)))});
 
 export const CIVICSMITH_LIBRARY = deepFreeze(${lines(library)});
 `);
   console.log(`wrote ${screens.length} screens and ${library.length} scripts (registry ${registryCommit}, library ${libraryCommit}`
-    + `${newText ? `, adopted from ${newerCommit}: ${library.filter((e) => e.earlier).map((e) => `${e.name} v${e.version}`).join(", ")}` : ""})`);
+    + `${newer.length ? `, adopted: ${library.filter((e) => e.earlier).map((e) => `${e.name} v${e.version} from ${e.source}`).join(", ")}` : ""})`);
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === resolve(process.argv[1])) main(process.argv.slice(2));
