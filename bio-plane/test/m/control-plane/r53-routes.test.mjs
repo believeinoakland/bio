@@ -31,9 +31,9 @@ const MAPS = {
   workbooks: ["workbooks/ops.mjs", "workbooksOps"], answers: ["answers/ops.mjs", "answersOps"],
   following: ["following/index.mjs", "followingOps"],
 };
-const ARMS = ["accountreferenceset", "accountreferenceremove", "accountreference", "accountswitchset", "aigrantmint",
-              "keyedserviceset", "keyedserviceswitch", "keyedservices", "sourcekeyed", "aiusage", "aiceilingset",
-              "aicopyceilingset", "airunverify", "waitlook", "exportpage", "exportrender", "addresseesuggest", "clockadopt",
+const ARMS = ["accountreferenceset", "accountreferenceremove", "accountreference", "accountusesset", "aigrantmint",
+              "keyedserviceset", "keyedserviceswitch", "keyedservices", "sourcekeyed", "aiusage", "ailimitset",
+              "airunverify", "waitlook", "exportpage", "exportrender", "addresseesuggest", "clockadopt",
               "clocksics", "clocklateness", "clockpropose"];
 async function t33Ops() {
   const out = new Set(ARMS);

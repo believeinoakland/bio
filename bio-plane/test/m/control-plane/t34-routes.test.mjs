@@ -11,7 +11,7 @@ const { record } = await import("./record.mjs");
 const { credentialsOf, credentialsOps } = await import("../../../src/credentials/index.mjs");
 const { membershipOf, membershipOps } = await import("../../../src/membership/index.mjs");
 const { instanceSetupOf } = await import("../../../src/setup.mjs");
-const { aiRunsOf } = await import("../../../src/ai-runs/index.mjs");
+const { aiUseOf } = await import("../../../src/ai-use/index.mjs");
 const { wizardScriptsOf } = await import("../../../src/wizard-scripts/index.mjs");
 const CHECKS = await import("../../../src/answer-envelope/checks.mjs");
 
@@ -21,9 +21,9 @@ const USE = { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 0, ca
 const answering = (routes, result) => (c) => (routes.includes(c.route)
   ? new Response(JSON.stringify({ ok: true, result }), { status: 200 }) : null);
 
-test("R53 (K1798; ai-runs R48): the record store's door hands ai-runs' ask counter the ask's `calls`, so an ask of N model calls counts N and one stating none counts one; a `calls` that is no positive integer is refused and counts nothing (negative control: the count is read back)", async () => {
+test("R53 (K1798; ai-use R1, was ai-runs R48, K2488): the record store's door hands ai-use's ask counter the ask's `calls`, so an ask of N model calls counts N and one stating none counts one; a `calls` that is no positive integer is refused and counts nothing (negative control: the count is read back)", async () => {
   const r = await record();
-  const calls = () => r.db.prepare("SELECT COALESCE(SUM(calls), 0) n FROM ai_usage WHERE member = 'ann'").get().n;
+  const calls = () => r.db.prepare("SELECT COALESCE(SUM(calls), 0) n FROM ai_usage WHERE member IN ('ann', 'member:ann')").get().n;
   const three = await r.go("askusage?viewer=member:ann", "POST", { usage: USE, calls: 3 });
   assert.deepEqual([three.status, three.json.ok, three.json.result.ok], [200, true, true], JSON.stringify(three.json).slice(0, 300));
   assert.equal(calls(), 3);
@@ -146,9 +146,9 @@ test("R55 (op-declarations R23; tasks R13–R16): tasks' five check-request ops 
   }
 });
 
-test("R56, R30 (credentials R33, R34, R36; admission R19): the group key's seven ops reach credentials' map from a session only, `groupkeyset`'s key from the body alone — one sent in the query never reaches the store's address — and no answer or refusal carries the key, `groupkeyset`'s own included (negative control: the key is looked for in every answer and inner request)", async () => {
+test("R56, R30 (credentials R33, R34, R36; admission R19): the group key's six ops reach credentials' map from a session only (`groupswitchset` retired, T41: R56's clause, tested in `t41-door`), `groupkeyset`'s key from the body alone — one sent in the query never reaches the store's address — and no answer or refusal carries the key, `groupkeyset`'s own included (negative control: the key is looked for in every answer and inner request)", async () => {
   const { env, S } = world();
-  const ops = ["groupkeyset", "groupswitchset", "groupkeyremove", "groupkeyswitch", "groupkeystate", "groupkeynotice", "groupkeynoticeseen"];
+  const ops = ["groupkeyset", "groupkeyremove", "groupkeyswitch", "groupkeystate", "groupkeynotice", "groupkeynoticeseen"];
   for (const op of ops) {
     assert.deepEqual(OPS[op]?.machineClasses, [], op);
     env.calls.length = 0;
@@ -208,7 +208,7 @@ async function drafts() {
   return { r, C, seen, code };
 }
 
-test("R57 (instance-setup R55, R65; run-rules R20; ai-runs R50, R52; credentials R35, R36; T37: N765, K231): before either draft's handler the door answers, in order, `groupdescriptiondraft`'s NOT_AN_ADMIN, AI_KEPT_AWAY (credentials' one row, in place of ASSISTANT_OFF), AI_NO_ACCOUNT, the member's and the copy's ceilings, and credentials' own refusal of the account (the group key's notice unread), each before any handler is asked (negative control: once every one is cleared the handler is reached)", async () => {
+test("R57 (instance-setup R55, R65; run-rules R20; ai-use R3; credentials R35, R36; T37: N765, K231): before either draft's handler the door answers, in order, `groupdescriptiondraft`'s NOT_AN_ADMIN, AI_KEPT_AWAY (credentials' one row, in place of ASSISTANT_OFF), AI_NO_ACCOUNT, the paying account's limit (ai-use R3's AI_LIMIT_REACHED, the retired ceilings' place), and credentials' own refusal of the account (the group key's notice unread), each before any handler is asked (negative control: once every one is cleared the handler is reached)", async () => {
   const { r, C, seen, code } = await drafts();
   const gdd = (by) => r.go(`groupdescriptiondraft?by=${by}&viewer=${by}`, "POST", { answers: [{ question: "q", text: "t" }] });
   const help = (by) => r.go(`writinghelp?by=${by}&viewer=${by}`, "POST", { op: "notewrite", field: "text", told: "what I saw" });
@@ -226,16 +226,16 @@ test("R57 (instance-setup R55, R65; run-rules R20; ai-runs R50, R52; credentials
   /* no account serves */
   assert.equal(code(await gdd("member:ann")), "AI_NO_ACCOUNT");
   assert.equal(code(await help("member:bea")), "AI_NO_ACCOUNT");
-  /* the member's own account, then their own ceiling, then the copy's */
+  /* the member's own account, then its own limit
   assert.equal((await C.accountReferenceSet({ member: "member:bea", kind: "apikey", secret: "sk-bea-own", by: "member:bea" })).ok, true);
-  const runs = aiRunsOf(r.ctx);
-  runs.countAskUsage({ member: "member:bea", mode: "ask", usage: USE, calls: 2 });
-  assert.equal(runs.aiCeilingSet({ member: "member:bea", calls: 2, by: "member:bea" }).ok, true);
-  assert.equal(code(await help("member:bea")), "AI_USE_CEILING_REACHED");
-  assert.equal(runs.aiCeilingSet({ member: "member:bea", calls: null, by: "member:bea" }).ok, true);
-  assert.equal(runs.aiCopyCeilingSet({ calls: 2, by: "admin" }).ok, true);
-  assert.equal(code(await help("member:bea")), "AI_USE_COPY_CEILING_REACHED");
-  assert.equal(runs.aiCopyCeilingSet({ calls: null, by: "admin" }).ok, true);
+  /* (T41; K2488, rule 4 (10)) the retired ceilings are ai-use's limits: the paying account's own limit, reached, is
+     `AI_LIMIT_REACHED` (ai-use R3, `useCheck`), then removed */
+  const use = aiUseOf(r.ctx);
+  use.countAskUsage({ member: "member:bea", owner: "member:bea", mode: "ask", usage: USE, calls: 2 });
+  const limit = (amount) => use.aiLimitSet({ owner: "member:bea", scope: "overall", unit: "calls", period: "day", amount, by: "member:bea" });
+  assert.equal(limit(2).ok, true);
+  assert.equal(code(await help("member:bea")), "AI_LIMIT_REACHED");
+  assert.equal(limit(null).ok, true);
   /* the group's key held and on, its notice unread by ann: credentials' own refusal, relayed with its row */
   assert.equal((await C.groupKeySet({ key: "sk-group-key", by: "admin" })).ok, true);
   assert.equal(C.groupKeySwitch({ on: true, by: "admin" }).ok, true);

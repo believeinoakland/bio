@@ -36,6 +36,7 @@ import { inquiryOf } from "../../../src/inquiry/index.mjs";
 import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { contradictionOf } from "../../../src/contradiction/index.mjs";
 import { aiRunsOf } from "../../../src/ai-runs/index.mjs";
+import { aiUseOf } from "../../../src/ai-use/index.mjs";
 import { runProductionsOf } from "../../../src/run-productions/index.mjs";
 import { captureRequestsOf } from "../../../src/capture-requests/index.mjs";
 import { intentOf } from "../../../src/intent/index.mjs";
@@ -100,6 +101,8 @@ export async function record({ step = false, probes = {}, sealSecret = null } = 
   const retrieval = retrievalOf(ctx, { now: () => Date.now() });
   registerInquiryGrammar(record);
   basisVersionsOf(ctx, { retrieval });
+  /* ai-use (T41-22; plane R31): the one instance every reader of AI use shares, built before ai-runs reads it */
+  aiUseOf(ctx);
   aiRunsOf(ctx, env);
   observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
   biasOf(ctx, { env });
