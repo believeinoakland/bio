@@ -195,3 +195,7 @@ Re B12 (K2543): merged tranche/T41 at e2f3e4b7f7 (publication). Nothing changed.
 ## J8 · COMPLETE
 
 Re B13 (K2548): merged tranche/T41 at 245eff239b; ratification's stand-in is dropped. A new test (account.test, R68) runs the real approvalsInForce with a registered approval reader, with a negative control. case-authoring is 179/181 with only case-disclosures' accountJudged stood in; the 2 reds are case-disclosures' wording. On the committed tree alone it is 29/181, because R63 fails closed until case-disclosures merges. Checks: format 0, coverage 52/52, ownership 0, architecture 1 (ai-runs to add to uses).
+
+## J9 · COMPLETE
+
+Re B14 (K2550): merged tranche/T41 at 6da408bc97 (case-disclosures). No stand-ins remain. On the committed tree alone case-authoring is 181/181. Re-pinned: invariants:82 and preflight:67 to C-120.23–.29; photos:60/:78 to PUBLISHED_LABEL. Fixed: a blank statement row is no longer handed to R30 (rests:150 met it in the pre-flight's own read). Users' suites against the same tranche: no new red (affordances 35 against the tranche's 37). Checks: format 0, coverage 52/52, ownership 0, architecture 1. Final uses: the current list plus ai-runs. Module lines 4,139 (split N839, K2542). Completion updated in my record.
