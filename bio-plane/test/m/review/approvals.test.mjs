@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { standard, P, Q, V, SECRET, NOW, sha } from "./fixture.mjs";
 import { REVIEW_COPY_CHECKS, APPROVERS_MAX, APPROVAL_REASON_MAX, REVIEW_LIST_MAX, noReviewCopy } from "../../../src/review/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
+import { reviewCommentsLines, CASE_DOCUMENT_FORMAT } from "../../../src/case-grammar/index.mjs";
 
 const DEAD = JSON.stringify(noReviewCopy());
 const refused = (r, code) => {
@@ -49,10 +50,11 @@ test("R30: an active administrator sets the approval rule, null turns it off (th
      [null, "adm", "2026-09-28T02:00:00.000Z"], ['["bea"]', "adm", "2026-09-28T03:00:00.000Z"]], "appended, never replaced");
 });
 
-test("R31: a named approver who may see the case's project approves one document at its doc_sha; NOT_AN_APPROVER otherwise; a later document needs a new approval", () => {
+test("R31: a named approver who may see the case's project approves one document at its approval digest (K2528); NOT_AN_APPROVER otherwise; a later document needs a new approval", () => {
   const w = standard();
   w.publishedCase(CASE, P, 1);
-  const A = w.caseDocument(CASE, 2, { docSha: sha("doc A") });
+  const textA = `---\ncase: ${CASE}\napproval_rule:\n  approvers: [ann]\n---\ndoc A`;
+  const A = w.caseDocument(CASE, 2, { text: textA });
   const approve = (by, extra = {}) => w.r.caseApprove({ case: CASE, edition: 2, docSha: A, by, ...extra });
   /* no rule: nobody is an approver */
   refused(approve("ann"), "NOT_AN_APPROVER");
@@ -65,7 +67,10 @@ test("R31: a named approver who may see the case's project approves one document
   for (const r of no) refused(r, "NOT_AN_APPROVER");
   assert.equal(new Set(no.map((r) => JSON.stringify(r))).size, 1, "no oracle for which condition held");
   /* the document: a doc_sha not held at that case edition, malformed, or an edition that is not one */
-  for (const [edition, docSha] of [[2, sha("doc B")], [1, A], [2, "x"], [2, A.toUpperCase()], [0, A], ["two", A], [null, A]])
+  /* the stored doc_sha is not the approval digest (K2528): it names nothing to approve */
+  const stored = w.row(`SELECT doc_sha FROM case_documents WHERE case_id=? AND edition=2`, CASE).doc_sha;
+  assert.notEqual(stored, A);
+  for (const [edition, docSha] of [[2, sha("doc B")], [2, stored], [1, A], [2, "x"], [2, A.toUpperCase()], [0, A], ["two", A], [null, A]])
     refused(w.r.caseApprove({ case: CASE, edition, docSha, by: "ann" }), "APPROVAL_NO_SUCH_DOCUMENT");
   refused(w.r.caseApprove({ case: CASE, edition: 2, docSha: "x", by: "bea" }), "NOT_AN_APPROVER");  // the approver first
   /* the reason: trimmed, at most 4,000 */
@@ -84,8 +89,14 @@ test("R31: a named approver who may see the case's project approves one document
   assert.equal(approve("adm").ok, true);
   assert.deepEqual(w.r.approvalsOf({ case: CASE, edition: 2, docSha: A }).map((x) => [x.by, x.reason]),
     [["ann", "r".repeat(APPROVAL_REASON_MAX)], ["ivy", null], ["adm", null]]);
-  /* a later document (another doc_sha) has no approval until it is given again */
-  const B = w.caseDocument(CASE, 2, { docSha: sha("doc B") });
+  /* K2528: the digest is the same whatever the approvals block holds, so the approval holds once it is written */
+  for (const text of [`---\ncase: ${CASE}\n---\ndoc A`,
+                      `---\ncase: ${CASE}\napproval_rule:\n  approvers: [ann]\napprovals:\n  - by: ann\n---\ndoc A`]) {
+    assert.equal(w.caseDocument(CASE, 2, { text }), A);
+    assert.equal(approve("ann").existed, true, "the same document, its approvals block rewritten");
+  }
+  /* a later document (another digest) has no approval until it is given again */
+  const B = w.caseDocument(CASE, 2, { text: `---\ncase: ${CASE}\n---\ndoc B` });
   assert.deepEqual(w.r.approvalsOf({ case: CASE, edition: 2, docSha: B }), []);
   assert.equal(w.r.caseApprove({ case: CASE, edition: 2, docSha: B, by: "ann" }).existed, false);
   assert.deepEqual(w.r.approvalsOf({ case: CASE, edition: 2, docSha: B }).map((x) => x.by), ["ann"]);
@@ -190,7 +201,9 @@ test("R33: after publication each member reviewer whose comments were left out i
   /* nothing published yet: nothing to tell */
   assert.deepEqual(left("ivy").items, []);
   /* edition 2 prepared and unsigned, then published: its block carries ivy's first comment and the recipient's */
-  const block = (rows) => `---\nreview_comments: ${JSON.stringify(rows)}\n---`;
+  /* the document's block as case-grammar R25 writes it */
+  const block = (rows) => ["---", `format: ${CASE_DOCUMENT_FORMAT}`, ...reviewCommentsLines({ comments: rows, left_out: null }),
+                           "---", ""].join("\n");
   const carry = (x) => ({ reviewer: x.author_kind === "recipient" ? "The Reporter" : x.author, text: x.text, at: x.at });
   w.caseDocument(CASE, 2, { text: block([carry(c.ivy1), carry(c.rec)]) });
   w.publishedCase(CASE, P, 2);
@@ -214,10 +227,12 @@ test("R33: after publication each member reviewer whose comments were left out i
   w.caseDocument("CASE-2026-0002", 1, { text: block([]), draft: B.draftId, signed: true });
   assert.deepEqual(left("ann").items.map((i) => [i.case, i.edition, i.left_out, i.comments]),
     [["CASE-2026-0002", 1, 1, [c.ann.comment_id]]]);
-  /* a block that cannot be read is undetermined and tells nobody */
-  w.caseDocument("CASE-2026-0002", 1, { text: "review_comments: THROW", draft: B.draftId, signed: true });
+  /* a document without the block (and one of a format before it) cannot say what was left out: undetermined, nobody told */
+  w.caseDocument("CASE-2026-0002", 1, { text: `---\nformat: ${CASE_DOCUMENT_FORMAT}\n---\nno block`, draft: B.draftId, signed: true });
   const u = left("ann");
   assert.deepEqual([u.items, u.undetermined], [[], 1]);
+  w.caseDocument("CASE-2026-0002", 1, { text: block([]).replace(/^format: .*\n/m, ""), draft: B.draftId, signed: true });
+  assert.deepEqual([left("ann").items, left("ann").undetermined], [[], 1], "no format: before the block existed");
   /* a comment from before identities were recorded belongs to no case edition */
   w.st.sql.exec(`UPDATE review_comments SET edition=NULL, case_id=NULL WHERE comment_id=?`, c.ivy2.comment_id);
   w.caseDocument(CASE, 2, { text: block([]), signed: true });

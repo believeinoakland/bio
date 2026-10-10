@@ -11,6 +11,7 @@ import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { reviewOf } from "../../../src/review/index.mjs";
+import { approvalSubjectSha, reviewCommentsOf } from "../../../src/case-grammar/index.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 const statements = (ddl) => ddl.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n")
@@ -136,16 +137,9 @@ export function world({ now = NOW, injectClock = true } = {}) {
   };
   /* ratification's side: the approval reader this module fills at start (its R50; R32). */
   const ratification = { readers: [], registerApprovalReader(reader) { this.readers.push(reader); return { ok: true }; } };
-  /* case-grammar's side: the comments a signed document's `review_comments:` block carries (its R25), here a JSON
-     line `review_comments: [...]` the test writes; `null` when the block is unreadable. */
-  const caseGrammar = {
-    reviewCommentsOf(text) {
-      const m = /^review_comments: (.*)$/m.exec(String(text ?? ""));
-      if (!m) return { comments: [], left_out: 0 };
-      if (m[1] === "THROW") throw new Error("unreadable block");
-      return { comments: JSON.parse(m[1]), left_out: null };
-    },
-  };
+  /* case-grammar's side, its own (pure): the comments a signed document's `review_comments:` block carries (its R25)
+     and the approval digest (its R26, K2528). */
+  const caseGrammar = { reviewCommentsOf, approvalSubjectSha };
   /* `injectClock: false` leaves the module on its own default clock (R17's stamps as the module writes them). */
   const r = reviewOf(host, { record, membership, strength, basisVersions, publication, caseTensions, caseAuthoring,
                              ratification, caseGrammar, ...(injectClock ? { now: () => clock.now } : {}) });
@@ -196,11 +190,12 @@ export function world({ now = NOW, injectClock = true } = {}) {
                                                     by: owner, viewer: V(owner) });
       if (!res.ok) throw new Error(`fixture discoverable refused: ${JSON.stringify(res)}`);
     },
-    /** A case document (publication's `case_documents`, its R40): `signed` sets `sig_armored`. */
-    caseDocument(caseId, edition, { docSha = sha(`${caseId}/${edition}`), text = "doc", draft = null, signed = false } = {}) {
+    /** A case document (publication's `case_documents`, its R40): `signed` sets `sig_armored`. Answers its approval
+     *  digest (case-grammar R26's `approvalSubjectSha`, K2528), which R31 names. */
+    caseDocument(caseId, edition, { text = `---\ncase: ${caseId}\n---\ndoc`, draft = null, signed = false } = {}) {
       st.sql.exec(`INSERT OR REPLACE INTO case_documents (case_id, edition, text, doc_sha, draft_id, sig_armored)
-                   VALUES (?,?,?,?,?,?)`, caseId, edition, text, docSha, draft, signed ? "-----BEGIN SSH SIGNATURE-----" : null);
-      return docSha;
+                   VALUES (?,?,?,?,?,?)`, caseId, edition, text, sha(text), draft, signed ? "-----BEGIN SSH SIGNATURE-----" : null);
+      return approvalSubjectSha(text);
     },
     /** A case owned by `project`, published at editions 1..`editions` (publication's rows). */
     publishedCase(caseId, project, editions = 1) {

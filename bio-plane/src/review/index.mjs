@@ -47,7 +47,8 @@
  *                        `withheld_stated` sentence (its R20; R15); `registerReviewComments` (its R66), filled at
  *                        start with R33's `reviewCommentsFor` (K2483).
  *   ratification         `registerApprovalReader` (its R50), filled at start with R30–R31's rule and approvals (R32).
- *   caseGrammar          `reviewCommentsOf` (its R25), the comments a signed document carries (R33's left-out read).
+ *   caseGrammar          `reviewCommentsOf` (its R25), the comments a signed document carries (R33's left-out read);
+ *                        `approvalSubjectSha` (its R26; K2528), the digest an approval names (R31).
  *   now                  the clock for the instants it writes, an ISO string (default: the wall clock, to the ms).
  *
  * READ CONTRACTS it joins in its own SQL: record-core's `bundles` (`bundle_id`, `object_type`, `current_state`) and
@@ -68,7 +69,7 @@ import { caseTensionsOf } from "../case-tensions/index.mjs";
 import { caseAuthoringOf } from "../case-authoring/index.mjs";
 import { ratificationOf } from "../ratification/index.mjs";
 import * as caseGrammar from "../case-grammar/index.mjs";
-import { isMachineIdentity } from "../record-grammar/index.mjs";
+import { isMachineIdentity, parseFrontmatter } from "../record-grammar/index.mjs";
 import { REVIEW_COPY_CHECKS } from "./checks.mjs";
 import { REVIEW_TABLES, migrateReview } from "./schema.mjs";
 
@@ -790,7 +791,7 @@ export class Review {
   }
 
   /** R31 (D60): a named approver who may see the case's project approves one case edition's document at its
-   *  `doc_sha`; a later document needs a new approval. Not an approver, no rule, a case not seen and a case that does
+   *  approval digest (K2528); a later document needs a new approval. Not an approver, no rule, a case not seen and a case that does
    *  not exist are one answer. */
   caseApprove({ case: caseId = null, edition = null, docSha = null, reason = null, by = null } = {}) {
     const who = String(by ?? "").trim();
@@ -807,12 +808,17 @@ export class Review {
     /* END DEC-49 REGION is-not-an-approver */
     const ed = Number(edition);
     const sha = String(docSha ?? "");
+    /* K2528: `docSha` is the APPROVAL DIGEST, case-grammar R26's `approvalSubjectSha` of the case edition's document
+       (its sha without the `approval_rule`/`approvals:` block), so the approval still names the document once that
+       block is written into it at signing. */
+    const doc = Number.isInteger(ed) && ed >= 1 && SECRET_SHA.test(sha)
+      ? this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, cid, ed) : null;
     /* DEC-49 REGION is-approval-document */
-    if (!Number.isInteger(ed) || ed < 1 || !SECRET_SHA.test(sha)
-        || !this.#one(`SELECT 1 AS d FROM case_documents WHERE case_id=? AND edition=? AND doc_sha=?`, cid, ed, sha))
+    if (!doc || this.caseGrammar.approvalSubjectSha(doc.text) !== sha)
       return refusal("APPROVAL_NO_SUCH_DOCUMENT",
-               `no document of ${cid} edition ${Number.isInteger(ed) ? ed : "(none)"} stands at that doc_sha; `
-             + "an approval names the document it approves. Nothing was recorded.", { caseId: cid });
+               `no document of ${cid} edition ${Number.isInteger(ed) ? ed : "(none)"} has that approval digest `
+             + "(its sha without the approvals block); an approval names the document it approves. Nothing was "
+             + "recorded.", { caseId: cid });
     /* END DEC-49 REGION is-approval-document */
     const why = reason == null ? null : String(reason).trim() || null;
     /* DEC-49 REGION is-approval-reason */
@@ -889,12 +895,14 @@ export class Review {
   }
 
   /* R33: the comments a signed document carries in its `review_comments:` block (`case-grammar` R25), or null when
-     the block cannot be read (no reader, or it throws), so a reviewer is never told a comment was left out on a guess. */
+     the block cannot be read (no reader, no block, a format before it, or a throw), so a reviewer is never told a
+     comment was left out on a guess. */
   #includedIn(text) {
     const read = this.caseGrammar.reviewCommentsOf;
     if (typeof read !== "function") return null;
     try {
-      const got = read(text);
+      /* its R25 reads the document's parsed front matter (record-grammar's `parseFrontmatter`) */
+      const got = read(parseFrontmatter(String(text ?? "")).data);
       const list = Array.isArray(got) ? got : got && (got.comments ?? got.included ?? got.review_comments);
       return Array.isArray(list) ? list : null;
     } catch { return null; }
