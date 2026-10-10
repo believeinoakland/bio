@@ -54,7 +54,7 @@
 - After a container restart, run `npm ci` in `agent-runner` (`--ignore-scripts`) and `sheet-worker` before `fleetbundles`, or it skips. (K1980, K1948)
 - Never stop agent-worker's test run midway: its negative controls mutate the working tree; if one was stopped, restore from HEAD before the next run. (K1994)
 - Regenerate artifacts in the manifest's order: case-checker `program.mjs` before the bundles (the plane bundles it), newgroup last. (K1540, K1341)
-- Measure a module's size (P6, K617's ~4,000-line split) over its own code in its `paths`, the most specific path owning each file, never its tests or a job's `Size` line. (K1821, K1519, K1024, K1135)
+- Measure a module's size (P6, K617's ~4,000-line split) over its own code in its `paths`, the most specific path owning each file, never its tests or a job's `Size` line, nor a generated artifact (K2513). (K1821, K1519, K1024, K1135)
 - Read every scripted edit back (a `modules.json` edit once matched nothing because of indentation), and read a file into memory before reopening it for writing. (K702, K715)
 - Code that runs on the plane keeps each LIKE/GLOB pattern within workerd's 50 bytes and spreads `sql.exec` cursors; test it at the plane's shape. (K313, K316)
 - The coverage check counts any `R<n>` string in a module's tests: a new id that other tests already name reads green wrongly, so each START requires an explicit test for such ids. (K874, K1369, K1122)
