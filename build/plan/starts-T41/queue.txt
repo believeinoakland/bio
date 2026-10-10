@@ -6,3 +6,6 @@ Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at yo
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
 
 **From INVESTIGATION #1 J1 (K2523).** investigation (L7) provides `registerProjectDisposition(module, fn)`, `fn({project, question})` → `"deferred" | "dismissed" | null` (K31's pattern; its R2's "stuck" item). Register queue's project arm of `op=proposedispose` (inquiry R39; your R27) with it, so a project's own deferral or dismissal reaches investigation; test it through the real investigation module. Exact signature in `build/jobs/T41/investigation.md` once merged.
+
+
+**Marked at this START (K2573, re-taken after L10's merge):** R1, R12, R27, R52. These are the ids your job meets and names; the lines above that list marks are superseded by this one.

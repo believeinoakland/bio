@@ -6,3 +6,6 @@ Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at yo
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
 
 **From T41-23 (ai-runs) merge (K2514, AI-RUNS #16 J6).** Rows :213, :253, :467, :500 name the retired ops: re-point to `ailimitset`.
+
+
+**Marked at this START (K2573, re-taken after L10's merge):** R1, R2. These are the ids your job meets and names; the lines above that list marks are superseded by this one.

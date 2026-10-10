@@ -16,3 +16,6 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 **From ACTION-PLANS #8 J1 (K2554).** `rows-before-r43.json`:634: move `PROPOSALS_CURSOR_REFUSED` (C-124.52, retired, number held) into `changed.retired`.
 
 **From ACTION-GRAMMAR #8 J2 (K2556).** `rows-before-r43.json`: C-94.5 OUTCOME_NOT_IN_VOCABULARY's translation was re-worded (K2553, to name `none_exists`): move its pin `["C-94.5","4f2ee83d0d48dd33"]` to the row's new digest `65a25bcf08b2ebd2` in `changed.note`. C-117.29 SEEKS_REFUSED reaches `CHECK_FAMILIES` through action-grammar's file, already listed.
+
+
+**Marked at this START (K2573, re-taken after L10's merge):** R7, R10. These are the ids your job meets and names; the lines above that list marks are superseded by this one.

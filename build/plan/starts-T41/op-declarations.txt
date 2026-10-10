@@ -20,3 +20,6 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **K2570.** Ten more member ops, found unrouted after the merges and placed in this layer: acts `stepoutcome`, `steplearn`, `stepbywhen`, `findmute`; reads `stepproposals`, `costmessages`, `questionfollowstate`, `stepproducts`, `recordsteps`, `finddoors` (op-declarations R43, control-plane R71, op-grades R30 name them).
+
+
+**Marked at this START (K2573, re-taken after L10's merge):** R20, (a clause: - the administrator's acts `groupkeyset`…), (a clause: - `publishat` (the ceremony's last act w…), R41, R42, R43, R45, R46. These are the ids your job meets and names; the lines above that list marks are superseded by this one.

@@ -7,3 +7,6 @@ Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at yo
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
 
 **From T41-23 (ai-runs) merge (K2514, AI-RUNS #16 J6).** K624 delete done: `dispatch.mjs`:276, :377 (`askceiling`), :381 (`askusage`) call ai-runs names that no longer exist (`aiUseCheck`, `countAskUsage`, `aiUsage`, `aiUsageMine`); re-point to `ai-use` (`useCheck`, `countUsage`, its reads). Reds inherited: `dispatch.test.mjs`:352; `routes.test.mjs`:132, :174, :226, :248 (helper :116 binds `runs.aiUseCheck`).
+
+
+**Marked at this START (K2573, re-taken after L10's merge):** R10, R11. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
