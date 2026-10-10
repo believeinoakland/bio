@@ -3,10 +3,12 @@
    to `run-rules` with their tests (K617). */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, OPEN, INQ, ORG, USAGE } from "./world.mjs";
+import { world, OPEN, INQ, ORG, ANN } from "./world.mjs";
 import { AI_RUNS_CHECKS } from "../../../src/run-rules/index.mjs";
 
-/** Every code this module's acts mint, with its catalogue number (R35, R40, R46, R47, R50, R52). */
+/** Every code this module's acts mint, with its catalogue number (R35, R40, R46, R47, R52, R73, R75). The ceiling
+ *  codes (R50, retired with R48–R51 to `ai-use`, K624) are not this module's: `ai-use` mints `AI_LIMIT_REACHED` and
+ *  `AI_LIMIT_INVALID` in its own table (its R8). */
 export const MINTED = {
   AI_RUN_CAPABILITY_UNAVAILABLE: "C-33.29", AI_RUN_NO_CONTEXT: "C-33.30", AI_RUN_ALREADY_OPEN: "C-33.31",
   AI_RUN_RERUN_SELF: "C-33.45", AI_RUN_RERUN_UNKNOWN: "C-33.46", AI_RUN_RERUN_OTHER_CONTEXT: "C-33.47",
@@ -16,9 +18,17 @@ export const MINTED = {
   AI_RUN_PLAN_NEEDS_PROJECT: "C-109.4", AI_RUN_PLAN_NEEDS_MEMBER: "C-109.5", AI_RUN_PLAN_NO_SEARCH: "C-109.6",
   AI_RUN_MODE_UNCHECKED: "C-109.7",
   /* T33-50 (run-rules R20, K1601) */
-  AI_USE_CEILING_REACHED: "C-109.8", AI_USE_COPY_CEILING_REACHED: "C-109.9", AI_NO_ACCOUNT: "C-109.10",
-  NOT_YOUR_CEILING: "C-109.11", AI_CEILING_INVALID: "C-109.12",
+  AI_NO_ACCOUNT: "C-109.10",
+  /* T41 (run-rules C-22.24–.28, B4, K2485; the origin codes are minted by run-rules' originAllowed and relayed) */
+  AI_GROUP_TEST_INVALID: "C-22.24", AI_RUN_EXPLORE_NEEDS_STEP: "C-22.26", AI_RUN_STEP_UNKNOWN: "C-22.28",
 };
+
+test("R35 (K624): the retired ceiling codes are no longer minted here — run-rules keeps them retired, their numbers never reused", () => {
+  for (const code of ["AI_USE_CEILING_REACHED", "AI_USE_COPY_CEILING_REACHED", "AI_CEILING_INVALID"])
+    assert.equal(Object.prototype.hasOwnProperty.call(MINTED, code), false, code);
+  /* control: a code this module still mints is listed */
+  assert.equal(MINTED.AI_NO_ACCOUNT, "C-109.10");
+});
 
 test("R35: each check this module's acts mint has its row in run-rules' table, read by key — its number, a translation and a where naming this module's site", () => {
   for (const [code, check] of Object.entries(MINTED)) {
@@ -30,7 +40,7 @@ test("R35: each check this module's acts mint has its row in run-rules' table, r
   }
 });
 
-test("R39: no place is named in the module's outward text — its acts' rows, refusals, notes and answers (the use and ceiling texts of R48–R52 included)", async () => {
+test("R39: no place is named in the module's outward text — its acts' rows, refusals, notes and answers (R52's account, R73–R75's texts included)", async () => {
   const PLACE = /oakland|alameda|california|berkeley|san francisco|\bcounty of\b/i;
   const w = world();
   await w.group("ann"); w.bundle(INQ);
@@ -41,14 +51,14 @@ test("R39: no place is named in the module's outward text — its acts' rows, re
              JSON.stringify(await w.runs.listInContext({})), JSON.stringify(await w.runs.read({ run: "R1", viewer: "admin" })),
              JSON.stringify(w.runs.log({ run: "R1", viewer: "admin" })), JSON.stringify(w.surface("INQ-2026-0100", { run: "NONE" })),
              JSON.stringify(await w.runs.close({ run: "R1", bound: "completed", viewer: "admin", caller: ORG })));
-  /* T33-50's texts: the account and ceiling refusals, the provider's limit, and the use reads */
-  w.runs.aiCeilingSet({ member: "member:ann", calls: 1, by: "member:ann" });
-  w.runs.countAskUsage({ member: "member:ann", mode: "ask", usage: USAGE() });
+  /* R52's account, R73's origin and step, R74's batch, R75's group test */
   texts.push(
-             JSON.stringify(await w.runs.open(OPEN({ run: "R9" }))), JSON.stringify(await w.runs.open(OPEN({ run: "R9", principalClaude: "x" }))),
-             JSON.stringify(w.runs.aiUseCheck({ member: "member:ann" })), JSON.stringify(w.runs.providerLimit("enforced_spend_limit_reached")),
-             JSON.stringify(w.runs.aiCeilingSet({ member: "member:ann", calls: 0, by: "member:ann" })),
-             JSON.stringify(w.runs.aiCeilingSet({ member: "member:ann", calls: 1, by: "member:bob" })),
-             JSON.stringify(w.runs.aiUsageMine({ viewer: "member:ann" })), JSON.stringify(w.runs.aiUsage({ viewer: "admin" })));
+             JSON.stringify(await w.runs.open(OPEN({ run: "R9", principalClaude: "x" }))),
+             JSON.stringify(await w.runs.open(OPEN({ run: "R9", origin: "elsewhere" }))),
+             JSON.stringify(await w.runs.open(OPEN({ run: "R9", origin: "explore" }))),
+             JSON.stringify(await w.runs.open(OPEN({ run: "R9", step: "STP-2026-0001" }))),
+             JSON.stringify(await w.runs.openMany({ steps: [], actor: ANN })),
+             JSON.stringify(await w.runs.openMany({ steps: ["STP-2026-0001"], actor: ANN, viewer: ANN, principalPlane: ORG, skillVersion: "bio@1" })),
+             JSON.stringify(w.runs.groupTestSet({ part: "check", by: ANN })));
   for (const t of texts) assert.equal(PLACE.test(String(t)), false, String(t).slice(0, 80));
 });

@@ -67,7 +67,7 @@ Terms. A **version** is a `basis_versions[]` row `{name, description, claim?, re
 - **R47** (K861, plane R10) The module exports a figure source shaped as `record-core` R63's `counts(hid)`, with its key list, for `plane` to register under this module's name: `basisVersions`, the rows of `inquiry_basis_versions` less the rows whose `bundle_id` is in `hid`, and `basisVersionLegs`, the rows of `inquiry_basis_version_legs` less the rows whose `bundle_id` or `target_id` is in `hid`, a NULL key naming no bundle (so never dropped by `hid`); a null `hid` counts whole. The module registers nothing itself.
 
 **A conclusion's bias applications** (T41-19; D59)
-- **R48** *(not yet met: T41)* (D59) A conclusion may carry `bias_applied` in `inquiry-grammar` R18's shape for the conclusion's claim (`inference_refused`, `scrutiny_raised`), recorded with the conclusion and read back by `conclusionRecordOf`. Each `statement` is asked of `bias.statementInForce` (its R49) at the conclusion's project scope, the acting member as viewer; one not in force (false or null) is refused through `inquiry.biasNotInForce` (its R61), and nothing is written (K2472).
+- **R48** (D59) A conclusion may carry `bias_applied` in `inquiry-grammar` R18's shape for the conclusion's claim (`inference_refused`, `scrutiny_raised`), recorded with the conclusion, in `inquiry-grammar` R18's one encoding (`flattenBiasApplied`, its numbered scalar keys on the `conclusions[]` row) with `bias_statements_sha` (bias R49's sha of the lens checked), and read back by `conclusionRecordOf` as `bias_applied` and `bias_lens_sha`; only a project's conclusion carries it; a malformed list is refused `BAD_BIAS_APPLIED` as `BAD_COMMENTARY` is (K2479). Each `statement` is asked of `bias.statementInForce` (its R49) at the conclusion's project scope, the acting member as viewer; one not in force (false or null) is refused through `inquiry.biasNotInForce` (its R61), and nothing is written (K2472).
 
 ## Private
 
@@ -93,7 +93,7 @@ Terms. A **version** is a `basis_versions[]` row `{name, description, claim?, re
 - **R32** A project's conclusion record is append-only; the latest row is its stance (DEC-19).
 - **R33** Every act and read naming a question, version or project the viewer may not see answers as an absent one.
 - **R34** `inquiry_basis_versions` and `inquiry_basis_version_legs` carry `bundle_id` and are declared to record-core's purge (K23).
-- **R35** Each check moves here as an invariant with its test (K6): C-25.1–C-25.34, C-27.15, C-50.1–C-50.11, C-33.1, C-33.2, C-33.33–C-33.37, C-32.2.
+- **R35** Each check moves here as an invariant with its test (K6): C-25.1–C-25.35 (C-25.35 `BAD_BIAS_APPLIED`, R48; K2495), C-27.15, C-50.1–C-50.11, C-33.1, C-33.2, C-33.33–C-33.37, C-32.2.
 - **R36** No place is named in this module's behaviour or outward text.
 
 ### Satisfies

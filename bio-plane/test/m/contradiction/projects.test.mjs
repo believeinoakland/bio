@@ -5,7 +5,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, MACHINE } from "./fixture.mjs";
 import { refusedWith } from "./seed.mjs";
-import { CONTRADICTION_CANDIDATE_CHECKS, NOTICE_SENTENCE, NOTICE_RESPONSES_MAX, EMAIL_MAX, PAGE_MAX } from "../../../src/contradiction/index.mjs";
+import { CONTRADICTION_CANDIDATE_CHECKS, NOTICE_SENTENCE, NOTICE_NAMED_SENTENCE, NOTICE_RESPONSES_MAX, EMAIL_MAX, PAGE_MAX } from "../../../src/contradiction/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 
 const ROWS = CONTRADICTION_CANDIDATE_CHECKS;
@@ -18,11 +18,12 @@ const M1 = "member:m1", M2 = "member:m2", M3 = "member:m3", OUT = "member:outsid
 
 /* m2 takes part in alpha only, m3 in beta only; m1 in both (sees the conflict whole). Alpha's passage is filed in
    alpha, beta's in beta; each project draws on the question resting on its own passage. */
-function twoHidden({ label = "record", extraParties = [] } = {}) {
+function twoHidden({ label = "record", extraParties = [], discoverable = [] } = {}) {
   const w = world();
+  const vis = (p) => ({ visibility: discoverable.includes(p) ? "discoverable" : null });
   w.runs.set(RUN, { status: "running", principal: M1 });
-  w.project(PA, [{ id: "m2", owner: 1 }, "m1"]);
-  w.project(PB, [{ id: "m3", owner: 1 }, "m1"]);
+  w.project(PA, [{ id: "m2", owner: 1 }, "m1"], vis(PA));
+  w.project(PB, [{ id: "m3", owner: 1 }, "m1"], vis(PB));
   w.content(HA, "capHA", PA, { ref: "p. 3 of alpha's minutes" });
   w.content(HB, "capHB", PB, { ref: "p. 9 of beta's report" });
   w.inquiry(IX); w.leg(IX, 0, "supports", { content: HA, target: PA });
@@ -31,7 +32,7 @@ function twoHidden({ label = "record", extraParties = [] } = {}) {
   w.reading("capHA", PA, { contentType: "minutes", date: "2026-01-01" });
   w.reading("capHB", PB, { contentType: "report", date: "2026-02-01" });
   w.draws(IX, PA); w.draws(IY, PB);
-  for (const p of extraParties) { w.project(p, [{ id: "m3", owner: 1 }]); w.draws(IY, p); }
+  for (const p of extraParties) { w.project(p, [{ id: "m3", owner: 1 }], vis(p)); w.draws(IY, p); }
   const pair = w.c.pairs({ key: "K4", viewer: MACHINE }).pairs[0];
   const r = w.c.propose({ run: RUN, proposedBy: "class:ai/t", viewer: MACHINE, caller: M1,
                           proposals: [{ key: "K4", a: pair.a, b: pair.b, label, reason: "alpha's minutes and beta's report disagree" }] });
@@ -85,6 +86,45 @@ test("R50, R55: a notice carries the seen side verbatim and the fixed sentence, 
   /* the page */
   assert.deepEqual([notices(w, PA, M2).limit, notices(w, PA, M2).truncated, notices(w, PA, M2).cursor], [50, false, w.id]);
   assert.deepEqual(w.c.conflictNotices({ project: PA, after: w.id, viewer: M2 }).notices, []);
+});
+
+test("R50, R55 (T41, D64): a non-hidden party the viewer may see by name is named from the start, {id, name}, with the fixed sentence; its side, members and contents stay withheld; a hidden party is never named or counted", () => {
+  assert.equal(NOTICE_NAMED_SENTENCE, "Your project's conclusion conflicts with that project's.");
+  const named = (w) => notices(w, PA, M2).notices[0];
+  /* beta discoverable: named to alpha's member from the start, before any opt-in */
+  const w = twoHidden({ discoverable: [PB] });
+  const n = named(w);
+  assert.deepEqual([n.named, n.says], [[{ id: PB, name: `title of ${PB}` }], NOTICE_NAMED_SENTENCE]);
+  assert.deepEqual([n.opted_in, n.asked_by_another, n.revealed, n.parties], [null, false, false, undefined]);
+  assert.deepEqual([n.side.content_id, n.side.source.bundle], [HA, PA]);
+  /* sight is unchanged: beta's side, its question, its contents and members stay withheld, and so do the key and reason */
+  const bytes = JSON.stringify(notices(w, PA, M2));
+  for (const leak of [HB, "capHB", IY, "report", "p. 9", "K4", "disagree", "m3", "Cover m3", "h_m3", "m1"]) assert.ok(!bytes.includes(leak), leak);
+  assert.deepEqual(w.c.candidatesFor({ on: { candidate: w.id }, viewer: M2 }).candidates, []);
+  refused(w.c.contextFacts({ candidate: w.id, viewer: M2 }), "NO_SUCH_CANDIDATE");
+  /* negative control: beta hidden, nothing named, today's sentence */
+  const h = named(twoHidden());
+  assert.deepEqual([h.named, h.says], [[], NOTICE_SENTENCE]);
+  assert.ok(!JSON.stringify(h).includes(PB));
+  /* a hidden party beside a named one is never counted: the same bytes with and without two hidden parties */
+  const mixed = twoHidden({ discoverable: [PB], extraParties: ["PROJ-2026-0005-gamma", "PROJ-2026-0006-delta"] });
+  assert.equal(JSON.stringify(notices(mixed, PA, M2)).replaceAll(mixed.id, "ID"), bytes.replaceAll(w.id, "ID"));
+  /* each discoverable party through the other side is named, in id order; the hidden ones are not */
+  const many = twoHidden({ discoverable: [PB, "PROJ-2026-0006-delta"], extraParties: ["PROJ-2026-0005-gamma", "PROJ-2026-0006-delta"] });
+  assert.deepEqual(named(many).named.map((p) => p.id), [PB, "PROJ-2026-0006-delta"]);
+  assert.ok(!JSON.stringify(notices(many, PA, M2)).includes("gamma"));
+  /* a discoverable project on the viewer's own side is not "that project": not named */
+  const own = twoHidden();
+  own.project("PROJ-2026-0009-ours", [{ id: "m2", owner: 1 }], { visibility: "discoverable" }); own.draws(IX, "PROJ-2026-0009-ours");
+  assert.deepEqual([named(own).named, named(own).says], [[], NOTICE_SENTENCE]);
+  /* a hidden party is never named, even to an administrator, who sees a hidden project at existence (membership R44) */
+  const adm = twoHidden();
+  adm.rows(`UPDATE members SET role='admin' WHERE member_id='m2'`);
+  assert.deepEqual([named(adm).named, named(adm).says], [[], NOTICE_SENTENCE]);
+  assert.ok(!JSON.stringify(notices(adm, PA, M2)).includes(PB));
+  /* the other way round: beta's member is told alpha's name only when alpha is not hidden */
+  assert.deepEqual(notices(twoHidden({ discoverable: [PA] }), PB, M3).notices[0].named, [{ id: PA, name: `title of ${PA}` }]);
+  assert.deepEqual(notices(w, PB, M3).notices[0].named, []);
 });
 
 test("R50 (N368): the page is at most 50 in candidate id order after `after`, a non-number 50, truncated observed one past at its cut, and the cursor resumes", () => {

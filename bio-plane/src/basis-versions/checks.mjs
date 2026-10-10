@@ -842,9 +842,16 @@ export const CONCLUDE_ACT_CHECKS = {
       + 'add beyond the claim can be sent as commentary: it is recorded in your name and is never '
       + 'treated as evidence.',
   },
-  /* REC-124. The project's own frontmatter could not take the conclusion row
-     in place, so nothing was written — the make-current writer's condition, on
-     the conclusion row. */
+  /* R48 (D59; K2479, K2491). A conclusion's bias applications, judged by inquiry-grammar R18's one shape check with a
+     conclusion's own effects; refused before the lens is asked, nothing written. */
+  BAD_BIAS_APPLIED: {
+    check: 'C-25.35',
+    where: 'src/basis-versions/index.mjs conclude > conclusionBiasApplied',
+    translation: 'A project\'s conclusion can record each statement of its declared bias that bore on it: the '
+      + 'statement, and whether it refused an inference or raised scrutiny. This list could not be recorded as sent '
+      + '(a missing or unwritable statement, another effect, a repeat, or more than 32), or it was sent with no '
+      + 'project. Nothing was recorded.',
+  },
   /* REC-136 / §7.1 item 7. A project withdraws only a conclusion it currently
      stands on; a second withdrawal, or one with nothing concluded, would add
      an entry that records nothing. */
@@ -855,6 +862,9 @@ export const CONCLUDE_ACT_CHECKS = {
       + 'has already withdrawn its latest conclusion. Everything it concluded and withdrew before stays in '
       + 'the record.',
   },
+  /* REC-124. The project's own frontmatter could not take the conclusion row
+     in place, so nothing was written — the make-current writer's condition, on
+     the conclusion row. */
   UNSPLICEABLE_CONCLUSIONS: {
     check: 'C-33.36',
     where: 'src/basis-versions/index.mjs #setProjectConclusion > is-conclusion-row',
