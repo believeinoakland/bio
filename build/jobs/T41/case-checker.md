@@ -57,3 +57,19 @@ Size (session_0165W4ZKVnAtc4FUGvKYg4Xb): test runs 22, module lines 2067
 ## J2 · COMPLETE
 
 T41-40 complete (record's Completion, commit 1e6424c11f): R14 /3 labels an unmarked photo's copy, with obscured_marked; R23 lens + reweigh (K2529), cites {kind, ref, ord} (K2528); R24 checkAccount in K2531's shape, run offline by R1. Case-checker tests 75/2: only the two R13 tests for the stale program.mjs (rule 4 (14)), 77/77 with it regenerated locally (not committed). Users' suites 356 pass, 4 fail, the same 4 fail on the tranche without this change. All four checks 0 failures. Uses unchanged. Module 2,067 lines. Switch to case-grammar accountOf/biasApplicationsOf awaits its CHANGE.
+
+### B5 (CHANGE, K2537): case-grammar's readers
+
+I merged `tranche/T41` @ 7fe0e94f76 and read both blocks through case-grammar:
+- **The account:** read by `accountOf` (R23), with its exact-value rows and `{kind, ref, ord}` cites.
+- **The bias applications:** read by `biasApplicationsOf` (R24). Its `target` is `leg` or `conclusion`, so an application now names a leg by its `finding` and `ord`. An application recorded at a conclusion is named under `not_applied` as moving no grade. The tests write both blocks with `CG.accountLines` and `CG.biasApplicationsLines`.
+- **Removed:** the local stand-ins (J1 (6)). The deferral above is closed.
+
+Final `uses` add `case-grammar`'s `accountOf` and `biasApplicationsOf`. The module edges are unchanged.
+
+**Results after the merge:**
+- **case-checker tests:** 75 pass, 2 fail. The 2 are the two R13 tests on the stale `program.mjs`. With `program.mjs` regenerated locally: 77 pass, 0 fail; the regenerated file was not committed.
+- **Users' suites** (now with case-grammar's): 476 pass, 8 fail. The same 8 fail on the tranche branch without this change, so none is this job's. They are the 4 named above, plus `case-grammar/obscured.test.mjs`, `public-read/obscured.test.mjs` and `case-authoring/documents.test.mjs` (R3, R7 ×2, R23), which reach the new `obscured.marked` field.
+- **Checks:** format, architecture (78 imports), coverage (24 of 24) and ownership: 0 failures each.
+
+Size (session_0165W4ZKVnAtc4FUGvKYg4Xb): test runs 27, module lines 2070
