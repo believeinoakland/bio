@@ -6,8 +6,9 @@
    Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { planeWorld as world, infoMd } from "./fixture.mjs";
-import { rowOf, CASE_SOURCES_CHECKS } from "../../../src/publication/checks.mjs";
+import { rowOf, CASE_SOURCES_CHECKS, PUBLICATION_WORDS } from "../../../src/publication/checks.mjs";
 import { caseCarriageOf } from "../../../src/case-carriage/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
@@ -30,11 +31,21 @@ function base() {
   return { w, proj, roster, cc, sign: () => w.signCase(CASE, 1, { project: proj, roster }) };
 }
 
-test("R33 (T39) C-122.7 DOCUMENT_COPY_CHANGED_SINCE is held once in this module's C-122 family, its translation BOB's draft, raised at the commit's document-copy site", () => {
+const WORDS = new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url);
+
+test("R33 (T41) C-122.7 DOCUMENT_COPY_CHANGED_SINCE is held once in this module's C-122 family, its translation words.json's document.refused.changed, read by key, verbatim and protected (DEC-188 (7)), raised at the commit's document-copy site", () => {
+  const list = JSON.parse(readFileSync(WORDS, "utf8"));
+  const hits = (Array.isArray(list) ? list : list.words || []).filter((x) => x && x.key === "document.refused.changed");
+  assert.equal(hits.length, 1, "one word in words.json");
+  assert.deepEqual([hits[0].protected, hits[0].note], [true, "DOCUMENT_COPY_CHANGED_SINCE"]);
+  assert.equal(PUBLICATION_WORDS["document.refused.changed"], hits[0].en, "held verbatim, by key");
   assert.deepEqual(rowOf("DOCUMENT_COPY_CHANGED_SINCE"), {
-    code: "DOCUMENT_COPY_CHANGED_SINCE", check: "C-122.7",
-    translation: "A document a member supplied now needs a different publication copy from the one this case was prepared "
-      + "with. Prepare the case again. Nothing was published." });
+    code: "DOCUMENT_COPY_CHANGED_SINCE", check: "C-122.7", translation: hits[0].en });
+  /* its words, R33's draft unchanged (K2483) */
+  assert.equal(hits[0].en, "A document a member supplied now needs a different publication copy from the one this case was "
+    + "prepared with. Prepare the case again. Nothing was published.");
+  /* negative control: C-122.6's words are another key's */
+  assert.notEqual(rowOf("PHOTO_MARKS_CHANGED_SINCE").translation, hits[0].en);
   assert.equal(CASE_SOURCES_CHECKS.DOCUMENT_COPY_CHANGED_SINCE.where,
                "src/publication/index.mjs commitCaseEdition > is-document-copy-current");
   assert.equal(Object.values(CASE_SOURCES_CHECKS).filter((x) => x.check === "C-122.7").length, 1, "held once");

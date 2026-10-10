@@ -7,7 +7,7 @@
    R61's T35 clause and R73 are in `t33.test.mjs` and `door.test.mjs`. Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { planeWorld as world, infoMd, V, SIG, NOW } from "./fixture.mjs";
+import { planeWorld as world, infoMd, V, SIG, NOW, MACHINE } from "./fixture.mjs";
 import { SCHEDULED_CHECK_UNAVAILABLE } from "../../../src/publication/index.mjs";
 import { rowOf } from "../../../src/publication/checks.mjs";
 
@@ -135,7 +135,7 @@ test("R72 at a case edition's commit the criteria are one row per distinct (stan
   assert.deepEqual([w.snapshot(), standards.calls.length], [snap, n]);
 });
 
-test("R72 the founder's signature reads as `admin`; members targeting no standard give criteria []; a standards read that throws is a row stated not held and never refuses the commit; a refused commit records nothing; an edition committed before T35 answers criteria null, stated as not recorded, never filled", () => {
+test("R72 (K2483, D54) a commit no member signs reads as a machine viewer, never the founder's `admin`; members targeting no standard give criteria []; a standards read that throws is a row stated not held and never refuses the commit; a refused commit records nothing; an edition committed before T35 answers criteria null, stated as not recorded, never filled", () => {
   const { w, proj, standards } = base({ standards: standardsOf({ [A]: "throw" }) });
   const roles = [member(w, "INFO-2026-0101-first", { subject: CLERK, legs: [{ target: A, content: C1 }] })];
   const r = sign(w, proj, roles, { signer: null });
@@ -143,7 +143,7 @@ test("R72 the founder's signature reads as `admin`; members targeting no standar
   assert.deepEqual(w.p.caseEditionState(CASE, 1).criteria, [{ standard: A, portion: null, designation: null, edition: null,
     issuer: null, citation: null, access: null, body: null, binds: null, passages: null, label: null, access_words: null,
     stated: "not held", captures: null }]);
-  assert.deepEqual(standards.calls, [["standardRead", A, "admin"]], "the founder reads as admin");
+  assert.deepEqual(standards.calls, [["standardRead", A, MACHINE]], "no member signs: a machine viewer reads");
   /* members whose legs name no standard */
   const plain = [member(w, "INFO-2026-0104-plain", { subject: CLERK, legs: [{ target: "INFO-2026-0001-minutes" }] })];
   w.prepare("CASE-2026-0002", 1, { project: proj, roles: plain });
@@ -276,13 +276,13 @@ test("R75 criteriaFor answers {rows}, exactly the criteria R72's commit records 
   assert.ok(standards.calls.filter((x) => x[0] === "bindsAt").every((x) => x[3] === "2027-01-02"));
 });
 
-test("R75 the founder's reads are `admin`; members targeting no standard answer rows []; a member whose bytes cannot be read contributes no row; a standards read that throws is a row stated not held; malformed arguments never throw", () => {
+test("R75 (K2483, D54) with no signer the reads are a machine viewer's, never the founder's `admin`; members targeting no standard answer rows []; a member whose bytes cannot be read contributes no row; a standards read that throws is a row stated not held; malformed arguments never throw", () => {
   const { w, standards } = base({ standards: standardsOf({ [A]: "throw" }) });
   const roles = [member(w, "INFO-2026-0101-first", { subject: CLERK, legs: [{ target: A, content: C1 }] })];
   const r = w.p.criteriaFor({ members: asMembers(roles), signer: null, at: NOW });
   assert.deepEqual(r.rows, [{ standard: A, portion: null, designation: null, edition: null, issuer: null, citation: null, access: null,
     body: null, binds: null, passages: null, label: null, access_words: null, stated: "not held" }]);
-  assert.deepEqual(standards.calls, [["standardRead", A, "admin"]], "the founder reads as admin");
+  assert.deepEqual(standards.calls, [["standardRead", A, MACHINE]], "no signer: a machine viewer reads");
   const plain = [member(w, "INFO-2026-0104-plain", { subject: CLERK, legs: [{ target: "INFO-2026-0001-minutes" }] })];
   assert.deepEqual(w.p.criteriaFor({ members: asMembers(plain), signer: "olive", at: NOW }), { rows: [] });
   /* unreadable bytes: a sha nobody holds, a bundle nobody holds, a member with no id; the readable member still answers */
@@ -299,4 +299,38 @@ test("R75 the founder's reads are `admin`; members targeting no standard answer 
   /* a record that throws is no row and no throw */
   w2.record.textAtSha = () => { throw new Error("down"); };
   assert.deepEqual(w2.p.criteriaFor({ members: asMembers(ok), signer: "olive", at: NOW }), { rows: [] });
+});
+
+/* ---------------------------------------------------------------- K2483 (D54): an internal read is no founder's */
+
+test("R72 R75 (K2483, D54) with no member signing, the criteria are read as a machine viewer, so a standard filed in a hidden project is still read (the founder's `admin` no longer sees it); a member's own read stays fenced: a signer outside the hidden project reads it as not held", () => {
+  /* `standards`, a stand-in whose standard A is filed in a hidden project: answered only to a viewer membership R43 lets
+     see that project (standards R37's sight), every other viewer as for an absent standard */
+  let w;
+  const held = standardsOf();
+  const hidden = { ...held, calls: held.calls,
+    standardRead(a) { return w.membership.inSight(HIDDEN, a.viewer) ? held.standardRead(a)
+      : (held.calls.push(["standardRead", a.id, a.viewer]), { ok: false, reason: "NO_SUCH_STANDARD", standard: a.id }); } };
+  let HIDDEN;
+  ({ w } = base({ standards: hidden }));
+  w.member("ivy"); w.member("zed");
+  HIDDEN = w.project("Filed", "ivy");
+  assert.equal(w.membership.visibilityOf(HIDDEN), "hidden", "(fixture) hidden");
+  assert.equal(w.membership.inSight(HIDDEN, "admin"), false, "(D54) the founder, in no project, does not see it");
+  assert.equal(w.membership.inSight(HIDDEN, MACHINE), true, "(R43) a machine viewer does");
+  const roles = [member(w, "INFO-2026-0101-first", { subject: CLERK, legs: [{ target: A, content: C1 }] })];
+  const read = (signer) => w.p.criteriaFor({ members: asMembers(roles), signer, at: NOW }).rows[0];
+  /* no signer: a machine viewer reads the standard */
+  held.calls.length = 0;
+  const machine = read(null);
+  assert.equal(machine.stated, undefined, "held, read");
+  assert.equal(machine.designation, "AI 4.12");
+  assert.deepEqual(held.calls.filter((x) => x[0] === "standardRead"), [["standardRead", A, MACHINE]]);
+  /* negative control: a member outside the hidden project signs; their own read is still fenced */
+  held.calls.length = 0;
+  assert.equal(read("zed").stated, "not held", "zed does not see the hidden project's standard");
+  assert.deepEqual(held.calls.filter((x) => x[0] === "standardRead"), [["standardRead", A, V("zed")]]);
+  /* and the commit records what R75 answers: with no signer, the machine viewer's row */
+  assert.equal(sign(w, w.project("Parks2", "olive"), roles, { signer: null }).ok, true);
+  assert.equal(w.p.caseEditionState(CASE, 1).criteria[0].designation, "AI 4.12");
 });
