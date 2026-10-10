@@ -40,6 +40,7 @@
  *   bias                 `biasManifest` (R14).
  *   observations         observation-log's `missingCauseAt` (R17).
  *   reevaluation         `raise` (R15).
+ *   publishSchedule      `waitingEditionOf` (publish-schedule R7; R58, R59; N823).
  *   publication          `storeCaseDocument`, `reauthorSection`, `hasCaseStanding`, `reviewProvider` (its R21, R23),
  *                        `criteriaFor` (its R75; R61).
  *   caseTensions         `caseRelation`, `attributionStatements` (case-tensions R1, R5; T33-62).
@@ -66,6 +67,9 @@ import { strengthOf, STRENGTH_AXES } from "../strength/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
+/* R58, R59 (N823; K2438): the waiting edition is `publish-schedule`'s (its R1, read through its R7), since publication's
+   third split. */
+import { publishScheduleOf } from "../publish-schedule/index.mjs";
 import { caseTensionsOf } from "../case-tensions/index.mjs";
 import { ratificationOf, SUBJECT_POSITIONS, completenessFields } from "../ratification/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
@@ -203,14 +207,16 @@ export class CaseAuthoring {
   #deps;
 
   constructor({ storage, record, membership, host = null, inquiry = null, basisVersions = null, strength = null,
-                bias = null, observations = null, reevaluation = null, publication = null, ratification = null,
+                bias = null, observations = null, reevaluation = null, publication = null, publishSchedule = null,
+                ratification = null,
                 networkNotices = null, disclosures = null, calculations = null, workbooks = null, events = null,
                 caseTensions = null, now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.membership = membership;
-    this.#deps = { host, inquiry, basisVersions, strength, bias, observations, reevaluation, publication, ratification,
+    this.#deps = { host, inquiry, basisVersions, strength, bias, observations, reevaluation, publication, publishSchedule,
+                   ratification,
                    networkNotices, disclosures, calculations, workbooks, events, caseTensions };
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
@@ -223,6 +229,8 @@ export class CaseAuthoring {
   get observations() { return this.#deps.observations ||= observationLogOf(this.#deps.host); }
   get reevaluation() { return this.#deps.reevaluation ||= reevaluationOf(this.#deps.host); }
   get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host); }
+  /* R58, R59: the waiting edition's one read (publish-schedule R7), viewer-free and in-process. */
+  get publishSchedule() { return this.#deps.publishSchedule ||= publishScheduleOf(this.#deps.host); }
   get ratification() { return this.#deps.ratification ||= ratificationOf(this.#deps.host); }
   get networkNotices() { return this.#deps.networkNotices ||= networkNoticesOf(this.#deps.host); }
   /* R55 (N529, K1333): `case-disclosures`, the one instance on this host, asked in R55's order. The composition builds
@@ -725,14 +733,14 @@ export class CaseAuthoring {
                detail: `no published case answers to ${theCase}. A case identity is minted by this act and `
                      + `carried in the signed bytes; it is never taken from a caller, because an identity a `
                      + `caller can hand us is one a caller can invent.` };
-    /* R58 (N681; DEC-147 (2), (4)): AN EDITION OF THIS CASE SIGNED AND WAITING TO BE PUBLISHED (publication R66) is
-       asked of publication's one read (its R74), after R7 and before R8, before anything is written or an id is drawn:
-       a new edition is prepared only once the waiting one is published, stopped or cancelled (publication R67, R68), so
+    /* R58 (N681, N823; DEC-147 (2), (4)): AN EDITION OF THIS CASE SIGNED AND WAITING TO BE PUBLISHED (publish-schedule
+       R1) is asked of publish-schedule's one read (its R7), after R7 and before R8, before anything is written or an id is
+       drawn: a new edition is prepared only once the waiting one is published, stopped or cancelled (its R2, R3), so
        this act never prepares an edition over, or beside, one a signature already covers. A minted case has none. A
        case of another project is not answered here: R7's CASE_BELONGS_TO_ANOTHER_PROJECT refuses it below, and
        nothing of another project's waiting edition is named to this one (R33). */
     if (theCase) {
-      const waiting = this.publication.waitingEditionOf(theCase);
+      const waiting = this.publishSchedule.waitingEditionOf(theCase);
       const owner = waiting ? (this.#one(`SELECT project_id FROM cases WHERE case_id=?`, theCase)?.project_id
                                ?? this.#documentProject(theCase, waiting.edition)) : null;
       /* DEC-49 REGION is-case-edition-waiting */
@@ -1680,9 +1688,10 @@ export class CaseAuthoring {
     return named || null;
   }
 
-  /* R59 (N681): whether `publication` holds this case edition waiting (its R66, R74): signed, for acknowledgeStatement. */
+  /* R59 (N681, N823): whether `publish-schedule` holds this case edition waiting (its R1, read through its R7, the same
+     read as R58's): signed, for acknowledgeStatement. */
   #waits(caseId, edition) {
-    const w = this.publication.waitingEditionOf(caseId);
+    const w = this.publishSchedule.waitingEditionOf(caseId);
     return !!(w && Number(w.edition) === Number(edition));
   }
 
@@ -1963,7 +1972,7 @@ export class CaseAuthoring {
         const doc = this.#one(`SELECT case_id, edition, text, ratified_at FROM case_documents
                                WHERE case_id=? AND edition=?`, cid, ed);
         if (!doc || !this.publication.hasCaseStanding(doc, v)) return review.deadAnswer();
-        /* R59 (N681): a document publication holds waiting (its R66, R74) is signed here, as a ratified one is: its
+        /* R59 (N681, N823): a document publish-schedule holds waiting (its R1, R7) is signed here, as a ratified one is: its
            signature covers the list, and nothing is re-authored. A cancelled edition's is again a preparation. */
         /* DEC-49 REGION is-statement-ack-signed */
         if (doc.ratified_at || this.#waits(cid, ed))
