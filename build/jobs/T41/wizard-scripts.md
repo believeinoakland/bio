@@ -48,3 +48,7 @@ T41-50 complete; Completion section in my record. 75/75 (was 62/7: the seven D54
 - `node --test bio-plane/test/m/wizard-scripts/*.test.mjs`: tests 76, pass 76, fail 0. Users: answer-envelope 24/4, plane 147/8, store-door 36/5 (as before); control-plane 190/5, its failing set identical with and without this change (the extra red came with the tranche merge, not from me). Checks: format 0, architecture 0, coverage 28/28, ownership 0.
 
 Size (session_01CgHt32emJfi3pZh8fJSRem): test runs 19, module lines 2,518
+
+## J3 · COMPLETE
+
+B4 (K2592) done: merged tranche/T41; #keptAway asks credentials.aiKeptAway({use: "draft"}) for R27 and R24 alike; tested with a keep-away covering only ask (passes) and negative controls covering draft / every use (AI_KEPT_AWAY). 76/76; users unchanged by this change (control-plane's 5th red came with the tranche merge, identical with and without mine); checks 0, coverage 28/28. Record: 'Completion of B4'.
