@@ -70,7 +70,7 @@ Merged `tranche/T41` (ai-runs merged @ 9741f67aad). Read whole: `build/requireme
 - `AI_LIMIT_INVALID` for all eight fields, each with its own words;
 - negative control: the words file's raw sentences are seen to carry placeholders.
 
-**Through ai-runs' path.** My tests may not import ai-runs (later in the order: the architecture check), so I drove it from a scratch script over ai-runs' own `world.mjs`. Its open and tick refused with "The assistant stopped here: your own daily limit is reached. It works again tomorrow. Everything else works as usual.", and with a month's limit "… your own monthly limit is reached. It works again on August 1. …"; no placeholder was left. ai-runs' `usage.test.mjs` `limitReached` checks only that the translation is a string. A test asserting no placeholder there is ai-runs' to add (REPORT J6).
+**Through ai-runs' path.** My tests may not import ai-runs (later in the order: the architecture check), so I drove it from a scratch script over ai-runs' own `world.mjs`. Its open and tick refused with "The assistant stopped here: your own daily limit is reached. It works again tomorrow. Everything else works as usual.", and with a month's limit "… your own monthly limit is reached. It works again on August 1. …"; no placeholder was left. ai-runs' `usage.test.mjs` `limitReached` checks only that the translation is a string. A test asserting no placeholder there is ai-runs' to add (REPORT J5).
 
 **Ran.**
 - `node --test bio-plane/test/m/ai-use/`: tests 49, pass 49, fail 0.
@@ -84,7 +84,7 @@ Merged `tranche/T41` (ai-runs merged @ 9741f67aad). Read whole: `build/requireme
 
 **Deferred.** None. **Generated artifacts:** none staled (nothing bundled imports ai-use).
 
-**Found in other modules (REPORT J6).**
+**Found in other modules (REPORT J5).**
 - `ai-runs`: its `limitReached` test helper could assert that no `{…}` placeholder is left in a relayed refusal.
 - The design stream: `words.json` has no keys for `{period}` (daily/monthly), `{when}` (tomorrow / on <month> 1) or `{field}`. ai-use fills them with its own words until keys exist.
 
