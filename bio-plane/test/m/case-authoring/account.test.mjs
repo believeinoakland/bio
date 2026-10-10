@@ -412,3 +412,24 @@ test("R68 (D60; K2528, K2533): publishCase writes case-grammar R26's block — t
   assert.deepEqual(un.blockers.filter((b) => b.reason === "APPROVAL_MISSING").map((b) => b.missing), [null]);
   assert.match(un.steps.find((x) => x.name === "approvals").stated, /could not be read/);
 });
+
+test("R68 (K2548): against the real ratification, an approval reader registered as review registers it (ratification R50) is read through approvalsInForce at the document's approval digest: the rule written into R26's block, the missing approver named in the approvals step and APPROVAL_MISSING among blockers; negative control: once given at that digest, nothing missing", () => {
+  const { w, P } = setup();
+  const given = [];
+  assert.equal(w.ratification.registerApprovalReader({ rule: () => ({ approvers: ["bo"], set_by: "root", set_at: "2026-09-26T00:00:00Z" }),
+    approvals: ({ docSha }) => given.filter((g) => g.docSha === docSha).map(({ by, at }) => ({ by, at })) }).ok, true);
+  const args = { ...AUTHORED, project: P, targets: [Q], roles: { [Q]: "load_bearing" }, viewer: V("alice"), author: "alice" };
+  /* prepared for real, so the pre-flight below prepares this same case edition again (R8, K2540) and its digest */
+  const r = w.publish(P, "alice", [Q]);
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  const first = { doc: docOf(w, r) };
+  assert.deepEqual(approvalsOf(w.fm(first.doc.text)).rule.approvers, ["bo"]);
+  const pre = w.ca.publishPreflight(args);
+  assert.deepEqual(pre.steps.find((x) => x.name === "approvals").missing, ["bo"]);
+  assert.equal(pre.blockers.filter((b) => b.reason === "APPROVAL_MISSING").length, 1);
+  /* bo approves this version (its approval digest): nothing is missing */
+  given.push({ docSha: approvalSubjectSha(first.doc.text), by: "bo", at: "2026-09-27T09:00:00Z" });
+  const after = w.ca.publishPreflight(args);
+  assert.deepEqual(after.steps.find((x) => x.name === "approvals").missing, []);
+  assert.deepEqual(after.steps.find((x) => x.name === "approvals").given.map((g) => g.by), ["bo"]);
+});
