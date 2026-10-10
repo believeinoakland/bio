@@ -70,6 +70,31 @@ The plane bundle is staled (rule 4 (14)).
 
 Size (session_01X91czHYMgFDRuMpbnSJLFk): test runs 16, module lines 1939
 
+## Completion: B4 CHANGE (R14; K2561)
+
+**Change applied:** R14. I merged `tranche/T41` (my T41-46a work was already merged there) and added the row C-32.21 `MACHINE_CANNOT_STATE_SEEKS` to `RECORDS_LAW_FENCE_CHECKS`, directly after C-32.20.
+- Its `where` is `src/actions/index.mjs #seeksFence > is-machine-state-seeks`, actions R72's fence, which ACTIONS #14 builds.
+- Its translation follows R14's words in C-32.20's form: "Which stages a records request asks the records for is a statement a member makes and answers for. The credential that asked here is an automated one, or no member is named behind it: it can propose the stages for a member to consider, but it cannot state or change what the request seeks. Nothing was written. Sign in to state it yourself."
+
+**Census (rule 4 (2), awaiting T42's stamp):** this adds `arrived with no record: C-32.21 MACHINE_CANNOT_STATE_SEEKS`, beside C-117.29 (arrived) and C-94.5 (changed). The plane bundle is staled (rule 4 (14)). `uses` is unchanged.
+
+**Deferred:** none. **Found in another module:** nothing new.
+
+**Tests and checks:**
+- `node --test bio-plane/test/m/action-grammar/`: 42 tests, 42 pass, 0 fail.
+  - New test in `seeks.test.mjs`: R14's row, checked whole, with negative controls (C-32.20 unchanged; no other table or code holds C-32.21).
+  - Changed in `grammar.test.mjs`: R9's expected rows and census range now include C-32.21.
+- Users' suites and the row census, run before and after this change: the failing tests are identical by name, except for the census's C-32.21 line.
+  - actions 95/96, action-clocks 55/55, filing-templates 56/56, escalation 63/63, affordances 186/220, setup-page 75/83 and answer-envelope 24/28 pass.
+  - Each red is pre-existing (rule 4's named reds).
+- Process checks:
+  - `format`: 145 modules, 144 requirements files; 0 failures.
+  - `architecture`: 8 product files, 17 relative imports; 0 failures.
+  - `coverage`: 14 of 14 live requirement ids named by a test; 0 failures.
+  - `ownership` (tranche/T41): 4 files; 0 failures.
+
+Size (session_01X91czHYMgFDRuMpbnSJLFk, B4): test runs 4, module lines 1950
+
 ## J1 · QUESTION
 
 Q1 (R13; my best reading, being built now; the answer does not stop the job).
