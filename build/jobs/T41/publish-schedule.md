@@ -31,6 +31,6 @@ publication's own `t34`/`t35`/`t39` unchanged (25 pass, 2 fail: its :300 and :37
 - `format`: 145 modules, 144 requirements files; 0 failures
 - `architecture publish-schedule`: 9 product files, 26 relative imports; 0 failures
 - `coverage publish-schedule`: 11 of 11 live requirement ids named by a test; 0 failures
-- `ownership publish-schedule tranche/T41`: run after the commit, below.
+- `ownership publish-schedule tranche/T41`: 10 files changed by publish-schedule between tranche/T41 and HEAD; 0 failures (with the scratch `modules.json`; against the committed one, which still names no paths, each file reads "outside publish-schedule's paths" until BOB writes them)
 
 Size (session_01GCuXKM9tA8NjwoR4rFdWhv): test runs 10, module lines 567
