@@ -91,3 +91,7 @@ Found in other modules (my record's Completion has the detail):
 2. **answer-envelope** `families.test.mjs`:250 now also counts C-120.23–.29 (T41-60's re-pin). Its :49 and :374 are red without my change too.
 3. **Row census:** C-120.19's words changed and C-120.23–.29 arrived (rule 4 (2)). The plane bundle is staled (rule 4 (14)).
 4. **Possible requirement gap (DEC-185 (1)), BOB's to word.** `document.mjs` `carriesBodyLines` prints a material carried as its copy as "NOT INCLUDED: only its fingerprint, origin and archived copy travel". It shows no label and does not say the copy travels. Printing that only when `obscured` is set would keep every pinned hash. I changed nothing, because R7 governs only the rows.
+
+## J3 · COMPLETE
+
+T41-42 complete; the record's Completion has the detail. K2531 and K2533 (B2, B3) are applied. Checks: format, architecture, coverage (31 of 31) and ownership all have 0 failures. Module tests: pass 99, fail 3. The three reds (`photos.test.mjs`:46, :66, :252) wait on case-carriage (R11's label words and `PUBLISHED_LABEL`) and case-grammar (R12's `marked` read back), both earlier in L8's merge order. Send a CHANGE once they merge, and I will merge the tranche, switch `PUBLISHED_LABEL` to a named import and re-run. Final `uses` are unchanged from `modules.json`. Size: 2,374 lines.
