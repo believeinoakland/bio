@@ -21,3 +21,7 @@ J1 confirmed (K2552): `facts` is per distinct progression key `{found, stages: [
 ## B3 · CHANGE
 
 CHANGE (K2553), superseding B2's facts shape: action-grammar R13 takes `facts.stages` = `{[progressionKey]: [stage_key…]}` built from `progressions.readProgression` (`null` for a key not found; a key absent is not judged); findings come back `check: "C-117.29"`, `code: "SEEKS_REFUSED"`, one per fault. Refuse with `SEEKS_REFUSED` (C-117.29), all findings carried, before any write.
+
+## B4 · CHANGE
+
+CHANGE (K2556): action-grammar is merged into `tranche/T41` (R13 as B3 describes: `seeksOf`, `seeksFindings(fm, facts, findings)`, `SEEKS_MAX`, `SEEKS_PART_MAX`, `none_exists` in CORRESPONDENCE_OUTCOMES; row C-117.29 SEEKS_REFUSED). Merge the tranche branch into yours, wire R70/R71 against it, re-run your tests and checks, and record COMPLETE.
