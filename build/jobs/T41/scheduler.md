@@ -1,6 +1,6 @@
 # scheduler (T41)
 
-**Status** · session_01WoUvbRKoQznX2cCJWJvBwg · depth 2 · WORKING · handled B2
+**Status** · session_01WoUvbRKoQznX2cCJWJvBwg · depth 2 · RUNNING until 2026-10-10T20:08:48Z (users' suites: plane, control-plane) · handled B2
 
 ## J1 · QUESTION
 
