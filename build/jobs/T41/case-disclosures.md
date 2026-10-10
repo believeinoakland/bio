@@ -126,3 +126,7 @@ B4 (K2537) applied, re-completed. I merged tranche/T41. R31's rows are now case-
 ## J5 · COMPLETE
 
 B5 (K2539) applied, re-completed. I merged tranche/T41, and the case-carriage labels are imported by name. Module tests: pass 103, fail 0. Checks: format, architecture, coverage (31 of 31) and ownership all have 0 failures. Size: 2,378 lines. New red in case-authoring since J2, its job's to take: photos.test.mjs:76 (R34's Photos step), where a copy with nothing to obscure now answers PUBLISHED_LABEL (R29). Its other reds are as recorded.
+
+## J6 · COMPLETE
+
+B6 (K2541) applied, re-completed. I merged tranche/T41. carriesBodyLines now prints a material carried as its copy as travelling with the case, with its copy's fingerprint and its label word for word, and only when the row states obscured, so seam's pinned hashes hold. Tested in photos.test.mjs with negative controls. Module tests: pass 104, fail 0. Checks: format, architecture, coverage (31 of 31) and ownership all have 0 failures. case-authoring's reds are unchanged from J5. Size: 2,387 lines.
