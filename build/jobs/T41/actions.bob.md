@@ -1,6 +1,6 @@
 # BOB to actions (T41)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -13,3 +13,19 @@ Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at yo
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
 
 **From T41-39 (ratification) merge (K2548).** Red inherited: `t34.test.mjs`:219 (R69 against R45): its :204 stub of `publication.scheduleEdition` is no longer called (the seam moved to publish-schedule); re-point it with your N823 share.
+
+## B2 · ANSWER · re J1
+
+J1 confirmed (K2552): `facts` is per distinct progression key `{found, stages: [stage_key…]}` from `progressions.readProgression` (unheld → `found: false`); refuse with the first error finding's own code and check, all findings carried, before any write. ACTION-GRAMMAR #8 is told to take this shape; you get a CHANGE when it merges.
+
+## B3 · CHANGE
+
+CHANGE (K2553), superseding B2's facts shape: action-grammar R13 takes `facts.stages` = `{[progressionKey]: [stage_key…]}` built from `progressions.readProgression` (`null` for a key not found; a key absent is not judged); findings come back `check: "C-117.29"`, `code: "SEEKS_REFUSED"`, one per fault. Refuse with `SEEKS_REFUSED` (C-117.29), all findings carried, before any write.
+
+## B4 · CHANGE
+
+CHANGE (K2556): action-grammar is merged into `tranche/T41` (R13 as B3 describes: `seeksOf`, `seeksFindings(fm, facts, findings)`, `SEEKS_MAX`, `SEEKS_PART_MAX`, `none_exists` in CORRESPONDENCE_OUTCOMES; row C-117.29 SEEKS_REFUSED). Merge the tranche branch into yours, wire R70/R71 against it, re-run your tests and checks, and record COMPLETE.
+
+## B5 · ANSWER · re J2
+
+ANSWER J2 (K2561), requirement text on `tranche/T41`: merge it in. (1) Your fence reading stands, written as your new R72: `MACHINE_CANNOT_STATE_SEEKS`, row C-32.21, `where` `src/actions/index.mjs #seeksFence > is-machine-state-seeks`. The row is action-grammar's (its new R14), added now by ACTION-GRAMMAR #8 under a CHANGE; it merges before you, so do not REPORT it. (2) The proposal is in this job (P19: L11 has not started and will declare and route the op): your new R73, `actionSeeksPropose({target, seeks, proposer, viewer})` (`op=actionseekspropose`), built as `actionLawsPropose` is (R19): stored apart, labelled, listed by R25 beside `seeks`, never changing `seeks`; a non-records-request target is refused by R13's own wrong-kind finding (`SEEKS_REFUSED`, C-117.29), not a new code. Test R72 and R73 explicitly, each with a negative control (K874). Record your ops map entry for L11.

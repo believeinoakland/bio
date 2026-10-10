@@ -83,7 +83,10 @@ const EXTRACTION_JOINED = [
 ];
 
 /** The world: `alice` owns and has joined project P, and `pat` has joined it; `bob` is a member who has not; `carol`
- *  is an administrator outside P (who sees it). `passages: false` leaves the passage-text read out (R4's "a form not read"). */
+ *  is an administrator neither invited nor joined. P is hidden (membership's default), so carol sees it only at
+ *  `EXISTENCE`, never its contents (D54; membership R43, R44), until `discoverable()` sets it discoverable or
+ *  `invite("carol")` invites her, either of which shows it to her whole. `passages: false` leaves the passage-text read
+ *  out (R4's "a form not read"). */
 export function world({ passages = true, group = "test-group", superseded = null } = {}) {
   const st = storage();
   const host = { storage: st };
@@ -262,6 +265,16 @@ export function world({ passages = true, group = "test-group", superseded = null
         inputs: [{ name: "t", money: factIds }], recipe, by: V("alice") });
       if (!r.ok) throw new Error(`fixture calculation refused: ${JSON.stringify(r).slice(0, 400)}`);
       return r.calc_id;
+    },
+    /** D54: a project its owner sets discoverable (membership R45), which an administrator outside it sees whole. */
+    discoverable(project = w.P, owner = "alice") {
+      const r = membership.projectVisibilitySet({ projectId: project, setting: "discoverable", reason: "open to members", by: owner });
+      if (!r.ok) throw new Error(`fixture visibility refused: ${JSON.stringify(r).slice(0, 300)}`);
+    },
+    /** D54: a member invited to P by alice and not joined: an invited administrator sees a hidden project whole. */
+    invite(id) {
+      const r = membership.projectInvite({ projectId: w.P, handle: `h_${id}`, by: "alice" });
+      if (!r.ok) throw new Error(`fixture invitation refused: ${JSON.stringify(r).slice(0, 300)}`);
     },
     determination(id, project, outcomes, extra = {}) {
       determinations.set(id, { project, outcomes: Object.entries(outcomes).map(([standard, outcome]) => ({ standard, outcome })),

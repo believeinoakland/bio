@@ -61,9 +61,11 @@ test("R1 R25: refusals in R1's order, each asked only once the ones before it pa
     if (mend.score === undefined && "score" in mend) delete cur.score;
   }
   assert.equal(w.c.determine(cur).ok, true, "every part mended, the determination is recorded");
-  /* DETERMINATION_NOT_A_PARTICIPANT sits between the project and the act: an administrator sees the project and has not
-     joined */
-  refused(w.c.determine({ ...bad, author: V("ron"), viewer: V("ron"), project: proj }), "DETERMINATION_NOT_A_PARTICIPANT");
+  /* DETERMINATION_NOT_A_PARTICIPANT sits between the project and the act: a member invited sees the project and has not
+     joined (D54: an administrator neither invited nor joined sees this hidden project only at EXISTENCE, so it is no
+     longer the case that reaches here) */
+  w.membership.projectInvite({ projectId: proj, handle: "h_sam", by: "olive", viewer: V("olive") });
+  refused(w.c.determine({ ...bad, author: V("sam"), viewer: V("sam"), project: proj }), "DETERMINATION_NOT_A_PARTICIPANT");
   /* STANDARD_NOT_IN_FORCE sits between NO_SUCH_STANDARD and ROWS_INCOMPLETE */
   const old = w.standard("Repealed Code 1", { period: { from: "2001-01-01", to: "2010-12-31" } });
   refused(w.c.determine({ ...cur, standards: [{ standard: old, outcome: "compliant" }], rows: [] }), "STANDARD_NOT_IN_FORCE");
@@ -87,19 +89,48 @@ test("R1: NO_SUCH_PROJECT for an absent id, a bundle that is not a project and a
   assert.equal(ex.reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
 });
 
-test("R1: DETERMINATION_NOT_A_PARTICIPANT (K380's rename, row C-113.3) for an author who has not joined (invited only, an administrator, the founder), translated in one line from membership's", () => {
+test("R1: DETERMINATION_NOT_A_PARTICIPANT (K380's rename, row C-113.3) for an author who has not joined (invited only, an invited administrator, an administrator or the founder at a discoverable project), translated in one line from membership's", () => {
   const { w, proj, input } = scene();
   w.membership.projectInvite({ projectId: proj, handle: "h_sam", by: "olive", viewer: V("olive") });
-  for (const [author, viewer] of [[V("sam"), V("sam")], [V("ron"), V("ron")], ["admin", "admin"]]) {
-    const r = nothing(w, () => w.c.determine(input({ author, viewer })));
+  w.membership.projectInvite({ projectId: proj, handle: "h_ron", by: "olive", viewer: V("olive") });
+  /* a discoverable project with its own published finding: administrators see it at FULL (D54 leaves it unchanged) */
+  const open = w.project("Open", "olive", { visibility: "discoverable" });
+  const O = "INQ-2026-0007-open";
+  w.inquiry(O, { legs: [{ target: DOC }] });
+  w.publish(O, open, { caseId: "CASE-2026-0008" });
+  for (const [author, viewer, project, findings] of [[V("sam"), V("sam"), proj, [F]], [V("ron"), V("ron"), proj, [F]],
+                                                     [V("ron"), V("ron"), open, [O]], ["admin", "admin", open, [O]]]) {
+    assert.equal(w.membership.sight(project, viewer), "full", `${viewer} sees ${project} at FULL`);
+    const r = nothing(w, () => w.c.determine(input({ author, viewer, project, findings })));
     refused(r, "DETERMINATION_NOT_A_PARTICIPANT");
-    assert.equal(r.project, proj);
+    assert.equal(r.project, project);
   }
   assert.equal(CONFORMANCE_CHECKS.DETERMINATION_NOT_A_PARTICIPANT.check, "C-113.3");
   assert.equal("NOT_A_PARTICIPANT" in CONFORMANCE_CHECKS, false, "the shared name is retired here (K275)");
   /* a participant who asked to leave is still joined (membership R54's joined-or-leaving) */
   w.membership.projectLeave({ projectId: proj, by: "pat", comment: "moving on", viewer: V("pat") });
   assert.equal(w.c.determine(input({ author: V("pat"), viewer: V("pat") })).ok, true);
+});
+
+test("R1 R15 (D54): an administrator or the founder neither invited nor joined to a hidden project sees it only at EXISTENCE: determine answers membership's existence refusal (its id, name and owners) and writes nothing; invited, or at a discoverable project, they see it at FULL (negative control)", () => {
+  const { w, proj, input } = scene();
+  for (const viewer of [V("ron"), "admin", "member:admin"]) {
+    assert.equal(w.membership.sight(proj, viewer), "existence", viewer);
+    const r = nothing(w, () => w.c.determine(input({ author: viewer, viewer })));
+    refused(r, "PROJECT_SEEN_NOT_A_PARTICIPANT");
+    assert.deepEqual(r, w.membership.existenceAct(proj, viewer), "membership's own answer, relayed");
+    assert.deepEqual([r.project, r.name, r.owners], [proj, "Parks", ["h_olive"]]);
+    for (const inside of [F, "CASE-2026-0001", "Parks Code"]) assert.equal(JSON.stringify(r).includes(inside), false, inside);
+  }
+  /* the controls: invited, the administrator sees it whole and reaches the participant check; at a discoverable project
+     an administrator and the founder see it whole too */
+  w.membership.projectInvite({ projectId: proj, handle: "h_ron", by: "olive", viewer: V("olive") });
+  refused(w.c.determine(input({ author: V("ron"), viewer: V("ron") })), "DETERMINATION_NOT_A_PARTICIPANT");
+  const open = w.project("Open", "olive", { visibility: "discoverable" });
+  for (const viewer of [V("ron"), "admin"]) {
+    assert.equal(w.membership.sight(open, viewer), "full", viewer);
+    refused(w.c.determine(input({ author: viewer, viewer, project: open })), "DETERMINATION_NOT_A_PARTICIPANT");
+  }
 });
 
 test("R1 R25: ACT_INCOMPLETE names the missing or unreadable part: actor role and body, evidence, content not held; the act takes no description or date of its own", () => {

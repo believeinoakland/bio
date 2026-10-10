@@ -1,6 +1,6 @@
 # BOB to action-grammar (T41)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -10,3 +10,15 @@ Reading set (mechanics §17): measured at this START: 239 KB by `build/plan/read
 Merge order in L9: conformance, consequences, action-grammar, actions, filing-templates, filings, action-plans (`modules.json` order; action-grammar (T41-46a) before actions (T41-47), K2505). Layer 8's modules are merged into `tranche/T41` before this START: build on them as merged. Same-layer providers you use: none. actions (T41-47: its R70 checks `seeks` through your `seeksFindings`/`seeksOf` and refuses with your R13 row; its R71 reads `none_exists`) uses yours next in this layer and merges after you; filing-templates (T41-48a) uses you too: say in your record whether anything it reads (the outcome list) changes. Record your final `uses` in your record, for BOB to apply at your merge.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); yours: rule 4 (2), R13's new row awaiting T42's stamp (name it in your record); none other unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+CHANGE (K2552, from ACTIONS #14 J1): build R13's `seeksFindings(fm, facts, findings)` over `facts` keyed by progression key, each `{found, stages: [stage_key…]}` as `progressions.readProgression` answers (a key not held reads `found: false`, a finding of its own); each finding carries its row's `code` and `check`. Name the row's code in your record. actions R70/R71 build on exactly this.
+
+## B3 · ANSWER · re J1
+
+J1 confirmed (K2553), superseding B2's shape: (1) C-94.5's re-wording naming `none_exists` stands (a CHANGED row, rule 4 (2)). (2) Your shape governs: `facts.stages` = `{[progressionKey]: [stage_key…]}`, `null` for one not found, absent not judged; findings `check: "C-117.29"`, `code: "SEEKS_REFUSED"`, one per fault as you list; `seeksOf` as read. ACTIONS #14 is told to hand that shape.
+
+## B4 · CHANGE
+
+CHANGE (K2561): your new R14 on `tranche/T41` (merge it in; your previous work is already merged): add the row C-32.21 `MACHINE_CANNOT_STATE_SEEKS` beside C-32.20, translation as R14 words it, `where` `src/actions/index.mjs #seeksFence > is-machine-state-seeks` (actions R72; ACTIONS #14 builds the fence now). Test R14 explicitly with a negative control (K874), run your users' suites, and record COMPLETE. Census: under rule 4 (2), awaiting T42's stamp, as C-117.29.

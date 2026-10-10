@@ -9,6 +9,9 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 **From T41-23 (ai-runs) merge (K2514, AI-RUNS #16 J6).** Reds inherited: `t34-routes.test.mjs`:24, :211, :253 (ai-runs ops `aiusage`, `aiceilingset`, `aicopyceilingset` gone; `aiUseOps` answers `aiusage` and `ailimitset`); `r53-routes.test.mjs`:35 still names the retired ops.
 
-**From INVESTIGATION #1 J2 (K2525).** TO FIX AT L11 START: investigation (merged in L7) declares no op; its member acts (milestones R1–R5, reports R6–R9, the interview R11–R13, claims R14–R15, the firsthand account R16, plan proposals R20, the quiet doors R18: `projectWatch`, `projectCloseWithGaps`) need ops declared (op-declarations), routed (control-plane) and helped (affordances R50), each named exactly from its merged services.
+**From INVESTIGATION #1 J2 (K2525).** **Filled (K2560, from the merged `investigation`):** every op R43 names has its exported service; R43 gains the reads `claims`, `investigationproposals`, `quietstate`, `interviewform`; control-plane R71 now names each service and places the map for investigation, steps and question-explorer (none exports one) in control-plane's own paths; `milestonereminder`'s `at` is a body calendar day, not a stamp; the machine arms (`planPropose`, `claimfindstep` with `run`) are N842, not session ops. op-grades: `milestoneremove`, `milestoneitemremove` and `projectclosewithgaps` require a reason (`reason` an enum `resolved|superseded|abandoned` for the close, free text in `note`): grade them `reasoned`.
 
 **From REVIEW #11 J1 (K2529).** review R30 `approvalRuleSet` and R31 `caseApprove` have no op: declare (`approvalruleset`, `caseapprove`), route and help them; review R33's `reviewCommentsFor` takes an optional `draft`.
+
+
+**From ACTIONS #14 J2 (K2561).** `actions` R73 adds `actionseekspropose` (`actionSeeksPropose({target, seeks, proposer, viewer})`), a proposal as `actionlawspropose` is: any credential, `proposer` stamped from the caller (session or machine), mutating, `target` and `seeks` body fields. Declare and route it as `actionlawspropose` is.

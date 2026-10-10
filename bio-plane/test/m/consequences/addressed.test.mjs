@@ -28,13 +28,15 @@ function setup() {
   return w;
 }
 
-test("R9: addressedRecord's refusals, with a negative control", () => {
+test("R9 (D54): addressedRecord's refusals, with a negative control", () => {
   const w = setup();
   const id = w.part();
   const cases = [
     ["MACHINE_CANNOT_ADDRESS", { author: MACHINE }], ["MACHINE_CANNOT_ADDRESS", { author: "" }],
     ["NO_SUCH_PART", { id: "CONS-2026-0999-fund" }], ["NO_SUCH_PART", { author: V("bob") }],
-    ["CONSEQUENCE_NOT_A_PARTICIPANT", { author: V("carol") }],
+    /* D54 (K2408): carol, an administrator neither invited nor joined, sees hidden P only at EXISTENCE: its part is
+       absent to her. */
+    ["NO_SUCH_PART", { author: V("carol") }],
     ["ADDRESSED_UNKNOWN_STATE", { state: "partly" }],
     ["NO_REASON", { reason: " " }],
     ["ADDRESSED_NO_EVIDENCE", { evidence: [] }], ["ADDRESSED_NO_EVIDENCE", { evidence: null }],
@@ -48,6 +50,13 @@ test("R9: addressedRecord's refusals, with a negative control", () => {
     assert.ok(r.check && r.translation, "a refusal carries its row");
     assert.deepEqual(w.snapshot(), before);
   }
+  /* Negative control (D54): P set discoverable, carol sees it whole and is refused only for not having joined it. */
+  w.discoverable();
+  const before = w.snapshot();
+  const carol = w.c.addressedRecord({ ...good, author: V("carol") });
+  assert.equal(carol.reason, "CONSEQUENCE_NOT_A_PARTICIPANT", JSON.stringify(carol));
+  assert.ok(carol.check && carol.translation, "a refusal carries its row");
+  assert.deepEqual(w.snapshot(), before);
   const ok = w.c.addressedRecord(good);
   assert.equal(ok.ok, true);
   assert.deepEqual([ok.state, ok.evidence, ok.by], ["addressed", [w.cid], V("alice")]);
