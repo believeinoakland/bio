@@ -107,7 +107,7 @@ test("R2, R3: an owner's signature through a member's session commits the case, 
   assert.equal(r.body.gateVersion.startsWith("plane-gate/"), true);
   assert.match(r.body.next, /1 member finding\(s\) still to ratify/);
   assert.deepEqual([w.pub.committed[0].attestorMember, w.pub.committed[0].deliveredBy], ["alice", V("bo")]);
-  assert.deepEqual(r.p.fetched, ["casedocfacts", "casetestimony", "casegate", "caseratify"]);
+  assert.deepEqual(r.p.fetched, ["casedocfacts", "casetestimony", "caseapproval", "casegate", "caseratify"]);
   assert.deepEqual(w.calls.filter((c) => c[0] === "caseDocumentFacts").map((c) => c[3]), [V("bo"), V("bo")],
     "the facts and the gate are read for the session's viewer");
   const again = await run(undefined, { session: { role: "admin" }, viewer: "member:admin" });

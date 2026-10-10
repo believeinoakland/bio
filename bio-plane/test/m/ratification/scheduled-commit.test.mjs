@@ -1,18 +1,24 @@
 /* ratification R42 (T39; N805, K2308): a scheduled publication stopped by the commit's own refusal. A case edition
    carrying a real photo as the copy its marks derive (case-carriage R9–R14, reached through publication) is signed
-   for a set time (`op=publishat`, R40) into publication's real waiting list (its R66); a mark on the photo is withdrawn
-   after signing; publication's own `publishDue` (its R67), run past the time, hands the edition to the publisher this
+   for a set time (`op=publishat`, R40) into publish-schedule's real waiting list (its R1; N823); a mark on the photo is
+   withdrawn after signing; publish-schedule's own `publishDue` (its R2), run past the time, hands the edition to the publisher this
    module registered (R43), whose commit is refused C-122.6 `PHOTO_MARKS_CHANGED_SINCE`. The edition is stopped
    `SCHEDULED_CHECK_REFUSED` (C-58.10), its `cause` the commit's own code, check and translation, and nothing is
-   committed. Driven at the module's interface, over the real publication and case-carriage. */
+   committed. Driven at the module's interface, over the real publish-schedule, publication and case-carriage. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { deflateSync } from "node:zlib";
+import { readFileSync } from "node:fs";
 import { world, plane, newKey, signCase, cleanCase, fmText, CASE_BODY, V, NOW, sha } from "./fixture.mjs";
 import { caseRatifyOp } from "../../../src/ratification/ops.mjs";
 import { caseConclusionRowLines, rowOf } from "../../../src/ratification/index.mjs";
 import { rowOf as publicationRowOf } from "../../../src/publication/checks.mjs";
 import { materialsLines } from "../../../src/case-grammar/index.mjs";
+import { publishScheduleOf } from "../../../src/publish-schedule/index.mjs";
+
+/* DEC-187 (4): the words C-122.6 answers after signing, read by key from the design stream's `words.json` */
+const SIGNED_WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url))).words
+  .find((x) => x.key === "photo.refused.changed.signed").en;
 
 const Q1 = "INQ-2026-0001-first", CASE = "CASE-2026-0001", PHOTO = "INFO-2026-0020-photo";
 const OWN = { version: "first", claim: "the council approved it", falsifier: "f", falsifier_override: null,
@@ -33,7 +39,7 @@ function png(width, height) {
                         chunk("IDAT", deflateSync(raw)), chunk("IEND", Buffer.alloc(0))]);
 }
 
-/* The world with publication's real set-time services (R66, R67) and case-carriage holding obscured copies; a photo
+/* The world with publish-schedule's real set-time services (its R1, R2) and case-carriage holding obscured copies; a photo
    captured by an information bundle and marked twice; a /6 case document Alice (the project's owner, with an attesting
    key) may sign, carrying the photo as the copy its marks derive; signed for a set time through op=publishat. */
 async function signedForLater() {
@@ -93,17 +99,22 @@ const nothingCommitted = (w) => {
   assert.equal(w.count("published_cases"), 0, "no case edition committed");
 };
 
-test("R42 (T39): a photo's mark withdrawn after signing stops the waiting edition at its time: publishDue finds it stopped SCHEDULED_CHECK_REFUSED (C-58.10), its cause the commit's own PHOTO_MARKS_CHANGED_SINCE (C-122.6) with that row's translation, and nothing is committed", async () => {
+test("R42 (T39, T40; N811, DEC-187 (4)): a photo's mark withdrawn after signing stops the waiting edition at its time: publishDue finds it stopped SCHEDULED_CHECK_REFUSED (C-58.10), its cause the commit's own PHOTO_MARKS_CHANGED_SINCE (C-122.6) with the commit's own translation, words.json's photo.refused.changed.signed read by key, and nothing is committed", async () => {
   const s = await signedForLater();
+  const answered = [], real = s.w.publication.commitCaseEdition;
+  s.w.publication.commitCaseEdition = (a) => { const c = real(a); answered.push(c); return c; };
   const wd = await s.cc.obscureMarkWithdraw({ captureSha: s.p, mark: s.m2.mark, reason: "not a plate after all", by: V("alice") });
   assert.equal(wd.ok, true, JSON.stringify(wd));
-  const due = await s.w.realPub.publishDue(s.pastItsTime);
+  const due = await s.w.schedule.publishDue(s.pastItsTime);
   assert.equal(due.ok, true, JSON.stringify(due));
   assert.equal(due.taken.length, 1);
   const [taken] = due.taken;
   assert.equal(taken.state, "stopped", JSON.stringify(taken));
-  const commitsOwn = publicationRowOf("PHOTO_MARKS_CHANGED_SINCE");
-  assert.equal(commitsOwn.translation, "A mark changed after this case was prepared. Prepare it again before signing.");
+  const commitsOwn = answered.at(-1);
+  assert.equal(commitsOwn.reason, "PHOTO_MARKS_CHANGED_SINCE", JSON.stringify(commitsOwn));
+  /* publication R33 (T40; DEC-187 (4)): after signing, C-122.6's sentence is the design stream's, by key, `{photo}` filled */
+  const template = SIGNED_WORDS.split(/\{photo\}/).map((x) => x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  assert.match(commitsOwn.translation, new RegExp(`^${template.join(".+")}$`), "words.json's photo.refused.changed.signed");
   assert.equal(taken.reasons.length, 1, JSON.stringify(taken.reasons));
   const [stop] = taken.reasons;
   assert.deepEqual([stop.code, stop.check, stop.translation],
@@ -111,16 +122,17 @@ test("R42 (T39): a photo's mark withdrawn after signing stops the waiting editio
   assert.deepEqual([stop.cause.code, stop.cause.check, stop.cause.translation],
                    [commitsOwn.code, commitsOwn.check, commitsOwn.translation], "the commit's own code, check and translation");
   assert.match(stop.cause.detail, /photo/);
-  /* publication R67 records the stop with that cause, as listed (its R69) */
-  const listed = s.w.realPub.scheduledEditions({ case: CASE });
+  /* publish-schedule R2 records the stop with that cause, as listed (its R4) */
+  const listed = s.w.schedule.scheduledEditions({ case: CASE });
   const entry = (listed.editions || []).find((e) => Number(e.edition) === 1);
   assert.equal(entry.state, "stopped", JSON.stringify(listed));
   nothingCommitted(s.w);
 });
 
-test("R42 (T39): negative control: with the marks as signed, publishDue past the time publishes the same waiting edition", async () => {
+test("R42 (T39), R43 (N823): negative control: with the marks as signed, publishDue past the time publishes the same waiting edition through the publisher this module registered with the publish-schedule it created on the host", async () => {
   const s = await signedForLater();
-  const due = await s.w.realPub.publishDue(s.pastItsTime);
+  assert.equal(s.w.schedule, publishScheduleOf(s.w.host), "the one publish-schedule of this host, created by this module");
+  const due = await s.w.schedule.publishDue(s.pastItsTime);
   assert.equal(due.taken.length, 1);
   assert.equal(due.taken[0].state, "published", JSON.stringify(due.taken[0]));
   assert.equal(s.w.count("published_cases"), 1);
@@ -141,7 +153,7 @@ const BOTH = { ...PHOTO_REFUSAL, caseId: CASE, edition: 1, refusals: [PHOTO_REFU
 test("R42 (T39; K2370): a commit refusing both C-122.6 and C-122.7 stops the waiting edition with one SCHEDULED_CHECK_REFUSED entry per refusal, each cause that refusal's own code, check and translation, in the commit's order; nothing committed", async () => {
   const s = await signedForLater();
   s.w.publication.commitCaseEdition = () => BOTH;
-  const due = await s.w.realPub.publishDue(s.pastItsTime);
+  const due = await s.w.schedule.publishDue(s.pastItsTime);
   const [taken] = due.taken;
   assert.equal(taken.state, "stopped", JSON.stringify(taken));
   assert.deepEqual(taken.reasons.map((x) => [x.code, x.check, x.translation]),
@@ -153,7 +165,7 @@ test("R42 (T39; K2370): a commit refusing both C-122.6 and C-122.7 stops the wai
   /* one refusal alone, with no `refusals` list, is one entry */
   const one = await signedForLater();
   one.w.publication.commitCaseEdition = () => ({ ...DOCUMENT_REFUSAL, caseId: CASE, edition: 1 });
-  const [t1] = (await one.w.realPub.publishDue(one.pastItsTime)).taken;
+  const [t1] = (await one.w.schedule.publishDue(one.pastItsTime)).taken;
   assert.deepEqual(t1.reasons.map((x) => [x.code, x.cause.code, x.cause.check]),
                    [["SCHEDULED_CHECK_REFUSED", "DOCUMENT_COPY_CHANGED_SINCE", "C-122.7"]]);
   nothingCommitted(one.w);
@@ -161,7 +173,7 @@ test("R42 (T39; K2370): a commit refusing both C-122.6 and C-122.7 stops the wai
 
 test("R3 (T39; K2370): op=caseratify's answer relays the commit's refusals as the commit answered them, at the store half and through the Worker half; nothing committed", async () => {
   const s = await signedForLater();
-  s.w.publication.scheduledEditions = () => ({ editions: [], cursor: null });   /* nothing waiting: the commit is asked */
+  s.w.schedule.scheduledEditions = () => ({ editions: [], cursor: null });   /* nothing waiting: the commit is asked */
   s.w.publication.commitCaseEdition = () => BOTH;
   const store = await s.w.r.ratifyCaseDocument({ ...s.body, at: undefined });
   assert.deepEqual(store, BOTH);
