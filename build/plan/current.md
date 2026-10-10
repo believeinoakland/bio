@@ -4,7 +4,7 @@
 
 **Jobs** · record-grammar: RECORD-GRAMMAR #13 session_01TfvYox4Sw4X6dSjqk6M1oK; bundler: BUNDLER #14 session_01X5bkceFD2GHGbfimdSRiKL
 
-**At T42's opening (K2607):** opened 2026-10-10 from `main` @ 65490c5e33 (T41 closed, K2603), with `tranche/T41`'s later build state merged in (K1703); Bob: "keep going until I tell you to pause" (K2605). Development runs through every layer; the 80% pause (K2341) and the account-switch rule stand.
+**At T42's opening (K2607):** opened 2026-10-10 from `main` @ 65490c5e33 (T41 closed, K2603), with `tranche/T41`'s later build state merged in (K1703); Bob: "keep going until I tell you to pause" (K2605). Bob's meter at the opening: 18% weekly (primary; K2615). Development runs through every layer; the 80% pause (K2341) and the account-switch rule stand.
 
 **Sources** · `next.md` N751…N848 (each re-tested today); `archive/T41.md` "Left out" and Outcome (its carried reds); `extraction/capture-split.md` (N826; its nine doubts settled, K2607); `extraction/agent-worker-split.md` and K2513 (agent-worker 2,777 hand-written lines: no split, so N832's stated hard reason is gone); the design lanes' `HANDOFF.md` (investigation to H43, its design placed; actions to H10, twelve decisions open with Bob, nothing handed off); the channel (UX-DESIGN to U147, nothing unread); `rulings-active.md`.
 
