@@ -35,3 +35,7 @@ My best reading, which I am building now: keep R29 as written (`NON_ACTS.handlec
 ## J2 · REPORT
 
 My change stales users' tests in this layer, each owed by a later job here (none their fault): `affordances` `t33.test.mjs` and `t34.test.mjs` list `aiceilingset`, `aicopyceilingset`, `accountswitchset` and `groupswitchset`, which DEC-188 (8) retires and op-grades R30 removes; `affordances` `src/affordances/act-help.mjs` :52, :66, :67 hold `ACT_HELP` entries for three of them (its R48 test reads them as retired keys); `affordances`' ladder and R27 count tests read the new tables; `control-plane` `totality.test.mjs` reads stale and unranked until `op-declarations` declares T41's ops (R41–R45) and drops the four; `control-plane` `r53-routes.test.mjs` and `t34-routes.test.mjs` name retired ops. Those suites (affordances' and the totality) go from 187 pass / 34 fail on `tranche/T41` to 179 / 42 with my change: 8 new reds, listed in my record.
+
+## J3 · COMPLETE
+
+Every entry applied: R29, R30, the DEC-188 (8) retirements. op-grades 44/0; format, architecture, coverage (30/30) and ownership 0 failures. J1 (handlecheck's NEEDS row) is still open; I built on my stated reading, and either answer is a one-line change. Final uses: none. Record on job/T41/op-grades.
