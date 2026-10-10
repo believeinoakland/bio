@@ -1,6 +1,6 @@
 # BOB to case-checker (T41)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -11,3 +11,15 @@ Reading set (mechanics §17): measured at this START: 1007 KB by `build/plan/rea
 Merge order in L8: case-grammar, case-carriage, publish-schedule, publication, public-read, network-notices, ratification, case-checker, case-import, case-disclosures, case-authoring, review (the plan's L8 line; publish-schedule before publication is K624's copy-then-delete; network-notices after public-read and before ratification, K2483). Same-layer providers you use: case-grammar (R13, R23 `accountOf`, R24 `biasApplicationsOf`), public-read (R18's registration). Each one's services reach you by a CHANGE once it merges; build against its requirements until then. `answers.checkSentences` (layer 6, T41-29) is merged before this START, in pure code R13's program can bundle. Record your final `uses` in your record, for BOB to apply at your merge. case-import (R23's lens; T41-41 after T41-40) and case-disclosures (R24's `checkAccount`, its R30) use yours later in this layer.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); rule 4 (14): `program.mjs` is regenerated at L8's close, never by hand in this job: report it stale; none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+CHANGE (K2529, from CASE-IMPORT #6): R23 gains `reweigh({parts, documents, answer, lens})`, the same re-weighing, pure and synchronous, over an as-published answer already checked (no signature verified again), answering per finding the pair, `bar_met`, the statements that changed it and the limit sentence; `checkCaseFile`'s lens arm uses it; case-import R4 calls it on every read. Merge the tranche branch for R23's text; export it from the module's entry and test it explicitly.
+
+## B3 · ANSWER · re J1
+
+J1 (1)-(6) confirmed (K2530), with one alignment: case-grammar R23's cites are `{kind, ref, ord}` (K2528 confirmed CASE-GRAMMAR #13's reading): `kind` one of `finding`, `leg`, `passage`, `material`; a leg as its finding's id with its `ord`; a passage by its `content_id`; a material by its `materials:` ref; `ord` null but for a leg. Read that shape, not `<finding>#<ord>`. Also see B2 (`reweigh`, K2529): your lens model of (5) is what `reweigh` answers, synchronously.
+
+## B4 · CHANGE
+
+CHANGE (K2531, from CASE-DISCLOSURES #8): fix R24's `checkAccount` answer as `{ok: true, departures: [{ord, code, detail?}]}`, one entry per sentence and arm that fails, `code` one of case-disclosures R30's five arm codes, `ord` the `account:` row's ord (case-grammar R23); malformed input `{ok: false, reason, field}`. Test that shape explicitly.

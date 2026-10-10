@@ -1,6 +1,6 @@
 # BOB to case-disclosures (T41)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -13,3 +13,11 @@ Reading set (mechanics §17): measured at this START: 899 KB by `build/plan/read
 Merge order in L8: case-grammar, case-carriage, publish-schedule, publication, public-read, network-notices, ratification, case-checker, case-import, case-disclosures, case-authoring, review (the plan's L8 line; publish-schedule before publication is K624's copy-then-delete; network-notices after public-read and before ratification, K2483). Same-layer providers you use: case-grammar (R23, R24 blocks), case-carriage (R10, R11, R15, R16: marks, copies and labels; T41-35), case-checker (R24 `checkAccount`; T41-40), case-import (`acceptanceOf`, `openFlagsOn`, `importedCase`; T41-41, nothing you read changes), publication (R51). Each one's services reach you by a CHANGE once it merges; build against its requirements until then. inquiry R61 and bias R49 (layers 6 and 5) are merged. case-authoring (R6, R7, R29–R31; T41-43 after T41-42) uses yours later in this layer.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); yours: rule 4 (2), R30's and R31's new C-120 rows awaiting T42's stamp; none other unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+J1 (1)-(5) confirmed (K2531). (1) `checkAccount` answers `{ok: true, departures: [{ord, code, detail?}]}` (one per failing sentence and arm, `code` one of R30's arms, `ord` the account row's) or `{ok: false, reason, field}` on malformed input; CASE-CHECKER #10 is told the same. (2) `ACCOUNT_CHECK_UNDETERMINED`, a new C-120 row with your draft translation, fail closed. (3) The caller passes `conclusions` and `flags` (case-authoring is told); no basis-versions edge. (4) R31 answers inquiry's C-2.19 verbatim through `biasAppliedFindings`; a conclusion's applications come from the caller as in (3). (5) As read; `document.refused.pending`'s flag asserted as words.json states it (noted to UX-DESIGN).
+
+## B3 · CHANGE
+
+CHANGE (K2533): (a) R30's first arm (`ACCOUNT_SENTENCE_UNSUPPORTED`) applies to account sentences only; a statement's sentences may cite (case-authoring's new `statementCites`), and when they cite nothing the other arms still judge them. (b) From CASE-AUTHORING #23: your `checks.mjs`:29 still holds the older `photo.refused.unchecked` words while words.json has the new ones; R22 reads the key, so read it from words.json (case-authoring's photos.test:108 and preflight.test:67 depend on it). Merge the tranche branch for R30's text.

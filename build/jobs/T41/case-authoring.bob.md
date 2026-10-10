@@ -1,6 +1,6 @@
 # BOB to case-authoring (T41)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -13,3 +13,19 @@ Reading set (mechanics §17): measured at this START: 1265 KB by `build/plan/rea
 Merge order in L8: case-grammar, case-carriage, publish-schedule, publication, public-read, network-notices, ratification, case-checker, case-import, case-disclosures, case-authoring, review (the plan's L8 line; publish-schedule before publication is K624's copy-then-delete; network-notices after public-read and before ratification, K2483). Same-layer providers you use: publish-schedule (R7; T41-37), publication (R21 through its R77; T41-36), ratification (R18's pre-flight, R49 `APPROVAL_MISSING`; T41-39), case-disclosures (R6, R7, R29–R31; T41-42), case-grammar (R23–R26), case-checker, case-import, case-carriage, network-notices (R19). Each one's services reach you by a CHANGE once it merges; build against its requirements until then. Record your final `uses` in your record (R64's `run` among them), for BOB to apply at your merge. review (R13, R15) uses yours later in this layer and fills your R66's `registerReviewComments` with its R33.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); yours to clear: rule 4 (13), R58 and R59, red from T41-36's merge until yours; rule 4 (11), the D54 tests above; the reds case-disclosures' record lists in your suite; none other unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+CHANGE (K2528): R68's pre-flight matches approvals by the approval digest, case-grammar R26's new `approvalSubjectSha` (the document's sha without R26's block), not the raw `doc_sha`. Merge the tranche branch for R68's text; case-grammar provides the function when it merges (stand in meanwhile).
+
+## B3 · CHANGE
+
+CHANGE (K2531): case-disclosures R30/R31 take from their caller `conclusions` (each member's concluded state, `[{finding, claim, claim_state, legs}]`), `flags` (`[{kind: "account_check", ord, text, cites}]`) and, for R31, a conclusion's bias applications: the arg list is `{account, statements, cited, lens, conclusions, flags, viewer}`. Where your R63–R68 call R30/R31 (the pre-flight R34 among them), pass them from what you already read.
+
+## B4 · ANSWER · re J2
+
+J1 and J2 answered (K2533); merge the tranche branch for the new text. Confirmed as read: (1)-(4), (7), (9), (11); in (3) also pass `flags` (B3). (5) yes, null means undetermined (case-grammar told). (6) ratification R50 gains `approvalsInForce({case, edition, docSha})` → `{rule, approvals, missing}` or `{ok: false}`; read it (stand in until ratification merges, after you is not the case: ratification precedes you). (8) write R26's block at publishCase: the rule in force and the approvals held for the approval digest at that act (`approval_rule`, `approvals:`); later approvals are carried by preparing again; the pre-flight names that step while any required approval is not carried (R68 re-worded). (10) R63 gains optional `statementCites` (`{statement, subject_justification, excluded: [per item], what_changed}`, cites in R23's shape, written on the statement rows, empty when absent); case-disclosures' 'cites nothing' arm applies to account sentences only. Pre-START find: routed to case-disclosures.
+
+## B5 · CHANGE
+
+CHANGE (K2535): publish-schedule (T41-37) is merged into tranche/T41 @ 8b6e5ab802, with R8's three doors (`isWaiting`, `signedAtOf`, `signerOf`). Merge the tranche branch and build against the real module in place of your stand-in; re-run your suite.
