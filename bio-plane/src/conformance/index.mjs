@@ -1041,13 +1041,14 @@ export class Conformance {
     return { ...this.determinationRead({ id, viewer }), wrote: true };
   }
 
-  /* R6: a new inquiry, `open`, titled from the question, through promotion (so inquiry's own check runs), recorded in
-     `project` by this module's rows and named so in its Session Log. */
+  /* R6: a new inquiry, `open`, titled from the question, through promotion (so inquiry's own check runs), in `project`:
+     its front matter states it (promotion R53), so membership fences it by that project's sight (R15, R24), as well as
+     this module's rows and its Session Log naming it. */
   #openInquiry(question, determination, project, author, viewer, at) {
     const id = `${this.record.allocId("INQ", at.slice(0, 4)).id}-question`;
     const title = deriveInquiryTitle(question) ?? question.slice(0, 120);
     const md = ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: ${q(title)}`,
-      "current_state: open", "prior_state: null", `created: ${q(at)}`, `last_updated: ${q(at)}`,
+      "current_state: open", "prior_state: null", `created: ${q(at)}`, `last_updated: ${q(at)}`, `project: ${project}`,
       "produced_by:", "  mode: human", "  capability_tier: session", "references: []", "state_history: []",
       "annotations_open: 0", "reeval_pending:", "  flag: false", "  since: null", "  source: null", "visuals: []",
       "surfaced_by: human", 'disposition_reason: ""', "---", "", "## Question", "", question, "",
