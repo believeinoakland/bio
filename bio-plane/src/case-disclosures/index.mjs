@@ -64,7 +64,7 @@ import { inquiryOf, biasNotInForce } from "../inquiry/index.mjs";
 import { strengthOf, DEPTH_BOUND, GRADING_METHOD_VERSION } from "../strength/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
 import { promotionOf, CATALOG_VERSION } from "../promotion/index.mjs";
-import { parseImportedFindingRef, readBiasApplied } from "../inquiry-grammar/index.mjs";
+import { parseImportedFindingRef, readBiasApplied, flattenBiasApplied } from "../inquiry-grammar/index.mjs";
 import { caseImportOf } from "../case-import/index.mjs";
 import { sourceStatement, unnamedSourceStatement } from "../publication/index.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
@@ -1162,13 +1162,16 @@ export class CaseDisclosures {
    *  and offline: `cited` as the caller read it as the viewer (`answers` R33's `{holdings, rules, looks}`), `printed` the
    *  statements the sentences frame by that `bias.statementInForce` (its R49) answers in force in this case's `lens`
    *  (its scope shape), and `conclusions` the record's at the act, as the caller read them. Its departures `{ord, code}`
-   *  are answered in R30's arm order (`ACCOUNT_ARMS`), one refusal per code naming each sentence. A check that cannot be
+   *  are answered in R30's arm order (`ACCOUNT_ARMS`), one refusal per code naming each sentence; the first arm,
+   *  `ACCOUNT_SENTENCE_UNSUPPORTED`, refuses account sentences only (K2533: a statement's sentence may cite, and when it
+   *  cites nothing the other arms still judge it), so its departure on a statement's sentence is not one. A check that cannot be
    *  run (no `checkAccount`, a throw, any other answer, a code that is no arm's) fails closed:
    *  `ACCOUNT_CHECK_UNDETERMINED`, naming every sentence (R23). Then each `account_check` flag (`run-rules` R25's draft
    *  kind) `{kind, ord, text, cites}` the member has not answered — the flagged sentence still stands with its text and
    *  cites nothing it did not cite when flagged — is `ACCOUNT_FLAG_UNANSWERED`, naming it; removing the sentence, or tying
    *  it to evidence it did not cite, answers it. A malformed list is `BAD_COMPLETENESS` naming the field, alone. Answers
-   *  `{refusals, sentences, printed}`. Writes nothing; never throws. */
+   *  `{refusals, sentences, printed}`. The answer's shape, `conclusions` and `flags` are K2531's. Writes nothing; never
+   *  throws. */
   accountJudged({ account = null, statements = null, cited = null, lens = null, conclusions = null, flags = null,
                   viewer = null } = {}) {
     const bad = (field, detail) => ({ refusals: [{ ok: false, reason: "BAD_COMPLETENESS", field, detail }], sentences: [], printed: [] });
@@ -1201,9 +1204,10 @@ export class CaseDisclosures {
       const check = this.caseChecker && this.caseChecker.checkAccount;
       answer = typeof check === "function" ? check({ account: sentences, cited, printed, conclusions }) : null;
     } catch { answer = null; }
-    const departures = answer && answer.ok === true && Array.isArray(answer.departures) ? answer.departures : null;
     const byOrd = new Map(sentences.map((x) => [x.ord, x]));
-    const known = departures && departures.every((d) => d && ACCOUNT_ARMS.includes(d.code) && byOrd.has(d.ord));
+    const all = answer && answer.ok === true && Array.isArray(answer.departures) ? answer.departures : null;
+    const known = all && all.every((d) => d && ACCOUNT_ARMS.includes(d.code) && byOrd.has(d.ord));
+    const departures = known ? all.filter((d) => d.code !== "ACCOUNT_SENTENCE_UNSUPPORTED" || byOrd.get(d.ord).kind === "account") : null;
     if (!known) {
       /* DEC-49 REGION is-account-checked */
       if (sentences.length)
@@ -1273,10 +1277,20 @@ export class CaseDisclosures {
    *  is in force is `inquiry`'s one test (`biasAppliedFindings`, its R61, at the finding's project scope as the viewer),
    *  never re-derived here; one not in force is answered as inquiry spells it (`biasNotInForce`, C-2.19), naming the
    *  finding, the leg and the statement. A test that cannot be had refuses each application through the same spelling
-   *  (fail closed, R23). A reached finding whose document cannot be read is stated in `unread` (R18). Answers
-   *  `{refusals, rows, unread}`. Writes nothing; never throws. */
-  biasApplicationsOf(prepared, viewer) {
+   *  (fail closed, R23). A reached finding whose document cannot be read is stated in `unread` (R18). A conclusion's
+   *  applications live on the project's document (`basis-versions` R48), which this module does not read: the caller
+   *  passes them (K2531), `conclusions: [{finding, project, bias_applied}]` as `basis-versions`' `conclusionRecordOf`
+   *  answers them, each answered as a row with no `ord`, `target` the finding, and judged by the same test at its
+   *  project's scope. A malformed list is `BAD_COMPLETENESS` naming the field, alone. Answers `{refusals, rows,
+   *  unread}`. Writes nothing; never throws. */
+  biasApplicationsOf(prepared, viewer, conclusions = null) {
     const rows = [], refusals = [], unread = [];
+    if (conclusions != null && (!Array.isArray(conclusions) || conclusions.some((c) => !c || typeof c !== "object"
+        || typeof (c.finding ?? c.inquiry) !== "string" || (c.bias_applied != null && !Array.isArray(c.bias_applied))
+        || flattenBiasApplied(c.bias_applied || []) === null)))
+      return { refusals: [{ ok: false, reason: "BAD_COMPLETENESS", field: "conclusions",
+        detail: "conclusions is a list of {finding, project, bias_applied}, as basis-versions' conclusionRecordOf answers them" }],
+        rows, unread };
     let findings = [];
     try {
       findings = chainsOf((Array.isArray(prepared) ? prepared : []).filter((p) => p && typeof p.id === "string")
@@ -1300,6 +1314,22 @@ export class CaseDisclosures {
       for (const f of found)
         if (f && f.code === "BIAS_APPLICATION_NOT_IN_FORCE")
           refusals.push({ ok: false, reason: f.code, ...f, finding: id });
+    }
+    for (const c of conclusions || []) {
+      const id = c.finding ?? c.inquiry, project = typeof c.project === "string" ? c.project : null;
+      const list = Array.isArray(c.bias_applied) ? c.bias_applied : [];
+      if (!list.length) continue;
+      for (const a of list) rows.push({ finding: id, target: id, statement: a.statement ?? null, effect: a.effect ?? null,
+                                        from: a.from ?? null, to: a.to ?? null });
+      let found = null;
+      try { found = this.inquiry.biasAppliedFindings({ legs: [flattenBiasApplied(list)], project, viewer }); } catch { found = null; }
+      if (!Array.isArray(found))
+        found = list.map((a, j) => biasNotInForce({ statement: a.statement ?? null, where: `basis[0].bias_applied[${j}]`, inForce: null,
+                                                    scope: project ? { type: "project", id: project } : { type: "instance" } }));
+      for (const f of found)
+        if (f && f.code === "BIAS_APPLICATION_NOT_IN_FORCE")
+          refusals.push({ ok: false, reason: f.code, ...f,
+                          where: typeof f.where === "string" ? f.where.replace(/^basis\[0\]/, "conclusion") : f.where, finding: id });
     }
     return { refusals, rows, unread };
   }

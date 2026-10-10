@@ -73,12 +73,15 @@ test("R30 (ACCOUNT_SENTENCE_UNSUPPORTED, ACCOUNT_FACT_NOT_IN_CITED, ACCOUNT_CONT
   assert.deepEqual(ACCOUNT_ARMS, ["ACCOUNT_SENTENCE_UNSUPPORTED", "ACCOUNT_FACT_NOT_IN_CITED", "ACCOUNT_CONTRADICTED_BY_RECORD",
     "ACCOUNT_BIAS_NOT_PRINTED", "ACCOUNT_CLAIM_NOT_BIAS"]);
   for (const code of ACCOUNT_ARMS) {
-    const { w } = setup([{ ord: 3, code }, { ord: 6, code }, { ord: 3, code }]);
+    const { w } = setup([{ ord: 3, code }, { ord: 1, code }, { ord: 3, code }]);
     const r = judge(w);
     assert.equal(r.refusals.length, 1, code);
     refused(r.refusals[0], code);
     assert.deepEqual(r.refusals[0].sentences, [{ ord: 3, kind: "account", text: ACCOUNT[2].text },
-      { ord: 6, kind: "excluded", text: STATEMENTS[2].text }], code);
+      { ord: 1, kind: "account", text: ACCOUNT[0].text }], code);
+    if (code !== "ACCOUNT_SENTENCE_UNSUPPORTED")
+      assert.deepEqual(judge(setup([{ ord: 6, code }]).w).refusals[0].sentences.map((x) => x.kind), ["excluded"],
+        `${code} judges a statement's sentence too`);
     assert.ok(r.refusals[0].detail.includes("sentence 3") && r.refusals[0].detail.endsWith("Nothing was written."), code);
     /* negative control: the same account, nothing departing */
     assert.deepEqual(judge(setup([]).w).refusals, [], code);
@@ -207,4 +210,38 @@ test("R31: a finding the chain reaches that the viewer may not see is not follow
   const u = world({ deps: { record: { readFile: () => { throw new Error("down"); } } } });
   u.member("alice"); u.doc(DOC); u.finding(Q, [{ target: DOC }]);
   assert.deepEqual(u.cd.biasApplicationsOf(u.prepared([Q]), V("alice")).unread.map((x) => x.finding), [Q]);
+});
+
+test("R30 (K2533): ACCOUNT_SENTENCE_UNSUPPORTED refuses account sentences only — a statement's sentence citing nothing is not refused by it, and the other arms still judge it", () => {
+  const { w } = setup([{ ord: 6, code: "ACCOUNT_SENTENCE_UNSUPPORTED" }, { ord: 7, code: "ACCOUNT_SENTENCE_UNSUPPORTED" },
+                      { ord: 6, code: "ACCOUNT_CLAIM_NOT_BIAS" }]);
+  const r = judge(w);
+  assert.deepEqual(r.refusals.map((x) => x.reason), ["ACCOUNT_CLAIM_NOT_BIAS"]);
+  assert.deepEqual(r.refusals[0].sentences.map((x) => [x.ord, x.kind]), [[6, "excluded"]]);
+  /* negative control: an account sentence citing nothing is refused by it */
+  const a = setup([{ ord: 2, code: "ACCOUNT_SENTENCE_UNSUPPORTED" }]);
+  refused(judge(a.w).refusals[0], "ACCOUNT_SENTENCE_UNSUPPORTED");
+});
+
+test("R31 (K2531): a conclusion's applications, passed by the caller as basis-versions' conclusionRecordOf answers them, are answered as rows with no ord, target the finding, and judged by inquiry's same test at the conclusion's project scope; one not in force is refused through biasNotInForce at `conclusion`; a malformed list is BAD_COMPLETENESS, alone", () => {
+  const w = world(); w.member("alice");
+  w.doc(DOC); w.finding(Q, [{ target: DOC }]);
+  w.lens.byScope.set("PROJ-2026-0001", new Set(["S1"]));
+  const conclusions = [{ finding: Q, project: "PROJ-2026-0001",
+    bias_applied: [{ statement: "S1", effect: "inference_refused" }, { statement: "S9", effect: "inference_refused" }] }];
+  const r = w.cd.biasApplicationsOf(w.prepared([Q]), V("alice"), conclusions);
+  assert.deepEqual(r.rows, [
+    { finding: Q, target: Q, statement: "S1", effect: "inference_refused", from: null, to: null },
+    { finding: Q, target: Q, statement: "S9", effect: "inference_refused", from: null, to: null }]);
+  assert.deepEqual(r.refusals.map((x) => [x.reason, x.check, x.finding, x.statement, x.where]),
+    [["BIAS_APPLICATION_NOT_IN_FORCE", "C-2.19", Q, "S9", "conclusion.bias_applied[1]"]]);
+  assert.deepEqual(w.lens.asked.slice(-2).map((a) => [a.statement, a.scope]),
+    [["S1", { type: "project", id: "PROJ-2026-0001" }], ["S9", { type: "project", id: "PROJ-2026-0001" }]]);
+  /* negative control: both in force */
+  w.lens.byScope.set("PROJ-2026-0001", new Set(["S1", "S9"]));
+  assert.deepEqual(w.cd.biasApplicationsOf(w.prepared([Q]), V("alice"), conclusions).refusals, []);
+  for (const bad of ["x", [null], [{ project: "P" }], [{ finding: Q, bias_applied: "S1" }], [{ finding: Q, bias_applied: [{ statement: "S1", note: "x" }] }]]) {
+    const b = w.cd.biasApplicationsOf(w.prepared([Q]), V("alice"), bad);
+    assert.deepEqual([b.refusals.length, b.refusals[0].reason, b.refusals[0].field], [1, "BAD_COMPLETENESS", "conclusions"], JSON.stringify(bad));
+  }
 });
