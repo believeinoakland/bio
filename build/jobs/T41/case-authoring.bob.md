@@ -33,3 +33,7 @@ CHANGE (K2535): publish-schedule (T41-37) is merged into tranche/T41 @ 8b6e5ab80
 ## B6 · ANSWER · re J3
 
 J3: your reading is ruled and worded into R64 (K2536): `accountPropose` takes `kind: "account_check"` with `flags` in place of `text`, same table, labelled machine work, listed by `accountDrafts`; `publishCase` passes R30 the flags of every `account_check` draft proposed after the named account draft (all with none named), in proposal order. Merge the tranche branch for the text.
+
+## B7 · CHANGE
+
+CHANGE (K2537): case-grammar (T41-34) is merged into tranche/T41 @ 7fe0e94f76: R12's reader answers `obscured: {copy, label, marked}`, R23–R26 (`accountOf`, `biasApplicationsOf`, `reviewCommentsOf`, `approvalsOf`, `approvalSubjectSha`). Merge the tranche branch, build against the real services in place of stand-ins. Re-state `documents.test.mjs`:147, `photos.test.mjs`:60 for `marked` (rule 4 (19)).
