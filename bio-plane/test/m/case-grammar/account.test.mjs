@@ -274,3 +274,37 @@ test("R14 (T41) negative controls: an edition whose document carries none of the
   const html = withLines(CG.accountLines([{ ord: 1, kind: "account", text: "<script>x</script> & y", began_as: "member" }]));
   assert.equal(/<script/.test(html), false);
 });
+
+test("R26 (K2528) approvalSubjectSha: the SHA-256 of the case document with its R26 block removed, the same before the block is written and after", () => {
+  const without = caseFileFixture({}).files.get("case.md");
+  const withBlock = without.replace("\nsearched:", `\n${CG.approvalsLines(APPROVALS).join("\n")}\nsearched:`);
+  assert.notEqual(withBlock, without);
+  assert.equal(CG.approvalSubjectSha(without), sha(without), "a document with no R26 block: its own digest");
+  assert.equal(CG.approvalSubjectSha(withBlock), sha(without), "the block written: the digest the approver saw");
+  /* other approvals, or the rule off, remove alike */
+  for (const given of [{ rule: null, approvals: [] }, { rule: APPROVALS.rule, approvals: [{ by: "olive", at: NOW }] }])
+    assert.equal(CG.approvalSubjectSha(without.replace("\nsearched:", `\n${CG.approvalsLines(given).join("\n")}\nsearched:`)), sha(without));
+  /* the fixture's whole T41 document: R23–R25's blocks stay in what is approved */
+  const t41 = caseFileFixture({ t41: true }).files.get("case.md");
+  assert.equal(CG.approvalSubjectSha(t41), sha(t41.replace(`${CG.approvalsLines(APPROVALS).join("\n")}\n`, "")));
+  assert.notEqual(CG.approvalSubjectSha(t41), sha(without));
+});
+
+test("R26 (K2528) negative controls: any other change to the document changes the digest; a body line spelled like the block is kept; odd input answers null and never throws", () => {
+  const base = caseFileFixture({ t41: true }).files.get("case.md");
+  const d = CG.approvalSubjectSha(base);
+  for (const [what, changed] of [["a byte of the account", base.replace("names no vote.", "names no vote!")],
+                                 ["the scope", base.replace("Who approved the lease, and on what record.\"", "Who approved it.\"")],
+                                 ["the count left out", base.replace("review_comments_left_out: 2", "review_comments_left_out: 1")],
+                                 ["the body", `${base}more`], ["a blank line", base.replace("\n---\n", "\n\n---\n")]]) {
+    assert.notEqual(changed, base, what);
+    assert.notEqual(CG.approvalSubjectSha(changed), d, what);
+  }
+  /* only the front matter's block is removed: the same spelling in the body is the document's own words */
+  const body = `${base}\napprovals:\n  - by: x\n`;
+  assert.equal(CG.approvalSubjectSha(body), sha(body.replace(`${CG.approvalsLines(APPROVALS).join("\n")}\n`, "")));
+  assert.notEqual(CG.approvalSubjectSha(body), d);
+  for (const odd of [null, undefined, 7, {}, ["x"]]) assert.equal(CG.approvalSubjectSha(odd), null);
+  assert.equal(CG.approvalSubjectSha(""), sha(""));
+  assert.equal(CG.approvalSubjectSha("approvals: []\nno front matter"), sha("approvals: []\nno front matter"), "no front matter: nothing removed");
+});

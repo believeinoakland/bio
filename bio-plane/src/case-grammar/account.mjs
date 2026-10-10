@@ -26,6 +26,7 @@
 
 import { caseDocumentRequiresMaterials } from "./formats.mjs";
 import { exact, unexact, exactRowsBlock } from "./facts.mjs";
+import { sha256HexSync } from "../record-grammar/index.mjs";
 
 /** R23: the fields of an `account:` row, in the order they are written. */
 export const ACCOUNT_FIELDS = Object.freeze(["ord", "text", "cites", "kind", "bias_statement", "began_as", "draft"]);
@@ -189,6 +190,31 @@ export function approvalsOf(fm) {
     const d = frontOf(fm);
     if (!d || (!Array.isArray(d.approvals) && !Object.hasOwn(d, APPROVAL_RULE_KEY))) return null;
     return { rule: ruleOf(unexact(d[APPROVAL_RULE_KEY])), approvals: readRows(d, "approvals", approvalRow) ?? [] };
+  } catch {
+    return null;
+  }
+}
+
+/** R26 (K2528): the SHA-256 an approval names, `approvalSubjectSha(text)`: the case document's text with its R26 block
+ *  (the `approval_rule` line and the `approvals:` block, each top-level key of its front matter with the lines
+ *  indented under it) removed, every other byte as it is. So an approver approves the document as they saw it, and the
+ *  same digest is computed before the block is written and after. Any other change to the document changes it. Null for
+ *  a text that is not a string. Pure; never throws. */
+export function approvalSubjectSha(text) {
+  try {
+    if (typeof text !== "string") return null;
+    const lines = text.split("\n");
+    const close = lines[0].replace(/\r$/, "") === "---" ? lines.findIndex((l, i) => i > 0 && l.replace(/\r$/, "") === "---") : -1;
+    const kept = [];
+    let dropping = false;
+    lines.forEach((l, i) => {
+      const inFront = i > 0 && i < close;
+      if (inFront && /^(approval_rule|approvals):/.test(l)) { dropping = true; return; }
+      if (dropping && inFront && /^\s/.test(l)) return;
+      dropping = false;
+      kept.push(l);
+    });
+    return sha256HexSync(kept.join("\n"));
   } catch {
     return null;
   }

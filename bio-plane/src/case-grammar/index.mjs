@@ -58,7 +58,8 @@ export { memberSubjectOf } from "./subject.mjs";
 export { ACCOUNT_FIELDS, ACCOUNT_KINDS, ACCOUNT_ORIGINS, ACCOUNT_CITE_KINDS, ACCOUNT_HEAD, accountBiasMark, accountLines,
          accountOf, accountSectionLines, BIAS_APPLICATION_FIELDS, BIAS_APPLICATION_TARGETS, BIAS_APPLICATION_EFFECTS,
          biasApplicationsLines, biasApplicationsOf, REVIEW_COMMENT_FIELDS, REVIEW_COMMENTS_LEFT_OUT_KEY, reviewCommentsLines,
-         reviewCommentsOf, APPROVAL_RULE_KEY, APPROVAL_RULE_FIELDS, APPROVAL_FIELDS, approvalsLines, approvalsOf } from "./account.mjs";
+         reviewCommentsOf, APPROVAL_RULE_KEY, APPROVAL_RULE_FIELDS, APPROVAL_FIELDS, approvalsLines, approvalsOf,
+         approvalSubjectSha } from "./account.mjs";
 export { COMPLETE_EDITION_HEADINGS, TIMELINE_HEADING, CALCULATIONS_HEADING, ACCOUNT_HEADING, REVIEW_COMMENTS_HEADING, APPROVALS_HEADING, TIMELINE_LANE_WORDS, RECOMPUTE_WORDS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, PRODUCT_NAMES, editionProductOf,
          madeWithLine, CHECKER_READS, OBSCURED_WORDS, completeEditionOf } from "./complete.mjs";
 
