@@ -53,6 +53,7 @@ It is the only module marked `legacy` in `modules.json`.
    21. (K2566) answer-envelope `catalogue-end.test.mjs`'s pin for `PROPOSAL_NO_RUN` (`rows-before-r43.json`:639) and `NO_SUCH_PROPOSAL` (:541), decorated by hypotheses' C-134.22/.23 since its T41 merge, until N843 (T42); and, until T41-60, the nine re-worded or retired pinned rows R10 names beyond rule 4 (16)'s (C-70.1, C-22.9, C-22.14, C-104.2–.5, .8, C-106.1).
    22. (K2579, OP-GRADES #5 J2) from T41-51's merge: affordances' `t33.test.mjs`, `t34.test.mjs`, its `act-help.mjs` R48 retired keys, ladder and R27 counts; control-plane `totality.test.mjs`, `r53-routes.test.mjs`, `t34-routes.test.mjs` (the 8 new reds listed in `build/jobs/T41/op-grades.md`), each until its own job's merge (affordances T41-52; control-plane T41-62, after op-declarations T41-58).
    23. (K2588, QUEUE-PRODUCERS #14 J2, J3) from T41-53's merge: queue `action.test.mjs`:104, `converts.test.mjs`:263 and `feed.test.mjs`'s R6 limit test, until T41-55's re-merge.
+   24. (K2592, PLANE #29 J3) `test/system/migrate-released.test.mjs` "born on 0.80.0: and no table a fresh store lacks" for `ai_ceilings` only (ai-use's `#carryCeilings` carries its rows but never drops it), until N848 (T42: ai-use merged at L6, one job per module, an out-of-layer job is Bob's, K1548).
 
 **Text owed before each layer's START (K2451; BOB's wording, P5):**
 - L7: none beyond §3.6 (applied).
