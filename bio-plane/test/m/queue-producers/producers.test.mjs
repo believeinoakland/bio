@@ -12,7 +12,7 @@ test("R2: proposals are one FINDING per open proposal, keyed <progression>::<sta
     { key: "p::s", progression_key: "p", progression_label: "P", stage_key: "s", stage_label: "S", required: "always",
       definition_version: 2, n: 1, kinds: ["missing_predecessor", "overdue_successor"], grade: "B", grade_determined: true,
       overdue: true, overdue_count: 1, surfaced_by: "machine", prior_disposition: { state: "deferred" },
-      instances: [{ progression_key: "p", entity_id: "E" }] }] }) } });
+      instances: [{ progression_key: "p", entity_id: "E", grade: "B", grade_determined: true, overdue: true, deadline: null }] }] }) } });
   w.member("alice"); w.bundle("INF-1"); w.bundle("PRJ-H", "project");
   w.run(`INSERT INTO progression_instances VALUES ('p','E','s','c1','INF-1'), ('p','E','s','c2','PRJ-H')`);
   const it = byId(w.read("alice"))["FINDING::p::s"];
@@ -133,4 +133,22 @@ test("R2 (N229, N330): source-modified and source-removed per document monitorin
   assert.ok(!w2.read(null, "class:admin").items.some((i) => /^source-/.test(i.kind)));
   // nothing here reads front matter or the reachability table any more (N330)
   assert.ok(!w.statements.some((q) => /source_reachability|FROM files/.test(q)));
+});
+
+test("R2, R11 (K2581; D54): a proposal whose only instance lies in a hidden project an administrator neither joined nor was invited to is no item to her; the negative controls, the project discoverable, or a member of it, count it", () => {
+  const w = world({ progressions: { proposalsFeed: () => ({ instances: [], dispositions: [], proposals: [
+    { key: "p::s", progression_key: "p", progression_label: "P", stage_key: "s", stage_label: "S", required: "always",
+      definition_version: 1, n: 1, kinds: ["missing_predecessor"], grade: "B", grade_determined: true, overdue: false, overdue_count: 0,
+      surfaced_by: "machine", prior_disposition: null,
+      instances: [{ progression_key: "p", entity_id: "E", grade: "B", grade_determined: true, overdue: false, deadline: null }] }] }) } });
+  w.member("ada", { role: "admin" }); w.member("hank");
+  w.bundle("PRJ-H", "project"); w.join("PRJ-H", "hank", { owner: true });
+  w.bundle("DOC-H"); w.run(`UPDATE bundles SET project='PRJ-H' WHERE bundle_id='DOC-H'`);
+  w.run(`INSERT INTO progression_instances VALUES ('p','E','s','c1','DOC-H')`);
+  const it = (who) => byId(w.read(who))["FINDING::p::s"];
+  assert.equal(it("ada"), undefined, "D54: no item, and so no count, of an instance she may not see");
+  assert.ok(!JSON.stringify(w.read("ada")).includes("DOC-H"));
+  assert.deepEqual([it("hank").basis.n, it("hank").subject.bundles], [1, ["DOC-H"]], "a member of the project is told");
+  w.discoverable("PRJ-H");
+  assert.deepEqual([it("ada").basis.n, it("ada").subject.bundles], [1, ["DOC-H"]], "a discoverable project is seen whole by administrators");
 });

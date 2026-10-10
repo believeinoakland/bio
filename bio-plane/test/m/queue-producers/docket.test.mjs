@@ -43,6 +43,11 @@ test("R30 (docket R9; DEC-116 item 2): one OBLIGATION docket-core-due per core i
     "a member of the project who is no owner is told nothing of its case; the owner of another is told of hers");
   assert.ok(!JSON.stringify(w.read("alice")).includes("CASE-H"), "R11: a case of a project she may not see is named nowhere");
   assert.deepEqual(ids(w.read("ada")), [], "nor an administrator who manages no case");
+  /* D54 (K2408): PRJ-H is hidden and ada neither invited nor joined; she sees it at EXISTENCE only, so nothing of its
+     case is named to her (R11); the negative control, PRJ-H set discoverable, still tells her nothing (she is no owner) */
+  assert.ok(!JSON.stringify(w.read("ada")).includes("CASE-H"), "D54, R11: a hidden project's case is named nowhere to an administrator outside it");
+  w.discoverable("PRJ-H");
+  assert.deepEqual(ids(w.read("ada")), [], "seen whole, the project's case is still its owners' to be told of (R30)");
   asked.length = 0;
   assert.deepEqual(ids(w.read(null, "class:admin")), [], "a caller with no member is no case's manager");
   assert.deepEqual(asked, [], "and docket is not asked for it");
