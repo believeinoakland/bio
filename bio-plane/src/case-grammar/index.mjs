@@ -10,7 +10,8 @@
  * complete edition (R14, `./complete.mjs`), a finding's standing against the bar (R15, `./standing.mjs`), the
  * calculations a case rests on with their PROV-O rendering (R18, R19, `./calculations.mjs`), the published timeline
  * (R20, `./timeline.mjs`), the people a case names with its signers' ties (R21, `./people.mjs`) and a member's subject
- * (R22, `./subject.mjs`). It reads no table,
+ * (R22, `./subject.mjs`), and the account, bias applications, review comments and approvals a case carries (R23–R26,
+ * `./account.mjs`). It reads no table,
  * holds no store and never throws.
  *
  * Split from `publication` by copy (K651, K624 (1)): the format block of `publication/checks.mjs`, and `fmSafe`,
@@ -38,7 +39,7 @@ export { WHAT_CHANGED_HEAD, WHAT_CHANGED_ORIGINS, whatChangedText, whatChangedBl
          LENS_NONE_SENTENCE, LENS_UNDETERMINED_SENTENCE, lensStatementKey, lensBlockLines, lensSectionLines, lensOf,
          editionStatementsOf } from "./edition.mjs";
 export { WORKING_ON_KEY, NOTICE_REFERENCE_PATTERN, isNoticeReference, workingOnLines, workingOnOf } from "./reference.mjs";
-export { METHOD_FIELDS, methodBlockLines, methodOf, MATERIAL_FIELDS, MATERIAL_OBSCURED_FIELDS, MATERIAL_ATTESTATION_FIELDS, MATERIAL_KINDS,
+export { METHOD_FIELDS, methodBlockLines, methodOf, MATERIAL_FIELDS, MATERIAL_OBSCURED_FIELDS, MATERIAL_OBSCURED_MARKED_FIELD, MATERIAL_ATTESTATION_FIELDS, MATERIAL_KINDS,
          MATERIAL_RESTS_UNDER, ATTESTATION_BY_KINDS, ATTESTATION_LEVELS, ANONYMOUS_ATTESTATION_LEVELS,
          GROUP_ATTESTATION_SIGNATURE, materialsLines, materialAttestationLines, materialBlockLines, materialsOf, ACCEPTED_WORK_FIELDS, ACCEPTED_WORK_FLAG_FIELDS,
          PAIR_AXES, pairLine, pairOf, acceptedWorkBlockLines, acceptedWorkOf } from "./materials.mjs";
@@ -54,7 +55,11 @@ export { CALCULATION_FIELDS, RECOMPUTE_STATUSES, calculationsLines, calculations
 export { TIMELINE_FIELDS, TIMELINE_LANES, timelineLines, timelineOf } from "./timeline.mjs";
 export { PEOPLE_FIELDS, MEMBER_TIE_FIELDS, peopleLines, memberTieLines, peopleOf, memberTiesOf } from "./people.mjs";
 export { memberSubjectOf } from "./subject.mjs";
-export { COMPLETE_EDITION_HEADINGS, TIMELINE_HEADING, CALCULATIONS_HEADING, TIMELINE_LANE_WORDS, RECOMPUTE_WORDS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, PRODUCT_NAMES, editionProductOf,
+export { ACCOUNT_FIELDS, ACCOUNT_KINDS, ACCOUNT_ORIGINS, ACCOUNT_CITE_KINDS, ACCOUNT_HEAD, accountBiasMark, accountLines,
+         accountOf, accountSectionLines, BIAS_APPLICATION_FIELDS, BIAS_APPLICATION_TARGETS, BIAS_APPLICATION_EFFECTS,
+         biasApplicationsLines, biasApplicationsOf, REVIEW_COMMENT_FIELDS, REVIEW_COMMENTS_LEFT_OUT_KEY, reviewCommentsLines,
+         reviewCommentsOf, APPROVAL_RULE_KEY, APPROVAL_RULE_FIELDS, APPROVAL_FIELDS, approvalsLines, approvalsOf } from "./account.mjs";
+export { COMPLETE_EDITION_HEADINGS, TIMELINE_HEADING, CALCULATIONS_HEADING, ACCOUNT_HEADING, REVIEW_COMMENTS_HEADING, APPROVALS_HEADING, TIMELINE_LANE_WORDS, RECOMPUTE_WORDS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, PRODUCT_NAMES, editionProductOf,
          madeWithLine, CHECKER_READS, OBSCURED_WORDS, completeEditionOf } from "./complete.mjs";
 
 
