@@ -61,3 +61,7 @@ R55's seam with `steps` (not yet built; its requirements name no signatures for 
 ## J2 · COMPLETE
 
 T41-25 applied: R55 (step on a request, refused as absent C-28.34; the capture tied by steps.recordProduct; capture_request registered as an arrival source), on the real steps after B3. Tests 108/0; users' suites' 25 reds identical on tranche/T41; checks format 0, coverage 55/55, ownership 0, architecture 0 once the uses edge capture-requests → steps is applied (2 failures until then, both that edge). Record: Completion (CAPTURE-REQUESTS #15).
+
+## J3 · COMPLETE
+
+B4 applied (K2514): plane.test.mjs's five runs now open on a passing test bar. The Miniflare plane takes no deps.testSet, so plane-world.mjs runs a scratch copy of src/ whose Civicsmith set holds one matter, its Store recording a passing bar per part through ai-runs R75's testBarRecord. Test-only; negative control (empty set) refused C-109.1. Tests 108/0; checks format 0, architecture 0, coverage 55/55, ownership 0. Record: Completion (CAPTURE-REQUESTS #16, B4).
