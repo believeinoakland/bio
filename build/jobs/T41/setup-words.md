@@ -10,7 +10,7 @@
 **Tests:** `bio-plane/test/m/setup-words/word-list.test.mjs`: `R1 R2`, the file at 3660c18803 word by word, using a failure-listing check (`r1Failures`); `R1 negative control`, which shows the check refusing a list with one word changed, two rows swapped, a row dropped or duplicated, a note or means nulled, a protected mark flipped, or the list at e08cd35ecb; `R2`, the commit plus the four retired-act rows carried as given, with negative controls (one re-keyed to `accountusesset`, one dropped, one re-worded); `R3`; `R4`. 5 pass, 0 fail. Negative control on the module: the e08cd35ecb file in place fails 3 of the 5 (R1 R2, R2 and the R1 negative control) and passes R3 and R4.
 **Users' tests (I changed the list I provide):** `instance-setup` 129 pass, 1 fail. `translations.test.mjs:469` (R74) expects `counts` `{ missing: 919, … }`, which is 921 minus 2. With the new list it is 1,004 (1,006 minus 2). That test is instance-setup's (T41-57, later in this layer), so I reported it and did not edit it. On the tranche before my change: 130 pass.
 **Checks** (process repo): format 0 failures; architecture 0 failures; coverage 4 of 4, 0 failures; ownership 0 failures.
-**Found elsewhere (REPORT J2):** (1) instance-setup's `translations.test.mjs:469` count, above. (2) Generated artifact made stale: `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` take this module as an input (owner `not_product`; regenerated at layer close).
+**Found elsewhere (REPORT J1):** (1) instance-setup's `translations.test.mjs:469` count, above. (2) Generated artifact made stale: `bio-plane/dist/bio-plane.bundled.mjs` and `.bundle.json` take this module as an input (owner `not_product`; regenerated at layer close).
 **Deferred:** none.
 **Final `uses`:** none (`[]`).
 
