@@ -1,6 +1,6 @@
 # admission (T41)
 
-**Status** · session_01XRFXxX3r77uSXKpEg4sgCD · depth 2 · RUNNING until 2026-10-10T21:40:05Z (users' tests on tranche/T41 for comparison) · handled B5
+**Status** · session_01XRFXxX3r77uSXKpEg4sgCD · depth 2 · COMPLETE · handled B5
 
 
 ## Record
