@@ -53,3 +53,23 @@ Until you answer I build option 1 against an injected synchronous re-weigher (a 
 - format: 0 failures. architecture: 0 failures. coverage: 23 of 23 live ids named, 0 failures. ownership: 5 files, 0 failures.
 
 Size (session_01KJ4zxTUbTA3VAHVeTVs72b): test runs 14, module lines 2011
+
+## J3 · COMPLETE
+
+**CHANGE B3 applied** (K2537; commit b8577161e5, after merging `tranche/T41` @ 7fe0e94f76 as 2367c852b3).
+- R23's applications now come from `case-grammar.biasApplicationsOf` (its R24), the real export, read from the edition's case document. The `biasApplicationsOf` dep and its stand-in are gone.
+- The fixture writes the block with `case-grammar.biasApplicationsLines`. The R23 tests use rows of the real shape (`target` `leg`/`conclusion`; effects `grade_lowered`, `inference_refused`).
+- New test: "R23 the applications are case-grammar's reading of the case document (its R24)". It checks that every row the block carries reaches the reader lens and the per-finding answers, in its order. Its negative control is an edition with no block: nothing is applied, `bias` is never asked, and each finding is re-weighed as recorded.
+- `reweigh` is still the injected stand-in until case-checker merges (B3). It is reached as `caseChecker.reweigh({parts, documents, answer, lens})`, answering `findings[{finding, pair, bar_met, changed_by}]` and `limit`. The stand-in now reads the carried applications through the real `biasApplicationsOf` too. By its convention, a reversed `grade_lowered` restores capture to `from`. That is the stand-in's convention only, not a claim about case-checker.
+
+**Final `uses`:** unchanged (as J2).
+
+**Tests and checks:**
+- `node --test test/m/case-import/`: tests 95, pass 95, fail 0.
+- accepted-work: 23 pass, 0 fail.
+- case-disclosures: 78 pass, 3 fail, identical with the tranche's own case-import, so inherited. They come from the case-grammar merge: R22 photo translations by key, and two R7 `obscured` copy-row tests.
+- format: 0 failures. architecture: 0 failures. coverage: 23 of 23, 0 failures. ownership: 5 files, 0 failures.
+
+Everything else is as J2.
+
+Size (session_01KJ4zxTUbTA3VAHVeTVs72b): test runs 18, module lines 2010
