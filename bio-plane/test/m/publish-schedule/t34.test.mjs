@@ -221,7 +221,7 @@ test("R3 publishAtMove and publishAtCancel refuse, in order and each writing not
   sched(w);
   const before = w.snapshot();
   for (const act of ["publishAtMove", "publishAtCancel"]) {
-    const call = (by, extra = {}) => w.p[act]({ case: CASE, edition: 1, at: { date: "2026-10-03", time: "07:30" }, by, ...extra });
+    const call = (by, extra = {}) => w.ps[act]({ case: CASE, edition: 1, at: { date: "2026-10-03", time: "07:30" }, by, ...extra });
     for (const by of [MACHINE, "class:admin", null, "", "nobody"])
       assert.equal(call(by).reason, "MACHINE_CANNOT_SCHEDULE_PUBLISH", `${act} ${by}`);
     assert.equal(call(MACHINE, { case: CASE2 }).reason, "MACHINE_CANNOT_SCHEDULE_PUBLISH", "before anything else");
@@ -371,6 +371,30 @@ test("R6 onPublishScheduled: one registration per module, refused through member
   const m = heard.length;
   w.ps.publishAtCancel({ case: CASE, edition: 1, by: V("olive") });
   assert.equal(heard.length, m);
+});
+
+test("R6 the notice never throws: a set time whose wake cannot be read when the notice runs (its table gone after the caller's transaction) tells nobody and throws nothing, and the act stands; the negative control: with the table held, the same act tells once", async () => {
+  const { w } = base();
+  const heard = [];
+  w.ps.onPublishScheduled("scheduler", (x) => heard.push(x));
+  const caught = [];
+  const onErr = (e) => caught.push(e);
+  process.on("uncaughtException", onErr);
+  try {
+    const r = sched(w);
+    assert.equal(r.ok, true, "the act");
+    w.st.db.exec(`DROP TABLE scheduled_editions`);   /* before the queued notice runs */
+    await tick(); await tick();
+    assert.deepEqual(caught, [], "the notice threw nothing");
+    assert.deepEqual(heard, [], "nobody is told a wake that cannot be read");
+  } finally { process.off("uncaughtException", onErr); }
+  /* the negative control */
+  const b = base();
+  const heard2 = [];
+  b.w.ps.onPublishScheduled("scheduler", (x) => heard2.push(x));
+  assert.equal(sched(b.w).ok, true);
+  await tick();
+  assert.deepEqual(heard2, [{ publishAt: AT_UTC }]);
 });
 
 /* ---------------------------------------------------------------- R10, the table's purge */
