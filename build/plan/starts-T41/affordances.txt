@@ -8,3 +8,5 @@ Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at yo
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
 
 **From T41-23 (ai-runs) merge (K2514, AI-RUNS #16 J6).** `act-help.mjs`:33, :66 and `t33.test.mjs`:102 name the retired ops `aiceilingset`, `aicopyceilingset`, `aiusage`: re-point to `ailimitset` and ai-use's reads.
+
+**From INVESTIGATION #1 J2 (K2525).** TO FIX AT L11 START: investigation (merged in L7) declares no op; its member acts (milestones R1–R5, reports R6–R9, the interview R11–R13, claims R14–R15, the firsthand account R16, plan proposals R20, the quiet doors R18: `projectWatch`, `projectCloseWithGaps`) need ops declared (op-declarations), routed (control-plane) and helped (affordances R50), each named exactly from its merged services.

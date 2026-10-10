@@ -9,3 +9,5 @@ Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at yo
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
 
 **From T41-23 (ai-runs) merge (K2514, AI-RUNS #16 J6).** `store.mjs`:219 (`ceilingRefusal`) calls ai-runs' removed ceiling path: compose `ai-use` `useCheck`/`countUsage` (with K2500's owed text).
+
+**From INVESTIGATION #1 J2 (K2525).** Register `investigation.registerRunHolder("ai-runs", (by, run) => …)` over ai-runs' run holder (ai-runs is earlier than investigation and cannot register itself); until then `planPropose` and the assistant's `claimFindStep` answer `PLAN_NOT_YOUR_RUN`. Compose `investigation` (`investigationOf(host, deps)`, its 11 tables).
