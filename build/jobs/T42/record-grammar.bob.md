@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 186 KB, under 300 KB: read
 Merge order in L1: none (independent).
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here. Coverage counts any `R54` string already present: name it in a test of its own.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+CHANGE (K2608): your requirements gained R55 on `tranche/T42` @ 34447bd76e: `ID_TABLE` gains `ACD` (owner `case-account`, form `opaque`; `ACCOUNT_DRAFT_PREFIX`, minted by case-authoring since T41 and moving to the new module `case-account` in L8), and `ACCEPT_MUST_REAUTHOR`'s `where` (R52's shared row, `acts.mjs`:68–73) names `case-account` R4 in place of `case-authoring` R64. `case-account` is in `modules.json` (no code yet): name it as owner only. Merge the tranche branch into yours, apply R55 with explicit tests (negative control: an `ACD` id of the wrong form), and include it in your COMPLETE. The `where` change is a row change: report it so the stamp (T42-5) carries it.
