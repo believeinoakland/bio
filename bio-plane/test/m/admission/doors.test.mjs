@@ -1,6 +1,7 @@
 /* admission: T34's ops (N552, DEC-133; K1749, K1755) — the doors into the group (R17), the administrator's acts that
    reach membership's own refusal (R18), and the group's API key's ops, a session's only (R19). Each spec is
-   op-declarations' (its R22, R24); this file holds admission's judgement of them at its interface. */
+   op-declarations' (its R22, R24); this file holds admission's judgement of them at its interface. (T41, DEC-188 (8))
+   `groupswitchset` is retired to `accountusesset` and is no longer among R19's ops (t41.test.mjs). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { A, O, world, gate, urlOf, refused, opCalls, hex64, aik, cred } from "./harness.mjs";
@@ -9,8 +10,7 @@ const { OPS, SESSION_OPS, NEEDS, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS } = O;
 const DOORS = ["joinlinkinvite", "websiteinvite"];
 const ADMIN_ACTS = ["invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset",
                     "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset"];
-const GROUP_KEY_OPS = ["groupkeyset", "groupkeyremove", "groupkeyswitch", "groupswitchset", "groupkeystate", "groupkeynotice",
-                       "groupkeynoticeseen"];
+const GROUP_KEY_OPS = ["groupkeyset", "groupkeyremove", "groupkeyswitch", "groupkeystate", "groupkeynotice", "groupkeynoticeseen"];
 const SECRET = "wk_" + hex64(), LINK = "jl_" + hex64(), COVER = "Rosa from the tenants' union", APIKEY = "sk-ant-api03-" + hex64();
 
 test("R17: websiteinvite and joinlinkinvite are public ops admitted with no credential; a credential or session presented (by header or body) is neither required nor used, nothing about the caller reaches the act, the key, link and cover are read from the body only, the one limit admission adds is R21's per-source window (the daily caps are membership's), and no key, link or invitation appears in a refusal", async () => {
