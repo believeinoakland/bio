@@ -1,6 +1,6 @@
 # publication (T41)
 
-**Status** · session_01BKNMquTmjnJkVp4dFUpPPJ · depth 2 · RUNNING until 2026-10-10T17:53:47Z (users' suites, HEAD vs tranche/T41) · handled B2
+**Status** · session_01BKNMquTmjnJkVp4dFUpPPJ · depth 2 · RUNNING until 2026-10-10T18:15:46Z (users' suites after the delete, HEAD vs tranche/T41) · handled B2
 
 ## J1 · QUESTION
 
