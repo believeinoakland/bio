@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, AUTHORED, sha, infoMd } from "./fixture.mjs";
-import { searchedSection, SEARCHED_LEVEL_OUTCOMES, SEARCHED_SUBJECT_MAX, CASE_CITATION_WORDS, caseDocumentText }
+import { PLANE_VIEWER, searchedSection, SEARCHED_LEVEL_OUTCOMES, SEARCHED_SUBJECT_MAX, CASE_CITATION_WORDS, caseDocumentText }
   from "../../../src/case-authoring/index.mjs";
 import { CASE_DOCUMENT_FORMAT } from "../../../src/publication/index.mjs";
 import { STRENGTH_AXES } from "../../../src/strength/index.mjs";
@@ -100,7 +100,7 @@ test("R14: the document, in publication's CASE_DOCUMENT_FORMAT, which is bio-cas
   assert.deepEqual(docOf(w, r), signed);
 });
 
-test("R14: the bias manifest is frozen from bias.biasManifest at the project's scope, read as the plane: in force (its bundles and hash), not in force, or undetermined (null, with its sentence), each with pins_proposed and its count", () => {
+test("R14 (D54): the bias manifest is frozen from bias.biasManifest at the project's scope, read as the plane (a machine viewer, never the founder's): in force (its bundles and hash), not in force, or undetermined (null, with its sentence), each with pins_proposed and its count", () => {
   const calls = [];
   let lens = null;
   const bias = { biasManifest: (a) => { calls.push(a); return lens; } };
@@ -111,8 +111,11 @@ test("R14: the bias manifest is frozen from bias.biasManifest at the project's s
            bundles: [{ bundle_id: "BIAS-2026-0001-lens", revision: "a".repeat(64), scope: "instance", adopter: "x" }],
            pins_proposed: [{ bundle_id: "BIAS-2026-0002-new", revision: "b".repeat(64), scope: "project", pinned_state: "proposed" }] };
   const on = w.publish(P, "alice", [Q]);
-  assert.deepEqual(calls.filter((c) => c.limit === 1), [{ scope: "project", scopeId: P, viewer: "admin", limit: 1 }],
+  assert.deepEqual(calls.filter((c) => c.limit === 1), [{ scope: "project", scopeId: P, viewer: PLANE_VIEWER, limit: 1 }],
                    "the manifest stamped, read as the plane, once (R40's lens reads its pages beside it)");
+  /* D54 (K2442): every read of the manifest is the plane's machine credential, never the founder's viewer, which is blind
+     to a hidden project it is not in (this one: the founder is neither invited nor joined) */
+  assert.ok(calls.length >= 2 && calls.every((c) => c.viewer === PLANE_VIEWER && c.viewer !== "admin"));
   assert.deepEqual(on.bias_manifest, { in_force: true, scope: "project", scope_id: P, statements_sha: "f".repeat(64),
     bundles: [{ bundle_id: "BIAS-2026-0001-lens", revision: "a".repeat(64), scope: "instance" }], lock_violations: 1,
     stated: `the effective bias set in force for ${P} at publication, frozen here and never recomputed`,
@@ -295,7 +298,7 @@ test("R22: everything the document asserts arrived as an argument or was read fr
   }
   const conc = w.ratification.caseConclusionFor(P, Q, V("alice"), "concluded");
   assert.deepEqual([fm.case_conclusions[0].relationship, fm.case_conclusions[0].falsifier], [conc.relationship, conc.falsifier]);
-  assert.deepEqual(r.bias_manifest.stated, w.bias.biasManifest({ scope: "project", scopeId: P, viewer: "admin", limit: 1 }).stated);
+  assert.deepEqual(r.bias_manifest.stated, w.bias.biasManifest({ scope: "project", scopeId: P, viewer: PLANE_VIEWER, limit: 1 }).stated);
   const list = w.ca.statementAcknowledgements(P, r.caseId, 1, AUTHORED.statement, "alice", { by: "alice" }, null, null);
   assert.deepEqual([fm.completeness.statement_sha, fm.completeness.acknowledged], [list.statementSha, list.rows.length]);
   /* the same arguments and the same record give the same bytes (nothing is composed at random) */

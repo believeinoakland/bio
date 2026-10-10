@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, AUTHORED, WHAT_CHANGED } from "./fixture.mjs";
-import { WHAT_CHANGED_MAX } from "../../../src/case-authoring/index.mjs";
+import { WHAT_CHANGED_MAX, PLANE_VIEWER } from "../../../src/case-authoring/index.mjs";
 import { whatChangedOf, whatChangedSectionLines, whatChangedBlockLines, WHAT_CHANGED_HEAD, lensOf, lensBlockLines,
          lensSectionLines, LENS_HEAD, LENS_NONE_SENTENCE, SECTIONS } from "../../../src/case-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
@@ -151,7 +151,7 @@ function adoptLens(w, P, statements) {
   assert.equal(a.ok, true, JSON.stringify(a).slice(0, 400));
 }
 
-test("R40, R14: every statement in force is printed through case-grammar R9 — kind in plain words, subject, text, justification — with each citation that is public material (a public web address, a bundle or hash this copy has published) and the rest only counted, named nowhere in the document; the stored unsigned bytes are what is printed", () => {
+test("R40, R14 (D54): every statement in force is printed through case-grammar R9 — kind in plain words, subject, text, justification — with each citation that is public material (a public web address, a bundle or hash this copy has published) and the rest only counted, named nowhere in the document; the stored unsigned bytes are what is printed", () => {
   const w = world();
   for (const m of ["alice", "bo"]) w.member(m);
   w.doc(DOC); w.doc(DOC2);
@@ -187,6 +187,16 @@ test("R40, R14: every statement in force is printed through case-grammar R9 — 
   assert.ok(doc.text.includes(blocks.join("\n")), "the blocks, byte for byte");
   assert.match(doc.text, /Citations withheld: 4 \(which ones is not stated\)/);
   assert.equal(r.caseDocument.doc_sha, doc.doc_sha);
+  /* D54 (K2442): P is hidden and the founder is neither invited nor joined, so the founder's viewer no longer sees its
+     lens; the act reads it as the plane (`PLANE_VIEWER`) and prints it. Negative control: a member's own read of the
+     manifest stays fenced by its sight of the project (bo is no participant), and so does the founder's. */
+  assert.equal(w.row(`SELECT 1 AS x FROM project_participants WHERE project_id=? AND member_id='admin'`, P), null);
+  assert.equal(w.bias.biasManifest({ scope: "project", scopeId: P, viewer: PLANE_VIEWER, limit: 1 }).in_force, true);
+  for (const outside of [V("bo"), "admin"]) {
+    const fenced = w.bias.biasManifest({ scope: "project", scopeId: P, viewer: outside, limit: 1 });
+    assert.notEqual(fenced.in_force, true, `${outside} does not read a hidden project's lens`);
+    assert.equal(JSON.stringify(fenced).includes(S1.text), false);
+  }
   /* negative control: a citation becomes public when this copy publishes it */
   const w2 = world(); w2.member("alice"); w2.doc(DOC); w2.doc(DOC2); w2.finding(Q, [{ target: DOC }]);
   const P2 = w2.project("Team", "alice", [Q]);

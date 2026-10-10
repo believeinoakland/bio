@@ -56,16 +56,24 @@ test("R19: doors — a recipient through a live grant (a named draft must be the
   assert.equal(ack(w, { viewer: V("bo"), caseId: pub.caseId, edition: 1 }).ok, true, "a member with standing in the document");
 });
 
-test("R19: refusals in order — STATEMENT_ACK_NO_SUBJECT (C-82.2), a signed document C-82.3, not a joined participant C-82.4, no statement C-82.5, the writer undetermined for a participant C-82.7, the writer, or on the case door the publisher, C-82.6; a recipient is never the writer", () => {
+test("R19 (D54): refusals in order — STATEMENT_ACK_NO_SUBJECT (C-82.2), a signed document C-82.3, not a joined participant C-82.4, no statement C-82.5, the writer undetermined for a participant C-82.7, the writer, or on the case door the publisher, C-82.6; a recipient is never the writer", () => {
   const { w, P } = setup();
   for (const a of [{ viewer: V("bo") }, { viewer: V("bo"), caseId: "CASE-2026-0001" }, { viewer: V("bo"), caseId: "CASE-2026-0001", edition: 0 },
                    { viewer: V("bo"), caseId: "CASE-2026-0001", edition: "x" }])
     refuses(ack(w, a), "STATEMENT_ACK_NO_SUBJECT");
   const pub = w.publish(P, "alice", [Q]);
-  /* not joined: an invited participant, and an administrator who sees every project */
+  /* not joined: an invited participant, and an administrator who sees the project. (D54) An administrator neither
+     invited nor joined sees a hidden project only at existence, so its unsigned document is working material it cannot
+     see, and it receives the dead answer (R27); once the project is discoverable it sees it whole, and is no participant. */
   w.draft("DRAFT-2026-0001", P, { statement: AUTHORED.statement }, { statementBy: "alice" });
   refuses(ack(w, { viewer: V("ed"), draft: "DRAFT-2026-0001" }), "STATEMENT_ACK_NOT_A_PARTICIPANT");
+  assert.deepEqual(ack(w, { viewer: V("root"), caseId: pub.caseId, edition: 1 }), DEAD,
+    "D54: a hidden project's document is not the administrator's to see");
+  assert.equal(w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", reason: "open work", by: "alice",
+                                                    viewer: V("alice") }).ok, true);
   refuses(ack(w, { viewer: V("root"), caseId: pub.caseId, edition: 1 }), "STATEMENT_ACK_NOT_A_PARTICIPANT");
+  assert.equal(w.membership.projectVisibilitySet({ projectId: P, setting: "hidden", reason: "closed again", by: "alice",
+                                                    viewer: V("alice") }).ok, true);
   /* no statement */
   w.draft("DRAFT-2026-0002", P, { statement: "" }, { statementBy: "alice" });
   refuses(ack(w, { viewer: V("bo"), draft: "DRAFT-2026-0002" }), "STATEMENT_ACK_NO_STATEMENT");

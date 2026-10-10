@@ -124,6 +124,11 @@ export const NOTICE_SEALS_SENTENCE = "This project has a public notice that the 
 /** R34 (DEC-112 (4)): what step one adds, one plain sentence until the UX design stream gives the words. */
 export const REPUBLISH_SENTENCE = "The published case republishes in full every document it includes, and judging whether "
   + "they may be republished, copyright included, is the group's.";
+/** R14, R40 (D54; K2442): the viewer the manifest is read as, the plane's machine credential, which sees every bundle
+ *  (membership R43's machine arm): the lens is a fact about the project's scope, read inside an act whose own authority
+ *  fences (R2) have already admitted the publisher. Never the founder's viewer, which D54 leaves blind to a hidden
+ *  project it is neither invited to nor joined. */
+export const PLANE_VIEWER = "class:daemon";
 /** R16: the id chunk for the citations' grouped read, this module's own copy of `retrieval`'s (K57). */
 export const SELECTION_ID_CHUNK = 64;
 /** R21: the most drafts the writer read scans, the bound `review` R26 states for `case_drafts` (`REVIEW_LIST_MAX`):
@@ -968,10 +973,11 @@ export class CaseAuthoring {
     /* REC-135: the conclusion each member rests on, from the SAME answer the NOT_CONCLUDED gate decided on. */
     const conclusionRows = prepared.map((p) => ({ target: p.id, ...p.conclusion }));
     /* D-84 — THE BIAS MANIFEST IN FORCE, STAMPED BY THE PLANE AND FROZEN (bias R13–R18), for the project's scope READ AS
-       THE PLANE (`admin`): the manifest is a fact about the project's scope, and a reader's sight must not turn it into
+       THE PLANE (`PLANE_VIEWER`, a machine credential: since D54 the founder's viewer is blind to a hidden project it is
+       not in, K2442): the manifest is a fact about the project's scope, and a reader's sight must not turn it into
        "no manifest was in force". `limit: 1` because the stamp needs the pairs and the hash, which covers the whole set
        before any bound. */
-    const lens = this.bias.biasManifest({ scope: "project", scopeId: proj, viewer: "admin", limit: 1 });
+    const lens = this.bias.biasManifest({ scope: "project", scopeId: proj, viewer: PLANE_VIEWER, limit: 1 });
     const manifest = {
       /* REC-187: `null` is the manifest's UNDETERMINED, carried as null with its own sentence (R26). */
       in_force: lens.in_force === null ? null : lens.in_force === true,
@@ -1724,7 +1730,7 @@ export class CaseAuthoring {
   }
 
   /** R40 — DEC-103: THE LENS THIS CASE WAS PRODUCED UNDER, READ WHOLE. Every statement in the effective set of the
-   *  manifest frozen at this act (bias R13–R18, every page, read as the plane like the stamp beside it), each with each
+   *  manifest frozen at this act (bias R13–R18, every page, read as the plane, `PLANE_VIEWER`, like the stamp beside it), each with each
    *  of its citations marked whether it may be printed: public material only, being a public web address
    *  (record-grammar's public-locator test, its R19) or a bundle or hash this copy has published (publication's
    *  registries: R12's `publishedTargets` for a bundle id; R40's `published_shas` and `published_bundles.bundle_sha` for
@@ -1732,7 +1738,7 @@ export class CaseAuthoring {
    *  `{in_force, stated, statements: [{bundle, id, kind, subject, text, justification, citations: [{citation,
    *  printed}]}]}`; with no manifest in force, or one undetermined, no statement. */
   #lensStatements(project) {
-    const read = (offset) => this.bias.biasManifest({ scope: "project", scopeId: project, viewer: "admin",
+    const read = (offset) => this.bias.biasManifest({ scope: "project", scopeId: project, viewer: PLANE_VIEWER,
                                                       limit: LENS_PAGE, offset });
     let page = read(0);
     if (!page || page.in_force !== true)
