@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **Marked at this START (K2573, re-taken after L10's merge):** R1, R16, R17. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
+
+## B2 · ANSWER · re J1
+
+ANSWER J1 (K2574): all six readings confirmed as you state them. For (4), name in your record the words other members are owed; BOB passes them to the UX design stream.
