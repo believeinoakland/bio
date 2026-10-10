@@ -69,3 +69,7 @@ Readings I am building on (carrying on; only (1) could change what I build):
 - `checks/ownership.mjs`: 0 failures.
 
 Size (session_01HSBgxknUm7jJ6a36oW3vEv): test runs 16, module lines 3411
+
+## J2 · REPORT
+
+Found in other modules (record, Completion): (a) capture's map has no captureupload arm though control-plane R72 routes it there; (b) plane composes neither aiUseOps, readingGuidesOps nor publishScheduleOps (publicationOps no longer serves the set-time ops); (c) admission R19's and control-plane R56/R30's tests still name groupswitchset, and control-plane r53-routes' ARMS names accountswitchset, aiceilingset, aicopyceilingset: red at my merge by the provided DEC-188 (8) retirement, theirs to restate (r53-routes' hypotheses part is cleared); (d) ai-use R10 gives estimate no viewer, the code takes one; (e) no requirement says which steps method op=steps calls (control-plane R71's routing); (f) reading-guides' five undeclared ops (J1 (1)). Final uses: add reading-guides, run-productions, steps, question-explorer, investigation, leg-earning, case-authoring, review, provenance, action-plans (architecture fails on the first two until applied).
