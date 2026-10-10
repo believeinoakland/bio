@@ -73,3 +73,7 @@ Final `uses` add `case-grammar`'s `accountOf` and `biasApplicationsOf`. The modu
 - **Checks:** format, architecture (78 imports), coverage (24 of 24) and ownership: 0 failures each.
 
 Size (session_0165W4ZKVnAtc4FUGvKYg4Xb): test runs 27, module lines 2070
+
+## J3 · COMPLETE
+
+B5 (K2537) applied, commit d830ae2335: tranche merged @ 7fe0e94f76; the account and bias applications are now read by case-grammar's accountOf and biasApplicationsOf (applications name a leg by finding and ord, target leg or conclusion); stand-ins removed. case-checker tests: 75 pass, 2 fail (the two R13 tests on the stale program.mjs); 77 of 77 with it regenerated locally. Users' suites: 476 pass, 8 fail, the same 8 as on the tranche branch without this change (4 answer-envelope/case-disclosures reds; case-grammar, public-read and case-authoring obscured tests touching obscured.marked). All four checks 0 failures. Module 2,070 lines.
