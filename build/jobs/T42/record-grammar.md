@@ -44,3 +44,7 @@ My best reading, which I am building: `ACD` is `{prefix: 'ACD', owner: 'case-acc
 - Generated artifacts staled: plane bundle, `case-checker/program.mjs`, agent-worker's bundle, newgroup's bundle (regenerated at layer close).
 
 Size (session_01TfvYox4Sw4X6dSjqk6M1oK): test runs 16, module lines 2518
+
+## J3 · COMPLETE
+
+T42-1 complete (b50fb8a6fc), with B2's R55. R54: PROPOSAL_STATES gains case_account and account_check after translation (fifteen subjects; the thirteen earlier tables unchanged by digest). R29: C-33.40's where names inquiry's actNoBasis (basis-versions through it), progressions' refusal and entities' actShapeRefusal (B3). R55: ID_TABLE gains ACD (case-account, opaque, legacy sequential: J2's reading, unanswered; the T41 ids are four random digits); C-33.54's where names case-account R4. Row changes for the stamp (T42-5): C-33.40's and C-33.54's where. record-grammar 85/85; checks format, architecture, coverage (53/53), ownership (7 files) 0 failures. Users' reds of mine: record-core t33.test.mjs:69 (R76 opaque-prefix pin lacks ACD) and :162 (R62 mintExhausted has no sentence for ACD); reported, not edited. Stale generated artifacts: case-checker program.mjs, agent-worker bundle (ids.mjs), newgroup bundle, plane bundle. Every other red is red on tranche/T42 without me (rule 4 (5), (6)) or load (capture-requests plane.test.mjs:167, 3/3 alone). Record: build/jobs/T42/record-grammar.md, Completion section.
