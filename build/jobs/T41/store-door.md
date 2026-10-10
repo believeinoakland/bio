@@ -44,3 +44,7 @@ Size (session_01PuHeVd3DfFWWwcgeAkRtmj): test runs 12, module lines 613
 ## J3 · REPORT
 
 Two findings (record, Completion): (1) wizard-scripts: writingHelp's own keep-away (#keptAway, index.mjs:376-381) asks credentials.aiKeptAway() with no use, so a keep-away covering only ask (credentials R57) still refuses a writing-help draft that store-door R10 (aiKeptAway({use: "draft"})) admits; it should ask {use: "draft"}. (2) The plane bundle (bio-plane/dist/bio-plane.bundled.mjs) is staled by this change (dispatch.mjs).
+
+## J4 · COMPLETE
+
+T41-61 done: R10, R11 as re-worded (B2-B4 applied). store-door 43/43; users control-plane+plane+migrate-released 338 pass/13 fail vs base 337/14, every failure inherited, one base red cleared; format, architecture, coverage 13/13, ownership: 0 failures. Final uses: drop ai-runs. Record: build/jobs/T41/store-door.md on job/T41/store-door.
