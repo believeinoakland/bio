@@ -69,6 +69,7 @@ import { readingGuidesOf, readingGuidesOps } from "../reading-guides/index.mjs";
 import { questionExplorerOf } from "../question-explorer/index.mjs";
 import { investigationOf } from "../investigation/index.mjs";
 import { publishScheduleOps } from "../publish-schedule/index.mjs";
+import { controlPlaneOwnerOps } from "../control-plane/owner-ops.mjs";
 import { contentOf, contentOps } from "../content/index.mjs";
 import { retrievalOf, retrievalRoutes } from "../retrieval/index.mjs";
 import { queueOf, Queue } from "../queue/index.mjs";
@@ -671,6 +672,12 @@ export class Store extends DurableObject {
       ...instanceSetupOps(instanceSetupOf(ctx, env), url, body),
       /* K2044, K2054 (admission R21): the Worker's count of a request to a public op, `doorwindow`, store-internal */
       ...admissionOps(admissionOf(ctx), url, body),
+      /* R35 (K2585; control-plane R71, R72): the door's own map for the owners that export a service and no arm, handed
+         each owner's one instance on this storage through getters, each asked only when its op is served. */
+      ...controlPlaneOwnerOps({ aiUse: () => aiUseOf(ctx), aiRuns: () => aiRunsOf(ctx, env), caseAuthoring: () => caseAuthoringOf(ctx),
+                                review: () => reviewOf(ctx), legEarning: () => legEarningOf(ctx), capture: () => captureOf(ctx),
+                                steps: () => stepsOf(ctx), investigation: () => investigationOf(ctx),
+                                questionExplorer: () => questionExplorerOf(ctx) }, url, body),
       /* store-door's map (its R1); the grant its door read from the header is handed on (its R11, K2041) */
       ...controlPlaneRoutes(ctx, url, body, grant),
     };

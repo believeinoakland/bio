@@ -266,3 +266,24 @@ test("R19, R30 (K2586; wizard-scripts R23): the front door's finder is registere
   assert.deepEqual((await x.call(`/startfrom?viewer=member:ann`, { message: "zzz unrelated words qqq" })).matches, []);
   assert.deepEqual((await x.call(`/startfrom?viewer=nobody`, { message: "ask the clerk for the 2025 contract file" })).matches, []);
 });
+
+test("R35 (K2585; control-plane R71, R72): control-plane's owner map is spread into the route map over the plane's own instances: each of its ops is routed, after admission's and before store-door's map, and a step made through `stepcreate` is the plane's steps' own; a bare storage's steps hold none of it", async () => {
+  const { controlPlaneOwnerOps } = await import("../../../src/control-plane/owner-ops.mjs");
+  const x = await store();
+  x.ctx.storage.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+                          VALUES ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
+  const u = new URL("http://do/x?viewer=member:ann&by=member:ann");
+  const none = () => { throw new Error("not asked"); };
+  const own = OPS(controlPlaneOwnerOps({ aiUse: none, aiRuns: none, caseAuthoring: none, review: none, legEarning: none,
+                                         capture: none, steps: none, investigation: none, questionExplorer: none }, u, {}));
+  assert.ok(own.includes("stepcreate") && own.includes("aiestimate"), own.join());
+  const keys = OPS(x.s.routes(u, {}));
+  for (const op of own) assert.ok(keys.includes(op), `op=${op} routed`);
+  assert.ok(keys.indexOf(own[0]) > keys.indexOf("doorwindow"), "after admission's map");
+  const made = await x.call(`/stepcreate?by=member:ann&viewer=member:ann`, { place: { group: true }, work: "Read the 2025 budget" });
+  assert.equal(made.ok, true, JSON.stringify(made).slice(0, 300));
+  assert.equal(stepsOf(x.ctx).step({ step: made.step, viewer: "member:ann" }).ok, true, "the plane's own steps holds it");
+  /* negative control: a storage no plane was built on holds no such step */
+  const bare = storage();
+  assert.notEqual(stepsOf(bare.ctx).step({ step: made.step, viewer: "member:ann" }).ok, true);
+});

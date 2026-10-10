@@ -75,6 +75,10 @@ import { fileSafetyOf, fileSafetyOps } from "../../../src/file-safety/index.mjs"
 import { aiUseOf, aiUseOps } from "../../../src/ai-use/index.mjs";
 import { readingGuidesOf, readingGuidesOps } from "../../../src/reading-guides/index.mjs";
 import { publishScheduleOps } from "../../../src/publish-schedule/index.mjs";
+import { controlPlaneOwnerOps } from "../../../src/control-plane/owner-ops.mjs";
+import { stepsOf } from "../../../src/steps/index.mjs";
+import { investigationOf } from "../../../src/investigation/index.mjs";
+import { questionExplorerOf } from "../../../src/question-explorer/index.mjs";
 
 export const MODULE_MAPS = [
   ["membership", (c, u, b, e) => membershipOps(membershipOf(c), u, b, e)],
@@ -156,6 +160,10 @@ export const MODULE_MAPS = [
   ["wizard-scripts", (c, u, b) => wizardScriptsOps(wizardScriptsOf(c), u, b)],
   ["instance-setup", (c, u, b, e) => instanceSetupOps(instanceSetupOf(c, e), u, b)],
   ["admission", (c, u, b) => admissionOps(admissionOf(c), u, b)],
+  /* plane R35 (K2585): control-plane's own map for owners with no arm (its R71, R72), over each owner's one instance */
+  ["control-plane", (c, u, b, e) => controlPlaneOwnerOps({ aiUse: () => aiUseOf(c), aiRuns: () => aiRunsOf(c, e),
+    caseAuthoring: () => caseAuthoringOf(c), review: () => reviewOf(c), legEarning: () => legEarningOf(c), capture: () => captureOf(c),
+    steps: () => stepsOf(c), investigation: () => investigationOf(c), questionExplorer: () => questionExplorerOf(c) }, u, b)],
   ["store-door", (c, u, b) => controlPlaneRoutes(c, u, b)],
 ];
 
