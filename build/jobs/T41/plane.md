@@ -64,7 +64,7 @@ Before my change, on `tranche/T41` @ `827b01abab` (a worktree, same test): the s
   - coverage: 35/35 ids, 0 failures.
   - ownership: 0 failures.
 
-Size (session_011Rh5mYtXnbRop7kcnGcwb1): test runs 27, module lines 1520
+Size (session_011Rh5mYtXnbRop7kcnGcwb1): test runs 27, module lines 1515
 
 ## J4 · COMPLETE
 
