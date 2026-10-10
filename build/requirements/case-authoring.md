@@ -186,7 +186,7 @@ Row C-44.6 (R58; N681), in the case-identity family; its translation is BOB's dr
 - **R65** *(not yet met: T41)* (D57, D63) R3's authored fields are exactly the four statements (`statement`, `subjectJustification`, `excluded` with its reasons, `whatChanged`), `scope`, `biasAcknowledgement` and the account; a field carrying a story, context or human-interest account is refused `CASE_FIELD_NOT_ALLOWED`, naming it.
 - **R66** *(not yet met: T41)* (D61) `publishCase` takes `reviewComments: {included: [comment ids]}` from the case's review copies, read through `registerReviewComments(fn)` (once at start, K31's pattern; `review` fills it with its R33, `review` being later in the order; with none registered no comment travels and the count left out reads undetermined; K2483); the chosen comments go into `case-grammar` R25's block; the count left out is stated. An objection does not travel unless chosen.
 - **R67** *(not yet met: T41)* (D56) R34's `steps` gain "the account": each sentence with its citations, its check result and, for a system draft, its framing.
-- **R68** *(not yet met: T41)* (D60) R34's pre-flight lists the approvals the group's rule requires and those given (`review` R32), and `APPROVAL_MISSING` among `blockers` when any is missing.
+- **R68** *(not yet met: T41)* (D60) R34's pre-flight lists the approvals the group's rule requires and those given (`review` R32), and `APPROVAL_MISSING` among `blockers` when any is missing; approvals are matched by the approval digest (`case-grammar` R26's `approvalSubjectSha`; K2528).
 
 ### Satisfies
 
