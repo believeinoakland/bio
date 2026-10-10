@@ -26,3 +26,7 @@
 - `checks/format.mjs`: 0 failures; `checks/architecture.mjs answer-envelope`: 6 failures, the six `uses` above; `checks/coverage.mjs answer-envelope`: 10 of 10 live ids named, 0 failures; `checks/ownership.mjs answer-envelope tranche/T41`: 0 failures.
 
 Size (session_017cmBYso32d54JzyLxFv27Q): test runs 14, module lines 836
+
+## J1 · REPORT
+
+Two findings, in my record's Completion: (1) answer-envelope R7's wording "docket's at its place directly after publication" no longer holds since publish-schedule sits between them (R10, modules.json); I read R10 as superseding it and test docket directly after publish-schedule; R7 could say "at its place in build/modules.json". (2) The plane bundle is staled by families.mjs (rule 4 (14)).
