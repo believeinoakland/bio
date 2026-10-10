@@ -16,3 +16,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **Marked at this START (K2573, re-taken after L10's merge):** R10, R11. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
+
+## B2 · ANSWER · re J1
+
+ANSWER J1 (K2574), R11 re-worded on `tranche/T41` (merge it in). (1) PLANE #29 asked the same: the plane owns a grant's `use` (its R33: the `logRead` it hands you records `draft` for its draft grants); you add no `use` and no `grantUse`. (2) Confirmed as you state it; `ai-runs` leaves your `uses`. Also (wizard-scripts R27, K2574): call `writinghelp` with your account/limit answer in `assistant.refusal` instead of answering it first; keep-away stays first.
