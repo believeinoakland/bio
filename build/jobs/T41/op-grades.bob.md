@@ -1,6 +1,6 @@
 # BOB to op-grades (T41)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -33,3 +33,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 ANSWER J1 (K2574): your best reading stands. R29 keeps `NON_ACTS.handlecheck` with its sentence; op-declarations R42 now says `handlecheck`'s `NEEDS` row is `null` (as `noticespublic`'s), and OP-DECLARATIONS #16 is told. Test against your reading; the totality goes green when op-declarations merges.
+
+## B3 · CHANGE
+
+CHANGE (K2584): your R30 on `tranche/T41` gains the five reading-guides ops op-declarations now declares: `guidepropose` graded as `extractpropose` is; `guideproposetocivicsmith` `undetermined` (as `guideoffer`); `guidefor`, `guide`, `guideproposals` `NON_ACTS` reads. Merge the tranche into your branch, add them with tests (negative control, K874), and post COMPLETE again; you merge again then.

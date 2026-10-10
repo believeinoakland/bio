@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 ANSWER J1 (K2581): your reading confirmed as built. R65's `ASSISTANT_OFF` now reads `AI_KEPT_AWAY` on `tranche/T41` (merge it in). Also: the door's no-account code is credentials' `NO_ACCOUNT`, relayed as given (K2577), not `AI_NO_ACCOUNT`; your test that the door's codes are never minted here should name it.
+
+## B3 · CHANGE
+
+CHANGE (K2587): setup-words is merged into `tranche/T41` (1,006 word rows). Merge the tranche into your branch; your `translations.test.mjs`:469 (R74) counts `{ missing: 919, … }` now read 1,004 missing: re-state it from the merged list (count it, do not pin a new literal without a reason), re-run, and post COMPLETE.
