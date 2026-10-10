@@ -21,7 +21,21 @@ Improvement in my own module: a new R9 (D54) test in `inbox.test.mjs`. An admini
 - `node --test bio-plane/test/m/tasks/`: tests 104, pass 104, fail 0 (before this job: 102, 1 fail, `check.test.mjs`:38). No layer tests are named in `build/manifest.md`.
 - `format`: 145 modules, 144 requirements files; 0 failures. `architecture tasks`: 9 product files, 37 relative imports; 0 failures. `coverage tasks`: 18 of 18 live requirement ids named by a test; 0 failures. `ownership tasks tranche/T41`: 0 failures.
 
-Size (session_01CGQvEK47xJQsjUXGG7z93f): test runs 5, module lines 1444
+
+## Completion (B2 · CHANGE, K2575)
+
+**Applied.** I merged `tranche/T41` (R1 and R3 now carry the K2575 marks) and changed the product code (`src/tasks/index.mjs`):
+- **R1**: `#routeTask`'s administrator fallback takes the earliest active administrator after the founder whom `membership.inSight(subject, "member:<id>")` (R80) admits; with none it is `unassigned`, its basis now "no project manager and no active administrator who can see it".
+- **R3**: in `#refuseNotYours`, the administrator arm holds only where `inSight(row.refers_to, "member:<actor>")`; otherwise it answers `{ok: false, reason: "NO_SUCH_TASK"}`, the same as `NO_SUCH_TASK` for an id that names nothing, never `TASK_NOT_YOURS` naming the assignee. The assignee and `unassigned` arms are unchanged, and so is a non-administrator's `TASK_NOT_YOURS`; the requirement gates the override only.
+
+**Tests.**
+- New `R1 (K2575, D54)`: a hidden project with no active owner goes `unassigned`; with one administrator invited, it goes to that one, passing over an earlier administrator who cannot see it. Controls: the project discoverable, and both administrators admitted, each route to the earliest; a subject in no project routes to the earliest.
+- New `R3 (K2575, D54; membership R60, R80)`: an uninvited `ada` and the claimed founder, on a hidden project and on an item belonging to it, are answered `NO_SUCH_TASK` by forward, resolve and the set form, with nothing written and no assignee named. A member who is not the assignee still gets `TASK_NOT_YOURS`. Controls: a subject in no project, the project discoverable, `ada` invited and the founder joined, where the override holds.
+- Re-stated for the change: `check.test.mjs`'s two R3 lines where the uninvited `ada` resolved a check's To do now expect `NO_SUCH_TASK`, then, with `ada` invited, the old answer (`ok`; `CHECK_CLOSES_BY_RECORD`).
+- With the product change reverted, the four tests fail, and all pass with it.
+
+**Tests and checks.** `node --test bio-plane/test/m/tasks/`: 106 pass, 0 fail. `format` 0 failures; `architecture tasks` 0 failures; `coverage tasks` 18 of 18; `ownership tasks tranche/T41` 0 failures (4 files). Uses unchanged.
+Size (session_01CGQvEK47xJQsjUXGG7z93f): test runs 11, module lines 1451
 
 ## J1 · COMPLETE
 
