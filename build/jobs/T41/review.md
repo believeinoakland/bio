@@ -56,3 +56,7 @@ Merged `tranche/T41` with ratification (T41-39). No stand-in of mine was ever co
 - Users (plane): still red until case-authoring R66 merges. Every one is now `r.caseAuthoring.registerReviewComments is not a function` (was ratification's); the ratification cause is gone.
 
 Size (session_01DoW3RXN1QKQ4zf62pWZg41): test runs 23, module lines 1305
+
+## J4 · COMPLETE
+
+B4 (K2548) applied: tranche merged with ratification. R32 is now also tested through ratification's approvalsRead. review 45/45. format, coverage and ownership 0 failures; architecture fails only on the uses edges ratification and case-grammar. Users' suites: their only remaining cause is case-authoring R66's registerReviewComments, absent until CASE-AUTHORING merges. Record: 'Completion again'.
