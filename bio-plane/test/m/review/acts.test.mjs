@@ -307,7 +307,9 @@ test("R4, R6: an opaque id standing in a live row when the module starts is neve
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
-  reviewOf(host, { record, membership, publication: { registerReviewProvider: () => ({ ok: true }) }, caseAuthoring: {} });
+  reviewOf(host, { record, membership, publication: { registerReviewProvider: () => ({ ok: true }) },
+                   caseAuthoring: { registerReviewComments: () => ({ ok: true }) },
+                   ratification: { registerApprovalReader: () => ({ ok: true }) } });
   const minted = st.sql.exec(`SELECT id FROM minted_ids ORDER BY id`).toArray().map((r) => r.id);
   for (const id of ["DRAFT-2026-0417", "DRAFT-2026-7316", "RVG-2026-7316"]) assert.ok(minted.includes(id), id);
   record.purge({});
@@ -317,7 +319,9 @@ test("R4, R6: an opaque id standing in a live row when the module starts is neve
   /* a store whose ledger table does not exist yet: the module still starts */
   const bare = storage();
   assert.doesNotThrow(() => reviewOf({ storage: bare }, { record: { declarePurge() {}, seedMintLedger() { throw new Error("no table"); } },
-    membership: {}, publication: { registerReviewProvider: () => ({ ok: true }) }, caseAuthoring: {} }));
+    membership: {}, publication: { registerReviewProvider: () => ({ ok: true }) },
+    caseAuthoring: { registerReviewComments: () => ({ ok: true }) },
+    ratification: { registerApprovalReader: () => ({ ok: true }) } }));
 });
 
 test("R27: when no free opaque id can be minted, draft's new draft and grant answer MINT_EXHAUSTED through record-core's mintExhausted (its R62, C-59.6; C-87.12 retired), naming the id, writing nothing", () => {

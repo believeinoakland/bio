@@ -1,7 +1,8 @@
 /* review over record-core, membership and strength (the real ones) on a real SQLite database (node:sqlite) standing in
    for a Durable Object's storage, at the plane's shape: `sql.exec` answers a one-pass cursor as workerd does (K316),
    never an array, so code that indexes or measures an answer instead of iterating it fails here as it would there. What it reads from `publication` (its `cases` and `published_cases` read contract,
-   R3 and R5, its R40), `case-tensions` (`attributionInForce`, R16, its R6), `case-authoring` (`publishCase` run dry, R13;
+   R3 and R5, its R40, and its `case_documents`, R31 and R33), `ratification` (`registerApprovalReader`, R32),
+   `case-grammar` (`reviewCommentsOf`, R33), `case-tensions` (`attributionInForce`, R16, its R6), `case-authoring` (`publishCase` run dry, R13;
    `statementAcknowledgements` with its `withheld_stated`, R15) and `basis-versions` (`testimonyReach`, R16) are providers the test controls, in the
    shapes of those modules' Provides, as `reviewOf`'s `deps` take them. Every test drives the module at its interface. */
 import { DatabaseSync } from "node:sqlite";
@@ -59,7 +60,8 @@ export function storage() {
 const PUBLICATION_DDL = `
 CREATE TABLE cases (case_id TEXT PRIMARY KEY, project_id TEXT);
 CREATE TABLE published_cases (case_id TEXT NOT NULL, edition INTEGER NOT NULL, PRIMARY KEY (case_id, edition));
-CREATE TABLE case_documents (case_id TEXT NOT NULL, edition INTEGER NOT NULL, text TEXT, PRIMARY KEY (case_id, edition));
+CREATE TABLE case_documents (case_id TEXT NOT NULL, edition INTEGER NOT NULL, text TEXT, doc_sha TEXT, draft_id TEXT,
+                             sig_armored TEXT, PRIMARY KEY (case_id, edition));
 `;
 
 /** One world: the store, the controlled providers, and helpers that write what they read. */
@@ -79,6 +81,9 @@ export function world({ now = NOW, injectClock = true } = {}) {
   const calls = { publish: [], acks: [], reach: [], attribution: [], attributionViaPublication: [] };
   const ca = { gate: () => ({ ok: true, caseId: "CASE-2026-0001" }), acks: [], throws: null };
   const caseAuthoring = {
+    /* its R66: the one review-comments reader, filled at start by this module (R33) */
+    reviewComments: [],
+    registerReviewComments(fn) { this.reviewComments.push(fn); return { ok: true }; },
     publishCase(args) {
       calls.publish.push(args);
       st.sql.exec(`INSERT INTO case_documents (case_id, edition, text) VALUES (?, ?, ?)`,
@@ -129,12 +134,25 @@ export function world({ now = NOW, injectClock = true } = {}) {
       return { self, via };
     },
   };
+  /* ratification's side: the approval reader this module fills at start (its R50; R32). */
+  const ratification = { readers: [], registerApprovalReader(reader) { this.readers.push(reader); return { ok: true }; } };
+  /* case-grammar's side: the comments a signed document's `review_comments:` block carries (its R25), here a JSON
+     line `review_comments: [...]` the test writes; `null` when the block is unreadable. */
+  const caseGrammar = {
+    reviewCommentsOf(text) {
+      const m = /^review_comments: (.*)$/m.exec(String(text ?? ""));
+      if (!m) return { comments: [], left_out: 0 };
+      if (m[1] === "THROW") throw new Error("unreadable block");
+      return { comments: JSON.parse(m[1]), left_out: null };
+    },
+  };
   /* `injectClock: false` leaves the module on its own default clock (R17's stamps as the module writes them). */
   const r = reviewOf(host, { record, membership, strength, basisVersions, publication, caseTensions, caseAuthoring,
-                             ...(injectClock ? { now: () => clock.now } : {}) });
+                             ratification, caseGrammar, ...(injectClock ? { now: () => clock.now } : {}) });
   let bundles = 0;
   const w = {
-    st, host, record, membership, strength, r, clock, calls, ca, chosen, reach, providers,
+    st, host, record, membership, strength, r, clock, calls, ca, chosen, reach, providers, ratification, caseAuthoring,
+    caseGrammar,
     rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
     row: (q, ...a) => st.sql.exec(q, ...a).toArray()[0] ?? null,
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
@@ -177,6 +195,12 @@ export function world({ now = NOW, injectClock = true } = {}) {
       const res = membership.projectVisibilitySet({ projectId: id, setting: "discoverable", reason: "open",
                                                     by: owner, viewer: V(owner) });
       if (!res.ok) throw new Error(`fixture discoverable refused: ${JSON.stringify(res)}`);
+    },
+    /** A case document (publication's `case_documents`, its R40): `signed` sets `sig_armored`. */
+    caseDocument(caseId, edition, { docSha = sha(`${caseId}/${edition}`), text = "doc", draft = null, signed = false } = {}) {
+      st.sql.exec(`INSERT OR REPLACE INTO case_documents (case_id, edition, text, doc_sha, draft_id, sig_armored)
+                   VALUES (?,?,?,?,?,?)`, caseId, edition, text, docSha, draft, signed ? "-----BEGIN SSH SIGNATURE-----" : null);
+      return docSha;
     },
     /** A case owned by `project`, published at editions 1..`editions` (publication's rows). */
     publishedCase(caseId, project, editions = 1) {

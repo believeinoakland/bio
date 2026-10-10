@@ -49,17 +49,33 @@ function drive(w, code, draftId) {
     case "REVIEW_NO_SECRET": return w.r.act({ act: "grant", author: "ann", draft: draftId, recipient: "R", secretSha: "x" });
     case "REVIEW_NO_GRANT": return w.r.act({ act: "revoke", author: "ann" });
     case "REVIEW_NO_COMMENT_TEXT": return w.r.comment({ draft: draftId, viewer: V("ann"), text: "" });
+    case "APPROVAL_RULE_BAD_APPROVERS": return w.r.approvalRuleSet({ approvers: [], by: "adm" });
+    case "NOT_AN_APPROVER": return w.r.caseApprove({ case: "CASE-2026-0009", edition: 2, docSha: SECRET(7), by: "out" });
+    case "APPROVAL_NO_SUCH_DOCUMENT":
+      approvable(w);
+      return w.r.caseApprove({ case: "CASE-2026-0009", edition: 2, docSha: SECRET(7), by: "ann" });
+    case "APPROVAL_REASON_TOO_LONG":
+      return w.r.caseApprove({ case: "CASE-2026-0009", edition: 2, docSha: approvable(w), by: "ann", reason: "r".repeat(4001) });
     default: throw new Error(`no driver for ${code}`);
   }
 }
 
+/* R30, R31: a rule naming ann, and P's case CASE-2026-0009 with an unsigned document at edition 2; answers its sha. */
+function approvable(w) {
+  w.publishedCase("CASE-2026-0009", P, 1);
+  if (!w.r.approvalRule()) w.r.approvalRuleSet({ approvers: ["ann"], by: "adm" });
+  return w.caseDocument("CASE-2026-0009", 2);
+}
+
 /* this module's tables, the minter's ledger, and SQLite's own autoincrement counter for review_comments */
-const OWN = new Set(["case_drafts", "review_grants", "review_comments", "minted_ids", "sqlite_sequence"]);
+const OWN = new Set(["case_drafts", "review_grants", "review_comments", "approval_rules", "case_approvals", "minted_ids",
+                     "sqlite_sequence"]);
 
 test("R20: nothing here writes the published projection, a case document or a signature; a copy never leaves the instance", () => {
   const w = standard();
   const others = () => Object.fromEntries(Object.entries(w.snapshot()).filter(([t]) => !OWN.has(t) && t !== "cases" && t !== "published_cases"));
   w.publishedCase("CASE-2026-0001", P, 1);
+  approvable(w);                                  // the fixture's case document for R31's refusals, written by the test
   const before = others();
   const pub = () => [w.rows(`SELECT * FROM cases`), w.rows(`SELECT * FROM published_cases`)];
   const pubBefore = JSON.stringify(pub());
@@ -88,11 +104,12 @@ test("R21: no secret's value is received or stored, only its fingerprint", () =>
     assert.equal(JSON.stringify(r).includes(VALUE), false);
 });
 
-test("R23, R27: C-87.1–C-87.11 and C-32.16 held here with their ids and translations, each refused at its interface; C-87.12 retired, its number held by no row", () => {
+test("R23, R27, R30, R31: C-87.1–C-87.11 and C-32.16 held here with their ids and translations, and T41's C-87.13–C-87.16, each refused at its interface; C-87.12 retired, its number held by no row", () => {
   const want = { MACHINE_CANNOT_REVIEW: "C-32.16", NO_REVIEW_COPY: "C-87.1", REVIEW_UNKNOWN_ACT: "C-87.2",
     REVIEW_NOT_PROJECT_OWNER: "C-87.3", REVIEW_NO_PROJECT: "C-87.4", REVIEW_DRAFT_CHANGES_PROJECT: "C-87.5",
     REVIEW_NO_SUCH_CASE: "C-87.6", REVIEW_DRAFT_TOO_LARGE: "C-87.7", REVIEW_NO_RECIPIENT: "C-87.8", REVIEW_NO_SECRET: "C-87.9",
-    REVIEW_NO_GRANT: "C-87.10", REVIEW_NO_COMMENT_TEXT: "C-87.11" };
+    REVIEW_NO_GRANT: "C-87.10", REVIEW_NO_COMMENT_TEXT: "C-87.11", APPROVAL_RULE_BAD_APPROVERS: "C-87.13",
+    NOT_AN_APPROVER: "C-87.14", APPROVAL_NO_SUCH_DOCUMENT: "C-87.15", APPROVAL_REASON_TOO_LONG: "C-87.16" };
   assert.deepEqual(Object.fromEntries(Object.entries(REVIEW_COPY_CHECKS).map(([k, v]) => [k, v.check])), want);
   assert.ok(Object.isFrozen(REVIEW_COPY_CHECKS));
   /* R27 (N322): C-87.12 retired into record-core's C-59.6; its number is not reused here */
@@ -121,11 +138,11 @@ test("R23, R27: C-87.1–C-87.11 and C-32.16 held here with their ids and transl
   }
 });
 
-test("R24: case_drafts, review_grants and review_comments are declared to record-core's purge as whole-store tables", () => {
+test("R24, R30, R31: case_drafts, review_grants and review_comments (and T41's approval_rules and case_approvals) are declared to record-core's purge as whole-store tables", () => {
   const w = standard();
   battery(w);
   assert.deepEqual(REVIEW_TABLES.map((t) => [t.name, t.keys]).sort(),
-    [["case_drafts", []], ["review_comments", []], ["review_grants", []]]);
+    [["approval_rules", []], ["case_approvals", []], ["case_drafts", []], ["review_comments", []], ["review_grants", []]]);
   for (const t of REVIEW_TABLES) assert.equal(reviewOwns(t.name) && reviewOwns(t), true);
   assert.equal(reviewOwns("statement_acknowledgements"), false);
   const counts = () => ["case_drafts", "review_grants", "review_comments"].map((t) => w.count(t));

@@ -1,4 +1,4 @@
-/* review's tables (requirements: `build/requirements/review.md`, R4, R6, R7, R18, R21, R24). Moved from `schema.mjs`
+/* review's tables (requirements: `build/requirements/review.md`, R4, R6, R7, R18, R21, R24, R30, R31, R33). Moved from `schema.mjs`
  * with their comments (K4). Working data: each is declared to record-core's purge as a whole-store table (K23, R24), so
  * only a whole-store purge clears it. */
 
@@ -68,21 +68,53 @@ CREATE TABLE IF NOT EXISTS review_comments (
   author      TEXT NOT NULL,
   grant_id    TEXT,               -- the grant that admitted a recipient, NULL for a member
   text        TEXT NOT NULL,
-  at          TEXT NOT NULL
+  at          TEXT NOT NULL,
+  -- T41 (D61; R33): THE CASE IDENTITY THE DRAFT STOOD AT WHEN THE COMMENT WAS MADE, as a grant binds one, so the
+  -- comments on a case edition's review copies stay that edition's after the draft moves on. NULL case_id with
+  -- edition 1 is a draft naming no case; edition NULL is a comment made before this was recorded, never back-filled.
+  case_id     TEXT,
+  edition     INTEGER
 );
 CREATE INDEX IF NOT EXISTS review_comments_draft ON review_comments(draft_id);
+
+-- T41 (D60; R30): THE GROUP'S APPROVAL RULE, APPEND-ONLY. Each set is a row with who set it and when; the latest row
+-- is in force; approvers NULL is the rule turned off, and with no row at all there is no rule (the default), so a
+-- group of one is never blocked.
+CREATE TABLE IF NOT EXISTS approval_rules (
+  seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+  approvers   TEXT,               -- JSON array of member ids, or NULL for off
+  set_by      TEXT NOT NULL,
+  set_at      TEXT NOT NULL
+);
+
+-- T41 (D60; R31): AN APPROVAL IS OF ONE DOCUMENT: a case edition's document at one doc_sha, so a later document
+-- (another doc_sha) needs a new one. Append-only; a repeat of the same approver and document is the first row.
+CREATE TABLE IF NOT EXISTS case_approvals (
+  seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+  case_id     TEXT NOT NULL,
+  edition     INTEGER NOT NULL,
+  doc_sha     TEXT NOT NULL,
+  approved_by TEXT NOT NULL,
+  reason      TEXT,
+  at          TEXT NOT NULL,
+  UNIQUE (case_id, edition, doc_sha, approved_by)
+);
 `;
 
-/** R24: whole-store tables (no bundle key). */
+/** R24: whole-store tables (no bundle key); T41's approval tables (R30, R31) are declared the same way. */
 export const REVIEW_TABLES = Object.freeze([
+  { name: "case_approvals", keys: [] },
+  { name: "approval_rules", keys: [] },
   { name: "review_comments", keys: [] },
   { name: "review_grants", keys: [] },
   { name: "case_drafts", keys: [] },
 ]);
 
 /* REC-193: `case_drafts.statement_by` arrived after the table did. A store created before it holds the table without
-   the column; it is added, never back-filled (NULL reads back as UNDETERMINED, R4). */
-const ADDED_COLUMNS = [["case_drafts", "statement_by", "TEXT"]];
+   the column; it is added, never back-filled (NULL reads back as UNDETERMINED, R4). So are `review_comments`' identity
+   columns (T41, R33): a comment made before them has edition NULL and belongs to no case edition. */
+const ADDED_COLUMNS = [["case_drafts", "statement_by", "TEXT"], ["review_comments", "case_id", "TEXT"],
+                       ["review_comments", "edition", "INTEGER"]];
 
 /** Creates the tables and the columns added since; idempotent. */
 export function migrateReview(sql) {

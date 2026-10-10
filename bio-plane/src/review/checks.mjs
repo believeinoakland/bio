@@ -1,4 +1,4 @@
-/* review's refusal rows (requirements: `build/requirements/review.md`, R1–R7, R10, R18, R23, R27). DEC-49: every refusal
+/* review's refusal rows (requirements: `build/requirements/review.md`, R1–R7, R10, R18, R23, R27, R30, R31). DEC-49: every refusal
  * this module answers carries its code, its catalogue row and the member's translation.
  *
  * Moved here from the check catalogue with their ids and translations unchanged (K6, R23): C-87.1–C-87.11
@@ -139,5 +139,32 @@ export const REVIEW_COPY_CHECKS = Object.freeze({
     where: at('comment', 'is-review-comment-text'),
     translation: 'A comment has to say something, and at most 4000 characters of it. Nothing was recorded. '
       + 'What you have written is still yours to send once it is within that length.',
+  },
+  /* T41 (D60; R30, R31): the approvals a group may require before any of its cases is signed. C-87.12 stays retired
+     and is not reused; the family continues at C-87.13. Their member words are BOB's draft, the UX stream's to revise. */
+  APPROVAL_RULE_BAD_APPROVERS: {
+    check: 'C-87.13',
+    where: at('approvalRuleSet', 'is-approval-rule-approvers'),
+    translation: 'Name the people whose approval every case needs before it is signed: one or more active members '
+      + 'of the group, at most 50. To stop requiring approvals, turn the rule off instead. Nothing was changed.',
+  },
+  NOT_AN_APPROVER: {
+    check: 'C-87.14',
+    where: at('caseApprove', 'is-not-an-approver'),
+    translation: 'You are not one of the people the group named to approve its cases before they are signed, or '
+      + 'this case is not one you can see. A case you cannot see is answered exactly as one that does not exist, '
+      + 'so this answer does not tell you whether it is there. Nothing was recorded.',
+  },
+  APPROVAL_NO_SUCH_DOCUMENT: {
+    check: 'C-87.15',
+    where: at('caseApprove', 'is-approval-document'),
+    translation: 'An approval is given to one version of a case document, and that version was not found for '
+      + 'this case and edition. Open the document as it now stands and approve that. Nothing was recorded.',
+  },
+  APPROVAL_REASON_TOO_LONG: {
+    check: 'C-87.16',
+    where: at('caseApprove', 'is-approval-reason'),
+    translation: 'The reason you gave is longer than 4000 characters. Nothing was recorded. What you have '
+      + 'written is still yours to send once it is within that length.',
   },
 });
