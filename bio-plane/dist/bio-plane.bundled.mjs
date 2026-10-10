@@ -112787,6 +112787,8 @@ __export(checks_exports28, {
   RISK_TIER_HISTORY_MAX: () => RISK_TIER_HISTORY_MAX,
   RISK_TIER_REASON_MAX: () => RISK_TIER_REASON_MAX,
   RISK_TIER_REVISION_CHECKS: () => RISK_TIER_REVISION_CHECKS,
+  SEEKS_MAX: () => SEEKS_MAX,
+  SEEKS_PART_MAX: () => SEEKS_PART_MAX,
   actionBasisFindings: () => actionBasisFindings,
   actionKinds: () => actionKinds,
   addresseeIsOffice: () => addresseeIsOffice,
@@ -112810,7 +112812,9 @@ __export(checks_exports28, {
   requestLifecycleOf: () => requestLifecycleOf,
   respondsToEdgeFindings: () => respondsToEdgeFindings,
   riskTierHistoryOf: () => riskTierHistoryOf,
-  riskTierState: () => riskTierState
+  riskTierState: () => riskTierState,
+  seeksFindings: () => seeksFindings,
+  seeksOf: () => seeksOf
 });
 
 // src/action-grammar/grammar.mjs
@@ -113027,7 +113031,7 @@ var CORRESPONDENCE_STAGES = {
     "court_decision"
   ]
 };
-var CORRESPONDENCE_OUTCOMES = ["granted", "denied", "partial", "reversed", "affirmed", "none_stated"];
+var CORRESPONDENCE_OUTCOMES = ["granted", "denied", "partial", "reversed", "affirmed", "none_stated", "none_exists"];
 var DECISION_STAGES = ["fee_waiver_decision", "denial", "appeal_decision", "court_decision"];
 var LIFECYCLE_KEYS = ["stage", "follows", "outcome", "exemptions", "due_by", "due_cite"];
 function lifecycleFindings(entries, i) {
@@ -113143,6 +113147,71 @@ function recordsLawOf(fm, author = null) {
       says: "MACHINE-STATED: a machine credential wrote this law before only a member could state one. It is read as written and is not a member's statement."
     };
   return { state: "stated", law, ...author ? { by: author } : {}, says: "Stated by a member." };
+}
+var SEEKS_MAX = 12;
+var SEEKS_PART_MAX = 200;
+var SEEKS_PARTS = ["progression", "entity", "stage"];
+function seeksItemFault(item3) {
+  if (!item3 || typeof item3 !== "object" || Array.isArray(item3)) return "is not a {progression, entity, stage} entry";
+  const extra = Object.keys(item3).filter((k) => !SEEKS_PARTS.includes(k));
+  if (extra.length) return `carries ${extra.map((k) => k.slice(0, 40)).join(", ")}: an entry names only its progression, entity and stage`;
+  for (const k of SEEKS_PARTS) {
+    const v = item3[k];
+    if (typeof v !== "string" || !v.trim() || v.length > SEEKS_PART_MAX)
+      return `${k} is not a non-empty string of at most ${SEEKS_PART_MAX} characters`;
+  }
+  return null;
+}
+var seeksKey = (item3) => JSON.stringify(SEEKS_PARTS.map((k) => item3[k]));
+function seeksOf(fm) {
+  if (!fm || typeof fm !== "object" || fm.action_kind !== "records_request" || !Array.isArray(fm.seeks)) return [];
+  const seen = /* @__PURE__ */ new Set();
+  const out = [];
+  for (const item3 of fm.seeks) {
+    if (seeksItemFault(item3)) continue;
+    const key2 = seeksKey(item3);
+    if (seen.has(key2)) continue;
+    seen.add(key2);
+    out.push({ progression: item3.progression, entity: item3.entity, stage: item3.stage });
+  }
+  return out;
+}
+function seeksFindings(fm, facts, findings) {
+  if (!fm || typeof fm !== "object" || fm.seeks === void 0 || fm.seeks === null) return;
+  const row11 = ACTION_CATALOGUE_CHECKS.SEEKS_REFUSED;
+  const REPAIRS = ["name each stage sought as {progression, entity, stage}, once each, at most twelve, each stage one its progression declares"];
+  const push = (message2, repairs = REPAIRS) => findings.push(f12(row11.check, "error", message2, repairs, "SEEKS_REFUSED"));
+  if (fm.action_kind !== "records_request") {
+    push(`seeks is stated on a '${String(fm.action_kind).slice(0, 40)}' action: only a records_request names the stages it asks the records for (R13)`, ["remove seeks, or make the kind records_request"]);
+    return;
+  }
+  if (!Array.isArray(fm.seeks) || !fm.seeks.length) {
+    push(`seeks is not a list of 1 to ${SEEKS_MAX} {progression, entity, stage} entries (R13)`);
+    return;
+  }
+  if (fm.seeks.length > SEEKS_MAX)
+    push(`seeks holds ${fm.seeks.length} entries; at most ${SEEKS_MAX} (R13)`);
+  const stages2 = facts && typeof facts === "object" && facts.stages && typeof facts.stages === "object" ? facts.stages : null;
+  const seen = /* @__PURE__ */ new Set();
+  fm.seeks.forEach((item3, i) => {
+    const fault = seeksItemFault(item3);
+    if (fault) {
+      push(`seeks[${i}] ${fault} (R13)`);
+      return;
+    }
+    const key2 = seeksKey(item3);
+    if (seen.has(key2)) {
+      push(`seeks[${i}] repeats an earlier entry: each stage sought is named once (R13)`);
+      return;
+    }
+    seen.add(key2);
+    if (!stages2 || !Object.prototype.hasOwnProperty.call(stages2, item3.progression)) return;
+    const declared2 = stages2[item3.progression];
+    if (declared2 === null)
+      push(`seeks[${i}].progression '${item3.progression.slice(0, 40)}' is not a progression this record holds (R13)`);
+    else if (!Array.isArray(declared2) || !declared2.includes(item3.stage))
+      push(`seeks[${i}].stage '${item3.stage.slice(0, 40)}' is not a stage progression '${item3.progression.slice(0, 40)}' declares (R13)`);
+  });
 }
 var ADDRESSEE_KINDS = Object.freeze(["office", "press", "organisation", "group"]);
 var AUDIENCE_DESCRIPTION_MAX = 500;
@@ -113783,7 +113852,9 @@ var LIFECYCLE_CHECKS = {
   OUTCOME_NOT_IN_VOCABULARY: {
     check: "C-94.5",
     where: "src/actions/index.mjs actionCorrespond > is-lifecycle-grammar",
-    translation: "An outcome is one of granted, denied, partial, reversed, affirmed, or none_stated when the body stated none."
+    /* R13 (T41): the vocabulary gained none_exists, so the sentence naming it does; a changed translation, awaiting T42's
+       stamp. */
+    translation: "An outcome is one of granted, denied, partial, reversed, affirmed, none_exists when the body says no responsive record exists, or none_stated when the body stated none."
   },
   DECISION_WITHOUT_OUTCOME: {
     check: "C-94.6",
@@ -113861,6 +113932,14 @@ var RECORDS_LAW_FENCE_CHECKS = {
     check: "C-32.20",
     where: "src/actions/index.mjs #machineRecordsLawRefusal > is-machine-state-records-law",
     translation: "Which law governs a records request is a judgement a member makes and answers for. The credential that asked here is an automated one: it can write the request as a records request that names no law, and it can propose the law for a member to consider, but it cannot state the law, and cannot change or remove one. Sign in to state the law yourself."
+  },
+  /* R14 (T41; K2561): WHO STATES WHAT A RECORDS REQUEST SEEKS (R13's `seeks`), `actions`' fence (its R72), beside C-32.20.
+     A machine credential may propose the stages sought (`actions` R73); it may not state or change them. New in T41
+     layer 9; awaiting T42's stamp. */
+  MACHINE_CANNOT_STATE_SEEKS: {
+    check: "C-32.21",
+    where: "src/actions/index.mjs #seeksFence > is-machine-state-seeks",
+    translation: "Which stages a records request asks the records for is a statement a member makes and answers for. The credential that asked here is an automated one, or no member is named behind it: it can propose the stages for a member to consider, but it cannot state or change what the request seeks. Nothing was written. Sign in to state it yourself."
   }
 };
 var ACTION_CATALOGUE_CHECKS = {
@@ -114045,6 +114124,13 @@ var ACTION_CATALOGUE_CHECKS = {
     check: "C-117.28",
     where: "src/actions/index.mjs #proceedingRefusal > is-proceeding-kind",
     translation: "An action belongs to a proceeding, such as a case before a court or a board, and the entity named is of another kind. Nothing was written. Name the proceeding itself."
+  },
+  /* R13 (T41; H30 (1), K2505): what a records request seeks. Minted here, by `seeksFindings` alone; `actions` refuses its
+     write with it (its R70). New in T41 layer 9; awaiting T42's stamp. */
+  SEEKS_REFUSED: {
+    check: "C-117.29",
+    where: "src/action-grammar/checks.mjs seeksFindings > is-seeks",
+    translation: "A records request may name the stages it asks the records for: one to twelve different entries, each naming a progression, an entity and a stage in at most 200 characters each, and each stage one its progression declares. Only a records request names them. This write named them otherwise, so nothing was written."
   }
 };
 
@@ -192590,11 +192676,8 @@ var ACTION_PLAN_CHECKS = Object.freeze({
     where: at36("#sources", "is-proposal-sourced"),
     translation: "An assistant's proposal names what it rests on: findings, determinations, standards, consequences, plans or options you can see. One named is none of those here; one you may not see is answered as one that does not exist. Nothing was written."
   },
-  PROPOSALS_CURSOR_REFUSED: {
-    check: "C-124.52",
-    where: at36("planProposals", "is-cursor-given"),
-    translation: "That page marker was not given by this list. Ask for the first page again. Nothing was read."
-  },
+  /* C-124.52 (PROPOSALS_CURSOR_REFUSED) is RETIRED and its number is never reused (R34 as amended; Bob's Actions D17,
+     K2443): the tray answers every proposal of a planning run, with no `after` cursor to refuse. */
   /* ---- the record object (R27, R24): the plan's document ---- */
   MACHINE_CANNOT_WRITE_PLAN: {
     check: "C-124.53",
@@ -205397,8 +205480,9 @@ var Conformance = class _Conformance {
     if (!out || !out.ok) return out;
     return { ...this.determinationRead({ id, viewer }), wrote: true };
   }
-  /* R6: a new inquiry, `open`, titled from the question, through promotion (so inquiry's own check runs), recorded in
-     `project` by this module's rows and named so in its Session Log. */
+  /* R6: a new inquiry, `open`, titled from the question, through promotion (so inquiry's own check runs), in `project`:
+     its front matter states it (promotion R53), so membership fences it by that project's sight (R15, R24), as well as
+     this module's rows and its Session Log naming it. */
   #openInquiry(question, determination, project, author, viewer, at42) {
     const id = `${this.record.allocId("INQ", at42.slice(0, 4)).id}-question`;
     const title = deriveInquiryTitle(question) ?? question.slice(0, 120);
@@ -205412,6 +205496,7 @@ var Conformance = class _Conformance {
       "prior_state: null",
       `created: ${q6(at42)}`,
       `last_updated: ${q6(at42)}`,
+      `project: ${project}`,
       "produced_by:",
       "  mode: human",
       "  capability_tier: session",
@@ -206532,6 +206617,20 @@ CREATE TABLE IF NOT EXISTS action_hold_projects (
   project     TEXT NOT NULL,    -- a project id
   PRIMARY KEY (bundle_id, ord, seq, project)
 );
+
+-- R73 (K2561): A PROPOSAL OF WHAT A RECORDS REQUEST SEEKS, stored apart from the
+-- action's own seeks (a member's statement, R70, R72) and labelled by who
+-- proposed it. One proposer's restatement replaces that proposer's rows only.
+CREATE TABLE IF NOT EXISTS action_seeks_proposals (
+  bundle_id    TEXT NOT NULL,    -- the action
+  proposed_by  TEXT NOT NULL,    -- the stamped proposer (any credential)
+  ord          INTEGER NOT NULL, -- the item's place in the proposal
+  progression  TEXT NOT NULL,
+  entity       TEXT NOT NULL,
+  stage        TEXT NOT NULL,
+  proposed_at  TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, proposed_by, ord)
+);
 `;
 var ACTIONS_TABLES = Object.freeze([
   "action_basis",
@@ -206542,7 +206641,8 @@ var ACTIONS_TABLES = Object.freeze([
   "action_overrides",
   "action_pressure",
   "action_holds",
-  "action_hold_projects"
+  "action_hold_projects",
+  "action_seeks_proposals"
 ]);
 function migrateActions(sql) {
   const bare4 = ACTIONS_SCHEMA.split("\n").filter((l2) => !l2.trim().startsWith("--")).join("\n");
@@ -206554,6 +206654,7 @@ var NOTE_MAX5 = 500;
 var CORRESPOND_LEASE_MS = 3e4;
 var LAW_PROPOSALS_READ_MAX = 12;
 var RISK_PROPOSALS_READ_MAX = 12;
+var SEEKS_PROPOSALS_READ_MAX = 12;
 var QUOTES_MAX = 500;
 var ACTIONS_PAGE_MAX = 200;
 var ACTION_LEGS_MAX = 500;
@@ -206564,6 +206665,7 @@ var PRESSURE_KINDS2 = Object.freeze(["legal", "retaliation", "discrediting", "ot
 var HOLD_STATES = Object.freeze(["in_place", "released"]);
 var HOLDS_DUE_MAX = 500;
 var HOLDS_RELEASED_MAX = 500;
+var NONE_EXISTS_MAX = 50;
 var HOLD_PROJECTS_MAX = 50;
 var PROJECT_ID_RE = { test: (x) => BUNDLE_ID_RE.test(x) && x.startsWith("PROJ-") };
 var RISK_PROPOSAL_BASIS_MAX = 500;
@@ -206743,6 +206845,7 @@ var Actions = class _Actions {
     events = null,
     standards = null,
     duties: duties2 = null,
+    progressions = null,
     now = null,
     env = null
   } = {}) {
@@ -206750,7 +206853,18 @@ var Actions = class _Actions {
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, retrieval, content, conformance: conformance ?? void 0, entities: entities2, lines: lines2, events, standards, duties: duties2 };
+    this.#deps = {
+      host,
+      retrieval,
+      content,
+      conformance: conformance ?? void 0,
+      entities: entities2,
+      lines: lines2,
+      events,
+      standards,
+      duties: duties2,
+      progressions
+    };
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : null;
   }
@@ -206789,6 +206903,10 @@ var Actions = class _Actions {
   }
   get duties() {
     return this.#reach("duties", (h) => dutiesOf(h));
+  }
+  /* R70: the progression definitions (`readProgression`, its R5), reached on the same host unless a test passes its own. */
+  get progressions() {
+    return this.#reach("progressions", (h) => progressionsOf(h));
   }
   /* R9: the kind the registry holds `entityId` as, or null when it holds none or cannot be read. */
   #entityKind(entityId) {
@@ -207293,6 +207411,48 @@ var Actions = class _Actions {
       return refuse19("NOT_A_PROCEEDING", `proceeding names an entity of kind ${kind2}; an action belongs to an entity of kind proceeding. Nothing was written.`, { entity_id: pid, kind: kind2 });
     return null;
   }
+  /* R70, R72 (H30 (1); K2505, K2552, K2553, K2561): a creation or revision stating `seeks`, or changing or removing it,
+     is judged before any write: a machine or unstamped author may not (R72: what a request asks the records for is a
+     member's statement; a machine proposes it, R73); then `#seeksRefusal` (R70). Asked only when `seeks` moved, so a later
+     revision is never refused for a progression's later version. */
+  #seeksFence(heldFm, nextFm, who2) {
+    const key2 = (fm) => JSON.stringify(fm && fm.seeks !== void 0 && fm.seeks !== null ? fm.seeks : null);
+    if (key2(heldFm) === key2(nextFm)) return null;
+    if (!who2 || isMachineIdentity(who2))
+      return refuse19("MACHINE_CANNOT_STATE_SEEKS", "which stages a records request asks the records for is a member's statement; a machine credential may not state, change or remove it, and may propose it (op=actionseekspropose). Nothing was written.");
+    return this.#seeksRefusal(nextFm);
+  }
+  /* R70, R73: action-grammar's `seeksFindings` (its R13) over `fm`, with the facts read here through
+     `progressions.readProgression`, one entry per distinct progression an item names: its declared stage keys, or null
+     for a progression the record does not hold. A definition that cannot be read is read as not held (fail closed), and
+     the refusal says so. The refusal is the grammar's own (C-117.29), relayed with every finding; null when none. */
+  #seeksRefusal(fm) {
+    const stages2 = {};
+    let unreadable2 = false;
+    const items = Array.isArray(fm.seeks) ? fm.seeks : [];
+    for (const p3 of new Set(items.map((x) => x && typeof x === "object" ? x.progression : null).filter((x) => typeof x === "string" && x.trim()))) {
+      let r = null;
+      try {
+        r = this.progressions ? this.progressions.readProgression({ progressionKey: p3 }) : null;
+      } catch {
+        r = null;
+      }
+      if (!r || r.ok === false) {
+        unreadable2 = true;
+        stages2[p3] = null;
+        continue;
+      }
+      stages2[p3] = r.found ? (r.stages || []).map((st) => st.stage_key) : null;
+    }
+    const found3 = [];
+    seeksFindings(fm, { stages: stages2 }, found3);
+    const errors = found3.filter((x) => x.severity === "error");
+    if (!errors.length) return null;
+    return refuse19(errors[0].code, errors[0].message, {
+      findings: findingsOf(errors),
+      ...unreadable2 ? { cause: "PROGRESSIONS_UNREADABLE" } : {}
+    });
+  }
   /* R3 (N237, K351): a document holding more legs or entries than the projection reads is refused where it is authored
      or revised, with the count and the limit; a replay is never asked (the projection skips it whole). */
   #tooLarge(fm) {
@@ -207327,6 +207487,8 @@ var Actions = class _Actions {
       if (link) return link;
       const t33 = this.#heldLinks(heldFm, nextFm, who2, pkg.actorViewer ?? pkg.viewer ?? c.viewer ?? (who2 || null));
       if (t33) return t33;
+      const seeks = this.#seeksFence(heldFm, nextFm, who2);
+      if (seeks) return seeks;
       const large = this.#tooLarge(nextFm);
       if (large) return large;
       const af = [];
@@ -208209,7 +208371,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     );
     if (preview) {
       const all = this.#restarts(target, n);
-      const seen = all.filter((p3) => this.#sees(p3, viewer));
+      const seen = all.filter((p3) => this.#mayName(p3, viewer));
       return {
         ok: true,
         target,
@@ -208222,7 +208384,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     if (release2 && latest3 && latest3.hold === "released")
       return refuse19("HOLD_ALREADY_RELEASED", "this entry's hold is already released; a release ends a hold in place. Nothing was written.", { target, ord: n });
     for (const p3 of named2) {
-      if (this.#sees(p3, viewer)) continue;
+      if (this.#mayName(p3, viewer)) continue;
       let existence = null;
       try {
         existence = this.membership.existenceAct(p3, viewer);
@@ -208268,7 +208430,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
         reason: why2,
         by: who2,
         at: at42,
-        restarted: written2.list.filter((p3) => this.#sees(p3, viewer))
+        restarted: written2.list.filter((p3) => this.#mayName(p3, viewer))
       };
     return {
       ok: true,
@@ -208278,7 +208440,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
       reason: why2,
       by: who2,
       at: at42,
-      projects: [...this.#covered(target, n)].sort().filter((p3) => this.#sees(p3, viewer))
+      projects: [...this.#covered(target, n)].sort().filter((p3) => this.#mayName(p3, viewer))
     };
   }
   /** R56 (DEC-113; K1134 (3)): a member states `released` on an entry, recording what it restarted. */
@@ -208314,10 +208476,15 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
       );
     return { ok: true, projects: absent ? [] : [...distinct2] };
   }
-  /* R52: whether the viewer sees a project at FULL (membership R44). Anything else, a failure included, is not. */
-  #sees(project, viewer) {
+  /* R52 (D54; K2484): whether the viewer may name a project here: she sees it at FULL, or, as an administrator neither
+     invited nor joined, a HIDDEN project at EXISTENCE (membership R44, R85's `visibilityOf`), which reaches its id and
+     hold state and never its contents. A discoverable project's EXISTENCE names nothing. Anything else, a failure
+     included, is not. */
+  #mayName(project, viewer) {
     try {
-      return this.membership.sight(project, viewer) === "full";
+      const sight = this.membership.sight(project, viewer);
+      if (sight === "full") return true;
+      return sight === "existence" && this.membership.visibilityOf(project) === "hidden";
     } catch {
       return false;
     }
@@ -208343,7 +208510,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     return [...mine].filter((p3) => !others.has(p3)).sort();
   }
   /** R58 (DEC-113): for each of 1 to 50 projects, whether a hold in place covers it: `held: true` with the `at` and `by`
-   *  of the earliest such statement, `false`, or `null` for a project absent or not seen at FULL. A read it cannot
+   *  of the earliest such statement, `false`, or `null` for a project absent or one the viewer may not name (R52). A read it cannot
    *  complete is a refusal, never `false`. Names no action, entry or reason. Writes nothing. */
   projectHolds({ projects = null, viewer = null } = {}) {
     const asked = this.#holdProjects(projects, true);
@@ -208357,7 +208524,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     const earliest2 = /* @__PURE__ */ new Map();
     for (const r of rows3) if (r.project && !earliest2.has(r.project)) earliest2.set(r.project, r);
     return { ok: true, projects: asked.projects.map((p3) => {
-      if (!this.#sees(p3, viewer)) return { project: p3, held: null };
+      if (!this.#mayName(p3, viewer)) return { project: p3, held: null };
       const e2 = earliest2.get(p3);
       return e2 ? { project: p3, held: true, since: e2.at, recorded_by: e2.stated_by } : { project: p3, held: false };
     }) };
@@ -208377,7 +208544,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
     }
   }
   /** R59 (DEC-113; for `queue-producers` R29): every `released` statement that ended a hold in place, on an action the
-   *  viewer may see, with the hold's placers and the projects it restarted that the viewer sees; at most 500 per page in
+   *  viewer may see, with the hold's placers and the projects it restarted that the viewer may name; at most 500 per page in
    *  (action, position, sequence) order. `cursor` is the last answered, `<action>#<position>#<sequence>`, when
    *  `truncated`, else null; `after` is a cursor or an action id, read as after all that action's statements. */
   holdsReleased({ after = null, limit = null, viewer = null } = {}) {
@@ -208408,7 +208575,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
                             AND s.hold = 'released'), 0)
         GROUP BY stated_by ORDER BY MIN(seq)`, r.bundle_id, r.ord, r.seq, r.bundle_id, r.ord, r.seq).map((x) => x.stated_by),
       restarted: this.#rows(`SELECT project FROM action_hold_projects WHERE bundle_id = ? AND ord = ? AND seq = ?
-        ORDER BY project`, r.bundle_id, r.ord, r.seq).map((x) => x.project).filter((p3) => this.#sees(p3, viewer))
+        ORDER BY project`, r.bundle_id, r.ord, r.seq).map((x) => x.project).filter((p3) => this.#mayName(p3, viewer))
     }));
     const tail2 = items[items.length - 1];
     return {
@@ -208423,7 +208590,8 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
    *  whatever the viewer. No `bundleId`: whether any hold is in place. A `bundleId`: whether a hold is in place and the
    *  bundle is a held project, belongs to one, is an action carrying a hold in place, or has no project that can be
    *  determined. Synchronous, so it is asked in the purge's own turn; writes nothing, never throws, and answers `true`
-   *  when the holds cannot be read. */
+   *  when the holds cannot be read. It reads every hold and every bundle's project whatever any viewer may see, never
+   *  through a viewer's sight (D54: the founder's viewer no longer sees a hidden project, membership R43). */
   purgeHeld({ bundleId = null } = {}) {
     try {
       const rows3 = this.#standing();
@@ -209368,6 +209536,9 @@ Changes: responds_to edge added to ${actionId}.
       governing_laws: governingLawsOf(fm),
       governing_laws_proposals: this.#lawProposalsFor(row11.bundle_id),
       risk_tier_proposals: this.#riskProposalsFor(row11.bundle_id),
+      /* R70, R73: what a records request seeks, as a member stated it, and the proposals of it stored apart. */
+      seeks: seeksOf(fm),
+      seeks_proposals: this.#seeksProposalsFor(row11.bundle_id),
       records_law: fm.action_kind === "records_request" ? recordsLawOf(fm, this.#lawAuthor(row11.bundle_id, fm)) : null,
       lifecycle: requestLifecycleOf(fm, localToday(now, zoneOf(place)) ?? ""),
       /* R26, DEC-14: the ACTION'S OWN OUTCOME, never the breach's consequence (which `consequences` holds). */
@@ -209472,13 +209643,13 @@ Changes: responds_to edge added to ${actionId}.
     }
     return { as_of_date: asOf, addressee, law_standards, proceeding };
   }
-  /* R52: an entry's hold statements, oldest first, each with those of its projects the viewer sees at FULL (an
+  /* R52: an entry's hold statements, oldest first, each with those of its projects the viewer may name (an
      `in_place` statement's `projects`, a release's `restarted`), and its current hold (the latest; null while none). */
   #holdsOf(id, ord, viewer) {
     const holds2 = this.#rows(`SELECT seq, hold, reason, stated_by, at FROM action_holds WHERE bundle_id=? AND ord=?
       ORDER BY seq`, id, ord).map((h) => {
       const projects = this.#rows(`SELECT project FROM action_hold_projects WHERE bundle_id=? AND ord=? AND seq=?
-        ORDER BY project`, id, ord, h.seq).map((p3) => p3.project).filter((p3) => this.#sees(p3, viewer));
+        ORDER BY project`, id, ord, h.seq).map((p3) => p3.project).filter((p3) => this.#mayName(p3, viewer));
       return {
         seq: h.seq,
         hold: h.hold,
@@ -209531,6 +209702,41 @@ Changes: responds_to edge added to ${actionId}.
       return r !== null;
     } catch {
       return true;
+    }
+  }
+  /** R71 (H30 (1); intent R33; K2505): registered with `intent.registerNoneExistsReader`: the `records_request` actions
+   *  the viewer may see whose `seeks` (action-grammar's `seeksOf`) names that progression, entity and stage and whose
+   *  correspondence holds a `received` entry with outcome `none_exists`, each `{action, ord, at}` (the entry's position
+   *  and date), oldest first, at most 50. No viewer sees none. Writes nothing and never throws; a read that fails
+   *  answers `[]`, so no stage is met this way. */
+  noneExistsFor({ progression = null, entity: entity2 = null, stage = null, viewer = null } = {}) {
+    try {
+      const want = [progression, entity2, stage];
+      if (want.some((x) => typeof x !== "string" || !x) || viewer === null || viewer === void 0 || viewer === "") return [];
+      const gate = viewerPredicate(viewer);
+      const rows3 = this.#rows(`SELECT b.bundle_id, f.content FROM bundles b
+        JOIN files f ON f.bundle_id = b.bundle_id AND f.path = 'bundle.md'
+        WHERE b.object_type = 'action' AND (${gate.sql}) AND f.content LIKE '%none_exists%' AND f.content LIKE '%seeks%'
+        ORDER BY b.bundle_id`, ...gate.args);
+      const out = [];
+      for (const r of rows3) {
+        let fm = null;
+        try {
+          fm = parseFrontmatter(r.content).data;
+        } catch {
+          fm = null;
+        }
+        if (!fm || typeof fm !== "object" || fm.action_kind !== "records_request") continue;
+        if (!seeksOf(fm).some((x) => x.progression === progression && x.entity === entity2 && x.stage === stage)) continue;
+        (Array.isArray(fm.correspondence) ? fm.correspondence : []).forEach((e2, ord) => {
+          if (e2 && typeof e2 === "object" && e2.direction === "received" && e2.outcome === "none_exists")
+            out.push({ action: r.bundle_id, ord, at: e2.at === void 0 || e2.at === null ? null : String(e2.at) });
+        });
+      }
+      out.sort((p3, q10) => String(p3.at) < String(q10.at) ? -1 : String(p3.at) > String(q10.at) ? 1 : p3.action < q10.action ? -1 : p3.action > q10.action ? 1 : p3.ord - q10.ord);
+      return out.slice(0, NONE_EXISTS_MAX);
+    } catch {
+      return [];
     }
   }
   /* R54: the action's project, as `action-clocks` answers it: the project of the first determination among its
@@ -209881,6 +210087,65 @@ Changes: responds_to edge added to ${actionId}.
       says: `a tier of ${asked} is proposed for this action. This is not the action's risk tier and did not change it: the tier is ${held2 === "undetermined" ? "undetermined" : held2}, and only a member's own act sets it.`
     };
   }
+  /** R73 (K2561; R70): a proposal of what a records request seeks, as R19 is to `actionLaws`: stored apart, labelled,
+   *  replacing only its proposer's own standing proposal; it writes no file and never changes `seeks`. Its items are
+   *  judged as R70 judges a statement (`SEEKS_REFUSED`, C-117.29, every finding carried), on the target's own kind. */
+  actionSeeksPropose({ target, seeks = null, proposer = null, viewer = null } = {}) {
+    const who2 = String(proposer ?? "").trim();
+    if (!who2) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    const b = this.#visibleAction(target, viewer);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    const held2 = this.#heldFm(target) || {};
+    let list6 = seeks;
+    if (typeof list6 === "string") {
+      try {
+        list6 = JSON.parse(list6);
+      } catch {
+      }
+    }
+    const asked = { action_kind: held2.action_kind, seeks: list6 === void 0 || list6 === null ? [] : list6 };
+    const r = this.#seeksRefusal(asked);
+    if (r) return { ...r, target };
+    const items = seeksOf(asked);
+    const at42 = stampInstant("second", this.#nowMs(null));
+    this.record.transact(() => {
+      this.sql.exec(`DELETE FROM action_seeks_proposals WHERE bundle_id=? AND proposed_by=?`, target, who2);
+      items.forEach((x, i) => this.sql.exec(`INSERT INTO action_seeks_proposals (bundle_id, proposed_by, ord, progression,
+        entity, stage, proposed_at) VALUES (?,?,?,?,?,?,?)`, target, who2, i, x.progression, x.entity, x.stage, at42));
+    });
+    const stated2 = seeksOf(held2);
+    return {
+      ok: true,
+      target,
+      weight: "single",
+      evidence: false,
+      proposal: { ...proposalLabelFor(who2, "seeks"), at: at42, seeks: items },
+      seeks: stated2,
+      says: `${items.length} stage${items.length === 1 ? " is" : "s are"} proposed as what this request seeks. This is not the action's seeks and did not change it: ${stated2.length ? `it names ${stated2.length} stage(s) a member stated` : "no member has stated what it seeks"}, and only a member's own write states it.`
+    };
+  }
+  /* R73: the standing proposals of what the request seeks, newest first, at most 12, with `truncated` and a sentence. */
+  #seeksProposalsFor(id) {
+    const cap = SEEKS_PROPOSALS_READ_MAX;
+    const rows3 = this.#rows(`SELECT proposed_by, ord, progression, entity, stage, proposed_at FROM action_seeks_proposals
+      WHERE bundle_id=? ORDER BY proposed_at DESC, proposed_by, ord LIMIT ?`, id, (cap + 1) * SEEKS_MAX + 1);
+    const by = /* @__PURE__ */ new Map();
+    for (const r of rows3) {
+      if (!by.has(r.proposed_by)) by.set(r.proposed_by, { ...proposalLabelFor(r.proposed_by, "seeks"), at: r.proposed_at, seeks: [] });
+      by.get(r.proposed_by).seeks.push({ progression: r.progression, entity: r.entity, stage: r.stage });
+    }
+    const all = [...by.values()];
+    const proposals = all.slice(0, cap);
+    return {
+      proposals,
+      limit: cap,
+      truncated: all.length > cap,
+      says: proposals.length ? `${proposals.length} proposal${proposals.length === 1 ? "" : "s"} of what this request seeks. A proposal is not the action's seeks: that is a member's own statement, shown beside this one.` : "no proposal of what this request seeks stands in the record. That is a statement about proposals and about nothing else."
+    };
+  }
   /* R28: the standing tier proposals, newest first, at most 12, with `truncated` and a sentence also when empty. */
   #riskProposalsFor(id) {
     const cap = RISK_PROPOSALS_READ_MAX;
@@ -209934,6 +210199,7 @@ for (const m of [
   "actionRiskTier",
   "actionQuotes",
   "actionRiskPropose",
+  "actionSeeksPropose",
   "actionPressure",
   "actionHold",
   "actionHoldRelease",
@@ -209952,6 +210218,11 @@ var PROPOSAL_SAYS2 = {
     machine_proposed: "a machine credential proposed this risk tier. That is machine work, labelled as machine work: it can set a tier beside the action for members to weigh and it can never set the tier. Nothing here is this action's risk tier, and nothing becomes it until a member states it themselves",
     member_proposed: "a member proposed this risk tier to whoever states it. It is a proposal and not the tier: only the risk-tier act sets that, and the record holds who made the proposal",
     unstated: "the record does not say who proposed this risk tier"
+  },
+  seeks: {
+    machine_proposed: "a machine credential proposed what this records request seeks. That is machine work, labelled as machine work: it sets stages beside the action for members to weigh and never states what it seeks; nothing becomes it until a member states it themselves",
+    member_proposed: "a member proposed what this records request seeks to whoever states it. It is a proposal and not the action's seeks: only a member's own write states that, and the record holds who made the proposal",
+    unstated: "the record does not say who proposed what this records request seeks"
   }
 };
 function proposalLabelFor(who2, subject) {
@@ -210001,6 +210272,16 @@ function actionsOf(host, deps) {
     }
     if (ratification && typeof ratification.registerHoldReader === "function")
       ratification.registerHoldReader({ holdsOn: (args) => a.holdsOn(args) });
+    let intent = null;
+    if (d.intent !== null && (d.intent || d.env)) {
+      try {
+        intent = d.intent || intentOf(host);
+      } catch {
+        intent = null;
+      }
+    }
+    if (intent && typeof intent.registerNoneExistsReader === "function")
+      intent.registerNoneExistsReader((args) => a.noneExistsFor(args || {}));
   }
   return a;
 }
@@ -210027,6 +210308,13 @@ function actionsOps(a, url, body) {
     actionlawspropose: () => a.actionLawsPropose({
       target: q10("target") || b.target,
       laws: b.laws,
+      viewer: q10("viewer"),
+      proposer: q10("proposer")
+    }),
+    /* R73 (K2561): a proposal of what a records request seeks (declared and routed by L11). */
+    actionseekspropose: () => a.actionSeeksPropose({
+      target: q10("target") || b.target,
+      seeks: b.seeks ?? q10("seeks"),
       viewer: q10("viewer"),
       proposer: q10("proposer")
     }),
@@ -234357,7 +234645,6 @@ var DATES_MAX = 20;
 var CHECKPOINT_DAYS_MAX = 3650;
 var PLANS_PAGE_MAX = 200;
 var DUE_MAX2 = 500;
-var TRAY_PAGE = 5;
 var SOURCES_MAX = 50;
 var STAGE_MAX = 7;
 var DAY_MS5 = 864e5;
@@ -236047,10 +236334,7 @@ var ActionPlans = class {
     const options = held2.map((o) => this.#optionView(p3, o, live7, viewer, see));
     const scenarios = this.#scenarios(p3.id).map((sc) => this.#scenarioView(p3, sc, viewer, see, now));
     const proposals = this.#rows(`SELECT * FROM plan_option_proposals WHERE plan_id=? AND machine=0 ORDER BY n`, p3.id).map((r) => this.#proposalView(r, see, viewer));
-    const runs = this.#planRuns(p3.id).map((run2) => {
-      const page2 = this.#trayPage(p3.id, run2, 0, see, viewer);
-      return { run: run2, proposals: page2.proposals, next: page2.next };
-    });
+    const runs = this.#planRuns(p3.id).map((run2) => ({ run: run2, proposals: this.#tray(p3.id, run2, see, viewer) }));
     const removed = all.filter((s) => s.removedSeq !== null && !inPlan.has(s.key) && see.subject(s.subject)).map((s) => ({ subject: s.subject, key: s.key }));
     const checks = this.#checks(p3, options, scenarios, live7, now, viewer, new Map(held2.map((o) => [o.id, o.fields])));
     const history = this.#historyView(p3.id, see);
@@ -236355,47 +236639,28 @@ var ActionPlans = class {
       if (!runs.some((x) => x.run === r.run)) runs.push({ run: r.run, at: r.at });
     return runs.sort((a, b) => instantOrder(a.at, b.at) || (a.run < b.run ? -1 : 1)).map((r) => r.run);
   }
-  #trayPage(planId2, run2, from, see, viewer) {
-    const rows3 = this.#rows(
-      `SELECT * FROM plan_option_proposals WHERE plan_id=? AND run=? AND run_ord > ? ORDER BY run_ord LIMIT ?`,
-      planId2,
-      run2,
-      from,
-      TRAY_PAGE + 1
-    );
-    const page2 = rows3.slice(0, TRAY_PAGE);
-    return {
-      proposals: page2.map((r) => this.#proposalView(r, see, viewer)),
-      next: rows3.length > TRAY_PAGE ? `${run2}#${page2.at(-1).run_ord}` : null
-    };
+  /* R34: every proposal of a planning run, in the run's order (R31's submission order, the assistant's order of
+     strength, strongest first), with no cut-off and no paging (Actions D17, K2443). */
+  #tray(planId2, run2, see, viewer) {
+    return this.#rows(`SELECT * FROM plan_option_proposals WHERE plan_id=? AND run=? ORDER BY run_ord`, planId2, run2).map((r) => this.#proposalView(r, see, viewer));
   }
-  /** R34: the tray: five of a planning run's proposals at a time, in the run's order, strongest first. */
-  planProposals({ plan, run: run2, after, viewer } = {}) {
+  /** R34: the tray: every proposal of a planning run, in the run's order, strongest first; the order is the only sign
+   *  of strength, and nothing is cut off or paged. */
+  planProposals({ plan, run: run2, viewer } = {}) {
     const p3 = this.#plan(plan, viewer);
     if (!p3) return noSuchPlan(plan);
     const runs = this.#planRuns(p3.id);
     const named2 = typeof run2 === "string" && run2.trim() ? run2.trim() : null;
     if (named2 && !runs.includes(named2)) return refuseRunOtherPlan(named2);
     const r = named2 ?? runs.at(-1) ?? null;
-    let from = 0;
-    if (after !== void 0 && after !== null && after !== "") {
-      const m = r ? /^(.+)#(\d+)$/.exec(String(after)) : null;
-      const n = m ? Number(m[2]) : NaN;
-      const max = r ? (this.#one(`SELECT MAX(run_ord) AS n FROM plan_option_proposals WHERE plan_id=? AND run=?`, p3.id, r) || {}).n || 0 : 0;
-      if (!m || m[1] !== r || !(n > 0 && n < max && n % TRAY_PAGE === 0))
-        return refusal31("PROPOSALS_CURSOR_REFUSED", "after= is a page marker this list gave for this run, and this is not one. Ask for the first page again. Nothing was read.");
-      from = n;
-    }
-    if (!r) return { ok: true, plan: p3.id, run: null, proposals: [], next: null };
+    if (!r) return { ok: true, plan: p3.id, run: null, proposals: [] };
     const see = this.#sight(viewer);
-    const page2 = this.#trayPage(p3.id, r, from, see, viewer);
     return {
       ok: true,
       plan: p3.id,
       run: r,
-      proposals: page2.proposals,
-      next: page2.next,
-      says: "the assistant's proposals in its own order, strongest first; no score is recorded or answered",
+      proposals: this.#tray(p3.id, r, see, viewer),
+      says: "every one of the assistant's proposals in its own order, strongest first; no score is recorded or answered",
       ...see.withheld ? { out_of_view: true } : {}
     };
   }
@@ -236694,7 +236959,7 @@ function actionPlansOps(m, url, body) {
     optionstart: () => m.optionStart(stamped2({ plan: pick3("plan"), option: pick3("option"), kind: pick3("kind") })),
     optionstartpreview: () => m.optionStartPreview(stamped2({ plan: pick3("plan"), option: pick3("option"), kind: pick3("kind") })),
     planclose: () => m.planClose(stamped2({ id: pick3("id") ?? pick3("plan"), reason: pick3("reason") })),
-    planproposals: () => m.planProposals({ plan: pick3("plan"), run: pick3("run"), after: pick3("after"), viewer: qp("viewer") })
+    planproposals: () => m.planProposals({ plan: pick3("plan"), run: pick3("run"), viewer: qp("viewer") })
   };
 }
 
