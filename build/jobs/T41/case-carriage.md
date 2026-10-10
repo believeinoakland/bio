@@ -59,3 +59,7 @@ Every other suite of my users had the same results on `tranche/T41` and on this 
 - `format`: 0 failures. `architecture`: 0 failures. `coverage`: 18 of 18 live ids, 0 failures. `ownership`: 7 files, 0 failures.
 
 Size (session_01PJqPaLJoAV9fTX9bSpNA4s): test runs 9, module lines 1383
+
+## J1 · REPORT
+
+Users' tests reddened by K2380 (N816), as designed: with no evidence store or bucket bound, copyWake now answers null, so scheduler R25 does not fire the doccopy consumer and onAlarm's answer has no doccopy. To re-state in each owner's job: scheduler copies.test.mjs:225 (R25, 'against the real case-carriage with no evidence store bound … DOCUMENT_COPY_NO_STORE'); plane t39.test.mjs:78 (R18 (T39), its negative-control arm 'with no bucket bound it answers DOCUMENT_COPY_NO_STORE'). Every other user suite is identical between tranche/T41 and job/T41/case-carriage (68 → 70 failures, these two only). Also: OBSCURED_LABEL's words changed by key (photo.obscured.label) and PUBLISHED_LABEL is new; case-checker's fixture and public-read's photos test hold their own copy of the old sentence as test data and stay green, but no longer match the module's words.
