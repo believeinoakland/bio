@@ -13,6 +13,8 @@
 - DEC-188 (8): `aiceilingset`, `aicopyceilingset` (`t33.mjs`) and `accountswitchset`, `groupswitchset` (`t34.mjs`) removed from `RUNG_ABSENT` and `NON_ACTS`; `owners.test.mjs` re-stated (the four rows gone; `memberlanguageset`'s precedent now `standingset`). This also applies the ai-runs merge note (K2514): the retired ops re-graded as `ai-use`'s (`ailimitset`, `aiusage`).
 - Tests: `t41.test.mjs` names R29 and R30, each op by name, with negative controls (K874), and holds `affordances` R12's totality over a stand-in of the table `op-declarations` declares (K2507); the real totality runs at its merge.
 
+- CHANGE B3 (K2583, K2584): after merging `tranche/T41`, the five reading-guides ops: `guidepropose` `reversible` as `extractpropose`, run-directed; `guideproposetocivicsmith` `undetermined` as `guideoffer`; `guidefor`, `guide`, `guideproposals` reads; tested by name with negative controls, and in the stand-in totality. op-grades 45/45; format, architecture, coverage (30/30), ownership 0 failures.
+
 **Deferred:** none.
 
 **Found in other modules (REPORT J2):** my change adds 8 reds to users' suites, each owed by a later job in this layer and none a fault of theirs: `affordances` `t33.test.mjs`, `t34.test.mjs` (they list the four retired ops), its ladder/R27 counts and R48's act-help keys (`src/affordances/act-help.mjs` names a retired op), and `control-plane` `totality.test.mjs` (stale and unranked until `op-declarations` declares T41's ops and drops the four). `control-plane` `r53-routes.test.mjs` and `t34-routes.test.mjs` also name retired ops. Baseline on `tranche/T41`: those suites 187 pass / 34 fail; with my change 179 / 42.
@@ -24,7 +26,7 @@
 - `affordances` and `control-plane` totality suites, before and after (above): 187/34 → 179/42.
 - `format`: 145 modules, 144 requirements files; 0 failures. `architecture op-grades`: 15 product files, 24 relative imports; 0 failures. `coverage op-grades`: 30 of 30 live requirement ids named by a test; 0 failures. `ownership op-grades tranche/T41`: 0 failures.
 
-Size (session_01AeoP2zAYoh9M4VE32oH24e): test runs 4, module lines 2593
+Size (session_01AeoP2zAYoh9M4VE32oH24e): test runs 6, module lines 2606
 
 ## J1 · QUESTION
 
