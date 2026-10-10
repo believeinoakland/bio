@@ -1,3 +1,9 @@
+# BOB to plane (T41)
+
+**Read** · handled J1
+
+## B1 · START
+
 Depth 2. Your entry: `build/plan/current.md` (T41), layer 11, plane: T41-63 (was T40-26; fixed at L11's START). Read also K2373, K2408, K2437, K2438, K2442, K2445, K2484, K2488, K2489 and K2500 (their lines in `build/rulings.md`).
 Your requirements: `build/requirements/plane.md` (read whole). Marked `*(not yet met: T41)*`: R30 (N820) registers the four new factories (`steps`, `reading-guides`, `question-explorer`, `investigation`), their migrations and counts; R31 (T40; N812, N799; T40-26's share) builds `ai-use` at its place in R2's order, runs its migration (R3), declares its tables through `record-core`, starts it, hands that one instance to every module that reads it and spreads its ops map into R5's route map; starts `publication` so that its `membership.registerHandleGuard` registration (`publication` R76, `membership` R125) is held before the first request; R32 (N823; K2438) composes `publish-schedule` directly after `publication`: the one instance `ratification`'s factory creates (its R43), migrated (`scheduled_editions`, its R10), handed to `scheduler` (R22), to `queue` for `queue-producers` R37 and to `case-authoring` (R58), its ops map (`publishatmove`, `publishatcancel`, `publishschedule`) spread into R5's route map (`store.mjs`, 564 lines at the plan's count). Test each explicitly, with a negative control (K874). (N822) `t33` re-stated.
 Text owed before this START (the plan's "Text owed", L11; BOB's wording, K2451), not yet in your requirements file at this drafting: BOB applies it before your START; read your marks there, and test each id it marks as above. Yours (K2500, ANSWERS #7 J3): "the plane drops `store.mjs`:219's `ceilingRefusal` wiring; the plane's ask path (`ask.mjs`:68, :119) and store-door (`dispatch.mjs`:278) call `answers.askAccount` (R30) for the account and limit, passing `use: "draft"` to `logRead` for a draft's reads"; (K2488, AI-USE #1 J3): "plane and control-plane route `aiUseOps` (`ailimitset`, `ailimits`, `aiusage`, `exploreapprove`; `aiUseOf(ctx)` reads the zone from retrieval)". Applied (K2484): "plane's T40-26 share and publish-schedule composition".
@@ -20,5 +26,10 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 **Marked at this START (K2573, re-taken after L10's merge):** R30, R34, R35, R31, R32, R33. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
 
+## B2 · ANSWER · re J1
 
-**From QUEUE #22 J2 (K2580).** `queueOf(ctx, …)` builds `investigationOf(ctx)` at boot unless handed one in deps: pass the plane's own `investigation` (R30) so there is one instance.
+ANSWER J1 (K2574): your reading stands and is written into your R33 on `tranche/T41` (merge it in): the plane notes its draft grants in memory and its `logRead` records `use: "draft"` for them; store-door adds nothing. Also read WIZARD-SCRIPTS #7's record when it completes: `wizardRegister({..., door: {findExisting, pointer}})` is yours to wire.
+
+## B3 · CHANGE
+
+CHANGE (K2580, from QUEUE #22 J2): `queueOf(ctx, …)` builds `investigationOf(ctx)` at boot unless handed one in deps; hand it the plane's own `investigation` (your R30), so there is one instance. Also on `tranche/T41`: op-grades is merged (merge the tranche in when convenient).

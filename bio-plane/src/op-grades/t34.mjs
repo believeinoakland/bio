@@ -32,13 +32,13 @@ export const T34_RUNG_ABSENT = {
   /* tasks R13, R14, on R3's rule: no reason is asked and no published act takes either back */
   checkrequest:         { ground: "undetermined", is: "a project owner asks a member, or the members declaring an expertise, to check one held object (tasks R13)" },
   checktake:            { ground: "undetermined", is: "a member who may see the object takes a check request, once; another's take is refused (tasks R14)" },
-  /* credentials R33, R36, R37: the group's key, as keyedserviceset; its switches, as keyedserviceswitch */
+  /* credentials R33, R36: the group's key, as keyedserviceset; its switch, as keyedserviceswitch. (R30; DEC-188 (8))
+     `groupswitchset` is retired to `accountusesset` (./t41.mjs). */
   groupkeyset:          { ground: "credential", is: "an administrator sets the group's sealed assistant key, never answered (credentials R33)" },
   groupkeyremove:       { ground: "credential", is: "an administrator removes the group's assistant key (credentials R33)" },
   groupkeyswitch:       { ground: "substrate", is: "an administrator switches the group's assistant key on or off; it moves no document, claim or grade (credentials R33)" },
-  groupswitchset:       { ground: "substrate", is: "an administrator sets one of the group's assistant switches; it moves no document, claim or grade (credentials R37)" },
   groupkeynoticeseen:   { ground: "caller-owned", is: "records that a member saw the notice of the group's key, for that member alone (credentials R36)" },
-  /* instance-setup R60, R64: an administrator's setting, as officesseed; a member's own language, as accountswitchset */
+  /* instance-setup R60, R64: an administrator's setting, as officesseed; a member's own language, as standingset */
   placewanted:          { ground: "substrate", is: "an administrator records the place the group wants its profile for; it moves no document, claim or grade (instance-setup R60)" },
   memberlanguageset:    { ground: "caller-owned", is: "a member sets the language the interface speaks to them (instance-setup R64)" },
 };
@@ -63,7 +63,6 @@ export const T34_NON_ACTS = {
   groupkeyset: "credential governance: the group's assistant key, an administrator's; never answered",
   groupkeyremove: "credential governance: the group's assistant key, an administrator's",
   groupkeyswitch: "the copy's configuration: whether the group's assistant key is on; an administrator's, not an act on an object",
-  groupswitchset: "the copy's configuration: one of the group's assistant switches; an administrator's, not an act on an object",
   groupkeystate: R("whether the group's assistant key is held and on, the whole state to an administrator"),
   groupkeynotice: R("the notice of the group's key for the session's own member"),
   groupkeynoticeseen: "personal state, keyed by member: the notice of the group's key seen by them",
