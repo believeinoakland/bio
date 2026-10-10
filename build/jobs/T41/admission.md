@@ -24,7 +24,12 @@
 
 **B4 (K2593):** `tranche/T41` merged (`f0b5103338`, affordances, tasks, queue and the modules before them); tests unchanged: 41, 37 pass, the same 4 red waiting only on op-declarations; checks format, architecture, coverage, ownership 0 failures.
 
-**Next:** on the CHANGE that brings op-declarations' merge (B2), merge `tranche/T41`, re-run the tests and checks, complete.
+**B5 (K2596), completion:** `tranche/T41` with op-declarations merged into my branch (`0a02e9f453`). The arms that waited on it are green: `node --test test/m/admission/`: **41 tests, 41 pass, 0 fail**. The retired switch ops (`groupswitchset`, `accountswitchset`, `aiceilingset`, `aicopyceilingset`): my tests name only `groupswitchset`, and only to find it retired (`t41.test.mjs` R19 (T41)); nothing else to re-state.
+- Users of my services (I changed what R3 and R20 admit): `node --test test/m/answer-envelope/ test/m/control-plane/ test/m/plane/ test/system/migrate-released.test.mjs`: 379 tests, 361 pass, 18 fail; the same suites on a clean `tranche/T41` (`6a63166ad5`): 379, 361, 18, **the same 18 by title**, so none is admission's. Among them control-plane's "R56, R30 … the group key's seven ops" names `groupswitchset`'s retirement (DEC-188 (8)): control-plane's to re-state at T41-62.
+- Checks: format 0 failures; architecture 0; coverage 22 of 22 live ids named, 0; ownership 0.
+- Entries applied: T41-59 (R3, R19, R22) and B3's R20 (K2576). Deferred: none.
+
+Size (session_01XRFXxX3r77uSXKpEg4sgCD): test runs 14, module lines 1395
 
 ## J1 · QUESTION
 
