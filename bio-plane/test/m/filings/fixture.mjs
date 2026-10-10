@@ -95,7 +95,7 @@ export function world({ profiles = undefined, group = "test-group" } = {}) {
     const j = w.membership.projectJoin({ projectId: proj, by: m, viewer: V(m) });
     if (j && j.ok === false) throw new Error(`fixture join refused: ${JSON.stringify(j)}`);
   }
-  w.doc(DOC);
+  w.doc(DOC, { fetched: false }); /* a member document: no receipt, so its capture is ungraded (R25; K2387) */
   attestedDoc(w, EVID);
   /* R33: the registry's entities (the real entities module): the Selectboard's office, the subject F concerns (its
      `subject_entity`) and another the chronology's set does not hold, through the world's connections (publication's
