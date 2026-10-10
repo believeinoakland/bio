@@ -34,7 +34,7 @@ import { evaluate, resultKey, METHOD as CALC_METHOD } from "../calc-grammar/inde
 import { CATALOG_VERSION } from "../gate.mjs";
 import { readStoredZip, asBytes } from "./zip.mjs";
 import { checkStandardsUse } from "./standards.mjs";
-import { checkAccount, listOfField } from "./account.mjs";
+import { checkAccount, listOfField, citeOf } from "./account.mjs";
 import { LENS_LIMIT_STATEMENT, lensOfArg, applicationOf, pairsUnderLens } from "./lens.mjs";
 
 /* ============================================================ the words (R1, R11, R18; the UX stream's, until it gives them) */
@@ -330,15 +330,8 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
   const materialsRead = fm ? materialsOf(fm) : null;
   const materials = isObj(materialsRead) && Array.isArray(materialsRead.materials) ? materialsRead.materials.filter(isObj) : [];
   const attestations = isObj(materialsRead) && Array.isArray(materialsRead.attestations) ? materialsRead.attestations.filter(isObj) : [];
-  const accepted = fm ? acceptedWorkOf(fm) : null;
-  const acceptedRows = isObj(accepted) && Array.isArray(accepted.rows) ? accepted.rows.filter(isObj) : [];
-  /* R5 (strength R29, R34): the attribution level in force for each observation or attested capture, as the signed
-     document states it (`observation_attributions:`, `case-grammar` R2). */
-  const levels = {};
-  for (const r of fm && Array.isArray(fm.observation_attributions) ? fm.observation_attributions.filter(isObj) : []) {
-    const k = str(r.observation) || str(r.capture);
-    if (k && typeof r.level === "string") levels[k] = r.level;
-  }
+  const grading = gradingContextOf(fm);
+  const { acceptedRows } = grading;
 
   /* The roster and its roles, as the signed document states them. */
   const roster = fm && Array.isArray(fm.case_findings) ? fm.case_findings.map(String) : [];
@@ -550,21 +543,11 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
 
   /* ---------------------------------------------------------- per finding */
   const bar = fm && isObj(fm.required_strength) ? fm.required_strength : null;
-  const version = method && typeof method.grading === "string" ? method.grading : null;
+  const { version } = grading;
   const strengthRows = fm && Array.isArray(fm.case_strength) ? fm.case_strength.filter(isObj) : [];
   const findingSigs = [];
   const findingsOut = [];
-  /* R5, R18: one finding's legs recomputed at the stated version, a leg on another group's finding taking the
-     `accepted_work:` row's pair as its fact; answers recomputePair's answer with `pair` beside it. */
-  function recomputeLegs(id, legs0) {
-    const legs = legs0.map((leg) => {
-      if (!isObj(leg) || leg.kind !== "imported") return leg;
-      const row = acceptedRows.find((r) => r.ref === leg.target && (r.member === id || r.leg_of === id)) || acceptedRows.find((r) => r.ref === leg.target);
-      return row && isObj(row.pair) ? { ...leg, answer: row.pair } : leg;    /* R18: the row's pair is that leg's fact */
-    });
-    const r = recomputePair({ legs: legs.map(factFields), levels: Object.keys(levels).length ? levels : null, version });
-    return r.ok ? { ...r, pair: Object.fromEntries(GRADE_AXES.map((a) => [a, { state: r[a].state, grade: r[a].grade ?? null }])) } : r;
-  }
+  const recomputeLegs = grading.recompute;
   const fileGap = (f, about, what) => (f.state === "missing"
     ? { missing: entry("integrity", about, `${what} is not carried; fetch the file whose SHA-256 is ${f.sha256}`, { sha256: f.sha256 }) }
     : f.entry ? { differs: f.entry } : {});
@@ -727,22 +710,16 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
     f.result = f.differs.length ? "did_not_recreate" : f.missing.length ? "recreated_in_part" : "recreated";
   }
 
-  /* R23: each finding's pair and bar under the lens asked for. A lens re-weighs; the result stays the check's. */
-  const applications = fm && Array.isArray(fm.bias_applications) ? fm.bias_applications.map(applicationOf).filter(Boolean) : [];
-  const lensAnswer = { name: lens.name, statements: lens.statements, departure: lens.departure, not_applied: [] };
-  if (lens.name !== "as_published") {
-    const readable = new Map([...facts].filter(([, fx]) => fx && Array.isArray(fx.legs)).map(([id, fx]) => [id, { legs: fx.legs.map(factFields) }]));
-    const under = pairsUnderLens({ lens, facts: readable, published: applications, recompute: (legs) => recomputeLegs(null, legs) });
-    lensAnswer.not_applied = under.not_applied;
-    for (const f of findingsOut) {
-      const p = under.pairs.get(f.finding) ?? null;
-      const isMember = roster.includes(f.finding);
-      const st = isMember && p ? standingOf({ role: f.role, bar, pair: p }) : null;
-      f.as_published = { pair: f.pair, bar_met: f.bar_met };
-      f.lens_changes = under.changes.get(f.finding) || [];
-      f.pair = p;
-      f.bar_met = !isMember ? "not_asked" : isObj(st) ? st.meets : null;
-    }
+  /* R23: each finding's pair and bar under the lens asked for, by `reweigh` over this answer (K2529). A lens re-weighs;
+     the result stays the check's. */
+  const reweighed = reweigh({ parts, documents, answer: { findings: findingsOut }, lens: lensArg });
+  const lensAnswer = reweighed.lens;
+  if (lens.name !== "as_published") for (const f of findingsOut) {
+    const w = reweighed.findings.find((x) => x.finding === f.finding);
+    f.as_published = { pair: f.pair, bar_met: f.bar_met };
+    f.lens_changes = w ? w.lens_changes : [];
+    f.pair = w ? w.pair : null;
+    f.bar_met = w ? w.bar_met : null;
   }
 
   return {
@@ -771,6 +748,95 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = undef
   };
 }
 const dedupe = (list) => { const seen = new Set(); return list.filter((e) => { const k = canonicalJson(e); if (seen.has(k)) return false; seen.add(k); return true; }); };
+
+/* ============================================================ grading and the lens (R5, R18, R23) */
+
+/** R5, R18: what recomputing a finding's pair reads from the signed document: the grading method version it states,
+ *  the attribution level in force for each observation or attested capture (`observation_attributions:`, `case-grammar`
+ *  R2; strength R29, R34) and the `accepted_work:` rows; `recompute(id, legs)` answers recomputePair's answer with
+ *  `pair` beside it, a leg on another group's finding taking the row's pair as its fact. */
+function gradingContextOf(fm) {
+  const method = fm ? methodOf(fm) : null;
+  const version = method && typeof method.grading === "string" ? method.grading : null;
+  const accepted = fm ? acceptedWorkOf(fm) : null;
+  const acceptedRows = isObj(accepted) && Array.isArray(accepted.rows) ? accepted.rows.filter(isObj) : [];
+  const levels = {};
+  for (const r of fm && Array.isArray(fm.observation_attributions) ? fm.observation_attributions.filter(isObj) : []) {
+    const k = str(r.observation) || str(r.capture);
+    if (k && typeof r.level === "string") levels[k] = r.level;
+  }
+  function recompute(id, legs0) {
+    const legs = legs0.map((leg) => {
+      if (!isObj(leg) || leg.kind !== "imported") return leg;
+      const row = acceptedRows.find((r) => r.ref === leg.target && (r.member === id || r.leg_of === id)) || acceptedRows.find((r) => r.ref === leg.target);
+      return row && isObj(row.pair) ? { ...leg, answer: row.pair } : leg;    /* R18: the row's pair is that leg's fact */
+    });
+    const r = recomputePair({ legs: legs.map(factFields), levels: Object.keys(levels).length ? levels : null, version });
+    return r.ok ? { ...r, pair: Object.fromEntries(GRADE_AXES.map((a) => [a, { state: r[a].state, grade: r[a].grade ?? null }])) } : r;
+  }
+  return { version, acceptedRows, levels, recompute };
+}
+
+/** R23 (K2529): re-weigh an as-published answer under a lens, pure and synchronous, reading the case file's parts again
+ *  (no signature is verified again; `documents` fill a file the parts lack, as R9). `answer` is `checkCaseFile`'s
+ *  as-published answer (its findings' `pair`, `bar_met` and `role`). Answers `{lens: {name, statements, departure,
+ *  not_applied}, lens_statement, findings: [{finding, pair, bar_met, as_published: {pair, bar_met}, lens_changes}]}`, a
+ *  finding in the answer's order, `lens_changes` the applications that changed its pair (each `{finding, ord, target,
+ *  statement, effect, from, to, how, through?}`). Under `as_published` each finding is answered as the answer gives it.
+ *  Never throws. */
+export function reweigh(args) {
+  const a = isObj(args) ? args : {};
+  const lens = lensOfArg(a.lens);
+  const given = isObj(a.answer) && Array.isArray(a.answer.findings) ? a.answer.findings.filter((f) => isObj(f) && str(f.finding)) : [];
+  const out = { lens: { name: lens.name, statements: lens.statements, departure: lens.departure, not_applied: [] }, lens_statement: LENS_LIMIT_STATEMENT,
+    findings: given.map((f) => ({ finding: f.finding, pair: f.pair ?? null, bar_met: f.bar_met ?? null,
+                                  as_published: { pair: f.pair ?? null, bar_met: f.bar_met ?? null }, lens_changes: [] })) };
+  if (lens.name === "as_published") return out;
+  try {
+    const read = readCaseFile(a.parts);
+    const files = read.files;
+    for (const d of Array.isArray(a.documents) ? a.documents : []) {
+      const b = asBytes(d); if (!b) continue;
+      const h = shaOf(b);
+      for (const g of files.filter((f) => f.state === "missing" && f.sha256 === h)) { g.state = "supplied"; g.content = b; }
+    }
+    const docFile = files.find((f) => f.kind === "case_document" && f.content) || null;
+    const p = docFile ? parseFrontmatter(textOf(docFile.content)) : null;
+    const fm = p && isObj(p.data) ? p.data : null;
+    if (!fm) { out.lens.departure = "the case document is not carried, so nothing was re-weighed under the lens"; for (const f of out.findings) { f.pair = null; f.bar_met = null; } return out; }
+    const grading = gradingContextOf(fm);
+    /* the grading facts the signed document states (`case-grammar` R17), or, for a document that predates them, the files */
+    const signed = gradingFactsOf(fm);
+    const facts = new Map();
+    for (const id of new Set([...given.map((f) => f.finding), ...Object.keys(isObj(signed) ? signed : {})])) {
+      let legs = null;
+      if (isObj(signed)) legs = Array.isArray(signed[id]) ? signed[id] : [];
+      else {
+        const gf = files.find((f) => f.kind === "grading_facts" && f.finding === id && f.content);
+        const raw = gf ? jsonOf(gf.content) : null;
+        legs = Array.isArray(raw) ? raw : isObj(raw) && Array.isArray(raw.legs) ? raw.legs : null;
+      }
+      if (legs) facts.set(id, { legs: legs.map(factFields) });
+    }
+    const published = Array.isArray(fm.bias_applications) ? fm.bias_applications.map(applicationOf).filter(Boolean) : [];
+    const under = pairsUnderLens({ lens, facts, published, recompute: (legs) => grading.recompute(null, legs) });
+    out.lens.not_applied = under.not_applied;
+    const roster = Array.isArray(fm.case_findings) ? fm.case_findings.map(String) : [];
+    const bar = isObj(fm.required_strength) ? fm.required_strength : null;
+    for (const f of out.findings) {
+      const role = given.find((g) => g.finding === f.finding).role ?? null;
+      const pair = under.pairs.get(f.finding) ?? null;
+      const st = roster.includes(f.finding) && pair ? standingOf({ role, bar, pair }) : null;
+      f.pair = pair;
+      f.bar_met = !roster.includes(f.finding) ? "not_asked" : isObj(st) ? st.meets : null;
+      f.lens_changes = under.changes.get(f.finding) || [];
+    }
+    return out;
+  } catch (e) {
+    out.lens.departure = `the case could not be re-weighed under the lens: ${String(e && e.message ? e.message : e).slice(0, 200)}`;
+    return out;
+  }
+}
 
 /* ============================================================ standards' use, offline (R22) */
 
@@ -852,19 +918,19 @@ function accountUseOf({ fm, files, facts, materials, signedPassages, fileOf, cas
   const printed = lens && Array.isArray(lens.statements) ? lens.statements.filter((x) => str(x.id)).map((x) => ({ bundle: x.bundle, id: x.id })) : [];
   const judged = [], not_judged = [];
   rows.forEach((r, i) => {
-    const cites = isObj(r) ? listOfField(r.cites) : [];
-    const gone = cites.filter((c) => lacking.has(c));
-    if (gone.length) not_judged.push({ sentence: isObj(r) && Number.isInteger(r.ord) ? r.ord : i, cites: gone,
-      detail: `account sentence ${isObj(r) && Number.isInteger(r.ord) ? r.ord : i} cites ${gone.join(", ")}, whose text this case file does not carry, so it is not judged; fetch it to judge it` });
+    const gone = (isObj(r) ? listOfField(r.cites) : []).map(citeOf).filter((c) => c && lacking.has(c.key));
+    const ord = isObj(r) && Number.isInteger(r.ord) ? r.ord : i;
+    if (gone.length) not_judged.push({ ord, cites: gone.map((c) => c.key),
+      detail: `account sentence ${ord} cites ${gone.map((c) => c.words).join(", ")}, whose text this case file does not carry, so it is not judged; fetch it to judge it` });
     else judged.push(isObj(r) && !Number.isInteger(r.ord) ? { ...r, ord: i } : r);
   });
   const r = checkAccount({ account: judged, cited, printed, conclusions });
-  for (const x of r.refusals || [])
-    caseLevel.differs.push(x.code === "MALFORMED" ? entry("account", "account", `the case document's account cannot be read (${x.field})`, { code: x.code })
-      : entry("account", `account sentence ${x.sentence}`, x.detail, { code: x.code }));
-  for (const n of not_judged) caseLevel.missing.push(entry("account", `account sentence ${n.sentence}`, n.detail));
-  return { sentences: rows.length, judged: judged.length, ok: r.ok === true && !not_judged.length ? true : r.ok === true ? null : false,
-           refusals: r.refusals || [], not_judged };
+  if (r.ok !== true) caseLevel.differs.push(entry("account", "account", `the case document's account cannot be read (${r.field})`, { code: r.reason }));
+  for (const x of r.departures || []) caseLevel.differs.push(entry("account", `account sentence ${x.ord}`, x.detail, { code: x.code }));
+  for (const n of not_judged) caseLevel.missing.push(entry("account", `account sentence ${n.ord}`, n.detail));
+  return { sentences: rows.length, judged: judged.length,
+           ok: r.ok !== true || r.departures.length ? false : not_judged.length ? null : true,
+           departures: r.departures || [], ...(r.ok !== true ? { malformed: { reason: r.reason, field: r.field } } : {}), not_judged };
 }
 
 /* ============================================================ the calculations (R20) */

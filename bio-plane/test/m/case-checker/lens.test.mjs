@@ -132,3 +132,56 @@ test("R23 R12: no lens composes a case-level strength: pairs stay per finding an
   for (const f of r.findings) if (f.pair) assert.deepEqual(Object.keys(f.pair), ["capture", "connection", "testimony"]);
   assert.deepEqual(Object.keys(gradingFacts()).sort(), [A, B, C].sort());
 });
+
+test("R23 (K2529): reweigh({parts, documents, answer, lens}) is the same re-weighing, pure and synchronous, over an as-published answer already checked, answering per finding the pair, bar_met, the statements that changed it and the limit; checkCaseFile's lens arm answers what it answers", async () => {
+  const cf = withApplications();
+  const answer = await run(cf);                                   /* as published, checked once */
+  const lens = { statements: ["S9"], applications: [{ finding: A, ord: 0, target: MINUTES, statement: "S9", effect: "grade_lowered", from: "B", to: "D" }] };
+  const w = CC.reweigh({ parts: cf.parts, answer, lens });
+  assert.equal(w instanceof Promise, false);                      /* synchronous */
+  assert.deepEqual(Object.keys(w), ["lens", "lens_statement", "findings"]);
+  assert.equal(w.lens_statement, CC.LENS_LIMIT_STATEMENT);
+  assert.equal(w.lens.name, "reader");
+  assert.deepEqual(w.findings.map((f) => f.finding), answer.findings.map((f) => f.finding));
+  for (const f of w.findings) assert.deepEqual(Object.keys(f), ["finding", "pair", "bar_met", "as_published", "lens_changes"]);
+  const wa = w.findings.find((f) => f.finding === A);
+  assert.deepEqual(wa.pair.capture, G("D"));
+  assert.equal(wa.bar_met, false);
+  assert.deepEqual(wa.as_published, { pair: byId(answer)[A].pair, bar_met: true });
+  /* its own lowering, and B's reversed lowering reaching it through its leg on B */
+  assert.deepEqual(wa.lens_changes.map((x) => [x.statement, x.effect, x.how, x.through ?? null]), [["S9", "grade_lowered", "applied", null], ["S1", "grade_lowered", "reversed", B]]);
+  /* the published lowering by S1, which this reader does not hold, is reversed for B */
+  assert.deepEqual(w.findings.find((f) => f.finding === B).lens_changes.map((x) => [x.statement, x.how]), [["S1", "reversed"]]);
+  /* checkCaseFile's lens arm is reweigh over its own as-published answer */
+  const full = await run(cf, lens);
+  assert.deepEqual(full.lens, w.lens);
+  for (const f of full.findings) {
+    const x = w.findings.find((y) => y.finding === f.finding);
+    assert.deepEqual([f.pair, f.bar_met, f.as_published, f.lens_changes], [x.pair, x.bar_met, x.as_published, x.lens_changes], f.finding);
+  }
+  /* pure: the same arguments, the same answer; reads only its arguments */
+  const copy = cf.parts.map((p) => Buffer.from(p));
+  assert.equal(canonicalJson(CC.reweigh({ parts: cf.parts, answer, lens })), canonicalJson(w));
+  cf.parts.forEach((p, i) => assert.equal(Buffer.compare(Buffer.from(p), copy[i]), 0));
+  /* no signature is verified again: a case whose signature fails still re-weighs over the answer given */
+  const forged = caseFile({ caseSigner: "mallory", docLines: applicationsLines([PUBLISHED]) });
+  const forgedAnswer = await run(forged);
+  assert.deepEqual(new Set(Object.values(results(forgedAnswer))), new Set(["did_not_recreate"]));
+  assert.deepEqual(CC.reweigh({ parts: forged.parts, answer: forgedAnswer, lens: "removed" }).findings.find((f) => f.finding === B).pair.connection, G("A"));
+  /* as_published answers each finding as the answer gives it, with no change */
+  const same = CC.reweigh({ parts: cf.parts, answer, lens: "as_published" });
+  for (const f of same.findings) { assert.deepEqual(f.pair, byId(answer)[f.finding].pair); assert.deepEqual(f.lens_changes, []); }
+  /* documents fill a file the parts lack, as R9: the case document supplied later */
+  const DOC = "case.md";      /* case-grammar R13's path of the case document */
+  const lacking = caseFile({ docLines: applicationsLines([PUBLISHED]), edit: (b) => b.delete(DOC) });
+  const docBytes = withApplications().bytesOf.get(DOC);
+  const without = CC.reweigh({ parts: lacking.parts, answer, lens: "removed" });
+  assert.match(without.lens.departure, /case document is not carried/);
+  assert.ok(without.findings.every((f) => f.pair === null));
+  const filled = CC.reweigh({ parts: lacking.parts, documents: [docBytes], answer, lens: "removed" });
+  assert.equal(filled.lens.departure, null);
+  assert.deepEqual(filled.findings.find((f) => f.finding === B).pair.connection, G("A"));
+  /* never throws */
+  for (const bad of [undefined, null, 7, {}, { parts: [new Uint8Array(3)], answer, lens: "removed" }, { answer: "x", lens: "removed" }])
+    assert.doesNotThrow(() => CC.reweigh(bad));
+});
