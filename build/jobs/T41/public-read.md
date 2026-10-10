@@ -40,3 +40,7 @@ Size (session_01GmwKwFGVsgqKaYYdEX3pJa): test runs 22, module lines 3,563
 T41-38 complete after CHANGE B3 (case-grammar, K2537) and B4 (case-carriage, K2539), tranche merged @ a79622d456. R3 label_key applied per K2527 and tested with negative controls (label-key.test.mjs). public-read 158/158; users' reds identical to the base; format 0, coverage 0, ownership 0; architecture 3, each the new case-carriage edge: final uses add case-carriage. Details and findings for you in the record's Completion.
 
 CHANGE B5 (K2543): merged `tranche/T41` @ e2f3e4b7f7 after publication's merge; re-run on the merged tip: `test/m/public-read/` 158 pass, 0 fail; format 0, coverage 0 (33 of 33), ownership 0, architecture 3 (the `case-carriage` edge, as above). Nothing changed; the completion above stands.
+
+## J3 · COMPLETE
+
+B5 handled: tranche merged @ e2f3e4b7f7; public-read 158/158; format 0, coverage 0, ownership 0, architecture 3 (the case-carriage edge for your merge). Nothing changed; J2's COMPLETE stands.
