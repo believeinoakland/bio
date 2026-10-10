@@ -813,19 +813,21 @@ export class CaseImport {
 
   /* R23 (D59, D62; K2471): the edition re-weighed under this group's own lens. The carried applications (`case-grammar`
      R24) are read from the case document; each statement is asked of `bias.statementInForce` (its R49) at scope
-     `instance` with the reading member as viewer. The reader lens (`case-checker` R23) holds the statements in force
-     and the applications whose statement is in force; a carried application whose statement is not in force is left
-     out, so it reads as removed. A statement whose answer is undetermined (`in_force: null`) is stated, never read as
-     false: a finding resting on one answers no pair and no `bar_met` under this lens. The re-weighing is
+     `instance` with the reading member as viewer. The reader lens (`case-checker` R23) names the statements in force, so
+     the carried applications of them stand as published, and a carried application whose statement is not in force is
+     reversed: it reads as removed. The carried rows are not passed again as the reader's own applications, which
+     `case-checker` would apply a second time (an excluded leg left out of a pair the published facts count it in). A
+     statement whose answer is undetermined (`in_force: null`) is stated, never read as false: a finding resting on one,
+     at its own legs or through another finding, answers no pair and no `bar_met` under this lens. The re-weighing is
      `case-checker`'s, synchronous, over the recorded as-published answer, so no signature is verified again and the
      lens read is always the one in force. It changes nothing: the acceptance, the published pair and the recorded
      results stand. Answers `{edition, finding(f)}`. Never throws. */
   #ownLens(i, ed, rec, lastAnswer, own, viewer) {
     const none = (stated) => ({
       edition: { whose: "this_group", scope: "instance", label: OWN_LENS, determined: false, stated, statements: [],
-                 statements_sha: null, limit: LENS_LIMIT },
-      finding: (f) => ({ whose: "this_group", determined: false, stated, pair: null, bar_met: null,
-                         against_own_bar: null, changed_by: [], applications: { in_force: [], removed: [], undetermined: [] } }) });
+                 statements_sha: null, limit: LENS_LIMIT, not_applied: [] },
+      finding: (f) => ({ whose: "this_group", applications: { in_force: [], removed: [], undetermined: [] }, determined: false, stated,
+                         pair: null, bar_met: null, against_own_bar: null, changed_by: [], lens_changes: [] }) });
     try {
       if (!rec) return none(LENS_NOT_REWEIGHED);
       const docRow = this.#one(`SELECT path FROM case_import_files WHERE import_id=? AND edition=? AND kind='case_document'`, i.import_id, ed);
@@ -842,11 +844,10 @@ export class CaseImport {
                                  { ok: true, statement: id, in_force: null, stated: "undetermined: the lens in force could not be read" }));
       const stateOf = (a) => { const v = asked.get(str(a.statement)); return v && (v.in_force === true || v.in_force === false) ? v.in_force : null; };
       const inForce = [...asked.values()].filter((v) => v && v.in_force === true);
-      const reader = { statements: inForce.map((v) => ({ statement: v.statement, kind: v.kind ?? null, text: v.text ?? null,
-                                                         bundle_id: v.bundle_id ?? null, level: v.level ?? null })),
-                       applications: apps.filter((a) => stateOf(a) === true) };
+      const reader = { statements: inForce.map((v) => v.statement), applications: [] };
       const sha = [...asked.values()].map((v) => (v && isSha(v.statements_sha) ? v.statements_sha : null)).find(Boolean) ?? null;
       const undeterminedIds = [...asked.values()].filter((v) => !v || v.in_force === null).map((v) => v?.statement ?? null);
+      const undetermined = new Set(undeterminedIds);
       /* case-checker's re-weighing, over the recorded answer with its findings, synchronous */
       const fn = this.#reweigh;
       let out = null, failed = null;
@@ -859,32 +860,36 @@ export class CaseImport {
             const answer = { ...lastAnswer, findings: rec.findings.map((f) => ({ ...f })) };
             out = fn({ parts, documents: this.#documents(i.import_id, ed), answer, lens: reader });
             if (out && typeof out.then === "function") { out = null; failed = LENS_NOT_REWEIGHED; }
+            else if (isObj(out) && isObj(out.lens) && str(out.lens.departure)) failed = `${LENS_NOT_REWEIGHED} (${str(out.lens.departure)})`;
           } catch (err) { failed = `${LENS_NOT_REWEIGHED} (${String(err && err.message ? err.message : err).slice(0, 200)})`; }
         }
       }
       const byFinding = new Map(isObj(out) && Array.isArray(out.findings) ? out.findings.filter(isObj).map((x) => [x.finding, x]) : []);
-      const limit = isObj(out) && str(out.limit) ? str(out.limit) : LENS_LIMIT;
+      const limit = isObj(out) && str(out.lens_statement) ? str(out.lens_statement) : LENS_LIMIT;
+      const notApplied = isObj(out) && isObj(out.lens) && Array.isArray(out.lens.not_applied) ? out.lens.not_applied : [];
       return {
         edition: { whose: "this_group", scope: "instance", label: OWN_LENS, determined: !failed && !undeterminedIds.length,
                    ...(failed ? { stated: failed } : undeterminedIds.length ? { stated: LENS_UNDETERMINED } : {}),
                    statements: [...asked.values()].map((v) => ({ statement: v?.statement ?? null, in_force: v ? v.in_force ?? null : null,
                                                                  kind: v?.kind ?? null, text: v?.text ?? null,
                                                                  ...(v && v.in_force !== true && v.stated ? { stated: v.stated } : {}) })),
-                   statements_sha: sha, limit },
+                   statements_sha: sha, limit, not_applied: notApplied },
         finding: (f) => {
           const mine = apps.filter((a) => a.finding === f.finding);
           const applications = { in_force: mine.filter((a) => stateOf(a) === true), removed: mine.filter((a) => stateOf(a) === false),
                                  undetermined: mine.filter((a) => stateOf(a) === null) };
           const head = { whose: "this_group", applications };
-          if (applications.undetermined.length)
-            return { ...head, determined: false, stated: LENS_UNDETERMINED, pair: null, bar_met: null, against_own_bar: null, changed_by: [] };
           const r = byFinding.get(f.finding);
-          if (failed || !r)
-            return { ...head, determined: false, stated: failed || LENS_NOT_REWEIGHED, pair: null, bar_met: null, against_own_bar: null, changed_by: [] };
+          const changes = r && Array.isArray(r.lens_changes) ? r.lens_changes.filter(isObj) : [];
+          const unsure = (x) => ({ ...head, determined: false, stated: x, pair: null, bar_met: null, against_own_bar: null, changed_by: [],
+                                   lens_changes: [] });
+          /* undetermined at its own legs, or through a finding it rests on (left out of the lens, so reversed there) */
+          if (applications.undetermined.length || changes.some((c) => undetermined.has(str(c.statement)))) return unsure(LENS_UNDETERMINED);
+          if (failed || !r) return unsure(failed || LENS_NOT_REWEIGHED);
           const pair = r.pair === undefined ? null : r.pair;
           return { ...head, determined: true, pair, bar_met: r.bar_met === undefined ? null : r.bar_met,
                    against_own_bar: againstBar(f.role, pair, own.bar),
-                   changed_by: Array.isArray(r.changed_by) ? r.changed_by : Array.isArray(r.statements) ? r.statements : [] };
+                   changed_by: [...new Set(changes.map((c) => str(c.statement)).filter(Boolean))], lens_changes: changes };
         },
       };
     } catch (err) {

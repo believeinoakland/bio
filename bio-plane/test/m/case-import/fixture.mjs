@@ -216,10 +216,12 @@ export function world({ minimal = false, realChecker = false } = {}) {
     };
   };
   /* R23: the importer's lens. `bias.statementInForce` (its R49), answering each statement from `lens.inForce` (true,
-     false or null; false when unnamed); and `case-checker`'s synchronous re-weighing (its R23): each application the case
-     document carries (read by `case-grammar`'s real `biasApplicationsOf`, its R24) that the reader lens does not hold is
-     reversed and named under `changed_by` (a stand-in's convention: a reversed `grade_lowered` restores the capture axis
-     to `from`; any other effect leaves the pair). Each records its calls. */
+     false or null; false when unnamed); and, for the scripted checker's world, a stand-in for `case-checker.reweigh`
+     (its R23), answering as it answers (`findings[{finding, pair, bar_met, lens_changes}]`, `lens_statement`): each
+     application the case document carries (read by `case-grammar`'s `biasApplicationsOf`, its R24) whose statement the
+     reader lens does not name is reversed and named under `lens_changes` (the stand-in's convention: a reversed
+     `grade_lowered` restores the capture axis to `from`; any other effect leaves the pair). With `realChecker`, the real
+     `reweigh` re-weighs. Each records its calls. */
   const lens = { inForce: new Map(), sha: "c3".repeat(32), asked: [], reweighed: [], throws: false, limit: "The checker's limit." };
   const bias = { statementInForce({ statement, scope, viewer }) {
     lens.asked.push({ statement, scope, viewer });
@@ -232,17 +234,19 @@ export function world({ minimal = false, realChecker = false } = {}) {
     lens.reweighed.push({ parts: parts.length, documents: documents.length, lens: reader });
     if (lens.throws) throw new Error("re-weighing down");
     if (lens.async) { lens.async = false; const r = reweigh({ parts, documents, answer, lens: reader }); lens.reweighed.pop(); return Promise.resolve(r); }
-    const kept = new Set(reader.applications.map((a) => canonicalJson(a)));
+    const held = new Set(reader.statements);
     const doc = readCaseFile(parts).files.find((x) => x.kind === "case_document");
     const carried = (doc && biasApplicationsOf(parseFrontmatter(new TextDecoder().decode(doc.content)).data)) || [];
-    return { limit: lens.limit, findings: answer.findings.map((f) => {
+    return { lens: { name: "reader", statements: reader.statements, departure: null, not_applied: [] }, lens_statement: lens.limit,
+             findings: answer.findings.map((f) => {
       const pair = f.pair ? JSON.parse(JSON.stringify(f.pair)) : null;
       const changed = [];
-      for (const a of carried.filter((x) => x.finding === f.finding && !kept.has(canonicalJson(x)))) {
+      for (const a of carried.filter((x) => x.finding === f.finding && !held.has(x.statement))) {
         if (pair && a.effect === "grade_lowered") pair.capture = { state: "graded", grade: a.from };
-        changed.push(a.statement);
+        changed.push({ ...a, how: "reversed" });
       }
-      return { finding: f.finding, pair, bar_met: "not_asked", changed_by: changed };
+      return { finding: f.finding, pair, bar_met: "not_asked", as_published: { pair: f.pair ?? null, bar_met: f.bar_met ?? null },
+               lens_changes: changed };
     }) };
   };
   const reeval = { told: [], throws: false,
@@ -274,7 +278,7 @@ export function world({ minimal = false, realChecker = false } = {}) {
     },
   };
   w.ci = caseImportOf(host, { record, membership, strength, acceptedWork, reevaluation: reeval,
-                              ...(realChecker ? {} : { checkCaseFile, bias, reweigh }),
+                              ...(realChecker ? { bias } : { checkCaseFile, bias, reweigh }),
                               now: () => clock.now });
   return w;
 }

@@ -221,22 +221,21 @@ test("R23 each finding is answered under this group's own lens: its statements i
   const e = w.ci.importedCase({ import: a.import, viewer: V("bob") }).edition;
   /* each statement the edition applies asked once, at scope instance, with the reading member as viewer */
   assert.deepEqual(w.lens.asked, [S2, S3, S1].sort().map((statement) => ({ statement, scope: "instance", viewer: V("bob") })));
-  /* the reader lens: the statements in force and only the applications whose statement is in force */
-  const reader = w.lens.reweighed.at(-1).lens;
-  assert.deepEqual(reader.statements, [{ statement: S1, kind: "scrutiny", text: `the text of ${S1}`, bundle_id: "BIA-home", level: "group" }]);
-  assert.deepEqual(reader.applications, [APPS[0]]);
+  /* the reader lens names the statements in force (so their carried applications stand), and no application twice */
+  assert.deepEqual(w.lens.reweighed.at(-1).lens, { statements: [S1], applications: [] });
   assert.deepEqual(w.lens.reweighed.at(-1).parts, 1, "re-weighed over the edition's parts");
   const by = Object.fromEntries(e.findings.map((f) => [f.finding, f]));
   /* F1: S1 applied, S2 not in force so its lowering reads as removed: capture restored to A */
   assert.deepEqual(by[F1].own_lens, { whose: "this_group", applications: { in_force: [APPS[0]], removed: [APPS[1]], undetermined: [] },
     determined: true, pair: { capture: g("A"), connection: g("C") }, bar_met: "not_asked",
-    against_own_bar: { meets: false, bar: { capture: "B", connection: "B" }, short: ["connection"] }, changed_by: [S2] });
+    against_own_bar: { meets: false, bar: { capture: "B", connection: "B" }, short: ["connection"] }, changed_by: [S2],
+    lens_changes: [{ ...APPS[1], how: "reversed" }] });
   /* beside it, unchanged: the source's lens (the recorded pair) and this group's bar over it */
   assert.deepEqual(by[F1].pair, { capture: g("B"), connection: g("C") });
   assert.deepEqual(by[F1].against_own_bar, { meets: false, bar: { capture: "B", connection: "B" }, short: ["connection"] });
   /* F2: S3 undetermined, stated and never read as false: no pair and no bar_met under this lens */
   assert.deepEqual(by[F2].own_lens, { whose: "this_group", applications: { in_force: [], removed: [], undetermined: [APPS[2]] },
-    determined: false, stated: LENS_UNDETERMINED, pair: null, bar_met: null, against_own_bar: null, changed_by: [] });
+    determined: false, stated: LENS_UNDETERMINED, pair: null, bar_met: null, against_own_bar: null, changed_by: [], lens_changes: [] });
   assert.notEqual(by[F2].own_lens.bar_met, false);
   /* F3: no application, re-weighed to its recorded pair */
   assert.deepEqual([by[F3].own_lens.determined, by[F3].own_lens.pair, by[F3].own_lens.changed_by], [true, by[F3].pair, []]);
@@ -319,7 +318,7 @@ test("R23 the applications are case-grammar's reading of the case document (its 
   assert.deepEqual(carried, APPS, "the block as written, read back by case-grammar");
   const e = w.ci.importedCase({ import: a.import, viewer: V("bob") }).edition;
   assert.deepEqual(e.findings.flatMap((f) => f.own_lens.applications.in_force), carried, "every carried row, each under its finding");
-  assert.deepEqual(w.lens.reweighed.at(-1).lens.applications, carried);
+  assert.deepEqual(w.lens.reweighed.at(-1).lens, { statements: [S1, S2, S3].sort(), applications: [] });
   /* the negative control: edition 2 carries no block; nothing applied, nothing asked of bias, every finding re-weighed as recorded */
   (await imp(w, caseFile({ edition: 2 })));
   const asked = w.lens.asked.length;
