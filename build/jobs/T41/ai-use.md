@@ -131,3 +131,7 @@ Found in other modules, at ai-use's completion (also in my record's Completion):
 ## J4 · COMPLETE
 
 AI-USE #1 complete on job/T41/ai-use: R1–R13 met. Tests 48/48. format 0, architecture 0, coverage 13/13, ownership 0, with my paths, tests and `retrieval` in `modules.json` as a local edit; those three are yours to apply (record: Completion). Report J3.
+
+## J5 · REPORT
+
+Found at AI-USE #2's completion of B5 (also in my record): (1) ai-runs: its usage.test.mjs limitReached helper checks only that the relayed translation is a string; it could assert no {…} placeholder is left (I verified the open and tick by a scratch script over ai-runs' world.mjs: filled, daily and monthly). (2) The design stream: words.json has no keys for {period} (daily/monthly), {when} (tomorrow / on <month> 1) or {field}; ai-use fills them with its own words (checks.mjs LIMIT_*_FILL) until keys exist.
