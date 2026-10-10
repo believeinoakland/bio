@@ -146,6 +146,39 @@ class AffordanceFacts {
              rescue_open: m.rescueRefusal(projectId, actor) === null };
   }
 
+  /* R13, R14 (D54; K2408; J1): an administrator (the founder included) neither invited nor joined to a HIDDEN project
+     sees it at EXISTENCE (membership R44): its id, name and owners, never its contents. The one act membership keeps
+     reachable for it there is the owner rescue (membership R60, project-roster R5), so the facts answer R14's keys with
+     every content fact null, the caller's own positions as R15 asks them, and `roster` carrying only `rescue_open`, asked of `by` through `rescueRefusal`, the
+     predicate the rescue runs: the pre-flight offers the rescue exactly where the act accepts it (R18) and nothing
+     else (R10: a null fact offers nothing). The floors stay null: whether owners are leaving is the project's contents.
+     A member at a discoverable project's EXISTENCE, and every NONE, answers null here: R13's NO_SUCH_BUNDLE. */
+  #existenceFacts(target, viewer, identity, author, by) {
+    const m = this.membership();
+    if (typeof target !== "string" || m.sight(target, viewer) !== Membership.SIGHT_EXISTENCE
+        || m.visibilityOf(target) !== "hidden") return null;
+    const actor = typeof by === "string" && by.trim() ? by.trim() : null;
+    /* The caller's own positions, as R15 asks them; the pair facts are false, never null, for a caller with no member
+       position (the founder): at this EXISTENCE the administrator is neither invited nor joined, and a null would
+       offer `cite`, which the act refuses there (R10, R18). */
+    const who = m.positionalMember(viewer, identity);
+    return { ok: true, target, object_type: "project", declared_type: null, current_state: null, criticality: null,
+             case_member: null, project_owner: who === null ? null : m.ownsAnyProject(who),
+             project_target_owner: who === null ? false : m.isProjectOwner(target, who),
+             project_participant: who === null ? false : m.isJoinedParticipant(target, who),
+             roster: actor === null ? null
+               : { owner: false, state: null, owner_floor_clear: null, other_owner_committed: null,
+                   rescue_open: m.rescueRefusal(target, actor) === null },
+             actor_is_machine: author === null ? null
+               : (() => { const a = String(author).trim(); return !a || isMachineIdentity(a); })(),
+             concludes_for_project: null, concluded_for_project: null, edition_warranted_for_project: null,
+             basis_legs: null, contradiction_inquiry: null, contradiction_sides_seen: null,
+             rested_on: { working: null, frozen: null, severed: null }, basis_version_states: null, basis_versions: null,
+             cites_in: { confirmed: null, severed: null },
+             cites_out: { confirmed: null, severed: null, severed_reinstatable: null },
+             cited_by_case: { confirmed: null, severed: null } };
+  }
+
   /** R13–R16: the facts for one target as the caller stands. `viewer` is what the caller may see, `identity` who it
    *  is (a session's member; an `ai` credential's member principal), `author` the stamp an act would be signed with,
    *  `by` the roster stamp. */
@@ -157,7 +190,7 @@ class AffordanceFacts {
        nothing. */
     const m = this.membership();
     const b = m.inSight(target, viewer) ? this.#bundle(target) : null;
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (!b) return this.#existenceFacts(target, viewer, identity, author, by) || { ok: false, reason: "NO_SUCH_BUNDLE", target };
     const type = normalizeType(b.object_type);
     const id = b.bundle_id;
 

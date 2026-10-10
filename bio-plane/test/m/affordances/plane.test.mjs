@@ -103,7 +103,9 @@ before(async () => {
   for (const p of ["PA", "PB", "PC", "PR"]) W[p] = (await promote(null, projectMd(`Affordances project ${p}`), "project", "forming")).bundleId;
   W.project = async (name) => (await promote(null, projectMd(name), "project", "forming")).bundleId;
   const own = (p, m) => DO("projectclaimowner", { projectId: W[p], memberId: m });
-  const invite = (p, h, by) => DO(`projectinvite?projectId=${W[p]}&handle=${h}&by=${by}&viewer=admin`, {});
+  /* D54 (K2408): the founder's viewer sees a hidden project it is neither invited nor joined to only at EXISTENCE, so the
+     invitation is asked with the inviting owner's own viewer, as the control plane stamps it */
+  const invite = (p, h, by) => DO(`projectinvite?projectId=${W[p]}&handle=${h}&by=${by}&viewer=${E(`member:${by}`)}`, {});
   W.own = own; W.invite = invite;
   must("iris owns PA", await own("PA", "iris")); must("pam owns PB", await own("PB", "pam"));
   must("iris owns PC", await own("PC", "iris")); must("vera owns PR", await own("PR", "vera"));
@@ -176,7 +178,7 @@ const FACT_KEYS = ["ok", "target", "object_type", "declared_type", "current_stat
   "basis_version_states", "basis_versions", "cites_in", "cites_out", "cited_by_case"].sort();
 test("R14: the answer carries exactly R14's facts, with their sub-keys", async () => {
   for (const id of [W.INFO, W.INQ, W.ACTN, W.PA]) {
-    const f = await facts(id, { identity: "member:iris", author: "member:iris", by: "iris" });
+    const f = await facts(id, { viewer: "member:iris", identity: "member:iris", author: "member:iris", by: "iris" });
     assert.deepEqual(Object.keys(f).sort(), FACT_KEYS, id);
     assert.deepEqual(Object.keys(f.rested_on).sort(), ["frozen", "severed", "working"]);
     assert.deepEqual(Object.keys(f.cites_in).sort(), ["confirmed", "severed"]);
@@ -195,15 +197,15 @@ test("R14: declared_type, basis_legs and the reading states come from the docume
   /* N345: neither document carries `contradiction`; a type that is not an inquiry reads null (the true arm is driven
      over contradiction's fixture, contradiction.test.mjs) */
   assert.deepEqual([q.contradiction_inquiry, q2.contradiction_inquiry], [false, false]);
-  for (const id of [W.INFO, W.ACTN, W.PA]) assert.equal((await facts(id)).contradiction_inquiry, null, id);
+  for (const id of [W.INFO, W.ACTN, W.PA]) assert.equal((await facts(id, { viewer: "member:iris" })).contradiction_inquiry, null, id);
   /* N365: contradiction_sides_seen is null wherever contradiction_inquiry is not true (its true and false arms are
      driven over contradiction's fixture) */
-  for (const id of [W.INQ, W.INQ2, W.INFO, W.ACTN, W.PA]) assert.equal((await facts(id)).contradiction_sides_seen, null, id);
+  for (const id of [W.INQ, W.INQ2, W.INFO, W.ACTN, W.PA]) assert.equal((await facts(id, { viewer: "member:iris" })).contradiction_sides_seen, null, id);
 });
 
 test("R14: the citation facts are the ones the acts refuse on — a live and a severed citation from a project, counted "
    + "on both ends, and a severed edge onto a live target reinstatable", async () => {
-  const pa = await facts(W.PA, { identity: "member:iris", by: "iris" });
+  const pa = await facts(W.PA, { viewer: "member:iris", identity: "member:iris", by: "iris" });
   assert.deepEqual(pa.cites_out, { confirmed: 1, severed: 1, severed_reinstatable: 1 });
   const i1 = await facts(W.INFO), i2 = await facts(W.INFO2);
   assert.deepEqual([i1.cited_by_case, i2.cited_by_case], [{ confirmed: 1, severed: 0 }, { confirmed: 0, severed: 1 }]);
@@ -228,31 +230,32 @@ test("R14 R15: machine is asked of `author` through isMachineIdentity, null when
 });
 
 test("R15: positional facts are asked of who the caller is (identity), not of what it may see (viewer)", async () => {
-  /* the administrator's sight, asked as olga (who owns nothing and joined nothing) and as iris (owner of PA) */
-  const asOlga = await facts(W.PA, { viewer: "admin", identity: "member:olga" });
-  const asIris = await facts(W.PA, { viewer: "admin", identity: "member:iris" });
+  /* pam's sight (joined PA, no owner there), asked as olga (who owns nothing and joined nothing) and as iris (owner of
+     PA); D54: an administrator's sight of hidden PA is EXISTENCE, driven in its own test below */
+  const asOlga = await facts(W.PA, { viewer: "member:pam", identity: "member:olga" });
+  const asIris = await facts(W.PA, { viewer: "member:pam", identity: "member:iris" });
   assert.deepEqual([asOlga.project_owner, asOlga.project_target_owner, asOlga.project_participant], [false, false, false]);
   assert.deepEqual([asIris.project_owner, asIris.project_target_owner, asIris.project_participant], [true, true, true]);
   /* identity absent: the viewer's own member answers */
   const viewerOnly = await facts(W.PA, { viewer: "member:iris" });
   assert.deepEqual([viewerOnly.project_owner, viewerOnly.project_target_owner], [true, true]);
   /* a caller with no roster position (a class credential) reads null */
-  const cls = await facts(W.PA, { viewer: "admin", identity: "class:member" });
+  const cls = await facts(W.PA, { viewer: "member:pam", identity: "class:member" });
   assert.deepEqual([cls.project_owner, cls.project_target_owner, cls.project_participant], [null, null, null]);
 });
 
 test("R15: roster is asked of `by`, never of identity", async () => {
-  const f = await facts(W.PA, { viewer: "admin", identity: "member:olga", by: "iris" });
+  const f = await facts(W.PA, { viewer: "member:pam", identity: "member:olga", by: "iris" });
   assert.deepEqual([f.roster.owner, f.roster.state], [true, "joined"]);
-  const g = await facts(W.PA, { viewer: "admin", identity: "member:iris", by: "olga" });
+  const g = await facts(W.PA, { viewer: "member:pam", identity: "member:iris", by: "olga" });
   assert.deepEqual([g.roster.owner, g.roster.state], [false, "invited"]);
-  assert.equal((await facts(W.PA, { viewer: "admin", identity: "member:iris" })).roster, null);
+  assert.equal((await facts(W.PA, { viewer: "member:pam", identity: "member:iris" })).roster, null);
 });
 
 test("R15: each positional fact is null on a target of the wrong type", async () => {
   const inq = await facts(W.INQ, { identity: "member:iris", by: "iris" });
   assert.deepEqual([inq.project_target_owner, inq.project_participant, inq.roster], [null, null, null]);
-  const pa = await facts(W.PA, { identity: "member:iris", by: "iris" });
+  const pa = await facts(W.PA, { viewer: "member:iris", identity: "member:iris", by: "iris" });
   assert.deepEqual([pa.concludes_for_project, pa.concluded_for_project, pa.edition_warranted_for_project], [null, null, null]);
   for (const id of [W.INFO, W.ACTN]) {
     const f = await facts(id, { identity: "member:iris", by: "iris" });
@@ -268,7 +271,7 @@ test("R16 R14: facts are counts, never ids — cites_in, cited_by_case, cites_ou
   /* INFO is cited by PA and by INQ's basis leg (a question writes `rel: cites` too); INFO2's one citation was severed */
   assert.deepEqual([i1.cites_in, i2.cites_in], [{ confirmed: 2, severed: 0 }, { confirmed: 0, severed: 1 }]);
   for (const id of [W.INFO, W.INFO2, W.INQ, W.INQ2, W.ACTN, W.PA]) {
-    const f = await facts(id, { identity: "member:iris", by: "iris", author: "member:iris" });
+    const f = await facts(id, { viewer: "member:iris", identity: "member:iris", by: "iris", author: "member:iris" });
     for (const k of ["cites_in", "cited_by_case", "cites_out", "rested_on"]) assert.ok(counts(f[k]), `${id}.${k}: ${JSON.stringify(f[k])}`);
     for (const k of ["basis_legs", "basis_versions"]) assert.ok(Number.isInteger(f[k]), `${id}.${k}`);
     const text = JSON.stringify({ ...f, target: null });
@@ -289,6 +292,68 @@ test("R23: the joined-project predicates are asked only for the caller's own mem
   assert.equal((await facts(W.INQ, { viewer: "member:olga", identity: "member:olga" })).concludes_for_project, false);
   assert.equal((await facts(W.INQ, { viewer: "member:nell", identity: "member:iris" })).concludes_for_project, false);
   assert.equal((await facts(W.INQ, { viewer: "admin", identity: "member:olga" })).concludes_for_project, false);
+  /* D54: the founder's sight of hidden PA is EXISTENCE, so iris's identity under it concludes for no project there */
+  assert.equal((await facts(W.INQ, { viewer: "admin", identity: "member:iris" })).concludes_for_project, false);
+});
+
+/* D54 (K2408; membership R44, R60; J1's reading of R13, R14): an administrator, the founder included, neither invited
+   nor joined to a HIDDEN project sees it only at EXISTENCE. Its facts carry none of its contents, only the caller's own
+   positions and the rescue's one fact, so the rescue is the one act offered there, exactly where it is accepted (R18).
+   Negative controls (K874): a member who is no administrator is answered NO_SUCH_BUNDLE as for an absent id; the same
+   administrator on a discoverable project, and an invited administrator, see it whole (R14's facts in full). */
+test("R13 R14 R16 R18 (D54): an administrator neither invited nor joined to a hidden project is answered at EXISTENCE — "
+   + "no content fact, the rescue offered exactly where it is accepted and nothing else; a discoverable project, or an "
+   + "invited administrator, is seen whole; a member who is no administrator gets NO_SUCH_BUNDLE", async () => {
+  const PH = await W.project("Affordances project PH"), PE = await W.project("Affordances project PE");
+  W.PH = PH; must("iris owns PH", await W.own("PH", "iris"));
+  W.PE = PE; must("iris owns PE", await W.own("PE", "iris"));
+  must("PE discoverable", await POST(`op=projectvisibilityset&token=${W.IRIS}&projectId=${PE}&setting=discoverable`));
+  const CONTENT = ["declared_type", "current_state", "criticality", "case_member", "concludes_for_project",
+    "concluded_for_project", "edition_warranted_for_project", "basis_legs", "contradiction_inquiry",
+    "contradiction_sides_seen", "basis_version_states", "basis_versions"];
+  const COUNTS = ["rested_on", "cites_in", "cites_out", "cited_by_case"];
+  for (const viewer of ["admin", "member:ruth"]) {
+    const by = viewer === "admin" ? "admin" : "ruth";
+    const f = await facts(PH, { viewer, identity: viewer, author: viewer, by });
+    assert.deepEqual(Object.keys(f).sort(), FACT_KEYS, viewer);
+    assert.deepEqual([f.ok, f.target, f.object_type], [true, PH, "project"], viewer);
+    for (const k of CONTENT) assert.equal(f[k], null, `${viewer}: ${k}`);
+    for (const k of COUNTS) assert.ok(Object.values(f[k]).every((v) => v === null), `${viewer}: ${k}`);
+    assert.deepEqual([f.project_target_owner, f.project_participant], [false, false], viewer);
+    assert.deepEqual(f.roster, { owner: false, state: null, owner_floor_clear: null, other_owner_committed: null,
+                                 rescue_open: false }, viewer);
+    assert.deepEqual(deriveActs(f).map((a) => a.id), [], `${viewer}: PH's owner is active, so no rescue`);
+  }
+  /* PR: hidden, its sole owner deactivated — the rescue is open to ruth, offered, and accepted (a parameter's refusal) */
+  const pr = await facts(W.PR, { viewer: "member:ruth", identity: "member:ruth", author: "member:ruth", by: "ruth" });
+  assert.equal(pr.current_state, null);
+  assert.equal(pr.roster.rescue_open, true);
+  assert.deepEqual(deriveActs(pr).map((a) => a.id), ["projectownerrescue"]);
+  assert.deepEqual(await offered(W.RUTH, W.PR), ["projectownerrescue"]);
+  assert.equal(codeOf(await POST(`op=projectownerrescue&token=${W.RUTH}&projectId=${W.PR}&handle=__nobody__&reason=${E("stranded")}`)),
+    "NO_SUCH_HANDLE");
+  /* the content acts are refused there, as they are withheld */
+  assert.equal(codeOf(await GET(`op=cite&token=${W.RUTH}&project=${W.PR}&handle=${await W.sel(W.RUTH, [W.INFO])}&note=basis`)),
+    "PROJECT_SEEN_NOT_A_PARTICIPANT");
+  /* R16: nothing names a bundle but the target, and nothing of the project's contents (its title) is told */
+  assert.ok(!JSON.stringify({ ...pr, target: null }).includes(W.PR));
+  /* negative control: a member who is no administrator sees the hidden project not at all */
+  const nell = await facts(PH, { viewer: "member:nell", identity: "member:nell", by: "nell" });
+  const absent = await facts("PRJ-2026-9999-nowhere", { viewer: "member:nell" });
+  assert.deepEqual({ ...nell, target: null }, { ...absent, target: null });
+  assert.equal(nell.reason, "NO_SUCH_BUNDLE");
+  /* negative control: discoverable, the administrator is at FULL, R14's facts in full */
+  for (const viewer of ["admin", "member:ruth"]) {
+    const f = await facts(PE, { viewer, identity: viewer, by: viewer === "admin" ? "admin" : "ruth" });
+    assert.deepEqual([f.ok, f.current_state, f.cites_out], [true, "forming", { confirmed: 0, severed: 0, severed_reinstatable: 0 }], viewer);
+    assert.equal(typeof f.roster.owner_floor_clear, "boolean", viewer);
+  }
+  /* negative control: invited, the administrator is at FULL on the hidden project too */
+  must("invite ruth to PH", await W.invite("PH", "ruth", "iris"));
+  const invited = await facts(PH, { viewer: "member:ruth", identity: "member:ruth", by: "ruth" });
+  assert.deepEqual([invited.current_state, invited.roster.state, typeof invited.roster.owner_floor_clear],
+    ["forming", "invited", "boolean"]);
+  assert.ok((await offered(W.RUTH, PH)).includes("projectjoin"));
 });
 
 /* citeproject-inquiry's share (T18 convert): sever and reinstate on a QUESTION, offered on the case citations the
@@ -485,8 +550,10 @@ test("R18 R9 R10: projectjoin and projectleave are each offered exactly where th
   const PROJECTS = ["PA", "PB", "PC", "PR"];
   const states = async () => {
     const m = new Map();
+    /* D54: an administrator neither invited nor joined reads no hidden project's roster, so each is read as its owner */
+    const OWNER = { PA: "iris", PB: "pam", PC: "iris", PR: "vera" };
     for (const p of PROJECTS)
-      for (const row of must(`participants of ${p}`, await DO(`projectparticipants?projectId=${W[p]}&by=ruth`, {})).participants)
+      for (const row of must(`participants of ${p}`, await DO(`projectparticipants?projectId=${W[p]}&by=${OWNER[p]}`, {})).participants)
         m.set(`${row.handle}|${p}`, row.state);
     return m;
   };
