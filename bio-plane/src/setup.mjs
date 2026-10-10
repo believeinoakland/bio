@@ -1,4 +1,4 @@
-/* instance-setup: what a group's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R66).
+/* instance-setup: what a group's Civicsmith is and whose it is (R1–R19, R26–R31, R33–R43, R47, R50–R55, R60, R62–R75).
  *
  * THE PAGE AT THE ROOT is `setup-page`'s (K1851): the template, its group line and its script. This module composes it,
  * placing R47's block on who controls the group's Civicsmith in the template's one slot (setup-page R14), and re-exports
@@ -339,6 +339,19 @@ const draftUnavailable = (detail) => scriptRefusal("ASSISTANT_DRAFT_UNAVAILABLE"
 const draftRefused = (checked) => (checked && typeof checked.code === "string"
   ? scriptRefusal(checked.code, "the draft did not pass the check that it adds no fact, so nothing is offered.")
   : draftUnavailable("the draft could not be checked, so nothing is offered."));
+/* R65, R67 (T40: N812, K2373): a draft carries no project. The door resolves the account for a draft with no project
+   (`credentials` R56, `store-door` R10), so an account it hands in that is a project's (`level: "project"`, or naming a
+   `project`) serves no draft here: `{project: true}`, and nothing is drafted. Otherwise the account handed on is the
+   door's `{kind, level}` as given, never carrying a project. */
+const draftAccount = (assistant) => {
+  const a = assistant && typeof assistant === "object" ? assistant.account ?? null : null;
+  if (!a || typeof a !== "object") return { account: null };
+  if (a.level === "project" || (a.project !== undefined && a.project !== null)) return { project: true };
+  const { project: _none, ...account } = a;
+  return { account };
+};
+const projectAccount = (what) => draftUnavailable(`a draft carries no project, and the account resolved for this one is `
+  + `a project's, so nothing was drafted and ${what}.`);
 
 /* R60: the longest name a place is given, in characters. R65: the answers' bounds, and membership R109's limits on
    the focus and the purpose a draft must fit. */
@@ -1946,10 +1959,11 @@ export class InstanceSetup {
 
   /** R65, op=groupdescriptiondraft, which the door routes itself and calls here in-process (control-plane R57): `by` and
    *  `viewer` are its stamps (R29) and `assistant` is `{on, account}` as it resolved them (never the key); `answers` is
-   *  the request's. The refusals, in order: NOT_AN_ADMIN, AI_KEPT_AWAY (R55's gate), the door's account and
-   *  ceiling codes (answered there), GROUP_DRAFT_ANSWERS_MALFORMED or GROUP_DRAFT_NO_ANSWERS; then the draft, or, when
-   *  the draft cannot be served, ASSISTANT_DRAFT_UNAVAILABLE. `turn` is the door's call to agent-worker's `/draft`
-   *  (`{answers, account, holdings}` → `{focus, purpose, readLog}`), else the one this module was built with. */
+   *  the request's. The refusals, in order: NOT_AN_ADMIN, AI_KEPT_AWAY (R55's gate), the door's AI_NO_ACCOUNT,
+   *  AI_USE_SWITCHED_OFF and AI_LIMIT_REACHED (T40: answered there, never minted here), GROUP_DRAFT_ANSWERS_MALFORMED or
+   *  GROUP_DRAFT_NO_ANSWERS; then the draft, or, when the draft cannot be served, ASSISTANT_DRAFT_UNAVAILABLE. A draft
+   *  carries no project (T40): a project's account handed in serves none. `turn` is the door's call to agent-worker's
+   *  `/draft` (`{answers, account, holdings}` → `{focus, purpose, readLog}`), else the one this module was built with. */
   async groupDescriptionDraft({ answers = undefined, assistant = null, viewer = null, by = null, turn = null } = {}) {
     if (typeof by !== "string" || !by || !this.#membership().isAdministrator(by))
       return notAnAdmin(by ?? null, "asking the assistant to draft your group's description");
@@ -1960,6 +1974,8 @@ export class InstanceSetup {
     if (assistant && typeof assistant === "object" && assistant.on === false)
       return draftUnavailable("the assistant was not on when this request was resolved, so nothing was drafted and the "
         + "fields are as they were.");
+    const served = draftAccount(assistant);
+    if (served.project) return projectAccount("the fields are as they were");
     /* DEC-49 REGION is-group-draft-answers */
     const given = Array.isArray(answers) && answers.length <= GROUP_DRAFT_ANSWERS_MAX ? answers : null;
     if (!given || given.some((a) => !a || typeof a !== "object" || typeof a.question !== "string"
@@ -1973,13 +1989,15 @@ export class InstanceSetup {
       + "nothing was drafted and the fields are as they were.");
     const draftTurn = typeof turn === "function" ? turn : this.#deps.groupDraftTurn;
     if (typeof draftTurn !== "function") return unavailable();
-    const account = assistant && typeof assistant === "object" ? assistant.account ?? null : null;
+    const account = served.account;
     const suggestions = !!(account && account.suggestions === true);
     let got = null;
     try { got = await draftTurn({ answers: given.map((a) => ({ question: a.question, text: a.text })), account, holdings: suggestions }); }
     catch { got = null; }
     if (!got || typeof got !== "object") return unavailable();
     const told = given.map((a) => a.text);
+    /* R65: the label names who asked by their handle, as R67's readings do (the id itself for the founder). */
+    const askedBy = this.#nameOf(by);
     const readLog = Array.isArray(got.readLog) ? got.readLog : [];
     const out = { ok: true, withheld: [] };
     for (const [field, max] of [["focus", GROUP_FOCUS_MAX], ["purpose", GROUP_PURPOSE_MAX]]) {
@@ -1987,7 +2005,7 @@ export class InstanceSetup {
       const checked = checkDraft(text, { told, readLog, firsthand: false, suggestions, askedBy: by });
       if (!checked || checked.ok !== true) return draftRefused(checked);
       if ([...checked.text].length > max) return unavailable();
-      out[field] = { text: checked.text, label: { kind: "machine", asked_by: by } };
+      out[field] = { text: checked.text, label: { kind: "machine", asked_by: askedBy } };
       out.withheld.push(...(checked.withheld || []).map((w) => ({ field, ...w })));
     }
     out.note = "a draft: nothing is saved until you edit it and keep it, and then the words are your group's.";
@@ -2279,12 +2297,15 @@ export class InstanceSetup {
    *  `ASSISTANT_DRAFT_UNAVAILABLE` carrying the words the door sends to agent-worker's `/draft`, the signal it drafts
    *  on: `{key, en, note, means, protected}` for each word to draft (`to_language`, with `offered_official`), or the one
    *  kept word's `{key, en, text, protected}` (`to_english`). Writes nothing: the door hands the answered draft to
-   *  `translationdraftrecord`. `assistant` is the door's `{on, account}`. */
+   *  `translationdraftrecord`. `assistant` is the door's `{on, account}`; a draft carries no project (T40), so a
+   *  project's account handed in answers ASSISTANT_DRAFT_UNAVAILABLE with no words, nothing to draft on. The door's
+   *  AI_NO_ACCOUNT, AI_USE_SWITCHED_OFF and AI_LIMIT_REACHED are answered there, never minted here. */
   translationDraft({ language = null, direction = undefined, keys = undefined, key = null, assistant = null, by = null } = {}) {
     const req = this.#draftRequest({ language, direction, keys, key, by });
     if (req.refused) return req.refused;
     const off = this.assistantGate();
     if (off) return off;
+    if (draftAccount(assistant).project) return projectAccount("nothing is sent");
     const out = draftUnavailable("the draft is asked of the assistant by the door with these words; nothing is drafted or "
       + "saved here.");
     return req.direction === "to_english"
