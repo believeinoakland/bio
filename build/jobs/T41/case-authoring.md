@@ -185,3 +185,7 @@ T41-43 built; my record's Completion has the detail.
 - **Tests:** 178/180 with local stand-ins for case-disclosures' `accountJudged` and ratification's `approvalsInForce`. The 2 reds are case-disclosures' wording, red before this job.
 - **Read this before merging:** on the committed tree alone it is 29/180, because R63 fails closed (`ACCOUNT_CHECK_UNDETERMINED`) until case-disclosures provides `accountJudged`. Both providers merge before me in L8's order. Their CHANGEs re-open me for B8/B10's re-pins and a full re-run.
 - **Users' suites:** no new reds.
+
+## J7 · COMPLETE
+
+Re B12 (K2543): merged tranche/T41 at e2f3e4b7f7 (publication). Nothing changed. case-authoring is 178/180 with the local stand-ins for accountJudged and approvalsInForce; the 2 reds are case-disclosures' wording. On the committed tree alone it is 29/180, because R63 fails closed until case-disclosures merges. Checks: format 0, coverage 52/52, ownership 0, architecture 1 (ai-runs to add to uses). J6 stands.
