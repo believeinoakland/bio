@@ -215,7 +215,10 @@ test("R10 refusals in order: MACHINE_CANNOT_APPROVE_TEMPLATE, NO_SUCH_TEMPLATE, 
   refused(ap({ version: "TPL-test-records-request@1" }), "NOT_IN_REVIEW");
   w.ft.templateSubmit({ version: d.version, reviewers: ["frank"], author: A, viewer: A });
   refused(ap({ by: F, viewer: F }), "NOT_AN_APPROVER");
-  refused(ap({ by: V("erin"), viewer: V("erin") }), "NOT_AN_APPROVER", "an administrator is not a project owner");
+  /* D54: an administrator neither invited nor joined sees the hidden P only at EXISTENCE: its template is absent */
+  refused(ap({ by: V("erin"), viewer: V("erin") }), "NO_SUCH_TEMPLATE", "D54: P is hidden from erin");
+  w.join(w.P, "erin", "invited");
+  refused(ap({ by: V("erin"), viewer: V("erin") }), "NOT_AN_APPROVER", "an invited administrator sees it, and is not a project owner");
   refused(ap({}), "APPROVER_IS_AUTHOR");
   refused(ap({ by: B, viewer: B }), "REVIEWS_INSUFFICIENT", "bob, another owner, passes APPROVER_IS_AUTHOR");
   /* a co-contributor: alice approves her own version once bob revised it (a run's adoption does not count) */
@@ -245,6 +248,13 @@ test("R10 the earlier approved version becomes updated, naming its successor, an
   const before = [read(w, a.version), read(w, two.version)];
   assert.equal(w.ft.templatesFor({ viewer: V("dave") }).templates.some((t) => t.id === a.template), false, "dave cannot see P's template");
   const wd = (x) => w.ft.templateApprove({ version: two.version, widen: true, by: V("erin"), viewer: V("erin"), ...x });
+  /* D54: P is hidden and erin neither invited nor joined: the template is absent to her, and nothing is written */
+  const unseen = w.snapshot();
+  refused(wd({}), "NO_SUCH_TEMPLATE");
+  assert.deepEqual(w.snapshot(), unseen);
+  /* a discoverable project is seen whole by an administrator, as before D54 */
+  w.discoverable(w.P);
+  assert.equal(w.ft.templatesFor({ viewer: V("dave") }).templates.some((t) => t.id === a.template), false, "a member outside a discoverable P still sees none of it");
   refused(wd({ by: B, viewer: B }), "NOT_AN_APPROVER", "an owner is not an administrator");
   const d3 = w.ft.templateDraft({ template: a.template, text: "Three {{group}}", author: A, viewer: A });
   refused(wd({ version: d3.version }), "TEMPLATE_NOT_APPROVED");
@@ -281,9 +291,11 @@ test("R11 retiring a whole template: by an approver of its scope, with a reason;
   const listed = w.ft.templatesFor({ state: "retired", viewer: A }).templates.find((t) => t.id === a.template);
   assert.equal(listed.retired.reason, "law changed");
   assert.equal(w.count("tpl_revisions"), rows, "nothing deleted");
-  /* a group-wide template is retired by an administrator */
+  /* a group-wide template is retired by an administrator (erin invited to the hidden P, so she sees it to widen it, D54) */
   const b = approved(w, { name: "Wide" });
-  w.ft.templateApprove({ version: b.version, widen: true, by: V("erin"), viewer: V("erin") });
+  refused(w.ft.templateApprove({ version: b.version, widen: true, by: V("erin"), viewer: V("erin") }), "NO_SUCH_TEMPLATE", "D54: P hidden from erin");
+  w.join(w.P, "erin", "invited");
+  assert.equal(w.ft.templateApprove({ version: b.version, widen: true, by: V("erin"), viewer: V("erin") }).ok, true);
   refused(w.ft.templateRetire({ template: b.template, reason: "r", by: A, viewer: A }), "NOT_AN_APPROVER");
   assert.equal(w.ft.templateRetire({ template: b.template, reason: "r", by: V("erin"), viewer: V("erin") }).ok, true);
 });
