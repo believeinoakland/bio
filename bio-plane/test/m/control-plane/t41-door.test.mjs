@@ -210,3 +210,27 @@ test("R17, R29 (K2442; membership R18): `op=memberlist` is stamped with the call
     assert.equal(inner.params.viewer, viewer);
   }
 });
+
+test("R17, R29 (K2442; membership R18, D54): through the door and membership's own map, an administrator neither invited nor joined to a hidden project reads no participant of it but its owners, because the roster is read by her stamped sight (negative control: once invited, the same administrator's roster lists its participants)", async () => {
+  const { world: membershipWorld, V } = await import("../membership/fixture.mjs");
+  const { membershipOps } = await import("../../../src/membership/index.mjs");
+  const m = await membershipWorld().group("ann", "bob", "cal", "second");
+  m.project("PROJ-H", "Hidden H");
+  m.m.projectClaimOwner({ projectId: "PROJ-H", memberId: "ann" });
+  m.m.projectInvite({ projectId: "PROJ-H", handle: "cal", by: "ann", viewer: V("ann") });
+  /* `second` administers: its session's rights say so, as membership answers them for an administrator */
+  const { member } = await import("./harness.mjs");
+  const S2 = "f".repeat(64);
+  const { env } = world({ sessions: { [S2]: member("second", [], { administer: true }) } });
+  const rosterOf = async (who) => {
+    env.calls.length = 0;
+    await call(env, { op: "memberlist", token: S2, params: { viewer: FORGED } });
+    const [inner] = opCalls(env).filter((c) => c.route === "memberlist");
+    const out = membershipOps(m.m, inner.url, null, {}).memberlist();
+    return out.members.find((r) => r.member_id === who).projects;
+  };
+  assert.deepEqual(await rosterOf("cal"), [], "cal's invitation to the hidden project is not listed");
+  assert.deepEqual(await rosterOf("ann"), [{ project: "PROJ-H", state: null, owner: true, existence: true }], "only its owner");
+  m.m.projectInvite({ projectId: "PROJ-H", handle: "second", by: "ann", viewer: V("ann") });
+  assert.deepEqual(await rosterOf("cal"), [{ project: "PROJ-H", state: "invited", owner: false }]);
+});
