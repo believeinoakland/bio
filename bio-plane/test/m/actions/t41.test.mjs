@@ -210,6 +210,7 @@ const rr = (lines = []) => ["action_kind: records_request", ...lines];
 const CPL = ["counterparty:", "  state: named", "  role: Town Clerk", "  body: Town of Port Ellery"];
 import { actionMd } from "./fixture.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
+import * as actions from "../../../src/actions/index.mjs";
 const md = (id, lines) => actionMd(id, [...CPL, ...lines]);
 
 test("R70 a records_request stating seeks is checked at the write through progressions.readProgression: a progression not held or a stage not declared is refused SEEKS_REFUSED (C-117.29) with every finding, before any write", () => {
@@ -251,12 +252,13 @@ test("R70 a records_request stating seeks is checked at the write through progre
   assert.deepEqual(progressions.asked, []);
 });
 
-test("R70 any member who may write the action may state seeks; a machine or unstamped author may not state, change or remove it (it may propose, R28's shape); a machine carrying it forward unchanged lands", () => {
+test("R72 R70 any member who may write the action may state seeks; a machine or unstamped author that states, changes or removes it is refused MACHINE_CANNOT_STATE_SEEKS (C-32.21) before any write; a machine carrying it forward unchanged lands", () => {
   const w = world({ deps: { progressions: progressionsStandIn() } });
   const ok = [{ progression: "meeting", entity: E1, stage: "minutes" }];
   for (const author of ["class:daemon", ""]) {
     const r = w.promote(A, md(A, rr(seeksLines(ok))), { author });
-    assert.equal(r.reason, "MACHINE_CANNOT_STATE_SEEKS", author || "unstamped");
+    assert.deepEqual([r.reason, r.code, r.check], ["MACHINE_CANNOT_STATE_SEEKS", "MACHINE_CANNOT_STATE_SEEKS", "C-32.21"], author || "unstamped");
+    assert.equal(r.translation, grammar.ACTION_CATALOGUE_CHECKS.MACHINE_CANNOT_STATE_SEEKS.translation);
   }
   assert.equal(w.record.head(A), null);
   assert.equal(w.promote(A, md(A, rr(seeksLines(ok))), { author: BOB }).ok, true, "a member states it");
@@ -334,4 +336,66 @@ test("R71 a host given no intent registers none and starts; a reader already hel
   assert.doesNotThrow(() => world({ deps: { intent: null } }));
   const held = { registerNoneExistsReader: () => ({ ok: false, reason: "NONE_EXISTS_READER_DECLARED" }) };
   assert.doesNotThrow(() => world({ deps: { intent: held } }));
+});
+
+test("R73 actionSeeksPropose: refusals in R73's order; a target not a records_request, or seeks the grammar refuses, answered SEEKS_REFUSED (C-117.29) with every finding; nothing written", () => {
+  const w = world({ deps: { progressions: progressionsStandIn() } });
+  const ok = [{ progression: "meeting", entity: E1, stage: "minutes" }];
+  assert.equal(w.promote(A, md(A, rr())).ok, true);
+  assert.equal(w.promote(B, md(B, ["action_kind: other"])).ok, true);
+  assert.equal(w.promote(I3, ["---", `id: ${I3}`, "object_type: information", `title: ${I3}`, "current_state: collected",
+    'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"', "---", "", "d", ""].join("\n")).ok, true);
+  const S = (x) => w.a.actionSeeksPropose({ target: A, seeks: ok, proposer: "class:daemon", viewer: "class:daemon", ...x });
+  assert.deepEqual([S({ proposer: "", target: "", seeks: "nonsense" }), S({ target: "", seeks: "nonsense" }),
+    S({ target: "ACTN-2026-0404-x", seeks: "nonsense" }), S({ viewer: "nobody", seeks: "nonsense" }),
+    S({ target: I3, seeks: "nonsense" }), S({ target: B }), S({ seeks: "nonsense" })].map((r) => r.reason),
+    ["NO_AUTHOR", "NO_TARGET", "NO_SUCH_BUNDLE", "NO_SUCH_BUNDLE", "NOT_AN_ACTION", "SEEKS_REFUSED", "SEEKS_REFUSED"]);
+  const kind = S({ target: B });
+  assert.deepEqual([kind.code, kind.check, kind.target], ["SEEKS_REFUSED", "C-117.29", B]);
+  assert.match(kind.findings[0].detail, /only a records_request names the stages/);
+  const notHeld = S({ seeks: [{ progression: "zoning", entity: E1, stage: "x" }, { progression: "meeting", entity: E1, stage: "vote" }] });
+  assert.deepEqual([notHeld.reason, notHeld.findings.length], ["SEEKS_REFUSED", 2], "progressions read as R70 reads them");
+  for (const seeks of [null, [], "[]", Array.from({ length: 13 }, (_, i) => ({ ...ok[0], entity: `ENT-2026-${1000 + i}-x` })), [ok[0], ok[0]]])
+    assert.equal(S({ seeks }).reason, "SEEKS_REFUSED", JSON.stringify(seeks)?.slice(0, 60));
+  assert.equal(w.rows(`SELECT COUNT(*) AS n FROM action_seeks_proposals`)[0].n, 0, "no refusal writes");
+});
+
+test("R73 any credential may propose; a proposal is stored apart and labelled, replaces only its proposer's own, never changes seeks or writes a file; R25 lists the proposals beside seeks", () => {
+  const w = world({ deps: { progressions: progressionsStandIn() } });
+  const stated = [{ progression: "budget", entity: E2, stage: "adopted" }];
+  assert.equal(w.promote(A, md(A, rr(seeksLines(stated)))).ok, true);
+  const text = w.text(A), manifest = JSON.stringify(w.rows(`SELECT * FROM manifest ORDER BY rowid`));
+  const one = [{ progression: "meeting", entity: E1, stage: "minutes" }];
+  const m = w.a.actionSeeksPropose({ target: A, seeks: one, proposer: "class:daemon", viewer: "class:daemon" });
+  assert.deepEqual([m.ok, m.evidence, m.proposal.state, m.proposal.machine_work, m.proposal.seeks, m.seeks],
+    [true, false, "machine_proposed", true, one, stated]);
+  assert.match(m.proposal.says, /machine work/);
+  assert.match(m.says, /not the action's seeks and did not change it/);
+  /* a member's proposal, given as JSON (the op's body or query), stands beside the machine's */
+  const two = [{ progression: "meeting", entity: E1, stage: "notice" }, { progression: "budget", entity: E1, stage: "adopted" }];
+  w.clock.ms += 60000;
+  const b = actions.actionsOps(w.a, new URL(`https://x/?target=${A}&viewer=${BOB}&proposer=${BOB}`), { seeks: JSON.stringify(two) })
+    .actionseekspropose();
+  assert.deepEqual([b.ok, b.proposal.state, b.proposal.seeks], [true, "member_proposed", two]);
+  /* the machine restates: its own replaced, the member's kept */
+  w.clock.ms += 60000;
+  const again = [{ progression: "meeting", entity: E2, stage: "notice" }];
+  assert.equal(w.a.actionSeeksPropose({ target: A, seeks: again, proposer: "class:daemon", viewer: "class:daemon" }).ok, true);
+  const read = w.a.actionRead({ id: A, viewer: ALICE });
+  assert.deepEqual(read.seeks, stated, "seeks as a member stated it");
+  assert.deepEqual(read.seeks_proposals.proposals.map((p) => [p.by, p.state, p.seeks]),
+    [["class:daemon", "machine_proposed", again], [BOB, "member_proposed", two]], "newest first, each proposer once");
+  assert.deepEqual([read.seeks_proposals.limit, read.seeks_proposals.truncated], [12, false]);
+  /* negative control: nothing in the record moved; a proposal never states seeks */
+  assert.equal(w.text(A), text, "no file written");
+  assert.equal(JSON.stringify(w.rows(`SELECT * FROM manifest ORDER BY rowid`)), manifest);
+  assert.deepEqual(grammar.seeksOf(w.fm(A)), stated);
+  /* an action with none answers an empty list and a sentence */
+  assert.equal(w.promote(B, md(B, rr())).ok, true);
+  const none = w.a.actionRead({ id: B, viewer: ALICE });
+  assert.deepEqual([none.seeks, none.seeks_proposals.proposals], [[], []]);
+  assert.match(none.seeks_proposals.says, /no proposal of what this request seeks/);
+  /* the proposals purge with the action (R36) */
+  w.record.purge({ bundleId: A });
+  assert.equal(w.rows(`SELECT COUNT(*) AS n FROM action_seeks_proposals WHERE bundle_id=?`, A)[0].n, 0);
 });

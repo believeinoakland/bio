@@ -64,7 +64,7 @@ import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, acti
          counterpartyOffice,
          clockMovesNotMechanical, ACTION_FENCE_CHECKS, ACTION_ACT_CHECKS, GOVERNING_LAW_CHECKS, QUOTE_CHECKS,
          LIFECYCLE_CHECKS, RISK_TIER_REVISION_CHECKS, RECORDS_LAW_FENCE_CHECKS,
-         ACTION_CATALOGUE_CHECKS, seeksOf, seeksFindings } from "../action-grammar/index.mjs";
+         ACTION_CATALOGUE_CHECKS, seeksOf, seeksFindings, SEEKS_MAX } from "../action-grammar/index.mjs";
 import { ACTIONS_TABLES, migrateActions } from "./schema.mjs";
 
 export { ACTIONS_SCHEMA, ACTIONS_TABLES } from "./schema.mjs";
@@ -79,6 +79,8 @@ export const CORRESPOND_LEASE_MS = 30000;
    beside the answer — never a claim that no more exist. R28: the same bound for proposed tiers. */
 export const LAW_PROPOSALS_READ_MAX = 12;
 export const RISK_PROPOSALS_READ_MAX = 12;
+/** R73: the most proposals of what a request seeks one action's read lists (R19's bound). */
+export const SEEKS_PROPOSALS_READ_MAX = 12;
 /** R27: the most quotes one read answers. */
 export const QUOTES_MAX = 500;
 /** R30: the most actions one page lists. */
@@ -814,24 +816,30 @@ export class Actions {
     return null;
   }
 
-  /* R70 (H30 (1); K2505, K2552, K2553): a creation or revision stating `seeks`, or changing it, is judged before any
-     write: a machine or unstamped author may not state or change it (a member's statement of what the request asks the
-     records for); then action-grammar's `seeksFindings` (its R13) over the facts read here through
-     `progressions.readProgression`, one entry per distinct progression a well-formed item names: its declared stage keys,
-     or null for a progression the record does not hold. A definition that cannot be read is read as not held (fail
-     closed), and the refusal says so. The refusal is the grammar's own (C-117.29), relayed with every finding. Asked only
-     when `seeks` moved, so a later revision is never refused for a progression's later version. */
-  #seeksRefusal(heldFm, nextFm, who) {
+  /* R70, R72 (H30 (1); K2505, K2552, K2553, K2561): a creation or revision stating `seeks`, or changing or removing it,
+     is judged before any write: a machine or unstamped author may not (R72: what a request asks the records for is a
+     member's statement; a machine proposes it, R73); then `#seeksRefusal` (R70). Asked only when `seeks` moved, so a later
+     revision is never refused for a progression's later version. */
+  #seeksFence(heldFm, nextFm, who) {
     const key = (fm) => JSON.stringify(fm && fm.seeks !== undefined && fm.seeks !== null ? fm.seeks : null);
     if (key(heldFm) === key(nextFm)) return null;
     /* DEC-49 REGION is-machine-state-seeks */
     if (!who || isMachineIdentity(who))
       return refuse("MACHINE_CANNOT_STATE_SEEKS", "which stages a records request asks the records for is a member's "
-        + "statement; a machine credential may not state, change or remove it. Nothing was written.");
+        + "statement; a machine credential may not state, change or remove it, and may propose it "
+        + "(op=actionseekspropose). Nothing was written.");
     /* END DEC-49 REGION is-machine-state-seeks */
+    return this.#seeksRefusal(nextFm);
+  }
+
+  /* R70, R73: action-grammar's `seeksFindings` (its R13) over `fm`, with the facts read here through
+     `progressions.readProgression`, one entry per distinct progression an item names: its declared stage keys, or null
+     for a progression the record does not hold. A definition that cannot be read is read as not held (fail closed), and
+     the refusal says so. The refusal is the grammar's own (C-117.29), relayed with every finding; null when none. */
+  #seeksRefusal(fm) {
     const stages = {};
     let unreadable = false;
-    const items = Array.isArray(nextFm.seeks) ? nextFm.seeks : [];
+    const items = Array.isArray(fm.seeks) ? fm.seeks : [];
     for (const p of new Set(items.map((x) => (x && typeof x === "object" ? x.progression : null))
                               .filter((x) => typeof x === "string" && x.trim()))) {
       let r = null;
@@ -840,7 +848,7 @@ export class Actions {
       stages[p] = r.found ? (r.stages || []).map((st) => st.stage_key) : null;
     }
     const found = [];
-    seeksFindings(nextFm, { stages }, found);
+    seeksFindings(fm, { stages }, found);
     const errors = found.filter((x) => x.severity === "error");
     if (!errors.length) return null;
     return refuse(errors[0].code, errors[0].message, { findings: findingsOf(errors),
@@ -889,7 +897,7 @@ export class Actions {
       if (link) return link;
       const t33 = this.#heldLinks(heldFm, nextFm, who, pkg.actorViewer ?? pkg.viewer ?? c.viewer ?? (who || null));
       if (t33) return t33;
-      const seeks = this.#seeksRefusal(heldFm, nextFm, who);
+      const seeks = this.#seeksFence(heldFm, nextFm, who);
       if (seeks) return seeks;
       const large = this.#tooLarge(nextFm);
       if (large) return large;
@@ -2566,6 +2574,9 @@ export class Actions {
       governing_laws: governingLawsOf(fm),
       governing_laws_proposals: this.#lawProposalsFor(row.bundle_id),
       risk_tier_proposals: this.#riskProposalsFor(row.bundle_id),
+      /* R70, R73: what a records request seeks, as a member stated it, and the proposals of it stored apart. */
+      seeks: seeksOf(fm),
+      seeks_proposals: this.#seeksProposalsFor(row.bundle_id),
       records_law: fm.action_kind === "records_request" ? recordsLawOf(fm, this.#lawAuthor(row.bundle_id, fm)) : null,
       lifecycle: requestLifecycleOf(fm, localToday(now, zoneOf(place)) ?? ""),
       /* R26, DEC-14: the ACTION'S OWN OUTCOME, never the breach's consequence (which `consequences` holds). */
@@ -2997,6 +3008,59 @@ export class Actions {
                  + `it: the tier is ${held === "undetermined" ? "undetermined" : held}, and only a member's own act sets it.` };
   }
 
+  /** R73 (K2561; R70): a proposal of what a records request seeks, as R19 is to `actionLaws`: stored apart, labelled,
+   *  replacing only its proposer's own standing proposal; it writes no file and never changes `seeks`. Its items are
+   *  judged as R70 judges a statement (`SEEKS_REFUSED`, C-117.29, every finding carried), on the target's own kind. */
+  actionSeeksPropose({ target, seeks = null, proposer = null, viewer = null } = {}) {
+    const who = String(proposer ?? "").trim();
+    if (!who) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    const b = this.#visibleAction(target, viewer);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    const held = this.#heldFm(target) || {};
+    let list = seeks;
+    if (typeof list === "string") { try { list = JSON.parse(list); } catch { /* judged as given: not a list */ } }
+    const asked = { action_kind: held.action_kind, seeks: list === undefined || list === null ? [] : list };
+    const r = this.#seeksRefusal(asked);
+    if (r) return { ...r, target };
+    const items = seeksOf(asked);
+    const at = stampInstant("second", this.#nowMs(null));
+    this.record.transact(() => {
+      this.sql.exec(`DELETE FROM action_seeks_proposals WHERE bundle_id=? AND proposed_by=?`, target, who);
+      items.forEach((x, i) => this.sql.exec(`INSERT INTO action_seeks_proposals (bundle_id, proposed_by, ord, progression,
+        entity, stage, proposed_at) VALUES (?,?,?,?,?,?,?)`, target, who, i, x.progression, x.entity, x.stage, at));
+    });
+    const stated = seeksOf(held);
+    return { ok: true, target, weight: "single", evidence: false,
+             proposal: { ...proposalLabelFor(who, "seeks"), at, seeks: items },
+             seeks: stated,
+             says: `${items.length} stage${items.length === 1 ? " is" : "s are"} proposed as what this request seeks. This `
+                 + `is not the action's seeks and did not change it: ${stated.length ? `it names ${stated.length} stage(s) a `
+                 + "member stated" : "no member has stated what it seeks"}, and only a member's own write states it.` };
+  }
+
+  /* R73: the standing proposals of what the request seeks, newest first, at most 12, with `truncated` and a sentence. */
+  #seeksProposalsFor(id) {
+    const cap = SEEKS_PROPOSALS_READ_MAX;
+    const rows = this.#rows(`SELECT proposed_by, ord, progression, entity, stage, proposed_at FROM action_seeks_proposals
+      WHERE bundle_id=? ORDER BY proposed_at DESC, proposed_by, ord LIMIT ?`, id, (cap + 1) * SEEKS_MAX + 1);
+    const by = new Map();
+    for (const r of rows) {
+      if (!by.has(r.proposed_by)) by.set(r.proposed_by, { ...proposalLabelFor(r.proposed_by, "seeks"), at: r.proposed_at, seeks: [] });
+      by.get(r.proposed_by).seeks.push({ progression: r.progression, entity: r.entity, stage: r.stage });
+    }
+    const all = [...by.values()];
+    const proposals = all.slice(0, cap);
+    return { proposals, limit: cap, truncated: all.length > cap,
+             says: proposals.length
+               ? `${proposals.length} proposal${proposals.length === 1 ? "" : "s"} of what this request seeks. A proposal is `
+                 + "not the action's seeks: that is a member's own statement, shown beside this one."
+               : "no proposal of what this request seeks stands in the record. That is a statement about proposals and "
+                 + "about nothing else." };
+  }
+
   /* R28: the standing tier proposals, newest first, at most 12, with `truncated` and a sentence also when empty. */
   #riskProposalsFor(id) {
     const cap = RISK_PROPOSALS_READ_MAX;
@@ -3043,7 +3107,7 @@ export class Actions {
 
 /* The acts answer their catalogue-backed refusals with code, check and translation (the Provides' "Terms"). */
 for (const m of ["actionMove", "actionCorrespond", "actionLaws", "actionLawsPropose", "actionRiskTier", "actionQuotes",
-                 "actionRiskPropose", "actionPressure", "actionHold", "actionHoldRelease", "holdReleasePreview",
+                 "actionRiskPropose", "actionSeeksPropose", "actionPressure", "actionHold", "actionHoldRelease", "holdReleasePreview",
                  "projectHolds", "actionCreate", "check"]) {
   const fn = Actions.prototype[m];
   Actions.prototype[m] = function (...a) { return withRow(fn.apply(this, a)); };
@@ -3060,6 +3124,14 @@ const PROPOSAL_SAYS = {
     member_proposed: "a member proposed this risk tier to whoever states it. It is a proposal and not the tier: only the "
       + "risk-tier act sets that, and the record holds who made the proposal",
     unstated: "the record does not say who proposed this risk tier",
+  },
+  seeks: {
+    machine_proposed: "a machine credential proposed what this records request seeks. That is machine work, labelled as "
+      + "machine work: it sets stages beside the action for members to weigh and never states what it seeks; nothing "
+      + "becomes it until a member states it themselves",
+    member_proposed: "a member proposed what this records request seeks to whoever states it. It is a proposal and not "
+      + "the action's seeks: only a member's own write states that, and the record holds who made the proposal",
+    unstated: "the record does not say who proposed what this records request seeks",
   },
 };
 function proposalLabelFor(who, subject) {
@@ -3155,6 +3227,9 @@ export function actionsOps(a, url, body) {
                                              reason: q("reason") ?? b.reason ?? null, viewer: q("viewer"), author: q("author") }),
     actionlawspropose: () => a.actionLawsPropose({ target: q("target") || b.target, laws: b.laws, viewer: q("viewer"),
                                                    proposer: q("proposer") }),
+    /* R73 (K2561): a proposal of what a records request seeks (declared and routed by L11). */
+    actionseekspropose: () => a.actionSeeksPropose({ target: q("target") || b.target, seeks: b.seeks ?? q("seeks"),
+                                                     viewer: q("viewer"), proposer: q("proposer") }),
     actionriskpropose: () => a.actionRiskPropose({ target: q("target") || b.target, tier: q("tier") ?? b.tier ?? null,
                                                    basis: q("basis") ?? b.basis ?? null, viewer: q("viewer"),
                                                    proposer: q("proposer") }),
