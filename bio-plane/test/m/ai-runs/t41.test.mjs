@@ -1,91 +1,154 @@
-/* ai-runs T41 (T41-23): B2's run holder for steps, R73's step-runs, R75's test bar, R76's cost and R72's estimated cost. */
+/* ai-runs T41 (T41-23): B2's run holder for steps, R73's step-runs and exploring runs (each a system step of its own,
+   K2490), R74's batch, R75's test bar and the deploy gate that reads it (B6), R76's cost. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, stepsStub, OPEN, INQ, ORG, T0, USAGE } from "./world.mjs";
-import { RUN_BOUNDS } from "../../../src/run-rules/index.mjs";
+import { world, stepsStub, OPEN, INQ, ORG, ANN, T0, TEST_SET } from "./world.mjs";
+import { AiRuns } from "../../../src/ai-runs/index.mjs";
+import { RUN_BOUNDS, CIVICSMITH_TEST_SET } from "../../../src/run-rules/index.mjs";
 
 const CAP = "d".repeat(64);
 const look = (state, extra = {}) => ({ level: "content", subject: CAP, state, detail: state, ...extra });
+const SYS = (run) => AiRuns.systemOf(run);
+/** A member's own credential, as the control plane stamps it (R9's `principalPlane`). */
+const ANN_CRED = "member:ann/tok-ann";
 
-test("B2 (K2480): runHolder(by, run) answers steps {enabled_by, principal} for a running run whose principal is `by`, registered with steps at start; an unknown, blank, ended or another's run answers null", async () => {
+test("B2 (K2480; J5 (8)): runHolder(by, run) answers steps {enabled_by, principal} for a running run whose principal `by` is, or whose own system identity it is — `principal` the opener's viewer; an unknown, blank, ended, another's run, or another run's system identity answers null", async () => {
   const steps = stepsStub();
   const w = world({ steps });
   await w.group("ann"); w.bundle(INQ);
   assert.equal(steps.holder().module, "ai-runs", "registered once at start");
   await w.runs.open(OPEN());
+  await w.runs.open(OPEN({ run: "R2", principalPlane: ANN_CRED, actor: ANN }));
   const fn = steps.holder().fn;
-  assert.deepEqual(fn(ORG, "R1"), { enabled_by: "member:ann", principal: ORG });
-  for (const [by, run] of [[ORG, "R404"], [ORG, ""], [ORG, null], ["class:ai/other", "R1"], ["", "R1"], [null, "R1"]])
+  assert.deepEqual(fn(ORG, "R1"), { enabled_by: "member:ann", principal: "class:ai" }, "a machine's run acts in its class's sight");
+  assert.deepEqual(fn(SYS("R1"), "R1"), { enabled_by: "member:ann", principal: "class:ai" }, "the run's own system identity");
+  assert.deepEqual(fn(ANN_CRED, "R2"), { enabled_by: "member:ann", principal: "member:ann" }, "a member's run acts in her sight");
+  assert.deepEqual(fn(SYS("R2"), "R2"), { enabled_by: "member:ann", principal: "member:ann" });
+  for (const [by, run] of [[ORG, "R404"], [ORG, ""], [ORG, null], ["class:ai/other", "R1"], ["", "R1"], [null, "R1"],
+                           [SYS("R2"), "R1"], ["class:daemon", "R1"]])
     assert.equal(fn(by, run), null, `${by} ${run}`);
   await w.runs.close({ run: "R1", bound: "completed", viewer: "admin", caller: ORG });
   assert.equal(fn(ORG, "R1"), null, "an ended run is held by nobody");
+  assert.equal(fn(SYS("R1"), "R1"), null);
 });
 
-test("R73: a run opens with `step` and `origin` — an unknown origin, explore with no step, explore while investigate cannot deploy, and a step the opener cannot see are each refused, nothing written; a seen step (control) opens, its looks name authority step, and its close ends the step as a machine may and ties what it produced", async () => {
-  const steps = stepsStub({ "STP-1": ["admin"], "STP-2": ["admin"], "STP-3": ["admin"] });
+test("R73 (K2490): an exploring run names its system step's place and work and is refused otherwise — an unknown origin (run-rules' originAllowed, relayed), explore while investigate cannot deploy, then explore with no place and work or with a step, a step the opener cannot see, a step and a place at once — nothing written; control: it opens, then its step is created by the run's own system identity and tied to it", async () => {
+  const steps = stepsStub({ "STP-1": ["admin"] });
   const w = world({ steps });
   await w.group("ann"); w.bundle(INQ);
   const before = w.dump();
   const code = async (o) => (await w.runs.open(OPEN({ run: "S", ...o }))).code;
-  assert.equal(await code({ origin: "elsewhere", step: "STP-1" }), "AI_RUN_ORIGIN_UNKNOWN");
-  assert.equal(await code({ origin: "explore" }), "AI_RUN_EXPLORE_NEEDS_STEP");
-  assert.equal(await code({ origin: "explore", step: "STP-1" }), "AI_RUN_EXPLORE_NOT_DEPLOYABLE");
+  const own = { place: { questions: [INQ] }, work: "find the fee schedule" };
+  assert.equal(await code({ origin: "elsewhere" }), "AI_RUN_ORIGIN_UNKNOWN");
+  assert.equal(await code({ origin: "explore", ...own }), "AI_RUN_EXPLORE_NOT_DEPLOYABLE", "check not yet verified live");
   assert.equal(await code({ step: "STP-9" }), "AI_RUN_STEP_UNKNOWN");
   assert.equal(await code({ step: "STP-1", viewer: "member:ann" }), "AI_RUN_STEP_UNKNOWN", "seen by another viewer only");
+  assert.equal(await code({ step: "STP-1", ...own }), "AI_RUN_STEP_UNKNOWN", "a run works one step");
   assert.equal(w.dump(), before, "no refusal wrote anything");
-  /* control: a seen step opens, a member's run; the read names its step and no origin */
-  assert.equal((await w.runs.open(OPEN({ run: "S", step: "STP-1", bounds: [{ bound: "fetches", allowed: 2 }] }))).started, true);
-  const s = (await w.runs.read({ run: "S", viewer: "admin" })).session;
-  assert.deepEqual([s.step, "origin" in s], ["STP-1", false]);
-  /* explore once investigate may deploy (check verified live, run-rules R19) */
+  assert.equal(steps.acts.length, 0, "and asked steps to make nothing");
+  /* investigate may deploy once check is verified live (run-rules R19's chain; the world holds its test bar) */
   await w.runs.open(OPEN({ run: "V" }));
   assert.equal(w.runs.verificationRecord({ mode: "check", run: "V", evidence: ["seen live: the run checked the fee table"], by: "member:ann", at: T0 }).ok, true);
-  const x = await w.runs.open(OPEN({ run: "X", origin: "explore", step: "STP-3" }));
-  assert.equal(x.started, true, JSON.stringify(x));
-  assert.equal((await w.runs.read({ run: "X", viewer: "admin" })).session.origin, "explore");
-  /* looks under the step; a run with no step (control) writes the run's own rows */
-  await w.runs.tick({ run: "S", viewer: "admin", caller: ORG, log: [look("PRESENT", { result_kind: "capture", result_ref: CAP }), look("LOOKED_ABSENT")] });
-  await w.runs.tick({ run: "V", viewer: "admin", caller: ORG, log: [look("LOOKED_ABSENT")] });
-  assert.deepEqual(w.rows(`SELECT authority_kind, authority FROM observation_log WHERE terminal = 0 ORDER BY seq`).map((r) => [r.authority_kind, r.authority]),
-    [["step", "STP-1"], ["step", "STP-1"], ["run", "V"]]);
-  const l = w.runs.log({ run: "S", viewer: "admin" });
-  assert.deepEqual(l.entries.map((e) => [e.seq, e.state]), [[1, "PRESENT"], [2, "LOOKED_ABSENT"]], "the run's log reads its step looks");
-  assert.equal(w.runs.log({ run: "V", viewer: "admin" }).entries.length, 1, "and no other run's");
-  /* the close: completed ends the step, every outcome left undetermined (no outcome is sent); its capture tied */
-  const c = await w.runs.close({ run: "S", bound: "completed", viewer: "admin", caller: ORG });
-  assert.deepEqual([c.terminated, c.step_end.told, c.step_end.end], [true, true, "ended"]);
-  assert.equal(c.state, "PRESENT", "the rollup reads the step looks");
-  assert.deepEqual(steps.acts, [["recordProduct", { step: "STP-1", record: CAP, kind: "capture", run: "S", by: ORG }],
-                                ["stepEnd", { step: "STP-1", end: "ended", run: "S", by: ORG }]]);
-  /* a run stopped by a bound sets its step aside with the bound's sentence; a run with no step tells steps nothing */
-  await w.runs.open(OPEN({ run: "B", step: "STP-2", bounds: [{ bound: "fetches", allowed: 1 }] }));
-  const t = await w.runs.tick({ run: "B", viewer: "admin", caller: ORG, consume: { fetches: 1 } });
-  assert.equal(t.ended.step_end.end, "set_aside");
-  assert.deepEqual(steps.acts[2], ["stepEnd", { step: "STP-2", end: "set_aside", reason: RUN_BOUNDS.fetches, run: "B", by: ORG }]);
-  const n = steps.acts.length;
-  assert.equal("step_end" in (await w.runs.close({ run: "V", bound: "completed", viewer: "admin", caller: ORG })), false);
-  assert.equal(steps.acts.length, n);
+  const mid = w.dump();
+  assert.equal(await code({ origin: "explore" }), "AI_RUN_EXPLORE_NEEDS_STEP");
+  assert.equal(await code({ origin: "explore", step: "STP-1" }), "AI_RUN_EXPLORE_NEEDS_STEP", "explore names no step (K2490)");
+  /* a step steps refuses rolls the run back: nothing written */
+  const refused = await w.runs.open(OPEN({ run: "X", origin: "explore", place: own.place, work: " " }));
+  assert.deepEqual([refused.started, refused.code], [false, "STEP_NO_WORK"]);
+  assert.equal(w.dump(), mid, "the run steps refused to give a step was not opened");
+  /* control: it opens; its step is the system's, made after the open by the run's own identity */
+  const x = await w.runs.open(OPEN({ run: "X", origin: "explore", ...own }));
+  assert.deepEqual([x.started, x.step, x.origin], [true, "STP-2026-0901", "explore"], JSON.stringify(x));
+  const made = steps.acts.filter(([a]) => a === "stepCreate").pop()[1];
+  assert.deepEqual(made, { ...own, run: "X", by: SYS("X") });
+  const s = (await w.runs.read({ run: "X", viewer: "admin" })).session;
+  assert.deepEqual([s.step, s.origin], ["STP-2026-0901", "explore"]);
+  /* a member's run of an existing step she sees opens too, naming it and no origin */
+  const m = await w.runs.open(OPEN({ run: "S", step: "STP-1" }));
+  assert.deepEqual([m.started, m.step, "origin" in m], [true, "STP-1", false]);
 });
 
-test("R75: testBarRecord records a part's result through run-rules' judge (a malformed record refused whole, nothing written; no judge reachable refuses, fail closed); testBarRecords answers Civicsmith's results only; groupTestSet by an active member, groupTestResults to the group's members with each false-alarm rate, never a gate's input", async () => {
-  const judge = (r) => (typeof r.false_alarm_rate === "number" && typeof r.passed === "boolean" && r.part && r.set
-    ? null : { ok: false, code: "AI_TEST_BAR_UNFIT", check: "C-22.22", translation: "unfit" });
-  const w = world({ checkTestBarRecord: judge });
+test("R73: a step-run's looks name authority step and its log and rollup read them; its close ties what it produced and ends its own system step as a machine may (ended, or set aside with the bound's sentence), by its system identity; a member's step it worked is left to her; a run with no step tells steps nothing", async () => {
+  const steps = stepsStub({ "STP-1": ["admin"] });
+  const w = world({ steps });
+  await w.group("ann"); w.bundle(INQ);
+  await w.runs.open(OPEN({ run: "V" }));
+  w.runs.verificationRecord({ mode: "check", run: "V", evidence: ["seen live"], by: "member:ann", at: T0 });
+  const own = { origin: "explore", place: { questions: [INQ] }, work: "find the fee schedule" };
+  const x = await w.runs.open(OPEN({ run: "X", ...own }));
+  await w.runs.open(OPEN({ run: "S", step: "STP-1" }));
+  await w.runs.tick({ run: "X", viewer: "admin", caller: ORG, log: [look("PRESENT", { result_kind: "capture", result_ref: CAP }), look("LOOKED_ABSENT")] });
+  await w.runs.tick({ run: "V", viewer: "admin", caller: ORG, log: [look("LOOKED_ABSENT")] });
+  assert.deepEqual(w.rows(`SELECT authority_kind, authority FROM observation_log WHERE terminal = 0 ORDER BY seq`).map((r) => [r.authority_kind, r.authority]),
+    [["step", x.step], ["step", x.step], ["run", "V"]]);
+  assert.deepEqual(w.runs.log({ run: "X", viewer: "admin" }).entries.map((e) => [e.seq, e.state]), [[1, "PRESENT"], [2, "LOOKED_ABSENT"]]);
+  assert.equal(w.runs.log({ run: "V", viewer: "admin" }).entries.length, 1, "no other run's looks");
+  const n0 = steps.acts.length;
+  const c = await w.runs.close({ run: "X", bound: "completed", viewer: "admin", caller: ORG });
+  assert.deepEqual([c.terminated, c.state, c.step_end.told, c.step_end.end], [true, "PRESENT", true, "ended"]);
+  assert.deepEqual(steps.acts.slice(n0), [["recordProduct", { step: x.step, record: { kind: "capture", id: CAP }, by: SYS("X") }],
+                                          ["stepEnd", { step: x.step, end: "ended", by: SYS("X") }]]);
+  /* a member's step: its products tied, the step left to her (control for the own step's end above) */
+  await w.runs.tick({ run: "S", viewer: "admin", caller: ORG, log: [look("PRESENT", { result_kind: "capture", result_ref: CAP })] });
+  const n1 = steps.acts.length;
+  const cs = await w.runs.close({ run: "S", bound: "completed", viewer: "admin", caller: ORG });
+  assert.equal(cs.step_end.end, null);
+  assert.deepEqual(steps.acts.slice(n1).map(([a]) => a), ["recordProduct"]);
+  /* a bound stops an exploring run: its step set aside with the bound's sentence */
+  const b = await w.runs.open(OPEN({ run: "B", ...own, work: "another look", bounds: [{ bound: "fetches", allowed: 1 }] }));
+  const t = await w.runs.tick({ run: "B", viewer: "admin", caller: ORG, consume: { fetches: 1 } });
+  assert.equal(t.ended.step_end.end, "set_aside");
+  assert.deepEqual(steps.acts.at(-1), ["stepEnd", { step: b.step, end: "set_aside", reason: RUN_BOUNDS.fetches, by: SYS("B") }]);
+  const n2 = steps.acts.length;
+  assert.equal("step_end" in (await w.runs.close({ run: "V", bound: "completed", viewer: "admin", caller: ORG })), false);
+  assert.equal(steps.acts.length, n2);
+});
+
+test("R74 (B4 (5); J5 (8), (9), (11)): openMany, a member's batch — no member's act or no list refused whole, nothing written; one estimate for the batch; each seen step opens its own run with a system step of its own whose work names hers; an unseen step and a group's step refused for themselves alone while the others open; a run stopped by its bound sets only its own step aside", async () => {
+  const steps = stepsStub({ "STP-A": [ANN], "STP-C": [ANN], "STP-G": [ANN], "STP-H": ["admin"] }, { "STP-G": { group: true } });
+  const w = world({ steps });
+  await w.group("ann"); w.bundle(INQ);
+  const before = w.dump();
+  const batch = (o = {}) => w.runs.openMany({ steps: ["STP-A", "STP-H", "STP-G", "STP-C"], mode: "check", skillVersion: "bio@1",
+    bounds: [{ bound: "fetches", allowed: 1 }], principalPlane: ANN_CRED, actor: ANN, viewer: ANN, at: T0, ...o });
+  assert.equal((await batch({ actor: null, principalPlane: ORG })).code, "AI_RUN_NOT_A_MEMBER_ACT");
+  for (const list of [[], ["STP-A", "STP-A"], [""], "STP-A"])
+    assert.equal((await batch({ steps: list })).code, "AI_RUN_NO_CONTEXT", JSON.stringify(list));
+  assert.equal(w.dump(), before, "nothing written");
+  const r = await batch();
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.estimate, { ok: true, owner: "member:ann", use: "run", mode: "check", count: 4, estimate: "not known yet" },
+    "ai-use R10, asked once for the batch");
+  assert.deepEqual(r.runs.map((x) => [x.step, x.run ?? null, x.refusal ? x.refusal.code : null]),
+    [["STP-A", "RUN-STP-A-1", null], ["STP-H", null, "AI_RUN_STEP_UNKNOWN"], ["STP-G", null, "AI_RUN_NO_CONTEXT"],
+     ["STP-C", "RUN-STP-C-1", null]]);
+  const created = steps.acts.filter(([a]) => a === "stepCreate").map(([, a]) => a);
+  assert.deepEqual(created.map((a) => [a.run, a.by, a.work, JSON.stringify(a.place)]),
+    [["RUN-STP-A-1", SYS("RUN-STP-A-1"), "AI run on STP-A: work of STP-A", JSON.stringify({ questions: [INQ] })],
+     ["RUN-STP-C-1", SYS("RUN-STP-C-1"), "AI run on STP-C: work of STP-C", JSON.stringify({ questions: [INQ] })]]);
+  const a = (await w.runs.read({ run: "RUN-STP-A-1", viewer: ANN })).session;
+  assert.deepEqual([a.step, a.context.id, a.principal.claude, a.principal.ref], [r.runs[0].system_step, INQ, "member:ann", "member:ann"]);
+  /* the bound ends RUN-STP-A-1 alone, setting its own step aside; RUN-STP-C-1 runs on */
+  const t = await w.runs.tick({ run: "RUN-STP-A-1", viewer: ANN, caller: ANN_CRED, consume: { fetches: 1 } });
+  assert.equal(t.ended.step_end.end, "set_aside");
+  assert.deepEqual(steps.acts.filter(([k]) => k === "stepEnd").map(([, x]) => x.step), [r.runs[0].system_step]);
+  assert.equal((await w.runs.read({ run: "RUN-STP-C-1", viewer: ANN })).session.status, "running");
+  /* a second batch over the same step mints the next run id */
+  const again = await w.runs.openMany({ steps: ["STP-A"], mode: "check", skillVersion: "bio@1", principalPlane: ANN_CRED, actor: ANN, viewer: ANN, at: T0 });
+  assert.equal(again.runs[0].run, "RUN-STP-A-2");
+});
+
+test("R75: testBarRecord records a part's result through run-rules' checkTestBarRecord (a malformed record refused whole, nothing written); testBarRecords answers the gate's records only, never a group's set; groupTestSet by an active member, groupTestResults to the group's members with each false-alarm rate", async () => {
+  const w = world({ bars: [] });
   await w.group("ann");
-  const rec = { part: "explore", set: "civicsmith", set_version: "1", false_alarm_rate: 0.12, passed: true, graded_by: "harness", at: T0 };
-  assert.equal(w.runs.testBarRecord({ ...rec, false_alarm_rate: "low" }).code, "AI_TEST_BAR_UNFIT");
+  const rec = { part: "explore", set: "civicsmith", set_version: 1, false_alarm_rate: 0.12, passed: true, graded_by: "harness", at: T0 };
+  for (const bad of [{ false_alarm_rate: "low" }, { part: "nothing" }, { set_version: "1" }, { passed: "yes" }])
+    assert.equal(w.runs.testBarRecord({ ...rec, ...bad }).code, "AI_TEST_BAR_UNFIT", JSON.stringify(bad));
   assert.equal(w.count("ai_test_bar"), 0, "nothing written");
-  assert.deepEqual(w.runs.testBarRecord(rec), { ok: true, part: "explore", set: "civicsmith", set_version: "1", false_alarm_rate: 0.12, passed: true, at: T0 });
+  assert.deepEqual(w.runs.testBarRecord(rec), { ok: true, part: "explore", set: "civicsmith", set_version: 1, false_alarm_rate: 0.12, passed: true, at: T0 });
   assert.equal(w.runs.testBarRecord({ ...rec, set: "group", false_alarm_rate: 0.3, passed: false }).ok, true);
-  assert.deepEqual(w.runs.testBarRecords().map((r) => [r.part, r.set, r.passed]), [["explore", "civicsmith", true]], "a group's set is no gate's input");
-  /* fail closed with no judge (until run-rules' merge carries it) */
-  const bare = world();
-  await bare.group("ann");
-  if (typeof (await import("../../../src/run-rules/index.mjs")).checkTestBarRecord !== "function") {
-    assert.equal(bare.runs.testBarRecord(rec).code, "AI_TEST_BAR_UNFIT");
-    assert.equal(bare.count("ai_test_bar"), 0);
-  }
-  /* a group's own test investigations */
+  assert.deepEqual(w.runs.testBarRecords().map((r) => [r.part, r.set, r.set_version, r.passed]), [["explore", "civicsmith", 1, true]],
+    "a group's set is no gate's input; the version answered as the number the judge reads");
   for (const [args, ok] of [[{ part: "explore", matter: "fee rise", answers: { q: "a" }, by: "member:ann" }, true],
                             [{ part: "explore", matter: "", answers: "a", by: "member:ann" }, false],
                             [{ part: "explore", matter: "m", answers: "a", by: "member:nobody" }, false],
@@ -98,31 +161,70 @@ test("R75: testBarRecord records a part's result through run-rules' judge (a mal
   const mine = w.runs.groupTestResults({ part: "explore", viewer: "member:ann" });
   assert.deepEqual([mine.matters, mine.results.map((r) => [r.false_alarm_rate, r.passed])], [1, [[0.3, false]]]);
   assert.deepEqual(w.runs.groupTestResults({ part: "explore", viewer: "class:ai/x" }).results, [], "control: no member, nothing");
-  /* figures only: no transcript column exists to hold one */
   assert.deepEqual(w.rows(`PRAGMA table_info(ai_test_bar)`).map((c) => c.name),
-    ["seq", "part", "set_name", "set_version", "false_alarm_rate", "passed", "graded_by", "at"]);
+    ["seq", "part", "set_name", "set_version", "false_alarm_rate", "passed", "graded_by", "at"], "figures only: no transcript");
 });
 
-test("R76 (K2482): at close a run answers its actual cost, ai-use's actualOf for the run, recorded on the run, answered only to the paying account's owners (principal_claude) — never another member; R72: a usage entry's estimated_cost_usd is null or an amount", async () => {
+test("R40, R75 (B6; run-rules R19 as amended; J5 (7)): the open deploys a mode only when its test bar is held on the set the gate reads, besides the chain — no bar refuses check C-109.1, nothing written; Civicsmith's set, empty today (N829), holds no bar whatever is recorded on it; control: the bar held, check opens", async () => {
+  const none = world({ bars: [] });
+  await none.group("ann"); none.bundle(INQ);
+  const before = none.dump();
+  const r = await none.runs.open(OPEN());
+  assert.deepEqual([r.started, r.code, r.deployed], [false, "AI_RUN_MODE_NOT_DEPLOYED", []]);
+  assert.equal(none.dump(), before);
+  const civic = world({ testSet: CIVICSMITH_TEST_SET, bars: ["check"] });
+  await civic.group("ann"); civic.bundle(INQ);
+  assert.equal(civic.runs.testBarRecords().length, 1, "a passing record is held on Civicsmith's set");
+  assert.equal((await civic.runs.open(OPEN())).code, "AI_RUN_MODE_NOT_DEPLOYED", "and counts for nothing while it holds no matter");
+  /* control: the bar held on a set with a matter */
+  none.runs.testBarRecord({ part: "check", set: TEST_SET.id, set_version: TEST_SET.version, false_alarm_rate: 0, passed: true, graded_by: "harness", at: T0 });
+  assert.equal((await none.runs.open(OPEN())).started, true);
+});
+
+test("R76 (K2482; J5 (10)): a run's cost is ai-use's actualOf for the run's id, asked with the reader's own stamp, answered to whom it answers (the paying account's owners) with `final` once the run has ended; no cost key at all where it answers nothing", async () => {
   const asked = [];
-  const aiUse = { actualOf: ({ act, viewer }) => { asked.push([act, viewer]); return { ok: true, unit: "usd", usd: 0.5, tokens: 1200, calls: 2 }; } };
+  const aiUse = { useCheck: () => null, countUsage: () => ({ ok: true }),
+    actualOf: ({ act, viewer }) => { asked.push([act, viewer]);
+      return viewer === "member:ann" ? { ok: true, found: true, act, unit: "usd", cost: { usd: 0.5 }, tokens: 1200, calls: 2 } : { ok: true, found: false }; } };
   const w = world({ aiUse });
   await w.group("ann", "bob"); w.bundle(INQ);
   await w.runs.open(OPEN());
-  /* R72: estimated_cost_usd judged; a bad one refuses the tick, a stated one is taken */
-  const bad = await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, usage: [{ mode: "check", model: null, usage: USAGE({ estimated_cost_usd: "x" }), calls: 1 }] });
-  assert.equal(bad.code, "AI_RUN_CONSUME_INVALID");
-  assert.equal((await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, usage: [{ mode: "check", model: null, usage: USAGE({ estimated_cost_usd: 0.01 }), calls: 1 }] })).ticked, true);
-  /* while running: the owner reads the cost so far; anyone else no key at all */
-  assert.deepEqual((await w.runs.read({ run: "R1", viewer: "member:ann" })).session.cost, { final: false, unit: "usd", usd: 0.5, tokens: 1200, calls: 2 });
+  assert.deepEqual((await w.runs.read({ run: "R1", viewer: "member:ann" })).session.cost,
+    { final: false, act: "R1", unit: "usd", cost: { usd: 0.5 }, tokens: 1200, calls: 2 });
   assert.equal("cost" in (await w.runs.read({ run: "R1", viewer: "member:bob" })).session, false);
   const c = await w.runs.close({ run: "R1", bound: "completed", viewer: "member:ann", caller: ORG });
-  assert.deepEqual(c.cost, { final: true, unit: "usd", usd: 0.5, tokens: 1200, calls: 2 });
-  assert.deepEqual(JSON.parse(w.row(`SELECT actual FROM ai_runs WHERE run='R1'`).actual), { unit: "usd", usd: 0.5, tokens: 1200, calls: 2 });
-  assert.ok(asked.every(([act]) => act === "R1"));
-  /* another member's close of their own sight answers no cost (control: the owner's read above) */
+  assert.equal(c.cost.final, true);
+  assert.equal("actual" in w.row(`SELECT * FROM ai_runs WHERE run='R1'`), false, "no figures kept on the run (one store)");
   await w.runs.open(OPEN({ run: "R2" }));
   const other = await w.runs.close({ run: "R2", bound: "completed", viewer: "member:bob", caller: ORG });
   assert.deepEqual([other.terminated, "cost" in other], [true, false]);
-  assert.equal("cost" in (await w.runs.read({ run: "R2", viewer: "member:bob" })).session, false);
+  assert.ok(asked.every(([act]) => act === "R1" || act === "R2"));
+  assert.ok(asked.some(([, v]) => v === "member:bob"), "asked with the reader's own stamp");
+});
+
+test("R73, R74 over the real steps module (K2490; J5 (8), (9)): an exploring run's step is the system's, enabled by the paying owner, ended when the run completes, even one that looked at nothing (its NEVER_LOOKED rollup the run's own); a batch over a member's open step makes each run a system step of its own, steps' R8 never refusing it as alike; control: a machine's step of the same work as her open step is refused STEP_ALIKE_EXISTS", async () => {
+  const { stepsOf } = await import("../../../src/steps/index.mjs");
+  const w = world();
+  await w.group("ann"); w.bundle(INQ);
+  const steps = stepsOf(w.ctx);
+  await w.runs.open(OPEN({ run: "V" }));
+  w.runs.verificationRecord({ mode: "check", run: "V", evidence: ["seen live"], by: "member:ann", at: T0 });
+  const x = await w.runs.open(OPEN({ run: "X", origin: "explore", place: { questions: [INQ] }, work: "find the fee schedule" }));
+  assert.equal(x.started, true, JSON.stringify(x));
+  const made = steps.step({ step: x.step, viewer: "admin" });
+  assert.deepEqual([made.doer, made.enabled_by, made.state], ["system", "member:ann", "planned"]);
+  const c = await w.runs.close({ run: "X", bound: "completed", viewer: "admin", caller: ORG });
+  assert.deepEqual([c.terminated, c.state, c.step_end.told], [true, "NEVER_LOOKED", true], JSON.stringify(c));
+  assert.equal(steps.step({ step: x.step, viewer: "admin" }).state, "ended");
+  /* R74: her own open step, then a batch over it */
+  const mine = steps.stepCreate({ place: { questions: [INQ] }, work: "read the council minutes", by: ANN });
+  assert.equal(mine.ok, true, JSON.stringify(mine));
+  const r = await w.runs.openMany({ steps: [mine.step], mode: "check", skillVersion: "bio@1", principalPlane: ANN_CRED, actor: ANN, viewer: ANN, at: T0 });
+  assert.equal(r.runs[0].run, `RUN-${mine.step}-1`, JSON.stringify(r.runs[0]));
+  const sys = steps.step({ step: r.runs[0].system_step, viewer: ANN });
+  assert.deepEqual([sys.doer, sys.work], ["system", `AI run on ${mine.step}: read the council minutes`]);
+  /* control: steps R8 refuses the system a step of exactly her open step's work */
+  await w.runs.open(OPEN({ run: "Y" }));
+  const alike = steps.stepCreate({ place: { questions: [INQ] }, work: "read the council minutes", by: SYS("Y"), run: "Y" });
+  assert.equal(alike.code || alike.reason, "STEP_ALIKE_EXISTS");
 });

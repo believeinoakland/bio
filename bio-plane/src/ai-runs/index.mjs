@@ -2,11 +2,11 @@
  * (T6-6's entry; the map is `build/extraction/ai-runs.md`). The vocabulary and pure rules, the deployment order and the
  * rows are `run-rules`' since the split (K617, K649 (1)); this file is the mechanism: the one exit, open, tick,
  * close, the reaper and the wake, the reads, and the services later modules produce under a run through (R28, R29).
- * Since T33-50 it also holds the assistant's use: the counter of every model call's figures per member and local day
- * (R48, R49; since T34-33 one entry per conversation, carrying the calls its sum covers), each member's own daily ceiling
- * and the administrator's lower one for the copy (R50), the two reads of use (R51), and the account a run carries (R52):
- * the one `credentials.accountFor` answers for the act of the member who started it, their own or the group's API key
- * (K1755), the act and its use still that member's; refused by name when no account serves them.
+ * The account a run carries (R52) is the one `credentials.accountFor` answers for the act of the member who started it
+ * (their own, a project's, or the group's API key; K1755), the act and its use still that member's; refused by name when
+ * no account serves them. What that account has spent and may spend is `ai-use`'s (T40-8, K624: the counter, the
+ * ceilings and the reads this module held as R48–R51 moved there): a run asks its `useCheck` and counts each tick's use
+ * through its `countUsage`, under the run's id (R52, R72, R76). Since T41 a run may work as a step (`steps`, R73, R74).
  *
  * THE ONE EXIT (R14, R31) is `#aiRunTerminate`, and it is the only thing that moves a run out of `running`: the
  * terminal log entry and the status change are one transaction, so no run is over while its log is silent. The
@@ -16,7 +16,7 @@
  * membership, credentials, connections, bias and observation-log through their factories on the same `ctx`. */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER, notAnAdmin } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 import { observationLogOf } from "../observation-log/index.mjs";
@@ -28,31 +28,21 @@ import { normalizeType, OBJECT_TYPES, isMachineIdentity, MACHINE_CLASS_PREFIX } 
 import { credentialsOf } from "../credentials/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { sha256hex, instanceAiCredential } from "../tokens.mjs";
-import { localDay } from "../civil-time/index.mjs";
+import { aiUseOf } from "../ai-use/index.mjs";
+import { stepsOf, WORK_MAX } from "../steps/index.mjs";
 /* The run's vocabulary, pure rules, deployment order and rows are `run-rules`' (K617, K649 (1)); read there, never
    re-exported from here. */
 import { RUN_BOUNDS, RUN_ENDINGS, RUN_CONTEXTS, STANDARD_BASIS, OBSERVATION_STATES, OBSERVATION_LEVELS,
          OBSERVATION_COVERAGE, OBSERVATION_COVERAGE_UNDETERMINED, observationCoverage, checkBound, checkCondition,
          checkConsume, checkRunState, finishedBound, runStatusFor, projectGate, runConsultsProjects, checkRunContextKind,
          runPrincipalGate, checkSkillVersion, DEPLOYED_MODES, DEFAULT_MODE, AI_RUNS_CHECKS, RUN_MODES, startAllowed,
-         checkVerification, deployable, ASK_MODE, DRAFT_MODE } from "../run-rules/index.mjs";
-import * as RUN_RULES from "../run-rules/index.mjs";
+         checkVerification, partDeployableOn, CIVICSMITH_TEST_SET, originAllowed, checkTestBarRecord } from "../run-rules/index.mjs";
 import { AI_RUNS_SCHEMA, AI_RUNS_TABLES, AI_RUNS_ADDED_COLUMNS } from "./schema.mjs";
 
 export { AI_RUNS_SCHEMA, AI_RUNS_TABLES } from "./schema.mjs";
 
-/** R50: the provisional daily ceiling per member, in force until a member sets their own, and until M-Q6 measures the
- *  default at the release (plan T33). `tokens` counts every token a call processed (input, output, cache read and cache
- *  write); `calls` counts model calls. */
-export const AI_CEILING_DEFAULT = Object.freeze({ tokens: 2_000_000, calls: 200 });
-/** R48: the figures of one conversation's `usage`, as `agent-model` returns them (its R5, R6: the sum over its model
- *  calls); token figures are whole numbers, the cost a dollar amount, and any of them `null` where the provider did not
- *  state it. */
-export const USAGE_TOKEN_FIGURES = Object.freeze(["input_tokens", "output_tokens", "cache_read_input_tokens",
-  "cache_creation_input_tokens"]);
-export const USAGE_FIGURES = Object.freeze([...USAGE_TOKEN_FIGURES, "total_cost_usd"]);
-/** R50: a provider's refusal for a spent limit (Anthropic's 429 `enforced_spend_limit_reached`), recognised in a reason
- *  or type a caller relays. */
+/** R72: a provider's refusal for a spent limit (Anthropic's 429 `enforced_spend_limit_reached`), recognised in the reason
+ *  or type the agent-worker relays to the wake's dispatch. */
 const PROVIDER_LIMIT = /enforced_spend_limit_reached/;
 
 /** A member's id from any of the forms a stamp takes (`member:<id>`, `member:<id>/<tokenId>`, `<id>`); null for a
@@ -117,8 +107,9 @@ export class AiRuns {
   #runListeners = [];     // R43: {module, fn, seq}, in the modules' total order
   #openChecks = [];       // R47: {module, mode, fn}, one per mode and one per module
   #deps;
-  /** `deps` is for in-process wiring only (never the wire or `env`): `inquiry` (R27's `migratedSurfacing`) and, for a
-   *  module test alone, `deployedModes` in place of `run-rules`' `DEPLOYED_MODES`. */
+  /** `deps` is for in-process wiring only (never the wire or `env`): `inquiry` (R27's `migratedSurfacing`), `steps` and
+   *  `aiUse` (each module's own instance, else its factory on this `ctx`), and, for a module test alone,
+   *  `deployedModes` in place of `run-rules`' `DEPLOYED_MODES` and `testSet` in place of `CIVICSMITH_TEST_SET`. */
   constructor(ctx, env = {}, deps = {}) {
     this.ctx = ctx;
     this.env = env || {};
@@ -126,15 +117,13 @@ export class AiRuns {
     this.sql = ctx.storage.sql;
     /* R38, R53 (plan T33, Rules (6)): this module's tables, declared explicitly to record-core (its R21). The
        surfacing rows are cleared by the question they name; the runs and their bounds by the whole-store purge only,
-       each with the sight R19 gives a run (its context bundle's); the use counter and the ceilings group-wide,
-       `admin-only`, cleared only with the whole store. */
+       each with the sight R19 gives a run (its context bundle's). The use counter and the ceilings are `ai-use`'s (its
+       R7; record-core R80 refuses a table declared twice). */
     const cls = { expunge: "none", export: "admin-only", derive: "stored", version_chain: false, purge: "clear" };
     recordOf(ctx).declareTable("ai-runs", [
       { name: "inquiry_run_surfacings", ...cls, sight: "bundle" },
       { name: "ai_run_bounds", keys: [], ...cls, sight: "bundle" },
       { name: "ai_runs", keys: [], ...cls, sight: "bundle" },
-      { name: "ai_usage", keys: [], ...cls, sight: "group" },
-      { name: "ai_ceilings", keys: [], ...cls, sight: "group" },
       { name: "ai_mode_verifications", keys: [], ...cls, sight: "group" },
       /* T41: a step-run's looks (R73), keyed by the observation's seq; the test bar's results and a group's own test
          matters (R75), group-wide, cleared only with the whole store. */
@@ -162,19 +151,36 @@ export class AiRuns {
     /* R38: this module's tables' figures, for `op=stats` and purge's proof (record-core R63; moved from the legacy
        store's `#counts`, its `#hiddenRunTail` with them). */
     recordOf(ctx).registerCounts("ai-runs", [...AiRuns.COUNT_KEYS], (hid) => this.counts(hid));
-    /* B2 (K2480; steps R1, R8): steps answers "a run it holds" through this module's resolver, registered once at start.
-       `steps` is reached as an in-process dependency until its merge re-points it to its factory. */
+    /* B2 (K2480; steps R1, R8): steps answers "a run it holds" through this module's resolver, registered once at start. */
     const steps = this.#steps();
     if (steps && typeof steps.registerRunHolder === "function")
       steps.registerRunHolder("ai-runs", (by, run) => this.runHolder(by, run));
   }
 
-  /** The `steps` module (T41; R73, R74, B2), or null where it is not reachable. */
-  #steps() { return this.#deps.steps || null; }
+  /** The `steps` module (T41; R73, R74, B2): the injected one, else its factory on this `ctx`; null where it cannot be
+   *  reached, so an act needing it is refused rather than trusted. */
+  #steps() {
+    if (this.#deps.steps) return this.#deps.steps;
+    try { return stepsOf(this.ctx); } catch { return null; }
+  }
+
+  /** R73, R74 (J5 (8)): THE RUN'S OWN SYSTEM IDENTITY, the machine that creates and ends the run's system step. steps
+   *  reads a member credential as that member, so a member's run (R74) needs a machine to make a step the system's; it is
+   *  minted here per run, never presented by a caller, and `runHolder` answers it only while its run is running. */
+  static systemOf(run) { return `${MACHINE_CLASS_PREFIX}daemon/${String(run)}`; }
+
+  /** The sight a run's principal acts in, as a viewer: `member:<id>` for a member credential, the class for a machine
+   *  one (`class:ai/<token>` acts as `class:ai`). */
+  static #viewerOf(principal) {
+    const p = typeof principal === "string" ? principal.trim() : "";
+    const m = memberIdOf(p);
+    return m ? `member:${m}` : p.replace(/\/.*$/, "");
+  }
 
   /** B2 (K2480): whether `by` holds `run`, for steps' machine arm: `{enabled_by, principal}` for a running run whose
-   *  principal `by` is (run-rules R5), `enabled_by` the paying owner the run records (`principal_claude`, R52; ai-use R6's
-   *  label) and `principal` its plane principal; null for a blank, unknown or ended run, or one another principal holds.
+   *  principal `by` is (run-rules R5), or whose own system identity it is (`systemOf`); `enabled_by` the paying owner the
+   *  run records (`principal_claude`, R52; ai-use R6's label) and `principal` the viewer the run's opener acts as (steps
+   *  judges the step's place in that sight); null for a blank, unknown or ended run, or one another principal holds.
    *  Writes nothing and never throws. */
   runHolder(by, run) {
     try {
@@ -182,8 +188,8 @@ export class AiRuns {
       if (!id || typeof by !== "string" || !by.trim()) return null;
       const r = this.#one(`SELECT status, principal_plane, principal_claude FROM ai_runs WHERE run = ?`, id);
       if (!r || r.status !== "running") return null;
-      if (runPrincipalGate({ caller: by, principal: r.principal_plane })) return null;
-      return { enabled_by: r.principal_claude ?? null, principal: r.principal_plane };
+      if (by !== AiRuns.systemOf(id) && runPrincipalGate({ caller: by, principal: r.principal_plane })) return null;
+      return { enabled_by: r.principal_claude ?? null, principal: AiRuns.#viewerOf(r.principal_plane) };
     } catch { return null; }
   }
 
@@ -254,25 +260,7 @@ export class AiRuns {
   static #INTERNAL_VIEWER = `${MACHINE_CLASS_PREFIX}daemon`;
 
   /** R35: the row of one of this module's acts' codes, read by key from `run-rules`' table (its R11, R15, R20). */
-  #checkRow(code) { return AI_RUNS_CHECKS[code] || AiRuns.#PENDING_ROWS[code]; }
-
-  /** T41 (R73, R75): the codes this job's new acts mint, read from `run-rules`' table by key once it holds them (its R11);
-   *  until then each refuses with this row, its number not yet given (J1 (2), J2 (6) to BOB). */
-  static #PENDING_ROWS = Object.freeze({
-    AI_RUN_ORIGIN_UNKNOWN: { check: null, translation: "A run starts either at a member's act or as exploring; this one named "
-      + "neither. Nothing was started." },
-    AI_RUN_EXPLORE_NEEDS_STEP: { check: null, translation: "An exploring run works on a step of its own, and none was named. "
-      + "Nothing was started." },
-    AI_RUN_EXPLORE_NOT_DEPLOYABLE: { check: null, translation: "Exploring is not available yet: it opens only after the assistant "
-      + "has passed its tests. Nothing was started." },
-    AI_RUN_STEP_UNKNOWN: { check: null, translation: "No such step is open to you. Nothing was started." },
-    AI_TEST_BAR_UNFIT: { check: null, translation: "That test result is not complete, so it was not recorded." },
-    AI_GROUP_TEST_INVALID: { check: null, translation: "A test investigation needs its matter and the answers your members wrote. "
-      + "Nothing was added." },
-  });
-
-  /** run-rules R23's `RUN_ORIGINS`, read here until that module's merge carries it (T41-21). */
-  static ORIGINS = Object.freeze(["member", "explore"]);
+  #checkRow(code) { return AI_RUNS_CHECKS[code]; }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { const r = this.#rows(q, ...a); return r.length ? r[0] : null; }
@@ -327,6 +315,13 @@ export class AiRuns {
     return { ok: true, module, mode: m };
   }
   #deployedModes() { return Array.isArray(this.#deps.deployedModes) ? this.#deps.deployedModes : DEPLOYED_MODES; }
+  /** run-rules R19 as amended (B6, K2489): MAY THIS AI PART DEPLOY, on what this record holds: its verification chain
+   *  (`verifications`) and its test bar (`testBarRecords`, R75) on Civicsmith's set (a module test's own set through
+   *  `deps.testSet`). `partDeployable`'s one computation, never a second here. */
+  #partDeployable(part) {
+    const set = this.#deps.testSet || CIVICSMITH_TEST_SET;
+    return partDeployableOn(set, part, { verifications: this.verifications(), testBars: this.testBarRecords() });
+  }
   #captureRequestConfigured() {
     const w = this.#wait();
     return !!w && (typeof w.configured !== "function" || w.configured() === true);
@@ -567,7 +562,6 @@ export class AiRuns {
         WHERE ${AiRuns.#ownRows()} AND terminal = 0
         ORDER BY seq DESC LIMIT 1`, run, run);
 
-    const actual = this.#actualFromUse(run);
     const done = this.#transact(() => {
       /* THE TERMINAL ENTRY FIRST, then the status. The order is deliberate: if
          anything could fail it is the append, and a run left `running` with its
@@ -585,7 +579,9 @@ export class AiRuns {
         detail: stoppedByBound
           ? `the run stopped because the '${bound}' bound was reached (${RUN_BOUNDS[bound]})`
           : `the run ended: ${RUN_ENDINGS[bound]}`,
-      }, at, 1, null, row.step || null);
+      /* R73: under the step, as its looks are, save a NEVER_LOOKED rollup (a step-run that looked at nothing), which the
+         observation log admits only as a run's own terminal entry (C-22.17); it names no referent (C-22.10). */
+      }, at, 1, null, rollup.state === "NEVER_LOOKED" ? null : (row.step || null));
       if (bad) return { run, found: true, terminated: false, ...bad };
       /* FL-8 / IC-67 — WHAT BECAME OF THIS RUN, ASKED ONCE AND OF `run-rules`.
          This was `stoppedByBound ? "stopped" : "finished"`, written out TWICE
@@ -601,49 +597,49 @@ export class AiRuns {
          chooses the terminal entry's SENTENCE two lines up, which is a different
          question from what the run's status is. */
       const status = runStatusFor(bound);
-      /* R76 (D12, K2482): the run's actual cost, ai-use's figures for it, recorded at its ending (every path: a close, a
-         tick's bound, the reaper), answered only to the paying account's owners (`#costFor`). */
+      /* R76: the run's cost is ai-use's figures under its id (one store, K2482); its ending fixes them as final. */
       this.sql.exec(
-        `UPDATE ai_runs SET status = ?, updated = ?, stopped_bound = ?, stopped_condition = ?, stopped_at = ?, actual = ?
+        `UPDATE ai_runs SET status = ?, updated = ?, stopped_bound = ?, stopped_condition = ?, stopped_at = ?
          WHERE run = ?`,
-        status, at, bound, condition, at, actual ? JSON.stringify(actual) : null, run);
+        status, at, bound, condition, at, run);
       return { run, found: true, terminated: true,
                status,
                bound, condition, state, at };
     });
-    /* R73: a step-run's ending ends its step as steps R5 allows a machine, after the run's own ending has committed, and
-       ties what it produced (steps R9's `recordProduct`). A step that cannot be told is said in the answer; the run's
-       ending stands. */
+    /* R73: a step-run's ending ties what it produced to its step (steps R9's `recordProduct`) and, for the run's own
+       system step, ends it as steps R5 allows a machine, after the run's own ending has committed. A member's step a run
+       worked is hers to end. A step that cannot be told is said in the answer; the run's ending stands. */
     return done && done.terminated === true && row.step ? { ...done, step_end: this.#endStep(row, bound) } : done;
   }
 
-  /** R73 (steps R5, R9): `ended` with every outcome undetermined for a completed run; `set_aside` with the stopping
-   *  bound's or ending's sentence for any other; then each record its looks name (a capture, content, connection or lead
-   *  referent) tied to the step. Answers what steps said, never throws. */
+  /** R73, R74 (steps R5, R9): each record the run's looks name (a capture, content or lead referent, steps R9's product
+   *  kinds) tied to its step; then its own system step `ended` with every outcome undetermined for a completed run, or
+   *  `set_aside` with the stopping bound's or ending's sentence for any other, by the run's system identity. Answers what
+   *  steps said, never throws. */
   #endStep(row, bound) {
     const st = this.#steps();
     if (!st || typeof st.stepEnd !== "function") return { told: false, reason: "steps is not reachable" };
-    const by = row.principal_plane;
+    const by = AiRuns.systemOf(row.run);
     try {
       const products = this.#rows(
         `SELECT DISTINCT o.result_kind, o.result_ref FROM observation_log o JOIN ai_run_looks l ON l.seq = o.seq
-          WHERE l.run = ? AND o.result_ref IS NOT NULL AND o.result_kind IS NOT NULL AND o.result_kind <> 'observation'
+          WHERE l.run = ? AND o.result_ref IS NOT NULL AND o.result_kind IN ('capture', 'content', 'lead', 'record')
           ORDER BY o.result_kind, o.result_ref LIMIT 200`, row.run);
       const tied = [];
       for (const p of products) {
         const t = typeof st.recordProduct === "function"
-          ? st.recordProduct({ step: row.step, record: String(p.result_ref), kind: p.result_kind, run: row.run, by }) : null;
-        tied.push({ record: String(p.result_ref), ok: !!(t && t.ok === true) });
+          ? st.recordProduct({ step: row.step, record: { kind: p.result_kind, id: String(p.result_ref) }, by }) : null;
+        tied.push({ kind: p.result_kind, record: String(p.result_ref), ok: !!(t && t.ok === true) });
       }
+      if (row.own_step !== "1") return { told: true, end: null, products: tied };
       const completed = bound === "completed";
       const said = st.stepEnd(completed
-        ? { step: row.step, end: "ended", run: row.run, by }
-        : { step: row.step, end: "set_aside", reason: RUN_BOUNDS[bound] || RUN_ENDINGS[bound] || bound, run: row.run, by });
+        ? { step: row.step, end: "ended", by }
+        : { step: row.step, end: "set_aside", reason: RUN_BOUNDS[bound] || RUN_ENDINGS[bound] || bound, by });
       return { told: !!(said && said.ok === true), end: completed ? "ended" : "set_aside", products: tied,
                ...(said && said.ok !== true ? { refusal: said.code || said.reason || null } : {}) };
     } catch { return { told: false, reason: "steps did not answer" }; }
   }
-
 
   /* ---- DEC-63 / PL-18: THE RUN VERBS' GATE IS PROJECT MEMBERSHIP ----------
    *
@@ -843,9 +839,10 @@ export class AiRuns {
               rerunOf = null,
               /* R46 (K660): the plan a run in mode `plan` works on, stored verbatim; refused in any other mode. */
               plan = null,
-              /* R73 (T41): the step this run works on, and where it came from (`member`, or `explore`, which works on a
-                 step); a run naming neither is a member's, as every run before T41. */
-              step = null, origin = null,
+              /* R73 (T41): where the run came from (`member`, or `explore`), and the step it works: an existing `step`, or
+                 the `place` and `work` of a system step of its own, created once the run is open (K2490); a run naming
+                 none is a member's, as every run before T41. */
+              step = null, origin = null, place = null, work = null,
               /* PL-18 / DEC-63: WHICH MEMBER IS ASKING, stamped server-side by
                  `control-plane` and empty for a machine credential. Never a
                  caller's word — a principal a caller can name is not one, which
@@ -992,8 +989,8 @@ export class AiRuns {
     const runMode = mode === undefined || mode === null ? DEFAULT_MODE : String(mode).trim();
     /* DEC-49 REGION is-airun-open-mode — C-109.1. */
     /* K1606 (run-rules R16, R19): a RUN's mode is one of the order's (`RUN_MODES`; `ask` is deployed apart and is no
-       run), deployed by its flag, and deployable on the verifications this record holds (the chain is the record's). */
-    const deployed = this.#deployedModes().filter((m) => RUN_MODES.includes(m) && deployable(m, this.verifications()));
+       run), deployed by its flag, and deployable on what this record holds (B6: the chain and the test bar, R75). */
+    const deployed = this.#deployedModes().filter((m) => RUN_MODES.includes(m) && this.#partDeployable(m));
     if (!deployed.includes(runMode))
       return refusal("AI_RUN_MODE_NOT_DEPLOYED", {
                mode: String(mode).slice(0, 60), deployed: [...deployed],
@@ -1024,22 +1021,26 @@ export class AiRuns {
       return planRefusal("AI_RUN_PLAN_NO_SEARCH", `a planning run works from what the record already holds, so it declares `
         + `no '${search.bound}' allowance (it was given ${search.allowed})`, { bound: search.bound });
     /* END DEC-49 REGION is-airun-open-plan */
-    /* R73 (T41; run-rules R23): THE ORIGIN AND THE STEP, after the mode and the plan and before the bounds: an origin the
-       order does not hold; an exploring run with no step, or while `investigate` cannot deploy (the chain is the record's,
-       run-rules R19); a step the opener cannot see (absent and unseen alike, steps R2). */
+    /* R73 (T41; run-rules R23): THE ORIGIN AND THE STEP, after the mode and the plan and before the bounds. The origin
+       is judged by `run-rules`' `originAllowed`, a RELAY (an exploring run only while `investigate` may deploy, its chain
+       and its test bar both held). A run that works as a system step of its own (an exploring run, each of R74's) names
+       that step's `place` and `work`, never a step (K2490): the step is created after the run is open (steps R1's
+       machine arm needs a run it holds). A member's run may instead work an existing `step` she can see (absent and
+       unseen alike, steps R2); a run names one or the other, never both. */
     const runOrigin = origin == null ? "member" : String(origin).trim();
     const stepId = step == null || String(step).trim() === "" ? null : String(step).trim();
+    const ownStep = place != null || work != null;
+    const originSaid = originAllowed({ origin: runOrigin, investigateDeployable: this.#partDeployable("investigate") });
+    if (!originSaid || originSaid.ok !== true)
+      return { run, started: false, code: originSaid.code, check: originSaid.check, translation: originSaid.translation,
+               detail: originSaid.detail, note: "Nothing was written" };
     /* DEC-49 REGION is-airun-open-step */
-    if (!AiRuns.ORIGINS.includes(runOrigin))
-      return refusal("AI_RUN_ORIGIN_UNKNOWN", { detail: `a run's origin is one of ${AiRuns.ORIGINS.join(", ")}`, note: "Nothing was written" });
-    if (runOrigin === "explore" && !stepId)
-      return refusal("AI_RUN_EXPLORE_NEEDS_STEP", { detail: "an exploring run names the system step it works on: pass step=<its id>",
-        note: "Nothing was written" });
-    if (runOrigin === "explore" && !deployable("investigate", this.verifications()))
-      return refusal("AI_RUN_EXPLORE_NOT_DEPLOYABLE", { detail: "an exploring run is admitted only while 'investigate' may deploy",
-        note: "Nothing was written" });
-    if (stepId && !this.#stepSeen(stepId, viewer))
-      return refusal("AI_RUN_STEP_UNKNOWN", { detail: `no step '${stepId.slice(0, 60)}' is open to this caller`, step: stepId.slice(0, 60),
+    if (runOrigin === "explore" && (!ownStep || stepId))
+      return refusal("AI_RUN_EXPLORE_NEEDS_STEP", { detail: "an exploring run works as a system step of its own: pass the "
+        + "step's place and work, and no step", note: "Nothing was written" });
+    if (stepId && (ownStep || !this.#stepSeen(stepId, viewer)))
+      return refusal("AI_RUN_STEP_UNKNOWN", { detail: ownStep ? "a run works one step: an existing one, or a step of its own "
+        + "by its place and work, not both" : `no step '${stepId.slice(0, 60)}' is open to this caller`, step: stepId.slice(0, 60),
         note: "Nothing was written" });
     /* END DEC-49 REGION is-airun-open-step */
     /* REC-169 — THE SEED IS THE TICK'S RULE. A declared `consumed` is the other caller-written figure in
@@ -1147,8 +1148,13 @@ export class AiRuns {
       return { run, started: false, code: start.code, check: start.check, translation: start.translation, detail: start.detail };
     if (!account || account.refusal)
       return { run, started: false, ...(account ? account.refusal : this.#noAccount(accountMember, "A run")) };
-    const overCeiling = this.#ceilingRefusal(accountMember, nowMs);
-    if (overCeiling) return { run, started: false, ...overCeiling };
+    /* R52 (B5): the paying account's limits, judged by `ai-use.useCheck` (its R3) for this member's use `run`, its
+       refusal relayed in the open's shape. */
+    const overLimit = this.#useCheck(account.owner, accountMember, nowMs);
+    if (overLimit) return { run, started: false, ...AiRuns.#shed(overLimit) };
+    /* R73, R74: a system step of its own needs steps, asked before anything is written. */
+    if (ownStep && !this.#steps())
+      return refusal("AI_RUN_STEP_UNKNOWN", { detail: "the run's own step cannot be made: steps is not reachable", note: "Nothing was written" });
 
     /* R47 (K660): THE CHECK A LATER MODULE REGISTERED FOR THIS MODE, applied LAST, synchronously, just before the
        write, and its refusal passed on unchanged. A planning run with no check registered is refused (fail closed); so
@@ -1170,7 +1176,9 @@ export class AiRuns {
     }
     /* END DEC-49 REGION is-airun-open-check */
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : AiRuns.AI_RUN_LEASE_MS;
-    this.#transact(() => {
+    let systemStep = null;
+    const STEP_REFUSED = Symbol("step refused");
+    try { this.#transact(() => {
       this.sql.exec(
         `INSERT INTO ai_runs (run, status, label, mode, context_type, context_id,
            principal_plane, principal_claude, principal_claude_ref, skill_version,
@@ -1205,7 +1213,23 @@ export class AiRuns {
           b.consumed == null ? 0 : b.consumed,   /* REC-169: judged above */
           b.unit == null ? null : String(b.unit));
       }
-    });
+      /* R73, R74 (K2490): THE RUN'S OWN SYSTEM STEP, created now the run is open, by the run's own system identity (steps
+         R1's machine arm, held through `runHolder`), and tied to the run. In the open's own transaction: a step steps
+         refuses (its place or work, R1; one alike, R8) rolls the run back, and the refusal is answered with nothing
+         written. */
+      if (ownStep) {
+        const made = this.#steps().stepCreate({ place, work, run, by: AiRuns.systemOf(run) });
+        if (!made || made.ok !== true || typeof made.step !== "string") { systemStep = made; throw STEP_REFUSED; }
+        this.sql.exec(`UPDATE ai_runs SET step = ?, own_step = '1' WHERE run = ?`, made.step, run);
+        systemStep = made.step;
+      }
+    }); } catch (e) {
+      if (e !== STEP_REFUSED) throw e;
+      const said = systemStep && typeof systemStep === "object" ? systemStep : {};
+      return { run, started: false, code: said.code || said.reason || "STEP_REFUSED", check: said.check ?? null,
+               translation: said.translation ?? null, detail: said.detail ?? null, ...(said.step ? { step: said.step } : {}),
+               note: "the run's own step was refused, so the run was not opened. Nothing was written" };
+    }
     /* R43: the post-write notice, after the run's transaction has committed, to every listener once in the modules'
        order; one that throws or rejects changes neither the run nor this answer. */
     const expires = AiRuns.#aiIso(nowMs + lease);
@@ -1226,7 +1250,75 @@ export class AiRuns {
                 it — and an echo that appeared as `null` on every other open would be a new key on an
                 answer every existing reader parses, for no fact. */
              ...(reRuns ? { rerun_of: reRuns } : {}),
+             ...(systemStep ? { step: systemStep } : stepId ? { step: stepId } : {}),
+             ...(runOrigin !== "member" ? { origin: runOrigin } : {}),
              ...AiRuns.#aiRunGateStated(gate) };
+  }
+
+  /** R74 (D7; K2472; B4 (5), K2490): A MEMBER'S BATCH, one bounded run per step she may see, under one act and one
+   *  estimate. `steps` is the list of her steps (at most `OPEN_MANY_MAX`, each named once); `mode`, `bounds`,
+   *  `skillVersion`, `label` are each run's, as `open` takes them; `owner` the account the estimate is asked of (default:
+   *  the account `credentials.accountFor` answers for her act). Refused whole, nothing written: no member's act
+   *  (`run-rules` R18, relayed), or no list of steps (`AI_RUN_NO_CONTEXT`). Otherwise `ai-use.estimate` is asked once for
+   *  the batch (its answer, a refusal included, carried as `estimate`), then each step in order: one she cannot see
+   *  answers `AI_RUN_STEP_UNKNOWN` for that step alone, a group-placed one `AI_RUN_NO_CONTEXT` (a run sits in an inquiry
+   *  or a project); every other opens through `open` exactly as one run (its own checks, its own `useCheck`), over the
+   *  step's place (its first question she sees, or its project), with a system step of its own whose work names hers
+   *  (J5 (9)). A refusal of one is answered for it and the others open; each run's limits end it alone (R14), setting
+   *  only its own step aside (R73). Answers `{ok, estimate, runs: [{step, run?, system_step?, refusal?}]}`. */
+  static OPEN_MANY_MAX = 50;
+  async openMany({ steps = null, mode = null, owner = null, bounds = null, skillVersion = null, label = null,
+                   principalPlane = null, actor = null, viewer = null, at = null } = {}) {
+    const member = memberIdOf(actor);
+    const runMode = mode == null ? DEFAULT_MODE : String(mode).trim();
+    const start = startAllowed({ startedBy: member ? `member:${member}` : (actor || principalPlane), mode: runMode });
+    if (!start || start.ok !== true)
+      return { ok: false, code: start.code, check: start.check, translation: start.translation, detail: start.detail };
+    const list = Array.isArray(steps) ? steps.map((x) => (typeof x === "string" ? x.trim() : "")) : [];
+    /* DEC-49 REGION is-airun-open-many */
+    if (!list.length || list.length > AiRuns.OPEN_MANY_MAX || list.some((x) => !x) || new Set(list).size !== list.length)
+      return { ...this.#refuse("AI_RUN_NO_CONTEXT", `a batch names the steps it runs on, each once, 1 to ${AiRuns.OPEN_MANY_MAX} `
+        + "of them. Nothing was started."), started: false };
+    /* END DEC-49 REGION is-airun-open-many */
+    let payer = owner;
+    if (payer == null) {
+      const a = await this.#accountFor(member, "run", null);
+      payer = a && !a.refusal ? a.owner : null;
+    }
+    let estimate = null;
+    try {
+      estimate = payer ? this.#aiUse().estimate({ owner: payer, use: "run", mode: runMode, count: list.length, viewer: `member:${member}` })
+        : this.#noAccount(member, "A batch of runs");
+    } catch { estimate = null; }
+    const st = this.#steps();
+    const runs = [];
+    for (const stepId of list) {
+      let seen = null;
+      try { seen = st ? st.step({ step: stepId, viewer }) : null; } catch { seen = null; }
+      if (!seen || seen.ok === false || seen.step !== stepId) {
+        runs.push({ step: stepId, refusal: this.#refuse("AI_RUN_STEP_UNKNOWN", `no step '${stepId.slice(0, 60)}' is open to you. `
+          + "Nothing was started for it.") });
+        continue;
+      }
+      const place = seen.place || {};
+      const questions = Array.isArray(place.questions) ? [...place.questions].sort() : [];
+      const context = place.project ? { type: "project", id: place.project, place: { project: place.project } }
+        : questions.length ? { type: "inquiry", id: questions[0], place: { questions } } : null;
+      if (!context) {
+        runs.push({ step: stepId, refusal: this.#refuse("AI_RUN_NO_CONTEXT", "a group's own step has no question or project for "
+          + "a run to sit in. Nothing was started for it.") });
+        continue;
+      }
+      let k = 1;
+      while (this.#one(`SELECT run FROM ai_runs WHERE run = ?`, `RUN-${stepId}-${k}`)) k += 1;
+      const run = `RUN-${stepId}-${k}`;
+      const opened = await this.open({ run, contextType: context.type, contextId: context.id, label, mode: runMode,
+        principalPlane, principalClaude: `member:${member}`, skillVersion, bounds, at, actor, viewer, origin: "member",
+        place: context.place, work: `AI run on ${stepId}: ${String(seen.work ?? "")}`.slice(0, WORK_MAX) });
+      if (opened && opened.started === true) runs.push({ step: stepId, run, system_step: opened.step ?? null });
+      else { const { run: _r, started: _s, ...refusal } = opened || {}; runs.push({ step: stepId, refusal }); }
+    }
+    return { ok: true, estimate, runs };
   }
 
   /** R73: whether `viewer` may see step `id` (steps R2, R4's `step`); false where steps is not reachable or answers
@@ -1235,7 +1327,9 @@ export class AiRuns {
     try {
       const st = this.#steps();
       const a = st && typeof st.step === "function" ? st.step({ step: id, viewer }) : null;
-      return !!a && a.found !== false && (a.step === id || (a.step && a.step.step === id));
+      /* steps' refusal (NO_SUCH_STEP) also names the step it was asked about, so only an answer that is not a refusal
+         counts as seen */
+      return !!a && a.ok !== false && a.found !== false && a.step === id;
     } catch { return false; }
   }
 
@@ -1268,7 +1362,7 @@ export class AiRuns {
    *  is a fact about the run's state, and a late tick from a straggling
    *  sub-session must not resurrect a run whose log is already closed. */
   tick({ run, state = null, consume = null, log = null, leaseMs = null, at = null,
-              /* R48 (N588): one entry per conversation that reached the provider since the last tick,
+              /* R72 (N588): one entry per conversation that reached the provider since the last tick,
                  `{mode, model, usage, calls}`. */
               usage = null,
               actor = null, viewer = null,
@@ -1355,35 +1449,45 @@ export class AiRuns {
                bytes: badState.bytes, limit: badState.limit,
                note: "a run's state is its resumable work list, and it is bounded. "
                    + "Nothing was appended and no budget was spent" };
-    /* R48 — THE CONVERSATIONS' FIGURES, judged whole after the state and before anything is written: a malformed entry
-       (its `calls` included) refuses the whole tick as R3 refuses a malformed consumption (C-22.13). */
-    const badUsage = this.#usageRefusal(usage);
-    if (badUsage)
-      return { run, ticked: false, found: true, status: row.status, ...AiRuns.#shed(badUsage),
-               note: "each conversation's figures and calls are as the model service states them. Nothing was appended and "
-                   + "no budget was spent" };
-    const calls = Array.isArray(usage) ? usage : [];
-    /* R52: the calls are counted against the member whose act the run serves, whichever account carried it (their own or
-       the group's key, K1755); a run that names no member (one opened before T33-50) cannot have its calls counted, and a
-       tick reporting calls for it is refused by name. */
+    /* R72 — THE CONVERSATIONS' FIGURES: a list, one entry per conversation that reached the provider. Each entry's shape
+       is judged by `ai-use.countUsage` (its R1: `AI_RUN_CONSUME_INVALID`), the one judge, inside the tick's own
+       transaction: a refused entry rolls the whole tick back, so nothing of it is written. */
+    const calls = usage == null ? [] : Array.isArray(usage) ? usage : null;
+    if (!calls)
+      return { run, ticked: false, found: true, status: row.status,
+               ...AiRuns.#shed(this.#refuse("AI_RUN_CONSUME_INVALID", "`usage` is a list with one entry per conversation that "
+                 + "reached the model since the last tick, each {mode, model, usage, calls}.")),
+               note: "Nothing was appended and no budget was spent" };
+    /* R52: the calls are counted to the account the run recorded as paying (`principal_claude`) and the member whose act
+       the run is (`principal_claude_ref`); a run that names no member (one opened before T33-50) cannot have its calls
+       counted, and a tick reporting calls for it is refused by name. */
     const payer = AiRuns.#memberOfRun(row);
     if (calls.length && !payer)
       return { run, ticked: false, found: true, status: row.status, ...AiRuns.#shed(this.#noAccount(null, "This run")) };
-    /* R50 — THE CEILING, on the use before this tick. The calls this tick reports were made, so they are counted
-       whatever the answer (the counter stays true); a member over the ceiling then gets the refusal and nothing else of
-       the tick is written: no entry, no figure, no lease, no tick. */
-    const overCeiling = payer ? this.#ceilingRefusal(payer, nowMs) : null;
-    if (overCeiling) {
-      const counted = calls.length ? this.#transact(() => this.#count(payer, calls, nowMs)) : 0;
-      return { run, ticked: false, found: true, status: row.status, ...AiRuns.#shed(overCeiling), counted };
+    /* R52 (B5) — THE PAYING ACCOUNT'S LIMITS (`ai-use.useCheck`, its R3), on the use before this tick. The calls this tick
+       reports were made and paid for, so they are counted whatever the answer (the counter stays true, J5 (13)); over a
+       limit the refusal is then answered and nothing else of the tick is written: no entry, no figure, no lease, no tick. */
+    const overLimit = payer ? this.#useCheck(row.principal_claude, payer, nowMs) : null;
+    if (overLimit) {
+      const counted = calls.length ? this.#countTick(row, payer, calls, nowMs) : 0;
+      if (counted && typeof counted === "object")
+        return { run, ticked: false, found: true, status: row.status, ...AiRuns.#shed(counted),
+                 note: "Nothing was appended and no budget was spent" };
+      return { run, ticked: false, found: true, status: row.status, ...AiRuns.#shed(overLimit), counted };
     }
 
     const lease = Number(leaseMs) > 0 ? Number(leaseMs) : AiRuns.AI_RUN_LEASE_MS;
     const refused = [];
     let appended = 0;
-    this.#transact(() => {
-      /* R48: the calls, against the run's member, in the tick's own transaction; nothing of them reaches the log. */
-      if (calls.length) this.#count(payer, calls, nowMs);
+    const USAGE_REFUSED = Symbol("usage refused");
+    let usageRefusal = null;
+    try { this.#transact(() => {
+      /* R52, R72: the calls, through ai-use's counter under the run's id, in the tick's own transaction; nothing of them
+         reaches the log. */
+      if (calls.length) {
+        const bad = this.#countEntries(row, payer, calls, nowMs);
+        if (bad) { usageRefusal = bad; throw USAGE_REFUSED; }
+      }
       for (const e of Array.isArray(log) ? log : []) {
         /* `row.principal_claude` is the run's machine identity and this method
            already holds the row — see #aiRunAppend's note on why it is passed
@@ -1403,7 +1507,12 @@ export class AiRuns {
          WHERE run = ?`,
         ...(state == null ? [now, AiRuns.#aiIso(nowMs + lease), run]
                           : [now, AiRuns.#aiIso(nowMs + lease), JSON.stringify(state), run]));
-    });
+    }); } catch (e) {
+      if (e !== USAGE_REFUSED) throw e;
+      return { run, ticked: false, found: true, status: row.status, ...AiRuns.#shed(usageRefusal),
+               note: "each conversation's figures and calls are as the model service states them. Nothing was appended and "
+                   + "no budget was spent" };
+    }
 
     /* The exhaustion check reads the rows back rather than trusting the deltas
        just written, so a bound that was ALREADY over before this tick is caught
@@ -1486,7 +1595,7 @@ export class AiRuns {
     let ended = this.#aiRunTerminate({ run, offered: bound, condition, at: now, derive: false });
     /* R76: at close the run answers its actual cost, to its paying account's owners only */
     if (ended && ended.terminated === true) {
-      const held = this.#one(`SELECT run, principal_claude, actual FROM ai_runs WHERE run = ?`, run);
+      const held = this.#one(`SELECT run, status FROM ai_runs WHERE run = ?`, run);
       const cost = held ? this.#costFor(held, viewer) : null;
       if (cost) ended = { ...ended, cost };
     }
@@ -1998,6 +2107,7 @@ export class AiRuns {
    *  dispatch already awaits every handler. */
   async read({ run, viewer = null } = {}) {
     const seen = this.#bundleGate("r.context_id", viewer);
+    let cost = null;
     const row = this.#one(
       `SELECT r.* FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, run, ...seen.args);
     if (!row) return { run: run || null, found: false, session: null };
@@ -2078,7 +2188,7 @@ export class AiRuns {
       ...(row.step ? { step: row.step } : {}),
       ...(row.origin && row.origin !== "member" ? { origin: row.origin } : {}),
       /* R76 (D12): the run's cost, only to its paying account's owners; no key at all for anyone else */
-      ...(this.#costFor(row, viewer) ? { cost: this.#costFor(row, viewer) } : {}),
+      ...((cost = this.#costFor(row, viewer)) ? { cost } : {}),
       /* R46: the plan a planning run works on; the key exists only on a run in mode `plan`. */
       ...(row.mode === "plan" ? { plan: row.plan ?? null } : {}),
     } };
@@ -2753,201 +2863,80 @@ export class AiRuns {
              refusal: runPrincipalGate({ caller, principal: r.principal_plane, ...(act ? { act } : {}) }) };
   }
 
-  /* ---- R48–R52: THE ASSISTANT'S USE AND ITS CEILING (T33-50; Q0-6; K1450, K1481, K1502, K1503) -----------------------
+  /* ---- R52, R72, R76: THE ACCOUNT A RUN CARRIES, ITS USE AND ITS COST ----------------------------------------------
    *
-   * Every model call is counted against the member whose account carried it: a run's calls arrive on its ticks (R48),
-   * an ask's (which is no run, K1450) through `countAskUsage`, and a standing question's AI half as its author's (R52).
-   * The counter keeps a member id, a local day, a mode and numbers, nothing else (R49). The ceiling a member is held
-   * to is their own, or the provisional default, and never above the lower one an administrator set for the copy's own
-   * load (R50); the open, the tick and an ask are refused when it is reached, in plain words that name no cost. */
+   * What each account has spent and may spend is `ai-use`'s (T40-8, K624: this module's R48–R51 moved there whole, the
+   * counter and ceilings with their tables): a run asks its `useCheck` before it opens and at each tick, counts each tick's
+   * conversations through its `countUsage` under the run's id, and answers its cost from its `actualOf` (one store of the
+   * figures, K2482). Which account pays is `credentials.accountFor`'s. */
 
   /** A refusal relayed inside the tick's own shape (`ticked: false` leads, so no `ok` rides beside it). */
   static #shed({ ok: _ok, ...rest }) { return rest; }
 
-  /** One refusal of these acts, its row read by key (R35): `run-rules` R20's, or the injected one until it merges. */
+  /** One refusal of this module's acts, its row read by key from `run-rules`' table (R35). */
   #refuse(code, detail, extra = {}) {
     const row = this.#checkRow(code) || { check: null, translation: null };
     return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra };
   }
 
-  /** The group's time zone (retrieval R69: local-facts' governing value, else the profiles'), else UTC. */
-  #zone() {
-    try { const z = retrievalOf(this.ctx).zone(); return typeof z === "string" && z ? z : "UTC"; } catch { return "UTC"; }
+  /** The `ai-use` module (R52, R76): the injected one, else its factory on this `ctx`. */
+  #aiUse() { return this.#deps.aiUse || aiUseOf(this.ctx); }
+
+  /** R52 (B5): `ai-use.useCheck` for the paying `owner` and `member`'s use `run` at `ms`: null, or its refusal relayed as
+   *  it came. A check that cannot be asked refuses (fail closed, as ai-use R3 fails closed). */
+  #useCheck(owner, member, ms) {
+    try {
+      return this.#aiUse().useCheck({ owner, member: `member:${member}`, use: "run", at: AiRuns.#aiIso(ms) }) ?? null;
+    } catch {
+      return this.#refuse("AI_NO_ACCOUNT", "The use of the account that would serve this run cannot be judged now. Nothing was started.");
+    }
   }
 
-  /** R49: the local day, in the group's zone, on which an instant (ms) falls (`civil-time.localDay`); UTC's when the
-   *  zone cannot be read. */
-  #dayOf(ms) {
-    const iso = AiRuns.#aiIso(Number.isFinite(ms) ? ms : Date.now());
-    const zone = this.#zone();
-    const d = localDay(iso, zone);
-    if (typeof d === "string") return { day: d, zone };
-    return { day: localDay(iso, "UTC"), zone: "UTC" };
-  }
-
-  /** R48 (N588; K1621): a list of conversations' usage, one entry per conversation that reached the provider,
-   *  `{mode, model, usage, calls}`: `usage` its summed figures as `agent-model` R5 and R6 state them, `calls` the model
-   *  calls that sum covers (its R6), a positive whole number or `null` where the runner states none. Null when well
-   *  formed; else run-rules R3's refusal of a malformed consumption (C-22.13), naming the entry. `calls` absent is
-   *  malformed, as R48 says. */
-  #usageRefusal(list) {
-    if (list == null) return null;
-    const bad = (detail) => this.#refuse("AI_RUN_CONSUME_INVALID", detail);
-    if (!Array.isArray(list))
-      return bad("`usage` is a list with one entry per conversation that reached the model since the last tick, each "
-        + "{mode, model, usage, calls}.");
-    for (let i = 0; i < list.length; i++) {
-      const e = list[i];
-      if (!e || typeof e !== "object" || Array.isArray(e))
-        return bad(`usage entry ${i + 1} is not an object {mode, model, usage, calls}.`);
-      if (typeof e.mode !== "string" || !e.mode.trim() || e.mode.length > 40)
-        return bad(`usage entry ${i + 1} names no mode.`);
-      if (e.model != null && (typeof e.model !== "string" || e.model.length > 120))
-        return bad(`usage entry ${i + 1}'s model is not a model's name.`);
-      const u = AiRuns.#figuresRefusal(e.usage);
-      if (u) return bad(`usage entry ${i + 1}: ${u}`);
-      const c = AiRuns.#callsRefusal(e);
-      if (c) return bad(`usage entry ${i + 1}: ${c}`);
+  /** R52, R72: each conversation of a tick counted through `ai-use.countUsage`, to the run's paying account and member,
+   *  under use `run` and `act` the run's id (R76), inside the caller's transaction. Null, or the first entry's refusal
+   *  (ai-use R1's `AI_RUN_CONSUME_INVALID`), naming which entry. */
+  #countEntries(row, payer, entries, ms) {
+    const use = this.#aiUse();
+    for (let i = 0; i < entries.length; i++) {
+      const e = entries[i];
+      const said = e && typeof e === "object" && !Array.isArray(e)
+        ? use.countUsage({ owner: row.principal_claude, member: `member:${payer}`, use: "run", mode: e.mode, model: e.model ?? null,
+                           usage: e.usage, calls: e.calls, at: AiRuns.#aiIso(ms), act: String(row.run) })
+        : this.#refuse("AI_RUN_CONSUME_INVALID", "the entry is not an object {mode, model, usage, calls}.");
+      if (!said || said.ok !== true)
+        return { ...(said || this.#refuse("AI_RUN_CONSUME_INVALID", "the entry could not be counted.")),
+                 detail: `usage entry ${i + 1}: ${(said && said.detail) || "it could not be counted"}` };
     }
     return null;
   }
 
-  /** R48: an entry's `calls`, the model calls its usage covers: present, and a positive safe integer or `null` (the
-   *  runner stated none). A sentence saying what is wrong, else null. */
-  static #callsRefusal(e) {
-    if (!Object.prototype.hasOwnProperty.call(e, "calls"))
-      return "it names no 'calls', the model calls its usage covers (null when the runner stated none).";
-    const v = e.calls;
-    if (v === null || (typeof v === "number" && Number.isSafeInteger(v) && v >= 1)) return null;
-    return "its 'calls' is not a whole number of one or more, or null.";
-  }
-
-  /** R48: the calls an entry adds to the count: its `calls`, a `null` counting as one, never none, so a ceiling on
-   *  calls is never reached later than the calls made. */
-  static #callsOf(e) { return e.calls === null || e.calls === undefined ? 1 : e.calls; }
-
-  /** One call's figures: each of `USAGE_FIGURES` present, `null` (not stated) or a figure — a token count a whole
-   *  number of zero or more, the cost a finite amount of zero or more. A sentence saying what is wrong, else null. */
-  static #figuresRefusal(u) {
-    if (!u || typeof u !== "object" || Array.isArray(u)) return "its usage is not an object of the call's figures.";
-    for (const f of USAGE_FIGURES) {
-      if (!Object.prototype.hasOwnProperty.call(u, f)) return `its usage names no '${f}' (null when the provider did not state it).`;
-      const v = u[f];
-      if (v === null) continue;
-      const ok = f === "total_cost_usd" ? typeof v === "number" && Number.isFinite(v) && v >= 0
-        : typeof v === "number" && Number.isSafeInteger(v) && v >= 0;
-      if (!ok) return `its '${f}' is not ${f === "total_cost_usd" ? "an amount" : "a whole number"} of zero or more.`;
-    }
-    /* R72: `estimated_cost_usd` (agent-model R13), where given, is null or an amount of zero or more */
-    const est = u.estimated_cost_usd;
-    if (est !== undefined && est !== null && !(typeof est === "number" && Number.isFinite(est) && est >= 0))
-      return "its 'estimated_cost_usd' is not an amount of zero or more.";
-    return null;
-  }
-
-  /** R48, R49: add well-formed entries to `member`'s counter for the local day of `ms`, inside the caller's transaction:
-   *  each entry's figures to the sums and its calls (R48's `#callsOf`) to the count. A figure not stated adds nothing and
-   *  is counted as unstated, never as 0. */
-  #count(member, entries, ms) {
-    const { day } = this.#dayOf(ms);
-    for (const e of entries) {
-      const u = e.usage;
-      const callCount = AiRuns.#callsOf(e);
-      const n = (f) => (u[f] === null ? 0 : u[f]);
-      const tokensUnstated = USAGE_TOKEN_FIGURES.some((f) => u[f] === null) ? 1 : 0;
-      const costUnstated = u.total_cost_usd === null ? 1 : 0;
-      const micro = u.total_cost_usd === null ? 0 : Math.round(u.total_cost_usd * 1e6);
-      this.sql.exec(
-        `INSERT INTO ai_usage (member, day, mode, calls, input_tokens, output_tokens, cache_read_input_tokens,
-           cache_creation_input_tokens, cost_micro_usd, tokens_unstated, cost_unstated)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-         ON CONFLICT(member, day, mode) DO UPDATE SET calls = calls + excluded.calls, input_tokens = input_tokens + excluded.input_tokens,
-           output_tokens = output_tokens + excluded.output_tokens,
-           cache_read_input_tokens = cache_read_input_tokens + excluded.cache_read_input_tokens,
-           cache_creation_input_tokens = cache_creation_input_tokens + excluded.cache_creation_input_tokens,
-           cost_micro_usd = cost_micro_usd + excluded.cost_micro_usd,
-           tokens_unstated = tokens_unstated + excluded.tokens_unstated, cost_unstated = cost_unstated + excluded.cost_unstated`,
-        member, day, String(e.mode).trim(), callCount, n("input_tokens"), n("output_tokens"), n("cache_read_input_tokens"),
-        n("cache_creation_input_tokens"), micro, tokensUnstated, costUnstated);
-    }
+  /** R52 (J5 (13)): a refused tick's conversations, counted in their own transaction (they were made and paid for): the
+   *  number counted, or the refusal of a malformed entry, which counts none. */
+  #countTick(row, payer, entries, ms) {
+    const REFUSED = Symbol("refused");
+    let bad = null;
+    try {
+      this.#transact(() => { bad = this.#countEntries(row, payer, entries, ms); if (bad) throw REFUSED; });
+    } catch (e) { if (e !== REFUSED) throw e; return bad; }
     return entries.length;
   }
 
-  /** R76: whether `viewer` is an owner of the account a run's `principal_claude` names: the member for `member:<id>`, an
-   *  owner of the project for `project:<id>`, an active administrator for `group`. False for anything else. */
-  #ownsAccount(principalClaude, viewer) {
-    try {
-      const who = memberIdOf(viewer);
-      const owner = typeof principalClaude === "string" ? principalClaude.trim() : "";
-      if (!who || !owner) return false;
-      if (owner.startsWith("member:")) return memberIdOf(owner) === who;
-      if (owner.startsWith("project:")) return this.#membership().isProjectOwner(owner.slice(8), who) === true;
-      if (owner === "group") return this.#membership().isAdministrator(who) === true;
-      return false;
-    } catch { return false; }
-  }
-
-  /** R76: the run's cost as its paying account's owners read it: the actual at its ending, else the sums so far; null for
-   *  anyone else, who is answered no cost at all. */
+  /** R76 (D12, K2482; J5 (10)): the run's cost as `ai-use.actualOf({act: <run>, viewer})` answers it, to the paying
+   *  account's owners only (ai-use decides who they are); `final` once the run has ended. Null for anyone else and where
+   *  nothing is measured: no key at all is answered then. Never throws. */
   #costFor(row, viewer) {
-    if (!this.#ownsAccount(row.principal_claude, viewer)) return null;
-    const actual = safeJson(row.actual);
-    if (actual) return { final: true, ...actual };
-    const now = this.#actualFromUse(row.run);
-    return now ? { final: false, ...now } : null;
-  }
-
-  /** The `ai-use` module (T41; R52, R76), reached in-process until its merge re-points it to its factory. */
-  #aiUse() { return this.#deps.aiUse || null; }
-
-  /** R76 (K2482): the run's actual cost from the one store of the figures, `ai-use.actualOf({act: <run>})` (its R11), read
-   *  internally; null when ai-use is not reachable or answers none. Never throws. */
-  #actualFromUse(run) {
     try {
-      const u = this.#aiUse();
-      const a = u && typeof u.actualOf === "function" ? u.actualOf({ act: String(run), viewer: AiRuns.#INTERNAL_VIEWER }) : null;
-      if (!a || a.ok === false || typeof a.code === "string") return null;
-      const { ok: _ok, ...rest } = a;
-      return rest;
+      const a = this.#aiUse().actualOf({ act: String(row.run), viewer });
+      if (!a || a.ok !== true || a.found !== true) return null;
+      const { ok: _ok, found: _found, ...rest } = a;
+      return { final: row.status !== "running", ...rest };
     } catch { return null; }
   }
 
-  /** R50: a member's use on one local day, over every mode: `tokens` every token processed, `calls` the calls. */
-  #usedOn(member, day) {
-    const r = this.#one(`SELECT COALESCE(SUM(input_tokens + output_tokens + cache_read_input_tokens + cache_creation_input_tokens), 0) t,
-                                COALESCE(SUM(calls), 0) c FROM ai_usage WHERE member = ? AND day = ?`, member, day);
-    return { tokens: Number(r.t), calls: Number(r.c) };
-  }
-
-  /** R50: the ceilings that hold for `member`: their own (or the default, figure by figure), the copy's, and the
-   *  lower of the two per figure. */
-  #ceilingFor(member) {
-    const own = this.#one(`SELECT tokens, calls, set_at FROM ai_ceilings WHERE holder = ?`, `member:${member}`);
-    const copy = this.#one(`SELECT tokens, calls, set_at FROM ai_ceilings WHERE holder = 'copy'`);
-    const fig = (r, f) => (r && r[f] != null ? Number(r[f]) : null);
-    const mine = { tokens: fig(own, "tokens") ?? AI_CEILING_DEFAULT.tokens, calls: fig(own, "calls") ?? AI_CEILING_DEFAULT.calls,
-                   basis: { tokens: fig(own, "tokens") != null ? "own" : "default", calls: fig(own, "calls") != null ? "own" : "default" } };
-    const copyC = copy ? { tokens: fig(copy, "tokens"), calls: fig(copy, "calls") } : null;
-    const low = (f) => (copyC && copyC[f] != null ? Math.min(mine[f], copyC[f]) : mine[f]);
-    return { own: mine, copy: copyC, in_force: { tokens: low("tokens"), calls: low("calls") } };
-  }
-
-  /** R50: null while `member`'s use today is under the ceiling in force; else the plain refusal — their own ceiling's
-   *  first, then the copy's. Names no cost. */
-  #ceilingRefusal(member, ms) {
-    const { day } = this.#dayOf(ms);
-    const used = this.#usedOn(member, day);
-    const c = this.#ceilingFor(member);
-    const over = (lim) => lim && ((lim.tokens != null && used.tokens >= lim.tokens) || (lim.calls != null && used.calls >= lim.calls));
-    /* DEC-49 REGION is-ai-use-ceiling */
-    if (over(c.own))
-      return this.#refuse("AI_USE_CEILING_REACHED", `Your assistant has reached today's limit, which you set (or the `
-        + `starting limit, if you have not set one). It is available again tomorrow. Nothing was started.`, { day });
-    if (over(c.copy))
-      return this.#refuse("AI_USE_COPY_CEILING_REACHED", `Your assistant has reached today's limit for this group, which `
-        + `an administrator set for the group's own load. It is available again tomorrow. Nothing was started.`, { day });
-    /* END DEC-49 REGION is-ai-use-ceiling */
-    return null;
+  /** R72: a provider's refusal for a spent limit, answered in plain words at the wake's dispatch, never as an error. */
+  #providerLimit() {
+    return { provider_limit: true, detail: "The Claude account that serves this run has reached the spending limit set on it, "
+      + "so the assistant cannot continue for now. Nothing was lost." };
   }
 
   /** R52 (K1755): which account serves `member`'s act now, read without unsealing, for the synchronous checks (an ask's
@@ -3023,135 +3012,6 @@ export class AiRuns {
     return ref || AiRuns.#payerOf(row && row.principal_claude);
   }
 
-  /** R48: count an ask's conversation (an ask is no run, K1450), or a standing question's AI half (R52, its author's),
-   *  for `member`, by `answers` (and the control plane's `askusage`). `usage` is the conversation's summed figures,
-   *  `calls` the model calls they cover, read as in a tick's entry (a `null` counts one); `mode` the conversation's mode.
-   *  An omitted `calls` reads as `null` (ai-runs #11 J1 (1): a caller that predates N588 states none). Writes the counter
-   *  only, to `member`'s day, whichever account served the ask (K1755).
-   *  (T35; N686) A draft (`run-rules` R21, also no run) is counted the same way with `mode` `draft`, to the member who
-   *  asked for it, under its own mode, so R51's reads answer drafts apart. Neither is a run, so a `mode` other than `ask`
-   *  or `draft` is refused as a malformed entry (C-22.13), counting nothing. */
-  static ASK_USAGE_MODES = Object.freeze([ASK_MODE.mode, DRAFT_MODE.mode]);
-  countAskUsage({ member = null, mode = null, usage = null, calls = null, at = null } = {}) {
-    const id = memberIdOf(member);
-    if (!id) return this.#noAccount(null, "Counting an ask's use");
-    const entry = { mode, model: null, usage, calls };
-    const bad = this.#usageRefusal([entry]);
-    if (bad) return bad;
-    if (!AiRuns.ASK_USAGE_MODES.includes(String(mode).trim()))
-      return this.#refuse("AI_RUN_CONSUME_INVALID", `the mode '${String(mode).slice(0, 40)}' is not one an ask's use is `
-        + `counted under: an ask counts as 'ask' and a draft as 'draft'; a run's use arrives on its own ticks.`);
-    const ms = at ? Date.parse(at) : Date.now();
-    this.#transact(() => this.#count(id, [entry], ms));
-    return { ok: true, counted: 1, calls: AiRuns.#callsOf(entry), day: this.#dayOf(ms).day };
-  }
-
-  /** R50: a provider's refusal for a spent limit (a 429 `enforced_spend_limit_reached` on the member's own account),
-   *  answered the plain way the ceiling is, never as an error: the refusal, or null when `said` (a relayed reason, type
-   *  or message) is not that. For `answers` and `agent-worker` to relay, and the wake's own dispatch. */
-  providerLimit(said = null) {
-    return PROVIDER_LIMIT.test(String(said ?? "")) ? this.#providerLimit() : null;
-  }
-  #providerLimit() {
-    return this.#refuse("AI_USE_CEILING_REACHED", "Your own Claude account has reached the spending limit set on it, so "
-      + "the assistant cannot continue for now. Nothing was lost.", { provider_limit: true });
-  }
-
-  /** R50, R52: before an ask's (or a standing question's) first model call, `answers` asks this: null when an account
-   *  serves `member` (their own, or the group's key, K1755) and they are under the ceiling in force for them today, the
-   *  copy's included; else the refusal, in plain words. Writes nothing. (T35; N686) A draft is held back the same way,
-   *  before its first model call, as the act of the member who asked for it (`mode: "draft"` names it in the words). */
-  aiUseCheck({ member = null, at = null, mode = null } = {}) {
-    const id = memberIdOf(member);
-    if (!id || !this.#accountServing(id)) return this.#noAccount(id, String(mode ?? "").trim() === DRAFT_MODE.mode ? "A draft" : "An ask");
-    return this.#ceilingRefusal(id, at ? Date.parse(at) : Date.now());
-  }
-
-  /** A ceiling's figures as given: each absent (left as held), `null` (cleared) or a whole number of one or more. */
-  #ceilingFigures(tokens, calls) {
-    for (const [f, v] of [["tokens", tokens], ["calls", calls]])
-      if (v !== undefined && v !== null && !(typeof v === "number" && Number.isSafeInteger(v) && v >= 1))
-        /* DEC-49 REGION is-ai-ceiling-figure */
-        return this.#refuse("AI_CEILING_INVALID", `A daily limit's '${f}' is a whole number of one or more, or null to `
-          + `clear it. Nothing was changed.`, { figure: f });
-        /* END DEC-49 REGION is-ai-ceiling-figure */
-    return null;
-  }
-
-  #setCeiling(holder, tokens, calls, by, at) {
-    const held = this.#one(`SELECT tokens, calls FROM ai_ceilings WHERE holder = ?`, holder);
-    const next = { tokens: tokens === undefined ? (held ? held.tokens : null) : tokens,
-                   calls: calls === undefined ? (held ? held.calls : null) : calls };
-    const now = AiRuns.#aiIso(at ? Date.parse(at) : Date.now());
-    this.#transact(() => {
-      if (next.tokens == null && next.calls == null) this.sql.exec(`DELETE FROM ai_ceilings WHERE holder = ?`, holder);
-      else this.sql.exec(`INSERT INTO ai_ceilings (holder, tokens, calls, set_by, set_at) VALUES (?, ?, ?, ?, ?)
-                          ON CONFLICT(holder) DO UPDATE SET tokens = excluded.tokens, calls = excluded.calls,
-                            set_by = excluded.set_by, set_at = excluded.set_at`, holder, next.tokens, next.calls, by, now);
-    });
-    return { tokens: next.tokens, calls: next.calls, set_at: now };
-  }
-
-  /** R50 (K1502): a member's own daily ceiling, set by that member's own act only (`by` the control plane's stamp). */
-  aiCeilingSet({ member = null, tokens = undefined, calls = undefined, by = null, at = null } = {}) {
-    const id = memberIdOf(member);
-    /* DEC-49 REGION is-ai-ceiling-own */
-    if (!id || memberIdOf(by) !== id)
-      return this.#refuse("NOT_YOUR_CEILING", "A member's daily limit for the assistant is set only by that member. "
-        + "Nothing was changed.");
-    /* END DEC-49 REGION is-ai-ceiling-own */
-    const bad = this.#ceilingFigures(tokens, calls);
-    if (bad) return bad;
-    const set = this.#setCeiling(`member:${id}`, tokens, calls, `member:${id}`, at);
-    const c = this.#ceilingFor(id);
-    return { ok: true, member: id, own: { tokens: set.tokens, calls: set.calls }, in_force: c.in_force,
-             default: { ...AI_CEILING_DEFAULT }, set_at: set.set_at };
-  }
-
-  /** R50 (K1502): the copy's ceiling, a lower daily limit for every member for the copy's own load, set by an
-   *  administrator only (`membership` R64, refused through `notAnAdmin`). */
-  aiCopyCeilingSet({ tokens = undefined, calls = undefined, by = null, at = null } = {}) {
-    const admin = memberIdOf(by);
-    if (!admin || !this.#membership().isAdministrator(admin)) return notAnAdmin(by, "setting the group's daily limit for the assistant");
-    const bad = this.#ceilingFigures(tokens, calls);
-    if (bad) return bad;
-    const set = this.#setCeiling("copy", tokens, calls, `member:${admin}`, at);
-    return { ok: true, copy: { tokens: set.tokens, calls: set.calls }, default: { ...AI_CEILING_DEFAULT }, set_at: set.set_at };
-  }
-
-  /** R51: an administrator's month of use, per mode, summed over every member and naming none (`op=aiusage`). `month`
-   *  is `YYYY-MM`, this month in the group's zone by default; a month nothing was counted in answers zeros. */
-  aiUsage({ viewer = null, month = null, at = null } = {}) {
-    const admin = memberIdOf(viewer);
-    if (!admin || !this.#membership().isAdministrator(admin)) return notAnAdmin(viewer, "reading the group's use of the assistant");
-    const m = typeof month === "string" && /^\d{4}-\d{2}$/.test(month.trim()) ? month.trim()
-      : this.#dayOf(at ? Date.parse(at) : Date.now()).day.slice(0, 7);
-    const rows = this.#rows(
-      `SELECT mode, SUM(calls) calls, SUM(input_tokens) input_tokens, SUM(output_tokens) output_tokens,
-              SUM(cache_read_input_tokens) cache_read_input_tokens, SUM(cache_creation_input_tokens) cache_creation_input_tokens,
-              SUM(cost_micro_usd) cost_micro_usd, SUM(tokens_unstated) tokens_unstated, SUM(cost_unstated) cost_unstated
-         FROM ai_usage WHERE substr(day, 1, 7) = ? GROUP BY mode ORDER BY mode`, m);
-    return { ok: true, month: m, zone: this.#zone(),
-             modes: rows.map((r) => ({ mode: r.mode, calls: Number(r.calls), input_tokens: Number(r.input_tokens),
-               output_tokens: Number(r.output_tokens), cache_read_input_tokens: Number(r.cache_read_input_tokens),
-               cache_creation_input_tokens: Number(r.cache_creation_input_tokens), total_cost_usd: Number(r.cost_micro_usd) / 1e6,
-               tokens_unstated: Number(r.tokens_unstated), cost_unstated: Number(r.cost_unstated) })) };
-  }
-
-  /** R51: a member's own use on a local day (today by default) against the ceiling in force, and never a cost. */
-  aiUsageMine({ viewer = null, day = null, at = null } = {}) {
-    const id = memberIdOf(viewer);
-    if (!id) return this.#refuse("NOT_YOUR_CEILING", "A member's use of the assistant is read only by that member. Nothing was read.");
-    const today = this.#dayOf(at ? Date.parse(at) : Date.now());
-    const d = typeof day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(day.trim()) ? day.trim() : today.day;
-    const used = this.#usedOn(id, d);
-    const c = this.#ceilingFor(id);
-    const reached = (lim) => (lim.tokens != null && used.tokens >= lim.tokens) || (lim.calls != null && used.calls >= lim.calls);
-    return { ok: true, member: id, day: d, zone: today.zone, used, ceiling: c.in_force,
-             own: { tokens: c.own.tokens, calls: c.own.calls, basis: c.own.basis }, copy: c.copy,
-             reached: reached(c.own) ? "own" : c.copy && reached(c.copy) ? "copy" : null };
-  }
-
   /* ---- K1606 (run-rules R19; VF-4): THE ACT THAT RECORDS A MODE'S FIRST LIVE RUN VERIFIED, written here, where runs
      are, and read back by the open's deployability (R40). ------------------------------------------------------------ */
 
@@ -3187,7 +3047,7 @@ export class AiRuns {
     const order = RUN_MODES;
     const next = order[order.indexOf(mode) + 1] ?? null;
     return { ok: true, mode, run, verified_by: v.verified_by, at: existed ? prior.at : now, existed,
-             next: next ? { mode: next, deployable: deployable(next, this.verifications()) } : null };
+             next: next ? { mode: next, deployable: this.#partDeployable(next) } : null };
   }
 
   /* ---- R75 (T41; D14, D11): THE TEST BAR, written here, where runs are, and read by run-rules R19's deploy gate ---- */
@@ -3200,15 +3060,12 @@ export class AiRuns {
                   at = null } = {}) {
     const now = AiRuns.#aiIso(at ? Date.parse(at) : Date.now());
     const record = { part, set, set_version, false_alarm_rate, passed, graded_by, at: now };
-    /* `deps.checkTestBarRecord` stands in for run-rules' judge in a module test alone, until run-rules (T41-21) merges */
-    const judge = this.#deps.checkTestBarRecord || RUN_RULES.checkTestBarRecord;
-    const bad = typeof judge === "function" ? judge(record)
-      : this.#refuse("AI_TEST_BAR_UNFIT", "the test bar's judge (run-rules' checkTestBarRecord) is not reachable. Nothing was recorded");
+    const bad = checkTestBarRecord(record);
     if (bad) return bad;
     this.#transact(() => this.sql.exec(
       `INSERT INTO ai_test_bar (part, set_name, set_version, false_alarm_rate, passed, graded_by, at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      String(part), String(set), String(set_version), Number(false_alarm_rate), passed === true ? 1 : 0, String(graded_by), now));
-    return { ok: true, part: String(part), set: String(set), set_version: String(set_version),
+      String(part), String(set), Number(set_version), Number(false_alarm_rate), passed === true ? 1 : 0, String(graded_by), now));
+    return { ok: true, part: String(part), set: String(set), set_version: Number(set_version),
              false_alarm_rate: Number(false_alarm_rate), passed: passed === true, at: now };
   }
 
@@ -3218,7 +3075,8 @@ export class AiRuns {
     try {
       return this.#rows(`SELECT part, set_name, set_version, false_alarm_rate, passed, graded_by, at FROM ai_test_bar
                           WHERE set_name <> 'group' ORDER BY seq`)
-        .map((r) => ({ part: r.part, set: r.set_name, set_version: r.set_version, false_alarm_rate: Number(r.false_alarm_rate),
+        /* the version as the number run-rules' judge reads (a whole number of one or more), whatever the column's affinity */
+        .map((r) => ({ part: r.part, set: r.set_name, set_version: Number(r.set_version), false_alarm_rate: Number(r.false_alarm_rate),
                        passed: r.passed === 1, graded_by: r.graded_by, at: r.at }));
     } catch { return []; }
   }
@@ -3415,12 +3273,13 @@ export function aiRunsOf(ctx, env = null, deps = null) {
 }
 
 /** The run's ops (K3), for the control plane's dispatch: `airunopen`, `airuntick`, `airunclose`, `airun`, `airunlog`,
- *  `airuns`, `airunspawn`, and the use's (T33-50): `aiusage`, `aiceilingset`, `aicopyceilingset`. Every identity is a
+ *  `airuns`, `airunspawn` and `airunverify`. The use's ops (`aiusage`, and the ceilings', retired
+ *  for `ailimitset`) are `ai-use`'s `aiUseOps` since T40-8 (K624). Every identity is a
  *  server-side stamp read from the QUERY and set AFTER the body's spread, so a caller's own copy in the body is
  *  overwritten rather than believed: the two principals on the open (§14a — a principal a caller can name is not one),
  *  `actor` (PL-18, DEC-63: which member is asking; empty for a machine), `viewer` (D-15's fail-closed sight; on the
  *  open only the stated project count reads it, REC-139), `caller` (the caller's principal on the tick and the close,
- *  REC-152) and `by` (who sets a ceiling, R50). */
+ *  REC-152) and `by` (who records a verification). */
 export function aiRunsOps(runs, url, body) {
   const q = (k) => url.searchParams.get(k);
   return {
@@ -3434,14 +3293,6 @@ export function aiRunsOps(runs, url, body) {
     airuns: () => runs.listInContext({ contextType: q("contextType"), contextId: q("contextId"), viewer: q("viewer"),
                                        limit: q("limit") }),
     airunspawn: () => runs.spawnPayload({ run: q("run"), half: q("half"), viewer: q("viewer") }),
-    /* R51 (op-declarations R20's one spec): with `month`, an administrator's month per mode; otherwise the viewer's
-       own day against their ceiling. */
-    aiusage: () => (q("month") != null
-      ? runs.aiUsage({ viewer: q("viewer"), month: q("month") })
-      : runs.aiUsageMine({ viewer: q("viewer"), day: q("day") })),
-    /* R50: the ceilings, `by` the control plane's stamp, never the body's. */
-    aiceilingset: () => runs.aiCeilingSet({ ...(body || {}), by: q("by") }),
-    aicopyceilingset: () => runs.aiCopyCeilingSet({ ...(body || {}), by: q("by") }),
     /* K1606 (run-rules R19): the verification act, `by` the stamp. */
     airunverify: () => runs.verificationRecord({ ...(body || {}), by: q("by") }),
   };

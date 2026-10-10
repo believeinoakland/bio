@@ -4,6 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, OPEN, INQ, ORG, sha, agentWorker, USAGE } from "./world.mjs";
+import { aiUseOf } from "../../../src/ai-use/index.mjs";
 
 const at = (s) => Date.parse(`2026-07-01T${s}Z`);
 const WRITE = /^\s*(INSERT|UPDATE|DELETE|REPLACE)\b[\s\S]*?\b(ai_runs|ai_run_bounds|inquiry_run_surfacings|observation_log|ai_usage|ai_ceilings)\b/i;
@@ -32,7 +33,7 @@ function waitSource(reqs) {
   };
 }
 
-test("R10, R12, R14, R16, R18, R26, R29, R48, R50 (N418): every write of the run's acts is made inside record-core's transact — open, tick (its calls counted), close, reap, hold and wake, a failed dispatch's entry, the surfacing step, a spend, an ask's count and the ceilings", async () => {
+test("R10, R12, R14, R16, R18, R26, R29, R52 (N418): every write of the run's acts is made inside record-core's transact — open, tick (its calls counted through ai-use, at a limit too), close, reap, hold and wake, a failed dispatch's entry, the surfacing step and a spend", async () => {
   const TOKEN = "instance-ai-secret-value-7f3c";
   const w = world({ env: { AGENT_WORKER: agentWorker("throw"), INSTANCE_AI_TOKEN: TOKEN, STORE: { idFromName: (n) => `id:${n}` },
                            AI_RUN_DISPATCH_WAIT_MS: "50" } });
@@ -52,13 +53,14 @@ test("R10, R12, R14, R16, R18, R26, R29, R48, R50 (N418): every write of the run
   assert.deepEqual([t.ticked, t.appended], [true, 1]);
   assert.equal((await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: "2026-07-01T00:00:02Z",
     usage: [{ mode: "check", model: "m", usage: USAGE(), calls: 1 }] })).counted, 1);
-  assert.equal(w.runs.countAskUsage({ member: "member:ann", mode: "ask", usage: USAGE() }).ok, true);
-  assert.equal(w.runs.aiCopyCeilingSet({ calls: 50, by: "admin" }).ok, true);
-  assert.equal(w.runs.aiCeilingSet({ member: "member:ann", calls: 2, by: "member:ann" }).ok, true);
-  /* at the ceiling: the refused tick's calls are still counted, inside transact */
-  assert.equal((await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: "2026-07-01T00:00:03Z",
-    usage: [{ mode: "check", model: "m", usage: USAGE(), calls: 1 }] })).counted, 1);
-  w.runs.aiCeilingSet({ member: "member:ann", calls: null, by: "member:ann" });
+  const limit = (amount) => aiUseOf(w.ctx).aiLimitSet({ owner: "member:ann", scope: "overall", unit: "calls", period: "day",
+    amount, by: "member:ann", at: "2026-07-01T00:00:02Z" });
+  assert.equal(limit(1).ok, true, "ai-use R2: ann's own account limited to one call a day");
+  /* at the limit (ai-use R3): the refused tick's calls are still counted, inside transact */
+  const over = await w.runs.tick({ run: "R1", viewer: "admin", caller: ORG, at: "2026-07-01T00:00:03Z",
+    usage: [{ mode: "check", model: "m", usage: USAGE(), calls: 1 }] });
+  assert.deepEqual([over.ticked, over.code, over.counted], [false, "AI_LIMIT_REACHED", 1]);
+  assert.equal(limit(null).ok, true);
   assert.equal(w.surface("INQ-2026-0009").ok, true);
   assert.equal(w.runs.consumeBound("R1", "fetches", 1), null);
   assert.equal((await w.runs.close({ run: "R1", bound: "completed", viewer: "admin", caller: ORG })).terminated, true);
