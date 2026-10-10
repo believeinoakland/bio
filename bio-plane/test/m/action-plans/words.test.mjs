@@ -36,7 +36,7 @@ test("R36: the words scan finds a sentence calling a matter a subject, and leave
 
 test("R36: every translation of this module's rows says matter, never subject", () => {
   const rows = Object.entries(ACTION_PLAN_CHECKS);
-  assert.ok(rows.length >= 57);
+  assert.ok(rows.length >= 56);
   for (const [code, row] of rows) assert.equal(SUBJECT.test(row.translation), false, `${code}: ${row.translation}`);
   assert.equal(DISCLOSURE("RUN-1", "planning@1").match(SUBJECT), null);
 });
@@ -131,7 +131,6 @@ test("R36: every refusal this module mints, each detail's variants with it, and 
   /* R30, R34: the run check and the tray */
   const check = w.reg.checks.find((c) => c.mode === "plan").fn;
   keep(check({ contextType: "project", contextId: w.Q, plan: w.PL, actor: V("bob"), viewer: V("bob") }));
-  keep(w.ap.planProposals({ plan: w.PL, after: "garbage", viewer: V("bob") }));
   keep(w.ap.planProposals({ plan: w.PL, run: "RUN-404", viewer: V("bob") }));
   keep(w.ap.planProposals({ plan: w.PL, run, viewer: V("bob") }));
   /* R21: the project's kinds of work */

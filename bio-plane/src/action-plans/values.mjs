@@ -32,7 +32,6 @@ export const DATES_MAX = 20;
 export const CHECKPOINT_DAYS_MAX = 3650;
 export const PLANS_PAGE_MAX = 200;
 export const DUE_MAX = 500;
-export const TRAY_PAGE = 5;
 export const SOURCES_MAX = 50;
 export const STAGE_MAX = 7;
 

@@ -65,12 +65,12 @@ import { ACTION_PLANS_TABLES, migrateActionPlans } from "./schema.mjs";
 import { ACTION_PLAN_CHECKS, refusal } from "./checks.mjs";
 import { CATEGORIES, DISPOSITIONS, NEEDS_REASON, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, TITLE_MAX, REASON_MAX,
          SUMMARY_MAX, DETAIL_MAX, WHY_MAX, NOTE_MAX, SUBJECTS_MAX, SCENARIOS_MAX, DATES_MAX, PLANS_PAGE_MAX, DUE_MAX,
-         TRAY_PAGE, SOURCES_MAX, isObj, str, isDay, isLine, isToken, normSubject, subjectKey, addresseeArm, addresseeOf,
+         SOURCES_MAX, isObj, str, isDay, isLine, isToken, normSubject, subjectKey, addresseeArm, addresseeOf,
          checkPhases, phaseTimes, unbranched, dayOf, DUTY_STATES } from "./values.mjs";
 
 export { ACTION_PLANS_SCHEMA, ACTION_PLANS_TABLES } from "./schema.mjs";
 export { ACTION_PLAN_CHECKS } from "./checks.mjs";
-export { CATEGORIES, DISPOSITIONS, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, TRAY_PAGE, DUTY_STATES } from "./values.mjs";
+export { CATEGORIES, DISPOSITIONS, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, DUTY_STATES } from "./values.mjs";
 
 /** R1, R8: an inquiry still open is live; these states are closed. (`published` is read, never entered.) */
 export const CLOSED_INQUIRY_STATES = Object.freeze(["concluded", "dismissed", "divided", "published"]);
@@ -1369,10 +1369,7 @@ export class ActionPlans {
     const scenarios = this.#scenarios(p.id).map((sc) => this.#scenarioView(p, sc, viewer, see, now));
     const proposals = this.#rows(`SELECT * FROM plan_option_proposals WHERE plan_id=? AND machine=0 ORDER BY n`, p.id)
       .map((r) => this.#proposalView(r, see, viewer));
-    const runs = this.#planRuns(p.id).map((run) => {
-      const page = this.#trayPage(p.id, run, 0, see, viewer);
-      return { run, proposals: page.proposals, next: page.next };
-    });
+    const runs = this.#planRuns(p.id).map((run) => ({ run, proposals: this.#tray(p.id, run, see, viewer) }));
     const removed = all.filter((s) => s.removedSeq !== null && !inPlan.has(s.key) && see.subject(s.subject))
       .map((s) => ({ subject: s.subject, key: s.key }));
     const checks = this.#checks(p, options, scenarios, live, now, viewer, new Map(held.map((o) => [o.id, o.fields])));
@@ -1604,39 +1601,26 @@ export class ActionPlans {
       if (!runs.some((x) => x.run === r.run)) runs.push({ run: r.run, at: r.at });
     return runs.sort((a, b) => instantOrder(a.at, b.at) || (a.run < b.run ? -1 : 1)).map((r) => r.run);
   }
-  #trayPage(planId, run, from, see, viewer) {
-    const rows = this.#rows(`SELECT * FROM plan_option_proposals WHERE plan_id=? AND run=? AND run_ord > ? ORDER BY run_ord LIMIT ?`,
-      planId, run, from, TRAY_PAGE + 1);
-    const page = rows.slice(0, TRAY_PAGE);
-    return { proposals: page.map((r) => this.#proposalView(r, see, viewer)),
-             next: rows.length > TRAY_PAGE ? `${run}#${page.at(-1).run_ord}` : null };
+  /* R34: every proposal of a planning run, in the run's order (R31's submission order, the assistant's order of
+     strength, strongest first), with no cut-off and no paging (Actions D17, K2443). */
+  #tray(planId, run, see, viewer) {
+    return this.#rows(`SELECT * FROM plan_option_proposals WHERE plan_id=? AND run=? ORDER BY run_ord`, planId, run)
+      .map((r) => this.#proposalView(r, see, viewer));
   }
 
-  /** R34: the tray: five of a planning run's proposals at a time, in the run's order, strongest first. */
-  planProposals({ plan, run, after, viewer } = {}) {
+  /** R34: the tray: every proposal of a planning run, in the run's order, strongest first; the order is the only sign
+   *  of strength, and nothing is cut off or paged. */
+  planProposals({ plan, run, viewer } = {}) {
     const p = this.#plan(plan, viewer);
     if (!p) return noSuchPlan(plan);
     const runs = this.#planRuns(p.id);
     const named = typeof run === "string" && run.trim() ? run.trim() : null;
     if (named && !runs.includes(named)) return refuseRunOtherPlan(named);
     const r = named ?? runs.at(-1) ?? null;
-    let from = 0;
-    if (after !== undefined && after !== null && after !== "") {
-      const m = r ? /^(.+)#(\d+)$/.exec(String(after)) : null;
-      const n = m ? Number(m[2]) : NaN;
-      const max = r ? (this.#one(`SELECT MAX(run_ord) AS n FROM plan_option_proposals WHERE plan_id=? AND run=?`, p.id, r) || {}).n || 0 : 0;
-      /* DEC-49 REGION is-cursor-given */
-      if (!m || m[1] !== r || !(n > 0 && n < max && n % TRAY_PAGE === 0))
-        return refusal("PROPOSALS_CURSOR_REFUSED", "after= is a page marker this list gave for this run, and this is not "
-          + "one. Ask for the first page again. Nothing was read.");
-      /* END DEC-49 REGION is-cursor-given */
-      from = n;
-    }
-    if (!r) return { ok: true, plan: p.id, run: null, proposals: [], next: null };
+    if (!r) return { ok: true, plan: p.id, run: null, proposals: [] };
     const see = this.#sight(viewer);
-    const page = this.#trayPage(p.id, r, from, see, viewer);
-    return { ok: true, plan: p.id, run: r, proposals: page.proposals, next: page.next,
-             says: "the assistant's proposals in its own order, strongest first; no score is recorded or answered",
+    return { ok: true, plan: p.id, run: r, proposals: this.#tray(p.id, r, see, viewer),
+             says: "every one of the assistant's proposals in its own order, strongest first; no score is recorded or answered",
              ...(see.withheld ? { out_of_view: true } : {}) };
   }
 
@@ -1921,6 +1905,6 @@ export function actionPlansOps(m, url, body) {
     optionstart: () => m.optionStart(stamped({ plan: pick("plan"), option: pick("option"), kind: pick("kind") })),
     optionstartpreview: () => m.optionStartPreview(stamped({ plan: pick("plan"), option: pick("option"), kind: pick("kind") })),
     planclose: () => m.planClose(stamped({ id: pick("id") ?? pick("plan"), reason: pick("reason") })),
-    planproposals: () => m.planProposals({ plan: pick("plan"), run: pick("run"), after: pick("after"), viewer: qp("viewer") }),
+    planproposals: () => m.planProposals({ plan: pick("plan"), run: pick("run"), viewer: qp("viewer") }),
   };
 }
