@@ -34,3 +34,7 @@ publication's own `t34`/`t35`/`t39` unchanged (25 pass, 2 fail: its :300 and :37
 - `ownership publish-schedule tranche/T41`: 10 files changed by publish-schedule between tranche/T41 and HEAD; 0 failures (with the scratch `modules.json`; against the committed one, which still names no paths, each file reads "outside publish-schedule's paths" until BOB writes them)
 
 Size (session_01GCuXKM9tA8NjwoR4rFdWhv): test runs 10, module lines 567
+
+## J1 · REPORT
+
+Two findings in other modules (record, Completion, items 1-2). (1) answer-envelope: once my paths are in modules.json, families.test.mjs:49 (already red, rule 4 (16)) also lists bio-plane/src/publish-schedule/checks.mjs PUBLISH_SCHEDULE_CHECKS (C-122.5). CHECK_FAMILY_FILES should gain src/publish-schedule/checks.mjs directly after publication's file (T41-60, with rule 4 (16)'s families); from T41-36's deletion until then dec49Row("SCHEDULED_CHECK_UNAVAILABLE") answers null. Proposed: name it in rule 4 (16). (2) promotion census: from my merge until T41-36 two row objects hold C-122.5 (identical but where); at T41's stamp it is one CHANGED row, as the map's §6 says.
