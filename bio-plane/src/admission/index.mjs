@@ -29,7 +29,12 @@
    T36 (T36-36; F1's tail, K2111, K2129; N711, K1936 Q3; N744, K2038): a credential or secret in the address is refused
    by name, `CREDENTIAL_IN_ADDRESS` (R20, C-38.10, `credentialAddressGate`, its one site), and never read from there; the
    shared member key is retired, a live `MEMBER_TOKEN` refused `MEMBER_TOKEN_RETIRED` (R5, C-38.11); and R22's tally
-   reaches credentials through the store's internal route `securitycount` (credentials R50). */
+   reaches credentials through the store's internal route `securitycount` (credentials R50).
+
+   T41 (T41-59, was T40-18a; N797, K2394; DEC-188 (8)): `handlecheck` is a public op that addresses scratch (R3) and its
+   `NO_SUCH_INVITATION` is counted as a refused key (R22); `groupswitchset`, retired to `accountusesset`
+   (op-declarations R24, R41), is no longer among R19's session-only ops (no code here named it: R19 is read from the
+   op table). */
 import { liveToken, sha256hex } from "../tokens.mjs";
 import { MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
 import { OPS, SESSION_OPS, NEEDS, UNATTENDED_BY_DECISION, GOVERNANCE_ACTIONS, IDENTITY_ACTIONS } from "../op-declarations/index.mjs";
@@ -81,9 +86,12 @@ export function namespaceGate(url) {
    added later is refused `store=scratch` until somebody makes it answer from scratch and lists it here — the unlisted
    default is the refusal, never the real record. Gated ops take their namespace from `scopeFor`.
    T34 (DEC-133, DEC-132; R3 as amended): the two doors and `groupdescription` join, since each namespace holds its own
-   website key, join link and description, as it holds its own invitations and identity. */
+   website key, join link and description, as it holds its own invitations and identity.
+   T41 (T41-59, was T40-18a; N797, K2394; op-declarations R42, membership R123): `handlecheck` joins, since it reads an
+   invitation as `invitelook` does, and each namespace holds its own invitations. */
 export const SCRATCH_ADDRESSING_PUBLIC_OPS = Object.freeze(["invitelook", "enroll", "instancegroup", "groupidentity",
-                                                            "websiteinvite", "joinlinkinvite", "groupdescription"]);
+                                                            "websiteinvite", "joinlinkinvite", "groupdescription",
+                                                            "handlecheck"]);
 export function pinnedNamespaceGate(url, op, spec) {
   if (spec.classes !== null || SCRATCH_ADDRESSING_PUBLIC_OPS.includes(op)) return null;
   if (url.searchParams.get("store") !== SCRATCH) return null;
@@ -845,7 +853,9 @@ export async function doorWindowGate({ req = null, env = null, spec = null, doAn
   return { source: typeof r.source === "string" ? r.source : null };
 }
 
-/* R22 (N703; K1875; DEC-165, DEC-166; credentials R44) — THE REFUSALS COUNTED IN THE SECURITY TALLY, and their kind. */
+/* R22 (N703; K1875; DEC-165, DEC-166; credentials R44) — THE REFUSALS COUNTED IN THE SECURITY TALLY, and their kind.
+   T41 (T41-59; N797, K2394; membership R123): `op=handlecheck` answered `NO_SUCH_INVITATION` is a refused key, as
+   `invitelook`'s is; its own pause (`HANDLE_CHECK_PAUSED`) is membership's and is not counted. */
 const CREDENTIAL_REFUSED_ANYWHERE = Object.freeze(["AI_CREDENTIAL_REVOKED", "AI_CREDENTIAL_EXPIRED", "MEMBER_TOKEN_RETIRED"]);
 /* The refusals whose credential names no member, whatever its shape: the retired key is the group's shared one (its
    64-hex shape is a session's, but it is nobody's). */
@@ -853,6 +863,7 @@ const NAMES_NO_MEMBER = Object.freeze(["MEMBER_TOKEN_RETIRED"]);
 const CREDENTIAL_REFUSED_AT = Object.freeze({
   invitelook: Object.freeze(["NO_SUCH_INVITATION"]),
   enroll: Object.freeze(["NO_SUCH_INVITATION"]),
+  handlecheck: Object.freeze(["NO_SUCH_INVITATION"]),
   websiteinvite: Object.freeze(["WEBSITE_KEY_UNKNOWN"]),
   joinlinkinvite: Object.freeze(["NO_SUCH_JOIN_LINK"]),
 });
