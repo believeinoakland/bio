@@ -1,6 +1,6 @@
 # monitoring (T41)
 
-**Status** · session_01Pfzyx4hzBorgjW5kbqPVcK · depth 2 · RUNNING until 2026-10-10T20:19:53Z (migrate-released system test, mine against tranche/T41) · handled B2
+**Status** · session_01Pfzyx4hzBorgjW5kbqPVcK · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
