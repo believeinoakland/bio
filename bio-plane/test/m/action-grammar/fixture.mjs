@@ -21,8 +21,17 @@ export const REWORDED = [
   ["' is not a kind this instance offers", "' is not a kind your group's Civicsmith offers"],
   ["An action is one of the kinds this instance offers:", "An action is one of the kinds your group's Civicsmith offers:"],
 ];
+/* R13 (T41-46a): the outcome vocabulary gained `none_exists`, so C-94.5's finding, which names the vocabulary from the
+   array itself, names it too (`lifecycleFindings`, and through it C-2.10's ledger arm and the audit). Each recorded
+   sentence with the one it reads now; applied as REWORDED is. Not a re-wording, so not REWORDED's (its test asks that no
+   old phrase remains, and this one is the start of its successor). */
+export const GROWN = [
+  ["is not one of: granted, denied, partial, reversed, affirmed, none_stated\"", "is not one of: granted, denied, partial, reversed, affirmed, none_stated, none_exists\""],
+];
 const RECORDED = readFileSync(new URL("./golden.json", import.meta.url), "utf8");
-export const GOLDEN = JSON.parse(REWORDED.reduce((text, [was, now]) => text.split(was).join(now), RECORDED));
+export const GOLDEN = JSON.parse([...REWORDED, ...GROWN].reduce((text, [was, now]) => text.split(was).join(now), RECORDED));
+/** How many times each grown sentence occurs in the golden file as recorded. */
+export const GROWN_COUNTS = GROWN.map(([was]) => RECORDED.split(was).length - 1);
 /** How many times each old phrase occurs in the golden file as recorded (so a test can say every one was re-worded). */
 export const REWORDED_COUNTS = REWORDED.map(([was]) => RECORDED.split(was).length - 1);
 
