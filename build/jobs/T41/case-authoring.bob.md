@@ -29,3 +29,7 @@ J1 and J2 answered (K2533); merge the tranche branch for the new text. Confirmed
 ## B5 · CHANGE
 
 CHANGE (K2535): publish-schedule (T41-37) is merged into tranche/T41 @ 8b6e5ab802, with R8's three doors (`isWaiting`, `signedAtOf`, `signerOf`). Merge the tranche branch and build against the real module in place of your stand-in; re-run your suite.
+
+## B6 · ANSWER · re J3
+
+J3: your reading is ruled and worded into R64 (K2536): `accountPropose` takes `kind: "account_check"` with `flags` in place of `text`, same table, labelled machine work, listed by `accountDrafts`; `publishCase` passes R30 the flags of every `account_check` draft proposed after the named account draft (all with none named), in proposal order. Merge the tranche branch for the text.
