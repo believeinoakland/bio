@@ -15,3 +15,6 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **From ACTIONS #14 J2 (K2561).** `actions` R73 adds `actionseekspropose` (`actionSeeksPropose({target, seeks, proposer, viewer})`), a proposal as `actionlawspropose` is: any credential, `proposer` stamped from the caller (session or machine), mutating, `target` and `seeks` body fields. Declare and route it as `actionlawspropose` is.
+
+
+**K2569.** R71 now also names the R43 ops whose owners export no arm (ai-use, ai-runs, case-authoring, review, leg-earning): your own map calls each service by name.
