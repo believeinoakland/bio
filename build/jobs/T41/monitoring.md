@@ -37,3 +37,7 @@ Size (session_01Pfzyx4hzBorgjW5kbqPVcK): test runs 16, module lines 3,489
 ## J2 · REPORT
 
 Two findings, in my record's Completion: (1) investigation: its R18 Provides names projectWatch and watchArrival but not watchedProjects(), which monitoring R70 calls and investigation/index.mjs:1121 provides (its watch field is intent R7's first page only); and watchArrival records the arrival, then computes its reads outside the write, so a read that throws makes the caller see a throw for an arrival already recorded. (2) The plane bundle is staled by this change (rule 4 (14)).
+
+## J3 · COMPLETE
+
+T41-49a applied: R70 (K2524, readings K2568), with the answer naming only projects the caller may see. monitoring 124/124; users' reds identical to tranche/T41's; format, architecture, coverage (57/57), ownership 0 failures. Final uses: as modules.json lists them. Details in the record's Completion.
