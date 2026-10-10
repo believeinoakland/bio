@@ -124,7 +124,10 @@ export class Queue {
     "docket",
     /* queue-producers R35 and R32, R33 (N545; plane R20's hand-off): case-import's followed dockets, wizard-scripts'
        breaks and submissions; queue passes them and calls none of their reads. */
-    "caseImport", "wizardScripts"]);
+    "caseImport", "wizardScripts",
+    /* queue-producers R37 (K2484, K2582): publish-schedule's scheduled editions, read there directly since N823's split;
+       queue passes it and calls none of its reads. */
+    "publishSchedule"]);
   get #scheduler() { return this.#dep("scheduler", () => schedulerOf(this.#host, this.#env)); }
   /* R51 (T33-83): `notice-producers`, read beside `queue-producers`. */
   get #notices() { return this.#dep("notices", () => noticeProducersOf(this.#host)); }
