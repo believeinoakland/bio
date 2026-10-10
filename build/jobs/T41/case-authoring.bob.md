@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 CHANGE (K2528): R68's pre-flight matches approvals by the approval digest, case-grammar R26's new `approvalSubjectSha` (the document's sha without R26's block), not the raw `doc_sha`. Merge the tranche branch for R68's text; case-grammar provides the function when it merges (stand in meanwhile).
+
+## B3 · CHANGE
+
+CHANGE (K2531): case-disclosures R30/R31 take from their caller `conclusions` (each member's concluded state, `[{finding, claim, claim_state, legs}]`), `flags` (`[{kind: "account_check", ord, text, cites}]`) and, for R31, a conclusion's bias applications: the arg list is `{account, statements, cited, lens, conclusions, flags, viewer}`. Where your R63–R68 call R30/R31 (the pre-flight R34 among them), pass them from what you already read.
