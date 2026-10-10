@@ -43,3 +43,7 @@ Nothing waits on the answer: I carry on.
 - `checks/format.mjs`: 0 failures; `checks/architecture.mjs notice-producers`: 8 failures, each one of the four `uses` edges for BOB to add (0 with them); `checks/coverage.mjs notice-producers`: 17 of 17 live ids named, 0 failures; `checks/ownership.mjs notice-producers tranche/T41`: 0 failures.
 
 Size (session_01Ktpm9VNdCcRPXAVDSh7PSu): test runs 20, module lines 1,297
+
+## J2 · REPORT
+
+Three findings, in my record's Completion: (1) queue: test/m/queue/noticed.test.mjs:295 now red (facts.failed ["question-explorer"]): its notices factory hands stand-ins only for R2–R6's providers, so this module reaches questionExplorerOf(host) lazily on queue's partial world, whose leg-earning migration fails; queue's job should hand aiUse, steps, questionExplorer, investigation, review (127/128; 128/128 on tranche/T41). (2) plane (T41-63): store.mjs:350 should hand noticeProducersOf aiUse, steps, questionExplorer, investigation, review (and credentials, following, standards, fileSafety, provenance) as it composes them; a bare instance reached first by this module would shadow the plane's composed one (factories keep the first instance per storage). Plane 147/8 before and after, the same 8. (3) The plane bundle is staled by this change.
