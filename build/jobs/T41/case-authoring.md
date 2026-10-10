@@ -173,3 +173,15 @@ Recommendation: 1, because nothing in T41 needs the seam. If you prefer 2, send 
 - My suite: 177/179. The 2 reds are case-disclosures' `photo.refused.unchecked` wording (routed to it, K2533).
 - The five users' suites (review, affordances, answer-envelope, control-plane, plane) carry exactly the tranche's own reds, none new.
 - Waiting on: J4 (R8 against re-preparation), and the CHANGEs for ratification (`approvalsInForce`) and case-disclosures (`accountJudged`), each run here meanwhile against an uncommitted local stand-in.
+
+## J6 · COMPLETE
+
+T41-43 built; my record's Completion has the detail.
+
+- **Built:** D54 re-stated; R58, R59 through publish-schedule (real); R63–R68; R8 per K2540.
+- **Size:** 4,137 lines, merged as is per K2542 (split N839).
+- **Uses:** add `ai-runs`. It is the architecture check's one failure until applied.
+- **Checks:** format 0, coverage 52/52, ownership 0.
+- **Tests:** 178/180 with local stand-ins for case-disclosures' `accountJudged` and ratification's `approvalsInForce`. The 2 reds are case-disclosures' wording, red before this job.
+- **Read this before merging:** on the committed tree alone it is 29/180, because R63 fails closed (`ACCOUNT_CHECK_UNDETERMINED`) until case-disclosures provides `accountJudged`. Both providers merge before me in L8's order. Their CHANGEs re-open me for B8/B10's re-pins and a full re-run.
+- **Users' suites:** no new reds.
