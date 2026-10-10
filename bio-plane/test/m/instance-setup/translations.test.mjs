@@ -466,7 +466,8 @@ test("R74 translations: to a granted speaker of the language (MACHINE_CANNOT_TRA
   assert.equal(counts(w), before);
   assert.equal(r.ok, true);
   assert.deepEqual(r.words.map((x) => x.key), INTERFACE_WORDS.map((x) => x.key));
-  assert.deepEqual(r.counts, { missing: 919, shown: 1, awaiting: 1 });
+  /* counted from the list as it stands (setup-words R1), the two words kept here set apart */
+  assert.deepEqual(r.counts, { missing: INTERFACE_WORDS.length - 2, shown: 1, awaiting: 1 });
   const o = r.words.find((x) => x.key === ORDINARY.key);
   assert.deepEqual([o.en, o.note, o.means, o.protected, o.state, o.text, o.adopted_by, o.english_changed],
                    [ORDINARY.en, ORDINARY.note, ORDINARY.means, false, "shown", "Algo más", "ruth", false]);
