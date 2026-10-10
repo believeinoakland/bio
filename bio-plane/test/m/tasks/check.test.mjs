@@ -267,9 +267,13 @@ test("R3: taskResolve by an addressee who has not taken it closes that To do onl
   assert.equal(took.ok, true);
   assert.notEqual(took.todo, t1.id);
   assert.equal(todos(w, r.request).find((t) => t.id === t2.id).status, "resolved", "the other's closed by the take");
-  // an administrator may close an addressee's untaken To do, as any task's
+  // an administrator who sees the target may close an addressee's untaken To do, as any task's; one neither invited nor
+  // joined to the hidden project does not see it, and is answered as for no task (K2575, D54)
   const r2 = ask(w);
-  assert.equal(w.t.taskResolve({ id: todos(w, r2.request)[0].id, actor: "ada" }).ok, true);
+  const t3 = todos(w, r2.request)[0].id;
+  assert.deepEqual(w.t.taskResolve({ id: t3, actor: "ada" }), { ok: false, reason: "NO_SUCH_TASK" });
+  w.join(PRJ, "ada", { state: "invited" });
+  assert.equal(w.t.taskResolve({ id: t3, actor: "ada" }).ok, true);
 });
 
 test("R3: the taker's To do closes only by R15's record: taskResolve on it is refused CHECK_CLOSES_BY_RECORD, writing nothing", () => {
@@ -277,7 +281,11 @@ test("R3: the taker's To do closes only by R15's record: taskResolve on it is re
   const r = ask(w);
   const took = w.t.checkTake({ request: r.request, by: "cpa1" });
   const before = snapshot(w);
-  for (const actor of ["cpa1", "ada"]) refused(w.t.taskResolve({ id: took.todo, actor }), "CHECK_CLOSES_BY_RECORD");
+  refused(w.t.taskResolve({ id: took.todo, actor: "cpa1" }), "CHECK_CLOSES_BY_RECORD");
+  // an administrator: only one who sees the target reaches the record rule (K2575, D54)
+  assert.deepEqual(w.t.taskResolve({ id: took.todo, actor: "ada" }), { ok: false, reason: "NO_SUCH_TASK" });
+  w.join(PRJ, "ada", { state: "invited" });
+  refused(w.t.taskResolve({ id: took.todo, actor: "ada" }), "CHECK_CLOSES_BY_RECORD");
   refused(w.t.taskResolve({ items: [{ id: took.todo }], actor: "cpa1" }).items[0], "CHECK_CLOSES_BY_RECORD");
   assert.equal(w.t.taskResolve({ id: took.todo, actor: "plain" }).code, "TASK_NOT_YOURS", "the fence is asked first");
   assert.deepEqual(snapshot(w), before);
