@@ -465,7 +465,10 @@ const BYTE_OPS = Object.freeze(["openoriginal", "openwithwarning", "safeview", "
 /* R68 (op-declarations R39; credentials R3): `setpassword`'s two passwords are the body's alone, and it names no role in
    either place (the role is the session's): a `role` in the address leaves with them, and one in the body is deleted
    (`BODY_DROPPED`). */
+/* R69 (op-declarations R41; credentials R54): `projectkeyset`'s key is the body's alone, as `groupkeyset`'s is (R56): one
+   in the address leaves it before anything reads it, and this door never logs, keeps or answers it. */
 const BODY_ONLY = Object.freeze({ securitytooladd: Object.freeze(["credentials", "config"]),
+                                  projectkeyset: Object.freeze(["key"]),
                                   setpassword: Object.freeze(["current", "password", "role"]) });
 const BODY_DROPPED = Object.freeze({ setpassword: Object.freeze(["role"]) });
 /* R60, R29 (K1687; op-declarations' families): the acts whose owner reads its actor from the BODY under a key that is not
@@ -806,9 +809,9 @@ export function makeFetch(hooks = {}) {
         const store = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
         const reader = await caseReader(url, env, store, presentedAi.cred, credential);
         if (reader.silent) return storeSilent(reader.silent, reader.correlation);
-        return relayAnswer(invStub.fetch(new Request(`http://do/handlecheck`, { method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ invite: o.invite, handle: o.handle, viewer: reader.viewer }) })), op);
+        return relayAnswer(invStub.fetch(new Request(`http://do/handlecheck?viewer=${encodeURIComponent(reader.viewer)}`, {
+          method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ invite: o.invite, handle: o.handle }) })), op);
       }
       /* R44 (K921): the template grant's four doors, a recipient's secret or a member's session (above). */
       if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, credential });
@@ -1927,10 +1930,13 @@ export function makeFetch(hooks = {}) {
       actorIdentity: viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`,
       actorViewer: viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`,
       ...(viaSession ? {} : { assistantPrincipal: cls === "ai" ? `${aiCred.principal}/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls}` }) };
-    let archiveProject = null;
+    let archiveProject = null, captureStep = null;
     if ((op === "acquire" || op === "unpack") && req.method === "POST")
-      try { const b = JSON.parse((await req.clone().text()) || "null"); archiveProject = b && typeof b.project === "string" ? b.project : null; }
-      catch { archiveProject = null; }
+      try {
+        const b = JSON.parse((await req.clone().text()) || "null");
+        archiveProject = b && typeof b.project === "string" ? b.project : null;
+        captureStep = b && typeof b.step === "string" ? b.step : null;   /* R71: the step a member's fetch is a product of */
+      } catch { archiveProject = null; }
     async function promoteAcquired(res) {
       let b = null;
       try { b = await res.clone().json(); } catch { return res; }
@@ -1967,8 +1973,38 @@ export function makeFetch(hooks = {}) {
     const armed = hooks.gatedOp ? await hooks.gatedOp({ req, url, env, op, cls, viaSession, sessMember, sessViewer,
       sessIdentity, sessRights, sessCaps, aiCred, storeName, stub,
       grantMember: aiCred?.grant ? aiCred.principal : undefined }) : undefined;   /* R53 (K1684): an ask's grant's member */
-    if (armed && op === "acquire") return promoteAcquired(armed);
+    if (armed && op === "acquire") {
+      const res = await promoteAcquired(armed);
+      if (!captureStep && url.searchParams.get("step") === null) return res;
+      let body;
+      try { body = await res.clone().json(); } catch { return res; }
+      return tieToStep({ body, status: res.status }, captureStep ?? url.searchParams.get("step"));
+    }
     if (armed) return armed;
+    /* The forward's answer, read once through `doAnswer`: the store's refusal at its status, a silence a silence. */
+    async function forwarded(res) {
+      const out = await doAnswer(Promise.resolve(res));
+      if (out.refused) return { early: storeRefusal(out, { store: storeName, tokenClass: cls }) };
+      if (!out.answered) return { early: storeSilent(op, out.correlation) };
+      return { body: out.reply.body, status: out.reply.status };
+    }
+    /* R71 (N820; steps R9): A MEMBER'S CAPTURE MAY CARRY `step`, the step it is a product of. Once the capture has landed
+       (its answer `ok`, naming the capture's digest), the door asks the store's internal route `capturestepproduct` to
+       tie it there (`steps.recordProduct`), for a step the member may see; a capture by any other caller, or one that did
+       not land, ties nothing. The capture's own answer is unchanged but for `step_product`, the tie's answer. */
+    async function tieToStep(got, step) {
+      if (got.early) return got.early;
+      const r = got.body && typeof got.body.result === "object" && got.body.result ? got.body.result : null;
+      const sha = r && r.ok === true ? (r.document?.capture?.sha256 ?? r.capture?.sha256 ?? r.sha256 ?? null) : null;
+      const named = typeof step === "string" ? step.trim() : "";
+      if (!viaSession || !named || typeof sha !== "string" || !/^[0-9a-f]{64}$/.test(sha))
+        return json({ ...got.body, store: storeName, tokenClass: cls }, got.status);
+      const tie = await doAnswer(stub.fetch(new Request(
+        `http://do/capturestepproduct?viewer=${encodeURIComponent(sessViewer)}&by=${encodeURIComponent(sessIdentity)}`,
+        { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ step: named, capture: sha }) })));
+      const tied = tie.answered ? (tie.reply.body?.result ?? tie.reply.body) : { ok: false, reason: "STORE_DID_NOT_ANSWER" };
+      return json({ ...got.body, result: { ...r, step_product: tied }, store: storeName, tokenClass: cls }, got.status);
+    }
     /* R57 (K1983): the rendered pack the door holds for this caller, `op=agentpack`'s (R41), sent with a draft that reads
        nothing of the record; null when none renders. */
     async function heldPack(ctx) {
@@ -2050,6 +2086,18 @@ export function makeFetch(hooks = {}) {
        `by` membership asks `isAdministrator` of as a member id: the custodial acts' expression, after any declared stamp,
        so a caller's `by` names nobody and a machine credential is refused there NOT_AN_ADMIN. */
     if (MEMBERSHIP_ADMIN_ACTS.includes(op))
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+
+    /* R70 (N799; membership R124): a member's change of their own handle, `by` the session's own member id, the form
+       `handleChange` compares with the roster, after any declared stamp, so a caller's `by` names nobody; only a
+       member's session reaches the op (its spec), and a machine stamp, were one to arrive, is refused there
+       (HANDLE_CHANGE_NOT_A_MEMBER). */
+    if (op === "handlechange")
+      inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
+    /* R72 (capture R86; op-declarations R45): who brought the file in, the session's own member id as capture's member acts
+       take it (`CAPTURE_MEMBER_ACTIONS`' expression), after any declared stamp, so a caller's `by` names nobody; only a
+       member's session reaches the op (its spec), and capture refuses any other stamp by its member-session fence. */
+    if (op === "captureupload")
       inner.searchParams.set("by", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`);
 
     if (ROSTER_SELF_ACTIONS.includes(op))
@@ -2208,6 +2256,16 @@ export function makeFetch(hooks = {}) {
     if (RUN_VERB_ACTIONS.includes(op)) {
       inner.searchParams.delete("actor");
       inner.searchParams.set("actor", viaSession ? sessMember : "");
+    }
+    /* R72 (K2458; capture R86): the upload's bytes are the request's raw body, streamed to capture as `bytes`, never read,
+       decoded or kept here; its words (`statement`, `name`, `within`) and a `step` it is a product of travel in the
+       address. Capture's answer is relayed as given, and a step named is tied after the capture lands (R71). */
+    if (op === "captureupload") {
+      const uploaded = await stub.fetch(new Request(inner, withGrant({ method: "POST", body: req.body,
+        headers: { "content-type": "application/octet-stream",
+                   ...(req.headers.get("content-length") ? { "content-length": req.headers.get("content-length") } : {}) },
+        ...(req.body ? { duplex: "half" } : {}) })));
+      return tieToStep(await forwarded(uploaded), url.searchParams.get("step"));
     }
     let passBody = req.method === "POST" ? await req.text() : undefined;
     /* R17, R29: and every body stamp, for every op; the ops that declare one set it below. */
