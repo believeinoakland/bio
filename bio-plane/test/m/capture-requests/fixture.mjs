@@ -13,6 +13,7 @@ import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { governorOf } from "../../../src/host-governor/index.mjs";
 import { credentialsOf } from "../../../src/capture-sources/credentials.mjs";
 import { captureRequestsOf } from "../../../src/capture-requests/index.mjs";
+import { stepsOf } from "../../../src/steps/index.mjs";
 import { normalizeAddress, fragmentOf } from "../../../src/subresources.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
@@ -113,8 +114,9 @@ export const renderRefusal = (code, state) => ({ status: 409, body: { ok: false,
                                                                      ...(state ? { render: { state } } : {}) } });
 
 /** A world: the record's modules, the capture stand-in, a table of runs, and capture-requests over them. `group` is
- *  the instance's recorded producing group (promotion R13; null: none recorded). */
-export function world({ env = ENV, configured, credentials = true, group = "test-group", order, standards } = {}) {
+ *  the instance's recorded producing group (promotion R13; null: none recorded). `steps` (R55) is the real `steps` on
+ *  this storage, over the same record, membership, promotion and log, unless a test passes its own (K61). */
+export function world({ env = ENV, configured, credentials = true, group = "test-group", order, standards, steps } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -166,14 +168,17 @@ export function world({ env = ENV, configured, credentials = true, group = "test
   const inquiry = { memberUserAgent: (id) => { asked.push(id); return agents.has(id) ? agents.get(id) : null; } };
   const waitRegs = [];
   const aiRuns = { registerWaitSource: (module, source) => { waitRegs.push({ module, source }); return { ok: true }; } };
+  const stepsOf_ = steps !== undefined ? steps : stepsOf(host, { record, membership, promotion, observationLog: obs });
   const cr = captureRequestsOf(host, { record, observations: obs, governor, capture, credentials: creds, runs: runSight,
                                        env, now, storeName: "bio", aiRuns, promotion, inquiry,
                                        ...(configured !== undefined ? { configured } : {}),
                                        ...(order !== undefined ? { order } : {}),
-                                       ...(standards !== undefined ? { standards } : {}) });
+                                       ...(standards !== undefined ? { standards } : {}),
+                                       steps: stepsOf_ });
   cr.migrate();
   const w = {
     st, host, record, membership, promotion, obs, governor, creds, capture, runs, cr, clock, waitRegs, agents, asked,
+    steps: stepsOf_,
     row: (q, ...a) => st.sql.exec(q, ...a).toArray()[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
     req: (id) => st.sql.exec(`SELECT * FROM capture_requests WHERE request=?`, id).toArray()[0] ?? null,

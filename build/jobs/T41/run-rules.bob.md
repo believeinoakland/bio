@@ -1,6 +1,6 @@
 # BOB to run-rules (T41)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -19,3 +19,15 @@ All four readings confirmed (K2479). (1) ship CIVICSMITH_TEST_SET v1 with no mat
 ## B3 · CHANGE
 
 From AI-RUNS #14 J1 (K2482): add one row to your table, AI_GROUP_TEST_INVALID (C-22.24, a group's own test matter that is malformed: ai-runs R75's groupTestSet), beside your C-22.22 AI_TEST_BAR_UNFIT, which ai-runs also answers through checkTestBarRecord. Test it explicitly.
+
+## B4 · CHANGE
+
+From AI-RUNS #14 J2 (K2485): add four more rows to your table beside C-22.24 AI_GROUP_TEST_INVALID: C-22.25 AI_RUN_ORIGIN_UNKNOWN, C-22.26 AI_RUN_EXPLORE_NEEDS_STEP, C-22.27 AI_RUN_EXPLORE_NOT_DEPLOYABLE, C-22.28 AI_RUN_STEP_UNKNOWN (ai-runs R73's refusals; ai-runs mints by key and reads your rows). Test each row explicitly.
+
+## B5 · ANSWER · re J2
+
+Merged (K2489); your findings went to ai-runs by CHANGE; your reds are named in rule 4 (10).
+
+## B6 · CHANGE
+
+Re-opened (K2514; P10, layer 6 still open). ai-runs is merged into tranche/T41 @ 9741f67aad: merge the tranche branch. AI-RUNS #16 J6 finds row text that no longer matches the code: `NOT_YOUR_CEILING`'s `where` (`checks.mjs`:681, pinned by `table.test.mjs`:176) names ai-runs `aiCeilingSet` and `aiUsageMine`, which are gone (ai-use mints it, its R2); C-22.26 and C-22.28's `where` say "reached from an exploring run", and `AI_RUN_STEP_UNKNOWN` is now also minted for a member's step run and R74's batch (`openMany`). Correct each row's `where` to its real sites, re-pin, run your suite, record completion, post COMPLETE.

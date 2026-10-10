@@ -18,6 +18,7 @@
 - Pause at 80% (Bob, K2341, K2357): the meter is not asked at each layer close; Bob says when it nears 80% and checks should be made each layer; once he reports 80% or more, no new layer or job starts, the running layer's jobs finish and merge, the layer closes, and BOB hands off with the tranche open, to resume when Bob says.
 - Development runs (Bob, K2430, "Continue development after layer 1 completes."): T41 runs all its layers; K2411's and K2422's holds are lifted; the 80% pause rule stands.
 - Pause after T41 (Bob, K2456, "Pause the development process after this tranche has been completed and merged."): T41 finishes and closes through §5.7 step 5; T42 is not opened and no job starts until Bob resumes; the actions design lane continues.
+- Paused for the account switch (Bob, K2510, "Pause development and save everything to the repo so that development can continue in the other account."): T41 stays open in L6; the work resumes on the other account when Bob starts its ROOT and BOB there; K2456's pause after T41 still stands.
 - Account switch: once Bob reports his primary meter at about 90% or more, move the work to the secondary account at the next layer close with no job live (handoff, then Bob starts a ROOT there); Bob stops the primary at 95%. Sessions on the other account cannot be rung or archived: leave them, with no `BOB-final` row. The `BOB` row of `build/channels.md` follows the account, changed at a tranche close. (K1820, K1891, K1896, K742, K1897, K1428)
 
 ## 2. Standing approvals and recorded refusals (check before acting, §16)
@@ -53,7 +54,7 @@
 - After a container restart, run `npm ci` in `agent-runner` (`--ignore-scripts`) and `sheet-worker` before `fleetbundles`, or it skips. (K1980, K1948)
 - Never stop agent-worker's test run midway: its negative controls mutate the working tree; if one was stopped, restore from HEAD before the next run. (K1994)
 - Regenerate artifacts in the manifest's order: case-checker `program.mjs` before the bundles (the plane bundles it), newgroup last. (K1540, K1341)
-- Measure a module's size (P6, K617's ~4,000-line split) over its own code in its `paths`, the most specific path owning each file, never its tests or a job's `Size` line. (K1821, K1519, K1024, K1135)
+- Measure a module's size (P6, K617's ~4,000-line split) over its own code in its `paths`, the most specific path owning each file, never its tests or a job's `Size` line, nor a generated artifact (K2513). (K1821, K1519, K1024, K1135)
 - Read every scripted edit back (a `modules.json` edit once matched nothing because of indentation), and read a file into memory before reopening it for writing. (K702, K715)
 - Code that runs on the plane keeps each LIKE/GLOB pattern within workerd's 50 bytes and spreads `sql.exec` cursors; test it at the plane's shape. (K313, K316)
 - The coverage check counts any `R<n>` string in a module's tests: a new id that other tests already name reads green wrongly, so each START requires an explicit test for such ids. (K874, K1369, K1122)

@@ -31,8 +31,11 @@ test("R22 (convert airuns): truncated counts only runs the viewer may see; a joi
   /* two or more hidden runs at limit 1: the bound is applied behind the gate, so nothing reads as cut */
   const hidden = await w.runs.listInContext({ contextType: "project", contextId: HIDDEN, viewer: "member:dan", limit: 1 });
   assert.deepEqual([hidden.ok, hidden.count, hidden.runs, hidden.limit, hidden.truncated], [true, 0, [], 1, false]);
-  const seen = await w.runs.listInContext({ contextType: "project", contextId: HIDDEN, viewer: "admin", limit: 1 });
+  const seen = await w.runs.listInContext({ contextType: "project", contextId: HIDDEN, viewer: "member:ann", limit: 1 });
   assert.deepEqual([seen.count, seen.truncated], [1, true], "control: the same page is cut for a viewer who sees them");
+  /* D54 (K2442): the founder, neither invited nor joined, sees a hidden project at EXISTENCE only: nothing listed, nothing cut */
+  const founder = await w.runs.listInContext({ contextType: "project", contextId: HIDDEN, viewer: "admin", limit: 1 });
+  assert.deepEqual([founder.count, founder.runs, founder.truncated], [0, [], false], "D54: the founder lists no hidden project's runs");
   /* a permitted member lists a project's runs; one outside it gets the empty list */
   const bob = await w.runs.listInContext({ contextType: "project", contextId: PROJ, viewer: "member:bob" });
   assert.deepEqual(bob.runs.map((r) => r.id), ["P1"]);
@@ -134,9 +137,13 @@ test("R20, R21, R23, R24 (convert run-conditions): the read and both spawn halve
   const bases = [];
   for (const [run, [o, standardPair]] of Object.entries(cases)) {
     await w.runs.open(OPEN({ run, ...o, standardPair, at: "2026-07-01T00:07:00Z" }));
-    const r = (await w.runs.read({ run, viewer: "admin" })).session;
-    const s = await w.runs.spawnPayload({ run, viewer: "admin", half: "search" });
-    const c = await w.runs.spawnPayload({ run, viewer: "admin", half: "compose" });
+    /* bob, joined to PROJ, reads every case (D54: the founder no longer reads a hidden project's runs) */
+    const r = (await w.runs.read({ run, viewer: "member:bob" })).session;
+    const s = await w.runs.spawnPayload({ run, viewer: "member:bob", half: "search" });
+    const c = await w.runs.spawnPayload({ run, viewer: "member:bob", half: "compose" });
+    if (o.contextId === PROJ)
+      assert.deepEqual([(await w.runs.read({ run, viewer: "admin" })).found, (await w.runs.spawnPayload({ run, viewer: "admin" })).found],
+        [false, false], `${run}: D54, the founder outside PROJ reads its runs as absent`);
     assert.deepEqual(s.payload.standard, r.standard, `${run}: search half`);
     assert.deepEqual(c.payload.standard, r.standard, `${run}: compose half`);
     assert.equal(r.standard.stated, STANDARD_BASIS[r.standard.basis]);
@@ -221,7 +228,12 @@ test("R10, R11, R12 (convert project-disclosure): the stated project count is th
   const count = async (viewer, run) => (await w.runs.open(OPEN({ run, viewer, at: T0 }))).projectGate;
   const seen = (viewer) => [PROJ, HIDDEN].filter((p) => w.membership.inSight(p, viewer)).length;
   w.cites(HIDDEN, INQ);
-  for (const [viewer, n] of [["member:eve", 1], ["member:bob", 1], ["member:dan", 0], ["admin", 2]]) {
+  /* D54 (K2442): an administrator, the founder included, neither invited nor joined, sees neither hidden project and
+     counts none; an administrator invited to PROJ (control) counts it */
+  w.membership.projectInvite({ projectId: PROJ, handle: "second", by: "ann" });
+  w.membership.reindexProjectSight(PROJ);
+  for (const [viewer, n] of [["member:eve", 1], ["member:bob", 1], ["member:dan", 0], ["admin", 0], ["member:second", 1],
+                             ["member:ann", 2]]) {
     const g = await count(viewer, `C-${viewer}`);
     assert.equal(g.projects, seen(viewer), viewer);
     assert.equal(g.projects, n, `${viewer}: invited ${viewer === "member:eve"}`);
@@ -239,7 +251,8 @@ test("R10, R11, R12 (convert project-disclosure): the stated project count is th
   v.cites(HIDDEN, INQ);
   assert.equal(await open("B2"), before, "the open's answer");
   assert.equal(await tick(), tBefore, "the tick's gate");
-  assert.equal((await v.runs.open(OPEN({ run: "B3", viewer: "admin" }))).projectGate.projects, 1, "control: the cite is there");
+  assert.equal((await v.runs.open(OPEN({ run: "B3", viewer: "member:ann" }))).projectGate.projects, 1, "control: the cite is there");
+  assert.equal((await v.runs.open(OPEN({ run: "B4", viewer: "admin" }))).projectGate.projects, 0, "D54: the founder does not count it");
 });
 
 test("R9, R40 (convert extractrun, skillpack): the mode refusal echoes the mode asked (cut at 60) and the deployed modes; the skill-version refusal's note quotes the value", async () => {

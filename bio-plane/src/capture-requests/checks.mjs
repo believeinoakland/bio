@@ -424,6 +424,16 @@ export const CAPTURE_REQUEST_CHECKS = Object.freeze({
       + '(it says no such record exists), withheld (it declined, and why) or no_answer (none came). This was none of '
       + 'them, so nothing was written.',
   },
+  /* R55 (T41-25; N820) — A REQUEST FOR A STEP. A request may name the step it is work for, and only one its run's
+     principal sees: an unseen step and one that does not exist answer alike, so the door cannot be used to learn that a
+     step exists. Refused at the door, before anything is written. New at T41, awaiting stamp. */
+  CAPTURE_REQUEST_NO_STEP: {
+    check: 'C-28.34',
+    where: 'src/capture-requests/index.mjs captureRequest > is-capture-request',
+    translation: 'This request names a step of work that is not one you can see here. A request made for a step is tied '
+      + 'to it, so the step it names must be one its asker can see; one that does not exist answers the same. Nothing '
+      + 'was queued.',
+  },
 });
 
 for (const row of Object.values(CAPTURE_REQUEST_CHECKS)) Object.freeze(row);

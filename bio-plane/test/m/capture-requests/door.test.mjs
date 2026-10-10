@@ -218,7 +218,7 @@ test("R9 the door makes no outbound request of any kind and runs no conduct or a
   assert.deepEqual(touched, []);
 });
 
-test("R34 R46 R49 R50 R51 R52 the module's C-28 table is C-28.1–.4, .6–.11 and .14–.33, each row frozen, naming a region of this module and a translation; C-28.5 and C-28.12 stay unallocated and C-28.13 is acquisition's", () => {
+test("R34 R46 R49 R50 R51 R52 R55 the module's C-28 table is C-28.1–.4, .6–.11 and .14–.34, each row frozen, naming a region of this module and a translation; C-28.5 and C-28.12 stay unallocated and C-28.13 is acquisition's", () => {
   assert.deepEqual(Object.fromEntries(Object.entries(CATALOGUE).map(([k, r]) => [k, r.check])), {
     CAPTURE_REQUEST_NO_RUN: "C-28.1", CAPTURE_REQUEST_NOT_PUBLIC: "C-28.2", CAPTURE_REQUEST_NOT_AN_INQUIRY: "C-28.3",
     CAPTURE_REQUEST_CARRIES_A_CAPTURE: "C-28.4", CAPTURE_CONDUCT_UA_ILLEGIBLE: "C-28.6",
@@ -232,7 +232,7 @@ test("R34 R46 R49 R50 R51 R52 the module's C-28 table is C-28.1–.4, .6–.11 a
     CAPTURE_REQUEST_CO_ARCHIVE_NOT_A_MEMBERS: "C-28.25", CAPTURE_REQUEST_CO_ARCHIVE_MALFORMED: "C-28.26",
     MACHINE_CANNOT_REQUEST_RECORDS: "C-28.27", RECORDS_REQUEST_NOT_CITED: "C-28.28", RECORDS_ANSWER_NO_CAPTURE: "C-28.29",
     RECORDS_ANSWER_NO_GROUND: "C-28.30", NO_SUCH_RECORDS_REQUEST: "C-28.31", RECORDS_REQUEST_ANSWERED: "C-28.32",
-    RECORDS_ANSWER_UNKNOWN: "C-28.33",
+    RECORDS_ANSWER_UNKNOWN: "C-28.33", CAPTURE_REQUEST_NO_STEP: "C-28.34",
   });
   assert.equal(Object.isFrozen(CATALOGUE), true);
   for (const [code, r] of Object.entries(CATALOGUE)) {
