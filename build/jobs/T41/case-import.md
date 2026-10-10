@@ -13,3 +13,43 @@ Two readings, the first decides how R23 is built.
 Until you answer I build option 1 against an injected synchronous re-weigher (a dep, default case-checker's export once it exists), so only the call changes.
 
 **Q2 (R22: `findings: "all"` when nothing can be accepted).** My reading: "all" takes every finding of the edition; it accepts those `recreated` and those `recreated_in_part` whose every missing entry `gaps` states, and answers `not_accepted: [{finding, ref, result, why, unstated?}]` for the rest (`did_not_recreate`, or in part with the gaps it leaves unstated named). When it would accept none, it writes nothing and refuses: `IMPORT_NO_SUCH_FINDING` for an edition with no findings; else `IMPORT_ACCEPT_GAPS_UNSTATED` when some finding recreated in part could be accepted by stating its gaps (naming them); else `IMPORT_ACCEPT_NOT_RECREATED` naming each finding. No new catalogue row. I carry on with this.
+
+## J2 · COMPLETE
+
+**Entry applied: T41-41** (commit 43422d8c67).
+- **R22** (D62; Q2 as read, B2): `acceptImported({findings: "all"})` takes every finding of the edition in one act with one reason. It accepts each finding that is `recreated`, and each `recreated_in_part` one whose missing entries `gaps` all states, as one acceptance row recorded as R6 records one. It answers `scope: "all"` and `not_accepted: [{finding, ref, result, why, unstated?}]`. When it would accept nothing, it writes nothing:
+  - `IMPORT_NO_SUCH_FINDING` for an edition that holds no finding;
+  - otherwise `IMPORT_ACCEPT_GAPS_UNSTATED`, naming each gap, when stating gaps would let a finding be accepted;
+  - otherwise `IMPORT_ACCEPT_NOT_RECREATED`, naming each finding.
+
+  R6's earlier refusals come first. A list naming `"all"` names a finding. No catalogue row was added.
+- **R23** (D59, D62; K2471; Q1 option 1, K2529): on every read, `importedCase` (R4) answers each finding's `own_lens` beside its recorded pair (the source's lens) and `against_own_bar`. The edition carries `source_lens` and `own_lens`.
+  - The carried applications come from `case-grammar.biasApplicationsOf` (its R24).
+  - Each statement is asked of `bias.statementInForce` once, at scope `instance`, with the reading member as viewer.
+  - The reader lens is `{statements in force, applications whose statement is in force}`, and the rest read as removed. It is re-weighed by `case-checker.reweigh({parts, documents, answer, lens})`, synchronous, over the recorded answer.
+  - A finding resting on an undetermined (`null`) statement answers `determined: false`, `pair: null` and `bar_met: null`, with `LENS_UNDETERMINED` stated. A throw, or an answer that is a promise, is stated as `LENS_NOT_REWEIGHED`. Neither is ever read as false.
+  - The read writes nothing. The acceptance, `findingFacts`' pair and the recorded results stand ("never stronger than its edition").
+  - `importedCase` stays synchronous, so `case-disclosures` R13 is unaffected.
+
+**Built against requirements, injected (B2):** `case-checker`'s `reweigh` (its R23 as K2529 amends it) and `case-grammar`'s `biasApplicationsOf` (its R24) are not on `tranche/T41` yet. The module reaches them as `caseChecker.reweigh` and `caseGrammar.biasApplicationsOf` (deps `reweigh` and `biasApplicationsOf`, which a test passes). Until they exist, the read states `LENS_NOT_REWEIGHED`. R23's tests run against scripted stand-ins in `fixture.mjs`, which apply the R23/R24 semantics. When each one merges, the CHANGE should name the export's exact name and its answer's shape (`findings[{finding, pair, bar_met, changed_by}]`, `limit`). I then add a test over the real ones and re-run steps 5–7.
+
+**Final `uses`:** unchanged from `modules.json` (record-grammar, record-core, membership, strength, case-grammar, case-checker, inquiry-grammar, accepted-work, reevaluation, signatures, docket, calc-grammar, bias). `bias` is now imported (`biasOf`, reached lazily, only when an edition carries an application).
+
+**Reading set (mechanics §17; K2304):** it measured about 324 KB (requirements 25, code 112, tests 153, used services 34), which is over 300.
+- I read whole myself: my requirements; layer 8's row of `build/layers.md`; `index.mjs`; `accept.test.mjs`; `reads.test.mjs`; `fixture.mjs`; and the used services my Uses names (Purpose, plus case-checker R1, R6, R11, R20, R23; case-grammar R11–R13, R18, R24; bias R49; strength R16; inquiry-grammar R11; accepted-work R1, R8; reevaluation R31, R33; signatures R2, R39, R40; docket R6, R15, R24).
+- A worker read in full `schema.mjs` and `import`, `calculations`, `flags`, `real`, `voice` and `watch` `.test.mjs`. Its summary is about 10 KB, citing file:line throughout: tables and columns, the R-ids per test, the exact-shape assertions a new field could break, and fixture use. Nothing it left out mattered. Its exact-shape warnings (import.test.mjs:178, flags.test.mjs:104/138/145/212) are why no field was added to `importCaseFile`'s recreation, `acceptanceOf`, `findingFacts` or the catalogue.
+
+**Deferred:** none.
+
+**Found elsewhere (report):**
+- `case-import`'s requirements name `calculations.evaluate` (R21; Uses), while the code, `modules.json` and `case-checker` R20 use `calc-grammar.evaluate`. This is a wording mismatch in the requirements, not a code fault.
+- Flaws in my own tests (fixed later only if a CHANGE re-opens them; none affects compliance): flags.test.mjs:26/37/52's negative controls add a flag rather than repeat the clear; watch.test.mjs:147 never reaches the 200 cap; calculations.test.mjs:228 states `inputs` as a map.
+- Inherited reds, identical with and without my change: case-disclosures R22 (photo translations by key), and case-authoring R19, R2, R29, R34, R40. None is mine.
+
+**Tests and checks:**
+- `node --test test/m/case-import/`: tests 94, pass 94, fail 0.
+- accepted-work: 23 pass, 0 fail. case-disclosures: 80 pass, 1 fail (inherited). case-authoring: 164 pass, 5 fail (inherited).
+- Layer tests: none named.
+- format: 0 failures. architecture: 0 failures. coverage: 23 of 23 live ids named, 0 failures. ownership: 5 files, 0 failures.
+
+Size (session_01KJ4zxTUbTA3VAHVeTVs72b): test runs 14, module lines 2011
