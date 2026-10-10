@@ -88,3 +88,28 @@ So as worded, neither R68's re-preparation nor a first edition's account from a 
 I have **not** built this. I am testing R64 and R68 on editions above 1 of a published case, which work today. Say yes and I build it, or word it otherwise.
 
 **REPORT (another module):** record-grammar's `PROPOSAL_STATES` has no subject for an account draft, so `proposalLabel(…, "case_account")` throws. R64 labels its drafts through record-grammar's `lawProposalState` with this module's own sentence. A `case_account` (and `account_check`) subject in record-grammar R43 would let it use the one composer.
+
+## J5 · REPORT
+
+**Size (P6, K617): case-authoring now measures 4,131 lines over its paths, past about 4,000.** At START I estimated about 3,800 and so did not report before building. That estimate was wrong: R63–R68 took 658 lines, not the ~300 I counted (`index.mjs` 3,039, `document.mjs` 676, `schema.mjs` 98, `checks.mjs` 169, `searched.mjs` 149).
+
+Built and green, every R58–R68 id named by a test (coverage 52/52).
+
+**Where the seam is**, if you move the account out as your START allowed ("the account's R63–R68 then move to a module after you"):
+- separable whole, about 430 lines: R64's drafts (`accountPropose`, `accountDrafts`, `#caseForDrafts`, the label, the two tables), R66's reader (`registerReviewComments`, `#reviewCommentsChosen`), and the account's helpers (`accountShaped`, `#accountDraftJudged`, `#accountJudged`, `#citedFor`, `#accountFlags`);
+- staying in `publishCase` and the pre-flight: the calls into them, about 120 lines.
+
+That would leave case-authoring at about 3,700.
+
+**Options:**
+1. Merge as is and split at its next job (K617's standing rule).
+2. Split now into a module directly after case-authoring (`case-account`), with requirements R63–R68 moved; I move the code in this job.
+3. I trim comments and duplication in this job, to about 4,000.
+
+Recommendation: 1, because nothing in T41 needs the seam. If you prefer 2, send a CHANGE naming the module and I do the move.
+
+**Other state:**
+- Uses to apply at merge: `ai-runs` (R64's `runFor`; architecture check fails until applied), and `publish-schedule` already in `modules.json`.
+- My suite: 177/179. The 2 reds are case-disclosures' `photo.refused.unchecked` wording (routed to it, K2533).
+- The five users' suites (review, affordances, answer-envelope, control-plane, plane) carry exactly the tranche's own reds, none new.
+- Waiting on: J4 (R8 against re-preparation), and the CHANGEs for ratification (`approvalsInForce`) and case-disclosures (`accountJudged`), each run here meanwhile against an uncommitted local stand-in.
