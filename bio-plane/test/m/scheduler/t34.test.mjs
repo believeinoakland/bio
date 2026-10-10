@@ -1,5 +1,6 @@
-/* scheduler — T34 (T34-51; N662, DEC-147; ANSWERS #2, K1803; N605, K1666; K1790, K1811, K1816, K1836): the
-   `scheduled-publish` consumer over publication R67 (R22), armed through publication's `onPublishScheduled` (its R71);
+/* scheduler — T34 (T34-51; N662, DEC-147; ANSWERS #2, K1803; N605, K1666; K1790, K1811, K1816, K1836), re-pointed at
+   T41-49 (N823, K2438): the `scheduled-publish` consumer over publish-schedule R2 (R22; publication R67 before the
+   split), armed through publish-schedule's `onPublishScheduled` (its R6; publication R71 before);
    the standing questions re-armed through answers' `onStandingSet` (R23, its R27); and the arming notices duties,
    people and money-checks offer (R9; duties R26, people R35, money-checks R16). The first tests drive stand-ins shaped
    as the owners state their services; the last drive the real owners in their own test worlds and read the alarm. */
@@ -7,7 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { SCHEDULER_ORDER, SCHEDULER_KEYS, RANKED, DAILY, Scheduler } from "../../../src/scheduler/index.mjs";
 import { world, storage, writes, NOW } from "./fixture.mjs";
-import { planeWorld as publicationWorld, V as PV, SIG, KEY } from "../publication/fixture.mjs";
+import { world as publishScheduleWorld, V as PV, SIG, KEY } from "../publish-schedule/fixture.mjs";
 import { world as dutiesWorld } from "../duties/fixture.mjs";
 import { world as peopleWorld, ANN } from "../people/fixture.mjs";
 import { world as moneyWorld, shareDetector, ALICE } from "../money-checks/fixture.mjs";
@@ -19,7 +20,7 @@ const LA = "America/Los_Angeles";
 
 /* ---- R22: the consumer ---- */
 
-test("R22, R5, R2: scheduled-publish stands after deadline-recheck and before working-on-seal, answers under scheduledpublish, and is publication's alone", () => {
+test("R22, R5, R2: scheduled-publish stands after deadline-recheck and before working-on-seal, answers under scheduledpublish, and is publish-schedule's alone", () => {
   const at = (n) => SCHEDULER_ORDER.indexOf(n);
   assert.equal(at("scheduled-publish"), at("deadline-recheck") + 1);
   assert.equal(at("working-on-seal"), at("scheduled-publish") + 1);
@@ -30,7 +31,13 @@ test("R22, R5, R2: scheduled-publish stands after deadline-recheck and before wo
   const names = s.consumers();
   assert.deepEqual(names.slice(names.indexOf("deadline-recheck"), names.indexOf("deadline-recheck") + 3),
     ["deadline-recheck", "scheduled-publish", "working-on-seal"]);
-  assert.deepEqual(new Scheduler({ storage: storage(), owners: {} }).consumers(), [], "without publication it is absent");
+  assert.deepEqual(new Scheduler({ storage: storage(), owners: {} }).consumers(), [], "without publish-schedule it is absent");
+  /* Negative control (T41-49, K2438): publication no longer holds the waiting editions; an owner under its old name is
+     never read, and its notice is never registered with. */
+  const old = { publishWake: () => { throw new Error("read"); }, onPublishScheduled: () => { throw new Error("registered"); } };
+  const s2 = new Scheduler({ storage: storage(), owners: { publication: () => old } });
+  assert.deepEqual(s2.consumers(), [], "an owner named publication adds no scheduled-publish");
+  assert.deepEqual([s2.listenTo({ publication: old }), s2.faults()], [{}, []]);
 });
 
 test("R22, R1, R2: its wake and due are publishWake; its tick is publishDue, told now as instant text and awaited, its answer under scheduledpublish; nothing waiting, it is absent and wants no wake", async () => {
@@ -42,12 +49,12 @@ test("R22, R1, R2: its wake and due are publishWake; its tick is publishDue, tol
   assert.equal(await s.arm(NOW), T, "armed at the set time, read from instant text");
   const quiet = await s.onAlarm(NOW);
   assert.equal("scheduledpublish" in quiet, false, "before its time: not due, absent");
-  assert.equal(calls.some(([m]) => m === "publication.publishDue"), false);
+  assert.equal(calls.some(([m]) => m === "publishSchedule.publishDue"), false);
   set["scheduled-publish"].wake = T;   /* an instant in ms reads the same */
   const r = await s.onAlarm(T);
   assert.equal(resolved, true, "the publisher's answer awaited inside the alarm");
   assert.deepEqual(r.scheduledpublish, taken);
-  assert.deepEqual(calls.filter(([m]) => m === "publication.publishDue"), [["publication.publishDue", "2026-10-01T12:00:00.000Z"]]);
+  assert.deepEqual(calls.filter(([m]) => m === "publishSchedule.publishDue"), [["publishSchedule.publishDue", "2026-10-01T12:00:00.000Z"]]);
   set["scheduled-publish"].wake = null;
   const after = await s.onAlarm(T + 1000);
   assert.equal("scheduledpublish" in after, false);
@@ -56,13 +63,13 @@ test("R22, R1, R2: its wake and due are publishWake; its tick is publishDue, tol
 
 test("R22, R1: a firing inside the grace before the set time runs the tick, takes nothing, and the reconcile re-arms at the time; the edition is never taken before it", async () => {
   const T = Date.parse("2026-10-01T12:00:00Z");
-  /* publication R67, played: takes only what is due at or before now */
+  /* publish-schedule R2, played: takes only what is due at or before now */
   const waiting = [T];
   const { s, st, calls } = world({ "scheduled-publish": { wake: () => waiting[0] ?? null,
     tick: (now) => { const n = Date.parse(now); const t = waiting.filter((w) => w <= n); waiting.splice(0, t.length); return { ok: true, taken: t }; } } });
   const early = await s.onAlarm(T - 200);
   assert.deepEqual(early.scheduledpublish, { ok: true, taken: [] }, "ticked within the grace, took nothing");
-  assert.equal(calls.find(([m]) => m === "publication.publishDue")[1], iso(T - 200), "told the firing instant, not the set time");
+  assert.equal(calls.find(([m]) => m === "publishSchedule.publishDue")[1], iso(T - 200), "told the firing instant, not the set time");
   assert.deepEqual([early.nextAt, st.alarm], [T, T], "re-armed at the time");
   const due = await s.onAlarm(T);
   assert.deepEqual(due.scheduledpublish.taken, [T]);
@@ -80,16 +87,16 @@ test("R22, R11: an edition whose time passed while no alarm fired is taken at th
   assert.deepEqual(r.scheduledpublish.taken, [T], "taken late, at the next firing");
 });
 
-test("R22, R3, R15: an edition still waiting after a tick at or past its time wants no wake until publication's next notice or the next start, so the alarm never spins; a throwing tick is answered under its key", async () => {
+test("R22, R3, R15: an edition still waiting after a tick at or past its time wants no wake until publish-schedule's next notice or the next start, so the alarm never spins; a throwing tick is answered under its key", async () => {
   const T = Date.parse("2026-10-01T12:00:00Z");
   const { s, st, set } = world({ "scheduled-publish": { wake: T, tick: { ok: true, taken: [] } } });
   const heard = [];
-  s.listenTo({ publication: { onPublishScheduled: (module, fn) => { heard.push(fn); return { ok: true, module }; } } });
+  s.listenTo({ publishSchedule: { onPublishScheduled: (module, fn) => { heard.push(fn); return { ok: true, module }; } } });
   const r = await s.onAlarm(T + 10);
   assert.deepEqual(r.scheduledpublish, { ok: true, taken: [] });
   assert.deepEqual([r.nextAt, st.alarm], [null, null], "held: no alarm in the past");
   assert.equal("scheduledpublish" in (await s.onAlarm(T + 20)), false, "not due again while held");
-  assert.equal(await heard[0]({ publishAt: iso(T) }), T, "publication's notice releases it");
+  assert.equal(await heard[0]({ publishAt: iso(T) }), T, "publish-schedule's notice releases it");
   assert.equal(await s.start(T + 30), T, "so does the next start");
   set["scheduled-publish"].throws = "tick";
   const broke = await s.onAlarm(T + 40);
@@ -97,21 +104,21 @@ test("R22, R3, R15: an edition still waiting after a tick at or past its time wa
   assert.deepEqual([broke.nextAt, st.alarm], [null, null], "a tick that threw holds the time too");
 });
 
-/* ---- R9, R22: publication's notice ---- */
+/* ---- R9, R22: publish-schedule's notice ---- */
 
-test("R9, R22, R17: it registers once with publication's onPublishScheduled; a set or a move arms the alarm at once, a cancel arms nothing new; the notice runs no tick and writes nothing but the alarm", async () => {
+test("R9, R22, R17: it registers once with publish-schedule's onPublishScheduled; a set or a move arms the alarm at once, a cancel arms nothing new; the notice runs no tick and writes nothing but the alarm", async () => {
   const T = Date.parse("2026-10-01T12:00:00Z"), LATER = T + 7 * 86_400_000;
   /* another consumer wants a later wake, so a cancel is seen to leave the alarm where it was */
   const { s, st, calls, set } = world({ "scheduled-publish": { wake: null }, "dated-waits": { wake: iso(LATER) } });
   const heard = [];
-  const out = s.listenTo({ publication: { onPublishScheduled: (module, fn) => { heard.push({ module, fn }); return { ok: true, module }; } } });
-  assert.deepEqual(out.publication, { ok: true, module: "scheduler" });
+  const out = s.listenTo({ publishSchedule: { onPublishScheduled: (module, fn) => { heard.push({ module, fn }); return { ok: true, module }; } } });
+  assert.deepEqual(out.publishSchedule, { ok: true, module: "scheduler" });
   assert.deepEqual(heard.map((h) => h.module), ["scheduler"]);
   st.log.length = 0;
-  set["scheduled-publish"].wake = iso(T);   /* set to wait (publication R66) */
+  set["scheduled-publish"].wake = iso(T);   /* set to wait (publish-schedule R1) */
   assert.equal(await heard[0].fn({ publishAt: iso(T) }), T);
   assert.equal(st.alarm, T);
-  set["scheduled-publish"].wake = iso(T - 3_600_000);   /* moved earlier (R68) */
+  set["scheduled-publish"].wake = iso(T - 3_600_000);   /* moved earlier (its R3) */
   await heard[0].fn({ publishAt: iso(T - 3_600_000) });
   assert.equal(st.alarm, T - 3_600_000);
   set["scheduled-publish"].wake = null;   /* cancelled: arms nothing new (R4) */
@@ -126,7 +133,7 @@ test("R9, R22, R17: it registers once with publication's onPublishScheduled; a s
   set["dated-waits"].wake = null;
   await heard[0].fn({ publishAt: null });
   assert.equal(st.alarm, null);
-  assert.equal(calls.some(([m]) => m === "publication.publishDue"), false, "no tick ran");
+  assert.equal(calls.some(([m]) => m === "publishSchedule.publishDue"), false, "no tick ran");
 });
 
 test("R22, R1: a take's notice arrives inside the scheduled-publish tick and arms nothing there: onAlarm's authoritative reconcile stands", async () => {
@@ -136,7 +143,7 @@ test("R22, R1: a take's notice arrives inside the scheduled-publish tick and arm
   const { s, st } = world({ "scheduled-publish": { wake: () => waiting[0] ?? null,
     tick: async () => { waiting.shift(); const told = fn({ publishAt: iso(waiting[0]) }); await settle();
                         return { ok: true, taken: [T], told: told ?? null }; } } });
-  s.listenTo({ publication: { onPublishScheduled: (module, f) => { fn = f; return { ok: true, module }; } } });
+  s.listenTo({ publishSchedule: { onPublishScheduled: (module, f) => { fn = f; return { ok: true, module }; } } });
   st.log.length = 0;
   const r = await s.onAlarm(T);
   assert.equal(r.scheduledpublish.told, null, "the notice inside the tick arms nothing");
@@ -168,7 +175,7 @@ test("R23, R9: a refused registration is a start-up fault, reported by faults() 
   const { s } = world();
   const refusal = { ok: false, reason: "LISTENER_DECLARED", detail: "scheduler has already registered its listener" };
   const out = s.listenTo({ answers: { onStandingSet: () => refusal },
-                           publication: { onPublishScheduled: (module) => ({ ok: true, module }) } });
+                           publishSchedule: { onPublishScheduled: (module) => ({ ok: true, module }) } });
   assert.deepEqual(out.answers, refusal, "the owner's answer, as given");
   assert.deepEqual(s.faults(), [{ notice: "answers", reason: "LISTENER_DECLARED", detail: refusal.detail }]);
   assert.deepEqual(world().s.faults(), [], "none listened: none refused");
@@ -210,8 +217,8 @@ test("R9, R21, R17: a duty tracked, a check changed, a detector switched on asks
 
 /* ---- against the real owners: the act driven, the alarm read ---- */
 
-test("R22, R9: against the real publication, an edition set to wait arms the alarm at its time; a firing in the grace before it takes nothing; the firing at it publishes through the registered publisher; a move and a cancel re-arm through onPublishScheduled", async () => {
-  const w = publicationWorld();
+test("R22, R9: against the real publish-schedule, an edition set to wait arms the alarm at its time; a firing in the grace before it takes nothing; the firing at it publishes through the registered publisher; a move and a cancel re-arm through onPublishScheduled", async () => {
+  const w = publishScheduleWorld();
   w.member("olive");
   const proj = w.project("Parks", "olive");
   const F = "INQ-2026-0001";
@@ -220,10 +227,10 @@ test("R22, R9: against the real publication, an edition set to wait arms the ala
   for (const c of ["CASE-2026-0001", "CASE-2026-0002"]) w.prepare(c, 1, { project: proj, roles });
   assert.equal(w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "admin").ok, true);   /* America/Halifax */
   const docOf = (c) => w.row(`SELECT doc_sha FROM case_documents WHERE case_id=? AND edition=1`, c).doc_sha;
-  const schedule = (c, at) => w.record.transact(() => w.p.scheduleEdition({ case: c, edition: 1, docSha: docOf(c),
+  const schedule = (c, at) => w.record.transact(() => w.ps.scheduleEdition({ case: c, edition: 1, docSha: docOf(c),
     signature: SIG(1), signer: "olive", deliveredBy: PV("olive"), at, checked: { sources: [], ties: [], holds: [] }, by: PV("olive") }));
   /* ratification's publisher, played: commits through publication R22 as its R42 commits */
-  w.p.registerScheduledPublisher("ratification", { publishScheduled: async (entry, now) => {
+  w.ps.registerScheduledPublisher("ratification", { publishScheduled: async (entry, now) => {
     await settle();   /* answering asynchronously (K1832) */
     const r = w.record.transact(() => w.p.commitCaseEdition({ case: entry.case, edition: entry.edition, project: proj,
       scope: "The question.", roster: roles.map((x) => ({ bundle_id: x.target, version_sha: x.version_sha, role: "load_bearing" })),
@@ -232,8 +239,8 @@ test("R22, R9: against the real publication, an edition set to wait arms the ala
     return r.ok ? { published: true, published_at: now } : { stopped: [{ code: r.reason, translation: "no" }] };
   } });
   const st = storage();
-  const s = new Scheduler({ storage: st, owners: { publication: () => w.p } });
-  assert.deepEqual(s.listenTo({ publication: w.p }).publication, { ok: true, module: "scheduler" });
+  const s = new Scheduler({ storage: st, owners: { publishSchedule: () => w.ps } });
+  assert.deepEqual(s.listenTo({ publishSchedule: w.ps }).publishSchedule, { ok: true, module: "scheduler" });
   assert.deepEqual(s.faults(), []);
   const T1 = Date.parse("2026-10-01T12:00:00Z"), T2 = Date.parse("2026-10-02T12:00:00Z");   /* 09:00 in Halifax */
   assert.equal(schedule("CASE-2026-0001", { date: "2026-10-01", time: "09:00" }).ok, true);
@@ -242,10 +249,10 @@ test("R22, R9: against the real publication, an edition set to wait arms the ala
   assert.equal(schedule("CASE-2026-0002", { date: "2026-10-03", time: "09:00" }).ok, true);
   await settle();
   assert.equal(st.alarm, T1, "a later set time never pushes the alarm later");
-  assert.equal(w.p.publishAtMove({ case: "CASE-2026-0002", edition: 1, at: { date: "2026-10-01", time: "08:00" }, by: PV("olive") }).ok, true);
+  assert.equal(w.ps.publishAtMove({ case: "CASE-2026-0002", edition: 1, at: { date: "2026-10-01", time: "08:00" }, by: PV("olive") }).ok, true);
   await settle();
   assert.equal(st.alarm, T1 - 3_600_000, "moved earlier: re-armed at once");
-  assert.equal(w.p.publishAtMove({ case: "CASE-2026-0002", edition: 1, at: { date: "2026-10-02", time: "09:00" }, by: PV("olive") }).ok, true);
+  assert.equal(w.ps.publishAtMove({ case: "CASE-2026-0002", edition: 1, at: { date: "2026-10-02", time: "09:00" }, by: PV("olive") }).ok, true);
   await settle();
   assert.equal(st.alarm, T1 - 3_600_000, "moved later: an arm never pushes the alarm later");
   const early = await s.onAlarm(T1 - 100);
@@ -254,7 +261,7 @@ test("R22, R9: against the real publication, an edition set to wait arms the ala
   const due = await s.onAlarm(T1);
   assert.deepEqual(due.scheduledpublish.taken.map((x) => [x.case, x.state]), [["CASE-2026-0001", "published"]]);
   assert.equal(st.alarm, T2, "the next waiting edition's time");
-  assert.equal(w.p.publishAtCancel({ case: "CASE-2026-0002", edition: 1, by: PV("olive") }).ok, true);
+  assert.equal(w.ps.publishAtCancel({ case: "CASE-2026-0002", edition: 1, by: PV("olive") }).ok, true);
   await settle();
   assert.equal(st.alarm, null, "a cancel arms nothing new; nothing waits, so its reconcile leaves no alarm (R4, R15)");
 });

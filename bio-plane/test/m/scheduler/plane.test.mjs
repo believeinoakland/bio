@@ -1,24 +1,27 @@
 /* scheduler in the running plane (Miniflare, the Durable Object the product runs in): the registry the plane builds
    (R5, R8), a producer's notice arming it (R9), and the suspended run woken on the alarm that expires its request
    (R12, D-583). The alarm is driven through the Durable Object's `onAlarm(now)` on a virtual clock that starts at the
-   wall clock, never in the past, so the real alarm the reconcile sets never fires inside the test. */
+   wall clock, never in the past, so the real alarm the reconcile sets never fires inside the test.
+   The plane is capture-requests' scratch plane (`test/m/capture-requests/plane-world.mjs`; T41-49, K2514): run-rules
+   R19 as amended gates every run on its mode's test bar on Civicsmith's set, which holds no matter yet (N829), so in the
+   plane as deployed R12's run never opens; that copy holds a one-matter set and a passing bar for each part, and differs
+   from `src/` in nothing else. */
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { Miniflare } from "miniflare";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
 import { list as heldProfiles, combine } from "../../../../jurisdictions/index.mjs";
+import { planeEntry } from "../capture-requests/plane-world.mjs";
 
-const SRC = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "src");
 const sha = (v) => createHash("sha256").update(v).digest("hex");
 /* R12's requested address, at a host the governor holds (below) */
 const HELD_DOC = "https://www.held.example.org/doc.pdf";
 let MF;
+const PLANE = planeEntry();
 const mf = new Miniflare({
-  modules: true, modulesRoot: "/", scriptPath: join(SRC, "plane", "index.mjs"),
-  script: readFileSync(join(SRC, "plane", "index.mjs"), "utf8"), modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
+  modules: true, modulesRoot: "/", scriptPath: PLANE.entry,
+  script: readFileSync(PLANE.entry, "utf8"), modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { STORE: { className: "Store", useSQLite: true } }, r2Buckets: ["CAPTURES", "PUBLISHED"],
   bindings: { ADMIN_TOKEN: "adm-sch", PROBE_TOKEN: "prb-sch", DAEMON_TOKEN: "dmn-sch",
@@ -36,7 +39,7 @@ const mf = new Miniflare({
   },
 });
 MF = mf;
-after(() => mf.dispose());
+after(async () => { await mf.dispose(); PLANE.dispose(); });
 
 const rP = (r) => (r && typeof r === "object" && "result" in r ? r.result : r);
 /* admission R20 (C-38.10, K2189): a credential is read only from the Authorization header or the body, never the

@@ -20,15 +20,15 @@ const ANSWER = { ok: true, copied: 2, clean: 1, public: 0, refused: 1, failed: 0
 
 /* ---- the registry (R5, R2) ---- */
 
-test("R25, R5, R2: document-copy stands after file-reputation, last in R5's order, answering under doccopy; given its now alone, never daily nor always due; without case-carriage it is absent", () => {
+test("R25, R5, R2: document-copy stands after file-reputation and before R26's question-explore (T41), answering under doccopy; given its now alone, never daily nor always due; without case-carriage it is absent", () => {
   assert.equal(COPY_CONSUMER, DC, "the fixture's name is the module's");
-  assert.equal(SCHEDULER_ORDER.at(-1), DC);
+  assert.equal(SCHEDULER_ORDER.indexOf("question-explore"), SCHEDULER_ORDER.indexOf(DC) + 1);
   assert.equal(SCHEDULER_ORDER.indexOf(DC), SCHEDULER_ORDER.indexOf("file-reputation") + 1);
   assert.equal(SCHEDULER_KEYS[DC], "doccopy");
   assert.deepEqual([RANKED.includes(DC), DAILY.includes(DC), ALWAYS_DUE.includes(DC)], [false, false, false]);
   const names = world({}, null, { daily: true, files: true, copies: true }).s.consumers();
   assert.deepEqual(names.slice(-2), ["file-reputation", DC]);
-  assert.deepEqual(world({}, null, { copies: true }).s.consumers().at(-1), DC, "no file-safety owner: still last");
+  assert.deepEqual(world({}, null, { copies: true }).s.consumers().at(-1), DC, "no file-safety or question-explorer owner: last of those present");
   assert.equal(world().s.consumers().includes(DC), false, "no case-carriage owner: absent");
   assert.deepEqual(new Scheduler({ storage: storage(), owners: { caseCarriage: () => world({}, null, { copies: true }).o.caseCarriage } }).consumers(), [DC]);
 });
@@ -222,12 +222,23 @@ test("R25, R7, R11: against the real case-carriage, a failed read of the evidenc
   assert.equal(again.nextAt, null);
 });
 
-test("R25: against the real case-carriage with no evidence store bound, the firing's answer under doccopy is its refusal DOCUMENT_COPY_NO_STORE, as given, and nothing is derived", async () => {
-  const { w, s } = realScheduler();
+/* Re-stated at T41-49 (K2534, K2380): with no evidence store bound case-carriage's `copyWake` answers null (nothing can
+   be copied), so the consumer is not due, wants no wake and never ticks; the refusal DOCUMENT_COPY_NO_STORE is
+   case-carriage's answer to a batch, which this module passes as given (the stand-in test of R25, R3 above). */
+test("R25, R15: against the real case-carriage with no evidence store bound, copyWake answers null, so document-copy is not due, wants no wake and nothing is derived; bound again, the same firing copies it", async () => {
+  const { w, st, s } = realScheduler();
   const T = Date.parse(CC_NOW);
   const knock = supplied(w, "INFO-2026-0103-sched", pdf());
+  const bound = w.record.evidenceStore;
   w.record.evidenceStore = () => null;
+  assert.equal(w.cc.copyWake(T), null);
   const r = await s.onAlarm(T);
-  assert.deepEqual([r.doccopy.ok, r.doccopy.code, r.doccopy.check], [false, "DOCUMENT_COPY_NO_STORE", "C-141.11"]);
+  assert.equal("doccopy" in r, false, "not due: no tick");
+  assert.deepEqual([r.nextAt, st.alarm], [null, null], "no wake held for it (R15)");
   assert.equal(w.cc.documentCopy(knock).state, "pending", "nothing derived");
+  /* Negative control: the store bound again, the document is due and the firing copies it. */
+  w.record.evidenceStore = bound;
+  const again = await s.onAlarm(T);
+  assert.equal(again.doccopy.copied, 1, JSON.stringify(again.doccopy));
+  assert.equal(w.cc.documentCopy(knock).state, "copy");
 });
