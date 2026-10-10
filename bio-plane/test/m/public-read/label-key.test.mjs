@@ -10,7 +10,7 @@ import assert from "node:assert/strict";
 import { world, stubOf, bucket, V, NOW, sha, caseDoc } from "./fixture.mjs";
 import { bindPublishedPlane, publishedRoutes } from "../../../src/publication/worker.mjs";
 import { LABEL_KEY_MARKED, LABEL_KEY_UNMARKED, LABEL_KEY_CLEANED } from "../../../src/public-read/index.mjs";
-import { OBSCURED_LABEL, COPY_CLEANED_LABEL } from "../../../src/case-carriage/index.mjs";
+import { OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL, CASE_CARRIAGE_WORDS } from "../../../src/case-carriage/index.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 bindPublishedPlane({
@@ -27,9 +27,6 @@ const call = async (w, env, op, q) => {
 };
 
 const CASE = "CASE-2026-0001", F = "INQ-2026-0001";
-/* `case-carriage`'s `PUBLISHED_LABEL` (its R11 from T40) is not exported before that module's T41 merge; any non-null
-   sentence other than the two above stands for it here, since the key is picked by `obscured_marked`, never by its words. */
-const PUBLISHED_LABEL = "Published as taken, with nothing covered; the group holds the original";
 const MARKED = "INFO-2026-0040-street", OLD_PLAIN = "INFO-2026-0041-screen", PLAIN = "INFO-2026-0042-park",
       STATED = "INFO-2026-0043-plate", LETTER = "INFO-2026-0044-letter", WHOLE = "INFO-2026-0001-minutes";
 /* `sha` is the original's: the capture the world holds for `ref`, filled in by `publish` */
@@ -88,6 +85,8 @@ test("R3 every published copy's label is answered by key beside the label as sig
   assert.equal(by[STATED].obscured.label, null);
   assert.equal(by[LETTER].obscured.label, COPY_CLEANED_LABEL);
   for (const r of ALL.filter((x) => x.obscured)) assert.equal(by[r.ref].obscured.copy, r.obscured.copy, r.ref);
+  /* each key names, in `case-carriage`'s words by key, exactly the label a copy signed now carries beside it */
+  for (const ref of [MARKED, PLAIN, LETTER]) assert.equal(CASE_CARRIAGE_WORDS[by[ref].label_key], by[ref].obscured.label, ref);
   /* a row carried whole: obscured null, no key */
   assert.equal(by[WHOLE].obscured, null);
   assert.equal(Object.hasOwn(by[WHOLE], "label_key"), false);

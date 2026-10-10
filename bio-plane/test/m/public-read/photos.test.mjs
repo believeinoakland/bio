@@ -16,6 +16,7 @@ import { bindPublishedPlane, publishedRoutes, assembleCaseContainer } from "../.
 import { readContainer, readPart } from "../../../src/ooxml.mjs";
 import { caseFilePath, materialsOf } from "../../../src/case-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
+import { OBSCURED_LABEL } from "../../../src/case-carriage/index.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 bindPublishedPlane({
@@ -37,9 +38,7 @@ const photo = (name) => new Uint8Array(readFileSync(new URL(`../image-cover/fixt
 
 const CASE = "CASE-2026-0001", F = "INQ-2026-0001", DOC = "INFO-2026-0001-minutes";
 const MARKED = "INFO-2026-0030-street", PLAIN = "INFO-2026-0031-screen";
-/* `case-carriage`'s `OBSCURED_LABEL` (its R11), word for word, and where its R11 holds a copy (`<store>/obscured/<sha>`):
-   case-carriage is reached here only through the world `publication` builds, as public-read reaches nothing of it. */
-const OBSCURED_LABEL = "Faces and plates obscured for publication; the group holds the original";
+/* Where `case-carriage` R11 holds a copy (`<store>/obscured/<sha>`); its `OBSCURED_LABEL` is imported by name (K2539). */
 const obscuredKey = (store, s) => `${store}/obscured/${s}`;
 /* What the originals carry beside their pixels (`image-cover`'s fixtures, `make-fixtures.py`): none may leave. */
 const METADATA = ["TestCam", "Phone One", "PhoneOS", "PersonInImage", "http://ns.adobe.com", "XML:com.adobe.xmp", "ICC_PROFILE",
