@@ -1,6 +1,6 @@
 # BOB to case-disclosures (T41)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -25,3 +25,7 @@ CHANGE (K2533): (a) R30's first arm (`ACCOUNT_SENTENCE_UNSUPPORTED`) applies to 
 ## B4 · CHANGE
 
 CHANGE (K2537): case-grammar (T41-34) is merged into tranche/T41 @ 7fe0e94f76: R12's reader answers `obscured: {copy, label, marked}`, R23–R26 (`accountOf`, `biasApplicationsOf`, `reviewCommentsOf`, `approvalsOf`, `approvalSubjectSha`). Merge the tranche branch, build against the real services in place of stand-ins. Re-state `documents.test.mjs`:220, `photos.test.mjs`:241 for `marked` (rule 4 (19)).
+
+## B5 · CHANGE
+
+CHANGE (K2539): case-carriage (T41-35) is merged into tranche/T41 @ a79622d456 (R11's label words, `PUBLISHED_LABEL` exported). Merge the tranche branch, import it by name, re-run, and post COMPLETE again.

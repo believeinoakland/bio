@@ -10,3 +10,5 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 **From INVESTIGATION #1 J2 (K2525).** Add `bio-plane/src/investigation/checks.mjs` (`INVESTIGATION_CHECKS`, family C-146) to `CHECK_FAMILY_FILES` (rule 4 (16)).
 
 **From PUBLISH-SCHEDULE #1 J1 (K2532).** `CHECK_FAMILY_FILES` also gains `src/publish-schedule/checks.mjs` (`PUBLISH_SCHEDULE_CHECKS`, C-122.5), directly after publication's file.
+
+**From CASE-DISCLOSURES #8 J2 (K2538).** families.test.mjs:250 also counts C-120.23–.29 (case-disclosures' new rows): re-pin with the rest.
