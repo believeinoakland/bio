@@ -34,3 +34,7 @@ Two readings of R3's `label_key` (T41-38), building on both meanwhile:
 - `test/system/migrate-released.test.mjs` (plane's system test): fail 1 both with my change and at `931fde1837`, the same cause (released stores lack the current tables against a fresh store); not this module's.
 
 Size (session_01GmwKwFGVsgqKaYYdEX3pJa): test runs 22, module lines 3,563
+
+## J2 · COMPLETE
+
+T41-38 complete after CHANGE B3 (case-grammar, K2537) and B4 (case-carriage, K2539), tranche merged @ a79622d456. R3 label_key applied per K2527 and tested with negative controls (label-key.test.mjs). public-read 158/158; users' reds identical to the base; format 0, coverage 0, ownership 0; architecture 3, each the new case-carriage edge: final uses add case-carriage. Details and findings for you in the record's Completion.
