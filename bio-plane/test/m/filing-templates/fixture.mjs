@@ -104,6 +104,12 @@ export function world({ profiles = [TEST], jur = null, before = null } = {}) {
       st.sql.exec(`INSERT OR REPLACE INTO project_participants (project_id, member_id, state, owner, created, updated)
                    VALUES (?, ?, ?, ?, 't', 't')`, projectId, memberId, state, owner ? 1 : 0);
     },
+    /** A project set discoverable, as membership's visibility act leaves its index (`project_sight`, R85); a project
+     *  with no row is hidden. Since D54 an administrator neither invited nor joined sees a hidden project only at
+     *  EXISTENCE, a discoverable one whole (membership R43, R44). */
+    discoverable(projectId) {
+      st.sql.exec(`INSERT OR REPLACE INTO project_sight (project_id, setting) VALUES (?, 'discoverable')`, projectId);
+    },
   };
   if (typeof before === "function") before(w);
   w.ft = filingTemplatesOf(host, { record, membership, now: () => Date.parse(clock.now), ...(jur ? { jurisdictions: jur } : {}) });
@@ -111,7 +117,8 @@ export function world({ profiles = [TEST], jur = null, before = null } = {}) {
 }
 
 /** The common world: alice and bob joined owners of P; carol invited to P, not joined; dave outside P, owner of Q;
- *  erin an administrator outside P; frank joined in P, not an owner. */
+ *  erin an administrator outside P (P hidden, so since D54 erin sees it only at EXISTENCE: none of its templates);
+ *  frank joined in P, not an owner. */
 export function seeded(opts = {}) {
   const w = world(opts);
   for (const m of ["alice", "bob", "carol", "dave", "frank"]) w.member(m);
