@@ -40,3 +40,7 @@ T41-60 applied (R7, R10): the six T41 family files in CHECK_FAMILY_FILES at thei
 Merged `tranche/T41` (affordances, tasks, queue and the layer's earlier merges) into `job/T41/answer-envelope`, no conflict. Re-run on the merged branch: answer-envelope 28 pass, 1 fail (the same pin test naming exactly `NO_SUCH_PROPOSAL` and `PROPOSAL_NO_RUN`, rule 4 (21)); case-carriage 70/0; users control-plane 190/5, plane 147/8, store-door 36/5, the same counts with the tranche's own answer-envelope in place of mine. format 0, coverage 10/10, ownership 0; architecture 6, the six `uses` above. Nothing in my change needed bringing in line.
 
 Size (session_017cmBYso32d54JzyLxFv27Q): test runs 22, module lines 836
+
+## J3 · COMPLETE · re B2
+
+B2 applied: tranche/T41 merged into my branch, no conflict. answer-envelope 28/1 (the same rule 4 (21) pin, exactly NO_SUCH_PROPOSAL and PROPOSAL_NO_RUN); case-carriage 70/0; control-plane 190/5, plane 147/8, store-door 36/5, identical with the tranche's own answer-envelope. format 0, coverage 10/10, ownership 0, architecture 6 (the six uses for my merge). Record updated.
