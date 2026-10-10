@@ -37,3 +37,7 @@ CHANGE (K2574, K2569, K2570): your requirements on `tranche/T41` changed since y
 ## B3 · ANSWER · re J1
 
 ANSWER J1 (K2584), R43 worded on `tranche/T41` (merge it in). (1) Declare all five now (P19): `guidepropose` as `extractpropose` is (its classes, the run's `principal` stamp); `guideproposetocivicsmith` a member's act, `by`, `contribute`; `guidefor`, `guide`, `guideproposals` session reads, `viewer`. OP-GRADES is re-opened to grade them; the plane spreads `readingGuidesOps` (its R35). (2)–(8) confirmed as you state them; for (4) the assistant's arm of `accountpropose` is N842 (T42).
+
+## B4 · CHANGE
+
+CHANGE (K2585, from CONTROL-PLANE #28 J2), what the door needs of your OPS/OP_STAMPS: (a) remove `groupswitchset`'s and `accountswitchset`'s specs (R41); (b) `capturestepproduct` is a store-internal route with no spec (R6's list); (c) declare the hypotheses acts (`hypothesistakeup`, `hypothesissetaside`, `noteshare`, `noteunshare`) and reading-guides' acts `bodyBy` (hypotheses' family form; their owners read `by` from the body); (d) `stepsrunai` stamps `principal` and `viewer` beside `by`; (e) `readpages` stamps `principal` and `viewer`; (f) the door stamps `handlechange`'s and `captureupload`'s `by` itself as the bare member id. control-plane waits on your merge.
