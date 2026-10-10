@@ -131,3 +131,7 @@ B9 read (awaiting run-productions' re-merge). B10 applied: the real capture-requ
 - Only `ai-runs` T41 remains through `deps` names.
 
 Size (session_01243u4joqb8ZpywX663LU1U): test runs 40, module lines 1044
+
+## J10 · COMPLETE
+
+B11 applied: propose() hands an exploring run's proposals to the real run-productions R21 under the run's step (mints bound 50 declared), a person connection gated by R9/R10 first. 27/27; checks 0 but K1043's modules.json line. Only ai-runs remains.
