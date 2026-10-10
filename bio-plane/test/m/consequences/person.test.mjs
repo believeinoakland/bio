@@ -49,11 +49,15 @@ test("R16: a viewer who may see the passage's capture is answered the person; on
   assert.equal(w.c.consequenceRead({ id: w.id, viewer: V("bob") }).reason, "NO_SUCH_PART");
 });
 
-test("R16 (DEC-78): a person the record holds as a protected source is withheld from every viewer the link does not admit", () => {
+test("R16 (DEC-78, D54): a person the record holds as a protected source is withheld from every viewer the link does not admit", () => {
   const w = setup();
   const link = w.people.linkSourceToPerson({ source: "SRC-2026-0001-tip", person: w.doe, evidence: "she told us",
                                               sight: ["alice"], by: V("alice") });
   assert.equal(link.ok, true, JSON.stringify(link));
+  /* D54 (K2408): carol, an administrator neither invited nor joined, sees hidden P only at EXISTENCE: the part is
+     absent to her. Invited (not joined), she sees the project whole. */
+  assert.equal(w.c.consequenceRead({ id: w.id, viewer: V("carol") }).reason, "NO_SUCH_PART");
+  w.invite("carol");
   /* alice is listed; pat and carol (an administrator) see the capture and the project, and are not. */
   assert.equal(w.read(w.c, "alice").affected.person.entity, w.doe);
   for (const v of ["pat", "carol"]) {
@@ -73,9 +77,13 @@ test("R16 (DEC-78): a person the record holds as a protected source is withheld 
   assert.equal(md.includes(w.doe) || md.includes(w.roll) || /doe/i.test(md), false);
 });
 
-test("R16 (N600): no link held leaves the capture's sight alone to decide; a person no link names is withheld from no one for want of one", () => {
+test("R16 (N600, D54): no link held leaves the capture's sight alone to decide; a person no link names is withheld from no one for want of one", () => {
   const w = setup();
   assert.equal(w.people.sourceLinkSight(w.doe), null, "no link is held");
+  /* D54 (K2408): carol, an administrator neither invited nor joined, sees hidden P only at EXISTENCE: the part is
+     absent to her. With P set discoverable she sees it whole. */
+  assert.equal(w.c.consequenceRead({ id: w.id, viewer: V("carol") }).reason, "NO_SUCH_PART");
+  w.discoverable();
   /* Every viewer who may see the roll's capture is answered the person: alice, pat, and carol (an administrator). */
   for (const v of ["alice", "pat", "carol"]) {
     const p = w.read(w.c, v);

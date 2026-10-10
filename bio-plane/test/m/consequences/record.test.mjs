@@ -18,7 +18,7 @@ function setup(opts) {
   return w;
 }
 
-test("R1: a valid part lands; each refusal holds in the requirement's order, with a negative control", () => {
+test("R1 (D54): a valid part lands; each refusal holds in the requirement's order, with a negative control", () => {
   const w = setup();
   const ok = w.c.consequenceRecord(w.base);
   assert.equal(ok.ok, true, JSON.stringify(ok));
@@ -27,6 +27,16 @@ test("R1: a valid part lands; each refusal holds in the requirement's order, wit
   /* Each case breaks one thing and everything after it too, so the first refusal named is the one that must win. */
   const bad = { affected: { kind: "planet" }, measure: { unit: "joy" }, period: { from: "x" } };
   const Ds = w.determination("CONF-2026-0003-old", w.P, { [S]: "noncompliant" }, { superseded_by: "CONF-2026-0004-new" });
+  /* D54 (K2408): P is hidden, so carol, an administrator neither invited nor joined, sees it only at EXISTENCE: every
+     determination in it is answered to her as an absent one, ahead of every other refusal, and nothing is written. */
+  for (const over of [{ determination: Ds, standard: S2 }, { standard: S2 }, {}, { ...w.base }]) {
+    const before = w.snapshot();
+    const r = w.c.consequenceRecord({ ...w.base, ...bad, ...over, author: V("carol") });
+    assert.deepEqual(r, noSuchDetermination(over.determination ?? w.D), `carol at EXISTENCE: ${JSON.stringify(over)}`);
+    assert.deepEqual(w.snapshot(), before);
+  }
+  /* Negative control: P set discoverable, carol sees it whole, and R1's order below holds for her. */
+  w.discoverable();
   /* The determination's two conditions are conformance's (its R19, R20): answered through its helpers, exactly. */
   const theirs = [
     [{ determination: "CONF-2026-0099-none", standard: "STD-x", author: V("bob"), ...bad },
@@ -113,7 +123,7 @@ test("R1: a valid part lands; each refusal holds in the requirement's order, wit
     assert.equal(w.c.consequenceRecord({ ...w.base, measure: { unit, range: { low: 1, high: 2 } } }).ok, true, unit);
 });
 
-test("R1 R3 (K171 (9)): a machine's computed part answers no project authority; a machine's anything else is refused", () => {
+test("R1 R3 (K171 (9), D54): a machine's computed part answers no project authority; a machine's anything else is refused", () => {
   const w = setup();
   const a = w.figure("INFO-2026-0001-budget", "Cut: 7,500");
   const r = w.c.consequenceRecord({ ...w.base, author: MACHINE, measure: { unit: "money", currency: "USD" },
@@ -122,9 +132,13 @@ test("R1 R3 (K171 (9)): a machine's computed part answers no project authority; 
   assert.equal(r.part.state, "computed");
   assert.equal(r.part.label.machine_work, true);
   /* A member who sees the project and has not joined is refused for the same computation: the exemption is the
-     machine's alone. */
-  assert.equal(w.c.consequenceRecord({ ...w.base, author: V("carol"), measure: { unit: "money" },
-    basis: { op: "sum", operands: [{ content: a, figure: "7,500" }] } }).reason, "CONSEQUENCE_NOT_A_PARTICIPANT");
+     machine's alone. D54: carol, an administrator neither invited nor joined, sees hidden P only at EXISTENCE, so its
+     determination is absent to her; invited (not joined), she sees it whole and is refused for not having joined. */
+  const asCarol = () => w.c.consequenceRecord({ ...w.base, author: V("carol"), measure: { unit: "money" },
+    basis: { op: "sum", operands: [{ content: a, figure: "7,500" }] } });
+  assert.deepEqual(asCarol(), noSuchDetermination(w.D));
+  w.invite("carol");
+  assert.equal(asCarol().reason, "CONSEQUENCE_NOT_A_PARTICIPANT");
   /* R3: an assessment, or an undetermined judgment, is a member's alone; an empty author is a machine's. */
   for (const author of [MACHINE, "", null]) {
     assert.equal(w.c.consequenceRecord({ ...w.base, author }).reason, "MACHINE_CANNOT_ASSESS", `assessed by ${author}`);
@@ -189,7 +203,7 @@ test("R10: people are a class or an office, or a person a document in the record
   assert.equal(md.includes(doe) || md.includes(roll) || /doe/i.test(md), false);
 });
 
-test("R13: parts, revisions and addressed records are append-only, declared to purge, and unseen parts read as absent", () => {
+test("R13 (D54): parts, revisions and addressed records are append-only, declared to purge, and unseen parts read as absent", () => {
   const w = setup();
   const r = w.c.consequenceRecord(w.base);
   const before = w.rows(`SELECT * FROM consequence_parts WHERE bundle_id=?`, r.id)[0];
@@ -217,7 +231,6 @@ test("R13: parts, revisions and addressed records are append-only, declared to p
   const absent = w.c.consequenceRead({ id: "CONS-2026-0999-fund", viewer: V("bob") });
   assert.equal(unseen.reason, "NO_SUCH_PART");
   assert.deepEqual({ ...unseen, id: null }, { ...absent, id: null });
-  assert.equal(w.c.consequenceRead({ id: r.id, viewer: V("carol") }).ok, true, "an administrator sees the project");
   assert.equal(w.c.consequencesOf({ determination: w.D, viewer: V("bob") }).reason, "NO_SUCH_DETERMINATION");
   assert.equal(w.c.addressed({ determination: w.D, viewer: V("bob") }).reason, "NO_SUCH_DETERMINATION");
   assert.equal(w.c.addressedRecord({ id: r.id, state: "addressed", evidence: ["x"], reason: "r", author: V("bob") }).reason,
@@ -227,6 +240,18 @@ test("R13: parts, revisions and addressed records are append-only, declared to p
   const words = JSON.stringify([w.c.consequencesOf({ determination: w.D, viewer: V("alice") }),
                                 w.c.addressed({ determination: w.D, viewer: V("alice") }), unseen]);
   for (const place of ["Oakland", "California", "Alameda", "Sacramento"]) assert.equal(words.includes(place), false, place);
+  /* D54 (K2408): carol, an administrator neither invited nor joined, sees hidden P only at EXISTENCE, never its
+     contents: every read answers its part as absent to her, as to bob. */
+  const carol = V("carol");
+  assert.deepEqual(w.c.consequenceRead({ id: r.id, viewer: carol }), unseen, "an administrator at EXISTENCE: absent");
+  assert.deepEqual([w.c.consequencesOf({ determination: w.D, viewer: carol }), w.c.addressed({ determination: w.D, viewer: carol })],
+                   [noSuchDetermination(w.D), noSuchDetermination(w.D)]);
+  /* Negative control: P set discoverable, the administrator sees it whole; bob, a member outside it, still at
+     EXISTENCE, is answered as before. */
+  w.discoverable();
+  assert.equal(w.c.consequenceRead({ id: r.id, viewer: carol }).ok, true, "an administrator sees a discoverable project");
+  assert.equal(w.c.consequencesOf({ determination: w.D, viewer: carol }).ok, true);
+  assert.deepEqual(w.c.consequenceRead({ id: r.id, viewer: V("bob") }), unseen);
 });
 
 test("R14: a part is a CONS- record object promoted through promotion, with history, audit and export", async () => {
