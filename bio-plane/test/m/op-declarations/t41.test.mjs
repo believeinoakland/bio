@@ -301,17 +301,20 @@ test("R46 (K2457, K2443, K2554): recordcapturedlocator is a store-internal route
 
 /* ---------- R34 and R6 over T41's ops ---------- */
 
-test("R34 (T41): every member op T41 declares is explained in affordances' ACT_HELP or named under one ground of ACT_HELP_ABSENT — the reads under the read ground, R41's and R42's ten owed acts under the owed ground until affordances carries their texts (its R48), every other act under the last; handlecheck, public, under none (negative control: an unnamed op is seen)", () => {
+test("R34 (T41; K2593): every member op T41 declares is explained in affordances' ACT_HELP or named under one ground of ACT_HELP_ABSENT, never both — R41's and R42's ten owed acts explained (affordances R48, merged: PR #19's owed texts held under their ops), the other reads under the read ground, the other acts under the last; handlecheck, public, under none (negative control: an unnamed op is seen)", () => {
   const ground = (op) => Object.entries(ACT_HELP_ABSENT).find(([, g]) => g.ops.includes(op))?.[0] ?? null;
-  const explained = (op) => Object.hasOwn(AFF.ACT_HELP, op);
+  const explained = (op) => Object.hasOwn(AFF.ACT_HELP, op) && typeof AFF.ACT_HELP[op] === "string" && AFF.ACT_HELP[op].length > 0;
   const OWED = ["accountusesset", "ailimitset", "exploreapprove", "handlechange", "projectaccountremove", "projectaccountswitch",
                 "projectaikeepaway", "projectkeynoticeseen", "projectkeyset", "projectsigninset"];
-  for (const op of Object.keys(T41).filter((o) => SESSION_OPS.member.has(o))) {
-    if (explained(op)) { assert.equal(ground(op), null, `${op} is explained and named`); continue; }
-    const want = !OPS[op].mutating ? "read" : OWED.includes(op) ? "owed" : "unexplained";
-    assert.equal(ground(op), want, op);
+  for (const op of OWED) {
+    assert.ok(explained(op), `${op}: no ACT_HELP text`);
+    assert.equal(ground(op), null, `${op} is explained and named`);
   }
-  assert.match(ACT_HELP_ABSENT.owed.ground, /owed/);
+  for (const op of Object.keys(T41).filter((o) => SESSION_OPS.member.has(o) && !OWED.includes(o))) {
+    if (explained(op)) { assert.equal(ground(op), null, `${op} is explained and named`); continue; }
+    assert.equal(ground(op), OPS[op].mutating ? "unexplained" : "read", op);
+  }
+  assert.ok(!Object.hasOwn(ACT_HELP_ABSENT, "owed"));
   assert.equal(ground("handlecheck"), null);
   /* negative control */
   assert.equal(ground("nosuchop"), null);

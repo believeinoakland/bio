@@ -100,3 +100,17 @@ Size (session_01HSBgxknUm7jJ6a36oW3vEv): test runs 19, module lines 3417
 ## J4 · COMPLETE
 
 B3 and B4 applied (record, 'B3, B4 applied'): reading-guides' five declared (guidepropose as extractpropose plus the body's by, since its owner reads the proposer from the body; guideproposetocivicsmith a member's act; three session reads); capturestepproduct store-internal, asserted. 128/128; format, coverage 45/45, ownership 0; architecture only the uses edges named (reading-guides, run-productions, provenance, action-plans).
+
+## B5 applied
+
+- B5 (K2593): merged `tranche/T41`, which now includes affordances, tasks and queue.
+- Affordances R48 now holds the ten owed texts of R41 and R42 under their ops. The `owed` ground of `ACT_HELP_ABSENT` is removed, and the ten are named under no ground (`t41` R34 re-stated).
+- op-declarations tests: 128/128.
+- Users' suites:
+  - op-grades: 45/45.
+  - affordances: 230/232. Its two reds (R2/R35/R37/R38 rung ladder; R27 undetermined count) fail identically on `tranche/T41` without my branch, so they are not mine.
+  - admission: 36/37. The red is R19's `groupswitchset` (Completion item (c)).
+- Checks: format 0, coverage 45/45, ownership 0. Architecture fails only on the `uses` edges already named in the Completion.
+- Module lines: 3,413.
+
+Size (session_01HSBgxknUm7jJ6a36oW3vEv): test runs 23, module lines 3413

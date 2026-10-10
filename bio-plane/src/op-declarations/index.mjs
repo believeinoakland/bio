@@ -3310,10 +3310,10 @@ const UNATTENDED_BY_DECISION = Object.freeze({
    yet explained.
    T38 (R34, R40; K2300): `obscuremarkwithdraw` is named here under no ground: PR #15's `mock-acts.js` explains it
    (`owed_obscuremarkwithdraw`), and affordances R48 re-generates `ACT_HELP` with that text (T38-31).
-   T41 (R34, R41–R43, R45): every member op T41 declares is named here until its text is held under it. The ten owed
-   acts of R41 and R42 that PR #19's `mock-acts.js` explains (`owed_accountusesset`, …, `owed_handlechange`) are under
-   the owed ground until affordances' T41 job (its R48) carries their texts under their ops; the reads under the read
-   ground; every other act under the last, named back to the design stream. */
+   T41 (R34, R41–R43, R45; K2593): the ten owed acts of R41 and R42 that PR #19's `mock-acts.js` explains
+   (`owed_accountusesset`, …, `owed_handlechange`) are explained in `ACT_HELP` under their ops (affordances R48, merged)
+   and named here under no ground; every other member op T41 declares is named here, the reads under the read ground and
+   the acts under the last, named back to the design stream. */
 const ACT_HELP_ABSENT = Object.freeze({
   alias: Object.freeze({ ground: "An alias of a declared op (R21): its op's explanation serves it.",
     ops: frozenList([
@@ -3357,10 +3357,6 @@ const ACT_HELP_ABSENT = Object.freeze({
   nocontrol: Object.freeze({ ground: "A step another act takes, which no control on a screen offers: a promotion's lease and identifier, a run's tick, the count of a check or a wizard's progress.",
     ops: frozenList([
       "airuntick", "allocid", "answercheck", "lease", "wizardprogress"]) }),
-  owed: Object.freeze({ ground: "An owed act the design explains under its owed key, held under the op once affordances carries it there (its R48).",
-    ops: frozenList([
-      "accountusesset", "ailimitset", "exploreapprove", "handlechange", "projectaccountremove", "projectaccountswitch",
-      "projectaikeepaway", "projectkeynoticeseen", "projectkeyset", "projectsigninset"]) }),
   unexplained: Object.freeze({ ground: "An act the design has not yet explained; named back to the design stream (DEC-174 (3)).",
     ops: frozenList([
       "accountpropose", "actalias", "actionholdrelease", "actionlawspropose", "actionriskpropose", "actionrisktier",
