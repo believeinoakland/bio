@@ -24,3 +24,7 @@
 - The plane bundle and `program.mjs` are stale from this merge (rule 4 (14)).
 
 Size (session_016rUmfMrmYSH7jvWKmSEXgc): test runs 8, module lines 2263
+
+## J1 · COMPLETE
+
+T41-32 done. R32: the warning at an objective's or condition's promotion (registered projection) and at adopt, never refused, recorded in intent_person_warnings with her choice. R33: registerNoneExistsReader (C-111.29/.30 new rows), met stage stated as 'answered: none exists'. D54: amount:153 and objective:313 re-stated with negative controls. intent 82/82; users' suites identical to tranche (905/58, same titles); checks 0. Final uses unchanged. Found: inquiry.personFacts is read by intent R32 and hypotheses R19 but not named in inquiry's Provides. Record: build/jobs/T41/intent.md.
