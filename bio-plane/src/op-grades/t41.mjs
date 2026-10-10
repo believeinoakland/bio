@@ -53,6 +53,9 @@ export const T41_RUNGS = {
   actionseekspropose:  "reversible", // actions R73: a proposal restated by the same proposer, as actionlawspropose
   stepoutcome:         "reversible", // steps R5: a member revises an outcome later, each change kept
   stepbywhen:          "reversible", // steps R12: a further stepbywhen sets the date again
+  /* (K2583) reading-guides R12, as extractpropose (DEC-88): a run's labelled draft, stored apart; never a guide until a
+     member's guidedraft names it */
+  guidepropose:        "reversible", // a member's guidedraft adopts it or a further proposal supersedes it
 };
 
 /* ---- the stated absences ---- */
@@ -93,6 +96,8 @@ export const T41_RUNG_ABSENT = {
   guidedraft:          { ground: "undetermined", is: "a member drafts a reading guide for a document kind, usable by its author at once (reading-guides R2)" },
   guideoffer:          { ground: "undetermined", is: "a member offers a guide's canonical bytes and digest, labelled with the group, for another group (reading-guides R6)" },
   guideadopt:          { ground: "undetermined", is: "a member imports another group's offered guide as adopted, usable only after review (reading-guides R6)" },
+  /* (K2583) as guideoffer */
+  guideproposetocivicsmith: { ground: "undetermined", is: "a member exports a guide many groups use, marked as a proposal for Civicsmith's library; Civicsmith's adoption is a release's (reading-guides R6)" },
   accountpropose:      { ground: "undetermined", is: "stores the system's draft of a case's account or its check flags, labelled machine work; the published account is a member's (case-authoring R64)" },
   caseapprove:         { ground: "undetermined", is: "a named approver approves one case edition's document by its digest, an optional reason kept; a later document needs a new approval (review R31)" },
   grouptestset:        { ground: "undetermined", is: "a member adds a group's own test investigation for an assistant part, its answers written by people; it never opens or closes a gate (ai-runs R75)" },
@@ -224,6 +229,14 @@ export const T41_NON_ACTS = {
   guideadopt: GUIDE("keyed by an offer's digest; another group's guide imported as adopted, usable after review"),
   guideretire: GUIDE("keyed by guide; retired with the reason, still readable"),
   guides: R("the reading guides the viewer may see, at most 200"),
+  /* (K2583) */
+  guidepropose: "run-directed: a run's draft of a reading guide, keyed by (run, document kind); stored apart and labelled "
+    + "machine work, never a guide until a member drafts from it",
+  guideproposetocivicsmith: GUIDE("keyed by guide; exported marked as a proposal for Civicsmith's library"),
+  guidefor: R("the reading guide in force for a document kind, the viewer's own, the group's or Civicsmith's, with its "
+    + "origin"),
+  guide: R("one reading guide the viewer may see, with its items, state and history"),
+  guideproposals: R("the machine drafts of reading guides, each labelled the system's"),
   /* case-authoring, review (R43) */
   accountpropose: "case-directed: keyed by a case, reached from its account; the system's draft of the account, labelled "
     + "machine work, never the published account until a member writes it",
