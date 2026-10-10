@@ -122,9 +122,9 @@ test("R23: RUN_ORIGINS is [member, explore], frozen; a member-origin run is admi
     refusal(originAllowed({ origin: "explore", investigateDeployable: partDeployable("investigate", {}) }), "AI_RUN_EXPLORE_NOT_DEPLOYABLE");
 });
 
-test("B3, B4 (K2482, K2485; ai-runs R73, R75): the rows of ai-runs' T41 acts are held here and read by key — AI_GROUP_TEST_INVALID C-22.24 (groupTestSet), AI_RUN_EXPLORE_NEEDS_STEP C-22.26 and AI_RUN_STEP_UNKNOWN C-22.28 (an exploring run's step), each minted by ai-runs, with a plain-words translation", () => {
-  const rows = { AI_GROUP_TEST_INVALID: ["C-22.24", /groupTestSet/], AI_RUN_EXPLORE_NEEDS_STEP: ["C-22.26", /open/],
-                 AI_RUN_STEP_UNKNOWN: ["C-22.28", /open/] };
+test("B3, B4 (K2482, K2485; ai-runs R73, R75): the rows of ai-runs' T41 acts are held here and read by key — AI_GROUP_TEST_INVALID C-22.24 (groupTestSet), AI_RUN_EXPLORE_NEEDS_STEP C-22.26 (an exploring run's step) and AI_RUN_STEP_UNKNOWN C-22.28 (any run's step, R74's batch included; B6), each minted by ai-runs, with a plain-words translation", () => {
+  const rows = { AI_GROUP_TEST_INVALID: ["C-22.24", /groupTestSet/], AI_RUN_EXPLORE_NEEDS_STEP: ["C-22.26", /open > is-airun-open-step\b.*origin explore$/],
+                 AI_RUN_STEP_UNKNOWN: ["C-22.28", /open > is-airun-open-step\b.*\bopenMany\b/] };
   for (const [code, [n, site]] of Object.entries(rows)) {
     const row = AI_RUN_CHECKS[code];
     assert.ok(row, code);
@@ -137,6 +137,8 @@ test("B3, B4 (K2482, K2485; ai-runs R73, R75): the rows of ai-runs' T41 acts are
   }
   assert.match(AI_RUN_CHECKS.AI_GROUP_TEST_INVALID.translation, /never switch a part on or off/, "a group's set opens no gate");
   assert.match(AI_RUN_CHECKS.AI_RUN_STEP_UNKNOWN.translation, /cannot see is answered exactly as something that does not exist/);
+  /* B6 (K2514): C-22.28 is minted for a member's step run and R74's batch too, so its row is not tied to exploring */
+  assert.doesNotMatch(AI_RUN_CHECKS.AI_RUN_STEP_UNKNOWN.where, /exploring/);
   /* beside the test bar's own row, which ai-runs also answers through checkTestBarRecord */
   assert.equal(AI_RUN_CHECKS.AI_TEST_BAR_UNFIT.check, "C-22.22");
   /* control: no code of a later module sneaks in under C-22 */

@@ -283,10 +283,11 @@ export const AI_RUN_OWN_CHECKS = {
     translation: 'Nothing was started, because this investigation did not say where it came from in a way the record '
       + 'knows: an investigation is started by a member or by exploring a question, and nothing else.',
   },
-  /* B4 (K2485): `ai-runs` R73 — an exploring run names the step it serves; minted by `ai-runs`, read here by key. */
+  /* B4 (K2485): `ai-runs` R73 — an exploring run works as a system step of its own, by its place and work and naming no
+     step; minted by `ai-runs` (open's step region, only for an `explore` origin; B6, K2514), read here by key. */
   AI_RUN_EXPLORE_NEEDS_STEP: {
     check: 'C-22.26',
-    where: 'src/ai-runs/index.mjs open, reached from an exploring run',
+    where: 'src/ai-runs/index.mjs open > is-airun-open-step, reached from op=airunopen with origin explore',
     translation: 'Nothing was started, because exploring a question unasked is always done as one step of the work, '
       + 'and this did not say which step. The step is what records why it ran and what it found.',
   },
@@ -298,11 +299,13 @@ export const AI_RUN_OWN_CHECKS = {
     translation: 'Nothing was started, because exploring a question unasked is switched on only after investigating has '
       + 'been checked in real use and has passed its test investigations.',
   },
-  /* B4 (K2485): `ai-runs` R73 — the step an exploring run names is not one the record holds for it; minted by `ai-runs`,
-     read here by key. Something unseen answers as something absent. */
+  /* B4 (K2485): `ai-runs` R73, R74 — the step a run names is not one the record holds for it; minted by `ai-runs`, read
+     here by key (B6, K2514): a member's step run naming a step unseen or both a step and its own, a run of its own step
+     with `steps` unreachable, and each unseen step of R74's batch. Something unseen answers as something absent. */
   AI_RUN_STEP_UNKNOWN: {
     check: 'C-22.28',
-    where: 'src/ai-runs/index.mjs open, reached from an exploring run',
+    where: 'src/ai-runs/index.mjs open > is-airun-open-step and its own step\'s steps check, reached from op=airunopen; '
+      + 'and openMany, for each step of a member\'s batch she cannot see',
     translation: 'Nothing was started, because the step this investigation names is not one the record holds here. '
       + 'Something you cannot see is answered exactly as something that does not exist.',
   },
@@ -657,7 +660,7 @@ export const AI_RUN_PLAN_CHECKS = {
 
 /* R20 (Q0-5; K1450, K1502, K1601; D79) / C-109.10–.11 — WHAT HOLDS AN AI RUN OR ASK BACK BEFORE IT STARTS that is not a
  * use limit: no account serves the member's act; and a member's limit set or read by another. `ai-runs` and `answers`
- * mint them and read the rows here by key, as R11's `ai-runs` rows are. They join C-109, the open's family, after the
+ * mint the first, `ai-use` the second (its R2; B6, K2514), and each reads the rows here by key, as R11's `ai-runs` rows are. They join C-109, the open's family, after the
  * planning run's rows. Each is said in plain words and names no cost: a translation names a cost to nobody but the
  * paying account's owners, to whom `ai-use` R10, R11 answer it (D12), and these rows are read by any member.
  * T40 (N812; K2373, K2400): the ceiling codes retired for `ai-use`'s limits (RETIRED_CHECKS below); `ai-use`'s rows are
@@ -675,10 +678,13 @@ export const AI_USE_CHECKS = {
       + 'has this use switched off. Connect yours, or ask an administrator about the group\'s.',
   },
   /* R50 (K1601, K1610): a member's ceiling is that member's own to set and read. The copy's ceiling is an
-     administrator's, refused to anyone else by membership's NOT_AN_ADMIN, never by this row. Stays at T40 (`ai-use` R2). */
+     administrator's, refused to anyone else by membership's NOT_AN_ADMIN, never by this row. Stays at T40 (`ai-use` R2),
+     minted since by `ai-use` alone (B6, K2514): its owner bar for a member's account, and a member's own use read. */
   NOT_YOUR_CEILING: {
     check: 'C-109.11',
-    where: 'src/ai-runs/index.mjs aiCeilingSet and aiUsageMine',
+    where: 'src/ai-use/index.mjs aiLimitSet, aiUsage, exploreApprove, estimate and aiLimits (a member\'s account, its '
+      + 'owner bar) and aiUsageMine, reached from op=ailimitset, op=aiusage, '
+      + 'op=exploreapprove, op=ailimits and ai-runs\' batch estimate',
     translation: 'Nothing was changed, because a member\'s daily limit on the assistant is theirs alone to set or look '
       + 'at.',
   },
