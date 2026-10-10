@@ -67,3 +67,23 @@ AI-RUNS #16 (restarted; merged tranche @ ac777958ea). Readings for B5, B6, B8 an
 (12) B5: `aiusage`, `aiceilingset`, `aicopyceilingset` leave `aiRunsOps`; `aiUseOps` answers `aiusage` and `ailimitset` (no op by the two ceiling names). Re-routing the dispatch is L11's (control-plane, plane); listed in my record.
 
 (13) R52 at a tick: a `useCheck` refusal still counts the calls that tick reports (they were made and paid for), then refuses the rest of the tick, as R50 did. The usage entry's shape is judged by `ai-use.countUsage` alone (no second copy here): a refused entry rolls the whole tick back.
+
+## J6 · REPORT
+
+Other modules' reds from my merge (rule 4 (10)), measured against tranche/T41 over 23 user suites (2035/57 there, 2021/71 here; none cleared):
+
+A. B6's gate (B10 (7)): a run opens only with its mode's test bar held, so a world that opens a run without one is refused C-109.1:
+- capture-requests `plane.test.mjs`:106, :138, :163, :184, :196
+- scheduler `plane.test.mjs`:199
+Each needs its world to hold a passing bar (e.g. ai-runs' `deps.testSet` with a one-matter set and `testBarRecord` for `check`, as my `world.mjs` does), in its own job.
+
+B. K624's delete (L11's re-point, K2488): callers of the removed `aiUseCheck`, `countAskUsage`, `aiCeilingSet`, `aiCopyCeilingSet`, `aiUsage`, `aiUsageMine` and ops `aiusage`, `aiceilingset`, `aicopyceilingset`:
+- product: store-door `dispatch.mjs`:276, :377 (`askceiling`), :381 (`askusage`); plane `store.mjs`:219 (`ceilingRefusal`) → `ai-use` `useCheck`/`countAskUsage`
+- tests red: store-door `dispatch.test.mjs`:352; `routes.test.mjs`:132, :174, :226, :248 (helper :116 binds `runs.aiUseCheck`); control-plane `t34-routes.test.mjs`:24, :211, :253
+- still naming the retired ops (not red today): op-declarations `index.mjs`:313; affordances `act-help.mjs`:33, :66 and `t33.test.mjs`:102; op-grades `t33.mjs`:154–155, :363–364 and `owners.test.mjs`:155; setup-words :213, :253, :467, :500; control-plane `r53-routes.test.mjs`:35.
+
+C. Findings against other modules:
+- run-rules: `NOT_YOUR_CEILING`'s `where` (`checks.mjs`:681, pinned by `table.test.mjs`:176) names `ai-runs aiCeilingSet and aiUsageMine`, which no longer exist; ai-use mints it now (its R2). C-22.26 and C-22.28's `where` say "reached from an exploring run"; `AI_RUN_STEP_UNKNOWN` is now also minted for a member's step run and R74's batch.
+- op-declarations: R74's `openMany` has no op; nothing reaches it from the door until one is declared (I added none, an undeclared op being a defect).
+- ai-use: `AI_LIMIT_REACHED`'s translation reaches a run's open and tick with `{period}` and `{when}` unfilled ("your own {period} limit is reached. It works again {when}."), against its R13.
+- agent-worker: the dispatch body's `account.member` is now `principal_claude_ref` (J3, forwarded in B7).
