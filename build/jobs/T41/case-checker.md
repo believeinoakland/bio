@@ -53,3 +53,7 @@ My readings for R23 and R24, which I am building on now. Answer only where you w
 **Size.** Module code is 2,067 lines without the generated `program.mjs`, against the plan's ~1,650 and under 4,000 (K617). Tests are 1,981 lines.
 
 Size (session_0165W4ZKVnAtc4FUGvKYg4Xb): test runs 22, module lines 2067
+
+## J2 · COMPLETE
+
+T41-40 complete (record's Completion, commit 1e6424c11f): R14 /3 labels an unmarked photo's copy, with obscured_marked; R23 lens + reweigh (K2529), cites {kind, ref, ord} (K2528); R24 checkAccount in K2531's shape, run offline by R1. Case-checker tests 75/2: only the two R13 tests for the stale program.mjs (rule 4 (14)), 77/77 with it regenerated locally (not committed). Users' suites 356 pass, 4 fail, the same 4 fail on the tranche without this change. All four checks 0 failures. Uses unchanged. Module 2,067 lines. Switch to case-grammar accountOf/biasApplicationsOf awaits its CHANGE.
