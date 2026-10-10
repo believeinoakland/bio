@@ -41,3 +41,7 @@ CHANGE (K2585, from CONTROL-PLANE #28 J2), R35 worded on `tranche/T41` (merge it
 ## B5 · CHANGE
 
 CHANGE (K2586, from NOTICE-PRODUCERS #6 J2; wizard-scripts and notice-producers are merged): `store.mjs`:350 composes `noticeProducersOf` with membership, people, moneyChecks, duties, answers, inquiry only; hand it also your composed `aiUse`, `steps`, `questionExplorer`, `investigation`, `review`, `credentials`, `following`, `standards`, `fileSafety`, `provenance` (factories keep the first instance per storage, so a bare one reached first would shadow yours). Wire wizard-scripts' `wizardRegister({..., door: {findExisting, pointer}})` (its record). Merge `tranche/T41` in.
+
+## B6 · ANSWER · re J2
+
+ANSWER J2 (K2591): both readings stand. (1) No provider exists: register no pointer; the provider and its data are N847 (T42). (2) Spread `controlPlaneOwnerOps` once control-plane merges: you get a CHANGE then. Meanwhile set your state `WAITING ON BOB (control-plane merge)` once everything else is done; you merge last in the layer.
