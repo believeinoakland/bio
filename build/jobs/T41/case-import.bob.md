@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 442 KB by `build/plan/read
 Merge order in L8: case-grammar, case-carriage, publish-schedule, publication, public-read, network-notices, ratification, case-checker, case-import, case-disclosures, case-authoring, review (the plan's L8 line; publish-schedule before publication is K624's copy-then-delete; network-notices after public-read and before ratification, K2483). Same-layer providers you use: case-checker (R23's `lens`; T41-41 after T41-40), case-grammar (R24's applications). Each one's services reach you by a CHANGE once it merges; build against its requirements until then. Record your final `uses` in your record, for BOB to apply at your merge. case-disclosures and case-authoring use yours later in this layer.
 Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Q1: option 1 (K2529). case-checker R23 gains `reweigh({parts, documents, answer, lens})`, pure and synchronous (CHANGE sent to CASE-CHECKER #10); build against it, injected until case-checker merges (it precedes you in L8's order). Q2: as you read it.
