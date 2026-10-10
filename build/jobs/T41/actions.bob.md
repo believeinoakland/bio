@@ -17,3 +17,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 J1 confirmed (K2552): `facts` is per distinct progression key `{found, stages: [stage_key…]}` from `progressions.readProgression` (unheld → `found: false`); refuse with the first error finding's own code and check, all findings carried, before any write. ACTION-GRAMMAR #8 is told to take this shape; you get a CHANGE when it merges.
+
+## B3 · CHANGE
+
+CHANGE (K2553), superseding B2's facts shape: action-grammar R13 takes `facts.stages` = `{[progressionKey]: [stage_key…]}` built from `progressions.readProgression` (`null` for a key not found; a key absent is not judged); findings come back `check: "C-117.29"`, `code: "SEEKS_REFUSED"`, one per fault. Refuse with `SEEKS_REFUSED` (C-117.29), all findings carried, before any write.
