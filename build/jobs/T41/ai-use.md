@@ -135,3 +135,7 @@ AI-USE #1 complete on job/T41/ai-use: R1–R13 met. Tests 48/48. format 0, archi
 ## J5 · REPORT
 
 Found at AI-USE #2's completion of B5 (also in my record): (1) ai-runs: its usage.test.mjs limitReached helper checks only that the relayed translation is a string; it could assert no {…} placeholder is left (I verified the open and tick by a scratch script over ai-runs' world.mjs: filled, daily and monthly). (2) The design stream: words.json has no keys for {period} (daily/monthly), {when} (tomorrow / on <month> 1) or {field}; ai-use fills them with its own words (checks.mjs LIMIT_*_FILL) until keys exist.
+
+## J6 · COMPLETE
+
+AI-USE #2: B5 applied on job/T41/ai-use @ 791163d8c7. useCheck's AI_LIMIT_REACHED answers its sentence whole ({whose}, {use}, {period}, {when} filled; fail-closed too), so ai-runs' open and tick relay a filled sentence (verified through ai-runs' path); AI_LIMIT_INVALID's {field} filled as well. Tests: ai-use 49/49; ai-runs 80/80, answers 58/58, notice-producers 74/74, run-rules+transcribe 47/47; op-declarations 8 fail, identical without my change (L11's, not mine). format 0, architecture 0, coverage 13/13, ownership 0. Report J6.
