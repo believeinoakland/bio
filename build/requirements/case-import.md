@@ -145,7 +145,7 @@ Terms.
 - `case-grammar`: `caseFileManifestCheck`, `methodOf`, `materialsOf` (its R11–R13).
 - `case-checker`: `checkCaseFile` (its R1), whose `calculations` (its R20) R21 compares with its own recreation. (T41) Its `lens` (its R23; R23 here).
 - `bias` (T41; D59; K2471): `statementInForce` (its R49; R23). A new `modules.json` edge; `bias` is earlier (layer 5).
-- `calculations` (T33-67): `evaluate` (R21).
+- `calc-grammar` (T33-67; K2534): `evaluate` (R21).
 - `inquiry-grammar`: `importedFindingRef` (its R11; R6).
 - `accepted-work`: `registerAcceptedWork` (its R1, with its R8's `moves`; R16).
 - `reevaluation`: `acceptanceWithdrawn` (its R31; R7); `citedCaseMoved` (its R33; R18; N534).
