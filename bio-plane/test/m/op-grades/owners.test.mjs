@@ -149,10 +149,10 @@ const T33_WRITES = {
   followbody: "reversible", unfollow: "reversible", followregister: "reversible", followpersonquery: "reversible",
   followportal: "reversible", permeetingbody: "reversible", refreshregister: "substrate",
   lawrelate: "reasoned", lawwithdraw: "reasoned", lawpropose: "undetermined", courtlink: "reasoned", courttreat: "reasoned",
-  accountreferenceset: "credential", accountreferenceremove: "credential", accountswitchset: "caller-owned",
+  accountreferenceset: "credential", accountreferenceremove: "credential",
   aigrantmint: "credential", keyedserviceset: "credential", keyedserviceswitch: "substrate",
   sourcekeyed: "undetermined", entityidentify: "reasoned", waitlook: "caller-owned", exportrender: "substrate",
-  clockadopt: "undetermined", aiceilingset: "caller-owned", aicopyceilingset: "substrate", airunverify: "reasoned",
+  clockadopt: "undetermined", airunverify: "reasoned",
   clockpropose: "reversible", capturerequestplatformmark: "reversible", capturerequestplatformunmark: "reversible",
   officesseed: "substrate", seatsseed: "substrate", disclosureshown: "caller-owned",
   ask: "caller-owned", askusage: "observational",
@@ -264,7 +264,7 @@ const T34_WRITES = {
   joinlinkenable: "credential", joinlinkset: "credential", joinlinkreplace: "credential", joinlinkoff: "credential",
   websiteinvite: "credential", joinlinkinvite: "credential", courtnoticeset: "substrate", groupdescriptionset: "substrate",
   checkrequest: "undetermined", checktake: "undetermined", checkrecord: "reasoned",
-  groupkeyset: "credential", groupkeyremove: "credential", groupkeyswitch: "substrate", groupswitchset: "substrate",
+  groupkeyset: "credential", groupkeyremove: "credential", groupkeyswitch: "substrate",
   groupkeynoticeseen: "caller-owned", placewanted: "substrate", memberlanguageset: "caller-owned",
 };
 const T34_READS = ["checkrequests", "checksof", "groupkeystate", "groupkeynotice", "placewantedstate", "memberlanguage",
@@ -277,7 +277,7 @@ test("R17: every op T34 declares carries the grade read from its owner, each gat
   for (const [op, e] of Object.entries(T34_RUNG_ABSENT)) assert.ok(e.is.length > 40, op);
   for (const [op, like] of [["groupkeyset", "keyedserviceset"], ["groupkeyswitch", "keyedserviceswitch"],
     ["courtnoticeset", "groupnameset"], ["placewanted", "officesseed"], ["websiteinvite", "knock"],
-    ["groupkeynoticeseen", "disclosureshown"], ["memberlanguageset", "accountswitchset"]])
+    ["groupkeynoticeseen", "disclosureshown"], ["memberlanguageset", "standingset"]])
     assert.equal(gradeOf(op), gradeOf(like), op);
   for (const op of T34_READS) { assert.ok(isRead(op), op); assert.equal(gradeOf(op), null, op); }
   for (const op of T34_PUBLIC) assert.ok(!Object.hasOwn(NON_ACTS, op), op);
