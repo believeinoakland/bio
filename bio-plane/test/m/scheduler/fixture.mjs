@@ -116,11 +116,19 @@ export function owners(set = {}) {
       standingWake: (now) => rec("answers.standingWake", [now], v("standing-questions", "wake", now)),
       standingTick: async (now) => rec("answers.standingTick", [now], v("standing-questions", "tick", now, { at: now, ran: [], remaining: 0 })),
     },
-    /* T34-51 (R22): a stand-in shaped as publication R67: `publishWake()` the earliest set time (instant text or ms),
-       `publishDue(now)` told `now` as instant text, answering a Promise. */
-    publication: {
-      publishWake: () => rec("publication.publishWake", [], v("scheduled-publish", "wake", null)),
-      publishDue: async (now) => rec("publication.publishDue", [now], v("scheduled-publish", "tick", now, { ok: true, taken: [] })),
+    /* T34-51, T41-49 (R22): a stand-in shaped as publish-schedule R2: `publishWake()` the earliest set time (instant
+       text or ms), `publishDue(now)` told `now` as instant text, answering a Promise. */
+    publishSchedule: {
+      publishWake: () => rec("publishSchedule.publishWake", [], v("scheduled-publish", "wake", null)),
+      publishDue: async (now) => rec("publishSchedule.publishDue", [now], v("scheduled-publish", "tick", now, { ok: true, taken: [] })),
+    },
+    /* T41-49 (R26): a stand-in shaped as question-explorer R1: `exploreDue(now)` a count of questions due (0 by default),
+       `exploreWake(now)` an instant in `now`'s form or null, `exploreTick(now)` its answer. */
+    questionExplorer: {
+      exploreDue: (now) => rec("questionExplorer.exploreDue", [now], v("question-explore", "due", now, 0)),
+      exploreWake: (now) => rec("questionExplorer.exploreWake", [now], v("question-explore", "wake", now)),
+      exploreTick: async (now) => rec("questionExplorer.exploreTick", [now], v("question-explore", "tick", now,
+        { at: new Date(now).toISOString(), gate: "open", opened: [], asked: [], refused: 0, considered: 0 })),
     },
     /* T36-29, T37-24 (R24): a stand-in shaped as file-safety R4, R12, R36, R35 and R41, each answering a Promise; its
        R39 wakes (each consumer's `wake` in `set`, the instant in ms or null, none by default); and its R40 notice,
@@ -178,14 +186,18 @@ export const FILE_CONSUMERS = Object.freeze(["file-scan", "file-render", "file-d
 /** R25's consumer: a world includes `case-carriage` only when a test asks (`copies`), or names it in `set`. */
 export const COPY_CONSUMER = "document-copy";
 
+/** R26's consumer: a world includes `question-explorer` only when a test asks (`explore`), or names it in `set`. */
+export const EXPLORE_CONSUMER = "question-explore";
+
 /** A scheduler over a fresh storage and the owners above; `env` its bindings; `zone` the group's time zone. */
-export function world(set = {}, env = null, { daily = false, files = false, copies = false, zone = null, st = null } = {}) {
+export function world(set = {}, env = null, { daily = false, files = false, copies = false, explore = false, zone = null, st = null } = {}) {
   const store = st || storage();
   const w = owners(set || {});
   const of = { ...w.of };
   for (const [name, owner] of Object.entries(DAILY_OWNERS)) if (!daily && !(set && name in set)) delete of[owner];
   if (!files && !FILE_CONSUMERS.some((n) => set && n in set)) delete of.fileSafety;
   if (!copies && !(set && COPY_CONSUMER in set)) delete of.caseCarriage;
+  if (!explore && !(set && EXPLORE_CONSUMER in set)) delete of.questionExplorer;
   const s = new Scheduler({ storage: store, env, owners: of, zone: () => zone });
   return { s, st: store, calls: w.calls, o: w.o, set };
 }

@@ -26,9 +26,9 @@
  *  the storage value `sched_daily`, never a table (R18). An act their owners tell of (a duty tracked, a check changed, a
  *  detector switched on: R9) asks for a pass at the next firing, so the change is not left to the next local day.
  *
- *  T34-51 (R22, R23): `scheduled-publish` takes each waiting edition at its set time through `publication` (its R67),
- *  re-armed by publication's `onPublishScheduled` (its R71); `answers`' `onStandingSet` (its R27) re-arms the standing
- *  questions. A notice whose registration is refused is a start-up fault, kept and logged (`faults()`), never ignored.
+ *  T34-51, T41-49 (R22, R23): `scheduled-publish` takes each waiting edition at its set time through `publish-schedule`
+ *  (its R2; `publication` R67 until N823's split), re-armed by publish-schedule's `onPublishScheduled` (its R6);
+ *  `answers`' `onStandingSet` (its R27) re-arms the standing questions. A notice whose registration is refused is a start-up fault, kept and logged (`faults()`), never ignored.
  *
  *  T36-29, T37-24 (R24): five consumers close the registry, each calling `file-safety`, which the plane hands this
  *  module (`hand`, or `schedulerOf`'s `deps.fileSafety`) once it has built it: `file-scan` (its R4), `file-render` (its
@@ -40,6 +40,11 @@
  *  T39-15 (R25; N806, K2333): `document-copy` closes the registry, calling `case-carriage.copyBatch` (its R15), its due
  *  and wake `copyWake(now)` asked afresh each time from case-carriage's own tables, so nothing is kept here (R7, R18).
  *  At start it registers once with `case-carriage.onCopyWork` (its R17), whose call arms the alarm (R9).
+ *
+ *  T41-49 (R26; N820): `question-explore` closes the registry, calling `question-explorer` (its R1): due now while its
+ *  `exploreDue` counts any question due, its wake `exploreWake`, its tick `exploreTick`; every cadence, including an
+ *  Ask's re-check, is question-explorer's (R7). `investigation`'s quiet check (its R18) is read by `notice-producers`
+ *  when it asks; it offers this module no due, wake or tick, so no consumer of investigation's is registered here.
  * ========================================================================= */
 import { retrievalOf } from "../retrieval/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
@@ -62,7 +67,8 @@ import { moneyChecksOf } from "../money-checks/index.mjs";
 import { answersOf } from "../answers/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { followingOf } from "../following/index.mjs";
-import { publicationOf } from "../publication/index.mjs";
+import { publishScheduleOf } from "../publish-schedule/index.mjs";
+import { questionExplorerOf } from "../question-explorer/index.mjs";
 import { caseCarriageOf } from "../case-carriage/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { localDay, dayRange } from "../civil-time/index.mjs";
@@ -81,7 +87,7 @@ export const SCHEDULER_ORDER = Object.freeze([
   "monitor-cadence", "gathering-sweep", "ai-run-reap", "capture-request-drain", "ai-run-wake", "calibration-reprobe",
   "group-domain-recheck", "bias-debt", "intent-age", "notice-sweep", "deadline-recheck", "scheduled-publish", "working-on-seal",
   "working-on-attest", "follow", "duty-transitions", "interest-checks", "money-detectors", "standing-questions",
-  "dated-waits", "file-scan", "file-render", "file-deeper", "file-forward", "file-reputation", "document-copy",
+  "dated-waits", "file-scan", "file-render", "file-deeper", "file-forward", "file-reputation", "document-copy", "question-explore",
 ]);
 
 /** R2: each consumer's key in `onAlarm`'s answer. The task drain's counts are spread into the answer's own fields. */
@@ -95,7 +101,7 @@ export const SCHEDULER_KEYS = Object.freeze({
   "duty-transitions": "dutytransitions", "interest-checks": "interestchecks", "money-detectors": "moneydetectors",
   "standing-questions": "standingquestions", "dated-waits": "datedwaits",
   "file-scan": "filescan", "file-render": "filerender", "file-deeper": "filedeeper", "file-forward": "fileforward",
-  "file-reputation": "filereputation", "document-copy": "doccopy",
+  "file-reputation": "filereputation", "document-copy": "doccopy", "question-explore": "explore",
 });
 
 /** R6: due at every firing. Every other consumer is due only when its owner says so. */
@@ -211,7 +217,8 @@ export class Scheduler {
   /** `storage` is the Durable Object's storage (its alarm, and the probe seam's and the daily consumers' values);
    *  `owners` answers each consumer's owner (`retrieval`, `monitoring`, `connections`, `progressions`, `aiRuns`,
    *  `captureRequests`, `calibration`, `bias`, `intent`, `reevaluation`, `networkNotices`, `linkSweep`, `following`,
-   *  `duties`, `people`, `moneyChecks`, `answers`, `inquiry`, `publication`, `fileSafety`, `caseCarriage`), each a function returning the owner, so an
+   *  `duties`, `people`, `moneyChecks`, `answers`, `inquiry`, `publishSchedule`, `fileSafety`, `caseCarriage`,
+   *  `questionExplorer`), each a function returning the owner, so an
    *  owner is reached only when the registry is built; `zone()` answers the group's time zone or null (R21's local day). */
   constructor({ storage, env = null, owners = {}, zone = null } = {}) {
     this.#storage = storage;
@@ -351,24 +358,24 @@ export class Scheduler {
     if (this.#owners.reevaluation) c["notice-sweep"] = {   /* reevaluation R25 */
       due: (now) => o("reevaluation").noticeSweepDue(now), wake: (now) => o("reevaluation").noticeSweepWake(now),
       tick: (now) => ({ noticesweep: o("reevaluation").noticeSweep(now) }) };
-    /* R22: publication R67's waiting editions, each taken at the first firing at or after its set time (R67 takes only at
+    /* R22: publish-schedule R2's waiting editions, each taken at the first firing at or after its set time (R2 takes only at
        or before `now`, so a firing inside the grace before it takes nothing and the reconcile re-arms at the time).
        Its `publishDue` awaits each answer of ratification's publisher, so the tick awaits it (R1). An edition still
        waiting after a tick at or past its time (a take that failed, or one another firing holds) would keep the wake
        in the past and the alarm firing at once, again and again: so that time is held, wanting no wake, until
-       publication's next notice (R71: every take, set, move and cancel tells it) or the instance's next start (R11),
+       publish-schedule's next notice (its R6: every take, set, move and cancel tells it) or the instance's next start (R11),
        never retried on an interval of this module's (R7). */
-    if (this.#owners.publication) {
-      const wake = () => { const w = msOf(o("publication").publishWake()); return w !== null && this.#publishHeld !== null && w <= this.#publishHeld ? null : w; };
+    if (this.#owners.publishSchedule) {
+      const wake = () => { const w = msOf(o("publishSchedule").publishWake()); return w !== null && this.#publishHeld !== null && w <= this.#publishHeld ? null : w; };
       c["scheduled-publish"] = {
         due: () => wake(), wake: () => wake(),
         tick: async (now) => {
           this.#publishTicking = true;
-          try { return { scheduledpublish: await o("publication").publishDue(new Date(now).toISOString()) }; }
+          try { return { scheduledpublish: await o("publishSchedule").publishDue(new Date(now).toISOString()) }; }
           finally {
             this.#publishTicking = false;
             let w = null;
-            try { w = msOf(o("publication").publishWake()); } catch { w = null; }
+            try { w = msOf(o("publishSchedule").publishWake()); } catch { w = null; }
             this.#publishHeld = w !== null && w <= now ? w : null;
           }
         } };
@@ -417,6 +424,13 @@ export class Scheduler {
         due: (now) => ms(o("caseCarriage").copyWake(now)), wake: (now) => ms(o("caseCarriage").copyWake(now)),
         tick: async () => ({ doccopy: await o("caseCarriage").copyBatch({}) }) };
     }
+    /* R26: question-explorer R1. `exploreDue(now)` counts the questions a tick would consider: any is now. Its wake is
+       `exploreWake(now)` (now while any is due; else an Ask's re-check, its own instant; else null), asked afresh every
+       time, so nothing is kept here (R7, R18). */
+    if (this.#owners.questionExplorer) c["question-explore"] = {
+      due: (now) => counted(o("questionExplorer").exploreDue(now), now),
+      wake: (now) => (counted(o("questionExplorer").exploreDue(now), now) !== null ? now : msOf(o("questionExplorer").exploreWake(now))),
+      tick: async (now) => ({ explore: await o("questionExplorer").exploreTick(now) }) };
     return c;
   }
 
@@ -626,7 +640,7 @@ export class Scheduler {
    *  Whether monitoring is configured is asked of the `monitoring` owner when a notice arrives. Answers each
    *  registration's answer by notice; a refused one is also kept as a start-up fault (`faults()`) and logged. */
   listenTo({ retrieval, bias, promotion, capture, progressions, calibration, aiRuns, captureRequests, entities, inquiry, following,
-             publication, answers, duties, people, moneyChecks, caseCarriage } = {}) {
+             publishSchedule, answers, duties, people, moneyChecks, caseCarriage } = {}) {
     const arm = () => this.arm();
     /* A notice its owner tells without awaiting: the arm runs, and a storage that fails it is never an unhandled
        rejection (the act stands, its owner's R27, R71). */
@@ -678,10 +692,10 @@ export class Scheduler {
     /* following R19 (K1666): a follow recorded, ended or re-dated, told after the act's transaction; the reconcile reads
        the follow's wake (R21). */
     if (following) out.following = following.onFollowed("scheduler", () => arm());
-    /* R22 (publication R71, K1816): after an edition is set to wait, its time moved or cancelled, or a due one taken;
+    /* R22 (publish-schedule R6, K1816): after an edition is set to wait, its time moved or cancelled, or a due one taken;
        the reconcile reads `publishWake` again. A cancel's or a take's call arms nothing new (R4); a take's arrives
        inside this module's own tick, before onAlarm's authoritative reconcile, which stands. */
-    if (publication) out.publication = publication.onPublishScheduled("scheduler", () => {
+    if (publishSchedule) out.publishSchedule = publishSchedule.onPublishScheduled("scheduler", () => {
       this.#publishHeld = null;
       return this.#publishTicking ? null : told();
     });
@@ -723,7 +737,8 @@ export function schedulerOf(ctx, env = null, deps = {}) {
       networkNotices: () => networkNoticesOf(ctx, { env: e }), linkSweep: () => linkSweepOf(ctx),
       duties: () => dutiesOf(ctx), people: () => peopleOf(ctx), moneyChecks: () => moneyChecksOf(ctx),
       answers: () => answersOf(ctx), inquiry: () => inquiryOf(ctx), following: () => followingOf(ctx),
-      publication: () => publicationOf(ctx), caseCarriage: () => caseCarriageOf(ctx),
+      publishSchedule: () => publishScheduleOf(ctx), caseCarriage: () => caseCarriageOf(ctx),
+      questionExplorer: () => questionExplorerOf(ctx),
     };
     const zone = deps.zone || (() => viewZone(recordOf(ctx)));
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e, owners, zone });
@@ -732,7 +747,7 @@ export function schedulerOf(ctx, env = null, deps = {}) {
       s.listenTo({ retrieval: retrievalOf(ctx), bias: biasOf(ctx), promotion: promotionOf(ctx), capture: captureOf(ctx),
                    progressions: progressionsOf(ctx, { env: e }), calibration: calibrationOf(ctx), aiRuns: aiRunsOf(ctx, e),
                    captureRequests: captureRequestsOf(ctx), entities: entitiesOf(ctx), inquiry: inquiryOf(ctx),
-                   following: followingOf(ctx), publication: publicationOf(ctx), answers: answersOf(ctx),
+                   following: followingOf(ctx), publishSchedule: publishScheduleOf(ctx), answers: answersOf(ctx),
                    duties: dutiesOf(ctx), people: peopleOf(ctx), moneyChecks: moneyChecksOf(ctx),
                    caseCarriage: caseCarriageOf(ctx) });
   }
