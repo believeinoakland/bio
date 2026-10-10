@@ -1,6 +1,6 @@
 # tasks (T41)
 
-**Status** · session_01CGQvEK47xJQsjUXGG7z93f · depth 2 · WORKING · handled B2
+**Status** · session_01CGQvEK47xJQsjUXGG7z93f · depth 2 · COMPLETE · handled B2
 
 ## Completion
 
