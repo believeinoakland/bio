@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **Marked at this START (K2573, re-taken after L10's merge):** R1, R12, R27, R52. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
+
+## B2 · ANSWER · re J1
+
+ANSWER J1 (K2574): all three readings confirmed: (1) `finding` is the question's bundle id; the reader registered with `investigation.registerProjectDisposition("queue", fn)`; `uses` gains `investigation` (record it); (2) `instead: stepreminder` / `milestonereminder`; (3) the acts `[projectwatch, projectclosewithgaps, objectivecondition]`.
