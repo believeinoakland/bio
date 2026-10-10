@@ -2,7 +2,7 @@
  * legacy `schema.mjs` at this module's extraction, with the comments that record why it is shaped as it is:
  * `capture_requests` and its indexes, and R46's `capture_request_platforms`. Its three additive columns (`lead_inquiry`, `run_woken_at`, `render`)
  * are in the table as created and are added to a store that predates them by `migrateCaptureRequests`, with R40's
- * `source_reason`, R45's `sweep` and R50's `co_archive` (T35); R51's `records_requests` (T35) is its own table. The table is keyed to a bundle by `target` for purge (R35). */
+ * `source_reason`, R45's `sweep`, R50's `co_archive` (T35) and R55's `step` (T41); R51's `records_requests` (T35) is its own table. The table is keyed to a bundle by `target` for purge (R35). */
 
 export const CAPTURE_REQUESTS_SCHEMA = `
 -- PL-4 / IS-4 / SWEEP section 4b.1: THE CAPTURE-REQUEST DOOR.
@@ -141,7 +141,13 @@ CREATE TABLE IF NOT EXISTS capture_requests (
   -- (ask the co-archive), 0 (ask none), or NULL (the group's setting decides
   -- at the fetch, acquisition's R43). NULL is the honest value on every row
   -- written before it: no member chose then. Passed to the fetch unchanged.
-  co_archive        INTEGER
+  co_archive        INTEGER,
+  -- R55 (T41-25; N820): THE STEP THIS REQUEST IS WORK FOR, a steps id the
+  -- run's principal sees at the door, or NULL for a request made for no step.
+  -- NULL is the honest value on every row written before it: no door read a
+  -- step then. On completion the drain ties the capture to it
+  -- (steps.recordProduct), and the step's arrival wait reads this row.
+  step              TEXT
 );
 CREATE INDEX IF NOT EXISTS capture_requests_state ON capture_requests(state, requested_at);
 CREATE INDEX IF NOT EXISTS capture_requests_target ON capture_requests(target);
@@ -212,6 +218,7 @@ export const CAPTURE_REQUESTS_ADDITIVE = Object.freeze([
   ["source_reason", "TEXT"],
   ["sweep", "TEXT"],
   ["co_archive", "INTEGER"],
+  ["step", "TEXT"],
 ]);
 
 export function migrateCaptureRequests(sql) {

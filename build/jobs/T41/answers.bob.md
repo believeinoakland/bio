@@ -1,6 +1,6 @@
 # BOB to answers (T41)
 
-**Read** · handled J2
+**Read** · handled J4
 
 ## B1 · START
 
@@ -22,3 +22,7 @@ All seven readings taken (K2482).
 ## B4 · CHANGE
 
 ai-use is merged into tranche/T41 @ 0c541ea499 (K2488): merge the tranche branch and replace deps.useCheck's stand-in and ai-runs' countAskUsage/aiUseCheck with ai-use's countAskUsage({..., owner, act}) and useCheck; re-run and record completion again.
+
+## B5 · CHANGE
+
+K2508 (tranche/T41 @ 63b416fef6): R30 gains a bullet marked T41: askAccount({member, project?, at?, kind?}) takes kind, 'ask' when absent or 'draft' for a draft, judged for that kind (credentials.accountFor, ai-use.useCheck); any other kind refused as credentials R24 refuses it. Store-door R10 and plane R33 (L11) call it with kind 'draft'. Merge the tranche branch, build and test it explicitly with a negative control (K874), and record completion again.
