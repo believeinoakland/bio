@@ -42,7 +42,12 @@ export const SHARED_ACT_CHECKS = Object.freeze({
      --------------------------------------------------------------------------- */
   NO_BASIS: {
     check: 'C-33.40',
-    where: 'src/inquiry/index.mjs actNoBasis > is-act-no-basis',
+    /* (N827, K2467; T42) every site that answers with this row: inquiry's helper (basis-versions raises through it),
+       progressions' and entities' one refusal helpers, each named with the acts it serves. */
+    where: 'src/inquiry/index.mjs actNoBasis > is-act-no-basis (inquiry\'s, and basis-versions\' through it), '
+      + 'src/progressions/checks.mjs refusal (progressions\' first declaration and revision of a declared flow, '
+      + 'src/progressions/index.mjs), and src/entities/index.mjs actShapeRefusal (entities\' held identifier and '
+      + 'grade-D testimony)',
     translation: 'This asks the record to stand behind something without saying what it rests on. '
       + 'Say what that is first — what the question is grounded in, what you personally observed, or '
       + 'why a settled thing is being changed — and the record carries it beside the claim, in your '
