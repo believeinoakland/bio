@@ -453,7 +453,10 @@ const STATED_STATUS_OPS = Object.freeze(["inbox", "inboxpull", "inboxresolve", "
    request naming either is answered as an op with no spec (R2), whatever any table holds. */
 /* R66 (op-declarations R37; instance-setup R67): `translationdraftrecord` is the door's own store-internal call after a
    translation draft, never a caller's. */
-const NOT_ROUTED = Object.freeze(["assistantset", "securitycount", "translationdraftrecord"]);
+/* R56 (T41; DEC-188 (8); credentials R37): `groupswitchset`, and `accountswitchset` with it (op-declarations R41), are
+   retired to `accountusesset` (R69), so a request naming either is answered as an op with no spec too. */
+const NOT_ROUTED = Object.freeze(["assistantset", "securitycount", "translationdraftrecord", "groupswitchset",
+                                  "accountswitchset"]);
 /* R61 (N714, N707, N710; DEC-169, DEC-173; file-safety R8, R11, R33): file-safety's four byte answers, relayed as the owner
    answers them, never enveloped; `openwithwarning` takes `warned` from the body (a GET's query `warned`, its JSON, is
    carried there). R62: a member's or an `ai` credential's `op=capture` GET is answered by the first two. */
@@ -792,6 +795,21 @@ export function makeFetch(hooks = {}) {
         if (reader.silent) return storeSilent(reader.silent, reader.correlation);
         return relayAnswer(invStub.fetch(`http://do/groupdescription?viewer=${encodeURIComponent(reader.viewer)}`), op);
       }
+      /* R70 (N797; membership R123; op-declarations R42; admission R3): the handle's check, answered as the invitation's
+         two steps are, from the store the caller names: only the body's `invite` and `handle` cross, with `viewer` read
+         as `groupdescription`'s is (`""` for no one), so an invitee asks with the invitation and a signed-in member
+         without one; nothing else of the caller crosses, and membership's answer is relayed as given (it names no
+         member, session or invitation). */
+      if (op === "handlecheck") {
+        const b = await req.json().catch(() => null);
+        const o = b && typeof b === "object" && !Array.isArray(b) ? b : {};
+        const store = url.searchParams.get("store") === SCRATCH ? SCRATCH : "bio";
+        const reader = await caseReader(url, env, store, presentedAi.cred, credential);
+        if (reader.silent) return storeSilent(reader.silent, reader.correlation);
+        return relayAnswer(invStub.fetch(new Request(`http://do/handlecheck`, { method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ invite: o.invite, handle: o.handle, viewer: reader.viewer }) })), op);
+      }
       /* R44 (K921): the template grant's four doors, a recipient's secret or a member's session (above). */
       if (TEMPLATE_GRANT_DOORS.includes(op)) return templateGrantDoor({ req, url, env, op, spec, presentedAi, stub, credential });
       if (op === "instancegroup" || op === "groupidentity") return groupRead(op, url, env, presentedAi, credential);
@@ -1038,7 +1056,11 @@ export function makeFetch(hooks = {}) {
                                 /* N388 (capture R69, K580): the accounts of a capture answer by the caller's SIGHT of
                                    the bundle that files it, so an unseen capture reads as one with no account; capture
                                    fails closed without the stamp. `lateattestations` names no bundle and takes none. */
-                                "captureaccounts"];
+                                "captureaccounts",
+                                /* K2442 (membership R18, D54): an administrator's roster lists a hidden project's
+                                   participants only to one who sees it, so the roster is read by the asking caller's
+                                   sight; membership fails closed (lists none) without the stamp. */
+                                "memberlist"];
     /* PL-9: op=meaningrows is the SAME compiler read at meaning grain, so it
        takes op=search's stamp beside op=search rather than joining a list of
        reads that merely name a bundle. Its answer is a CANDIDATE LIST in §14c's
@@ -2368,6 +2390,17 @@ export function makeFetch(hooks = {}) {
            carries no stamp for `#surfacingGate` to ask. Written as its own line after REC-171's stamp, which stands
            byte-for-byte for every other caller. */
         if (replayed) delete b.assistantPrincipal;
+        /* R73 (K2498; inquiry R54, R59): TWO FIELDS OF THE PACKAGE ARE THE DOOR'S, each deleted first for every caller.
+           `setIn` is the project the request names as the act's context (`project` in its address, else a top-level
+           `project` string in its body), absent when it names none; inquiry keeps it only for a project the author may
+           see. `personWarningSeen` is `true` only when a member's own session states she saw the person warning before
+           the act (the body's `personWarningSeen: true`): no machine credential and no other value records her choice. */
+        const saidWarningSeen = b.personWarningSeen === true;
+        delete b.setIn;
+        delete b.personWarningSeen;
+        const context = (url.searchParams.get("project") ?? (typeof b.project === "string" ? b.project : "")).trim().slice(0, 200);
+        if (context) b.setIn = context;
+        if (viaSession && saidWarningSeen) b.personWarningSeen = true;
         if (b.base === null && b.meta && promotedType === "project" && viaSession) {
           /* admission R11 (K723): a session creating a project without `create_projects` is refused NOT_CAPABLE (C-38.5)
              at admission's one site, `projectCreationGate`, from the payload, since no op names the shape. */
