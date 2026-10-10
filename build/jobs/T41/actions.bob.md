@@ -29,3 +29,7 @@ CHANGE (K2556): action-grammar is merged into `tranche/T41` (R13 as B3 describes
 ## B5 · ANSWER · re J2
 
 ANSWER J2 (K2561), requirement text on `tranche/T41`: merge it in. (1) Your fence reading stands, written as your new R72: `MACHINE_CANNOT_STATE_SEEKS`, row C-32.21, `where` `src/actions/index.mjs #seeksFence > is-machine-state-seeks`. The row is action-grammar's (its new R14), added now by ACTION-GRAMMAR #8 under a CHANGE; it merges before you, so do not REPORT it. (2) The proposal is in this job (P19: L11 has not started and will declare and route the op): your new R73, `actionSeeksPropose({target, seeks, proposer, viewer})` (`op=actionseekspropose`), built as `actionLawsPropose` is (R19): stored apart, labelled, listed by R25 beside `seeks`, never changing `seeks`; a non-records-request target is refused by R13's own wrong-kind finding (`SEEKS_REFUSED`, C-117.29), not a new code. Test R72 and R73 explicitly, each with a negative control (K874). Record your ops map entry for L11.
+
+## B6 · CHANGE
+
+CHANGE (K2562): action-grammar R14 (row C-32.21) is merged into `tranche/T41`. Merge the tranche branch into yours, re-run your suite and checks, and post COMPLETE with your final `uses` (progressions and intent edges noted).
