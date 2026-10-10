@@ -894,10 +894,16 @@ export class CaseAuthoring {
     }
     /* R8 — D-442: ALREADY_A_CASE_MEMBER IS ASKED OF THE CASE THIS ACT PUBLISHES, AND OF NO OTHER. The same bytes may be
        pinned by several cases (rule 12), and an edition of case X recording this conclusion says nothing about case Y.
-       An unsigned preparation still refuses, whichever case it is of. Asked before an id is minted. */
+       An unsigned preparation of another case, or of another edition of this one, still refuses. Asked before an id is
+       minted. */
+    /* (K2540) An unsigned preparation of THIS case edition does not refuse: the new preparation replaces it (R14,
+       publication R21), which is how later approvals (R68) and a first edition's account from a draft (R64) are carried.
+       One of another case, or of another edition of this one, still does. */
+    const thisEdition = theCase ? this.#highestEdition(theCase) + 1 : null;
+    const replaced = (e) => e.state === "prepared" && theCase && e.case_id === theCase && Number(e.edition) === thisEdition;
     for (const p of prepared) {
       const same = p.warrant ? p.warrant.same.filter((e) =>
-        (theCase && e.case_id === theCase) || e.state === "prepared") : [];
+        ((theCase && e.case_id === theCase) || e.state === "prepared") && !replaced(e)) : [];
       if (same.length)
         return { ok: false, reason: "ALREADY_A_CASE_MEMBER", target: p.id, from: p.b.current_state,
                  project: proj, relationship: p.conclusion.relationship,

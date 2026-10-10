@@ -43,7 +43,7 @@ const cancel = (w, c, e) => assert.equal(w.publishSchedule.publishAtCancel({ cas
 const carries = (r, key, family = CASE_DERIVATION_CHECKS) => assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation],
   [false, key, key, family[key].check, family[key].translation]);
 
-test("R58: publishCase refuses CASE_EDITION_WAITING (C-44.6) while an edition of the case R7 resolves waits, naming the waiting edition and its at (date, time and zone), whether the case is derived from the members' preparation or named; nothing is written and no id is drawn; once the waiting one is cancelled the act goes on to R8", () => {
+test("R58: publishCase refuses CASE_EDITION_WAITING (C-44.6) while an edition of the case R7 resolves waits, naming the waiting edition and its at (date, time and zone), whether the case is derived from the members' preparation or named; nothing is written and no id is drawn; once the waiting one is cancelled the act goes on and replaces the preparation (R8, K2540)", () => {
   const { w, A } = setup();
   /* a first edition, prepared and waiting: the case is the one the members' own preparation names (R7's third route) */
   const one = w.publish(A, "alice", [Q]);
@@ -64,11 +64,14 @@ test("R58: publishCase refuses CASE_EDITION_WAITING (C-44.6) while an edition of
   const fresh = w.publish(A, "alice", [Q2], { newCase: true });
   assert.equal(fresh.ok, true, "a case of its own, minted, waits on nothing");
   assert.notEqual(fresh.caseId, one.caseId);
-  /* cancelled: its document is again an unsigned preparation (publish-schedule R3), so nothing waits and the act goes on
-     to R8's own judgment of that preparation */
+  /* cancelled: its document is again an unsigned preparation (publish-schedule R3), so nothing waits and the act goes on:
+     a preparation of this same case edition is replaced by the new one (R8, K2540) */
   cancel(w, one.caseId, 1);
   const again = w.publish(A, "alice", [Q]);
-  assert.deepEqual([again.reason, again.recorded_by], ["ALREADY_A_CASE_MEMBER",
+  assert.deepEqual([again.ok, again.caseId, again.edition], [true, one.caseId, 1], JSON.stringify(again).slice(0, 300));
+  /* negative control: R8 still refuses a preparation of another case over the same bytes */
+  const other = w.publish(A, "alice", [Q], { newCase: true });
+  assert.deepEqual([other.reason, other.recorded_by], ["ALREADY_A_CASE_MEMBER",
     [{ case_id: one.caseId, edition: 1, state: "prepared" }]]);
 });
 

@@ -235,6 +235,23 @@ test("R64 (record-grammar R52): a member writes the account from a draft — edi
   assert.deepEqual(accountOf(w.fm(mine.doc.text)).filter((x) => x.kind === "account").map((x) => x.began_as), SENTENCES.map(() => "member"));
 });
 
+test("R64, R8 (K2540): a first edition's account is drafted on its unsigned preparation and taken up by preparing it again, which replaces the preparation; negative control: a case with neither preparation nor publication has no drafts (NO_SUCH_CASE)", () => {
+  const { w, P } = setup();
+  w.judgeAccount = () => ({ ok: true, refusals: [] });
+  assert.equal(w.ca.accountPropose({ case: "CASE-2026-0001", framing: "time_order", text: "x", run: RUN, proposedBy: "class:ai",
+                                     viewer: "class:ai" }).reason, "NO_SUCH_CASE");
+  const first = w.publish(P, "alice", [Q]);
+  const d = w.ca.accountPropose({ case: first.caseId, framing: "time_order", text: "A draft of what happened.", run: RUN,
+                                  proposedBy: "class:ai", viewer: "class:ai" });
+  assert.equal(d.ok, true, JSON.stringify(d));
+  const again = w.publish(P, "alice", [Q], { account: SENTENCES, accountDraft: d.draft.id });
+  assert.deepEqual([again.ok, again.caseId, again.edition, again.account.form], [true, first.caseId, 1, "edited"],
+                   JSON.stringify(again).slice(0, 300));
+  assert.equal(w.count("case_documents"), 1, "the preparation replaced");
+  assert.deepEqual(accountOf(w.fm(docOf(w, again).text)).filter((x) => x.kind === "account").map((x) => x.draft),
+                   SENTENCES.map(() => d.draft.id));
+});
+
 test("R64, R63 (K2536): accountPropose takes kind account_check with flags in place of text, labelled machine work and listed; publishCase hands R30 the flags of every account_check draft proposed after the account draft it names, or all of them with none named, in proposal order", () => {
   const { w, P } = setup();
   w.judgeAccount = () => ({ ok: true, refusals: [] });
