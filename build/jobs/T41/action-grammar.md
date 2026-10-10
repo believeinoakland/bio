@@ -81,3 +81,7 @@ Q1 (R13; my best reading, being built now; the answer does not stop the job).
 ## J2 · REPORT
 
 answer-envelope (T41-60): `catalogue-end.test.mjs` pins C-94.5 OUTCOME_NOT_IN_VOCABULARY's translation digest in `rows-before-r43.json` (`["C-94.5","4f2ee83d0d48dd33"]`). With R13's re-wording (K2553) it reads `65a25bcf08b2ebd2`, so the pin moves with the row (`changed.note`). The test is already red for rule 4 (16), so nothing new shows today. Once T41-60 clears rule 4 (16), it will name C-94.5 unless the pin is moved then. C-117.29 SEEKS_REFUSED reaches CHECK_FAMILIES through action-grammar's file, which is already listed.
+
+## J3 · COMPLETE
+
+T41-46a done (R13), as confirmed in B3. Exports: `none_exists` in CORRESPONDENCE_OUTCOMES; `seeksOf`, `seeksFindings` (facts.stages shape per B3), `SEEKS_MAX`, `SEEKS_PART_MAX`. Row: C-117.29 `SEEKS_REFUSED` (`where` seeksFindings > is-seeks, minted here). C-94.5's translation is re-worded. Mine under rule 4 (2), awaiting T42's stamp: the census rows C-117.29 (arrived) and C-94.5 (changed); the plane bundle is staled (rule 4 (14)). `uses` unchanged. filing-templates is unaffected (it reads only RISK_TIERS). Tests: action-grammar 41/41. The users' suites fail exactly the same tests before and after the change. format, architecture, coverage (13/13) and ownership: 0 failures. Record: Completion, on job/T41/action-grammar @ b6dce8ecb5+.
