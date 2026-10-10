@@ -12,9 +12,17 @@ import * as wz from "../../../src/wizard-scripts/index.mjs";
 const A = V("alice"), F = V("frank"), E = V("erin"), D = V("dave");
 const src = (f) => readFileSync(new URL(`./source/${f}`, import.meta.url), "utf8");
 const REG_FILE = JSON.parse(src("registry.json")), LIB_FILE = JSON.parse(src("library.json"));
-/* PR #14's library, from which BOB adopted version 2 of four scripts (R22; K2241). */
+/* PR #14's library, from which BOB adopted version 2 of four scripts (T37), and PR #19's, of two more (T41) (R22; K2241). */
 const LIB_NEW = JSON.parse(src("library-e08cd35ecb.json"));
-const ADOPTED = ["Set up and claim", "Publication ceremony", "Check a claim", "Follow a proceeding"];
+const LIB_T41 = JSON.parse(src("library-3660c18803.json"));
+const ADOPTED_T37 = ["Set up and claim", "Publication ceremony", "Check a claim", "Follow a proceeding"];
+const ADOPTED_T41 = ["Connect your Claude account", "Invite a member"];
+const ADOPTED = [...ADOPTED_T37, ...ADOPTED_T41];
+/* each adopted script: the file and commit its version 2 comes from, and its adoption */
+const adoption = (name) => (ADOPTED_T41.includes(name) ? { file: LIB_T41, commit: "3660c18803", approved: { by: "BOB", at: "2026-10-10", ruling: "K2241" } }
+  : { file: LIB_NEW, commit: "e08cd35ecb", approved: { by: "BOB", at: "2026-10-08", ruling: "K2241" } });
+/* DEC-188 (8): the acts PR #19 removed from the registry */
+const RETIRED_ACTS = ["aiceilingset", "aicopyceilingset", "accountswitchset", "groupswitchset"];
 const OWED = /^owed:([a-z][a-z0-9]*)(?:\s+(DEC-\d+|K\d+))?$/;   /* a ruling owes it: a DEC or a K (PR #13) */
 /* Every op the registry names, owed ones as their op: the member op table once each owed op is declared. */
 const ALL_OPS = [...new Set(REG_FILE.screens.flatMap((s) => s.acts.map((a) => (a.status === "owed" ? OWED.exec(a.op)[1] : a.op))))];
@@ -30,9 +38,9 @@ const refused = (r, c, why = "") => {
 
 test("R13 SCREEN_REGISTRY is DEC-139's registry as the file holds it, screen by screen and act by act: [{id, name, purpose, acts}], acts the declared and function ops in the file's order, owed acts apart; frozen; its source the vendored file", () => {
   const sha = createHash("sha256").update(src("registry.json"), "utf8").digest("hex");
-  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "e08cd35ecb", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha });
+  assert.deepEqual(wz.SCREEN_REGISTRY_SOURCE, { commit: "3660c18803", path: "docs/development/ux-substrate/screens/registry.json", sha256: sha });
   assert.equal(wz.SCREEN_REGISTRY.length, REG_FILE.screens.length);
-  assert.equal(wz.SCREEN_REGISTRY.length, 47);
+  assert.equal(wz.SCREEN_REGISTRY.length, 48);
   REG_FILE.screens.forEach((f, i) => {
     const s = wz.SCREEN_REGISTRY[i];
     assert.deepEqual([s.id, s.name, s.purpose], [f.id, f.name, f.purpose], f.id);
@@ -48,8 +56,39 @@ test("R13 SCREEN_REGISTRY is DEC-139's registry as the file holds it, screen by 
   assert.ok(Object.isFrozen(wz.SCREEN_REGISTRY) && Object.isFrozen(wz.SCREEN_REGISTRY[0]) && Object.isFrozen(wz.SCREEN_REGISTRY[0].acts));
 });
 
-test("R13 (T37; K2171) the registry is re-taken from PR #14's merge to main (e08cd35ecb), its commit named as the source: connect is still \"The assistant\", setup no longer offers assistantset, and the library keeps its own commit (R22): each file names its own", () => {
-  assert.equal(wz.SCREEN_REGISTRY_SOURCE.commit, "e08cd35ecb");
+test("R13 (T41; DEC-188; K2484) the registry is re-taken from PR #19's merge to main (3660c18803), its commit named as the source, with its new screen projectai; aiceilingset, aicopyceilingset, accountswitchset and groupswitchset appear nowhere in it; ailimitset, accountusesset, projectkeyset and projectsigninset are owed acts, registered as their ops once declared and not before", () => {
+  assert.equal(wz.SCREEN_REGISTRY_SOURCE.commit, "3660c18803");
+  const projectai = wz.SCREEN_REGISTRY.find((s) => s.id === "projectai");
+  assert.deepEqual([projectai.name, projectai.acts], ["AI for this project", []], "every act of projectai is owed");
+  assert.deepEqual(projectai.owed.map((o) => o.op), ["projectkeyset", "projectsigninset", "projectaccountswitch", "projectaccountremove",
+    "projectkeynoticeseen", "accountusesset", "ailimitset", "projectaikeepaway"]);
+  const text = JSON.stringify(wz.SCREEN_REGISTRY);
+  for (const op of RETIRED_ACTS) assert.ok(!text.includes(`"${op}"`), `${op} gone`);
+  for (const op of ["aiceilingset", "accountswitchset"]) assert.ok(src("library-e08cd35ecb.json").includes(`"${op}"`), `control: ${op} was named before PR #19`);
+  /* registered once declared (op-declarations R41), at the file's place; undeclared, not registered */
+  const DEC188 = ["ailimitset", "accountusesset", "projectkeyset", "projectsigninset", "projectaccountswitch", "projectaccountremove",
+                  "projectkeynoticeseen", "projectaikeepaway", "exploreapprove"];
+  const declared = seeded({ register: false });
+  declared.wz.wizardRegister({ ops: ALL_OPS, library: [] });
+  const by = Object.fromEntries(declared.wz.registeredScreens().map((s) => [s.id, s.acts]));
+  assert.deepEqual(by.projectai, projectai.owed.map((o) => o.op));
+  assert.deepEqual(by.connect, ["groupkeynoticeseen", "disclosureshown", "subscriptionsignin", "accountreferenceset", "accountusesset", "ailimitset", "accountreferenceremove"]);
+  assert.deepEqual(by.setup.slice(8, 11), ["groupkeyset", "groupkeyswitch", "ailimitset"], "in aicopyceilingset's old place");
+  assert.ok(by.members.includes("accountusesset") && by.members.includes("ailimitset"));
+  for (const op of RETIRED_ACTS) assert.ok(!Object.values(by).some((acts) => acts.includes(op)), op);
+  const undeclared = seeded({ register: false });
+  undeclared.wz.wizardRegister({ ops: ALL_OPS.filter((o) => !DEC188.includes(o)), library: [] });
+  const un = Object.fromEntries(undeclared.wz.registeredScreens().map((s) => [s.id, s.acts]));
+  assert.deepEqual(un.projectai, [], "negative control: none declared, none registered");
+  for (const op of DEC188) assert.ok(!Object.values(un).some((acts) => acts.includes(op)), `${op} undeclared`);
+  assert.deepEqual(wz.checkScript([step("connect", "ailimitset"), step("connect", null)], real()).refusals, []);
+  assert.deepEqual(wz.checkScript([step("connect", "ailimitset"), step("connect", null)], real({ ops: ALL_OPS.filter((o) => o !== "ailimitset") })).refusals.map((x) => x.code),
+                   ["WIZARD_ACT_UNKNOWN"]);
+  assert.deepEqual(wz.checkScript([step("connect", "aiceilingset"), step("connect", null)], real({ ops: [...ALL_OPS, "aiceilingset"] })).refusals.map((x) => x.code),
+                   ["WIZARD_ACT_UNKNOWN"], "a retired act is no act of its screen, declared or not");
+});
+
+test("R13 (T37; K2171) the registry is re-taken from PR #14's merge onward: connect is still \"The assistant\", setup no longer offers assistantset, and the library keeps its own commit (R22): each file names its own", () => {
   assert.deepEqual(REG_FILE.screens.find((f) => f.id === "connect").name, "The assistant", "the vendored file is PR #14's");
   const setup = wz.SCREEN_REGISTRY.find((s) => s.id === "setup");
   assert.ok(!setup.acts.includes("assistantset") && !REG_FILE.screens.find((f) => f.id === "setup").acts.some((a) => a.op === "assistantset"),
@@ -61,21 +100,21 @@ test("R13 (T37; K2171) the registry is re-taken from PR #14's merge to main (e08
   w.wz.wizardRegister({ library: [] });
   assert.deepEqual(w.wz.registeredScreens().find((s) => s.id === "connect").acts, [...connect.acts], "registered by default");
   assert.ok(!JSON.stringify(wz.SCREEN_REGISTRY).includes("The assistant and your account"), "the old name is gone");
-  assert.equal(wz.CIVICSMITH_LIBRARY_SOURCE.commit, "d129238bf3", "the library is not re-taken (R22)");
+  assert.equal(wz.CIVICSMITH_LIBRARY_SOURCE.commit, "d129238bf3", "the library's version 1 is not re-taken (R22)");
 });
 
 test("R13 a registration without screens registers SCREEN_REGISTRY; an owed act is registered as its op, in the file's order, only once the member op table declares it; with no op table none is", () => {
   const w = seeded({ register: false });
   const r = w.wz.wizardRegister({ ops: ALL_OPS.filter((o) => o !== "memberlanguageset"), library: [] });
-  assert.deepEqual([r.ok, r.screens], [true, 47]);
+  assert.deepEqual([r.ok, r.screens], [true, 48]);
   const by = Object.fromEntries(w.wz.registeredScreens().map((s) => [s.id, s.acts]));
-  assert.deepEqual(by.join, ["invitelook", "enroll"], "memberlanguageset undeclared: not registered");
+  assert.deepEqual(by.join, ["invitelook", "handlecheck", "enroll"], "memberlanguageset undeclared: not registered");
   assert.deepEqual(by.home, ["promote", "startfrom"], "startfrom declared: registered at its place");
-  assert.deepEqual(by.ceremony, ["publishpreflight", "publishtensions", "caseratify", "publish", "publishat", "obscuremark"]);
+  assert.deepEqual(by.ceremony, ["publishpreflight", "publishtensions", "caseratify", "publish", "publishat", "obscuremark", "obscuremarkwithdraw"]);
   assert.deepEqual(by.setup.slice(5, 9), ["entitycreate", "placewanted", "aikeepaway", "groupkeyset"], "an owed act between two declared ones keeps its place");
   assert.deepEqual(by.security, ["securitymap", "securitytooladd", "securitytooltest", "securitytoolremove"], "an act a K ruling owes, as one a DEC owes");
   assert.deepEqual(by.notes, ["notewrite", "noteturn", "noterevise", "notedelete", "writinghelp"]);
-  assert.deepEqual(by.account, ["expertisedeclare", "setpassword", "signerregisterown", "signerrevokeown", "infolevelset"]);
+  assert.deepEqual(by.account, ["expertisedeclare", "handlechange", "setpassword", "signerregisterown", "signerrevokeown", "infolevelset"]);
   /* every registered act is the file's, in the file's order */
   for (const f of REG_FILE.screens) {
     const want = f.acts.map((a) => (a.status === "owed" ? OWED.exec(a.op)[1] : a.op)).filter((op) => op !== "memberlanguageset");
@@ -128,10 +167,12 @@ test("R13 (T37; N776) with an op table registered, a declared or function act wh
   assert.deepEqual(t.wz.wizardCheck({ steps: [step("case-home", "casejoin"), STEPS[0]], viewer: F }).refusals.map((x) => [x.code, x.step]), [["WIZARD_ACT_UNKNOWN", 1]]);
 });
 
-test("R22 CIVICSMITH_LIBRARY is the seventeen scripts of library.json, in its order, each with the file's id, name, start and steps (screen, act, what, why, draft), a side trip as the named script's id and an owed act as its op: version 1 from d129238bf3, and for the four scripts BOB adopted (K2241) version 2 from e08cd35ecb, version 1 kept in earlier; the file's notes not carried", () => {
+test("R22 CIVICSMITH_LIBRARY is the seventeen scripts of library.json, in its order, each with the file's id, name, start and steps (screen, act, what, why, draft), a side trip as the named script's id and an owed act as its op: version 1 from d129238bf3, for the four scripts BOB adopted at T37 (K2241) version 2 from e08cd35ecb, for the two adopted at T41 version 2 from 3660c18803, version 1 kept in earlier; the file's notes not carried", () => {
   const sha = (f) => createHash("sha256").update(src(f), "utf8").digest("hex");
   assert.deepEqual(wz.CIVICSMITH_LIBRARY_SOURCE, { commit: "d129238bf3", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library.json") });
-  assert.deepEqual(wz.CIVICSMITH_LIBRARY_ADOPTED_SOURCE, { commit: "e08cd35ecb", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-e08cd35ecb.json") });
+  assert.deepEqual(wz.CIVICSMITH_LIBRARY_ADOPTED_SOURCES, [
+    { commit: "e08cd35ecb", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-e08cd35ecb.json") },
+    { commit: "3660c18803", path: "docs/development/ux-substrate/screens/library.json", sha256: sha("library-3660c18803.json") }]);
   const lib = wz.CIVICSMITH_LIBRARY;
   assert.equal(lib.length, 17);
   assert.deepEqual(lib.map((e) => e.id), LIB_FILE.scripts.map((s) => s.id));
@@ -146,10 +187,15 @@ test("R22 CIVICSMITH_LIBRARY is the seventeen scripts of library.json, in its or
   LIB_FILE.scripts.forEach((f, i) => {
     const e = lib[i];
     const g = LIB_NEW.scripts.find((x) => x.id === f.id);
+    const h = LIB_T41.scripts.find((x) => x.id === f.id);
     assert.deepEqual([e.id, e.name, e.start], [g.id, g.name, g.start], f.name);
+    assert.deepEqual([e.id, e.name, e.start], [h.id, h.name, h.start], f.name);
     if (ADOPTED.includes(f.name)) {
-      assert.deepEqual([e.version, e.source], [2, "e08cd35ecb"], f.name);
-      assert.deepEqual(e.steps, carried(LIB_NEW, g), `${f.name}: version 2 is e08cd35ecb's steps, step by step`);
+      const { file, commit } = adoption(f.name);
+      const n = file.scripts.find((x) => x.id === f.id);
+      assert.deepEqual([e.version, e.source], [2, commit], f.name);
+      assert.deepEqual(e.steps, carried(file, n), `${f.name}: version 2 is ${commit}'s steps, step by step`);
+      assert.deepEqual(carried(LIB_T41, h), e.steps, `${f.name}: the same at 3660c18803, so nothing newer is left out`);
       assert.deepEqual(e.earlier, [{ version: 1, steps: carried(LIB_FILE, f), author: "civicsmith", approved: { by: "Bob", at: "2026-10-06" }, source: "d129238bf3" }],
                        `${f.name}: version 1 kept whole`);
       assert.notDeepEqual(e.steps, e.earlier[0].steps, `${f.name}: the versions differ`);
@@ -157,6 +203,7 @@ test("R22 CIVICSMITH_LIBRARY is the seventeen scripts of library.json, in its or
       assert.deepEqual([e.version, e.source, "earlier" in e], [1, "d129238bf3", false], f.name);
       assert.deepEqual(e.steps, carried(LIB_FILE, f), `${f.name}: version 1, step by step`);
       assert.deepEqual(carried(LIB_NEW, g), e.steps, `${f.name}: the same at e08cd35ecb, so nothing newer is left out`);
+      assert.deepEqual(carried(LIB_T41, h), e.steps, `${f.name}: the same at 3660c18803`);
     }
     for (const k of ["note", "journeys", "versions"]) assert.equal(k in e, false, `${f.name}: ${k} not carried`);
   });
@@ -165,16 +212,20 @@ test("R22 CIVICSMITH_LIBRARY is the seventeen scripts of library.json, in its or
   assert.deepEqual(vias, [["Set up and claim", "Say who your group is"], ["Welcome a new member", "Connect your Claude account"],
                           ["Welcome a new member", "Your ties"], ["Check a claim", "Get a record"]]);
   const owed = lib.flatMap((e) => e.steps.map((s) => s.act)).filter((a) => OWED_OPS.includes(a));
-  assert.deepEqual([...new Set(owed)].sort(), ["aikeepaway", "memberlanguageset", "obscuremark", "publishat", "startfrom", "subscriptionsignin",
-                                               "translationadopt", "translationconfirm", "translationdraft"]);
+  assert.deepEqual([...new Set(owed)].sort(), ["accountusesset", "aikeepaway", "ailimitset", "memberlanguageset", "obscuremark", "publishat", "startfrom",
+                                               "subscriptionsignin", "translationadopt", "translationconfirm", "translationdraft"]);
+  /* the offered versions name no act PR #19 removed (DEC-188 (8)); Connect's version 1, kept readable, still does */
+  for (const op of RETIRED_ACTS) assert.ok(!lib.some((e) => e.steps.some((s) => s.act === op)), `${op}: no offered version`);
+  const connect = lib.find((e) => e.name === "Connect your Claude account");
+  assert.deepEqual(connect.earlier[0].steps.map((s) => s.act).filter((a) => RETIRED_ACTS.includes(a)), ["aiceilingset", "accountswitchset"]);
   assert.ok(!JSON.stringify(lib).includes("owed:"), "no owed: prefix is carried");
   assert.ok(Object.isFrozen(lib) && Object.isFrozen(lib[0]) && Object.isFrozen(lib[0].steps[0]));
 });
 
-test("R22 each library script is origin civicsmith, scope group, authored by the Civicsmith library: version 1 approved by Bob on 2026-10-06, and for the four K2241 names version 2 approved, adopted by BOB on 2026-10-08 under K2241; exactly the three DEC-148 names are required; read so by every member", () => {
+test("R22 each library script is origin civicsmith, scope group, authored by the Civicsmith library: version 1 approved by Bob on 2026-10-06, for the four T37 names version 2 adopted by BOB on 2026-10-08 under K2241, for the two T41 names (Connect, Invite) on 2026-10-10 under K2241; exactly the three DEC-148 names are required; read so by every member", () => {
   const lib = wz.CIVICSMITH_LIBRARY;
   for (const e of lib) {
-    const want = ADOPTED.includes(e.name) ? [2, { by: "BOB", at: "2026-10-08", ruling: "K2241" }] : [1, { by: "Bob", at: "2026-10-06" }];
+    const want = ADOPTED.includes(e.name) ? [2, adoption(e.name).approved] : [1, { by: "Bob", at: "2026-10-06" }];
     assert.deepEqual([e.origin, e.scope, e.author, e.version, e.approved], ["civicsmith", "group", "civicsmith", ...want], e.name);
   }
   assert.deepEqual(lib.filter((e) => e.required).map((e) => e.name), ["Set up and claim", "Welcome a new member", "Publication ceremony"]);
@@ -219,9 +270,18 @@ test("R22 every write on a library script, either version, is refused WIZARD_NOT
   assert.deepEqual(wz.checkScript(setup.earlier[0].steps, { ...real(), offered, self: setup.id }).refusals.map((f) => [f.code, f.step]), [["WIZARD_ACT_UNKNOWN", 11]]);
 });
 
-test("R22 (T37; K2241) the four adopted scripts carry version 2 in place of version 1: \"Set up and claim\" on aikeepaway then groupkeyset, no assistantset; \"Publication ceremony\" with its Photos step on obscuremark; \"Check a claim\" with DEC-178's wording; \"Follow a proceeding\" on entitycreate; each keeps its id, name, required and start, its version 1 updated, naming version 2, readable and not offered", () => {
+test("R22 (T37, T41; K2241) the six adopted scripts carry version 2 in place of version 1: \"Set up and claim\" on aikeepaway then groupkeyset, no assistantset; \"Publication ceremony\" with its Photos step on obscuremark; \"Check a claim\" with DEC-178's wording; \"Follow a proceeding\" on entitycreate; (T41; DEC-188 (8), DEC-184) \"Connect your Claude account\" on ailimitset and accountusesset in place of aiceilingset and accountswitchset; \"Invite a member\" as PR #19 words it (an invitation's short id; the member chooses her handle); each keeps its id, name, required and start, its version 1 updated, naming version 2, readable and not offered", () => {
   const by = (n) => wz.CIVICSMITH_LIBRARY.find((e) => e.name === n);
   const acts = (n) => by(n).steps.map((t) => t.act);
+  const connect = acts("Connect your Claude account"), connect1 = by("Connect your Claude account").earlier[0].steps.map((t) => t.act);
+  assert.deepEqual([connect[4], connect[5]], ["ailimitset", "accountusesset"]);
+  assert.deepEqual([connect1[4], connect1[5]], ["aiceilingset", "accountswitchset"], "version 1 as it was");
+  assert.deepEqual(connect.filter((_, i) => i !== 4 && i !== 5), connect1.filter((_, i) => i !== 4 && i !== 5), "no other act changed");
+  const invite = by("Invite a member");
+  assert.match(invite.steps[0].what, /a short id for the invitation/);
+  assert.match(invite.steps[0].why, /choose their own handle/);
+  assert.match(invite.earlier[0].steps[0].what, /their handle/);
+  assert.deepEqual(invite.steps.map((t) => t.act), invite.earlier[0].steps.map((t) => t.act), "Invite's acts unchanged: its words only");
   const setup = acts("Set up and claim");
   assert.ok(!setup.includes("assistantset") && setup.indexOf("aikeepaway") >= 0 && setup.indexOf("groupkeyset") === setup.indexOf("aikeepaway") + 1, setup.join());
   assert.ok(acts("Publication ceremony").includes("obscuremark"));
@@ -229,7 +289,7 @@ test("R22 (T37; K2241) the four adopted scripts carry version 2 in place of vers
   assert.notDeepEqual(by("Check a claim").steps.map((t) => [t.what, t.why]), by("Check a claim").earlier[0].steps.map((t) => [t.what, t.why]), "the wording changed");
   for (const n of ADOPTED) {
     const f = LIB_FILE.scripts.find((x) => x.name === n);
-    assert.deepEqual([by(n).id, by(n).required, by(n).start], [f.id, ["Set up and claim", "Publication ceremony"].includes(n), f.start], n);
+    assert.deepEqual([by(n).id, by(n).name, by(n).required, by(n).start], [f.id, f.name, ["Set up and claim", "Publication ceremony"].includes(n), f.start], n);
   }
   const w = world({ register: false });
   w.member("frank");
@@ -243,7 +303,7 @@ test("R22 (T37; K2241) the four adopted scripts carry version 2 in place of vers
     assert.deepEqual([one.ok, one.version.state, one.version.updated_by, one.offered, one.version.approved],
                      [true, "updated", `${e.id}@2`, false, { by: { name: "Bob" }, at: "2026-10-06" }], `${e.name}: version 1 readable, updated`);
     assert.deepEqual(one.version.steps, e.earlier[0].steps);
-    assert.deepEqual(r.version.approved, { by: { name: "BOB" }, at: "2026-10-08", ruling: "K2241" });
+    assert.deepEqual(r.version.approved, { by: { name: "BOB" }, at: adoption(e.name).approved.at, ruling: "K2241" });
     const at = w.wz.wizardsAt({ screen: e.start, viewer: F }).scripts.filter((s) => s.id === e.id).map((s) => s.version);
     assert.deepEqual(at, [`${e.id}@2`], `${e.name}: only version 2 offered`);
     const listed = w.wz.wizards({ viewer: V("erin") }).scripts.find((s) => s.id === e.id);
@@ -273,9 +333,9 @@ test("R23 startFrom answers the offered scripts this viewer may start, the libra
   const d = draft(w, { name: "A draft" });
   const before = w.snapshot();
   const r = w.wz.startFrom({ viewer: F });
-  assert.deepEqual(r, { ok: true, doors: [], scripts: [
+  assert.deepEqual([r.ok, r.doors, r.scripts], [true, [], [
     { id: LIBRARY[1].id, version: `${LIBRARY[1].id}@1`, name: "Publish", start: "publish" },
-    { id: a.script, version: a.version, name: "Ours", start: "case-home" }] });
+    { id: a.script, version: a.version, name: "Ours", start: "case-home" }]]);
   assert.ok(!r.scripts.some((s) => s.id === LIBRARY[0].id), "a required library script is not a first step");
   assert.ok(!r.scripts.some((s) => s.id === d.script), "a draft is not offered");
   assert.deepEqual(w.wz.startFrom({ viewer: D }).scripts.map((s) => s.id), [LIBRARY[1].id], "dave cannot see P");

@@ -27,7 +27,9 @@
  *   zone      `() => zone | null`, the instance profile's time zone (R21, R22), in place of scheduler's `viewZone`;
  *   env       the instance bindings: `BIO_NOW_MS` (the clock);
  *   now       a clock, `() => ms`, in place of `env`'s;
- *   start     false to skip the scheduler registration (a test that drives the consumer itself).
+ *   investigation   `investigation` (R27, K2523), which this module registers its project arm's read with at start;
+ *   start     false to skip the scheduler registration (a test that drives the consumer itself) and, unless
+ *             `investigation` is given, investigation's.
  * The ops are `queueOps`' entries, which control-plane's `controlPlaneRoutes` spreads into the plane's one route map
  * (plane R5; control-plane's `dispatch` answers every store request over it); `op=queue`'s door half (the store's
  * answer decorated for the caller, R17) is `door.mjs`' `queueOp`, which the control plane's door reaches through the
@@ -49,6 +51,7 @@ import { localDay, dayRange, isCalendarDate } from "../civil-time/index.mjs";
 import { tasksOf } from "../tasks/index.mjs";
 import { queueProducersOf } from "../queue-producers/index.mjs";
 import { noticeProducersOf } from "../notice-producers/index.mjs";
+import { investigationOf } from "../investigation/index.mjs";
 import { affordancesOf, deriveActs, decorate, PER_ITEM_ACTS, PER_ITEM_MAX } from "../affordances.mjs";
 import { QUEUE_CONDITION_KINDS, QUEUE_FINDING_KINDS, catalogueIdOf, classOfKind, MUTE_REFUSAL_DETAIL,
          PERSONALLY_MUTABLE_CLASSES, itemClassOf, mutedAsItem, serializeMutedKinds, parseMutedKinds,
@@ -121,7 +124,10 @@ export class Queue {
     "docket",
     /* queue-producers R35 and R32, R33 (N545; plane R20's hand-off): case-import's followed dockets, wizard-scripts'
        breaks and submissions; queue passes them and calls none of their reads. */
-    "caseImport", "wizardScripts"]);
+    "caseImport", "wizardScripts",
+    /* queue-producers R37 (K2484, K2582): publish-schedule's scheduled editions, read there directly since N823's split;
+       queue passes it and calls none of its reads. */
+    "publishSchedule"]);
   get #scheduler() { return this.#dep("scheduler", () => schedulerOf(this.#host, this.#env)); }
   /* R51 (T33-83): `notice-producers`, read beside `queue-producers`. */
   get #notices() { return this.#dep("notices", () => noticeProducersOf(this.#host)); }
@@ -582,6 +588,9 @@ export class Queue {
     "template-review-requested": "templatereview", "local-fact-due": "factconfirm",
     "attribution-unchosen": "attribute", "wizard-approval-requested": "wizardapprove",
     "inquiry-recheck-due": "waitlook",
+    /* R52 (N820; steps R12, investigation R3): a step past the date its setter gave it leaves when the step is ended; a
+       reminder on a step or a milestone is answered as `action-reminder`'s is, with another reminder or none. */
+    "step-date-due": "stepend", "step-reminder": "stepreminder", "milestone-reminder": "milestonereminder",
     "docket-core-due": Object.freeze(["docketprepare", "docketdecline"]),
     "contradiction-duty": Object.freeze(["contradictionclarify", "contradictiontakeup"]),
     "contradiction-duty-unseen": Object.freeze(["contradictionoptin"]) });
@@ -646,6 +655,14 @@ export class Queue {
     "inquiry-recheck-due": " This one is a date you set to look again at a question, keyed by the inquiry, the wait and "
       + "the date rather than by a task, and it is yours alone: it leaves when you record that you looked "
       + "(op=waitlook), set a new date or remove the wait in a revision of the inquiry, or when the inquiry concludes.",
+    "step-date-due": " This one is a date you set on a step, keyed by the step and the date rather than by a task, and "
+      + "it is yours alone: it leaves when the step is ended (op=stepend), or when you set the step a new date.",
+    "step-reminder": " This one is a reminder you asked for on a step's date, keyed by the reminder rather than by a task, "
+      + "and it is yours alone: you answer it with another reminder or with none (op=stepreminder), and it is told on "
+      + "its day only.",
+    "milestone-reminder": " This one is a reminder you asked for on a milestone, keyed by the reminder rather than by a "
+      + "task, and it is yours alone: you answer it with another reminder or with none (op=milestonereminder), and it "
+      + "is told on its day only.",
     /* T34-53 (tasks R3, R14, R15; DEC-135): a task like any other, so its door is taskresolve, which closes only this
        member's own; taking it and recording the check are its other ways out. */
     "check-requested": " This one is a check a project owner asked for: take it (op=checktake) and record your check or a "
@@ -664,7 +681,20 @@ export class Queue {
     /* T33-83 (notice-producers R8; K1491, K1467): what the machine noticed is disposed of, or taken up as a member's
        hunch or hypothesis, and nothing else. */
     "interest-check-noticed": Object.freeze(["hypothesishold"]),
-    "money-detector-noticed": Object.freeze(["hypothesishold"]) });
+    "money-detector-noticed": Object.freeze(["hypothesishold"]),
+    /* R52 (T41; N820; notice-producers R17): a find is accepted, held as a hypothesis, or answered by a step planned
+       (question-explorer R5, steps); something that arrived after a step looked for it answers that step (steps R23); a
+       quiet project's doors are investigation R18's: keep watching, close it with its gaps, or revise its objective's
+       condition (intent R2), each the op a member sends (op-declarations R43). */
+    "question-find": Object.freeze(["findaccept", "hypothesishold", "stepcreate"]),
+    "step-later-found": Object.freeze(["stepend"]),
+    "project-quiet": Object.freeze(["projectwatch", "projectclosewithgaps", "objectivecondition"]) });
+  /** R12 (T40; N812, K2376 (2), K2394): the AI accounts' three kinds are told to whom they concern and no team's list
+   *  holds them: an explore ask is answered by its own act, the other two are quieted by their recipient. */
+  static ACCOUNT_DOORS = Object.freeze({ "explore-ask": "exploreapprove", "ai-limit-reached": "queuemute",
+    "project-account-suspended": "queuemute" });
+  /** R52: the FINDINGs a member quiets for themselves when no project home holds them (a personal mute). */
+  static MUTED_OUTSIDE_A_PROJECT = Object.freeze(["question-find"]);
 
   /** D-266 / IC-60 — THE SECOND IDENTITY, and the whole of what this item added.
    *
@@ -752,6 +782,20 @@ export class Queue {
                      + "holds it and there is no team for a disposition to speak for. Quiet it for yourself "
                      + "(op=queuemute, naming this item) once you have read it; your question keeps running and a "
                      + "later run's new finds are told to you as a new item." };
+    /* R12 (T40; N812): an explore ask, a limit reached and a suspended project account are facts about an account,
+       told to its owners or the member it served; no team decides them. */
+    if (Object.prototype.hasOwnProperty.call(Queue.ACCOUNT_DOORS, item.kind)) {
+      const door = Queue.ACCOUNT_DOORS[item.kind];
+      return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
+               reason: door === "exploreapprove" ? "an_ask_is_answered_by_its_act" : "an_account_notice_is_quieted",
+               instead: door,
+               detail: door === "exploreapprove"
+                 ? "one of your accounts may explore today, and the ask is yours as its owner: approve it "
+                   + "(op=exploreapprove), or let the day pass and it lapses. No team's list holds it."
+                 : "this is about an account and is told to whom it concerns; no team's list holds it and there is no "
+                   + "team for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once "
+                   + "you have read it." };
+    }
     if (item.kind === "newer-capture-affects-reference") {
       const notice = item.subject && typeof item.subject.id === "string" ? item.subject.id : null;
       return { available: notice !== null, op: null, scope: "notice", keyed_on: ["notice"], key: notice,
@@ -811,15 +855,18 @@ export class Queue {
        finding keeps this disposition and names the act that answers it. */
     const acts = Object.prototype.hasOwnProperty.call(Queue.FINDING_ACTS, item.kind)
       ? { acts: [...Queue.FINDING_ACTS[item.kind]] } : {};
+    /* R52: a find filed under no project is quieted by its recipient for themselves (a personal mute). */
+    const muted = Queue.MUTED_OUTSIDE_A_PROJECT.includes(item.kind);
     if (homes.length === 0 || !fid)
       return { available: false, op: null, scope: "project", keyed_on: SCOPED_ON, key: null,
                finding: fid, projects: [], ...acts,
                reason: "no_project_scope",
-               instead: null,
+               instead: muted ? "queuemute" : null,
                detail: "this finding carries no progression stage, so its disposition is one project's judgment, "
                      + "scoped to that team's feed (D-266, §7/D-216), and it is filed under no project you can see: "
                      + "there is no team to record a decision for. A decision, where one can be made, ages the finding "
-                     + "out of the team's open list until it is re-triaged, and deletes nothing (D-79)." };
+                     + "out of the team's open list until it is re-triaged, and deletes nothing (D-79)."
+                     + (muted ? " Quiet it for yourself instead (op=queuemute, naming this item)." : "") };
     return { available: true, op: "proposedispose", scope: "project", keyed_on: SCOPED_ON,
              key: null, finding: fid, projects: homes, requires: ["project", "finding"], ...acts,
              detail: "this finding carries no progression stage, so its disposition is a judgment-layer act, and a "
@@ -2094,6 +2141,20 @@ export class Queue {
     }
   }
 
+  /** R27 (T40, T41; K2371, K2523; investigation R2, inquiry R39): this project's own deferral or dismissal of a
+   *  question, as this arm recorded it: the state of the one decision kept for (`project`, `question`), the question's
+   *  own id sent as `finding`, else null. It reads that one row and no other project's, so what it answers never depends
+   *  on how many projects draw on the question. Registered with `investigation` at start (`queueOf`). Never throws. */
+  projectDisposition({ project, question } = {}) {
+    const p = typeof project === "string" ? project.trim() : "";
+    const q = typeof question === "string" ? question.trim() : "";
+    if (!p || !q) return null;
+    try {
+      const r = this.#one(`SELECT state FROM finding_dispositions WHERE project_id=? AND finding_id=?`, p, q);
+      return r && (r.state === "deferred" || r.state === "dismissed") ? r.state : null;
+    } catch { return null; }
+  }
+
   /* ------------------------------------------------------------------ the store's counts (R42) */
 
   /** R42 (N342; record-core R63): this module's three figures, each a row count with the rows naming a bundle in `hid`
@@ -2159,6 +2220,14 @@ export function queueOf(ctx, deps = {}) {
     if (!deps || deps.start !== false) {
       const scheduler = (deps && deps.scheduler) || schedulerOf(ctx, deps && deps.env);
       scheduler.register("queue", q.renotifyConsumer());
+    }
+    /* R27 (K2523; investigation R2): the project arm's read of a question's own set-aside, registered once with
+       `investigation` (earlier, K31's pattern), so a milestone waiting on a question this project deferred or dismissed
+       reads stuck. With the scheduler's registration, or whenever a caller hands `investigation` in. */
+    if (!deps || deps.start !== false || deps.investigation) {
+      const investigation = (deps && deps.investigation) || investigationOf(ctx);
+      const r = investigation.registerProjectDisposition("queue", (a) => q.projectDisposition(a));
+      if (r && r.ok === false) throw new Error(`queue: registerProjectDisposition refused: ${r.reason || r.code}`);
     }
   }
   return q;

@@ -207,14 +207,17 @@ export class Tasks {
       if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: `owner of ${cite[0]}, which cites this record` };
     }
     /* membership's active administrators (its R86), in the order the roster holds them, the founder (who is no member
-       row, and holds no task) aside: the earliest. */
-    const first = this.#membership.activeAdmins().find((m) => m !== "admin");
+       row, and holds no task) aside: the earliest that membership R80 admits to the subject (K2575, D54: an
+       administrator neither invited nor joined to a hidden project would be handed a task R9 then withholds from them),
+       else none, and the task is `unassigned`. */
+    const first = this.#membership.activeAdmins()
+      .find((m) => m !== "admin" && this.#membership.inSight(bundleId, `member:${m}`));
     const adm = first ? { member_id: first } : null;
     if (adm) return { assignee: adm.member_id, assignee_role: "group-admin", basis: "no project manager; the RULED fallback to a group admin" };
     /* Named honestly rather than assigned to someone who does not exist. An
        unassigned task is still visible and still routable by hand; a task
        addressed to a phantom is not. */
-    return { assignee: "unassigned", assignee_role: "group-admin", basis: "no project manager and no active administrator" };
+    return { assignee: "unassigned", assignee_role: "group-admin", basis: "no project manager and no active administrator who can see it" };
   }
 
   /** A stored row as the grammar's task: the shape `taskList` gives (R2) and R6's reads give. */
@@ -540,11 +543,15 @@ export class Tasks {
    *  THIS one answers *is this THIS member's task*, and the act refusal answers
    *  *is this a person at all*.
    *
-   *  Returns a TASK_NOT_YOURS refusal (N382: its own code, apart from intent's NOT_YOURS) NAMING who it is with, or null to proceed. */
+   *  Returns a TASK_NOT_YOURS refusal (N382: its own code, apart from intent's NOT_YOURS) NAMING who it is with, NO_SUCH_TASK
+   *  for an administrator who does not see the subject (K2575), or null to proceed. */
   #refuseNotYours(row, actor, verb) {
     if (row.assignee === "unassigned") return null;
     if (actor === row.assignee) return null;
-    if (this.#membership.isAdministrator(actor)) return null;
+    /* K2575 (D54; membership R60, R80): the administrator's override holds only where the actor sees the subject; one who
+       does not is answered as for a task that does not exist, never with TASK_NOT_YOURS naming who holds it. */
+    if (this.#membership.isAdministrator(actor))
+      return this.#membership.inSight(row.refers_to, `member:${actor}`) ? null : { ok: false, reason: "NO_SUCH_TASK" };
     /* DEC-49 REGION is-task-actor-fence — D-126/C-76.1: a selection surfaces this refusal to a member, so it carries
        its code, check and translation; `reason`, `detail` and the assignee name who holds the task. */
     return {

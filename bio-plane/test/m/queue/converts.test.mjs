@@ -246,6 +246,8 @@ test("R4, R14 (queue-state): a mute is keyed (member, case): an item under a mut
 test("R21, R30, R40 (queue-state): a mute and a snooze write queue_state alone: no task, disposition or bundle moves, and the feed's items are unchanged by the snooze", () => {
   const w = world();
   w.member("carol"); w.bundle("INF-1"); w.bundle("INQ-1", "inquiry"); w.leg("INQ-1", "INF-1"); w.task("TASK-2026-0001-a", "INF-1");
+  /* progressions R18: the proposal's one instance, placed on a bundle the reader sees (queue-producers R11, K2581) */
+  w.run(`INSERT INTO progression_instances VALUES ('proc','E','sol',NULL,'INF-1')`);
   const snap = () => ({ tasks: w.all(`SELECT * FROM tasks`), disp: w.all(`SELECT * FROM finding_dispositions`),
                         bundles: w.all(`SELECT bundle_id, current_state FROM bundles`) });
   const before = snap();
@@ -264,8 +266,11 @@ test("R6, R8 (queue): an OBLIGATION and a FINDING under one contract, key for ke
   const w = world({ progressions: { proposalsFeed: () => ({ instances: [], dispositions: [], proposals: [
     { key: "proc::sol", progression_key: "proc", progression_label: "P", stage_key: "sol", stage_label: "S", required: "always",
       definition_version: 1, n: 1, kinds: ["missing_predecessor"], grade: null, grade_determined: false, overdue: false,
-      overdue_count: 0, surfaced_by: "machine", prior_disposition: null, instances: [] }] }) } });
+      overdue_count: 0, surfaced_by: "machine", prior_disposition: null,
+                        instances: [{ progression_key: "proc", entity_id: "E", grade: null, grade_determined: false, overdue: false }] }] }) } });
   w.member("dave"); w.bundle("INF-1"); w.bundle("INQ-1", "inquiry"); w.leg("INQ-1", "INF-1"); w.task("TASK-2026-0001-a", "INF-1");
+  /* progressions R18: the proposal's one instance, placed on a bundle the reader sees (queue-producers R11, K2581) */
+  w.run(`INSERT INTO progression_instances VALUES ('proc','E','sol',NULL,'INF-1')`);
   const f = w.feed("dave");
   const [ob, fi] = [byId(f)["TASK-2026-0001-a"], byId(f)["FINDING::proc::sol"]];
   const CONTRACT = ["id", "class", "kind", "case", "subject", "summary", "detail", "basis", "age", "assignee", "assignee_role",

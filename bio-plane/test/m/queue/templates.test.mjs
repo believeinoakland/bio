@@ -88,6 +88,7 @@ test("R19, R26, R31: each is refused KIND_NOT_PERSONAL by kind and by its publis
 test("R8 (K921): filingTemplates and localFacts are among the providers queue hands queue-producers, and queue calls neither", () => {
   assert.ok(Queue.PRODUCER_DEPS.includes("filingTemplates"));
   assert.ok(Queue.PRODUCER_DEPS.includes("localFacts"));
+  assert.ok(Queue.PRODUCER_DEPS.includes("publishSchedule"), "queue-producers R37 (K2582): handed on, never read here");
   assert.ok(Object.isFrozen(Queue.PRODUCER_DEPS));
   // given providers that throw on any call, the feed and the acts complete: queue itself reads neither
   const w = withK921({ filingTemplates: untouchable("filingTemplates", "reviewsRequested"),

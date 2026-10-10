@@ -13,8 +13,11 @@ test("R6: limit clamped to 1–500 (default 200); among equals (here every item,
                     progressions: { proposalsFeed: () => ({ instances: [], dispositions: [], proposals: [
                       { key: "p::s", progression_key: "p", progression_label: "P", stage_key: "s", stage_label: "S", required: "always",
                         definition_version: 1, n: 1, kinds: ["missing_predecessor"], grade: null, grade_determined: false, overdue: false,
-                        overdue_count: 0, surfaced_by: "machine", prior_disposition: null, instances: [] }] }) } });
+                        overdue_count: 0, surfaced_by: "machine", prior_disposition: null,
+                        instances: [{ progression_key: "p", entity_id: "E", grade: null, grade_determined: false, overdue: false }] }] }) } });
   w.bundle("INF-1"); w.bundle("INF-2"); w.task("TASK-2026-0002-b", "INF-1"); w.task("TASK-2026-0001-a", "INF-2");
+  /* progressions R18: the proposal's one instance, placed on a bundle the reader sees (queue-producers R11, K2581) */
+  w.run(`INSERT INTO progression_instances VALUES ('p','E','s',NULL,'INF-1')`);
   const f = w.feed(null, "class:admin");
   assert.equal(f.ok, true);
   assert.deepEqual(f.items.map((i) => i.class), ["OBLIGATION", "OBLIGATION", "FINDING", "CONDITION"]);

@@ -1,0 +1,34 @@
+# BOB to store-door (T41)
+
+**Read** · handled J4
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T41), layer 11, store-door: T41-61 (was T40-24). Read also K2373, K2400, K2489 and K2500 (their lines in `build/rulings.md`).
+Your requirements: `build/requirements/store-door.md` (read whole). Marked `*(not yet met: T41)*`: R10 (T40: N812, K2373) for the three drafts (`groupdescriptiondraft`, `writinghelp`, `translationdraft` in both directions) the door resolves `assistant` per act, `{account}` from `credentials.accountFor` with kind `draft`, and before any model turn answers, in order, `AI_KEPT_AWAY` (`credentials.aiKeptAway({use: "draft"})`), then `AI_NO_ACCOUNT` or `AI_USE_SWITCHED_OFF` (`credentials` R56), then `ai-use.useCheck`'s `AI_LIMIT_REACHED` (its R3), after the handler's own first refusal; under keep-away no account is read and no draft routed. Test it explicitly, with a negative control (K874).
+Text owed before this START (the plan's "Text owed", L11; BOB's wording, K2451), not yet in your requirements file at this drafting: BOB applies it before your START; read your marks there, and test each id it marks as above. Yours, store-door's share of (K2500, ANSWERS #7 J3): "the plane's ask path (`ask.mjs`:68, :119) and store-door (`dispatch.mjs`:278) call `answers.askAccount` (R30) for the account and limit, passing `use: "draft"` to `logRead` for a draft's reads" (the plane's share is T41-63's). At this drafting `dispatch.mjs`:276 calls ai-runs' `aiUseCheck`, and :377 (`askceiling`) too.
+Reading set (mechanics §17): measured at this START: 1009 KB by `build/plan/reading-sets.py`, an over-estimate (it counts each used module's whole public part): read as mechanics §3 asks (each used module's Purpose and the services your Uses names). Measure that set, with your tests, first. At most 300 KB: read it whole and state so in your record. Over: (1) trim nothing; (2) no further split in T41; (3) read whole yourself your requirements, layer 11's row of `build/layers.md`, the code and tests your entry changes and the used services your Uses names, and have your own workers read the rest of your code and tests in full and write the summary this task needs (each statement citing file and line), told the task, the requirements it serves and what follows; state in your record what you read whole, the summary's size and what it cites, and whether anything it left out mattered (K2304). This step is required, not optional.
+Merge order in L11: wizard-scripts, op-grades, affordances, tasks, queue-producers, notice-producers, queue, setup-words, instance-setup, op-declarations, admission, answer-envelope, store-door, control-plane, plane (`modules.json` order, the plan's L11 line; plane last; tasks (T41-61a) merges at its `modules.json` place, after affordances, whatever its number). Layer 10 is merged into `tranche/T41` before this START: build on it as merged. Same-layer providers you use: wizard-scripts (T41-50), affordances (T41-52), tasks (T41-61a), queue (T41-55), instance-setup (T41-57), answer-envelope (T41-60). Each one's changes reach you by a CHANGE once it merges. control-plane (T41-62) and plane (T41-63) use yours later in this layer. Drop `ai-runs` from your `uses` if nothing still reads it once you call ai-use and answers. Record your final `uses` in your record, for BOB to apply at your merge.
+Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); yours: rule 4 (10) (K2489), the L11 users of the retired ceiling codes (`AI_USE_CEILING_REACHED`, `AI_USE_COPY_CEILING_REACHED`), red from T41-21/T41-23's merges until your job, to be named exactly at L6's close (read the list as it stands at your START): your tests that call either code, or the removed ceiling ops (`aiceilingset`, `aicopyceilingset`, `aiCeilingSet`, `aiCopyCeilingSet`), are yours to re-point to ai-use (`ailimitset`, `useCheck`, `AI_LIMIT_REACHED`; its R3, R8): `routes.test.mjs`:154–159 (`aiCeilingSet`, `aiCopyCeilingSet`, `AI_USE_CEILING_REACHED`, `AI_USE_COPY_CEILING_REACHED`) and :208–210 (`aiCopyCeilingSet`, `AI_USE_COPY_CEILING_REACHED`) (grep at this drafting); your stubs of ai-runs' `aiUseCheck` (`routes.test.mjs`:116–118, `dispatch.test.mjs`:361–364) go with the re-point; none other unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+**From T41-23 (ai-runs) merge (K2514, AI-RUNS #16 J6).** K624 delete done: `dispatch.mjs`:276, :377 (`askceiling`), :381 (`askusage`) call ai-runs names that no longer exist (`aiUseCheck`, `countAskUsage`, `aiUsage`, `aiUsageMine`); re-point to `ai-use` (`useCheck`, `countUsage`, its reads). Reds inherited: `dispatch.test.mjs`:352; `routes.test.mjs`:132, :174, :226, :248 (helper :116 binds `runs.aiUseCheck`).
+
+
+**Marked at this START (K2573, re-taken after L10's merge):** R10, R11. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
+
+## B2 · ANSWER · re J1
+
+ANSWER J1 (K2574), R11 re-worded on `tranche/T41` (merge it in). (1) PLANE #29 asked the same: the plane owns a grant's `use` (its R33: the `logRead` it hands you records `draft` for its draft grants); you add no `use` and no `grantUse`. (2) Confirmed as you state it; `ai-runs` leaves your `uses`. Also (wizard-scripts R27, K2574): call `writinghelp` with your account/limit answer in `assistant.refusal` instead of answering it first; keep-away stays first.
+
+## B3 · ANSWER · re J2
+
+ANSWER J2 (K2577): your reading stands: relay credentials' `NO_ACCOUNT` as given, mint nothing; R10 on `tranche/T41` now reads `NO_ACCOUNT` (merge it in). WIZARD-SCRIPTS #7 is told the code it receives in `assistant.refusal`.
+
+## B4 · CHANGE
+
+CHANGE (K2585, from CONTROL-PLANE #28 J2), R11 worded on `tranche/T41` (merge it in): (a) `dispatch.mjs`:276, :377, :381 call ai-use's `useCheck`/`countAskUsage` (via `answers.askAccount` and `ai-use`, as B2 says), never ai-runs; (b) hand `captureupload`'s body on unread as the request stream (no JSON parse, no `BAD_JSON`), so control-plane R72 can stream it to capture. control-plane waits on your merge.
+
+## B5 · CHANGE
+
+CHANGE (K2593): affordances, tasks and queue are merged into `tranche/T41` (with op-grades, wizard-scripts, notice-producers, setup-words, queue-producers before them). Merge the tranche into your branch before your next completion; re-run your tests on it.

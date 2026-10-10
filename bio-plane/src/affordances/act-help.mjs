@@ -2,9 +2,9 @@
  * English explanation per op, keyed by op, held for translation (N669 keys the translations by this table's keys).
  *
  * GENERATED, never edited by hand, from the design stream's `docs/development/ux-substrate/screens/mock-acts.js` as
- * PR #15 merged it (`c848b56671`, DEC-183), 204 entries (T38-31, K2300; before it PR #14's `e08cd35ecb`, 203, T37-27);
- * a later design text is a re-generation. Each text is the design's, verbatim, in the design's order. Its keys are read
- * as R48 reads them:
+ * PR #19 merged it (`3660c18803`, DEC-188 (7), (8), U145), 215 entries (T41-52, K2484; before it PR #15's `c848b56671`,
+ * 204, T38-31; PR #14's `e08cd35ecb`, 203, T37-27); a later design text is a re-generation. Each text is the design's,
+ * verbatim, in the design's order. Its keys are read as R48 reads them:
  *   - a declared op is that op;
  *   - an alias (`op-grades`' OP_ALIASES, `op-declarations` R21's table) is held under its op, never as a second entry;
  *   - `owed_<op>` is held under `<op>` for the nineteen owed acts declared in T36 (`aikeepaway`, `openoriginal`,
@@ -12,11 +12,16 @@
  *     `securitytoolremove`, `archivelist`, `findin`, `groupdescriptiondraft`, `memberlanguageset`, `notedelete`,
  *     `noterevise`, `publishat`, `securitymap`, `startfrom`, `writinghelp`), the eight op-declarations declares in T37
  *     (T37-31, K2249: `subscriptionsignin`, `setpassword`, `obscuremark`, `translationgrant`, `translationdraft`,
- *     `translationadopt`, `translationconfirm`, `translationrevert`) and the one it declares in T38 (T38-15, its R40:
- *     `obscuremarkwithdraw`, PR #15's new text), and under `owed_<op>` for the one still undeclared (`infolevelset`);
+ *     `translationadopt`, `translationconfirm`, `translationrevert`), the one it declares in T38 (T38-15, its R40:
+ *     `obscuremarkwithdraw`) and the eleven it declares in T41 (its R41: `accountusesset`, `ailimitset`,
+ *     `projectkeyset`, `projectsigninset`, `projectaccountswitch`, `projectaccountremove`, `projectkeynoticeseen`,
+ *     `projectaikeepaway`, `exploreapprove`; its R42: `handlechange`, `handlecheck`), and under `owed_<op>` for the one
+ *     still undeclared (`infolevelset`);
+ *   - a retired op is not held: the file's texts for `aiceilingset`, `aicopyceilingset`, `accountswitchset` and
+ *     `groupswitchset` (retired by DEC-188 (8): no longer declared) are left out.
  * PR #14 withdrew `projectcreated`, `countask`, `registerproceeding`, `deadlinecompute` and `claimidentity` and dropped
- * `assistantset` (DEC-182 (1)–(3)); PR #15 re-worded `setpassword` (credentials R3: every other session ends) and added
- * `obscuremarkwithdraw` (DEC-183 (2)), so every one of its 204 entries is held. */
+ * `assistantset` (DEC-182 (1)–(3)); PR #19 re-worded `aikeepaway` (its `owed_` text) and `groupkeyset`. So 211 of its
+ * 215 entries are held. */
 export const ACT_HELP = Object.freeze({
   bootstrap: 'Installs Civicsmith in your group\'s own Cloudflare account under this short name. The short name is permanent: it appears in every address and beside every signature.',
   selftest: 'Runs Civicsmith\'s own checks on what was just installed, so you know it works before anyone joins.',
@@ -27,10 +32,9 @@ export const ACT_HELP = Object.freeze({
   officesseed: 'Lists the public offices and seats for your places, so requests and people can be addressed by role.',
   entitycreate: 'Adds something the record does not hold yet, such as an office, an organisation or a court case, with a note on where it comes from.',
   placewanted: 'Names a place Civicsmith does not yet hold rules for. Administrators are told when an update brings it.',
-  aikeepaway: 'Stops every assistant in the group, the group\'s and members\' own. Members see your reason on Settings › The assistant.',
-  groupkeyset: 'Holds one Anthropic API key for the group, sealed and never shown again. It serves members with no account of their own, at the group\'s cost.',
+  aikeepaway: 'Keeps the group\'s material away from AI, for every use or the ones you choose. It binds every account, the group\'s, any project\'s and members\' own. Members see your reason on Settings › The assistant.',
+  groupkeyset: 'Holds one Anthropic API key for the group, sealed and never shown again. It pays for a member\'s act when neither a project\'s account nor the member\'s own serves it.',
   groupkeyswitch: 'Turns the group\'s key on or off without removing it. Members who rely on it are told what changed.',
-  aicopyceilingset: 'Sets the most each member may spend on the group\'s key in a day. At the limit the assistant pauses for them until the next day.',
   courtnoticeset: 'Chooses whether members are told, when they join and the first time they record something not public, what a court order could reach.',
   hostingaccess: 'Records who holds the Cloudflare account. Whoever holds it can reach everything, so the group should know who that is.',
   securitytooladd: 'Adds a security tool your organisation uses. Before it is turned on you see what it is sent, who receives it and how long it keeps files.',
@@ -49,7 +53,6 @@ export const ACT_HELP = Object.freeze({
   invitewithdraw: 'Cancels an invitation nobody has used yet. The link stops working at once.',
   websitekeycreate: 'Creates a key that lets your group\'s website invite people, through an open form or an application someone approves.',
   joinlinkenable: 'Turns on one reusable link anyone with it can use to ask to join. You can turn it off at any time.',
-  groupswitchset: 'Sets whether, on the group\'s key, the assistant may suggest things unprompted and keep asking standing questions.',
   groupkeyremove: 'Removes the group\'s key for good. Members without their own account use Civicsmith without the assistant.',
   securitymap: 'Shows how hard your group\'s Civicsmith was tried over the period you choose, against its usual. Counts only.',
   securitytooltest: 'Sends a harmless test file or address to the tool and shows its answer, so you know it works before relying on it.',
@@ -63,8 +66,6 @@ export const ACT_HELP = Object.freeze({
   disclosureshown: 'Confirms you have read what connecting your own account means: your questions go to Anthropic under your own account and terms.',
   subscriptionsignin: 'Opens Anthropic\'s own sign-in page in a new tab. It gives you a code to paste here; Civicsmith never sees your password.',
   accountreferenceset: 'Connects your own Claude subscription or API key. It serves only you, before the group\'s key.',
-  aiceilingset: 'Sets the most your own account may spend in a day here, up to the limit the group set.',
-  accountswitchset: 'Lets the assistant suggest things without being asked. Off unless you turn it on; each suggestion is yours to adopt or ignore.',
   accountreferenceremove: 'Disconnects your own account. The group\'s key serves you instead, if the group has one.',
   membertie: 'Lists a tie that could matter to a case: an employer, a relative in a public body, a business interest. A case that concerns it says so.',
   membertiewithdraw: 'Removes a tie from your list. A case already published keeps what it said.',
@@ -122,6 +123,17 @@ export const ACT_HELP = Object.freeze({
   personfact: 'Records a fact about this person from the passage: a position, a credential, an interest. It cites the passage.',
   datedfact: 'Records a dated fact from the passage, citing it, for the timeline.',
   clockpropose: 'Works out a due date from the law and the dates, showing each day counted and each holiday skipped. It proposes the date; a member confirms it.',
+  accountusesset: 'Switches one use on or off for this account: asking, drafting, runs, standing questions, suggestions, or exploring (No, Ask every day, Yes). An act this account would pay for, with its use off, stops; it never moves to another account.',
+  ailimitset: 'Sets or removes one limit on this account: overall, for one use, or for each member\'s use, in dollars (estimated, API keys only), tokens or calls, a day or a month. It binds this account only.',
+  projectkeyset: 'Holds an Anthropic API key for this project, sealed and never shown again. Switched on, it pays for members\' acts in the project, before their own accounts or the group\'s key.',
+  projectsigninset: 'Makes your own Claude sign-in the project\'s account, allowed only while you are its only member. If another member joins, it stops serving the project at once and you are told.',
+  projectaccountswitch: 'Turns the project\'s account on or off without removing it. While it is off, members\' own accounts, then the group\'s key, serve in the project.',
+  projectaccountremove: 'Removes the project\'s account. Members\' own accounts, then the group\'s key, serve in the project from then on.',
+  projectkeynoticeseen: 'Records that you have read what the project\'s key means, before the first act it pays for.',
+  projectaikeepaway: 'Keeps this project\'s material away from AI, for every use or the ones you choose, with a reason every member sees. It binds every account, whoever pays.',
+  exploreapprove: 'Lets the assistant explore today, on this account, what it said is worth exploring. Without a yes today, it doesn\'t.',
+  handlechange: 'Changes the handle the record shows on your work. Members see your earlier handle beside it. Allowed until your work first appears in a published case; after that it is fixed.',
+  handlecheck: 'Checks, as you type, whether this handle can be used in the group: free, already taken, or using characters a handle can\'t have. It never says who has a handle.',
   obscuremarkwithdraw: 'Withdraws a mark on a photo, with your reason, for example when it covers what the finding shows. The withdrawal is recorded beside the mark; the public copy follows the marks that stand.',
   obscuremark: 'Marks anyone in a photo who is not part of a finding, and any number plate, so the copy a published case carries shows them obscured, labelled. The original stays inside the group.',
   standarddeclare: 'Holds this requirement as a standard the city set itself, so questions can test the city against it.',

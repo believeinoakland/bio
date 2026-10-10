@@ -105,6 +105,13 @@ export function world(fakes = {}) {
       db.prepare(`INSERT INTO signers (key_b64, member_id, comment, status, added, origin, registered_by) VALUES (?,?,?,?,?,?,?)`)
         .run(key, member, comment, status, added, origin, origin === "self" ? member : null);
     },
+    /** A project its owners set discoverable (membership R45's record, re-derived into R85's index), so an administrator
+     *  outside it still sees it whole (membership R43; K2409). A project with no such act is hidden (D54). */
+    discoverable(project) {
+      db.prepare(`INSERT INTO project_visibility (project_id, setting, set_by, reason, at) VALUES (?,?,?,?,?)`)
+        .run(project, "discoverable", "owner", null, iso(NOW));
+      membership.reindexProjectSight(project);
+    },
     cite(from, to, kind = "cites") { db.prepare(`INSERT INTO refs (bundle_id, target_id, kind) VALUES (?,?,?)`).run(from, to, kind); },
     leg(inquiry, target, ord = 0) { db.prepare(`INSERT INTO inquiry_basis (bundle_id, ord, role, target_id) VALUES (?,?,?,?)`).run(inquiry, ord, "supports", target); },
     /** R8's read, as queue makes it: homesOf and optionsOf closed over the viewer and identity. */
@@ -130,8 +137,9 @@ export function defaultFakes() {
     progressions: { proposalsFeed: () => ({ instances: [], proposals: [], dispositions: [] }) },
     aiRuns: { runFor: () => null },
     bias: { uncleared: () => ({ debts: [], limit: 200, truncated: false }) },
-    publication: { caseDocumentFacts: (c, e) => ({ ok: false, reason: "NO_CASE_DOCUMENT", case: c, edition: e }),
-                   scheduledEditions: () => ({ ok: true, editions: [], limit: 500, cursor: null }) },
+    /* publication keeps R23's read; the scheduled editions are publish-schedule's (its R4, was publication R69; N823) */
+    publication: { caseDocumentFacts: (c, e) => ({ ok: false, reason: "NO_CASE_DOCUMENT", case: c, edition: e }) },
+    publishSchedule: { scheduledEditions: () => ({ ok: true, editions: [], limit: 500, cursor: null }) },
     /* N612: a published case's tensions are case-tensions' (its R4, was publication R50) */
     caseTensions: { caseTensions: () => ({ ok: true, cases: [], limit: 200, cursor: null }) },
     corpusExport: { exportLog: () => ({ ok: true, exports: [], limit: 200, truncated: false }) },
