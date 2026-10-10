@@ -87,3 +87,7 @@ action-clocks, escalation and action-plans pass.
 - `node checks/ownership.mjs … conformance tranche/T41`: 0 failures (re-run after this commit, below).
 
 Size (session_019LCq6jQwSHCrrFFYXRcWYs): test runs 14, module lines 2,086
+
+## J1 · COMPLETE
+
+T41-45 complete; conformance 87/0; checks 0 failures (format, architecture, coverage 29/29, ownership). D54: the three listed tests re-stated (determine :15 twice, reads :68, :304) and two new D54 tests, each with a FULL control (invited administrator; discoverable project). D55: purpose.test.mjs, four Purpose tests with negative controls; the statements already met are named with their tests in my record. A flaw fixed here: an unclear question's new inquiry held no project (promotion R53), so any member saw a hidden project's question text; #openInquiry now states project:. Users' suites identical with and without the change (all reds inherited). Final uses unchanged. The Purpose's not-yet-met mark is yours to strike at the merge. Deferred items, with why, are in my record (Completion).
