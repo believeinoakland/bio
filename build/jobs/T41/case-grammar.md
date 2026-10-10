@@ -52,3 +52,7 @@ Every other failure in the users' suites is inherited, the same on `origin/tranc
 ## J3 · COMPLETE
 
 T41-34 complete on `job/T41/case-grammar` @ fbf2d2e62f, `tranche/T41` merged in (B2's R26). R12 `obscured_marked`, R13, R14 (T40 and T41), R23–R26 with K2528's `approvalSubjectSha`, each tested with negative controls. case-grammar 123/123; format, architecture, ownership 0 failures; coverage 26 of 26. Users' added reds: J2. Size: 2,657 module lines (~2,550 planned), test runs 14. Ready to merge (first in L8).
+
+## J4 · COMPLETE
+
+CHANGE B3 (K2533) applied on job/T41/case-grammar @ 0c1dd263c4, tranche/T41 merged: R25's review_comments_left_out null (undetermined) written, read and rendered as not stated; tested with a negative control. case-grammar 124/124; format, architecture, ownership 0 failures; coverage 26 of 26. Users' reds as J2, unchanged. Ready to merge.
