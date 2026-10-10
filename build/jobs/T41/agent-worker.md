@@ -1,6 +1,6 @@
 # agent-worker (T41)
 
-**Status** · session_01CuxSKppmd8ZmgSfSPhpxXR · depth 2 · COMPLETE · handled B5
+**Status** · session_01Rn3iyLqiJ9q66u1kvcCDXj · depth 2 · COMPLETE · handled B6
 
 
 ## Completion (AGENT-WORKER #15, session_01CuxSKppmd8ZmgSfSPhpxXR)
@@ -58,6 +58,19 @@ Re-run results:
 - **For BOB (wording):** R10's text still names `session.principal.claude`. It wants `session.principal.ref` (ai-runs R52, K2489).
 Size (session_01CuxSKppmd8ZmgSfSPhpxXR): test runs 16, module lines 2,760 (source; 13,923 all files outside `dist/`)
 
+**After B6 (CHANGE, K2520), AGENT-WORKER #16 (session_01Rn3iyLqiJ9q66u1kvcCDXj).** I merged `tranche/T41` (at d2617bbbb8, the merge) and reproduced the reported red: harness 256/5, the five REC100 arms.
+- **Cause: my test fixture, not another module.** Section R's real plane is `bio-plane/src/plane/index.mjs` as deployed. run-rules R19 (amended in T41) gates every run on its mode's test bar, on Civicsmith's set, which holds no matter yet (N829). So the fixture's `op=airunopen` answered `started: false, AI_RUN_MODE_NOT_DEPLOYED` (C-109.1, `deployed: []`). Every tick then answered `{found: false, note: "no such run…"}`, and the log read empty. Nothing in another module is wrong: the gate is run-rules' requirement, met.
+- **Fix in my tests:** new `test/plane-world.mjs`. It gives the fixture's plane a passing test bar the same way capture-requests' `plane-world.mjs` and ai-runs' `world.mjs` do: a scratch copy of `bio-plane/src/` whose Civicsmith set holds one matter, and an entry whose `Store` records a passing bar per part through ai-runs R75's `testBarRecord`. `harness.test.mjs` section R runs that entry and disposes of it at the end. Harness: 261/0.
+- **A flaw the red exposed, in my module, fixed (R26: "`logged` counts entries the plane appended"):** with the run never opened, the worker still reported `logged: 1`. A tick answered `found: false` has no `ok: false` and no `appended`, so it was read as one entry landed. Both tick sites in `src/index.mjs` (the drive loop and the fan-out's sub-session tick) now treat `found: false` as a refusal of the tick: in `refusals` in the plane's words (the plane's body unchanged, R43), and never counted in `logged`.
+- **Tests for it:** `t41.test.mjs` (now 50/0) has R26 "a tick answered `found: false`", with its control, the same run on a plane that holds it, counting what was appended. `t41.control.mjs` arm 9 (the check removed) fails the suite on R26: 9/0.
+- **Bundle:** my source change staled my own bundle. I rebuilt it with `npm run build` (agent-worker's `dist/` only, from the merged tip's inputs), so R45 reads green: requirements 305/0. BOB's L6 regeneration will produce the same bytes or replace them.
+- **Runs:** `npm test`: 13 files, 0 fail (agent-worker 140, ask 62, cascade 71, fanout 185, harness 261, plan 55, requirements 305, t35 206, t36 20, t37 165, t41 50, versions 20, wire-vocabulary 83). `harness.control.mjs` H6 (anchored on the tick site) and S2 (REC-100 aw-refused): AS DECLARED.
+- **Process checks:** format 0 failures (145 modules); architecture 0 failures; coverage 63 of 63 live ids, 0 failures; ownership 0 failures.
+- **Reading:** I read whole the code and tests this change touches: `harness.test.mjs` section R; `src/index.mjs`' two tick sites and `planeAnswer`; `t41.test.mjs`; `t41.control.mjs`. I also read capture-requests' `plane-world.mjs`, whose pattern the new helper mirrors. Nothing else of the set was needed for B6; the rest of the reading is #15's, above.
+- **Noted, not fixed:** `harness.control.mjs`' header announces S1 (REC-100 `aw-steplog`), but only S2 is armed in the file. `stepLog` moved to agent-harness, so S1's subject is no longer in this module. The header's count is stale, which is cosmetic; it goes to the split (T42).
+- **Found in other modules:** none.
+Size (session_01Rn3iyLqiJ9q66u1kvcCDXj): test runs 9, module lines 2,770 (source)
+
 ## J1 · QUESTION
 
 R6 still says "of `level` `group` or `project` with a `kind` other than `apikey`, 400 `BAD_ACCOUNT`", while R71 says a project's sign-in account (credentials R54, and credentials R56's cascade step 1: `{kind: "signin", level: "project", project, member}`) runs as `agent-runner` R2's `{kind: "signin", member}`, exactly as the member's own. The two disagree on `{kind: "signin", level: "project"}`.
@@ -79,3 +92,7 @@ B3 applied: tranche/T41 merged (8e954b4bfa). (1) Done already after B2: ask.test
 ## J5 · COMPLETE
 
 B4/B5 applied (record's Completion, 'After B4'): tranche merged 8ebe11131c. R10 now compares account.member with session.principal.ref (ai-runs R52), never principal.claude; mocks give ref; t41 48/0 adds group- and project-paid runs (drive) with mismatch controls, and R26's estimated_cost_usd on the tick (number on a key, null on a sign-in); t41.control 8/0 (new arm 8: R10 reading principal.claude). npm test: all 0 fail but requirements 303/2 = R45, stale bundle accepted by name, not regenerated. Checks: format, architecture, coverage 63/63, ownership 0 failures. Wording for you: R10's text still says session.principal.claude; it wants session.principal.ref.
+
+## J6 · COMPLETE
+
+B6 applied (record: 'After B6'). Cause of REC100's 5 reds: my fixture, not another module. run-rules R19's test-bar gate refused the real plane's airunopen AI_RUN_MODE_NOT_DEPLOYED (C-109.1), so every tick found no run. Fix: new test/plane-world.mjs gives section R's plane a passing bar (as capture-requests' plane-world.mjs); harness 261/0. The red also exposed an R26 flaw of mine: a tick answered found:false counted logged 1. Both tick sites now refuse it (in refusals, plane's words); t41 50/0 with a control; t41.control arm 9; 9/0. I rebuilt my own bundle after the src change: requirements 305/0. npm test: 13 files, 0 fail; harness.control H6, S2 as declared. Checks: format, architecture, coverage 63/63, ownership 0 failures. Head 9bfd66954b.

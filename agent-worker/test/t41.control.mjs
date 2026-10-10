@@ -42,6 +42,8 @@ const ARMS = [
   { name: "the payer compared against principal.claude (who pays) instead of principal.ref (whose act)", file: INDEX,
     ids: ["R10", "R57"], from: "const recordedPayer = session.principal?.ref ?? null;",
     to: "const recordedPayer = session.principal?.claude ?? null;" },
+  { name: "a tick answered `found: false` (no such run) counted as landed (T41 B6)", file: INDEX, ids: ["R26"],
+    from: "const noRun = !tickAnswer.refused && tickAnswer.result?.found === false;", to: "const noRun = false;" },
 ];
 
 const pick = process.argv[2] ? [Number(process.argv[2])] : ARMS.map((_, i) => i + 1);

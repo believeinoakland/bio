@@ -4068,7 +4068,15 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     );
     if (!tick.reached) return { refusal: planeSilent(tick) };
     const tickAnswer = planeAnswer(tick, "airuntick");
-    if (tickAnswer.refused) {
+    const noRun = !tickAnswer.refused && tickAnswer.result?.found === false;
+    if (noRun) {
+      refusals.push({
+        at: "airuntick",
+        code: tickAnswer.result.code ?? null,
+        check: tickAnswer.result.check ?? null,
+        plane: tick.body ?? null
+      });
+    } else if (tickAnswer.refused) {
       refusals.push({
         at: "airuntick",
         code: tickAnswer.refused.code,
@@ -4539,8 +4547,8 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
       if (tick.silent) return { silent: tick.silent };
       const t = tick.result ?? {};
       const bad = Array.isArray(t.refused) ? t.refused : [];
-      if (tick.refused || bad.length) {
-        for (const r of tick.refused ? [tick.refused] : bad)
+      if (tick.refused || bad.length || t.found === false) {
+        for (const r of tick.refused ? [tick.refused] : t.found === false ? [t] : bad)
           logSeq?.refused({
             at: "airuntick.log",
             step: "fanout",

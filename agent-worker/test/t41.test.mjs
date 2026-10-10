@@ -66,7 +66,8 @@ function plane(cfg = {}) {
       case "airunspawn": return ok({ found: true, half: "search", payload: { run: "RUN-41", context: { type: "inquiry", id: "INQ-1" },
                                                                             mode: "check", skill: PACK.version, standard_pair: null } });
       case "basisversions": return ok({ versions: [] });
-      case "airuntick": return ok({ ticked: true, appended: (body?.log || []).length, refused: [] });
+      case "airuntick": return ok(cfg.tick ? cfg.tick(body)
+                                             : { ticked: true, appended: (body?.log || []).length, refused: [] });
       case "airunclose": S.status = "finished"; return ok({ terminated: true });
       default: return ok({ op, rows: [{ id: "EVT-1" }] });
     }
@@ -254,6 +255,25 @@ section("R26 (ai-runs R72, agent-model R13) · a tick's usage carries agent-mode
   const su = usageOf(s);
   t("R26 (control): on a project's sign-in every entry carries estimated_cost_usd as null, passed as agent-model answers it",
     [su.length > 0, su.every((e) => e.usage && "estimated_cost_usd" in e.usage && e.usage.estimated_cost_usd === null)], [true, true]);
+}
+
+section("R26 (T41 B6) · a tick the plane answers `found: false` (no such run) appended nothing: refused, never `logged`");
+{
+  /* The plane's own answer for a run it does not hold (ai-runs: `{run, found: false, note}`, no `ok: false`): the REC-100
+     fixture's run was never opened (AI_RUN_MODE_NOT_DEPLOYED) and every tick answered so, yet `logged` read 1. */
+  const NO_RUN = { run: "RUN-41", found: false, note: "no such run: it either never existed or was purged" };
+  const look = { judgements: [{ targets: [], level: "document", observed: "LOOKED_INDETERMINATE" }] };
+  const sent = (r) => r.plane.filter((c) => c.op === "airuntick").reduce((n, c) => n + (c.body?.log || []).length, 0);
+  const tickRefusals = (o) => (o?.refusals || []).filter((x) => x.at === "airuntick" && x.plane?.result?.found === false);
+  const gone = await drive("run", runBody(MKEY(), look), { planeCfg: { tick: () => NO_RUN } });
+  const go = last(gone) ?? gone.out;
+  t("R26: every tick answered `found: false` counts nothing in `logged`, and each is in `refusals` in the plane's words",
+    [sent(gone) > 0, go?.logged, tickRefusals(go).length > 0,
+     tickRefusals(go).every((x) => x.plane.result.note === NO_RUN.note)], [true, 0, true, true]);
+  const held = await drive("run", runBody(MKEY(), look));
+  const ho = last(held) ?? held.out;
+  t("R26 (control): the same run on a plane that holds it counts each entry it appended, and names no such refusal",
+    [sent(held) > 0, ho?.logged, tickRefusals(ho).length], [true, sent(held), 0]);
 }
 
 section("R71, R57 · model turns on a project's account: its key to the Messages API, its sign-in as the member's own in that member's runner");
