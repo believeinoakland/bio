@@ -48,3 +48,9 @@ Two findings (record, Completion): (1) wizard-scripts: writingHelp's own keep-aw
 ## J4 · COMPLETE
 
 T41-61 done: R10, R11 as re-worded (B2-B4 applied). store-door 43/43; users control-plane+plane+migrate-released 338 pass/13 fail vs base 337/14, every failure inherited, one base red cleared; format, architecture, coverage 13/13, ownership: 0 failures. Final uses: drop ai-runs. Record: build/jobs/T41/store-door.md on job/T41/store-door.
+
+## Re-run after B5 (K2593)
+
+Merged `tranche/T41` (affordances, tasks, queue and the layer's earlier merges) at `cf3fd85ce8`; no conflict, no change to the module. `node --test bio-plane/test/m/store-door/*.test.mjs`: `tests 43, pass 43, fail 0`. Checks: format 0, architecture 0, coverage 13/13 0, ownership 0 failures.
+
+Size (session_01PuHeVd3DfFWWwcgeAkRtmj): test runs 13, module lines 613
