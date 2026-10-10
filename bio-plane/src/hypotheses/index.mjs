@@ -880,7 +880,8 @@ function stringsIn(v, out = []) {
 
 /** R7: the route arms, keyed by op name, each a function of no arguments: the hypotheses' four and the notes' five
  *  (three since T34; `noterevise`, `notedelete` since T35, DEC-144); since T41, `hypothesistakeup` (R17) and the shares'
- *  `noteshare`, `noteunshare` and `shares` (R19–R21), as `op-declarations` R43 names them. An act's arguments come from the body, whose `by` is the control plane's stamp; a read's from `url`'s
+ *  `noteshare`, `noteunshare` and `shares` (R19–R21), as `op-declarations` R43 names them, and (K2508) R18's
+ *  `hypothesissetaside`. An act's arguments come from the body, whose `by` is the control plane's stamp; a read's from `url`'s
  *  query, the `viewer` stamp among them, never the body. */
 export function hypothesesOps(hypotheses, url, body) {
   const q = (k) => url.searchParams.get(k);
@@ -897,6 +898,7 @@ export function hypothesesOps(hypotheses, url, body) {
     noterevise: () => hypotheses.noteRevise(b),
     notedelete: () => hypotheses.noteDelete(b),
     hypothesistakeup: () => hypotheses.hypothesisTakeUp(b),
+    hypothesissetaside: () => hypotheses.hypothesisSetAside(b),
     noteshare: () => hypotheses.noteShare(b),
     noteunshare: () => hypotheses.noteUnshare(b),
     shares: () => hypotheses.sharesOf({ project: q("project"), viewer: q("viewer") }),
