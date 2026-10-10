@@ -258,7 +258,7 @@ test("R72 R70 any member who may write the action may state seeks; a machine or 
   for (const author of ["class:daemon", ""]) {
     const r = w.promote(A, md(A, rr(seeksLines(ok))), { author });
     assert.deepEqual([r.reason, r.code, r.check], ["MACHINE_CANNOT_STATE_SEEKS", "MACHINE_CANNOT_STATE_SEEKS", "C-32.21"], author || "unstamped");
-    assert.equal(r.translation, grammar.ACTION_CATALOGUE_CHECKS.MACHINE_CANNOT_STATE_SEEKS.translation);
+    assert.equal(r.translation, grammar.RECORDS_LAW_FENCE_CHECKS.MACHINE_CANNOT_STATE_SEEKS.translation);
   }
   assert.equal(w.record.head(A), null);
   assert.equal(w.promote(A, md(A, rr(seeksLines(ok))), { author: BOB }).ok, true, "a member states it");

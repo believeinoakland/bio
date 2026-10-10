@@ -2,12 +2,32 @@
 
 **Status** · session_01To13zdek2Zn7rXSM6hPTP7 · depth 2 · WORKING · handled B5
 
-## Work (in progress)
+## Completion
 
-- Reading set (mechanics §17): measured over 300 KB (START: 859 KB; `index.mjs` alone 203 KB, the tests 200 KB). Read whole myself: `requirements/actions.md`, layer 9's row and contract in `build/layers.md`, `src/actions/index.mjs` (3,108 lines), `t34`, `t27` and `fixture.mjs`, and the services my entry uses (membership R43, R44, R60, R77, R78, R85 and their code `sight`, `visibilityOf`, `existenceAct`; progressions R5 `readProgression`; intent R33 and `registerNoneExistsReader`; action-grammar R13; publish-schedule R1, R8; ratification's fixture). A worker read whole the rest (`schema.mjs` and `acts`, `write`, `read`, `t11`, `t12`, `t17`–`t20`, `t22`, `t33`: 158,771 bytes) and summarised it, citing file and line: the hold tables and `ACTIONS_TABLES`; no test there touches a hidden project or an administrator's sight; the registrations asserted at start (none counts them all); the records_request writes a `seeks` check must leave unchanged (it runs only when `seeks` is stated); the exact key sets and `where` regions to keep. Nothing it left out mattered.
-- Suite at START: 95/96, the one red `t34`:219 (rule 4 (13), K2548).
-- Done: R52, R56–R60 by "may name" (`#mayName`: `FULL`, or `EXISTENCE` of a hidden project, which membership answers only to an administrator neither invited nor joined); R60 already read no viewer's sight, now stated and tested. `t34`'s stub re-pointed to `w.schedule.scheduleEdition` (publish-schedule R1). New `t41.test.mjs` (7 tests, each failing against the FULL-only rule). Suite 103/103.
-- Next: R70, R71 when action-grammar's CHANGE lands (J1, answered B2, K2552).
+**Reading set** (mechanics §17): over 300 KB (START: 859 KB; `index.mjs` 203 KB, the tests 200 KB). Read whole myself: `requirements/actions.md` (with R72, R73 as K2561 added them), layer 9's row and contract in `build/layers.md`, `src/actions/index.mjs`, `t34`, `t27`, `fixture.mjs`, and the services my entry uses (membership R43, R44, R60, R77, R78, R85 and `sight`, `visibilityOf`, `existenceAct`; progressions R5 `readProgression`; intent R33 `registerNoneExistsReader`; action-grammar R13, R14 and `seeksOf`/`seeksFindings`; publish-schedule R1, R8; ratification's fixture). A worker read whole the rest (`schema.mjs`; `acts`, `write`, `read`, `t11`, `t12`, `t17`–`t20`, `t22`, `t33`: 158,771 bytes) and summarised it with file and line: the hold tables and `ACTIONS_TABLES`; no test there touches a hidden project or an administrator's sight; the start registrations asserted (none counts them all); the records_request writes a `seeks` check must leave unchanged; the exact key sets and `where` regions to keep. Nothing it left out mattered.
+
+**Entries applied** (T41-47; N822, N823, K2505, K2561):
+- R52, R56–R60 (D54; K2484): "may name" (`#mayName`): `FULL`, or `EXISTENCE` of a hidden project (membership answers it only to an administrator neither invited nor joined; a discoverable project's `EXISTENCE` names nothing). Applied to `actionHold`'s named projects and its `projects`, R56's `restarted`, R57's `restarts`/`out_of_view`, R58's `held: null`, R59's `restarted`, R25's statements. R60 already read no viewer's sight: stated in its comment and proved.
+- `t34` (N823, K2438): its stub re-pointed from `publication.scheduleEdition` to publish-schedule's (`w.schedule.scheduleEdition`, its R1); rule 4 (13)'s actions red cleared. No `publish-schedule` edge needed: actions' source does not import it; the test reaches it through ratification's fixture.
+- R70: `seeks` judged at the write when stated or changed (never re-judged when carried forward), facts read per distinct progression through `progressions.readProgression` (`null` for one not held; an unreadable read fails closed, `cause: PROGRESSIONS_UNREADABLE`), refused with the grammar's own `SEEKS_REFUSED` (C-117.29), every finding carried.
+- R71: `noneExistsFor` registered once at start with `intent.registerNoneExistsReader` (reached as ratification is: given, or the composition root's `env`; a reader already held stands).
+- R72: `MACHINE_CANNOT_STATE_SEEKS` (C-32.21) at `#seeksFence > is-machine-state-seeks`.
+- R73: `actionSeeksPropose` (`op=actionseekspropose`), table `action_seeks_proposals` (in `ACTIONS_TABLES`, purged with the action), R25's `seeks` and `seeks_proposals` (at most 12, newest first, R19's bound).
+
+**For L11 (op-declarations, control-plane):** `actionseekspropose` in `actionsOps`: `target` (query or body), `seeks` (body list or JSON, or query JSON), stamps `viewer` and `proposer`; any credential; a write to this module's own table only.
+
+**Final `uses`** (for BOB at merge): today's list plus `progressions` (R70, R73: `readProgression`) and `intent` (R71: `registerNoneExistsReader`). Membership's `visibilityOf` (its R85) joins the services named under membership.
+
+**Deferred:** none.
+
+**Found in other modules:** none new. The plane boots actions with its `env` before `intentOf` (`plane/src/store.mjs`:252 vs :286), so actions' factory now creates intent first on that host; intent's factory is idempotent per host, and the plane's later call returns the same instance.
+
+**Tests and checks:**
+- actions: 109 pass, 0 fail (START: 95/96, the `t34` red). New `t41.test.mjs`: 13 tests; the 7 D54 tests each fail against the FULL-only rule.
+- users and providers: intent 82/0, progressions 63/0, action-grammar 42/0, action-clocks 55/0, escalation 63/0, action-plans 63/0, monitoring 121/0; filings 69/1 (`outward`:136, rule 4 (9)); queue-producers 3 fail, store-door 28 fail, answer-envelope 4 fail, each identical on `tranche/T41` (inherited).
+- `checks/format.mjs`: 0 failures. `checks/coverage.mjs`: 61 of 61, 0 failures. `checks/ownership.mjs`: 0 failures. `checks/architecture.mjs`: 2 failures, the `progressions` and `intent` edges above (BOB's at merge, per the START).
+
+Size (session_01To13zdek2Zn7rXSM6hPTP7): test runs 38, module lines 3547
 
 ## J1 · QUESTION
 
