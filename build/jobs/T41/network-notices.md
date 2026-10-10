@@ -35,3 +35,7 @@ Size (session_01GXCqPTAxKrSAfPYRLzkwSn): test runs 11, module lines 1413
 **Tests and checks after the merge:** `node --test bio-plane/test/m/network-notices/*.test.mjs`: tests 73, pass 73, fail 0. `format`: 145 modules, 144 requirements files; 0 failures. `architecture`: 12 product files, 65 relative imports; 0 failures. `coverage`: 30 of 30 live requirement ids named by a test; 0 failures. `ownership … tranche/T41`: 4 files changed; 0 failures.
 
 Size (session_01GXCqPTAxKrSAfPYRLzkwSn): test runs 12, module lines 1413
+
+## J4 · COMPLETE
+
+B3 applied (K2543): merged tranche/T41 (publication T41-36, @ e2f3e4b7f7) into my branch @ 90919f0b16. Nothing I read changed: publication's R37, R40, R41, R53 (the cases, published_cases, caseCitedParts this module reads) are unchanged by the merge. No code or test change; J2 and J3 stand. On the merged tip: network-notices tests 73, pass 73, fail 0; format 0 failures (145 modules, 144 requirements files); architecture 0 failures; coverage 30 of 30 live ids, 0 failures; ownership 4 files, 0 failures. Size (session_01GXCqPTAxKrSAfPYRLzkwSn): test runs 13, module lines 1413
