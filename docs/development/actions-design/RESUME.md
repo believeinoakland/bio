@@ -1,6 +1,6 @@
 # Resume: actions design lane
 
-**State: PAUSED 2026-10-10 by Bob** ("Pause development and save everything to the repo so that development can continue in the other account"). Everything is on branch `design/actions` in this folder. A successor continues from here, in any account, by reading this file whole, then `DECISIONS.md`, then `HANDOFF.md` H1–H9, then the working page `actions-design.html` (its §7 holds every decision's full text as Bob saw it).
+**State: RESUMED 2026-10-10** by ACTIONS-DESIGN #2 (`session_01RukQneSYmxg4FvfJ9aXccd`, Bob's primary account), started by BOB #149 (`session_01EyAmJMZV2GNzEmkDJkdcik`) on Bob's direction of 2026-10-10 ("Yes, start actions design and ux substrate lanes"). The working page is now https://claude.ai/artifact/JH9AK7rgmxRNR9QjPL3s5d (H10). Earlier: paused 2026-10-10 by Bob ("Pause development and save everything to the repo so that development can continue in the other account"). Everything is on branch `design/actions` in this folder. A successor continues from here, in any account, by reading this file whole, then `DECISIONS.md`, then `HANDOFF.md` H1–H9, then the working page `actions-design.html` (its §7 holds every decision's full text as Bob saw it).
 
 **Lane:** ACTIONS-DESIGN #1 (`session_01VDxYUZBV7s4gVx8xWwmCVY`), started 2026-10-09 by BOB #146 (`session_017Mqb4UstLxePtEby56C1kS`) on Bob's direction (investigation lane D43, K2382; N817 in `build/plan/next.md`). Branch `design/actions`. Model: the investigation lane on `design/investigation`, `docs/development/investigation-design/`.
 
@@ -18,7 +18,8 @@
 ## The working page
 
 - Source: `actions-design.html` in this folder (HTML artifact source: no `<html>/<head>/<body>`; `<title>Actions Design</title>`; tokens on `:root` with dark-mode blocks; styling modelled on the investigation lane's page).
-- Published by the old account at https://claude.ai/artifact/3LPhoZ6geoYBnt7XvDqUM8. That artifact belongs to the old account; a session in another account cannot republish to it unless Bob grants edit access. **In the new account, publish `actions-design.html` as a new artifact (icon `compass`)** and give Bob the new link; record it here and in HANDOFF.
+- **Current page (this account): https://claude.ai/artifact/JH9AK7rgmxRNR9QjPL3s5d** (icon `compass`, published 2026-10-10 by ACTIONS-DESIGN #2); republish this one.
+- Formerly published by the old account at https://claude.ai/artifact/3LPhoZ6geoYBnt7XvDqUM8. That artifact belongs to the old account; a session in another account cannot republish to it unless Bob grants edit access. **In the new account, publish `actions-design.html` as a new artifact (icon `compass`)** and give Bob the new link; record it here and in HANDOFF.
 - Sections: 1 Bob's direction · 2 what canon says an action is · 3 what is built · 4 the gaps · 5 readings settled here · 6 the twenty use cases (table) · 7 decisions for Bob (D1–D24, each with background, options with examples, trade-offs, recommendation; ruled ones tagged with Bob's words) · 8 the research record.
 - Bob comments on the page. Two comment threads on the old artifact were left open for his reply: D18 (narrowing the override) and D19 (scenario count). Their content is in §7 and `DECISIONS.md`.
 
@@ -34,7 +35,7 @@
 
 ## Next actions for a successor
 
-1. Publish `actions-design.html` as a new artifact in the new account; tell Bob the link and that D6, D8–D16, D18, D19 await him.
+1. ~~Publish `actions-design.html` as a new artifact in the new account~~ done 2026-10-10 (H10); D6, D8–D16, D18, D19 put to Bob again the same day.
 2. Record each answer verbatim in `DECISIONS.md`, tag it on the page, add an `H<n>` with what requirements must say, commit and push.
 3. Then step 5 as above.
 
@@ -45,3 +46,4 @@
 - 2026-10-09: step 3 done (U1–U20, S1); D1–D16 put to Bob; H3.
 - 2026-10-09: Bob's comments and answers: D17 ruled (all options listed; replaces K660 (2)); D18, D19 put from his questions; D20–D22 ruled (responses that are infractions; re-examination on a reported response; publications record actions taken); D23 ruled (a case checked then held to act first); D24 put; D1, D2, D3, D4, D5, D7 ruled; D6 re-explained; D24 ruled. H4–H8.
 - 2026-10-10: paused by Bob for continuation in another account; H9.
+- 2026-10-10: resumed by ACTIONS-DESIGN #2 (`session_01RukQneSYmxg4FvfJ9aXccd`) in Bob's primary account; page republished as https://claude.ai/artifact/JH9AK7rgmxRNR9QjPL3s5d; the twelve open decisions put to Bob again; H10.
