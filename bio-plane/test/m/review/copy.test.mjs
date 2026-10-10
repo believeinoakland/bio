@@ -66,9 +66,17 @@ test("R12: each finding is read as the draft's last editor may see it, for both 
     { target: "INQ-2026-0404-none", present: false, role: "supporting",
       detail: "this draft names a finding its editor cannot read, or one that does not exist." },
   ];
-  /* the recipient, a member who could see z (quinn cannot read P's drafts; adm can see every project), and ed */
+  /* the recipient, a member who could see z (quinn cannot read P's drafts; an administrator invited to P and z both,
+     who has standing in P's drafts and sight of z under D54), and ed */
+  w.member("adm2", "admin");
+  for (const pid of [P, "PROJ-2026-0009-z"])
+    w.st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated)
+                   VALUES (?,?,?,?,?,?)`, pid, "adm2", "invited", 0, NOW, NOW);
+  assert.equal(w.membership.inSight("PROJ-2026-0009-z", V("adm2")), true, "the reader can see z");
   assert.deepEqual(w.r.copy({ secretSha: SECRET(1), bySecret: true }).findings, want);
-  assert.deepEqual(w.r.copy({ draft: d.draftId, viewer: V("adm") }).findings, want, "the reader's own sight does not widen it");
+  assert.deepEqual(w.r.copy({ draft: d.draftId, viewer: V("adm2") }).findings, want, "the reader's own sight does not widen it");
+  /* D54: an administrator neither invited nor joined to hidden P has no member door at all */
+  assert.equal(JSON.stringify(w.r.copy({ draft: d.draftId, viewer: V("adm") })), DEAD);
   assert.deepEqual(w.r.copy({ draft: d.draftId, viewer: V("ed") }).findings, want);
   /* the editor changes: the next last editor's sight governs */
   w.st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated)

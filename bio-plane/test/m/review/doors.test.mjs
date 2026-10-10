@@ -48,14 +48,26 @@ test("R8: a grant is live only while it exists with that fingerprint, is unrevok
   assert.equal(w.r.grantAdmitsCaseEdition(null, "CASE-2026-0001", 3), false);
 });
 
-test("R9: standing in a project's drafts is the sight predicate over the producing project: a participant (invited or joined) or an active administrator", () => {
+test("R9: standing in a project's drafts is the sight predicate over the producing project: a participant (invited or joined), or an active administrator only of a discoverable project (D54)", () => {
   const w = standard();
   w.member("gone", "admin", "revoked");
+  w.member("adm2", "admin");
+  w.st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, owner, created, updated)
+                 VALUES (?,?,?,?,?,?)`, P, "adm2", "invited", 0, "2026-09-28T01:00:00.000Z", "2026-09-28T01:00:00.000Z");
   const d = draft(w);
-  const sees = { ann: true, bea: true, ed: true, ivy: true, lee: true, adm: true, out: false, quinn: false, gone: false };
+  /* P is hidden (no visibility recorded): an administrator neither invited nor joined has no standing (D54) */
+  const sees = { ann: true, bea: true, ed: true, ivy: true, lee: true, adm: false, adm2: true, out: false, quinn: false, gone: false };
   for (const [m, want] of Object.entries(sees)) {
     assert.equal(w.r.seesProjectDrafts(P, V(m)), want, m);
     assert.equal(!!w.r.draftForMember(d.draftId, V(m)), want, m);
+  }
+  /* negative control (D54): the same administrator keeps standing in a discoverable project's drafts */
+  w.project("PROJ-2026-0003-d", { owners: ["quinn"] });
+  w.discoverable("PROJ-2026-0003-d", "quinn");
+  const dd = w.r.act({ act: "draft", author: "quinn", project: "PROJ-2026-0003-d", statement: "S" });
+  for (const [m, want] of Object.entries({ adm: true, quinn: true, gone: false, out: false, ann: false })) {
+    assert.equal(w.r.seesProjectDrafts("PROJ-2026-0003-d", V(m)), want, `discoverable ${m}`);
+    assert.equal(!!w.r.draftForMember(dd.draftId, V(m)), want, `discoverable ${m}`);
   }
   for (const viewer of [null, undefined, "", "ann", "member:", "member:ann extra", "guest:ann", "class:nobody"]) {
     assert.equal(w.r.seesProjectDrafts(P, viewer), false, String(viewer));
@@ -148,6 +160,10 @@ test("R19: the list of a project's drafts, fenced exactly as R9, bounded, writin
                    w.r.list({ viewer: V("ann") })])
     assert.equal(JSON.stringify(r), DEAD);
   assert.equal(w.r.list({ project: Q, viewer: V("quinn") }).total, 1);
+  /* D54: an administrator neither invited nor joined reads a hidden project's list as the dead answer; once the
+     project is discoverable (the negative control), the whole list */
+  assert.equal(JSON.stringify(w.r.list({ project: P, viewer: V("adm") })), DEAD);
+  w.discoverable(P, "ann");
   assert.equal(w.r.list({ project: P, viewer: V("adm") }).total, 5);
 });
 
@@ -177,6 +193,9 @@ test("R19: a project with no drafts is a stated zero, the whole list and not a r
   const w = standard();
   /* P holds drafts; Q holds none (another project's drafts are not Q's) */
   draft(w); draft(w, { newCase: true });
+  /* D54: Q is hidden, so an administrator outside it has no standing there; made discoverable, the administrator does */
+  assert.equal(JSON.stringify(w.r.list({ project: Q, viewer: V("adm") })), DEAD);
+  w.discoverable(Q, "quinn");
   for (const [viewer, limit] of [[V("quinn"), null], [V("quinn"), "1"], [V("adm"), null], [V("adm"), 0]]) {
     const before = w.snapshot();
     const l = w.r.list({ project: Q, viewer, limit });
