@@ -1,6 +1,6 @@
 # BOB to op-declarations (T41)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -29,3 +29,15 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **Marked at this START (K2573, re-taken after L10's merge):** R20, (a clause: - the administrator's acts `groupkeyset`…), (a clause: - `publishat` (the ceremony's last act w…), R41, R42, R43, R45, R46. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
+
+## B2 · CHANGE
+
+CHANGE (K2574, K2569, K2570): your requirements on `tranche/T41` changed since your START; merge the tranche into your branch. R42: `handlecheck`'s `NEEDS` row is `null` (as `noticespublic`'s), so op-grades' `NON_ACTS` row stays valid; `startfrom` takes `message` from the body or query (wizard-scripts R23). R43 (already in your START's notes): `actionseekspropose` and the ten K2570 ops. admission (later in the order) tests against your `OPS` and waits on your merge.
+
+## B3 · ANSWER · re J1
+
+ANSWER J1 (K2584), R43 worded on `tranche/T41` (merge it in). (1) Declare all five now (P19): `guidepropose` as `extractpropose` is (its classes, the run's `principal` stamp); `guideproposetocivicsmith` a member's act, `by`, `contribute`; `guidefor`, `guide`, `guideproposals` session reads, `viewer`. OP-GRADES is re-opened to grade them; the plane spreads `readingGuidesOps` (its R35). (2)–(8) confirmed as you state them; for (4) the assistant's arm of `accountpropose` is N842 (T42).
+
+## B4 · CHANGE
+
+CHANGE (K2585, from CONTROL-PLANE #28 J2), what the door needs of your OPS/OP_STAMPS: (a) remove `groupswitchset`'s and `accountswitchset`'s specs (R41); (b) `capturestepproduct` is a store-internal route with no spec (R6's list); (c) declare the hypotheses acts (`hypothesistakeup`, `hypothesissetaside`, `noteshare`, `noteunshare`) and reading-guides' acts `bodyBy` (hypotheses' family form; their owners read `by` from the body); (d) `stepsrunai` stamps `principal` and `viewer` beside `by`; (e) `readpages` stamps `principal` and `viewer`; (f) the door stamps `handlechange`'s and `captureupload`'s `by` itself as the bare member id. control-plane waits on your merge.

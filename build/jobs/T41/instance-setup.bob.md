@@ -1,6 +1,6 @@
 # BOB to instance-setup (T41)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **Marked at this START (K2573, re-taken after L10's merge):** R65, R67. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
+
+## B2 · ANSWER · re J1
+
+ANSWER J1 (K2581): your reading confirmed as built. R65's `ASSISTANT_OFF` now reads `AI_KEPT_AWAY` on `tranche/T41` (merge it in). Also: the door's no-account code is credentials' `NO_ACCOUNT`, relayed as given (K2577), not `AI_NO_ACCOUNT`; your test that the door's codes are never minted here should name it.

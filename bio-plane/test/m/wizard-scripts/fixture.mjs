@@ -165,3 +165,10 @@ export function approved(w, x = {}) {
   must(w.wz.wizardApprove({ version: d.version, by: V(by), viewer: V(by) }), "approve");
   return d;
 }
+
+/** D54 (membership R43, R44; K2408): a project's owner sets it discoverable, so an administrator neither invited nor
+ *  joined sees it at FULL again (a hidden project, the default, it sees only at EXISTENCE: none of its scripts). */
+export function discoverable(w, project = w.P, owner = "alice") {
+  return must(w.membership.projectVisibilitySet({ projectId: project, setting: "discoverable", reason: "open to the group", by: owner, viewer: V(owner) }),
+              "discoverable");
+}

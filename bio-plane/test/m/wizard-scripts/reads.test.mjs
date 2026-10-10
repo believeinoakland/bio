@@ -2,7 +2,7 @@
    approvals owed (R17), at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, draft, approved, V, MACHINE, STEPS, step, LIBRARY } from "./fixture.mjs";
+import { seeded, draft, approved, discoverable, V, MACHINE, STEPS, step, LIBRARY } from "./fixture.mjs";
 import * as wz from "../../../src/wizard-scripts/index.mjs";
 
 const A = V("alice"), B = V("bob"), F = V("frank"), E = V("erin"), D = V("dave");
@@ -13,7 +13,7 @@ const refused = (r, c, why = "") => {
 };
 const ids = (r) => r.scripts.map((s) => s.id);
 
-test("R10 wizards lists, to the owners of a script's project and to administrators, the scripts the viewer may see, newest first, each offered version with state, author, contributors, approver, dates, broken and use; others see none; writes nothing", () => {
+test("R10 wizards lists, to the owners of a script's project and to administrators, the scripts the viewer may see, newest first, each offered version with state, author, contributors, approver, dates, broken and use; others see none; writes nothing; D54: an administrator lists no script of a hidden project she is neither invited nor joined to", () => {
   const w = seeded();
   const a1 = approved(w, { name: "First" });
   w.clock.now = "2026-10-04T00:00:00Z";
@@ -26,7 +26,9 @@ test("R10 wizards lists, to the owners of a script's project and to administrato
   assert.deepEqual([v.id, v.state, v.author.id, v.approved.by.id, v.broken, v.use, v.start], [a2.version, "approved", "frank", "alice", false, { start: 0, finish: 0 }, "case-home"]);
   assert.ok(Array.isArray(v.contributors) && v.created_at);
   assert.equal(al.truncated, false);
-  assert.deepEqual(ids(w.wz.wizards({ viewer: E })), [a2.script, a1.script, LIBRARY[1].id, LIBRARY[0].id], "an administrator: every one, the library's too");
+  assert.deepEqual(ids(w.wz.wizards({ viewer: E })), [LIBRARY[1].id, LIBRARY[0].id], "D54: P is hidden and erin uninvited: the library's only");
+  w.join(w.P, "erin", "invited");
+  assert.deepEqual(ids(w.wz.wizards({ viewer: E })), [a2.script, a1.script, LIBRARY[1].id, LIBRARY[0].id], "an administrator invited to P: every one, the library's too");
   assert.deepEqual(ids(w.wz.wizards({ viewer: F })), [], "frank is joined, not an owner");
   assert.deepEqual(ids(w.wz.wizards({ viewer: D })), [], "dave owns Q, which has only a draft");
   assert.deepEqual(ids(w.wz.wizards({ state: "draft", viewer: D })), [dq.script]);
@@ -118,7 +120,7 @@ test("R11 wizardsAt answers the offered scripts whose start is the screen, each 
   assert.deepEqual(w2.wz.wizardsAt({ screen: "case-home", viewer: F }).scripts, []);
 });
 
-test("R17 submittedFor lists every (version, owner) pair for a submitted version and an owner who may approve it (a group-wide script's administrators), the sole author left out, {script, version, owner, name, author, submitted_at, project}, at most 500 per page with cursor and truncated", () => {
+test("R17 submittedFor lists every (version, owner) pair for a submitted version and an owner who may approve it (a group-wide script's administrators), the sole author left out, {script, version, owner, name, author, submitted_at, project}, at most 500 per page with cursor and truncated; D54: an administrator widens only a script she may see", () => {
   const w = seeded();
   const s1 = draft(w, { name: "One" }); w.wz.wizardSubmit({ version: s1.version, author: F, viewer: F });
   w.clock.now = "2026-10-04T00:00:00Z";
@@ -141,8 +143,10 @@ test("R17 submittedFor lists every (version, owner) pair for a submitted version
   w.wz.wizardApprove({ version: s1.version, by: B, viewer: B });
   w.wz.wizardRetire({ version: s2.version, reason: "r", by: A, viewer: A });
   assert.deepEqual(w.wz.submittedFor({ viewer: MACHINE }).entries, []);
-  /* a group-wide script's next version: the administrators */
-  w.wz.wizardApprove({ version: s1.version, widen: true, by: E, viewer: E });
+  /* a group-wide script's next version: the administrators; D54: erin widens it once P is discoverable, not before */
+  assert.equal(w.wz.wizardApprove({ version: s1.version, widen: true, by: E, viewer: E }).reason, "NO_SUCH_WIZARD", "D54: hidden, uninvited");
+  discoverable(w);
+  assert.equal(w.wz.wizardApprove({ version: s1.version, widen: true, by: E, viewer: E }).ok, true, "D54 control: discoverable");
   const n2 = w.wz.wizardDraft({ from: s1.version, author: F, viewer: F });
   w.wz.wizardSubmit({ version: n2.version, author: F, viewer: F });
   assert.deepEqual(w.wz.submittedFor({ viewer: MACHINE }).entries.map((e) => [e.version, e.owner, e.project]), [[2, "erin", null]]);

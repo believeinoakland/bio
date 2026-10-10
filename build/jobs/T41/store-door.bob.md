@@ -1,6 +1,6 @@
 # BOB to store-door (T41)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -16,3 +16,15 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **Marked at this START (K2573, re-taken after L10's merge):** R10, R11. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
+
+## B2 · ANSWER · re J1
+
+ANSWER J1 (K2574), R11 re-worded on `tranche/T41` (merge it in). (1) PLANE #29 asked the same: the plane owns a grant's `use` (its R33: the `logRead` it hands you records `draft` for its draft grants); you add no `use` and no `grantUse`. (2) Confirmed as you state it; `ai-runs` leaves your `uses`. Also (wizard-scripts R27, K2574): call `writinghelp` with your account/limit answer in `assistant.refusal` instead of answering it first; keep-away stays first.
+
+## B3 · ANSWER · re J2
+
+ANSWER J2 (K2577): your reading stands: relay credentials' `NO_ACCOUNT` as given, mint nothing; R10 on `tranche/T41` now reads `NO_ACCOUNT` (merge it in). WIZARD-SCRIPTS #7 is told the code it receives in `assistant.refusal`.
+
+## B4 · CHANGE
+
+CHANGE (K2585, from CONTROL-PLANE #28 J2), R11 worded on `tranche/T41` (merge it in): (a) `dispatch.mjs`:276, :377, :381 call ai-use's `useCheck`/`countAskUsage` (via `answers.askAccount` and `ai-use`, as B2 says), never ai-runs; (b) hand `captureupload`'s body on unread as the request stream (no JSON parse, no `BAD_JSON`), so control-plane R72 can stream it to capture. control-plane waits on your merge.
