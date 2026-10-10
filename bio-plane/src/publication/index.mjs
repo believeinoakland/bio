@@ -176,6 +176,8 @@ const CRITERIA_NOT_RECORDED = "the criteria were not recorded: this edition was 
 /* R72 (DEC-145 (6)): a standard's access in the members' words. */
 const ACCESS_WORDS = Object.freeze({ free: "Free to read", reading_room: "Reading room only", paywalled: "Behind a paywall" });
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : "");
+/* R77 (K2438, K2529): the doors the source of waiting editions gives. */
+const WAITING_DOORS = Object.freeze(["isWaiting", "signedAtOf", "signerOf"]);
 /* K2483 (D54): the viewer of an internal read that no member makes (R72's criteria with no signer), a machine one. */
 const MACHINE_VIEWER = "class:daemon";
 const shaOf = (text) => createSha256().update(new TextEncoder().encode(String(text))).hex();
@@ -210,7 +212,7 @@ export class Publication {
   #orders = null;        // R62 (K1632): {module, courtOrderOf}, filled once by docket
   #publisher = null;     // R67 (K1790): {module, publishScheduled}, filled once by ratification
   #publishListeners = [];   // R71 (K1816): [{module, fn}], one per module
-  #waiting = null;       // R77 (K2438): {module, isWaiting, signedAtOf}, filled once by publish-schedule
+  #waiting = null;       // R77 (K2438, K2529): {module, isWaiting, signedAtOf, signerOf}, filled once by publish-schedule
   purgeDeclaration = null;   // R31: record-core's answer to this module's purge declaration, set at creation
   handleGuard = null;        // R76: membership's answer to this module's handle guard registration, set at creation
 
@@ -332,19 +334,18 @@ export class Publication {
   /** R77 (N823; K2438; K31's pattern): `publish-schedule` fills, once at start, the source of the editions it holds
    *  waiting to be published at a set time (its R8): `isWaiting(caseId, edition)` → whether that edition's document waits
    *  (R21: it counts as signed) and `signedAtOf(caseId, edition)` → the instant it was signed at the ceremony, or null
-   *  (R70). Called as `registerWaitingEditions(source)` or `registerWaitingEditions(module, source)`; a second
+   *  (R70), and `signerOf(caseId, edition)` → `{signer, delivered_by}` while it waits, else null (R76; K2529). Called as `registerWaitingEditions(source)` or `registerWaitingEditions(module, source)`; a second
    *  registration is refused `PROVIDER_DECLARED`, one missing a door `PROVIDER_MALFORMED`, each registering nothing.
    *  With none, no edition waits and no signing instant is answered. No SQL of this module names its table. */
   registerWaitingEditions(moduleOrSource, maybeSource = undefined) {
     const source = typeof moduleOrSource === "string" ? maybeSource : moduleOrSource;
     const module = typeof moduleOrSource === "string" ? str(moduleOrSource) : str(source && source.module) || "unnamed";
-    if (!source || typeof source !== "object" || typeof source.isWaiting !== "function"
-        || typeof source.signedAtOf !== "function")
-      return { ok: false, reason: "PROVIDER_MALFORMED", detail: "the waiting editions' source gives the doors isWaiting and signedAtOf" };
+    if (!source || typeof source !== "object" || !WAITING_DOORS.every((d) => typeof source[d] === "function"))
+      return { ok: false, reason: "PROVIDER_MALFORMED", detail: `the waiting editions' source gives the doors ${WAITING_DOORS.join(", ")}` };
     if (this.#waiting)
       return { ok: false, reason: "PROVIDER_DECLARED", module: this.#waiting.module,
                detail: `the waiting editions' source is already registered by ${this.#waiting.module}` };
-    this.#waiting = { module, isWaiting: source.isWaiting, signedAtOf: source.signedAtOf };
+    this.#waiting = { module, ...Object.fromEntries(WAITING_DOORS.map((d) => [d, source[d]])) };
     return { ok: true, module };
   }
 
@@ -429,9 +430,8 @@ export class Publication {
    *  edition}` for the earliest (by `signed_at`) case edition that is ratified (R22) or waits (R77's `isWaiting`: signed,
    *  its bytes fixed) whose signer, deliverer (R14) or preparer (`authored_by`) is the member, or whose document names
    *  the member's handle in a row that carries one (`material_attestations:` at `cover` or `name`, `member_ties:`, an
-   *  attribution at `cover` or `name`); null when none; `{unreadable: true}` when its tables cannot be read. A waiting
-   *  edition's signer is held by its source alone, so for one only its preparer and its handle rows are read.
-   *  Synchronous; writes nothing; never throws. Registered with `membership.registerHandleGuard` at start. */
+   *  attribution at `cover` or `name`); null when none; `{unreadable: true}` when its tables or the source cannot be
+   *  read. A waiting edition's signer and deliverer are its source's `signerOf` (R77; K2529). Synchronous; writes nothing; never throws. Registered with `membership.registerHandleGuard` at start. */
   publishedWorkOf({ memberId = null } = {}) {
     try {
       const id = str(memberId);
@@ -449,13 +449,16 @@ export class Publication {
         if (as.includes(r.attestor_member) || r.delivered_by === as[1] || as.includes(r.authored_by)
             || this.#namesHandle(r.text, handle))
           hits.push({ case: r.case_id, edition: Number(r.edition), at: r.signed_at || r.ratified_at || "" });
-      for (const r of this.#rows(
-        `SELECT d.case_id, d.edition, d.text, d.authored_by, d.authored_at FROM case_documents d
-          WHERE d.sig_armored IS NULL AND (d.authored_by IN (?,?)${named})`, ...as, ...byHandle)) {
-        if (!as.includes(r.authored_by) && !this.#namesHandle(r.text, handle)) continue;
-        /* asked of R77's source directly, so a source that throws is the unreadable answer */
-        const ed = Number(r.edition), src = this.#waiting;
+      /* a waiting edition: its document unsigned here, its signer and deliverer held by R77's source (K2529), asked of
+         it directly, so a source that throws is the unreadable answer */
+      const src = this.#waiting;
+      for (const r of this.#rows(`SELECT case_id, edition, text, authored_by, authored_at FROM case_documents
+                                   WHERE sig_armored IS NULL ORDER BY case_id, edition`)) {
+        const ed = Number(r.edition);
         if (!((src && src.isWaiting(r.case_id, ed)) || schedule.isWaiting(this, r.case_id, ed))) continue;
+        const who = src ? src.signerOf(r.case_id, ed) : null;
+        const signer = who && typeof who === "object" ? who.signer : null, by = who && typeof who === "object" ? who.delivered_by : null;
+        if (!as.includes(signer) && by !== as[1] && !as.includes(r.authored_by) && !this.#namesHandle(r.text, handle)) continue;
         hits.push({ case: r.case_id, edition: ed, at: (src && str(src.signedAtOf(r.case_id, ed)))
                     || schedule.signedAtFor(this, r.case_id, ed, null) || r.authored_at || "" });
       }

@@ -20,21 +20,26 @@ function base() {
   return { w, proj, roles, roster };
 }
 /* publish-schedule R8's registration, played: `waiting` the case editions it holds waiting (`<case>#<edition>` → the
-   instant signed), every call kept with whether a transaction was open when it was made. */
-function source(w, waiting = {}) {
+   instant signed), `signers` who signed and delivered each (`<case>#<edition>` → {signer, delivered_by}), every call
+   kept with whether a transaction was open when it was made. */
+function source(w, waiting = {}, signers = {}) {
   const calls = [];
   const open = () => w.st.db.isTransaction;
-  return { calls, waiting,
-    isWaiting(c, e) { calls.push(["isWaiting", c, e, open()]); return Object.hasOwn(waiting, `${c}#${e}`); },
-    signedAtOf(c, e) { calls.push(["signedAtOf", c, e, open()]); return waiting[`${c}#${e}`] ?? null; } };
+  const held = (c, e) => Object.hasOwn(waiting, `${c}#${e}`);
+  return { calls, waiting, signers,
+    isWaiting(c, e) { calls.push(["isWaiting", c, e, open()]); return held(c, e); },
+    signedAtOf(c, e) { calls.push(["signedAtOf", c, e, open()]); return waiting[`${c}#${e}`] ?? null; },
+    signerOf(c, e) { calls.push(["signerOf", c, e, open()]); return held(c, e) ? signers[`${c}#${e}`] ?? null : null; } };
 }
 
 /* ---------------------------------------------------------------- R77 */
 
-test("R77 registerWaitingEditions takes the source once at start: one missing a door PROVIDER_MALFORMED, a second PROVIDER_DECLARED naming the holder, each registering nothing; with none registered no edition waits and no signing instant is answered", () => {
+test("R77 registerWaitingEditions takes the source (isWaiting, signedAtOf, signerOf; K2529) once at start: one missing a door PROVIDER_MALFORMED, a second PROVIDER_DECLARED naming the holder, each registering nothing; with none registered no edition waits and no signing instant is answered", () => {
   const { w, proj, roles, roster } = base();
   assert.deepEqual(w.p.waitingSource(), { registered: false, module: null });
-  for (const bad of [null, {}, { isWaiting() {} }, { signedAtOf() {} }, { isWaiting: 1, signedAtOf() {} }, "x"])
+  const doors = { isWaiting() {}, signedAtOf() {}, signerOf() {} };
+  const without = (d) => Object.fromEntries(Object.entries(doors).filter(([k]) => k !== d));
+  for (const bad of [null, {}, without("isWaiting"), without("signedAtOf"), without("signerOf"), { ...doors, isWaiting: 1 }, "x"])
     assert.equal(w.p.registerWaitingEditions("publish-schedule", bad).reason, "PROVIDER_MALFORMED", JSON.stringify(bad));
   assert.equal(w.p.registerWaitingEditions({ isWaiting() {} }).reason, "PROVIDER_MALFORMED", "the one-argument form");
   assert.deepEqual(w.p.waitingSource(), { registered: false, module: null }, "nothing registered");
@@ -48,7 +53,7 @@ test("R77 registerWaitingEditions takes the source once at start: one missing a 
   /* registered once, either form; a second refused, the first kept */
   const s = source(w);
   assert.deepEqual(w.p.registerWaitingEditions("publish-schedule", s), { ok: true, module: "publish-schedule" });
-  const dup = w.p.registerWaitingEditions({ module: "other", isWaiting: () => true, signedAtOf: () => null });
+  const dup = w.p.registerWaitingEditions({ module: "other", isWaiting: () => true, signedAtOf: () => null, signerOf: () => null });
   assert.deepEqual([dup.ok, dup.reason, dup.module], [false, "PROVIDER_DECLARED", "publish-schedule"]);
   assert.deepEqual(w.p.waitingSource(), { registered: true, module: "publish-schedule" });
   const w2 = base().w;
@@ -147,16 +152,15 @@ test("R76 publishedWorkOf names the earliest ratified case edition whose signer,
   assert.deepEqual(w.p.publishedWorkOf({ memberId: "fay" }), { case: CASE, edition: 1 });
 });
 
-test("R76 an unsigned preparation is no published work; one R77's source answers waiting is (its preparer and its handle rows), named by the source's signing instant; with no source registered none waits", () => {
+test("R76 an unsigned preparation is no published work; one R77's source answers waiting is (its signer and deliverer through signerOf, K2529; its preparer; its handle rows), named by the source's signing instant; with no source registered none waits", () => {
   const { w, proj, roles } = base();
   store(w, CASE, 1, docWith(CASE, 1, proj, roles, { ties: [{ shown: "h_eve", level: "cover" }] }), "cy");
-  assert.equal(w.p.publishedWorkOf({ memberId: "cy" }), null, "a preparation, not signed");
-  assert.equal(w.p.publishedWorkOf({ memberId: "eve" }), null);
-  const s = source(w, { [`${CASE}#1`]: "2026-09-29T00:00:00Z" });
+  for (const m of ["cy", "eve", "bo", "dee"]) assert.equal(w.p.publishedWorkOf({ memberId: m }), null, `${m}: a preparation, not signed`);
+  const s = source(w, { [`${CASE}#1`]: "2026-09-29T00:00:00Z" }, { [`${CASE}#1`]: { signer: "bo", delivered_by: V("dee") } });
   w.p.registerWaitingEditions("publish-schedule", s);
-  assert.deepEqual(w.p.publishedWorkOf({ memberId: "cy" }), { case: CASE, edition: 1 }, "waiting: signed, its bytes fixed");
-  assert.deepEqual(w.p.publishedWorkOf({ memberId: "eve" }), { case: CASE, edition: 1 });
-  assert.equal(w.p.publishedWorkOf({ memberId: "bo" }), null);
+  for (const m of ["cy", "eve", "bo", "dee"])
+    assert.deepEqual(w.p.publishedWorkOf({ memberId: m }), { case: CASE, edition: 1 }, `${m}: waiting, signed, its bytes fixed`);
+  assert.equal(w.p.publishedWorkOf({ memberId: "gus" }), null, "the negative control: a member it does not name");
   /* the earliest by signed_at: a waiting edition signed before a ratified one is named first */
   store(w, CASE2, 1, docWith(CASE2, 1, proj, roles), "cy");
   assert.equal(commit(w, proj, roles.map((r) => ({ bundle_id: r.target, version_sha: r.version_sha })), CASE2,
@@ -164,15 +168,15 @@ test("R76 an unsigned preparation is no published work; one R77's source answers
   assert.deepEqual(w.p.publishedWorkOf({ memberId: "cy" }), { case: CASE, edition: 1 });
   s.waiting[`${CASE}#1`] = "2026-10-01T00:00:00Z";
   assert.deepEqual(w.p.publishedWorkOf({ memberId: "cy" }), { case: CASE2, edition: 1 });
-  /* no longer waiting (cancelled): no work there */
+  /* no longer waiting (cancelled): no work there, its signer's included */
   delete s.waiting[`${CASE}#1`];
-  assert.equal(w.p.publishedWorkOf({ memberId: "eve" }), null);
+  for (const m of ["eve", "bo", "dee"]) assert.equal(w.p.publishedWorkOf({ memberId: m }), null, m);
 });
 
 test("R76 when its tables or the source cannot be read it answers {unreadable: true}, never a throw", () => {
   const { w, proj, roles } = base();
   store(w, CASE, 1, docWith(CASE, 1, proj, roles), "cy");
-  w.p.registerWaitingEditions("publish-schedule", { isWaiting() { throw new Error("down"); }, signedAtOf: () => null });
+  w.p.registerWaitingEditions("publish-schedule", { isWaiting() { throw new Error("down"); }, signedAtOf: () => null, signerOf: () => null });
   assert.deepEqual(w.p.publishedWorkOf({ memberId: "cy" }), { unreadable: true }, "the source throws");
   const w2 = base().w;
   assert.equal(w2.p.publishedWorkOf({ memberId: "cy" }), null, "the control: readable, none");
