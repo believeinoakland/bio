@@ -100,7 +100,8 @@ export const CASE_DERIVATION_CHECKS = Object.freeze({
       + 'Nothing was published.',
   },
   /* R58 (N681; K1833; DEC-147): an edition of the case is signed and waiting to be published at its set time
-     (publication R66, read through its R74), asked after R7 and before R8, before anything is written or an id drawn.
+     (publish-schedule R1, read through its R7; publication R66, R74 before N823), asked after R7 and before R8, before
+     anything is written or an id drawn.
      New in T35; its translation is BOB's draft (the UX stream's to revise), awaiting promotion's stamp (rule 17). */
   CASE_EDITION_WAITING: {
     check: 'C-44.6',

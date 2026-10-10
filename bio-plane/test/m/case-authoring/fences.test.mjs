@@ -35,7 +35,7 @@ test("R1: an empty or machine author is MACHINE_CANNOT_PUBLISH (C-32.6, with its
   assert.deepEqual(w.snapshot(), before, "nothing written");
 });
 
-test("R2: authority in order — NO_PUBLISHING_PROJECT; a project seen only at existence answers C-70.1; one unseen or none NO_SUCH_PROJECT identically; NOT_A_PROJECT; NOT_THE_PROJECT_OWNER, an owner only, no administrator arm", () => {
+test("R2: authority in order — NO_PUBLISHING_PROJECT; a project seen only at existence answers C-70.1; one unseen or none NO_SUCH_PROJECT identically; NOT_A_PROJECT; NOT_THE_PROJECT_OWNER, an owner only, no administrator arm; (D54) an administrator neither invited nor joined sees a hidden project only at existence", () => {
   const { w, P } = setup();
   const before = w.snapshot();
   assert.deepEqual(reasons(w.ca.publishCase({ ...AUTHORED, author: "alice", viewer: V("alice") })), [false, "NO_PUBLISHING_PROJECT"]);
@@ -49,6 +49,12 @@ test("R2: authority in order — NO_PUBLISHING_PROJECT; a project seen only at e
   assert.deepEqual(unseen, noSuchProject(P));
   assert.deepEqual(absent, noSuchProject("PROJ-2026-9999-none"));
   assert.deepEqual([unseen.code, typeof unseen.check, typeof unseen.translation], ["NO_SUCH_PROJECT", "string", "string"]);
+  /* (D54) a hidden project, asked by an active administrator neither invited nor joined: seen only at existence, the
+     refusal membership's own (C-70.1), carrying the id, the name and the owners' handles and nothing else */
+  const admin = w.publish(P, "root", [Q]);
+  assert.deepEqual([admin.ok, admin.reason, admin.check, admin.project, admin.name, admin.owners],
+    [false, "PROJECT_SEEN_NOT_A_PARTICIPANT", PROJECT_VISIBILITY_CHECKS.PROJECT_SEEN_NOT_A_PARTICIPANT.check, P, "Team", ["h_alice"]]);
+  assert.equal(JSON.stringify(admin).includes(Q), false, "nothing inside the project is named");
   /* a discoverable project, asked by a member outside it: the existence refusal, membership's own (C-70.1) */
   assert.equal(w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", reason: "open to all",
                                                    by: "alice", viewer: V("alice") }).ok, true);
@@ -56,7 +62,8 @@ test("R2: authority in order — NO_PUBLISHING_PROJECT; a project seen only at e
   assert.deepEqual([seen.ok, seen.reason, seen.check],
     [false, "PROJECT_SEEN_NOT_A_PARTICIPANT", PROJECT_VISIBILITY_CHECKS.PROJECT_SEEN_NOT_A_PARTICIPANT.check]);
   assert.deepEqual(reasons(w.publish(Q, "alice", [Q])), [false, "NOT_A_PROJECT"]);
-  /* a joined participant who is not an owner, and an active administrator who sees every project */
+  /* a joined participant who is not an owner, and an active administrator, who sees a discoverable project whole (the
+     negative control of D54's arm above) */
   w.join(P, "cy");
   assert.deepEqual(reasons(w.publish(P, "cy", [Q])), [false, "NOT_THE_PROJECT_OWNER"]);
   assert.deepEqual(reasons(w.publish(P, "root", [Q])), [false, "NOT_THE_PROJECT_OWNER"]);

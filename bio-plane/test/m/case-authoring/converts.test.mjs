@@ -171,7 +171,7 @@ test("R14, R13 (d442-publish-writes-nothing): a second project's new case over b
   assert.ok(body.includes(`Published by: ${B}`));
 });
 
-test("R2 (caseproduction): the owner fence is keyed on the pair — a joined participant who owns nothing, an owner of another project, and an administrator are each NOT_THE_PROJECT_OWNER — and every authority refusal comes before the authored fields: only the owner reaches NO_STATEMENT", () => {
+test("R2 (caseproduction; D54): the owner fence is keyed on the pair — a joined participant who owns nothing and an owner of another project are each NOT_THE_PROJECT_OWNER; an administrator neither invited nor joined sees a hidden project only at existence (membership's C-70.1), and one who sees it (a discoverable project, or invited) is NOT_THE_PROJECT_OWNER — and every authority refusal comes before the authored fields: only the owner reaches NO_STATEMENT", () => {
   const w = setup();
   w.member("root", { role: "admin" });
   w.finding(Q, [{ target: DOC }]);
@@ -187,8 +187,22 @@ test("R2 (caseproduction): the owner fence is keyed on the pair — a joined par
     "alice owns a project, and not this one");
   assert.equal(w.publish(P, "bo", [Q], { author: "class:daemon" }).reason, "MACHINE_CANNOT_PUBLISH", "R1 first");
   const probe = (who) => w.publish(P, who, [Q], { statement: "" }).reason;
-  assert.deepEqual(["alice", "bo", "root"].map(probe), ["NO_STATEMENT", "NOT_THE_PROJECT_OWNER", "NOT_THE_PROJECT_OWNER"]);
+  assert.deepEqual(["alice", "bo", "root"].map(probe), ["NO_STATEMENT", "NOT_THE_PROJECT_OWNER", "PROJECT_SEEN_NOT_A_PARTICIPANT"],
+    "D54: an administrator neither invited nor joined sees the hidden project only at existence");
+  const seen = w.publish(P, "root", [Q], { statement: "" });
+  assert.deepEqual([seen.check, seen.project, seen.name, seen.owners], ["C-70.1", P, "Team", ["h_alice"]],
+    "its id, name and owners' handles, as membership R44 answers a hidden project's existence");
+  assert.equal(JSON.stringify(seen).includes(Q), false, "the existence refusal names nothing inside the project");
   assert.deepEqual(w.snapshot(), before, "nothing written");
+  /* negative controls: an invited administrator, and any administrator of a discoverable project, sees it, and is no owner */
+  w.join(P, "root", "invited");
+  assert.equal(probe("root"), "NOT_THE_PROJECT_OWNER", "an invited administrator sees it at FULL");
+  const x = setup(); x.member("root", { role: "admin" }); x.finding(Q, [{ target: DOC }]);
+  const XP = x.project("Open", "alice", [Q]);
+  assert.equal(x.membership.projectVisibilitySet({ projectId: XP, setting: "discoverable", reason: "open work", by: "alice",
+                                                    viewer: V("alice") }).ok, true);
+  assert.equal(x.publish(XP, "root", [Q], { statement: "" }).reason, "NOT_THE_PROJECT_OWNER",
+    "a discoverable project stays seen whole by an administrator (K2409)");
 });
 
 test("R6, R14, R15 (caseproduction): the bar is read at the act — a member refused under the project's bar publishes load-bearing once the project lowers it, the answer carrying the new bar — while a document authored under the old bar keeps stating it", () => {

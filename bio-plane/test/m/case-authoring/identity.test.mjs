@@ -117,18 +117,26 @@ test("R7: MINT_EXHAUSTED when the minter finds no free id answers through record
   assert.deepEqual(w.publish(A, "alice", [Q], { newCase: true }), mintExhausted("CASE"), "newCase always mints");
 });
 
-test("R8: ALREADY_A_CASE_MEMBER when an edition of this case, or any unsigned preparation, pins a member's current bytes and already records the conclusion this act would record; a finding may serve any number of cases", () => {
+test("R8 (K2540): ALREADY_A_CASE_MEMBER when an edition of this case, or an unsigned preparation of another case or of another edition of this one, pins a member's current bytes and already records the conclusion this act would record; a preparation of this same case edition is replaced by the new one; a finding may serve any number of cases", () => {
   const { w, A } = setup();
   const x = w.publish(A, "alice", [Q]);
   assert.equal(x.ok, true);
   const n = minted(w);
-  const prep = w.publish(A, "alice", [Q, Q2]);
-  assert.deepEqual([prep.reason, prep.target, prep.project, prep.relationship, prep.recorded_by],
+  /* (K2540) this case edition prepared again: the new preparation replaces the unsigned one, no id drawn */
+  const again = w.publish(A, "alice", [Q, Q2]);
+  assert.deepEqual([again.ok, again.caseId, again.edition, again.minted], [true, x.caseId, 1, false], JSON.stringify(again).slice(0, 300));
+  assert.equal(minted(w), n, "no id is drawn");
+  assert.deepEqual(w.rows(`SELECT case_id, edition FROM case_documents`).map((d) => [d.case_id, d.edition]), [[x.caseId, 1]],
+                   "replaced, one document");
+  assert.deepEqual(w.fm(w.row(`SELECT text FROM case_documents WHERE case_id=?`, x.caseId).text).case_findings, [Q, Q2]);
+  /* negative control: an unsigned preparation of another case refuses: a new case over the same bytes */
+  const other = w.publish(A, "alice", [Q], { newCase: true });
+  assert.deepEqual([other.reason, other.target, other.project, other.relationship, other.recorded_by],
     ["ALREADY_A_CASE_MEMBER", Q, A, "no_project", [{ case_id: x.caseId, edition: 1, state: "prepared" }]]);
   assert.equal(minted(w), n, "asked before an id is drawn");
-  /* an unsigned preparation refuses whichever case: even a new case */
-  assert.equal(w.publish(A, "alice", [Q], { newCase: true }).reason, "ALREADY_A_CASE_MEMBER");
-  w.ratify(x);
+  const x2 = w.publish(A, "alice", [Q]);
+  assert.equal(x2.ok, true);
+  w.ratify(x2);
   const derived = w.publish(A, "alice", [Q], FRESH);
   assert.deepEqual([derived.reason, derived.recorded_by], ["ALREADY_A_CASE_MEMBER",
     [{ case_id: x.caseId, edition: 1, state: "ratified" }]]);
