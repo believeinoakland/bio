@@ -31,6 +31,10 @@ import { captureRequestsOps } from "../../../src/capture-requests/index.mjs";
 import { membershipOps } from "../../../src/membership/index.mjs";
 import { tasksOps } from "../../../src/tasks/index.mjs";
 import { publicationOps } from "../../../src/publication/index.mjs";
+import { publishScheduleOps } from "../../../src/publish-schedule/index.mjs";
+import { aiUseOps } from "../../../src/ai-use/index.mjs";
+import { readingGuidesOps } from "../../../src/reading-guides/index.mjs";
+import { runProductionsOps } from "../../../src/run-productions/index.mjs";
 import { wizardScriptsOps } from "../../../src/wizard-scripts/index.mjs";
 import { fileSafetyOps } from "../../../src/file-safety/index.mjs";
 import { caseCarriageOps } from "../../../src/case-carriage/index.mjs";
@@ -55,7 +59,12 @@ const MAPS = { events: eventsOps, lines: linesOps, money: moneyOps, "money-check
   /* T36 (R32): file-safety's map, read for R6's totality */
   "file-safety": fileSafetyOps,
   /* T37 (R38): case-carriage's map, read for R6's totality */
-  "case-carriage": caseCarriageOps };
+  "case-carriage": caseCarriageOps,
+  /* T41 (R25, R41, R43): publish-schedule's, ai-use's, reading-guides' and run-productions' maps, read for R6's
+     totality (steps, question-explorer, investigation, leg-earning, case-authoring and review export no map for their
+     T41 ops: the door's own serves them, control-plane R71) */
+  "publish-schedule": publishScheduleOps, "ai-use": aiUseOps, "reading-guides": readingGuidesOps,
+  "run-productions": runProductionsOps };
 const recorder = () => {
   const calls = [];
   const fn = (...args) => { calls.push(args); return { ok: true }; };
@@ -80,7 +89,11 @@ const IN_PROCESS = { inquiry: ["basis", "restson"], entities: ["readingnameplan"
                        /* membership's own hop, called inside `projectCreated` (R6's store-internal list, K1864) */
                        "projectclaimowner"],
                      /* publication's internal hops (its R15; D-734) and its reads served by public-read */
-                     publication: ["recordcasemanifest", "publishedtargets", "casedocfacts", "publishedcasedoctext"] };
+                     publication: ["recordcasemanifest", "publishedtargets", "casedocfacts", "publishedcasedoctext"],
+                     /* T41: the five ops reading-guides' map serves that no requirement here declares (R43 names its six;
+                        R2, R6, R12's machine draft, the export to Civicsmith and three reads): no spec, so the door
+                        answers each as an op with no spec, until BOB's answer to OP-DECLARATIONS #16 J1 */
+                     "reading-guides": ["guidepropose", "guideproposetocivicsmith", "guidefor", "guide", "guideproposals"] };
 /* The family ops whose arm another L11 job serves (R6's other half holds at the layer's close): the control plane
    routes these to their owner's in-process services (K1601; action-clocks R2's `clockpropose`, capture-requests R46,
    answers' `ask`), instance-setup builds its two (T33-87). */
@@ -106,15 +119,23 @@ const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturereques
   translationdraft: "instance-setup (T37-30)", translationgrant: "instance-setup (T37-30)",
   translationadopt: "instance-setup (T37-30)", translationconfirm: "instance-setup (T37-30)",
   translationrevert: "instance-setup (T37-30)", translationmark: "instance-setup (T37-30)",
-  translations: "instance-setup (T37-30)", interfacewords: "instance-setup (T37-30)" };
+  translations: "instance-setup (T37-30)", interfacewords: "instance-setup (T37-30)",
+  /* T41 (R41, R43): the ops whose owner exports no arm for them, routed by the door's own map (control-plane R71,
+     K2560, K2569) — ai-use's estimate and actual, ai-runs' run over steps and group test (and inquiry, hypotheses,
+     actions and run-productions serve theirs in their own maps) */
+  aiestimate: "control-plane (T41-62)", aiactual: "control-plane (T41-62)", stepsrunai: "control-plane (T41-62)",
+  grouptestset: "control-plane (T41-62)", grouptestresults: "control-plane (T41-62)" };
 
 test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — owner, citation, the actor and proposer stamps as {key, at}, its kinds, and the acts, proposals and reads derived from them — each op in exactly one family and every kind one of OP_KINDS", () => {
-  assert.deepEqual(Object.keys(OP_FAMILIES).sort(), ["acquisition", "action-clocks", "actions", "ai-runs", "answers",
-    "calculations", "capture-requests", "case-carriage", "corpus-export", "credentials", "duties", "entities", "events", "explore", "file-safety",
-    "following", "hypotheses", "inquiry", "instance-setup", "lines", "membership", "money", "money-checks", "people",
-    "public-read", "publication", "retrieval", "sources", "standards", "tasks", "wizard-scripts", "workbooks"]);
+  assert.deepEqual(Object.keys(OP_FAMILIES).sort(), ["acquisition", "action-clocks", "actions", "ai-runs", "ai-use", "answers",
+    "calculations", "capture", "capture-requests", "case-authoring", "case-carriage", "corpus-export", "credentials", "duties",
+    "entities", "events", "explore", "file-safety", "following", "hypotheses", "inquiry", "instance-setup", "investigation",
+    "leg-earning", "lines", "membership", "money", "money-checks", "people", "public-read", "publish-schedule",
+    "question-explorer", "reading-guides", "retrieval", "review", "run-productions", "sources", "standards", "steps", "tasks",
+    "wizard-scripts", "workbooks"]);
   assert.deepEqual(Object.keys(OP_KINDS).sort(), ["admin", "daemonact", "door", "member", "open", "own", "ownread",
-    "plainread", "proposal", "public", "publishact", "read", "roster", "sessionact", "sessionend", "sessionread",
+    "plainread", "proposal", "public", "publicread", "publishact", "read", "roster", "runact", "sessionact", "sessionend",
+    "sessionread", "sessionrunact",
     "settingread", "sightact", "tally"]);
   const seen = new Set();
   for (const [owner, f] of Object.entries(OP_FAMILIES)) {
@@ -171,8 +192,12 @@ test("R19, R2, R3: every family op has the spec and NEEDS row its kind gives —
     sessionend: [{ classes: ["admin", "member"], machineClasses: [], mutating: true }, null],
     /* T36 (R32) */
     sightact: [{ classes: ["admin", "member"], machineClasses: [], mutating: true }, null],
+    sessionrunact: [{ classes: ["admin", "member"], machineClasses: [], mutating: true }, "contribute"],
+    /* T41 (R42, R43; K2574, K2496) */
+    publicread: [{ classes: null, mutating: false }, null],
+    runact: [{ classes: MP, mutating: true }, "contribute"],
   };
-  const PUBLIC = ["door", "public"];
+  const PUBLIC = ["door", "public", "publicread"];
   let n = 0;
   for (const f of Object.values(OP_FAMILIES)) for (const [op, k] of Object.entries(f.kinds)) {
     n++;
@@ -232,8 +257,8 @@ test("R19, R6: each new module's ops map and each family's share of an earlier m
   /* the families no map holds are instance-setup's (its job builds them) */
   for (const op of Object.keys(OP_FAMILIES["instance-setup"].kinds)) assert.match(SERVED_ELSEWHERE[op], /instance-setup/);
   /* T34: membership's, publication's and credentials' new ops are served by their merged owners now */
-  for (const op of [...Object.keys(OP_FAMILIES.membership.kinds), ...Object.keys(OP_FAMILIES.publication.kinds),
-                    "groupkeyset", "groupkeyremove", "groupkeyswitch", "groupswitchset", "groupkeystate", "groupkeynotice",
+  for (const op of [...Object.keys(OP_FAMILIES.membership.kinds), ...Object.keys(OP_FAMILIES["publish-schedule"].kinds),
+                    "groupkeyset", "groupkeyremove", "groupkeyswitch", "groupkeystate", "groupkeynotice",
                     "groupkeynoticeseen", "notewrite", "noteturn", "notes"])
     assert.ok(!Object.hasOwn(SERVED_ELSEWHERE, op), op);
   /* each named exception is a family op its owner's map does not yet serve */
@@ -289,7 +314,9 @@ test("R19, R4: every family read is stamped with the viewer, and the owner reads
     /* T35: calculations' recipes of application are data, the same for every caller (its R33) */
     "applicationrecipes",
     /* T35: the security map and the recovery codes' state answer `by`, an administrator's own (credentials R45, R46) */
-    "securitymap", "recoverycodesstate"];
+    "securitymap", "recoverycodesstate",
+    /* T41: run-productions' acceptance counts name no member and take no viewer (its R22) */
+    "acceptancecounts"];
   let checked = 0;
   for (const [owner, f] of Object.entries(OP_FAMILIES)) {
     if (!MAPS[owner]) continue;
@@ -393,21 +420,38 @@ test("R18: entityidentify an act on the record, contribute, by stamped (the body
   }
 });
 
-test("R20: ask a member's own session only (machineClasses []), viewer stamped; aiusage a session's read; the account-reference ops a member's own session only, by stamped from the query — no bearer, so no administrator token acts for another member — and no spec admits a group- or project-level credential", () => {
+test("R20 (T41; DEC-188 (8); K2484): ask a member's own session only (machineClasses []), viewer and member stamped; aiusage ai-use's session read, with and without owner; the account-reference ops a member's own session only, by stamped from the query — no bearer, so no administrator token acts for another member; the switches set only by R41's accountusesset (accountswitchset retired, no spec); no spec admits a group subscription, and a project's account is reached only through R41's ops (negative control: a retired name is in no table)", async () => {
   assert.deepEqual(plain(OPS.ask), { classes: ["admin", "member"], machineClasses: [], mutating: true });
   assert.equal(OP_FAMILIES.answers.kinds.ask, "own");
   assert.deepEqual(OP_FAMILIES.answers.actor, { key: "viewer", at: "query" });
+  assert.deepEqual([...OP_STAMPS.ask].sort(), ["member", "viewer"]);
+  /* aiusage is ai-use's (its R4), a session's read, both arms in its own map */
   assert.deepEqual(plain(OPS.aiusage), { classes: ["admin", "member"], machineClasses: [], mutating: false });
+  assert.equal(OP_FAMILIES["ai-use"].kinds.aiusage, "ownread");
+  assert.ok(!Object.hasOwn(OP_FAMILIES["ai-runs"].kinds, "aiusage"));
+  assert.ok(await reaches("ai-use", "aiusage", { key: "viewer", at: "query" }));
   const cr = OP_FAMILIES.credentials;
-  for (const op of ["accountreferenceset", "accountreferenceremove", "accountswitchset", "aigrantmint"]) {
+  for (const op of ["accountreferenceset", "accountreferenceremove", "aigrantmint", "accountusesset"]) {
     assert.equal(cr.kinds[op], "own", op);
     assert.deepEqual([...OPS[op].machineClasses], [], op);
+    assert.ok(await reaches("credentials", op, { key: "by", at: "query" }), op);
   }
   assert.deepEqual(cr.actor, { key: "by", at: "query" });
-  /* no op names a group- or project-level account */
-  for (const op of Object.keys(OPS)) assert.doesNotMatch(op, /^(group|project|instance)(account|claude|reference)/, op);
+  /* the switches: one act, accountusesset; the retired switch acts have no spec and are in no table */
+  for (const op of ["accountswitchset", "groupswitchset"])
+    assert.ok(!Object.hasOwn(OPS, op) && !Object.hasOwn(NEEDS, op) && !Object.hasOwn(OP_STAMPS, op)
+      && !SESSION_OPS.member.has(op) && !FAMILY_OPS.includes(op) && !servedBy("credentials").includes(op), op);
+  assert.deepEqual(Object.keys(OPS).filter((op) => /switch/.test(op) && /account|group/.test(op)).sort(),
+                   ["groupkeyswitch", "projectaccountswitch"]);
+  /* no op names a group-level subscription or a group account; a project's account ops are R41's alone */
+  for (const op of Object.keys(OPS)) assert.doesNotMatch(op, /^(group|instance)(account|claude|reference|subscription)/, op);
+  assert.deepEqual(Object.keys(OPS).filter((op) => /^project(account|key|signin|aikeep)/.test(op)).sort(),
+    ["projectaccountremove", "projectaccountstate", "projectaccountswitch", "projectaikeepaway", "projectaikeepawaystate",
+     "projectkeynotice", "projectkeynoticeseen", "projectkeyset", "projectsigninset"]);
   /* the agent's grant is admitted by its scope alone: no spec names ai */
   for (const op of [...FAMILY_OPS, ...ASK_GRANT_OPS]) assert.ok(!JSON.stringify(OPS[op]).includes('"ai"'), op);
+  /* negative control */
+  assert.ok(Object.hasOwn(OPS, "accountreferenceset"));
 });
 
 test("R19, R3 (K1601, K1566): the ask's three plane ops admit a session's kinds and no bearer, are in no session set, askusage alone mutating and unattended by a cited decision; moneydetectorsrun the operator's (admin, probe), in no session set, unattended by money-checks R6", () => {
