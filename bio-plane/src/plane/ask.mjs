@@ -1,11 +1,12 @@
 /* plane (B2, K1674, K1684; control-plane R53; agent-worker R6, R54, R56; credentials R25, R27, R35; K1755, K1798, K1806):
    `op=ask`'s handler. A member's own session (or a grant control-plane admitted, handed as `grantMember`) asks; on the
-   `bio` object, where credentials live, the member's short-lived read-only grant is minted at that act, the account that
-   serves the member's ask (`credentials.accountFor`: their own reference, else the group's API key while held and on) is
-   unsealed for this one ask, the switch that governs it read, and the question goes to agent-worker's `/ask` with the
-   grant and the account in agent-worker R6's shape. agent-worker's answer (its NDJSON stream, or its plain refusal) is handed back unchanged.
+   `bio` object, where credentials live, the account that serves the member's ask and its limit are judged by
+   `answers.askAccount` (R33; K2500: `credentials.accountFor`'s cascade, then `ai-use.useCheck`; no ceiling of the
+   plane's own), the member's short-lived read-only grant is minted at that act, the account is unsealed for this one
+   ask, the switch that governs it read, and the question goes to agent-worker's `/ask` with the grant and the account
+   in agent-worker R6's shape. agent-worker's answer (its NDJSON stream, or its plain refusal) is handed back unchanged.
    The secret leaves the object only in that one call and is kept nowhere; every refusal is its owner's, in its words. */
-import { credentialsOf } from "../credentials/index.mjs";
+import { credentialsOf, AI_GRANT_TTL_SECONDS } from "../credentials/index.mjs";
 import { instanceSetupOf } from "../setup.mjs";
 import { answersOf } from "../answers/index.mjs";
 
@@ -35,16 +36,48 @@ export async function askOp({ req, url, env, viaSession, sessMember, grantMember
   let body;
   try { body = await req.json(); } catch { return json({ ok: false, reason: "BAD_JSON", detail: "the ask's body is not JSON" }, 400); }
   const named = url.searchParams.get("store");
+  /* R33: an ask may name the project it is asked in (answers R30), carried as given; credentials judges it. */
+  const project = body && typeof body.project === "string" && body.project !== "" ? body.project : null;
   const args = { member, question: body && body.question, conversation: body && body.conversation,
-                 store: named ? named : null,
+                 store: named ? named : null, ...(project ? { project } : {}),
                  session: viaSession ? presentedToken(req, url, body) : null,
                  grant: viaSession ? null : presentedToken(req, url, body) };
   return env.STORE.get(env.STORE.idFromName("bio")).ask(args);
 }
 
-/** On the `bio` object: mint the grant (unless one was presented), unseal the account, read the suggestions switch,
- *  and post the ask. */
-export async function askOnObject(ctx, env, { member, session = null, grant = null, question, conversation, store = null }) {
+/* R33 (K2500; answers R2 as R30 widens it, store-door R11): the grants this object's draft path minted, each with the
+   instant it lapses, so a read made under one is recorded in its read log with `use: "draft"` (`draftUse`, read by the
+   `logRead` the composition root hands store-door's frame). Held in memory only, on this storage, for at most a grant's
+   life; never a table (R9). */
+const DRAFT_GRANTS = new WeakMap();
+const DRAFT_GRANTS_MAX = 512;
+function draftGrants(ctx) {
+  const k = ctx && ctx.storage ? ctx.storage : ctx;
+  let m = DRAFT_GRANTS.get(k);
+  if (!m) { m = new Map(); DRAFT_GRANTS.set(k, m); }
+  return m;
+}
+function noteDraftGrant(ctx, token) {
+  const m = draftGrants(ctx), now = Date.now();
+  for (const [t, until] of m) if (until <= now) m.delete(t);
+  m.set(token, now + AI_GRANT_TTL_SECONDS * 1000);
+  while (m.size > DRAFT_GRANTS_MAX) m.delete(m.keys().next().value);
+}
+/** R33: the use a read under `grant` is recorded with: `draft` for a grant this object's draft path minted and still
+ *  live, else null (the entry's own use, `ask` by default, stands). */
+export function draftUse(ctx, grant) {
+  if (typeof grant !== "string" || grant === "") return null;
+  const until = draftGrants(ctx).get(grant);
+  return until !== undefined && until > Date.now() ? "draft" : null;
+}
+
+/* R33: `answers.askAccount`'s account, read once into agent-worker R6's account shape. */
+const accountOf = (a) => (a && a.account && typeof a.account === "object" ? a.account : {});
+
+/** On the `bio` object: judge the account and its limit (`answers.askAccount`), mint the grant (unless one was
+ *  presented), unseal the account, read the suggestions switch, and post the ask. */
+export async function askOnObject(ctx, env, { member, session = null, grant = null, question, conversation, store = null,
+                                              project = null }) {
   const w = env && env.AGENT_WORKER;
   if (!w || typeof w.fetch !== "function")
     return json({ ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "your group's Civicsmith has no assistant bound to it. Nothing was asked." }, 503);
@@ -54,19 +87,23 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
   const off = instanceSetupOf(ctx, env).assistantGate();
   if (off) return json(off, 403);
   const c = credentialsOf(ctx);
+  /* R33 (K2500; answers R30): the account that serves this ask, and its limit, judged by answers for the ask's
+     `project` when it names one; a refusal (NO_ACCOUNT, AI_USE_SWITCHED_OFF, AI_LIMIT_REACHED, ...) is answered as
+     given, before any grant is minted or anything posted. */
+  const judged = await answersOf(ctx).askAccount({ member, kind: "ask", ...(project ? { project } : {}) });
+  if (!judged || judged.ok !== true) return json(judged, 409);
   let token = grant;
   if (!token) {
-    const g = await c.aiGrantMint({ member, by: member, session });
+    const g = await c.aiGrantMint({ member, by: member, session, ...(project ? { project } : {}) });
     if (!g || g.ok !== true) return json(g, 403);
     token = g.token;
   }
   /* K1806 (agent-worker R6, R54; credentials R35; K1755, K1798): the account that serves this ask, carried as
      `{kind, level, secret, member, suggestions}`: R35's `key` named `secret`, `level` `member` for the member's own
-     reference or `group` for the group's API key. The member's own switch is read from their reference's state
-     (credentials R25); the group key's switch has no in-plane read for a member's act (K1798), so an ask it serves offers
-     no suggestion, as by default. */
-  let ref = await c.accountFor({ member, act: { kind: "ask", member } });
-  if (!ref || ref.ok !== true) return json(ref, 409);
+     reference, `group` for the group's API key, `project` for a project's. The member's own switch is read from their
+     reference's state (credentials R25); another account's switch has no in-plane read for a member's act (K1798), so an
+     ask it serves offers no suggestion, as by default. */
+  let ref = accountOf(judged);
   let suggestions = false;
   if (ref.level === "member")
     try { const st = c.accountReferenceState({ member, viewer: member }); suggestions = !!(st && st.ok === true && st.suggestions === true); }
@@ -116,12 +153,15 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
   const off = instanceSetupOf(ctx, env).assistantGate();   /* N765: `AI_KEPT_AWAY`, as for an ask, before any account */
   if (off) return out(403, off);
   const c = credentialsOf(ctx);
-  let ref = await c.accountFor({ member: who, act: { kind: "ask", member: who } });
-  if (!ref || ref.ok !== true) return out(409, ref);
+  /* R33 (K2500, K2508; answers R30): the account and its limit judged by answers for kind `draft`; its refusal answered
+     as given, before any grant is minted or anything posted. */
+  const judged = await answersOf(ctx).askAccount({ member: who, kind: "draft" });
+  if (!judged || judged.ok !== true) return out(409, judged);
+  let ref = accountOf(judged);
   let suggestions = false;
   try {
     if (ref.level === "member") { const st = c.accountReferenceState({ member: who, viewer: who }); suggestions = !!(st && st.ok === true && st.suggestions === true); }
-    else { const g = c.groupKeySwitches(); suggestions = !!(g && g.suggestions === true); }
+    else if (ref.level === "group") { const g = c.groupKeySwitches(); suggestions = !!(g && g.suggestions === true); }
   } catch { suggestions = false; }
   /* (T37; K2238; agent-worker R68, run-rules R22) a translation draft reads nothing of the record: no grant is minted
      whatever the switch, and its task is the owner's `{direction, language, words}` with the pack, no `told`. */
@@ -131,6 +171,7 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
     const g = await c.aiGrantMint({ member: who, by: who, session });
     if (!g || g.ok !== true) return out(403, g, null, suggestions);
     grant = g.token;
+    noteDraftGrant(ctx, grant);   /* R33: its reads are recorded with `use: "draft"` */
   }
   const task = op === "writinghelp" ? { op, act, field } : translation ? { op, direction, language, words } : { op };
   const account = { kind: ref.kind, level: ref.level, secret: ref.key, member: who, suggestions };

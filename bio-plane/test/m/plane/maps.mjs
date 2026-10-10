@@ -72,6 +72,9 @@ import { answersOf, answersOps } from "../../../src/answers/index.mjs";
 import { caseTensionsOf, caseTensionsOps } from "../../../src/case-tensions/index.mjs";
 import { followingOf, followingOps } from "../../../src/following/index.mjs";
 import { fileSafetyOf, fileSafetyOps } from "../../../src/file-safety/index.mjs";
+import { aiUseOf, aiUseOps } from "../../../src/ai-use/index.mjs";
+import { readingGuidesOf, readingGuidesOps } from "../../../src/reading-guides/index.mjs";
+import { publishScheduleOps } from "../../../src/publish-schedule/index.mjs";
 
 export const MODULE_MAPS = [
   ["membership", (c, u, b, e) => membershipOps(membershipOf(c), u, b, e)],
@@ -118,6 +121,8 @@ export const MODULE_MAPS = [
   ["publication", (c, u, b) => publicationOps(publicationOf(c), u, b)],
   /* plane R18 (T37; K2226): case-carriage's map, over the one instance publication's factory made */
   ["case-carriage", (c, u, b) => caseCarriageOps(publicationOf(c).caseCarriage, u, b)],
+  /* plane R32 (N823): publish-schedule's map, over the one instance ratification's factory made */
+  ["publish-schedule", (c, u, b) => publishScheduleOps(ratificationOf(c).publishSchedule, u, b)],
   ["docket", (c, u, b) => docketOps(docketOf(c), u, b)],
   ["public-read", (c, u) => publicReadOps(publicReadOf(c), u)],
   ["project-stage", (c, u) => projectStageOps(projectStageOf(c), u)],
@@ -128,7 +133,9 @@ export const MODULE_MAPS = [
   ["provenance-routes", (c, u, b) => provenanceRouteOps(provenanceRoutesOf(c), u, b)],
   ["content", (c, u, b) => contentOps(contentOf(c), u, b)],
   ["capture-requests", (c, u, b) => captureRequestsOps(captureRequestsOf(c), u, b)],
+  ["reading-guides", (c, u, b) => readingGuidesOps(readingGuidesOf(c), u, b)],   /* plane R35 */
   ["host-governor", (c, u, b) => governorRoutes(governorOf(c), u, b)],
+  ["ai-use", (c, u, b) => aiUseOps(aiUseOf(c), u, b)],   /* plane R31 (K2488) */
   ["ai-runs", (c, u, b, e) => aiRunsOps(aiRunsOf(c, e), u, b)],
   ["answers", (c, u, b) => answersOps(answersOf(c), u, b)],
   ["retrieval", (c, u, b) => retrievalRoutes(retrievalOf(c), u, b)],

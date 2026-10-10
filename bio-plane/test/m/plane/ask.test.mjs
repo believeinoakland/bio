@@ -68,7 +68,7 @@ test("B2 (K1674): a member's ask mints their grant, unseals their own account an
 
 test("B2 (agent-worker R56): the member's suggestions switch is carried as they set it", async () => {
   const x = await world();
-  assert.equal(credentialsOf(x.ctx).accountSwitchSet({ member: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
+  assert.equal(credentialsOf(x.ctx).accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
   await x.s.ask({ member: "member:ann", session: SESSION, question: "q", store: "scratch" });
   assert.equal(x.asks[0][1].account.suggestions, true);
   assert.equal(x.asks[0][1].store, "scratch", "a named store is carried");
@@ -193,7 +193,7 @@ test("K1806 (agent-worker R6, R54; credentials R35; K1755, K1798): a member with
   assert.match(JSON.stringify(await due.json()), /GROUP_KEY_NOTICE_DUE/);
   assert.equal(x.asks.length, 0, "nothing reached agent-worker");
   assert.equal((await c.groupKeyNoticeSeen({ member: "member:ann", by: "member:ann" })).ok, true);
-  assert.equal((await c.groupSwitchSet({ switch: "suggestions", on: true, by: "ada" })).ok, true);
+  assert.equal((await c.accountUsesSet({ owner: "group", switch: "suggestions", on: true, by: "ada" })).ok, true);
   const r = await x.s.ask({ member: "member:ann", session: SESSION, question: "Who holds the clerk's office?" });
   assert.equal(r.status, 200);
   assert.equal(x.asks.length, 1);
@@ -233,7 +233,7 @@ test("R19 (N686; K2062; agent-worker R59): a member's draft carries their accoun
 
 test("R19 (N686; DEC-153 (2), K1841 (2), K2041): with the member's suggestions on, a grant is minted and sent in place of the pack, and its read log's strings come back; a firsthand field never gets one", async () => {
   const x = await world();
-  assert.equal(credentialsOf(x.ctx).accountSwitchSet({ member: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
+  assert.equal(credentialsOf(x.ctx).accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
   /* the assistant member reads through the grant while it drafts, as agent-worker R59's read tool does: a read on this
      object under the grant, in store-door's header, recorded in its read log (answers R1, R2) */
   const fetchDraft = x.env.AGENT_WORKER.fetch;
@@ -263,7 +263,7 @@ test("R19 (N686; DEC-153 (2), K1841 (2), K2041): with the member's suggestions o
 
 test("R19 (T37; K2238; agent-worker R68, run-rules R22): a translation draft carries its task {op, direction, language, words}, the account and the door's pack to /draft, and no told, grant or firsthand, even with the member's suggestions on", async () => {
   const x = await world();
-  assert.equal(credentialsOf(x.ctx).accountSwitchSet({ member: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
+  assert.equal(credentialsOf(x.ctx).accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
   const words = [{ key: "nav.home", en: "Home", note: "the first screen", means: "where a member starts", protected: false }];
   const TPACK = { layers: ["interface_translation"] };
   for (const direction of ["to_language", "to_english"]) {
@@ -290,7 +290,7 @@ test("R19 (N686; credentials R35, R37): a member with no account of their own is
   assert.equal((await c.groupKeySet({ key: "sk-ant-zz-group", by: "ada" })).ok, true);
   assert.equal((await c.groupKeySwitch({ on: true, by: "ada" })).ok, true);
   assert.equal((await c.groupKeyNoticeSeen({ member: "member:ann", by: "member:ann" })).ok, true);
-  assert.equal((await c.groupSwitchSet({ switch: "suggestions", on: true, by: "ada" })).ok, true);
+  assert.equal((await c.accountUsesSet({ owner: "group", switch: "suggestions", on: true, by: "ada" })).ok, true);
   const r = await draft(x);
   assert.equal(r.status, 200);
   assert.deepEqual(x.asks[0][1].account, { kind: "apikey", level: "group", secret: "sk-ant-zz-group", member: "member:ann", suggestions: true });
@@ -313,7 +313,7 @@ test("R19 negative controls (N686; N765): no assistant member, the group keeping
   assert.equal(r3.status, 409);
   assert.match(JSON.stringify(r3.body), /NO_ACCOUNT/);
   const x = await world();
-  assert.equal(credentialsOf(x.ctx).accountSwitchSet({ member: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
+  assert.equal(credentialsOf(x.ctx).accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "member:ann" }).ok, true);
   const r4 = await draft(x, { session: "t".repeat(64) });
   assert.equal(r4.status, 403, "a grant is minted only under the member's own live session");
   assert.equal(r4.body.grant, null);
