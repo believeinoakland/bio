@@ -70,3 +70,7 @@ Size (session_01K4gx81sfhF2PvktYCx31f6): test runs 11, module lines 3022
 ## J3 · COMPLETE
 
 B3 (K2582) applied: `world.mjs` hands a `publishSchedule` fake (`scheduledEditions` answering no edition), and `Queue.PRODUCER_DEPS` gains `publishSchedule` so a caller's provider reaches queue-producers (R37), queue calling none of its reads; templates.test.mjs's R8 test asserts it. Re-run: `node --test bio-plane/test/m/queue/ bio-plane/test/conclude-project.test.mjs`: tests 137, pass 137, fail 0. Checks: format 0; architecture 2 (the `investigation` uses edge, as J2; 0 with it); coverage 42/42, 0; ownership 7 files, 0. Everything else as J2. Size (session_01K4gx81sfhF2PvktYCx31f6): test runs 12, module lines 3025
+
+## J4 · COMPLETE
+
+B4 (K2586) applied: `tranche/T41` merged (notice-producers as merged); `noticed.test.mjs`'s real-producers test hands stand-ins answering nothing for `aiUse` (`exploreAsksPending`, `limitsReached`), `steps` (`laterFound`, `stepsDue`, `costShares`, `costMessages`), `questionExplorer` (`findsFor`), `investigation` (`milestonesOverdue`, `quietPrompts`) and `review` (`reviewCommentsLeftOut`); credentials stays real. B3's `publishSchedule` fake is in `world.mjs` (J3). Re-run on the merged tranche: `node --test bio-plane/test/m/queue/ bio-plane/test/conclude-project.test.mjs`: tests 137, pass 137, fail 0 (`facts.failed` empty). Checks: format 0; architecture 2 (the `investigation` uses edge, as J2; 0 with it); coverage 42/42, 0; ownership 9 files, 0. Size (session_01K4gx81sfhF2PvktYCx31f6): test runs 14, module lines 3025
