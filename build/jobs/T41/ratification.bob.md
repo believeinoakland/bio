@@ -15,3 +15,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 J1 readings (1)-(6) confirmed (K2528): `caseapproval` in R32's list as you read it; C-58.11's translation stands as drafted; your full runs wait on the CHANGE after T41-37 and T41-36 merge. One change: R49 now matches approvals by the approval digest, case-grammar R26's new `approvalSubjectSha` (the document's sha without R26's block), not the raw `doc_sha`; R50's `approvals({case, edition, docSha})` is asked with that digest. Merge the tranche branch for R49's text; case-grammar provides the function when it merges (stand in meanwhile).
+
+## B3 · CHANGE
+
+CHANGE (K2533): (a) R50 gains `approvalsInForce({case, edition, docSha})` → `{rule, approvals, missing}` through the reader at the approval digest, or `{ok: false}` when unreadable; case-authoring R68 reads it. (b) R49 also refuses `APPROVAL_MISSING` when an approval the rule requires is held but not carried in the document's R26 block (case-grammar `approvalsOf`), so a signed file proves its own approvals. Merge the tranche branch for R49/R50's text; test both explicitly with negative controls.
