@@ -29,7 +29,7 @@ It is the only module marked `legacy` in `modules.json`.
    5. membership R83's `MODULE_ORDER` tests from the opening's insertion of `doorbell` and `case-account` until T42-3, then each new module named "not yet built" until its own merge;
    6. answer-envelope `catalogue-end.test.mjs`'s pins for `PROPOSAL_NO_RUN` and `NO_SUCH_PROPOSAL` (T41 rule 4 (21)) until T42-27 (N843);
    7. `test/system/migrate-released.test.mjs`'s `ai_ceilings` arm (T41 rule 4 (24)) until T42-17 (N848);
-   8. `fleetbundles` agent-worker's input count (K2520 (a)) until T42-2 (N836);
+   8. (cleared at T42-2's merge, K2612) `fleetbundles` agent-worker's input count (K2520 (a));
    9. from T42-6's merge: doorbell R25's ownership arm until capture's delete (T43; rule 3 (4));
    10. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
 
