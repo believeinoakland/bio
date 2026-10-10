@@ -6,7 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, caseFm, makePng, sha, V, NOW } from "./fixture.mjs";
 import { makeZip } from "../../make-zip.mjs";
-import { OBSCURED_LABEL, MARKS_LAPSED_MAX, PHOTO_ONLY_AS_COPY, ARCHIVE_HOLDS_IMAGE } from "../../../src/case-carriage/index.mjs";
+import { OBSCURED_LABEL, PUBLISHED_LABEL, MARKS_LAPSED_MAX, PHOTO_ONLY_AS_COPY, ARCHIVE_HOLDS_IMAGE } from "../../../src/case-carriage/index.mjs";
 import { migrateCaseCarriage } from "../../../src/case-carriage/schema.mjs";
 import { materialsOf } from "../../../src/case-grammar/index.mjs";
 
@@ -26,11 +26,17 @@ async function scene() {
   return { w, p, copy: r.copy.sha256 };
 }
 
-test("R1 case-grammar reads the obscured row this module's tests write (the one spelling)", async () => {
+test("R1 case-grammar reads the obscured row this module's tests write (the one spelling), with (T41; K2537) its R12 `marked`: stated, or read by the label when absent", async () => {
   const { p, copy } = await scene();
-  const m = materialsOf(caseFm({ materials: [obscuredRow(PHOTO, p, copy)] }));
-  assert.deepEqual(m.materials[0].obscured, { copy, label: OBSCURED_LABEL });
-  assert.equal(m.materials[0].included, false);
+  const read = (ob) => materialsOf(caseFm({ materials: [obscuredRow(PHOTO, p, copy, { obscured: ob })] })).materials[0];
+  const m = read({ copy, label: OBSCURED_LABEL });
+  assert.deepEqual(m.obscured, { copy, label: OBSCURED_LABEL, marked: true }, "no marked stated: read by its label, non-null");
+  assert.equal(m.included, false);
+  assert.deepEqual(read({ copy, label: OBSCURED_LABEL, marked: true }).obscured, { copy, label: OBSCURED_LABEL, marked: true });
+  assert.deepEqual(read({ copy, label: PUBLISHED_LABEL, marked: false }).obscured, { copy, label: PUBLISHED_LABEL, marked: false },
+                   "an unmarked photo's copy: PUBLISHED_LABEL, marked false");
+  /* negative control: an edition signed before T40, no label and no marked, reads unmarked */
+  assert.deepEqual(read({ copy, label: null }).obscured, { copy, label: null, marked: false });
 });
 
 /* ---------------------------------------------------------------- R1 */

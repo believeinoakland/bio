@@ -6,3 +6,5 @@ Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at yo
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
 
 **From T41-23 (ai-runs) merge (K2514, AI-RUNS #16 J6).** Red inherited: `plane.test.mjs`:199, a world that opens a run with no test bar held (refused C-109.1, run-rules R19 as amended): give the world a passing bar (ai-runs `deps.testSet` with a one-matter set and `testBarRecord` for `check`, as `bio-plane/test/m/ai-runs/world.mjs` does).
+
+**From CASE-CARRIAGE #7 J1 (K2534).** Red inherited: `copies.test.mjs`:225 (R25): with no evidence store bound case-carriage's `copyWake` now answers null (K2380), so the doccopy consumer does not fire; re-state it.
