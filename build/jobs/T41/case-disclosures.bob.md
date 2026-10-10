@@ -17,3 +17,11 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 J1 (1)-(5) confirmed (K2531). (1) `checkAccount` answers `{ok: true, departures: [{ord, code, detail?}]}` (one per failing sentence and arm, `code` one of R30's arms, `ord` the account row's) or `{ok: false, reason, field}` on malformed input; CASE-CHECKER #10 is told the same. (2) `ACCOUNT_CHECK_UNDETERMINED`, a new C-120 row with your draft translation, fail closed. (3) The caller passes `conclusions` and `flags` (case-authoring is told); no basis-versions edge. (4) R31 answers inquiry's C-2.19 verbatim through `biasAppliedFindings`; a conclusion's applications come from the caller as in (3). (5) As read; `document.refused.pending`'s flag asserted as words.json states it (noted to UX-DESIGN).
+
+## B3 · CHANGE
+
+CHANGE (K2533): (a) R30's first arm (`ACCOUNT_SENTENCE_UNSUPPORTED`) applies to account sentences only; a statement's sentences may cite (case-authoring's new `statementCites`), and when they cite nothing the other arms still judge them. (b) From CASE-AUTHORING #23: your `checks.mjs`:29 still holds the older `photo.refused.unchecked` words while words.json has the new ones; R22 reads the key, so read it from words.json (case-authoring's photos.test:108 and preflight.test:67 depend on it). Merge the tranche branch for R30's text.
+
+## B4 · CHANGE
+
+CHANGE (K2537): case-grammar (T41-34) is merged into tranche/T41 @ 7fe0e94f76: R12's reader answers `obscured: {copy, label, marked}`, R23–R26 (`accountOf`, `biasApplicationsOf`, `reviewCommentsOf`, `approvalsOf`, `approvalSubjectSha`). Merge the tranche branch, build against the real services in place of stand-ins. Re-state `documents.test.mjs`:220, `photos.test.mjs`:241 for `marked` (rule 4 (19)).

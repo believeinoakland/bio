@@ -47,6 +47,8 @@ It is the only module marked `legacy` in `modules.json`.
    15. (K2486) control-plane `r53-routes.test.mjs`:67 (R53) from T41-16's merge until T41-58 declares hypotheses' ops.
    16. (K2487) answer-envelope's `CHECK_FAMILIES is total` test and case-carriage's re-assertion of it, from each new family's merge (steps C-142, ai-use C-143, reading-guides C-144, question-explorer C-145, investigation C-146; and publish-schedule's `src/publish-schedule/checks.mjs`, C-122.5, directly after publication's file, K2532) until T41-60 adds each family's `checks.mjs` to `CHECK_FAMILY_FILES`.
    17. (K2514, AI-RUNS #16 J6) from T41-23's merge: (capture-requests' five cleared at its re-merge, K2517) scheduler `plane.test.mjs`:199 until T41-49; store-door `dispatch.test.mjs`:352, `routes.test.mjs`:132, :174, :226, :248 until T41-61; control-plane `t34-routes.test.mjs`:24, :211, :253 until T41-62. Rule 4 (10)'s ai-runs reds are cleared.
+   18. (K2534, CASE-CARRIAGE #7 J1; K2380) from T41-35's merge: scheduler `copies.test.mjs`:225 until T41-49; plane `t39.test.mjs`:78 until T41-63 (with no evidence store bound `copyWake` answers null).
+   19. (K2537, CASE-GRAMMAR #13 J2) from T41-34's merge, the users' deep compares of `obscured` that lack R12's `marked`: case-carriage `obscured.test.mjs`:29; public-read `obscured.test.mjs`:156, :365; case-disclosures `documents.test.mjs`:220, `photos.test.mjs`:241; case-authoring `documents.test.mjs`:147, `photos.test.mjs`:60; each until its own merge.
 
 **Text owed before each layer's START (K2451; BOB's wording, P5):**
 - L7: none beyond §3.6 (applied).

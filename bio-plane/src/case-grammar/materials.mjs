@@ -17,10 +17,11 @@
  *                           a member document's cleaned copy (`case-carriage` R15: every picture in it, and the
  *                           document itself, carrying none of their details). The row states `included: false` and
  *                           keeps the original's `sha`, `text_sha`, `origin` and `archived_copy`; read back as
- *                           `obscured: {copy, label}`. A published case states it for every photo it carries and every
+ *                           `obscured: {copy, label, marked}` (T40: `obscured_marked`, optional; absent, read by the
+ *                           label). A published case states it for every photo it carries and every
  *                           member document it carries as its copy (its writers' duty: `case-carriage`,
- *                           `case-authoring`). `label` is `case-carriage`'s `OBSCURED_LABEL` for a marked photo, null
- *                           for an unmarked one (a copy with nothing covered), and its `COPY_CLEANED_LABEL` for a
+ *                           `case-authoring`). `label` is `case-carriage`'s `OBSCURED_LABEL` for a marked photo, for an
+ *                           unmarked one (a copy with nothing covered) its `PUBLISHED_LABEL` since T40 (null before), and its `COPY_CLEANED_LABEL` for a
  *                           member document, written as handed: this module is earlier than `case-carriage` and names
  *                           no label of its own. An optional field of `/7`, with no new format (K2206): a row without
  *                           it is written and read exactly as before, and an absent label reads null.
@@ -92,6 +93,9 @@ export const MATERIAL_RESTS_UNDER = Object.freeze(["load_bearing", "supporting"]
 export const ATTESTATION_BY_KINDS = Object.freeze(["member", "co_attestation", "project", "group"]);
 /** R12 (T37; N757): the two flat fields a `document` row carried as its copy adds, after `rests_under`, in order. */
 export const MATERIAL_OBSCURED_FIELDS = Object.freeze(["obscured_copy", "obscured_label"]);
+/** R12 (T40; N798; DEC-185 (1); K2394): the optional flat field after them, whether the copy has marked areas covered;
+ *  written only when handed `marked` as a boolean, so a row written before T40 is written and read exactly as before. */
+export const MATERIAL_OBSCURED_MARKED_FIELD = "obscured_marked";
 /** R12: the levels a member's attestation is stated at (`publication` R17's four), and the two that name nobody. */
 export const ATTESTATION_LEVELS = Object.freeze(["group", "project", "cover", "name"]);
 export const ANONYMOUS_ATTESTATION_LEVELS = Object.freeze(["group", "project"]);
@@ -103,11 +107,15 @@ export const GROUP_ATTESTATION_SIGNATURE = "case";
    handed `obscured` (an object) is written with its two flat fields, a copy that is not a SHA-256 written null (so a
    reader finds the copy missing, never a guess) and a label that is not a sentence written null (an unmarked photo's
    copy carries none: T38), and `included: false` whatever it is handed: the original never travels (T37; N757), a
-   photo's and a member document's alike (T39; N806). */
+   photo's and a member document's alike (T39; N806). An `obscured` that cannot be read is written with its copy and
+   label null: undetermined, never a guess, and the row is still listed. */
 const HEX64 = /^[0-9a-f]{64}$/;
-const obscuredOf = (o) => (o && typeof o === "object" && !Array.isArray(o)
+const obscuredOf = (o) => { try { return obscuredSpelled(o); } catch { return { obscured_copy: null, obscured_label: null }; } };
+const obscuredSpelled = (o) => (o && typeof o === "object" && !Array.isArray(o)
   ? { obscured_copy: typeof o.copy === "string" && HEX64.test(o.copy) ? o.copy : null,
-      obscured_label: typeof o.label === "string" && o.label.trim() ? o.label : null } : null);
+      obscured_label: typeof o.label === "string" && o.label.trim() ? o.label : null,
+      ...(typeof o.marked === "boolean" ? { [MATERIAL_OBSCURED_MARKED_FIELD]: o.marked } : {}) } : null);
+/* T40: `obscured_marked` (above) only when the row is handed `marked` as a boolean. */
 const materialRow = (r) => {
   const kind = oneOf(r.kind, MATERIAL_KINDS);
   const obscured = kind === "document" ? obscuredOf(r.obscured) : null;
@@ -129,12 +137,13 @@ const attestationRow = (r) => {
 
 /** R12 (K1317): the `materials:` block's lines, from `[{ref, kind, sha, text_sha, origin, archived_copy, included,
  *  rests_under, obscured?}]`, in the order given; `materials: []` when there are none. A `document` row handed
- *  `obscured: {copy, label}` adds `obscured_copy` and `obscured_label` after `rests_under` and is written `included:
+ *  `obscured: {copy, label, marked?}` adds `obscured_copy` and `obscured_label` (and `obscured_marked`) after `rests_under` and is written `included:
  *  false`; every other row is written byte for byte as before T37. */
 export function materialsLines(rows) {
   const written = objects(rows).map(materialRow);
   if (!written.length) return ["materials: []"];
-  return ["materials:", ...written.flatMap((r) => [...MATERIAL_FIELDS, ...("obscured_copy" in r ? MATERIAL_OBSCURED_FIELDS : [])]
+  return ["materials:", ...written.flatMap((r) => [...MATERIAL_FIELDS, ...("obscured_copy" in r ? MATERIAL_OBSCURED_FIELDS : []),
+    ...(MATERIAL_OBSCURED_MARKED_FIELD in r ? [MATERIAL_OBSCURED_MARKED_FIELD] : [])]
     .map((f, i) => `${i ? "   " : "  -"} ${f}: ${scalar(r[f])}`))];
 }
 
@@ -155,7 +164,7 @@ export function materialBlockLines(given) {
 /** R12: the two blocks read back from a `/6` document's front matter, in the document's order: `{materials: [{ref,
  *  kind, sha, text_sha, origin, archived_copy, included, rests_under, obscured}], attestations: [{ref, by_kind, by, level, at,
  *  signature, recorded_in}]}`; a block the document does not carry answers null, and a document carrying neither (or
- *  any other format) answers null. `included` reads true only when the bytes say true. `obscured` is `{copy, label}`
+ *  any other format) answers null. `included` reads true only when the bytes say true. `obscured` is `{copy, label, marked}`
  *  for a `document` row stating either flat field, else null (T37); a copy not stated reads null, undetermined, and a
  *  label not stated reads null, a copy that carries none (an unmarked photo's, T38). Pure; never throws. */
 export function materialsOf(fm) {
@@ -180,7 +189,9 @@ export function materialsOf(fm) {
 const str = (v) => (typeof val(v) === "string" ? v : null);
 function obscuredRead(r) {
   if (val(r.kind) !== "document" || !MATERIAL_OBSCURED_FIELDS.some((f) => Object.hasOwn(r, f))) return null;
-  return { copy: str(r.obscured_copy), label: str(r.obscured_label) };
+  const label = str(r.obscured_label);
+  /* T40 (DEC-185 (1)): `marked` as written, else by the label, so every earlier edition reads as it rendered */
+  return { copy: str(r.obscured_copy), label, marked: bool(r[MATERIAL_OBSCURED_MARKED_FIELD]) ?? label !== null };
 }
 
 /* ===== R16 — ANOTHER GROUP'S WORK THE CASE RESTS ON (DEC-96 item 4; N522) ===== */
