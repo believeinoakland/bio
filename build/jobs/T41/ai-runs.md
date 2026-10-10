@@ -87,3 +87,29 @@ C. Findings against other modules:
 - op-declarations: R74's `openMany` has no op; nothing reaches it from the door until one is declared (I added none, an undeclared op being a defect).
 - ai-use: `AI_LIMIT_REACHED`'s translation reaches a run's open and tick with `{period}` and `{when}` unfilled ("your own {period} limit is reached. It works again {when}."), against its R13.
 - agent-worker: the dispatch body's `account.member` is now `principal_claude_ref` (J3, forwarded in B7).
+
+## J7 · COMPLETE
+
+T41-23 done on `job/T41/ai-runs` @ 0e14f0feb1 (tranche merged @ B10's head). J4's Next worked in order with B5–B10.
+
+**Entries applied.**
+- K624's delete (B5): R48–R51's copy gone (counter, ceilings, `countAskUsage`, `aiUseCheck`, ceiling acts, `aiUsage`/`aiUsageMine`, `providerLimit`, `AI_CEILING_DEFAULT`, `USAGE_*`, ops `aiusage`/`aiceilingset`/`aicopyceilingset`); `ai_usage`/`ai_ceilings` out of `declareTable` and schema (R53).
+- R52: `open` and `tick` judge the paying account by `ai-use.useCheck` (use `run`). Each tick's conversations are counted through `ai-use.countUsage` with the run's owner and member, under `act` = the run id; that is the one judge of R72's shape, and a refused entry rolls the whole tick back. A tick over a limit counts its calls, then refuses (J5 (13)). `principal_claude` is the owner and `principal_claude_ref` the member.
+- R76: `cost` comes from `actualOf({act: run, viewer})` with the reader's own stamp, `final` once ended. No figures are kept on the run; #14's `actual` column is removed.
+- B6: R40 deploys a mode only by `partDeployable` (chain plus test bar, `deps.testSet` in module tests). `originAllowed` is relayed. `#PENDING_ROWS` dropped; rows read from run-rules. `checkTestBarRecord` named. `checkPagesRead`: no read inside a document is this module's own (the read happens in its producers), so nothing to apply.
+- R73, B8: an exploring run names its system step's `place`/`work`. After the open, inside the open's transaction, the step is created by the run's own system identity `class:daemon/<run>` (J5 (8)); a refused step rolls the open back. At close, own steps end `ended`/`set_aside` and products are tied; a member's step the run worked is left to her.
+- R74: `openMany` as B4 (5) and J5 (9), (11).
+- B2: `runHolder` answers the system identity, and `principal` in viewer form.
+
+**Defects fixed in my module.** `testBarRecords` answered `set_version` as text, so no bar ever counted. `#stepSeen` took steps' `NO_SUCH_STEP` refusal (which names the step) as seen. A step-run that looked at nothing could not close: its NEVER_LOOKED rollup was written under `step` (C-22.17); it now goes under the run.
+
+**Deferred.** None. **Other modules:** J6.
+
+**`uses` edge for BOB to apply at merge:** ai-runs → steps (architecture's two failures are exactly this edge).
+
+**Tests and checks.**
+- `node --test test/m/ai-runs/*.test.mjs`: tests 80, pass 80, fail 0. This includes real-`steps` paths for explore and R74.
+- The suites of the other modules that use mine: 14 new reds, none cleared, per J6.
+- format: 0 failures. coverage: 46 of 46, 0 failures. ownership: 0 failures. architecture: 2 failures, both the steps edge above.
+
+Size (session_01GR97XnUR7v9ZQaT1BcPwFh): test runs 14, module lines 3446
