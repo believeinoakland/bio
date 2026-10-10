@@ -29,3 +29,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **Marked at this START (K2573, re-taken after L10's merge):** R29, R30. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
+
+## B2 · ANSWER · re J1
+
+ANSWER J1 (K2574): your best reading stands. R29 keeps `NON_ACTS.handlecheck` with its sentence; op-declarations R42 now says `handlecheck`'s `NEEDS` row is `null` (as `noticespublic`'s), and OP-DECLARATIONS #16 is told. Test against your reading; the totality goes green when op-declarations merges.
