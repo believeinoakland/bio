@@ -1,5 +1,5 @@
 /* case-import — another group's case file, imported into a read-only project (requirements:
- * `build/requirements/case-import.md` R1–R21; DEC-112 (6), DEC-96 items 1, 2, 4, DEC-92, DEC-45, DEC-46 (3), DEC-101 (3),
+ * `build/requirements/case-import.md` R1–R23; DEC-112 (6), DEC-96 items 1, 2, 4, DEC-92, DEC-45, DEC-46 (3), DEC-101 (3),
  * DEC-116 item 8; `BIO_Publication_v0_1.md` §5A, §5C "Import"; N520, N522, N534, K1256, K1257, K1273, K1339, K1366).
  *
  * A member imports another group's case file (R1). The copy holds it as an IMPORT, one per source group, case and lens,
@@ -14,6 +14,12 @@
  * by `calc-grammar` over the inputs the case file carries, each first checked against its stated SHA-256, and recorded
  * `recreated`, `differs` or `not_recreated`. The source's stated values are held only as the source's statement, beside
  * what was recomputed; no act here writes a `CALC-`, a money fact or any record row from them.
+ *
+ * An edition may be accepted whole (R22; D62): `findings: "all"` accepts, in one act with one reason, every finding that
+ * recreated and each recreated in part with its gaps stated, and answers the rest with why. Each finding is also read under
+ * this group's own lens (R23; D59): the statements in force here (`bias` R49), the case's applications of them applied and
+ * the rest read as removed, re-weighed by `case-checker` (its R23) beside the source's lens and this group's bar; an
+ * undetermined statement is stated, never read as false, and nothing about the finding changes.
  *
  * A member may watch an import (R17): `monitoring` then reads the publisher's public docket for that case daily and hands
  * each read to `recordDocketRead` (R18), which verifies each new entry (its digest and form, its signature against the
@@ -37,6 +43,9 @@
  *   acceptedWork    `registerAcceptedWork` (its R1; R16).
  *   reevaluation    `acceptanceWithdrawn` (its R31; R7), `citedCaseMoved` (its R33; R18).
  *   checkCaseFile   `case-checker.checkCaseFile` (its R1), pure; it answers a promise. Default: case-checker's own.
+ *   bias            `statementInForce` (its R49; R23), synchronous.
+ *   reweigh         `case-checker`'s synchronous re-weighing under a reader lens (its R23; R23 here). Default: its own.
+ *   biasApplicationsOf   `case-grammar.biasApplicationsOf` (its R24), pure.
  *   caseFileManifestCheck   `case-grammar.caseFileManifestCheck` (its R13), pure.
  *   now             the clock, milliseconds (default `env.BIO_NOW_MS`, else the wall clock).
  *
@@ -61,8 +70,11 @@ import { verifySshsig, NS_DOCKET, docketStatement, normalizeKey } from "../sshsi
 import { DOCKET_UNREADABLE, ENTRY_FORMATS } from "../docket/index.mjs";
 import { CASE_IMPORT_CHECKS, rowOf } from "./checks.mjs";
 import { CASE_IMPORT_TABLES, BLOB_CHUNK, migrateCaseImport } from "./schema.mjs";
-import { checkCaseFile, readCaseFile } from "../case-checker/index.mjs";
+import * as caseChecker from "../case-checker/index.mjs";
+import { biasOf } from "../bias/index.mjs";
 import { evaluate as evaluateRecipe, resultKey, METHOD as CALC_METHOD } from "../calc-grammar/index.mjs";
+
+const { checkCaseFile, readCaseFile } = caseChecker;
 
 export { CASE_IMPORT_CHECKS } from "./checks.mjs";
 export { CASE_IMPORT_SCHEMA, CASE_IMPORT_TABLES } from "./schema.mjs";
@@ -79,10 +91,27 @@ export const WORDS_MAX = 2000;
 export const WITHDRAWALS_PAGE_MAX = 1000, WITHDRAWALS_PAGE = 200;
 /** R4: the label every statement of the source's own bar carries (DEC-45). */
 export const SOURCE_BAR = "the source group's bar, as its case states it";
+/** R23: the labels of the two lenses an edition is read under (DEC-45's kind: the source's is never this group's). */
+export const SOURCE_LENS = "the source group's lens, as its case states it";
+export const OWN_LENS = "your group's own lens: its statements in force, the case's applications of them, the rest read as removed";
+/** R23 (`case-checker` R23): the limit every re-weighing states. */
+export const LENS_LIMIT = "A re-check re-weighs the analysis that exists; it cannot write what another lens would have written.";
+/** R23: undetermined, stated and never read as false (`bias` R49's `in_force: null`). */
+export const LENS_UNDETERMINED = "Whether a statement this finding applies is in your group's lens cannot be determined, so it is not "
+  + "re-weighed under that lens; that is not a statement that it would not change.";
+/** R23: when the re-weighing could not be made. */
+export const LENS_NOT_REWEIGHED = "This edition could not be re-weighed under your group's lens.";
 /** R4: this group's own bar, the group default, when none is set (K1134 reading 3). */
 export const NO_OWN_BAR = "no bar is set for this group";
 /** R1 (`case-checker` R1): the checker's statement when no answer carries one; its words are the UX stream's. */
 export const STATEMENT = "Recreating a case shows it is intact and consistent, not that it is true.";
+/** R22 (D62): the `findings` value that takes every finding of the edition. */
+export const ALL_FINDINGS = "all";
+/** R22: why a finding was not accepted under `findings: "all"`. */
+export const NOT_ACCEPTED_WHY = Object.freeze({
+  did_not_recreate: "It did not recreate, so it cannot be accepted.",
+  gaps_unstated: "It recreated in part, and the gaps named under unstated are not yet stated in your words.",
+});
 const AXES = Object.freeze(["capture", "connection", "testimony"]);
 const ID = { acceptance: "IMA", withdrawal: "IMW", flag: "IMF", move: "IMM" };
 /** R18 check 1: the docket entry's format, one format under two labels, as `docket` spells them (its R6; DEC-124, K1365). */
@@ -355,7 +384,12 @@ export class CaseImport {
   get strength() { return this.#deps.strength ||= strengthOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get reevaluation() { return this.#deps.reevaluation ||= reevaluationOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get acceptedWork() { return this.#deps.acceptedWork ||= acceptedWorkOf(this.#deps.host, { record: this.record }); }
+  get bias() { return this.#deps.bias ||= biasOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get #checkCaseFile() { return this.#deps.checkCaseFile || checkCaseFile; }
+  /* R23: `case-checker`'s synchronous re-weighing under a lens (its R23), and `case-grammar`'s reading of the carried
+     applications (its R24); a test passes its own */
+  get #reweigh() { return this.#deps.reweigh || caseChecker.reweigh; }
+  get #applicationsOf() { return this.#deps.biasApplicationsOf || caseGrammar.biasApplicationsOf; }
   get #manifestCheck() { return this.#deps.caseFileManifestCheck || caseGrammar.caseFileManifestCheck; }
 
   migrate() { migrateCaseImport(this.sql); }
@@ -726,7 +760,7 @@ export class CaseImport {
     const e = i && named ? this.#edition(i.import_id, named) : null;
     if (!e) return this.#noSuchEdition(importId, edition);
     return { ok: true, import: i.import_id, group: i.source_group, case: i.case_id, lens: i.lens ?? null, editions,
-             edition: { ...this.#editionView(i, e), ...wf.publisher(Number(e.edition)) }, ...wf.facts, wrote: false };
+             edition: { ...this.#editionView(i, e, viewer), ...wf.publisher(Number(e.edition)) }, ...wf.facts, wrote: false };
   }
 
   /* R4, R19: an import's editions, each with when it was imported and its publisher facts. */
@@ -736,11 +770,12 @@ export class CaseImport {
   }
 
   /* R4: one edition in full. */
-  #editionView(i, e) {
+  #editionView(i, e, viewer = null) {
     const ed = Number(e.edition);
     const rec = this.#recreationView(i.import_id, ed);
     const lastAnswer = parse(this.#latestCheck(i.import_id, ed)?.answer, {});
     const own = this.#ownBar();
+    const lens = this.#ownLens(i, ed, rec, lastAnswer, own, viewer);
     const flags = this.#openFlags(i.import_id, ed);
     const verified = signatureVerified(lastAnswer);
     const sourceBar = e.source_bar ? parse(e.source_bar) : null;
@@ -748,6 +783,8 @@ export class CaseImport {
       ...f,
       ref: importedFindingRef(i.import_id, f.finding),
       against_own_bar: againstBar(f.role, f.pair, own.bar),
+      /* R23: the finding under this group's own lens, beside the source's (its recorded result and pair) and this bar */
+      own_lens: lens.finding(f),
       origin: {
         another_groups: { group: i.source_group, case: i.case_id, edition: ed, signature_verified: verified },
         acceptance: this.#acceptanceFor(i.import_id, ed, f.finding),
@@ -762,6 +799,8 @@ export class CaseImport {
       source_bar: { whose: "source", label: SOURCE_BAR, group: i.source_group, stated: sourceBar,
                     bar: barAxes(sourceBar) },
       own_bar: own,
+      source_lens: { whose: "source", label: SOURCE_LENS, group: i.source_group, statements_sha: i.lens ?? null },
+      own_lens: lens.edition,
       documents: this.#rows(`SELECT sha, bytes, by_member, at FROM case_import_documents WHERE import_id=? AND edition=? ORDER BY at, sha`,
                             i.import_id, ed).map((d) => ({ sha: d.sha, bytes: Number(d.bytes), by: d.by_member, at: d.at })),
       findings,
@@ -769,6 +808,89 @@ export class CaseImport {
       calculations: rec ? rec.calculations : [],
       flags,
     };
+  }
+
+  /* ================================================================ R23: this group's own lens */
+
+  /* R23 (D59, D62; K2471): the edition re-weighed under this group's own lens. The carried applications (`case-grammar`
+     R24) are read from the case document; each statement is asked of `bias.statementInForce` (its R49) at scope
+     `instance` with the reading member as viewer. The reader lens (`case-checker` R23) holds the statements in force
+     and the applications whose statement is in force; a carried application whose statement is not in force is left
+     out, so it reads as removed. A statement whose answer is undetermined (`in_force: null`) is stated, never read as
+     false: a finding resting on one answers no pair and no `bar_met` under this lens. The re-weighing is
+     `case-checker`'s, synchronous, over the recorded as-published answer, so no signature is verified again and the
+     lens read is always the one in force. It changes nothing: the acceptance, the published pair and the recorded
+     results stand. Answers `{edition, finding(f)}`. Never throws. */
+  #ownLens(i, ed, rec, lastAnswer, own, viewer) {
+    const none = (stated) => ({
+      edition: { whose: "this_group", scope: "instance", label: OWN_LENS, determined: false, stated, statements: [],
+                 statements_sha: null, limit: LENS_LIMIT },
+      finding: (f) => ({ whose: "this_group", determined: false, stated, pair: null, bar_met: null,
+                         against_own_bar: null, changed_by: [], applications: { in_force: [], removed: [], undetermined: [] } }) });
+    try {
+      if (!rec) return none(LENS_NOT_REWEIGHED);
+      const docRow = this.#one(`SELECT path FROM case_import_files WHERE import_id=? AND edition=? AND kind='case_document'`, i.import_id, ed);
+      const doc = docRow ? this.fileOf({ import: i.import_id, edition: ed, path: docRow.path }) : null;
+      const fm = doc ? this.#call(() => parseFrontmatter(new TextDecoder().decode(doc.bytes)).data) : null;
+      const readApps = this.#applicationsOf;
+      if (!isObj(fm) || typeof readApps !== "function") return none(LENS_NOT_REWEIGHED);
+      const read = this.#call(() => readApps(fm), null);
+      const apps = (Array.isArray(read) ? read : []).filter((a) => isObj(a) && str(a.finding) && str(a.statement));
+      /* each statement the edition applies, asked once of the lens in force here */
+      const asked = new Map();
+      for (const id of [...new Set(apps.map((a) => str(a.statement)))].sort())
+        asked.set(id, this.#call(() => this.bias.statementInForce({ statement: id, scope: "instance", viewer }),
+                                 { ok: true, statement: id, in_force: null, stated: "undetermined: the lens in force could not be read" }));
+      const stateOf = (a) => { const v = asked.get(str(a.statement)); return v && (v.in_force === true || v.in_force === false) ? v.in_force : null; };
+      const inForce = [...asked.values()].filter((v) => v && v.in_force === true);
+      const reader = { statements: inForce.map((v) => ({ statement: v.statement, kind: v.kind ?? null, text: v.text ?? null,
+                                                         bundle_id: v.bundle_id ?? null, level: v.level ?? null })),
+                       applications: apps.filter((a) => stateOf(a) === true) };
+      const sha = [...asked.values()].map((v) => (v && isSha(v.statements_sha) ? v.statements_sha : null)).find(Boolean) ?? null;
+      const undeterminedIds = [...asked.values()].filter((v) => !v || v.in_force === null).map((v) => v?.statement ?? null);
+      /* case-checker's re-weighing, over the recorded answer with its findings, synchronous */
+      const fn = this.#reweigh;
+      let out = null, failed = null;
+      if (typeof fn !== "function") failed = LENS_NOT_REWEIGHED;
+      else {
+        const parts = this.#parts(i.import_id, ed);
+        if (parts.some((p) => !p)) failed = LENS_NOT_REWEIGHED;
+        else {
+          try {
+            const answer = { ...lastAnswer, findings: rec.findings.map((f) => ({ ...f })) };
+            out = fn({ parts, documents: this.#documents(i.import_id, ed), answer, lens: reader });
+            if (out && typeof out.then === "function") { out = null; failed = LENS_NOT_REWEIGHED; }
+          } catch (err) { failed = `${LENS_NOT_REWEIGHED} (${String(err && err.message ? err.message : err).slice(0, 200)})`; }
+        }
+      }
+      const byFinding = new Map(isObj(out) && Array.isArray(out.findings) ? out.findings.filter(isObj).map((x) => [x.finding, x]) : []);
+      const limit = isObj(out) && str(out.limit) ? str(out.limit) : LENS_LIMIT;
+      return {
+        edition: { whose: "this_group", scope: "instance", label: OWN_LENS, determined: !failed && !undeterminedIds.length,
+                   ...(failed ? { stated: failed } : undeterminedIds.length ? { stated: LENS_UNDETERMINED } : {}),
+                   statements: [...asked.values()].map((v) => ({ statement: v?.statement ?? null, in_force: v ? v.in_force ?? null : null,
+                                                                 kind: v?.kind ?? null, text: v?.text ?? null,
+                                                                 ...(v && v.in_force !== true && v.stated ? { stated: v.stated } : {}) })),
+                   statements_sha: sha, limit },
+        finding: (f) => {
+          const mine = apps.filter((a) => a.finding === f.finding);
+          const applications = { in_force: mine.filter((a) => stateOf(a) === true), removed: mine.filter((a) => stateOf(a) === false),
+                                 undetermined: mine.filter((a) => stateOf(a) === null) };
+          const head = { whose: "this_group", applications };
+          if (applications.undetermined.length)
+            return { ...head, determined: false, stated: LENS_UNDETERMINED, pair: null, bar_met: null, against_own_bar: null, changed_by: [] };
+          const r = byFinding.get(f.finding);
+          if (failed || !r)
+            return { ...head, determined: false, stated: failed || LENS_NOT_REWEIGHED, pair: null, bar_met: null, against_own_bar: null, changed_by: [] };
+          const pair = r.pair === undefined ? null : r.pair;
+          return { ...head, determined: true, pair, bar_met: r.bar_met === undefined ? null : r.bar_met,
+                   against_own_bar: againstBar(f.role, pair, own.bar),
+                   changed_by: Array.isArray(r.changed_by) ? r.changed_by : Array.isArray(r.statements) ? r.statements : [] };
+        },
+      };
+    } catch (err) {
+      return none(LENS_NOT_REWEIGHED);
+    }
   }
 
   /* R4 (K1134 reading 3): this group's own bar, the group default (`strength` R16, no project), or that none is set. */
@@ -824,7 +946,8 @@ export class CaseImport {
   /* ================================================================ R6, R7: acceptance and its withdrawal */
 
   /** R6: records the acceptance of one edition for the named findings, each recreated, or recreated in part with every
-   *  gap stated in the member's words. It changes no grade. */
+   *  gap stated in the member's words. It changes no grade. R22: `findings: "all"` accepts, in one act with one reason,
+   *  every finding of the edition that can be accepted, and answers the rest under `not_accepted`, each with why. */
   acceptImported({ import: importId = null, edition = null, findings = null, checked = null, reason = null, gaps = null,
                    by = null, viewer = null } = {}) {
     const k = this.#callerRefusal({ by, viewer });
@@ -838,32 +961,66 @@ export class CaseImport {
       return refuse("IMPORT_ACCEPT_NO_REASON", `what was checked and the reason are each 1 to ${WORDS_MAX} characters`,
                     { missing: [!words(checked) ? "checked" : null, !words(reason) ? "reason" : null].filter(Boolean) });
     /* END DEC-49 REGION is-import-accept */
-    const asked = (typeof findings === "string" ? (findings.trim().startsWith("[") ? parse(findings, null) : [findings]) : findings);
-    const named = Array.isArray(asked) ? [...new Set(asked.map((f) => (typeof f === "string" ? f.trim() : f)))] : [];
     const results = new Map(this.#resultsOf(e.import_id, ed).map((r) => [r.finding, r]));
-    const unknown = named.filter((f) => typeof f !== "string" || !results.has(f));
-    /* DEC-49 REGION is-import-finding */
-    if (!named.length || unknown.length)
-      return refuse("IMPORT_NO_SUCH_FINDING", named.length ? "a finding named is not one of this edition's" : "no finding is named",
-                    { import: e.import_id, edition: ed, findings: unknown.map((f) => (typeof f === "string" ? f : null)) });
-    /* END DEC-49 REGION is-import-finding */
     const stated = isObj(gaps) ? gaps : typeof gaps === "string" ? parse(gaps, {}) : {};
-    const notRecreated = named.filter((f) => results.get(f).result === "did_not_recreate");
-    /* DEC-49 REGION is-import-accept */
-    if (notRecreated.length)
-      return refuse("IMPORT_ACCEPT_NOT_RECREATED", "only a finding that recreated, wholly or in part, is accepted",
-                    { import: e.import_id, edition: ed, findings: notRecreated });
-    const unstated = [];
-    for (const f of named) {
+    /* R6: each missing entry of a finding recreated in part that `gaps` leaves unstated in the member's words, in order */
+    const unstatedOf = (f) => {
       const r = results.get(f);
-      if (r.result !== "recreated_in_part") continue;
+      if (r.result !== "recreated_in_part") return [];
       const said = Array.isArray(stated[f]) ? stated[f] : [];
-      r.missing.forEach((m, i) => { if (!words(said[i])) unstated.push({ finding: f, entry: i, missing: m }); });
+      return r.missing.flatMap((m, i) => (words(said[i]) ? [] : [{ finding: f, entry: i, missing: m }]));
+    };
+    /* R22 (D62): `findings: "all"` takes every finding of the edition: one act, one reason, accepting each that recreated,
+       and each recreated in part with its gaps stated; the rest are answered, each with why */
+    const all = typeof findings === "string" && findings.trim() === ALL_FINDINGS;
+    let named, notAccepted = null;
+    if (all) {
+      named = [];
+      notAccepted = [];
+      const unstatedAll = [];
+      for (const [f, r] of results) {
+        const unstated = unstatedOf(f);
+        if (r.result === "did_not_recreate")
+          notAccepted.push({ finding: f, ref: importedFindingRef(e.import_id, f), result: r.result, why: NOT_ACCEPTED_WHY.did_not_recreate });
+        else if (unstated.length) {
+          unstatedAll.push(...unstated);
+          notAccepted.push({ finding: f, ref: importedFindingRef(e.import_id, f), result: r.result, why: NOT_ACCEPTED_WHY.gaps_unstated,
+                             unstated: unstated.map(({ entry, missing }) => ({ entry, missing })) });
+        } else named.push(f);
+      }
+      /* DEC-49 REGION is-import-finding */
+      if (!results.size)
+        return refuse("IMPORT_NO_SUCH_FINDING", "this edition holds no finding to accept", { import: e.import_id, edition: ed, findings: [] });
+      /* END DEC-49 REGION is-import-finding */
+      /* DEC-49 REGION is-import-accept */
+      if (!named.length && unstatedAll.length)
+        return refuse("IMPORT_ACCEPT_GAPS_UNSTATED", "no finding of this edition can be accepted until each missing entry of a finding "
+          + "recreated in part is stated in the member's words, in order", { import: e.import_id, edition: ed, unstated: unstatedAll,
+            not_accepted: notAccepted });
+      if (!named.length)
+        return refuse("IMPORT_ACCEPT_NOT_RECREATED", "no finding of this edition recreated, wholly or in part",
+                      { import: e.import_id, edition: ed, findings: notAccepted.map((x) => x.finding), not_accepted: notAccepted });
+      /* END DEC-49 REGION is-import-accept */
+    } else {
+      const asked = (typeof findings === "string" ? (findings.trim().startsWith("[") ? parse(findings, null) : [findings]) : findings);
+      named = Array.isArray(asked) ? [...new Set(asked.map((f) => (typeof f === "string" ? f.trim() : f)))] : [];
+      const unknown = named.filter((f) => typeof f !== "string" || !results.has(f));
+      /* DEC-49 REGION is-import-finding */
+      if (!named.length || unknown.length)
+        return refuse("IMPORT_NO_SUCH_FINDING", named.length ? "a finding named is not one of this edition's" : "no finding is named",
+                      { import: e.import_id, edition: ed, findings: unknown.map((f) => (typeof f === "string" ? f : null)) });
+      /* END DEC-49 REGION is-import-finding */
+      const notRecreated = named.filter((f) => results.get(f).result === "did_not_recreate");
+      /* DEC-49 REGION is-import-accept */
+      if (notRecreated.length)
+        return refuse("IMPORT_ACCEPT_NOT_RECREATED", "only a finding that recreated, wholly or in part, is accepted",
+                      { import: e.import_id, edition: ed, findings: notRecreated });
+      const unstated = named.flatMap(unstatedOf);
+      if (unstated.length)
+        return refuse("IMPORT_ACCEPT_GAPS_UNSTATED", "each missing entry of a finding recreated in part is stated in the member's words, "
+          + "in order", { import: e.import_id, edition: ed, unstated });
+      /* END DEC-49 REGION is-import-accept */
     }
-    if (unstated.length)
-      return refuse("IMPORT_ACCEPT_GAPS_UNSTATED", "each missing entry of a finding recreated in part is stated in the member's words, "
-        + "in order", { import: e.import_id, edition: ed, unstated });
-    /* END DEC-49 REGION is-import-accept */
     const kept = {};
     for (const f of named) if (results.get(f).result === "recreated_in_part") kept[f] = stated[f].slice(0, results.get(f).missing.length).map((s) => s.trim());
     const at = this.#stamp();
@@ -879,6 +1036,7 @@ export class CaseImport {
     return { ok: true, acceptance: idOf("acceptance", rn), import: e.import_id, edition: ed, by: k.member, at,
              checked: checked.trim(), reason: reason.trim(), gaps: kept,
              findings: named.map((f) => ({ finding: f, ref: importedFindingRef(e.import_id, f), result: results.get(f).result })),
+             ...(all ? { scope: ALL_FINDINGS, not_accepted: notAccepted } : {}),
              grades: "unchanged: the edition's grades stand as published" };
   }
 
