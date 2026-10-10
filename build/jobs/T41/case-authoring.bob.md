@@ -1,6 +1,6 @@
 # BOB to case-authoring (T41)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -57,3 +57,7 @@ J5: option 1 (K2542). Merge as is at 4,131; the split (the account to `case-acco
 ## B12 · CHANGE
 
 CHANGE (K2543): publication (T41-36) is merged into tranche/T41 @ e2f3e4b7f7, its scheduled-publishing copy deleted (R77's three doors filled by publish-schedule). Merge the tranche branch, re-run on the merged tip, and post COMPLETE again (your earlier COMPLETE stands if nothing changes).
+
+## B13 · CHANGE
+
+CHANGE (K2548): ratification (T41-39) is merged into tranche/T41 @ 245eff239b with R49's digest and carried-approvals arms and R50's `registerApprovalReader` and `approvalsInForce`. Merge the tranche branch, drop your local stand-in, re-run, post COMPLETE.

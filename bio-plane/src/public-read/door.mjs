@@ -1,5 +1,5 @@
 /* public-read — the door's half of the public read path (requirements: `build/requirements/public-read.md` R1, R4, R5,
- * R9, R10, R18, R21, R30). Moved from `src/index.mjs` (the legacy-index map's §4.4 move, K649 (7); §12.2): the `verify` and
+ * R9, R10, R18, R21, R25, R30). Moved from `src/index.mjs` (the legacy-index map's §4.4 move, K649 (7); §12.2): the `verify` and
  * `publishedmanifest` arms, the REC-22 note, and the `publishedcase`/`publishedbytes` dispatch line, which hands both
  * to the Worker's `publishedRoutes` (`../publication/worker.mjs`, this module's by `paths`, K697, K702).
  * `bindPublishedPlane`'s hook hand-over stays the door's.

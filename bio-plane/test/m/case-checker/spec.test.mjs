@@ -149,6 +149,22 @@ test("R14 (T39; N806; K2333, K2343): bio-case-file/3 names a member document's c
   for (const v of [V1, V2]) assert.equal(CC.CASE_FILE_SPECS[v].includes("member document"), false, v);
 });
 
+test("R14 (T40; N798; DEC-185 (1); K2394): bio-case-file/3 names an unmarked photo's copy as labelled (published), told from a marked one by obscured_marked, by its label when absent, with no format change", () => {
+  const SPEC = CC.CASE_FILE_SPECS[V3];
+  const row = SPEC.slice(SPEC.indexOf("- `materials:`"), SPEC.indexOf("\n", SPEC.indexOf("- `materials:`")));
+  /* every photo a case carries is labelled: a marked copy obscured, an unmarked copy published, a member document cleaned */
+  assert.match(row, /a member document's copy is labelled cleaned, a photo's copy with marked areas covered is labelled obscured, and an unmarked photo's copy \(nothing covered, no metadata\) is labelled published, so every photo a case carries is labelled/);
+  /* obscured_marked tells them apart, and a row without it is read by its label */
+  assert.ok(codeOf(SPEC).has("obscured_marked"));
+  assert.match(row, /The row may also state `obscured_marked`, whether the photo's copy covers areas a member marked, which tells a marked copy from an unmarked one; a row without it is read by its label \(a label stated, marked; none, unmarked, as in an edition signed before unmarked copies were labelled\)/);
+  /* negative control: the words that an unmarked copy has no label are gone */
+  assert.equal(SPEC.includes("an unmarked photo's copy has none"), false);
+  /* words only: the format and the versions held are as before; /1 and /2 say nothing of it */
+  assert.equal(CG.CASE_FILE_FORMAT, V3);
+  assert.deepEqual(CC.CASE_FILE_SPEC_VERSIONS, [V1, V2, V3]);
+  for (const v of [V1, V2]) assert.equal(CC.CASE_FILE_SPECS[v].includes("obscured_marked"), false, v);
+});
+
 test("R15 (DEC-149): at start the module registers casechecker and casefilespec with public-read, credential-free; a second registration is refused", async () => {
   const pr = new PublicRead({ storage: { sql: null }, publication: null, docket: null });
   const host = {};

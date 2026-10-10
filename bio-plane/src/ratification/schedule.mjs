@@ -9,11 +9,16 @@ import { caseDocumentBlocks, acceptedWorkOf, peopleOf, memberTiesOf } from "../c
 import { rowOf } from "./checks.mjs";
 
 /** R41: the parts of `checked`, in the order they are recorded and compared. */
-export const CHECKED_PARTS = Object.freeze(["sources", "ties", "holds", "signer_key"]);
+export const CHECKED_PARTS = Object.freeze(["sources", "ties", "holds", "signer_key", "approvals"]);
+
+/* R50 (T41; D60): the `approvals` part with no rule in force, which a waiting edition signed before the part existed
+   is read as recording (no approval was asked then, and none is lost by reading it so). */
+export const NO_APPROVAL_RULE = canonicalJson({ rule: null, approvals: [] });
 
 /* R42: the stop code a part that differs answers with (`signer_key` cannot differ under a signature that verifies). */
 const DIFFERS = Object.freeze({ sources: "SCHEDULED_SOURCES_CHANGED", ties: "SCHEDULED_TIES_CHANGED",
-                                holds: "SCHEDULED_HOLD_CHANGED", signer_key: "SCHEDULED_CHECK_REFUSED" });
+                                holds: "SCHEDULED_HOLD_CHANGED", signer_key: "SCHEDULED_CHECK_REFUSED",
+                                approvals: "SCHEDULED_CHECK_REFUSED" });
 
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
 const byJson = (a, b) => { const x = canonicalJson(a), y = canonicalJson(b); return x < y ? -1 : x > y ? 1 : 0; };
@@ -41,7 +46,8 @@ function moneyFactsNamed(people) {
 /** R41: what signing read, read again by R42 the same way. `reads` are the caller's: `sourcesLapsed(text, at)` and
  *  `acceptedWorkLapsed(fm, signer)` (case-carriage, as publication R51 and R59 read them), `tiesConcerning(args)`
  *  (people R20), `readFact(args)` (money), `holdsOn({project})` (R45's reader, or null), `stampsOf({case, edition})`
- *  (publication R62) and `ratifiedEditions(case)`. Answers `{ok: true, checked}`, each part canonical JSON, or
+ *  (publication R62), `ratifiedEditions(case)` and `approvals()` (`./refusals.mjs` `approvalsRead` over R50's reader, at
+ *  the signed `doc_sha`). Answers `{ok: true, checked}`, each part canonical JSON, or
  *  `{ok: false, unreadable: [{part, what}]}` naming every part that could not be read. Never throws. */
 export function checkedOf({ text, fm, caseId, project, signer, keyB64, at, reads }) {
   const unreadable = [];
@@ -128,6 +134,14 @@ export function checkedOf({ text, fm, caseId, project, signer, keyB64, at, reads
       parts.holds = { project: holds, stamps };
   }
 
+  /* approvals (R50): the group's rule in force and the approvals given at the signed bytes */
+  {
+    const a = ask("approvals", "the group's approvals", () => reads.approvals ? reads.approvals() : null);
+    if (a && a.unreadable) unreadable.push({ part: "approvals", what: a.unreadable });
+    else if (a !== undefined)
+      parts.approvals = a ? { rule: { approvers: a.approvers }, approvals: a.approvals } : { rule: null, approvals: [] };
+  }
+
   parts.signer_key = keyFingerprint(keyB64);
   if (unreadable.length) return { ok: false, unreadable };
   return { ok: true, checked: Object.fromEntries(CHECKED_PARTS.map((p) => [p, canonicalJson(parts[p] ?? null)])) };
@@ -140,6 +154,8 @@ function itemsOf(part, json) {
   if (part === "sources" && v) return [...(v.sources || []).map((r) => canonicalJson({ source: r })),
                                        ...(v.accepted_work || []).map((r) => canonicalJson({ accepted_work: r }))];
   if (part === "ties" && Array.isArray(v)) return v.flatMap((m) => (m.ties || []).map((t) => canonicalJson({ member: m.member, tie: t.tie_id, withdrawn: t.withdrawn })));
+  if (part === "approvals" && v) return [canonicalJson({ rule: v.rule ?? null }),
+                                         ...(v.approvals || []).map((x) => canonicalJson({ approval: x }))];
   if (part === "holds" && v) return [canonicalJson({ hold: v.project ?? null }),
                                      ...(v.stamps || []).flatMap((e) => (e.stamps || []).map((s) => canonicalJson({ edition: e.edition, stamp: s })))];
   return [canonicalJson(v)];
@@ -147,11 +163,13 @@ function itemsOf(part, json) {
 
 /** R42: each part of `then` (what signing recorded) that `now` answers differently, `[{part, code, changed}]`, `changed`
  *  the items present in one reading and not the other (at most 50), each naming a source, a tie by its id, a hold or a
- *  stamp. A part missing from `then` is a part signing could not have recorded, so it differs. */
+ *  stamp, an approval or the rule. A part missing from `then` is a part signing could not have recorded, so it differs;
+ *  but `approvals`, added in T41, is read as no rule when an edition signed before then does not record it. */
 export function checkedDiffers(then, now) {
   const out = [];
   for (const part of CHECKED_PARTS) {
-    const a = then && typeof then[part] === "string" ? then[part] : null;
+    const a = then && typeof then[part] === "string" ? then[part]
+      : part === "approvals" && then && typeof then === "object" ? NO_APPROVAL_RULE : null;
     const b = now[part];
     if (a === b) continue;
     const was = new Set(a === null ? [] : itemsOf(part, a)), is = new Set(itemsOf(part, b));
