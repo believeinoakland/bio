@@ -45,7 +45,6 @@
  *   checkCaseFile   `case-checker.checkCaseFile` (its R1), pure; it answers a promise. Default: case-checker's own.
  *   bias            `statementInForce` (its R49; R23), synchronous.
  *   reweigh         `case-checker`'s synchronous re-weighing under a reader lens (its R23; R23 here). Default: its own.
- *   biasApplicationsOf   `case-grammar.biasApplicationsOf` (its R24), pure.
  *   caseFileManifestCheck   `case-grammar.caseFileManifestCheck` (its R13), pure.
  *   now             the clock, milliseconds (default `env.BIO_NOW_MS`, else the wall clock).
  *
@@ -386,10 +385,10 @@ export class CaseImport {
   get acceptedWork() { return this.#deps.acceptedWork ||= acceptedWorkOf(this.#deps.host, { record: this.record }); }
   get bias() { return this.#deps.bias ||= biasOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get #checkCaseFile() { return this.#deps.checkCaseFile || checkCaseFile; }
-  /* R23: `case-checker`'s synchronous re-weighing under a lens (its R23), and `case-grammar`'s reading of the carried
-     applications (its R24); a test passes its own */
+  /* R23: `case-checker`'s synchronous re-weighing under a lens (its R23), a test passes its own; the carried applications
+     are `case-grammar`'s reading (its R24) */
   get #reweigh() { return this.#deps.reweigh || caseChecker.reweigh; }
-  get #applicationsOf() { return this.#deps.biasApplicationsOf || caseGrammar.biasApplicationsOf; }
+  get #applicationsOf() { return caseGrammar.biasApplicationsOf; }
   get #manifestCheck() { return this.#deps.caseFileManifestCheck || caseGrammar.caseFileManifestCheck; }
 
   migrate() { migrateCaseImport(this.sql); }
