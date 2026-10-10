@@ -12,16 +12,17 @@
 - R22: `op=handlecheck` answered `NO_SUCH_INVITATION` counted as kind `credential` (`CREDENTIAL_REFUSED_AT`), as `invitelook`'s; its own `HANDLE_CHECK_PAUSED` is membership's and not counted.
 - R19: no code named `groupswitchset` (R19 is read from op-declarations' table); `doors.test.mjs`:12's `GROUP_KEY_OPS` re-stated without it.
 - Tests: new `t41.test.mjs` (R3, R19, R22, each with negative controls); `namespaces.test.mjs` R3's list gains `handlecheck`.
+- R20 (CHANGE B3, K2576), on the commit after `tranche/T41`'s merge: `handlecheck`'s `invite` and `handle` are body-only (`BODY_ONLY_FIELDS`), stripped from the query by `queryGate`, so a query-only invitation reaches membership with none (`NO_SUCH_INVITATION`); tested in `t41.test.mjs` R20 (T41) with negative controls (`invitelook`, `handlechange` keep their query).
 
-**Tests (on `tranche/T41` as it stands):** `node --test test/m/admission/`: 40 tests, 37 pass, 3 fail, each only because op-declarations' T41 declarations are not merged yet (J1): R3 (`namespaces.test.mjs`) and R3 (T41) find no `OPS.handlecheck`; R19 (T41) finds `groupswitchset` still declared and no `accountusesset`. With op-declarations' R24/R41/R42 simulated locally (not committed): 40 of 40 pass; with my code change then reverted, R3, R3 (T41) and R22 (T41) fail (the tests tell the change apart).
+**Tests (on `tranche/T41` as it stands, after B3):** `node --test test/m/admission/`: 41 tests, 37 pass, 4 fail, each only because op-declarations' T41 declarations are not merged yet (J1, answered B2: build against the real `OPS`): R3 (`namespaces.test.mjs`), R3 (T41) and R20 (T41) find no `OPS.handlecheck`; R19 (T41) finds `groupswitchset` still declared and no `accountusesset`. With op-declarations' R24/R41/R42 simulated locally (not committed): 41 of 41 pass; with my code change then reverted, R3, R3 (T41), R22 (T41) and R20 (T41) fail (the tests tell the change apart).
 
 **Checks:** format 0 failures; architecture 0; coverage 22 of 22 live ids named, 0; ownership 0.
 
-**Found elsewhere (for BOB):** op-declarations R42 says `handlecheck`'s `invite` and `handle` are read from the body only, citing admission R20; R20 governs only `token` and `secret`, and admission's `queryGate` removes body-only fields from the query only for the doors and `groupkeyset` (R17, R19). Nothing in my requirements asks it for `handlecheck`, so I added nothing; whose site enforces "body only" for `invite` (control-plane's relay or membership's handler) is a question for BOB, not a change I make unasked.
+**Found elsewhere (for BOB; J2, answered by B3/K2576: admission is the site, applied above):** op-declarations R42 says `handlecheck`'s `invite` and `handle` are read from the body only, citing admission R20; R20 governs only `token` and `secret`, and admission's `queryGate` removes body-only fields from the query only for the doors and `groupkeyset` (R17, R19). Nothing in my requirements asks it for `handlecheck`, so I added nothing; whose site enforces "body only" for `invite` (control-plane's relay or membership's handler) is a question for BOB, not a change I make unasked.
 
 **Uses (final):** unchanged: record-grammar, runtime-limits, membership, op-declarations, credentials, capture, record-core.
 
-**Next:** after BOB's answer to J1 / the CHANGE that brings op-declarations' merge, merge `tranche/T41`, re-run the tests and checks, complete.
+**Next:** on the CHANGE that brings op-declarations' merge (B2), merge `tranche/T41`, re-run the tests and checks, complete.
 
 ## J1 · QUESTION
 
