@@ -41,3 +41,10 @@ Size (session_01CgHt32emJfi3pZh8fJSRem): test runs 14, module lines 2,515
 ## J2 · COMPLETE
 
 T41-50 complete; Completion section in my record. 75/75 (was 62/7: the seven D54 reds re-stated with negative and FULL controls). R13/R22 from 3660c18803 (48 screens, projectai; Connect and Invite v2, adopted 2026-10-10 under K2241); R23 routes + registered door finder/pointer (for PLANE #29); R28 proposeStart + checkStartProposal, new row C-131.42 START_RUMOUR_AS_QUESTION (awaiting stamp); R27 assistant.refusal ordered per B2/B3 (for STORE-DOOR #4). Users' failing sets identical before/after (63 across 12 modules). Checks: format 0, architecture 0, coverage 28/28, ownership 0. uses unchanged. Plane bundle staled (rule 4 (14)).
+
+## Completion of B4 (CHANGE K2592)
+
+- Merged `tranche/T41` (`ec1ad966c0`). **R27 (K2592)**: `writingHelp`'s own keep-away (`#keptAway`, read by both `writingHelp` and `writingHelpAt`, R24 item 1) asks `credentials.aiKeptAway({use: "draft"})` (`KEEP_AWAY_USE`, exported), so a keep-away covering only `ask` does not refuse a draft the door admits. New test in `writing-help.test.mjs`: covering only `ask` passes to `ASSISTANT_DRAFT_UNAVAILABLE` and R24 offers; negative controls covering `draft`, `ask`+`draft` and every use refuse `AI_KEPT_AWAY` with credentials' row and `keep_away`; a stand-in credentials shows the question asked is exactly `{use: "draft"}`.
+- `node --test bio-plane/test/m/wizard-scripts/*.test.mjs`: tests 76, pass 76, fail 0. Users: answer-envelope 24/4, plane 147/8, store-door 36/5 (as before); control-plane 190/5, its failing set identical with and without this change (the extra red came with the tranche merge, not from me). Checks: format 0, architecture 0, coverage 28/28, ownership 0.
+
+Size (session_01CgHt32emJfi3pZh8fJSRem): test runs 19, module lines 2,518
