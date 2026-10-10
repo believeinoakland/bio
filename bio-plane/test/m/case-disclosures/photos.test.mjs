@@ -12,9 +12,9 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { world, V, sha } from "./fixture.mjs";
-import { CASE_DISCLOSURE_CHECKS, PHOTO_NOT_COVERABLE_WORDS, PHOTO_UNCHECKED_WORDS, PHOTO_WORDS, PHOTO_STATES,
+import { CASE_DISCLOSURE_CHECKS, carriesBodyLines, PHOTO_NOT_COVERABLE_WORDS, PHOTO_UNCHECKED_WORDS, PHOTO_WORDS, PHOTO_STATES,
          photoRead } from "../../../src/case-disclosures/index.mjs";
-import { OBSCURED_LABEL, PUBLISHED_LABEL } from "../../../src/case-carriage/index.mjs";
+import { OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "../../../src/case-carriage/index.mjs";
 import { CASE_DOCUMENT_FORMAT, materialBlockLines, materialsOf } from "../../../src/case-grammar/index.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c", DOC4 = "INFO-2026-0004-d";
@@ -390,4 +390,28 @@ test("R6, R29 over the real case-carriage (its R10–R14): an unchecked photo is
   assert.deepEqual(r2.refusals[0].not_coverable, [{ target: Q2, materials: [{ ref: DOC3, sha: p2, refused: "NOT_A_COVERABLE_FORMAT" }] }]);
   assert.deepEqual(w.cd.photosOf(r2.materials, w.roles([Q2]), V("alice")).photos.map((x) => x.words), [PHOTO_NOT_COVERABLE_WORDS]);
   void d;
+});
+
+test("R7 (K2541; DEC-185 (1)): the case document's body prints a material carried as its copy — a marked photo, a photo with nothing to obscure, a member document's cleaned copy — as travelling with the case, with its copy's fingerprint and its label word for word, never as NOT INCLUDED; a row without obscured prints as before", () => {
+  const w = setup();
+  const p = w.doc(DOC), n = w.doc(DOC2), m = w.doc(DOC3), d = w.doc(DOC4, {}, { indexed: false });
+  w.marks.photo(p, { state: "marked", copy: COPY });
+  w.marks.photo(n, { state: "nothing_to_obscure", copy: COPY2 });
+  w.marks.document(m, { state: "copy", copy: "e".repeat(64), refused: null });
+  w.finding(Q, [{ target: DOC }, { target: DOC2 }, { target: DOC3 }]);
+  w.finding(Q2, [{ target: DOC4 }]);
+  const reached = judged(w, [Q, Q2], [Q2]);
+  assert.deepEqual(reached.refusals, []);
+  const out = w.cd.disclosureBlocks({ reached, project: "PROJ-x", author: "alice", at: AT });
+  const lines = carriesBodyLines(w.cd.methodOf(), out.materials, out.group);
+  const line = (ref) => lines.find((l) => l.startsWith(`- ${ref},`));
+  for (const [ref, copy, label] of [[DOC, COPY, OBSCURED_LABEL], [DOC2, COPY2, PUBLISHED_LABEL], [DOC3, "e".repeat(64), COPY_CLEANED_LABEL]]) {
+    assert.ok(line(ref).includes(`travels with this case as its copy, fingerprint ${copy}`), ref);
+    assert.ok(line(ref).includes(`shown with the label "${label}"`), ref);
+    assert.equal(line(ref).includes("NOT INCLUDED"), false, ref);
+  }
+  /* negative control: supporting-only material not held whole, with no copy, is still NOT INCLUDED; a whole one travels whole */
+  assert.ok(line(DOC4).includes("NOT INCLUDED: only its fingerprint, origin and archived copy travel"));
+  const plain = carriesBodyLines(null, { rows: out.materials.rows.map((r) => ({ ...r, obscured: null })), attestations: [] }, null);
+  assert.ok(plain.filter((l) => l.startsWith("- ")).every((l) => !l.includes("as its copy")), "no obscured, no copy words");
 });

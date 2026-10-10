@@ -55,6 +55,12 @@
 - `OBSCURED_LABEL`, `PUBLISHED_LABEL` and `COPY_CLEANED_LABEL` are now imported by name, with no namespace reads left.
 - Every module test is green.
 
+**CHANGE B6 (K2541), the body's copy line:** applied (my J2 (4)).
+- `document.mjs` `carriesBodyLines` prints a material carried as its copy as "travels with this case as its copy, fingerprint <copy>, the original kept by the group, shown with the label "<label>"", never as NOT INCLUDED.
+- It prints so only when the row states `obscured`, so every pinned hash in `seam.test.mjs` holds.
+- New test in `photos.test.mjs` covers a marked photo, a photo with nothing to obscure and a member document's copy, with negative controls.
+- case-authoring's suite is unchanged by it.
+
 **case-authoring's suite after B5**, for its job:
 - new since J2: `photos.test.mjs`:76, R34's Photos step. A copy with nothing to obscure now carries `PUBLISHED_LABEL` (R29), where it was null.
 - rule 4 (19): `photos.test.mjs`:60 and `documents.test.mjs`:147.
@@ -74,8 +80,8 @@
 - **Read by a worker, whole:** `accepted.mjs`, `people.mjs`, `document.mjs`, and the tests captures, imported, people, tensions, hunch, seam and carries. Its summary is about 8 KB, every statement citing file:line. It covered each file's exports and tests, every assertion my change could break, R23's service enumeration in seam, and flaws.
 - **Did anything left out matter?** No. The summary's two flaws are handled (`accepted.mjs`:75 fixed; `document.mjs` reported above).
 
-**Tests and checks run** (re-run after B5, the four checks 0 failures again):
-- `node --test bio-plane/test/m/case-disclosures/*.test.mjs`, file by file: pass 103, fail 0 (after B5).
+**Tests and checks run** (re-run after B6, the four checks 0 failures again):
+- `node --test bio-plane/test/m/case-disclosures/*.test.mjs`, file by file: pass 104, fail 0 (after B6).
 - No layer tests are named in the manifest.
 - case-authoring's suite, compared above.
 - answer-envelope `families.test.mjs`: pass 10, fail 3. Row census: fail 1, as above.
@@ -84,7 +90,7 @@
 - `checks/coverage.mjs bio case-disclosures`: 31 of 31 live ids named, 0 failures.
 - `checks/ownership.mjs bio case-disclosures tranche/T41`: 9 files, 0 failures.
 
-Size (session_01LY8Zq25Bmbg74LWk3TRP5f): test runs 17, module lines 2,378
+Size (session_01LY8Zq25Bmbg74LWk3TRP5f): test runs 19, module lines 2,387
 
 ## J1 · QUESTION
 
