@@ -42,3 +42,7 @@ Size (session_01X5bkceFD2GHGbfimdSRiKL): test runs 4, module lines 3441
 ## J1 · REPORT
 
 R31 finding (K2547's watch): the plane's global scope measures past R31's 500 ms warning here: 743 ms in the recorded run, 441-1,359 ms across six runs, some past the platform's 1 s. A CPU profile puts ~380 ms per import in compiling the 15 MiB source and ~60 ms in evaluating it, so size drives it. Measured in Node, not workerd; the platform's own figure is the next release's (wrangler --dry-run). Splitting the plane is Bob's question (K2547); yours to weigh. Every other member is under 70 ms and 2.5 MiB.
+
+## J2 · COMPLETE
+
+T42-2 done. N836: fleetbundles re-pinned 23 -> 25 from agent-worker's committed manifest (clears rule 4 (8)). N840/R31: fleet-bundle.mjs gains BUDGET, sizeVerdict, startVerdict, measureStart, budgetReport; fleetbundles section 9 measures and prints every member and the plane; section 9a is R31's negative control. fleetbundles 149 pass, 0 fail, no SKIP; module tests 94/94; format, architecture, coverage 31/31, ownership 0 failures. No bundle rebuilt. R31's not-yet-met mark is yours to strike. Record: build/jobs/T42/bundler.md.
