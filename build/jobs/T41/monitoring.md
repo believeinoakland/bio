@@ -33,3 +33,7 @@ R70's reading, building on it now; the answer changes the build only if (1) is r
 - `checks/format.mjs`: 0 failures; `checks/architecture.mjs monitoring`: 0 failures; `checks/coverage.mjs monitoring`: 57 of 57 live ids named, 0 failures; `checks/ownership.mjs monitoring tranche/T41`: 0 failures.
 
 Size (session_01Pfzyx4hzBorgjW5kbqPVcK): test runs 16, module lines 3,489
+
+## J2 · REPORT
+
+Two findings, in my record's Completion: (1) investigation: its R18 Provides names projectWatch and watchArrival but not watchedProjects(), which monitoring R70 calls and investigation/index.mjs:1121 provides (its watch field is intent R7's first page only); and watchArrival records the arrival, then computes its reads outside the write, so a read that throws makes the caller see a throw for an arrival already recorded. (2) The plane bundle is staled by this change (rule 4 (14)).
