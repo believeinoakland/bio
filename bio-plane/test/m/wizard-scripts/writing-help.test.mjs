@@ -207,3 +207,38 @@ test("R20 T34's rows: WIZARD_VIA_REFUSED and the eight writing-help rows are C-1
   for (const [code, r] of Object.entries(wz.WIZARD_SCRIPTS_CHECKS))
     for (const word of [/this instance/i, /the instance/i, /this copy/i, /this plane/i, /the plane/i, /\bserver\b/i]) assert.ok(!word.test(r.translation), `${code}: ${word}`);
 });
+
+test("R27 (T41; N812, K2373) the door's refusals of the account and its limit, ai-use R3's AI_LIMIT_REACHED and credentials' AI_USE_SWITCHED_OFF (and a fail-closed one), are answered as given, after R24's codes and WRITING_HELP_NOTHING_TOLD and before any model turn; a door's AI_NO_ACCOUNT at R24 item 1's place; the retired ceiling codes are named nowhere", () => {
+  const w = helped();
+  const before = w.snapshot();
+  const limit = { ok: false, reason: "AI_LIMIT_REACHED", code: "AI_LIMIT_REACHED", check: "C-143.3", translation: "Your limit is reached.",
+                  whose: "member", scope: "draft", unit: "usd", period: "day" };
+  const off = { ok: false, reason: "AI_USE_SWITCHED_OFF", code: "AI_USE_SWITCHED_OFF", check: "C-29.40", translation: "Switched off.", use: "draft" };
+  const unreadable = { ok: false, reason: "LIMITS_UNREADABLE", code: "LIMITS_UNREADABLE" };
+  const none = { ok: false, reason: "AI_NO_ACCOUNT", code: "AI_NO_ACCOUNT", check: "C-22.1", translation: "No account serves you." };
+  const ask = (refusal, x = {}) => w.wz.writingHelp({ op: "notewrite", field: "text", told: "The gate was locked.", by: F, viewer: F,
+                                                      assistant: { on: true, account: ON.account, refusal }, ...x });
+  for (const door of [limit, off, unreadable]) {
+    assert.deepEqual(ask(door), { ...door, op: "notewrite" }, `${door.code}: as given, never re-minted`);
+    assert.deepEqual(ask(door, { assistant: { on: true, refusal: door } }), { ...door, op: "notewrite" }, `${door.code}: with no account named, still not AI_NO_ACCOUNT`);
+    /* R24's codes and NOTHING_TOLD come first */
+    refused(ask(door, { op: "publish" }), "WRITING_HELP_REFUSED", door.code);
+    refused(ask(door, { field: "reason" }), "WRITING_HELP_REASON_FIELD", door.code);
+    refused(ask(door, { draftHeld: true }), "WRITING_HELP_DRAFT_HELD", door.code);
+    refused(ask(door, { told: "" }), "WRITING_HELP_NOTHING_TOLD", door.code);
+  }
+  /* the door's AI_NO_ACCOUNT stands at R24 item 1's place: before WRITING_HELP_REFUSED */
+  for (const code of ["AI_NO_ACCOUNT", "NO_ACCOUNT"]) {
+    const n = { ...none, reason: code, code };
+    assert.deepEqual(ask(n, { assistant: { on: true, account: null, refusal: n }, op: "publish", told: "" }), { ...n, op: "publish" }, code);
+  }
+  /* negative control: no door refusal, the request reaches the model turn's place */
+  refused(ask(undefined), "ASSISTANT_DRAFT_UNAVAILABLE");
+  refused(ask({ ok: true }), "ASSISTANT_DRAFT_UNAVAILABLE", "an answer that is no refusal is not one");
+  /* a keep-away still comes first of all */
+  keepAway(w, true);
+  assert.equal(ask(limit, { op: "publish", told: "" }).code, "AI_KEPT_AWAY");
+  keepAway(w, false);
+  assert.deepEqual(w.snapshot(), before, "writes nothing");
+  for (const retired of ["AI_USE_CEILING_REACHED", "AI_USE_COPY_CEILING_REACHED"]) assert.ok(!(retired in wz.WIZARD_SCRIPTS_CHECKS), retired);
+});

@@ -12,9 +12,13 @@ const refused = (r, c, why = "") => {
   return r;
 };
 
-test("R15 wizardProgress adds one to an unattributed tally per (version, event, step) and day: start, step (the step reached) or finish; no member, viewer, case, project or instant finer than the day is kept, nothing else of the call; wizardUse answers the tallies by version and day", () => {
+test("R15 wizardProgress adds one to an unattributed tally per (version, event, step) and day: start, step (the step reached) or finish; no member, viewer, case, project or instant finer than the day is kept, nothing else of the call; wizardUse answers the tallies by version and day; D54: an uninvited administrator's call on a hidden project's script counts nothing", () => {
   const w = seeded();
   const a = approved(w);
+  /* D54 (K2408): erin, an administrator neither invited nor joined to hidden P, may not see its script: nothing counted */
+  refused(w.wz.wizardProgress({ script: a.script, version: a.version, event: "start", viewer: E }), "NO_SUCH_WIZARD", "D54");
+  assert.equal(w.count("wiz_tallies"), 0);
+  w.join(w.P, "erin", "invited");   /* control: invited, she sees P whole */
   const go = (event, step, x = {}) => w.wz.wizardProgress({ script: a.script, version: a.version, event, step, viewer: F, ...x });
   w.clock.now = "2026-10-03T08:15:42Z";
   assert.deepEqual(go("start"), { ok: true }, "nothing of the call is echoed");

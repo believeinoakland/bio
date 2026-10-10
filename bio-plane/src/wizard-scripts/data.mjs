@@ -9,11 +9,15 @@ export const OWED_ACT = /^owed:([a-z][a-z0-9]*)(?:\s+(DEC-\d+|K\d+))?$/;
 /** R22: who authored the Civicsmith library, and who approved its first version and when (DEC-148). */
 export const LIBRARY_AUTHOR = "civicsmith";
 export const LIBRARY_APPROVED = Object.freeze({ by: "Bob", at: "2026-10-06" });
-/** R22 (T37; K2241): the newer versions BOB adopts from the design stream's library (Bob: "I don't need to approve
- *  wizard scripts"), each script by name, the version it becomes, and who adopted it when under which ruling. */
+/** R22 (T37, T41; K2241): the newer versions BOB adopts from the design stream's library (Bob: "I don't need to approve
+ *  wizard scripts"), each script by name, the version it becomes, the commit of the library it is taken from, and who
+ *  adopted it when under which ruling: T37's four from PR #14's merge (`e08cd35ecb`), T41's two from PR #19's
+ *  (`3660c18803`; DEC-188 (8), DEC-184; K2484). */
 export const LIBRARY_ADOPTED = Object.freeze([
   Object.freeze({ names: Object.freeze(["Set up and claim", "Publication ceremony", "Check a claim", "Follow a proceeding"]), version: 2,
-                  approved: Object.freeze({ by: "BOB", at: "2026-10-08", ruling: "K2241" }) }),
+                  source: "e08cd35ecb", approved: Object.freeze({ by: "BOB", at: "2026-10-08", ruling: "K2241" }) }),
+  Object.freeze({ names: Object.freeze(["Connect your Claude account", "Invite a member"]), version: 2,
+                  source: "3660c18803", approved: Object.freeze({ by: "BOB", at: "2026-10-10", ruling: "K2241" }) }),
 ]);
 /** R22: the three required scripts, by name (DEC-148). */
 export const REQUIRED_NAMES = Object.freeze(["Set up and claim", "Welcome a new member", "Publication ceremony"]);
@@ -54,20 +58,22 @@ export function libraryFromFile(file, commit = null) {
   });
 }
 
-/** R22 (T37; K2241): the library with BOB's adopted versions: each script of `base` (its version 1, at `baseCommit`)
- *  that `adopted` names takes the newer file's steps (at `newerCommit`; the design file keeps its latest steps as its
- *  own version) as the adopted version, approved as `adopted` records, its version 1 kept apart in `earlier` (R1: a
- *  version's steps never change; R7: the earlier version then `updated`). The newer file's id, name, start and
- *  required are the script's (R22: kept unless the file changes them). Every other script keeps version 1 at
- *  `baseCommit`, whatever the newer file holds for it. */
-export function adoptedLibrary(baseFile, baseCommit, newerFile, newerCommit, adopted = LIBRARY_ADOPTED) {
+/** R22 (T37, T41; K2241): the library with BOB's adopted versions: each script of `base` (its version 1, at
+ *  `baseCommit`) that an entry of `adopted` names takes the steps of the newer file at that entry's `source` commit
+ *  (`newer`, `[{file, commit}]`; the design file keeps its latest steps as its own version) as the adopted version,
+ *  approved as the entry records, its version 1 kept apart in `earlier` (R1: a version's steps never change; R7: the
+ *  earlier version then `updated`). The newer file's id, name, start and required are the script's (R22: kept unless
+ *  the file changes them). Every other script keeps version 1 at `baseCommit`, whatever a newer file holds for it. */
+export function adoptedLibrary(baseFile, baseCommit, newer = [], adopted = LIBRARY_ADOPTED) {
   const base = libraryFromFile(baseFile, baseCommit);
-  const newer = new Map(libraryFromFile(newerFile, newerCommit).map((e) => [e.name, e]));
+  const files = new Map((Array.isArray(newer) ? newer : []).map((n) => [n.commit, new Map(libraryFromFile(n.file, n.commit).map((e) => [e.name, e]))]));
   return base.map((e) => {
     const a = adopted.find((x) => x.names.includes(e.name));
     if (!a) return e;
-    const n = newer.get(e.name);
-    if (!n) throw new Error(`library: '${e.name}' is adopted but the newer file does not hold it`);
+    const from = files.get(a.source);
+    if (!from) throw new Error(`library: '${e.name}' is adopted from ${a.source}, which is not given`);
+    const n = from.get(e.name);
+    if (!n) throw new Error(`library: '${e.name}' is adopted but the file at ${a.source} does not hold it`);
     const { version, steps, author, approved, source } = e;
     return { ...n, version: a.version, approved: { ...a.approved }, earlier: [{ version, steps, author, approved, source }] };
   });
