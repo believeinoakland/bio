@@ -39,3 +39,7 @@ Readings for R30–R33 (T41-44). I am building on these now; tell me which to ch
 - `checks/format.mjs`: 0 failures. `checks/coverage.mjs review`: 33 of 33, 0 failures. `checks/ownership.mjs review tranche/T41`: 0 failures. `checks/architecture.mjs review`: 4 failures, all the two new uses edges above.
 
 Size (session_01DoW3RXN1QKQ4zf62pWZg41): test runs 20, module lines 1305
+
+## J2 · REPORT
+
+Two wording points for review's requirements. (1) R31's refusal code is CASE_NOT_AN_APPROVER (C-87.14) as built: filing-templates already holds NOT_AN_APPROVER (C-125.24), and answer-envelope decorates by code, so the shared name turned its families.test.mjs K921 test red. Please re-word R31 (and any START or op text that names the code). (2) R23 lists C-87.1–C-87.11 and C-32.16, and R24 lists three tables. T41 adds C-87.13–C-87.16 (R30, R31) and the tables approval_rules and case_approvals (whole-store, as R24's). Fold them into R23/R24, or name them in R30/R31.
