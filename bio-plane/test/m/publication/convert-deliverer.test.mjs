@@ -1,5 +1,5 @@
 /* publication — converted from `bio-plane/test/deliverer.test.mjs` (layer 8, publication's share): R1 the founder's
-   standing on an unsigned case document (block 1b of the old suite, with vera, a member of no project, as its
+   standing on an unsigned case document (since T41, D54: a discoverable project's, never a hidden one's) (block 1b of the old suite, with vera, a member of no project, as its
    stranger); R28 a legacy case document with no deliverer reads undetermined, stated, beside its named signer (block
    6); and R14/R27 where they are this module's: the case document's deliverer is read from the stored column alone,
    never from the signer (block 7's table, at the case document). The old suite, kept by K619, was deleted in T20; its op=ratify,
@@ -35,11 +35,23 @@ function commit(w, proj, pin, caseId, deliverer) {
     attestorMember: "iris", gateVersion: "legacy", at: NOW, ...(deliverer === undefined ? {} : { deliveredBy: deliverer }) }));
 }
 
-test("R1 R29 the founder's session (bare `admin` or `member:admin`) reads an unsigned case document whole; a member of no project gets the not-found a stranger gets, byte for byte", () => {
-  const { w, d } = authored();
+test("R1 R29 (D54) the founder's session (bare `admin` or `member:admin`) reads an unsigned case document of a discoverable project whole, and of a hidden one as a stranger does; a member of no project gets the not-found a stranger gets, byte for byte", () => {
+  const { w, proj, d } = authored();
   /* the ground: iris's document awaits its signature */
   const own = w.p.caseDocument(CASE, 1, V("iris"));
   assert.deepEqual([own.ok, own.ratified, own.delivered_by, own.authored_by], [true, false, null, V("iris")]);
+  /* D54 (K2408): the founder is in no project, so a hidden project's working material answers it as a case never
+     authored, byte for byte, and its standing is none */
+  assert.equal(w.membership.visibilityOf(proj), "hidden", "(fixture) hidden until its owner says otherwise");
+  for (const founder of ["admin", "member:admin"]) {
+    const fr = w.p.caseDocument(CASE, 1, founder);
+    assert.equal(fr.reason, "NO_CASE_DOCUMENT", `${founder} at a hidden project`);
+    assert.equal(JSON.stringify(fr), JSON.stringify(world().p.caseDocument(CASE, 1, founder)), `${founder}: as never authored`);
+    assert.equal(JSON.stringify(w.p.caseDocumentFacts(CASE, 1, founder)), JSON.stringify(world().p.caseDocumentFacts(CASE, 1, founder)));
+    assert.equal(w.p.hasCaseStanding(w.row(`SELECT * FROM case_documents`), founder), false);
+  }
+  /* the negative control: the same project set discoverable is read whole */
+  assert.equal(w.membership.projectVisibilitySet({ projectId: proj, setting: "discoverable", by: "iris", viewer: V("iris") }).ok, true);
   for (const founder of ["admin", "member:admin"]) {
     const fr = w.p.caseDocument(CASE, 1, founder);
     assert.deepEqual([fr.ok, fr.ratified, fr.doc_sha], [true, false, d.doc_sha], `${founder}: whole, unratified, the sha to sign`);

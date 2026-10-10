@@ -112,3 +112,24 @@ test("R14 (T40) negative controls: an edition whose rows state no obscured_marke
   assert.equal(lines.includes(esc(COPY_CLEANED_LABEL)), true);
   assert.equal(lines.some((l) => l.startsWith(esc(CG.OBSCURED_WORDS.unmarked))), false);
 });
+
+test("R14 (K2538; DEC-185 (1)) every material carried as its copy is printed with its copy's label and as travelling with the case, never as not included; a material not included and not carried as a copy still says so", () => {
+  const { manifest, files } = caseFileFixture({ photo: true, plainPhoto: true, memberDoc: true, fileFormat: CG.CASE_FILE_FORMAT });
+  const swapped = new Map(files);
+  swapped.set("case.md", files.get("case.md").replace(CG.materialsLines([PLAIN_PHOTO_ROW]).slice(1).join("\n"), CG.materialsLines([UNMARKED]).slice(1).join("\n")));
+  const html = CG.completeEditionOf(editionInput(manifest, swapped));
+  const notIncluded = /not included/i;
+  for (const [ref, label, carried] of [[PHOTO, OBSCURED_LABEL, CG.OBSCURED_WORDS.copy], [PLAIN_PHOTO, PUBLISHED_LABEL, CG.OBSCURED_WORDS.unmarked],
+                                       [MEMBER_DOC, COPY_CLEANED_LABEL, CG.OBSCURED_WORDS.cleaned]]) {
+    const lines = listing(html, ref);
+    assert.equal(lines.includes(esc(label)), true, `${ref}: its label, word for word`);
+    assert.equal(lines.some((l) => l.startsWith(esc(carried))), true, `${ref}: carried, as its copy, with the case`);
+    assert.equal(lines.some((l) => notIncluded.test(l) || l.includes(esc("Included whole"))), false, `${ref}: never "not included"`);
+  }
+  /* negative control: an observation that does not travel whole, and states no obscured, is still listed as not included */
+  const mats = materialsSection(html);
+  const obs = mats.slice(mats.indexOf("<h3>INFO-2026-0009-observation (observation)</h3>"));
+  assert.equal(lis(obs).includes(esc("Not included: only its fingerprint, origin and archived copy travel.")), true);
+  /* and no case-grammar output names a copy "NOT INCLUDED" */
+  assert.equal(html.includes("NOT INCLUDED"), false);
+});
