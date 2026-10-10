@@ -46,3 +46,7 @@ Found in other modules (my record's Completion lists each):
 1. R12's reader now answers `obscured: {copy, label, marked}` (T40, required). Users' tests that deep-compare `{copy, label}` fail on the added key, and only on it: case-carriage `obscured.test.mjs`:29; public-read `obscured.test.mjs`:156, :365; case-disclosures `documents.test.mjs`:220, `photos.test.mjs`:241; case-authoring `documents.test.mjs`:147, `photos.test.mjs`:60. Each is that module's expectation to update in its job (case-carriage and public-read for `obscured_marked`; case-disclosures and case-authoring with their CHANGE).
 2. Generated artifact staled: `bio-plane/src/case-checker/program.mjs` (case-checker `program.test.mjs`:19), rule 4 (14).
 Every other failure in the users' suites is inherited, the same on `origin/tranche/T41`.
+
+## J3 · COMPLETE
+
+T41-34 complete on `job/T41/case-grammar` @ fbf2d2e62f, `tranche/T41` merged in (B2's R26). R12 `obscured_marked`, R13, R14 (T40 and T41), R23–R26 with K2528's `approvalSubjectSha`, each tested with negative controls. case-grammar 123/123; format, architecture, ownership 0 failures; coverage 26 of 26. Users' added reds: J2. Size: 2,657 module lines (~2,550 planned), test runs 14. Ready to merge (first in L8).
