@@ -18,7 +18,7 @@
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `transact`, `acquireLease`, `releaseLease`, `head`, `readFile`, `livePaths`,
  *                                   `declarePurge`, `registerAuditCheck`, `getSetting`, `bundleInfo`; `viewerPredicate`,
- *                                   `sight`, `existenceAct`, `noSuchProject` (R52, R57–R59);
+ *                                   `sight`, `visibilityOf`, `existenceAct`, `noSuchProject` (R52, R56–R59);
  *                                   `promote`, `registerStep`.
  *   retrieval      `registerActionFacts`, `registerProjectionDecoration` (its R53, R56).
  *   content        `captureFor` (R11).
@@ -1617,7 +1617,7 @@ export class Actions {
       target, n);
     if (preview) {
       const all = this.#restarts(target, n);
-      const seen = all.filter((p) => this.#sees(p, viewer));
+      const seen = all.filter((p) => this.#mayName(p, viewer));
       return { ok: true, target, ord: n, hold: latest ? latest.hold : null, restarts: seen,
                out_of_view: seen.length < all.length };
     }
@@ -1626,9 +1626,9 @@ export class Actions {
       return refuse("HOLD_ALREADY_RELEASED", "this entry's hold is already released; a release ends a hold in place. "
         + "Nothing was written.", { target, ord: n });
     /* END DEC-49 REGION is-hold-already-released */
-    /* R52: the first named project the author may not see at FULL answers as membership answers it (its R77, R78). */
+    /* R52: the first named project the author may not name answers as membership answers it (its R77, R78). */
     for (const p of named) {
-      if (this.#sees(p, viewer)) continue;
+      if (this.#mayName(p, viewer)) continue;
       let existence = null;
       try { existence = this.membership.existenceAct(p, viewer); } catch { existence = null; }
       return existence || noSuchProject(p);
@@ -1653,9 +1653,9 @@ export class Actions {
     });
     if (release)
       return { ok: true, target, ord: n, hold: "released", reason: why, by: who, at,
-               restarted: written.list.filter((p) => this.#sees(p, viewer)) };
+               restarted: written.list.filter((p) => this.#mayName(p, viewer)) };
     return { ok: true, target, ord: n, hold: h, reason: why, by: who, at,
-             projects: [...this.#covered(target, n)].sort().filter((p) => this.#sees(p, viewer)) };
+             projects: [...this.#covered(target, n)].sort().filter((p) => this.#mayName(p, viewer)) };
   }
 
   /** R56 (DEC-113; K1134 (3)): a member states `released` on an entry, recording what it restarted. */
@@ -1690,9 +1690,16 @@ export class Actions {
     return { ok: true, projects: absent ? [] : [...distinct] };
   }
 
-  /* R52: whether the viewer sees a project at FULL (membership R44). Anything else, a failure included, is not. */
-  #sees(project, viewer) {
-    try { return this.membership.sight(project, viewer) === "full"; } catch { return false; }
+  /* R52 (D54; K2484): whether the viewer may name a project here: she sees it at FULL, or, as an administrator neither
+     invited nor joined, a HIDDEN project at EXISTENCE (membership R44, R85's `visibilityOf`), which reaches its id and
+     hold state and never its contents. A discoverable project's EXISTENCE names nothing. Anything else, a failure
+     included, is not. */
+  #mayName(project, viewer) {
+    try {
+      const sight = this.membership.sight(project, viewer);
+      if (sight === "full") return true;
+      return sight === "existence" && this.membership.visibilityOf(project) === "hidden";
+    } catch { return false; }
   }
 
   /* R52: every `in_place` statement of a hold still in place (no `released` statement after it on its entry), one row per
@@ -1719,7 +1726,7 @@ export class Actions {
   }
 
   /** R58 (DEC-113): for each of 1 to 50 projects, whether a hold in place covers it: `held: true` with the `at` and `by`
-   *  of the earliest such statement, `false`, or `null` for a project absent or not seen at FULL. A read it cannot
+   *  of the earliest such statement, `false`, or `null` for a project absent or one the viewer may not name (R52). A read it cannot
    *  complete is a refusal, never `false`. Names no action, entry or reason. Writes nothing. */
   projectHolds({ projects = null, viewer = null } = {}) {
     const asked = this.#holdProjects(projects, true);
@@ -1732,7 +1739,7 @@ export class Actions {
     const earliest = new Map();
     for (const r of rows) if (r.project && !earliest.has(r.project)) earliest.set(r.project, r);
     return { ok: true, projects: asked.projects.map((p) => {
-      if (!this.#sees(p, viewer)) return { project: p, held: null };
+      if (!this.#mayName(p, viewer)) return { project: p, held: null };
       const e = earliest.get(p);
       return e ? { project: p, held: true, since: e.at, recorded_by: e.stated_by } : { project: p, held: false };
     }) };
@@ -1752,7 +1759,7 @@ export class Actions {
   }
 
   /** R59 (DEC-113; for `queue-producers` R29): every `released` statement that ended a hold in place, on an action the
-   *  viewer may see, with the hold's placers and the projects it restarted that the viewer sees; at most 500 per page in
+   *  viewer may see, with the hold's placers and the projects it restarted that the viewer may name; at most 500 per page in
    *  (action, position, sequence) order. `cursor` is the last answered, `<action>#<position>#<sequence>`, when
    *  `truncated`, else null; `after` is a cursor or an action id, read as after all that action's statements. */
   holdsReleased({ after = null, limit = null, viewer = null } = {}) {
@@ -1778,7 +1785,7 @@ export class Actions {
                             AND s.hold = 'released'), 0)
         GROUP BY stated_by ORDER BY MIN(seq)`, r.bundle_id, r.ord, r.seq, r.bundle_id, r.ord, r.seq).map((x) => x.stated_by),
       restarted: this.#rows(`SELECT project FROM action_hold_projects WHERE bundle_id = ? AND ord = ? AND seq = ?
-        ORDER BY project`, r.bundle_id, r.ord, r.seq).map((x) => x.project).filter((p) => this.#sees(p, viewer)),
+        ORDER BY project`, r.bundle_id, r.ord, r.seq).map((x) => x.project).filter((p) => this.#mayName(p, viewer)),
     }));
     const tail = items[items.length - 1];
     return { ok: true, items, limit: max, truncated,
@@ -1789,7 +1796,8 @@ export class Actions {
    *  whatever the viewer. No `bundleId`: whether any hold is in place. A `bundleId`: whether a hold is in place and the
    *  bundle is a held project, belongs to one, is an action carrying a hold in place, or has no project that can be
    *  determined. Synchronous, so it is asked in the purge's own turn; writes nothing, never throws, and answers `true`
-   *  when the holds cannot be read. */
+   *  when the holds cannot be read. It reads every hold and every bundle's project whatever any viewer may see, never
+   *  through a viewer's sight (D54: the founder's viewer no longer sees a hidden project, membership R43). */
   purgeHeld({ bundleId = null } = {}) {
     try {
       const rows = this.#standing();
@@ -2601,13 +2609,13 @@ export class Actions {
     return { as_of_date: asOf, addressee, law_standards, proceeding };
   }
 
-  /* R52: an entry's hold statements, oldest first, each with those of its projects the viewer sees at FULL (an
+  /* R52: an entry's hold statements, oldest first, each with those of its projects the viewer may name (an
      `in_place` statement's `projects`, a release's `restarted`), and its current hold (the latest; null while none). */
   #holdsOf(id, ord, viewer) {
     const holds = this.#rows(`SELECT seq, hold, reason, stated_by, at FROM action_holds WHERE bundle_id=? AND ord=?
       ORDER BY seq`, id, ord).map((h) => {
       const projects = this.#rows(`SELECT project FROM action_hold_projects WHERE bundle_id=? AND ord=? AND seq=?
-        ORDER BY project`, id, ord, h.seq).map((p) => p.project).filter((p) => this.#sees(p, viewer));
+        ORDER BY project`, id, ord, h.seq).map((p) => p.project).filter((p) => this.#mayName(p, viewer));
       return { seq: h.seq, hold: h.hold, reason: h.reason, by: h.stated_by, at: h.at,
                [h.hold === "released" ? "restarted" : "projects"]: projects };
     });
