@@ -329,8 +329,11 @@ export function signerOf(p, caseId, edition) {
   } catch { return null; }
 }
 
-/* R6: each registered listener once, with the wake as it stands; one that throws never undoes the act. */
+/* R6: each registered listener once, with the wake as it stands; one that throws never undoes the act. It never throws
+   itself: when the wake cannot be read (its table gone), nobody is told rather than told a wrong wake, and the act stands
+   (it may run in a microtask after the caller's transaction, where a throw would escape every caller). */
 function tell(p) {
-  const wake = publishWake(p);
+  let wake;
+  try { wake = publishWake(p); } catch { return; }
   for (const l of p.publishListeners()) { try { l.fn({ publishAt: wake }); } catch { /* the act stands (R6) */ } }
 }
