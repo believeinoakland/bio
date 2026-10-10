@@ -90,6 +90,8 @@ export const READ_PAGES_SAYS = "the text the record holds for these pages, read 
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 const HEX64 = /^[0-9a-f]{64}$/;
 const ENTITY_ID = idPattern("ENT");
+/** R21 (K2502): the mode of an exploring run (question-explorer R13), which proposes while reading for its step. */
+const EXPLORING_RUN_MODE = "investigate";
 /** R24: the run's reading bound, run-rules' (its R26), read by key. */
 const PAGES_BOUND = Object.prototype.hasOwnProperty.call(RUN_BOUNDS, "pages") ? "pages" : null;
 const nonBlank = (v) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null);
@@ -699,7 +701,8 @@ export class RunProductions {
     };
   }
 
-  /** op=extractpropose — AN EXTRACT RUN PROPOSES READINGS (R10, R11, R15) AND CONNECTIONS (R21). Every proposal is
+  /** op=extractpropose — AN EXTRACT RUN, OR AN EXPLORING RUN FOR ITS STEP (K2502), PROPOSES READINGS (R10, R11, R15)
+   *  AND CONNECTIONS (R21). Every proposal is
    *  CHECKED before anything is written, the batch is written in one transaction, and the bound is consumed by what was
    *  ACTUALLY minted. A proposal that says WHERE it read the reference mints that passage through `content` (on the
    *  capture's own chain, so a member's later citation of the same passage finds this row); one with no position mints
@@ -721,11 +724,16 @@ export class RunProductions {
     if (held.refusal) return held.refusal;
     const { run: r, runId } = held;
     /* DEC-49 REGION is-extract-door */
-    if (String(r.mode || "") !== EXTRACT_RUN_MODE)
+    /* R21 (K2502): an exploring run (mode investigate, question-explorer R13) proposes while reading too, but only for
+       the step it serves: one naming no step is refused as any other mode is. */
+    const mode = String(r.mode || "");
+    const named = step !== null && step !== undefined && step !== "";
+    if (mode !== EXTRACT_RUN_MODE && !(mode === EXPLORING_RUN_MODE && named))
       return this.#refuse("NOT_AN_EXTRACT_RUN",
         `this run was opened in mode '${r.mode == null ? "(none)" : String(r.mode)}' and a proposed reading is the `
-        + `EXTRACT role's production. A run's mode is one of the conditions it was formed under: it is read back, never `
-        + `widened by the work`, { run: runId, mode: r.mode ?? null });
+        + `EXTRACT role's production${mode === EXPLORING_RUN_MODE ? `, or an exploring run's for the step it serves, `
+          + `and this named no step` : ""}. A run's mode is one of the conditions it was formed under: it is read back, `
+        + `never widened by the work`, { run: runId, mode: r.mode ?? null });
     /* THE BOUND, ASKED BEFORE ANY WORK IS DONE (§7.3 (5)). A bound nobody declared is an UNBOUNDED one, so it is a
        refusal here rather than a default allowance invented in code. */
     const bound = this.aiRuns.boundOf(runId, "mints");

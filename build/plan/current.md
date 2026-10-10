@@ -50,7 +50,7 @@ It is the only module marked `legacy` in `modules.json`.
 **Text owed before each layer's START (K2451; BOB's wording, P5):**
 - L7: none beyond §3.6 (applied).
 - L8: publication R21's waiting clause, R66–R69, R71, R74 retired "moved to publish-schedule R<n>", R70 re-worded (K2438); case-authoring R58, R59 re-pointed; ratification R42 (names publication R67) and R43 re-pointed; the placement of `case-disclosures` R30's account arms that `case-checker` R24 re-runs (case-checker precedes case-disclosures: move the arms earlier or re-word R24); case-import's `bias` edge (R23).
-- L9: actions R52–R60 (hold reads at `EXISTENCE`, §3.5); actions registers its records-request outcome with `intent` R33's `registerSource` (K2483).
+- L9 (applied, K2484, K2505): actions R52–R60 (hold reads at `EXISTENCE`); action-grammar R13 and actions R70, R71 (the records-request outcome registered with `intent` R33's `registerNoneExistsReader`).
 - L10: scheduler R22's `scheduled-publish` consumer re-pointed.
 - L11 (K2500, ANSWERS #7 J3): the plane drops `store.mjs`:219's `ceilingRefusal` wiring; the plane's ask path (`ask.mjs`:68, :119) and store-door (`dispatch.mjs`:278) call `answers.askAccount` (R30) for the account and limit, passing `use: "draft"` to `logRead` for a draft's reads.
 - L11 (K2498, INQUIRY #16 J2): control-plane stamps a promotion package's `setIn` (the request's project context) and `personWarningSeen`, and routes `questionwaits`.
@@ -144,7 +144,8 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 ### L9
 - **T41-45 · conformance** · (D55) Purpose re-worded; (N822) `determine`, `reads` re-stated.
 - **T41-46 · consequences** · (N822) `record` tests re-stated · tests only.
-- **T41-47 · actions** · (N822) R52–R60: the hold reads and notices answered at `EXISTENCE` of a hidden project with what each already names, never contents; `t34` re-stated · req: §3.5, BOB's wording. (N823, K2438) `t34.test.mjs`'s stub of `publication.scheduleEdition` re-pointed to publish-schedule.
+- **T41-46a · action-grammar** · (H30 (1), intent R33; K2505) R13: outcome `none_exists`; a records request's `seeks`, `seeksFindings`, `seeksOf` · req: R13, BOB's wording.
+- **T41-47 · actions** · (H30 (1), K2505) R70 `seeks` checked at the write through progressions; R71 registers `noneExistsFor` with `intent.registerNoneExistsReader` (intent R33) · after T41-46a, T41-32 · (N822) R52–R60: the hold reads and notices answered at `EXISTENCE` of a hidden project with what each already names, never contents; `t34` re-stated · req: §3.5, BOB's wording. (N823, K2438) `t34.test.mjs`'s stub of `publication.scheduleEdition` re-pointed to publish-schedule.
 - **T41-48 · filings** (tests only) · (was T40-9a; N819) `outward.test.mjs`:136's fixture · K2387.
 - **T41-48a · filing-templates** (tests only) · (N822, K2442) re-state for D54 the tests rule 4 (11) lists.
 - **T41-48b · action-plans** · (Bob's Actions D17, K2443) R34: the tray lists every proposal of a planning run, no cut-off, no paging (the `after` cursor and `PROPOSALS_CURSOR_REFUSED` retired; `op=planproposals` and `planRead` answer whole) · req: R34 as amended · L11 shares: op-declarations (the op's `after` parameter), affordances if its help names five.
@@ -171,7 +172,7 @@ No merge order (independent). **L1 holds exactly these two jobs.**
 
 **L11 STARTs (K874, K2400):** control-plane R69, R70 and notice-producers R16 each need an explicit test. **L11 merge order:** `modules.json` order; plane last.
 
-**Counts:** L1 2 · L2 4 · L3 2 · L4 2 · L5 2 · L6 19 · L7 2 · L8 11 · L9 4 · L10 1 · L11 14 = 63 jobs (T40's 29 unstarted entries all carried, renumbered).
+**Counts:** L1 2 · L2 4 · L3 2 · L4 2 · L5 2 · L6 19 · L7 2 · L8 11 · L9 7 · L10 1 · L11 14 = 66 jobs (L9 counted anew at K2505: 6 listed plus action-grammar) (T40's 29 unstarted entries all carried, renumbered).
 
 ## Left out of T41 (one hard reason each, re-tested today)
 

@@ -1,6 +1,6 @@
 # BOB to question-explorer (T41)
 
-**Read** · handled J8
+**Read** · handled J9
 
 ## B1 · START
 
@@ -47,3 +47,7 @@ Settled (K2502): R21 admits an investigate-mode run carrying a step; run-product
 ## B10 · CHANGE
 
 capture-requests is merged into tranche/T41 (K2504; @ c8411c1d3d): merge the tranche branch and reach capture-requests R55 (a request's step) through the real module; re-run and record it. You still merge after ai-runs and run-productions' re-merge, each reaching you by CHANGE.
+
+## B11 · CHANGE
+
+run-productions is merged again into tranche/T41 (K2506; @ 5b7458916d): R21 now admits an investigate-mode run carrying a step (your R13). Merge the tranche branch, reach it through the real module, re-run and record it. Only ai-runs (blocked on a refused act with Bob) remains before your merge.
