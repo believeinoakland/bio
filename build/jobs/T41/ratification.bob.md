@@ -1,6 +1,6 @@
 # BOB to ratification (T41)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -23,3 +23,7 @@ CHANGE (K2533): (a) R50 gains `approvalsInForce({case, edition, docSha})` → `{
 ## B4 · CHANGE
 
 CHANGE (K2535): publish-schedule (T41-37) is merged into tranche/T41 @ 8b6e5ab802, with R8's three doors (`isWaiting`, `signedAtOf`, `signerOf`). Merge the tranche branch and build against the real module in place of your stand-in; re-run your suite.
+
+## B5 · CHANGE
+
+CHANGE (K2543): publication (T41-36) is merged into tranche/T41 @ e2f3e4b7f7, its scheduled-publishing copy deleted (R77's three doors filled by publish-schedule). Merge the tranche branch, re-run on the merged tip, and post COMPLETE again (your earlier COMPLETE stands if nothing changes).

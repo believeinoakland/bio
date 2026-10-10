@@ -3,11 +3,13 @@
    rows of `kind` `document` (its R13); its photo rows stay C-122.6, and both are answered when both hold.
    `marksLapsed` is driven by a stand-in on the host's one case-carriage answering exactly its shape (`[{ref, sha, kind,
    why}]`), so each lapse is exact; case-carriage's own tests judge when a document's copy lapses.
-   Driven at the module's interface. */
+   A waiting edition's stop by C-122.6 or C-122.7 (was R67's test here) moved with publishing at a set time to
+   `publish-schedule` (its R2; T41, K2438). Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { planeWorld as world, infoMd } from "./fixture.mjs";
-import { rowOf, CASE_SOURCES_CHECKS } from "../../../src/publication/checks.mjs";
+import { rowOf, CASE_SOURCES_CHECKS, PUBLICATION_WORDS } from "../../../src/publication/checks.mjs";
 import { caseCarriageOf } from "../../../src/case-carriage/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
@@ -30,11 +32,21 @@ function base() {
   return { w, proj, roster, cc, sign: () => w.signCase(CASE, 1, { project: proj, roster }) };
 }
 
-test("R33 (T39) C-122.7 DOCUMENT_COPY_CHANGED_SINCE is held once in this module's C-122 family, its translation BOB's draft, raised at the commit's document-copy site", () => {
+const WORDS = new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url);
+
+test("R33 (T41) C-122.7 DOCUMENT_COPY_CHANGED_SINCE is held once in this module's C-122 family, its translation words.json's document.refused.changed, read by key, verbatim and protected (DEC-188 (7)), raised at the commit's document-copy site", () => {
+  const list = JSON.parse(readFileSync(WORDS, "utf8"));
+  const hits = (Array.isArray(list) ? list : list.words || []).filter((x) => x && x.key === "document.refused.changed");
+  assert.equal(hits.length, 1, "one word in words.json");
+  assert.deepEqual([hits[0].protected, hits[0].note], [true, "DOCUMENT_COPY_CHANGED_SINCE"]);
+  assert.equal(PUBLICATION_WORDS["document.refused.changed"], hits[0].en, "held verbatim, by key");
   assert.deepEqual(rowOf("DOCUMENT_COPY_CHANGED_SINCE"), {
-    code: "DOCUMENT_COPY_CHANGED_SINCE", check: "C-122.7",
-    translation: "A document a member supplied now needs a different publication copy from the one this case was prepared "
-      + "with. Prepare the case again. Nothing was published." });
+    code: "DOCUMENT_COPY_CHANGED_SINCE", check: "C-122.7", translation: hits[0].en });
+  /* its words, R33's draft unchanged (K2483) */
+  assert.equal(hits[0].en, "A document a member supplied now needs a different publication copy from the one this case was "
+    + "prepared with. Prepare the case again. Nothing was published.");
+  /* negative control: C-122.6's words are another key's */
+  assert.notEqual(rowOf("PHOTO_MARKS_CHANGED_SINCE").translation, hits[0].en);
   assert.equal(CASE_SOURCES_CHECKS.DOCUMENT_COPY_CHANGED_SINCE.where,
                "src/publication/index.mjs commitCaseEdition > is-document-copy-current");
   assert.equal(Object.values(CASE_SOURCES_CHECKS).filter((x) => x.check === "C-122.7").length, 1, "held once");
@@ -125,45 +137,6 @@ test("R57 (T39) document rows are read in R57's step, after R51 and before R59: 
   assert.equal(sign().reason, "ACCEPTANCE_WITHDRAWN_SINCE");
   assert.deepEqual(order, ["R51", "R57", "R59"]);
   assert.equal(w.count("published_cases"), 0);
-});
-
-test("R67 (T39) R57 a waiting edition stopped at its time by C-122.6 or C-122.7 keeps each stop entry's check and cause exactly as the publisher answered them, the commit's code and translation inside it; both are kept when both hold, and nothing is committed", async () => {
-  const AT = { date: "2026-10-01", time: "09:00" }, DUE = "2026-10-01T12:00:00Z";   /* 09:00 in the test profile's zone */
-  const answers = [
-    [DOC("INFO-2026-0030-letter", S1)],
-    [PHOTO("INFO-2026-0020-photo", S3)],
-    [PHOTO("INFO-2026-0020-photo", S3), DOC("INFO-2026-0030-letter", S1)],
-  ];
-  for (const answer of answers) {
-    const { w, proj, roster, cc } = base();
-    assert.equal(w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "admin").ok, true);
-    const doc = w.row(`SELECT doc_sha FROM case_documents WHERE case_id=? AND edition=1`, CASE);
-    const set = w.record.transact(() => w.p.scheduleEdition({ case: CASE, edition: 1, docSha: doc.doc_sha, signature: "-----BEGIN SSH SIGNATURE-----\nsig1\n-----END SSH SIGNATURE-----",
-      signer: "olive", deliveredBy: "member:olive", at: AT, checked: { sources: [], ties: [], holds: [] }, by: "member:olive" }));
-    assert.equal(set.ok, true, JSON.stringify(set));
-    cc.marksLapsed = () => answer;
-    /* ratification's publisher, played as its R42 answers a commit refusal: one entry per refusal, the commit's code and
-       translation in `cause` (ratification's own tests judge its entries) */
-    w.p.registerScheduledPublisher("ratification", { publishScheduled(entry, now) {
-      const r = w.record.transact(() => w.p.commitCaseEdition({ case: entry.case, edition: entry.edition, project: proj,
-        scope: "The question.", roster, sigArmored: entry.signature, attestorKey: "AAAAC3NzaC1lZDI1NTE5AAAAIKEY",
-        attestorMember: entry.signer, gateVersion: "plane-gate/test", deliveredBy: entry.delivered_by, at: now }));
-      return r.ok ? { published: true, published_at: now }
-        : { stopped: r.refusals.map((x) => ({ code: "SCHEDULED_CHECK_REFUSED", check: x.check, translation: x.translation,
-                                              cause: { code: x.code, translation: x.translation } })) };
-    } });
-    const before = w.snapshot(["published_cases", "published_case_members", "published_shas", "cases"]);
-    const out = await w.p.publishDue(DUE);
-    const want = [...(answer.some((m) => m.kind === "photo") ? ["PHOTO_MARKS_CHANGED_SINCE"] : []),
-                  ...(answer.some((m) => m.kind === "document") ? ["DOCUMENT_COPY_CHANGED_SINCE"] : [])]
-      .map((code) => { const row = rowOf(code);
-        return { code: "SCHEDULED_CHECK_REFUSED", translation: row.translation, check: row.check,
-                 cause: { code, translation: row.translation } }; });
-    assert.deepEqual(out.taken, [{ case: CASE, edition: 1, state: "stopped", reasons: want }]);
-    const e = w.p.scheduledEditions({}).editions[0];
-    assert.deepEqual([e.state, e.reasons], ["stopped", want], "kept as answered, read back whole");
-    assert.deepEqual(w.snapshot(["published_cases", "published_case_members", "published_shas", "cases"]), before, "nothing committed");
-  }
 });
 
 test("R57 (T39) R33 over the real case-carriage: a member document carried whole while its copy is pending, or one naming a copy that is not its current copy, refuses the commit DOCUMENT_COPY_CHANGED_SINCE naming it, nothing committed; once it is derived clean it commits whole; a document this copy fetched commits whole", async () => {
