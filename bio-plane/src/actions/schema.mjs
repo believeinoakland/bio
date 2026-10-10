@@ -242,12 +242,26 @@ CREATE TABLE IF NOT EXISTS action_hold_projects (
   project     TEXT NOT NULL,    -- a project id
   PRIMARY KEY (bundle_id, ord, seq, project)
 );
+
+-- R73 (K2561): A PROPOSAL OF WHAT A RECORDS REQUEST SEEKS, stored apart from the
+-- action's own seeks (a member's statement, R70, R72) and labelled by who
+-- proposed it. One proposer's restatement replaces that proposer's rows only.
+CREATE TABLE IF NOT EXISTS action_seeks_proposals (
+  bundle_id    TEXT NOT NULL,    -- the action
+  proposed_by  TEXT NOT NULL,    -- the stamped proposer (any credential)
+  ord          INTEGER NOT NULL, -- the item's place in the proposal
+  progression  TEXT NOT NULL,
+  entity       TEXT NOT NULL,
+  stage        TEXT NOT NULL,
+  proposed_at  TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, proposed_by, ord)
+);
 `;
 
 /** The tables, each keyed to the action by `bundle_id` (record-core R21, R46). */
 export const ACTIONS_TABLES = Object.freeze(["action_basis", "correspondence", "action_quotes",
   "action_law_proposals", "action_risk_proposals", "action_overrides", "action_pressure", "action_holds",
-  "action_hold_projects"]);
+  "action_hold_projects", "action_seeks_proposals"]);
 
 /** Creates the tables; idempotent. */
 export function migrateActions(sql) {

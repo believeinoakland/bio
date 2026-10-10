@@ -180,8 +180,9 @@ test("R69 holdsOn answers null when it cannot complete the read (no project name
 });
 
 /* The real ratification (its R40–R45) on its own fixture's host, with a /6 case document alice (the project's owner,
-   holding an attesting key) may sign, stored unsigned; publication's set-time services stand-ins, as its own tests set
-   them. `withActions` starts actions on that host, registering R69's reader. */
+   holding an attesting key) may sign, stored unsigned; publish-schedule's `scheduleEdition` (its R1, N823) and
+   publication's `stampsOf` stand-ins, as ratification's own tests set them. `withActions` starts actions on that host,
+   registering R69's reader. */
 const Q1 = "INQ-2026-0001-first", CASE = "CASE-2026-0001";
 const OWN = { version: "first", claim: "the council approved it", falsifier: "f", falsifier_override: null,
               by: "member:alice", at: "2026-09-01T00:00:00Z" };
@@ -201,7 +202,7 @@ async function signing({ withActions }) {
                                  signers: w.credentials.attestingKeys(), memberBasis: null, priorCase: null });
   const sig = await rat.signCase(key, CASE, 1, docSha);
   const scheduled = [];
-  w.publication.scheduleEdition = (a) => (scheduled.push(a), { ok: true, case: a.case, edition: a.edition, state: "waiting",
+  w.schedule.scheduleEdition = (a) => (scheduled.push(a), { ok: true, case: a.case, edition: a.edition, state: "waiting",
     at: { ...a.at, zone: "America/Halifax" }, publish_at: "2026-10-09T12:30:00.000Z" });
   w.publication.stampsOf = () => ({ ok: true, stamps: [] });
   const at = { date: "2026-10-09", time: "09:30" };
