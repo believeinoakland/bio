@@ -1,6 +1,6 @@
 # publish-schedule (T41)
 
-**Status** · session_01GCuXKM9tA8NjwoR4rFdWhv · depth 2 · COMPLETE · handled B2
+**Status** · session_01GCuXKM9tA8NjwoR4rFdWhv · depth 2 · WORKING · handled B2
 
 ## Completion (PUBLISH-SCHEDULE #1, T41-37)
 
