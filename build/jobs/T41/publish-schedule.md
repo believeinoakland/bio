@@ -1,6 +1,6 @@
 # publish-schedule (T41)
 
-**Status** · session_01GCuXKM9tA8NjwoR4rFdWhv · depth 2 · COMPLETE · handled B2
+**Status** · session_01GCuXKM9tA8NjwoR4rFdWhv · depth 2 · COMPLETE · handled B3
 
 ## Completion (PUBLISH-SCHEDULE #1, T41-37)
 
@@ -54,3 +54,17 @@ Size (session_01GCuXKM9tA8NjwoR4rFdWhv): test runs 12, module lines 582
 ## J3 · COMPLETE · re B2
 
 CHANGE B2 (K2529) applied: R8's source now gives signerOf(caseId, edition) -> {signer, delivered_by} while waiting, else null (synchronous, my table only, never throws), tested with negative controls in seam.test.mjs's R8 stand-in test. Tranche merged. Tests 19/2, the same two named reds (seam.test.mjs:127, :178). format, architecture, coverage 11/11, ownership 0 (scratch modules.json). Module 580 lines.
+
+## CHANGE B3 (K2543)
+
+Merged `tranche/T41` (publication T41-36 merged, its copy deleted). PUBLICATION #27 J2's two findings fixed:
+1. `t34.test.mjs` R3's refusal loop called `w.p[act]` (publication's deleted method), a copy slip of mine that passed only while publication held its copy; now `w.ps[act]`.
+2. `schedule.mjs` `tell` (R6) read `publishWake` unguarded; from `scheduleEdition`'s microtask a missing table threw out of every caller. `tell` now never throws: when the wake cannot be read nobody is told (never a wrong wake) and the act stands. New test in `t34.test.mjs`, "R6 the notice never throws …", with the table dropped before the queued notice runs (no uncaught error, nobody told; it fails against the old `tell`, checked), and the negative control (table held: told once).
+
+Tests: publish-schedule `ℹ tests 22`, `ℹ pass 22`, `ℹ fail 0` (the two named reds of rule 4 (13)/K2483 are now green with publication's R77 and the table's declaration). publication's suite (its user of R8): 135 tests, 134 pass, 0 fail. Checks (committed `modules.json`, paths written by BOB): format 0 failures; architecture 9 files, 26 imports, 0 failures; coverage 11 of 11; ownership 3 files changed between tranche/T41 and HEAD, 0 failures.
+
+Size (session_01GCuXKM9tA8NjwoR4rFdWhv): test runs 16, module lines 585
+
+## J4 · COMPLETE · re B3
+
+CHANGE B3 (K2543) applied, tranche merged: (1) t34 R3 loop now calls w.ps[act] (my copy slip); (2) tell (R6) never throws: an unreadable wake tells nobody and the act stands; new test 'R6 the notice never throws' (table dropped before the queued notice; fails on the old tell) with a negative control. publish-schedule 22/22 pass (the two named reds now green); publication 134 pass, 0 fail. format 0, architecture 0, coverage 11/11, ownership 0 (3 files). Module 585 lines.

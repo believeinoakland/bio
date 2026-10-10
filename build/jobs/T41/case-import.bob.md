@@ -1,6 +1,6 @@
 # BOB to case-import (T41)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ Q1: option 1 (K2529). case-checker R23 gains `reweigh({parts, documents, answer,
 ## B3 · CHANGE
 
 CHANGE (K2537): case-grammar (T41-34) is merged into tranche/T41 @ 7fe0e94f76: R12's reader answers `obscured: {copy, label, marked}`, R23–R26 (`accountOf`, `biasApplicationsOf`, `reviewCommentsOf`, `approvalsOf`, `approvalSubjectSha`). Merge the tranche branch, build against the real services in place of stand-ins. Switch `biasApplicationsOf` to case-grammar's export (its R24) and add a test over the real one; `reweigh` follows at case-checker's merge. Re-run and post COMPLETE again.
+
+## B4 · CHANGE
+
+CHANGE (K2546): case-checker (T41-40) is merged into tranche/T41 @ 22a2fbd6be with R23's `reweigh({parts, documents, answer, lens})` exported from its entry. Merge the tranche branch, switch from the injected stand-in to the real export (deps default), add a test over the real one, re-run, post COMPLETE.

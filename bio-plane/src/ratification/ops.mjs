@@ -57,7 +57,8 @@ export async function caseRatifyOp(req, stub, ctx) { return caseCeremony(req, st
 
 /** R40 (DEC-147): `op=publishat`, "Publish at…": `op=caseratify`'s payload and `at: {date, time}`, every refusal
  *  `op=caseratify` answers before its commit, byte for byte and in its order (`MALFORMED` also covering an absent `at`),
- *  and then the store half (`publishat`), which calls publication R66 in place of the commit and answers as it does. */
+ *  and then the store half (`publishat`), which calls `publish-schedule` R1 in place of the commit and answers as it
+ *  does. */
 export async function publishAtOp(req, stub, ctx) { return caseCeremony(req, stub, ctx, true); }
 
 async function caseCeremony(req, stub, ctx, later) {
@@ -129,6 +130,15 @@ async function caseCeremony(req, stub, ctx, later) {
                     detail: "the case document has changed since it was reviewed; read it again and re-sign",
                     expected: facts.doc.doc_sha, got: body.expectedSha,
                     store: storeName, tokenClass: cls }, 409);
+    /* R49 (T41; D60): APPROVAL_MISSING (C-58.11), after CASE_RATIFY_STALE and before the signature is weighed, asked of
+       the store half, where R50's reader is registered (`caseapproval`), over the stored document's `doc_sha`. With no
+       rule in force nothing is refused. A silence refuses: nothing is written. */
+    const apprOut = await doAnswer(stub.fetch("http://do/caseapproval", { method: "POST",
+      body: JSON.stringify({ caseId: facts.doc.case_id, edition: Number(facts.doc.edition), docSha: facts.doc.doc_sha }) }));
+    if (apprOut.refused) return storeRefused(apprOut, relay);
+    if (!apprOut.answered) return storeSilent("caseratify/approval", apprOut.correlation);
+    if (apprOut.result && apprOut.result.refusal)
+      return json({ ...apprOut.result.refusal, store: storeName, tokenClass: cls }, 409);
     /* D-57: NO_SIGNERS IS INSTANCE-WIDE and the detail must never say "for
        you" — the same sentence op=ratify carries, for the same reason. */
     if (!facts.signers.length)
@@ -168,7 +178,7 @@ async function caseCeremony(req, stub, ctx, later) {
     const deliveredBy = deliveringPrincipal(sessRights); /* REC-128: op=caseratify */
     if (later) {
       /* R40: the store half runs R3's refusals before its commit, publication's commit's own (made and rolled back), R41
-         (C-58.6), and then publication R66 in place of the commit; its answer is relayed as given. A silence refuses:
+         (C-58.6), and then `publish-schedule` R1 in place of the commit; its answer is relayed as given. A silence refuses:
          whether anything was written is the store's to say, and nothing here claims it. */
       const sOut = await doAnswer(stub.fetch("http://do/publishat", {
         method: "POST", body: JSON.stringify({

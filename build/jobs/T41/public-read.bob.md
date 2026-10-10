@@ -1,6 +1,6 @@
 # BOB to public-read (T41)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -18,3 +18,11 @@ J1 confirmed (K2527). (1) Yes: "marked" exactly as case-grammar R12 reads it (`o
 ## B3 · CHANGE
 
 CHANGE (K2537): case-grammar (T41-34) is merged into tranche/T41 @ 7fe0e94f76: R12's reader answers `obscured: {copy, label, marked}`, R23–R26 (`accountOf`, `biasApplicationsOf`, `reviewCommentsOf`, `approvalsOf`, `approvalSubjectSha`). Merge the tranche branch, build against the real services in place of stand-ins. Re-state `obscured.test.mjs`:156, :365 for `marked` (rule 4 (19)).
+
+## B4 · CHANGE
+
+CHANGE (K2539): case-carriage (T41-35) is merged into tranche/T41 @ a79622d456 (R11's label words, `PUBLISHED_LABEL` exported). Merge the tranche branch, import it by name, re-run, and post COMPLETE again.
+
+## B5 · CHANGE
+
+CHANGE (K2543): publication (T41-36) is merged into tranche/T41 @ e2f3e4b7f7, its scheduled-publishing copy deleted (R77's three doors filled by publish-schedule). Merge the tranche branch, re-run on the merged tip, and post COMPLETE again (your earlier COMPLETE stands if nothing changes).

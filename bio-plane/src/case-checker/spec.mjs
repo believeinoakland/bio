@@ -179,7 +179,9 @@ const V2 = edit(V1, [
    `obscured` field (`case-grammar` R12, R13), the presentability of a photo carried as its copy (R8), and the criteria
    rows' `captures` (`publication` R72), over which R22 judges the copyrighted standards' arms offline. Built as version 2
    is, by named changes; the specification's test reads every addition. (T39; N806; K2333, K2343) The `obscured` kind also
-   carries a member document's cleaned copy (`case-carriage` R15) beside a photo's: words only, the format unchanged. */
+   carries a member document's cleaned copy (`case-carriage` R15) beside a photo's: words only, the format unchanged. (T40;
+   N798; DEC-185 (1); K2394) An unmarked photo's copy is labelled published (`case-carriage`'s `PUBLISHED_LABEL`), told
+   from a marked one by `obscured_marked` (`case-grammar` R12), by its label when absent: words only, the format unchanged. */
 const V3 = edit(V2, [
   ["# The case file, format bio-case-file/2\n\nThis document specifies version 2 of the case file:",
    "# The case file, format bio-case-file/3\n\nThis document specifies version 3 of the case file:"],
@@ -212,8 +214,12 @@ const V3 = edit(V2, [
    + "document a member supplied with the details of who made it, and of its pictures, removed. A published case states it for "
    + "every photo it carries and for every member document it carries as its copy. The row then states `included: false`, and "
    + "its `sha`, `text_sha`, `origin` and `archived_copy` stay the original's; `obscured_copy` is the SHA-256 of the copy and "
-   + "`obscured_label` the sentence the published case shows beside the material (an unmarked photo's copy has none). A row "
-   + "without them travels as before.\n"],
+   + "`obscured_label` the sentence the published case shows beside the material: a member document's copy is labelled cleaned, "
+   + "a photo's copy with marked areas covered is labelled obscured, and an unmarked photo's copy (nothing covered, no metadata) "
+   + "is labelled published, so every photo a case carries is labelled. The row may also state `obscured_marked`, whether the "
+   + "photo's copy covers areas a member marked, which tells a marked copy from an unmarked one; a row without it is read by its "
+   + "label (a label stated, marked; none, unmarked, as in an edition signed before unmarked copies were labelled). A row without "
+   + "them travels as before.\n"],
   ["So a case file published before `/7` still renders its own carried edition byte for byte.\n",
    "So a case file published before `/7` still renders its own carried edition byte for byte. A material carried as its copy (a "
    + "photo, or a member document's cleaned copy) is listed with the original's fingerprint, the copy's fingerprint and its label, "
