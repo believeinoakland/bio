@@ -155,3 +155,39 @@ test("R13: a run reads inside a held document through run-productions R24, a few
   /* Outside the paying account's sight: answered as absent. */
   assert.equal(w.p.read({ run: o.run, bundleId: "INFO-2026-0099-z", caller: CALLER }).code, "NO_SUCH_BUNDLE");
 });
+
+test("R13: what an exploring run proposes while reading is run-productions R21's, under its step (K2502); a proposed connection to a person passes R9's gate first", async () => {
+  const w = await world().standard();
+  w.entity(PERSON, "person");
+  w.entity(PERSON2, "person");
+  w.question(Q, { subject: PERSON, surfacedBy: "human", recipients: ["alice"] });
+  const o = await w.openRun("group");
+  const at0 = { kind: "pdf-page", page: 0, ref: "page 1" };
+  const doc = { to_kind: "document", to: DOC2, how: "name", name: "page", quote: "text of page 1", source: at0 };
+  const r = w.p.propose({ run: o.run, bundleId: DOC, fn: "propose-reading", version: "0.1.0", connections: [doc], caller: CALLER });
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.connections.map((c) => [c.to_kind, c.to, c.earned, c.verified_quote]), [["document", DOC2, "C", true]]);
+  assert.equal(w.rows(`SELECT step FROM proposed_connections`)[0].step, o.step, "carrying the step it serves");
+  assert.equal(w.calledAs("open")[0].bounds.find((b) => b.bound === "mints").allowed, 50, "within a mints bound");
+  /* A person a member tied (the question's subject, raised by a member) may be proposed, in a public role. */
+  const tied = { to_kind: "person", to: PERSON, role: "the clerk", how: "name", name: "page", quote: "text of page 2",
+                 source: { kind: "pdf-page", page: 1, ref: "page 2" } };
+  assert.equal(w.p.propose({ run: o.run, bundleId: DOC, fn: "propose-reading", version: "0.1.0", connections: [tied], caller: CALLER }).ok, true);
+  /* Negative control: a person no member tied is refused before anything is proposed, recorded on the run. */
+  const before = w.count("proposed_connections");
+  const no = w.p.propose({ run: o.run, bundleId: DOC, fn: "propose-reading", version: "0.1.0", caller: CALLER,
+                           connections: [{ ...tied, to: PERSON2, quote: "text of page 3", source: { kind: "pdf-page", page: 2, ref: "page 3" } }] });
+  assert.deepEqual([no.code, no.nothing_proposed], ["EXPLORE_PERSON_NOT_TIED", true]);
+  assert.equal(w.count("proposed_connections"), before);
+  assert.deepEqual(w.p.refusalsOn(o.run).map((x) => [x.code, x.entity]), [["EXPLORE_PERSON_NOT_TIED", PERSON2]]);
+  /* As the read: a document kept from exploring is refused before run-productions is asked. */
+  const w2 = await world().standard();
+  w2.project(PROJ, ["alice"], { owners: ["alice"] });
+  w2.doc(HDOC, HCAP, { project: PROJ });
+  w2.draw(Q, PROJ);
+  await w2.setExplore("group", "no");
+  const o2 = await w2.openRun(`project:${PROJ}`);
+  assert.equal(w2.credentials.projectAiKeepAwaySet({ project: PROJ, on: true, uses: ["explore"], reason: "kept", by: "member:alice" }).ok, true);
+  assert.equal(w2.p.propose({ run: o2.run, bundleId: HDOC, fn: "propose-reading", version: "0.1.0", connections: [doc], caller: CALLER }).code,
+               "EXPLORE_READ_KEPT_AWAY");
+});

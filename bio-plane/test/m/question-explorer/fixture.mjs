@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS register (capture_sha TEXT PRIMARY KEY, bundle_id TEX
   bytes INTEGER, registered TEXT, authored INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS captured_locators (capture_sha TEXT, address TEXT, retrieval_locator TEXT, address_norm TEXT);
 CREATE TABLE IF NOT EXISTS links (address TEXT, fragment TEXT, source_capture TEXT, address_norm TEXT);
+CREATE TABLE IF NOT EXISTS reading_refs (capture_sha TEXT, ref TEXT, kind TEXT, key TEXT);
 CREATE TABLE IF NOT EXISTS content (content_id TEXT PRIMARY KEY, capture_sha TEXT, bundle_id TEXT, extent_kind TEXT, extent TEXT,
   ref TEXT, stale INTEGER, minted_by TEXT, cited_as TEXT, chain_kind TEXT);
 `;
@@ -224,7 +225,9 @@ export function world({ gateOpen = true, testSet = TEST_SET } = {}) {
      answered by content's and extraction's stand-ins (`w.units`). */
   const runProductions = runProductionsOf(host, {
     record, membership, connections, aiRuns, credentials, steps: realSteps, legEarning,
-    content: { captureFor: (b) => Object.keys(w.captures).find((c) => w.captures[c] === b) ?? null },
+    content: { captureFor: (b) => Object.keys(w.captures).find((c) => w.captures[c] === b) ?? null,
+               contentContextFor: () => ({ chain: [{ step: "layer", tier: 1, container: "pdf", cap: null, measured_by: null, calibration: null }] }),
+               mint: () => ({ ok: false, code: "NOT_IN_THESE_TESTS" }) },
     extraction: { unitsOf: (sha) => ({ units: w.units[sha] || [], state: "indexed" }) },
     strength: {}, citation: {}, basisVersions: { onCandidates: () => ({ ok: true }) }, now: () => Date.parse(clock.now) });
   runProductions.migrate();

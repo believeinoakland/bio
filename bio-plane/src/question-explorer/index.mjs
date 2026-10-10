@@ -68,6 +68,8 @@ export const EXPLORE_BOUNDS = Object.freeze([
   Object.freeze({ bound: "fetches", allowed: 20 }),
   Object.freeze({ bound: "wallclock", allowed: 3600000 }),
   Object.freeze({ bound: Object.keys(runRules.RUN_BOUNDS).find((k) => k === "pages"), allowed: 40 }),
+  /* R13: what an exploring run proposes while reading is minted within this bound (`run-productions` R21, R10). */
+  Object.freeze({ bound: "mints", allowed: 50 }),
 ]);
 /** The step's words (`steps` R1's `work`, the doer's words on what the work is). */
 export const EXPLORE_WORK = "The system explored this question for material the record does not yet bring to it.";
@@ -633,25 +635,54 @@ export class QuestionExplorer {
    *  Asked here first: the document is within the paying account's sight (R3), and no limit keeps it from `explore`.
    *  What it proposes while reading is `run-productions` R21's, under the step this answer names. */
   read({ run, bundleId, from = null, caller = null, at = null } = {}) {
-    const live = this.#liveRun(run, caller);
-    if (live.refusal) return live.refusal;
-    const r = live.run;
-    const id = str(bundleId);
-    const b = id ? this.#one(`SELECT object_type, project FROM bundles WHERE bundle_id=?`, id) : null;
-    if (!b || b.object_type !== "information" || !this.#ownerSees(r.owner, id))
-      return { ok: false, reason: "NO_SUCH_BUNDLE", code: "NO_SUCH_BUNDLE", target: id,
-               detail: "no held document by that id is in the paying account's sight" };
-    let k = null;
-    try { k = this.credentials.aiKeptAway({ project: str(b.project), use: EXPLORE_USE }); }
-    catch { k = { code: "AI_KEPT_AWAY" }; }
-    if (k) return this.#refuse("EXPLORE_READ_KEPT_AWAY", "a material limit keeps this document from exploring",
-                               { run: r.run, target: id, kept_away: { code: k.code ?? null, use: EXPLORE_USE } });
+    const d = this.#readable(run, bundleId, caller);
+    if (d.refusal) return d.refusal;
+    const { r, id } = d;
     if (!this.runProductions || typeof this.runProductions.readPages !== "function")
       return this.#refuse("EXPLORE_NO_RUN", "the reading door is not in place", { run: r.run });
     const read = this.runProductions.readPages({ run: r.run, bundleId: id, ...(from === null ? {} : { from }),
                                                  viewer: this.principal, caller: caller ?? this.principal,
                                                  ...(at ? { at } : {}) });
     return read && read.ok !== false ? { ...read, step: r.step } : read;
+  }
+
+  /** R3, R13: the run and the held document it would read or propose over: the run its caller holds, the document in
+   *  the paying account's sight, and no limit keeping it from `explore`. */
+  #readable(run, bundleId, caller) {
+    const live = this.#liveRun(run, caller);
+    if (live.refusal) return { refusal: live.refusal };
+    const r = live.run;
+    const id = str(bundleId);
+    const b = id ? this.#one(`SELECT object_type, project FROM bundles WHERE bundle_id=?`, id) : null;
+    if (!b || b.object_type !== "information" || !this.#ownerSees(r.owner, id))
+      return { refusal: { ok: false, reason: "NO_SUCH_BUNDLE", code: "NO_SUCH_BUNDLE", target: id,
+                          detail: "no held document by that id is in the paying account's sight" } };
+    let k = null;
+    try { k = this.credentials.aiKeptAway({ project: str(b.project), use: EXPLORE_USE }); }
+    catch { k = { code: "AI_KEPT_AWAY" }; }
+    if (k) return { refusal: this.#refuse("EXPLORE_READ_KEPT_AWAY", "a material limit keeps this document from exploring",
+                                          { run: r.run, target: id, kept_away: { code: k.code ?? null, use: EXPLORE_USE } }) };
+    return { r, id };
+  }
+
+  /** R13 (K2502): what the run proposes while reading a held document is `run-productions` R21's (`extractPropose`):
+   *  passages and connections, each tied to its quote, labelled the system's, under the run's step, minted within its
+   *  `mints` bound. Asked here first, as `read` asks; and a proposed connection to a person passes R9 and R10's gate (a
+   *  person a member tied, within the run's 20), so the run gathers about no one else by proposing either. */
+  propose({ run, bundleId, fn, version, cap = null, refs = [], connections = [], caller = null, at = null } = {}) {
+    const d = this.#readable(run, bundleId, caller);
+    if (d.refusal) return d.refusal;
+    const { r, id } = d;
+    for (const c of Array.isArray(connections) ? connections : []) {
+      if (!c || c.to_kind !== "person") continue;
+      const looked = this.look({ run: r.run, entity: c.to, aim: "a proposed connection", caller, at });
+      if (looked.ok === false) return { ...looked, nothing_proposed: true };
+    }
+    if (!this.runProductions || typeof this.runProductions.extractPropose !== "function")
+      return this.#refuse("EXPLORE_NO_RUN", "the proposing door is not in place", { run: r.run });
+    return this.runProductions.extractPropose({ run: r.run, bundleId: id, fn, version, cap, refs, connections, step: r.step,
+                                                proposedBy: this.principal, viewer: this.principal,
+                                                caller: caller ?? this.principal, ...(at ? { at } : {}) });
   }
 
   /* ---------------------------------------------------------------- R8, R12: the end */
