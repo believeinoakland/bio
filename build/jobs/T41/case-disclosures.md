@@ -135,3 +135,7 @@ B5 (K2539) applied, re-completed. I merged tranche/T41, and the case-carriage la
 ## J6 · COMPLETE
 
 B6 (K2541) applied, re-completed. I merged tranche/T41. carriesBodyLines now prints a material carried as its copy as travelling with the case, with its copy's fingerprint and its label word for word, and only when the row states obscured, so seam's pinned hashes hold. Tested in photos.test.mjs with negative controls. Module tests: pass 104, fail 0. Checks: format, architecture, coverage (31 of 31) and ownership all have 0 failures. case-authoring's reds are unchanged from J5. Size: 2,387 lines.
+
+## J7 · COMPLETE
+
+B7 (K2549) applied, re-completed. I merged tranche/T41 @ 3c877f0a1d and re-ran on the merged tip. Added: R30 over the real case-checker.checkAccount, with no stand-in (its answer matches K2531). Module tests: pass 105, fail 0. Checks: format, architecture, coverage (31 of 31) and ownership (12 files) all have 0 failures. In case-authoring's suite, my change still only adds invariants:76 and photos:76 and clears photos:101. Every other red there is on the tip without me (rule 4 (13)). Ready to merge.
