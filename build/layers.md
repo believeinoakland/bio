@@ -306,7 +306,7 @@ Uses: `publish-schedule` uses civil-time, jurisdictions, record-core, membership
 
 Uses: `doorbell` uses record-core, membership, credentials, provenance, acquisition, capture and test-support. `sources` (layer 3), `actions` (layer 9), `answer-envelope`, `store-door` and `plane` (layer 11) re-point to it in their T42 jobs.
 
-## Layer 8: case-authoring's third split (K617, K624; N839; T42)
+## Layer 8: case-authoring's second split (K617, K624; N839; T42)
 
 `case-authoring` measures 4,131 lines over its own paths (K1821) after T41's account work, so the account (R63–R68: the system's drafts of a case's account and its checks, the reader, their helpers) moves out, with no requirement changing meaning. `case-account` is a product module with no `from`, built by copy (K624) in its own T42 job, directly before `case-authoring` (after `case-disclosures`, whose R30 it uses), since `publishCase` calls it (P4; N529's precedent). R65, R67 and R68 run inside the publishing act and stay in case-authoring, re-pointed; case-authoring keeps three one-line pass-throughs (`accountPropose`, `accountDrafts`, `registerReviewComments`; K1333's form) until `review`, `control-plane` and `plane` re-point in T42, deleted in T43 (N850). Map: `build/extraction/case-account-split.md`.
 
