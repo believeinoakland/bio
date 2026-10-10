@@ -73,3 +73,30 @@ Size (session_01KJ4zxTUbTA3VAHVeTVs72b): test runs 14, module lines 2011
 Everything else is as J2.
 
 Size (session_01KJ4zxTUbTA3VAHVeTVs72b): test runs 18, module lines 2010
+
+## J4 · COMPLETE
+
+**CHANGE B4 applied** (K2546; merged `tranche/T41` @ 22a2fbd6be as 4c946b076a; commit 0e550dcbe4).
+- R23 re-weighs with `case-checker.reweigh` (its R23), the real export and the module's default. The `reweigh` dep stays, so a test can pass the scripted world's stand-in.
+- **Built to the real interface:**
+  - The reader lens is `{statements: [ids in force], applications: []}`.
+  - The answer is read from `findings[{pair, bar_met, lens_changes}]`, `lens_statement` (the limit) and `lens.not_applied`. `own_lens` now carries `lens_changes`, and `changed_by` holds the statement ids they name.
+  - A `lens.departure` is stated as `LENS_NOT_REWEIGHED` with the departure, and is never read as false.
+- **A reading recorded here (BOB's to confirm or correct):** R23 says the reader lens's "applications are the carried rows whose statement is in force". `case-checker` already keeps (does not reverse) a carried application whose statement the reader names. It applies the reader's `applications` on top as the reader's own, so passing the carried rows there would apply them twice. For an excluded leg, that leaves out a leg the published facts count. So I name the statements in force and pass no applications, and the carried rows of those statements stand as published. The new real test shows this: with every statement in force, every finding re-weighs to its recorded pair, an excluded leg included. Passing the carried rows as applications fails that test (checked, then reverted).
+- **Undetermined, refined:** a finding is undetermined when it rests on an undetermined statement at its own legs, or through another finding (an entry in `lens_changes` naming one).
+- **New test** (`real.test.mjs`): "R23 over the real re-weighing", over case-checker's fixture case file with a `bias_applications:` block written by `case-grammar.biasApplicationsLines`. It checks:
+  - both statements in force: every pair is as recorded, and the limit is `LENS_LIMIT_STATEMENT`;
+  - S1 not in force: B's lowered leg reads as removed, A changes through B, and each finding's pair, `bar_met` and `lens_changes` equal `reweigh`'s own answer for the same lens;
+  - S1 undetermined: A and B answer `determined: false`, stated, with `bar_met: null`, while C is re-weighed.
+
+**Final `uses`:** unchanged (as J2).
+
+**Tests and checks:**
+- `node --test test/m/case-import/`: tests 96, pass 96, fail 0.
+- accepted-work: 23 pass, 0 fail. case-checker: 77 pass, 0 fail.
+- case-disclosures: 78 pass, 3 fail. These are the same three inherited reds as J3: R22 photo translations, and two R7 `obscured` rows.
+- format: 0 failures. architecture: 0 failures. coverage: 23 of 23, 0 failures. ownership: 6 files, 0 failures.
+
+Everything else is as J2 and J3. Every R23 service is now real: `bias.statementInForce` is injected only in the test worlds, and `case-grammar.biasApplicationsOf` and `case-checker.reweigh` are used directly.
+
+Size (session_01KJ4zxTUbTA3VAHVeTVs72b): test runs 25, module lines 2015
