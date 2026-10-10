@@ -172,7 +172,7 @@ test("R15 copyWake: null while nothing is queued; now while a queued document ha
   assert.equal(w.cc.copyWake(now + 60000), now + 60000, "a new untried document: now");
   /* the instants live in the tables: a fresh instance over the same storage answers alike */
   const { CaseCarriage } = await import("../../../src/case-carriage/index.mjs");
-  const again = new CaseCarriage({ storage: w.st, record: w.record, provenance: w.prov });
+  const again = new CaseCarriage({ storage: w.st, record: w.record, provenance: w.prov, bucket: w.bucket });
   assert.equal(again.copyWake(now + 60000), now + 60000);
   const before = w.snapshot();
   for (const bad of [null, undefined, "not a time", {}, NaN]) assert.equal(w.cc.copyWake(bad), null);
@@ -383,4 +383,82 @@ test("R12 (T39) the queue and the record of member documents' copies are declare
   assert.equal(now.length, kept.length + 1);
   assert.equal(COPY_CLEANED_LABEL, "Details of who made this file, and of its pictures, removed for publication; the group holds the original");
   assert.notEqual(COPY_CLEANED_LABEL, OBSCURED_LABEL);
+});
+
+/* ---------------------------------------------------------------- R15 (T40), R18 (T40) */
+
+test("R15 (T40; N816, K2380) copyWake answers null while no evidence store or bucket is bound, whatever is queued; bound again, it answers as before (negative control)", async () => {
+  const w = world();
+  const now = Date.parse(NOW);
+  const a = supplied(w, "INFO-2026-0101-knock", KNOCKED);
+  assert.equal(w.cc.copyWake(now), now, "negative control: bound, a queued untried document wakes now");
+  const store = w.record.evidenceStore, bucket = w.cc.bucket;
+  for (const [label, spoil] of [["no evidence store", () => { w.record.evidenceStore = () => null; }],
+                                ["an evidence store that throws", () => { w.record.evidenceStore = () => { throw new Error("unbound"); }; }],
+                                ["no bucket", () => { w.cc.bucket = null; }]]) {
+    spoil();
+    const before = w.snapshot();
+    assert.equal(w.cc.copyWake(now), null, label);
+    assert.equal(w.cc.copyWake(NOW), null, `${label}, an ISO instant`);
+    assert.deepEqual(w.snapshot(), before, `${label}: writes nothing`);
+    assert.deepEqual(queue(w).map((q) => q.capture), [a], `${label}: still queued`);
+    /* copyBatch, unbound, refuses before stamping a try, so nothing would re-arm it (K2380) */
+    assert.equal((await w.cc.copyBatch({})).code, "DOCUMENT_COPY_NO_STORE", label);
+    assert.equal(queue(w)[0].tried, null, `${label}: no try stamped`);
+    w.record.evidenceStore = store;
+    w.cc.bucket = bucket;
+    assert.equal(w.cc.copyWake(now), now, `${label}: bound again, it wakes now`);
+  }
+  /* bound, after a failed read: the retry instant, as before */
+  w.evidence.held.delete(a);
+  await w.cc.copyBatch({});
+  assert.equal(w.cc.copyWake(now), now + DOCUMENT_COPY_RETRY_MS);
+  w.cc.bucket = null;
+  assert.equal(w.cc.copyWake(now), null, "unbound, null even with a retry pending");
+});
+
+test("R18 (T40; N818, K2383) a refused onReceipt registration ({ok: false}, a throw, or none to ask) is a start-up fault: kept, answered by faults() as {notice: \"onReceipt\", reason, detail}, and logged; a registration that stands leaves no fault (negative control); faults() writes nothing and never throws", async () => {
+  const { CaseCarriage } = await import("../../../src/case-carriage/index.mjs");
+  const w = world();
+  /* negative control: the fixture's instance registered with the real provenance at creation, and a receipt queues */
+  assert.deepEqual(w.cc.faults(), []);
+  supplied(w, "INFO-2026-0101-knock", KNOCKED);
+  assert.equal(queue(w).length, 1, "the listener stands");
+  const logged = [], error = console.error;
+  console.error = (...a) => logged.push(a.join(" "));
+  try {
+    /* the real provenance refuses a second registration by this module (membership R81's LISTENER_DECLARED) */
+    const second = w.cc.start();
+    assert.deepEqual([second.ok, second.code], [false, "LISTENER_DECLARED"]);
+    assert.deepEqual(w.cc.faults(), [{ notice: "onReceipt", reason: second.reason ?? second.code, detail: second.detail ?? null }]);
+    const cases = [
+      ["an answer {ok: false}", { onReceipt: () => ({ ok: false, reason: "LISTENER_MALFORMED", detail: "refused here" }) },
+       { notice: "onReceipt", reason: "LISTENER_MALFORMED", detail: "refused here" }],
+      ["a throw", { onReceipt: () => { throw new Error("provenance is down"); } },
+       { notice: "onReceipt", reason: "REGISTRATION_THREW", detail: "provenance is down" }],
+      ["no onReceipt to ask", {}, { notice: "onReceipt", reason: "NO_RECEIPT_NOTICE", detail: "no provenance onReceipt to register the receipt listener with" }],
+      ["an answer that is no answer", { onReceipt: () => undefined },
+       { notice: "onReceipt", reason: "REGISTRATION_UNANSWERED", detail: "the registration answered undefined" }],
+    ];
+    for (const [label, provenance, fault] of cases) {
+      const cc = new CaseCarriage({ storage: w.st, record: w.record, provenance });
+      assert.deepEqual(cc.faults(), [], `${label}: none before start`);
+      const r = cc.start();
+      assert.equal(r.ok, false, label);
+      assert.deepEqual(cc.faults(), [fault], label);
+      const f = cc.faults();
+      f[0].reason = "changed by the caller";
+      assert.deepEqual(cc.faults(), [fault], `${label}: answered as a copy`);
+    }
+    assert.equal(logged.length, 5, "each fault logged");
+    assert.ok(logged.every((l) => l.startsWith("case-carriage: the onReceipt notice refused its registration")), logged.join("\n"));
+    /* negative control: a registration that stands keeps no fault and logs nothing */
+    const ok = new CaseCarriage({ storage: w.st, record: w.record, provenance: { onReceipt: (m) => ({ ok: true, module: m }) } });
+    assert.deepEqual(ok.start(), { ok: true, module: "case-carriage" });
+    assert.deepEqual(ok.faults(), []);
+    assert.equal(logged.length, 5);
+  } finally { console.error = error; }
+  const before = w.snapshot();
+  assert.doesNotThrow(() => w.cc.faults());
+  assert.deepEqual(w.snapshot(), before, "faults() writes nothing");
 });
