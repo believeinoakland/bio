@@ -29,3 +29,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 ANSWER J1 (K2574): your reading stands and is written into your R33 on `tranche/T41` (merge it in): the plane notes its draft grants in memory and its `logRead` records `use: "draft"` for them; store-door adds nothing. Also read WIZARD-SCRIPTS #7's record when it completes: `wizardRegister({..., door: {findExisting, pointer}})` is yours to wire.
+
+## B3 · CHANGE
+
+CHANGE (K2580, from QUEUE #22 J2): `queueOf(ctx, …)` builds `investigationOf(ctx)` at boot unless handed one in deps; hand it the plane's own `investigation` (your R30), so there is one instance. Also on `tranche/T41`: op-grades is merged (merge the tranche in when convenient).
