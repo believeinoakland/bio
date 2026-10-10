@@ -57,13 +57,15 @@ function refused(r, code) {
     [code, code, CASE_DISCLOSURE_CHECKS[code].check, CASE_DISCLOSURE_CHECKS[code].translation]);
 }
 
-test("R14: a marked photo is stated as carried by its copy — its materials: row included: false with obscured: {copy, label}, the copy's SHA-256 and case-carriage's OBSCURED_LABEL — a photo with nothing to obscure by its copy with no label (T38; N779), and the document stores it unsigned; a capture that is no photo travels whole with obscured null", () => {
+test("R14: a marked photo is stated as carried by its copy — its materials: row included: false with obscured: {copy, label, marked} (case-grammar R12 since T41), the copy's SHA-256 and case-carriage's OBSCURED_LABEL — a photo with nothing to obscure by its copy with no label (T38; N779), and the document stores it unsigned; a capture that is no photo travels whole with obscured null", () => {
   const { w, P, shas } = setup({ states: { [DOC]: "marked", [DOC2]: "nothing" } });
   const r = w.ca.publishCase(args(P, [Q, Q2]));
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
   const rows = Object.fromEntries(materialsOf(w.fm(docOf(w, r))).materials.map((m) => [m.ref, m]));
-  assert.deepEqual([rows[DOC].sha, rows[DOC].included, rows[DOC].obscured], [shas[DOC], false, { copy: COPY, label: OBSCURED_LABEL }]);
-  assert.deepEqual([rows[DOC2].sha, rows[DOC2].included, rows[DOC2].obscured], [shas[DOC2], false, { copy: COPY2, label: null }]);
+  /* case-grammar R12 (T41): `marked` read back beside the copy and label: a marked photo's true, one with nothing to
+     obscure false (its label null) */
+  assert.deepEqual([rows[DOC].sha, rows[DOC].included, rows[DOC].obscured], [shas[DOC], false, { copy: COPY, label: OBSCURED_LABEL, marked: true }]);
+  assert.deepEqual([rows[DOC2].sha, rows[DOC2].included, rows[DOC2].obscured], [shas[DOC2], false, { copy: COPY2, label: null, marked: false }]);
   assert.deepEqual([rows[DOC3].included, rows[DOC3].obscured], [true, null]);
   assert.equal(w.row(`SELECT sig_armored FROM case_documents WHERE case_id=?`, r.caseId).sig_armored, null, "stored unsigned");
   /* negative control: with no photo at all, every row travels whole */
