@@ -5,7 +5,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, inquiryMd, V, MACHINE } from "./fixture.mjs";
-import { WAIT_ENDING_STATES } from "../../../src/inquiry/index.mjs";
+import { WAIT_ENDING_STATES, inquiryOps } from "../../../src/inquiry/index.mjs";
 
 const Q = "INQ-2026-0701-q", R = "INQ-2026-0702-r";
 const LA = () => ({ time_zone: { value: "America/Los_Angeles" } });
@@ -215,4 +215,105 @@ test("R55 T34-86 DEC-149 the undetermined wait's why calls the group's Civicsmit
   assert.equal(u.why, "no time zone is held for your group's Civicsmith, so the local day the wait falls due on cannot be "
     + "read (it is never read as the UTC day)");
   assert.doesNotMatch(u.why, /\b(instance|copy|plane|server)\b/);
+});
+
+/* ---- T41 (T41-15; D17, H38; K2436, K2480): R54's `set_in`, R55's `questionWaits` ---- */
+
+const discoverable = (w, P, by) => {
+  const r = w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", reason: "open", by, viewer: V(by) });
+  assert.equal(r.ok, true, JSON.stringify(r));
+};
+const setInOf = (w, id) => w.rows(`SELECT text, date, set_in, ended FROM inquiry_dated_waits WHERE bundle_id=? ORDER BY wait_id`, id)
+  .map((r) => [r.text, r.date, r.set_in, r.ended]);
+
+test("R54 set_in: the project the promoting act named, kept only when it is a project the author may see; none when it named none; kept while text and date are unchanged", () => {
+  const w = setup();
+  const P = w.project("Records", "alice"), B = w.project("Bob's", "bob");
+  assert.equal(w.promote(Q, doc(Q, [{ text: "a", date: "2026-10-10" }]), null, { author: V("alice"), setIn: P }).ok, true);
+  assert.deepEqual(setInOf(w, Q), [["a", "2026-10-10", P, null]]);
+  /* bob's revision names his own project: the unchanged wait keeps alice's; his new one is set in his */
+  assert.equal(w.promote(Q, doc(Q, [{ text: "a", date: "2026-10-10" }, { text: "b", date: "2026-10-12" }]), undefined,
+    { author: V("bob"), setIn: B }).ok, true);
+  assert.deepEqual(setInOf(w, Q), [["a", "2026-10-10", P, null], ["b", "2026-10-12", B, null]]);
+  /* re-dated by alice naming no project: the new wait is set in none */
+  assert.equal(w.promote(Q, doc(Q, [{ text: "a", date: "2026-10-11" }, { text: "b", date: "2026-10-12" }]), undefined,
+    { author: V("alice") }).ok, true);
+  assert.deepEqual(setInOf(w, Q).at(-1), ["a", "2026-10-11", null, null]);
+  /* negative controls: a project the author may not see, a bundle that is no project, and junk are recorded as none */
+  for (const [i, [setIn, label]] of [[B, "bob's hidden project, named by alice"], [Q, "not a project"], ["  ", "blank"],
+                                      [7, "not a string"]].entries()) {
+    const id = `INQ-2026-071${i}-x`;
+    assert.equal(w.promote(id, doc(id, [{ text: "c", date: "2026-10-13" }]), null, { author: V("alice"), setIn }).ok, true);
+    assert.equal(setInOf(w, id)[0][2], null, label);
+  }
+  /* R55: the setter's own read answers it */
+  assert.deepEqual(w.k.datedWaits({ member: "alice", viewer: V("alice"), asOf: "2026-10-01T12:00:00Z" }).waits
+    .filter((x) => x.inquiry === Q).map((x) => [x.text, x.set_in]), [["a", null]]);
+});
+
+test("R54 migration: a dated-waits table written before T41 gains set_in once, idempotently, its rows reading none", () => {
+  const w = setup();
+  w.promote(Q, doc(Q, [{ text: "a", date: "2026-10-10" }]), null, { author: V("alice") });
+  w.st.db.exec(`ALTER TABLE inquiry_dated_waits DROP COLUMN set_in`);
+  assert.equal(w.rows(`PRAGMA table_info(inquiry_dated_waits)`).some((c) => c.name === "set_in"), false);
+  w.k.migrate(); w.k.migrate();
+  assert.equal(w.rows(`PRAGMA table_info(inquiry_dated_waits)`).filter((c) => c.name === "set_in").length, 1);
+  assert.deepEqual(setInOf(w, Q), [["a", "2026-10-10", null, null]]);
+});
+
+test("R55 questionWaits: every wait on a question to any viewer who may see it, with text, date, state and the setter's handle; the project only while discoverable; never the setter's look", () => {
+  const w = setup();
+  w.member("carol");
+  const P = w.project("Records", "alice");
+  w.promote(Q, doc(Q, [{ text: "records reply", description: "from the clerk", date: "2026-10-10" }, { text: "undated" }]),
+    null, { author: V("alice"), setIn: P });
+  w.promote(Q, doc(Q, [{ text: "records reply", description: "from the clerk", date: "2026-10-10" }, { text: "undated" },
+    { text: "agenda", date: "2026-10-20" }]), undefined, { author: V("bob") });
+  const read = (viewer, asOf = "2026-10-12T12:00:00Z") => w.k.questionWaits({ question: Q, viewer, asOf });
+  /* P is hidden: no set_in, exactly as bob's wait set in none */
+  const hidden = read(V("carol"));
+  assert.deepEqual(hidden.waits, [
+    { index: 0, text: "records reply", description: "from the clerk", date: "2026-10-10", state: "due",
+      set_by_handle: "h_alice", set_at: hidden.waits[0].set_at },
+    { index: 2, text: "agenda", description: "from the clerk", date: "2026-10-20", state: "waiting",
+      set_by_handle: "h_bob", set_at: hidden.waits[1].set_at }]);
+  assert.equal(hidden.ok, true); assert.equal(hidden.question, Q);
+  assert.doesNotMatch(JSON.stringify(hidden), new RegExp(P), "a hidden project is never named");
+  /* even to alice, P's own participant: a hidden project is never answered here (D17, H38) */
+  assert.equal(read(V("alice")).waits[0].set_in, undefined);
+  /* P discoverable: named, to anyone whose sight of it is not NONE */
+  discoverable(w, P, "alice");
+  for (const v of [V("carol"), V("alice"), V("bob")])
+    assert.deepEqual(read(v).waits.map((x) => x.set_in ?? null), [{ id: P, name: "Records" }, null], v);
+  /* the setter's look is her own: never answered here, the state is the day's */
+  assert.equal(w.k.waitLook({ inquiry: Q, index: 0, by: V("alice") }).ok, true);
+  assert.deepEqual(read(V("carol")).waits.map((x) => [x.state, x.looked_at, x.note]), [["due", undefined, undefined], ["waiting", undefined, undefined]]);
+  assert.equal(w.k.datedWaits({ member: "alice", viewer: V("alice"), asOf: "2026-10-12T12:00:00Z" }).waits[0].state, "looked",
+    "the setter's own read still says looked (negative control)");
+  /* the question ended: every wait ended */
+  w.st.sql.exec(`UPDATE bundles SET current_state='concluded' WHERE bundle_id=?`, Q);
+  assert.deepEqual(read(V("carol")).waits.map((x) => [x.state, x.inquiry_state]), [["ended", "concluded"], ["ended", "concluded"]]);
+  /* no zone held: undetermined */
+  const nz = setup({ view: () => ({}) });
+  nz.promote(Q, doc(Q, [{ text: "r", date: "2026-10-10" }]), null, { author: V("alice") });
+  assert.equal(nz.k.questionWaits({ question: Q, viewer: V("bob") }).waits[0].state, "undetermined");
+});
+
+test("R55 R33 questionWaits: a question the viewer may not see, no viewer, an absent id and a non-inquiry are answered alike, with no waits; it writes nothing and never throws", () => {
+  const w = setup();
+  const B = w.project("Bob's", "bob");
+  w.promote(Q, doc(Q, [{ text: "r", date: "2026-10-10" }]), null, { author: V("bob") });
+  w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, B, Q);
+  const none = (question) => ({ ok: true, question, waits: [] });
+  assert.deepEqual(w.k.questionWaits({ question: Q, viewer: V("alice") }), none(Q), "out of alice's sight");
+  assert.deepEqual(w.k.questionWaits({ question: "INQ-2026-0799-none", viewer: V("alice") }), none("INQ-2026-0799-none"));
+  assert.deepEqual(w.k.questionWaits({ question: Q, viewer: null }), none(Q));
+  assert.deepEqual(w.k.questionWaits({ question: B, viewer: V("bob") }), none(B), "a project is no question");
+  assert.equal(w.k.questionWaits({ question: Q, viewer: V("bob") }).waits.length, 1, "negative control: bob sees it");
+  const before = JSON.stringify(w.rows(`SELECT * FROM inquiry_dated_waits`));
+  for (const a of [undefined, null, {}, { question: 7, viewer: {} }]) assert.doesNotThrow(() => w.k.questionWaits(a));
+  assert.equal(JSON.stringify(w.rows(`SELECT * FROM inquiry_dated_waits`)), before);
+  /* the op: the stamped viewer, the question from the query or the body */
+  const url = new URL(`https://x/?viewer=${encodeURIComponent(V("bob"))}&question=${Q}`);
+  assert.equal(inquiryOps(w.k, url, {}).questionwaits().waits.length, 1);
 });

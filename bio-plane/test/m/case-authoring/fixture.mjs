@@ -1,6 +1,6 @@
 /* case-authoring over the modules it uses, each the real one (record-core, membership, credentials, promotion,
    provenance, attestation, extraction's tables, content, entities, connections, inquiry, basis-versions, strength, bias, observation-log,
-   reevaluation, publication, ratification, contradiction, network-notices), on a real SQLite database (node:sqlite) standing in for a Durable Object's
+   reevaluation, publication, publish-schedule, ratification, contradiction, network-notices), on a real SQLite database (node:sqlite) standing in for a Durable Object's
    storage. What a later module fills is a stand-in the test controls: the run gate `ai-runs` registers with
    contradiction (its R13; `runs` below), the review provider (publication R23, which
    `review` registers once extracted) and its `case_drafts` table (review R26's read contract); and what case-carriage's
@@ -23,6 +23,7 @@ import { biasOf, BIAS_SCHEMA } from "../../../src/bias/index.mjs";
 import { observationLogOf } from "../../../src/observation-log/index.mjs";
 import { reevaluationOf } from "../../../src/reevaluation/index.mjs";
 import { publicationOf } from "../../../src/publication/index.mjs";
+import { publishScheduleOf } from "../../../src/publish-schedule/index.mjs";
 import { ratificationOf, completenessFields } from "../../../src/ratification/index.mjs";
 import { contradictionOf } from "../../../src/contradiction/index.mjs";
 import { Capture } from "../../../src/capture/index.mjs";
@@ -219,6 +220,9 @@ export function world({ group = "test-group", provider = true, now = null, recor
                                               strength, basisVersions, now: () => clock.now });
   const publication = publicationOf(host, { record, membership, promotion, inquiry, basisVersions, entities, ...held,
                                             now: () => clock.now });
+  /* publish-schedule (layer 8, after publication; N823): the waiting editions R58 and R59 read (its R1, R7), the real
+     one on this host, which registers its waiting source with publication (its R8). */
+  const publishSchedule = publishScheduleOf(host, { record, membership, publication, now: () => clock.now });
   const ratification = ratificationOf(host, { record, membership, promotion, provenance: prov, inquiry, basisVersions,
                                               publication });
   /* contradiction (layer 6), on this host; the runs its gate answers for are the test's: {status, principal}. */
@@ -253,7 +257,7 @@ export function world({ group = "test-group", provider = true, now = null, recor
   const w = {
     imports, checks,
     st, host, record, membership, credentials, promotion, prov, content, entities, connections, inquiry, basisVersions, strength,
-    bias, observations, reevaluation, publication, ratification, contradiction, runs, clock, readings, grants: new Map(),
+    bias, observations, reevaluation, publication, publishSchedule, ratification, contradiction, runs, clock, readings, grants: new Map(),
     capture, sources, attestation, extraction: ex,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
@@ -299,10 +303,20 @@ export function world({ group = "test-group", provider = true, now = null, recor
   w.disclosures = disclosures;
   /* `inquiry` (a wrap) changes only what case-authoring reads of inquiry: R56's and R57's tests give a finding legs on a
      calculation or an event, which inquiry's own gate does not yet admit at promotion (C-2.8). */
+  /* R63 (D56): case-disclosures R30's judgment of the account, the real one unless a test sets `w.judgeAccount`, which
+     receives what case-authoring hands R30 and answers in its place (`w.judged` records each hand-over). */
+  w.judged = [];
+  const judgedDisclosures = new Proxy(disclosures, { get: (t, p) => (p === "accountJudged"
+    ? (a) => { w.judged.push(a); return w.judgeAccount ? w.judgeAccount(a) : t.accountJudged(a); }
+    : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
+  /* R64: the runs an account draft names, ai-runs' `runFor` over the test's own `runs` (as contradiction's gate above):
+     a run is seen by every viewer but "nobody". */
+  const aiRuns = { runFor: (id, viewer) => (runs.has(String(id)) && viewer !== "nobody"
+    ? { run: String(id), status: runs.get(String(id)).status, mode: "draft" } : null) };
   w.ca = caseAuthoringOf(host, { record: caseRecord, membership, basisVersions,
-    strength, bias, observations, reevaluation, publication, ratification: ratWrap ? ratWrap(ratification) : ratification,
+    strength, bias, observations, reevaluation, publication, publishSchedule, ratification: ratWrap ? ratWrap(ratification) : ratification,
     networkNotices, now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)),
-    disclosures, events,
+    disclosures: judgedDisclosures, events, runs: aiRuns,
     ...given((d) => !READ_BY_DISCLOSURES.includes(d) || d === "inquiry" || d === "strength"),
     inquiry: inqWrap ? inqWrap(deps.inquiry || inquiry) : deps.inquiry || inquiry });
   Object.assign(w, { events, lines, money, people });

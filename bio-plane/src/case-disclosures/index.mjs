@@ -7,7 +7,9 @@
  * refused (R6–R12; T39, N806: a member document's copy, `case-carriage` R16), and the
  * photos it relies on for the ceremony's Photos step (R29; T37, N757; T38, DEC-183); another group's work it rests on, with its acceptance and open flags (R13,
  * R14); each reached finding's grading facts and passages (R15); hunch debt (R16); and the people it names, each with a
- * recorded basis, and each signer's attestation of no undeclared tie (R24–R28). Each judgment answers its
+ * recorded basis, and each signer's attestation of no undeclared tie (R24–R28); (T41) the account and the four statements,
+ * each sentence against what it cites (R30), and the bias applications of the findings it reaches (R31). Each judgment
+ * answers its
  * refusals in order and the rows the case document writes; `case-authoring`'s `publishCase` asks them in its order (its
  * R55), answers the first refusal, and writes the rows through this module's renderers (`./document.mjs`).
  *
@@ -42,11 +44,15 @@
  *   money                `readFact` (a cited money fact's parties; R24).
  *   people               `identityOf`, `interestsOf`, `personAt`, `tiesConcerning` (its R5, R15, R14, R20; R24–R27).
  *   membership           `memberFacts` (a signer's cover or handle, at the level they chose; R27).
- *   caseCarriage         `photoMarks` (its R10; R6, R29); `OBSCURED_LABEL` (its R11) is imported (T37; N757);
+ *   caseCarriage         `photoMarks` (its R10; R6, R29); `OBSCURED_LABEL` and (T40) `PUBLISHED_LABEL` (its R11) are
+ *                        imported (T37; N757);
  *                        `documentCopy` (its R16; R6), `COPY_CLEANED_LABEL` (its R15) imported (T39; N806). A member
  *                        document neither queued nor derived is queued by that read, case-carriage's one write, inside
  *                        the caller's transaction (its R16).
+ *   bias                 `statementInForce` (its R49; R30: the statements this case's lens prints).
+ *   caseChecker          `checkAccount` (its R24; R30), pure; imported unless given.
  *   now                  the judgment's instant, for the day `personAt` is read at (R26).
+ * (T41) R31 asks `inquiry.biasAppliedFindings` (its R61's one in-force test, `biasNotInForce` its one spelling).
  *
  * READ CONTRACTS it joins in its own SQL, each named at its statement: record-core's `bundles` (R37); inquiry's
  * `inquiry_basis` (R40); content's `content` (R45); provenance's `register` and `captured_locators` (R48). Sight is
@@ -54,11 +60,11 @@
 
 import { recordOf } from "../record-core/index.mjs";
 import { viewerPredicate, membershipOf } from "../membership/index.mjs";
-import { inquiryOf } from "../inquiry/index.mjs";
+import { inquiryOf, biasNotInForce } from "../inquiry/index.mjs";
 import { strengthOf, DEPTH_BOUND, GRADING_METHOD_VERSION } from "../strength/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
 import { promotionOf, CATALOG_VERSION } from "../promotion/index.mjs";
-import { parseImportedFindingRef } from "../inquiry-grammar/index.mjs";
+import { parseImportedFindingRef, readBiasApplied, flattenBiasApplied } from "../inquiry-grammar/index.mjs";
 import { caseImportOf } from "../case-import/index.mjs";
 import { sourceStatement, unnamedSourceStatement } from "../publication/index.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
@@ -74,15 +80,18 @@ import { eventsOf } from "../events/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { peopleOf as peopleModuleOf } from "../people/index.mjs";
-import { caseCarriageOf, OBSCURED_LABEL, COPY_CLEANED_LABEL } from "../case-carriage/index.mjs";
-import { CASE_DISCLOSURE_CHECKS } from "./checks.mjs";
+import { caseCarriageOf, OBSCURED_LABEL, PUBLISHED_LABEL, COPY_CLEANED_LABEL } from "../case-carriage/index.mjs";
+import * as caseCheckerModule from "../case-checker/index.mjs";
+import { biasOf } from "../bias/index.mjs";
+import { DRAFT_KINDS } from "../run-rules/index.mjs";
+import { CASE_DISCLOSURE_CHECKS, ACCOUNT_ARMS } from "./checks.mjs";
 import { basesListed, basisCitation, placesStated, PERSON_PLACES, TIE_LINE_KINDS, TIE_ANONYMOUS_LEVELS } from "./people.mjs";
 import { chainsOf, materialHeld, materialRows, photoRead, documentRead, PHOTO_NOT_COVERABLE_WORDS,
          PHOTO_UNCHECKED_WORDS } from "./materials.mjs";
 import { flagsListed, flagsJudged, acceptedWorkRow } from "./accepted.mjs";
 import { NOT_SHOWN_WORDS, tensionSide, SELF_ATTESTED_SENTENCE } from "./document.mjs";
 
-export { CASE_DISCLOSURE_CHECKS, PHOTO_WORDS, DOCUMENT_WORDS } from "./checks.mjs";
+export { CASE_DISCLOSURE_CHECKS, PHOTO_WORDS, DOCUMENT_WORDS, ACCOUNT_ARMS } from "./checks.mjs";
 export { PERSON_BASES, PERSON_PLACES, TIE_LINE_KINDS, TIE_ANONYMOUS_LEVELS, basesListed, basisCitation, placesStated,
          peopleLines, memberTieLines, peopleOf, memberTiesOf } from "./people.mjs";
 export { chainsOf, materialHeld, materialRows, photoRead, documentRead, PHOTO_STATES, DOCUMENT_STATES,
@@ -116,12 +125,13 @@ export class CaseDisclosures {
   constructor({ storage, record, host = null, inquiry = null, strength = null, contradiction = null, provenance = null,
                 attestation = null, capture = null, sources = null, extraction = null, caseImport = null,
                 promotion = null, entities = null, events = null, lines = null, money = null, people = null,
-                membership = null, caseCarriage = null, now = null } = {}) {
+                membership = null, caseCarriage = null, bias = null, caseChecker = null, now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.#deps = { host, inquiry, strength, contradiction, provenance, attestation, capture, sources, extraction,
-                   caseImport, promotion, entities, events, lines, money, people, membership, caseCarriage };
+                   caseImport, promotion, entities, events, lines, money, people, membership, caseCarriage, bias,
+                   caseChecker };
     this.#now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
@@ -148,6 +158,10 @@ export class CaseDisclosures {
   /* R6, R29 (T37; N757): the marks on a photo and its copy (`case-carriage` R10); R6 (T39; N806): a member document's
      publication copy (its R16). */
   get caseCarriage() { return this.#deps.caseCarriage ||= caseCarriageOf(this.#deps.host); }
+  /* R30 (T41): whether a statement is in the lens this case prints (`bias` R49); the account's five arms
+     (`case-checker` R24, pure, imported unless a test passes its own). */
+  get bias() { return this.#deps.bias ||= biasOf(this.#deps.host); }
+  get caseChecker() { return this.#deps.caseChecker ||= caseCheckerModule; }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { for (const r of this.sql.exec(q, ...a)) return r; return null; }
@@ -157,6 +171,20 @@ export class CaseDisclosures {
     let f = null;
     try { f = this.record.readFile(id, "bundle.md"); } catch { f = null; }
     return f && typeof f.text === "string" ? f.text : null;
+  }
+
+  /* R6, R8, R31: the reads `chainsOf` walks, as `viewer` sees the record (membership R43's one rule). */
+  #chainIo(viewer) {
+    const gate = viewerPredicate(viewer);
+    return {
+      rows: (q, ...a) => this.#rows(q, ...a), one: (q, ...a) => this.#one(q, ...a), normalizeType,
+      parseRef: (t) => parseImportedFindingRef(t),
+      visible: (id) => gate.scope !== "DENY"
+        && !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args),
+      readFile: (b, p) => this.record.readFile(b, p),
+      unitsOf: (sha) => this.extraction.unitsOf(sha),
+      sha256: (s) => createSha256().update(new TextEncoder().encode(s)).hex(), extractedTextOf,
+    };
   }
 
   /** R5 (DEC-112 (3)): the versions the owner signs under, read at the call: the grading method `strength` grades by
@@ -399,7 +427,10 @@ export class CaseDisclosures {
    *    chain reaching it is `PHOTO_NOT_COVERABLE`, naming each such photo and member; one only supporting members reach
    *    is listed `included: false` with no `obscured`;
    *  - otherwise (`marked` or `nothing_to_obscure`, with a copy) it is presentable through its copy, `obscured: {copy,
-   *    label}`, `label` `OBSCURED_LABEL` when `marked`, else null (no label for an unmarked copy, K2291).
+   *    label, marked, label_key}`: `label` `OBSCURED_LABEL` when `marked` (`photo.obscured.label`), else
+   *    `PUBLISHED_LABEL` (`photo.published.label`; T40, DEC-185 (1): every photo a published case carries is labelled,
+   *    replacing K2291's null), `marked` whether it is `marked`, and `label_key` the key a reader's surface shows the
+   *    label by (K2483, as `public-read` R3 answers it).
    *  A MEMBER DOCUMENT (T39; N806; K2315, K2333): a document `photoRead` finds no photo is asked of its publication copy
    *  (`case-carriage.documentCopy`, its R16; `documentRead`), answered on the material as `document`. In R6's order:
    *  - a state that cannot be read (`undetermined`) is `DOCUMENT_COPY_UNDETERMINED`, naming it, whichever chain reaches
@@ -408,7 +439,8 @@ export class CaseDisclosures {
    *  - `refused` is `DOCUMENT_NOT_CLEANABLE` when a load-bearing chain reaches it, naming each document, member and
    *    `doc-clean`'s code; pending or refused material only supporting members reach is listed `included: false` with
    *    no `obscured`;
-   *  - `copy` is presentable through its copy, `included: false`, `obscured: {copy, label: COPY_CLEANED_LABEL}`;
+   *  - `copy` is presentable through its copy, `included: false`, `obscured: {copy, label: COPY_CLEANED_LABEL,
+   *    label_key: "document.cleaned.label"}` (K2483: the words stay `case-carriage`'s);
    *  - `clean` and `public` are judged as any document, by what is held.
    *  None of the first four is C-120.8. A member-supplied archive is never carried (`case-carriage` R8): this module
    *  answers materials, never an archive.
@@ -418,16 +450,7 @@ export class CaseDisclosures {
    *  that order, then the documents' in that order; each writes nothing. Answers `{refusals, materials, refs, findings}`;
    *  `op=publish` answers the first refusal, `case-authoring` R34's pre-flight lists them all. */
   materialsJudged(prepared, memberRoles, viewer) {
-    const gate = viewerPredicate(viewer);
-    const io = {
-      rows: (q, ...a) => this.#rows(q, ...a), one: (q, ...a) => this.#one(q, ...a), normalizeType,
-      parseRef: (t) => parseImportedFindingRef(t),
-      visible: (id) => gate.scope !== "DENY"
-        && !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args),
-      readFile: (b, p) => this.record.readFile(b, p),
-      unitsOf: (sha) => this.extraction.unitsOf(sha),
-      sha256: (s) => createSha256().update(new TextEncoder().encode(s)).hex(), extractedTextOf,
-    };
+    const io = this.#chainIo(viewer);
     const roleOf = new Map(memberRoles.map((m) => [m.target, m.role]));
     const chains = chainsOf(prepared.map((p) => ({ id: p.id, role: roleOf.get(p.id) })), io, DEPTH_BOUND);
     const materials = chains.materials.map((m) => {
@@ -438,8 +461,10 @@ export class CaseDisclosures {
       const document = photo && photo.photo === false
         ? documentRead(() => this.caseCarriage.documentCopy(m.sha)) : null;
       const obscured = isPhoto && photo.state !== "unchecked" && !photo.refused && photo.copy
-        ? { copy: photo.copy, label: photo.state === "marked" ? OBSCURED_LABEL : null }
-        : document && document.state === "copy" ? { copy: document.copy, label: COPY_CLEANED_LABEL } : null;
+        ? { copy: photo.copy, ...photoLabel(photo.state === "marked") }
+        : document && document.state === "copy"
+          ? { copy: document.copy, label: COPY_CLEANED_LABEL, label_key: "document.cleaned.label" }
+          : null;
       const plain = !(photo && photo.unread) && !isPhoto && !(document && !AS_HELD.includes(document.state));
       return { ...m, held, included: plain && held.whole, obscured, photo, document };
     });
@@ -542,7 +567,9 @@ export class CaseDisclosures {
    *  the members whose chains reach it; `state`, `marks` (with their withdrawals), `copy` (its SHA-256) and `refused` as
    *  `photoMarks` answers them (R6's read, `photo`, else read here); `words` `PHOTO_UNCHECKED_WORDS`
    *  (`photo.refused.unchecked`) for an unchecked photo, `PHOTO_NOT_COVERABLE_WORDS` (`photo.refused.format`) for a
-   *  refused cover, marked or not, `OBSCURED_LABEL` for a marked photo with a copy, else null. A photo whose marks
+   *  refused cover, marked or not, `OBSCURED_LABEL` for a marked photo with a copy, `PUBLISHED_LABEL` for one with
+   *  nothing to obscure (T40; DEC-185 (2)), else null. The step's sentence on camera details and its gate sentence
+   *  (`photo.step.gate`) are the screens' words, read from `words.json`: this module answers neither. A photo whose marks
    *  cannot be read is listed `state: null, unread: true` where R6 refuses it (`marksDecide`); unread material R6 does
    *  not refuse is no photo it can show. `unchecked` counts the photos with no standing mark, each of which blocks
    *  signing (R6's `PHOTO_UNCHECKED`) and never travels. Writes nothing; never throws. */
@@ -563,7 +590,7 @@ export class CaseDisclosures {
         continue;
       }
       const words = p.state === "unchecked" ? PHOTO_UNCHECKED_WORDS : p.refused ? PHOTO_NOT_COVERABLE_WORDS
-        : p.state === "marked" ? OBSCURED_LABEL : null;
+        : p.copy ? photoLabel(p.state === "marked").label : null;
       photos.push({ ...entry, state: p.state, marks: p.marks, copy: p.copy, refused: p.refused, words, unread: false });
     }
     return { photos, unchecked: photos.filter((p) => p.state === "unchecked").length };
@@ -1129,6 +1156,185 @@ export class CaseDisclosures {
       : { candidate: e.candidate, finding: e.finding, state: e.state, kind: e.kind, a: e.a, b: e.b };
   }
 
+  /** R30 (T41; N820; D56–D58, D63; K2405, K2418, K2471): THE ACCOUNT SAYS ONLY WHAT THE RECORD HOLDS. Every sentence of
+   *  the account and of the four statements (`case-grammar` R23's rows `{ord, text, cites, kind, bias_statement?,
+   *  began_as?}`) is judged against what it cites by `case-checker.checkAccount` (its R24), one body of check code online
+   *  and offline: `cited` as the caller read it as the viewer (`answers` R33's `{holdings, rules, looks}`), `printed` the
+   *  statements the sentences frame by that `bias.statementInForce` (its R49) answers in force in this case's `lens`
+   *  (its scope shape), and `conclusions` the record's at the act, as the caller read them. Its departures `{ord, code}`
+   *  are answered in R30's arm order (`ACCOUNT_ARMS`), one refusal per code naming each sentence; the first arm,
+   *  `ACCOUNT_SENTENCE_UNSUPPORTED`, refuses account sentences only (K2533: a statement's sentence may cite, and when it
+   *  cites nothing the other arms still judge it), so its departure on a statement's sentence is not one. A check that cannot be
+   *  run (no `checkAccount`, a throw, any other answer, a code that is no arm's) fails closed:
+   *  `ACCOUNT_CHECK_UNDETERMINED`, naming every sentence (R23). Then each `account_check` flag (`run-rules` R25's draft
+   *  kind) `{kind, ord, text, cites}` (each cite as `case-grammar` R23 spells it, `{kind, ref, ord}`) the member has not answered — the flagged sentence still stands with its text and
+   *  cites nothing it did not cite when flagged — is `ACCOUNT_FLAG_UNANSWERED`, naming it; removing the sentence, or tying
+   *  it to evidence it did not cite, answers it. A malformed list is `BAD_COMPLETENESS` naming the field, alone. Answers
+   *  `{refusals, sentences, printed}`. The answer's shape, `conclusions` and `flags` are K2531's. Writes nothing; never
+   *  throws. */
+  accountJudged({ account = null, statements = null, cited = null, lens = null, conclusions = null, flags = null,
+                  viewer = null } = {}) {
+    const bad = (field, detail) => ({ refusals: [{ ok: false, reason: "BAD_COMPLETENESS", field, detail }], sentences: [], printed: [] });
+    const sentences = [];
+    for (const [field, list] of [["account", account], ["statements", statements]]) {
+      if (list == null) continue;
+      if (!Array.isArray(list)) return bad(field, `${field} is a list of sentences {ord, text, cites, kind, bias_statement?}`);
+      for (let i = 0; i < list.length; i++) {
+        const r = list[i];
+        if (!r || typeof r !== "object" || Array.isArray(r) || typeof r.text !== "string" || !r.text.trim()
+            || (r.cites != null && (!Array.isArray(r.cites) || r.cites.some((c) => !c || (typeof c !== "string" && typeof c !== "object"))))
+            || (r.bias_statement != null && typeof r.bias_statement !== "string"))
+          return bad(`${field}[${i}]`, `${field}[${i}] is not a sentence {ord, text, cites, kind, bias_statement?}`);
+        sentences.push({ ...r, ord: Number.isInteger(r.ord) ? r.ord : sentences.length + 1, text: r.text.trim(),
+                         cites: Array.isArray(r.cites) ? r.cites : [], kind: r.kind ?? (field === "account" ? "account" : null),
+                         bias_statement: typeof r.bias_statement === "string" && r.bias_statement.trim() ? r.bias_statement.trim() : null });
+      }
+    }
+    const marked = (list) => list.map((x) => ({ ord: x.ord, kind: x.kind, text: x.text }));
+    /* the printed statements: each one a sentence frames by, asked of the lens in force for this case */
+    const printed = [];
+    for (const statement of [...new Set(sentences.map((x) => x.bias_statement).filter(Boolean))]) {
+      let r = null;
+      try { r = this.bias.statementInForce({ statement, scope: lens ?? "instance", viewer }); } catch { r = null; }
+      if (r && r.ok === true && r.in_force === true) printed.push(statement);
+    }
+    const refusals = [];
+    let answer = null;
+    try {
+      const check = this.caseChecker && this.caseChecker.checkAccount;
+      answer = typeof check === "function" ? check({ account: sentences, cited, printed, conclusions }) : null;
+    } catch { answer = null; }
+    const byOrd = new Map(sentences.map((x) => [x.ord, x]));
+    const all = answer && answer.ok === true && Array.isArray(answer.departures) ? answer.departures : null;
+    const known = all && all.every((d) => d && ACCOUNT_ARMS.includes(d.code) && byOrd.has(d.ord));
+    const departures = known ? all.filter((d) => d.code !== "ACCOUNT_SENTENCE_UNSUPPORTED" || byOrd.get(d.ord).kind === "account") : null;
+    if (!known) {
+      /* DEC-49 REGION is-account-checked */
+      if (sentences.length)
+        refusals.push(disclosureRefusal("ACCOUNT_CHECK_UNDETERMINED", { sentences: marked(sentences),
+          detail: `the account could not be checked against what it cites (${answer && answer.ok === false
+            ? `the check answered ${answer.reason ?? "a refusal"}` : "the check answered nothing it states"}), so whether `
+            + `each of its ${sentences.length} sentence(s) stands is not known. Try again. Nothing was written.` }));
+      /* END DEC-49 REGION is-account-checked */
+    } else {
+      const named = (code) => marked([...new Set(departures.filter((d) => d.code === code).map((d) => d.ord))]
+        .map((o) => byOrd.get(o)));
+      const say = (list) => list.map((x) => `sentence ${x.ord} ("${x.text.slice(0, 80)}")`).join("; ");
+      let n;
+      /* DEC-49 REGION is-account-sentence-supported */
+      if ((n = named("ACCOUNT_SENTENCE_UNSUPPORTED")).length)
+        refusals.push(disclosureRefusal("ACCOUNT_SENTENCE_UNSUPPORTED", { sentences: n,
+          detail: `${say(n)} cites nothing and is not marked as following a printed bias statement. Cite what it rests on, `
+                + `or take it out. Nothing was written.` }));
+      /* END DEC-49 REGION is-account-sentence-supported */
+      /* DEC-49 REGION is-account-fact-cited */
+      if ((n = named("ACCOUNT_FACT_NOT_IN_CITED")).length)
+        refusals.push(disclosureRefusal("ACCOUNT_FACT_NOT_IN_CITED", { sentences: n,
+          detail: `${say(n)} states a figure, date, name or quotation that what it cites does not hold. Nothing was written.` }));
+      /* END DEC-49 REGION is-account-fact-cited */
+      /* DEC-49 REGION is-account-consistent-with-record */
+      if ((n = named("ACCOUNT_CONTRADICTED_BY_RECORD")).length)
+        refusals.push(disclosureRefusal("ACCOUNT_CONTRADICTED_BY_RECORD", { sentences: n,
+          detail: `${say(n)} says other than the record holds, and cannot be tied to evidence. Nothing was written.` }));
+      /* END DEC-49 REGION is-account-consistent-with-record */
+      /* DEC-49 REGION is-account-bias-printed */
+      if ((n = named("ACCOUNT_BIAS_NOT_PRINTED")).length)
+        refusals.push(disclosureRefusal("ACCOUNT_BIAS_NOT_PRINTED", { sentences: n,
+          detail: `${say(n)} is framed by a bias statement this case's lens does not print. Nothing was written.` }));
+      /* END DEC-49 REGION is-account-bias-printed */
+      /* DEC-49 REGION is-account-bias-not-a-claim */
+      if ((n = named("ACCOUNT_CLAIM_NOT_BIAS")).length)
+        refusals.push(disclosureRefusal("ACCOUNT_CLAIM_NOT_BIAS", { sentences: n,
+          detail: `${say(n)} is marked as following a bias statement and states a fact. Lying is not bias. Nothing was written.` }));
+      /* END DEC-49 REGION is-account-bias-not-a-claim */
+    }
+    /* the machine's flags, judged here (R30): answered by the sentence's removal, or by evidence it did not cite */
+    if (flags != null) {
+      if (!Array.isArray(flags)) return bad("flags", "flags is a list of the account_check flags {kind, ord, text, cites}");
+      const unanswered = [];
+      for (let i = 0; i < flags.length; i++) {
+        const f = flags[i];
+        if (!f || typeof f !== "object" || Array.isArray(f) || f.kind !== "account_check" || !DRAFT_KINDS.includes(f.kind)
+            || typeof f.text !== "string" || !f.text.trim() || (f.cites != null && !Array.isArray(f.cites)))
+          return bad(`flags[${i}]`, `flags[${i}] is not an account_check flag {kind, ord, text, cites}`);
+        const was = new Set((Array.isArray(f.cites) ? f.cites : []).map(citeKey));
+        unanswered.push(...sentences.filter((x) => x.text === f.text.trim() && x.cites.every((c) => was.has(citeKey(c)))));
+      }
+      const n = marked([...new Map(unanswered.map((x) => [x.ord, x])).values()]);
+      /* DEC-49 REGION is-account-flag-answered */
+      if (n.length)
+        refusals.push(disclosureRefusal("ACCOUNT_FLAG_UNANSWERED", { sentences: n,
+          detail: `the machine flagged ${n.map((x) => `sentence ${x.ord} ("${x.text.slice(0, 80)}")`).join("; ")} as not `
+                + `supported by what it cites, and it stands as flagged. Tie it to evidence, or take it out. Nothing was written.` }));
+      /* END DEC-49 REGION is-account-flag-answered */
+    }
+    return { refusals, sentences, printed };
+  }
+
+  /** R31 (T41; D59; K2472): the `bias_applications:` rows (`case-grammar` R24) of every finding a member's chain
+   *  reaches (R8, as `viewer` sees the record): each application a leg of its live `bundle.md` carries (`inquiry-grammar`
+   *  R18's one encoding, `readBiasApplied`), `{finding, ord, target: "leg", statement, effect, from, to}` in `case-grammar`
+   *  R24's fields. Whether each statement
+   *  is in force is `inquiry`'s one test (`biasAppliedFindings`, its R61, at the finding's project scope as the viewer),
+   *  never re-derived here; one not in force is answered as inquiry spells it (`biasNotInForce`, C-2.19), naming the
+   *  finding, the leg and the statement. A test that cannot be had refuses each application through the same spelling
+   *  (fail closed, R23). A reached finding whose document cannot be read is stated in `unread` (R18). A conclusion's
+   *  applications live on the project's document (`basis-versions` R48), which this module does not read: the caller
+   *  passes them (K2531), `conclusions: [{finding, project, bias_applied}]` as `basis-versions`' `conclusionRecordOf`
+   *  answers them, each answered as a row with `ord` null and `target: "conclusion"`, and judged by the same test at its
+   *  project's scope. A malformed list is `BAD_COMPLETENESS` naming the field, alone. Answers `{refusals, rows,
+   *  unread}`. Writes nothing; never throws. */
+  biasApplicationsOf(prepared, viewer, conclusions = null) {
+    const rows = [], refusals = [], unread = [];
+    if (conclusions != null && (!Array.isArray(conclusions) || conclusions.some((c) => !c || typeof c !== "object"
+        || typeof (c.finding ?? c.inquiry) !== "string" || (c.bias_applied != null && !Array.isArray(c.bias_applied))
+        || flattenBiasApplied(c.bias_applied || []) === null)))
+      return { refusals: [{ ok: false, reason: "BAD_COMPLETENESS", field: "conclusions",
+        detail: "conclusions is a list of {finding, project, bias_applied}, as basis-versions' conclusionRecordOf answers them" }],
+        rows, unread };
+    let findings = [];
+    try {
+      findings = chainsOf((Array.isArray(prepared) ? prepared : []).filter((p) => p && typeof p.id === "string")
+        .map((p) => ({ id: p.id, role: null })), this.#chainIo(viewer), DEPTH_BOUND).findings;
+    } catch (e) { unread.push({ finding: null, why: String(e && e.message || e).slice(0, 160) }); }
+    for (const id of [...new Set(findings.map((f) => f.id))]) {
+      const text = this.#liveText(id);
+      const fm = text === null ? null : parseFrontmatter(text).data;
+      if (!fm || typeof fm !== "object") { unread.push({ finding: id, why: "its document could not be read" }); continue; }
+      const legs = Array.isArray(fm.basis) ? fm.basis : [];
+      const project = typeof fm.project === "string" ? fm.project : null;
+      const applied = legs.map((leg) => readBiasApplied(leg));
+      applied.forEach((list, ord) => list.forEach((a) => rows.push({ finding: id, ord, target: "leg", statement: a.statement ?? null,
+        effect: a.effect ?? null, from: a.from ?? null, to: a.to ?? null })));
+      if (!applied.some((l) => l.length)) continue;
+      let found = null;
+      try { found = this.inquiry.biasAppliedFindings({ legs, project, viewer }); } catch { found = null; }
+      if (!Array.isArray(found))
+        found = applied.flatMap((list, i) => list.map((a, j) => biasNotInForce({ statement: a.statement ?? null,
+          where: `basis[${i}].bias_applied[${j}]`, inForce: null, scope: project ? { type: "project", id: project } : { type: "instance" } })));
+      for (const f of found)
+        if (f && f.code === "BIAS_APPLICATION_NOT_IN_FORCE")
+          refusals.push({ ok: false, reason: f.code, ...f, finding: id });
+    }
+    for (const c of conclusions || []) {
+      const id = c.finding ?? c.inquiry, project = typeof c.project === "string" ? c.project : null;
+      const list = Array.isArray(c.bias_applied) ? c.bias_applied : [];
+      if (!list.length) continue;
+      for (const a of list) rows.push({ finding: id, ord: null, target: "conclusion", statement: a.statement ?? null,
+                                        effect: a.effect ?? null, from: a.from ?? null, to: a.to ?? null });
+      let found = null;
+      try { found = this.inquiry.biasAppliedFindings({ legs: [flattenBiasApplied(list)], project, viewer }); } catch { found = null; }
+      if (!Array.isArray(found))
+        found = list.map((a, j) => biasNotInForce({ statement: a.statement ?? null, where: `basis[0].bias_applied[${j}]`, inForce: null,
+                                                    scope: project ? { type: "project", id: project } : { type: "instance" } }));
+      for (const f of found)
+        if (f && f.code === "BIAS_APPLICATION_NOT_IN_FORCE")
+          refusals.push({ ok: false, reason: f.code, ...f,
+                          where: typeof f.where === "string" ? f.where.replace(/^basis\[0\]/, "conclusion") : f.where, finding: id });
+    }
+    return { refusals, rows, unread };
+  }
+
   /** R3, R7, R10, R14 (K1134 Q6, BOB's decision 15; K1316): the rows the case document writes for what R2, R6 and R14
    *  judged, once the caller is past its last refusal and has read R4's sources and the attribution run. Its arguments
    *  are those answers as the caller holds them: `resting` (R2's captures), `facts` (a map of R2's facts by capture,
@@ -1201,6 +1407,18 @@ export class CaseDisclosures {
       acknowledged_by: who, acknowledged_at: when }));
     return { captures, materials, flags: flagRows, group };
   }
+}
+
+/* R6, R29 (T40; DEC-185 (1); K2483): the label a photo's copy carries, `case-carriage`'s words (its R11), and the key a
+   reader's surface shows it by. */
+/* R30: one cite as a comparable key, a string as itself and `case-grammar` R23's `{kind, ref, ord}` by those fields. */
+const citeKey = (c) => (typeof c === "string" ? c : JSON.stringify([c && c.kind ? c.kind : null, c && c.ref != null ? c.ref : null,
+                                                                    c && c.ord != null ? c.ord : null]));
+
+function photoLabel(marked) {
+  return marked
+    ? { label: OBSCURED_LABEL, marked: true, label_key: "photo.obscured.label" }
+    : { label: PUBLISHED_LABEL, marked: false, label_key: "photo.published.label" };
 }
 
 /* R6 (T39; N806): the publication-copy states (`case-carriage` R16) a document is judged in by what is held, as any

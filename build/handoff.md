@@ -1,35 +1,33 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #145 (`session_01Lzjn9d16Mo4a4RE2Xr16gN`), 2026-10-09 ~01:45 UTC, at Bob's hold (K2411). Read `build/rulings-active.md` first; this BOB's rulings are K2397–K2415.
-
-## The hold (Bob's, K2411)
-
-Bob, meter 77%: "hold development after the current layer is finished", so the capacity goes to finishing the investigation design, folding it into canon and the build plan, and including it in the next tranche. T40's L1 and L2 are merged and closed (K2402, K2415); no layer or job starts until Bob says to resume. BOB's backstop and WATCH are deleted; nothing runs unattended.
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #149 (`session_01EyAmJMZV2GNzEmkDJkdcik`, primary account), 2026-10-10 ~19:10 UTC, for BOB #150, refreshing past 55% of its window (§2, §5.8). Read `build/rulings-active.md` first; this BOB's rulings are K2511–K2555.
 
 ## Open with Bob
 
-- The investigation design, with INVESTIGATION-DESIGN #2 (`session_01WzvEVTg39Jijv4CesGz4Dc`, branch `design/investigation`): batches of the remaining D's (D2–D4, D12 now; then D19, D20, D24, D7; then D8, D21, D22, D17, D18, D16; then D1 restated), then the whole design for his review (K2410). Bob is hesitant to build what may change: N820–N822 stay held until he says the design is settled.
-- When he resumes: ask his weekly meter at the resume.
+- **UX-DESIGN session waits on Bob** (`session_014uT5e8EjnRxmEeUDDg2cYa`, started by BOB #149 on Bob's direction, K2521): it paused its takeover asking Bob to reply "proceed" before publishing the layouts page. Bob's act, told to him; not BOB's to steer (K945). Its outbox Writer line still names the old session; B123–B125 are unread by it.
+- **ACTIONS-DESIGN #2** (`session_01RukQneSYmxg4FvfJ9aXccd`, K2521): page https://claude.ai/artifact/JH9AK7rgmxRNR9QjPL3s5d; twelve decisions (D6, D8–D16, D18, D19) open with Bob there. HANDOFF read to H10.
+- **Pause after T41 (K2456)** stands: T41 runs to its close through §5.7 step 5; T42 does not open until Bob resumes. Bob's meter (primary) 2% at 16:36 UTC (K2521).
+- ROOT #5 (`session_0187SrKsqhqzSTqwDk2hzcXy`, primary) was ~250k at resumption; Bob replaces it at 300k (manifest).
 
-## Open with UX-DESIGN
+## Where things stand (T41 on `tranche/T41`)
 
-- B121 (QUESTION, K2394): DEC-186's two readings; membership was built on the first (earlier handles reserved for their member, K2413). If U answers otherwise, membership R124/R16 changes by an entry; publication R76 (L8) before its START.
-- B119, B120: no answer needed.
-
-## Where things stand
-
-- **T40 open, HELD** on `tranche/T40` (plan `build/plan/current.md`, Status line HELD). Done: L1 (record-grammar, pdf-reader, doc-clean T40-2a), L2 (membership with R127 `joinedParticipants`, credentials, promotion's stamp 1.67.0). Remaining, unchanged: L4 T40-4a (reading-pipeline tests only), L6 (T40-5–T40-11), L8 (T40-12–T40-16b), L9 T40-9a, L11 (T40-17–T40-26). Requirement text for L6, L8, L9, L11 is applied (K2400); STARTs for them are not yet written (T39's are the pattern; L11 STARTs must require explicit tests for control-plane R69, R70 and notice-producers R16).
-- **Reds carried by name:** answers `standing.test.mjs`:122, :273 → T40-9; op-declarations `t33` R19 and `t35`:196 → T40-23; reading-pipeline's two agenda pins → T40-4a; rule 4's list otherwise.
-- **Investigation drafts (P18), current through H19:** `plan/draft-T41-investigation.md` (adopted text, K2405; D13/D14/D52–D54 folded, K2409) and `plan/draft-canon-investigation.md` (not to be put to Bob until his whole-design review, K2410). Keep both current from each HANDOFF entry (H20 onward), with one K per fold.
-- `next.md`: N748, N751, N780, N794, N796, N815, N817, N820–N822 (N820–N822 held, K2410).
+- **L1–L8 merged and closed** (L6 K2522, L7 K2526, L8 K2551). Plane bundle 14.8 MiB at L8's close (K2547's watch: report to Bob past 32 MiB; N840).
+- **L9 running, 7 jobs** (addresses in the plan's Jobs line; STARTs `build/plan/starts-T41/`):
+  - COMPLETE, read, not yet merged: filing-templates (J1; uses action-grammar), filings (J1; uses actions, filing-templates), consequences (J1; uses conformance), action-plans (J1; uses conformance, actions, filings).
+  - Working: conformance, action-grammar (B2 then B3: K2553's `facts.stages` shape and C-94.5 re-word), actions (B2, then B3 CHANGE to K2553's shape; R70/R71 wire when action-grammar merges: send it a CHANGE then).
+  - Merge order: `modules.json` order (conformance, consequences, action-grammar, actions, filings, filing-templates?, action-plans as their uses require: each after its unmerged same-layer providers). Strike marks; strike nothing a job does not name.
+- **L10:** monitoring (T41-49a, added K2524; START written) and scheduler (START carries K2534, K2543's boot re-point first, rule 4 (20)). Merge order monitoring, scheduler.
+- **L11:** STARTs carry many routed items (K2514, K2525, K2529, K2532, K2538, K2544, K2554). Before L11's START: fill each `TO FIX AT L11 START` line (op-grades, answer-envelope, plane, op-declarations, control-plane, affordances: investigation's ops, review's `approvalruleset`/`caseapprove`, ai-runs R74 `openMany`) from the merged code, and re-take each START's marked ids.
+- Rule 4 (accepted reds) runs to item 20; `next.md` holds N827–N840.
 
 ## Next steps, in order
 
-1. While held: when INVESTIGATION-DESIGN says in HANDOFF that Bob is content with the whole design (D1–D63, H20–H34 and after), fold H20 onward into the two drafts in one pass (a worker applies, BOB reviews; K2416), commit, answer with the K. Spend nothing else.
-2. When Bob says to resume: take over or wake (§5.1), arm backstop and WATCH, ask his meter, write L4's and L6's STARTs and start L4 (T40-4a) then L6 in order; run the rest of T40; close it by §5.7 (PR `tranche/T40` → `main` merged with the GitHub merge tool, authority Bob's standing direction in the product's `CLAUDE.md`, K1177; standing list `mcp__github__merge_pull_request`; no refusal since K2273).
-3. Plan T41 with the investigation design once Bob says it is settled (N820–N822, the canon approved first).
+1. Take over (§5.1): Status line; delete BOB #149's backstop and any routine into it; archive BOB #149 once idle and write its `BOB-final` row under T41; move `WATCH #149` (`trig_01FzksbFW2zXRj5pdK7R6C1b`) out: delete it and create `WATCH #150`.
+2. Run L9 to merge and close (§5.6: regenerate in K1540's order, checks, archive, rows, plane size), then L10, then L11.
+3. Close T41 by §5.7 steps 1–5: channel MERGE U147 (PR #21, design stream) merged into `main` first; PR `tranche/T41` → `main` with the GitHub merge tool (authority: Bob's standing direction in the product `CLAUDE.md`, K1177; standing list `mcp__github__merge_pull_request`; no refusal since K2273); at the close move `build/channels.md`'s BOB row to `primary` (K1428). Then stop (K2456): report to Bob, ask his meter, open nothing.
 
 ## Process notes
 
-- After a container restart: `npm ci --ignore-scripts` in agent-runner, `npm ci` in sheet-worker, file-scanner and bio-plane before `fleetbundles` (agent-worker has no lockfile; it needs none).
-- A rename of a module's test fixture needs that module's `tests` entry in `modules.json` swapped by BOB at the merge (K2415).
+- The Writer line keeps the registry's `secondary` account until the close (K2511).
+- Routine creation is rate-limited (~8 in a burst): ring the rest a minute later (K1825).
+- When a job is COMPLETE before a CHANGE reaches it, it re-completes; merge only on the latest COMPLETE with `mail check` showing nothing owed.

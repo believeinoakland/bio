@@ -1,5 +1,8 @@
 /* action-grammar — the action document's arms, readers and rows (requirements: `build/requirements/action-grammar.md`,
- * R1, R3, R7–R10, R12; K6, K64).
+ * R1, R3, R7–R10, R12–R14; K6, K64).
+ * Since T41 layer 9 (T41-46a; H30 (1), K2505): R13's `seeks` (`seeksOf`, `seeksFindings`, C-117.29 `SEEKS_REFUSED`) and the
+ * outcome `none_exists` (C-94.5's translation names it); R14's C-32.21 `MACHINE_CANNOT_STATE_SEEKS`, `actions`' fence (K2561);
+ * each awaiting T42's stamp.
  *
  * Copied from `actions/checks.mjs` in T19 layer 9 with its comments (that file is deleted since, K914; `actions` reads each
  * of these from here): the kinds this instance accepts (`actionKinds`, `kindReadsAsWritten`, `PRODUCT_KINDS`), the records law
@@ -126,6 +129,87 @@ export function recordsLawOf(fm, author = null) {
              says: "MACHINE-STATED: a machine credential wrote this law before only a member could state one. It "
                  + "is read as written and is not a member's statement." };
   return { state: "stated", law, ...(author ? { by: author } : {}), says: "Stated by a member." };
+}
+
+/* ---------------------------------------------------------------------------------------------- R13: what a records request seeks */
+
+/** R13 (T41; H30 (1), intent R33, K2505): the most items one records request's `seeks` states, and the longest part. */
+export const SEEKS_MAX = 12;
+export const SEEKS_PART_MAX = 200;
+const SEEKS_PARTS = ["progression", "entity", "stage"];
+
+/* An item is well formed when it is exactly `{progression, entity, stage}`, each a non-empty string of at most
+   SEEKS_PART_MAX characters; answers why not, or null. */
+function seeksItemFault(item) {
+  if (!item || typeof item !== "object" || Array.isArray(item)) return "is not a {progression, entity, stage} entry";
+  const extra = Object.keys(item).filter((k) => !SEEKS_PARTS.includes(k));
+  if (extra.length) return `carries ${extra.map((k) => k.slice(0, 40)).join(", ")}: an entry names only its progression, entity and stage`;
+  for (const k of SEEKS_PARTS) {
+    const v = item[k];
+    if (typeof v !== "string" || !v.trim() || v.length > SEEKS_PART_MAX)
+      return `${k} is not a non-empty string of at most ${SEEKS_PART_MAX} characters`;
+  }
+  return null;
+}
+const seeksKey = (item) => JSON.stringify(SEEKS_PARTS.map((k) => item[k]));
+
+/** R13: the stages of progression instances a `records_request` asks the records for, as its `seeks` states them: each
+ *  well-formed item once, in order, as `{progression, entity, stage}`; `[]` when absent, on another kind, or when `seeks`
+ *  is not a list. Pure; never throws. */
+export function seeksOf(fm) {
+  if (!fm || typeof fm !== "object" || fm.action_kind !== "records_request" || !Array.isArray(fm.seeks)) return [];
+  const seen = new Set();
+  const out = [];
+  for (const item of fm.seeks) {
+    if (seeksItemFault(item)) continue;
+    const key = seeksKey(item);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ progression: item.progression, entity: item.entity, stage: item.stage });
+  }
+  return out;
+}
+
+/** R13: C-117.29 `SEEKS_REFUSED`, the one site that mints it. Pushes one finding for each fault, each carrying the row's
+ *  check and code: `seeks` stated on another kind than `records_request` (and nothing more is asked of it); `seeks` not a
+ *  list of 1 to SEEKS_MAX items; each malformed item; each item repeating an earlier one; each item whose stage `facts`
+ *  says its progression does not declare. `facts.stages` is the caller's reading of `progressions` (`actions` R70):
+ *  `{[progression]: [stage key, …]}` for a progression it holds, `null` for one it does not; a progression it names no
+ *  entry for is not judged here. Absent `seeks` (undefined or null) pushes nothing. It reads no record; never throws. */
+export function seeksFindings(fm, facts, findings) {
+  if (!fm || typeof fm !== "object" || fm.seeks === undefined || fm.seeks === null) return;
+  const row = ACTION_CATALOGUE_CHECKS.SEEKS_REFUSED;
+  const REPAIRS = ["name each stage sought as {progression, entity, stage}, once each, at most twelve, each stage one its progression declares"];
+  /* DEC-49 REGION is-seeks */
+  const push = (message, repairs = REPAIRS) => findings.push(f(row.check, "error", message, repairs, "SEEKS_REFUSED"));
+  if (fm.action_kind !== "records_request") {
+    push(`seeks is stated on a '${String(fm.action_kind).slice(0, 40)}' action: only a records_request names the stages it `
+      + "asks the records for (R13)", ["remove seeks, or make the kind records_request"]);
+    return;
+  }
+  if (!Array.isArray(fm.seeks) || !fm.seeks.length) {
+    push(`seeks is not a list of 1 to ${SEEKS_MAX} {progression, entity, stage} entries (R13)`);
+    return;
+  }
+  if (fm.seeks.length > SEEKS_MAX)
+    push(`seeks holds ${fm.seeks.length} entries; at most ${SEEKS_MAX} (R13)`);
+  const stages = facts && typeof facts === "object" && facts.stages && typeof facts.stages === "object" ? facts.stages : null;
+  const seen = new Set();
+  fm.seeks.forEach((item, i) => {
+    const fault = seeksItemFault(item);
+    if (fault) { push(`seeks[${i}] ${fault} (R13)`); return; }
+    const key = seeksKey(item);
+    if (seen.has(key)) { push(`seeks[${i}] repeats an earlier entry: each stage sought is named once (R13)`); return; }
+    seen.add(key);
+    if (!stages || !Object.prototype.hasOwnProperty.call(stages, item.progression)) return;
+    const declared = stages[item.progression];
+    if (declared === null)
+      push(`seeks[${i}].progression '${item.progression.slice(0, 40)}' is not a progression this record holds (R13)`);
+    else if (!Array.isArray(declared) || !declared.includes(item.stage))
+      push(`seeks[${i}].stage '${item.stage.slice(0, 40)}' is not a stage progression '${item.progression.slice(0, 40)}' `
+        + "declares (R13)");
+  });
+  /* END DEC-49 REGION is-seeks */
 }
 
 /* ---------------------------------------------------------------------------------------------- R9: the counterparty */
@@ -1011,8 +1095,10 @@ export const LIFECYCLE_CHECKS = {
   OUTCOME_NOT_IN_VOCABULARY: {
     check: 'C-94.5',
     where: 'src/actions/index.mjs actionCorrespond > is-lifecycle-grammar',
-    translation: 'An outcome is one of granted, denied, partial, reversed, affirmed, or none_stated when the body '
-      + 'stated none.',
+    /* R13 (T41): the vocabulary gained none_exists, so the sentence naming it does; a changed translation, awaiting T42's
+       stamp. */
+    translation: 'An outcome is one of granted, denied, partial, reversed, affirmed, none_exists when the body says no '
+      + 'responsive record exists, or none_stated when the body stated none.',
   },
   DECISION_WITHOUT_OUTCOME: {
     check: 'C-94.6',
@@ -1129,6 +1215,17 @@ export const RECORDS_LAW_FENCE_CHECKS = {
       + 'credential that asked here is an automated one: it can write the request as a records request that '
       + 'names no law, and it can propose the law for a member to consider, but it cannot state the law, and '
       + 'cannot change or remove one. Sign in to state the law yourself.',
+  },
+  /* R14 (T41; K2561): WHO STATES WHAT A RECORDS REQUEST SEEKS (R13's `seeks`), `actions`' fence (its R72), beside C-32.20.
+     A machine credential may propose the stages sought (`actions` R73); it may not state or change them. New in T41
+     layer 9; awaiting T42's stamp. */
+  MACHINE_CANNOT_STATE_SEEKS: {
+    check: 'C-32.21',
+    where: 'src/actions/index.mjs #seeksFence > is-machine-state-seeks',
+    translation: 'Which stages a records request asks the records for is a statement a member makes and answers for. '
+      + 'The credential that asked here is an automated one, or no member is named behind it: it can propose the stages '
+      + 'for a member to consider, but it cannot state or change what the request seeks. Nothing was written. Sign in to '
+      + 'state it yourself.',
   },
 };
 
@@ -1365,5 +1462,14 @@ export const ACTION_CATALOGUE_CHECKS = {
     where: 'src/actions/index.mjs #proceedingRefusal > is-proceeding-kind',
     translation: 'An action belongs to a proceeding, such as a case before a court or a board, and the entity named is '
       + 'of another kind. Nothing was written. Name the proceeding itself.',
+  },
+  /* R13 (T41; H30 (1), K2505): what a records request seeks. Minted here, by `seeksFindings` alone; `actions` refuses its
+     write with it (its R70). New in T41 layer 9; awaiting T42's stamp. */
+  SEEKS_REFUSED: {
+    check: 'C-117.29',
+    where: 'src/action-grammar/checks.mjs seeksFindings > is-seeks',
+    translation: 'A records request may name the stages it asks the records for: one to twelve different entries, each '
+      + 'naming a progression, an entity and a stage in at most 200 characters each, and each stage one its progression '
+      + 'declares. Only a records request names them. This write named them otherwise, so nothing was written.',
   },
 };

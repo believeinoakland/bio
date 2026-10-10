@@ -122,6 +122,32 @@ probe("VERSION_FROZEN", async () => {
   return promote(id, inquiry(id, [...refs([INFO1]), ...V1("the first reading of the ledger"), ...VLEG(INFO1, "cuts_against")]), { base: a.bundleSha });
 });
 
+/* This module's own `PROMOTION_CHECKS` (C-86.5–.15, C-1.1, C-2.1; R7, R9, R11–R15, R17, R56), each met through the whole
+   write path as `promote.test.mjs` meets it at the module (PROMOTION #39, T41: the suite named only four of the tables). */
+const raw = (bundleId, files, extra = {}) => call("/promote", { ...(bundleId ? { bundleId } : {}), base: null,
+  snapKey: `k${++seq}`, author: "member:ruth", meta: {}, files, ...extra });
+const INFO2 = "INFO-2026-0123-w";
+const held2 = await promote(INFO2, info(INFO2));
+assert.equal(held2.ok, true, JSON.stringify(held2));
+probe("PROMOTE_SNAP_KEY_UNSTATED", () => raw("INFO-2026-0124-x", [{ path: "bundle.md", text: info("INFO-2026-0124-x") }], { snapKey: " " }));
+probe("PROMOTED_FILE_PATH_UNSTATED", () => raw("INFO-2026-0124-x", [{ text: "x" }]));
+probe("PROMOTED_FILE_CONTENT_UNSTATED", () => raw("INFO-2026-0124-x", [{ path: "bundle.md" }]));
+probe("PROMOTED_FILE_BYTES_UNSTATED", () => raw("INFO-2026-0124-x",
+  [{ path: "bundle.md", text: info("INFO-2026-0124-x") }, { path: "b", blobSha: "a".repeat(64) }]));
+probe("BUNDLE_MD_UNREADABLE", () => promote(INFO2, "no front matter", { base: held2.bundleSha }));
+probe("PROMOTED_TYPE_UNSTATED", () => promote("INFO-2026-0124-x", info("INFO-2026-0124-x").replace("object_type: information\n", "")));
+probe("PROMOTED_FIELD_UNSTATED", () => promote("INFO-2026-0124-x", info("INFO-2026-0124-x").replace("current_state: collected\n", "")));
+probe("REVISION_REDATES_CREATION", () => promote(INFO2, info(INFO2).replace(`created: "${NOW}"`, 'created: "2026-07-02T00:00:00Z"'),
+  { base: held2.bundleSha }));
+probe("REVISION_REGROUPS_BUNDLE", () => promote(INFO2, info(INFO2).replace("group: test-group", "group: another-group"),
+  { base: held2.bundleSha }));
+probe("BUNDLE_ID_DISAGREES", () => promote("INFO-2026-0124-x", info("INFO-2026-0125-y")));
+probe("ENVELOPE_DATES_DISAGREE", () => promote("INFO-2026-0124-x", info("INFO-2026-0124-x"),
+  { meta: { last_updated: "2026-07-02T00:00:00Z" } }));
+probe("STATE_MOVE_UNDECLARED", () => promote(INFO2, info(INFO2).replace("current_state: collected", "current_state: nonsense"),
+  { base: held2.bundleSha }));
+probe("PROJECT_STAGE_COMPUTED", () => promote(null, common(null, "project", "project@1", "Staged", "matured").concat("---", "").join("\n")));
+
 /* The answer each probe must meet: its reason, or the envelope that relays it (with the row's check among findings). */
 const ENVELOPE = { SELF_BASIS: null, BASIS_CYCLE: null, VERSION_LEG_UNRESOLVED: null, VERSION_FROZEN: null };
 
@@ -139,9 +165,10 @@ const RELAYED = [
 
 test("R18: every refusal sited at the promote write is enforced there — each row is met by name", async () => {
   /* This module's own rows sited at this write (C-86, C-97 whole since T18; the act-shape, machine-fence, C-59, C-26.12
-     and C-64.1 rows since T19), read from its tables. */
+     and C-64.1 rows since T19; `PROMOTION_CHECKS`' thirteen since T41), read from its tables. */
   const own = { PROMOTED_TYPE_CHECKS: P.PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS: P.PROJECT_CREATION_VISIBILITY_CHECKS,
-                PROMOTION_ROW_CHECKS: P.PROMOTION_ROW_CHECKS, PROJECT_MINT_CHECKS: P.PROJECT_MINT_CHECKS };
+                PROMOTION_ROW_CHECKS: P.PROMOTION_ROW_CHECKS, PROJECT_MINT_CHECKS: P.PROJECT_MINT_CHECKS,
+                PROMOTION_CHECKS: P.PROMOTION_CHECKS };
   const rows = [];
   for (const [family, table] of Object.entries(own))
     for (const [code, row] of Object.entries(table))
@@ -153,7 +180,7 @@ test("R18: every refusal sited at the promote write is enforced there — each r
                  ["VERSION_FROZEN", "C-25.11", "basis-versions"], ["VERSION_LEG_UNRESOLVED", "C-25.16", "basis-versions"],
                  ["SURFACED_BY_REWRITTEN", "C-66.5", "inquiry"]];
   for (const [code, check, family] of LATER) rows.push({ family, code, check, where: "" });
-  assert.equal(rows.length, 21, `the rows sited at the promote write: ${rows.length}`);
+  assert.equal(rows.length, 34, `the rows sited at the promote write: ${rows.length}`);
   /* A code is probed once, should two of these tables ever hold it (C-26.12 and C-64.1 were held twice in T19). */
   const probed = new Set();
   for (const row of rows) {

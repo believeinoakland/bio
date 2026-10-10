@@ -49,7 +49,7 @@ function planeStub(cfg = {}) {
     airun: () => ok({ found: true, session: {
       id: "RUN-P", mode: cfg.mode ?? "plan", status: S.status, plan: cfg.noPlan ? null : PLAN_ID,
       context: { type: "project", id: PROJECT, questions: [] },
-      principal: { plane: "member:ruth", claude: "member:ruth", ref: null, skill: "investigative-session@1" },
+      principal: { plane: "member:ruth", claude: "member:ruth", ref: "member:ruth", skill: "investigative-session@1" },
       state: S.state, budget: Object.entries(budget).map(([bound, b]) => ({ bound, ...b })) } }),
     airunlog: () => ok({ found: true, entries: [], truncated: false }),
     plan: () => ok({ ...PLAN_DOC, proposals: S.proposals.map((p) => ({ summary: p.summary, category: p.category, subjects: p.subjects })) }),

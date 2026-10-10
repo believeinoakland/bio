@@ -40,6 +40,12 @@ export const ANSWERS_CHECKS = Object.freeze({
   STANDING_NEEDS_SEARCH: row(13, "standing.mjs standingQuestionSet", "is-standing-search",
     "A standing question keeps one search: a saved search, or a find in a document, a set or a project. Give one of "
     + "these, not both. Nothing was written."),
+  ANSWER_VERDICT_WORD: row(14, "sentences.mjs checkSentences", "is-no-verdict-word",
+    "This sentence gave a verdict, a likelihood or a rating in Civicsmith's own words, so it is not shown. Civicsmith "
+    + "says what the record holds and never judges it."),
+  ANSWER_CAUSE_UNESTABLISHED: row(15, "sentences.mjs checkSentences", "is-cause-established",
+    "This sentence stated a cause that no finding it quotes establishes, so it is not shown: the cause is not "
+    + "established. A cause a body gave is shown only in its own quoted words."),
 });
 
 /** The row's fields beside a refusal: `{ok: false, reason, code, check, translation, detail, ...extra}`. */

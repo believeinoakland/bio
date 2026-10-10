@@ -146,10 +146,13 @@ test("R31 a read moneyOf cuts at its bound makes the instance undetermined, neve
   assert.equal(row(r, "ENT-1").amount.total, null);
 });
 
-test("R31 R19 R5 the total is derived on read and never stored: the condition holds the filter only, a read writes nothing, and a new fact moves the answer; every reader's counts are the same, a fact the viewer may not see listed as null", async () => {
+test("R31 R19 R5 the total is derived on read and never stored: the condition holds the filter only, a read writes nothing, and a new fact moves the answer; every reader's counts are the same, a fact the viewer may not see listed as null (D54: an administrator sees a hidden project's fact only when invited or joined)", async () => {
   const w = await measured();
   w.fact("ENT-1", "10");
+  /* a hidden project alice, an administrator, is invited to (D54: neither invited nor joined, she would see it at
+     existence only, and could not write a fact sourced in it) */
   const hidden = w.project("Sealed ledger", "carol");
+  w.join(hidden, "alice", "invited");
   const sealed = w.fact("ENT-1", "15", {}, { bundle: hidden });
   w.join(w.P, "dave");
   const r = w.set(condOf({ max: "20", currency: "USD" }, { relation: null }));
@@ -173,6 +176,14 @@ test("R31 R19 R5 the total is derived on read and never stored: the condition ho
   assert.ok(seen("alice").includes(third));
   assert.deepEqual(seen("bob").filter((x) => x === null).length, 1);
   assert.ok(!seen("bob").includes(third));
+  /* D54: the same administrator, neither invited nor joined, sees the hidden project's fact as null, as bob does; the
+     counts are unchanged */
+  w.st.sql.exec(`DELETE FROM project_participants WHERE project_id=? AND member_id='alice'`, hidden);
+  assert.equal(seen("alice").filter((x) => x === null).length, 1, "an administrator not added may not see it");
+  assert.equal(w.i.progress({ project: w.P, viewer: V("alice") }).meeting, w.i.progress({ project: w.P, viewer: V("bob") }).meeting);
+  /* negative control: the project made discoverable, she sees it again (D54 is hidden projects only) */
+  assert.equal(w.membership.projectVisibilitySet({ projectId: hidden, setting: "discoverable", by: "carol", viewer: V("carol") }).ok, true);
+  assert.ok(seen("alice").includes(third), "a discoverable project: unchanged");
 });
 
 test("R2 R31 the amount filter's shape: at least one bound, each an exact decimal, min no higher than max, a currency, money's own kinds and phases and period fields; anything else is CONDITION_UNREADABLE and writes nothing; a set filter reads back unchanged, a raw promotion is held to it", async () => {

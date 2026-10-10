@@ -144,14 +144,14 @@ test("R55: case-disclosures R6's document refusals reach op=publish in R6's orde
   assert.equal(low.ca.publishCase(args(LP, [Q])).reason, "BELOW_PROJECT_STRENGTH");
 });
 
-test("R14: a member document carried as its cleaned copy is stated so — its materials: row included: false with obscured: {copy, label}, the copy's SHA-256 and case-carriage's COPY_CLEANED_LABEL, its sha the original's — and the document stores it unsigned; a document fetched by this copy (public) or carrying no details (clean) travels whole with obscured null", () => {
+test("R14: a member document carried as its cleaned copy is stated so — its materials: row included: false with obscured: {copy, label, marked} (case-grammar R12 since T41), the copy's SHA-256 and case-carriage's COPY_CLEANED_LABEL, its sha the original's — and the document stores it unsigned; a document fetched by this copy (public) or carrying no details (clean) travels whole with obscured null", () => {
   for (const other of ["public", "clean"]) {
     const { w, P, shas } = setup({ [DOC]: "copy", [DOC2]: other });
     const r = w.ca.publishCase(args(P, [Q, Q2]));
     assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
     const rows = rowsOf(w, r);
     assert.deepEqual([rows[DOC].sha, rows[DOC].included, rows[DOC].obscured],
-      [shas[DOC], false, { copy: COPY, label: COPY_CLEANED_LABEL }]);
+      [shas[DOC], false, { copy: COPY, label: COPY_CLEANED_LABEL, marked: true }]);
     assert.deepEqual([rows[DOC2].sha, rows[DOC2].included, rows[DOC2].obscured], [shas[DOC2], true, null], other);
     assert.equal(w.row(`SELECT sig_armored FROM case_documents WHERE case_id=?`, r.caseId).sig_armored, null, "stored unsigned");
   }

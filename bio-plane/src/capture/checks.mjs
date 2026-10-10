@@ -21,7 +21,9 @@
  * member's signed account (R69), each minted at the one site its `where` names.
  *
  * C-118.7 is new with DEC-88 (R32: a resolve records the member's reason), C-118.8 and C-118.9 with DEC-97 (R79, R81:
- * setting held material aside and bringing it back); C-118.3 and C-85's sentences gained DEC-108's (R52) (K1019). */
+ * setting held material aside and bringing it back); C-118.3 and C-85's sentences gained DEC-108's (R52) (K1019).
+ *
+ * C-118.10 is new with R86 (T41-8a; K2425 (4)): a member's upload names where the file came from. */
 
 const at = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
 const inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
@@ -68,6 +70,13 @@ export const CAPTURE_CHECKS = Object.freeze({
     check: 'C-118.9', where: inIndex("#heldActRefusal", "is-held-act-reasoned"),
     translation: 'Setting held material aside, or bringing it back, records why, in your own words, and no reason was '
                + 'given, or it is longer than 2,000 characters. Write one. Nothing was written.',
+  }),
+  /* R86 (T41-8a; K2425 (4), K2434): the next free row of C-118, awaiting T42's stamp (plan rule 4 (2)). Its words are
+     R86's Suggestion's meaning until the UX stream gives its own. */
+  UPLOAD_NO_STATEMENT: Object.freeze({
+    check: 'C-118.10', where: inIndex("uploadCapture", "is-upload-stated"),
+    translation: 'A file brought into the record records where it came from, in your own words, and none was given, or '
+               + 'it is longer than 2,000 characters. Write it. Nothing was written.',
   }),
 });
 

@@ -1,6 +1,7 @@
-/* case-authoring's two tables (requirements: `build/requirements/case-authoring.md`, R20, R28, R39): the statement's
- * acknowledgements, moved from `schema.mjs` unchanged (K4), and the drafts of an edition's statement of what changed
- * (R39, T23). Every other table this module writes is `publication`'s, through its R21. */
+/* case-authoring's tables (requirements: `build/requirements/case-authoring.md`, R20, R28, R39, R64): the statement's
+ * acknowledgements, moved from `schema.mjs` unchanged (K4), the drafts of an edition's statement of what changed (R39,
+ * T23), and the system's drafts of a case's account with the members' acceptances of them (R64, T41). Every other table
+ * this module writes is `publication`'s, through its R21. */
 
 export const CASE_AUTHORING_SCHEMA = `
 -- D-150 / BIO_Publication_v0_1.md section 3 rule 11: THE EXCLUSION STATEMENT'S ACKNOWLEDGEMENTS.
@@ -45,11 +46,47 @@ CREATE TABLE IF NOT EXISTS what_changed_drafts (
   at          TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS what_changed_drafts_case ON what_changed_drafts(case_id, seq);
+
+-- R64 (D56): THE SYSTEM'S DRAFTS OF A CASE'S ACCOUNT. One row per proposal, append-only as what_changed_drafts:
+-- a draft is never the account; a member writes the account from it, or from nothing, at op=publish (R63), and
+-- the published account is hers. kind is run-rules R25's draft kind: case_account (text, in one framing) or
+-- account_check (flags, JSON [{ord, text, cites}], the system's flags on a member's account, which R30 asks
+-- her to answer). run is the AI run it came from; label is proposalLabel(proposed_by, "case_account") as JSON.
+CREATE TABLE IF NOT EXISTS account_drafts (
+  seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+  draft_id    TEXT NOT NULL UNIQUE,
+  case_id     TEXT NOT NULL,
+  kind        TEXT NOT NULL CHECK (kind IN ('case_account','account_check')),
+  framing     TEXT,
+  text        TEXT,
+  flags       TEXT,
+  run         TEXT NOT NULL,
+  proposed_by TEXT,
+  label       TEXT NOT NULL,
+  at          TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS account_drafts_case ON account_drafts(case_id, seq);
+
+-- R64 (record-grammar R52): A MEMBER'S ACCEPTANCE OF AN ACCOUNT DRAFT, the one shape every accepting act
+-- records (record, JSON {proposal, form, by, at, kind}), written by the op=publish that prepared the document
+-- naming the draft, so how often a draft is taken up edited or replaced is one count group-wide. Append-only.
+CREATE TABLE IF NOT EXISTS account_acceptances (
+  seq       INTEGER PRIMARY KEY AUTOINCREMENT,
+  case_id   TEXT NOT NULL,
+  edition   INTEGER NOT NULL,
+  draft_id  TEXT NOT NULL,
+  form      TEXT NOT NULL,
+  record    TEXT NOT NULL,
+  at        TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS account_acceptances_case ON account_acceptances(case_id, edition, seq);
 `;
 
-/** R28: declared whole to record-core's purge (K23): a whole-store purge clears them, and no bundle keys them. */
+/** R28 (and R64's two tables): declared whole to record-core's purge (K23): a whole-store purge clears them, and no bundle keys them. */
 export const CASE_AUTHORING_TABLES = Object.freeze([{ name: "statement_acknowledgements", keys: [] },
-                                                    { name: "what_changed_drafts", keys: [] }]);
+                                                    { name: "what_changed_drafts", keys: [] },
+                                                    { name: "account_drafts", keys: [] },
+                                                    { name: "account_acceptances", keys: [] }]);
 
 /** Creates the table where absent, and adds R19's `reason` column (DEC-88) to a table created before it, never filling
  *  it: an acknowledgement recorded before the acknowledger's words were asked for carries none (K1050). Idempotent. */

@@ -1,4 +1,4 @@
-/* observation-log — the record of looking (requirements: `build/requirements/observation-log.md`, R1–R35; map:
+/* observation-log — the record of looking (requirements: `build/requirements/observation-log.md`, R1–R37; map:
  * `build/extraction/observation-log.md`). Extracted from the legacy store (the append site `#observe` and
  * `#observationReferent`, the writers `#observeExtraction`, `#observeIndexed`, `#observeReaderRun`,
  * `#observeResolutionAttempt`, `#observeConnectionDerivation` and the receipt's look, the missing-row rule, the
@@ -16,7 +16,7 @@
  * itself. */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { extractionOf, CAPTURE_TEXT_UNIT_CAP, CAPTURE_TEXT_CAPTURE_BOUND, CAPTURE_TEXT_CAPTURE_UNIT_BOUND }
   from "../extraction/index.mjs";
@@ -77,10 +77,13 @@ export const LEAD_LIST_NOTE =
   + "(NEVER_LOOKED when nobody has followed it). Two leads with the same words are two leads and both are "
   + "listed. A lead is never evidence";
 
-/* R13: the authority kinds whose bundles a later module's resolver answers (N39, K71). */
-export const RESOLVED_AUTHORITY_KINDS = Object.freeze(["sweep", "run"]);
+/* R13: the authority kinds whose bundles a later module's resolver answers (N39, K71; `step` T41-11, `steps` R18). */
+export const RESOLVED_AUTHORITY_KINDS = Object.freeze(["sweep", "run", "step"]);
 /* Which module holds each resolved kind's authority (R13), the name its one registration is held under. */
-const AUTHORITY_HOLDERS = Object.freeze({ sweep: "capture-requests", run: "ai-runs" });
+const AUTHORITY_HOLDERS = Object.freeze({ sweep: "capture-requests", run: "ai-runs", step: "steps" });
+
+/* R37: the states a later `PRESENT` answers, and the one that answers them. */
+const UNANSWERED_STATES = Object.freeze(["LOOKED_ABSENT", "LOOKED_INDETERMINATE"]);
 
 /** The name this module registers its listeners under (provenance R47, extraction R24), which is how a caller finds
  *  this module's outcome among a notice's listeners. */
@@ -129,6 +132,7 @@ export class ObservationLog {
     this.membership = membership;
     this.now = typeof now === "function" ? now : () => Date.now();
     this.resolvers = new Map();
+    this.answeredListeners = [];
     this.listening = false;
     this.indexListening = false;
     this.captureListening = false;
@@ -178,6 +182,16 @@ export class ObservationLog {
     const bad = checkObservation(row, CONDITION_KINDS, this.#observationReferent(row));
     if (bad) return bad;
     const when = at || stampInstant("second", this.now());
+    /* R37: with a listener registered, a `PRESENT` at a subject is appended and its earlier unanswered looks told in
+       ONE transaction: a listener's throw rolls back the row and its own writes and reaches the writer. With none, or
+       any other state, the append is the bare insert it always was. */
+    if (row.state === "PRESENT" && this.answeredListeners.length && row.subject != null)
+      return this.record.transact(() => { this.#insert(row, when, terminal); this.#tellAnswered(row); return null; });
+    this.#insert(row, when, terminal);
+    return null;
+  }
+
+  #insert(row, when, terminal) {
     /* `seq` is assigned by SQLite as the rowid, which is store-wide and monotonic (R4). It is not reused, because
        nothing deletes a row: the only DELETE is the whole-store purge, after which the table is empty. */
     this.sql.exec(
@@ -201,7 +215,39 @@ export class ObservationLog {
       row.result_kind == null || row.result_kind === "" ? null : String(row.result_kind),
       row.result_ref == null || row.result_ref === "" ? null : String(row.result_ref),
       row.detail == null ? null : String(row.detail));
-    return null;
+  }
+
+  /** R37 (H39): the row just appended is `PRESENT`; each earlier row at the same level and subject (`subject_kind`,
+   *  `subject`, as R9 and R10 key one) that stands `LOOKED_ABSENT` or `LOOKED_INDETERMINATE`, meaning no `PRESENT`
+   *  has answered it since, is handed to every registered listener as `{earlier, observation}`, oldest first. Nothing
+   *  here changes either row (R22). One index walk on `observation_log_frontier`. */
+  #tellAnswered(row) {
+    const cols = `seq, at, actor_class, actor, authority_kind, authority, level, subject_kind, subject, state, governed,
+                  condition, bound, terminal, result_kind, result_ref, detail`;
+    const key = [String(row.level || "document"), String(row.subject_kind || "unstated"), String(row.subject)];
+    const observation = this.#one(
+      `SELECT ${cols} FROM observation_log WHERE level = ? AND subject_kind = ? AND subject = ? ORDER BY seq DESC LIMIT 1`,
+      ...key);
+    const answered = this.#one(
+      `SELECT MAX(seq) AS s FROM observation_log WHERE level = ? AND subject_kind = ? AND subject = ? AND seq < ?
+          AND state = 'PRESENT'`, ...key, observation.seq);
+    const earlier = this.#rows(
+      `SELECT ${cols} FROM observation_log WHERE level = ? AND subject_kind = ? AND subject = ? AND seq > ? AND seq < ?
+          AND state IN (${UNANSWERED_STATES.map(() => "?").join(", ")}) ORDER BY seq`,
+      ...key, answered && answered.s != null ? Number(answered.s) : 0, observation.seq, ...UNANSWERED_STATES);
+    for (const e of earlier)
+      for (const l of this.answeredListeners) l.fn({ earlier: { ...e }, observation: { ...observation } });
+  }
+
+  /** R37 (H39): `onLookAnswered(module, fn)` registers `fn` once per module, through membership's `listenerRefusal`
+   *  (its R81); listeners run in `MODULE_ORDER` (its R83), then by name. Answers `{ok: true, module}` or the refusal. */
+  onLookAnswered(module, fn) {
+    const refused = listenerRefusal(this.answeredListeners.map((l) => ({ module: l.module })), module, fn);
+    if (refused) return refused;
+    this.answeredListeners.push({ module, fn });
+    const rank = (m) => { const i = MODULE_ORDER.indexOf(m); return i < 0 ? MODULE_ORDER.length : i; };
+    this.answeredListeners.sort((a, b) => rank(a.module) - rank(b.module) || (a.module < b.module ? -1 : a.module > b.module ? 1 : 0));
+    return { ok: true, module };
   }
 
   /** REC-100 / IC-130 — RESOLVE AN `observation` REFERENT FOR THE CHECKER, and decide nothing. The checker holds the
@@ -662,10 +708,11 @@ export class ObservationLog {
     if (row.authority != null && row.authority !== "") {
       const a = String(row.authority);
       switch (row.authority_kind) {
-        /* `sweep` and `run`: the module that holds the authority answers (N39): capture-requests names a request's
-           target and lead inquiry; ai-runs whether the viewer may read the run. With none registered, or none that
+        /* `sweep`, `run` and `step`: the module that holds the authority answers (N39): capture-requests names a
+           request's target and lead inquiry; ai-runs whether the viewer may read the run; steps whether the viewer
+           sees the step (its R18). A step id is never a bundle's, so a `step` row with no resolver is withheld. With none registered, or none that
            holds it, a bundle of that id (`op=monitor`'s look names the bundle it runs under), else unresolved. */
-        case "sweep": case "run": {
+        case "sweep": case "run": case "step": {
           const resolve = this.resolvers.get(row.authority_kind);
           const r = resolve ? resolve(a, viewer) : null;
           if (Array.isArray(r)) { for (const id of r) if (id) out.push(id); break; }

@@ -1,5 +1,7 @@
-/* publication — T38 (T38-29): C-122.6 `PHOTO_MARKS_CHANGED_SINCE` takes `words.json`'s `photo.refused.changed`,
-   verbatim (R33; DEC-183 (4), K2291), and the commit answers it with that translation (R57). The words file is read
+/* publication — T38 (T38-29), T41 (T41-36): C-122.6 `PHOTO_MARKS_CHANGED_SINCE` takes `words.json`'s
+   `photo.refused.changed.signed`, read by key and verbatim (R33; DEC-187 (4), the commit always after signing; was
+   `photo.refused.changed`, DEC-183 (4), K2291, which stays the screens' before signing), and the commit answers it with
+   that translation and `photo` naming the photos for its `{photo}` (R57). The words file is read
    here by key, so a re-wording there is a red here until the row follows it. The last test drives the real
    case-carriage (its R9–R14): a real photo marked, its copy carried, the mark withdrawn, and a photo carried whole.
    Driven at the module's interface. */
@@ -8,7 +10,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { deflateSync } from "node:zlib";
 import { planeWorld as world, infoMd, sha, V, NOW } from "./fixture.mjs";
-import { rowOf, CASE_SOURCES_CHECKS } from "../../../src/publication/checks.mjs";
+import { rowOf, CASE_SOURCES_CHECKS, PUBLICATION_WORDS } from "../../../src/publication/checks.mjs";
 import { caseCarriageOf, OBSCURED_LABEL } from "../../../src/case-carriage/index.mjs";
 
 const WORDS = new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url);
@@ -19,17 +21,20 @@ const word = (key) => {
   return hits[0];
 };
 
-test("R33 (T38) C-122.6 PHOTO_MARKS_CHANGED_SINCE's translation is words.json's photo.refused.changed, verbatim and protected, held once in the C-122 family", () => {
-  const w = word("photo.refused.changed");
+test("R33 (T41) C-122.6 PHOTO_MARKS_CHANGED_SINCE's translation is words.json's photo.refused.changed.signed, read by key, verbatim and protected, held once in the C-122 family; not photo.refused.changed, the screens' before signing", () => {
+  const w = word("photo.refused.changed.signed");
   assert.equal(w.protected, true);
-  assert.equal(w.note, "PHOTO_MARKS_CHANGED_SINCE");
+  assert.match(w.note, /PHOTO_MARKS_CHANGED_SINCE/);
+  assert.equal(PUBLICATION_WORDS["photo.refused.changed.signed"], w.en, "held verbatim, by key");
   assert.deepEqual(rowOf("PHOTO_MARKS_CHANGED_SINCE"), { code: "PHOTO_MARKS_CHANGED_SINCE", check: "C-122.6", translation: w.en });
-  assert.equal(w.en, "A mark changed after this case was prepared. Prepare it again before signing.");
+  assert.match(w.en, /\{photo\}/, "its placeholder left for the screen");
+  /* negative control: the words before signing are not this row's */
+  assert.notEqual(rowOf("PHOTO_MARKS_CHANGED_SINCE").translation, word("photo.refused.changed").en);
   assert.equal(Object.values(CASE_SOURCES_CHECKS).filter((x) => x.check === "C-122.6").length, 1, "held once");
 });
 
-test("R57 (T38) R33 every row case-carriage answers lapsed (a mark withdrawn since preparation, a photo carried whole, marks that cannot be read) refuses the commit with words.json's photo.refused.changed, naming each, and nothing is committed", () => {
-  const en = word("photo.refused.changed").en;
+test("R57 (T41) R33 every row case-carriage answers lapsed (a mark withdrawn since preparation, a photo carried whole, marks that cannot be read) refuses the commit with words.json's photo.refused.changed.signed, naming each (`photo` for its placeholder), and nothing is committed", () => {
+  const en = word("photo.refused.changed.signed").en;
   const w = world();
   w.member("olive");
   const proj = w.project("Parks", "olive");
@@ -53,6 +58,7 @@ test("R57 (T38) R33 every row case-carriage answers lapsed (a mark withdrawn sin
     assert.deepEqual({ reason: r.reason, code: r.code, check: r.check, translation: r.translation },
                      { reason: "PHOTO_MARKS_CHANGED_SINCE", code: "PHOTO_MARKS_CHANGED_SINCE", check: "C-122.6", translation: en });
     assert.deepEqual(r.photos, answer ?? [{ ref: null, sha: null, why: "the photos' marks could not be read" }]);
+    assert.equal(r.photo, answer ? "INFO-2026-0020-photo" : "a photo", "`photo`, the photos named, for {photo}");
     assert.deepEqual(w.snapshot(), before, "nothing is committed");
   }
   cc.marksLapsed = () => [];
@@ -73,8 +79,8 @@ function png(width, height) {
                         chunk("IDAT", deflateSync(raw)), chunk("IEND", Buffer.alloc(0))]);
 }
 
-test("R57 (T38) R33 over the real case-carriage: a photo carried as the copy its marks derive commits; a mark withdrawn since preparation, or a photo carried whole, refuses the commit PHOTO_MARKS_CHANGED_SINCE with words.json's photo.refused.changed, naming the photo, and nothing is committed", async () => {
-  const en = word("photo.refused.changed").en;
+test("R57 (T41) R33 over the real case-carriage: a photo carried as the copy its marks derive commits; a mark withdrawn since preparation, or a photo carried whole, refuses the commit PHOTO_MARKS_CHANGED_SINCE with words.json's photo.refused.changed.signed, naming the photo, and nothing is committed", async () => {
+  const en = word("photo.refused.changed.signed").en;
   const held = new Map(), bucket = {
     put: async (k, b) => { held.set(k, Buffer.from(b)); return { key: k }; },
     get: async (k) => (held.has(k) ? { arrayBuffer: async () => held.get(k) } : null),
@@ -113,6 +119,7 @@ test("R57 (T38) R33 over the real case-carriage: a photo carried as the copy its
     assert.deepEqual({ ok: r.ok, reason: r.reason, code: r.code, check: r.check, translation: r.translation },
                      { ok: false, reason: "PHOTO_MARKS_CHANGED_SINCE", code: "PHOTO_MARKS_CHANGED_SINCE", check: "C-122.6", translation: en });
     assert.deepEqual(r.photos.map((x) => [x.ref, x.sha]), [[PHOTO, p]]);
+    assert.equal(r.photo, PHOTO);
     assert.match(r.photos[0].why, why);
   };
 

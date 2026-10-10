@@ -273,9 +273,20 @@ test("R22: a date's snooze lapses for the consumer at that local day's start, no
   assert.equal(byId(w.q.queueFeed({ member: "alice", viewer: "member:alice", nowMs: NOW + 7 * HOUR }))["TASK-2026-0009-a"].snoozed, undefined);
 });
 
+/* notice-producers R16, R17 (K2586): the AI accounts' and the investigation's providers, each answering nothing, so this
+   test reads R4's and R6's items alone and every producer is read (none named in `facts.failed`). */
+const QUIET_T40_T41 = {
+  aiUse: { exploreAsksPending: () => ({ ok: true, asks: [] }), limitsReached: () => ({ ok: true, reached: [] }) },
+  steps: { laterFound: () => ({ ok: true, found: [] }), stepsDue: () => ({ ok: true, due: [] }),
+           costShares: () => ({ ok: true, shares: [] }), costMessages: () => ({ ok: true, messages: [] }) },
+  questionExplorer: { findsFor: () => ({ ok: true, finds: [] }) },
+  investigation: { milestonesOverdue: () => ({ ok: true, due: [] }), quietPrompts: () => ({ ok: true, prompts: [] }) },
+  review: { reviewCommentsLeftOut: () => ({ ok: true, items: [] }) },
+};
+
 test("R51, R7, R11, R12, R14, R49: the real notice-producers' items (its R4, R6) reach the feed, homed, minted, offered, muted and sorted by due", () => {
   const asked = {};
-  const w = world({}, { notices: (host, { membership }) => noticeProducersOf(host, { membership,
+  const w = world({}, { notices: (host, { membership }) => noticeProducersOf(host, { membership, ...QUIET_T40_T41,
     people: { checkResults: () => ({ ok: true, results: [] }), listChecks: () => ({ checks: [] }) },
     moneyChecks: { noticed: () => ({ ok: true, results: [] }) },
     duties: { dutiesOf: () => ({ ok: true, duties: [] }), occurrencesOf: () => ({ ok: true, occurrences: [] }) },

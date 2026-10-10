@@ -336,8 +336,14 @@ test("R23 (K1505 (6); N633, K1730; roster-reader R12): people's roster-reader so
                    "the table read through R6's roles");
   assert.doesNotMatch(JSON.stringify(ann), /510-555/, "a contact column is never read (roster-reader R4)");
   assert.deepEqual(ROSTER_CONTENT_TYPES, ["staff_roster", "org_chart"]);
-  /* an administrator's sight reaches the project's roster too; a viewer the gate does not know sees none */
+  /* the administrative class's whole read reaches the project's roster too; a viewer the gate does not know sees none */
   assert.deepEqual(staffing("class:admin").rosters.map((r) => r.source), [{ capture_sha: "c1" }, { capture_sha: "c4" }, { table: "t1" }]);
+  /* D54 (K2408, K2442; N822): an administrator member neither invited to nor joined to the hidden project sees it only
+     at EXISTENCE, so its roster is not read for her; the rest of her sight is ann's */
+  x.ctx.storage.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+            VALUES ('ada', 'Cover ada', 'h_ada', 'admin', 'active', '["contribute"]', 't', 't')`);
+  assert.deepEqual(staffing("member:ada").rosters.map((r) => r.source), [{ capture_sha: "c1" }, { table: "t1" }],
+                   "the hidden project's roster is not hers to read");
   /* negative control: the store's read refuses or fails, and the source says it reads no held roster */
   const failing = rosterReads({ sql: () => { throw new Error("storage gone"); } })({ organisation: ORG, viewer: "class:admin" });
   assert.equal(failing.ok, false);

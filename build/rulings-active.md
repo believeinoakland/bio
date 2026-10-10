@@ -8,6 +8,7 @@
 - Before putting a question to Bob, apply his test: values, legal exposure, money, how real groups behave, or reversing one of his own doctrines are his; whatever follows from canon or his rulings, or is technical, is BOB's. Check he has not already answered it, and never trust a "for Bob" label inherited from a plan or handoff. (K1437, K1266, K2009, K1913)
 - Record a ruling of Bob's in his own words: its "Ruled" text adds no limit or scope he did not state; BOB's additions are marked "BOB's details (P17)"; where his words and a recorded ruling differ, his words govern and a new line corrects it at once. (K1762, K1755)
 - A change to `PROCESS-DESIGN.md`, or to any process document that alters a rule, is made only after Bob has seen the exact change rendered and approved it in words; an answer to another question is never that approval. Do not propose principle changes in reaction to an incident: recurring confusion is fixed by retiring the BOB and ROOT and starting a fresh ROOT. (K1258, K1265, K1497, K2020)
+- An open point in Anthropic's terms (the register's `U-n`) that no one has shown to be a problem is not a question for Bob and places no restriction: build as if allowed, record the open point, and revisit only if the terms or Anthropic say otherwise (Bob, K2425: "it's not until it is").
 - End every turn that waits by naming each question open with Bob; "Nothing for Bob to do" only when none is open. (K2006)
 - Open each tranche as soon as its plan is ready, without asking. A layer never waits on Bob's meter reading (K2357: not asked at each layer close). (K1507, K1853)
 - A tranche carries everything safely doable, with no job-count cap, every rung of a ruled construct (not only the first), each exclusion with its named hard reason. P10 stands: no closing sweep, but work may join layers not yet started. When `next.md` holds nothing doable, no tranche opens until an entry arrives. (K642, K1741, K882, K899, K1249)
@@ -15,7 +16,9 @@
 - Releases are BOB's decision, never asked: cut one only when the deployment or measurement it yields lets held work enter the next tranche; at most one per tranche boundary; never mid-tranche from unmerged work. Each deploy act still needs Bob (§2 below). (K1501, K1759, K1862, K1876)
 - Add protective limits (sign-in caps, rate limits, session and key expiry, size and count caps) without asking and report them; a limit that changes what a member or group may do is Bob's. (K1881)
 - Pause at 80% (Bob, K2341, K2357): the meter is not asked at each layer close; Bob says when it nears 80% and checks should be made each layer; once he reports 80% or more, no new layer or job starts, the running layer's jobs finish and merge, the layer closes, and BOB hands off with the tranche open, to resume when Bob says.
-- Hold after T40's L2 (Bob, K2411, meter 77%): once L2 is merged and closed, no new layer or job starts; T40 stays open and BOB hands off at the hold, its successor resuming L3+ when Bob says. Meanwhile the capacity goes to the investigation design: BOB folds the lane's hand-offs into canon and the plan so the design can enter the next tranche.
+- Development runs (Bob, K2430, "Continue development after layer 1 completes."): T41 runs all its layers; K2411's and K2422's holds are lifted; the 80% pause rule stands.
+- Pause after T41 (Bob, K2456, "Pause the development process after this tranche has been completed and merged."): T41 finishes and closes through §5.7 step 5; T42 is not opened and no job starts until Bob resumes; the actions design lane continues.
+- Paused for the account switch (Bob, K2510, "Pause development and save everything to the repo so that development can continue in the other account."): T41 stays open in L6; the work resumes on the other account when Bob starts its ROOT and BOB there; K2456's pause after T41 still stands.
 - Account switch: once Bob reports his primary meter at about 90% or more, move the work to the secondary account at the next layer close with no job live (handoff, then Bob starts a ROOT there); Bob stops the primary at 95%. Sessions on the other account cannot be rung or archived: leave them, with no `BOB-final` row. The `BOB` row of `build/channels.md` follows the account, changed at a tranche close. (K1820, K1891, K1896, K742, K1897, K1428)
 
 ## 2. Standing approvals and recorded refusals (check before acting, §16)
@@ -34,6 +37,7 @@
 
 - Bob's construct rulings live in canon: the Capability Ladders (§2 cross-cutting rulings, §6B–§6C, §10 doctrine), Intake Doctrine §3 (ZIP), Assistant and AI Roles §3 rule 11. Apply them from there; do not re-ask. (K1432, K1472, K1500, K1742, K1852, K1944)
 - The investigation engine's design runs in the INVESTIGATION-DESIGN lane (manifest; K2076): read its `HANDOFF.md` on `design/investigation` at takeover and each backstop check, fold each hand-off into requirements (N748) and answer with a K.
+- The actions design runs in the ACTIONS-DESIGN lane (manifest; K2433): read its `HANDOFF.md` on `design/actions` at takeover and each backstop check, fold each hand-off into requirements and answer with a K.
 - Substrate first: each stage publishes its services (ops, reads, refusals, vocabularies) for the design stream; a member screen is never a precondition of a substrate stage. (K1430)
 - The assistant may search and read any public site to plan research, but nothing it reads enters the record: the substrate's capture fetches whatever does. (K1880)
 - No credential (session token, secret, grant) ever travels in a URL; DEC-2, the root of trust, is not reopened. (K1874)
@@ -50,7 +54,7 @@
 - After a container restart, run `npm ci` in `agent-runner` (`--ignore-scripts`) and `sheet-worker` before `fleetbundles`, or it skips. (K1980, K1948)
 - Never stop agent-worker's test run midway: its negative controls mutate the working tree; if one was stopped, restore from HEAD before the next run. (K1994)
 - Regenerate artifacts in the manifest's order: case-checker `program.mjs` before the bundles (the plane bundles it), newgroup last. (K1540, K1341)
-- Measure a module's size (P6, K617's ~4,000-line split) over its own code in its `paths`, the most specific path owning each file, never its tests or a job's `Size` line. (K1821, K1519, K1024, K1135)
+- Measure a module's size (P6, K617's ~4,000-line split) over its own code in its `paths`, the most specific path owning each file, never its tests or a job's `Size` line, nor a generated artifact (K2513). (K1821, K1519, K1024, K1135)
 - Read every scripted edit back (a `modules.json` edit once matched nothing because of indentation), and read a file into memory before reopening it for writing. (K702, K715)
 - Code that runs on the plane keeps each LIKE/GLOB pattern within workerd's 50 bytes and spreads `sql.exec` cursors; test it at the plane's shape. (K313, K316)
 - The coverage check counts any `R<n>` string in a module's tests: a new id that other tests already name reads green wrongly, so each START requires an explicit test for such ids. (K874, K1369, K1122)

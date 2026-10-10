@@ -17,7 +17,8 @@ const OP_STAMPS = O.OP_STAMPS || {};
 const KEYS = ["viewer", "by", "bodyBy", "author", "proposer", "member", "session", "principal", "owner", "source", "country"];
 /* who is calling, as the door knows them on a public op (admission R21): the window's fingerprint, no country unstated */
 const DOOR = { source: "src-test", country: null };
-const MEMBER_ID_BY = ["invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset",
+/* (T41; R70, R72) `handlechange` and `captureupload` too: membership and capture compare the bare member id */
+const MEMBER_ID_BY = ["handlechange", "captureupload", "invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset",
                       "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset"];
 const URL0 = new URL("http://do/");
 
@@ -31,9 +32,9 @@ const MAPS = {
   workbooks: ["workbooks/ops.mjs", "workbooksOps"], answers: ["answers/ops.mjs", "answersOps"],
   following: ["following/index.mjs", "followingOps"],
 };
-const ARMS = ["accountreferenceset", "accountreferenceremove", "accountreference", "accountswitchset", "aigrantmint",
-              "keyedserviceset", "keyedserviceswitch", "keyedservices", "sourcekeyed", "aiusage", "aiceilingset",
-              "aicopyceilingset", "airunverify", "waitlook", "exportpage", "exportrender", "addresseesuggest", "clockadopt",
+const ARMS = ["accountreferenceset", "accountreferenceremove", "accountreference", "accountusesset", "aigrantmint",
+              "keyedserviceset", "keyedserviceswitch", "keyedservices", "sourcekeyed", "aiusage", "ailimitset",
+              "airunverify", "waitlook", "exportpage", "exportrender", "addresseesuggest", "clockadopt",
               "clocksics", "clocklateness", "clockpropose"];
 async function t33Ops() {
   const out = new Set(ARMS);

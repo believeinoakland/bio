@@ -192,6 +192,43 @@ test("R1, R2, R4 (K581): the rebuild reconstructs a chainless doorbell document 
   assert.deepEqual([b.mark.route.finding, b.mark.documents[0].outcome], ["LOOKED_INDETERMINATE", "undetermined"]);
 });
 
+test("R1, R2, R4 (K2457): the rebuild reconstructs a chainless upload document from its receipt, and the route mark reads it derivable; without the receipt both say undetermined", () => {
+  const w = world();
+  const upload = (bytes, receipt) => ({ file: `snapshots/${sha(bytes)}`, locator: `upload:${sha(bytes)}`, retrieved: "2026-10-09T12:00:00Z",
+    authority_state: "undetermined", authority_basis: "brought in by a member; no authority is asserted",
+    capture: { method: "uploaded", grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED", actor_class: "member", actor: "member:ruth",
+               sha256: sha(bytes), encoding: "binary", bytes: Buffer.byteLength(bytes) },
+    source: { kind: "uploader", ...(receipt ? { receipt: { sha256: sha(bytes), bytes: Buffer.byteLength(bytes), received: "2026-10-09T11:00:00Z" } } : {}) },
+    origin: { kind: "upload" },
+    origin_statement: { text: "from the clerk", words_of: "member:ruth", evidence_of_truth: false } });
+  const file = (id, bytes, doc) => {
+    const r = w.promotion.promote({ bundleId: id, base: null, snapKey: `s-${id}`, author: "member:ruth",
+      meta: { object_type: "information" },
+      files: [{ path: "bundle.md", text: infoMd(id) }, { path: "data/provenance.json", text: JSON.stringify({ documents: [doc] }) },
+              { path: doc.file, blobSha: sha(bytes), sha256: sha(bytes), bytes: Buffer.byteLength(bytes) }] });
+    assert.equal(r.ok, true, JSON.stringify(r));
+  };
+  file("INFO-2026-0001-up", "held A", upload("held A", true));
+  file("INFO-2026-0002-up", "held B", upload("held B", false));
+  const ask = (id) => ({ rebuild: w.routes.provenanceChainRebuild({ bundleId: id, author: V("ruth"), viewer: V("ruth") }),
+                         mark: w.routes.provenanceRouteAssess({ bundleId: id, author: V("ruth"), viewer: V("ruth") }) });
+  const a = ask("INFO-2026-0001-up");
+  assert.deepEqual([a.rebuild.ok, a.rebuild.changed, a.rebuild.documents[0].outcome], [true, 1, "reconstructed"]);
+  assert.deepEqual([a.mark.route.finding, a.mark.documents[0].outcome], ["PRESENT", "derivable"]);
+  const applied = w.routes.provenanceChainRebuild({ bundleId: "INFO-2026-0001-up", apply: true, author: V("ruth"), viewer: V("ruth") });
+  assert.equal(applied.applied, true, JSON.stringify(applied));
+  const doc = JSON.parse(w.record.readFile("INFO-2026-0001-up", "data/provenance.json").text).documents[0];
+  assert.deepEqual(doc.provenance_chain.map((h) => [h.via, h.asserts]),
+                   [["upload", `these bytes were received for upload:${sha("held A")} at 2026-10-09T11:00:00Z`]]);
+  assert.deepEqual(doc.origin_statement, { text: "from the clerk", words_of: "member:ruth", evidence_of_truth: false },
+                   "her statement is carried as it was, never moved into the chain");
+  /* Negative control: without the receipt, neither reconstructs. */
+  const b = ask("INFO-2026-0002-up");
+  assert.deepEqual([b.rebuild.ok, b.rebuild.reason, b.rebuild.documents[0].outcome], [false, "EVIDENCE_INSUFFICIENT", "undetermined"]);
+  assert.match(b.rebuild.documents[0].missing[0], /upload's receipt/);
+  assert.deepEqual([b.mark.route.finding, b.mark.documents[0].outcome], ["LOOKED_INDETERMINATE", "undetermined"]);
+});
+
 test("R3: a machine identity is refused by name before anything is read", () => {
   const w = world();
   twoDocs(w, "INFO-2026-0001-x", { secondRouted: true });

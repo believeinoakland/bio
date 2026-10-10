@@ -100,7 +100,10 @@ test("R80 inSight: true exactly for a held bundle R43 admits the viewer to (FULL
   const cases = [
     ["INFO-I", V("cal"), true], ["PROJ-H", V("ann"), true], ["PROJ-H", V("bob"), true, "invited"],
     ["PROJ-H", V("cal"), false], ["PROJ-D", V("cal"), false, "EXISTENCE is not FULL"],
-    ["PROJ-H", V("second"), true, "an administrator"], ["PROJ-H", "admin", true, "the founder"],
+    /* D54 (T41-3): an administrator and the founder see a hidden project they are not in at EXISTENCE, never FULL;
+       a discoverable one at FULL */
+    ["PROJ-H", V("second"), false, "an administrator, hidden"], ["PROJ-H", "admin", false, "the founder, hidden"],
+    ["PROJ-D", V("second"), true, "an administrator, discoverable"], ["PROJ-D", "admin", true, "the founder, discoverable"],
     ["PROJ-NEVER", V("ann"), false], ["PROJ-NEVER", "admin", false, "absent for everyone"],
     ["PROJ-H", "junk", false], ["INFO-I", "junk", false], ["INFO-I", null, false],
   ];

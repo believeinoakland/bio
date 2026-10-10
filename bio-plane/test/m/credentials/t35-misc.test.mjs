@@ -104,7 +104,7 @@ test("R43 subscriptionConnected records that an active member is connected, with
   assert.deepEqual([r.ok, r.member], [true, "ann"]);
   assert.deepEqual(w.rows(`SELECT member_id, since FROM subscription_connections`), [{ member_id: "ann", since: r.since }], "the fact and its instant");
   assert.deepEqual(Object.keys(w.row(`SELECT * FROM subscription_connections`)).sort(), ["explore", "member_id", "since", "standing",
-    "suggestions", "use_ask", "use_draft", "use_run"], "and the sign-in's own switches (R55), nothing else: no login, code or token");
+    "suggestions", "use_account", "use_ask", "use_draft", "use_enquire", "use_read", "use_run", "use_transcribe"], "and the sign-in's own switches (R55), nothing else: no login, code or token");
   assert.deepEqual(w.c.subscriptionConnected({ member: "ann" }).since, r.since, "connected since the first");
   assert.ok(!Object.keys(w.ops()).some((op) => op === "subscriptionconnected"), "reached by no route");
 });
@@ -113,7 +113,7 @@ test("R43 R23 accountReferenceState answers it to the member alone as subscripti
   const w = await world().group("ann", "bob");
   const since = w.c.subscriptionConnected({ member: "ann" }).since;
   assert.deepEqual(w.c.accountReferenceState({ member: "ann", viewer: "ann" }).subscription, { connected: true, since,
-    uses: { ask: true, draft: true, run: true, standing: false, explore: "no", suggestions: false } });
+    uses: { ask: true, draft: true, run: true, standing: false, explore: "no", enquire: true, read: true, transcribe: true, account: true, suggestions: false } });
   assert.deepEqual(w.c.accountReferenceState({ member: "bob", viewer: "bob" }).subscription, { connected: false, since: null, uses: null });
   for (const viewer of ["bob", "second", "admin"]) assert.equal(w.c.accountReferenceState({ member: "ann", viewer }).reason, "NOT_YOUR_ACCOUNT");
   /* T38: served by her own sign-in (R35); bob, not connected, by nothing */
@@ -186,7 +186,7 @@ test("R37 groupKeySwitches answers {on, suggestions, standing} for the group key
   assert.deepEqual(w.c.groupKeySwitches(), { on: false, suggestions: false, standing: false });
   await w.c.groupKeySet({ key: "sk-ant-api03-SWITCHES", by: "admin" });
   w.c.groupKeySwitch({ on: true, by: "admin" });
-  w.c.groupSwitchSet({ switch: "suggestions", on: true, by: "second" });
+  w.c.accountUsesSet({ owner: "group", switch: "suggestions", on: true, by: "second" });
   const before = w.snapshot();
   const r = w.c.groupKeySwitches();
   assert.deepEqual(r, { on: true, suggestions: true, standing: false });
@@ -326,7 +326,7 @@ test("R48 (T36: R29, R35, R49, R51 included) no member- or founder-facing string
     w.c.aiCredentialRevoke({ who: "class:ai" }), w.c.aiCredentialRevoke({ who: "ann", tokenId: "x" }),
     w.c.accountReferenceSet({ member: "ann", kind: "x", secret: "s", by: "ann" }), w.c.accountReferenceSet({ member: "ann", by: null }),
     w.c.accountReferenceSet({ member: "ann", by: "dee" }), w.c.accountReferenceSet({ member: "dee", by: "dee" }),
-    w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "", by: "ann" }), w.c.accountSwitchSet({ member: "ann", switch: "x", by: "ann" }),
+    w.c.accountReferenceSet({ member: "ann", kind: "apikey", secret: "", by: "ann" }), w.c.accountUsesSet({ owner: "member:ann", switch: "x", by: "ann" }),
     w.c.accountReferenceFor({ member: "ann", act: null }), w.c.accountFor({ member: "ann", act: { kind: "ask", member: "ann" } }),
     w.c.groupKeySet({ key: "k", by: "ann" }), w.c.groupKeyState({ viewer: null }),
     w.c.aiGrantAdmit({ token: "x" }), w.c.aiGrantMintStanding({ member: "ann", question: "q" }),

@@ -171,8 +171,11 @@ test("R43 N426 a bundle that belongs to a project is seen exactly when its proje
   assert.deepEqual(sees(w, V("cal")), ["BLANK-1", "INF-1"], "outside every project: neither project, nor anything in them");
   assert.deepEqual(sees(w, V("bob")), ["BLANK-1", "ESC-1", "INF-1", "PLN-1", "PROJ-P"], "an invited participant of P");
   assert.deepEqual(sees(w, V("ann")), ["BLANK-1", "ESC-1", "INF-1", "PLN-1", "PLN-D", "PROJ-D", "PROJ-P"], "owner of both");
-  assert.deepEqual(sees(w, V("second")), EVERY, "an active administrator sees every project and so all in them");
-  for (const v of ["admin", V("admin"), ...["admin", "member", "probe", "daemon", "ai"].map((c) => `${MACHINE_CLASS_PREFIX}${c}`)])
+  /* D54 (T41-3): an administrator, the founder included, sees the discoverable project and all in it, and neither
+     hidden P (it is not in it) nor what names a project no one holds (that reads hidden, fail closed). */
+  for (const v of [V("second"), "admin", V("admin")])
+    assert.deepEqual(sees(w, v), ["BLANK-1", "INF-1", "PLN-D", "PROJ-D"], v);
+  for (const v of ["admin", "member", "probe", "daemon", "ai"].map((c) => `${MACHINE_CLASS_PREFIX}${c}`))
     assert.deepEqual(sees(w, v), EVERY, v);
   for (const v of [null, "", "junk", `${MACHINE_CLASS_PREFIX}robot`]) assert.deepEqual(sees(w, v), [], String(v));
 });

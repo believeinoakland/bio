@@ -63,8 +63,15 @@ test("R9 R19 R25: determinationRead answers R1's fields, the act's event with wh
   assert.deepEqual(a, noSuchDetermination("CONF-2026-0099-determination"), "R19: answered through noSuchDetermination");
   assert.deepEqual(b, noSuchDetermination(d.id));
   assert.deepEqual({ ...a, determination: null }, { ...b, determination: null });
-  /* a machine credential and an administrator see it */
+  /* a machine credential sees it; an administrator or the founder neither invited nor joined to this hidden project sees
+     it only at EXISTENCE (D54), which never widens a read of what is inside it: answered as absent */
   assert.equal(w.c.determinationRead({ id: d.id, viewer: MACHINE }).ok, true);
+  for (const viewer of [V("ron"), "admin", "member:admin"]) {
+    assert.equal(w.membership.sight(proj, viewer), "existence", viewer);
+    assert.deepEqual(w.c.determinationRead({ id: d.id, viewer }), noSuchDetermination(d.id), viewer);
+  }
+  /* the negative control: invited, the administrator sees the project whole and reads it */
+  w.membership.projectInvite({ projectId: proj, handle: "h_ron", by: "olive", viewer: V("olive") });
   assert.equal(w.c.determinationRead({ id: d.id, viewer: V("ron") }).ok, true);
 });
 
@@ -301,7 +308,12 @@ test("R11 R15: determinationsFor lists at most 200 a page in id order (a lower l
   assert.deepEqual(ids(w.c.determinationsFor({ viewer: "nobody" })), []);
   refused(w.c.determinationsFor({ project: proj, viewer: V("quinn") }), "NO_SUCH_PROJECT");
   refused(w.c.determinationsFor({ project: "PROJ-2026-9999-none", viewer: V("pat") }), "NO_SUCH_PROJECT");
-  assert.deepEqual(ids(w.c.determinationsFor({ viewer: V("ron") })), [a.id, b.id, c.id], "an administrator sees every project");
+  /* D54: an administrator or the founder neither invited nor joined sees this hidden project only at EXISTENCE: none of
+     its determinations is listed, and naming it answers membership's existence refusal */
+  for (const viewer of [V("ron"), "admin"]) {
+    assert.deepEqual(ids(w.c.determinationsFor({ viewer })), [], viewer);
+    refused(w.c.determinationsFor({ project: proj, viewer }), "PROJECT_SEEN_NOT_A_PARTICIPANT");
+  }
   /* the cap: 200 a page whatever limit is asked; the 201st is behind the cursor */
   for (let i = 0; i < DETERMINATIONS_PAGE_MAX; i++)
     w.st.sql.exec(`INSERT INTO determinations (determination_id, project_id, act_id, act_description, act_role, act_body,
@@ -337,6 +349,39 @@ test("R15: every read answers a determination in a project the viewer may not se
   w.membership.projectRemove({ projectId: hidden, handle: "h_pat", by: "olive", comment: "left", viewer: V("olive") });
   refused(w.c.determinationRead({ id: h.id, viewer: V("pat") }), "NO_SUCH_DETERMINATION");
   assert.deepEqual(w.c.determinationsFor({ viewer: V("pat") }).items.map((i) => i.id), [d.id]);
+});
+
+test("R9 R11 R12 R15 (D54): an administrator or the founder neither invited nor joined to a hidden project reads none of its determinations or comparisons; at a discoverable project, or invited, they read them whole (negative control)", () => {
+  const { w, proj, input } = scene();
+  const d = w.c.determine(input());
+  const p = w.c.comparisonPropose({ project: proj, act: input().act, standards: [], rows: [], proposer: V("olive"), viewer: V("olive") });
+  assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
+  /* a discoverable project with its own determination */
+  const open = w.project("Open", "olive", { visibility: "discoverable" });
+  const O = "INQ-2026-0620-open";
+  w.inquiry(O, { legs: [{ target: DOC }] });
+  w.publish(O, open, { caseId: "CASE-2026-0009" });
+  const o = w.c.determine(input({ project: open, findings: [O] }));
+  assert.equal(o.ok, true, JSON.stringify(o).slice(0, 300));
+  const ids = (x) => x.items.map((i) => i.id);
+  for (const viewer of [V("ron"), "admin", "member:admin"]) {
+    assert.deepEqual([w.membership.sight(proj, viewer), w.membership.sight(open, viewer)], ["existence", "full"], viewer);
+    const r = quiet(w, () => w.c.determinationRead({ id: d.id, viewer }));
+    assert.deepEqual(r, noSuchDetermination(d.id), viewer);
+    assert.equal(JSON.stringify(r).includes(proj), false, "not even the project is named by the read");
+    assert.equal(w.c.comparisonRead({ id: p.proposal.id, viewer }).ok, false, viewer);
+    assert.deepEqual(ids(w.c.determinationsFor({ viewer })), [o.id], viewer);
+    assert.deepEqual(ids(w.c.determinationsFor({ act: d.act.id, viewer })), [o.id], viewer);
+    /* the controls: at the discoverable project the determination reads whole */
+    const whole = w.c.determinationRead({ id: o.id, viewer });
+    assert.deepEqual([whole.ok, whole.project, whole.findings.map((f) => f.finding)], [true, open, [O]], viewer);
+  }
+  /* invited, the administrator sees the hidden project whole and reads both; the founder, not invited, still does not */
+  w.membership.projectInvite({ projectId: proj, handle: "h_ron", by: "olive", viewer: V("olive") });
+  assert.equal(w.c.determinationRead({ id: d.id, viewer: V("ron") }).ok, true);
+  assert.equal(w.c.comparisonRead({ id: p.proposal.id, viewer: V("ron") }).ok, true);
+  assert.deepEqual(ids(w.c.determinationsFor({ viewer: V("ron") })), [d.id, o.id]);
+  assert.deepEqual(ids(w.c.determinationsFor({ viewer: "admin" })), [o.id]);
 });
 
 test("R1 R9 R11 R12 R18 R21: the ops route to the services, and the author, proposer and viewer are the control plane's stamps, never the body's", () => {

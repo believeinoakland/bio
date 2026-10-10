@@ -121,20 +121,38 @@ test("R5: truncation is read from one past the page, and the cursor is the last 
 test("R5: a bundle the viewer may not see is withheld from the page and the census alike, and the cursor still moves past it", () => {
   const w = world();
   for (const n of [1, 2, 3]) twoDocs(w, `INFO-2026-000${n}-f`);
-  w.fence("INFO-2026-0002-f");
+  const P = w.project("PROJ-2026-0009-p");   /* hidden: no setting recorded; olive its owner */
+  w.fence("INFO-2026-0002-f", P);
   for (const n of [1, 2, 3])
-    assert.equal(w.routes.provenanceRouteAssess({ bundleId: `INFO-2026-000${n}-f`, author: V("r"), viewer: "admin" }).ok, true);
-  /* The founder sees all three. */
-  const all = w.routes.provenanceRoutesMarked({ viewer: "admin" });
+    assert.equal(w.routes.provenanceRouteAssess({ bundleId: `INFO-2026-000${n}-f`, author: V("olive"), viewer: V("olive") }).ok, true);
+  /* The project's owner sees all three. */
+  const all = w.routes.provenanceRoutesMarked({ viewer: V("olive") });
   assert.deepEqual([all.documents.length, all.census.marked, all.census.documents_visible], [3, 3, 3]);
   /* A member outside the project: the fenced bundle is absent from the page and from every count. */
   const m = w.routes.provenanceRoutesMarked({ viewer: V("x") });
   assert.deepEqual(m.documents.map((d) => d.bundleId), ["INFO-2026-0001-f", "INFO-2026-0003-f"]);
   assert.deepEqual(m.census, { documents_visible: 2, assessed: 2, never_assessed: 0, standing: { LOOKED_INDETERMINATE: 2 }, marked: 2 });
   assert.equal(JSON.stringify(m).includes("INFO-2026-0002-f"), false);
+  /* D54 (K2408, K2442): the founder, neither invited nor joined to the hidden project, sees it only at EXISTENCE, so
+     the bundle in it is withheld from the founder exactly as from any member outside it, in both spellings. */
+  for (const founder of ["admin", V("admin")]) {
+    const f = w.routes.provenanceRoutesMarked({ viewer: founder });
+    assert.deepEqual(f.documents.map((d) => d.bundleId), ["INFO-2026-0001-f", "INFO-2026-0003-f"], founder);
+    assert.deepEqual(f.census, m.census, founder);
+    assert.equal(JSON.stringify(f).includes("INFO-2026-0002-f"), false, founder);
+  }
   /* A page whose rows are all withheld still advances: the cursor is over what was read, not what was returned. */
-  const p1 = w.routes.provenanceRoutesMarked({ viewer: V("x"), after: "INFO-2026-0001-f", limit: 1 });
-  assert.deepEqual([p1.documents.length, p1.truncated, p1.cursor], [0, true, "INFO-2026-0002-f"]);
-  const p2 = w.routes.provenanceRoutesMarked({ viewer: V("x"), after: p1.cursor, limit: 1 });
-  assert.deepEqual(p2.documents.map((d) => d.bundleId), ["INFO-2026-0003-f"]);
+  for (const v of [V("x"), "admin"]) {
+    const p1 = w.routes.provenanceRoutesMarked({ viewer: v, after: "INFO-2026-0001-f", limit: 1 });
+    assert.deepEqual([p1.documents.length, p1.truncated, p1.cursor], [0, true, "INFO-2026-0002-f"], v);
+    const p2 = w.routes.provenanceRoutesMarked({ viewer: v, after: p1.cursor, limit: 1 });
+    assert.deepEqual(p2.documents.map((d) => d.bundleId), ["INFO-2026-0003-f"], v);
+  }
+  /* Negative control: set discoverable by its owner, the project is seen whole by the founder (D54 covers hidden
+     projects only, K2409), while a member outside it is still at EXISTENCE, which is never FULL. */
+  assert.equal(w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "olive", viewer: V("olive") }).ok, true);
+  const seen = w.routes.provenanceRoutesMarked({ viewer: "admin" });
+  assert.deepEqual([seen.documents.map((d) => d.bundleId), seen.census.documents_visible, seen.census.marked],
+                   [["INFO-2026-0001-f", "INFO-2026-0002-f", "INFO-2026-0003-f"], 3, 3]);
+  assert.deepEqual(w.routes.provenanceRoutesMarked({ viewer: V("x") }).census, m.census);
 });

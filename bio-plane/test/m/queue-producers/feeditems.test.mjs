@@ -92,10 +92,10 @@ function busy(extra = {}) {
       { case: "CASE-D", kind: "response", ref: "DKT-2026-0001", edition: 1, since: iso(NOW - 7) }] }) },
     ...extra,
   });
-  /* R37: an edition waiting, one published, one stopped (publication R69); R39: a copy whose base moved (wizard-scripts R26) */
+  /* R37: an edition waiting, one published, one stopped (publish-schedule R4, was publication R69); R39: a copy whose base moved (wizard-scripts R26) */
   const ed = (c, state, over = {}) => ({ case: c, edition: 1, project: "PRJ-A", state, signer: "KEY-1", set_by: "alice", signed_at: iso(NOW - 9),
     at: { date: "2026-09-03", time: "09:30", zone: "UTC" }, publish_at: "2026-09-03T09:30:00Z", moves: [], outcome_at: null, reasons: null, ...over });
-  w.fakes.publication.scheduledEditions = () => ({ ok: true, limit: 500, cursor: null, editions: [ed("CASE-SW", "waiting"),
+  w.fakes.publishSchedule.scheduledEditions = () => ({ ok: true, limit: 500, cursor: null, editions: [ed("CASE-SW", "waiting"),
     ed("CASE-SP", "published", { outcome_at: iso(NOW - 2) }),
     ed("CASE-SS", "stopped", { outcome_at: iso(NOW - 1), reasons: [{ code: "X", translation: "A source changed after it was signed." }] })] });
   w.fakes.wizardScripts.baseUpdates = () => ({ ok: true, cursor: null, truncated: false, entries: [{ copy: "WIZ-C", name: "Copy",
@@ -162,7 +162,7 @@ test("R8: every producer's items, homed through homesOf and offered optionsOf; n
   assert.deepEqual(m["FINDING::edition-contested::INF-1::DKT-2026-0002"].options, [{ id: "opt", on: ["INF-1"] }]);
   assert.deepEqual(m["OBLIGATION::template-review-requested::TPL-1@1::alice"].options.map((o) => o.id), ["templatereview"]);
   assert.deepEqual(m["OBLIGATION::local-fact-due::profile:p/holidays/2026/*::unconfirmed"].options.map((o) => o.id), ["factconfirm", "opt"]);
-  /* R37's, R38's and R39's own acts (publication R68; instance-setup R14; wizard-scripts R4) */
+  /* R37's, R38's and R39's own acts (publish-schedule R3; instance-setup R14; wizard-scripts R4) */
   assert.deepEqual(m["CONDITION::edition-scheduled::CASE-SW@1"].options.map((o) => o.id), ["publishatmove", "publishatcancel"]);
   assert.deepEqual(m["CONDITION::place-profile-arrived::us-xx-riverton"].options.map((o) => o.id), ["profilesset"]);
   assert.deepEqual(m["FINDING::wizard-base-updated::WIZ-C::WIZ-1@2::alice"].options.map((o) => o.id), ["wizardread", "wizardrevise"]);
@@ -278,7 +278,7 @@ test("R12: a CONDITION earns an item only where a member's act can change it: it
   for (const it of conds) {
     /* R35: a signal about a watch (no document behind it) is changed by the watch's own acts: set its address again, end it */
     if (it.subject.kind === "import") { assert.deepEqual(it.options.map((o) => o.id), ["importwatch", "importunwatch"], it.id); continue; }
-    /* R37: a waiting edition is changed by its owners' acts on its time: move it, cancel it (publication R68) */
+    /* R37: a waiting edition is changed by its owners' acts on its time: move it, cancel it (publish-schedule R3) */
     if (it.subject.kind === "case_edition") { assert.deepEqual(it.options.map((o) => o.id), ["publishatmove", "publishatcancel"], it.id); continue; }
     /* R38: an arrival is changed by an administrator's choosing it under Places (instance-setup R14) */
     if (it.subject.kind === "place_profile") { assert.deepEqual(it.options.map((o) => o.id), ["profilesset"], it.id); continue; }

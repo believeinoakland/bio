@@ -1,0 +1,29 @@
+# BOB to inquiry (T41)
+
+**Read** · handled J3
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T41), layer 6, inquiry: T41-15. Read also K2371, K2418, K2436, K2442, K2448 and K2472 (their lines in `build/rulings.md`).
+Your requirements: `build/requirements/inquiry.md` (read whole). Marked `*(not yet met: T41)*`: R39 (folded, K2436) each project's own deferral and dismissal (K2371, H10), refused `DRAWN_ON_BY_A_PROJECT` only when a project shown to the caller (`leg-earning` R14) draws on a member, the shown projects as data, words by key `question.refused.drawnon`; a question drawn on only by hidden projects moved on its own state; R54 `set_in` on a dated wait; R55 `datedWaits`; R59 (D13) the warning on a promotion naming a person in no public role; R60 (H38) `projects` (`leg-earning` R14) on every read answering a question (`stepsOn`'s header is steps R4's share); R61 (D59) inquiry-grammar R18's store-side check: each `bias_applied` statement asked of `bias.statementInForce` (R49), one not in force refused `BIAS_APPLICATION_NOT_IN_FORCE`, nothing written; `biasNotInForce` exported. Test each explicitly, with a negative control (K874). basis-versions R48 answers through your `biasNotInForce` later in this layer.
+Also D54 (Bob's "D54: B", K2408; built by membership in L2, K2442): an administrator, the founder included, neither invited nor joined to a HIDDEN project sees it only at `EXISTENCE` (its id, name and owners), never its contents; discoverable projects unchanged. Re-state each listed test for D54, with a negative control (a discoverable project, or an invited administrator, still at `FULL`). Your `exports.test.mjs`:53, `findings.test.mjs`:60, :108 (`build/jobs/T41/membership.md`, Completion). And `inquiry/index.mjs`:750 reads `biasManifest` as the founder (`viewer: "admin"`), now blind to hidden projects (K2442): an internal read takes no viewer or a machine one; test it with a hidden project's manifest, with a negative control (a member's own read still fenced).
+Reading set (mechanics §17): measured at this START: 863 KB by `build/plan/reading-sets.py`, an over-estimate (it counts each used module's whole public part): read as mechanics §3 asks (each used module's Purpose and the services your Uses names). Measure that set, with your tests, first. At most 300 KB: read it whole and state so in your record. Over: (1) trim nothing; (2) no further split in T41; (3) read whole yourself your requirements, layer 6's row of `build/layers.md`, the code and tests your entry changes and the used services your Uses names, and have your own workers read the rest of your code and tests in full and write the summary this task needs (each statement citing file and line), told the task, the requirements it serves and what follows; state in your record what you read whole, the summary's size and what it cites, and whether anything it left out mattered (K2304). This step is required, not optional.
+Merge order in L6: inquiry-grammar, leg-earning, inquiry, hypotheses, steps, citation, basis-versions, contradiction; run-rules, ai-use, ai-runs (copy then delete), run-productions, capture-requests, reading-guides, skills, question-explorer; answers, agent-model, agent-worker (`modules.json` order; ai-use before ai-runs is K624's copy-then-delete). Same-layer providers you use: leg-earning (R14), inquiry-grammar (R18's shape). Each one's services reach you by a CHANGE once it merges; build against its requirements until then. Record your final `uses` in your record, for BOB to apply at your merge.
+Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · CHANGE
+
+On tranche/T41 @ 15ec91ff1f (K2479) (K2479), merge the tranche branch: R59 now names its test as one pure export, personWarning({text, entities, viewer}) -> null | {code, translation, persons}, which hypotheses R19 also calls; state in your record what you read as a public role (an office the entity holds, is responsible for or speaks for, from the record's own relations). Test it explicitly with a negative control.
+
+## B3 · ANSWER · re J1
+
+Answered on tranche/T41 @ 46211ff1dd (K2480); merge the tranche branch. (1) your public-role reading is taken; export it as personWarning({text, entities, viewer}) (the name hypotheses calls; R59 says so) over personsInNoPublicRole; lines joins your uses; the warning table and words as you propose. (2) the search row is retrieval's share: N830 (retrieval's layer closed); R60 now names your own reads only. (3), (4) confirmed.
+
+## B4 · CHANGE
+
+leg-earning is merged into tranche/T41 @ e3d47c7994 (K2485): merge the tranche branch into yours and replace your stand-in or fail-closed path with leg-earning's real R13 projectsDrawingOnPaged and R14 projectsShownOn; re-run your tests and record it.
+
+## B5 · CHANGE
+
+inquiry-grammar is merged into tranche/T41 @ 0f747c0f4b (K2491): merge the tranche branch; your test pinning INQUIRY_GRAMMAR_CHECKS' ids must add BIAS_APPLICATION_MALFORMED (C-2.8), INQUIRY-GRAMMAR #9's new row; R61's leg arm now reads readBiasApplied on each leg.

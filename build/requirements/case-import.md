@@ -1,6 +1,6 @@
 # case-import — requirements
 
-**Status** · In force: a new product module, placed by BOB (K1256, K1257); folded at T28's opening (N520, DEC-96; K1268, K1277), R16 and R6–R9's changes N522's (K1273); N534 reviewed (K1369). Last changed T34 (T34-94: R5, K1828); every requirement met (K1833).
+**Status** · In force: a new product module, placed by BOB (K1256, K1257); folded at T28's opening (N520, DEC-96; K1268, K1277), R16 and R6–R9's changes N522's (K1273); N534 reviewed (K1369). Last changed T34 (T34-94: R5, K1828); every requirement met (K1833). Last changed T41 (T41-41's text: R22, R23 new; N820; D59, D62; K2405, K2417, K2418); marked not yet met (T41).
 
 **Size (P6).** About 1,600–2,300 lines: the import and its tables, recreation, completion, the reads, the four acts and its catalogue rows. Acceptance is split out if it grows (K1256).
 
@@ -36,7 +36,7 @@ Terms.
 - **R2** Read-only. Nothing an import holds is a record bundle. No act of this copy edits, promotes, ratifies or publishes it, and this module offers no act that changes an imported file. The only later writes are R5's completion, R6's acceptance and its withdrawal, and R8's flags. (DEC-112 (6) "a new, read-only project")
 - **R3** Recreation is recorded per finding: the result, what is missing, what differs, the recomputed pair, and the checker's grading and checks versions; and per calculation the case carries, as R21 records it. It is recomputed only by R5. (DEC-112 (6); Bob, DEC-112 response 2: "the system confirms the findings according to the structured case file")
 
-- **R21** (C:A-14; K1448; D312) At an import (R1) and at a completion (R5), each calculation the case carries (`case-grammar` R18) is recreated, never trusted: its recipe is evaluated by `calculations.evaluate` (which writes nothing to the record) over the inputs the case file carries, each first checked against its stated SHA-256, and the result recorded per calculation as `recreated` (every result agrees), `differs` (naming each result, the source's value and the recomputed one) or `not_recreated` (an input missing or differing from its hash, or a method version this copy does not hold, each named). The source's stated results are held only as the source's statement: no act of this module writes a `CALC-`, a money fact, or any record row from them, and a later use of the figure in this group's record is a member's own calculation over its own inputs (`calculations`).
+- **R21** (C:A-14; K1448; D312) At an import (R1) and at a completion (R5), each calculation the case carries (`case-grammar` R18) is recreated, never trusted: its recipe is evaluated by `calc-grammar.evaluate` (which writes nothing to the record) over the inputs the case file carries, each first checked against its stated SHA-256, and the result recorded per calculation as `recreated` (every result agrees), `differs` (naming each result, the source's value and the recomputed one) or `not_recreated` (an input missing or differing from its hash, or a method version this copy does not hold, each named). The source's stated results are held only as the source's statement: no act of this module writes a `CALC-`, a money fact, or any record row from them, and a later use of the figure in this group's record is a member's own calculation over its own inputs (`calculations`).
 
 **importedCases({viewer}), importedCase({import, edition?, viewer})** (`op=importedcases`, `op=importedcase`; member session; reads)
 
@@ -74,6 +74,11 @@ Terms.
 **acceptanceOf({import, edition, finding}), openFlagsOn({import, edition})** (services for later modules)
 
 - **R9** `acceptanceOf` answers the acceptance in force for a finding of an edition (by, when, why, what was checked, the gaps) or null. `openFlagsOn` answers the open flags with their issues. They are read as the plane. They are the one answer to "is this accepted or flagged" for every later module, including a case of this group that rests on accepted work. `case-disclosures` R13–R14 now read it, for `case-authoring` (its R55). (DEC-96 items 1, 2, 4; N522)
+
+**Whole-case acceptance and the importer's lens** (T41; N820; `draft-T41-investigation.md` §3.6; K2405, K2417, K2418; D59, D62)
+
+- **R22** (D62) `acceptImported` takes `findings: "all"`: one act, one reason, accepts every finding of the edition that `recreated` (and `recreated_in_part` ones with gaps stated, R6) and answers the findings not accepted, listed with why; each accepted finding as R6 records it.
+- **R23** (D59, D62; K2471) R4's assessment also answers each finding under the importing group's own lens, beside the source's lens and the importer's bar. That lens is `case-checker` R23's reader lens: its `statements` are the group statements in force (`bias.statementInForce`, its R49, at scope `instance`, with the importing member as viewer), and its `applications` are the carried `case-grammar` R24 rows whose statement is in force there; a carried application whose statement is not in force there reads as removed. An answer of `null` (undetermined) is stated, not read as false. An accepted finding stays read-only evidence marked as another group's, never stronger than its edition.
 
 **The registration it fills** (K31's pattern; `accepted-work` R1; N522)
 
@@ -138,8 +143,9 @@ Terms.
 - `membership`: the session stamp and whether a viewer is an active member.
 - `strength`: `strengthBarOf` (its R16; R4).
 - `case-grammar`: `caseFileManifestCheck`, `methodOf`, `materialsOf` (its R11–R13).
-- `case-checker`: `checkCaseFile` (its R1), whose `calculations` (its R20) R21 compares with its own recreation.
-- `calculations` (T33-67): `evaluate` (R21).
+- `case-checker`: `checkCaseFile` (its R1), whose `calculations` (its R20) R21 compares with its own recreation. (T41) Its `lens` (its R23; R23 here).
+- `bias` (T41; D59; K2471): `statementInForce` (its R49; R23). A new `modules.json` edge; `bias` is earlier (layer 5).
+- `calc-grammar` (T33-67; K2534): `evaluate` (R21).
 - `inquiry-grammar`: `importedFindingRef` (its R11; R6).
 - `accepted-work`: `registerAcceptedWork` (its R1, with its R8's `moves`; R16).
 - `reevaluation`: `acceptanceWithdrawn` (its R31; R7); `citedCaseMoved` (its R33; R18; N534).

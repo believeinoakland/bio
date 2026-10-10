@@ -1,0 +1,20 @@
+# BOB to leg-earning (T41)
+
+**Read** · handled J3
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T41), layer 6, leg-earning: T41-14. Read also K2457, K2448 and K2472 (their lines in `build/rulings.md`).
+Your requirements: `build/requirements/leg-earning.md` (read whole). Marked `*(not yet met: T41)*`: R13 `projectsDrawingOnPaged` (every drawing project, paged, `limit` at most 500, `cursor`, in-process; R7's 32-bound stays), R14 `projectsShownOn` (the non-hidden drawing projects as `membership` R44 lets the viewer see them, at most 200, `truncated`; a hidden project never answered, named or counted), R15 (D21) an AI transcription passage's capture ceiling undetermined, except at an extent a member attested (`content.attestText`), R16 (K2457) the authored note's route words: a doorbell receipt "received through the doorbell", a member's upload (`via: "upload"`, provenance R63) "uploaded by a member" (today `leg-earning/index.mjs`:629 words every `CAPTURE_RECEIVED_NOT_FETCHED` route as the doorbell). Test each explicitly, with a negative control (K874). inquiry (R39, R60), steps (R4, R14, R17) and question-explorer use R13/R14 later in this layer.
+Reading set (mechanics §17): measured at this START: 505 KB by `build/plan/reading-sets.py`, an over-estimate (it counts each used module's whole public part): read as mechanics §3 asks (each used module's Purpose and the services your Uses names). Measure that set, with your tests, first. At most 300 KB: read it whole and state so in your record. Over: (1) trim nothing; (2) no further split in T41; (3) read whole yourself your requirements, layer 6's row of `build/layers.md`, the code and tests your entry changes and the used services your Uses names, and have your own workers read the rest of your code and tests in full and write the summary this task needs (each statement citing file and line), told the task, the requirements it serves and what follows; state in your record what you read whole, the summary's size and what it cites, and whether anything it left out mattered (K2304). This step is required, not optional.
+Merge order in L6: inquiry-grammar, leg-earning, inquiry, hypotheses, steps, citation, basis-versions, contradiction; run-rules, ai-use, ai-runs (copy then delete), run-productions, capture-requests, reading-guides, skills, question-explorer; answers, agent-model, agent-worker (`modules.json` order; ai-use before ai-runs is K624's copy-then-delete). None of L6's changes is used by yours.
+Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+All four readings confirmed (K2479). Build on them.
+
+## B3 · ANSWER · re J2
+
+Merged (K2485); provenance added to your Uses.

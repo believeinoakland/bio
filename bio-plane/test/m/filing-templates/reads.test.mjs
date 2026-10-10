@@ -183,8 +183,13 @@ test("R20 each item names the template's project, its scope's (R1): a project te
   /* a project template in review: its project */
   const p = draft(w, { name: "Scoped" });
   w.ft.templateSubmit({ version: p.version, reviewers: ["frank"], author: A, viewer: A });
-  /* a group template (widened before its new version was asked): null */
+  /* a group template (widened before its new version was asked): null. D54: erin, an administrator, sees the hidden
+     P's templates (and so widens one) only once invited; before that, one answer as absent, and no item of P's for her */
   const g = approved(w, { name: "Wide" });
+  refused(w.ft.templateApprove({ version: g.version, widen: true, by: E, viewer: E }), "NO_SUCH_TEMPLATE");
+  assert.equal(of(page(E), p.version).length, 0, "D54: no item of the hidden P's for an administrator outside it");
+  w.join(w.P, "erin", "invited");
+  assert.deepEqual(of(page(E), p.version).map((i) => i.project), [w.P], "invited, she sees it");
   assert.equal(w.ft.templateApprove({ version: g.version, widen: true, by: E, viewer: E }).ok, true);
   const g2 = w.ft.templateDraft({ template: g.template, text: "Wide two {{group}}", author: A, viewer: A });
   w.ft.templateSubmit({ version: g2.version, reviewers: ["frank", "bob"], author: A, viewer: A });
@@ -229,14 +234,34 @@ test("R24 a project's template is seen by whoever may see the project; group and
                    w.ft.templatePropose({ template: a.template, text: "x {{group}}", why: "w", proposer: D, ...asD }),
                    w.ft.templateDraft({ template: a.template, text: TEXT, author: D, ...asD })])
     assert.deepEqual(code(r), code(w.ft.templateRead({ template: "TPL-2026-0000", ...asD })), "absent and hidden: one answer");
-  /* the founder-like machine viewer and the administrator see it; an unrecognised viewer sees nothing at all */
+  /* a machine viewer sees it; an unrecognised viewer sees nothing at all */
   assert.equal(ids(w.ft.templatesFor({ viewer: MACHINE })).includes(a.template), true);
-  assert.equal(ids(w.ft.templatesFor({ viewer: V("erin") })).includes(a.template), true);
   assert.equal(ids(w.ft.templatesFor({ viewer: V("carol") })).includes(a.template), true, "an invited participant sees the project");
   assert.deepEqual(w.ft.templatesFor({ viewer: "nobody" }).templates, []);
   assert.deepEqual(w.ft.templatesFor({ viewer: null }).templates, []);
+  /* D54: an administrator neither invited nor joined, the founder included, sees the hidden P only at EXISTENCE: its
+     template is absent from every read and act, as for dave, and no count names it */
+  const E = V("erin");
+  for (const viewer of [E, "admin", "member:admin"]) {
+    const as = { viewer };
+    assert.deepEqual(ids(w.ft.templatesFor(as)).sort(), [...PROFILE_IDS].sort(), viewer);
+    assert.equal(w.ft.templatesFor({ state: "proposed", ...as }).proposals.length, 0, viewer);
+    for (const r of [w.ft.templateRead({ template: a.template, ...as }), w.ft.offeredVersion({ template: a.template, ...as }),
+                     w.ft.templateComments({ template: a.template, ...as })])
+      assert.deepEqual(code(r), code(w.ft.templateRead({ template: "TPL-2026-0000", ...as })), `${viewer}: absent and hidden, one answer`);
+  }
+  refused(w.ft.templateApprove({ version: a.version, widen: true, by: E, viewer: E }), "NO_SUCH_TEMPLATE");
+  /* negative controls: an invited administrator sees it whole; so does an administrator, and the founder, of a
+     discoverable project, as before D54 */
+  const open = seeded();
+  const oa = approved(open);
+  open.discoverable(open.P);
+  for (const viewer of [E, "admin"]) assert.equal(ids(open.ft.templatesFor({ viewer })).includes(oa.template), true, `${viewer}: discoverable`);
+  assert.equal(ids(open.ft.templatesFor(asD)).includes(oa.template), false, "a member outside a discoverable project: existence only");
+  w.join(w.P, "erin", "invited");
+  assert.equal(ids(w.ft.templatesFor({ viewer: E })).includes(a.template), true, "an invited administrator sees it");
   /* once widened, every member */
-  w.ft.templateApprove({ version: a.version, widen: true, by: V("erin"), viewer: V("erin") });
+  assert.equal(w.ft.templateApprove({ version: a.version, widen: true, by: E, viewer: E }).ok, true);
   assert.equal(ids(w.ft.templatesFor(asD)).includes(a.template), true);
   assert.deepEqual(w.ft.templatesFor({ viewer: "nobody" }).templates, []);
 });
@@ -281,6 +306,7 @@ test("R26 a template's handle: its name case-folded, each run of characters othe
 test("R26 offeredVersion takes {name, project?, version?} in place of template: among templates not retired that the viewer may see, the project's first (when given), then the group's, then the active profiles'; the first scope holding the handle answers, and R25 answers its version exactly as for its id; writes nothing", () => {
   const w = seeded();
   const E = V("erin");
+  w.join(w.P, "erin", "invited"); /* D54: the administrator who widens P's templates sees the hidden P as invited */
   const P = { project: w.P };
   const by = (name, x = {}) => w.ft.offeredVersion({ name, viewer: A, ...x });
   const same = (named, id, x = {}) => assert.deepEqual(named, w.ft.offeredVersion({ template: id, viewer: A, ...x }));
@@ -356,6 +382,7 @@ test("R26 refusals in order, each writing nothing: template and name both or nei
   assert.equal(w2.ft.offeredVersion({ template: "TPL-test-harbour-records", viewer: A }).ok, true, "each still named by its id");
   /* an earlier scope holding one answers before a later scope's ambiguity */
   const g = approved(w2, { name: "Request under the records act" });
-  w2.ft.templateApprove({ version: g.version, widen: true, by: V("erin"), viewer: V("erin") });
+  w2.join(w2.P, "erin", "invited"); /* D54: seen by the administrator as invited */
+  assert.equal(w2.ft.templateApprove({ version: g.version, widen: true, by: V("erin"), viewer: V("erin") }).ok, true);
   assert.equal(w2.ft.offeredVersion({ name: "@request-under-the-records-act", viewer: A }).template, g.template);
 });

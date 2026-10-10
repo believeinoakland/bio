@@ -5,7 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, sha, V, provDoc } from "./fixture.mjs";
 import { chainFromEvidence, provenanceRouteOps } from "../../../src/provenance-routes/index.mjs";
-import { DOORBELL_ORIGIN } from "../../../src/provenance/index.mjs";
+import { DOORBELL_ORIGIN, UPLOAD_ORIGIN } from "../../../src/provenance/index.mjs";
 
 const fetched = { locator: "https://e.org/d", retrieved: "2026-09-01T00:00:00Z",
                   capture: { method: "acquire", actor_class: "session", sha256: sha("d") } };
@@ -137,4 +137,47 @@ test("R7: no hop is read from a request: every hop written is derived from field
   w3.promoteInfo("INFO-2026-0003-z", { captures: [a], docs: [provDoc(a, { provenance_chain: [{ who: "a named party" }] })] });
   const rep = w3.routes.provenanceChainRebuild({ bundleId: "INFO-2026-0003-z", author: V("r"), viewer: V("r") });
   assert.equal(rep.documents[0].outcome, "already_recorded");
+});
+
+/* A document brought in by an upload (capture R86; provenance R63) with no chain, with and without the upload's receipt it
+   states (K2457). */
+const uploadDoc = (bytes, { receipt = true } = {}) => ({
+  file: `snapshots/${sha(bytes)}`, locator: `upload:${sha(bytes)}`, retrieved: "2026-10-09T12:00:00Z",
+  authority_state: "undetermined", authority_basis: "brought in by a member; no authority is asserted",
+  capture: { method: "uploaded", grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED", actor_class: "member", actor: "member:ruth",
+             sha256: sha(bytes), encoding: "binary", bytes: Buffer.byteLength(bytes) },
+  source: { kind: "uploader", ...(receipt ? { receipt: { sha256: sha(bytes), bytes: Buffer.byteLength(bytes), received: "2026-10-09T11:00:00Z" } } : {}) },
+  origin: { kind: "upload" },
+  origin_statement: { text: "handed to me at the counter by the records clerk", words_of: "member:ruth", evidence_of_truth: false },
+});
+
+test("R1 (K2457): an upload document is never a fetched route: its one hop is read from the upload's receipt, else undetermined", () => {
+  assert.equal(UPLOAD_ORIGIN, "upload", "the origin kind as provenance exports it (its R63)");
+  const d = uploadDoc("a file she held");
+  const r = chainFromEvidence(d, { instanceName: "civic", at: "2026-10-09T13:00:00Z" });
+  assert.equal(r.ok, true);
+  assert.equal(r.hops.length, 1);
+  const h = r.hops[0];
+  assert.equal(h.asserts, `these bytes were received for upload:${sha("a file she held")} at 2026-10-09T11:00:00Z`);
+  assert.deepEqual([h.via, h.bound, h.who], ["upload", false, "instance civic (upload by member:ruth)"]);
+  assert.equal(/served for/.test(h.asserts), false, "never a fetched hop, though locator, retrieved and method are all present");
+  assert.deepEqual(h.reconstructed.from, ["origin.kind", "source.receipt.sha256", "source.receipt.received", "capture.actor"]);
+  assert.equal(h.reconstructed.at, "2026-10-09T13:00:00Z");
+  assert.match(h.evidence, new RegExp(d.capture.sha256));
+  assert.equal(JSON.stringify(r).includes("records clerk"), false, "her statement is her words, never read into a hop");
+  /* No actor recorded: the hop is still the upload's, naming no one. */
+  assert.equal(chainFromEvidence({ ...d, capture: { ...d.capture, actor: undefined } }).hops[0].who, "instance unnamed (upload)");
+  for (const bad of [uploadDoc("b", { receipt: false }), { ...d, source: { ...d.source, receipt: { sha256: d.capture.sha256 } } },
+                     { ...d, source: { ...d.source, receipt: { received: "2026-10-09T11:00:00Z" } } }, { ...d, source: null }]) {
+    const u = chainFromEvidence(bad);
+    assert.equal(u.ok, false);
+    assert.equal(u.missing.length, 1);
+    assert.match(u.missing[0], /upload's receipt/);
+  }
+  assert.match(chainFromEvidence({ ...d, timestamp: { authority: "tsa.example", token_file: "snapshots/t.tsr" } }).hops[0].evidence,
+               /not to the address/);
+  /* Negative control: the arm is the origin's alone. The same fields under a fetched origin are a fetched route, and a
+     doorbell document is still read from its knock's receipt. */
+  assert.equal(chainFromEvidence({ ...d, origin: { kind: "named_request" } }).hops[0].via, "direct");
+  assert.equal(chainFromEvidence({ ...d, origin: { kind: "doorbell" } }).ok, false, "no knock_id: the doorbell arm's own missing");
 });

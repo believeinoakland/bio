@@ -1,5 +1,5 @@
-/* ratification R17 (N339, N349, N354; control-plane R23, R25, R30; K421, K444, K477): the eight relays of the two
-   ceremonies — `op=caseratify`'s facts, gate and commit, `op=ratify`'s gate facts, image, list, gate (`ratifygate`,
+/* ratification R17 (N339, N349, N354; control-plane R23, R25, R30; K421, K444, K477): the nine relays of the two
+   ceremonies — `op=caseratify`'s facts, approvals (R49), gate and commit, `op=ratify`'s gate facts, image, list, gate (`ratifygate`,
    which runs the register probe in the store half, N417) and commit — answer the store's own
    refusal with its status, code and sentence, and only a reply that is no answer as the silence, carrying the store's
    correlation id when it gave one. The sub-reads inside the longer act relay a refusal by the same rule (K444). The
@@ -75,9 +75,10 @@ async function probeWorld() {
   return made;
 }
 
-/* The eight relays, each with the store op behind it and the op the silence names. */
+/* The nine relays, each with the store op behind it and the op the silence names. */
 const RELAYS = [
   { name: "caseratify/facts", op: "casedocfacts", make: caseWorld, run: caseRatifyOp },
+  { name: "caseratify/approval", op: "caseapproval", make: caseWorld, run: caseRatifyOp },
   { name: "caseratify/gate", op: "casegate", make: caseWorld, run: caseRatifyOp },
   { name: "caseratify/commit", op: "caseratify", make: caseWorld, run: caseRatifyOp },
   { name: "ratify/gatefacts", op: "gatefacts", make: ratifyWorld, run: ratifyOp },
@@ -110,7 +111,7 @@ async function drive(relay, answer, handed) {
 const committed = (w) => w.pub.committed.length + w.count("published_bundles");
 const wire = (res) => JSON.stringify(res.body);
 
-test("R17 (N339, N354): each of the eight relays answers the store's own refusal (ok false below 500) with the store's status, code and sentence, never STORE_DID_NOT_ANSWER, with or without storeRefusal handed; nothing is committed or copied", async () => {
+test("R17 (N339, N354): each of the nine relays answers the store's own refusal (ok false below 500) with the store's status, code and sentence, never STORE_DID_NOT_ANSWER, with or without storeRefusal handed; nothing is committed or copied", async () => {
   const refusals = [
     [{ ok: false, reason: "BAD_JSON", error: "the body is not JSON" }, 400],
     [{ ok: false, reason: "UNKNOWN_OP", code: "UNKNOWN_OP", error: "unknown op: x", translation: "t" }, 404],

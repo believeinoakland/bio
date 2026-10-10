@@ -188,7 +188,9 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
                                    accepted = null, grading = null, passages = null,
                                    calculations = [], calculationsBlock = [], timeline = [], timelineLeftOut = 0,
                                    timelineCut = [], timelineUnread = null,
-                                   timelineBlock = [], peopleBlock = [], memberTiesBlock = [] }) {
+                                   timelineBlock = [], peopleBlock = [], memberTiesBlock = [],
+                                   accountBlock = [], accountSection = [], reviewCommentsBlock = [], reviewComments = null,
+                                   approvalsBlock = [] }) {
   const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
   const lens = manifest && manifest.in_force === true ? manifest
     : { in_force: manifest && manifest.in_force === null ? null : false,
@@ -290,6 +292,12 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     ...timelineBlock,
     ...peopleBlock,
     ...memberTiesBlock,
+    /* R63 (D56): case-grammar R23's `account:` block, every sentence of the account and of the four statements with what
+       it cites; R66 (D61): its R25's review comments chosen and the count left out; R68 (D60): its R26's approvals, last,
+       the one block the approval digest leaves out. Each its owner's one spelling, rendered by the caller. */
+    ...accountBlock,
+    ...reviewCommentsBlock,
+    ...approvalsBlock,
     "completeness:",
     `  statement: "${fmSafe(statement)}"`,
     `  subject_position: ${position}`,
@@ -434,6 +442,8 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
         + "no-project relationship's. A reader weighing this case should know which findings this "
         + "project concluded for itself and which it took as the record already answered.",
     "",
+    /* R63 (D56): the account, the publisher's own, sentence by sentence (case-grammar R23's section). */
+    ...accountSection,
     ...tensionBodyLines(tensions, tensionsUnread),
     ...captureBodyLines(captures, sources),
     ...(materials ? carriesBodyLines(method, materials, group) : []),
@@ -551,6 +561,8 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
            + (x.capture ? ` ${x.capture}` : ""))]
       : ["This case's project cited nothing when it was published."]),
     "",
+    /* R66 (D61): the reviewers' comments the publisher chose to carry, and how many were left out. */
+    ...reviewCommentBodyLines(reviewComments),
     /* R40 (DEC-103): case-grammar R9's section, which prints the bias acknowledgement first and then the lens; it
        stands where the acknowledgement's own section stood, so the acknowledgement is printed once. */
     ...lensSectionLines({ acknowledgement: bias,
@@ -642,4 +654,23 @@ export function timelineBodyLines(rows, leftOut = 0, { cut = [], unread = null }
     ...cuts.map((c) => (c === "they_did" ? "The list of what they did stops at its bound: the record holds more than this case lists."
       : `What we did, from ${c.slice("we_did:".length)}, stops at its bound: that source holds more than this case lists.`)),
     ...(cuts.length ? [""] : [])];
+}
+
+/** R66 (D61): the review comments the publisher chose to carry, in words a reader reads: each with its reviewer and when,
+ *  and how many were left out, or that the count is undetermined. No section when the reader was never asked and no
+ *  comment is carried (`comments` null). An objection is here only when the publisher chose it. */
+export function reviewCommentBodyLines(given) {
+  if (!given) return [];
+  const comments = Array.isArray(given.comments) ? given.comments : [];
+  const left = given.left_out;
+  return ["## What Reviewers Said", "",
+    ...(comments.length
+      ? ["The publisher chose to carry these comments from the case's review copies, in the reviewers' own words:", "",
+         ...comments.map((c) => `- ${c.reviewer ?? "(a reviewer)"}, on ${c.at ?? "(an unrecorded date)"}: ${String(c.text ?? "")
+           .replace(/[\r\n]+/g, " ")}`), ""]
+      : ["The publisher carried no comment from the case's review copies.", ""]),
+    Number.isInteger(left)
+      ? `${left} comment${left === 1 ? " was" : "s were"} left out. A reviewer left out may file a response in the case's docket.`
+      : "How many comments were left out is undetermined: the review copies' comments could not all be read here.",
+    ""];
 }

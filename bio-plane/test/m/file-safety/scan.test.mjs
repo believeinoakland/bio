@@ -146,6 +146,11 @@ test("R15: `scanFindings` answers {ok, findings: [{captureSha, note_id, tool, en
   assert.deepEqual(w.fs.scanFindings({ viewer: "member:m2" }).findings.map((f) => f.captureSha), [s1, s3, s4]);
   const sp = w.fs.scanFindings({ viewer: "member:m2", limit: 1, after: w.fs.scanFindings({ viewer: "member:m2", limit: 1 }).cursor });
   assert.deepEqual(sp.findings.map((f) => f.captureSha), [s3], "a hidden note is passed over, never answered");
+  /* D54: an administrator, the founder included, neither invited nor joined to the hidden project passes over its notes
+     too; the project's participant still reads them (the negative control) */
+  for (const admin of ["member:boss", "admin"])
+    assert.deepEqual(w.fs.scanFindings({ viewer: admin }).findings.map((f) => f.captureSha), [s1, s3, s4], admin);
+  assert.deepEqual(w.fs.scanFindings({ viewer: "member:m1" }).findings.map((f) => f.captureSha), [s1, s2, s3, s4]);
   /* it writes nothing, and never throws */
   const before = JSON.stringify(w.tables());
   w.fs.scanFindings({ viewer: "member:m1" }); w.fs.scanFindings({ since: "x" });

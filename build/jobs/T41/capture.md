@@ -1,0 +1,67 @@
+# capture (T41)
+
+**Status** · session_01DfzCz7CLFcSqit28SNzCXp · depth 2 · COMPLETE · handled B5
+
+## Completion (CAPTURE #25)
+
+**Provenance merged (B5, K2457):** `tranche/T41` merged into this branch; `UPLOAD_VIA` now imported from provenance (its R63), the local copy removed; capture's Uses names `receiptsOfCapture` (BOB). A new `upload.test.mjs` arm runs R86 and R76 over provenance's own instance (not the fixture's stand-in): grade `route: "upload"`, `CAPTURE_RECEIVED_NOT_FETCHED`, not fetched (R62); a second upload keeps each uploader's statement on the receipt (K2449); no grade note; then a later public fetch governs (`direct`, determined, fetched) with the upload's receipt and statements kept and the note back.
+
+**Reading set** (mechanics §17): BOB measured 716 KB (an over-estimate); capture's own code (3,826 lines, ~257 KB) and tests (~388 KB) alone are over 300 KB, so the over path (K2304). Read whole myself: `build/requirements/capture.md`; layer 3's row of `build/layers.md`; plan entries T41-8, T41-8a, T41-7a and the opening's rule 4; K509, K2425, K2434, K2442, K2449, K2452; the used services R86 names: provenance R5, R13–R15, R42, R51, R59, R62, R63 and `recordReceipt`'s signature; acquisition R10, R16, R17 (`profileOf`, its code read whole at `acquisition/index.mjs`:1309–1367), R39, and its streamed store (`index.mjs`:907–1030, `unpack.mjs`:116–151); the code the entries change: `capture/index.mjs`:1–1060 (the module's head, the doorbell, the inbox, the pull and its document, the capturing actor), `checks.mjs` whole; the tests they change: `knocker.test.mjs`:1–180 and :572–711, `held.test.mjs`:1–200. A worker read the rest in full (`index.mjs`:1060–2683, `ops.mjs`, `doorbell.mjs`, `schema.mjs`, `grammar.mjs`, `fixture.mjs` and the 17 other test files) and wrote a ~15 KB summary citing file:line for every statement, on the task, R86 and D54. It found: no other test reads a hidden project as the founder or an administrator (`class:admin` is the machine arm, untouched by D54); `heldCaptures` reads a row's source from the receipt, never the document's shape, so an upload lists by its `upload:` receipt and needs its `capture_actors` row for `member=` (both tested); two tests list this module's surfaces exhaustively (`evidence-absent`:26, `services`:485), both extended. Nothing it left out mattered.
+
+**Entries applied.**
+- **T41-8** (N822; D54, K2408, K2442): `knocker.test.mjs`:685 re-stated (R69): the founder (`admin`, `member:admin`) not in a hidden project reads its capture as one never recorded; controls: discoverable, and joined. `held.test.mjs` never read as an administrator, so its re-statement is a new test (R77, R76): an administrator member and the founder, at a project with no setting and at `hidden`, see none of its held documents (also filtered to the project) and no grade note of its capture; controls: the participant, discoverable, joined. No R-text names administrators' sight: tests only.
+- **T41-8a** (N821; K2425 (4), K2434, K2449, K2452): R86 `uploadCapture({bytes, statement, name, by, at, within})`, as J1's readings and B3's answer: the fence (`MEMBER_SESSION_REQUIRED`), `UPLOAD_NO_STATEMENT` (C-118.10, new row, awaiting T42's stamp, plan rule 4 (2)), `name`, no evidence store, `NO_BODY`, `EMPTY`, `TOO_LARGE` (stream cancelled); bytes hashed as they arrive and held in 8 MiB parts; one receipt `via: "upload"` at `upload:<sha256>` with `by` and `statement` (K2449); her actor row; the document (R65's form: method `uploaded`, received grade basis, `source` `uploader`, `origin_statement`, `name_stated`, `origin.kind` `upload`, profiled with `origin: "member"`); `existed` for bytes the register or a receipt already names, the receipt a second sighting with its own uploader's statement; `within` as R65's, its fault `UPLOAD_WITHIN_FAILED`. The pull's `within` call is now one shared helper (`#callWithin`), behaviour unchanged.
+- **Reading (5) narrowed, for a flaw the tests found:** J1 (5) also read single-part bytes already in the store as held (acquisition R11's test). An upload rolled back by `within` or an unwritten receipt leaves its bytes there, content-addressed; its retry then answered `existed: true` and could never be filed. So `existed` is the register or a receipt naming the digest (provenance R5) only, which is R86's "bytes the record already holds". Tested (`upload.test.mjs`, the `within` test's last arm). The test fixture's provenance stand-in now answers `acquired` from the receipts it wrote, as provenance R5 does.
+
+- **B4 CHANGE** (K2455): `tranche/T41` merged. R76 amended: `gradeNoteOf` answers null for a capture whose every receipt is a received route (`doorbell`, `upload`), read through provenance R60 (`receiptsOfCapture`; a use beyond capture's Uses list, which names R5 and R13: for BOB to add); a capture with no receipt, or a fetched receipt beside them, keeps the note. `UPLOAD_MAX` removed: R86 reads acquisition's exported `CAPTURE_MAX` (one constant, one site).
+
+**Tests.** New `upload.test.mjs` (12 tests, every one naming R86): each refusal with its negative control and the order (each refusal tried with every later one tripped), nothing written on each; 256 MiB + 1 chunk refused with the stream cancelled, exactly 256 MiB filed in 32 parts; the receipt, actor, document and no bundle; the three byte forms; `existed` by a second upload, by the register, by a receipt, with a negative control; `RECEIPT_NOT_WRITTEN`; a later public fetch writing its own receipt beside the upload's; `within` (inside the act, refusal, throw, promise, the retry filed); held for review (R77) under her name. Extended: `evidence-absent` (C-118.10 in the key list), `services` R74 (`uploadCapture` writes only through `transact`). `held.test.mjs` gains R76 (K2455): an upload's and a pulled knock's capture answer null; negative controls: an upload with a fetched receipt beside it, and a capture held with no receipt, answer the note; through the route; writes nothing. The fixture's provenance stand-in gains R60.
+
+**Deferred.** None.
+
+**Found in this module, beyond the entries.** R76's note on received captures (J2): BOB amended R76 (K2455, B4), built above.
+
+**Size (P6).** capture is now 4,059 lines (`src/capture/`), past the 4,000 at which BOB reports a module (R86 added ~230): reported (J2); its split is N826 for T42 (B4).
+
+**Found in other modules.** `acquisition`: R10's 256 MiB was not exported; acquisition now exports `CAPTURE_MAX` (B4), which R86 imports. L11 (op-declarations, control-plane, affordances): `op=captureupload` must stamp `by` from the session and stream the raw body to `bytes`; the store side refuses a machine identity itself.
+
+**Ran.** Module suite (`node --test bio-plane/test/m/capture/ bio-plane/test/cap13-reuse-pages.test.mjs bio-plane/test/d57selflink.test.mjs`): before, 158/159 (`knocker`:685, rule 4 (11)); now, against merged provenance, `# tests 173 # pass 173 # fail 0`. No layer tests (manifest). Checks: `format: 145 modules, 144 requirements files; 0 failures`; `architecture: 29 product files, 121 relative imports …; 0 failures`; `coverage: 1 modules, 59 of 59 live requirement ids named by a test; 0 failures`; `ownership: 9 files changed by capture between tranche/T41 and HEAD; 0 failures`.
+
+Size (session_01DfzCz7CLFcSqit28SNzCXp): test runs 19, module lines 4,059
+
+## J1 · QUESTION
+
+Readings of R86 (T41-8a). I build on them now; only (1) changes what I write, and I code it either way behind one line.
+
+(1) The receipt's `by` and statement. R86: the receipt is written "with `by`, the instant and her statement"; `provenance.recordReceipt` (R13) takes neither, and PROVENANCE's J1 (3) asks you the same. Reading, until you answer: the statement and `by` travel in the document (`origin_statement`, `capture.actor`) and in `capture_actors` (R69's actor row, so she may append her signed account); the receipt carries what R13 carries. Consequence: a second upload of bytes already held (`existed: true`, no new document) keeps no record of the second uploader's statement. If you amend provenance R13 to take `by` and `statement`, I pass them (one line) and test that a second sighting keeps them.
+
+(2) The fence. The op's fence is L11's; at this interface I refuse, first, a `by` that is absent, blank or a machine identity (`record-grammar.isMachineIdentity`) as `MEMBER_SESSION_REQUIRED` (403), the code this module's own store-side member fence already answers (`doorbellTally`, R80).
+
+(3) Refusal order: fence; `UPLOAD_NO_STATEMENT` (C-118.10, 400, `maxChars`; translation, until the UX stream's words: "A file brought into the record records where it came from, in your own words, and none was given, or it is longer than 2,000 characters. Write it. Nothing was written."); `name` (`REQUIRED_ARGUMENT_MISSING`, `argument: "name"`, 400); no evidence store (acquisition's `EVIDENCE_STORAGE_NOT_CONFIGURED`, 503, as R65 answers it; R21's storage-absent refusal); then `EMPTY` and `TOO_LARGE` as acquisition R10 answers them (`EMPTY` with `locator`, 502 as acquire answers it; `TOO_LARGE` 413 with `bytes`, `maxBytes`, the stream cancelled). "Writing nothing" for `TOO_LARGE` read as R10 reads it: the 8 MiB parts already stored while streaming stay content-addressed and named by no row, receipt or document. `bytes` is taken as a `ReadableStream` (the raw body), a `Uint8Array`/`ArrayBuffer`, or an async iterable of chunks.
+
+(4) `name_stated`: "also her statement" read as the same shape, `{text, words_of: by, evidence_of_truth: false}`.
+
+(5) `existed`: the record already holds the bytes when `provenance.registerHolds` answers `registered` or `acquired` for the digest (R5), or, for a single part, the store held it before this call (acquisition R11's test). Then no document, `within` not called, the receipt written as a second sighting, `existed: true`, `capture.sha256`.
+
+(6) `within`'s fault: answered as R65's (500, the fixed sentence `PULL_WITHIN_FAILED_DETAIL`), under the code `UPLOAD_WITHIN_FAILED` (a fault of an upload, not a pull); say if you want `PULL_WITHIN_FAILED` itself.
+
+(7) The document: R65's form, `capture.method` `uploaded`, `grade: null`, `grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED"`, `origin: {kind: "upload"}`, `file` `snapshots/upload-<sha256>`, `parts` as acquisition R16's when multi-part, `profile` with `origin: "member"` for `doctypeFor` (acquisition's `profileOf` names an upload as that case, N615), first hop `via: "upload"` from `firstHopWho`. No archive is opened on upload (acquisition R40 is the fetch's; a member may `op=unpack`).
+
+Found in another module (also in my record): `acquisition` does not export R10's 256 MiB (`CAPTURE_MAX`); I state it once here as `UPLOAD_MAX`, citing R10, and would read it from acquisition if it exported it.
+
+## J2 · REPORT
+
+Built and pushed; waiting only on provenance's merge (your START: merge `tranche/T41`, run against it, then COMPLETE). State on `job/T41/capture`: T41-8 and T41-8a applied; module suite 170/170; format, architecture, coverage (59/59), ownership all 0 failures. Details in my record's Completion.
+
+Three things for you:
+(1) J1 (5) narrowed after a flaw the tests found: bytes merely in the evidence store no longer count as held. An upload rolled back by `within` (or an unwritten receipt) leaves its bytes content-addressed in the store, and its retry answered `existed: true` and could never be filed. `existed` is now the register or a receipt naming the digest (provenance R5), which is R86's "bytes the record already holds". Tested.
+(2) R76 (this module, a requirement change, so yours): `gradeNoteOf` answers `ACQUIRE_GRADE_NOTE` ("Grade B: bytes as fetched…") for any held capture, so a pulled knock's capture and now an upload's carry a note that says the bytes were fetched, which provenance R51/R63 says they were not. A fix: R76 answers, for a capture whose receipts are all received routes (`doorbell`, `upload`), a received-material note (or null). Not built: R76's text asks for the acquire note.
+(3) P6: capture is 4,053 lines, past the 4,000 at which you report a module.
+
+## J3 · REPORT
+
+B4 applied and pushed: tranche/T41 merged; R76 answers null for a capture whose every receipt is doorbell or upload (negative controls: a fetched receipt beside them, and a capture held with no receipt, keep the note), read through provenance R60 receiptsOfCapture, a use capture's Uses list does not yet name (please add); UPLOAD_MAX removed, R86 imports acquisition's CAPTURE_MAX. Suite 172/172; format, architecture, coverage 59/59, ownership 0 failures. Still waiting only on provenance's merge for COMPLETE.
+
+## J4 · COMPLETE
+
+T41-8 and T41-8a complete, with B2, B4 and B5 applied. tranche/T41 (provenance merged) merged into job/T41/capture; UPLOAD_VIA from provenance; R86 and R76 also tested over provenance's own instance. Suite 173/173; format, architecture, coverage 59/59, ownership 9 files: all 0 failures. Record's Completion has the reading set, entries, tests, findings and size (4,059 lines; split N826, T42).

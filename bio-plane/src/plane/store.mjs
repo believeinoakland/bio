@@ -63,6 +63,13 @@ import { networkNoticesOf, networkNoticesOps } from "../network-notices/index.mj
 import { corpusExportOf, corpusExportOps } from "../corpus-export/index.mjs";
 import { biasOf, biasOps } from "../bias/index.mjs";
 import { aiRunsOf, aiRunsOps } from "../ai-runs/index.mjs";
+import { aiUseOf, aiUseOps } from "../ai-use/index.mjs";
+import { stepsOf } from "../steps/index.mjs";
+import { readingGuidesOf, readingGuidesOps } from "../reading-guides/index.mjs";
+import { questionExplorerOf } from "../question-explorer/index.mjs";
+import { investigationOf } from "../investigation/index.mjs";
+import { publishScheduleOps } from "../publish-schedule/index.mjs";
+import { controlPlaneOwnerOps } from "../control-plane/owner-ops.mjs";
 import { contentOf, contentOps } from "../content/index.mjs";
 import { retrievalOf, retrievalRoutes } from "../retrieval/index.mjs";
 import { queueOf, Queue } from "../queue/index.mjs";
@@ -90,13 +97,13 @@ import { answersOf, answersOps } from "../answers/index.mjs";
 import { caseTensionsOf, caseTensionsOps } from "../case-tensions/index.mjs";
 import { followingOf, followingOps } from "../following/index.mjs";
 import { noticeProducersOf } from "../notice-producers/index.mjs";
-import { askOnObject, draftOnObject } from "./ask.mjs";
+import { askOnObject, draftOnObject, draftUse } from "./ask.mjs";
 import { admissionOf, admissionOps } from "../admission/window.mjs";
 import { archiveUnpackConsumer } from "./unpack.mjs";
 import { rosterSource } from "../../../roster-reader/index.mjs";
 import { credentialsOf as captureCredentialsOf } from "../capture-sources/credentials.mjs";
 import { registerReaders, rosterReads, ownHostsOf, officePorts, dutiesFactOf, retrievalTerms, sheetRecompute,
-         ratificationWorker } from "./wiring.mjs";
+         ratificationWorker, frontDoorFinder } from "./wiring.mjs";
 
 /* The name store-door's promotion step (its R5, was control-plane R42) is registered under (K2037). */
 const STEP = "store-door";
@@ -206,6 +213,16 @@ export class Store extends DurableObject {
                        recompute: sheetRecompute(env, () => this.#ownNamespace() || "bio") });
     registerInquiryGrammar(recordOf(ctx));   /* inquiry-grammar R6 (K812): before basis-versions, whose R43 runs at its sub-slot */
     basisVersionsOf(ctx, { retrieval, acceptedWork });   /* basis-versions registers its projection decoration (its R42) */
+    /* R30 (K2567): steps, at its place before ai-use and ai-runs (layer 6), one instance per host, built here with the
+       plane's promotion and observation-log, so its promotion step, its authority, its look listener and its counts
+       (`stepsAcceptedAsProposed`, `stepsAcceptedEdited`, `stepsAcceptedOwnInstead`, record-core R63) are registered
+       before ai-runs' factory reaches it (ai-runs registers its run holder with it) and before the first request. */
+    stepsOf(ctx, { promotion, observationLog: observationLogOf(ctx) });
+    /* R31 (T40; N812; K2488): ai-use, directly before ai-runs, the one instance per host every reader reaches through
+       its factory (ai-runs, answers' `useCheck`, question-explorer). Built with no zone handed in, so it reads the
+       group's zone from retrieval (its R69) and counts by the group's local day; its first construction migrates and
+       declares its tables (its R7). */
+    aiUseOf(ctx);
     aiRunsOf(ctx, env);   /* ai-runs registers with retrieval, in the modules' order */
     /* R21 (T33-44, K1619): leg-earning, before inquiry's factory reaches it, with the standards and duties above. */
     legEarningOf(ctx, { standards, duties });
@@ -213,10 +230,10 @@ export class Store extends DurableObject {
        registered at load, finds its one instance; explore is the instance above (its R6 rederives through it). */
     hypothesesOf(ctx, { explore: this.explore });
     /* R21 (K1609; answers R7–R12, R15–R21): the owners its rule services read, the saved query's runner (retrieval,
-       whose `relations()` and `zone()` answers reads itself, K1788, K1803), the account reads and ai-runs' ceiling. */
+       whose `relations()` and `zone()` answers reads itself, K1788, K1803) and the account reads. R33 (K2500): no
+       `ceilingRefusal`: answers judges a limit through ai-use's `useCheck` on its own host (its R30). */
     answersOf(ctx, { standards, content: contentOf(ctx), events, entities: entitiesOf(ctx), lines, people, duties,
       calculations, retrieval, credentials: credentialsOf(ctx),
-      ceilingRefusal: (member, at) => aiRunsOf(ctx, env).aiUseCheck({ member, at }),
       /* R24 (Q1-7): the screens registry the plane carries, for its explain read. */
       screens: SCREENS });
     /* reevaluation before actions: actions reaches conformance, which reaches reevaluation, and a factory reads its
@@ -249,6 +266,11 @@ export class Store extends DurableObject {
        `op=caseratify` does. */
     ratificationOf(ctx, { worker: ratificationWorker({ env, door: (req) => this.fetch(req),
                                                        namespace: () => this.#ownNamespace() || "bio" }) });
+    /* R32 (N823; K2438): publish-schedule, the one instance ratification's factory creates (its R43, registering its
+       publisher), over the publication built above; at its place directly after publication in the modules' order, and
+       before the scheduler's default owner first reaches it (R30). It is handed to case-authoring (its R58) and to queue
+       for queue-producers R37 (below); the scheduler's `scheduled-publish` reaches the same instance (its R22). */
+    const publishSchedule = ratificationOf(ctx).publishSchedule;
     actionsOf(ctx, { env });
     retrieval.registerLegGrades("inquiry", inquiryLegGrades(ctx));   /* R10 (K861): inquiry's leg grades (its R52, retrieval R55) */
     observationLogOf(ctx).attachMeaning({ connections: connectionsOf(ctx, { env }) });
@@ -284,7 +306,11 @@ export class Store extends DurableObject {
     runProductionsOf(ctx, { aiRuns: aiRunsOf(ctx, env) });
     reviewOf(ctx);
     intentOf(ctx);   /* intent: its check (R1, R2, R26) joins every promotion; its audit check keeps C-2.9 (R22) */
-    caseAuthoringOf(ctx);   /* R18: its disclosures, with their attestation, are case-disclosures' (built above) */
+    /* R30, R34 (K2525, K2567; investigation R20, R14): investigation, directly after intent, one instance per host on the
+       plane's promotion; ai-runs' run holder registered with it once (ai-runs is earlier in the order and cannot), so a
+       running run's principal reaches `planPropose` and `claimFindStep`'s run arm. */
+    investigationOf(ctx, { promotion }).registerRunHolder("ai-runs", (by, run) => aiRunsOf(ctx, env).runHolder(by, run));
+    caseAuthoringOf(ctx, { publishSchedule });   /* R18: its disclosures, with their attestation, are case-disclosures' (built above) */
     /* layer 9, in the modules' order, each registering at start what its factory registers (checks, projections,
        purge, filings' evidence block). standards creates its own tables at construction. R11 (K921): local-facts heads
        the layer, creating its table and declaring it to purge (record-core K23). */
@@ -313,6 +339,16 @@ export class Store extends DurableObject {
        the first sweep service is judged, never refused for want of a check (K1163). */
     const captureRequests = captureRequestsOf(ctx, { env, storeName: () => this.#ownNamespace() || "bio",
       now: () => this.#nowMs(null), runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
+    /* R30, R35 (K2567; reading-guides R1, R6): reading-guides, directly after capture-requests, with `groupSlug` read
+       from instance-setup's `producingGroup` each time an offer asks (never once at start), so once a group is set up its
+       offers are labelled with its slug. Its tables are made in R3's pass. */
+    readingGuidesOf(ctx, { groupSlug: () => instanceSetupOf(ctx, env).producingGroup() });
+    /* R30 (K2567, K2571; scheduler R26): question-explorer, after ai-runs and the modules it reads, one instance per
+       host, migrated here at once (its factory does not migrate) so its tables exist before the scheduler is handed it
+       below, and again in R3's pass. */
+    const questionExplorer = questionExplorerOf(ctx, { steps: stepsOf(ctx), aiUse: aiUseOf(ctx), aiRuns: aiRunsOf(ctx, env),
+                                                     captureRequests, runProductions: runProductionsOf(ctx) });
+    questionExplorer.migrate();
     /* R20 (N534; DEC-101 (3)): monitoring is handed the case-import instance built above, whose watches its cadence tick
        reads and whose `recordDocketRead` records each docket read (monitoring R67, R68). */
     const caseImport = caseImportOf(ctx);
@@ -329,7 +365,9 @@ export class Store extends DurableObject {
        (affordances, queue-producers, control-plane). At creation it creates its tables, declares them to purge (K23) and
        registers its ids' seed; it is then registered, once and before the first request, with the bundle's screens and
        library, the member op table, the acts a machine is refused and the labelled machine drafts (its R13). */
-    wizardScriptsOf(ctx, { env }).wizardRegister(wizardRegistration());
+    wizardScriptsOf(ctx, { env }).wizardRegister(wizardRegistration({ door: {
+      /* K2586 (its R23): the front door's finder over the plane's steps and retrieval, asked at each `startfrom` */
+      findExisting: frontDoorFinder({ steps: () => stepsOf(ctx), retrieval: () => retrievalOf(ctx) }) } }));
     /* K2044, K2054 (admission R21): admission's door window, built at its place in layer 11 so its table is made and
        declared through record-core before the first request; its fingerprint is capture's (its R56). */
     admissionOf(ctx);
@@ -337,8 +375,9 @@ export class Store extends DurableObject {
     observationLogOf(ctx).listenToCapture(capture);
     /* R26 (K2153; scheduler R24): file-safety handed to the scheduler as the owner of its four batch consumers
        (`file-scan`, `file-render`, `file-deeper`, `file-forward`) before its start, since its default owners do not
-       build it. */
-    schedulerOf(ctx, env, { fileSafety });
+       build it. R30 (K2571; scheduler R26): question-explorer handed the same way, for its `question-explore` consumer;
+       the scheduler never builds it. */
+    schedulerOf(ctx, env, { fileSafety, questionExplorer });
     /* R3: the migration pass, then scheduler's start. */
     ctx.blockConcurrencyWhile(async () => this.#migrate());
     ctx.blockConcurrencyWhile(async () => schedulerOf(ctx, env).start());
@@ -347,13 +386,20 @@ export class Store extends DurableObject {
        case-import its R35's watch items read. */
     /* R21 (T33-82; queue R51; K1683): notice-producers, over the instances it reads, handed to queue beside
        queue-producers' deps. */
+    /* K2586 (NOTICE-PRODUCERS #6 J2): handed every instance it reads, the plane's own, so no bare one built first by its
+       factory shadows them (a factory keeps the first instance per storage). */
     const noticeProducers = noticeProducersOf(ctx, { membership: membershipOf(ctx), people, moneyChecks: moneyChecksOf(ctx), duties,
-                                                     answers: answersOf(ctx), inquiry: inquiryOf(ctx) });
+      answers: answersOf(ctx), inquiry: inquiryOf(ctx), credentials: credentialsOf(ctx), following: followingOf(ctx), standards,
+      fileSafety, provenance, aiUse: aiUseOf(ctx), steps: stepsOf(ctx), questionExplorer, investigation: investigationOf(ctx),
+      review: reviewOf(ctx) });
     /* K1868 (2): queue-producers' one instance per storage, built here with the providers queue would hand it
        (`Queue.PRODUCER_DEPS`), since its factory reads its deps on the first call only; handed to queue as its producers
        and to instance-setup, whose start registers `placeArrivals` through it (instance-setup R62, queue-producers R38),
        so neither builds it bare. */
-    const queueDeps = { env, filingTemplates, localFacts, docket, caseImport, noticeProducers };
+    /* R32: publish-schedule for queue-producers R37's scheduled items (passed on once queue lists it among its deps). */
+    /* K2580 (QUEUE #22 J2): queue reads investigation (its project arm); handed the plane's one instance (R30). */
+    const queueDeps = { env, filingTemplates, localFacts, docket, caseImport, noticeProducers, publishSchedule,
+                        investigation: investigationOf(ctx) };
     const queueProducers = queueProducersOf(ctx, Object.fromEntries(
       Queue.PRODUCER_DEPS.filter((k) => queueDeps[k] !== undefined).map((k) => [k, queueDeps[k]])));
     queueOf(ctx, { ...queueDeps, producers: queueProducers }).migrate();
@@ -427,7 +473,11 @@ export class Store extends DurableObject {
     observationLogOf(this.ctx).migrate();   /* before the run log folds into its tables below */
     runProductionsOf(this.ctx).migrate();
     captureRequestsOf(this.ctx).migrate();
+    /* R31: ai-use's tables, directly before ai-runs' (its R7: the pre-T40 counter and ceilings carried over once) */
+    aiUseOf(this.ctx).migrate();
     aiRunsOf(this.ctx, this.env).migrate();   /* ai-runs' two late columns and the ai_run_log fold (its R38) */
+    readingGuidesOf(this.ctx).migrate();   /* R30: reading-guides' tables (its factory makes none) */
+    questionExplorerOf(this.ctx).migrate();   /* R30: question-explorer's tables, explicitly (its factory does not migrate) */
     entitiesOf(this.ctx).migrate();
     /* R21 (T33-90): layer 5's new modules' tables, in the modules' order, after entities and before retrieval, whose
        views read them (each idempotent; money's, people's, events' and lines' factories create none). */
@@ -440,10 +490,14 @@ export class Store extends DurableObject {
     peopleOf(this.ctx).migrate();
     legEarningOf(this.ctx).migrate();   /* `inquiry_basis`, leg-earning's since T33-45 (its R12) */
     hypothesesOf(this.ctx).migrate();
+    stepsOf(this.ctx).migrate();   /* R30: steps' tables, directly after hypotheses (its factory made them; idempotent) */
     contradictionOf(this.ctx).migrate();
     progressionsOf(this.ctx).migrate();
     biasOf(this.ctx).migrate();
     intentOf(this.ctx).migrate();
+    investigationOf(this.ctx).migrate();   /* R30: investigation's tables, directly after intent (idempotent) */
+    /* R32: `scheduled_editions` (publish-schedule R10), directly after publication, before docket (idempotent) */
+    ratificationOf(this.ctx).publishSchedule.migrate();
     docketOf(this.ctx).migrate();   /* R15: its tables, in the modules' order (directly after publication) */
     caseImportOf(this.ctx).migrate();   /* R17: its tables, in the modules' order (after ratification and case-checker) */
     networkNoticesOf(this.ctx).migrate();   /* its tables, in the modules' order (after project-stage) */
@@ -479,8 +533,13 @@ export class Store extends DurableObject {
   async fetch(req) {
     return dispatch(req, { routes: (url, body, grant) => this.routes(url, body, grant), membership: () => membershipOf(this.ctx),
       namespace: () => this.#ownNamespace() || "bio", purgeHeld: (q) => actionsOf(this.ctx).purgeHeld(q),
-      /* B5 (K1685; answers R1, R2): a read served under a grant is recorded in this object's read log, scrubbed. */
-      logRead: (entry) => answersOf(this.ctx).logRead(entry) });
+      /* B5 (K1685; answers R1, R2): a read served under a grant is recorded in this object's read log, scrubbed. R33
+         (K2500; answers R30, store-door R11): under a grant this object's draft path minted, with `use: "draft"`, so the
+         rows of projects kept away from drafts are removed before the log records them; else the entry's own use. */
+      logRead: (entry) => {
+        const use = draftUse(this.ctx, entry && entry.grant);
+        return answersOf(this.ctx).logRead(use ? { ...entry, use } : entry);
+      } });
   }
 
   /* The injectable clock: an explicit instant, else `BIO_NOW_MS` (so a suite pins "now"), else the wall clock.
@@ -565,6 +624,10 @@ export class Store extends DurableObject {
       /* R18 (T37; K2226): case-carriage's `obscuremark`, `photomarks` and `obscuremarkwithdraw` (its R9, R10, R14), directly after publication's, over
          the one instance publication's factory made. */
       ...caseCarriageOps(publicationOf(ctx).caseCarriage, url, body),
+      /* R32 (N823): publish-schedule's `publishatmove`, `publishatcancel`, `publishschedule`, after publication's map and
+         case-carriage's (R18 keeps that one directly after publication's), over the one instance ratification's factory
+         made. */
+      ...publishScheduleOps(ratificationOf(ctx).publishSchedule, url, body),
       /* R15 (N520): docket's member ops; its public reads `docketpublic` and `docketfeed` are public-read's (its R21). */
       ...docketOps(docketOf(ctx), url, body),
       ...publicReadOps(publicReadOf(ctx), url),
@@ -580,7 +643,13 @@ export class Store extends DurableObject {
       ...provenanceRouteOps(provenanceRoutesOf(ctx), url, body),
       ...contentOps(contentOf(ctx), url, body),
       ...captureRequestsOps(captureRequestsOf(ctx), url, body),
+      /* R35 (K2567): reading-guides' ops, after capture-requests' map, its place in the modules' order. steps',
+         investigation's and question-explorer's ops are control-plane R71's own map (K2560), not routed here. */
+      ...readingGuidesOps(readingGuidesOf(ctx), url, body),
       ...governorRoutes(governorOf(ctx), url, body),
+      /* R31 (K2488): ai-use's `ailimitset`, `ailimits`, `aiusage`, `exploreapprove` (op-declarations R41), before
+         ai-runs' map, over the one instance `aiUseOf(ctx)` makes. */
+      ...aiUseOps(aiUseOf(ctx), url, body),
       ...aiRunsOps(aiRunsOf(ctx, env), url, body),
       ...answersOps(answersOf(ctx), url, body),   /* R21 (K1609) */
       ...retrievalRoutes(retrievalOf(ctx), url, body),
@@ -603,6 +672,12 @@ export class Store extends DurableObject {
       ...instanceSetupOps(instanceSetupOf(ctx, env), url, body),
       /* K2044, K2054 (admission R21): the Worker's count of a request to a public op, `doorwindow`, store-internal */
       ...admissionOps(admissionOf(ctx), url, body),
+      /* R35 (K2585; control-plane R71, R72): the door's own map for the owners that export a service and no arm, handed
+         each owner's one instance on this storage through getters, each asked only when its op is served. */
+      ...controlPlaneOwnerOps({ aiUse: () => aiUseOf(ctx), aiRuns: () => aiRunsOf(ctx, env), caseAuthoring: () => caseAuthoringOf(ctx),
+                                review: () => reviewOf(ctx), legEarning: () => legEarningOf(ctx), capture: () => captureOf(ctx),
+                                steps: () => stepsOf(ctx), investigation: () => investigationOf(ctx),
+                                questionExplorer: () => questionExplorerOf(ctx) }, url, body),
       /* store-door's map (its R1); the grant its door read from the header is handed on (its R11, K2041) */
       ...controlPlaneRoutes(ctx, url, body, grant),
     };

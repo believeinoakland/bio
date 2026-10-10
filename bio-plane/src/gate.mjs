@@ -876,7 +876,26 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    threw; membership's `MODULE_ORDER` gains `ai-use`, which registers no step, so no gate's order moves.
    ROW_CENSUS (R50) re-pinned to this tree: 1566 rows. Rows a T40 job in layers 3–11 adds or changes are T41's stamp
    (plan T40, rule 4 item 2). */
-export const CATALOG_VERSION = "1.67.0";
+/* 1.68.0 (PROMOTION #39, T41-6, 2026-10-09; T40's rule 4 item 2, T41's rule 4 item 2; K2426, K2428, K2431, K2435, K2441,
+   K2442, K2444, K2445): MINOR. The stamp of every row awaiting it at T40's close (T40's layers 3–11) and of T41's layers 1
+   and 2, read by diffing R50's census lines of `tranche/T41` after record-core, membership, project-roster and
+   credentials merged against 1.67.0's own (`test/fixtures/row-census-1.67.0.jsonl`: 1566 rows, d3f742b5…): one new row,
+   thirteen changed, none departed. Each is one BOB's START and CHANGE name (RECORD-GRAMMAR's, TEXT-CHAIN's, MEMBERSHIP's
+   and CREDENTIALS' T41 jobs); T40's layers 3–11 added and changed no row.
+   ARRIVED (1): record-grammar C-33.54 ACCEPT_MUST_REAUTHOR, the shared row in `SHARED_ACT_CHECKS` (its R52, K2426).
+   CHANGED (13), translation only, code, number and `where` unmoved: text-chain C-35.13 TEXT_CHAIN_LETTER_UNCALIBRATED (an
+   AI's reading of a page, K2428); membership C-70.1 PROJECT_SEEN_NOT_A_PARTICIPANT ("you can see that this project
+   exists"), C-96.48 HANDLE_CHECK_PAUSED, C-96.49 HANDLE_CHANGE_NOT_A_MEMBER, C-96.51 HANDLE_CHANGE_UNCHECKED (the handle
+   words); credentials C-29.21 UNKNOWN_SWITCH (the new kinds of use), C-29.34 PROJECT_NOT_SOLE_MEMBER, C-29.35
+   SIGNIN_NOT_CONNECTED, C-29.36 SWITCH_VALUE_INVALID, C-29.37 AI_USE_SWITCHED_OFF, C-29.38 PROJECT_AI_KEPT_AWAY, C-29.39
+   PROJECT_KEY_NOTICE_DUE (DEC-188's words, K2435).
+   CHANGED IN WHAT THE GATES RUN, no row line moving: none a T41 L1–L2 job record names. Record-core's and
+   project-roster's T41 jobs added and changed no row; membership's `MODULE_ORDER` gains the five new modules (`steps`,
+   `reading-guides`, `question-explorer`, `investigation`, `publish-schedule`), none of which registers a gate step yet,
+   so no gate's order moves.
+   ROW_CENSUS (R50) re-pinned to this tree: 1567 rows. Rows a T41 job in layers 3–11 adds or changes are T42's stamp
+   (plan T41, rule 4 item 2). */
+export const CATALOG_VERSION = "1.68.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -968,8 +987,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1566,
-  digest: "d3f742b59fd8e19cf2fe0a547d8854866705fa935818e563783267796721e904" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1567,
+  digest: "8c92f849fed9dd1e00dfc8ee1cd3165a442bd6479dd81f3f7981e656e2e57cbb" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();

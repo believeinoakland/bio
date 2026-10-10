@@ -43,10 +43,11 @@ test("R17 nothing is deleted or rewritten: every act appends to this module's ow
   step(() => w.ft.templateComment({ template: d.template, version: d.version, text: "c", note: true, author: A, viewer: A }));
   step(() => w.ft.templateGrantRevoke({ grant: g.grant, by: A, viewer: A }));
   step(() => w.ft.templateApprove({ version: d.version, by: B, viewer: B }));
-  step(() => w.ft.templateApprove({ version: d.version, widen: true, by: V("erin"), viewer: V("erin") }));
+  w.join(w.P, "erin", "invited"); /* D54: an administrator sees the hidden P's template only once invited or joined */
+  step(() => assert.equal(w.ft.templateApprove({ version: d.version, widen: true, by: V("erin"), viewer: V("erin") }).ok, true));
   step(() => { const two = w.ft.templateDraft({ template: d.template, text: "two {{group}}", author: A, viewer: A });
                w.ft.templateRetire({ template: d.template, version: two.version, reason: "r", by: A, viewer: A }); });
-  step(() => w.ft.templateRetire({ template: d.template, reason: "r", by: V("erin"), viewer: V("erin") }));
+  step(() => assert.equal(w.ft.templateRetire({ template: d.template, reason: "r", by: V("erin"), viewer: V("erin") }).ok, true));
   for (const t of ft.FILING_TEMPLATES_TABLES) assert.ok(w.count(t) > 0, `${t} written`);
   /* declared to purge: every table, owned here; a purge of the project's bundle clears its rows, another's stay */
   assert.equal(w.record.declarePurge("x", ["tpl_templates"]).reason, "TABLE_DECLARED");

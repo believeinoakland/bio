@@ -234,7 +234,7 @@ test("R11: missing fields are refused by name or carried forward and said so; th
   assert.equal(p.promote({ ...base, snapKey: "s", files: [md, { path: "a.bin", blobSha: "a".repeat(64), bytes: -1 }] }).reason, "PROMOTED_FILE_BYTES_UNSTATED");
 });
 
-test("R12: created and last_updated come from the document; a disagreeing envelope and a redated revision are refused by name", () => {
+test("R12: created and last_updated come from the document; a disagreeing envelope and a redated revision are refused by name; a replay is exempt from the envelope refusal, not from the derivation", () => {
   const { p, record, head } = held();
   const d = p.promote(create("INFO-2026-0003", infoDoc("INFO-2026-0003"), { meta: { created: T1 } }));
   assert.deepEqual([d.reason, d.field, d.check], ["ENVELOPE_DATES_DISAGREE", "created", "C-86.7"]);
@@ -245,6 +245,10 @@ test("R12: created and last_updated come from the document; a disagreeing envelo
   assert.equal(ok.ok, true);
   assert.deepEqual([record.head(ID).created, record.head(ID).lastUpdated], [T0, T1]);
   assert.equal(record.manifestEntry(ID, "k2").created, T1);
+  /* A replay is exempt from the refusal, as from R9's (K2439), and not from the derivation: the document's dates hold. */
+  const rp = p.promote({ ...create("INFO-2026-0004", infoDoc("INFO-2026-0004")), meta: { created: T1, last_updated: T1 }, replay: true });
+  assert.equal(rp.ok, true, JSON.stringify(rp));
+  assert.deepEqual([record.head("INFO-2026-0004").created, record.head("INFO-2026-0004").lastUpdated], [T0, T0]);
 });
 
 test("R13: a creation takes the recorded producing group; with none, the document's or envelope's; a revision may not regroup", () => {
@@ -503,7 +507,7 @@ test("R20: a revision of a bundle the stamped actor may not see answers exactly 
   void record;
 });
 
-test("R20: every refusal names a reason, carrying its catalogue row where one exists; NO_BODY; never throws for any JSON package", () => {
+test("promote, Errors: every refusal names a reason, carrying its catalogue row where one exists; NO_BODY; never throws for any JSON package", () => {
   const { p } = makePromotion();
   for (const pkg of [undefined, null, 7, "x", [], {}, { files: "x" }, { bundleId: 5, base: null, snapKey: "k", files: [], meta: {} },
                      { bundleId: ID, base: null, snapKey: {}, files: [1], meta: 3 }, { bundleId: ID, base: null, snapKey: "k", files: [{ path: "bundle.md", text: 5 }], meta: {} }]) {
@@ -550,7 +554,7 @@ test("R20: every refusal names a reason, carrying its catalogue row where one ex
   assert.ok(seen.size >= 8, `answers carrying a row: ${[...seen]}`);
 });
 
-test("R20: every row of this module's own refusals carries its check, translation and the `where` naming the region of promote that mints it (N118)", () => {
+test("promote, Errors (N118): every row of this module's own refusals carries its check, translation and the `where` naming the region of promote that mints it (N118)", () => {
   const rows = Object.entries(PROMOTION_CHECKS);
   assert.equal(rows.length, 13);
   const checks = new Set();

@@ -2,7 +2,7 @@
 
 **Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed. Last changed T33 (T33-39: R3, R17 amended; R27–R30 new; K1444, K1481); every requirement met (QUERY-LANGUAGE #6, K1582).
 
-**Size (P6).** 2,665 lines (922 without comment-only and blank lines). N37 removes about 150 (`viewerPredicate` and its comments, 1041–1182, becoming a re-export of `membership`'s, which since the merge exports its own `viewerPredicate` and `GATE_MARK`, `bio-plane/src/membership/index.mjs` 23–31). Well under the 4,000 at which BOB reports a module.
+**Size (P6).** 2,941 lines (`query.mjs`, T41). `viewerPredicate` and `GATE_MARK` are re-exports of `membership`'s (N37, done). Under the 4,000 at which BOB reports a module.
 
 ## Public
 
@@ -78,7 +78,6 @@ Terms. A **query** `q` is a string. A **plan** is `compile`'s answer: `{ast, war
 
 ### Suggestions
 
-- **N37.** `query.mjs` re-exports `viewerPredicate` and `GATE_MARK` from `membership` once that module is extracted; `meaningread.test.mjs` and `meaningquery.test.mjs` pin the gate's three mint sites inside `query.mjs`'s own text, so N37 needs a `legacy-tests` entry beside it (K53).
 - **Later layers' vocabulary.** `leg:` and `content:cited` read layer-6 tables, and the fields `capture`, `connection`, `legs`, `actionkind` … `overdue` read projection columns written by `strength`, `inquiry` and `actions`. A registry this module offers (the K31 pattern: an arm, a sub-field predicate or a field registered by its owner, `legacy-store` registering them until each extraction) would keep the grammar unchanged and the order intact. BOB decides (P17); see `build/extraction/retrieval.md` §5.
 - **The `axis` statement** joins `register`, `readings` and `observation_log`; it could move to `retrieval`, which already reads them, leaving the compiler only the shapes of the query itself.
 - **T33 (T33-39).** The field names `kind`, `phase`, `stage`, `basis`, `period`, `fund` and `party` are the entries' (B1b.7); `money`'s own words may ask a prefix (`money.kind:`) if a member's `kind:` would read ambiguously in the design stream's view, a naming question for BOB. R27's `zone` is passed by `retrieval`, which reads it from `local-facts` (governed) or `jurisdictions`. `savedForm`'s refusal codes are this fold's.

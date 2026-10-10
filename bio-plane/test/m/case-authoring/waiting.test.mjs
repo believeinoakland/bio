@@ -1,6 +1,6 @@
 /* case-authoring: an edition of the case waiting to be published at a set time (R58, R59; N681, K1833, DEC-147). The
-   edition waits through publication's real `scheduleEdition` (its R66), is cancelled through its `publishAtCancel` (its
-   R68), and is read by `publishCase` and `acknowledgeStatement` through its `waitingEditionOf` (its R74). The group's
+   edition waits through publish-schedule's real `scheduleEdition` (its R1), is cancelled through its `publishAtCancel`
+   (its R3), and is read by `publishCase` and `acknowledgeStatement` through its `waitingEditionOf` (its R7; N823, K2438). The group's
    zone is the test profile's (`jurisdictions` R41). Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -31,19 +31,19 @@ function setup() {
   return { w, A };
 }
 const docOf = (w, c, e) => w.row(`SELECT doc_sha, text, sig_armored FROM case_documents WHERE case_id=? AND edition=?`, c, e);
-/* ratification's op=publishat, played: the edition signed and set to wait (publication R66) */
+/* ratification's op=publishat, played: the edition signed and set to wait (publish-schedule R1) */
 const wait = (w, c, e) => {
-  const r = w.record.transact(() => w.publication.scheduleEdition({ case: c, edition: e, docSha: docOf(w, c, e).doc_sha,
+  const r = w.record.transact(() => w.publishSchedule.scheduleEdition({ case: c, edition: e, docSha: docOf(w, c, e).doc_sha,
     signature: `sig-${c}-${e}`, signer: "alice", deliveredBy: V("alice"), at: AT, checked: { sources: [], ties: [], holds: [] },
     by: V("alice") }));
   assert.equal(r.ok, true, JSON.stringify(r));
   return r;
 };
-const cancel = (w, c, e) => assert.equal(w.publication.publishAtCancel({ case: c, edition: e, by: V("alice") }).ok, true);
+const cancel = (w, c, e) => assert.equal(w.publishSchedule.publishAtCancel({ case: c, edition: e, by: V("alice") }).ok, true);
 const carries = (r, key, family = CASE_DERIVATION_CHECKS) => assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation],
   [false, key, key, family[key].check, family[key].translation]);
 
-test("R58: publishCase refuses CASE_EDITION_WAITING (C-44.6) while an edition of the case R7 resolves waits, naming the waiting edition and its at (date, time and zone), whether the case is derived from the members' preparation or named; nothing is written and no id is drawn; once the waiting one is cancelled the act goes on to R8", () => {
+test("R58: publishCase refuses CASE_EDITION_WAITING (C-44.6) while an edition of the case R7 resolves waits, naming the waiting edition and its at (date, time and zone), whether the case is derived from the members' preparation or named; nothing is written and no id is drawn; once the waiting one is cancelled the act goes on and replaces the preparation (R8, K2540)", () => {
   const { w, A } = setup();
   /* a first edition, prepared and waiting: the case is the one the members' own preparation names (R7's third route) */
   const one = w.publish(A, "alice", [Q]);
@@ -64,11 +64,14 @@ test("R58: publishCase refuses CASE_EDITION_WAITING (C-44.6) while an edition of
   const fresh = w.publish(A, "alice", [Q2], { newCase: true });
   assert.equal(fresh.ok, true, "a case of its own, minted, waits on nothing");
   assert.notEqual(fresh.caseId, one.caseId);
-  /* cancelled: its document is again an unsigned preparation (publication R68), so nothing waits and the act goes on
-     to R8's own judgment of that preparation */
+  /* cancelled: its document is again an unsigned preparation (publish-schedule R3), so nothing waits and the act goes on:
+     a preparation of this same case edition is replaced by the new one (R8, K2540) */
   cancel(w, one.caseId, 1);
   const again = w.publish(A, "alice", [Q]);
-  assert.deepEqual([again.reason, again.recorded_by], ["ALREADY_A_CASE_MEMBER",
+  assert.deepEqual([again.ok, again.caseId, again.edition], [true, one.caseId, 1], JSON.stringify(again).slice(0, 300));
+  /* negative control: R8 still refuses a preparation of another case over the same bytes */
+  const other = w.publish(A, "alice", [Q], { newCase: true });
+  assert.deepEqual([other.reason, other.recorded_by], ["ALREADY_A_CASE_MEMBER",
     [{ case_id: one.caseId, edition: 1, state: "prepared" }]]);
 });
 
@@ -90,7 +93,7 @@ test("R58: a further edition of a published case is refused while its next editi
   assert.deepEqual(w.snapshot(), before, "nothing written, no id drawn");
   /* the waiting edition's document is untouched by the refused act */
   assert.equal(docOf(w, one.caseId, 2).doc_sha, two.caseDocument.doc_sha);
-  /* stopped or published, nothing waits: publication's R74 answers null and the act goes on to R8's own judgment */
+  /* stopped or published, nothing waits: publish-schedule's R7 answers null and the act goes on to R8's own judgment */
   w.st.sql.exec(`UPDATE scheduled_editions SET state='published' WHERE case_id=? AND edition=2`, one.caseId);
   w.ratify({ caseId: one.caseId, edition: 2 });
   const three = w.publish(A, "alice", [Q3], { ...FRESH, caseId: one.caseId, statement: "It does not cover the 2027 award.",
@@ -135,7 +138,7 @@ test("R58, R34: publishPreflight answers CASE_EDITION_WAITING first, exactly as 
   assert.deepEqual(w.snapshot(), before);
 });
 
-test("R59: on the case door a document publication holds waiting is signed: STATEMENT_ACK_ALREADY_SIGNED (C-82.3), in R19's order (no subject first; an outsider the dead answer), nothing written or re-authored; cancelled, it is acknowledged as an unsigned preparation and re-authored", () => {
+test("R59: on the case door a document publish-schedule holds waiting is signed: STATEMENT_ACK_ALREADY_SIGNED (C-82.3), in R19's order (no subject first; an outsider the dead answer), nothing written or re-authored; cancelled, it is acknowledged as an unsigned preparation and re-authored", () => {
   const { w, A } = setup();
   const one = w.publish(A, "alice", [Q]);
   wait(w, one.caseId, 1);
@@ -152,7 +155,7 @@ test("R59: on the case door a document publication holds waiting is signed: STAT
                "NO_REVIEW_COPY");
   assert.deepEqual(w.snapshot(), before, "nothing written, nothing re-authored");
   assert.equal(docOf(w, one.caseId, 1).doc_sha, sha);
-  /* cancelled: again a preparation (publication R68), acknowledged and its list re-authored, so its hash moves */
+  /* cancelled: again a preparation (publish-schedule R3), acknowledged and its list re-authored, so its hash moves */
   cancel(w, one.caseId, 1);
   const ok = w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: one.caseId, edition: 1, reason: WORDS });
   assert.equal(ok.ok, true, JSON.stringify(ok));

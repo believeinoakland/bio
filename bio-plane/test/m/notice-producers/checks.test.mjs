@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, ANN } from "../people/fixture.mjs";
-import { producers, reader, ofKind, sentences, texts, JUDGMENT, snapshot, hintFailures } from "./fixture.mjs";
+import { producers, fresh, reader, ofKind, sentences, texts, JUDGMENT, snapshot, hintFailures } from "./fixture.mjs";
 import { TAKE_UP, NOTICED_LABEL, HINT_MARK } from "../../../src/notice-producers/index.mjs";
 
 const NOW = "2026-10-06T12:00:00Z";
@@ -155,4 +155,19 @@ test("R11: an interest-check item is marked \"Hint · machine work\" in its summ
   assert.equal(it.label, "noticed");
   assert.equal(it.kind, "interest-check-noticed");
   assert.match(it.id, /^FINDING::interest-check-noticed::CHK-[^:]+::[^:]+$/);
+});
+
+test("R2 R7 (D54; N822, K2408): an administrator at a hidden project's EXISTENCE is told nothing of its contents: no interest-check item for that project, which is never asked about for them; the control: joined, the same administrator receives it", () => {
+  const { w, P } = setup();
+  gate(w, 0.1);
+  const asked = [];
+  const people = { listChecks: (a) => w.p.listChecks(a), checkResults: (a) => { asked.push([a.viewer, a.project]); return w.p.checkResults(a); } };
+  const read = (m) => reader(fresh(w.host, { membership: w.membership, people, duties: w.duties })).read(m, { now: NOW });
+  assert.equal(w.membership.sight(P, BOSS), "existence", "boss, an administrator, sees only that the hidden project exists");
+  const r = read("boss");
+  assert.deepEqual(ofKind(r, "interest-check-noticed"), []);
+  assert.deepEqual(asked.filter(([, p]) => p === P), [], "the hidden project is never asked about for him");
+  assert.ok(!texts(r).some((t) => t.includes(P)), "nothing names it");
+  join(w, P, "boss");
+  assert.equal(ofKind(read("boss"), "interest-check-noticed").length, 1, "negative control: joined, he receives it");
 });

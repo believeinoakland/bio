@@ -1,6 +1,6 @@
 # run-productions — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102), split from `ai-runs`' draft (N54, K82); `SUGGEST_KINDS` and C-27.15 are `basis-versions`' (K82 (4)). Last changed T21 (R20 wording, K933); every requirement met.
+**Status** · In force: approved by Bob 2026-09-26 (K102), split from `ai-runs`' draft (N54, K82); `SUGGEST_KINDS` and C-27.15 are `basis-versions`' (K82 (4)). Last changed T41 (T41-24: R21–R24 new, reading inside a document, the member's acceptance, the bearing note, a reading's pages, as `draft-T41-investigation.md` §3.6; K2405, K2418), not yet met; every other requirement met.
 
 **Size (P6).** About 1,780 lines (about 800 without comment-only and blank lines): `store.mjs` 1,464, `bio-checks.mjs` 204, `schema.mjs` 108. Well under 4,000. A job reads it whole with the public parts of `ai-runs`, `basis-versions`, `strength`, `content` and `extraction`.
 
@@ -35,10 +35,17 @@ Terms. A **run** and its **bounds** are `ai-runs`'; `ai-runs.runFor` answers a r
 - **R14** For a capture, the proposals with a position, newest first, at most the count asked plus one, each as `{run, ref, label, position, content_id, mint label}`, so `narrowCandidates` lists passages an extract run proposed.
 - **R20** (K861, plane R10) The module exports its figure source, `counts(hid)` (shaped as `record-core` R63's), with its key list, for `plane` to register under this module's name: `proposedReadings`, the rows of `proposed_readings` less the rows whose `bundle_id` is in `hid`, and `suggestRefusals`, the rows of `suggest_refusals` less the rows whose `target` (the question refused) is in `hid`, a NULL key naming no bundle (so never dropped by `hid`); a null `hid` counts whole; it answers exactly the listed keys. The module registers nothing itself.
 
+**Reading inside a held document** (T41-24; N820; D2, D3, D4, D22)
+- **R21** (D2, D4) An extract-mode run, or an investigate-mode run carrying a step (an exploring run, `question-explorer` R13; K2502), reading inside a held document (`run-rules` R26) proposes, besides R11's passages, connections (to bodies, people in their public roles, other documents, the questions), each tied to its exact quote, labelled the system's, carrying the step it serves (`steps.recordProduct`); a connection's grade is earned by how its link is established, never offered and never D by the machine's say-so. The `{text, ceiling}` it hands `extraction` R42 takes `ceiling` as the record's own ceiling for that capture, route included (`leg-earning`'s earned capture ceiling, provenance R25/R26 applied), never the bytes' B alone (K2496).
+- **R22** (D3) `proposalAccept({proposal, form, edit?, by})` is the member's one act on a proposed passage or connection (`record-grammar` R52): as proposed (the meaning recorded as proposed), edited (her meaning), or her own instead; only then may a leg cite it as hers. `acceptanceCounts()` answers per kind, group-wide only.
+- **R23** (D22) `bearingNote({capture, question, run?, sentences, caller, viewer})` (`run` absent when drafted interactively, `run-rules` R25's draft kind, the caller then a member who may see both; K2482) stores a note on what a document says about a question and what it does not: each sentence tied to a quote checked byte-exact in the capture's extracted text (`extraction` R42's byte-exact check, as R21 hands it; K2472); a sentence that cannot be tied is left out. It is shown only beside the source, never in its place, never stored as the document's content, never cited as evidence, never a leg target.
+- **R24** (D2) A reading proceeds a few pages at a time within the `pages` bound, and a run stopping at it says how far it read.
+
 ## Private
 
 ### Uses
 
+- (T41; RUN-PRODUCTIONS #8 J2, K2496) `extraction`: `unitsOf`, the `readings`/`reading_refs` read contract (R21, R23); `text-chain`: `captureBound`; `leg-earning`: the capture's earned ceiling (R21); `record-grammar`: `idPattern`, `isStepId`, `sha256HexSync`, `acceptanceRecord` (R22); `membership`: `projectAuthority` (R22); `credentials`: `aiKeptAway` (R24); `steps`: `recordProduct` (R21). R17 holds six tables.
 - `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `text-chain`: `readingSource`, `readingSourceJson`, `readingSourceFromColumns`, `describeChain`.
 - `record-core`: `recordOf(ctx)`, `transact`, `declarePurge`, `bundles` and `files` by its read contract.

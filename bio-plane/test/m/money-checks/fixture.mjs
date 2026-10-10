@@ -119,8 +119,19 @@ export function world({ budgetClock = null } = {}) {
     },
     project(id, participants = []) {
       w.bundle(id, "project");
-      for (const p of participants)
-        st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, created, updated) VALUES (?,?,?,?,?)`, id, p, "joined", NOW, NOW);
+      for (const p of participants) w.participate(id, p);
+      return id;
+    },
+    /** A member placed in a project, `joined` or `invited` (membership R43: a participant in any state sees it). */
+    participate(id, member, state = "joined") {
+      st.sql.exec(`INSERT INTO project_participants (project_id, member_id, state, created, updated) VALUES (?,?,?,?,?)`, id, member, state, NOW, NOW);
+    },
+    /** D54 (membership R43, R45): `owner`, a participant, made the project's owner, who sets it discoverable by
+     *  membership's own act; an administrator outside a discoverable project still sees it whole. */
+    discoverable(id, owner) {
+      st.sql.exec(`UPDATE project_participants SET owner=1 WHERE project_id=? AND member_id=?`, id, owner);
+      const r = membership.projectVisibilitySet({ projectId: id, setting: "discoverable", by: owner, viewer: `member:${owner}` });
+      if (!r.ok) throw new Error(`fixture visibility refused: ${r.reason}`);
       return id;
     },
     event(kind, concerns = []) {

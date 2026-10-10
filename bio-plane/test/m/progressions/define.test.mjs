@@ -229,9 +229,12 @@ test("R27 R28: every refusal this module answers carries its code with its row a
   assert.equal(PROGRESSION_CHECKS.UNKNOWN_AFTER.check, "C-33.26");
   assert.equal(PROGRESSION_CHECKS.NO_DEFINITION_VERSION.check, "C-33.42");
   assert.equal(PROGRESSION_CHECKS.DEFINITION_MOVED.check, "C-33.43");
-  assert.deepEqual(Object.keys(SHARED_ACT_CHECKS).sort(), ["NO_BASIS", "NO_CITATION"]);
+  // the shared rows are read from record-grammar's export, never pinned as a literal list (its R52 adds C-33.54, K2446)
   assert.deepEqual([SHARED_ACT_CHECKS.NO_BASIS.check, SHARED_ACT_CHECKS.NO_CITATION.check], ["C-33.40", "C-33.41"]);
-  for (const shared of ["NO_BASIS", "NO_CITATION"]) assert.equal(PROGRESSION_CHECKS[shared], undefined, shared);
+  for (const [shared, row] of Object.entries(SHARED_ACT_CHECKS)) {
+    assert.equal(PROGRESSION_CHECKS[shared], undefined, shared);
+    assert.ok(!ids.has(row.check), `${shared}: ${row.check} is a shared row, never this module's`);
+  }
 
   // every refusal each act answers, driven at the interface, and what it carries
   const w = seeded();

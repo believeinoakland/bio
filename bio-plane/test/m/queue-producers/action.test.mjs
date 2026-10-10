@@ -101,7 +101,15 @@ test("R16: one OBLIGATION per checkpoint action-plans answers due, keyed OBLIGAT
   w.fakes.actionPlans.checkpointsDue = () => ({ ok: true, limit: 500, truncated: false,
     items: [{ plan: "PLN-3", project: "PRJ-O", scenario: 1, version: 1, phase: "p", set_by: null, due: day(NOW) }] });
   w.bundle("PRJ-O", "project");
-  assert.deepEqual(ids(w.read("ada")), ["OBLIGATION::plan-checkpoint-due::PLN-3::1::p"]);
+  /* D54 (K2408, K2442): PRJ-O is hidden and ada neither invited nor joined, so she sees it only at EXISTENCE, never its
+     plan (membership R43, R44); R11: no item names it */
+  assert.deepEqual(ids(w.read("ada")), [], "D54: an administrator outside a hidden project is told nothing of its plan");
+  assert.ok(!JSON.stringify(w.read("ada")).includes("PLN-3"), "R11: the plan is named nowhere");
+  /* the negative controls (K874): an invited administrator, and a discoverable project, are still at FULL */
+  w.member("ida", { role: "admin" }); w.join("PRJ-O", "ida", { state: "invited" });
+  assert.deepEqual(ids(w.read("ida")), ["OBLIGATION::plan-checkpoint-due::PLN-3::1::p"], "an invited administrator sees it whole");
+  w.discoverable("PRJ-O");
+  assert.deepEqual(ids(w.read("ada")), ["OBLIGATION::plan-checkpoint-due::PLN-3::1::p"], "a discoverable project is seen whole by administrators");
   assert.equal(byId(w.read("ada"))["OBLIGATION::plan-checkpoint-due::PLN-3::1::p"].basis.recipients_rule, "administrators");
 });
 
@@ -206,8 +214,16 @@ test("R19: one OBLIGATION litigation-hold per legal mark actions.holdsDue answer
     "the viewer is actions' to read by, and its cursor is followed");
   const all = ["OBLIGATION::litigation-hold::ACT-1::2", "OBLIGATION::litigation-hold::ACT-1::4", "OBLIGATION::litigation-hold::ACT-2::0",
     "OBLIGATION::litigation-hold::ACT-H::1"];
-  assert.deepEqual(ids(w.read("ada")), all, "every administrator: one item per unanswered legal mark");
-  assert.deepEqual(ids(w.read(null, "class:admin")), all, "and the admin machine credential, as R14's");
+  /* D54 (K2408, K2442): ACT-H belongs to PRJ-H, hidden, which ada neither was invited to nor joined: she sees PRJ-H
+     only at EXISTENCE, never an action in it (membership R43, R44; actions R54 lists marks on actions the viewer may see) */
+  assert.deepEqual(ids(w.read("ada")), all.slice(0, 3), "every administrator: one item per unanswered legal mark she may see");
+  assert.ok(!JSON.stringify(w.read("ada")).includes("ACT-H"), "D54, R11: the action in the hidden project is named nowhere to her");
+  assert.deepEqual(ids(w.read(null, "class:admin")), all, "and the admin machine credential, as R14's, which sees every bundle");
+  /* the negative controls (K874): an invited administrator, and the project set discoverable, are at FULL */
+  w.member("ida", { role: "admin" }); w.join("PRJ-H", "ida", { state: "invited" });
+  assert.deepEqual(ids(w.read("ida")), all, "an administrator invited to the hidden project is told of all four");
+  w.discoverable("PRJ-H");
+  assert.deepEqual(ids(w.read("ada")), all, "a discoverable project is seen whole by administrators");
   assert.deepEqual(ids(alice), ["OBLIGATION::litigation-hold::ACT-1::2", "OBLIGATION::litigation-hold::ACT-2::0"],
     "the member who marked it, her own marks only, and never one on an action she may not see");
   assert.ok(!JSON.stringify(alice).includes("ACT-H"), "R11: the invisible action is named nowhere");
@@ -220,7 +236,7 @@ test("R19: one OBLIGATION litigation-hold per legal mark actions.holdsDue answer
     "its subject the action, naming the entry's position and the mark's note");
   assert.deepEqual(it.age, { state: "determined", since: iso(NOW - 3 * DAY), ms: 3 * DAY }, "aged from the mark's instant");
   assert.equal(byId(alice)["OBLIGATION::litigation-hold::ACT-2::0"].age.state, "undetermined");
-  assert.deepEqual(it.recipients, ["ada", "alice"], "every administrator and the marker");
+  assert.deepEqual(it.recipients, ["ada", "alice"], "every administrator and the marker (read before ida was added)");
   assert.deepEqual(it.options, [{ id: "actionhold", label: "Record that a litigation hold is in place", weight: "single" },
     { id: "actionholdrelease", label: "Record that no hold is needed, with a reason", weight: "single" },
     { id: "opt", on: ["ACT-1"] }], "both its doors (DEC-113): the hold in place and its release, beside the acts on the action");
@@ -277,8 +293,28 @@ test("R29 (DEC-113): one FINDING litigation-hold-released per release actions.ho
     "the viewer is actions' to read by, and its cursor is followed");
   const all = ["FINDING::litigation-hold-released::ACT-1::2::3", "FINDING::litigation-hold-released::ACT-1::4::7",
     "FINDING::litigation-hold-released::ACT-2::0::2", "FINDING::litigation-hold-released::ACT-H::1::2"];
-  assert.deepEqual(ids(w.read("ada")), all, "every administrator member: one item per release");
-  assert.deepEqual(ids(w.read(null, "class:admin")), all, "and the admin machine credential, as R14's");
+  /* D54 (K2408, K2442): PRJ-1 and PRJ-H are hidden and ada joined neither, so every action here is in a project she sees
+     only at EXISTENCE: none is told her (membership R43, R44; actions R59 lists releases on actions the viewer may see) */
+  assert.deepEqual(ids(w.read("ada")), [], "D54: an administrator outside the hidden projects is told of no release in them");
+  assert.ok(!/ACT-|PRJ-/.test(JSON.stringify(ofKind(w.read("ada"), "litigation-hold-released"))), "R11: nothing of them is named to her");
+  assert.deepEqual(ids(w.read(null, "class:admin")), all, "and the admin machine credential, as R14's, which sees every bundle");
+  /* the negative controls (K874): invited to PRJ-1 she is at FULL there; PRJ-H set discoverable, at FULL there too */
+  w.join("PRJ-1", "ada", { state: "invited" });
+  assert.deepEqual(ids(w.read("ada")), all.slice(0, 3), "an invited administrator: every release on PRJ-1's actions");
+  /* K2581 (D54; membership R60; actions R59's "may name"): PRJ-H, hidden, which she sees only at EXISTENCE, is named to
+     her among the restarted projects by its id alone; the action in it stays withheld */
+  const adaAt = byId(w.read("ada"))["FINDING::litigation-hold-released::ACT-1::2::3"];
+  assert.deepEqual(adaAt.subject.restarted, ["PRJ-1", "PRJ-H"], "an administrator at a hidden project's EXISTENCE is told its id");
+  assert.deepEqual(adaAt.basis.restarted, ["PRJ-1", "PRJ-H"]);
+  assert.match(adaAt.detail, /restarts for PRJ-1, PRJ-H\./);
+  assert.ok(!JSON.stringify(w.read("ada")).includes("ACT-H"), "never its contents: the action in PRJ-H is no item and is named nowhere");
+  /* the negative controls: a member who is no administrator, at NONE of hidden PRJ-H, is not told it (below, after it is
+     discoverable, at its EXISTENCE, still not: "may name" is FULL or an administrator's EXISTENCE of a hidden project) */
+  assert.deepEqual(byId(w.read("alice"))["FINDING::litigation-hold-released::ACT-1::2::3"].subject.restarted, ["PRJ-1"]);
+  w.discoverable("PRJ-H");
+  assert.deepEqual(ids(w.read("ada")), all, "every administrator member who sees the projects: one item per release");
+  assert.deepEqual(byId(w.read("alice"))["FINDING::litigation-hold-released::ACT-1::2::3"].subject.restarted, ["PRJ-1"],
+    "a member at a discoverable project's EXISTENCE may not name it among the restarted projects");
   assert.deepEqual(ids(alice), ["FINDING::litigation-hold-released::ACT-1::2::3", "FINDING::litigation-hold-released::ACT-2::0::2"],
     "a placer, of the holds she placed, never one on an action she may not see, nor one she released and did not place");
   assert.deepEqual(ids(w.read("bob")), ["FINDING::litigation-hold-released::ACT-1::2::3", "FINDING::litigation-hold-released::ACT-1::4::7"]);

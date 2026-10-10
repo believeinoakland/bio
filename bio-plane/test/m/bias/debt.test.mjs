@@ -7,7 +7,9 @@ import { viewerPredicate } from "../../../src/membership/index.mjs";
 const A = "BIAS-2026-0001-a", P = "PROJ-2026-0001-p", NOW = Date.parse("2026-07-10T00:00:00Z");
 const ADMIN = { reason: WHY, author: "admin", identity: "member:admin", viewer: "admin" };
 
-/* A world with an instance lens in force, a project owned by ruth, and the lens's current hash. */
+/* A world with an instance lens in force, a project owned by ruth, and the lens's current hash. The project is hidden
+   (the world's default), so since D54 (membership R43; K2408) the founder, neither invited nor joined, sees it only at
+   EXISTENCE: the lens is read as its owner, and the reads that list every debt use a machine viewer's gate. */
 async function debtWorld(env = {}) {
   const w = world({ env });
   await w.group("alice", "ruth", "cora", "gone");
@@ -16,7 +18,7 @@ async function debtWorld(env = {}) {
   w.membership.projectJoin({ projectId: P, by: "alice" });
   w.set(A, [S("s1")], "adopted");
   w.bias.biasAdopt({ reason: WHY, bundleId: A, ...ADMIN });
-  w.lens = () => w.bias.biasManifest({ scope: "project", scopeId: P, viewer: "admin" }).statements_sha;
+  w.lens = () => w.bias.biasManifest({ scope: "project", scopeId: P, viewer: "member:ruth" }).statements_sha;
   w.move = (text) => w.promote(A, FM(A, { statements: [S("s1", { text })], current_state: "adopted", prior_state: "proposed" }));
   return w;
 }
@@ -32,7 +34,7 @@ test("R33: registerWorkProducts takes a later module's work products; a malforme
   assert.equal(w.bias.registerWorkProducts("x", { list: () => [] }).reason, "WORK_PRODUCTS_MALFORMED");
 });
 
-test("R33: the sweep compares the lens each work product was made under with the lens in force now, as the administrator: moved raises, changed restates, not moved settles as lens_returned, undetermined raises and clears nothing", async () => {
+test("R33: the sweep compares the lens each work product was made under with the lens in force now, read as a machine viewer (D54: a hidden project's lens too): moved raises, changed restates, not moved settles as lens_returned, undetermined raises and clears nothing", async () => {
   const w = await debtWorld();
   const then = w.lens();
   const wps = { "RUN-1": run(then), "RUN-2": run(then, { lens: null }), "RUN-3": run(null, { lens: { basis: "handed", statements_sha: null } }) };
@@ -47,6 +49,14 @@ test("R33: the sweep compares the lens each work product was made under with the
   const d = debt(w, "RUN-1");
   assert.deepEqual([d.context_type, d.context_id, d.moved_basis, d.lens_then, d.lens_now, JSON.parse(d.recipients), d.raised, d.cleared_at],
     ["project", P, "at_open", then, now1, ["alice", "ruth"], "2026-07-10T00:00:01Z", null]);
+  /* D54: the founder, not in the hidden project, reads its lens as none in force, and the sweep raised the debt all
+     the same: the lens in force is the scope's, not a viewer's (negative control: made discoverable, the founder
+     reads the very lens the sweep compared against) */
+  assert.equal(w.bias.biasManifest({ scope: "project", scopeId: P, viewer: "admin" }).in_force, false);
+  w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "ruth", reason: "open to the group" });
+  assert.equal(w.bias.biasManifest({ scope: "project", scopeId: P, viewer: "admin" }).statements_sha, now1);
+  w.membership.projectVisibilitySet({ projectId: P, setting: "hidden", by: "ruth", reason: "closed again" });
+  assert.equal(w.bias.biasManifest({ scope: "project", scopeId: P, viewer: "admin" }).in_force, false);
   /* moved again: the same debt, restated, keeping its age */
   w.move("The lens moved a second time.");
   s = await w.bias.biasDebtSweep(NOW + 2000);
@@ -159,11 +169,14 @@ test("R36: biasDebt answers a visible debt with its settled state and settlement
   assert.deepEqual({ ...unseen, run: 0 }, { ...absent, run: 0 });
   assert.equal(unseen.found, false);
   w.sql.exec(`UPDATE bias_debts SET cleared_at='2026-01-01T00:00:00Z', settled_kind=NULL WHERE run='RUN-1'`);
-  assert.deepEqual(w.bias.biasDebt({ run: "RUN-1", viewer: "admin" }).settled.kind_state, "undetermined");
+  assert.deepEqual(w.bias.biasDebt({ run: "RUN-1", viewer: "member:alice" }).settled.kind_state, "undetermined");
+  /* D54: the founder, not in the hidden project, is answered as if no debt were held; a machine viewer sees it */
+  assert.deepEqual({ ...w.bias.biasDebt({ run: "RUN-1", viewer: "admin" }), run: 0 }, { ...absent, run: 0 });
+  assert.equal(w.bias.biasDebt({ run: "RUN-1", viewer: "class:daemon" }).found, true);
   for (let i = 0; i < 55; i++) w.sql.exec(`INSERT INTO bias_debt_settlements (run, kind, at) VALUES ('RUN-1','resolved',?)`, `t${i}`);
-  const many = w.bias.biasDebt({ run: "RUN-1", viewer: "admin", limit: 500 });
+  const many = w.bias.biasDebt({ run: "RUN-1", viewer: "member:alice", limit: 500 });
   assert.deepEqual([many.settlements.length, many.limit, many.truncated, many.settlements[0].at], [50, 50, true, "t0"]);
-  assert.equal(w.ops("run=RUN-1&viewer=admin&limit=3").biasdebt().settlements.length, 3);
+  assert.equal(w.ops("run=RUN-1&viewer=member:alice&limit=3").biasdebt().settlements.length, 3);
 });
 
 test("R37: every settlement is appended, never rewritten; a debt is disclosed and blocks nothing", async () => {
@@ -349,7 +362,8 @@ test("R43: uncleared answers the open debts the gate admits, newest raised first
   await w.bias.biasDebtSweep(NOW);
   const now = w.lens();
   w.sql.exec(`UPDATE bias_debts SET raised='2026-07-11T00:00:00Z' WHERE run='RUN-2'`);
-  const admin = viewerPredicate("admin");
+  /* every debt: a machine viewer's gate (since D54 the founder's no longer admits a hidden project it is not in) */
+  const admin = viewerPredicate("class:daemon");
   const all = w.bias.uncleared({ gate: admin });
   assert.deepEqual([all.limit, all.truncated, all.debts.map((d) => d.run)], [200, false, ["RUN-2", "RUN-1", "RUN-3"]]);
   assert.deepEqual(all.debts[1], { run: "RUN-1", context_type: "project", context_id: P, moved_basis: "at_open", lens_then: then,
@@ -360,6 +374,13 @@ test("R43: uncleared answers the open debts the gate admits, newest raised first
   assert.deepEqual(w.bias.uncleared({ gate: viewerPredicate("member:cora") }).debts.map((d) => d.run), []);
   assert.deepEqual(w.bias.uncleared({ gate: viewerPredicate("member:alice") }).debts.map((d) => d.run), ["RUN-2", "RUN-1"]);
   assert.deepEqual(w.bias.uncleared({ gate: viewerPredicate("nobody") }).debts, []);
+  /* D54: the founder's gate and an administrator's admit none of the hidden project's debts (nor the inquiry's, no held
+     bundle); made discoverable, both admit the project's (negative control) */
+  for (const v of ["admin", "member:second"]) assert.deepEqual(w.bias.uncleared({ gate: viewerPredicate(v) }).debts, [], v);
+  w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "ruth", reason: "open to the group" });
+  for (const v of ["admin", "member:second"])
+    assert.deepEqual(w.bias.uncleared({ gate: viewerPredicate(v) }).debts.map((d) => d.run), ["RUN-2", "RUN-1"], v);
+  w.membership.projectVisibilitySet({ projectId: P, setting: "hidden", by: "ruth", reason: "closed again" });
   for (const gate of [null, {}, { sql: 1, args: [] }, "admin"]) assert.deepEqual(w.bias.uncleared({ gate }).debts, [], String(gate));
   /* cleared debts are not listed */
   w.bias.biasDebtResolve({ run: "RUN-2", reason: "Not bearing.", actor: "alice", viewer: "member:alice" });
@@ -398,7 +419,7 @@ test("R44: settled answers the debts settled at or after since that the gate adm
   w.move(S("s1").text);
   const back = await w.bias.biasDebtSweep(NOW + 5000);
   assert.deepEqual(back.cleared, ["RUN-3", "RUN-4"]);
-  const admin = viewerPredicate("admin");
+  const admin = viewerPredicate("class:daemon");   // every debt (D54: not the founder's gate)
   const before = w.dump();
   const all = w.bias.settled({ gate: admin, since: "2026-07-01T00:00:00Z" });
   assert.deepEqual(all, { limit: 200, truncated: false, since: "2026-07-01T00:00:00Z", debts: [
@@ -420,6 +441,11 @@ test("R44: settled answers the debts settled at or after since that the gate adm
   assert.deepEqual(runs({ gate: viewerPredicate("member:alice"), since: "2026-07-01T00:00:00Z" }), ["RUN-2", "RUN-1", "RUN-3"]);
   assert.deepEqual(runs({ gate: viewerPredicate("member:cora"), since: "2026-07-01T00:00:00Z" }), []);
   assert.deepEqual(runs({ gate: viewerPredicate("nobody"), since: "2026-07-01T00:00:00Z" }), []);
+  /* D54: the founder's gate admits none of the hidden project's settled debts; made discoverable, it admits them */
+  assert.deepEqual(runs({ gate: viewerPredicate("admin"), since: "2026-07-01T00:00:00Z" }), []);
+  w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "ruth", reason: "open to the group" });
+  assert.deepEqual(runs({ gate: viewerPredicate("admin"), since: "2026-07-01T00:00:00Z" }), ["RUN-2", "RUN-1", "RUN-3"]);
+  w.membership.projectVisibilitySet({ projectId: P, setting: "hidden", by: "ruth", reason: "closed again" });
   for (const gate of [null, {}, { sql: 1, args: [] }, "admin"]) assert.deepEqual(runs({ gate, since: "2026-07-01T00:00:00Z" }), [], String(gate));
   /* a since that is not an instant answers none, and says so */
   for (const since of [null, undefined, "", "  ", "soon", NaN, Infinity, {}, ["2026-07-01T00:00:00Z"]]) {
@@ -456,7 +482,7 @@ test("R44: at most limit (1–1,000, default 200), truncated measured by reading
   assert.equal((await w.bias.biasDebtSweep(NOW)).raised.length, 201);
   w.move(S("s1").text);
   assert.equal((await w.bias.biasDebtSweep(NOW + 1000)).cleared.length, 201);
-  const admin = viewerPredicate("admin");
+  const admin = viewerPredicate("class:daemon");   // every debt (D54: not the founder's gate)
   const since = "2026-07-10T00:00:00Z";
   const d = w.bias.settled({ gate: admin, since });
   assert.deepEqual([d.limit, d.debts.length, d.truncated], [200, 200, true]);

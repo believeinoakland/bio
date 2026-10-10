@@ -53,7 +53,7 @@ Committed files built by `bundler` (`bio-plane/scripts/fleet-bundle.mjs`, `write
 
 ## Parallel work: the UX design stream (Bob, 2026-10-01; K945)
 
-Bob's UX design work runs under his **primary account**, outside this process and its sessions (today on branch `claude/gallant-brown-zg0wc1`, session `session_01EhPoUTrVCgAqw2ktRyKjCU`). It writes `docs/development/ux-substrate/`, mints **DEC** ids (DEC-96 onward) for Bob's UX rulings, and amends canon documents under `docs/architecture/`. Every record this process writes (rulings, plans, job records, handoffs, reports to Bob) recognises it:
+Bob's UX design work runs under his **primary account**, outside this process and its sessions (today on branch `claude/gallant-brown-zg0wc1`, session `session_014uT5e8EjnRxmEeUDDg2cYa` on the primary account, started for Bob by BOB #149, K2521). It writes `docs/development/ux-substrate/`, mints **DEC** ids (DEC-96 onward) for Bob's UX rulings, and amends canon documents under `docs/architecture/`. Every record this process writes (rulings, plans, job records, handoffs, reports to Bob) recognises it:
 - Its DEC rulings are Bob's, made there; this process never mints a DEC id, cites them as that stream's, and folds a DEC into module requirements only once it is on `main` (or Bob names it), as a requirement change with its DEC cited.
 - Its files are its own: no session of this process edits, reverts or re-words `docs/development/ux-substrate/` or that stream's canon amendments, and a merge conflict with them is resolved by keeping its text.
 - Entries left out as "Bob's: UX" (K633; N470 and the legacy-ui shares in `plan/next.md`) wait on that stream's outcome, not on a question from this process.
@@ -64,8 +64,12 @@ Bob's UX design work runs under his **primary account**, outside this process an
 
 Bob's design of the investigation engine and the project as an investigation (K1627, K2064, K2075) runs in its own session, **INVESTIGATION-DESIGN** (#2: `session_01WzvEVTg39Jijv4CesGz4Dc`, started by BOB #145, K2398; #1 `session_01MoJa8LUVd6PRJDtgoSdRvj` archived), on branch `design/investigation`, writing only `docs/development/investigation-design/`. It works with Bob directly and records his decisions as D-numbers (the study's D1–D24, new ones from D25), never K or DEC. Its `HANDOFF.md` (entries `H<n>`) is read by BOB at takeover and at every backstop check; BOB folds each hand-off into requirements (N748) and answers with the K that folds it. Its screens are owed to the UX design stream. A successor (`#n+1`) is started by the BOB of the day when the lane asks.
 
+## Parallel work: the actions design lane (Bob, 2026-10-09; K2433)
+
+Bob's research and design of actions (requirements, current capabilities, capabilities needed, design and use cases; N817, his D43) runs in its own session, **ACTIONS-DESIGN** (#2: `session_01RukQneSYmxg4FvfJ9aXccd`, primary account, started by BOB #149 on Bob's direction, K2521; #1 `session_01VDxYUZBV7s4gVx8xWwmCVY` on the secondary account), on branch `design/actions`, writing only `docs/development/actions-design/`. It works as the investigation lane does: Bob's decisions are its own D-numbers ("Actions D<n>"), never K or DEC; its `HANDOFF.md` (entries `H<n>`) is read by BOB at takeover and every backstop check and folded into requirements with a K; its screens are owed to the UX design stream. A successor is started by the BOB of the day when the lane asks.
+
 ## Starting a session
 
-- **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`. Current: **ROOT #6**, `session_01FXbdTJZyPp3Bhcv7pfVSR1` (Bob's secondary account, 2026-10-07; K2022). Earlier ROOTs are archived (rulings K693–K2022).
+- **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`. Current, on Bob's **primary** account: **ROOT #5**, `session_0187SrKsqhqzSTqwDk2hzcXy` (started by Bob 2026-10-05, resumed by him for the account switch 2026-10-10; K2511); its context is about 250k tokens at resumption, so it is replaced (by Bob) at 300k. On the secondary account: ROOT #6, `session_01FXbdTJZyPp3Bhcv7pfVSR1` (2026-10-07; K2022), unreachable from the primary. Earlier ROOTs are archived (rulings K693–K2022).
 - **BOB:** read `roles/BOB.md` in the process repository, then this file, then `build/rulings-active.md`, then the latest handoff, `build/handoff.md`.
 - **A module job:** read `roles/JOB.md` in the process repository; BOB's first message names the module and the tranche.

@@ -79,7 +79,17 @@ export const SEAL = "test-seal-secret-for-ai-runs";
  *  null otherwise; inquiry builds the real one in this layer. */
 export const inquiryStub = (migrated = {}) => ({ migratedSurfacing: (id) => migrated[id] ?? null });
 
-export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undefined, zone = null } = {}) {
+/** A test set standing in for Civicsmith's (run-rules R19's `CIVICSMITH_TEST_SET`, v1 empty until N829), with one
+ *  matter, so a part's bar can be held here (ai-runs' `deps.testSet`, a module test's alone). */
+export const TEST_SET = Object.freeze({ id: "world-set", version: 1, matters: Object.freeze([{ id: "m1" }]) });
+/** The parts a world holds a passing bar for unless told otherwise (`bars`). */
+export const BAR_PARTS = Object.freeze(["check", "investigate", "extract", "plan", "explore"]);
+
+/* `steps` and `aiUse`: a stand-in at the module's interface where a test passes one; else the real module through its
+   factory on this world's storage. `testSet` and `bars`: the test set the deploy gate reads and the parts holding a
+   passing record on it (B6: run-rules R19's test bar); `bars: []` holds none. */
+export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undefined, zone = null, steps = undefined,
+                        aiUse = undefined, testSet = TEST_SET, bars = BAR_PARTS } = {}) {
   const db = new DatabaseSync(":memory:");
   const sql = { exec(q, ...args) {
     const literal = [...q.matchAll(/\b(?:GLOB|LIKE)\s+'((?:[^']|'')*)'/gi)].map((m) => m[1].replace(/''/g, "'"));
@@ -115,8 +125,12 @@ export function world({ env = {}, inquiry = inquiryStub(), deployedModes = undef
   /* `zone`: the group's governing time zone as retrieval answers it (its R69), from an active profile's `time_zone`. */
   if (zone) record.setSetting("jurisdiction_profiles", ["zone-profile"], "admin");
   retrievalOf(ctx, zone ? { combine: () => ({ ok: true, view: { time_zone: { value: zone } } }), localFacts: null } : undefined).migrate();
-  const runs = aiRunsOf(ctx, env, { inquiry, ...(deployedModes ? { deployedModes } : {}) });
+  const runs = aiRunsOf(ctx, env, { inquiry, ...(deployedModes ? { deployedModes } : {}), ...(steps ? { steps } : {}),
+                                    ...(aiUse ? { aiUse } : {}), testSet });
   runs.migrate();
+  for (const part of bars)
+    runs.testBarRecord({ part, set: testSet.id, set_version: testSet.version, false_alarm_rate: 0, passed: true,
+                         graded_by: "harness", at: T0 });
   let k = 0;
   const w = {
     db, sql, ctx, record, membership, credentials, promotion, bias, runs,
@@ -230,4 +244,29 @@ export function agentWorker(answer = { status: 200, body: { ok: true } }) {
     if (answer === "throw") throw new Error("network down");
     return new Response(JSON.stringify(answer.body), { status: answer.status });
   } };
+}
+
+/** steps at its interface (its R1, R2, R4, R5, R9 and B2's registerRunHolder), over plain maps: `seen` maps a step id to
+ *  the viewers that may see it, `places` a step id to its place (questions on `INQ` by default); `stepCreate` makes a
+ *  system step only for a run the registered holder says `by` holds (steps R1's machine arm), refusing blank work; every
+ *  act is recorded in `acts`. */
+export function stepsStub(seen = {}, places = {}) {
+  const acts = [];
+  let holder = null, made = 0;
+  return { acts, holder: () => holder,
+    registerRunHolder: (module, fn) => { holder = { module, fn }; return { ok: true, module }; },
+    step: ({ step, viewer }) => ((seen[step] || []).includes(viewer)
+      ? { ok: true, step, place: places[step] || { questions: [INQ] }, work: `work of ${step}` }
+      : { ok: false, code: "NO_SUCH_STEP", step }),
+    stepCreate: (a) => {
+      acts.push(["stepCreate", a]);
+      const held = holder ? holder.fn(a.by, a.run) : null;
+      if (!held) return { ok: false, code: "STEP_NOT_YOUR_RUN", reason: "STEP_NOT_YOUR_RUN" };
+      if (typeof a.work !== "string" || !a.work.trim()) return { ok: false, code: "STEP_NO_WORK", reason: "STEP_NO_WORK" };
+      made += 1;
+      return { ok: true, step: `STP-2026-${String(900 + made).padStart(4, "0")}`, place: a.place, held };
+    },
+    stepEnd: (a) => { acts.push(["stepEnd", a]); return { ok: true }; },
+    recordProduct: (a) => { acts.push(["recordProduct", a]); return { ok: true }; },
+  };
 }

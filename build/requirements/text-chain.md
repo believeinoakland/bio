@@ -1,6 +1,6 @@
 # text-chain — requirements
 
-**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Carried rows D-635 and D-665 are outside this module. Every requirement met.
+**Status** · In force: written by BOB #37 (T6), a helper module, its requirements BOB's (K20). Carried rows D-635 and D-665 are outside this module. Every requirement met. Last changed T41's opening (T41-2: R104 new; N820; K2405, K2418, K2420); marked not yet met (T41).
 
 ## Public
 
@@ -27,8 +27,8 @@ non-empty array of step objects; `STEP_KINDS` below is the only source of which 
 - **R2** Each entry has `tier`: an integer (the kind IS that extraction tier), the string `"step"`
   (the step itself names its tier, on a `tier` field), or `null` (the kind is not a rung on the
   extraction ladder).
-- **R3** `convert` and `typed` additionally declare `names` (the fields `checkChain` requires
-  non-empty on that step), `unmeasured: "undetermined"` and `letter` (`"calibrated"` for `convert`,
+- **R3** `convert`, `typed` and (T41; R104, K2427) `ai_transcription` additionally declare `names` (the fields `checkChain` requires
+  non-empty on that step), `unmeasured: "undetermined"` and `letter` (`"calibrated"` for `convert` and `ai_transcription`,
   `"never"` for `typed`) — read by `checkChain`'s and `derivationCap`'s rules, never hand-matched by
   spelling.
 - Errors: not applicable; a plain object, never mutated.
@@ -342,7 +342,7 @@ new refusal condition in this module mints the next one in the family and is add
 - **R88** (N98) `extentCovers`: a `region` extent covers a target only when `rectSpace(extent.source)` equals `rectSpace(target)`, neither `null` (added to R54's conditions; the default stays no).
 - **R89** (N98) `readingPositionInExtent`, `pdf-page` with a rect on both sides: `false` unless both rects are in the same readable space (added to R71's `pdf-page` rule).
 - **R90** (N102, D-665, D-697) `mergeTier2Text`: when tier 2 wins a page, each of the base page's `image_unread` markers is carried onto the merged page after tier 2's own, unless tier 2 states one with the same `reason` and `rect`; it counts 0 undetermined characters, so no award moves (R77's family).
-- **R91** (N104, K143) Each `STEP_KINDS` entry that is a machine reading declares `machine: true` (`ocr`, `ai`), and no other does; `MACHINE_READ_KINDS` is the frozen array of those keys in `STEP_KINDS` order (`["ocr", "ai"]`), which `query-language` re-exports.
+- **R91** (N104, K143) Each `STEP_KINDS` entry that is a machine reading declares `machine: true` (`ocr`, `ai`, and (T41; R104, K2427) `ai_transcription`), and no other does; `MACHINE_READ_KINDS` is the frozen array of those keys in `STEP_KINDS` order (`["ocr", "ai", "ai_transcription"]` from T41), which `query-language` re-exports.
 
 **The content-extent algebra** (copied from the catalogue in T19, K747; the catalogue's copy was deleted at T19's close, K855, so this module's is the only one).
 - **R92** `CONTENT_EXTENT_KINDS` is a plain object whose keys are exactly `document`, `pdf-page`, `sheet-cell`, `slide-shape`, `doc-para`, `sheet-range`, `doc-table`, `image`, in that order, each `{landed: true, human: <its phrase>}`, the phrases unchanged from the catalogue's as this module copied them (K747); `dom` is not a key.
@@ -359,6 +359,9 @@ new refusal condition in this module mints the next one in the family and is add
 - **R101** `CONFIDENCE_BASES` is a plain object whose keys are exactly `engine` and `none`: the bases R42 admits.
 - **R102** `perPageTierWinner(p1, p2)` → `"tier1"` when `p2` is absent, `"tier2"` when `p1` is absent, else `"tier2"` exactly on R76's two conditions and `"tier1"` otherwise; `TIER_RULE` is a non-empty sentence stating that rule (fewer undetermined characters and more glyphs, else tier 1).
 - **R103** `READING_POSITION_KINDS` is a plain object whose keys are exactly R61's four arms; `READING_POSITION_UNPRODUCED` is `"dom"`, the IC-1 arm `readingSource` answers `null` for.
+
+**T41's addition** (N820; D21; K2418; `plan/draft-T41-investigation.md` §3.6)
+- **R104** (D21) Step kind `ai_transcription` with a derivation cap undetermined until its accuracy is measured (`calibration`), so `captureBound` answers undetermined for text it produced.
 
 ## Private
 

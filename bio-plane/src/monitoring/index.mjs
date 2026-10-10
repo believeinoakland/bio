@@ -37,6 +37,8 @@
  *   publication                     R33's published-finding half (`restingCapturesOf`, its R42; N230).
  *   caseImport                      R67, R68 (N534): `watchedImports` and `recordDocketRead` (its R18), the watched
  *                                   dockets the cadence tick reads daily.
+ *   investigation                   R70 (K2524): `watchedProjects` and `watchArrival` (its R18), the projects whose
+ *                                   members chose to keep watching their sources, told when a tick finds one changed.
  *   env      the instance bindings (`MONITOR_TICK_MS`). No binding or credential is a condition of monitoring (R45):
  *            both ticks call `monitor` and capture's `acquire` in process, from the scheduler's alarm (R23, N222).
  *   now      the instance clock in milliseconds (default: the wall clock).
@@ -62,6 +64,7 @@ import { actionClocksOf } from "../action-clocks/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { caseImportOf } from "../case-import/index.mjs";
+import { investigationOf } from "../investigation/index.mjs";
 import { PROJECTION_TABLE } from "../retrieval/index.mjs";
 import { readDriveAddress, driveBaselineRow, classifyDriveBaseline } from "../drive.mjs";
 import { RENDERED_METHOD, RENDER_TICK_UNDETERMINED } from "../render.mjs";
@@ -287,6 +290,8 @@ export const DOCKET_PURPOSE = "docket";
 export const DOCKET_UNREADABLE = Object.freeze(["not_json", "not_a_docket", "too_large", "fetch_failed"]);
 /* R67: the most pages of `watchedImports` one read follows (each at most 200 watches). */
 const DOCKET_WATCH_PAGES = 1000;
+/* R33, R70: the most pages of intent R7's `watchSet` one read follows (each at most 1,000 captures). */
+const WATCH_SET_PAGES = 1000;
 
 /** The machine viewer this module reads as: the daemon class, which D-15 leaves unfiltered. Escalation and
  *  conformance answer a call with no viewer as unseen, so every read names it (ESCALATION #1 J3). */
@@ -462,7 +467,7 @@ export class Monitoring {
 
   constructor({ storage, record, membership, promotion, host = null, env = null, now = null, fetch = null,
                 governor = null, provenance = null, capture = null, observationLog = null, intent = null,
-                actionClocks = null, escalation = null, publication = null, caseImport = null } = {}) {
+                actionClocks = null, escalation = null, publication = null, caseImport = null, investigation = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
@@ -470,7 +475,7 @@ export class Monitoring {
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : () => Date.now();
     this.#deps = { host, fetch, governor, provenance, capture, observationLog, intent, actionClocks, escalation, publication,
-                   caseImport };
+                   caseImport, investigation };
   }
 
   get governor() { return this.#deps.governor ||= governorOf(this.#deps.host, { env: this.env }); }
@@ -482,6 +487,7 @@ export class Monitoring {
   get escalation() { return this.#deps.escalation ||= escalationOf(this.#deps.host); }
   get publication() { return this.#deps.publication === undefined ? null : (this.#deps.publication ||= publicationOf(this.#deps.host)); }
   get caseImport() { return this.#deps.caseImport ||= caseImportOf(this.#deps.host); }
+  get investigation() { return this.#deps.investigation ||= investigationOf(this.#deps.host); }
   #fetch(u, init) { return (this.#deps.fetch || globalThis.fetch)(u, init); }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -1126,6 +1132,15 @@ export class Monitoring {
       }
     }
 
+    /* R70 (K2524): a look that recorded something new (a change tick) on a source a watched project keeps watching is
+       reported to that project, once; what the change means is not this module's to say (Intake Doctrine §4). */
+    const reached = lookArgs.outcome === "changed" && observation && observation.written === true
+      ? this.#reportArrivals({ bundleId, address: addressNorm, at: checked }) : null;
+    /* The answer names only the projects the caller may see (a member's session reaches `op=monitor`); a hidden one is
+       reported to all the same, and never named or counted here (K391's rule). */
+    const sees = (x) => { try { return this.membership.inSight(x.project, viewer) === true; } catch { return false; } };
+    const arrivals = reached ? { ...reached, reported: reached.reported.filter(sees), failed: reached.failed.filter(sees) } : null;
+
     return answer({
       ok: !!promoted?.ok,
       checked, status, note, baseline, seen,
@@ -1157,6 +1172,8 @@ export class Monitoring {
             fetched_address: tickAddress }
         : {}),
       reeval_raised: flags,
+      /* R70: the watched projects this change tick was reported to; null on a tick whose look recorded no change. */
+      arrivals,
       ...(promoted?.ok ? { revision: promoted.bundleSha } : { reason: promoted?.reason, detail: promoted?.detail }),
       note2: "A tick records that the source moved. It does not capture the new version: what a change MEANS is not a mechanical judgement.",
     }, promoted?.ok ? 200 : 409);
@@ -1261,6 +1278,71 @@ export class Monitoring {
     else
       this.sql.exec(`UPDATE monitor_address_type SET unchanged_run = 0, run_since = NULL WHERE address_norm = ?`,
                     String(addressNorm));
+  }
+
+  /* ================================================================== *
+   * A watched project's sources (R70; K2524, investigation R18)
+   * ================================================================== */
+
+  /* R70: the change tick of the document `bundleId` at the normalised address `address`, reported through
+     `investigation.watchArrival({project, source, at})` once to each project `investigation.watchedProjects()` answers
+     whose sources (intent R7's `watchSet`, followed by its cursor to the end) name a capture of this source: one filed
+     at the address, or one the document registers. `source` is the address, `at` the tick's instant. The watched
+     projects are read afresh on every change tick, so a project no longer watched is no longer reported. Answers
+     `{reported: [{project, source, at}], failed: [{project, reason}]}`, with `unread` saying why when the watched
+     projects could not be read. Never throws: a report that fails does not fail the tick. */
+  #reportArrivals({ bundleId, address, at }) {
+    const out = { reported: [], failed: [] };
+    let inv = null, list = null;
+    try { inv = this.investigation; } catch { inv = null; }
+    if (!inv || typeof inv.watchedProjects !== "function")
+      return { ...out, unread: "no investigation module is present to name the watched projects" };
+    try {
+      const w = inv.watchedProjects();
+      list = w && w.ok !== false && Array.isArray(w.projects) ? w.projects : null;
+    } catch { list = null; }
+    if (!list) return { ...out, unread: "the watched projects could not be read" };
+    if (!list.length) return out;
+    let mine;
+    try {
+      mine = new Set([...this.#rows(`SELECT capture_sha FROM captured_locators WHERE address_norm = ?`, String(address)),
+                      ...this.#rows(`SELECT capture_sha FROM register WHERE bundle_id = ?`, String(bundleId))]
+        .map((r) => r.capture_sha));
+    } catch { return { ...out, unread: "the captures of this source could not be read" }; }
+    for (const p of list) {
+      const project = p && typeof p.project === "string" && p.project ? p.project : null;
+      if (!project) continue;
+      const hit = this.#watchesAny(project, mine);
+      if (hit === null) { out.failed.push({ project, reason: "the sources intent R7 names for it could not be read" }); continue; }
+      if (!hit) continue;
+      let r;
+      try { r = inv.watchArrival({ project, source: String(address), at }); }
+      catch (e) { r = { ok: false, reason: String(e && e.message || e).slice(0, 160) }; }
+      if (r && r.ok === true) out.reported.push({ project, source: String(address), at });
+      else out.failed.push({ project, reason: (r && (r.code || r.reason)) || "investigation gave no answer" });
+    }
+    return out;
+  }
+
+  /* R70: whether intent R7's `watchSet` for `project`, followed by its cursor to the end, names a capture in `shas`;
+     null when it cannot be read. */
+  #watchesAny(project, shas) {
+    const intent = this.intent;
+    if (!intent || typeof intent.watchSet !== "function" || !shas.size) return shas.size ? null : false;
+    let after = null;
+    try {
+      for (let pages = 0; pages < WATCH_SET_PAGES; pages++) {
+        const w = intent.watchSet({ project, after });
+        if (!w || w.ok === false || !Array.isArray(w.captures)) return null;
+        for (const c of w.captures) {
+          const sha = typeof c === "string" ? c : c && (c.capture_sha || c.sha256 || c.capture);
+          if (typeof sha === "string" && shas.has(sha)) return true;
+        }
+        if (!w.cursor) return false;
+        after = w.cursor;
+      }
+    } catch { return null; }
+    return null;
   }
 
   /* ================================================================== *

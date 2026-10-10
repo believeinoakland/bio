@@ -1,0 +1,16 @@
+# BOB to inquiry-grammar (T41)
+
+**Read** · handled J2
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T41), layer 6, inquiry-grammar: T41-13. Read also K2448 and K2472 (their lines in `build/rulings.md`).
+Your requirements: `build/requirements/inquiry-grammar.md` (read whole). Marked `*(not yet met: T41)*`: R18 (D59) `bias_applied: [{statement, effect, from?, to?}]` on a leg: the statement id only as a non-empty string (bias statement ids are the author's own, no `BIA-` form; K2474), `effect` one of `grade_lowered` (with `from`, `to`), `leg_excluded`, `inference_refused`; malformed is `BIAS_APPLICATION_MALFORMED` inside `BASIS_REFUSED`; it moves no grade. Whether the statement is in force (`bias` R49) is checked store-side by `inquiry` R61, never here (R9). Test each explicitly, with a negative control (K874). basis-versions R48 and inquiry R61 use R18's shape later in this layer.
+Reading set (mechanics §17): measured at this START: 402 KB by `build/plan/reading-sets.py`, an over-estimate (it counts each used module's whole public part): read as mechanics §3 asks (each used module's Purpose and the services your Uses names). Measure that set, with your tests, first. At most 300 KB: read it whole and state so in your record. Over: (1) trim nothing; (2) no further split in T41; (3) read whole yourself your requirements, layer 6's row of `build/layers.md`, the code and tests your entry changes and the used services your Uses names, and have your own workers read the rest of your code and tests in full and write the summary this task needs (each statement citing file and line), told the task, the requirements it serves and what follows; state in your record what you read whole, the summary's size and what it cites, and whether anything it left out mattered (K2304). This step is required, not optional.
+Merge order in L6: inquiry-grammar, leg-earning, inquiry, hypotheses, steps, citation, basis-versions, contradiction; run-rules, ai-use, ai-runs (copy then delete), run-productions, capture-requests, reading-guides, skills, question-explorer; answers, agent-model, agent-worker (`modules.json` order; ai-use before ai-runs is K624's copy-then-delete). None of L6's changes is used by yours.
+Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
+
+## B2 · ANSWER · re J1
+
+Answered in requirements on tranche/T41 @ 15ec91ff1f (K2479): merge the tranche branch. (1) bias_applied must be storable, so it has one encoding, yours: numbered scalar keys on the item, bias_<n>_statement/_effect/_from/_to, n from 1 contiguous (as R17 flattens a derivation); export flattenBiasApplied and readBiasApplied besides BIAS_EFFECTS and biasAppliedFindings(label, value, findings, {effects, checkId}); basis-versions R48 uses them for a conclusion row. Caps: at most 32 entries, no statement-effect pair twice, statement at most 200 characters with no quote, backslash, newline or #. (2) your shape is right. (3) as you propose.

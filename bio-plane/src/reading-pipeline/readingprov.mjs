@@ -23,8 +23,9 @@
  *
  * WHERE THE PER-PAGE TIER COMES FROM, IN ORDER, AND WHY THE CHAIN IS FIRST. §16 rules that THE CHAIN IS
  * THE AUTHORITY for a per-page question (D-284): each derivation step names the pages it covers. So a
- * page's tier is read off the chain when there is one — a `pixels` step covering the page is tier 3 (no
- * tier-3 route is not an engine over pixels), otherwise the covering `layer` step's own `tier`. Only when
+ * page's tier is read off the chain when there is one — an `ai_transcription` step covering the page is tier 4
+ * (R29: the AI's reading, naming its model), a `pixels` step covering the page is tier 3 (no tier-3 route is not an
+ * engine over pixels), otherwise the covering `layer` step's own `tier`. Only when
  * no chain speaks for the page does the page's own `tier` stamp (the tier-2 merge's) answer, and only
  * after that the document's tier. A page nothing speaks for reads tier NULL, and says so. */
 
@@ -34,7 +35,8 @@ export const PROVENANCE_SCHEME = "reading-provenance/1";
 
 /* WHICH MEMBER PRODUCES EACH TIER, as the plane wires it (§16's three-tier table). A table and not a
    guess: tier 2 is reached only through the `PDF_WORKER` binding and tier 3 only through `OCR_WORKER`,
-   and tier 1 runs inside the plane. A tier this table does not name reads member NULL. */
+   and tier 1 runs inside the plane. A tier this table does not name reads member NULL: tier 4 (R29), the AI's
+   reading, is reached through no member of the fleet, and is named by its model (`engine`) instead. */
 export const TIER_MEMBERS = Object.freeze({ 1: "plane", 2: "pdf-worker", 3: "ocr-worker" });
 
 async function sha256Hex(s) {
@@ -73,8 +75,14 @@ function chainTiersOf(chain, page) {
     const pages = stepPages(s);
     if (!covers(pages, page)) continue;
     const key = partOf(s);
-    const had = byPart.get(key) || { layer: null, pixels: null };
-    if (s.step === "pixels") {
+    const had = byPart.get(key) || { layer: null, pixels: null, ai: null };
+    if (s.step === "ai_transcription") {
+      /* R29 (T41; text-chain R104): the AI read these pixels. Its kind is tier 4 (`STEP_KINDS`), above the OCR
+         engine's rung, and its engine is the model the step names. It outranks the `pixels` step before it, which
+         would otherwise read as tier 3's. */
+      had.ai = { tier: 4, engine: typeof s.engine === "string" && s.engine
+        ? `${s.engine}${s.version ? ` ${s.version}` : ""}` : null };
+    } else if (s.step === "pixels") {
       /* The engine is the `ocr` step that READ these pixels — the next step in the same part. */
       const next = chain[i + 1];
       had.pixels = { tier: 3, engine: next && next.step === "ocr" && typeof next.engine === "string"
@@ -84,7 +92,7 @@ function chainTiersOf(chain, page) {
     }
     byPart.set(key, had);
   }
-  return [...byPart.values()].map((h) => h.pixels || h.layer).filter(Boolean);
+  return [...byPart.values()].map((h) => h.ai || h.pixels || h.layer).filter(Boolean);
 }
 /* The chain's answer for one page: `{tier, engine}` or null when no step speaks for it. A page with two
    producers (D-635) answers the LAST, the tier its text was last extended by; `chainTiersOf` names both. */

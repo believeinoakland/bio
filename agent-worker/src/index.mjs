@@ -34,10 +34,11 @@
  *
  * **WHEN IT RUNS MODEL TURNS, AND IT SAYS WHICH ON THE WIRE (R28, R58).** It
  * runs model turns through `agent-model` exactly when the Claude account that
- * serves the member's act arrived with the call (R6: the member's own, or the
- * group's API key, as `credentials.accountFor` answers it, K1755; there is no
- * project account) and the run's mode has turns to run: an API key goes to the
- * Messages API, the member's own sign-in to Claude Code in that member's
+ * serves the member's act arrived with the call (R6: the member's own, a
+ * project's (R71), or the group's API key, as `credentials.accountFor` answers
+ * it, K1755) and the run's mode has turns to run: an API key goes to the
+ * Messages API, the member's own sign-in (or a one-member project's, which is
+ * that member's own) to Claude Code in that member's
  * `agent-runner` instance through the Container Durable Object binding (R35). A segment whose caller
  * supplied the judgements (`judgements` in the body, the stubbed path) runs no
  * turn. The answer's `turns_run` counts the turns that actually ran and
@@ -169,8 +170,8 @@ import {
   SUBSESSION_OPS, spawnContract, takeReports, citedAddresses, documentHoldings, holdingsNote, LOOKED_STATES,
 } from "../../agent-harness/src/subsession.mjs";
 
-/* R32, R33 (K1502, K1755) — WHICH ACCOUNT SERVES THE ACT: the one that arrived, judged at its own level (`member` or
- * `group`), in its own file and pure. The account arrives PER CALL beside the `ai` credential and is retained exactly
+/* R32, R33, R71 (K1502, K1755, K2373) — WHICH ACCOUNT SERVES THE ACT: the one that arrived, judged at its own level
+ * (`project`, `member` or `group`), in its own file and pure. The account arrives PER CALL beside the `ai` credential and is retained exactly
  * as long: not at all (R36). */
 import {
   resolveClaudeCascade, cascadeToken, CASCADE_NO_ACCOUNT, ACCOUNT_KINDS, CASCADE_ORDER, LEVEL_KINDS,
@@ -386,20 +387,24 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       + "member opens no run: a run's identity and its conditions are the plane's, and a member that "
       + "could open one would be a machine deciding what it was formed under.", 404, { run_id: runId }) };
 
-  /* R10, R57 (K1502, K1503, K1755) — THE RECORD'S ACCOUNT HOLDER AND THE MEMBER WHOSE ACT THE ARRIVED ACCOUNT SERVES
-     MUST BE THE SAME MEMBER. The run records the member whose act started it (a standing question's author) as its
-     account holder (`session.principal.claude`); this segment was handed the account that serves one member's act:
-     that member's own reference, or the group's API key (`level: "group"`), which serves that member's act and never
-     the group's own, so the run stays that member's act. When the two members differ, driving on would spend one
+  /* R10, R57 (K1502, K1503, K1755) — THE MEMBER WHOSE ACT THE RUN RECORDS AND THE MEMBER WHOSE ACT THE ARRIVED ACCOUNT
+     SERVES MUST BE THE SAME MEMBER. (T41; ai-runs R52, K2489) The run records the member whose act started it (a
+     standing question's author) as `session.principal.ref` (`principal_claude_ref`, `member:<id>`) and the owner who
+     pays as `session.principal.claude` (`member:<id>`, `project:<id>` or `group`), which is read here never: a run the
+     group's or a project's key pays is still that member's act. This segment was handed the account that serves one
+     member's act:
+     that member's own reference, or the group's or a project's API key (`level: "group"`, `"project"`, R71), which
+     serves that member's act and never the group's or the project's own, so the run stays that member's act. When the two members differ, driving on would spend one
      member's act on another's run, which K1502 forbids and nobody could audit. Refused before any step, naming both
      members (ids, never a secret); this member re-words neither. Every segment carries an account (R6), the stubbed
      `judgements` path included, so the check is made on every segment. */
-  const recordedPayer = session.principal?.claude ?? null;
+  const recordedPayer = session.principal?.ref ?? null;
   if (account && recordedPayer !== account.member)
     return { refusal: refusal("RUN_NAMES_A_DIFFERENT_PAYER",
       `the run's own record says it is the act of ${JSON.stringify(recordedPayer)}, but the Claude account handed to `
       + `this segment serves ${JSON.stringify(account.member)}'s act (${account.level === "group"
-        ? "the group's API key, serving that member" : "that member's own reference"}). A run is continued only under `
+        ? "the group's API key, serving that member" : account.level === "project"
+        ? "the project's account, serving that member" : "that member's own reference"}). A run is continued only under `
       + "the account that serves the member whose act started it, never another member's (K1502, K1755, D-260), so no "
       + "step was taken and the run stays as it was. The caller handed the account for the wrong member, or the run "
       + "recorded the wrong member.",
@@ -629,7 +634,13 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     /* R26, R43 — D-276's class at the tick: a refusal of the whole tick nested in `result` is a refusal, never
        an entry that landed. */
     const tickAnswer = planeAnswer(tick, "airuntick");
-    if (tickAnswer.refused) {
+    /* R26: a tick the plane answered `found: false` (no such run, `ai-runs`) appended nothing: it is a refusal of the
+       tick in the plane's words, never an entry that landed (T41 B6: a run the plane never opened counted `logged`). */
+    const noRun = !tickAnswer.refused && tickAnswer.result?.found === false;
+    if (noRun) {
+      refusals.push({ at: "airuntick", code: tickAnswer.result.code ?? null, check: tickAnswer.result.check ?? null,
+                      plane: tick.body ?? null });
+    } else if (tickAnswer.refused) {
       /* R49: `AI_RUN_STATE_TOO_LARGE` (ai-runs R45) among them — a refusal of this tick, never the plane failing; the
          segment carries on. */
       refusals.push({ at: "airuntick", code: tickAnswer.refused.code, check: tickAnswer.refused.check,
@@ -1349,8 +1360,9 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
       if (tick.silent) return { silent: tick.silent };
       const t = tick.result ?? {};
       const bad = Array.isArray(t.refused) ? t.refused : [];
-      if (tick.refused || bad.length) {
-        for (const r of tick.refused ? [tick.refused] : bad)
+      /* R26: a tick answered `found: false` (no such run) appended nothing, so it is refused, never landed. */
+      if (tick.refused || bad.length || t.found === false) {
+        for (const r of tick.refused ? [tick.refused] : t.found === false ? [t] : bad)
           logSeq?.refused({ at: "airuntick.log", step: "fanout", to: "collect", level: contract.level,
                             code: r?.code ?? r?.reason ?? null, check: r?.check ?? null, plane: r?.plane ?? r ?? null });
       } else {
@@ -1426,18 +1438,25 @@ const planeRefused = (runId, store, asked) =>
 /** R6, R32, R57 (K1502, K1503, K1755) — the account a call carries: `{account, cascade}` or `{refusal}`. `account` is
  *  the account that serves the act of the member who started the run (or asked; a standing question's author), as
  *  `credentials.accountFor` answers it for that act (its R35), with that member and the switch that governs it:
- *  `{kind, level, secret, member, suggestions?}`, `level` `member` (the member's own reference) or `group` (the group's
- *  API key, which serves that member's act and is still that member's act). There is no project level (R32): a body
- *  still carrying the old cascade's `claude_accounts` is refused naming that field, and a member whom no account
- *  serves has no assistant, refused by name before any plane call (D-260 as K1503 reads it). The secret is read here
- *  for the call it serves and goes no further than `agent-model` (R36). (T38; N785, K2200) A `signin` account, the
- *  member's own stored sign-in, is `{kind: "signin", level: "member", member, suggestions: false}` and carries no
- *  secret: one carrying a `secret`, or a `suggestions` other than `false`, is refused `BAD_ACCOUNT`. */
+ *  `{kind, level, secret, member, project?, suggestions?}`, `level` `member` (the member's own reference), `group`
+ *  (the group's API key, which serves that member's act and is still that member's act) or (T40, T41; R71, K2373)
+ *  `project` (a project's account, `credentials` R54, R56: its API key, serving the member's act as the group's does,
+ *  or, while the project has one member, that member's own sign-in), `project` the project's id (never a secret),
+ *  required at that level and carried at no other. A body still carrying the old cascade's `claude_accounts` is
+ *  refused naming that field, and a member whom no account serves has no assistant, refused by name before any plane
+ *  call (D-260 as K1503 reads it). The secret is read here for the call it serves and goes no further than
+ *  `agent-model` (R36). (T38; N785, K2200) A `signin` account, the member's own stored sign-in (or a one-member
+ *  project's, which is that member's own), is `{kind: "signin", level: "member" | "project", member,
+ *  suggestions: false}` and carries no secret: one carrying a `secret`, or a `suggestions` other than `false`, is
+ *  refused `BAD_ACCOUNT`. (T41; N796, K2425) Whether a sign-in may serve a standing question's AI half is
+ *  `credentials`' (its R32, R55, the sign-in's `standing` use): this module refuses nothing of its own for a sign-in. */
+/** R71: a project's id as the account carries it, a short name and never a secret. */
+const PROJECT_ID_MAX = 200;
 async function accountOf(body) {
   if (body.claude_accounts !== undefined)
     return { refusal: refusal("BAD_ACCOUNT",
-      "claude_accounts is the retired three-level cascade's field: there is no project or instance Claude account. "
-      + "A call carries the one account that serves the member's act, as account.", 400, { field: "claude_accounts" }) };
+      "claude_accounts is the retired three-level cascade's field: there is no instance Claude account. A call "
+      + "carries the one account that serves the member's act, as account.", 400, { field: "claude_accounts" }) };
   const a = body.account;
   if (a === undefined || a === null)
     return { refusal: refusal("NO_ACCOUNT",
@@ -1448,12 +1467,16 @@ async function accountOf(body) {
   if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind)
       || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind)
       || typeof a.member !== "string" || !a.member
+      || (a.level === "project"
+        ? !(typeof a.project === "string" && a.project && a.project.length <= PROJECT_ID_MAX)
+        : a.project !== undefined)
       || (a.kind === "signin" && (a.secret !== undefined || (a.suggestions !== undefined && a.suggestions !== false))))
     return { refusal: refusal("BAD_ACCOUNT",
       `account is the account that serves the member's act: {kind, level, secret, member}, kind one of `
       + `${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), `
-      + "and member the member whose act it serves; a signin account is the member's own and carries no secret and "
-      + "no suggestions but false. What arrived is not one, and this member judges only what it is handed.",
+      + "and member the member whose act it serves; a project's account names its project, and no other does; a "
+      + "signin account is the member's own and carries no secret and no suggestions but false. What arrived is not "
+      + "one, and this member judges only what it is handed.",
       400, { field: "account" }) };
   const cascade = await resolveClaudeCascade(a);
   if (!cascade.available)
@@ -1593,14 +1616,16 @@ async function handleRun(req, env) {
     judgement_note: modelMode
       ? `the control-flow table ran and the judgements inside its steps were made by model turns run through `
         + `agent-model (${meter.turns}), under the Claude account that serves the member's act `
-        + `(${cascade.level === "group" ? "the group's API key" : "the member's own"}) and the skill pack the run names; `
+        + `(${cascade.level === "group" ? "the group's API key" : cascade.level === "project" ? "the project's"
+          : "the member's own"}) and the skill pack the run names; `
         + "the sub-sessions ran one per level and returned REPORTS"
       : "the control-flow table ran and its judgements arrived from the caller (the body), so no model turn was taken "
         + "(turns_run: 0). Stated rather than presented as a model run.",
-    /* R29 — WHICH ACCOUNT, secret-free by construction: its kind, its level (the member's own, or the group's API key,
-       K1755) and the member whose act it serves. A call with none never reaches here (R6 refused it by name before
-       any step). */
-    claude_account: { available: true, kind: cascade.kind, level: cascade.level, member: cascade.member },
+    /* R29 — WHICH ACCOUNT, secret-free by construction: its kind, its level (the member's own, a project's, R71, or the
+       group's API key, K1755), the member whose act it serves and, for a project's, the project (an id). A call with
+       none never reaches here (R6 refused it by name before any step). */
+    claude_account: { available: true, kind: cascade.kind, level: cascade.level, member: cascade.member,
+                      ...(cascade.level === "project" ? { project: cascade.project } : {}) },
     mode: drive.mode,
     trace: drive.trace,
     passes: drive.passes,
@@ -1688,7 +1713,7 @@ const ASK_DEPS = { refusal, json, askPlane, planeAnswer, publishedPack, accountO
 /* R58 — ONE TRUTH FOR MODEL TURNS, the sentence this member states about itself on `GET /version`, and the same one its
    header and its `/run` answer state. */
 const MODEL_TURNS = "run through agent-model exactly when the Claude account that serves the member's act (the "
-  + "member's own reference, or the group's API key) arrives with the call and the run's, ask's or draft's mode has "
+  + "member's own reference or sign-in, a project's account, or the group's API key) arrives with the call and the run's, ask's or draft's mode has "
   + "turns to run; a segment whose caller supplies the judgements runs none";
 
 export default {

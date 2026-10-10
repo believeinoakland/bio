@@ -1,28 +1,34 @@
-/* publication — publishing at a set time (requirements: `build/requirements/publication.md` R66–R71, R21's waiting
- * clause; DEC-147, Bob's "S1: B"; K1784, K1785, K1790, K1811, K1816). The case ceremony (`ratification`, `op=publishat`)
- * signs and, in place of R22's commit, sets the edition to wait (R66): its signature is held here beside the document,
- * never on it, so until it is published the document answers as an unsigned preparation and nothing of the edition is
- * public (R29). At its time the one publisher `ratification` registers (R67) runs every signing check again and commits
- * through R22 only when nothing has changed; otherwise the edition stops, once, and publishing it needs a new signing.
- * An owner of the case's project may move or cancel the time until it comes (R68). R69 lists them; R71 tells
- * `scheduler` the next wake after each act, so a waiting edition is taken on an idle instance. R74 answers a case's
- * waiting edition to `case-authoring`, which refuses its acts while one waits (its R58; N681). A stop with no publisher
- * able to check carries its row, C-122.5 (R33; N687).
+/* publish-schedule — publishing a signed case edition at a set time (requirements:
+ * `build/requirements/publish-schedule.md` R1–R11; DEC-147, Bob's "S1: B"; K1784, K1785, K1790, K1811, K1816). Copied
+ * whole from `publication/schedule.mjs` at publication's third split (K617, K624, K2418, K2438; N823; T41-37), its SQL
+ * unchanged; its ids re-labelled (publication R66–R69 → R1–R4, R70's set-time share → R5, R71 → R6, R74 → R7, R33's
+ * C-122.5 → R9). The case ceremony (`ratification`, `op=publishat`) signs and, in place of `publication` R22's commit,
+ * sets the edition to wait (R1): its signature is held here beside the document, never on it, so until it is published
+ * the document answers as an unsigned preparation and nothing of the edition is public (`publication` R29). At its time
+ * the one publisher `ratification` registers (R2) runs every signing check again and commits through `publication` R22
+ * only when nothing has changed; otherwise the edition stops, once, and publishing it needs a new signing. An owner of
+ * the case's project may move or cancel the time until it comes (R3). R4 lists them; R6 tells `scheduler` the next wake
+ * after each act, so a waiting edition is taken on an idle instance. R7 answers a case's waiting edition to
+ * `case-authoring`, which refuses its acts while one waits (its R58; N681). A stop with no publisher able to check
+ * carries its row, C-122.5 (R9; N687). `publication` reads whether a document waits, and when a waiting edition was
+ * signed, through `isWaiting` and `signedAtOf` (R5, R8), which this module registers with it.
  *
  * The table is `scheduled_editions` (`./schema.mjs`): one row per setting, its `seq` the order made; at most one row of a
- * case edition is `waiting` at a time (R66's PUBLISH_AT_ALREADY_SET). Each function takes the module's instance `p`
- * (its `sql`, `record`, `membership`, clock and the R1 standing test) and is called through its method of the same name. */
+ * case edition is `waiting` at a time (R1's PUBLISH_AT_ALREADY_SET). This module never writes `publication`'s tables: it
+ * reads `cases` and `case_documents` under `publication` R40, and `publication.hasCaseStanding` (its R1) for standing.
+ * Each function takes the module's instance `p` (its `sql`, `record`, `membership`, `publication` and clock) and is
+ * called through its method of the same name. */
 
 import { bounds, isCalendarDate } from "../civil-time/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { viewerPredicate } from "../membership/index.mjs";
 import { rowOf } from "./checks.mjs";
 
-/** R69: the page of `scheduledEditions`, its default and its ceiling. */
+/** R4: the page of `scheduledEditions`, its default and its ceiling. */
 export const SCHEDULED_EDITIONS_MAX = 500;
-/** R67, R69: the states a scheduled edition passes through; only `waiting` changes, and only once. */
+/** R2, R4: the states a scheduled edition passes through; only `waiting` changes, and only once. */
 export const SCHEDULE_STATES = Object.freeze(["waiting", "published", "stopped", "cancelled"]);
-/** R67, R33: the reason a waiting edition is stopped when no publisher could check it, never published unchecked: its
+/** R2, R9: the reason a waiting edition is stopped when no publisher could check it, never published unchecked: its
  *  code, its row (C-122.5; N687) and the row's translation. */
 export const SCHEDULED_CHECK_UNAVAILABLE = Object.freeze(rowOf("SCHEDULED_CHECK_UNAVAILABLE"));
 
@@ -34,7 +40,7 @@ const one = (p, q, ...a) => { for (const r of p.sql.exec(q, ...a)) return r; ret
 const ms = (t) => { const n = Date.parse(String(t ?? "")); return Number.isFinite(n) ? n : NaN; };
 const clock = (p) => { const w = p.now(); return typeof w === "string" && w ? w : new Date().toISOString(); };
 
-/** R66: the group's time zone, the active profiles' `time_zone` (`jurisdictions` R41) through `jurisdictions.combine`
+/** R1: the group's time zone, the active profiles' `time_zone` (`jurisdictions` R41) through `jurisdictions.combine`
  *  over record-core's `jurisdiction_profiles` setting, or null when none is held (never UTC by default). */
 export function groupZone(p) {
   try {
@@ -45,7 +51,7 @@ export function groupZone(p) {
   } catch { return null; }
 }
 
-/* R66's refusals of `at`, in order, each a refusal or `{at, publish_at}`: the date and time as set with the zone, and
+/* R1's refusals of `at`, in order, each a refusal or `{at, publish_at}`: the date and time as set with the zone, and
    the instant the minute begins in it (`civil-time.bounds`, its `earliest`). */
 function resolveAt(p, at) {
   const date = at && typeof at === "object" ? at.date : null, time = at && typeof at === "object" ? at.time : null;
@@ -66,7 +72,7 @@ function resolveAt(p, at) {
   return { ok: true, at: { date, time, zone }, publish_at: b.earliest };
 }
 
-/* R69's entry for one row. */
+/* R4's entry for one row. */
 function entryOf(p, r) {
   const project = projectOf(p, r.case_id, r.edition);
   return { case: r.case_id, edition: Number(r.edition), project, state: r.state, signer: r.signer ?? null,
@@ -90,10 +96,13 @@ const waitingRow = (p, caseId, edition) => one(p,
   `SELECT * FROM scheduled_editions WHERE case_id=? AND edition=? AND state='waiting' ORDER BY seq DESC LIMIT 1`,
   caseId, Number(edition));
 
-/** R21: whether a case edition's document waits (R66), and so counts as signed for R21's writes. */
-export const isWaiting = (p, caseId, edition) => !!waitingRow(p, str(caseId), edition);
+/** R8 (`publication` R21's waiting clause): whether a case edition's document waits (R1), and so counts as signed for
+ *  `publication` R21's writes. Synchronous; reads only this module's table; writes nothing and never throws. */
+export function isWaiting(p, caseId, edition) {
+  try { return !!waitingRow(p, str(caseId), edition); } catch { return false; }
+}
 
-/** R74 (N681; K1833): the case's one edition R66 holds waiting, `{case, edition, doc_sha, at, publish_at}`, or null when
+/** R7 (N681; K1833): the case's one edition R1 holds waiting, `{case, edition, doc_sha, at, publish_at}`, or null when
  *  none waits (none set, or each published, stopped or cancelled), for `case-authoring` before its acts (its R58).
  *  Viewer-free; writes nothing; never throws (a malformed `caseId` answers null). */
 export function waitingEditionOf(p, caseId) {
@@ -107,7 +116,7 @@ export function waitingEditionOf(p, caseId) {
   } catch { return null; }
 }
 
-/** R66: set a signed case edition to wait for its time, inside the caller's transaction. */
+/** R1: set a signed case edition to wait for its time, inside the caller's transaction. */
 export function scheduleEdition(p, { case: caseArg = null, caseId = null, edition = null, docSha = null, signature = null,
                                      signer = null, deliveredBy = null, at = null, checked = null, by = null } = {}) {
   const id = str(caseArg ?? caseId), ed = Number(edition);
@@ -138,22 +147,22 @@ export function scheduleEdition(p, { case: caseArg = null, caseId = null, editio
        zone,publish_at,set_by,state,checked,moves) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,'waiting',?,'[]')`,
     id, ed, str(docSha), str(signature), signer ?? null, deliveredBy ?? null, now, when.at.date, when.at.time,
     when.at.zone, when.publish_at, by ?? null, checked === undefined ? null : JSON.stringify(checked));
-  /* R71: the caller's transaction is still open here, so the notice follows it, reading the wake as it then stands. */
+  /* R6: the caller's transaction is still open here, so the notice follows it, reading the wake as it then stands. */
   queueMicrotask(() => tell(p));
   return { ok: true, case: id, edition: ed, state: "waiting", at: when.at, publish_at: when.publish_at };
 }
 
-/** R67: the earliest `publish_at` of a waiting edition, or null. */
+/** R2: the earliest `publish_at` of a waiting edition, or null. */
 export function publishWake(p) {
   const r = one(p, `SELECT publish_at FROM scheduled_editions WHERE state='waiting' ORDER BY publish_at, seq LIMIT 1`);
   return r ? r.publish_at : null;
 }
 
-/* R67: the editions a `publishDue` is taking now, per instance, so an alarm overlapping an earlier one awaiting its
+/* R2: the editions a `publishDue` is taking now, per instance, so an alarm overlapping an earlier one awaiting its
    publisher never takes the same edition twice. */
 const TAKING = new WeakMap();
 
-/** R67 (K1832): take each waiting edition whose time has come, in `publish_at` order, and hand it to the registered
+/** R2 (K1832): take each waiting edition whose time has come, in `publish_at` order, and hand it to the registered
  *  publisher, awaiting each answer (it may be a Promise) before taking the next. Answers a Promise of `{ok, taken}`. */
 export async function publishDue(p, now) {
   const at = str(now) || clock(p);
@@ -171,7 +180,7 @@ export async function publishDue(p, now) {
   return { ok: true, taken };
 }
 
-/* R67: one due edition, handed with the entry R66 recorded (its held signature included) and settled once. */
+/* R2: one due edition, handed with the entry R1 recorded (its held signature included) and settled once. */
 async function takeOne(p, r, at) {
   const entry = { ...entryOf(p, r), doc_sha: r.doc_sha, signature: r.sig_armored, delivered_by: r.delivered_by ?? null,
                   checked: safeJson(r.checked, null) };
@@ -181,7 +190,7 @@ async function takeOne(p, r, at) {
   /* Settled once: a row no longer waiting (a cancel cannot reach a due one; this is defence) is answered as it is. */
   const now = one(p, `SELECT state FROM scheduled_editions WHERE seq=?`, r.seq);
   if (!now || now.state !== "waiting") return { case: r.case_id, edition: Number(r.edition), state: now ? now.state : null };
-  /* What the store holds decides: published only when the document is signed at the waiting bytes (R22's commit). */
+  /* What the store holds decides: published only when the document is signed at the waiting bytes (`publication` R22's commit). */
   const signed = one(p, `SELECT ratified_at FROM case_documents WHERE case_id=? AND edition=? AND doc_sha=?
                           AND sig_armored IS NOT NULL`, r.case_id, Number(r.edition), r.doc_sha);
   const stops = answer && Array.isArray(answer.stopped) && answer.stopped.length
@@ -198,14 +207,14 @@ async function takeOne(p, r, at) {
            ...(signed ? { published_at: signed.ratified_at } : { reasons: stops }) };
 }
 
-/* R67, R33 (C-122.5): the stop of an edition no publisher could check. */
+/* R2, R9 (C-122.5): the stop of an edition no publisher could check. */
 function unchecked() {
   /* DEC-49 REGION is-scheduled-check-available */
   return [{ ...SCHEDULED_CHECK_UNAVAILABLE }];
   /* END DEC-49 REGION is-scheduled-check-available */
 }
 
-/* R68: the common fence of a move and a cancel, in R68's order; the waiting row, or a refusal. */
+/* R3: the common fence of a move and a cancel, in R3's order; the waiting row, or a refusal. */
 function ownersRow(p, caseId, edition, by) {
   /* A machine credential, or no stamp at all; the founder is no machine, and owns no project (NOT_A_CASE_OWNER). */
   const g = viewerPredicate(by);
@@ -214,7 +223,7 @@ function ownersRow(p, caseId, edition, by) {
              detail: "a publishing time is moved or cancelled by a member who owns the case's project, never a machine" };
   const notWaiting = { ok: false, reason: "NOT_WAITING", detail: "no edition of that case waits to be published" };
   const doc = one(p, `SELECT case_id, edition, text FROM case_documents WHERE case_id=? AND edition=?`, caseId, Number(edition));
-  if (!doc || !p.hasCaseStanding(doc, by)) return notWaiting;
+  if (!doc || !p.publication.hasCaseStanding(doc, by)) return notWaiting;
   const last = one(p, `SELECT * FROM scheduled_editions WHERE case_id=? AND edition=? ORDER BY seq DESC LIMIT 1`,
                    caseId, Number(edition));
   if (!last) return notWaiting;
@@ -228,7 +237,7 @@ function ownersRow(p, caseId, edition, by) {
   return { ok: true, row: last, member: g.member };
 }
 
-/** R68: move a waiting edition's time, keeping each earlier time with who moved it and when. */
+/** R3: move a waiting edition's time, keeping each earlier time with who moved it and when. */
 export function publishAtMove(p, { case: caseArg = null, caseId = null, edition = null, at = null, by = null } = {}) {
   const id = str(caseArg ?? caseId), ed = Number(edition);
   const out = p.record.transact(() => {
@@ -246,8 +255,8 @@ export function publishAtMove(p, { case: caseArg = null, caseId = null, edition 
   return out;
 }
 
-/** R68: cancel a waiting edition: it is `cancelled`, its signature never committed, and its document again an unsigned
- *  preparation (R21). */
+/** R3: cancel a waiting edition: it is `cancelled`, its signature never committed, and its document again an unsigned
+ *  preparation (`publication` R21). */
 export function publishAtCancel(p, { case: caseArg = null, caseId = null, edition = null, by = null } = {}) {
   const id = str(caseArg ?? caseId), ed = Number(edition);
   const out = p.record.transact(() => {
@@ -261,8 +270,8 @@ export function publishAtCancel(p, { case: caseArg = null, caseId = null, editio
   return out;
 }
 
-/** R69: the scheduled editions in `publish_at` order after `after` (a cursor this read answered), at most `limit`. A
- *  viewer without R1's standing sees none of a case; with no `viewer` (read as the plane) every edition answers. */
+/** R4: the scheduled editions in `publish_at` order after `after` (a cursor this read answered), at most `limit`. A
+ *  viewer without `publication` R1's standing sees none of a case; with no `viewer` (read as the plane) every edition answers. */
 export function scheduledEditions(p, { case: caseArg = null, caseId = null, state = null, after = null, limit = null,
                                        viewer = undefined } = {}) {
   const cap = Math.max(1, Math.min(Math.floor(Number(limit)) || SCHEDULED_EDITIONS_MAX, SCHEDULED_EDITIONS_MAX));
@@ -281,7 +290,7 @@ export function scheduledEditions(p, { case: caseArg = null, caseId = null, stat
     const k = `${r.case_id}\u0000${r.edition}`;
     if (!seen.has(k)) {
       const doc = one(p, `SELECT case_id, edition, text FROM case_documents WHERE case_id=? AND edition=?`, r.case_id, r.edition);
-      seen.set(k, !!doc && p.hasCaseStanding(doc, viewer));
+      seen.set(k, !!doc && p.publication.hasCaseStanding(doc, viewer));
     }
     return seen.get(k);
   };
@@ -297,16 +306,34 @@ export function scheduledEditions(p, { case: caseArg = null, caseId = null, stat
            cursor: more && last ? `${last.publish_at}#${last.seq}` : null };
 }
 
-/** R70: the instant a published case edition was signed: the waiting edition's signing when it was published at a set
- *  time, else the commit's own instant. */
-export function signedAtFor(p, caseId, edition, commitAt) {
-  const r = one(p, `SELECT signed_at FROM scheduled_editions WHERE case_id=? AND edition=? AND state='waiting'
-                     ORDER BY seq DESC LIMIT 1`, caseId, Number(edition));
-  return r ? r.signed_at : commitAt;
+/** R5, R8 (`publication` R70's set-time share): the instant a waiting case edition was signed at the ceremony, while it
+ *  waits, so `publication` R22's commit holds it as the edition's `signed_at`; null for a case edition that does not
+ *  wait (the commit's own instant then stands for both). Synchronous; reads only this module's table; writes nothing and
+ *  never throws. */
+export function signedAtOf(p, caseId, edition) {
+  try {
+    const r = one(p, `SELECT signed_at FROM scheduled_editions WHERE case_id=? AND edition=? AND state='waiting'
+                       ORDER BY seq DESC LIMIT 1`, str(caseId), Number(edition));
+    return r ? r.signed_at : null;
+  } catch { return null; }
 }
 
-/* R71: each registered listener once, with the wake as it stands; one that throws never undoes the act. */
+/** R8 (K2529; `publication` R76): a waiting case edition's signer and deliverer, `{signer, delivered_by}`, while it waits;
+ *  null for a case edition that does not wait. Synchronous; reads only this module's table; writes nothing and never
+ *  throws. */
+export function signerOf(p, caseId, edition) {
+  try {
+    const r = one(p, `SELECT signer, delivered_by FROM scheduled_editions WHERE case_id=? AND edition=? AND state='waiting'
+                       ORDER BY seq DESC LIMIT 1`, str(caseId), Number(edition));
+    return r ? { signer: r.signer ?? null, delivered_by: r.delivered_by ?? null } : null;
+  } catch { return null; }
+}
+
+/* R6: each registered listener once, with the wake as it stands; one that throws never undoes the act. It never throws
+   itself: when the wake cannot be read (its table gone), nobody is told rather than told a wrong wake, and the act stands
+   (it may run in a microtask after the caller's transaction, where a throw would escape every caller). */
 function tell(p) {
-  const wake = publishWake(p);
-  for (const l of p.publishListeners()) { try { l.fn({ publishAt: wake }); } catch { /* the act stands (R71) */ } }
+  let wake;
+  try { wake = publishWake(p); } catch { return; }
+  for (const l of p.publishListeners()) { try { l.fn({ publishAt: wake }); } catch { /* the act stands (R6) */ } }
 }

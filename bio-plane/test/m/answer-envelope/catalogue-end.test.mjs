@@ -14,14 +14,17 @@ import { machineFences } from "../../../src/skillpack.mjs";
 const SNAP = JSON.parse(readFileSync(new URL("./rows-before-r43.json", import.meta.url), "utf8"));
 const digest = (s) => createHash("sha256").update(s).digest("hex").slice(0, 16);
 
-test("R7, R2: every code decorated before the catalogue's end reads the same check and translation, its owner's re-wordings under a ruling re-pinned, and every published fence (control-plane R41) stays published (negative control: a changed word or a missing code is seen)", () => {
+test("R7, R2, R10: every code decorated before the catalogue's end reads the same check and translation, its owner's re-wordings under a ruling re-pinned (T41's: C-35.13, C-94.5, C-70.1, C-22.9, C-22.14, C-104.2–.5, C-104.8) and its retired codes held by none (T41's: C-124.52, C-106.1), every pin compared and every difference named, and every published fence (control-plane R41) stays published (negative control: a changed word or a missing code is seen)", () => {
   const codes = Object.keys(SNAP.rows);
   assert.ok(codes.length > 900, String(codes.length));
+  /* every pin is compared, and every one that differs is named at once */
+  const differs = [];
   for (const code of codes) {
     const got = M.dec49Row(code);
-    assert.ok(got, `${code} lost its row`);
-    assert.deepEqual([got.check, digest(got.translation)], SNAP.rows[code], code);
+    const now = got ? [got.check, digest(got.translation)] : null;
+    if (JSON.stringify(now) !== JSON.stringify(SNAP.rows[code])) differs.push(`${code} ${JSON.stringify(SNAP.rows[code])} → ${JSON.stringify(now)}`);
   }
+  assert.deepEqual(differs, []);
   const fences = machineFences(M.CHECK_FAMILIES).map((f) => f.code);
   for (const code of SNAP.fences) assert.ok(fences.includes(code), `fence ${code} is no longer published`);
   /* the changes since, each its owner's under a Bob-approved requirement (`changed.note`): a retired code has no row and

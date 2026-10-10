@@ -13,7 +13,9 @@
    evidence store stand-in keyed by digest (`w.evidence`), its copy held in a bucket stand-in, and `image-cover`'s
    `coverAreas` a stand-in the test scripts (`w.cover`), so its R10–R14 answer as they do; (T39) its member documents'
    copies (R15, R16) are derived by `copyBatch` over provenance R62 on this host, `doc-clean`'s `cleanDocument` a
-   stand-in answering `clean` unless a test scripts its answer (`w.clean.answer`). `people` is handed a stand-in for `duties` (a person's
+   stand-in answering `clean` unless a test scripts its answer (`w.clean.answer`). (T41) `bias`'s `statementInForce` (its
+   R49) is a stand-in the test controls (`lensStandIn`, `w.lens`): the statements in force, per scope, and every ask; it
+   is bound to `inquiry` (its R61 asks it) and handed to case-disclosures (R30). `people` is handed a stand-in for `duties` (a person's
    duties are no read of this module's), and `entities` is built on the host directly, not reached through inquiry's
    instance (K1619). Every test drives `case-disclosures` at its interface: its services, its renderers, its exports. */
 import { DatabaseSync } from "node:sqlite";
@@ -114,6 +116,8 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
   const retrieval = { selectionResolve: () => ({ ok: false, reason: "NO_SUCH_SELECTION", check: "C-33.20" }) };
   const inquiry = inquiryOf(host, { record, membership, content, retrieval, provenance: prov, entities, now: () => clock.now });
   inquiry.migrate();
+  const lens = lensStandIn();
+  inquiry.bindBias(lens);
   const promotion = inquiry.promotion;
   promotion.registerFact("producingGroup", "instance-setup", () => group);
   inquiry.connections.migrate();
@@ -170,7 +174,7 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
       } });
   }
   const w = {
-    marks, carriage, evidence, cover, clean, imports, checks, st, host, record, membership, promotion, prov, content, inquiry, strength, contradiction, runs, clock,
+    lens, marks, carriage, evidence, cover, clean, imports, checks, st, host, record, membership, promotion, prov, content, inquiry, strength, contradiction, runs, clock,
     capture, sources, attestation, extraction: ex, entities, events, lines, money, people,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
@@ -183,7 +187,7 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
   };
   w.cd = caseDisclosuresOf(host, { record, inquiry, strength, contradiction, provenance: prov, attestation, capture,
     sources, extraction: ex, promotion, caseImport: imports, entities, events, lines, money, people, membership,
-    caseCarriage: carriage || marks, now: () => clock.now, ...deps });
+    caseCarriage: carriage || marks, bias: lens, now: () => clock.now, ...deps });
   let n = 0;
   Object.assign(w, {
     head: (id) => record.head(id)?.bundleSha ?? null,
@@ -296,6 +300,26 @@ export function marksStandIn() {
       const p = held.get(captureSha);
       return p ? { ok: true, capture: captureSha, photo: true, ...p } : { ok: true, capture: captureSha, photo: false };
     },
+  };
+  return s;
+}
+
+/** `bias.statementInForce` at its ruled interface (its R49; T41), a stand-in the test controls: `inForce` the statement
+ *  ids in force for every scope, unless `byScope` names a scope's own (`"instance"` or a project id); `read`, when set,
+ *  answers in place of the held ones. `asked` lists each `{statement, scope, viewer}`. `biasManifest` answers no lens in
+ *  force, so inquiry's R53 records none. */
+export function lensStandIn() {
+  const s = {
+    inForce: new Set(), byScope: new Map(), read: null, asked: [],
+    statementInForce({ statement, scope = "instance", viewer = null } = {}) {
+      s.asked.push({ statement, scope, viewer });
+      if (s.read) return s.read({ statement, scope, viewer });
+      const key = scope && typeof scope === "object" ? (scope.type === "project" ? scope.id : "instance") : "instance";
+      const held = s.byScope.has(key) ? s.byScope.get(key) : s.inForce;
+      const on = held.has(statement);
+      return { ok: true, statement, scope, in_force: on, kind: on ? "scrutiny" : null, text: on ? `the text of ${statement}` : null };
+    },
+    biasManifest: () => ({ ok: true, in_force: false }),
   };
   return s;
 }

@@ -1,6 +1,6 @@
 # basis-versions — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed. Last changed T28 (N522: R3, K1273); every requirement met.
+**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed. Last changed T41 (T41-19: R48 new, `bias_applied` on a conclusion, as `draft-T41-investigation.md` §3.6; K2405, K2418), not yet met; every other requirement met.
 
 **Size (P6).** About 4,280 lines move (about 2,160 without comment-only and blank lines): `store.mjs` 3,004, `bio-checks.mjs` 1,018, `schema.mjs` 257. Just past the 4,000 mark; one session reads it with its uses' public parts (K74's test). The conclusion acts are 816 of them; left with `inquiry` they would need a registration from this module (map §5.3). `op=suggest` (912 lines and C-27) is placed with `ai-runs`, not here (map §5.2).
 
@@ -66,10 +66,14 @@ Terms. A **version** is a `basis_versions[]` row `{name, description, claim?, re
 - **R42** (N392, K593, K595) `basisVersionsOf` registers with the `retrieval` its host hands it (its R56, module name `basis-versions`; a host that hands none registers nothing) the single-bundle projection's `no_project_conclusion`: for an inquiry, exactly R11's `no_project_conclusion` for the same viewer (R23's answer when the inquiry is visible to them, else `null`); `null` for every other type; it never throws (a failure reads `null`) and never reaches the list form (retrieval R5).
 - **R47** (K861, plane R10) The module exports a figure source shaped as `record-core` R63's `counts(hid)`, with its key list, for `plane` to register under this module's name: `basisVersions`, the rows of `inquiry_basis_versions` less the rows whose `bundle_id` is in `hid`, and `basisVersionLegs`, the rows of `inquiry_basis_version_legs` less the rows whose `bundle_id` or `target_id` is in `hid`, a NULL key naming no bundle (so never dropped by `hid`); a null `hid` counts whole. The module registers nothing itself.
 
+**A conclusion's bias applications** (T41-19; D59)
+- **R48** (D59) A conclusion may carry `bias_applied` in `inquiry-grammar` R18's shape for the conclusion's claim (`inference_refused`, `scrutiny_raised`), recorded with the conclusion, in `inquiry-grammar` R18's one encoding (`flattenBiasApplied`, its numbered scalar keys on the `conclusions[]` row) with `bias_statements_sha` (bias R49's sha of the lens checked), and read back by `conclusionRecordOf` as `bias_applied` and `bias_lens_sha`; only a project's conclusion carries it; a malformed list is refused `BAD_BIAS_APPLIED` as `BAD_COMMENTARY` is (K2479). Each `statement` is asked of `bias.statementInForce` (its R49) at the conclusion's project scope, the acting member as viewer; one not in force (false or null) is refused through `inquiry.biasNotInForce` (its R61), and nothing is written (K2472).
+
 ## Private
 
 ### Uses
 
+- `bias`: `statementInForce` (its R49; R48; K2472). A new `modules.json` edge; `bias` is earlier (layer 5). `inquiry`: `biasNotInForce` (its R61; R48).
 - `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `record-core`: `recordOf(ctx)`, `declarePurge`, the `bundles` read contract.
 - `membership`: `viewerPredicate`, `inSight` (R80), `existenceAct`, `projectAuthority`; `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202).
@@ -89,7 +93,7 @@ Terms. A **version** is a `basis_versions[]` row `{name, description, claim?, re
 - **R32** A project's conclusion record is append-only; the latest row is its stance (DEC-19).
 - **R33** Every act and read naming a question, version or project the viewer may not see answers as an absent one.
 - **R34** `inquiry_basis_versions` and `inquiry_basis_version_legs` carry `bundle_id` and are declared to record-core's purge (K23).
-- **R35** Each check moves here as an invariant with its test (K6): C-25.1–C-25.34, C-27.15, C-50.1–C-50.11, C-33.1, C-33.2, C-33.33–C-33.37, C-32.2.
+- **R35** Each check moves here as an invariant with its test (K6): C-25.1–C-25.35 (C-25.35 `BAD_BIAS_APPLIED`, R48; K2495), C-27.15, C-50.1–C-50.11, C-33.1, C-33.2, C-33.33–C-33.37, C-32.2.
 - **R36** No place is named in this module's behaviour or outward text.
 
 ### Satisfies

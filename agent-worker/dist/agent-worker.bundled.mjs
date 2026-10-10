@@ -860,7 +860,12 @@ var ID_TABLE = Object.freeze([
      calculations minted sequentially, and every reader keeps reading them through `idPattern`. Minting follows `form`
      alone (record-core). */
   row("CALC", "calculations", "opaque", "sequential"),
-  row("STQ", "answers")
+  row("STQ", "answers"),
+  /* T41-1 (N820; D32, D8; K2405, K2418): a step (`steps`) and a reading guide (`reading-guides`), opaque, as T33's new
+     objects are: a counter would tell a reader how many steps a group took, hidden projects' included. Their owners are
+     named here before they hold code (P8). */
+  row("STP", "steps", "opaque"),
+  row("GUD", "reading-guides", "opaque")
 ]);
 var YEAR = "\\d{4}";
 var CORE = { sequential: "\\d{4,}", opaque: "[a-z0-9]{16}" };
@@ -873,6 +878,8 @@ function idPattern(prefix) {
   return typeof prefix === "string" && ROW.has(prefix) ? new RegExp(`^${coreOf(prefix)}$`) : null;
 }
 var HYP_RE = idPattern("HYP");
+var STP_RE = idPattern("STP");
+var GUD_RE = idPattern("GUD");
 var ID_PREFIXES = Object.freeze([
   "INFO",
   "PROB",
@@ -974,7 +981,7 @@ var AI_RUN_CHECKS = {
   OBS_AUTHORITY_UNNAMED: {
     check: "C-22.9",
     where: "src/observation-log/vocabulary.mjs checkObservation, called from src/observation-log/index.mjs observe",
-    translation: "That observation does not say why the look was made. The record keeps what it looked for only when something can be named as the reason \u2014 an investigation, a monitoring sweep, a link in a document, a ratification, or a lead somebody wrote down. A look with no reason behind it is not recorded."
+    translation: "That observation does not say why the look was made. The record keeps what it looked for only when something can be named as the reason \u2014 an investigation, a monitoring sweep, a link in a document, a ratification, an acquisition, an extraction, a derivation, a lead somebody wrote down, a standing objective, or a step taken for a question. A look with no reason behind it is not recorded."
   },
   /* REC-93, 2026-09-14 — THE WARC LESSON, AND THE FALSE-COVERAGE HAZARD FROM
        THE OTHER DIRECTION. `OBSERVATION-LOG-DESIGN.md` §3: *"`PRESENT` with no
@@ -1195,7 +1202,8 @@ var AI_RUN_OWN_CHECKS = {
   AI_RUN_BOUND_PLANE_COUNTED: {
     check: "C-22.14",
     where: "src/run-rules/rules.mjs checkConsume, called from src/ai-runs/index.mjs tick and open",
-    translation: "This part of the investigation's budget is kept by the record itself \u2014 passages marked citable and questions opened are counted as the work lands, and whether the investigation is still alive is read off the clock \u2014 so the investigation cannot report it, up or down. Nothing was recorded for this step."
+    /* R26 (T41-21): `pages` joins the plane-counted bounds, so the sentence names pages read beside the rest. */
+    translation: "This part of the investigation's budget is kept by the record itself \u2014 passages marked citable, questions opened and pages read are counted as the work lands, and whether the investigation is still alive is read off the clock \u2014 so the investigation cannot report it, up or down. Nothing was recorded for this step."
   },
   /* REC-172, 2026-09-23 (INVESTIGATIVE-SESSION.md §14b.6). A tick's `consume` key naming no bound, and a `consume`
      that is not a map at all (an ARRAY, whose keys are positions), were SKIPPED: the tick answered `ticked: true` and
@@ -1255,6 +1263,62 @@ var AI_RUN_OWN_CHECKS = {
     check: "C-22.21",
     where: "src/run-rules/rules.mjs checkAskBounds, called from agent-worker and answers when an ask starts",
     translation: "Nothing was asked, because the question was given more room than one question may have \u2014 more turns, more reading or more time than the most allowed. Ask again within those limits."
+  },
+  /* R19 as amended (T41-21; D11, D14): AN AI PART'S RESULT ON THE TEST INVESTIGATIONS, `ai-runs` R75's record, judged
+     here as `verification_recorded` is: one code for every way the record is unfit (a part this module does not name, no
+     set, a version that is not a whole number of one or more, a false-alarm rate outside 0 to 1, a `passed` that is not
+     true or false, nobody grading, no time), the detail naming the field. Its own code and not C-22.20's: that one is a
+     member's verification of a live run; this is a graded result on frozen test matters, and its remedy differs. */
+  AI_TEST_BAR_UNFIT: {
+    check: "C-22.22",
+    where: "src/run-rules/test-bar.mjs checkTestBarRecord, called from src/ai-runs/index.mjs testBarRecord",
+    translation: "This result on the test investigations was not kept, because it does not say all it must: which part of the assistant was tested, on which set and which version of it, how often it raised a false alarm, whether it passed, who graded it and when. Until such a result is kept, that part stays switched off."
+  },
+  /* R26 (T41-21; D2): A READ INSIDE A DOCUMENT KEPT FROM THE ASSISTANT. A material limit that covers reading (`credentials`
+     R57) refuses the read whatever the run's `pages` bound allows: the bound counts pages a run may read, it never
+     licenses one. Minted here by `checkPagesRead`; the run's read relays it. The sentence names no limit's reason. */
+  AI_RUN_READ_NO_AI: {
+    check: "C-22.23",
+    where: "src/run-rules/rules.mjs checkPagesRead, called from the run's read inside a held document",
+    translation: "Nothing was read, because this document is kept away from the assistant by a limit your group put on its material. The investigation goes on without it; a person can still read it."
+  },
+  /* B3 (K2482; AI-RUNS #14 J1): A GROUP'S OWN TEST MATTER THAT IS MALFORMED, refused by `ai-runs` R75's `groupTestSet`
+     and read here by key. Its own code and not C-22.22's: that one is a graded result on a set; this is a matter a member
+     offers a group's own set, and its remedy (say the part, the matter and its answers) differs. A group's set never
+     opens or closes a deploy gate. */
+  AI_GROUP_TEST_INVALID: {
+    check: "C-22.24",
+    where: "src/ai-runs/index.mjs groupTestSet, reached from the group's test investigations",
+    translation: "This test investigation was not added, because it does not say all it must: which part of the assistant it tests, the matter itself, and the answers people wrote for it. Your group's own tests show how the assistant does on your matters; they never switch a part on or off."
+  },
+  /* R23 (T41-21; N820; B4, K2485): A RUN'S ORIGIN outside RUN_ORIGINS, or none. Minted by `originAllowed`, the one site,
+     which `ai-runs` R73's open relays. An origin is said, never assumed. */
+  AI_RUN_ORIGIN_UNKNOWN: {
+    check: "C-22.25",
+    where: "src/run-rules/rules.mjs originAllowed, called from src/ai-runs/index.mjs open",
+    translation: "Nothing was started, because this investigation did not say where it came from in a way the record knows: an investigation is started by a member or by exploring a question, and nothing else."
+  },
+  /* B4 (K2485): `ai-runs` R73 — an exploring run works as a system step of its own, by its place and work and naming no
+     step; minted by `ai-runs` (open's step region, only for an `explore` origin; B6, K2514), read here by key. */
+  AI_RUN_EXPLORE_NEEDS_STEP: {
+    check: "C-22.26",
+    where: "src/ai-runs/index.mjs open > is-airun-open-step, reached from op=airunopen with origin explore",
+    translation: "Nothing was started, because exploring a question unasked is always done as one step of the work, and this did not say which step. The step is what records why it ran and what it found."
+  },
+  /* R23 (B4, K2485): an `explore`-origin run while `investigate` is not deployable (R19: its chain and its test bar).
+     Minted by `originAllowed`, which `ai-runs` R73's open relays. */
+  AI_RUN_EXPLORE_NOT_DEPLOYABLE: {
+    check: "C-22.27",
+    where: "src/run-rules/rules.mjs originAllowed, called from src/ai-runs/index.mjs open",
+    translation: "Nothing was started, because exploring a question unasked is switched on only after investigating has been checked in real use and has passed its test investigations."
+  },
+  /* B4 (K2485): `ai-runs` R73, R74 — the step a run names is not one the record holds for it; minted by `ai-runs`, read
+     here by key (B6, K2514): a member's step run naming a step unseen or both a step and its own, a run of its own step
+     with `steps` unreachable, and each unseen step of R74's batch. Something unseen answers as something absent. */
+  AI_RUN_STEP_UNKNOWN: {
+    check: "C-22.28",
+    where: "src/ai-runs/index.mjs open > is-airun-open-step and its own step's steps check, reached from op=airunopen; and openMany, for each step of a member's batch she cannot see",
+    translation: "Nothing was started, because the step this investigation names is not one the record holds here. Something you cannot see is answered exactly as something that does not exist."
   }
 };
 var AI_RUN_ACT_SHAPE_CHECKS = {
@@ -1488,39 +1552,29 @@ var AI_RUN_PLAN_CHECKS = {
   }
 };
 var AI_USE_CHECKS = {
-  /* R50: the member's own daily ceiling, set by the member. */
-  AI_USE_CEILING_REACHED: {
-    check: "C-109.8",
-    where: "src/ai-runs/index.mjs open, tick and the ask's ceiling, reached from op=airunopen, op=airuntick and an ask",
-    translation: "Nothing was run, because you have used the assistant as much today as your own daily limit allows. You set that limit yourself and can raise it; otherwise it resets at the start of tomorrow."
-  },
-  /* R50: the lower ceiling an administrator set for the copy's own load. */
-  AI_USE_COPY_CEILING_REACHED: {
-    check: "C-109.9",
-    where: "src/ai-runs/index.mjs open, tick and the ask's ceiling, reached from op=airunopen, op=airuntick and an ask",
-    translation: "Nothing was run, because you have reached today's limit that this group's administrator set to keep your group's Civicsmith from being overloaded. It resets at the start of tomorrow, or an administrator can raise it."
-  },
   /* R52 (K1502, K1503; K1755): no account serves the member's act — none of their own connected (a subscription token
-     or an API key), and the group's API key, which an administrator may hold, not held or switched off. */
+     or an API key), and the group's API key, which an administrator may hold, not held or switched off. T40 (N812):
+     or the account that would serve has this use switched off, where `AI_USE_SWITCHED_OFF` (`credentials` R56) is not
+     answered in its place. */
   AI_NO_ACCOUNT: {
     check: "C-109.10",
     where: "src/ai-runs/index.mjs open and the ask's account, reached from op=airunopen and an ask",
-    translation: "Nothing was run, because no account serves your request: you have not connected a Claude account or an API key of your own, and your group has no API key of its own switched on. Connect yours, or ask an administrator about the group's."
+    translation: "Nothing was run, because no account serves your request: you have not connected a Claude account or an API key of your own, and your group has no API key of its own switched on, or the account that would serve has this use switched off. Connect yours, or ask an administrator about the group's."
   },
   /* R50 (K1601, K1610): a member's ceiling is that member's own to set and read. The copy's ceiling is an
-     administrator's, refused to anyone else by membership's NOT_AN_ADMIN, never by this row. */
+     administrator's, refused to anyone else by membership's NOT_AN_ADMIN, never by this row. Stays at T40 (`ai-use` R2),
+     minted since by `ai-use` alone (B6, K2514): its owner bar for a member's account, and a member's own use read. */
   NOT_YOUR_CEILING: {
     check: "C-109.11",
-    where: "src/ai-runs/index.mjs aiCeilingSet and aiUsageMine",
+    where: "src/ai-use/index.mjs aiLimitSet, aiUsage, exploreApprove, estimate and aiLimits (a member's account, its owner bar) and aiUsageMine, reached from op=ailimitset, op=aiusage, op=exploreapprove, op=ailimits and ai-runs' batch estimate",
     translation: "Nothing was changed, because a member's daily limit on the assistant is theirs alone to set or look at."
-  },
-  /* R50 (K1601): a ceiling's figure is a whole number of one or more, or none at all (null: no ceiling of one's own). */
-  AI_CEILING_INVALID: {
-    check: "C-109.12",
-    where: "src/ai-runs/index.mjs aiCeilingSet and aiCopyCeilingSet",
-    translation: "Nothing was changed, because a daily limit on the assistant is a whole number of one or more, or no limit of your own at all. Give a whole number, or clear the limit."
   }
 };
+var RETIRED_CHECKS = Object.freeze({
+  AI_USE_CEILING_REACHED: Object.freeze({ check: "C-109.8", retired_for: "AI_LIMIT_REACHED" }),
+  AI_USE_COPY_CEILING_REACHED: Object.freeze({ check: "C-109.9", retired_for: "AI_LIMIT_REACHED" }),
+  AI_CEILING_INVALID: Object.freeze({ check: "C-109.12", retired_for: "AI_LIMIT_INVALID" })
+});
 var AI_RUNS_CHECKS = Object.freeze({
   ...AI_RUN_OWN_CHECKS,
   ...AI_RUN_ACT_SHAPE_CHECKS,
@@ -1622,7 +1676,7 @@ var CONDITION_KINDS = Object.freeze({
 
 // ../bio-plane/src/run-rules/rules.mjs
 var AI_RUN_CHECKS2 = Object.freeze({ ...AI_RUN_CHECKS, ...AI_RUNS_CHECKS });
-var PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces", "proposals"]);
+var PLANE_COUNTED_BOUNDS = Object.freeze(["mints", "surfaces", "proposals", "pages"]);
 var PLANE_DECIDED_BOUNDS = Object.freeze(["lease"]);
 var AI_RUN_STATE_MAX_BYTES = 262144;
 var ASK_BOUNDS = Object.freeze({
@@ -1643,6 +1697,7 @@ function askBoundReached(bounds, used) {
   }
   return null;
 }
+var RUN_ORIGINS = Object.freeze(["member", "explore"]);
 
 // ../bio-plane/src/run-rules/deployment.mjs
 var GATE_ADDRESS = {
@@ -1737,7 +1792,14 @@ var ASK_MODE = Object.freeze({
   when: "only by a reviewed change of its own that sets this flag, whatever the run modes' state",
   bounds: "ASK_BOUNDS (R17), declared when the ask starts"
 });
-var DRAFT_KINDS = Object.freeze(["own_words", "translation"]);
+var DRAFT_KINDS = Object.freeze(["own_words", "translation", "case_account", "account_check", "bearing_note"]);
+var DRAFT_REACH = Object.freeze({
+  own_words: Object.freeze({ scope: "ask_scope", means: "within answers' ASK_SCOPE (its R1); a firsthand field reads nothing" }),
+  translation: Object.freeze({ scope: "none", means: "nothing of the record: only the interface words it is asked about" }),
+  case_account: Object.freeze({ scope: "case_record", means: "within answers' ASK_SCOPE, narrowed to the case's own record: its evidence, in one or several framings (time order, by question, by rule)" }),
+  account_check: Object.freeze({ scope: "case_record", means: "within answers' ASK_SCOPE, narrowed to the case's own record: the member's account and what it cites (skills R44)" }),
+  bearing_note: Object.freeze({ scope: "source_record", means: "within answers' ASK_SCOPE, narrowed to the source's own record (run-productions R23)" })
+});
 var TRANSLATION_DRAFT_MAX_WORDS = 100;
 var DRAFT_MODE = Object.freeze({
   mode: "draft",
@@ -1745,6 +1807,7 @@ var DRAFT_MODE = Object.freeze({
   reach: "within answers' ASK_SCOPE (its R1); no write op of any module",
   firsthand_reach: "nothing: a draft for a field that records what the member saw reads nothing at all",
   kinds: DRAFT_KINDS,
+  kind_reach: DRAFT_REACH,
   translation_reach: `nothing of the record: no read op of any module, answers' ASK_SCOPE included, whatever the member's suggestions switch; a translation draft is given only the interface words it is asked about, at most ${TRANSLATION_DRAFT_MAX_WORDS} a draft, each with its key, note and marks as its caller hands them`,
   translation_keeps: "nothing: the draft is answered to the plane and never kept by the run; the words recorded as a labelled draft, adopted or confirmed are instance-setup's, never the mode's",
   interactive: true,
@@ -1755,6 +1818,19 @@ var DRAFT_MODE = Object.freeze({
   deployed: false,
   when: "only by a reviewed change of its own that sets this flag, the change that serves agent-worker's POST /draft, whatever the run modes' state and whatever ask's flag",
   bounds: "ASK_BOUNDS (R17), declared when the draft starts"
+});
+var ENQUIRE_MODE = Object.freeze({
+  mode: "enquire",
+  read_only: true,
+  reach: "within answers' ASK_SCOPE (its R1); no write op of any module",
+  interactive: true,
+  writes_run_row: false,
+  writes: "nothing: its proposals are stored by investigation R12, R20 and steps R24, each by its own act",
+  why: "it interviews one member about their matter and proposes questions and steps inside that member's act, and is no run: it writes no run row and keeps nothing itself",
+  deploys_apart: true,
+  deployed: false,
+  when: "only by a reviewed change of its own that sets this flag, once R19's test bar is held for it, whatever the run modes' state and whatever ask's or draft's flag",
+  bounds: "ASK_BOUNDS (R17), declared when the interview starts"
 });
 function draftMayRead(asked) {
   const at = (k) => own(asked, k) ? asked[k] : null;
@@ -1772,7 +1848,8 @@ function deployedModesFor(flags) {
     ...CHAIN.slice(0, verified == null ? 1 : 2),
     ...DEPLOYMENT_SEQUENCE.order.filter((m) => apart(m, DEPLOYMENT_SEQUENCE.deploys_apart[m]?.deployed)),
     ...apart(ASK_MODE.mode, ASK_MODE.deployed) ? [ASK_MODE.mode] : [],
-    ...apart(DRAFT_MODE.mode, DRAFT_MODE.deployed) ? [DRAFT_MODE.mode] : []
+    ...apart(DRAFT_MODE.mode, DRAFT_MODE.deployed) ? [DRAFT_MODE.mode] : [],
+    ...apart(ENQUIRE_MODE.mode, ENQUIRE_MODE.deployed) ? [ENQUIRE_MODE.mode] : []
   ]);
 }
 var DEPLOYED_MODES = deployedModesFor();
@@ -1786,6 +1863,43 @@ var VERIFICATION_RECORDED = Object.freeze({
     verified_by: "the member who verified it; never a machine",
     at: "when it was verified",
     evidence: "what the member saw, in their words or as references to it"
+  })
+});
+
+// ../bio-plane/src/run-rules/test-set.mjs
+var TEST_MATTER_SHAPE = Object.freeze({
+  id: "the matter's id within the set, unique and never reused",
+  title: "the matter in plain words",
+  documents: "the documents it was frozen with, each as its capture's address and digest",
+  answers: "what a correct investigation finds, written by people, each with what it rests on",
+  answered_by: "who wrote the answers; never a machine"
+});
+var CIVICSMITH_TEST_SET = Object.freeze({
+  id: "civicsmith",
+  version: 1,
+  matters: Object.freeze([])
+});
+
+// ../bio-plane/src/run-rules/test-bar.mjs
+var TEST_BAR_PARTS = Object.freeze([
+  ...DEPLOYMENT_SEQUENCE.order,
+  ASK_MODE.mode,
+  ENQUIRE_MODE.mode,
+  "explore",
+  ...DRAFT_KINDS.map((k) => `draft:${k}`),
+  "transcribe",
+  "read"
+]);
+var TEST_BAR_RECORD = Object.freeze({
+  fields: Object.freeze(["part", "set", "set_version", "false_alarm_rate", "passed", "graded_by", "at"]),
+  means: Object.freeze({
+    part: "the AI part tested, one of TEST_BAR_PARTS",
+    set: "the set of test investigations it was graded on",
+    set_version: "the version of that set, a whole number of one or more",
+    false_alarm_rate: "how often it raised a false alarm on that set, from 0 to 1",
+    passed: "whether it passed its bar there, true or false",
+    graded_by: "who or what graded it",
+    at: "when it was graded"
   })
 });
 
@@ -2895,9 +3009,9 @@ var sha256hex = async (v) => {
 };
 
 // src/cascade.mjs
-var CASCADE_ORDER = Object.freeze(["member", "group"]);
+var CASCADE_ORDER = Object.freeze(["project", "member", "group"]);
 var ACCOUNT_KINDS = Object.freeze(["apikey", "signin"]);
-var LEVEL_KINDS = Object.freeze({ member: ACCOUNT_KINDS, group: Object.freeze(["apikey"]) });
+var LEVEL_KINDS = Object.freeze({ project: ACCOUNT_KINDS, member: ACCOUNT_KINDS, group: Object.freeze(["apikey"]) });
 var CASCADE_NO_ACCOUNT = "NO_ACCOUNT";
 var LEVEL_UNSET = "unset";
 var LEVEL_REVOKED = "revoked_by_publication";
@@ -2905,10 +3019,12 @@ var LEVEL_AVAILABLE = "available";
 var isObject3 = (a) => a !== null && typeof a === "object" && !Array.isArray(a);
 var secretOf = (account) => isObject3(account) && typeof account.secret === "string" ? account.secret : "";
 var memberOf = (account) => isObject3(account) && typeof account.member === "string" ? account.member : "";
+var projectOf = (account) => isObject3(account) && typeof account.project === "string" ? account.project : "";
 var levelOf = (account) => isObject3(account) && CASCADE_ORDER.includes(account.level) ? account.level : "member";
 async function levelState(account) {
   if (!isObject3(account) || !CASCADE_ORDER.includes(account.level)) return LEVEL_UNSET;
   if (!LEVEL_KINDS[account.level].includes(account.kind)) return LEVEL_UNSET;
+  if (account.level === "project" && !projectOf(account)) return LEVEL_UNSET;
   if (account.kind === "signin") return memberOf(account) ? LEVEL_AVAILABLE : LEVEL_UNSET;
   const v = secretOf(account);
   if (v.length === 0) return LEVEL_UNSET;
@@ -2925,15 +3041,16 @@ async function resolveClaudeCascade(account) {
       level,
       kind: account.kind,
       member: typeof account.member === "string" ? account.member : null,
+      ...level === "project" ? { project: projectOf(account) } : {},
       levels
     };
-  const whose = level === "group" ? "the group's API key" : "the member's own Claude account reference";
+  const whose = level === "group" ? "the group's API key" : level === "project" ? "the project's Claude account" : "the member's own Claude account reference";
   return {
     available: false,
     reason: CASCADE_NO_ACCOUNT,
     level,
     levels,
-    detail: state === LEVEL_REVOKED ? `${whose} has been published in this repository, which revokes it, so no model turn can run under it. ` + (level === "group" ? "An administrator sets a new key for the group, or members connect their own." : "The member connects a new one; until then the group's API key serves them only while your group's Civicsmith holds it and it is on.") : `no usable Claude account arrived for this act (${whose} was absent, empty, named no member, or of a kind its level does not hold). Which account serves a member's act is your group's Civicsmith's to answer (the member's own, else the group's API key while it is held and on); a member whom neither serves has no assistant.`
+    detail: state === LEVEL_REVOKED ? `${whose} has been published in this repository, which revokes it, so no model turn can run under it. ` + (level === "group" ? "An administrator sets a new key for the group, or members connect their own." : level === "project" ? "An owner of the project sets a new one; until then the member's own account, else the group's API key, serves them only while your group's Civicsmith holds it and it is on." : "The member connects a new one; until then the group's API key serves them only while your group's Civicsmith holds it and it is on.") : `no usable Claude account arrived for this act (${whose} was absent, empty, named no member${level === "project" ? " or no project" : ""}, or of a kind its level does not hold). Which account serves a member's act is your group's Civicsmith's to answer (the project's, else the member's own, else the group's API key while it is held and on); a member whom none serves has no assistant.`
   };
 }
 async function cascadeToken(account) {
@@ -2955,14 +3072,18 @@ var USAGE_FIGURES = Object.freeze([
 ]);
 var DETAIL_MAX2 = 200;
 var MESSAGE_MAX = 300;
+var ESTIMATE = "estimated_cost_usd";
+var SUMMED = Object.freeze([...USAGE_FIGURES, ESTIMATE]);
+var finite = (v) => typeof v === "number" && Number.isFinite(v) ? v : null;
 function usageOf(stated) {
   const u = stated && typeof stated === "object" ? stated : {};
-  return Object.fromEntries(USAGE_FIGURES.map((k) => [k, typeof u[k] === "number" && Number.isFinite(u[k]) ? u[k] : null]));
+  return { ...Object.fromEntries(USAGE_FIGURES.map((k) => [k, finite(u[k])])), [ESTIMATE]: null };
 }
+var kept = (u) => Object.fromEntries(SUMMED.map((k) => [k, finite(u[k])]));
 function sumUsage(a, b) {
-  if (!a) return b ? usageOf(b) : null;
-  if (!b) return usageOf(a);
-  return Object.fromEntries(USAGE_FIGURES.map((k) => [k, a[k] == null || b[k] == null ? null : a[k] + b[k]]));
+  if (!a) return b ? kept(b) : null;
+  if (!b) return kept(a);
+  return Object.fromEntries(SUMMED.map((k) => [k, a[k] == null || b[k] == null ? null : a[k] + b[k]]));
 }
 function callsOf(stated) {
   return Number.isInteger(stated) && stated >= 0 ? stated : null;
@@ -3304,17 +3425,47 @@ var MODEL_FOR_MODE = Object.freeze({
   draft: "claude-opus-5"
 });
 var MODEL_MAX_TOKENS = 16e3;
+var rates = (input, output, cache_read, cache_write) => Object.freeze({ input, output, cache_read, cache_write });
+var MODEL_PRICES = Object.freeze({
+  "claude-opus-5": rates(5, 25, 0.5, 6.25)
+});
+var RATE_OF = Object.freeze({
+  input_tokens: "input",
+  output_tokens: "output",
+  cache_read_input_tokens: "cache_read",
+  cache_creation_input_tokens: "cache_write"
+});
+var INPUT_SIDE = Object.freeze(["input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens"]);
+var highest = (r) => Math.max(r.input, r.output, r.cache_read, r.cache_write);
+var TABLE_HIGHEST = Math.max(...Object.values(MODEL_PRICES).map(highest));
+var utf8 = new TextEncoder();
+function estimateCost(usage, { model, serialized, maxTokens }) {
+  const own2 = Object.prototype.hasOwnProperty.call(MODEL_PRICES, model) ? MODEL_PRICES[model] : null;
+  const top = own2 ? highest(own2) : TABLE_HIGHEST;
+  const rate = (figure) => own2 ? own2[RATE_OF[figure]] : top;
+  let usd = 0;
+  for (const k of Object.keys(RATE_OF)) if (usage[k] != null) usd += usage[k] * rate(k);
+  if (INPUT_SIDE.some((k) => usage[k] == null)) {
+    const stated = INPUT_SIDE.reduce((n, k) => n + (usage[k] ?? 0), 0);
+    usd += Math.max(0, utf8.encode(String(serialized ?? "")).length - stated) * top;
+  }
+  if (usage.output_tokens == null)
+    usd += (Number.isInteger(maxTokens) && maxTokens > 0 ? maxTokens : MODEL_MAX_TOKENS) * top;
+  return usd / 1e6;
+}
+var priced = (got, turn) => got && got.usage ? { ...got, usage: { ...got.usage, [ESTIMATE]: estimateCost(got.usage, turn) } } : got;
 var DEFAULT_MAX_SEGMENT_BYTES = 1e9;
 var SEGMENT_BYTES_SOURCE = "D-611 on M-168: CPU binds at ~7-10 ms per MB re-serialised, ~3 GB under the 30 s default; a segment sends at most a third of that";
 var CONVERSATION_MAX_TURNS = 12;
 function segmentMeter({ turnsBound, bytesBound }) {
   return { turns: 0, turnsBound, bytes: 0, bytesBound, stopped: null };
 }
-var LEVELS2 = Object.freeze(["member", "group"]);
+var LEVELS2 = Object.freeze(["member", "project", "group"]);
+var KEY_ONLY = Object.freeze(["project", "group"]);
 function usable(reference) {
   if (!reference || typeof reference !== "object") return null;
   if (reference.level !== void 0 && !LEVELS2.includes(reference.level)) return null;
-  if (reference.level === "group" && reference.kind !== "apikey") return null;
+  if (KEY_ONLY.includes(reference.level) && reference.kind !== "apikey") return null;
   if (reference.kind === "apikey" && typeof reference.key === "string" && reference.key) return { kind: "apikey", secret: reference.key };
   if (reference.kind === "signin" && typeof reference.member === "string" && reference.member)
     return { kind: "signin", member: reference.member };
@@ -3326,7 +3477,7 @@ function precheck(reference, runner) {
   if (!ref) return { refusal: refused(
     null,
     "ACCOUNT_REFERENCE_UNUSABLE",
-    `a model turn runs only under the account reference that serves a member's act: {kind: "apikey", key} or {kind: "signin", member}, the member's own, or the group's API key {kind: "apikey", level: "group", key}`
+    `a model turn runs only under the account reference that serves a member's act: {kind: "apikey", key} or {kind: "signin", member}, the member's own, or a project's or the group's API key {kind: "apikey", level: "project" or "group", key}`
   ) };
   if (ref.kind === "signin" && !runnerBinding(runner)) return { refusal: refused(
     null,
@@ -3390,7 +3541,7 @@ async function converse({
     }));
     const stop = charge(serialized);
     if (stop) return { ...stop, usage, calls };
-    const got = await apikeyTurn(ref.secret, serialized);
+    const got = priced(await apikeyTurn(ref.secret, serialized), { model, serialized, maxTokens: MODEL_MAX_TOKENS });
     if (got.usage) {
       usage = sumUsage(usage, got.usage);
       calls += 1;
@@ -3712,11 +3863,11 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       404,
       { run_id: runId }
     ) };
-  const recordedPayer = session.principal?.claude ?? null;
+  const recordedPayer = session.principal?.ref ?? null;
   if (account && recordedPayer !== account.member)
     return { refusal: refusal2(
       "RUN_NAMES_A_DIFFERENT_PAYER",
-      `the run's own record says it is the act of ${JSON.stringify(recordedPayer)}, but the Claude account handed to this segment serves ${JSON.stringify(account.member)}'s act (${account.level === "group" ? "the group's API key, serving that member" : "that member's own reference"}). A run is continued only under the account that serves the member whose act started it, never another member's (K1502, K1755, D-260), so no step was taken and the run stays as it was. The caller handed the account for the wrong member, or the run recorded the wrong member.`,
+      `the run's own record says it is the act of ${JSON.stringify(recordedPayer)}, but the Claude account handed to this segment serves ${JSON.stringify(account.member)}'s act (${account.level === "group" ? "the group's API key, serving that member" : account.level === "project" ? "the project's account, serving that member" : "that member's own reference"}). A run is continued only under the account that serves the member whose act started it, never another member's (K1502, K1755, D-260), so no step was taken and the run stays as it was. The caller handed the account for the wrong member, or the run recorded the wrong member.`,
       409,
       { run_id: runId, recorded: recordedPayer, supplied: account.member }
     ) };
@@ -3917,7 +4068,15 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
     );
     if (!tick.reached) return { refusal: planeSilent(tick) };
     const tickAnswer = planeAnswer(tick, "airuntick");
-    if (tickAnswer.refused) {
+    const noRun = !tickAnswer.refused && tickAnswer.result?.found === false;
+    if (noRun) {
+      refusals.push({
+        at: "airuntick",
+        code: tickAnswer.result.code ?? null,
+        check: tickAnswer.result.check ?? null,
+        plane: tick.body ?? null
+      });
+    } else if (tickAnswer.refused) {
       refusals.push({
         at: "airuntick",
         code: tickAnswer.refused.code,
@@ -4388,8 +4547,8 @@ async function runSubsessions(call, state, runId, model, logSeq, contracts) {
       if (tick.silent) return { silent: tick.silent };
       const t = tick.result ?? {};
       const bad = Array.isArray(t.refused) ? t.refused : [];
-      if (tick.refused || bad.length) {
-        for (const r of tick.refused ? [tick.refused] : bad)
+      if (tick.refused || bad.length || t.found === false) {
+        for (const r of tick.refused ? [tick.refused] : t.found === false ? [t] : bad)
           logSeq?.refused({
             at: "airuntick.log",
             step: "fanout",
@@ -4478,11 +4637,12 @@ var planeRefused = (runId, store, asked) => json({
   plane_status: asked.status,
   plane: asked.body
 }, 403);
+var PROJECT_ID_MAX = 200;
 async function accountOf(body) {
   if (body.claude_accounts !== void 0)
     return { refusal: refusal2(
       "BAD_ACCOUNT",
-      "claude_accounts is the retired three-level cascade's field: there is no project or instance Claude account. A call carries the one account that serves the member's act, as account.",
+      "claude_accounts is the retired three-level cascade's field: there is no instance Claude account. A call carries the one account that serves the member's act, as account.",
       400,
       { field: "claude_accounts" }
     ) };
@@ -4494,10 +4654,10 @@ async function accountOf(body) {
       409,
       { capability: "unavailable" }
     ) };
-  if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind) || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind) || typeof a.member !== "string" || !a.member || a.kind === "signin" && (a.secret !== void 0 || a.suggestions !== void 0 && a.suggestions !== false))
+  if (typeof a !== "object" || Array.isArray(a) || !ACCOUNT_KINDS.includes(a.kind) || !CASCADE_ORDER.includes(a.level) || !LEVEL_KINDS[a.level].includes(a.kind) || typeof a.member !== "string" || !a.member || (a.level === "project" ? !(typeof a.project === "string" && a.project && a.project.length <= PROJECT_ID_MAX) : a.project !== void 0) || a.kind === "signin" && (a.secret !== void 0 || a.suggestions !== void 0 && a.suggestions !== false))
     return { refusal: refusal2(
       "BAD_ACCOUNT",
-      `account is the account that serves the member's act: {kind, level, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), and member the member whose act it serves; a signin account is the member's own and carries no secret and no suggestions but false. What arrived is not one, and this member judges only what it is handed.`,
+      `account is the account that serves the member's act: {kind, level, secret, member}, kind one of ${ACCOUNT_KINDS.join(", ")}, level one of ${CASCADE_ORDER.join(", ")} (the group's account an API key only), and member the member whose act it serves; a project's account names its project, and no other does; a signin account is the member's own and carries no secret and no suggestions but false. What arrived is not one, and this member judges only what it is handed.`,
       400,
       { field: "account" }
     ) };
@@ -4618,11 +4778,17 @@ async function handleRun(req, env) {
     stage: "harness",
     turns_run: meter.turns,
     judgement_source: modelMode ? "model" : "body",
-    judgement_note: modelMode ? `the control-flow table ran and the judgements inside its steps were made by model turns run through agent-model (${meter.turns}), under the Claude account that serves the member's act (${cascade.level === "group" ? "the group's API key" : "the member's own"}) and the skill pack the run names; the sub-sessions ran one per level and returned REPORTS` : "the control-flow table ran and its judgements arrived from the caller (the body), so no model turn was taken (turns_run: 0). Stated rather than presented as a model run.",
-    /* R29 — WHICH ACCOUNT, secret-free by construction: its kind, its level (the member's own, or the group's API key,
-       K1755) and the member whose act it serves. A call with none never reaches here (R6 refused it by name before
-       any step). */
-    claude_account: { available: true, kind: cascade.kind, level: cascade.level, member: cascade.member },
+    judgement_note: modelMode ? `the control-flow table ran and the judgements inside its steps were made by model turns run through agent-model (${meter.turns}), under the Claude account that serves the member's act (${cascade.level === "group" ? "the group's API key" : cascade.level === "project" ? "the project's" : "the member's own"}) and the skill pack the run names; the sub-sessions ran one per level and returned REPORTS` : "the control-flow table ran and its judgements arrived from the caller (the body), so no model turn was taken (turns_run: 0). Stated rather than presented as a model run.",
+    /* R29 — WHICH ACCOUNT, secret-free by construction: its kind, its level (the member's own, a project's, R71, or the
+       group's API key, K1755), the member whose act it serves and, for a project's, the project (an id). A call with
+       none never reaches here (R6 refused it by name before any step). */
+    claude_account: {
+      available: true,
+      kind: cascade.kind,
+      level: cascade.level,
+      member: cascade.member,
+      ...cascade.level === "project" ? { project: cascade.project } : {}
+    },
     mode: drive.mode,
     trace: drive.trace,
     passes: drive.passes,
@@ -4714,7 +4880,7 @@ var ASK_DEPS = {
   NAMESPACES,
   DEFAULT_MAX_SEGMENT_BYTES
 };
-var MODEL_TURNS = "run through agent-model exactly when the Claude account that serves the member's act (the member's own reference, or the group's API key) arrives with the call and the run's, ask's or draft's mode has turns to run; a segment whose caller supplies the judgements runs none";
+var MODEL_TURNS = "run through agent-model exactly when the Claude account that serves the member's act (the member's own reference or sign-in, a project's account, or the group's API key) arrives with the call and the run's, ask's or draft's mode has turns to run; a segment whose caller supplies the judgements runs none";
 var index_default = {
   async fetch(req, env) {
     const url = new URL(req.url);

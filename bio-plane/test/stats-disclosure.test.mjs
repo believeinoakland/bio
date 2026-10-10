@@ -44,20 +44,20 @@
  *     "byte-identical except `dbBytes`", and a LARGE lead (near C-54.4's cap) is the arm that discriminates.
  *
  * WHAT THIS SUITE ASSERTS, all through the ops against the real plane in miniflare:
- *   A. THE HEADLINE CONTROL: an ADMIN-token, a member-token, a member-session and a probe `op=stats`
+ *   A. THE HEADLINE CONTROL: an ADMIN-token, a member-session and a probe `op=stats`
  *      answer are each BYTE-IDENTICAL before and after another member authors a lead and follows it (the
  *      admin's with `dbBytes` set aside — its stated residue);
  *   B. `leads` and `observations` are ABSENT for every class, `observationsNonLead` PRESENT for every class,
  *      `dbBytes` present for the admin CLASS only, and no caller-supplied parameter moves any of it;
  *   C. THE LIAR ARM: dropping the log count for everyone would make every A answer identical too, so
- *      `observationsNonLead` must MOVE when a NON-lead observation is written — for the admin token, the
- *      member token and a member session over the live store, and for the probe over scratch — and read the
+ *      `observationsNonLead` must MOVE when a NON-lead observation is written — for the admin token and a
+ *      member session over the live store, and for the probe over scratch — and read the
  *      SAME number for every caller of one store;
  *   D. the second and third doors: op=selftest and op=livefire relay the store's stats under the same rule;
  *   E. `purge`'s D-113 proof is taken from the store's own counts and stays WHOLE — `observations` over the
  *      whole log, `leads`, and `dbBytes`, as op=purge has always answered;
  *   F. THE dbBytes CONTROL: a lead near the 128 KiB cap, followed, GROWS the database (F0 — the arm is
- *      armed), and the member token's, a member session's and the probe's WHOLE op=stats are byte-identical
+ *      armed), and a member session's and the probe's WHOLE op=stats are byte-identical
  *      across it; the admin's differs ONLY in `dbBytes` (the stated residue).
  * THE PROBE's A and F arms are NON-DISCRIMINATING and say so: the probe reads the SCRATCH store, and a lead
  * can only be written by a signed-in member into the live one. Its discriminating arms are B1 (the key is
@@ -88,7 +88,9 @@ const t = (label, got, want) => {
   ok ? pass++ : fail++;
 };
 const sha = (v) => createHash("sha256").update(v).digest("hex");
-const raw = async (op, qs, tok, init) => (await mf.dispatchFetch(`http://x/api/?op=${op}&token=${tok}${qs ? `&${qs}` : ""}`, init)).json();
+/* A credential travels in the Authorization header, never the address (admission R20, `CREDENTIAL_IN_ADDRESS`; K2166). */
+const raw = async (op, qs, tok, init = {}) => (await mf.dispatchFetch(`http://x/api/?op=${op}${qs ? `&${qs}` : ""}`,
+  { ...init, headers: { ...(init.headers || {}), ...(tok ? { authorization: `Bearer ${tok}` } : {}) } })).json();
 const rP = (r) => (r && typeof r === "object" && "result" in r) ? r.result : r;
 const post = async (op, body, tok, qs = "") => rP(await raw(op, qs, tok, { method: "POST", body: JSON.stringify(body ?? {}) }));
 const stats = async (tok, qs = "") => rP(await raw("stats", qs, tok));
@@ -122,8 +124,9 @@ t("FIXTURE: the admin's op=stats answers, carries `observationsNonLead` and `dbB
   + "nor `observations`", [typeof s0?.bundles, ...shape(s0)], ["number", ...ADMIN_SHAPE]);
 
 /* the admin's answer is compared with `dbBytes` set aside — its STATED residue (F2). */
-const VIEWERS = { "the admin TOKEN": ADMIN, "the member TOKEN": "mem-r129s",
-                  "sam's member SESSION": SAM, "the probe TOKEN": "prb-r129s" };
+/* T41 (RECORD-CORE #19): no binding class `member` exists since T36 (admission R5, K2166), so the shared member TOKEN's
+   arms are gone; a member reaches op=stats only through a session, which every arm below still covers. */
+const VIEWERS = { "the admin TOKEN": ADMIN, "sam's member SESSION": SAM, "the probe TOKEN": "prb-r129s" };
 const view = async (tok) => JSON.stringify(tok === ADMIN ? sansDb(await stats(tok)) : await stats(tok));
 
 /* ================= A. THE HEADLINE CONTROL: byte-identical across a colleague's lead ======== */
@@ -152,8 +155,7 @@ for (const [k, tok] of Object.entries(ALL)) {
     + (tok === ADMIN ? "`dbBytes` (the admin CLASS keeps capacity)" : "no `dbBytes` — absent, not zero"),
     [typeof r?.bundles, ...shape(r)], ["number", ...(tok === ADMIN ? ADMIN_SHAPE : MEMBER_SHAPE)]);
 }
-for (const [k, tok] of Object.entries({ "the member TOKEN": "mem-r129s", "sam's member SESSION": SAM,
-                                        "the probe TOKEN": "prb-r129s" })) {
+for (const [k, tok] of Object.entries({ "sam's member SESSION": SAM, "the probe TOKEN": "prb-r129s" })) {
   const plain = JSON.stringify(await stats(tok));
   const asked = JSON.stringify(await stats(tok, "operator=1&proof=1&whole=1&capacity=1"));
   t(`B2: ${k} sending capacity=1/operator=1/proof=1/whole=1 gets the byte-identical answer — the server's `
@@ -170,7 +172,7 @@ for (const [k, tok] of Object.entries({ "the member TOKEN": "mem-r129s", "sam's 
 
 /* ================= C. THE LIAR ARM: the log count MOVES on a non-lead observation ============ */
 console.log("\n--- C. `observationsNonLead` moves when a non-lead row is written, and means one thing ---");
-const LIVE = { "the admin TOKEN": ADMIN, "the member TOKEN": "mem-r129s", "sam's member SESSION": SAM };
+const LIVE = { "the admin TOKEN": ADMIN, "sam's member SESSION": SAM };
 const c0 = {};
 for (const [k, tok] of Object.entries(LIVE)) c0[k] = (await stats(tok))?.observationsNonLead;
 t("C0: every caller of the live store reads the SAME `observationsNonLead` — one meaning for every caller",
@@ -193,8 +195,8 @@ t("C2: the probe's `observationsNonLead` (the SCRATCH store) MOVED by one on a s
 
 /* ================= D. THE SECOND AND THIRD DOORS ============================================ */
 console.log("\n--- D. op=selftest and op=livefire relay the store's stats under the same rule ---");
-const sM = await stats("mem-r129s");
-const stM = await raw("selftest", "", "mem-r129s");
+const sM = await stats(SAM);
+const stM = await raw("selftest", "", SAM);
 const stP = await raw("selftest", "", "prb-r129s");
 const stA = await raw("selftest", "", ADMIN);
 t("D1: selftest answers every class with the store's stats embedded",

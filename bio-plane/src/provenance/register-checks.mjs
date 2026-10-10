@@ -40,7 +40,12 @@ const CAPTURE_GRADES = BASIS_GRADES.filter((g) => g !== TESTIMONY_GRADE);
    `captureGrade` answers for its receipt. The one spelling of the basis, and of the origin kind the pull writes. */
 export const RECEIVED_NOT_FETCHED = 'CAPTURE_RECEIVED_NOT_FETCHED';
 export const DOORBELL_ORIGIN = 'doorbell';
-const ORIGIN_KINDS = ['named_request', 'sweep', 'member', DOORBELL_ORIGIN];
+/* R63 · K2425 (4): a file a member holds and brought in herself (capture R86) was received too, never fetched. Its
+   document's origin kind, its `capture.method`, and the member's own statement of where it came from, which is never
+   evidence of its truth. One spelling each. */
+export const UPLOAD_ORIGIN = 'upload';
+export const UPLOADED_METHOD = 'uploaded';
+const ORIGIN_KINDS = ['named_request', 'sweep', 'member', DOORBELL_ORIGIN, UPLOAD_ORIGIN];
 const CAPTURE_ENCODINGS = ['utf8', 'base64', 'binary'];
 const HIST_TS_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 const RAW_SHA_RE = /^[0-9a-f]{64}$/;
@@ -111,6 +116,35 @@ function checkContainer(ctx, findings, d, i) {
   const found = r.archiveOrigin(a) || { found: false };
   if (!found.found) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}…, and no register document of that archive can be read, so its origin cannot be shown to be the archive's`));
   else if (canon(d.origin ?? null) !== canon(found.origin ?? null)) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was cut out of archive ${a.slice(0, 16)}… and its origin is ${canon(d.origin ?? null).slice(0, 120)}, not its archive's, ${canon(found.origin ?? null).slice(0, 120)}`));
+}
+
+/** R42 · R63: an upload's document and its two marks, paired as `container` is with `unpacked`. A document of origin
+ *  `upload` carries `capture.method` `uploaded` and the member's `origin_statement` `{text, words_of,
+ *  evidence_of_truth: false}`, but for a file cut out of an uploaded archive; the method or a statement on a document
+ *  of any other origin is an error finding. */
+function checkUpload(findings, d, i) {
+  const upload = !!d.origin && typeof d.origin === 'object' && d.origin.kind === UPLOAD_ORIGIN;
+  const cap = d.capture && typeof d.capture === 'object' ? d.capture : null;
+  const st = d.origin_statement;
+  /* A file cut out of an uploaded archive carries the archive's origin (R42's `container` rule) and its own method,
+     `unpacked`; the statement is the archive's document's, so the file owes neither. */
+  if (upload && cap && cap.method === UNPACKED_METHOD) return;
+  if (!upload) {
+    if (cap && cap.method === UPLOADED_METHOD) findings.push(f('C-18.1', 'error', `provenance documents[${i}] states capture.method '${UPLOADED_METHOD}' but its origin.kind is not '${UPLOAD_ORIGIN}': only a file a member brought in by an upload was uploaded`));
+    if (st !== undefined) findings.push(f('C-18.1', 'error', `provenance documents[${i}] carries an origin_statement but its origin.kind is not '${UPLOAD_ORIGIN}': only an upload records its member's statement of where the file came from`));
+    return;
+  }
+  if (cap && cap.method !== UPLOADED_METHOD) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was brought in by a member's upload and its capture.method is '${cap.method}', not '${UPLOADED_METHOD}'`));
+  const text = (v) => typeof v === 'string' && v.trim() !== '';
+  if (!st || typeof st !== 'object' || Array.isArray(st)) {
+    findings.push(f('C-18.1', 'error', `provenance documents[${i}] was brought in by a member's upload and carries no origin_statement: a file brought in records where it came from, in the member's own words`));
+    return;
+  }
+  const bad = [];
+  if (!text(st.text)) bad.push('text (the member\'s words, not blank)');
+  if (!text(st.words_of)) bad.push('words_of (who said them)');
+  if (st.evidence_of_truth !== false) bad.push('evidence_of_truth (false: the member\'s words are never evidence of the file\'s truth)');
+  if (bad.length) findings.push(f('C-18.1', 'error', `provenance documents[${i}].origin_statement is malformed: ${bad.join('; ')}`));
 }
 
 /** C-18.1: intake provenance register shape, release authority, and the
@@ -281,6 +315,10 @@ function checkReleaseAuthority(ctx, findings) {
       } else if (cap.method === UNPACKED_METHOD) {
         /* N688 (R42, R59): a file cut out of an archive earns exactly what its archive earns, so its letter (or the
            basis of none) is judged against the archive, with its container block (`checkContainer`, below). */
+      } else if (d.origin && typeof d.origin === 'object' && d.origin.kind === UPLOAD_ORIGIN) {
+        /* R63: an upload is graded exactly as the doorbell's material, below: no letter, the basis stated. */
+        if (cap.grade !== undefined && cap.grade !== null) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was brought in by a member's upload and carries capture.grade '${cap.grade}': a file a member holds was fetched from no address, so it earns no fetched letter (Intake Doctrine §2a)`));
+        if (cap.grade_basis !== RECEIVED_NOT_FETCHED) findings.push(f('C-18.1', 'error', `provenance documents[${i}] was brought in by a member's upload and its capture.grade_basis is '${cap.grade_basis}', not '${RECEIVED_NOT_FETCHED}': why it carries no letter is stated, never left to be inferred`));
       } else if (d.origin && typeof d.origin === 'object' && d.origin.kind === DOORBELL_ORIGIN) {
         /* N381 (R51; K509 (3)): A PULLED KNOCK CARRIES NO FETCHED LETTER, and the basis is the statement. No instance
            asked any address for these bytes, so a letter would read as a measurement of a fetch that never happened;
@@ -292,6 +330,7 @@ function checkReleaseAuthority(ctx, findings) {
       if (!ACTOR_CLASSES.includes(cap.actor_class)) findings.push(f('C-18.1', 'error', `provenance documents[${i}].capture.actor_class '${cap.actor_class}' is not one of: ${ACTOR_CLASSES.join(', ')}`));
     }
     checkContainer(ctx, findings, d, i);
+    checkUpload(findings, d, i);
     const or = d.origin;
     /* MK-1: the design's first §7 refusal, stated in the catalogue as well as
        fenced at the write (C-53.7) — an authored observation's origin is the

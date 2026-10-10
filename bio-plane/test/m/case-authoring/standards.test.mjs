@@ -69,14 +69,17 @@ function refusedStandards(r) {
 
 /* ---------------------------------------------------------------- R60 */
 
-test("R60: each case_roles row states the subject_entity its member's pinned bytes state, or null when they state none; never the inquiry's current subject, another member's, or a value the act's caller sends", () => {
+test("R60: each case_roles row states the subject_entity its member's pinned bytes state, or null when they state none; never the inquiry's current subject, another member's, or a value the act's caller sends (refused by name, R65)", () => {
   const { w, A, B } = setup();
   w.finding(Q, [{ target: DOC }], { lines: subject(A) });
   w.finding(Q2, [{ target: DOC }]);
   /* the inquiry's current subject, as inquiry's column holds it, says otherwise: the pinned bytes govern */
   w.st.sql.exec(`UPDATE bundles SET inquiry_subject_entity=? WHERE bundle_id IN (?, ?)`, B, Q, Q2);
   const P = w.project("Team", "alice", [Q, Q2]);
-  const r = w.publish(P, "alice", [Q, Q2], { subject_entity: B, subjects: { [Q]: B, [Q2]: B }, subjectEntity: B });
+  /* R65 (T41): a value the caller sends is refused by name, never read; the same act without it publishes */
+  const sent = w.publish(P, "alice", [Q, Q2], { subject_entity: B, subjects: { [Q]: B, [Q2]: B }, subjectEntity: B });
+  assert.deepEqual([sent.ok, sent.reason, sent.fields], [false, "CASE_FIELD_NOT_ALLOWED", ["subjectEntity", "subject_entity", "subjects"]]);
+  const r = w.publish(P, "alice", [Q, Q2]);
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
   const text = w.row(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, r.caseId, r.edition).text;
   assert.deepEqual(w.fm(text).case_roles.map((x) => [x.target, x.subject_entity]), [[Q, A], [Q2, null]]);

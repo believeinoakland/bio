@@ -34,7 +34,7 @@ async function noFetch(fn) {
 test("R23: the module exports read and every piece the re-read composes, and the two constants with their values", () => {
   for (const name of ["read", "tier2Escalate", "decodeView", "pageBoxesFrom", "needsTier3", "tier3Extend", "tier3SeedFrom",
                       "layerChainFor", "readingFromWire", "textCountsOf", "textUnitsFor", "bytesOf",
-                      "readingProvenance", "compareProvenance"])
+                      "readingProvenance", "compareProvenance", "tier4Pages", "tier4Extend"])
     assert.equal(typeof rp[name], "function", name);
   assert.equal(CAPTURE_TEXT_UNIT_CAP, 128 * 1024, "R15's per-unit cap");
   assert.equal(PROVENANCE_SCHEME, "reading-provenance/1", "R18's scheme");
@@ -209,9 +209,13 @@ const DOCX = zip([["[Content_Types].xml", `<?xml version="1.0"?><Types xmlns="ht
   ["_rels/.rels", `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`],
   ["word/document.xml", `<?xml version="1.0"?><w:document ${W}><w:body>${["AGENDA REPORT", "SUBJECT: Midcycle Budget Amendments", "RECOMMENDATION", "Adopt the accompanying resolution."].map(wp).join("")}</w:body></w:document>`]]);
 const PDF = new Uint8Array(readFileSync(new URL("../../fixtures/legistar-agenda-1425405.pdf", import.meta.url)));
-/* Measured 2026-10-02 over `extraction/pipeline.mjs`'s `read` and this module's, the same inputs: equal. */
+/* Measured 2026-10-02 over `extraction/pipeline.mjs`'s `read` and this module's, the same inputs: equal. The PDF's pin
+   re-measured at T41-9 (K2399): pdf-reader R38 reads the packet's 45 codes 0x80-0x9F (60,797 -> 60,842 characters). With
+   pdf-reader as it was before that merge (9b9fc8e3f7^) this module's answer still digests to the old pin, 3f4eb430...051f;
+   with it, every difference is those 45 characters: the counts, the page digests and lengths that hold them, the units'
+   text, one entity's label ("Code Enforcement’s"), and the basis's full-decode statement. The docx pin is unchanged. */
 const PINNED = {
-  pdf: "3f4eb430f988fd7a033d53ba5d1eb1c207561cd568c92996f3e0b323c737051f",
+  pdf: "5b1437e6bb0062322d648ad10b22df16aba636dab1b342fecb9f42646199f17a",
   docx: "b70fa4e8976d4c6ef3f663145af1b943d204b306eab29f7470dd9ea50038cd25",
 };
 
@@ -229,6 +233,7 @@ test("R2 R15 (over-strictness): a real PDF and an office capture are read throug
     assert.ok(metadata === null || (metadata && typeof metadata === "object"), `${name}: R28's metadata is present`);
     if (name === "docx") assert.deepEqual(cells, {}, "docx: a body with no tables reads cells {}");
     else assert.equal(cells, undefined, `${name}: no cells for a document that is neither a workbook nor a .docx`);
+    if (name === "pdf") assert.deepEqual([before.text_chars, before.text_undetermined], [60842, 0], "pdf: decoded whole since K2399");
     assert.equal(hex(JSON.stringify({ ...out, reading: before })), PINNED[name], name);
   }
 });

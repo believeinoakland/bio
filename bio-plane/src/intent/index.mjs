@@ -22,7 +22,8 @@
  *                test passes its own.
  *   progressions through its factory on the same host, reached on first use (N179: the plane's own instance, built
  *                with the plane's `env`, is the one read), unless a test passes its own.
- *   inquiry      `dispose` (R17); aiRuns `open` (R18); retrieval `selectionCreate` (R17: inquiry's dispose takes a
+ *   inquiry      `dispose` (R17) and `personFacts` (R32: the record's facts for the persons a text names, which
+ *                inquiry's pure `personWarning`, its R59, judges); aiRuns `open` (R18); retrieval `selectionCreate` (R17: inquiry's dispose takes a
  *                selection, K198); captureRequests `requestById`, one request's outcome by key (R14, its R43; N291),
  *                and `captureRequests` and `bundlesOf`, a request's address and target (R28). Each through its
  *                factory on the same host, reached lazily on first use, unless a test passes its own.
@@ -36,7 +37,7 @@ import { membershipOf, noSuchProject, notAnAdmin } from "../membership/index.mjs
 import { promotionOf } from "../promotion/index.mjs";
 import { entitiesOf, gradeRank, noSuchEntity } from "../entities/index.mjs";
 import { progressionsOf } from "../progressions/index.mjs";
-import { inquiryOf } from "../inquiry/index.mjs";
+import { inquiryOf, personWarning } from "../inquiry/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { captureRequestsOf } from "../capture-requests/index.mjs";
@@ -71,6 +72,11 @@ export const PLANE_ACTOR = "plane:intent", PLANE_VIEWER = "class:daemon";
 export const GAP_KIND = "objective-gap";
 /** R16: a reason's bound, the restricted grammar's edge reason (a reason may travel into a document's front matter). */
 export const REASON_MAX = 160;
+/** R33: the words stated beside a required stage met by a records request answered that no such record exists. */
+export const NONE_EXISTS_SAYS = "answered: none exists";
+/** R32: the most entities an adopted proposal's warning asks about (its basis's entity and its instances'), the cap on
+ *  persons one warning names elsewhere (K1881's 20). */
+export const WARNING_SUBJECTS_MAX = 20;
 /** N181: the bound on each read that grows with the record, published in each answer that it can cut, and read one
  *  past so a cut says so. MEASURE_MAX: the instances one condition measures (R4); WATCH_LIMIT_MAX: the captures one
  *  page of `watchSet` answers (R7), followed with its cursor; DEPARTURES_MAX: one project's departures in force (R10);
@@ -108,6 +114,7 @@ const bodyText = (s) => String(s).trim().replace(/^#/gm, " #");
 
 export class Intent {
   #sources = new Map();   // kind -> reader (R15)
+  #noneExists = null;     // R33: the reader of records requests answered that no such record exists
 
   constructor({ storage, record, membership, promotion, entities, progressions, inquiry = null, aiRuns = null,
                 retrieval = null, captureRequests = null, money = null, now = null } = {}) {
@@ -226,6 +233,12 @@ export class Intent {
 
   #checkProject(c) {
     const fm = c.docFm || {};
+    const heldFm = c.head ? parseFm(this.record.readFile(c.bundleId, "bundle.md")?.text) || {} : null;
+    /* R32: the objective and condition as held before this write, for the projection to tell a statement or revision
+       of either from one left alone (by projection time the record holds the new bytes) */
+    if (c.state && c.state.intent)
+      Object.assign(c.state.intent, { priorObjective: heldFm ? str(heldFm.objective) : null,
+                                      priorCondition: heldFm ? conditionOf(heldFm)?.condition ?? null : null });
     /* R1, C-2.9's objective arm (K6): moved from the catalogue, the id unchanged. */
     /* DEC-49 REGION is-objective-stated */
     if (typeof fm.objective !== "string" || fm.objective.trim() === "")
@@ -234,7 +247,7 @@ export class Intent {
     /* END DEC-49 REGION is-objective-stated */
     /* R2's grammar, asked when the condition changes (Suggestions): a condition carried unchanged was judged when set. */
     const now = conditionOf(fm);
-    const held = c.head ? conditionOf(parseFm(this.record.readFile(c.bundleId, "bundle.md")?.text) || {}) : null;
+    const held = heldFm ? conditionOf(heldFm) : null;
     if (now && JSON.stringify(now.condition) !== JSON.stringify(held ? held.condition : null))
       return this.#conditionRefusal(now.condition);
     return null;
@@ -341,6 +354,61 @@ export class Intent {
     return null;
   }
 
+  /** R32 (D13; promotion R39's projection): a promotion of a project that states its `objective` (its creation) or
+   *  revises it, or sets or changes its condition, carries inquiry R59's warning when the objective's text, or the
+   *  entity the condition names, names a person in no public role; never refused. The warning is recorded
+   *  (`intent_person_warnings`) with her choice, `went_on` when the package says she saw it before the act
+   *  (`personWarningSeen: true`), else `warned_at_act`; a machine's promotion records `pending`. A condition removed,
+   *  or a revision leaving both alone, asks nothing. Never throws into the promotion: a test that cannot be read warns
+   *  of nothing. */
+  project(c) {
+    try {
+      if (!c || c.promotedType !== "project" || c.replay) return null;
+      const fm = c.docFm || {};
+      const prior = (c.state && c.state.intent) || {};
+      const objective = str(fm.objective);
+      const cond = conditionOf(fm)?.condition ?? null;
+      const objectiveActed = !c.head || objective !== (prior.priorObjective ?? "");
+      const conditionActed = !!cond && JSON.stringify(cond) !== JSON.stringify(prior.priorCondition ?? null);
+      if (!objectiveActed && !conditionActed) return null;
+      const author = str(c.author);
+      const warning = this.#warningFor(objectiveActed ? objective : "", conditionActed ? [str(cond.entity)] : [], author);
+      if (!warning) return null;
+      const act = [objectiveActed ? "objective" : null, conditionActed ? "condition" : null].filter(Boolean).join("+");
+      return { warning: this.#recordWarning(c.bundleId, act, null, warning, author, c.pkg && c.pkg.personWarningSeen) };
+    } catch { return null; }
+  }
+
+  /* R32: inquiry R59's warning for `text` and the entities `subjects` names (each read as a subject, at most
+     WARNING_SUBJECTS_MAX), over the record's facts for the persons named (`inquiry.personFacts`, read as `viewer`);
+     null when they name none, or when the test cannot be asked (a warning, never a refusal). */
+  #warningFor(text, subjects, viewer) {
+    try {
+      const inq = this.#lazy(this.inquiryRef);
+      if (!inq || typeof inq.personFacts !== "function") return null;
+      const who = machine(viewer) ? null : str(viewer);
+      const facts = new Map();
+      const ask = (t, subject) => {
+        const got = inq.personFacts({ text: t, subject, viewer: who });
+        for (const f of Array.isArray(got) ? got : []) if (isObj(f) && typeof f.entity_id === "string") facts.set(f.entity_id, f);
+      };
+      const named = [...new Set((subjects || []).map(str).filter(Boolean))].slice(0, WARNING_SUBJECTS_MAX);
+      if (str(text) || named.length) ask(str(text), named[0] ?? null);
+      for (const subject of named.slice(1)) ask("", subject);
+      return personWarning({ text: str(text), entities: [...facts.values()], viewer: who }) ?? null;
+    } catch { return null; }
+  }
+
+  /* R32: the warning recorded with her choice (`went_on` when she saw it before the act, else `warned_at_act`;
+     `pending` for a machine), answered with the choice. */
+  #recordWarning(project, act, proposalKey, warning, author, seen) {
+    const choice = machine(author) ? "pending" : seen === true ? "went_on" : "warned_at_act";
+    this.sql.exec(`INSERT INTO intent_person_warnings (project_id, act, proposal_key, persons, author, choice, at)
+                   VALUES (?,?,?,?,?,?,?)`, project, act, proposalKey, JSON.stringify(warning.persons), author || null,
+                  choice, this.#when());
+    return { ...warning, act, choice };
+  }
+
   /** record-core R59: C-2.9's objective arm in the audit, beside the grammar's `closed_reason` arm (R29), over the same image
    *  (R22). */
   auditCheck(image) {
@@ -360,7 +428,7 @@ export class Intent {
   /** R2: set, replace or (with a null condition) remove a project's satisfaction condition, as a new revision of the
    *  project's document through `promotion`, with the author's reason (DEC-88) carried on that revision's log entry;
    *  the earlier revision stays in history. */
-  setCondition({ project, condition, reason, author, viewer = null } = {}) {
+  setCondition({ project, condition, reason, author, viewer = null, personWarningSeen = false } = {}) {
     /* DEC-49 REGION is-condition-member */
     if (machine(author))
       return refusal("MACHINE_CANNOT_SET_OBJECTIVE", "setting or changing an objective's measure is a named member's act "
@@ -389,9 +457,11 @@ export class Intent {
     text = logEntry(text, at, c ? "Objective condition set" : "Objective condition removed", str(author),
                     `${c ? `the objective's satisfaction condition is ${JSON.stringify(c)}.` : "the objective states no condition."}`
                     + `\nReason: ${bodyText(why)}`);
-    const r = this.#revise(p.doc, text, str(author), viewer);
+    /* R32: the promotion carries inquiry R59's warning when the condition names a person in no public role */
+    const r = this.#revise(p.doc, text, str(author), viewer, { personWarningSeen: personWarningSeen === true });
     if (!r.ok) return r;
-    return { ok: true, project, condition: c, reason: why, set_by: str(author), at, bundleSha: r.bundleSha };
+    return { ok: true, project, condition: c, reason: why, set_by: str(author), at, bundleSha: r.bundleSha,
+             ...(r.warning ? { warning: r.warning } : {}) };
   }
 
   /* The matched instances of a condition (R4), each assembled by progressions and judged; derived, never stored. */
@@ -443,7 +513,13 @@ export class Intent {
         continue;
       }
       const placed = new Set((inst.stages || []).filter((s) => s.present).map((s) => s.stage_key));
-      const missing = stages.filter((s) => !placed.has(s));
+      /* R33 (H30 (1)): a required stage not placed is met when the record holds a records request for it answered
+         that no such record exists, stated beside the instance; met is still computed from the record (R4). */
+      const answered = [];
+      for (const s of stages)
+        if (!placed.has(s)) { const a = this.#noneExistsFor(key, eid, s, viewer); if (a) answered.push(a); }
+      if (answered.length) row.none_exists = answered;
+      const missing = stages.filter((s) => !placed.has(s) && !answered.some((a) => a.stage === s));
       /* R4 (K200): a missing required stage is short whatever the grade; the grade decides only once the stages are in. */
       if (missing.length) {
         short.push({ ...row, why: { stages_missing: missing }, documents: this.#documents(inst) });
@@ -461,6 +537,35 @@ export class Intent {
                    documents: this.#documents(inst) });
     }
     return { key, related: [...related].sort(), matched, meeting, short, undetermined, truncated };
+  }
+
+  /* R33: the first answer the registered reader gives for one stage of one instance, `{stage, action, ord, at, says}`,
+     or null: none registered, an empty answer, or a reader that throws or answers otherwise meets no stage. */
+  #noneExistsFor(progression, entity, stage, viewer) {
+    if (!this.#noneExists) return null;
+    let got;
+    try { got = this.#noneExists({ progression, entity, stage, viewer: viewer ?? null }); } catch { return null; }
+    const first = Array.isArray(got) ? got.find((x) => isObj(x) && typeof x.action === "string" && x.action) : null;
+    if (!first) return null;
+    return { stage, action: first.action, ord: first.ord ?? null, at: first.at ?? null, says: NONE_EXISTS_SAYS };
+  }
+
+  /** R33: `actions` registers, once at start (K31's pattern), its reader of records requests answered that no such
+   *  record exists: `reader({progression, entity, stage, viewer})` → `[{action, ord, at}]`. With none registered, or
+   *  one answering `[]`, no stage is met this way. */
+  registerNoneExistsReader(reader) {
+    if (typeof reader !== "function")
+      /* DEC-49 REGION is-none-exists-shaped */
+      return refusal("NONE_EXISTS_READER_MALFORMED", "the reader of records requests answered that no such record exists "
+                     + "is a function of {progression, entity, stage, viewer}.");
+      /* END DEC-49 REGION is-none-exists-shaped */
+    /* DEC-49 REGION is-none-exists-once */
+    if (this.#noneExists)
+      return refusal("NONE_EXISTS_READER_DECLARED", "the reader of records requests answered that no such record exists "
+                     + "is already registered.");
+    /* END DEC-49 REGION is-none-exists-once */
+    this.#noneExists = reader;
+    return { ok: true };
   }
 
   /* R5: the documents placed at each stage, with bundle ids the viewer may not see withheld (progressions R13). */
@@ -580,7 +685,8 @@ export class Intent {
     const key = `${project}::${cond.progression}::${s.entity_id}`;
     const basis = s.why.stages_missing
       ? { project, progression: cond.progression, entity: s.entity_id, stages_missing: s.why.stages_missing,
-          says: `the records the stages ${s.why.stages_missing.join(", ")} would hold are to be requested` }
+          says: `the records the stages ${s.why.stages_missing.join(", ")} would hold are to be requested`,
+          ...(s.none_exists ? { none_exists: s.none_exists } : {}) }
       : { project, progression: cond.progression, entity: s.entity_id, grade_reached: s.why.grade_reached,
           grade_required: s.why.grade_required, link: s.why.weakest_link,
           says: "the weakest link of this instance is to be strengthened" };
@@ -1189,7 +1295,7 @@ export class Intent {
   /** R16: a member's act on a proposal: adopt it into a project's objective, open a question from it (a machine may
    *  do only this), or defer or dismiss it with a reason. */
   triage({ proposal, act, project = null, reason = null, author = null, viewer = null, run = null,
-           assistantPrincipal = null } = {}) {
+           assistantPrincipal = null, personWarningSeen = false } = {}) {
     /* DEC-49 REGION is-triage-act */
     if (!TRIAGE_ACTS.includes(act))
       return refusal("TRIAGE_ACT_UNKNOWN", `a proposal is triaged by one of ${TRIAGE_ACTS.join(", ")}. Nothing was written.`,
@@ -1224,8 +1330,13 @@ export class Intent {
       if (denied) return denied;
     }
     const at = this.#when();
-    let inquiry = null, extra = {};
+    let inquiry = null, extra = {}, warning = null;
     if (act === "adopt") {
+      /* R32 (D13): adopting a proposal into the objective carries inquiry R59's warning when the proposal names a person
+         in no public role (its question's words, its basis's entity, its instances' entities); never refused. */
+      const b = isObj(found.basis) ? found.basis : {};
+      warning = this.#warningFor(questionOf(found), [b.entity, ...(Array.isArray(found.instances) ? found.instances : [])
+        .map((x) => (isObj(x) ? x.entity_id : null))].filter((x) => typeof x === "string"), str(author));
       let text = appendItem(proj.text, "objective_adoptions",
                             { proposal: q(found.key), source: found.source, by: TOKEN.test(str(author)) ? str(author) : q(author),
                               at: q(at) });
@@ -1250,14 +1361,17 @@ export class Intent {
       if (!d || d.ok !== true) return d;
       extra = { progressions: { key: d.key, state: d.state, definition_version: d.definition_version } };
     }
-    this.record.transact(() => this.sql.exec(
-      `INSERT INTO intent_triage (proposal_key, source, kind, act, project_id, inquiry_id, reason, grade, basis_json, author, at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-      found.key, found.source, found.kind ?? null, act, proj ? proj.id : this.#projectOfAct({ key: found.key }), inquiry,
-      why || null, found.grade ?? null,
-      JSON.stringify(found.basis ?? null), str(author) || PLANE_ACTOR, at));
+    const recorded = this.record.transact(() => {
+      this.sql.exec(
+        `INSERT INTO intent_triage (proposal_key, source, kind, act, project_id, inquiry_id, reason, grade, basis_json, author, at)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+        found.key, found.source, found.kind ?? null, act, proj ? proj.id : this.#projectOfAct({ key: found.key }), inquiry,
+        why || null, found.grade ?? null,
+        JSON.stringify(found.basis ?? null), str(author) || PLANE_ACTOR, at);
+      return warning ? this.#recordWarning(proj.id, "adopt", found.key, warning, str(author), personWarningSeen) : null;
+    });
     return { ok: true, proposal: found.key, act, project: proj ? proj.id : null, reason: why || null,
-             author: str(author) || null, at, ...extra };
+             author: str(author) || null, at, ...extra, ...(recorded ? { warning: recorded } : {}) };
   }
 
   /* R16's `question`: a new inquiry at `surfaced`, through promotion (so inquiry's check and ai-runs' surfacing step,
@@ -1615,7 +1729,8 @@ export function intentOps(i, url, body) {
 const instances = new WeakMap();
 
 /** K61: the one instance per host, created on the first call with `deps`. It registers its check with promotion
- *  (R39), its audit check with record-core (R59), its tables with purge (R24) and its project grammar, C-2.9's
+ *  (R39; and its projection, R32's warning), its audit check with record-core (R59), its tables with purge (R24) and
+ *  its project grammar, C-2.9's
  *  `closed_reason` arm, in record-grammar's `checkProjectExtension` slot (R29). */
 export function intentOf(host, deps) {
   let i = instances.get(host);
@@ -1634,7 +1749,7 @@ export function intentOf(host, deps) {
                      money: d.money || (() => moneyOf(host)) });
     instances.set(host, i);
     record.declarePurge("intent", INTENT_TABLES);
-    promotion.registerStep("intent", { check: (c) => i.check(c) });
+    promotion.registerStep("intent", { check: (c) => i.check(c), project: (c) => i.project(c) });
     record.registerAuditCheck("intent", (image) => i.auditCheck(image));
     registerProjectGrammar(record);
   }

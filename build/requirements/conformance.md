@@ -1,6 +1,6 @@
 # conformance — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102); the layer-9 maps' review folded (K171), no meaning changed. Last changed T35 (T35-61: Terms amended; R27–R29 new; K1723, K1740); every requirement met (CONFORMANCE #14, K2021).
+**Status** · In force: approved by Bob 2026-09-26 (K102); the layer-9 maps' review folded (K171), no meaning changed. Last changed T35 (T35-61: Terms amended; R27–R29 new; K1723, K1740); every requirement met (CONFORMANCE #14, K2021). Last changed T41 (T41-45's text: Purpose re-worded; N820; D55; K2405, K2417, K2418); marked not yet met (T41).
 
 **Size (P6).** New. Estimated 700–1,000 lines of code; one session reads it with the public parts of its uses.
 
@@ -8,7 +8,7 @@
 
 ### Purpose
 
-A determination is the group's recorded judgment that a named government act is compliant, noncompliant or unclear against named standards, resting on published findings (Functional Architecture, "Analysis outputs"). A member makes it; a machine may prepare the structured comparison and never determines. A compliant determination is recorded with the same care as a noncompliant one. An unclear one names its open questions and sends each back to an inquiry. This module does not rank significance: whether a breach warrants action, and how urgently, is a member's judgment made with the consequences in front of them (Function 4; Bob's ruling 1, K12).
+(T41; D55; K2418) A determination is a member's determination, resting on published findings, that a named government act is compliant, noncompliant or unclear against named standards, per standard (Functional Architecture, "Analysis outputs"). A member makes it; a machine may prepare the structured comparison and never determines. A compliant determination is recorded with the same care as a noncompliant one. An unclear one names its open questions and sends each back to an inquiry. This module does not rank significance: whether a breach warrants action, and how urgently, is a member's judgment made with the consequences in front of them (Function 4; Bob's ruling 1, K12).
 
 ### Provides
 

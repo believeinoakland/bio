@@ -70,7 +70,7 @@ function planeStub(rec, cfg) {
       case "airun": return ok({ run: u.searchParams.get("run"), found: true, session: {
         id: u.searchParams.get("run"), mode: cfg.mode, status: S.status, plan: cfg.mode === "plan" ? PLAN_ID : null,
         context: cfg.mode === "plan" ? { type: "project", id: PROJECT, questions: [] } : { type: "inquiry", id: "INQ-421" },
-        max_passes: 1, principal: { plane: "member:ruth", claude: cfg.payer ?? MEMBER, ref: null, skill: PACK_VERSION },
+        max_passes: 1, principal: { plane: "member:ruth", claude: cfg.payer ?? MEMBER, ref: cfg.payer ?? MEMBER, skill: PACK_VERSION },
         state: S.state, budget: WIDE.map((b) => ({ ...b, consumed: 0, unit: null })) } });
       case "airunlog": return ok({ run: u.searchParams.get("run"), found: true, entries: [], limit: 200, truncated: false });
       case "airunspawn": return ok({ found: true, half: "search", payload: { run: u.searchParams.get("run"),

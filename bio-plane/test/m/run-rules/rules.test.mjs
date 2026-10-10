@@ -8,7 +8,7 @@ import { RUN_BOUNDS, RUN_ENDINGS, RUN_STATUS, RUN_NEVER_STARTED, runStatusFor, S
          checkSkillVersion, parseSkillVersion, translationOf, AI_RUN_CHECKS } from "../../../src/run-rules/index.mjs";
 import { refusal } from "./helpers.mjs";
 
-const BOUNDS = ["fetches", "subsessions", "wallclock", "runtime", "mints", "surfaces", "proposals", "lease"];
+const BOUNDS = ["fetches", "subsessions", "wallclock", "runtime", "mints", "surfaces", "proposals", "pages", "lease"];
 const ENDINGS = ["completed", "cancelled", "mode-not-deployed"];
 
 test("R1: the bounds and endings are exactly the named ones; runStatusFor answers never-started for mode-not-deployed, stopped for every bound, finished otherwise", () => {
@@ -90,7 +90,7 @@ test("R3: checkConsume — a non-map/non-list shape or an unknown bound C-22.15;
 test("R13: proposals is a bound after surfaces, counted by the plane — a caller's non-zero figure is AI_RUN_BOUND_PLANE_COUNTED, a zero claims nothing, and its declared allowance is uncapped here (control: an unknown bound is still AI_RUN_BOUND_UNKNOWN)", () => {
   const keys = Object.keys(RUN_BOUNDS);
   assert.equal(keys.indexOf("proposals"), keys.indexOf("surfaces") + 1);
-  assert.deepEqual(PLANE_COUNTED_BOUNDS, ["mints", "surfaces", "proposals"]);
+  assert.deepEqual(PLANE_COUNTED_BOUNDS.slice(0, 3), ["mints", "surfaces", "proposals"]);
   assert.equal(runStatusFor("proposals"), "stopped");
   assert.equal(checkBound("proposals"), null);
   for (const v of [1, 5, 6]) {

@@ -1,9 +1,10 @@
 /* leg-earning — what the record can earn for a leg of an inquiry's basis, and which questions rest on a target
  * (requirements: `build/requirements/leg-earning.md`). The earned registry (R1, R8, R9) and the cap a stated grade meets
  * (R2), the inquiry's earned basis as a viewer may read it (R3), the projected legs and the legs resting on a target (R4,
- * R5), the one walk that finds a cycle through inquiry legs (R6), the projects drawing on a question (R7), and the table
- * all of them read, `inquiry_basis`, with its one write (R12). It writes no basis of its own and grades no conclusion:
- * those are `inquiry`'s and `strength`'s.
+ * R5), the one walk that finds a cycle through inquiry legs (R6), the projects drawing on a question (R7; paged, R13;
+ * as a viewer may be shown them, R14), and the table all of them read, `inquiry_basis`, with its one write (R12). T41
+ * adds a passage of an AI transcription's capture ceiling (R15) and the authored note's route words (R16). It writes no
+ * basis of its own and grades no conclusion: those are `inquiry`'s and `strength`'s.
  *
  * Split from `inquiry` by copy with no change of meaning (T33-44; K617, K1505): the code below is `inquiry`'s
  * `index.mjs` and `schema.mjs` as they stood at the split, its comments moved with it; `inquiry`'s job (T33-45) deletes
@@ -21,14 +22,14 @@
 import { parseFrontmatter, normalizeType, OBJECT_TYPES, BASIS_GRADES, EARNED_CAPTURE_CEILING, UNREACHABLE_CAPTURE_GRADE,
          TESTIMONY_GRADE } from "../record-grammar/index.mjs";
 import { parseImportedFindingRef, parseOccurrenceRef } from "../inquiry-grammar/index.mjs";
-import { captureBound, isTranscribed } from "../textchain.mjs";
+import { captureBound, isTranscribed, stepCovers, describeExtent } from "../textchain.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf, CONTENT_MINTED_BY_PLANE, legContentId } from "../content/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { entitiesOf, gradeRank } from "../entities/index.mjs";
-import { provenanceOf } from "../provenance/index.mjs";
+import { provenanceOf, DOORBELL_VIA, UPLOAD_VIA } from "../provenance/index.mjs";
 import { standardsOf, STANDARDS_CHECKS } from "../standards/index.mjs";
 import { dutiesOf } from "../duties/index.mjs";
 import { LEG_EARNING_TABLES, migrateLegEarning } from "./schema.mjs";
@@ -44,11 +45,31 @@ const ID_CHUNK = 64;
 /** R7 (N183): the projects drawing on one question, at most, the first by id (basis-versions R37's bound); deciding
  *  "more than one" is never cut by it. */
 export const PROJECTS_DRAWING_MAX = 32;
+/** R13: a page of the projects drawing on a question, at most and by default. */
+export const PROJECTS_PAGE_MAX = 500;
+export const PROJECTS_PAGE_DEFAULT = 100;
+/** R14: the projects shown on one question, at most. */
+export const PROJECTS_SHOWN_MAX = 200;
 
 /** R1 (provenance R26, R51; K538): the capture-grade bases whose bytes no fetch measured, on which a leg keeps its
  *  author's letter under the ceiling, stated as authored: no recorded route, and material received through the
  *  doorbell. */
 export const AUTHORED_ROUTE_BASES = Object.freeze(["CAPTURE_ROUTE_UNRECORDED", "CAPTURE_RECEIVED_NOT_FETCHED"]);
+
+/** R16 (K2457, K2472): the words an authored ceiling's `why` names each route by, keyed by provenance's answered
+ *  `route` (its R26 `unrecorded`, R51 `doorbell`, R63 `upload`), in the order they are named. A received route this
+ *  table does not know is named by its own spelling, never as the doorbell. */
+export const AUTHORED_ROUTE_WORDS = Object.freeze({
+  [DOORBELL_VIA]: "received through the doorbell",
+  [UPLOAD_VIA]: "uploaded by a member",
+  unrecorded: "no fetch route recorded",
+});
+const authoredRouteWords = (vias) => {
+  const order = Object.keys(AUTHORED_ROUTE_WORDS);
+  const rank = (v) => { const i = order.indexOf(v); return i === -1 ? order.length : i; };
+  return [...new Set(vias)].sort((a, b) => rank(a) - rank(b) || String(a).localeCompare(String(b)))
+    .map((v) => AUTHORED_ROUTE_WORDS[v] ?? `received by route ${v}`).join("; ");
+};
 
 /** R8, R9: the viewer this module reads a held standard and a duty's occurrences as: a machine credential, which sees
  *  every bundle (membership R43), as `duties` reads for its own internal callers. The registry is an in-process read
@@ -177,6 +198,56 @@ export class LegEarning {
         out.push(r.p);
       }
       if (page.length <= PROJECTS_DRAWING_MAX) return out;
+    }
+  }
+
+  /** R13 (D36, D29): every project drawing on `id` — R7's test (a `cites` reference from a project's document, not
+   *  severed), over every project whatever any viewer sees — a page at a time: the ids after `after`, ascending, at
+   *  most `limit` (a positive integer, at most `PROJECTS_PAGE_MAX`, default `PROJECTS_PAGE_DEFAULT`), with `cursor` the
+   *  last id answered when more draw on it, else null. A severed citer takes no slot. In-process only: no op routes
+   *  to it, and R7's bound stays for R7's callers. */
+  projectsDrawingOnPaged({ id, after = null, limit = null } = {}) {
+    if (typeof id !== "string" || !id) return { ok: false, reason: "NO_ID", detail: "projectsDrawingOnPaged requires an id" };
+    const n = Number.isInteger(limit) && limit > 0 ? Math.min(limit, PROJECTS_PAGE_MAX) : PROJECTS_PAGE_DEFAULT;
+    const projects = [];
+    let from = typeof after === "string" ? after : "";
+    for (;;) {
+      const page = this.#rows(
+        `SELECT DISTINCT r.bundle_id AS p FROM refs r JOIN bundles b ON b.bundle_id = r.bundle_id
+          WHERE r.target_id=? AND r.kind='cites' AND b.object_type='project' AND r.bundle_id > ?
+          ORDER BY r.bundle_id LIMIT ?`, id, from, n + 1);
+      for (const r of page) {
+        from = r.p;
+        if (this.connections.edgeSevered(r.p, id, "cites")) continue;
+        if (projects.length === n) return { ok: true, id, projects, limit: n, cursor: projects[n - 1] };
+        projects.push(r.p);
+      }
+      if (page.length <= n) return { ok: true, id, projects, limit: n, cursor: null };
+    }
+  }
+
+  /** R14 (H38, D64): the projects drawing on a question as `viewer` may be shown them. A question the viewer may not
+   *  see answers exactly as an absent one (R11). A project is shown only when it is not hidden (`membership` R85) and
+   *  R44's `sight` lets the viewer see it at all (FULL, or EXISTENCE's id and name), each `{id, name}`; a hidden
+   *  project is never answered, named or counted: it takes no slot and never sets `truncated`, so the answer is the
+   *  same whether or not one draws. At most `PROJECTS_SHOWN_MAX`, the first by id, with `truncated` when one more
+   *  would be shown. Read over R13's pages, so every project drawing on it is considered. */
+  projectsShownOn({ id, viewer = null } = {}) {
+    if (typeof id !== "string" || !id) return { ok: false, reason: "NO_ID", detail: "projectsShownOn requires an id" };
+    if (!this.membership.inSight(id, viewer)) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id };
+    const projects = [];
+    let after = null;
+    for (;;) {
+      const page = this.projectsDrawingOnPaged({ id, after, limit: PROJECTS_PAGE_MAX });
+      for (const p of page.projects) {
+        if (this.membership.visibilityOf(p) === "hidden") continue;
+        if (this.membership.sight(p, viewer) === "none") continue;
+        if (projects.length === PROJECTS_SHOWN_MAX) return { ok: true, id, projects, truncated: true };
+        const t = this.#one(`SELECT title FROM bundles WHERE bundle_id=?`, p);
+        projects.push({ id: p, name: t && typeof t.title === "string" ? t.title : null });
+      }
+      if (!page.cursor) return { ok: true, id, projects, truncated: false };
+      after = page.cursor;
     }
   }
 
@@ -524,7 +595,7 @@ export class LegEarning {
       if (!r.bundle_id) continue;
       if (!perBundle.has(r.bundle_id))
         perBundle.set(r.bundle_id, { n: 0, bound: null, transcribed: 0, authored: 0, byteBest: null, unruled: 0,
-                                     measured: 0, authoredRoutes: [] });
+                                     measured: 0, authoredRoutes: [], authoredVias: [] });
       const e = perBundle.get(r.bundle_id);
       /* MK-1 / D-184: A MEMBER'S AUTHORED WORDS ARE NOT A CAPTURE ON THIS AXIS.
          The capture axis measures the act of reading a document in (DEC-21's
@@ -543,9 +614,12 @@ export class LegEarning {
          does not know that an unmeasured transcription is null rather than
          "fine", and it must not learn: DEC-4's arithmetic has one home. */
       /* One capture's letter, by the one rule `#captureLetter` holds (R8 reads a standard's text by it too). */
-      const { byteGrade, authoredRoute, transcribed, bound: b } = this.#captureLetter(r.capture_sha, r.chain);
+      const { byteGrade, authoredRoute, authoredVia, transcribed, bound: b } = this.#captureLetter(r.capture_sha, r.chain);
       if (byteGrade == null) { e.unruled++; if (transcribed) e.transcribed++; continue; }
-      if (authoredRoute) { if (!e.authoredRoutes.includes(authoredRoute)) e.authoredRoutes.push(authoredRoute); }
+      if (authoredRoute) {
+        if (!e.authoredRoutes.includes(authoredRoute)) e.authoredRoutes.push(authoredRoute);
+        if (!e.authoredVias.includes(authoredVia)) e.authoredVias.push(authoredVia);
+      }
       else e.measured++;
       e.byteBest = e.byteBest == null ? byteGrade
         : (BASIS_GRADES.indexOf(byteGrade) < BASIS_GRADES.indexOf(e.byteBest) ? byteGrade : e.byteBest);
@@ -621,14 +695,13 @@ export class LegEarning {
          leg on publisher-typed text must not move because the record learned to
          ask a question whose answer for it is "no change", and IC-84's §7
          over-strictness arm pins exactly that. No new key appears here. */
-      /* K538 (provenance R26, R51): no capture of this document came by a measured route, so the ceiling below is the
-         most an author may state, not a measurement: said so, beside the letter. */
+      /* K538 (provenance R26, R51, R63), R16 (K2457): no capture of this document came by a measured route, so the
+         ceiling below is the most an author may state, not a measurement: said so, beside the letter, each route the
+         captures came by named in words (provenance's answered `route`), in `AUTHORED_ROUTE_WORDS`' order. */
       const asAuthored = !e.measured && e.authoredRoutes.length ? {
         stated_as: "authored", route_basis: [...e.authoredRoutes].sort(),
         why: `${captureWord}, and none of them was fetched by a route that measures a capture grade (`
-           + `${e.authoredRoutes.includes("CAPTURE_RECEIVED_NOT_FETCHED") ? "received through the doorbell" : ""}`
-           + `${e.authoredRoutes.length > 1 ? "; " : ""}`
-           + `${e.authoredRoutes.includes("CAPTURE_ROUTE_UNRECORDED") ? "no fetch route recorded" : ""}), so a leg on `
+           + `${authoredRouteWords(e.authoredVias)}), so a leg on `
            + `it keeps the letter its author gave, under the ceiling (${EARNED_CAPTURE_CEILING}), stated as authored `
            + `and never as measured.` } : null;
       if (!e.transcribed && e.bound === EARNED_CAPTURE_CEILING) {
@@ -741,6 +814,8 @@ export class LegEarning {
     if (Array.isArray(contentIds) && contentIds.length)
       out.earned.content = this.content.standings(contentIds, out.earned.connection);
     for (const [id, axis] of Object.entries(this.connections.portionAxes(contentIds, { entityId: subjectEntity }))) if (out.earned.content?.[id]?.connection?.grain === "portion") out.earned.content[id].connection = axis;
+    /* R15 (D21; D4): a passage of an AI transcription earns its capture ceiling at the passage's own grain. */
+    if (out.earned.content) for (const st of Object.values(out.earned.content)) this.#aiPassageCeiling(st);
     return this.#earnHeld(out, standardIds, occurrenceIds);
   }
 
@@ -757,8 +832,54 @@ export class LegEarning {
     const cg = this.provenance.captureGrade(captureSha) || {};
     const authored = !(cg.determined && cg.grade) && AUTHORED_ROUTE_BASES.includes(cg.basis);
     const byteGrade = cg.determined && cg.grade ? cg.grade : authored ? (cg.ceiling || EARNED_CAPTURE_CEILING) : null;
-    return { byteGrade, authoredRoute: authored ? cg.basis : null, transcribed: isTranscribed(chain),
+    return { byteGrade, authoredRoute: authored ? cg.basis : null,
+             authoredVia: authored ? (cg.basis === "CAPTURE_ROUTE_UNRECORDED" ? "unrecorded" : cg.route) : null,
+             transcribed: isTranscribed(chain),
              bound: byteGrade == null ? null : captureBound(chain, byteGrade) };
+  }
+
+  /* R15 (D21; D4): a content row cited as text whose chain holds an `ai_transcription` step covering the row's
+     extent (text-chain R104: a page step covering its page; any such step for a row with no page) is a passage of an AI
+     transcription. Its capture axis is answered at the passage's grain, replacing content's pointer to the document:
+     UNDETERMINED (what a model read off a picture is graded undetermined until its accuracy is measured), except where
+     a member attested the text against the page over an extent covering the row (`content.attestText`, made against
+     the row's own chain: content's standing answers `determinant: "attestation"`), where it is the capture's own grade,
+     from how its bytes came in (`#captureLetter` with no chain): an authored route stated as authored, an unruled one
+     undetermined. Every other row is left as content answers it. */
+  #aiPassageCeiling(st) {
+    if (!st || st.cited_as === "bytes" || !Array.isArray(st.chain)) return;
+    const page = st.extent && Number.isInteger(st.extent.page) ? st.extent.page : null;
+    const ai = st.chain.some((x) => x && x.step === "ai_transcription" && (page == null || stepCovers(x, page)));
+    if (!ai) return;
+    const ref = st.ref || describeExtent(st.extent);
+    const base = { grain: "passage", mode: "ceiling", capture_sha: st.capture_sha };
+    const attested = st.transcription && st.transcription.determinant === "attestation";
+    if (!attested) {
+      st.capture = { ...base, grade: null, determined: false, undetermined_because: "CAPTURE_FIDELITY_UNMEASURED",
+        empty_level: "a member's check — this passage's text is the AI's reading of the page, graded undetermined "
+                   + "until its accuracy is measured or a member checks it against the page",
+        why: `${ref} of ${st.bundle_id} was read off the page by an AI, and that reading is graded undetermined until `
+           + `its accuracy is measured, so what a leg resting on this passage may claim about how it was captured is `
+           + `undetermined. A member who checks the passage against the page (op=attesttext) gives it the capture's `
+           + `own grade. A leg may state NO capture grade; it may not state a letter.` };
+      return;
+    }
+    const by = Array.isArray(st.transcription.by) ? st.transcription.by : [];
+    const l = this.#captureLetter(st.capture_sha, null);
+    if (l.byteGrade == null) {
+      st.capture = { ...base, grade: null, determined: false, undetermined_because: "CAPTURE_GRADE_VIA_UNRULED", by,
+        why: `${ref} of ${st.bundle_id} was read off the page by an AI and checked against the page by a member, so `
+           + `its text is as good as the capture it was read from; but that capture was served by a route no ruling `
+           + `grades, so what a leg resting on it may claim on the capture axis is undetermined.` };
+      return;
+    }
+    st.capture = { ...base, grade: l.byteGrade, determined: true, determinant: "attestation", by,
+      ...(l.authoredRoute ? { stated_as: "authored", route_basis: [l.authoredRoute] } : {}),
+      why: `${ref} of ${st.bundle_id} was read off the page by an AI, and ${by.join(", ") || "a member"} checked it `
+         + `against the page over an extent covering it, so the passage earns the capture's own grade, `
+         + `${l.byteGrade}, on the capture axis`
+         + (l.authoredRoute ? ` — the letter its author may give under the ceiling, stated as authored and never `
+                            + `as measured (${authoredRouteWords([l.authoredVia])}).` : ".") };
   }
 
   /* R8, R9: the entries a held standard and a duty occurrence earn, added to `out` (an `occurrence` map only when an

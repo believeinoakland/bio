@@ -40,12 +40,16 @@ test("R18: publishCase is synchronous and writes only inside the caller's transa
   assert.equal(w.count("minted_ids"), n);
 });
 
-test("R25: every authorship field is a stamp — the author, an acknowledger, the draft link's namer — and statement_by is read from the record, never a body's", async () => {
+test("R25, R65: every authorship field is a stamp — the author, an acknowledger, the draft link's namer — and statement_by is read from the record, never a body's: a body naming it is refused CASE_FIELD_NOT_ALLOWED", async () => {
   const { w, P } = setup();
   w.draft("DRAFT-2026-0001", P, { statement: AUTHORED.statement }, { statementBy: "bo" });
   const url = new URL(`http://do/publishcase?author=alice&viewer=${encodeURIComponent(V("alice"))}&project=${P}&draft=DRAFT-2026-0001`);
   const body = { ...AUTHORED, targets: [Q], roles: { [Q]: "load_bearing" }, author: "mallory", viewer: V("mallory"),
-                 statement_by: "mallory", statementBy: "mallory", draft: "DRAFT-2026-0099" };
+                 draft: "DRAFT-2026-0099" };
+  /* R65 (T41): a body naming the writer is not ignored but refused, the fields named; nothing written */
+  const named = await caseAuthoringOps(w.ca, url, { ...body, statement_by: "mallory", statementBy: "mallory" }).publishcase();
+  assert.deepEqual([named.ok, named.reason, named.fields], [false, "CASE_FIELD_NOT_ALLOWED", ["statementBy", "statement_by"]]);
+  assert.equal(w.count("case_documents"), 0, "nothing written");
   const r = await caseAuthoringOps(w.ca, url, body).publishcase();
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
   assert.deepEqual([r.author, r.completeness.author, r.completeness.statement_by, r.completeness.draft.named_by,
@@ -58,10 +62,12 @@ test("R25: every authorship field is a stamp — the author, an acknowledger, th
   assert.deepEqual([a.ok, a.acknowledgement.by], [true, "cy"]);
 });
 
-test("R28: statement_acknowledgements is declared whole to record-core's purge, with R39's what_changed_drafts beside it: a whole-store purge clears it, a bundle's purge does not", () => {
+test("R28: statement_acknowledgements is declared whole to record-core's purge, with R39's what_changed_drafts and R64's account_drafts and account_acceptances beside it: a whole-store purge clears it, a bundle's purge does not", () => {
   const { w, P } = setup();
   assert.deepEqual(CASE_AUTHORING_TABLES, [{ name: "statement_acknowledgements", keys: [] },
-                                           { name: "what_changed_drafts", keys: [] }]);
+                                           { name: "what_changed_drafts", keys: [] },
+                                           { name: "account_drafts", keys: [] },
+                                           { name: "account_acceptances", keys: [] }]);
   assert.deepEqual([caseAuthoringOwns("statement_acknowledgements"), caseAuthoringOwns({ name: "statement_acknowledgements" }),
                     caseAuthoringOwns("case_documents")], [true, true, false]);
   const pub = w.publish(P, "alice", [Q]);
@@ -73,7 +79,7 @@ test("R28: statement_acknowledgements is declared whole to record-core's purge, 
   assert.equal(w.count("statement_acknowledgements"), 0);
 });
 
-test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5 (and R58's C-44.6, new, N681), C-82.2–C-82.8 (C-82.8 new, DEC-88), C-32.6 (and R3's C-33.14), R56's CALCULATION_NOT_DISCLOSED (new, T33-69) and R61's STANDARDS_USE_REFUSED (C-136.2, new, T36) — every refusal carrying its check, code and translation; the family C-120.1–C-120.8 and C-120.10–C-120.22 (C-120.9 withdrawn unstamped; .14–.16 the people a case names, T33-68; .17–.18 a marked photo, T37; .19 an unchecked photo, T38; .20–.22 a member document's publication copy, T39, numbered provisionally until promotion's stamp) is case-disclosures' (its R22, N529), re-exported here and held nowhere in this module's own families (K529)", () => {
+test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5 (and R58's C-44.6, new, N681), C-82.2–C-82.8 (C-82.8 new, DEC-88), C-32.6 (and R3's C-33.14), R56's CALCULATION_NOT_DISCLOSED (new, T33-69) and R61's STANDARDS_USE_REFUSED (C-136.2, new, T36) — every refusal carrying its check, code and translation; the family C-120.1–C-120.8 and C-120.10–C-120.29 (C-120.9 withdrawn unstamped; .14–.16 the people a case names, T33-68; .17–.18 a marked photo, T37; .19 an unchecked photo, T38; .20–.22 a member document's publication copy, T39, numbered provisionally until promotion's stamp; .23–.29 the account, T41) is case-disclosures' (its R22, N529), re-exported here and held nowhere in this module's own families (K529)", () => {
   assert.deepEqual(Object.entries(CASE_DERIVATION_CHECKS).map(([k, v]) => [k, v.check]),
     [["CASE_IDENTITY_AMBIGUOUS", "C-44.1"], ["PUBLISH_DRAFT_NOT_FOUND", "C-44.3"], ["PUBLISH_DRAFT_NOT_THIS_CASE", "C-44.4"],
      ["PUBLISH_DRAFT_ALREADY_BOUND", "C-44.5"], ["CASE_EDITION_WAITING", "C-44.6"]]);
@@ -97,7 +103,7 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
   assert.deepEqual(Object.values(CASE_DISCLOSURE_CHECKS).map((v) => v.check),
     ["C-120.1", "C-120.2", "C-120.3", "C-120.4", "C-120.5", "C-120.6", "C-120.7", "C-120.8", "C-120.10", "C-120.11",
      "C-120.12", "C-120.13", "C-120.14", "C-120.15", "C-120.16", "C-120.17", "C-120.18", "C-120.19",
-     "C-120.20", "C-120.21", "C-120.22"]);
+     "C-120.20", "C-120.21", "C-120.22", "C-120.23", "C-120.24", "C-120.25", "C-120.26", "C-120.27", "C-120.28", "C-120.29"]);
   assert.equal(Object.values(CASE_DISCLOSURE_CHECKS).some((v) => v.check === "C-120.9"), false, "withdrawn, never used");
   assert.deepEqual(Object.entries(PUBLISH_ACT_CHECKS).map(([k, v]) => [k, v.check]),
     [["MACHINE_CANNOT_PUBLISH", "C-32.6"], ["NO_STATEMENT", "C-33.14"], ["CALCULATION_NOT_DISCLOSED", "C-136.1"],

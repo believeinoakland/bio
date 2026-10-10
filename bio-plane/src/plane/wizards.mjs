@@ -21,10 +21,14 @@ export const irreversibleActs = (rungs = RUNGS) => Object.keys(rungs).filter((op
  *  stream's `registry.json` it carries, so the required flows walk the registry's screens; K1869 (2)) and the Civicsmith
  *  library the bundle carries,
  *  the member op table (`op-declarations`), the acts a machine is refused (`op-grades`' `MACHINE_REFUSALS`, its R5), the
- *  labelled machine drafts and the irreversible acts (`wizard-scripts` R24's refused set). */
-export const wizardRegistration = () => ({ screens: SCREEN_REGISTRY, ops: OPS, machineRefused: Object.keys(MACHINE_REFUSALS),
-                                           machineDrafts: MACHINE_DRAFTS, irreversible: irreversibleActs(),
-                                           library: CIVICSMITH_LIBRARY });
+ *  labelled machine drafts and the irreversible acts (`wizard-scripts` R24's refused set); with `door`, the front door's
+ *  finder (its R23). */
+export const wizardRegistration = ({ door = null } = {}) => ({ screens: SCREEN_REGISTRY, ops: OPS,
+  machineRefused: Object.keys(MACHINE_REFUSALS), machineDrafts: MACHINE_DRAFTS, irreversible: irreversibleActs(),
+  library: CIVICSMITH_LIBRARY,
+  /* (K2586; wizard-scripts R23) the front door's in-process finder (and pointer, once one is given), the plane's
+     composition (`wiring.mjs`' `frontDoorFinder`); absent, `matches` is [] and the pointer null. */
+  ...(door ? { door } : {}) });
 
 /** R24 (Q1-7): what the release suite holds empty: each screen of the registry whose shape is not `{id, title, acts,
  *  purpose}` (an id or title or purpose that is not a non-empty string, an id repeated, acts not a list of names, or a

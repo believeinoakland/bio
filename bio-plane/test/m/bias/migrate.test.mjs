@@ -29,15 +29,17 @@ test("R45: a bias_debts built without settled_kind, holding a settled debt, and 
   const col = w.rows(`PRAGMA table_info(bias_debts)`).find((c) => c.name === "settled_kind");
   assert.deepEqual([col.type, col.notnull, col.dflt_value, col.pk], ["TEXT", 0, null, 0]);
   assert.deepEqual(w.row(`SELECT * FROM bias_debts`), { ...held, settled_kind: null }, "the debt already held: nothing filled, nothing else changed");
-  const d = w.bias.biasDebt({ run: "RUN-OLD", viewer: "admin" });
+  /* read as a machine viewer: the debt's context is no held bundle, which since D54 (membership R43) only a machine
+     viewer's gate admits; the founder's does not */
+  const d = w.bias.biasDebt({ run: "RUN-OLD", viewer: "class:daemon" });
   assert.deepEqual([d.found, d.open, d.settled.settled, d.settled.kind, d.settled.kind_state], [true, false, true, null, "undetermined"]);
   assert.match(d.settled.stated, /before the record kept which act settled it/);
-  assert.deepEqual(w.bias.settled({ gate: viewerPredicate("admin"), since: "2026-01-01T00:00:00Z" }).debts.map((x) => [x.run, x.settled_kind]),
+  assert.deepEqual(w.bias.settled({ gate: viewerPredicate("class:daemon"), since: "2026-01-01T00:00:00Z" }).debts.map((x) => [x.run, x.settled_kind]),
     [["RUN-OLD", null]]);
   /* the column is live: a debt settled after the migration records its kind */
   w.sql.exec(`INSERT INTO bias_debts (run, context_type, context_id, recipients, raised, observed) VALUES ('RUN-NEW', 'inquiry', 'INQ-2026-0001-q', '[]', 't', 't')`);
-  assert.equal(w.bias.biasDebtResolve({ run: "RUN-NEW", reason: "Not bearing.", actor: "admin", viewer: "admin" }).ok, true);
-  assert.equal(w.bias.biasDebt({ run: "RUN-NEW", viewer: "admin" }).settled.kind_state, "determined");
+  assert.equal(w.bias.biasDebtResolve({ run: "RUN-NEW", reason: "Not bearing.", actor: "admin", viewer: "class:daemon" }).ok, true);
+  assert.equal(w.bias.biasDebt({ run: "RUN-NEW", viewer: "class:daemon" }).settled.kind_state, "determined");
   assert.equal(w.row(`SELECT settled_kind FROM bias_debts WHERE run = 'RUN-OLD'`).settled_kind, null, "still never filled");
 });
 

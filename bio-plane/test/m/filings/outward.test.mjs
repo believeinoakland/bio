@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { world, V, MACHINE, STRANGER, PROFILE, DOC, EVID, sha, WORDS, LAW, WHY } from "./fixture.mjs";
+import { world, V, NOW, MACHINE, STRANGER, PROFILE, DOC, EVID, sha, WORDS, LAW, WHY } from "./fixture.mjs";
 import { Filings, INBAND_RULE, inbandBlock } from "../../../src/filings/index.mjs";
 import { inbandQuartet } from "../../../src/inband.mjs";
 import { validate } from "../../../../jurisdictions/index.mjs";
@@ -160,6 +160,12 @@ test("R25 every draft and packet shows each exhibit's capture grade (provenance'
   assert.deepEqual([pe[evSha].venue.state, pe[evSha].venue.flagged], ["accepted", false], "B is within what the venue accepts");
   assert.deepEqual([pe[docSha].venue.state, pe[docSha].venue.flagged], ["undetermined", false], "an unmeasured grade is not read against it");
   assert.ok(p.ok, "never refused for a grade");
+  /* negative control (K874): the same capture once this copy has fetched it (a direct receipt, provenance R62) reads B
+     in the next draft, so DOC's null above is its missing receipt, never a grade left unread */
+  const rc = x.prov.recordReceipt({ addressNorm: `example.org/${DOC}`, captureSha: docSha, retrieved: NOW, via: "direct" });
+  assert.equal(rc.recorded, true, JSON.stringify(rc).slice(0, 200));
+  const again = drafted(x).d.exhibits.find((e) => e.sha256 === docSha);
+  assert.deepEqual([again.grade.grade, again.grade.grade === x.prov.captureGrade(docSha).grade, again.coattested], ["B", true, false]);
 });
 
 test("R25 the venue's standard flags an exhibit below every grade it accepts, one accepted only co-attested that is not, and one at a grade the profile marks contestable; profiles that disagree leave it undetermined", () => {

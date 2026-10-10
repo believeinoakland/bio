@@ -217,9 +217,31 @@ test("R23 directorySubmission prefills a directory's fields for a published edit
 test("R24 only an owner's own signature publishes a revision: no machine, AI run or administrator posts, re-words or back-dates one", async () => {
   const w = seeded();
   w.member("erin", { role: "admin" });
-  for (const who of [MACHINE, "token:x", "admin", V("erin")]) {
-    const r = await w.nn.prepareNotice({ project: w.P, wording: "x", since: "2026-02-01", by: who, viewer: who.startsWith("member:") || who === "admin" ? who : MACHINE });
-    assert.ok(["MACHINE_CANNOT_POST_NOTICE", "NOTICE_NOT_THE_OWNER"].includes(r.reason), `${who}: ${r.reason}`);
+  const as = (who, pid = w.P) => w.nn.prepareNotice({ project: pid, wording: "x", since: "2026-02-01", by: who,
+                                                      viewer: who.startsWith("member:") || who === "admin" ? who : MACHINE });
+  for (const who of [MACHINE, "token:x"]) assert.equal((await as(who)).reason, "MACHINE_CANNOT_POST_NOTICE", who);
+  /* D54 (K2408, K2442): P is hidden, so an administrator, the founder included, neither invited nor joined, sees it only at
+     EXISTENCE: refused with membership's C-70.1 (id, name, owners), never the notice nor anything inside it */
+  const before = w.snapshot();
+  for (const who of ["admin", "member:admin", V("erin")]) {
+    assert.equal(w.membership.sight(w.P, who), "existence", who);
+    const r = await as(who);
+    assert.deepEqual(r, w.membership.existenceAct(w.P, who), `${who}: membership's answer, relayed as it came`);
+    assert.deepEqual([r.reason, r.check], ["PROJECT_SEEN_NOT_A_PARTICIPANT", "C-70.1"], who);
+    assert.ok(!("revision" in r) && !("digest" in r) && !JSON.stringify(r).includes("NOTE-"), `${who}: nothing of a notice`);
+  }
+  assert.deepEqual(w.snapshot(), before, "nothing written");
+  /* negative controls, each at FULL: P made discoverable, administrators see it whole; an administrator invited to a
+     hidden project sees it whole. Either way an administrator is no owner (the founder, holding no roster row, is no member signed in as
+     themselves): refused by R1's caller refusals, never by sight */
+  w.join(w.Q, "erin", "invited");
+  assert.equal(w.membership.sight(w.Q, V("erin")), "full");
+  assert.equal((await as(V("erin"), w.Q)).reason, "NOTICE_NOT_THE_OWNER", "an invited administrator");
+  assert.equal(w.membership.projectVisibilitySet({ projectId: w.P, setting: "discoverable", by: "alice", viewer: A }).ok, true);
+  for (const who of ["admin", "member:admin", V("erin")]) {
+    assert.equal(w.membership.sight(w.P, who), "full", who);
+    const r = await as(who);
+    assert.ok(["MACHINE_CANNOT_POST_NOTICE", "NOTICE_NOT_THE_OWNER"].includes(r.reason), `${who} at a discoverable project: ${r.reason}`);
   }
   const p = await post(w);
   /* a prepared change signed with another member's key is refused */

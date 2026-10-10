@@ -1,0 +1,49 @@
+# reading-guides — requirements
+
+**Status** · Draft, BOB's (K2405, K2418, K2420): a new product module Bob approved (D51 A, D1), placed by BOB, written at T41's opening from `build/plan/draft-T41-investigation.md` §3.4 (N820; D8, D24, D65). Every requirement not yet met (T41).
+
+**Size (P6).** About 900 lines.
+
+## Public
+
+### Purpose
+
+Reading guides say what to look for in one kind of document (D8): by hand a checklist, for the AI what to read for, so the two are the same thing (D65). Civicsmith's library ships to every group; each group keeps its own; guides are offered across groups and reviewed before adoption. A guide says what to look for, never how the AI may behave (D24).
+
+### Provides
+
+Terms. A **guide** is `GUD-` (`record-grammar` R53): `{id, kind, origin, items, state, author, reviewed_by, based_on}`; `kind` a document kind (`doctypes`); `origin` `civicsmith`, `group` or `adopted`; each **item** `{label, look_for, where?}`, short plain strings. A **state** is `draft`, `usable_by_author`, `group`, `retired`.
+
+- **R1** `CIVICSMITH_GUIDES` is frozen data carried with the release, each guide approved by Bob or someone he names, each carrying the record of measured use that showed it works; read-only to every group.
+- **R2** `guideDraft({kind, items, based_on?, by})` by a member: usable by its author at once (`usable_by_author`). A machine may draft (`guidePropose`, labelled, R12), never approve.
+- **R3** `guideReview({guide, verdict, reason, by})` by another member (never the author): `approve` makes it the group's; `refuse` keeps it its author's with the reason. History kept.
+- **R4** `checkGuide(items)` (pure) refuses `GUIDE_CARRIES_CONDUCT`, naming the item, any item whose text names an act, op, tool, rule, the assistant, a permission or a control-flow pattern (the check registered by `registerConductCheck(fn)`, once at start, K31's pattern: `skills` fills it with its R16 `controlFlowAuthority`; a second registration is refused `PROVIDER_DECLARED`; with none registered R4 checks only its own lists, and `skills` R40 re-runs R16 at every render), or is not a look-for statement (the closed lists in this file's Suggestions, BOB's; K2472); every draft, review, adoption and render runs it. No guide can loosen a rule (D24).
+- **R5** `guideFor({kind, viewer})` answers the guide in force for a kind: the viewer's own usable guide when she asks, else the group's, else Civicsmith's, else none, with its origin. Never throws.
+- **R6** (D8 cross-group) `guideOffer({guide, by})` by a group member answers the guide's canonical bytes and digest, labelled with the offering group's slug, for another group; `guideAdopt({bytes, by})` imports one as `adopted`, `based_on` the offer's digest, usable only after R3's review in the adopting group. A guide many groups use may be exported marked as a proposal for Civicsmith's library (`guideProposeToCivicsmith`); Civicsmith's adoption is a release's, not this module's. The channel between groups is registered later (`registerGuideChannel`, K31's pattern; `network-notices`), BOB's.
+- **R7** `guideRetire({guide, reason, by})` by an approver of its scope; retired guides stay readable; nothing is deleted.
+- **R8** `guidesOf({kind?, state?, viewer})` lists guides the viewer may see, at most 200, `truncated`.
+- **R12** `guidePropose({kind, items, run, by})` stores a machine draft apart, labelled (`record-grammar` R42); only a member's R2 act with `based_on` makes it a guide.
+
+## Private
+
+### Uses
+
+- `record-grammar`: `ID_TABLE`'s `GUD` and `isGuideId` (its R53), the proposal labels (its R42).
+- `civil-time`: dates of reviews and adoptions.
+- `record-core`: `declareTable` (R9).
+- `membership`: members, the group's sight (R2, R3, R7).
+
+### Invariants
+
+- **R9** Tables declared through `record-core.declareTable`, purged with the store; a group guide's sight is the group's.
+- **R10** A guide never grades, concludes, or names a body's conduct; its items say what to look for and where.
+- **R11** Each refusal carries its row in this module's own `checks.mjs`, a new family. No place is named in behaviour or outward text.
+
+### Satisfies
+
+- The investigation design of record (K2417): D8, D24, D65; D1's "reading-guide library".
+
+### Suggestions
+
+- **R4's closed lists (BOB's, K2472).** An item is a look-for statement when it opens with one of: "Look for", "Note whether", "Note where", "Check whether", "Check that", "Watch for", "Compare". It names conduct when, as a whole word and case-insensitive, it carries an op form (`op=`), a tool or act word (`run`, `call`, `fetch`, `search`, `capture`, `post`, `send`, `sign`, `publish`, `approve`, `delete`, `tool`, `grant`), a party to conduct (`assistant`, `Civicsmith`, `model`, `AI`), or a rule or permission word (`permission`, `permitted`, `allowed`, `must` (not `may`, which a month's name would trip; READING-GUIDES #1 J1, K2482), `rule`, `instruction`). The lists are frozen in code and tested whole; a later change is a requirement change.
+- Paths: `bio-plane/src/reading-guides/`; tests `bio-plane/test/m/reading-guides/`.

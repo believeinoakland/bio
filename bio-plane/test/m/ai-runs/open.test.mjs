@@ -111,8 +111,13 @@ test("R10: success writes the run, its bounds, the handed manifest and bar verba
   assert.equal(rr.rerun_of, "R1");
   assert.equal(w.row(`SELECT rerun_of FROM ai_runs WHERE run='R3'`).rerun_of, "R1");
   /* a machine credential: the gate is not applied, and the count is the viewer's */
-  const m = await w.runs.open(OPEN({ run: "R4", actor: "", viewer: "admin" }));
+  const m = await w.runs.open(OPEN({ run: "R4", actor: "", viewer: "member:ann" }));
   assert.deepEqual([m.projectGate.ground, m.projectGate.projects], ["NO_MEMBER_BEHIND_CALLER", 2]);
+  /* D54 (K2442): the founder's viewer, in neither project, counts neither hidden project; cited also by the discoverable
+     OPENP (control), it counts that one */
+  assert.equal((await w.runs.open(OPEN({ run: "R5", actor: "", viewer: "admin" }))).projectGate.projects, 0, "D54");
+  w.cites(OPENP, INQ);
+  assert.equal((await w.runs.open(OPEN({ run: "R6", actor: "", viewer: "admin" }))).projectGate.projects, 1, "control: discoverable");
 });
 
 test("R32: a run's conditions are recorded at the open and never derived later — the handed manifest verbatim, absent stored as absent, the lens at the open unchanged by a later lens", async () => {

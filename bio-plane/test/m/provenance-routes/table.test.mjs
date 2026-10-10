@@ -35,9 +35,16 @@ test("R10: routeMarks, registered once through record-core's counts, keyed on bu
   assert.equal(w.record.counts(hideA).routeMarks, 1, "a hidden bundle's rows are left out");
   assert.equal(w.record.counts(hiddenBundles("stranger")).routeMarks, 0);
   assert.equal(w.record.counts(hiddenBundles(V("x"))).routeMarks, 3);
-  /* A fenced bundle (in a project the member is not in) is subtracted for that member, counted for the founder. */
-  w.fence("INFO-2026-0002-b");
-  assert.deepEqual([w.record.counts(hiddenBundles(V("x"))).routeMarks, w.record.counts(hiddenBundles("admin")).routeMarks], [2, 3]);
+  /* A fenced bundle (in a hidden project the member is not in) is subtracted for that member and, since D54 (K2408,
+     K2442), for the founder too, neither invited nor joined; its owner counts it. */
+  const P = w.project("PROJ-2026-0009-p");
+  w.fence("INFO-2026-0002-b", P);
+  const fig = (v) => w.record.counts(hiddenBundles(v)).routeMarks;
+  assert.deepEqual([fig(V("x")), fig("admin"), fig(V("admin")), fig(V("olive"))], [2, 2, 2, 3]);
+  /* Negative control: set discoverable, the founder sees the project whole and counts the bundle's row again; a member
+     outside it is at EXISTENCE, never FULL, and still does not. */
+  assert.equal(w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", by: "olive", viewer: V("olive") }).ok, true);
+  assert.deepEqual([fig(V("x")), fig("admin"), fig(V("admin")), fig(V("olive"))], [2, 3, 3, 3]);
   const before = w.snapshot();
   const got = w.routes.counts(null);
   assert.equal(typeof got.then, "undefined", "synchronous");

@@ -7,6 +7,7 @@ import * as A from "../../../src/affordances.mjs";
 import * as G from "../../../src/op-grades/index.mjs";
 import { ratificationOps } from "../../../src/ratification/index.mjs";
 import { publicationOps } from "../../../src/publication/index.mjs";
+import { publishScheduleOps } from "../../../src/publish-schedule/index.mjs";
 import { hypothesesOps } from "../../../src/hypotheses/index.mjs";
 import { HYPOTHESES_CHECKS } from "../../../src/hypotheses/checks.mjs";
 import { DUTIES_CHECKS } from "../../../src/duties/checks.mjs";
@@ -37,8 +38,12 @@ test("R42 R19 R36 R7 R12: publishat and publishatmove are `irreversible` as publ
    + "for the two and true for the cancel, none in MACHINE_REFUSALS — and with op-declarations R25's rows nothing is "
    + "unaccounted; a misgraded op or an op left out is seen", () => {
   assert.ok(keysOf(ratificationOps).includes("publishat"), "ratification serves publishat");
-  const pub = keysOf(publicationOps);
-  for (const op of ["publishatmove", "publishatcancel", "publishschedule"]) assert.ok(pub.includes(op), op);
+  /* N823 (K2438): publishing at a set time left publication for publish-schedule, which serves the other three now */
+  const pub = keysOf(publicationOps), sched = keysOf(publishScheduleOps);
+  for (const op of ["publishatmove", "publishatcancel", "publishschedule"]) {
+    assert.ok(sched.includes(op), `publish-schedule serves ${op}`);
+    assert.ok(!pub.includes(op), `publication no longer serves ${op}`);
+  }
   const grades = Object.fromEntries(Object.keys(R42_GRADES).map((op) => [op, gradeOf(op)]));
   assert.deepEqual(grades, R42_GRADES);
   assert.equal(RUNGS.publishat, RUNGS.publish);
@@ -186,9 +191,12 @@ const R45_WRITES = {
   joinlinkenable: "credential", joinlinkset: "credential", joinlinkreplace: "credential", joinlinkoff: "credential",
   websiteinvite: "credential", joinlinkinvite: "credential", courtnoticeset: "substrate", groupdescriptionset: "substrate",
   checkrequest: "undetermined", checktake: "undetermined", checkrecord: "reasoned",
-  groupkeyset: "credential", groupkeyremove: "credential", groupkeyswitch: "substrate", groupswitchset: "substrate",
+  groupkeyset: "credential", groupkeyremove: "credential", groupkeyswitch: "substrate",
   groupkeynoticeseen: "caller-owned", placewanted: "substrate", memberlanguageset: "caller-owned",
 };
+/* op-grades R30 (DEC-188 (8); K2437, K2445): `groupswitchset`, graded `substrate` here since T34, is retired to
+   credentials' `accountusesset` (graded in op-grades' t41.mjs): no grade, no reason, and no owner serves it. */
+const R45_RETIRED = ["groupswitchset"];
 const R45_READS = ["checkrequests", "checksof", "groupkeystate", "groupkeynotice", "placewantedstate",
   "memberlanguage", "startfrom"];
 /* public, with no NEEDS row (op-declarations R22: `classes: null`; `courtnotice` a plain read, K1883 (1)): graded where
@@ -203,8 +211,12 @@ test("R45 R3 R7 R12 R19: every op T34 declares in op-declarations R22–R24, R26
   for (const op of ["invitewithdraw", "websitekeycreate", "websitekeyset", "websitekeyrevoke", "joinlinkenable", "joinlinkset",
     "joinlinkreplace", "joinlinkoff", "courtnoticeset", "groupdescriptionset", "websiteinvite", "joinlinkinvite",
     "courtnotice", "groupdescription"]) assert.ok(m.includes(op), `membership serves ${op}`);
-  for (const op of ["groupkeyset", "groupkeyremove", "groupkeyswitch", "groupswitchset", "groupkeystate", "groupkeynotice",
+  for (const op of ["groupkeyset", "groupkeyremove", "groupkeyswitch", "groupkeystate", "groupkeynotice",
     "groupkeynoticeseen"]) assert.ok(c.includes(op), `credentials serves ${op}`);
+  for (const op of R45_RETIRED) {
+    assert.ok(!c.includes(op), `credentials no longer serves ${op}`);
+    assert.deepEqual([gradeOf(op), Object.hasOwn(NON_ACTS, op), Object.hasOwn(T34_NON_ACTS, op)], [null, false, false], op);
+  }
   const got = Object.fromEntries(Object.keys(R45_WRITES).map((op) => [op, g(op)]));
   assert.deepEqual(got, R45_WRITES);
   assert.deepEqual([...Object.keys(T34_RUNGS), ...Object.keys(T34_RUNG_ABSENT)].sort(), Object.keys(R45_WRITES).sort());
@@ -212,7 +224,9 @@ test("R45 R3 R7 R12 R19: every op T34 declares in op-declarations R22–R24, R26
   /* each beside the op R45's reading names as its precedent */
   for (const [op, like] of [["groupkeyset", "keyedserviceset"], ["groupkeyswitch", "keyedserviceswitch"],
     ["courtnoticeset", "groupnameset"], ["placewanted", "officesseed"], ["websiteinvite", "knock"],
-    ["groupkeynoticeseen", "disclosureshown"], ["memberlanguageset", "accountswitchset"]]) assert.equal(g(op), g(like), op);
+    ["groupkeynoticeseen", "disclosureshown"],
+    /* (T41) a member's own setting, as a member's own reminder; `accountswitchset`, the precedent before, is retired */
+    ["memberlanguageset", "reminderset"]]) assert.equal(g(op), g(like), op);
   for (const op of R45_READS) {
     assert.ok(NON_ACTS[op].startsWith("read: ") && /writes nothing$/.test(NON_ACTS[op]), op);
     assert.equal(gradeOf(op), null, op);

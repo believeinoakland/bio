@@ -18,7 +18,7 @@
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `transact`, `acquireLease`, `releaseLease`, `head`, `readFile`, `livePaths`,
  *                                   `declarePurge`, `registerAuditCheck`, `getSetting`, `bundleInfo`; `viewerPredicate`,
- *                                   `sight`, `existenceAct`, `noSuchProject` (R52, R57–R59);
+ *                                   `sight`, `visibilityOf`, `existenceAct`, `noSuchProject` (R52, R56–R59);
  *                                   `promote`, `registerStep`.
  *   retrieval      `registerActionFacts`, `registerProjectionDecoration` (its R53, R56).
  *   content        `captureFor` (R11).
@@ -27,6 +27,9 @@
  *   entities       `readEntity` (its R5): whether an addressee's `entity_id` names a person (R9).
  *   capture        `registerReader` (its R32): the litigation-hold reader (R55); `null` registers none.
  *   ratification   `registerHoldReader` (its R45): the reader of holds over a project (R69); `null` registers none.
+ *   progressions  `readProgression` (its R5): the progressions and stages a records request's `seeks` names (R70).
+ *   intent         `registerNoneExistsReader` (its R33): the reader of requests answered that none exists (R71);
+ *                  `null` registers none.
  *   now            the instance clock, milliseconds (default: `env.BIO_NOW_MS`, else the wall clock).
  *   env            the instance bindings.
  *
@@ -47,6 +50,8 @@ import { linesOf } from "../lines/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { standardsOf, noSuchStandard } from "../standards/index.mjs";
 import { dutiesOf } from "../duties/index.mjs";
+import { progressionsOf } from "../progressions/index.mjs";
+import { intentOf } from "../intent/index.mjs";
 import { localDay, overdueOn, isCalendarDate } from "../civil-time/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity,
@@ -59,7 +64,7 @@ import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, acti
          counterpartyOffice,
          clockMovesNotMechanical, ACTION_FENCE_CHECKS, ACTION_ACT_CHECKS, GOVERNING_LAW_CHECKS, QUOTE_CHECKS,
          LIFECYCLE_CHECKS, RISK_TIER_REVISION_CHECKS, RECORDS_LAW_FENCE_CHECKS,
-         ACTION_CATALOGUE_CHECKS } from "../action-grammar/index.mjs";
+         ACTION_CATALOGUE_CHECKS, seeksOf, seeksFindings, SEEKS_MAX } from "../action-grammar/index.mjs";
 import { ACTIONS_TABLES, migrateActions } from "./schema.mjs";
 
 export { ACTIONS_SCHEMA, ACTIONS_TABLES } from "./schema.mjs";
@@ -74,6 +79,8 @@ export const CORRESPOND_LEASE_MS = 30000;
    beside the answer — never a claim that no more exist. R28: the same bound for proposed tiers. */
 export const LAW_PROPOSALS_READ_MAX = 12;
 export const RISK_PROPOSALS_READ_MAX = 12;
+/** R73: the most proposals of what a request seeks one action's read lists (R19's bound). */
+export const SEEKS_PROPOSALS_READ_MAX = 12;
 /** R27: the most quotes one read answers. */
 export const QUOTES_MAX = 500;
 /** R30: the most actions one page lists. */
@@ -94,6 +101,8 @@ export const HOLD_STATES = Object.freeze(["in_place", "released"]);
 export const HOLDS_DUE_MAX = 500;
 /** R59: the most statements one `holdsReleased` page lists. */
 export const HOLDS_RELEASED_MAX = 500;
+/** R71 (intent R33): the most answers `noneExistsFor` gives. */
+export const NONE_EXISTS_MAX = 50;
 /** R52, R58 (DEC-113): the most distinct projects one hold statement names, and one `projectHolds` read asks. */
 export const HOLD_PROJECTS_MAX = 50;
 /* R52: a project's id, a bundle id of the project prefix. */
@@ -272,12 +281,13 @@ export class Actions {
 
   constructor({ storage, record, membership, promotion, host = null, retrieval = null, content = null,
                 conformance = null, entities = null, lines = null, events = null, standards = null, duties = null,
-                now = null, env = null } = {}) {
+                progressions = null, now = null, env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, retrieval, content, conformance: conformance ?? undefined, entities, lines, events, standards, duties };
+    this.#deps = { host, retrieval, content, conformance: conformance ?? undefined, entities, lines, events, standards, duties,
+                   progressions };
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : null;
   }
@@ -301,6 +311,8 @@ export class Actions {
   get events() { return this.#reach("events", (h) => eventsOf(h)); }
   get standards() { return this.#reach("standards", (h) => standardsOf(h)); }
   get duties() { return this.#reach("duties", (h) => dutiesOf(h)); }
+  /* R70: the progression definitions (`readProgression`, its R5), reached on the same host unless a test passes its own. */
+  get progressions() { return this.#reach("progressions", (h) => progressionsOf(h)); }
 
   /* R9: the kind the registry holds `entityId` as, or null when it holds none or cannot be read. */
   #entityKind(entityId) {
@@ -804,6 +816,45 @@ export class Actions {
     return null;
   }
 
+  /* R70, R72 (H30 (1); K2505, K2552, K2553, K2561): a creation or revision stating `seeks`, or changing or removing it,
+     is judged before any write: a machine or unstamped author may not (R72: what a request asks the records for is a
+     member's statement; a machine proposes it, R73); then `#seeksRefusal` (R70). Asked only when `seeks` moved, so a later
+     revision is never refused for a progression's later version. */
+  #seeksFence(heldFm, nextFm, who) {
+    const key = (fm) => JSON.stringify(fm && fm.seeks !== undefined && fm.seeks !== null ? fm.seeks : null);
+    if (key(heldFm) === key(nextFm)) return null;
+    /* DEC-49 REGION is-machine-state-seeks */
+    if (!who || isMachineIdentity(who))
+      return refuse("MACHINE_CANNOT_STATE_SEEKS", "which stages a records request asks the records for is a member's "
+        + "statement; a machine credential may not state, change or remove it, and may propose it "
+        + "(op=actionseekspropose). Nothing was written.");
+    /* END DEC-49 REGION is-machine-state-seeks */
+    return this.#seeksRefusal(nextFm);
+  }
+
+  /* R70, R73: action-grammar's `seeksFindings` (its R13) over `fm`, with the facts read here through
+     `progressions.readProgression`, one entry per distinct progression an item names: its declared stage keys, or null
+     for a progression the record does not hold. A definition that cannot be read is read as not held (fail closed), and
+     the refusal says so. The refusal is the grammar's own (C-117.29), relayed with every finding; null when none. */
+  #seeksRefusal(fm) {
+    const stages = {};
+    let unreadable = false;
+    const items = Array.isArray(fm.seeks) ? fm.seeks : [];
+    for (const p of new Set(items.map((x) => (x && typeof x === "object" ? x.progression : null))
+                              .filter((x) => typeof x === "string" && x.trim()))) {
+      let r = null;
+      try { r = this.progressions ? this.progressions.readProgression({ progressionKey: p }) : null; } catch { r = null; }
+      if (!r || r.ok === false) { unreadable = true; stages[p] = null; continue; }
+      stages[p] = r.found ? (r.stages || []).map((st) => st.stage_key) : null;
+    }
+    const found = [];
+    seeksFindings(fm, { stages }, found);
+    const errors = found.filter((x) => x.severity === "error");
+    if (!errors.length) return null;
+    return refuse(errors[0].code, errors[0].message, { findings: findingsOf(errors),
+      ...(unreadable ? { cause: "PROGRESSIONS_UNREADABLE" } : {}) });
+  }
+
   /* R3 (N237, K351): a document holding more legs or entries than the projection reads is refused where it is authored
      or revised, with the count and the limit; a replay is never asked (the projection skips it whole). */
   #tooLarge(fm) {
@@ -846,6 +897,8 @@ export class Actions {
       if (link) return link;
       const t33 = this.#heldLinks(heldFm, nextFm, who, pkg.actorViewer ?? pkg.viewer ?? c.viewer ?? (who || null));
       if (t33) return t33;
+      const seeks = this.#seeksFence(heldFm, nextFm, who);
+      if (seeks) return seeks;
       const large = this.#tooLarge(nextFm);
       if (large) return large;
       /* REC-24: the legs (ACTION_BASIS_REFUSED), the ledger (CORRESPONDENCE_REFUSED) and what only the record can
@@ -1617,7 +1670,7 @@ export class Actions {
       target, n);
     if (preview) {
       const all = this.#restarts(target, n);
-      const seen = all.filter((p) => this.#sees(p, viewer));
+      const seen = all.filter((p) => this.#mayName(p, viewer));
       return { ok: true, target, ord: n, hold: latest ? latest.hold : null, restarts: seen,
                out_of_view: seen.length < all.length };
     }
@@ -1626,9 +1679,9 @@ export class Actions {
       return refuse("HOLD_ALREADY_RELEASED", "this entry's hold is already released; a release ends a hold in place. "
         + "Nothing was written.", { target, ord: n });
     /* END DEC-49 REGION is-hold-already-released */
-    /* R52: the first named project the author may not see at FULL answers as membership answers it (its R77, R78). */
+    /* R52: the first named project the author may not name answers as membership answers it (its R77, R78). */
     for (const p of named) {
-      if (this.#sees(p, viewer)) continue;
+      if (this.#mayName(p, viewer)) continue;
       let existence = null;
       try { existence = this.membership.existenceAct(p, viewer); } catch { existence = null; }
       return existence || noSuchProject(p);
@@ -1653,9 +1706,9 @@ export class Actions {
     });
     if (release)
       return { ok: true, target, ord: n, hold: "released", reason: why, by: who, at,
-               restarted: written.list.filter((p) => this.#sees(p, viewer)) };
+               restarted: written.list.filter((p) => this.#mayName(p, viewer)) };
     return { ok: true, target, ord: n, hold: h, reason: why, by: who, at,
-             projects: [...this.#covered(target, n)].sort().filter((p) => this.#sees(p, viewer)) };
+             projects: [...this.#covered(target, n)].sort().filter((p) => this.#mayName(p, viewer)) };
   }
 
   /** R56 (DEC-113; K1134 (3)): a member states `released` on an entry, recording what it restarted. */
@@ -1690,9 +1743,16 @@ export class Actions {
     return { ok: true, projects: absent ? [] : [...distinct] };
   }
 
-  /* R52: whether the viewer sees a project at FULL (membership R44). Anything else, a failure included, is not. */
-  #sees(project, viewer) {
-    try { return this.membership.sight(project, viewer) === "full"; } catch { return false; }
+  /* R52 (D54; K2484): whether the viewer may name a project here: she sees it at FULL, or, as an administrator neither
+     invited nor joined, a HIDDEN project at EXISTENCE (membership R44, R85's `visibilityOf`), which reaches its id and
+     hold state and never its contents. A discoverable project's EXISTENCE names nothing. Anything else, a failure
+     included, is not. */
+  #mayName(project, viewer) {
+    try {
+      const sight = this.membership.sight(project, viewer);
+      if (sight === "full") return true;
+      return sight === "existence" && this.membership.visibilityOf(project) === "hidden";
+    } catch { return false; }
   }
 
   /* R52: every `in_place` statement of a hold still in place (no `released` statement after it on its entry), one row per
@@ -1719,7 +1779,7 @@ export class Actions {
   }
 
   /** R58 (DEC-113): for each of 1 to 50 projects, whether a hold in place covers it: `held: true` with the `at` and `by`
-   *  of the earliest such statement, `false`, or `null` for a project absent or not seen at FULL. A read it cannot
+   *  of the earliest such statement, `false`, or `null` for a project absent or one the viewer may not name (R52). A read it cannot
    *  complete is a refusal, never `false`. Names no action, entry or reason. Writes nothing. */
   projectHolds({ projects = null, viewer = null } = {}) {
     const asked = this.#holdProjects(projects, true);
@@ -1732,7 +1792,7 @@ export class Actions {
     const earliest = new Map();
     for (const r of rows) if (r.project && !earliest.has(r.project)) earliest.set(r.project, r);
     return { ok: true, projects: asked.projects.map((p) => {
-      if (!this.#sees(p, viewer)) return { project: p, held: null };
+      if (!this.#mayName(p, viewer)) return { project: p, held: null };
       const e = earliest.get(p);
       return e ? { project: p, held: true, since: e.at, recorded_by: e.stated_by } : { project: p, held: false };
     }) };
@@ -1752,7 +1812,7 @@ export class Actions {
   }
 
   /** R59 (DEC-113; for `queue-producers` R29): every `released` statement that ended a hold in place, on an action the
-   *  viewer may see, with the hold's placers and the projects it restarted that the viewer sees; at most 500 per page in
+   *  viewer may see, with the hold's placers and the projects it restarted that the viewer may name; at most 500 per page in
    *  (action, position, sequence) order. `cursor` is the last answered, `<action>#<position>#<sequence>`, when
    *  `truncated`, else null; `after` is a cursor or an action id, read as after all that action's statements. */
   holdsReleased({ after = null, limit = null, viewer = null } = {}) {
@@ -1778,7 +1838,7 @@ export class Actions {
                             AND s.hold = 'released'), 0)
         GROUP BY stated_by ORDER BY MIN(seq)`, r.bundle_id, r.ord, r.seq, r.bundle_id, r.ord, r.seq).map((x) => x.stated_by),
       restarted: this.#rows(`SELECT project FROM action_hold_projects WHERE bundle_id = ? AND ord = ? AND seq = ?
-        ORDER BY project`, r.bundle_id, r.ord, r.seq).map((x) => x.project).filter((p) => this.#sees(p, viewer)),
+        ORDER BY project`, r.bundle_id, r.ord, r.seq).map((x) => x.project).filter((p) => this.#mayName(p, viewer)),
     }));
     const tail = items[items.length - 1];
     return { ok: true, items, limit: max, truncated,
@@ -1789,7 +1849,8 @@ export class Actions {
    *  whatever the viewer. No `bundleId`: whether any hold is in place. A `bundleId`: whether a hold is in place and the
    *  bundle is a held project, belongs to one, is an action carrying a hold in place, or has no project that can be
    *  determined. Synchronous, so it is asked in the purge's own turn; writes nothing, never throws, and answers `true`
-   *  when the holds cannot be read. */
+   *  when the holds cannot be read. It reads every hold and every bundle's project whatever any viewer may see, never
+   *  through a viewer's sight (D54: the founder's viewer no longer sees a hidden project, membership R43). */
   purgeHeld({ bundleId = null } = {}) {
     try {
       const rows = this.#standing();
@@ -2513,6 +2574,9 @@ export class Actions {
       governing_laws: governingLawsOf(fm),
       governing_laws_proposals: this.#lawProposalsFor(row.bundle_id),
       risk_tier_proposals: this.#riskProposalsFor(row.bundle_id),
+      /* R70, R73: what a records request seeks, as a member stated it, and the proposals of it stored apart. */
+      seeks: seeksOf(fm),
+      seeks_proposals: this.#seeksProposalsFor(row.bundle_id),
       records_law: fm.action_kind === "records_request" ? recordsLawOf(fm, this.#lawAuthor(row.bundle_id, fm)) : null,
       lifecycle: requestLifecycleOf(fm, localToday(now, zoneOf(place)) ?? ""),
       /* R26, DEC-14: the ACTION'S OWN OUTCOME, never the breach's consequence (which `consequences` holds). */
@@ -2601,13 +2665,13 @@ export class Actions {
     return { as_of_date: asOf, addressee, law_standards, proceeding };
   }
 
-  /* R52: an entry's hold statements, oldest first, each with those of its projects the viewer sees at FULL (an
+  /* R52: an entry's hold statements, oldest first, each with those of its projects the viewer may name (an
      `in_place` statement's `projects`, a release's `restarted`), and its current hold (the latest; null while none). */
   #holdsOf(id, ord, viewer) {
     const holds = this.#rows(`SELECT seq, hold, reason, stated_by, at FROM action_holds WHERE bundle_id=? AND ord=?
       ORDER BY seq`, id, ord).map((h) => {
       const projects = this.#rows(`SELECT project FROM action_hold_projects WHERE bundle_id=? AND ord=? AND seq=?
-        ORDER BY project`, id, ord, h.seq).map((p) => p.project).filter((p) => this.#sees(p, viewer));
+        ORDER BY project`, id, ord, h.seq).map((p) => p.project).filter((p) => this.#mayName(p, viewer));
       return { seq: h.seq, hold: h.hold, reason: h.reason, by: h.stated_by, at: h.at,
                [h.hold === "released" ? "restarted" : "projects"]: projects };
     });
@@ -2650,6 +2714,37 @@ export class Actions {
         AND h.seq = (SELECT MAX(s.seq) FROM action_holds s WHERE s.bundle_id = h.bundle_id AND s.ord = h.ord) LIMIT 1`);
       return r !== null;
     } catch { return true; }
+  }
+
+  /** R71 (H30 (1); intent R33; K2505): registered with `intent.registerNoneExistsReader`: the `records_request` actions
+   *  the viewer may see whose `seeks` (action-grammar's `seeksOf`) names that progression, entity and stage and whose
+   *  correspondence holds a `received` entry with outcome `none_exists`, each `{action, ord, at}` (the entry's position
+   *  and date), oldest first, at most 50. No viewer sees none. Writes nothing and never throws; a read that fails
+   *  answers `[]`, so no stage is met this way. */
+  noneExistsFor({ progression = null, entity = null, stage = null, viewer = null } = {}) {
+    try {
+      const want = [progression, entity, stage];
+      if (want.some((x) => typeof x !== "string" || !x) || viewer === null || viewer === undefined || viewer === "") return [];
+      const gate = viewerPredicate(viewer);
+      const rows = this.#rows(`SELECT b.bundle_id, f.content FROM bundles b
+        JOIN files f ON f.bundle_id = b.bundle_id AND f.path = 'bundle.md'
+        WHERE b.object_type = 'action' AND (${gate.sql}) AND f.content LIKE '%none_exists%' AND f.content LIKE '%seeks%'
+        ORDER BY b.bundle_id`, ...gate.args);
+      const out = [];
+      for (const r of rows) {
+        let fm = null;
+        try { fm = parseFrontmatter(r.content).data; } catch { fm = null; }
+        if (!fm || typeof fm !== "object" || fm.action_kind !== "records_request") continue;
+        if (!seeksOf(fm).some((x) => x.progression === progression && x.entity === entity && x.stage === stage)) continue;
+        (Array.isArray(fm.correspondence) ? fm.correspondence : []).forEach((e, ord) => {
+          if (e && typeof e === "object" && e.direction === "received" && e.outcome === "none_exists")
+            out.push({ action: r.bundle_id, ord, at: e.at === undefined || e.at === null ? null : String(e.at) });
+        });
+      }
+      out.sort((p, q) => (String(p.at) < String(q.at) ? -1 : String(p.at) > String(q.at) ? 1
+        : p.action < q.action ? -1 : p.action > q.action ? 1 : p.ord - q.ord));
+      return out.slice(0, NONE_EXISTS_MAX);
+    } catch { return []; }
   }
 
   /* R54: the action's project, as `action-clocks` answers it: the project of the first determination among its
@@ -2913,6 +3008,59 @@ export class Actions {
                  + `it: the tier is ${held === "undetermined" ? "undetermined" : held}, and only a member's own act sets it.` };
   }
 
+  /** R73 (K2561; R70): a proposal of what a records request seeks, as R19 is to `actionLaws`: stored apart, labelled,
+   *  replacing only its proposer's own standing proposal; it writes no file and never changes `seeks`. Its items are
+   *  judged as R70 judges a statement (`SEEKS_REFUSED`, C-117.29, every finding carried), on the target's own kind. */
+  actionSeeksPropose({ target, seeks = null, proposer = null, viewer = null } = {}) {
+    const who = String(proposer ?? "").trim();
+    if (!who) return { ok: false, reason: "NO_AUTHOR", detail: "this call carries nobody: the proposer is stamped from the credential that asked." };
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    const b = this.#visibleAction(target, viewer);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action")
+      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    const held = this.#heldFm(target) || {};
+    let list = seeks;
+    if (typeof list === "string") { try { list = JSON.parse(list); } catch { /* judged as given: not a list */ } }
+    const asked = { action_kind: held.action_kind, seeks: list === undefined || list === null ? [] : list };
+    const r = this.#seeksRefusal(asked);
+    if (r) return { ...r, target };
+    const items = seeksOf(asked);
+    const at = stampInstant("second", this.#nowMs(null));
+    this.record.transact(() => {
+      this.sql.exec(`DELETE FROM action_seeks_proposals WHERE bundle_id=? AND proposed_by=?`, target, who);
+      items.forEach((x, i) => this.sql.exec(`INSERT INTO action_seeks_proposals (bundle_id, proposed_by, ord, progression,
+        entity, stage, proposed_at) VALUES (?,?,?,?,?,?,?)`, target, who, i, x.progression, x.entity, x.stage, at));
+    });
+    const stated = seeksOf(held);
+    return { ok: true, target, weight: "single", evidence: false,
+             proposal: { ...proposalLabelFor(who, "seeks"), at, seeks: items },
+             seeks: stated,
+             says: `${items.length} stage${items.length === 1 ? " is" : "s are"} proposed as what this request seeks. This `
+                 + `is not the action's seeks and did not change it: ${stated.length ? `it names ${stated.length} stage(s) a `
+                 + "member stated" : "no member has stated what it seeks"}, and only a member's own write states it.` };
+  }
+
+  /* R73: the standing proposals of what the request seeks, newest first, at most 12, with `truncated` and a sentence. */
+  #seeksProposalsFor(id) {
+    const cap = SEEKS_PROPOSALS_READ_MAX;
+    const rows = this.#rows(`SELECT proposed_by, ord, progression, entity, stage, proposed_at FROM action_seeks_proposals
+      WHERE bundle_id=? ORDER BY proposed_at DESC, proposed_by, ord LIMIT ?`, id, (cap + 1) * SEEKS_MAX + 1);
+    const by = new Map();
+    for (const r of rows) {
+      if (!by.has(r.proposed_by)) by.set(r.proposed_by, { ...proposalLabelFor(r.proposed_by, "seeks"), at: r.proposed_at, seeks: [] });
+      by.get(r.proposed_by).seeks.push({ progression: r.progression, entity: r.entity, stage: r.stage });
+    }
+    const all = [...by.values()];
+    const proposals = all.slice(0, cap);
+    return { proposals, limit: cap, truncated: all.length > cap,
+             says: proposals.length
+               ? `${proposals.length} proposal${proposals.length === 1 ? "" : "s"} of what this request seeks. A proposal is `
+                 + "not the action's seeks: that is a member's own statement, shown beside this one."
+               : "no proposal of what this request seeks stands in the record. That is a statement about proposals and "
+                 + "about nothing else." };
+  }
+
   /* R28: the standing tier proposals, newest first, at most 12, with `truncated` and a sentence also when empty. */
   #riskProposalsFor(id) {
     const cap = RISK_PROPOSALS_READ_MAX;
@@ -2959,7 +3107,7 @@ export class Actions {
 
 /* The acts answer their catalogue-backed refusals with code, check and translation (the Provides' "Terms"). */
 for (const m of ["actionMove", "actionCorrespond", "actionLaws", "actionLawsPropose", "actionRiskTier", "actionQuotes",
-                 "actionRiskPropose", "actionPressure", "actionHold", "actionHoldRelease", "holdReleasePreview",
+                 "actionRiskPropose", "actionSeeksPropose", "actionPressure", "actionHold", "actionHoldRelease", "holdReleasePreview",
                  "projectHolds", "actionCreate", "check"]) {
   const fn = Actions.prototype[m];
   Actions.prototype[m] = function (...a) { return withRow(fn.apply(this, a)); };
@@ -2977,6 +3125,14 @@ const PROPOSAL_SAYS = {
       + "risk-tier act sets that, and the record holds who made the proposal",
     unstated: "the record does not say who proposed this risk tier",
   },
+  seeks: {
+    machine_proposed: "a machine credential proposed what this records request seeks. That is machine work, labelled as "
+      + "machine work: it sets stages beside the action for members to weigh and never states what it seeks; nothing "
+      + "becomes it until a member states it themselves",
+    member_proposed: "a member proposed what this records request seeks to whoever states it. It is a proposal and not "
+      + "the action's seeks: only a member's own write states that, and the record holds who made the proposal",
+    unstated: "the record does not say who proposed what this records request seeks",
+  },
 };
 function proposalLabelFor(who, subject) {
   const base = lawProposalLabel(who);
@@ -2986,7 +3142,8 @@ function proposalLabelFor(who, subject) {
 const instances = new WeakMap();
 
 /** K61: the one instance per host; at creation it declares its tables, registers its step, audit, facts and
- *  decoration (R3, R12, R25, R36, R51; retrieval R53, R56) and its litigation-hold reader (R55; capture R32). */
+ *  decoration (R3, R12, R25, R36, R51; retrieval R53, R56), its litigation-hold reader (R55; capture R32), its reader of
+ *  holds over a project (R69; ratification R45) and its none-exists reader (R71; intent R33). */
 export function actionsOf(host, deps) {
   let a = instances.get(host);
   if (!a) {
@@ -3037,6 +3194,15 @@ export function actionsOf(host, deps) {
     }
     if (ratification && typeof ratification.registerHoldReader === "function")
       ratification.registerHoldReader({ holdsOn: (args) => a.holdsOn(args) });
+    /* R71 (intent R33; K2505): once per host, the reader of records requests answered that no such record exists,
+       reached as ratification is (the composition root's environment, or given); a reader already held
+       (`NONE_EXISTS_READER_DECLARED`) stands. */
+    let intent = null;
+    if (d.intent !== null && (d.intent || d.env)) {
+      try { intent = d.intent || intentOf(host); } catch { intent = null; }
+    }
+    if (intent && typeof intent.registerNoneExistsReader === "function")
+      intent.registerNoneExistsReader((args) => a.noneExistsFor(args || {}));
   }
   return a;
 }
@@ -3061,6 +3227,9 @@ export function actionsOps(a, url, body) {
                                              reason: q("reason") ?? b.reason ?? null, viewer: q("viewer"), author: q("author") }),
     actionlawspropose: () => a.actionLawsPropose({ target: q("target") || b.target, laws: b.laws, viewer: q("viewer"),
                                                    proposer: q("proposer") }),
+    /* R73 (K2561): a proposal of what a records request seeks (declared and routed by L11). */
+    actionseekspropose: () => a.actionSeeksPropose({ target: q("target") || b.target, seeks: b.seeks ?? q("seeks"),
+                                                     viewer: q("viewer"), proposer: q("proposer") }),
     actionriskpropose: () => a.actionRiskPropose({ target: q("target") || b.target, tier: q("tier") ?? b.tier ?? null,
                                                    basis: q("basis") ?? b.basis ?? null, viewer: q("viewer"),
                                                    proposer: q("proposer") }),

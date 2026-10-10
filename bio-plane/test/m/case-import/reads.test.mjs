@@ -1,11 +1,13 @@
-/* case-import: the reads (R4), with the invariants they keep: no composed strength or trust score (R10), and the
+/* case-import: the reads (R4), the importer's own lens (R23), with the invariants they keep: no composed strength or trust score (R10), and the
    source's bar never this group's, nor an acceptance a grade (R11). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { rowOk, seeded, imp, caseFile, V, SOURCE, CASE, LENS, SLUG, F1, F2, F3 } from "./fixture.mjs";
-import { SOURCE_BAR, NO_OWN_BAR, NO_MOVE_SEEN, againstBar } from "../../../src/case-import/index.mjs";
+import { SOURCE_BAR, NO_OWN_BAR, NO_MOVE_SEEN, againstBar, SOURCE_LENS, OWN_LENS, LENS_UNDETERMINED, LENS_NOT_REWEIGHED }
+  from "../../../src/case-import/index.mjs";
 import { importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
-import { standingOf } from "../../../src/case-grammar/index.mjs";
+import { standingOf, biasApplicationsOf } from "../../../src/case-grammar/index.mjs";
+import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 
 const g = (grade) => ({ state: "graded", grade });
 async function scripted(w) {
@@ -195,4 +197,138 @@ test("R11 an acceptance changes no grade: the recorded results and pairs, and th
   assert.deepEqual(grades(), before);
   w.ci.withdrawAcceptance({ import: a.import, edition: 1, reason: "r", by: V("alice"), viewer: V("alice") });
   assert.deepEqual(grades(), before);
+});
+
+/* ================================================================ R23 (D59, D62; K2471): the importer's own lens */
+
+const S1 = "scrutiny-official-statements", S2 = "inference-shell-companies", S3 = "pattern-late-filings";
+/* The case document's `bias_applications:` block (`case-grammar` R24), each row as its reader answers it: F1 rests on two
+   lowered grades at its legs (S1, S2), F2 on an inference refused at its conclusion (S3). The re-weighing stand-in
+   restores a reversed `grade_lowered`'s capture to `from` (fixture.mjs). */
+const APPS = [
+  { finding: F1, ord: 0, target: "leg", statement: S1, effect: "grade_lowered", from: "B", to: "C" },
+  { finding: F1, ord: 1, target: "leg", statement: S2, effect: "grade_lowered", from: "A", to: "B" },
+  { finding: F2, ord: null, target: "conclusion", statement: S3, effect: "inference_refused", from: null, to: null },
+];
+const withApps = (x = {}) => caseFile({ apps: APPS, ...x });
+
+test("R23 each finding is answered under this group's own lens: its statements in force (bias.statementInForce, scope instance, the reading member as viewer), the carried applications of them applied, the rest read as removed; beside the source's lens and this group's bar", async () => {
+  const w = seeded();
+  (await scripted(w));
+  w.lens.inForce.set(S1, true).set(S2, false).set(S3, null);
+  w.bar({ capture: "B", connection: "B" });
+  const a = (await imp(w, withApps()));
+  const e = w.ci.importedCase({ import: a.import, viewer: V("bob") }).edition;
+  /* each statement the edition applies asked once, at scope instance, with the reading member as viewer */
+  assert.deepEqual(w.lens.asked, [S2, S3, S1].sort().map((statement) => ({ statement, scope: "instance", viewer: V("bob") })));
+  /* the reader lens names the statements in force (so their carried applications stand), and no application twice */
+  assert.deepEqual(w.lens.reweighed.at(-1).lens, { statements: [S1], applications: [] });
+  assert.deepEqual(w.lens.reweighed.at(-1).parts, 1, "re-weighed over the edition's parts");
+  const by = Object.fromEntries(e.findings.map((f) => [f.finding, f]));
+  /* F1: S1 applied, S2 not in force so its lowering reads as removed: capture restored to A */
+  assert.deepEqual(by[F1].own_lens, { whose: "this_group", applications: { in_force: [APPS[0]], removed: [APPS[1]], undetermined: [] },
+    determined: true, pair: { capture: g("A"), connection: g("C") }, bar_met: "not_asked",
+    against_own_bar: { meets: false, bar: { capture: "B", connection: "B" }, short: ["connection"] }, changed_by: [S2],
+    lens_changes: [{ ...APPS[1], how: "reversed" }] });
+  /* beside it, unchanged: the source's lens (the recorded pair) and this group's bar over it */
+  assert.deepEqual(by[F1].pair, { capture: g("B"), connection: g("C") });
+  assert.deepEqual(by[F1].against_own_bar, { meets: false, bar: { capture: "B", connection: "B" }, short: ["connection"] });
+  /* F2: S3 undetermined, stated and never read as false: no pair and no bar_met under this lens */
+  assert.deepEqual(by[F2].own_lens, { whose: "this_group", applications: { in_force: [], removed: [], undetermined: [APPS[2]] },
+    determined: false, stated: LENS_UNDETERMINED, pair: null, bar_met: null, against_own_bar: null, changed_by: [], lens_changes: [] });
+  assert.notEqual(by[F2].own_lens.bar_met, false);
+  /* F3: no application, re-weighed to its recorded pair */
+  assert.deepEqual([by[F3].own_lens.determined, by[F3].own_lens.pair, by[F3].own_lens.changed_by], [true, by[F3].pair, []]);
+  /* the edition: the two lenses side by side, labelled, with the limit the checker states */
+  assert.deepEqual(e.source_lens, { whose: "source", label: SOURCE_LENS, group: SOURCE, statements_sha: LENS });
+  assert.equal(e.own_lens.label, OWN_LENS);
+  assert.equal(e.own_lens.scope, "instance");
+  assert.equal(e.own_lens.statements_sha, w.lens.sha);
+  assert.equal(e.own_lens.limit, "The checker's limit.");
+  assert.equal(e.own_lens.determined, false, "one statement undetermined");
+  assert.equal(e.own_lens.stated, LENS_UNDETERMINED);
+  assert.deepEqual(e.own_lens.statements.map((x) => [x.statement, x.in_force]), [[S2, false], [S3, null], [S1, true]], "in statement order");
+  /* the negative control: with S2 in force too, nothing reads as removed and F1 stands as published */
+  w.lens.inForce.set(S2, true).set(S3, true);
+  const again = w.ci.importedCase({ import: a.import, viewer: V("bob") }).edition;
+  const f1 = again.findings.find((f) => f.finding === F1).own_lens;
+  assert.deepEqual([f1.applications.removed, f1.pair, f1.changed_by], [[], { capture: g("B"), connection: g("C") }, []]);
+  assert.equal(again.own_lens.determined, true);
+  assert.equal(again.findings.find((f) => f.finding === F2).own_lens.determined, true);
+  /* and with none in force, every carried application reads as removed */
+  w.lens.inForce.clear();
+  const removed = w.ci.importedCase({ import: a.import, viewer: V("bob") }).edition.findings.find((f) => f.finding === F1).own_lens;
+  assert.deepEqual([removed.applications.removed, removed.changed_by], [[APPS[0], APPS[1]], [S1, S2]]);
+  assert.deepEqual(w.lens.reweighed.at(-1).lens, { statements: [], applications: [] });
+});
+
+test("R23 the lens is the reading member's, read afresh each time; the assessment changes nothing: the acceptance, the published pair and the recorded results stand, and the read writes nothing", async () => {
+  const w = seeded();
+  (await scripted(w));
+  const a = (await imp(w, withApps()));
+  const ref = importedFindingRef(a.import, F1);
+  w.ci.acceptImported({ import: a.import, edition: 1, findings: [F1], checked: "c", reason: "r", by: V("alice"), viewer: V("alice") });
+  const facts = w.ci.findingFacts({ ref, edition: 1 });
+  const before = w.snapshot();
+  w.ci.importedCase({ import: a.import, viewer: V("alice") });
+  assert.ok(w.lens.asked.every((x) => x.viewer === V("alice")), "the reading member is the viewer");
+  /* an adoption after the import: the next read is under the lens now in force */
+  w.lens.inForce.set(S2, true);
+  const e = w.ci.importedCase({ import: a.import, viewer: V("bob") }).edition;
+  assert.deepEqual(e.findings.find((f) => f.finding === F1).own_lens.applications.in_force, [APPS[1]]);
+  assert.deepEqual(w.snapshot(), before, "the reads write nothing");
+  /* never stronger than its edition: the accepted finding's facts read as before, its acceptance unchanged */
+  assert.deepEqual(w.ci.findingFacts({ ref, edition: 1 }), facts);
+  const f1 = e.findings.find((f) => f.finding === F1);
+  assert.deepEqual(f1.pair, { capture: g("B"), connection: g("C") });
+  assert.equal(f1.origin.another_groups.group, SOURCE, "still marked as another group's");
+  assert.equal(f1.origin.acceptance.reason, "r");
+});
+
+test("R23 a re-weighing that cannot be made is stated, never read as false", async () => {
+  const w = seeded();
+  (await scripted(w));
+  w.lens.inForce.set(S1, true);
+  const a = (await imp(w, withApps()));
+  w.lens.throws = true;
+  const e = w.ci.importedCase({ import: a.import, viewer: V("bob") }).edition;
+  for (const f of e.findings.filter((x) => x.finding !== F2)) {
+    assert.equal(f.own_lens.determined, false);
+    assert.ok(f.own_lens.stated.startsWith(LENS_NOT_REWEIGHED), f.own_lens.stated);
+    assert.equal(f.own_lens.bar_met, null);
+  }
+  assert.equal(e.own_lens.determined, false);
+  /* the control: the same read, re-weighed */
+  w.lens.throws = false;
+  assert.equal(w.ci.importedCase({ import: a.import, viewer: V("bob") }).edition.own_lens.statements_sha, w.lens.sha);
+  /* an answer that is a promise is no synchronous re-weighing: stated, as a throw is */
+  w.lens.async = true;
+  const p = w.ci.importedCase({ import: a.import, viewer: V("bob") }).edition;
+  assert.equal(p.own_lens.stated, LENS_NOT_REWEIGHED);
+  assert.equal(p.findings.find((f) => f.finding === F1).own_lens.bar_met, null);
+});
+
+test("R23 the applications are case-grammar's reading of the case document (its R24): every row the block carries, in its order; an edition without the block applies nothing, and no statement is asked", async () => {
+  const w = seeded();
+  (await scripted(w));
+  w.lens.inForce.set(S1, true).set(S2, true).set(S3, true);
+  const a = (await imp(w, withApps()));
+  const doc = w.ci.fileOf({ import: a.import, edition: 1, path: caseFile().files.find((f) => f.kind === "case_document").path });
+  const carried = biasApplicationsOf(parseFrontmatter(new TextDecoder().decode(doc.bytes)).data);
+  assert.deepEqual(carried, APPS, "the block as written, read back by case-grammar");
+  const e = w.ci.importedCase({ import: a.import, viewer: V("bob") }).edition;
+  assert.deepEqual(e.findings.flatMap((f) => f.own_lens.applications.in_force), carried, "every carried row, each under its finding");
+  assert.deepEqual(w.lens.reweighed.at(-1).lens, { statements: [S1, S2, S3].sort(), applications: [] });
+  /* the negative control: edition 2 carries no block; nothing applied, nothing asked of bias, every finding re-weighed as recorded */
+  (await imp(w, caseFile({ edition: 2 })));
+  const asked = w.lens.asked.length;
+  const e2 = w.ci.importedCase({ import: a.import, edition: 2, viewer: V("bob") }).edition;
+  assert.equal(w.lens.asked.length, asked);
+  assert.deepEqual(w.lens.reweighed.at(-1).lens, { statements: [], applications: [] });
+  for (const f of e2.findings) {
+    assert.deepEqual(f.own_lens.applications, { in_force: [], removed: [], undetermined: [] });
+    assert.equal(f.own_lens.determined, true);
+    assert.deepEqual(f.own_lens.pair, f.pair);
+  }
+  assert.deepEqual(e2.own_lens.statements, []);
 });

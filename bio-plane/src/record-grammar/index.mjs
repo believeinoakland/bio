@@ -2,7 +2,8 @@
 /* record-grammar: the record's shared grammar, below every module that reads or writes a document (layer 1, first in
    the order). Pure: no store, no network, no clock (R24). This is the module's one entry; each part is in its own
    file. */
-export { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, ID_TABLE, idPattern, isHypothesisId } from './ids.mjs';
+export { BUNDLE_ID_RE, ANN_ID_RE, FILENAME_RE, ISO_TS_RE, ID_TABLE, idPattern, isHypothesisId, isStepId,
+  isGuideId } from './ids.mjs';
 export { OBJECT_TYPES, LEGACY_TYPE_ALIASES, normalizeType } from './types.mjs';
 export { CORE_FIELDS, FORBIDDEN_ALIASES, parseFrontmatter } from './frontmatter.mjs';
 export { canonicalJson } from './json.mjs';
@@ -17,4 +18,5 @@ export { HEADINGS, HEADINGS_WHEN, isCaseMemberBytes, vocabFor, STATES, sectionTe
 export { LAW_PROPOSAL_STATES, lawProposalState, PROPOSAL_STATES, proposalLabel, CONTENT_MINTED_BY_PLANE,
   CONTENT_MINT_STATES, contentMintState } from './labels.mjs';
 export { SHARED_ACT_CHECKS } from './acts.mjs';
+export { ACCEPTANCE_FORMS, ACCEPT_MUST_REAUTHOR, acceptanceRecord } from './acceptance.mjs';
 export { EXTENSION_ARMS, checkBundle } from './bundle.mjs';

@@ -3,7 +3,8 @@
    them, events, whose dated facts give a stage document its own date (progressions R16, R37), with extraction and
    content), and the fictional test profile through jurisdictions (its time zone governs the stage dates), on a real SQLite database (node:sqlite) standing in for a Durable
    Object's storage. Four are stand-ins in the shape of their Provides, which the test controls and records: inquiry's
-   `dispose` (R20–R22: the selection resolved, each member moved to the disposition with its reason and author),
+   `dispose` (R20–R22: the selection resolved, each member moved to the disposition with its reason and author) and
+   `personFacts` (R59, over `persons`, which a test fills),
    retrieval's `selectionCreate` (R18), ai-runs' `open` (R9–R10) and capture-requests' reads (`captureRequests`, R23;
    `requestById`, R43).
    Every test drives `intent` at its interface. */
@@ -116,7 +117,7 @@ export function world({ now = NOW, plane = null } = {}) {
     return p;
   };
   let progressions = plane ? null : buildProgressions();
-  const calls = { selections: [], dispose: [], open: [], requests: [], requestById: [] };
+  const calls = { selections: [], dispose: [], open: [], requests: [], requestById: [], personFacts: [] };
   const selections = new Map();
   const retrieval = {
     async selectionCreate(a) {
@@ -135,7 +136,18 @@ export function world({ now = NOW, plane = null } = {}) {
   };
   /* inquiry's dispose (its R20–R22), over the selection: each member moves to the disposition, its reason and author
      recorded as inquiry records them (state_history, prior_state, disposition_reason), through promotion */
+  /* inquiry's `personFacts` (its R59, read by intent R32): the record's facts for the persons a text or a subject names,
+     over `persons` (entity id → {label, public_role}), which a test fills; each call recorded */
+  const persons = new Map();
   const inquiry = {
+    personFacts({ text = "", subject = null, viewer = null } = {}) {
+      calls.personFacts.push({ text, subject, viewer });
+      const out = [];
+      for (const [id, p] of persons)
+        if (id === subject || (p.label && String(text).includes(p.label)))
+          out.push({ entity_id: id, kind: "person", label: p.label, public_role: p.public_role === true, named: true });
+      return out;
+    },
     dispose({ handle, to, reason, viewer, owner, author }) {
       calls.dispose.push({ handle, to, reason, viewer, owner, author });
       const sel = retrieval.selectionResolve({ handle, viewer, owner, weight: "refuse" });
@@ -176,7 +188,7 @@ export function world({ now = NOW, plane = null } = {}) {
   let n = 0;
   const w = {
     st, host, record, membership, credentials, promotion, entities, progressions, i, clock, calls, requests, money,
-    events,
+    events, persons,
     /** A capture held in `bundleId` whose own date is `day`: the one dated fact events holds for it, recorded by a
      *  member (events R1; progressions R37). Answers the capture's digest. */
     dated(name, bundleId, day) {

@@ -83,6 +83,11 @@ CREATE TABLE IF NOT EXISTS captured_locators (
   -- exactly as given ({tool, listed, categories, checked_at, unanswered?}), as JSON; NULL when none was given. It
   -- changes no other field, grade or chain. Not part of R48's read contract: R16 and R60 answer it.
   reputation        TEXT,
+  -- R63 (K2449): on a receipt of route 'upload' only, each sighting's uploading member and her statement of where the
+  -- file came from, as a JSON array [{by, statement, at}], one entry per upload in the order written, so a second
+  -- sighting by another member keeps her own statement; NULL on every other receipt. Not part of R48's read contract:
+  -- R16 and R60 answer it.
+  uploads           TEXT,
   PRIMARY KEY (address_norm, capture_sha, via)
 );
 CREATE INDEX IF NOT EXISTS captured_locators_addr ON captured_locators(address_norm, first_retrieved);
@@ -108,19 +113,22 @@ CREATE TABLE IF NOT EXISTS origin_declarations (
 /* The columns added after stores were first written. The register's (MK-1 / D-184 / IC-134): the default IS the true
    value for every row that can exist before the column did, since no route could author a bundle until
    op=testify existed; `author` and `observed_at` are NULL on every row that is not authored. A receipt's
-   `reputation` (R61): NULL on every receipt written before acquisition asked one, which is the truth about it. */
+   `reputation` (R61): NULL on every receipt written before acquisition asked one, which is the truth about it. A
+   receipt's `uploads` (R63): NULL on every receipt written before the upload route existed, none of which is one. */
 export const REGISTER_ADDITIVE = [
   ["register", "authored", "INTEGER NOT NULL DEFAULT 0"],
   ["register", "author", "TEXT"],
   ["register", "observed_at", "TEXT"],
   ["captured_locators", "reputation", "TEXT"],
+  ["captured_locators", "uploads", "TEXT"],
 ];
 
 /* Creates this module's tables on `sql` (the Durable Object's storage). Idempotent, run at every boot.
    `captured_locators` gained `via` (D-96) when observation SOURCE became part of the key: an archive observation
    of the same bytes at the same address is a different fact from a direct one, and rows keyed without via had
-   already merged them. It is derived (re-derivable from the captures and the provenance documents, holding
-   nothing a member wrote), so a table without the column is dropped and rebuilt rather than altered. */
+   already merged them. It was derived then (re-derivable from the captures and the provenance documents, holding
+   nothing a member wrote), so a table without the column is dropped and rebuilt rather than altered. Only such a
+   table, written before `via` existed, is ever dropped; an upload's statements (R63) live only in tables that have it. */
 export function migrateProvenance(sql) {
   const cols = (t) => [...sql.exec(`PRAGMA table_info(${t})`)].map((r) => r.name);
   const cl = cols("captured_locators");

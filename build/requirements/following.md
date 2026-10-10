@@ -1,6 +1,5 @@
 # following — requirements
 
-> **DRAFT by a requirements-drafting worker for BOB #114, not reviewed.** 2026-10-05, on `tranche/T32` (P18), for T33's opening (§5.9). Not yet in `build/requirements/`.
 
 **Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-79), a seam beside `monitoring` with no copy (K617): no `monitoring` requirement moved. Following a whole policy portal and a standard's new editions is not here. Last changed T35 (T35-65: R20, R21; K1727, K1740); every requirement met (K2027).
 
