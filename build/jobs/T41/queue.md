@@ -66,3 +66,7 @@ A worker read the other 18 test files and `conclude-project.test.mjs`/`docdates.
   - `ownership … tranche/T41`: 7 files, 0 failures.
 
 Size (session_01K4gx81sfhF2PvktYCx31f6): test runs 11, module lines 3022
+
+## J3 · COMPLETE
+
+B3 (K2582) applied: `world.mjs` hands a `publishSchedule` fake (`scheduledEditions` answering no edition), and `Queue.PRODUCER_DEPS` gains `publishSchedule` so a caller's provider reaches queue-producers (R37), queue calling none of its reads; templates.test.mjs's R8 test asserts it. Re-run: `node --test bio-plane/test/m/queue/ bio-plane/test/conclude-project.test.mjs`: tests 137, pass 137, fail 0. Checks: format 0; architecture 2 (the `investigation` uses edge, as J2; 0 with it); coverage 42/42, 0; ownership 7 files, 0. Everything else as J2. Size (session_01K4gx81sfhF2PvktYCx31f6): test runs 12, module lines 3025
