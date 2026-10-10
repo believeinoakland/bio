@@ -3,9 +3,8 @@
    `case-carriage`'s `OBSCURED_LABEL`; an unmarked photo signed before T40 (no label); an unmarked photo signed from T40
    with `PUBLISHED_LABEL` and `obscured_marked: false`; a photo whose row states `obscured_marked: true`; and a member
    document's cleaned copy with `COPY_CLEANED_LABEL`. Beside them, a material carried whole. `obscured_marked` is written
-   into the document as `case-grammar` R12 spells it, flat on the row after `obscured_label`, before the document is
-   stored and signed. `publishedCase` is read as the store answers it and through the Worker's public route. Each claim
-   has its negative control (K874). */
+   by `case-grammar`'s own writer (its R12, `materialsLines`), flat on the row after `obscured_label`. `publishedCase` is
+   read as the store answers it and through the Worker's public route. Each claim has its negative control (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, stubOf, bucket, V, NOW, sha, caseDoc } from "./fixture.mjs";
@@ -49,18 +48,10 @@ function publish(rows, marked = {}) {
   const proj = w.project("Parks", "olive");
   w.inquiry(F, { legs: rows.map((r) => ({ target: r.ref })) });
   const pin = w.head(F);
-  let text = caseDoc(CASE, 1, { format: "bio-case-document/7", project: proj, roles: [{ target: F, version_sha: pin }],
-                               method: { grading: "bio-grading/1", checks: "1.57.0" }, materials: held, attestations: [] });
-  /* `case-grammar` R12 (T40): `obscured_marked`, flat on the row, after its `obscured_label` */
-  for (const [ref, m] of Object.entries(marked)) {
-    const ls = text.split("\n");
-    const at = ls.findIndex((l) => l.endsWith(`ref: "${ref}"`) || l.endsWith(`ref: ${ref}`));
-    assert.ok(at >= 0, `the row of ${ref} is written`);
-    const lab = ls.findIndex((l, i) => i > at && /^\s+obscured_label:/.test(l));
-    assert.ok(lab > at, `the row of ${ref} states obscured_label`);
-    ls.splice(lab + 1, 0, `${ls[lab].match(/^\s+/)[0]}obscured_marked: ${m}`);
-    text = ls.join("\n");
-  }
+  const text = caseDoc(CASE, 1, { format: "bio-case-document/7", project: proj, roles: [{ target: F, version_sha: pin }],
+    method: { grading: "bio-grading/1", checks: "1.57.0" }, attestations: [],
+    materials: held.map((r) => (r.ref in marked ? { ...r, obscured: { ...r.obscured, marked: marked[r.ref] } } : r)) });
+  assert.equal((text.match(/obscured_marked:/g) || []).length, Object.keys(marked).length, "the writer states each mark");
   const stored = w.p.storeCaseDocument({ case: CASE, edition: 1, text, author: V("olive"), at: NOW });
   assert.equal(stored.ok, true, JSON.stringify(stored).slice(0, 400));
   const signed = w.signCase(CASE, 1, { project: proj, roster: [{ bundle_id: F, version_sha: pin }] });

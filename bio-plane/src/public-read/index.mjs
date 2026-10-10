@@ -59,29 +59,20 @@ const signedParts = (doc) => {
 };
 /* R3 (T41; N798, N811; DEC-179, DEC-185 (1), DEC-187): the key a reader's surface shows a copy's label by. A member
    document's cleaned copy is the one whose signed label is `case-carriage`'s `COPY_CLEANED_LABEL` word for word (its R15:
-   every such copy carries it, and no photo's does; nothing else in the row tells the two apart). A photo's copy is marked
-   as `case-grammar` R12 reads it: by `obscured_marked` when the row states it, else by its label (not null is marked), so
-   every earlier edition keys as it labels. */
+   every such copy carries it, and no photo's does; nothing else in the row tells the two apart). A photo's copy is keyed
+   by `case-grammar` R12's `marked`: `obscured_marked` when the row states it, else its label (not null is marked), so
+   every earlier edition keys as it labels (K2527). */
 export const LABEL_KEY_MARKED = "photo.obscured.label";
 export const LABEL_KEY_UNMARKED = "photo.published.label";
 export const LABEL_KEY_CLEANED = "document.cleaned.label";
-const markedOf = (obscured, raw) => {
-  const m = obscured.marked ?? (raw ? raw.obscured_marked : undefined);
-  if (m === true || m === "true") return true;
-  if (m === false || m === "false") return false;
-  return obscured.label != null;
-};
-const labelKeyOf = (obscured, raw) => (obscured.label === COPY_CLEANED_LABEL ? LABEL_KEY_CLEANED
-  : markedOf(obscured, raw) ? LABEL_KEY_MARKED : LABEL_KEY_UNMARKED);
+const labelKeyOf = (obscured) => (obscured.label === COPY_CLEANED_LABEL ? LABEL_KEY_CLEANED
+  : obscured.marked === true ? LABEL_KEY_MARKED : LABEL_KEY_UNMARKED);
 /* R3: the `materials` and `material_attestations` blocks as signed (`case-grammar` R11, R12), each row carried as its copy
    also answering its `label_key` beside its label; a row without `obscured` gains nothing. */
 const keyedMaterialsOf = (fm) => {
   const read = materialsOf(fm);
   if (!read || !Array.isArray(read.materials)) return read;
-  const raw = (Array.isArray(fm.materials) ? fm.materials : [])
-    .filter((x) => x && typeof x === "object" && !Array.isArray(x));
-  return { ...read, materials: read.materials.map((r, i) => (r.obscured != null
-    ? { ...r, label_key: labelKeyOf(r.obscured, raw[i]) } : r)) };
+  return { ...read, materials: read.materials.map((r) => (r.obscured != null ? { ...r, label_key: labelKeyOf(r.obscured) } : r)) };
 };
 /* R3 (DEC-103): the lens section of a signed body, from its head to the next `## ` heading, whole and as signed. */
 const lensSection = (body) => {
