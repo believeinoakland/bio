@@ -1,9 +1,10 @@
 /* ratification R40–R48 (DEC-147; T34-85): publishing a signed case edition at a set time. `op=publishat` at the control
    plane (`publishAtOp`) and its store half (`publishat`, R40), what signing records (`checked`, R41), the scheduled
    publisher (`publishScheduled`, R42) and its registration (R43), the pre-flight's offer (R44), the hold reader (R45),
-   the rows (R46) and nothing published unchecked (R48); with R3's waiting clause and R32's `publishat` arm. publication's
-   R66, R67, R69 and R62 are stand-ins the test controls (its own tests hold its side); the case, its signature, its
-   gate and the commit are this module's and publication's real ones. */
+   the rows (R46) and nothing published unchecked (R48); with R3's waiting clause and R32's `publishat` arm.
+   `publish-schedule`'s R1, R2 and R4 (N823; publication R66, R67, R69 until its third split) and publication's R62 are
+   stand-ins the test controls (their own tests hold their side); the case, its signature, its gate and the commit are
+   this module's and publication's real ones. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -20,10 +21,13 @@ const AT = { date: "2026-10-09", time: "09:30" };
 const LATER = "2026-10-09T13:30:00.000Z";
 
 /* A /6 case document Alice (the project's owner, holding an attesting key) may sign, stored unsigned; publication's set
-   time services as stand-ins; a hold reader registered unless `reader` is false. `raw` adds front-matter lines. */
+   time services (`publish-schedule`) as stand-ins; a hold reader registered unless `reader` is false. `raw` adds front-matter lines. */
 async function setup({ raw = [], reader = true, mutate = (d) => d, worker = null } = {}) {
   const registered = [];
-  const w = world({ steer: { registerScheduledPublisher: (p) => (registered.push(p), { ok: true }) }, worker });
+  /* publish-schedule (a stand-in): R2's registration kept; R4 answers nothing waiting unless a test says otherwise */
+  const ps = { registerScheduledPublisher: (p) => (registered.push(p), { ok: true }),
+               scheduledEditions: () => ({ editions: [], cursor: null }) };
+  const w = world({ schedule: ps, worker });
   const key = await newKey(), other = await newKey();
   w.member("alice", { signer: key }); w.member("bo");
   const P = w.project("Team", "alice", { joined: ["bo"] });
@@ -37,9 +41,9 @@ async function setup({ raw = [], reader = true, mutate = (d) => d, worker = null
                                  attribution: { reached: [], legacy: [], stated: [], current: [] },
                                  signers: w.credentials.attestingKeys(), memberBasis: null, priorCase: null });
   const sig = await signCase(key, CASE, 1, docSha);
-  /* publication R66 (a stand-in): each call kept; the answer R66 gives, or `w.scheduleAnswer` */
+  /* publish-schedule R1 (a stand-in): each call kept; the answer R1 gives, or `w.scheduleAnswer` */
   const scheduled = [];
-  w.publication.scheduleEdition = (a) => (scheduled.push(a), w.scheduleAnswer
+  ps.scheduleEdition = (a) => (scheduled.push(a), w.scheduleAnswer
     ?? { ok: true, case: a.case, edition: a.edition, state: "waiting", at: { ...a.at, zone: "America/Halifax" }, publish_at: LATER });
   w.publication.stampsOf = () => ({ ok: true, stamps: w.stamps ?? [] });
   w.hold = { held: false };
@@ -103,7 +107,7 @@ test("R40: every refusal op=caseratify answers before its commit is op=publishat
   nothingCommitted(s.w);
 });
 
-test("R40, R32: past every refusal op=publishat hands publication R66 the signature, the signer read from it, the deliverer from the session, at, checked and by, and relays its answer as given, its refusals unchanged; R32's arm reads the body", async () => {
+test("R40, R32: past every refusal op=publishat hands publish-schedule R1 the signature, the signer read from it, the deliverer from the session, at, checked and by, and relays its answer as given, its refusals unchanged; R32's arm reads the body", async () => {
   const s = await setup();
   const ok = await s.op(publishAtOp, { caseId: CASE, edition: 1, expectedSha: s.docSha, sig: s.sig, at: AT });
   assert.equal(ok.status, 200, JSON.stringify(ok.body));
@@ -116,9 +120,9 @@ test("R40, R32: past every refusal op=publishat hands publication R66 the signat
   nothingCommitted(s.w);
   assert.deepEqual([s.w.sealCalls, s.w.levelMoves, s.w.pub.committed.length], [[], [], 1], "only the rolled-back probe reached the commit");
   for (const reason of ["PUBLISH_AT_MALFORMED", "PUBLISH_AT_NO_ZONE", "PUBLISH_AT_PAST", "PUBLISH_AT_ALREADY_SET"]) {
-    s.w.scheduleAnswer = { ok: false, reason, detail: `publication's ${reason}` };
+    s.w.scheduleAnswer = { ok: false, reason, detail: `publish-schedule's ${reason}` };
     const r = await s.op(publishAtOp, { caseId: CASE, edition: 1, expectedSha: s.docSha, sig: s.sig, at: AT });
-    assert.deepEqual([r.status, r.body.reason, r.body.detail], [409, reason, `publication's ${reason}`]);
+    assert.deepEqual([r.status, r.body.reason, r.body.detail], [409, reason, `publish-schedule's ${reason}`]);
   }
   s.w.scheduleAnswer = null;
   const viaOps = s.w.op("publishat", {}, s.body);
@@ -204,7 +208,8 @@ test("R41: checked records, each part in canonical JSON with its lists ordered, 
   const r = s.w.op("publishat", {}, s.body);
   assert.equal(r.ok, true, JSON.stringify(r));
   const c = s.scheduled[0].checked;
-  assert.deepEqual(Object.keys(c), ["sources", "ties", "holds", "signer_key"]);
+  assert.deepEqual(Object.keys(c), ["sources", "ties", "holds", "signer_key", "approvals"]);
+  assert.deepEqual(JSON.parse(c.approvals), { rule: null, approvals: [] }, "R50: no reader registered, no rule in force");
   assert.deepEqual(JSON.parse(c.sources), { accepted_work: [], sources: [] });
   assert.deepEqual(JSON.parse(c.ties), [{ member: "alice", ties: [
     { entity: "ENT-2026-0009-org", tie_id: "MTI-1", withdrawn: false },
@@ -323,7 +328,7 @@ test("R42, R45: what cannot be read at the time stops it (UNREADABLE naming what
   nothingCommitted(bare.w);
 });
 
-test("R43: at start this module registers R42 once with publication's registerScheduledPublisher, and the registered publisher is R42", async () => {
+test("R43: at start this module creates publish-schedule and registers R42 once with its registerScheduledPublisher (N823), and the registered publisher is R42", async () => {
   const s = await setup();
   assert.equal(s.registered.length, 1);
   assert.equal(typeof s.registered[0].publishScheduled, "function");
@@ -334,10 +339,10 @@ test("R43: at start this module registers R42 once with publication's registerSc
 
 /* ---------------------------------------------------------------- R3, R44, R45 */
 
-test("R3: an edition publication holds waiting is refused PUBLISH_AT_ALREADY_SET naming its set time, nothing written; the same signature and at again through op=publishat answer R66's own answer", async () => {
+test("R3: an edition publish-schedule holds waiting is refused PUBLISH_AT_ALREADY_SET naming its set time, nothing written; the same signature and at again through op=publishat answer publish-schedule R1's own answer", async () => {
   const s = await setup();
   const waiting = { case: CASE, edition: 1, state: "waiting", at: { ...AT, zone: "America/Halifax" }, publish_at: LATER, checked: { sources: "x" } };
-  s.w.publication.scheduledEditions = ({ case: c, state }) => ({ editions: c === CASE && state === "waiting" ? [waiting] : [], cursor: null });
+  s.w.schedule.scheduledEditions = ({ case: c, state }) => ({ editions: c === CASE && state === "waiting" ? [waiting] : [], cursor: null });
   const r = await s.w.r.ratifyCaseDocument(s.body);
   assert.deepEqual([r.ok, r.reason, r.publish_at, r.at], [false, "PUBLISH_AT_ALREADY_SET", LATER, waiting.at]);
   nothingCommitted(s.w);
@@ -345,7 +350,7 @@ test("R3: an edition publication holds waiting is refused PUBLISH_AT_ALREADY_SET
   const again = s.w.op("publishat", {}, s.body);
   assert.deepEqual(again, s.w.scheduleAnswer);
   assert.deepEqual(s.scheduled.at(-1).checked, waiting.checked, "the waiting entry's own record is handed back");
-  s.w.publication.scheduledEditions = () => ({ editions: [], cursor: null });
+  s.w.schedule.scheduledEditions = () => ({ editions: [], cursor: null });
   assert.equal((await s.w.r.ratifyCaseDocument(s.body)).ok, true, "negative control: nothing waiting, it commits");
 });
 

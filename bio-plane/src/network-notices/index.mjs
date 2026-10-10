@@ -183,8 +183,9 @@ export class NetworkNotices {
     return f && f.ok && str(f.value) ? str(f.value) : null;
   }
   #isProject(pid) { return this.#call(() => this.#one(`SELECT object_type FROM bundles WHERE bundle_id=?`, pid))?.object_type === "project"; }
-  /* project-stage R2's `closed`, read as the internal caller (the founder's viewer sees every project). */
-  #closed(pid) { return this.#call(() => this.stage.projectStage({ project: pid, viewer: "admin" }))?.stage === "closed"; }
+  /* project-stage R2's `closed`, read as the internal caller with a machine viewer, which sees every project, hidden ones
+     included (D54, K2442): the founder's viewer no longer sees a hidden project it is not in. */
+  #closed(pid) { return this.#call(() => this.stage.projectStage({ project: pid, viewer: "class:daemon" }))?.stage === "closed"; }
   /* The UTC date of the first entry in the project's history (R1, R27). */
   #createdDate(pid) {
     const r = this.#one(`SELECT MIN(created) AS c FROM manifest WHERE bundle_id=?`, pid);

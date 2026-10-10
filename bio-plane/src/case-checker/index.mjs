@@ -4,7 +4,11 @@
  * Anybody can check a published case, and recreate its findings, without a Civicsmith copy. This module is the one
  * checker:
  *
- *   checkCaseFile        R1–R11, R18, R20, R22 (`./check.mjs`): a pure function Civicsmith runs on import (`case-import`);
+ *   checkCaseFile        R1–R11, R18, R20, R22–R24 (`./check.mjs`): a pure function Civicsmith runs on import (`case-import`);
+ *   checkAccount         R24 (`./account.mjs`): the account's sentences judged against what they cite, for
+ *                        `case-disclosures` R30 at the act and R1 offline;
+ *   reweigh              R23 (`./check.mjs`, `./lens.mjs`; K2529): each finding's pair re-weighed under another lens, pure
+ *                        and synchronous, over an answer already checked; `checkCaseFile`'s lens arm and `case-import` R4;
  *   the program          R13 (`./main.mjs`, built by `./build-program.mjs` into `./program.mjs`): the same code, one
  *                        file anyone runs offline with nothing to install;
  *   the specification    R14 (`./spec.mjs`): the readable text of each case-file format version;
@@ -21,8 +25,10 @@ import { publicReadOf } from "../public-read/index.mjs";
 
 export { checkCaseFile, RESULTS, RESULT_WORDS, CHECKER_VERSIONS, RECREATION_STATEMENT, REST_ON_ANOTHER_GROUP_STATEMENT,
          KEYS_NOT_CHECKED_STATEMENT, CHECKS_VERSION_STATEMENT, NOT_RECOMPUTED_STATEMENT, CAPTURES_NOT_CARRIED_STATEMENT, CALCULATION_RESULTS, accountStatement,
-         keyFingerprint, readCaseFile, textAtExtent } from "./check.mjs";
+         keyFingerprint, readCaseFile, textAtExtent, reweigh } from "./check.mjs";
 export { runProgram } from "./main.mjs";
+export { checkAccount, ACCOUNT_CODES, DETERMINATION_WORDS, SUPPORT_WORDS, CONTRARY_WORDS } from "./account.mjs";
+export { LENS_LIMIT_STATEMENT, LENS_NAMES } from "./lens.mjs";
 export { checkStandardsUse, STANDARDS_USE_CODES, NONCONFORMING_WORDS } from "./standards.mjs";
 export { CASE_FILE_SPECS, CASE_FILE_SPEC_VERSIONS } from "./spec.mjs";
 export { PROGRAM, PROGRAM_SHA256, PROGRAM_BODY_SHA256 } from "./program.mjs";

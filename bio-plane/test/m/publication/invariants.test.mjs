@@ -62,8 +62,7 @@ test("R31 published bytes and the court-order stamps are exempt from purge; the 
     const got = declared[d.name];
     assert.deepEqual([got.purge, got.expunge, got.export, got.derive, got.version_chain],
                      [PUBLICATION_EXEMPT.includes(d.name) ? "exempt" : "clear", "none", "admin-only", "stored", false], d.name);
-    assert.equal(got.sight, ["case_documents", "case_exclusions", "published_cases", "cases", "edition_stamps",
-                             "scheduled_editions"].includes(d.name)
+    assert.equal(got.sight, ["case_documents", "case_exclusions", "published_cases", "cases", "edition_stamps"].includes(d.name)
       ? "group" : "bundle", `${d.name}'s sight`);
   }
   /* T33-63 (K1634): the flags and attributions are case-tensions', declared by it, created at this module's creation */
@@ -80,8 +79,10 @@ test("R31 published bytes and the court-order stamps are exempt from purge; the 
   assert.deepEqual([...CASE_CARRIAGE_EXEMPT].sort(), ["published_case_materials", "published_material_texts"]);
   for (const t of CASE_CARRIAGE_EXEMPT) assert.equal(publicationOwns(t), false, `${t} is case-carriage's`);
   assert.deepEqual(PUBLICATION_TABLES.map((t) => t.name || t).sort(),
-                   ["case_documents", "case_exclusions", "published_edges", "published_held_references",
-                    "scheduled_editions"]);
+                   ["case_documents", "case_exclusions", "published_edges", "published_held_references"]);
+  /* T41 (K2438): the waiting editions' table is publish-schedule's (its R10), neither created nor declared here */
+  assert.equal(publicationOwns("scheduled_editions"), false, "publish-schedule's");
+  assert.equal(w.row(`SELECT name FROM sqlite_master WHERE name='scheduled_editions'`), null, "not created by this module");
   assert.equal(publicationOwns("published_edges"), true);
   assert.equal(publicationOwns({ name: "export_log" }), false, "corpus-export's since K1024");
   assert.equal(publicationOwns("statement_acknowledgements"), false, "case-authoring's");
@@ -138,24 +139,24 @@ test("N483 N501 (K1119) this module answers no export: no op `export` or `export
   for (const name of constants) assert.equal(name in pub, false, `${name} is corpus-export's alone`);
 });
 
-test("R33 this module's table holds exactly C-122.1–.7, each with its code, sentence and its raiser's site here; C-92.1–.9 and C-92.13 left it for case-tensions' (its R9), C-44.2, C-68.5 and C-98 for public-read's (its R17)", () => {
+test("R33 this module's table holds exactly C-122.1–.4, .6 and .7 (C-122.5 moved with its raiser to publish-schedule R9; T41), each with its code, sentence and its raiser's site here; C-92.1–.9 and C-92.13 left it for case-tensions' (its R9), C-44.2, C-68.5 and C-98 for public-read's (its R17)", () => {
   /* every table this file exports, not a sample: one, and every row in it is one of the seven */
   const tables = Object.entries(CHECKS).filter(([, v]) => v && typeof v === "object" && !Array.isArray(v)
     && Object.values(v).some((r) => r && typeof r.check === "string"));
   assert.deepEqual(tables.map(([k]) => k).sort(), ["CASE_SOURCES_CHECKS"]);
   const ids = Object.values(MINE).map((r) => r.check).sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
-  assert.deepEqual(ids, ["C-122.1", "C-122.2", "C-122.3", "C-122.4", "C-122.5", "C-122.6", "C-122.7"]);
+  assert.deepEqual(ids, ["C-122.1", "C-122.2", "C-122.3", "C-122.4", "C-122.6", "C-122.7"]);
   for (const [code, row] of Object.entries(MINE)) {
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, `${code} has its sentence`);
-    assert.match(row.where, /^src\/publication\/(index|schedule)\.mjs \w+ > is-[a-z-]+$/, `${code}'s site is this module's`);
+    assert.match(row.where, /^src\/publication\/index\.mjs \w+ > is-[a-z-]+$/, `${code}'s site is this module's`);
     assert.deepEqual(rowOf(code), { code, check: row.check, translation: row.translation });
   }
   /* the moved rows answer nothing here: a code with no row in this table is a defect, and says so loudly */
   for (const code of ["FINDING_IN_SEVERAL_CASES", "NO_PUBLISHED_STORE", "NO_PUBLISHED_PART", "OBJECT_MISSING", "NOT_A_CONTAINER",
                       "MANIFEST_UNREADABLE", "PART_MISSING", "DUPLICATE_PATH", "CONTAINER_TOO_LARGE", "NOT_PUBLISHED",
-                      "CASE_DOCUMENT_UNSERVABLE", "NOT_A_CODE", ...Object.keys(ATTRIBUTION_ACT_CHECKS)])
+                      "CASE_DOCUMENT_UNSERVABLE", "NOT_A_CODE", "SCHEDULED_CHECK_UNAVAILABLE", ...Object.keys(ATTRIBUTION_ACT_CHECKS)])
     assert.throws(() => rowOf(code), /no row with a canned translation/, code);
-  for (const id of ["C-44.2", "C-68.5", ...Array.from({ length: 9 }, (_, i) => `C-98.${i + 1}`),
+  for (const id of ["C-44.2", "C-68.5", "C-122.5", ...Array.from({ length: 9 }, (_, i) => `C-98.${i + 1}`),
                     ...Object.values(ATTRIBUTION_ACT_CHECKS).map((r) => r.check)])
     assert.equal(tables.some(([, t]) => Object.values(t).some((r) => r.check === id)), false, `${id} is not held here`);
 });

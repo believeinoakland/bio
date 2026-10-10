@@ -51,7 +51,7 @@ const familiesHolding = (code, check) => Object.entries(R)
   .filter(([, fam]) => Object.hasOwn(fam, code) || Object.values(fam).some((row) => row?.check === check))
   .map(([name]) => name);
 
-test("R14, R46: C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.10, C-65.1 and C-92.10–C-92.12 held here with their codes, ids and translations, each row in one family of this module", () => {
+test("R14, R46: C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.11, C-65.1 and C-92.10–C-92.12 held here with their codes, ids and translations, each row in one family of this module", () => {
   const want = {
     RATIFY_MACHINE_FENCE_CHECKS: { MACHINE_CANNOT_RATIFY: "C-32.12", MACHINE_CANNOT_RATIFY_CASE: "C-32.13",
                                    OPERATOR_TOKEN_CANNOT_RATIFY: "C-32.14", OPERATOR_TOKEN_CANNOT_RATIFY_CASE: "C-32.15" },
@@ -64,7 +64,8 @@ test("R14, R46: C-32.12–C-32.15, C-53.10–C-53.12, C-58.1–C-58.10, C-65.1 a
                            RATIFY_NOT_EVIDENCE_OF_A_RATIFIED_CASE: "C-58.3", CONTESTED_IN_BATCH: "C-58.4",
                            ANONYMOUS_TESTIMONY_UNCORROBORATED: "C-58.5", SCHEDULE_UNCHECKABLE: "C-58.6",
                            SCHEDULED_SOURCES_CHANGED: "C-58.7", SCHEDULED_TIES_CHANGED: "C-58.8",
-                           SCHEDULED_HOLD_CHANGED: "C-58.9", SCHEDULED_CHECK_REFUSED: "C-58.10" },
+                           SCHEDULED_HOLD_CHANGED: "C-58.9", SCHEDULED_CHECK_REFUSED: "C-58.10",
+                           APPROVAL_MISSING: "C-58.11" },
   };
   for (const [fam, rows] of Object.entries(want)) {
     assert.deepEqual(Object.fromEntries(Object.entries(R[fam]).map(([k, v]) => [k, v.check])), rows, fam);
