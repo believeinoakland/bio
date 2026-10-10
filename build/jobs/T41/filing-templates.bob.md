@@ -1,0 +1,13 @@
+# BOB to filing-templates (T41)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T41), layer 9, filing-templates: T41-48a (tests only). Read also K2408 and K2442 (their lines in `build/rulings.md`).
+Your requirements: `build/requirements/filing-templates.md` (read whole). Marked `*(not yet met: T41)*`: none; no requirement changes. Your entry is tests only (N822, K2442): re-state for D54 the tests rule 4 (11) lists, below, with no product code changed unless a re-stated test shows a product read that assumes the founder's or an administrator's `FULL` sight (then an internal read takes no viewer or a machine one, K2442's pattern; name it in your record).
+Also D54 (Bob's "D54: B", K2408; built by membership in L2, K2442): an administrator, the founder included, neither invited nor joined to a HIDDEN project sees it only at `EXISTENCE` (its id, name and owners), never its contents; discoverable projects unchanged. Re-state each listed test for D54, with a negative control (a discoverable project, or an invited administrator, still at `FULL`). Your `lifecycle.test.mjs`:12, `reads.test.mjs`:188, :234, :298, :360 (`build/jobs/T41/membership.md`, Completion).
+Reading set (mechanics §17): measured at this START: 298 KB by `build/plan/reading-sets.py`, within the 300 KB limit (an over-estimate: it counts each used module's whole public part; read as mechanics §3 asks, each used module's Purpose and the services your Uses names): read it whole, with your tests, and state so in your record.
+Merge order in L9: conformance, consequences, action-grammar, actions, filing-templates, filings, action-plans (`modules.json` order; action-grammar (T41-46a) before actions (T41-47), K2505). Layer 8's modules are merged into `tranche/T41` before this START: build on them as merged. Same-layer providers you use: action-grammar (T41-46a: its R13 adds `none_exists` to `CORRESPONDENCE_OUTCOMES` and a records request's `seeks`; check whether your code or tests enumerate the outcomes or a records request's fields, and say so in your record). Its changes reach you by a CHANGE once it merges. filings (T41-48) uses yours later in this layer. Record your final `uses` in your record, for BOB to apply at your merge.
+Inherited reds: the plan's "Rules at the opening" rule 4 list as it stands at your START (read it there); yours: rule 4 (11), the five D54 tests above; none other unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083); read a fixture only where your work changes or relies on its content.
