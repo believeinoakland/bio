@@ -34,3 +34,9 @@ Two findings, in my record's Completion: (1) answer-envelope R7's wording "docke
 ## J2 · COMPLETE
 
 T41-60 applied (R7, R10): the six T41 family files in CHECK_FAMILY_FILES at their modules.json places, rule 4 (16) cleared (case-carriage 70/0); 90 codes join, no earlier code's decoration moves; pins re-taken (ten re-worded, C-124.52 and C-106.1 retired); C-120.23-.29 re-pinned; new R10 test with negative controls. answer-envelope 28 pass, 1 fail: the pin test naming exactly NO_SUCH_PROPOSAL and PROPOSAL_NO_RUN (rule 4 (21)). Users' counts identical to tranche/T41's. format, coverage (10/10), ownership 0; architecture 6 = the six uses for BOB to apply at merge: steps, ai-use, reading-guides, question-explorer, investigation, publish-schedule. Details in the record's Completion.
+
+## After B2 (CHANGE, K2593)
+
+Merged `tranche/T41` (affordances, tasks, queue and the layer's earlier merges) into `job/T41/answer-envelope`, no conflict. Re-run on the merged branch: answer-envelope 28 pass, 1 fail (the same pin test naming exactly `NO_SUCH_PROPOSAL` and `PROPOSAL_NO_RUN`, rule 4 (21)); case-carriage 70/0; users control-plane 190/5, plane 147/8, store-door 36/5, the same counts with the tranche's own answer-envelope in place of mine. format 0, coverage 10/10, ownership 0; architecture 6, the six `uses` above. Nothing in my change needed bringing in line.
+
+Size (session_017cmBYso32d54JzyLxFv27Q): test runs 22, module lines 836
