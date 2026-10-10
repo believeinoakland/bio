@@ -33,3 +33,7 @@ ANSWER J1 (K2574): your reading stands and is written into your R33 on `tranche/
 ## B3 · CHANGE
 
 CHANGE (K2580, from QUEUE #22 J2): `queueOf(ctx, …)` builds `investigationOf(ctx)` at boot unless handed one in deps; hand it the plane's own `investigation` (your R30), so there is one instance. Also on `tranche/T41`: op-grades is merged (merge the tranche in when convenient).
+
+## B4 · CHANGE
+
+CHANGE (K2585, from CONTROL-PLANE #28 J2), R35 worded on `tranche/T41` (merge it in): spread `controlPlaneOwnerOps(of, url, body)` from `src/control-plane/owner-ops.mjs` (on its branch until it merges) with `of` = getters of your instances `{aiUse, aiRuns, caseAuthoring, review, legEarning, capture, steps, investigation, questionExplorer}`; spread `aiUseOps` (R31) and `readingGuidesOps` with `groupSlug` (R35); drop `store.mjs`:219's `aiRunsOf(ctx, env).aiUseCheck` (R33); build investigation at boot (R30) so its promotion check registers at start.
