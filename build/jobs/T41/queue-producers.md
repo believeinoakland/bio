@@ -1,6 +1,6 @@
 # queue-producers (T41)
 
-**Status** · session_017yeAgZAB9uGWeA15kp1VeV · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_017yeAgZAB9uGWeA15kp1VeV · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
