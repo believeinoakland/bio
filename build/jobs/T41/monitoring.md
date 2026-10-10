@@ -26,3 +26,10 @@ R70's reading, building on it now; the answer changes the build only if (1) is r
 - Generated artifacts: the plane bundle (`bio-plane/dist/bio-plane.bundled.mjs`) is staled by this change (rule 4 (14)).
 
 **Final `uses`:** as `modules.json` lists them (investigation already added).
+
+**Tests and checks run:**
+- `node --test bio-plane/test/m/monitoring/`: `tests 124, pass 124, fail 0`.
+- Users of monitoring (an `op=monitor` answer field added), each compared by failing test name against `tranche/T41` @ origin: following 50/0, link-sweep 29/0, machinery-producers 24/0; scheduler 114 pass/8 fail, affordances 186/34, queue-producers 77/3, answer-envelope 24/4, control-plane 174/21, plane 26/129, each failing exactly the tests the base fails (inherited, rule 4 (11), (12), (16), (17), (20), (21)); `test/system/migrate-released.test.mjs` fails on the base and here alike (`publication.onPublishScheduled is not a function` at plane boot, rule 4 (20)).
+- `checks/format.mjs`: 0 failures; `checks/architecture.mjs monitoring`: 0 failures; `checks/coverage.mjs monitoring`: 57 of 57 live ids named, 0 failures; `checks/ownership.mjs monitoring tranche/T41`: 0 failures.
+
+Size (session_01Pfzyx4hzBorgjW5kbqPVcK): test runs 16, module lines 3,489
