@@ -49,7 +49,7 @@ Merged `tranche/T41` (R8's text). R8's source gains `signerOf(caseId, edition)`:
 
 Tests: `ℹ tests 21`, `ℹ pass 19`, `ℹ fail 2` (the same two named reds, `seam.test.mjs`:127 R8 real publication, :178 R10 owner arm). Checks (scratch `modules.json` with my paths): format 0 failures; architecture 9 files, 26 imports, 0 failures; coverage 11 of 11; ownership 10 files, 0 failures.
 
-Size (session_01GCuXKM9tA8NjwoR4rFdWhv): test runs 12, module lines 580
+Size (session_01GCuXKM9tA8NjwoR4rFdWhv): test runs 12, module lines 582
 
 ## J3 · COMPLETE · re B2
 
