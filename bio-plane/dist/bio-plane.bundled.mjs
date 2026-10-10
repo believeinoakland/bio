@@ -188647,6 +188647,16 @@ var INTENT_CHECKS = Object.freeze({
     where: at30("triage", "is-adoptions-spliceable"),
     translation: "The project's record of adopted proposals is not in a shape the record can add to, so this adoption could not be written into it. Nothing was written."
   },
+  NONE_EXISTS_READER_DECLARED: {
+    check: "C-111.29",
+    where: at30("registerNoneExistsReader", "is-none-exists-once"),
+    translation: "The reader of records requests answered that no such record exists is already registered. It registers once, when your group's Civicsmith starts."
+  },
+  NONE_EXISTS_READER_MALFORMED: {
+    check: "C-111.30",
+    where: at30("registerNoneExistsReader", "is-none-exists-shaped"),
+    translation: "The reader of records requests answered that no such record exists is a function. This registration gives none."
+  },
   NO_NOTE: {
     check: "C-111.27",
     where: at30("recordDeadEnd", "is-dead-end-noted"),
@@ -198818,10 +198828,27 @@ CREATE TABLE IF NOT EXISTS intent_triage (
   seq            INTEGER PRIMARY KEY AUTOINCREMENT
 );
 CREATE INDEX IF NOT EXISTS intent_triage_key ON intent_triage(proposal_key);
+-- R32 (T41; D13; inquiry R59's warning): the warning an act on a project's objective carried for naming a person in no
+-- public role, one row per act that carried it: act 'objective' or 'condition' (a promotion stating or revising either,
+-- 'objective+condition' for both) or 'adopt' (R16, with the proposal's key); the persons named (JSON [{entity_id,
+-- label}]) and her choice: 'went_on' (she saw it before the act and went on), 'warned_at_act' (told by the act's
+-- answer) or 'pending' (a machine's promotion). Nothing is refused. Appended, never updated.
+CREATE TABLE IF NOT EXISTS intent_person_warnings (
+  project_id     TEXT NOT NULL,
+  act            TEXT NOT NULL,
+  proposal_key   TEXT,
+  persons        TEXT NOT NULL,
+  author         TEXT,
+  choice         TEXT NOT NULL,
+  at             TEXT NOT NULL,
+  seq            INTEGER PRIMARY KEY AUTOINCREMENT
+);
+CREATE INDEX IF NOT EXISTS intent_person_warnings_project ON intent_person_warnings(project_id);
 `;
 var INTENT_TABLES = Object.freeze([
   { name: "intent_departures", keys: ["project_id", "aspiration_id"] },
-  { name: "intent_triage", keys: ["project_id", "inquiry_id"] }
+  { name: "intent_triage", keys: ["project_id", "inquiry_id"] },
+  { name: "intent_person_warnings", keys: ["project_id"] }
 ]);
 function migrateIntent(sql) {
   const bare4 = INTENT_SCHEMA.split("\n").filter((l2) => !l2.trim().startsWith("--")).join("\n");
@@ -199106,6 +199133,8 @@ var AGEING_DEFAULT_DAYS = 30;
 var PLANE_ACTOR = "plane:intent";
 var PLANE_VIEWER2 = "class:daemon";
 var GAP_KIND = "objective-gap";
+var NONE_EXISTS_SAYS = "answered: none exists";
+var WARNING_SUBJECTS_MAX = 20;
 var AMOUNT_FACTS_MAX = LIST_LIMIT_MAX;
 var MEASURE_MAX = 1e3;
 var WATCH_LIMIT_MAX = 1e3;
@@ -199132,6 +199161,8 @@ var bodyText2 = (s) => String(s).trim().replace(/^#/gm, " #");
 var Intent = class {
   #sources = /* @__PURE__ */ new Map();
   // kind -> reader (R15)
+  #noneExists = null;
+  // R33: the reader of records requests answered that no such record exists
   constructor({
     storage,
     record,
@@ -199286,10 +199317,16 @@ var Intent = class {
   }
   #checkProject(c) {
     const fm = c.docFm || {};
+    const heldFm = c.head ? parseFm(this.record.readFile(c.bundleId, "bundle.md")?.text) || {} : null;
+    if (c.state && c.state.intent)
+      Object.assign(c.state.intent, {
+        priorObjective: heldFm ? str37(heldFm.objective) : null,
+        priorCondition: heldFm ? conditionOf(heldFm)?.condition ?? null : null
+      });
     if (typeof fm.objective !== "string" || fm.objective.trim() === "")
       return refusal28("NO_OBJECTIVE", "this project's document states no objective, or an empty one (C-2.9). A project says what it is trying to achieve. Nothing was written.");
     const now = conditionOf(fm);
-    const held2 = c.head ? conditionOf(parseFm(this.record.readFile(c.bundleId, "bundle.md")?.text) || {}) : null;
+    const held2 = heldFm ? conditionOf(heldFm) : null;
     if (now && JSON.stringify(now.condition) !== JSON.stringify(held2 ? held2.condition : null))
       return this.#conditionRefusal(now.condition);
     return null;
@@ -199373,6 +199410,70 @@ var Intent = class {
       return refusal28("BAD_SHARE", "a share is a whole number from 1 to 100. Nothing was written.");
     return null;
   }
+  /** R32 (D13; promotion R39's projection): a promotion of a project that states its `objective` (its creation) or
+   *  revises it, or sets or changes its condition, carries inquiry R59's warning when the objective's text, or the
+   *  entity the condition names, names a person in no public role; never refused. The warning is recorded
+   *  (`intent_person_warnings`) with her choice, `went_on` when the package says she saw it before the act
+   *  (`personWarningSeen: true`), else `warned_at_act`; a machine's promotion records `pending`. A condition removed,
+   *  or a revision leaving both alone, asks nothing. Never throws into the promotion: a test that cannot be read warns
+   *  of nothing. */
+  project(c) {
+    try {
+      if (!c || c.promotedType !== "project" || c.replay) return null;
+      const fm = c.docFm || {};
+      const prior = c.state && c.state.intent || {};
+      const objective = str37(fm.objective);
+      const cond = conditionOf(fm)?.condition ?? null;
+      const objectiveActed = !c.head || objective !== (prior.priorObjective ?? "");
+      const conditionActed = !!cond && JSON.stringify(cond) !== JSON.stringify(prior.priorCondition ?? null);
+      if (!objectiveActed && !conditionActed) return null;
+      const author = str37(c.author);
+      const warning = this.#warningFor(objectiveActed ? objective : "", conditionActed ? [str37(cond.entity)] : [], author);
+      if (!warning) return null;
+      const act2 = [objectiveActed ? "objective" : null, conditionActed ? "condition" : null].filter(Boolean).join("+");
+      return { warning: this.#recordWarning(c.bundleId, act2, null, warning, author, c.pkg && c.pkg.personWarningSeen) };
+    } catch {
+      return null;
+    }
+  }
+  /* R32: inquiry R59's warning for `text` and the entities `subjects` names (each read as a subject, at most
+     WARNING_SUBJECTS_MAX), over the record's facts for the persons named (`inquiry.personFacts`, read as `viewer`);
+     null when they name none, or when the test cannot be asked (a warning, never a refusal). */
+  #warningFor(text7, subjects, viewer) {
+    try {
+      const inq = this.#lazy(this.inquiryRef);
+      if (!inq || typeof inq.personFacts !== "function") return null;
+      const who2 = machine(viewer) ? null : str37(viewer);
+      const facts = /* @__PURE__ */ new Map();
+      const ask2 = (t2, subject) => {
+        const got = inq.personFacts({ text: t2, subject, viewer: who2 });
+        for (const f17 of Array.isArray(got) ? got : []) if (isObj44(f17) && typeof f17.entity_id === "string") facts.set(f17.entity_id, f17);
+      };
+      const named2 = [...new Set((subjects || []).map(str37).filter(Boolean))].slice(0, WARNING_SUBJECTS_MAX);
+      if (str37(text7) || named2.length) ask2(str37(text7), named2[0] ?? null);
+      for (const subject of named2.slice(1)) ask2("", subject);
+      return personWarning({ text: str37(text7), entities: [...facts.values()], viewer: who2 }) ?? null;
+    } catch {
+      return null;
+    }
+  }
+  /* R32: the warning recorded with her choice (`went_on` when she saw it before the act, else `warned_at_act`;
+     `pending` for a machine), answered with the choice. */
+  #recordWarning(project, act2, proposalKey, warning, author, seen) {
+    const choice = machine(author) ? "pending" : seen === true ? "went_on" : "warned_at_act";
+    this.sql.exec(
+      `INSERT INTO intent_person_warnings (project_id, act, proposal_key, persons, author, choice, at)
+                   VALUES (?,?,?,?,?,?,?)`,
+      project,
+      act2,
+      proposalKey,
+      JSON.stringify(warning.persons),
+      author || null,
+      choice,
+      this.#when()
+    );
+    return { ...warning, act: act2, choice };
+  }
   /** record-core R59: C-2.9's objective arm in the audit, beside the grammar's `closed_reason` arm (R29), over the same image
    *  (R22). */
   auditCheck(image) {
@@ -199394,7 +199495,7 @@ var Intent = class {
   /** R2: set, replace or (with a null condition) remove a project's satisfaction condition, as a new revision of the
    *  project's document through `promotion`, with the author's reason (DEC-88) carried on that revision's log entry;
    *  the earlier revision stays in history. */
-  setCondition({ project, condition, reason: reason2, author, viewer = null } = {}) {
+  setCondition({ project, condition, reason: reason2, author, viewer = null, personWarningSeen = false } = {}) {
     if (machine(author))
       return refusal28("MACHINE_CANNOT_SET_OBJECTIVE", "setting or changing an objective's measure is a named member's act (DEC-24 rule 2). Nothing was written.");
     const p3 = this.#project(project, viewer);
@@ -199429,9 +199530,18 @@ var Intent = class {
       `${c ? `the objective's satisfaction condition is ${JSON.stringify(c)}.` : "the objective states no condition."}
 Reason: ${bodyText2(why2)}`
     );
-    const r = this.#revise(p3.doc, text7, str37(author), viewer);
+    const r = this.#revise(p3.doc, text7, str37(author), viewer, { personWarningSeen: personWarningSeen === true });
     if (!r.ok) return r;
-    return { ok: true, project, condition: c, reason: why2, set_by: str37(author), at: at42, bundleSha: r.bundleSha };
+    return {
+      ok: true,
+      project,
+      condition: c,
+      reason: why2,
+      set_by: str37(author),
+      at: at42,
+      bundleSha: r.bundleSha,
+      ...r.warning ? { warning: r.warning } : {}
+    };
   }
   /* The matched instances of a condition (R4), each assembled by progressions and judged; derived, never stored. */
   #measure(cond, viewer) {
@@ -199488,7 +199598,14 @@ Reason: ${bodyText2(why2)}`
         continue;
       }
       const placed2 = new Set((inst.stages || []).filter((s) => s.present).map((s) => s.stage_key));
-      const missing2 = stages2.filter((s) => !placed2.has(s));
+      const answered = [];
+      for (const s of stages2)
+        if (!placed2.has(s)) {
+          const a = this.#noneExistsFor(key2, eid, s, viewer);
+          if (a) answered.push(a);
+        }
+      if (answered.length) row11.none_exists = answered;
+      const missing2 = stages2.filter((s) => !placed2.has(s) && !answered.some((a) => a.stage === s));
       if (missing2.length) {
         short.push({ ...row11, why: { stages_missing: missing2 }, documents: this.#documents(inst) });
         continue;
@@ -199513,6 +199630,31 @@ Reason: ${bodyText2(why2)}`
       });
     }
     return { key: key2, related: [...related].sort(), matched, meeting: meeting2, short, undetermined: undetermined3, truncated: truncated5 };
+  }
+  /* R33: the first answer the registered reader gives for one stage of one instance, `{stage, action, ord, at, says}`,
+     or null: none registered, an empty answer, or a reader that throws or answers otherwise meets no stage. */
+  #noneExistsFor(progression, entity2, stage, viewer) {
+    if (!this.#noneExists) return null;
+    let got;
+    try {
+      got = this.#noneExists({ progression, entity: entity2, stage, viewer: viewer ?? null });
+    } catch {
+      return null;
+    }
+    const first = Array.isArray(got) ? got.find((x) => isObj44(x) && typeof x.action === "string" && x.action) : null;
+    if (!first) return null;
+    return { stage, action: first.action, ord: first.ord ?? null, at: first.at ?? null, says: NONE_EXISTS_SAYS };
+  }
+  /** R33: `actions` registers, once at start (K31's pattern), its reader of records requests answered that no such
+   *  record exists: `reader({progression, entity, stage, viewer})` → `[{action, ord, at}]`. With none registered, or
+   *  one answering `[]`, no stage is met this way. */
+  registerNoneExistsReader(reader) {
+    if (typeof reader !== "function")
+      return refusal28("NONE_EXISTS_READER_MALFORMED", "the reader of records requests answered that no such record exists is a function of {progression, entity, stage, viewer}.");
+    if (this.#noneExists)
+      return refusal28("NONE_EXISTS_READER_DECLARED", "the reader of records requests answered that no such record exists is already registered.");
+    this.#noneExists = reader;
+    return { ok: true };
   }
   /* R5: the documents placed at each stage, with bundle ids the viewer may not see withheld (progressions R13). */
   #documents(inst) {
@@ -199689,7 +199831,8 @@ Reason: ${bodyText2(why2)}`
       progression: cond.progression,
       entity: s.entity_id,
       stages_missing: s.why.stages_missing,
-      says: `the records the stages ${s.why.stages_missing.join(", ")} would hold are to be requested`
+      says: `the records the stages ${s.why.stages_missing.join(", ")} would hold are to be requested`,
+      ...s.none_exists ? { none_exists: s.none_exists } : {}
     } : {
       project,
       progression: cond.progression,
@@ -200445,7 +200588,8 @@ ${bodyText2(note)}`
     author = null,
     viewer = null,
     run: run2 = null,
-    assistantPrincipal = null
+    assistantPrincipal = null,
+    personWarningSeen = false
   } = {}) {
     if (!TRIAGE_ACTS.includes(act2))
       return refusal28(
@@ -200475,8 +200619,10 @@ ${bodyText2(note)}`
       if (denied) return denied;
     }
     const at42 = this.#when();
-    let inquiry = null, extra = {};
+    let inquiry = null, extra = {}, warning = null;
     if (act2 === "adopt") {
+      const b = isObj44(found3.basis) ? found3.basis : {};
+      warning = this.#warningFor(questionOf2(found3), [b.entity, ...(Array.isArray(found3.instances) ? found3.instances : []).map((x) => isObj44(x) ? x.entity_id : null)].filter((x) => typeof x === "string"), str37(author));
       let text7 = appendItem(
         proj.text,
         "objective_adoptions",
@@ -200508,21 +200654,24 @@ ${bodyText2(note)}`
       if (!d || d.ok !== true) return d;
       extra = { progressions: { key: d.key, state: d.state, definition_version: d.definition_version } };
     }
-    this.record.transact(() => this.sql.exec(
-      `INSERT INTO intent_triage (proposal_key, source, kind, act, project_id, inquiry_id, reason, grade, basis_json, author, at)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-      found3.key,
-      found3.source,
-      found3.kind ?? null,
-      act2,
-      proj ? proj.id : this.#projectOfAct({ key: found3.key }),
-      inquiry,
-      why2 || null,
-      found3.grade ?? null,
-      JSON.stringify(found3.basis ?? null),
-      str37(author) || PLANE_ACTOR,
-      at42
-    ));
+    const recorded = this.record.transact(() => {
+      this.sql.exec(
+        `INSERT INTO intent_triage (proposal_key, source, kind, act, project_id, inquiry_id, reason, grade, basis_json, author, at)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+        found3.key,
+        found3.source,
+        found3.kind ?? null,
+        act2,
+        proj ? proj.id : this.#projectOfAct({ key: found3.key }),
+        inquiry,
+        why2 || null,
+        found3.grade ?? null,
+        JSON.stringify(found3.basis ?? null),
+        str37(author) || PLANE_ACTOR,
+        at42
+      );
+      return warning ? this.#recordWarning(proj.id, "adopt", found3.key, warning, str37(author), personWarningSeen) : null;
+    });
     return {
       ok: true,
       proposal: found3.key,
@@ -200531,7 +200680,8 @@ ${bodyText2(note)}`
       reason: why2 || null,
       author: str37(author) || null,
       at: at42,
-      ...extra
+      ...extra,
+      ...recorded ? { warning: recorded } : {}
     };
   }
   /* R16's `question`: a new inquiry at `surfaced`, through promotion (so inquiry's check and ai-runs' surfacing step,
@@ -200980,7 +201130,7 @@ function intentOf(host, deps) {
     });
     instances52.set(host, i);
     record.declarePurge("intent", INTENT_TABLES);
-    promotion.registerStep("intent", { check: (c) => i.check(c) });
+    promotion.registerStep("intent", { check: (c) => i.check(c), project: (c) => i.project(c) });
     record.registerAuditCheck("intent", (image) => i.auditCheck(image));
     registerProjectGrammar(record);
   }
