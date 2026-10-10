@@ -5,9 +5,15 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, makePng, decodePng, sha, V, NOW } from "./fixture.mjs";
-import { CASE_CARRIAGE_CHECKS, OBSCURED_LABEL, MARK_AREAS_MAX, STAFF_REASON_MAX, CASE_CARRIAGE_MARK_TABLES, caseCarriageOps,
+import { CASE_CARRIAGE_CHECKS, CASE_CARRIAGE_WORDS, OBSCURED_LABEL, PUBLISHED_LABEL, MARK_AREAS_MAX, STAFF_REASON_MAX, CASE_CARRIAGE_MARK_TABLES, caseCarriageOps,
          obscuredKey } from "../../../src/case-carriage/index.mjs";
 import { COVER_MAX_BYTES } from "../../../src/image-cover/index.mjs";
+import { readFile } from "node:fs/promises";
+
+/* The design stream's words file (DEC-179), read whole: what this module reads by key (R11, R14). */
+const WORDS = async () =>
+  JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8")).words;
+const ADA = V("ada");   // an active administrator, as the founder neither invited nor joined to the hidden project (D54)
 
 const PHOTO = "INFO-2026-0020-photo";
 const OLIVE = V("olive"), BEN = V("ben");
@@ -65,11 +71,14 @@ test("R9 obscureMark records one mark {mark, capture, areas, by, at} and answers
   assert.deepEqual(r2.marks[1], { mark: 2, by: BEN, at: "2026-09-28T01:00:00.000Z", areas: [area([30, 20, 35, 25])], withdrawn: null });
 });
 
-test("R9 each refusal, in order, writes nothing and carries its C-141 row (MACHINE_CANNOT_MARK_PHOTO its own code, N790); a negative control for each records the mark", async () => {
+test("R9 each refusal, in order, writes nothing and carries its C-141 row (MACHINE_CANNOT_MARK_PHOTO its own code, N790); a negative control for each records the mark; (D54) the founder and an administrator neither invited nor joined to a hidden project are answered NO_SUCH_PHOTO, a discoverable project's photo marked by both", async () => {
   const { w, p } = scene();
+  w.member("ada", { role: "admin" });
   const text = w.doc("INFO-2026-0021-text");
   const hidden = w.photo("INFO-2026-0022-hidden", makePng(8, 8));
-  w.st.sql.exec(`UPDATE bundles SET project='PROJ-2026-0099' WHERE bundle_id='INFO-2026-0022-hidden'`);
+  w.fence("INFO-2026-0022-hidden", "PROJ-2026-0099");
+  const open = w.photo("INFO-2026-0023-open", makePng(8, 8, () => [90, 160, 30]));
+  w.fence("INFO-2026-0023-open", w.project("PROJ-2026-0098", { owner: "olive", visibility: "discoverable" }));
   const ok = [area([1, 1, 4, 4])];
   const cases = [
     ["MACHINE_CANNOT_MARK_PHOTO", { captureSha: p, areas: ok, by: undefined }, null],
@@ -81,6 +90,11 @@ test("R9 each refusal, in order, writes nothing and carries its C-141 row (MACHI
     ["NO_SUCH_PHOTO", { captureSha: "not-a-digest", areas: ok, by: OLIVE }, null],
     ["NO_SUCH_PHOTO", { captureSha: null, areas: ok, by: OLIVE }, null],
     ["NO_SUCH_PHOTO", { captureSha: hidden, areas: "malformed too", by: OLIVE }, null],
+    /* D54 (K2408, K2442): the founder, in both spellings, and an active administrator neither invited nor joined to the
+       hidden project see it only at EXISTENCE, never its photo */
+    ["NO_SUCH_PHOTO", { captureSha: hidden, areas: ok, by: "admin" }, null],
+    ["NO_SUCH_PHOTO", { captureSha: hidden, areas: ok, by: V("admin") }, null],
+    ["NO_SUCH_PHOTO", { captureSha: hidden, areas: ok, by: ADA }, null],
     ["NOT_A_PHOTO", { captureSha: text, areas: "malformed too", by: OLIVE }, null],
     ["MARK_MALFORMED", { captureSha: p, areas: "x", by: OLIVE }, null],
     ["MARK_MALFORMED", { captureSha: p, areas: null, by: OLIVE }, null],
@@ -126,11 +140,15 @@ test("R9 each refusal, in order, writes nothing and carries its C-141 row (MACHI
                                ["MARK_AREAS_MAX areas", { captureSha: p, areas: Array.from({ length: MARK_AREAS_MAX }, () => area([1, 1, 2, 2])), by: OLIVE }],
                                ["a staff area with a reason at the bound", { captureSha: p, areas: [area([1, 1, 4, 4], "staff", "x".repeat(STAFF_REASON_MAX))], by: OLIVE }],
                                ["an area partly outside", { captureSha: p, areas: [area([W - 2, H - 2, W + 9, H + 9], "plate")], by: OLIVE }],
-                               ["the founder sees the hidden photo", { captureSha: hidden, areas: ok, by: "admin" }]]) {
+                               ["(D54) the founder marks a discoverable project's photo", { captureSha: open, areas: ok, by: "admin" }],
+                               ["(D54) an administrator marks a discoverable project's photo", { captureSha: open, areas: ok, by: ADA }]]) {
     const r = await w.cc.obscureMark(args);
     assert.equal(r.ok, true, `${label}: ${JSON.stringify(r).slice(0, 200)}`);
   }
-  assert.equal(w.count("photo_marks"), 5);
+  /* (D54) negative control for the hidden photo: taken out of the project, the founder marks it */
+  w.fence("INFO-2026-0022-hidden", null);
+  assert.equal((await w.cc.obscureMark({ captureSha: hidden, areas: ok, by: "admin" })).ok, true);
+  assert.equal(w.count("photo_marks"), 7);
 });
 
 test("R9 R11 areas: [] records \"nothing to obscure\" and derives the photo's copy with nothing covered and no metadata (N779); a later \"nothing to obscure\" never removes an area; no act changes or erases a mark", async () => {
@@ -140,8 +158,8 @@ test("R9 R11 areas: [] records \"nothing to obscure\" and derives the photo's co
   assert.deepEqual(none.copy, { sha256: none.copy.sha256, covered: 0, width: W, height: H }, "a copy, nothing covered");
   assertCovers(copyOf(w, none.copy.sha256), original, [], "every pixel the original's");
   assert.equal(copyOf(w, none.copy.sha256).chunks.includes("tEXt"), false, "nothing of the original but its pixels");
-  assert.deepEqual(w.bucket.held.get(obscuredKey("bio", none.copy.sha256)).opts.customMetadata, { derived: "obscured", original: p },
-                   "labelled derived, naming its original; no OBSCURED_LABEL, since nothing is covered");
+  assert.deepEqual(w.bucket.held.get(obscuredKey("bio", none.copy.sha256)).opts.customMetadata, { derived: "obscured", original: p, label: PUBLISHED_LABEL },
+                   "labelled derived, naming its original; (T40) PUBLISHED_LABEL, since nothing is covered");
   assert.equal(w.count("photo_copies"), 1);
   const marked = await w.cc.obscureMark({ captureSha: p, areas: [area([3, 3, 9, 9])], by: BEN });
   assert.equal(marked.state, "marked");
@@ -177,7 +195,7 @@ test("R10 photoMarks answers unchecked, nothing_to_obscure and marked, its marks
   assert.equal(w2.cc.photoMarks({ captureSha: p2, viewer: OLIVE }).state, "nothing_to_obscure");
 });
 
-test("R10 a capture that is not an image answers photo false; one not held or not seen NO_SUCH_PHOTO; a photo is told by its recorded type, else its path's extension; never throws", () => {
+test("R10 a capture that is not an image answers photo false; one not held or not seen NO_SUCH_PHOTO, (D54) the founder's and an administrator's sight of a hidden project's photo included; a photo is told by its recorded type, else its path's extension; never throws", () => {
   const { w, p } = scene();
   const text = w.doc("INFO-2026-0021-text");
   assert.deepEqual(w.cc.photoMarks({ captureSha: text, viewer: OLIVE }), { ok: true, capture: text, photo: false });
@@ -189,16 +207,27 @@ test("R10 a capture that is not an image answers photo false; one not held or no
   assert.deepEqual([typedTxt, jpgNotImage, untypedJpg, untypedPdf, heic].map((s) => w.cc.photoMarks({ captureSha: s, viewer: OLIVE }).photo),
                    [true, false, true, false, true]);
   const hidden = w.photo("INFO-2026-0022-hidden", makePng(8, 8));
-  w.st.sql.exec(`UPDATE bundles SET project='PROJ-2026-0099' WHERE bundle_id='INFO-2026-0022-hidden'`);
+  w.fence("INFO-2026-0022-hidden", "PROJ-2026-0099");
+  w.member("ada", { role: "admin" });
+  const open = w.photo("INFO-2026-0030-open", makePng(8, 8, () => [90, 160, 30]));
+  w.fence("INFO-2026-0030-open", w.project("PROJ-2026-0098", { owner: "olive", visibility: "discoverable" }));
   const orphan = sha("registered on no bundle");
   w.st.sql.exec(`INSERT INTO register (capture_sha, bundle_id, path, encoding, bytes, registered) VALUES (?, 'INFO-2026-0999-gone', 'snapshots/x.png', 'binary', 5, ?)`, orphan, NOW);
-  for (const [label, args] of [["not seen", { captureSha: hidden, viewer: OLIVE }], ["never captured", { captureSha: sha("x"), viewer: OLIVE }],
+  for (const [label, args] of [["not seen", { captureSha: hidden, viewer: OLIVE }],
+                               ["(D54) the founder, neither invited nor joined", { captureSha: hidden, viewer: "admin" }],
+                               ["(D54) the founder, as a member viewer", { captureSha: hidden, viewer: V("admin") }],
+                               ["(D54) an administrator, neither invited nor joined", { captureSha: hidden, viewer: ADA }],
+                               ["never captured", { captureSha: sha("x"), viewer: OLIVE }],
                                ["on no bundle", { captureSha: orphan, viewer: OLIVE }], ["no viewer", { captureSha: p, viewer: "" }],
                                ["not a digest", { captureSha: "zz", viewer: OLIVE }], ["nothing", undefined]]) {
     const r = w.cc.photoMarks(args);
     assert.deepEqual([r.ok, r.code, r.check], [false, "NO_SUCH_PHOTO", "C-141.2"], label);
   }
-  assert.equal(w.cc.photoMarks({ captureSha: hidden, viewer: "admin" }).ok, true, "negative control: the founder sees it");
+  /* (D54) negative controls: a discoverable project's photo is seen whole by the founder and an administrator; the
+     hidden one, once out of the project */
+  for (const viewer of ["admin", ADA]) assert.equal(w.cc.photoMarks({ captureSha: open, viewer }).ok, true, `${viewer} sees the discoverable project's photo`);
+  w.fence("INFO-2026-0022-hidden", null);
+  assert.equal(w.cc.photoMarks({ captureSha: hidden, viewer: "admin" }).ok, true, "negative control: out of the hidden project, the founder sees it");
   w.st.sql.exec(`DROP TABLE photo_marks`);
   assert.doesNotThrow(() => w.cc.photoMarks({ captureSha: p, viewer: OLIVE }));
   assert.equal(w.cc.photoMarks({ captureSha: p, viewer: OLIVE }).ok, false);
@@ -239,8 +268,29 @@ test("R11 the copy covers every area of every mark, two members marking at once 
   assert.ok(w2.bucket.held.has(`scratch/obscured/${r2.copy.sha256}`));
 });
 
-test("R11 OBSCURED_LABEL is exactly the sentence DEC-180 (4) names, held once here", () => {
-  assert.equal(OBSCURED_LABEL, "Faces and plates obscured for publication; the group holds the original");
+test("R11 (T40) OBSCURED_LABEL is words.json's photo.obscured.label and PUBLISHED_LABEL its photo.published.label, read by key, each held once here; a derived copy's stored label follows: OBSCURED_LABEL when it covers an area, else PUBLISHED_LABEL", async () => {
+  const words = await WORDS();
+  const en = (k) => { const x = words.find((w) => w.key === k); assert.ok(x, `words.json holds ${k}`); return x; };
+  assert.equal(OBSCURED_LABEL, en("photo.obscured.label").en);
+  assert.equal(PUBLISHED_LABEL, en("photo.published.label").en);
+  assert.equal(OBSCURED_LABEL, "Faces, plates and camera details removed for publication; the group holds the original");
+  assert.equal(PUBLISHED_LABEL, "Camera details removed for publication; the group holds the original");
+  assert.ok(en("photo.obscured.label").protected && en("photo.published.label").protected, "protected words (DEC-179)");
+  /* every word this module holds is its key's `en`, verbatim */
+  for (const [k, v] of Object.entries(CASE_CARRIAGE_WORDS)) assert.equal(v, en(k).en, k);
+  /* negative control: BOB's draft is gone, and the two labels differ */
+  assert.notEqual(OBSCURED_LABEL, "Faces and plates obscured for publication; the group holds the original");
+  assert.notEqual(OBSCURED_LABEL, PUBLISHED_LABEL);
+  /* the stored label of each copy, through the act */
+  const { w, p } = scene();
+  const label = (c) => w.bucket.held.get(obscuredKey("bio", c)).opts.customMetadata.label;
+  const none = await w.cc.obscureMark({ captureSha: p, areas: [], by: OLIVE });
+  assert.equal(label(none.copy.sha256), PUBLISHED_LABEL, "nothing covered");
+  const marked = await w.cc.obscureMark({ captureSha: p, areas: [area([1, 1, 4, 4])], by: BEN });
+  assert.equal(label(marked.copy.sha256), OBSCURED_LABEL, "an area covered");
+  const back = await w.cc.obscureMarkWithdraw({ captureSha: p, mark: marked.mark, reason: "not a person", by: OLIVE });
+  assert.equal(back.copy.sha256, none.copy.sha256, "the same pixels, the same copy");
+  assert.equal(label(back.copy.sha256), PUBLISHED_LABEL, "after the area's withdrawal, nothing covered");
 });
 
 test("R11 a cover image-cover refuses by name records the mark with no copy and names the code, whether the photo is marked or not: a progressive JPEG, a HEIC, a photo over COVER_MAX_BYTES (nothing over the bound fetched)", async () => {

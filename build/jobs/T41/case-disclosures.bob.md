@@ -1,6 +1,6 @@
 # BOB to case-disclosures (T41)
 
-**Read** · handled J1
+**Read** · handled J5
 
 ## B1 · START
 
@@ -25,3 +25,11 @@ CHANGE (K2533): (a) R30's first arm (`ACCOUNT_SENTENCE_UNSUPPORTED`) applies to 
 ## B4 · CHANGE
 
 CHANGE (K2537): case-grammar (T41-34) is merged into tranche/T41 @ 7fe0e94f76: R12's reader answers `obscured: {copy, label, marked}`, R23–R26 (`accountOf`, `biasApplicationsOf`, `reviewCommentsOf`, `approvalsOf`, `approvalSubjectSha`). Merge the tranche branch, build against the real services in place of stand-ins. Re-state `documents.test.mjs`:220, `photos.test.mjs`:241 for `marked` (rule 4 (19)).
+
+## B5 · CHANGE
+
+CHANGE (K2539): case-carriage (T41-35) is merged into tranche/T41 @ a79622d456 (R11's label words, `PUBLISHED_LABEL` exported). Merge the tranche branch, import it by name, re-run, and post COMPLETE again.
+
+## B6 · CHANGE
+
+CHANGE (K2541; your J2 (4), confirmed by CASE-GRAMMAR #13 J5): the gap is yours. `document.mjs`:112 `carriesBodyLines` prints a material carried as its copy as "NOT INCLUDED: only its fingerprint, origin and archived copy travel", ignoring `obscured`, against DEC-185 (1). R7 now says the case document's body prints a carried copy with its copy's label and as travelling. Print so only when `obscured` is set (every other pinned hash holds); test it with a negative control. Merge the tranche (case-carriage and case-grammar are in), re-run, post COMPLETE.

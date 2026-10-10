@@ -5,7 +5,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, makePng, decodePng, sha, V } from "./fixture.mjs";
-import { CASE_CARRIAGE_CHECKS, WITHDRAW_REASON_MAX, obscuredKey } from "../../../src/case-carriage/index.mjs";
+import { CASE_CARRIAGE_CHECKS, CASE_CARRIAGE_WORDS, WITHDRAW_REASON_MAX, obscuredKey } from "../../../src/case-carriage/index.mjs";
+import { readFile } from "node:fs/promises";
 import { migrateCaseCarriage } from "../../../src/case-carriage/schema.mjs";
 import * as SOURCES from "../../../src/sources/checks.mjs";
 import * as RECORD_CORE from "../../../src/record-core/checks.mjs";
@@ -17,7 +18,10 @@ import * as ACCEPTED_WORK from "../../../src/accepted-work/checks.mjs";
 import * as RECORD_GRAMMAR from "../../../src/record-grammar/acts.mjs";
 
 const PHOTO = "INFO-2026-0020-photo";
-const OLIVE = V("olive"), BEN = V("ben"), CARA = V("cara");
+const OLIVE = V("olive"), BEN = V("ben"), CARA = V("cara"), ADA = V("ada");
+/* R14 (T40; DEC-187 (3)): the four withdrawal refusals' keys in words.json, by code */
+const WITHDRAW_KEYS = { MACHINE_CANNOT_WITHDRAW_MARK: "photo.withdraw.refused.machine", NO_SUCH_MARK: "photo.withdraw.refused.nomark",
+                        MARK_ALREADY_WITHDRAWN: "photo.withdraw.refused.already", WITHDRAW_NO_REASON: "photo.withdraw.refused.noreason" };
 const W = 40, H = 30;
 const area = (rect, kind = "person") => ({ rect, kind });
 const inside = (rects, x, y) => rects.some(([x0, y0, x1, y1]) => x >= x0 && x < x1 && y >= y0 && y < y1);
@@ -64,13 +68,18 @@ test("R14 obscureMarkWithdraw records {withdrawal, mark, capture, reason, by, at
   assertCovers(copyOf(again.copy.sha256), original, [], "nothing covered");
 });
 
-test("R14 each refusal, in order, writes nothing and carries its C-141 row: MACHINE_CANNOT_WITHDRAW_MARK, NO_SUCH_PHOTO, NO_SUCH_MARK, MARK_ALREADY_WITHDRAWN (naming when and by whom), WITHDRAW_NO_REASON; a negative control for each records the withdrawal", async () => {
+test("R14 each refusal, in order, writes nothing and carries its C-141 row: MACHINE_CANNOT_WITHDRAW_MARK, NO_SUCH_PHOTO, NO_SUCH_MARK, MARK_ALREADY_WITHDRAWN (naming when and by whom), WITHDRAW_NO_REASON; a negative control for each records the withdrawal; (D54) the founder and an administrator neither invited nor joined to a hidden project are answered NO_SUCH_PHOTO, a discoverable project's mark withdrawn by both", async () => {
   const { w, p, a, b } = await scene();
+  w.member("ada", { role: "admin" });
   const other = w.photo("INFO-2026-0021-other", makePng(8, 8, () => [200, 10, 10]));
   const o = await w.cc.obscureMark({ captureSha: other, areas: [area([0, 0, 2, 2])], by: OLIVE });
   const hidden = w.photo("INFO-2026-0022-hidden", makePng(8, 8, () => [10, 10, 200]));
-  const h = await w.cc.obscureMark({ captureSha: hidden, areas: [area([0, 0, 2, 2])], by: "admin" });
-  w.st.sql.exec(`UPDATE bundles SET project='PROJ-2026-0099' WHERE bundle_id='INFO-2026-0022-hidden'`);
+  const h = await w.cc.obscureMark({ captureSha: hidden, areas: [area([0, 0, 2, 2])], by: OLIVE });
+  w.fence("INFO-2026-0022-hidden", "PROJ-2026-0099");
+  const open = w.photo("INFO-2026-0023-open", makePng(8, 8, () => [90, 160, 30]));
+  const op = await w.cc.obscureMark({ captureSha: open, areas: [area([0, 0, 2, 2])], by: OLIVE });
+  const op2 = await w.cc.obscureMark({ captureSha: open, areas: [area([4, 4, 6, 6])], by: OLIVE });
+  w.fence("INFO-2026-0023-open", w.project("PROJ-2026-0098", { owner: "olive", visibility: "discoverable" }));
   w.clock.now = "2026-09-28T04:00:00Z";
   assert.equal((await w.cc.obscureMarkWithdraw({ captureSha: p, mark: b.mark, reason: "drawn twice", by: BEN })).ok, true);
   const ok = { captureSha: p, mark: a.mark, reason: "a reason", by: OLIVE };
@@ -82,6 +91,11 @@ test("R14 each refusal, in order, writes nothing and carries its C-141 row: MACH
     ["NO_SUCH_PHOTO", { ...ok, captureSha: sha("never captured") }],
     ["NO_SUCH_PHOTO", { ...ok, captureSha: "not-a-digest", mark: "x", reason: "" }],
     ["NO_SUCH_PHOTO", { ...ok, captureSha: hidden, mark: h.mark }],
+    /* D54 (K2408, K2442): neither invited nor joined, the founder (both spellings) and an administrator see the
+       hidden project only at EXISTENCE */
+    ["NO_SUCH_PHOTO", { captureSha: hidden, mark: h.mark, reason: "r", by: "admin" }],
+    ["NO_SUCH_PHOTO", { captureSha: hidden, mark: h.mark, reason: "r", by: V("admin") }],
+    ["NO_SUCH_PHOTO", { captureSha: hidden, mark: h.mark, reason: "r", by: ADA }],
     ["NO_SUCH_MARK", { ...ok, mark: 999, reason: "" }],
     ["NO_SUCH_MARK", { ...ok, mark: o.mark }],
     ["NO_SUCH_MARK", { ...ok, mark: "first" }],
@@ -110,12 +124,48 @@ test("R14 each refusal, in order, writes nothing and carries its C-141 row: MACH
   assert.equal(w.bucket.calls.filter((c) => c[0] === "put").length, puts, "nor held a copy");
   /* negative controls: the same acts, made right, are recorded */
   for (const [label, args] of [["a reason at the bound", { ...ok, reason: "x".repeat(WITHDRAW_REASON_MAX) }],
-                               ["the founder sees the hidden photo", { captureSha: hidden, mark: h.mark, reason: "r", by: "admin" }],
+                               ["(D54) the founder withdraws on a discoverable project's photo", { captureSha: open, mark: op.mark, reason: "r", by: "admin" }],
+                               ["(D54) an administrator withdraws on a discoverable project's photo", { captureSha: open, mark: op2.mark, reason: "r", by: ADA }],
                                ["the other photo's own mark", { captureSha: other, mark: o.mark, reason: "r", by: BEN }]]) {
     const r = await w.cc.obscureMarkWithdraw(args);
     assert.equal(r.ok, true, `${label}: ${JSON.stringify(r).slice(0, 200)}`);
   }
-  assert.equal(w.count("photo_mark_withdrawals"), 4);
+  /* (D54) negative control for the hidden photo: out of the project, the founder withdraws its mark */
+  w.fence("INFO-2026-0022-hidden", null);
+  assert.equal((await w.cc.obscureMarkWithdraw({ captureSha: hidden, mark: h.mark, reason: "r", by: "admin" })).ok, true);
+  assert.equal(w.count("photo_mark_withdrawals"), 6);
+});
+
+test("R14 (T40; DEC-187 (3)) the four refusals' translations are words.json's photo.withdraw.refused.machine, .nomark, .already, .noreason (C-141.7–.10), read by key, replacing BOB's drafts; each answer carries its placeholders' fills: {photo} the photo named, {member} and {date} who withdrew it and when", async () => {
+  const words = JSON.parse(await readFile(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8")).words;
+  const en = (k) => { const x = words.find((w) => w.key === k); assert.ok(x, `words.json holds ${k}`); return x; };
+  for (const [code, key] of Object.entries(WITHDRAW_KEYS)) {
+    assert.equal(CASE_CARRIAGE_CHECKS[code].translation, en(key).en, `${code} reads ${key}`);
+    assert.equal(CASE_CARRIAGE_WORDS[key], en(key).en, key);
+    assert.ok(en(key).protected, `${key} is protected`);
+  }
+  assert.deepEqual(Object.entries(WITHDRAW_KEYS).map(([c]) => CASE_CARRIAGE_CHECKS[c].check), ["C-141.7", "C-141.8", "C-141.9", "C-141.10"]);
+  /* negative control: BOB's drafts are gone */
+  for (const draft of ["Only a member can withdraw a mark on a photo. Nothing was recorded.", "That mark is not one of this photo's marks. Nothing was recorded.",
+                       "That mark was already withdrawn. It is named with when and by whom. Nothing was recorded.",
+                       "A mark is withdrawn only with a reason. Give the reason. Nothing was recorded."])
+    assert.equal(Object.values(CASE_CARRIAGE_CHECKS).some((r) => r.translation === draft), false, draft);
+  /* through the act: each refusal answers its key's words and the fills its placeholders name */
+  const { w, p, a, b } = await scene();
+  w.clock.now = "2026-09-28T06:00:00Z";
+  assert.equal((await w.cc.obscureMarkWithdraw({ captureSha: p, mark: b.mark, reason: "r", by: CARA })).ok, true);
+  const machine = await w.cc.obscureMarkWithdraw({ captureSha: p, mark: a.mark, reason: "r", by: "daemon" });
+  assert.equal(machine.translation, en("photo.withdraw.refused.machine").en);
+  const nomark = await w.cc.obscureMarkWithdraw({ captureSha: p, mark: 999, reason: "r", by: OLIVE });
+  assert.deepEqual([nomark.translation, nomark.photo], [en("photo.withdraw.refused.nomark").en, p]);
+  assert.match(nomark.translation, /\{photo\}/);
+  const already = await w.cc.obscureMarkWithdraw({ captureSha: p, mark: b.mark, reason: "r", by: OLIVE });
+  assert.deepEqual([already.translation, already.member, already.date], [en("photo.withdraw.refused.already").en, CARA, "2026-09-28T06:00:00.000Z"]);
+  assert.match(already.translation, /\{member\}.*\{date\}/);
+  const noreason = await w.cc.obscureMarkWithdraw({ captureSha: p, mark: a.mark, reason: " ", by: OLIVE });
+  assert.equal(noreason.translation, en("photo.withdraw.refused.noreason").en);
+  /* negative control: the act made right is recorded */
+  assert.equal((await w.cc.obscureMarkWithdraw({ captureSha: p, mark: a.mark, reason: "a reason", by: OLIVE })).ok, true);
 });
 
 test("R14 R11 two members withdrawing one mark at once: one withdrawal is recorded, the other answered MARK_ALREADY_WITHDRAWN; each act's copy covers exactly the marks standing after it", async () => {
@@ -174,8 +224,10 @@ test("N790 R9 R14 each of this module's codes is its own: held once in C-141 and
   const checks = Object.values(CASE_CARRIAGE_CHECKS).map((r) => r.check);
   assert.equal(new Set(checks).size, checks.length, "each row numbered once");
   assert.ok(checks.every((c) => /^C-141\.\d+$/.test(c)));
-  for (const r of Object.values(CASE_CARRIAGE_CHECKS)) {
-    assert.ok(typeof r.translation === "string" && /Nothing was (recorded|made)\.$/.test(r.translation), r.check);
+  for (const [code, r] of Object.entries(CASE_CARRIAGE_CHECKS)) {
+    /* this module's own sentences say nothing was recorded; (T40) the withdrawal's four are words.json's, by key */
+    if (Object.hasOwn(WITHDRAW_KEYS, code)) assert.equal(r.translation, CASE_CARRIAGE_WORDS[WITHDRAW_KEYS[code]], r.check);
+    else assert.ok(typeof r.translation === "string" && /Nothing was (recorded|made)\.$/.test(r.translation), r.check);
     assert.match(r.where, /^src\/case-carriage\/index\.mjs \S+ > is-[a-z-]+$/);
   }
   /* negative control: sources holds the bare code this module no longer answers */
