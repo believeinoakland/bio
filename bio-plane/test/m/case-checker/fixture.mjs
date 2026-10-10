@@ -100,13 +100,13 @@ export function pairsOf(facts, accepted = []) {
 }
 
 const q = (v) => (v === null ? "null" : typeof v === "string" ? `"${v}"` : String(v));
-const rows = (key, list) => (list.length ? [`${key}:`, ...list.flatMap((r) => Object.entries(r)
+export const rows = (key, list) => (list.length ? [`${key}:`, ...list.flatMap((r) => Object.entries(r)
   .map(([k, v], i) => `${i ? "   " : "  -"} ${k}: ${q(v)}`))] : [`${key}: []`]);
 
 /** The case document's text, `/6` unless `format` names another (`/7`, T31). */
 export function caseDocument({ format = "bio-case-document/6", pairs, bar = { declared: true, capture: "B", connection: "C" }, findings = { [A]: "load_bearing", [C]: "supporting" },
                               pins, materials, attestations, accounts, accepted = [], edition = 2, recorded = null,
-                              facts = {}, passages = {}, calculations = [], extra = [] } = {}) {
+                              facts = {}, passages = {}, calculations = [], extra = [], lens = [] } = {}) {
   const roster = Object.keys(findings);
   const rec = recorded || pairs;
   const fm = [
@@ -116,7 +116,7 @@ export function caseDocument({ format = "bio-case-document/6", pairs, bar = { de
     "bias_manifest:", "  in_force: false", '  stated: "no manifest was in force"', "  pins_proposed: 0",
     '  pins_proposed_stated: "no adoption pinned a proposed revision"',
     "bias_manifest_bundles: []", "bias_manifest_pins_proposed: []",
-    ...CG.lensBlockLines([]),
+    ...CG.lensBlockLines(lens),
     ...CG.whatChangedBlockLines({ statement: "Added the 2019 minutes.", began_as: "member" }),
     ...rows("case_citations", [{ target: MINUTES, version: "pinned", capture: MINUTES_SHA }]),
     `case_findings: [${roster.join(", ")}]`,
@@ -203,7 +203,7 @@ export function caseFiles(opts = {}) {
     { ref: OBS, by_kind: "member", by: null, level: "group", at: NOW }];
   const doc = caseDocument({ format: opts.format, pairs, findings, pins, materials, attestations, accounts, accepted, bar: opts.bar,
     recorded: opts.recorded ? opts.recorded(pairs) : null, facts: opts.signedFacts || facts, passages: opts.signedPassages || passages,
-    calculations, extra: opts.docLines || [] });
+    calculations, extra: opts.docLines || [], lens: opts.lens || [] });
   put("case_document", null, doc);
   /* R22: the edition's criteria rows, as `public-read` R33 carries them (a list in canonical JSON; text as given) */
   if (opts.criteria !== undefined) put("criteria", null, typeof opts.criteria === "string" ? opts.criteria : canonicalJson(opts.criteria));

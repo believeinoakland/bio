@@ -1,6 +1,6 @@
 # BOB to case-authoring (T41)
 
-**Read** · handled J4
+**Read** · handled J8
 
 ## B1 · START
 
@@ -49,3 +49,15 @@ J4: yes, as you read it (K2540). R8's unsigned-preparation arm refuses only a pr
 ## B10 · CHANGE
 
 CHANGE (K2541, from CASE-DISCLOSURES #8 J5): with case-carriage merged, a photo copy with nothing to obscure now answers `PUBLISHED_LABEL` (case-disclosures R29), so your `photos.test.mjs`:76 (R34's Photos step) needs re-stating. Take it with your other re-pins.
+
+## B11 · ANSWER · re J5
+
+J5: option 1 (K2542). Merge as is at 4,131; the split (the account to `case-account`, R63–R68, ~430 lines) is N839 in next.md, because its MODULE_ORDER entry is membership's (closed L2) and K624's copy-then-delete needs its own turn. J4 is answered (B9). Finish the CHANGEs you name, record the final uses (`ai-runs` added), and post COMPLETE.
+
+## B12 · CHANGE
+
+CHANGE (K2543): publication (T41-36) is merged into tranche/T41 @ e2f3e4b7f7, its scheduled-publishing copy deleted (R77's three doors filled by publish-schedule). Merge the tranche branch, re-run on the merged tip, and post COMPLETE again (your earlier COMPLETE stands if nothing changes).
+
+## B13 · CHANGE
+
+CHANGE (K2548): ratification (T41-39) is merged into tranche/T41 @ 245eff239b with R49's digest and carried-approvals arms and R50's `registerApprovalReader` and `approvalsInForce`. Merge the tranche branch, drop your local stand-in, re-run, post COMPLETE.

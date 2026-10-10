@@ -16,7 +16,8 @@
  * bulk retirement (`Store.retire`, R28–R31, R33) as `./retire.mjs`.
  *
  * REACHED as `ratificationOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the
- * first call. At creation it registers the case-document catalogue with `promotion` (its R47; R8 here), the
+ * first call. At creation it creates `publish-schedule` and registers R42 as its publisher (its R2; R43 here), and it
+ * registers the case-document catalogue with `promotion` (its R47; R8 here), the
  * case-member arm of C-2.8 as a promotion check and a record-core audit check (R9), and its mint-ledger seed sources
  * (`cases`, `case_documents`) with record-core (its R70; K783).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
@@ -36,6 +37,8 @@
  *   contradiction  `candidatesFor` (its R25, R26; R22's contested arm). capture: `registerReader` (its R78; R34).
  *   strength       `testimonyCorroboration` (its R30; R35). reevaluation: `levelMoved` (its R29; R36).
  *   networkNotices `openSeals` (its R17; R37), after the case commit.
+ *   publishSchedule `scheduleEdition`, `scheduledEditions`, `registerScheduledPublisher` (its R1, R4, R2; R40, R3, R43):
+ *                  the waiting editions of "Publish at…" (T41, N823; publication's until its third split, K2438).
  *
  * READ CONTRACTS it reads in its own SQL: publication's `case_documents` and `cases` (its R40), record-core's `manifest`
  * and `history` (`gateFacts`' manifest and history lists, as they were), inquiry's `inquiry_basis` (`bundle_id`,
@@ -57,14 +60,16 @@ import { strengthOf } from "../strength/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
 import { captureOf } from "../capture/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
+import { publishScheduleOf } from "../publish-schedule/index.mjs";
 import { peopleOf } from "../people/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
+import { approvalSubjectSha, approvalsOf } from "../case-grammar/index.mjs";
 import { checkCaseDocument, caseMemberFindings, caseMemberImageFindings, completenessFields,
          RATIFY_SCOPE_CHECKS, rowOf } from "./checks.mjs";
 import { operatorCaseRefusal, machineCaseRefusal, testimonyCaseRefusal, attributionUnchosenRefusal,
          attributionStaleRefusal, conclusionMovedRefusal, noAttestingKeyRefusal,
-         anonymousTestimonyRefusal } from "./refusals.mjs";
+         anonymousTestimonyRefusal, approvalMissingRefusal, approvalsRead, approvalsNotCarried } from "./refusals.mjs";
 import { release, examineMember, PLANE_VIEWER } from "./release.mjs";
 import { retire } from "./retire.mjs";
 import { checkedOf, checkedDiffers, scheduleUncheckableRefusal, scheduledStop, refusedStop, commitStops,
@@ -114,17 +119,20 @@ export function caseConclusionRowLines(m, c) {
 export class Ratification {
   #deps;
   #holdReader = null;   /* R45: the one reader of litigation holds, registered once at start (`actions`) */
+  #approvalReader = null;   /* R50: the one reader of the group's approvals, registered once at start (`review`) */
 
   constructor({ storage, record, membership, promotion, host = null, provenance = null, inquiry = null,
                 basisVersions = null, publication = null, retrieval = null, connections = null,
                 credentials = null, contradiction = null, strength = null, reevaluation = null,
-                networkNotices = null, people = null, money = null, caseTensions = null, worker = null } = {}) {
+                networkNotices = null, people = null, money = null, caseTensions = null, publishSchedule = null,
+                worker = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.#deps = { host, provenance, inquiry, basisVersions, publication, retrieval, connections, credentials,
-                   contradiction, strength, reevaluation, networkNotices, people, money, caseTensions, worker };
+                   contradiction, strength, reevaluation, networkNotices, people, money, caseTensions, publishSchedule,
+                   worker };
   }
 
   /* The modules reached lazily: each is created on the same host on first use, unless a test passed its own. */
@@ -148,6 +156,11 @@ export class Ratification {
   }
   get people() { return this.#deps.people ||= peopleOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get money() { return this.#deps.money ||= moneyOf(this.#deps.host); }
+  /* publish-schedule (N823), one per host: created here, by its first user, after publication (its Suggestions). */
+  get publishSchedule() {
+    return this.#deps.publishSchedule ||= publishScheduleOf(this.#deps.host,
+      { record: this.record, membership: this.membership, publication: this.publication });
+  }
   get credentials() {
     return this.#deps.credentials ||= credentialsOf(this.#deps.host, { record: this.record, membership: this.membership });
   }
@@ -615,6 +628,12 @@ export class Ratification {
                        anonymousTestimonyRefusal(caseId, edition, this.#uncorroborated(src, attr))])
         if (r) refusals.push(r);
 
+      /* R49 (D60; K2528, K2533): APPROVAL_MISSING, where the act asks it after CASE_RATIFY_STALE, over these bytes'
+         approval digest; approvals that cannot be read make the answer undetermined, never a clear one. */
+      const approval = this.#approvalCheck(caseId, edition, src);
+      if (approval.read && approval.read.unreadable) throw new Error(approval.read.unreadable);
+      if (approval.refusal) refusals.push(approval.refusal);
+
       const signerMember = signer === null || signer === undefined || isMachineIdentity(signer) ? null
         : String(signer).trim().replace(/^member:/, "") || null;
       if (!signerMember || !this.credentials.attestingKeys().some((k) => k.member_id === signerMember))
@@ -647,7 +666,7 @@ export class Ratification {
   }
 
   /* R44 (DEC-147): whether the ceremony's last step offers "Publish at…", and in which zone: the group's time zone as
-     publication R66 reads it (the active profiles' `time_zone`, `jurisdictions.combine` over record-core's
+     `publish-schedule` R1 reads it (the active profiles' `time_zone`, `jurisdictions.combine` over record-core's
      `jurisdiction_profiles`). No zone held offers only "Publish now"; the time is never read as UTC. */
   #publishAtOffer() {
     let zone = null;
@@ -693,9 +712,61 @@ export class Ratification {
                                                           this.#uncorroborated(doc.text, attr)) };
   }
 
+  /* ===== THE GROUP'S APPROVALS BEFORE SIGNING (T41; D60, N820; R49, R50) ================================== */
+
+  /** R50: the reader of the group's approval rule and the approvals given (`review`, its R32), registered once at start;
+   *  a second is refused. With none, no rule is in force and R49 asks nothing. */
+  registerApprovalReader(reader) {
+    if (this.#approvalReader)
+      return { ok: false, reason: "APPROVAL_READER_DECLARED",
+               detail: "a reader of the group's approvals is already registered; there is one, registered once at start" };
+    if (!reader || typeof reader.rule !== "function" || typeof reader.approvals !== "function")
+      return { ok: false, reason: "MALFORMED", detail: "registerApprovalReader takes {rule(), approvals({case, edition, docSha})}" };
+    this.#approvalReader = reader;
+    return { ok: true };
+  }
+
+  /* R50's reading at an approval digest (`./refusals.mjs` `approvalsRead`). */
+  #approvals(caseId, edition, approvalSha) {
+    return approvalsRead(this.#approvalReader, { caseId, edition, docSha: approvalSha });
+  }
+
+  /* R49 over one document's text: its approval digest (`case-grammar` R26's `approvalSubjectSha`, K2528), R50's reading
+     there, and APPROVAL_MISSING when an approver has not approved it or a held approval is not carried in the text's own
+     `approvals:` block (K2533); `refusal` null with no rule in force. */
+  #approvalCheck(caseId, edition, text) {
+    const sha = approvalSubjectSha(text);
+    const read = this.#approvals(caseId, edition, sha);
+    const carried = (approvalsOf(parseFrontmatter(String(text ?? "")).data || {}) || {}).approvals ?? [];
+    return { sha, read, refusal: approvalMissingRefusal(caseId, edition, sha, read, approvalsNotCarried(read, carried)) };
+  }
+
+  /** R50 (K2533): the approvals in force for a case edition's document at its approval digest `docSha`, for
+   *  `case-authoring` R68: `{ok: true, rule, approvals, missing}` (`rule` null, nothing missing, with no rule in force), or
+   *  `{ok: false}` when they cannot be read. Writes nothing; never throws. */
+  approvalsInForce({ case: caseArg = null, caseId = null, edition = null, docSha = null } = {}) {
+    try {
+      const read = this.#approvals(caseArg ?? caseId, Number(edition), docSha ?? null);
+      if (read && read.unreadable)
+        return { ok: false, reason: "APPROVALS_UNREADABLE", detail: `${read.unreadable} could not be read` };
+      return read ? { ok: true, rule: { approvers: read.approvers }, approvals: read.approvals, missing: read.missing }
+                  : { ok: true, rule: null, approvals: [], missing: [] };
+    } catch (e) {
+      return { ok: false, reason: "APPROVALS_UNREADABLE", detail: String((e && e.message) || e).slice(0, 160) };
+    }
+  }
+
+  /** R49 in R2: the act's store half, asked by the Worker after CASE_RATIFY_STALE (`./ops.mjs`), over the stored
+   *  document at the `doc_sha` the Worker read: APPROVAL_MISSING (C-58.11) or null. */
+  caseApproval({ caseId = null, edition = null, docSha = null } = {}) {
+    const doc = this.#caseDocumentRow(String(caseId ?? ""), edition);
+    if (!doc || doc.doc_sha !== docSha) return { ok: true, refusal: null };   /* the act's own refusals answer it */
+    return { ok: true, refusal: this.#approvalCheck(caseId, Number(edition), doc.text).refusal };
+  }
+
   /* ===== PUBLISHING AT A SET TIME (DEC-147; R40–R45, R48) ==================================================
      "Publish at…" signs now and publishes later: the signed statement is the same as "Publish now"'s, the time is not
-     signed, and the edition waits in publication (its R66) until the one publisher this module registers (R43) checks
+     signed, and the edition waits in `publish-schedule` (its R1) until the one publisher this module registers (R43) checks
      it again at its time and commits it only if nothing changed (R42, R48). */
 
   /** R45: the reader of litigation holds in place over a project (`actions`, its R58), registered once at start; a
@@ -726,18 +797,20 @@ export class Ratification {
     };
   }
 
-  /* R41 over a plan (the stored document's bytes), at `at`, for the signing member and the verified key. */
+  /* R41 over a plan (the stored document's bytes), at `at`, for the signing member and the verified key; with R50's
+     approvals at the plan's approval digest. */
   #checkedNow(plan, signer, keyB64, at) {
     return checkedOf({ text: plan.doc.text, fm: plan.fm, caseId: plan.id, project: plan.project,
                        signer: signer === null || signer === undefined ? null : String(signer).replace(/^member:/, ""),
-                       keyB64, at, reads: this.#scheduleReads() });
+                       keyB64, at, reads: { ...this.#scheduleReads(),
+                                            approvals: () => this.#approvals(plan.id, plan.ed,
+                                                                             approvalSubjectSha(plan.doc.text)) } });
   }
 
-  /* publication R66's waiting entry for a case edition, or null (read as the plane, R69). */
+  /* `publish-schedule` R1's waiting entry for a case edition, or null (read as the plane, its R4). */
   #waitingEntry(id, ed) {
-    if (typeof this.publication.scheduledEditions !== "function") return null;
     for (let after = null; ;) {
-      const page = this.publication.scheduledEditions({ case: id, state: "waiting", after, limit: 500 });
+      const page = this.publishSchedule.scheduledEditions({ case: id, state: "waiting", after, limit: 500 });
       const list = page && Array.isArray(page.editions) ? page.editions : [];
       const hit = list.find((e) => Number(e.edition) === ed);
       if (hit) return hit;
@@ -746,7 +819,8 @@ export class Ratification {
     }
   }
 
-  /* R3 (DEC-147): an edition that waits is answered with publication's PUBLISH_AT_ALREADY_SET, naming its set time. */
+  /* R3 (DEC-147): an edition that waits is answered with `publish-schedule`'s PUBLISH_AT_ALREADY_SET, naming its set
+     time. */
   #waitingRefusal(id, ed) {
     const w = this.#waitingEntry(id, ed);
     if (!w) return null;
@@ -767,8 +841,8 @@ export class Ratification {
   /** R40: `op=publishat`'s store half. Every refusal R3 answers before its commit writes, in R3's order; then every
    *  refusal publication's commit would answer for the document now (the commit is made and rolled back, so the answer
    *  is the commit's own and nothing is written); then SCHEDULE_UNCHECKABLE (C-58.6) when R41 cannot be read; else, in
-   *  this one transaction, publication R66 in place of the commit, its answer relayed as given. The same signature and
-   *  `at` again answer R66's `existed`. Nothing of R3's commit, R36, R37 or R39 happens here: each happens at R42. */
+   *  this one transaction, `publish-schedule` R1 in place of the commit, its answer relayed as given. The same signature
+   *  and `at` again answer its `existed`. Nothing of R3's commit, R36, R37 or R39 happens here: each happens at R42. */
   publishAt({ caseId, edition, docSha, sigArmored, attestorKey, attestorMember, gateVersion, deliveredBy = null,
               at = null } = {}) {
     const id = String(caseId ?? "").trim();
@@ -786,7 +860,7 @@ export class Ratification {
       const plan = this.#casePlan({ id, ed, docSha, attestorMember: signer, deliveredBy, sigArmored, retry: false });
       if (!plan.plan) return plan;
       const waiting = this.#waitingEntry(id, ed);
-      if (waiting) return this.publication.scheduleEdition({ ...args, checked: waiting.checked ?? null });
+      if (waiting) return this.publishSchedule.scheduleEdition({ ...args, checked: waiting.checked ?? null });
       const PASSED = "PUBLISH_AT_COMMIT_WOULD_PASS";
       const probe = this.record.transact(() => {
         const c = this.publication.commitCaseEdition(this.#commitArgs(plan, { sigArmored, attestorKey,
@@ -796,11 +870,11 @@ export class Ratification {
       if (!probe || probe.reason !== PASSED) return probe;
       const checked = this.#checkedNow(plan, signer, attestorKey, stampInstant("millisecond"));
       if (!checked.ok) return scheduleUncheckableRefusal(id, ed, checked.unreadable);
-      return this.publication.scheduleEdition({ ...args, checked: checked.checked });
+      return this.publishSchedule.scheduleEdition({ ...args, checked: checked.checked });
     });
   }
 
-  /** R42: the scheduled publisher, registered with publication (its R67, R43 here). At `now`, over the document
+  /** R42: the scheduled publisher, registered with `publish-schedule` (its R2, R43 here). At `now`, over the document
    *  publication holds at the waiting `doc_sha`, it runs again every check signing ran but those that read the arriving
    *  credential, then reads R41 again and compares it with `checked`. Any refusal, difference or unread part stops it,
    *  one entry per cause, nothing committed; otherwise it commits as R3 commits and answers `{published: true,
@@ -838,6 +912,12 @@ export class Ratification {
       const late = plan.plan ? null : ["CASE_CONCLUSION_MOVED", "CASE_PRODUCTION_DIVERGED"].includes(plan.reason);
       if (!plan.plan && !late) stopped.push(refusedStop(plan));
       const doc = plan.plan ? plan.doc : this.#caseDocumentRow(id, ed);
+      /* R49: after CASE_RATIFY_STALE, the group's approvals over the waiting document's bytes */
+      if (doc && doc.doc_sha === docSha) {
+        const a = this.#approvalCheck(id, ed, doc.text);
+        if (a.read && a.read.unreadable) stopped.push(unreadableStop(a.read.unreadable));
+        else if (a.refusal) stopped.push(refusedStop(a.refusal));
+      }
       if (doc) {
         const attr = this.caseTensions.attributionFacts({ text: doc.text, case_id: id, edition: ed });
         for (const r of [testimonyCaseRefusal(id, ed, attr.legacy), attributionUnchosenRefusal(id, ed, attr),
@@ -859,8 +939,10 @@ export class Ratification {
         const read = this.#checkedNow(plan, signer, keyB64 ?? entry.signer_key ?? null, at);
         if (!read.ok) stopped.push(unreadableStop(read.unreadable));
         else for (const d of checkedDiffers(entry.checked, read.checked))
-          stopped.push(d.code === "SCHEDULED_CHECK_REFUSED" ? unreadableStop(`what signing recorded of ${d.part}`)
-                                                             : scheduledStop(d.code, { changed: d.changed }));
+          stopped.push(d.part === "approvals"   /* R50: a changed approval or rule */
+            ? scheduledStop(d.code, { cause: { code: "APPROVALS_CHANGED" }, changed: d.changed })
+            : d.code === "SCHEDULED_CHECK_REFUSED" ? unreadableStop(`what signing recorded of ${d.part}`)
+            : scheduledStop(d.code, { changed: d.changed }));
       }
       if (stopped.length || !plan.plan) return { ok: false, stopped };
       const done = this.#commitPlan(plan, { sigArmored: sig, attestorKey: keyB64, attestorMember: signer, gateVersion,
@@ -963,8 +1045,8 @@ export class Ratification {
     const out = this.record.transact(() => {
       const plan = this.#casePlan({ id, ed, docSha, attestorMember, deliveredBy, sigArmored, retry: true });
       if (!plan.plan) return plan;
-      /* R3 (DEC-147): an edition publication holds waiting (its R66) is not published now: an owner cancels the set
-         time (publication R68) and signs again. Nothing is written. */
+      /* R3 (DEC-147): an edition `publish-schedule` holds waiting (its R1) is not published now: an owner cancels the set
+         time (its R3) and signs again. Nothing is written. */
       const waiting = this.#waitingRefusal(id, ed);
       if (waiting) return waiting;
       return this.#commitPlan(plan, { sigArmored, attestorKey, attestorMember, gateVersion, deliveredBy }, hold);
@@ -1451,10 +1533,9 @@ export function ratificationOf(host, deps) {
     (d.capture || captureOf(host)).registerReader("batch-examination", "ratification", (id) => r.examine(id));
     promotion.registerStep("ratification", { check: (c) => r.check(c) });
     record.registerAuditCheck("ratification", (image) => r.audit(image));
-    /* R43 (DEC-147; publication R67): the one publisher of a waiting edition is R42, registered once. */
-    const pub = r.publication;
-    if (typeof pub.registerScheduledPublisher === "function")
-      pub.registerScheduledPublisher({ publishScheduled: (entry, now) => r.publishScheduled(entry, now) });
+    /* R43 (DEC-147; N823): this module creates `publish-schedule` and registers R42 once as the one publisher of a
+       waiting edition (its R2). */
+    r.publishSchedule.registerScheduledPublisher({ publishScheduled: (entry, now) => r.publishScheduled(entry, now) });
     const seeded = record.registerMintSeed("ratification", MINT_SEED.map((x) => [...x]));
     if (seeded && seeded.ok === false)
       throw new Error(`ratification: record-core refused its mint seed: ${seeded.reason}`);
@@ -1463,7 +1544,8 @@ export function ratificationOf(host, deps) {
 }
 
 /** R32: the module's store-half ops (K3), spread into the plane's op map (`plane/store.mjs`): `gatefacts` (R7), `ratifygate` (R4's
- *  gate, N417), `casegate` (R2's gate), `caseratify` (R3), `publishat` (R40) and `publish` (R5), the internal hops of the two ceremonies,
+ *  gate, N417), `casegate` (R2's gate), `caseratify` (R3), `publishat` (R40), `casetestimony` (R35), `caseapproval` (R49)
+ *  and `publish` (R5), the internal hops of the two ceremonies,
  *  `release` (R20–R27) and `retire` (R28–R31). `viewer`, and release's and retire's `owner` and `author`, are the
  *  control plane's stamps, read from the query, never from the body. `casegate`'s grant digest `secretSha` is the one
  *  exception: read from the internal request's body only, where the control plane sets it after removing any a caller
@@ -1480,6 +1562,7 @@ export function ratificationOps(r, url, body) {
     caseratify: () => r.ratifyCaseDocument(b),
     publishat: () => r.publishAt(b),
     casetestimony: () => r.caseTestimony(b),
+    caseapproval: () => r.caseApproval(b),
     publish: () => r.publish(b),
     release: () => r.release({ handle: q("handle"), acknowledgment: q("acknowledgment"), mitigation: q("mitigation"),
                                viewer: q("viewer"), owner: q("owner"), author: q("author") }),

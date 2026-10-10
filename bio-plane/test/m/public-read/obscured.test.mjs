@@ -159,7 +159,8 @@ test("R3 a row carried as its copy answers obscured: {copy, label} exactly as si
   const c = w.read("publishedcase", { id: CASE });
   assert.equal(c.ok, true);
   const row = c.materials.materials.find((r) => r.ref === PHOTO);
-  assert.deepEqual(row.obscured, { copy: COPY_SHA, label: LABEL }, "as signed, the label word for word");
+  /* as signed; `marked` (case-grammar R12, T40) read by the label where the row states no `obscured_marked` */
+  assert.deepEqual(row.obscured, { copy: COPY_SHA, label: LABEL, marked: true }, "as signed, the label word for word");
   assert.equal(row.sha, original, "the row keeps the original's fingerprint");
   assert.equal(row.included, false);
   assert.equal(c.materials.materials.find((r) => r.ref === DOC).obscured, null, "a row without it answers obscured: null");
@@ -391,7 +392,8 @@ test("R23 a member document carried as its cleaned copy (case-carriage R15) is c
   /* R3: the row as signed, the label word for word */
   const c = w.read("publishedcase", { id: CASE });
   const row = c.materials.materials.find((r) => r.ref === MEMDOC);
-  assert.deepEqual(row.obscured, { copy: copySha, label: CLEANED_LABEL });
+  assert.deepEqual(row.obscured, { copy: copySha, label: CLEANED_LABEL, marked: true });
+  assert.equal(row.label_key, "document.cleaned.label");
   assert.equal(row.sha, original);
   assert.equal(row.included, false);
   /* R5: the copy is served by its hash */

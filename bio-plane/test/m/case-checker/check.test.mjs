@@ -21,8 +21,10 @@ const has = (list, check, re) => list.some((e) => e.check === check && re.test(e
 test("R1 R11: a clean case file recreates every finding, members and the finding a member's chain reaches, with the answer's whole shape", async () => {
   for (const parts of [1, 2, 3]) {
     const r = await check({ parts });
-    assert.deepEqual(Object.keys(r).sort(), ["calculations", "case", "checker", "complete_edition", "edition", "findings", "format", "group", "integrity",
-      "obscured", "publication_checks", "rests_on_another_group", "rests_on_another_group_statement", "signatures", "standards_use", "statement"]);
+    assert.deepEqual(Object.keys(r).sort(), ["account", "calculations", "case", "checker", "complete_edition", "edition", "findings", "format", "group", "integrity",
+      "lens", "lens_statement", "obscured", "publication_checks", "rests_on_another_group", "rests_on_another_group_statement", "signatures", "standards_use", "statement"]);
+    assert.equal(r.account, null);           /* R24: no account block */
+    assert.equal(r.lens.name, "as_published"); assert.equal(r.lens_statement, CC.LENS_LIMIT_STATEMENT);   /* R23 */
     assert.equal(r.standards_use, null);     /* R22: no criteria file */
     assert.deepEqual(r.obscured, []);        /* R1, R8: no material carried as its copy */
     assert.equal(r.format, "bio-case-file/1"); assert.equal(r.case, CASE); assert.equal(r.edition, 2); assert.equal(r.group, GROUP);

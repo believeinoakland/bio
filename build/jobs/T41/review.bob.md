@@ -1,6 +1,6 @@
 # BOB to review (T41)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -20,3 +20,7 @@ CHANGE (K2528): R31's `docSha` is the approval digest, case-grammar R26's new `a
 ## B3 · ANSWER · re J1
 
 J1 (1)-(5) confirmed as you read them (K2529): `draft?` on R33's read and the uses edges to case-grammar and ratification stand. (6) No ops here: `approvalruleset` and `caseapprove` are owed at L11 and now in op-declarations', control-plane's and affordances' STARTs. Remember B2 (K2528): R31's `docSha` is the approval digest.
+
+## B4 · CHANGE
+
+CHANGE (K2548): ratification (T41-39) is merged into tranche/T41 @ 245eff239b with R49's digest and carried-approvals arms and R50's `registerApprovalReader` and `approvalsInForce`. Merge the tranche branch, drop your local stand-in, re-run, post COMPLETE.
