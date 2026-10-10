@@ -1,6 +1,6 @@
 # ai-use — requirements
 
-**Status** · In force: a new module (layer 6, directly before `ai-runs`; K657, K1043), its requirements BOB's, written for T40 from `build/plan/draft-T40-N812.md` part C (N812; Bob's K2350, K2352, K2353; adopted K2373, its doubts settled K2376; applied K2394). R1–R4 were `ai-runs` R48–R51, retired there with pointers (B10). Last changed T40 (T40-7: R1–R9 new; N812; K2373, K2376, K2394, K2400). Last changed T41 (T41-22: R10 `estimate`, R11 `actualOf`, new; R4 and R9 amended, folded with T40's text, D12; as `draft-T41-investigation.md` §3.6, K2405, K2418), not yet met; every requirement not yet met (T41).
+**Status** · In force: a new module (layer 6, directly before `ai-runs`; K657, K1043), its requirements BOB's, written for T40 from `build/plan/draft-T40-N812.md` part C (N812; Bob's K2350, K2352, K2353; adopted K2373, its doubts settled K2376; applied K2394). R1–R4 were `ai-runs` R48–R51, retired there with pointers (B10). Last changed T40 (T40-7: R1–R9 new; N812; K2373, K2376, K2394, K2400). Last changed T41 (T41-22: R10 `estimate`, R11 `actualOf`, new; R4 and R9 amended, folded with T40's text, D12; as `draft-T41-investigation.md` §3.6, K2405, K2418), not yet met; every requirement not yet met (T41). Last changed T42 (T42-17: R2 and R3 amended, `ai_ceilings` dropped after the carry and the owner's `explore` read through `credentials.accountUsesOf`; N848, N831; K2592, K2608), not yet met.
 
 **Size (P6).** About 900 lines: about 350 copied from `ai-runs/index.mjs`:2591–2940 (the counter, the ceilings and the reads, K624), with the limits, the judging and the reads added. Well under 4,000.
 
@@ -33,7 +33,7 @@ Terms. An **owner** is the holder of one AI account: `group` (its administrators
   - Anything else is refused `AI_LIMIT_INVALID`, naming the field.
   - Who may set it is the owner's own act: the member (`NOT_YOUR_CEILING`); a project owner (`credentials`' R54 refusals); an active administrator (`NOT_AN_ADMIN`).
   - At most one limit is held per owner, scope, unit and period. Each set is appended with who and when.
-  - The migration writes today's ceilings as B4 says: a member's own daily ceiling becomes that member's account's `overall` day limits in tokens and calls; the copy-wide ceiling becomes the group account's `per_member` day limits.
+  - The migration writes today's ceilings as B4 says: a member's own daily ceiling becomes that member's account's `overall` day limits in tokens and calls; the copy-wide ceiling becomes the group account's `per_member` day limits. (T42; N848; K2592) Once carried, `ai_ceilings` is dropped in the same migration, as R1's pre-T40 counter table is, so a migrated store holds no table a fresh one lacks. A store whose carry already ran but which still holds the table drops it at its next migration. Idempotent. *(not yet met: T42)*
 
 **Judging** (`useCheck`)
 - **R3** (D38 C, D39; B3, B5; was `ai-runs` R50's judging half) `useCheck({owner, member, use, at})` answers `null` or `AI_LIMIT_REACHED` with `{whose, scope, unit, period}` and its plain-words row, naming no cost.
@@ -42,7 +42,7 @@ Terms. An **owner** is the holder of one AI account: `group` (its administrators
     - its `overall` limit, counted over the uses that are not exclusive, unless `use`'s limit is exclusive;
     - its `per_member` limit, counted over `member`'s use of that account.
   - It judges only the paying account's limits (D38: never another account's money limits).
-  - For `explore` it refuses `EXPLORE_NOT_ENABLED` when the owner's `explore` setting is `no` (A5, B6; K2400). With `yes` and no `explore` limit held, `explore` is judged against the `overall` limit alone; `ask` without that day's approval is R6's answer, not this one's.
+  - For `explore` it refuses `EXPLORE_NOT_ENABLED` when the owner's `explore` setting is `no` (A5, B6; K2400). With `yes` and no `explore` limit held, `explore` is judged against the `overall` limit alone; `ask` without that day's approval is R6's answer, not this one's. (T42; N831) The owner's `explore` value is read through `credentials.accountUsesOf` (its R62), with no viewer. It reads as `no` when the account is not held, cannot be read, or holds a value other than `no`, `ask` or `yes` (fail closed). It is never read through `accountUses` asked as one of the account's owners. *(not yet met: T42)*
   - It writes nothing and never throws. A counter that cannot be read answers the refusal (fail closed).
 
 **Reads** (`aiUsage`, `aiUsageMine`, `limitsReached`)
@@ -73,7 +73,7 @@ Terms. An **owner** is the holder of one AI account: `group` (its administrators
 - `civil-time`: `localDay` and the local month (R1–R5, R9).
 - `record-core`: `declareTable`, `transact` (R1, R7).
 - `membership`: the administrator test and `notAnAdmin` (its R64, R84), `isProjectOwner` (its R54) (R2, R4, R5, R9).
-- `credentials`: `USE_KINDS` (its R55), the project account's owner refusals (its R54), `aiKeptAway` and `projectsKeptAway` (its R57), the owner's `explore` value (its R55) (R2, R6, R9).
+- `credentials`: `USE_KINDS` (its R55), the project account's owner refusals (its R54), `aiKeptAway` and `projectsKeptAway` (its R57), the owner's `explore` value through `accountUsesOf` (its R62; R3, R6, R9; T42), and `accountUses`'s owners and refusals (its R60; R12).
 - `connections`: `citesInto` (R6's project scope).
 - `run-rules`: `AI_RUN_CONSUME_INVALID`'s row (its R3, R11) and the retired ceiling codes' successors (its R20).
 

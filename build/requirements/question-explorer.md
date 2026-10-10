@@ -1,6 +1,6 @@
 # question-explorer — requirements
 
-**Status** · Draft, BOB's (K2405, K2418, K2420): a new product module Bob approved (D51 A, D1), placed by BOB, written at T41's opening from `build/plan/draft-T41-investigation.md` §3.2 (N815, N820; D33, D36, D39, D11–D14, D66). Every requirement not yet met (T41).
+**Status** · Draft, BOB's (K2405, K2418, K2420): a new product module Bob approved (D51 A, D1), placed by BOB, written at T41's opening from `build/plan/draft-T41-investigation.md` §3.2 (N815, N820; D33, D36, D39, D11–D14, D66). Every requirement not yet met (T41). Last changed T42 (T42-19: R15 new, the factory migrates at creation; N845; K2571, K2608), not yet met.
 
 **Size (P6).** About 1,450 lines. Built and tested; offered to no member until R7's gate (D11's bar) opens.
 
@@ -26,6 +26,7 @@ The system exploring a question on its own where an account owner turned explori
 - **R12** (D12) Each Ask item and each run carries `ai-use` R10's estimate before (a range, or "not known yet") and, at its close, `ai-runs` R76's actual cost, each answered to the paying account's owners only.
 - **R13** (D2) An exploring run may read inside documents the record holds, a few pages at a time within `run-rules` R26's reading bound, never a document under a "no AI" material limit (`credentials` R57); what it proposes while reading is `run-productions` R21's, each tied to the step.
 - **R14** (D66; CF invariant 7 as amended) A find that cuts against what the question's members hold is offered exactly as prominently as one that supports it: the same item, kind, place and order rule; no answer here orders, groups or filters finds by bearing.
+- **R15** (T42; N845; K2571) `questionExplorerOf(host, deps?)` answers one instance per host with its tables already created: it runs its `migrate()` before declaring them to purge, as `publish-schedule`'s factory does. A host that builds it and never calls `migrate()` therefore reads, ticks and purges without error. `migrate()` stays callable and idempotent. *(not yet met: T42)*
 
 ## Private
 

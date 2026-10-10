@@ -1,6 +1,6 @@
 # steps — requirements
 
-**Status** · Draft, BOB's (K2405, K2418, K2420): a new product module Bob approved (D51 A, D1), placed by BOB, written at T41's opening from `build/plan/draft-T41-investigation.md` §3.1 (N820; D27–D50, H38, H39, D64). Every requirement not yet met (T41).
+**Status** · Draft, BOB's (K2405, K2418, K2420): a new product module Bob approved (D51 A, D1), placed by BOB, written at T41's opening from `build/plan/draft-T41-investigation.md` §3.1 (N820; D27–D50, H38, H39, D64). Every requirement not yet met (T41). Last changed T42 (T42-14: R28 new, its own code for C-142.28, re-coded in place; N843; K2566, K2608), not yet met.
 
 **Size (P6).** About 2,150 lines; past about 2,500, the cost relay, follows and later-found move to a module directly after it (BOB's, at the job's report).
 
@@ -90,6 +90,7 @@ Terms. A **step** is `STP-` (`record-grammar` R51). Its **place** is exactly one
 - **R21** (D44) A step holds no step; nothing here nests one step in another.
 - **R22** Tables are declared through `record-core.declareTable`: project-placed steps keyed and purged with their project; question-placed steps purged when their last referring question is; group steps with the whole store; follows `sight: "owner"`. No place is named in behaviour or outward text.
 - **R27** (H30 (2)) Nothing here reads the project's bar or gates a leg, a conclusion or a step by it.
+- **R28** (T42; N843; K231, K2566) R24's `stepAccept` refuses a proposed step that is absent or unseen with `NO_SUCH_STEP_PROPOSAL` (C-142.28, its number and translation unchanged), and never with `NO_SUCH_PROPOSAL` (intent's). *(not yet met: T42)*
 
 ### Satisfies
 

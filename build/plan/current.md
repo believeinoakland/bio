@@ -63,7 +63,7 @@ No merge order (independent).
 
 ### L4
 - **T42-9 · reading-pipeline** · (N835, K2500) the paying owner spelled from the bare member id (ai-use R1; tests only, R29 stands); (N832, K2611) R30: the act's entry into R29's tier, and a re-read keeps AI-transcribed pages (`tier3SeedFrom` keeps only OCR pages today) · req: `draft-T42-transcribe.md` §2.
-- **T42-10 · extraction** · (N832, K2484, K2611) R71, R72; R47 gains C-51.6 `TRANSCRIBE_NOT_DEPLOYED` (501, before any account or content is read, while run-rules R19's bar cannot be held; the test set handed in as a dependency so a module test drives the chain); the capture's own project's "no AI" limit checked (`credentials.aiKeptAway`) · req: `draft-T42-transcribe.md` §3; (N839, K2608) R58's read contract names `capture_text`, which `case-account` reads.
+- **T42-10 · extraction** · (N832, K2484, K2611) R71, R72; R47 gains C-51.7 `TRANSCRIBE_NOT_DEPLOYED` (501, before any account or content is read, while run-rules R19's bar cannot be held; the test set handed in as a dependency so a module test drives the chain); the capture's own project's "no AI" limit checked (`credentials.aiKeptAway`) · req: `draft-T42-transcribe.md` §3; (N839, K2608) R58's read contract names `capture_text`, which `case-account` reads.
 
 ### L5
 - **T42-11 · retrieval** · (N830, K2480) a row-decoration registration on the search answer, for inquiry R60's `projects` · req: from `draft-T42-reqs.md`.
@@ -101,12 +101,12 @@ No merge order (independent).
 None.
 
 ### L11
-- **T42-25a · op-grades** · (N832) R31 grades `transcribe` · req: `draft-T42-transcribe.md` §6.
-- **T42-25b · affordances** · (N832) its ladder-count tests re-pinned for op-grades' `transcribe` · after T42-25a.
-- **T42-26 · op-declarations** · (N832) R47 declares `transcribe` · req: §7.
+- **T42-25a · op-grades** · (N832) R31 grades `pagetranscribe` · req: `draft-T42-transcribe.md` §6.
+- **T42-25b · affordances** · (N832) its ladder-count tests re-pinned for op-grades' `pagetranscribe` · after T42-25a.
+- **T42-26 · op-declarations** · (N832) R47 declares `pagetranscribe` · req: §7.
 - **T42-27 · answer-envelope** · (N843) its two pins return to green (clears rule 4 (6)); the `changed.note` sentence in `rows-before-r43.json` and three `HELD_EARLIER` rows in `families.test.mjs` follow N843's re-codings. (Doorbell's family file joins in T43, N849; K2609.)
 - **T42-28 · store-door** · (N826) `inboxpullfile` through `doorbell`.
-- **T42-29 · control-plane** · (N832) R74 routes `transcribe`; (N826) wording; (N839) `owner-ops.mjs` reaches `accountPropose`/`accountDrafts` through `of.caseAccount()`.
+- **T42-29 · control-plane** · (N832) R74 routes `pagetranscribe`; (N826) wording; (N839) `owner-ops.mjs` reaches `accountPropose`/`accountDrafts` through `of.caseAccount()`.
 - **T42-30 · plane** · (N826) builds `doorbellOf` after capture, migrates after it, spreads `doorbellOps`, its door uses `doorbellPublicOp`; (N832) R36 composes `read`'s `transcription` (renders pages with `pdf-pixels`: edge `plane` → `pdf-pixels`, and `run-rules` if new); (N839) builds `caseAccountOf` before `caseAuthoringOf`.
 - L11 shares from the case-account map and the transcribe draft (op-grades, affordances, users of the account's ops) are added here before L11's START.
 

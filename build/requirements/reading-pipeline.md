@@ -1,6 +1,6 @@
 # reading-pipeline — requirements
 
-**Status** · In force: split from `extraction` (N513; K617, K1193), meaning unchanged: R1–R19 are `extraction` R2–R17, R60, R25 and R26, retired there; R20–R22 copy its R44, R45 and R50, binding both modules; R23 is BOB's wording of the seam; the text Bob's rulings (K102, K293, DEC-4, DEC-75) settled. Last changed T41 (T41-9: R29 new, a transcription tier above tier 3, as `draft-T41-investigation.md` §3.6; K2405, K2418), not yet met; R28 marked not yet met (T36: amended, a `.docx` table's cells; K1972, K2092), every other requirement met (last merged T35, K1962).
+**Status** · In force: split from `extraction` (N513; K617, K1193), meaning unchanged: R1–R19 are `extraction` R2–R17, R60, R25 and R26, retired there; R20–R22 copy its R44, R45 and R50, binding both modules; R23 is BOB's wording of the seam; the text Bob's rulings (K102, K293, DEC-4, DEC-75) settled. Last changed T41 (T41-9: R29 new, a transcription tier above tier 3, as `draft-T41-investigation.md` §3.6; K2405, K2418), not yet met; R28 marked not yet met (T36: amended, a `.docx` table's cells; K1972, K2092), every other requirement met (last merged T35, K1962). Last changed T42 (T42-9: R30 new, the re-read's seed keeps the AI's pages; N832, K2611; N835's owner spelling is tests only, R29 stands, K2500), not yet met.
 
 | old (`extraction`) | new | | old | new | |
 |---|---|---|---|---|---|
@@ -80,6 +80,7 @@ Reads a stored capture. `document` is `capture`'s acquire answer's document (dig
   - `bytesOf` (the evidence read);
   - `CAPTURE_TEXT_UNIT_CAP` (R15's per-unit cap, which `extraction` R22 also bounds stored units by);
   - `PROVENANCE_SCHEME` (`reading-provenance/1`, R18).
+- **R30** (T42; N832; K2611; R29, `extraction` R35) `tier3SeedFrom(reading, units)` also seeds the stored reading's `pixels → ai_transcription` parts (R29), each under its own chain, as it seeds `pixels → ocr` parts: a page a stored reading holds from the AI's transcription is kept with that text and chain by a re-read (R6's merge), is never asked of the OCR member or of the AI again (`tier4Pages` does not list it), and is never dropped from the reading a re-read writes. A part whose chain `checkChain` refuses is not seeded, as today. *(not yet met: T42)*
 
 **The after-read hook: onRead(module, fn, {captureClasses}), afterRead({captureSha, captureClass, reading, committed})** (T33-23; B1a.4; K1468, D177)
 Both are methods of the storage's own hook registry, `readHooksOf(ctx)` (one per `ctx.storage`, held in memory; K1555): a registering module calls `readHooksOf(ctx).onRead(…)` at its start and the committing module calls `readHooksOf(ctx).afterRead(…)`.

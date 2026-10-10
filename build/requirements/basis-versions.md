@@ -1,6 +1,6 @@
 # basis-versions — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed. Last changed T41 (T41-19: R48 new, `bias_applied` on a conclusion, as `draft-T41-investigation.md` §3.6; K2405, K2418), not yet met; every other requirement met.
+**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed. Last changed T41 (T41-19: R48 new, `bias_applied` on a conclusion, as `draft-T41-investigation.md` §3.6; K2405, K2418), not yet met; every other requirement met. Last changed T42 (T42-16: R49 new, the `onMachinePassage` slot; N834; K2496, K2608), not yet met.
 
 **Size (P6).** About 4,280 lines move (about 2,160 without comment-only and blank lines): `store.mjs` 3,004, `bio-checks.mjs` 1,018, `schema.mjs` 257. Just past the 4,000 mark; one session reads it with its uses' public parts (K74's test). The conclusion acts are 816 of them; left with `inquiry` they would need a registration from this module (map §5.3). `op=suggest` (912 lines and C-27) is placed with `ai-runs`, not here (map §5.2).
 
@@ -68,12 +68,17 @@ Terms. A **version** is a `basis_versions[]` row `{name, description, claim?, re
 
 **A conclusion's bias applications** (T41-19; D59)
 - **R48** (D59) A conclusion may carry `bias_applied` in `inquiry-grammar` R18's shape for the conclusion's claim (`inference_refused`, `scrutiny_raised`), recorded with the conclusion, in `inquiry-grammar` R18's one encoding (`flattenBiasApplied`, its numbered scalar keys on the `conclusions[]` row) with `bias_statements_sha` (bias R49's sha of the lens checked), and read back by `conclusionRecordOf` as `bias_applied` and `bias_lens_sha`; only a project's conclusion carries it; a malformed list is refused `BAD_BIAS_APPLIED` as `BAD_COMMENTARY` is (K2479). Each `statement` is asked of `bias.statementInForce` (its R49) at the conclusion's project scope, the acting member as viewer; one not in force (false or null) is refused through `inquiry.biasNotInForce` (its R61), and nothing is written (K2472).
+- **R49** (T42; N834; K2496) `onMachinePassage(module, fn)` is a slot like `inquiry` R62's, with one registration (`run-productions` R25's) and R40's refusals. R6's check of a promotion whose author is not a machine calls `fn({legs, author, viewer})` once, over:
+  - each leg of a version the revision adds, `narrow`'s version included (R27). A version already held is frozen (R29) and is never asked;
+  - at `versionAccept` of a version a machine authored, that version's legs, with the accepting member as `author`.
+
+  A refusal from `fn` refuses the act unchanged and nothing is written. A `fn` that throws or answers anything else is refused through `inquiry.machinePassageUnchecked` (its R62). A machine's own `suggested` version (R28; `run-productions` R4) is never asked. With nothing registered, no leg is refused by this rule. *(not yet met: T42)*
 
 ## Private
 
 ### Uses
 
-- `bias`: `statementInForce` (its R49; R48; K2472). A new `modules.json` edge; `bias` is earlier (layer 5). `inquiry`: `biasNotInForce` (its R61; R48).
+- `bias`: `statementInForce` (its R49; R48; K2472). A new `modules.json` edge; `bias` is earlier (layer 5). `inquiry`: `biasNotInForce` (its R61; R48), `machinePassageUnchecked` (its R62; R49).
 - `record-grammar`: the shared grammar names this module once read from the check catalogue (frontmatter, types, ids, actors, labels, grades, `SHARED_ACT_CHECKS`), re-pointed in T19 (rule 1); the catalogue rows it owned are in its own code (K808, K820).
 - `record-core`: `recordOf(ctx)`, `declarePurge`, the `bundles` read contract.
 - `membership`: `viewerPredicate`, `inSight` (R80), `existenceAct`, `projectAuthority`; `listenerRefusal` (R81) and `MODULE_ORDER` (R83) (N202).
