@@ -13,7 +13,8 @@ import { controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
 import { createHash } from "node:crypto";
 import { ROOT, owners, published } from "./fixture.mjs";
 
-const SOURCINGS = new Set(["authored", "imported", "driven", "absent"]);
+/* The four kinds, and R40's `guide` (a reading guide's items, passed by the run's caller). */
+const SOURCINGS = new Set(["authored", "imported", "driven", "absent", "guide"]);
 const JUDGEMENT_KEYS = ["composition", "description", "search", "absence", "prohibitions",
                         "deployment_sequence", "judgement_boundary"];
 
@@ -166,12 +167,13 @@ test("R4 disclosable lists every disclosed key with its load_when, and nothing o
   for (const d of resident.disclosable) assert.deepEqual(Object.keys(d).sort(), ["layer", "load_when"]);
 });
 
-test("R5 disclosed holds the judgement layers, then vocabularies, acts, bounds, refusals, contradiction, action_planning, filing_drafting, edition_statement, wizard_authoring, legal_lookup, ask, suggestions, writing_help, interface_translation, wizard_scripts (no recipes layer), each with load_when and sourcing", () => {
+test("R5 disclosed holds the judgement layers, then vocabularies, acts, bounds, refusals, contradiction, action_planning, filing_drafting, edition_statement, wizard_authoring, legal_lookup, ask, suggestions, writing_help, interface_translation, wizard_scripts (no recipes layer), then (T41) reading_guide, enquire, explore, reading, case_account, account_check, each with load_when and sourcing", () => {
   const pub = published();
   const { disclosed } = renderPack(pub);
   assert.deepEqual(Object.keys(disclosed), [...JUDGEMENT_KEYS, "vocabularies", "acts", "bounds", "refusals",
     "contradiction", "action_planning", "filing_drafting", "edition_statement", "wizard_authoring", "legal_lookup",
-    "ask", "suggestions", "writing_help", "interface_translation", "wizard_scripts"]);
+    "ask", "suggestions", "writing_help", "interface_translation", "wizard_scripts",
+    "reading_guide", "enquire", "explore", "reading", "case_account", "account_check"]);
   assert.ok(!("recipes" in disclosed), "DEC-120 retires the recipe: no layer carries the word");
   assert.deepEqual(JUDGEMENT_KEYS.map((k) => disclosed[k]), JUDGEMENT_KEYS.map((k) => judgementLayers()[k]));
   assert.equal(disclosed.vocabularies.body, pub.vocabularies, "the published vocabularies, unchanged");
@@ -189,7 +191,7 @@ test("R5 disclosed holds the judgement layers, then vocabularies, acts, bounds, 
   for (const [k, layer] of Object.entries(disclosed)) {
     assert.equal(typeof layer.load_when, "string", `${k}.load_when`);
     assert.ok(layer.load_when.trim().length > 0, `${k}.load_when is non-empty`);
-    assert.ok(SOURCINGS.has(layer.sourcing), `${k}.sourcing is one of the four`);
+    assert.ok(SOURCINGS.has(layer.sourcing), `${k}.sourcing is one of the four, or R40's guide`);
   }
 });
 

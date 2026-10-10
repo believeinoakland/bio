@@ -89,10 +89,16 @@ import { SUGGEST_LEVELS, SUGGEST_CHECKS } from "./run-productions/index.mjs";
 import { BASIS_ROLES, EARNED_GRADE_SOURCES, PROPOSAL_STATES } from "./record-grammar/index.mjs";
 import { BASIS_VERSION_CHECKS, CONCLUDE_ACT_CHECKS } from "./basis-versions/index.mjs";
 import { INQUIRY_GRAMMAR_CHECKS } from "./inquiry-grammar/index.mjs";
+/* The guide check and its one registration are reading-guides' (its R4; K2472, K31's pattern): this module fills the
+   registration with its R16 at load, and runs the check again at every render of a guide (R40). */
+import { checkGuide, registerConductCheck } from "./reading-guides/index.mjs";
 /* The run's rows and the one deployment order are run-rules' (its R8, R9, R11;
    N156, K617): read from it, never copied. */
 import { AI_RUN_CHECKS, DEPLOYMENT_SEQUENCE, DEPLOYED_MODES, DRAFT_MODE, GATE_ADDRESS, SEQUENCING_SOURCE,
          SEQUENCING_ALSO_NAMED_IN } from "./run-rules/index.mjs";
+/* T41 (run-rules R23–R26): the interview's mode, the explorer's origin, the system's draft kinds and their reach, and the
+   reading bound, each read by key, never typed (R23). */
+import { ENQUIRE_MODE, RUN_ORIGINS, DRAFT_REACH, RUN_BOUNDS } from "./run-rules/index.mjs";
 export { DEPLOYMENT_SEQUENCE, GATE_ADDRESS, SEQUENCING_SOURCE, SEQUENCING_ALSO_NAMED_IN };
 
 /* C-22.7 IS NAMED HERE BY KEY (R25; K194, K333), selected from `run-rules`'
@@ -222,6 +228,11 @@ export function controlFlowAuthority(text) {
   const s = typeof text === "string" ? text : "";
   return CONTROL_FLOW_AUTHORITY.filter((p) => p.re.test(s)).map((p) => p.name);
 }
+
+/** R40 (K2472): R16 registered, once at load, as reading-guides' conduct check (its R4), so every draft, review,
+ *  adoption and offer of a guide is scanned by the same function as this module's doctrine. Its answer is kept: a
+ *  second registration in one process is refused there (`PROVIDER_DECLARED`), and R40's render runs R16 itself anyway. */
+export const CONDUCT_CHECK_REGISTRATION = Object.freeze(registerConductCheck(controlFlowAuthority, "skills"));
 
 /* =========================================================================
  * THE CLAUSES
@@ -1212,7 +1223,7 @@ const DEC27_LIMIT = Object.freeze({
   text: "The assistant may only structure what the member SAID",
   source: ROLES_SOURCE, section: "§3" });
 
-/* THE RESEARCH BOUNDARY (R2, R37, R38; T35: F5, K1881; K1880; K1888; T36: N731, K1993). Four clauses every run, ask
+/* THE RESEARCH BOUNDARY (R2, R37, R38; T35: F5, K1881; K1880; K1888; T36: N731, K1993). Five clauses every run, ask
    and draft holds from its first token, so they are resident, not disclosed. Each is held ONCE here and named from every
    layer that carries it: the ask layer names R37's (R34), and the law lookup and the action planning layers name R38
    (a)'s and (c)'s as their capture clauses (R33, R28), so no two carriers can differ. R38 (a) and (b) are Roles §3
@@ -1233,11 +1244,18 @@ export const DISCOVERY_IS_NOT_CAPTURE = Object.freeze({
     + "record's request, never by the assistant.",
   source: ROLES_SOURCE, section: "§3" });
 
-/** R38 (b), K1888: a file is read only as the readers' text, its active list told as a fact. */
+/** R38 (b), K1888: a file is read only as the readers' text. Rule 11 as amended with the investigation canon (K2420,
+ *  D2) puts the reading limit inside this sentence and states the active list in a sentence of its own, so (b) is
+ *  carried as the two spans the rule now holds, this and `ACTIVE_LIST_IS_A_FACT`. */
 export const FILES_AS_EXTRACTED_TEXT = Object.freeze({
-  text: "The assistant reads inside a file only as the text the plane's readers extracted from it, and is told the "
-    + "file's active list (its macros, scripts and embedded files) as a fact about the file; it never opens an "
-    + "embedded file, runs a macro or asks for a file's bytes.",
+  text: "The assistant reads inside a file only as the text the plane's readers extracted from it, a few pages at a "
+    + "time within a reading limit, and never a document under a \"no AI\" limit",
+  source: ROLES_SOURCE, section: "§3" });
+
+/** R38 (b), K1888: the file's active list is told as a fact, and the file is never opened, run or asked for. */
+export const ACTIVE_LIST_IS_A_FACT = Object.freeze({
+  text: "It is told the file's active list (its macros, scripts and embedded files) as a fact about the file; it never "
+    + "opens an embedded file, runs a macro or asks for a file's bytes.",
   source: ROLES_SOURCE, section: "§3" });
 
 /** R38 (c), K1899's F2 rule, K1993: the run's own capture request names only a held address; a found page that is not
@@ -1249,9 +1267,9 @@ export const HELD_ADDRESS_ONLY = Object.freeze({
     + "never asks for its capture.",
   source: ROLES_SOURCE, section: "§3" });
 
-/** The resident research boundary's clauses, in R37, R38 (a), (b), (c) order. */
+/** The resident research boundary's clauses, in R37, R38 (a), (b) (its two spans), (c) order. */
 export const RESEARCH_BOUNDARY_CLAUSES = Object.freeze([RECORD_CONTENT_IS_DATA, DISCOVERY_IS_NOT_CAPTURE,
-  FILES_AS_EXTRACTED_TEXT, HELD_ADDRESS_ONLY]);
+  FILES_AS_EXTRACTED_TEXT, ACTIVE_LIST_IS_A_FACT, HELD_ADDRESS_ONLY]);
 
 /** The capture clauses the law lookup and the action planning layers carry (R33, R28): R38 (a)'s and (c)'s, the very
  *  objects the resident layer carries. */
@@ -1647,6 +1665,269 @@ export function interfaceTranslationLayer(catalog) {
         + "and which words a draft is given are read for each call by the modules that serve it. A draft is recorded "
         + "apart, labelled as machine work, and becomes the group's wording only by a granted member's act. A run "
         + "ignoring every word here gets past nothing.",
+    },
+  };
+}
+
+/* =========================================================================
+ * THE INVESTIGATION LAYERS (R40–R44; T41-27; N820; D1, D2, D8, D13, D19, D20, D24, D33, D56, D65; K2405, K2418,
+ * K2420, K2472)
+ *
+ * The rules the AI follows in an investigation are approved by Bob in plain language, and "the AI's working
+ * instructions may only quote those rules, and code checks that they do" (`BIO_Investigation_v0_1.md` §6, D24). So
+ * every clause below is `{text, source, section}`, a span of that canon document found by R21's normaliser (R43), and
+ * nothing here rewords one; a clause the requirements name that no canon sentence states is reported, never authored
+ * (K921's pattern). None holds a gate: a proposal is stored apart and labelled by the module that keeps it
+ * (`investigation`, `steps`, `run-productions`, `case-authoring`), a member's act alone takes it up, and the reach of
+ * each mode and draft kind is `run-rules`' (its R23–R26), so a run ignoring every word here gets past nothing.
+ * ========================================================================= */
+
+/** Where the investigation's rules are quoted from: canon, whole (K2420). */
+export const INVESTIGATION_SOURCE = "docs/architecture/BIO_Investigation_v0_1.md";
+
+const inv = (section, text) => Object.freeze({ text, source: INVESTIGATION_SOURCE, section });
+
+/** R41: the intake interview's six questions, the one frozen list (`investigation` R11 reads it), each a span of §6's
+ *  sentence in its order: the same questions on both paths, by hand and with the assistant. */
+export const INTAKE_QUESTIONS = Object.freeze([
+  "what happened",
+  "which public body, and where",
+  "since when",
+  "what was promised or expected, and by whom",
+  "what you already have",
+  "what you want to come of it",
+]);
+
+/** The sentence of §6 the six questions are quoted from, carried whole beside them (R41, R43). */
+export const INTAKE_SENTENCE = inv("§6",
+  "The intake interview asks the same questions on both paths: what happened; which public body, and where; since "
+  + "when; what was promised or expected, and by whom; what you already have; what you want to come of it.");
+
+/** The clauses the interview and planning work under (R41): §6's interview, §8's narrative and the claim that
+ *  becomes something to find, §10's planning, §7's six places and leads, §9's warning, §5's one accepting act. */
+export const ENQUIRE_CLAUSES = Object.freeze([
+  INTAKE_SENTENCE,
+  inv("§6", "With the assistant, it is a conversation that skips what she has already said and follows up."),
+  inv("§6", "The member checks the answers before they are kept."),
+  inv("§6", "The answers are narrative (§8)."),
+  inv("§8", "What a member recalls of what others said or did is narrative."),
+  inv("§8", "But memory is not always exact, and a member's recollection of what a public body said is not the body's "
+    + "statement."),
+  inv("§10", "a new kind of AI work inside the existing AI parts: the assistant's interview, turning a member's words "
+    + "into proposed questions and steps, and turning remembered claims into \"find the record\" steps."),
+  inv("§8", "A claim in the narrative becomes something to find."),
+  inv("§8", "Until it is found, the claim is shown as the member recalls it, never as what the district said."),
+  inv("§7", "With the assistant, the member writes freely and the assistant proposes where the message should go."),
+  inv("§7", "The member always decides, and can move a lead into a project later."),
+  inv("§7", "Rumours become leads, never questions aimed at a person."),
+  inv("§9", "No investigation has as its subject a private person's private life."),
+  inv("§9", "When an objective or a question names a person in no public role, the member is warned at the act, and "
+    + "decides."),
+  inv("§5", "The member takes it up as proposed, takes it up edited, or writes her own instead, and the record keeps "
+    + "which."),
+]);
+
+/** The clauses the system explores a question under (R42): §5's part for the system, §9's rule on people, and §5's
+ *  labels; the capture rule is §5's sentence of AI Roles rule 12, the same rule the resident layer carries (R38 (c)). */
+export const EXPLORE_CLAUSES = Object.freeze([
+  inv("§5", "takes steps: searching, reading, and asking to capture pages the record already points to."),
+  inv("§5", "A page it finds anywhere else it names to a member, who captures it (AI Roles rule 12);"),
+  inv("§5", "explores questions where an account owner has turned exploring on (Capability Ladders §2, §10);"),
+  inv("§9", "The system never explores a person on its own."),
+  inv("§9", "It gathers about a person only when a member has tied that person to the question, and only up to a fixed "
+    + "amount per run."),
+  inv("§5", "judges how a find bears on a question, supporting it or contradicting what has been gathered;"),
+  inv("§5", "The system's judgement of a find is a labelled signal (Capability Ladders §10, K1473): shown with how it "
+    + "was worked out and its measured false-alarm rate."),
+  inv("§5", "It is never a grade, never a stored score, and never used to hide or rank what members see."),
+  inv("§5", "The system's hunches and hypotheses are kept apart from members', under their own heading on the "
+    + "question."),
+  inv("§5", "They are never facts."),
+  inv("§5", "The system's finds are labelled as the system's work."),
+  inv("§1", "The machine never concludes, determines or attests (AI Roles §3 rules 1 and 4; Capability Ladders §10)."),
+]);
+
+/** The clauses the AI reads inside a document under (R42): §6's reading inside a document, its note beside a source
+ *  and its transcription of pictures, and §5's rule that a fact the AI found loses no strength for that. */
+export const READING_CLAUSES = Object.freeze([
+  inv("§6", "The AI may read a document the group holds a few pages at a time, within a reading limit, and never one "
+    + "under a \"no AI\" limit."),
+  inv("§6", "As it reads, it builds the record: it proposes the passages worth citing that bear on the investigation "
+    + "(figures, policies, decisions, statements and the like) and the connections they make (to bodies, to people in "
+    + "their public roles, to other documents and to the questions)."),
+  inv("§6", "Each proposal is tied to its exact quote, labelled as the system's work, and taken up by a member's act "
+    + "(§5)."),
+  inv("§6", "A passage keeps the document's capture grade."),
+  inv("§6", "A connection is graded by how the link is established, never by the machine's say-so, and the machine "
+    + "never grades one D (AI Roles rule 3)."),
+  inv("§5", "The machine only pointed."),
+  inv("§5", "What the passage means is read by the member when she accepts it, and recorded as proposed or edited."),
+  inv("§6", "Every sentence is tied to a quote, and any sentence that cannot be tied is left out."),
+  inv("§6", "It is never shown in place of the source, never stored as the document's content, and never cited as "
+    + "evidence."),
+  inv("§6", "The text is labelled as the AI's reading and graded \"undetermined\" until its accuracy is measured."),
+]);
+
+/** The clauses the system drafts a case's account under (R44): §11's account, and no stories. */
+export const CASE_ACCOUNT_CLAUSES = Object.freeze([
+  inv("§11", "The system drafts the case's written account from the evidence, and may offer more than one framing (in "
+    + "time order, by question, by rule), each labelled as the system's."),
+  inv("§11", "The member writes the account, from a draft or from nothing, and it is published as hers."),
+  inv("§11", "A case carries no stories, context or human-interest accounts, however relevant."),
+  inv("§11", "Framing carried under it is optional, and is allowed only when marked in the text and tied to a bias "
+    + "statement printed in the case."),
+]);
+
+/** The clauses the system checks a member's account under (R44): §11's sentence check, and bias is not a relabel. */
+export const ACCOUNT_CHECK_CLAUSES = Object.freeze([
+  inv("§11", "Before publication, every sentence is checked against the evidence it cites."),
+  inv("§11", "A sentence the evidence does not support is flagged: she ties it to evidence or removes it."),
+  inv("§11", "A sentence the record contradicts is refused outright."),
+  inv("§11", "Only framing that follows a documented bias statement may stay, marked as such in the text."),
+  inv("§11", "An unsupported claim cannot be relabelled as bias."),
+  inv("§11", "Lying is not bias."),
+  inv("§11", "The case's statements about itself (what it says; why this subject; its scope; what was left out, and "
+    + "why; the bias acknowledgement; and, for a new edition, what changed) are held to the same check."),
+]);
+
+const INSTRUCTION_NOTE = "this layer is INSTRUCTION, every clause a quotation of the rules Bob approved in plain language "
+  + "(BIO_Investigation_v0_1.md). What a run proposes is stored apart and labelled as the system's work by the module "
+  + "that keeps it, and becomes the record's only by a member's act, which refuses a machine. A run ignoring every word "
+  + "here gets past nothing.";
+
+/** THE `enquire` LAYER (R41): the intake interview and planning, a member's words into proposed questions and steps
+ *  and a remembered claim into a "find the record" step. Always rendered: it names no act, and the mode's reach and
+ *  deployment are `run-rules`' (its R24). */
+export function enquireLayer() {
+  return {
+    load_when: "the run interviews a member at intake, or turns a member's words into proposed questions and steps",
+    sourcing: "authored",
+    body: {
+      /* run-rules R24: the mode the interview is answered in; its reach, bounds and flag are run-rules'. */
+      mode: ENQUIRE_MODE.mode,
+      questions: INTAKE_QUESTIONS,
+      clauses: ENQUIRE_CLAUSES,
+      source: INVESTIGATION_SOURCE,
+      note: INSTRUCTION_NOTE,
+    },
+  };
+}
+
+/** THE `explore` LAYER (R42): the system exploring a question unasked reuses the investigate mode's instructions,
+ *  named here by their keys (`judgementLayers()`, never copied), plus the rules for exploring. */
+export function exploreLayer() {
+  return {
+    load_when: "the system explores a question no member asked it to, where an account owner has turned exploring on",
+    sourcing: "authored",
+    body: {
+      /* run-rules R23: the explorer's runs carry the origin after every member-started run's (`RUN_ORIGINS`' first),
+         in the mode the law lookup reads from the order, the one after the first deployed (R18). */
+      origin: RUN_ORIGINS[RUN_ORIGINS.length - 1],
+      mode: LEGAL_LOOKUP_MODE,
+      reuses: Object.keys(judgementLayers()),
+      clauses: EXPLORE_CLAUSES,
+      source: INVESTIGATION_SOURCE,
+      note: INSTRUCTION_NOTE,
+    },
+  };
+}
+
+/** THE `reading` LAYER (R42): reading inside a document the group holds, quote-bound proposals only. */
+export function readingLayer() {
+  return {
+    load_when: "the run reads inside a document the group holds, a few pages at a time, or writes a note beside a source",
+    sourcing: "authored",
+    body: {
+      /* run-rules R26: the reading bound, its description as run-rules holds it; the bounds layer carries them all. */
+      bound: RUN_BOUNDS.pages,
+      clauses: READING_CLAUSES,
+      source: INVESTIGATION_SOURCE,
+      note: INSTRUCTION_NOTE,
+    },
+  };
+}
+
+/** THE `case_account` LAYER (R44): the system's draft of a case's account, from the case's cited evidence only. */
+export function caseAccountLayer() {
+  return {
+    load_when: "the run drafts a case's written account from its evidence",
+    sourcing: "authored",
+    body: {
+      /* run-rules R25: a draft of its own kind, in the draft mode, reaching the case's own record only. */
+      mode: DRAFT_MODE.mode,
+      reach: DRAFT_REACH.case_account,
+      clauses: CASE_ACCOUNT_CLAUSES,
+      source: INVESTIGATION_SOURCE,
+      note: INSTRUCTION_NOTE,
+    },
+  };
+}
+
+/** THE `account_check` LAYER (R44): the system's flags on a member's account, sentence by sentence. */
+export function accountCheckLayer() {
+  return {
+    load_when: "the run checks each sentence of a member's account of a case against the evidence it cites",
+    sourcing: "authored",
+    body: {
+      /* run-rules R25: a draft of its own kind, in the draft mode, reaching the case's own record only. */
+      mode: DRAFT_MODE.mode,
+      reach: DRAFT_REACH.account_check,
+      clauses: ACCOUNT_CHECK_CLAUSES,
+      source: INVESTIGATION_SOURCE,
+      note: INSTRUCTION_NOTE,
+    },
+  };
+}
+
+/* THE READING GUIDE LAYER (R40; D8, D65; K2472). When a run reads a document of a kind, the guide in force for that
+   kind (`reading-guides.guideFor`, its R5) is what it reads for: the items only, so the AI's reading and the by-hand
+   checklist are the same thing. A guide says what to look for, never how the AI may behave (D24): before a guide is
+   rendered its items pass the guide check (`reading-guides` R4, into which this module registers R16) and R16 again
+   here, and an item either finds throws, naming the guide and the item, so nothing renders. The guides arrive from the
+   run's caller, which reads them for the viewer; this pack reads no viewer. */
+
+/** The text fields of a guide's item R16 reads here: the guide check's own (`reading-guides` R4, `ITEM_FIELDS`). */
+const GUIDE_ITEM_FIELDS = Object.freeze(["label", "look_for", "where"]);
+
+/** THE `reading_guide` LAYER over the guides the caller passed (R40): a stated absence in R9's form with none; with
+ *  them, `sourcing` `guide`, each guide named with its kind and origin, its items only. Throws naming the guide and
+ *  the item when an item carries a clause of conduct. */
+export function readingGuideLayer(answers) {
+  const guides = (Array.isArray(answers) ? answers : [])
+    .filter((a) => a && typeof a === "object" && a.guide && typeof a.guide === "object");
+  if (guides.length === 0) return {
+    load_when: "never, in this edition",
+    sourcing: "absent",
+    body: {},
+    absent_because: "no reading guide was passed to this render: a guide is the group's or Civicsmith's, read for the "
+      + "kind of document a run reads by the run's caller, and with none this layer carries nothing to read for.",
+  };
+  return {
+    load_when: "the run reads a document of a kind a guide below is for",
+    sourcing: "guide",
+    body: {
+      guides: guides.map(({ guide, origin, kind }) => {
+        const name = typeof guide.id === "string" ? guide.id : "an unnamed guide";
+        /* R4 first, the guide check as reading-guides holds it (its closed lists, the look-for openers, the registered
+           R16); its refusal names the item, and nothing renders. */
+        const checked = checkGuide(guide.items);
+        if (!checked || checked.ok !== true)
+          throw new Error(`the reading guide ${name} item ${Number.isInteger(checked?.item) ? checked.item + 1 : "?"} `
+            + `(${JSON.stringify(checked?.label ?? null)}) carries a clause of conduct or is not what to look for: `
+            + `${checked?.reason ?? "the guide check refused it"}: ${checked?.detail ?? ""}`);
+        const items = checked.items;
+        /* R16 again, here, whatever is registered (R40). */
+        items.forEach((item, i) => {
+          const texts = GUIDE_ITEM_FIELDS.map((f) => item?.[f]).filter((t) => typeof t === "string");
+          const found = [...new Set(texts.flatMap(controlFlowAuthority))];
+          if (found.length > 0)
+            throw new Error(`the reading guide ${name} item ${i + 1} (${JSON.stringify(item?.label ?? null)}) carries a `
+              + `clause of conduct (${found.join("; ")}): a guide says what to look for, never how the AI may behave`);
+        });
+        return { kind: guide.kind ?? kind ?? null, guide: name, origin: origin ?? guide.origin ?? null, items };
+      }),
+      note: "a guide is WHAT TO LOOK FOR in one kind of document, never how the AI may behave: the AI's rules of conduct "
+        + "come only from the rules Bob approves, no guide can loosen them, and code checks that none does.",
     },
   };
 }

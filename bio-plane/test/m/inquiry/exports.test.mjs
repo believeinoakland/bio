@@ -44,14 +44,26 @@ test("R52 (1) the figure source: its key list is `inquiryMigrationReplays`, it r
 });
 
 test("R52 (1) R63: the registered figure counts the table as its SQL states, whole and through each caller's sight; a NULL key names no bundle and is never dropped", () => {
-  const { w } = replays();
+  const { w, P: closedWork } = replays();
   register(w);
   assert.equal(w.record.counts(null).inquiryMigrationReplays, 3, "whole: the two replays and the row naming no bundle");
   assert.equal(w.record.counts(null).inquiryMigrationReplays, pinnedCount(w, null));
-  for (const [viewer, expected] of [["admin", 3], [V("alice"), 3], [V("bob"), 2], ["", 1], [null, 1], ["class:member", 3]]) {
+  /* D54 (K2408, K2442): alice's project is hidden (no visibility recorded, membership R85) and the founder neither invited
+     nor joined, so the founder's viewer, either spelling, is blind to the replay inside it, as bob is */
+  for (const [viewer, expected] of [["admin", 2], ["member:admin", 2], [V("alice"), 3], [V("bob"), 2], ["", 1], [null, 1],
+                                    ["class:member", 3]]) {
     const hid = hiddenBundles(viewer);
     assert.equal(w.k.counts(hid).inquiryMigrationReplays, expected, `${viewer}`);
     assert.equal(w.record.counts(hid).inquiryMigrationReplays, pinnedCount(w, hid), `${viewer}: as the pinned count states it`);
+  }
+  /* negative control (D54): the project set discoverable, the founder sees it whole again (K2409), bob still does not */
+  const set = w.membership.projectVisibilitySet({ projectId: closedWork, setting: "discoverable", reason: "open to the group",
+                                                  by: "alice", viewer: V("alice") });
+  assert.equal(set.ok, true, JSON.stringify(set));
+  for (const [viewer, expected] of [["admin", 3], ["member:admin", 3], [V("bob"), 2]]) {
+    const hid = hiddenBundles(viewer);
+    assert.equal(w.k.counts(hid).inquiryMigrationReplays, expected, `${viewer}, discoverable`);
+    assert.equal(w.record.counts(hid).inquiryMigrationReplays, pinnedCount(w, hid), `${viewer}, discoverable`);
   }
   /* the plain inquiry wrote no row, and a revision writes none */
   assert.equal(w.row(`SELECT count(*) AS c FROM inquiry_migration_replays WHERE bundle_id=?`, PLAIN).c, 0);

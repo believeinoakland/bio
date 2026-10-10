@@ -28,7 +28,8 @@ const one = (w, q = Q, viewer = V("alice")) => w.k.documentWaits({ questions: [q
 
 test("R58 a question waits on each document set aside with it: {document, by, reason, at} of that set-aside, oldest first, with its whole history", () => {
   const w = setup();
-  assert.deepEqual(one(w), { question: Q, inquiry_state: "open", state: "none", waits: [], history: [] }, "nothing set aside");
+  assert.deepEqual(one(w), { question: Q, inquiry_state: "open", state: "none", waits: [], history: [], projects: [] },
+    "nothing set aside; R60: no project draws on it");
   aside(w, [D2], "Duplicate of the clerk's copy.");
   aside(w, [D1], "Out of scope for now.", V("alice"));
   /* capture stamps its acts with the wall clock's second: the two are set apart here so "oldest first" is visible */

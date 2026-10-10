@@ -41,6 +41,7 @@ import { inquiryOf } from "../inquiry/index.mjs";
 import { runPrincipalGate, runPrincipalOf } from "../run-rules/index.mjs";
 import { normalizeAddress } from "../subresources.mjs";
 import { standardsOf } from "../standards/index.mjs";
+import { stepsOf } from "../steps/index.mjs";
 import { migrateCaptureRequests } from "./schema.mjs";
 import { CAPTURE_REQUEST_CHECKS, CAPTURE_SOURCE_CHECKS, CAPTURE_PURPOSES, CAPTURE_UA_MODES, CAPTURE_UA_MODE_ALIASES,
          uaModeOf, userAgentIsLegible } from "./checks.mjs";
@@ -91,6 +92,8 @@ export const CAPTURE_REQUEST_ADDRESS_MAX = 2048;
 /** R52 (T35): the four answers a records request may record, and the most a withheld ground may say. */
 export const RECORDS_ANSWERS = Object.freeze(["produced", "none_exists", "withheld", "no_answer"]);
 export const RECORDS_GROUND_MAX = 1000;
+/** R55 (steps R11): the arrival kind this module answers for a step's wait. */
+export const CAPTURE_REQUEST_ARRIVAL_KIND = "capture_request";
 /** R4: the fields that would make a request a capture. */
 export const CAPTURE_FIELDS = Object.freeze(["capture_sha", "sha256", "bytes", "content", "provenance_chain", "via", "retrieved"]);
 
@@ -180,7 +183,7 @@ export class CaptureRequests {
    *  `principal_plane` and `principal_claude`, or null), `env`, `now()` (milliseconds; a test may inject its clock),
    *  `storeName`, `configured()` (R11; `unattendedBound(env)` by default), `promotion` (R38), `order` (R44: the
    *  modules' total order, membership's `MODULE_ORDER` unless a test passes its own), `inquiry` (R14: its R44
-   *  `memberUserAgent(id)`). */
+   *  `memberUserAgent(id)`), `steps` (R55: its R2 read by key, R9's `recordProduct`, R11's arrival registration). */
   constructor(storage, deps = {}) {
     this.#sql = storage.sql;
     this.#deps = deps;
@@ -295,6 +298,17 @@ export class CaptureRequests {
           + `different one was found.`, { lead_inquiry: lead, target });
     }
 
+    /* R55 (T41-25; N820): THE STEP the request is work for, optional. When named it must be one the run's principal
+       sees (`steps` R2, read as that principal's viewer stamp, as the drain judges R49); an unseen step, an absent one,
+       a value that is not text and a step nobody here can read are answered alike, before anything is written. */
+    const stepRaw = args.step ?? null;
+    const step = typeof stepRaw === "string" ? stepRaw.trim() : stepRaw === null ? "" : null;
+    if (step === null || (step && !this.#stepSeen(step, runPrincipalOf(runRow.principal_plane))))
+      return refusal("CAPTURE_REQUEST_NO_STEP",
+        `${step ? step.slice(0, 60) : shown(stepRaw)} is not a step this request's asker can see here. A request made `
+        + `for a step is tied to it, so it names one its asker can see. Nothing was requested or written.`,
+        { step: step || null });
+
     /* R4, THE SPINE AT THE DOOR. A request that arrives carrying bytes, a digest or a provenance hop is a caller
        trying to be the fetcher. Refused BY NAME rather than by dropping the fields. */
     const brought = CAPTURE_FIELDS.filter((k) => args[k] !== undefined && args[k] !== null && args[k] !== "");
@@ -375,6 +389,7 @@ export class CaptureRequests {
                host: standing.host, purpose: standing.purpose, ua_mode: uaModeOf(standing.ua_mode),
                lead_inquiry: standing.lead_inquiry ?? null, render: standing.render === 1,
                sweep: standing.sweep ?? null, co_archive: coArchiveOf(standing.co_archive),
+               step: standing.step ?? null,
                state: standing.state, requested: false, already: true,
                principals: { plane: standing.principal_plane, claude: standing.principal_claude } };
 
@@ -393,10 +408,10 @@ export class CaptureRequests {
     this.#sql.exec(
       `INSERT INTO capture_requests (request, run, target, address, host, purpose, ua_mode,
          principal_plane, principal_claude, state, attempts, requested_at, updated, expires, lead_inquiry, render, sweep,
-         co_archive)
-       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?,?,?)`,
+         co_archive, step)
+       VALUES (?,?,?,?,?,?,?,?,?,'requested',0,?,?,?,?,?,?,?,?)`,
       request, run, target, address, host, purpose, uaMode, callerPlane, String(runRow.principal_claude ?? ""),
-      now, now, expires, lead || null, render, sweep, coArchive);
+      now, now, expires, lead || null, render, sweep, coArchive, step || null);
     const written = this.#one(`SELECT * FROM capture_requests WHERE request=?`, request);
     /* R44 (N223): every listener told once, after the write, in the modules' total order; none can change the row or
        the answer. A rejection is swallowed where it lands. */
@@ -410,6 +425,7 @@ export class CaptureRequests {
              host: written.host, purpose: written.purpose, ua_mode: written.ua_mode,
              lead_inquiry: written.lead_inquiry ?? null, render: written.render === 1,
              sweep: written.sweep ?? null, co_archive: coArchiveOf(written.co_archive),
+             step: written.step ?? null,
              state: written.state, requested: true, already: false,
              requested_at: written.requested_at, expires: written.expires,
              principals: { plane: written.principal_plane, claude: written.principal_claude },
@@ -425,6 +441,53 @@ export class CaptureRequests {
     const b = this.#one(`SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
                         id, ...gate.args);
     return !!b && normalizeType(b.object_type) === "inquiry";
+  }
+
+  /** `steps`' instance (K61), or null when none is reachable here. */
+  #steps() {
+    const s = this.#deps.steps;
+    try { return typeof s === "function" ? s() : s || null; } catch { return null; }
+  }
+
+  /** R55: whether `viewer` sees the step `id`, as `steps` answers its read by key (its R2, R4): an answer naming that
+   *  step. No steps reachable, a refusal, null or a throw see none (fail closed). */
+  #stepSeen(id, viewer) {
+    try {
+      const steps = this.#steps();
+      if (!steps || typeof steps.step !== "function" || !viewer) return false;
+      const a = steps.step({ step: id, viewer });
+      return !!a && typeof a === "object" && a.ok !== false && a.step === id;
+    } catch { return false; }
+  }
+
+  /** R55: the capture a request for a step filed, tied to that step through `steps`' in-process door (its R9,
+   *  `recordProduct({step, record: {kind: "capture", id}, by})`, `by` the row's plane principal). Its answer is relayed
+   *  and changes nothing of the row; never throws. */
+  async #tieToStep(q, sha) {
+    try {
+      const steps = this.#steps();
+      if (!steps || typeof steps.recordProduct !== "function")
+        return { ok: false, step: q.step, detail: "no steps are reachable here, so the capture was filed and not tied to its step" };
+      const a = await steps.recordProduct({ step: q.step, record: { kind: "capture", id: sha }, by: q.principal_plane });
+      if (a && a.ok !== false) return { ok: true, step: q.step };
+      return { ok: false, step: q.step, reason: (a && (a.reason || a.code)) || null,
+               detail: String((a && a.detail) || "the step did not take the capture").slice(0, 300) };
+    } catch {
+      return { ok: false, step: q.step, detail: "the tie to the step did not complete and your group's Civicsmith did not "
+                                              + "record why" };
+    }
+  }
+
+  /** R55, steps R11: the arrival a step's wait on a capture request reads (`registerArrivalSource("capture_request",
+   *  read, "capture-requests")`): `true` when the request is captured, `false` while it is not (waiting, refused or
+   *  expired: nothing arrived), and null for a blank or unknown id, which steps reads as undetermined. Synchronous;
+   *  writes nothing; never throws. */
+  arrived(id) {
+    try {
+      const key = text(id).trim();
+      const r = key ? this.#one(`SELECT state FROM capture_requests WHERE request = ?`, key) : null;
+      return r ? r.state === "captured" : null;
+    } catch { return null; }
   }
 
   /** R49 (T35; F2, K1880; K1881): null when `address` is within 2,048 characters and is one the record already holds
@@ -690,9 +753,11 @@ export class CaptureRequests {
           /* R38 (N141): a NEW capture is promoted at `collected` as an information bundle; one already held has its
              home and makes none (R39). The promotion's refusal changes nothing of the row: the capture is filed. */
           const promoted = r.existed === true || !r.document ? null : this.#promoteCapture(q, r.document, verdict.attribution, at);
+          /* R55: a request made for a step ties its capture (new or already held, R39) to that step. */
+          const tied = q.step && r.sha ? await this.#tieToStep(q, r.sha) : null;
           captured.push({ request: q.request, address: q.address, sha: r.sha || null, grade: r.grade ?? null,
                           attribution: verdict.attribution, already_held: r.existed === true,
-                          ...(promoted ? { promoted } : {}) });
+                          ...(promoted ? { promoted } : {}), ...(tied ? { step_product: tied } : {}) });
         } else if (r.sweepRefused) {
           /* R45: the fetch met a locator outside the sweep: refused, nothing filed; the redirect was fetched, so the
              host's slot stays spent. */
@@ -1039,7 +1104,7 @@ export class CaptureRequests {
       updated: r.updated, expires: r.expires, captured_at: r.captured_at,
       lead_inquiry: r.lead_inquiry ?? null, run_woken_at: r.run_woken_at ?? null,
       render: r.render === 1, source_reason: r.source_reason ?? null, sweep: r.sweep ?? null,
-      co_archive: coArchiveOf(r.co_archive),
+      co_archive: coArchiveOf(r.co_archive), step: r.step ?? null,
       /* R25, D-523: what became of a render this instance could not do, in the drain's and op=queue's words. */
       render_deferral: (r.render === 1 && (r.state === "expired" || (r.state === "requested" && r.code)))
         ? (({ code, check, translation }) => ({ state: r.state === "expired" ? "expired" : "deferred",
@@ -1722,6 +1787,9 @@ export function captureRequestsOf(host, deps = {}) {
          on this host is the one the plane built with its own deps. */
       standards: deps.standards || (() => standardsOf(host)),
     };
+    /* R55 (T41-25): `steps`' instance (its R2, R9, R11), the one on this host, built on the record this module uses. */
+    d.steps = deps.steps === undefined
+      ? stepsOf(host, { record, observationLog: d.observations, promotion: d.promotion }) : deps.steps;
     c = new CaptureRequests(storage, d);
     instances.set(storage, c);
     /* R47, R35 (plan T33, Rules (6)): both tables declared explicitly through record-core's `declareTable` (its R21).
@@ -1749,6 +1817,9 @@ export function captureRequestsOf(host, deps = {}) {
        order (its R83). A capture with no seam (a test's stand-in) is not asked. */
     if (d.capture && typeof d.capture.registerReader === "function")
       d.capture.registerReader("captured-for", CAPTURE_REQUESTS_MODULE, (a) => c.capturedFor(a));
+    /* R55, steps R11: a step's wait on a capture request is answered by this module's rows. */
+    if (d.steps && typeof d.steps.registerArrivalSource === "function")
+      d.steps.registerArrivalSource(CAPTURE_REQUEST_ARRIVAL_KIND, (id) => c.arrived(id), CAPTURE_REQUESTS_MODULE);
     /* R29, ai-runs R41 (K182): the wake reads this module's rows through the wait source, when ai-runs is given. */
     if (d.aiRuns && typeof d.aiRuns.registerWaitSource === "function")
       d.aiRuns.registerWaitSource(CAPTURE_REQUESTS_MODULE, c.waitSource());
