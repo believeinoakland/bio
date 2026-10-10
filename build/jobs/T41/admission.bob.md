@@ -21,3 +21,11 @@ ANSWER J1 (K2574): build against the real `OPS` as you propose, no stand-ins. Wh
 ## B3 · CHANGE
 
 CHANGE (K2576), answering J2: admission is the site. Your R20 on `tranche/T41` gains `handlecheck`'s `invite` and `handle` as body-only (`BODY_ONLY_FIELDS`), a query invitation answered `NO_SUCH_INVITATION` as R17's doors answer a missing key. Merge it in, build and test it (negative control, K874); the rest stands as B2 says (COMPLETE after op-declarations' merge reaches you).
+
+## B4 · CHANGE
+
+CHANGE (K2593): affordances, tasks and queue are merged into `tranche/T41` (with op-grades, wizard-scripts, notice-producers, setup-words, queue-producers before them). Merge the tranche into your branch before your next completion; re-run your tests on it.
+
+## B5 · CHANGE
+
+CHANGE (K2596): op-declarations is merged into `tranche/T41` (instance-setup, affordances, tasks, queue before it). Merge the tranche into your branch, verify your arms that waited on it, re-state any of your tests naming the retired switch ops (`groupswitchset`, `accountswitchset`, `aiceilingset`, `aicopyceilingset`), re-run, and post COMPLETE.

@@ -635,6 +635,35 @@ test("R9: no answer names a bundle the viewer may not see, and no count reveals 
   assert.deepEqual([d.tasks, d.counts.open, d.counts.resolved], [[], 0, 0]);
 });
 
+test("R9 (D54; K2408, K2442): an administrator neither invited nor joined to a hidden project is answered as any outsider; a discoverable project, or an invited administrator, sees its tasks whole", () => {
+  const w = box();
+  w.member("ada", { role: "admin" }); w.member("olga");
+  w.bundle(DOC); w.bundle(PRJ, "project"); w.join(PRJ, "olga", { owner: true });
+  w.task("TASK-2026-0001-a", DOC, { created: iso(NOW - 2000) });
+  w.task("TASK-2026-0002-hidden", PRJ, { assignee: "ada", created: iso(NOW - 1000) });
+  const outsider = () => {
+    const a = w.t.taskList({ viewer: "member:ada" });
+    assert.deepEqual([a.tasks.map((t) => t.id), a.counts.open], [["TASK-2026-0001-a"], 1], "the hidden project's task is neither listed nor counted");
+    assert.equal(JSON.stringify([a, w.t.recentTasks({ viewer: "member:ada" })]).includes(PRJ), false);
+    assert.equal(w.t.taskExists({ id: "TASK-2026-0002-hidden", viewer: "member:ada" }), false);
+    assert.deepEqual(w.t.taskList({ viewer: "member:ada", refersTo: PRJ }), w.t.taskList({ viewer: "member:ada", refersTo: "PROJ-2026-9999-none" }));
+  };
+  const whole = () => {
+    const a = w.t.taskList({ viewer: "member:ada" });
+    assert.deepEqual([a.tasks.map((t) => t.id), a.counts.open], [["TASK-2026-0002-hidden", "TASK-2026-0001-a"], 2]);
+    assert.equal(w.t.taskExists({ id: "TASK-2026-0002-hidden", viewer: "member:ada" }), true);
+  };
+  outsider();
+  // negative control (1): discoverable, an administrator sees it whole (K2409)
+  assert.equal(w.membership.projectVisibilitySet({ projectId: PRJ, setting: "discoverable", by: "olga", viewer: "member:olga" }).ok, true);
+  whole();
+  assert.equal(w.membership.projectVisibilitySet({ projectId: PRJ, setting: "hidden", by: "olga", viewer: "member:olga" }).ok, true);
+  outsider();
+  // negative control (2): hidden, the administrator invited
+  w.join(PRJ, "ada", { state: "invited" });
+  whole();
+});
+
 test("R10: the viewer comes only from the control plane's stamp in the URL, never from a body; the acts take the body the control plane stamped", () => {
   const seen = [];
   const t = new Proxy({}, { get: (_, k) => (a) => { seen.push([k, a]); return { ok: true }; } });
@@ -677,4 +706,68 @@ test("R11: no place is named in this module's behaviour or outward text", () => 
   }
   for (const r of Object.values({ ...QUEUE_MACHINE_CHECKS, ...TASK_ACTOR_CHECKS, ...QUEUE_INBOX_CHECKS }))
     assert.equal(places.test(r.translation), false);
+});
+
+test("R1 (K2575, D54): the administrator fallback picks the earliest active administrator membership R80 admits to the subject; with none, unassigned", () => {
+  // the subject is a hidden project with no active owner and no citer: only the administrator fallback can route it
+  const route = (setup) => {
+    const w = box([ev("a2")]);
+    w.bundle(PRJ, "project");
+    w.member("bea", { role: "admin", created: iso(NOW - 3000) });
+    w.member("cal", { role: "admin", created: iso(NOW - 2000) });
+    w.member("gone", { status: "revoked" }); w.join(PRJ, "gone", { owner: true });
+    setup(w);
+    return w.t.taskDrain({ actor: "alarm", now: iso(NOW) }).created.map((c) => [c.assignee, c.assignee_role, c.basis]);
+  };
+  assert.deepEqual(route(() => {}), [["unassigned", "group-admin", "no project manager and no active administrator who can see it"]],
+    "hidden, neither administrator invited nor joined: unassigned, never handed to one who cannot see it");
+  assert.deepEqual(route((w) => w.join(PRJ, "cal", { state: "invited" })),
+    [["cal", "group-admin", "no project manager; the RULED fallback to a group admin"]], "the earliest one admitted, passing over bea");
+  // negative controls: the project discoverable, or both admitted: the earliest administrator, as before
+  assert.deepEqual(route((w) => {
+    // set discoverable by its owner while active, the owner then revoked, so no owner routes it
+    w.run(`UPDATE members SET status='active' WHERE member_id='gone'`);
+    assert.equal(w.membership.projectVisibilitySet({ projectId: PRJ, setting: "discoverable", by: "gone", viewer: "member:gone" }).ok, true);
+    w.run(`UPDATE members SET status='revoked' WHERE member_id='gone'`);
+  }).map((x) => x[0]), ["bea"], "discoverable: every administrator sees it whole");
+  assert.deepEqual(route((w) => { w.join(PRJ, "bea", { state: "invited" }); w.join(PRJ, "cal"); }).map((x) => x[0]), ["bea"]);
+  // a subject in no project: every administrator sees it, the earliest is chosen
+  const w = box([ev("a3")]); w.bundle(DOC2);
+  w.member("bea", { role: "admin", created: iso(NOW - 3000) }); w.member("cal", { role: "admin", created: iso(NOW - 2000) });
+  assert.deepEqual(w.t.taskDrain({}).created.map((c) => c.assignee), ["bea"]);
+});
+
+test("R3 (K2575, D54; membership R60, R80): an administrator's override holds only where the actor sees the subject; else NO_SUCH_TASK, never TASK_NOT_YOURS naming the assignee", async () => {
+  const w = box();
+  w.member("olga"); w.member("alice"); w.member("ada", { role: "admin" });
+  assert.equal((await w.credentials.claim({ password: "a founder's password", tokenFp: "fp" })).ok, true);
+  w.bundle(PRJ, "project"); w.bundle(DOC); w.bundle(DOC2);
+  w.run(`UPDATE bundles SET project=? WHERE bundle_id=?`, PRJ, DOC);
+  w.join(PRJ, "olga", { owner: true }); w.join(PRJ, "alice");
+  w.task("TASK-2026-0001-a", DOC, { assignee: "alice", role: "member" });
+  w.task("TASK-2026-0002-b", PRJ, { assignee: "olga", role: "project-manager" });
+  w.task("TASK-2026-0003-c", DOC2, { assignee: "alice", role: "member" });
+  const rows = () => w.all(`SELECT * FROM tasks ORDER BY id`);
+  const before = rows();
+  const none = { ok: false, reason: "NO_SUCH_TASK" };
+  for (const actor of ["ada", "admin"]) for (const id of ["TASK-2026-0001-a", "TASK-2026-0002-b"]) {
+    const f = w.t.taskForward({ id, to: "olga", actor }), r = w.t.taskResolve({ id, actor });
+    assert.deepEqual([f, r], [none, none], `${actor} on ${id}`);
+    assert.deepEqual(w.t.taskResolve({ id: "TASK-2026-9999-none", actor }), none, "alike to a task that does not exist");
+    assert.equal(JSON.stringify([f, r]).includes("alice") || JSON.stringify([f, r]).includes("olga"), false, "the assignee is never named");
+  }
+  const set = w.t.taskResolve({ items: [{ id: "TASK-2026-0001-a" }], actor: "ada" });
+  assert.deepEqual([set.applied, set.items[0].reason], [0, "NO_SUCH_TASK"]);
+  assert.deepEqual(rows(), before, "nothing was written");
+  // a member who is not the assignee is still told TASK_NOT_YOURS (the override alone is gated)
+  assert.equal(w.t.taskResolve({ id: "TASK-2026-0001-a", actor: "olga" }).code, "TASK_NOT_YOURS");
+  // negative controls: a subject in no project; the project discoverable; the administrator invited, the founder joined
+  assert.equal(w.t.taskResolve({ id: "TASK-2026-0003-c", actor: "ada", now: iso(NOW) }).ok, true, "a subject every administrator sees");
+  assert.equal(w.membership.projectVisibilitySet({ projectId: PRJ, setting: "discoverable", by: "olga", viewer: "member:olga" }).ok, true);
+  assert.equal(w.t.taskForward({ id: "TASK-2026-0001-a", to: "olga", actor: "ada", now: iso(NOW) }).ok, true, "discoverable: seen whole");
+  assert.equal(w.membership.projectVisibilitySet({ projectId: PRJ, setting: "hidden", by: "olga", viewer: "member:olga" }).ok, true);
+  assert.deepEqual(w.t.taskResolve({ id: "TASK-2026-0001-a", actor: "ada" }), none, "hidden again");
+  w.join(PRJ, "ada", { state: "invited" }); w.join(PRJ, "admin");
+  assert.equal(w.t.taskResolve({ id: "TASK-2026-0001-a", actor: "ada", now: iso(NOW) }).ok, true, "invited: the override holds");
+  assert.equal(w.t.taskResolve({ id: "TASK-2026-0002-b", actor: "admin", now: iso(NOW) }).ok, true, "the founder joined: the override holds");
 });

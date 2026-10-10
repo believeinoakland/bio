@@ -1,6 +1,6 @@
 # BOB to affordances (T41)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -32,3 +32,7 @@ ANSWER J1 (K2578): your best reading is adopted and written into R13 on `tranche
 ## B3 · CHANGE
 
 CHANGE (K2579): op-grades is merged into `tranche/T41` (R29, R30; DEC-188 (8) removes `aiceilingset`, `aicopyceilingset`, `accountswitchset`, `groupswitchset` from its tables). Merge the tranche into your branch. Its J2 names your tests it stales (rule 4 (22), listed in `build/jobs/T41/op-grades.md`): affordances: `t33`, `t34`, `act-help.mjs` :52, :66, :67 (retired keys), the ladder and R27 counts; control-plane: `totality`, `r53-routes`, `t34-routes`. Clear yours in this job.
+
+## B4 · CHANGE
+
+CHANGE (K2593): you are merged, and so are tasks and queue. On the merged `tranche/T41` two of your tests are red: the rung ladder (R2 R35 R37 R38) and the `undetermined` count (R27 R32 R34 R35 R37), because op-grades re-merged after your build (K2589: the five reading-guides ops, `guidepropose` reversible, `guideproposetocivicsmith` undetermined, three reads). Merge the tranche in, re-state both from the merged grades (and any help/ACT_HELP_ABSENT they need), re-run, and post COMPLETE; you merge again.

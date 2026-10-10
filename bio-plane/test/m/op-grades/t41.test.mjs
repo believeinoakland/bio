@@ -50,6 +50,7 @@ const R30_WRITES = {
   proposalaccept: "undetermined", bearingnote: "undetermined", guidedraft: "undetermined", guideoffer: "undetermined",
   guideadopt: "undetermined", accountpropose: "undetermined", caseapprove: "undetermined", grouptestset: "undetermined",
   captureupload: "undetermined", steplearn: "undetermined",
+  guidepropose: "reversible", guideproposetocivicsmith: "undetermined",
 };
 /* the code each `reasoned` op's owner refuses an absent reason with (driven in affordances' R19 tests) */
 const R30_CODES = {
@@ -65,14 +66,15 @@ const TAKEN_BACK_BY = {
   questionfollow: "questionfollow", stepsrunai: "stepend", milestoneset: "milestoneremove",
   milestonerevise: "milestonerevise", hypothesistakeup: "hypothesiswithdraw", noteshare: "noteunshare",
   noteunshare: "noteshare", approvalruleset: "approvalruleset", actionseekspropose: "actionseekspropose",
-  stepoutcome: "stepoutcome", stepbywhen: "stepbywhen",
+  stepoutcome: "stepoutcome", stepbywhen: "stepbywhen", guidepropose: "guidedraft",
 };
 /* every other op of op-declarations R41, R43 and R45: a read */
 const R30_READS = ["projectaccountstate", "projectkeynotice", "projectaikeepawaystate", "accountuses", "accounthistory",
   "ailimits", "aiusage", "aiestimate", "aiactual", "stepslike", "steps", "stepproposals", "costmessages",
   "questionfollowstate", "stepproducts", "recordsteps", "finddoors", "milestones", "reportdraft", "reports", "interview",
   "interviewform", "claims", "investigationproposals", "projectstanding", "quietstate", "shares", "questionwaits",
-  "projectsshownon", "acceptancecounts", "bearingnotes", "guides", "accountdrafts", "reviewcomments", "grouptestresults"];
+  "projectsshownon", "acceptancecounts", "bearingnotes", "guides", "accountdrafts", "reviewcomments", "grouptestresults",
+  "guidefor", "guide", "guideproposals"];
 const RETIRED = ["aiceilingset", "aicopyceilingset", "accountswitchset", "groupswitchset"];
 
 test("R30: every write op-declarations R41, R43 and R45 declares, and actionseekspropose, carries R30's grade, the "
@@ -180,4 +182,22 @@ test("R29 R30: affordances R12's totality holds over a stand-in of the table op-
   assert.deepEqual(unaccountedOver([...STAND_IN, { op: "stepnew", mutating: true, gated: true }]).unranked, ["stepnew"]);
   assert.deepEqual(unaccountedOver(STAND_IN.map((r) => r.op === "stepcreate" ? { ...r, mutating: false } : r)).stale,
     ["stepcreate"]);
+});
+
+/* ---- R30 (K2583, B3): the five reading-guides ops op-declarations adds ------------------------------------------------ */
+test("R30 (K2583): guidepropose graded as extractpropose (run-directed, labelled machine work); guideproposetocivicsmith "
+   + "`undetermined` as guideoffer; guidefor, guide and guideproposals reads; none a machine refusal, all phone acts", () => {
+  assert.equal(gradeOf("guidepropose"), gradeOf("extractpropose"));
+  assert.equal(gradeOf("guidepropose"), "reversible");
+  assert.ok(NON_ACTS.guidepropose.startsWith("run-directed:") && NON_ACTS.extractpropose.startsWith("run-directed:"));
+  assert.equal(gradeOf("guideproposetocivicsmith"), gradeOf("guideoffer"));
+  assert.equal(gradeOf("guideproposetocivicsmith"), "undetermined");
+  assert.ok(!isRead("guideproposetocivicsmith") && NON_ACTS.guideproposetocivicsmith.startsWith("guide-directed:"));
+  for (const op of ["guidefor", "guide", "guideproposals"]) { assert.ok(isRead(op), op); assert.equal(gradeOf(op), null, op); }
+  const FIVE = ["guidepropose", "guideproposetocivicsmith", "guidefor", "guide", "guideproposals"];
+  assert.deepEqual(FIVE.filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), []);
+  assert.deepEqual(FIVE.map(phoneOf), [true, true, true, true, true]);
+  /* negative controls */
+  assert.notEqual(gradeOf("guidepropose"), "reasoned");
+  assert.ok(!isRead("guidepropose"));
 });

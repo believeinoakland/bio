@@ -93,6 +93,8 @@ const textUpTo = (v, max, min = 1) => typeof v === "string" && v.trim().length >
 const clamp = (v, dflt, max) => { const n = Math.floor(Number(v)); return v !== null && v !== undefined && v !== "" && Number.isFinite(n) ? Math.min(Math.max(n, 1), max) : dflt; };
 const truthy = (v) => v === true || v === "true" || v === "1" || v === 1;
 const OFFERED = Object.freeze(["approved"]);
+/** R24, R27 (K2592; `credentials` R57): the use a writing-help draft is, as the keep-away is asked of it. */
+export const KEEP_AWAY_USE = "draft";
 /* R4: how a revision that took a copy's base's newer version records it in `wiz_revisions.adopted` (a proposal id never
    starts so). */
 const BASE_ADOPTION = "base:";
@@ -370,14 +372,14 @@ export class WizardScripts {
   /* R15, R16: the day, and nothing finer. */
   #day() { return this.#when().slice(0, 10); }
   #registration() { return this.reg || normaliseRegistration({}); }
-  /* R24 item 1 (T37; N765, K231): `credentials.aiKeptAway()` (its R35) as it answers now: null, or its AI_KEPT_AWAY
-     refusal. A credentials that cannot be reached or answers by throwing is no reading of null: undefined, which R24
+  /* R24 item 1 (T37; N765, K231): `credentials.aiKeptAway({use: "draft"})` (its R35, R57) as it answers now: null, or
+     its AI_KEPT_AWAY refusal; a keep-away covering only other uses (`ask`) does not refuse a draft (R27; K2592). A credentials that cannot be reached or answers by throwing is no reading of null: undefined, which R24
      reads as kept away (fail closed, K2093). */
   #keptAway() {
     try {
       if (typeof this.credentials === "function") this.credentials = this.credentials();
       const c = this.credentials;
-      return c && typeof c.aiKeptAway === "function" ? c.aiKeptAway() : undefined;
+      return c && typeof c.aiKeptAway === "function" ? c.aiKeptAway({ use: KEEP_AWAY_USE }) : undefined;
     } catch { return undefined; }
   }
 
