@@ -89,7 +89,7 @@ No merge order (independent).
 - **T42-21 · investigation** · (N843) its own codes for C-146.21 and C-146.26; (N846, K2572) R18 atomic arrival, `watchedProjects()` carries every source.
 
 ### L8
-- **T42-22 · case-account** (new; by copy, K624) · (N839, K2542, K2608) case-authoring R64, R66 and R63's account share moved (`case-account-split.md`); its drafts labelled through record-grammar R54 · req: `requirements/case-account.md` (BOB's, before L8's START) · merges first in L8.
+- **T42-22 · case-account** (new; by copy, K624) · (N839, K2542, K2608) case-authoring R64, R66 and R63's account share moved (`case-account-split.md`); its drafts labelled through record-grammar R54; mints `ACD` opaque through record-core's `allocId` (record-grammar R55's legacy form keeps T41's ids valid; `mintExhausted`'s `MINTED_OBJECT` gains `ACD` if record-core's table needs it, reported at its START, K2616) · req: `requirements/case-account.md` (BOB's, before L8's START) · merges first in L8.
 - **T42-23 · case-authoring** · (N839, K2608) R64, R66 retired "moved to case-account R<n>"; R63, R65, R67, R68 stay, re-pointed; new R69 (the order `publishCase` asks case-account in); bodies and tables deleted, three one-line pass-throughs kept (`accountPropose`, `accountDrafts`, `registerReviewComments`; K1333) until T43 (N850); `uses` gains `case-account`, loses `ai-runs` · after T42-22 Its START requires an explicit R69 test (the string is in `fixture.mjs`:161 already, K874).
 - **T42-23a · review** · (N839, K2608) `reviewOf` registers its comments with `case-account` · after T42-22.
 
