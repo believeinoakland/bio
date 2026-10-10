@@ -2,6 +2,66 @@
 
 **Status** · session_01RSu6BGSEYVGjuvDfZesRY5 · depth 2 · WAITING ON BOB (J5) · handled B11
 
+
+## Completion (CASE-AUTHORING #23)
+
+**Reading set** (mechanics §17): measured 657 KB for the module's own code (250 KB) and tests (407 KB), over 300 KB, so the over path (K2304).
+- **Read whole myself:**
+  - `build/requirements/case-authoring.md`;
+  - layer 8's row of `build/layers.md`;
+  - the plan's T41-43 entry and rule 4;
+  - K617, K2438, K2442, K2451, K2471, K2483 and `build/extraction/publication-split-3.md` §6;
+  - `src/case-authoring/index.mjs` and `document.mjs`;
+  - the tests the entry changed: `fixture`, `waiting`, `converts`, `statement`, `fences`, `whatchanged`, and the changed tests of `document`, `invariants`, `standards`, `identity`, `preflight`, `photos` and `documents`;
+  - the used services my Uses names for this entry: publish-schedule R1–R4, R7, R8; case-grammar R23–R26 and its `account.mjs`; case-disclosures R29–R31 and its J1; ratification R18, R49, R50; review R32, R33 and its J1; record-grammar R52 (`acceptance.mjs`, `acts.mjs`, `proposalLabel`); membership R43, R44 (`viewerPredicate`, `existenceAct`); answers R33 (`checkSentences`' `cited` shape); ai-runs `runFor`.
+- **Read by two workers, each file whole:** `checks.mjs`, `searched.mjs`, `schema.mjs` and the 17 other test files. Their summaries were about 2,400 and 2,500 words, every statement citing file:line.
+- **What the summaries found that mattered:** the exact pre-flight step lists and blocker lists (re-stated), the two R65 test sites (`standards`:79, `invariants`:48), and that case-disclosures R30's "cites nothing" arm would refuse every statement (raised as J2 (10), answered K2533).
+- Nothing they left out mattered.
+
+**Entries applied (T41-43):**
+- **D54** (K2442): `index.mjs`:974 and :1735 read the manifest as `PLANE_VIEWER` (`class:daemon`). `converts`:174, `statement`:59, `fences`:38, `whatchanged`:154 and `document`:103/:284 are re-stated, each with a negative control: a discoverable project or an invited administrator still at FULL, and a member's or the founder's own read still fenced.
+- **R58, R59** (N823): the waiting edition is read through `publish-schedule.waitingEditionOf` (R7). `waiting.test` uses the real module, merged.
+- **R63:**
+  - the account and `statementCites` are shaped (`BAD_ACCOUNT`, `BAD_STATEMENT_CITES`);
+  - case-disclosures R30 (`accountJudged`) is asked after R55 and R38 and before R11, with `{account, statements, cited, lens, conclusions, flags, viewer}` (K2531);
+  - `cited` is `{holdings: [{address: "kind:ref[#ord]", quote}], rules, looks}`;
+  - R30 failing to answer is `ACCOUNT_CHECK_UNDETERMINED` (fail closed);
+  - case-grammar R23's block is always written (the statement rows always), with its section when the account has a sentence.
+- **R64** (K2536):
+  - `accountPropose` and `accountDrafts` take `case_account` (`ACCOUNT_FRAMINGS`) and `account_check` (flags) drafts, stored append-only in two new purge-declared tables, `account_drafts` and `account_acceptances`;
+  - `accountDraft` is taken up `edited` or `own_instead`, and `as_proposed` is refused `ACCEPT_MUST_REAUTHOR` (C-33.54);
+  - the `acceptanceRecord` is stored;
+  - the label is composed through `lawProposalState`, since record-grammar has no subject for it (N838).
+- **R65:** `AUTHORED_FIELDS` and `ACT_FIELDS`; any other field is `CASE_FIELD_NOT_ALLOWED`, asked last of R3's refusals.
+- **R66:** `registerReviewComments`; R25's block is always written, `left_out` null when undetermined; refusals `REVIEW_COMMENT_NOT_FOUND`, `REVIEW_COMMENTS_UNREAD`, `BAD_REVIEW_COMMENTS`.
+- **R67, R68:** pre-flight steps 6 "the account", 7 "approvals", 8 "sign". R26's block is written at the approval digest (two passes), read through `ratification.approvalsInForce`. `APPROVAL_MISSING` is among `blockers` (once, ratification R18's when it carries it).
+- **R8** (K2540): a preparation of this same case edition is replaced. `identity` and `waiting` are re-stated with negative controls.
+- **Re-stated for providers:** case-grammar R12's `marked` (`documents`:147, `photos`:60).
+
+**Deferred, with why:**
+- B8's re-pins (`invariants.test`:76 to C-120.23–.29, `preflight.test`:67) and B10's (`photos.test`:76, `PUBLISHED_LABEL`): each waits on case-disclosures' merge, so I take them by its CHANGE.
+- The split of R63–R68 to `case-account`: N839 (K2542).
+
+**Found in other modules:**
+- case-disclosures' `photo.refused.unchecked` words (routed, K2533).
+- record-grammar R43 has no account-draft subject (N838).
+- R8's conflict with re-preparation (K2540, mine, built).
+
+**Final `uses`, for BOB to apply:** the current list plus `ai-runs` (R64's `runFor`; the architecture check's one failure until it is applied).
+
+**Tests:**
+- With local, uncommitted stand-ins for case-disclosures' `accountJudged` and ratification's `approvalsInForce` (neither module merged yet): `case-authoring` 178/180. The 2 reds are case-disclosures' wording (`photos`:101, `preflight`:67), red before this job.
+- On the committed tree alone: 29/180, because R63 fails closed (`ACCOUNT_CHECK_UNDETERMINED`) until case-disclosures provides `accountJudged`. Both providers merge before this module (L8 order), and I re-run at their CHANGE.
+- Users' suites (review, affordances, answer-envelope, control-plane, plane): the tranche's own reds exactly, none new.
+
+**Checks:**
+- format: 0 failures;
+- architecture: 1 failure (`ai-runs` not yet in `uses`);
+- coverage: 52 of 52;
+- ownership: 0 failures.
+
+Size (session_01RSu6BGSEYVGjuvDfZesRY5): test runs 28, module lines 4,137
+
 ## J1 · QUESTION
 
 Readings I am building on now (T41-43). Answer only where you read otherwise; items 3, 6 and 8 touch other modules' interfaces.
