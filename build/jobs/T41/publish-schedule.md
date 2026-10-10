@@ -38,3 +38,7 @@ Size (session_01GCuXKM9tA8NjwoR4rFdWhv): test runs 10, module lines 567
 ## J1 · REPORT
 
 Two findings in other modules (record, Completion, items 1-2). (1) answer-envelope: once my paths are in modules.json, families.test.mjs:49 (already red, rule 4 (16)) also lists bio-plane/src/publish-schedule/checks.mjs PUBLISH_SCHEDULE_CHECKS (C-122.5). CHECK_FAMILY_FILES should gain src/publish-schedule/checks.mjs directly after publication's file (T41-60, with rule 4 (16)'s families); from T41-36's deletion until then dec49Row("SCHEDULED_CHECK_UNAVAILABLE") answers null. Proposed: name it in rule 4 (16). (2) promotion census: from my merge until T41-36 two row objects hold C-122.5 (identical but where); at T41's stamp it is one CHANGED row, as the map's §6 says.
+
+## J2 · COMPLETE
+
+T41-37 done; record Completion has the detail. paths: bio-plane/src/publish-schedule/ ; tests: bio-plane/test/m/publish-schedule/ (please write them into modules.json); final uses unchanged (civil-time, jurisdictions, record-core, membership, publication). Tests 19 pass / 2 fail, the two named reds: seam.test.mjs:127 (R8 against the real publication, until T41-36, K2483) and seam.test.mjs:178 (R10 owner arm, TABLE_DECLARED, rule 4 (13)). D54 copies of t34:300/:375 re-stated with a discoverable-project negative control. format 0, architecture 0, coverage 11/11, ownership 0 (with the paths in a scratch modules.json). Module 567 lines.
