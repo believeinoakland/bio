@@ -242,3 +242,29 @@ test("R27 (T41; N812, K2373) the door's refusals of the account and its limit, a
   assert.deepEqual(w.snapshot(), before, "writes nothing");
   for (const retired of ["AI_USE_CEILING_REACHED", "AI_USE_COPY_CEILING_REACHED"]) assert.ok(!(retired in wz.WIZARD_SCRIPTS_CHECKS), retired);
 });
+
+test("R27 (T41; K2592; credentials R57) writingHelp's own keep-away asks credentials.aiKeptAway({use: \"draft\"}): a keep-away covering only ask does not refuse a draft the door admits; one covering draft (or every use) still refuses AI_KEPT_AWAY; R24's offer reads the same", () => {
+  const w = helped();
+  const ask = (x = {}) => w.wz.writingHelp({ op: "notewrite", field: "text", told: "The gate was locked.", assistant: ON, by: F, viewer: F, ...x });
+  const set = (on, uses) => assert.equal(w.credentials.aiKeepAwaySet({ on, uses, reason: on ? "We hold residents' records" : null, by: V("erin") }).ok, true);
+  set(true, ["ask"]);
+  assert.ok(w.credentials.aiKeptAway({ use: "ask" }), "control: the group keeps its material away from ask");
+  refused(ask(), "ASSISTANT_DRAFT_UNAVAILABLE", "a keep-away covering only ask: the draft passes to the model turn's place");
+  assert.deepEqual(w.wz.writingHelpAt({ op: "notewrite", field: "text", assistant: ON }), { offered: true });
+  for (const uses of [["draft"], ["ask", "draft"], null]) {
+    set(true, uses);
+    const want = w.credentials.aiKeptAway({ use: "draft" });
+    const r = ask();
+    assert.deepEqual([r.code, r.check, r.keep_away], ["AI_KEPT_AWAY", want.check, want.keep_away], `negative control: covering ${JSON.stringify(uses)}`);
+    assert.deepEqual(w.wz.writingHelpAt({ op: "notewrite", field: "text", assistant: ON }), { offered: false, code: "AI_KEPT_AWAY" });
+  }
+  /* the question asked is exactly {use: "draft"} */
+  const asked = [];
+  const x = new wz.WizardScripts({ storage: w.st, record: w.record, membership: w.membership, filingTemplates: w.filingTemplates,
+                                   credentials: { aiKeptAway: (a) => { asked.push(a); return null; } } });
+  x.migrate();
+  x.wizardRegister(registration());
+  refused(x.writingHelp({ op: "notewrite", field: "text", told: "t", assistant: ON }), "ASSISTANT_DRAFT_UNAVAILABLE");
+  assert.deepEqual(asked, [{ use: "draft" }]);
+  assert.equal(wz.KEEP_AWAY_USE, "draft");
+});

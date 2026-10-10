@@ -25,3 +25,7 @@ CHANGE (K2576), answering J2: admission is the site. Your R20 on `tranche/T41` g
 ## B4 · CHANGE
 
 CHANGE (K2593): affordances, tasks and queue are merged into `tranche/T41` (with op-grades, wizard-scripts, notice-producers, setup-words, queue-producers before them). Merge the tranche into your branch before your next completion; re-run your tests on it.
+
+## B5 · CHANGE
+
+CHANGE (K2596): op-declarations is merged into `tranche/T41` (instance-setup, affordances, tasks, queue before it). Merge the tranche into your branch, verify your arms that waited on it, re-state any of your tests naming the retired switch ops (`groupswitchset`, `accountswitchset`, `aiceilingset`, `aicopyceilingset`), re-run, and post COMPLETE.

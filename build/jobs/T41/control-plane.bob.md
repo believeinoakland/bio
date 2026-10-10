@@ -42,3 +42,7 @@ CHANGE (K2579): op-grades is merged into `tranche/T41` (R29, R30; DEC-188 (8) re
 ## B4 · ANSWER · re J2
 
 ANSWER J2 (K2585): each item routed: op-declarations (a)–(f), store-door (a)–(b), plane (the spreads, the stale `aiUseCheck`, investigation at boot), all by CHANGE; R72 worded for the arm in your own map (merge `tranche/T41`). Your three readings confirmed. Your `uses` gains ai-use, steps, investigation, question-explorer at your merge. You get a CHANGE as op-declarations and store-door merge.
+
+## B5 · CHANGE
+
+CHANGE (K2596): op-declarations is merged into `tranche/T41` (instance-setup, affordances, tasks, queue before it). Merge the tranche into your branch, verify your arms that waited on it, re-state any of your tests naming the retired switch ops (`groupswitchset`, `accountswitchset`, `aiceilingset`, `aicopyceilingset`), re-run, and post COMPLETE.

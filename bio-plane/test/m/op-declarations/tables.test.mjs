@@ -38,7 +38,7 @@ test("R2: OPS maps every op to a well-formed spec {classes, machineClasses?, mut
   assert.deepEqual(ops.filter((op) => OPS[op].classes === null).sort(),
     ["activitymethod", "bootstrap", "casechecker", "casedocument", "casefilespec", "caseflags", "claim", "credit", "docketfeed",
      "docketpublic", "enroll", "groupdescription",
-     "groupidentity", "groupkeyspublic",
+     "groupidentity", "groupkeyspublic", "handlecheck",
      "instancegroup", "invitelook", "joinlinkinvite", "knock", "knockerconsent", "login", "noticespublic", "publicread", "publishedbytes",
      "publishedcase", "publishedmanifest", "recover", "reviewcomment", "reviewcopy", "statementack", "templatecomment",
      "templatecomments", "templateread", "templatereview", "verify", "websiteinvite"]);

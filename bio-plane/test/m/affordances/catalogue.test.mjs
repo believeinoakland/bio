@@ -49,11 +49,12 @@ const T41_REASONED = ["projectaikeepaway", "milestoneremove", "milestoneitemremo
   "hypothesissetaside", "guidereview", "guideretire", "stepaccept"];
 const T41_REVERSIBLE = ["stepcreate", "stepstart", "stepend", "stepwait", "stepwaitremove", "stepcostadd", "stepcostremove",
   "questionfollow", "stepsrunai", "milestoneset", "milestonerevise", "hypothesistakeup", "noteshare", "noteunshare",
-  "approvalruleset", "actionseekspropose", "stepoutcome", "stepbywhen"];
+  "approvalruleset", "actionseekspropose", "stepoutcome", "stepbywhen",
+  "guidepropose" /* K2583, K2589: reading-guides' run draft, as extractpropose */];
 const T41_UNDETERMINED = ["stepdelete", "steprefer", "stepproduct", "costmessage", "findaccept", "reportkeep",
   "interviewkeep", "narrativeclaim", "claimfindstep", "claimfound", "planaccept", "projectwatch", "proposalaccept",
   "bearingnote", "guidedraft", "guideoffer", "guideadopt", "accountpropose", "caseapprove", "grouptestset",
-  "captureupload", "steplearn"];
+  "captureupload", "steplearn", "guideproposetocivicsmith" /* K2583, K2589: as guideoffer */];
 
 test("R1: ACTS holds exactly the object-directed acts, each at its weight", () => {
   const W = {
@@ -183,7 +184,7 @@ test("R2 R35 R37 R38: the rung ladder, low to high, and RUNGS' assignment — DE
   want.reasoned.push("obscuremarkwithdraw");
   want.reversible.push("obscuremark");
   /* op-grades R30 (T41): the eight that ask the member's reason, each backed by its owner's refusal (t41-backing.test.mjs),
-     and the eighteen each taken back by a further act; pinned by name */
+     and the nineteen each taken back by a further act; pinned by name */
   assert.deepEqual(Object.keys(T41_RUNGS).sort(), [...T41_REASONED, ...T41_REVERSIBLE].sort());
   want.reasoned.push(...T41_REASONED);
   want.reversible.push(...T41_REVERSIBLE);
