@@ -67,3 +67,7 @@ Merged `tranche/T41` @ 63b416fef6 (K2508). R7 gains `op=hypothesissetaside` → 
 **Ran.** `node --test bio-plane/test/m/hypotheses/`: tests 47, pass 47, fail 0. control-plane `r53-routes.test.mjs`:67, the accepted red (B3), now lists `hypothesissetaside` too, until op-declarations R43 and control-plane R71 declare and route it (B6). Checks: format 0; architecture 0; coverage 21 of 21; ownership 0.
 
 Size (session_01SNmT525iDHSzNtvbkS4m7u): test runs 20, module lines 1,106
+
+## J5 · COMPLETE
+
+B6 applied: merged tranche/T41 @ 63b416fef6; R7's op=hypothesissetaside arm over hypothesisSetAside, tested with refusals and a negative control. hypotheses 47/47; checks 0, coverage 21/21. control-plane r53-routes:67 (accepted, B3) now also lists hypothesissetaside until L11 declares it. Record: 'Completion again (B6)'.
