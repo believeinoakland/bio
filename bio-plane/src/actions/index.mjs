@@ -27,6 +27,9 @@
  *   entities       `readEntity` (its R5): whether an addressee's `entity_id` names a person (R9).
  *   capture        `registerReader` (its R32): the litigation-hold reader (R55); `null` registers none.
  *   ratification   `registerHoldReader` (its R45): the reader of holds over a project (R69); `null` registers none.
+ *   progressions  `readProgression` (its R5): the progressions and stages a records request's `seeks` names (R70).
+ *   intent         `registerNoneExistsReader` (its R33): the reader of requests answered that none exists (R71);
+ *                  `null` registers none.
  *   now            the instance clock, milliseconds (default: `env.BIO_NOW_MS`, else the wall clock).
  *   env            the instance bindings.
  *
@@ -47,6 +50,8 @@ import { linesOf } from "../lines/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { standardsOf, noSuchStandard } from "../standards/index.mjs";
 import { dutiesOf } from "../duties/index.mjs";
+import { progressionsOf } from "../progressions/index.mjs";
+import { intentOf } from "../intent/index.mjs";
 import { localDay, overdueOn, isCalendarDate } from "../civil-time/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity,
@@ -59,7 +64,7 @@ import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, acti
          counterpartyOffice,
          clockMovesNotMechanical, ACTION_FENCE_CHECKS, ACTION_ACT_CHECKS, GOVERNING_LAW_CHECKS, QUOTE_CHECKS,
          LIFECYCLE_CHECKS, RISK_TIER_REVISION_CHECKS, RECORDS_LAW_FENCE_CHECKS,
-         ACTION_CATALOGUE_CHECKS } from "../action-grammar/index.mjs";
+         ACTION_CATALOGUE_CHECKS, seeksOf, seeksFindings } from "../action-grammar/index.mjs";
 import { ACTIONS_TABLES, migrateActions } from "./schema.mjs";
 
 export { ACTIONS_SCHEMA, ACTIONS_TABLES } from "./schema.mjs";
@@ -94,6 +99,8 @@ export const HOLD_STATES = Object.freeze(["in_place", "released"]);
 export const HOLDS_DUE_MAX = 500;
 /** R59: the most statements one `holdsReleased` page lists. */
 export const HOLDS_RELEASED_MAX = 500;
+/** R71 (intent R33): the most answers `noneExistsFor` gives. */
+export const NONE_EXISTS_MAX = 50;
 /** R52, R58 (DEC-113): the most distinct projects one hold statement names, and one `projectHolds` read asks. */
 export const HOLD_PROJECTS_MAX = 50;
 /* R52: a project's id, a bundle id of the project prefix. */
@@ -272,12 +279,13 @@ export class Actions {
 
   constructor({ storage, record, membership, promotion, host = null, retrieval = null, content = null,
                 conformance = null, entities = null, lines = null, events = null, standards = null, duties = null,
-                now = null, env = null } = {}) {
+                progressions = null, now = null, env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
-    this.#deps = { host, retrieval, content, conformance: conformance ?? undefined, entities, lines, events, standards, duties };
+    this.#deps = { host, retrieval, content, conformance: conformance ?? undefined, entities, lines, events, standards, duties,
+                   progressions };
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : null;
   }
@@ -301,6 +309,8 @@ export class Actions {
   get events() { return this.#reach("events", (h) => eventsOf(h)); }
   get standards() { return this.#reach("standards", (h) => standardsOf(h)); }
   get duties() { return this.#reach("duties", (h) => dutiesOf(h)); }
+  /* R70: the progression definitions (`readProgression`, its R5), reached on the same host unless a test passes its own. */
+  get progressions() { return this.#reach("progressions", (h) => progressionsOf(h)); }
 
   /* R9: the kind the registry holds `entityId` as, or null when it holds none or cannot be read. */
   #entityKind(entityId) {
@@ -804,6 +814,39 @@ export class Actions {
     return null;
   }
 
+  /* R70 (H30 (1); K2505, K2552, K2553): a creation or revision stating `seeks`, or changing it, is judged before any
+     write: a machine or unstamped author may not state or change it (a member's statement of what the request asks the
+     records for); then action-grammar's `seeksFindings` (its R13) over the facts read here through
+     `progressions.readProgression`, one entry per distinct progression a well-formed item names: its declared stage keys,
+     or null for a progression the record does not hold. A definition that cannot be read is read as not held (fail
+     closed), and the refusal says so. The refusal is the grammar's own (C-117.29), relayed with every finding. Asked only
+     when `seeks` moved, so a later revision is never refused for a progression's later version. */
+  #seeksRefusal(heldFm, nextFm, who) {
+    const key = (fm) => JSON.stringify(fm && fm.seeks !== undefined && fm.seeks !== null ? fm.seeks : null);
+    if (key(heldFm) === key(nextFm)) return null;
+    /* DEC-49 REGION is-machine-state-seeks */
+    if (!who || isMachineIdentity(who))
+      return refuse("MACHINE_CANNOT_STATE_SEEKS", "which stages a records request asks the records for is a member's "
+        + "statement; a machine credential may not state, change or remove it. Nothing was written.");
+    /* END DEC-49 REGION is-machine-state-seeks */
+    const stages = {};
+    let unreadable = false;
+    const items = Array.isArray(nextFm.seeks) ? nextFm.seeks : [];
+    for (const p of new Set(items.map((x) => (x && typeof x === "object" ? x.progression : null))
+                              .filter((x) => typeof x === "string" && x.trim()))) {
+      let r = null;
+      try { r = this.progressions ? this.progressions.readProgression({ progressionKey: p }) : null; } catch { r = null; }
+      if (!r || r.ok === false) { unreadable = true; stages[p] = null; continue; }
+      stages[p] = r.found ? (r.stages || []).map((st) => st.stage_key) : null;
+    }
+    const found = [];
+    seeksFindings(nextFm, { stages }, found);
+    const errors = found.filter((x) => x.severity === "error");
+    if (!errors.length) return null;
+    return refuse(errors[0].code, errors[0].message, { findings: findingsOf(errors),
+      ...(unreadable ? { cause: "PROGRESSIONS_UNREADABLE" } : {}) });
+  }
+
   /* R3 (N237, K351): a document holding more legs or entries than the projection reads is refused where it is authored
      or revised, with the count and the limit; a replay is never asked (the projection skips it whole). */
   #tooLarge(fm) {
@@ -846,6 +889,8 @@ export class Actions {
       if (link) return link;
       const t33 = this.#heldLinks(heldFm, nextFm, who, pkg.actorViewer ?? pkg.viewer ?? c.viewer ?? (who || null));
       if (t33) return t33;
+      const seeks = this.#seeksRefusal(heldFm, nextFm, who);
+      if (seeks) return seeks;
       const large = this.#tooLarge(nextFm);
       if (large) return large;
       /* REC-24: the legs (ACTION_BASIS_REFUSED), the ledger (CORRESPONDENCE_REFUSED) and what only the record can
@@ -2660,6 +2705,37 @@ export class Actions {
     } catch { return true; }
   }
 
+  /** R71 (H30 (1); intent R33; K2505): registered with `intent.registerNoneExistsReader`: the `records_request` actions
+   *  the viewer may see whose `seeks` (action-grammar's `seeksOf`) names that progression, entity and stage and whose
+   *  correspondence holds a `received` entry with outcome `none_exists`, each `{action, ord, at}` (the entry's position
+   *  and date), oldest first, at most 50. No viewer sees none. Writes nothing and never throws; a read that fails
+   *  answers `[]`, so no stage is met this way. */
+  noneExistsFor({ progression = null, entity = null, stage = null, viewer = null } = {}) {
+    try {
+      const want = [progression, entity, stage];
+      if (want.some((x) => typeof x !== "string" || !x) || viewer === null || viewer === undefined || viewer === "") return [];
+      const gate = viewerPredicate(viewer);
+      const rows = this.#rows(`SELECT b.bundle_id, f.content FROM bundles b
+        JOIN files f ON f.bundle_id = b.bundle_id AND f.path = 'bundle.md'
+        WHERE b.object_type = 'action' AND (${gate.sql}) AND f.content LIKE '%none_exists%' AND f.content LIKE '%seeks%'
+        ORDER BY b.bundle_id`, ...gate.args);
+      const out = [];
+      for (const r of rows) {
+        let fm = null;
+        try { fm = parseFrontmatter(r.content).data; } catch { fm = null; }
+        if (!fm || typeof fm !== "object" || fm.action_kind !== "records_request") continue;
+        if (!seeksOf(fm).some((x) => x.progression === progression && x.entity === entity && x.stage === stage)) continue;
+        (Array.isArray(fm.correspondence) ? fm.correspondence : []).forEach((e, ord) => {
+          if (e && typeof e === "object" && e.direction === "received" && e.outcome === "none_exists")
+            out.push({ action: r.bundle_id, ord, at: e.at === undefined || e.at === null ? null : String(e.at) });
+        });
+      }
+      out.sort((p, q) => (String(p.at) < String(q.at) ? -1 : String(p.at) > String(q.at) ? 1
+        : p.action < q.action ? -1 : p.action > q.action ? 1 : p.ord - q.ord));
+      return out.slice(0, NONE_EXISTS_MAX);
+    } catch { return []; }
+  }
+
   /* R54: the action's project, as `action-clocks` answers it: the project of the first determination among its
      `rests_on` legs the viewer may read (conformance's `determinationRead`), null when it rests on none. */
   #projectOf(fm, viewer) {
@@ -2994,7 +3070,8 @@ function proposalLabelFor(who, subject) {
 const instances = new WeakMap();
 
 /** K61: the one instance per host; at creation it declares its tables, registers its step, audit, facts and
- *  decoration (R3, R12, R25, R36, R51; retrieval R53, R56) and its litigation-hold reader (R55; capture R32). */
+ *  decoration (R3, R12, R25, R36, R51; retrieval R53, R56), its litigation-hold reader (R55; capture R32), its reader of
+ *  holds over a project (R69; ratification R45) and its none-exists reader (R71; intent R33). */
 export function actionsOf(host, deps) {
   let a = instances.get(host);
   if (!a) {
@@ -3045,6 +3122,15 @@ export function actionsOf(host, deps) {
     }
     if (ratification && typeof ratification.registerHoldReader === "function")
       ratification.registerHoldReader({ holdsOn: (args) => a.holdsOn(args) });
+    /* R71 (intent R33; K2505): once per host, the reader of records requests answered that no such record exists,
+       reached as ratification is (the composition root's environment, or given); a reader already held
+       (`NONE_EXISTS_READER_DECLARED`) stands. */
+    let intent = null;
+    if (d.intent !== null && (d.intent || d.env)) {
+      try { intent = d.intent || intentOf(host); } catch { intent = null; }
+    }
+    if (intent && typeof intent.registerNoneExistsReader === "function")
+      intent.registerNoneExistsReader((args) => a.noneExistsFor(args || {}));
   }
   return a;
 }
