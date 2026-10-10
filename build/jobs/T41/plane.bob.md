@@ -25,3 +25,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 
 
 **Marked at this START (K2573, re-taken after L10's merge):** R30, R34, R35, R31, R32, R33. These are the ids your job meets and names; the lines above that list marks are superseded by this one.
+
+## B2 · ANSWER · re J1
+
+ANSWER J1 (K2574): your reading stands and is written into your R33 on `tranche/T41` (merge it in): the plane notes its draft grants in memory and its `logRead` records `use: "draft"` for them; store-door adds nothing. Also read WIZARD-SCRIPTS #7's record when it completes: `wizardRegister({..., door: {findExisting, pointer}})` is yours to wire.
