@@ -1,6 +1,6 @@
-/* publication — T35 (T35-54): the published criteria (R72; N649, K1723, K1739, K2002), the waiting edition read
-   `case-authoring` calls (R74; N681, K1833), and the row of a stop no publisher could check (R33's C-122.5; N687,
-   K1839). `standards` and `entities` are stand-ins answering exactly the shapes of `standards.standardRead` (its R5),
+/* publication — T35 (T35-54): the published criteria (R72; N649, K1723, K1739, K2002). The waiting edition read
+   `case-authoring` calls (was R74) and the row of a stop no publisher could check (was R33's C-122.5) moved with their
+   tests to `publish-schedule` (its R7, R9; T41, K2438). `standards` and `entities` are stand-ins answering exactly the shapes of `standards.standardRead` (its R5),
    `standards.bindsAt` (its R43) and `entities.readEntity` (its R5); every call they receive is kept. A member's pinned
    bytes are written as a document bundle stating its `subject_entity` and `basis` legs, since R72 reads only the
    front matter at the pin (a real inquiry naming a standard would need the standard held for inquiry's own checks).
@@ -8,8 +8,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, infoMd, V, SIG, NOW, MACHINE } from "./fixture.mjs";
-import { SCHEDULED_CHECK_UNAVAILABLE } from "../../../src/publication/index.mjs";
-import { rowOf } from "../../../src/publication/checks.mjs";
 
 const CASE = "CASE-2026-0001";
 const A = "STD-2026-0001-policy", B = "STD-2026-0002-standard", GONE = "STD-2026-0003-ordinance";
@@ -164,73 +162,6 @@ test("R72 (K2483, D54) a commit no member signs reads as a machine viewer, never
   w2.p.migrate();
   assert.equal(w2.p.caseEditionState(CASE, 2).criteria, null, "never filled");
   assert.deepEqual(s2.calls, [], "no standard read for an older edition");
-});
-
-/* ---------------------------------------------------------------- R74, R33 (C-122.5) */
-
-const AT = { date: "2026-10-01", time: "09:00" };
-function waiting() {
-  const w = world();
-  w.member("olive");
-  const proj = w.project("Parks", "olive");
-  w.inquiry("INQ-2026-0001");
-  const roles = [{ target: "INQ-2026-0001", version_sha: w.head("INQ-2026-0001") }];
-  for (const id of [CASE, "CASE-2026-0002"]) w.prepare(id, 1, { project: proj, roles });
-  assert.equal(w.record.setSetting("jurisdiction_profiles", ["test-port-ellery"], "admin").ok, true);
-  const sched = (id = CASE, at = AT) => w.record.transact(() => w.p.scheduleEdition({ case: id, edition: 1,
-    docSha: w.row(`SELECT doc_sha FROM case_documents WHERE case_id=? AND edition=1`, id).doc_sha, signature: SIG(1),
-    signer: "olive", deliveredBy: V("olive"), at, checked: {}, by: V("olive") }));
-  return { w, proj, roles, sched };
-}
-
-test("R74 waitingEditionOf answers the case's one waiting edition as {case, edition, doc_sha, at, publish_at}, or null when none was set or it was published, stopped or cancelled; viewer-free, it writes nothing and never throws, a malformed case id answering null", async () => {
-  const { w, sched } = waiting();
-  assert.equal(w.p.waitingEditionOf(CASE), null, "none set");
-  assert.equal(sched().ok, true);
-  const docSha = w.row(`SELECT doc_sha FROM case_documents WHERE case_id=? AND edition=1`, CASE).doc_sha;
-  const before = w.snapshot();
-  assert.deepEqual(w.p.waitingEditionOf(CASE), { case: CASE, edition: 1, doc_sha: docSha,
-    at: { ...AT, zone: "America/Halifax" }, publish_at: "2026-10-01T12:00:00Z" });
-  assert.deepEqual(w.p.waitingEditionOf(` ${CASE} `), w.p.waitingEditionOf(CASE), "the id trimmed");
-  assert.deepEqual(w.snapshot(), before, "writes nothing");
-  assert.equal(w.p.waitingEditionOf("CASE-2026-0002"), null, "another case's edition does not wait");
-  for (const bad of [null, undefined, "", 7, {}, []]) assert.equal(w.p.waitingEditionOf(bad), null, JSON.stringify(bad));
-  /* cancelled, stopped, published: none waits */
-  assert.equal(w.p.publishAtCancel({ case: CASE, edition: 1, by: V("olive") }).ok, true);
-  assert.equal(w.p.waitingEditionOf(CASE), null, "cancelled");
-  sched();
-  await w.p.publishDue("2026-10-01T12:00:00Z");
-  assert.equal(w.p.scheduledEditions({ case: CASE }).editions.at(-1).state, "stopped");
-  assert.equal(w.p.waitingEditionOf(CASE), null, "stopped");
-  const { w: w2, proj, roles, sched: s2 } = waiting();
-  s2();
-  w2.p.registerScheduledPublisher("ratification", { publishScheduled(entry, now) {
-    w2.record.transact(() => w2.p.commitCaseEdition({ case: entry.case, edition: entry.edition, project: proj, scope: "The question.",
-      roster: roles.map((x) => ({ bundle_id: x.target, version_sha: x.version_sha })), sigArmored: entry.signature,
-      attestorKey: "AAAA", attestorMember: entry.signer, gateVersion: "plane-gate/test", deliveredBy: entry.delivered_by, at: now }));
-    return { published: true, published_at: now };
-  } });
-  await w2.p.publishDue("2026-10-01T12:00:00Z");
-  assert.equal(w2.p.scheduledEditions({ case: CASE }).editions[0].state, "published");
-  assert.equal(w2.p.waitingEditionOf(CASE), null, "published");
-  w2.st.db.exec(`DROP TABLE scheduled_editions`);
-  assert.equal(w2.p.waitingEditionOf(CASE), null, "never throws");
-});
-
-test("R33 R67 (N687) a waiting edition no publisher could check is stopped with row C-122.5, SCHEDULED_CHECK_UNAVAILABLE, held in this module's C-122 family: its reasons carry the code, the check and the translation R67 answers", async () => {
-  assert.deepEqual(SCHEDULED_CHECK_UNAVAILABLE, rowOf("SCHEDULED_CHECK_UNAVAILABLE"));
-  assert.deepEqual(SCHEDULED_CHECK_UNAVAILABLE, { code: "SCHEDULED_CHECK_UNAVAILABLE", check: "C-122.5",
-    translation: "This edition was not published at its set time, because the checks it needed then could not be run. "
-      + "Nothing was published. Sign it again to publish it." });
-  for (const pub of [null, { publishScheduled() { throw new Error("boom"); } }, { publishScheduled: () => ({}) }]) {
-    const { w, sched } = waiting();
-    sched();
-    if (pub) w.p.registerScheduledPublisher("ratification", pub);
-    const out = await w.p.publishDue("2026-10-01T12:00:00Z");
-    assert.deepEqual(out.taken[0].reasons, [{ code: "SCHEDULED_CHECK_UNAVAILABLE", check: "C-122.5",
-                                              translation: SCHEDULED_CHECK_UNAVAILABLE.translation }]);
-    assert.deepEqual(w.p.scheduledEditions({}).editions[0].reasons, out.taken[0].reasons, "R69 answers the row");
-  }
 });
 
 /* ---------------------------------------------------------------- R75 (T36; N717, K2129) */

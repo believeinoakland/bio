@@ -6,6 +6,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { planeWorld as world, caseDoc, V, SIG, KEY, NOW } from "./fixture.mjs";
 import { memberTieLines } from "../../../src/case-grammar/index.mjs";
+import * as PUB from "../../../src/publication/index.mjs";
 
 const F = "INQ-2026-0001", CASE = "CASE-2026-0001", CASE2 = "CASE-2026-0002";
 const docOf = (w, c = CASE, e = 1) => w.row(`SELECT doc_sha, text, sig_armored FROM case_documents WHERE case_id=? AND edition=?`, c, e);
@@ -58,6 +59,23 @@ test("R77 registerWaitingEditions takes the source (isWaiting, signedAtOf, signe
   assert.deepEqual(w.p.waitingSource(), { registered: true, module: "publish-schedule" });
   const w2 = base().w;
   assert.deepEqual(w2.p.registerWaitingEditions({ module: "publish-schedule", ...source(w2) }), { ok: true, module: "publish-schedule" });
+});
+
+test("R77 (N823, K2438) publishing at a set time is publish-schedule's: this module serves none of its services, re-exports none of its names and creates no table of its; R21 and R70 work with no such table, reading only through the source", () => {
+  const { w, proj, roles, roster } = base();
+  for (const m of ["registerScheduledPublisher", "scheduledPublisher", "onPublishScheduled", "publishListeners", "scheduleEdition",
+                   "publishWake", "publishDue", "publishAtMove", "publishAtCancel", "scheduledEditions", "groupZone", "waitingEditionOf"])
+    assert.equal(m in w.p, false, `${m} is publish-schedule's`);
+  for (const x of ["SCHEDULED_EDITIONS_MAX", "SCHEDULE_STATES", "SCHEDULED_CHECK_UNAVAILABLE", "publishScheduleOf"])
+    assert.equal(x in PUB, false, `${x} is not re-exported`);
+  assert.equal(w.row(`SELECT name FROM sqlite_master WHERE name='scheduled_editions'`), null, "no table of publish-schedule's");
+  /* with no such table, R21 stores and replaces and R70's commit answers its own instant */
+  w.prepare(CASE, 1, { project: proj, roles });
+  assert.equal(w.p.storeCaseDocument({ case: CASE, edition: 1, text: docOf(w).text + "\nchanged", author: V("olive") }).stored, true);
+  assert.equal(w.signCase(CASE, 1, { project: proj, roster }).ok, true);
+  assert.deepEqual(w.row(`SELECT signed_at, published_at FROM published_cases WHERE case_id=?`, CASE), { signed_at: NOW, published_at: NOW });
+  /* the control: the seam itself is this module's */
+  assert.equal(typeof w.p.registerWaitingEditions, "function");
 });
 
 /* ---------------------------------------------------------------- R21's waiting clause, through R77 */

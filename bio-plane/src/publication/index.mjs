@@ -29,16 +29,14 @@
  * directly. Since T36 (N597, K1643) `caseRelation` is gone too: every reader of a case relation reads case-tensions'.
  *
  * T34 (T34-44, T34-79): the set-wide read of the court-order stamps (R64), the group's self-description as the public is
- * told it (R65), and publishing at a set time (R66–R71, `./schedule.mjs`, its table `scheduled_editions`): a signed
- * edition waits with its signature held beside its document, is checked again at its time by the one publisher
- * `ratification` registers, and is moved or cancelled by an owner until then. Case-tensions' ops are the plane's to
- * spread since T33-90 (N597); this module's map no longer spreads them.
+ * told it (R65), and publishing at a set time (was R66–R71, R74; `publish-schedule`'s since T41, below). Case-tensions'
+ * ops are the plane's to spread since T33-90 (N597); this module's map no longer spreads them.
  *
  * T35 (T35-54): the published criteria (R72; N649): at a case edition's commit, each standard its members' legs target,
  * read from `standards` (and the body's name from `entities`), frozen on the edition's row: a benchmark labelled "not
  * binding on" its body, a copyrighted standard by its edition, citation and access with only the passages relied on.
- * The waiting edition read `case-authoring` calls (R74; N681), C-122.5 for an edition no publisher could check (R33;
- * N687), and the review copy's secret read from the request body, never the address (R73, `./door.mjs`; F1).
+ * The waiting edition read `case-authoring` calls (was R74) and C-122.5 (was R33's) moved with publishing at a set
+ * time; the review copy's secret read from the request body, never the address (R73, `./door.mjs`; F1).
  *
  * T36 (T36-26): the address's secret admits nothing and its fingerprint reaches the store op in the store request's
  * body, never its address (R73; K2111); `criteriaFor` answers the criteria a commit would record, for case-authoring's
@@ -58,8 +56,10 @@
  *
  * T41 (T41-36): C-122.6's words are `words.json`'s `photo.refused.changed.signed` (DEC-187 (4)) and C-122.7's
  * `document.refused.changed` (DEC-188 (7)), read by key (R33); the published-work fact membership's handle guard asks
- * (R76; DEC-186 (1)); the source of waiting editions `publish-schedule` fills (R77; N823, K2438), through which R21's
- * waiting clause and R70's set-time signing instant read; and a commit no member signs reads the criteria as a machine
+ * (R76; DEC-186 (1)); and split a fifth time for size (N823; K617, K624, K2438): publishing at a set time (was R66–R69,
+ * R71, R74, the table `scheduled_editions` and C-122.5) is `publish-schedule`'s, which fills the source of waiting
+ * editions (R77; K2529: `isWaiting`, `signedAtOf`, `signerOf`) through which R21's waiting clause, R70's set-time
+ * signing instant and R76 read, this module naming its table in no SQL; and a commit no member signs reads the criteria as a machine
  * viewer, never the founder's (K2483, D54).
  *
  * REACHED as `publicationOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
@@ -96,7 +96,7 @@
  * provenance's `register` (R42's captures) and content's `content` (its R45; R72's `captures`). */
 
 import { recordOf, instantOrder } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf } from "../basis-versions/index.mjs";
@@ -113,7 +113,6 @@ import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, PUBLICATION_DECLARATIONS, migra
 import { corpusExportOf } from "../corpus-export/index.mjs";
 import { caseCarriageOf } from "../case-carriage/index.mjs";
 import { caseTensionsOf } from "../case-tensions/index.mjs";
-import * as schedule from "./schedule.mjs";
 /* The case document's grammar is `case-grammar`'s (K651): the formats and predicates, the /5 blocks and tension
    section, the attribution run's text, the section locators, the signed citations and the edge set a finding rests on.
    This module reads them from there and re-exports, unchanged, every name it exported before the split, so its
@@ -136,7 +135,6 @@ export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V4,
          publishedGraphEdges } from "../case-grammar/index.mjs";
 export { PUBLICATION_SCHEMA, PUBLICATION_TABLES, PUBLICATION_EXEMPT, PUBLICATION_DECLARATIONS,
          caseDocumentPath } from "./schema.mjs";
-export { SCHEDULED_EDITIONS_MAX, SCHEDULE_STATES, SCHEDULED_CHECK_UNAVAILABLE } from "./schedule.mjs";
 
 /** R62 (K1480): the effects a court order may have on a ratified edition. */
 export const EDITION_STAMP_EFFECTS = Object.freeze(["remove", "redact", "seal", "unseal"]);
@@ -210,8 +208,6 @@ export class Publication {
   #deps;
   #review = null;        // R23: {module, ...doors}, filled once
   #orders = null;        // R62 (K1632): {module, courtOrderOf}, filled once by docket
-  #publisher = null;     // R67 (K1790): {module, publishScheduled}, filled once by ratification
-  #publishListeners = [];   // R71 (K1816): [{module, fn}], one per module
   #waiting = null;       // R77 (K2438, K2529): {module, isWaiting, signedAtOf, signerOf}, filled once by publish-schedule
   purgeDeclaration = null;   // R31: record-core's answer to this module's purge declaration, set at creation
   handleGuard = null;        // R76: membership's answer to this module's handle guard registration, set at creation
@@ -357,59 +353,15 @@ export class Publication {
   #waits(caseId, edition) {
     let w = false;
     if (this.#waiting) { try { w = !!this.#waiting.isWaiting(caseId, Number(edition)); } catch { w = true; } }
-    return w || schedule.isWaiting(this, caseId, edition);
+    return w;
   }
 
   /* R70 (R77): the instant a waiting edition was signed, or null; with no source, or one that throws, null. */
   #signedAtOf(caseId, edition) {
     let at = null;
     if (this.#waiting) { try { at = this.#waiting.signedAtOf(caseId, Number(edition)); } catch { at = null; } }
-    return str(at) || schedule.signedAtFor(this, caseId, edition, null) || null;
+    return str(at) || null;
   }
-
-  /* ---------------------------------------------------------------- R66–R71: publishing at a set time (./schedule.mjs) */
-
-  /** R67 (K1790): `ratification` fills, once at start, the one publisher of a waiting edition:
-   *  `publishScheduled(entry, now)` → `{published: true, published_at}` or `{stopped: [{code, translation}]}`. Called as
-   *  `registerScheduledPublisher(publisher)` or `registerScheduledPublisher(module, publisher)`; a second registration is
-   *  refused `PROVIDER_DECLARED`, one without the door `PROVIDER_MALFORMED`. With none, a due edition is stopped
-   *  `SCHEDULED_CHECK_UNAVAILABLE` and never published unchecked. */
-  registerScheduledPublisher(moduleOrPublisher, maybePublisher = undefined) {
-    const pub = typeof moduleOrPublisher === "string" ? maybePublisher : moduleOrPublisher;
-    const module = typeof moduleOrPublisher === "string" ? str(moduleOrPublisher) : str(pub && pub.module) || "unnamed";
-    if (!pub || typeof pub !== "object" || typeof pub.publishScheduled !== "function")
-      return { ok: false, reason: "PROVIDER_MALFORMED", detail: "the scheduled publisher gives the door publishScheduled" };
-    if (this.#publisher)
-      return { ok: false, reason: "PROVIDER_DECLARED", module: this.#publisher.module,
-               detail: `the scheduled publisher is already registered by ${this.#publisher.module}` };
-    this.#publisher = { module, publishScheduled: pub.publishScheduled };
-    return { ok: true, module };
-  }
-  /** R67: the registered publisher, or null. */
-  scheduledPublisher() { return this.#publisher; }
-
-  /** R71 (K1811, K1816; answers R27's model): one listener per module, refused through `membership.listenerRefusal`,
-   *  told `{publishAt}` (R67's `publishWake()` as it then stands) once after an edition is set to wait (R66), its time
-   *  moved or cancelled (R68), or a due edition taken (R67), so `scheduler` re-arms its alarm. Writes nothing. */
-  onPublishScheduled(module, fn) {
-    const bad = listenerRefusal(this.#publishListeners, module, fn);
-    if (bad) return bad;
-    this.#publishListeners.push({ module, fn });
-    return { ok: true, module };
-  }
-  /* R71: the listeners, for ./schedule.mjs. */
-  publishListeners() { return this.#publishListeners; }
-
-  scheduleEdition(a) { return schedule.scheduleEdition(this, a); }
-  publishWake() { return schedule.publishWake(this); }
-  publishDue(now) { return schedule.publishDue(this, now); }
-  publishAtMove(a) { return schedule.publishAtMove(this, a); }
-  publishAtCancel(a) { return schedule.publishAtCancel(this, a); }
-  scheduledEditions(a) { return schedule.scheduledEditions(this, a); }
-  /** R66: the group's time zone as R66 reads it, or null (for `ratification` R44's offer). */
-  groupZone() { return schedule.groupZone(this); }
-  /** R74 (N681): the case's waiting edition, or null, for `case-authoring` (its R58). */
-  waitingEditionOf(caseId) { return schedule.waitingEditionOf(this, caseId); }
 
   /* ---------------------------------------------------------------- R65: the group's self-description, publicly */
 
@@ -455,12 +407,11 @@ export class Publication {
       for (const r of this.#rows(`SELECT case_id, edition, text, authored_by, authored_at FROM case_documents
                                    WHERE sig_armored IS NULL ORDER BY case_id, edition`)) {
         const ed = Number(r.edition);
-        if (!((src && src.isWaiting(r.case_id, ed)) || schedule.isWaiting(this, r.case_id, ed))) continue;
-        const who = src ? src.signerOf(r.case_id, ed) : null;
+        if (!src || !src.isWaiting(r.case_id, ed)) continue;
+        const who = src.signerOf(r.case_id, ed);
         const signer = who && typeof who === "object" ? who.signer : null, by = who && typeof who === "object" ? who.delivered_by : null;
         if (!as.includes(signer) && by !== as[1] && !as.includes(r.authored_by) && !this.#namesHandle(r.text, handle)) continue;
-        hits.push({ case: r.case_id, edition: ed, at: (src && str(src.signedAtOf(r.case_id, ed)))
-                    || schedule.signedAtFor(this, r.case_id, ed, null) || r.authored_at || "" });
+        hits.push({ case: r.case_id, edition: ed, at: str(src.signedAtOf(r.case_id, ed)) || r.authored_at || "" });
       }
       if (!hits.length) return null;
       const ms = (t) => { const n = Date.parse(t); return Number.isFinite(n) ? n : Infinity; };
@@ -2720,11 +2671,5 @@ export function publicationOps(p, url, body) {
                                        typeof b.secretSha === "string" && b.secretSha ? b.secretSha : null),
     /* D-734: internal, the signed text behind a published case-document hash; the control plane re-hashes it. */
     publishedcasedoctext: () => p.publishedCaseDocumentText((q("sha256") || "").toLowerCase()),
-    /* R68, R69 (DEC-147): `by` and `viewer` the control plane's stamps; an absent viewer is no viewer at all, never the
-       plane's whole read. */
-    publishatmove: () => p.publishAtMove({ case: b.case, edition: b.edition, at: b.at, by: q("by") }),
-    publishatcancel: () => p.publishAtCancel({ case: b.case, edition: b.edition, by: q("by") }),
-    publishschedule: () => p.scheduledEditions({ case: q("case"), state: q("state"), after: q("after"),
-                                                 limit: q("limit"), viewer: q("viewer") || "" }),
   };
 }

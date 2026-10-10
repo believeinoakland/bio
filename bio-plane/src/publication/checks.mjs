@@ -2,7 +2,8 @@
  * refusal this module answers carries its code, its catalogue row and the member's translation.
  *
  * C-122.1 (R51, N364) is a family of its own here: a case's sources; C-122.2 (R58, DEC-112) and C-122.3, C-122.4 (R59,
- * N522) join it at T28, C-122.5 (R67's stop when no publisher could check a waiting edition; R33, N687) at T35, and
+ * N522) join it at T28, C-122.5 (a waiting edition no publisher could check; N687) at T35, moved with its raiser to
+ * `publish-schedule` (its R9; T41, K2438), number and translation unchanged, so no row id is held twice, and
  * C-122.6 (R57's photo marks changed since preparation; N757, K2206) at T37, its translation `words.json`'s
  * `photo.refused.changed` since T38 (DEC-183 (4)) and `photo.refused.changed.signed` since T41 (DEC-187 (4): answered at
  * the commit, always after signing), and C-122.7 (R57's member document copy changed since preparation; N806, K2333) at
@@ -65,15 +66,6 @@ export const CASE_SOURCES_CHECKS = {
     where: 'src/publication/index.mjs commitCaseEdition > is-accepted-work-standing',
     translation: "A flag was raised on another group's work this case rests on after the case was prepared, and the case "
       + 'must disclose it. Prepare the case again. Nothing was published.',
-  },
-  /* C-122.5 (R33, R67; N687, K1839): a waiting edition taken at its time with no publisher able to check it (none
-     registered, one that throws, or one giving neither answer) is stopped, never published unchecked; the translation
-     is the one R67 already answered. */
-  SCHEDULED_CHECK_UNAVAILABLE: {
-    check: 'C-122.5',
-    where: 'src/publication/schedule.mjs unchecked > is-scheduled-check-available',
-    translation: 'This edition was not published at its set time, because the checks it needed then could not be run. '
-      + 'Nothing was published. Sign it again to publish it.',
   },
   /* C-122.6 (R33, R57; N757, DEC-180 (4), K2206): a photo the case carries no longer matches its marks (its copy no
      longer the photo's current copy, a mark withdrawn since the case was prepared among them (case-carriage R14), a
