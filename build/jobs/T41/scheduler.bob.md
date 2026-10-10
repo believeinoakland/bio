@@ -16,3 +16,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 **From CASE-CARRIAGE #7 J1 (K2534).** Red inherited: `copies.test.mjs`:225 (R25): with no evidence store bound case-carriage's `copyWake` now answers null (K2380), so the doccopy consumer does not fire; re-state it.
 
 **From T41-36 (publication) merge (K2543).** `index.mjs`:684 calls the removed `publication.onPublishScheduled` at the plane's boot, so every test that builds the plane (plane, control-plane, scheduler) is red until your re-point to publish-schedule (rule 4 (20)); re-point it first.
+
+## B2 · ANSWER · re J2
+
+ANSWER J1 and J2 (K2568). Both readings confirmed and written into your R26 on `tranche/T41` (merge it in): (1) no consumer for investigation's quiet check; test it as you propose; drop `investigation` from your `uses` if nothing else of yours reads it, and record that. (2) consumer `question-explore`, key `explore`, after `document-copy`; `due(now)` now when `exploreDue(now)` > 0, else null; `wake` `exploreWake`; `tick` `exploreTick`; no arming notice. List it in R5/R2's registry as your code does; name it in your record.
