@@ -1,0 +1,292 @@
+/* case-checker — the account's sentences, judged against what they cite (requirements: `build/requirements/case-checker.md`
+ * R24; D56; K2451, K2471).
+ *
+ * `checkAccount({account, cited, printed, conclusions})` judges each sentence of a case document's `account:` block
+ * (`case-grammar` R23) through `answers.checkSentences` (its R33) and `case-disclosures` R30's arms, in its order:
+ *
+ *   ACCOUNT_SENTENCE_UNSUPPORTED     a sentence not bias-marked that cites nothing, or cites only what was not read;
+ *   ACCOUNT_FACT_NOT_IN_CITED        a figure, date, name or quotation not in what it cites;
+ *   ACCOUNT_CONTRADICTED_BY_RECORD   a finding's conclusion or a determination other than the record holds, or a leg that
+ *                                    cuts against it read as supporting it (against `conclusions`);
+ *   ACCOUNT_BIAS_NOT_PRINTED         a bias-marked sentence whose statement is not in `printed`;
+ *   ACCOUNT_CLAIM_NOT_BIAS           a bias-marked sentence stating a fact ("Lying is not bias").
+ *
+ * `case-disclosures` R30 runs it at the act, with the record; `checkCaseFile` (R1) runs it offline over the carried
+ * document, so one body of check code judges both. The machine flags (`run-rules` R25) are not judged here. Its codes'
+ * catalogue rows are `case-disclosures`' (its R22). Pure: it reads only its arguments, the same arguments give the same
+ * answer, and it never throws. No place is named here (R17). */
+
+import { canonicalJson } from "../record-grammar/json.mjs";
+import { checkSentences, VERDICT_WORDS, CAUSE_MARKERS } from "../answers/sentences.mjs";
+
+/** R24: the arms' codes, in `case-disclosures` R30's order. */
+export const ACCOUNT_CODES = Object.freeze(["ACCOUNT_SENTENCE_UNSUPPORTED", "ACCOUNT_FACT_NOT_IN_CITED",
+  "ACCOUNT_CONTRADICTED_BY_RECORD", "ACCOUNT_BIAS_NOT_PRINTED", "ACCOUNT_CLAIM_NOT_BIAS"]);
+
+/* The words that state a finding's outcome, a determination (arm 3 (a), arm 5). */
+export const DETERMINATION_WORDS = Object.freeze(["established", "establishes", "establish", "found that", "finds that",
+  "concluded", "concludes", "determined", "determines", "proved", "proves", "proven", "shows that", "showed that",
+  "shown that", "confirmed", "confirms", "demonstrated", "demonstrates"]);
+/* A leg read as supporting what it rests on (arm 3 (c)), and the words that read it as cutting against it. */
+export const SUPPORT_WORDS = Object.freeze(["supports", "supported", "shows", "showed", "confirms", "confirmed", "proves",
+  "proved", "establishes", "established", "demonstrates", "demonstrated", "bears out", "backs"]);
+export const CONTRARY_WORDS = Object.freeze(["against", "contradicts", "contradicted", "undermines", "undermined",
+  "disputes", "disputed", "cuts", "however", "despite", "but", "although", "though", "weakens", "conflicts"]);
+
+const plain = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+const filled = (v) => typeof v === "string" && v.trim() !== "";
+const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/ /g, "\\s+");
+const wordsRe = (list, flags = "i") => new RegExp(`(?<![A-Za-z])(?:${[...list].sort((a, b) => b.length - a.length).map(esc).join("|")})(?![A-Za-z])`, flags);
+const squash = (s) => String(s).replace(/\s+/g, " ").trim();
+const lower = (s) => squash(s).toLowerCase();
+
+const DETERMINATION_RE = wordsRe(DETERMINATION_WORDS);
+const SUPPORT_RE = wordsRe(SUPPORT_WORDS);
+const CONTRARY_RE = wordsRe(CONTRARY_WORDS);
+/* answers R32's voice (its verdict, likelihood and rating words, a likelihood's percentage and its cause words) is the
+   assistant's own and no arm of R30's: taken out of the text `checkSentences` reads, so it hides no arm's code */
+const VOICE_RE = wordsRe([...Object.values(VERDICT_WORDS).flat(), ...CAUSE_MARKERS, "sure", "certain", "confident"], "gi");
+const QUOTED = /"([^"]*)"|“([^”]*)”|«([^»]*)»/g;
+
+/* ============================================================ the facts a sentence states */
+
+const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+const MONTH = `(?:${MONTHS.map((m) => `${m[0].toUpperCase()}${m.slice(1)}`).join("|")}|(?:Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Sept|Oct|Nov|Dec)\\.?)`;
+const DATE_RE = new RegExp([
+  "\\b\\d{4}-\\d{2}-\\d{2}\\b",
+  `\\b${MONTH}\\s+\\d{1,2}(?:st|nd|rd|th)?,?\\s+\\d{4}\\b`,
+  `\\b\\d{1,2}(?:st|nd|rd|th)?\\s+${MONTH}\\s+\\d{4}\\b`,
+  `\\b${MONTH}\\s+\\d{4}\\b`,
+  "\\b(?:18|19|20|21)\\d{2}\\b"].join("|"), "g");
+const monthOf = (w) => { const i = MONTHS.findIndex((m) => m.startsWith(w.toLowerCase().replace(/\.$/, "").slice(0, 3))); return i < 0 ? null : String(i + 1).padStart(2, "0"); };
+
+/** A date as one spelling: `YYYY-MM-DD`, `YYYY-MM` or `YYYY`. */
+function dateKey(s) {
+  let m;
+  if ((m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s))) return `${m[1]}-${m[2]}-${m[3]}`;
+  if ((m = /^([A-Za-z.]+)\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})$/.exec(s))) return `${m[3]}-${monthOf(m[1])}-${m[2].padStart(2, "0")}`;
+  if ((m = /^(\d{1,2})(?:st|nd|rd|th)?\s+([A-Za-z.]+)\s+(\d{4})$/.exec(s))) return `${m[3]}-${monthOf(m[2])}-${m[1].padStart(2, "0")}`;
+  if ((m = /^([A-Za-z.]+)\s+(\d{4})$/.exec(s))) return `${m[2]}-${monthOf(m[1])}`;
+  return s;
+}
+/** Every date a text states, each with the spellings it is found by: itself, and the month and year it falls in. */
+const datesIn = (t) => [...String(t).matchAll(DATE_RE)].map((m) => ({ said: m[0], key: dateKey(squash(m[0])) }));
+const dateKeysOf = (t) => {
+  const out = new Set();
+  for (const d of datesIn(t)) { out.add(d.key); out.add(d.key.slice(0, 7)); out.add(d.key.slice(0, 4)); }
+  return out;
+};
+
+/* A figure: an amount, count, ratio or percentage (a date is not one; answers' `figuresIn` reads them the same way). */
+const FIGURE_RE = /(?:[$€£]\s?)?\d[\d,]*(?:\.\d+)?(?:\s?(?:%|percent\b|thousand\b|million\b|billion\b))?/g;
+const numberCore = (s) => (/\d[\d,]*(?:\.\d+)?/.exec(s) || [""])[0].replace(/,/g, "");
+const NOT_NAMES = new Set(["I", ...MONTHS.map((m) => `${m[0].toUpperCase()}${m.slice(1)}`),
+  "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
+
+/** The text outside a sentence's quotations. */
+const unquoted = (t) => String(t).replace(QUOTED, " ");
+/** The quotations a sentence makes. */
+const quotationsIn = (t) => [...String(t).matchAll(QUOTED)].map((m) => m[1] ?? m[2] ?? m[3]).filter((q) => q.trim());
+
+/** The names a text states outside its quotations: runs of capitalised words, a sentence's first word not counted when
+ *  it stands alone; months, weekdays and record ids (words holding a digit) are not names. */
+function namesIn(t) {
+  const text = unquoted(t);
+  const out = [];
+  for (const m of text.matchAll(/[A-Z][A-Za-z'’-]*(?:\s+(?:of|the|and|for|de|van|von|du|la)\s+[A-Z][A-Za-z'’-]*|\s+[A-Z][A-Za-z'’-]*)*/g)) {
+    const before = text.slice(0, m.index);
+    if (before && /[A-Za-z0-9]$/.test(before)) continue;
+    let words = m[0].split(/\s+/);
+    const starts = !before.trim() || /[.!?:;]\s*$/.test(before) || /["“«(]\s*$/.test(before);
+    if (starts) { words = words.slice(1); while (words.length && /^[a-z]/.test(words[0])) words = words.slice(1); }
+    words = words.filter((w) => !/\d/.test(w));
+    while (words.length && NOT_NAMES.has(words[0])) words = words.slice(1);
+    while (words.length && NOT_NAMES.has(words.at(-1))) words = words.slice(0, -1);
+    if (words.length) out.push(words.join(" "));
+  }
+  return [...new Set(out)];
+}
+
+/** The figures a text states outside its quotations, each a span of the text (a date is not a figure). */
+function figureSpans(t) {
+  const text = unquoted(t);
+  const dateSpans = [...text.matchAll(DATE_RE)].map((m) => [m.index, m.index + m[0].length]);
+  const out = [];
+  for (const m of text.matchAll(FIGURE_RE)) {
+    const s = m.index, e = s + m[0].length;
+    if (dateSpans.some(([a, b]) => s < b && e > a)) continue;
+    if (/[A-Za-z-]$/.test(text.slice(Math.max(0, s - 1), s))) continue;    /* part of a word or an id */
+    if (/^[A-Za-z]/.test(text.slice(e, e + 1))) continue;
+    out.push(m[0].trim());
+  }
+  return out;
+}
+const figureIn = (fig, texts) => {
+  const core = numberCore(fig);
+  if (!core) return true;
+  const re = new RegExp(`(?<![\\d.,])${core.replace(/\B(?=(\d{3})+(?!\d))/g, ",?").replace(/\./g, "\\.")}(?![\\d]|[.,]\\d)`);
+  return texts.some((x) => re.test(x));
+};
+
+/** Every fact a text states: its figures, dates, names and quotations. */
+export function factsIn(t) {
+  return { figures: figureSpans(t), dates: datesIn(unquoted(t)).map((d) => d.said), names: namesIn(t), quotations: quotationsIn(t) };
+}
+
+/* ============================================================ the arguments */
+
+/** A list field written as a list, as canonical JSON in one value (`case-grammar`'s flat rows), or comma-separated. */
+export function listOfField(v) {
+  if (Array.isArray(v)) return v.filter((x) => x !== null && x !== undefined).map(String);
+  if (typeof v !== "string" || !v.trim()) return [];
+  if (/^\s*\[/.test(v)) { try { const j = JSON.parse(v); if (Array.isArray(j)) return j.map(String); } catch { /* read as words */ } }
+  return v.split(",").map((x) => x.trim()).filter(Boolean);
+}
+
+/* The text of what was cited: a string as given, an object's string leaves joined by a space. */
+function textOfCited(v) {
+  if (typeof v === "string") return v;
+  const out = [];
+  const walk = (x) => { if (typeof x === "string") out.push(x); else if (typeof x === "number") out.push(String(x));
+    else if (Array.isArray(x)) x.forEach(walk); else if (plain(x)) Object.values(x).forEach(walk); };
+  walk(v);
+  return out.join(" ");
+}
+
+function citedMap(cited) {
+  const out = new Map();
+  if (Array.isArray(cited)) {
+    for (const [i, c] of cited.entries()) {
+      if (!plain(c) || !filled(c.ref)) return { bad: `cited[${i}]` };
+      out.set(c.ref, { text: textOfCited(c.text ?? ""), role: typeof c.role === "string" ? c.role : null });
+    }
+  } else if (plain(cited)) {
+    for (const [ref, v] of Object.entries(cited)) out.set(ref, { text: textOfCited(plain(v) && "text" in v ? v.text : v), role: plain(v) && typeof v.role === "string" ? v.role : null });
+  } else if (cited !== undefined && cited !== null) return { bad: "cited" };
+  return { map: out };
+}
+
+const MALFORMED = (field) => ({ ok: false, refusals: [{ code: "MALFORMED", field }] });
+
+/* ============================================================ the check */
+
+/** R24: judge each sentence of an `account:` block. `account` its rows `{ord, text, cites, kind, bias_statement?,
+ *  began_as}` (`case-grammar` R23); `cited` what the sentences may cite, as `[{ref, text, role?}]` or a map from ref to
+ *  its text (a finding's id, a leg as `<finding>#<ord>`, a passage's `content_id`, a material's `ref` or `sha`);
+ *  `printed` the bias statements printed in this case's lens (their ids, or `{bundle, id}`); `conclusions` the record's,
+ *  `[{finding, claim, claim_state, legs: [{ord, target, role}]}]`. Answers `{ok: true, sentences}` or `{ok: false,
+ *  refusals, sentences}`, each refusal `{code, sentence, text, detail, ...}` naming the sentence by its `ord`, every
+ *  departure named in the arms' order, never only the first; `sentences` the count judged. Malformed arguments answer
+ *  `{ok: false, refusals: [{code: "MALFORMED", field}]}`. Pure; never throws. */
+export function checkAccount(args) {
+  try { return judgeAccount(plain(args) ? args : {}); }
+  catch { return MALFORMED("account"); }
+}
+
+function judgeAccount({ account = [], cited = [], printed = [], conclusions = [] }) {
+  if (!Array.isArray(account)) return MALFORMED("account");
+  const rows = [];
+  for (const [i, r] of account.entries()) {
+    if (!plain(r) || !filled(r.text)) return MALFORMED(`account[${i}]`);
+    rows.push({ ord: Number.isInteger(r.ord) ? r.ord : i, text: String(r.text), cites: listOfField(r.cites),
+                bias: filled(r.bias_statement) ? r.bias_statement.trim() : null });
+  }
+  const c = citedMap(cited);
+  if (c.bad) return MALFORMED(c.bad);
+  if (!Array.isArray(printed)) return MALFORMED("printed");
+  const printedIds = new Set(printed.flatMap((p) => (typeof p === "string" ? [p] : plain(p) && filled(p.id)
+    ? [p.id, `${p.bundle ?? ""}#${p.id}`] : [])));
+  if (!Array.isArray(conclusions)) return MALFORMED("conclusions");
+  const concl = new Map();
+  for (const [i, x] of conclusions.entries()) {
+    if (!plain(x) || !filled(x.finding)) return MALFORMED(`conclusions[${i}]`);
+    concl.set(x.finding, { claim: filled(x.claim) ? x.claim : null, adopted: x.claim_state === "adopted",
+                           legs: Array.isArray(x.legs) ? x.legs.filter(plain) : [] });
+  }
+  const refusals = [];
+  for (const row of rows) refusals.push(...judgeSentence(row, c.map, printedIds, concl));
+  const seen = new Set();
+  const out = refusals.filter((r) => { const k = canonicalJson(r); if (seen.has(k)) return false; seen.add(k); return true; });
+  return out.length ? { ok: false, refusals: out, sentences: rows.length } : { ok: true, sentences: rows.length };
+}
+
+/* The leg a cite names: `<finding>#<ord>`, as `conclusions` or `cited` hold it. */
+function legOf(cite, cited, concl) {
+  const m = /^(.+)#(\d+)$/.exec(cite);
+  if (!m) return null;
+  const leg = (concl.get(m[1])?.legs || []).find((l) => Number(l.ord) === Number(m[2]));
+  const role = leg && typeof leg.role === "string" ? leg.role : cited.get(cite)?.role ?? null;
+  return { finding: m[1], ord: Number(m[2]), role };
+}
+
+/* Without its negations: `not`, `no`, `never` and `n't`. */
+const unnegated = (s) => lower(s).replace(/n['’]t\b/g, "").replace(/\b(?:not|never|no)\b/g, " ").replace(/\s+/g, " ").trim();
+
+function judgeSentence(row, cited, printed, concl) {
+  const out = [];
+  const say = (code, detail, more = {}) => out.push({ code, sentence: row.ord, text: row.text, ...more, detail });
+  const read = row.cites.filter((x) => cited.has(x));
+  const texts = read.map((x) => cited.get(x).text);
+  const facts = factsIn(row.text);
+
+  if (!row.bias) {
+    /* arm 1 and the figures of arm 2, through answers' checkSentences (its R33): a holding per cite, the read log what
+       was cited; a figure taken word for word from what it cites is marked as quoting it; its voice taken out */
+    let text = row.text.replace(VOICE_RE, " ");
+    for (const f of [...new Set(facts.figures)].sort((a, b) => b.length - a.length)) if (figureIn(f, texts)) text = text.split(f).join(`“${f}”`);
+    if (!text.trim()) text = "-";
+    const holdings = row.cites.map((x) => ({ address: x, quote: cited.has(x) && cited.get(x).text ? cited.get(x).text : x }));
+    const log = read.map((x) => ({ address: x, text: cited.get(x).text }));
+    const j = row.cites.length
+      ? checkSentences([{ text, kind: "explain", support: holdings.map((_, i) => `h${i + 1}`) }], { cited: { holdings }, readLog: log })
+      : null;
+    const code = j && j.ok ? (j.withheld[0]?.code ?? null) : null;
+    const unread = row.cites.filter((x) => !cited.has(x));
+    if (!row.cites.length) say("ACCOUNT_SENTENCE_UNSUPPORTED", `sentence ${row.ord} cites nothing, and is not marked as following a printed bias statement`);
+    else if (code === "ANSWER_CITES_UNREAD" || (j && !j.ok))
+      say("ACCOUNT_SENTENCE_UNSUPPORTED", `sentence ${row.ord} cites ${unread.length ? unread.join(", ") : row.cites.join(", ")}, which is not among what it may cite`, { cites: unread.length ? unread : row.cites });
+    else {
+      /* arm 2: a figure, date, name or quotation not in what it cites */
+      const missing = [];
+      if (code === "ANSWER_FIGURE_UNSOURCED") {
+        for (const f of facts.figures) if (!figureIn(f, texts)) missing.push({ kind: "figure", said: f });
+        if (!missing.length) missing.push({ kind: "figure", said: "it states" });
+      }
+      const keys = new Set(texts.flatMap((x) => [...dateKeysOf(x)]));
+      for (const d of datesIn(unquoted(row.text))) if (!keys.has(d.key) && !texts.some((x) => lower(x).includes(lower(d.said)))) missing.push({ kind: "date", said: d.said });
+      for (const n of facts.names) if (!texts.some((x) => lower(x).includes(lower(n)))) missing.push({ kind: "name", said: n });
+      for (const q of facts.quotations) if (!texts.some((x) => squash(x).includes(squash(q)))) missing.push({ kind: "quotation", said: q });
+      if (missing.length)
+        say("ACCOUNT_FACT_NOT_IN_CITED", `sentence ${row.ord} states ${missing.map((m) => `the ${m.kind} ${m.kind === "quotation" ? `"${m.said}"` : m.said}`).join(", ")}, which ${missing.length === 1 ? "is" : "are"} not in what it cites`, { facts: missing });
+    }
+  }
+
+  /* arm 3: against the record's conclusions, and the legs that cut against what they rest on */
+  for (const cite of row.cites) {
+    const k = concl.get(cite);
+    if (k && !k.adopted && DETERMINATION_RE.test(unquoted(row.text)))
+      say("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row.ord} states finding ${cite} as determined, where the record holds no adopted conclusion for it`, { finding: cite });
+    else if (k && k.adopted && k.claim) {
+      const s = lower(unquoted(row.text)), claim = lower(k.claim);
+      if (!s.includes(claim) && unnegated(s).includes(unnegated(claim)) && unnegated(claim))
+        say("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row.ord} states finding ${cite}'s conclusion other than the record holds it ("${k.claim}")`, { finding: cite });
+    }
+    const leg = legOf(cite, cited, concl);
+    if (leg && leg.role === "cuts_against" && SUPPORT_RE.test(unquoted(row.text)) && !CONTRARY_RE.test(unquoted(row.text)))
+      say("ACCOUNT_CONTRADICTED_BY_RECORD", `sentence ${row.ord} reads leg ${cite} as supporting finding ${leg.finding}, where it cuts against it`, { leg: cite });
+  }
+
+  if (row.bias) {
+    /* arm 4: its statement printed in this case's lens */
+    if (!printed.has(row.bias))
+      say("ACCOUNT_BIAS_NOT_PRINTED", `sentence ${row.ord} is marked as following bias statement ${row.bias}, which this case does not print in its lens`, { statement: row.bias });
+    /* arm 5: a bias-marked sentence states no fact */
+    const stated = [...facts.figures.map((f) => `the figure ${f}`), ...facts.dates.map((d) => `the date ${d}`),
+                    ...facts.names.map((n) => `the name ${n}`), ...facts.quotations.map((q) => `the quotation "${q}"`)];
+    if (DETERMINATION_RE.test(unquoted(row.text))) stated.push("a finding's outcome");
+    else for (const [f, k] of concl) if (k.claim && unnegated(k.claim).split(" ").length >= 3 && unnegated(row.text).includes(unnegated(k.claim))) { stated.push(`finding ${f}'s outcome`); break; }
+    if (stated.length)
+      say("ACCOUNT_CLAIM_NOT_BIAS", `sentence ${row.ord} is marked as bias and states ${stated.join(", ")}: a fact is never bias`, { statement: row.bias });
+  }
+  return out;
+}
