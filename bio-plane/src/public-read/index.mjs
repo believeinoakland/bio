@@ -14,7 +14,8 @@
  * moved with it and keep their old ids (REC-, CASE-, D-); a `publication` R id in them is named as such. The Worker
  * half (`../publication/worker.mjs`, `../container.mjs`, `../inband.mjs`: R5–R7, R9) is this module's by `paths` and
  * stays at those paths (K697, K702); the door's routes reach it through `./door.mjs`. Its refusal rows are its own,
- * in `./checks.mjs` (R17); the case document's tensions and blocks are read from `case-grammar`.
+ * in `./checks.mjs` (R17); the case document's tensions and blocks are read from `case-grammar`, and a member document's
+ * cleaned copy is told by `case-carriage`'s `COPY_CLEANED_LABEL` (R3's `label_key`; K2527).
  *
  * REACHED as `publicReadOf(host, deps)` (K61): one instance per host, created on the first call with `deps`, returned
  * to every later caller. `deps`:
@@ -38,6 +39,7 @@ import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
          caseDocumentRequiresMaterials, caseDocumentStatesMemberBlocks } from "../case-grammar/index.mjs";
 import { caseFilePath, calculationsOf, timelineOf } from "../case-grammar/index.mjs";
 import { parseFrontmatter } from "../record-grammar/index.mjs";
+import { COPY_CLEANED_LABEL } from "../case-carriage/index.mjs";
 import { rowOf } from "./checks.mjs";
 import { WITHHELD_SENTENCE, withholdingOf } from "./courtorders.mjs";
 import { delivererOf } from "../deliverer.mjs";
@@ -54,6 +56,32 @@ const signedParts = (doc) => {
   if (!doc || typeof doc.text !== "string") return null;
   try { const p = parseFrontmatter(doc.text); return p.data ? { fm: p.data, body: p.body } : null; }
   catch { return null; }
+};
+/* R3 (T41; N798, N811; DEC-179, DEC-185 (1), DEC-187): the key a reader's surface shows a copy's label by. A member
+   document's cleaned copy is the one whose signed label is `case-carriage`'s `COPY_CLEANED_LABEL` word for word (its R15:
+   every such copy carries it, and no photo's does; nothing else in the row tells the two apart). A photo's copy is marked
+   as `case-grammar` R12 reads it: by `obscured_marked` when the row states it, else by its label (not null is marked), so
+   every earlier edition keys as it labels. */
+export const LABEL_KEY_MARKED = "photo.obscured.label";
+export const LABEL_KEY_UNMARKED = "photo.published.label";
+export const LABEL_KEY_CLEANED = "document.cleaned.label";
+const markedOf = (obscured, raw) => {
+  const m = obscured.marked ?? (raw ? raw.obscured_marked : undefined);
+  if (m === true || m === "true") return true;
+  if (m === false || m === "false") return false;
+  return obscured.label != null;
+};
+const labelKeyOf = (obscured, raw) => (obscured.label === COPY_CLEANED_LABEL ? LABEL_KEY_CLEANED
+  : markedOf(obscured, raw) ? LABEL_KEY_MARKED : LABEL_KEY_UNMARKED);
+/* R3: the `materials` and `material_attestations` blocks as signed (`case-grammar` R11, R12), each row carried as its copy
+   also answering its `label_key` beside its label; a row without `obscured` gains nothing. */
+const keyedMaterialsOf = (fm) => {
+  const read = materialsOf(fm);
+  if (!read || !Array.isArray(read.materials)) return read;
+  const raw = (Array.isArray(fm.materials) ? fm.materials : [])
+    .filter((x) => x && typeof x === "object" && !Array.isArray(x));
+  return { ...read, materials: read.materials.map((r, i) => (r.obscured != null
+    ? { ...r, label_key: labelKeyOf(r.obscured, raw[i]) } : r)) };
 };
 /* R3 (DEC-103): the lens section of a signed body, from its head to the next `## ` heading, whole and as signed. */
 const lensSection = (body) => {
@@ -981,7 +1009,8 @@ export class PublicRead {
        none). It composes no case-level strength (R11): one line per member, never one for the case. */
     const standings = signed ? standingsOf(signed.fm) : null;
     for (const f of findings) f.standing = standings ? (standings.get(f.bundle_id) ?? null) : null;
-    /* R3 (DEC-112): a `/6` document's `method` and `materials` blocks, as signed; null for any other document. */
+    /* R3 (DEC-112): a `/6` document's `method` and `materials` blocks, as signed, each copy's row with its `label_key`
+       (T41; DEC-185 (1)); null for any other document. */
     const six = !!(signed && caseDocumentRequiresMaterials(signed.fm));
     /* R20 (DEC-116 items 7, 8): each edition a docket withdrawal names carries its stamp; the edition is answered whole
        as before. The docket's last date is `docket` R14's `last_entry`, read synchronously and without any capture's
@@ -1107,7 +1136,7 @@ export class PublicRead {
              /* R26 (C:A-15): each calculation, its outputs labelled computed facts with their denominators; R27 (C11): the
                 timeline, its two lanes apart. Both null where an order withholds the document they are read from. */
              calculations, timeline,
-             method: six ? methodOf(signed.fm) : null, materials: six ? materialsOf(signed.fm) : null,
+             method: six ? methodOf(signed.fm) : null, materials: six ? keyedMaterialsOf(signed.fm) : null,
              blocks_detail: blocks.detail
                ?? "each capture a member rests on, with its grade and co-attestation, and what may be told of the source "
                 + "behind it, read from the signed document: a source's detail is stated only as it could be published "
