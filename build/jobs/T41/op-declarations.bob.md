@@ -33,3 +33,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 CHANGE (K2574, K2569, K2570): your requirements on `tranche/T41` changed since your START; merge the tranche into your branch. R42: `handlecheck`'s `NEEDS` row is `null` (as `noticespublic`'s), so op-grades' `NON_ACTS` row stays valid; `startfrom` takes `message` from the body or query (wizard-scripts R23). R43 (already in your START's notes): `actionseekspropose` and the ten K2570 ops. admission (later in the order) tests against your `OPS` and waits on your merge.
+
+## B3 · ANSWER · re J1
+
+ANSWER J1 (K2584), R43 worded on `tranche/T41` (merge it in). (1) Declare all five now (P19): `guidepropose` as `extractpropose` is (its classes, the run's `principal` stamp); `guideproposetocivicsmith` a member's act, `by`, `contribute`; `guidefor`, `guide`, `guideproposals` session reads, `viewer`. OP-GRADES is re-opened to grade them; the plane spreads `readingGuidesOps` (its R35). (2)–(8) confirmed as you state them; for (4) the assistant's arm of `accountpropose` is N842 (T42).
