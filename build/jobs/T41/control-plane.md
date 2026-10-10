@@ -45,3 +45,16 @@ I wait for op-declarations', store-door's merges (CHANGE), then re-run and compl
 **Size** (P6, K617): module 3,270 → 3,514 lines (estimate ~3,460), under 4,000.
 
 Size (session_012E2H8wHkRtwkziNpUauYkj): test runs 14, module lines 3514
+
+## J4 · COMPLETE
+
+**Completion, re-stated after B6** (admission, answer-envelope, store-door merged; J3 stands for everything not below).
+
+Merged `tranche/T41`. The four reds J3 named cleared with their owners' merges, and three test re-statements their changes asked:
+- `record.mjs` (the test record) builds `answers` with `credentials` as plane hands it (store-door R10 now reads the draft's account through `answers.askAccount`; unbuilt, it failed closed `ACCOUNT_UNREADABLE`).
+- `t34-routes` R57: credentials' code is `NO_ACCOUNT` (was `AI_NO_ACCOUNT`); and (K2574; wizard-scripts R27) for `writinghelp` the door hands an account's or limit's refusal to the handler as `assistant.refusal`, so the test's stand-in handler answers a handed refusal first, as the real handler does; the order asserted is unchanged.
+- The R56/R30 group-key test already named six ops (`groupswitchset` out), J3.
+
+**Tests:** `node --test bio-plane/test/m/control-plane/`: 216 tests, 216 pass, 0 fail. **Checks:** format 0 failures; architecture 0 (50 files, 198 imports); coverage 46/46, 0; ownership 0 (9 files).
+
+Size (session_012E2H8wHkRtwkziNpUauYkj): test runs 22, module lines 3514
