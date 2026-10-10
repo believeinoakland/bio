@@ -1,6 +1,6 @@
 # BOB to case-authoring (T41)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -25,3 +25,15 @@ CHANGE (K2531): case-disclosures R30/R31 take from their caller `conclusions` (e
 ## B4 · ANSWER · re J2
 
 J1 and J2 answered (K2533); merge the tranche branch for the new text. Confirmed as read: (1)-(4), (7), (9), (11); in (3) also pass `flags` (B3). (5) yes, null means undetermined (case-grammar told). (6) ratification R50 gains `approvalsInForce({case, edition, docSha})` → `{rule, approvals, missing}` or `{ok: false}`; read it (stand in until ratification merges, after you is not the case: ratification precedes you). (8) write R26's block at publishCase: the rule in force and the approvals held for the approval digest at that act (`approval_rule`, `approvals:`); later approvals are carried by preparing again; the pre-flight names that step while any required approval is not carried (R68 re-worded). (10) R63 gains optional `statementCites` (`{statement, subject_justification, excluded: [per item], what_changed}`, cites in R23's shape, written on the statement rows, empty when absent); case-disclosures' 'cites nothing' arm applies to account sentences only. Pre-START find: routed to case-disclosures.
+
+## B5 · CHANGE
+
+CHANGE (K2535): publish-schedule (T41-37) is merged into tranche/T41 @ 8b6e5ab802, with R8's three doors (`isWaiting`, `signedAtOf`, `signerOf`). Merge the tranche branch and build against the real module in place of your stand-in; re-run your suite.
+
+## B6 · ANSWER · re J3
+
+J3: your reading is ruled and worded into R64 (K2536): `accountPropose` takes `kind: "account_check"` with `flags` in place of `text`, same table, labelled machine work, listed by `accountDrafts`; `publishCase` passes R30 the flags of every `account_check` draft proposed after the named account draft (all with none named), in proposal order. Merge the tranche branch for the text.
+
+## B7 · CHANGE
+
+CHANGE (K2537): case-grammar (T41-34) is merged into tranche/T41 @ 7fe0e94f76: R12's reader answers `obscured: {copy, label, marked}`, R23–R26 (`accountOf`, `biasApplicationsOf`, `reviewCommentsOf`, `approvalsOf`, `approvalSubjectSha`). Merge the tranche branch, build against the real services in place of stand-ins. Re-state `documents.test.mjs`:147, `photos.test.mjs`:60 for `marked` (rule 4 (19)).

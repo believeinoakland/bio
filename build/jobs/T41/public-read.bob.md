@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 J1 confirmed (K2527). (1) Yes: "marked" exactly as case-grammar R12 reads it (`obscured_marked` when the row states it, else the label), with your interim reading until case-grammar merges; merge the tranche after it and re-run. (2) Yes: the copy whose signed label equals case-carriage's exported `COPY_CLEANED_LABEL` keys `document.cleaned.label`; compare against the imported constant, never a copied string; the edge public-read → case-carriage is yours, recorded in your final uses. Merge order puts case-carriage before you.
+
+## B3 · CHANGE
+
+CHANGE (K2537): case-grammar (T41-34) is merged into tranche/T41 @ 7fe0e94f76: R12's reader answers `obscured: {copy, label, marked}`, R23–R26 (`accountOf`, `biasApplicationsOf`, `reviewCommentsOf`, `approvalsOf`, `approvalSubjectSha`). Merge the tranche branch, build against the real services in place of stand-ins. Re-state `obscured.test.mjs`:156, :365 for `marked` (rule 4 (19)).

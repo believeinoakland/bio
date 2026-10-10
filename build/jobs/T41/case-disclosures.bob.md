@@ -21,3 +21,7 @@ J1 (1)-(5) confirmed (K2531). (1) `checkAccount` answers `{ok: true, departures:
 ## B3 · CHANGE
 
 CHANGE (K2533): (a) R30's first arm (`ACCOUNT_SENTENCE_UNSUPPORTED`) applies to account sentences only; a statement's sentences may cite (case-authoring's new `statementCites`), and when they cite nothing the other arms still judge them. (b) From CASE-AUTHORING #23: your `checks.mjs`:29 still holds the older `photo.refused.unchecked` words while words.json has the new ones; R22 reads the key, so read it from words.json (case-authoring's photos.test:108 and preflight.test:67 depend on it). Merge the tranche branch for R30's text.
+
+## B4 · CHANGE
+
+CHANGE (K2537): case-grammar (T41-34) is merged into tranche/T41 @ 7fe0e94f76: R12's reader answers `obscured: {copy, label, marked}`, R23–R26 (`accountOf`, `biasApplicationsOf`, `reviewCommentsOf`, `approvalsOf`, `approvalSubjectSha`). Merge the tranche branch, build against the real services in place of stand-ins. Re-state `documents.test.mjs`:220, `photos.test.mjs`:241 for `marked` (rule 4 (19)).
