@@ -38,21 +38,23 @@
 - **R8** (K2540): a preparation of this same case edition is replaced. `identity` and `waiting` are re-stated with negative controls.
 - **Re-stated for providers:** case-grammar R12's `marked` (`documents`:147, `photos`:60).
 
-**Deferred, with why:**
-- B8's re-pins (`invariants.test`:76 to C-120.23–.29, `preflight.test`:67) and B10's (`photos.test`:76, `PUBLISHED_LABEL`): each waits on case-disclosures' merge, so I take them by its CHANGE.
-- The split of R63–R68 to `case-account`: N839 (K2542).
+**Re-pinned after providers merged:**
+- case-disclosures (K2550): `invariants`:82 and `preflight`:67 re-pinned to C-120.23–.29 (B8); `photos`:60/:78 re-pinned to `PUBLISHED_LABEL` (B10, K2541). A blank statement is no sentence for R30: found by `rests`:150 against the real R30, and fixed.
+- ratification (K2548): R68 runs against the real `approvalsInForce`, with a reader registered (`account.test`).
+- publication (K2543): nothing changed.
+
+**Deferred, with why:** the split of R63–R68 to `case-account`, N839 (K2542).
 
 **Found in other modules:**
-- case-disclosures' `photo.refused.unchecked` words (routed, K2533).
-- record-grammar R43 has no account-draft subject (N838).
+- case-disclosures' `photo.refused.unchecked` words (routed, K2533; now cleared);
+- record-grammar R43 has no account-draft subject (N838);
 - R8's conflict with re-preparation (K2540, mine, built).
 
 **Final `uses`, for BOB to apply:** the current list plus `ai-runs` (R64's `runFor`; the architecture check's one failure until it is applied).
 
-**Tests:**
-- With local, uncommitted stand-ins for case-disclosures' `accountJudged` and ratification's `approvalsInForce` (neither module merged yet): `case-authoring` 178/180. The 2 reds are case-disclosures' wording (`photos`:101, `preflight`:67), red before this job.
-- On the committed tree alone: 29/180, because R63 fails closed (`ACCOUNT_CHECK_UNDETERMINED`) until case-disclosures provides `accountJudged`. Both providers merge before this module (L8 order), and I re-run at their CHANGE.
-- Users' suites (review, affordances, answer-envelope, control-plane, plane): the tranche's own reds exactly, none new.
+**Tests (committed tree, no stand-ins, tranche/T41 at 6da408bc97):**
+- `case-authoring`: 181/181.
+- Users' suites against the same tranche: no new red. review 5 = 5, affordances 35 against the tranche's 37, answer-envelope 5 = 5, control-plane 22 = 22, plane 130 = 130.
 
 **Checks:**
 - format: 0 failures;
@@ -60,7 +62,7 @@
 - coverage: 52 of 52;
 - ownership: 0 failures.
 
-Size (session_01RSu6BGSEYVGjuvDfZesRY5): test runs 28, module lines 4,137
+Size (session_01RSu6BGSEYVGjuvDfZesRY5): test runs 36, module lines 4,139
 
 ## J1 · QUESTION
 
