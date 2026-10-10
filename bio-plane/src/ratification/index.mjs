@@ -63,13 +63,13 @@ import { networkNoticesOf } from "../network-notices/index.mjs";
 import { publishScheduleOf } from "../publish-schedule/index.mjs";
 import { peopleOf } from "../people/index.mjs";
 import { moneyOf } from "../money/index.mjs";
-import { parseFrontmatter, normalizeType, isMachineIdentity, MACHINE_CLASS_PREFIX,
-         createSha256 } from "../record-grammar/index.mjs";
+import { parseFrontmatter, normalizeType, isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
+import { approvalSubjectSha, approvalsOf } from "../case-grammar/index.mjs";
 import { checkCaseDocument, caseMemberFindings, caseMemberImageFindings, completenessFields,
          RATIFY_SCOPE_CHECKS, rowOf } from "./checks.mjs";
 import { operatorCaseRefusal, machineCaseRefusal, testimonyCaseRefusal, attributionUnchosenRefusal,
          attributionStaleRefusal, conclusionMovedRefusal, noAttestingKeyRefusal,
-         anonymousTestimonyRefusal, approvalMissingRefusal, approvalsRead } from "./refusals.mjs";
+         anonymousTestimonyRefusal, approvalMissingRefusal, approvalsRead, approvalsNotCarried } from "./refusals.mjs";
 import { release, examineMember, PLANE_VIEWER } from "./release.mjs";
 import { retire } from "./retire.mjs";
 import { checkedOf, checkedDiffers, scheduleUncheckableRefusal, scheduledStop, refusedStop, commitStops,
@@ -628,12 +628,11 @@ export class Ratification {
                        anonymousTestimonyRefusal(caseId, edition, this.#uncorroborated(src, attr))])
         if (r) refusals.push(r);
 
-      /* R49 (D60): APPROVAL_MISSING, where the act asks it after CASE_RATIFY_STALE, over these bytes' own sha (publication
-         R21's `doc_sha`); approvals that cannot be read make the answer undetermined, never a clear one. */
-      const ownSha = createSha256().update(new TextEncoder().encode(src)).hex();
-      const approvals = this.#approvals(caseId, edition, ownSha);
-      if (approvals && approvals.unreadable) throw new Error(approvals.unreadable);
-      { const r = approvalMissingRefusal(caseId, edition, ownSha, approvals); if (r) refusals.push(r); }
+      /* R49 (D60; K2528, K2533): APPROVAL_MISSING, where the act asks it after CASE_RATIFY_STALE, over these bytes'
+         approval digest; approvals that cannot be read make the answer undetermined, never a clear one. */
+      const approval = this.#approvalCheck(caseId, edition, src);
+      if (approval.read && approval.read.unreadable) throw new Error(approval.read.unreadable);
+      if (approval.refusal) refusals.push(approval.refusal);
 
       const signerMember = signer === null || signer === undefined || isMachineIdentity(signer) ? null
         : String(signer).trim().replace(/^member:/, "") || null;
@@ -727,16 +726,42 @@ export class Ratification {
     return { ok: true };
   }
 
-  /* R50's reading for one case edition's document (`./refusals.mjs` `approvalsRead`). */
-  #approvals(caseId, edition, docSha) {
-    return approvalsRead(this.#approvalReader, { caseId, edition, docSha });
+  /* R50's reading at an approval digest (`./refusals.mjs` `approvalsRead`). */
+  #approvals(caseId, edition, approvalSha) {
+    return approvalsRead(this.#approvalReader, { caseId, edition, docSha: approvalSha });
+  }
+
+  /* R49 over one document's text: its approval digest (`case-grammar` R26's `approvalSubjectSha`, K2528), R50's reading
+     there, and APPROVAL_MISSING when an approver has not approved it or a held approval is not carried in the text's own
+     `approvals:` block (K2533); `refusal` null with no rule in force. */
+  #approvalCheck(caseId, edition, text) {
+    const sha = approvalSubjectSha(text);
+    const read = this.#approvals(caseId, edition, sha);
+    const carried = (approvalsOf(parseFrontmatter(String(text ?? "")).data || {}) || {}).approvals ?? [];
+    return { sha, read, refusal: approvalMissingRefusal(caseId, edition, sha, read, approvalsNotCarried(read, carried)) };
+  }
+
+  /** R50 (K2533): the approvals in force for a case edition's document at its approval digest `docSha`, for
+   *  `case-authoring` R68: `{ok: true, rule, approvals, missing}` (`rule` null, nothing missing, with no rule in force), or
+   *  `{ok: false}` when they cannot be read. Writes nothing; never throws. */
+  approvalsInForce({ case: caseArg = null, caseId = null, edition = null, docSha = null } = {}) {
+    try {
+      const read = this.#approvals(caseArg ?? caseId, Number(edition), docSha ?? null);
+      if (read && read.unreadable)
+        return { ok: false, reason: "APPROVALS_UNREADABLE", detail: `${read.unreadable} could not be read` };
+      return read ? { ok: true, rule: { approvers: read.approvers }, approvals: read.approvals, missing: read.missing }
+                  : { ok: true, rule: null, approvals: [], missing: [] };
+    } catch (e) {
+      return { ok: false, reason: "APPROVALS_UNREADABLE", detail: String((e && e.message) || e).slice(0, 160) };
+    }
   }
 
   /** R49 in R2: the act's store half, asked by the Worker after CASE_RATIFY_STALE (`./ops.mjs`), over the stored
-   *  document's `doc_sha`: APPROVAL_MISSING (C-58.11) or null. */
+   *  document at the `doc_sha` the Worker read: APPROVAL_MISSING (C-58.11) or null. */
   caseApproval({ caseId = null, edition = null, docSha = null } = {}) {
-    return { ok: true, refusal: approvalMissingRefusal(caseId, Number(edition), docSha,
-                                                       this.#approvals(caseId, Number(edition), docSha)) };
+    const doc = this.#caseDocumentRow(String(caseId ?? ""), edition);
+    if (!doc || doc.doc_sha !== docSha) return { ok: true, refusal: null };   /* the act's own refusals answer it */
+    return { ok: true, refusal: this.#approvalCheck(caseId, Number(edition), doc.text).refusal };
   }
 
   /* ===== PUBLISHING AT A SET TIME (DEC-147; R40–R45, R48) ==================================================
@@ -773,12 +798,13 @@ export class Ratification {
   }
 
   /* R41 over a plan (the stored document's bytes), at `at`, for the signing member and the verified key; with R50's
-     approvals at the plan's `doc_sha`. */
+     approvals at the plan's approval digest. */
   #checkedNow(plan, signer, keyB64, at) {
     return checkedOf({ text: plan.doc.text, fm: plan.fm, caseId: plan.id, project: plan.project,
                        signer: signer === null || signer === undefined ? null : String(signer).replace(/^member:/, ""),
                        keyB64, at, reads: { ...this.#scheduleReads(),
-                                            approvals: () => this.#approvals(plan.id, plan.ed, plan.doc.doc_sha) } });
+                                            approvals: () => this.#approvals(plan.id, plan.ed,
+                                                                             approvalSubjectSha(plan.doc.text)) } });
   }
 
   /* `publish-schedule` R1's waiting entry for a case edition, or null (read as the plane, its R4). */
@@ -885,11 +911,13 @@ export class Ratification {
       const plan = this.#casePlan({ id, ed, docSha, attestorMember: signer, deliveredBy, sigArmored: sig, retry: false });
       const late = plan.plan ? null : ["CASE_CONCLUSION_MOVED", "CASE_PRODUCTION_DIVERGED"].includes(plan.reason);
       if (!plan.plan && !late) stopped.push(refusedStop(plan));
-      /* R49: after CASE_RATIFY_STALE, the group's approvals at the waiting `doc_sha` */
-      { const a = this.#approvals(id, ed, docSha);
-        if (a && a.unreadable) stopped.push(unreadableStop(a.unreadable));
-        else { const r = approvalMissingRefusal(id, ed, docSha, a); if (r) stopped.push(refusedStop(r)); } }
       const doc = plan.plan ? plan.doc : this.#caseDocumentRow(id, ed);
+      /* R49: after CASE_RATIFY_STALE, the group's approvals over the waiting document's bytes */
+      if (doc && doc.doc_sha === docSha) {
+        const a = this.#approvalCheck(id, ed, doc.text);
+        if (a.read && a.read.unreadable) stopped.push(unreadableStop(a.read.unreadable));
+        else if (a.refusal) stopped.push(refusedStop(a.refusal));
+      }
       if (doc) {
         const attr = this.caseTensions.attributionFacts({ text: doc.text, case_id: id, edition: ed });
         for (const r of [testimonyCaseRefusal(id, ed, attr.legacy), attributionUnchosenRefusal(id, ed, attr),
