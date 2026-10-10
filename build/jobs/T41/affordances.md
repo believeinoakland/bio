@@ -60,3 +60,14 @@ Requirement text needed either way (R13, R14 or R18). I carry on with the rest o
   - `ownership affordances tranche/T41`: 13 files, 0 failures.
 
 Size (session_01QdSkAamnkagsBNMwfgAvuB): test runs 34, module lines 2,330
+
+## J2 · COMPLETE
+
+COMPLETE (T41-52). Every entry applied; Completion in this record.
+- **R48:** `ACT_HELP` is re-generated from `3660c18803`: 211 of 215 texts held, the eleven T41 owed texts under their ops, the four retired ops left out. Tested with negative controls.
+- **D54:** R13's EXISTENCE arm (your K2578) is built. The pair facts `project_participant` and `project_target_owner` are false there, never null (R15's positions, not contents; a null would offer `cite`). converts and plane are re-stated with negative controls.
+- **T41's ops:** the grades are in catalogue's closed sets; new `t41.test.mjs` (R12, R41) and `t41-backing.test.mjs` (R19: all eight reasoned ops at their owners).
+- **Retired ops:** t33 and t34 re-stated; t34 R42 reads publish-schedule's map. Rule 4 (11), (12), (20) and (22)'s affordances shares are cleared.
+- **Tests:** module 242/0. Users (tasks, queue, op-declarations, store-door, control-plane, plane; 112 files) are 710/30 both with and without my change, file for file.
+- **Checks:** format 0, coverage 34/34, ownership 0. Architecture shows 4 failures: the four new `uses` edges, for you to apply at merge.
+- **Final uses:** add `steps`, `reading-guides`, `investigation`, `publish-schedule`. With them, architecture reads 0.
