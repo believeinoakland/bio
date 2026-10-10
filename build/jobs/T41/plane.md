@@ -65,3 +65,7 @@ Before my change, on `tranche/T41` @ `827b01abab` (a worktree, same test): the s
   - ownership: 0 failures.
 
 Size (session_011Rh5mYtXnbRop7kcnGcwb1): test runs 27, module lines 1520
+
+## J4 · COMPLETE
+
+T41-63 complete, on the merged tranche. Plane module tests 166/166. migrate-released 584/1: rule 4 (24) only. Users' suites green except answer-envelope catalogue-end, rule 4 (21). B8 applied: controlPlaneOwnerOps spread over the plane's instances, tested. Checks: format 0, coverage 35/35, ownership 0; architecture fails only on the four uses edges (steps, reading-guides, question-explorer, investigation), recorded as my final uses for you to apply at merge. Completion section in my record.
