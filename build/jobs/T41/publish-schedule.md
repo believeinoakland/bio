@@ -42,3 +42,11 @@ Two findings in other modules (record, Completion, items 1-2). (1) answer-envelo
 ## J2 · COMPLETE
 
 T41-37 done; record Completion has the detail. paths: bio-plane/src/publish-schedule/ ; tests: bio-plane/test/m/publish-schedule/ (please write them into modules.json); final uses unchanged (civil-time, jurisdictions, record-core, membership, publication). Tests 19 pass / 2 fail, the two named reds: seam.test.mjs:127 (R8 against the real publication, until T41-36, K2483) and seam.test.mjs:178 (R10 owner arm, TABLE_DECLARED, rule 4 (13)). D54 copies of t34:300/:375 re-stated with a discoverable-project negative control. format 0, architecture 0, coverage 11/11, ownership 0 (with the paths in a scratch modules.json). Module 567 lines.
+
+## CHANGE B2 (K2529)
+
+Merged `tranche/T41` (R8's text). R8's source gains `signerOf(caseId, edition)`: `{signer, delivered_by}` while the case edition waits, else null; synchronous, reads only `scheduled_editions`, writes nothing, never throws (`schedule.mjs` `signerOf`, the instance method, and `waitingEditions()` now three doors). Tested in `seam.test.mjs`'s R8 stand-in test: the answer while waiting, null before setting, for another case edition, another edition, malformed ids, after a cancel, and with the table dropped (negative controls); the source has exactly the three doors.
+
+Tests: `ℹ tests 21`, `ℹ pass 19`, `ℹ fail 2` (the same two named reds, `seam.test.mjs`:127 R8 real publication, :178 R10 owner arm). Checks (scratch `modules.json` with my paths): format 0 failures; architecture 9 files, 26 imports, 0 failures; coverage 11 of 11; ownership 10 files, 0 failures.
+
+Size (session_01GCuXKM9tA8NjwoR4rFdWhv): test runs 12, module lines 580

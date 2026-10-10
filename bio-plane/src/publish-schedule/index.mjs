@@ -13,7 +13,8 @@
  *
  * THE SEAM (R8; K31's pattern, as `publication` R61): at creation this module registers with `publication` R77
  * (`registerWaitingEditions`) the source `publication` reads a waiting edition through: `isWaiting(caseId, edition)`
- * (`publication` R21's waiting clause) and `signedAtOf(caseId, edition)` (R5, for `publication` R70's `signed_at`).
+ * (`publication` R21's waiting clause), `signedAtOf(caseId, edition)` (R5, for `publication` R70's `signed_at`) and
+ * `signerOf(caseId, edition)` (K2529, for `publication` R76's signer and deliverer).
  * Until `publication` offers R77 (T41-36, K2483) nothing is registered, and `publication` reads its own copy, as today.
  *
  * REACHED as `publishScheduleOf(host, deps)` (K61): one instance per host, created on the first call with `deps`. At
@@ -104,10 +105,13 @@ export class PublishSchedule {
   isWaiting(caseId, edition) { return schedule.isWaiting(this, caseId, edition); }
   /** R5, R8: a waiting case edition's signing instant, or null. */
   signedAtOf(caseId, edition) { return schedule.signedAtOf(this, caseId, edition); }
+  /** R8 (K2529): a waiting case edition's `{signer, delivered_by}`, or null. */
+  signerOf(caseId, edition) { return schedule.signerOf(this, caseId, edition); }
 
   /** R8: the source `publication` R77 takes, its two doors bound to this instance. */
   waitingEditions() {
-    return { module: "publish-schedule", isWaiting: (c, e) => this.isWaiting(c, e), signedAtOf: (c, e) => this.signedAtOf(c, e) };
+    return { module: "publish-schedule", isWaiting: (c, e) => this.isWaiting(c, e), signedAtOf: (c, e) => this.signedAtOf(c, e),
+             signerOf: (c, e) => this.signerOf(c, e) };
   }
 }
 

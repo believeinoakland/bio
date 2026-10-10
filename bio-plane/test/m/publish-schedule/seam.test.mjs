@@ -81,7 +81,7 @@ test("R5 a waiting edition was signed when R1 recorded it: signedAtOf answers th
 
 /* ---------------------------------------------------------------- R8 */
 
-test("R8 at its creation this module registers once with publication.registerWaitingEditions (publication R77) the source {isWaiting, signedAtOf}: isWaiting true exactly while the case edition waits, signedAtOf R5's instant while it waits else null; both synchronous, reading only this module's table, writing nothing and never throwing (over a stand-in publication offering R77's shape)", async () => {
+test("R8 at its creation this module registers once with publication.registerWaitingEditions (publication R77) the source {isWaiting, signedAtOf, signerOf}: isWaiting true exactly while the case edition waits, signedAtOf R5's instant and signerOf {signer, delivered_by} (K2529) while it waits, else null; both synchronous, reading only this module's table, writing nothing and never throwing (over a stand-in publication offering R77's shape)", async () => {
   const { w, sched } = base();
   const pub = standIn(w);
   const host = { storage: w.st };
@@ -90,29 +90,30 @@ test("R8 at its creation this module registers once with publication.registerWai
   assert.deepEqual(ps.waitingSource, { ok: true, module: "publish-schedule" }, "R77's answer kept");
   const src = pub.got[0];
   assert.equal(src.module, "publish-schedule");
-  assert.deepEqual(Object.keys(src).filter((k) => typeof src[k] === "function").sort(), ["isWaiting", "signedAtOf"]);
+  assert.deepEqual(Object.keys(src).filter((k) => typeof src[k] === "function").sort(), ["isWaiting", "signedAtOf", "signerOf"]);
   assert.equal(onHost(w, pub, host), ps, "one instance per host: never registered twice");
   assert.equal(pub.got.length, 1);
   /* none waits */
-  assert.deepEqual([src.isWaiting(CASE, 1), src.signedAtOf(CASE, 1)], [false, null]);
+  assert.deepEqual([src.isWaiting(CASE, 1), src.signedAtOf(CASE, 1), src.signerOf(CASE, 1)], [false, null, null]);
   sched(ps);
   const before = w.snapshot();
-  const answers = [src.isWaiting(CASE, 1), src.signedAtOf(CASE, 1)];
-  assert.deepEqual(answers, [true, NOW], "while it waits");
+  const answers = [src.isWaiting(CASE, 1), src.signedAtOf(CASE, 1), src.signerOf(CASE, 1)];
+  assert.deepEqual(answers, [true, NOW, { signer: "olive", delivered_by: V("olive") }], "while it waits");
   assert.equal(answers.some((a) => a instanceof Promise), false, "synchronous");
   assert.deepEqual(w.snapshot(), before, "writes nothing");
   /* the negative controls: another case edition, another edition, a malformed id */
-  assert.deepEqual([src.isWaiting(CASE2, 1), src.signedAtOf(CASE2, 1)], [false, null]);
-  assert.deepEqual([src.isWaiting(CASE, 2), src.signedAtOf(CASE, 2)], [false, null]);
-  for (const bad of [null, undefined, "", 7, {}]) assert.deepEqual([src.isWaiting(bad, 1), src.signedAtOf(bad, 1)], [false, null]);
+  assert.deepEqual([src.isWaiting(CASE2, 1), src.signedAtOf(CASE2, 1), src.signerOf(CASE2, 1)], [false, null, null]);
+  assert.deepEqual([src.isWaiting(CASE, 2), src.signedAtOf(CASE, 2), src.signerOf(CASE, 2)], [false, null, null]);
+  for (const bad of [null, undefined, "", 7, {}])
+    assert.deepEqual([src.isWaiting(bad, 1), src.signedAtOf(bad, 1), src.signerOf(bad, 1)], [false, null, null]);
   /* inside the caller's transaction, as publication R21 asks it */
   w.record.transact(() => assert.equal(src.isWaiting(CASE, 1), true));
   /* cancelled: no longer waits */
   assert.equal(ps.publishAtCancel({ case: CASE, edition: 1, by: V("olive") }).ok, true);
-  assert.deepEqual([src.isWaiting(CASE, 1), src.signedAtOf(CASE, 1)], [false, null]);
+  assert.deepEqual([src.isWaiting(CASE, 1), src.signedAtOf(CASE, 1), src.signerOf(CASE, 1)], [false, null, null]);
   sched(ps);
   w.st.db.exec(`DROP TABLE scheduled_editions`);
-  assert.deepEqual([src.isWaiting(CASE, 1), src.signedAtOf(CASE, 1)], [false, null], "never throws");
+  assert.deepEqual([src.isWaiting(CASE, 1), src.signedAtOf(CASE, 1), src.signerOf(CASE, 1)], [false, null, null], "never throws");
 });
 
 test("R8 with a publication that offers no registerWaitingEditions (publication before T41-36), nothing is registered and this module is created all the same (the negative control)", () => {

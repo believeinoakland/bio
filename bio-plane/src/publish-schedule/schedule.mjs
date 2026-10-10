@@ -318,6 +318,17 @@ export function signedAtOf(p, caseId, edition) {
   } catch { return null; }
 }
 
+/** R8 (K2529; `publication` R76): a waiting case edition's signer and deliverer, `{signer, delivered_by}`, while it waits;
+ *  null for a case edition that does not wait. Synchronous; reads only this module's table; writes nothing and never
+ *  throws. */
+export function signerOf(p, caseId, edition) {
+  try {
+    const r = one(p, `SELECT signer, delivered_by FROM scheduled_editions WHERE case_id=? AND edition=? AND state='waiting'
+                       ORDER BY seq DESC LIMIT 1`, str(caseId), Number(edition));
+    return r ? { signer: r.signer ?? null, delivered_by: r.delivered_by ?? null } : null;
+  } catch { return null; }
+}
+
 /* R6: each registered listener once, with the wake as it stands; one that throws never undoes the act. */
 function tell(p) {
   const wake = publishWake(p);
