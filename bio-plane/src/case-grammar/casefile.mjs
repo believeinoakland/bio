@@ -41,7 +41,11 @@
  * SHA-256 that row names as `obscured.copy`; the original never travels: no `document`, `extracted_text`, `archive` or
  * `container` file under that ref. Those three rules are relative to the case document's rows, which the manifest does
  * not carry, so `caseFileManifestCheck` judges them when its caller hands it the rows (`{materials}`, as `materialsOf`
- * reads them), and judges the manifest alone otherwise. */
+ * reads them), and judges the manifest alone otherwise.
+ *
+ * THE ACCOUNT AND WHAT TRAVELS WITH IT (T41; N820; D56–D61; K2418). R23–R26's blocks (the account, the bias
+ * applications, the review comments included and the approvals) travel inside the case document, `case.md`: no file
+ * kind is added, and a manifest naming one for them departs as any unknown kind does. */
 
 import { sha256HexSync } from "../record-grammar/index.mjs";
 

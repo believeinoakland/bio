@@ -44,13 +44,24 @@
  * is from the copy's own bytes, which the case file carries at `materials/<ref>/obscured`: a copy that is a PDF or a
  * zip package (doc-clean's output: PDF, OOXML, ODF) is a cleaned document and its copy line says so, then its label
  * word for word; every other copy (an image) is a photo's, listed as before T39, so every photo's edition keeps its
- * bytes. */
+ * bytes.
+ *
+ * MARKED OR NOT (T40; N798; DEC-185 (1); K2394). Since T40 an unmarked photo's copy carries `case-carriage`'s
+ * `PUBLISHED_LABEL`, so the label no longer tells a marked copy from an unmarked one: R12's `marked` picks the copy line
+ * or the unmarked line, then the label is printed word for word when there is one. A row stating no `obscured_marked`
+ * reads `marked` by its label, so every earlier edition renders byte for byte.
+ *
+ * THE ACCOUNT, THE REVIEW COMMENTS AND THE APPROVALS (T41; N820; D56, D58, D60, D61; K2418). A document carrying R23's
+ * `account:` block gains "The account" right after the claims, each bias-framed sentence marked and its statement named;
+ * one carrying R25's or R26's gains "What reviewers said" or "Approvals" right before "How to check this case
+ * yourself". Each is added only when its block is carried, numbered as rendered, so an earlier edition re-renders byte
+ * for byte. */
 
 import { parseFrontmatter, canonicalJson, createSha256 } from "../record-grammar/index.mjs";
 import { gradingMethodText } from "../strength/method.mjs";
 import { caseDocumentBlocks, sourceRowWithheld, WITHHELD_SOURCE_LABEL, WITHHELD_SOURCE_REASON } from "./blocks.mjs";
 import { caseTensionsOf } from "./tensions.mjs";
-import { lensOf, LENS_KIND_WORDS, LENS_CLOSING_SENTENCES, LENS_NONE_SENTENCE, LENS_UNDETERMINED_SENTENCE } from "./edition.mjs";
+import { lensOf, lensStatementKey, LENS_KIND_WORDS, LENS_CLOSING_SENTENCES, LENS_NONE_SENTENCE, LENS_UNDETERMINED_SENTENCE } from "./edition.mjs";
 import { methodOf, materialsOf, acceptedWorkOf, PAIR_AXES } from "./materials.mjs";
 import { caseFilePath } from "./casefile.mjs";
 import { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentRequiresMaterials } from "./formats.mjs";
@@ -58,6 +69,7 @@ import { gradingFactsOf, passagesOf } from "./facts.mjs";
 import { standingOf } from "./standing.mjs";
 import { calculationsOf } from "./calculations.mjs";
 import { timelineOf } from "./timeline.mjs";
+import { accountOf, accountBiasMark, reviewCommentsOf, approvalsOf } from "./account.mjs";
 
 /** R14: the sections, in order, by their headings (the UX stream's words, until it gives them). */
 export const COMPLETE_EDITION_HEADINGS = Object.freeze(["The claims", "The findings", "The documents and observations",
@@ -67,6 +79,12 @@ export const COMPLETE_EDITION_HEADINGS = Object.freeze(["The claims", "The findi
  *  "The documents and observations" (the UX stream's words, until it gives them). */
 export const TIMELINE_HEADING = "The timeline";
 export const CALCULATIONS_HEADING = "The calculations";
+/** R14 (T41; N820; D56, D60, D61): the three sections a document carrying R23's, R25's or R26's block adds: the account
+ *  right after the claims, the included review comments and the approvals right before "How to check this case
+ *  yourself" (the UX stream's words, until it gives them). */
+export const ACCOUNT_HEADING = "The account";
+export const REVIEW_COMMENTS_HEADING = "What reviewers said";
+export const APPROVALS_HEADING = "Approvals";
 /** R14 (C11): the timeline's two lanes, by their names in the edition. */
 export const TIMELINE_LANE_WORDS = Object.freeze({ they_did: "What they did", we_did: "What we did" });
 /** R14 (C:A-12): each recompute status in words. */
@@ -255,10 +273,11 @@ export function completeEditionOf(caseFile) {
             ...(x.text_sha ? [li(`Extracted text fingerprint: ${x.text_sha}`)] : []),
             li(`Origin: ${said(x.origin)}`),
             li(`Archived copy: ${said(x.archived_copy, "none recorded")}`),
-            ...(ob ? (isDocumentCopy(files.get(caseFilePath("obscured", x.ref)))
-                ? [li(`${OBSCURED_WORDS.cleaned}${said(ob.copy)}`), ...(ob.label === null ? [] : [li(ob.label)])]
-              : ob.label === null ? [li(`${OBSCURED_WORDS.unmarked}${said(ob.copy)}`)]
-              : [li(`${OBSCURED_WORDS.copy}${said(ob.copy)}`), li(ob.label)])
+            /* T40 (DEC-185 (1)): the copy line or the unmarked line by R12's `marked`, then the label word for word when
+               there is one; `marked` absent reads by the label, so every earlier edition renders byte for byte */
+            ...(ob ? [...(isDocumentCopy(files.get(caseFilePath("obscured", x.ref))) ? [li(`${OBSCURED_WORDS.cleaned}${said(ob.copy)}`)]
+                : (ob.marked ?? ob.label !== null) ? [li(`${OBSCURED_WORDS.copy}${said(ob.copy)}`)]
+                : [li(`${OBSCURED_WORDS.unmarked}${said(ob.copy)}`)]), ...(ob.label === null ? [] : [li(ob.label)])]
               : [li(x.included ? "Included whole in this case file." : "Not included: only its fingerprint, origin and archived copy travel.")]),
             li(x.rests_under === "load_bearing" ? "A finding this case relies on rests on it." : "Only supporting findings rest on it."),
             ...src.map((r) => li(sourceRowWithheld(r) ? `Source: ${WITHHELD_SOURCE_LABEL}: ${WITHHELD_SOURCE_REASON}.`
@@ -338,6 +357,15 @@ export function completeEditionOf(caseFile) {
     const v6up = caseDocumentRequiresMaterials(fm);
     if (v6up && Array.isArray(fm.calculations)) sections.splice(3, 0, [CALCULATIONS_HEADING, calculationsHtml(calculationsOf(fm))]);
     if (v6up && Array.isArray(fm.timeline)) sections.splice(2, 0, [TIMELINE_HEADING, timelineHtml(timelineOf(fm))]);
+    /* T41 (D56, D60, D61): the account after the claims, the review comments and approvals before how to check it, each
+       only when carried, so an edition signed before T41 renders byte for byte */
+    const account = accountOf(fm);
+    if (account) sections.splice(1, 0, [ACCOUNT_HEADING, accountHtml(account, lens)]);
+    const comments = reviewCommentsOf(fm);
+    const approvals = approvalsOf(fm);
+    const before = sections.length - 1;
+    if (approvals) sections.splice(before, 0, [APPROVALS_HEADING, approvalsHtml(approvals)]);
+    if (comments) sections.splice(before, 0, [REVIEW_COMMENTS_HEADING, reviewCommentsHtml(comments)]);
 
     return page({ product, title: `${said(group, "A group")} · Case ${caseId} · Edition ${edition}`, notice, group, sections:
       sections.map(([h, body], i) => `<h2>${esc(`${i + 1}. ${h}`)}</h2>${body.join("")}`) });
@@ -417,6 +445,40 @@ function calculationsHtml(rows) {
     li(`It was ${RECOMPUTE_WORDS[c.recompute] ?? "recomputed at publication with an outcome not stated"}.`),
     ...(c.disclosed ? [li(`The publisher's disclosure: ${c.disclosed}`)] : []),
   ])}`)];
+}
+
+/* R23 (D56, D58): the account's sentences in order, each bias-framed one marked and its statement named (with what the
+   lens block prints of it, when it does); the four statements' rows are the check's, not printed here. */
+function accountHtml(rows, lens) {
+  const sentences = rows.filter((r) => r.kind === "account");
+  if (!sentences.length) return [p("This case states no account.")];
+  const statements = lens ? lens.statements : [];
+  const named = (id) => statements.find((s) => s.id === id || lensStatementKey(s.bundle, s.id) === id);
+  return [p("The account is the publisher's own, sentence by sentence; every sentence rests on what it cites. A sentence "
+    + "framed by the group's declared bias is marked, and its statement named."),
+    ...sentences.map((r) => {
+      const s = r.bias_statement ? named(r.bias_statement) : null;
+      const mark = r.bias_statement ? ` ${accountBiasMark(r.bias_statement)}${s ? ` (${LENS_KIND_WORDS[s.kind] ?? "a statement"}, `
+        + `on ${said(s.subject)}: ${clause(s.text)})` : ""}` : "";
+      return p(`${said(r.text, "")}${mark}`);
+    })];
+}
+
+/* R25 (D61): the comments the publisher included, and how many were left out. */
+function reviewCommentsHtml({ comments, left_out: leftOut }) {
+  return [comments.length ? ul(comments.map((c) => li(`${said(c.reviewer, "A reviewer")}${c.at ? `, on ${c.at}` : ""}: ${said(c.text, "")}`)))
+    : p("The publisher included no reviewer's comment."),
+    p(leftOut === null ? "How many reviewers' comments were left out is not stated."
+      : `${leftOut} reviewer's comment${leftOut === 1 ? " was" : "s were"} left out by the publisher.`)];
+}
+
+/* R26 (D60): the approval rule in force at signing, and each approval. */
+function approvalsHtml({ rule, approvals }) {
+  return [p(!rule ? "No approval rule was in force when this case was signed."
+      : `The group's rule in force at signing required approval by: ${rule.approvers.length ? rule.approvers.join(", ") : "no one named"}`
+        + `${rule.set_by ? ` (set by ${rule.set_by}${rule.set_at ? ` on ${rule.set_at}` : ""})` : ""}.`),
+    approvals.length ? ul(approvals.map((a) => li(`Approved by ${said(a.by)}${a.at ? ` on ${a.at}` : ""}.`)))
+      : p("No approval is recorded.")];
 }
 
 /* An attestation row in words (R12): an anonymous member is never named. */
