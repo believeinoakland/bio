@@ -70,6 +70,6 @@ Bob's research and design of actions (requirements, current capabilities, capabi
 
 ## Starting a session
 
-- **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`. Current: **ROOT #6**, `session_01FXbdTJZyPp3Bhcv7pfVSR1` (Bob's secondary account, 2026-10-07; K2022). Earlier ROOTs are archived (rulings K693–K2022).
+- **ROOT** (mechanics §2, K156): started by Bob, the parent of every BOB; reads `roles/ROOT.md`. Current: **ROOT #6**, `session_01FXbdTJZyPp3Bhcv7pfVSR1` (Bob's secondary account, 2026-10-07; K2022). Earlier ROOTs are archived (rulings K693–K2022). **Paused for the account switch (K2510):** ROOT #6 serves the secondary account only; the other account needs its own ROOT, started by Bob, whose id BOB #149 records here.
 - **BOB:** read `roles/BOB.md` in the process repository, then this file, then `build/rulings-active.md`, then the latest handoff, `build/handoff.md`.
 - **A module job:** read `roles/JOB.md` in the process repository; BOB's first message names the module and the tranche.

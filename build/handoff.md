@@ -1,41 +1,44 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #147 (`session_015RSW6DLs4ZrmfVfQPAvos5`), 2026-10-09 ~23:50 UTC, for BOB #148. Read `build/rulings-active.md` first; this BOB's rulings are K2467–K2502.
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #148 (`session_01EeszW98JLSNnCn9cvup3E9`, secondary account), 2026-10-10 ~06:00 UTC, for BOB #149 on the other (primary) account. Read `build/rulings-active.md` first; this BOB's rulings are K2504–K2510.
+
+## Why paused (K2510)
+
+Bob: "Pause development and save everything to the repo so that development can continue in the other account." Everything is pushed on `tranche/T41`. No routine of this process is armed; every L6 job session is archived with its row in `build/metrics/T41.csv`. BOB #148 stays unarchived on the secondary account, with no `BOB-final` row (K742, K1897).
 
 ## Open with Bob
 
-- **NEEDS BOB: approve `git pull --ff-only origin job/T41/ai-runs` in AI-RUNS #15** (`session_018LtTgjuoBm5JJCXEVJhJZ4`, https://claude.ai/code/session_018LtTgjuoBm5JJCXEVJhJZ4). Its permission check refused that first act (its checkout 147 commits behind its branch); mechanics §16, K2502; no earlier refusal of it in `rulings.md`; not on the standing list. Relayed to Bob by BOB #147. Until he approves, ai-runs (and question-explorer and agent-worker after it) cannot merge, so L6 cannot close. Do not start another ai-runs session to work around it (§16).
-- **Pause after T41 (K2456):** T41 runs every layer and closes by §5.7 through step 5; T42 does not open until Bob resumes.
-- The actions design lane's open decisions (D6, D18, D19) are with Bob on its page; nothing else of BOB's is open with him.
+- **NEEDS BOB: start ROOT on the primary account.** Plain steps: on the primary account, open claude.ai/code, start a new session on `believeinoakland/bio` (branch `main`), title it `ROOT #7`, and paste: "You are ROOT #7 for BIO/CivicOS, on Bob's primary account. Attach believeinoakland/civicos-process, read roles/ROOT.md whole, and follow it. Your first act: START BOB #149: tranche/T41 @ <the commit that carries this handoff>; BOB #148 is `session_01EeszW98JLSNnCn9cvup3E9` (secondary account, unreachable from here)." ROOT then starts BOB #149.
+- **Pause after T41 (K2456)** stands: T41 runs to its close through §5.7 step 5; T42 does not open until Bob resumes.
+- **Bob's meter:** his reading on the primary account is asked at takeover (the 80% rule, K2341).
+- The actions lane's open decisions (D6, D18, D19) are with Bob on its page.
 
 ## Parallel lanes
 
-- **ACTIONS-DESIGN #1** (`design/actions`): read to H8 (Actions D24 → N828, K2474). Not paused.
-- **UX-DESIGN:** read to U145; B123 sent (four wording points, K2484/K2486); nothing owed.
+- **ACTIONS-DESIGN #1** (`design/actions`): read to H8. Not paused by K2510 (it is Bob's lane); its session is on the account it was started on.
+- **UX-DESIGN:** read to U145; B123 sent; nothing owed. The channel's `BOB` row in `build/channels.md` (on `main`) still says secondary: change it to primary at T41's close (§13.1 item 1, K1428); meanwhile write the Writer line with `mail xwriter --account primary`.
 - **INVESTIGATION-DESIGN:** HANDOFF at H43 (design work done).
 
 ## Where things stand (T41 on `tranche/T41`)
 
-- **L1–L5 merged and closed** (L5: K2477).
-- **L6 started 22:59** (K2478), 19 jobs. **Merged (15):** citation, leg-earning, contradiction, agent-model, reading-guides, ai-use, run-rules, inquiry-grammar, steps, skills, inquiry, run-productions, answers, basis-versions, hypotheses (K2481–K2502). **Open (4):**
-  - **ai-runs** (T41-23): AI-RUNS #15 blocked on the refused pull (above). Its record's J4 "Next" lists the rest: R74 `openMany`; K624's delete of its R48–R52 copy and the two tables, re-pointed to ai-use (B5); run-rules' gate `partDeployable` etc. (B6); K2490's system-step order (B8); steps (B9). On merge: add `steps` to its uses; rule 4 (10)'s ai-runs reds clear.
-  - **run-productions**: re-opened by K2502 (B6: R21 admits an investigate run carrying a step). Merge again when COMPLETE.
-  - **capture-requests** (T41-25): RUNNING its users' suites with real steps until ~00:00. On merge: add `steps` to its uses.
-  - **question-explorer** (T41-28, new): COMPLETE against real steps, ai-use, run-productions; merges after ai-runs, capture-requests and run-productions' re-merge (each by CHANGE). On merge: write its paths, tests and final uses from its record (K1043).
+- **L1–L5 merged and closed.**
+- **L6, 19 jobs, 17 merged** (K2481–K2509; capture-requests K2504, run-productions again K2506, hypotheses and answers again K2509 on K2508's CHANGEs). **Not merged (every session archived, K2510):**
+  - **ai-runs** (T41-23): its record's J4 (BLOCKED, context) lists what remains: R74 `openMany`; re-point to ai-use and delete the R48–R52 copy and its two tables (B5, K624); run-rules' imports and `#PENDING_ROWS` dropped (B6); K2490's system-step order (B8); steps (B9). Start **AI-RUNS #16** on `job/T41/ai-runs` (§5.3 step 3, same prompt); a new session's checkout is fresh, so AI-RUNS #15's refused pull does not recur. Its `START` is `build/plan/starts-T41/ai-runs.txt` and its mailbox carries B1–B9. On merge: add `steps` to its uses; rule 4 (10)'s ai-runs reds clear.
+  - **question-explorer** (T41-28): COMPLETE (J10) against the real capture-requests (B10) and run-productions R21 (B11); merges after ai-runs. On merge write its paths, tests and final uses from its record (K1043). If ai-runs' merge changes what it reads, restart it as QUESTION-EXPLORER #2 with a CHANGE.
   - **agent-worker** (T41-31): COMPLETE (J5); merges last in L6.
-- **L6 close (§5.6):** regenerate `program.mjs` and the bundles (manifest order; `npm ci` first after a container restart: agent-runner `--ignore-scripts`, sheet-worker, file-scanner, bio-plane), run the checks, archive the 19 job sessions with their rows (AI-RUNS #14's row is written; its `Size` line was not, the job unfinished), and name rule 4 (10)'s L11 users of the retired ceiling codes exactly.
-- **L7–L11 are ready:** requirement text applied (K2448, K2451, K2471, K2472, K2483, K2484) and STARTs written and reviewed for L6–L8 (`build/plan/starts-T41/`, K2497). L9–L11 STARTs are not yet written (pattern as L6–L8; measure with `build/plan/reading-sets.py`). New code families: steps C-142, ai-use C-143, reading-guides C-144, question-explorer C-145, investigation C-146 (K2480); answer-envelope lists them at T41-60 (rule 4 (16)).
-- `next.md` gained N827–N835 (each with its hard reason).
+- **L6 close (§5.6):** `npm ci` first in this container (agent-runner `--ignore-scripts`, sheet-worker, file-scanner, bio-plane), regenerate `program.mjs` and the bundles in the manifest's order, run the checks, write AI-RUNS #16's row when archived (all other L6 rows are written), and name rule 4 (10)'s L11 users exactly (the L11 STARTs list today's grep: store-door `routes.test.mjs`:154–159, :208–210; control-plane `t34-routes.test.mjs`:233–238, `r53-routes.test.mjs`:35–36).
+- **L7–L11 ready.** STARTs written for every job (`build/plan/starts-T41/`; L7–L8 K2497, L9–L11 K2507). L9's text K2505 (new job T41-46a action-grammar; plan total 66). L11's owed text applied K2508; **before L11's START** re-take each L11 START's marked ids from the requirements files and fill the `TO FIX AT L11 START` lines (op-grades, answer-envelope, plane).
+- `next.md` holds N827–N835 (each with its hard reason).
 
 ## Next steps, in order
 
-1. Take over (§5.1): archive BOB #147, its `BOB-final` row under T41; `mail xwriter`; arm backstop and WATCH (`WATCH #148: tranche/T41`); delete mine: backstop `trig_01VBcrigHwY4BjEEXE2b443o`, WATCH `trig_01JQJntdR1KrJU4FxbXna84E`.
-2. Run L6 to its close (above), then L7–L11 in order: for L9–L11 write the STARTs first.
-3. Close T41 by §5.7 steps 1–5 (check the channel for a MERGE; PR `tranche/T41` → `main` with the GitHub merge tool, authority Bob's standing direction in the product's `CLAUDE.md`, K1177; standing list `mcp__github__merge_pull_request`; no refusal since K2273). Then stop (K2456): report to Bob, ask his meter, open nothing.
+1. Take over (§5.1) on the primary account: depth check, Status line, record ROOT #7's id in `build/manifest.md`; `mail xwriter --as BOB --account primary`; arm backstop and `WATCH #149: tranche/T41`; nothing of BOB #148's to delete (no routine armed) or archive (other account).
+2. Ask Bob's meter reading (K2341).
+3. Start AI-RUNS #16; merge ai-runs, question-explorer, agent-worker; close L6; run L7–L11 in order.
+4. Close T41 by §5.7 steps 1–5 (check the channel for a MERGE; PR `tranche/T41` → `main` with the GitHub merge tool, authority Bob's standing direction in the product's `CLAUDE.md`, K1177; standing list `mcp__github__merge_pull_request`; no refusal since K2273; at the close also move `build/channels.md`'s BOB row to primary). Then stop (K2456): report to Bob, ask his meter, open nothing.
 
 ## Process notes
 
-- Job sessions went idle mid-run with a background test command lost (observation-log, K2476): at QUIET, `get_session` and post `RESUME`.
+- A new account's sessions need the standing list in `.claude/settings.json` (both repositories); it travels with the repositories.
 - Routine creation is rate-limited (~8 in a burst): ring the rest a minute later (K1825).
-- Commit only named paths while a worker edits the tree (K2482: a broad `git add` swept unreviewed drafts in).
-- A worker may be refused git by its permission check: give it file edits only, and run the checks yourself (K2484).
+- Commit only named paths while a worker edits the tree (K2482). A worker may be refused git: give it file edits only (K2484).
