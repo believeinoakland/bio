@@ -30,3 +30,7 @@ Size (session_017cmBYso32d54JzyLxFv27Q): test runs 14, module lines 836
 ## J1 · REPORT
 
 Two findings, in my record's Completion: (1) answer-envelope R7's wording "docket's at its place directly after publication" no longer holds since publish-schedule sits between them (R10, modules.json); I read R10 as superseding it and test docket directly after publish-schedule; R7 could say "at its place in build/modules.json". (2) The plane bundle is staled by families.mjs (rule 4 (14)).
+
+## J2 · COMPLETE
+
+T41-60 applied (R7, R10): the six T41 family files in CHECK_FAMILY_FILES at their modules.json places, rule 4 (16) cleared (case-carriage 70/0); 90 codes join, no earlier code's decoration moves; pins re-taken (ten re-worded, C-124.52 and C-106.1 retired); C-120.23-.29 re-pinned; new R10 test with negative controls. answer-envelope 28 pass, 1 fail: the pin test naming exactly NO_SUCH_PROPOSAL and PROPOSAL_NO_RUN (rule 4 (21)). Users' counts identical to tranche/T41's. format, coverage (10/10), ownership 0; architecture 6 = the six uses for BOB to apply at merge: steps, ai-use, reading-guides, question-explorer, investigation, publish-schedule. Details in the record's Completion.
