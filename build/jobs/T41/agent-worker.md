@@ -92,3 +92,7 @@ B3 applied: tranche/T41 merged (8e954b4bfa). (1) Done already after B2: ask.test
 ## J5 · COMPLETE
 
 B4/B5 applied (record's Completion, 'After B4'): tranche merged 8ebe11131c. R10 now compares account.member with session.principal.ref (ai-runs R52), never principal.claude; mocks give ref; t41 48/0 adds group- and project-paid runs (drive) with mismatch controls, and R26's estimated_cost_usd on the tick (number on a key, null on a sign-in); t41.control 8/0 (new arm 8: R10 reading principal.claude). npm test: all 0 fail but requirements 303/2 = R45, stale bundle accepted by name, not regenerated. Checks: format, architecture, coverage 63/63, ownership 0 failures. Wording for you: R10's text still says session.principal.claude; it wants session.principal.ref.
+
+## J6 · COMPLETE
+
+B6 applied (record: 'After B6'). Cause of REC100's 5 reds: my fixture, not another module. run-rules R19's test-bar gate refused the real plane's airunopen AI_RUN_MODE_NOT_DEPLOYED (C-109.1), so every tick found no run. Fix: new test/plane-world.mjs gives section R's plane a passing bar (as capture-requests' plane-world.mjs); harness 261/0. The red also exposed an R26 flaw of mine: a tick answered found:false counted logged 1. Both tick sites now refuse it (in refusals, plane's words); t41 50/0 with a control; t41.control arm 9; 9/0. I rebuilt my own bundle after the src change: requirements 305/0. npm test: 13 files, 0 fail; harness.control H6, S2 as declared. Checks: format, architecture, coverage 63/63, ownership 0 failures. Head 9bfd66954b.
