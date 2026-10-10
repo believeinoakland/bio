@@ -36,7 +36,7 @@ Terms.
 - **R2** Read-only. Nothing an import holds is a record bundle. No act of this copy edits, promotes, ratifies or publishes it, and this module offers no act that changes an imported file. The only later writes are R5's completion, R6's acceptance and its withdrawal, and R8's flags. (DEC-112 (6) "a new, read-only project")
 - **R3** Recreation is recorded per finding: the result, what is missing, what differs, the recomputed pair, and the checker's grading and checks versions; and per calculation the case carries, as R21 records it. It is recomputed only by R5. (DEC-112 (6); Bob, DEC-112 response 2: "the system confirms the findings according to the structured case file")
 
-- **R21** (C:A-14; K1448; D312) At an import (R1) and at a completion (R5), each calculation the case carries (`case-grammar` R18) is recreated, never trusted: its recipe is evaluated by `calculations.evaluate` (which writes nothing to the record) over the inputs the case file carries, each first checked against its stated SHA-256, and the result recorded per calculation as `recreated` (every result agrees), `differs` (naming each result, the source's value and the recomputed one) or `not_recreated` (an input missing or differing from its hash, or a method version this copy does not hold, each named). The source's stated results are held only as the source's statement: no act of this module writes a `CALC-`, a money fact, or any record row from them, and a later use of the figure in this group's record is a member's own calculation over its own inputs (`calculations`).
+- **R21** (C:A-14; K1448; D312) At an import (R1) and at a completion (R5), each calculation the case carries (`case-grammar` R18) is recreated, never trusted: its recipe is evaluated by `calc-grammar.evaluate` (which writes nothing to the record) over the inputs the case file carries, each first checked against its stated SHA-256, and the result recorded per calculation as `recreated` (every result agrees), `differs` (naming each result, the source's value and the recomputed one) or `not_recreated` (an input missing or differing from its hash, or a method version this copy does not hold, each named). The source's stated results are held only as the source's statement: no act of this module writes a `CALC-`, a money fact, or any record row from them, and a later use of the figure in this group's record is a member's own calculation over its own inputs (`calculations`).
 
 **importedCases({viewer}), importedCase({import, edition?, viewer})** (`op=importedcases`, `op=importedcase`; member session; reads)
 
@@ -145,7 +145,7 @@ Terms.
 - `case-grammar`: `caseFileManifestCheck`, `methodOf`, `materialsOf` (its R11–R13).
 - `case-checker`: `checkCaseFile` (its R1), whose `calculations` (its R20) R21 compares with its own recreation. (T41) Its `lens` (its R23; R23 here).
 - `bias` (T41; D59; K2471): `statementInForce` (its R49; R23). A new `modules.json` edge; `bias` is earlier (layer 5).
-- `calculations` (T33-67): `evaluate` (R21).
+- `calc-grammar` (T33-67; K2534): `evaluate` (R21).
 - `inquiry-grammar`: `importedFindingRef` (its R11; R6).
 - `accepted-work`: `registerAcceptedWork` (its R1, with its R8's `moves`; R16).
 - `reevaluation`: `acceptanceWithdrawn` (its R31; R7); `citedCaseMoved` (its R33; R18; N534).

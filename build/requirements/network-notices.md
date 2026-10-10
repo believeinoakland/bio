@@ -27,7 +27,7 @@ Terms.
 **prepareNotice({project, wording, body?, matter?, since, collaborate, handoff?, final?, viewer, by}) → `{ok, revision, statement, digest, warning, caution, expires}`** (`op=noticeprepare`; member session; writes nothing)
 - **R1** Refusals, in order. Each writes nothing and carries a catalogue row (DEC-49):
   - no `project` is the required-argument refusal;
-  - a project that is absent, or invisible to `by`, is `membership`'s `noSuchProject`, the same answer either way. A discoverable project `by` sees only at `existence` (`membership.sight`, its R44) is instead `membership.existenceAct`'s refusal (its R77, C-70.1), never `noSuchProject`;
+  - a project that is absent, or invisible to `by`, is `membership`'s `noSuchProject`, the same answer either way. A project `by` sees only at `existence`, in either of its forms (`membership.sight`, its R44; D54, K2529) is instead `membership.existenceAct`'s refusal (its R77, C-70.1), never `noSuchProject`;
   - a machine or AI credential, or an operator token, is `MACHINE_CANNOT_POST_NOTICE`;
   - `by` not an owner of the project (`membership.isProjectOwner`, its R54) is `NOTICE_NOT_THE_OWNER`;
   - a project at stage `closed` (`project-stage` R2) is `NOTICE_PROJECT_CLOSED`, unless `final` is `stopped` on an open notice (R11);
@@ -138,7 +138,7 @@ Terms.
   A revoked or replaced key stays listed, so older signatures can still be checked.
 
 **Member reads**
-- **R22** `noticesOf({project, viewer})` (`op=notices`) answers a viewer who can see the project (`membership.sight`, its R44). A project absent or invisible to `viewer` is `noSuchProject`; a discoverable project `viewer` sees only at `existence` is `membership.existenceAct`'s refusal (its R77, C-70.1). Otherwise it answers:
+- **R22** `noticesOf({project, viewer})` (`op=notices`) answers a viewer who can see the project (`membership.sight`, its R44). A project absent or invisible to `viewer` is `noSuchProject`; a project `viewer` sees only at `existence`, in either form (D54, K2529), is `membership.existenceAct`'s refusal (its R77, C-70.1). Otherwise it answers:
   - the project's notices, their revisions and their attestations;
   - the next `monthly` date, and the lapse date when one is running;
   - any `monthly` attestation missed for want of a key (R13);
@@ -165,7 +165,7 @@ Terms.
 
 ### Invariants
 - **R24** Only an owner's own signature publishes a revision. No machine, AI run or administrator can post, re-word or back-date a revision for a project they do not own. An attestation states only facts the copy computes (R12).
-- **R25** No answer of this module names a member. There are no names in revisions, attestations, keys, leaves or openings.
+- **R25** No answer of this module names a member, save membership's own refusal it relays unchanged (R1, R22; its R77, which at a hidden project's `existence` names the owners, D54; K2529). There are no names in revisions, attestations, keys, leaves or openings.
 - **R26** A published revision, attestation or opening is never altered or deleted. Only a whole-store purge clears this module's tables. A bundle purge leaves a published notice standing.
 - **R27** In every revision, `since` is never earlier than the project's creation and never later than the day the revision was signed.
 - **R28** The assistant's work never counts toward activity, and volume never moves the level.

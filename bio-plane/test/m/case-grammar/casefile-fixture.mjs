@@ -98,13 +98,30 @@ export const MEMBER_DOC_ROW = { ref: MEMBER_DOC, kind: "document", sha: sha(MEMB
 export const memberDocCopyBytes = (as) => (as === "ooxml" ? MEMBER_DOC_OOXML_COPY_BYTES : MEMBER_DOC_COPY_BYTES);
 export const memberDocRow = (as) => ({ ...MEMBER_DOC_ROW, obscured: { ...MEMBER_DOC_ROW.obscured, copy: sha(memberDocCopyBytes(as)) } });
 
+/** T41 (N820; D56–D61): the account a case carries (R23), its bias applications (R24), the review comments its
+    publisher included (R25) and the approvals it was signed under (R26), as case-authoring writes them. */
+export const ACCOUNT = [
+  { ord: 2, text: "The vendor's filing, which this group checks twice, names no vote.", kind: "account", bias_statement: "s1",
+    cites: [{ kind: "material", ref: "INFO-2026-0003-x" }], began_as: "machine_draft", draft: "DRAFT-1" },
+  { ord: 1, text: "The minutes say: \"No vote was taken on item 7 <the lease>.\" It's on page 3 # here.", kind: "account",
+    cites: [{ kind: "passage", ref: sha("passage") }, { kind: "leg", ref: A, ord: 1 }, { kind: "finding", ref: A }], began_as: "member" },
+  { ord: 3, text: "Who approved the lease, and on what record.", kind: "statement", cites: [{ kind: "finding", ref: A }], began_as: "member" },
+];
+export const BIAS_APPLICATIONS = [
+  { finding: A, ord: 1, target: "leg", statement: "s1", effect: "grade_lowered", from: "A", to: "B" },
+  { finding: A, target: "conclusion", statement: "s1", effect: "scrutiny_raised" },
+];
+export const REVIEW_COMMENTS = { comments: [{ reviewer: "heron", text: "Check the 2019 minutes too.", at: NOW }], left_out: 2 };
+export const APPROVALS = { rule: { approvers: ["heron", "olive"], set_by: "olive", set_at: NOW },
+                           approvals: [{ by: "heron", at: NOW }, { by: "olive", at: NOW }] };
+
 /** The case document's text, `/7` (the format written) unless `format` says otherwise; `t33` adds R18's and R20's
     blocks; `photo` adds a third material, a photo carried as its copy (T37); `plainPhoto` an unmarked one (T38);
     `memberDoc` a member document carried as its cleaned copy (T39), its copy a PDF or, with `memberDoc: "ooxml"`, a zip
-    package. */
+    package; `t41` adds R23–R26's blocks (T41). */
 export function caseDocument({ bar = { declared: true, capture: "B", connection: "C" }, blocks = true,
                                format = CG.CASE_DOCUMENT_FORMAT, t33 = false, photo = false, plainPhoto = false,
-                               memberDoc = false } = {}) {
+                               memberDoc = false, t41 = false } = {}) {
   const fm = [
     "---", `format: ${format}`, "case_id: CASE-2026-0001", "case_edition: 2", "case_project: PROJ-2026-0001-parks",
     'case_scope: "Who approved the lease, and on what record."',
@@ -145,6 +162,8 @@ export function caseDocument({ bar = { declared: true, capture: "B", connection:
                 words: "We disclose it.", acknowledged_by: V("olive"), acknowledged_at: NOW }] }),
     ...(blocks ? [...CG.gradingFactsLines(LEGS), ...CG.passagesLines(PASSAGES)] : []),
     ...(t33 ? [...CG.calculationsLines(CALCS), ...CG.timelineLines(TIMELINE)] : []),
+    ...(t41 ? [...CG.accountLines(ACCOUNT), ...CG.biasApplicationsLines(BIAS_APPLICATIONS),
+               ...CG.reviewCommentsLines(REVIEW_COMMENTS), ...CG.approvalsLines(APPROVALS)] : []),
     "searched:", '  computed_at: "2026-09-30T00:00:00Z"', "  subject_source: case", "  subjects: 3", "  looked: 2",
     ...rows("searched_levels", [{ level: "document", subject_kind: "document", outcome: "looked", subjects: 3, looked: 2,
                                   never_looked: 0, undetermined: 1, detail: "One was never logged." }]),
@@ -154,7 +173,7 @@ export function caseDocument({ bar = { declared: true, capture: "B", connection:
     `  connection: ${bar.connection ?? "null"}`, '  detail: ""',
     "---"];
   const body = ["", "# Case CASE-2026-0001 — edition 2", "", ...CG.whatChangedSectionLines("Added the 2019 minutes."), "## Scope", "",
-                "Who approved the lease.", ""];
+                "Who approved the lease.", "", ...(t41 ? CG.accountSectionLines(ACCOUNT) : [])];
   const text = [...fm, ...body].join("\n");
   /* a /6 document was written before strength R35's `undetermined` (K1608) reached R17's rows: as it was written then */
   return format === CG.CASE_DOCUMENT_FORMAT_V6 ? text.replace(/\n {4}undetermined: null(?=\n)/g, "") : text;
