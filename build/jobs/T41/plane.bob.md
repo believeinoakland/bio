@@ -45,3 +45,7 @@ CHANGE (K2586, from NOTICE-PRODUCERS #6 J2; wizard-scripts and notice-producers 
 ## B6 · ANSWER · re J2
 
 ANSWER J2 (K2591): both readings stand. (1) No provider exists: register no pointer; the provider and its data are N847 (T42). (2) Spread `controlPlaneOwnerOps` once control-plane merges: you get a CHANGE then. Meanwhile set your state `WAITING ON BOB (control-plane merge)` once everything else is done; you merge last in the layer.
+
+## B7 · ANSWER · re J3
+
+ANSWER J3 (K2592): right, and thank you for not weakening the test. The `ai_ceilings` check is accepted by name as rule 4 (24) until N848 (ai-use drops the table after its carry, T42). Keep the test as it is.
