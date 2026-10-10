@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { world, V, FETCHED_COPY } from "./fixture.mjs";
 import { CASE_DISCLOSURE_CHECKS } from "../../../src/case-authoring/index.mjs";
 import { materialsOf } from "../../../src/case-grammar/index.mjs";
-import { OBSCURED_LABEL } from "../../../src/case-carriage/index.mjs";
+import { OBSCURED_LABEL, PUBLISHED_LABEL } from "../../../src/case-carriage/index.mjs";
 import { PHOTO_NOT_COVERABLE_WORDS } from "../../../src/case-disclosures/materials.mjs";
 
 const DOC = "INFO-2026-0001-a", DOC2 = "INFO-2026-0002-b", DOC3 = "INFO-2026-0003-c";
@@ -57,15 +57,15 @@ function refused(r, code) {
     [code, code, CASE_DISCLOSURE_CHECKS[code].check, CASE_DISCLOSURE_CHECKS[code].translation]);
 }
 
-test("R14: a marked photo is stated as carried by its copy — its materials: row included: false with obscured: {copy, label, marked} (case-grammar R12 since T41), the copy's SHA-256 and case-carriage's OBSCURED_LABEL — a photo with nothing to obscure by its copy with no label (T38; N779), and the document stores it unsigned; a capture that is no photo travels whole with obscured null", () => {
+test("R14: a marked photo is stated as carried by its copy — its materials: row included: false with obscured: {copy, label, marked} (case-grammar R12 since T41), the copy's SHA-256 and case-carriage's OBSCURED_LABEL — a photo with nothing to obscure by its copy labelled PUBLISHED_LABEL (T38; N779; K2541), and the document stores it unsigned; a capture that is no photo travels whole with obscured null", () => {
   const { w, P, shas } = setup({ states: { [DOC]: "marked", [DOC2]: "nothing" } });
   const r = w.ca.publishCase(args(P, [Q, Q2]));
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
   const rows = Object.fromEntries(materialsOf(w.fm(docOf(w, r))).materials.map((m) => [m.ref, m]));
-  /* case-grammar R12 (T41): `marked` read back beside the copy and label: a marked photo's true, one with nothing to
-     obscure false (its label null) */
+  /* case-grammar R12 (T41): `marked` read back beside the copy and label; (K2541) a copy with nothing to obscure now
+     carries case-carriage's PUBLISHED_LABEL (case-disclosures R29), and is written unmarked */
   assert.deepEqual([rows[DOC].sha, rows[DOC].included, rows[DOC].obscured], [shas[DOC], false, { copy: COPY, label: OBSCURED_LABEL, marked: true }]);
-  assert.deepEqual([rows[DOC2].sha, rows[DOC2].included, rows[DOC2].obscured], [shas[DOC2], false, { copy: COPY2, label: null, marked: false }]);
+  assert.deepEqual([rows[DOC2].sha, rows[DOC2].included, rows[DOC2].obscured], [shas[DOC2], false, { copy: COPY2, label: PUBLISHED_LABEL, marked: false }]);
   assert.deepEqual([rows[DOC3].included, rows[DOC3].obscured], [true, null]);
   assert.equal(w.row(`SELECT sig_armored FROM case_documents WHERE case_id=?`, r.caseId).sig_armored, null, "stored unsigned");
   /* negative control: with no photo at all, every row travels whole */
@@ -86,8 +86,8 @@ test("R34: steps gains photos after \"what you are leaving out\" — case-disclo
   assert.equal(step.step, 4);
   assert.deepEqual(step.photos.map((p) => [p.ref, p.sha, p.state, p.copy, p.words, p.relied_on_by]), [
     [DOC, shas[DOC], "marked", COPY, OBSCURED_LABEL, [{ target: Q, role: "load_bearing" }]],
-    [DOC2, shas[DOC2], "nothing_to_obscure", COPY2, null, [{ target: Q, role: "load_bearing" }]],
-    [DOC3, shas[DOC3], "nothing_to_obscure", COPY2, null, [{ target: Q2, role: "supporting" }]]]);
+    [DOC2, shas[DOC2], "nothing_to_obscure", COPY2, PUBLISHED_LABEL, [{ target: Q, role: "load_bearing" }]],
+    [DOC3, shas[DOC3], "nothing_to_obscure", COPY2, PUBLISHED_LABEL, [{ target: Q2, role: "supporting" }]]]);
   assert.deepEqual(step.photos[0].marks, [AREA]);
   assert.equal(step.unchecked, 0);
   assert.deepEqual([pre.ready, pre.first, pre.blockers], [true, null, []], "every photo checked: nothing blocks");

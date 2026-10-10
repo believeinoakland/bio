@@ -1376,8 +1376,10 @@ export class CaseAuthoring {
     let ord = 0;
     for (const x of sentences) rows.push({ ord: ++ord, text: x.text, cites: x.cites, kind: "account",
                                            bias_statement: x.bias_statement ?? null, ...began });
-    const stated = (kind, text, cites, origin = { began_as: "member", draft: null }) =>
-      rows.push({ ord: ++ord, text, cites: cites || [], kind, bias_statement: null, ...origin });
+    /* a blank statement is no sentence to judge: R3 refuses it first (the pre-flight's own read may still meet one) */
+    const stated = (kind, text, cites, origin = { began_as: "member", draft: null }) => {
+      if (typeof text === "string" && text.trim()) rows.push({ ord: ++ord, text, cites: cites || [], kind, bias_statement: null, ...origin });
+    };
     stated("statement", statement, sc.statement);
     stated("subject_justification", justification, sc.subject_justification);
     (excluded || []).forEach((r, i) => stated("excluded", exclusionSentence(r), sc.excluded[i]));

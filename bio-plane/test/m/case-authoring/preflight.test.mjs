@@ -64,8 +64,17 @@ test("R29 (N529): C-120.4–C-120.7, in the family 'a case's disclosures and its
     "src/case-disclosures/index.mjs hunchDebt > is-hunch-cleared"], "each names the method that raises it there");
 });
 
-test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), C-120.14–C-120.16 (the people a case names, T33-68), C-120.17–C-120.18 (a marked photo, T37; N757) R34's C-120.19 (an unchecked photo, T38; DEC-183) and C-120.20–C-120.22 (a member document's publication copy undetermined, pending or not cleanable, T39; N806; numbered provisionally until promotion's stamp), in the same family, held with their translations in case-disclosures (its R22; the photo rows words.json's photo.refused.format and photo.refused.unchecked, read by key), each naming its raising method there; C-120.9 is withdrawn and not used", () => {
-  const rows = Object.entries(CASE_DISCLOSURE_CHECKS).slice(7);
+test("R29 (N529): C-120.8 and C-120.10–C-120.13 (DEC-112, N522), C-120.14–C-120.16 (the people a case names, T33-68), C-120.17–C-120.18 (a marked photo, T37; N757) R34's C-120.19 (an unchecked photo, T38; DEC-183) and C-120.20–C-120.22 (a member document's publication copy undetermined, pending or not cleanable, T39; N806; numbered provisionally until promotion's stamp) and C-120.23–C-120.29 (the account, T41, R63), in the same family, held with their translations in case-disclosures (its R22; the photo rows words.json's photo.refused.format and photo.refused.unchecked, read by key), each naming its raising method there; C-120.9 is withdrawn and not used", () => {
+  const rows = Object.entries(CASE_DISCLOSURE_CHECKS).slice(7, 21);
+  /* (T41; K2550) the account's rows follow, C-120.23–C-120.29, case-disclosures' (its R22, R30) */
+  assert.deepEqual(Object.entries(CASE_DISCLOSURE_CHECKS).slice(21).map(([k, v]) => [k, v.check, v.where]), [
+    ["ACCOUNT_SENTENCE_UNSUPPORTED", "C-120.23", "src/case-disclosures/index.mjs accountJudged > is-account-sentence-supported"],
+    ["ACCOUNT_FACT_NOT_IN_CITED", "C-120.24", "src/case-disclosures/index.mjs accountJudged > is-account-fact-cited"],
+    ["ACCOUNT_CONTRADICTED_BY_RECORD", "C-120.25", "src/case-disclosures/index.mjs accountJudged > is-account-consistent-with-record"],
+    ["ACCOUNT_BIAS_NOT_PRINTED", "C-120.26", "src/case-disclosures/index.mjs accountJudged > is-account-bias-printed"],
+    ["ACCOUNT_CLAIM_NOT_BIAS", "C-120.27", "src/case-disclosures/index.mjs accountJudged > is-account-bias-not-a-claim"],
+    ["ACCOUNT_FLAG_UNANSWERED", "C-120.28", "src/case-disclosures/index.mjs accountJudged > is-account-flag-answered"],
+    ["ACCOUNT_CHECK_UNDETERMINED", "C-120.29", "src/case-disclosures/index.mjs accountJudged > is-account-checked"]]);
   assert.deepEqual(rows.map(([k, v]) => [k, v.check, v.where]), [
     ["RELIED_ON_NOT_PRESENTABLE", "C-120.8", "src/case-disclosures/index.mjs materialsJudged > is-relied-on-presentable"],
     ["ACCEPTED_WORK_NOT_IN_FORCE", "C-120.10", "src/case-disclosures/index.mjs acceptedWorkJudged > is-accepted-work-in-force"],
