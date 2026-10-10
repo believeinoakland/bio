@@ -6,7 +6,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { answersWorld, answer, V } from "./fixture.mjs";
-import { GRANT_USES, ownerOf } from "../../../src/answers/index.mjs";
+import { GRANT_USES, ASK_ACCOUNT_KINDS, ownerOf } from "../../../src/answers/index.mjs";
+import { ACCOUNT_CHECKS } from "../../../src/credentials/index.mjs";
 
 const BOB = V("bob"), CAROL = V("carol"), ALICE = V("alice");
 
@@ -141,4 +142,39 @@ test("R30 with no useCheck handed in, answers judges by ai-use's useCheck on its
   assert.deepEqual(r, reached);
   assert.equal(r.code, "AI_LIMIT_REACHED");
   assert.equal(w.limit.asked.length, 0, "the fixture's watched provider was not the one asked");
+});
+
+test("R30 (K2508) askAccount takes kind: ask when absent, or draft, the account and its limit judged for that kind; any other kind refused NOT_YOUR_ACCOUNT as credentials R24 refuses it, before any account is read", async () => {
+  const w = answersWorld();
+  const seen = [];
+  const real = w.credentials;
+  w.a.deps.credentials = new Proxy(real, { get: (t, k) => { const v = t[k]; return typeof v === "function"
+    ? (...a) => { if (k === "accountFor") seen.push(a[0]); return v.apply(t, a); } : v; } });
+  w.a.resolved.delete("credentials");
+  await real.accountReferenceSet({ member: "bob", kind: "apikey", secret: "sk-bob", by: BOB });
+  const d = await w.a.askAccount({ member: BOB, kind: "draft" });
+  assert.equal(d.ok, true, JSON.stringify(d)); assert.equal(d.owner, "member:bob");
+  assert.deepEqual(seen.at(-1).act, { kind: "draft", member: BOB });
+  assert.equal(w.limit.asked.at(-1).use, "draft");
+  assert.equal((await w.a.askAccount({ member: BOB })).ok, true);
+  assert.deepEqual(seen.at(-1).act, { kind: "ask", member: BOB }, "ask when absent");
+  assert.equal(w.limit.asked.at(-1).use, "ask");
+  /* judged for that kind: the draft use off, or its limit reached, refuses a draft and leaves an ask served */
+  assert.equal(real.accountUsesSet({ owner: "member:bob", switch: "draft", on: false, by: BOB }).ok, true);
+  assert.equal((await w.a.askAccount({ member: BOB, kind: "draft" })).code, "AI_USE_SWITCHED_OFF");
+  assert.equal((await w.a.askAccount({ member: BOB, kind: "ask" })).ok, true);
+  assert.equal(real.accountUsesSet({ owner: "member:bob", switch: "draft", on: true, by: BOB }).ok, true);
+  const reached = w.reach("member:bob", "draft");
+  assert.deepEqual(await w.a.askAccount({ member: BOB, kind: "draft" }), reached);
+  assert.equal((await w.a.askAccount({ member: BOB, kind: "ask" })).ok, true, "the ask's own limit is not the draft's");
+  w.unreach("member:bob", "draft");
+  /* any other kind: refused as credentials R24 refuses it, no account read and no limit asked */
+  const n = seen.length, m = w.limit.asked.length;
+  for (const kind of ["run", "standing", "explore", "transcribe", "", "ASK", 7]) {
+    const r = await w.a.askAccount({ member: BOB, kind });
+    assert.equal(r.code, "NOT_YOUR_ACCOUNT", String(kind));
+    assert.equal(r.check, ACCOUNT_CHECKS.NOT_YOUR_ACCOUNT.check); assert.equal(r.translation, ACCOUNT_CHECKS.NOT_YOUR_ACCOUNT.translation);
+  }
+  assert.equal(seen.length, n); assert.equal(w.limit.asked.length, m);
+  assert.deepEqual(ASK_ACCOUNT_KINDS, ["ask", "draft"]);
 });

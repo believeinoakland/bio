@@ -1,6 +1,6 @@
 # answers (T41)
 
-**Status** · session_01AYLXqGDu2yvQaZ7USf6Dv7 · depth 2 · COMPLETE · handled B4
+**Status** · session_01AYLXqGDu2yvQaZ7USf6Dv7 · depth 2 · COMPLETE · handled B5
 
 ## Completion (ANSWERS #7)
 
@@ -24,6 +24,8 @@
 - **R33.** `checkSentences(sentences, {cited, readLog, viewer?})` is in `sentences.mjs`, which imports only pure files: record-grammar `json.mjs`, calc-grammar `figures.mjs`, observation-log `vocabulary.mjs`, and this module's `checks.mjs` and `readlog.mjs`. That keeps it bundleable for case-checker (K2471). `readLog` is a ReadLog, or, offline, the list of objects read. `checkAnswer` judges through the same `judge`.
 - **Reds cleared:** rule 4 (6) `standing.test.mjs`:122, :273 and rule 4 (12) :154, :183, :210. The tests now set switches through `accountUsesSet`.
 
+**B5 (CHANGE, K2508), applied after merging `tranche/T41` @ 1d70351623:** `askAccount({member, project?, at?, kind?})` takes `kind`, from `ASK_ACCOUNT_KINDS` = `["ask", "draft"]`, with `ask` when absent. The account (`accountFor`, act `{kind, member, project?}`) and its limit (`useCheck`, `use` that kind) are judged for that kind. Any other kind is refused `NOT_YOUR_ACCOUNT` with credentials' own row (`ACCOUNT_CHECKS`, as its R24 refuses), before any account is read or any limit asked. Tested in `accounts.test.mjs` ("R30 (K2508) ..."): a draft uses kind and use `draft`; with the draft use off, or its limit reached, a draft is refused while an ask is still served (the negative control); seven other kinds are refused, with no account read and no limit asked. Its users (store-door R10, plane R33) call it at L11. The change adds to `askAccount` alone, and no module calls it yet, so the users' suites are unchanged from J4's run.
+
 **Deferred:** none.
 
 **Found in other modules (REPORT J3):**
@@ -32,15 +34,15 @@
 3. `reading-pipeline/index.mjs`:698 spells the paying owner `member:${member}` from the `member` it was handed. A stamp (`member:bob`) would make `member:member:bob`, so the owner should be built from the bare id. This is against ai-use R1's owner spelling; reading-pipeline's to judge.
 
 **Tests and checks** (on `job/T41/answers` with `tranche/T41` @ cbdca49cd0 merged):
-- answers: `node --test bio-plane/test/m/answers/*.test.mjs`: **57 pass, 0 fail**. New files: `accounts.test.mjs` (R30) and `sentences.test.mjs` (R31–R33). Each check has a negative control (K874).
+- answers: `node --test bio-plane/test/m/answers/*.test.mjs`: **58 pass, 0 fail** after B5 (57 at J4). New files: `accounts.test.mjs` (R30) and `sentences.test.mjs` (R31–R33). Each check has a negative control (K874).
 - The users of answers were run on my branch and on `tranche/T41` alone, by test name:
   - case-checker, scheduler, affordances, notice-producers, op-declarations, answer-envelope, store-door, control-plane, plane, and `migrate-released`: 1014 tests, 960 pass, 54 fail on both. The same 54 by name: no red added, none cleared.
   - agent-worker: 12 tests, 10 pass, 2 fail on both, the same 2.
 - From the process repository:
   - `node checks/format.mjs`: 0 failures.
-  - `node checks/architecture.mjs answers`: 20 files, 65 imports, 0 failures.
+  - `node checks/architecture.mjs answers`: 20 files, 66 imports, 0 failures.
   - `node checks/coverage.mjs answers`: 33 of 33 live ids named, 0 failures.
-  - `node checks/ownership.mjs answers tranche/T41`: 12 files, 0 failures.
+  - `node checks/ownership.mjs answers tranche/T41`: 0 failures (12 files at J4; 3 after B5, the rest already merged).
 
 **Reading set:** measured at about 290 KB, under 300 KB, so I read all of it myself:
 - the requirements, whole;
@@ -51,7 +53,7 @@
 
 **Final `uses`:** the current list without `ai-runs` (B3): record-grammar, jurisdictions, civil-time, calc-grammar, record-core, membership, credentials, content, entities, events, lines, observation-log, standards, duties, people, query-language, retrieval, calculations, ai-use.
 
-Size (session_01AYLXqGDu2yvQaZ7USf6Dv7): test runs 21, module lines 1833
+Size (session_01AYLXqGDu2yvQaZ7USf6Dv7): test runs 23, module lines 1844
 
 ## J1 · QUESTION
 
@@ -97,3 +99,7 @@ Results:
 - Format, architecture and ownership: 0 failures. Coverage: 33/33.
 - Final `uses`: the current list without `ai-runs`.
 - Generated artifact: the plane bundle is stale (J3).
+
+## J5 · COMPLETE
+
+B5 (K2508) applied after merging tranche/T41 @ 1d70351623. askAccount takes kind: ask when absent, or draft (ASK_ACCOUNT_KINDS). The account and its limit are judged for that kind. Any other kind is refused NOT_YOUR_ACCOUNT with credentials' row, before any account is read. Tested with negative controls: a draft is refused while its use is off or its limit reached, while an ask is still served; seven other kinds are refused. answers: 58/58. Format, architecture, coverage (33/33) and ownership: 0. The record's Completion section is updated.

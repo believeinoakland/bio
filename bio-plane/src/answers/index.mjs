@@ -30,7 +30,7 @@ import { sha256HexSync } from "../record-grammar/index.mjs";
 import { localDay, dayRange } from "../civil-time/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, listenerRefusal, notAnAdmin } from "../membership/index.mjs";
-import { AI_GRANT_TTL_SECONDS } from "../credentials/index.mjs";
+import { AI_GRANT_TTL_SECONDS, ACCOUNT_CHECKS } from "../credentials/index.mjs";
 import { savedForm } from "../query.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { aiUseOf } from "../ai-use/index.mjs";
@@ -58,6 +58,8 @@ export { ANSWERS_SCHEMA, ANSWERS_TABLES } from "./schema.mjs";
 export const RULE_SERVICES_SETTING = "answers_rule_services";
 /** R13: the modes a tally is kept per. */
 export const ASK_MODES = Object.freeze(["ask", "standing"]);
+/** R30 (K2508): the kinds `askAccount` judges an account for: an ask, and a draft (store-door R10, plane R33). */
+export const ASK_ACCOUNT_KINDS = Object.freeze(["ask", "draft"]);
 /** R30: the uses a grant reads under (credentials' `USE_KINDS` that mint an ask's or a standing question's grant). */
 export const GRANT_USES = Object.freeze(["ask", "draft", "standing"]);
 /** The most read logs held at once (each lives at most a grant's life). */
@@ -243,16 +245,25 @@ export class Answers {
    * AN ASK'S ACCOUNT (R30; D38, B3)
    * ===================================================================== */
 
-  /** R30: the account that serves a member's ask, `credentials.accountFor` asked with kind `ask` and the ask's
+  /** R30: the account that serves a member's ask (or, K2508, a draft: `kind` `draft`), `credentials.accountFor` asked
+   *  with that kind (`ask` when absent) and the ask's
    *  `project` (one the member has joined: credentials R56 refuses any other, `PROJECT_ACT_NOT_A_PARTICIPANT`, or as
    *  absent), then judged by `ai-use.useCheck` for the account chosen, in place of the ceiling. Answers
    *  `{ok: true, account, owner}` (`owner` the paying account, as `ai-use` R1 spells it) or the refusal unchanged
    *  (`AI_KEPT_AWAY`, `PROJECT_AI_KEPT_AWAY`, `AI_USE_SWITCHED_OFF`, `NO_ACCOUNT`, `AI_LIMIT_REACHED`, ...). A limit that
    *  cannot be judged, or an account that cannot be read, refuses with no row (`LIMITS_UNREADABLE`,
    *  `ACCOUNT_UNREADABLE`: the deployment's fault, fail closed). Writes nothing; never throws. */
-  async askAccount({ member = null, project = null, at = null } = {}) {
+  async askAccount({ member = null, project = null, at = null, kind = null } = {}) {
+    /* (K2508) `kind`: `ask` when absent, or `draft` for a draft; any other is refused as credentials R24 refuses an act
+       not the member's own (`NOT_YOUR_ACCOUNT`, its row), before any account is read */
+    const use = kind === null || kind === undefined ? "ask" : kind;
+    if (!ASK_ACCOUNT_KINDS.includes(use)) {
+      const r = ACCOUNT_CHECKS.NOT_YOUR_ACCOUNT;
+      return { ok: false, reason: "NOT_YOUR_ACCOUNT", code: "NOT_YOUR_ACCOUNT", check: r.check, translation: r.translation,
+               detail: `an ask's account is read for an ask or a draft only, not for '${String(use).slice(0, 40)}'. Nothing was used.` };
+    }
     const creds = this.dep("credentials");
-    const act = { kind: "ask", member, ...(project !== null && project !== undefined ? { project } : {}) };
+    const act = { kind: use, member, ...(project !== null && project !== undefined ? { project } : {}) };
     let account = null;
     try { account = creds && typeof creds.accountFor === "function" ? await creds.accountFor({ member, act }) : null; }
     catch { account = null; }
@@ -262,7 +273,7 @@ export class Answers {
     const owner = S.ownerOf(account, member);
     const check = this.dep("useCheck");
     let limit;
-    try { limit = typeof check === "function" ? await check({ owner, member: S.memberOf(member) ?? member, use: "ask",
+    try { limit = typeof check === "function" ? await check({ owner, member: S.memberOf(member) ?? member, use,
                                                                 at: filled(at) ? at : this.now() }) : undefined; }
     catch { limit = undefined; }
     if (limit === undefined) return { ok: false, reason: "LIMITS_UNREADABLE",
