@@ -635,6 +635,35 @@ test("R9: no answer names a bundle the viewer may not see, and no count reveals 
   assert.deepEqual([d.tasks, d.counts.open, d.counts.resolved], [[], 0, 0]);
 });
 
+test("R9 (D54; K2408, K2442): an administrator neither invited nor joined to a hidden project is answered as any outsider; a discoverable project, or an invited administrator, sees its tasks whole", () => {
+  const w = box();
+  w.member("ada", { role: "admin" }); w.member("olga");
+  w.bundle(DOC); w.bundle(PRJ, "project"); w.join(PRJ, "olga", { owner: true });
+  w.task("TASK-2026-0001-a", DOC, { created: iso(NOW - 2000) });
+  w.task("TASK-2026-0002-hidden", PRJ, { assignee: "ada", created: iso(NOW - 1000) });
+  const outsider = () => {
+    const a = w.t.taskList({ viewer: "member:ada" });
+    assert.deepEqual([a.tasks.map((t) => t.id), a.counts.open], [["TASK-2026-0001-a"], 1], "the hidden project's task is neither listed nor counted");
+    assert.equal(JSON.stringify([a, w.t.recentTasks({ viewer: "member:ada" })]).includes(PRJ), false);
+    assert.equal(w.t.taskExists({ id: "TASK-2026-0002-hidden", viewer: "member:ada" }), false);
+    assert.deepEqual(w.t.taskList({ viewer: "member:ada", refersTo: PRJ }), w.t.taskList({ viewer: "member:ada", refersTo: "PROJ-2026-9999-none" }));
+  };
+  const whole = () => {
+    const a = w.t.taskList({ viewer: "member:ada" });
+    assert.deepEqual([a.tasks.map((t) => t.id), a.counts.open], [["TASK-2026-0002-hidden", "TASK-2026-0001-a"], 2]);
+    assert.equal(w.t.taskExists({ id: "TASK-2026-0002-hidden", viewer: "member:ada" }), true);
+  };
+  outsider();
+  // negative control (1): discoverable, an administrator sees it whole (K2409)
+  assert.equal(w.membership.projectVisibilitySet({ projectId: PRJ, setting: "discoverable", by: "olga", viewer: "member:olga" }).ok, true);
+  whole();
+  assert.equal(w.membership.projectVisibilitySet({ projectId: PRJ, setting: "hidden", by: "olga", viewer: "member:olga" }).ok, true);
+  outsider();
+  // negative control (2): hidden, the administrator invited
+  w.join(PRJ, "ada", { state: "invited" });
+  whole();
+});
+
 test("R10: the viewer comes only from the control plane's stamp in the URL, never from a body; the acts take the body the control plane stamped", () => {
   const seen = [];
   const t = new Proxy({}, { get: (_, k) => (a) => { seen.push([k, a]); return { ok: true }; } });

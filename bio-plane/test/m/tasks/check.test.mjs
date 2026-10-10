@@ -54,7 +54,9 @@ test("R13: checkRequest's refusals in order, each writing nothing", () => {
   refused(ask(w, { target: OTHER, by: "olga", label: null }), "NO_SUCH_CHECK_TARGET");   // before the address
   // not an owner of the project the target belongs to; a project itself; a target in no project
   refused(ask(w, { by: "cpa1" }), "CHECK_NOT_AN_OWNER");
-  refused(ask(w, { by: "ada" }), "CHECK_NOT_AN_OWNER", "an administrator who owns nothing is no owner");
+  // D54 (K2408, K2442): an administrator neither invited nor joined to a hidden project does not see what belongs to it
+  // (membership R43, R80), so the target answers as one not held, before ownership is asked
+  assert.deepEqual(ask(w, { by: "ada" }), absent, "an uninvited administrator: the hidden project's item answers as absent");
   refused(ask(w, { target: LOOSE }), "CHECK_NOT_AN_OWNER");
   refused(ask(w, { by: "cpa1", label: null }), "CHECK_NOT_AN_OWNER");   // before the address
   // neither or both of label and member
@@ -76,6 +78,35 @@ test("R13: checkRequest's refusals in order, each writing nothing", () => {
   assert.equal(long.max, 1000);
   refused(ask(w, { label: null, member: "cpa1", note: ` ${"y".repeat(1001)} ` }), "CHECK_NOTE_TOO_LONG");
   refused(ask(w, { label: null, member: "gone", note: "x".repeat(1001) }), "CHECK_MEMBER_REFUSED");   // before the note
+  assert.deepEqual(snapshot(w), before, "nothing was written by any refusal");
+});
+
+test("R13 (D54; K2408, K2442): an administrator, the founder included, neither invited nor joined to a hidden project is answered NO_SUCH_CHECK_TARGET; seeing it (discoverable, or invited) and owning nothing, CHECK_NOT_AN_OWNER", async () => {
+  const w = seeded();
+  assert.equal((await w.credentials.claim({ password: "a founder's password", tokenFp: "fp" })).ok, true);
+  const before = snapshot(w);
+  const absent = ask(w, { target: "INFO-2026-9999-none" });
+  refused(absent, "NO_SUCH_CHECK_TARGET");
+  // hidden (no setting recorded: R45's default) and neither invited nor joined: one answer with an id that names nothing
+  for (const by of ["ada", "admin"]) {
+    assert.equal(w.membership.inSight(FIND, `member:${by}`), false, `fixture: ${by} does not see FIND`);
+    for (const target of [FIND, PRJ]) assert.deepEqual(ask(w, { by, target }), absent, `${by} on ${target}`);
+    assert.deepEqual(ask(w, { by, target: PRJ, label: null, member: "cpa1" }), absent, "before the address");
+  }
+  // negative control (1): the project set discoverable, every administrator sees it whole and is asked ownership
+  assert.equal(w.membership.projectVisibilitySet({ projectId: PRJ, setting: "discoverable", by: "olga", viewer: "member:olga" }).ok, true);
+  for (const by of ["ada", "admin"]) {
+    assert.equal(w.membership.inSight(FIND, `member:${by}`), true, `fixture: ${by} sees FIND`);
+    for (const target of [FIND, PRJ]) refused(ask(w, { by, target }), "CHECK_NOT_AN_OWNER");
+  }
+  assert.equal(w.membership.projectVisibilitySet({ projectId: PRJ, setting: "hidden", by: "olga", viewer: "member:olga" }).ok, true);
+  assert.deepEqual(ask(w, { by: "ada" }), absent, "hidden again: absent again");
+  // negative control (2): hidden, but the administrator invited (or the founder joined): seen, and no owner
+  w.join(PRJ, "ada", { state: "invited" }); w.join(PRJ, "admin");
+  for (const by of ["ada", "admin"]) {
+    assert.equal(w.membership.inSight(FIND, `member:${by}`), true, `fixture: ${by} sees FIND`);
+    for (const target of [FIND, PRJ]) refused(ask(w, { by, target }), "CHECK_NOT_AN_OWNER");
+  }
   assert.deepEqual(snapshot(w), before, "nothing was written by any refusal");
 });
 
