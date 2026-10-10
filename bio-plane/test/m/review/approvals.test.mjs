@@ -5,6 +5,7 @@ import { standard, P, Q, V, SECRET, NOW, sha } from "./fixture.mjs";
 import { REVIEW_COPY_CHECKS, APPROVERS_MAX, APPROVAL_REASON_MAX, REVIEW_LIST_MAX, noReviewCopy } from "../../../src/review/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { reviewCommentsLines, CASE_DOCUMENT_FORMAT } from "../../../src/case-grammar/index.mjs";
+import { approvalsRead } from "../../../src/ratification/refusals.mjs";
 
 const DEAD = JSON.stringify(noReviewCopy());
 const refused = (r, code) => {
@@ -121,8 +122,16 @@ test("R32: at start the rule and approvals are registered once with ratification
   for (const args of [{ case: CASE, edition: 2, docSha: sha("other") }, { case: CASE, edition: 3, docSha: A },
                       { case: "CASE-2026-0002", edition: 2, docSha: A }])
     assert.deepEqual(reader.approvals(args), [], JSON.stringify(args));
+  /* read as ratification reads it (its R50's `approvalsRead`, K2548): bea's given, ann's missing; then ann's given */
+  assert.deepEqual(approvalsRead(reader, { caseId: CASE, edition: 2, docSha: A }),
+    { approvers: ["ann", "bea"], approvals: [{ by: "bea", at: NOW }], missing: ["ann"] });
+  w.r.caseApprove({ case: CASE, edition: 2, docSha: A, by: "ann" });
+  assert.deepEqual(approvalsRead(reader, { caseId: CASE, edition: 2, docSha: A }).missing, []);
+  assert.deepEqual(approvalsRead(reader, { caseId: CASE, edition: 2, docSha: sha("other") }).missing, ["ann", "bea"],
+    "another digest: every approver missing");
   w.r.approvalRuleSet({ approvers: null, by: "adm" });
   assert.equal(reader.rule(), null, "turned off");
+  assert.equal(approvalsRead(reader, { caseId: CASE, edition: 2, docSha: A }), null, "no rule in force: nothing asked");
 });
 
 /* R33's world: CASE of P at edition 1; draft A names it (so stands at edition 2), draft B asks for a new case, a draft

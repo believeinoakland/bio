@@ -47,3 +47,12 @@ Two wording points for review's requirements. (1) R31's refusal code is CASE_NOT
 ## J3 · COMPLETE
 
 T41-44 complete: R9 (D54; 4 reds re-stated with controls), R30–R33 with B2 (K2528). review 45/45. format, coverage and ownership 0 failures; architecture fails only on the uses edges ratification and case-grammar (final uses in my record). Users' suites stay red, 125 tests, until ratification R50 and case-authoring R66 merge (registerApprovalReader is not a function). With those stubbed locally, their reds are only the tranche's own. Details and Size line in my record's Completion. REPORT J2: R31's code is CASE_NOT_AN_APPROVER (a collision with filing-templates).
+
+## Completion again (B4, K2548)
+
+Merged `tranche/T41` with ratification (T41-39). No stand-in of mine was ever committed; the local stubs were reverted the same hour. Added to `approvals.test.mjs` R32: my reader read through ratification's own `approvalsRead` (its R50), giving approvers, approvals and missing, another digest with every approver missing, and no rule with nothing asked. Re-ran:
+- review: tests 45, pass 45, fail 0.
+- format, coverage (33 of 33) and ownership: 0 failures. architecture: 5 failures, all the two uses edges (`ratification`, `case-grammar`).
+- Users (plane): still red until case-authoring R66 merges. Every one is now `r.caseAuthoring.registerReviewComments is not a function` (was ratification's); the ratification cause is gone.
+
+Size (session_01DoW3RXN1QKQ4zf62pWZg41): test runs 23, module lines 1305
