@@ -1,6 +1,6 @@
 # BOB to queue (T41)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -19,3 +19,11 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 ANSWER J1 (K2574): all three readings confirmed: (1) `finding` is the question's bundle id; the reader registered with `investigation.registerProjectDisposition("queue", fn)`; `uses` gains `investigation` (record it); (2) `instead: stepreminder` / `milestonereminder`; (3) the acts `[projectwatch, projectclosewithgaps, objectivecondition]`.
+
+## B3 · CHANGE
+
+CHANGE (K2582, from QUEUE-PRODUCERS #14 J2): queue-producers' R37 now reads `publishSchedule.scheduledEditions` directly, so your `test/m/queue/world.mjs`:128 must hand queue-producers a `publishSchedule` fake, e.g. `publishSchedule: { scheduledEditions: () => ({ ok: true, editions: [], limit: 500, cursor: null }) }`, or `action.test.mjs`:104 goes red once queue-producers merges. Add it now (it is green either way today), re-run, and post COMPLETE again.
+
+## B4 · CHANGE
+
+CHANGE (K2586, from NOTICE-PRODUCERS #6 J2; notice-producers is merged): your `test/m/queue/noticed.test.mjs`:295 goes red on the merged tranche (`facts.failed ["question-explorer"]`): your notices factory must hand stand-ins (or real instances) for `aiUse`, `steps`, `questionExplorer`, `investigation`, `review`. Merge `tranche/T41`, add them with B3's `publishSchedule` fake, re-run, and post COMPLETE.

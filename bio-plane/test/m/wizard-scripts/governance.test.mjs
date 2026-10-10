@@ -2,7 +2,7 @@
    interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, draft, approved, restart, V, MACHINE, STEPS, step, LIBRARY } from "./fixture.mjs";
+import { seeded, draft, approved, restart, discoverable, V, MACHINE, STEPS, step, LIBRARY } from "./fixture.mjs";
 import * as wz from "../../../src/wizard-scripts/index.mjs";
 
 const A = V("alice"), B = V("bob"), F = V("frank"), E = V("erin"), D = V("dave");
@@ -60,10 +60,16 @@ test("R7 APPROVER_IS_AUTHOR: the sole author is refused; an author with a co-con
   assert.equal(w.wz.wizardApprove({ version: d3.version, by: A, viewer: A }).ok, true, "the author with a co-contributor");
 });
 
-test("R7 widen: an administrator makes an approved project script group-wide, recorded with the administrator and instant, changing no version; then administrators approve its versions", () => {
+test("R7 widen: an administrator who sees the project makes an approved project script group-wide, recorded with the administrator and instant, changing no version; then administrators approve its versions; D54: an administrator neither invited nor joined to a hidden project finds none of its scripts to widen", () => {
   const w = seeded();
   const d = approved(w);
   const before = read(w, d.version);
+  /* D54 (K2408): P is hidden and erin neither invited nor joined: its script is absent to her, and nothing is written */
+  const unseen = w.snapshot();
+  refused(w.wz.wizardApprove({ version: d.version, widen: true, by: E, viewer: E }), "NO_SUCH_WIZARD", "D54: a hidden project's script, to an uninvited administrator");
+  assert.deepEqual(w.snapshot(), unseen);
+  /* control: invited, she sees P whole (FULL) */
+  w.join(w.P, "erin", "invited");
   refused(w.wz.wizardApprove({ version: d.version, widen: true, by: A, viewer: A }), "NOT_AN_APPROVER", "an owner is not an administrator");
   w.clock.now = "2026-10-06T00:00:00Z";
   const r = w.wz.wizardApprove({ version: d.version, widen: true, by: E, viewer: E });
@@ -144,7 +150,7 @@ test("R9 wizardRetire: without version an approver retires the whole script, non
   assert.equal(w.count("wiz_scripts"), 3, "nothing deleted");
 });
 
-test("R9 refusals in order: MACHINE_CANNOT_APPROVE_WIZARD, NO_SUCH_WIZARD, WIZARD_NOT_THE_GROUPS (every write on a civicsmith script, R3–R9), NOT_AN_APPROVER (or WIZARD_SCOPE_REFUSED, NOT_A_DRAFT), WIZARD_REASON_REFUSED, WIZARD_ALREADY_ENDED", () => {
+test("R9 refusals in order: MACHINE_CANNOT_APPROVE_WIZARD, NO_SUCH_WIZARD, WIZARD_NOT_THE_GROUPS (every write on a civicsmith script, R3–R9), NOT_AN_APPROVER (or WIZARD_SCOPE_REFUSED, NOT_A_DRAFT), WIZARD_REASON_REFUSED, WIZARD_ALREADY_ENDED; D54: an administrator retires a group-wide script once P is discoverable, and finds none of a hidden project's", () => {
   const w = seeded();
   const d = approved(w);
   const ret = (x) => w.wz.wizardRetire({ script: d.script, reason: "r", by: A, viewer: A, ...x });
@@ -172,8 +178,11 @@ test("R9 refusals in order: MACHINE_CANNOT_APPROVE_WIZARD, NO_SUCH_WIZARD, WIZAR
   refused(ret({ script: null, version: d2.version, by: F, viewer: F, reason: "" }), "WIZARD_REASON_REFUSED", "before already ended");
   const again = refused(ret({ script: null, version: d2.version, by: F, viewer: F, reason: "second" }), "WIZARD_ALREADY_ENDED");
   assert.equal(again.ended.reason, "first");
-  /* a group-wide script is retired by an administrator */
-  w.wz.wizardApprove({ version: d.version, widen: true, by: E, viewer: E });
+  /* a group-wide script is retired by an administrator; D54: while P is hidden and erin uninvited, it is absent to her */
+  refused(ret({ by: E, viewer: E }), "NO_SUCH_WIZARD", "D54: hidden, uninvited");
+  refused(w.wz.wizardApprove({ version: d.version, widen: true, by: E, viewer: E }), "NO_SUCH_WIZARD", "D54: hidden, uninvited");
+  discoverable(w);   /* control: a discoverable project, seen whole by administrators */
+  assert.equal(w.wz.wizardApprove({ version: d.version, widen: true, by: E, viewer: E }).ok, true);
   refused(ret({}), "NOT_AN_APPROVER");
   assert.equal(ret({ by: E, viewer: E }).ok, true);
 });

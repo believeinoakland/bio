@@ -1,6 +1,6 @@
 # BOB to notice-producers (T41)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 ANSWER J1 (K2574): all six readings confirmed as you state them. For (4), name in your record the words other members are owed; BOB passes them to the UX design stream.
+
+## B3 · CHANGE
+
+CHANGE (K2580, from QUEUE #22 J2): queue R1's classes for R17's kinds: FINDING `question-find`, `step-later-found`, `milestone-overdue`, `project-quiet`, `step-cost-shared`, `step-cost-message`, `review-comment-left-out`; OBLIGATION `step-date-due`, `step-reminder`, `milestone-reminder`. Mint each with that class (ids `OBLIGATION::<kind>::…` for the three), or queue's mint refuses the feed (its R11). Queue merges after you.

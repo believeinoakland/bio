@@ -143,7 +143,6 @@ export const T33_RUNG_ABSENT = {
   lawpropose:           { ground: "undetermined", is: "a machine or a member PROPOSES a law relation, a court link or a treatment with its why, stored apart and labelled; recorded only when a member's act names it (standards R23, R26, R27)" },
   accountreferenceset:  { ground: "credential", is: "a member sets their own assistant account reference, its secret sealed and never answered (credentials R22, R23)" },
   accountreferenceremove: { ground: "credential", is: "a member removes their own assistant account reference (credentials R22, R25)" },
-  accountswitchset:     { ground: "caller-owned", is: "a member sets their own suggestions or standing switch on their account reference (credentials R25)" },
   aigrantmint:          { ground: "credential", is: "a member mints a short-lived, read-only ai grant under their own session, for their own account (credentials R27, R28)" },
   keyedserviceset:      { ground: "credential", is: "an administrator sets the group's sealed key for a keyed outside service, off until switched on (credentials R29)" },
   keyedserviceswitch:   { ground: "substrate", is: "an administrator switches a keyed outside service on or off for the copy; it moves no document, claim or grade (credentials R29)" },
@@ -151,10 +150,10 @@ export const T33_RUNG_ABSENT = {
   waitlook:             { ground: "caller-owned", is: "the member who set a dated wait records that they looked; it moves nothing in the inquiry (inquiry R56)" },
   exportrender:         { ground: "substrate", is: "renders the rows the viewer would be carried in one open format and logs the export; the bytes are already the record's (corpus-export R10)" },
   clockadopt:           { ground: "undetermined", is: "a member adopts a standing clock proposal, as proposed or amended, as a clock entry with its basis and trace (action-clocks R13)" },
-  aiceilingset:         { ground: "caller-owned", is: "a member sets their own daily assistant ceiling (ai-runs R50)" },
-  aicopyceilingset:     { ground: "substrate", is: "an administrator sets the copy's daily assistant ceiling below members' own; it moves no document, claim or grade (ai-runs R50)" },
   officesseed:          { ground: "substrate", is: "an administrator seeds the offices and bodies the active profiles name as entities, with their identifiers and lines (instance-setup R50)" },
-  /* `assistantset` is retired (R25; DEC-172 (5), instance-setup R53 as T36-34 supersedes it): no row here or below. */
+  /* `assistantset` is retired (R25; DEC-172 (5), instance-setup R53 as T36-34 supersedes it): no row here or below.
+     (R30; DEC-188 (8)) `accountswitchset` (to `accountusesset`), `aiceilingset` and `aicopyceilingset` (to `ai-use`'s
+     `ailimitset`) are retired too, and graded in ./t41.mjs under the ops that replace them. */
   /* B3 (K1689): the ops op-declarations declares that T33's first grading did not reach */
   seatsseed:            { ground: "substrate", is: "an administrator seeds the seats of matched bodies, and their holders, from held register captures as entities and lines, each as the register records it (instance-setup R52)" },
   disclosureshown:      { ground: "caller-owned", is: "records that a member was shown the assistant's disclosure, and its version, when they connect their own account (instance-setup R54)" },
@@ -339,7 +338,6 @@ export const T33_NON_ACTS = {
   /* credentials */
   accountreferenceset: "credential governance: a member's own assistant account reference, never answered; the subject is a credential, not a bundle",
   accountreferenceremove: "credential governance: a member removes their own account reference; the subject is a credential, not a bundle",
-  accountswitchset: "personal state, keyed by member: a member's own account switches",
   aigrantmint: "credential governance: a member's own short-lived ai grant; the subject is a credential, not a bundle",
   keyedserviceset: "credential governance: the group's key for a keyed outside service, an administrator's; never answered",
   keyedserviceswitch: "the copy's configuration: whether a keyed outside service is on; an administrator's, not an act on an object",
@@ -358,10 +356,9 @@ export const T33_NON_ACTS = {
   clockadopt: "action-directed: keyed by (action, proposal); a new revision of the action's clock",
   clocksics: R("an iCalendar file of named actions' pending dated clock entries"),
   clocklateness: R("the group's own lateness: commitments met on time, met late, or pending past their date"),
-  /* ai-runs */
-  aiusage: R("the copy's month of assistant use per mode, naming no member, or a member's own day against their ceiling"),
-  aiceilingset: "personal state, keyed by member: a member's own daily assistant ceiling",
-  aicopyceilingset: "the copy's configuration: its daily assistant ceiling; an administrator's, not an act on an object",
+  /* ai-use (R30: `ai-use` R4; no ceiling remains, its limits are `ailimitset`'s, ./t41.mjs) */
+  aiusage: R("one account's month of assistant use per use, to its owners, naming no member, or a member's own use per "
+    + "payer and per use against each limit that bound them"),
   airunverify: "run-directed: keyed by (mode, run); a member's evidenced verification of a mode's first live run",
   /* capture-requests */
   capturerequestplatformmark: "host-directed: keyed by a host; a group-wide mark that the host is a login-gated platform",

@@ -7,7 +7,8 @@ import assert from "node:assert/strict";
 import { world } from "../money-checks/fixture.mjs";
 import { fresh, reader, byId, texts, sentences, snapshot } from "./fixture.mjs";
 import { list as profiles } from "../../../../jurisdictions/index.mjs";
-import { NOTICE_KINDS, NOTICE_PROJECTS_MAX, DUTIES_MAX, POLICY_CHANGES_MAX, POLICY_CHANGE_DAYS, SCAN_FINDINGS_MAX, SCAN_FINDINGS_DAYS, TOOL_EVENTS_MAX } from "../../../src/notice-producers/index.mjs";
+import { NOTICE_KINDS, NOTICE_PROJECTS_MAX, DUTIES_MAX, POLICY_CHANGES_MAX, POLICY_CHANGE_DAYS, SCAN_FINDINGS_MAX, SCAN_FINDINGS_DAYS, TOOL_EVENTS_MAX,
+  ACCOUNT_ITEMS_MAX, INVESTIGATION_ITEMS_MAX } from "../../../src/notice-producers/index.mjs";
 import { SECURITY_DAYS } from "../../../src/credentials/index.mjs";
 
 const NOW = "2026-10-06T12:00:00Z";
@@ -35,7 +36,8 @@ function providers(calls = []) {
         return { ok: true, from, to, step: "hour", buckets: Array.from({ length: Math.ceil((t - f) / 3600e3) }, (_, i) => {
           const start = new Date(f + i * 3600e3).toISOString().replace(/\.\d+Z$/, "Z");
           const n = start >= "2026-10-06T11:00:00Z" ? 40 : 0;
-          return { start, counts: { through: 0, total: n }, usual: { through: 0, total: 0 } }; }) }; } },
+          return { start, counts: { through: 0, total: n }, usual: { through: 0, total: 0 } }; }) }; },
+      projectAccountsSuspended: () => [{ project: P, member: "alice", since: "2026-10-02T00:00:00Z", key: `${P}|alice|2026-10-02T00:00:00Z` }] },
     following: { policyChanges: () => ({ ok: true, cursor: null, changes: [{ watch: 7, standard: "STD-1", address: "https://example.org/p",
       before: { capture: "a".repeat(64), at: "2026-09-01T00:00:00Z" }, after: { capture: "b".repeat(64), at: "2026-10-01T00:00:00Z" }, amendment_held: false }] }) },
     standards: { standardRead: ({ id }) => ({ ok: true, id, cite: "a policy", declared_by: "member:alice" }) },
@@ -45,6 +47,23 @@ function providers(calls = []) {
         { tool_id: "scanii-1", event: "switched_off", at: "2026-10-05T00:00:00Z" }] }),
       securityTools: () => ({ ok: true, tools: [{ tool_id: "scanii-1", provider_id: "scanii", state: "off", off_reason: "PRIVATE_MODE_NOT_HONOURED" }] }) },
     provenance: { homeOf: () => ({ bundleId: P }) },
+    /* R16 (ai-use R5, R9) and R17 (steps, question-explorer, investigation, review): one entry each, as each answers */
+    aiUse: { exploreAsksPending: () => ({ ok: true, asks: [{ key: `explore-ask:project:${P}:2026-10-06`, owner: `project:${P}`, day: "2026-10-06",
+        what: ["What did the council vote?"], asked_at: NOW, estimate: "not known yet" }] }),
+      limitsReached: () => ({ ok: true, reached: [{ key: "ai-limit:group:ask:usd:day:2026-10-06", owner: "group", scope: "ask", unit: "usd",
+        period: "day", period_start: "2026-10-06", reached_at: NOW }] }) },
+    questionExplorer: { findsFor: () => ({ ok: true, truncated: false, finds: [{ key: "explore-find:F1:INQ-1", find: "F1", question: "INQ-1",
+      kind: "page", label: "machine", by: "system", says: "The system found this while exploring the question.", at: NOW }] }) },
+    steps: { laterFound: () => ({ ok: true, found: [{ step: "STP-1", look: 1, observation: 2, at: NOW, questions: ["INQ-1"], key: "k-later" }] }),
+      stepsDue: () => ({ ok: true, due: [{ step: "STP-1", work: "ask the clerk", kind: "past_date", date: "2026-10-01", key: "k-date" },
+        { step: "STP-1", work: "ask the clerk", kind: "reminder", date: "2026-10-06", key: "k-rem" }] }),
+      costShares: () => ({ ok: true, shares: [{ step: "STP-2", totals: { USD: "40.00" }, projects: [{ id: P, name: "alpha" }, { id: "PROJ-2026-0009-z", name: "zeta" }], key: "k-share" }] }),
+      costMessages: () => ({ ok: true, messages: [{ message: 4, step: "STP-2", text: "shall we split it?", writer: "zed", at: NOW }] }) },
+    investigation: { milestonesOverdue: () => ({ ok: true, due: [{ kind: "overdue", milestone: 3, project: P, name: "draft out", date: "2026-10-01", key: "k-ms" },
+        { kind: "reminder", milestone: 3, project: P, name: "draft out", date: "2026-10-01", key: "k-msr" }] }),
+      quietPrompts: () => ({ ok: true, prompts: [{ project: P, spell: 1, key: "k-quiet", objective: "o", condition: "c", gaps: [], doors: ["watch"] }] }) },
+    review: { reviewCommentsLeftOut: () => ({ ok: true, undetermined: 0, truncated: false,
+      items: [{ key: `FINDING::review-comment-left-out::CASE-1::1::alice`, case: "CASE-1", edition: 1, project: P, left_out: 2, comments: [1, 2] }] }) },
   };
 }
 /* membership as the real one answers, with alice an administrator besides (R12's recipient). */
@@ -61,7 +80,7 @@ function setup(over = {}) {
   return { w, n, calls, ...reader(n) };
 }
 
-test("R1: every item R2–R6 and R12–R15 derive for this member and viewer, each homed through homesOf and carrying its options; facts state each producer's bound and truncated", () => {
+test("R1: every item R2–R6 and R12–R17 derive for this member and viewer, each homed through homesOf and carrying its options; facts state each producer's bound and truncated, R16's and R17's as R13's", () => {
   const { read, asked } = setup((w) => ({ membership: adminAlice(w.membership) }));
   const r = read("alice", { now: NOW });
   const m = byId(r);
@@ -70,7 +89,13 @@ test("R1: every item R2–R6 and R12–R15 derive for this member and viewer, ea
     "FINDING::standing-answer::STQ-1::1", "FINDING::temporal-expectation-due::DUT-1::OCC-1::overdue",
     "OBLIGATION::inquiry-recheck-due::INQ-1::2026-10-01", "FINDING::security-level-high::2026-10-06T11:00:00Z",
     `FINDING::policy-changed-noticed::7::${"b".repeat(64)}`, `FINDING::scan-found::${"c".repeat(64)}::FSN-1`,
-    "FINDING::security-tool-off::scanii-1::2026-10-05T00:00:00Z"].sort());
+    "FINDING::security-tool-off::scanii-1::2026-10-05T00:00:00Z",
+    `FINDING::explore-ask::explore-ask:project:${P}:2026-10-06`, "FINDING::ai-limit-reached::ai-limit:group:ask:usd:day:2026-10-06",
+    `FINDING::project-account-suspended::${P}|alice|2026-10-02T00:00:00Z`,
+    "FINDING::question-find::explore-find:F1:INQ-1", "FINDING::step-later-found::k-later", "OBLIGATION::step-date-due::k-date",
+    "OBLIGATION::step-reminder::k-rem", "FINDING::step-cost-shared::k-share", "FINDING::step-cost-message::4",
+    "FINDING::milestone-overdue::k-ms", "OBLIGATION::milestone-reminder::k-msr", "FINDING::project-quiet::k-quiet",
+    "FINDING::review-comment-left-out::CASE-1::1::alice"].sort());
   for (const it of r.items) {
     assert.equal(it.class, NOTICE_KINDS[it.kind], it.kind);
     assert.ok(it.case && Array.isArray(it.case.ancestors), "a home set from the walk passed in");
@@ -84,7 +109,19 @@ test("R1: every item R2–R6 and R12–R15 derive for this member and viewer, ea
     temporal_expectation: { bound: DUTIES_MAX, truncated: false }, inquiry_recheck: { truncated: false },
     security_level: { days: SECURITY_DAYS, truncated: false }, policy_change: { bound: POLICY_CHANGES_MAX, days: POLICY_CHANGE_DAYS, truncated: false },
     scan_found: { bound: SCAN_FINDINGS_MAX, days: SCAN_FINDINGS_DAYS, truncated: false }, security_tool_off: { bound: TOOL_EVENTS_MAX, truncated: false },
+    explore_ask: { bound: ACCOUNT_ITEMS_MAX, truncated: false }, ai_limit: { bound: ACCOUNT_ITEMS_MAX, truncated: false },
+    signin_suspended: { bound: ACCOUNT_ITEMS_MAX, truncated: false },
+    question_find: { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, step_later_found: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
+    step_due: { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, step_cost_shared: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
+    step_cost_message: { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, milestone: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
+    project_quiet: { bound: INVESTIGATION_ITEMS_MAX, truncated: false }, review_left_out: { bound: INVESTIGATION_ITEMS_MAX, truncated: false },
     failed: [] });
+  /* R16's and R17's items each carry the class queue R1 takes for its kind */
+  assert.deepEqual(Object.fromEntries(r.items.filter((i) => !/::(interest|money|standing|temporal|inquiry|security|policy|scan)/.test(i.id))
+    .map((i) => [i.kind, i.class])), { "explore-ask": "FINDING", "ai-limit-reached": "FINDING", "project-account-suspended": "FINDING",
+    "question-find": "FINDING", "step-later-found": "FINDING", "step-date-due": "OBLIGATION", "step-reminder": "OBLIGATION",
+    "step-cost-shared": "FINDING", "step-cost-message": "FINDING", "milestone-overdue": "FINDING", "milestone-reminder": "OBLIGATION",
+    "project-quiet": "FINDING", "review-comment-left-out": "FINDING" });
 });
 
 test("R1: with no walk and no options passed, an item is ungrouped and carries only its own acts", () => {
@@ -97,12 +134,14 @@ test("R1: with no walk and no options passed, an item is ungrouped and carries o
 test("R1: writes nothing and never throws; a provider that throws contributes no item and is named in facts.failed, the others still answer", () => {
   const boom = () => { throw new Error("down"); };
   const { w, read } = setup({ people: { checkResults: boom, listChecks: boom }, inquiry: { datedWaits: boom }, following: { policyChanges: boom },
-    fileSafety: { scanFindings: boom, securityToolEvents: boom } });
+    fileSafety: { scanFindings: boom, securityToolEvents: boom }, aiUse: { exploreAsksPending: boom, limitsReached: () => ({ ok: true, reached: [], unreadable: true }) },
+    questionExplorer: { findsFor: boom }, steps: { laterFound: boom, stepsDue: boom, costShares: boom, costMessages: boom },
+    investigation: { milestonesOverdue: () => null, quietPrompts: boom }, review: { reviewCommentsLeftOut: () => ({ ok: false }) } });
   const before = snapshot((q) => w.st.sql.exec(q));
   const r = read("alice", { now: NOW });
   assert.deepEqual(snapshot((q) => w.st.sql.exec(q)), before);
-  assert.deepEqual(r.facts.failed, ["people", "inquiry", "following", "file-safety"]);
-  assert.deepEqual(r.items.map((i) => i.kind).sort(), ["money-detector-noticed", "standing-answer", "temporal-expectation-due"]);
+  assert.deepEqual(r.facts.failed, ["people", "inquiry", "following", "file-safety", "ai-use", "question-explorer", "steps", "investigation", "review"]);
+  assert.deepEqual(r.items.map((i) => i.kind).sort(), ["money-detector-noticed", "project-account-suspended", "standing-answer", "temporal-expectation-due"]);
   /* a provider throwing part-way contributes nothing at all */
   let calls = 0;
   const part = setup({ duties: { dutiesOf: ({ entity }) => ({ ok: true, entity, truncated: false, duties: [{ duty_id: "DUT-1", adoption: { by: "member:alice" } },
