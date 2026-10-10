@@ -44,3 +44,10 @@ R26 is ambiguous in two places; my best reading of each, on which I carry on:
 Replaces J1's point 2 (point 1, investigation's quiet check, stands as asked in J1).
 
 2 (revised). **question-explorer's consumer (its R1).** `exploreDue(now)` answers a *count* of due questions (`question-explorer/index.mjs`:366), as `answers`' `standingDue` does (R21's `standing-questions`, read as "any is now"). **Best reading:** consumer `question-explore`, key `explore`; `due(now)` is now when `exploreDue(now)` > 0, else null; `wake(now)` is `exploreWake(now)` (now while any is due, else an Ask's re-check instant, else null; `question-explorer`'s own `EXPLORE_ASK_RECHECK_MS`, never an interval here, R7); `tick(now)` is `exploreTick(now)`. Placed after `document-copy` (R5 naming no slot), holding R1–R4 and R7; no arming notice (question-explorer offers none; its wake is weighed at every firing, `arm` and start, R11). Please confirm the name, key and place, or name others; R5 and R2 would then list them.
+
+## J3 · REPORT
+
+Found in other modules at T41-49 (details in my record's Completion):
+1. `question-explorer`: `questionExplorerOf` (`index.mjs`:868–891) declares its tables to purge at creation without creating them (`migrate()` separate), so a host that builds it unmigrated breaks every purge read (`no such table: explore_runs`; 11 plane tests went red when my first cut built it from the scheduler's defaults). `publish-schedule`'s factory migrates at creation; suggest the same.
+2. `plane` (T41-63): build and migrate `question-explorer` and hand it to the scheduler (`schedulerOf(ctx, env, {questionExplorer})` or `hand`), as `fileSafety` is handed; until then R26's consumer is absent in the running plane. Also build `publish-schedule` with its deps before the scheduler first reaches it (today the scheduler's default `publishScheduleOf(ctx)` is its first creation in the plane).
+3. The plane bundle is staled (rule 4 (14)).
