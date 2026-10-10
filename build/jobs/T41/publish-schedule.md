@@ -17,7 +17,7 @@
 
 **Deferred.** None.
 
-**Found in other modules (REPORT J2).**
+**Found in other modules (REPORT J1).**
 1. `answer-envelope`: its totality test (`families.test.mjs`:49, already red under rule 4 (16)) also lists `bio-plane/src/publish-schedule/checks.mjs PUBLISH_SCHEDULE_CHECKS` (and `index.mjs`' re-export) once my paths are in `modules.json`. `CHECK_FAMILY_FILES` should gain `["src/publish-schedule/checks.mjs", …]` directly after publication's file (T41-60, with rule 4 (16)'s other families). Until it does, C-122.5 reaches the wire only through publication's copy, so from T41-36's deletion until T41-60 `dec49Row("SCHEDULED_CHECK_UNAVAILABLE")` answers null.
 2. `promotion` (the census): from my merge until T41-36 two row objects hold C-122.5 (publication's and mine, identical but `where`); at T41's stamp the row is one CHANGED (`where` re-pointed, words unchanged), as the map's §6 says.
 3. The window (accepted, rule 4 (13)): publication's own `schedule.mjs` copy and mine run over the same table until T41-36; each holds its own publisher registration and `TAKING` set, so only the instance `ratification` and `scheduler` drive (publication's, until T41-39 and T41-49) takes due editions.
