@@ -41,3 +41,7 @@ My change stales users' tests in this layer, each owed by a later job here (none
 ## J3 · COMPLETE
 
 Every entry applied: R29, R30, the DEC-188 (8) retirements. op-grades 44/0; format, architecture, coverage (30/30) and ownership 0 failures. J1 (handlecheck's NEEDS row) is still open; I built on my stated reading, and either answer is a one-line change. Final uses: none. Record on job/T41/op-grades.
+
+## J4 · COMPLETE · re B3
+
+B3 applied (K2583): guidepropose reversible as extractpropose; guideproposetocivicsmith undetermined as guideoffer; guidefor, guide, guideproposals reads; each tested by name with a negative control and in the stand-in totality. op-grades 45/45; format, architecture, coverage 30/30, ownership 0 failures. Tranche merged into my branch first. Uses: none.
