@@ -1,6 +1,6 @@
 # hypotheses (T41)
 
-**Status** · session_01SNmT525iDHSzNtvbkS4m7u · depth 2 · COMPLETE · handled B5
+**Status** · session_01SNmT525iDHSzNtvbkS4m7u · depth 2 · COMPLETE · handled B6
 
 ## J1 · QUESTION
 
@@ -59,3 +59,15 @@ Size (session_01SNmT525iDHSzNtvbkS4m7u): test runs 18, module lines 1,104
 ## J4 · COMPLETE
 
 B5 applied: merged tranche/T41 @ dc41a13858; R19 asks inquiry's real personWarning over inquiry.personFacts (as the note's author). Named red cleared; hypotheses 46/46. control-plane r53-routes:67 still the accepted red (B3). Checks 0, coverage 21/21. Record: 'Completion again'.
+
+## Completion again (B6 CHANGE; HYPOTHESES #5)
+
+Merged `tranche/T41` @ 63b416fef6 (K2508). R7 gains `op=hypothesissetaside` → `hypothesisSetAside(body)` (`proposal`, `reason` and the `by` stamp from the body, never a body `viewer`). New test in `t41.test.mjs` "R7 R18 op=hypothesissetaside…": an empty body, a machine stamp, an absent proposal, a missing reason, a hidden proposal under an outsider's stamp (a body `viewer` ignored) and a second setting aside each refused, writing nothing; the member's act lands (negative control). R7's ops-keys test re-stated.
+
+**Ran.** `node --test bio-plane/test/m/hypotheses/`: tests 47, pass 47, fail 0. control-plane `r53-routes.test.mjs`:67, the accepted red (B3), now lists `hypothesissetaside` too, until op-declarations R43 and control-plane R71 declare and route it (B6). Checks: format 0; architecture 0; coverage 21 of 21; ownership 0.
+
+Size (session_01SNmT525iDHSzNtvbkS4m7u): test runs 20, module lines 1,106
+
+## J5 · COMPLETE
+
+B6 applied: merged tranche/T41 @ 63b416fef6; R7's op=hypothesissetaside arm over hypothesisSetAside, tested with refusals and a negative control. hypotheses 47/47; checks 0, coverage 21/21. control-plane r53-routes:67 (accepted, B3) now also lists hypothesissetaside until L11 declares it. Record: 'Completion again (B6)'.

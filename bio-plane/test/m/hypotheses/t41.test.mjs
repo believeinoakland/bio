@@ -173,6 +173,24 @@ test("R18 a proposal set aside by a member stays readable with her reason; refus
   assert.deepEqual(["NO_SUCH_PROPOSAL", "PROPOSAL_NOT_OPEN", "PROPOSAL_FORM_UNKNOWN", "PROPOSAL_NO_REASON"].map((c) => row(c).check), ["C-134.23", "C-134.24", "C-134.25", "C-134.26"]);
 });
 
+test("R7 R18 op=hypothesissetaside sets the system's proposal aside through hypothesisSetAside, proposal and reason from the body, the member the body's stamp (the control plane's); a machine's stamp, an absent proposal, a missing reason and an empty body are refused, writing nothing", () => {
+  const w = setup();
+  const p = w.h.hypothesisPropose(PROPOSAL).proposal;
+  const arm = (body) => hypothesesOps(w.h, url("hypothesissetaside"), body).hypothesissetaside();
+  const expect = (body, code) => { const before = everything(w); refusedAs(arm(body), code); assert.equal(everything(w), before, "nothing was written"); };
+  expect(null, "NO_SUCH_PROPOSAL");
+  expect({ proposal: p, reason: "not him", by: "class:ai" }, "MACHINE_CANNOT_HYPOTHESISE");
+  expect({ proposal: "HYP-2026-0404", reason: "not him", by: ANN }, "NO_SUCH_PROPOSAL");
+  expect({ proposal: p, by: ANN }, "PROPOSAL_NO_REASON");
+  /* a viewer named in the body is no stamp: an outsider's act on a hidden proposal answers as an absent one */
+  const hp = w.h.hypothesisPropose({ ...PROPOSAL, inquiry: HIDDEN }).proposal;
+  expect({ proposal: hp, reason: "r", by: OUTSIDER, viewer: ANN }, "NO_SUCH_PROPOSAL");
+  const r = arm({ proposal: p, reason: "A different treasurer.", by: ANN });
+  assert.deepEqual([r.ok, r.proposal, r.set_aside.by, r.set_aside.reason], [true, p, ANN, "A different treasurer."], "the negative control: the member's act lands");
+  assert.equal(w.h.proposalsOf({ inquiry: INQ, viewer: OUTSIDER }).proposals[0].status, "set_aside");
+  expect({ proposal: p, reason: "again", by: ANN }, "PROPOSAL_NOT_OPEN");
+});
+
 /* ---- R19 ---------------------------------------------------------------------------------------------------------- */
 
 test("R19 noteShare by the note's author, a joined participant: copies the note's current words into a share of that project, seen by its participants, labelled hers and narrative; never evidence, a leg target or a record id, never exported", () => {
