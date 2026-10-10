@@ -10,3 +10,5 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 **From T41-23 (ai-runs) merge (K2514, AI-RUNS #16 J6).** `index.mjs`:313 still names the retired ops `aiusage`, `aiceilingset`, `aicopyceilingset`. Declare an op for ai-runs R74 `openMany` (a member's act over steps she may see; `NEEDS` as a run's open), so the door reaches it.
 
 **From INVESTIGATION #1 J2 (K2525).** TO FIX AT L11 START: investigation (merged in L7) declares no op; its member acts (milestones R1–R5, reports R6–R9, the interview R11–R13, claims R14–R15, the firsthand account R16, plan proposals R20, the quiet doors R18: `projectWatch`, `projectCloseWithGaps`) need ops declared (op-declarations), routed (control-plane) and helped (affordances R50), each named exactly from its merged services.
+
+**From REVIEW #11 J1 (K2529).** review R30 `approvalRuleSet` and R31 `caseApprove` have no op: declare (`approvalruleset`, `caseapprove`), route and help them; review R33's `reviewCommentsFor` takes an optional `draft`.
