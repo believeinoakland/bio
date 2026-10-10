@@ -78,3 +78,7 @@ COMPLETE (T41-52). Every entry applied; Completion in this record.
 - Re-run: module 232 pass, 0 fail. Checks: format 0, architecture 0 (the four edges are applied), coverage 34/34, ownership 0.
 
 Size (session_01QdSkAamnkagsBNMwfgAvuB): test runs 37, module lines 2,330
+
+## J3 · COMPLETE
+
+COMPLETE (B4, K2593): tranche merged in; catalogue pins op-grades' two new reading-guides grades (guidepropose reversible, guideproposetocivicsmith undetermined), clearing the ladder and R27 count reds; no ACT_HELP change (no design text; ACT_HELP_ABSENT is op-declarations'). Module 232/0 (J2's 242 was an addition error; corrected in the record). Checks: format 0, architecture 0, coverage 34/34, ownership 0. Ready to merge again.
