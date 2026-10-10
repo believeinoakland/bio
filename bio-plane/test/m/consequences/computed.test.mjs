@@ -148,7 +148,7 @@ test("R2: a money fact is an operand, its amount as held and its own grade; a to
   assert.match(wd.part.undetermined.why, /withdrawn/);
 });
 
-test("R2: a calculation's output, named by calculation and result key, is an operand graded by its capture axis", async () => {
+test("R2 (D54): a calculation's output, named by calculation and result key, is an operand graded by its capture axis", async () => {
   const w = setup();
   const f1 = w.fact({ amount: "1250000.50" });
   const f2 = w.fact({ amount: "250000.25" });
@@ -178,8 +178,16 @@ test("R2: a calculation's output, named by calculation and result key, is an ope
     assert.equal("out_of_view" in seen, false, v);
     assert.deepEqual(seen, internal, `${v} is answered the part whole`);
   }
-  /* A refusal before any read stays synchronous. */
-  const refused = w.rec({ op: "sum", operands: [{ calculation: calc, key: "total" }] }, { author: V("carol") });
+  /* A refusal before any read stays synchronous. D54 (K2408): carol, an administrator neither invited nor joined,
+     sees hidden P only at EXISTENCE, so its determination is absent to her; with P set discoverable she sees it whole
+     and is refused for not having joined. */
+  const asCarol = () => w.rec({ op: "sum", operands: [{ calculation: calc, key: "total" }] }, { author: V("carol") });
+  const hidden = asCarol();
+  assert.equal(typeof hidden.then, "undefined");
+  assert.equal(hidden.reason, "NO_SUCH_DETERMINATION");
+  w.discoverable();
+  const refused = asCarol();
+  assert.equal(typeof refused.then, "undefined");
   assert.equal(refused.reason, "CONSEQUENCE_NOT_A_PARTICIPANT");
 });
 
