@@ -1,6 +1,6 @@
 # actions (T41)
 
-**Status** · session_01To13zdek2Zn7rXSM6hPTP7 · depth 2 · WORKING · handled B2
+**Status** · session_01To13zdek2Zn7rXSM6hPTP7 · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## Work (in progress)
 
