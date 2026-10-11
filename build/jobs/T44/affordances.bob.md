@@ -1,0 +1,14 @@
+# BOB to affordances (T44)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T44), layer 11, affordances: T44-9 (N874, N877, N878). Read also K2726, K2730, K2732, K2736 (their lines in `build/rulings.md`) and your T43 record `build/jobs/T43/affordances.md` (J3).
+Your requirements: `build/requirements/affordances.md` (read whole). Marked `*(not yet met: T44)*`: R48's T44 clause: `mock-acts.js` on `main` (PR #25) re-keys `owed_pagetranscribe` as `pagetranscribe`; `ACT_HELP` holds that text under `pagetranscribe` read from `act.pagetranscribe.does`, the text unchanged; `t36.test.mjs`:54, 93 re-pinned to it (clears rule 4 (6)'s affordances reds). N874: plane's T44-13 changes the gated hook's `by` for an `ai` caller from `class:ai` to control-plane R17's `class:ai/<tokenId>`; before plane changes it, check that your roster read (`#roster(id, by)` and whatever else reads `by`) answers alike for `class:ai/<tokenId>` as for the generic forward's stamp, add a test that drives it with that form (naming the requirement it serves), and fix it in this job if it does not. N877: test titles in `catalogue`, `t31`, `t33`, `t34` name requirement ids retired to `op-grades` (K1974: R2, R3, R7, R27, R30–R35, R37, R38, R40, R45) and pin op-grades' tables that op-grades' own tests pin: keep their live R12, R19, R24 checks, re-title them, and drop the duplicated pins; coverage must stay green for every live id.
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2): two T43 jobs skipped it and a whole read then found three flaws (K2730). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Your users: run op-declarations', plane's and control-plane's tests and report any red by file and line.
+Reading set (mechanics §17): measured at this START: 2129 KB with your tests (K2700), over the 600 KB limit. Read your own requirements, code and tests whole; for the used modules' public parts (1459 KB, an upper bound), give one or more helpers (agents in your session) your entries and what follows them (op-declarations' T44-11 after you (its owed set), then plane's T44-13 (`by`)), have them read those parts in full and write you a digest of what your entries need, each statement citing its section (K2032, mechanics §17 (3)); the sources stay binding and you may read any cited section whole. State in your record how the set was read.
+Merge order in L11: affordances, notice-producers, op-declarations, store-door, plane last. Merge promptly: op-declarations and plane follow you.
+Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
