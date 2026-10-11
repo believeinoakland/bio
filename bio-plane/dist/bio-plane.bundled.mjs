@@ -43983,6 +43983,16 @@ var REEXTRACT_CHECKS = {
     check: "C-51.5",
     where: "src/extraction/index.mjs pdfStructure > is-reextract",
     translation: "This record holds no reading of that document for you to re-read. A capture is read when it is filed into the record, so file it first; re-reading replaces a reading that already exists."
+  },
+  /* R71, R47 (T42; N832, K2611, K2613): `op=pagetranscribe` asked while the AI's part `transcribe` cannot be
+     switched on (no transcriber registered, R72, or its `deployable()`, run-rules R19's test bar, not exactly true).
+     Refused by name, as C-51.4 refuses an absent tier, before any account or content is read, so it names nothing
+     about any account. The number follows C-51.6, which is R63's `NO_SHA`. BOB's draft words, the design stream's
+     to replace. */
+  TRANSCRIBE_NOT_DEPLOYED: {
+    check: "C-51.7",
+    where: "src/extraction/index.mjs pageTranscribe > is-transcribe",
+    translation: "Nothing was read or sent, because reading picture pages with the assistant is not switched on for your group's Civicsmith yet: each part of the assistant is switched on only after it passes Civicsmith's test investigations."
   }
 };
 var reextractRow = (code) => {
@@ -45009,12 +45019,14 @@ var withLoopNote = (note, loop) => {
   const extra = tier3LoopNote(loop);
   return extra ? note ? `${note}; ${extra}` : extra : note;
 };
+var TRANSCRIBED = ["ocr", "ai_transcription"];
+var SEEDED_STEPS = ["pixels", ...TRANSCRIBED];
 function tier3SeedFrom(reading2, units) {
   const chain3 = reading2 && Array.isArray(reading2.text_source) ? reading2.text_source : null;
   if (!chain3 || checkChain(chain3) || !Array.isArray(units) || !units.length) return null;
   const groups = /* @__PURE__ */ new Map();
   for (const step of chain3) {
-    if (step.step !== "pixels" && step.step !== "ocr") continue;
+    if (!SEEDED_STEPS.includes(step.step)) continue;
     const key2 = JSON.stringify(step.extent ?? null);
     if (!groups.has(key2)) groups.set(key2, { extent: step.extent ?? null, chain: [] });
     const { extent, ...bare5 } = step;
@@ -45022,8 +45034,8 @@ function tier3SeedFrom(reading2, units) {
   }
   const parts = [];
   for (const g of groups.values()) {
-    if (!g.chain.some((x) => x.step === "ocr") || checkChain(g.chain)) continue;
-    if (g.extent == null && chain3.some((x) => x.step !== "pixels" && x.step !== "ocr")) continue;
+    if (!g.chain.some((x) => TRANSCRIBED.includes(x.step)) || checkChain(g.chain)) continue;
+    if (g.extent == null && chain3.some((x) => !SEEDED_STEPS.includes(x.step))) continue;
     parts.push({ chain: g.chain, covers: (p3) => stepCovers({ step: "ocr", extent: g.extent ?? void 0 }, p3) });
   }
   const text7 = /* @__PURE__ */ new Map(), pagesOf2 = parts.map(() => []);
@@ -45136,15 +45148,63 @@ async function tier3Extend(env, {
     const baseText = i2text;
     const kept = seed ? wantPages.filter((p3) => seed.text.has(p3)) : [];
     const askPages = wantPages.filter((p3) => !kept.includes(p3));
+    const compose4 = (answer, freshChain) => {
+      const m = mergeTier3Text(baseText, answer, wantPages, { kept });
+      if (!m.ok) return m;
+      i2text = m.text;
+      const appendedTo = Array.isArray(m.appended) ? m.appended : [];
+      const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : []).filter((p3) => p3 && Number.isInteger(p3.page) && (!m.filled.includes(p3.page) || appendedTo.includes(p3.page)) && typeof p3.text === "string" && glyphCount(p3.text) > 0).map((p3) => p3.page);
+      const parts = [];
+      const layerSet = new Set(layerPages);
+      const spokenFor = tier2PerPage ? [
+        [1, (tier2PerPage.tier1 || []).filter((p3) => layerSet.has(p3))],
+        [2, (tier2PerPage.tier2 || []).filter((p3) => layerSet.has(p3))]
+      ] : [];
+      const spoken = new Set(spokenFor.flatMap(([, ps]) => ps));
+      for (const [tier, ps] of spokenFor)
+        if (ps.length) parts.push({ pages: ps, chain: layerChainFor(baseText, { tier, container: fmt }) });
+      const unspoken = layerPages.filter((p3) => !spoken.has(p3));
+      if (unspoken.length)
+        parts.push({ pages: unspoken, chain: layerChainFor(baseText, { tier: baseTier, container: fmt }) });
+      const keptIn = m.filled.filter((p3) => kept.includes(p3));
+      const fresh = m.filled.filter((p3) => !kept.includes(p3));
+      const t3parts = [];
+      for (const pt of [
+        ...(seed ? seed.parts : []).map((x) => ({
+          chain: x.chain,
+          pages: x.pages.filter((p3) => keptIn.includes(p3))
+        })),
+        ...freshChain ? [{ chain: freshChain, pages: fresh }] : []
+      ]) {
+        if (!pt.pages.length) continue;
+        const same3 = t3parts.find((q10) => JSON.stringify(q10.chain) === JSON.stringify(pt.chain));
+        if (same3) same3.pages = [...same3.pages, ...pt.pages].sort((a, b) => a - b);
+        else t3parts.push({ chain: pt.chain, pages: [...pt.pages] });
+      }
+      parts.push(...t3parts);
+      const merged = mergedChain(parts);
+      chain3 = Array.isArray(merged) ? merged : null;
+      chainSet = true;
+      if (m.filled.length)
+        wiredTier = t3parts.some((pt) => pt.chain.some((s) => s.step === "ai_transcription")) ? 4 : 3;
+      filled21 = fresh;
+      seeded = keptIn;
+      unanswered3 = m.unanswered || [];
+      return { ...m, layerPages, appendedTo };
+    };
+    const keepSeeded = () => kept.length ? compose4(withKeptPages(null, kept, seed), null) : { ok: false };
+    const keptSaid = () => `${seeded.length} of them were transcribed by an earlier reading of this capture and kept, not asked for again`;
     if (env && env.OCR_WORKER && kept.length && !askPages.length) {
-      seeded = kept;
+      const k = keepSeeded();
+      if (!k.ok) seeded = kept;
       ocrNote = `every page of this document without a text layer (${kept.length}) was already transcribed by an earlier reading of this capture, so the OCR member was not asked again`;
     } else if (env && env.OCR_WORKER) {
+      let failure2 = null;
       try {
         const asked = await askMemberPerPage(env, { sha: sha2, storeName, wantPages: askPages });
         loop = asked.loop || null;
         if (!(asked.status >= 200 && asked.status < 300)) {
-          ocrNote = `the OCR member answered ${asked.status}, so this document stays unread`;
+          failure2 = `the OCR member answered ${asked.status}, so this document stays unread`;
         } else {
           const ocrAnswer = asked.answer;
           let calRef = null;
@@ -45159,57 +45219,25 @@ async function tier3Extend(env, {
           }
           const built = ocrTextFromMember(ocrAnswer, { calibration: calRef });
           if (built.ok) {
-            engine = { engine: String(ocrAnswer.engine), version: String(ocrAnswer.version), calibration: calRef };
-            const m = mergeTier3Text(baseText, withKeptPages(built.text, kept, seed), wantPages, { kept });
-            if (!m.ok) ocrNote = withLoopNote(m.why, loop);
+            const m = compose4(withKeptPages(built.text, kept, seed), built.chain);
+            if (!m.ok) failure2 = withLoopNote(m.why, loop);
             else {
-              i2text = m.text;
-              const appendedTo = Array.isArray(m.appended) ? m.appended : [];
-              const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : []).filter((p3) => p3 && Number.isInteger(p3.page) && (!m.filled.includes(p3.page) || appendedTo.includes(p3.page)) && typeof p3.text === "string" && glyphCount(p3.text) > 0).map((p3) => p3.page);
-              const parts = [];
-              const layerSet = new Set(layerPages);
-              const spokenFor = tier2PerPage ? [
-                [1, (tier2PerPage.tier1 || []).filter((p3) => layerSet.has(p3))],
-                [2, (tier2PerPage.tier2 || []).filter((p3) => layerSet.has(p3))]
-              ] : [];
-              const spoken = new Set(spokenFor.flatMap(([, ps]) => ps));
-              for (const [tier, ps] of spokenFor)
-                if (ps.length) parts.push({ pages: ps, chain: layerChainFor(baseText, { tier, container: fmt }) });
-              const unspoken = layerPages.filter((p3) => !spoken.has(p3));
-              if (unspoken.length)
-                parts.push({ pages: unspoken, chain: layerChainFor(baseText, { tier: baseTier, container: fmt }) });
-              const keptIn = m.filled.filter((p3) => kept.includes(p3));
-              const fresh = m.filled.filter((p3) => !kept.includes(p3));
-              const t3parts = [];
-              for (const pt of [
-                ...(seed ? seed.parts : []).map((x) => ({
-                  chain: x.chain,
-                  pages: x.pages.filter((p3) => keptIn.includes(p3))
-                })),
-                { chain: built.chain, pages: fresh }
-              ]) {
-                if (!pt.pages.length) continue;
-                const same3 = t3parts.find((q10) => JSON.stringify(q10.chain) === JSON.stringify(pt.chain));
-                if (same3) same3.pages = [...same3.pages, ...pt.pages].sort((a, b) => a - b);
-                else t3parts.push({ chain: pt.chain, pages: [...pt.pages] });
-              }
-              parts.push(...t3parts);
-              const merged = mergedChain(parts);
-              chain3 = Array.isArray(merged) ? merged : null;
-              chainSet = true;
-              if (m.filled.length) wiredTier = 3;
-              filled21 = fresh;
-              seeded = keptIn;
-              unanswered3 = m.unanswered || [];
-              ocrNote = withLoopNote(tier3Note(m, built.note, layerPages.filter((p3) => !appendedTo.includes(p3))), loop);
-              if (keptIn.length)
-                ocrNote = `${ocrNote}; ${keptIn.length} of them were transcribed by an earlier reading of this capture and kept, not asked for again`;
+              engine = { engine: String(ocrAnswer.engine), version: String(ocrAnswer.version), calibration: calRef };
+              ocrNote = withLoopNote(tier3Note(m, built.note, m.layerPages.filter((p3) => !m.appendedTo.includes(p3))), loop);
+              if (seeded.length) ocrNote = `${ocrNote}; ${keptSaid()}`;
             }
-          } else ocrNote = withLoopNote(built.why, loop);
+          } else failure2 = withLoopNote(built.why, loop);
         }
       } catch {
-        ocrNote = "the OCR member could not be reached, so this document stays unread";
+        failure2 = "the OCR member could not be reached, so this document stays unread";
       }
+      if (failure2 !== null) {
+        ocrNote = failure2;
+        if (keepSeeded().ok && seeded.length) ocrNote = `${ocrNote}; ${keptSaid()}`;
+      }
+    } else if (keepSeeded().ok && seeded.length) {
+      const rest = unanswered3.length;
+      ocrNote = `${seeded.length} page(s) of this document without a text layer were transcribed by an earlier reading of this capture and kept` + (rest ? `; the other ${rest} have no text layer to read and no OCR engine is installed in your group's Civicsmith, so nothing is claimed about what they say` : "");
     } else {
       ocrNote = "this document has no text layer to read and no OCR engine is installed in your group's Civicsmith, so nothing is claimed about what it says";
     }
@@ -45283,7 +45311,7 @@ async function tier4Extend(transcription, { sha: sha2, storeName, i2text, chain:
     return not("the account that would pay for it could not be checked");
   }
   if (!(account && account.ok === true)) return not(refusalSays(account));
-  const owner = account.level === "project" ? `project:${account.project}` : account.level === "group" ? "group" : `member:${member2}`;
+  const owner = account.level === "project" ? `project:${account.project}` : account.level === "group" ? "group" : `member:${member2.startsWith("member:") ? member2.slice(7) : member2}`;
   if (typeof useCheck !== "function") return not("the limits of the account that would pay for it could not be checked");
   const at43 = typeof transcription.at === "string" && transcription.at ? transcription.at : (/* @__PURE__ */ new Date()).toISOString();
   try {
@@ -46161,6 +46189,7 @@ var Extraction = class _Extraction {
   #host = null;
   #migrationRun = null;
   #readHooks = null;
+  #transcriber = null;
   constructor(storage, {
     record,
     membership = null,
@@ -47557,37 +47586,7 @@ var Extraction = class _Extraction {
           pages: t3.filled,
           via: "op=pdfstructure&ocr=1"
         };
-        const u = textUnitsFor(t3.i2text);
-        let w = { ok: false };
-        try {
-          const out = this.#sees(reBasis.bundleId, viewer) ? this.writeReading({
-            bundleId: reBasis.bundleId,
-            captureSha: sha2,
-            reading: reading2,
-            textUnits: u.textUnits,
-            textUnitsOverBound: u.textUnitsOverBound,
-            textUnitsSkipped: u.textUnitsSkipped,
-            author,
-            composed: true
-          }) : null;
-          if (out) {
-            this.recordComposed(reading2, sha2);
-            const afterRead = out.afterRead ? await out.afterRead : null;
-            const ls2 = Object.values(out.listeners || {});
-            const staled = ls2.reduce((n2, l2) => n2 + (l2 && Number.isInteger(l2.staled) ? l2.staled : 0), 0);
-            const observed = (ls2.find((l2) => l2 && l2.observed) || {}).observed ?? null;
-            w = {
-              ok: true,
-              staled,
-              observed,
-              compared: out.kept ? out.kept.compared : null,
-              afterRead,
-              indexed: { written: out.indexed.written, offered: out.indexed.offered, over_bound: out.indexed.over_bound }
-            };
-          }
-        } catch {
-          w = { ok: false, rolledBack: true };
-        }
+        const w = await this.#writeReread({ basis: reBasis, sha: sha2, reading: reading2, text: t3.i2text, author, viewer });
         structure2.text = t3.i2text;
         structure2.tier = t3.wiredTier;
         if (t3.ocrNote) structure2.notes = [...structure2.notes, t3.ocrNote];
@@ -47597,7 +47596,7 @@ var Extraction = class _Extraction {
           cost,
           /* Two different facts, never answered alike: the capture left the caller's sight before the write, or
              the write ran and was rolled back whole (a listener refused it, R24), so nothing of it was kept. */
-          ...w.ok === true ? {} : w.rolledBack === true ? { why: "the record's reading of this capture could not be written: the write was refused while it ran and rolled back whole, so the text above was read and NOT recorded, and nothing the re-read would have changed was changed" } : { why: "the record's reading of this capture could not be written (it was no longer held for this caller when the write arrived), so the text above was read and NOT recorded" },
+          ...unwrittenWhy(w, "re-read"),
           pages: t3.filled,
           engine: t3.engine,
           text_source: chain3,
@@ -47627,6 +47626,276 @@ var Extraction = class _Extraction {
       planeVersion: e2.VERSION || null
     });
     return { status: 200, body: structure2 };
+  }
+  /** R34, R71: a composed reading written by R19's writer while the capture is still in the caller's sight, then
+   *  recorded as composed here (R21), with R69's after-read outcome and what the listeners and index reported. Answers
+   *  `{ok: true, staled, observed, compared, afterRead, indexed}`, `{ok: false}` when the capture left the caller's
+   *  sight, or `{ok: false, rolledBack: true}` when the write was refused while it ran and nothing of it was kept. */
+  async #writeReread({ basis, sha: sha2, reading: reading2, text: text7, author, viewer }) {
+    const u = textUnitsFor(text7);
+    let w = { ok: false };
+    try {
+      const out = this.#sees(basis.bundleId, viewer) ? this.writeReading({
+        bundleId: basis.bundleId,
+        captureSha: sha2,
+        reading: reading2,
+        textUnits: u.textUnits,
+        textUnitsOverBound: u.textUnitsOverBound,
+        textUnitsSkipped: u.textUnitsSkipped,
+        author,
+        composed: true
+      }) : null;
+      if (out) {
+        this.recordComposed(reading2, sha2);
+        const afterRead = out.afterRead ? await out.afterRead : null;
+        const ls2 = Object.values(out.listeners || {});
+        const staled = ls2.reduce((n2, l2) => n2 + (l2 && Number.isInteger(l2.staled) ? l2.staled : 0), 0);
+        const observed = (ls2.find((l2) => l2 && l2.observed) || {}).observed ?? null;
+        w = {
+          ok: true,
+          staled,
+          observed,
+          compared: out.kept ? out.kept.compared : null,
+          afterRead,
+          indexed: { written: out.indexed.written, offered: out.indexed.offered, over_bound: out.indexed.over_bound }
+        };
+      }
+    } catch {
+      w = { ok: false, rolledBack: true };
+    }
+    return w;
+  }
+  /* ---- transcribing the pages Civicsmith could not read, `op=pagetranscribe` (R71, R72) ---- */
+  /** R72 (K31's pattern; plane R36): the composition root registers one transcriber, once, at start. `t` is
+   *  `{deployable(), keptAway({project, use}), transcription({member, project, at})}`, `transcription` answering
+   *  reading-pipeline R29's `{member, project?, credentials, useCheck, transcribe, at, act}`. A malformed registration
+   *  is refused LISTENER_MALFORMED and a second, by any module, LISTENER_DECLARED (membership's `listenerRefusal`, its
+   *  R81: the slot takes one registration whoever makes it). Everything above this layer arrives through it. */
+  registerTranscriber(module, t2) {
+    const refused5 = listenerRefusal(this.#transcriber, module, isTranscriber(t2) ? t2.transcription : null);
+    if (refused5) return refused5;
+    this.#transcriber = { module, t: t2 };
+    return { ok: true, module };
+  }
+  /* R71: the project whose "no AI" limit judges the capture: its reading's own bundle's, by membership's rule over
+     record-core's `bundles` (its R37): the bundle itself when it is a project, else the project it is filed in; null
+     for a bundle in none. */
+  #projectOfBundle(bundleId) {
+    const r = this.#one(`SELECT CASE WHEN object_type = 'project' THEN bundle_id ELSE project END AS p
+                           FROM bundles WHERE bundle_id=?`, bundleId);
+    return r && typeof r.p === "string" && r.p ? r.p : null;
+  }
+  /** R71 (`op=pagetranscribe`; N832, D21): a member's act, the AI's reading of the pages of a stored PDF reading that
+   *  Civicsmith's own text recognition could not read (reading-pipeline R29), on the account that pays for that act.
+   *  The control plane has refused a malformed digest and an instance with no evidence storage, and stamps `cls`,
+   *  `session`, `caps`, `viewer` and `by`. Every refusal comes before any byte is read, any account is read or any page
+   *  is rendered (C-51.2, C-51.3, C-51.7, C-51.5, then the transcriber's keep-away refusal relayed as given). Then the
+   *  text as R33–R35 compose it (tier 2; tier 3 seeded with the pages the stored reading holds, the OCR member asked
+   *  only when bound), `reading-pipeline.tier4Extend`, and R34's write. Answers `{status, body}`. */
+  async pageTranscribe({
+    captureSha = null,
+    project = null,
+    cls: cls3 = null,
+    session = false,
+    caps: caps3 = [],
+    viewer = null,
+    by = null,
+    storeName = "bio",
+    env = null
+  } = {}) {
+    const e2 = env || this.env || {};
+    const op = "pagetranscribe";
+    const sha2 = typeof captureSha === "string" ? captureSha.trim().toLowerCase() : "";
+    const reg = this.#transcriber;
+    if (cls3 === "ai")
+      return { status: 403, body: {
+        ok: false,
+        reason: "REEXTRACT_AGENT_REFUSED",
+        ...reextractRow("REEXTRACT_AGENT_REFUSED"),
+        op,
+        detail: `op=pagetranscribe writes this capture's reading and spends the account that pays for it, and an agent credential cannot declare that as one of its writes. A member can ask for it (D-199).`
+      } };
+    const held2 = new Set(Array.isArray(caps3) ? caps3 : []);
+    if (session && !held2.has("contribute"))
+      return { status: 403, body: {
+        ok: false,
+        reason: "REEXTRACT_NOT_CAPABLE",
+        ...reextractRow("REEXTRACT_NOT_CAPABLE"),
+        op,
+        needs: "contribute",
+        held: [...held2].sort(),
+        detail: `a transcription replaces this capture's reading, its text units and the standing of content rows cited under the old one, which is a write to the record and asks the capability a promotion asks.`
+      } };
+    let deployable2 = false;
+    try {
+      deployable2 = !!reg && reg.t.deployable() === true;
+    } catch {
+      deployable2 = false;
+    }
+    if (!deployable2)
+      return { status: 501, body: {
+        ok: false,
+        reason: "TRANSCRIBE_NOT_DEPLOYED",
+        ...reextractRow("TRANSCRIBE_NOT_DEPLOYED"),
+        op,
+        sha256: sha2,
+        detail: `the AI's part for transcribing pages has not passed its test bar here (run-rules R19), so it is not switched on. Nothing was read, rendered, sent or written, and no account was looked at.`
+      } };
+    const basis = this.reextractBasis({ captureSha: sha2, viewer });
+    if (!basis.held)
+      return { status: 409, body: {
+        ok: false,
+        reason: "REEXTRACT_NOT_READ",
+        ...reextractRow("REEXTRACT_NOT_READ"),
+        op,
+        sha256: sha2,
+        detail: `this record holds no reading of that capture that you can see, so there are no pages for the AI to transcribe. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.`
+      } };
+    const away = reg.t.keptAway({ project: this.#projectOfBundle(basis.bundleId), use: TRANSCRIBE_USE });
+    if (away) return { status: 403, body: away };
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    const obj = ev ? await ev.get(sha2) : null;
+    if (!obj) return evidenceAbsent(sha2, storeName, { tokenClass: cls3 });
+    const bytes2 = new Uint8Array(await obj.arrayBuffer());
+    const pdfEntry = getFormat("pdf");
+    if (!pdfEntry || typeof pdfEntry.structure !== "function")
+      return { status: 501, body: {
+        ok: false,
+        reason: "FORMAT_UNREGISTERED",
+        format: "pdf",
+        error: 'format "pdf" is not registered in the format registry (formats.mjs), so op=pagetranscribe has no extractor to dispatch to'
+      } };
+    const structure2 = await pdfEntry.structure(bytes2);
+    if (!structure2.ok) return { status: 422, body: structure2 };
+    let tier = 1, t2PerPage = null, t2Note = null, text7 = structure2.text;
+    const notes = [...Array.isArray(structure2.notes) ? structure2.notes : []];
+    const t2 = await tier2Escalate(e2, { sha: sha2, storeName, text: text7 });
+    if (t2.outcome === "merged") {
+      text7 = t2.text;
+      tier = t2.replaced.length ? 2 : 1;
+      t2PerPage = t2.perPage;
+      t2Note = t2.note;
+      if (t2.note) notes.push(t2.note);
+    } else if (t2.outcome === "refused") {
+      t2Note = t2.note;
+      notes.push(t2.note);
+    }
+    const stored2 = basis.reading || {};
+    const t3 = await tier3Extend(e2, {
+      sha: sha2,
+      storeName,
+      i2text: text7,
+      wiredTier: tier,
+      tier2PerPage: t2PerPage,
+      fmt: "pdf",
+      seed: tier3SeedFrom(stored2, basis.units),
+      liveCalibration: (q10) => this.#liveCalibration(q10)
+    });
+    const chain3 = (t3.chainSet ? t3.chain : null) || layerChainFor(t3.i2text, { tier: t3.wiredTier, container: "pdf" });
+    const at43 = stampInstant("second");
+    let tx = null;
+    try {
+      tx = reg.t.transcription({ member: by, project, at: at43 });
+    } catch {
+      tx = null;
+    }
+    const t4 = await tier4Extend(tx, { sha: sha2, storeName, i2text: t3.i2text, chain: chain3, wiredTier: t3.wiredTier });
+    if (!t4.filled.length)
+      return { status: 200, body: {
+        ok: true,
+        op,
+        sha256: sha2,
+        transcription: {
+          performed: false,
+          written: false,
+          why: t4.aiNote || "the AI was not asked to transcribe, and nothing about this capture was changed"
+        }
+      } };
+    const chain4 = t4.chain;
+    const vw = this.view();
+    const wired = readText(decodeView(t4.i2text), {
+      headers: null,
+      locator: basis.locator || null,
+      content_type: null,
+      at: stored2.at ?? null,
+      ...vw ? { view: vw } : {}
+    });
+    const reading2 = readingFromWire({
+      wired,
+      docType: { type: { key: stored2.content_type ?? null, version: stored2.reader_version ?? null } },
+      chain: chain4,
+      wiredTier: t4.wiredTier,
+      fmt: "pdf",
+      retrieved: stored2.at ?? null,
+      tier2note: t2Note,
+      ocrNote: t3.ocrNote,
+      tier3Candidate: t3.stillWanting
+    });
+    reading2.page_count = Number.isInteger(structure2.pages) && structure2.pages > 0 ? structure2.pages : Number.isInteger(stored2.page_count) && stored2.page_count > 0 ? stored2.page_count : null;
+    {
+      const pb = pageBoxesFrom(structure2.pageBoxes);
+      if (pb) reading2.page_boxes = pb;
+      else if (Object.prototype.hasOwnProperty.call(stored2, "page_boxes")) reading2.page_boxes = stored2.page_boxes;
+    }
+    if (Object.prototype.hasOwnProperty.call(stored2, "container_extent")) reading2.container_extent = stored2.container_extent;
+    reading2.provenance = await readingProvenance({
+      text: t4.i2text,
+      chain: chain4,
+      tier: t4.wiredTier,
+      container: "pdf",
+      planeVersion: e2.VERSION || null
+    });
+    {
+      const n2 = textCountsOf(t4.i2text);
+      if (n2) Object.assign(reading2, n2);
+    }
+    Object.assign(reading2, emittedFieldsOf(t4.i2text));
+    const act2 = tx && typeof tx.act === "string" && tx.act ? tx.act : null;
+    reading2.reextracted = {
+      at: at43,
+      by,
+      engine: t3.engine ? t3.engine.engine : null,
+      version: t3.engine ? t3.engine.version : null,
+      calibration: t3.engine ? t3.engine.calibration ?? null : null,
+      pages: t3.filled,
+      via: "op=pagetranscribe",
+      ai: { engine: t4.engine.engine, version: t4.engine.version, pages: t4.filled, act: act2 }
+    };
+    const w = await this.#writeReread({ basis, sha: sha2, reading: reading2, text: t4.i2text, author: by, viewer });
+    return { status: 200, body: {
+      ok: true,
+      op,
+      sha256: sha2,
+      tier: t4.wiredTier,
+      notes,
+      transcription: {
+        performed: true,
+        written: w.ok === true,
+        ...unwrittenWhy(w, "transcription"),
+        pages: t4.filled,
+        engine: t4.engine.engine,
+        version: t4.engine.version,
+        act: act2,
+        text_source: chain4,
+        chain: describeChain(chain4),
+        label: AI_READING_LABEL,
+        note: t4.aiNote,
+        measured_by: AI_TRANSCRIPTION_SOURCE,
+        ocr: t3.filled.length ? { pages: t3.filled, engine: t3.engine } : null,
+        reading: {
+          content_type: reading2.content_type,
+          read_from_text: reading2.read_from_text,
+          found: reading2.found,
+          entities: Array.isArray(reading2.entities) ? reading2.entities.length : 0,
+          text_tier: reading2.text_tier
+        },
+        staled: w.staled ?? 0,
+        units: w.indexed ?? null,
+        observed: w.observed ?? null,
+        compared: w.compared ?? null,
+        after_read: w.afterRead ?? null
+      }
+    } };
   }
   /* ---- drift obligations (R38–R40) ---- */
   /** R39's derivation, unfiltered by viewer: calibration's worse supersessions (its R11) against the text-source rows
@@ -47694,6 +47963,11 @@ var Extraction = class _Extraction {
     return { obligations: [...out], truncated: !!out.truncated };
   }
 };
+function unwrittenWhy(w, act2) {
+  if (w.ok === true) return {};
+  return w.rolledBack === true ? { why: `the record's reading of this capture could not be written: the write was refused while it ran and rolled back whole, so the text above was read and NOT recorded, and nothing the ${act2} would have changed was changed` } : { why: "the record's reading of this capture could not be written (it was no longer held for this caller when the write arrived), so the text above was read and NOT recorded" };
+}
+var isTranscriber = (t2) => !!t2 && typeof t2 === "object" && typeof t2.deployable === "function" && typeof t2.keptAway === "function" && typeof t2.transcription === "function";
 function extractionOps(x, url, body, env) {
   const q10 = (k) => url.searchParams.get(k);
   return {
@@ -47721,6 +47995,18 @@ function extractionOps(x, url, body, env) {
       caps: (q10("caps") || "").split(",").filter(Boolean),
       viewer: q10("viewer"),
       author: q10("author"),
+      storeName: q10("store") || "bio",
+      env
+    }),
+    /* R71: the control plane's stamps in the query; `by` is its author stamp. */
+    pagetranscribe: () => x.pageTranscribe({
+      captureSha: q10("sha256"),
+      project: q10("project") || null,
+      cls: q10("cls"),
+      session: q10("session") === "1",
+      caps: (q10("caps") || "").split(",").filter(Boolean),
+      viewer: q10("viewer"),
+      by: q10("author") || null,
       storeName: q10("store") || "bio",
       env
     })
