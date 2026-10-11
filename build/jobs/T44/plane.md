@@ -30,3 +30,7 @@ Size (session_01Dwre5v9yYZxVWPCf2yNy66): test runs 6, module lines 232
 ## J1 · QUESTION
 
 R36 (T44) `refused`: two cases the clause does not name. (1) A renderer answering ok but with no PNG (not image/png, or empty bytes): my reading, `reason: "DECODE_FAILED"` (the page was not prepared as pixels; DECODE_FAILED is a pdf-pixels R39 key). (2) "Each asked page": my reading, the pages R36 already takes in (whole numbers >= 0, each once, ascending, at most TRANSCRIBE_PAGES_MAX); a page past the cap, or not a whole number, is never asked of a renderer and is not listed (no renderer key would fit). Extraction reads only reason and process (its index.mjs:1781-1806), so neither changes what a member is told. I am building on these readings; nothing here blocks.
+
+## J2 · COMPLETE
+
+T44-13 done on job/T44/plane (0290a7ada5): R36 `refused` per asked page (K2769's readings), R6 `by` = class:ai/<tokenId> for an ai caller; two stale store.mjs comments fixed from the whole read (own code and tests read whole; used modules' public parts by one helper's cited digest). Plane tests + release suite (migrate-released): 197/197. extraction pageTranscribe tests 22/22. affordances 231/233, the 2 reds rule 4 (6) (t36.test.mjs R48, until T44-9). Checks format, architecture, coverage (38/38), ownership all 0. No reds of mine. I merge tranche/T44 on your CHANGE after the other L11 merges and re-run. Details and Size line in my record.
