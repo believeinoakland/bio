@@ -1,6 +1,6 @@
 # doorbell (T43)
 
-**Status** · session_01SeTaW1cz4FqJ1wHpmaFkGf · depth 2 · WORKING · handled B1
+**Status** · session_01SeTaW1cz4FqJ1wHpmaFkGf · depth 2 · COMPLETE · handled B1
 
 ## Record: first merge (T43-7; N851)
 
