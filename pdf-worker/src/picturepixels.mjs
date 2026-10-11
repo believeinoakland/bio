@@ -17,28 +17,32 @@
  * pixels present). The JPEG decode is image-codecs' R1, bit-exact with libjpeg;
  * the PNG decode is its R10.
  *
- * MEMORY. A 12-megapixel colour photo is 36.6 MB of samples, and the decoder's
- * own working set is larger still, inside an isolate of 128 MB. So the frame is
- * bounded from the HEADER, before anything is allocated (`PICTURE_FRAME_MAX`,
- * measured: see the job record of T43-5), the decoder turns the picture as it
- * writes it, and grey, mirror and reduction are one pass into the small output:
- * no second full-size buffer is made beside the decoder's.
+ * MEMORY. A 48-megapixel colour photo is 145 MB of samples, more than the
+ * isolate's 128 MB. So a JPEG is decoded WHILE it is reduced (T44; N868): the
+ * decoder hands over a strip of finished rows at a time (image-codecs R11) and
+ * each row is summed, grey when asked, into the one band of boxes it falls in;
+ * only the small picture is kept. The full frame is judged from the HEADER,
+ * before anything is allocated, against `PICTURE_SOURCE_MAX`, the reduced one
+ * against `PICTURE_FRAME_MAX`. A PNG is still decoded whole (image-codecs R10),
+ * so its full frame is judged against `PICTURE_FRAME_MAX` (T43-5's measure).
  */
 
 import { readJpegHeader, decodeBaselineJpegRows, DctRefusal } from "./dctdecode.mjs";
 import { decodePng, PngRefusal, PNG_REFUSES } from "./pngdecode.mjs";
 import { REFUSALS, DCT_TO_REFUSAL, featureReasons, encodePng8 } from "./pagepixels.mjs";
 
-/** The largest frame decoded here, as `width × height × components` read from
- *  the file's header (R42): 4096 × 3072 × 3, a 12.6-megapixel colour frame, so
- *  the 12-megapixel cameras (4032×3024, 4000×3000, 4080×3072) pass. Measured at
- *  T43-5 (its job record): the JPEG decoder's live working set is 2.0–2.33 bytes
- *  per sample (6–7 per colour pixel: its planes, the upsampled chroma and the
- *  output), so this bound holds it under 88 MB of a 128 MB isolate; nothing
- *  here adds a second full-size buffer. */
+/** The largest frame held whole here, as `width × height × components`
+ *  (R42): a PNG's full frame, read from its header, and a JPEG's REDUCED frame,
+ *  `ceil(width/k) × ceil(height/k) × components`. 4096 × 3072 × 3, a
+ *  12.6-megapixel colour frame, so the 12-megapixel cameras (4032×3024,
+ *  4000×3000, 4080×3072) pass whole. Measured at T43-5 (its job record): a
+ *  whole decode's live working set is 2.0–2.33 bytes per sample, so this bound
+ *  holds it under 88 MB of a 128 MB isolate. */
 export const PICTURE_FRAME_MAX = 4096 * 3072 * 3;
 
-export const PICTURE_SOURCE_MAX = 8064 * 8064 * 3;   // PROVISIONAL, measured below
+/** The largest JPEG frame decoded here, as `width × height × components` read
+ *  from its header (R42, T44): MEASURED_PLACEHOLDER */
+export const PICTURE_SOURCE_MAX = 8064 * 8064 * 3;
 
 const refuse = (reason, detail = {}) => {
   if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);

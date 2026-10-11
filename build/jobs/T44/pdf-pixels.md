@@ -2,6 +2,16 @@
 
 **Status** · session_01HryQFWAv5MrBMYBBygXxEJ · depth 2 · WORKING · handled B2
 
+### Work (kept current by the job)
+
+**Reading set** (mechanics §17): read whole — `roles/JOB.md`, `build/manifest.md`, `build/requirements/pdf-pixels.md`, the public parts of `image-codecs` (with R1's and R11's text), `pdf-reader` and `test-support` as named in my Uses, layer 1's contract and the helper-module note in `build/layers.md`, my plan entry and "Rules at the opening", `draft-T44.md` § N868, K2701, K2702, K2719, K1888, my T43 record, and the module's code and tests: `pagepixels.mjs`, `picturepixels.mjs`, `imagecrop.mjs`, `pagepixels-worker.mjs`, `pagepixels.test.mjs`, `imagecrop.test.mjs`, `jbig2.test.mjs`, `jpx.test.mjs`, both probes and `make-picture-fixtures.py` (plus `dctdecode.mjs`, image-codecs', for R11's design). About 240 KB as BOB measured, under 600 KB. I read my own code and tests whole, not only what I changed (P20, plan rule 2).
+
+**Flaws found in my own module by the whole read, fixed here:** `REFUSALS.NO_IMAGE_ON_PAGE`'s text said "the page references no image XObject", which R17 (K27) contradicts: the reason is about what the page PAINTS (an inline image counts, a listed but unpainted XObject does not). Now "the page paints no image" (R39's text is the key's own, so nothing else reads it; only the bundles carry the old words). The T43 `finish()` pass and its full-size decode are gone: the PNG path now runs through the same strip reducer, fed its one decoded frame.
+
+**Built against** R11's interface as K2737 words it, with a LOCAL stand-in `decodeBaselineJpegRows` (R1's full decode handed over in 16-row strips) in my tree only, never committed, until IMAGE-CODECS #5 publishes; the tests then run against the real one.
+
+**Fixture (T44):** `picture-variants.json` gains `photo48`: a Pillow-made seed JPEG, 8064 × 128 (8 MCU rows, a restart marker after each), 97 KB; the 48 MP file is its rows' entropy runs laid out by `make-picture-fixtures.py`'s rule, RSTn renumbered, the height set to 6048 and an Exif orientation inserted. The test assembles the same bytes and checks their SHA-256 (the script's) before any picture; every expected digest is Pillow 12.3.0's over the assembled file (orientations 1, 3, 6, 8; grey at `maxEdge` 1568, k = 6; colour at 2000, k = 5, partial edge boxes of 4 columns and 3 rows).
+
 ## J1 · QUESTION
 
 Readings I am building on; I carry on with them unless you answer otherwise. None blocks me.
