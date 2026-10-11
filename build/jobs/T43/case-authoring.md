@@ -1,6 +1,6 @@
 # case-authoring (T43)
 
-**Status** · session_0115vgTqhQQu4wvo26nopLhu · depth 2 · RUNNING until 2026-10-11T10:58:51Z (users' tests (review … plane)) · handled B2
+**Status** · session_0115vgTqhQQu4wvo26nopLhu · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
