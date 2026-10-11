@@ -25,3 +25,7 @@
 - Checks: `format` 0 failures; `architecture` bundler 0 failures; `coverage` bundler 31 of 31 live ids, 0 failures; `ownership` bundler against `tranche/T43`, 0 failures (re-run after the commit).
 
 Size (session_0176Gs2ArDkbAyfHKBHEdKdd): test runs 4, module lines 3442
+
+## J1 · COMPLETE
+
+T43-2 done. N860: fleetbundles' agent-worker pin re-pinned 25 -> 26 from the committed manifest (src/transcribe.mjs arrives; clears rule 4 (7)); no bundle rebuilt, no requirement changed. Also fixed deploy.mjs's stale header comment (keep_bindings does keep service, as R18 says). fleetbundles 149 pass, 0 fail, no SKIP; module tests 95/95; format, architecture, coverage 31/31, ownership 0 failures. Found: (1) the reading set is ~544 KB measured, not 235 KB: over the 300 KB limit, yours to fix for the next bundler START (§17); (2) R31 figures in the record, plane 794 ms WARN (K2547 stands). Deferred: R11's one-implementation test reads source text; no behavioural form fits a tests-only entry. Record: build/jobs/T43/bundler.md.
