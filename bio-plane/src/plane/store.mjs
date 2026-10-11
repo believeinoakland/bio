@@ -31,6 +31,7 @@ import { registerInquiryGrammar } from "../inquiry-grammar/index.mjs";
 import { governorOf, governorRoutes } from "../host-governor/index.mjs";
 import { acquisitionOf } from "../acquisition/index.mjs";
 import { captureOf, captureOps } from "../capture/index.mjs";
+import { doorbellOf, doorbellOps } from "../doorbell/index.mjs";
 import { fileSafetyOf, fileSafetyOps } from "../file-safety/index.mjs";
 import { monitoringOf, monitoringOps } from "../monitoring/index.mjs";
 import { linkSweepOf, linkSweepOps } from "../link-sweep/index.mjs";
@@ -56,6 +57,7 @@ import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { checkCaseFile, registerCaseCheckerPublicReads } from "../case-checker/index.mjs";
 import { caseImportOf, caseImportOps } from "../case-import/index.mjs";
 import { caseDisclosuresOf } from "../case-disclosures/index.mjs";
+import { caseAccountOf } from "../case-account/index.mjs";
 import { caseCarriageOps } from "../case-carriage/index.mjs";
 import { publicReadOf, publicReadOps } from "../public-read/index.mjs";
 import { projectStageOf, projectStageOps } from "../project-stage/index.mjs";
@@ -100,6 +102,7 @@ import { noticeProducersOf } from "../notice-producers/index.mjs";
 import { askOnObject, draftOnObject, draftUse } from "./ask.mjs";
 import { admissionOf, admissionOps } from "../admission/window.mjs";
 import { archiveUnpackConsumer } from "./unpack.mjs";
+import { transcriberOf } from "./transcribe.mjs";
 import { rosterSource } from "../../../roster-reader/index.mjs";
 import { credentialsOf as captureCredentialsOf } from "../capture-sources/credentials.mjs";
 import { registerReaders, rosterReads, ownHostsOf, officePorts, dutiesFactOf, retrievalTerms, sheetRecompute,
@@ -224,6 +227,10 @@ export class Store extends DurableObject {
        declares its tables (its R7). */
     aiUseOf(ctx);
     aiRunsOf(ctx, env);   /* ai-runs registers with retrieval, in the modules' order */
+    /* R36 (T42; N832; K2611, K2656; extraction R72): the one transcriber, registered with extraction once at start, built
+       on this object's own instances (ai-runs' R75 records for its test bar, credentials, ai-use, the evidence store, the
+       `AGENT_WORKER` binding), so extraction reaches nothing above its layer. */
+    extractionOf(ctx).registerTranscriber("plane", transcriberOf(ctx, env));
     /* R21 (T33-44, K1619): leg-earning, before inquiry's factory reaches it, with the standards and duties above. */
     legEarningOf(ctx, { standards, duties });
     /* R21 (K1607): hypotheses at boot, so its leg check joins the promotion (its R5, R6) and the `hunch` owner, which
@@ -291,6 +298,11 @@ export class Store extends DurableObject {
        factory (above) creates it eagerly, with the bucket and namespace handed there, its tables made and declared at
        every boot (case-carriage R6, R12; K1024); its ops are routed in R5's map over that one instance. */
     caseDisclosuresOf(ctx, { attestation });
+    /* R38 (T42; N839; K2608, K2656; case-account R12): case-account, after case-disclosures and before any module that
+       reaches it (`reviewOf` below, which registers its comments through case-authoring's pass-through, and so
+       `caseAuthoringOf`), built here with ai-runs' instance on this host as the runs a draft names (its R1), since its
+       factory reads its deps on the first call only. One instance per host serves case-authoring, review and the door. */
+    caseAccountOf(ctx, { runs: aiRunsOf(ctx, env) });
     biasOf(ctx, { env });
     /* R12 (K1061; inquiry R53, bias R40): inquiry's findings registered with bias as kind `finding`, after bias is built
        with its environment above (its factory reads its deps on the first call only), so a lens change raises a debt on
@@ -327,7 +339,12 @@ export class Store extends DurableObject {
        first `airunopen` arrives; built lazily, that open is refused AI_RUN_MODE_UNCHECKED. */
     actionPlansOf(ctx);
     const capture = captureOf(ctx, { env, attestation });   /* the acquisition act signs its receipt through `cap.attestation` */
-    /* R26 (rev. 2 §4; K2063 (10)): file-safety, directly after capture in the modules' order, built here with this
+    /* R37 (T42; N826; K2607 rule 3, K2629, K2630; doorbell R25): doorbell, directly after capture in the modules' order,
+       the one instance per host (actions' factory may have reached it first for its hold reader, actions R55); it takes no
+       `env` of its own and reads capture's at each use, the instance above. */
+    doorbellOf(ctx);
+    /* R26 (rev. 2 §4; K2063 (10)): file-safety, directly after doorbell in the modules' order (capture, doorbell,
+       file-safety), built here with this
        environment (the `FILE_SCANNER` binding and the `CAPTURES` bucket; the evidence store and its prefix are
        record-core's, R2) and the object's own namespace, since its factory reads its deps on the first call only. Its
        first construction is its start: its `provenance.onReceipt` listener (its R1) is registered before the first
@@ -468,7 +485,9 @@ export class Store extends DurableObject {
     inquiryOf(this.ctx).migrate();
     governorOf(this.ctx, { env: this.env }).migrate();
     captureOf(this.ctx).migrate();
-    fileSafetyOf(this.ctx).migrate();   /* R26: its tables, declared to purge (its R25), directly after capture's */
+    /* R37 (K2629): doorbell's tables directly after capture's, so capture's declaration is first and doorbell's held */
+    doorbellOf(this.ctx).migrate();
+    fileSafetyOf(this.ctx).migrate();   /* R26: its tables, declared to purge (its R25), directly after doorbell's */
     extractionOf(this.ctx).migrate();
     observationLogOf(this.ctx).migrate();   /* before the run log folds into its tables below */
     runProductionsOf(this.ctx).migrate();
@@ -581,7 +600,10 @@ export class Store extends DurableObject {
       coarchiveset: () => acquisitionOf(ctx).coArchiveSet({ on: body ? body.on : undefined, by: url.searchParams.get("by") }),
       coarchivestate: () => acquisitionOf(ctx).coArchiveState(),
       ...captureOps(captureOf(ctx), url, body, env),
-      /* R26: file-safety's ops (op-declarations R32), at its place directly after capture's map. */
+      /* R37 (N826; K2630): doorbell's nine routes, directly after capture's map, so each name capture's map still carries
+         until its T43 delete is answered by doorbell's instance, never capture's copy. */
+      ...doorbellOps(doorbellOf(ctx), url, body),
+      /* R26: file-safety's ops (op-declarations R32), at its place directly after doorbell's map. */
       ...fileSafetyOps(fileSafetyOf(ctx), url, body, env),
       ...calibrationOps(calibrationOf(ctx), url, body),
       ...biasOps(biasOf(ctx), url, body),
@@ -674,7 +696,9 @@ export class Store extends DurableObject {
       ...admissionOps(admissionOf(ctx), url, body),
       /* R35 (K2585; control-plane R71, R72): the door's own map for the owners that export a service and no arm, handed
          each owner's one instance on this storage through getters, each asked only when its op is served. */
-      ...controlPlaneOwnerOps({ aiUse: () => aiUseOf(ctx), aiRuns: () => aiRunsOf(ctx, env), caseAuthoring: () => caseAuthoringOf(ctx),
+      /* (T42; N839; K2656) `caseAccount`, the plane's one case-account instance (R38), for control-plane R71's account
+         ops; never case-authoring's pass-through. */
+      ...controlPlaneOwnerOps({ aiUse: () => aiUseOf(ctx), aiRuns: () => aiRunsOf(ctx, env), caseAccount: () => caseAccountOf(ctx),
                                 review: () => reviewOf(ctx), legEarning: () => legEarningOf(ctx), capture: () => captureOf(ctx),
                                 steps: () => stepsOf(ctx), investigation: () => investigationOf(ctx),
                                 questionExplorer: () => questionExplorerOf(ctx) }, url, body),

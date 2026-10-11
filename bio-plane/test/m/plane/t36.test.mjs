@@ -118,7 +118,7 @@ test("R25 negative control: a queue shorter than a page is read once, from the h
 
 /* ===== R26 ===== */
 
-test("R26, R3: construction builds file-safety directly after capture: its tables made and declared to purge under its name, after capture's declaration; a second construction on one storage migrates idempotently", async () => {
+test("R26, R3: construction builds file-safety after capture and doorbell (R37): its tables made and declared to purge under its name, after capture's declaration; a second construction on one storage migrates idempotently", async () => {
   const db = new DatabaseSync(":memory:");
   const x = await store({ db });
   const names = tableNames(x);
@@ -199,7 +199,7 @@ test("R26 (K2153, K2236; scheduler R24, file-safety R39): file-safety is handed 
   assert.equal("filescan" in (await bare.s.onAlarm(now)), false);
 });
 
-test("R26, R5: every op of fileSafetyOps is in the route map, directly after capture's, and answers through the door what its own map answers called directly", async () => {
+test("R26, R5: every op of fileSafetyOps is in the route map, after capture's and doorbell's (R37), and answers through the door what its own map answers called directly", async () => {
   const u = new URL("http://do/");
   const ops = Object.keys(fileSafetyOps(null, u, null, {}));
   assert.equal(ops.length, 23, ops.join());
