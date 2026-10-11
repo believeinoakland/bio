@@ -33,3 +33,7 @@ Size (session_01YWts36gHnAjf1TsTwr49NV): test runs 9, module lines 3549
 ## J1 · REPORT
 
 doorbell R25 / capture R87: doorbellOf calls capture.declareTables(), which declares capture's purge tables (CAPTURE_PURGED_TABLES, e.g. task_queue) without creating them; a host whose capture never migrated then fails record-core's whole-store purge 'no such table: task_queue'. Now that actionsOf builds doorbell (T42-25), users' bare fixtures go red: action-clocks test/m/action-clocks/overdue.test.mjs:151 and action-plans test/m/action-plans/invariants.test.mjs:50 (both green on tranche/T42 without my change; plane passes, capture migrates there). Proposed fix (doorbell's or capture's, not mine): declareTables declares only tables created (or doorbellOf asks capture.migrate()), or record-core's purge skips a declared table that does not exist. Details in my record.
+
+## J2 · COMPLETE
+
+T42-25 applied: R55's reader registers with doorbell (doorbellOf(host), registerReader litigation-hold), deps.capture -> deps.doorbell; t22 re-pointed (every site), t34:212; negative controls. Also R60's whole-store purgeHeld now answers through holdInPlace (R55), with a test. modules.json edge for BOB: actions uses capture -> doorbell (architecture's only 2 failures until then). actions 111/0; coverage 61/61; format, ownership 0 failures. Users: 10 suites green; 2 reds from the REPORT just posted (action-clocks overdue.test.mjs:151, action-plans invariants.test.mjs:50). Record: build/jobs/T42/actions.md.
