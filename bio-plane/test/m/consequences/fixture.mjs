@@ -7,7 +7,8 @@
    determination's outcomes and supersession directly (filings' and escalation's suites drive the real conformance with
    this module); and the passage text of a content row (content R46 reads it from extraction's units, which this world
    does not index), unless `passages: false` leaves content's own read in place. Every test drives `consequences` at its
-   interface. */
+   interface. (T45) A third: case-authoring's `carryOutcome` (its R71), which R22 calls, recording each call, so a test
+   reads what was carried; its own suite proves the service. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -149,14 +150,42 @@ export function world({ passages = true, group = "test-group", superseded = null
                subjectEntityOf: (id) => inquiry.subjectEntityOf(id) },
     producingGroup: () => group, now: () => clock.now });
 
-  /* conformance R9, as far as R1 reads it. */
+  /* conformance R9, as far as R1 reads it; R33's `void: {causes}` (its outcomes then read undetermined, the recorded one
+     beside them), and the act's `when` and the findings R22 reads of a curing determination. R37's `curesOf` answers
+     per standard the standing link a test states in `cures` (keyed `determination|standard`), or null. */
   const determinations = new Map();
+  const cures = new Map();
   const conformance = {
     determinationRead: ({ id, viewer }) => {
       const d = determinations.get(id);
       if (!d || (viewer != null && membership.sight(d.project, viewer) !== "full"))
         return { ok: false, reason: "NO_SUCH_DETERMINATION", id };
-      return { ok: true, id, project: d.project, outcomes: d.outcomes, superseded_by: d.superseded_by ?? null };
+      const outcomes = d.void ? d.outcomes.map((o) => ({ standard: o.standard, outcome: "undetermined", recorded_outcome: o.outcome }))
+        : d.outcomes;
+      return { ok: true, id, project: d.project, outcomes, superseded_by: d.superseded_by ?? null,
+               act: { when: d.when ?? "2026-03-01" }, findings: d.findings ?? [],
+               ...(d.void ? { void: { causes: d.void } } : {}) };
+    },
+    curesOf: ({ determination, standard, viewer }) => {
+      const d = determinations.get(determination);
+      if (!d || (viewer != null && membership.sight(d.project, viewer) !== "full"))
+        return { ok: false, reason: "NO_SUCH_DETERMINATION", determination };
+      const stds = standard ? [standard] : d.outcomes.map((o) => o.standard);
+      return { ok: true, determination, cures: Object.fromEntries(stds.map((st) => [st, cures.get(`${determination}|${st}`) ?? null])),
+               ended: [] };
+    },
+  };
+  /* case-authoring R71's `carryOutcome`, as R22 calls it: each call recorded in `carried`; a case named in
+     `noCases` answers its NO_SUCH_CASE, and a text with a quote its BAD_CARRIED_OUTCOME (R71's text rule). */
+  const carried = [];
+  const noCases = new Set(["CASE-2026-0099"]);
+  const caseAuthoring = {
+    carryOutcome: (a) => {
+      if (noCases.has(a.case)) return { ok: false, reason: "NO_SUCH_CASE", detail: "no published case" };
+      if (typeof a.text !== "string" || !a.text.trim() || /["\\\r\n]/.test(a.text))
+        return { ok: false, reason: "BAD_CARRIED_OUTCOME", code: "BAD_CARRIED_OUTCOME", field: "text" };
+      carried.push(a);
+      return { ok: true, outcome: `OUT-2026-${String(carried.length).padStart(4, "0")}` };
     },
   };
   const texts = new Map();
@@ -164,13 +193,14 @@ export function world({ passages = true, group = "test-group", superseded = null
   const inq = new Proxy(inquiry, { get: (t, p) => (p === "supersededBy" && superseded
     ? (id) => superseded.get(id) || [] : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
   const deps = { record, membership, promotion, conformance, content, provenance: prov, inquiry: inq, strength, money,
-    calculations, entities, people,
+    calculations, entities, people, caseAuthoring,
     now: () => clock.now, ...(passages ? { passageText: (id) => texts.get(id) ?? null } : {}) };
   const c = consequencesModule(host, deps);
 
   let n = 0;
   const w = {
     st, host, record, membership, promotion, prov, content, inquiry, strength, c, clock, ex, texts, determinations,
+    cures, carried, noCases, deps,
     entities, money, people, calculations,
     /** R15: this module over the same record, with a sight rule that withholds the bundles in `hidden` from `pat`
      *  (and from no one else). membership's rule shows every bundle outside a project to a member (its R43), so a
