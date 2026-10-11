@@ -17,3 +17,7 @@ Merge order in L5: events, local-facts, standards, duties (`modules.json` order;
 ## B2 · ANSWER · re J1
 
 Yes: the edge duties → local-facts is now in modules.json on tranche/T45 (K2804). Your reading of R5 stands. Merge tranche/T45 into your branch for the edge.
+
+## B3 · ANSWER · re J2
+
+All three as you read them (K2806), now in the text: (1) standards gains R54 `standardProposalRead` (forwarded to STANDARDS #12; it merges before you; until then fail closed as you said); (2) R30's due date: the `owed_by: body` deadline whose `starter` names the issuer, one used, several undetermined unless the optional `rule` names one, none undetermined; (3) trigger `date` = `period.from`, else `UNKNOWN_TRIGGER`. Merge tranche/T45 for the amended R30.
