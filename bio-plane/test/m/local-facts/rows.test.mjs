@@ -1,27 +1,40 @@
 /* local-facts: its refusal rows (R8), and no place in its behaviour or outward text. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, P, MACHINE, written } from "./fixture.mjs";
+import { world, P, MACHINE, written, V, sha } from "./fixture.mjs";
 import { LOCAL_FACTS_CHECKS, localFactsOps } from "../../../src/local-facts/index.mjs";
 import { get } from "../../../../jurisdictions/index.mjs";
 
-const CODES = ["MACHINE_CANNOT_CONFIRM", "NO_SUCH_FACT", "FACT_ACT_REFUSED", "FACT_HOW_REFUSED", "FACT_VALUE_REFUSED"];
+const CODES = ["MACHINE_CANNOT_CONFIRM", "NO_SUCH_FACT", "FACT_ACT_REFUSED", "FACT_HOW_REFUSED", "FACT_VALUE_REFUSED",
+  /* R14 (T45): R10–R13's codes join the family */
+  "MACHINE_CANNOT_DRAFT_RULE", "RULE_SECTION_UNKNOWN", "RULE_ENTRY_INVALID", "RULE_NO_SOURCE", "RULE_IN_PROFILE", "NO_REASON",
+  "NO_SUCH_RULE", "RULE_SELF_CONFIRM", "RULE_NOT_DRAFTED", "RULE_NEEDS_QUALIFICATION", "RULE_NOT_CONFIRMED"];
 
-test("R8 each refusal carries its row in the module's own table, family C-126, each {check, where, translation}", () => {
+test("R8 R14 each refusal carries its row in the module's own table, family C-126, each {check, where, translation}", () => {
   assert.deepEqual(Object.keys(LOCAL_FACTS_CHECKS), CODES);
   assert.ok(Object.isFrozen(LOCAL_FACTS_CHECKS));
   CODES.forEach((code, i) => {
     const r = LOCAL_FACTS_CHECKS[code];
     assert.deepEqual(Object.keys(r).sort(), ["check", "translation", "where"]);
     assert.equal(r.check, `C-126.${i + 1}`);
-    assert.match(r.where, /^src\/local-facts\/index\.mjs \S+ > is-[a-z-]+$/);
+    assert.match(r.where, /^src\/local-facts\/(index|rules)\.mjs \S+ > is-[a-z-]+$/);
     assert.match(r.translation, /Nothing was written\.$/);
   });
   /* every code is reached at the interface and answers its row */
   const w = world();
   const got = new Map();
+  const src = { captureSha: w.held("INFO-2026-0001", sha("source")), extent: { kind: "document" } };
+  const DL = { rule: "group_answer", applies_to: "records_request", units: "days", amount: 7, starts: "received", citation: "Test Bylaw § 9" };
+  const draft = (x = {}) => w.lf.ruleDraft({ section: "deadlines", entry: DL, source: src, reason: "r", by: V("bob"), ...x });
+  const rule = draft().rule;
+  const drafted = draft({ entry: { ...DL, rule: "kept_drafted" } }).rule;
   for (const r of [w.act(P.tz, "confirm", { by: MACHINE }), w.act("nowhere", "confirm"), w.act(P.tz, "x"),
-                   w.act(P.tz, "confirm", { how: "" }), w.act(P.tz, "correct", { value: 5, source: "s" })]) got.set(r.code, r);
+                   w.act(P.tz, "confirm", { how: "" }), w.act(P.tz, "correct", { value: 5, source: "s" }),
+                   draft({ by: MACHINE }), draft({ section: "x" }), draft({ entry: { ...DL, units: "x" } }), draft({ source: null }),
+                   draft({ entry: { ...DL, rule: "records_answer" } }), draft({ reason: "" }),
+                   w.lf.ruleConfirm({ rule: "GR-99", by: V("carol") }), w.lf.ruleConfirm({ rule, by: V("bob") }),
+                   (w.lf.ruleConfirm({ rule, by: V("carol"), statement: "q" }), w.lf.ruleConfirm({ rule, by: V("dan"), statement: "q" })),
+                   w.lf.ruleConfirm({ rule: drafted, by: V("carol") }), w.lf.ruleOffer({ rule: drafted, viewer: V("bob") })]) got.set(r.code, r);
   assert.deepEqual([...got.keys()], CODES);
   for (const [code, r] of got) assert.deepEqual([r.check, r.translation], [LOCAL_FACTS_CHECKS[code].check, LOCAL_FACTS_CHECKS[code].translation]);
 });
