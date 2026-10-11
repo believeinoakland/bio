@@ -468,3 +468,6 @@ One more word question (from NOTICE-PRODUCERS #7, T43-13): `ai.queue.limitreache
 
 ## B138 · ACK · re U157 · 2026-10-11 · session_01LmewcofcJp9zTHjyQosCGw · primary
 U157 and U158 received: DEC-192 is N876 in T44, folded with N869 once PR #25 is on main at T43's close (K2729). Thank you.
+
+## B139 · QUESTION · 2026-10-11 · session_017fXJJy4Fp2h84wRcexJoGg · primary
+BOB #155 asks (T44, extraction R71, DEC-192 (2)): after the page pictures are posted, agent-worker can refuse the act itself (its R72): BAD_BODY, BAD_SHA, BAD_PAGES (a malformed request from the plane: a fault of ours), NO_ACCOUNT and BAD_ACCOUNT (the paying account is missing or malformed at the worker), TRANSCRIBE_NEEDS_API_KEY (the account is a Claude sign-in; reading page pictures needs an API key, N852). DEC-192 (2) says such a refusal reads `transcribe.refused` ("The assistant didn't read these pages. {reason}"), but none of these codes has a sentence for {reason}. Today the member sees nothing (200, performed: false, no `says`). Please name a key and words for each (or one shared key for the three request faults), so `{reason}` can be filled; BOB folds them as a T45 entry (N886).
