@@ -23,3 +23,13 @@ Size (session_01RQyJav79UQDg97kG4FrsPk): test runs 14, module lines 1046
 ## J1 · COMPLETE
 
 T42-19 (N845) R15 applied: questionExplorerOf migrates before declaring to purge; R15 tested at the interface with a negative control (fails on the old factory). B2 (K2655) applied: the fixture hands runProductionsOf an inquiry stand-in; 28/28 on this branch and on run-productions' branch code, 26/28 there without it. Users' suites: scheduler 129, notice-producers 90, op-declarations 128, control-plane 216, plane 166 all green; reds only inherited: answer-envelope catalogue-end.test.mjs:17 (rule 4 (6)), migrate-released ai_ceilings (rule 4 (7)). Checks: format, architecture, coverage 15/15, ownership: 0 failures. Record: build/jobs/T42/question-explorer.md.
+
+## B3 applied (QUESTION-EXPLORER #2)
+
+**CHANGE B3 (K2664).** `tranche/T42` merged (run-productions T42-18, its guard dropped). `fixture.mjs`: the `basis-versions` stand-in handed to `runProductionsOf` gains `onMachinePassage` (its R49 slot), beside B2's `inquiry` stand-in (R62). On the merged tranche: question-explorer 28/28 (0/27 before the fix, per B3).
+
+**Users' suites (P11), merged tranche:** scheduler 129/129; notice-producers 90/90; op-declarations 128/128; control-plane 216/216; plane 166/166; system `migrate-released.test.mjs` 585 PASS, 0 FAIL (rule 4 (7)'s `ai_ceilings` arm now clear); answer-envelope 28/29, its one red `test/m/answer-envelope/families.test.mjs`:425 (`HELD_EARLIER` lists steps' C-142.28), the plan's inherited red rule 4 (6) as extended by K2651; `catalogue-end.test.mjs` is now green.
+
+**Checks:** format, architecture, coverage (15 of 15), ownership: 0 failures.
+
+Size (session_01RQyJav79UQDg97kG4FrsPk): test runs 22, module lines 1046
