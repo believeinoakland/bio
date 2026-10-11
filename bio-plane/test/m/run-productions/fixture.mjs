@@ -204,10 +204,15 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven }
   const connections = { citesInto: (id) => ({ confirmed: [...(cites[id] || [])].sort(), severed: [] }) };
 
   const candidateSources = [];
+  /* R25: what registers with inquiry's R62 and basis-versions' R49 `onMachinePassage` slots. */
+  const machinePassageSlots = [];
+  const inquiry = { onMachinePassage(module, fn) { machinePassageSlots.push({ slot: "inquiry", module, fn }); return { ok: true }; } };
   const basisVersions = {
     unsplice: false,
     appended: [],
     onCandidates(module, fn) { candidateSources.push({ module, fn }); return { ok: true }; },
+    /* R25: basis-versions' R49 slot, recorded as the candidate source is. */
+    onMachinePassage(module, fn) { machinePassageSlots.push({ slot: "basis-versions", module, fn }); return { ok: true }; },
     basisVersions({ id, limit, viewer }) {
       note("basisVersions", { id, limit, viewer });
       const rows = [...st.sql.exec(`SELECT * FROM inquiry_basis_versions WHERE bundle_id=? ORDER BY ord LIMIT ?`, id, limit)];
@@ -284,7 +289,7 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven }
   };
   const p = runProductionsOf(host, { record, membership, content, connections, extraction, legEarning,
                                      ...(aiRunsGiven === null ? {} : { aiRuns }),
-                                     basisVersions, steps,
+                                     basisVersions, inquiry, steps,
                                      ...(real ? {} : { strength, citation }), now: () => Date.parse(clock.now) });
   p.migrate();
 
@@ -307,7 +312,7 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven }
 
   const w = {
     st, host, record, membership, prov, registered, content, p, clock, ex, calls, runs, bounds, aiRuns, strength,
-    citation, retired, connections, cites, basisVersions, candidateSources, ceilings, steps, credentials, routes, legEarning,
+    citation, retired, connections, cites, basisVersions, candidateSources, machinePassageSlots, ceilings, steps, credentials, routes, legEarning,
     versions: {}, authors: {}, ats: {}, legsOf: {}, groundsOf: {},
     row: (qq, ...a) => [...st.sql.exec(qq, ...a)][0] ?? null,
     rows: (qq, ...a) => [...st.sql.exec(qq, ...a)],
