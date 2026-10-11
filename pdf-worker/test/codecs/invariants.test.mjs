@@ -1,4 +1,4 @@
-/* image-codecs R6–R9, across every codec (R10 the PNG decoder among them) (build/requirements/image-codecs.md):
+/* image-codecs R6–R9, across every codec (R10 the PNG decoder and R11 the strip-wise JPEG decoder among them) (build/requirements/image-codecs.md):
  * each checked against a named independent decoder (R6), refusal sets as
  * contracts (R7), purity (R8), and no place named (R9). Behaviour at the
  * interface only: what the module exports and answers. */
@@ -8,7 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { decodeBaselineJpeg, DctRefusal } from "../../src/dctdecode.mjs";
+import { decodeBaselineJpeg, decodeBaselineJpegRows, DctRefusal } from "../../src/dctdecode.mjs";
 import { ccittDecode } from "../../src/ccittdecode.mjs";
 import { decodeJbig2, JBIG2_REFUSES, Jbig2Refusal } from "../../src/jbig2decode.mjs";
 import { decodeJpx, JPX_REFUSES, JpxRefusal } from "../../src/jpxdecode.mjs";
@@ -165,6 +165,40 @@ test("R8 no state carried between calls: the input is never changed, and a secon
   const da = [], db = [];
   for (let i = 0; i < 300; i++) { da.push(a.decode(ca, i % 4)); db.push(b.decode(cb, i % 4)); }
   assert.deepEqual(da, db);
+});
+
+/** R11's answer for a DCT fixture: its rows joined, and the rest, or its refusal. */
+const rowsAnswer = (v) => answer(() => {
+  const parts = [];
+  const info = decodeBaselineJpegRows(b64(v.jpeg_b64), { onRows: (rows) => parts.push(rows.slice()) });
+  return { ...info, samples: Buffer.concat(parts) };
+});
+const rowsAnswers = () => DCT.variants.map(rowsAnswer);
+
+test("R8 R11 pure, the strip-wise JPEG decoder too: the same answers in any order, with no clock, randomness or I/O, and no input changed", () => {
+  const first = rowsAnswers().map(summary);
+  assert.deepEqual([...DCT.variants].reverse().map((v) => summary(rowsAnswer(v))).reverse(), first, "in reverse order, the same answers");
+  const saved = { now: Date.now, random: Math.random, perf: globalThis.performance, fetch: globalThis.fetch, crypto: globalThis.crypto };
+  const trap = (what) => () => { throw new Error(`the decoder reached for ${what}`); };
+  let got;
+  try {
+    Date.now = trap("the clock");
+    Math.random = trap("randomness");
+    Object.defineProperty(globalThis, "performance", { value: { now: trap("the clock") }, configurable: true, writable: true });
+    globalThis.fetch = trap("the network");
+    Object.defineProperty(globalThis, "crypto", { value: undefined, configurable: true, writable: true });
+    got = rowsAnswers();
+  } finally {
+    Date.now = saved.now; Math.random = saved.random; globalThis.fetch = saved.fetch;
+    Object.defineProperty(globalThis, "performance", { value: saved.perf, configurable: true, writable: true });
+    Object.defineProperty(globalThis, "crypto", { value: saved.crypto, configurable: true, writable: true });
+  }
+  assert.deepEqual(got.map(summary), first);
+  for (const v of DCT.variants) {
+    const d = b64(v.jpeg_b64), before = sha(d);
+    answer(() => decodeBaselineJpegRows(d, { onRows: () => {} }));
+    assert.equal(sha(d), before, `dct ${v.name}: input unchanged`);
+  }
 });
 
 /** A PNG answer as a comparable value: the samples' digest and the rest, or the refusal. */
