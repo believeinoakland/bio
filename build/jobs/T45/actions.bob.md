@@ -18,3 +18,7 @@ Merge order in L9: conformance, consequences, action-grammar, action-holds, acti
 ## B2 · CHANGE
 
 R80 re-worded (K2845, wording only, no new behaviour): a second receipt record appends, and actionRead answers them as receipts: [{ord, kind, at, how, party?, ...}], oldest first, so the latest is last. action-clocks R2 reads that field. Merge tranche/T45 before continuing.
+
+## B3 · CHANGE
+
+K2848: R79 re-worded (no new behaviour beyond the read's field): actionRead answers press_terms ({on_record, embargo_until?, release_at?}) with press_terms_history. filings R46 reads it. Merge tranche/T45 before continuing.

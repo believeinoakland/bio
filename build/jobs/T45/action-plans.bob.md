@@ -1,6 +1,6 @@
 # BOB to action-plans (T45)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Merge order in L9: conformance, consequences, action-grammar, action-holds, acti
 ## B2 · ANSWER · re J1
 
 All three readings confirmed (K2845): LOOK_AGAIN_REFUSED and CLOSE_NOTE_TOO_LONG as new C-124 rows where you place them; an unmatched offer answers NO_SUCH_PLAN_PROPOSAL.
+
+## B3 · ANSWER · re J2
+
+All three readings confirmed (K2848). (1) paused derived from the Plan Log; record-grammar's edges are N914. (2) build closingNotesOf and answer the notes in planRead's closed block and plansFor; agent-worker/skills naming them is N915. (3) Your mark shape is now written into your R43 and governs; plan-work R10 is re-worded (no chance-to-fix mark) and PLAN-WORK is told. Your named reds are plan rule 4 (14) and (11)/(12)'s, accepted until T45-49 and T45-39/45. Merge tranche/T45 for R43's text.

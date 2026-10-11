@@ -17,3 +17,7 @@ Merge order in L9: conformance, consequences, action-grammar, action-holds, acti
 ## B2 · ANSWER · re J1
 
 All seven readings confirmed (K2845), PLAN_WORK_TEXT_REFUSED as C-151's row. On (2): adopt action-plans' mark names when it merges; I will send you a CHANGE then.
+
+## B3 · CHANGE
+
+K2848: action-plans R43 now fixes planMark's shape, which governs over your J1 (2) names: cause {action, ord} (or "<action>#<ord>"); marks {kind, why, option?, scenario?, phase?, routes?}, kind option_changed (option; premise or date changed), phase_start_holds (scenario, phase), next_routes (routes, up to 20 profile route names), why 1–500; a malformed mark is skipped and named in the answer. Your R10 is re-worded: the chance to fix re-offered is action-plans R41's derivation on read, never a mark. Merge tranche/T45 before continuing.
