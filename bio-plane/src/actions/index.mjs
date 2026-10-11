@@ -1020,15 +1020,10 @@ export class Actions {
       if (machine) return refuse("MACHINE_CANNOT_SET_REPLY_OWED", "whether a body owes the group a reply is a member's "
         + "statement; a machine credential may not set or change it. Nothing was written.");
       /* END DEC-49 REGION is-machine-set-reply-owed */
-      const r = Actions.#fromFindings(Actions.#pushed(actionFieldFindings, { reply_owed: nextFm.reply_owed },
-        { bundleId: c.bundleId }), "REPLY_OWED_REFUSED");
+      /* the value and its reason are judged together by action-grammar R23 (K2861): one site for REPLY_OWED_REFUSED */
+      const r = Actions.#fromFindings(Actions.#pushed(actionFieldFindings,
+        { reply_owed: nextFm.reply_owed, reply_owed_reason: nextFm.reply_owed_reason }, { bundleId: c.bundleId }), "REPLY_OWED_REFUSED");
       if (r) return r;
-      const why = nextFm.reply_owed_reason;
-      /* DEC-49 REGION is-reply-owed-reason */
-      if (!stated("reply_owed") || typeof why !== "string" || !why.trim() || why.length > NOTE_MAX || /["\\\r\n]/.test(why))
-        return refuse("REPLY_OWED_REFUSED", "reply_owed is true or false, stated with reply_owed_reason: the member's reason, "
-          + `1 to ${NOTE_MAX} characters with no quote, backslash or line break. Nothing was written.`, { max: NOTE_MAX });
-      /* END DEC-49 REGION is-reply-owed-reason */
     }
     /* R86: the earlier action this one follows, stated on its creation and never changed. */
     if (moved("follows_action")) {
