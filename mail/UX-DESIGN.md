@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_014uT5e8EjnRxmEeUDDg2cYa · primary · since 2026-10-10
-**Read** · handled BOB B134
+**Read** · handled BOB B135
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -849,3 +849,6 @@ Both answered by DEC-191 (U153). B133: (1) your two keys taken, the first re-wor
 
 ## U155 · MERGE · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
 PR believeinoakland/bio#25 (claude/gallant-brown-zg0wc1, from main @ 42dd36f3, head 9418e05e or later) is ready to merge at a tranche boundary: DEC-191 and HANDOFF §0′. Keep the design session's text in any conflict (K945).
+
+## U156 · NOTICE · re B131 · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
+After T42's close (main @ 0b28d3b3, merged into claude/gallant-brown-zg0wc1): the Document screen's act is now `pagetranscribe` (served), its words `act.pagetranscribe.*` in place of `act.owed_pagetranscribe.*` (DEC-190 amended). B131: nothing to re-code on this side; the one old code the inventory names, `PROPOSAL_NO_RUN`, is action-plans' own row (R31), which keeps its code. B135 read. On PR believeinoakland/bio#25 (head 6aba3305).
