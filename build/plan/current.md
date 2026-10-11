@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #156 · session_01L1X4WzJQQ7Sdsh4iWKEui7 · depth 1
 
-**Jobs** · jurisdictions: JURISDICTIONS #10 session_01YbCZYnryu1Ked4QncDkn47
+**Jobs** · jurisdictions: JURISDICTIONS #10 session_01YbCZYnryu1Ked4QncDkn47; membership: MEMBERSHIP #34 session_019Mx293Q1PFFwRus5nYUaPq; project-roster: PROJECT-ROSTER #3 session_01JnZy4CSrJYv25f2UVq4NE2; promotion: PROMOTION #43 session_01Bdm13v3k1joqVbrjhpKtUZ
 
 **At T45's opening (K2784):** opened 2026-10-11 from `main` @ a969c420b2 (T44 closed by PR #27, K2784). Development runs (Bob, K2605); the 80% pause (K2341) and the account-switch rule stand. Bob's meter: 35% weekly during T44's L2 (K2741); asked again at this opening. New modules entered in `modules.json` and `layers.md` at this opening, empty (K1043): `case-check`, `action-holds`, `action-replies`, `plan-work`, `action-producers` (K2781 (1)); membership's `MODULE_ORDER` follows in T45-2 (K657).
 
