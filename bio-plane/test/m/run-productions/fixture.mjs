@@ -23,7 +23,7 @@ import { captureBound } from "../../../src/textchain.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { citationOf } from "../../../src/citation/index.mjs";
 import { inquiryOf } from "../../../src/inquiry/index.mjs";
-import { versionsIn } from "../../../src/basis-versions/index.mjs";
+import { versionsIn, basisVersionsOf as realBasisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { EXTRACTION_SCHEMA } from "../../../src/extraction/schema.mjs";
 import { runProductionsOf } from "../../../src/run-productions/index.mjs";
 
@@ -127,7 +127,8 @@ export const basisVersionsOf = (fm) => versionsIn(fm);
  *  plane reaches them), strength over an inquiry stand-in (its R13 registry, R14 `legCapped`, R16 `basisFor`) whose
  *  capture ceilings the test sets in `w.ceilings`. `aiRuns: null` leaves ai-runs to this module's factory (the real
  *  module, over its own tables). */
-export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven, realInquiry = false } = {}) {
+export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven, realInquiry = false,
+                        realBasisVersions = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -292,7 +293,10 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven, 
   };
   const p = runProductionsOf(host, { record, membership, content, connections, extraction, legEarning,
                                      ...(aiRunsGiven === null ? {} : { aiRuns }),
-                                     basisVersions, inquiry, steps,
+                                     /* `realBasisVersions`: its own factory, so R25 registers with its real R49 slot. */
+                                     basisVersions: realBasisVersions
+                                       ? realBasisVersionsOf(host, { record, membership, content, inquiry }) : basisVersions,
+                                     inquiry, steps,
                                      ...(real ? {} : { strength, citation }), now: () => Date.parse(clock.now) });
   p.migrate();
 

@@ -7,6 +7,7 @@ import { EXTRACT_PROPOSE_CHECKS, runProductionsOps, migrateRunProductions, passa
          BEARING_NOTE_SAYS, READ_PAGES_AT_A_TIME, DOC_PARAS_PER_PAGE } from "../../../src/run-productions/index.mjs";
 import { ACCEPTANCE_FORMS } from "../../../src/record-grammar/index.mjs";
 import { inquiryOf } from "../../../src/inquiry/index.mjs";
+import { basisVersionsOf as realBasisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { world, LAYER, Q, Q2, PROJ, DOC, DOC2, HIDDEN_PROJ, ALICE, BOB, MACHINE, sha } from "./fixture.mjs";
 
 const AK = "class:ai/k1";
@@ -570,13 +571,16 @@ test("R25: fail closed — an acceptance that cannot be read refuses the leg, a 
   assert.equal(w.p.machinePassage({ legs: [null, 5, "x", {}], author: ALICE }), null);
 });
 
-test("R25 (inquiry R62, merged): the read is registered with inquiry's real slot, so a second registration by any module is refused LISTENER_DECLARED naming run-productions", () => {
-  const w = world({ realInquiry: true });
-  const inquiry = inquiryOf(w.host);
-  const second = inquiry.onMachinePassage("another-module", () => null);
-  assert.equal(second.ok, false);
-  assert.equal(second.code, "LISTENER_DECLARED");
-  assert.match(JSON.stringify(second), /run-productions/);
-  /* The negative control: where run-productions registered elsewhere (the stand-in), inquiry's slot is open. */
-  assert.equal(inquiryOf(world().host).onMachinePassage("another-module", () => null).ok, true);
+test("R25 (inquiry R62, basis-versions R49, merged): the read is registered with both real slots, so a second registration by any module is refused LISTENER_DECLARED naming run-productions", () => {
+  const w = world({ realInquiry: true, realBasisVersions: true });
+  for (const slot of [inquiryOf(w.host), realBasisVersionsOf(w.host)]) {
+    const second = slot.onMachinePassage("another-module", () => null);
+    assert.equal(second.ok, false);
+    assert.equal(second.code, "LISTENER_DECLARED");
+    assert.match(JSON.stringify(second), /run-productions/);
+  }
+  /* The negative control: where run-productions registered elsewhere (the stand-ins), both real slots are open. */
+  const bare = world().host;
+  assert.equal(inquiryOf(bare).onMachinePassage("another-module", () => null).ok, true);
+  assert.equal(realBasisVersionsOf(bare).onMachinePassage("another-module", () => null).ok, true);
 });

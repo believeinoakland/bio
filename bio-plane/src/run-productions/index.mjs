@@ -1428,10 +1428,7 @@ export function runProductionsOf(host, deps) {
     p.basisVersions.onCandidates(RUN_PRODUCTIONS_MODULE, (a) => p.candidates(a));
     /* R25 (T42; N834): the one read of inquiry's R62 and basis-versions' R49 slots, `onMachinePassage`. */
     const inquiry = d.inquiry || inquiryOf(host, { record, membership, content });
-    inquiry.onMachinePassage(RUN_PRODUCTIONS_MODULE, (a) => p.machinePassage(a));
-    /* basis-versions' R49 slot: registered where it is offered, until T42-16 merges it. */
-    if (typeof p.basisVersions.onMachinePassage === "function")
-      p.basisVersions.onMachinePassage(RUN_PRODUCTIONS_MODULE, (a) => p.machinePassage(a));
+    for (const slot of [inquiry, p.basisVersions]) slot.onMachinePassage(RUN_PRODUCTIONS_MODULE, (a) => p.machinePassage(a));
   }
   return p;
 }
