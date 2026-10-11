@@ -17,6 +17,8 @@ export const MINTED = {
   AI_RUN_MODE_NOT_DEPLOYED: "C-109.1", AI_RUN_PLAN_REQUIRED: "C-109.2", AI_RUN_PLAN_UNEXPECTED: "C-109.3",
   AI_RUN_PLAN_NEEDS_PROJECT: "C-109.4", AI_RUN_PLAN_NEEDS_MEMBER: "C-109.5", AI_RUN_PLAN_NO_SEARCH: "C-109.6",
   AI_RUN_MODE_UNCHECKED: "C-109.7",
+  /* T45 (R77; T45-11): the re-examination run's two, in run-rules' C-109 after the retired .12 (run-rules R15's table) */
+  AI_RUN_REEXAM_NEEDS_RESPONSE: "C-109.13", AI_RUN_REEXAM_OPEN: "C-109.14",
   /* T33-50 (run-rules R20, K1601) */
   AI_NO_ACCOUNT: "C-109.10",
   /* T41 (run-rules C-22.24–.28, B4, K2485; the origin codes are minted by run-rules' originAllowed and relayed) */
