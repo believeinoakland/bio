@@ -35,3 +35,7 @@ action-grammar (T45-25) is merged into tranche/T45 (K2855): rows C-117.30–.58,
 ## B6 · CHANGE
 
 filing-templates (T45-30) and action-holds (T45-26) are merged into tranche/T45 (K2856): filing-templates R15 (offered only when attributed and professionally reviewed: give your fixture attributed templates, B3) and action-holds' holdNotInPlace/holdsOf are real. Merge tranche/T45, drop the stand-ins, re-run.
+
+## B7 · CHANGE
+
+consequences (T45-24) is merged into tranche/T45 (K2857): successRecordRead, registerOwnActReader(fn, module), the R9 addressed words and outcomeCarry are real. Merge tranche/T45, drop any stand-in, re-run, then continue or post COMPLETE again.
