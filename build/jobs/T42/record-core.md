@@ -46,3 +46,7 @@
   - `ownership`: 4 files changed by record-core between tranche/T42 and HEAD; 0 failures
 
 Size (session_013PmyJwtkkmXmvfs4xFhWb6): test runs 7, module lines 2296
+
+## J1 · COMPLETE
+
+T42-2a applied. R62: MINTED_OBJECT gains ACD, 'case account draft'. R76: needs no code; the opaque set is read from ID_TABLE. t33.test.mjs:69 and :162 re-pinned with ACD (rule 4 (11) cleared). New t33.test.mjs:177 tests ACD with negative controls, and t35's MINTED gains ACD. record-core tests 165/165, stats-disclosure 31/31. Checks: format, architecture, coverage (82/82) and ownership (4 files), each 0 failures. Users' suites (94 modules, 1,055 files): 7,746 pass, 11 fail. All 11 are inherited: rule 4 (5) MODULE_ORDER, at membership module-order.test.mjs:13 and :107, t9-notice-sight-bounds.test.mjs:161, progressions order.test.mjs:16, promotion registry.test.mjs:58 and standards reads.test.mjs:200; rule 4 (6) catalogue-end.test.mjs:17; rule 4 (7) migrate-released ai_ceilings; rule 4 (2) row-census R50, none of this module's rows; plus two fixture data files the runner was handed, not tests. Deferred: nothing. Details in my record.
