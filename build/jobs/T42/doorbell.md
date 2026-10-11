@@ -27,7 +27,7 @@ Two readings I am building on; I carry on with them unless you answer otherwise.
 
 **Tests (moved per map §6, re-labelled, plus new):** `doorbell.test.mjs`, `inbox.test.mjs`, `knock-origin.test.mjs` whole; `knocker.test.mjs` (the 14 tests §6 lists); `t35.test.mjs` (DEC-149's six doorbell strings re-labelled with `door.mjs`/`index.mjs` lines; R85's three as R20); `instance.test.mjs` (R25 new; figures 47–63 as R12 R14; reads 156–175 as R3); `invariants.test.mjs` (R22 from services' arms, R23 from act 85–96, R16, R24 from relays' knock arm); `rows.test.mjs` (R21: rows held once, their table, codes, numbers and translations; the `where` arm; K874's negative control for each of C-85.1–.5 by name); `ops.test.mjs` (the nine routes, `doorbellPublicOp` from ops 9/169–170, and R13's over-strictness arm: a plain capture unchanged byte for byte). R10's order by a body tripping two refusals is in `doorbell.test.mjs` (empty content with a weak secret answers `KNOCK_EMPTY`).
 
-**Not moved:** `capture/plane.test.mjs` 66–75 (`op=knock` at the whole plane's door under Miniflare): the plane's door calls capture's `capturePublicOp` until T42-30, so in L3 that test exercises capture's copy, not this module, and its interface is the plane's. REPORT J3 asks that plane's T42-30 job carry it over `doorbellPublicOp`.
+**Not moved:** `capture/plane.test.mjs` 66–75 (`op=knock` at the whole plane's door under Miniflare): the plane's door calls capture's `capturePublicOp` until T42-30, so in L3 that test exercises capture's copy, not this module, and its interface is the plane's. REPORT J2 asks that plane's T42-30 job carry it over `doorbellPublicOp`.
 
 **Results:**
 - `node --test bio-plane/test/m/doorbell/`: tests 69, pass 67, fail 2. The two are R21's `where` arm (`rows.test.mjs` "R21 (K2627, K2629): each row's where…" and `doorbell.test.mjs` "R21 R4 R5 R6 R7 R8 (K649, K2627)…"), red until CAPTURE #26's merge re-points the rows (K2627). With capture's re-point applied to a local, uncommitted copy of `capture/checks.mjs`: 69 pass, 0 fail.
@@ -36,6 +36,6 @@ Two readings I am building on; I carry on with them unless you answer otherwise.
 
 **Deferred:** none. Within the module, the copy keeps capture's own `KNOCK` constants and helpers (map §2's copy); they become the only copy at capture's T43 delete (N849).
 
-**Found in other modules:** see REPORT J3 (plane's door test). Generated artifacts: none staled by this job beyond rule 4 (10)'s standing ones (no bundle input changed: the plane does not import doorbell yet).
+**Found in other modules:** see REPORT J2 (plane's door test). Generated artifacts: none staled by this job beyond rule 4 (10)'s standing ones (no bundle input changed: the plane does not import doorbell yet).
 
 Size (session_01LUJMTyBUMuQMAruQweWeZp): test runs 11, module lines 1048
