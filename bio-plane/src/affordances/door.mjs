@@ -93,8 +93,9 @@ export async function affordancesOp(url, stub, { json, doAnswer, storeSilent, st
        asked with the stamps exactly as the acts receive them (D-311), so each question is asked of the caller the act
        will see. */
     ? `http://do/affordancefacts?${stamped({ target, viewer, identity, author, by })}`
-    /* R37: the screens and offered scripts, asked of the store for this viewer. */
-    : `http://do/affordancescreens?viewer=${encodeURIComponent(viewer ?? "")}`;
+    /* R37: the screens and offered scripts, asked of the store for this viewer; no viewer stamped is left off, so the
+       store reads it null as the facts read an absent stamp (R15), never as "". */
+    : `http://do/affordancescreens?${stamped({ viewer })}`;
   const [kOut, out] = await Promise.all([doAnswer(stub.fetch("http://do/actionkinds")), doAnswer(stub.fetch(second))]);
   if (kOut.refused) return storeRefusal(kOut);
   if (!kOut.answered) return storeSilent("affordances", kOut.correlation);

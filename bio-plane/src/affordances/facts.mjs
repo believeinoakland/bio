@@ -31,7 +31,7 @@
  * R37 (N528): the second route, `op=affordancescreens`, answers what the untargeted `op=affordances` publishes of
  * `wizard-scripts`: the registered screens and, for each, the offered scripts that start there for this viewer. */
 
-import { normalizeType, parseFrontmatter, isMachineIdentity } from "../record-grammar/index.mjs";
+import { normalizeType, parseFrontmatter, isMachineIdentity, isMachineStamp } from "../record-grammar/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { membershipOf, Membership } from "../membership/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
@@ -43,6 +43,12 @@ import { ratificationOf } from "../ratification/index.mjs";
 import { contradictionOf } from "../contradiction/index.mjs";
 import { wizardScriptsOf } from "../wizard-scripts/index.mjs";
 import { explainRefusal } from "../affordances.mjs";
+
+/* R15: the `by` a roster position is asked of, or null when none can be: no stamp sent, or a credential's stamp (N874). */
+const rosterActor = (by) => {
+  const actor = typeof by === "string" && by.trim() ? by.trim() : null;
+  return actor === null || isMachineStamp(actor) ? null : actor;
+};
 
 class AffordanceFacts {
   constructor(host, deps) {
@@ -119,9 +125,8 @@ class AffordanceFacts {
   }
 
   /* R14, R15, R18 (D-311, N45): THE CALLER'S ROSTER POSITION IN THIS PROJECT — the PAIR (this target, this caller),
-     asked of `by`, the string the roster acts themselves receive (`class:<cls>` for every bearer, which holds no row),
-     so the pre-flight asks the question of the same caller the act will. Each field is read through the predicate its
-     act's refusal runs:
+     asked of `by`, the string the roster acts themselves receive, so the pre-flight asks the question of the same caller
+     the act will. Each field is read through the predicate its act's refusal runs:
        owner                  `isProjectOwner` (invite, remove, owner-add, owner-remove: NOT_THE_OWNER)
        state                  `participation` (join's NOT_INVITED, leave's NOT_A_PARTICIPANT / NOT_JOINED)
        owner_floor_clear      owner-remove's floor for EVERY target: `ownerMath` over the owners (LAST_OWNER, R40),
@@ -131,9 +136,12 @@ class AffordanceFacts {
                               an owner who is the last committed one is refused LAST_COMMITTED_OWNER
        rescue_open            `rescueRefusal` is null (the rescue's three caller-and-project conditions, R75)
      "Committed" is R35's: an owner whose participation is not `leaving` (R65's owners, R74's state). Null on a target
-     that is not a project and when no `by` was sent (a DO-internal call). */
+     that is not a project, when no `by` was sent (a DO-internal call), and (R15) for a caller with no roster position:
+     a stamp the control plane mints for a credential (`isMachineStamp`: `class:<cls>` for a bearer, `class:ai` or, since
+     control-plane R17, `class:ai/<tokenId>` for an assistant; N874), which no participation row names. Every act these
+     facts offer asks a stated `true`, so the null offers nothing, as a stamp's answers did. */
   #roster(projectId, by) {
-    const actor = typeof by === "string" && by.trim() ? by.trim() : null;
+    const actor = rosterActor(by);
     if (actor === null) return null;
     const m = this.membership();
     const p = m.participation(projectId, actor);
@@ -157,7 +165,7 @@ class AffordanceFacts {
     const m = this.membership();
     if (typeof target !== "string" || m.sight(target, viewer) !== Membership.SIGHT_EXISTENCE
         || m.visibilityOf(target) !== "hidden") return null;
-    const actor = typeof by === "string" && by.trim() ? by.trim() : null;
+    const actor = rosterActor(by);
     /* The caller's own positions, as R15 asks them; the pair facts are false, never null, for a caller with no member
        position (the founder): at this EXISTENCE the administrator is neither invited nor joined, and a null would
        offer `cite`, which the act refuses there (R10, R18). */

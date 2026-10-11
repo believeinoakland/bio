@@ -253,6 +253,39 @@ test("R15: roster is asked of `by`, never of identity", async () => {
   assert.equal((await facts(W.PA, { viewer: "member:pam", identity: "member:iris" })).roster, null);
 });
 
+/* N874 (K2726; T44-9): plane's T44-13 stamps an `ai` caller's `by` as control-plane R17's `class:ai/<tokenId>`, where
+   the generic forward stamped `class:ai`. A credential's stamp names no participation row, so the roster is null for
+   both forms, alike, on every project and at a hidden project's EXISTENCE (R15), and both are offered the same acts,
+   none of them a roster act (R10, R18); the members' rosters, read beside them, are not null (negative control). */
+test("R15 R18 (N874): roster is null for a credential's `by` — `class:ai/<tokenId>` exactly as `class:ai` and a bearer's "
+   + "`class:<cls>` — on every project and at a hidden one's EXISTENCE, so the two forms answer alike and are offered no "
+   + "roster act; a member's `by` still reads a roster", async () => {
+  const ROSTER = ["projectinvite", "projectjoin", "projectleave", "projectremove", "projectowneradd",
+    "projectownerremove", "projectownerrescue"];   /* projectvisibilityset is asked of identity, not `by` (R15) */
+  const STAMPS = ["class:ai", "class:ai/tok-aff-1", "class:ai/9f2c", "class:member", "token:member"];
+  const cases = [...["PA", "PB", "PC"].map((p) => [W[p], { viewer: "member:pam", identity: "member:pam", author: "member:pam" }]),
+    /* PR at EXISTENCE: hidden, its sole owner deactivated, seen by an administrator neither invited nor joined (D54) */
+    [W.PR, { viewer: "member:ruth", identity: "member:ruth", author: "member:ruth" }]];
+  for (const [p, who] of cases) {
+    const base = await facts(p, { ...who, by: "class:ai" });
+    assert.equal(base.ok, true, JSON.stringify(base).slice(0, 300));
+    for (const by of STAMPS) {
+      const f = await facts(p, { ...who, by });
+      assert.equal(f.roster, null, `${p} ${by}`);
+      assert.deepEqual(f, base, `${p}: ${by} answers as class:ai`);
+      assert.deepEqual(deriveActs(f).map((a) => a.id).filter((id) => ROSTER.includes(id)), [], `${p} ${by}`);
+    }
+  }
+  /* negative control: the same projects asked with a member's `by` read a roster, and ruth's rescue of PR is open */
+  assert.deepEqual([(await facts(W.PA, { viewer: "member:pam", by: "iris" })).roster.owner,
+                    (await facts(W.PR, { viewer: "member:ruth", identity: "member:ruth", by: "ruth" })).roster.rescue_open], [true, true]);
+  assert.ok(deriveActs(await facts(W.PR, { viewer: "member:ruth", identity: "member:ruth", by: "ruth" })).some((a) => a.id === "projectownerrescue"));
+  /* and the act agrees (R18): a credential stamp is no administrator, so the rescue the null withholds is refused it */
+  for (const by of ["class:ai", "class:ai/tok-aff-1"])
+    assert.equal(codeOf(await DO(`projectownerrescue?projectId=${W.PR}&handle=ruth&by=${E(by)}&viewer=admin`,
+      { reason: "stranded" })), "NOT_AN_ADMIN", by);
+});
+
 test("R15: each positional fact is null on a target of the wrong type", async () => {
   const inq = await facts(W.INQ, { identity: "member:iris", by: "iris" });
   assert.deepEqual([inq.project_target_owner, inq.project_participant, inq.roster], [null, null, null]);
