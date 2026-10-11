@@ -139,13 +139,13 @@ test("N483 N501 (K1119) this module answers no export: no op `export` or `export
   for (const name of constants) assert.equal(name in pub, false, `${name} is corpus-export's alone`);
 });
 
-test("R33 this module's table holds exactly C-122.1–.4, .6 and .7 (C-122.5 moved with its raiser to publish-schedule R9; T41), each with its code, sentence and its raiser's site here; C-92.1–.9 and C-92.13 left it for case-tensions' (its R9), C-44.2, C-68.5 and C-98 for public-read's (its R17)", () => {
+test("R33 R78 this module's table holds exactly C-122.1–.4, .6, .7 and .8 (C-122.5 moved with its raiser to publish-schedule R9; T41; C-122.8 R78's, T45), each with its code, sentence and its raiser's site here; C-92.1–.9 and C-92.13 left it for case-tensions' (its R9), C-44.2, C-68.5 and C-98 for public-read's (its R17)", () => {
   /* every table this file exports, not a sample: one, and every row in it is one of the seven */
   const tables = Object.entries(CHECKS).filter(([, v]) => v && typeof v === "object" && !Array.isArray(v)
     && Object.values(v).some((r) => r && typeof r.check === "string"));
   assert.deepEqual(tables.map(([k]) => k).sort(), ["CASE_SOURCES_CHECKS"]);
   const ids = Object.values(MINE).map((r) => r.check).sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
-  assert.deepEqual(ids, ["C-122.1", "C-122.2", "C-122.3", "C-122.4", "C-122.6", "C-122.7"]);
+  assert.deepEqual(ids, ["C-122.1", "C-122.2", "C-122.3", "C-122.4", "C-122.6", "C-122.7", "C-122.8"]);
   for (const [code, row] of Object.entries(MINE)) {
     assert.ok(typeof row.translation === "string" && row.translation.length > 40, `${code} has its sentence`);
     assert.match(row.where, /^src\/publication\/index\.mjs \w+ > is-[a-z-]+$/, `${code}'s site is this module's`);

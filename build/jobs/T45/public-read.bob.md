@@ -1,6 +1,6 @@
 # BOB to public-read (T45)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -17,3 +17,7 @@ Merge order in L8: case-grammar, publication, docket, public-read, case-account,
 ## B2 · ANSWER · re J1
 
 (1)-(4) as you read them (K2829). (5) Right: reconciliation R8's '-19' was a slip; its folds are T45-4, -17, -18, -20, -21. Nothing for public-read.
+
+## B3 · CHANGE
+
+case-grammar and publication are merged into tranche/T45 (K2833; publication's COUNSEL_MATTER_NOT_PUBLISHED row is C-122.8 in CASE_SOURCES_CHECKS). Merge tranche/T45 into your branch and re-run against them.

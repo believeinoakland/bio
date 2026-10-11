@@ -10,8 +10,9 @@
  * complete edition (R14, `./complete.mjs`), a finding's standing against the bar (R15, `./standing.mjs`), the
  * calculations a case rests on with their PROV-O rendering (R18, R19, `./calculations.mjs`), the published timeline
  * (R20, `./timeline.mjs`), the people a case names with its signers' ties (R21, `./people.mjs`) and a member's subject
- * (R22, `./subject.mjs`), and the account, bias applications, review comments and approvals a case carries (R23–R26,
- * `./account.mjs`). It reads no table,
+ * (R22, `./subject.mjs`), the account, bias applications, review comments and approvals a case carries (R23–R26,
+ * `./account.mjs`), the two blocks read as one and the sources that still hold (R27, R28, `./blocks.mjs`), and the
+ * outcomes carried into an edition (R29, `./outcomes.mjs`). It reads no table,
  * holds no store and never throws.
  *
  * Split from `publication` by copy (K651, K624 (1)): the format block of `publication/checks.mjs`, and `fmSafe`,
@@ -60,7 +61,9 @@ export { ACCOUNT_FIELDS, ACCOUNT_KINDS, ACCOUNT_ORIGINS, ACCOUNT_CITE_KINDS, ACC
          biasApplicationsLines, biasApplicationsOf, REVIEW_COMMENT_FIELDS, REVIEW_COMMENTS_LEFT_OUT_KEY, reviewCommentsLines,
          reviewCommentsOf, APPROVAL_RULE_KEY, APPROVAL_RULE_FIELDS, APPROVAL_FIELDS, approvalsLines, approvalsOf,
          approvalSubjectSha } from "./account.mjs";
-export { COMPLETE_EDITION_HEADINGS, TIMELINE_HEADING, CALCULATIONS_HEADING, ACCOUNT_HEADING, REVIEW_COMMENTS_HEADING, APPROVALS_HEADING, TIMELINE_LANE_WORDS, RECOMPUTE_WORDS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, PRODUCT_NAMES, editionProductOf,
+export { OUTCOME_FIELDS, OUTCOME_KINDS, OUTCOMES_HEAD, OUTCOME_KIND_WORDS, outcomesLines, outcomesOf, outcomeCitesWords,
+         outcomeWords, outcomesSectionLines } from "./outcomes.mjs";
+export { COMPLETE_EDITION_HEADINGS, TIMELINE_HEADING, CALCULATIONS_HEADING, ACCOUNT_HEADING, REVIEW_COMMENTS_HEADING, APPROVALS_HEADING, OUTCOMES_HEADING, TIMELINE_LANE_WORDS, RECOMPUTE_WORDS, TWO_STRENGTHS_SENTENCE, GRADE_MEANINGS, PRODUCT_NAMES, editionProductOf,
          madeWithLine, CHECKER_READS, OBSCURED_WORDS, completeEditionOf } from "./complete.mjs";
 
 

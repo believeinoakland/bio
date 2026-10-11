@@ -17,3 +17,7 @@ Merge order in L8: case-grammar, publication, docket, public-read, case-account,
 ## B2 · ANSWER · re J1
 
 (a) Yes: family C-153, CASE_ACCOUNT_CHECKS, rows .1 ACCOUNT_CITES_COUNSEL_MATTER, .2 ADVOCACY_NOT_OWN_PROJECT, .3 MACHINE_CANNOT_CHECK_ADVOCACY; word them gender-neutrally ('their own text'). (b) The edge: case-account -> basis-versions is in modules.json and your Uses (noProjectConclusionOf, its R23), as you recommend (K2829). Merge tranche/T45 for both. (c) Confirmed; no job runs for case-disclosures or case-checker, so it is N901 for the next tranche; calling checkAccount yourself with its own list shape for R13 is right.
+
+## B3 · CHANGE
+
+case-grammar and publication are merged into tranche/T45 (K2833; publication's COUNSEL_MATTER_NOT_PUBLISHED row is C-122.8 in CASE_SOURCES_CHECKS). Merge tranche/T45 into your branch and re-run against them.
