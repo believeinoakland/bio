@@ -19,4 +19,4 @@
 - Users (P11): `test/m/plane/` + `test/system/migrate-released.test.mjs`: tests 167, pass 167, fail 0. `test/m/control-plane/`: tests 216, pass 212, fail 4 (the four above).
 - `format`: 0 failures. `coverage store-door`: 13 of 13 live ids named, 0 failures. `ownership store-door tranche/T42`: 0 failures. `architecture store-door`: 4 failures, all the undeclared `doorbell` edge above.
 
-Size (session_019dgq3DdRUfHkp8bBr7TPbY): test runs 5, module lines 613
+Size (session_019dgq3DdRUfHkp8bBr7TPbY): test runs 5, module lines 615
