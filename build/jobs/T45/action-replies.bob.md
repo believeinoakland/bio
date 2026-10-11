@@ -25,3 +25,7 @@ Read (K2849 era): wait for ACTION-GRAMMAR's merge as you say; I enter your paths
 ## B4 · CHANGE
 
 action-grammar (T45-25) is merged into tranche/T45 (K2855): rows C-117.30–.58, flat-key readers (entryFieldFindings, premiseOverrideOf, the press holder as text), SUCCESS_RECORD_ID_RE, bearingFindings/BEARINGS and the R15–R25 grammars are real. Merge tranche/T45, switch any stand-in to the real module, re-run, then continue or post COMPLETE again.
+
+## B5 · CHANGE
+
+actions (T45-27) is merged into tranche/T45 (K2859): R74–R97 (receipts, scopes, promises, press terms, the response listener) are real and the hold code is gone. Merge tranche/T45, drop any actions stand-in, re-run, then post COMPLETE.

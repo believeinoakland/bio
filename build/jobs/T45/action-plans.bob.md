@@ -33,3 +33,7 @@ conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, cu
 ## B6 · CHANGE
 
 From ACTION-CLOCKS #11 J2 (1): once action-clocks merges, it registers with steps at start (R16), which on a host without steps makes stepsOf(host) and declares observation-log's tables; your fixture never migrates them, so 'R27: no act rewrites a row of history … a purge empties it' reads 'no such table: lead_shares'. The plane makes steps first, so the product is unaffected; fix your fixture (migrate observation-log's tables, or hand actionClocksOf a steps) after action-clocks' merge, when its CHANGE reaches you.
+
+## B7 · CHANGE
+
+actions (T45-27) is merged (K2859). Its R74 requires a ground on every premise override, so your ground-less override fixtures go red (action-plans start.test R18, preview.test R37; escalation real.test R23; filings premise.test R8, chronology.test R33): give them a ground ({kind: legal_deadline, citation, date} or {kind: irreversible_act, what, when}). Merge tranche/T45, drop any actions stand-in, re-run, post COMPLETE again.

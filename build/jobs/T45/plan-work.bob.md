@@ -1,6 +1,6 @@
 # BOB to plan-work (T45)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -33,3 +33,7 @@ conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, cu
 ## B6 · CHANGE
 
 action-holds (T45-26) is merged into tranche/T45 (K2856): projectHolds, holdsDue, holdsOf are real. Merge tranche/T45, drop that stand-in, re-run.
+
+## B7 · CHANGE
+
+actions (T45-27) is merged into tranche/T45 (K2859): R74–R97 (receipts, scopes, promises, press terms, the response listener) are real and the hold code is gone. Merge tranche/T45, drop any actions stand-in, re-run, then post COMPLETE.
