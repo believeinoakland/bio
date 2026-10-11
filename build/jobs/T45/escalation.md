@@ -47,3 +47,16 @@ Built on my branch (pushed): R6, R14, R23, R25, R30, R32 and R31's code; R31's t
 New test files: `stopped.test.mjs` (the todo) and `t45.test.mjs`, under my tests path.
 
 Size (session_01HztAVfrFX3rGVayQh2NyNt): test runs 16, module lines 2218
+
+## J4 · COMPLETE
+
+**B3 applied (K2850); completion stands as J3 with these changes.** Head 2fb120eb76 (tranche/T45 merged).
+
+- **R1, R27:** a void determination (`d.void` set) is refused through `conformance.determinationVoided(determination, causes)`, after `DETERMINATION_SUPERSEDED` and before `NOT_NONCOMPLIANT`. Conformance does not export it yet (T45-23), so escalation reads it off the module namespace and loads without it. Its test (`t45.test.mjs`, "R1 R27 a void determination…") is skipped, naming why, until conformance merges; it compares the answer to `determinationVoided` itself. Merge conformance first, as the order already says, and it runs.
+- **R30:** opening, stage move, attachment and end are `public: true`; evaluation, decline and suspension are `public: false`. A **resumption is also `public: false`**, my reading: R30 names neither list for it, and it is the second half of a suspension, so it fails closed. Change it if you read otherwise.
+- **R14:** `curesOf` is read as `{standards: [{standard, link, ended}]}` only.
+- **(3) The two ops' pins:** none are needed. R31 and its arms are not built in T45 (B2), so no new op ships from escalation.
+
+Tests: escalation 71: pass 69, fail 0, skipped 1 (the void test, as above), todo 1 (R31). Checks: format 0 failures; architecture 18 files, 67 imports, 0 failures; coverage 32 of 32 ids named, 0 failures; ownership 7 files, 0 failures.
+
+Size (session_01HztAVfrFX3rGVayQh2NyNt): test runs 19, module lines 2205
