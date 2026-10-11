@@ -38,6 +38,7 @@ It is the only module marked `legacy` in `modules.json`.
    14. from T42-8's merge (sources re-pointed to `doorbellOf`, 636f27bb74): case-disclosures `carries.test.mjs`:139 (R7 "no new table", 159 vs 157: `acquisition`'s `archive_entries` and `unpack_days` created at first use inside the read) until T42-23b (MONEY #4 J1; K2643).
    15. from L6's close (agent-worker's bundle regenerated with `src/transcribe.mjs`, T42-20): bundler's `test/system/fleetbundles.test.mjs`:248–261 pins agent-worker's 25 inputs, 26 after it, until N860 (T43; bundler's layer L1 closed in T42; AGENT-WORKER #17 J1; K2650).
    16. from T42-8's merge (sources' `deps.capture` became `deps.doorbell`, 636f27bb74): reevaluation's `fixture.mjs`:183 (7 tests, R28) and publication's 5 tests (R2, R51, R52) still hand `sources` a `capture: {pulledKnocksOf}` stand-in, so its `sourceOf` answers `NO_SUCH_SOURCE`; until T42-21a and T42-23c (INQUIRY #17 J2; K2659).
+   17. from T42-25's merge (actions builds `doorbellOf`): action-clocks `overdue.test.mjs`:151 and action-plans `invariants.test.mjs`:50 fail record-core's whole-store purge (`no such table: task_queue`), since doorbell R25's `capture.declareTables()` declares capture's purge tables on a host whose capture never migrated; test-visible only (the plane migrates capture); until N864 (T43) (ACTIONS #15 J1; K2680).
    (7) cleared at T42-17's merge (K2650).
 
 **Text owed before each layer's START (BOB's wording, P5):**
