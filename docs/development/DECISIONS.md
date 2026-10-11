@@ -2968,6 +2968,7 @@ reasoning recorded in: this entry; `docs/architecture/BIO_Interaction_Constructs
 owed: (BOB) ai-use reads its fills by key (`ai.period.*`, `ai.when.*`, `date.month.*`, `ai.limitfield.*`, `ai.refused.limit.unjudged`); notice-producers reads R16's and R17's words by key (`ai.queue.limitreached*`, `ai.account.*`, `ai.use.*.inline`, `ai.scope.*`, `ai.label.explored.member`, `queue.*`); the B123 wording in ai-use's `AI_USE_WORDS`.
 
 ### DEC-190 · answered
+amended: 2026-10-11 (T42 closed onto `main`): `op=pagetranscribe` is served; the act names the served op, so its words are `act.pagetranscribe.*`
 raised: 2026-10-11 · the UX design session with Bob on his primary account (session_014uT5e8EjnRxmEeUDDg2cYa; the development process also runs on his primary account since K2511) (BOB's B128 and B129, for T42's N832, K2611, K2613)
 for: bob-session
 question: Where a member is offered the assistant's reading of page pictures (`pagetranscribe`), and its words: its help, its refusal C-51.7 `TRANSCRIBE_NOT_DEPLOYED`, its label and its answers.

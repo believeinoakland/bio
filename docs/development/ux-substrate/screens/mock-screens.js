@@ -417,7 +417,7 @@ SCR.document = c => ({ rail: 'projects', title: 'Document', crumbs: ['Pothole re
   ${sec('Passages', `<blockquote class="mk-passage rec" data-act="cite">"3. The Director shall repair each reported pothole within seven calendar days of the report, weather permitting."</blockquote>${acts(btn('cite', 'Cite this passage', { tone: 'primary' }))}
     <blockquote class="mk-passage rec">"5. Repairs are recorded as closed when the crew reports the work complete."</blockquote>`)}
   ${sec('Pages Civicsmith couldn\'t read', `${note('Pages 7 to 9 are pictures of text that Civicsmith\'s own reading couldn\'t make out, so their words can\'t be found or cited yet. The page images are kept as they are.')}
-   ${c.ai ? acts(btn('owed:pagetranscribe K2611', 'Have the assistant read pages 7–9')) : ''}
+   ${c.ai ? acts(btn('pagetranscribe', 'Have the assistant read pages 7–9')) : ''}
    ${acts(btn('transcribe', 'Type a page\'s words yourself'))}`, { help: 'Shown only when a document has pages its reading couldn\'t make out. It says which pages, and the ways to get their words.' })}
   ${sec('People it names', `${sheet(row(I('subject'), 'L. Chen, Director of Public Works', btn('identityclaim', 'Say this is a person we follow…')))}`)}
   ${sec('This copy', acts(btn('release', 'Vouch for this copy'), btn('attest', 'Attest'), btn('monitor', 'Watch for changes'), btn('retire', 'Retire')))}

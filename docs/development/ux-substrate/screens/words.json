@@ -2900,7 +2900,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_pagetranscribe.label.document",
+   "key": "act.pagetranscribe.label.document",
    "en": "Have the assistant read pages",
    "protected": true,
    "source": "registry.json"
@@ -4448,7 +4448,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_pagetranscribe.does",
+   "key": "act.pagetranscribe.does",
    "en": "Has the assistant read up to 8 pages of this document that Civicsmith's own reading couldn't make out. The account that pays for your acts here pays, within its limits. Its words arrive labelled as the assistant's reading and stay undetermined until a member checks a passage against the page; the page images stay as they are.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
