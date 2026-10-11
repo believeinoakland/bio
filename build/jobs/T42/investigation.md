@@ -30,3 +30,7 @@
 **Checks** (from the process repository): format 0 failures (147 modules); architecture 0 failures; coverage 23 of 23 live ids named, 0 failures; ownership 0 failures.
 
 Size (session_019Hq9peCLMijcPKpNYfPUpH): test runs 12, module lines 1526
+
+## J1 · COMPLETE
+
+T42-21 applied. N843: C-146.21 re-coded NO_SUCH_PLANNING_PROPOSAL (R23), C-146.26 INTERVIEW_NOT_A_LEG (R12), numbers and translations kept; both rows named awaiting stamp in my record. N846 (R18): watchArrival records then answers each read or {unread}, never throws after the write; watchedProjects follows intent R7's cursor to the end, watch:null + watch_unread when not whole. Tests: investigation 31/31, each marked id tested explicitly with a negative control; R15's untested 'reader who cannot see the record' clause also now tested. Users: monitoring 124, queue 136, notice-producers 90, plane 166 green; answer-envelope 28/29, red only families.test.mjs:425 (rule 4 (6), K2651); row-census red only rule 4 (2). Checks format, architecture, coverage 23/23, ownership: 0 failures. Deferred (test-only, own module): R1 not-at-FULL clause untested; milestones.test.mjs:166 fixture count pin; reports.test.mjs NOWISH order. Record: build/jobs/T42/investigation.md.
