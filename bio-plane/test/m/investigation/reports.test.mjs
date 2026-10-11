@@ -4,6 +4,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, ANN, BOB, DAN, OUT, AI, P1, PH, Q1, Q2, Q3 } from "./fixture.mjs";
 
+/* A fixed instant, an hour before the fixture's clock (NOW), declared before every test that uses it: no test depends
+   on the wall clock or on the order the tests are declared in. */
+const NOWISH = "2026-10-09T17:00:00Z";
+
 test("R6: reportDraft composes by code, with no AI, the steps taken and ended (outcomes, learned lines), what was found and what is waiting, each line citing its source; it writes nothing", () => {
   const w = world();
   const s = w.step();
@@ -44,7 +48,6 @@ test("R6: reportDraft composes by code, with no AI, the steps taken and ended (o
   assert.equal(w.inv.reportDraft({ project: P1, question: Q3, viewer: ANN }).code, "NO_SUCH_QUESTION");
 });
 
-const NOWISH = "2026-10-09T17:00:00Z";
 
 test("R6: since the last report kept for the project (or that question in it); only what the viewer may see enters", () => {
   const w = world();

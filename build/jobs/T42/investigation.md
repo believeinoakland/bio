@@ -34,3 +34,18 @@ Size (session_019Hq9peCLMijcPKpNYfPUpH): test runs 12, module lines 1526
 ## J1 · COMPLETE
 
 T42-21 applied. N843: C-146.21 re-coded NO_SUCH_PLANNING_PROPOSAL (R23), C-146.26 INTERVIEW_NOT_A_LEG (R12), numbers and translations kept; both rows named awaiting stamp in my record. N846 (R18): watchArrival records then answers each read or {unread}, never throws after the write; watchedProjects follows intent R7's cursor to the end, watch:null + watch_unread when not whole. Tests: investigation 31/31, each marked id tested explicitly with a negative control; R15's untested 'reader who cannot see the record' clause also now tested. Users: monitoring 124, queue 136, notice-producers 90, plane 166 green; answer-envelope 28/29, red only families.test.mjs:425 (rule 4 (6), K2651); row-census red only rule 4 (2). Checks format, architecture, coverage 23/23, ownership: 0 failures. Deferred (test-only, own module): R1 not-at-FULL clause untested; milestones.test.mjs:166 fixture count pin; reports.test.mjs NOWISH order. Record: build/jobs/T42/investigation.md.
+
+## B2 applied (INVESTIGATION #2)
+
+**CHANGE B2 (K2667): the three deferrals done**, my own module's tests only, no behaviour changed:
+- R1's "a project not at `FULL` answered as `membership` R44 says": a new test in `milestones.test.mjs` drives four sights, checked first through `membership.sight`: a discoverable project's stranger and a hidden project's administrator at `existence`, a stranger to a hidden project at `none`, and a joined participant at `full`.
+  - At `existence`, `milestoneSet` and `milestonesOf` naming the project answer C-70.1 `PROJECT_SEEN_NOT_A_PARTICIPANT`. The answer carries the id and name and nothing else; to the administrator it also carries the hidden project's owners' handles.
+  - At `none` the answer equals that for a project that does not exist (`NO_SUCH_PROJECT`).
+  - The four acts naming a milestone inside the project answer `NO_SUCH_MILESTONE` at every sight below `full`, since R44 says nothing inside is widened. `milestonesOverdue` gives the administrator nothing, and nothing is written.
+  - The negative control: at `full` a joined participant reads and revises the milestone.
+- `milestones.test.mjs` R5 no longer pins "the fixture's seven bundles". It measures `bundles`, `observation_log`, `inquiry_basis` and `steps` before and after `milestoneSet` and asserts each is unchanged, so it holds whatever the fixture holds.
+- `reports.test.mjs`: `NOWISH`, a fixed instant (no wall clock), is now declared at the top, before every test that uses it. Each of the file's five tests passes run alone (`--test-name-pattern`).
+
+**Module tests:** investigation 32/32. **Users' suites (P11):** monitoring 124/124; queue 136/136; notice-producers 90/90; plane 166/166. answer-envelope 28/29, its one red `test/m/answer-envelope/families.test.mjs`:425, the accepted red rule 4 (6) (K2651), unchanged from J1.
+
+**Deferred:** none. **Found in another module:** none.
