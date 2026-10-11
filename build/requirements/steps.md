@@ -1,6 +1,6 @@
 # steps — requirements
 
-**Status** · Draft, BOB's (K2405, K2418, K2420): a new product module Bob approved (D51 A, D1), placed by BOB, written at T41's opening from `build/plan/draft-T41-investigation.md` §3.1 (N820; D27–D50, H38, H39, D64). Every requirement not yet met (T41). Last changed T42 (T42-14: R28 new, its own code for C-142.28, re-coded in place; N843; K2566, K2608), not yet met.
+**Status** · Draft, BOB's (K2405, K2418, K2420): a new product module Bob approved (D51 A, D1), placed by BOB, written at T41's opening from `build/plan/draft-T41-investigation.md` §3.1 (N820; D27–D50, H38, H39, D64). Every requirement not yet met (T41). Last changed T42 (T42-14: R28 new, its own code for C-142.28, re-coded in place; N843; K2566, K2608), not yet met. Last changed T44 (T44-6: R23 amended, `looked_at`; N873; K2726), not yet met.
 
 **Size (P6).** About 2,150 lines; past about 2,500, the cost relay, follows and later-found move to a module directly after it (BOB's, at the job's report).
 
@@ -54,7 +54,7 @@ Terms. A **step** is `STP-` (`record-grammar` R51). Its **place** is exactly one
 
 #### Data found later (H39)
 
-- **R23** At start this module registers with `observation-log` (its R37) for a look answered later: when an observation of state `PRESENT` is appended for a subject and level at which a step's look (authority `step`) stands `LOOKED_ABSENT` or `LOOKED_INDETERMINATE`, the step gains a `later_found` entry `{look, observation, at}` and the step's questions are told. The earlier look stays as it was, dated (the log is append-only); no outcome moves by itself. `laterFound({viewer, at})` answers, for `notice-producers`, each such entry once to each of R17's recipients of each referring question who may see both the step and what arrived (keyed per step and observation), and to the member who did the step; a member may then revise the per-question outcome by R5.
+- **R23** At start this module registers with `observation-log` (its R37) for a look answered later: when an observation of state `PRESENT` is appended for a subject and level at which a step's look (authority `step`) stands `LOOKED_ABSENT` or `LOOKED_INDETERMINATE`, the step gains a `later_found` entry `{look, observation, at}` and the step's questions are told. The earlier look stays as it was, dated (the log is append-only); no outcome moves by itself. `laterFound({viewer, at})` answers, for `notice-producers`, each such entry once to each of R17's recipients of each referring question who may see both the step and what arrived (keyed per step and observation), and to the member who did the step; a member may then revise the per-question outcome by R5. (T44; N873; K2726) Each `laterFound` entry also answers `looked_at`, the instant of the look (its `observation-log` `look` entry's `at`), beside `at`, the instant the later observation arrived; `notice-producers` fills `queue.step-later-found.detail`'s `{date}` from it (DEC-189 (2)). *(not yet met: T44)*
 
 #### A proposed step, accepted (D3)
 
