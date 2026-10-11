@@ -13,3 +13,29 @@ Seven points the requirements leave open. I am building on the reading given for
 5. **R11's item.** Reading: `{kind: "clock", action, entry}`, `{kind: "checkpoint", plan, scenario, phase}`, `{kind: "escalation_stage", escalation, stage}`, `{kind: "hold", target, ord?}` or `{kind: "hold", project}`; visible when its owner's read answers it to the member (actions, action-plans, escalation `proposed`, action-holds `holdsOf`). A take-up records `{item, by, at, target?}`, appended; `takeUpsFor` lists them oldest first with `cursor`.
 6. **`OPTION_KEY_REFUSED`** (R5, R11) is action-plans' (`refuseKeys`). Reading: answered through `refuseKeys`, with `keys: ["for"]` when `for` names another member; `for` naming the author herself lands.
 7. **Who may act; a closed plan.** Reading: any member who sees the plan (`action-plans.planRead` answers her) acts; no joined fence, since R1 lists none. Every write here refuses `PLAN_CLOSED` (through `action-plans`' own answer) on a closed plan; a paused plan takes every act (action-plans R40). R4's rhythm zone: the `zone` given, else `actions.place()`'s; none is `REVIEW_RHYTHM_REFUSED`.
+
+## Completion (T45-34)
+
+**Entries applied.** T45-34: `plan-work` built fresh (no ids move), R1–R13 (R8 system-assembled only, its assistant arm left out of T45; R9 registered by `following` alone; R13 reconciliation R18). J1's seven readings as confirmed by B2 (K2845); B3 (K2848) applied: R10's marks are action-plans R43's `option_changed`, `phase_start_holds`, `next_routes` (up to 20 route names), `cause {action, ord}`, `why` 1–500; the chance to fix is never marked (action-plans R41 derives it).
+
+**Files added** (BOB adds them to `modules.json` before the ownership check, plan rule 3): `bio-plane/src/plan-work/index.mjs`, `checks.mjs`, `schema.mjs`; `bio-plane/test/m/plan-work/fixture.mjs`, `matters.test.mjs`, `timeline.test.mjs`, `prep.test.mjs`, `stands.test.mjs`, `reexam.test.mjs`, `takeup.test.mjs`, `invariants.test.mjs`, `ops.test.mjs`.
+
+**Rows.** C-151.1–.8: `MATTER_NOT_OF_PLAN`, `REVIEW_RHYTHM_REFUSED`, `NO_SUCH_ITEM`, `PLAN_WORK_TEXT_REFUSED`, `NO_SUCH_PREP_ITEM`, `PREP_ITEM_DONE`, `COMMENT_TARGET_REFUSED`, `PLAN_WORK_PROVIDER_UNAVAILABLE` (`PLAN_WORK_CHECKS`, `src/plan-work/checks.mjs`, for answer-envelope's `CHECK_FAMILY_FILES`, T45-49). Relayed, not minted: `NO_SUCH_PLAN`, `PLAN_CLOSED`, `PLAN_NO_REASON`, `OPTION_KEY_REFUSED`, `NO_SUCH_OPTION` (action-plans' sites), `LISTENER_*` (membership).
+
+**Ops** (`planWorkOps`, for op-declarations T45-45, op-grades T45-38, affordances T45-39, plane T45-47): acts `matteroutcomeset`, `planreviewrhythm`, `planreviewrecord`, `prepitemadd`, `prepitemtakeup`, `prepitemdone`, `plancomment`, `statusreportsave`, `itemtakeup`; reads `matters`, `plantimeline`, `planreviewopen`, `planreviews`, `prepitems`, `plancomments`, `whereitstands`, `statusreportdraft`, `statusreports`, `matterpromiseduties`. In-process (no op): `planReviewsDue`, `takeUpsFor` (action-producers), `registerWatchReader` (following), `closeSnapshot`, `onResponse`, `reexaminations`. A missing viewer or author stamp reads as `""`, never as the module's own sight.
+
+**Built against readings, pending providers' merges (L9 order: they merge before plan-work).** `action-plans` R43 `planMark`, R44 `registerCloseSnapshot`, `marks` in `planRead`, R39's set-aside scenarios (read as `scenarios[].set_aside`); `actions` R95 `registerResponseListener`, R80 `receipts`, R18's `owed_by` on clock entries; `action-holds` R2/R3/R7; `action-replies` R2; `conformance` R37 `curesOf`; `escalation` R31 `stopped_pursuing`; `filings` R37/R38 purposes (`filingsFor` already answers `purpose`). Tests stand in for these in their Provides' shape (the fixture header says which); each registration at start is made only where its provider offers it (`registered` answers which). `action-holds` and `action-replies` are reached through `deps` (no factory import until their files exist); the plane composes them (T45-47) or I import their factories at their merge's CHANGE.
+
+**Deferred.** None of this module's requirements. Smaller than P6's estimate (about 1,320 code lines against 1,800–2,300): every read is derived through its owner, nothing cached.
+
+**Found in other modules (REPORT J3).** (a) `actions`/`action-plans`: an action started by `action-plans.optionStart` carries no `project` (`record.bundleInfo(id).project` is null), so `actions`' sight (`membership.viewerPredicate`'s "outside every project" arm) answers it to any member: in the test world dave, outside P, reads P's plan's action through `actionRead`. Against action-plans R25 (never published; read only by who may see its project) and DEC-36. (b) `action-plans` exports no one site for `MACHINE_CANNOT_PLAN` (C-124.1; `#member` is private), so plan-work relays its row from `ACTION_PLAN_CHECKS` in `machineCannotPlan()` (a second site for the code, K231); an exported `machineCannotPlan(extra?)` in action-plans would make it one.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/plan-work/`: tests 37, pass 37, fail 0. Layer tests: none named in `build/manifest.md`.
+- `node checks/format.mjs .`: 153 modules, 152 requirements files; 0 failures.
+- `node checks/architecture.mjs . plan-work`: 12 product files, 42 relative imports; 0 failures.
+- `node checks/coverage.mjs . plan-work`: 13 of 13 live requirement ids named by a test; 0 failures.
+- `node checks/ownership.mjs . plan-work tranche/T45`: 0 failures.
+  (architecture, coverage and ownership run with `modules.json` naming the two paths above in a working copy only, not committed: BOB adds them.)
+
+Size (session_01KvuonAaLKfAEaHnozQTt17): test runs 14, module lines 1318
