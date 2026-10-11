@@ -183,3 +183,82 @@ test("R18: watchArrival (K2524), for monitoring: something new from a watched pr
   w.inv.projectWatch({ project: P1, by: BOB });
   assert.equal(w.inv.watchedProjects().projects.length, 1);
 });
+
+test("R18 (T42, N846): watchArrival never throws once the arrival is written: each read is taken after the write and one that fails answers {unread}; a refusal or a failure before the write records nothing", () => {
+  const w = quietWorld();
+  const at = "2026-10-10T00:00:00Z";
+  w.inv.projectWatch({ project: P1, by: ANN });
+  const arrivals = () => w.rows(`SELECT COUNT(*) AS n FROM inv_watch_arrivals`)[0].n;
+  /* a read that fails: intent's progress throws, so projectStanding throws */
+  const progress = w.intent.progress;
+  w.intent.progress = () => { throw new Error("intent is down"); };
+  let r;
+  assert.doesNotThrow(() => { r = w.inv.watchArrival({ project: P1, source: "https://example.org/agenda", at }); });
+  assert.deepEqual([r.ok, r.reopened, arrivals()], [true, true, 1], "the arrival is recorded and answered ok");
+  assert.deepEqual(r.reads.standing, { unread: "intent is down" }, "the failed read is marked unread in its place");
+  assert.deepEqual([r.reads.quiet.ok, r.reads.quiet.quiet, r.reads.quiet.why], [true, false, "something arrived from a watched source"], "read after the write");
+  assert.equal(r.reads.milestones.ok, true);
+  assert.equal(r.reads.quiet.unread, undefined, "the negative control: a read that did not fail is never marked unread");
+  w.intent.progress = progress;
+  /* every read failing still answers ok, the arrival kept */
+  /* storage failing for the reads only, armed once the arrival's insert has run */
+  const exec = w.st.sql.exec;
+  let armed = false;
+  const before2 = arrivals();
+  w.st.sql.exec = (q, ...a) => { if (/INSERT INTO inv_watch_arrivals/.test(q)) { const out = exec.call(w.st.sql, q, ...a); armed = true; return out; }
+                                 if (armed && /FROM inv_milestones|FROM inv_watch_arrivals WHERE project_id/.test(q)) throw new Error("storage hiccup");
+                                 return exec.call(w.st.sql, q, ...a); };
+  let r2;
+  assert.doesNotThrow(() => { r2 = w.inv.watchArrival({ project: P1, source: "https://example.org/minutes", at }); });
+  w.st.sql.exec = exec;
+  assert.equal(r2.ok, true);
+  assert.equal(arrivals(), before2 + 1, "recorded");
+  assert.deepEqual(r2.reads.quiet, { unread: "storage hiccup" });
+  assert.deepEqual(Object.keys(r2.reads.milestones), ["unread"], "milestonesOf's failed read, never answered as the project's absence");
+  /* a failure before the write records nothing: the insert itself fails, and the answer is not ok */
+  const mid = w.snapshot();
+  w.st.sql.exec = (q, ...a) => { if (/INSERT INTO inv_watch_arrivals/.test(q)) throw new Error("disk full"); return exec.call(w.st.sql, q, ...a); };
+  let r3 = null;
+  try { r3 = w.inv.watchArrival({ project: P1, source: "https://example.org/late", at }); } catch { r3 = null; }
+  w.st.sql.exec = exec;
+  assert.notEqual(r3 && r3.ok, true);
+  assert.equal(w.snapshot(), mid, "nothing recorded");
+  /* a refusal records nothing (the negative control: an unwatched project) */
+  assert.equal(w.inv.watchArrival({ project: P2, source: "s", at }).code, "PROJECT_NOT_WATCHED");
+  assert.equal(w.inv.watchArrival({ project: P1, source: "", at }).code, "ARRIVAL_BAD");
+  assert.equal(w.snapshot(), mid);
+});
+
+test("R18 (T42, N846): watchedProjects carries every source intent R7 names for a watched project, following its cursor to the end; a project whose sources cannot be read whole answers watch: null with watch_unread, never a partial set", () => {
+  const w = quietWorld();
+  w.inv.projectWatch({ project: P1, by: ANN });
+  const pages = { "": { captures: ["c1", "c2"], cursor: "c2" }, c2: { captures: ["c3", "c4"], cursor: "c4" }, c4: { captures: ["c5"], cursor: null } };
+  const asked = [];
+  w.intent.watchSet = ({ project, after }) => {
+    asked.push(after);
+    const p = pages[after ?? ""];
+    if (!p) throw new Error(`no page after ${after}`);
+    return { entities: [`ENT-for-${project}`], progressions: ["PRG-1"], captures: p.captures, limit: 2, truncated: p.cursor !== null, cursor: p.cursor };
+  };
+  const one = w.inv.watchedProjects().projects;
+  assert.equal(one.length, 1);
+  assert.deepEqual(one[0].watch, { entities: [`ENT-for-${P1}`], progressions: ["PRG-1"], captures: ["c1", "c2", "c3", "c4", "c5"], truncated: false, cursor: null },
+    "every page, never the first alone");
+  assert.deepEqual(asked, [null, "c2", "c4"]);
+  assert.equal(one[0].watch_unread, undefined);
+  /* the negative control: a page 2 that fails is not answered as a whole set of page 1 */
+  pages.c2 = null;
+  const two = w.inv.watchedProjects().projects;
+  assert.deepEqual([two[0].project, two[0].watch], [P1, null]);
+  assert.match(two[0].watch_unread, /could not be read/);
+  /* a page that is not R7's shape, a cursor that does not move, and a measure intent cut are each unread too */
+  pages.c2 = { captures: ["c3"], cursor: "c2" };
+  assert.equal(w.inv.watchedProjects().projects[0].watch, null, "a cursor that repeats");
+  w.intent.watchSet = () => ({ entities: [], progressions: [], captures: "c1" });
+  assert.equal(w.inv.watchedProjects().projects[0].watch, null, "not R7's shape");
+  w.intent.watchSet = () => ({ entities: ["E"], progressions: ["P"], captures: [], truncated: false, cursor: null, measure_truncated: true });
+  assert.match(w.inv.watchedProjects().projects[0].watch_unread, /measure/);
+  /* one page and no condition: whole */
+  w.intent.watchSet = () => ({ entities: [], progressions: [], captures: [], limit: 1000, truncated: false, cursor: null });
+  assert.deepEqual(w.inv.watchedProjects().projects[0].watch, { entities: [], progressions: [], captures: [], truncated: false, cursor: null });
+});
