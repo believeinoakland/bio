@@ -1,6 +1,6 @@
 # notice-producers (T43)
 
-**Status** · session_0185KLN8pZrLcZSM86tkn1wY · depth 2 · RUNNING until 2026-10-11T11:40:26Z (queue's conclude-project and plane's migrate-released tests) · handled B2
+**Status** · session_0185KLN8pZrLcZSM86tkn1wY · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
