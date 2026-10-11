@@ -49,7 +49,11 @@
  * handed to the plane's `answers` checks before anything is returned. `POST
  * /draft` (R59) is a member's labelled draft of their own words, made the same
  * way, read only under a grant the door sends when the draft may read, and
- * checked by the door before the member sees it. `POST /signin` (R66, R67)
+ * checked by the door before the member sees it. `POST /transcribe` (R72–R75)
+ * runs turns the same way, one conversation per page under the API key that
+ * serves the member's `transcribe` act, handing the model only the page's
+ * picture the plane rendered, as a tool's result, and answers the AI's reading
+ * of each page: no plane call. `POST /signin` (R66, R67)
  * relays one step of a member's own Claude sign-in to that member's own
  * `agent-runner` instance on the same `RUNNER` binding and holds nothing of it:
  * no plane call, no model turn.
@@ -155,6 +159,8 @@ import { handleAsk } from "./ask.mjs";
 import { handleDraft } from "./draft.mjs";
 /* R66, R67 — `POST /signin`, the relay of a member's own sign-in to their own runner instance, in its own file. */
 import { handleSignin } from "./signin.mjs";
+/* R72–R75 — `POST /transcribe`, the AI's reading of a page's picture the plane rendered, in its own file. */
+import { handleTranscribe } from "./transcribe.mjs";
 
 /* R49, N293 — THE CEILING ON A RUN'S PUBLISHED STATE IS run-rules' (its R10), read from its own module and never
  * copied. run-rules is pure (no storage, no clock), so this is the one plane module in the bundle beside `tokens.mjs`. */
@@ -284,6 +290,8 @@ export const SURFACE = {
   ask:     { method: "POST", mutating: false },
   draft:   { method: "POST", mutating: false },
   signin:  { method: "POST", mutating: false },
+  /* R34 (T42; N832): the AI's reading of the pages the plane rendered (R72). */
+  transcribe: { method: "POST", mutating: false },
   version: { method: "GET",  mutating: false },
 };
 
@@ -1713,8 +1721,8 @@ const ASK_DEPS = { refusal, json, askPlane, planeAnswer, publishedPack, accountO
 /* R58 — ONE TRUTH FOR MODEL TURNS, the sentence this member states about itself on `GET /version`, and the same one its
    header and its `/run` answer state. */
 const MODEL_TURNS = "run through agent-model exactly when the Claude account that serves the member's act (the "
-  + "member's own reference or sign-in, a project's account, or the group's API key) arrives with the call and the run's, ask's or draft's mode has "
-  + "turns to run; a segment whose caller supplies the judgements runs none";
+  + "member's own reference or sign-in, a project's account, or the group's API key) arrives with the call and the mode of the run (/run), ask (/ask), "
+  + "draft (/draft) or transcription (/transcribe) has turns to run; a segment whose caller supplies the judgements runs none";
 
 export default {
   async fetch(req, env) {
@@ -1725,6 +1733,8 @@ export default {
     if (req.method === "POST" && path === "ask") return handleAsk(req, env, ASK_DEPS);
     if (req.method === "POST" && path === "draft") return handleDraft(req, env, ASK_DEPS);
     if (req.method === "POST" && path === "signin") return handleSignin(req, env, ASK_DEPS);
-    return refusal("UNKNOWN", "POST /run, POST /ask, POST /draft, POST /signin or GET /version only.", 404);
+    if (req.method === "POST" && path === "transcribe") return handleTranscribe(req, env, ASK_DEPS);
+    return refusal("UNKNOWN", "POST /run, POST /ask, POST /draft, POST /signin, POST /transcribe or GET /version only.",
+      404);
   },
 };

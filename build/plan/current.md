@@ -27,7 +27,7 @@ It is the only module marked `legacy` in `modules.json`.
    3. the UI's DEC-88 tests (Bob's), carried;
    4. legacy-ui `statement-ack.test.mjs` (N794, K633);
    5. (cleared at T42-3's merge, K2623) membership R83's `MODULE_ORDER` tests; since then each new module named "not yet built" until its own merge;
-   6. answer-envelope `catalogue-end.test.mjs`'s pins for `PROPOSAL_NO_RUN` and `NO_SUCH_PROPOSAL` (T41 rule 4 (21)) until T42-27 (N843);
+   6. answer-envelope `catalogue-end.test.mjs`'s pins for `PROPOSAL_NO_RUN` and `NO_SUCH_PROPOSAL` (T41 rule 4 (21)) until T42-27 (N843); from T42-13's merge also `families.test.mjs`:425 (`HELD_EARLIER` lists C-142.28 as held earlier) until T42-14, T42-21 and T42-27 (K2651);
    7. `test/system/migrate-released.test.mjs`'s `ai_ceilings` arm (T41 rule 4 (24)) until T42-17 (N848);
    8. (cleared at T42-2's merge, K2612) `fleetbundles` agent-worker's input count (K2520 (a));
    9. from T42-6's merge: doorbell R25's ownership arm until capture's delete (T43; rule 3 (4));
@@ -36,6 +36,8 @@ It is the only module marked `legacy` in `modules.json`.
    13. (cleared at T42-7's merge, K2631) from T42-6's merge, doorbell R21's `where` arm until CAPTURE #26 re-points the nine rows (K2627).
    10. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
    14. from T42-8's merge (sources re-pointed to `doorbellOf`, 636f27bb74): case-disclosures `carries.test.mjs`:139 (R7 "no new table", 159 vs 157: `acquisition`'s `archive_entries` and `unpack_days` created at first use inside the read) until T42-23b (MONEY #4 J1; K2643).
+   15. from L6's close (agent-worker's bundle regenerated with `src/transcribe.mjs`, T42-20): bundler's `test/system/fleetbundles.test.mjs`:248–261 pins agent-worker's 25 inputs, 26 after it, until N860 (T43; bundler's layer L1 closed in T42; AGENT-WORKER #17 J1; K2650).
+   (7) cleared at T42-17's merge (K2650).
 
 **Text owed before each layer's START (BOB's wording, P5):**
 - L2: credentials' `accountUsesOf` (N831), from `draft-T42-reqs.md`.

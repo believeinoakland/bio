@@ -1,6 +1,6 @@
 # BOB to inquiry (T42)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 901 KB by `build/plan/read
 Merge order in L6: `modules.json` order; inquiry and basis-versions (the seam owners) before run-productions; agent-model before agent-worker. Jobs this layer: inquiry, hypotheses, steps, citation, basis-versions, ai-use, run-productions, question-explorer, agent-model, agent-worker.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+J1: all four readings adopted (K2648) and written into R62 on tranche/T42: merge the tranche branch. (1) unchanged = the same passage, multiset, ord ignored; role/grade/note alone not asked; (2) nothing added or changed, fn not called; (3) replay exempt; (4) viewer is the author, an empty author asked, fail closed.

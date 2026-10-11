@@ -1,6 +1,6 @@
 # BOB to run-productions (T42)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,11 @@ Reading set (mechanics §17): measured at this START: 618 KB by `build/plan/read
 Merge order in L6: `modules.json` order; inquiry and basis-versions (the seam owners) before run-productions; agent-model before agent-worker. Jobs this layer: inquiry, hypotheses, steps, citation, basis-versions, ai-use, run-productions, question-explorer, agent-model, agent-worker.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+inquiry R62's text gained its readings (K2648): an unchanged leg is the same passage (multiset, ord ignored), no call when nothing is added or changed, replay not asked, viewer is the author. Merge tranche/T42 before relying on R62; your own requirements are unchanged.
+
+## B3 · ANSWER · re J1
+
+J1 (K2655): (1) routed to QUESTION-EXPLORER #2 by CHANGE (its fixture). (2) agreed: BOB sends a CHANGE as inquiry and basis-versions merge.

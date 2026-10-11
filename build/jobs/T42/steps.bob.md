@@ -1,6 +1,6 @@
 # BOB to steps (T42)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 505 KB by `build/plan/read
 Merge order in L6: `modules.json` order; inquiry and basis-versions (the seam owners) before run-productions; agent-model before agent-worker. Jobs this layer: inquiry, hypotheses, steps, citation, basis-versions, ai-use, run-productions, question-explorer, agent-model, agent-worker.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+J1 read (K2655). The deferred flaw is your own module's and has no hard reason to wait (P8: dealt with in the job whenever possible): fix it in this job. When a step goes, `steps_gone` (or the migration that creates it) also clears or retires `step_proposals.step_id`, so `stepProposals` never names a deleted step; state it in your own requirements' wording only if an existing R id already covers stepProposals' answer (else name it in your record and BOB words it), test it with a negative control, re-run your users' suites and post COMPLETE again. The answer-envelope reds are expected (rule 4 (6)).
