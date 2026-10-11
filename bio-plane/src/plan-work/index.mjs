@@ -968,16 +968,12 @@ export class PlanWork {
  * PURE HELPERS
  * ===================================================================== */
 
-/* R2: the standing cure link `conformance.curesOf` answers for a standard, whatever list or map holds it; null when none. */
+/* R2: the standing cure link `conformance.curesOf` (its R37) answers for a standard: `{standards: [{standard, link,
+   ended}]}`, the link null when none stands; a link whose curing determination has been superseded reads
+   `cure_standing: false` and is no standing cure. Null when none. */
 function standingCure(r, standard) {
-  const pick = (x) => (isObj(x) && x.cure_standing !== false && (x.link || x.cure) ? x : null);
-  for (const k of ["cures", "standards", "items", "links"]) {
-    const v = r[k];
-    if (Array.isArray(v)) { const x = v.find((y) => isObj(y) && y.standard === standard); if (x) return pick(x.standing ?? x); }
-    if (isObj(v) && standard in v) return pick(v[standard]);
-  }
-  if (isObj(r.standing)) return pick(r.standing);
-  return null;
+  const s = (Array.isArray(r && r.standards) ? r.standards : []).find((x) => isObj(x) && x.standard === standard);
+  return s && isObj(s.link) && s.link.cure_standing !== false ? s.link : null;
 }
 
 /* R10: a mark's identity: its kind and what it names. */

@@ -49,7 +49,8 @@ test("R1: a second statement keeps the first in history, each with who and when"
 
 /* R2's fixtures: each state from the record the module reads */
 const ESC = (w, state) => w.escalations.set(w.D, [{ id: "ESC-2026-0001-e", state, stage: 3, history: [] }]);
-const CURE = (w) => w.cures.set(`${w.D}#STD-2026-0001-a`, { link: "LNK-1", cure: "INQ-2026-0009-fix", standard: "STD-2026-0001-a", cure_standing: true });
+const CURE = (w) => w.cures.set(`${w.D}#STD-2026-0001-a`, { link: "CURE-2026-0001", cure: "CONF-2026-0009-determination",
+  standard: "STD-2026-0001-a", by: V("bob"), at: "2026-10-01T00:00:00Z", reason: null, cure_standing: true });
 const stateOf = (w, key = `outcome:${w.D}#STD-2026-0001-a`) =>
   w.pw.matters({ plan: w.PL, viewer: V("bob") }).matters.find((x) => x.key === key);
 
@@ -77,7 +78,8 @@ test("R2: each state from a fixture: ended, fixed, stopped, acting, fix_offered,
      unsent chance to fix each leave the matter none */
   const w = world();
   ESC(w, "open");
-  w.cures.set(`${w.D}#STD-2026-0001-a`, { link: "LNK-1", cure: "x", standard: "STD-2026-0001-a", cure_standing: false });
+  w.cures.set(`${w.D}#STD-2026-0001-a`, { link: "CURE-2026-0001", cure: "CONF-2026-0009-determination", standard: "STD-2026-0001-a",
+    by: V("bob"), at: "2026-10-01T00:00:00Z", reason: null, cure_standing: false, cure_why: "the curing determination has been superseded" });
   const s = w.started({ subjects: [w.S1] });
   w.drafts.set(s.action, [{ filing: "COM-3", purpose: "document_infraction", approval: null, sending: null },
                           { filing: "COM-4", purpose: "chance_to_fix", approval: { approved_by: V("bob") }, sending: null }]);
@@ -111,4 +113,31 @@ test("R2: a matter whose escalations cannot be read is undetermined with why, ne
   const m = stateOf(w);
   assert.equal(m.state, "undetermined"); assert.match(m.why, /escalations/);
   assert.equal(MATTER_STATES.includes(m.state), false);
+});
+
+test("R2: fixed read through the real conformance (its R37, K2852): a standing link is fixed; its cure superseded, or the link ended, is not", async () => {
+  const { scene, V: CV } = await import("../conformance/fixture.mjs");
+  const s = scene();
+  const { w: cw, std, ev, input } = s;
+  const target = cw.c.determine(input());
+  const later = cw.event(ev, { date: "2026-04-01" });
+  const compliant = (over = {}) => input({ act: { ...input().act, event: later }, standards: [{ standard: std, outcome: "compliant" }],
+                                           rows: [{ ...input().rows[0], reading: "aligns" }], ...over });
+  const cure = cw.c.determine(compliant());
+  assert.deepEqual([target.ok, cure.ok], [true, true]);
+  /* the plan's matter S1 stands for the conformance world's target and standard: asked and answered in its names */
+  const w = world({ deps: { conformance: { curesOf: ({ standard }) => {
+    const r = cw.c.curesOf({ determination: target.id, standard: standard === "STD-2026-0001-a" ? std : standard, viewer: CV("pat") });
+    return r.ok ? { ...r, standards: r.standards.map((x) => (x.standard === std ? { ...x, standard: "STD-2026-0001-a" } : x)) } : r;
+  } } } });
+  const read = () => stateOf(w).state;
+  assert.equal(read(), "none", "no link");
+  const l = cw.c.cureLink({ determination: target.id, standard: std, cure: cure.id, author: CV("olive"), viewer: CV("olive") });
+  assert.equal(l.ok, true, JSON.stringify(l).slice(0, 300));
+  assert.equal(read(), "fixed");
+  assert.equal(stateOf(w).cure.link, l.link);
+  cw.c.determine(compliant({ supersedes: cure.id, reason: "restated" }));
+  assert.equal(read(), "none", "the curing determination superseded: cure_standing false");
+  cw.c.cureUnlink({ link: l.link, reason: "the cure was restated", author: CV("olive"), viewer: CV("olive") });
+  assert.equal(read(), "none", "an ended link is no cure");
 });

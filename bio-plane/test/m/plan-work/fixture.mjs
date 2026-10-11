@@ -44,11 +44,13 @@ export function world(opts = {}) {
     return typeof t[k] === "function" ? t[k].bind(t) : t[k];
   } });
   /* escalation: the action-plans fixture's stand-in, its items' state set by the test */
-  const cures = new Map();          // `${determination}#${standard}` -> link
+  const cures = new Map();          // `${determination}#${standard}` -> the standing link, in conformance R37's shape
+  /* conformance R37's answer (K2852): per standard of the determination (or the one named), the standing link or null */
   const conformance = { curesOf: ({ determination, standard, viewer }) => {
     if (viewer === V("outsider")) return { ok: false, reason: "NO_SUCH_DETERMINATION" };
-    const l = cures.get(`${determination}#${standard}`) || null;
-    return { ok: true, determination, cures: [{ standard, standing: l }] };
+    const d = w.determinations.get(determination);
+    const stds = (d ? d.outcomes.map((o) => o.standard) : []).filter((x) => !standard || x === standard);
+    return { ok: true, determination, standards: stds.map((x) => ({ standard: x, link: cures.get(`${determination}#${x}`) || null, ended: [] })), cures: [] };
   } };
   const drafts = new Map();         // action -> [{filing, purpose, approval, sending}]
   const filings = { filingsFor: ({ action }) => ({ ok: true, action, drafts: drafts.get(action) || [] }) };
