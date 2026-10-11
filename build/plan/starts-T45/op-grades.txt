@@ -9,3 +9,4 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 412 KB with your tests, under the 600 KB limit: read it all whole.
 Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, installer, stewards, plane.
 Also (K2817, K2820): grade duties' `dutyfromresponse`, `dutiesarising` and reading-guides' `procedureguides`.
+Also (K2839): case-check's ops `publishcheck` (mutating, graded as publish) and `casecheck` (a read).

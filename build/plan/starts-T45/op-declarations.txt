@@ -11,3 +11,4 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, qu
 Also (K2817, K2820): duties' `dutyfromresponse` and `dutiesarising` (plan rule 4 (12)), and reading-guides' `procedureguides` (`{kind}`, an own read in reading-guides' family) need their specs.
 Also (K2824): `PLAN_RUN_SCOPE` gains `action`, `reading`, `procedureguides` (agent-worker R78); the door routes for the drafts `textcheck`, `infractiondraft`, `bearingdraft` (control-plane R57 / store-door R10's pattern) are owed: name in your COMPLETE which module writes them.
 Also (K2834): case-account's `advocacycheck` (mutating, writes only in the member's own project) and a read op for `advocacyChecksOf` need specs.
+Also (K2839): case-check's ops `publishcheck` (mutating, graded as publish) and `casecheck` (a read).

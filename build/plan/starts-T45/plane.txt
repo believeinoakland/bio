@@ -11,3 +11,4 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, qu
 Also route reading-guides' `procedureguides` (K2820) and duties' two ops (K2817).
 Also (K2824): the door for `infractiondraft` hands `record` and for `bearingdraft` `action_record`, `reply_record`, assembled from the asking member's reads (agent-worker R76, run-rules R27).
 Also (K2834): route case-account's `advocacycheck` and its read op.
+Also (K2839): case-check's ops `publishcheck` (mutating, graded as publish) and `casecheck` (a read); compose caseCheckOps and create caseCheckOf at start.

@@ -22,7 +22,7 @@ Terms are `publication`'s and `case-authoring`'s. A **check** is one record of a
   - A repeat while the latest check of that edition reads `held` (R2) answers that check with `existed: true`, writing nothing.
   - A check has no expiry. Holding is the act itself: no further act is needed to keep the case unsigned.
 
-  Controls: a pre-flight with one blocker writes nothing and stores no preparation; a ready one stores the preparation and the check. *(not yet met: T45)*
+  Controls: a pre-flight with one blocker writes nothing and stores no preparation; a ready one stores the preparation and the check.
 
 **caseCheckOf({case, edition?, check?, viewer?})** (`op=casecheck`; a read)
 - **R2** (T45; Actions D23, D24) Answers one check's state, computed at the read: the named `check`, else the latest check of `edition`, else of the case's latest prepared edition.
@@ -36,10 +36,10 @@ Terms are `publication`'s and `case-authoring`'s. A **check** is one record of a
   - With `viewer`, it is fenced as `publication` R1 is (`hasCaseStanding`): no standing in the case's project answers `NO_SUCH_CASE`, the same answer as an absent case. Without `viewer` it is read as the plane.
   - It writes nothing and never throws. A void check stays void when its cause is undone: re-running R1 makes a new check. For `document_replaced` and `member_moved` (latched by the pinned preparation and by record-core's `row_version`); for the three lapse causes the latch needs case-carriage reads over an interval (N907) and until then they are judged at the read, the commit re-reading all three *(not yet met for the lapse causes: T46, N907; K2833)*.
 
-  Controls: each `why`, against an untouched check that reads `held`; a re-authored acknowledgement list (`case-authoring` R20) reads `document_replaced` (l8 doubt 3); a failed read reads `undetermined`; after ratification it reads `published`; an outsider gets the same answer as an absent case, byte-identical. *(not yet met: T45)*
+  Controls: each `why`, against an untouched check that reads `held`; a re-authored acknowledgement list (`case-authoring` R20) reads `document_replaced` (l8 doubt 3); a failed read reads `undetermined`; after ratification it reads `published`; an outsider gets the same answer as an absent case, byte-identical.
 
 **heldFindingVersions({finding, version?, project?})** (no op)
-- **R3** (T45; N828; Actions D24; the plan's reconciliation R4) Answers `{items: [{case, edition, project, version_sha, role, check, checked_at}]}`: every check reading `held` (R2) whose members include `finding`, in `publication` R37's shape with `check` and `checked_at` in place of the frozen pair. `version` keeps those pinning that version, `project` those of that project. `NO_ID` for an empty `finding`; a finding no held check names answers `items: []`. Viewer-free; it writes nothing. It is the read `conformance` R2 uses beside `publication` R37, with R2 for voiding. Control: a void check is not listed. *(not yet met: T45)*
+- **R3** (T45; N828; Actions D24; the plan's reconciliation R4) Answers `{items: [{case, edition, project, version_sha, role, check, checked_at}]}`: every check reading `held` (R2) whose members include `finding`, in `publication` R37's shape with `check` and `checked_at` in place of the frozen pair. `version` keeps those pinning that version, `project` those of that project. `NO_ID` for an empty `finding`; a finding no held check names answers `items: []`. Viewer-free; it writes nothing. It is the read `conformance` R2 uses beside `publication` R37, with R2 for voiding. Control: a void check is not listed.
 
 ## Private
 
@@ -55,8 +55,8 @@ Terms are `publication`'s and `case-authoring`'s. A **check** is one record of a
 
 ### Invariants
 
-- **R4** (T45; Actions D23) Checks are append-only, and a check row is never rewritten. They are declared to `record-core`'s purge as working material, cleared with the unsigned documents they name (`publication` R29, R31). No answer composes a case-level strength. No place is named in this module's behaviour or outward text (`layers.md`). *(not yet met: T45)*
-- **R5** (T45; Actions D23) The states `held`, `void` (with each `why`) and `undetermined` are answered to be shown to members as a state, never a fault: no answer of this module carries a refusal row for a held or void check. Their words are the UX stream's, keyed `case.check.held`, `case.check.void.<why>` (`document_replaced`, `member_moved`, `source_lapsed`, `accepted_work_lapsed`, `marks_lapsed`) and `case.check.undetermined`, and each answer carries its key. *(not yet met: T45)*
+- **R4** (T45; Actions D23) Checks are append-only, and a check row is never rewritten. They are declared to `record-core`'s purge as working material, cleared with the unsigned documents they name (`publication` R29, R31). No answer composes a case-level strength. No place is named in this module's behaviour or outward text (`layers.md`).
+- **R5** (T45; Actions D23) The states `held`, `void` (with each `why`) and `undetermined` are answered to be shown to members as a state, never a fault: no answer of this module carries a refusal row for a held or void check. Their words are the UX stream's, keyed `case.check.held`, `case.check.void.<why>` (`document_replaced`, `member_moved`, `source_lapsed`, `accepted_work_lapsed`, `marks_lapsed`) and `case.check.undetermined`, and each answer carries its key.
 
 ### Satisfies
 
