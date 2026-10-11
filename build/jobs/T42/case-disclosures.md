@@ -23,3 +23,7 @@ No generated artifact made stale beyond the plane bundle (rule 4 (10)). `modules
 - `ownership: 3 files changed by case-disclosures between tranche/T42 and HEAD; 0 failures`
 
 Size (session_011M1X1CKSmsRAQDvUbXrW5e): test runs 10, module lines 2387
+
+## J1 · REPORT
+
+P9, capture: captureOf (src/capture/index.mjs:265) reads Capture's lazy acquisition getter on every repeat call while comparing supplied deps, even when none is supplied, so a repeat captureOf(ctx) (doorbellOf's, reached from a read through sources) builds acquisition and runs its DDL (archive_entries, unpack_days) inside the caller's read or transaction. Suggested fix (capture's): compare acquisition only when opts.acquisition != null. In the plane the tables exist from boot, so it is test-visible only. Details in my record.
