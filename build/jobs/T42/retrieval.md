@@ -46,3 +46,7 @@ None. inquiry's T42-12 registers through R78. Its `fn` must answer synchronously
   - `ownership retrieval tranche/T42`: 4 files changed; 0 failures.
 
 Size (session_019vnhhXM8NuoLEZ5m4aXXJA): test runs 8, module lines 3,513 (all eight source files; `index.mjs` 1818).
+
+## J1 · COMPLETE
+
+T42-11 done: R78 registerSearchDecoration (batched, synchronous, page hits only, R56's codes, MODULE_ORDER) and R58's wording. retrieval 175/175; users all green but the accepted reds rule 4 (6) answer-envelope catalogue-end:17 and rule 4 (7) migrate-released ai_ceilings; format, architecture, coverage (78/78), ownership 0. Nothing found in another module; inquiry's fn must answer synchronously, one entry per hit, keys not in R6's hit. Record: build/jobs/T42/retrieval.md.
