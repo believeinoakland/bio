@@ -157,9 +157,12 @@ export function world({ profiles = ["test-port-ellery"], override = null } = {})
                                                        ...(project ? { project } : {}) },
         ...(project ? { project } : {}), ...extra });
     },
-    /** An action created by a member; throws when refused. */
+    /** An action created by a member; throws when refused. Its `counterparty` and `action_kind` are the defaults (`CP`, a
+     *  records request) unless `lines` carry their own: a front-matter key is written once (promotion R38, C-2.1). */
     action(id, lines = [], opts = {}) {
-      const r = w.promote(id, actionMd(id, [...CP, "action_kind: records_request", ...lines], opts), opts);
+      const own = (key) => lines.some((l) => l.startsWith(`${key}:`));
+      const defaults = [...(own("counterparty") ? [] : CP), ...(own("action_kind") ? [] : ["action_kind: records_request"])];
+      const r = w.promote(id, actionMd(id, [...defaults, ...lines], opts), opts);
       if (!r.ok) throw new Error(`fixture action refused: ${JSON.stringify(r).slice(0, 500)}`);
       return r;
     },
