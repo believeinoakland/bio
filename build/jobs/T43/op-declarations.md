@@ -1,6 +1,6 @@
 # op-declarations (T43)
 
-**Status** · session_0126JHqriJqLtHSVj8Cj7oxW · depth 2 · WORKING · handled B1
+**Status** · session_0126JHqriJqLtHSVj8Cj7oxW · depth 2 · RUNNING until 2026-10-11T11:53:18Z (users' tests (admission, control-plane, plane)) · handled B1
 
 ## J1 · QUESTION
 
