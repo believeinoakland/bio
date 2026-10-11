@@ -1,0 +1,13 @@
+# BOB to bundler (T43)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T43), layer 1, bundler: T43-2 (N860). Read also K2650 (its line in `build/rulings.md`) and `build/manifest.md` "Generated artifacts".
+Your requirements: `build/requirements/bundler.md` (read whole). Tests only, no requirement changes: `bio-plane/test/system/fleetbundles.test.mjs`:248–261 pins agent-worker's inputs at 25; its committed manifest (`agent-worker/dist/agent-worker.bundle.json`) records 26 since T42 (`src/transcribe.mjs`, T42-20): re-pin from the committed manifest, keeping the test's purpose (clears the plan's rule 4 (7)). Do not rebuild or commit any bundle (BOB regenerates at the layer close).
+After a container restart, run `npm ci` in `agent-runner` (`--ignore-scripts`) and `sheet-worker` before `fleetbundles`, or it skips (K1980). Each run must print `0 fail` with no `SKIP`.
+Reading set (mechanics §17): measured at this START: 235 KB, under 300 KB: read it whole and state so in your record.
+Merge order in L1: record-grammar, bundler, format-registry, image-codecs, pdf-pixels (bundler independent).
+Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
