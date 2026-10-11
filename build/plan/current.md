@@ -1,6 +1,6 @@
 # Plan T42
 
-**Status** · OPEN · BOB #151 · session_01TNKsMjSu49MiEhsdjBhpvT · depth 1
+**Status** · OPEN · BOB #152 · session_01LmewcofcJp9zTHjyQosCGw · depth 1
 
 **Jobs** · record-grammar: RECORD-GRAMMAR #13 session_01TfvYox4Sw4X6dSjqk6M1oK; bundler: BUNDLER #14 session_01X5bkceFD2GHGbfimdSRiKL; record-core: RECORD-CORE #20 session_013PmyJwtkkmXmvfs4xFhWb6; membership: MEMBERSHIP #33 session_01RzYrca5P3xs9xcgtmKsFnL; credentials: CREDENTIALS #12 session_01SmVin6JuSDfPb4PyoweFzP; promotion: PROMOTION #40 session_0152YS47KdFKKexnY73o2BzS; doorbell: DOORBELL #1 session_01LUJMTyBUMuQMAruQweWeZp; capture: CAPTURE #26 session_01Kru2kyU9rCEgAQWN4QGh4o; sources: SOURCES #13 session_01SnzeWkLZjLCzHaakfd3erC; reading-pipeline: READING-PIPELINE #10 session_01Tc6bhUF3M5vKa36y66nHwL; extraction: EXTRACTION #19 session_014f4EL4v2VbnLjwqMpQYA8o; retrieval: RETRIEVAL #17 session_019vnhhXM8NuoLEZ5m4aXXJA; lines: LINES #3 session_0163snLavE1iNycSFMG4uPJy; money: MONEY #4 session_01Ux9Ca6B1viDvKwTEe8rhGB
 
