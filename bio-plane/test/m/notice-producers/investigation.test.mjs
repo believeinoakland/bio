@@ -2,7 +2,9 @@
    over the real providers on their own test worlds: `steps` (its R12 `stepsDue`, R14 `costShares`, R15 `costMessages`,
    R23 `laterFound`), `investigation` (its R3 `milestonesOverdue`, R18 `quietPrompts`), `question-explorer` (its R5
    `findsFor`, with ai-use R6's `enabled_by` for the paying account's owners, D64) and `review` (its R33
-   `reviewCommentsLeftOut`). Each with a negative control (K874). */
+   `reviewCommentsLeftOut`). (T43; N856; DEC-189 (2), (7)) Each kind's `summary` and `detail` are `words.json`'s
+   `queue.<kind>.summary|detail`, by key, their placeholders filled from the source's own facts; the expected words are
+   built here from that file, never from this module. Each with a negative control (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world as stepsWorld, ANN, BOB, CAT, DAN, OUT, P1, P2, PH, PD, Q, Q2 } from "../steps/fixture.mjs";
@@ -11,11 +13,23 @@ import { world as qeWorld, Q as QQ, PROJ, CAP, CALLER } from "../question-explor
 import { standard as reviewStandard, P as RP, Q as RQ, V, SECRET } from "../review/fixture.mjs";
 import { fresh, reader, ofKind, sentences, texts } from "./fixture.mjs";
 import { NOTICE_KINDS, HINT_MARK, INVESTIGATION_ITEMS_MAX } from "../../../src/notice-producers/index.mjs";
-import { NOTICE_WORDS } from "../../../src/notice-producers/words.mjs";
+import { WORDS } from "../ai-use/fixture.mjs";
 
 const UTC = () => ({ time_zone: { value: "UTC" } });
 const duties = (st) => st.sql.exec(`CREATE TABLE IF NOT EXISTS duties (duty_id TEXT, obligor TEXT)`);   /* duties' table, empty (R5) */
 const bare = (v) => v.replace(/^member:/, "");
+/* `words.json`'s sentence of `key`, its placeholders filled (a key the file lacks fails here) */
+const say = (key, fills = {}) => {
+  assert.equal(typeof WORDS[key], "string", `${key} is in words.json`);
+  return WORDS[key].replace(/\{([A-Za-z_]+)\}/g, (m, k) => (k in fills ? fills[k] : m));
+};
+const day = (d, month) => `${d} ${WORDS[`date.month.${month}`]}`;
+/* R17 (DEC-189 (2)): the item's summary and detail are its kind's keys with these fills, every placeholder filled */
+const words = (it, fills) => {
+  assert.equal(it.summary, say(`queue.${it.kind}.summary`, fills), `${it.kind} summary`);
+  assert.equal(it.detail, say(`queue.${it.kind}.detail`, fills), `${it.kind} detail`);
+  for (const t of [it.summary, it.detail]) assert.doesNotMatch(t, /\{[A-Za-z_]+\}/, t);
+};
 /* This module over one provider world: `deps` the real providers, a read as `viewer` at `now`. */
 function over(w, deps) {
   duties(w.st);
@@ -50,7 +64,10 @@ test("R17 step-later-found: one FINDING per entry steps.laterFound answers, keye
     check(it, "FINDING", "step-later-found", e.key);
     assert.deepEqual(it.recipients, [bare(v)]);
     assert.equal(it.subject.id, id);
+    words(it, { what: w.s.step({ step: id, viewer: v }).work, date: day(9, "october") });
   }
+  assert.equal(items(ANN, "step-later-found", later)[0].summary, "Found later: Ask the clerk for the 2025 contract file", "the step's work");
+  assert.notEqual(items(ANN, "step-later-found", later)[0].summary, say("queue.step-later-found.summary", { what: id }), "negative control: not the step's id");
   assert.deepEqual(items(OUT, "step-later-found", later), [], "not a recipient and not the doer");
   assert.deepEqual(items(ANN, "step-later-found", later).map((i) => i.id), items(ANN, "step-later-found", later).map((i) => i.id), "the same key: told once");
 });
@@ -67,6 +84,8 @@ test("R17 step-date-due and step-reminder: OBLIGATIONs from steps.stepsDue, keye
   assert.equal(d.subject.id, past);
   assert.equal(d.due, "2026-10-08");
   assert.deepEqual(d.recipients, ["ann"]);
+  words(d, { step: "past", date: day(8, "october") });
+  assert.notEqual(d.summary, say("queue.step-reminder.summary", { step: "past" }), "negative control: a past date is no reminder");
   assert.deepEqual(items(BOB, "step-date-due", at), [], "negative control: not the member who set it");
   assert.ok(items(ANN, "step-date-due", "2026-10-11T06:30:00Z").map((i) => i.id).includes(d.id), "stable per step and date");
   assert.equal(w.s.stepReminder({ step: today, at: "2026-10-12", by: BOB }).ok, true);
@@ -74,6 +93,7 @@ test("R17 step-date-due and step-reminder: OBLIGATIONs from steps.stepsDue, keye
   const [r] = items(BOB, "step-reminder", "2026-10-12T18:00:00Z");
   check(r, "OBLIGATION", "step-reminder", w.s.stepsDue({ viewer: BOB, at: "2026-10-12T18:00:00Z" }).due[0].key);
   assert.deepEqual(r.recipients, ["bob"]);
+  words(r, { step: "today" });
   assert.deepEqual(items(ANN, "step-reminder", "2026-10-12T18:00:00Z"), [], "hers alone");
 });
 
@@ -91,7 +111,7 @@ test("R17 step-cost-shared and step-cost-message: FINDINGs from steps.costShares
     const [it] = items(v, "step-cost-shared", at);
     check(it, "FINDING", "step-cost-shared", key);
     assert.deepEqual(it.subject.projects.map((p) => p.name), ["Project One", "Project Two"]);
-    assert.match(it.detail, /40 USD/);
+    words(it, { step: w.s.step({ step: id, viewer: v }).work, totals: "40 USD", projects: "Project One, Project Two" });
   }
   assert.deepEqual(items(DAN, "step-cost-shared", at), [], "not an owner of either");
   const r = w.s.costMessage({ step: id, text: "Shall we split it?", by: ANN });
@@ -100,6 +120,7 @@ test("R17 step-cost-shared and step-cost-message: FINDINGs from steps.costShares
   check(m, "FINDING", "step-cost-message", String(r.message));
   assert.match(m.detail, /Shall we split it\?/);
   assert.match(m.detail, /ann-h/);
+  words(m, { step: w.s.step({ step: id, viewer: BOB }).work, member: "ann-h", text: "Shall we split it?" });
   assert.deepEqual(items(ANN, "step-cost-message", at), [], "not relayed to its writer");
   w.draw(Q, PH);
   assert.deepEqual(items(ANN, "step-cost-shared", at), [], "a hidden sharing project: nothing about the step");
@@ -118,14 +139,17 @@ test("R17 milestone-overdue (FINDING, to each joined participant) and milestone-
     check(it, "FINDING", "milestone-overdue", key);
     assert.equal(it.subject.id, milestone);
     assert.deepEqual(it.case.ancestors.map((a) => a.id), [IP1]);
+    words(it, { milestone: "M", date: day(1, "november") });
   }
   for (const v of [IOUT, IDAN]) assert.deepEqual(items(v, "milestone-overdue", at), [], v);
   const late = w.inv.milestoneSet({ project: IP1, name: "Later", date: "2026-12-01", waitsOn: [IQ1], by: IANN }).milestone;
   assert.equal(w.inv.milestoneReminder({ milestone: late, at: "2026-11-20", by: IBOB }).ok, true);
-  const day = "2026-11-20T18:00:00Z";
-  const [r] = items(IBOB, "milestone-reminder", day);
-  check(r, "OBLIGATION", "milestone-reminder", w.inv.milestonesOverdue({ viewer: IBOB, at: day }).due.find((d) => d.kind === "reminder").key);
-  assert.deepEqual(items(IANN, "milestone-reminder", day), [], "hers alone");
+  const on = "2026-11-20T18:00:00Z";
+  const [r] = items(IBOB, "milestone-reminder", on);
+  check(r, "OBLIGATION", "milestone-reminder", w.inv.milestonesOverdue({ viewer: IBOB, at: on }).due.find((d) => d.kind === "reminder").key);
+  words(r, { milestone: "Later" });
+  assert.notEqual(r.summary, say("queue.milestone-overdue.summary", { milestone: "Later" }), "negative control: a reminder is not overdue");
+  assert.deepEqual(items(IANN, "milestone-reminder", on), [], "hers alone");
 });
 
 test("R17 project-quiet: one FINDING per quiet spell from investigation.quietPrompts, keyed by its key, to the joined participants; nothing more once a member took a door", () => {
@@ -141,14 +165,14 @@ test("R17 project-quiet: one FINDING per quiet spell from investigation.quietPro
   for (const v of [IANN, IBOB]) {
     const [it] = items(v, "project-quiet", at);
     check(it, "FINDING", "project-quiet", key);
-    assert.match(it.detail, /Know whether the award was proper/);
+    words(it, { project: "Project One", progress: "Know whether the award was proper; the vote record is to be requested" });
   }
   assert.deepEqual(items(IOUT, "project-quiet", at), [], "an invited participant is not told");
   assert.equal(w.inv.projectWatch({ project: IP1, by: IBOB }).ok, true);
   assert.deepEqual(items(IANN, "project-quiet", at), [], "a door taken: nothing more in that spell");
 });
 
-test("R17 question-find: one FINDING per find question-explorer.findsFor answers, keyed by its key, marked \"Hint · machine work\"; the label ai.label.explored with {owner} filled from ai-use R6's enabled_by only for that account's owners (D64)", async () => {
+test("R17 question-find: one FINDING per find question-explorer.findsFor answers, keyed by its key, marked \"Hint · machine work\"; the label ai.label.explored with {owner} filled from ai-use R6's enabled_by only for that account's owners, ai.label.explored.member for every other viewer (D64; DEC-189 (7))", async () => {
   const w = await qeWorld().standard();
   const items = over(w, { questionExplorer: w.p });
   const at = "2026-10-10T09:00:00Z";
@@ -163,14 +187,16 @@ test("R17 question-find: one FINDING per find question-explorer.findsFor answers
   const [a] = items("alice", "question-find", at);
   check(a, "FINDING", "question-find", w.p.findsFor({ viewer: "member:alice" }).finds[0].key);
   assert.equal(a.mark, HINT_MARK);
-  assert.ok(a.summary.startsWith(HINT_MARK) && a.detail.startsWith(HINT_MARK));
-  assert.equal(a.label, NOTICE_WORDS["ai.label.explored"].replace("{owner}", name), "alice owns the paying account");
+  words(a, { question: QQ, what: "the minutes record the vote" });
+  assert.equal(a.label, say("ai.label.explored", { owner: name }), "alice owns the paying account");
   assert.equal(a.word, "ai.label.explored");
   const [b] = items("bob", "question-find", at);
   assert.equal(b.id, a.id, "one key per find and question");
-  assert.equal(b.label, "machine", "bob does not own the paying account: no explored label");
-  assert.equal("word" in b, false);
-  assert.ok(!texts(b).some((t) => t.includes("enabled by") || t === `project:${PROJ}`), "which account paid is never answered to him");
+  assert.equal(b.label, say("ai.label.explored.member"), "bob does not own the paying account: the label naming no account");
+  assert.equal(b.word, "ai.label.explored.member");
+  assert.notEqual(b.label, a.label, "negative control: not the owner's label");
+  words(b, { question: QQ, what: "the minutes record the vote" });
+  assert.ok(!texts(b).some((t) => t.includes("enabled by") || t.includes(name) || t === `project:${PROJ}`), "which account paid is never answered to him");
   assert.deepEqual(items("carol", "question-find", at), [], "not a recipient");
 });
 
@@ -197,7 +223,7 @@ test("R17 review-comment-left-out: one FINDING per entry review.reviewCommentsLe
   assert.equal(key, `FINDING::review-comment-left-out::${CASE}::2::ivy`);
   check(it, "FINDING", "review-comment-left-out", key);
   assert.deepEqual(it.recipients, ["ivy"]);
-  assert.match(it.detail, /file a response in its docket/);
+  words(it, { case: CASE });
   for (const m of ["ann", "ed", "quinn"]) assert.deepEqual(items(m, "review-comment-left-out", at), [], m);
   w.caseDocument(CASE, 2, { text: block([carry(c1), carry(c2)]), signed: true });
   assert.deepEqual(items("ivy", "review-comment-left-out", at), [], "negative control: every comment carried");
@@ -224,4 +250,24 @@ test("R17 R1 each source's bound and truncated stated; a source that throws or r
   run({});
   assert.equal(w.snapshot(), before);
   for (const it of run({}).items) for (const s of sentences(it)) assert.equal(typeof s, "string");
+});
+
+test("R17 step-later-found's {date} is the look's own local day when steps answers it (looked_at), else the entry's (J1 (4)); {what} the step's work, else its id", () => {
+  const w = stepsWorld();
+  const entry = (x) => ({ step: "STP-9", look: 1, observation: 2, at: "2026-12-01T00:00:00Z", questions: [], key: "k", ...x });
+  const run = (e, step) => ofKind(reader(fresh(w.host, { membership: w.membership, view: UTC, steps: { laterFound: () => ({ ok: true, found: [e] }),
+    stepsDue: () => ({ ok: true, due: [] }), costShares: () => ({ ok: true, shares: [] }), costMessages: () => ({ ok: true, messages: [] }), ...(step ? { step } : {}) } }))
+    .read("ann", { now: Date.parse("2026-12-02T00:00:00Z") }), "step-later-found")[0];
+  duties(w.st);
+  const looked = run(entry({ looked_at: "2026-10-09T18:00:00Z" }), () => ({ ok: true, step: "STP-9", work: "Ask the clerk" }));
+  assert.equal(looked.detail, say("queue.step-later-found.detail", { date: day(9, "october") }));
+  assert.equal(looked.summary, say("queue.step-later-found.summary", { what: "Ask the clerk" }));
+  const plain = run(entry({}), () => ({ ok: false, reason: "NO_SUCH_STEP" }));
+  assert.equal(plain.detail, say("queue.step-later-found.detail", { date: day(1, "december") }), "negative control: no looked_at, the entry's own day");
+  assert.equal(plain.summary, say("queue.step-later-found.summary", { what: "STP-9" }), "a step the read does not answer: its id");
+  const boom = reader(fresh(w.host, { membership: w.membership, view: UTC, steps: { laterFound: () => ({ ok: true, found: [entry({})] }),
+    stepsDue: () => ({ ok: true, due: [] }), costShares: () => ({ ok: true, shares: [] }), costMessages: () => ({ ok: true, messages: [] }),
+    step: () => { throw new Error("down"); } } })).read("ann", { now: Date.parse("2026-12-02T00:00:00Z") });
+  assert.deepEqual(ofKind(boom, "step-later-found"), []);
+  assert.deepEqual(boom.facts.failed, ["steps"], "a step read that throws is steps' failure");
 });
