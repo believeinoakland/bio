@@ -1,6 +1,6 @@
 # agent-worker (T42)
 
-**Status** · session_015HxKEDkguQKE7aafHdePDD · depth 2 · WORKING · handled B1
+**Status** · session_015HxKEDkguQKE7aafHdePDD · depth 2 · WAITING ON BOB (J1) · handled B1
 
 ## Work (T42-20; N832, K2611, K2613)
 
