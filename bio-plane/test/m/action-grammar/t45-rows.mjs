@@ -1,0 +1,189 @@
+/* action-grammar R9 (T45-25; reconciliation R21): the rows C-117.30–.66 this job adds, as drafted, each {check, where,
+   translation} exactly; pinned here so a later change to one is a change to a test. New in T45 layer 9, awaiting T46's stamp. */
+export const T45_ROWS = {
+  DETERMINATION_NOT_NONCOMPLIANT: {
+    check: "C-117.30",
+    where: "src/actions/index.mjs #breachRefusal > is-breach-noncompliant",
+    translation: "An action taken for a breach rests on the group's determination that the act was out of conformance. The determination named is in force but finds no breach of any standard it names, so nothing was written. Name a determination that finds the act noncompliant, or record the action without marking it a breach.",
+  },
+  OVERRIDE_NO_GROUND: {
+    check: "C-117.31",
+    where: "src/action-grammar/checks.mjs overrideGroundFindings > is-override-ground",
+    translation: "Acting on a breach the group has not yet determined is allowed on one of two grounds only: a legal deadline that falls before a determination could be made, with its citation and date, or an imminent act that cannot be undone, saying what and when. No ground was stated, so nothing was written.",
+  },
+  OVERRIDE_GROUND_REFUSED: {
+    check: "C-117.32",
+    where: "src/action-grammar/checks.mjs overrideGroundFindings > is-override-ground",
+    translation: "The ground stated for acting without a determination was incomplete or not in the form the record keeps: a legal deadline names its citation and a real date; an imminent act says what it is in up to 500 characters and when, as a date or a date and time. Nothing was written.",
+  },
+  COPIED_IS_ADDRESSEE: {
+    check: "C-117.33",
+    where: "src/action-grammar/checks.mjs copiedFindings > is-copied",
+    translation: "The office the action is addressed to is also listed among the offices copied on it. One action is made per office addressed, and the others are copied. Remove the addressee from the copied list. Nothing was written.",
+  },
+  MACHINE_CANNOT_SET_PARTNERS: {
+    check: "C-117.34",
+    where: "src/actions/index.mjs #fieldFences > is-machine-set-partners",
+    translation: "Which organisations the group acts jointly with is a member's statement, and somebody answers for it. The credential that asked here is an automated one, so it cannot state or change the partners. Nothing was written. Sign in to state them yourself.",
+  },
+  PARTNERS_REFUSED: {
+    check: "C-117.35",
+    where: "src/action-grammar/checks.mjs partnersFindings > is-partners",
+    translation: "A partner on a joint action is an organisation named by a role and its name, at most twenty of them, each once, never a person. One entry was not of that form, so nothing was written.",
+  },
+  MACHINE_CANNOT_SET_PRESS_TERMS: {
+    check: "C-117.36",
+    where: "src/actions/index.mjs #fieldFences > is-machine-set-press-terms",
+    translation: "The terms agreed with a reporter, on the record, background or off the record, and any embargo, are a member's statement. The credential that asked here is an automated one, so it cannot state or change them. Nothing was written. Sign in to state them yourself.",
+  },
+  PRESS_TERMS_NOT_PRESS: {
+    check: "C-117.37",
+    where: "src/action-grammar/checks.mjs pressTermsFindings > is-press-terms",
+    translation: "Press terms are noted on an action addressed to a reporter. This action is addressed to someone else, so nothing was written. Remove the press terms, or address the action to the press.",
+  },
+  PRESS_TERMS_REFUSED: {
+    check: "C-117.38",
+    where: "src/action-grammar/checks.mjs pressTermsFindings > is-press-terms",
+    translation: "Press terms say whether the exchange is on the record, background or off the record, with an embargo and a release time each as a date and time, and a note of up to 500 characters with no quotation mark, backslash or line break. These were not of that form, so nothing was written.",
+  },
+  RECEIPT_NOT_ON_SENT: {
+    check: "C-117.39",
+    where: "src/actions/index.mjs actionReceipt > is-receipt-on-sent",
+    translation: "Receipt is recorded for something the group sent: when and how the addressee received it. The entry named records something received, or a reply that never came, so nothing was written.",
+  },
+  OFFICE_STATUS_UNKNOWN: {
+    check: "C-117.40",
+    where: "src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields",
+    translation: "The office's own status was named with a status the group's jurisdiction profile does not hold for this kind of action. Quote the office's words alone, or name a status the profile lists. Nothing was written.",
+  },
+  OFFICE_STATUS_WITHOUT_OUTCOME: {
+    check: "C-117.41",
+    where: "src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields",
+    translation: "The office's own wording of its status is quoted beside the outcome of what it sent back, never in its place, in up to 500 characters on one line. This entry carried the wording without an outcome, or the wording was not of that form, so nothing was written. Record the outcome first.",
+  },
+  MACHINE_CANNOT_SET_REPLY_OWED: {
+    check: "C-117.42",
+    where: "src/actions/index.mjs #fieldFences > is-machine-set-reply-owed",
+    translation: "Whether a body owes the group a reply is a member's statement, made with a reason. The credential that asked here is an automated one, so it cannot state or change it. Nothing was written. Sign in to state it yourself.",
+  },
+  NO_REPLY_OWED: {
+    check: "C-117.43",
+    where: "src/actions/index.mjs actionCorrespond > is-reply-owed",
+    translation: "This action is to a body that owes the group no reply, so silence is not recorded as a non-response. Nothing was written. If a reply is owed after all, a member states so first, with a reason.",
+  },
+  FOUND_ELSEWHERE_NEEDS_CAPTURE: {
+    check: "C-117.44",
+    where: "src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields",
+    translation: "A response found elsewhere, in the press, a report, a decision or a statement, is held as the captured material where it was found, never as an account alone. Capture it first and record it with its capture. Nothing was written.",
+  },
+  STAGE_NOT_IN_LAW: {
+    check: "C-117.45",
+    where: "src/actions/index.mjs actionCorrespond > is-stage-in-law",
+    translation: "The law this records request is made under has no such stage, as the group's jurisdiction profile lists that law's stages. Record the entry as the stage the law has, or with no stage. Nothing was written.",
+  },
+  FOLLOWS_ACTION_REWRITTEN: {
+    check: "C-117.46",
+    where: "src/actions/index.mjs #heldLinks > is-follows-action",
+    translation: "The earlier action this one follows is named when it is created and never changed or removed afterwards. This write would have set, changed or removed it, so nothing was written.",
+  },
+  FOLLOWS_ACTION_SELF: {
+    check: "C-117.47",
+    where: "src/action-grammar/checks.mjs actionFieldFindings > is-action-fields",
+    translation: "An action follows an earlier action, and this one named itself. Name the action it follows. Nothing was written.",
+  },
+  MACHINE_CANNOT_SET_SCOPE: {
+    check: "C-117.48",
+    where: "src/actions/index.mjs actionScope > is-scope",
+    translation: "Whether an action is kept confidential inside the group is a member's decision, made with a reason. The credential that asked here is an automated one, so it cannot set or remove it. Nothing was written. Sign in to do it yourself.",
+  },
+  SCOPE_NO_REASON: {
+    check: "C-117.49",
+    where: "src/actions/index.mjs actionScope > is-scope",
+    translation: "Keeping an action confidential, or ending that, is recorded with a reason in your own words, up to 500 characters with no quotation mark, backslash or line break. No such reason was given, so nothing was written.",
+  },
+  SCOPE_UNCHANGED: {
+    check: "C-117.50",
+    where: "src/actions/index.mjs actionScope > is-scope",
+    translation: "The action already has that scope, so there is nothing to change. Nothing was written.",
+  },
+  MACHINE_CANNOT_RECORD_PROMISE: {
+    check: "C-117.51",
+    where: "src/actions/index.mjs actionPromise > is-promise",
+    translation: "A promise the group made to a person, an embargo or a source's anonymity, is recorded by a member who answers for it. The credential that asked here is an automated one, so it cannot record one. Nothing was written. Sign in to record it yourself.",
+  },
+  PROMISE_REFUSED: {
+    check: "C-117.52",
+    where: "src/actions/index.mjs actionPromise > is-promise",
+    translation: "A promise is recorded as an embargo, anonymity or other, with words of up to 500 characters; one that ends an earlier promise names a promise still standing. This one was not of that form, so nothing was written.",
+  },
+  FOUND_ELSEWHERE_REFUSED: {
+    check: "C-117.53",
+    where: "src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields",
+    translation: "A response found elsewhere is something received, and says where it was found: the press, a report, a decision, a statement or other, with a note of up to 500 characters. This entry was not of that form, so nothing was written.",
+  },
+  SPEAKER_REFUSED: {
+    check: "C-117.54",
+    where: "src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields",
+    translation: "The member who spoke for the group is recorded on something the group sent, by their member id. This entry was received or named no member id, so nothing was written.",
+  },
+  REPLY_OWED_REFUSED: {
+    check: "C-117.55",
+    where: "src/action-grammar/checks.mjs actionFieldFindings > is-action-fields",
+    translation: "Whether a reply is owed is stated as yes or no, or left out, which reads as owed. Something else was stated, so nothing was written.",
+  },
+  FOLLOWS_ACTION_REFUSED: {
+    check: "C-117.56",
+    where: "src/action-grammar/checks.mjs actionFieldFindings > is-action-fields",
+    translation: "The earlier action this one follows is named by its record id and, optionally, the position of the entry it follows, a whole number counted from zero. It was named in another form, so nothing was written.",
+  },
+  LAW_STAGE_UNKNOWN: {
+    check: "C-117.57",
+    where: "src/action-grammar/checks.mjs lawStagesFindings > is-law-stages",
+    translation: "A records law in the jurisdiction profile lists a stage the record does not know. Each of a law's stages is named by one of the record's stages of a records request, such as a request, an appeal or a decision. That stage is not read as one the law has.",
+  },
+  HOLD_PLACE_REFUSED: {
+    check: "C-117.58",
+    where: "src/action-holds/index.mjs #holdPlace > is-hold-place",
+    translation: "A litigation hold is placed on exactly one place: an action, an entry of one, or a project. None, or more than one, was named, so nothing was written.",
+  },
+  MACHINE_CANNOT_SEND: {
+    check: "C-117.59",
+    where: "src/action-holds/index.mjs holdNoticeSent > is-hold-notice",
+    translation: "Sending the notice that tells members what to keep is a member's own act, done by their own hand. The credential that asked here is an automated one, so it cannot record a sending. Nothing was written. Sign in to record it yourself.",
+  },
+  HOLD_NOT_IN_PLACE: {
+    check: "C-117.60",
+    where: "src/action-holds/index.mjs holdNoticeSent > is-hold-notice",
+    translation: "A hold notice is recorded for a hold that is in place, and the place named holds none, or its hold is released. Nothing was written.",
+  },
+  MACHINE_CANNOT_RECORD_BEARING: {
+    check: "C-117.61",
+    where: "src/action-replies/index.mjs actionReplyBearing > is-reply-bearing",
+    translation: "Laying a reply out claim by claim is a member's reading of what the reply answers. The credential that asked here is an automated one, so it can propose a layout and cannot record one. Nothing was written. Sign in to record it yourself.",
+  },
+  BEARING_NOT_RFC: {
+    check: "C-117.62",
+    where: "src/action-replies/index.mjs actionReplyBearing > is-reply-bearing",
+    translation: "A reply is laid out claim by claim on something received in answer to a request for comment. The entry named is not one, so nothing was written.",
+  },
+  BEARING_REFUSED: {
+    check: "C-117.63",
+    where: "src/action-grammar/checks.mjs bearingFindings > is-bearing",
+    translation: "A reply is laid out once for each claim the action put: one to fifty entries, each naming a claim the action rests on or advances, once, with new evidence, disputed without evidence or not addressed, and a note of up to 500 characters. One entry was not, so nothing was written.",
+  },
+  MACHINE_CANNOT_LINK: {
+    check: "C-117.64",
+    where: "src/action-replies/index.mjs aroseFromLink > is-arose-from",
+    translation: "That a matter or project arose from a response is a member's statement, and somebody answers for it. The credential that asked here is an automated one, so it cannot record the link. Nothing was written. Sign in to record it yourself.",
+  },
+  AROSE_FROM_NOT_A_RESPONSE: {
+    check: "C-117.65",
+    where: "src/action-replies/index.mjs aroseFromLink > is-arose-from",
+    translation: "A matter or project arises from a response, something the group received. The entry named records something sent, or a reply that never came, so nothing was written.",
+  },
+  AROSE_FROM_LINKED: {
+    check: "C-117.66",
+    where: "src/action-replies/index.mjs aroseFromLink > is-arose-from",
+    translation: "That link is already recorded, and a link is recorded once. Nothing was written.",
+  },
+};

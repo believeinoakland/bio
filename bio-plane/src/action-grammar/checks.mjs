@@ -1,5 +1,11 @@
 /* action-grammar — the action document's arms, readers and rows (requirements: `build/requirements/action-grammar.md`,
- * R1, R3, R7–R10, R12–R14; K6, K64).
+ * R1, R2, R3, R7–R15, R20–R25; K6, K64).
+ * Since T45 layer 9 (T45-25; N858, N861, N879, N880, N882–N884, N892 (b); `BIO_Action_v0_2.md`): the vocabularies R2 adds,
+ * the press arm's `holder` (R8), the override's ground (R15), the action's new fields (R20–R25: `copied`, `partners`,
+ * `press_terms`, an entry's `office_status`, `found_elsewhere` and `speaker`, `reply_owed`, `follows_action`, the claim
+ * bearings, the stages per law), the audit's arms over them and C-11.1's `owed_by` (R7), and C-117.30–.66, the rows of the
+ * codes `actions`, `action-holds`, `action-replies` and these arms mint (R9); C-117.22 retired. The phrasing lists and the
+ * finder (R16–R19) are `./phrasings.mjs` and `./finder.mjs`, re-exported here. Each awaiting T46's stamp.
  * Since T41 layer 9 (T41-46a; H30 (1), K2505): R13's `seeks` (`seeksOf`, `seeksFindings`, C-117.29 `SEEKS_REFUSED`) and the
  * outcome `none_exists` (C-94.5's translation names it); R14's C-32.21 `MACHINE_CANNOT_STATE_SEEKS`, `actions`' fence (K2561);
  * each awaiting T42's stamp.
@@ -33,12 +39,19 @@ import { ACTION_KINDS, RISK_TIERS, riskTierState, ACTION_BASIS_KINDS, CORRESPOND
          CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES, DECISION_STAGES, LIFECYCLE_KEYS, lawProposalLabel,
          RFC_RESPONSE_WINDOW_PRECEDENT } from "./grammar.mjs";
 import { LAW_LEVELS } from "../../../jurisdictions/index.mjs";
-import { localDay } from "../civil-time/index.mjs";
+import { localDay, isCalendarDate } from "../civil-time/index.mjs";
+import { PHRASINGS, PHRASING_KINDS, ASSERTION_RESOLUTIONS, PHRASING_MIN, PHRASING_MAX, SENTENCES_MAX, SENTENCE_MAX,
+         RESOLUTION_WORDS_MAX, readAs, phrasingsFor, pointOut, assertionResolutionFindings,
+         assertionsUnresolved } from "./finder.mjs";
 
 export { ACTION_KINDS, RISK_TIERS, riskTierState, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
          correspondenceFindings, isQuoteEntry, quoteValue, quoteFindings, QUOTE_KEYS, lifecycleFindings,
          CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES, DECISION_STAGES, LIFECYCLE_KEYS, lawProposalLabel, LAW_LEVELS,
          RFC_RESPONSE_WINDOW_PRECEDENT };
+/* T45 (R16–R19): the phrasing lists and the finder are `./finder.mjs`' and `./phrasings.mjs`', re-exported here;
+   `PHRASING_KINDS` is `jurisdictions`' own binding (its R86), never a copy. */
+export { PHRASINGS, PHRASING_KINDS, ASSERTION_RESOLUTIONS, PHRASING_MIN, PHRASING_MAX, SENTENCES_MAX, SENTENCE_MAX,
+         RESOLUTION_WORDS_MAX, readAs, phrasingsFor, pointOut, assertionResolutionFindings, assertionsUnresolved };
 
 /* The catalogue's finding shape (record-grammar's, its R11), for the arms here. */
 function f(check, severity, message, repairs, code) {
@@ -619,6 +632,7 @@ export function counterpartyFindings(fm, findings) {
       findings.push(f('C-2.10', 'error',
         `counterparty.entity_id '${entityId.slice(0, 40)}' is not a subject registry key (ENT-YYYY-NNNN)`,
         ['point entity_id at the office in the subject registry, or omit it: it is optional']));
+    holderFindings(cp, kind, findings, REPAIRS);
   } else if (cp.state === 'audience') {
     if (!description)
       findings.push(f('C-2.10', 'error', 'counterparty.state is audience and counterparty.description is empty: an '
@@ -631,6 +645,7 @@ export function counterpartyFindings(fm, findings) {
     if (asserted.length)
       findings.push(f('C-2.10', 'error', `counterparty is an audience and carries ${asserted.map(([k]) => k).join(', ')}: `
         + 'an audience is described, never named (R9, arm: audience)', REPAIRS));
+    holderFindings(cp, 'audience', findings, REPAIRS);
   } else {
     if (!basis)
       findings.push(f('C-2.10', 'error',
@@ -644,7 +659,29 @@ export function counterpartyFindings(fm, findings) {
         `counterparty.state is undetermined and it carries ${asserted.map(([k]) => k).join(', ')}: the block asserts `
         + 'a counterparty and denies having one in the same breath (R9, arm: undetermined)',
         ['set state: named if that is the addressee', 'or clear them and leave the basis to say what is known']));
+    holderFindings(cp, 'undetermined', findings, REPAIRS);
   }
+}
+/** R8 (T45; N879; Actions D12; v0.2 rule 7 "A reporter's name is kept inside the group as the role's holder"): the press
+ *  arm may carry `holder: {name}`, the reporter who holds the role, `name` 1 to `HOLDER_NAME_MAX` characters with no quote,
+ *  backslash or line break. A malformed holder, or one on any other arm, is one C-2.10 finding naming the arm `holder`
+ *  (`actions` answers it `COUNTERPARTY_REFUSED`, its R9). Absent (or null) pushes nothing, so every finding on a
+ *  counterparty without a holder is unchanged. */
+export const HOLDER_NAME_MAX = 200;
+function holderFindings(cp, arm, findings, repairs) {
+  if (cp.holder === undefined || cp.holder === null) return;
+  if (arm !== 'press') {
+    const what = arm === 'audience' ? 'an audience' : arm === 'undetermined' ? 'undetermined' : `a named ${arm}`;
+    findings.push(f('C-2.10', 'error', `counterparty is ${what} and carries holder: only a reporter is named, as the `
+      + 'holder of the press role (R9, arm: holder)', repairs));
+    return;
+  }
+  const h = cp.holder;
+  const ok = h && typeof h === 'object' && !Array.isArray(h) && Object.keys(h).every((k) => k === 'name')
+    && typeof h.name === 'string' && h.name.trim() && h.name.length <= HOLDER_NAME_MAX && !UNWRITABLE.test(h.name);
+  if (!ok)
+    findings.push(f('C-2.10', 'error', `counterparty.holder is not {name} with a name of 1 to ${HOLDER_NAME_MAX} characters `
+      + 'and no quote, backslash or line break (R9, arm: holder)', repairs));
 }
 /** D-147: THE LIFECYCLE, READ BACK AS ONE DATED CHAIN — a pure function over one document and a day, so
  *  `actions`' read and any other reader agree by construction. Every entry answers with its stage (or
@@ -778,6 +815,311 @@ export function consequenceState(fm) {
            detail: `IMPACT rests on evidence that is not our own action: ${evidence.join(', ')}.` };
 }
 
+/* ---------------------------------------------------------------------------------------------- T45: the new fields */
+
+/** R2 (T45; Actions D3, D4, D12, D13, D15, D18; v0.2 rules 2, 6, 8, 15, 16): the vocabularies of the fields T45 adds, each
+ *  frozen, one binding read by every module and published by `affordances` as the others are. */
+export const OVERRIDE_GROUNDS = Object.freeze(["legal_deadline", "irreversible_act"]);
+export const PRESS_RECORD_TERMS = Object.freeze(["on_record", "background", "off_record"]);
+export const FOUND_ELSEWHERE_KINDS = Object.freeze(["press", "report", "decision", "statement", "other"]);
+export const BEARINGS = Object.freeze(["new_evidence", "disputed_without_evidence", "not_addressed"]);
+export const PROMISE_KINDS = Object.freeze(["embargo", "anonymity", "other"]);
+export const CLOCK_OWED_BY = Object.freeze(["group", "body", "undetermined"]);
+/** R15, R21, R22, R24: the longest free text one of these fields carries (an act's `what`, a note, the office's words). */
+export const FIELD_TEXT_MAX = 500;
+/** R20: the most offices one action copies, and the most partners it names. */
+export const COPIED_MAX = 20;
+export const PARTNERS_MAX = 20;
+/** R20, R22: the longest partner role or organisation, and a speaker's member id. */
+export const PARTNER_TEXT_MAX = 200;
+export const SPEAKER_MAX = 200;
+/** R24: the most claims one reply is laid out by. */
+export const BEARING_CLAIMS_MAX = 50;
+
+const isBlock = (v) => !!v && typeof v === 'object' && !Array.isArray(v);
+const stated = (v) => v !== undefined && v !== null;
+const extraKeys = (o, keys) => Object.keys(o).filter((k) => !keys.includes(k)).map((k) => k.slice(0, 40));
+/* A text of 1 to `max` characters, not blank, with no quote, backslash or line break (R8's text rule). */
+const writable = (v, max) => typeof v === 'string' && !!v.trim() && v.length <= max && !UNWRITABLE.test(v);
+/* A local date-time `YYYY-MM-DDTHH:MM` with a real date and a time from 00:00 to 23:59. */
+const LOCAL_MINUTE_RE = /^(\d{4}-\d{2}-\d{2})T([01]\d|2[0-3]):[0-5]\d$/;
+const isLocalMinute = (v) => typeof v === 'string' && LOCAL_MINUTE_RE.test(v) && isCalendarDate(v.slice(0, 10));
+const coded = (message, code, repairs) => f('C-2.10', 'error', message, repairs, code);
+
+/** R15 (T45; N884; Actions D3, D18; v0.2 rule 2): the gate's override ground. `override.ground` is
+ *  `{kind: "legal_deadline", citation, date}` or `{kind: "irreversible_act", what, when}`; with none, or of another kind,
+ *  `OVERRIDE_NO_GROUND`, naming both grounds; a part missing or malformed, or a key the kind lacks, `OVERRIDE_GROUND_REFUSED`
+ *  naming the part, one finding each. `actions` asks it at the write that states an override (its R74) and mints the
+ *  refusal from the first finding. Pure; never throws; pushes and answers nothing. */
+export function overrideGroundFindings(override, findings) {
+  const g = isBlock(override) ? override.ground : undefined;
+  /* DEC-49 REGION is-override-ground */
+  if (!isBlock(g) || !OVERRIDE_GROUNDS.includes(g.kind)) {
+    findings.push(coded(`premise_override states no ground: an override rests on one of two grounds, a legal deadline `
+      + 'that falls before a determination could be made (legal_deadline: its citation and date) or an imminent '
+      + 'irreversible act (irreversible_act: what, and when) (R15)', 'OVERRIDE_NO_GROUND',
+      ['state ground: {kind: legal_deadline, citation, date}', 'or ground: {kind: irreversible_act, what, when}']));
+    return;
+  }
+  const parts = g.kind === 'legal_deadline' ? ['kind', 'citation', 'date'] : ['kind', 'what', 'when'];
+  const refuse = (part, why) => findings.push(coded(`premise_override.ground.${part} ${why} (R15)`, 'OVERRIDE_GROUND_REFUSED',
+    [`state the ${g.kind} ground's ${parts.slice(1).join(' and ')}, and nothing else`]));
+  for (const k of extraKeys(g, parts)) refuse(k, `is not a part of a ${g.kind} ground`);
+  if (g.kind === 'legal_deadline') {
+    if (!writable(g.citation, CITATION_MAX))
+      refuse('citation', `is not a citation of 1 to ${CITATION_MAX} characters with no quote, backslash or line break`);
+    if (!isCalendarDate(g.date)) refuse('date', `'${String(g.date ?? '').slice(0, 40)}' is not a real calendar date (YYYY-MM-DD)`);
+  } else {
+    if (!writable(g.what, FIELD_TEXT_MAX))
+      refuse('what', `is not 1 to ${FIELD_TEXT_MAX} characters with no quote, backslash or line break`);
+    if (!isCalendarDate(g.when) && !isLocalMinute(g.when))
+      refuse('when', `'${String(g.when ?? '').slice(0, 40)}' is not a real date (YYYY-MM-DD) or a local time (YYYY-MM-DDTHH:MM)`);
+  }
+  /* END DEC-49 REGION is-override-ground */
+}
+
+/* R20: the key two addressees are equal by: an office by its `entity_id` when it has one, else its role and body; another
+   named addressee by its kind, role and organisation; each compared trimmed and case-folded. */
+function officeEqual(a, b) {
+  if (!a || !b) return false;
+  if (a.entity_id && b.entity_id) return a.entity_id.trim() === b.entity_id.trim();
+  const k = (o) => `${(o.role ?? '').toLowerCase()}|${(o.body ?? '').toLowerCase()}`;
+  return !!(a.role || a.body) && k(a) === k(b);
+}
+function addresseeKey(cp) {
+  const o = counterpartyOffice(cp);
+  if (o) return o.entity_id ? `office:ent:${o.entity_id.trim()}` : `office:${(o.role ?? '').toLowerCase()}|${(o.body ?? '').toLowerCase()}`;
+  const s = (v) => (typeof v === 'string' ? v.trim().toLowerCase() : '');
+  return `${s(cp.kind)}:${s(cp.role)}|${s(cp.organisation)}`;
+}
+
+/** R20 (T45; N883; Actions D12, D16; v0.2 rule 7 "one action per office addressed, others copied"): `copied`, absent or
+ *  0 to `COPIED_MAX` named addressees (never an audience or undetermined), each checked as R8 checks a named counterparty,
+ *  the finding naming `copied[i]` (`COUNTERPARTY_REFUSED`), two equal entries or more than `COPIED_MAX` the same; an office
+ *  equal to the counterparty's office `COPIED_IS_ADDRESSEE`. Pure; never throws. */
+export function copiedFindings(fm, findings) {
+  const list = isBlock(fm) ? fm.copied : undefined;
+  if (!stated(list)) return;
+  const REPAIRS = ['copy each other office by its role and body (or a press, organisation or group by role and organisation), once each, at most twenty'];
+  const refused = (message) => findings.push(coded(message, 'COUNTERPARTY_REFUSED', REPAIRS));
+  if (!Array.isArray(list)) { refused(`copied is not a list of addressees (R20)`); return; }
+  if (list.length > COPIED_MAX) refused(`copied holds ${list.length} addressees; at most ${COPIED_MAX} (R20)`);
+  const addressee = counterpartyOffice(fm.counterparty);
+  const seen = new Set();
+  list.forEach((cp, i) => {
+    if (!isBlock(cp) || cp.state !== 'named') {
+      refused(`copied[${i}] is not a named addressee: an office, a press, organisation or group by role, never an audience or an undetermined one (R20)`);
+      return;
+    }
+    const own = [];
+    counterpartyFindings({ counterparty: cp }, own);
+    if (own.length) { for (const x of own) refused(`copied[${i}]: ${x.message}`); return; }
+    const key = addresseeKey(cp);
+    if (seen.has(key)) { refused(`copied[${i}] repeats an earlier copied addressee (R20)`); return; }
+    seen.add(key);
+    /* DEC-49 REGION is-copied */
+    if (officeEqual(counterpartyOffice(cp), addressee))
+      findings.push(coded(`copied[${i}] is the office the action is addressed to: the addressee is not also copied (R20)`,
+        'COPIED_IS_ADDRESSEE', ['remove the addressee from copied']));
+    /* END DEC-49 REGION is-copied */
+  });
+}
+
+/** R20 (T45; N883; Actions D16; v0.2 §6 `partners`): `partners`, absent or 0 to `PARTNERS_MAX` organisations by role,
+ *  `{role, organisation, entity_id?}`, role and organisation by R8's text rule, `entity_id` a subject registry key; any
+ *  other key (a person's name), or a repeated organisation, `PARTNERS_REFUSED` naming the entry. Pure; never throws. */
+export function partnersFindings(fm, findings) {
+  const list = isBlock(fm) ? fm.partners : undefined;
+  if (!stated(list)) return;
+  /* DEC-49 REGION is-partners */
+  const refused = (message) => findings.push(coded(message, 'PARTNERS_REFUSED',
+    ['name each partner organisation once, by {role, organisation} and optionally its entity_id, never a person']));
+  if (!Array.isArray(list)) { refused('partners is not a list of {role, organisation, entity_id?} entries (R20)'); return; }
+  if (list.length > PARTNERS_MAX) refused(`partners holds ${list.length} entries; at most ${PARTNERS_MAX} (R20)`);
+  const seen = [];
+  list.forEach((p, i) => {
+    if (!isBlock(p)) { refused(`partners[${i}] is not a {role, organisation, entity_id?} entry (R20)`); return; }
+    const extra = extraKeys(p, ['role', 'organisation', 'entity_id']);
+    if (extra.length) { refused(`partners[${i}] carries ${extra.join(', ')}: a partner is an organisation by role, never a person (R20)`); return; }
+    for (const k of ['role', 'organisation'])
+      if (!writable(p[k], PARTNER_TEXT_MAX)) { refused(`partners[${i}].${k} is not 1 to ${PARTNER_TEXT_MAX} characters with no quote, backslash or line break (R20)`); return; }
+    if (stated(p.entity_id) && !(typeof p.entity_id === 'string' && ENTITY_ID_RE.test(p.entity_id.trim()))) {
+      refused(`partners[${i}].entity_id '${String(p.entity_id).slice(0, 40)}' is not a subject registry key (R20)`); return;
+    }
+    const me = { id: stated(p.entity_id) ? p.entity_id.trim() : null, org: p.organisation.trim().toLowerCase() };
+    if (seen.some((o) => (o.id && me.id ? o.id === me.id : o.org === me.org))) { refused(`partners[${i}] repeats an earlier partner (R20)`); return; }
+    seen.push(me);
+  });
+  /* END DEC-49 REGION is-partners */
+}
+
+/** R21 (T45; N879; Actions D12; v0.2 rule 8): `press_terms`, absent or `{on_record, embargo_until?, release_at?, note?}`,
+ *  `on_record` one of `PRESS_RECORD_TERMS`, the two times local date-times, `note` at most `FIELD_TEXT_MAX` characters by
+ *  R8's text rule; malformed or another key `PRESS_TERMS_REFUSED`; on an action whose counterparty is not the press arm
+ *  `PRESS_TERMS_NOT_PRESS`. Pure; never throws. */
+export function pressTermsFindings(fm, findings) {
+  const t = isBlock(fm) ? fm.press_terms : undefined;
+  if (!stated(t)) return;
+  /* DEC-49 REGION is-press-terms */
+  const cp = fm.counterparty;
+  if (!(isBlock(cp) && cp.state === 'named' && cp.kind === 'press'))
+    findings.push(coded('press_terms is stated on an action not addressed to the press: press terms are noted on a press '
+      + 'action (R21)', 'PRESS_TERMS_NOT_PRESS', ['remove press_terms, or address the action to the press']));
+  const refused = (message) => findings.push(coded(message, 'PRESS_TERMS_REFUSED',
+    ['state press_terms as {on_record, embargo_until?, release_at?, note?}']));
+  if (!isBlock(t)) { refused('press_terms is not a block of {on_record, embargo_until?, release_at?, note?} (R21)'); return; }
+  const extra = extraKeys(t, ['on_record', 'embargo_until', 'release_at', 'note']);
+  if (extra.length) refused(`press_terms carries ${extra.join(', ')}: it holds on_record, embargo_until, release_at and note (R21)`);
+  if (!PRESS_RECORD_TERMS.includes(t.on_record))
+    refused(`press_terms.on_record '${String(t.on_record ?? '').slice(0, 40)}' is not one of: ${PRESS_RECORD_TERMS.join(', ')} (R21)`);
+  for (const k of ['embargo_until', 'release_at'])
+    if (stated(t[k]) && !isLocalMinute(t[k])) refused(`press_terms.${k} '${String(t[k]).slice(0, 40)}' is not a local date and time (YYYY-MM-DDTHH:MM) (R21)`);
+  if (stated(t.note) && !(typeof t.note === 'string' && t.note.length <= FIELD_TEXT_MAX && !UNWRITABLE.test(t.note)))
+    refused(`press_terms.note is not at most ${FIELD_TEXT_MAX} characters with no quote, backslash or line break (R21)`);
+  /* END DEC-49 REGION is-press-terms */
+}
+
+/** R22 (T45; N879, N880; Actions D12, D13; v0.2 rules 8, 16): the fields T45 adds to correspondence entry `i`, as
+ *  `lifecycleFindings` is asked (at `actions`' R15 and in the audit): `office_status: {words, status?}` only on a
+ *  `received` entry carrying an `outcome`, `words` 1 to `FIELD_TEXT_MAX` characters with no line break, else
+ *  `OFFICE_STATUS_WITHOUT_OUTCOME`; `status` one of `facts.responseStatuses` (strings, or `{status}` entries as
+ *  `jurisdictions` R58 holds them), else, or with none handed in, `OFFICE_STATUS_UNKNOWN`; `found_elsewhere: {kind, note?}`
+ *  only on a `received` entry, else `FOUND_ELSEWHERE_REFUSED`, and with no `artifact_sha` `FOUND_ELSEWHERE_NEEDS_CAPTURE`;
+ *  `speaker` only on a `sent` entry, a member id (`member:<id>` or bare) of 1 to `SPEAKER_MAX` characters, else
+ *  `SPEAKER_REFUSED`. An entry with none of the three answers nothing. Answers the C-2.10 findings, each with its code.
+ *  Pure; never throws. */
+export function entryFieldFindings(entries, i, facts) {
+  const out = [];
+  if (!Array.isArray(entries)) return out;
+  const e = entries[i];
+  if (!isBlock(e)) return out;
+  const at = `correspondence[${i}]`;
+  /* DEC-49 REGION is-entry-fields */
+  if (stated(e.office_status)) {
+    const os = e.office_status;
+    const outcome = typeof e.outcome === 'string' ? e.outcome.trim() : '';
+    if (e.direction !== 'received' || !outcome)
+      out.push(coded(`${at} carries office_status with no outcome: the office's own wording is quoted beside a received `
+        + 'entry\'s outcome, never in its place (R22)', 'OFFICE_STATUS_WITHOUT_OUTCOME', ['record the outcome, then quote the office\'s status beside it']));
+    if (!isBlock(os) || extraKeys(os, ['words', 'status']).length)
+      out.push(coded(`${at}.office_status is not {words, status?} (R22)`, 'OFFICE_STATUS_WITHOUT_OUTCOME'));
+    else {
+      if (!(typeof os.words === 'string' && os.words.trim() && os.words.length <= FIELD_TEXT_MAX && !/[\r\n]/.test(os.words)))
+        out.push(coded(`${at}.office_status.words is not the office's wording of 1 to ${FIELD_TEXT_MAX} characters on one line (R22)`,
+          'OFFICE_STATUS_WITHOUT_OUTCOME'));
+      if (stated(os.status)) {
+        const held = isBlock(facts) && Array.isArray(facts.responseStatuses)
+          ? facts.responseStatuses.map((x) => (isBlock(x) ? x.status : x)).filter((x) => typeof x === 'string') : [];
+        if (!held.includes(os.status))
+          out.push(coded(`${at}.office_status.status '${String(os.status).slice(0, 40)}' is not a status the group's `
+            + 'jurisdiction profile holds for this kind (R22)', 'OFFICE_STATUS_UNKNOWN', ['quote the office\'s words alone, or name a status the profile holds']));
+      }
+    }
+  }
+  if (stated(e.found_elsewhere)) {
+    const fe = e.found_elsewhere;
+    if (e.direction !== 'received')
+      out.push(coded(`${at} carries found_elsewhere on a '${String(e.direction).slice(0, 40)}' entry: a response found `
+        + 'elsewhere is something received (R22)', 'FOUND_ELSEWHERE_REFUSED'));
+    else if (!isBlock(fe) || extraKeys(fe, ['kind', 'note']).length || !FOUND_ELSEWHERE_KINDS.includes(fe.kind)
+             || (stated(fe.note) && !(typeof fe.note === 'string' && fe.note.length <= FIELD_TEXT_MAX)))
+      out.push(coded(`${at}.found_elsewhere is not {kind, note?}, kind one of ${FOUND_ELSEWHERE_KINDS.join(', ')} and a `
+        + `note of at most ${FIELD_TEXT_MAX} characters (R22)`, 'FOUND_ELSEWHERE_REFUSED'));
+    if (!(typeof e.artifact_sha === 'string' && e.artifact_sha.trim()))
+      out.push(coded(`${at} records a response found elsewhere with no artifact_sha: it is held as a capture, never as `
+        + 'an account alone (R22)', 'FOUND_ELSEWHERE_NEEDS_CAPTURE', ['capture where it was found and record its sha256']));
+  }
+  if (stated(e.speaker)) {
+    const sp = e.speaker;
+    if (e.direction !== 'sent')
+      out.push(coded(`${at} carries a speaker on a '${String(e.direction).slice(0, 40)}' entry: a speaker spoke for the `
+        + 'group in a sending (R22)', 'SPEAKER_REFUSED'));
+    else if (!(writable(sp, SPEAKER_MAX) && sp.trim().replace(/^member:/, '')))
+      out.push(coded(`${at}.speaker is not a member id of 1 to ${SPEAKER_MAX} characters (R22)`, 'SPEAKER_REFUSED'));
+  }
+  /* END DEC-49 REGION is-entry-fields */
+  return out;
+}
+
+/** R23 (T45; S1 §C 2, 8; v0.2 rule 6, §5): `reply_owed` absent, `true` or `false`, else `REPLY_OWED_REFUSED`;
+ *  `follows_action` absent or `{action, ord?}`, `action` an action's record id, `ord` a non-negative integer, else
+ *  `FOLLOWS_ACTION_REFUSED`, and equal to `ctx.bundleId` (the document's own id, when the caller has it)
+ *  `FOLLOWS_ACTION_SELF`. Pure; never throws. */
+export function actionFieldFindings(fm, ctx, findings) {
+  if (!isBlock(fm)) return;
+  /* DEC-49 REGION is-action-fields */
+  if (stated(fm.reply_owed) && fm.reply_owed !== true && fm.reply_owed !== false)
+    findings.push(coded(`reply_owed '${String(fm.reply_owed).slice(0, 40)}' is not true or false (R23)`, 'REPLY_OWED_REFUSED',
+      ['state reply_owed: false when the body owes the group no reply, or leave it out']));
+  const fa = fm.follows_action;
+  if (stated(fa)) {
+    const ok = isBlock(fa) && !extraKeys(fa, ['action', 'ord']).length && typeof fa.action === 'string'
+      && BUNDLE_ID_RE.test(fa.action) && OBJECT_TYPES[fa.action.split('-')[0]] === 'action'
+      && (!stated(fa.ord) || (Number.isInteger(fa.ord) && fa.ord >= 0));
+    if (!ok)
+      findings.push(coded('follows_action is not {action, ord?}: the record id of the action it follows and, optionally, '
+        + 'the position of its entry (R23)', 'FOLLOWS_ACTION_REFUSED', ['name the earlier action by its record id']));
+    else if (isBlock(ctx) && typeof ctx.bundleId === 'string' && fa.action === ctx.bundleId)
+      findings.push(coded('follows_action names this action itself: an action follows an earlier one (R23)',
+        'FOLLOWS_ACTION_SELF', ['name the earlier action it follows']));
+  }
+  /* END DEC-49 REGION is-action-fields */
+}
+
+/** R24 (T45; N880; Actions D13; v0.2 rule 16 "laid out claim by claim"): `claims`, 1 to `BEARING_CLAIMS_MAX`
+ *  `{claim, bearing, note?}`, `claim` one of `legTargets` (the action's `advances` and `rests_on` targets, handed in), none
+ *  twice, `bearing` one of `BEARINGS`, `note` at most `FIELD_TEXT_MAX` characters; each fault `BEARING_REFUSED` naming the
+ *  item. Asked for a member's layout and a proposal alike. Pure; never throws. */
+export function bearingFindings(claims, legTargets, findings) {
+  const legs = Array.isArray(legTargets) ? legTargets.filter((x) => typeof x === 'string') : [];
+  /* DEC-49 REGION is-bearing */
+  const refused = (message) => findings.push(coded(message, 'BEARING_REFUSED',
+    ['lay the reply out once per claim the action put, each with one of: ' + BEARINGS.join(', ')]));
+  if (!Array.isArray(claims) || !claims.length || claims.length > BEARING_CLAIMS_MAX) {
+    refused(`claims is not a list of 1 to ${BEARING_CLAIMS_MAX} {claim, bearing, note?} entries (R24)`); return;
+  }
+  const seen = new Set();
+  claims.forEach((c, i) => {
+    const at = `claims[${i}]`;
+    if (!isBlock(c) || extraKeys(c, ['claim', 'bearing', 'note']).length) { refused(`${at} is not a {claim, bearing, note?} entry (R24)`); return; }
+    if (typeof c.claim !== 'string' || !legs.includes(c.claim)) { refused(`${at}.claim '${String(c.claim ?? '').slice(0, 60)}' is not one of the action's legs (R24)`); return; }
+    if (seen.has(c.claim)) { refused(`${at} repeats the claim '${c.claim.slice(0, 60)}' (R24)`); return; }
+    seen.add(c.claim);
+    if (!BEARINGS.includes(c.bearing)) refused(`${at}.bearing '${String(c.bearing ?? '').slice(0, 40)}' is not one of: ${BEARINGS.join(', ')} (R24)`);
+    else if (stated(c.note) && !(typeof c.note === 'string' && c.note.length <= FIELD_TEXT_MAX)) refused(`${at}.note is longer than ${FIELD_TEXT_MAX} characters (R24)`);
+  });
+  /* END DEC-49 REGION is-bearing */
+}
+
+/* R25: every stage of the records-request lifecycle, either direction. */
+const ALL_STAGES = Object.freeze([...CORRESPONDENCE_STAGES.sent, ...CORRESPONDENCE_STAGES.received]);
+const lawStageKnown = (item) => isBlock(item) && typeof item.stage === 'string' && ALL_STAGES.includes(item.stage);
+
+/** R25 (T45; N858; v0.2 §5 "Which stages a law has comes from the profile"; `jurisdictions` R76): one `LAW_STAGE_UNKNOWN`
+ *  finding per item of a records law's profile `stages` whose `stage` is not a stage of `CORRESPONDENCE_STAGES`, naming
+ *  it; `[]` for a well-formed list, or no list. Pure; never throws. */
+export function lawStagesFindings(stages) {
+  if (!Array.isArray(stages)) return [];
+  const out = [];
+  /* DEC-49 REGION is-law-stages */
+  stages.forEach((item, i) => {
+    if (!lawStageKnown(item))
+      out.push(coded(`stages[${i}].stage '${String(isBlock(item) ? item.stage : item).slice(0, 40)}' is not a stage of a `
+        + `records request: one of ${ALL_STAGES.join(', ')} (R25)`, 'LAW_STAGE_UNKNOWN',
+        ['name the law\'s stage by the record\'s stage it is, or leave it out']));
+  });
+  /* END DEC-49 REGION is-law-stages */
+  return out;
+}
+
+/** R25: whether `stage` is one of the law's `stages` (`in_law`, `not_in_law`), or `undetermined` when the stages are not
+ *  held (absent, or not a list); never `in_law` by default, and never for a stage `lawStagesFindings` reports. Pure;
+ *  never throws. */
+export function stageInLaw(stage, stages) {
+  if (!Array.isArray(stages)) return 'undetermined';
+  return stages.some((item) => lawStageKnown(item) && item.stage === stage) ? 'in_law' : 'not_in_law';
+}
+
 /** R7 (K1444 (iii)): the local day of `nowMs` in `zone` (`civil-time.localDay`), or null with no zone, an unknown one or
  *  an unreadable time: a pending clock entry is past its date only once that day is after the entry's, and with no
  *  local day nothing is past, never the UTC day. */
@@ -793,7 +1135,7 @@ function localTodayOf(nowMs, zone) {
 
 /** R37: C-2.10's action arms and C-11.1 over one action's document, as the audit runs them (`ctx.fm`, `ctx.nowMs`;
  *  `ctx.actionKinds`, the instance's R10 set, when the caller has it; `ctx.zone`, the IANA zone of the action's office
- *  or venue, R7). */
+ *  or venue, R7; `ctx.bundleId`, the document's own id, when the caller has it, R23). */
 export function checkActionExtension(ctx, findings) {
   if (ctx?.fm?.object_type !== 'action') return;
   const fm = ctx.fm;
@@ -834,11 +1176,28 @@ export function checkActionExtension(ctx, findings) {
       findings.push(f('C-11.1', 'error', `clock[${i}] has no basis (the statute, order, or commitment the date derives from)`, ['supply basis']));
     }
     if (!STATUSES.includes(e.status)) findings.push(f('C-11.1', 'error', `clock[${i}].status '${e.status}' is not one of: ${STATUSES.join(', ')}`));
+    /* R7 (T45; N882; Actions D15): who owes the date, when stated; absent reads undetermined, never defaulted. */
+    if (e.owed_by !== undefined && e.owed_by !== null && !CLOCK_OWED_BY.includes(e.owed_by))
+      findings.push(f('C-11.1', 'error', `clock[${i}].owed_by '${String(e.owed_by).slice(0, 40)}' is not one of: ${CLOCK_OWED_BY.join(', ')}`,
+        ['state who owes the date: the group, the body, or undetermined']));
     if (today && DATE_RE.test(e.date || '') && e.date < today && e.status === 'pending') {
       findings.push(f('C-11.1', 'error', `clock[${i}] '${e.text}' is silently past-due (${e.date} < today, status still pending)`,
         ['mark overdue', 'mark met', 'mark waived with reason']));
     }
   }
+  /* R7 (T45): the fields T45 adds, each pushing nothing on a document written before it. An override written before T45
+     states no ground and reads as written; `office_status.status` is judged at the act, against the profile as it stands
+     then, never over history (so the audit hands no facts and drops that one code). */
+  const override = fm.premise_override;
+  if (override && typeof override === 'object' && !Array.isArray(override) && override.ground !== undefined && override.ground !== null)
+    overrideGroundFindings(override, findings);
+  copiedFindings(fm, findings);
+  partnersFindings(fm, findings);
+  pressTermsFindings(fm, findings);
+  const entries = Array.isArray(fm.correspondence) ? fm.correspondence : [];
+  for (let i = 0; i < entries.length; i++)
+    for (const x of entryFieldFindings(entries, i)) if (x.code !== 'OFFICE_STATUS_UNKNOWN') findings.push(x);
+  actionFieldFindings(fm, { bundleId: ctx.bundleId }, findings);
 }
 
 /* The action layer's machine fences (C-32.3, C-32.4, C-32.18, C-32.19), split out of legacy-checks' MACHINE_FENCE_CHECKS
@@ -1413,12 +1772,8 @@ export const ACTION_CATALOGUE_CHECKS = {
     translation: 'A litigation hold is recorded as in place or released, with a reason of up to 500 characters and no '
       + 'quotation mark, backslash or line break. This one was not, so nothing was written.',
   },
-  HOLD_NO_LEGAL_MARK: {
-    check: 'C-117.22',
-    where: 'src/actions/index.mjs actionHold > is-hold-legal-mark',
-    translation: 'A litigation hold is recorded on something the group received and marked as legal pressure. The entry '
-      + 'named carries no such mark, so nothing was written.',
-  },
+  /* C-117.22 HOLD_NO_LEGAL_MARK retired (T45; R9; `actions` R52 amended, Actions D10): a hold is placed at a place, with
+     no legal mark asked; its number is never reused. */
   /* R52, R56, R58 (DEC-113; K1251, K1252; N518): a hold's release is its own act (`actionHoldRelease`, rung terminal), a
      hold names the projects it covers, and the "is this project held?" read names the projects it asks about. Minted
      by `actions`: C-117.23 in `actionHold`, C-117.24 in the one helper `actionHold` and `projectHolds` both ask,
@@ -1471,5 +1826,247 @@ export const ACTION_CATALOGUE_CHECKS = {
     translation: 'A records request may name the stages it asks the records for: one to twelve different entries, each '
       + 'naming a progression, an entity and a stage in at most 200 characters each, and each stage one its progression '
       + 'declares. Only a records request names them. This write named them otherwise, so nothing was written.',
+  },
+  /* T45 (T45-25; R9, reconciliation R21): the rows of the codes `actions` (its R8, R74, R77–R88, R94), the action's field
+     grammars here (R15, R20–R25), `action-holds` (its R52, R89) and `action-replies` (its R84, R91) mint, numbered from
+     C-117.30 in R9's order; each `where` names the raising site (a later module's region as its job builds it). Translations
+     the job's drafts for BOB, the UX stream's to revise. New in T45 layer 9; awaiting T46's stamp. */
+  DETERMINATION_NOT_NONCOMPLIANT: {
+    check: 'C-117.30',
+    where: 'src/actions/index.mjs #breachRefusal > is-breach-noncompliant',
+    translation: 'An action taken for a breach rests on the group\'s determination that the act was out of conformance. The '
+      + 'determination named is in force but finds no breach of any standard it names, so nothing was written. Name a '
+      + 'determination that finds the act noncompliant, or record the action without marking it a breach.',
+  },
+  OVERRIDE_NO_GROUND: {
+    check: 'C-117.31',
+    where: 'src/action-grammar/checks.mjs overrideGroundFindings > is-override-ground',
+    translation: 'Acting on a breach the group has not yet determined is allowed on one of two grounds only: a legal deadline '
+      + 'that falls before a determination could be made, with its citation and date, or an imminent act that cannot '
+      + 'be undone, saying what and when. No ground was stated, so nothing was written.',
+  },
+  OVERRIDE_GROUND_REFUSED: {
+    check: 'C-117.32',
+    where: 'src/action-grammar/checks.mjs overrideGroundFindings > is-override-ground',
+    translation: 'The ground stated for acting without a determination was incomplete or not in the form the record keeps: a '
+      + 'legal deadline names its citation and a real date; an imminent act says what it is in up to 500 characters '
+      + 'and when, as a date or a date and time. Nothing was written.',
+  },
+  COPIED_IS_ADDRESSEE: {
+    check: 'C-117.33',
+    where: 'src/action-grammar/checks.mjs copiedFindings > is-copied',
+    translation: 'The office the action is addressed to is also listed among the offices copied on it. One action is made per '
+      + 'office addressed, and the others are copied. Remove the addressee from the copied list. Nothing was written.',
+  },
+  MACHINE_CANNOT_SET_PARTNERS: {
+    check: 'C-117.34',
+    where: 'src/actions/index.mjs #fieldFences > is-machine-set-partners',
+    translation: 'Which organisations the group acts jointly with is a member\'s statement, and somebody answers for it. The '
+      + 'credential that asked here is an automated one, so it cannot state or change the partners. Nothing was '
+      + 'written. Sign in to state them yourself.',
+  },
+  PARTNERS_REFUSED: {
+    check: 'C-117.35',
+    where: 'src/action-grammar/checks.mjs partnersFindings > is-partners',
+    translation: 'A partner on a joint action is an organisation named by a role and its name, at most twenty of them, each '
+      + 'once, never a person. One entry was not of that form, so nothing was written.',
+  },
+  MACHINE_CANNOT_SET_PRESS_TERMS: {
+    check: 'C-117.36',
+    where: 'src/actions/index.mjs #fieldFences > is-machine-set-press-terms',
+    translation: 'The terms agreed with a reporter, on the record, background or off the record, and any embargo, are a '
+      + 'member\'s statement. The credential that asked here is an automated one, so it cannot state or change them. '
+      + 'Nothing was written. Sign in to state them yourself.',
+  },
+  PRESS_TERMS_NOT_PRESS: {
+    check: 'C-117.37',
+    where: 'src/action-grammar/checks.mjs pressTermsFindings > is-press-terms',
+    translation: 'Press terms are noted on an action addressed to a reporter. This action is addressed to someone else, so '
+      + 'nothing was written. Remove the press terms, or address the action to the press.',
+  },
+  PRESS_TERMS_REFUSED: {
+    check: 'C-117.38',
+    where: 'src/action-grammar/checks.mjs pressTermsFindings > is-press-terms',
+    translation: 'Press terms say whether the exchange is on the record, background or off the record, with an embargo and a '
+      + 'release time each as a date and time, and a note of up to 500 characters with no quotation mark, backslash '
+      + 'or line break. These were not of that form, so nothing was written.',
+  },
+  RECEIPT_NOT_ON_SENT: {
+    check: 'C-117.39',
+    where: 'src/actions/index.mjs actionReceipt > is-receipt-on-sent',
+    translation: 'Receipt is recorded for something the group sent: when and how the addressee received it. The entry named '
+      + 'records something received, or a reply that never came, so nothing was written.',
+  },
+  OFFICE_STATUS_UNKNOWN: {
+    check: 'C-117.40',
+    where: 'src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields',
+    translation: 'The office\'s own status was named with a status the group\'s jurisdiction profile does not hold for this kind '
+      + 'of action. Quote the office\'s words alone, or name a status the profile lists. Nothing was written.',
+  },
+  OFFICE_STATUS_WITHOUT_OUTCOME: {
+    check: 'C-117.41',
+    where: 'src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields',
+    translation: 'The office\'s own wording of its status is quoted beside the outcome of what it sent back, never in its '
+      + 'place, in up to 500 characters on one line. This entry carried the wording without an outcome, or the '
+      + 'wording was not of that form, so nothing was written. Record the outcome first.',
+  },
+  MACHINE_CANNOT_SET_REPLY_OWED: {
+    check: 'C-117.42',
+    where: 'src/actions/index.mjs #fieldFences > is-machine-set-reply-owed',
+    translation: 'Whether a body owes the group a reply is a member\'s statement, made with a reason. The credential that asked '
+      + 'here is an automated one, so it cannot state or change it. Nothing was written. Sign in to state it '
+      + 'yourself.',
+  },
+  NO_REPLY_OWED: {
+    check: 'C-117.43',
+    where: 'src/actions/index.mjs actionCorrespond > is-reply-owed',
+    translation: 'This action is to a body that owes the group no reply, so silence is not recorded as a non-response. Nothing '
+      + 'was written. If a reply is owed after all, a member states so first, with a reason.',
+  },
+  FOUND_ELSEWHERE_NEEDS_CAPTURE: {
+    check: 'C-117.44',
+    where: 'src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields',
+    translation: 'A response found elsewhere, in the press, a report, a decision or a statement, is held as the captured '
+      + 'material where it was found, never as an account alone. Capture it first and record it with its capture. '
+      + 'Nothing was written.',
+  },
+  STAGE_NOT_IN_LAW: {
+    check: 'C-117.45',
+    where: 'src/actions/index.mjs actionCorrespond > is-stage-in-law',
+    translation: 'The law this records request is made under has no such stage, as the group\'s jurisdiction profile lists that '
+      + 'law\'s stages. Record the entry as the stage the law has, or with no stage. Nothing was written.',
+  },
+  FOLLOWS_ACTION_REWRITTEN: {
+    check: 'C-117.46',
+    where: 'src/actions/index.mjs #heldLinks > is-follows-action',
+    translation: 'The earlier action this one follows is named when it is created and never changed or removed afterwards. '
+      + 'This write would have set, changed or removed it, so nothing was written.',
+  },
+  FOLLOWS_ACTION_SELF: {
+    check: 'C-117.47',
+    where: 'src/action-grammar/checks.mjs actionFieldFindings > is-action-fields',
+    translation: 'An action follows an earlier action, and this one named itself. Name the action it follows. Nothing was '
+      + 'written.',
+  },
+  MACHINE_CANNOT_SET_SCOPE: {
+    check: 'C-117.48',
+    where: 'src/actions/index.mjs actionScope > is-scope',
+    translation: 'Whether an action is kept confidential inside the group is a member\'s decision, made with a reason. The '
+      + 'credential that asked here is an automated one, so it cannot set or remove it. Nothing was written. Sign in '
+      + 'to do it yourself.',
+  },
+  SCOPE_NO_REASON: {
+    check: 'C-117.49',
+    where: 'src/actions/index.mjs actionScope > is-scope',
+    translation: 'Keeping an action confidential, or ending that, is recorded with a reason in your own words, up to 500 '
+      + 'characters with no quotation mark, backslash or line break. No such reason was given, so nothing was '
+      + 'written.',
+  },
+  SCOPE_UNCHANGED: {
+    check: 'C-117.50',
+    where: 'src/actions/index.mjs actionScope > is-scope',
+    translation: 'The action already has that scope, so there is nothing to change. Nothing was written.',
+  },
+  MACHINE_CANNOT_RECORD_PROMISE: {
+    check: 'C-117.51',
+    where: 'src/actions/index.mjs actionPromise > is-promise',
+    translation: 'A promise the group made to a person, an embargo or a source\'s anonymity, is recorded by a member who '
+      + 'answers for it. The credential that asked here is an automated one, so it cannot record one. Nothing was '
+      + 'written. Sign in to record it yourself.',
+  },
+  PROMISE_REFUSED: {
+    check: 'C-117.52',
+    where: 'src/actions/index.mjs actionPromise > is-promise',
+    translation: 'A promise is recorded as an embargo, anonymity or other, with words of up to 500 characters; one that ends '
+      + 'an earlier promise names a promise still standing. This one was not of that form, so nothing was written.',
+  },
+  FOUND_ELSEWHERE_REFUSED: {
+    check: 'C-117.53',
+    where: 'src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields',
+    translation: 'A response found elsewhere is something received, and says where it was found: the press, a report, a '
+      + 'decision, a statement or other, with a note of up to 500 characters. This entry was not of that form, so '
+      + 'nothing was written.',
+  },
+  SPEAKER_REFUSED: {
+    check: 'C-117.54',
+    where: 'src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields',
+    translation: 'The member who spoke for the group is recorded on something the group sent, by their member id. This entry '
+      + 'was received or named no member id, so nothing was written.',
+  },
+  REPLY_OWED_REFUSED: {
+    check: 'C-117.55',
+    where: 'src/action-grammar/checks.mjs actionFieldFindings > is-action-fields',
+    translation: 'Whether a reply is owed is stated as yes or no, or left out, which reads as owed. Something else was stated, '
+      + 'so nothing was written.',
+  },
+  FOLLOWS_ACTION_REFUSED: {
+    check: 'C-117.56',
+    where: 'src/action-grammar/checks.mjs actionFieldFindings > is-action-fields',
+    translation: 'The earlier action this one follows is named by its record id and, optionally, the position of the entry it '
+      + 'follows, a whole number counted from zero. It was named in another form, so nothing was written.',
+  },
+  LAW_STAGE_UNKNOWN: {
+    check: 'C-117.57',
+    where: 'src/action-grammar/checks.mjs lawStagesFindings > is-law-stages',
+    translation: 'A records law in the jurisdiction profile lists a stage the record does not know. Each of a law\'s stages is '
+      + 'named by one of the record\'s stages of a records request, such as a request, an appeal or a decision. That '
+      + 'stage is not read as one the law has.',
+  },
+  HOLD_PLACE_REFUSED: {
+    check: 'C-117.58',
+    where: 'src/action-holds/index.mjs #holdPlace > is-hold-place',
+    translation: 'A litigation hold is placed on exactly one place: an action, an entry of one, or a project. None, or more '
+      + 'than one, was named, so nothing was written.',
+  },
+  MACHINE_CANNOT_SEND: {
+    check: 'C-117.59',
+    where: 'src/action-holds/index.mjs holdNoticeSent > is-hold-notice',
+    translation: 'Sending the notice that tells members what to keep is a member\'s own act, done by their own hand. The '
+      + 'credential that asked here is an automated one, so it cannot record a sending. Nothing was written. Sign in '
+      + 'to record it yourself.',
+  },
+  HOLD_NOT_IN_PLACE: {
+    check: 'C-117.60',
+    where: 'src/action-holds/index.mjs holdNoticeSent > is-hold-notice',
+    translation: 'A hold notice is recorded for a hold that is in place, and the place named holds none, or its hold is '
+      + 'released. Nothing was written.',
+  },
+  MACHINE_CANNOT_RECORD_BEARING: {
+    check: 'C-117.61',
+    where: 'src/action-replies/index.mjs actionReplyBearing > is-reply-bearing',
+    translation: 'Laying a reply out claim by claim is a member\'s reading of what the reply answers. The credential that asked '
+      + 'here is an automated one, so it can propose a layout and cannot record one. Nothing was written. Sign in to '
+      + 'record it yourself.',
+  },
+  BEARING_NOT_RFC: {
+    check: 'C-117.62',
+    where: 'src/action-replies/index.mjs actionReplyBearing > is-reply-bearing',
+    translation: 'A reply is laid out claim by claim on something received in answer to a request for comment. The entry named '
+      + 'is not one, so nothing was written.',
+  },
+  BEARING_REFUSED: {
+    check: 'C-117.63',
+    where: 'src/action-grammar/checks.mjs bearingFindings > is-bearing',
+    translation: 'A reply is laid out once for each claim the action put: one to fifty entries, each naming a claim the action '
+      + 'rests on or advances, once, with new evidence, disputed without evidence or not addressed, and a note of up '
+      + 'to 500 characters. One entry was not, so nothing was written.',
+  },
+  MACHINE_CANNOT_LINK: {
+    check: 'C-117.64',
+    where: 'src/action-replies/index.mjs aroseFromLink > is-arose-from',
+    translation: 'That a matter or project arose from a response is a member\'s statement, and somebody answers for it. The '
+      + 'credential that asked here is an automated one, so it cannot record the link. Nothing was written. Sign in '
+      + 'to record it yourself.',
+  },
+  AROSE_FROM_NOT_A_RESPONSE: {
+    check: 'C-117.65',
+    where: 'src/action-replies/index.mjs aroseFromLink > is-arose-from',
+    translation: 'A matter or project arises from a response, something the group received. The entry named records something '
+      + 'sent, or a reply that never came, so nothing was written.',
+  },
+  AROSE_FROM_LINKED: {
+    check: 'C-117.66',
+    where: 'src/action-replies/index.mjs aroseFromLink > is-arose-from',
+    translation: 'That link is already recorded, and a link is recorded once. Nothing was written.',
   },
 };
