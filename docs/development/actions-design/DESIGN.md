@@ -169,13 +169,14 @@ S1 §D 1–19 stand. Rulings resolve: §D 6 (D9), §D 7 (D5), §D 8 (D14), §D 9
 ## 10. Settled by the lane after BOB #155's review (2026-10-11)
 
 - **Outcomes:** a correspondence entry keeps the fixed outcome vocabulary (Action §6); the office's own status wording (profile `response_statuses`) is quoted beside it, never replacing it (S1 §C 11 read so; no conflict with the approved vocabulary).
-- **A professional's review** (D8, Tier 2–3 rules): recorded as an attestation the confirming member enters (reviewer named, the qualification they state), never a member attribute; the second member's confirmation is open to any member (rule 10 kept).
+- **A professional's confirmation** (D8, Tier 2–3 rules), as H12: the confirming member is the professional and states her qualification on that confirmation; the statement is an attestation of that one act, recorded on the rule, never held as a member attribute and read by nothing else (rule 10 kept); the drafter cannot confirm her own rule. A reading of Bob's ruling, told to him.
 - **Assertion phrasings** (D1): a list per language held by the product, extendable per profile.
 - **The quick route** (D3): a case of one finding, run through every publication check.
-- **Re-examination reach** (D21): the project and projects linked to it by `arose_from`; the AI part runs within the AI settings and limits of the member who recorded the response.
+- **Re-examination reach** (D21): the project and projects linked to it by `arose_from`; the AI part runs on the paying account as Capability Ladders §2 sets it for the recording act (the project's own account where it holds one, K2420, otherwise the recording member's), within its limits and the project's and group's settings (Investigation §6).
+- **Machine marks** (rule 1): the overdue mark; recomputed dates, opened phases and marked options on a response; actions marked while their findings are voided or re-evaluated. Docket entries are a member's act.
 - **Basis kinds** (K1431): a fifth kind, the other side's stated deadline, never presented as legal.
-- **Recognition** rests on a compliant determination or a success record (required, as a breach claim needs a determination).
-- **Advocacy text** (D11a): kept in the member's own notes, private to her.
+- **Recognition** may rest on a compliant determination or a success record (H11 6c's "may"); it is not gated, and a fix only promised is shown.
+- **Advocacy text** (D11a): kept in the member's own hidden project, private to her.
 - **"Every promise met"** (D6d): every duty adopted from the matter's promises reads `met`.
 - **"Her items"** (D14): dated items whose to-dos route to her; on leaving a group or a project.
 - **Scopes** (D4): removable by an act with a reason by a member who can see the item (a counsel matter by its members); never retroactively for anything published.
@@ -183,22 +184,23 @@ S1 §D 1–19 stand. Rulings resolve: §D 6 (D9), §D 7 (D5), §D 8 (D14), §D 9
 
 ## 11. Where each piece lives (module order, P4; for BOB's fold)
 
-Positions from `build/modules.json`: project-roster 35 (L2), standards 58 and duties 62 (L5), publication 96 and docket 97 (L8), conformance 108, consequences 109, actions 111, action-clocks 112, filings 114, escalation 115, action-plans 116 (L9), monitoring 117 and following 118 (L10), queue-producers 126 (L11).
+Positions as of T44 (BOB #155): project-roster (L2), standards 59 and duties 63 (L5), publication 101 and docket 103 (L8), conformance 115, consequences, actions 118, action-clocks, filings, escalation, action-plans 123 (L9), monitoring 124 and following 125 (L10), queue-producers 133 (L11).
 
 - **Success record** in `consequences` (before `actions`, which reads it for recognition). Carrying it into the next edition is a member's act in layer 9 calling the docket's or case-authoring's op (layer 9 calling layer 8); layer 8 never reads it. No reader moves.
-- **Re-examination** (rule 16): the driver is `action-plans` (after `actions`, `action-clocks` and `escalation`, so it reads all three), listening to `actions`' correspondence-recorded event; the AI part is an agent-worker mode invoked by its op.
-- **Watches and their end dates** (rule 17): owned by `monitoring`/`following` (layer 10), which read plans; the once-only question at plan close or when a matter's promises are met is raised by `monitoring` on observing that state. `action-plans` neither lists nor stops watches.
-- **One date, one reminder** (rule 6): de-duplication in `action-clocks` (layer 9), which may read `steps` (layer 6); `queue-producers` (layer 11) draws one item.
-- **Scopes** (rule 15): a counsel matter is a project (`project-roster`, layer 2; membership as hidden projects), so docket, publication and promotion enforce it through project sight. A confidential act is a flag on the action; the published record of actions is produced by `actions` (R66) and registered to publication, so the exclusion is enforced at the producer. A source role stays in the member's hidden project.
+- **Re-examination** (rule 16): the driver is `action-plans` (after `actions`, `action-clocks` and `escalation`), listening to `actions`' correspondence-recorded event; its marks are the machine marks of rule 1; the AI part is an agent-worker mode invoked by its op.
+- **Watches and their end dates** (rule 17): owned by `monitoring`/`following` (layer 10); the once-only question at plan close or when a matter's adopted duties all read met is raised by `monitoring`. **New uses edges:** `monitoring` → `action-plans`, `following` → `action-plans`.
+- **One date, one reminder** (rule 6): de-duplication in `action-clocks` (layer 9) reading `steps` (layer 6). **New uses edge:** `action-clocks` → `steps`. `queue-producers` (layer 11) draws one item.
+- **Scopes** (rule 15): a counsel matter is a project (`project-roster`, layer 2), so docket, publication and promotion enforce it through project sight. A confidential act is a field of the action; the published record of actions is produced by `actions` (R66) and registered to publication, so the exclusion is enforced at the producer. A source role stays in the member's hidden project.
+- **The advocacy evidence check** (rule 9): the text and its result live in the member's own hidden project (layer 2 sight); the check is the case-account check (layer 8) run over that text; nothing reaches layer 9.
+- **A hold from a docket pressure mark** (rule 12; S1 §D 10): the docket (layer 8) cannot call `actions`; `queue-producers` (layer 11) raises the hold to-do from a `legal` mark; placing the hold is a member's act in `actions` (layer 9), which reads the docket mark.
 - **Open requests at signing** (rule 8): a registration seam from `actions` into the signing view (layer 8), as H17.
-- **Dated outcome entries** (rule 17): written to the docket (layer 8) by a member's act through the docket's op; the ladder's interfaces say so.
-- **Links and states** (Action §6): `arose_from`, `cures`, `partners` added to State Rules §5.1's closed vocabulary; escalation state `stopped_pursuing` to §4.4.
+- **Dated outcome entries and replies on the docket** (rules 16, 17): a member's act through the docket's op.
+- **Links, fields and states:** `arose_from`, `cures` added to State Rules §5.1's closed link vocabulary; `partners` and the `confidential` scope as action fields and `stopped_pursuing` as an escalation state in §4.4.
 
 ## 12. Canon this changes
 
 Drafted in `canon-draft/` for Bob's approval, as a clean statement of the design (Bob, 2026-10-11, H25):
-- `BIO_Action_v0_1.md` → **v0.2**: §2 the contract (what a breach claim rests on: published, checked-and-held, or accepted findings); §3 constructs (scenarios unlimited; success record; counsel matter; the records-request rules D-147–149 homed); §4 rules 2 (classes by what the text does; override grounds; record check), 3 (unchanged), 5 ("our deadlines"; no reply owed), 7 (published record of actions and its exclusions), 9 (Civicsmith never advocates; evidence check only), new rule 14 (endings), new rule 15 (what stays inside); §7 updated (joint action partly lifted; Bob's rulings of 2026-10-09/11).
-- `BIO_Capability_Ladders_v0_1.md`: a new section §9A ACTIONS; title, §1's register list and an Amended line (`canon-draft/ladder-ACTIONS.md`).
-- `BIO_State_Rules_Consistency_v1_5.md` §5.1: `arose_from`, `cures`, `partners`; §4.4: escalation state `stopped_pursuing`, action scope `confidential`.
-- v0.1's §7 items 7 and 8 (DEC-114 "Matters", DEC-115 binding sketches) carried into v0.2 §7; v0.1's reconciliations absorbed into its rules and §6.
-- Consequential, by BOB at placement: K590 ruling 8 (scenarios), K600 (a) (overridden actions and escalation), K660 (2) (options), conformance R2's reading of Action §2, K1483/K1484 row 14 reading (D13).
+- `BIO_Action_v0_2.md` replaces v0.1: §1 purpose (the shapes of action; audience; both kinds of member); §2 the contract (three kinds of findings; Civicsmith never an instrument); §3 constructs (determination on three kinds of findings; success record; scenarios unlimited; escalation ends or is stopped); §4 rules 1–18 (2 the gate and its grounds; 3 the record check; 9 the doctrine's limits; 15 what stays inside; 16 responses; 17 endings; 18 handing over); §5 records requests (D-147–149 homed); §6 things kept distinct (outcome vocabularies, plan vs escalation, kinds and tiers, links, fields and states); §7 words and screens (DEC-114, DEC-115); §8 not yet.
+- `BIO_Capability_Ladders_v0_1.md`: §9A ACTIONS; title, §1's register list and an Amended line (`canon-draft/ladder-ACTIONS.md`).
+- `BIO_State_Rules_Consistency_v1_5.md` §5.1: links `arose_from`, `cures`; §4.4: action fields `partners`, `confidential`; escalation state `stopped_pursuing`.
+- Readings BOB records at placement as K rulings: K590 ruling 8 superseded (D19); K600 (a) revised (D3); K660 (2) superseded (D17); K1483/K1484 row 14 read with rule 8 (D13); `conformance` R2 read with §3 (D16, D24); K1431's basis kinds gain the other side's stated deadline.

@@ -80,8 +80,12 @@ Responses across a group's actions to one body (late, partial, silent) are shown
 | EVENTS | meetings, agenda items, minutes | what the group said and did, beside them |
 | COURTS | reports and their required responses; proceedings | proceedings linked to actions |
 | QUESTIONS | standing questions ("tell me if they miss this date") | the action's dates to watch |
-| Publication (layer 8) | published, checked-and-held and accepted findings; the docket | dated outcome entries and responses written to the docket by a member's act (layer 9 calling layer 8); open requests for comment at signing through a registration seam |
+| Publication (layer 8) | published, checked-and-held and accepted findings; the docket; pressure marks on the docket | dated outcome entries and responses written to the docket by a member's act (layer 9 calling layer 8); open requests for comment at signing through a registration seam |
 
 ### 9A.8 Decisions, all ruled
 
-Actions D1–D24, D11a, D11b and D16a (Bob, 2026-10-09 and 2026-10-11), recorded in `docs/development/actions-design/DECISIONS.md`, with BOB's K rulings at placement.
+Each with Bob's ruling; BOB adds its K number at placement. Full text: `docs/development/actions-design/DECISIONS.md`.
+- **D1** asking or asserting: classed by what the text does (c). **D2** what is sent is checked against the record (c). **D3** short windows: shown beside the refusal, a quick route; an overridden action may join escalation once determined (b with d). **D4** three scopes: confidential act, counsel matter, source role (a). **D5** curing act; harm statement; outcome entry then determination. **D6** stopped pursuing; closing summary; success record; watches asked once (a, b, a, b).
+- **D7** a spoken promise binds once confirmed in writing or public (a). **D8** templates, guides, facts on trigger, other states, rule-writing (as recommended). **D9** counsel at any stage; defence packet (b). **D10** any member places a hold; hold notice (a, a). **D11** Civicsmith never rules on policy; advocacy gets the evidence check only (Bob's words); the assistant stays with facts (D11b: b). **D12** who speaks and who is named (as recommended).
+- **D13** replies quotable unless they say otherwise; open requests at signing (b, b). **D14** taking up a departed member's items; where it stands; status reports (b, c). **D15** formal party as Tier 2; our deadlines (b; c when asked). **D16** partners now, joint approval designed; breach claims on accepted findings (Bob's words), with D16a's three points (all). **D17** every option listed. **D18** override only on a legal deadline or an imminent act (b).
+- **D19** no limit on scenarios (b). **D20** a response that may be an infraction becomes a new matter, same or linked project (a, b and c). **D21** responses re-examine the plan. **D22** actions before publication; the published record of actions. **D23** checked and held. **D24** determinations on a checked, held case (b).
