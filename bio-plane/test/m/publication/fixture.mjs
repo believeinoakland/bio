@@ -139,11 +139,11 @@ export function world({ group = "test-group", workerd = false, contradiction = n
     inquiry: { earned: (s, t) => k.earned(s, t), legCapped, cyclePath: (id, t) => k.cyclePath(id, t) },
     now: () => clock.now });
   basisVersions.migrate();
-  /* sources (layer 3) over a stand-in for capture's one keyed read (`pulledKnocksOf`): the test pulls knocks with
-     `w.knock`. Its clock is the world's, in milliseconds. */
+  /* sources (layer 3) over a stand-in for doorbell's one keyed read (`pulledKnocksOf`, sources R1, doorbell R18): the
+     test pulls knocks with `w.knock`. Its clock is the world's, in milliseconds. */
   const knocks = [];
   const src = sourcesOf(host, { record, membership, now: () => Date.parse(clock.now),
-    capture: { pulledKnocksOf: (captureSha) => knocks.filter((k) => k.sha256 === captureSha) } });
+    doorbell: { pulledKnocksOf: (captureSha) => knocks.filter((k) => k.sha256 === captureSha) } });
   /* reevaluation before publication, as the plane's store builds them: publication registers its cited parts with it (R41, R43). */
   const r = reevaluationOf(host, { record, membership, promotion, inquiry: k, content, connections, provenance: prov,
                                    basisVersions, now: () => clock.now });
