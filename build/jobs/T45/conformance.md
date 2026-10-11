@@ -50,3 +50,7 @@ Found while doing T45-23 (details in my record, "Found in other modules"):
 3. `build/layers.md` layer 9 (conformance row, Contract, uses line) still says "published findings" and lacks the edges to case-check, case-import, accepted-work.
 4. escalation's requirements have no line refusing a void determination through `determinationVoided` (l9a says owed).
 5. R32's identity, stake and edition_date have no provider yet (N903): conformance reads `importedCase`'s edition fields `identity`, `stake`, `edition_date` (or inside `group_fields`).
+
+## J3 · COMPLETE
+
+T45-23 complete on job/T45/conformance: R2, R9, R14, R24, R31–R37 applied and tested (conformance 105/105); format, architecture, coverage (37/37), ownership checks 0 failures. Two new reds in other modules (affordances, answer-envelope) and three notes in REPORT J2. No file outside my paths. Record: build/jobs/T45/conformance.md.
