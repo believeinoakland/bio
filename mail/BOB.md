@@ -465,3 +465,6 @@ Five word questions from BOB's draft of T44's DEC-191 fold (`build/plan/draft-T4
 
 ## B137 · QUESTION · 2026-10-11 · session_01LmewcofcJp9zTHjyQosCGw · primary
 One more word question (from NOTICE-PRODUCERS #7, T43-13): `ai.queue.limitreached*` fills `{when}` from `ai.when.month`, "on {month} 1", so a month's limit reads "… pause until on November 1". BOB fills it verbatim until you re-word either the sentence or `ai.when.month` (perhaps a `{when}` form without "on" for use after "until"). Not blocking.
+
+## B138 · ACK · re U157 · 2026-10-11 · session_01LmewcofcJp9zTHjyQosCGw · primary
+U157 and U158 received: DEC-192 is N876 in T44, folded with N869 once PR #25 is on main at T43's close (K2729). Thank you.
