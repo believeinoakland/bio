@@ -3,7 +3,7 @@
    refused, never passed (K248). Driven at the module's interface, over the real modules. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, STRANGER, WORDS, WHY, grammar, actionsWith } from "./fixture.mjs";
+import { world, V, MACHINE, STRANGER, WORDS, WHY, actionsWith } from "./fixture.mjs";
 import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { FILINGS_CHECKS, Filings } from "../../../src/filings/index.mjs";
 import { noSuchAction } from "../../../src/actions/index.mjs";
@@ -96,10 +96,10 @@ test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 R34 R36 R38 R40 R42 R43 R44 ea
     assert.deepEqual([r.check, r.translation], [FILING_TEMPLATE_CHECKS[r.reason].check, FILING_TEMPLATE_CHECKS[r.reason].translation],
                      `${r.reason}: filing-templates' row`);
   }
-  /* T45 (R34, R36, R38, R40, R42–R44, R23): the action layer's rows, the phrasing lists and actions' partners stood in
-     until their providers merge (K2848 (7)) */
+  /* T45 (R34, R36, R38, R40, R42–R44, R23): the action layer's rows, actions' partners stood in until actions merges
+     (K2848 (7)) */
   const P = x.action();
-  const g = x.filingsWith({ grammar, actions: actionsWith(x, { [P]: { partners: [{ role: "chair", organisation: "Harbour Watch" }] } }) });
+  const g = x.filingsWith({ actions: actionsWith(x, { [P]: { partners: [{ role: "chair", organisation: "Harbour Watch" }] } }) });
   const gp = (text, o = {}) => g.filingPrepare({ action: P, text, language: "en", preparer: V("bo"), viewer: V("bo"), ...o });
   expect(await g.filingApprove({ filing: gp("The works order was not let without the vote the bylaw requires.").id, author: V("bo"), viewer: V("bo") }), "CONTRADICTED_HELD");
   expect(await g.filingApprove({ filing: gp("Please fund our newsletter.").id, author: V("bo"), viewer: V("bo") }), "SELF_BENEFIT_ASK");

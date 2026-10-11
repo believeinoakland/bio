@@ -3,12 +3,12 @@
    to fix (R37, R38), election and position (R39), quoting (R40), templates after the act (R41), second approval (R42),
    the assertion gate (R43), "as myself" (R44), recognition (R45), the review copy (R46), the hold notice (R47), junior
    staff (R48), legal facts (R49), and packets without a determination, for defence and in counsel matters (R8–R10).
-   Driven at the module's interface over the real modules; what a layer-9 provider merging before filings does not yet
-   answer (action-grammar's phrasing lists, R18–R19; actions' disclosures, partners and press terms, R75, R78, R79;
+   Driven at the module's interface over the real modules (action-grammar's phrasing lists, its R16–R19, among them);
+   what a layer-9 provider merging before filings does not yet answer (actions' disclosures, partners and press terms, R75, R78, R79;
    action-holds' reads, R2, R11, R12) is a stand-in answering as its requirement states (K2848 (7)). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, STRANGER, F, DOC, CASE, PROFILE, WHY, sha, grammar, actionsWith, templatesOver } from "./fixture.mjs";
+import { world, V, MACHINE, STRANGER, F, DOC, CASE, PROFILE, WHY, sha, actionsWith, templatesOver } from "./fixture.mjs";
 import { KEYED, FILINGS_CHECKS, sentencesOf, groupLine, counselMarking } from "../../../src/filings/index.mjs";
 import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
@@ -17,7 +17,7 @@ const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const CLAIM = "The works order was let without the vote the bylaw requires.";
 const NEGATED = "The works order was not let without the vote the bylaw requires.";
 
-const f45 = (x, over = {}) => x.filingsWith({ grammar, ...over });
+const f45 = (x, over = {}) => x.filingsWith(over);
 const prep = (f, action, over = {}) => f.filingPrepare({ action, text: "To the {{counterparty_role}}: a letter.", preparer: V("bo"), viewer: V("bo"), language: "en", ...over });
 const comm = (f, action, over = {}) => f.communicationPrepare({ action, text: "A word to the board.", purpose: "a letter", preparer: V("bo"), viewer: V("bo"), language: "en", ...over });
 const approve = (f, filing, over = {}) => f.filingApprove({ filing, author: V("bo"), viewer: V("bo"), ...over });

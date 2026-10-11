@@ -334,35 +334,6 @@ function provDoc(path, text) {
            origin: { kind: "named_request" } };
 }
 
-/* action-grammar's R16–R19, as they are required (a stand-in until its job merges): English lists, a phrase matched
-   case-insensitively within a sentence; any other language undetermined (`no_list`). */
-const LISTS = { assertion: ["in breach of", "unlawful"], position: ["we support", "we oppose"], own_benefit_ask: ["fund our", "pay us"] };
-export const grammar = {
-  pointOut({ sentences, language, kind }) {
-    if (!/^en\b/i.test(String(language))) return { state: "undetermined", why: "no_list" };
-    const pointed = [];
-    sentences.forEach((s, index) => { for (const phrase of LISTS[kind] || []) { const at = s.toLowerCase().indexOf(phrase);
-      if (at >= 0) pointed.push({ index, phrase, origin: "product", start: at, end: at + phrase.length }); } });
-    return { state: "read", language, kind, pointed };
-  },
-  assertionResolutionFindings({ sentences, pointed, resolutions }, findings) {
-    const seen = new Set();
-    for (const r of resolutions) {
-      const i = sentences.indexOf(r && r.sentence);
-      const ok = r && ["only_asks", "breach_claim"].includes(r.resolution) && i >= 0 && pointed.pointed.some((p) => p.index === i)
-        && (r.resolution === "only_asks" ? typeof r.words === "string" && r.words.trim() : r.words === undefined) && !seen.has(i);
-      if (!ok) findings.push({ code: "ASSERTION_RESOLUTION_REFUSED", item: r ?? null });
-      seen.add(i);
-    }
-  },
-  assertionsUnresolved({ sentences, pointed, resolutions }) {
-    if (!pointed || pointed.state !== "read") return { state: "undetermined" };
-    const done = new Map(resolutions.map((r) => [sentences.indexOf(r.sentence), r.resolution]));
-    const at = [...new Set(pointed.pointed.map((p) => p.index))];
-    return { unresolved: at.filter((i) => !done.has(i)), breach_claim: at.some((i) => done.get(i) === "breach_claim") };
-  },
-};
-
 /* actions' read with R75's disclosures, R78's partners and R79's press terms added for the actions named (a stand-in
    until actions' job merges); every other field the real read's. */
 export function actionsWith(x, extra) {
