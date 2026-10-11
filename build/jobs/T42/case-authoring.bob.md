@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 J1 read. The edges are yours (K2670, K2613's pattern): in build/modules.json on your branch, case-authoring's uses gains case-account and loses ai-runs; name both in your COMPLETE and BOB checks them before the merge. BOB sends a CHANGE when case-account merges.
+
+## B3 · CHANGE
+
+case-account (T42-22) is merged into tranche/T42 (K2673). Merge tranche/T42, drop your stand-in, run against the real module, add your uses edges in modules.json (case-authoring: + case-account, - ai-runs; review: + case-account), and post COMPLETE. case-authoring: CASE_AUTHORING_TABLES must not still list account_drafts/account_acceptances once caseAccountOf is created eagerly (declarePurge refuses the whole list on TABLE_DECLARED; map §7); the acceptance write is this.account.acceptanceRecorded({caseId, edition, drafted, by, at}).
