@@ -895,7 +895,41 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    so no gate's order moves.
    ROW_CENSUS (R50) re-pinned to this tree: 1567 rows. Rows a T41 job in layers 3–11 adds or changes are T42's stamp
    (plan T41, rule 4 item 2). */
-export const CATALOG_VERSION = "1.68.0";
+/* 1.69.0 (PROMOTION #40, T42-5, 2026-10-11; T41's rule 4 item 2, T42's rule 4 item 2; K1680, K1750, K2607, K2608):
+   MINOR. The stamp of every row awaiting it at T41's close (T41's layers 3–11) and of T42's layers 1 and 2, read by
+   diffing R50's census lines of `tranche/T42` at its layer 2 against 1.68.0's own (`test/fixtures/row-census-1.68.0.jsonl`:
+   1567 rows, 8c92f849…): 154 new rows, 24 changed, two retired. Each is one a job record names (T41's RUN-PRODUCTIONS',
+   RUN-RULES', AI-RUNS', AI-USE's, STEPS', READING-GUIDES', QUESTION-EXPLORER's, INVESTIGATION's, HYPOTHESES', ANSWERS',
+   INQUIRY's, INQUIRY-GRAMMAR's, BASIS-VERSIONS', INTENT's, ACTION-GRAMMAR's, ACTION-PLANS', CAPTURE's,
+   CAPTURE-REQUESTS', CASE-DISCLOSURES', CASE-CARRIAGE's, PUBLICATION's, PUBLISH-SCHEDULE's, RATIFICATION's, REVIEW's,
+   WIZARD-SCRIPTS', OBSERVATION-LOG's and ANSWER-ENVELOPE's; T42's RECORD-GRAMMAR's).
+   ARRIVED (154): steps C-142.1–.31 (the new module's family); investigation C-146.1–.28; reading-guides C-144.1–.18;
+   question-explorer C-145.1–.11; ai-use C-143.1–.6; run-productions C-104.13–.31 (reading runs, connections,
+   acceptance, bearings); hypotheses C-134.20–.28 (proposals); run-rules C-22.22–.28; case-disclosures C-120.23–.29 (the
+   account's checks); review C-87.13–.16 (approval rules); intent C-111.29, .30 (`registerNoneExistsReader`, its R33);
+   answers C-135.14, .15; action-grammar C-117.29 SEEKS_REFUSED, C-32.21 MACHINE_CANNOT_STATE_SEEKS; inquiry C-106.2
+   DRAWN_ON_BY_A_PROJECT, C-2.19 BIAS_APPLICATION_NOT_IN_FORCE; inquiry-grammar C-2.8 BIAS_APPLICATION_MALFORMED;
+   basis-versions C-25.35 BAD_BIAS_APPLIED; capture C-118.10 UPLOAD_NO_STATEMENT; capture-requests C-28.34
+   CAPTURE_REQUEST_NO_STEP; ratification C-58.11 APPROVAL_MISSING; wizard-scripts C-131.42 START_RUMOUR_AS_QUESTION.
+   DEPARTED (2), their numbers never reused: inquiry C-106.1 DRAWN_ON_BY_SEVERAL_PROJECTS (C-106.2 answers the act);
+   action-plans C-124.52 PROPOSALS_CURSOR_REFUSED.
+   CHANGED (24), code and number unmoved. `where` only: run-productions C-104.9, C-104.10; run-rules C-109.11;
+   publish-schedule C-122.5 SCHEDULED_CHECK_UNAVAILABLE (now minted in `src/publish-schedule/`); record-grammar C-33.40
+   NO_BASIS (now naming progressions' and entities' sites beside inquiry's, N827) and C-33.54 ACCEPT_MUST_REAUTHOR
+   (case-account R4 in place of case-authoring R64, K2608). `where` and translation: run-productions C-104.2–.4; run-rules
+   C-109.8, .9, .12. Translation only: run-productions C-104.5, .8; run-rules C-109.10, C-22.14; observation-log C-22.9;
+   case-disclosures C-120.19; publication C-122.6; case-carriage C-141.7–.10; action-grammar C-94.5.
+   CHANGED IN WHAT THE GATES RUN, no row line moving: the promote gate gains two registered checks, steps' (its R18: a
+   basis leg resting on a step id is refused STEP_NOT_A_LEG inside BASIS_REFUSED) and investigation's (a leg resting on
+   an intake interview, narrative, is refused NARRATIVE_NOT_A_LEG inside BASIS_REFUSED), each counted with its row
+   above and run in the modules' total order (R39); intent's registered step gains a projection (its R32: the person
+   warning at an objective's or condition's promotion, never a refusal). 1.68.0's note had steps and investigation
+   registering none.
+   T42's layer 1 changed the two record-grammar `where`s above and no other row; T42's layer 2 (record-core, membership,
+   credentials) is re-pinned in place as each merges, so T42 names one catalogue.
+   ROW_CENSUS (R50) re-pinned to this tree: 1719 rows. Rows a T42 job in layers 3–11 adds or changes (doorbell's
+   re-pointed `where`s among them) are T43's stamp (plan T42, rule 4 item 2). */
+export const CATALOG_VERSION = "1.69.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -987,8 +1021,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1567,
-  digest: "8c92f849fed9dd1e00dfc8ee1cd3165a442bd6479dd81f3f7981e656e2e57cbb" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1719,
+  digest: "8902282a60165dd94e0dd306bc7b27e739b9452089c82025852730e91e3878cd" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
