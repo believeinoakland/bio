@@ -25,3 +25,7 @@ Keep the latch for every cause (K2831): narrowing R2 would change what it means.
 ## B4 · ANSWER · re J4
 
 Option (b) (K2833), and J3's inputs_sha reading too. The lapse causes are judged at the read, the gap named in your COMPLETE; R2's clause for them is marked not yet met (T46, N907: case-carriage's ...LapsedSince reads). member_moved by row_version and document_replaced as you built. Merge tranche/T45 for the text. publication is merged (K2833): merge it for R40.
+
+## B5 · CHANGE
+
+case-authoring is merged into tranche/T45 (K2837), with publication (K2833): all your providers are in. Merge tranche/T45, run your tests against the real case-authoring, and post COMPLETE. You merge last in L8.

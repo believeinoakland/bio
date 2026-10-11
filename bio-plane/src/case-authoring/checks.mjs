@@ -9,7 +9,7 @@
  * enforces it. C-32.6 (`MACHINE_CANNOT_PUBLISH`) and C-33.14 (`NO_STATEMENT`) were copied
  * into `PUBLISH_ACT_CHECKS` (T18; R1, R3, R29; K695), ids, codes, `where`s and translations unchanged, and stamped by
  * promotion in T19; the catalogue and its copies are deleted (K529). R56's `CALCULATION_NOT_DISCLOSED` joins
- * `PUBLISH_ACT_CHECKS` in T33 (R29), R61's `STANDARDS_USE_REFUSED` (C-136.2) in T36. The family C-120, "a case's disclosures and its
+ * `PUBLISH_ACT_CHECKS` in T33 (R29), R61's `STANDARDS_USE_REFUSED` (C-136.2) in T36, R71's six (C-136.3–C-136.8) in T45. The family C-120, "a case's disclosures and its
  * pre-flight", moved whole to `case-disclosures`' own `checks.mjs` with its ids, codes and translations (its R22; N529);
  * no copy is held here (K529), and `index.mjs` re-exports it for this module's importers. */
 
@@ -57,6 +57,46 @@ export const PUBLISH_ACT_CHECKS = Object.freeze({
       + 'that is not free to read, quote a passage of one that no finding relies on, or call a finding that rests only '
       + 'on benchmarks "violated" or "nonconforming". Each is named below. Change the case and prepare it again. '
       + 'Nothing was prepared.',
+  },
+  /* R71 (T45; N855 (6c); Actions D5, D6c; v0.2 §3 Success record, rule 17): an outcome carried into a case's next edition
+     by a member's act (`carryOutcome`, `withdrawCarriedOutcome`). Six new rows, the next free numbers of C-136 (this
+     module's existing family); their translations are BOB's to draft, these the job's until then, the member words the UX
+     stream's to revise, awaiting promotion's stamp (rule 17). */
+  MACHINE_CANNOT_CARRY_OUTCOME: {
+    check: 'C-136.3',
+    where: at('carryOutcome', 'is-carry-machine'),
+    translation: 'An outcome is carried into a case\'s next edition by a member, and the credential that asked here is an '
+      + 'automated one. Sign in to carry it. Nothing was written.',
+  },
+  CARRY_NOT_A_PARTICIPANT: {
+    check: 'C-136.4',
+    where: at('carryOutcome', 'is-carry-participant'),
+    translation: 'Only someone who has joined the project that makes this case can carry an outcome into its next edition. '
+      + 'Nothing was written.',
+  },
+  BAD_CARRIED_OUTCOME: {
+    check: 'C-136.5',
+    where: at('carryOutcome', 'is-carry-shaped'),
+    translation: 'An outcome carried into a case is its kind (a success, a cure or a harm addressed), your statement on one '
+      + 'line of at most 2,000 characters with no quote or backslash, what it cites, and the date it happened. One of these '
+      + 'is missing or malformed, and is named. Nothing was written.',
+  },
+  NO_SUCH_CARRIED_OUTCOME: {
+    check: 'C-136.6',
+    where: at('withdrawCarriedOutcome', 'is-carried-outcome-found'),
+    translation: 'No outcome carried into a case you can see answers to that id. Nothing was written.',
+  },
+  CARRIED_OUTCOME_SETTLED: {
+    check: 'C-136.7',
+    where: at('withdrawCarriedOutcome', 'is-carried-outcome-pending'),
+    translation: 'This outcome is no longer waiting for the next edition: a signed edition already carries it, or it was '
+      + 'withdrawn. A signed edition is corrected only by a later one. Nothing was written.',
+  },
+  CARRY_NO_REASON: {
+    check: 'C-136.8',
+    where: at('withdrawCarriedOutcome', 'is-carry-reasoned'),
+    translation: 'Withdrawing an outcome from a case\'s next edition is recorded with your own words on why, and none were '
+      + 'given, or they are longer than 2,000 characters. Write them. Nothing was written.',
   },
 });
 

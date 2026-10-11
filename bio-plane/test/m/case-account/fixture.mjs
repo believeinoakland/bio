@@ -11,11 +11,13 @@ import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
-import { inquiryOf } from "../../../src/inquiry/index.mjs";
+import { inquiryOf, legCapped } from "../../../src/inquiry/index.mjs";
 import { migrateContent } from "../../../src/content/schema.mjs";
 import { EXTRACTION_SCHEMA } from "../../../src/extraction/schema.mjs";
 import { migratePublication } from "../../../src/publication/schema.mjs";
 import { caseDisclosuresOf } from "../../../src/case-disclosures/index.mjs";
+import { projectRosterOf } from "../../../src/project-roster/index.mjs";
+import { basisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { caseAccountOf } from "../../../src/case-account/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? Buffer.from(s, "utf8") : s).digest("hex");
@@ -85,12 +87,20 @@ export function world({ group = "test-group", deps = {}, create = true } = {}) {
      on this host, reached through inquiry */
   inquiry.connections.migrate();
   inquiry.entities.migrate();
+  /* project-roster (its R23's scope, R21's act that sets it) and basis-versions (its R23: a finding's own conclusion),
+     the real ones on this host, as T45's R13 and R14 read them */
+  const roster = projectRosterOf(host, { record, membership });
+  roster.migrate();
+  const versions = basisVersionsOf(host, { record, membership, promotion,
+    inquiry: { earned: (s, t) => inquiry.earned(s, t), legCapped, cyclePath: (id, t) => inquiry.cyclePath(id, t) },
+    now: () => clock.now });
+  versions.migrate();
   /* ai-runs' `runFor` over the test's own runs: a run is seen by every viewer but "nobody" */
   const runs = new Map();
   const aiRuns = { runFor: (id, viewer) => (runs.has(String(id)) && viewer !== "nobody"
     ? { run: String(id), status: runs.get(String(id)).status, mode: "draft" } : null) };
   const w = {
-    st, host, record, membership, inquiry, promotion, disclosures, runs, printed, clock,
+    st, host, record, membership, inquiry, promotion, disclosures, runs, printed, clock, roster, versions,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
@@ -105,7 +115,7 @@ export function world({ group = "test-group", deps = {}, create = true } = {}) {
   const judgedDisclosures = new Proxy(disclosures, { get: (t, p) => (p === "accountJudged"
     ? (a) => { w.judged.push(a); return w.judgeAccount ? w.judgeAccount(a) : t.accountJudged(a); }
     : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
-  w.deps = { record, membership, inquiry, runs: aiRuns, disclosures: judgedDisclosures,
+  w.deps = { record, membership, inquiry, runs: aiRuns, disclosures: judgedDisclosures, roster, versions,
              now: (p) => (p === "millisecond" ? clock.ms : clock.now), ...deps };
   if (create) w.cacc = caseAccountOf(host, w.deps);
   let n = 0;
@@ -139,11 +149,12 @@ export function world({ group = "test-group", deps = {}, create = true } = {}) {
       w.indexText(c.sha, id, units);
       return c.sha;
     },
-    /** An inquiry whose basis is `legs` (each `{target, …leg fields}`), concluded in its own bytes. */
-    finding(id, legs) {
+    /** An inquiry whose basis is `legs` (each `{target, …leg fields}`), concluded in its own bytes; `claim` adopts a
+     *  reading stating it (basis-versions R23: the claim `adopted`), `state` its state (`concluded` by default). */
+    finding(id, legs, { claim = null, state = "concluded" } = {}) {
       const head = record.head(id);
       const r = promotion.promote({ bundleId: id, base: head ? head.bundleSha : null, snapKey: `k${++n}`,
-        author: V("alice"), files: [{ path: "bundle.md", text: inqMd(id, legs) }], meta: { object_type: "inquiry" } });
+        author: V("alice"), files: [{ path: "bundle.md", text: inqMd(id, legs, { claim, state }) }], meta: { object_type: "inquiry" } });
       if (!r.ok) throw new Error(`fixture finding refused: ${JSON.stringify(r).slice(0, 600)}`);
       return r;
     },
@@ -153,6 +164,12 @@ export function world({ group = "test-group", deps = {}, create = true } = {}) {
         files: [{ path: "bundle.md", text: projMd(title, cites) }], meta: { object_type: "project" } });
       if (!r.ok) throw new Error(`fixture project refused: ${JSON.stringify(r).slice(0, 400)}`);
       return r.bundleId;
+    },
+    /** Sets `project`'s scope (project-roster R21) by its owner `by`: `own`, `counsel_matter` or `none`. */
+    scope(project, scope, by = "alice") {
+      const r = roster.projectScopeSet({ projectId: project, scope, reason: "for the test", by, viewer: V(by) });
+      if (!r.ok) throw new Error(`fixture scope refused: ${JSON.stringify(r).slice(0, 400)}`);
+      return r;
     },
     join(project, member, state = "joined", owner = 0) {
       st.sql.exec(`INSERT OR REPLACE INTO project_participants (project_id, member_id, state, owner, invited_by, created, updated)
@@ -181,12 +198,13 @@ export function infoMd(id) {
           "---", "", "## Summary", "", "A document.", ""].join("\n");
 }
 
-/** An inquiry document: `legs` its basis (each cited by a confirmed `cites` reference); concluded in its own bytes. */
-export function inqMd(id, legs = []) {
+/** An inquiry document: `legs` its basis (each cited by a confirmed `cites` reference); concluded in its own bytes, its
+ *  reading `first` stating `claim` and adopted by the conclusion when `claim` is given (basis-versions R1–R5, R23). */
+export function inqMd(id, legs = [], { claim = null, state = "concluded" } = {}) {
   const val = (v) => (typeof v === "number" ? String(v) : `${v}`);
   const refs = [...new Set(legs.map((l) => l.target))];
   return ["---", `id: ${id}`, "object_type: inquiry", "schema: inquiry@1", `title: "Question ${id}"`,
-    "current_state: concluded", "prior_state: open", `created: "${T0}"`, `last_updated: "${T0}"`, "surfaced_by: human",
+    `current_state: ${state}`, "prior_state: open", `created: "${T0}"`, `last_updated: "${T0}"`, "surfaced_by: human",
     ...(refs.length ? ["references:", ...refs.flatMap((t) => ["  - rel: cites", `    target: ${t}`, "    status: confirmed",
                                                               '    note: ""'])] : ["references: []"]),
     "state_history: []",
@@ -194,6 +212,13 @@ export function inqMd(id, legs = []) {
       .sort(([a], [b]) => (a === "target" ? -1 : b === "target" ? 1 : 0))
       .map(([k, v], i) => `${i ? "    " : "  - "}${k}: ${val(v)}`))] : []),
     `conclusion: "the award followed the minutes"`, `falsifier: "a later amendment"`,
+    ...(claim ? [`conclusion_version: "first"`, `conclusion_claim: "${claim}"`, "basis_versions:", `  - name: "first"`,
+                 `    description: "the reading called first"`, `    relationship: "and"`, `    state: "accepted"`, "    hidden: false",
+                 "    derived_from: null", `    author: "member:alice"`, `    at: "${T0}"`, `    claim: "${claim}"`,
+                 `    state_by: "member:alice"`, `    state_at: "${T0}"`, `    state_reason: ""`,
+                 "basis_version_grounds:", `  - version: "first"`, `    ground: "main"`, `    asserted_by: "member:alice"`, `    at: "${T0}"`,
+                 "basis_version_legs:", ...[...new Set(legs.map((l) => l.target))].flatMap((t) => [`  - version: "first"`,
+                   `    target: ${t}`, `    role: "supports"`, `    ground: "main"`])] : []),
     "---", "", "## Question", "", `Was ${id} answered?`, "", "## Session Log", ""].join("\n");
 }
 

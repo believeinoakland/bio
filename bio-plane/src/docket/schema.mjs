@@ -8,7 +8,8 @@
 
 export const DOCKET_SCHEMA = `
 -- R1: A RECORD ENTRY, as a member filed it. from_json is {kind, entity|grant|name}; answers the receipted record entry
--- a resent reply answers (R8), or null.
+-- a resent reply answers (R8), or null. (T45) outcome_json {kind, on} and summary, for an outcome entry only; null
+-- for every other kind and for an outcome filed before T45.
 CREATE TABLE IF NOT EXISTS docket_record (
   rn           INTEGER PRIMARY KEY,
   entry_id     TEXT NOT NULL UNIQUE,
@@ -23,7 +24,9 @@ CREATE TABLE IF NOT EXISTS docket_record (
   answers      TEXT,
   found_by     TEXT NOT NULL,
   author       TEXT NOT NULL,
-  filed_at     TEXT NOT NULL
+  filed_at     TEXT NOT NULL,
+  outcome_json TEXT,
+  summary      TEXT
 );
 CREATE INDEX IF NOT EXISTS docket_record_case ON docket_record (case_id, rn);
 -- R2, R7, R11: A MARK ON A RECORD ENTRY: a pressure mark, a decline, or a take-back; each once per entry and kind.
@@ -61,8 +64,15 @@ CREATE INDEX IF NOT EXISTS docket_entries_record ON docket_entries (record_entry
 /** The tables, every one cleared by the whole-store purge only (R16). */
 export const DOCKET_TABLES = Object.freeze(["docket_record", "docket_marks", "docket_entries"]);
 
-/** Creates the tables; idempotent. */
+/** (T45) Columns added to a table after it first shipped: a store created before carries them once migrated. */
+const ADDED_COLUMNS = Object.freeze([["docket_record", "outcome_json", "TEXT"], ["docket_record", "summary", "TEXT"]]);
+
+/** Creates the tables, and adds any column a table created earlier lacks; idempotent. */
 export function migrateDocket(sql) {
   const bare = DOCKET_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const s of bare.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
+  for (const [table, column, type] of ADDED_COLUMNS) {
+    const has = [...sql.exec(`PRAGMA table_info(${table})`)].some((c) => c.name === column);
+    if (!has) sql.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+  }
 }

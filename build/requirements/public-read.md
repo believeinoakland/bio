@@ -83,7 +83,7 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
   - **On a published case.** `publishedCase` (R3) also answers `group_fields`, R34's answer at the read: the group's current identity and stake, labelled as current, never read from or written into the signed document or the case file's bytes (R23), so a later declaration changes no published byte.
   - It writes nothing and never throws.
 
-  Controls: the same subject stamped with two different `group` values answers the same `hash`; with no source registered the identity reads null with its detail, never a guess; an unset setting answers `stake: null`, an unreadable one `"undetermined"`; a second registration is refused. *(not yet met: T45)*
+  Controls: the same subject stamped with two different `group` values answers the same `hash`; with no source registered the identity reads null with its detail, never a guess; an unset setting answers `stake: null`, an unreadable one `"undetermined"`; a second registration is refused.
 
 ## Private
 
@@ -102,7 +102,7 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
 ### Invariants
 
 - **R9** (was `publication` R48; N339, K421) A store answer this module's Worker handlers relay that is the store's own refusal (`answer-envelope` R3: `ok: false` below 500) is answered with the store's status, code and sentence through `storeRefusal`; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, with the store's correlation id when it gave one (`store-door` R6; N349).
-- **R10** (copied from `publication` R25) The public read path (R1–R5, R18's registered reads, and R20–R21's docket reads) needs no credential and reads the published projection, the published store and `docket`'s public answers only, so it can disclose nothing unpublished; a scratch namespace is not readable there (rule 10). (T45; v0.2 rule 21) It also reads R34's per-group fields: the registered identity source's public answer and the one setting `declared_stake`, each public by the group's own act; nothing else outside the published projection. *(not yet met: T45)*
+- **R10** (copied from `publication` R25) The public read path (R1–R5, R18's registered reads, and R20–R21's docket reads) needs no credential and reads the published projection, the published store and `docket`'s public answers only, so it can disclose nothing unpublished; a scratch namespace is not readable there (rule 10). (T45; v0.2 rule 21) It also reads R34's per-group fields: the registered identity source's public answer and the one setting `declared_stake`, each public by the group's own act; nothing else outside the published projection.
 - **R11** (copied from `publication` R26) No answer, document or row this module serves composes a case-level strength: every pair is per member and per axis (DEC-44, DEC-21).
 - **R12** (copied from `publication` R27) Signer and deliverer are two facts, and neither is copied from the other; every authorship field is a stamp or read from a signature.
 - **R13** (copied from `publication` R28) Undetermined is stated and never filled: a deliverer, an acknowledgement list a document is silent about (null, not `[]`), a citation's version in a document older than `/4`.

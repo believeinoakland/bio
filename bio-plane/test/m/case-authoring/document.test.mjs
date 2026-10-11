@@ -143,7 +143,9 @@ test("R15: the answer carries the case, whether it was minted, its edition, the 
   assert.deepEqual(Object.keys(one).sort(), ["author", "at", "bias_acknowledgement", "bias_manifest", "bundleSha",
     "caseDocument", "caseId", "case_citations", "completeness", "edition", "findings", "minted", "next", "ok", "project",
     "required", "roles", "scope", "state", "target", "tensions", "tensions_highlighted", "tensions_legs_unread",
-    "weight"].sort());
+    "timeline", "weight"].sort());
+  /* R57 (T45): the published record of actions written and the count its sources did not mark public */
+  assert.deepEqual(one.timeline, { we_did: 0, withheld: 0 });
   assert.deepEqual([one.tensions, one.tensions_highlighted], [[], 0], "nothing to disclose: stated, zero included");
   const row = docOf(w, one);
   assert.deepEqual(one.caseDocument, { case_id: one.caseId, edition: 1, doc_sha: row.doc_sha,
@@ -156,13 +158,15 @@ test("R15: the answer carries the case, whether it was minted, its edition, the 
   assert.deepEqual(f.required, w.strength.projectBar(P));
   assert.deepEqual(f.strength.map((a) => a.axis), ["capture", "connection"]);
   assert.match(one.next, /op=caseratify/);
+  /* a second one-finding case answers its own member at the top, never the first's */
   const two = w.publish(P, "alice", [Q2], { newCase: true, roles: { [Q2]: "load_bearing" } });
+  assert.deepEqual([two.ok, two.target, two.bundleSha, two.minted], [true, Q2, w.head(Q2), true]);
+  assert.notEqual(two.caseId, one.caseId);
   const w2 = setup(); w2.finding(Q, [{ target: DOC }]); w2.finding(Q2, [{ target: DOC2 }]);
   const P2 = w2.project("Team", "alice", [Q, Q2]);
   const both = w2.publish(P2, "alice", [Q, Q2]);
   for (const k of ["target", "bundleSha", "state"]) assert.equal(k in both, false, `a case of two answers no ${k}`);
   assert.deepEqual(both.findings.map((x) => x.target), [Q, Q2], "in the order published");
-  void two;
 });
 
 test("R16: citations — every non-severed cites edge of the project at the act, in order, each pinned (its capture), only_capture (the one held), undetermined (several held, never back-filled), no_capture or no_bytes", () => {
