@@ -132227,8 +132227,8 @@ CREATE TABLE IF NOT EXISTS published_material_texts (
 );
 
 -- R1, R2 (K1317): WHAT ONE COMMITTED CASE EDITION HELD, in the order held: each SHA-256 and whether its text is held
--- here (inline), its bytes are in the evidence store (evidence), or it is a photo's obscured copy held under
--- <store>/obscured/<sha> (derived, T37; R11), for ratification R39 to copy. Written once per case edition by
+-- here (inline), its bytes are in the evidence store (evidence), or it is a photo's obscured copy or (T39; R15) a member
+-- document's cleaned copy held under <store>/obscured/<sha> (derived, T37; R11), for ratification R39 to copy. Written once per case edition by
 -- holdMaterials, read by heldMaterialsOf for a retried ratification. Published, so exempt (R6).
 CREATE TABLE IF NOT EXISTS published_case_materials (
   case_id  TEXT NOT NULL,
@@ -132806,8 +132806,8 @@ var CaseCarriage = class _CaseCarriage {
     const reg = f17 ? safeJson21(f17.content) : null;
     return (reg && Array.isArray(reg.documents) ? reg.documents : []).filter((d) => d && typeof d === "object" && d.capture && digestOf2(d.capture.sha256) === sha2);
   }
-  /** R2 (K1317): what a committed case edition held, `[{sha, held}]` in the order held, `held` `inline` or `evidence`,
-   *  as R1 wrote it, so a retried ratification copies what is left (ratification R39); `[]` for an edition that held
+  /** R2 (K1317): what a committed case edition held, `[{sha, held}]` in the order held, `held` `inline`, `evidence` or
+   *  (T37) `derived`, as R1 wrote it, so a retried ratification copies what is left (ratification R39); `[]` for an edition that held
    *  nothing or was never committed. Writes nothing; never throws. */
   heldMaterialsOf(caseId, edition) {
     try {
