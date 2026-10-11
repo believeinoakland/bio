@@ -37,6 +37,7 @@ It is the only module marked `legacy` in `modules.json`.
    10. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
    14. from T42-8's merge (sources re-pointed to `doorbellOf`, 636f27bb74): case-disclosures `carries.test.mjs`:139 (R7 "no new table", 159 vs 157: `acquisition`'s `archive_entries` and `unpack_days` created at first use inside the read) until T42-23b (MONEY #4 J1; K2643).
    15. from L6's close (agent-worker's bundle regenerated with `src/transcribe.mjs`, T42-20): bundler's `test/system/fleetbundles.test.mjs`:248–261 pins agent-worker's 25 inputs, 26 after it, until N860 (T43; bundler's layer L1 closed in T42; AGENT-WORKER #17 J1; K2650).
+   16. from T42-8's merge (sources' `deps.capture` became `deps.doorbell`, 636f27bb74): reevaluation's `fixture.mjs`:183 (7 tests, R28) and publication's 5 tests (R2, R51, R52) still hand `sources` a `capture: {pulledKnocksOf}` stand-in, so its `sourceOf` answers `NO_SUCH_SOURCE`; until T42-21a and T42-23c (INQUIRY #17 J2; K2659).
    (7) cleared at T42-17's merge (K2650).
 
 **Text owed before each layer's START (BOB's wording, P5):**
@@ -96,12 +97,14 @@ No merge order (independent).
 
 ### L7
 - **T42-21 · investigation** · (N843) its own codes for C-146.21 and C-146.26; (N846, K2572) R18 atomic arrival, `watchedProjects()` carries every source.
+- **T42-21a · reevaluation** · (K2659) test-only: its fixture (`fixture.mjs`:183) hands `sources` its knocks as `doorbell: {pulledKnocksOf}`, sources' deps since T42-8 (sources R1, `doorbell` R18); clears rule 4 (16)'s reevaluation half.
 
 ### L8
 - **T42-22 · case-account** (new; by copy, K624) · (N839, K2542, K2608) case-authoring R64, R66 and R63's account share moved (`case-account-split.md`); its drafts labelled through record-grammar R54; mints `ACD` opaque through record-core's `allocId` (record-grammar R55's legacy form keeps T41's ids valid; `mintExhausted`'s `MINTED_OBJECT` gains `ACD` if record-core's table needs it, reported at its START, K2616) · req: `requirements/case-account.md` (BOB's, before L8's START) · merges first in L8.
 - **T42-23 · case-authoring** · (N839, K2608) R64, R66 retired "moved to case-account R<n>"; R63, R65, R67, R68 stay, re-pointed; new R69 (the order `publishCase` asks case-account in); bodies and tables deleted, three one-line pass-throughs kept (`accountPropose`, `accountDrafts`, `registerReviewComments`; K1333) until T43 (N850); `uses` gains `case-account`, loses `ai-runs` · after T42-22 Its START requires an explicit R69 test (the string is in `fixture.mjs`:161 already, K874).
 - **T42-23a · review** · (N839, K2608) `reviewOf` registers its comments with `case-account` · after T42-22.
 - **T42-23b · case-disclosures** · (K2643; MONEY #4 J1) `carries.test.mjs`:139: its fixture builds the modules the read reaches (as the plane does at boot) before R7's snapshot, so the "no new table" arm measures case-disclosures alone; green on `main`, red since T42-8 made `sources` reach `doorbellOf`, which builds `capture` and `acquisition` at first use. Test-only; clears rule 4 (14).
+- **T42-23c · publication** · (K2659) test-only: as T42-21a, its fixture's stand-in for `sources` becomes `doorbell: {pulledKnocksOf}`; clears rule 4 (16)'s publication half.
 
 ### L9
 - **T42-24 · conformance** · (N841, K2558) refusals ahead of the measures; `determinationsFor` batched · req: from `draft-T42-reqs.md`.
