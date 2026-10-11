@@ -43,3 +43,7 @@ Three questions; I am building on my best reading of each meanwhile.
 ## J2 · REPORT
 
 Other modules (also in my record): (1) N901 as confirmed in B2 (c): case-disclosures hands R6's {holdings} to checkAccount, which reads a list; through the real modules every cited sentence reads unsupported and a statement's or outcome's figure arm never runs. R6's outcome control is proven through the real case-disclosures handed the same holdings in checkAccount's list (fixedDisclosures in t45-judgment.test.mjs). (2) answer-envelope: CHECK_FAMILY_FILES must list src/case-account/checks.mjs (CASE_ACCOUNT_CHECKS) directly after case-disclosures' file; until then 4 answer-envelope tests are red from my merge (totality and the three that re-assert it); 31/31 without my change. (3) promotion: stamp C-153.1-.3. (4) L11 (op-declarations, control-plane, affordances): op=advocacycheck (mutating, writes only in the member's own project) and a read op for advocacyChecksOf are not declared or routed; until then reached in-process only.
+
+## J3 · COMPLETE
+
+T45-20 done on 2eee810f4e (tranche/T45 merged after B2): R6 (carried outcomes), R13 (advocacyCheck, advocacyChecksOf, table advocacy_checks), R14 (counsel matters never evidence) met; family C-153 (3 rows). case-account 32/32; case-authoring 185/185, review 46/46; format, architecture, coverage (14/14), ownership (8 files) all 0 failures. One new red in another module: answer-envelope's family list (J2 (2)). Record in build/jobs/T45/case-account.md.
