@@ -30,4 +30,4 @@
 ## Open with Bob
 
 - The stewards' contact address (K2799): needed for T45-46 (installer README) and before any public release.
-- His weekly meter reading (K2841).
+- (answered: 51%, K2843)
