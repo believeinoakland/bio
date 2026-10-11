@@ -41,8 +41,14 @@ import { REFUSALS, DCT_TO_REFUSAL, featureReasons, encodePng8 } from "./pagepixe
 export const PICTURE_FRAME_MAX = 4096 * 3072 * 3;
 
 /** The largest JPEG frame decoded here, as `width × height × components` read
- *  from its header (R42, T44): MEASURED_PLACEHOLDER */
-export const PICTURE_SOURCE_MAX = 8064 * 8064 * 3;
+ *  from its header (R42, T44): 16384 × 12288 × 3, a 201-megapixel colour
+ *  frame, so the 48 MP (8000×6000, 8064×6048) and 200 MP (16320×12240) phone
+ *  frames pass either way up. Decoded while reduced, memory no longer grows
+ *  with the frame (measured at T44-2, its job record: a peak 13–16 MB over the
+ *  process's own, at 48 and at 195 MP, beside the input bytes the caller
+ *  holds), so the bound is CPU time: 40–60 ms per megapixel in node, about
+ *  12 s for a 200 MP colour reduction, 8 s grey, under a 30 s CPU limit. */
+export const PICTURE_SOURCE_MAX = 16384 * 12288 * 3;
 
 const refuse = (reason, detail = {}) => {
   if (!(reason in REFUSALS)) throw new Error(`undeclared refusal: ${reason}`);

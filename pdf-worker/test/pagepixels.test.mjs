@@ -598,8 +598,8 @@ console.log("\n--- R42, R43: a picture file, against Pillow 12.3.0 ---");
   /* T44: a JPEG is decoded while reduced, so its header's full frame is judged
      against PICTURE_SOURCE_MAX and its reduced frame against PICTURE_FRAME_MAX. */
   const [SW, SH] = [Math.floor(PICTURE_SOURCE_MAX / 3 / 8064), 8064];
-  t("R42 (the source bound is at least the 48 MP phone frames, in colour, either way up)",
-    [[8000, 6000], [6000, 8000], [8064, 6048], [6048, 8064]].every(([w, h]) => w * h * 3 <= PICTURE_SOURCE_MAX), true);
+  t("R42 (the source bound admits the 48 MP phone frames, in colour, either way up, and the 200 MP ones)",
+    [[8000, 6000], [6000, 8000], [8064, 6048], [6048, 8064], [16320, 12240], [12240, 16320]].every(([w, h]) => w * h * 3 <= PICTURE_SOURCE_MAX), true);
   const over = await picture(jpegSized(SW + 1, SH), 0, { maxEdge: 1568, grey: true });
   t("R42 a JPEG header past PICTURE_SOURCE_MAX: IMAGE_TOO_LARGE before any decode, naming the bound",
     fields(over, "ok", "reason", "width", "height", "comps", "samples", "bound", "bound_name"),
