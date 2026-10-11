@@ -17,3 +17,7 @@ Merge order in L5: events, local-facts, standards, duties (`modules.json` order;
 ## B2 · ANSWER · re J1
 
 (a), as you recommend (K2807): the edge local-facts → provenance is in modules.json and your Uses on tranche/T45; R10's text unchanged. Your detail readings stand. Merge tranche/T45 for the edge.
+
+## B3 · ANSWER · re J2
+
+All confirmed (K2811): R10, R11, R13 now say RULE_NO_REASON and NO_SUCH_GROUP_RULE; R13 gains RULE_NOT_CONFIRMED; the two reds (affordances catalogue, plane compose) are accepted in plan rule 4 (11); op-declarations declares your four ops and a groupRules read. Merge tranche/T45 for the wording, then complete.
