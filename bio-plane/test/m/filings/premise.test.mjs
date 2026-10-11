@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, PROFILE, attributed, WHY } from "./fixture.mjs";
-import { FILING_BLANKS, OVERRIDE_HEAD, INBAND_RULE, unfilledMarker } from "../../../src/filings/index.mjs";
+import { FILING_BLANKS, OVERRIDE_HEAD, INBAND_RULE, unfilledMarker, overrideDisclosure } from "../../../src/filings/index.mjs";
 
 const COUNSEL = { name: "A. Counsel", organisation: "Test Chambers" };
 const REASON = "the clerk refused to produce the minutes the finding needs";
@@ -53,16 +53,20 @@ test("R3 the addressee's blanks follow its arm (actions R9): an office fills rol
     assert.match(u[n], /undetermined/, n);
 });
 
-test("R8 an action stating a premise override and no live determination gets a counsel packet: assembled with R24's disclosure, its facts section saying in words that no determination is held; without the override it is refused NO_DETERMINATION", async () => {
+test("R8 an action stating a premise override and no live determination gets a counsel packet: assembled with R24's disclosure, its facts section saying in words that no determination is held; without the override it is assembled too (T45), with no disclosure", async () => {
   const x = world();
   const bare = x.action({ kind: "commitment_claim", legs: [] });
-  assert.equal(x.f.counselPacket({ reason: WHY, action: bare, counsel: COUNSEL, author: V("olive"), viewer: V("olive") }).reason, "NO_DETERMINATION");
+  const plain = x.f.counselPacket({ reason: WHY, action: bare, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
+  assert.deepEqual([plain.ok, plain.disclosure], [true, null]);
+  assert.match(plain.sections.facts.says, /no determination is held/);
   const O = x.action({ kind: "commitment_claim", legs: [], breach: true, override: REASON });
   const o = x.read(O).premise_override;
   assert.equal(o.reason, REASON, "actions holds the override");
   const p = x.f.counselPacket({ reason: WHY, action: O, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
   assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
-  const line = `${OVERRIDE_HEAD} ${REASON} (stated by ${o.by} at ${o.at})`;
+  const line = overrideDisclosure(o);
+  assert.equal(line, `${OVERRIDE_HEAD} ${REASON}; on the ground of a legal deadline, Test Stat. § 9.20, falling on 2026-04-01 (stated by ${o.by} at ${o.at})`,
+               "its reason, its ground (actions R74), who and when");
   assert.deepEqual([p.disclosure, p.head.disclosure], [line, line]);
   assert.deepEqual(p.sections.facts.items, []);
   assert.match(p.sections.facts.says, /no determination is held/);
@@ -81,7 +85,9 @@ test("R24 a draft, packet or communication prepared from an action carrying a pr
   const O = x.action({ breach: true, override: REASON });
   const o = x.read(O).premise_override;
   assert.deepEqual([typeof o.by, typeof o.at], ["string", "string"], "stamped by actions with who and when");
-  const line = `${OVERRIDE_HEAD} ${REASON} (stated by ${o.by} at ${o.at})`;
+  const line = overrideDisclosure(o);
+  assert.equal(line, `${OVERRIDE_HEAD} ${REASON}; on the ground of a legal deadline, Test Stat. § 9.20, falling on 2026-04-01 (stated by ${o.by} at ${o.at})`,
+               "its reason, its ground (actions R74), who and when");
   /* a filing draft: first on its face, before the template's text */
   const d = prep(x, O);
   assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));

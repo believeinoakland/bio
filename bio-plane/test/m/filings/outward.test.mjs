@@ -47,7 +47,7 @@ test("R22 an approved filing's bytes carry the in-band quartet: its hash over th
   const q = r.inband;
   assert.equal(q.format, "bio-inband/1");
   assert.deepEqual([q.hash.sha256, q.date, q.author], [rehash(text), r.at, V("bo")]);
-  assert.deepEqual(q, (await inbandQuartet({ subject: text, over: q.hash.over, date: r.at, author: V("bo"), bar: null })).quartet,
+  assert.deepEqual(q, (await inbandQuartet({ subject: text, over: q.hash.over, date: r.at, author: V("bo"), bar: null, group: x.pr.groupFields() })).quartet,
                    "the one hasher's quartet, nothing computed beside it");
   assert.deepEqual([q.floors.declared, q.floors.capture, q.floors.connection], [false, null, null], "the project declares no bar");
   assert.equal(r.bytes, `${text}\n${inbandBlock(q)}`);

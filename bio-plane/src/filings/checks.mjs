@@ -1,4 +1,5 @@
-/* filings' refusal rows (requirements: `build/requirements/filings.md`, R1, R6–R8, R11, R13, R14, R21, R23, R28, R31, R32). DEC-49: every
+/* filings' refusal rows (requirements: `build/requirements/filings.md`, R1, R6–R8, R11, R13, R14, R21, R23, R28, R31, R32,
+ * R34–R44). DEC-49: every
  * refusal this module answers carries its code, its catalogue row and the member's translation. The family is C-115
  * (K248). A refusal another module answers passes through as it came: `actions.actionCorrespond`'s (R7), standards'
  * `NO_SUCH_STANDARD` (R14) and conformance's `NO_SUCH_DETERMINATION` (R21), each its owner's row. `NO_SUCH_ACTION` (R1,
@@ -9,7 +10,11 @@
  * and `NOT_TIER3` (C-115.17) are retired, their numbers never reused; the library's rows C-115.31–.33, .35–.38 moved to
  * `filing-templates` (its R23), whose refusals R28, R31 and R32 pass through as its own (`NO_SUCH_TEMPLATE`,
  * `TEMPLATE_RETIRED`, `TEMPLATE_NOT_OFFERED`, `TEMPLATE_BLANK_UNKNOWN` and `templateDraft`'s). T22 (DEC-88, K1025): R8's
- * `PACKET_NO_REASON` (C-115.44). */
+ * `PACKET_NO_REASON` (C-115.44). T45 (K2780, K2791): `NO_DETERMINATION` (C-115.19) is retired, its number never reused (R8: a
+ * packet needs no determination); R34–R44's rows are C-115.45–.54 in the requirement's order, with R23's `NO_SUCH_BUNDLE`
+ * (a chosen finding absent or unseen) and the marks a member states at preparation (`FILING_MARK_REFUSED`) after them.
+ * `action-holds`' `HOLD_NOT_IN_PLACE` and `HOLD_PLACE_REFUSED` (R47) and `actions`' revision refusals (R43's
+ * `breach_claim`) pass through as their owners'. */
 
 const at = (fn, region) => `src/filings/index.mjs ${fn} > ${region}`;
 
@@ -79,10 +84,6 @@ export const FILINGS_CHECKS = Object.freeze({
   NO_COUNSEL: {
     check: "C-115.18", where: at("counselPacket", "is-counsel-packet"),
     translation: "Name counsel by a name and an organisation, each on one line and not too long; a contact is optional.",
-  },
-  NO_DETERMINATION: {
-    check: "C-115.19", where: at("counselPacket", "is-counsel-packet-basis"),
-    translation: "The action rests on no live determination you can read, so there are no facts to assemble for counsel.",
   },
   NO_SUCH_PACKET: {
     check: "C-115.20", where: at("#noPacket", "is-no-such-packet"),
@@ -162,6 +163,64 @@ export const FILINGS_CHECKS = Object.freeze({
     check: "C-115.44", where: at("counselPacket", "is-counsel-packet"),
     translation: "Assembling a counsel packet records why, in your own words, and no reason was given, or it is longer "
       + "than 2,000 characters. Write one. Nothing was written.",
+  },
+  /* T45 (K2780, K2791): the record check, the chance to fix, quoting, joint texts, second approval, the assertion gate,
+     "as myself" (R34, R36, R38, R40, R42–R44); R23's chosen findings; the marks stated at preparation. */
+  CONTRADICTED_HELD: {
+    check: "C-115.45", where: at("#outwardRefusal", "is-contradicted-held"),
+    translation: "A sentence of this text is contradicted by the group's own record, and it is held back. Rewrite it, or "
+      + "approve it openly by naming the sentence with your reason.",
+  },
+  SELF_BENEFIT_ASK: {
+    check: "C-115.46", where: at("#outwardRefusal", "is-self-benefit-ask"),
+    translation: "A sentence of this text asks something for the benefit of the group or its members. Nothing is sent that "
+      + "asks that: rewrite it to ask only for what the rule requires, remedy of the harm, or a route the law provides.",
+  },
+  RFC_QUOTING_MISSING: {
+    check: "C-115.47", where: at("#outwardRefusal", "is-rfc-quoting-missing"),
+    translation: "A request for comment says that the reply may be quoted unless it says otherwise, and this text no longer "
+      + "does. Put the sentence back.",
+  },
+  NOT_A_PARTNER: {
+    check: "C-115.48", where: at("jointSignatory", "is-joint-signatory"),
+    translation: "That organisation is not among this action's partners, so it cannot be recorded as signing this text.",
+  },
+  JOINT_FINGERPRINT_MISMATCH: {
+    check: "C-115.49", where: at("jointSignatory", "is-joint-signatory"),
+    translation: "The partner's text does not match this one: its fingerprint differs, so the same text was not approved.",
+  },
+  SECOND_APPROVAL_NEEDED: {
+    check: "C-115.50", where: at("filingRecordSent", "is-filing-sent"),
+    translation: "Your project asks a second member to approve this act before it is sent, and no second member has yet.",
+  },
+  SAME_APPROVER: {
+    check: "C-115.51", where: at("filingSecondApprove", "is-second-approve"),
+    translation: "A second approval is made by a member other than the one who approved the text.",
+  },
+  ASSERTION_UNRESOLVED: {
+    check: "C-115.52", where: at("#outwardRefusal", "is-assertion-unresolved"),
+    translation: "A sentence that reads as asserting a breach is not resolved yet. Rewrite it, say in your own words that the "
+      + "act only asks, or treat the act as a breach claim.",
+  },
+  ASSERTION_RESOLUTION_REFUSED: {
+    check: "C-115.53", where: at("#outwardRefusal", "is-assertion-resolution-refused"),
+    translation: "A resolution names no sentence that was pointed out, names one twice, or is not in a form that can be "
+      + "recorded. Nothing was approved.",
+  },
+  NOT_THE_GROUPS_ACT: {
+    check: "C-115.54", where: at("#notTheGroups", "is-not-the-groups-act"),
+    translation: "These are your own notes, prepared as yourself: they are not the group's act, so they are never approved "
+      + "or recorded as sent by the group.",
+  },
+  NO_SUCH_BUNDLE: {
+    check: "C-115.55", where: at("communicationPrepare", "is-communication-from"),
+    translation: "A finding or inquiry named to draft from is not one you can read here. One you may not see answers the "
+      + "same as one that does not exist.",
+  },
+  FILING_MARK_REFUSED: {
+    check: "C-115.56", where: at("#marks", "is-filing-mark-refused"),
+    translation: "Something you marked about this text (whose voice it is, its audience, its language, the sentences about "
+      + "the group's own doing, or what it names) is not in a form that can be recorded. Nothing was prepared.",
   },
 });
 

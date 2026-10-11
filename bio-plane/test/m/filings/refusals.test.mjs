@@ -4,11 +4,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, STRANGER, WORDS, WHY } from "./fixture.mjs";
+import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { FILINGS_CHECKS, Filings } from "../../../src/filings/index.mjs";
 import { noSuchAction } from "../../../src/actions/index.mjs";
 import { FILING_TEMPLATE_CHECKS } from "../../../src/filing-templates/index.mjs";
 
-test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 each refusal of this module carries its code, its C-115 row and translation; one actions answered passes through as it came", async () => {
+test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 R34 R36 R38 R40 R42 R43 R44 each refusal of this module carries its code, its C-115 row and translation; one actions answered passes through as it came", async () => {
   const x = world();
   const A = x.action();
   const T3 = x.action({ kind: "commitment_claim" });
@@ -48,8 +49,6 @@ test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 each refusal of this module ca
   expect(f.counselPacket({ reason: WHY, action: T3, counsel, author: MACHINE }), "MACHINE_CANNOT_NAME_COUNSEL");
   expect(f.counselPacket({ action: T3, counsel, author: V("bo"), viewer: V("bo") }), "PACKET_NO_REASON");
   expect(f.counselPacket({ reason: WHY, action: T3, counsel: {}, author: V("bo"), viewer: V("bo") }), "NO_COUNSEL");
-  expect(f.counselPacket({ reason: WHY, action: x.action({ kind: "commitment_claim", legs: [] }), counsel, author: V("bo"), viewer: V("bo") }),
-         "NO_DETERMINATION");
   const p = f.counselPacket({ reason: WHY, action: T3, counsel, author: V("bo"), viewer: V("bo") });
   expect(f.counselPacketRead({ id: "NONE", viewer: V("bo") }), "NO_SUCH_PACKET");
   expect((await f.counselPacketExport({ id: p.id, author: MACHINE })), "MACHINE_CANNOT_EXPORT");
@@ -97,7 +96,37 @@ test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 each refusal of this module ca
     assert.deepEqual([r.check, r.translation], [FILING_TEMPLATE_CHECKS[r.reason].check, FILING_TEMPLATE_CHECKS[r.reason].translation],
                      `${r.reason}: filing-templates' row`);
   }
+  /* T45 (R34, R36, R38, R40, R42–R44, R23): the action layer's rows */
+  const P = x.action({ partners: [{ role: "chair", organisation: "Harbour Watch" }] });
+  const g = x.f;
+  const gp = (text, o = {}) => g.filingPrepare({ action: P, text, language: "en", preparer: V("bo"), viewer: V("bo"), ...o });
+  expect(await g.filingApprove({ filing: gp("The works order was not let without the vote the bylaw requires.").id, author: V("bo"), viewer: V("bo") }), "CONTRADICTED_HELD");
+  expect(await g.filingApprove({ filing: gp("Please fund our newsletter.").id, author: V("bo"), viewer: V("bo") }), "SELF_BENEFIT_ASK");
+  const asserted = gp("The board acted in breach of the bylaw.");
+  expect(await g.filingApprove({ filing: asserted.id, author: V("bo"), viewer: V("bo") }), "ASSERTION_UNRESOLVED");
+  expect(await g.filingApprove({ filing: asserted.id, resolutions: [{ sentence: "none", resolution: "only_asks", words: "w" }], author: V("bo"), viewer: V("bo") }),
+         "ASSERTION_RESOLUTION_REFUSED");
+  expect(gp("Words.", { voice: "loud" }), "FILING_MARK_REFUSED");
+  const self = g.communicationPrepare({ action: P, text: "My notes.", purpose: "notes", voice: "self", preparer: V("bo"), viewer: V("bo") });
+  expect(await g.filingApprove({ filing: self.id, author: V("bo"), viewer: V("bo") }), "NOT_THE_GROUPS_ACT");
+  expect(g.communicationPrepare({ action: P, text: "A word.", purpose: "a word", from: ["INQ-2026-0999"], preparer: V("bo"), viewer: V("bo") }), "NO_SUCH_BUNDLE");
+  const Q = "INQ-2026-0002-quay";
+  x.inquiry(Q, { legs: [{ target: "INFO-2026-0001-minutes" }] });
+  const rfc = g.communicationPrepare({ action: x.action({ kind: "request_for_comment", legs: [{ target: Q, kind: "advances" }] }), text: "Please comment.",
+                                       purpose: "comment", preparer: V("bo"), viewer: V("bo") });
+  expect(await g.filingApprove({ filing: rfc.id, text: "Please comment.", author: V("bo"), viewer: V("bo") }), "RFC_QUOTING_MISSING");
+  const joint = gp("Our joint letter.");
+  await g.filingApprove({ filing: joint.id, author: V("bo"), viewer: V("bo") });
+  const js = (o) => g.jointSignatory({ filing: joint.id, organisation: "Harbour Watch", body_sha: "0".repeat(64), account: "signed", author: V("bo"), viewer: V("bo"), ...o });
+  expect(js({ organisation: "Nobody" }), "NOT_A_PARTNER");
+  expect(js(), "JOINT_FINGERPRINT_MISMATCH");
+  const roster = projectRosterOf(x.host, { record: x.record });
+  roster.migrate();
+  assert.equal(roster.projectApprovalSet({ projectId: x.proj, needs: [{ tier: 1 }], reason: "two eyes", by: "olive", viewer: V("olive") }).ok, true);
+  expect(g.filingRecordSent({ filing: joint.id, at: "2026-09-29", account: "x", author: V("bo"), viewer: V("bo") }), "SECOND_APPROVAL_NEEDED");
+  expect(g.filingSecondApprove({ filing: joint.id, author: V("bo"), viewer: V("bo") }), "SAME_APPROVER");
   assert.deepEqual([...seen].sort(), Object.keys(FILINGS_CHECKS).sort(), "every row of the family is answered");
+  assert.equal("NO_DETERMINATION" in FILINGS_CHECKS, false, "C-115.19 retired (T45, R8), its number never reused");
   assert.equal("NO_SUCH_ACTION" in FILINGS_CHECKS, false, "C-115.2 gave way to actions' row (N217)");
   const checks = Object.values(FILINGS_CHECKS).map((r) => r.check);
   assert.equal(new Set(checks).size, checks.length);
@@ -120,8 +149,8 @@ test("R1 R3 R8 R15 R21 with a layer-9 provider absent, filings refuses or states
   assert.match(d.unfilled.find((u) => u.name === "act").why, /no module answers determinations/);
   const T3 = x.action({ kind: "commitment_claim" });
   const p = noConformance.counselPacket({ reason: WHY, action: T3, counsel: { name: "A", organisation: "B" }, author: V("bo"), viewer: V("bo") });
-  assert.equal(p.reason, "NO_DETERMINATION");
-  assert.match(p.detail, /no module answers determinations/);
+  assert.deepEqual([p.ok, p.sections.facts.items], [true, []], "T45 (R8): no determination is read, and none is needed");
+  assert.match(p.sections.facts.says, /no determination is held/);
   /* no filing-templates module: a template is not readable, refused with that module's code; the member's words serve */
   const noTemplates = new Filings({ storage: x.st, record: x.record, publication: x.p, provenance: x.prov, content: x.content,
                                     actions: x.actions, standards: x.standards, conformance: x.conformance, now: () => x.clock.now });

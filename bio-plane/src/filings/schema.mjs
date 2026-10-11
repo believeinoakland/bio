@@ -1,4 +1,4 @@
-/* filings' tables (requirements: `build/requirements/filings.md`, R5–R7, R8–R14, R19, R22–R25, R29, R31; R26's
+/* filings' tables (requirements: `build/requirements/filings.md`, R5–R7, R8–R14, R19, R22–R25, R29, R31, R34–R47; R26's
  * retired). Every row is an act or a proposal, written once and never edited (append-only, R19): a new draft, a new
  * packet version, a new export, a new proposal. Each is keyed to the action it is about and declared to record-core's
  * purge (K23), so a purge of that action clears its rows. */
@@ -127,6 +127,40 @@ CREATE TABLE IF NOT EXISTS filing_templates (
   at            TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS filing_templates_kind ON filing_templates (kind, template_id);
+-- R36: A PARTNER'S SIGNATURE ON A JOINT TEXT, recorded by a member: the
+-- partner organisation approved the same text (body_sha, the approved text's
+-- fingerprint without the per-group fields) in its own copy, by its own act
+-- (account: how it is known).
+CREATE TABLE IF NOT EXISTS joint_signatories (
+  filing_id     TEXT NOT NULL,
+  action_id     TEXT NOT NULL,
+  organisation  TEXT NOT NULL,
+  role          TEXT,
+  body_sha      TEXT NOT NULL,
+  account       TEXT NOT NULL,
+  recorded_by   TEXT NOT NULL,
+  at            TEXT NOT NULL,
+  PRIMARY KEY (filing_id, organisation)
+);
+-- R42: A SECOND MEMBER'S APPROVAL, at most one per draft, by a member other
+-- than the approver.
+CREATE TABLE IF NOT EXISTS filing_second_approvals (
+  filing_id     TEXT PRIMARY KEY,
+  action_id     TEXT NOT NULL,
+  approved_by   TEXT NOT NULL,
+  at            TEXT NOT NULL
+);
+-- R47: A HOLD NOTICE'S TEXT, prepared for a hold in place and labelled as a
+-- draft; keyed to the hold's action, or to none for a project's hold.
+CREATE TABLE IF NOT EXISTS filing_hold_notices (
+  notice_id     TEXT PRIMARY KEY,
+  action_id     TEXT,
+  place         TEXT NOT NULL,
+  text          TEXT NOT NULL,
+  sources       TEXT NOT NULL,
+  preparer      TEXT NOT NULL,
+  prepared_at   TEXT NOT NULL
+);
 `;
 
 /* Columns added after a table was first created (T18: R22, R24, R25, R26; T21: R29, R31; T22: R8's reason): each is
@@ -142,6 +176,18 @@ export const FILINGS_COLUMNS = Object.freeze([
   ["counsel_packet_exports", "inband", "TEXT"], // R22
   ["counsel_packets", "template", "TEXT"],   // R31: the brief template a version's briefing was filled from, as R29 records it
   ["counsel_packets", "reason", "TEXT"],     // R8 (DEC-88): the author's words on why this version was assembled, as written
+  /* T45 (K2780): what the outward check read at preparation (R34, R38–R40, R43, R45, R48, R49) and the marks the member
+     stated (voice, audience, language, own-doing sentences, a pending measure or candidate); the approval's releases,
+     resolutions, check on the approved text and review copy (R34, R43, R46); the sending as a review copy (R46); a
+     packet's purpose and the statements a defence packet sets out (R8, R9). */
+  ["filing_drafts", "outward", "TEXT"],
+  ["filing_drafts", "marks", "TEXT"],
+  ["communication_drafts", "outward", "TEXT"],
+  ["communication_drafts", "marks", "TEXT"],
+  ["filing_approvals", "outward", "TEXT"],
+  ["filing_approvals", "body_sha", "TEXT"],
+  ["filing_sendings", "review_copy", "TEXT"],
+  ["counsel_packets", "purpose", "TEXT"],
 ]);
 
 /** K23, R19: each table keyed to the action it is about, so a single-bundle purge of that action clears its rows. */
@@ -154,6 +200,9 @@ export const FILINGS_TABLES = Object.freeze([
   { name: "theory_proposals", keys: ["action_id"] },
   { name: "communication_drafts", keys: ["action_id"] },
   { name: "filing_templates", keys: ["action_id"] },
+  { name: "joint_signatories", keys: ["action_id"] },
+  { name: "filing_second_approvals", keys: ["action_id"] },
+  { name: "filing_hold_notices", keys: ["action_id"] },
 ]);
 
 /** Creates the tables; idempotent. */

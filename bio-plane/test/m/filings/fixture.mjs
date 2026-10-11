@@ -48,8 +48,13 @@ export function actionMd(id, o) {
         `    date: "${c.date}"`, `    basis: ${q(c.basis)}`, `    status: ${c.status}`])] : []),
     ...(o.legs && o.legs.length ? ["action_basis:", ...o.legs.flatMap((l) => [`  - target: ${l.target}`, `    kind: ${l.kind}`])] : []),
     ...(o.law ? [`law: ${q(o.law)}`] : []),
+    /* actions R78, R79 (T45): partners by role and organisation; a press action's terms */
+    ...(o.partners ? ["partners:", ...o.partners.flatMap((x) => Object.entries(x).map(([k, v], i) => `${i ? "    " : "  - "}${k}: ${q(v)}`))] : []),
+    ...(o.press_terms ? ["press_terms:", ...Object.entries(o.press_terms).map(([k, v]) => `  ${k}: ${q(v)}`)] : []),
     ...(o.breach ? ["breach: true"] : []),
-    ...(o.override ? ["premise_override:", `  reason: ${q(o.override)}`] : []),
+    /* actions R74 (T45): an override states its ground, held flat (K2849): a legal deadline unless `ground` says otherwise */
+    ...(o.override ? ["premise_override:", ...Object.entries(o.ground || { kind: "legal_deadline", citation: "Test Stat. § 9.20", date: "2026-04-01" })
+                       .map(([k, v]) => `  ground_${k}: ${q(v)}`), `  reason: ${q(o.override)}`] : []),
     ...(o.state_history && o.state_history.length ? ["state_history:", ...o.state_history.flatMap((h) => [
         `  - timestamp: "${h.at}"`, `    from_state: ${h.from}`, `    to_state: ${h.to}`, `    blurb: ${q(h.reason ?? "moved")}`,
         `    author: ${h.by ?? V("olive")}`])] : []),
@@ -261,12 +266,28 @@ export function localFactsOver(w, profiles, now = () => w.clock.now) {
 
 /** The real filing-templates on the world's storage (its tables and opaque-id seed made by its factory on the host),
  *  its active profiles `profiles` when given. */
-export function templatesOver(w, profiles) {
-  const made = filingTemplatesOf(w.host, { record: w.record, membership: w.membership });
-  if (profiles === undefined) return made;
-  const { record, get } = over(w, profiles);
-  return new FilingTemplates({ storage: w.st, record, membership: w.membership, jurisdictions: { get },
+export function templatesOver(w, profiles, { reviewed: rev = true } = {}) {
+  filingTemplatesOf(w.host, { record: w.record, membership: w.membership });
+  const { record, get } = profiles === undefined ? { record: w.record, get: profileOf } : over(w, profiles);
+  return new FilingTemplates({ storage: w.st, record, membership: w.membership, jurisdictions: { get: rev ? reviewed(get) : get },
                                now: () => Date.parse(w.clock.now) });
+}
+
+/** filing-templates R15 (T45, K2851): a profile template is offered only with a named writer, public sources, a
+ *  professional's `no_concerns` review and an approver other than its writer. The test profiles' templates carry the
+ *  writer and approver; each read through here gains sources and a professional's review, as filing-templates' own
+ *  fixture gives them (its `attributed`). `templatesOver(w, p, {reviewed: false})` reads them as they are. */
+export const PRO_REVIEW = Object.freeze({ reviewer: "Dee Example", kind: "professional", organisation: "Marlow Commons Legal Society (test)",
+                                          credential: "solicitor (test)", scope: "the whole text", outcome: "no_concerns", at: "2026-08-25" });
+function reviewed(get) {
+  const fix = (t) => ({ ...t, sources: t.sources && t.sources.length ? t.sources : [{ citation: "P.E.B.L. § 1" }],
+                        reviews: [...(t.reviews || []).filter((r) => r.kind !== "professional"), PRO_REVIEW] });
+  return (id) => {
+    const p = get(id);
+    if (!p || typeof p !== "object") return p;
+    return { ...p, action_kinds: (p.action_kinds || []).map((k) => ({ ...k, ...(k.template ? { template: fix(k.template) } : {}),
+                                                                      ...(Array.isArray(k.templates) ? { templates: k.templates.map(fix) } : {}) })) };
+  };
 }
 
 /* record-core with `profiles` as its active jurisdiction profiles, and the profiles' reader. */
@@ -316,4 +337,13 @@ function provDoc(path, text) {
            capture: { method: "acquire", grade: "B", actor_class: "session", sha256: sha(text), encoding: "utf8",
                       bytes: Buffer.byteLength(text) },
            origin: { kind: "named_request" } };
+}
+
+/* actions' read with R75's disclosures, R78's partners and R79's press terms added for the actions named (a stand-in
+   until actions' job merges); every other field the real read's. */
+export function actionsWith(x, extra) {
+  const real = x.actions;
+  return new Proxy(real, { get: (t, k) => (k === "actionRead"
+    ? (a) => { const r = t.actionRead(a); return r && r.ok && extra[r.id] ? { ...r, ...extra[r.id] } : r; }
+    : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
 }
