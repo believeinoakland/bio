@@ -4,7 +4,7 @@
 
 **Jobs** · image-codecs: IMAGE-CODECS #5 session_0192ECShmFQefWJ5mQLg6Ptw; pdf-pixels: PDF-PIXELS #5 session_01HryQFWAv5MrBMYBBygXxEJ; promotion: PROMOTION #42 session_015sXXurg5etajFj626NU7kC
 
-**At T44's opening (K2735):** opened 2026-10-11 from `main` @ b9ec6c6eb5 (T43 closed, K2733; PR #25, DEC-191 and DEC-192, on `main`), with `tranche/T43`'s handoff commit merged in. Development runs (Bob, K2605); the 80% pause (K2341) and the account-switch rule stand. Bob's meter: not given for T43; asked again at this opening.
+**At T44's opening (K2735):** opened 2026-10-11 from `main` @ b9ec6c6eb5 (T43 closed, K2733; PR #25, DEC-191 and DEC-192, on `main`), with `tranche/T43`'s handoff commit merged in. Development runs (Bob, K2605); the 80% pause (K2341) and the account-switch rule stand. Bob's meter: not given for T43; 35% weekly during T44's L2 (K2741).
 
 **Sources** · `next.md` N751…N878 (each re-tested today); `archive/T43.md` Outcome (its carried reds); `draft-T44.md` (adopted, K2719), re-worded at this opening for DEC-192 (N876, K2729) as each layer's fold states; the design lanes' `HANDOFF.md` (investigation to H43, done; actions to H15, nothing handed off as requirements); the channel (UX-DESIGN to U158, nothing unread); `rulings-active.md`.
 
