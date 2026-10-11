@@ -20,6 +20,7 @@
 - Development runs (Bob, K2605, 2026-10-10: "keep going until I tell you to pause"): K2456's pause after T41 is lifted; tranches open and run one after another, each opening as soon as its plan is ready, until Bob says pause; the 80% pause rule (K2341) and the account-switch rule still stand.
 - Paused for the account switch (Bob, K2510, "Pause development and save everything to the repo so that development can continue in the other account."): T41 stays open in L6; the work resumes on the other account when Bob starts its ROOT and BOB there; K2456's pause after T41 still stands.
 - Account switch: once Bob reports his primary meter at about 90% or more, move the work to the secondary account at the next layer close with no job live (handoff, then Bob starts a ROOT there); Bob stops the primary at 95%. Sessions on the other account cannot be rung or archived: leave them, with no `BOB-final` row. The `BOB` row of `build/channels.md` follows the account, changed at a tranche close. (K1820, K1891, K1896, K742, K1897, K1428)
+- ROOT's refresh (Bob, K2679: "ROOT #5 can keep running until it gets to 55%."): ROOT is replaced by Bob when its context passes 55% of its window, as BOB's own threshold, not at 300k; mechanics §2's "300k" waits on Bob's approval of the exact text (K1258).
 
 ## 2. Standing approvals and recorded refusals (check before acting, §16)
 
