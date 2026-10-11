@@ -37,3 +37,7 @@ Size (session_01WJkNJBh3kNMavvSr8hujuE): test runs 9, module lines 1637
 ## J2 · REPORT
 
 Not docket's: answer-envelope has 4 reds (its CHECK_FAMILIES totality tests: R2/R7 K585, R7/R2 T37, R10/R11 T41, R12 T43) on tranche/T45 itself after publication's merge (K2833). They are identical with and without docket's change (checked on a clean tranche/T45 worktree). The likely cause is that answer-envelope's list does not yet reach publication's new row C-122.8. docket's new row C-129.29 is in docket's own file, which that list already reads.
+
+## J3 · COMPLETE
+
+T45-18 done; merged tranche/T45 @ B3. R1, R6, R26, R27, R28 applied as J1's readings (K2829); new row C-129.29 DOCKET_OUTCOME_UNREADABLE, and C-129.19 re-worded (both await the stamp). docket 75/0; the users' results are unchanged by this job; migrate-released 1/0; format, architecture, coverage (28/28) and ownership: 0 failures. No file outside docket's paths. Record: build/jobs/T45/docket.md (Completion).
