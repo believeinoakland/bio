@@ -1,6 +1,6 @@
 # affordances (T43)
 
-**Status** · session_01S81AeYUiK3j4br2K1UYVmu · depth 2 · COMPLETE · handled B1
+**Status** · session_01S81AeYUiK3j4br2K1UYVmu · depth 2 · COMPLETE · handled B2
 
 ## J1 · REPORT
 
