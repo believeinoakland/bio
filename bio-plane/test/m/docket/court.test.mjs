@@ -202,7 +202,7 @@ test("R26 docketEvents: each public entry of a case whose named subjects are in 
     ["2026-10-02", `${CASE}#2`, "response"], ["2026-10-04", `${CASE}#2`, "response"],
     ["2026-10-05", `${CASE}#3`, "court-order"]]);
   for (const i of all.items) {
-    assert.deepEqual(Object.keys(i).sort(), ["at", "kind", "label", "ref"]);
+    assert.deepEqual(Object.keys(i).sort(), ["at", "kind", "label", "public", "ref"]);
     assert.equal(typeof i.label, "string");
   }
   assert.equal(all.truncated, false);

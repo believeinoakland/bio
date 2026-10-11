@@ -33,6 +33,7 @@
  *                 and `case_documents` under its R40.
  *   caseTensions  `case-tensions`' `caseTensions` (its R4, was `publication` R50; R9 (c)).
  *   events        `registerEventSource` (its R30; R26 here).
+ *   projectRoster `projectScope` (its R23; R28 here, T45).
  *   now           the clock, milliseconds (default `env.BIO_NOW_MS`, else the wall clock).
  *
  * The words a member or reader sees (the shelves' labels, the outward-act warning, the invitation, the stamp) are the
@@ -48,7 +49,8 @@ import { attestationOf } from "../attestation/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
-import { publicationOf } from "../publication/index.mjs";
+import * as publicationModule from "../publication/index.mjs";
+import { projectRosterOf } from "../project-roster/index.mjs";
 import { whatChangedOf } from "../case-grammar/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { caseTensionsOf } from "../case-tensions/index.mjs";
@@ -89,6 +91,12 @@ export const FINAL_KINDS = Object.freeze(["withdrawal", "court-order"]);
 export const FROM_KINDS = Object.freeze(["subject", "holder", "other"]);
 export const PROPOSALS = Object.freeze(["record", "public", "both"]);                     /* R1 */
 export const PRESSURE_KINDS = Object.freeze(["legal", "retaliation", "discrediting", "other"]);   /* R2: as `actions` R48's */
+/** R1 (T45; N880, Actions D5, D20): what an `outcome` entry states it was. */
+export const OUTCOME_KINDS = Object.freeze(["cure", "harm_addressed"]);
+/** R27 (T45): the bounds of a page of pressure marks. */
+export const MARKS_LIMIT_DEFAULT = 1000, MARKS_LIMIT_MAX = 1000;
+/** R28 (T45; N892): the code a counsel matter's case is refused, `publication` R78's one row. */
+export const COUNSEL_MATTER_CODE = "COUNSEL_MATTER_NOT_PUBLISHED";
 export const FOUND_BY = Object.freeze(["paste", "watch"]);                                /* R1 */
 export const RECORD_STATES = Object.freeze(["pending", "placed", "declined", "receipted", "taken-back"]);  /* R3 */
 export const CORE_KINDS = Object.freeze(["response", "statement", "edition", "tension"]);  /* R9 */
@@ -138,6 +146,12 @@ const dayOf = (iso) => String(iso).slice(0, 10);
 const td = new TextDecoder();
 const b64 = (bytes) => { let s = ""; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };
 const publicId = (caseId, seq) => `${caseId}#${seq}`;
+/* R6, R14 (T45): an entry's fields, its JSON parsed; an `outcome` entry published before T45, without `outcome`, reads
+   `outcome: null` (the stored bytes, and so `json` and the digest, are untouched). */
+const entryFields = (json) => {
+  const f = parse(json);
+  return f && typeof f === "object" && f.kind === "outcome" && !("outcome" in f) ? { ...f, outcome: null } : f;
+};
 
 /* DEC-49: a refusal of this module's own carries its code, its row and the member's translation; one another module
    answered passes through as it came. */
@@ -151,6 +165,26 @@ const refuse = (code, detail, extra) => withRow({ ok: false, reason: code, detai
 export const noSuchCase = (caseId) => ({ ok: false, reason: "NO_SUCH_CASE", case: str(caseId),
   detail: "no published case answers here by that id for you; an absent case, one never published and one you do not "
     + "see answer the same" });
+
+/** R28 (T45): `publication` R78's row for a counsel matter, found by its code in publication's exported table (one code,
+ *  one row; this module holds no copy), or null while publication exports none. */
+export function counselMatterRow() {
+  for (const [name, table] of Object.entries(publicationModule)) {
+    if (!name.endsWith("_CHECKS") || !table || typeof table !== "object") continue;
+    const flat = table[COUNSEL_MATTER_CODE];
+    if (flat && typeof flat.check === "string") return flat;
+    for (const fam of Object.values(table))
+      if (fam && typeof fam === "object" && fam[COUNSEL_MATTER_CODE] && typeof fam[COUNSEL_MATTER_CODE].check === "string") return fam[COUNSEL_MATTER_CODE];
+  }
+  return null;
+}
+
+/* R1 (T45): a real calendar date `YYYY-MM-DD`, or null. */
+const calendarDay = (v) => {
+  if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return null;
+  const d = new Date(`${v}T00:00:00Z`);
+  return Number.isNaN(d.getTime()) || d.toISOString().slice(0, 10) !== v ? null : v;
+};
 
 export class Docket {
   #held = new Map();       /* R4, R5: prepared answers, by member and digest, kept in memory: prepare writes nothing */
@@ -173,10 +207,12 @@ export class Docket {
   get entities() { return this.#deps.entities ||= entitiesOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get inquiry() { return this.#deps.inquiry ||= inquiryOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get reevaluation() { return this.#deps.reevaluation ||= reevaluationOf(this.#deps.host, { record: this.record, membership: this.membership }); }
-  get publication() { return this.#deps.publication ||= publicationOf(this.#deps.host, { record: this.record, membership: this.membership }); }
+  get publication() { return this.#deps.publication ||= publicationModule.publicationOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   /* R9 (c): `case-tensions` R4. */
   get caseTensions() { return this.#deps.caseTensions ||= caseTensionsOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get events() { return this.#deps.events ||= eventsOf(this.#deps.host, { record: this.record, membership: this.membership }); }
+  /* R28 (T45): `project-roster` R23. */
+  get projectRoster() { return this.#deps.projectRoster ||= projectRosterOf(this.#deps.host, { record: this.record, membership: this.membership }); }
 
   migrate() { migrateDocket(this.sql); }
 
@@ -222,6 +258,17 @@ export class Docket {
     if (!c || !c.project || this.#call(() => this.membership.sight(c.project, viewer)) !== "full")
       return { refusal: noSuchCase(caseId) };
     return { c };
+  }
+  /* R28 (T45): a refusal when the case's owning project is a counsel matter at this act (`project-roster` R23), with
+     `publication` R78's row; null otherwise. R23 never throws; should it, the act is refused (fail closed), never
+     placed on a scope that could not be read. */
+  #counselRefusal(c) {
+    let scope;
+    try { scope = this.projectRoster.projectScope(c.project); } catch { scope = { scope: "counsel_matter" }; }
+    if (!scope || scope.scope !== "counsel_matter") return null;
+    const row = counselMatterRow();
+    return { ok: false, reason: COUNSEL_MATTER_CODE, code: COUNSEL_MATTER_CODE, ...(row ? { check: row.check, translation: row.translation } : {}),
+             detail: "the case's project is a counsel matter, and nothing of a counsel matter is placed on a docket", case: c.case };
   }
   #isManager(project, member) { return !!project && !!member && this.#call(() => this.membership.isProjectOwner(project, member), false); }
   /* R1: each subject entity of the edition's member findings (inquiry R43). */
@@ -340,12 +387,14 @@ export class Docket {
       return { refusal: refuse("DOCKET_NOT_A_PARTICIPANT", "only a joined participant of the case's project files to its docket",
                                { case: k.c.case }) };
     /* END DEC-49 REGION is-docket-filer */
+    const counsel = this.#counselRefusal(k.c);
+    if (counsel) return { refusal: counsel };
     return { c: k.c, member };
   }
 
   /* R1's form checks, in R1's order, never merit; `at` the instant a holder's grant must be live at (the filing's).
      Answers the entry's fields or a refusal. Also R4's re-check of a record entry it would sign. */
-  #formRefusal(c, { edition, from, capture, kind, proposed, reason, answers, contests }, at) {
+  #formRefusal(c, { edition, from, capture, kind, proposed, reason, answers, contests, outcome, summary }, at) {
     const f = parse(from);
     const ed = int(edition);
     /* DEC-49 REGION is-docket-form */
@@ -388,19 +437,37 @@ export class Docket {
     }
     if (!PROPOSALS.includes(proposed) || !words(reason, REASON_MAX))
       return { refusal: refuse("DOCKET_NO_REASON", `proposed is record, public or both, with a reason of 1 to ${REASON_MAX} characters`) };
+    /* R1 (T45): an outcome states what it was and when, no later than the filing's day, with the member's summary; no
+       other kind states an outcome. */
+    const stated = outcome !== undefined && outcome !== null && outcome !== "";
+    let outcomeRow = null;
+    if (kind === "outcome") {
+      const o = parse(outcome);
+      const on = o && typeof o === "object" ? calendarDay(o.on) : null;
+      if (!o || typeof o !== "object" || !OUTCOME_KINDS.includes(o.kind) || !on || on > dayOf(at))
+        return { refusal: refuse("DOCKET_OUTCOME_UNREADABLE", `an outcome states {kind, on}: kind ${OUTCOME_KINDS.join(" or ")}, on a calendar `
+          + `date no later than the filing's day (${dayOf(at)})`, { kind: o && typeof o.kind === "string" ? o.kind : null }) };
+      if (!oneParagraph(summary, SUMMARY_MAX))
+        return { refusal: refuse("DOCKET_NO_SUMMARY", `an outcome carries the member's summary, one paragraph of 1 to ${SUMMARY_MAX} characters`) };
+      outcomeRow = { kind: o.kind, on };
+    } else if (stated) {
+      return { refusal: refuse("DOCKET_OUTCOME_UNREADABLE", `only an outcome states an outcome, and this entry is a ${kind}`, { kind }) };
+    }
     /* END DEC-49 REGION is-docket-form */
-    return { fields: { edition: ed, from: fromRow, capture: cap, kind, proposed, reason, answers: answering, contests: yes(contests) } };
+    return { fields: { edition: ed, from: fromRow, capture: cap, kind, proposed, reason, answers: answering, contests: yes(contests),
+                       outcome: outcomeRow, summary: outcomeRow ? summary.trim() : null } };
   }
 
   /** R1, R11, R13: files a record entry, or, with `takesBack`, takes an earlier record entry back with a reason. */
   docketFile({ case: caseId = null, edition = null, kind = null, from = null, capture = null, contests = false,
-               proposed = null, reason = null, answers = null, takesBack = null, author = null, viewer = null } = {}) {
+               proposed = null, reason = null, answers = null, takesBack = null, outcome = null, summary = null, author = null,
+               viewer = null } = {}) {
     const nowMs = this.#nowMs(), at = this.#stamp(nowMs);
     const k = this.#filerRefusal({ case: caseId, author, viewer });
     if (k.refusal) return k.refusal;
     const { c, member } = k;
     if (takesBack !== null && takesBack !== undefined && takesBack !== "") return this.#takeBackRecord(c, member, takesBack, reason, at);
-    const v = this.#formRefusal(c, { edition, from, capture, kind, proposed, reason, answers, contests }, at);
+    const v = this.#formRefusal(c, { edition, from, capture, kind, proposed, reason, answers, contests, outcome, summary }, at);
     if (v.refusal) return v.refusal;
     const x = v.fields;
     let id = null;
@@ -408,16 +475,17 @@ export class Docket {
       id = this.record.mintOpaqueId(RECORD_ID_PREFIX, at.slice(0, 4), "", (y) => !!this.#recordEntry(y));
       if (!id) return { ok: false, reason: "MINT_EXHAUSTED", detail: "no free record entry id could be drawn; nothing was filed" };
       this.sql.exec(`INSERT INTO docket_record (entry_id, case_id, edition, kind, from_json, capture_sha, contests, proposed, reason,
-                                                answers, found_by, author, filed_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                                                answers, found_by, author, filed_at, outcome_json, summary)
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
                     id, c.case, x.edition, x.kind, JSON.stringify(x.from), capture, x.contests ? 1 : 0, x.proposed, x.reason,
-                    x.answers, x.capture.found_by, member, at);
+                    x.answers, x.capture.found_by, member, at, x.outcome ? JSON.stringify(x.outcome) : null, x.summary);
       return { ok: true };
     });
     if (!out || out.ok !== true) return out;
     /* R13: a contesting filing is told to reevaluation after it commits; a throw there never undoes it. */
     if (x.contests) this.#call(() => this.reevaluation.docketActed({ kind: "contested", case: c.case, entry: id }));
     return { ok: true, entry: id, case: c.case, edition: x.edition, kind: x.kind, shelf: "record", found_by: x.capture.found_by,
-             contests: x.contests, filed_at: at };
+             contests: x.contests, filed_at: at, ...(x.outcome ? { outcome: x.outcome, summary: x.summary } : {}) };
   }
 
   /* R11: a record entry taken back by a later record act with a reason; it then reads `taken-back`. */
@@ -499,6 +567,10 @@ export class Docket {
     /* DEC-49 REGION is-docket-manager */
     if (!this.#isManager(k.c.project, member))
       return { refusal: refuse("DOCKET_NOT_THE_MANAGER", "only an owner of the case's project manages its public docket", { case: k.c.case }) };
+    /* END DEC-49 REGION is-docket-manager */
+    const counsel = this.#counselRefusal(k.c);
+    if (counsel) return { refusal: counsel };
+    /* DEC-49 REGION is-docket-manager */
     const slug = this.#slug();
     if (!slug) return { refusal: refuse("DOCKET_NO_GROUP_SLUG", "no group slug is recorded, and there are no anonymous entries") };
     /* END DEC-49 REGION is-docket-manager */
@@ -655,7 +727,7 @@ export class Docket {
       /* R1's form checks again, on the entry it would sign; a holder's grant at the filing. */
       const v = this.#formRefusal(c, { edition: rec.edition, from: rec.from_json, capture: rec.capture_sha,
                                        kind: rec.kind, proposed: rec.proposed, reason: rec.reason, answers: rec.answers,
-                                       contests: rec.contests }, rec.filed_at);
+                                       contests: rec.contests, outcome: rec.outcome_json, summary: rec.summary }, rec.filed_at);
       if (v.refusal) return v.refusal;
       recFields = v.fields;
       /* DEC-49 REGION is-docket-form */
@@ -667,7 +739,8 @@ export class Docket {
       return refuse("DOCKET_KIND_UNKNOWN", `kind is one of ${ENTRY_KINDS.join(", ")}`, { kind: typeof kind === "string" ? kind : null });
       /* END DEC-49 REGION is-docket-form */
     }
-    const kr = this.#kindRefusal(c, kind, { shelf, edition, summary, reason, holder, takesBack, candidate, grant }, rec, recFields);
+    const kr = this.#kindRefusal(c, kind, { shelf, edition, summary: kind === "outcome" ? null : summary, reason, holder, takesBack,
+                                            candidate, grant }, rec, recFields);
     if (kr.refusal) return kr.refusal;
     const x = kr.out;
     const prior = this.#one(`SELECT seq, digest FROM docket_entries WHERE case_id=? ORDER BY seq DESC LIMIT 1`, c.case);
@@ -686,7 +759,9 @@ export class Docket {
         if (receipt) json.answers = Number(receipt.seq);
       }
     }
-    if (str(summary)) json.summary = summary.trim();
+    /* R6 (T45): an outcome carries its outcome and summary as filed; every other kind the manager's summary, if any. */
+    if (kind === "outcome") { json.outcome = recFields.outcome; json.summary = recFields.summary; }
+    else if (str(summary)) json.summary = summary.trim();
     if (kind === "edition") {
       const doc = this.#call(() => this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=? AND sig_armored IS NOT NULL`,
                                              c.case, x.edition));
@@ -905,7 +980,7 @@ export class Docket {
   /* R14's view of one public entry. */
   #publicView(e, backs) {
     const back = backs.get(Number(e.seq));
-    return { seq: Number(e.seq), entry: publicId(e.case_id, e.seq), digest: e.digest, json: e.json, fields: parse(e.json),
+    return { seq: Number(e.seq), entry: publicId(e.case_id, e.seq), digest: e.digest, json: e.json, fields: entryFields(e.json),
              signature: e.signature, published_at: e.published_at,
              taken_back: back ? { seq: Number(back.seq), date: (parse(back.json) || {}).date ?? null } : null };
   }
@@ -926,6 +1001,8 @@ export class Docket {
         shelf: "record", at: r.filed_at, entry: r.entry_id, edition: Number(r.edition), kind: r.kind, from: parse(r.from_json),
         capture: r.capture_sha, proposed: r.proposed, reason: r.reason, found_by: r.found_by, contests, answers: r.answers ?? null,
         author: r.author, filed_at: r.filed_at, state: s.state,
+        /* R1 (T45): an outcome's statement as filed; one filed before T45 reads null */
+        ...(r.kind === "outcome" ? { outcome: parse(r.outcome_json) ?? null, summary: r.summary ?? null } : {}),
         ...(s.state === "placed" || s.state === "receipted" ? { public: { seq: Number(s.pub.seq), entry: publicId(c.case, s.pub.seq) } } : {}),
         ...(s.state === "declined" ? { declined: { reason: s.decline.reason, at: s.decline.at } } : {}),
         ...(s.state === "taken-back" ? { taken_back: { reason: s.back.reason, at: s.back.at } } : {}),
@@ -1012,13 +1089,68 @@ export class Docket {
     return { contested: out, cursor: more ? last : null };
   }
 
+  /* ================================================================ R27: the pressure marks, read */
+
+  /* R27: one mark as answered, its case and owning project read beside it; names no member. */
+  #markView(m, r) {
+    const c = r ? this.#call(() => this.#one(`SELECT project_id FROM cases WHERE case_id=?`, r.case_id)) : null;
+    return { entry: m.entry_id, case: r ? r.case_id : null, project: c ? str(c.project_id) : null, kind: m.pressure, note: m.note ?? null, at: m.at };
+  }
+
+  /** R27 (T45): each R2 mark in the order made after `after` (a mark's id), read as the plane, at most `limit` (1–1,000,
+   *  default 1,000), with `cursor` the last mark answered when more follow; with `kind`, only that kind. Names no member,
+   *  writes nothing and never throws: an unreadable table answers `DOCKET_UNREADABLE`, never a short list. */
+  docketPressureMarks({ kind = null, after = null, limit = null } = {}) {
+    if (kind !== null && kind !== undefined && kind !== "" && !PRESSURE_KINDS.includes(kind))
+      /* DEC-49 REGION is-docket-pressure */
+      return refuse("DOCKET_PRESSURE_REFUSED", `kind is one of ${PRESSURE_KINDS.join(", ")}`, { kind: typeof kind === "string" ? kind : null });
+      /* END DEC-49 REGION is-docket-pressure */
+    const n = int(limit);
+    const cap = n === null ? MARKS_LIMIT_DEFAULT : Math.min(Math.max(n, 1), MARKS_LIMIT_MAX);
+    const from = int(after) ?? 0;
+    const k = PRESSURE_KINDS.includes(kind) ? kind : null;
+    try {
+      const rows = this.#rows(`SELECT m.rn, m.entry_id, m.pressure, m.note, m.at, r.case_id FROM docket_marks m
+                                 LEFT JOIN docket_record r ON r.entry_id = m.entry_id
+                                WHERE m.kind='pressure' AND m.rn > ? AND (? IS NULL OR m.pressure = ?) ORDER BY m.rn LIMIT ?`,
+                               from, k, k, cap + 1);
+      const more = rows.length > cap;
+      if (more) rows.length = cap;
+      const marks = rows.map((m) => ({ mark: Number(m.rn), ...this.#markView(m, m.case_id ? { case_id: m.case_id } : null) }));
+      return { ok: true, marks, cursor: more ? Number(rows[rows.length - 1].rn) : null };
+    } catch {
+      return { ok: false, reason: "DOCKET_UNREADABLE", detail: "the docket's marks could not be read; this is not an empty list" };
+    }
+  }
+
+  /** R27 (T45): the entry's mark, or `pressure: null` when it has none; an entry absent, or whose project `viewer` does
+   *  not see in full, is NO_SUCH_DOCKET_ENTRY, one answer; a call naming no member as viewer sees nothing (fail closed).
+   *  Names no member, writes nothing and never throws. */
+  docketPressureOf({ entry = null, viewer = null } = {}) {
+    const id = str(entry);
+    try {
+      const r = this.#recordEntry(id);
+      const c = r ? this.#case(r.case_id) : null;
+      /* DEC-49 REGION is-docket-entry */
+      if (!r || !c || !c.project || !this.#member(viewer) || this.#call(() => this.membership.sight(c.project, str(viewer))) !== "full")
+        return refuse("NO_SUCH_DOCKET_ENTRY", "no record entry you see answers by that id", { entry: id });
+      /* END DEC-49 REGION is-docket-entry */
+      const m = this.#marks(id).find((x) => x.kind === "pressure");
+      return m ? { ok: true, ...this.#markView(m, r) } : { ok: true, entry: id, pressure: null };
+    } catch {
+      return { ok: false, reason: "DOCKET_UNREADABLE", detail: "the docket's marks could not be read" };
+    }
+  }
+
   /** R26: the docket's dates for `events`' "what we did" lane: each public entry of a case one of whose named subjects
    *  (the subjects of its ratified editions' member findings) is in `set`, its `date` (and, for an entry placing a record
    *  entry, its `received`) within `from`–`to` by day, as `{at, label, ref, kind}`, by `at` then `ref`, at most `limit`
    *  (1–500, default 100) with `truncated`. Only a case whose project `viewer` sees in full is answered; a call naming
    *  no viewer is answered nothing. Record entries never appear. It writes nothing, and an item is the group's own act,
-   *  never an event of the world or evidence (R17). */
-  docketEvents({ set = null, from = null, to = null, limit = null, viewer = null } = {}) {
+   *  never an event of the world or evidence (R17). (T45) Each item carries `public: true`, every entry answered being a
+   *  public entry (the mark `case-authoring` R57 requires); under `audience: "public"` (`events` R28, R30) it answers the
+   *  same items. */
+  docketEvents({ set = null, from = null, to = null, limit = null, viewer = null, audience: _audience } = {}) {
     const who = str(viewer);
     const ids = new Set((Array.isArray(set) ? set : typeof set === "string" ? set.split(",") : []).map(str).filter(Boolean));
     const n = int(limit);
@@ -1033,7 +1165,7 @@ export class Docket {
       if (!c.editions.some((e) => [...this.#namedSubjects(c.case, e.edition)].some((s) => ids.has(s)))) continue;
       for (const e of this.#entries(c.case)) {
         const j = parse(e.json) || {};
-        const add = (at, label) => { if (at && (!lo || at >= lo) && (!hi || at <= hi)) items.push({ at, label, ref: publicId(c.case, e.seq), kind: j.kind ?? e.kind }); };
+        const add = (at, label) => { if (at && (!lo || at >= lo) && (!hi || at <= hi)) items.push({ at, label, ref: publicId(c.case, e.seq), kind: j.kind ?? e.kind, public: true }); };
         add(day(j.date), `docket: ${j.kind}, edition ${j.edition}`);
         if (e.record_entry) add(day(j.received), `docket: ${j.kind} received, edition ${j.edition}`);
       }
@@ -1166,7 +1298,7 @@ export function docketOps(m, url, body) {
   return {
     docketfile: () => m.docketFile({ case: pick("case"), edition: pick("edition"), kind: pick("kind"), from: pick("from"),
       capture: pick("capture"), contests: pick("contests"), proposed: pick("proposed"), reason: pick("reason"),
-      answers: pick("answers"), takesBack: pick("takesBack"), author, viewer }),
+      answers: pick("answers"), takesBack: pick("takesBack"), outcome: pick("outcome"), summary: pick("summary"), author, viewer }),
     docketpressure: () => m.docketPressure({ entry: pick("entry"), pressure: pick("pressure"), author, viewer }),
     docket: () => m.docketOf({ case: q("case"), viewer }),
     docketprepare: () => m.docketPrepare({ case: pick("case"), kind: pick("kind"), shelf: pick("shelf"), edition: pick("edition"),
