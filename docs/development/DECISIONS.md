@@ -2968,6 +2968,7 @@ reasoning recorded in: this entry; `docs/architecture/BIO_Interaction_Constructs
 owed: (BOB) ai-use reads its fills by key (`ai.period.*`, `ai.when.*`, `date.month.*`, `ai.limitfield.*`, `ai.refused.limit.unjudged`); notice-producers reads R16's and R17's words by key (`ai.queue.limitreached*`, `ai.account.*`, `ai.use.*.inline`, `ai.scope.*`, `ai.label.explored.member`, `queue.*`); the B123 wording in ai-use's `AI_USE_WORDS`.
 
 ### DEC-190 · answered
+amended: 2026-10-11 (T42 closed onto `main`): `op=pagetranscribe` is served; the act names the served op, so its words are `act.pagetranscribe.*`
 raised: 2026-10-11 · the UX design session with Bob on his primary account (session_014uT5e8EjnRxmEeUDDg2cYa; the development process also runs on his primary account since K2511) (BOB's B128 and B129, for T42's N832, K2611, K2613)
 for: bob-session
 question: Where a member is offered the assistant's reading of page pictures (`pagetranscribe`), and its words: its help, its refusal C-51.7 `TRANSCRIBE_NOT_DEPLOYED`, its label and its answers.
@@ -2983,4 +2984,43 @@ response: **Decided by the design session, 2026-10-11.**
 decided: 2026-10-11 · the design session (P17)
 reasoning recorded in: this entry; `screens/mock-screens.js` (Document; the AI panel's uses); `screens/mock-acts.js`; `screens/mock-kit.js`; `screens/registry.src.py`; `screens/check_walk.mjs`; `screens/build_words.mjs`, `screens/words.json` (1,075 words, 395 protected); `layouts.html`.
 owed: (BOB, T42) `op=pagetranscribe` served (the act then re-pointed from `owed:pagetranscribe K2611`); C-51.7's translation read by key `transcribe.refused.notdeployed`; the answer's sentences read by key; the Document read answering which pages its reading could not make out.
+
+### DEC-191 · answered
+raised: 2026-10-11 · the UX design session with Bob on his primary account (session_014uT5e8EjnRxmEeUDDg2cYa; the development process also runs on his primary account since K2511) (BOB's B133 and B134, for T43's folds of DEC-189 and DEC-190, N853b, N859, K2691)
+for: bob-session
+question: The word keys T43 needs: exploring's two refusals; the uses `enquire`, `read` and `account`; the queue's date; the transcription's outcomes when nothing was sent; a photographed page.
+why it is Bob's: it is not: word detail beneath DEC-188 to DEC-190; decided by the design session (P17) and reported.
+provisional: BOB's bracketed readings in B133 and B134.
+alternative: as BOB's readings.
+recommendation: as decided below.
+reversal cost: low; words read by key.
+response: **Decided by the design session, 2026-10-11.**
+(1) `ai.refused.exploreoutofscope` (C-143.5): "The assistant can't explore this question on {whose} account: it lies outside what the account's owners chose to explore."; `ai.refused.exploreaskinvalid` (C-143.6): ai-use's sentence kept.
+(2) The uses gain `ai.use.enquire` ("Interviews and planning"), `ai.use.read` ("Reading inside documents") and `ai.use.account` ("A case's account"), each with `.inline`; the AI panel lists them, on by default. `ai.use.suggestions` stays: it names the `suggestions` switch (credentials' `USE_SWITCHES`, K1479), which is not a kind of use but is switched alongside them.
+(3) `date.daymonth`, "{day} {month}" with `date.month.*`, is the one format for a local day in a sentence, the queue's `{date}` included.
+(4) `transcribe.none` is only for the assistant asked and reading nothing. When nothing was sent: `transcribe.notsent` ("Nothing was sent to the assistant: {why}. The pages are as they were.") with `transcribe.why.unbound`, `.evidenceabsent`, `.norender`; when a refusal came back: `transcribe.refused` with the refusal's own sentence.
+(5) A photographed page (B134): `transcribe.picture.unprepared` with `transcribe.picture.why.progressive` and `.toolarge`; `capture.picture.unread`.
+decided: 2026-10-11 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (the AI panel's uses); `screens/build_words.mjs`, `screens/words.json` (1,093 words, 395 protected); `layouts.html`.
+owed: (BOB, T43) the keys read by ai-use (C-143.5, C-143.6), credentials and the panel's reads (the three uses), notice-producers and queue (`date.daymonth`), extraction (`transcribe.*`) and capture (`capture.picture.unread`).
+
+### DEC-192 · answered
+raised: 2026-10-11 · the UX design session with Bob on his primary account (session_014uT5e8EjnRxmEeUDDg2cYa; the development process also runs on his primary account since K2511) (BOB's B136 and B137, from T44's draft fold of DEC-191 and NOTICE-PRODUCERS #7)
+for: bob-session
+question: Six word points on DEC-189 and DEC-191's keys: a relayed refusal inside `transcribe.refused`; a reading that fails after the pages were sent; a date in another year; the order of day and month in `ai.when.month`; `{when}` after "until"; who says `capture.picture.unread`.
+why it is Bob's: it is not: word detail beneath DEC-189 to DEC-191; decided by the design session (P17) and reported.
+provisional: BOB's readings in B136 and B137.
+alternative: as BOB's readings.
+recommendation: as decided below.
+reversal cost: low; words read by key.
+response: **Decided by the design session, 2026-10-11.**
+(1) `transcribe.refused` is "The assistant didn't read these pages. {reason}": the relayed refusal is a sentence of its own, so its capital stands, and its own placeholders are filled by the screen from the fields relayed beside it (BOB's reading).
+(2) After the pages were sent: `transcribe.failed` ("The pages were sent to the assistant, but no reading came back: {why}. Nothing was written; you can try again.") with `transcribe.why.silent` (`AGENT_WORKER_SILENT`) and `transcribe.why.ended` (a provider ending). A refusal from the worker after the post reads `transcribe.refused`.
+(3) `date.daymonthyear`, "{day} {month} {year}", for a day not in the current year; `date.daymonth` otherwise.
+(4) `ai.when.month` is "on 1 {month}", day before month as everywhere.
+(5) `{when}` after "until" has its own keys: `ai.until.day` ("tomorrow") and `ai.until.month` ("1 {month}"), read by `ai.queue.limitreached*`: "… pause until 1 November". The refusals keep `ai.when.*` ("It works again on 1 November").
+(6) `capture.picture.unread` is the reading's fact, said by extraction (R27), never by capture's upload answer (BOB's reading).
+decided: 2026-10-11 · the design session (P17)
+reasoning recorded in: this entry; `screens/build_words.mjs`, `screens/words.json` (1,099 words, 395 protected).
+owed: (BOB, T44) the keys read as named: extraction (`transcribe.refused`, `transcribe.failed`, `transcribe.why.*`), ai-use (`ai.when.month`), notice-producers (`ai.until.*`), the screens' dates (`date.daymonthyear`).
 
