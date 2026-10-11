@@ -62,3 +62,11 @@ For BOB:
 (3) plane `door.mjs`:54: the hook's `viewer` for an `ai` caller is `class:ai`, where R17 says the principal.
 
 Edges added by this job: none in the file (item 1). Record: build/jobs/T42/control-plane.md.
+
+## B2 · CHANGE handled
+
+Merged `tranche/T42` (op-grades, affordances, op-declarations, answer-envelope merged).
+- Item 1 is already met: the hook's `author` for `pagetranscribe` comes from the session. `t42-door.test.mjs` tests this with a forged `author` in the address and the body, and the forged value is not taken (R29).
+- Item 2 is already met (R71, `of.caseAccount()`).
+- control-plane suite: 219/223. The 5 R74 tests now pass on the real R47 spec (totality's stale red is cleared too). The 4 R36 pull tests still wait on store-door R7's `deps.doorbell`.
+- Checks are as before: architecture shows the 4 failures from the missing `doorbell` edge only.
