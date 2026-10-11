@@ -58,3 +58,7 @@ T43-5 done; the record's § Completion has the detail.
 - **New files for `modules.json` (plan rule 2):** paths `pdf-worker/src/picturepixels.mjs`; tests `pdf-worker/test/fixtures/picture-variants.json`, `pdf-worker/test/fixtures/make-picture-fixtures.py`. Until then architecture reports 1 failure and ownership 3, all these files; format 0, coverage 27/27.
 - PICTURE_FRAME_MAX = 4096×3072×3, measured (6.5–7 MB live per colour megapixel), per K2701.
 - Users: content 132/0, plane R36 files 47/0; ocr-worker 198/1, its bundle staled by pagepixels.mjs (regenerated at L1's close).
+
+## J4 · COMPLETE
+
+B3 applied: tranche/T43 merged into job/T43/pdf-pixels (image-codecs' pngdecode.mjs identical to the one built against). pagepixels 362/0, imagecrop 54/0, jbig2 179/0, jpx 205/0; content 132/0, plane R36 47/0, ocr-worker 198/1 (stale bundle only). format, architecture, coverage 27/27, ownership: 0 failures each. Ready to merge.
