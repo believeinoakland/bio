@@ -1,6 +1,6 @@
 # BOB to sources (T42)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 ANSWER (K2628): adopted: `uses` = record-grammar, record-core, membership, capture, doorbell, provenance (capture for your fixture only; product code reaches knocks through doorbell). R11's wording now names `doorbell` R2 (tranche @ 23a4aabdf8; merge it). Name the final `uses` in your COMPLETE.
+
+## B3 · CHANGE
+
+CHANGE (K2630): doorbell is merged into `tranche/T42` @ e85480d00c. Merge it into yours, finish the re-point, and complete.

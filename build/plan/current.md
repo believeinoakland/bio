@@ -33,6 +33,7 @@ It is the only module marked `legacy` in `modules.json`.
    9. from T42-6's merge: doorbell R25's ownership arm until capture's delete (T43; rule 3 (4));
    11. (cleared at T42-2a's merge, K2622) record-core `t33.test.mjs`:69 (R76) and :162 (R62), which lack `ACD`, from T42-1's merge until T42-2a.
    12. (cleared at T42-5's merge, K2625) format: `modules.json` names promotion's `row-census-1.69.0.jsonl` (K2620) before T42-5 merges it; until that merge.
+   13. (K2630) from T42-6's merge, doorbell R21's `where` arm until CAPTURE #26 re-points the nine rows (K2627).
    10. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
 
 **Text owed before each layer's START (BOB's wording, P5):**
@@ -112,7 +113,7 @@ None.
 - **T42-27 · answer-envelope** · (N843) its two pins return to green (clears rule 4 (6)); the `changed.note` sentence in `rows-before-r43.json` and three `HELD_EARLIER` rows in `families.test.mjs` follow N843's re-codings. (Doorbell's family file joins in T43, N849; K2609.)
 - **T42-28 · store-door** · (N826) `inboxpullfile` through `doorbell`.
 - **T42-29 · control-plane** · (N832) R74 routes `pagetranscribe`; (N826) wording; (N839) `owner-ops.mjs` reaches `accountPropose`/`accountDrafts` through `of.caseAccount()`.
-- **T42-30 · plane** · (N826) builds `doorbellOf` after capture, migrates after it, spreads `doorbellOps`, its door uses `doorbellPublicOp`; (N832) R36 composes `read`'s `transcription` (renders pages with `pdf-pixels`: edge `plane` → `pdf-pixels`, and `run-rules` if new); (N839) builds `caseAccountOf` before `caseAuthoringOf`.
+- **T42-30 · plane** · (N826) carries `capture/plane.test.mjs`:66–75 (`op=knock` at the whole plane's door), re-pointed to `doorbellPublicOp` (DOORBELL #1 J2, K2630); builds `doorbellOf` after capture, migrates after it, spreads `doorbellOps`, its door uses `doorbellPublicOp`; (N832) R36 composes `read`'s `transcription` (renders pages with `pdf-pixels`: edge `plane` → `pdf-pixels`, and `run-rules` if new); (N839) builds `caseAccountOf` before `caseAuthoringOf`.
 - L11 shares from the case-account map and the transcribe draft (op-grades, affordances, users of the account's ops) are added here before L11's START.
 
 **L11 merge order:** `modules.json` order; the plane last.
