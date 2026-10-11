@@ -12,3 +12,7 @@ Reading set (mechanics §17): measured at this START: 240 KB, under 600 KB (K270
 Merge order in L1: after image-codecs.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+All four readings adopted (K2737). (1) is now R11's wording in image-codecs' requirements, and IMAGE-CODECS #5 is told to publish exactly that shape; merge tranche/T44 into your branch for the requirement text. (2), (3), (4) as you state them; put the CPU figure and margin in your record.
