@@ -18,7 +18,7 @@
  *
  * THE DOORBELL (T42, K2607; T43, N849). The doorbell (the knock, its rate and tallies, the inbox, the pull, the knocker
  * secret; once this module's R30–R32, R47–R54, R56, R65–R67, R70–R72, R80, R85) is `doorbell`'s; this module's copy of it
- * was deleted in T43 (N849), its rows (R37) and tables with it. One piece is held, by K625's pattern, until `admission`
+ * was deleted in T43 (N849), its rows (R37) and tables with it. One piece is held (K2708, N870), by K625's pattern, until `admission`
  * re-points: `sourceFingerprint` (once R56, now doorbell R12), which admission's door window still reaches through
  * `captureOf(ctx)`; it answers no requirement of this module and nothing new calls it. */
 import { isPublicHttpsLocator, createSha256, isMachineIdentity } from "../record-grammar/index.mjs";
@@ -506,9 +506,9 @@ export class Capture {
   }
 
   /* ==================================================================== *
-   * THE HELD COPY (K625's pattern; T43, N849): the source fingerprint, once this module's R56, `doorbell`'s R12 since
-   * T42. Kept only because `admission`'s door window reaches it through `captureOf(ctx)` until admission re-points to
-   * `doorbell`; it answers no requirement of this module, and capture's next job deletes it. The key's table,
+   * THE HELD COPY (K2708, K625's pattern; T43, N849): the source fingerprint, once this module's R56, `doorbell`'s R12
+   * since T42. Kept only because `admission`'s door window reaches it through `captureOf(ctx)` until admission re-points
+   * to `doorbell` (T43-21); it answers no requirement of this module, and capture's next job deletes it (N870, T44). The key's table,
    * `knock_key`, is `doorbell`'s (its R25): created here with doorbell's own DDL only when absent, never declared here,
    * so either module's read finds the one key.
    * ==================================================================== */
