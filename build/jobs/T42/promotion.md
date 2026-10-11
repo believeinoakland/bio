@@ -1,6 +1,6 @@
 # promotion (T42)
 
-**Status** · session_0152YS47KdFKKexnY73o2BzS · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_0152YS47KdFKKexnY73o2BzS · depth 2 · WORKING · handled B2
 
 ## J1 · REPORT
 
