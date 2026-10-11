@@ -25,3 +25,6 @@ T43-23 applied (b7e25994d8). It is tests only. envelope.test.mjs:391 reads NO_SU
 - **Found in other modules:** (1) store-door R7's stale C-118.7 wording and (2) plane R6's `token:` clause, both reported in J1 and logged by BOB as K2726.
 - **Size (session_01DfugQdQ5JweBPDomQkf9rS):** test runs 7, module lines 4084.
 
+## J2 · COMPLETE
+
+T43-23 complete. I merged tranche/T43 (with T43-14) into the job branch. Control-plane: 223 of 223 tests pass, and envelope.test.mjs:391 passes with its assertions unchanged, so rule 4 (12)'s control-plane red is cleared. Plane's tests (my user): 185 of 185 pass, no reds. Checks: format, architecture, coverage (47 of 47) and ownership (3 files) all report 0 failures. Per B2, I read all the code and all 46 test files whole. While reading, I fixed two comments in index.mjs that still gave C-118.2 and C-118.7 to capture; they now name doorbell. Comments only, no behaviour change. No file outside my paths. Nothing deferred. Record: build/jobs/T43/control-plane.md.
