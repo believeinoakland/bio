@@ -263,7 +263,7 @@ test("R79 R81 R77 (DEC-97 (2)): a set-aside is recorded with its reason, who and
   assert.equal(route(w.c, "heldrestore", "by=member:m1&viewer=member:m1", { ids: ["INFO-1"], reason: "back" }).ok, true);
 });
 
-/* ---- R82: the backlog of one sweep (K1036; monitoring R60's hold) ---- */
+/* ---- R82: the backlog of one sweep (K1036; link-sweep R8's hold) ---- */
 
 /* Documents filed by sweeps: each an Information document at `collected` unless said, with its register document
    (`data/provenance.json`, record-core's `files` read contract) naming each of its documents' `origin`. */
