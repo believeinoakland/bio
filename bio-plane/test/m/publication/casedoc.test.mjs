@@ -236,7 +236,7 @@ test("R40 the seven tables and their named columns are the stated read contract,
   const cols = (t) => w.rows(`PRAGMA table_info(${t})`).map((c) => c.name);
   const contract = { cases: ["case_id", "project_id"],
     published_cases: ["case_id", "edition", "completeness", "bias_acknowledgement", "ratified_at", "bar", "scope", "manifest",
-                      "manifest_sha"],
+                      "manifest_sha", "signed_at", "published_at", "criteria"],
     published_case_members: ["case_id", "bundle_id", "ord", "version_sha", "role"],
     published_edges: ["from_bundle", "to_bundle", "kind", "disclosure", "published"],
     published_shas: ["sha256", "bundle_id", "path", "kind", "bytes", "published"],
@@ -252,7 +252,7 @@ test("R40 the seven tables and their named columns are the stated read contract,
      answerable as written */
   for (const q of [`SELECT sha256, bundle_id, path, kind, bytes, published FROM published_shas`,
                    `SELECT from_bundle, to_bundle, kind, disclosure, published FROM published_edges`,
-                   `SELECT case_id, edition, scope, bar, ratified_at, manifest, manifest_sha FROM published_cases`,
+                   `SELECT case_id, edition, scope, bar, ratified_at, manifest, manifest_sha, signed_at, published_at, criteria FROM published_cases`,
                    `SELECT case_id, edition, ord, bundle_id, version_sha, role FROM published_case_members`,
                    `SELECT c.case_id, k.project_id FROM published_cases c LEFT JOIN cases k ON k.case_id=c.case_id`,
                    `SELECT case_id, edition, text, sig_armored FROM case_documents`])
