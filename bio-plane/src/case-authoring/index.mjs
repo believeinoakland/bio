@@ -95,6 +95,8 @@ import { SECTIONS, calculationsLines, timelineLines, materialsOf, passagesOf } f
 /* R63, R68 (T41; D56, D60): case-grammar's account and approval blocks (its R23, R26), the one spelling of each, and the
    approval digest an approval names (its R26; K2528). The review comments' block is `case-account` R7's answer. */
 import { accountLines, accountSectionLines, approvalsLines, approvalSubjectSha } from "../case-grammar/index.mjs";
+/* R71 (T45): case-grammar R29's `outcomes:` block and body section, the one spelling of each, and its one reading. */
+import { OUTCOME_KINDS, outcomesLines, outcomesOf, outcomesSectionLines } from "../case-grammar/index.mjs";
 /* R61 (N717; K2129): how a case uses the standards it measures against, judged by `case-checker`'s pure R21. */
 import { checkStandardsUse } from "../case-checker/standards.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
@@ -230,8 +232,9 @@ function refusal(family, key, extra = {}) {
 /* Each family's own helper, the code its literal first argument, so the DEC-49 guard judges the code at each site
    against the rows that govern it (N259, N275). */
 const derivationRefusal = (key, extra) => refusal(CASE_DERIVATION_CHECKS, key, extra);
-/** R71 (T45): the kinds of outcome a member's act carries into a case's next edition. */
-export const OUTCOME_KINDS = Object.freeze(["success", "cure", "harm_addressed"]);
+const actRefusal = (key, extra) => refusal(PUBLISH_ACT_CHECKS, key, extra);
+/** R71 (T45): the kinds of outcome a member's act carries into a case's next edition, case-grammar R29's. */
+export { OUTCOME_KINDS };
 /** R71: the prefix of a carried outcome's opaque id (record-core R6), drawn through record-core's ledger. */
 export const CARRIED_OUTCOME_PREFIX = "OUTC";
 /** R71: the longest reason for withdrawing a carried outcome, in code points (R19's bound). */
@@ -242,10 +245,6 @@ const isDate = (v) => {
   const d = new Date(`${v}T00:00:00Z`);
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
 };
-/* PENDING CASE-GRAMMAR'S MERGE (T45-16): case-grammar R29's `outcomesOf(fm)` reads the `outcomes:` block back; until it
-   is on the tranche this reads the same rows from the parsed front matter, and is replaced by its import at the merge. */
-const outcomesOf = (fm) => (fm && Array.isArray(fm.outcomes) ? fm.outcomes.filter((o) => o && typeof o === "object") : []);
-const actRefusal = (key, extra) => refusal(PUBLISH_ACT_CHECKS, key, extra);
 
 /** R70 (T45; N880; Actions D13; v0.2 rule 8): the doors the open-requests source gives. */
 const OPEN_REQUESTS_DOORS = Object.freeze(["openRequestsOn"]);
@@ -1242,6 +1241,8 @@ export class CaseAuthoring {
       accountBlock: accountLines(accountJ.rows),
       accountSection: shaped.sentences.length ? accountSectionLines(accountJ.rows) : [],
       reviewCommentsBlock: comments.block, reviewComments: comments.body,
+      /* R71 (T45): case-grammar R29's block and body section, every pending outcome in the order carried. */
+      outcomesBlock: outcomesLines(outcomes), outcomesSection: outcomesSectionLines(outcomes),
       approvalsBlock,
     });
     /* R68 (D60; K2528, K2533): THE APPROVALS THIS DOCUMENT CARRIES, case-grammar R26's block: the rule in force and the

@@ -193,6 +193,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
                                    timelineCut = [], timelineUnread = null, timelineWithheld = 0,
                                    timelineBlock = [], peopleBlock = [], memberTiesBlock = [],
                                    accountBlock = [], accountSection = [], reviewCommentsBlock = [], reviewComments = null,
+                                   outcomesBlock = [], outcomesSection = [],
                                    approvalsBlock = [] }) {
   const roleOf = new Map((roles || []).map((r) => [r.target, r.role]));
   const lens = manifest && manifest.in_force === true ? manifest
@@ -300,6 +301,8 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
        the one block the approval digest leaves out. Each its owner's one spelling, rendered by the caller. */
     ...accountBlock,
     ...reviewCommentsBlock,
+    /* R71 (T45): case-grammar R29's `outcomes:` block, the outcomes carried into this edition; none, no line. */
+    ...outcomesBlock,
     ...approvalsBlock,
     "completeness:",
     `  statement: "${fmSafe(statement)}"`,
@@ -447,6 +450,9 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     "",
     /* R63 (D56): the account, the publisher's own, sentence by sentence (case-grammar R23's section). */
     ...accountSection,
+    /* R71 (T45): the outcomes carried into this edition, after the account and before what the findings rest on
+       (case-grammar R29, R14's order); none, no section. */
+    ...outcomesSection,
     ...tensionBodyLines(tensions, tensionsUnread),
     ...captureBodyLines(captures, sources),
     ...(materials ? carriesBodyLines(method, materials, group) : []),
