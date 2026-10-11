@@ -40,6 +40,15 @@ export function setScalar(text, key, value) {
   return text;
 }
 
+/** A text as a scalar the grammar reads back as itself (R44's fork title). The grammar has no escapes: a value wrapped
+ *  in two of one quote character is the text between them, so the wrapper is a quote the text does not hold, never a
+ *  JSON string, whose `\"` and `\\` the grammar would keep as written. A text holding both quotes is wrapped in `"`,
+ *  and the promotion it goes into judges what the grammar reads. */
+export function quotedScalar(text) {
+  const s = String(text);
+  return !s.includes('"') ? `"${s}"` : !s.includes("'") ? `'${s}'` : `"${s}"`;
+}
+
 /** Add a Session Log entry after the `## Session Log` heading's section, opening the section when absent. */
 export function appendSessionLog(text, entry) {
   const at = text.indexOf("## Session Log");
