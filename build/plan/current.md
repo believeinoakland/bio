@@ -2,9 +2,9 @@
 
 **Status** · OPEN · BOB #156 · session_01L1X4WzJQQ7Sdsh4iWKEui7 · depth 1
 
-**Jobs** · jurisdictions: JURISDICTIONS #10 session_01YbCZYnryu1Ked4QncDkn47
+**Jobs** · jurisdictions: JURISDICTIONS #10 session_01YbCZYnryu1Ked4QncDkn47; membership: MEMBERSHIP #34 session_019Mx293Q1PFFwRus5nYUaPq; project-roster: PROJECT-ROSTER #3 session_01JnZy4CSrJYv25f2UVq4NE2; promotion: PROMOTION #43 session_01Bdm13v3k1joqVbrjhpKtUZ
 
-**At T45's opening (K2784):** opened 2026-10-11 from `main` @ a969c420b2 (T44 closed by PR #27, K2784). Development runs (Bob, K2605); the 80% pause (K2341) and the account-switch rule stand. Bob's meter: 35% weekly during T44's L2 (K2741); asked again at this opening. New modules entered in `modules.json` and `layers.md` at this opening, empty (K1043): `case-check`, `action-holds`, `action-replies`, `plan-work`, `action-producers` (K2781 (1)); membership's `MODULE_ORDER` follows in T45-2 (K657).
+**At T45's opening (K2784):** opened 2026-10-11 from `main` @ a969c420b2 (T44 closed by PR #27, K2784). Development runs (Bob, K2605); the 80% pause (K2341) and the account-switch rule stand. Bob's meter: 35% weekly during T44's L2 (K2741); 43% at T45's L2 (K2798). New modules entered in `modules.json` and `layers.md` at this opening, empty (K1043): `case-check`, `action-holds`, `action-replies`, `plan-work`, `action-producers` (K2781 (1)); membership's `MODULE_ORDER` follows in T45-2 (K657).
 
 **Sources** · `next.md` N751…N895 (each re-tested at the opening); `archive/T44.md` Outcome (its carried reds); the six fold drafts `draft-T45-{lower,l8,l9a,l9b,grammar,upper}.md` (requirement text, BOB's wording at each layer's fold, P5), read with K2780 (canon v0.2 placed), K2781 (packaging and readings) and K2782 (Bob: own projects never rescued; stewards' contact now, service later); the actions lane's `REQUIREMENTS-HANDOFF.md` (H31, folded as N893); the channel; `rulings-active.md`. The cross-draft points below are BOB's (P17), decided at each layer's fold and recorded in `rulings.md`.
 
@@ -23,12 +23,14 @@ It is the only module marked `legacy` in `modules.json`.
 3. A job that adds a file outside its module's listed `paths` names it in its COMPLETE, and BOB adds it before the ownership check (K1043). A new module enters `modules.json` with empty `paths` and `tests` (K1043, K1975), with membership's `MODULE_ORDER` entry in the same act (K657; T45-2).
 4. **Accepted reds at the opening** (from T44's Outcome; re-confirmed against `node checks/run.mjs` at T44's close):
    1. coverage: every id marked `*(not yet met: T45)*` until its module's merge;
-   2. row census: C-143.5 and C-143.6 (and any other row T44's L3+ jobs changed), until T45-3's stamp; rows T45's L3+ jobs add or change, until T46's;
+   2. row census: ~~T44's rows~~ stamped by T45-4 (K2800); rows T45's L3+ jobs add or change, until T46's;
    3. the UI's DEC-88 tests (Bob's), carried;
    4. legacy-ui `statement-ack.test.mjs` (N794, K633), `progression-revision.test.mjs` and `queue-recipients.test.mjs` (N865, K2688);
    5. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close;
    7. from T45-1's merge (K2792): `action-grammar` `grammar.test.mjs` "R1, R11: actionKinds(view)" until T45-25; `filing-templates` `reads.test.mjs` "R26 offeredVersion" until T45-30; `filings` `packet.test.mjs` "R9 the six sections" until T45-31 (the test profile grew, R84);
-   8. `standards` R29 "the move to layer 5" (the new modules in `modules.json` before `MODULE_ORDER` names them), until T45-2;
+   8. ~~`standards` R29 "the move to layer 5", until T45-2~~ cleared at T45-2's merge (K2796);
+   9. from T45-3's merge (K2797): plane `roster.test.mjs` "R5, R9 (T38-26; N783): project-roster's whole ops map is routed" (it pins the ops map, now with `projectscopeset`, `projectapprovalset`), until T45-47;
+   10. skills `planning.test.mjs` R28 and `filing.test.mjs` R30 ("the Action document is canon", K2783), until T45-13;
    6. (if T45-27's START finds the plane composes `actions`' start registrations itself) the plane's composition of the moved hold registrations, from L9's close until T45-47 (Measure first, M-T45-5).
 5. **Readings recorded with the folds, told to Bob as done** (K2781, K2782, P17): breach actions need a live *noncompliant* determination (actions R8 (a)); docket entries by a member's act are filed at once and made public by the manager's signing (DEC-116); phrasing lists hold English now, any other language reads undetermined and is never "nothing found"; the own-benefit list stays narrow (a remedy of harm is never matched); `none_exists` kept beside §6's outcomes; Tier 1 template machinery built, `@records-request` withheld until a named writer and a professional review exist; D54's existence-sight kept for a member's own project; a member's own project is never rescued (K2782); `public_comment` at Tier 1 (Design Requirement 8); `legal_organisations` widened to Tier 2 and to defence; the re-examination run started inside the recording act (ai-runs R77 amending R46); a voided basis "marked" as derived on read.
 
@@ -107,9 +109,10 @@ It is the only module marked `legacy` in `modules.json`.
 - **T45-44 · instance-setup** · (grammar doubt 11; D28d) reports `action-grammar.lawStagesFindings` over the loaded view's records laws; the administrators' act setting the group's `declared_stake` · text BOB's.
 - **T45-45 · op-declarations** · (N893) R49 (every T45 op specified); **R47's wording note**: its T42 `ACT_HELP_ABSENT` sentence marked history since T43 (OP-DECLARATIONS #19, K2773), wording only · upper "L11 op pattern".
 - **T45-46 · installer** · (**N894**, K2782) its README publishes the stewards' contact address, what they may do (withdraw shared services, never edit a group's record), and the plain guide to what a group holds and who could compel it; the same text in the public documentation (BOB's commit) · text BOB's; **the address is Bob's to name** (one act, asked at the opening).
+- **T45-48 · stewards** (new, after `installer`; Bob, K2799) · (N895, N892 (e); v0.2 rule 21, D28e) Civicsmith's stewards' reporting service, a Civicsmith-run deployable outside every group's instance: a public intake for reports of abuse of Civicsmith itself, a store of reports and the stewards' decisions readable only by stewards, remedies limited to withdrawing shared services, never editing a group's record; the contact address Bob names before a public release (K2799) · text BOB's, `draft-T45-stewards.md` · merges before plane.
 - **T45-47 · plane** · composition: the new modules' start registrations (`action-holds`, `action-replies`, `plan-work`, `following`'s, `case-authoring` R70's source, `steps` R29's holder, `standards` R53, `consequences` R19), the new ops' handlers; clears rule 4 (6) if opened · merges last in L11.
 
-**L11 merge order:** wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, installer, plane last. `control-plane` and `answer-envelope` join (before plane) only where their op maps must name a new module's ops, decided at T45-45's merge.
+**L11 merge order:** wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, installer, stewards, plane last. `control-plane`, `store-door` (its `projectId` parameter list) and `answer-envelope` join (before plane) only where their op maps must name a new module's ops, decided at T45-45's merge.
 
 ### New modules: places and id moves (K617, K624, K657, K1043)
 
@@ -138,7 +141,6 @@ Users re-pointed in their own jobs: `doorbell` R3, `ratification` R45, `store-do
 | N853c | a measurement: OCR's accuracy on members' photos |
 | N886 | the design stream's words (B139), not yet given |
 | N889 | the design stream's: those sentences have no keys yet |
-| N895 (the stewards' service; N892 (e)'s service part) | a dependency not yet built: no shared service exists to withdraw (K2782) |
 | N881's assistant status report (`statusreportdraft`, its `run-rules` reach and grant op; `plan-work` R8's assistant arm) | the order: its read (`plan-work` R7, L9) is built after `agent-worker` and `run-rules` (L6); an out-of-layer job needs Bob each time (K1548); joins T46 |
 | N858's `@records-request` template content | K2781 (6): no named writer and no professional review exist (v0.2 rule 11); the machinery is in |
 | `wizard-scripts` R22's second clause (five scripts) and `@communication`'s step | the design stream's: `library.json` not given; `@communication`'s re-pointing is theirs (upper doubt 12) |

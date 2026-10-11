@@ -1,5 +1,5 @@
 /* project-roster over a real SQLite database (node:sqlite), beside the real membership it uses, with a stub record-core
-   that provides the services both use (bundleInfo, declarePurge) over a `bundles` table holding the R37 read contract
+   that provides the services both use (bundleInfo, declarePurge, getSetting) over a `bundles` table holding the R37 read contract
    (bundle_id, object_type) and a title, passed to `membershipOf` and `projectRosterOf` as a test's own record-core
    (K61). Every test drives the module at its interface; membership's acts set up the participation it reads. */
 import { DatabaseSync } from "node:sqlite";
@@ -31,7 +31,10 @@ export function world() {
   const db = new DatabaseSync(":memory:");
   db.exec(`CREATE TABLE bundles (bundle_id TEXT PRIMARY KEY, object_type TEXT NOT NULL, title TEXT, project TEXT)`);
   const declared = [];
+  /* record-core's settings (its R25), for R24's active profiles: `jurisdiction_profiles` a test sets directly. */
+  const settings = { jurisdiction_profiles: ["test-port-ellery"] };
   const core = {
+    getSetting(name) { return Object.hasOwn(settings, name) ? settings[name] : null; },
     bundleInfo(id) {
       const r = db.prepare(`SELECT bundle_id, object_type, title, project FROM bundles WHERE bundle_id=?`).get(bind(id));
       return r ? { id: r.bundle_id, type: r.object_type, title: r.title, project: r.project ?? null } : null;
@@ -47,7 +50,7 @@ export function world() {
   if (projectRosterOf(ctx) !== r) throw new Error("projectRosterOf answers one instance per storage");
   r.migrate();
   const w = {
-    db, sql, core, m, r, declared, creds, ctx,
+    db, sql, core, m, r, declared, creds, ctx, settings,
     bundle(id, type = "information", title = `title of ${id}`, project = null) {
       db.prepare(`INSERT INTO bundles (bundle_id, object_type, title, project) VALUES (?,?,?,?)`).run(id, type, title, project);
       return id;

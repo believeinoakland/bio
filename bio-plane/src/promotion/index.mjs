@@ -13,12 +13,15 @@
  *   now         the module's clock, an ISO instant (default: the wall clock).
  *   order       the modules' total order (ids), which registered steps and listeners run in (R39, R45, R46);
  *               membership's `MODULE_ORDER` unless a test passes its own. Unknown modules run last, in the order they registered.
+ *   roster      project-roster, whose `projectScope` R57 reads; `projectRosterOf(host)` on the same record and membership,
+ *               made on its first use, unless a test passes its own.
  */
 
 import { parseFrontmatter, idDisagrees, normalizeType, vocabFor, STATES,
          deriveInquiryTitle, inquiryQuestionOf, isMachineIdentity } from "../record-grammar/index.mjs";
 import { recordOf, fileDigestOf, inlineBytesOf, EMPTY_STRING_SHA, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject, notAParticipant, listenerRefusal, MODULE_ORDER, CUSTODIAL_CHECKS } from "../membership/index.mjs";
+import { projectRosterOf } from "../project-roster/index.mjs";
 import { PROMOTION_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS, PROMOTION_ROW_CHECKS,
          PROJECT_MINT_CHECKS, PROMOTION_REGISTRATION_CHECKS } from "./checks.mjs";
 import { recordChecks } from "./record-checks.mjs";
@@ -144,6 +147,18 @@ function projectOf(fm, type) {
   return id === "" ? null : id;
 }
 
+/* R57: the bundles a document rests on as evidence: each `basis[]` leg's target and each `references[]` entry of rel
+   `cites` not severed (a case's citation, a question's leg's edge; citation R1, R4). Other rels are not evidence. */
+function evidenceTargets(fm) {
+  const out = new Set();
+  if (!isObj(fm)) return out;
+  const said = (v) => (typeof v === "string" && v.trim() !== "" ? v.trim() : null);
+  for (const l of Array.isArray(fm.basis) ? fm.basis : []) if (isObj(l) && said(l.target)) out.add(said(l.target));
+  for (const r of Array.isArray(fm.references) ? fm.references : [])
+    if (isObj(r) && r.rel === "cites" && r.status !== "severed" && said(r.target)) out.add(said(r.target));
+  return out;
+}
+
 /* R13: the producing group written into a created document's bytes, rehashed from what is written. */
 function stampGroup(files, slug) {
   return files.map((f) => {
@@ -177,7 +192,7 @@ const NAME_TAKEN = () => ({ ok: false, reason: "NAME_TAKEN",
         + "holds for deactivated projects too, because their names are still cited." });
 
 class Promotion {
-  #record; #membership; #now; #order;
+  #record; #membership; #now; #order; #rosterOf; #roster = null;
   #steps = [];            // {module, check, project, seq}
   #facts = new Map();     // name -> {module, fn}
   #listeners = [];        // {module, fn, seq}: R45's post-commit notice
@@ -186,9 +201,11 @@ class Promotion {
   #caseCatalogue = null;  // {module, fn}: R47's registered case-document catalogue, which R33 runs
   #delivering = false;
 
-  constructor({ record, membership, now, order } = {}) {
+  constructor({ record, membership, now, order, roster = null, rosterOf = null } = {}) {
     this.#record = record;
     this.#membership = membership;
+    this.#roster = roster;
+    this.#rosterOf = typeof rosterOf === "function" ? rosterOf : null;
     this.#now = typeof now === "function" ? now : () => new Date().toISOString();
     this.#order = Array.isArray(order) ? order : MODULE_ORDER;
   }
@@ -553,10 +570,12 @@ class Promotion {
       const head = record.head(bundleId);
       /* R11, R12: the head's `created` and `last_updated` are what its own document states (the row is written from
          it); read from the held bundle.md, and undefined where the head holds none it can read. */
+      let heldDoc = null;
       if (head) {
         const heldMd = record.readFile(bundleId, "bundle.md");
         const heldFm0 = heldMd && typeof heldMd.text === "string" ? parseFrontmatter(heldMd.text).data : null;
         const heldFm = isObj(heldFm0) ? heldFm0 : {};
+        heldDoc = isObj(heldFm0) ? heldFm0 : null;
         if (head.created === undefined) head.created = textStated(heldFm.created) ?? undefined;
         if (head.lastUpdated === undefined) head.lastUpdated = textStated(heldFm.last_updated) ?? undefined;
       }
@@ -823,6 +842,19 @@ class Promotion {
           + `new snap key. Nothing was written.`, { snapKey: String(snapKey) });
       /* END DEC-49 REGION is-promote-snapkey */
 
+      /* R57: a counsel matter is never evidence outside its own project. Only what this promotion newly names is asked
+         (a scope changes nothing already cited, project-roster R21): a revision carrying a citation its head already
+         held is not a new citation. */
+      const counselCited = this.#counselMatterCited(finalFm, heldDoc,
+        promotedType === "project" ? bundleId : projectOf(finalFm, promotedType));
+      /* DEC-49 REGION is-counsel-matter-evidence */
+      if (counselCited.length)
+        return refusal("COUNSEL_MATTER_NOT_EVIDENCE",
+          `${counselCited.map((t) => cut(t, 80)).join(", ")} ${counselCited.length > 1 ? "are" : "is"} kept in a counsel `
+          + `matter of another project, and a counsel matter is never evidence outside its own project. A leg or a `
+          + `citation resting on it is made from inside that project. Nothing was written.`, { targets: counselCited });
+      /* END DEC-49 REGION is-counsel-matter-evidence */
+
       /* R39: the later modules' checks, in the modules' order. */
       Object.assign(ctx, { bundleId, files, head, creation: !head, promotedType, promotedTitle, promotedState,
                            promotedPriorState, promotedClosedReason, promotedCreated, promotedLastUpdated,
@@ -880,6 +912,32 @@ class Promotion {
                        base: head ? base : EMPTY_STRING_SHA });
       return answer;
     });
+  }
+
+  /* R57: the targets `fm` newly names as evidence (absent from `held`'s), each resting on a bundle of a project other
+     than `own` whose scope is `counsel_matter`. A target the record does not hold is not asked here (its fences are the
+     legs' own); a target that is itself a project is its own project. A scope that cannot be read abstains (R17). */
+  #counselMatterCited(fm, held, own) {
+    const before = evidenceTargets(held);
+    const out = [];
+    for (const target of evidenceTargets(fm)) {
+      if (before.has(target)) continue;
+      const info = this.#record.bundleInfo(target);
+      if (!info) continue;
+      const project = normalizeType(info.type) === "project" ? info.id : info.project;
+      if (typeof project !== "string" || project === "" || project === own) continue;
+      if (this.#scopeOf(project) === "counsel_matter") out.push(target);
+    }
+    return out.sort();
+  }
+
+  /* R57: a project's scope, project-roster R23's; null when it cannot be read. */
+  #scopeOf(projectId) {
+    try {
+      if (!this.#roster && this.#rosterOf) this.#roster = this.#rosterOf();
+      const answer = this.#roster && typeof this.#roster.projectScope === "function" ? this.#roster.projectScope(projectId) : null;
+      return answer && typeof answer.scope === "string" ? answer.scope : null;
+    } catch { return null; }
   }
 
   /* R19: is `key` (projectNameKey) the name of any project but `except`, deactivated ones included? */
@@ -1167,7 +1225,9 @@ export function promotionOf(host, deps) {
   let p = instances.get(host);
   if (!p) {
     const record = (deps && deps.record) || recordOf(host);
-    p = new Promotion({ ...(deps || {}), record, membership: (deps && deps.membership) || membershipOf(host, { record }) });
+    const membership = (deps && deps.membership) || membershipOf(host, { record });
+    p = new Promotion({ ...(deps || {}), record, membership,
+                        rosterOf: () => projectRosterOf(host, { record, membership }) });
     instances.set(host, p);
     /* record-core R59: the moved checks join the audit, with the caller's release registry from its context. */
     record.registerAuditCheck("promotion", ({ folderName, files, raw, sha256 }, context) =>

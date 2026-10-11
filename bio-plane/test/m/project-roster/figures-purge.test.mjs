@@ -127,11 +127,12 @@ test("R17 registered through record-core R63 under this module's name, it answer
   assert.deepEqual([p.before.projectOwnerVotes, p.after.projectOwnerVotes, p.removed.projectOwnerVotes], [2, 1, 1]);
 });
 
-test("R18 owner votes, requests and ownership decisions are declared keyed by project, once; a refused declaration is thrown", async () => {
+test("R18 owner votes, requests, ownership decisions, scope records and approval settings are declared keyed by project, once; a refused declaration is thrown", async () => {
   const w = world();
   const mine = w.declared.filter((d) => d.module === "project-roster");
   assert.equal(mine.length, 1);
-  assert.deepEqual(mine[0].tables, ["project_join_requests", "project_owner_votes", "project_owner_decisions"]
+  assert.deepEqual(mine[0].tables, ["project_join_requests", "project_owner_votes", "project_owner_decisions",
+    "project_scopes", "project_approval_settings"]
     .map((name) => ({ name, keys: ["project_id"] })));
   assert.deepEqual([...PROJECT_ROSTER_TABLES], mine[0].tables.map((t) => t.name));
   for (const t of PROJECT_ROSTER_TABLES)
@@ -143,7 +144,7 @@ test("R18 owner votes, requests and ownership decisions are declared keyed by pr
   assert.throws(() => refused.migrate(), /refused its purge declaration: TABLE_DECLARED \(project_owner_votes\)/);
 });
 
-test("R18 through the real record-core: a purge clears the project's votes, requests and decisions, and never another project's", async () => {
+test("R18 through the real record-core: a purge clears the project's votes, requests, decisions, scope records and approval settings, and never another project's", async () => {
   const w = await realWorld();
   const { m, r, rc } = w;
   await w.claim();
@@ -157,16 +158,20 @@ test("R18 through the real record-core: a purge clears the project's votes, requ
     }
     r.projectOwnerAdd({ projectId: id, handle: "bob", by: "ann", viewer: V("ann") });   // a decision
     r.projectOwnerAdd({ projectId: id, handle: "cal", by: "ann", viewer: V("ann") });   // an open vote
+    r.projectScopeSet({ projectId: id, scope: "counsel_matter", reason: "counsel", by: "ann", viewer: V("ann") });   // a scope
+    r.projectApprovalSet({ projectId: id, needs: [{ tier: 3 }], reason: "care", by: "ann", viewer: V("ann") });   // a setting
+    r.projectScopeSet({ projectId: id, scope: "none", reason: "opening up", by: "ann", viewer: V("ann") });
     m.projectVisibilitySet({ projectId: id, setting: "discoverable", by: "ann", viewer: V("ann") });
   }
   await w.enrol("dee");
   for (const id of ["PROJ-A", "PROJ-B"]) r.projectRequest({ projectId: id, by: "dee", viewer: V("dee") });   // a request
   const count = (t, where = "1=1") => w.row(`SELECT COUNT(*) AS n FROM ${t} WHERE ${where}`).n;
-  for (const t of PROJECT_ROSTER_TABLES) assert.equal(count(t, "project_id='PROJ-A'"), 1, t);
+  for (const t of PROJECT_ROSTER_TABLES)
+    assert.equal(count(t, "project_id='PROJ-A'"), t === "project_scopes" ? 2 : 1, t);
   rc.purge({ bundleId: "PROJ-A" });
   for (const t of PROJECT_ROSTER_TABLES) {
     assert.equal(count(t, "project_id='PROJ-A'"), 0, `${t}: cleared with the project`);
-    assert.equal(count(t, "project_id='PROJ-B'"), 1, `${t}: another project's kept`);
+    assert.equal(count(t, "project_id='PROJ-B'"), t === "project_scopes" ? 2 : 1, `${t}: another project's kept`);
   }
   rc.purge({});
   for (const t of PROJECT_ROSTER_TABLES) assert.equal(count(t), 0, t);
