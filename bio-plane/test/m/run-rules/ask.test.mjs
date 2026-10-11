@@ -179,7 +179,7 @@ test("R18 (T35): a draft starts only at a member's own act â€” startAllowed({sta
     for (const standing of [undefined, null, {}, { author: "member:ann" }, { author: "member:ann/tok1" }, { author: "class:daemon" }]) {
       const r = refusal(startAllowed({ startedBy, mode: "draft", standing }), "AI_RUN_NOT_A_MEMBER_ACT");
       assert.equal(r.check, "C-22.19");
-      assert.match(r.detail, /^a draft of a member's own words starts only at the act of the member who asked for the help/);
+      assert.match(r.detail, /^a draft, of whatever kind, starts only at the act of the member who asked for the help/);
       assert.match(r.detail, /exception is an ask's alone/);
       assert.match(r.detail, /Nothing was started$/);
       assert.equal(r.exception, undefined);
@@ -300,8 +300,10 @@ test("R22: draftMayRead({kind, firsthand, suggestions}) is true only for own_wor
   assert.equal(draftMayRead({ kind: "own_words", suggestions: true }), true);
   /* suggestions left out is not on */
   assert.equal(draftMayRead({ kind: "own_words", firsthand: false }), false);
-  /* every kind of DRAFT_KINDS but own_words is false with the arguments that let own_words read */
-  for (const k of DRAFT_KINDS) assert.equal(draftMayRead({ kind: k, suggestions: true }), k === "own_words", k);
+  /* every kind of DRAFT_KINDS but own_words is false with the arguments that let own_words read, save R27's two that read
+     named records through the grant (infractiondraft, bearingdraft; t45.test.mjs holds their whole table) */
+  for (const k of DRAFT_KINDS)
+    assert.equal(draftMayRead({ kind: k, suggestions: true }), ["own_words", "infractiondraft", "bearingdraft"].includes(k), k);
   /* inherited keys are no arguments */
   assert.equal(draftMayRead(Object.create({ kind: "own_words", suggestions: true })), false);
   /* never throws: anything that is not a request is false */
@@ -315,7 +317,7 @@ test("R22, R18: startAllowed answers for a translation draft as for any draft â€
   for (const startedBy of [null, "class:daemon", "class:ai/tok1", "scheduler"])
     for (const standing of [undefined, { author: "member:ann" }]) {
       const r = refusal(startAllowed({ startedBy, mode: "draft", kind: "translation", standing }), "AI_RUN_NOT_A_MEMBER_ACT");
-      assert.match(r.detail, /^a draft of a member's own words starts only at the act of the member who asked for the help/);
+      assert.match(r.detail, /^a draft, of whatever kind, starts only at the act of the member who asked for the help/);
     }
   /* the kind changes nothing: the same answers as a draft that names none */
   for (const startedBy of ["member:ann", "class:daemon"])

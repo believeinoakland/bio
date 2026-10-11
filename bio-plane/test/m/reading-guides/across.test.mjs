@@ -44,7 +44,7 @@ test("R6 adopting imports it as adopted, based on the offer's digest, usable onl
   const f = b.g.guideFor({ kind: "staff_report", viewer: BOB });
   assert.deepEqual([f.guide.id, f.origin], [r.guide, "adopted"]);
   /* an offer already adopted answers that guide */
-  assert.deepEqual(b.g.guideAdopt({ bytes: offer.bytes, by: BOB }), { ok: true, already: true, guide: r.guide, state: "group", based_on: offer.digest, offered_by: "group-a" });
+  assert.deepEqual(b.g.guideAdopt({ bytes: offer.bytes, by: BOB }), { ok: true, already: true, guide: r.guide, state: "group", purpose: "reading", based_on: offer.digest, offered_by: "group-a" });
   assert.equal(b.count("reading_guides"), 1);
 });
 

@@ -1,6 +1,6 @@
 # BOB to agent-worker (T45)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -17,3 +17,11 @@ Merge order in L6: steps, run-rules, ai-runs, reading-guides, skills, answers, a
 ## B2 · ANSWER · re J1
 
 All as you read them (K2820), now in R78's text: response id "<action id>#<ord>"; op=action for the entry and kind; op=reading for the text; op=procedureguides ({kind}, reading-guides R13's read, declared by op-declarations in L11); malformed id or unrouted op undetermined in why; PLANE_OPS gains exactly action, reading, procedureguides. Your R76 readings stand (text 1-20,000; ids <=200; no told; ASK_OPS; whole-shape DRAFT_UNFORMED). Merge tranche/T45 for R78.
+
+## B3 · CHANGE
+
+Your J2 (1) confirmed (K2824): the door hands the records in. R76 amended: infractiondraft takes record ({plan?, actions, correspondence, findings}), bearingdraft takes action_record and reply_record; each given to the model as data (R77's injection rule), an absent or malformed one R59's BAD_TASK; the grant stays as is, reads through it only ASK_OPS. (6) filings matches your textcheck by quote, not index: no change for you. (3) op=reading {sha256} as you built; an answer without the reply's text reads undetermined. (4) is op-declarations' (START noted). Merge tranche/T45, apply R76's amendment, and post COMPLETE again; your merge waits on run-rules (and then your R27 arms go green).
+
+## B4 · CHANGE
+
+run-rules (R27, draftMayRead) is merged into tranche/T45 (K2825): merge it with B3's work; your R27 arms should go green. Note procedureGuidesFor's answer carries ok and withheld, and the profile's guide has guide: null.
