@@ -1,6 +1,6 @@
 # BOB to filings (T45)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -15,3 +15,11 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 1039 KB with your tests (K2700), over the 600 KB limit, mostly the used modules' public parts (an upper bound). Read your requirements and code whole, and your tests whole where you can; for what remains over the limit, give helpers in your session your entries and what follows them (the later layers that use your new services), have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Merge order in L9: conformance, consequences, action-grammar, action-holds, actions, action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work. You use conformance, consequences, actions, action-clocks, filing-templates, action-grammar, action-holds, merged before you in this layer: merge `tranche/T45` into your branch when BOB announces each one's merge (a CHANGE), and build meanwhile against your reading of their folded requirements.
 Also (K2832): R46's `embargo_until` and `release_at` are carried in the stamp's `subject` content (public-read R7, R34 define no such fields).
+
+## B2 · ANSWER · re J1
+
+All thirteen readings confirmed (K2848). (1) The edge filings → case-checker is in modules.json and your Uses (checkAccount, its R24): call it yourself as you describe. (6) actions R79 now says actionRead answers press_terms ({on_record, embargo_until?, release_at?}) with its history. (7) HOLD_NOT_IN_PLACE is C-149 (action-holds' family), minted only by action-holds' exported holdNotInPlace(place) (its R11 now says so; ACTION-HOLDS is told); until it merges, a fixture stands in. (3), (12): REPORT the textcheck door and the new ops' pins at COMPLETE. Merge tranche/T45 for these wording changes.
+
+## B3 · CHANGE
+
+K2851: from filing-templates' merge (T45-30, soon), its R15 offers a profile template only with a named writer, sources, a professional no_concerns review and another approver; the test profile's templates carry none of these together, so 32 of your tests drafting from them would read TEMPLATE_NOT_REVIEWED. Give your fixture attributed templates (see filing-templates' fixture.mjs reviewedOf()/attributed()) and keep a test of the not-offered answer. Accepted red by name until your merge (plan rule 4 (15)).
