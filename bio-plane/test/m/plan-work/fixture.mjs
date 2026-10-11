@@ -1,10 +1,9 @@
 /* plan-work over the modules it uses: action-plans' test world (its fixture) gives the real record, membership,
-   promotion, actions, action-clocks, action-plans, action-holds and action-replies (merged, K2856, K2862), on a real SQLite database; plan-work is built over them with
+   promotion, actions, action-clocks, action-plans, action-holds and action-replies (merged, K2856, K2862, K2864), on a real SQLite database; plan-work is built over them with
    stand-ins, in the shape of their Provides, for the modules whose facts a test controls: escalation (`escalationsFor`
-   R22, `escalationRead` R2, the fixture's own), filings (`filingsFor` R13), conformance (`curesOf` R37; a test may read it through the real module), duties
-   (`dutiesArisingIn` R31), reading-guides (`procedureGuidesFor` R13) and ai-runs (`open` R77). action-plans' T45
-   services this module calls (`planMark` R43 in K2848's shape, `registerCloseSnapshot` R44, the marks in `planRead`) are
-   stood in over the real module until its job merges (plan rule 1). Every test drives plan-work at its interface. */
+   R22, `escalationRead` R2, the fixture's own), filings (`filingsFor` R13), conformance (`curesOf` R37; a test may read
+   it through the real module), duties (`dutiesArisingIn` R31), reading-guides (`procedureGuidesFor` R13) and ai-runs
+   (`open` R77). Every test drives plan-work at its interface. */
 import { seeded, opened, option, choose, V, MACHINE, by, OFFICE, ms, DAY, NOW } from "../action-plans/fixture.mjs";
 import { createHash } from "node:crypto";
 import { planWorkOf } from "../../../src/plan-work/index.mjs";
@@ -16,35 +15,8 @@ export { V, MACHINE, by, OFFICE, ms, DAY, NOW, option, choose };
 export function world(opts = {}) {
   const w = seeded(opts);
   opened(w, [w.SI, w.S1, w.S3]);
-  /* action-plans' T45 services, stood in over the real module */
-  const marks = new Map(), offers = new Map(), aside = new Map(), closers = [];
-  const ap = new Proxy(w.ap, { get: (t, k) => {
-    if (k === "planRead") return (a) => {
-      const r = t.planRead(a);
-      if (!r || !r.ok) return r;
-      const set = aside.get(r.id) || new Map();
-      return { ...r, marks: marks.get(r.id) || [], offers: offers.get(r.id) || [],
-               scenarios: r.scenarios.map((s) => (set.has(s.scenario) ? { ...s, set_aside: { reason: set.get(s.scenario) } } : s)) };
-    };
-    /* action-plans R43 (K2848): `cause` {action, ord}; each mark {kind, why, option?, scenario?, phase?, routes?}, a
-       malformed one skipped and named */
-    if (k === "planMark") return ({ plan, marks: m, cause }) => {
-      const l = marks.get(plan) || [];
-      const skipped = [];
-      const good = (x) => typeof x.why === "string" && x.why.length >= 1 && x.why.length <= 500
-        && (x.kind === "option_changed" ? typeof x.option === "string"
-          : x.kind === "phase_start_holds" ? x.scenario !== undefined && typeof x.phase === "string"
-          : x.kind === "next_routes" ? Array.isArray(x.routes) && x.routes.length >= 1 && x.routes.length <= 20 : false);
-      m.forEach((x, i) => (good(x) ? l.push({ ...x, machine_work: true, cause, at: w.clock.now }) : skipped.push(i)));
-      marks.set(plan, l);
-      return { ok: true, plan, marked: m.length - skipped.length, skipped };
-    };
-    if (k === "registerCloseSnapshot") return (module, fn) => {
-      if (closers.length) return { ok: false, code: "LISTENER_DECLARED" };
-      closers.push({ module, fn }); return { ok: true };
-    };
-    return typeof t[k] === "function" ? t[k].bind(t) : t[k];
-  } });
+  /* action-plans, real (T45-33 merged, K2864): planMark, registerCloseSnapshot, marks, offers, set-aside scenarios */
+  const ap = w.ap;
   /* escalation: the action-plans fixture's stand-in, its items' state set by the test */
   const cures = new Map();          // `${determination}#${standard}` -> the standing link, in conformance R37's shape
   /* conformance R37's answer (K2852): per standard of the determination (or the one named), the standing link or null */
@@ -57,8 +29,11 @@ export function world(opts = {}) {
   const drafts = new Map();         // action -> [{filing, purpose, approval, sending}]
   const filings = { filingsFor: ({ action }) => ({ ok: true, action, drafts: drafts.get(action) || [] }) };
   /* action-holds, real (T45-26 merged, K2856), over the same host; its doorbell and ratification readers not registered */
+  /* its docket arm a stand-in in docket R27's shape (no docket marks), so no read here builds the docket and publication
+     modules, whose promotion steps need tables this world does not hold */
+  const docket = { docketPressureMarks: () => ({ ok: true, marks: [] }), docketPressureOf: () => ({ ok: false, reason: "NO_SUCH_ENTRY" }) };
   const actionHolds = actionHoldsOf(w.host, { record: w.record, membership: w.membership, now: () => ms(w.clock.now),
-                                              doorbell: null, ratification: null });
+                                              doorbell: null, ratification: null, docket });
   /* action-replies, real (T45-29 merged, K2862): its arose_from links and their two reads */
   const actionReplies = actionRepliesOf(w.host, { record: w.record, membership: w.membership, actions: w.actions, caseAuthoring: null,
                                                   now: () => ms(w.clock.now) });
@@ -79,15 +54,19 @@ export function world(opts = {}) {
   const pw = planWorkOf(w.host, { record: w.record, membership: w.membership, actionPlans: ap, actions,
     escalation: w.stand.escalation, filings, conformance, actionHolds, actionReplies, duties, readingGuides, aiRuns,
     now: () => w.clock.now, ...(opts.deps || {}) });
-  Object.assign(w, { pw, apx: ap, marks, offers, aside, closers, cures, drafts, holds: actionHolds, replies: actionReplies, dutyCalls, guides, runs });
+  Object.assign(w, { pw, cures, drafts, holds: actionHolds, replies: actionReplies, dutyCalls, guides, runs });
   /** Start a chosen option addressed to the office and answer its action's id. */
   w.started = (fields = {}, extra = {}) => {
     const o = option(w, { addressee: OFFICE, ...fields });
     choose(w, [o]);
-    const r = w.ap.optionStart({ plan: w.PL, option: o, kind: "other", ...by("bob"), ...extra });
+    /* R42: an outward option going before its infraction is documented says why (its control is in matters.test.mjs) */
+    const r = w.ap.optionStart({ plan: w.PL, option: o, kind: "other", why_first: "the reply is due before we can document it",
+                                 ...by("bob"), ...extra });
     if (!r.ok) throw new Error(`fixture start refused: ${JSON.stringify(r).slice(0, 300)}`);
     return { option: o, action: r.action };
   };
+  /** The plan's machine marks (action-plans R43), as members read them. */
+  w.marksOf = (plan = w.PL) => w.ap.planRead({ id: plan, viewer: V("bob") }).marks;
   /** Record a correspondence entry on an action by bob: a member's account, or the capture `artifactSha` names. A
    *  `received` one sets off actions' response listener (its R95), plan-work's re-examination among them. */
   w.correspond = (action, direction, at = "2026-10-02", extra = {}) => {

@@ -17,7 +17,8 @@
  * and its re-examination with `actions` (R10, its R95), each where the provider offers the registration.
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership     layer 2: `transact`, `readFile`, `bundleInfo`, `declarePurge`; `memberFacts`.
- *   actionPlans            `planRead`, `plansFor`, `planMark`, `registerCloseSnapshot` (its R6, R7, R43, R44).
+ *   actionPlans            `planRead`, `plansFor`, `planMark`, `registerCloseSnapshot` (its R6, R7, R43, R44); its
+ *                          `machineCannotPlan` (K2851), the one site of MACHINE_CANNOT_PLAN.
  *   actions                `actionRead`, `registerResponseListener`, `place` (its R29, R95, R68).
  *   actionHolds            `projectHolds`, `holdsDue`, `holdsOf` (its R7, R3, R2; R7, R11); through its factory (K2856).
  *   actionReplies          `aroseFrom`, `arisenFrom` (its R2; R10); through its factory (K2862).
@@ -32,7 +33,7 @@
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, listenerRefusal } from "../membership/index.mjs";
 import { actionPlansOf, noSuchPlan, refusePlanClosed, refuseReason, refuseKeys, refuseNoSuchOption,
-         ACTION_PLAN_CHECKS } from "../action-plans/index.mjs";
+         machineCannotPlan } from "../action-plans/index.mjs";
 import { isObj, str, isDay, isLine, normSubject, subjectKey } from "../action-plans/values.mjs";
 import { actionsOf, zoneOf } from "../actions/index.mjs";
 import { actionHoldsOf } from "../action-holds/index.mjs";
@@ -232,14 +233,16 @@ export class PlanWork {
       const stopped = esc.find((e) => e.state === "stopped_pursuing");
       if (stopped) return { state: "stopped", escalation: stopped.id };
       let acting = null, offered = null, documented = null;
+      /* the options adopted from action-plans' standing offers (its R41) for this matter */
+      const offerOptions = new Set((p.offers || []).filter((x) => x.key === key)
+        .flatMap((x) => (x.offers || []).flatMap((f) => (f.adopted || []).map((a) => a.option))));
       for (const o of this.#serving(p, key)) {
         if (!o.action || typeof o.action.id !== "string") continue;
         const a = this.#actionOf(o.action.id, viewer, nowMs);
         if (!a) continue;
         const f = this.filings.filingsFor({ action: a.id, viewer: sightOf(viewer) });
         const drafts = ok(f) ? f.drafts || [] : [];
-        const offer = OFFER_KINDS.includes(o.offer && o.offer.kind)
-          || drafts.some((d) => OFFER_KINDS.includes(d.purpose));
+        const offer = offerOptions.has(o.id) || drafts.some((d) => OFFER_KINDS.includes(d.purpose));
         if (drafts.some((d) => d.purpose === "chance_to_fix" && d.sending)) offered = offered || a.id;
         if (drafts.some((d) => d.purpose === "document_infraction" && d.approval)) documented = documented || a.id;
         const sent = (a.correspondence || []).some((e) => e && e.direction === "sent");
@@ -1021,13 +1024,6 @@ function safeExpand(a) {
 /* ===================================================================== *
  * THE CODES, each minted once (DEC-49's one code, one site; K231)
  * ===================================================================== */
-
-/** R1–R11: action-plans' answer to a machine or unstamped author (its C-124.1), relayed with its row. */
-export function machineCannotPlan() {
-  const row = ACTION_PLAN_CHECKS.MACHINE_CANNOT_PLAN;
-  return { ok: false, reason: "MACHINE_CANNOT_PLAN", code: "MACHINE_CANNOT_PLAN", check: row.check, translation: row.translation,
-           detail: "the work of a plan is a named member's; a machine marks and assembles, labelled, and never acts. Nothing was written." };
-}
 
 /** R4–R6, R8: a text of 1 to `max` characters (one line, with no quotation mark, backslash or line break, when `line`);
  *  null when it passes. */

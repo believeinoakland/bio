@@ -30,7 +30,7 @@ function setup() {
   const d = option(w, { summary: "Call the papers" });
   w.ap.optionDispose({ plan: w.PL, options: [d], disposition: "declined", reason: "too early to go public", ...by("bob") });
   w.ap.scenarioSet({ plan: w.PL, scenario: 2, name: "Loud line", phases: [{ id: "x", name: "X", options: [], starts: "plan_start" }], ...by("bob") });
-  w.aside.set(w.PL, new Map([[2, "we chose the quiet line"]]));
+  assert.equal(w.ap.scenarioSetAside({ plan: w.PL, scenario: 2, reason: "we chose the quiet line", ...by("bob") }).ok, true);
   w.escalations.set(w.D, [{ id: "ESC-2026-0001-e", state: "open", stage: 2, history: [] }]);
   /* action-holds, real: a hold in place on the project; a legal pressure mark on the action's reply, no hold yet (due) */
   assert.equal(w.holds.actionHold({ project: w.P, hold: "in_place", reason: "a letter from their lawyer", ...by("bob") }).ok, true);
@@ -43,8 +43,9 @@ function setup() {
 
 test("R7: whereItStands answers waits with their basis, next dates, holds, overrides with reasons, declined options and set-aside scenarios with reasons, escalations and watches; writes nothing", () => {
   const { w, s, b, d } = setup();
-  /* an action outside the plan, with a legal mark and no hold: never the plan's (the control below) */
-  const other = w.actions.actionCreate({ document: w.text(s.action).replace(/plan: .*\n/, "").replace(/option: .*\n/, ""), ...by("bob") });
+  /* an action outside the plan and its project, with a legal mark and no hold: never the plan's (the control below) */
+  const other = w.actions.actionCreate({ document: w.text(s.action).replace(/plan: .*\n/, "").replace(/option: .*\n/, "")
+    .replace(/\nproject: .*\n/, "\n"), ...by("bob") });
   assert.equal(other.ok, true, JSON.stringify(other));
   const o = w.correspond(other.id, "received", "2026-10-02");
   assert.equal(w.holds.actionPressure({ target: other.id, ord: o, pressure: { kind: "legal", note: "x" }, ...by("bob") }).ok, true);
@@ -78,16 +79,23 @@ test("R7: whereItStands answers waits with their basis, next dates, holds, overr
   assert.doesNotMatch(JSON.stringify(w.pw.whereItStands({ plan: w.PL, viewer: V("alice") })), new RegExp(b.action));
 });
 
-test("R7: at start the module registers whereItStands with action-plans as the closing summary; its answer is the plan's standing", () => {
+test("R7: at start the module registers whereItStands with action-plans as the closing summary; the close keeps its answer frozen", () => {
   const { w } = setup();
-  assert.deepEqual(w.pw.registered.close_snapshot, { ok: true });
-  assert.equal(w.closers.length, 1); assert.equal(w.closers[0].module, "plan-work");
-  const snap = w.closers[0].fn({ plan: w.PL });
+  assert.deepEqual(w.pw.registered.close_snapshot, { ok: true, module: "plan-work" });
+  /* action-plans' one registration: a second is refused */
+  assert.equal(w.ap.registerCloseSnapshot("following", () => ({})).code, "LISTENER_DECLARED");
   const now = w.pw.whereItStands({ plan: w.PL, viewer: null });
-  assert.deepEqual(snap, now);
-  assert.equal(snap.declined.length, 1);
+  const c = w.ap.planClose({ id: w.PL, reason: "the hall is saved", ...by("bob") });
+  assert.equal(c.ok, true, JSON.stringify(c).slice(0, 300));
+  assert.equal(c.summary.state, "stated"); assert.equal(c.summary.by, "plan-work");
+  assert.deepEqual(c.summary.value.declined, now.declined);
+  assert.deepEqual(c.summary.value.overrides, now.overrides);
+  assert.equal(c.summary.value.state, "open", "read at the instant of closing, before the close landed");
+  /* a later change does not alter the stored summary */
+  const kept = w.ap.planRead({ id: w.PL, viewer: V("bob") }).closed.summary;
+  assert.deepEqual(kept, c.summary);
   /* a plan the module cannot read throws, so action-plans stores the summary undetermined (its R44) */
-  assert.throws(() => w.closers[0].fn({ plan: "PLN-2026-0999-plan" }));
+  assert.throws(() => w.pw.closeSnapshot({ plan: "PLN-2026-0999-plan" }));
   /* holds read as undetermined when this host holds no hold reads */
   const w2 = world({ deps: { actionHolds: null } });
   assert.equal(w2.pw.whereItStands({ plan: w2.PL, viewer: V("bob") }).holds.state, "undetermined");

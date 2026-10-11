@@ -1,7 +1,7 @@
 /* plan-work R1, R2: each matter's intended outcome, its revisions kept, and its state derived on read. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, code, by, V, MACHINE } from "./fixture.mjs";
+import { world, code, by, V, MACHINE, OFFICE, option, choose } from "./fixture.mjs";
 import { noSuchPlan, refusePlanClosed, ACTION_PLAN_CHECKS } from "../../../src/action-plans/index.mjs";
 import { PLAN_WORK_CHECKS, MATTER_STATES } from "../../../src/plan-work/index.mjs";
 
@@ -140,4 +140,16 @@ test("R2: fixed read through the real conformance (its R37, K2852): a standing l
   assert.equal(read(), "none", "the curing determination superseded: cure_standing false");
   cw.c.cureUnlink({ link: l.link, reason: "the cure was restated", author: CV("olive"), viewer: CV("olive") });
   assert.equal(read(), "none", "an ended link is no cure");
+});
+
+test("R2: the fixture's starts say why they go before the infraction is documented (action-plans R42); without it the start is refused", () => {
+  const w = world();
+  const o = option(w, { addressee: OFFICE, subjects: [w.S1] });
+  choose(w, [o]);
+  const r = w.ap.optionStart({ plan: w.PL, option: o, kind: "other", ...by("bob") });
+  assert.equal(code(r), "DOCUMENT_FIRST_NO_REASON");
+  assert.equal(stateOf(w).state, "none", "no action was started, so the matter has gone nowhere");
+  const s = w.started({ subjects: [w.S1] });
+  w.correspond(s.action, "sent");
+  assert.equal(stateOf(w).state, "acting");
 });
