@@ -150,7 +150,7 @@ add('ai.refused.signinnotconnected', 'Connect your own Claude sign-in first, in 
 add('ai.refused.limitinvalid', 'That limit can\'t be set: {field}. A limit is a positive amount in dollars, tokens or calls, for a day or a month.', false, 'DEC-188', 'AI_LIMIT_INVALID');
 add('ai.refused.unitunavailable', 'A limit in dollars needs an API key: a subscription doesn\'t report what a use costs. Set it in tokens or calls instead.', false, 'DEC-188', 'LIMIT_UNIT_UNAVAILABLE');
 add('ai.refused.explorenotenabled', 'Exploring is off on {whose} account. Its owners can switch it on.', false, 'DEC-189', 'EXPLORE_NOT_ENABLED; an exploring limit is never required (ai-use R3): the overall limit judges exploring when no exploring limit is set');
-add('ai.queue.limitreached', '{account} reached its {period} limit for {use} on {date}. It pauses {use} until {when}; its other uses go on.', true, 'DEC-189', 'the told-once Noticed item, scope a use; names no member');
+add('ai.queue.limitreached', '{account} reached its {period} limit for {use} on {date}. It pauses {use} until {when}; its other uses go on.', true, 'DEC-189', 'the told-once Noticed item, scope a use; names no member; {when} from ai.until.*');
 must(scr, 'mock-screens.js', 'reached its monthly limit for runs on 14 October. It pauses runs until 1 November; its other uses go on.');
 add('ai.queue.suspended', must(scr, 'mock-screens.js', 'a second member joined, and a sign-in serves a project only while it has one member. Members\\\' acts there now use their own accounts, or the group\\\'s key.').replace(/\\'/g, "'").replace(/^/, 'Your sign-in no longer serves {project}: '), true, 'mock-screens.js queue', 'the project account suspended; names no member');
 add('ai.queue.exploreask', 'The assistant found something worth exploring in {scope} today: {what}. Explore it today on {account}? If nobody says yes today, it doesn\'t.', false, 'DEC-188', 'the daily Ask, shown as Noticed with Explore today');
@@ -162,7 +162,9 @@ add('ai.owner.group', 'the group', false, 'DEC-188', 'enabled_by for the group')
 // 4c'. The fills of the AI sentences (DEC-189; BOB's B124 and B126): each placeholder above that names a fixed word has a key
 for (const [k, t] of [['day', 'daily'], ['month', 'monthly']]) add(`ai.period.${k}`, t, false, 'DEC-189', '{period}');
 add('ai.when.day', 'tomorrow', false, 'DEC-189', '{when} for a daily limit');
-add('ai.when.month', 'on {month} 1', false, 'DEC-189', '{when} for a monthly limit; {month} from date.month.*');
+add('ai.when.month', 'on 1 {month}', false, 'DEC-192', '{when} for a monthly limit, as in "It works again on 1 November"; {month} from date.month.*; day before month, as date.daymonth');
+add('ai.until.day', 'tomorrow', false, 'DEC-192', '{when} after "until" in ai.queue.limitreached*, for a daily limit');
+add('ai.until.month', '1 {month}', false, 'DEC-192', '{when} after "until" in ai.queue.limitreached*, for a monthly limit: "pause until 1 November"');
 ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
   .forEach(m => add(`date.month.${m}`, m[0].toUpperCase() + m.slice(1), false, 'DEC-189', 'a month\'s name in a sentence'));
 add('ai.refused.limit.unjudged', 'The assistant stopped here: Civicsmith couldn\'t check the use of {whose} account just now, and it spends nothing it can\'t count. Try again in a moment. Everything else works as usual.', true, 'DEC-189', 'AI_LIMIT_REACHED when the limit can\'t be judged (ai-use R3 failing closed); in place of a {period} and {when}');
@@ -184,10 +186,11 @@ add('ai.account.own', 'Your own account', false, 'DEC-189', '{account} at a sent
 add('ai.account.group.inline', 'your group\'s key', false, 'DEC-189', '{account} inside a sentence');
 add('ai.account.project.inline', 'the project\'s account', false, 'DEC-189', '{account} inside a sentence');
 add('ai.account.own.inline', 'your own account', false, 'DEC-189', '{account} inside a sentence');
-add('ai.queue.limitreached.overall', '{account} reached its {period} limit on {date}. Uses counted in its overall limit pause until {when}; uses with their own limit on top of it go on.', true, 'DEC-189', 'the told-once Noticed item, scope overall; names no member');
-add('ai.queue.limitreached.member', '{account}: a member reached the {period} amount each member may use, on {date}. Their uses on it pause until {when}; other members\' go on.', true, 'DEC-189', 'the told-once Noticed item, scope per_member; names no member');
+add('ai.queue.limitreached.overall', '{account} reached its {period} limit on {date}. Uses counted in its overall limit pause until {when}; uses with their own limit on top of it go on.', true, 'DEC-189', 'the told-once Noticed item, scope overall; names no member; {when} from ai.until.*');
+add('ai.queue.limitreached.member', '{account}: a member reached the {period} amount each member may use, on {date}. Their uses on it pause until {when}; other members\' go on.', true, 'DEC-189', 'the told-once Noticed item, scope per_member; names no member; {when} from ai.until.*');
 add('ai.refused.exploreoutofscope', 'The assistant can\'t explore this question on {whose} account: it lies outside what the account\'s owners chose to explore.', false, 'DEC-191', 'EXPLORE_OUT_OF_SCOPE (C-143.5)');
 add('ai.refused.exploreaskinvalid', 'Nothing was recorded: an ask to explore names the day and what is worth exploring that day.', false, 'DEC-191', 'EXPLORE_ASK_INVALID (C-143.6); ai-use\'s sentence kept');
+add('date.daymonthyear', '{day} {month} {year}', false, 'DEC-192', 'a local day not in the current year, such as 3 March 2027');
 add('date.daymonth', '{day} {month}', false, 'DEC-191', 'a local day in a sentence, such as 14 October; {month} from date.month.*; {date} in ai.queue.limitreached* and every queue item');
 add('ai.scope.group', 'your group\'s work', false, 'DEC-189', '{scope} in ai.queue.exploreask for the group\'s key');
 add('ai.scope.own', 'your own questions', false, 'DEC-189', '{scope} in ai.queue.exploreask for a member\'s own account; a project\'s is its name');
@@ -215,11 +218,14 @@ add('transcribe.notsent', 'Nothing was sent to the assistant: {why}. The pages a
 add('transcribe.why.unbound', 'the assistant can\'t be reached from your group\'s Civicsmith just now', false, 'DEC-191', 'AGENT_WORKER_UNBOUND');
 add('transcribe.why.evidenceabsent', 'the document\'s stored copy can\'t be read just now', false, 'DEC-191', 'EVIDENCE_ABSENT');
 add('transcribe.why.norender', 'none of these pages could be turned into an image the assistant can read', false, 'DEC-191', 'NO_PAGE_RENDERED');
-add('transcribe.refused', 'The assistant didn\'t read these pages: {reason}', false, 'DEC-191', 'a refusal came back; {reason} the refusal\'s own sentence, read by its key');
+add('transcribe.refused', 'The assistant didn\'t read these pages. {reason}', false, 'DEC-192', 'a refusal came back; {reason} the refusal\'s own sentence as relayed, a sentence of its own, its own placeholders filled by the screen from the fields beside it');
+add('transcribe.failed', 'The pages were sent to the assistant, but no reading came back: {why}. Nothing was written; you can try again.', false, 'DEC-192', 'after the post: the worker silent or the provider ending; {why} from transcribe.why.silent or .ended');
+add('transcribe.why.silent', 'it didn\'t answer in time', false, 'DEC-192', 'AGENT_WORKER_SILENT');
+add('transcribe.why.ended', 'the AI service stopped before it finished', false, 'DEC-192', 'a provider ending');
 add('transcribe.picture.unprepared', 'This photo can\'t be prepared for the assistant: {why}. Take it again as an ordinary photo, or type its words yourself.', false, 'DEC-191', '{why} from transcribe.picture.why.*');
 add('transcribe.picture.why.progressive', 'it is saved in a form the assistant can\'t open (a progressive JPEG)', false, 'DEC-191');
 add('transcribe.picture.why.toolarge', 'it is too large', false, 'DEC-191');
-add('capture.picture.unread', 'A photographed page, not read yet: its words can\'t be found or cited until the assistant reads it or a member types them.', false, 'DEC-191', 'a JPEG or PNG capture read as one picture page (N853b)');
+add('capture.picture.unread', 'A photographed page, not read yet: its words can\'t be found or cited until the assistant reads it or a member types them.', false, 'DEC-191', 'a JPEG or PNG capture read as one picture page (N853b); the reading\'s fact, so said by the reading (extraction), never by capture\'s upload answer (DEC-192)');
 add('transcribe.done', 'The assistant read pages {pages}. Their words can now be found; each passage stays undetermined until a member checks it against the page.', false, 'DEC-190', 'performed and written');
 add('document.unread.pages', must(scr, 'mock-screens.js', 'are pictures of text that Civicsmith\\\'s own reading couldn\\\'t make out, so their words can\\\'t be found or cited yet. The page images are kept as they are.').replace(/\\'/g, "'").replace(/^/, 'Pages {pages} '), false, 'DEC-190', 'the Document screen\'s section, shown only when such pages exist');
 

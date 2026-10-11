@@ -9,10 +9,10 @@
   "draft": 4,
   "photo": 13,
   "handle": 9,
-  "ai": 71,
-  "date": 13,
+  "ai": 73,
+  "date": 14,
   "queue": 20,
-  "transcribe": 12,
+  "transcribe": 15,
   "capture": 1,
   "document": 5,
   "question": 1,
@@ -24,7 +24,7 @@
   "act": 483,
   "column": 33,
   "wizard": 239,
-  "total": 1093,
+  "total": 1099,
   "protected": 395
  },
  "words": [
@@ -820,7 +820,7 @@
    "en": "{account} reached its {period} limit for {use} on {date}. It pauses {use} until {when}; its other uses go on.",
    "protected": true,
    "source": "DEC-189",
-   "note": "the told-once Noticed item, scope a use; names no member"
+   "note": "the told-once Noticed item, scope a use; names no member; {when} from ai.until.*"
   },
   {
    "key": "ai.queue.suspended",
@@ -880,10 +880,24 @@
   },
   {
    "key": "ai.when.month",
-   "en": "on {month} 1",
+   "en": "on 1 {month}",
    "protected": false,
-   "source": "DEC-189",
-   "note": "{when} for a monthly limit; {month} from date.month.*"
+   "source": "DEC-192",
+   "note": "{when} for a monthly limit, as in \"It works again on 1 November\"; {month} from date.month.*; day before month, as date.daymonth"
+  },
+  {
+   "key": "ai.until.day",
+   "en": "tomorrow",
+   "protected": false,
+   "source": "DEC-192",
+   "note": "{when} after \"until\" in ai.queue.limitreached*, for a daily limit"
+  },
+  {
+   "key": "ai.until.month",
+   "en": "1 {month}",
+   "protected": false,
+   "source": "DEC-192",
+   "note": "{when} after \"until\" in ai.queue.limitreached*, for a monthly limit: \"pause until 1 November\""
   },
   {
    "key": "date.month.january",
@@ -1149,14 +1163,14 @@
    "en": "{account} reached its {period} limit on {date}. Uses counted in its overall limit pause until {when}; uses with their own limit on top of it go on.",
    "protected": true,
    "source": "DEC-189",
-   "note": "the told-once Noticed item, scope overall; names no member"
+   "note": "the told-once Noticed item, scope overall; names no member; {when} from ai.until.*"
   },
   {
    "key": "ai.queue.limitreached.member",
    "en": "{account}: a member reached the {period} amount each member may use, on {date}. Their uses on it pause until {when}; other members' go on.",
    "protected": true,
    "source": "DEC-189",
-   "note": "the told-once Noticed item, scope per_member; names no member"
+   "note": "the told-once Noticed item, scope per_member; names no member; {when} from ai.until.*"
   },
   {
    "key": "ai.refused.exploreoutofscope",
@@ -1171,6 +1185,13 @@
    "protected": false,
    "source": "DEC-191",
    "note": "EXPLORE_ASK_INVALID (C-143.6); ai-use's sentence kept"
+  },
+  {
+   "key": "date.daymonthyear",
+   "en": "{day} {month} {year}",
+   "protected": false,
+   "source": "DEC-192",
+   "note": "a local day not in the current year, such as 3 March 2027"
   },
   {
    "key": "date.daymonth",
@@ -1384,10 +1405,31 @@
   },
   {
    "key": "transcribe.refused",
-   "en": "The assistant didn't read these pages: {reason}",
+   "en": "The assistant didn't read these pages. {reason}",
    "protected": false,
-   "source": "DEC-191",
-   "note": "a refusal came back; {reason} the refusal's own sentence, read by its key"
+   "source": "DEC-192",
+   "note": "a refusal came back; {reason} the refusal's own sentence as relayed, a sentence of its own, its own placeholders filled by the screen from the fields beside it"
+  },
+  {
+   "key": "transcribe.failed",
+   "en": "The pages were sent to the assistant, but no reading came back: {why}. Nothing was written; you can try again.",
+   "protected": false,
+   "source": "DEC-192",
+   "note": "after the post: the worker silent or the provider ending; {why} from transcribe.why.silent or .ended"
+  },
+  {
+   "key": "transcribe.why.silent",
+   "en": "it didn't answer in time",
+   "protected": false,
+   "source": "DEC-192",
+   "note": "AGENT_WORKER_SILENT"
+  },
+  {
+   "key": "transcribe.why.ended",
+   "en": "the AI service stopped before it finished",
+   "protected": false,
+   "source": "DEC-192",
+   "note": "a provider ending"
   },
   {
    "key": "transcribe.picture.unprepared",
@@ -1413,7 +1455,7 @@
    "en": "A photographed page, not read yet: its words can't be found or cited until the assistant reads it or a member types them.",
    "protected": false,
    "source": "DEC-191",
-   "note": "a JPEG or PNG capture read as one picture page (N853b)"
+   "note": "a JPEG or PNG capture read as one picture page (N853b); the reading's fact, so said by the reading (extraction), never by capture's upload answer (DEC-192)"
   },
   {
    "key": "transcribe.done",
