@@ -748,13 +748,19 @@ console.log("\n--- 9a · R31's NEGATIVE CONTROL: synthetic artifacts that a budg
     /* The smallest valid wasm module, and a data part: the platform hands both to the global scope ready. */
     writeFileSync(join(dir, "assets/engine.wasm"), Buffer.from([0x00, 0x61, 0x73, 0x6d, 0x01, 0x00, 0x00, 0x00]));
     writeFileSync(join(dir, "assets/model.bin"), Buffer.from("MODEL"));
+    const SLOW_MS = 60, SLOW_FLOOR_MS = 50;
     const body = [
       'import { DurableObject, env as ENV } from "cloudflare:workers";',
       'import wasm from "../assets/engine.wasm";',
       'import model from "../assets/model.bin";',
       "globalThis.__r31Probe = (globalThis.__r31Probe || 0) + 1;",
       "globalThis.__r31Seen = [typeof DurableObject, typeof ENV, wasm instanceof WebAssembly.Module, model instanceof ArrayBuffer && model.byteLength];",
-      "const t0 = Date.now(); while (Date.now() - t0 < 40) { /* a slow global scope */ }",
+      /* CHANGE B2 (K2618): timed with `performance.now()`, never `Date.now()`, whose whole-millisecond truncation let
+         the loop end up to 1 ms short of its figure, so a timing read back as 39.x ms failed `>= 40` on BOB's
+         container. The loop now runs SLOW_MS by the same high-resolution clock the measurement uses, and the
+         assertions ask for SLOW_FLOOR_MS, a margin below it: the measured window encloses the loop, so it can only
+         be longer. */
+      `const t0 = performance.now(); while (performance.now() - t0 < ${SLOW_MS}) { /* a slow global scope */ }`,
       "export class Probe extends DurableObject {}",
       "export default { fetch() { return new Response(\"ok\"); } };",
       "",
@@ -780,14 +786,14 @@ console.log("\n--- 9a · R31's NEGATIVE CONTROL: synthetic artifacts that a budg
 
     const slow = await budgetReport(probe, { sizeWarn: 10 * MIB, sizeFail: 20 * MIB, startWarnMs: 10 });
     t("R31: (d) a global scope slower than its budget warns, naming the member and the time, and never fails",
-      [slow.start, slow.findings, slow.ms >= 40, slow.warnings.some((w) => w.startsWith("r31-probe:") && /global scope took \d+ ms/.test(w))],
+      [slow.start, slow.findings, slow.ms >= SLOW_FLOOR_MS, slow.warnings.some((w) => w.startsWith("r31-probe:") && /global scope took \d+ ms/.test(w))],
       ["warn", [], true, true]);
     t("R31: (e) the import really evaluated the artifact's global scope, with its cloudflare: names and its upload parts as the platform hands them",
       globalThis.__r31Seen, ["function", "object", true, 5]);
     const before = globalThis.__r31Probe;
     const again = await measureStart(probe);
     t("R31: (f) every measurement is a FRESH import — the global scope ran again, so no module cache can make it free",
-      [again.measured, globalThis.__r31Probe, again.ms >= 40], [true, before + 1, true]);
+      [again.measured, globalThis.__r31Probe, again.ms >= SLOW_FLOOR_MS], [true, before + 1, true]);
     t("R31: (f) and the import hooks were removed after it — a cloudflare: import outside a measurement is Node's own refusal again",
       await import("cloudflare:workers").then(() => "resolved", () => "refused"), "refused");
 
