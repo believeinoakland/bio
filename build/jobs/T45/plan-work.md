@@ -55,3 +55,7 @@ T45-34 complete on `job/T45/plan-work` @ the record's commit: plan-work R1–R13
 Merged `tranche/T45`. R2's `fixed` reads `conformance.curesOf`'s real shape (`standards: [{standard, link, ended}]`): a standing link is fixed; a link whose curing determination is superseded (`cure_standing: false`) or ended is not. The fixture's stand-in answers that shape; a new test reads `fixed` through the real conformance (its own test world: link, supersede, unlink). Tests 38 pass, 0 fail; format, architecture, coverage (13 of 13), ownership 0 failures (modules.json paths in a working copy only, as before).
 
 Size (session_01KvuonAaLKfAEaHnozQTt17): test runs 17, module lines 1314
+
+## J4 · COMPLETE
+
+B5 applied: tranche/T45 merged; R2's fixed reads conformance R37's real curesOf shape (cure_standing false is no cure), with a test through the real conformance. 38 tests pass; the four checks 0 failures (paths in a working copy only). Record updated.
