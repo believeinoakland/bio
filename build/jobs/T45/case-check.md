@@ -21,3 +21,22 @@ One more reading (not replacing J1; it does not block me). R2: "A void check sta
 ## J3 · QUESTION
 
 Replaces J1 item 3 only (K2829's other readings unchanged; not blocking). Testing against the real case-authoring showed that "the latest check of that edition reads held" alone would answer an *edited* act (a new statement over the same members, same case edition) with the old check, so the edit would never be prepared. My reading now: a repeat is the same act, held: the latest check of that edition reads `held` AND was made from the same inputs (a SHA-256 of the act's arguments as canonical JSON, the viewer stamp left out, the author kept), recorded on the check as `inputs_sha`. Any other act prepares again and records a new check, which voids the earlier one (`document_replaced`). R1's sentence would read "A repeat of the same act while…".
+
+## J4 · QUESTION
+
+On B3 (K2831), before I build it: the latch as ruled leaves no real check `held`. Evidence follows, with options.
+
+**What the providers can answer.** All three lapse reads I may use answer only "now". `case-carriage.acceptedWorkLapsed(fm, signer)` and `marksLapsed(fm)` take no instant. `sourcesLapsed(text, at)` takes one instant, which cannot rule out a lapse *between* two instants. The append-only histories exist, but none is a read contract I may use: case-carriage's marks and withdrawals (its R12) and `document_copies`; `sources`' consents; `accepted-work`'s flags. `sources` and `accepted-work` are not in my Uses at all.
+
+**The consequence.** A real preparation always carries `materials:` rows: every member document is carried whole as `included: true`. I measured this against the real case-authoring. So under B3, `marks_lapsed` can never be ruled out, and every real check reads `undetermined` from the moment it is made. `conformance` R2 could then never rest on a held check: D24 is unreachable until a history read exists.
+
+**Already latched without any provider change** (I am building these now):
+- `member_moved`: a bundle's `bundle_sha` is the digest of its `bundle.md`, so a revert *returns* to the pinned sha. I latch with record-core's `bundles.row_version` (one per commit, R37/R41), pinned at the check. Any commit since then is a move.
+- `document_replaced`: preparations only move forward.
+
+**Options for the three lapse causes:**
+- (a) As ruled: each reads `undetermined` unless the document states no row of its block. Fail closed, but no real check is ever `held`, so D24 is unusable in T45.
+- (b) **Recommended.** T46 entry: case-carriage gains `…LapsedSince(fm, since)` over its append-only histories (marks and withdrawals, document copies; consents through `sources`; flags through `accepted-work`). Until it lands, each lapse cause is judged "now" and the gap is named in R2 and in my COMPLETE. A lapse undone in between is the one case missed, and the commit itself still re-reads all three, so nothing is published on a lapsed consent.
+- (c) As (b), but until T46 a check older than its last lapse-read instant… not workable: there is no instant to compare against.
+
+I am carrying on with everything else, building the lapse reads under (b), behind one switch, so (a) is a one-line change if you choose it.
