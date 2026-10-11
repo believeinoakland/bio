@@ -25,7 +25,7 @@ Two readings, building on each meanwhile.
 
 **Deferred:** none.
 
-**Found in other modules** (REPORT J3): with R15 in force, the test profile's templates (`jurisdictions` R84: none carries `sources` and a professional `no_concerns` review together) are not offered, so `filings` gains 32 reds and `wizard-scripts` 7 whose fixtures draft from them (each refused `TEMPLATE_NOT_REVIEWED` / `WIZARD_DRAFT_REFUSED`). `affordances`, `answer-envelope`, `control-plane`, `plane` and `queue-producers` are unchanged (the same reds before and after, all already accepted by rule 4); `migrate-released` passes. No generated artifact staled beyond rule 4 (5)'s plane bundle.
+**Found in other modules** (REPORT J2): with R15 in force, the test profile's templates (`jurisdictions` R84: none carries `sources` and a professional `no_concerns` review together) are not offered, so `filings` gains 32 reds and `wizard-scripts` 7 whose fixtures draft from them (each refused `TEMPLATE_NOT_REVIEWED` / `WIZARD_DRAFT_REFUSED`). `affordances`, `answer-envelope`, `control-plane`, `plane` and `queue-producers` are unchanged (the same reds before and after, all already accepted by rule 4); `migrate-released` passes. No generated artifact staled beyond rule 4 (5)'s plane bundle.
 
 **Tests and checks:** `node --test bio-plane/test/m/filing-templates/*.test.mjs`: tests 63, pass 63, fail 0 (new file `offer.test.mjs`, 7 tests). Users' tests run before and after (above). `checks/format.mjs`: 0 failures; `checks/architecture.mjs bio filing-templates`: 0 failures; `checks/coverage.mjs bio filing-templates`: 28 of 28 live ids named, 0 failures; `checks/ownership.mjs bio filing-templates tranche/T45`: 7 files, 0 failures.
 
