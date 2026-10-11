@@ -87,3 +87,10 @@ Found with actions merged (K2859): action-plans R18 composes premise_override {r
 ## J7 · COMPLETE
 
 B7 applied: tranche/T45 merged; actions real (its R95 listener drives R10; R13 on real captures). Two fixes from the real wiring: a plan-started action's project from its plan, and the re-examination claimed before the run's await (new table pw_reexam_runs). 39 pass; the four checks 0 failures. Finding in action-plans: J6.
+
+## B8, B9 (CHANGEs: action-holds again K2860; action-clocks, action-replies K2862)
+
+Merged `tranche/T45`. action-holds' second merge needs nothing here (plan-work reads `projectHolds`, `holdsDue`, `holdsOf`, unchanged in shape). action-clocks: plan-work reads clock entries, their basis and `owed_by` through `actions.actionRead`, so nothing to switch. action-replies: reached through its factory (`actionRepliesOf`), the stand-in dropped; the tests record real `aroseFromLink`s.
+Reading applied (R10, "the projects linked to it by `arose_from` both ways"): a link is recorded on a response after that response is held, so a new response never carries links of its own. "It" is read as the response's project: forward, the projects (or plans' projects) that arose from any response of the responded action or of an action started from one of that project's plans (`aroseFrom` with no `ord`); backward, the projects of the responses the project arose from (`arisenFrom({project})`). Tests 39 pass, 0 fail; the four checks 0 failures (paths in a working copy only).
+
+Size (session_01KvuonAaLKfAEaHnozQTt17): test runs 34, module lines 1339
