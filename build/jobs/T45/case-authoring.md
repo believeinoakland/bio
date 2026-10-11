@@ -1,6 +1,6 @@
 # case-authoring (T45)
 
-**Status** · session_01GDnDMjDLXJXoDemp1UPqER · depth 2 · WORKING · handled B1
+**Status** · session_01GDnDMjDLXJXoDemp1UPqER · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
