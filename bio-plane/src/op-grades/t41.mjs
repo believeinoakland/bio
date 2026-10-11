@@ -3,7 +3,7 @@
  * R73), graded by R5 and R3 with `affordances` R12's totality holding over them, each grade read from its owner's
  * requirements as R13, R17 and R22–R28 do: `credentials`' project accounts and uses, `ai-use`'s limits and exploring,
  * `steps`, `investigation`, `hypotheses`' proposals and shares, `reading-guides`, `question-explorer`'s finds,
- * `run-productions`' acceptance and bearing notes, `case-authoring`'s account drafts, `review`'s approvals, `ai-runs`'
+ * `run-productions`' acceptance and bearing notes, `case-account`'s account drafts, `review`'s approvals, `ai-runs`'
  * group tests, `capture`'s upload and `membership`'s handle. Data only: no op's behaviour is decided here (P6).
  *
  * `./index.mjs` spreads the three tables into `RUNGS`, `RUNG_ABSENT` and `NON_ACTS`. This file imports nothing, so the
@@ -98,7 +98,7 @@ export const T41_RUNG_ABSENT = {
   guideadopt:          { ground: "undetermined", is: "a member imports another group's offered guide as adopted, usable only after review (reading-guides R6)" },
   /* (K2583) as guideoffer */
   guideproposetocivicsmith: { ground: "undetermined", is: "a member exports a guide many groups use, marked as a proposal for Civicsmith's library; Civicsmith's adoption is a release's (reading-guides R6)" },
-  accountpropose:      { ground: "undetermined", is: "stores the system's draft of a case's account or its check flags, labelled machine work; the published account is a member's (case-authoring R64)" },
+  accountpropose:      { ground: "undetermined", is: "stores the system's draft of a case's account or its check flags, labelled machine work; the published account is a member's (case-account R1, R2)" },
   caseapprove:         { ground: "undetermined", is: "a named approver approves one case edition's document by its digest, an optional reason kept; a later document needs a new approval (review R31)" },
   grouptestset:        { ground: "undetermined", is: "a member adds a group's own test investigation for an assistant part, its answers written by people; it never opens or closes a gate (ai-runs R75)" },
   captureupload:       { ground: "undetermined", is: "a member uploads bytes as a capture in her own name, with its receipt (capture R86)" },
@@ -237,7 +237,7 @@ export const T41_NON_ACTS = {
     + "origin"),
   guide: R("one reading guide the viewer may see, with its items, state and history"),
   guideproposals: R("the machine drafts of reading guides, each labelled the system's"),
-  /* case-authoring, review (R43) */
+  /* case-account (T42; N839), review (R43) */
   accountpropose: "case-directed: keyed by a case, reached from its account; the system's draft of the account, labelled "
     + "machine work, never the published account until a member writes it",
   accountdrafts: R("a case's drafts of its account, each labelled machine work"),

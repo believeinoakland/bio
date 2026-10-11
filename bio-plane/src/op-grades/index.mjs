@@ -2,7 +2,7 @@
  *
  * The rung ladder and each writing op's rung, or the one ground on which it has none (R1–R3); the consequence statements
  * published beside a rung (R4, R8, R21); the codes that back a `reasoned` rung (R1); the ops refused to a machine by name
- * and every other gated op's reason (R5); the owners' ops, graded (R6–R17, R22–R25, R27–R30); the advisory phone set (R18,
+ * and every other gated op's reason (R5); the owners' ops, graded (R6–R17, R22–R25, R27–R31); the advisory phone set (R18,
  * R26); the Irreversible weight (R21); and the alias table that gives an alias its op's grade (R17).
  *
  * DATA ONLY, AND IT IMPORTS NOTHING OF ANOTHER MODULE (R19, R20). It decides no op's behaviour: each grade is read from
@@ -10,9 +10,9 @@
  * backed (its R12, R19, R20) and publishes these very objects in its `VOCABULARIES` (its R4). Names written in the
  * comments below (`STATES`, `decorateAct`, `ACTS`, `CAPTURE_ACTS`, `deriveActs`, `unaccounted`) are `affordances`'.
  *
- * T33's, T34's, T35's, T36's, T37's, T38's and T41's ops are graded in `./t33.mjs`, `./t34.mjs`, `./t35.mjs`, `./t36.mjs`,
- * `./t37.mjs`, `./t38.mjs` and `./t41.mjs`, spread into the tables below; each of those files imports nothing, so the spread closes no
- * cycle. */
+ * T33's, T34's, T35's, T36's, T37's, T38's, T41's and T42's ops are graded in `./t33.mjs`, `./t34.mjs`, `./t35.mjs`,
+ * `./t36.mjs`, `./t37.mjs`, `./t38.mjs`, `./t41.mjs` and `./t42.mjs`, spread into the tables below; each of those files
+ * imports nothing, so the spread closes no cycle. */
 
 /* R13 (T33-85): the grades and reasons of every op T33 adds, spread into RUNGS, RUNG_ABSENT and NON_ACTS below. */
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "./t33.mjs";
@@ -29,6 +29,8 @@ import { T37_RUNGS, T37_RUNG_ABSENT, T37_NON_ACTS } from "./t37.mjs";
 import { T38_RUNGS, T38_NON_ACTS } from "./t38.mjs";
 /* R29, R30 (N797, N799, N820, N812; T41): the handle ops and T41's ops, graded from their owners. */
 import { T41_RUNGS, T41_RUNG_ABSENT, T41_NON_ACTS } from "./t41.mjs";
+/* R31 (N832; T42): `pagetranscribe`, the AI's reading of the pages Civicsmith could not read. */
+import { T42_RUNG_ABSENT, T42_NON_ACTS } from "./t42.mjs";
 export { OP_ALIASES, aliased } from "./t34.mjs";
 
 /* ===========================================================================
@@ -547,8 +549,8 @@ export const RUNGS = {
   statementack:          "reasoned",   // STATEMENT_ACK_NO_REASON (case-authoring R19)
   workobjective:         "reasoned",   // INTENT_NO_REASON (intent R18, R30) · why the run is opened (R4)
   /* `inboxresolve`: DEC-88 banded it reversible while it only set a status; reasoned since DEC-78's pull is built
-     (capture R65) and capture R32 requires the member's reason on every arm. */
-  inboxresolve:          "reasoned",   // RESOLVE_NO_REASON (capture R32)
+     (`doorbell` R13, was capture R65) and `doorbell` R3 (was capture R32) requires the member's reason on every arm. */
+  inboxresolve:          "reasoned",   // RESOLVE_NO_REASON (doorbell R3)
   /* terminal (DEC-88): the act cannot be walked back — an ended escalation is never reopened, and a filing is
      approved at most once. */
   escalationend:         "terminal",   // escalation R14 · never reopened
@@ -715,9 +717,10 @@ export const RUNG_ABSENT = {
      (RUNGS); these 21 are what it left `undetermined` (R3), each on R3's rule: no authored reason is asked and no
      published act takes it back. R7 adds T23's `whatchangedpropose`, R9 the docket's `docketpressure` and R10 `case-import`'s `caseimport` and
      `caseimportdocument` on the same rule, at the foot of this table. */
-  /* N364 (capture R65), on R3's rule: pulling a knock files its bytes as a capture with a receipt, in the puller's
-     name; no reason is asked and no published act takes it back (a pulled knock stays pulled, and the capture stands). */
-  inboxpull:            { ground: "undetermined", is: "a member pulls a knock into the record: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled, in one act; never un-pulled (capture R65)" },
+  /* N364 (`doorbell` R13, was capture R65), on R3's rule: pulling a knock files its bytes as a capture with a receipt,
+     in the puller's name; no reason is asked and no published act takes it back (a pulled knock stays pulled, and the
+     capture stands). */
+  inboxpull:            { ground: "undetermined", is: "a member pulls a knock into the record: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled, in one act; never un-pulled (doorbell R13)" },
   /* N345 (K481), on R3's rule. `contradictionrecommend` is `contradictionpropose`'s ground for its reason: a run
      proposes, and it is machine work. The opt-in and the response (DEC-85) ask no authored reason (their words are
      optional, a response's text is what is relayed, not an account of a decision), and no published act takes either
@@ -794,13 +797,15 @@ export const RUNG_ABSENT = {
   wizardeditorrevoke:   { ground: "credential", is: "an administrator revokes an advanced-editor grant, appended and never deleted (wizard-scripts R8)" },
   wizardprogress:       { ground: "observational", is: "adds one to an unattributed daily tally of a script version's start, step reached or finish; names no member, case or project, and stopping is no event (wizard-scripts R15)" },
   /* R13 (T33-85): T33's ops, graded in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs, T36's in
-     ./t36.mjs, T37's in ./t37.mjs and T41's in ./t41.mjs (T38's ./t38.mjs states no absence). */
+     ./t36.mjs, T37's in ./t37.mjs, T41's in ./t41.mjs and T42's (R31) in ./t42.mjs (T38's ./t38.mjs states no
+     absence). */
   ...T33_RUNG_ABSENT,
   ...T34_RUNG_ABSENT,
   ...T35_RUNG_ABSENT,
   ...T36_RUNG_ABSENT,
   ...T37_RUNG_ABSENT,
   ...T41_RUNG_ABSENT,
+  ...T42_RUNG_ABSENT,
 };
 
 /* D-311 · THE ACTS A MACHINE CREDENTIAL'S CLASS IS REFUSED BY NAME, each with the code its store
@@ -1014,7 +1019,7 @@ export const NON_ACTS = {
   discharge: "exception document, keyed by (progression, entity, stage)",
   proposedispose: "ages a DERIVED proposal, keyed by (progression, stage) — not a bundle",
   /* Inbox and publication. */
-  inboxresolve: "inbox disposition, keyed by knock id, with the member's reason on every arm (capture R32, RESOLVE_NO_REASON): sets a knock aside or back to new, and its `pulled` arm is the pull, a filing act that answers as op=inboxpull does (capture R32, R65)",
+  inboxresolve: "inbox disposition, keyed by knock id, with the member's reason on every arm (doorbell R3, RESOLVE_NO_REASON): sets a knock aside or back to new, and its `pulled` arm is the pull, a filing act that answers as op=inboxpull does (doorbell R3, R13)",
   /* N364 (capture R65–R69, R72; DEC-78, DEC-81 item 3). A knock is not a bundle (capture R32) and a capture is keyed by
      its sha, so none of these has an object in a state beside which to offer it. `inboxpull` is `inboxresolve`'s
      subject, filed; the late co-attestation and the capturing member's account are capture-directed in subject but
@@ -1479,7 +1484,7 @@ export const NON_ACTS = {
   groupdescriptiondraft: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
   writinghelp: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
   /* R13 (T33-85): T33's ops, their reasons in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs,
-     T36's in ./t36.mjs, T37's in ./t37.mjs, T38's in ./t38.mjs and T41's in ./t41.mjs. */
+     T36's in ./t36.mjs, T37's in ./t37.mjs, T38's in ./t38.mjs, T41's in ./t41.mjs and T42's in ./t42.mjs. */
   ...T33_NON_ACTS,
   ...T34_NON_ACTS,
   ...T35_NON_ACTS,
@@ -1487,6 +1492,7 @@ export const NON_ACTS = {
   ...T37_NON_ACTS,
   ...T38_NON_ACTS,
   ...T41_NON_ACTS,
+  ...T42_NON_ACTS,
 };
 
 /* R21 (N657, DEC-143): THE IRREVERSIBLE WEIGHT. An act that can never be undone shows the Irreversible weight on its

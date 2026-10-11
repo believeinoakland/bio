@@ -68,8 +68,10 @@ import * as HYPOTHESES from "../hypotheses/checks.mjs";
    run-productions; ai-runs between them holds no file of families), reading-guides' C-144 (after capture-requests, before
    skills), question-explorer's C-145 (after skills, before answers), investigation's C-146 (after intent, before
    reevaluation) and publish-schedule's C-122.5 (moved from publication with its raiser; directly after publication,
-   before docket). A code an earlier family already holds keeps that family's row (steps' C-142.3, C-142.28;
-   investigation's C-146.10, C-146.21, C-146.26) until N843 re-codes them; no new family takes a code from a later one. */
+   before docket). A code an earlier family already holds keeps that family's row (steps' C-142.3, investigation's
+   C-146.10); no new family takes a code from a later one. R11 (T42; N843, K2651, K2656): hypotheses' C-134.22, C-134.23,
+   steps' C-142.28 and investigation's C-146.21, C-146.26 are re-coded in place, so each decorates with its own row and
+   action-plans' `PROPOSAL_NO_RUN` and intent's `NO_SUCH_PROPOSAL` read their pinned rows again. */
 import * as STEPS from "../steps/checks.mjs";
 import * as CITATION from "../citation/checks.mjs";
 import * as BASIS_VERSIONS from "../basis-versions/checks.mjs";

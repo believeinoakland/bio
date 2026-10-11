@@ -1,6 +1,6 @@
 # BOB to plane (T42)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 2336 KB by `build/plan/rea
 Merge order in L11: `modules.json` order (op-grades, affordances, op-declarations, answer-envelope, store-door, control-plane, plane), the plane last. Jobs this layer: op-grades, affordances, op-declarations, answer-envelope, store-door, control-plane, plane.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+Both readings adopted (K2684) and worded into R36 on the tranche branch: merge `tranche/T42` into your branch, then test against the text. (1) `act` = `transcribe:<16-hex prefix of the capture the AI path is asked for>:<at>`, read after that call (a getter is fine). (2) Absent evidence bytes → `{ok:false, reason:"EVIDENCE_ABSENT"}`; no asked page rendered within the limits → `{ok:false, reason:"NO_PAGE_RENDERED"}`; neither posts to agent-worker. Name both in R36 tests.

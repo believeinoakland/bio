@@ -61,8 +61,8 @@ const MAPS = { events: eventsOps, lines: linesOps, money: moneyOps, "money-check
   /* T37 (R38): case-carriage's map, read for R6's totality */
   "case-carriage": caseCarriageOps,
   /* T41 (R25, R41, R43): publish-schedule's, ai-use's, reading-guides' and run-productions' maps, read for R6's
-     totality (steps, question-explorer, investigation, leg-earning, case-authoring and review export no map for their
-     T41 ops: the door's own serves them, control-plane R71) */
+     totality (steps, question-explorer, investigation, leg-earning, case-account (T42, R48) and review export no map
+     for their T41 ops: the door's own serves them, control-plane R71) */
   "publish-schedule": publishScheduleOps, "ai-use": aiUseOps, "reading-guides": readingGuidesOps,
   "run-productions": runProductionsOps };
 const recorder = () => {
@@ -124,8 +124,8 @@ const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturereques
 
 test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — owner, citation, the actor and proposer stamps as {key, at}, its kinds, and the acts, proposals and reads derived from them — each op in exactly one family and every kind one of OP_KINDS", () => {
   assert.deepEqual(Object.keys(OP_FAMILIES).sort(), ["acquisition", "action-clocks", "actions", "ai-runs", "ai-use", "answers",
-    "calculations", "capture", "capture-requests", "case-authoring", "case-carriage", "corpus-export", "credentials", "duties",
-    "entities", "events", "explore", "file-safety", "following", "hypotheses", "inquiry", "instance-setup", "investigation",
+    "calculations", "capture", "capture-requests", "case-account", "case-carriage", "corpus-export", "credentials", "duties",
+    "entities", "events", "explore", "extraction", "file-safety", "following", "hypotheses", "inquiry", "instance-setup", "investigation",
     "leg-earning", "lines", "membership", "money", "money-checks", "people", "public-read", "publish-schedule",
     "question-explorer", "reading-guides", "retrieval", "review", "run-productions", "sources", "standards", "steps", "tasks",
     "wizard-scripts", "workbooks"]);
