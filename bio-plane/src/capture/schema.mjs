@@ -2,52 +2,10 @@
  * (T4-4), and the additive columns an older store gains at boot. `Capture#migrate` runs it. SQL comments are `--`
  * lines, dropped before the statements run.
  *
- * THE DOORBELL COPY (T43's delete; K2607, K625): `inbox`, `knock_rate`, `knocker_key`, `doorbell_tally`,
- * `doorbell_limit_last`, `knock_key` and the `inbox` additive columns are `doorbell`'s since T42 (it creates the same DDL
- * and treats capture's declaration as held, plan rule 3 (4)); they stay here, unchanged, until capture's T43 job
- * deletes them with the copy. */
+ * `inbox`, `knock_rate`, `knocker_key`, `doorbell_tally`, `doorbell_limit_last`, `knock_key` and the `inbox` additive
+ * columns are `doorbell`'s (T42, K2607): its DDL creates them and its declaration holds them; capture's copy of them was
+ * deleted in T43 (N849, N864). */
 export const CAPTURE_SCHEMA = `
--- The knock: quarantined public intake. Payload bytes live in R2 under
--- <store>/inbox/<sha256> when R2 is configured, else inline here (small
--- only). Nothing reads this table except member review; nothing here
--- touches the record until a member pulls it through the gate.
-CREATE TABLE IF NOT EXISTS inbox (
-  knock_id    TEXT PRIMARY KEY,
-  sha256      TEXT NOT NULL,
-  bytes       INTEGER NOT NULL,
-  content     TEXT,
-  in_r2       INTEGER NOT NULL DEFAULT 0,
-  note        TEXT,
-  contact     TEXT,
-  received    TEXT NOT NULL,
-  status      TEXT NOT NULL DEFAULT 'new',
-  resolved    TEXT,
-  resolved_by TEXT,
-  -- R32 (DEC-88 (2)): the member's own reason for the last status change, beside who (resolved_by) and when (resolved).
-  resolve_reason TEXT,
-  -- R66: the knocker's continuity, never the secret: a keyed digest of it and the pseudonym derived from that
-  -- digest, each NULL for a knock sent without a secret.
-  knocker_digest TEXT,
-  pseudonym   TEXT,
-  -- R65: the capture a pull filed, who pulled it and when. Set once, by the pull; NULL until then.
-  capture_sha TEXT,
-  pulled_by   TEXT,
-  pulled_at   TEXT,
-  pulled_document TEXT,
-  -- Inline knocks only (no evidence store): the bytes themselves, base64, so a pull holds exactly what was
-  -- received; content keeps the text a member reads. NULL with an evidence store, and on a row written before it.
-  content_b64 TEXT
-);
-CREATE INDEX IF NOT EXISTS inbox_status ON inbox(status);
-
--- The doorbell's rate account (R31): one count per window bucket, the source's (a keyed fingerprint, R56) and the
--- instance's. The estimate weights the previous window's bucket by how much of it is still inside the trailing
--- window, so each accepted knock prunes every bucket but the current and the previous one.
-CREATE TABLE IF NOT EXISTS knock_rate (
-  bucket TEXT PRIMARY KEY,
-  count  INTEGER NOT NULL
-);
-
 -- What this RUNTIME was observed to allow, as opposed to what we choose to
 -- spend. Cloudflare's per-invocation subrequest limit differs by account, can
 -- change on either plan without notice, and is not documented anywhere this
@@ -426,16 +384,7 @@ CREATE TABLE IF NOT EXISTS capture_validators (
   at            TEXT NOT NULL,
   PRIMARY KEY (address_norm, capture_sha)
 );
--- R66: the key the knocker's secret is digested under when the operator binds none (KNOCKER_SECRET_KEY): R56's
--- pattern, a separate key. One row, generated at first use, never answered by any op.
-CREATE TABLE IF NOT EXISTS knocker_key (
-  id      INTEGER PRIMARY KEY CHECK (id = 1),
-  key_hex TEXT NOT NULL,
-  created TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS inbox_pseudonym ON inbox(pseudonym, received);
-CREATE INDEX IF NOT EXISTS inbox_capture ON inbox(capture_sha, received);
--- acquisition R16, R69: each member this module stamped as capturing a capture (a member session's acquire, a knock's pull).
+-- acquisition R16, R69: each member this module stamped as capturing a capture (a member session's acquire, an upload, and doorbell R13's pull of a knock).
 -- Several members who captured the same bytes are each its actor. Written once per pair, never removed but by purge.
 CREATE TABLE IF NOT EXISTS capture_actors (
   capture_sha TEXT NOT NULL,
@@ -467,19 +416,6 @@ CREATE TABLE IF NOT EXISTS late_attestations (
   outcome     TEXT NOT NULL,
   PRIMARY KEY (capture_sha, seq)
 );
--- R80 (DEC-108 (6), BOB's privacy ruling): the doorbell's count-only tally of the knocks it turned away. One row per
--- UTC day, the last 30 kept: how many were refused, and how many of those found the whole-doorbell limit reached.
--- No address, fingerprint, time of a knock, digest, pseudonym, note, contact or content: two counters and a date.
-CREATE TABLE IF NOT EXISTS doorbell_tally (
-  day           TEXT PRIMARY KEY,
-  refused       INTEGER NOT NULL DEFAULT 0,
-  limit_reached INTEGER NOT NULL DEFAULT 0
-);
--- R80: the day the whole-doorbell limit was last reached, a date only. One row.
-CREATE TABLE IF NOT EXISTS doorbell_limit_last (
-  id  INTEGER PRIMARY KEY CHECK (id = 1),
-  day TEXT NOT NULL
-);
 -- R79, R81 (DEC-97 (2)): setting held material aside and bringing it back, each act appended with its reason, who and
 -- when, never rewritten or removed; a document's latest act decides whether it is set aside.
 CREATE TABLE IF NOT EXISTS held_acts (
@@ -500,14 +436,7 @@ CREATE TABLE IF NOT EXISTS held_act_questions (
   question  TEXT NOT NULL,
   PRIMARY KEY (bundle_id, seq, question)
 );
-CREATE INDEX IF NOT EXISTS held_act_questions_q ON held_act_questions (question, bundle_id, seq);
--- R56: the key the doorbell's source fingerprint is computed under when the operator binds none
--- (KNOCK_FINGERPRINT_KEY). One row, generated at first use, never answered by any op.
-CREATE TABLE IF NOT EXISTS knock_key (
-  id      INTEGER PRIMARY KEY CHECK (id = 1),
-  key_hex TEXT NOT NULL,
-  created TEXT NOT NULL
-)`;
+CREATE INDEX IF NOT EXISTS held_act_questions_q ON held_act_questions (question, bundle_id, seq)`;
 
 /* Columns an older store's tables gained after they were first written, added at boot (never back-filled; each
    reason is where the column is read). Moved from the legacy store's additive list. */
@@ -516,14 +445,6 @@ export const CAPTURE_ADDITIVE_COLUMNS = [
   ["site_asset_refs", "reused_from", "TEXT"],        // CAP-14
   ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"],   // D-492: 0 is the measured truth
   ["links", "chrome_basis", "TEXT"],                 // D-340: the region a contained link sat in
-  ["inbox", "knocker_digest", "TEXT"],               // R66: the knocker's keyed digest
-  ["inbox", "pseudonym", "TEXT"],                    // R66
-  ["inbox", "capture_sha", "TEXT"],                  // R65: the capture a pull filed
-  ["inbox", "pulled_by", "TEXT"],                    // R65
-  ["inbox", "pulled_at", "TEXT"],                    // R65
-  ["inbox", "pulled_document", "TEXT"],              // R65: the document a pull answered, answered again to a repeat
-  ["inbox", "content_b64", "TEXT"],                  // R65: an inline knock's bytes as received
-  ["inbox", "resolve_reason", "TEXT"],               // R32 (DEC-88): the member's reason for a status change
 ];
 
 /* A derived table whose KEY changed shape is dropped and rebuilt rather than altered: `links` gained
@@ -532,11 +453,9 @@ export const CAPTURE_ADDITIVE_COLUMNS = [
 export const CAPTURE_RESHAPE = [["links", "citation_norm"]];
 
 /* record-core R21/R46: what purge clears (whole-store only: none is keyed to a bundle) and what it never clears.
-   The exempt tables are operational facts (the inbox, the doorbell's rate, its tally (R80) and its two keys among them) about this
-   instance, not corpus-derived; that the inbox and both keys outlive a whole-store purge is doorbell R12's and R14's
-   test since T42 (the doorbell copy's tables, T43's delete). */
+   The exempt tables are operational facts about this instance (the platform's ceiling and the render allowance), not
+   corpus-derived. The doorbell's tables are `doorbell`'s to declare (T43; N849, N864). */
 export const CAPTURE_PURGED_TABLES = ["task_queue", "source_reachability", "link_verdicts", "links", "site_asset_refs",
   "site_assets", "reuse_verdicts", "capture_sessions", "site_chrome_refs", "site_chrome", "link_chrome", "capture_validators",
   "capture_actors", "capture_accounts", "late_attestations", "held_acts", "held_act_questions"];
-export const CAPTURE_EXEMPT_TABLES = ["inbox", "knock_rate", "capture_limits", "render_allowance", "render_slots", "knock_key",
-  "knocker_key", "doorbell_tally", "doorbell_limit_last"];
+export const CAPTURE_EXEMPT_TABLES = ["capture_limits", "render_allowance", "render_slots"];
