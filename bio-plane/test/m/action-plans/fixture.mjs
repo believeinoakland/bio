@@ -14,7 +14,6 @@
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
-import { OBSERVATION_LOG_SCHEMA } from "../../../src/observation-log/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
@@ -68,10 +67,6 @@ export function world({ profiles = ["test-port-ellery"], omit = [], duties } = {
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const t of bare.split(";")) if (t.trim()) st.db.exec(t);
-  /* action-clocks registers with steps at start (its R16), which declares observation-log's tables to purge; the plane
-     builds them first, as here (K2862, B6). */
-  for (const t of OBSERVATION_LOG_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";"))
-    if (t.trim()) st.db.exec(t);
   const clock = { now: NOW };
   const nowMs = () => ms(clock.now);
   const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
@@ -157,7 +152,11 @@ export function world({ profiles = ["test-port-ellery"], omit = [], duties } = {
   const retrievalStub = { registerActionFacts: () => ({ ok: true }), registerProjectionDecoration: () => ({ ok: true }) };
   const actions = actionsOf(host, { record, membership, promotion, retrieval: retrievalStub, conformance,
                                     content: { captureFor: () => null }, now: nowMs });
-  const clocks = actionClocksOf(host, { record, membership, actions, conformance, now: nowMs });
+  /* action-clocks' steps (its R16), in the shape of steps' Provides: no step stands for any entry here. Built on this
+     host it would declare observation-log's tables, which the plane builds first (K2862, B6). */
+  const steps = { registerDueHolder: () => ({ ok: true }), productsOf: () => ({ ok: true, steps: [] }),
+                  stepsOf: () => ({ ok: true, steps: [] }), stepsWaitingOn: () => ({ ok: true, steps: [] }), step: () => null };
+  const clocks = actionClocksOf(host, { record, membership, actions, conformance, steps, now: nowMs });
   const given = Object.fromEntries(Object.entries(stand).filter(([k]) => !omit.includes(k)).map(([k, v]) => [k, v]));
   for (const k of omit) given[k] = null;
   const seenActions = new Proxy(actions, { get: (t, k) => (k === "actionRead"
