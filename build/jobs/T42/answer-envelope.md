@@ -18,3 +18,7 @@
 **Checks.** format: 147 modules, 146 requirements files; 0 failures. architecture: 9 product files, 107 relative imports; 0 failures. coverage: 11 of 11 live requirement ids named by a test; 0 failures. ownership: 4 files changed by answer-envelope between tranche/T42 and HEAD; 0 failures.
 
 Size (session_01GfbfuPey5USVmCuUZXmE4L): test runs 4, module lines 838
+
+## J1 · COMPLETE
+
+T42-27 done (R11; clears rule 4 (6)). HELD_EARLIER loses C-142.28, C-146.21, C-146.26; rows-before-r43.json changed.note names N843's five re-codings; new R11 test with negative controls; families.mjs comment. No pin moved. Own suite 30/30; users control-plane, store-door, plane 425/425; format, architecture, coverage, ownership 0 failures. Nothing deferred, nothing found in other modules. Record: build/jobs/T42/answer-envelope.md.
