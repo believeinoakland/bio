@@ -544,3 +544,20 @@ test("R36 (T45) the new tables (receipts, scopes, promises, the press-terms and 
   w.record.purge({ bundleId: A });
   for (const t of tables) assert.equal(w.rows(`SELECT COUNT(*) AS n FROM ${t} WHERE bundle_id=?`, A)[0].n, 0, t);
 });
+
+test("R8 R74 R77 R78 R79 R80 R82 R85 R86 R87 R88 (T45) each code this module mints has its row in action-grammar's C-117 (R9), and each row naming this module names a region its source holds", async () => {
+  const { readFileSync } = await import("node:fs");
+  const src = readFileSync(new URL("../../../src/actions/index.mjs", import.meta.url), "utf8");
+  const rows = Object.entries(grammar.ACTION_CATALOGUE_CHECKS).filter(([, r]) => r.where.startsWith("src/actions/index.mjs "));
+  for (const [code, r] of rows) {
+    const [fn, region] = r.where.slice("src/actions/index.mjs ".length).split(" > ");
+    assert.ok(src.includes(`DEC-49 REGION ${region} `) || src.includes(`DEC-49 REGION ${region}\n`) || src.includes(`DEC-49 REGION ${region} */`), `${code}: ${region}`);
+    assert.ok(src.includes(`END DEC-49 REGION ${region}`), `${code}: its region ends`);
+    assert.ok(new RegExp(`(^|\\s)${fn.replace(/[#$]/g, "\\$&")}\\(`, "m").test(src), `${code}: ${fn}`);
+  }
+  for (const code of ["DETERMINATION_NOT_NONCOMPLIANT", "OVERRIDE_NO_GROUND", "MACHINE_CANNOT_SET_COPIED", "MACHINE_CANNOT_SET_PARTNERS",
+                      "PARTNERS_REFUSED", "MACHINE_CANNOT_SET_PRESS_TERMS", "RECEIPT_NOT_ON_SENT", "MACHINE_CANNOT_SET_REPLY_OWED",
+                      "NO_REPLY_OWED", "STAGE_NOT_IN_LAW", "FOLLOWS_ACTION_REWRITTEN", "MACHINE_CANNOT_SET_SCOPE", "SCOPE_NO_REASON",
+                      "SCOPE_UNCHANGED", "MACHINE_CANNOT_RECORD_PROMISE", "PROMISE_REFUSED"])
+    assert.ok(rows.some(([c]) => c === code), `${code} has its row`);
+});

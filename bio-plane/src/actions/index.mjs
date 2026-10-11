@@ -42,11 +42,7 @@ import { membershipOf, viewerPredicate, noSuchProject, listenerRefusal } from ".
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
-import { conformanceOf, determinationSuperseded } from "../conformance/index.mjs";
-/* T45: names conformance (R33's `determinationVoided`) and action-grammar (R15, R20–R23, R25) add in this tranche,
-   read through their namespaces so this module loads whichever version is beside it. */
-import * as conformanceNs from "../conformance/index.mjs";
-import * as G from "../action-grammar/index.mjs";
+import { conformanceOf, determinationSuperseded, determinationVoided } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
 import { projectRosterOf } from "../project-roster/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
@@ -71,7 +67,9 @@ import { RISK_TIERS, riskTierState, RESOLUTIONS, CORRESPONDENCE_DIRECTIONS, acti
          counterpartyOffice,
          clockMovesNotMechanical, ACTION_FENCE_CHECKS, ACTION_ACT_CHECKS, GOVERNING_LAW_CHECKS, QUOTE_CHECKS,
          LIFECYCLE_CHECKS, RISK_TIER_REVISION_CHECKS, RECORDS_LAW_FENCE_CHECKS,
-         ACTION_CATALOGUE_CHECKS, seeksOf, seeksFindings, SEEKS_MAX } from "../action-grammar/index.mjs";
+         ACTION_CATALOGUE_CHECKS, seeksOf, seeksFindings, SEEKS_MAX, OVERRIDE_GROUNDS, PROMISE_KINDS, SUCCESS_RECORD_ID_RE,
+         premiseOverrideOf, overrideGroundFindings, copiedFindings, partnersFindings, pressTermsFindings,
+         entryFieldFindings, actionFieldFindings, stageInLaw } from "../action-grammar/index.mjs";
 import { ACTIONS_TABLES, migrateActions } from "./schema.mjs";
 
 export { ACTIONS_SCHEMA, ACTIONS_TABLES } from "./schema.mjs";
@@ -116,9 +114,7 @@ export const HOLD_PROJECTS_MAX = 50;
 const PROJECT_ID_RE = { test: (x) => BUNDLE_ID_RE.test(x) && x.startsWith("PROJ-") };
 /** R28: the longest basis a proposed tier carries. */
 export const RISK_PROPOSAL_BASIS_MAX = 500;
-/** R74 (T45): the two grounds an override states, carried by `OVERRIDE_NO_GROUND` (action-grammar's `OVERRIDE_GROUNDS`
- *  once it holds them), and the quick route offered beside it (reconciliation R16). */
-export const OVERRIDE_GROUND_KINDS = Object.freeze(["legal_deadline", "irreversible_act"]);
+/** R74 (T45): the quick route offered beside `OVERRIDE_NO_GROUND` (reconciliation R16). */
 export const QUICK_ROUTE = Object.freeze({ kind: "one_finding_case" });
 /** R80 (T45): what a receipt record says happened to a sent entry. */
 export const RECEIPT_KINDS = Object.freeze(["receipt", "service"]);
@@ -130,12 +126,8 @@ export const PROMISE_TEXT_MAX = 500;
 export const OPEN_ITEMS_MAX = 200;
 /** R80, R74: a local date-time, `YYYY-MM-DDTHH:MM`. */
 const LOCAL_DT_RE = /^(\d{4}-\d{2}-\d{2})T([01]\d|2[0-3]):[0-5]\d$/;
-/* R74: the flat keys a premise override's ground is held under (J2's reading). */
-/* R8 (e), R93 (K2849): a success record's id, `SUC-<year>-<counter>` (consequences R17). */
-const SUCCESS_ID_RE = /^SUC-\d{4}-\d{4,}$/;
-/* R88: the kinds of promise, action-grammar's `PROMISE_KINDS` (its R2) where it holds them. */
-const PROMISE_KINDS_HELD = Object.freeze(["embargo", "anonymity", "other"]);
-/* R81, R83, R94: the flat keys an entry's T45 fields are held under (J2's reading). */
+/* R74: the flat keys a premise override's ground is held under (K2849). */
+/* R81, R83, R94: the flat keys an entry's T45 fields are held under (K2849). */
 const ENTRY_FIELD_KEYS = Object.freeze(["speaker", "office_words", "office_status", "found_elsewhere", "found_elsewhere_note"]);
 const OVERRIDE_KEYS = Object.freeze(["ground_kind", "ground_citation", "ground_date", "ground_what", "ground_when"]);
 /* The member-facing sentences T45 adds, each with the key the design stream words it under (filings and the surfaces
@@ -773,17 +765,12 @@ export class Actions {
 
   /** R8, R74 (T45): the premise override a document states, `{ground, reason}`, or null when it states none. The bytes
    *  hold the ground flat on the override (`ground_kind`, `ground_citation`, `ground_date`, `ground_what`,
-   *  `ground_when`: the restricted grammar holds no map inside a map; J2's reading), presented here as R74's object;
-   *  `ground` is null for an override written before T45 with its reason alone. */
+   *  `ground_when`: the restricted grammar holds no map inside a map; K2849), presented as R74's object by
+   *  action-grammar's `premiseOverrideOf`; `ground` is null for an override written before T45 with its reason alone. */
   static overrideOf(fm) {
     const o = fm && typeof fm === "object" ? fm.premise_override : null;
     if (!(o && typeof o === "object" && !Array.isArray(o) && typeof o.reason === "string" && o.reason.trim())) return null;
-    return { ground: Actions.#groundOf(o), reason: o.reason.trim() };
-  }
-  static #groundOf(o) {
-    const keys = Object.keys(o).filter((k) => k.startsWith("ground_"));
-    if (!keys.length) return null;
-    return Object.fromEntries(keys.map((k) => [k.slice("ground_".length), o[k]]));
+    return { ground: premiseOverrideOf(o).ground, reason: o.reason.trim() };
   }
 
   /* R8 (K600 (a)), R74 (T45), R9 (D1): the premise override and a breach action's addressee. The override is stated by
@@ -814,8 +801,18 @@ export class Actions {
           + "characters with no quote, backslash or line break, and nothing else beside them. Nothing was written.",
           { max: NOTE_MAX });
       /* END DEC-49 REGION is-premise-override */
-      const ground = this.#groundRefusal(Actions.overrideOf(nextFm));
-      if (ground) return ground;
+      /* R74 (T45; N884; v0.2 rule 2): one of two grounds (action-grammar R15). With none, or another kind, the refusal
+         names both and carries the quick route (a case of one finding run through every publication check, on which a
+         member may determine; `action-clocks` answers the deadline's window beside it, reconciliation R16); a malformed
+         ground is refused by the grammar's first finding, naming the part. */
+      const found = [];
+      overrideGroundFindings(Actions.overrideOf(nextFm), found);
+      const errors = found.filter((x) => x.severity === "error");
+      /* DEC-49 REGION is-override-ground */
+      if (errors.length)
+        return refuse(errors[0].code, errors[0].message + ". Nothing was written.", { findings: findingsOf(errors),
+          ...(errors[0].code === "OVERRIDE_NO_GROUND" ? { grounds: [...OVERRIDE_GROUNDS], quick_route: { ...QUICK_ROUTE } } : {}) });
+      /* END DEC-49 REGION is-override-ground */
     }
     const cp = nextFm.counterparty;
     /* DEC-49 REGION is-breach-addressee */
@@ -825,29 +822,6 @@ export class Actions {
         + `${cp && typeof cp === "object" && cp.state === "named" ? `a ${cp.kind}` : `${cp && cp.state ? `an addressee ${cp.state}` : "no office"}`}. `
         + "Nothing was written.", { counterparty_state: cp && typeof cp === "object" ? cp.state ?? null : null });
     /* END DEC-49 REGION is-breach-addressee */
-    return null;
-  }
-
-  /* R74 (T45; N884; v0.2 rule 2): an override states one of two grounds (action-grammar R15). With none, or another
-     kind, the refusal names both and carries the quick route (a case of one finding run through every publication check,
-     on which a member may determine; `action-clocks` answers the deadline's window beside it, reconciliation R16); a
-     malformed ground is the grammar's `OVERRIDE_GROUND_REFUSED`, naming the part. */
-  #groundRefusal(override) {
-    const g = override ? override.ground : null;
-    const found = [];
-    if (g && typeof G.overrideGroundFindings === "function") G.overrideGroundFindings(override, found);
-    const errors = found.filter((x) => x.severity === "error");
-    const noGround = !g || !OVERRIDE_GROUND_KINDS.includes(g.kind) || errors.some((x) => x.code === "OVERRIDE_NO_GROUND");
-    /* DEC-49 REGION is-override-ground */
-    if (noGround)
-      return refuse("OVERRIDE_NO_GROUND", "acting on a breach without a determination needs one of two grounds: a legal "
-        + "deadline that falls before a determination could be made (its citation and date), or an imminent irreversible "
-        + "act (what, and when). A case of one finding, run through every publication check, may instead be determined on. "
-        + "Nothing was written.", { grounds: [...OVERRIDE_GROUND_KINDS], quick_route: { ...QUICK_ROUTE },
-          ...(errors.length ? { findings: findingsOf(errors) } : {}) });
-    if (errors.length)
-      return refuse(errors[0].code || "OVERRIDE_GROUND_REFUSED", errors[0].message, { findings: findingsOf(errors) });
-    /* END DEC-49 REGION is-override-ground */
     return null;
   }
 
@@ -982,20 +956,9 @@ export class Actions {
       ...(unreadable ? { cause: "PROGRESSIONS_UNREADABLE" } : {}) });
   }
 
-  /* T45: action-grammar's pure findings over `args`, run as each arm names (R15, R20–R23, R25): a function that pushes
-     into `findings`, or one that answers its own list; `{code, message}` items are read as errors. A name the grammar
-     beside this module does not export answers none. */
-  static #grammar(name, ...args) {
-    const fn = G[name];
-    if (typeof fn !== "function") return [];
-    const pushed = [];
-    let answered;
-    try { answered = fn(...args, pushed); } catch { answered = null; }
-    return [...pushed, ...(Array.isArray(answered) ? answered : [])]
-      .filter((x) => x && typeof x === "object" && (x.severity === undefined || x.severity === "error"))
-      .map((x) => ({ check: x.check ?? "C-2.10", severity: "error", message: x.message ?? x.detail ?? "", ...(x.code ? { code: x.code } : {}),
-                     ...(x.repairs ? { repairs: x.repairs } : {}) }));
-  }
+  /* T45: the errors of an action-grammar arm (R15, R20–R23), as the refusal reads them. */
+  static #errors(list) { return (Array.isArray(list) ? list : []).filter((x) => x && x.severity === "error"); }
+  static #pushed(fn, ...args) { const out = []; fn(...args, out); return Actions.#errors(out); }
   /* T45: the refusal minted from a grammar arm's first finding, every finding carried; `dflt` when it names no code. */
   static #fromFindings(errors, dflt, extra = {}) {
     return errors.length ? refuse(errors[0].code || dflt, errors[0].message, { findings: findingsOf(errors), ...extra }) : null;
@@ -1018,7 +981,7 @@ export class Actions {
         + "machine credential may not set or change them. Nothing was written.");
       /* END DEC-49 REGION is-machine-set-copied */
       if (stated("copied")) {
-        const r = Actions.#fromFindings(Actions.#grammar("copiedFindings", nextFm), "COUNTERPARTY_REFUSED");
+        const r = Actions.#fromFindings(Actions.#pushed(copiedFindings, nextFm), "COUNTERPARTY_REFUSED");
         if (r) return r;
         const bad = (Array.isArray(nextFm.copied) ? nextFm.copied : []).map((e, i) => ({ e, i }))
           .find(({ e }) => e && typeof e.entity_id === "string" && e.entity_id.trim()
@@ -1036,7 +999,7 @@ export class Actions {
         + "member's statement; a machine credential may not set or change them. Nothing was written.");
       /* END DEC-49 REGION is-machine-set-partners */
       if (stated("partners")) {
-        const r = Actions.#fromFindings(Actions.#grammar("partnersFindings", nextFm), "PARTNERS_REFUSED");
+        const r = Actions.#fromFindings(Actions.#pushed(partnersFindings, nextFm), "PARTNERS_REFUSED");
         if (r) return r;
         const list = Array.isArray(nextFm.partners) ? nextFm.partners : [];
         for (let i = 0; i < list.length; i++) {
@@ -1059,7 +1022,7 @@ export class Actions {
         + "statement; a machine credential may not set or change them. Nothing was written.");
       /* END DEC-49 REGION is-machine-set-press-terms */
       if (stated("press_terms")) {
-        const r = Actions.#fromFindings(Actions.#grammar("pressTermsFindings", nextFm), "PRESS_TERMS_REFUSED");
+        const r = Actions.#fromFindings(Actions.#pushed(pressTermsFindings, nextFm), "PRESS_TERMS_REFUSED");
         if (r) return r;
       }
     }
@@ -1069,7 +1032,7 @@ export class Actions {
       if (machine) return refuse("MACHINE_CANNOT_SET_REPLY_OWED", "whether a body owes the group a reply is a member's "
         + "statement; a machine credential may not set or change it. Nothing was written.");
       /* END DEC-49 REGION is-machine-set-reply-owed */
-      const r = Actions.#fromFindings(Actions.#grammar("actionFieldFindings", { reply_owed: nextFm.reply_owed },
+      const r = Actions.#fromFindings(Actions.#pushed(actionFieldFindings, { reply_owed: nextFm.reply_owed },
         { bundleId: c.bundleId }), "REPLY_OWED_REFUSED");
       if (r) return r;
       const why = nextFm.reply_owed_reason;
@@ -1086,14 +1049,11 @@ export class Actions {
         + "and never set, changed or removed by a revision. Nothing was written.");
       /* END DEC-49 REGION is-follows-action-rewritten */
       if (stated("follows_action")) {
-        const r = Actions.#fromFindings(Actions.#grammar("actionFieldFindings", { follows_action: nextFm.follows_action },
+        const r = Actions.#fromFindings(Actions.#pushed(actionFieldFindings, { follows_action: nextFm.follows_action },
           { bundleId: c.bundleId }), "FOLLOWS_ACTION_REFUSED");
         if (r) return r;
         const f = nextFm.follows_action;
         const target = f && typeof f === "object" && typeof f.action === "string" ? f.action.trim() : "";
-        /* the grammar's self arm, asked here too: this module knows the bundle's own id */
-        if (target && target === c.bundleId)
-          return refuse("FOLLOWS_ACTION_SELF", "an action follows another action, never itself. Nothing was written.");
         const b = target ? this.#visibleAction(target, viewer) : null;
         if (!b || normalizeType(b.object_type) !== "action") return noSuchAction(target || null);
       }
@@ -1124,9 +1084,8 @@ export class Actions {
           + "machine credential may not set it. Nothing was written.");
       /* END DEC-49 REGION is-machine-contact-speaker */
     }
-    const presented = ledger.map((x, k) => (k === i ? Actions.entryFields(x) : x));
-    const r = Actions.#fromFindings(Actions.#grammar("entryFieldFindings", presented, i,
-      { responseStatuses: this.#responseStatuses(kind) }), "CORRESPONDENCE_REFUSED");
+    const r = Actions.#fromFindings(Actions.#errors(entryFieldFindings(ledger, i,
+      { responseStatuses: this.#responseStatuses(kind) || [] })), "CORRESPONDENCE_REFUSED");
     if (r) return r;
     if (speakerMoved && e.speaker !== undefined && e.speaker !== null) {
       const id = contactId(e.speaker);
@@ -1250,7 +1209,7 @@ export class Actions {
      R20), or null when it names none the viewer may see, none is live, or no success record can be read here. */
   #successRecord(id, viewer) {
     const cons = this.consequences;
-    if (!cons || typeof cons.successRecordRead !== "function" || typeof id !== "string" || !SUCCESS_ID_RE.test(id)) return null;
+    if (!cons || typeof cons.successRecordRead !== "function" || typeof id !== "string" || !SUCCESS_RECORD_ID_RE.test(id)) return null;
     let r = null;
     try { r = cons.successRecordRead({ id, viewer }); } catch { r = null; }
     return r && r.ok !== false && !r.superseded_by ? r : null;
@@ -1283,13 +1242,12 @@ export class Actions {
     /* N312 (K275): the condition is conformance's, and its answer is minted there (its R20). */
     if (superseded) return determinationSuperseded(superseded.id, superseded.by);
     /* T45 (b): the void determination's answer is conformance's own (its R33). */
-    if (voided && typeof conformanceNs.determinationVoided === "function")
-      return conformanceNs.determinationVoided(voided.id, voided.causes);
+    if (voided) return determinationVoided(voided.id, voided.causes);
     /* DEC-49 REGION is-breach-not-noncompliant */
-    if (notNoncompliant || voided)
+    if (notNoncompliant)
       return refuse("DETERMINATION_NOT_NONCOMPLIANT", "an action recorded for a breach rests on a determination that the "
         + "government acted out of conformance with at least one standard it names; the determination it names records "
-        + "no noncompliant outcome. Nothing was written.", { determination: notNoncompliant || voided.id });
+        + "no noncompliant outcome. Nothing was written.", { determination: notNoncompliant });
     /* END DEC-49 REGION is-breach-not-noncompliant */
     /* DEC-49 REGION is-breach-determination */
     return refuse("ACTION_NO_DETERMINATION", readable
@@ -1878,7 +1836,7 @@ export class Actions {
     }
     /* R85 (T45; S1 §C 18, §D 15): a records request's stage is one its law lists, where the profile lists them. */
     if (life.stage !== undefined && fm.action_kind === "records_request") {
-      const inLaw = Actions.#stageInLaw(life.stage, this.#lawStages(fm.law));
+      const inLaw = stageInLaw(life.stage, this.#lawStages(fm.law));
       /* DEC-49 REGION is-stage-in-law */
       if (inLaw === "not_in_law") {
         this.#releaseLease(target, who);
@@ -1947,46 +1905,37 @@ export class Actions {
     return answer;
   }
 
-  /* R81, R83, R94 (T45): the entry's T45 fields as the act is given them, flat for the bytes: `speaker` a member id;
-     `officeStatus` `{words, status?}` and `foundElsewhere` `{kind, note?}`, each an object or its JSON. A value the
-     restricted grammar cannot hold (a quote, backslash or line break in its text) is refused by the grammar's code
-     before any byte is spliced; the rest of each shape is action-grammar's R22, asked with the ledger. */
+  /* R81, R83, R94 (T45): the entry's T45 fields as the act is given them, flat for the bytes (K2849): `speaker` a member
+     id; `officeStatus` `{words, status?}` and `foundElsewhere` `{kind, note?}`, each an object or its JSON. Their shape is
+     action-grammar's R22, asked with the ledger before any byte is spliced; what the restricted grammar cannot hold in
+     its quoted text (a quote or backslash, which R22's line rule lets through) is refused here first by R22's code. */
   static #entryT45(speaker, officeStatus, foundElsewhere) {
     const obj = (v) => {
       if (v === null || v === undefined || v === "") return null;
       if (typeof v === "string") { try { v = JSON.parse(v); } catch { return { bad: true }; } }
       return v && typeof v === "object" && !Array.isArray(v) ? v : { bad: true };
     };
-    const tok = (x) => (x === undefined || x === null ? undefined : String(x).trim());
+    const text = (v) => v === undefined || (typeof v === "string" && !/["\\\r\n]/.test(v));
+    const tok = (v) => v === undefined || /^[A-Za-z0-9_.:-]{1,200}$/.test(String(v));
     const fields = {};
     const sp = String(speaker ?? "").trim();
-    /* DEC-49 REGION is-speaker-writable */
-    if (sp && !/^[^\s"\\]{1,200}$/.test(sp))
-      return refuse("SPEAKER_REFUSED", "speaker is the member id of the member who spoke for the group in this sending. "
-        + "Nothing was written.");
-    /* END DEC-49 REGION is-speaker-writable */
     if (sp) fields.speaker = sp;
     const os = obj(officeStatus), fe = obj(foundElsewhere);
-    if (os) {
-      /* DEC-49 REGION is-office-status-writable */
-      if (os.bad || (os.words !== undefined && (typeof os.words !== "string" || /["\\\r\n]/.test(os.words)))
-          || (os.status !== undefined && !/^[a-z0-9_-]{1,40}$/.test(String(os.status))))
-        return refuse("OFFICE_STATUS_WITHOUT_OUTCOME", "office_status is {words, status?}: the office's own wording, 1 to "
-          + `${NOTE_MAX} characters with no quote, backslash or line break, and a status token. Nothing was written.`);
-      /* END DEC-49 REGION is-office-status-writable */
-      if (os.words !== undefined) fields.office_words = os.words.trim();
-      if (os.status !== undefined) fields.office_status = tok(os.status);
-    }
-    if (fe) {
-      /* DEC-49 REGION is-found-elsewhere-writable */
-      if (fe.bad || !/^[a-z0-9_-]{1,40}$/.test(String(fe.kind ?? ""))
-          || (fe.note !== undefined && (typeof fe.note !== "string" || /["\\\r\n]/.test(fe.note))))
-        return refuse("FOUND_ELSEWHERE_REFUSED", "found_elsewhere is {kind, note?}: a kind token and a note of at most "
-          + `${NOTE_MAX} characters with no quote, backslash or line break. Nothing was written.`);
-      /* END DEC-49 REGION is-found-elsewhere-writable */
-      fields.found_elsewhere = tok(fe.kind);
-      if (fe.note !== undefined) fields.found_elsewhere_note = fe.note.trim();
-    }
+    /* DEC-49 REGION is-entry-writable */
+    if (sp && !tok(sp))
+      return refuse("SPEAKER_REFUSED", "speaker is the member id of the member who spoke for the group in this sending. "
+        + "Nothing was written.");
+    if (os && (os.bad || !text(os.words) || !tok(os.status)))
+      return refuse("OFFICE_STATUS_WITHOUT_OUTCOME", "office_status is {words, status?}: the office's own wording, with no "
+        + "quote, backslash or line break, and a status the profile holds. Nothing was written.");
+    if (fe && (fe.bad || !tok(fe.kind ?? "") || !text(fe.note)))
+      return refuse("FOUND_ELSEWHERE_REFUSED", "found_elsewhere is {kind, note?}: a kind and a note with no quote, backslash "
+        + "or line break. Nothing was written.");
+    /* END DEC-49 REGION is-entry-writable */
+    if (os && os.words !== undefined) fields.office_words = os.words;
+    if (os && os.status !== undefined) fields.office_status = String(os.status);
+    if (fe) fields.found_elsewhere = String(fe.kind);
+    if (fe && fe.note !== undefined) fields.found_elsewhere_note = fe.note;
     return { ok: true, fields };
   }
   /* R25: the T45 fields of an entry, presented as R22 names them. */
@@ -1994,12 +1943,6 @@ export class Actions {
     const p = Actions.entryFields(e);
     return { ...(p.office_status ? { office_status: p.office_status } : {}),
              ...(p.found_elsewhere ? { found_elsewhere: p.found_elsewhere } : {}) };
-  }
-  /* R85 (T45): action-grammar's `stageInLaw` (its R25) over the law's stages; `undetermined` where no list is held. */
-  static #stageInLaw(stage, stages) {
-    if (typeof G.stageInLaw === "function") { try { return G.stageInLaw(stage, stages); } catch { return "undetermined"; } }
-    if (!Array.isArray(stages)) return "undetermined";
-    return stages.some((x) => x && x.stage === stage) ? "in_law" : "not_in_law";
   }
 
   /** R48: a pressure mark as given (`{kind, note}`, or its JSON), trimmed, or null when it is not one. */
@@ -3084,7 +3027,7 @@ export class Actions {
                  ...(p.office_status ? { office_status: p.office_status } : {}),
                  ...(p.found_elsewhere ? { found_elsewhere: p.found_elsewhere } : {}),
                  ...(fm.action_kind === "records_request" && typeof p.stage === "string"
-                   ? { stage_in_law: Actions.#stageInLaw(p.stage, stages) } : {}) };
+                   ? { stage_in_law: stageInLaw(p.stage, stages) } : {}) };
       }).filter((x) => Object.keys(x).length > 1),
       follows_action: fm.follows_action && typeof fm.follows_action === "object" ? fm.follows_action : null,
       followed_by: this.#followedBy(id, viewer),
@@ -3712,7 +3655,7 @@ export class Actions {
     const k = String(kind ?? "").trim(), t = String(text ?? "").trim();
     const endsAt = ends === null || ends === undefined || ends === "" ? null
       : Number.isInteger(ends) ? ends : /^\d+$/.test(String(ends).trim()) ? Number(String(ends).trim()) : NaN;
-    const kinds = Array.isArray(G.PROMISE_KINDS) ? G.PROMISE_KINDS : PROMISE_KINDS_HELD;
+    const kinds = PROMISE_KINDS;
     const promiseRefused = (why) => refuse("PROMISE_REFUSED", `${why} Nothing was written.`,
       { target: target ?? null, legal: [...kinds], max: PROMISE_TEXT_MAX });
     /* DEC-49 REGION is-promise */
