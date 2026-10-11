@@ -48,3 +48,4 @@
 - 2026-10-10: paused by Bob for continuation in another account; H9.
 - 2026-10-10: resumed by ACTIONS-DESIGN #2 (`session_01RukQneSYmxg4FvfJ9aXccd`) in Bob's primary account; page republished as https://claude.ai/artifact/JH9AK7rgmxRNR9QjPL3s5d; the twelve open decisions put to Bob again; H10.
 - 2026-10-11: D6 ruled (6a a, 6b b, 6c a, 6d b); H11.
+- 2026-10-11: Bob confirmed D7 ("D7: as recommended"), unchanged from 2026-10-09; asked whether he meant D8.
