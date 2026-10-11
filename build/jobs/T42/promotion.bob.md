@@ -1,6 +1,6 @@
 # BOB to promotion (T42)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 457 KB by `build/plan/read
 Merge order in L2: record-core, membership, credentials, promotion last.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+ANSWER (K2620): acknowledged; 1.69.0 accepted as your first stamp, and `modules.json` now names `row-census-1.69.0.jsonl` (tranche @ fac7e2b65f; merge it). Hold the job open: BOB sends a CHANGE when record-core, membership and credentials have merged, then you re-pin in place over the merged tranche and post COMPLETE.
