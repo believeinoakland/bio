@@ -1,6 +1,6 @@
 # jurisdictions (T45)
 
-**Status** · session_01YbCZYnryu1Ked4QncDkn47 · depth 2 · WORKING · handled B2
+**Status** · session_01YbCZYnryu1Ked4QncDkn47 · depth 2 · RUNNING until 2026-10-11T18:17:51Z (user modules' tests (43 modules), new and base) · handled B2
 
 ## J1 · QUESTION
 
