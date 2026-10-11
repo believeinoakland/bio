@@ -45,7 +45,7 @@
 - No credential (session token, secret, grant) ever travels in a URL; DEC-2, the root of trust, is not reopened. (K1874)
 - AI accounts: a group-level API key held by an administrator; a member's own subscription token, used only by that member; a member's own API key; or no AI (a subset of the product). K1502's "no group-wide account" applies to subscriptions only. (K1755, K1757, K1761, K1547)
 - Any statement about Anthropic's (or any provider's) terms cites an `AT-n`/`U-n` id of `build/terms/anthropic.md` or a ruling of Bob's, never a paraphrase; re-read those entries live at each tranche opening and before a ruling relies on one. Its format-check arm stays opt-in (`CIVICOS_TERMS_CHECK=1`) until certified. (K1762, K1763, K1765, K1772)
-- A member's own hidden project is never rescued; Civicsmith's stewards: a published contact address now, the service with the first shared service (Bob, K2782).
+- A member's own hidden project is never rescued; Civicsmith's stewards' reporting service is built now (T45), its contact address named by Bob before any public release, which is not cut without it (Bob, K2782, K2799).
 - Members' words: "record", never "bundle", in any text a member reads, the assistant's relayed text included (identifiers stay); "your group's Civicsmith" to members, "this group's Civicsmith" to a reader without credentials, never "copy", "instance" or "plane". (K106, K158, K899, K902, K1821)
 - `legacy-ui` (`app.html`) stays as it is until the new interface replaces it; it is touched only where Bob names it. (K633, K1849)
 

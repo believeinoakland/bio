@@ -108,9 +108,10 @@ It is the only module marked `legacy` in `modules.json`.
 - **T45-44 · instance-setup** · (grammar doubt 11; D28d) reports `action-grammar.lawStagesFindings` over the loaded view's records laws; the administrators' act setting the group's `declared_stake` · text BOB's.
 - **T45-45 · op-declarations** · (N893) R49 (every T45 op specified); **R47's wording note**: its T42 `ACT_HELP_ABSENT` sentence marked history since T43 (OP-DECLARATIONS #19, K2773), wording only · upper "L11 op pattern".
 - **T45-46 · installer** · (**N894**, K2782) its README publishes the stewards' contact address, what they may do (withdraw shared services, never edit a group's record), and the plain guide to what a group holds and who could compel it; the same text in the public documentation (BOB's commit) · text BOB's; **the address is Bob's to name** (one act, asked at the opening).
+- **T45-48 · stewards** (new, after `installer`; Bob, K2799) · (N895, N892 (e); v0.2 rule 21, D28e) Civicsmith's stewards' reporting service, a Civicsmith-run deployable outside every group's instance: a public intake for reports of abuse of Civicsmith itself, a store of reports and the stewards' decisions readable only by stewards, remedies limited to withdrawing shared services, never editing a group's record; the contact address Bob names before a public release (K2799) · text BOB's, `draft-T45-stewards.md` · merges before plane.
 - **T45-47 · plane** · composition: the new modules' start registrations (`action-holds`, `action-replies`, `plan-work`, `following`'s, `case-authoring` R70's source, `steps` R29's holder, `standards` R53, `consequences` R19), the new ops' handlers; clears rule 4 (6) if opened · merges last in L11.
 
-**L11 merge order:** wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, installer, plane last. `control-plane`, `store-door` (its `projectId` parameter list) and `answer-envelope` join (before plane) only where their op maps must name a new module's ops, decided at T45-45's merge.
+**L11 merge order:** wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, installer, stewards, plane last. `control-plane`, `store-door` (its `projectId` parameter list) and `answer-envelope` join (before plane) only where their op maps must name a new module's ops, decided at T45-45's merge.
 
 ### New modules: places and id moves (K617, K624, K657, K1043)
 
@@ -139,7 +140,6 @@ Users re-pointed in their own jobs: `doorbell` R3, `ratification` R45, `store-do
 | N853c | a measurement: OCR's accuracy on members' photos |
 | N886 | the design stream's words (B139), not yet given |
 | N889 | the design stream's: those sentences have no keys yet |
-| N895 (the stewards' service; N892 (e)'s service part) | a dependency not yet built: no shared service exists to withdraw (K2782) |
 | N881's assistant status report (`statusreportdraft`, its `run-rules` reach and grant op; `plan-work` R8's assistant arm) | the order: its read (`plan-work` R7, L9) is built after `agent-worker` and `run-rules` (L6); an out-of-layer job needs Bob each time (K1548); joins T46 |
 | N858's `@records-request` template content | K2781 (6): no named writer and no professional review exist (v0.2 rule 11); the machinery is in |
 | `wizard-scripts` R22's second clause (five scripts) and `@communication`'s step | the design stream's: `library.json` not given; `@communication`'s re-pointing is theirs (upper doubt 12) |
