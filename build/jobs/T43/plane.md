@@ -29,3 +29,7 @@ No other arm of the hook takes `author`. The only requirement naming `token:ai` 
 - New `test/m/plane/t43.test.mjs`: 6 tests naming R24, R36 and R6, each with a negative control. Its fixtures (`fixtures/t43-photo-o6.jpg`, 3200×2400 colour, EXIF orientation 6; `fixtures/t43-page.png`) were made with Pillow 12.3.0. Against the old code the file fails.
 - `node --test "test/m/plane/*.test.mjs" test/system/migrate-released.test.mjs`: tests 191, pass 191, fail 0. This includes the release suite (`release.test.mjs`, R24's registry check and R19).
 - format: 147 modules, 0 failures. architecture: 0 failures. coverage: 38 of 38 live ids, 0 failures. ownership: 7 files, 0 failures.
+
+## J1 · REPORT
+
+Work done and pushed on job/T43/plane (e01bd20633): R24, R36, R6 applied; 191/191 plane tests incl. the release suite and migrate-released; four checks clean. Per the merge order I wait for the other L11 jobs to merge, then merge tranche/T43, re-run, and post COMPLETE. Findings for you in my record: the hook's `by` for an `ai` caller is still `class:ai` (R6 names only author); plane's Uses wording for renderPictureToPixels. No op keeps the `token:` form for an ai author (reasons in the record). Ring me when L11's other merges are in.
