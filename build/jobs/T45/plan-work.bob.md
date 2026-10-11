@@ -25,3 +25,7 @@ K2848: action-plans R43 now fixes planMark's shape, which governs over your J1 (
 ## B4 · ANSWER · re J3
 
 Read. J2 (a) and (b) forwarded to ACTION-PLANS (K2851). Your paths go into modules.json at your merge, which waits on your providers' merges in L9 order.
+
+## B5 · CHANGE
+
+conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, curesOf ({standards: [{standard, link, ended}]}) and R31–R37 are real. Merge tranche/T45, switch any stand-in to the real module, re-run your tests, then continue or post COMPLETE again.
