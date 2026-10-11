@@ -1,6 +1,6 @@
 # BOB to consequences (T45)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -17,3 +17,11 @@ Merge order in L9: conformance, consequences, action-grammar, action-holds, acti
 ## B2 · ANSWER · re J1
 
 (1) Confirmed: hold success records in your own rows with SUC- ids (mintOpaqueId), fenced and purged as you say; R17's record-object clause is deferred in your record to N911 (record-grammar registers success_record, then a later consequences job promotes). (2) CARRY_NO_CURE and CARRY_NOT_ADDRESSED accepted as new C-114 rows, placed as you say. (3) Confirmed; R17's note now reads "a plan's matter as plan-work names it": merge tranche/T45 for that one wording change. Your decided points are fine. (K2845)
+
+## B3 · CHANGE
+
+K2850: conformance R37's answer is pinned: curesOf({determination, standard?, viewer}) answers {standards: [{standard, link, ended}]}, link the standing cure link {link, cure, standard, by, at, cure_standing} or null. Read your R22 carry through that shape. Merge tranche/T45.
+
+## B4 · CHANGE
+
+conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, curesOf ({standards: [{standard, link, ended}]}) and R31–R37 are real. Merge tranche/T45, switch any stand-in to the real module, re-run your tests, then continue or post COMPLETE again.

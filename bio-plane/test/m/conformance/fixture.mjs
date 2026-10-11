@@ -10,8 +10,13 @@
    participants; a document's own date is a dated fact, which contradiction reads, K1610). The bridge (instance-setup
    R50) is the test's `offices` map, given as conformance's `officeEntityOf`. T35-61: `calculations` (R29's measures) is
    a stand-in built from its stated `read` (its R8–R10: asynchronous, the stored results and grade facts, a calculation
-   withheld from a viewer answered exactly as an absent one), holding the test's `calcs`. Every test drives
-   `conformance` at its interface. */
+   withheld from a viewer answered exactly as an absent one), holding the test's `calcs`. T45-23: the real `case-check`
+   (a case checked for publication and held unsigned, its state computed at each read), its preparation played by a
+   stand-in for `case-authoring` built from its stated `publishPreflight` and `publishCase` (storing the preparation
+   through publication's R21, as case-authoring does) and its lapse reads by a stand-in for `case-carriage` the test
+   controls (`lapse`); the real `accepted-work`, its one registration filled by a stand-in for `case-import` built from
+   its stated R16 functions (`finding`, `openFlags`, `withdrawals`, `moves`) over the test's `imports`, and
+   `case-import`'s `importedCase` (its R4) over the same. Every test drives `conformance` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
@@ -25,6 +30,8 @@ import { publicationOf } from "../../../src/publication/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
 import { contradictionOf, inquiryServices } from "../../../src/contradiction/index.mjs";
 import { eventsOf } from "../../../src/events/index.mjs";
+import { caseCheckOf } from "../../../src/case-check/index.mjs";
+import { acceptedWorkOf } from "../../../src/accepted-work/index.mjs";
 import { conformanceOf, conformanceOps } from "../../../src/conformance/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
 
@@ -194,12 +201,63 @@ export function world({ group = "test-group" } = {}) {
       return { ok: true, found: true, calc_id: calcId, ...structuredClone(c.answer) };
     },
   };
+  /* case-carriage's three lapse reads (its R4, R5, R13), standing in: none lapsed unless the test says so */
+  const lapse = { sources: [], accepted: null, marks: [], fail: false };
+  const caseCarriage = {
+    sourcesLapsed: () => { if (lapse.fail) throw new Error("the sources read failed"); return lapse.sources; },
+    acceptedWorkLapsed: () => lapse.accepted,
+    marksLapsed: () => lapse.marks,
+  };
+  /* case-authoring's pre-flight and preparation (its R34, R14), standing in: every case is ready; the preparation is a
+     case document of the named case and edition, stored through publication's R21 */
+  const caseAuthoring = {
+    publishPreflight: () => ({ ready: true, first: null, blockers: [] }),
+    publishCase: (a) => {
+      const caseId = a.caseId, edition = a.edition ?? 1;
+      const roles = (a.targets || []).map((t) => ({ target: t, version_sha: record.head(t).bundleSha, edition, role: "load_bearing" }));
+      const text = caseDoc(caseId, edition, { project: a.project, roles });
+      const st = publication.storeCaseDocument({ case: caseId, edition, text, author: a.author ?? V("olive"), at: NOW });
+      if (!st.ok) return st;
+      return { ok: true, caseId, edition, project: a.project,
+               findings: roles.map((r) => ({ target: r.target, bundleSha: r.version_sha, role: r.role })), caseDocument: text };
+    },
+    calculationsAtPublication: async () => null,
+  };
+  const caseCheck = caseCheckOf(host, { record, publication, caseAuthoring, caseCarriage, now });
+  /* case-import's R16 functions and R4 read, standing in, over `imports`: `findings` keyed "ref|edition" → {group,
+     case, pair, acceptance}; `moves` the publisher moves as accepted-work R8 answers them; `editions` keyed
+     "import|edition" → the importedCase edition's facts; `fail` makes every read throw (unreadable) */
+  const imports = { findings: new Map(), moves: [], editions: new Map(), hiddenFrom: [], fail: false };
+  const acceptedWork = acceptedWorkOf(host, { record, promotion });
+  acceptedWork.registerAcceptedWork("case-import", {
+    finding: ({ ref, edition, viewer }) => {
+      if (imports.fail) throw new Error("the import could not be read");
+      if (viewer && imports.hiddenFrom.includes(viewer)) return null;
+      const f = imports.findings.get(`${ref}|${edition}`);
+      return f ? { ref, edition, ...structuredClone(f) } : null;
+    },
+    openFlags: () => ({ flags: [], complete: true }),
+    withdrawals: () => ({ withdrawals: [], cursor: null }),
+    moves: ({ after = null, limit = 200 } = {}) => {
+      if (imports.fail) throw new Error("the moves could not be read");
+      const from = after ? imports.moves.findIndex((m) => m.move === after) + 1 : 0;
+      const page = imports.moves.slice(from, from + limit);
+      return { moves: structuredClone(page), cursor: from + limit < imports.moves.length ? page[page.length - 1].move : null };
+    },
+  });
+  const caseImport = {
+    importedCase: ({ import: imp, edition }) => {
+      const e = imports.editions.get(`${imp}|${edition}`);
+      return e ? { ok: true, import: imp, edition: { edition, ...e } } : { ok: false, reason: "IMPORT_NO_SUCH_EDITION" };
+    },
+  };
   const c = conformanceOf(host, { record, membership, promotion, content, inquiry: k, strength, reevaluation,
                                   publication, standards, contradiction, events, entities, calculations, now,
+                                  caseCheck, acceptedWork, caseImport,
                                   officeEntityOf: ({ role, body }) => offices.get(`${role}|${body}`) ?? null });
   const w = {
     st, host, record, membership, promotion, content, k, strength, reevaluation, publication, standards, contradiction, c,
-    clock, ex, entities, events, offices, view, calcs, calcReads,
+    clock, ex, entities, events, offices, view, calcs, calcReads, caseCheck, acceptedWork, lapse, imports,
     row: (q, ...a) => st.sql.exec(q, ...a).toArray()[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
@@ -368,6 +426,32 @@ export function world({ group = "test-group" } = {}) {
       if (!items.some((i) => i.case === caseId && i.edition === edition))
         throw new Error(`fixture publish: ${finding} is not in ${caseId} edition ${edition}: ${JSON.stringify(items)}`);
       return pin;
+    },
+    /** A case of `project` naming `findings` (an id or a list), checked for publication and held unsigned (case-check
+     *  R1), at `caseId` edition `edition`. Answers the check as case-check answers it. */
+    hold(findings, project, { caseId = "CASE-2026-0101", edition = 1 } = {}) {
+      const r = caseCheck.checkAndHold({ caseId, edition, project, targets: [].concat(findings), author: V("olive"),
+                                         viewer: V("olive") });
+      if (!r.ok) throw new Error(`fixture hold refused: ${JSON.stringify(r).slice(0, 400)}`);
+      return r;
+    },
+    /** Another group's finding `finding` of import `imp` at `edition`, held by the stand-in and accepted by this group
+     *  (unless `accepted: false`). Answers its ref. */
+    accept(imp, finding, { edition = 1, group = "Hayward Parents", caseId = "CASE-2026-0900", accepted = true,
+                           pair = { capture: { state: "graded", grade: "B" }, connection: { state: "graded", grade: "C" } } } = {}) {
+      const ref = `imported:${imp}/${finding}`;
+      imports.findings.set(`${ref}|${edition}`, { import: imp, group, case: caseId, edition, finding, pair,
+        acceptance: accepted ? { by: "olive", at: "2026-09-20T00:00:00Z", reason: "checked", checked: [], gaps: [] } : null });
+      return ref;
+    },
+    /** A publisher move recorded by the stand-in (accepted-work R8's shape). */
+    move(imp, { kind = "withdrawal", edition = 1, at = "2026-10-01T00:00:00Z", date = "2026-09-30", caseId = "CASE-2026-0900",
+                taken_back = null } = {}) {
+      const m = { move: `MOVE-${imports.moves.length + 1}`, import: imp, group: "Hayward Parents", case: caseId, kind, edition,
+                  seq: imports.moves.length + 1, date, at, what_changed: kind === "edition" ? "revised" : null,
+                  reason: kind === "withdrawal" ? "withdrawn" : null, key_listed: true, taken_back };
+      imports.moves.push(m);
+      return m;
     },
     /** A standard held by `standards`, declared by a member through its R1 with the declarer's `reason` (DEC-88), its
      *  text a passage of its own document. */
