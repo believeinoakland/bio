@@ -77,3 +77,15 @@ Size (session_0162rfUAY9xvRvZ6LS5J1DNM): test runs 16, module lines 3315
 **Checks:** format 0 failures; architecture (19 files, 87 imports) 0; coverage 48 of 48; ownership 11 files, 0 failures.
 
 Size (session_0162rfUAY9xvRvZ6LS5J1DNM): test runs 20, module lines 3315
+
+## J4 · COMPLETE
+
+**B8 processed** (B6, B7 were already applied in J3: action-holds through `actionHoldsOf` in the getter, stand-ins dropped). Merged tranche/T45.
+
+- **R9's kind read alone (K2858 (1)):** with no determination, an unpublished finding a held check names reads `checked_held` (`case-check.heldFindingVersions`, its R3: read at the version the check pins, with `held: {case, edition, check, checked_at}`); a leg on another group's finding (`imported:` ref, its `target_edition`) accepted here reads `accepted` (`accepted-work.acceptedFinding`, its R2: group, import, acceptance, the source edition's pair as grade); otherwise published or unpublished as before. These kinds also feed R34's record check (unpublished is never cited).
+- Test: t45 "R9 (K2858)": real accepted-work with a registered finding read standing in for case-import; case-check's R3 answer stood in (a held check needs a signed-but-held case the fixture does not build).
+- Noted, nothing to do: (2) the plane migrates project-roster; (3) N916, N917; (4) the seam stays unsplit.
+
+**Tests:** filings 92 pass, 0 fail. **Checks:** format 0; architecture (19 files, 89 imports) 0; coverage 48 of 48; ownership 11 files, 0.
+
+Size (session_0162rfUAY9xvRvZ6LS5J1DNM): test runs 24, module lines 3347
