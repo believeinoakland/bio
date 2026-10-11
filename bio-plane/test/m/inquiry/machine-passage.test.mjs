@@ -138,3 +138,13 @@ test("R62 machinePassageUnchecked is the one pure spelling: its row, its detail,
   assert.deepEqual(machinePassageUnchecked("d"), machinePassageUnchecked("d"), "pure");
   assert.equal(typeof inquiryOf, "function");
 });
+
+test("R62 (K2648) viewer is the author; an empty author is asked (only a machine's identity is not), failing closed", () => {
+  const { w, calls, read } = setup();
+  w.k.onMachinePassage("run-productions", read);
+  const r = w.promote(Q, doc([B]), null, { author: "" });
+  assert.equal(calls.length, 1, `asked: ${JSON.stringify(r).slice(0, 200)}`);
+  assert.deepEqual([calls[0].author, calls[0].viewer], ["", ""], "the author as the promotion carries it, and as viewer");
+  assert.equal(r.ok, false);
+  assert.equal(w.record.head(Q), null);
+});
