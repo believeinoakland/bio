@@ -4,7 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, toStage, V, OFFICE, ms } from "./fixture.mjs";
-import * as conformanceExports from "../../../src/conformance/index.mjs";
+import { determinationVoided } from "../../../src/conformance/index.mjs";
 
 const by = (who) => ({ author: V(who), viewer: V(who) });
 const read = (w, nowMs) => w.esc.escalationRead({ id: w.E, viewer: V("bob"), ...(nowMs ? { nowMs } : {}) });
@@ -221,7 +221,7 @@ test("R32 the read answers context: the actions the viewer may see resting on th
   assert.equal(attach(w, rfc).reason, "NOT_A_BREACH_ACTION");
 });
 
-test("R1 R27 a void determination (conformance R33) is refused DETERMINATION_VOID through conformance.determinationVoided, after DETERMINATION_SUPERSEDED and before NOT_NONCOMPLIANT; nothing written; control: the same determination not void opens", { skip: typeof conformanceExports.determinationVoided !== "function" && "conformance's determinationVoided (T45-23) not merged yet" }, () => {
+test("R1 R27 a void determination (conformance R33) is refused DETERMINATION_VOID through conformance.determinationVoided, after DETERMINATION_SUPERSEDED and before NOT_NONCOMPLIANT; nothing written; control: the same determination not void opens", () => {
   const w = seeded();
   const d = w.determinations.get(w.D);
   const causes = [{ kind: "check_voided", check: "CHK-1" }];
@@ -232,7 +232,7 @@ test("R1 R27 a void determination (conformance R33) is refused DETERMINATION_VOI
   const before = w.snapshot();
   for (const act of ["escalationOpen", "declineToEscalate"]) {
     const r = w.esc[act]({ reason: "Worth it.", determination: w.D, ...by("bob") });
-    assert.deepEqual(r, conformanceExports.determinationVoided(w.D, causes), act);
+    assert.deepEqual(r, determinationVoided(w.D, causes), act);
   }
   /* after the supersession: a superseded void determination answers DETERMINATION_SUPERSEDED */
   w.supersede(w.D, "CONF-2026-0999-next");

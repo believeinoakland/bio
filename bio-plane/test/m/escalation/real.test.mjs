@@ -279,3 +279,36 @@ test("R12 over the real actions and conformance: an oversight request to an offi
   assert.deepEqual([item.oversight.state, item.oversight.lines.map((l) => l.line.line_id)], ["held", [line.line_id]]);
   assert.deepEqual(read.targets.offices.map((o) => [o.entity, o.line.line_id]), [[harbour, line.line_id]]);
 });
+
+test("R14 over the real conformance (T45-23, K2852): a later act of the same office, determined compliant after the escalation opened and linked through conformance.cureLink, restores compliance (escalationEnd then asks the consequences); before the link, and for another office's compliant act never linked, COMPLIANCE_NOT_RESTORED names the standard", () => {
+  const x = real();
+  const { w, std, ev, input } = x;
+  w.clock.now = "2026-09-28T01:00:00Z";
+  const target = w.c.determine(input());
+  assert.equal(target.ok, true, JSON.stringify(target).slice(0, 300));
+  w.clock.now = "2026-09-28T02:00:00Z";
+  const E = x.esc.escalationOpen({ reason: "Worth pursuing.", determination: target.id, author: V("pat"), viewer: V("pat") }).id;
+  const end = () => x.esc.escalationEnd({ id: E, author: V("pat"), viewer: V("pat") });
+  /* control: another office's later act, compliant, never linked */
+  w.clock.now = "2026-09-28T03:00:00Z";
+  const later = w.event(ev, { date: "2026-04-01" });
+  const compliant = (actor) => input({ act: { ...input().act, event: later, actor }, standards: [{ standard: std, outcome: "compliant" }],
+                                       rows: [{ ...input().rows[0], reading: "aligns" }] });
+  const other = w.c.determine(compliant({ role: "City Manager", body: "City Administration" }));
+  assert.equal(other.ok, true, JSON.stringify(other).slice(0, 300));
+  let r = end();
+  assert.equal(r.reason, "COMPLIANCE_NOT_RESTORED");
+  assert.deepEqual(r.standards.filter((s) => !s.met).map((s) => s.standard), [std]);
+  /* the same office's later act, compliant: not restored until a member links it as the cure */
+  const cure = w.c.determine(compliant({ role: "Director of Parks", body: "Parks Department" }));
+  assert.equal(cure.ok, true, JSON.stringify(cure).slice(0, 300));
+  assert.equal(end().reason, "COMPLIANCE_NOT_RESTORED");
+  const linked = w.c.cureLink({ determination: target.id, standard: std, cure: cure.id, author: V("olive"), viewer: V("olive") });
+  assert.equal(linked.ok, true, JSON.stringify(linked).slice(0, 300));
+  const read = x.esc.escalationRead({ id: E, viewer: V("pat") });
+  assert.equal(read.exit.compliance.state, "met", JSON.stringify(read.exit.compliance).slice(0, 400));
+  assert.deepEqual(read.exit.compliance.standards[0].cured_by.map((c) => c.cure), [cure.id]);
+  /* compliance restored: the end now asks the consequences, none recorded (K172) */
+  r = end();
+  assert.equal(r.reason, "CONSEQUENCES_UNDETERMINED");
+});

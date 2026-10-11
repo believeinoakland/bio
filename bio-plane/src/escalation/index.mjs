@@ -66,9 +66,7 @@
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
-import { conformanceOf, noSuchDetermination, determinationSuperseded } from "../conformance/index.mjs";
-/* conformance R33's `determinationVoided` (T45-23), read off the module so this one loads before that job merges. */
-import * as conformanceExports from "../conformance/index.mjs";
+import { conformanceOf, noSuchDetermination, determinationSuperseded, determinationVoided } from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
 import { Actions, actionsOf, actionFacts, actionOverdue, localToday, zoneOf, noSuchAction } from "../actions/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
@@ -929,8 +927,8 @@ export class Escalation {
     }
     /* R1, R27 (T45; conformance R33; K2850): a void determination, answered by conformance's one site, after the
        supersession and before NOT_NONCOMPLIANT. */
-    if (isObj(d.void) && typeof conformanceExports.determinationVoided === "function")
-      return conformanceExports.determinationVoided(determination, Array.isArray(d.void.causes) ? d.void.causes : []);
+    if (isObj(d.void))
+      return determinationVoided(determination, Array.isArray(d.void.causes) ? d.void.causes : []);
     const pursued = outcomesOf(d).filter((o) => o.outcome === "noncompliant").map((o) => o.standard);
     /* DEC-49 REGION is-determination-noncompliant */
     if (!pursued.length)
