@@ -32,6 +32,8 @@ export function world(opts = {}) {
   /* inquiry's own lazy services and schemas, made and migrated now as the plane's boot does (plane R3), so the tables its
      check and projection read and write exist. */
   if (booted) { booted.connections.migrate(); booted.migrate(); }
+  /* The booted inquiry itself, for a test that registers with it (its R62, `onMachinePassage`). */
+  w.inquiryModule = booted;
   w.earned = {};                // target → {grade, why}: what inquiry's registry earns for a leg
   w.earnedCalls = [];
   w.inq = {

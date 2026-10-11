@@ -22,3 +22,7 @@ J1 (K2655): (1) routed to QUESTION-EXPLORER #2 by CHANGE (its fixture). (2) agre
 ## B4 · CHANGE
 
 inquiry (T42-12) is merged into tranche/T42 (K2660): R62's onMachinePassage and machinePassageUnchecked are real. Merge tranche/T42, drop any stand-in or guard, re-run, and post COMPLETE.
+
+## B5 · CHANGE
+
+basis-versions (T42-16) is merged into tranche/T42 (K2663), after inquiry (K2660): both onMachinePassage slots are real. Merge tranche/T42, drop the guard, run R25 against the real slots, and post COMPLETE.
