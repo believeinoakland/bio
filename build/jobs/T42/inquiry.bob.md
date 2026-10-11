@@ -1,0 +1,12 @@
+# BOB to inquiry (T42)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T42), layer 6, inquiry: T42-12 (N837, N834, N830). Read also K2496, K2526, K2608 and `build/plan/draft-T42-reqs.md` sections N837, N834 and N830.
+Your requirements: `build/requirements/inquiry.md` (read whole). Marked `*(not yet met: T42)*`: R60 (registers the question row's `projects` with `retrieval.registerSearchDecoration`, its R78, merged in L5: the fn answers synchronously, one entry per hit, with keys not in retrieval R6's hit; K2644), R62 (`onMachinePassage(module, fn)`, the seam, and `machinePassageUnchecked`, the one spelling basis-versions R49 answers through), R63 (`personFacts`, named in Provides). Its users are basis-versions (R49 answers through your `machinePassageUnchecked`), citation (R1 relays R62's refusal) and run-productions (R25 registers with R62), all in this layer: you merge before them. Test each marked id explicitly at your interface, with a negative control (K874: the id's string may already be in your tests). Run your users' suites (P11) and report reds by file and line.
+Reading set (mechanics §17): measured at this START: 901 KB by `build/plan/reading-sets.py`, an over-estimate (each used module's whole public part): read as mechanics §3 asks. At most 300 KB: read it whole and state so. Over: read whole yourself your requirements, layer 6's row of `build/layers.md`, the code and tests your entry changes and the used services your Uses names, and have your own workers read the rest of your code and tests in full and write the summary this task needs (each statement citing file and line), told the task, the requirements it serves and what follows; state in your record what you read whole and the summary's size (K2304). This step is required.
+Merge order in L6: `modules.json` order; inquiry and basis-versions (the seam owners) before run-productions; agent-model before agent-worker. Jobs this layer: inquiry, hypotheses, steps, citation, basis-versions, ai-use, run-productions, question-explorer, agent-model, agent-worker.
+Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
