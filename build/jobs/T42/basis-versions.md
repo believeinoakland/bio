@@ -61,3 +61,7 @@ R49 implemented on my best reading; four points I settled, and I'm carrying on w
 3. "Author is not a machine": only `isMachineIdentity(author)` is exempt. A promotion with a blank author is asked (fail closed). A replay is skipped, as all of R6 is.
 4. The registration slot is R40's form (`listenerRefusal`). The unchecked refusal is `{...machinePassageUnchecked(detail, {legs}), ok:false, reason: code, findings}`.
 Blocking only on inquiry R62's export `machinePassageUnchecked`: I'm testing against a local stub that is never committed. I'll merge and re-run when your CHANGE says inquiry is merged.
+
+## J2 · COMPLETE
+
+T42-16 applied: R49 onMachinePassage, as K2652 reads it, with inquiry's real machinePassageUnchecked (merged after B4). The module's suite: 145 pass, 0 fail, the 9 R49 tests in machine-passage.test.mjs included. format, architecture, coverage (46 of 46) and ownership: 0 failures. Users' reds, none from this change (record §Completion item 1): reevaluation source.test.mjs :35–:147 (7) and publication sources.test.mjs :59/:75/:104/:142/:153 (5), both NO_SUCH_SOURCE in their fixtures; answer-envelope catalogue-end.test.mjs:17 (rule 4 (6)); agent-worker requirements.test.mjs R45, bundle stale from agent-model and agent-worker sources the tranche brought in; migrate-released, also red before my change. Generated artifacts staled by this change: the plane bundle and program.mjs (rule 4 (10)). Deferred: none.
