@@ -96,9 +96,13 @@
      ]
     },
     {
-     "op": "owed:aikeepaway DEC-172",
+     "op": "aikeepaway",
      "label": "Keep the group's material away from AI, with a reason",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "credentials",
+      "setup-page"
+     ]
     },
     {
      "op": "groupkeyset",
@@ -117,9 +121,12 @@
      ]
     },
     {
-     "op": "owed:ailimitset DEC-188",
+     "op": "ailimitset",
      "label": "Set each member's daily use of the group's key",
-     "status": "owed"
+     "status": "function",
+     "modules": [
+      "ai-use"
+     ]
     },
     {
      "op": "courtnoticeset",
@@ -138,9 +145,13 @@
      ]
     },
     {
-     "op": "owed:securitytooladd K1929",
+     "op": "securitytooladd",
      "label": "Add a security tool (optional)",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "file-safety",
+      "setup-page"
+     ]
     },
     {
      "op": "memberadd",
@@ -171,9 +182,13 @@
      ]
     },
     {
-     "op": "owed:groupdescriptiondraft DEC-152",
+     "op": "groupdescriptiondraft",
      "label": "Ask the assistant to help write it",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "instance-setup",
+      "setup-page"
+     ]
     }
    ],
    "journeys": [
@@ -196,14 +211,22 @@
      ]
     },
     {
-     "op": "owed:memberlanguageset DEC-127",
+     "op": "memberlanguageset",
      "label": "Choose your language",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "instance-setup",
+      "setup-page"
+     ]
     },
     {
-     "op": "owed:handlecheck DEC-184",
+     "op": "handlecheck",
      "label": "See whether a handle is free",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "admission",
+      "membership"
+     ]
     },
     {
      "op": "enroll",
@@ -235,9 +258,12 @@
      ]
     },
     {
-     "op": "owed:startfrom DEC-129",
+     "op": "startfrom",
      "label": "Start from…",
-     "status": "owed"
+     "status": "function",
+     "modules": [
+      "wizard-scripts"
+     ]
     }
    ],
    "journeys": [
@@ -340,14 +366,20 @@
      ]
     },
     {
-     "op": "owed:accountusesset DEC-188",
+     "op": "accountusesset",
      "label": "Set what the group's key pays for",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "credentials"
+     ]
     },
     {
-     "op": "owed:ailimitset DEC-188",
+     "op": "ailimitset",
      "label": "Set a limit on the group's key",
-     "status": "owed"
+     "status": "function",
+     "modules": [
+      "ai-use"
+     ]
     },
     {
      "op": "groupkeyremove",
@@ -358,9 +390,13 @@
      ]
     },
     {
-     "op": "owed:aikeepaway DEC-172",
+     "op": "aikeepaway",
      "label": "Keep the group's material away from AI, with a reason",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "credentials",
+      "setup-page"
+     ]
     }
    ],
    "journeys": [
@@ -375,24 +411,39 @@
    "purpose": "Administrators only: how hard the group's Civicsmith is being tried over a period they choose, by kind and hour against its usual; counts only; told only when risk is high (K1875, K1874, DEC-165).",
    "acts": [
     {
-     "op": "owed:securitymap K1875",
+     "op": "securitymap",
      "label": "Show the level for a period",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "credentials"
+     ]
     },
     {
-     "op": "owed:securitytooladd K1929",
+     "op": "securitytooladd",
      "label": "Add a security tool",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "file-safety",
+      "setup-page"
+     ]
     },
     {
-     "op": "owed:securitytooltest K1929",
+     "op": "securitytooltest",
      "label": "Test a security tool",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "file-safety",
+      "setup-page"
+     ]
     },
     {
-     "op": "owed:securitytoolremove K1929",
+     "op": "securitytoolremove",
      "label": "Remove a security tool",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "file-safety",
+      "setup-page"
+     ]
     }
    ],
    "journeys": [
@@ -414,14 +465,20 @@
      ]
     },
     {
-     "op": "owed:handlechange DEC-186",
+     "op": "handlechange",
      "label": "Change your handle",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "membership"
+     ]
     },
     {
-     "op": "owed:setpassword DEC-182",
+     "op": "setpassword",
      "label": "Change your password",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "credentials"
+     ]
     },
     {
      "op": "signerregisterown",
@@ -440,9 +497,13 @@
      ]
     },
     {
-     "op": "owed:memberlanguageset DEC-127",
+     "op": "memberlanguageset",
      "label": "Choose your language",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "instance-setup",
+      "setup-page"
+     ]
     },
     {
      "op": "owed:infolevelset DEC-162",
@@ -491,14 +552,20 @@
      ]
     },
     {
-     "op": "owed:accountusesset DEC-188",
+     "op": "accountusesset",
      "label": "Set what your account pays for",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "credentials"
+     ]
     },
     {
-     "op": "owed:ailimitset DEC-188",
+     "op": "ailimitset",
      "label": "Set a limit on your account",
-     "status": "owed"
+     "status": "function",
+     "modules": [
+      "ai-use"
+     ]
     },
     {
      "op": "accountreferenceremove",
@@ -564,19 +631,28 @@
      ]
     },
     {
-     "op": "owed:noterevise DEC-144",
+     "op": "noterevise",
      "label": "Revise your note",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "hypotheses"
+     ]
     },
     {
-     "op": "owed:notedelete DEC-144",
+     "op": "notedelete",
      "label": "Delete your note",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "hypotheses"
+     ]
     },
     {
-     "op": "owed:writinghelp DEC-153",
+     "op": "writinghelp",
      "label": "Help me write this",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
     }
    ],
    "journeys": [
@@ -590,29 +666,44 @@
    "purpose": "The interface's words in the group's languages (DEC-127).",
    "acts": [
     {
-     "op": "owed:translationdraft DEC-127",
+     "op": "translationdraft",
      "label": "Ask the assistant to draft",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "instance-setup"
+     ]
     },
     {
-     "op": "owed:translationadopt DEC-127",
+     "op": "translationadopt",
      "label": "Adopt a translation",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "instance-setup"
+     ]
     },
     {
-     "op": "owed:translationgrant DEC-157",
+     "op": "translationgrant",
      "label": "Give a member the grant for a language",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "instance-setup"
+     ]
     },
     {
-     "op": "owed:translationconfirm DEC-157",
+     "op": "translationconfirm",
      "label": "Confirm a protected word",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "instance-setup"
+     ]
     },
     {
-     "op": "owed:translationrevert DEC-157",
+     "op": "translationrevert",
      "label": "Undo a change",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "instance-setup"
+     ]
     }
    ],
    "journeys": [
@@ -758,14 +849,20 @@
      ]
     },
     {
-     "op": "owed:projectkeyset DEC-188",
+     "op": "projectkeyset",
      "label": "Add an API key for a project",
-     "status": "owed"
+     "status": "function",
+     "modules": [
+      "credentials"
+     ]
     },
     {
-     "op": "owed:exploreapprove DEC-188",
+     "op": "exploreapprove",
      "label": "Let the assistant explore today",
-     "status": "owed"
+     "status": "function",
+     "modules": [
+      "ai-use"
+     ]
     }
    ],
    "journeys": [
@@ -797,9 +894,12 @@
      ]
     },
     {
-     "op": "owed:findin DEC-164",
+     "op": "findin",
      "label": "Find in these",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "retrieval"
+     ]
     },
     {
      "op": "selectionrelease",
@@ -887,9 +987,12 @@
      ]
     },
     {
-     "op": "owed:writinghelp DEC-153",
+     "op": "writinghelp",
      "label": "Help me write this",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
     }
    ],
    "journeys": [
@@ -958,9 +1061,12 @@
      ]
     },
     {
-     "op": "owed:archivelist K1852",
+     "op": "archivelist",
      "label": "List the archive's files by state",
-     "status": "owed"
+     "status": "function",
+     "modules": [
+      "acquisition"
+     ]
     },
     {
      "op": "heldsetaside",
@@ -991,29 +1097,45 @@
    "purpose": "Before a file opens: its risk, the safe view, the deeper check, its checks as notes, and a hold released by two members or a second engine; nothing records who opened what (K1888, K1892, K1929, DEC-168).",
    "acts": [
     {
-     "op": "owed:openoriginal K1888",
+     "op": "openoriginal",
      "label": "Open the original",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "file-safety"
+     ]
     },
     {
-     "op": "owed:openwithwarning DEC-173",
+     "op": "openwithwarning",
      "label": "Open the original after the warning, without a deeper check",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "control-plane",
+      "file-safety"
+     ]
     },
     {
-     "op": "owed:safeview K1888",
+     "op": "safeview",
      "label": "Read the safe view",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "file-safety"
+     ]
     },
     {
-     "op": "owed:deepercheck K1888",
+     "op": "deepercheck",
      "label": "Ask for a deeper check",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "file-safety"
+     ]
     },
     {
-     "op": "owed:releasescanhold K1892",
+     "op": "releasescanhold",
      "label": "Release, with a reason",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "file-safety"
+     ]
     }
    ],
    "journeys": [
@@ -1087,9 +1209,12 @@
      ]
     },
     {
-     "op": "owed:findin DEC-164",
+     "op": "findin",
      "label": "Find in this",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "retrieval"
+     ]
     }
    ],
    "journeys": [
@@ -1105,9 +1230,12 @@
    "purpose": "One control on a document, a held set or a project: pick what to find; each result cites its passage and becomes a fact only by a member's own act (DEC-164, K1468).",
    "acts": [
     {
-     "op": "owed:findin DEC-164",
+     "op": "findin",
      "label": "Find in this",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "retrieval"
+     ]
     },
     {
      "op": "standingquestionset",
@@ -1197,9 +1325,12 @@
      ]
     },
     {
-     "op": "owed:findin DEC-164",
+     "op": "findin",
      "label": "Find in this project",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "retrieval"
+     ]
     },
     {
      "op": "strengthbarset",
@@ -1247,39 +1378,60 @@
    "purpose": "Who pays for the assistant's work in a project: its own API key, or its sole member's sign-in; what it pays for; its limits; its use summed, naming no member; keeping the project's material away from AI; every change, seen by every owner (DEC-188).",
    "acts": [
     {
-     "op": "owed:projectkeyset DEC-188",
+     "op": "projectkeyset",
      "label": "Hold the project's API key",
-     "status": "owed"
+     "status": "function",
+     "modules": [
+      "credentials"
+     ]
     },
     {
-     "op": "owed:projectsigninset DEC-188",
+     "op": "projectsigninset",
      "label": "Use your own sign-in for the project",
-     "status": "owed"
+     "status": "function",
+     "modules": [
+      "credentials"
+     ]
     },
     {
-     "op": "owed:projectaccountswitch DEC-188",
+     "op": "projectaccountswitch",
      "label": "Switch the project's account on or off",
-     "status": "owed"
+     "status": "function",
+     "modules": [
+      "credentials"
+     ]
     },
     {
-     "op": "owed:projectaccountremove DEC-188",
+     "op": "projectaccountremove",
      "label": "Remove the project's account",
-     "status": "owed"
+     "status": "function",
+     "modules": [
+      "credentials"
+     ]
     },
     {
-     "op": "owed:projectkeynoticeseen DEC-188",
+     "op": "projectkeynoticeseen",
      "label": "Read what the project's key means",
-     "status": "owed"
+     "status": "function",
+     "modules": [
+      "credentials"
+     ]
     },
     {
-     "op": "owed:accountusesset DEC-188",
+     "op": "accountusesset",
      "label": "Set what the project's account pays for",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "credentials"
+     ]
     },
     {
-     "op": "owed:ailimitset DEC-188",
+     "op": "ailimitset",
      "label": "Set a limit on the project's account",
-     "status": "owed"
+     "status": "function",
+     "modules": [
+      "ai-use"
+     ]
     },
     {
      "op": "owed:projectaikeepaway DEC-188",
@@ -1584,9 +1736,12 @@
      ]
     },
     {
-     "op": "owed:findin DEC-164",
+     "op": "findin",
      "label": "Look for dates in this project",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "retrieval"
+     ]
     }
    ],
    "journeys": [
@@ -1656,9 +1811,12 @@
      ]
     },
     {
-     "op": "owed:findin DEC-164",
+     "op": "findin",
      "label": "Look for it in this project",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "retrieval"
+     ]
     },
     {
      "op": "actioncreate",
@@ -2320,9 +2478,12 @@
      ]
     },
     {
-     "op": "owed:writinghelp DEC-153",
+     "op": "writinghelp",
      "label": "Help me write this",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "wizard-scripts"
+     ]
     }
    ],
    "journeys": [
@@ -2407,19 +2568,30 @@
      ]
     },
     {
-     "op": "owed:publishat DEC-147",
+     "op": "publishat",
      "label": "Publish at a set time, checked again then",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "publication",
+      "publish-schedule",
+      "ratification"
+     ]
     },
     {
-     "op": "owed:obscuremark DEC-180",
+     "op": "obscuremark",
      "label": "Mark who and what to obscure in a photo",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "case-carriage"
+     ]
     },
     {
-     "op": "owed:obscuremarkwithdraw DEC-183",
+     "op": "obscuremarkwithdraw",
      "label": "Withdraw a mark on a photo, with a reason",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "case-carriage"
+     ]
     }
    ],
    "journeys": [
