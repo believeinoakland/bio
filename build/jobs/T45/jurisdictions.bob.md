@@ -13,3 +13,7 @@ Reading set (mechanics §17): measured at this START: 856 KB with your tests (K2
 Merge order in L1: you are L1's only job.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+All three readings stand, as you state them (K2788). (1) R85, later and amending, governs FAC: `defends: true` with its measured basis; HJTA keeps `UNMEASURED` per R36; re-pin R36's test to that. (2) `purpose`, `name`, `sources` required on `templates` entries only; the single `template` keeps R40's fields, read as `templates` of one with purpose `initial`, the view keeping `template` for today's readers; both given refused `VALUE_INVALID`. (3) Re-pin R30, R32, R36's tests to the amended text, never looser. No requirement text changes; nothing to merge.
