@@ -3,7 +3,7 @@
    real modules. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { world, E, BOB, CAROL, MACHINE, ZONE, SHA } from "./fixture.mjs";
+import { world, fictionalView, E, BOB, CAROL, MACHINE, ZONE, SHA } from "./fixture.mjs";
 import { DUTIES_CHECKS, CAPTURES_MAX, STATED_BASIS, BASIS_KINDS } from "../../../src/duties/index.mjs";
 
 const AS_OF = "2026-03-02T12:00:00Z";
@@ -139,4 +139,204 @@ test("R23 the fifth basis kind, the other side's stated deadline, is a deadline 
   const other = w.declare({ time: { basis: "hunch" } });
   row(other, "UNKNOWN_BASIS_KIND");
   assert.doesNotMatch(other.detail, /deadline on the group/);
+});
+
+/* ---- R30 ---- */
+
+const GJ = "Test Grand Jury";
+const gjRule = (rule, amount, over = {}) => ({ rule, applies_to: "claim", units: "days", amount, count: "calendar", starts: "third_party",
+  starter: { role: GJ, body: GJ }, owed_by: "body", citation: `Test Penal Code §933(c) (${rule})`, status: "researched", basis: "TEST", ...over });
+
+/* A world whose standards answer a proposal by id the way R30 reads it (`standardProposalRead`): the read standards owes
+   (BOB's, J2), built over the real standards' own propose and adopt answers until it exists. */
+function responseWorld({ view = null, proposalRead = true } = {}) {
+  let w = null;
+  const seen = new Map();
+  const standards = () => new Proxy(w.standards, { get: (o, k) => {
+    if (k === "standardPropose") return (a) => { const r = o.standardPropose(a); if (r.ok) seen.set(r.proposal.id, r.proposal); return r; };
+    if (k === "standardAdopt") return (a) => { const r = o.standardAdopt(a); if (r.ok && seen.has(a.proposal)) seen.get(a.proposal).adoption = { standard: r.id, by: a.author }; return r; };
+    if (k === "standardProposalRead") return proposalRead
+      ? ({ proposal }) => (seen.has(proposal) ? { ok: true, proposal: seen.get(proposal) } : { ok: false, reason: "STANDARD_NO_SUCH_PROPOSAL", code: "STANDARD_NO_SUCH_PROPOSAL", proposal })
+      : undefined;
+    return typeof o[k] === "function" ? o[k].bind(o) : o[k];
+  } });
+  w = world({ ...(view ? { view } : {}), deps: { standards } });
+  const words = (name, text) => { const p = w.passage(name, { text }); return { ...p, cite: { captureSha: p.capSha, extent: { kind: "pdf-page", page: 0 } } }; };
+  const reply = words("reply", "We will publish the audit response by June 30, 2026.");
+  const vague = words("vague-reply", "We will publish it by spring.");
+  const report = words("report", "Recommendation R1: the Town Clerk shall respond within the period the law sets.");
+  const commitment = w.sw.declare({ cite: "Clerk's letter of 3 March 2026", kind: "commitment", issuer: "Town Clerk", text: [reply.contentId] });
+  assert.equal(commitment.ok, true, JSON.stringify(commitment).slice(0, 300));
+  const gj = w.sw.declare({ cite: "Grand Jury Report 2026-01", kind: "court", issuer: GJ, text: [report.contentId], period: { from: "2026-01-15", to: null } });
+  assert.equal(gj.ok, true, JSON.stringify(gj).slice(0, 300));
+  const propose = (over = {}) => w.duties.proposeFromResponse({ kind: "promise", arisingIn: reply.capSha, quote: reply.cite, obligor: E.clerk,
+    performance: "publish the audit response", standard: commitment.id, by: MACHINE, ...over });
+  const required = (over = {}) => w.duties.proposeFromResponse({ kind: "required_response", arisingIn: report.capSha, quote: report.cite,
+    obligor: E.council, performance: "respond to Recommendation R1", standard: gj.id, by: MACHINE, ...over });
+  return { w, reply, vague, report, commitment: commitment.id, gj: gj.id, propose, required };
+}
+
+test("R30 refusals, in order, each writing nothing, with the control landing", () => {
+  const { w, reply, vague, report, propose } = responseWorld();
+  const before = written(w);
+  row(propose({ by: "" }), "DUTY_MEMBER_ACT_ONLY");
+  row(propose({ kind: "rumour" }), "RESPONSE_KIND_UNKNOWN");
+  row(propose({ kind: undefined }), "RESPONSE_KIND_UNKNOWN");
+  row(propose({ arisingIn: SHA("never captured") }), "ARISING_IN_NOT_HELD");
+  row(propose({ arisingIn: "not a sha" }), "ARISING_IN_NOT_HELD");
+  /* content's extent refusals, then the quote's capture */
+  assert.equal(propose({ quote: undefined }).reason, "NO_SHA");
+  assert.equal(propose({ quote: { captureSha: reply.capSha } }).reason, "NO_EXTENT");
+  const out = propose({ quote: { captureSha: reply.capSha, extent: { kind: "pdf-page", page: 9 } } });
+  assert.deepEqual([out.reason, out.extent_refusal.code], ["EXTENT_NOT_IN_CAPTURE", "CONTENT_EXTENT_OUT_OF_RANGE"]);
+  row(propose({ quote: report.cite }), "RESPONSE_EXTENT_NOT_IN");
+  /* a promise's words state one whole date or are kept as written */
+  const unread = propose({ arisingIn: vague.capSha, quote: vague.cite });
+  row(unread, "PROMISE_DATE_UNREAD");
+  assert.equal(unread.words, "We will publish it by spring.", "kept as written, never completed");
+  assert.ok(unread.detail.includes("by spring"));
+  const blank = propose({ quote: { captureSha: reply.capSha, extent: { kind: "pdf-page", page: 1 } } });
+  row(blank, "PROMISE_DATE_UNREAD");
+  assert.equal(blank.words, null);
+  /* the source: a held commitment, of that kind */
+  assert.equal(propose({ standard: undefined }).reason, "NO_SUCH_STANDARD");
+  assert.equal(propose({ standard: "STD-2026-0099-none" }).reason, "NO_SUCH_STANDARD");
+  row(propose({ standard: w.standard() }), "UNKNOWN_SOURCE_KIND");
+  /* R1's and R29's refusals apply */
+  assert.equal(propose({ obligor: "ENT-2026-0099" }).reason, "NO_SUCH_ENTITY");
+  row(propose({ obligor: E.private }), "NOT_ACTING_FOR_PUBLIC");
+  row(propose({ performance: "" }), "NO_PERFORMANCE");
+  assert.equal(written(w), before, "nothing written");
+  const ok = propose();
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
+  assert.deepEqual([ok.tracked, ok.label.machine_work], [false, true], "a proposal (R2): stored apart, labelled, never tracked");
+  assert.equal(w.duties.recordTransitions({ asOf: AS_OF }).duties_read, 0);
+});
+
+test("R30 a promise: commitment basis, its date the quote's whole date, arising in the reply, the quote held as cited; tracked once adopted", () => {
+  const { w, reply, commitment, propose } = responseWorld();
+  const p = propose();
+  const a = w.duties.adopt({ proposalId: p.proposal_id, clause: "the clerk's reply: by June 30, 2026", by: BOB });
+  assert.equal(a.ok, true, JSON.stringify(a));
+  const d = w.duties.readDuty({ dutyId: a.duty_id, viewer: BOB }).duty;
+  assert.deepEqual([d.modality, d.obligor, d.performance, d.source, d.trigger, d.time.basis, d.arising_in],
+    ["duty", E.clerk, { act: "publish the audit response" }, { kind: "standard", standard: commitment }, { kind: "date", date: "2026-06-30" }, "commitment", reply.capSha]);
+  assert.equal(d.response.kind, "promise");
+  assert.deepEqual([d.response.quote.capture_sha, d.response.quote.extent], [reply.capSha, reply.cite.extent]);
+  assert.equal(w.content.passageText(d.response.quote.content_id), "We will publish the audit response by June 30, 2026.", "the quote, never paraphrased");
+  assert.equal(d.time.citation, d.response.quote.content_id);
+  const o = w.duties.occurrencesOf({ dutyId: a.duty_id, asOf: "2026-07-02T12:00:00Z", viewer: BOB }).occurrences[0];
+  assert.deepEqual([o.due.date, o.due.basis_kind, o.due.law_set, o.state], [day("2026-06-30"), "commitment", false, "overdue"]);
+  /* R31 answers it with its kind */
+  const r = w.duties.dutiesArisingIn({ captures: [reply.capSha], asOf: AS_OF, viewer: BOB });
+  assert.deepEqual(r.duties.map((x) => x.response_kind), ["promise"]);
+  /* a member's own call is a proposal too */
+  assert.deepEqual(propose({ by: CAROL }).label.state, "member_proposed");
+});
+
+test("R30 a promise on a standards proposal: adoption refused DUTY_SOURCE_NOT_HELD until that proposal is adopted, then naming the adopted standard", () => {
+  const { w, reply, propose } = responseWorld();
+  const sp = w.duties.standards.standardPropose({ cite: "Clerk's spoken promise, confirmed in writing", kind: "commitment", issuer: "Town Clerk", text: [reply.contentId],
+    why: "the clerk's reply states it", proposer: MACHINE, viewer: MACHINE });
+  assert.equal(sp.ok, true, JSON.stringify(sp).slice(0, 300));
+  const p = propose({ standard: undefined, standardProposal: sp.proposal.id });
+  assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
+  const before = written(w);
+  const refused = w.duties.adopt({ proposalId: p.proposal_id, clause: "the reply", by: BOB });
+  row(refused, "DUTY_SOURCE_NOT_HELD");
+  assert.equal(refused.standard_proposal, sp.proposal.id);
+  assert.equal(written(w), before, "nothing written");
+  /* a duty declared on the pending proposal is refused alike: only a proposal may rest on it */
+  row(w.declare({ source: { kind: "standard", standard_proposal: sp.proposal.id }, time: { basis: "commitment" } }), "DUTY_SOURCE_NOT_HELD");
+  /* an unknown standards proposal is standards' own answer */
+  assert.equal(propose({ standard: undefined, standardProposal: "STDP-2026-0099" }).reason, "STANDARD_NO_SUCH_PROPOSAL");
+  /* the member adopts the commitment as a standard; the duty then adopts, naming it */
+  const std = w.duties.standards.standardAdopt({ proposal: sp.proposal.id, reason: "the clerk's written reply confirms it", period: { from: "2026-03-03", to: null },
+    author: BOB, viewer: BOB });
+  assert.equal(std.ok, true, JSON.stringify(std).slice(0, 300));
+  const a = w.duties.adopt({ proposalId: p.proposal_id, clause: "the reply", by: BOB });
+  assert.equal(a.ok, true, JSON.stringify(a));
+  const d = w.duties.readDuty({ dutyId: a.duty_id, viewer: BOB }).duty;
+  assert.deepEqual(d.source, { kind: "standard", standard: std.id, adopted_from: sp.proposal.id });
+  /* proposing on an adopted proposal names its standard at once */
+  const again = propose({ standard: undefined, standardProposal: sp.proposal.id });
+  const ad = w.duties.adopt({ proposalId: again.proposal_id, clause: "c", by: BOB });
+  assert.equal(w.duties.readDuty({ dutyId: ad.duty_id, viewer: BOB }).duty.source.standard, std.id);
+  /* a proposal of another kind is refused */
+  const pol = w.duties.standards.standardPropose({ cite: "A policy", kind: "policy", text: [reply.contentId], why: "w", proposer: MACHINE, viewer: MACHINE });
+  row(propose({ standard: undefined, standardProposal: pol.proposal.id }), "UNKNOWN_SOURCE_KIND");
+});
+
+test("R30 a promise on a standards proposal fails closed where standards cannot answer whether it was adopted", () => {
+  const { w, reply, propose } = responseWorld({ proposalRead: false });
+  const sp = w.duties.standards.standardPropose({ cite: "c", kind: "commitment", text: [reply.contentId], why: "w", proposer: MACHINE, viewer: MACHINE });
+  row(propose({ standard: undefined, standardProposal: sp.proposal.id }), "DUTY_SOURCE_NOT_HELD");
+});
+
+test("R30 a required response: a court source, a rule basis by the governing view's rule for a body answering the report, else undetermined, never defaulted", () => {
+  const one = fictionalView({ deadlines: [...fictionalView().deadlines, gjRule("gj_body_comment", 90)] });
+  const { w, report, gj, required } = responseWorld({ view: one });
+  const before = written(w);
+  row(required({ standard: w.standard() }), "UNKNOWN_SOURCE_KIND");
+  assert.equal(required({ standard: undefined }).reason, "NO_SUCH_STANDARD");
+  const undated = w.sw.declare({ cite: "Undated report", kind: "court", issuer: GJ, text: [report.contentId], period: { from: null, to: null } });
+  assert.equal(undated.ok, true, JSON.stringify(undated).slice(0, 300));
+  row(required({ standard: undated.id }), "UNKNOWN_TRIGGER");
+  row(required({ rule: "no_such_rule" }), "BAD_TIME");
+  assert.equal(written(w), before);
+  const p = required();
+  assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
+  const a = w.duties.adopt({ proposalId: p.proposal_id, clause: "the report's Recommendation R1", by: BOB });
+  const d = w.duties.readDuty({ dutyId: a.duty_id, viewer: BOB }).duty;
+  assert.deepEqual([d.source, d.trigger, d.time.basis, d.response.kind, d.arising_in],
+    [{ kind: "court", standard: gj }, { kind: "date", date: "2026-01-15" }, "rule", "required_response", report.capSha]);
+  const o = w.duties.occurrencesOf({ dutyId: a.duty_id, asOf: AS_OF, viewer: BOB }).occurrences[0];
+  assert.deepEqual([o.due.date.value, o.due.basis_kind, o.due.law_set, o.due.trace.citation], ["2026-04-15", "rule", true, "Test Penal Code §933(c) (gj_body_comment)"]);
+  /* two rules a body owes the report: none chosen, undetermined naming them, unless the call names one */
+  const two = fictionalView({ deadlines: [...one.deadlines, gjRule("gj_officer_comment", 60)] });
+  w.setView(two);
+  const u = w.duties.occurrencesOf({ dutyId: a.duty_id, asOf: AS_OF, viewer: BOB }).occurrences[0];
+  assert.equal(u.state, "undetermined");
+  assert.match(u.why, /hold 2 deadlines a body owes in response to Test Grand Jury \(gj_body_comment, gj_officer_comment\)/);
+  const named = w.duties.adopt({ proposalId: required({ rule: "gj_officer_comment" }).proposal_id, clause: "c", by: BOB });
+  assert.equal(w.duties.occurrencesOf({ dutyId: named.duty_id, asOf: AS_OF, viewer: BOB }).occurrences[0].due.date.value, "2026-03-16");
+  /* none: undetermined, never a default */
+  w.setView(fictionalView());
+  const none = w.duties.occurrencesOf({ dutyId: a.duty_id, asOf: AS_OF, viewer: BOB }).occurrences[0];
+  assert.deepEqual([none.state, none.due.undetermined], ["undetermined", true]);
+  assert.match(none.why, /hold no deadline a body owes in response to Test Grand Jury/);
+  /* a deadline the group owes, or one another issuer starts, is never the body's */
+  w.setView(fictionalView({ deadlines: [gjRule("ours", 5, { owed_by: "group" }), gjRule("theirs", 5, { starter: { role: "Auditor", body: "Auditor" } })] }));
+  assert.equal(w.duties.occurrencesOf({ dutyId: a.duty_id, asOf: AS_OF, viewer: BOB }).occurrences[0].state, "undetermined");
+});
+
+test("R30 the route arm: dutyfromresponse, the stamp from the query", () => {
+  const { w, reply, commitment } = responseWorld();
+  const body = { kind: "promise", arisingIn: reply.capSha, quote: reply.cite, obligor: E.clerk, performance: "publish it", standard: commitment, by: "member:mallory" };
+  const r = w.ops("by=member:bob&viewer=member:bob", body).dutyfromresponse();
+  assert.deepEqual([r.ok, r.label.by], [true, BOB]);
+});
+
+/* ---- R5 ---- */
+
+test("R5 the profile deadlines are local-facts.governingView's: a group's confirmed rule governs here; with none the view is combine's", () => {
+  const group = fictionalView({ deadlines: fictionalView().deadlines.map((d) => (d.rule === "records_response"
+    ? { ...d, amount: 5, profile: "group", basis: "group rule RULE-1, confirmed 2026-02-01" } : d)) });
+  let governing = group;
+  const localFacts = { governingView: () => governing };
+  const w = world({ deps: { view: null, localFacts } });
+  const a = w.declare();
+  const due = () => w.duties.occurrencesOf({ dutyId: a.duty_id, asOf: AS_OF, viewer: BOB }).occurrences[0].due;
+  assert.equal(due().date.value, "2026-02-09", "the group's 5 days (02-07 a Saturday, rolled)");
+  governing = fictionalView();
+  assert.equal(due().date.value, "2026-02-12", "the profile's 10 days");
+  /* proposeFromRule reads the same view */
+  governing = { ...group, deadlines: [] };
+  assert.equal(w.duties.proposeFromRule({ rule: "records_response", office: E.clerk, by: MACHINE }).reason, "BAD_TIME");
+  /* a view that throws or answers nothing settles nothing */
+  localFacts.governingView = () => { throw new Error("down"); };
+  assert.equal(w.duties.occurrencesOf({ dutyId: a.duty_id, asOf: AS_OF, viewer: BOB }).occurrences[0].state, "undetermined");
+  /* by default, duties reaches local-facts on its own host */
+  const real = world({ deps: { view: null } });
+  assert.equal(real.duties.localFacts.constructor.name, "LocalFacts");
 });
