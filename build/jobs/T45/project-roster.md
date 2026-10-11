@@ -1,3 +1,7 @@
 # project-roster (T45)
 
 **Status** · session_01JnZy4CSrJYv25f2UVq4NE2 · depth 2 · WORKING · handled B0
+
+## J1 · QUESTION
+
+Catalogue family for the new rows (K2480's precedent: BOB names new families). R21, R22 and R24's nine new codes need DEC-49 rows: PROJECT_SCOPE_UNKNOWN, PROJECT_SCOPE_NEEDS_HIDDEN, PROJECT_SCOPE_OWN_NOT_SOLE, PROJECT_SCOPE_UNCHANGED, PROJECT_SCOPE_OWN, PROJECT_SCOPE_KEEPS_HIDDEN, APPROVAL_RULE_INVALID, APPROVAL_KIND_UNKNOWN (and NO_REASON, NOT_THE_OWNER kept bare as R3–R5 answer them today). My best reading: a new family C-147 (the census's highest is C-146), rows C-147.1–.8 in that order, exported from this module's checks.mjs as PROJECT_SCOPE_CHECKS (answer-envelope finds it by suffix, no edit there); translations BOB's draft per draft-T45-lower §10, re-wordable by the UX stream. Other readings I am building on, no answer needed unless you differ: (a) R21/R24's history is read in R6's form, as `scopes` and `approvals` on projectParticipants (R1's readers); (b) R21's participant test asks membership R55 with the identity `member:<by>`, so a machine credential or founder not joined is refused PROJECT_ACT_NOT_A_PARTICIPANT rather than passed unasked; (c) R24's `tier` other than 1, 2 or 3 (absent, null, a string) reads undetermined and matches every {tier} entry; secondApprovalNeeded and projectScope answer the defaults for an unknown project. I carry on with C-147 meanwhile.
