@@ -3,9 +3,9 @@
    standing in for a Durable Object's storage, never publication's fixture, which is later in the order (seam map
    `build/extraction/publication-split-2.md` §5). Extraction's units are a stand-in answering exactly the shape of its
    `unitsOf` (its R36), which the test sets (`w.units`); the knocks `sources` mints its sources from are pulled through a
-   stand-in for capture's one keyed read (`w.knock`); what case-import registers with `accepted-work` is a stand-in each
-   test controls (`w.importer`). The case document is written with case-grammar's own line builders, as case-authoring
-   writes it. Every test drives `case-carriage` at its interface.
+   stand-in for the doorbell's one keyed read, `pulledKnocksOf` (its R18; `w.knock`); what case-import registers with
+   `accepted-work` is a stand-in each test controls (`w.importer`). The case document is written with case-grammar's
+   own line builders, as case-authoring writes it. Every test drives `case-carriage` at its interface.
    (T37; R9–R13) A photo is a capture whose bytes are only in the evidence store: record-core's `evidenceStore` (its R38)
    answers a stand-in keyed by digest (`w.evidence`), and the obscured copy is held in a stand-in bucket (`w.bucket`). The
    photos are PNGs built here (`makePng`) and read back by a decoder written here (`decodePng`), independent of
@@ -27,10 +27,11 @@ export const NOW = "2026-09-28T01:00:00Z";
 export function world() {
   const w = provenanceWorld({ now: NOW });
   const { host, record, membership, promotion, st } = w;
-  /* sources (layer 3) over a stand-in for capture's `pulledKnocksOf`; its clock is the world's, in milliseconds. */
+  /* sources (layer 3) over a stand-in for the doorbell's `pulledKnocksOf` (its R18; since T42-8, not capture's); its
+     clock is the world's, in milliseconds. */
   const knocks = [];
   const src = sourcesOf(host, { record, membership, now: () => Date.parse(w.clock.now),
-    capture: { pulledKnocksOf: (captureSha) => knocks.filter((k) => k.sha256 === captureSha) } });
+    doorbell: { pulledKnocksOf: (captureSha) => knocks.filter((k) => k.sha256 === captureSha) } });
   const acceptedWork = acceptedWorkOf(host, { record, promotion });
   const units = new Map(), unitCalls = [];
   const extraction = { unitsOf: (s) => { unitCalls.push(s); return units.has(s) ? { capture_sha: s, ...units.get(s) }
@@ -55,7 +56,7 @@ export function world() {
       st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                    VALUES (?, ?, ?, ?, ?, '["contribute"]', 't', 't')`, id, `Cover ${id}`, `h_${id}`, role, status);
     },
-    /** A knock pulled into the capture `captureSha` (capture R65), and its source minted as `sources` R1 mints it. */
+    /** A knock pulled into the capture `captureSha` (doorbell R13), and its source minted as `sources` R1 mints it. */
     knock(captureSha, { knockId = `KNOCK-${knocks.length + 1}`, pseudonym = null, received = NOW, viewer = V("olive") } = {}) {
       knocks.push({ knock_id: knockId, sha256: captureSha, bytes: 10, received, pseudonym,
                     knocker_digest: pseudonym ? `d-${pseudonym}` : null });
