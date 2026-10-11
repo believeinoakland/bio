@@ -23,3 +23,7 @@
 - ownership: 1 file changed by reevaluation between tranche/T42 and HEAD; 0 failures.
 
 Size (session_01LRWEykRE4LfGyRqfs7QV5h): test runs 3, module lines 8
+
+## J1 · COMPLETE
+
+T42-21a applied: fixture.mjs:183 hands sources doorbell: {pulledKnocksOf}; suite 141/141 green; no other change needed. Users green except the inherited reds (publication fixture.mjs:146, 5 tests, T42-23c; answer-envelope families.test.mjs:425, rule 4 (6)). Four checks 0 failures. Record on job/T42/reevaluation.
