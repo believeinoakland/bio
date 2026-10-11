@@ -449,3 +449,21 @@ test("R11 onRows is required", () => {
   assert.throws(() => decodeBaselineJpegRows(jpeg("grey-baseline")), TypeError);
   assert.throws(() => decodeBaselineJpegRows(jpeg("grey-baseline"), { onRows: 1 }), TypeError);
 });
+
+test("R11 the strip's shape (K2737): rows a Uint8Array of count rows of width x comps bytes, interleaved as R1's rotate-0 samples, y0 the row's index in the unrotated frame", () => {
+  for (const [name, d] of DECODABLE) {
+    const whole = decodeBaselineJpeg(d, { rotate: 0 });
+    const rowBytes = whole.width * whole.comps;
+    decodeBaselineJpegRows(d, { onRows(rows, y0, count) {
+      assert.equal(Object.getPrototypeOf(rows), Uint8Array.prototype, `${name}: a Uint8Array`);
+      assert.equal(rows.length, count * rowBytes, `${name}: count rows of width x comps bytes`);
+      assert.ok(Buffer.from(whole.samples.subarray(y0 * rowBytes, (y0 + count) * rowBytes)).equals(rows), `${name}: rows ${y0}..${y0 + count - 1} of R1's rotate-0 samples`);
+    } });
+  }
+  /* A rotated fixture's strips are its unrotated frame's: y0 counts the stored rows. */
+  const v = V.find((x) => x.name === "rgb-420-rotate90");
+  const h = readJpegHeader(jpeg(v.name)).frame;
+  let last = 0;
+  decodeBaselineJpegRows(jpeg(v.name), { onRows(rows, y0, count) { assert.equal(rows.length, count * h.width * 3); last = y0 + count; } });
+  assert.equal(last, h.height, "every stored row, in the stored frame's height");
+});
