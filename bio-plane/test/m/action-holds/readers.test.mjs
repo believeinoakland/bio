@@ -2,8 +2,7 @@
    litigation-hold reader registered once at start with the real `doorbell` (its R3; DEC-108, K1023), proved through
    doorbell's own `mayClearDiscarded`; the reader of holds over a project registered with `ratification` (its R45), proved
    against the real ratification's `op=publishat` and scheduled publisher (M-T45-7: S1 §D 11, a hold stops a scheduled
-   publication); and the copy window (reconciliation R19): while `actions` holds both registrations, this module
-   registers nothing and `actions`' stand. */
+   publication); and the copy window's end (reconciliation R19; B5): these are the only registrations. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, actionMd, CP, received } from "./fixture.mjs";
@@ -18,8 +17,8 @@ const D = "CONF-2026-0001-determination";
 
 /* A world whose action A is in a project and B in none; each holds two received entries, A's both marked legal
    pressure and B's first. */
-function ground(opts = {}) {
-  const w = world(opts);
+function ground() {
+  const w = world();
   const P = w.project("alice");
   w.action(A, [`project: ${P}`, ...received(2)]);
   w.action(B, received(2));
@@ -113,31 +112,28 @@ test("R4 registered once per host: a second actionHoldsOf registers nothing, and
   assert.deepEqual([empty.may, empty.basis], [false, "no reader of litigation holds is registered, so a hold cannot be ruled out"]);
   /* a reader held by another module is a defect of the wiring: thrown at start */
   const held = (module) => ({ registerReader: () => ({ ok: false, reason: "LISTENER_DECLARED", module }) });
-  for (const module of ["actions", "action-holds"])
+  for (const module of ["action-holds"])
     assert.ok(actionHoldsOf({ storage: w.st }, { record: w.record, membership: w.membership, doorbell: held(module), ratification: null }),
       `a reader held by ${module} stands`);
   assert.throws(() => actionHoldsOf({ storage: w.st }, { record: w.record, membership: w.membership, doorbell: held("monitoring"),
     ratification: null }), /doorbell refused the litigation-hold reader: LISTENER_DECLARED \(held by monitoring\)/);
 });
 
-test("R4 R10 the copy window (reconciliation R19): while actions holds both registrations this module registers nothing and actions' stand, answering from the one table; nothing is thrown", () => {
-  const { w, doorbell } = ground({ registrations: "actions" });
-  assert.equal(w.holdReaders.length, 0, "no ratification reader of this module's");
-  assert.equal(w.reg.holdReaders.length, 1, "actions' reader stands with ratification");
-  assert.match(doorbell.mayClearDiscarded().basis, /^actions reports/, "actions' reader stands with doorbell");
-  /* a hold placed here is read by actions' reader too: the two modules share the hold tables in the window */
-  hold(w, A, 0, "in_place");
-  assert.deepEqual([doorbell.mayClearDiscarded().may, w.a.holdInPlace(), w.h.holdInPlace()], [false, true, true]);
-  assert.deepEqual(w.reg.holdReaders[0].holdsOn({ project: w.h.holdsOf({ target: A, ord: 0, viewer: M }).holds[0].projects[0] }).held, true);
-  hold(w, A, 0, "released");
-  assert.equal(doorbell.mayClearDiscarded().may, true);
-  /* the purge declaration: actions keeps the copied tables', this module declares its own */
+test("R4 R10 R13 the copy window has ended (reconciliation R19; B5): actions registers neither reader and declares none of the hold tables; this module holds both registrations and all five declarations, and one held by actions is now a fault of the wiring", () => {
+  const { w, doorbell } = ground();
+  assert.match(doorbell.mayClearDiscarded().basis, /^action-holds reports/, "the doorbell reader is this module's");
+  assert.equal(w.holdReaders.length, 1, "the ratification reader is this module's");
+  assert.equal((w.reg.holdReaders ?? []).length, 0, "actions registered none");
+  assert.equal(typeof w.a.holdInPlace, "undefined", "actions holds no hold reader any more");
   const declared = Object.fromEntries(w.record.declaredTables().map((d) => [d.name, d.module]));
   assert.deepEqual(["action_pressure", "action_holds", "action_hold_projects", "hold_notices", "pressure_records"].map((t) => declared[t]),
-    ["actions", "actions", "actions", "action-holds", "action-holds"]);
-  /* after the window (actions registering none, as T45-27 leaves it), this module declares all five */
-  const after = Object.fromEntries(world().record.declaredTables().map((d) => [d.name, d.module]));
-  assert.deepEqual(["hold_notices", "pressure_records"].map((t) => after[t]), ["action-holds", "action-holds"]);
+    Array(5).fill("action-holds"));
+  hold(w, A, 0, "in_place");
+  assert.deepEqual([doorbell.mayClearDiscarded().may, w.holdReaders[0].holdsOn({ project: w.h.holdsOf({ target: A, ord: 0, viewer: M }).holds[0].projects[0] }).held],
+    [false, true]);
+  const held = (module) => ({ registerReader: () => ({ ok: false, reason: "LISTENER_DECLARED", module }) });
+  assert.throws(() => actionHoldsOf({ storage: w.st }, { record: w.record, membership: w.membership, doorbell: held("actions"),
+    ratification: null }), /held by actions/, "a reader held by actions is no longer the copy window");
 });
 
 test("R4 R9 the whole-store purge answers exactly as the litigation-hold reader, in every hold state and when the holds cannot be read", () => {
