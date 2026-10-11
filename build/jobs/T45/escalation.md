@@ -1,6 +1,6 @@
 # escalation (T45)
 
-**Status** · session_01HztAVfrFX3rGVayQh2NyNt · depth 2 · WORKING · handled B2
+**Status** · session_01HztAVfrFX3rGVayQh2NyNt · depth 2 · COMPLETE · handled B2
 
 ## J1 · QUESTION
 
