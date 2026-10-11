@@ -75,6 +75,6 @@ T42-23 complete on job/T42/case-authoring (tranche/T42 merged after K2673). Agai
 - plane 166/166
 - answer-envelope 28/29 (`families.test.mjs:425`, accepted red 6)
 
-Checks: format, architecture and coverage report 0 failures. Ownership is as before: `build/modules.json`, the edges BOB directed (K2670).
+Checks: format, architecture and coverage report 0 failures. Ownership: 3 files changed, 0 failures (the modules.json edges are now on the tranche).
 
-Size (session_017gKhVp4wij8NKw7oL1jXhs): test runs 37, module lines 3706
+Size (session_017gKhVp4wij8NKw7oL1jXhs): test runs 37, module lines 3707
