@@ -39,3 +39,7 @@ Size (session_01Ux9Ca6B1viDvKwTEe8rhGB): test runs 4, module lines 1434
 ## J1 · REPORT
 
 Two findings outside money (record, Completion). (1) record-grammar: C-33.40's where (acts.mjs) names inquiry's, progressions' and entities' NO_BASIS sites but not money's refusal (setFundType) nor, after T42-11a, lines'; R29 says it names every site. A row change, with its stamp. (2) case-disclosures: test/m/case-disclosures/carries.test.mjs:139 (R7 'no new table', 159 !== 157) is red identically on tranche/T42 @ f997b738cd without money's change, and is not in rule 4.
+
+## J2 · COMPLETE
+
+T42-11b complete at the branch head: R26, money's refusal helper answers NO_BASIS (setFundType, direct and op=moneyfundtype) with record-grammar's C-33.40 check and translation; refusals.test.mjs covers each site with a negative control. money 72/72. Users' suites 1888 pass, 2 fail: carries.test.mjs:139 (REPORT J1) and migrate-released ai_ceilings (rule 4 (7)), both red on tranche/T42 too. Four checks 0 failures. modules.json edges added: none.
