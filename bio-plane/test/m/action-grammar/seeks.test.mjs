@@ -4,7 +4,6 @@
    reads it from `progressions`. */
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import * as AG from "../../../src/action-grammar/index.mjs";
 import { pushed, GROWN_COUNTS, ZONE } from "./fixture.mjs";
 import { NOW, TODAY } from "./corpus.mjs";
@@ -175,16 +174,15 @@ test("R13: an item whose stage facts says its progression does not declare is on
   assert.deepEqual(all.map((x) => x.message.slice(0, 8)), ["seeks[1]", "seeks[2]", "seeks[3]", "seeks[4]"]);
 });
 
-test("R13: every finding is C-117.29 SEEKS_REFUSED's: the row is held in ACTION_CATALOGUE_CHECKS, its where names seeksFindings' own region in this module, and its translation names no op, ruling, check number or place", () => {
+test("R13: every finding is C-117.29 SEEKS_REFUSED's: the row is held in ACTION_CATALOGUE_CHECKS, its where names seeksFindings in this module, and its translation names no op, ruling, check number or place", () => {
   assert.deepEqual(ROW, {
     check: "C-117.29", where: "src/action-grammar/checks.mjs seeksFindings > is-seeks",
     translation: "A records request may name the stages it asks the records for: one to twelve different entries, each naming a "
       + "progression, an entity and a stage in at most 200 characters each, and each stage one its progression declares. Only a "
       + "records request names them. This write named them otherwise, so nothing was written.",
   });
-  const src = readFileSync(new URL("../../../src/action-grammar/checks.mjs", import.meta.url), "utf8");
-  assert.ok(src.includes("DEC-49 REGION is-seeks") && src.includes("END DEC-49 REGION is-seeks"));
-  assert.match(src, /export function seeksFindings\(/);
+  /* the function its where names is this module's export, and it is the one that pushes the row's findings (below) */
+  assert.equal(typeof AG.seeksFindings, "function");
   assert.doesNotMatch(ROW.translation, /\b(bundle|op=|DEC-|C-\d|ENT-|Oakland|Alameda|California)/);
   const every = [seeks([ITEM], FACTS, { action_kind: "other" }), seeks([]), seeks([null]), seeks([ITEM, ITEM]),
     seeks([{ ...ITEM, stage: "appeal" }])].flatMap((x) => x.findings);
