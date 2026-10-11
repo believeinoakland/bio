@@ -1470,12 +1470,18 @@ export class Credentials {
   /* R62 `accountUsesOf` (T42; N831): an in-plane read, reached by no route and taking no viewer, of one account's uses
      exactly as R60 answers them to its owners, without `keptAway`: the read an in-plane caller uses for an account it
      does not own (ai-use R3, R6, R9). An `owner` not spelled as R55's answers `held: false, uses: null`; a store that
-     cannot be read answers `held: null, uses: null, unreadable: true`, never a default (no switch reads as on). Never a
-     key or a digest; writes nothing; never throws. */
+     cannot be read answers `held: null, uses: null, unreadable: true`, never a default (no switch reads as on); a revoked
+     member's `member:<id>` answers `held: false, uses: null` (K2620). Never a key or a digest; writes nothing; never throws. */
   accountUsesOf({ owner = null } = {}) {
     const said = typeof owner === "string" ? owner : null;
     try {
       if (!Credentials.#usesOwnerSpelled(owner)) return { ok: true, owner: said, held: false, uses: null };
+      /* (K2620) a revoked member's account, which R60 answers no viewer, is held by no one; membership asked directly,
+         so a roster that cannot be read answers `unreadable` */
+      if (owner.startsWith("member:") && this.membership.memberFacts(owner.slice(7))?.status === "revoked") {
+        const none = { held: false, uses: null };
+        return { ok: true, owner, ...none, accounts: { reference: { ...none }, signin: { ...none } } };
+      }
       return this.#usesAnswer(owner);
     } catch {
       return { ok: true, owner: said, held: null, uses: null, unreadable: true };

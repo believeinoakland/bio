@@ -24,3 +24,13 @@ Size (session_01SmVin6JuSDfPb4PyoweFzP): test runs 4, module lines 3857
 ## J1 · COMPLETE
 
 T42-4 done: R62 accountUsesOf built (shares R60's answer body; unrouted), new t42.test.mjs (6 tests, R62 with negative controls). credentials 174/174; format, architecture, coverage, ownership 0 failures. Two findings for you in the record: a revoked member's reference survives R16, so accountUsesOf answers it held: true (a requirement question); group's held:false carries uses (as R60), for ai-use T42-17 to read held. Plane bundle staled.
+
+## Change B2 (K2620)
+
+**Applied.** Merged `tranche/T42` (R62 clarified @ fac7e2b65f). `accountUsesOf` answers a revoked member's `member:<id>` `{ok: true, owner, held: false, uses: null, accounts: {reference: {held: false, uses: null}, signin: {held: false, uses: null}}}` (the `accounts` shape kept, holding nothing). It asks `membership.memberFacts` (R68, already in my Uses) directly rather than through the never-throwing `#memberFacts`, so a roster that cannot be read answers `unreadable: true` (fail closed) rather than reading as "not revoked". R16's reach unchanged; R60 unchanged.
+
+**Tests.** `t42.test.mjs` gains one test (R62, K2620): fay held before revocation (negative control) and equal to R60's answer; after `memberSet` revoked, her reference row is kept, R60 refuses her, R62 answers `held: false, uses: null` with no key, writing nothing; live ann still held with her uses (negative control); a throwing roster gives `unreadable` for a member while `group` still reads.
+
+**Ran.** `node --test test/m/credentials/`: tests 175, pass 175, fail 0. `architecture`: 0 failures. `coverage`: 61 of 61; 0 failures. `ownership … tranche/T42`: 0 failures. `format`: 1 failure, not mine: `build/modules.json: promotion: tests entry bio-plane/test/fixtures/row-census-1.69.0.jsonl names no file` (K2620's fixture swap, arriving with promotion's merge); the same failure with my changes stashed.
+
+Size (session_01SmVin6JuSDfPb4PyoweFzP): test runs 5, module lines 3863

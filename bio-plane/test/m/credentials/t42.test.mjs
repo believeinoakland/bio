@@ -160,3 +160,29 @@ test("R62 no route reaches accountUsesOf: the ops map serves no accountusesof, w
   assert.equal(ops.accountusesof, undefined);
   assert.equal(Object.hasOwn(ops, "accountUsesOf"), false);
 });
+
+test("R62 (K2620) a revoked member's member:<id> is answered held: false, uses: null, as R60 refuses every viewer for it, though the reference survives R16; a live member's account still answers held", async () => {
+  const w = await usesWorld();
+  await w.enrol("fay");
+  assert.equal((await w.c.accountReferenceSet({ member: "fay", kind: "apikey", secret: "sk-ant-T42-fay-SENTINEL", by: "fay" })).ok, true);
+  /* negative control: before her revocation fay's account answers held, as R60 answers her */
+  assert.equal(w.c.accountUsesOf({ owner: "member:fay" }).held, true);
+  assert.deepEqual(w.c.accountUsesOf({ owner: "member:fay" }), noKeptAway(w.c.accountUses({ owner: "member:fay", viewer: "fay" })));
+  assert.equal(w.m.memberSet({ memberId: "fay", status: "revoked", by: "admin" }).ok, true);
+  /* the reference survives R16 (its reach unchanged), and R60 now refuses fay herself */
+  assert.ok(w.row(`SELECT member_id FROM account_references WHERE member_id='fay'`), "the reference is kept");
+  assert.equal(w.c.accountUses({ owner: "member:fay", viewer: "fay" }).ok, false);
+  const before = w.snapshot();
+  const r = w.c.accountUsesOf({ owner: "member:fay" });
+  assert.deepEqual(r, { ok: true, owner: "member:fay", held: false, uses: null,
+    accounts: { reference: { held: false, uses: null }, signin: { held: false, uses: null } } });
+  assert.ok(!JSON.stringify(r).includes("sk-ant-T42-fay-SENTINEL"));
+  assert.equal(w.snapshot(), before, "it writes nothing");
+  /* negative control: a live member's account still answers held */
+  assert.equal(w.c.accountUsesOf({ owner: "member:ann" }).held, true);
+  assert.deepEqual(w.c.accountUsesOf({ owner: "member:ann" }).uses, DEFAULTS);
+  /* a roster that cannot be read is no answer of "not revoked": it fails closed */
+  w.m.memberFacts = () => { throw new Error("roster unreadable"); };
+  assert.deepEqual(w.c.accountUsesOf({ owner: "member:ann" }), { ok: true, owner: "member:ann", held: null, uses: null, unreadable: true });
+  assert.equal(w.c.accountUsesOf({ owner: "group" }).held, true, "the group's account asks no roster");
+});
