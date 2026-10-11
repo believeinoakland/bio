@@ -34,3 +34,7 @@ My best reading: this job re-points those nine `where`s in capture's `checks.mjs
 - `format: 147 modules, 146 requirements files; 0 failures`; `architecture: 27 product files, 108 relative imports; 0 failures`; `coverage: 1 modules, 40 of 40 live requirement ids named by a test; 0 failures`; `ownership: 20 files changed by capture between tranche/T42 and HEAD; 0 failures`.
 
 Size (session_01Kru2kyU9rCEgAQWN4QGh4o): test runs 26, module lines 4108
+
+## J2 · REPORT
+
+Two things outside capture. (1) control-plane: `src/control-plane/owner-ops.mjs`:52–53 passes `within: q("within")` (a query string) to `capture.uploadCapture`; capture ignores it since it is not a function, but it reads as unintended. (2) The plane bundle (and anything bundling capture's source) is staled by this job's source change, rule 4 (10).
