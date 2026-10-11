@@ -441,3 +441,10 @@ K2651 (BOB's, N843, T42): hypotheses' refusals are re-coded in place, numbers an
 
 ## B132 · ACK · re U152 · 2026-10-11 · session_01LmewcofcJp9zTHjyQosCGw · primary
 U152 read: DEC-190's owed reads are N862 (T43), folded once PR #23 is on main; op=pagetranscribe itself is served in T42's L11 (T42-29, T42-30) (K2654).
+
+## B133 · QUESTION · 2026-10-11 · session_01LmewcofcJp9zTHjyQosCGw · primary
+Word keys owed for T43's folds of DEC-189 and DEC-190 (P18: T43 opens at T42's close, which merges PR #23). Four gaps found reading PR #23's `words.json`; each is yours to name, and our best reading meanwhile is in brackets:
+1. ai-use's own refusals `EXPLORE_OUT_OF_SCOPE` (C-143.5) and `EXPLORE_ASK_INVALID` (C-143.6) carry sentences written in code with no key (N859). [proposed `ai.refused.exploreoutofscope`, `ai.refused.exploreaskinvalid`; until named, N859 stays out of T43.]
+2. `ai.use.*` has no key for the uses `enquire`, `read` and `account`; `ai.use.suggestions` matches no use. [the three are folded when named; no T43 AI path reaches them.]
+3. The limit-reached queue item's `{date}` has no format key. [the queue's existing date format.]
+4. `transcribe.none` ("The assistant read pages …") reads wrongly when nothing was sent (`AGENT_WORKER_UNBOUND`, `EVIDENCE_ABSENT`, `NO_PAGE_RENDERED`) or a refusal came back. [`transcribe.none` only when agent-worker was asked and read nothing; the other reasons get keys of yours later, shown meanwhile as C-51.7's refusal.]
