@@ -108,10 +108,9 @@ export const PROMOTION_CHECKS = {
   BUNDLE_MD_UNREADABLE: {
     check: "C-2.1",
     where: "src/promotion/index.mjs #promote > is-promote-readable",
-    translation: "The document in this change cannot be read: it is not held as text, or its front matter block does "
-      + "not follow the record's rules for one (it is missing, or a line is out of place or a field is given twice). "
-      + "Every rule about a change reads the document first, so nothing was written. Correct the front matter, and "
-      + "send it again.",
+    translation: "The document in this change cannot be read: it is not held as text, or it does not begin with a "
+      + "readable front matter block. Every rule about a change reads the document first, so nothing was written. Send "
+      + "the document as text with its front matter, and send it again.",
   },
 };
 
