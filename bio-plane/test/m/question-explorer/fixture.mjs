@@ -231,7 +231,11 @@ export function world({ gateOpen = true, testSet = TEST_SET, migrate = true } = 
                contentContextFor: () => ({ chain: [{ step: "layer", tier: 1, container: "pdf", cap: null, measured_by: null, calibration: null }] }),
                mint: () => ({ ok: false, code: "NOT_IN_THESE_TESTS" }) },
     extraction: { unitsOf: (sha) => ({ units: w.units[sha] || [], state: "indexed" }) },
-    strength: {}, citation: {}, basisVersions: { onCandidates: () => ({ ok: true }) }, now: () => Date.parse(clock.now) });
+    strength: {}, citation: {}, basisVersions: { onCandidates: () => ({ ok: true }) },
+    /* inquiry's R62 slot run-productions registers its machine-passage read with (K2655): a stand-in, so this store
+       needs none of inquiry's tables (none is read here). */
+    inquiry: { onMachinePassage: (module) => ({ ok: true, module }) },
+    now: () => Date.parse(clock.now) });
   runProductions.migrate();
   const tablesBefore = [...st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'explore_%' ORDER BY name`)]
     .map((r) => r.name);

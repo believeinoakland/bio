@@ -12,4 +12,10 @@
 
 **Deferred:** none. **Found in another module:** none.
 
-**Users' suites (P11), from `bio-plane/`:** scheduler 129/129; notice-producers 90/90; op-declarations 128/128; control-plane 216/216; plane 166/166; answer-envelope 28/29, its one red `test/m/answer-envelope/catalogue-end.test.mjs`:17 (`PROPOSAL_NO_RUN`, `NO_SUCH_PROPOSAL` pins) is the plan's inherited red rule 4 (6), red on this branch without my change too; system `migrate-released.test.mjs` MIGRATE_RESULT.
+**Users' suites (P11), from `bio-plane/`:** scheduler 129/129; notice-producers 90/90; op-declarations 128/128; control-plane 216/216; plane 166/166; answer-envelope 28/29, its one red `test/m/answer-envelope/catalogue-end.test.mjs`:17 (`PROPOSAL_NO_RUN`, `NO_SUCH_PROPOSAL` pins) is the plan's inherited red rule 4 (6), red on this branch without my change too; system `migrate-released.test.mjs` 516 PASS, 1 FAIL: `born on 0.80.0: and no table a fresh store lacks` got `["ai_ceilings"]`, the plan's inherited red rule 4 (7) until T42-17 (N848); the `explore_*` tables are among those a migrated store gains, as a fresh one has them.
+
+**CHANGE B2 (K2655) applied.** `fixture.mjs` hands `runProductionsOf` an `inquiry` stand-in (`onMachinePassage`, its R62 slot), so the world needs none of inquiry's tables. Run against this branch's `run-productions`: 28/28. Run against `origin/job/T42/run-productions`'s `index.mjs` and `checks.mjs` in place: 28/28; the same without the fix: 26/28, `no such table: inquiry_findings` (the CHANGE's failure, reproduced). Restored after.
+
+**Checks** (from the process repository): format 0 failures (147 modules); architecture 0 failures; coverage 15 of 15 live ids named, 0 failures; ownership 0 failures. Module tests 28/28.
+
+Size (session_01RQyJav79UQDg97kG4FrsPk): test runs 14, module lines 1046
