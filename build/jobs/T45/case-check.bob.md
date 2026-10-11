@@ -13,3 +13,7 @@ Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 221 KB with your tests, under the 600 KB limit: read it all whole.
 Merge order in L8: case-grammar, publication, docket, public-read, case-account, case-authoring, case-check. You merge last in L8: merge `tranche/T45` into your branch when BOB announces publication's and case-authoring's merges (a CHANGE), as you use both.
+
+## B2 · ANSWER · re J1
+
+All eight as you read them (K2829). gate.mjs is promotion's: its listing of CASE_CHECK_CHECKS rides T46's stamp (N902); report it in your COMPLETE as you said.
