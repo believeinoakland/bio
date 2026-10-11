@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #153 · session_01M1HKb2JkFH595E438e39Cz · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #14 session_012hin3suQbyht8NAUmKGuMq; bundler: BUNDLER #15 session_0176Gs2ArDkbAyfHKBHEdKdd; format-registry: FORMAT-REGISTRY #3 session_012CR9FjettQwdGvBEvk8MPR; image-codecs: IMAGE-CODECS #4 session_01EmjAtfa4SNhFFjZAmrA9eZ; pdf-pixels: PDF-PIXELS #4 session_019UE5f9dE91LZQFBmRUVev4; promotion: PROMOTION #41 session_01FkEawkkBapPx1hxUZQnZ2M
+**Jobs** · record-grammar: RECORD-GRAMMAR #14 session_012hin3suQbyht8NAUmKGuMq; bundler: BUNDLER #15 session_0176Gs2ArDkbAyfHKBHEdKdd; format-registry: FORMAT-REGISTRY #3 session_012CR9FjettQwdGvBEvk8MPR; image-codecs: IMAGE-CODECS #4 session_01EmjAtfa4SNhFFjZAmrA9eZ; pdf-pixels: PDF-PIXELS #4 session_019UE5f9dE91LZQFBmRUVev4; promotion: PROMOTION #41 session_01FkEawkkBapPx1hxUZQnZ2M; doorbell: DOORBELL #2 session_01SeTaW1cz4FqJ1wHpmaFkGf; capture: CAPTURE #27 session_012qi9yvQTQeqGH156Kzdsx8
 
 **At T43's opening (K2697):** opened 2026-10-11 from `main` @ 0b28d3b32d (T42 closed, K2696; PR #23, DEC-189 and DEC-190, on `main`). Development runs (Bob, K2605); the 80% pause (K2341) and the account-switch rule stand. Bob's meter: 26% weekly during T42's L9 (K2677); asked again at this opening.
 
@@ -71,6 +71,7 @@ It is the only module marked `legacy` in `modules.json`.
 - **T43-20 · action-clocks** · (K2706) `fixture.mjs`:162 writes one `counterparty` key, not a second one prepended (the write door refuses a duplicate key since T43-6, R38); tests only · clears rule 4 (11)'s action-clocks reds.
 
 ### L11
+- **T43-21 · admission** · (K2708; CAPTURE #27 J1) `src/admission/window.mjs`:82 builds the door window's fingerprint through `doorbellOf(ctx).sourceFingerprint` (doorbell R12), not capture's held copy; `modules.json` edge `admission` → `doorbell` (BOB's, at the job's COMPLETE) · then capture's held `sourceFingerprint` is deleted in T44 (N870).
 - **T43-17 · affordances** · (K2704; DEC-189, DEC-190) `t36.test.mjs`:55 re-pinned to the design's 213 texts (37 acts re-keyed from `owed_<op>`, four retired); `ACT_HELP` gains the design's texts for `pagetranscribe` and `transcribe` (both ops declared) · clears rule 4 (10)'s affordances red.
 - **T43-18 · op-declarations** · (K2704; DEC-189) `t34`, `t37`, `t38` re-pinned to the design's registry (37 acts now served functions; four still owed) and `mock-acts.js`'s re-keyed names; tests only · clears rule 4 (10)'s op-declarations reds.
 - **T43-13 · notice-producers** · (N856, DEC-189) R16's limit-reached item by scope and its fills by key; R17's ten kinds' `summary` and `detail` by key, `ai.label.explored.member` for members who do not own the account; `NOTICE_WORDS` re-read from `words.json` (its `{for_use}`/`{Uses}` fills and the retired key `act.owed_exploreapprove.label.queue` predate DEC-189; clears rule 4 (10)'s notice-producers reds, K2704) · req: `draft-T43-words.md` (`{date}`: the local day, month by `date.month.*`, until B133 is answered).
