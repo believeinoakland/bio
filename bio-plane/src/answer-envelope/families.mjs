@@ -31,6 +31,10 @@ import * as PROVENANCE_ROUTES from "../provenance-routes/checks.mjs";
 import * as CAPTURE_SOURCES from "../capture-sources/credentials.mjs";
 import * as ACQUISITION from "../acquisition/checks.mjs";
 import * as CAPTURE from "../capture/checks.mjs";
+/* R12 (T43-14; N851, K2609, K2697): doorbell's rows (`DOORBELL_CHECKS`: C-118.2, .3, .4, .7; `KNOCK_CHECKS`: C-85.1–C-85.5),
+   which moved with their raisers from capture's file (capture R37, doorbell R21), in its place in the module order
+   (directly after capture, before file-safety). No code is in both files, so each reads the row R7 pins. */
+import * as DOORBELL from "../doorbell/checks.mjs";
 /* K2130, K2103 (T36-47; red 11): file-safety's C-140 rows (`FILE_SAFETY_CHECKS`), in its place in the module order
    (directly after capture, before sources). K2103 re-coded the three codes earlier families held, so no row moves. */
 import * as FILE_SAFETY from "../file-safety/checks.mjs";
@@ -153,6 +157,7 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/capture-sources/credentials.mjs", CAPTURE_SOURCES],
   ["src/acquisition/checks.mjs", ACQUISITION],
   ["src/capture/checks.mjs", CAPTURE],
+  ["src/doorbell/checks.mjs", DOORBELL],
   ["src/file-safety/checks.mjs", FILE_SAFETY],
   ["src/sources/checks.mjs", SOURCES],
   ["src/calibration/checks.mjs", CALIBRATION],

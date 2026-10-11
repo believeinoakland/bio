@@ -65,7 +65,7 @@ const UNSERVED = [];
 const WITHDRAWN = { projectcreated: "promote", countask: "calculationcreate", registerproceeding: "entitycreate",
                     deadlinecompute: "clockpropose" };
 
-test("R21, R5: every act the screen registry marks `function` is an op under its lowercased name — already an op, or an alias in the one frozen table OP_ALIASES — and on PR #14's registry no function is unserved: the four DEC-182 (1) withdraws are no function and no op, their buttons' ops declared, and setpassword is owed (negative control: an unaliased name is seen)", () => {
+test("R21, R5: every act the screen registry marks `function` is an op under its lowercased name — already an op, or an alias in the one frozen table OP_ALIASES — and on PR #14's registry no function is unserved: the four DEC-182 (1) withdraws are no function and no op, their buttons' ops declared, and setpassword (owed on PR #14's, re-pointed by DEC-189 (3)) a declared act of R39's op (negative control: an unaliased name is seen)", () => {
   const fns = actsOf("function");
   /* T41: the registry as PR #19 left it (`wizard-scripts` R13, K2484) names 58 distinct functions */
   assert.ok(fns.length >= 55, `${fns.length} functions`);
@@ -79,7 +79,10 @@ test("R21, R5: every act the screen registry marks `function` is an op under its
     assert.ok(!fns.includes(f) && inNoTable(f), `${f} is still a function or has a spec`);
     assert.ok(Object.hasOwn(OPS, op), `${op}: no spec`);
   }
-  assert.ok(!fns.includes("setpassword") && actsOf("owed").some((a) => a.startsWith("owed:setpassword ")));
+  /* T43 (DEC-189 (3); K2704): the registry re-points setpassword's owed act to the op R39 declares — a declared act,
+     neither a function nor owed */
+  assert.ok(!fns.includes("setpassword") && !actsOf("owed").some((a) => a.startsWith("owed:setpassword ")));
+  assert.ok(actsOf("declared").includes("setpassword") && Object.hasOwn(OPS, "setpassword"));
   assert.ok(Object.isFrozen(OP_ALIASES));
   for (const [al, op] of Object.entries(OP_ALIASES)) {
     assert.ok(fns.includes(al), `${al} is no registry function`);
@@ -142,7 +145,7 @@ test("R21: each alias names the function its op's arm calls — driven through t
   assert.ok(!calls.some(([k]) => String(k).toLowerCase() === "createevent"));
 });
 
-test("R21, R27 (K1901; T36, K2084; T37, K2159, K2171; T38, K2300): an act the registry marks `owed` is no op until its ruling's op is declared under its own name, and then it is that op, read as served with no alias made — on PR #14's registry the ten T34's and T35's ops declare, the nine R32 and R33 declare the eight T37 declares (R35–R39) and, on PR #15's registry, R40's obscuremarkwithdraw (T38), `owed:placewanted` gone; no spec names `owed:`; infolevelset, the one owed act no owner serves, has no spec", () => {
+test("R21, R27 (K1901; T36, K2084; T37, K2159, K2171; T38, K2300): an act the registry marks `owed` is no op until its ruling's op is declared under its own name, and then it is that op, read as served with no alias made — on PR #14's registry the ten T34's and T35's ops declare, the nine R32 and R33 declare the eight T37 declares (R35–R39) and, on PR #15's registry, R40's obscuremarkwithdraw (T38), `owed:placewanted` gone; (T43; DEC-189 (3), DEC-190) 37 of them re-pointed to their declared ops and subscriptionsignin, projectaikeepaway and pagetranscribe owed and served; no spec names `owed:`; infolevelset, the one owed act no owner serves, has no spec", () => {
   for (const op of Object.keys(OPS)) assert.ok(!op.includes(":") && !op.includes(" "), op);
   const owed = actsOf("owed").map((a) => a.replace(/^owed:/, "").split(" ")[0]);
   /* the registry as PR #13 left it (T36): the owed acts whose ops this module declares under those names — T34's and
@@ -161,11 +164,21 @@ test("R21, R27 (K1901; T36, K2084; T37, K2159, K2171; T38, K2300): an act the re
                     "projectaikeepaway", "projectkeynoticeseen", "projectkeyset", "projectsigninset",
                     "handlecheck", "handlechange"];
   assert.ok(!owed.includes("placewanted") && Object.hasOwn(OPS, "placewanted"));
-  /* and the one owed act no owner serves in T37 and T38 */
+  /* T43 (DEC-189 (3), DEC-190; K2704): the registry as it stands on `tranche/T43` re-points 37 of those owed acts to
+     the ops this module declares — each now named under its own name as a `declared` or `function` act, owed no
+     longer — and keeps owed two it served already (`subscriptionsignin`, R36; `projectaikeepaway`, R41) and one more,
+     `pagetranscribe` (K2611; R47), each read as served under its declared op with no alias */
+  const STILL_OWED = ["subscriptionsignin", "projectaikeepaway", "pagetranscribe"];
+  const served = [...actsOf("declared"), ...actsOf("function")];
+  for (const op of DECLARED.filter((o) => !STILL_OWED.includes(o))) {
+    assert.ok(served.includes(op) && !owed.includes(op), `${op} is not re-pointed to its declared op`);
+  }
+  assert.equal(DECLARED.filter((o) => !STILL_OWED.includes(o)).length, 37);
+  /* and the one owed act no owner serves in T37 to T43 */
   const UNDECLARED = ["infolevelset"];
-  assert.deepEqual([...new Set(owed)].sort(), [...DECLARED, ...UNDECLARED].sort());
-  for (const op of DECLARED) {
-    assert.ok(Object.hasOwn(OPS, op), `${op} is owed and declared: no spec`);
+  assert.deepEqual([...new Set(owed)].sort(), [...STILL_OWED, ...UNDECLARED].sort());
+  for (const op of [...DECLARED, ...STILL_OWED]) {
+    assert.ok(Object.hasOwn(OPS, op), `${op} is owed or re-pointed and declared: no spec`);
     assert.ok(!Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op), `${op} is aliased`);
   }
   for (const op of UNDECLARED) assert.ok(inNoTable(op), `${op} is owed and must have no spec`);
@@ -304,7 +317,7 @@ test("R26: placewanted an administrator's own session (officesseed's spec), by s
   for (const op of ["placewanted", "placewantedstate"]) assert.ok(both(op) && OPS[op].classes !== null, op);
 });
 
-test("R27 (T35; N701, K1869 (3); T37, its T35 and T36 sentences retired): DEC-148's library marks seven acts owed — memberlanguageset and startfrom (Welcome a new member), publishat (Publication ceremony), translationdraft and translationadopt (Translate the interface), subscriptionsignin and translationconfirm (optional scripts) — and all seven are declared under their own names, in both session sets", () => {
+test("R27 (T35; N701, K1869 (3); T37, its T35 and T36 sentences retired): DEC-148's library marks seven acts owed — memberlanguageset and startfrom (Welcome a new member), publishat (Publication ceremony), translationdraft and translationadopt (Translate the interface), subscriptionsignin and translationconfirm (optional scripts) — and all seven are declared under their own names, in both session sets; (T43, DEC-189 (3)) the library names each by its op, subscriptionsignin alone still owed", () => {
   const SERVED = ["memberlanguageset", "publishat", "startfrom"];
   /* T37: served now (R35, R36, R37) */
   const UNSERVED_OWED = ["subscriptionsignin", "translationadopt", "translationconfirm", "translationdraft"];
@@ -317,7 +330,12 @@ test("R27 (T35; N701, K1869 (3); T37, its T35 and T36 sentences retired): DEC-14
      `ailimitset` and `accountusesset` */
   const LATER = ["aikeepaway", "obscuremark", "ailimitset", "accountusesset"];
   for (const op of LATER) assert.ok(Object.hasOwn(OPS, op) && both(op) && !Object.hasOwn(OP_ALIASES, op), op);
-  assert.deepEqual(owed.sort(), [...SERVED, ...UNSERVED_OWED, ...LATER].sort());
+  /* T43 (DEC-189 (3); K2704): the library as it stands on `tranche/T43` names ten of those eleven by the served op
+     itself, owed no longer; subscriptionsignin alone stays owed, read as served (R36) */
+  const acts = new Set(JSON.parse(lib).scripts.flatMap((s) => s.versions.flatMap((v) => v.steps.map((st) => st.act))));
+  for (const op of [...SERVED, ...UNSERVED_OWED, ...LATER].filter((o) => o !== "subscriptionsignin"))
+    assert.ok(acts.has(op), `${op}: the library does not name the served op`);
+  assert.deepEqual(owed.sort(), ["subscriptionsignin"]);
   /* negative control: a declared op is not inNoTable, an undeclared one is */
   assert.ok(!inNoTable("publishat") && inNoTable("infolevelset"));
 });

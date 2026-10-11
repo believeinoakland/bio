@@ -1,0 +1,20 @@
+# BOB to plane (T43)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T43), layer 11, plane: T43-15 (N862, DEC-190; N853b; N866). Read also K2611, K2684, K2689, K2691, K2692, K2698, K2716 (their lines in `build/rulings.md`), `build/plan/draft-T43-n853b.md` whole and `build/plan/draft-T43-words.md` §N862.
+Your requirements: `build/requirements/plane.md` (read whole). Marked `*(not yet met: T43)*`:
+- R24: the `bundle` screen's `acts` gain `reading`, `pagetranscribe` and `transcribe` (each an op op-declarations declares, R6).
+- R36: a page `renderPageToPixels` answers `NOT_A_PDF` for is rendered by `pdf-pixels.renderPictureToPixels(bytes, page, {maxEdge: TRANSCRIBE_PICTURE_EDGE, grey: true})`; `TRANSCRIBE_PICTURE_EDGE` exported, 1,568 px. Checked at this START against the provider's vision documentation (platform.claude.com, "Resolution and token cost", read 2026-10-11): 1,568 px is the standard tier's long edge, so it is never downscaled on any model, and stays under the 2,000 px limit a request with more than 20 images imposes; the high-resolution tier's 2,576 px is not used (K2716). Its refusals leave the page unread, as the renderer's do. End to end: an uploaded JPEG's page 0 posted to a stub agent-worker as one grey PNG whose long edge is at most 1,568 px (control: a PDF page renders as before, byte for byte).
+- R6 (N866, K2692): an `ai` caller's `author` on a gated op is control-plane R17's `class:ai/<tokenId>`, unless that op's recorded decision names the `token:` form (D-311), as the generic forward stamps it. Check each gated op's recorded decision and name, in your record, every op that keeps the `token:` form and why.
+Test each marked id at your interface with a negative control (K874). Run the plane's tests and its release suite (R24's registry check among them) and report reds by file and line, naming any rule 4 already accepts.
+Reading set (mechanics §17): measured at this START: 2,839 KB with your tests, over the 600 KB limit (K2700). Read your own requirements whole and the code and tests your entries touch (`src/plane/screens.mjs`, the AI path of R36, the gated hook of R6, and their tests) whole; for the used modules' public parts (2,290 KB), give helpers (agents in your session) your entries and what follows them (T44's N869 and N870, the release that deploys this; the design stream's Document screen) to read those parts in full and write you a digest of what your entries need, each statement citing its section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+Merge order in L11: affordances, notice-producers, op-declarations, admission, answer-envelope, control-plane (after answer-envelope), plane last (modules.json order): merge `tranche/T43` into your branch after the others' merges, re-run, then complete.
+Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+CHANGE: every other L11 job is merged on `tranche/T43` but affordances, which is re-reading and may merge again (no change to its outputs expected). Merge the tranche into your branch now, re-run your tests and the release suite, and COMPLETE; your findings are K2726's (N874 in T44; R36's Uses wording done). If affordances re-merges after you, BOB tells you.

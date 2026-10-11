@@ -52,7 +52,7 @@ The instance's composition root. It builds every module on one Durable Object's 
 - (T36; K2130, K2152) `file-safety` (R26, R29): built at its place, migrated, started, its ops spread. `file-scanner` (R27): the `FILE_SCANNER` binding's service.
 - (T41; K2500) `answers`: `askAccount` (its R30) and `logRead` with a grant's `use` (its R2), for R33; `answers` no longer receives `ceilingRefusal`.
 - (T41; N820; K2418; new `modules.json` edges, §3.6's list) `steps`, `reading-guides`, `question-explorer`, `investigation`: their factories, migrations and counts (R30).
-- (T42; N832; K2611) For R36: `pdf-pixels` (`renderPageToPixels`) and `run-rules` (`partDeployableOn`, `CIVICSMITH_TEST_SET`), new `modules.json` edges, BOB's; `ai-runs` (`testBarRecords`), `ai-use` (`useCheck`, `countUsage`), `credentials` (`accountFor`, `aiKeptAway`) and `extraction` (`registerTranscriber`), already uses.
+- (T42; N832; K2611) For R36: `pdf-pixels` (`renderPageToPixels`; since T43, `renderPictureToPixels`, K2726) and `run-rules` (`partDeployableOn`, `CIVICSMITH_TEST_SET`), new `modules.json` edges, BOB's; `ai-runs` (`testBarRecords`), `ai-use` (`useCheck`, `countUsage`), `credentials` (`accountFor`, `aiKeptAway`) and `extraction` (`registerTranscriber`), already uses.
 - (T42; N826, N839; K2656) `doorbell` (`doorbellOf`, `doorbellOps`, `doorbellPublicOp`; R37) and `case-account` (`caseAccountOf`; R38), new `modules.json` edges, BOB's; `extraction`'s `pageTranscribeOp` for R36's door arm, already a use.
 
 ### Invariants
