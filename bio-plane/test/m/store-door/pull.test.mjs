@@ -1,7 +1,8 @@
 /* store-door R7 (was control-plane R36's pull and its promotion; N364, DEC-78 item 1; DEC-88 (2), K1037): the store's
-   pull, `pullAndFile` at the internal route `inboxpullfile`, pulls through capture's `pullKnock` with `by` as stamped and
-   promotes the pulled document as a new information bundle at collected in the same act; a knock already pulled whose
-   capture no bundle holds is promoted by the next pull; the `pulled` resolve takes capture R32's reason. Driven at the
+   pull, `pullAndFile` at the internal route `inboxpullfile`, pulls through the doorbell's `pullKnock` (doorbell R13; T42,
+   N826: `doorbellOf(ctx)` handed as `deps.doorbell`) with `by` as stamped and promotes the pulled document as a new
+   information bundle at collected in the same act; a knock already pulled whose capture no bundle holds is promoted by
+   the next pull; the `pulled` resolve takes doorbell R3's reason. Driven at the
    record store's door over a real record (`record.mjs`) and through `pullAndFile` with the promotion controlled. Moved from
    control-plane's `inbox-door.test.mjs` and `doorbell.test.mjs` at the split (K1974); the Worker's routing and the `by`
    stamp stay control-plane's. */
@@ -10,8 +11,10 @@ import assert from "node:assert/strict";
 import "./harness.mjs";
 const { record: fixture } = await import("./record.mjs");
 const P = await import("../../../src/store-door/pull.mjs");
-const { captureOf, REASON_MAX, PULL_WITHIN_FAILED_DETAIL } = await import("../../../src/capture/index.mjs");
-const { CAPTURE_CHECKS } = await import("../../../src/capture/checks.mjs");
+const { doorbellOf, REASON_MAX, PULL_WITHIN_FAILED_DETAIL } = await import("../../../src/doorbell/index.mjs");
+/* C-118.7 is defined in capture's table until T43 and re-exported by the doorbell (its R21; K2609) */
+const { DOORBELL_CHECKS } = await import("../../../src/doorbell/checks.mjs");
+const { captureOf } = await import("../../../src/capture/index.mjs");
 const { provenanceOf } = await import("../../../src/provenance/index.mjs");
 const { recordOf } = await import("../../../src/record-core/index.mjs");
 
@@ -20,7 +23,7 @@ async function record() {
   const r = await fixture();
   const knock = async (text = "material for the group", extra = {}) =>
     (await r.go("knock?source=203.0.113.9", "POST", { content: text, note: "please look", contact: "knocker@example.org", now: Date.now(), ...extra })).json.result;
-  const state = (knockId) => captureOf(r.ctx).inboxGet(knockId).item;
+  const state = (knockId) => doorbellOf(r.ctx).inboxGet(knockId).item;
   const held = (knockId, sha) => {
     const k = state(knockId);
     return { status: k.status, capture_sha: k.capture_sha ?? null, pulled_by: k.pulled_by ?? null,
@@ -30,7 +33,7 @@ async function record() {
   return { ...r, knock, state, held };
 }
 const UNTOUCHED = { status: "new", capture_sha: null, pulled_by: null, resolve_reason: null, receipt: false, home: null, bundles: 0 };
-/* What capture R32 refuses: absent, not a string, blank, over REASON_MAX code points. */
+/* What doorbell R3 refuses: absent, not a string, blank, over REASON_MAX code points. */
 const REASONLESS = [undefined, null, 7, "", "   \n\t", "x".repeat(REASON_MAX + 1)];
 /* What the record holds of a knock's pull: the knock's row, its receipt, and a bundle holding its capture. */
 const heldOf = (r, knockId, sha) => {
@@ -39,11 +42,11 @@ const heldOf = (r, knockId, sha) => {
            receipt: provenanceOf(r.ctx).registerHolds({ sha }).acquired, home: provenanceOf(r.ctx).homeOf(sha) };
 };
 
-test("R7 (capture R32, C-118.7; DEC-88 (2), K1037): the `pulled` resolve at the record store's door refuses a reason absent, not a string, blank or over 2,000 characters RESOLVE_NO_REASON at 400 with capture's own row, and nothing is written — the knock still new, no receipt, no capture, no bundle (negative control: 2,000 characters is a reason)", async () => {
+test("R7 (doorbell R3, C-118.7; DEC-88 (2), K1037): the `pulled` resolve at the record store's door refuses a reason absent, not a string, blank or over 2,000 characters RESOLVE_NO_REASON at 400 with the doorbell's row (defined in capture's table until T43), and nothing is written — the knock still new, no receipt, no capture, no bundle (negative control: 2,000 characters is a reason)", async () => {
   const r = await record();
   const k = await r.knock();
   assert.deepEqual(r.held(k.knockId, k.sha256), UNTOUCHED);
-  const row = CAPTURE_CHECKS.RESOLVE_NO_REASON;
+  const row = DOORBELL_CHECKS.RESOLVE_NO_REASON;
   for (const reason of REASONLESS) {
     const a = await r.go(`inboxpullfile?${SESSION}&resolve=pulled`, "POST",
                          { knockId: k.knockId, status: "pulled", ...(reason === undefined ? {} : { reason }) });
@@ -53,7 +56,7 @@ test("R7 (capture R32, C-118.7; DEC-88 (2), K1037): the `pulled` resolve at the 
     assert.equal(row.check, "C-118.7");
     assert.deepEqual(r.held(k.knockId, k.sha256), UNTOUCHED, `nothing written for ${JSON.stringify(reason)?.slice(0, 20)}`);
   }
-  /* a knock no knock answers to is refused first (capture's order), with nothing written */
+  /* a knock no knock answers to is refused first (the doorbell's order), with nothing written */
   const none = await r.go(`inboxpullfile?${SESSION}&resolve=pulled`, "POST", { knockId: "KNOCK-none", status: "pulled" });
   assert.equal(none.json.result.reason, "NO_SUCH_KNOCK");
   /* negative control: exactly REASON_MAX code points is admitted */
@@ -63,7 +66,7 @@ test("R7 (capture R32, C-118.7; DEC-88 (2), K1037): the `pulled` resolve at the 
   assert.equal(r.held(k.knockId, k.sha256).status, "pulled");
 });
 
-test("R7 (capture R32, R65; DEC-88 (2), K1037): a reasoned `pulled` resolve is the pull with its promotion — the knock pulled by the member, its receipt, one new information bundle at collected holding the capture, the puller its author; `op=inboxpull` asked directly takes no reason, whatever its body carries", async () => {
+test("R7 (doorbell R3, R13; DEC-88 (2), K1037): a reasoned `pulled` resolve is the pull with its promotion — the knock pulled by the member, its receipt, one new information bundle at collected holding the capture, the puller its author; `op=inboxpull` asked directly takes no reason, whatever its body carries", async () => {
   const r = await record();
   const k = await r.knock("the minutes they did not publish");
   const a = await r.go(`inboxpullfile?${SESSION}&resolve=pulled`, "POST",
@@ -86,7 +89,7 @@ test("R7 (capture R32, R65; DEC-88 (2), K1037): a reasoned `pulled` resolve is t
   assert.equal((await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: f.knockId })).json.result.ok, true);
 });
 
-test("R7 (capture R32; DEC-88 (2); N499, K1117): an admitted `pulled` resolve's reason is recorded on the knock's row with the pull, through capture's `inboxResolve` (negative control: a direct pull records none)", async () => {
+test("R7 (doorbell R3; DEC-88 (2); N499, K1117): an admitted `pulled` resolve's reason is recorded on the knock's row with the pull, through the doorbell's `inboxResolve` (negative control: a direct pull records none)", async () => {
   const r = await record();
   const k = await r.knock("the reason's row");
   const a = await r.go(`inboxpullfile?${SESSION}&resolve=pulled`, "POST", { knockId: k.knockId, status: "pulled", reason: "worth a look" });
@@ -100,13 +103,13 @@ test("R7 (capture R32; DEC-88 (2); N499, K1117): an admitted `pulled` resolve's 
   assert.deepEqual([r.held(e.knockId, e.sha256).status, r.held(e.knockId, e.sha256).resolve_reason], ["pulled", null]);
 });
 
-test("R7 (capture R65's `within`; DEC-88 (2)): the reasoned `pulled` resolve and its promotion are one act — a promotion that refuses, or throws, leaves neither written: the knock new, no reason on its row, no receipt, no bundle", async () => {
+test("R7 (doorbell R13's `within`; DEC-88 (2)): the reasoned `pulled` resolve and its promotion are one act — a promotion that refuses, or throws, leaves neither written: the knock new, no reason on its row, no receipt, no bundle", async () => {
   for (const fault of [{ ok: false, reason: "PROMOTE_REFUSED_HERE", detail: "raced" }, "throw"]) {
     const r = await record();
     const k = await r.knock(`one act ${JSON.stringify(fault)}`);
     let asked = 0;
     const promotion = { promote() { asked++; if (fault === "throw") throw new Error("a store fault"); return fault; } };
-    const deps = { capture: captureOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: provenanceOf(r.ctx) };
+    const deps = { doorbell: doorbellOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: provenanceOf(r.ctx) };
     const out = await P.pullAndFile(deps, { knockId: k.knockId, by: "ann", identity: "member:ann", viewer: "member:ann",
                                             resolve: true, reason: "worth a look" });
     assert.equal(out.ok, false, JSON.stringify(out).slice(0, 300));
@@ -116,14 +119,14 @@ test("R7 (capture R65's `within`; DEC-88 (2)): the reasoned `pulled` resolve and
   }
 });
 
-test("R7, R1 (N364, N381): the pull is a route of the record store's door, beside capture's own — refused by capture (no puller, no such knock, a discarded knock), nothing is written; admitted, it files the knock end to end with the real capture, provenance and promotion: one new information bundle at collected, the puller its author, holding the capture, no contact in it", async () => {
+test("R7, R1 (N364, N381): the pull is a route of the record store's door, beside the doorbell's own — refused by the doorbell (no puller, no such knock, a discarded knock), nothing is written; admitted, it files the knock end to end with the real doorbell, provenance and promotion: one new information bundle at collected, the puller its author, holding the capture, no contact in it", async () => {
   const r = await record();
   const k = await r.knock();
   assert.equal(k.ok, true);
   const before = heldOf(r, k.knockId, k.sha256);
   assert.deepEqual(before, { status: "new", capture_sha: null, pulled_by: null, receipt: false, home: null });
   const bundles = () => recordOf(r.ctx).listBundles().ids;
-  /* capture's refusals: its own words, nothing written */
+  /* the doorbell's refusals: its own words, nothing written */
   for (const [path, body, reason] of [[`inboxpullfile?identity=member:ann&viewer=member:ann`, { knockId: k.knockId }, "NO_PULLER"],
                                       [`inboxpullfile?${SESSION}`, { knockId: "KNOCK-none" }, "NO_SUCH_KNOCK"]]) {
     const a = await r.go(path, "POST", body);
@@ -131,13 +134,13 @@ test("R7, R1 (N364, N381): the pull is a route of the record store's door, besid
     assert.deepEqual(heldOf(r, k.knockId, k.sha256), before);
   }
   const d = await r.knock("another");
-  /* capture R32 (DEC-88 (2)): every resolve takes the member's reason */
-  assert.equal(captureOf(r.ctx).inboxResolve({ knockId: d.knockId, status: "discarded", by: "ann", reason: "not for us" }).ok, true);
+  /* doorbell R3 (DEC-88 (2)): every resolve takes the member's reason */
+  assert.equal(doorbellOf(r.ctx).inboxResolve({ knockId: d.knockId, status: "discarded", by: "ann", reason: "not for us" }).ok, true);
   const da = await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: d.knockId });
   assert.equal(da.json.result.reason, "KNOCK_DISCARDED");
   assert.equal(heldOf(r, d.knockId, d.sha256).receipt, false);
   assert.deepEqual(bundles(), []);
-  /* N381: the real promotion admits capture R65's own document, so one pull files the knock */
+  /* N381: the real promotion admits doorbell R13's own document, so one pull files the knock */
   const p = await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: k.knockId });
   assert.equal(p.json.result.ok, true, JSON.stringify(p.json).slice(0, 400));
   const { bundle } = p.json.result;
@@ -165,8 +168,8 @@ test("R7, R1 (N364, N381): the pull is a route of the record store's door, besid
   assert.deepEqual([again.json.result.ok, again.json.result.existed, again.json.result.bundle],
                    [true, true, { bundleId: bundle.bundleId, bundleSha: null, existed: true }]);
   assert.deepEqual(bundles(), [bundle.bundleId]);
-  /* negative control: capture's own route, called directly, pulls a knock and files no bundle; the door's next pull of
-     it promotes it, because no bundle holds its capture */
+  /* negative control: the doorbell's own route, called directly, pulls a knock and files no bundle; the door's next
+     pull of it promotes it, because no bundle holds its capture */
   const e = await r.knock("pulled around the door");
   const c = await r.go("inboxpull?by=ann", "POST", { knockId: e.knockId });
   assert.equal(c.json.result.ok, true);
@@ -177,7 +180,7 @@ test("R7, R1 (N364, N381): the pull is a route of the record store's door, besid
   assert.equal(bundles().length, 2);
 });
 
-/* The promotion's answer controlled, capture and record-core real: what reaches the promotion, and when. */
+/* The promotion's answer controlled, the doorbell and record-core real: what reaches the promotion, and when. */
 function promotionStandIn(r, decide) {
   const seen = [];
   return {
@@ -202,7 +205,7 @@ test("R7 (N364, N380, N386): one pull files the capture and promotes its documen
   const k = await r.knock("the minutes they did not publish");
   const promotion = promotionStandIn(r, () => true);
   let homes = 0;
-  const deps = { capture: captureOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: { homeOf: () => { homes++; return null; } } };
+  const deps = { doorbell: doorbellOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: { homeOf: () => { homes++; return null; } } };
   const now = () => Date.parse("2026-09-30T12:34:56.789Z");
   const a = await P.pullAndFile(deps, { knockId: k.knockId, by: "ann", identity: "member:ann", viewer: "member:ann", now });
   assert.equal(a.ok, true, JSON.stringify(a).slice(0, 300));
@@ -229,26 +232,26 @@ test("R7 (N364, N380, N386): one pull files the capture and promotes its documen
   assert.equal(a.document.capture.actor, "ann");
   assert.deepEqual(real.files.find((f) => f.path === a.document.file), { path: a.document.file, blobSha: k.sha256, sha256: k.sha256, bytes: k.bytes });
   assert.deepEqual(real.register, [{ sha256: k.sha256, path: a.document.file, encoding: "binary", bytes: k.bytes }]);
-  assert.equal(JSON.stringify(promotion.seen).includes("knocker@example.org"), false, "no contact reaches the bundle (capture R70)");
+  assert.equal(JSON.stringify(promotion.seen).includes("knocker@example.org"), false, "no contact reaches the bundle (doorbell R13, R16)");
   /* the knock is pulled by the puller, with its receipt */
   assert.deepEqual([r.state(k.knockId).status, r.state(k.knockId).pulled_by], ["pulled", "ann"]);
   assert.equal(provenanceOf(r.ctx).registerHolds({ sha: k.sha256 }).acquired, true);
   assert.equal(homes, 0, "a fresh pull promotes; it does not look for a home");
 });
 
-test("R7 (N380, K559; capture R65): the pull and its promotion are one act — a promotion that refuses, or throws, leaves neither written (the knock as it was, no receipt, no actor, no bundle, no id drawn), and the next pull files it; a fault's message is not carried", async () => {
+test("R7 (N380, K559; doorbell R13): the pull and its promotion are one act — a promotion that refuses, or throws, leaves neither written (the knock as it was, no receipt, no actor, no bundle, no id drawn), and the next pull files it; a fault's message is not carried", async () => {
   for (const [fault, reason, status] of [[{ ok: false, reason: "PROMOTE_REFUSED_HERE", detail: "raced" }, "PROMOTE_REFUSED_HERE", undefined],
                                          ["throw", "PULL_WITHIN_FAILED", 500]]) {
     const r = await record();
     const k = await r.knock(`one act ${JSON.stringify(fault)}`);
     /* the first promotion fails; every later one lands */
     const promotion = promotionStandIn(r, (i) => (i === 0 ? fault : true));
-    const deps = { capture: captureOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: provenanceOf(r.ctx) };
+    const deps = { doorbell: doorbellOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: provenanceOf(r.ctx) };
     const who = { knockId: k.knockId, by: "ann", identity: "member:ann", viewer: "member:ann" };
     const first = await P.pullAndFile(deps, who);
     assert.deepEqual([first.ok, first.reason, first.status, first.knockId], [false, reason, status, k.knockId]);
     assert.equal(JSON.stringify(first).includes("a store fault"), false, "a fault's message is not carried");
-    /* N419: a fault answers capture's fixed sentence (capture R65), never the thrown message */
+    /* N419: a fault answers the doorbell's fixed sentence (doorbell R13), never the thrown message */
     if (fault === "throw") assert.equal(first.detail, PULL_WITHIN_FAILED_DETAIL);
     assert.deepEqual(heldOf(r, k.knockId, k.sha256), { status: "new", capture_sha: null, pulled_by: null, receipt: false, home: null },
                      "the pull was rolled back with its promotion");
@@ -263,15 +266,15 @@ test("R7 (N380, K559; capture R65): the pull and its promotion are one act — a
   }
 });
 
-test("R7 (N364, K559): a pulled knock no bundle holds (pulled through capture's own route) is promoted by the door's pull — a promotion that fails then says so and leaves the knock pulled, the next pull files it; once a bundle holds the capture, a pull answers that bundle and promotes nothing", async () => {
+test("R7 (N364, K559): a pulled knock no bundle holds (pulled through the doorbell's own route) is promoted by the door's pull — a promotion that fails then says so and leaves the knock pulled, the next pull files it; once a bundle holds the capture, a pull answers that bundle and promotes nothing", async () => {
   for (const fault of ["throw", { ok: false, reason: "PROMOTE_FAILED", detail: "raced" }]) {
     const r = await record();
     const k = await r.knock(`residue ${JSON.stringify(fault)}`);
-    const pulledAround = await captureOf(r.ctx).pullKnock({ knockId: k.knockId, by: "bea" });
+    const pulledAround = await doorbellOf(r.ctx).pullKnock({ knockId: k.knockId, by: "bea" });
     assert.equal(pulledAround.ok, true);
     let home = null;
     const promotion = promotionStandIn(r, (i) => (i === 0 ? fault : true));
-    const deps = { capture: captureOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: { homeOf: () => home } };
+    const deps = { doorbell: doorbellOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: { homeOf: () => home } };
     const who = { knockId: k.knockId, by: "ann", identity: "member:ann", viewer: "member:ann" };
     const first = await P.pullAndFile(deps, who);
     assert.deepEqual([first.ok, first.reason, first.knockId], [false, "PROMOTE_FAILED", k.knockId]);
@@ -279,7 +282,7 @@ test("R7 (N364, K559): a pulled knock no bundle holds (pulled through capture's 
     assert.equal(JSON.stringify(first).includes("a store fault"), false, "a fault's message is not carried");
     assert.deepEqual(standinWrites(r), [], "no bundle filed");
     assert.deepEqual([r.state(k.knockId).status, r.state(k.knockId).pulled_by], ["pulled", "bea"], "the earlier pull stands");
-    /* a repeated pull: capture answers existed with its document, no bundle holds the capture, so it is promoted */
+    /* a repeated pull: the doorbell answers existed with its document, no bundle holds the capture, so it is promoted */
     const again = await P.pullAndFile(deps, who);
     assert.deepEqual([again.ok, again.existed], [true, true]);
     assert.equal(again.bundle.bundleId, promotion.seen.at(-1).bundleId);
@@ -292,4 +295,43 @@ test("R7 (N364, K559): a pulled knock no bundle holds (pulled through capture's 
     assert.deepEqual([third.ok, third.existed, third.bundle], [true, true, { bundleId: again.bundle.bundleId, bundleSha: null, existed: true }]);
     assert.equal(promotion.seen.length, asked);
   }
+});
+
+test("R7 (T42; N826; K2656; doorbell R13, R3): the internal route `inboxpullfile` hands `pullAndFile` `doorbellOf(ctx)` as `deps.doorbell`, never `captureOf` — the direct pull is asked of the doorbell's own instance's `pullKnock` and the `pulled` resolve of its `inboxResolve`, each with `within`, and what the doorbell answers is the route's answer; capture's instance is never asked (negative control: `pullAndFile` handed only `deps.capture` reaches no capture and answers nothing of it)", async () => {
+  const r = await record();
+  const k = await r.knock("which instance pulls");
+  const d = doorbellOf(r.ctx), c = captureOf(r.ctx);
+  assert.notEqual(d, c);
+  const asked = { doorbell: [], capture: [] };
+  const spy = (who, inst, name) => {
+    inst[name] = (args) => { asked[who].push({ name, args }); return { ok: false, reason: `${who.toUpperCase()}_ANSWERED`, knockId: args.knockId }; };
+  };
+  for (const name of ["pullKnock", "inboxResolve"]) { spy("doorbell", d, name); spy("capture", c, name); }
+  try {
+    const direct = await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: k.knockId });
+    assert.equal(direct.json.result.reason, "DOORBELL_ANSWERED", JSON.stringify(direct.json).slice(0, 300));
+    const resolved = await r.go(`inboxpullfile?${SESSION}&resolve=pulled`, "POST", { knockId: k.knockId, status: "pulled", reason: "worth a look" });
+    assert.equal(resolved.json.result.reason, "DOORBELL_ANSWERED");
+    assert.deepEqual(asked.doorbell.map((x) => x.name), ["pullKnock", "inboxResolve"]);
+    const [p, s] = asked.doorbell.map((x) => x.args);
+    assert.deepEqual([p.knockId, p.by, typeof p.within, typeof p.at], [k.knockId, "ann", "function", "string"]);
+    assert.deepEqual([s.knockId, s.status, s.by, s.reason, typeof s.within], [k.knockId, "pulled", "ann", "worth a look", "function"]);
+    assert.deepEqual(asked.capture, [], "capture's instance is never asked");
+  } finally { for (const name of ["pullKnock", "inboxResolve"]) { delete d[name]; delete c[name]; } }
+  /* the doorbell's own methods back, the same route files the knock through it end to end; capture still never asked */
+  for (const name of ["pullKnock", "inboxResolve"]) spy("capture", c, name);
+  try {
+    const real = await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: k.knockId });
+    assert.deepEqual([real.json.result.ok, real.json.result.existed], [true, false], JSON.stringify(real.json).slice(0, 300));
+    assert.equal(doorbellOf(r.ctx).inboxGet(k.knockId).item.status, "pulled");
+    assert.deepEqual(asked.capture, []);
+    /* negative control: `pullAndFile` reads `deps.doorbell` alone — handed capture's instance under the old name, it
+       does not reach it */
+    const other = await r.knock("old shape");
+    await assert.rejects(P.pullAndFile({ capture: c, promotion: { promote() { throw new Error("not reached"); } },
+                                         record: recordOf(r.ctx), provenance: provenanceOf(r.ctx) },
+                                       { knockId: other.knockId, by: "ann", identity: "member:ann", viewer: "member:ann" }), TypeError);
+    assert.deepEqual(asked.capture, [], "capture's instance is not asked under the old name either");
+    assert.equal(doorbellOf(r.ctx).inboxGet(other.knockId).item.status, "new");
+  } finally { for (const name of ["pullKnock", "inboxResolve"]) delete c[name]; }
 });

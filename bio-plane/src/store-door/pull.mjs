@@ -1,16 +1,16 @@
 /* store-door: THE DOORBELL'S PULL (R7, was control-plane R36's pull; N364, DEC-78 item 1; copied whole at the split,
-   K1974). `op=inboxpull` brings a knock into the record as a
-   capture (capture R65, `pullKnock`) and, in the same act, promotes the pulled document as a new `information` bundle at
-   `collected` (promotion's `promote`), the puller its author. Run in the record store's door (`dispatch.mjs`), where
-   capture, promotion and record-core are in process.
+   K1974). `op=inboxpull` brings a knock into the record as a capture (`doorbell` R13, `pullKnock`; was capture R65;
+   T42, N826) and, in the same act, promotes the pulled document as a new `information` bundle at `collected`
+   (promotion's `promote`), the puller its author. Run in the record store's door (`dispatch.mjs`), where the doorbell,
+   promotion and record-core are in process.
 
    ONE ACT (N380, K559). `pullKnock` is async (it holds the bytes under their own digest and profiles them before it
-   writes), and record-core's `transact` is synchronous, so no caller can wrap both writes in one transaction. Capture
-   therefore offers a seam: `within(document)`, called inside the pull's own transaction after its receipt, the knock's
-   `pulled` update and the actor are written (capture R65). The promotion runs there, so a refusal of either (no recorded
-   group, C-64.1; a mint exhausted; a package refused; a store fault, answered `PULL_WITHIN_FAILED`) leaves neither
-   written. A knock already pulled does not call `within`: its bundle is the one holding its capture, and a pulled knock
-   whose capture no bundle holds (pulled through capture's own route) is promoted by this door's next pull. */
+   writes), and record-core's `transact` is synchronous, so no caller can wrap both writes in one transaction. The
+   doorbell therefore offers a seam: `within(document)`, called inside the pull's own transaction after its receipt, the
+   knock's `pulled` update and the actor are written (doorbell R13). The promotion runs there, so a refusal of either
+   (no recorded group, C-64.1; a mint exhausted; a package refused; a store fault, answered `PULL_WITHIN_FAILED`) leaves
+   neither written. A knock already pulled does not call `within`: its bundle is the one holding its capture, and a pulled knock
+   whose capture no bundle holds (pulled through the doorbell's own route) is promoted by this door's next pull. */
 import { createSha256 } from "../record-grammar/index.mjs";
 import { stampInstant } from "../record-core/index.mjs";
 
@@ -23,9 +23,9 @@ const enc = (text) => {
   return { text, bytes: b.length, sha256: createSha256().update(b).hex() };
 };
 
-/* The bundle, capture-requests R38's shape: the document as `bio/bundle.md`, capture's provenance document as
+/* The bundle, capture-requests R38's shape: the document as `bio/bundle.md`, the doorbell's provenance document as
    `data/provenance.json`, the bytes as a blob at the document's own `file`, and one register row. No contact is in any
-   of it (capture R70): the document carries none, and nothing here reads the inbox's `contact`. */
+   of it (doorbell R13, R16): the document carries none, and nothing here reads the inbox's `contact`. */
 function filing(record, doc, { knockId, by, identity, viewer, at }) {
   const cap = doc.capture || {};
   const id = `${record.allocId("INFO", at.slice(0, 4)).id}-${PULL_BUNDLE_SLUG}`;
@@ -78,8 +78,8 @@ const promoteIn = ({ record, promotion }, doc, who) =>
     return p && p.ok === true ? { ...p, bundleId: p.bundleId ?? pkg.bundleId } : (p || { ok: false, reason: "PROMOTE_FAILED" });
   });
 
-/* Inside the pull: a throw still rolls the pull back, and capture answers `PULL_WITHIN_FAILED` with its own fixed
-   sentence (capture R65), never the thrown message (R6's rule for a thrown error); it is thrown here with no message of
+/* Inside the pull: a throw still rolls the pull back, and the doorbell answers `PULL_WITHIN_FAILED` with its own fixed
+   sentence (doorbell R13), never the thrown message (R6's rule for a thrown error); it is thrown here with no message of
    the store's in it all the same, so nothing of the store's could reach an answer by any route. */
 function promoteOrFault(deps, doc, who) {
   try { return promoteIn(deps, doc, who); }
@@ -88,30 +88,31 @@ function promoteOrFault(deps, doc, who) {
 
 const bundleOf = (p) => ({ bundleId: p.bundleId, bundleSha: p.bundleSha ?? null });
 
-/** R7: `op=inboxpull`. `deps` is `{capture, promotion, record, provenance}` of one record; `by`, `identity` and `viewer`
- *  are the control plane's stamps. Answers capture's pull answer with `bundle: {bundleId, bundleSha}` beside it, or the
- *  first refusal, with nothing written. `resolve` marks `op=inboxresolve` at `pulled` (capture R32, DEC-88 (2)): the
- *  same pull reached as capture's resolve, which takes the member's `reason`, so it is asked of capture's `inboxResolve`
- *  (N499, K1117), whose refusals come first and in its order (`NO_SUCH_KNOCK`; a reason absent, not a string, blank or
- *  over its bound `RESOLVE_NO_REASON`, C-118.7, 400), each before anything is written, and which records the reason on
- *  the knock's row inside the pull, one act with the promotion through the same `within`. A direct pull is
- *  `pullKnock`'s and takes no reason (capture R65). */
+/** R7: `op=inboxpull`. `deps` is `{doorbell, promotion, record, provenance}` of one record (T42, N826: the doorbell's
+ *  instance, `doorbellOf`, never capture's copy); `by`, `identity` and `viewer` are the control plane's stamps. Answers
+ *  the doorbell's pull answer with `bundle: {bundleId, bundleSha}` beside it, or the first refusal, with nothing written.
+ *  `resolve` marks `op=inboxresolve` at `pulled` (doorbell R3, DEC-88 (2)): the same pull reached as the doorbell's
+ *  resolve, which takes the member's `reason`, so it is asked of the doorbell's `inboxResolve` (N499, K1117), whose
+ *  refusals come first and in its order (`NO_SUCH_KNOCK`; a reason absent, not a string, blank or over its bound
+ *  `RESOLVE_NO_REASON`, C-118.7, 400), each before anything is written, and which records the reason on the knock's
+ *  row inside the pull, one act with the promotion through the same `within`. A direct pull is
+ *  `pullKnock`'s and takes no reason (doorbell R13). */
 export async function pullAndFile(deps, { knockId, by, identity, viewer, resolve = false, reason, now = Date.now } = {}) {
-  const { capture, provenance } = deps;
+  const { doorbell, provenance } = deps;
   /* N386: the pull's instant, to the second, through record-core's one stamping helper (its R47). */
   const at = stampInstant("second", +now());
   const who = { knockId, by, identity, viewer, at };
-  /* The pull and its promotion, one transaction (capture R65's `within`): a refusal of either writes nothing. */
+  /* The pull and its promotion, one transaction (doorbell R13's `within`): a refusal of either writes nothing. */
   const within = (doc) => promoteOrFault(deps, doc, who);
-  const pulled = await (resolve ? capture.inboxResolve({ knockId, status: "pulled", by, reason, at, within })
-                                : capture.pullKnock({ knockId, by, at, within }));
+  const pulled = await (resolve ? doorbell.inboxResolve({ knockId, status: "pulled", by, reason, at, within })
+                                : doorbell.pullKnock({ knockId, by, at, within }));
   if (!pulled || pulled.ok !== true) return pulled;
   const { within: filed, ...answer } = pulled;
   if (!pulled.existed) return { ...answer, bundle: bundleOf(filed) };
   /* A knock already pulled: its bundle is the one holding its capture. */
   const home = provenance.homeOf(pulled.capture && pulled.capture.sha256);
   if (home) return { ...answer, bundle: { bundleId: home.bundleId, bundleSha: null, existed: true } };
-  /* A pulled knock no bundle holds (pulled through capture's own route, or before N380): its document is promoted now,
+  /* A pulled knock no bundle holds (pulled through the doorbell's own route, or before N380): its document is promoted now,
      in a transaction of its own; the knock is already pulled, so a refusal leaves it as it was. */
   if (!pulled.document) return { ...answer, bundle: null };
   let again;
