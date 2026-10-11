@@ -523,16 +523,26 @@ const OP_FAMILIES = Object.freeze({
   /* T41 (R43; leg-earning R14; K2569): the projects a question is shown on, a session's read. No arm in leg-earning's
      map: control-plane R71. */
   "leg-earning": family({ owner: "leg-earning", cite: "leg-earning R14; R43; K2569", ops: { projectsshownon: "ownread" } }),
-  /* T41 (R43; case-authoring R64; K2569): an account of a case proposed for its authors, from a session only (R43),
-     `contribute`, `by` stamped (the door hands it as the owner's `proposedBy`); the case's account drafts a session's
-     read. No arm in case-authoring's map: control-plane R71. */
-  "case-authoring": family({ owner: "case-authoring", cite: "case-authoring R64; R43; K2569", actor: QUERY("by"), ops: {
+  /* T41 (R43; K2569), T42 (R48; case-account R1, R3; N839; K2608, K2656): an account of a case proposed for its authors,
+     from a session only (R43), `contribute`, `by` stamped (the door hands it as the owner's `proposedBy`); the case's
+     account drafts a session's read. The family is `case-account`'s since its split from `case-authoring` (K2608),
+     specs unchanged. No arm in case-account's map: control-plane R71. */
+  "case-account": family({ owner: "case-account", cite: "case-account R1, R3; R43; K2569, K2608", actor: QUERY("by"), ops: {
     accountpropose: "member", accountdrafts: "ownread" } }),
   /* T41 (R43; review R30, R31, R33; K2529): the group's approval rule, an administrator's own act (NOT_AN_ADMIN); a case
      edition approved by an approver (CASE_NOT_AN_APPROVER otherwise), `contribute`; the review comments (with an
      optional `draft`), a session's read. No arm in review's map: control-plane R71. */
   review: family({ owner: "review", cite: "review R30, R31, R33; R43; K2529", actor: QUERY("by"), ops: {
     approvalruleset: "admin", caseapprove: "member", reviewcomments: "ownread" } }),
+  /* T42 (R47; extraction R71; N832; K2611, K2613, K2635, K2656): the AI's transcription of a stored PDF reading's pages
+     its own text recognition could not read, a member's act from their own session (classes `admin`, `member`;
+     `machineClasses: []`), `contribute`, `by` stamped and the `viewer` the owner reads sight by; `sha256` (the
+     capture's digest) and the optional `project` (whose account the member asks to pay) are read from the request's
+     address, as `pdfstructure`'s `sha256`, neither a secret nor a stamp. Distinct from content's manual `transcribe`.
+     Its handler is extraction's exported `pageTranscribeOp`, which `EXTRACTION_OPS` does not list (K2635), reached
+     through the plane's gated hook (control-plane R74, plane R36). Not on `AI_GRANT_OPS`. */
+  extraction: family({ owner: "extraction", cite: "extraction R71; R47; K2611, K2613, K2635, K2656", actor: QUERY("by"),
+    ops: { pagetranscribe: "member" } }),
 });
 const FAMILY_OPS = frozenList(Object.values(OP_FAMILIES).flatMap((f) => Object.keys(f.kinds)));
 /* T34: a public kind's op is in no session set (every caller reaches it); every other family op is in both. */
@@ -3313,7 +3323,9 @@ const UNATTENDED_BY_DECISION = Object.freeze({
    T41 (R34, R41–R43, R45; K2593): the ten owed acts of R41 and R42 that PR #19's `mock-acts.js` explains
    (`owed_accountusesset`, …, `owed_handlechange`) are explained in `ACT_HELP` under their ops (affordances R48, merged)
    and named here under no ground; every other member op T41 declares is named here, the reads under the read ground and
-   the acts under the last, named back to the design stream. */
+   the acts under the last, named back to the design stream.
+   T42 (R34, R47; N832, N862; K2611): `pagetranscribe` is named under the last ground until the design stream's words
+   for it land in `ACT_HELP` (BOB's NOTICE to UX-DESIGN). */
 const ACT_HELP_ABSENT = Object.freeze({
   alias: Object.freeze({ ground: "An alias of a declared op (R21): its op's explanation serves it.",
     ops: frozenList([
@@ -3386,7 +3398,8 @@ const ACT_HELP_ABSENT = Object.freeze({
       "milestonerevise", "milestoneset", "moneycheckparam", "moneydetectordefine", "moneydetectorgate",
       "moneydetectorswitch", "moneyfundtype", "moneyingest", "moneysetpropose", "moneywithdraw", "monitorpause",
       "narrativeclaim", "noteshare", "noteunshare", "noticepost", "objectivecondition", "optionrevise",
-      "participantcorrect", "patterngate", "patternswitch", "permeetingbody", "personfactwithdraw", "planaccept",
+      "pagetranscribe", "participantcorrect", "patterngate", "patternswitch", "permeetingbody", "personfactwithdraw",
+      "planaccept",
       "plansubjectremove", "progressiondefine", "projectclosewithgaps", "projectfork", "projectleave",
       "projectowneradd", "projectownerremove", "projectownerrescue", "projectremove", "projectrequest",
       "projectrequestanswer", "projectrequestwithdraw", "projectvisibilityset", "projectwatch", "proposalaccept",
