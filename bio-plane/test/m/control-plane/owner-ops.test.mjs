@@ -14,18 +14,22 @@ function recorder(answers = {}) {
     return Object.hasOwn(answers, method) ? answers[method](args) : { ok: true, method, args };
   } }) };
 }
+/* Each getter of `of` answers one shared recorder, and each asking is logged by the getter's name in `asked`, so a test
+   sees which owner an op reached. `caseAuthoring` is offered too, so a route through it would be seen (R71, K2656). */
+const GETTERS = ["aiUse", "aiRuns", "caseAccount", "caseAuthoring", "review", "legEarning", "capture", "steps",
+                 "investigation", "questionExplorer"];
 function owners(answers) {
   const r = recorder(answers);
-  const of = Object.fromEntries(["aiUse", "aiRuns", "caseAuthoring", "review", "legEarning", "capture", "steps",
-                                 "investigation", "questionExplorer"].map((k) => [k, () => r.owner]));
-  return { of, log: r.log };
+  const asked = [];
+  const of = Object.fromEntries(GETTERS.map((k) => [k, () => { asked.push(k); return r.owner; }]));
+  return { of, log: r.log, asked };
 }
 const serve = (op, { query = {}, body, answers } = {}) => {
-  const { of, log } = owners(answers);
+  const { of, log, asked } = owners(answers);
   const url = new URL("http://do/" + op);
   for (const [k, v] of Object.entries(query)) url.searchParams.set(k, v);
   const out = controlPlaneOwnerOps(of, url, body)[op]();
-  return { out, log };
+  return { out, log, asked };
 };
 
 /* op → [service, fields the act names, the stamp the service takes and its expected value for `by: member:ann`] */
@@ -138,12 +142,28 @@ test("R71 (K2569): the ops whose owners export no arm call their services by nam
   assert.equal(log[0].args.draft, "DRAFT-1");
 });
 
-test("R72 (capture R86): `captureupload` hands the request's raw body to capture's `uploadCapture` as `bytes`, unread, its words from the address and `by` the door's (negative control: nothing but the bytes is taken from the body)", () => {
+test("R72 (capture R86; T42, K2631, K2656): `captureupload` hands the request's raw body to capture's `uploadCapture` as `bytes`, unread, its words from the address and `by` the door's, and passes no `within` — one in the address reaches nothing (negative controls: nothing but the bytes is taken from the body; the other words of the same address do cross)", () => {
   const stream = new ReadableStream();
-  const { log } = serve("captureupload", { query: { by: "ann", statement: "she gave it to me", name: "a.pdf", within: "PRJ-1" }, body: stream });
-  assert.equal(log[0].method, "uploadCapture");
+  const { log, asked } = serve("captureupload", { query: { by: "ann", statement: "she gave it to me", name: "a.pdf", within: "PRJ-1" }, body: stream });
+  assert.deepEqual([log.length, log[0].method, asked], [1, "uploadCapture", ["capture"]]);
   assert.equal(log[0].args.bytes, stream);
-  assert.deepEqual([log[0].args.by, log[0].args.statement, log[0].args.name, log[0].args.within], ["ann", "she gave it to me", "a.pdf", "PRJ-1"]);
+  assert.deepEqual(Object.keys(log[0].args).sort(), ["by", "bytes", "name", "statement"], "exactly the four fields capture R86 takes from a request");
+  assert.deepEqual([log[0].args.by, log[0].args.statement, log[0].args.name], ["ann", "she gave it to me", "a.pdf"]);
+  assert.equal("within" in log[0].args, false, "a `within` in the address reaches nothing");
+  /* without a `within` in the address the call is the same: the address never decides it */
+  const plain = serve("captureupload", { query: { by: "ann", statement: "s", name: "a.pdf" }, body: stream });
+  assert.deepEqual(Object.keys(plain.log[0].args).sort(), Object.keys(log[0].args).sort());
+});
+
+test("R71 (T42; N839, K2656; case-account R1, R3): `accountpropose` and `accountdrafts` are asked of `case-account` itself through `of.caseAccount()`, never through `case-authoring`'s pass-through; `proposedBy` the door's bare `by` and `viewer` the door's, the body's forged copies losing (negative control: the getters' log shows `caseAuthoring` never asked, and a neighbouring op still reaches its own owner)", () => {
+  const forged = { by: FORGED, viewer: FORGED, proposedBy: FORGED };
+  const p = serve("accountpropose", { query: { by: "member:ann", viewer: "member:ann" }, body: { case: "CASE-1", framing: "time_order", text: "t", ...forged } });
+  assert.deepEqual([p.asked, p.log.map((l) => l.method)], [["caseAccount"], ["accountPropose"]]);
+  assert.deepEqual([p.log[0].args.proposedBy, p.log[0].args.viewer, p.log[0].args.case, p.log[0].args.framing], ["ann", "member:ann", "CASE-1", "time_order"]);
+  const d = serve("accountdrafts", { query: { case: "CASE-1", viewer: "member:ann" }, body: forged });
+  assert.deepEqual([d.asked, d.log.map((l) => l.method), d.log[0].args], [["caseAccount"], ["accountDrafts"], { case: "CASE-1", viewer: "member:ann" }]);
+  /* negative control: an op of another owner reaches that owner's getter, so the log above names the owner truly */
+  assert.deepEqual(serve("caseapprove", { query: { by: "member:ann", case: "CASE-1" } }).asked, ["review"]);
 });
 
 test("R71 (steps R9): the store-internal `capturestepproduct` ties a landed capture to a step the member may see through `recordProduct`, and a step she may not see ties nothing, answered as steps answers it (negative control)", () => {

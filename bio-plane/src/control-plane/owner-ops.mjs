@@ -4,7 +4,7 @@
    body's copy of `by`, `viewer` or `principal` never wins (R29; the door also deletes any the caller sent, R17).
 
    `plane` spreads this map into its route map (R5) beside the owners' own, handing it each owner's one instance through
-   `of`, a set of getters (`of.aiUse()`, `of.aiRuns()`, `of.caseAuthoring()`, `of.review()`, `of.legEarning()`,
+   `of`, a set of getters (`of.aiUse()`, `of.aiRuns()`, `of.caseAccount()`, `of.review()`, `of.legEarning()`,
    `of.capture()`, `of.steps()`, `of.investigation()`, `of.questionExplorer()`), each asked only when its op is served. */
 
 /* The `by` stamp is the actor in the viewer's form (`member:<id>`, the founder's `admin`, a machine `class:<cls>`); the
@@ -33,9 +33,10 @@ export function controlPlaneOwnerOps(of, url, body) {
     stepsrunai: () => of.aiRuns().openMany({ ...b, principalPlane: q("principal") ?? q("by"), actor: q("by"), viewer: q("viewer") }),
     grouptestset: () => of.aiRuns().groupTestSet({ ...b, by: q("by") }),
     grouptestresults: () => of.aiRuns().groupTestResults({ part: f("part"), viewer: q("viewer") }),
-    /* case-authoring R64 (K2569): a proposed account of a case, labelled with its proposer as `whatchangedpropose`'s are. */
-    accountpropose: () => of.caseAuthoring().accountPropose({ ...b, proposedBy: bare(q("by")), viewer: q("viewer") }),
-    accountdrafts: () => of.caseAuthoring().accountDrafts({ case: f("case"), viewer: q("viewer") }),
+    /* case-account R1, R3 (R71; T42, N839, K2656): a proposed account of a case, labelled with its proposer as
+       `whatchangedpropose`'s are, asked of `case-account` itself, never through `case-authoring`'s pass-through. */
+    accountpropose: () => of.caseAccount().accountPropose({ ...b, proposedBy: bare(q("by")), viewer: q("viewer") }),
+    accountdrafts: () => of.caseAccount().accountDrafts({ case: f("case"), viewer: q("viewer") }),
     /* review R30, R31, R33 (K2529): the approval rule, an approval, and the comments on a case (`draft` optional). */
     approvalruleset: () => of.review().approvalRuleSet({ approvers: b.approvers, by: bare(q("by")) }),
     caseapprove: () => of.review().caseApprove({ case: f("case"), edition: f("edition"), docSha: f("docSha"),
@@ -48,9 +49,9 @@ export function controlPlaneOwnerOps(of, url, body) {
 
     /* capture R86 (R72; K2458): a member's upload, the request's raw body handed on as `bytes` (a stream, never read
        here), its words from the address, `by` the door's. Capture's own map holds no arm for it, so this one calls its
-       service by name, as R71's do. */
-    captureupload: () => of.capture().uploadCapture({ bytes: body, statement: q("statement"), name: q("name"),
-                                                      within: q("within"), by: q("by") }),
+       service by name, as R71's do. No `within` (T42; K2631, K2656): capture R86's `within` is a function an in-process
+       caller hands, never a request's field, so one in the address reaches nothing. */
+    captureupload: () => of.capture().uploadCapture({ bytes: body, statement: q("statement"), name: q("name"), by: q("by") }),
     /* R71 (steps R9): STORE-INTERNAL, no spec, so no caller reaches it (R2): the door ties a member's landed capture to
        the step she named, `recordProduct` asked only for a step she may see; one she may not is answered as steps
        answers an unseen step. */

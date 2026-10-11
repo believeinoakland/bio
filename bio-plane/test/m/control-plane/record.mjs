@@ -2,8 +2,8 @@
    answering a cursor, `transactionSync` a savepoint that rolls back on a throw, as workerd's does — with the modules the
    record store's door routes to here, and the modules a promotion's registered steps reach, composed from earlier modules
    only (all in this module's `uses`), each built and migrated in the order the composition root uses, with
-   instance-setup started, and an in-memory evidence bucket. The door is this module's `dispatch` over a route map of capture's own routes and
-   `controlPlaneRoutes`, so no suite here constructs plane's class (P4). `record({step: true})` also registers this
+   instance-setup started, and an in-memory evidence bucket. The door is this module's `dispatch` over a route map of capture's own routes, the doorbell's
+   (T42) and `controlPlaneRoutes`, so no suite here constructs plane's class (P4). `record({step: true})` also registers this
    module's promotion step (R42) at the rank the composition root gives it, with `probes` (`{module: {check, project}}`)
    registered beside it, and routes provenance's ops (`op=testify`) with provenance-routes' beside them (`op=provenancechain`,
    `provenanceroute`, `provenanceroutes`; N512). attestation and provenance-routes are built directly after provenance,
@@ -42,6 +42,7 @@ import { runProductionsOf } from "../../../src/run-productions/index.mjs";
 import { captureRequestsOf } from "../../../src/capture-requests/index.mjs";
 import { intentOf } from "../../../src/intent/index.mjs";
 import { captureOf, captureOps } from "../../../src/capture/index.mjs";
+import { doorbellOf, doorbellOps } from "../../../src/doorbell/index.mjs";
 import { instanceSetupOf } from "../../../src/setup.mjs";
 
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
@@ -118,6 +119,9 @@ export async function record({ step = false, probes = {}, sealSecret = null } = 
     promotion.registerStep("control-plane", typeof step === "object" ? step : promotionStep(ctx));
   }
   const capture = captureOf(ctx, { env });
+  /* T42 (N826): the doorbell, built on capture's instance for the storage as the composition root builds it; its routes
+     (the knock, the inbox, the doorbell's own pull) answer for the doorbell's, not capture's copy */
+  doorbellOf(ctx, { capture });
   captureRequestsOf(ctx, { env, storeName: () => "bio", now: () => Date.now(), runs: aiRunsOf(ctx, env), aiRuns: aiRunsOf(ctx, env) });
   observationLogOf(ctx).listenToCapture(capture);
   /* the migration pass, in the composition root's order, for every owner this module uses (host-governor's tables are
@@ -130,6 +134,7 @@ export async function record({ step = false, probes = {}, sealSecret = null } = 
   /* instance-setup started, as the composition root starts it: it provides the producing group a promotion reads */
   await instanceSetupOf(ctx, env).start();
   const store = { routes: (url, body) => ({ ...captureOps(captureOf(ctx), url, body, env),
+                                            ...doorbellOps(doorbellOf(ctx), url, body),
                                             ...(step ? provenanceOps(provenanceOf(ctx), url, body, { observer: OBSERVATION_LOG_MODULE }) : {}),
                                             ...(step ? provenanceRouteOps(provenanceRoutesOf(ctx), url, body) : {}),
                                             ...controlPlaneRoutes(ctx, url, body) }),
