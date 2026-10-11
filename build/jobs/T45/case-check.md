@@ -1,6 +1,6 @@
 # case-check (T45)
 
-**Status** · session_0147VSsrfyRUc6H7GZeANVWi · depth 2 · WAITING ON BOB (J4) · handled B4
+**Status** · session_0147VSsrfyRUc6H7GZeANVWi · depth 2 · WORKING · handled B4
 
 ## J1 · QUESTION
 
