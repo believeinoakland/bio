@@ -51,8 +51,12 @@ export function floorsOf(bar) {
 }
 
 /* THE QUARTET. `subject` is the JSON value whose canonical bytes are hashed; `over` names it in words, so
-   a reader knows what to re-hash. Returns the bytes too, for the caller that must store or serve them. */
-export async function inbandQuartet({ subject, over, date = null, author = null, bar = null }) {
+   a reader knows what to re-hash. Returns the bytes too, for the caller that must store or serve them.
+   public-read R34 (T45; v0.2 rules 14, 21): `group` is the group's per-group fields (`groupFields()`) as the caller
+   read them, answered unchanged as `group` (null with none given). They sit BESIDE `hash` and never inside what it
+   covers, which is the subject's bytes only: two groups stamping the same bytes carry the same `hash.sha256`, so a
+   joint text's body fingerprint is computed without them. The format stays `bio-inband/1`: the field is additive. */
+export async function inbandQuartet({ subject, over, date = null, author = null, bar = null, group = null }) {
   const bytes = canonicalBytes(subject);
   const sha256 = await sha256HexOf(bytes);
   return {
@@ -64,6 +68,7 @@ export async function inbandQuartet({ subject, over, date = null, author = null,
       date: date ?? null,
       author: author ?? null,
       floors: floorsOf(bar),
+      group: group ?? null,
     },
   };
 }
