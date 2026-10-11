@@ -27,7 +27,7 @@ The checks (format, architecture, coverage, ownership) were all 0 failures. Arch
   - `test/m/case-authoring/fixture.mjs`, `account.test.mjs` and `invariants.test.mjs`.
 - A worker read the rest whole and wrote a 9,026-byte summary citing file and line: `document.mjs`, `checks.mjs`, `searched.mjs` and the 22 other test files. None uses a moved name. `tensions.test` uses `w.runs` for contradiction's gate, which stays. `carries.test` 65/75 counts tables across a publish, which still holds because the fixture creates case-account's tables first.
 
-**For BOB.** `modules.json`'s case-authoring `uses` still lists `ai-runs` and lacks `case-account`. That edge is BOB's (the map's §3; START); the architecture check will need it once case-account's files are tracked.
+**Edges (B2, K2670).** In `build/modules.json` on this branch, case-authoring's `uses` gains `case-account` (after `case-disclosures`) and loses `ai-runs`. format and architecture: 0 failures.
 
 ## J1 · REPORT
 
