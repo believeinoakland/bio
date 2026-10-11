@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { EXTRACT_PROPOSE_CHECKS, runProductionsOps, migrateRunProductions, passageProposalId, PROPOSED_CONNECTION_SAYS,
          BEARING_NOTE_SAYS, READ_PAGES_AT_A_TIME, DOC_PARAS_PER_PAGE } from "../../../src/run-productions/index.mjs";
 import { ACCEPTANCE_FORMS } from "../../../src/record-grammar/index.mjs";
+import { inquiryOf } from "../../../src/inquiry/index.mjs";
 import { world, LAYER, Q, Q2, PROJ, DOC, DOC2, HIDDEN_PROJ, ALICE, BOB, MACHINE, sha } from "./fixture.mjs";
 
 const AK = "class:ai/k1";
@@ -567,4 +568,15 @@ test("R25: fail closed — an acceptance that cannot be read refuses the leg, a 
   for (const a of [undefined, null, {}, { legs: null }, { legs: [null, 5, "x", {}] }, { legs: [{ target: 7 }] }])
     assert.doesNotThrow(() => w.p.machinePassage(a));
   assert.equal(w.p.machinePassage({ legs: [null, 5, "x", {}], author: ALICE }), null);
+});
+
+test("R25 (inquiry R62, merged): the read is registered with inquiry's real slot, so a second registration by any module is refused LISTENER_DECLARED naming run-productions", () => {
+  const w = world({ realInquiry: true });
+  const inquiry = inquiryOf(w.host);
+  const second = inquiry.onMachinePassage("another-module", () => null);
+  assert.equal(second.ok, false);
+  assert.equal(second.code, "LISTENER_DECLARED");
+  assert.match(JSON.stringify(second), /run-productions/);
+  /* The negative control: where run-productions registered elsewhere (the stand-in), inquiry's slot is open. */
+  assert.equal(inquiryOf(world().host).onMachinePassage("another-module", () => null).ok, true);
 });
