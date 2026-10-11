@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #151 · session_01TNKsMjSu49MiEhsdjBhpvT · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #13 session_01TfvYox4Sw4X6dSjqk6M1oK; bundler: BUNDLER #14 session_01X5bkceFD2GHGbfimdSRiKL; record-core: RECORD-CORE #20 session_013PmyJwtkkmXmvfs4xFhWb6; membership: MEMBERSHIP #33 session_01RzYrca5P3xs9xcgtmKsFnL
+**Jobs** · record-grammar: RECORD-GRAMMAR #13 session_01TfvYox4Sw4X6dSjqk6M1oK; bundler: BUNDLER #14 session_01X5bkceFD2GHGbfimdSRiKL; record-core: RECORD-CORE #20 session_013PmyJwtkkmXmvfs4xFhWb6; membership: MEMBERSHIP #33 session_01RzYrca5P3xs9xcgtmKsFnL; credentials: CREDENTIALS #12 session_01SmVin6JuSDfPb4PyoweFzP
 
 **At T42's opening (K2607):** opened 2026-10-10 from `main` @ 65490c5e33 (T41 closed, K2603), with `tranche/T41`'s later build state merged in (K1703); Bob: "keep going until I tell you to pause" (K2605). Bob's meter at the opening: 18% weekly (primary; K2615). Development runs through every layer; the 80% pause (K2341) and the account-switch rule stand.
 
