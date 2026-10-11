@@ -92,3 +92,7 @@ Results:
 Still open for BOB: plane `store.mjs`:677 hands `caseAccount` (plane R35, T42-30).
 
 Size (session_017Td7k1YMLLrLUpRB4yBYq4): test runs 21, module lines 3529
+
+## J4 · COMPLETE
+
+B2 item 1 is confirmed covered, so no new change. The pagetranscribe author is the session's, as for pdfstructure (hook and declined-hook forward alike). t42-door.test.mjs forges author in the address and the body as its negative control, and it is not taken. Item 2 was done in J1. Merged tranche/T42 (store-door merged and the edges in): control-plane 223/223; plane (users) 167/167. Checks: format, architecture, coverage 47/47 and ownership each 0 failures. Still for BOB: plane store.mjs:677's caseAccount getter (plane R35), and plane door.mjs:54's ai viewer (J1 item 3). Record: build/jobs/T42/control-plane.md.
