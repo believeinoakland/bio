@@ -44,6 +44,11 @@
  *   entities     `readEntity` (R25: whether the actor's entity is an `office`; R28: or an organisation, or a person).
  *   officeEntityOf `({role, body})` → the `office` entity seeded for that office (the bridge, instance-setup R50), or
  *                null; wired by the composition root (as local-facts' `officeOf`). Absent, no office entity is held.
+ *   caseCheck     `caseCheckOf`, `heldFindingVersions` (its R2, R3: R31's checked-and-held findings, R33's voiding,
+ *                 R34's re-pin; T45).
+ *   acceptedWork  `acceptedFinding`, `acceptedLegRefusals`, `publisherMoves` (its R2, R3, R8: R32's accepted findings,
+ *                 its refusals minted there, R33's voiding; T45).
+ *   caseImport    `importedCase` (its R4: R32's source identity, declared stake and edition date, where it records them).
  *   now           the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
  *
  * T35 (N651; K1723, K1713): a standard that does not bind the act's body is a benchmark (R27): never `noncompliant`
@@ -68,6 +73,9 @@ import { contradictionOf } from "../contradiction/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { eventsOf, noSuchEvent } from "../events/index.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
+import { caseCheckOf } from "../case-check/index.mjs";
+import { acceptedWorkOf } from "../accepted-work/index.mjs";
+import { caseImportOf } from "../case-import/index.mjs";
 import { localDay } from "../civil-time/index.mjs";
 import { isMachineIdentity, proposalLabel, normalizeType, deriveInquiryTitle, idPattern } from "../record-grammar/index.mjs";
 import { CONFORMANCE_CHECKS, refusal } from "./checks.mjs";
@@ -142,6 +150,28 @@ export const MEASURE_SAYS = "What the office does, measured: the calculation's r
 const measureWords = (calc) => `what the office does, as measured by ${calc}`;
 
 const ACT_RE = idPattern("ACT");
+/** R32: an accepted finding's label. */
+export const ACCEPTED_SAYS = "Another group's finding, accepted by this group at the edition named: read-only, never "
+  + "stronger than that edition.";
+/** R32 (K2832): what an accepted finding reads while the source's identity and stake are not recorded at import. */
+export const SOURCE_FACTS_UNRECORDED = "the source group's public identity and declared stake were not recorded when this "
+  + "edition was imported, so they read undetermined";
+/** R33: the sentence beside a void determination. */
+export const VOID_SAYS = "A finding this determination rests on no longer stands, so each outcome reads undetermined "
+  + "until a member re-evaluates it by superseding it. The member's recorded outcome is kept beside it.";
+/* R33: the most pages of publisher moves one read takes (200 each). */
+const MOVE_PAGES_MAX = 50;
+/* R11, R33: the most batches of 200 one page filtered by `void` reads. */
+const VOID_SCAN_BATCHES = 50;
+const THREW = Symbol("threw");
+/** R35 (T45): the input keys that would adopt another group's determination. */
+export const ADOPTION_KEYS = Object.freeze(["adopts", "imported_determination", "source_determination"]);
+/** R2 (T45): the three kinds of finding a determination rests on. */
+export const FINDING_KINDS = Object.freeze(["published", "checked_held", "accepted"]);
+/* R32: an imported finding reference, as inquiry-grammar R11 spells it (`imported:<import>/<finding>`); its import. */
+const IMPORTED_REF_RE = /^imported:([^/\s]+)\/(\S+)$/;
+const isImportedRef = (v) => typeof v === "string" && IMPORTED_REF_RE.test(v);
+const importOfRef = (v) => (IMPORTED_REF_RE.exec(String(v ?? "")) || [])[1] ?? null;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const ID_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/;
 const str = (v) => (typeof v === "string" && v.trim() ? v.trim() : null);
@@ -198,13 +228,14 @@ export class Conformance {
 
   constructor({ storage, record, membership, promotion, host = null, content = null, inquiry = null, strength = null,
                 reevaluation = null, publication = null, standards = null, contradiction = null, events = null,
-                entities = null, calculations = null, officeEntityOf = null, now = null } = {}) {
+                entities = null, calculations = null, caseCheck = null, acceptedWork = null, caseImport = null,
+                officeEntityOf = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.#deps = { host, content, inquiry, strength, reevaluation, publication, standards, contradiction, events, entities,
-                   calculations };
+                   calculations, caseCheck, acceptedWork, caseImport };
     this.officeEntityOf = typeof officeEntityOf === "function" ? officeEntityOf : null;
     this.now = typeof now === "function" ? now : () => stampInstant("second");
   }
@@ -220,6 +251,9 @@ export class Conformance {
   get events() { return this.#deps.events ||= eventsOf(this.#deps.host); }
   get entities() { return this.#deps.entities ||= entitiesOf(this.#deps.host); }
   get calculations() { return this.#deps.calculations ||= calculationsOf(this.#deps.host); }
+  get caseCheck() { return this.#deps.caseCheck ||= caseCheckOf(this.#deps.host); }
+  get acceptedWork() { return this.#deps.acceptedWork ||= acceptedWorkOf(this.#deps.host); }
+  get caseImport() { return this.#deps.caseImport ||= caseImportOf(this.#deps.host); }
 
   migrate() { migrateConformance(this.sql); }
 
@@ -323,6 +357,20 @@ export class Conformance {
         { unresolved: unseen.filter(Boolean).slice(0, 20) });
     /* END DEC-49 REGION is-cause-evidenced */
     return { ok: true, cause: { statement, evidence: [...new Set(ids)] } };
+  }
+
+  /* R35 (T45; Actions D16a): another group's determination is never adopted as this group's: an input naming one (a
+     key ADOPTION_KEYS names, or a `supersedes` that is an imported reference) is refused, writing nothing. */
+  #refuseAdoption(input) {
+    const keys = ADOPTION_KEYS.filter((k) => isObj(input) && input[k] !== undefined && input[k] !== null);
+    const imported = isObj(input) && typeof input.supersedes === "string" && /^imported:/.test(input.supersedes.trim());
+    /* DEC-49 REGION is-own-determination */
+    if (keys.length || imported)
+      return refusal("DETERMINATION_NOT_ADOPTABLE", "another group's determination is never adopted as this group's: a "
+        + "member of this group determines, against standards in this group's record. Nothing was written.",
+        { keys: imported ? [...keys, "supersedes"] : keys });
+    /* END DEC-49 REGION is-own-determination */
+    return null;
   }
 
   /* R22: no recommendation or policy, anywhere in the input: a recommendation is a proposed action, recorded by
@@ -606,41 +654,100 @@ export class Conformance {
             to ? { date: to, why: null } : { date: null, why: "the end of the act's event's band is not stated" }];
   }
 
-  /* R2: each finding, pinned to a ratified edition of `project` (publication R37). An item is an id or
-     `{finding, version?, case?, edition?}`; of the editions left, the latest edition of the last case is pinned. */
-  #pinFindings(findings, project) {
+  /* R2 (T45: three kinds), R31, R32: each finding, pinned. An item is an id or `{finding, version?, case?, edition?}`
+     (an accepted finding: `{ref | finding, edition}`). Asked in this order, the first kind that holds is pinned:
+     PUBLISHED, a ratified edition of `project` (publication R37), of the editions left the latest edition of the last
+     case; CHECKED AND HELD (R31), a check of `project` reading `held` that pins the version (case-check R3, read again
+     through its R2), the latest; ACCEPTED (R32), an imported finding reference (`imported:<import>/<finding>`,
+     inquiry-grammar R11) at the edition named, with an acceptance in force there (accepted-work R2), its refusals
+     minted by accepted-work (its R3), never copied. None of the three is FINDING_NOT_PUBLISHED. */
+  #pinFindings(findings, project, viewer) {
     const list = Array.isArray(findings) ? findings : [];
     /* DEC-49 REGION is-finding-named */
     if (!list.length)
-      return refusal("NO_FINDINGS", "a determination rests on at least one published finding (R14). Nothing was written.");
+      return refusal("NO_FINDINGS", "a determination rests on at least one finding: published, checked and held, or "
+        + "accepted from another group (R14). Nothing was written.");
     /* END DEC-49 REGION is-finding-named */
     const pins = [], seen = new Set();
     for (const item of list) {
-      const f = isObj(item) ? { finding: str(item.finding ?? item.id), version: str(item.version),
+      const f = isObj(item) ? { finding: str(item.finding ?? item.ref ?? item.id), version: str(item.version),
                                  case: str(item.case), edition: item.edition == null ? null : Number(item.edition) }
                             : { finding: str(item), version: null, case: null, edition: null };
-      let items = [];
-      if (f.finding) {
-        let r = null;
-        try { r = this.publication.publishedEditionsOf({ finding: f.finding, version: f.version, project }); } catch { r = null; }
-        items = r && r.ok !== false && Array.isArray(r.items) ? r.items : [];
-        items = items.filter((i) => i.project === project && (!f.case || i.case === f.case)
-                                    && (f.edition == null || i.edition === f.edition));
+      let pin = null;
+      if (f.finding && isImportedRef(f.finding)) {
+        const a = this.#acceptedPin(f, viewer);
+        if (a && a.ok === false) return a;
+        pin = a;
+      } else if (f.finding) {
+        pin = this.#publishedPin(f, project) || this.#heldPin(f, project);
       }
       /* DEC-49 REGION is-finding-published */
-      if (!items.length)
-        return refusal("FINDING_NOT_PUBLISHED", `${String(f.finding ?? "a finding named").slice(0, 80)} is not a finding `
-          + "this project has published in a ratified case edition. A finding published only by another project, or not "
-          + "at all, is not one. Nothing was written.", { finding: f.finding });
+      if (!pin)
+        return refusal("FINDING_NOT_PUBLISHED", `${String(f.finding ?? "a finding named").slice(0, 80)} is none of the `
+          + "three kinds a determination rests on: a finding this project published in a ratified case edition, one "
+          + "checked for publication and held unsigned by this project, or another group's finding accepted at the "
+          + "edition named. A finding published only by another project is not one. Nothing was written.",
+          { finding: f.finding, kinds: [...FINDING_KINDS] });
       /* END DEC-49 REGION is-finding-published */
-      const pick = items.reduce((best, i) => (!best || i.case > best.case || (i.case === best.case && i.edition > best.edition)
-        ? i : best), null);
       if (seen.has(f.finding)) continue;
       seen.add(f.finding);
-      pins.push({ finding: f.finding, case: pick.case, edition: pick.edition, version_sha: pick.version_sha ?? null,
-                  role: pick.role ?? null, frozen: pick.strength ?? null });
+      pins.push(pin);
     }
     return { ok: true, pins };
+  }
+
+  /* R2: the published pin, or null. */
+  #publishedPin(f, project) {
+    let r = null;
+    try { r = this.publication.publishedEditionsOf({ finding: f.finding, version: f.version, project }); } catch { r = null; }
+    const items = (r && r.ok !== false && Array.isArray(r.items) ? r.items : [])
+      .filter((i) => i.project === project && (!f.case || i.case === f.case) && (f.edition == null || i.edition === f.edition));
+    if (!items.length) return null;
+    const pick = items.reduce((best, i) => (!best || i.case > best.case || (i.case === best.case && i.edition > best.edition)
+      ? i : best), null);
+    return { basis: "published", finding: f.finding, case: pick.case, edition: pick.edition,
+             version_sha: pick.version_sha ?? null, role: pick.role ?? null, frozen: pick.strength ?? null };
+  }
+
+  /* R31: the checked-and-held pin, or null: case-check R3's items of `project` (the version and any case or edition
+     named kept), each read again through its R2, which must answer `held`; the latest check. */
+  #heldPin(f, project) {
+    let r = null;
+    try { r = this.caseCheck.heldFindingVersions({ finding: f.finding, version: f.version, project }); } catch { r = null; }
+    const items = (r && r.ok !== false && Array.isArray(r.items) ? r.items : [])
+      .filter((i) => i.project === project && (!f.case || i.case === f.case) && (f.edition == null || i.edition === f.edition))
+      .filter((i) => {
+        let st = null;
+        try { st = this.caseCheck.caseCheckOf({ check: i.check }); } catch { st = null; }
+        return isObj(st) && st.state === "held";
+      });
+    if (!items.length) return null;
+    const pick = items.reduce((best, i) => (!best || instantOrder(i.checked_at, best.checked_at) > 0 ? i : best), null);
+    return { basis: "checked_held", finding: f.finding, case: pick.case, edition: pick.edition,
+             version_sha: pick.version_sha ?? null, role: pick.role ?? null, frozen: null, check: pick.check,
+             checked_at: pick.checked_at };
+  }
+
+  /* R32: the accepted pin, or accepted-work's refusal (its R3: absent or unreadable is C-21.5, an acceptance not in
+     force at the edition C-21.4). The pair is the source edition's as accepted-work answers it, never raised. */
+  #acceptedPin(f, viewer) {
+    const edition = f.edition;
+    let found = [];
+    try { found = this.acceptedWork.acceptedLegRefusals({ legs: [{ target: f.finding, target_edition: edition, ord: 0 }],
+                                                            viewer }); } catch { found = null; }
+    if (!Array.isArray(found)) found = [{ code: "ACCEPTED_WORK_UNREADABLE", check: null, translation: null,
+                                          detail: "accepted work could not be read" }];
+    if (found.length) {
+      const x = found[0];
+      return { ok: false, reason: x.code, code: x.code, check: x.check, translation: x.translation,
+               detail: `${x.detail}. Nothing was written.`, finding: f.finding, edition: edition ?? null };
+    }
+    let a = null;
+    try { a = this.acceptedWork.acceptedFinding({ ref: f.finding, edition, viewer }); } catch { a = null; }
+    if (!isObj(a) || !isObj(a.acceptance)) return null;
+    return { basis: "accepted", finding: f.finding, case: str(a.case) ?? "", edition, version_sha: null, role: null,
+             frozen: isObj(a.pair) ? a.pair : null, source_group: str(a.group), accepted_by: str(a.acceptance.by),
+             accepted_at: str(a.acceptance.at) };
   }
 
   /* R1, R3, R4: the standards, each read through `standards.inForce` at the act's dates; the outcome is checked later,
@@ -874,17 +981,9 @@ export class Conformance {
       return refusal("SUPERSEDES_ANOTHER_ACT", `${id} is a determination of ${prev.act_id}, and this names ${act.event}. `
         + "Nothing was written.", { supersedes: id, act: act.event, predecessor_act: prevEvent ?? prev.act_id });
     /* END DEC-49 REGION is-same-act */
-    const why = typeof reason === "string" ? reason.trim() : reason == null ? "" : null;
-    /* DEC-49 REGION is-reason-given */
-    if (why === "")
-      return refusal("CONFORMANCE_NO_REASON", "superseding a determination says why it is superseded; this names no reason. "
-        + "Nothing was written.", { supersedes: id, max: REASON_MAX });
-    /* END DEC-49 REGION is-reason-given */
-    /* DEC-49 REGION is-reason-stated */
-    if (why === null || why.length > REASON_MAX)
-      return refusal("CONFORMANCE_BAD_REASON", `superseding a determination says why, as text of at most ${REASON_MAX} characters. `
-        + "Nothing was written.", { supersedes: id, max: REASON_MAX });
-    /* END DEC-49 REGION is-reason-stated */
+    const why = Conformance.#reason(reason);
+    const bad = this.#reasonRefusal(why, "superseding a determination", { supersedes: id });
+    if (bad) return bad;
     /* R7, R20: superseded at most once; the successor is in the same project, which the viewer sees in full. */
     const by = this.#one(`SELECT superseded_by FROM determination_supersessions WHERE superseded=?`, id);
     if (by) return determinationSuperseded(id, by.superseded_by, { supersedes: id });
@@ -952,9 +1051,11 @@ export class Conformance {
     const head = this.#determineHead(input);
     if (head) return head;
     const pid = str(project);
+    const adopted = this.#refuseAdoption(input);
+    if (adopted) return adopted;
     const a = this.#actOf(act, pid, supersedes, viewer);
     if (!a.ok) return a;
-    const f = this.#pinFindings(findings, pid);
+    const f = this.#pinFindings(findings, pid, viewer);
     if (!f.ok) return f;
     const s = this.#readStandards(standards, a.act, viewer);
     if (!s.ok) return s;
@@ -1051,9 +1152,10 @@ export class Conformance {
          VALUES (?,?,?,?,?,?,?,?)`, id, i, x.standard, x.requires, x.did, x.reading, JSON.stringify(x.content),
         x.measure ? JSON.stringify(x.measure) : null));
       pins.forEach((x, i) => this.sql.exec(
-        `INSERT INTO determination_findings (determination_id, ord, finding_id, case_id, edition, version_sha, role, frozen)
-         VALUES (?,?,?,?,?,?,?,?)`, id, i, x.finding, x.case, x.edition, x.version_sha, x.role,
-        x.frozen ? JSON.stringify(x.frozen) : null));
+        `INSERT INTO determination_findings (determination_id, ord, finding_id, case_id, edition, version_sha, role, frozen,
+           basis, check_id, checked_at, source_group, accepted_by, accepted_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        id, i, x.finding, x.case, x.edition, x.version_sha, x.role, x.frozen ? JSON.stringify(x.frozen) : null, x.basis,
+        x.check ?? null, x.checked_at ?? null, x.source_group ?? null, x.accepted_by ?? null, x.accepted_at ?? null));
       qs.forEach((x, i) => this.sql.exec(
         `INSERT INTO determination_questions (determination_id, ord, question, inquiry_id, opened, project_id)
          VALUES (?,?,?,?,?,?)`, id, i, x.question, x.inquiry, x.opened ? 1 : 0, project));
@@ -1096,6 +1198,112 @@ export class Conformance {
   /* ===================================================================== *
    * R9, R10, R15: the reads
    * ===================================================================== */
+
+  /* R2, R9, R24, R31–R34 (T45): each pinned finding's basis as read now, and R33's void causes, for one determination
+     (`r`) as `viewer` reads it. `memo` (a page's, R11) holds each check's state, each import edition's facts and the
+     publisher moves, read once per page. Answers `{pins: Map(finding row → {basis, frozen?, hidden}), causes}`.
+     Every read is fail-closed: one that cannot complete is a cause `unreadable`, never not-void. Writes nothing. */
+  #bases(r, findingRows, viewer, memo = new Map()) {
+    const once = (key, ask) => { if (!memo.has(key)) { let v; try { v = ask(); } catch { v = THREW; } memo.set(key, v); } return memo.get(key); };
+    const causes = [], pins = new Map();
+    for (const x of findingRows) {
+      const kind = x.basis || "published";
+      if (kind === "published") {
+        pins.set(x, { basis: { kind: "published", case: x.case_id, edition: Number(x.edition) }, hidden: false });
+        continue;
+      }
+      if (kind === "checked_held") {
+        const check = { check: x.check_id, checked_at: x.checked_at };
+        const st = once(`check:${x.check_id}`, () => this.caseCheck.caseCheckOf({ check: x.check_id }));
+        const fenced = viewer == null ? null
+          : once(`check:${x.check_id}:${viewer}`, () => this.caseCheck.caseCheckOf({ check: x.check_id, viewer }));
+        const hidden = viewer != null && (!isObj(fenced) || fenced === THREW || fenced.ok === false);
+        const held = { kind: "checked_held", case: x.case_id, edition: Number(x.edition), ...check };
+        if (!isObj(st) || st === THREW || st.ok === false) {
+          causes.push({ finding: x.finding_id, cause: "unreadable", what: "the held check could not be read", date: null });
+          pins.set(x, { basis: held, hidden });
+        } else if (st.state === "published") {
+          /* R34: the check's edition is published; read as published when it holds the same pinned version */
+          const eds = once(`eds:${x.finding_id}:${x.version_sha}:${r.project_id}`, () =>
+            this.publication.publishedEditionsOf({ finding: x.finding_id, version: x.version_sha, project: r.project_id }));
+          const item = isObj(eds) && Array.isArray(eds.items) ? eds.items.find((i) => i.case === x.case_id
+            && i.edition === Number(st.published_edition ?? x.edition) && i.version_sha === x.version_sha) : null;
+          if (item) pins.set(x, { basis: { kind: "published", case: item.case, edition: item.edition, from_check: check },
+                                  frozen: item.strength ?? null, hidden });
+          else {
+            causes.push({ finding: x.finding_id, cause: "published_version_differs", check: x.check_id, date: null,
+                          what: "the case edition was published without the version this determination rests on" });
+            pins.set(x, { basis: held, hidden });
+          }
+        } else if (st.state === "held") pins.set(x, { basis: held, hidden });
+        else {
+          causes.push({ finding: x.finding_id, cause: st.state === "void" ? "check_void" : "check_undetermined",
+                        check: x.check_id, ...(Array.isArray(st.why) ? { why: st.why } : {}), date: null,
+                        what: st.state === "void" ? "the check it was held under was voided"
+                          : "whether the check it was held under still stands could not be determined" });
+          pins.set(x, { basis: held, hidden });
+        }
+        continue;
+      }
+      /* accepted (R32, R33) */
+      const ed = Number(x.edition);
+      const imp = importOfRef(x.finding_id);
+      const facts = once(`imp:${imp}:${ed}`, () => this.caseImport.importedCase({ import: imp, edition: ed, viewer: null }));
+      const e = isObj(facts) && facts !== THREW && facts.ok !== false && isObj(facts.edition) ? facts.edition : {};
+      const gf = isObj(e.group_fields) ? e.group_fields : {};
+      const identity = e.identity ?? gf.identity ?? null;
+      const stake = e.stake ?? gf.stake ?? null;
+      const editionDate = e.edition_date ?? gf.edition_date ?? null;
+      const seenBy = viewer == null ? null
+        : once(`acc:${x.finding_id}:${ed}:${viewer}`, () => this.acceptedWork.acceptedFinding({ ref: x.finding_id, edition: ed, viewer }));
+      const hidden = viewer != null && seenBy === null;
+      const live = isObj(seenBy) && isObj(seenBy.pair) ? seenBy.pair : null;
+      pins.set(x, { basis: { kind: "accepted", group: x.source_group ?? null, case: x.case_id, edition: ed,
+                             edition_date: editionDate, accepted_at: x.accepted_at ?? null, accepted_by: x.accepted_by ?? null,
+                             identity, stake: stake ?? "undetermined",
+                             ...(identity === null || stake === null ? { identity_says: SOURCE_FACTS_UNRECORDED } : {}),
+                             says: ACCEPTED_SAYS }, live, hidden });
+      const moves = once("moves", () => this.#allMoves());
+      if (!Array.isArray(moves)) {
+        causes.push({ finding: x.finding_id, cause: "unreadable", what: "the source group's moves could not be read", date: null });
+        continue;
+      }
+      for (const m of moves) {
+        if (m.import !== imp || m.taken_back || !m.at || instantOrder(m.at, r.at) <= 0) continue;
+        if (m.kind === "withdrawal" && (m.edition === "all" || Number(m.edition) === ed))
+          causes.push({ finding: x.finding_id, cause: "source_withdrawn", edition: m.edition, date: m.date ?? null, at: m.at,
+                        what: "the source group withdrew the edition this determination rests on" });
+        else if (m.kind === "edition" && typeof m.edition === "number" && m.edition > ed) {
+          const acc = once(`acc:${x.finding_id}:${m.edition}:`, () =>
+            this.acceptedWork.acceptedFinding({ ref: x.finding_id, edition: m.edition, viewer: null }));
+          if (acc === THREW || (isObj(acc) && (acc.absent || acc.unreadable)))
+            causes.push({ finding: x.finding_id, cause: "unreadable", what: "whether the revision is accepted could not be read", date: null });
+          else if (!isObj(acc) || !isObj(acc.acceptance))
+            causes.push({ finding: x.finding_id, cause: "source_revised", edition: m.edition, date: m.date ?? null, at: m.at,
+                          what: "the source group published a newer edition, not accepted here" });
+        }
+      }
+    }
+    return { pins, causes };
+  }
+
+  /* R33: every publisher move this copy recorded (accepted-work R8), page by page, bounded; null when they cannot be
+     read (none registered, a failed read, or more than the bound). */
+  #allMoves() {
+    const out = [];
+    let after = null;
+    for (let page = 0; page < MOVE_PAGES_MAX; page++) {
+      const r = this.acceptedWork.publisherMoves({ after, limit: 200 });
+      if (!isObj(r) || r.absent || r.unreadable || !Array.isArray(r.moves)) return null;
+      out.push(...r.moves);
+      if (!r.cursor) return out;
+      after = r.cursor;
+    }
+    return null;
+  }
+
+  /* R33: the void answer's parts, or null when nothing voids it. */
+  static voidOf(causes) { return causes.length ? { causes, says: VOID_SAYS } : null; }
 
   /* R15: the determination's row when the viewer sees its project in full, else null (absent and unseen alike). */
   #seen(id, viewer) {
@@ -1144,17 +1352,24 @@ export class Conformance {
       return { standard: s.standard_id, outcome: s.outcome, in_force: s.in_force, in_force_why: s.in_force_why, ...b,
                rows: mine.map((x) => rowRead(x, b.binds, seen)), disagreement };
     });
-    const findings = this.#rows(`SELECT * FROM determination_findings WHERE determination_id=? ORDER BY ord LIMIT ?`,
-                                did, LIMITS.findings).filter((x) => seen.sees(x.finding_id)).map((x) => {
+    const pinned = this.#rows(`SELECT * FROM determination_findings WHERE determination_id=? ORDER BY ord LIMIT ?`,
+                              did, LIMITS.findings);
+    const bases = this.#bases(r, pinned, viewer);
+    const pair = (p) => (isObj(p) ? { capture: axisOf(p.capture), connection: axisOf(p.connection), testimony: axisOf(p.testimony) }
+                                  : null);
+    const findings = pinned.filter((x) => seen.sees(x.finding_id)).filter((x) => {
+      if (bases.pins.get(x).hidden) { seen.withheld = true; return false; }
+      return true;
+    }).map((x) => {
+      const b = bases.pins.get(x);
       let live = null;
-      try { live = this.strength.inquiryStrength({ id: x.finding_id, viewer }); } catch { live = null; }
-      const frozen = safeJson(x.frozen, null);
-      return { finding: x.finding_id, case: x.case_id, edition: Number(x.edition), version_sha: x.version_sha,
-               role: x.role, frozen: frozen ? { capture: axisOf(frozen.capture), connection: axisOf(frozen.connection),
-                                                testimony: axisOf(frozen.testimony) } : null,
-               live: live && live.ok !== false ? { capture: axisOf(live.capture), connection: axisOf(live.connection),
-                                                   testimony: axisOf(live.testimony) } : null };
+      if (b.basis.kind === "accepted") live = b.live ?? null;
+      else { try { live = this.strength.inquiryStrength({ id: x.finding_id, viewer }); } catch { live = null; } }
+      const frozen = b.frozen !== undefined ? b.frozen : safeJson(x.frozen, null);
+      return { finding: x.finding_id, case: b.basis.case, edition: b.basis.edition, version_sha: x.version_sha,
+               role: x.role, frozen: pair(frozen), live: live && live.ok !== false ? pair(live) : null, basis: b.basis };
     });
+    const voided = Conformance.voidOf(bases.causes);
     /* A question's text is authored on the determination and stands; an inquiry the viewer may not see loses its key. */
     const questions = this.#rows(`SELECT * FROM determination_questions WHERE determination_id=? ORDER BY ord LIMIT ?`,
                                  did, LIMITS.questions).map((x) => ({ question: x.question,
@@ -1167,8 +1382,12 @@ export class Conformance {
     const cz = this.#one(`SELECT statement, evidence FROM determination_causes WHERE determination_id=?`, did);
     const cause = cz ? { statement: cz.statement,
                          evidence: seen.contents(safeJson(cz.evidence, []).slice(0, LIMITS.evidence)) } : null;
+    if (voided) for (const s of standards) Object.assign(s, { outcome: "undetermined", recorded_outcome: s.outcome });
+    const cures = this.#curesRead(did, viewer, seen);
     return seen.mark({ ok: true, id: did, project: r.project_id, act, event,
-             outcomes: standards.map((s) => ({ standard: s.standard, outcome: s.outcome })), standards, findings,
+             outcomes: standards.map((s) => ({ standard: s.standard, outcome: s.outcome,
+                                               ...(voided ? { recorded_outcome: s.recorded_outcome } : {}) })),
+             standards, findings, ...(voided ? { void: voided } : {}), cured_by: cures.cured_by, cures: cures.cures,
              questions, author: r.author, at: r.at, supersedes: r.supersedes ?? null, reason: r.reason ?? null,
              superseded_by: by ? by.superseded_by : null, live: !by, proposal: r.proposal_id ?? null,
              basis_changed: flag.causes.length ? { causes: flag.causes, says: FLAG_SAYS } : null,
@@ -1254,7 +1473,7 @@ export class Conformance {
    *  with its items (N841): supersessions, standards and findings are read once for the page, each `ACT-` alias and
    *  each id's sight once per distinct id. */
   determinationsFor({ project = null, act = null, standard = null, finding = null, outcome = null, live = null,
-                      after = null, limit = null, viewer = null } = {}) {
+                      void: voidAsked = null, after = null, limit = null, viewer = null } = {}) {
     const pid = str(project);
     if (pid) { const unseen = this.#projectRefusal(pid, viewer); if (unseen) return unseen; }
     const cap = Number.isInteger(Number(limit)) && Number(limit) >= 1
@@ -1285,44 +1504,79 @@ export class Conformance {
     }
     if (live === true || live === "true" || live === "1")
       where.push(`NOT EXISTS (SELECT 1 FROM determination_supersessions x WHERE x.superseded = d.determination_id)`);
-    const page = this.#rows(
-      `SELECT d.* FROM determinations d JOIN bundles b ON b.bundle_id = d.project_id
-        WHERE ${where.join(" AND ")} ORDER BY d.determination_id LIMIT ?`, ...args, cap + 1);
-    const truncated = page.length > cap;
-    const listed = page.slice(0, cap);
-    /* R11 (N841): the page's supersessions, standards and findings are each read once for the page, never per item */
-    const byItem = (sql) => {
+    /* R33 (T45): `void` keeps the determinations whose derived state matches; the state is read for each item (once per
+       page for each check, import edition and the publisher moves), so with the filter the page is read in batches
+       until it is full, bounded (VOID_SCAN_BATCHES): a page cut short by the bound is truncated at the last read. */
+    const wantVoid = voidAsked === true || voidAsked === "true" || voidAsked === "1" ? true
+      : voidAsked === false || voidAsked === "false" || voidAsked === "0" ? false : null;
+    const memo = new Map();
+    const byItem = (sql, ids) => {
       const out = new Map();
-      if (!listed.length) return out;
-      for (const x of this.#rows(sql, JSON.stringify(listed.map((r) => r.determination_id)))) {
+      if (!ids.length) return out;
+      for (const x of this.#rows(sql, JSON.stringify(ids))) {
         if (!out.has(x.determination_id)) out.set(x.determination_id, []);
         out.get(x.determination_id).push(x);
       }
       return out;
     };
+    const FINDINGS_SQL = `SELECT * FROM determination_findings WHERE determination_id IN (SELECT value FROM json_each(?))
+                          ORDER BY determination_id, ord`;
+    const select = (from, n) => this.#rows(
+      `SELECT d.* FROM determinations d JOIN bundles b ON b.bundle_id = d.project_id
+        WHERE ${where.join(" AND ")} ORDER BY d.determination_id LIMIT ?`, from, ...args.slice(1), n);
+    let listed = [], truncated = false, findingsOf = new Map(), causesOf = new Map(), scanCursor = null;
+    if (wantVoid === null) {
+      const page = select(args[0], cap + 1);
+      truncated = page.length > cap;
+      listed = page.slice(0, cap);
+      findingsOf = byItem(FINDINGS_SQL, listed.map((r) => r.determination_id));
+    } else {
+      let from = args[0];
+      for (let batch = 0; ; batch++) {
+        if (batch >= VOID_SCAN_BATCHES) { truncated = true; scanCursor = from; break; }
+        const rows = select(from, DETERMINATIONS_PAGE_MAX);
+        const fo = byItem(FINDINGS_SQL, rows.map((r) => r.determination_id));
+        for (const r of rows) {
+          const causes = this.#bases(r, (fo.get(r.determination_id) || []).slice(0, LIMITS.findings), null, memo).causes;
+          if ((causes.length > 0) !== wantVoid) continue;
+          if (listed.length === cap) { truncated = true; break; }
+          listed.push(r);
+          findingsOf.set(r.determination_id, fo.get(r.determination_id) || []);
+          causesOf.set(r.determination_id, causes);
+        }
+        if (truncated || rows.length < DETERMINATIONS_PAGE_MAX) break;
+        from = rows[rows.length - 1].determination_id;
+      }
+    }
+    /* R11 (N841): the page's supersessions, standards and findings are each read once for the page, never per item */
+    const ids = listed.map((r) => r.determination_id);
     const supersededBy = byItem(`SELECT superseded AS determination_id, superseded_by FROM determination_supersessions
-                                 WHERE superseded IN (SELECT value FROM json_each(?))`);
+                                 WHERE superseded IN (SELECT value FROM json_each(?))`, ids);
     const outcomesOf = byItem(`SELECT determination_id, standard_id, outcome FROM determination_standards
-                               WHERE determination_id IN (SELECT value FROM json_each(?)) ORDER BY determination_id, ord`);
-    const findingsOf = byItem(`SELECT determination_id, finding_id, case_id, edition, version_sha, role
-                               FROM determination_findings WHERE determination_id IN (SELECT value FROM json_each(?))
-                               ORDER BY determination_id, ord`);
+                               WHERE determination_id IN (SELECT value FROM json_each(?)) ORDER BY determination_id, ord`, ids);
     const sight = new Map();
     /* R24: each item withholds whole what the viewer may not see and states `out_of_view: true` itself; the page never. */
     const items = listed.map((r) => {
       const [by] = supersededBy.get(r.determination_id) || [];
       const seen = this.#sight(viewer, sight);
+      const pinned = (findingsOf.get(r.determination_id) || []).slice(0, LIMITS.findings);
+      const bases = this.#bases(r, pinned, viewer, memo);
+      const voided = Conformance.voidOf(causesOf.get(r.determination_id) ?? bases.causes);
       return seen.mark({ id: r.determination_id, project: r.project_id, act: this.#actView(r, seen, acts),
                outcomes: (outcomesOf.get(r.determination_id) || []).slice(0, LIMITS.standards)
-                 .filter((s) => seen.sees(s.standard_id)).map((s) => ({ standard: s.standard_id, outcome: s.outcome })),
-               findings: (findingsOf.get(r.determination_id) || []).slice(0, LIMITS.findings)
-                 .filter((f) => seen.sees(f.finding_id))
-                 .map((f) => ({ finding: f.finding_id, case: f.case_id, edition: Number(f.edition),
-                                version_sha: f.version_sha, role: f.role })),
+                 .filter((s) => seen.sees(s.standard_id)).map((s) => (voided
+                   ? { standard: s.standard_id, outcome: "undetermined", recorded_outcome: s.outcome }
+                   : { standard: s.standard_id, outcome: s.outcome })),
+               findings: pinned.filter((f) => seen.sees(f.finding_id))
+                 .filter((f) => { if (bases.pins.get(f).hidden) { seen.withheld = true; return false; } return true; })
+                 .map((f) => { const b = bases.pins.get(f).basis;
+                   return { finding: f.finding_id, case: b.case, edition: b.edition, version_sha: f.version_sha, role: f.role }; }),
+               ...(voided ? { void: voided } : {}),
                author: r.author, at: r.at, supersedes: r.supersedes ?? null,
                superseded_by: by ? by.superseded_by : null, live: !by });
     });
-    return { ok: true, items, limit: cap, truncated, cursor: truncated ? items[items.length - 1].id : null };
+    const cursor = truncated ? (items.length ? items[items.length - 1].id : null) : null;
+    return { ok: true, items, limit: cap, truncated, cursor: scanCursor && (!cursor || scanCursor > cursor) ? scanCursor : cursor };
   }
 
   /* R11, R26: the act ids that name the same act as `act`: the event an `ACT-` alias resolves to, and every pre-T33
@@ -1528,6 +1782,223 @@ export class Conformance {
   }
 
   /* ===================================================================== *
+   * R33, R36, R37 (T45): void, and the cure
+   * ===================================================================== */
+
+  /* R33: the void causes of determination row `r`, read as the plane (the state is the record's, never a viewer's). */
+  #voidCauses(r, memo = new Map()) {
+    const pins = this.#rows(`SELECT * FROM determination_findings WHERE determination_id=? ORDER BY ord LIMIT ?`,
+                            r.determination_id, LIMITS.findings);
+    return this.#bases(r, pins, null, memo).causes;
+  }
+
+  /* R36: the dates an act row is read at (R3's reading of its event's `when`; a pre-T33 act its recorded date or period). */
+  static #actDates(r) {
+    if (r.act_event) return Conformance.datesOf({ when: safeJson(r.act_when, null) }).map((d) => d.date);
+    if (r.act_at) return [r.act_at];
+    return [r.act_from ?? null, r.act_to ?? null];
+  }
+
+  /* R36: an empty or machine author. */
+  #refuseCureMachine(author) {
+    /* DEC-49 REGION is-cure-member */
+    if (!str(author) || isMachineIdentity(author))
+      return refusal("MACHINE_CANNOT_LINK_CURE", "naming a later act as the cure of a breach is a member's judgment; this "
+        + "act names no member author, or a machine credential. Nothing was written.", { author: str(author) });
+    /* END DEC-49 REGION is-cure-member */
+    return null;
+  }
+
+  /* R36: the refusals that compare the two determinations, in order, each over rows already seen and live. */
+  #cureRefusal(t, c, standard) {
+    const outcomeOf = (id) => this.#one(`SELECT outcome FROM determination_standards WHERE determination_id=? AND
+                                          standard_id=? ORDER BY ord LIMIT 1`, id, standard);
+    const target = outcomeOf(t.determination_id), cure = outcomeOf(c.determination_id);
+    /* DEC-49 REGION is-cure-target-noncompliant */
+    if (!target || target.outcome !== "noncompliant")
+      return refusal("CURE_TARGET_NOT_NONCOMPLIANT", `${t.determination_id} is not noncompliant against ${standard}: only a `
+        + "noncompliant outcome is cured. Nothing was written.", { determination: t.determination_id, standard });
+    /* END DEC-49 REGION is-cure-target-noncompliant */
+    /* DEC-49 REGION is-cure-compliant */
+    if (!cure || cure.outcome !== "compliant")
+      return refusal("CURE_NOT_COMPLIANT", `${c.determination_id} ${cure ? "is not compliant against" : "does not name"} `
+        + `${standard}: the curing act is one determined compliant against the same standard. Nothing was written.`,
+        { cure: c.determination_id, standard });
+    /* END DEC-49 REGION is-cure-compliant */
+    const same = t.act_entity && c.act_entity ? t.act_entity === c.act_entity
+      : t.act_role === c.act_role && t.act_body === c.act_body;
+    /* DEC-49 REGION is-cure-same-office */
+    if (!same)
+      return refusal("CURE_OTHER_OFFICE", "the act named as the cure is another office's: a breach is cured by a later act "
+        + "of the same office. Nothing was written.", { determination: t.determination_id, cure: c.determination_id });
+    /* END DEC-49 REGION is-cure-same-office */
+    const td = Conformance.#actDates(t), cd = Conformance.#actDates(c);
+    const known = td.length && cd.length && td.every(Boolean) && cd.every(Boolean);
+    const later = known && cd.reduce((a, b) => (a < b ? a : b)) > td.reduce((a, b) => (a > b ? a : b));
+    /* DEC-49 REGION is-cure-later */
+    if (!later)
+      return refusal("CURE_NOT_LATER", known
+        ? "the act named as the cure is not after the act it would cure, by the dates the record holds. Nothing was written."
+        : "the order of the two acts is undetermined: the date of one of them is not known, so the cure is not shown to "
+          + "be later. Nothing was written.", { determination: t.determination_id, cure: c.determination_id,
+                                                 order: known ? "not_later" : "undetermined" });
+    /* END DEC-49 REGION is-cure-later */
+    const standing = this.#standingLink(t.determination_id, standard);
+    /* DEC-49 REGION is-cure-unlinked */
+    if (standing)
+      return refusal("CURE_LINKED", `${standing.link_id} already names a cure of ${t.determination_id} against ${standard}. `
+        + "End it first, saying why. Nothing was written.", { link: standing.link_id, determination: t.determination_id,
+                                                             standard });
+    /* END DEC-49 REGION is-cure-unlinked */
+    return null;
+  }
+
+  /* R36: the link standing for a determination and standard (appended and not ended), or null. */
+  #standingLink(determination, standard) {
+    return this.#one(`SELECT * FROM determination_cures c WHERE c.determination_id=? AND c.standard_id=? AND NOT EXISTS
+                      (SELECT 1 FROM determination_cure_ends e WHERE e.link_id=c.link_id) ORDER BY c.link_id DESC LIMIT 1`,
+                     determination, standard);
+  }
+
+  /** R36: a member records that the live determination `cure` is the curing act of `determination`'s noncompliant
+   *  outcome for `standard`. Refusals in R36's order, each writing nothing; the link is appended, never edited. */
+  cureLink({ determination = null, standard = null, cure = null, reason = undefined, author = null, viewer = null } = {}) {
+    const v = viewer ?? author;
+    const byMachine = this.#refuseCureMachine(author);
+    if (byMachine) return byMachine;
+    const t = this.#seen(determination, v);
+    if (!t) return noSuchDetermination(str(determination));
+    const c = this.#seen(cure, v);
+    if (!c) return noSuchDetermination(str(cure), { cure: str(cure) });
+    const notJoined = this.#participantRefusal(t.project_id, author);
+    if (notJoined) return notJoined;
+    for (const x of [t, c]) {
+      const by = this.#one(`SELECT superseded_by FROM determination_supersessions WHERE superseded=?`, x.determination_id);
+      if (by) return determinationSuperseded(x.determination_id,
+                                             this.#seen(by.superseded_by, v) ? by.superseded_by : null);
+    }
+    const memo = new Map();
+    for (const x of [t, c]) {
+      const causes = this.#voidCauses(x, memo);
+      if (causes.length) return determinationVoided(x.determination_id, causes);
+    }
+    const sid = str(standard);
+    const unfit = this.#cureRefusal(t, c, sid);
+    if (unfit) return unfit;
+    let why = null;
+    if (reason !== undefined && reason !== null) {
+      /* the optional reason, when given, is R7's form; a blank one is none */
+      why = Conformance.#reason(reason);
+      const bad = why === "" ? null : this.#reasonRefusal(why, "linking a cure", { determination: t.determination_id });
+      if (bad) return bad;
+      why = why || null;
+    }
+    const at = this.#when();
+    let id = null;
+    this.record.transact(() => {
+      id = this.record.allocId("CURE", at.slice(0, 4)).id;
+      this.sql.exec(`INSERT INTO determination_cures (link_id, determination_id, standard_id, cure_id, reason, by, at)
+                     VALUES (?,?,?,?,?,?,?)`, id, t.determination_id, sid, c.determination_id, why, str(author), at);
+      return { ok: true };
+    });
+    return { ...this.curesOf({ determination: t.determination_id, standard: sid, viewer: v }), link: id, wrote: true };
+  }
+
+  /* R7, R23, R36: a reason as given: trimmed text, "" when absent, null when not text. */
+  static #reason(reason) { return typeof reason === "string" ? reason.trim() : reason == null ? "" : null; }
+
+  /* R7, R23, R36: the one site of this module's reason codes: an absent reason is `CONFORMANCE_NO_REASON`, one over
+     REASON_MAX characters or not text `CONFORMANCE_BAD_REASON` (N233, K264; never progressions' NO_REASON/BAD_REASON).
+     `why` is `#reason`'s answer; `act` names the act in the detail. */
+  #reasonRefusal(why, act, extra) {
+    /* DEC-49 REGION is-reason-given */
+    if (why === "")
+      return refusal("CONFORMANCE_NO_REASON", `${act} says why; this names no reason. Nothing was written.`,
+        { ...extra, max: REASON_MAX });
+    /* END DEC-49 REGION is-reason-given */
+    /* DEC-49 REGION is-reason-stated */
+    if (why === null || why.length > REASON_MAX)
+      return refusal("CONFORMANCE_BAD_REASON", `${act} says why, as text of at most ${REASON_MAX} characters. Nothing was `
+        + "written.", { ...extra, max: REASON_MAX });
+    /* END DEC-49 REGION is-reason-stated */
+    return null;
+  }
+
+  /** R36: a member ends a cure link, saying why (R7's reason). The ending is appended; the link stays readable. A link
+   *  absent or on a determination the viewer may not see answers through `noSuchDetermination`; one already ended
+   *  answers its ending and writes nothing. */
+  cureUnlink({ link = null, reason = undefined, author = null, viewer = null } = {}) {
+    const v = viewer ?? author;
+    const byMachine = this.#refuseCureMachine(author);
+    if (byMachine) return byMachine;
+    const l = str(link) ? this.#one(`SELECT * FROM determination_cures WHERE link_id=?`, str(link)) : null;
+    const t = l ? this.#seen(l.determination_id, v) : null;
+    if (!t) return noSuchDetermination(null, { link: str(link) });
+    const notJoined = this.#participantRefusal(t.project_id, author);
+    if (notJoined) return notJoined;
+    const why = Conformance.#reason(reason);
+    const bad = this.#reasonRefusal(why, "ending a cure link", { link: l.link_id });
+    if (bad) return bad;
+    const ended = this.#one(`SELECT * FROM determination_cure_ends WHERE link_id=?`, l.link_id);
+    if (ended) return { ok: true, wrote: false, link: l.link_id, ended: endedView(ended) };
+    const at = this.#when();
+    this.record.transact(() => {
+      this.sql.exec(`INSERT INTO determination_cure_ends (link_id, determination_id, cure_id, reason, by, at)
+                     VALUES (?,?,?,?,?,?)`, l.link_id, l.determination_id, l.cure_id, why, str(author), at);
+      return { ok: true };
+    });
+    return { ok: true, wrote: true, link: l.link_id,
+             ended: endedView(this.#one(`SELECT * FROM determination_cure_ends WHERE link_id=?`, l.link_id)) };
+  }
+
+  /* R37: one link as answered, its cure's standing read now (superseded or void: not standing, with why). */
+  #linkView(l, viewer, memo) {
+    const c = this.#one(`SELECT * FROM determinations WHERE determination_id=?`, l.cure_id);
+    const by = this.#one(`SELECT superseded_by FROM determination_supersessions WHERE superseded=?`, l.cure_id);
+    const causes = c ? this.#voidCauses(c, memo) : [];
+    const why = !c ? "the curing determination is not held" : by ? "the curing determination has been superseded"
+      : causes.length ? "the curing determination is void: a finding it rests on no longer stands" : null;
+    return { link: l.link_id, cure: l.cure_id, standard: l.standard_id, by: l.by, at: l.at, reason: l.reason ?? null,
+             cure_standing: !why, ...(why ? { cure_why: why } : {}) };
+  }
+
+  /* R9, R37: `cured_by` (per standard, the standing link and the ended ones) and `cures` (the standing links naming this
+     determination as the cure), as `viewer` may see them: a link whose other determination the viewer may not see is
+     withheld whole (R24). */
+  #curesRead(did, viewer, seen, standard = null) {
+    const memo = new Map();
+    const stds = this.#rows(`SELECT standard_id FROM determination_standards WHERE determination_id=? ORDER BY ord LIMIT ?`,
+                            did, LIMITS.standards).map((x) => x.standard_id)
+      .filter((sid, i, a) => a.indexOf(sid) === i && (!standard || sid === standard) && seen.sees(sid));
+    const links = this.#rows(`SELECT c.*, e.reason AS end_reason, e.by AS end_by, e.at AS end_at FROM determination_cures c
+                              LEFT JOIN determination_cure_ends e ON e.link_id=c.link_id WHERE c.determination_id=?
+                              ORDER BY c.link_id LIMIT 1000`, did);
+    const visible = (id) => { const ok = !!this.#seen(id, viewer); if (!ok) seen.withheld = true; return ok; };
+    const cured_by = stds.map((sid) => {
+      const mine = links.filter((l) => l.standard_id === sid && visible(l.cure_id));
+      const standing = mine.find((l) => !l.end_at);
+      return { standard: sid, standing: standing ? this.#linkView(standing, viewer, memo) : null,
+               ended: mine.filter((l) => l.end_at).map((l) => ({ ...this.#linkView(l, viewer, memo),
+                 ended: { reason: l.end_reason, by: l.end_by, at: l.end_at } })) };
+    });
+    const cures = this.#rows(`SELECT * FROM determination_cures c WHERE c.cure_id=? AND NOT EXISTS (SELECT 1 FROM
+                               determination_cure_ends e WHERE e.link_id=c.link_id) ORDER BY c.link_id LIMIT 1000`, did)
+      .filter((l) => visible(l.determination_id))
+      .map((l) => ({ link: l.link_id, determination: l.determination_id, standard: l.standard_id, by: l.by, at: l.at }));
+    return { cured_by, cures };
+  }
+
+  /** R37: per standard of `determination` (or the one named), the standing cure link or null, and the ended links
+   *  apart with their reasons; a cure the viewer may not see is withheld whole (R24). Writes nothing. */
+  curesOf({ determination = null, standard = null, viewer = null } = {}) {
+    const r = this.#seen(determination, viewer);
+    if (!r) return noSuchDetermination(str(determination));
+    const seen = this.#sight(viewer);
+    const { cured_by, cures } = this.#curesRead(r.determination_id, viewer, seen, str(standard));
+    return seen.mark({ ok: true, determination: r.determination_id, standards: cured_by, cures });
+  }
+
+  /* ===================================================================== *
    * R10: the notice reevaluation gives (its R8); R13, R17: the step promotion runs
    * ===================================================================== */
 
@@ -1643,6 +2114,29 @@ export function determinationSuperseded(determinationId, supersededBy = null, ex
   /* END DEC-49 REGION is-determination-live */
 }
 
+/* R33: a void determination's fixed sentence. */
+const DETERMINATION_VOID_DETAIL = "that determination reads undetermined: a finding it rests on no longer stands. It is not "
+  + "acted on until a member supersedes it with a determination resting on findings that stand.";
+const DETERMINATION_VOID_FIXED = [...NO_SUCH_DETERMINATION_FIXED, "causes"];
+
+/** R33 (T45): the one answer to "the determination `determinationId` names is void" (a finding it rests on no longer
+ *  stands). `causes` as R9 answers them (a list; anything else is answered as none given). Every later act that refuses
+ *  a void determination answers through it; it writes nothing and never throws. */
+export function determinationVoided(determinationId, causes = null, extra = null) {
+  const own = ownFields(extra, DETERMINATION_VOID_FIXED);
+  let list = [];
+  try { list = Array.isArray(causes) ? causes.slice(0, LIMITS.findings * 4) : []; } catch { list = []; }
+  /* DEC-49 REGION is-determination-standing */
+  const row = CONFORMANCE_CHECKS.DETERMINATION_VOID;
+  return { ok: false, reason: "DETERMINATION_VOID", code: "DETERMINATION_VOID", check: row.check,
+           translation: row.translation, determination: asId(determinationId), causes: list, ...own,
+           detail: DETERMINATION_VOID_DETAIL };
+  /* END DEC-49 REGION is-determination-standing */
+}
+
+/* R36: a link's ending as answered. */
+const endedView = (e) => ({ reason: e.reason, by: e.by, at: e.at });
+
 /* R18: the one "no such comparison" answer, absent, unseen and another project's alike. */
 function refuseNoSuchComparison(id) {
   /* DEC-49 REGION is-comparison-seen */
@@ -1736,7 +2230,14 @@ export function conformanceOps(c, url, body) {
     determination: () => c.determinationRead({ id: qp("id") ?? b.id, viewer: qp("viewer") }),
     determinations: () => c.determinationsFor({ project: qp("project"), act: qp("act"), standard: qp("standard"),
                                                 finding: qp("finding"), outcome: qp("outcome"), live: qp("live"),
+                                                void: qp("void"),
                                                 after: qp("after"), limit: qp("limit"), viewer: qp("viewer") }),
+    /* R36, R37 (T45): the cure link, its ending and its read */
+    curelink: () => c.cureLink({ determination: b.determination ?? qp("determination"), standard: b.standard ?? qp("standard"),
+                                 cure: b.cure ?? qp("cure"), reason: b.reason, ...stamped }),
+    cureunlink: () => c.cureUnlink({ link: b.link ?? qp("link"), reason: b.reason, ...stamped }),
+    cures: () => c.curesOf({ determination: qp("determination") ?? b.determination, standard: qp("standard") ?? b.standard ?? null,
+                             viewer: qp("viewer") }),
     comparisonpropose: () => c.comparisonPropose({ ...b, proposer: qp("author"), viewer: qp("viewer") }),
     comparison: () => c.comparisonRead({ id: qp("id") ?? b.id, viewer: qp("viewer") }),
     comparisonfacts: () => c.comparisonFacts({ contradiction: qp("contradiction") ?? b.contradiction ?? null,
