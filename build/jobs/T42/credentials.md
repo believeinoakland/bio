@@ -34,3 +34,7 @@ T42-4 done: R62 accountUsesOf built (shares R60's answer body; unrouted), new t4
 **Ran.** `node --test test/m/credentials/`: tests 175, pass 175, fail 0. `architecture`: 0 failures. `coverage`: 61 of 61; 0 failures. `ownership … tranche/T42`: 0 failures. `format`: 1 failure, not mine: `build/modules.json: promotion: tests entry bio-plane/test/fixtures/row-census-1.69.0.jsonl names no file` (K2620's fixture swap, arriving with promotion's merge); the same failure with my changes stashed.
 
 Size (session_01SmVin6JuSDfPb4PyoweFzP): test runs 5, module lines 3863
+
+## J2 · COMPLETE
+
+B2 (K2620) applied: accountUsesOf answers a revoked member's member:<id> held: false, uses: null (accounts both not held); a roster that cannot be read answers unreadable. New test with negative controls (live member still held). credentials 175/175; architecture, coverage, ownership 0 failures; format 1 failure not mine (modules.json names promotion's row-census-1.69.0.jsonl, not yet on the tranche; same with my changes stashed).
