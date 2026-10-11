@@ -35,3 +35,14 @@ None. inquiry's T42-12 registers through R78. Its `fn` must answer synchronously
   
   A mutation run (the key guard and the shape check removed) turned 2 of them red, as it should.
 - retrieval: 175/175 pass.
+- Users' suites (P11), the 21 modules whose uses name retrieval, plus `test/system/migrate-released.test.mjs`. None is red because of this change:
+  - green: calculations 55/55, inquiry 193/193, citation 78/78, basis-versions 136/136, strength 143/143, ai-use 49/49, ai-runs 81/81, question-explorer 27/27, answers 58/58, agent-worker 13/13, intent 82/82, ratification 233/233, actions 109/109, action-clocks 55/55, monitoring 124/124, scheduler 129/129, op-declarations 128/128, store-door 43/43, control-plane 216/216, plane 166/166.
+  - answer-envelope 28 pass, 1 fail: `catalogue-end.test.mjs`:17, the pins for `NO_SUCH_PROPOSAL` and `PROPOSAL_NO_RUN`. This is accepted red rule 4 (6), until T42-27.
+  - `migrate-released`: 1 fail, its `ai_ceilings` arm (got `["ai_ceilings"]`). This is accepted red rule 4 (7), until T42-17.
+- Checks:
+  - `format`: 147 modules, 146 requirements files; 0 failures.
+  - `architecture retrieval`: 30 product files, 123 relative imports; 0 failures.
+  - `coverage retrieval`: 78 of 78 live requirement ids named by a test; 0 failures.
+  - `ownership retrieval tranche/T42`: 4 files changed; 0 failures.
+
+Size (session_019vnhhXM8NuoLEZ5m4aXXJA): test runs 8, module lines 3,513 (all eight source files; `index.mjs` 1818).
