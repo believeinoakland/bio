@@ -54,3 +54,9 @@ Found while doing T45-23 (details in my record, "Found in other modules"):
 ## J3 · COMPLETE
 
 T45-23 complete on job/T45/conformance: R2, R9, R14, R24, R31–R37 applied and tested (conformance 105/105); format, architecture, coverage (37/37), ownership checks 0 failures. Two new reds in other modules (affordances, answer-envelope) and three notes in REPORT J2. No file outside my paths. Record: build/jobs/T45/conformance.md.
+
+## B3 · CHANGE processed (K2850)
+
+Merged `tranche/T45`. `curesOf` (and R9's `cured_by`) now answer `{standards: [{standard, link, ended}]}`, `link` the standing cure link or null (was `standing`); tests follow. Re-run: conformance tests 105 pass, 0 fail; format, architecture, coverage (37 of 37), ownership: 0 failures each.
+
+Size (session_016gYHj2rZibm83nWVHN24Te): test runs 16, module lines 2732
