@@ -166,6 +166,13 @@ test("R7: material_attestations states, per material, the attesting member's sig
   const og = blocks(g, [Q]).out;
   assert.deepEqual([og.group, og.materials.attestations.at(-1).by], [null, null]);
   assert.ok(carriesBodyLines(null, og.materials, og.group).join("\n").includes("the group vouches for it by signing this case"));
+  /* negative control for "no new table": a table created inside the same read is counted (T42-23b) */
+  let made = null;
+  const n = world({ deps: { promotion: { fact: () => { made.st.sql.exec(`CREATE TABLE IF NOT EXISTS added_by_read (x)`); return { ok: true, value: "g" }; } } } });
+  made = n; n.member("alice"); n.doc(DOC); n.finding(Q, [{ target: DOC }]);
+  const counted = n.rows(`SELECT name FROM sqlite_master WHERE type='table'`).length;
+  blocks(n, [Q]);
+  assert.equal(n.rows(`SELECT name FROM sqlite_master WHERE type='table'`).length, counted + 1, "a table the read adds is counted");
 });
 
 test("R7, R8: an observation a chain reaches (a member's authored words, provenance R48's `authored`) is a material of kind observation, held whole by its own bytes, its member row from the attribution the caller hands", () => {

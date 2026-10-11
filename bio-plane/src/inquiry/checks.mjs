@@ -103,6 +103,20 @@ export const INQUIRY_BIAS_CHECKS = {
   },
 };
 
+/* R62 (T42; N834; run-productions R22, R25; K2496, K231): a machine-passage read registered with `onMachinePassage` that
+ * throws or answers anything but null or a refusal, so whether a leg may stand as the member's own is not known: the
+ * promotion is refused, never passed (fail closed). The next free number of this module's C-2 family (C-2.19 the last
+ * held at the job's START); the translation is BOB's draft until `words.json` holds a key for it, and the row awaits
+ * T42's stamp. Minted at one site, `machinePassageUnchecked`, which `basis-versions` R49 answers through (K231). */
+export const INQUIRY_PASSAGE_CHECKS = {
+  MACHINE_PASSAGE_UNCHECKED: {
+    check: 'C-2.20',
+    where: 'src/inquiry/index.mjs machinePassageUnchecked > is-machine-passage-checked, reached from check > is-machine-passage-taken-up',
+    translation: 'Whether a passage this question now rests on was proposed by an assistant and taken up by you could not '
+      + 'be read, so the question is refused rather than let through. Nothing was written. Try again.',
+  },
+};
+
 /* R39 (T41; DEC-188 (7)): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module's
  * refusals read by key, each `en` verbatim; the UX stream re-words them there (its `question.refused.drawnon` replaced
  * BOB's drafted words). */

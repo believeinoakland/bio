@@ -69,7 +69,8 @@ export function lawProposalState(proposedBy) {
  * (filing-templates R6; K921, T21), a draft of a new edition's statement of what changed (case-authoring R39;
  * DEC-101) and an escalation's pre-assembled opening reason (escalation R29; DEC-89; both K1019, T23), and steps proposed
  * for a wizard script (wizard-scripts R5; N543, T32), a law relation, court link or treatment (standards R23, R26,
- * R27, R30; N568, T34), and a draft translation of an interface word (N669, T37) are each machine work or a member's
+ * R27, R30; N568, T34), a draft translation of an interface word (N669, T37), and a draft of a case's account and a
+ * check of a member's account (case-authoring R64; N838, T42) are each machine work or a member's
  * suggestion, never the thing itself, and each is labelled by `lawProposalState`'s three states. ONE CLOSED
  * TABLE, keyed by what was proposed: `governing_laws` is REC-195's table above, the same object, so its words
  * cannot drift from it; each other subject says, in each state, what the proposal is not. A subject the table does
@@ -202,6 +203,28 @@ export const PROPOSAL_STATES = Object.freeze({
       + 'and not the group\'s wording until a member granted that language adopts it, and the record holds who proposed it',
     unstated: 'the record does not say who drafted this translation of an interface word. It is a draft, shown to members '
       + 'as "Draft", and not the group\'s wording until a member granted that language adopts it',
+  }),
+  /* N838 (K2540; T42, R54): a draft of a case's account drawn from its cited evidence (case-authoring R64, kind
+     `case_account`) is never the case's account, which a member writes in her own words; and a check of a member's
+     account (kind `account_check`) flags the sentences the evidence they cite does not support, a draft and never a
+     finding of the group. Before these subjects case-authoring worded the same three states itself (`#accountLabel`). */
+  case_account: Object.freeze({
+    machine_proposed: 'a machine credential drafted this account of a case from its cited evidence. That is machine work, '
+      + 'labelled as machine work: it is a draft, which can set out what the cited evidence holds and can never be the '
+      + 'case\'s account. The case\'s account is the one a member writes in her own words',
+    member_proposed: 'a member drafted this account of a case from its cited evidence. It is a draft and never the case\'s '
+      + 'account, which a member writes in her own words, and the record holds who proposed it',
+    unstated: 'the record does not say who drafted this account of a case from its cited evidence. It is a draft and never '
+      + 'the case\'s account, which a member writes in her own words',
+  }),
+  account_check: Object.freeze({
+    machine_proposed: 'a machine credential flagged these sentences of a member\'s account as not supported by the evidence '
+      + 'they cite. That is machine work, labelled as machine work: it is a draft, which can point at a sentence and can '
+      + 'never find against one. It is never a finding of the group',
+    member_proposed: 'a member flagged these sentences of a member\'s account as not supported by the evidence they cite. '
+      + 'It is a draft and never a finding of the group, and the record holds who proposed it',
+    unstated: 'the record does not say who flagged these sentences of a member\'s account as not supported by the evidence '
+      + 'they cite. It is a draft and never a finding of the group',
   }),
 });
 

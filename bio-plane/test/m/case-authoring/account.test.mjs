@@ -1,13 +1,16 @@
 /* case-authoring: the case's account and what travels with it (T41; N820; D56, D57, D60, D61, D63; K2528, K2531, K2533,
    K2536) — the account and the statements judged against what they cite and written as case-grammar R23's block (R63),
-   the system's drafts of it (R64), the authored fields and no other (R65), the reviewers' comments the publisher chooses
-   (R66), the pre-flight's account and approvals steps (R67, R68). case-disclosures R30's judgment is the real one unless
-   a test sets `w.judgeAccount`; review's reader (R66) and ratification's `approvalsInForce` (R68) are stand-ins the test
-   registers, as review and ratification fill them. Driven at the module's interface. */
+   the authored fields and no other (R65), the pre-flight's account and approvals steps (R67, R68), and the order in
+   which publishCase asks `case-account` (R69; N839, K2608): the system's drafts (its R1–R4, reached here through this
+   module's pass-throughs until T43) and the reviewers' comments the publisher chooses (its R7) are proved end to end
+   here, through op=publish. case-disclosures R30's judgment is the real one unless a test sets `w.judgeAccount`;
+   review's reader (case-account R7) and ratification's `approvalsInForce` (R68) are stand-ins the test registers, as
+   review and ratification fill them. Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, AUTHORED, WHAT_CHANGED } from "./fixture.mjs";
-import { caseAuthoringOps, ACCOUNT_FRAMINGS, AUTHORED_FIELDS, ACT_FIELDS } from "../../../src/case-authoring/index.mjs";
+import { caseAuthoringOps, AUTHORED_FIELDS, ACT_FIELDS } from "../../../src/case-authoring/index.mjs";
+import { ACCOUNT_FRAMINGS } from "../../../src/case-account/index.mjs";
 import { accountOf, reviewCommentsOf, approvalsOf, approvalSubjectSha, ACCOUNT_HEAD } from "../../../src/case-grammar/index.mjs";
 import { SHARED_ACT_CHECKS, ACCEPT_MUST_REAUTHOR } from "../../../src/record-grammar/index.mjs";
 
@@ -160,9 +163,9 @@ test("R63: the account's and the statements' citations are shaped before anythin
   assert.deepEqual(w.judged.at(-1).cited.holdings, [], "no holding for what the viewer cannot read");
 });
 
-/* ---------------------------------------------------------------- R64 */
+/* ---------------------------------------------------------------- R69: case-account R1–R4 end to end */
 
-test("R64 (D56; K2536): accountPropose stores the system's draft of the account in a framing, labelled machine work, and accountDrafts lists the case's drafts oldest first; refusals in order — NO_SUCH_CASE (unseen and absent alike), BAD_ACCOUNT_DRAFT, BAD_ACCOUNT_FRAMING, NO_SUCH_RUN — each writing nothing; a draft is never the account", () => {
+test("R69 (case-account R1, R3; D56; K2536), through the pass-throughs: accountPropose stores the system's draft of the account in a framing, labelled machine work, and accountDrafts lists the case's drafts oldest first; refusals in order — NO_SUCH_CASE (unseen and absent alike), BAD_ACCOUNT_DRAFT, BAD_ACCOUNT_FRAMING, NO_SUCH_RUN — each writing nothing; a draft is never the account", () => {
   const { w, P } = setup();
   const one = published(w, P);
   const before = w.count("account_drafts");
@@ -194,7 +197,7 @@ test("R64 (D56; K2536): accountPropose stores the system's draft of the account 
   assert.equal(docOf(w, one).text.includes("First the award"), false);
 });
 
-test("R64 (record-grammar R52): a member writes the account from a draft — edited, its rows began_as machine_draft with the draft named and the acceptance recorded in its one shape; own_instead, her own words with the acceptance recorded; as proposed (the draft's words unchanged, or the form given) refused ACCEPT_MUST_REAUTHOR, the shared row; a draft not of this case NO_SUCH_ACCOUNT_DRAFT; negative control: from nothing, began_as member and no acceptance", () => {
+test("R69 (case-account R4; record-grammar R52): a member writes the account from a draft — edited, its rows began_as machine_draft with the draft named and the acceptance recorded in its one shape; own_instead, her own words with the acceptance recorded; as proposed (the draft's words unchanged, or the form given) refused ACCEPT_MUST_REAUTHOR, the shared row; a draft not of this case NO_SUCH_ACCOUNT_DRAFT; negative control: from nothing, began_as member and no acceptance", () => {
   const { w, P } = setup();
   w.judgeAccount = () => ({ ok: true, refusals: [] });
   const one = published(w, P);
@@ -235,7 +238,7 @@ test("R64 (record-grammar R52): a member writes the account from a draft — edi
   assert.deepEqual(accountOf(w.fm(mine.doc.text)).filter((x) => x.kind === "account").map((x) => x.began_as), SENTENCES.map(() => "member"));
 });
 
-test("R64, R8 (K2540): a first edition's account is drafted on its unsigned preparation and taken up by preparing it again, which replaces the preparation; negative control: a case with neither preparation nor publication has no drafts (NO_SUCH_CASE)", () => {
+test("R69, R8 (case-account R4; K2540): a first edition's account is drafted on its unsigned preparation and taken up by preparing it again, which replaces the preparation; negative control: a case with neither preparation nor publication has no drafts (NO_SUCH_CASE)", () => {
   const { w, P } = setup();
   w.judgeAccount = () => ({ ok: true, refusals: [] });
   assert.equal(w.ca.accountPropose({ case: "CASE-2026-0001", framing: "time_order", text: "x", run: RUN, proposedBy: "class:ai",
@@ -252,7 +255,7 @@ test("R64, R8 (K2540): a first edition's account is drafted on its unsigned prep
                    SENTENCES.map(() => d.draft.id));
 });
 
-test("R64, R63 (K2536): accountPropose takes kind account_check with flags in place of text, labelled machine work and listed; publishCase hands R30 the flags of every account_check draft proposed after the account draft it names, or all of them with none named, in proposal order", () => {
+test("R69, R63 (case-account R2, R6; K2536): accountPropose takes kind account_check with flags in place of text, labelled machine work and listed; publishCase hands R30 the flags of every account_check draft proposed after the account draft it names, or all of them with none named, in proposal order", () => {
   const { w, P } = setup();
   w.judgeAccount = () => ({ ok: true, refusals: [] });
   const one = published(w, P);
@@ -298,9 +301,9 @@ test("R65 (D57, D63): the authored fields are exactly the four statements, the s
                    "accountDraft", "reviewComments", "statementCites", "subjectPosition"]) assert.ok(known.has(k), k);
 });
 
-/* ---------------------------------------------------------------- R66 */
+/* ---------------------------------------------------------------- R69: case-account R7 end to end */
 
-test("R66 (D61; K2483): with no reader registered no comment travels and the count left out is stated undetermined; review's reader, registered once, is asked {case, edition, viewer, draft}; the chosen comments go into case-grammar R25's block and the body, the count left out stated; an objection not chosen does not travel; refusals REVIEW_COMMENT_NOT_FOUND, REVIEW_COMMENTS_UNREAD, BAD_REVIEW_COMMENTS write nothing; a second registration REVIEW_COMMENTS_DECLARED", () => {
+test("R69 (case-account R7; D61; K2483): with no reader registered no comment travels and the count left out is stated undetermined; review's reader, registered once, is asked {case, edition, viewer, draft}; the chosen comments go into case-grammar R25's block and the body, the count left out stated; an objection not chosen does not travel; refusals REVIEW_COMMENT_NOT_FOUND, REVIEW_COMMENTS_UNREAD, BAD_REVIEW_COMMENTS write nothing; a second registration REVIEW_COMMENTS_DECLARED", () => {
   const { w, P } = setup();
   const act = (over) => tried(w, () => w.publish(P, "alice", [Q], over));
   const none = act({ reviewComments: { included: ["RVC-1"] } });
@@ -432,4 +435,59 @@ test("R68 (K2548): against the real ratification, an approval reader registered 
   const after = w.ca.publishPreflight(args);
   assert.deepEqual(after.steps.find((x) => x.name === "approvals").missing, []);
   assert.deepEqual(after.steps.find((x) => x.name === "approvals").given.map((g) => g.by), ["bo"]);
+});
+
+/* ---------------------------------------------------------------- R69: the order */
+
+test("R69 (N839, K2608): publishCase asks case-account in its order — R5 last among R3's refusals, after R65; R4 after R10; R6 after R4 and before R7; each first refusal answered, nothing written; negative controls: the earlier refusal wins at each seam", () => {
+  const { w, P } = setup();
+  w.judgeAccount = () => ({ ok: true, refusals: [] });
+  const before = w.count("case_documents");
+  const BAD = { account: "a story" };
+  /* R5 after R3's own refusals, and after R65 */
+  assert.equal(w.publish(P, "alice", [Q], { ...BAD, scope: "" }).reason, "NO_SCOPE");
+  assert.equal(w.publish(P, "alice", [Q], { ...BAD, story: "x" }).reason, "CASE_FIELD_NOT_ALLOWED");
+  /* R5 before any member is read (R4) */
+  assert.equal(w.publish(P, "alice", ["INQ-2026-0404-x"], BAD).reason, "BAD_ACCOUNT");
+  assert.equal(w.publish(P, "alice", ["INQ-2026-0404-x"]).reason, "NO_SUCH_BUNDLE", "negative control: well-shaped, the member refuses");
+  /* R4 after R10: a second edition carrying its statement forward refuses before the draft is asked */
+  const one = published(w, P);
+  const second = (over) => tried(w, () => w.publish(P, "alice", [Q2], { ...FRESH, caseId: one.caseId, account: SENTENCES, ...over })).r;
+  assert.equal(second({ statement: AUTHORED.statement, accountDraft: "ACD-2026-0404" }).reason, "COMPLETENESS_CARRIED_FORWARD");
+  assert.equal(second({ accountDraft: "ACD-2026-0404" }).reason, "NO_SUCH_ACCOUNT_DRAFT", "negative control: fresh, the draft refuses");
+  /* R4 before R6: a draft refused is answered and R30 is never asked */
+  const asked = w.judged.length;
+  w.judgeAccount = () => ({ ok: true, refusals: [{ ok: false, reason: "ACCOUNT_FACT_NOT_IN_CITED", code: "ACCOUNT_FACT_NOT_IN_CITED", sentences: [1] }] });
+  assert.equal(second({ accountDraft: "ACD-2026-0404" }).reason, "NO_SUCH_ACCOUNT_DRAFT");
+  assert.equal(w.judged.length, asked, "R6 not asked");
+  /* R6 before R7: the judgment's refusal wins over malformed review comments */
+  assert.equal(second({ reviewComments: ["RVC-1"] }).reason, "ACCOUNT_FACT_NOT_IN_CITED");
+  w.judgeAccount = () => ({ ok: true, refusals: [] });
+  assert.equal(second({ reviewComments: ["RVC-1"] }).reason, "BAD_REVIEW_COMMENTS", "negative control: judged clean, R7 refuses");
+  assert.equal(w.count("case_documents"), before + 1, "only the first edition written");
+});
+
+test("R69 (N839; K2608): after the document is stored, case-account R4's acceptance is recorded inside the act's transaction — the pre-flight's rolled-back run leaves none, a refusal leaves none; case-authoring asks the one case-account instance on its host and its three pass-throughs answer exactly as case-account answers; negative control: op=publish over the same draft records one", () => {
+  const { w, P } = setup();
+  w.judgeAccount = () => ({ ok: true, refusals: [] });
+  assert.equal(w.ca.account, w.cacc, "the one instance on the host");
+  const one = published(w, P);
+  const d = w.ca.accountPropose({ case: one.caseId, framing: "time_order", text: "Draft words.", run: RUN, proposedBy: "class:ai",
+                                  viewer: "class:ai" }).draft;
+  assert.deepEqual(w.ca.accountDrafts({ case: one.caseId, viewer: V("alice") }), w.cacc.accountDrafts({ case: one.caseId, viewer: V("alice") }));
+  assert.deepEqual(w.ca.accountDrafts({ case: one.caseId, viewer: V("cy") }), w.cacc.accountDrafts({ case: one.caseId, viewer: V("cy") }));
+  assert.equal(w.ca.registerReviewComments("x").reason, "MALFORMED");
+  assert.equal(w.ca.registerReviewComments(() => []).ok, true);
+  assert.equal(w.cacc.registerReviewComments(() => []).reason, "REVIEW_COMMENTS_DECLARED", "the pass-through registered on case-account itself");
+  const args = { ...AUTHORED, ...FRESH, project: P, targets: [Q2], roles: { [Q2]: "load_bearing" }, caseId: one.caseId,
+                 viewer: V("alice"), author: "alice", account: SENTENCES, accountDraft: d.id };
+  const pre = w.ca.publishPreflight(args);
+  assert.equal(pre.first, null, JSON.stringify(pre.first));
+  assert.equal(w.count("account_acceptances"), 0, "the rolled-back run records none");
+  assert.equal(w.publish(P, "alice", [Q2], { ...FRESH, caseId: one.caseId, account: SENTENCES, accountDraft: d.id, scope: "" }).ok, false);
+  assert.equal(w.count("account_acceptances"), 0, "a refusal records none");
+  const r = w.publish(P, "alice", [Q2], { ...FRESH, caseId: one.caseId, account: SENTENCES, accountDraft: d.id });
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.deepEqual(w.rows(`SELECT case_id, edition, draft_id, form FROM account_acceptances`),
+                   [{ case_id: one.caseId, edition: 2, draft_id: d.id, form: "edited" }]);
 });

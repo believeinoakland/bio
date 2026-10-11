@@ -415,14 +415,13 @@ const T41_FAMILIES = [
   ["src/investigation/checks.mjs", "INVESTIGATION_CHECKS", "C-146.", "investigation", "src/intent/checks.mjs", "src/reevaluation/checks.mjs"],
   ["src/publish-schedule/checks.mjs", "PUBLISH_SCHEDULE_CHECKS", "C-122.5", "publish-schedule", "src/publication/checks.mjs", "src/docket/checks.mjs"],
 ];
-/* The rows of a T41 family whose code an earlier family already holds, which keep that family's row until N843 (K2566):
-   `[path, code, its own check]`. */
-const HELD_EARLIER = [["src/steps/checks.mjs", "NO_SUCH_BUNDLE", "C-142.3"], ["src/steps/checks.mjs", "NO_SUCH_PROPOSAL", "C-142.28"],
-                      ["src/investigation/checks.mjs", "NO_SUCH_QUESTION", "C-146.10"],
-                      ["src/investigation/checks.mjs", "NO_SUCH_PROPOSAL", "C-146.21"],
-                      ["src/investigation/checks.mjs", "NARRATIVE_NOT_A_LEG", "C-146.26"]];
+/* The rows of a T41 family whose code an earlier family already holds, which keep that family's row (K2566): since
+   N843's re-codings (R11; K2651, K2656) only these two, C-142.28, C-146.21 and C-146.26 having left. `[path, code, its
+   own check]`. */
+const HELD_EARLIER = [["src/steps/checks.mjs", "NO_SUCH_BUNDLE", "C-142.3"],
+                      ["src/investigation/checks.mjs", "NO_SUCH_QUESTION", "C-146.10"]];
 
-test("R10, R7, R2 (T41; K2418, K2480, K2487, K2488, K2532, K2566; N820): CHECK_FAMILY_FILES lists T41's new families at their `modules.json` places — steps' C-142 after hypotheses' and before citation's, ai-use's C-143 after run-rules' and before run-productions', reading-guides' C-144 after capture-requests' and before skilldoctrine.mjs, question-explorer's C-145 after skilldoctrine.mjs and before answers', investigation's C-146 after intent's and before reevaluation's, publish-schedule's C-122.5 (moved from publication) directly after publication's and before docket's — so CHECK_FAMILIES is total again; every one of their codes decorates with its own row unless an earlier family holds the code (steps' C-142.3, C-142.28; investigation's C-146.10, C-146.21, C-146.26), no later family holds a code one of them decorates, and no code decorated before them moves (negative control: the list without any one of the six files misses its family, and the totality test fails)", async () => {
+test("R10, R11, R7, R2 (T41; K2418, K2480, K2487, K2488, K2532, K2566; N820; T42: N843, K2651, K2656): CHECK_FAMILY_FILES lists T41's new families at their `modules.json` places — steps' C-142 after hypotheses' and before citation's, ai-use's C-143 after run-rules' and before run-productions', reading-guides' C-144 after capture-requests' and before skilldoctrine.mjs, question-explorer's C-145 after skilldoctrine.mjs and before answers', investigation's C-146 after intent's and before reevaluation's, publish-schedule's C-122.5 (moved from publication) directly after publication's and before docket's — so CHECK_FAMILIES is total again; every one of their codes decorates with its own row unless an earlier family holds the code (steps' C-142.3 and investigation's C-146.10 alone since N843's re-codings, R11), no later family holds a code one of them decorates, and no code decorated before them moves (negative control: the list without any one of the six files misses its family, and the totality test fails)", async () => {
   const paths = M.CHECK_FAMILY_FILES.map(([p]) => p);
   const at = (p) => paths.indexOf(p);
   const order = MODULES.map((m) => m.id);
@@ -462,7 +461,7 @@ test("R10, R7, R2 (T41; K2418, K2480, K2487, K2488, K2532, K2566; N820): CHECK_F
     const missing = await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== path));
     assert.ok(missing.includes(`bio-plane/${path} ${fam}`), `without ${path}: ${missing.join(", ")}`);
   }
-  /* exactly the five codes K2566 names keep an earlier family's row */
+  /* exactly the codes K2566 names that N843 did not re-code keep an earlier family's row (R11) */
   assert.deepEqual(keptEarlier.sort(), HELD_EARLIER.map((h) => h.join(" ")).sort());
   /* C-122.5 moved: publish-schedule's row decorates it, and publication's file holds it no longer */
   const PUB = await import("../../../src/publication/checks.mjs");
@@ -479,4 +478,57 @@ test("R10, R7, R2 (T41; K2418, K2480, K2487, K2488, K2532, K2566; N820): CHECK_F
   /* negative control: the totality test fails with any one of them left out */
   const [one] = T41_FAMILIES;
   assert.notDeepEqual(await unreached(M.CHECK_FAMILY_FILES.filter(([p]) => p !== one[0])), []);
+});
+
+/* R11's re-coded rows (N843): `[path, family, code, its check, the code it held before, the earlier code's own row]`. */
+const N843 = [
+  ["src/hypotheses/checks.mjs", "HYPOTHESES_CHECKS", "HYPOTHESIS_PROPOSAL_NO_RUN", "C-134.22", "PROPOSAL_NO_RUN", "C-124.47"],
+  ["src/hypotheses/checks.mjs", "HYPOTHESES_CHECKS", "NO_SUCH_HYPOTHESIS_PROPOSAL", "C-134.23", "NO_SUCH_PROPOSAL", "C-111.22"],
+  ["src/steps/checks.mjs", "STEPS_CHECKS", "NO_SUCH_STEP_PROPOSAL", "C-142.28", "NO_SUCH_PROPOSAL", "C-111.22"],
+  ["src/investigation/checks.mjs", "INVESTIGATION_CHECKS", "NO_SUCH_PLANNING_PROPOSAL", "C-146.21", "NO_SUCH_PROPOSAL", "C-111.22"],
+  ["src/investigation/checks.mjs", "INVESTIGATION_CHECKS", "INTERVIEW_NOT_A_LEG", "C-146.26", "NARRATIVE_NOT_A_LEG", "C-134.28"],
+];
+
+test("R11 (T42; N843, K238, K2566, K2651, K2656; R7, R10): N843's re-codings decorate with their own families' rows — C-134.22 HYPOTHESIS_PROPOSAL_NO_RUN, C-134.23 NO_SUCH_HYPOTHESIS_PROPOSAL, C-142.28 NO_SUCH_STEP_PROPOSAL, C-146.21 NO_SUCH_PLANNING_PROPOSAL, C-146.26 INTERVIEW_NOT_A_LEG, each held by its own family alone, no other listed family holding the code; none of the three families holds the code it held before, so PROPOSAL_NO_RUN (C-124.47) and NO_SUCH_PROPOSAL (C-111.22) read R7's pinned rows again (check and translation digest) and NARRATIVE_NOT_A_LEG keeps hypotheses' C-134.28; of R10's rows an earlier family held only C-142.3 and C-146.10 stay; the snapshot's changed.note names the five re-codings and no longer names the two codes red (negative control: an earlier family holding a re-coded code would take its row, and the comparison sees it)", async () => {
+  const { createHash } = await import("node:crypto");
+  const SNAP = JSON.parse(readFileSync(new URL("./rows-before-r43.json", import.meta.url), "utf8"));
+  const digest = (s) => createHash("sha256").update(s).digest("hex").slice(0, 16);
+  const holders = (files, code) => files.flatMap(([p, ns]) => Object.entries(ns).filter(([k, v]) => isFamily(k, v) && v[code]?.translation)
+    .map(([k, v]) => [p, k, v[code]]));
+  const listed = new Map(M.CHECK_FAMILY_FILES.map(([p, ns]) => [p, ns]));
+  for (const [path, fam, code, check, was, wasCheck] of N843) {
+    const own = listed.get(path)?.[fam]?.[code];
+    assert.ok(own && own.check === check && typeof own.translation === "string" && own.translation, `${path} ${fam}.${code}`);
+    /* its own family's row, and no other listed family holds the code */
+    assert.deepEqual(holders(M.CHECK_FAMILY_FILES, code).map(([p, k]) => `${p} ${k}`), [`${path} ${fam}`], code);
+    assert.deepEqual(M.dec49Row(code), { check, translation: own.translation }, code);
+    /* the code it held before has left its family, and decorates with its earlier owner's row */
+    assert.equal(Object.entries(listed.get(path)).some(([k, v]) => isFamily(k, v) && Object.hasOwn(v, was)), false, `${was} left ${path}`);
+    assert.equal(M.dec49Row(was).check, wasCheck, was);
+    assert.notEqual(M.dec49Row(was).check, check, was);
+  }
+  /* the two pins of rule 4 (6): R7's pinned rows again, check and words */
+  for (const code of ["PROPOSAL_NO_RUN", "NO_SUCH_PROPOSAL"]) {
+    assert.ok(SNAP.rows[code], code);
+    const got = M.dec49Row(code);
+    assert.deepEqual([got.check, digest(got.translation)], SNAP.rows[code], code);
+  }
+  assert.deepEqual([SNAP.rows.PROPOSAL_NO_RUN[0], SNAP.rows.NO_SUCH_PROPOSAL[0]], ["C-124.47", "C-111.22"]);
+  /* R10's rows an earlier family holds: C-142.3 and C-146.10 stay, and only they */
+  assert.deepEqual(HELD_EARLIER.map(([, , c]) => c), ["C-142.3", "C-146.10"]);
+  for (const [path, code, check] of HELD_EARLIER) {
+    const first = holders(M.CHECK_FAMILY_FILES, code)[0];
+    assert.notEqual(first[0], path, code);
+    assert.notEqual(M.dec49Row(code).check, check, code);
+  }
+  /* the snapshot's note: the five re-codings named, the sentence naming the two codes red gone */
+  const note = SNAP.changed.note;
+  for (const [, , code, check] of N843) assert.ok(note.includes(`${check} ${code}`), `${check} ${code} in changed.note`);
+  assert.equal(/red by name \(T41 rule 4 \(21\)\)/.test(note), false, "the red sentence is replaced");
+  assert.equal(/are not re-pinned/.test(note), false, "the red sentence is replaced");
+  /* negative control: a family listed earlier holding a re-coded code would take its row, and the comparison sees it */
+  const intruder = ["src/record-grammar/acts.mjs", { INTRUDER_CHECKS: { NO_SUCH_STEP_PROPOSAL: { check: "C-0.1", translation: "x" } } }];
+  const withIntruder = [intruder, ...M.CHECK_FAMILY_FILES];
+  assert.notDeepEqual(holders(withIntruder, "NO_SUCH_STEP_PROPOSAL").map(([p, k]) => `${p} ${k}`), ["src/steps/checks.mjs STEPS_CHECKS"]);
+  assert.equal(holders(withIntruder, "NO_SUCH_STEP_PROPOSAL")[0][2].check, "C-0.1");
 });

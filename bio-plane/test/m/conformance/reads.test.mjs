@@ -426,3 +426,75 @@ test("R12 R24: comparisonRead withholds whole a standard the viewer may not see,
   assert.deepEqual([full.standards, "out_of_view" in full, full.contradiction], [[std, second], false, null]);
   assert.deepEqual(c.comparisonRead({ id: p.proposal.id, viewer: V("olive") }).proposal, full);
 });
+
+test("R11 (N841): a page's reads do not grow with its items: supersessions, standards and findings are read once per page, an ACT- id's event once per distinct id; the answer is unchanged, item for item, from each item read alone", () => {
+  const { w, proj, std, ev, act, input } = scene();
+  const second = w.standard("Parks Code 12.08.040", { period: { from: "2020-01-01", to: "2030-12-31" } });
+  /* real determinations: one superseded, two standards, an unclear one with a question */
+  const a = w.c.determine(input());
+  const b = w.c.determine(input({ supersedes: a.id, reason: "restated",
+    standards: [{ standard: std, outcome: "noncompliant" }, { standard: second, outcome: "compliant" }],
+    rows: [input().rows[0], { standard: second, requires: "a sign", did: "a sign", reading: "aligns" }] }));
+  assert.equal(b.ok, true, JSON.stringify(b).slice(0, 300));
+  /* legacy rows naming three ACT- ids, one aliased to the scene's event, each with standards and findings rows */
+  const actIds = ["ACT-2025-0001", "ACT-2025-0002", "ACT-2025-0003"];
+  const fill = (from, n) => {
+    for (let i = from; i < from + n; i++) {
+      const id = `CONF-2027-${String(i).padStart(4, "0")}-determination`;
+      w.st.sql.exec(`INSERT INTO determinations (determination_id, project_id, act_id, act_description, act_role, act_body,
+                       act_evidence, author, at) VALUES (?,?,?,?,?,?,?,?,?)`,
+                    id, proj, actIds[i % 3], "d", "r", "b", JSON.stringify([ev.content]), V("olive"), "2027-01-01T00:00:00Z");
+      w.st.sql.exec(`INSERT INTO determination_standards (determination_id, ord, standard_id, outcome, in_force)
+                     VALUES (?,?,?,?,?)`, id, 0, i % 2 ? std : second, i % 2 ? "noncompliant" : "compliant", "in_force");
+      w.st.sql.exec(`INSERT INTO determination_findings (determination_id, ord, finding_id, case_id, edition)
+                     VALUES (?,?,?,?,?)`, id, 0, F, "CASE-2026-0001", 1);
+    }
+  };
+  fill(0, 1);
+  assert.equal(w.events.aliasAct({ actId: actIds[0], eventId: act, by: V("olive") }).ok, true);
+  /* counted: every statement naming this module's determination tables, and every eventForAct */
+  const counts = { sql: 0, alias: [] };
+  const exec = w.st.sql.exec;
+  w.st.sql.exec = (q, ...args) => { if (/\bdetermination/.test(q)) counts.sql++; return exec.call(w.st.sql, q, ...args); };
+  const eventForAct = w.events.eventForAct.bind(w.events);
+  w.events.eventForAct = (id) => { counts.alias.push(id); return eventForAct(id); };
+  const measure = (fn) => { counts.sql = 0; counts.alias = []; const r = fn(); return { r, sql: counts.sql, alias: [...counts.alias] }; };
+  const small = measure(() => w.c.determinationsFor({ viewer: V("pat") }));
+  assert.equal(small.r.items.length, 3);
+  w.st.sql.exec = exec;
+  fill(1, 197);
+  w.st.sql.exec = (q, ...args) => { if (/\bdetermination/.test(q)) counts.sql++; return exec.call(w.st.sql, q, ...args); };
+  const big = measure(() => w.c.determinationsFor({ viewer: V("pat") }));
+  assert.deepEqual([big.r.items.length, big.r.truncated], [DETERMINATIONS_PAGE_MAX, false]);
+  assert.equal(big.sql, small.sql, "the determination statements are a fixed count per page");
+  assert.ok(big.sql <= 4, `at most the page, its supersessions, standards and findings: ${big.sql}`);
+  assert.deepEqual(big.alias.sort(), actIds, "eventForAct once per distinct ACT- id");
+  /* the act filter shares the page's aliases: still once per distinct id */
+  const filtered = measure(() => w.c.determinationsFor({ act: actIds[0], viewer: V("pat") }));
+  assert.equal(filtered.r.items.length, 2 + 66);
+  assert.deepEqual([...new Set(filtered.alias)].length, filtered.alias.length, "no id asked twice");
+  w.st.sql.exec = exec;
+  w.events.eventForAct = eventForAct;
+  /* the answer, item for item, is each item read alone (a page of one), for a viewer who sees all and one who does not */
+  const c = withholding(w, (id, viewer) => id === std && viewer === V("pat"));
+  for (const [svc, viewer] of [[w.c, V("pat")], [c, V("pat")], [c, V("olive")]]) {
+    const page = svc.determinationsFor({ viewer });
+    const alone = [];
+    let after = null;
+    for (;;) {
+      const one = svc.determinationsFor({ viewer, limit: 1, after });
+      if (!one.items.length) break;
+      alone.push(one.items[0]);
+      after = one.items[0].id;
+    }
+    assert.equal(JSON.stringify(page.items), JSON.stringify(alone), viewer);
+  }
+  const withheld = c.determinationsFor({ viewer: V("pat") }).items;
+  assert.ok(withheld.some((i) => i.out_of_view === true) && withheld.some((i) => !("out_of_view" in i)),
+            "the withholding is each item's own");
+  const first = w.c.determinationsFor({ viewer: V("pat") }).items;
+  assert.deepEqual(first.find((i) => i.id === a.id).superseded_by, b.id);
+  assert.deepEqual(first.find((i) => i.id === b.id).outcomes.map((o) => o.standard), [std, second]);
+  assert.deepEqual(first.find((i) => i.act.id === actIds[0]).act.event, act, "an aliased ACT- id answers its event");
+  assert.equal(first.find((i) => i.act.id === actIds[1]).act.act_unaliased, true);
+});

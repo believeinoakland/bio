@@ -27,6 +27,11 @@
  * and both are answered here, over the relay, as a `tool_result` (agent-runner R3): the one place record text
  * reaches the model on this path.
  *
+ * A PAGE'S PICTURE IS NOT RELAYED (R14; N832). The relay carries text only (agent-runner R3), so an `image` block
+ * cannot reach a sign-in conversation as an image, and rendered as text it would carry the picture's bytes into
+ * the prompt or the relay. A transcript holding one is refused before any connection opens, and an `onTool` answer
+ * holding one is refused in place of its result: `refused` with type `IMAGE_NOT_RELAYED`, and nothing more is sent.
+ *
  * THE CALLS (R6; N588). Each runner conversation's model calls are the `num_turns` its end states (agent-runner R4);
  * a conversation that ended without stating them (the socket closed, or this side stopped it) makes the count
  * `null`, as its unstated usage is null: never 0, which would be a claim.
@@ -48,6 +53,16 @@ export const READ_RESULT = Object.freeze({
   input_schema: Object.freeze({ type: "object", properties: Object.freeze({ id: Object.freeze({ type: "string" }) }),
                                 required: Object.freeze(["id"]), additionalProperties: false }),
 });
+
+/* R14 — a page's picture: an `image` block, alone or inside a `tool_result`'s content. */
+const IMAGE_NOT_RELAYED = "IMAGE_NOT_RELAYED";
+const isImage = (b) => !!b && typeof b === "object" && b.type === "image";
+const blocksHoldImage = (content) => Array.isArray(content) && content.some((b) => isImage(b)
+  || (!!b && b.type === "tool_result" && Array.isArray(b.content) && b.content.some(isImage)));
+const transcriptHoldsImage = (messages) => (Array.isArray(messages) ? messages : []).some((m) => blocksHoldImage(m && m.content));
+const notRelayed = () => refused(null, IMAGE_NOT_RELAYED,
+  "a page's picture reaches the model only on an API key: a sign-in's relay carries text only, so nothing was sent");
+const NOT_RELAYED_RESULT = "not performed: a page's picture is not relayed to a sign-in";
 
 /** The results a transcript holds, by their call's id, as the relay would carry them. */
 function heldResults(messages) {
@@ -150,6 +165,7 @@ function ending(m, usage) {
  *  turn's answer, returned as a Messages-shaped `tool_use` block, and the connection is closed (which aborts the
  *  query, agent-runner R4), so no tool is performed here and no usage was stated for it. */
 export async function signinTurn(member, runner, body) {
+  if (transcriptHoldsImage(body.messages)) return notRelayed();
   /* A held result read over the relay is a turn of the runner's own, so the turn may take one per held result. */
   const reads = heldResults(body.messages).size;
   const serialized = JSON.stringify(conversationRequest(member, {
@@ -186,6 +202,7 @@ export async function signinConverse({ member, runner, model, system, messages, 
   let calls = 0;
   let k = 0;
   const unstated = () => sumUsage(usage, usageOf(null));
+  if (transcriptHoldsImage(messages)) return notRelayed();
   while (k < maxTurns) {
     const serialized = JSON.stringify(conversationRequest(member, { model, system, messages, tools, maxTurns: maxTurns - k }));
     const stop = charge(serialized);
@@ -219,6 +236,12 @@ export async function signinConverse({ member, runner, model, system, messages, 
           const r = await onTool(u.name, input);
           if (r && r.halt) { conn.close(); return r.halt; }
           blocks = toolResultContent(r);
+          if (blocksHoldImage(blocks)) {
+            /* R14: the picture is not sent; the transcript keeps the call answered, without the picture. */
+            conn.close();
+            messages.push({ role: "user", content: [{ type: "tool_result", tool_use_id: u.id, content: NOT_RELAYED_RESULT, is_error: true }] });
+            return { ...notRelayed(), usage: unstated(), calls: null };
+          }
           content = relayText(blocks);
           isError = !!r?.error;
         }

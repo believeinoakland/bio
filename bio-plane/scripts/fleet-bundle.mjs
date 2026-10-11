@@ -96,7 +96,7 @@
 import { build, version as ESBUILD_VERSION } from "esbuild";
 import { createHash } from "node:crypto";
 import { readFileSync, readdirSync, writeFileSync, mkdirSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join, resolve } from "node:path";
 /* THIS WALK IS GUARDED RATHER THAN NAMED. Found by the census in the old
    `hygiene.test.mjs` (deleted in T20): it went red on this file the first full
@@ -914,4 +914,147 @@ export async function verifyFresh(member, committed) {
           + "which a one-part script upload cannot resolve — so an installer that cannot bundle "
           + "could not install it.");
   return { checked: true, findings, built };
+}
+
+/* ---- THE SIZE AND START-UP BUDGETS (bundler R31; N840, K2547) -----------------
+ *
+ * Cloudflare takes a Worker of up to 64 MiB uncompressed and gives its global scope 1 s to evaluate. Nothing measured
+ * either until T42: the plane went from 8.0 MiB to 14.6 MiB in five days (K2547) and no check could see it. So every
+ * fleet member's built artifact, and the plane's, is measured against a budget with room below the platform's limit:
+ * past 32 MiB is a warning, past 48 MiB a failure; a global scope slower than 500 ms is a warning. Each figure is
+ * printed by the fleet gate, so BOB reports them at each layer close.
+ *
+ * THE START-UP TIME IS A FRESH IMPORT IN THIS PROCESS (Node, not workerd), and what that measures is stated rather
+ * than assumed:
+ *   - `cloudflare:*` cannot be imported outside workerd, so each is answered by a stub that exports every name the
+ *     artifact imports from it (a class; `env` an object). The stub costs nothing measurable; what the artifact's own
+ *     global scope does with those names is still run.
+ *   - an upload part (`bundle.assets`) arrives on the platform already compiled (wasm) or as bytes, so it is read and
+ *     compiled BEFORE the clock starts and handed to the import as that value: the timed window is the artifact's own
+ *     load, parse, link and global-scope evaluation, which is what the platform's limit is about.
+ *   - the import is fresh: a URL no earlier import used, so a module cache can never make a second run free.
+ * The hooks that do this are registered for the one import and removed after it, and reach only the artifact's own
+ * imports. Node's and workerd's V8 differ in flags and machines differ in speed, so the figure is a measurement to
+ * watch and warn on, never a failure. */
+export const MIB = 1024 * 1024;
+export const BUDGET = Object.freeze({ sizeWarn: 32 * MIB, sizeFail: 48 * MIB, startWarnMs: 500 });
+
+const mib = (n) => `${(n / MIB).toFixed(1)} MiB`;
+
+/** R31, size: `{bytes, verdict, finding, warning}` for an artifact of `bytes`: `fail` past `sizeFail` (a finding),
+ *  `warn` past `sizeWarn` (a warning), else `ok`. "Past" is strictly greater. */
+export function sizeVerdict(member, bytes, budget = BUDGET) {
+  const at = `${member.name}: its built artifact ${member.bundle ? member.bundle.outfile : ""} is ${bytes} B (${mib(bytes)})`;
+  if (bytes > budget.sizeFail)
+    return { bytes, verdict: "fail", warning: null,
+      finding: `${at}, past the fleet's size budget of ${mib(budget.sizeFail)} (Cloudflare's limit is 64 MiB per Worker). `
+        + "Splitting the plane into further Workers is an architecture question for Bob (K2547)." };
+  if (bytes > budget.sizeWarn)
+    return { bytes, verdict: "warn", finding: null, warning: `${at}, past the warning budget of ${mib(budget.sizeWarn)}.` };
+  return { bytes, verdict: "ok", finding: null, warning: null };
+}
+
+/** R31, start-up: `{ms, verdict, warning}`: `warn` past `startWarnMs`, else `ok`. Never a failure (see above). */
+export function startVerdict(member, ms, budget = BUDGET) {
+  if (ms > budget.startWarnMs)
+    return { ms, verdict: "warn",
+      warning: `${member.name}: its global scope took ${ms.toFixed(0)} ms to evaluate on a fresh import, past the warning `
+        + `budget of ${budget.startWarnMs} ms (the platform allows 1 s).` };
+  return { ms, verdict: "ok", warning: null };
+}
+
+/* The names an artifact imports statically from each `cloudflare:*` specifier, so its stub can export exactly them. */
+function cloudflareImports(text) {
+  const out = new Map();
+  for (const m of text.matchAll(/(?:^|[;\n])\s*import\s*\{([^}]*)\}\s*from\s*["'](cloudflare:[^"']+)["']/g)) {
+    const names = out.get(m[2]) || new Set();
+    for (const part of m[1].split(",")) {
+      const name = part.trim().split(/\s+as\s+/)[0].trim();
+      if (name) names.add(name);
+    }
+    out.set(m[2], names);
+  }
+  return out;
+}
+
+let freshImport = 0;
+
+/** R31: the time to evaluate a member's built artifact's global scope, by a fresh import in this process.
+ *  `{measured: true, ms}`, or `{measured: false, reason}` when the artifact cannot be read or its import throws (the
+ *  reason names it). `artifact` overrides the path (member-relative); nothing is written. */
+export async function measureStart(member, { artifact = member.bundle && member.bundle.outfile } = {}) {
+  const { registerHooks } = await import("node:module");
+  const abs = join(member.abs, artifact);
+  let text;
+  try { text = readFileSync(abs, "utf8"); }
+  catch (e) { return { measured: false, reason: `${member.name}: its built artifact ${artifact} cannot be read (${e.message})` }; }
+  const artifactUrl = pathToFileURL(abs).href;
+  const url = `${artifactUrl}?r31-fresh=${process.pid}-${++freshImport}-${Date.now()}`;
+  const stubs = new Map();
+  for (const [spec, names] of cloudflareImports(text)) {
+    const body = [...names].map((n) => (n === "env" ? `export const env = {};` : `export class ${n} {}`)).join("\n");
+    stubs.set(spec, `data:text/javascript,${encodeURIComponent(body || "export {};")}`);
+  }
+  /* The upload parts, compiled and read BEFORE the clock starts, as the platform has them before the global scope runs. */
+  const parts = new Map();
+  const key = `__bundlerR31Parts${freshImport}`;
+  try {
+    for (const rel of assetsOf(member)) {
+      const bytes = readFileSync(join(member.abs, rel));
+      parts.set(pathToFileURL(join(member.abs, rel)).href,
+        rel.endsWith(".wasm") ? new WebAssembly.Module(bytes) : bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.length));
+    }
+  } catch (e) {
+    return { measured: false, reason: `${member.name}: an upload part cannot be read or compiled (${e.message})` };
+  }
+  globalThis[key] = Object.fromEntries(parts);
+  const fromArtifact = (ctx) => typeof ctx.parentURL === "string" && ctx.parentURL.split("?")[0] === artifactUrl;
+  const hooks = registerHooks({
+    resolve(spec, ctx, next) {
+      if (fromArtifact(ctx)) {
+        if (stubs.has(spec)) return { url: stubs.get(spec), shortCircuit: true };
+        const target = new URL(spec, artifactUrl).href;
+        if (parts.has(target)) return { url: `bundler-r31-part:${encodeURIComponent(target)}`, shortCircuit: true };
+      }
+      return next(spec, ctx);
+    },
+    load(u, ctx, next) {
+      if (u.startsWith("bundler-r31-part:")) {
+        const target = decodeURIComponent(u.slice("bundler-r31-part:".length));
+        return { format: "module", shortCircuit: true,
+          source: `export default globalThis[${JSON.stringify(key)}][${JSON.stringify(target)}];` };
+      }
+      return next(u, ctx);
+    },
+  });
+  try {
+    const t0 = performance.now();
+    await import(url);
+    return { measured: true, ms: performance.now() - t0 };
+  } catch (e) {
+    return { measured: false, reason: `${member.name}: a fresh import of ${artifact} threw: ${String(e && e.message).split("\n")[0]}` };
+  } finally {
+    hooks.deregister();
+    delete globalThis[key];
+  }
+}
+
+/** R31, the whole check for one member: its size and its start-up time against `budget`. `findings` are failures;
+ *  `warnings` are printed, never failed; `line` is the one line the gate prints for the member. */
+export async function budgetReport(member, budget = BUDGET) {
+  const findings = [], warnings = [];
+  let bytes = null;
+  try { bytes = readFileSync(join(member.abs, member.bundle.outfile)).length; }
+  catch (e) { findings.push(`${member.name}: its built artifact ${member.bundle.outfile} cannot be read (${e.message}), so its size is unmeasured`); }
+  const size = bytes === null ? null : sizeVerdict(member, bytes, budget);
+  if (size && size.finding) findings.push(size.finding);
+  if (size && size.warning) warnings.push(size.warning);
+  const run = await measureStart(member);
+  const start = run.measured ? startVerdict(member, run.ms, budget) : null;
+  if (!run.measured) findings.push(`${run.reason}, so its start-up time is unmeasured`);
+  if (start && start.warning) warnings.push(start.warning);
+  const line = `${member.name}: ${bytes === null ? "size unmeasured" : `${bytes} B (${mib(bytes)}) ${size.verdict}`} · `
+    + `${start ? `global scope ${start.ms.toFixed(0)} ms ${start.verdict}` : "start-up unmeasured"}`;
+  return { name: member.name, bytes, size: size && size.verdict, ms: start ? start.ms : null, start: start && start.verdict,
+    findings, warnings, line };
 }

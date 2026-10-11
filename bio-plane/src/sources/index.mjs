@@ -9,22 +9,22 @@
  * A new module (K509 (1), N364): nothing moves. Its tables (`./schema.mjs`) are append-only and exempt from purge
  * (R13), each declared with its classes (R19). Its rows are its own family, C-121 (`./checks.mjs`, R14).
  *
- * WHERE A SOURCE COMES FROM (R1). `capture` is earlier in the order and cannot call this module, so a source is
- * derived at read from the knocks capture pulled into a capture (its R72, R65, R66) and minted on first read and kept:
- * one per pseudonym, one per knock sent without a secret. A pulled knock's bytes are filed under their own digest (capture
- * R65), so the capture's digest is the knock's `sha256`; the capture's own `source` is rebuilt from the row exactly as
- * capture R65 composes it. A capture that is not a pulled knock has no source here: the capturing member is never
+ * WHERE A SOURCE COMES FROM (R1). `doorbell` is earlier in the order and cannot call this module, so a source is
+ * derived at read from the knocks the doorbell pulled into a capture (its R18, R13, R14) and minted on first read and
+ * kept: one per pseudonym, one per knock sent without a secret. A pulled knock's bytes are filed under their own digest
+ * (doorbell R13), so the capture's digest is the knock's `sha256`; the capture's own `source` is rebuilt from the row
+ * exactly as doorbell R13 composes it. A capture that is not a pulled knock has no source here: the capturing member is never
  * recorded as the source of what someone else gave them (R12).
  *
- * WHO SEES WHAT. A source is seen by a viewer naming a member (the inbox's fence, capture R32); a machine credential
+ * WHO SEES WHAT. A source is seen by a viewer naming a member (the inbox's fence, doorbell R3); a machine credential
  * or no viewer is answered `NO_SUCH_SOURCE`. A stored value is read only by the members its entry lists (R5), each
  * read logged. `by` and `viewer` are the control plane's stamps, never a body's.
  *
  * REACHED as `sourcesOf(ctx, deps)` (K61): one instance per Durable Object storage, created on the first call with
  * `deps` and returned to every later caller. At creation it creates its tables and declares them to purge, every one
  * exempt (R13). `deps`:
- *   record, membership, capture, provenance   the modules it uses, through their factories on the same storage unless
- *                                 a test passes its own (`capture` and `provenance` are reached lazily, on first use).
+ *   record, membership, doorbell, provenance  the modules it uses, through their factories on the same storage unless
+ *                                 a test passes its own (`doorbell` and `provenance` are reached lazily, on first use).
  *   now                           the module's clock, milliseconds since the epoch (default: the wall clock).
  *
  * THE OPS (routed and stamped by `control-plane`, layer 11; `sourcesOps` below): `sourcedisclose` (R2–R5),
@@ -35,7 +35,7 @@
 import { isMachineIdentity, BASIS_GRADES, TESTIMONY_GRADE } from "../record-grammar/index.mjs";
 import { recordOf, stampInstant, instantOrder, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, listenerRefusal } from "../membership/index.mjs";
-import { captureOf } from "../capture/index.mjs";
+import { doorbellOf } from "../doorbell/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { SOURCES_CHECKS, noSuchSource, badDisclosure, noEvidence, noSightList, consentNotStanding,
          SECRET_NOT_RECOGNISED_ANSWER, machineCannotMark, notYourCapture, noSuchCapture, noService } from "./checks.mjs";
@@ -53,7 +53,7 @@ export const AUDIENCES = Object.freeze(["member", "group", "public"]);
 export const RUNGS = Object.freeze(["unknown", "same_knocker", "partly_known", "known_to_group", "publicly_known"]);
 /** R6: a link's basis, strongest first. */
 export const LINK_BASES = Object.freeze(["same_secret", "evidence"]);
-/** R11: a presented secret shorter than this is never recognised (capture R66's floor, K497). */
+/** R11: a presented secret shorter than this is never recognised (doorbell R14's floor, K497). */
 export const SECRET_MIN = 20;
 /** Bounds on what a member writes: a value, an exposer's name, a statement of evidence, a citation. */
 export const VALUE_MAX = 400, CLAIMED_BY_MAX = 200, EVIDENCE_MAX = 2000;
@@ -98,13 +98,13 @@ function isWhen(v) {
 }
 
 export class Sources {
-  #sql; #record; #membership; #captureRef; #provenanceRef; #clock; #listeners = [];
+  #sql; #record; #membership; #doorbellRef; #provenanceRef; #clock; #listeners = [];
 
-  constructor({ storage, record, membership, capture = null, provenance = null, now = null } = {}) {
+  constructor({ storage, record, membership, doorbell = null, provenance = null, now = null } = {}) {
     this.#sql = storage.sql;
     this.#record = record;
     this.#membership = membership;
-    this.#captureRef = capture;
+    this.#doorbellRef = doorbell;
     this.#provenanceRef = provenance;
     this.#clock = typeof now === "function" ? now : () => Date.now();
     migrateSources(this.#sql);
@@ -114,7 +114,7 @@ export class Sources {
       throw new Error(`sources: record-core refused its table declaration: ${declared.reason} (${declared.table})`);
   }
 
-  get #capture() { return typeof this.#captureRef === "function" ? this.#captureRef() : this.#captureRef; }
+  get #doorbell() { return typeof this.#doorbellRef === "function" ? this.#doorbellRef() : this.#doorbellRef; }
   get #provenance() {
     if (typeof this.#provenanceRef === "function") this.#provenanceRef = this.#provenanceRef();
     return this.#provenanceRef;
@@ -147,13 +147,13 @@ export class Sources {
 
   #source(id) { return typeof id === "string" && id ? this.#one(`SELECT * FROM sources WHERE source_id = ?`, id) : null; }
 
-  /** Every knock pulled into the capture, oldest received first: capture's one keyed read (its R72). */
+  /** Every knock pulled into the capture, oldest received first: the doorbell's one keyed read (its R18). */
   #pulledKnocks(captureSha) {
-    const list = this.#capture.pulledKnocksOf(captureSha);
+    const list = this.#doorbell.pulledKnocksOf(captureSha);
     return Array.isArray(list) ? list.filter((k) => k && typeof k.knock_id === "string" && k.sha256 === captureSha) : [];
   }
 
-  /** R1: capture R65's `source`, verbatim, from the knock's row. */
+  /** R1: doorbell R13's `source`, verbatim, from the knock's row. */
   static stated(k) {
     return { kind: "knocker", named: false, pseudonym: k.pseudonym ?? null,
              receipt: { knock_id: k.knock_id, sha256: k.sha256, bytes: k.bytes, received: k.received } };
@@ -184,16 +184,16 @@ export class Sources {
                    k.knock_id, sourceId, k.sha256, Number(k.bytes) || 0, String(k.received));
   }
 
-  /** R15: every pulled knock of a pseudonym's source bound to it, from capture's `knocksOf` (its R67), when the source
+  /** R15: every pulled knock of a pseudonym's source bound to it, from the doorbell's `knocksOf` (its R15), when the source
    *  is minted and before each act that may move its rung (R10), so a capture the source stands behind has its row
    *  whichever of its captures was read (reevaluation R28 reads them). A knock without a secret is its source's only
-   *  knock, bound when read. In the caller's transaction; a capture that does not answer binds nothing more. */
+   *  knock, bound when read. In the caller's transaction; a doorbell that does not answer binds nothing more. */
   #bindKnocks(src) {
     if (!src || !src.pseudonym) return;
     let after = null;
     for (;;) {
       let page;
-      try { page = this.#capture.knocksOf({ pseudonym: src.pseudonym, limit: 1000, after }); } catch { return; }
+      try { page = this.#doorbell.knocksOf({ pseudonym: src.pseudonym, limit: 1000, after }); } catch { return; }
       if (!page || page.ok === false || !Array.isArray(page.knocks)) return;
       for (const k of page.knocks)
         if (k && k.status === "pulled" && typeof k.knock_id === "string" && HEX64.test(String(k.sha256)) && k.capture_sha === k.sha256)
@@ -485,7 +485,7 @@ export class Sources {
 
   async #digestOf(secret) {
     try {
-      const d = await this.#capture.knockerDigestOf(secret);
+      const d = await this.#doorbell.knockerDigestOf(secret);
       return d && typeof d.knocker_digest === "string" && d.knocker_digest ? d : null;
     } catch { return null; }
   }
@@ -604,19 +604,19 @@ export class Sources {
 
   /* ---- R11: consent by the knocker's own secret, no account ---- */
 
-  /** R11 (`op=knockerconsent`). Counted in the knock's rate windows as a knock from its source (capture R31, K530);
+  /** R11 (`op=knockerconsent`). Counted in the knock's rate windows as a knock from its source (doorbell R2, R17; K530);
    *  a rate refusal answers as the knock's does. Every other failure answers `SECRET_NOT_RECOGNISED`, byte for byte
    *  the same. `sourceAddress` and `now` are the control plane's, as for a knock. */
   async consentBySecret(args = {}) {
     const a = isObj(args) ? args : {};
-    const cap = this.#capture;
+    const bell = this.#doorbell;
     let rate;
     try {
       /* The instant is the control plane's stamp when it sends one, else this module's own clock, never a third: an
-         attempt counted on another clock lands in another window, and capture's prune of every bucket but the
-         current window's two would drop the others' counts (R31's window is one clock's). */
+         attempt counted on another clock lands in another window, and the doorbell's prune of every bucket but the
+         current window's two would drop the others' counts (doorbell R2's window is one clock's). */
       const stamped = a.now != null && a.now !== "" && Number.isFinite(Number(a.now)) ? Number(a.now) : null;
-      rate = await cap.knockAttempt({ sourceAddress: a.sourceAddress ?? null, now: stamped ?? this.#nowMs() });
+      rate = await bell.knockAttempt({ sourceAddress: a.sourceAddress ?? null, now: stamped ?? this.#nowMs() });
     } catch { return SECRET_NOT_RECOGNISED_ANSWER; }
     if (rate && rate.ok === false) return rate;
     const secret = typeof a.knockerSecret === "string" ? a.knockerSecret : "";
@@ -722,7 +722,7 @@ export function sourcesOf(ctx, deps = {}) {
   if (!s) {
     const record = deps.record ?? recordOf(ctx);
     s = new Sources({ storage, record, membership: deps.membership ?? membershipOf(ctx, { record }),
-                      capture: deps.capture ?? (() => captureOf(ctx)),
+                      doorbell: deps.doorbell ?? (() => doorbellOf(ctx)),
                       provenance: deps.provenance ?? (() => provenanceOf(ctx, { record })), now: deps.now ?? null });
     OF.set(storage, s);
   }

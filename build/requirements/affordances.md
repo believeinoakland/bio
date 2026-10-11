@@ -1,6 +1,6 @@
 # affordances — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed. Split for size (K617, K1907, K1974): its grading ids are retired to `op-grades`, each naming its new id; R30, R34, R36, R37 and R44 keep their other parts here; R22 and R25 are copied there (its R19, R20). Last changed T35 (T35-66: R14, R39 amended; K1943); every requirement met (AFFORDANCES #22, K2066). Last changed T37 (T37-27: R48 amended, `ACT_HELP` from PR #14's `mock-acts.js`; N669, N708, N757, N776; DEC-182; K2171); marked not yet met (T37). Last changed T41 (T41-52's text: R50 new; N820; K2405, K2417, K2418); marked not yet met (T41).
+**Status** · In force: approved by Bob 2026-09-26 (K102), with later folds reviewed. Split for size (K617, K1907, K1974): its grading ids are retired to `op-grades`, each naming its new id; R30, R34, R36, R37 and R44 keep their other parts here; R22 and R25 are copied there (its R19, R20). Last changed T35 (T35-66: R14, R39 amended; K1943); every requirement met (AFFORDANCES #22, K2066). Last changed T37 (T37-27: R48 amended, `ACT_HELP` from PR #14's `mock-acts.js`; N669, N708, N757, N776; DEC-182; K2171); marked not yet met (T37). Last changed T41 (T41-52's text: R50 new; N820; K2405, K2417, K2418); marked not yet met (T41). Last changed T42 (T42-25b: tests only, the `undetermined` count re-pinned for `op-grades` R31's `pagetranscribe`; Uses re-pointed to `doorbell` for `inboxresolve`'s backing; N826, N832; K2611, K2613, K2656); no requirement changed.
 
 **Size (P6).** About 2,780 lines (about 630 without comment-only and blank lines): `affordances.mjs` 2,225 once the 86 lines of vocabulary that other modules own leave it (R6), `store.mjs` 406, `index.mjs` 150. Well under 4,000.
 
@@ -122,7 +122,7 @@ Terms. An **act** is `{id, label, weight, types, applies(facts, type), prompt?}`
 - `inquiry`: `DISPOSITIONS` (R6). `progressions`: `STAGE_REQUIREDNESS`. `entities`: `ENTITY_KINDS`, `RELATION_KINDS`. `action-grammar`: `RISK_TIERS`, `actionKinds` (its R1) and the other action vocabularies (its R2) (R26); `content`: its vocabularies.
 - `intent`: its open proposal, the backing of R19's `triage` (K221).
 - `inquiry`: R46's vocabularies (R4; N345). `contradiction`: `DISMISSAL_REASONS` (its R31; R4; N345); `candidateSidesSeen` (its R56; R14's `contradiction_sides_seen`, N365).
-- `sources` and `capture` (N364): their op maps, the ops R2 and R3 grade, and the backing of each rung (R19).
+- `sources` and `capture` (N364), and (T42; N826; K2656) `doorbell`: their op maps, the ops R2 and R3 grade, and the backing of each rung (R19; `inboxresolve`'s by `doorbell` R3, its backing test re-pointed in T42-25b), `doorbell` a new `modules.json` edge, BOB's.
 - `standards`, `conformance`, `consequences`, `filings`, `escalation`: their op maps, the ops R27 grades, and the backing of each rung (K264).
 - `filing-templates`, `local-facts` (K921): their op maps, R30's vocabularies and the backing of each rung.
 - `provenance`, `attestation`, `provenance-routes` (N512), `observation-log`, `bias`, `strength`, `reevaluation`, `monitoring` (K1107): their op maps, the ops R2 grades, and the backing of each rung (R19).

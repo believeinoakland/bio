@@ -71,7 +71,7 @@ test("R16 hypothesisPropose, the machine's only door: stored apart, labelled the
   assert.deepEqual([d.keys, d.sight, d.export, d.purge], [["bundle_id"], "bundle", "yes", "clear"]);
 });
 
-test("R16 hypothesisPropose's refusals in order, each writing nothing: NO_SUCH_BUNDLE, NOT_AN_INQUIRY, UNKNOWN_HYPOTHESIS_KIND, HYPOTHESIS_NO_STATEMENT, BAD_ABOUT, PROPOSAL_NO_HOW, PROPOSAL_NO_RATE, PROPOSAL_NO_RUN", () => {
+test("R16 hypothesisPropose's refusals in order, each writing nothing: NO_SUCH_BUNDLE, NOT_AN_INQUIRY, UNKNOWN_HYPOTHESIS_KIND, HYPOTHESIS_NO_STATEMENT, BAD_ABOUT, PROPOSAL_NO_HOW, PROPOSAL_NO_RATE, HYPOTHESIS_PROPOSAL_NO_RUN", () => {
   const w = setup();
   w.bundle("INFO-2026-0001-doc", { type: "information" });
   const expect = (args, code) => {
@@ -88,9 +88,9 @@ test("R16 hypothesisPropose's refusals in order, each writing nothing: NO_SUCH_B
   expect({ ...all, kind: "cause", statement: "s", about: [E1] }, "BAD_ABOUT");
   expect({ ...all, kind: "cause", statement: "s", about: { from: E1, to: E2 }, how: "  " }, "PROPOSAL_NO_HOW");
   for (const false_alarm_rate of [null, -0.01, 1.01, NaN, "0.1", Infinity]) expect({ false_alarm_rate, run: "" }, "PROPOSAL_NO_RATE");
-  for (const run of [null, "", "  ", 7]) expect({ run }, "PROPOSAL_NO_RUN");
+  for (const run of [null, "", "  ", 7]) expect({ run }, "HYPOTHESIS_PROPOSAL_NO_RUN");
   for (const false_alarm_rate of [0, 1]) assert.equal(w.h.hypothesisPropose({ ...PROPOSAL, false_alarm_rate }).ok, true, "the bounds are kept");
-  assert.deepEqual(["PROPOSAL_NO_HOW", "PROPOSAL_NO_RATE", "PROPOSAL_NO_RUN"].map((c) => row(c).check), ["C-134.20", "C-134.21", "C-134.22"]);
+  assert.deepEqual(["PROPOSAL_NO_HOW", "PROPOSAL_NO_RATE", "HYPOTHESIS_PROPOSAL_NO_RUN"].map((c) => row(c).check), ["C-134.20", "C-134.21", "C-134.22"]);
 });
 
 /* ---- R17 ---------------------------------------------------------------------------------------------------------- */
@@ -118,10 +118,10 @@ test("R17 hypothesisTakeUp, a member's act (record-grammar R52): holds the propo
   const p = w.h.hypothesisPropose(PROPOSAL).proposal;
   assert.equal(hypothesesOps(w.h, url("hypothesistakeup"), { proposal: p, form: "as_proposed", by: "class:ai" }).hypothesistakeup().reason, "MACHINE_CANNOT_HYPOTHESISE");
   assert.equal(hypothesesOps(w.h, url("hypothesistakeup"), { proposal: p, form: "as_proposed", by: ANN }).hypothesistakeup().ok, true);
-  assert.equal(hypothesesOps(w.h, url("hypothesistakeup"), null).hypothesistakeup().reason, "NO_SUCH_PROPOSAL", "an empty body is refused, never thrown");
+  assert.equal(hypothesesOps(w.h, url("hypothesistakeup"), null).hypothesistakeup().reason, "NO_SUCH_HYPOTHESIS_PROPOSAL", "an empty body is refused, never thrown");
 });
 
-test("R17 hypothesisTakeUp's refusals in order, each writing nothing: NO_SUCH_PROPOSAL (absent, hidden or a held hypothesis, one answer), MACHINE_CANNOT_HYPOTHESISE, PROPOSAL_FORM_UNKNOWN, PROPOSAL_NOT_OPEN, HYPOTHESIS_NO_STATEMENT", () => {
+test("R17 hypothesisTakeUp's refusals in order, each writing nothing: NO_SUCH_HYPOTHESIS_PROPOSAL (absent, hidden or a held hypothesis, one answer), MACHINE_CANNOT_HYPOTHESISE, PROPOSAL_FORM_UNKNOWN, PROPOSAL_NOT_OPEN, HYPOTHESIS_NO_STATEMENT", () => {
   const w = setup();
   const p = w.h.hypothesisPropose(PROPOSAL).proposal;
   const hiddenP = w.h.hypothesisPropose({ ...PROPOSAL, inquiry: HIDDEN }).proposal;
@@ -133,9 +133,9 @@ test("R17 hypothesisTakeUp's refusals in order, each writing nothing: NO_SUCH_PR
     assert.equal(everything(w), before, "nothing was written");
     return r;
   };
-  const absent = expect({ proposal: "HYP-2026-0404", form: "x", by: OUTSIDER }, "NO_SUCH_PROPOSAL");
+  const absent = expect({ proposal: "HYP-2026-0404", form: "x", by: OUTSIDER }, "NO_SUCH_HYPOTHESIS_PROPOSAL");
   for (const proposal of [hiddenP, held, null, "nope"])
-    assert.deepEqual({ ...expect({ proposal, form: "x", by: OUTSIDER }, "NO_SUCH_PROPOSAL"), proposal: null }, { ...absent, proposal: null });
+    assert.deepEqual({ ...expect({ proposal, form: "x", by: OUTSIDER }, "NO_SUCH_HYPOTHESIS_PROPOSAL"), proposal: null }, { ...absent, proposal: null });
   for (const by of ["class:ai", "class:daemon"]) expect({ proposal: p, form: "x", by }, "MACHINE_CANNOT_HYPOTHESISE");
   const f = expect({ proposal: p, form: "accept", by: ANN }, "PROPOSAL_FORM_UNKNOWN");
   assert.deepEqual(f.forms, ["as_proposed", "edited", "own_instead"]);
@@ -148,7 +148,7 @@ test("R17 hypothesisTakeUp's refusals in order, each writing nothing: NO_SUCH_PR
 
 /* ---- R18 ---------------------------------------------------------------------------------------------------------- */
 
-test("R18 a proposal set aside by a member stays readable with her reason; refusals in order, each writing nothing: NO_SUCH_PROPOSAL, MACHINE_CANNOT_HYPOTHESISE, PROPOSAL_NO_REASON, PROPOSAL_NOT_OPEN; R1's MACHINE_CANNOT_HYPOTHESISE stands for hold", () => {
+test("R18 a proposal set aside by a member stays readable with her reason; refusals in order, each writing nothing: NO_SUCH_HYPOTHESIS_PROPOSAL, MACHINE_CANNOT_HYPOTHESISE, PROPOSAL_NO_REASON, PROPOSAL_NOT_OPEN; R1's MACHINE_CANNOT_HYPOTHESISE stands for hold", () => {
   const w = setup();
   const p = w.h.hypothesisPropose(PROPOSAL).proposal;
   const expect = (args, code) => {
@@ -156,7 +156,7 @@ test("R18 a proposal set aside by a member stays readable with her reason; refus
     refusedAs(w.h.hypothesisSetAside(args), code);
     assert.equal(everything(w), before, "nothing was written");
   };
-  expect({ proposal: "HYP-2026-0404", reason: "", by: ANN }, "NO_SUCH_PROPOSAL");
+  expect({ proposal: "HYP-2026-0404", reason: "", by: ANN }, "NO_SUCH_HYPOTHESIS_PROPOSAL");
   expect({ proposal: p, reason: "", by: "class:ai" }, "MACHINE_CANNOT_HYPOTHESISE");
   expect({ proposal: p, reason: "  ", by: ANN }, "PROPOSAL_NO_REASON");
   const r = w.h.hypothesisSetAside({ proposal: p, reason: "The treasurer is a different person.", by: ANN });
@@ -170,7 +170,7 @@ test("R18 a proposal set aside by a member stays readable with her reason; refus
   /* hold stays a member's act alone: a machine's stamp is refused; the member's is the control */
   refusedAs(w.h.hold({ inquiry: INQ, kind: "relation", statement: "s", about: { from: E1, to: E2 }, by: "class:ai" }), "MACHINE_CANNOT_HYPOTHESISE");
   assert.equal(w.h.hold({ inquiry: INQ, kind: "relation", statement: "s", about: { from: E1, to: E2 }, by: ANN }).ok, true);
-  assert.deepEqual(["NO_SUCH_PROPOSAL", "PROPOSAL_NOT_OPEN", "PROPOSAL_FORM_UNKNOWN", "PROPOSAL_NO_REASON"].map((c) => row(c).check), ["C-134.23", "C-134.24", "C-134.25", "C-134.26"]);
+  assert.deepEqual(["NO_SUCH_HYPOTHESIS_PROPOSAL", "PROPOSAL_NOT_OPEN", "PROPOSAL_FORM_UNKNOWN", "PROPOSAL_NO_REASON"].map((c) => row(c).check), ["C-134.23", "C-134.24", "C-134.25", "C-134.26"]);
 });
 
 test("R7 R18 op=hypothesissetaside sets the system's proposal aside through hypothesisSetAside, proposal and reason from the body, the member the body's stamp (the control plane's); a machine's stamp, an absent proposal, a missing reason and an empty body are refused, writing nothing", () => {
@@ -178,13 +178,13 @@ test("R7 R18 op=hypothesissetaside sets the system's proposal aside through hypo
   const p = w.h.hypothesisPropose(PROPOSAL).proposal;
   const arm = (body) => hypothesesOps(w.h, url("hypothesissetaside"), body).hypothesissetaside();
   const expect = (body, code) => { const before = everything(w); refusedAs(arm(body), code); assert.equal(everything(w), before, "nothing was written"); };
-  expect(null, "NO_SUCH_PROPOSAL");
+  expect(null, "NO_SUCH_HYPOTHESIS_PROPOSAL");
   expect({ proposal: p, reason: "not him", by: "class:ai" }, "MACHINE_CANNOT_HYPOTHESISE");
-  expect({ proposal: "HYP-2026-0404", reason: "not him", by: ANN }, "NO_SUCH_PROPOSAL");
+  expect({ proposal: "HYP-2026-0404", reason: "not him", by: ANN }, "NO_SUCH_HYPOTHESIS_PROPOSAL");
   expect({ proposal: p, by: ANN }, "PROPOSAL_NO_REASON");
   /* a viewer named in the body is no stamp: an outsider's act on a hidden proposal answers as an absent one */
   const hp = w.h.hypothesisPropose({ ...PROPOSAL, inquiry: HIDDEN }).proposal;
-  expect({ proposal: hp, reason: "r", by: OUTSIDER, viewer: ANN }, "NO_SUCH_PROPOSAL");
+  expect({ proposal: hp, reason: "r", by: OUTSIDER, viewer: ANN }, "NO_SUCH_HYPOTHESIS_PROPOSAL");
   const r = arm({ proposal: p, reason: "A different treasurer.", by: ANN });
   assert.deepEqual([r.ok, r.proposal, r.set_aside.by, r.set_aside.reason], [true, p, ANN, "A different treasurer."], "the negative control: the member's act lands");
   assert.equal(w.h.proposalsOf({ inquiry: INQ, viewer: OUTSIDER }).proposals[0].status, "set_aside");
@@ -366,4 +366,38 @@ test("R14 never shared except by its author's R19 act, which shares a copy of it
   for (const t of ["member_notes", "member_note_turns"]) assert.ok(!JSON.stringify(w.rows(`SELECT * FROM ${t}`)).includes("share"), t);
   /* a note never shared stays her own alone: the negative control */
   assert.ok(!JSON.stringify(w.h.sharesOf({ project: PROJ, viewer: VERA })).includes("kept apart"));
+});
+
+/* ---- R22 (T42; N843, K2566) ---------------------------------------------------------------------------------------- */
+
+test("R22 this module's codes name its own conditions: a proposal with no run is refused HYPOTHESIS_PROPOSAL_NO_RUN (C-134.22) and one absent or unseen at R17's or R18's act NO_SUCH_HYPOTHESIS_PROPOSAL (C-134.23), each row's number and translation kept; it never answers or holds PROPOSAL_NO_RUN (action-plans') or NO_SUCH_PROPOSAL (intent's)", () => {
+  const w = setup();
+  const OLD = ["PROPOSAL_NO_RUN", "NO_SUCH_PROPOSAL"];
+  /* the rows, re-coded in place: numbers and translations as T41 minted them */
+  assert.deepEqual([row("HYPOTHESIS_PROPOSAL_NO_RUN").check, row("HYPOTHESIS_PROPOSAL_NO_RUN").translation],
+    ["C-134.22", "A proposal of the system's names the run that made it. Nothing was written."]);
+  assert.deepEqual([row("NO_SUCH_HYPOTHESIS_PROPOSAL").check, row("NO_SUCH_HYPOTHESIS_PROPOSAL").translation],
+    ["C-134.23", "There is no proposal here by that id that you can see. Nothing was written."]);
+  /* no row of this module holds the other modules' codes, and every C-134 number is held once */
+  for (const code of OLD) assert.equal(code in HYPOTHESES_CHECKS, false, code);
+  const checks = Object.values(HYPOTHESES_CHECKS).map((r) => r.check);
+  assert.equal(new Set(checks).size, checks.length);
+  /* every refusal of the three proposal acts, through the methods and the ops arms, answers the new codes, never the old */
+  const answers = [];
+  const ask = (r) => { answers.push(r); return r; };
+  for (const run of [null, "", "  ", 7]) refusedAs(ask(w.h.hypothesisPropose({ ...PROPOSAL, run })), "HYPOTHESIS_PROPOSAL_NO_RUN");
+  const hp = w.h.hypothesisPropose({ ...PROPOSAL, inquiry: HIDDEN }).proposal;
+  const held = w.hold();
+  for (const proposal of ["HYP-2026-0404", hp, held, null, "nope"]) {
+    refusedAs(ask(w.h.hypothesisTakeUp({ proposal, form: "as_proposed", by: OUTSIDER })), "NO_SUCH_HYPOTHESIS_PROPOSAL");
+    refusedAs(ask(w.h.hypothesisSetAside({ proposal, reason: "r", by: OUTSIDER })), "NO_SUCH_HYPOTHESIS_PROPOSAL");
+  }
+  refusedAs(ask(hypothesesOps(w.h, url("hypothesistakeup"), null).hypothesistakeup()), "NO_SUCH_HYPOTHESIS_PROPOSAL");
+  refusedAs(ask(hypothesesOps(w.h, url("hypothesissetaside"), null).hypothesissetaside()), "NO_SUCH_HYPOTHESIS_PROPOSAL");
+  for (const r of answers) for (const code of OLD) assert.ok(![r.reason, r.code].includes(code), JSON.stringify(r).slice(0, 200));
+  /* the negative control: a proposal with its run, taken up and set aside by who sees it, lands */
+  const p = w.h.hypothesisPropose(PROPOSAL);
+  assert.equal(p.ok, true);
+  assert.equal(w.h.hypothesisTakeUp({ proposal: hp, form: "as_proposed", by: ANN }).ok, true);
+  assert.equal(w.h.hypothesisSetAside({ proposal: p.proposal, reason: "r", by: OUTSIDER }).ok, true);
 });

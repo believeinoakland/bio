@@ -24,6 +24,7 @@ import { recordOf, recordCoreOps } from "../../../src/record-core/index.mjs";
 import { governorOf, governorRoutes } from "../../../src/host-governor/index.mjs";
 import { acquisitionOf } from "../../../src/acquisition/index.mjs";
 import { captureOf, captureOps } from "../../../src/capture/index.mjs";
+import { doorbellOf, doorbellOps } from "../../../src/doorbell/index.mjs";
 import { monitoringOf, monitoringOps } from "../../../src/monitoring/index.mjs";
 import { linkSweepOf, linkSweepOps } from "../../../src/link-sweep/index.mjs";
 import { connectionsOf, connectionsOps } from "../../../src/connections/index.mjs";
@@ -40,6 +41,7 @@ import { strengthOf, strengthOps } from "../../../src/strength/index.mjs";
 import { reevaluationOf, reevaluationOps } from "../../../src/reevaluation/index.mjs";
 import { reviewOf, reviewOps } from "../../../src/review/index.mjs";
 import { caseAuthoringOf, caseAuthoringOps } from "../../../src/case-authoring/index.mjs";
+import { caseAccountOf } from "../../../src/case-account/index.mjs";
 import { ratificationOf, ratificationOps } from "../../../src/ratification/index.mjs";
 import { publicationOf, publicationOps } from "../../../src/publication/index.mjs";
 import { docketOf, docketOps } from "../../../src/docket/index.mjs";
@@ -90,7 +92,8 @@ export const MODULE_MAPS = [
   ["acquisition", (c, u, b) => ({ coarchiveset: () => acquisitionOf(c).coArchiveSet({ on: b ? b.on : undefined, by: u.searchParams.get("by") }),
                                   coarchivestate: () => acquisitionOf(c).coArchiveState() })],
   ["capture", (c, u, b, e) => captureOps(captureOf(c), u, b, e)],
-  ["file-safety", (c, u, b, e) => fileSafetyOps(fileSafetyOf(c), u, b, e)],   /* R26: directly after capture's */
+  ["doorbell", (c, u, b) => doorbellOps(doorbellOf(c), u, b)],   /* R37: directly after capture's */
+  ["file-safety", (c, u, b, e) => fileSafetyOps(fileSafetyOf(c), u, b, e)],   /* R26: directly after doorbell's */
   ["calibration", (c, u, b) => calibrationOps(calibrationOf(c), u, b)],
   ["bias", (c, u, b) => biasOps(biasOf(c), u, b)],
   ["extraction", (c, u, b, e) => extractionOps(extractionOf(c), u, b, e)],
@@ -162,7 +165,7 @@ export const MODULE_MAPS = [
   ["admission", (c, u, b) => admissionOps(admissionOf(c), u, b)],
   /* plane R35 (K2585): control-plane's own map for owners with no arm (its R71, R72), over each owner's one instance */
   ["control-plane", (c, u, b, e) => controlPlaneOwnerOps({ aiUse: () => aiUseOf(c), aiRuns: () => aiRunsOf(c, e),
-    caseAuthoring: () => caseAuthoringOf(c), review: () => reviewOf(c), legEarning: () => legEarningOf(c), capture: () => captureOf(c),
+    caseAccount: () => caseAccountOf(c), review: () => reviewOf(c), legEarning: () => legEarningOf(c), capture: () => captureOf(c),
     steps: () => stepsOf(c), investigation: () => investigationOf(c), questionExplorer: () => questionExplorerOf(c) }, u, b)],
   ["store-door", (c, u, b) => controlPlaneRoutes(c, u, b)],
 ];

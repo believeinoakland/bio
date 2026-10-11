@@ -1,5 +1,5 @@
-/* capture R65 with N615 (K1683, K1773): a knock's pull hands intake's `doctypeFor` the capture's origin. A knock is
-   made with no account (R30) and its row names no member session, so no knock is a member's own act under their
+/* R13 (capture R65 before T42's split) with N615 (K1683, K1773): a knock's pull hands intake's `doctypeFor` the capture's origin. A knock is
+   made with no account (R1) and its row names no member session, so no knock is a member's own act under their
    session, and every pull is profiled as `"fetch"`, whoever brings it in: a type read only from a member's own capture
    (court-doctypes R2) never matches a stranger's knock. Checked at the module's interface, through `knock` and
    `pullKnock` (and `inboxResolve`'s pulled arm), over a probe content type that reports the origin it was handed and a
@@ -35,7 +35,7 @@ const knockAndPull = async (pull) => {
   return pull(f.c, k.knockId);
 };
 
-test("R65 (N615): every knock's pull hands doctypeFor the origin \"fetch\", never \"member\", whichever member brings it in and by whichever act", async () => {
+test("R13 (N615): every knock's pull hands doctypeFor the origin \"fetch\", never \"member\", whichever member brings it in and by whichever act", async () => {
   for (const pull of [(c, id) => c.pullKnock({ knockId: id, by: "member:m1" }),
                       (c, id) => c.pullKnock({ knockId: id, by: "m2", at: "2026-10-06T12:00:00Z" }),
                       (c, id) => c.inboxResolve({ knockId: id, status: "pulled", by: "member:m1", reason: "ours to bring in" })]) {

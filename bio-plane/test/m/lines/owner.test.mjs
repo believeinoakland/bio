@@ -73,11 +73,13 @@ test("R15 kinds(), capacities() and roles(kind) answer the closed lists, frozen"
   assert.deepEqual(capacities(), ["employee", "elected", "appointed", "acting", "interim", "ex officio", "board member", "officer or director",
     "partner", "military service", "volunteer", "contractor", "other"]);
   assert.deepEqual(roles("reports_to"), ["administrative", "functional", "budgetary"]);
-  assert.ok(roles("contracts_with").includes("supplier") && roles("contracts_with").includes("buyer"));
-  assert.ok(roles("party_to").includes("plaintiff"));
-  assert.deepEqual(roles("part_of"), []);
+  assert.deepEqual(roles("contracts_with"), ["buyer", "procuringEntity", "supplier", "tenderer", "funder", "enquirer", "payer", "payee",
+    "reviewBody", "interestedParty"], "the OCDS party-role codelist, whole");
+  assert.deepEqual(roles("party_to"), ["plaintiff", "defendant", "petitioner", "respondent", "appellant", "appellee", "cross_complainant",
+    "cross_defendant", "intervenor", "real_party_in_interest", "amicus", "applicant", "protestant", "complainant", "interested_party", "other"]);
+  for (const k of kinds()) if (!["reports_to", "contracts_with", "party_to"].includes(k)) assert.deepEqual(roles(k), [], `${k} takes no role`);
   assert.equal(roles("knows"), null);
-  for (const l of [kinds(), capacities(), roles("party_to"), roles("part_of"), ROLES]) assert.ok(Object.isFrozen(l));
+  for (const l of [kinds(), capacities(), ROLES, CONNECTION_KINDS, ...kinds().map(roles)]) assert.ok(Object.isFrozen(l));
   const w = world();
   assert.equal(w.l.kinds(), kinds());
   assert.equal(w.l.capacities(), capacities());
@@ -97,7 +99,9 @@ test("R16 linesOps publishes one route arm per act and read, reading parameters 
   assert.deepEqual(ops(`id=${rec.line_id}&${v}`).line(), w.l.readLine({ lineId: rec.line_id, viewer: ANN }));
   assert.deepEqual(ops(`entity=${o}&kinds=holds&${v}`).linesof(), w.l.linesOf({ entity: o, kinds: ["holds"], viewer: ANN }));
   assert.deepEqual(ops(`entity=${o}&at=2022-01-01&${v}`).structureat(), w.l.structureAt({ entity: o, at: "2022-01-01", viewer: ANN }));
-  assert.equal(ops(`office=${o}&at=2022-01-01&${v}`).holderat().holder, p);
+  const held = ops(`office=${o}&at=2022-01-01&${v}`).holderat();
+  assert.equal(held.holder, p);
+  assert.deepEqual(held, w.l.holderAt({ office: o, at: "2022-01-01", viewer: ANN }));
   assert.deepEqual(ops(`proceeding=${c}&${v}`).partiesof(), w.l.partiesOf({ proceeding: c, viewer: ANN }));
   assert.deepEqual(ops(`proceeding=${c}&${v}`).proceedinglinks(), w.l.proceedingLinks({ proceeding: c, viewer: ANN }));
   assert.equal(ops("", { lineId: pt.line_id, reason: "wrong case", by: ANN }).linewithdraw().ok, true);

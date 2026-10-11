@@ -70,10 +70,10 @@ const sameInstant = (a, b) => {
 };
 const cut = (v, n) => String(v).slice(0, n);
 
-/* R39's "the modules' total order" is membership's `MODULE_ORDER` (one list, one site), held equal to
-   `build/modules.json` by membership's R79 test and this module's R39 test. */
 const rand = (n) => [...crypto.getRandomValues(new Uint8Array(n))].map((b) => b.toString(16).padStart(2, "0")).join("");
 
+/* R39's "the modules' total order" is membership's `MODULE_ORDER` (one list, one site), held equal to
+   `build/modules.json` by membership's R83 test and this module's R39 test. */
 /* The families whose rows this module's refusals carry (Uses; K93 (2)), and promotion's own rows last. A code is held
    by one row in the whole catalogue (DEC-49's one code, one row), so the first family naming it is its row. */
 const ROW_FAMILIES = [PROMOTION_ROW_CHECKS, PROMOTED_TYPE_CHECKS, PROJECT_MINT_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS,
@@ -1080,7 +1080,11 @@ class Promotion {
     }
     const declared = fm.object_type ?? head.type;
     const spec = vocabFor(STATES, declared);
-    const legalFrom = (spec?.edges?.[head.currentState]) || [];
+    /* R24: an own key only, as R15's fence reads it: a state named by an inherited key (`toString`) has no edges and is
+       refused ILLEGAL_TRANSITION, never thrown into REOPEN_FAILED. */
+    const edges = spec?.edges || {};
+    const legalFrom = Object.prototype.hasOwnProperty.call(edges, head.currentState) && Array.isArray(edges[head.currentState])
+      ? edges[head.currentState] : [];
     if (!legalFrom.includes("open"))
       return { ok: false, reason: "ILLEGAL_TRANSITION", to: "open", target, from: head.currentState, object_type: declared,
                detail: "this is not a legal move in the catalogue's state table for this document's own vocabulary." };

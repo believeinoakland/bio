@@ -1,5 +1,5 @@
 /* question-explorer — the system exploring a question on its own where an account owner turned exploring on
- * (requirements: `build/requirements/question-explorer.md`, R1–R14; D33, D36, D39, D11–D14, D66; N815).
+ * (requirements: `build/requirements/question-explorer.md`, R1–R15; D33, D36, D39, D11–D14, D66; N815).
  *
  * `questionExplorerOf(host, deps)` answers the one instance per Durable Object storage (K61). What it does:
  *   - chooses (R1, R2, R9): each tick reads at most 200 open or surfaced questions, keeps those worth exploring, and
@@ -864,7 +864,8 @@ const instances = new WeakMap();
 
 /** The one question-explorer instance for `host` (the Durable Object's `ctx`, with its `storage`); `deps` are read on
  *  the first call only; a provider not given is reached through its factory (`steps` since K2491, `ai-use` since
- *  K2488). At creation it declares its tables to purge. */
+ *  K2488). At creation it creates its tables (`migrate()`, idempotent) and only then declares them to purge, as
+ *  `publish-schedule`'s factory does, so a host that never calls `migrate()` reads, ticks and purges (R15). */
 export function questionExplorerOf(host, deps) {
   let p = instances.get(host);
   if (!p) {
@@ -887,6 +888,7 @@ export function questionExplorerOf(host, deps) {
       principal: d.principal || EXPLORE_PRINCIPAL, now: d.now || null,
     });
     instances.set(host, p);
+    p.migrate();
     record.declarePurge(QUESTION_EXPLORER_MODULE, QUESTION_EXPLORER_TABLES);
   }
   return p;

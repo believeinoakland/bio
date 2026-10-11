@@ -2068,7 +2068,12 @@ var ID_TABLE = Object.freeze([
      objects are: a counter would tell a reader how many steps a group took, hidden projects' included. Their owners are
      named here before they hold code (P8). */
   row("STP", "steps", "opaque"),
-  row("GUD", "reading-guides", "opaque")
+  row("GUD", "reading-guides", "opaque"),
+  /* T42-1 (R55; N839, K2608): an account draft (`case-account`, case-authoring's until L8), opaque, as `STP` and `GUD`
+     are. Since T41 case-authoring has minted it through record-core's `mintOpaqueId`, four random digits, which is the
+     sequential shape; so its row carries `legacy: 'sequential'` as `CALC`'s does (K1728): those ids stay readable, and
+     minting through `allocId` follows `form` alone. Its owner is named before it holds code (P8). */
+  row("ACD", "case-account", "opaque", "sequential")
 ]);
 var YEAR = "\\d{4}";
 var CORE = { sequential: "\\d{4,}", opaque: "[a-z0-9]{16}" };
@@ -2627,6 +2632,20 @@ var PROPOSAL_STATES = Object.freeze({
     machine_proposed: `a machine credential drafted this translation of an interface word. That is machine work, labelled as machine work: it can draft a translation and it can never adopt or confirm one. It is a draft, shown to members as "Draft", and not the group's wording until a member granted that language adopts it`,
     member_proposed: `a member proposed this translation of an interface word. It is a draft, shown to members as "Draft", and not the group's wording until a member granted that language adopts it, and the record holds who proposed it`,
     unstated: `the record does not say who drafted this translation of an interface word. It is a draft, shown to members as "Draft", and not the group's wording until a member granted that language adopts it`
+  }),
+  /* N838 (K2540; T42, R54): a draft of a case's account drawn from its cited evidence (case-authoring R64, kind
+     `case_account`) is never the case's account, which a member writes in her own words; and a check of a member's
+     account (kind `account_check`) flags the sentences the evidence they cite does not support, a draft and never a
+     finding of the group. Before these subjects case-authoring worded the same three states itself (`#accountLabel`). */
+  case_account: Object.freeze({
+    machine_proposed: "a machine credential drafted this account of a case from its cited evidence. That is machine work, labelled as machine work: it is a draft, which can set out what the cited evidence holds and can never be the case's account. The case's account is the one a member writes in her own words",
+    member_proposed: "a member drafted this account of a case from its cited evidence. It is a draft and never the case's account, which a member writes in her own words, and the record holds who proposed it",
+    unstated: "the record does not say who drafted this account of a case from its cited evidence. It is a draft and never the case's account, which a member writes in her own words"
+  }),
+  account_check: Object.freeze({
+    machine_proposed: "a machine credential flagged these sentences of a member's account as not supported by the evidence they cite. That is machine work, labelled as machine work: it is a draft, which can point at a sentence and can never find against one. It is never a finding of the group",
+    member_proposed: "a member flagged these sentences of a member's account as not supported by the evidence they cite. It is a draft and never a finding of the group, and the record holds who proposed it",
+    unstated: "the record does not say who flagged these sentences of a member's account as not supported by the evidence they cite. It is a draft and never a finding of the group"
   })
 });
 
@@ -2666,7 +2685,9 @@ var SHARED_ACT_CHECKS = Object.freeze({
        --------------------------------------------------------------------------- */
   NO_BASIS: {
     check: "C-33.40",
-    where: "src/inquiry/index.mjs actNoBasis > is-act-no-basis",
+    /* (N827, K2467; T42) every site that answers with this row: inquiry's helper (basis-versions raises through it),
+       progressions' and entities' one refusal helpers, each named with the acts it serves. */
+    where: "src/inquiry/index.mjs actNoBasis > is-act-no-basis (inquiry's, and basis-versions' through it), src/progressions/checks.mjs refusal (progressions' first declaration and revision of a declared flow, src/progressions/index.mjs), and src/entities/index.mjs actShapeRefusal (entities' held identifier and grade-D testimony)",
     translation: "This asks the record to stand behind something without saying what it rests on. Say what that is first \u2014 what the question is grounded in, what you personally observed, or why a settled thing is being changed \u2014 and the record carries it beside the claim, in your name, so a later reader can go and disagree with it. If the honest answer is that nothing supports it yet, write that down rather than inventing something: a stated absence is a real answer here, and an empty basis reads as one nobody checked."
   },
   NO_CITATION: {
@@ -2678,11 +2699,11 @@ var SHARED_ACT_CHECKS = Object.freeze({
      would make a member vouch for a legal or authored statement (an action's reason, a case statement, a testimony), is
      refused by the act's owner with this row, and only `edited` or `own_instead` lands (Investigation §5). The owners
      (`steps` R24, `hypotheses` R17, `run-productions` R22, `question-explorer` R6, `investigation` R12, R20,
-     `case-authoring` R64) read it from here and add no row of their own; the code is `ACCEPT_MUST_REAUTHOR`
+     `case-account` R4, case-authoring R64's account drafts moving there at L8; R55, K2608) read it from here and add no row of their own; the code is `ACCEPT_MUST_REAUTHOR`
      (acceptance.mjs). The translation states the meaning; the design stream words it later by key. */
   ACCEPT_MUST_REAUTHOR: {
     check: "C-33.54",
-    where: "raised by the owner of each accepting act that would make a member vouch for a legal or authored statement (steps R24, hypotheses R17, run-productions R22, question-explorer R6, investigation R12 and R20, case-authoring R64), from this shared row (record-grammar R52)",
+    where: "raised by the owner of each accepting act that would make a member vouch for a legal or authored statement (steps R24, hypotheses R17, run-productions R22, question-explorer R6, investigation R12 and R20, case-account R4), from this shared row (record-grammar R52)",
     translation: "Accepting this as it was proposed would make you vouch for words the machine wrote. Write it in your own words instead, by editing it or writing your own, and the record keeps that the words are yours."
   }
 });

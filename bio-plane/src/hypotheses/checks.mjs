@@ -6,8 +6,10 @@
  * translations unchanged); the leg rows (R5, R6) are carried inside `BASIS_REFUSED` by the check this module registers
  * with `promotion`; the notes' rows (R11, R13; T34, K1807) answer a member's own notes, and (T35, DEC-144) C-134.13–C-134.16 name
  * `noteRevise` and `noteDelete` too, with no new code. Rows changed or added in T34 and T35 await
- * `promotion`'s next stamp; (T41) C-134.20–C-134.28 the system's proposals and a note's share, awaiting the stamp too. No
- * translation names a place. This file imports nothing. */
+ * `promotion`'s next stamp; (T41) C-134.20–C-134.28 the system's proposals and a note's share, awaiting the stamp too;
+ * (T42, R22; N843, K2566) C-134.22 and C-134.23 re-coded in place under codes of their own, numbers and translations
+ * kept, so this module never answers action-plans' `PROPOSAL_NO_RUN` or intent's `NO_SUCH_PROPOSAL`. No translation
+ * names a place. This file imports nothing. */
 
 const act = (fn) => `src/hypotheses/index.mjs ${fn}`;
 const acts = (...fns) => fns.map(act).join("; ");
@@ -57,9 +59,9 @@ export const HYPOTHESES_CHECKS = {
     translation: "A proposal of the system's says how it was worked out. Nothing was written." },
   PROPOSAL_NO_RATE: { check: "C-134.21", where: act("hypothesisPropose"),
     translation: "A proposal of the system's carries its measured false-alarm rate, a share between 0 and 1. Nothing was written." },
-  PROPOSAL_NO_RUN: { check: "C-134.22", where: act("hypothesisPropose"),
+  HYPOTHESIS_PROPOSAL_NO_RUN: { check: "C-134.22", where: act("hypothesisPropose"),
     translation: "A proposal of the system's names the run that made it. Nothing was written." },
-  NO_SUCH_PROPOSAL: { check: "C-134.23", where: acts("hypothesisTakeUp", "hypothesisSetAside"),
+  NO_SUCH_HYPOTHESIS_PROPOSAL: { check: "C-134.23", where: acts("hypothesisTakeUp", "hypothesisSetAside"),
     translation: "There is no proposal here by that id that you can see. Nothing was written." },
   PROPOSAL_NOT_OPEN: { check: "C-134.24", where: acts("hypothesisTakeUp", "hypothesisSetAside"),
     translation: "This proposal was already taken up or set aside. Nothing was written." },

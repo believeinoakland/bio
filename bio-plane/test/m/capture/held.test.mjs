@@ -8,6 +8,7 @@ import { fresh, bucket, network, receipt, register, sha, H } from "./fixture.mjs
 import { captureOps, ACQUIRE_GRADE_NOTE, READ_LIMIT, REASON_MAX, WITHHELD_QUESTION } from "../../../src/capture/index.mjs";
 import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
 import { PER_ITEM_MAX } from "../../../src/record-core/index.mjs";
+import { DOORBELL_VIA } from "../../../src/provenance/index.mjs";
 
 const everything = (rows) => rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name)
   .map((t) => [t, JSON.stringify(rows(`SELECT * FROM ${t}`))]);
@@ -543,20 +544,30 @@ test("R84: an act on a document the viewer may not see is left out, unannounced 
 });
 
 /* K2455 (T41): the acquire note says the bytes were fetched, which a received capture's were not. */
-test("R76 (K2455): a capture whose every receipt is a received route (a pulled knock's doorbell, an upload) answers note null; one with a fetched receipt beside it, or held with no receipt, answers the note", async () => {
+test("R76 (K2455): a capture whose every receipt is a received route (a pulled knock's doorbell, an upload, or both) answers note null; one with a fetched receipt beside it, or held with no receipt, answers the note", async () => {
   const f = fresh({ evidence: bucket(), env: { INSTANCE_NAME: "i" } });
-  const up = await f.c.uploadCapture({ bytes: new TextEncoder().encode("uploaded only"), statement: "mine", by: "m1" });
-  const k = await f.c.knock({ content: "knocked only", sourceAddress: "1.2.3.4" });
-  const pulled = await f.c.pullKnock({ knockId: k.knockId, by: "m1" });
-  const both = await f.c.uploadCapture({ bytes: new TextEncoder().encode("uploaded, then fetched"), statement: "mine", by: "m1" });
+  const te = new TextEncoder();
+  const up = await f.c.uploadCapture({ bytes: te.encode("uploaded only"), statement: "mine", by: "m1" });
+  /* a pulled knock's receipt, as provenance R13 records it (the pull is doorbell's, its R13; T42): route DOORBELL_VIA */
+  const doorbell = (d, id) => f.c.provenance.recordReceipt({ address: `knock:${id}`, addressNorm: `knock:${id}`, captureSha: d,
+                                                             retrieved: "2026-10-10T00:00:00Z", via: DOORBELL_VIA, retrievalLocator: null });
+  const knocked = sha("knocked only");
+  assert.equal(doorbell(knocked, "KNOCK-1").recorded, true);
+  const twice = await f.c.uploadCapture({ bytes: te.encode("knocked, then uploaded"), statement: "mine", by: "m1" });
+  doorbell(twice.capture.sha256, "KNOCK-2");
+  const both = await f.c.uploadCapture({ bytes: te.encode("uploaded, then fetched"), statement: "mine", by: "m1" });
   receipt(f.s, { address: "https://a.example/later", capture: both.capture.sha256, first: "2026-10-10T00:00:00Z" });
+  const knockedFetched = sha("knocked, then fetched");
+  doorbell(knockedFetched, "KNOCK-3");
+  receipt(f.s, { address: "https://a.example/again", capture: knockedFetched, first: "2026-10-10T00:00:00Z" });
   const before = everything(f.rows);
-  for (const d of [up.capture.sha256, pulled.capture.sha256])
+  for (const d of [up.capture.sha256, knocked, twice.capture.sha256])
     assert.deepEqual(await f.c.gradeNoteOf({ captureSha: d }), { captureSha: d, note: null }, d);
-  assert.equal((await f.c.gradeNoteOf({ captureSha: both.capture.sha256 })).note, ACQUIRE_GRADE_NOTE, "negative control: a fetched receipt beside the upload's");
+  for (const d of [both.capture.sha256, knockedFetched])
+    assert.equal((await f.c.gradeNoteOf({ captureSha: d })).note, ACQUIRE_GRADE_NOTE, `negative control: a fetched receipt beside a received one (${d})`);
   const loose = sha("held, no receipt");
   f.b = f.c.core.evidenceStore();
-  await f.b.put(loose, new TextEncoder().encode("held, no receipt"));
+  await f.b.put(loose, te.encode("held, no receipt"));
   assert.equal((await f.c.gradeNoteOf({ captureSha: loose })).note, ACQUIRE_GRADE_NOTE, "negative control: held with no receipt");
   assert.equal((await route(f.c, "gradenote", `capture=${up.capture.sha256}&viewer=member:m1`)).note, null, "through the route");
   assert.deepEqual(everything(f.rows), before, "writes nothing");

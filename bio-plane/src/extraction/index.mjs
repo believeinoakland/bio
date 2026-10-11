@@ -8,7 +8,9 @@
    the testimony path's index as a projection in `provenance`'s slot (R65), the figures through record-core's
    `registerCounts` and `textIndexOk` (R67), and N26's migration of stored `.docx` readings (R66). T20 layer 4: N439's
    migration of stored `.pptx` readings (R68), run by the same machine as N26's. T33 layer 4: every reading's commit
-   calls its storage's `reading-pipeline.readHooksOf(ctx).afterRead` once (R69, T33-23a). */
+   calls its storage's `reading-pipeline.readHooksOf(ctx).afterRead` once (R69, T33-23a). T42 layer 4: `op=pagetranscribe`,
+   the AI's reading of the pages Civicsmith could not read (R71), through the one transcriber the composition root
+   registers (R72), so nothing above this layer is imported; R58's contract names `capture_text`. */
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, listenerRefusal, MODULE_ORDER } from "../membership/index.mjs";
 import { calibrationOf } from "../calibration/index.mjs";
@@ -31,7 +33,8 @@ import { membershipBeside } from "./filemembership.mjs";
 import * as pipeline from "../reading-pipeline/index.mjs";
 import { read as readDocument, tier2Escalate, tier3Extend, tier3SeedFrom, needsTier3, textUnitsFor, layerChainFor,
          readingFromWire, decodeView, textCountsOf, emittedFieldsOf, pageBoxesFrom, bytesOf, CAPTURE_TEXT_UNIT_CAP,
-         compareProvenance, readingProvenance, PROVENANCE_SCHEME } from "../reading-pipeline/index.mjs";
+         compareProvenance, readingProvenance, PROVENANCE_SCHEME, tier4Extend, AI_READING_LABEL,
+         AI_TRANSCRIPTION_SOURCE, TRANSCRIBE_USE } from "../reading-pipeline/index.mjs";
 
 export { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL, CAPTURE_TEXT_UNIT_CAP };
 
@@ -80,9 +83,11 @@ const ADDITIVE_COLUMNS = [
 
 /* R58 (N108): the read contract. `readings` (capture_sha, bundle_id, content_type), `reading_refs` (capture_sha,
    bundle_id, ref, ref_kind, ref_key, label, pos_kind, pos, pos_ref, occurrence, seq), `reading_ref_terms`
-   (capture_sha, bundle_id, ref, src, term) and `capture_text_skipped` (capture_sha, bundle_id, first_seq, last_seq,
-   units, first_extent, first_ref, last_extent, last_ref, side) may be joined by a later module in its own SQL; their
-   names and meaning change only with that requirement, and every write stays here. */
+   (capture_sha, bundle_id, ref, src, term), `capture_text_skipped` (capture_sha, bundle_id, first_seq, last_seq,
+   units, first_extent, first_ref, last_extent, last_ref, side), `reading_text_source` (capture_sha, chain) and (T42,
+   N839) `capture_text` (capture_sha, bundle_id, extent, seq, text, truncated; `case-account` reads it) may be joined
+   by a later module in its own SQL; their names and meaning change only with that requirement, and every write stays
+   here. */
 
 /* The case-folded, whitespace-collapsed form the alias reverse index keys on. `entities`' alias index must fold
    identically or the join between them silently stops matching, so it reads these through `labelTerms`. */
@@ -383,7 +388,7 @@ export function extractionOf(ctx, opts = {}) {
 
 export class Extraction {
   #sql; #storage; #listeners = []; #indexListeners = []; #declared = false; #stepped = false; #calListening = false;
-  #testified = false; #counted = false; #host = null; #migrationRun = null; #readHooks = null;
+  #testified = false; #counted = false; #host = null; #migrationRun = null; #readHooks = null; #transcriber = null;
 
   constructor(storage, { record, membership = null, calibration = null, promotion = null, provenance = null, host = null,
                          env = {}, readHooks = null } = {}) {
@@ -1431,25 +1436,7 @@ export class Extraction {
           calibration: t3.engine ? t3.engine.calibration ?? null : null,
           pages: t3.filled, via: "op=pdfstructure&ocr=1",
         };
-        const u = textUnitsFor(t3.i2text);
-        let w = { ok: false };
-        try {
-          const out = this.#sees(reBasis.bundleId, viewer)
-            ? this.writeReading({ bundleId: reBasis.bundleId, captureSha: sha, reading, textUnits: u.textUnits,
-                                  textUnitsOverBound: u.textUnitsOverBound, textUnitsSkipped: u.textUnitsSkipped,
-                                  author, composed: true })
-            : null;
-          if (out) {
-            this.recordComposed(reading, sha);
-            /* R69: the after-read hooks' outcome, reported with the reading. */
-            const afterRead = out.afterRead ? await out.afterRead : null;
-            const ls = Object.values(out.listeners || {});
-            const staled = ls.reduce((n, l) => n + (l && Number.isInteger(l.staled) ? l.staled : 0), 0);
-            const observed = (ls.find((l) => l && l.observed) || {}).observed ?? null;
-            w = { ok: true, staled, observed, compared: out.kept ? out.kept.compared : null, afterRead,
-                  indexed: { written: out.indexed.written, offered: out.indexed.offered, over_bound: out.indexed.over_bound } };
-          }
-        } catch { w = { ok: false, rolledBack: true }; }
+        const w = await this.#writeReread({ basis: reBasis, sha, reading, text: t3.i2text, author, viewer });
         structure.text = t3.i2text;
         structure.tier = t3.wiredTier;
         if (t3.ocrNote) structure.notes = [...structure.notes, t3.ocrNote];
@@ -1457,13 +1444,7 @@ export class Extraction {
           performed: true, written: w.ok === true, cost,
           /* Two different facts, never answered alike: the capture left the caller's sight before the write, or
              the write ran and was rolled back whole (a listener refused it, R24), so nothing of it was kept. */
-          ...(w.ok === true ? {} : w.rolledBack === true
-            ? { why: "the record's reading of this capture could not be written: the write was refused while it ran "
-                   + "and rolled back whole, so the text above was read and NOT recorded, and nothing the re-read "
-                   + "would have changed was changed" }
-            : { why: "the record's reading of this capture could not be written (it was no "
-                   + "longer held for this caller when the write arrived), so the text above "
-                   + "was read and NOT recorded" }),
+          ...unwrittenWhy(w, "re-read"),
           pages: t3.filled, engine: t3.engine,
           text_source: chain, chain: describeChain(chain),
           reading: { content_type: reading.content_type, read_from_text: reading.read_from_text,
@@ -1484,6 +1465,172 @@ export class Extraction {
     structure.provenance = await readingProvenance({ text: structure.text || null, chain: structureChain,
       tier: Number.isInteger(structure.tier) ? structure.tier : null, container: "pdf", planeVersion: e.VERSION || null });
     return { status: 200, body: structure };
+  }
+
+  /** R34, R71: a composed reading written by R19's writer while the capture is still in the caller's sight, then
+   *  recorded as composed here (R21), with R69's after-read outcome and what the listeners and index reported. Answers
+   *  `{ok: true, staled, observed, compared, afterRead, indexed}`, `{ok: false}` when the capture left the caller's
+   *  sight, or `{ok: false, rolledBack: true}` when the write was refused while it ran and nothing of it was kept. */
+  async #writeReread({ basis, sha, reading, text, author, viewer }) {
+    const u = textUnitsFor(text);
+    let w = { ok: false };
+    try {
+      const out = this.#sees(basis.bundleId, viewer)
+        ? this.writeReading({ bundleId: basis.bundleId, captureSha: sha, reading, textUnits: u.textUnits,
+                              textUnitsOverBound: u.textUnitsOverBound, textUnitsSkipped: u.textUnitsSkipped,
+                              author, composed: true })
+        : null;
+      if (out) {
+        this.recordComposed(reading, sha);
+        /* R69: the after-read hooks' outcome, reported with the reading. */
+        const afterRead = out.afterRead ? await out.afterRead : null;
+        const ls = Object.values(out.listeners || {});
+        const staled = ls.reduce((n, l) => n + (l && Number.isInteger(l.staled) ? l.staled : 0), 0);
+        const observed = (ls.find((l) => l && l.observed) || {}).observed ?? null;
+        w = { ok: true, staled, observed, compared: out.kept ? out.kept.compared : null, afterRead,
+              indexed: { written: out.indexed.written, offered: out.indexed.offered, over_bound: out.indexed.over_bound } };
+      }
+    } catch { w = { ok: false, rolledBack: true }; }
+    return w;
+  }
+
+  /* ---- transcribing the pages Civicsmith could not read, `op=pagetranscribe` (R71, R72) ---- */
+
+  /** R72 (K31's pattern; plane R36): the composition root registers one transcriber, once, at start. `t` is
+   *  `{deployable(), keptAway({project, use}), transcription({member, project, at})}`, `transcription` answering
+   *  reading-pipeline R29's `{member, project?, credentials, useCheck, transcribe, at, act}`. A malformed registration
+   *  is refused LISTENER_MALFORMED and a second, by any module, LISTENER_DECLARED (membership's `listenerRefusal`, its
+   *  R81: the slot takes one registration whoever makes it). Everything above this layer arrives through it. */
+  registerTranscriber(module, t) {
+    const refused = listenerRefusal(this.#transcriber, module, isTranscriber(t) ? t.transcription : null);
+    if (refused) return refused;
+    this.#transcriber = { module, t };
+    return { ok: true, module };
+  }
+
+  /* R71: the project whose "no AI" limit judges the capture: its reading's own bundle's, by membership's rule over
+     record-core's `bundles` (its R37): the bundle itself when it is a project, else the project it is filed in; null
+     for a bundle in none. */
+  #projectOfBundle(bundleId) {
+    const r = this.#one(`SELECT CASE WHEN object_type = 'project' THEN bundle_id ELSE project END AS p
+                           FROM bundles WHERE bundle_id=?`, bundleId);
+    return r && typeof r.p === "string" && r.p ? r.p : null;
+  }
+
+  /** R71 (`op=pagetranscribe`; N832, D21): a member's act, the AI's reading of the pages of a stored PDF reading that
+   *  Civicsmith's own text recognition could not read (reading-pipeline R29), on the account that pays for that act.
+   *  The control plane has refused a malformed digest and an instance with no evidence storage, and stamps `cls`,
+   *  `session`, `caps`, `viewer` and `by`. Every refusal comes before any byte is read, any account is read or any page
+   *  is rendered (C-51.2, C-51.3, C-51.7, C-51.5, then the transcriber's keep-away refusal relayed as given). Then the
+   *  text as R33–R35 compose it (tier 2; tier 3 seeded with the pages the stored reading holds, the OCR member asked
+   *  only when bound), `reading-pipeline.tier4Extend`, and R34's write. Answers `{status, body}`. */
+  async pageTranscribe({ captureSha = null, project = null, cls = null, session = false, caps = [], viewer = null,
+                         by = null, storeName = "bio", env = null } = {}) {
+    const e = env || this.env || {};
+    const op = "pagetranscribe";
+    const sha = typeof captureSha === "string" ? captureSha.trim().toLowerCase() : "";
+    const reg = this.#transcriber;
+    /* DEC-49 REGION is-transcribe */
+    if (cls === "ai")
+      return { status: 403, body: { ok: false, reason: "REEXTRACT_AGENT_REFUSED", ...reextractRow("REEXTRACT_AGENT_REFUSED"),
+        op, detail: `op=pagetranscribe writes this capture's reading and spends the account that pays for it, and an `
+                  + `agent credential cannot declare that as one of its writes. A member can ask for it (D-199).` } };
+    const held = new Set(Array.isArray(caps) ? caps : []);
+    if (session && !held.has("contribute"))
+      return { status: 403, body: { ok: false, reason: "REEXTRACT_NOT_CAPABLE", ...reextractRow("REEXTRACT_NOT_CAPABLE"),
+        op, needs: "contribute", held: [...held].sort(),
+        detail: `a transcription replaces this capture's reading, its text units and the standing of content rows `
+              + `cited under the old one, which is a write to the record and asks the capability a promotion asks.` } };
+    let deployable = false;
+    try { deployable = !!reg && reg.t.deployable() === true; } catch { deployable = false; }
+    if (!deployable)
+      return { status: 501, body: { ok: false, reason: "TRANSCRIBE_NOT_DEPLOYED", ...reextractRow("TRANSCRIBE_NOT_DEPLOYED"),
+        op, sha256: sha,
+        detail: `the AI's part for transcribing pages has not passed its test bar here (run-rules R19), so it is not `
+              + `switched on. Nothing was read, rendered, sent or written, and no account was looked at.` } };
+    const basis = this.reextractBasis({ captureSha: sha, viewer });
+    if (!basis.held)
+      return { status: 409, body: { ok: false, reason: "REEXTRACT_NOT_READ", ...reextractRow("REEXTRACT_NOT_READ"),
+        op, sha256: sha,
+        detail: `this record holds no reading of that capture that you can see, so there are no pages for the AI `
+              + `to transcribe. A capture is read when a record carrying it is promoted; a capture in a project you `
+              + `are not part of answers exactly as one never filed.` } };
+    /* `credentials.aiKeptAway` (its R57), the one site of both codes, relayed as given; it fails closed itself, and a
+       transcriber that throws here fails the request, nothing read or sent (no code is minted here for it). */
+    const away = reg.t.keptAway({ project: this.#projectOfBundle(basis.bundleId), use: TRANSCRIBE_USE });
+    if (away) return { status: 403, body: away };
+    /* END DEC-49 REGION is-transcribe */
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    const obj = ev ? await ev.get(sha) : null;
+    if (!obj) return evidenceAbsent(sha, storeName, { tokenClass: cls });
+    const bytes = new Uint8Array(await obj.arrayBuffer());
+    const pdfEntry = getFormat("pdf");
+    if (!pdfEntry || typeof pdfEntry.structure !== "function")
+      return { status: 501, body: { ok: false, reason: "FORMAT_UNREGISTERED", format: "pdf",
+        error: 'format "pdf" is not registered in the format registry (formats.mjs), so op=pagetranscribe has no extractor to dispatch to' } };
+    const structure = await pdfEntry.structure(bytes);
+    if (!structure.ok) return { status: 422, body: structure };
+    /* R71 (R31, reading-pipeline R3): tier 2 by the one escalation every path runs. */
+    let tier = 1, t2PerPage = null, t2Note = null, text = structure.text;
+    const notes = [...(Array.isArray(structure.notes) ? structure.notes : [])];
+    const t2 = await tier2Escalate(e, { sha, storeName, text });
+    if (t2.outcome === "merged") {
+      text = t2.text; tier = t2.replaced.length ? 2 : 1; t2PerPage = t2.perPage; t2Note = t2.note;
+      if (t2.note) notes.push(t2.note);
+    } else if (t2.outcome === "refused") { t2Note = t2.note; notes.push(t2.note); }
+    /* R71, R35 (reading-pipeline R30): tier 3 seeded with the pages the stored reading holds, OCR's and the AI's, so
+       none is asked of the OCR member or the AI again; `tier3Extend` asks the OCR member only when it is bound. */
+    const stored = basis.reading || {};
+    const t3 = await tier3Extend(e, { sha, storeName, i2text: text, wiredTier: tier, tier2PerPage: t2PerPage, fmt: "pdf",
+      seed: tier3SeedFrom(stored, basis.units), liveCalibration: (q) => this.#liveCalibration(q) });
+    const chain3 = (t3.chainSet ? t3.chain : null) || layerChainFor(t3.i2text, { tier: t3.wiredTier, container: "pdf" });
+    const at = stampInstant("second");
+    let tx = null;
+    try { tx = reg.t.transcription({ member: by, project, at }); } catch { tx = null; }
+    const t4 = await tier4Extend(tx, { sha, storeName, i2text: t3.i2text, chain: chain3, wiredTier: t3.wiredTier });
+    if (!t4.filled.length)
+      return { status: 200, body: { ok: true, op, sha256: sha,
+        transcription: { performed: false, written: false,
+                         why: t4.aiNote || "the AI was not asked to transcribe, and nothing about this capture was changed" } } };
+    /* R71 by R34's rule: the stored reading's type, `at` the capture instant, page count and container extent carried,
+       reading-pipeline R18's provenance, the read's own counts and emitted fields, and `reextracted`. */
+    const chain = t4.chain;
+    const vw = this.view();
+    const wired = readText(decodeView(t4.i2text), { headers: null, locator: basis.locator || null,
+                                                    content_type: null, at: stored.at ?? null, ...(vw ? { view: vw } : {}) });
+    const reading = readingFromWire({
+      wired, docType: { type: { key: stored.content_type ?? null, version: stored.reader_version ?? null } },
+      chain, wiredTier: t4.wiredTier, fmt: "pdf", retrieved: stored.at ?? null,
+      tier2note: t2Note, ocrNote: t3.ocrNote, tier3Candidate: t3.stillWanting });
+    reading.page_count = Number.isInteger(structure.pages) && structure.pages > 0
+      ? structure.pages : (Number.isInteger(stored.page_count) && stored.page_count > 0 ? stored.page_count : null);
+    { const pb = pageBoxesFrom(structure.pageBoxes);
+      if (pb) reading.page_boxes = pb;
+      else if (Object.prototype.hasOwnProperty.call(stored, "page_boxes")) reading.page_boxes = stored.page_boxes; }
+    if (Object.prototype.hasOwnProperty.call(stored, "container_extent")) reading.container_extent = stored.container_extent;
+    reading.provenance = await readingProvenance({ text: t4.i2text, chain, tier: t4.wiredTier, container: "pdf",
+                                                   planeVersion: e.VERSION || null });
+    { const n = textCountsOf(t4.i2text); if (n) Object.assign(reading, n); }
+    Object.assign(reading, emittedFieldsOf(t4.i2text));
+    const act = tx && typeof tx.act === "string" && tx.act ? tx.act : null;
+    reading.reextracted = {
+      at, by, engine: t3.engine ? t3.engine.engine : null, version: t3.engine ? t3.engine.version : null,
+      calibration: t3.engine ? t3.engine.calibration ?? null : null, pages: t3.filled, via: "op=pagetranscribe",
+      ai: { engine: t4.engine.engine, version: t4.engine.version, pages: t4.filled, act },
+    };
+    const w = await this.#writeReread({ basis, sha, reading, text: t4.i2text, author: by, viewer });
+    return { status: 200, body: { ok: true, op, sha256: sha, tier: t4.wiredTier, notes,
+      transcription: {
+        performed: true, written: w.ok === true, ...unwrittenWhy(w, "transcription"),
+        pages: t4.filled, engine: t4.engine.engine, version: t4.engine.version, act,
+        text_source: chain, chain: describeChain(chain),
+        label: AI_READING_LABEL, note: t4.aiNote, measured_by: AI_TRANSCRIPTION_SOURCE,
+        ocr: t3.filled.length ? { pages: t3.filled, engine: t3.engine } : null,
+        reading: { content_type: reading.content_type, read_from_text: reading.read_from_text, found: reading.found,
+                   entities: Array.isArray(reading.entities) ? reading.entities.length : 0, text_tier: reading.text_tier },
+        staled: w.staled ?? 0, units: w.indexed ?? null, observed: w.observed ?? null, compared: w.compared ?? null,
+        after_read: w.afterRead ?? null,
+      } } };
   }
 
   /* ---- drift obligations (R38–R40) ---- */
@@ -1546,6 +1693,24 @@ export class Extraction {
   }
 }
 
+/* R34, R71: why a composed re-read or transcription was not recorded. Two different facts, never answered alike: the
+   capture left the caller's sight before the write, or the write ran and was rolled back whole (a listener refused it,
+   R24), so nothing of it was kept. Nothing for a written one. */
+function unwrittenWhy(w, act) {
+  if (w.ok === true) return {};
+  return w.rolledBack === true
+    ? { why: "the record's reading of this capture could not be written: the write was refused while it ran "
+           + `and rolled back whole, so the text above was read and NOT recorded, and nothing the ${act} `
+           + "would have changed was changed" }
+    : { why: "the record's reading of this capture could not be written (it was no "
+           + "longer held for this caller when the write arrived), so the text above "
+           + "was read and NOT recorded" };
+}
+
+/* R72: a transcriber is `{deployable(), keptAway({project, use}), transcription({member, project, at})}`. */
+const isTranscriber = (t) => !!t && typeof t === "object" && typeof t.deployable === "function"
+  && typeof t.keptAway === "function" && typeof t.transcription === "function";
+
 /* The Durable Object routes this module answers, as entries of the plane's one route map (plane R5: `routes` spreads
    them in, and control-plane's `dispatch` answers every store request over it). `url` carries the control plane's
    stamps; `body` the parsed body. */
@@ -1568,5 +1733,9 @@ export function extractionOps(x, url, body, env) {
     pdfstructure: () => x.pdfStructure({ sha: q("sha256"), ocr: url.searchParams.has("ocr") ? q("ocr") : null,
       cls: q("cls"), session: q("session") === "1", caps: (q("caps") || "").split(",").filter(Boolean),
       viewer: q("viewer"), author: q("author"), storeName: q("store") || "bio", env }),
+    /* R71: the control plane's stamps in the query; `by` is its author stamp. */
+    pagetranscribe: () => x.pageTranscribe({ captureSha: q("sha256"), project: q("project") || null, cls: q("cls"),
+      session: q("session") === "1", caps: (q("caps") || "").split(",").filter(Boolean), viewer: q("viewer"),
+      by: q("author") || null, storeName: q("store") || "bio", env }),
   };
 }

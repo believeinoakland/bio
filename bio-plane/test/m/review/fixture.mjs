@@ -3,7 +3,7 @@
    never an array, so code that indexes or measures an answer instead of iterating it fails here as it would there. What it reads from `publication` (its `cases` and `published_cases` read contract,
    R3 and R5, its R40, and its `case_documents`, R31 and R33), `ratification` (`registerApprovalReader`, R32),
    `case-grammar` (`reviewCommentsOf`, R33), `case-tensions` (`attributionInForce`, R16, its R6), `case-authoring` (`publishCase` run dry, R13;
-   `statementAcknowledgements` with its `withheld_stated`, R15) and `basis-versions` (`testimonyReach`, R16) are providers the test controls, in the
+   `statementAcknowledgements` with its `withheld_stated`, R15), `case-account` (`registerReviewComments`, R33, its R7) and `basis-versions` (`testimonyReach`, R16) are providers the test controls, in the
    shapes of those modules' Provides, as `reviewOf`'s `deps` take them. Every test drives the module at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
@@ -82,7 +82,8 @@ export function world({ now = NOW, injectClock = true } = {}) {
   const calls = { publish: [], acks: [], reach: [], attribution: [], attributionViaPublication: [] };
   const ca = { gate: () => ({ ok: true, caseId: "CASE-2026-0001" }), acks: [], throws: null };
   const caseAuthoring = {
-    /* its R66: the one review-comments reader, filled at start by this module (R33) */
+    /* its pass-through to case-account until T43 (N850): R33 registers with case-account, never here, so this list
+       stays empty (the negative control) */
     reviewComments: [],
     registerReviewComments(fn) { this.reviewComments.push(fn); return { ok: true }; },
     publishCase(args) {
@@ -104,6 +105,17 @@ export function world({ now = NOW, injectClock = true } = {}) {
                   reading recorded before the reason was required. */
                rows: listed.map((r) => ({ kind: r.kind, by: r.by, recipient: r.recipient ?? null, at: r.at,
                                           reason: r.reason ?? null })) };
+    },
+  };
+  /* case-account's side: the one review-comments reader (its R7), taken once; a second registration is
+     REVIEW_COMMENTS_DECLARED and one that is not a function MALFORMED, each changing nothing. */
+  const caseAccount = {
+    reviewComments: [],
+    registerReviewComments(fn) {
+      if (typeof fn !== "function") return { ok: false, reason: "MALFORMED" };
+      if (this.reviewComments.length) return { ok: false, reason: "REVIEW_COMMENTS_DECLARED" };
+      this.reviewComments.push(fn);
+      return { ok: true };
     },
   };
   /* case-tensions' side: the attribution level in force (its R6). */
@@ -142,11 +154,11 @@ export function world({ now = NOW, injectClock = true } = {}) {
   const caseGrammar = { reviewCommentsOf, approvalSubjectSha };
   /* `injectClock: false` leaves the module on its own default clock (R17's stamps as the module writes them). */
   const r = reviewOf(host, { record, membership, strength, basisVersions, publication, caseTensions, caseAuthoring,
-                             ratification, caseGrammar, ...(injectClock ? { now: () => clock.now } : {}) });
+                             caseAccount, ratification, caseGrammar, ...(injectClock ? { now: () => clock.now } : {}) });
   let bundles = 0;
   const w = {
     st, host, record, membership, strength, r, clock, calls, ca, chosen, reach, providers, ratification, caseAuthoring,
-    caseGrammar,
+    caseAccount, caseGrammar,
     rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
     row: (q, ...a) => st.sql.exec(q, ...a).toArray()[0] ?? null,
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,

@@ -6,7 +6,6 @@ import assert from "node:assert/strict";
 import { fresh, bucket, sha, receipt, register, network } from "./fixture.mjs";
 import { captureOps } from "../../../src/capture/index.mjs";
 import { captureObjectOp, linksOp, acquireOp, withReading, captureOp } from "../../../src/capture/ops.mjs";
-import { capturePublicOp } from "../../../src/capture/doorbell.mjs";
 import { ACQUIRE_GRADE_NOTE } from "../../../src/capture/index.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
@@ -115,7 +114,7 @@ test("R73 (acquisition R8) N103: op=acquire forwards to the service with the con
 
 /* The legacy-index map's §4.4 plain move (K649 (7)): the door hands its op to capture's two dispatchers, which answer
    each of their ops exactly as the handler it names and null for any other, so the door routes on. */
-test("R21 R27 R30 R73 (K649 (7)): captureOp answers links, capture, archivelookup and acquire through their handlers with the door's stamps, hands an acquire's filed document to the door's reader and adds the grade note; capturePublicOp answers knock alone; any other op is null", async () => {
+test("R21 R27 R73 (K649 (7)): captureOp answers links, capture, archivelookup and acquire through their handlers with the door's stamps, hands an acquire's filed document to the door's reader and adds the grade note; any other op, knock included (doorbell's, T42), is null", async () => {
   const b = bucket();
   const f = fresh({ evidence: b, env: { INSTANCE_NAME: "i" } });
   const st = stubOf(f.c);
@@ -130,8 +129,6 @@ test("R21 R27 R30 R73 (K649 (7)): captureOp answers links, capture, archivelooku
   /* not this module's: null, and the store is never reached */
   for (const op of ["knock", "attest", "governorstate", "pdfstructure", "nonsense", ""])
     assert.equal(await captureOp(op, req(`op=${op}`), new URL(`https://p/?op=${op}`), env, store, h), null, op);
-  for (const op of ["links", "capture", "acquire", "attest", ""])
-    assert.equal(await capturePublicOp(op, req(`op=${op}`), env, st, h), null, `${op} is not the public door's`);
   assert.equal(reached, 0);
   /* capture: the object op with the door's key and class */
   const bytes = "held bytes", d = sha(bytes);
@@ -166,8 +163,4 @@ test("R21 R27 R30 R73 (K649 (7)): captureOp answers links, capture, archivelooku
                                 new URL("https://p/?op=acquire"), env, store, { ...h, readAcquired: async () => ({ response: json({ ok: false, reason: "READ_REFUSED" }, 409) }) });
     assert.deepEqual([own.status, (await own.json()).reason], [409, "READ_REFUSED"]);
   } finally { net.restore(); }
-  /* knock: the public door's one op */
-  const k = await capturePublicOp("knock", new Request("https://p/?op=knock", { method: "POST", headers: { "cf-connecting-ip": "203.0.113.4" },
-                                                                             body: JSON.stringify({ contentText: "a tip" }) }), f.c.env, st, h);
-  assert.deepEqual([k.status, (await k.json()).sha256], [200, sha("a tip")]);
 });

@@ -26,7 +26,7 @@ test("R52 ACCEPT_MUST_REAUTHOR is the one spelling of the code an act's owner re
   assert.match(row.translation, /in your own words instead/);
   /* The owners are named in its where, and no other shared row holds its number or its code. */
   for (const owner of ["steps R24", "hypotheses R17", "run-productions R22", "question-explorer R6", "investigation R12",
-    "case-authoring R64"]) assert.ok(row.where.includes(owner), owner);
+    "case-account R4"]) assert.ok(row.where.includes(owner), owner);
   const others = Object.entries(SHARED_ACT_CHECKS).filter(([k]) => k !== ACCEPT_MUST_REAUTHOR);
   assert.ok(others.every(([, r]) => r.check !== "C-33.54"));
   /* Control: the other rows keep their own numbers. */
@@ -64,4 +64,16 @@ test("R52 acceptanceRecord refuses, naming the field, anything that is not an ac
   for (const bad of [undefined, null, "x", 1, []]) assert.throws(() => acceptanceRecord(bad), TypeError);
   /* Control: the same record with each field put right lands. */
   assert.deepEqual(acceptanceRecord(OK), OK);
+});
+
+/* T42 (R55; N839, K2608): the account drafts move from case-authoring to case-account at L8, so the shared row names
+   case-account R4 in place of case-authoring R64. */
+test("R55 ACCEPT_MUST_REAUTHOR's where names case-account R4 in place of case-authoring R64, the other owners unchanged", () => {
+  const w = SHARED_ACT_CHECKS[ACCEPT_MUST_REAUTHOR].where;
+  assert.match(w, /\bcase-account R4\b/);
+  assert.doesNotMatch(w, /case-authoring/, "negative control: the old owner is gone");
+  assert.equal(w, "raised by the owner of each accepting act that would make a member vouch for a legal or authored statement "
+    + "(steps R24, hypotheses R17, run-productions R22, question-explorer R6, investigation R12 and R20, case-account R4), "
+    + "from this shared row (record-grammar R52)");
+  assert.equal(SHARED_ACT_CHECKS[ACCEPT_MUST_REAUTHOR].check, "C-33.54");
 });

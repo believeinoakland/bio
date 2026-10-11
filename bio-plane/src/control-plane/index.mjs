@@ -976,6 +976,20 @@ export function makeFetch(hooks = {}) {
       inner.searchParams.set("cls", viaSession ? "member" : cls);
       inner.searchParams.set("member", viaSession ? "1" : "0");
     }
+    /* R74 (T42; N832, K2656), and `pdfstructure`'s alike: their arm is plane's gated hook, which builds the store's query
+       afresh from these same values (`extraction`'s `pageTranscribeOp`, `extractionOp`). Should the hook decline, the
+       forward below carries the door's own class, session flag, capabilities, viewer, author and namespace, never the
+       caller's `cls`, `session`, `caps`, `viewer` or `author` (deleted above); `sha256` and `project` stay as the address names them. */
+    if (op === "pagetranscribe" || op === "pdfstructure") {
+      inner.searchParams.set("cls", cls);
+      inner.searchParams.set("session", viaSession ? "1" : "0");
+      inner.searchParams.set("caps", [...(sessCaps || [])].join(","));
+      /* R17's expressions: `viewer` a session's viewer, an `ai` credential's principal, else `class:<cls>`; `author` (the
+         owner's `by`) a session's member, else the machine actor */
+      inner.searchParams.set("viewer", stampOf.viewer);
+      inner.searchParams.set("author", viaSession ? sessMember : actor);
+      inner.searchParams.set("store", storeName);
+    }
     if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`);
     /* K372 (monitoring R30): WHO PAUSED OR RESUMED THE DAEMON, the server's stamp by the roster acts' `by` expression and
        set after the caller's parameters were copied, so a caller's `actor` is overwritten; monitoring records it with

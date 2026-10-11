@@ -53,3 +53,39 @@ test("R60 negative controls: a read that answers no question to a member carries
   assert.match(w.k.stateHistory(Q, V("alice")).projects_undetermined, /could not be read/);
   assert.deepEqual(w.k.projectsOf(Q, V("alice")), { projects: null, projects_undetermined: "which projects draw on this question could not be read" });
 });
+
+/* R60 (T42; N830; retrieval R78): the question's row in a `search` page, through the decoration this module registers
+   with retrieval at start. */
+const searchRow = (w, id, viewer, extra = {}) =>
+  w.retrieval.search({ q: "", viewer, sort: "title", limit: 200, ...extra }).hits?.find((h) => h.bundle_id === id);
+
+test("R60 a question's row in a search page carries projects for the viewer, never a hidden one; a row that is no question carries none", () => {
+  const { w, open, hidden } = setup();
+  const D = "INFO-2026-6011-d";
+  w.doc(D);
+  for (const viewer of [V("alice"), V("bob"), V("carol")]) {
+    assert.deepEqual(searchRow(w, Q, viewer).projects, [{ id: open, name: "Open books" }], viewer);
+    assert.deepEqual(searchRow(w, R, viewer).projects, [], `${viewer}: drawn on only by a hidden project`);
+    const named = JSON.stringify(w.retrieval.search({ q: "", viewer, limit: 200 }).hits.map((h) => h.projects ?? null));
+    assert.doesNotMatch(named, new RegExp(hidden), "the hidden project is never named in a row's projects");
+    /* negative control: a document that is no question gains no key */
+    const d = searchRow(w, D, viewer);
+    assert.ok(d, "the document is on the page");
+    assert.equal(Object.hasOwn(d, "projects"), false);
+    assert.equal(Object.hasOwn(d, "projects_undetermined"), false);
+  }
+  /* the decoration touches the page only: ids and count answer as before */
+  const ids = w.retrieval.search({ q: "", viewer: V("alice"), mode: "ids" });
+  assert.equal(Object.hasOwn(ids, "hits"), false);
+  assert.ok(ids.ids.includes(Q));
+  /* registered once, at start: a second registration under this module's name is refused */
+  assert.equal(w.retrieval.registerSearchDecoration("inquiry", () => []).reason, "DECORATION_DECLARED");
+});
+
+test("R60 negative control: a read of R14 that fails gives the search row projects null with why, never an empty list", () => {
+  const { w } = setup();
+  w.k.legEarning.projectsShownOn = () => { throw new Error("boom"); };
+  const row = searchRow(w, Q, V("alice"));
+  assert.equal(row.projects, null);
+  assert.match(row.projects_undetermined, /could not be read/);
+});

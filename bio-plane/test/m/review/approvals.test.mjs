@@ -2,7 +2,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { standard, P, Q, V, SECRET, NOW, sha } from "./fixture.mjs";
-import { REVIEW_COPY_CHECKS, APPROVERS_MAX, APPROVAL_REASON_MAX, REVIEW_LIST_MAX, noReviewCopy } from "../../../src/review/index.mjs";
+import { REVIEW_COPY_CHECKS, APPROVERS_MAX, APPROVAL_REASON_MAX, REVIEW_LIST_MAX, noReviewCopy,
+         reviewOf } from "../../../src/review/index.mjs";
+import { caseAccountOf } from "../../../src/case-account/index.mjs";
 import { MEMBERSHIP_CHECKS } from "../../../src/membership/index.mjs";
 import { reviewCommentsLines, CASE_DOCUMENT_FORMAT } from "../../../src/case-grammar/index.mjs";
 import { approvalsRead } from "../../../src/ratification/refusals.mjs";
@@ -195,13 +197,35 @@ test("R33: reviewCommentsFor lists the comments on a case edition's review copie
   assert.equal(w.r.reviewCommentsFor({ case: CASE, edition: 2, viewer: V("adm") }).count, 3);
 });
 
-test("R33: registered at start with case-authoring's registerReviewComments (its R66), once, answering reviewCommentsFor", () => {
+test("R33: registered at start with case-account's registerReviewComments (its R7), once, answering reviewCommentsFor; never with case-authoring", () => {
   const { w, B } = commented();
-  assert.equal(w.caseAuthoring.reviewComments.length, 1);
-  const [fn] = w.caseAuthoring.reviewComments;
+  assert.equal(w.caseAccount.reviewComments.length, 1);
+  const [fn] = w.caseAccount.reviewComments;
   for (const args of [{ case: CASE, edition: 2, viewer: V("ann") }, { case: null, edition: 1, viewer: V("ed"), draft: B.draftId },
                       { case: CASE, edition: 2, viewer: V("out") }])
     assert.deepEqual(fn(args), w.r.reviewCommentsFor(args), JSON.stringify(args));
+  /* negative control: case-authoring's pass-through (its retired R66, kept until T43) is given nothing, so case-account
+     is not registered twice; and a second reviewOf on the same host registers nothing more */
+  assert.deepEqual(w.caseAuthoring.reviewComments, []);
+  assert.equal(reviewOf(w.host), w.r);
+  assert.equal(w.caseAccount.reviewComments.length, 1);
+});
+
+test("R33: on a host that hands it no case-account, reviewOf registers with the host's one case-account instance (its R12), whose slot it then holds", () => {
+  const w = standard();
+  const host = { storage: w.st };
+  const r = reviewOf(host, { record: w.record, membership: w.membership, strength: w.strength,
+                             publication: { registerReviewProvider: () => ({ ok: true }) },
+                             ratification: { registerApprovalReader: () => ({ ok: true }) } });
+  const ca = caseAccountOf(host);
+  assert.equal(r.caseAccount, ca, "the one instance for the host");
+  /* the slot is taken: case-account refuses a second reader, changing nothing (its R7) */
+  const again = ca.registerReviewComments(() => []);
+  assert.equal(again.ok, false);
+  assert.equal(again.reason, "REVIEW_COMMENTS_DECLARED");
+  /* negative control: a host whose review was never built leaves the slot free */
+  const bare = { storage: standard().st };
+  assert.equal(caseAccountOf(bare).registerReviewComments(() => []).ok, true);
 });
 
 test("R33: after publication each member reviewer whose comments were left out is told once; a recipient is not; an unreadable block tells nobody", () => {

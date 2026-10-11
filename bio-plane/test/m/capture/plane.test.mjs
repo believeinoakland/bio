@@ -1,7 +1,8 @@
-/* capture through the whole plane (the Worker's entry under Miniflare, as `wrangler.jsonc` runs it): the five ops whose
-   dispatch moved out of `src/index.mjs` into capture's `capturePublicOp` and `captureOp` (the legacy-index map's §4.4
-   plain move, K649 (7)) are reached at the door exactly as before: `knock` with no token, the other four behind it,
-   `acquire` read by extraction's reader and carrying the grade note. The network is scripted. */
+/* capture through the whole plane (the Worker's entry under Miniflare, as `wrangler.jsonc` runs it): the four ops whose
+   dispatch moved out of `src/index.mjs` into capture's `captureOp` (the legacy-index map's §4.4 plain move, K649 (7))
+   are reached at the door exactly as before, behind the token, `acquire` read by extraction's reader and carrying the
+   grade note; and `knock`, `doorbell`'s since T42 (K2607), reached with no token through capture's copy until plane's
+   T42-30 re-points the door (K2630). The network is scripted. */
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -63,14 +64,14 @@ const member = async (q, init = {}) => {
   return { status: res.status, body, text };
 };
 
-test("R30 R54 (K649 (7)): op=knock is reached at the door with no token, through capturePublicOp, and answers as the doorbell does", async () => {
+test("(K2630; the doorbell copy, T43's delete) op=knock is reached at the door with no token, through capture's copy's capturePublicOp until plane's T42-30 re-points it, and answers as the doorbell does (doorbell R1, R11)", async () => {
   const k = await send("op=knock", { method: "POST", headers: { "cf-connecting-ip": "203.0.113.8" }, body: JSON.stringify({ contentText: "a tip for the group" }) });
   assert.equal(k.status, 200, k.text);
   assert.deepEqual([k.body.ok, k.body.sha256, k.body.bytes], [true, sha("a tip for the group"), "a tip for the group".length]);
   assert.match(k.body.received, /inbox awaiting member review/);
   assert.equal((await send("op=knock", { method: "GET" })).status, 405);
   const empty = await send("op=knock", { method: "POST", body: JSON.stringify({ contentText: "" }) });
-  assert.deepEqual([empty.status, empty.body.reason, empty.body.check], [400, "KNOCK_EMPTY", "C-85.5"], "the row from capture's own table");
+  assert.deepEqual([empty.status, empty.body.reason, empty.body.check], [400, "KNOCK_EMPTY", "C-85.5"], "the row, defined in capture's table (K2609)");
 });
 
 test("R21 R27 R73 (K649 (7)): op=capture, op=links, op=archivelookup and op=acquire are reached behind the token through captureOp; acquire is read by extraction and carries the grade note", async () => {

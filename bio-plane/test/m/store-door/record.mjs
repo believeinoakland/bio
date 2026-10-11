@@ -2,8 +2,8 @@
    plane's shape (node:sqlite behind `sql.exec` answering a cursor, `transactionSync` a savepoint that rolls back on a
    throw, as workerd's does), with the modules the record store's door routes to here and the modules a promotion's
    registered steps reach, each built and migrated in the order the composition root uses, with instance-setup started,
-   and an in-memory evidence bucket. The door is this module's `dispatch` over a route map of capture's own routes and
-   `controlPlaneRoutes`, so no suite here constructs plane's class (P4). `record({step: true})` also registers this
+   and an in-memory evidence bucket. The door is this module's `dispatch` over a route map of capture's own routes, the
+   doorbell's spread after them (as plane composes them, T42; N826), and `controlPlaneRoutes`, so no suite here constructs plane's class (P4). `record({step: true})` also registers this
    module's promotion step (R5) under this module's name at the rank the composition root gives it, with `probes`
    (`{module: {check, project}}`) registered beside it, and routes provenance's ops (`op=testify`) with
    provenance-routes' beside them. `go(path, method, body, headers)` asks the door. */
@@ -39,6 +39,7 @@ import { runProductionsOf } from "../../../src/run-productions/index.mjs";
 import { captureRequestsOf } from "../../../src/capture-requests/index.mjs";
 import { intentOf } from "../../../src/intent/index.mjs";
 import { captureOf, captureOps } from "../../../src/capture/index.mjs";
+import { doorbellOf, doorbellOps } from "../../../src/doorbell/index.mjs";
 import { instanceSetupOf } from "../../../src/setup.mjs";
 import { answersOf } from "../../../src/answers/index.mjs";
 
@@ -122,12 +123,15 @@ export async function record({ step = false, probes = {}, sealSecret = null } = 
                    basisVersionsOf(ctx), inquiryOf(ctx), captureOf(ctx), extractionOf(ctx), observationLogOf(ctx), runProductionsOf(ctx),
                    captureRequestsOf(ctx), aiRunsOf(ctx, env), entitiesOf(ctx), contradictionOf(ctx), progressionsOf(ctx), biasOf(ctx),
                    intentOf(ctx), retrievalOf(ctx)]) m.migrate();
+  /* T42 (N826; doorbell R25): the doorbell built after capture's migration, its own tables made at its creation */
+  doorbellOf(ctx);
   /* T41 (R10, R11; K2500): answers as the composition root builds it (plane R21), handed credentials for its account
      reads (its R30) and its keep-away rows (its R2); its limits are ai-use's on this host (its default) */
   answersOf(ctx, { record, membership: membershipOf(ctx), credentials: credentialsOf(ctx) });
   /* instance-setup started, as the composition root starts it: it provides the producing group a promotion reads */
   await instanceSetupOf(ctx, env).start();
   const store = { routes: (url, body, grant) => ({ ...captureOps(captureOf(ctx), url, body, env),
+                                            ...doorbellOps(doorbellOf(ctx), url, body),
                                             ...(step ? provenanceOps(provenanceOf(ctx), url, body, { observer: OBSERVATION_LOG_MODULE }) : {}),
                                             ...(step ? provenanceRouteOps(provenanceRoutesOf(ctx), url, body) : {}),
                                             ...controlPlaneRoutes(ctx, url, body, grant) }),

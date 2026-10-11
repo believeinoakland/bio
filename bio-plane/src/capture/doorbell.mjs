@@ -1,3 +1,7 @@
+/* THE DOORBELL COPY, DELETED IN T43 (N849; K2607, K625). This file is `doorbell`'s since T42 (its `door.mjs`, doorbell
+ * R1–R20; once this module's R30, R49–R51, R53, R54, R66, R85). It is kept here unchanged, unused by new code, only
+ * because `plane/door.mjs` imports `capturePublicOp` from it until plane's layer-11 job re-points to
+ * `doorbellPublicOp`; capture's T43 job deletes it. Nothing new imports it. */
 /* capture — the doorbell (Intake Doctrine §2a): anyone may hand the group material, with no account. The op's
  * handler (moved from `legacy-index` in T4, K98) refuses what it will not read before the store is called
  * (R49–R51 and R66's weak secret, in R53's order) and hands the rest to the store side (`Capture#knock`, R31, R32, R54). A knock is not a

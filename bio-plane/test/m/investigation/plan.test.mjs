@@ -2,7 +2,8 @@
    has a path by hand that needs no AI. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, ANN, BOB, DAN, OUT, AI, P1, PH, Q1, Q3 } from "./fixture.mjs";
+import { world, ANN, BOB, CAT, DAN, OUT, AI, P1, PH, Q1, Q3 } from "./fixture.mjs";
+import { INVESTIGATION_CHECKS } from "../../../src/investigation/index.mjs";
 
 test("R20: planPropose stores a proposed question or step drawn from a member's words, labelled the system's; never a question or step until accepted", () => {
   const w = world();
@@ -36,7 +37,7 @@ test("R20: planAccept is the member's one accepting act (record-grammar R52): a 
   const c = prop("step", "Call the board clerk");
   assert.equal(w.inv.planAccept({ proposal: a, form: "taken", by: ANN }).code, "PLAN_BAD_FORM");
   assert.equal(w.inv.planAccept({ proposal: a, form: "as_proposed", by: AI }).code, "INVESTIGATION_MEMBER_ONLY");
-  assert.equal(w.inv.planAccept({ proposal: a, form: "as_proposed", by: DAN }).code, "NO_SUCH_PROPOSAL");
+  assert.equal(w.inv.planAccept({ proposal: a, form: "as_proposed", by: DAN }).code, "NO_SUCH_PLANNING_PROPOSAL");
   assert.equal(w.inv.planAccept({ proposal: a, form: "as_proposed", by: OUT }).code, "PROJECT_ACT_NOT_A_PARTICIPANT");
   assert.equal(w.inv.planAccept({ proposal: a, form: "edited", by: ANN }).code, "PLAN_NO_TEXT", "edited carries her words");
   const r1 = w.inv.planAccept({ proposal: a, form: "as_proposed", by: BOB });
@@ -85,4 +86,31 @@ test("R21: every act here has a path by hand that needs no AI; the assistant onl
                               ["interviewKeep", { project: P1, answers: ["a", "", "", "", "", ""] }], ["planAccept", { proposal: 1, form: "as_proposed" }],
                               ["claimFound", { claim: claim.claim, record: Q1 }]])
     assert.equal(w.inv[name]({ ...args, by: AI }).ok, false, name);
+});
+
+test("R23: planAccept refuses a planning proposal absent or unseen with NO_SUCH_PLANNING_PROPOSAL (C-146.21, its translation kept), never intent's NO_SUCH_PROPOSAL", () => {
+  const w = world();
+  w.runs();
+  const a = w.inv.planPropose({ project: P1, kind: "step", text: "Ask the district for the newsletter", run: "RUN-1", by: AI }).proposal;
+  const before = w.snapshot();
+  const row = INVESTIGATION_CHECKS.NO_SUCH_PLANNING_PROPOSAL;
+  assert.deepEqual([row.check, row.translation], ["C-146.21", "There is no planning proposal here by that number that you can see. Nothing was written."]);
+  assert.equal(INVESTIGATION_CHECKS.NO_SUCH_PROPOSAL, undefined, "intent's code is not minted here");
+  const refusals = [
+    w.inv.planAccept({ proposal: 999, form: "as_proposed", by: ANN }),          /* absent */
+    w.inv.planAccept({ proposal: null, form: "as_proposed", by: ANN }),         /* named by nothing */
+    w.inv.planAccept({ proposal: "x", form: "as_proposed", by: ANN }),          /* not a number */
+    w.inv.planAccept({ proposal: a, form: "as_proposed", by: DAN }),            /* a project she does not see in full */
+    w.inv.planAccept({ proposal: a, form: "as_proposed", by: CAT }),            /* another project's owner, not of P1 */
+    w.inv.planAccept({ proposal: a, form: "as_proposed", by: null }),           /* no stamp: fails closed */
+  ];
+  for (const r of refusals) {
+    assert.deepEqual([r.ok, r.code, r.reason, r.check, r.translation], [false, "NO_SUCH_PLANNING_PROPOSAL", "NO_SUCH_PLANNING_PROPOSAL", "C-146.21", row.translation], JSON.stringify(r));
+    assert.notEqual(r.code, "NO_SUCH_PROPOSAL");
+  }
+  assert.equal(w.snapshot(), before, "nothing was written");
+  /* the negative control: the same proposal, seen by a joined participant, is accepted, so the refusal is the condition's */
+  assert.equal(w.inv.planAccept({ proposal: a, form: "as_proposed", by: BOB }).ok, true);
+  /* and no answer of any act here carries intent's code */
+  assert.equal(JSON.stringify([w.inv.planProposals({ project: P1, viewer: ANN }), ...refusals]).includes('"NO_SUCH_PROPOSAL"'), false);
 });

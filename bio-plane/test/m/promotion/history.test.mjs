@@ -187,8 +187,8 @@ test("R32: C-4.2 never throws — a type or a state named by an inherited key (t
   const entry = (from, to) => `\n  - timestamp: "2026-07-02T00:00:00Z"\n    from_state: ${from}\n    to_state: ${to}\n    blurb: "moved"\n    author: member:a`;
   const c42 = async (img) => of(await all(img), "C-4.2");
   for (const key of ["toString", "constructor", "__proto__"]) {
-    /* As the document's type: no table, so no finding of C-4.2's own. (At the gate, `checkBundle` runs first and its own
-       throw on such a type is record-grammar's, N809; this is C-4.2 as the gate and the audit both run it.) */
+    /* As the document's type: no table, so no finding of C-4.2's own. (At the gate, `checkBundle` runs first and, since
+       T40-1 (N809), answers such a type as unknown without throwing; this is C-4.2 as the gate and the audit both run it.) */
     const typed = md({ object_type: key, current_state: "a", prior_state: "b", state_history: entry("b", "a") });
     assert.deepEqual(await c42({ "bundle.md": typed }), [], key);
     assert.deepEqual(await c42(image([{ key: "k1", text: md() }, { key: "k2", text: typed }])), [], `${key}, with a record`);

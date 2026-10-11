@@ -78,3 +78,14 @@ export const ASK_PLANE_OPS = Object.freeze({
   askcheck:    { mutating: false, why: "R54 — answers' checks over the read log the plane holds for the grant (answers R4)" },
   askusage:    { mutating: true,  why: "R54 — each model call's usage, counted for the member (ai-runs R48's countAskUsage)" },
 });
+
+/* R72, R73 (N832; K2611) — `POST /transcribe`'s bounds: BOB's figures for the pages one act may send and the model
+ * turns one page may take, until M-Q7 and M-Q9 measure them, and the provider's own limit on one picture. Protective
+ * limits (K1881): a request past one is refused, never cut. */
+/** R72 — at most this many pages per act (K2611). */
+export const TRANSCRIBE_PAGES_MAX = 8;
+/** R73 — at most this many model turns per page (K2611). */
+export const TRANSCRIBE_TURNS = 2;
+/** R72 — a page's picture, decoded, at most this many bytes: the Messages API's per-image limit, 5 MB, as Anthropic's
+ *  vision documentation states it at T42-20's START (2026-10-11). */
+export const TRANSCRIBE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;

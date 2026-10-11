@@ -3,7 +3,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as QE from "../../../src/question-explorer/index.mjs";
 import * as RR from "../../../src/run-rules/index.mjs";
-import { world, Q, Q2, DOC, CAP, CALLER } from "./fixture.mjs";
+import { world, Q, Q2, DOC, CAP, CALLER, NOW } from "./fixture.mjs";
 
 test("R9, R10, R13: each refusal this module mints is its own row, frozen, with a translation in plain words and the site that mints it; a relayed provider's code is never copied here", async () => {
   assert.ok(Object.isFrozen(QE.EXPLORE_CHECKS));
@@ -52,4 +52,36 @@ test("questionExplorerOf answers one instance per storage; the constants are as 
   assert.ok(RR.TEST_BAR_PARTS.includes(QE.EXPLORE_TEST_PART), "a part run-rules holds the bar for");
   assert.equal(QE.EXPLORE_MODE, "investigate");
   assert.equal(QE.EXPLORE_USE, "explore");
+});
+
+test("R15: questionExplorerOf answers its instance with its tables already created, migrated before they are declared to purge: a host that never calls migrate() reads, ticks and purges without error; migrate() stays callable and idempotent", async () => {
+  const w = await world({ migrate: false }).standard();
+  const tables = QE.QUESTION_EXPLORER_TABLES.map((t) => t.name).sort();
+  assert.deepEqual(w.tablesBefore, [], "negative control: the storage held none of its tables before the factory ran");
+  assert.deepEqual(w.rows(`SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'explore_%' ORDER BY name`).map((r) => r.name),
+                   tables, "every table it declares to purge, created by the factory alone");
+  /* Reads, ticks and purges with no `no such table`. */
+  await w.setExplore("group", "yes");
+  assert.equal(w.p.exploreDue(NOW), 1);
+  assert.equal(w.p.exploreWake(NOW), NOW);
+  const t = w.p.exploreTick(NOW);
+  assert.equal(t.opened.length, 1);
+  assert.equal(w.p.find({ run: t.opened[0].run, kind: "capture", ref: CAP, bearing: "unclear", how: "x", caller: CALLER }).ok, true);
+  assert.deepEqual(w.p.findsFor({ viewer: "member:alice" }).finds.length, 1);
+  assert.deepEqual(w.p.stopsFor({ viewer: "member:dana" }), { ok: true, stops: [] });
+  w.record.purge({ bundleId: DOC });
+  assert.equal(w.count("explore_finds"), 0, "a document's purge reaches the declared tables");
+  w.record.purge({ bundleId: Q });
+  assert.equal(w.count("explore_runs"), 0, "a question's purge reaches them");
+  /* migrate() stays callable and idempotent: twice more over held rows changes nothing. */
+  w.question(Q2, { recipients: ["alice"] });
+  w.clock.now = "2026-10-11T09:00:00Z";
+  assert.equal(w.p.exploreTick(w.clock.now).opened.length, 1);
+  const before = w.snapshot();
+  w.p.migrate();
+  w.p.migrate();
+  assert.deepEqual(w.snapshot(), before, "calling migrate() again changes nothing");
+  /* One instance per host: the factory asked again answers the same instance, and migrates nothing anew. */
+  assert.equal(QE.questionExplorerOf(w.host), w.p);
+  assert.deepEqual(w.snapshot(), before);
 });

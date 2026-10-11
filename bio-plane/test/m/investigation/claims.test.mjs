@@ -2,7 +2,7 @@
    firsthand account is provenance's testimony; a person in no public role is warned of, never refused. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, ANN, BOB, DAN, OUT, AI, P1, P2, PH, Q1, Q3 } from "./fixture.mjs";
+import { world, ANN, BOB, CAT, DAN, OUT, AI, P1, P2, PH, Q1, Q3, QH } from "./fixture.mjs";
 
 const SIX = ["The campus closed.", "The school district.", "Since June.", "The district said the campus would be closed for one school year.", "A newsletter.", "Reopen it."];
 
@@ -74,6 +74,19 @@ test("R15: a claim reads as_recalled until a member ties a record to its find st
   assert.deepEqual(w.steps.productsOf({ step, viewer: ANN }).products.map((p) => p.id), [Q1]);
   /* to a reader who cannot see the record it names, the claim still reads as recalled */
   assert.equal(w.inv.claimsOf({ project: P1, viewer: DAN }).code, "PROJECT_SEEN_NOT_A_PARTICIPANT");
+  /* a participant who cannot see the found record: Cat, joined in P1 and owning the hidden project, ties its question */
+  w.participant(P1, "cat");
+  const c2 = w.inv.narrativeClaim({ project: P1, source: { own: true }, text: "The board voted in closed session.", by: CAT });
+  const s2 = w.inv.claimFindStep({ claim: c2.claim, by: CAT });
+  assert.equal(s2.ok, true, JSON.stringify(s2));
+  const f2 = w.inv.claimFound({ claim: c2.claim, record: QH, by: CAT });
+  assert.equal(f2.ok, true, JSON.stringify(f2));
+  const of = (viewer) => w.inv.claimsOf({ project: P1, viewer }).claims.find((x) => x.claim === c2.claim);
+  assert.deepEqual([of(CAT).stated_as, of(CAT).found.record], ["found", QH], "the negative control: one who sees it reads it found");
+  const ann = of(ANN);
+  assert.deepEqual([ann.stated_as, ann.found], ["as_recalled", undefined]);
+  assert.match(ann.label, /not what the body said/);
+  assert.equal(JSON.stringify(ann).includes(QH), false, "the record she cannot see is not named to her");
 });
 
 test("R16: a member who was present records her firsthand account through provenance's testify (its R28): testimony graded and labelled as hers; nothing here grades it or keeps it", () => {

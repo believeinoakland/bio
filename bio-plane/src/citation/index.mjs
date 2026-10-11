@@ -792,8 +792,9 @@ export class Citation {
     const fm = doc.data;
     /* The type from the DOCUMENT (op=conclude's precedent): byte-identical for a case, correct for a question. */
     const promoted = this.#write(project, p, text, when, author, fm, fm.object_type ?? p.type);
-    /* THE WRITE'S REFUSALS COME BACK UNCHANGED (inquiry R11: BASIS_REFUSED, SELF_BASIS, BASIS_CYCLE): this act
-       composes legs; the write judges them. */
+    /* THE WRITE'S REFUSALS COME BACK UNCHANGED (inquiry R11: BASIS_REFUSED, SELF_BASIS, BASIS_CYCLE; since T42 the
+       machine-passage read R11 asks, inquiry R62 with run-productions R25: PROPOSAL_NOT_TAKEN_UP,
+       MACHINE_PASSAGE_UNCHECKED; N834): this act composes legs; the write judges them. No seam of its own (K2608). */
     if (!promoted.ok) return { ...promoted, project, handle, drift: sel.drift };
 
     return { ok: true, project, handle, weight: "report", moved: sel.moved, drift: sel.drift,
