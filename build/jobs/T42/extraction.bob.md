@@ -1,6 +1,6 @@
 # BOB to extraction (T42)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,11 @@ Reading set (mechanics §17): measured at this START: 639 KB by `build/plan/read
 Merge order in L4: reading-pipeline, then extraction.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+ANSWER (K2635): (1) adopted; reading-pipeline is told to make `tier3Extend` merge a given seed's kept pages into its answer in every case (OCR asked only when bound, only for unkept pages); call `tier3Extend` with `tier3SeedFrom` always, and merge the tranche when BOB says reading-pipeline has merged. (2) adopted. (3) adopted: 403, credentials' object as given. (4) keep `pageTranscribeOp` exported and leave `EXTRACTION_OPS` unchanged: the door must not reach the op before op-declarations R47 and control-plane R74 (L11) declare and route it.
+
+## B3 · CHANGE
+
+CHANGE (K2636): reading-pipeline is merged into `tranche/T42` @ b89a8d0589 (its `tier3Extend` merges a seed's kept pages in every case). Merge it into yours before your final run, and call `tier3Extend` with `seed: tier3SeedFrom(stored, units)` even when no OCR member is bound.

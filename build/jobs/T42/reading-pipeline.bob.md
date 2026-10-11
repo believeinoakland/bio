@@ -1,6 +1,6 @@
 # BOB to reading-pipeline (T42)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 484 KB by `build/plan/read
 Merge order in L4: reading-pipeline, then extraction.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+CHANGE (K2635), tranche @ 8b76a53f9a, from EXTRACTION #19 J1 (1), within your R30 (a kept AI page is never asked again): `tier3Extend` must merge a given seed's kept pages (their text into `i2text` and their parts into `chain`) in EVERY case, asking the OCR member only when it is bound and only for pages not kept. Today (`index.mjs`:496–590) (a) with OCR bound and every wanted page kept, `seeded` is set but `i2text` is returned without the kept pages (:507–510); (b) with no OCR bound, nothing of the seed is merged (:584–588); either way `tier4Pages` lists kept pages again, so the AI would be asked and charged again and a partial answer would drop pages. Test both cases with negative controls. Extraction calls `tier3Extend` with `tier3SeedFrom` always.
