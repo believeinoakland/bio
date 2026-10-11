@@ -74,3 +74,25 @@ Size (session_01FkEawkkBapPx1hxUZQnZ2M): test runs 24, module lines 3698
 ## J1 · COMPLETE
 
 T43-6 done; record's Completion has it all. R38 (N854) applied at the door, commit 3e8b8216cc: C-1.1 through record-grammar's idDisagrees (padded id refused, non-string id now C-1.2's), C-2.1 on any parseFrontmatter C-2.1 finding for a revision; both arms tested with negative controls. Held records the stricter door refuses: none real-shaped (my stores: one replay fixture already refused today). Stamp 1.69.0 -> 1.70.0, ROW_CENSUS 1722 rows f73c10a3..., commit db7e28f9e9: 3 new, 5 re-keyed, 10 changed (where only), each named by a T42 L3-L11 or T43 L1 record; clears rule 4 (2) for them. Tests: promotion 128/0, row-census 8/0, d526 31/0; users' suites 47 of 53 green, reds by file and line in the record: accepted case-carriage, action-plans, affordances, action-clocks overdue; NEW from N854, both fixtures sending a key twice: action-clocks calendar.test.mjs:60,132,201,247 and factreader.test.mjs:119,138 (fixture.mjs:162 prepends a second counterparty), ratification converted-b.test.mjs:166 (:180 prepends edition twice). For you: modules.json promotion tests -> row-census-1.70.0.jsonl (format and ownership's one failure each); strike R38's mark; regenerate plane bundle and program.mjs; a ruling on whether C-2.1 should refuse creations too (gap in record).
+
+## After B2 (CHANGE, K2706)
+
+**Applied:** commit `47ac97edda`. R38's C-2.1 arm now refuses a **creation** as it refuses a revision.
+- Any C-2.1 finding of `parseFrontmatter` refuses `BUNDLE_MD_UNREADABLE` (`why: "front_matter"`, `grammar`).
+- A revision's blob-held `bundle.md` keeps `why: "blob"`.
+- A project's creation with no front matter is still C-59.4 `PROJECT_DOCUMENT_UNREADABLE`, asked first.
+- Test: `registry.test.mjs` R38 (N854, K2706). Every C-2.1 case is refused at creation exactly when the parser answers C-2.1, nothing is written, and the clean document is created. Negative control: on the previous door the creation arm fails (a key given twice was created).
+- The 1.70.0 note in `gate.mjs` now says "a creation or a revision". No row moved; the census is unchanged.
+
+**Tests:**
+- promotion: 128 pass, 0 fail.
+- `row-census`: 8 pass, 0 fail.
+- `d526-refusal-order`: 31 passed, 0 failed.
+- Users' suites (53 modules), compared with the first run:
+  - **action-clocks** 44/11: four more tests from the same fixture (T43-19), now refused at the creation itself: `calendar.test.mjs`:278 and `factreader.test.mjs`:39, 72, 80, besides :60, 132, 201, 247 and :119, 138.
+  - **case-checker** `program.test.mjs`:19, 49: "program.mjs is stale". This is the generated artifact embedding 1.69.0 since the stamp (§14; rule 4 (6), regenerated at L2's close), not the door.
+  - **answer-envelope**: green (30/0).
+  - The other reds are unchanged: ratification `converted-b.test.mjs`:166 (T43-20), and the accepted case-carriage, action-plans, affordances and action-clocks `overdue.test.mjs`:126.
+  - No other new red.
+
+Size (session_01FkEawkkBapPx1hxUZQnZ2M): test runs 29, module lines 3698
