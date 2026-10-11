@@ -28,3 +28,7 @@ I found no flaw in behaviour. Nothing is deferred.
 - `ownership case-carriage tranche/T44`: 3 files changed; 0 failures.
 
 Size (session_01RHnxNfEc1i2Xkd7pgZikrv): test runs 2, module lines 1382
+
+## J1 · REPORT
+
+Found in another module (case-grammar). My Uses cite caseDocumentBlocks and sourceRowsStanding as "case-grammar R1", and my R5 relies on both. case-grammar exports both (src/case-grammar/blocks.mjs:125, 163), but neither name appears anywhere in build/requirements/case-grammar.md, public or private. So a service I use has no requirement that states it. Nothing in T44-8 depends on this. Detail in my record's Completion section.
