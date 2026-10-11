@@ -64,3 +64,4 @@
 - 2026-10-11: D19 ruled (b), no limit; all decisions ruled; H23; step 5 begins.
 - 2026-10-11: DESIGN.md, page §8 (design, ladder), canon draft v0.2 + ACTIONS ladder published for Bob; H24.
 - 2026-10-11: Bob: the canon draft should reflect the design without change history (like the investigation design); rewritten clean; H25.
+- 2026-10-11: BOB #155's whole-read review applied to the canon draft, ladder (§9A form) and DESIGN §10–§12; H26.

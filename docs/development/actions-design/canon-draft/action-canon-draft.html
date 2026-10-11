@@ -76,19 +76,25 @@ the actions design of record
 (<code>docs/development/actions-design/</code>, branch
 <code>design/actions</code>: <code>DESIGN.md</code> and the working
 page, on Bob's rulings in <code>DECISIONS.md</code>). On approval it
-replaces v0.1 as the level-1 home of the Action layer, with a new
-ACTIONS section in <code>BIO_Capability_Ladders_v0_1.md</code>
-(<code>ladder-ACTIONS.md</code>).</p>
+replaces v0.1 as the level-1 home of the Action layer; Case Making's
+action sections remain history for why, and this document governs where
+they differ. It is approved together with a new section §9A ACTIONS in
+<code>BIO_Capability_Ladders_v0_1.md</code> and edits to
+<code>BIO_State_Rules_Consistency_v1_5.md</code> §4.4 and §5.1 (the
+links and states named in §6 below), each placed by BOB in its own
+document.</p>
 <p><strong>Place in the system</strong> · Level 1, construct 16 of
-<code>BIO_System_Design.md</code> §3 (Action), layer 9 of the build. It
-depends on and does not restate: <code>BIO_Investigation_v0_1.md</code>
-(projects, steps, the case-account check, accepting another group's
-case); <code>BIO_Publication_v0_1.md</code> (editions, the docket, the
-in-band stamp, import); <code>BIO_Capability_Ladders_v0_1.md</code>
-(TIME, ORGANISATIONS, LAW, COURTS, QUESTIONS; due-date bases);
-<code>BIO_Membership_Architecture_v2.md</code> (projects, members);
-<code>BIO_Assistant_and_AI_Roles_v0_1.md</code> (the AI's rules and
-account settings).</p>
+<code>BIO_System_Design.md</code> §3 (Action); layer 9 of the build
+(<code>build/layers.md</code>), whose numbering governs (the Functional
+Architecture's "Layer 3: Action" is the functional layer). It depends on
+and does not restate: <code>BIO_Investigation_v0_1.md</code> (projects,
+steps, the case-account check, accepting another group's case);
+<code>BIO_Publication_v0_1.md</code> (editions, the docket, the in-band
+stamp, import); <code>BIO_Capability_Ladders_v0_1.md</code> (TIME,
+ORGANISATIONS, LAW, COURTS, QUESTIONS; due-date bases);
+<code>BIO_Membership_Architecture_v2.md</code> (projects, members,
+hidden projects); <code>BIO_Assistant_and_AI_Roles_v0_1.md</code> (the
+AI's rules and account settings).</p>
 <h2 id="1-what-the-layer-is-for">1. What the layer is for</h2>
 <p>The Action layer is where a group turns what it has learned into what
 it does: from the first suspicion that something is wrong or working,
@@ -105,19 +111,21 @@ taking part as a formal party; working with the press; meeting
 officials; recognising success; acting jointly with other groups;
 briefing counsel; defending the group. A plan may be developed and acted
 on before any case is published, so a published case may carry a record
-of the actions the group has taken.</p>
+of the actions the group has taken. Audience remains a reader of a
+published case; the differences between groups' work live in a project's
+declared kind of work (rule 10).</p>
 <p>Civicsmith supports members at every stage, both members who work
 with the assistant and members who don't: everything in this document
 works without AI, and the assistant, where the account owner has enabled
 it, adds labelled proposals.</p>
 <h2 id="2-the-contract">2. The contract</h2>
 <p>An action rests on the record. One asserting a breach rests on a
-member's determination, against a standard held in the record, made on
-findings that are published, checked for publication and held, or
-another group's findings the group has accepted. The group plans and
-decides every act; the AI proposes and prepares, and never files or
-sends. Compliance is recorded as carefully as noncompliance. Every
-deadline names its basis. Civicsmith holds evidence and takes no
+member's determination, against a standard held in the group's own
+record, made on findings that are published, checked for publication and
+held, or another group's findings the group has accepted. The group
+plans and decides every act; the AI proposes and prepares, and never
+files or sends. Compliance is recorded as carefully as noncompliance.
+Every deadline names its basis. Civicsmith holds evidence and takes no
 position on policy; members and groups may, and Civicsmith is never
 their instrument.</p>
 <h2 id="3-the-constructs">3. The constructs</h2>
@@ -126,7 +134,6 @@ their instrument.</p>
 <tr class="header">
 <th>construct</th>
 <th>what it is</th>
-<th>its home module</th>
 </tr>
 </thead>
 <tbody>
@@ -138,19 +145,24 @@ held as captured text with its citation and period in force. An
 official's spoken commitment becomes a standard only once the body
 confirms it in writing or states it publicly; until then members keep it
 "as heard" in their own accounts, and the body's silence after the
-group's confirming letter is a dated fact.</td>
-<td><code>standards</code></td>
+group's confirming letter is recorded as a dated fact.</td>
 </tr>
 <tr class="even">
 <td><strong>Determination</strong></td>
 <td>a member's determination that a named government act is compliant,
-noncompliant or unclear against named standards, per standard, resting
-on findings that are published, checked for publication and held, or
-another group's accepted findings. One resting on held findings moves to
-the edition when it is published; one whose check is voided by a change
-to the evidence, or whose source withdraws or revises its findings,
-reads undetermined until a member re-evaluates.</td>
-<td><code>conformance</code></td>
+noncompliant or unclear against named standards held in the group's own
+record, per standard, resting on findings of one of three kinds:
+<strong>published</strong>; <strong>checked for publication and
+held</strong> (the case passed every publication check and is held
+unsigned); or <strong>another group's findings the group has
+accepted</strong> (read-only, marked as another group's, never stronger
+than the edition they came from). The determination is always made by a
+member of the group itself; another group's determination is never
+adopted as such. One resting on held findings moves to the edition when
+it is published. One whose check is voided by a change to the evidence,
+or whose source group withdraws or revises the accepted edition, reads
+undetermined until a member re-evaluates, and every action resting on it
+is marked meanwhile.</td>
 </tr>
 <tr class="odd">
 <td><strong>Consequence</strong></td>
@@ -159,33 +171,31 @@ body, or a person a document names; published text names them only with
 their consent or where Design Requirement 6 allows, and a whistleblower
 who is a source stays protected), computed from the record or assessed
 by a member, with causation as its own finding; whether each part is
-addressed, by a member's reasoned statement with evidence for each
-part</td>
-<td><code>consequences</code></td>
+addressed, by a member's reasoned statement with evidence for each part.
+Consequences belong to breaches only.</td>
 </tr>
 <tr class="even">
 <td><strong>Success record</strong></td>
 <td>per matter, a member's statement of what changed and when, resting
-on evidence, with figures computed from cited sources; it says the
-group's action caused the change only on evidence other than the group's
-own act</td>
-<td>placed by BOB</td>
+on evidence, optionally with figures computed from cited sources. It may
+state the sequence of events ("after our demand of 6 Nov, the City
+published both reports on 14 May"); it says the group's action caused
+the change only on evidence other than the group's own act. A member may
+carry it into the case's next edition as an outcome.</td>
 </tr>
 <tr class="odd">
 <td><strong>Action plan</strong></td>
 <td>a project's working material for deciding what to do about one or
 more matters, suspected or determined: every option proposed and the
 group's own, their disposition, and any number of scenarios laid out in
-phases with checkpoints a member judges; a scenario no longer in use is
-set aside with a reason and kept</td>
-<td><code>action-plans</code></td>
+phases with checkpoints a member judges. A scenario no longer in use is
+set aside by a member with a reason, kept, and may be restored.</td>
 </tr>
 <tr class="even">
 <td><strong>Action</strong></td>
 <td>one outward engagement: its kind, addressee, partners, risk tier,
-clock (each deadline with its basis), what it rests on, scope,
-lifecycle, correspondence, and its own outcome</td>
-<td><code>actions</code></td>
+clock (each deadline with its basis), what it rests on, whether it is
+confidential, lifecycle, correspondence, and its own resolution.</td>
 </tr>
 <tr class="odd">
 <td><strong>Filing and communication</strong></td>
@@ -193,30 +203,34 @@ lifecycle, correspondence, and its own outcome</td>
 from the profile's templates, the Tier 3 counsel packet, and
 communication drafts; each checked against the record, approved by a
 member and sent by the member's own hand, carrying the in-band
-stamp</td>
-<td><code>filings</code></td>
+stamp.</td>
 </tr>
 <tr class="even">
 <td><strong>Escalation</strong></td>
-<td>the seven-stage protocol that pursues one noncompliant determination
-until compliance is restored and its consequences are addressed, or
-until a member stops pursuing it with a reason; a met trigger is
-proposed with its age, and a member advances or declines with a
-reason</td>
-<td><code>escalation</code></td>
+<td>the seven-stage protocol that pursues one noncompliant
+determination. A met trigger is proposed with its age; a member advances
+or declines with a reason. It <strong>ends</strong> when compliance is
+restored and the consequences are addressed; a member may instead
+<strong>stop pursuing</strong> it, with a reason, which is not an ending
+(rule 17).</td>
 </tr>
 </tbody>
 </table>
+<p>Their homes in the build: <code>standards</code> (layer 5);
+<code>conformance</code>, <code>consequences</code> (with the success
+record), <code>actions</code>, <code>action-clocks</code>,
+<code>filings</code>, <code>escalation</code> and
+<code>action-plans</code> (layer 9); watches and their end dates live
+with <code>monitoring</code> and <code>following</code> (layer 10).</p>
 <p>How they connect: an inquiry opens a plan, its matters suspected; a
-determination, on published, checked-and-held or accepted findings,
-makes a matter determined; consequences measure a breach and a success
-record measures a success; a chosen option starts an action; a filing or
-communication prepares what the action sends; a breach action joins its
-determination's escalation; responses return as correspondence and set
-off a re-examination of the plan; an action resolves with its own
-outcome; the plan closes by a member's act with its closing summary.
-Monitoring (layer 10) watches the clocks, duties and triggers and tells
-members; the queue carries the to-dos.</p>
+determination makes a matter determined; consequences measure a breach
+and a success record a success; a chosen option starts an action; a
+filing or communication prepares what the action sends; a breach action
+joins its determination's escalation; responses return as correspondence
+and set off a re-examination of the plan; an action resolves with its
+own resolution; the plan closes by a member's act with its closing
+summary. Monitoring watches the clocks, duties, triggers and watches and
+tells members; the queue carries the to-dos.</p>
 <h2 id="4-the-rules">4. The rules</h2>
 <ol type="1">
 <li><p><strong>Humans decide.</strong> A member takes every act that
@@ -224,7 +238,8 @@ commits the group: declaring a standard, determining, assessing a
 consequence or a success, choosing an option, approving, sending,
 advancing or stopping a stage, resolving, closing. The machine may find,
 compare, compute, propose and draft, always labelled as machine work,
-and never does any of these acts.</p></li>
+and never does any of these acts. The one machine write is mechanical:
+marking a pending clock entry overdue when its date passes.</p></li>
 <li><p><strong>The gate is at the outward act, not the reasoning, and a
 member may pass it openly on stated grounds.</strong> A plan may rest on
 premises not yet established, shown as hunch debt. Outward acts are
@@ -233,75 +248,94 @@ seeking evidence (a records request, a request for comment), and
 enforcing the group's own request on its own dated record are never held
 back. A sentence that asserts a breach as the group's finding needs a
 live noncompliant determination. Sentences that read as assertions are
-pointed out before approval, from a fixed list of phrasings for every
-member and by the assistant where enabled, and the member resolves each
-one: she rewrites it, confirms in her own recorded words that the act
-only asks, or treats the act as a breach claim. Without a determination,
-an act asserting a breach may proceed only on one of two grounds, a
-legal deadline that falls before a determination could be made (cited,
-with its date) or an imminent irreversible act (what, and when),
-together with the member's reason; ground and reason are disclosed on
-the action and on everything prepared from it, and an override without a
-ground is refused. Where the law's window is short, the window is shown
-beside the refusal, with a quick route to a small case checked for
-publication. An action sent on these grounds may join its escalation
-once a determination is made, the override kept in its history. No tool
-has the final word (Requirement 12), and a departure from the group's
-standard is visible to every reader.</p></li>
+pointed out before approval, from a list of phrasings Civicsmith holds
+for each language, which a profile may extend, for every member, and by
+the assistant where enabled; the member resolves each one: she rewrites
+it, confirms in her own recorded words that the act only asks, or treats
+the act as a breach claim. Without a determination, an act asserting a
+breach may proceed only on one of two grounds, a legal deadline that
+falls before a determination could be made (cited, with its date) or an
+imminent irreversible act (what, and when), together with the member's
+reason; ground and reason are disclosed on the action and on everything
+prepared from it, and an override without a ground is refused, naming
+the two grounds. Where the law's window is short, the window is shown
+beside the refusal, with a quick route: a case of one finding, run
+through every publication check, on which a member may determine. An
+action sent on these grounds may join its escalation once a
+determination is made, the override kept in its history. No tool has the
+final word (Requirement 12), and a departure from the group's standard
+is visible to every reader.</p></li>
 <li><p><strong>What the group sends is checked against its
 record.</strong> Every filing and communication gets the case's
 sentence-by-sentence account check: a sentence the record does not
 support is pointed out; one the record contradicts is held back by
 default and sent only by a member's open act with a reason; a question
 is never flagged. Claims about a body rest on findings of the three
-kinds in §2 or on the group's own dated correspondence; statements about
-what the group itself is doing need neither.</p></li>
+kinds in §3 or on the group's own dated correspondence; statements about
+what the group itself is doing need neither. Everything prepared from an
+action resting on held findings says so ("rests on findings checked for
+publication on 3 Nov, not yet published"); everything resting on
+accepted findings names them ("rests on findings of Hayward Parents for
+Accountability, edition of 3 Sep 2026, accepted by us on 20
+Sep").</p></li>
 <li><p><strong>No significance, no score.</strong> Whether a matter
 warrants action, and how urgently, is a member's judgment, recorded only
 in acts and their reasons. No field holds significance, severity,
 priority or a score. The planning run lists every option it proposes,
 with no cut-off, collapsed to its summary; an option left unticked is
-undecided, and declining one is an act with a reason. No ending is
-rated. Suggested options come from reasoning over the matter, the routes
-the profile's guides list and the group's own earlier plans, never from
-a fixed catalogue; the plan holds no costs, assignees or hours.</p></li>
+undecided, and declining one is an act with a reason. Suggested options
+come from reasoning over the matter, the routes the profile's guides
+list and the group's own earlier plans, never from a fixed catalogue;
+the plan holds no costs, assignees or hours. No ending is
+rated.</p></li>
 <li><p><strong>Compliance counts.</strong> A compliant determination is
 recorded with the same care as a noncompliant one and may start a plan.
-Recognition is an action, resting on a compliant determination or a
-success record; its text may name staff acting in their official roles,
-with a reminder that public thanks names them publicly.</p></li>
+Recognition is an action, and rests on a compliant determination or a
+success record; where the fix is only promised, that is shown. Its text
+may name staff acting in their official roles, with a one-time reminder
+that public thanks names them publicly, and needs no individual's
+consent.</p></li>
 <li><p><strong>Every deadline names its basis, and members are told
-without being nagged.</strong> A due date's basis is a rule (cited), the
-body's own commitment, a dependency, or the group's own window, computed
-in the office's local day. A reminder is the member's own request; an
-overdue date notifies once; a nearing date changes display only; no
-outside channel; nothing repeats unless the member asks. One date gives
-one reminder: an investigation step's "by when" is the action's clock
-entry. A missed date is shown as a question ("Noticed: no reply recorded
-by 25 Oct") until a member determines noncompliance on the record.
-Receipt is recorded as a fact where the law counts from it. An action to
-a body that owes the group no reply never records silence as
-non-response. What the group itself owes a venue (service, filings,
-contact reports, a requester's own deadlines) is held as the group's own
-deadlines, distinct from a body's duties. The other side's stated
-deadline is never presented as a legal one.</p></li>
+without being nagged.</strong> A due date's basis is one of five kinds:
+a rule (cited), the body's own commitment, a dependency, the group's own
+window, or the other side's stated deadline, which is never presented as
+a legal one. Dates are computed in the office's local day, including a
+time of day and counts from service. A deadline reminder is the member's
+own request, set when the option is chosen from defaults the member
+sees; it fires as asked, and its response offers another reminder or
+none; an overdue date notifies once; a nearing date changes display
+only; no outside channel; nothing repeats unless the member asks. One
+date gives one reminder: a step's "by when" and the action's clock entry
+for the same date are one item, and an adopted duty's "Noticed" item
+replaces the clock's overdue item. A missed date is shown as a question
+("Noticed: no reply recorded by 25 Oct") until a member determines
+noncompliance on the record. Receipt is recorded as a fact (how, when)
+where the law counts from it. An action to a body that owes the group no
+reply never records silence as non-response. What the group itself owes
+a venue (service, filings, contact reports, a requester's own deadlines)
+is held as the group's own deadlines, distinct from a body's duties. A
+records request's next-stage due date lives on its correspondence
+entry.</p></li>
 <li><p><strong>Addressees are roles, not people.</strong> An action is
 addressed to a government office by role and body, a reporter by role
 and outlet, an organisation or another civic group by role, or a
 described audience; never a private individual; the page may show who
 holds the office on the date, from the record. An action asserting a
-breach is addressed to an office. One action is made per office
-addressed, others copied on it; a venue's delivery point is held on the
-venue, never as the addressee. A reporter's name is kept inside the
-group as the role's holder and never published by the system. Partners
-on a joint action are organisations by role.</p></li>
+breach is addressed to an office. An action about a person's statutory
+duty is addressed to the office that enforces it. One action is made per
+office addressed, others copied on it; a venue's delivery point is held
+on the venue, never as the addressee. A reporter's name is kept inside
+the group as the role's holder and never published by the system.
+Partners on a joint action are organisations by role.</p></li>
 <li><p><strong>Who speaks.</strong> At a meeting a member speaks for the
 group, approved, stamped and held to every rule here, or as herself, in
 her own notes and not as the group's act. Press terms (on the record,
 embargo, release time) are noted on each press action. A request for
-comment states that the reply may be quoted unless it says otherwise; at
-signing, each request for comment still open is shown as one line of
-fact, never a gate.</p></li>
+comment states that the reply may be quoted unless it says otherwise. At
+signing, each request for comment still open on the case is shown once
+as one line of fact (whom the group asked, when, when the window closes,
+and what any reply received answers), with no reason asked and no
+gate.</p></li>
 <li><p><strong>The doctrine's limits.</strong> Civicsmith takes no
 position on what policy should be, and does not rule on policy even when
 members or groups do. Its outputs (published cases, which hold evidence,
@@ -311,23 +345,29 @@ planning run never suggests advocacy. Political accountability asks
 officials to act on a breach, requests oversight and audits, testifies
 to facts and asks a body to examine or apply an existing requirement,
 and supports legislation that restores or enforces an existing
-requirement; lobbying is an option only for that. Policy advocacy and
-candidate support are not actions. Civicsmith must not be weaponized by
-members or groups with a policy agenda: its only involvement in material
-that supports a policy position is assessing whether the positions taken
-are supported by the evidence in the record, and pointing out where they
-are not. Each claim and position is shown as supported, not supported or
-contradicted; nothing is held back, prepared, sent, recorded as the
-group's act or certified, and the check carries no mark outside. When a
-message names a pending measure or candidate, the campaign-spending rule
-is shown once as legal information. Any group may use Civicsmith; a
-group with a stake in a matter discloses it.</p></li>
+requirement; lobbying is an option only for that. In testimony prepared
+as the group's act, a sentence stating a policy position is pointed out
+for the member to remove. Policy advocacy and candidate support are not
+actions. Civicsmith must not be weaponized by members or groups with a
+policy agenda: its only involvement in material that supports a policy
+position is assessing whether the positions taken are supported by the
+evidence in the record, and pointing out where they are not. A member
+brings text she wrote; each claim and position is shown as supported,
+not supported or contradicted; the text and its check are kept in her
+own notes, never in the group's record, never prepared, sent, recorded
+as the group's act or certified, and the check carries no mark outside.
+When an action's text names a pending measure or a candidate, including
+thanks to an elected office whose holder is a candidate, the
+campaign-spending rule is shown once as legal information. Any group may
+use Civicsmith; a group with a stake in a matter discloses it.</p></li>
 <li><p><strong>The work varies, not the person.</strong> A project may
 declare the kind of work it does (reporting, fixing, legal, oversight,
 other), which shapes what the assistant suggests and nothing else. No
 attribute of a member or user gates, filters or orders anything; no
-member is named spokesperson; no one's reading of a notice is
-tracked.</p></li>
+member is named spokesperson; no one's reading of a notice is tracked.
+The people the record holds may be searched and sorted by any held fact
+and ranked by a measured quantity, and a judgment score appears only as
+a signal in the hypothesis layer.</p></li>
 <li><p><strong>Jurisdiction lives in data.</strong> Kinds, venues,
 templates, offices, legal organisations, deadlines, holidays and the
 stages each law has come from a jurisdiction profile; a missing fact
@@ -337,12 +377,14 @@ sources, reviewed by a professional, approved and attributed, and
 offered only after a member has chosen the act; and a sourced procedure
 guide for each kind of action, labelled legal information, not legal
 advice, listing the replies to expect and the routes in the profile's
-order, unranked. Legal facts are shown with their citations at the
-moment they matter. A member may draft a jurisdiction rule from its
-primary source, confirmed by a second member (a professional for Tier 2
-and 3 matters); it applies in that group at once and may be offered to
-the shared profile. A state is supported when a group there
-asks.</p></li>
+order, unranked; groups may add their own guides. Legal facts are shown
+with their citations at the moment they matter. A member may draft a
+jurisdiction rule from its primary source and a second member confirms
+it; for a Tier 2 or 3 matter the confirmation also records a
+professional's review, naming the reviewer and the qualification they
+state (an attestation the group records, never a member attribute); the
+rule applies in that group at once and may be offered to the shared
+profile. A state is supported when a group there asks.</p></li>
 <li><p><strong>Hope for good faith; prepare for opposition.</strong>
 People are presumed to want better outcomes, and a bad actor is
 identified by evidence, never by role. The system is nonetheless
@@ -352,13 +394,14 @@ response; pressure against the group or its supporters is recorded as
 evidence wherever it arrives, and can open an inquiry of its own; lawful
 demands are complied with openly. Any member who can see an action or
 case may place a litigation hold with a reason; nothing named in it is
-purged, and a plain notice tells members what to keep outside
-Civicsmith. Counsel may be briefed at any stage, for a claim or for the
-group's defence, without a determination: the packet shows each matter's
-support as it stands, and a defence packet holds each challenged
-statement with its findings and sources, the pressure received and the
-defence deadlines; it never says "you have a claim". What counsel or
-another group needs to carry a matter on survives the group's
+purged; a plain notice telling members what to keep outside Civicsmith
+is prepared and sent by a member's own hand. Counsel may be briefed at
+any stage, for a claim or for the group's defence, without a
+determination: the packet shows each matter's support as it stands, and
+a defence packet holds each challenged statement with its findings and
+sources, the pressure received and the defence deadlines. A packet never
+says "you have a claim" nor whether a protection applies. What counsel
+or another group needs to carry a matter on survives the group's
 disruption.</p></li>
 <li><p><strong>The venue sets the standard of evidence.</strong> No
 action is refused for its evidence grade. Every filing and counsel
@@ -367,7 +410,7 @@ venue's standard beside it; where a filing rests on a grade the
 opposition could contest, it says so. Grade A is the highest grade the
 product offers, not a minimum. Taking part as a formal party before a
 venue is a Tier 2 action, with its advisory and the counsel packet
-offered.</p></li>
+offered; Civicsmith never says whether to become a party.</p></li>
 <li><p><strong>Nothing leaves by a system path.</strong> The instance
 transmits nothing. A member sends by the venue's own means and records
 the sending with the bytes sent; anything addressed carries the in-band
@@ -376,72 +419,91 @@ fingerprint matching, each signatory added by its own organisation's
 act. A plan is never published; a counsel packet is never published and
 never fileable as it stands.</p></li>
 <li><p><strong>What stays inside.</strong> Three scopes, each set by a
-member's act with a reason: a confidential act, seen inside the group
-and never in anything published; a counsel matter, a project of its own
-whose members alone see counsel's correspondence and dates, never
-published or used as evidence, its packets marked privileged; and a
-member's own role as a source, kept in her hidden project, the group's
-act resting on the documents she chooses to share. Promises the group
-made to people (an embargo, a source's anonymity) are notes on the
-action that every participant sees. A published case's record of actions
-holds the group's outward acts only: never the plan's deliberation,
-never a confidential act, never a counsel matter.</p></li>
+member's act with a reason and removable the same way, never
+retroactively for anything already published: a <strong>confidential
+act</strong>, seen inside the group and never in anything published; a
+<strong>counsel matter</strong>, a project of its own whose members
+alone see counsel's correspondence and dates, never published or used as
+evidence, its packets marked privileged, with a warning on sharing
+outside; and a member's own role as a <strong>source</strong>, kept in
+her hidden project, the group's act resting on the documents she chooses
+to share. Promises the group made to people (an embargo, a source's
+anonymity) are notes on the action that every participant sees. A
+published case's record of actions holds the group's outward acts only:
+never the plan's deliberation, never a confidential act, never a counsel
+matter.</p></li>
 <li><p><strong>Responses change the plan only through members.</strong>
 A response is recorded wherever it is found (a direct reply, a press
-quote, a report, a decision), in the office's own terms; a reply to a
-request for comment is laid out claim by claim. Each recorded response
-sets off a re-examination of every action taken or planned in the
-project and its linked projects: dates recomputed, phases whose start
-now holds opened with their options offered, options whose premise or
-date changed marked with why, the profile's next routes for that reply
-offered, and, where enabled, the assistant's labelled proposals. What
-the group chose changes only by a member's act. A response that may
-itself be an infraction becomes a new matter, suspected until a member
-determines it, kept in the same project or a linked one as the member
+quote, a report, a decision); its outcome is recorded in the fixed
+outcome vocabulary, with the office's own status wording quoted beside
+it; a reply to a request for comment is laid out claim by claim (new
+evidence, disputed without evidence, not addressed). Each recorded
+response sets off a re-examination of every action taken or planned in
+the project and in projects linked to it by a response: dates
+recomputed, phases whose start now holds opened with their options
+offered, options whose premise or date changed marked with why, the
+profile's next routes for that reply offered, and, where enabled, the
+assistant's labelled proposals, run within the AI settings and limits of
+the member who recorded the response. What the group chose changes only
+by a member's act. A response that may itself be an infraction becomes a
+new matter, suspected until a member determines it against the rule that
+governs it, kept in the same project or a linked one as the member
 chooses, the link kept both ways: the body's response is evidence, the
-group's own act never is; a slow or unwelcome reply is not an
-infraction; the case changes only through evidence; the plan gains the
-matter; the chain is shown, never counted. A body's promise in a
-response, or a report's required responses, may be adopted as duties
-with their dates.</p></li>
+group's own act never is; a reply that is slow or unwelcome is not by
+itself an infraction, though a missed date a rule sets may be determined
+noncompliant (rule 6); the case changes only through evidence, a
+relevant reply going to the published case's docket at once; the plan
+gains the matter; the chain is shown, never counted. A body's promise in
+a response, or a report's required responses, may be adopted by a member
+as duties with their dates.</p></li>
 <li><p><strong>Endings are honest.</strong> Compliance is restored by a
 curing act: a later act of the same office, determined compliant against
 the same standard and linked by a member as the cure. Harm is addressed
 by a member's reasoned statement with evidence for each part, with plain
 words offered (remedied, mitigated, compensated, acknowledged, cannot be
 undone) and no percentage. A dated outcome entry goes on the published
-case at once, and the determination with its next edition. A member may
-stop pursuing an escalation with a reason: it is never shown as success
-or as ended, proposes no next stage, and may be reopened where it
-stopped. A closed plan keeps its reason, a closing summary assembled
-from the record (never machine prose, never published, never rated) and
-an optional note. At close, and when every promise in a matter is met,
-members are asked once, for each watch the plan set running, whether to
-keep it until a date or stop it; every watch shows its end
-date.</p></li>
+case's docket at once, and the determination with its next edition. A
+member may stop pursuing an escalation with a reason: it is never shown
+as success or as ended, proposes no next stage, and may be reopened by a
+member with a reason at the stage where it stopped; a published record
+of actions shows "stopped pursuing" with its date, and the reason stays
+inside unless a member writes it into the case. A closed plan keeps its
+reason, a closing summary assembled from the record at the moment of
+closing (a frozen copy of its "where it stands" view; never machine
+prose, never published, never rated) and an optional note; members may
+draw on it for the case's next edition. At close, and when every duty
+adopted from a matter's promises reads met, members are asked once, for
+each watch the plan set running (following a body, watching a page, a
+promise watched as a duty, a standing question), whether to keep it
+until a date they choose or stop it now; every watch then shows its end
+date, and a watch another plan or project relies on is shown but not
+offered for stopping.</p></li>
 <li><p><strong>Work carries on when people change.</strong> A "where it
 stands" view shows each plan's waits with their basis, next dates,
 holds, overrides, declined options and set-aside scenarios with their
 reasons, escalations and watches. Members may draft status reports from
-the record, never required, never published. When a member leaves, the
-owners are told once which dated items were hers, and any member who can
-see an item may take it up by one act; nobody assigns anybody.</p></li>
+the record, never required, never published. When a member leaves a
+group or a project, the owners are told once which dated items routed
+their to-dos to her, and any member who can see an item may take it up
+by one act, which routes its to-dos to that member; nobody assigns
+anybody.</p></li>
 </ol>
 <h2 id="5-records-requests">5. Records requests</h2>
 <p>A records request and its reply are one round trip, the reply's
-outcome taken from a fixed vocabulary. Its due date cites a governing
-law, and every law that governs the body and the request is named. A fee
-quote is held as evidence. Reconsideration is a stage on the request;
-mediation, an ethics complaint and a court petition are new actions
-linked to it, each with its own addressee, tier and clock. Which stages
-a law has comes from the profile.</p>
+outcome taken from the fixed outcome vocabulary. Its due date cites a
+governing law, and every law that governs the body and the request is
+named. A fee quote is held as evidence. Reconsideration is a stage on
+the request; mediation, an ethics complaint and a court petition are new
+actions linked to it, each with its own addressee, tier and clock. Which
+stages a law has comes from the profile.</p>
 <h2 id="6-things-kept-distinct">6. Things kept distinct</h2>
 <ul>
 <li>An action's <strong>resolution</strong> (complied, denied,
 escalated, withdrawn, completed), a correspondence entry's
-<strong>outcome</strong> (in the office's own terms, from the profile),
-and an escalation's <strong>evaluation</strong> of a response (complied,
-partial, denied, none) are three different things, each kept.</li>
+<strong>outcome</strong> (granted, denied, partial, reversed, affirmed,
+none stated, with the office's own wording quoted), and an escalation's
+<strong>evaluation</strong> of a response (complied, partial, denied,
+none) are three different things, each kept.</li>
 <li>The <strong>plan</strong> is the strategic layer above; each
 determined breach keeps its own <strong>escalation</strong>; the plan
 never moves an escalation.</li>
@@ -450,112 +512,411 @@ enforces (records request, request for comment, other); every other kind
 comes from the profile. A kind's <strong>risk tier</strong> comes from
 the profile and an action's is set by a member; a filing is governed by
 the stricter, and an undetermined tier is never read as Tier 1.</li>
-<li>An action's <strong>addressee</strong> and the person who owes a
-duty are different: an action about a person's statutory duty is
-addressed to the office that enforces it.</li>
+<li>The <strong>links</strong> an action uses, in State Rules' closed
+vocabulary: <code>action_basis</code> (an action → the inquiry,
+determination or information it rests on or advances),
+<code>responds_to</code> (a reply → the action), <code>references</code>
+(a finding of non-response → the action), <code>arose_from</code> (a
+matter or project → the response it arose from, read both ways),
+<code>cures</code> (a later act → the determination it cures), and an
+action's <code>partners</code>; an escalation's states include
+<strong>stopped pursuing</strong>.</li>
 </ul>
-<h2 id="7-not-yet">7. Not yet</h2>
+<h2 id="7-words-and-screens">7. Words and screens</h2>
+<p>The member word for what a plan addresses is
+<strong>"Matters"</strong> (DEC-114): the plan page's heading and add
+button, the options' tags, the start preview, queue items and the
+glossary; "Subject" keeps its one member-facing meaning, an entity on
+the Subjects screen. The approved plan page, the start-and-send sketch
+(its content, step order and wording) and the Tier 2 filing draft and
+Tier 3 counsel packet panels bind the redesign; look and layout stay
+Design's; where a bound sketch predates a later ruling, the ruling wins
+(DEC-115).</p>
+<h2 id="8-not-yet">8. Not yet</h2>
 <p>Certification of an output by a licensed professional, and with it
 court-petition templates; compensation claims for formal parties; and
 the question "if this finding holds, what could we do, and what else
 would have to be true?" each wait until a group needs them.</p>
-<h1
-id="actions-a-capability-ladder-draft-section-for-bio_capability_ladders_v0_1md">ACTIONS:
-a capability ladder (draft section for
+<h2 class="doc" id="9a-actions-draft-section-for-bio_capability_ladders_v0_1md">§9A.
+ACTIONS (draft section for
 <code>BIO_Capability_Ladders_v0_1.md</code>)</h2>
-<p><strong>Status</strong> · DRAFT for Bob's approval with
-<code>BIO_Action_v0_2.md</code>, written 2026-10-11 by ACTIONS-DESIGN
-#2. BOB places it as a new section after the existing constructs'
-ladders. Its needs register is the actions lane's twenty use cases
-(<code>docs/development/actions-design/research/S1-synthesis.md</code>
-§A, traced in <code>U1</code>–<code>U20</code>).</p>
-<p><strong>Purpose.</strong> How far Civicsmith carries a group from
-deciding to act to knowing how it ended, for both kinds of member,
-without ever deciding for them or speaking for policy.</p>
+<p><strong>Placement (BOB, on Bob's approval with
+<code>BIO_Action_v0_2.md</code>).</strong> Inserted after §9 QUESTIONS.
+The document's title gains "and actions"; §1's list of needs registers
+gains §9A.2; an "Amended" line is added under the Status: "Amended
+2026-10-<n> (K<n>; <code>BIO_Action_v0_2.md</code>): §9A ACTIONS added,
+from the actions design (<code>docs/development/actions-design/</code>),
+Bob's rulings Actions D1–D24, D11a, D11b, D16a."</p>
+<h2 id="9a-actions">9A. ACTIONS</h2>
+<p><em>Added 2026-10-11 from the actions design
+(<code>docs/development/actions-design/DESIGN.md</code>; use cases
+<code>research/U1</code>–<code>U20</code>; synthesis
+<code>research/S1-synthesis.md</code>). Each rung is re-verified when
+its tranche is planned.</em></p>
+<h3 id="9a1-purpose">9A.1 Purpose</h3>
+<p>Bob, 2026-10-09: "we need to dive every bit as deeply into the
+requirements, current capabilities, additional capabilities needed,
+design, and use cases of Actions" as for investigations, so that
+Civicsmith supports members "throughout the action plan to the greatest
+and most appropriate extents possible" (investigation D43). This
+construct holds how far Civicsmith carries a group from deciding to act
+to knowing how it ended, for members who use the assistant and members
+who don't, without ever deciding for them or speaking for a policy
+(<code>BIO_Action_v0_2.md</code>).</p>
+<h3 id="9a2-needs-register">9A.2 Needs register</h3>
+<p>(Use cases U1–U20, traced with practice, law, today's product and the
+gap.)</p>
 <table>
 <thead>
 <tr class="header">
+<th>id</th>
+<th>need</th>
+<th>in a member's words</th>
+<th>centrality</th>
 <th>rung</th>
-<th>what a member can do</th>
-<th>needs</th>
-<th>stands on</th>
+<th>evidence</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td><strong>A1 · Record</strong></td>
-<td>record an action to a real office, what was sent and received, and
-how it ended</td>
-<td>registry addressee; correspondence; resolution (built)</td>
-<td>ORGANISATIONS L2, TIME L2</td>
+<td>AC1</td>
+<td>Address a real office and record what was sent, received and how it
+ended</td>
+<td>"We sent the Clerk our request on the 3rd; they answered in
+part."</td>
+<td>core</td>
+<td>L0</td>
+<td>U1, U6, U13; actions R63; S1 §D 1</td>
 </tr>
 <tr class="even">
-<td><strong>A2 · Reach</strong></td>
-<td>everything built, on screens: plan, determinations,
-prepare/approve/send, clocks and reminders, escalation, packet, hold;
-queue items answered where they appear</td>
-<td>screens (UX); queue doors; affordances</td>
-<td>A1</td>
+<td>AC2</td>
+<td>Reach every built act from a screen; answer a to-do where it
+appears</td>
+<td>"The queue says the date passed; let me reply to it here."</td>
+<td>core</td>
+<td>L1</td>
+<td>all twenty; S1 §D 4, §D 12</td>
 </tr>
 <tr class="odd">
-<td><strong>A3 · Guided by the profile</strong></td>
-<td>computed dates with their law; approved starting texts; procedure
-guides; facts on trigger; next routes after each kind of reply; "no
-reply owed"; "our deadlines"</td>
-<td>profile data and schema; templates; guides</td>
-<td>A2, LAW L2, TIME L3</td>
+<td>AC3</td>
+<td>Dates computed from the law, with their citation, in the office's
+local day</td>
+<td>"When is the City late, and under which law?"</td>
+<td>core</td>
+<td>L2</td>
+<td>U1, U7, U19; K1431, K1657</td>
 </tr>
 <tr class="even">
-<td><strong>A4 · Checked</strong></td>
-<td>assertion classing; record check on all sent text; override grounds;
-window and quick route; checked-and-held; accepted findings; advocacy
-evidence check; election notice</td>
-<td>case-account check reused on outward text</td>
-<td>A3, Investigation §11</td>
+<td>AC4</td>
+<td>An approved starting text and a sourced guide, after choosing the
+act</td>
+<td>"I've never written a records request; what does it say?"</td>
+<td>core</td>
+<td>L2</td>
+<td>U18; D8</td>
 </tr>
 <tr class="odd">
-<td><strong>A5 · Responsive</strong></td>
-<td>responses recorded wherever found, in the office's terms, claim by
-claim; re-examination of the plan; new matters from infractions;
-pressure anywhere; hold notice; promises → duties; standing
-questions</td>
-<td>deterministic re-examination; duty proposals</td>
-<td>A4, COURTS L3, QUESTIONS L5</td>
+<td>AC5</td>
+<td>The next routes after a reply, in the law's order</td>
+<td>"They denied it; what can we do now?"</td>
+<td>regular</td>
+<td>L2</td>
+<td>U1; S1 §C 2</td>
 </tr>
 <tr class="even">
-<td><strong>A6 · Complete endings</strong></td>
-<td>curing act; harm statement; stopped pursuing; closing summary;
-success record; recognition; watch end dates; where it stands; take up;
-status reports</td>
-<td></td>
-<td>A5</td>
+<td>AC6</td>
+<td>The group's own deadlines to a venue; a body that owes no reply</td>
+<td>"We're a party now; when must we serve?"</td>
+<td>occasional</td>
+<td>L2</td>
+<td>U5, U6; D15; S1 §C 8</td>
 </tr>
 <tr class="odd">
-<td><strong>A7 · Together</strong></td>
-<td>partners; joint approval with matching fingerprints; sign-ons;
-breach claims on accepted findings</td>
-<td>case import and acceptance (DEC-96)</td>
-<td>A6</td>
+<td>AC7</td>
+<td>Asking kept apart from asserting; the record check on everything
+sent</td>
+<td>"Can we ask the Auditor to look without accusing anyone?"</td>
+<td>core</td>
+<td>L3</td>
+<td>U3, U11; D1, D2</td>
 </tr>
 <tr class="even">
-<td><strong>A8 · Assisted</strong> (beside every rung, where
-enabled)</td>
-<td>AI proposals at each rung: options, drafts, reading replies, claim
-bearings, status drafts; never positions</td>
-<td>agent-worker modes</td>
-<td>each rung</td>
+<td>AC8</td>
+<td>Act before the window closes without lowering the standard</td>
+<td>"We have 30 days to send a Brown Act demand."</td>
+<td>regular</td>
+<td>L3</td>
+<td>U7, U20; D3, D18, D24</td>
+</tr>
+<tr class="odd">
+<td>AC9</td>
+<td>A breach claim on a checked case or on another group's accepted
+findings</td>
+<td>"Our case is ready but we're holding it to negotiate."</td>
+<td>regular</td>
+<td>L3</td>
+<td>U14, U20; D16, D23, D24</td>
+</tr>
+<tr class="even">
+<td>AC10</td>
+<td>Advocacy checked against the evidence and nothing more</td>
+<td>"Does our flyer say anything the record doesn't support?"</td>
+<td>occasional</td>
+<td>L3</td>
+<td>U11; D11</td>
+</tr>
+<tr class="odd">
+<td>AC11</td>
+<td>A response recorded wherever it appears, and the plan
+re-examined</td>
+<td>"The City's statement was in the paper; what changes for us?"</td>
+<td>core</td>
+<td>L4</td>
+<td>U2, U10, U16; D20, D21</td>
+</tr>
+<tr class="even">
+<td>AC12</td>
+<td>Pressure recorded, a hold placed and members told what to keep</td>
+<td>"Their lawyer threatened to sue us."</td>
+<td>occasional</td>
+<td>L4</td>
+<td>U15; D10</td>
+</tr>
+<tr class="odd">
+<td>AC13</td>
+<td>Promises adopted as duties and watched</td>
+<td>"They promised to finish by June."</td>
+<td>regular</td>
+<td>L4</td>
+<td>U13, U16; D7</td>
+</tr>
+<tr class="even">
+<td>AC14</td>
+<td>Counsel briefed early, and for the group's defence</td>
+<td>"We want a lawyer to look before we decide."</td>
+<td>regular</td>
+<td>L4</td>
+<td>U8, U15, U20; D9</td>
+</tr>
+<tr class="odd">
+<td>AC15</td>
+<td>A breach that ends by a cure, with harm addressed honestly</td>
+<td>"They fixed it with a new resolution in 2028."</td>
+<td>core</td>
+<td>L5</td>
+<td>U9, U16; D5</td>
+</tr>
+<tr class="even">
+<td>AC16</td>
+<td>Stopping without winning, and saying so</td>
+<td>"The grand jury took it over; we'll follow their report."</td>
+<td>regular</td>
+<td>L5</td>
+<td>U9, U16; D6a</td>
+</tr>
+<tr class="odd">
+<td>AC17</td>
+<td>What came of the plan, and success recorded</td>
+<td>"What did all this achieve?"</td>
+<td>regular</td>
+<td>L5</td>
+<td>U12, U16; D6b, D6c</td>
+</tr>
+<tr class="even">
+<td>AC18</td>
+<td>A newcomer picks up where things stand</td>
+<td>"Maria left; what's due and why?"</td>
+<td>regular</td>
+<td>L5</td>
+<td>U17; D14</td>
+</tr>
+<tr class="odd">
+<td>AC19</td>
+<td>Act with partner groups on one text</td>
+<td>"The tenants' union wants to sign on."</td>
+<td>occasional</td>
+<td>L5</td>
+<td>U14; D16</td>
+</tr>
+<tr class="even">
+<td>AC20</td>
+<td>Any state, from its own sourced profile</td>
+<td>"The same request, but in Houston."</td>
+<td>occasional</td>
+<td>L2</td>
+<td>U19; D8</td>
 </tr>
 </tbody>
 </table>
-<p>Later rungs, planned: court-petition templates (await licensed
-certification, Action §7 (4)); intervenor compensation (D15 (c)); "if
-this finding holds, what could we do" condition layout (D-165); a body's
-pattern of late replies across requests (TIME L4).</p>
-<p><strong>Interfaces.</strong> Reads ORGANISATIONS (addressee,
-oversight lines), LAW (standards, profile rules), TIME
-(<code>civil-time</code>, duties), EVENTS (meetings, minutes), COURTS
-(reports, orders), QUESTIONS (standing questions); writes nothing below
-layer 9; the signing view reads open requests for comment through a
-registration seam (P4; H17).</p>
+<h3 id="9a3-the-ladder">9A.3 The ladder</h3>
+<table>
+<thead>
+<tr class="header">
+<th>rung</th>
+<th>a member can</th>
+<th>example</th>
+<th>state on 2026-10-11</th>
+<th>planned tranche</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>L0 Recorded</td>
+<td>Record an action to an office, its correspondence and its
+resolution</td>
+<td>"Records request to the City Clerk, sent 3 Oct, partly granted 28
+Oct."</td>
+<td><strong>Usable today, thin</strong> (old interface; addressee only
+"undetermined")</td>
+<td>after the lane's requirements hand-off</td>
+</tr>
+<tr class="even">
+<td>L1 Reached</td>
+<td>Use everything built through screens: plans, determinations,
+preparing and sending, clocks and reminders, escalation, the packet,
+holds; answer to-dos where they appear</td>
+<td>"From the action: prepare the follow-up, set a reminder, open the
+escalation."</td>
+<td><strong>Built, no screen</strong></td>
+<td>with the UX stream's action screens (N821)</td>
+</tr>
+<tr class="odd">
+<td>L2 Guided</td>
+<td>Computed dates with their law; approved starting texts and guides;
+facts on their trigger; next routes; the group's own deadlines; any
+state's profile</td>
+<td>"Due 17 Oct (10 days, Gov. Code §7922.535); template 'Records
+request (CPRA + Sunshine)'."</td>
+<td><strong>Not built</strong> (rules partly built; no templates, guides
+or most profile facts)</td>
+<td>BOB's</td>
+</tr>
+<tr class="even">
+<td>L3 Checked</td>
+<td>Asking vs asserting; the record check on what is sent; override
+grounds; the window and quick route; checked-and-held and accepted
+findings; the advocacy evidence check; the election notice</td>
+<td>"2 sentences assert a breach; 1 contradicted by finding F-12."</td>
+<td><strong>Not built</strong> (the case-account check exists for
+cases)</td>
+<td>BOB's</td>
+</tr>
+<tr class="odd">
+<td>L4 Responsive</td>
+<td>Responses recorded wherever found, claim by claim; the plan
+re-examined; new matters from responses; pressure and holds anywhere;
+promises adopted as duties; counsel at any stage</td>
+<td>"Reply recorded: the 30-day window now closes 27 Nov; 2 options
+marked."</td>
+<td><strong>Partly built, not reachable</strong> (correspondence, holds,
+duties)</td>
+<td>BOB's</td>
+</tr>
+<tr class="even">
+<td>L5 Complete and together</td>
+<td>Cures, harm statements, stopped pursuing, closing summaries, success
+records, recognition, watch end dates, where it stands, taking up;
+partners, joint approval, sign-ons</td>
+<td>"Escalation ended at stage 4: cured by Resolution 2028-031; harm
+mitigated."</td>
+<td><strong>Not built</strong></td>
+<td>BOB's</td>
+</tr>
+</tbody>
+</table>
+<h3 id="9a4-rungs-in-the-first-stages">9A.4 Rungs in the first
+stages</h3>
+<p>Bob's decisions these rungs rest on: §9A.8.</p>
+<p><strong>L0 and L1.</strong></p>
+<ul>
+<li><em>Design:</em> the addressee from the registry by role
+(ORGANISATIONS L2), never a typed name; screens for every built act, the
+affordances deriving each act an action offers; queue to-dos answered by
+their own reply (<code>BIO_Action_v0_2.md</code> rules 1, 7).</li>
+<li><em>The AI's part:</em> proposes options and drafts, labelled
+(already built).</li>
+<li><em>The member decides:</em> every act.</li>
+<li><em>Measure first:</em> which of the twenty use cases a member
+completes end to end on the new screens.</li>
+</ul>
+<h3 id="9a5-patterns-of-application">9A.5 Patterns of application</h3>
+<p>Responses across a group's actions to one body (late, partial,
+silent) are shown as facts with their counts and dates; a pattern across
+requests is TIME L4's, never a verdict.</p>
+<h3 id="9a6-later-rungs-planned">9A.6 Later rungs, planned</h3>
+<p><strong>L2: guided.</strong> Profile rules, venue facts,
+<code>response_statuses</code> quoted beside the fixed outcomes,
+templates under the template process, sourced guides, member-drafted
+rules with a second member's confirmation and, for Tier 2–3, a recorded
+professional review; schema for other states now, data when a group
+asks. <em>Risks:</em> encoded law going stale (cited, versioned, adopted
+by members). <strong>L3: checked.</strong> The case-account check
+applied to outward text; the assertion phrasings held per language and
+extendable by a profile; the override's two grounds; held and accepted
+findings as bases for a determination. <em>Risks:</em> over-flagging
+(members resolve; nothing is refused for wording alone). <strong>L4:
+responsive.</strong> A deterministic re-examination on every recorded
+response, AI where enabled within the recording member's settings and
+limits; <code>arose_from</code> links; pressure marks readable across
+actions, docket and testimony. <strong>L5: complete and
+together.</strong> Cures, stopped pursuing, closing summaries, success
+records, watch end dates, taking up; partners and joint approval with
+matching fingerprints (case import and acceptance, DEC-96). <em>What
+waits, and why:</em> court-petition templates (licensed certification,
+not yet); compensation claims for formal parties (until a group asks);
+"if this finding holds, what could we do" (deferred, D-165).</p>
+<h3 id="9a7-interfaces">9A.7 Interfaces</h3>
+<table>
+<thead>
+<tr class="header">
+<th>construct</th>
+<th>ACTIONS needs from it</th>
+<th>ACTIONS supplies to it</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ORGANISATIONS</td>
+<td>offices by role, oversight lines, holders on a date</td>
+<td>addressees acted on</td>
+</tr>
+<tr class="even">
+<td>LAW / STANDARDS</td>
+<td>standards held in the record; profile rules</td>
+<td>determinations against them</td>
+</tr>
+<tr class="odd">
+<td>TIME</td>
+<td><code>civil-time</code>; duties and occurrences; due-date bases</td>
+<td>clock entries; the group's own deadlines</td>
+</tr>
+<tr class="even">
+<td>EVENTS</td>
+<td>meetings, agenda items, minutes</td>
+<td>what the group said and did, beside them</td>
+</tr>
+<tr class="odd">
+<td>COURTS</td>
+<td>reports and their required responses; proceedings</td>
+<td>proceedings linked to actions</td>
+</tr>
+<tr class="even">
+<td>QUESTIONS</td>
+<td>standing questions ("tell me if they miss this date")</td>
+<td>the action's dates to watch</td>
+</tr>
+<tr class="odd">
+<td>Publication (layer 8)</td>
+<td>published, checked-and-held and accepted findings; the docket</td>
+<td>dated outcome entries and responses written to the docket by a
+member's act (layer 9 calling layer 8); open requests for comment at
+signing through a registration seam</td>
+</tr>
+</tbody>
+</table>
+<h3 id="9a8-decisions-all-ruled">9A.8 Decisions, all ruled</h3>
+<p>Actions D1–D24, D11a, D11b and D16a (Bob, 2026-10-09 and 2026-10-11),
+recorded in <code>docs/development/actions-design/DECISIONS.md</code>,
+with BOB's K rulings at placement.</p>
 
 </main>
