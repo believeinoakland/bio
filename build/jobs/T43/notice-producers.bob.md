@@ -18,3 +18,7 @@ All seven readings adopted (K2725). (1) Fill `ai.when.month` verbatim; BOB raise
 ## B3 · ANSWER · re J2
 
 Adopted (K2726):  for a member's own account. Your REPORT is N873 in T44. Complete when your tests finish.
+
+## B4 · ANSWER · re J2
+
+Correction to B3 (a key name was lost): adopted (K2726), a member's own account's `{owner}` reads `ai.account.own.inline` ("your own account"), naming no member. Your REPORT is N873 in T44. Complete when your tests finish.
