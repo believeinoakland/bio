@@ -33,7 +33,7 @@ It is the only module marked `legacy` in `modules.json`.
 ## Entries
 
 ### L1
-- **T45-1 · jurisdictions** · (N858, N861, N882; N893) the profile schema: R74–R84 new, R85 (the first profile's sourced data; M-T45-1, -2) · `draft-T45-lower.md` §7 · plus, from the reconciliation (R6, R7 below): R86 `phrasings` (R6), an `action_kinds` entry's `shape` (`recognition`), `delivery_point` among `VENUE_FACTS` (R82), each R81 template carrying its own `name`, a `deadlines` entry's `defends: true`, R80 items' optional `after` (outcomes) · req: R74–R86.
+- **T45-1 · jurisdictions** · (N858, N861, N882; N893) the profile schema: R74–R84 new, R85 (the first profile's sourced data; M-T45-1, -2) · `draft-T45-lower.md` §7 · plus, from the reconciliation (R6, R7 below): R86 `phrasings` (R6), an `action_kinds` entry's `shape` (`recognition`), `delivery_point` among `VENUE_FACTS` (R82), each R81 template carrying its own `name`, a `deadlines` entry's `defends: true`, R80 items' optional `after` (outcomes) · req: R74–R87 (R86 `phrasings`, R87 the reconciliation fields, folded K2785).
 
 ### L2
 - **T45-2 · membership** · (N893; Actions D4) R128 `registerProjectActGuard` · lower §1.2; and (K657) R83's `MODULE_ORDER` gains `case-check` (L8, after `review`), `action-holds` (L9, after `actions`), `action-replies` (L9, after `action-clocks`), `plan-work` (L9, after `action-plans`) and `action-producers` (L11, after `machinery-producers`), in the act that adds them to `modules.json` at the opening.
