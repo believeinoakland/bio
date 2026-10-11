@@ -13,3 +13,7 @@ Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 330 KB with your tests, under the 600 KB limit: read it all whole.
 Merge order in L5: events, local-facts, standards, duties (`modules.json` order; each independent of the others' T45 change except duties after standards).
+
+## B2 · ANSWER · re J1
+
+(a), as you recommend (K2807): the edge local-facts → provenance is in modules.json and your Uses on tranche/T45; R10's text unchanged. Your detail readings stand. Merge tranche/T45 for the edge.
