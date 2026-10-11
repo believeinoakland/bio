@@ -20,6 +20,6 @@ No generated artifact made stale beyond the plane bundle (rule 4 (10)). `modules
 - `format: 147 modules, 146 requirements files; 0 failures`
 - `architecture: 17 product files, 102 relative imports (0 naming no tracked file, not judged); 0 failures`
 - `coverage: 1 modules, 31 of 31 live requirement ids named by a test; 0 failures`
-- ownership: see the line below, run after the commit.
+- `ownership: 3 files changed by case-disclosures between tranche/T42 and HEAD; 0 failures`
 
 Size (session_011M1X1CKSmsRAQDvUbXrW5e): test runs 10, module lines 2387
