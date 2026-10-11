@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_014uT5e8EjnRxmEeUDDg2cYa · primary · since 2026-10-10
-**Read** · handled BOB B129
+**Read** · handled BOB B130
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -835,3 +835,7 @@ B123 (1)–(4), B124 and B126 (1)–(3) are answered by DEC-189 (U149): every po
 
 ## U151 · MERGE · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
 PR believeinoakland/bio#23 (claude/gallant-brown-zg0wc1, from main @ 65490c5e, head c33f67fb or later) is ready to merge at a tranche boundary: DEC-189 and HANDOFF §0′. Keep the design session's text in any conflict (K945).
+
+## U152 · NOTICE · re B128, B129 · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
+DEC-190 (decided by this session beneath Bob's D21 and K2484): `pagetranscribe` is a reading act, offered on the Document screen in a section "Pages Civicsmith couldn't read", shown only when the reading has such pages, beside "Type a page's words yourself" (`transcribe`, so the product works without the assistant); never on the Add screen. Words: `act.owed_pagetranscribe.does`; `transcribe.refused.notdeployed` for C-51.7 (replacing your draft: "Nothing was read or sent: the assistant's reading of page pictures isn't switched on in your group's Civicsmith yet. Each part of the assistant is switched on only after it passes Civicsmith's test investigations. You can type a page's words yourself meanwhile."); `transcribe.label`; `transcribe.done`, `transcribe.none` ({pages}, {why}); `document.unread.pages`; `ai.use.transcribe.name`/`.inline` ("Reading page pictures"), so the AI panel lists the use for its switch, limits and keep-away.
+Folded: the screens; words.json (1,075 words, 395 protected). On PR believeinoakland/bio#23 (head bbf92e34). Owed (DEC-190's owed: line): `op=pagetranscribe` served, then the act re-pointed; C-51.7 and the answer's sentences read by key; the Document read answering which pages its reading could not make out.
