@@ -1,6 +1,6 @@
 # plane (T44)
 
-**Status** · session_01Dwre5v9yYZxVWPCf2yNy66 · depth 2 · WORKING · handled B2
+**Status** · session_01Dwre5v9yYZxVWPCf2yNy66 · depth 2 · WORKING · handled B3
 
 **How the reading set was read (mechanics §17).** Read whole: `build/requirements/plane.md`; every file of `bio-plane/src/plane/` (`ask.mjs`, `door.mjs`, `index.mjs`, `screens.mjs`, `stats.mjs`, `store.mjs`, `transcribe.mjs`, `unpack.mjs`, `wiring.mjs`, `wizards.mjs`); every test under `bio-plane/test/m/plane/` (the 33 `.test.mjs`, `fixture.mjs`, `maps.mjs`; the two binary fixtures not read) and `test/system/migrate-released.test.mjs`; START's rulings K2716, K2719, K2726, K2731, K2736; DEC-191; `draft-T44.md` § N869. The used modules' public parts (pdf-pixels, with its R39 though private, control-plane, extraction, agent-worker, affordances, image-codecs, ai-use, store-door, op-declarations, notice-producers) and `build/layers.md`'s general rules and layer 11 were read in full by one helper agent in this session, which wrote a digest citing a section (and the code's file:line) for every statement (K2032); the sources stay binding.
 
