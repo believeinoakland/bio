@@ -18,3 +18,7 @@ inquiry R62's text gained its readings (K2648): an unchanged leg is the same pas
 ## B3 · ANSWER · re J1
 
 J1 (K2655): (1) routed to QUESTION-EXPLORER #2 by CHANGE (its fixture). (2) agreed: BOB sends a CHANGE as inquiry and basis-versions merge.
+
+## B4 · CHANGE
+
+inquiry (T42-12) is merged into tranche/T42 (K2660): R62's onMachinePassage and machinePassageUnchecked are real. Merge tranche/T42, drop any stand-in or guard, re-run, and post COMPLETE.
