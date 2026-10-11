@@ -253,6 +253,7 @@
      "label": "Start a project",
      "status": "declared",
      "modules": [
+      "basis-versions",
       "control-plane",
       "promotion"
      ]
@@ -844,6 +845,7 @@
      "label": "Open a question from a hint",
      "status": "declared",
      "modules": [
+      "basis-versions",
       "control-plane",
       "promotion"
      ]
@@ -1217,9 +1219,13 @@
      ]
     },
     {
-     "op": "owed:pagetranscribe K2611",
+     "op": "pagetranscribe",
      "label": "Have the assistant read pages",
-     "status": "owed"
+     "status": "declared",
+     "modules": [
+      "extraction",
+      "plane"
+     ]
     },
     {
      "op": "transcribe",
@@ -1333,6 +1339,7 @@
      "label": "Open a question",
      "status": "declared",
      "modules": [
+      "basis-versions",
       "control-plane",
       "promotion"
      ]
@@ -2017,6 +2024,7 @@
      "label": "Open a question from this chain",
      "status": "declared",
      "modules": [
+      "basis-versions",
       "control-plane",
       "promotion"
      ]
@@ -2722,8 +2730,8 @@
      "label": "Move into the record",
      "status": "declared",
      "modules": [
-      "capture",
       "control-plane",
+      "doorbell",
       "store-door"
      ]
     },
@@ -2759,9 +2767,9 @@
     {
      "op": "knock",
      "label": "Hand it over",
-     "status": "function",
+     "status": "declared",
      "modules": [
-      "capture"
+      "plane"
      ]
     }
    ],
