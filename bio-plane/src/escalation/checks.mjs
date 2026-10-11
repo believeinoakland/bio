@@ -136,10 +136,9 @@ export const ESCALATION_CHECKS = Object.freeze({
       + 'written.',
   },
   NOT_OPEN: {
-    check: 'C-116.27', where: at("refuseNotOpen", "is-escalation-open"),
-    translation: 'The escalation is not open for that. Its stage moves only while it is open: a suspended one is resumed '
-      + 'first, and one the group stopped pursuing is reopened first. An ended one never moves again, and one already '
-      + 'stopped is not stopped twice. Nothing was written.',
+    check: 'C-116.27', where: at("#edgeArgs", "is-edge-open"),
+    translation: 'The escalation\'s stage moves only while it is open. A suspended one is resumed first; an ended one '
+      + 'never moves again. Nothing was written.',
   },
   ILLEGAL_STAGE: {
     check: 'C-116.28', where: at("#edgeArgs", "is-edge-legal"),
@@ -219,15 +218,6 @@ export const ESCALATION_CHECKS = Object.freeze({
     check: 'C-116.46', where: at("declineToEscalate", "is-decline-member"),
     translation: 'Recording that the group is not pursuing a breach is a member\'s act, in the member\'s own words. An '
       + 'assistant may point out a breach; it may not decline it. Nothing was written.',
-  },
-  MACHINE_CANNOT_STOP: {
-    check: 'C-116.47', where: at("#stopArgs", "is-stop-member"),
-    translation: 'Stopping the pursuit of an escalation, or reopening it, is a member\'s decision, with the member\'s '
-      + 'reason. An assistant may point out that nothing is moving; it may not stop or reopen one. Nothing was written.',
-  },
-  NOT_STOPPED: {
-    check: 'C-116.48', where: at("escalationReopen", "is-reopen-stopped"),
-    translation: 'This escalation was not stopped, so there is nothing to reopen. Nothing was written.',
   },
   PROVIDER_UNAVAILABLE: {
     check: 'C-116.44', where: at("refuseProviderUnavailable", "is-provider-present"),

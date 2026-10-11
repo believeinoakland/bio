@@ -98,14 +98,7 @@ export const ACCOUNTABILITY_PURPOSES = Object.freeze(["official_request", "overs
 /** R12: the lines by which an office oversees another, and the line from an office to the organisation it is in. */
 export const OVERSIGHT_KINDS = Object.freeze(["oversees", "appoints"]);
 /** R30: the escalation's own acts, as the timeline's "what we did" lane names them (the log's kinds). */
-export const TIMELINE_KINDS = Object.freeze(["open", "advance", "attach", "evaluate", "decline", "suspend", "resume", "end",
-  "stopped_pursuing", "reopened"]);
-/** R31: the state a member sets when the group stops pursuing an escalation, beside `open`, `suspended`, `ended`. */
-export const STOPPED = "stopped_pursuing";
-/** R1, R27, R31: the states in which an escalation of a determination still stands (one at a time). */
-const STANDING = Object.freeze(["open", "suspended", STOPPED]);
-/** R18, R21: the log's kinds that move the escalation's state. */
-const STATE_KINDS = Object.freeze(["open", "suspend", "resume", "end", STOPPED, "reopened"]);
+export const TIMELINE_KINDS = Object.freeze(["open", "advance", "attach", "evaluate", "decline", "suspend", "resume", "end"]);
 /** R30: the lane's bound when the timeline states none, and its most (events R27's clamp). */
 export const TIMELINE_LIMIT = 100;
 export const TIMELINE_MAX = 500;
@@ -779,8 +772,7 @@ export class Escalation {
     const attached = this.#attachments(e.id);
     const seen = this.#sight(attached, viewer);
     const { triggers, notes } = this.#triggers(e, at, viewer, seen);
-    /* R31: a stopped escalation proposes nothing; its triggers are answered as facts of the record. */
-    const proposed = e.state === STOPPED ? [] : this.#proposed(e, triggers, at);
+    const proposed = this.#proposed(e, triggers, at);
     /* R4: the actor's office entity, which stage 2's notice and stage 7's targets read. */
     const d = this.conformance.determinationRead({ id: e.determination, viewer });
     const actor = d && d.ok !== false ? this.#actor(d, viewer)
@@ -797,10 +789,6 @@ export class Escalation {
     if (e.state === "suspended")
       answer.suspended = { since: e.stateSince, says: "suspended: its proposals are not reported as due, its clocks keep "
                            + "running in the actions, and it is not ended" };
-    if (e.state === STOPPED)
-      answer.stopped = { since: e.stateSince, stage: e.stage, says: "stopped pursuing: the group decided to stop pursuing "
-                         + "this escalation. It proposes nothing, it is not ended and it is not a success; a member may reopen "
-                         + "it at this stage" };
     if (e.state === "ended") answer.ended = { at: e.stateSince, says: "ended: compliance was restored and the consequences addressed" };
     if (e.stage === 7) answer.targets = this.#targets(actor, dayOf(at), viewer);
     if (e.stage === 5) {
@@ -881,7 +869,7 @@ export class Escalation {
     const from = held ? held.log_len : 0;
     const open = log.find((x) => x.kind === "open") || {};
     const stageAt = log.filter((x) => x.kind === "open" || x.kind === "advance").at(-1) || open;
-    const stateAt = log.filter((x) => STATE_KINDS.includes(x.kind)).at(-1) || open;
+    const stateAt = log.filter((x) => ["open", "suspend", "resume", "end"].includes(x.kind)).at(-1) || open;
     this.#rows(`INSERT OR REPLACE INTO escalations (escalation_id, project_id, determination_id, act_id, standards_json,
                 state, stage, stage_since, state_since, opened_by, opened_at, opened_reason, log_len)
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
@@ -891,7 +879,7 @@ export class Escalation {
       String(fm.current_state ?? "open"), Number(fm.stage ?? 1), stageAt.at ?? "", stateAt.at ?? "",
       open.author ?? "", open.at ?? "", typeof open.reason === "string" ? open.reason : null, log.length);
     for (const x of log.filter((y) => y.seq > from)) {
-      if (x.kind === "advance" || STATE_KINDS.includes(x.kind))
+      if (["open", "advance", "suspend", "resume", "end"].includes(x.kind))
         this.#rows(`INSERT OR REPLACE INTO escalation_moves (escalation_id, seq, kind, from_stage, to_stage, reason,
                     trigger_json, author, at) VALUES (?,?,?,?,?,?,?,?,?)`,
           id, x.seq, x.kind, x.from ?? null, x.to ?? null, x.reason ?? null, json(x.trigger), x.author, x.at);
@@ -957,14 +945,13 @@ export class Escalation {
       return refusal("ESCALATION_NOT_A_PARTICIPANT", "an escalation is opened, or declined, by a member who has joined the "
                      + "determination's project. Nothing was written.", { project, membership: fence.reason });
     /* END DEC-49 REGION is-open-joined */
-    const held = this.#one(`SELECT escalation_id FROM escalations WHERE determination_id=? AND state IN (${STANDING.map(() => "?").join(",")})
-                            ORDER BY escalation_id LIMIT 1`, determination, ...STANDING);
+    const held = this.#one(`SELECT escalation_id FROM escalations WHERE determination_id=? AND state IN ('open','suspended')
+                            ORDER BY escalation_id LIMIT 1`, determination);
     /* DEC-49 REGION is-one-escalation */
     if (held)
       return refusal("ALREADY_OPEN", `the escalation ${held.escalation_id} of this determination is not ended; there is `
-                     + "one open, suspended or stopped escalation per determination (a stopped one is reopened, never "
-                     + "replaced), and no decline to escalate is recorded while it stands. Nothing was written.",
-                     { escalation: held.escalation_id });
+                     + "one open or suspended escalation per determination, and no decline to escalate is recorded while "
+                     + "it stands. Nothing was written.", { escalation: held.escalation_id });
     /* END DEC-49 REGION is-one-escalation */
     return { ok: true, d, pursued, project, reason: str(reason) };
   }
@@ -1144,7 +1131,11 @@ export class Escalation {
     if (judged) return judged;
     const e = this.#row(id, viewer);
     if (!e) return refuseNoSuchEscalation();
-    if (e.state !== "open") return refuseNotOpen(e.state, "its stage moves only while it is open");
+    /* DEC-49 REGION is-edge-open */
+    if (e.state !== "open")
+      return refusal("NOT_OPEN", `this escalation is ${e.state}; its stage moves only while it is open. Nothing was written.`,
+                     { state: e.state });
+    /* END DEC-49 REGION is-edge-open */
     const bad = refuseReason(reason);
     if (bad) return bad;
     const target = typeof to === "string" && /^\d$/.test(to) ? Number(to)
@@ -1213,8 +1204,6 @@ export class Escalation {
     if (e.state === "ended")
       return refusal("ALREADY_ENDED", "this escalation has ended; an ended escalation is never reopened. Nothing was written.");
     /* END DEC-49 REGION is-end-once */
-    /* R31: a stopped escalation is never ended; it is reopened first, and ends only by R14's two conditions. */
-    if (e.state === STOPPED) return refuseNotOpen(e.state, "a stopped escalation is never ended; it is reopened first");
     const c = this.#compliance(e, viewer);
     /* DEC-49 REGION is-compliance-restored */
     if (c.state !== "met")
@@ -1255,7 +1244,6 @@ export class Escalation {
       return refusal("ALREADY_SUSPENDED", `this escalation has been suspended since ${e.stateSince}; it is resumed before it is `
                      + "suspended again. Nothing was written.", { since: e.stateSince });
     /* END DEC-49 REGION is-suspend-once */
-    if (e.state === STOPPED) return refuseNotOpen(e.state, "a stopped escalation is reopened, not suspended");
     const bad = refuseReason(reason);
     if (bad) return bad;
     const entry = { kind: "suspend", from: e.stage, reason: str(reason), author, at: this.now() };
@@ -1286,60 +1274,6 @@ export class Escalation {
     const w = this.#append(e, entry, { state: "open", blurb: "Escalation resumed" });
     if (!w.ok) return w;
     return { ok: true, id: e.id, state: "open", stage: e.stage, author, at: entry.at };
-  }
-
-  /** R31: the group stops pursuing an escalation, open or suspended, with a member's reason: its state becomes
-   *  `stopped_pursuing` at the stage it stands at. It is never ended and never a success; it proposes nothing until a
-   *  member reopens it (R2, R16). */
-  escalationStopPursuing(args = {}) {
-    const { reason, author } = args;
-    const s = this.#stopArgs(args, "escalationStopPursuing");
-    if (!s.ok) return s;
-    const { e } = s;
-    if (e.state !== "open" && e.state !== "suspended")
-      return refuseNotOpen(e.state, "only an open or suspended escalation is stopped; an ended one never moves, and a stopped one is not stopped twice");
-    const bad = refuseReason(reason);
-    if (bad) return bad;
-    const entry = { kind: STOPPED, from: e.stage, reason: str(reason), author, at: this.now() };
-    const w = this.#append(e, entry, { state: STOPPED, blurb: "Stopped pursuing" });
-    if (!w.ok) return w;
-    return { ok: true, id: e.id, state: STOPPED, stage: e.stage, reason: entry.reason, author, at: entry.at,
-             says: "stopped pursuing: not ended and not a success. It proposes nothing until a member reopens it." };
-  }
-
-  /** R31: a stopped escalation returned to `open` at the stage where it stopped, with a member's reason. */
-  escalationReopen(args = {}) {
-    const { reason, author } = args;
-    const s = this.#stopArgs(args, "escalationReopen");
-    if (!s.ok) return s;
-    const { e } = s;
-    /* DEC-49 REGION is-reopen-stopped */
-    if (e.state !== STOPPED)
-      return refusal("NOT_STOPPED", `this escalation is ${e.state}, not stopped, so there is nothing to reopen. Nothing was written.`,
-                     { state: e.state });
-    /* END DEC-49 REGION is-reopen-stopped */
-    const bad = refuseReason(reason);
-    if (bad) return bad;
-    const entry = { kind: "reopened", from: e.stage, reason: str(reason), author, at: this.now() };
-    const w = this.#append(e, entry, { state: "open", blurb: "Reopened" });
-    if (!w.ok) return w;
-    return { ok: true, id: e.id, state: "open", stage: e.stage, reason: entry.reason, author, at: entry.at };
-  }
-
-  /* R31: what stopping and reopening both ask first: a member (MACHINE_CANNOT_STOP for both), no judgment (R19), an
-     escalation the viewer may see. */
-  #stopArgs(args, act) {
-    const { id, author, viewer } = args;
-    /* DEC-49 REGION is-stop-member */
-    if (isMachine(author))
-      return refusal("MACHINE_CANNOT_STOP", `${act === "escalationReopen" ? "reopening" : "stopping"} the pursuit of an `
-                     + "escalation is a named member's decision, with a reason; a machine prepares and never acts. Nothing was written.");
-    /* END DEC-49 REGION is-stop-member */
-    const judged = refuseJudgment(args);
-    if (judged) return judged;
-    const e = this.#row(id, viewer);
-    if (!e) return refuseNoSuchEscalation();
-    return { ok: true, e };
   }
 
   /** R16: every open escalation with a proposed edge not advanced or declined since its trigger was met, oldest first. */
@@ -1657,8 +1591,6 @@ function timelineLabel(id, x) {
     case "decline": return `Escalation ${id}: the move from ${st(x.from)} to ${st(x.to)} declined for now`;
     case "suspend": return `Escalation ${id} suspended at ${st(x.from)}`;
     case "resume": return `Escalation ${id} resumed at ${st(x.from)}`;
-    case STOPPED: return `Escalation ${id}: the group stopped pursuing it at ${st(x.from)}`;
-    case "reopened": return `Escalation ${id} reopened at ${st(x.from)}`;
     default: return `Escalation ${id} ended`;
   }
 }
@@ -1673,13 +1605,6 @@ export function refuseNoSuchEscalation() {
   return refusal("NO_SUCH_ESCALATION", "no escalation answers to that id here; one in a project you may not see is "
     + "answered exactly as one that does not exist.");
   /* END DEC-49 REGION is-escalation-seen */
-}
-
-/** R13, R31: an act that needs the escalation open (an edge) or standing (a stop) refused for its state, naming it. */
-export function refuseNotOpen(state, why) {
-  /* DEC-49 REGION is-escalation-open */
-  return refusal("NOT_OPEN", `this escalation is ${state}: ${why}. Nothing was written.`, { state });
-  /* END DEC-49 REGION is-escalation-open */
 }
 
 /** R14: an ended escalation is never reopened, so nothing is added to it. */
@@ -1736,8 +1661,7 @@ class ProviderAbsent extends Error {
 /* Every service answers PROVIDER_UNAVAILABLE, rather than throwing or answering in part, when a provider it reads is
    absent (K248). */
 for (const name of ["escalationOpen", "escalationRead", "escalationAttach", "escalationEvaluate", "escalationAdvance",
-                    "escalationDecline", "escalationEnd", "escalationSuspend", "escalationResume", "escalationStopPursuing",
-                    "escalationReopen", "escalationsDue",
+                    "escalationDecline", "escalationEnd", "escalationSuspend", "escalationResume", "escalationsDue",
                     "escalationsFor", "declineToEscalate", "escalationStatus", "escalationReasonDraft", "timelineSource"]) {
   const f = Escalation.prototype[name];
   Object.defineProperty(Escalation.prototype, name, { configurable: true, writable: true, value: function (...a) {

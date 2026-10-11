@@ -216,8 +216,7 @@ test("R30 escalation registers once with events.registerEventSource at start; fo
   assert.deepEqual(all.items.map((x) => x.kind), history.map((h) => h.kind));
   assert.deepEqual(all.items.map((x) => x.at), history.map((h) => h.at));
   assert.ok(all.items.every((x) => x.ref === w.E && Object.keys(x).sort().join() === "at,kind,label,public,ref" && x.public === true));
-  assert.deepEqual([...new Set(all.items.map((x) => x.kind))].sort(),
-                   TIMELINE_KINDS.filter((k) => k !== "stopped_pursuing" && k !== "reopened").sort());
+  assert.deepEqual([...new Set(all.items.map((x) => x.kind))].sort(), [...TIMELINE_KINDS].sort());
   const label = (k) => all.items.find((x) => x.kind === k).label;
   assert.equal(label("open"), `Escalation ${w.E} opened at stage 1 (documentation)`);
   assert.equal(all.items.filter((x) => x.kind === "advance")[0].label, `Escalation ${w.E} advanced from stage 1 (documentation) to stage 2 (notification)`);

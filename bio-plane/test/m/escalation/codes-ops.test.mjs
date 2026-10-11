@@ -68,17 +68,16 @@ function recorder() {
   const calls = [];
   const names = ["escalationOpen", "escalationRead", "escalationAttach", "escalationEvaluate", "escalationAdvance",
                  "escalationDecline", "escalationEnd", "escalationSuspend", "escalationResume", "escalationsDue",
-                 "declineToEscalate", "escalationStatus", "escalationReasonDraft", "escalationStopPursuing", "escalationReopen"];
+                 "declineToEscalate", "escalationStatus", "escalationReasonDraft"];
   const esc = Object.fromEntries(names.map((n) => [n, (args) => { calls.push([n, args]); return { answered: n }; }]));
   return { esc, calls };
 }
 const URL_OF = (q) => new URL(`https://plane.test/op?${new URLSearchParams(q)}`);
 
-test("R25 escalationOps(escalation, url, body) holds exactly the fifteen arms, each a function of no arguments answering what its service answers: the eleven acts (declinetoescalate, and R31's escalationstoppursuing and escalationreopen, among them) with the body's fields and the query's author and viewer set after them; escalation (the read) with the query's id, now as nowMs and viewer; escalationsdue with now as nowMs, limit and viewer; escalationstatus with the query's determination and viewer; escalationreasondraft (R29) with the query's determination, now as nowMs and viewer; now and limit numbers when stated and absent when not or empty", () => {
+test("R25 escalationOps(escalation, url, body) holds exactly the thirteen arms, each a function of no arguments answering what its service answers: the nine acts (declinetoescalate among them) with the body's fields and the query's author and viewer set after them; escalation (the read) with the query's id, now as nowMs and viewer; escalationsdue with now as nowMs, limit and viewer; escalationstatus with the query's determination and viewer; escalationreasondraft (R29) with the query's determination, now as nowMs and viewer; now and limit numbers when stated and absent when not or empty", () => {
   const ACTS = { escalationopen: "escalationOpen", escalationattach: "escalationAttach", escalationevaluate: "escalationEvaluate",
     escalationadvance: "escalationAdvance", escalationdecline: "escalationDecline", escalationend: "escalationEnd",
-    escalationsuspend: "escalationSuspend", escalationresume: "escalationResume", declinetoescalate: "declineToEscalate",
-    escalationstoppursuing: "escalationStopPursuing", escalationreopen: "escalationReopen" };
+    escalationsuspend: "escalationSuspend", escalationresume: "escalationResume", declinetoescalate: "declineToEscalate" };
   const { esc, calls } = recorder();
   const url = URL_OF({ op: "x", author: "member:bob", viewer: "member:carol", id: "ESC-2026-0001-escalation", now: "1790000000000", limit: "7",
                        determination: "CONF-2026-0001-determination" });

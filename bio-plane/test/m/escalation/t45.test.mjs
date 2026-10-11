@@ -139,26 +139,19 @@ test("R23 an overridden action with no rests_on leg naming this escalation's det
   assert.equal("premise_override" in attach(w, plain), false);
 });
 
-test("R30 the timeline source answers each stop and reopening, kind stopped_pursuing or reopened, with its date and never its reason; every item carries public: true; an escalation every attached action of which is confidential is not answered, and a confidential attached action's attachment never is", () => {
+test("R30 every item the timeline source answers carries public: true (case-authoring R57), and its labels carry no member's reason; the stop and reopening wait on R31 (T46)", () => {
   const w = seeded({ structure: true });
   w.clerk = w.ent("office", "Town Clerk");
   w.D = w.determine({ project: w.P, actor: { ...OFFICE.clerk, entity_id: w.clerk },
                       outcomes: [{ standard: "STD-2026-0001-a", outcome: "noncompliant" }] });
-  toStage(w, 2);
-  const src = () => w.source.fn({ set: [w.clerk], viewer: V("bob") }).items;
-  assert.ok(src().every((x) => x.public === true));
-  /* the stop, dated, with no reason; and the reopening */
-  w.clock.now = "2026-09-29T00:00:00Z";
-  const stopped = w.esc.escalationStopPursuing({ id: w.E, reason: "SECRET-REASON-TEXT", ...by("bob") });
-  if (stopped.ok) {
-    w.clock.now = "2026-09-30T00:00:00Z";
-    w.esc.escalationReopen({ id: w.E, reason: "ANOTHER-SECRET", ...by("bob") });
-    const items = src();
-    const stop = items.find((x) => x.kind === "stopped_pursuing");
-    assert.deepEqual([stop.at, stop.public], ["2026-09-29T00:00:00Z", true]);
-    assert.equal(items.find((x) => x.kind === "reopened").at, "2026-09-30T00:00:00Z");
-    assert.ok(!JSON.stringify(items).includes("SECRET"), "no reason in any item");
-  } else assert.fail(`the stop is refused: ${stopped.reason} (record-grammar's escalation states, J1)`);
+  w.clock.now = "2026-09-28T01:00:00Z";
+  w.esc.escalationOpen({ reason: "SECRET-OPENING", determination: w.D, ...by("bob") });
+  w.E = w.esc.escalationsFor({ determination: w.D, viewer: V("bob") }).items[0].id;
+  w.esc.escalationDecline({ id: w.E, to: 2, reason: "SECRET-DECLINE", ...by("bob") });
+  w.esc.escalationSuspend({ id: w.E, reason: "SECRET-SUSPEND", ...by("bob") });
+  const items = w.source.fn({ set: [w.clerk], viewer: V("bob") }).items;
+  assert.deepEqual(items.map((x) => [x.kind, x.public]), [["open", true], ["decline", true], ["suspend", true]]);
+  assert.ok(!JSON.stringify(items).includes("SECRET"), "no reason in any item");
 });
 
 test("R30 confidential acts: every attached action confidential, the escalation is not answered; one of two confidential, its attachment alone is left out; none attached, it is answered", () => {
