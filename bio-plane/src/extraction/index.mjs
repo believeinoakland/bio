@@ -948,7 +948,7 @@ export class Extraction {
     if (typeof captureSha !== "string" || !captureSha) return noSha("a reading is read by its capture sha256");
     const row = this.#one(
       `SELECT capture_sha, bundle_id, content_type, reader_version, found, entity_count, reading, at,
-              origin, asserted_by, asserted_standing, justification
+              origin, asserted_by, asserted_standing, justification, capture_format
          FROM readings WHERE capture_sha=?`, captureSha);
     if (!row) return { ok: true, found: false, capture_sha: captureSha, reading: null };
     const reading = safeJson(row.reading);
@@ -976,15 +976,18 @@ export class Extraction {
                    why: `this reading carries no text provenance, which is not the same as its `
                       + `text not having been transcribed -- nobody recorded how it was produced` },
              reading_history: this.#readingHistoryOf(row.capture_sha),
-             ...this.#unreadOf(row.capture_sha, reading, viewer, row.bundle_id) };
+             ...this.#unreadOf(row.capture_sha, reading, viewer, row.bundle_id, row.capture_format) };
   }
 
   /** R27 (T43; N862; DEC-190 (1), (2)): the pages a reading with pages could not make out, ascending: those holding no
    *  glyph after every tier, which are the pages `reading-pipeline.tier4Pages` would ask for (the index holds a page's
    *  unit exactly when it holds a glyph, reading-pipeline R15; a page the index skipped over its bound is not unread).
    *  `[]` when none; absent for a reading with no pages (R45). With pages, `unread_says` is `document.unread.pages`
-   *  filled. Both withheld with the bundle. */
-  #unreadOf(captureSha, reading, viewer, bundleId) {
+   *  filled. Both withheld with the bundle. (T44; N869, N876; DEC-191 (5), DEC-192 (6)) A photographed page, a reading
+   *  of a `jpeg` or `png` capture with its one page unread, says `capture.picture.unread` instead. The capture format
+   *  is the one the reading was written with (R30's `captureFormat`), else, when that names no picture format (a photo
+   *  profiled before its entry was registered), the reading's own `text_container`. */
+  #unreadOf(captureSha, reading, viewer, bundleId, captureFormat = null) {
     const n = reading && reading.page_count;
     if (!(Number.isInteger(n) && n > 0)) return {};
     if (bundleId && this.#redactor(viewer)(bundleId) === null) return {};
@@ -998,8 +1001,10 @@ export class Extraction {
       if (a && b && Number.isInteger(a.page) && Number.isInteger(b.page)) for (let p = a.page; p <= b.page; p++) read.add(p);
     }
     const pages = Array.from({ length: n }, (_, p) => p).filter((p) => !read.has(p));
-    return { unread_pages: pages,
-             ...(pages.length ? { unread_says: fillWords("document.unread.pages", { pages: pagesSaid(pages) }) } : {}) };
+    const picture = PICTURE_FORMATS.includes(captureFormat) || PICTURE_FORMATS.includes(reading.text_container);
+    const says = picture && pages.length === 1 && pages[0] === 0 && n === 1
+      ? fillWords("capture.picture.unread") : fillWords("document.unread.pages", { pages: pagesSaid(pages) });
+    return { unread_pages: pages, ...(pages.length ? { unread_says: says } : {}) };
   }
 
   /** R28 (`op=readingref`): every captured document whose reading carries `ref` exactly, one entry per document
@@ -1759,6 +1764,9 @@ function unwrittenWhy(w, act) {
 /* R71 (N862, K2689): the transcriber's reasons that posted nothing to agent-worker (plane R36), answered with
    `performed: false` and the reason until the design stream names their words (B133). */
 const NO_POST_REASONS = Object.freeze(["AGENT_WORKER_UNBOUND", "EVIDENCE_ABSENT", "NO_PAGE_RENDERED"]);
+
+/* R27, R71 (T44; N853b, N869): the formats a photographed page is captured in (`format-registry` R29–R30). */
+const PICTURE_FORMATS = Object.freeze(["jpeg", "png"]);
 
 /* R71 (N853a): the status a relayed account or limit refusal carries: its own when it states one, else 403, as the
    keep-away refusal is relayed. */
