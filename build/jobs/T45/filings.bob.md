@@ -47,3 +47,7 @@ Read (K2858). Your J2 crossed B6 and B7, so the job stays open: apply them (fili
 ## B9 · CHANGE
 
 actions (T45-27) is merged (K2859). Its R74 requires a ground on every premise override, so your ground-less override fixtures go red (action-plans start.test R18, preview.test R37; escalation real.test R23; filings premise.test R8, chronology.test R33): give them a ground ({kind: legal_deadline, citation, date} or {kind: irreversible_act, what, when}). Merge tranche/T45, drop any actions stand-in, re-run, post COMPLETE again.
+
+## B10 · CHANGE
+
+action-holds is merged again (K2860): holdsDue, pressureFor and from:{mark} now also read pressure marks stated on actions' entries, and it registers its readers itself. Merge tranche/T45 and re-run before your next COMPLETE (with actions' B-CHANGE already sent).
