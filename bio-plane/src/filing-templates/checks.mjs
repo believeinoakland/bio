@@ -7,7 +7,9 @@
  * .37 and .38 (`NO_SUCH_TEMPLATE`, which `filings` passes through as this module's) moved; `filings`' T21 job deleted
  * its copies (K624 (1)). C-115.34, .39 and .40 stay `filings`'. Every other code is a new
  * row of this module's family, C-125 (K933), except R26's two (T35, N702): C-115.45 and C-115.46, as R26 numbers them.
- * Every row but those two was stamped by 1.52.0 (PROMOTION #23, T22 layer 2; K991); they await T36's promotion job. */
+ * Every row but those two was stamped by 1.52.0 (PROMOTION #23, T22 layer 2; K991); they await T36's promotion job.
+ * T45 (R15, R28; R23's T45 line): `TEMPLATE_NOT_REVIEWED` and `TEMPLATE_COURT_PETITION`, the next free numbers of this
+ * module's own family, C-125.33 and C-125.34 (FILING-TEMPLATES #8 J1), awaiting promotion's stamp. */
 
 const at = (fn, region) => `src/filing-templates/index.mjs ${fn} > ${region}`;
 
@@ -200,6 +202,18 @@ export const FILING_TEMPLATE_CHECKS = Object.freeze({
   TEMPLATES_STATE_REFUSED: {
     check: "C-125.32", where: at("templatesFor", "is-templates-state"),
     translation: "Templates are listed as offered, or by one of: draft, in_review, withdrawn, retired, proposed.",
+  },
+  /* ---- new in T45 (R15, R28; N858, Actions D8, v0.2 rule 11, §8): BOB's drafts, awaiting promotion's stamp ---- */
+  TEMPLATE_NOT_REVIEWED: {
+    check: "C-125.33", where: at("#profileRefusal", "is-profile-offered"),
+    translation: "This template from the jurisdiction profile is not offered yet. A profile's template is offered only "
+      + "once it names who wrote it, the public sources it was written from, a professional's review with no concerns, "
+      + "and an approver other than its writer; what it lacks is named.",
+  },
+  TEMPLATE_COURT_PETITION: {
+    check: "C-125.34", where: at("#courtPetition", "is-court-petition"),
+    translation: "This kind is filed with a court, so no template the group files in its own name is kept for it until "
+      + "a licensed professional can certify one. A template that is the basis of a briefing to counsel may serve it.",
   },
 });
 
