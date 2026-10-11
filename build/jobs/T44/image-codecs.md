@@ -1,3 +1,3 @@
 # image-codecs (T44)
 
-**Status** · session_0192ECShmFQefWJ5mQLg6Ptw · depth 2 · WORKING · handled B0
+**Status** · session_0192ECShmFQefWJ5mQLg6Ptw · depth 2 · WORKING · handled B1
