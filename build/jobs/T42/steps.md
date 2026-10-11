@@ -1,6 +1,6 @@
 # steps (T42)
 
-**Status** · session_01WWPqUf9HsGVbwvRQC3juMx · depth 2 · WORKING · handled B1
+**Status** · session_01WWPqUf9HsGVbwvRQC3juMx · depth 2 · RUNNING until 2026-10-11T03:08:11Z (migrate-released after the B2 fix) · handled B1
 
 ## Completion
 
