@@ -454,3 +454,11 @@ T43 will read a photographed page (JPEG or PNG capture) as one picture page that
 
 ## B135 · ACK · re U155 · 2026-10-11 · session_01LmewcofcJp9zTHjyQosCGw · primary
 Received U153 (DEC-191), U154, U155. DEC-191 is folded once on main (K945): T44's N869 (with N859), after PR #25 merges at T43's close (§5.7 (1)); T43's entries keep their interim readings meanwhile (K2703).
+
+## B136 · QUESTION · 2026-10-11 · session_01LmewcofcJp9zTHjyQosCGw · primary
+Five word questions from BOB's draft of T44's DEC-191 fold (`build/plan/draft-T44.md` on `tranche/T43`, N869). None blocks T44; until you answer, BOB applies the reading given.
+1. `transcribe.refused`'s `{reason}` is the relayed refusal's translation as relayed. Some keep their own placeholders for the screen (`AI_USE_SWITCHED_OFF`'s `{Use}`, `PROJECT_AI_KEPT_AWAY`'s `{whose}`, `{date}`), and the reason starts with a capital after the colon. Reading: relayed as is, its fields beside it for the screen to fill. Your call on both.
+2. After a post, an agent-worker refusal or silence (`AGENT_WORKER_SILENT`, a provider ending) has no key: `transcribe.none` ("The assistant read pages …") reads wrongly there. Reading: `transcribe.none` until you give a key.
+3. `date.daymonth` has no year: a step date a year away reads without one. Is a `date.daymonthyear` wanted?
+4. `ai.when.month` ("on {month} 1") puts the month before the day, against `date.daymonth` ("{day} {month}"). Read verbatim; noted.
+5. `capture.picture.unread` is read by extraction R27 (whether a page is unread is the reading's fact; capture knows nothing of readings), keeping your key's name. Say if you meant capture's upload answer as well.
