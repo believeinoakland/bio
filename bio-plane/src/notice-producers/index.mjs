@@ -19,8 +19,11 @@
  *   R16 explore-ask              FINDING ("Ask"), ai-use.exploreAsksPending     an account's daily Ask, to its owners
  *       ai-limit-reached         FINDING, ai-use.limitsReached                  a limit reached this period, to its owners
  *       project-account-suspended FINDING, credentials.projectAccountsSuspended a project's sign-in stopped serving
- *   R17 the investigation's items, each told once, keyed by its source's own key (N820; K2418, K2484):
- *       question-find            FINDING, question-explorer.findsFor   "Hint · machine work"; `ai.label.explored` to the owners
+ *       (each item's sentence and fills read by key from `words.json`, `words.mjs`; DEC-189 (5), (6))
+ *   R17 the investigation's items, each told once, keyed by its source's own key (N820; K2418, K2484), each kind's summary
+ *       and detail `queue.<kind>.summary|detail` by key (DEC-189 (2)):
+ *       question-find            FINDING, question-explorer.findsFor   "Hint · machine work"; `ai.label.explored` to the
+ *                                paying account's owners, `ai.label.explored.member` to every other viewer (DEC-189 (7))
  *       step-later-found         FINDING, steps.laterFound
  *       step-date-due, step-reminder  OBLIGATION, steps.stepsDue     to the setter, to the member who asked
  *       step-cost-shared         FINDING, steps.costShares             to the sharing projects' owners
@@ -32,7 +35,7 @@
  * REACHED as `noticeProducersOf(host, deps)` (K1563 (1)): one instance per Durable Object storage. It registers nothing
  * and holds no check row: it refuses nothing. `deps` (each defaults to its module's instance on the same host, reached
  * lazily when first asked): membership, people, moneyChecks, duties, answers, inquiry, credentials, following, standards,
- * fileSafety, provenance, aiUse (R16), steps, questionExplorer, investigation, review (R17);
+ * fileSafety, provenance, aiUse (R16), steps (with `step`, R17's step work), questionExplorer, investigation, review (R17);
  * and `view`, the jurisdiction view whose time zone R13's, R14's and R15's dates are read in (the profile's, when not given).
  *
  * R7 (queue's homes walk) and R12 (queue's options) stay in queue: `noticeItems` takes them as `homesOf(subjectIds)`
@@ -56,12 +59,11 @@ import { standardsOf } from "../standards/index.mjs";
 import { fileSafetyOf, findingKind } from "../file-safety/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { aiUseOf } from "../ai-use/index.mjs";
-import { LIMIT_PERIOD_FILL, LIMIT_WHEN_FILL, MONTH_NAMES } from "../ai-use/checks.mjs";
 import { stepsOf } from "../steps/index.mjs";
 import { questionExplorerOf } from "../question-explorer/index.mjs";
 import { investigationOf } from "../investigation/index.mjs";
 import { reviewOf } from "../review/index.mjs";
-import { NOTICE_WORDS, wordsOf } from "./words.mjs";
+import { wordsOf, hasWords, monthName, dayMonth } from "./words.mjs";
 
 /* The walk queue passes in answers this shape; with none passed, an item is ungrouped rather than given a home. */
 const UNGROUPED = Object.freeze({ state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] });
@@ -137,14 +139,12 @@ export const NOTICE_KINDS = Object.freeze({
  *  bound and `truncated` when a source answers more. */
 export const ACCOUNT_ITEMS_MAX = 200;
 export const INVESTIGATION_ITEMS_MAX = 200;
-/** R16 (J1): the fills of `ai.queue.limitreached` for a limit that is not one use's (`words.json` gives them no key). */
-export const LIMIT_FOR_EACH_MEMBER = " for each member";
-export const LIMIT_USES_OVERALL = "Uses counted in its overall limit";
-export const LIMIT_USES_PER_MEMBER = "Each member's uses";
+/** R16: the periods a limit counts over (ai-use R2), each with its `ai.period.*` and `ai.when.*` words. */
+export const LIMIT_PERIODS = Object.freeze(["day", "month"]);
 /** R16: the "Ask" item's label (an Ask, DEC-69's form), beside R16's two "Noticed" items' `noticed`. */
 export const ASK_LABEL = "ask";
 /** R16: the Ask's one act beside disposal: approve exploring on that account today (`ai-use` R9, `op=exploreapprove`). */
-export const EXPLORE_APPROVE = Object.freeze({ id: "exploreapprove", label: NOTICE_WORDS["act.owed_exploreapprove.label.queue"], weight: "single" });
+export const EXPLORE_APPROVE = Object.freeze({ id: "exploreapprove", label: wordsOf("act.exploreapprove.label.queue"), weight: "single" });
 
 const HOUR_MS = 3600e3, DAY_MS = 24 * HOUR_MS;
 /* A provider's failure, named in `facts.failed` as the provider it came from (R1). */
@@ -180,6 +180,7 @@ const ageFrom = (since, now, reason, zone = null) => {
 export class NoticeProducers {
   #host; #deps;
   #homesFn = null; #optionsFn = null;
+  #works = null;          /* R17: each step's work, read once a read (`#workOf`) */
   constructor({ host, storage, deps = {} } = {}) {
     this.#host = host;
     this.sql = storage.sql;
@@ -282,6 +283,7 @@ export class NoticeProducers {
     } finally {
       this.#homesFn = null;
       this.#optionsFn = null;
+      this.#works = null;
     }
   }
 
@@ -901,11 +903,11 @@ export class NoticeProducers {
   }
 
   /* ================================================================== R16 · the AI accounts' items
-   * (ai-use R5, R9; credentials R59; B7, K2353, K2376, K2488; DEC-188 (6), (7)). Each read is the viewer's own: ai-use
-   * and credentials answer only the accounts and projects the viewer owns, so each item goes to this member alone. Each
-   * is keyed by its source's own stable key, read as given and never composed here (K2488), so `queue` mints it once per
-   * account, limit and period. Its words are `words.json`'s, by key (`words.mjs`), the placeholders filled here (J1): it
-   * names whose account, which use and the period's end, and never a member. A read answering `unreadable` is its
+   * (ai-use R5, R9; credentials R59; B7, K2353, K2376, K2488; DEC-188 (6), (7); DEC-189 (5), (6); N856). Each read is the
+   * viewer's own: ai-use and credentials answer only the accounts and projects the viewer owns, so each item goes to this
+   * member alone. Each is keyed by its source's own stable key, read as given and never composed here (K2488), so `queue`
+   * mints it once per account, limit and period. Its sentence and every fill are `words.json`'s, by key (`words.mjs`):
+   * it names whose account, which use and the period's end, and never a member. A read answering `unreadable` is its
    * provider's failure (R1), never read as no item. */
   #exploreAsks(me, viewer, now) {
     const r = this.#aiUse.exploreAsksPending({ viewer, at: instantOf(now) });
@@ -914,7 +916,9 @@ export class NoticeProducers {
     const items = list.map((a) => {
       const o = this.#owner(a.owner, viewer);
       const what = Array.isArray(a.what) ? a.what.filter(filled).join("; ") : filled(a.what) ? a.what : "";
-      const fills = { scope: o.scope, what, account: o.account };
+      /* `{scope}`: the group's or a member's own words, or the project's name; `{account}` the account's inline words */
+      const fills = { scope: o.kind === "project" ? o.name : wordsOf(`ai.scope.${o.kind}`), what,
+                      account: wordsOf(`ai.account.${o.kind}.inline`) };
       const text = wordsOf("ai.queue.exploreask", fills);
       return {
         id: keyed("FINDING", "explore-ask", a.key), class: "FINDING", kind: "explore-ask",
@@ -935,30 +939,36 @@ export class NoticeProducers {
     return { items, facts: { truncated } };
   }
 
+  /* The "Noticed" item for a limit reached reads its sentence by the limit's scope (DEC-189 (5)): a use's
+     `ai.queue.limitreached`, the overall limit's `.overall`, the per-member limit's `.member`; a use with no
+     `ai.use.<use>.inline` key reads `.overall` (J1 (3), as K2720 for ai-use). An entry whose period, day or period end
+     cannot be read is no item: ai-use R5 answers each (R3's unjudged refusal is never listed: it reached nothing). */
   #limitsReached(me, viewer, now) {
     const r = this.#aiUse.limitsReached({ viewer, at: instantOf(now) });
     if (!r || r.ok !== true || r.unreadable === true || !Array.isArray(r.reached)) throw failure("ai-use");
-    const ok = r.reached.filter((e) => e && filled(e.key) && filled(e.owner) && filled(e.scope)
-      && Object.prototype.hasOwnProperty.call(LIMIT_PERIOD_FILL, e.period));
-    const { list, truncated } = cut(ok, ACCOUNT_ITEMS_MAX);
     const zone = this.#zone();
-    const items = list.map((e) => {
+    const ok = [];
+    for (const e of r.reached) {
+      if (!e || !filled(e.key) || !filled(e.owner) || !filled(e.scope) || !LIMIT_PERIODS.includes(e.period)) continue;
+      const day = NoticeProducers.#localDay(e.reached_at, zone);
+      const when = NoticeProducers.#periodEnd(e.period, e.period_start, day);
+      const date = dayMonth(day);
+      if (when && date) ok.push({ e, when, date });
+    }
+    const { list, truncated } = cut(ok, ACCOUNT_ITEMS_MAX);
+    const items = list.map(({ e, when, date }) => {
       const o = this.#owner(e.owner, viewer);
-      const use = NOTICE_WORDS[`ai.use.${e.scope}.name`] ?? null;
-      const fills = {
-        account: capital(o.account), period: LIMIT_PERIOD_FILL[e.period],
-        for_use: e.scope === "overall" ? "" : e.scope === "per_member" ? LIMIT_FOR_EACH_MEMBER : use ? ` for ${use.toLowerCase()}` : "",
-        date: NoticeProducers.#localDate(e.reached_at, zone),
-        Uses: e.scope === "overall" ? LIMIT_USES_OVERALL : e.scope === "per_member" ? LIMIT_USES_PER_MEMBER : use ?? LIMIT_USES_OVERALL,
-        when: NoticeProducers.#periodEnd(e.period, e.period_start),
-      };
-      const text = wordsOf("ai.queue.limitreached", fills);
+      const use = e.scope !== "overall" && e.scope !== "per_member" && hasWords(`ai.use.${e.scope}.inline`) ? e.scope : null;
+      const word = e.scope === "per_member" ? "ai.queue.limitreached.member" : use ? "ai.queue.limitreached" : "ai.queue.limitreached.overall";
+      const fills = { account: wordsOf(`ai.account.${o.kind}`, { project: o.name }), period: wordsOf(`ai.period.${e.period}`),
+                      ...(use ? { use: wordsOf(`ai.use.${use}.inline`) } : {}), date, when };
+      const text = wordsOf(word, fills);
       return {
         id: keyed("FINDING", "ai-limit-reached", e.key), class: "FINDING", kind: "ai-limit-reached",
         label: NOTICED_LABEL, by: "the group's Civicsmith",
         case: o.project ? this.#homesAt([o.project], viewer) : this.#homesOf([]),
         subject: { kind: "ai_account", id: o.ref, scope: e.scope, unit: e.unit ?? null, period: e.period, period_start: e.period_start ?? null },
-        summary: text, detail: text, word: "ai.queue.limitreached", fills,
+        summary: text, detail: text, word, fills,
         basis: { source: "ai-use.limitsReached", key: e.key, owner: o.ref, scope: e.scope, unit: e.unit ?? null, period: e.period,
                  period_start: e.period_start ?? null, reached_at: e.reached_at ?? null, zone,
                  detail: "a limit first reached in its current period is ai-use's (its R5), answered to that account's "
@@ -977,7 +987,7 @@ export class NoticeProducers {
     if (!Array.isArray(r)) throw failure("credentials");
     const { list, truncated } = cut(r.filter((e) => e && filled(e.key) && filled(e.project)), ACCOUNT_ITEMS_MAX);
     const items = list.map((e) => {
-      const fills = { project: this.#projectName(e.project, viewer) ?? e.project };
+      const fills = { project: this.#titleOf(e.project, viewer) ?? e.project };
       const text = wordsOf("ai.queue.suspended", fills);
       return {
         id: keyed("FINDING", "project-account-suspended", e.key), class: "FINDING", kind: "project-account-suspended",
@@ -997,26 +1007,23 @@ export class NoticeProducers {
     return { items, facts: { truncated } };
   }
 
-  /** R16, R17: an AI account's owner as its words name it: `group`, `project:<id>` or `member:<id>` (ai-use's owners).
-   *  `ref` names it in an item without naming a member (`own` for a member's own account). */
+  /** R16, R17: an AI account's owner (ai-use's `group`, `project:<id>` or `member:<id>`) as its words name it: `kind`
+   *  `group`, `project` or `own` (the `ai.account.*` and `ai.scope.*` keys' last part), `name` a project's name (its
+   *  bundle's title when this viewer sees it, else its id), `ref` naming it in an item without naming a member, and
+   *  `owner`, R17's `{owner}`: the group's words, the project's name, or "your own account" (only its owner is told). */
   #owner(owner, viewer) {
     const s = typeof owner === "string" ? owner.trim() : "";
-    if (s === "group") return { ref: "group", project: null, scope: NOTICE_WORDS["ai.owner.group"],
-                                account: `${NOTICE_WORDS["ai.whose.group"]} account`, label: NOTICE_WORDS["ai.owner.group"] };
+    if (s === "group") return { kind: "group", ref: "group", project: null, name: null, owner: wordsOf("ai.owner.group") };
     const p = /^project:(.+)$/.exec(s);
     if (p) {
-      const name = this.#projectName(p[1], viewer) ?? p[1];
-      return { ref: `project:${p[1]}`, project: p[1], scope: name, account: `${name}'s account`, label: name };
+      const name = this.#titleOf(p[1], viewer) ?? p[1];
+      return { kind: "project", ref: `project:${p[1]}`, project: p[1], name, owner: name };
     }
-    const m = /^member:(.+)$/.exec(s);
-    let handle = null;
-    if (m) { try { handle = (this.#membership.memberFacts(m[1]) || {}).handle ?? null; } catch { handle = null; } }
-    return { ref: "own", project: null, scope: `${NOTICE_WORDS["ai.whose.own"]} questions`,
-             account: `${NOTICE_WORDS["ai.whose.own"]} account`, label: handle ?? NOTICE_WORDS["ai.whose.own"] };
+    return { kind: "own", ref: "own", project: null, name: null, owner: wordsOf("ai.account.own.inline") };
   }
 
-  /** A project's name (its bundle's title) when this viewer sees it, else null. */
-  #projectName(id, viewer) {
+  /** A bundle's title (a project's name, a question's or a case's) when this viewer sees it, else null. */
+  #titleOf(id, viewer) {
     if (!filled(id)) return null;
     const gate = viewerPredicate(viewer);
     if (gate.scope === "DENY") return null;
@@ -1025,47 +1032,45 @@ export class NoticeProducers {
     return row && filled(row.title) ? row.title : null;
   }
 
-  /** R16: when a period's uses go on again: `tomorrow` for a day's, the first of the next month by name for a month's
-   *  (ai-use's own fills, R13, so the two modules say it one way). */
-  static #periodEnd(period, start) {
-    if (period === "day") return LIMIT_WHEN_FILL.day;
-    const m = typeof start === "string" ? Number(start.slice(5, 7)) : NaN;
-    const name = Number.isInteger(m) && m >= 1 && m <= 12 ? MONTH_NAMES[m % 12] : null;
-    return name ? LIMIT_WHEN_FILL.month.replace(/^on /, "").replace("{month}", name) : LIMIT_WHEN_FILL.unjudged;
+  /** R16's `{when}`: a day's limit `ai.when.day`; a month's `ai.when.month` with `{month}` the next period's month from
+   *  `date.month.*` (as ai-use R13), the period read from `period_start`, else the local day it was reached; null when
+   *  neither is read. */
+  static #periodEnd(period, start, day) {
+    if (period === "day") return wordsOf("ai.when.day");
+    const from = dayOf(start) ?? dayOf(day);
+    const m = from ? Number(from.slice(5, 7)) : NaN;
+    const next = Number.isInteger(m) && m >= 1 && m <= 12 ? monthName((m % 12) + 1) : null;
+    return next ? wordsOf("ai.when.month", { month: next }) : null;
   }
 
   /* ================================================================== R17 · the investigation's items
-   * (N820; K2405, K2417, K2418, K2484, K2525). Each source answers this viewer its own items, each with a stable key,
-   * told once (DEC-94): the item is keyed `<CLASS>::<kind>::<the source's key>`, the key as given (review's already has
-   * that form and is used whole). A source that throws or refuses contributes no item and is named in `facts.failed`;
-   * a source answering more than the bound is cut, `truncated` stated (as R13's). */
+   * (N820; K2405, K2417, K2418, K2484, K2525; DEC-189 (2), (7); N856). Each source answers this viewer its own items,
+   * each with a stable key, told once (DEC-94): the item is keyed `<CLASS>::<kind>::<the source's key>`, the key as given
+   * (review's already has that form and is used whole). Its `summary` and `detail` are `queue.<kind>.summary|detail`,
+   * by key, their placeholders filled from the source's own facts (J1 (4)–(6)). A source that throws or refuses
+   * contributes no item and is named in `facts.failed`; a source answering more than the bound is cut, `truncated`
+   * stated (as R13's). */
   #questionFinds(me, viewer, now) {
     const r = this.#questionExplorer.findsFor({ viewer, at: instantOf(now), limit: INVESTIGATION_ITEMS_MAX });
     if (!r || r.ok !== true || !Array.isArray(r.finds)) throw failure("question-explorer");
     const c = cut(r.finds.filter((f) => f && filled(f.key) && filled(f.question)), INVESTIGATION_ITEMS_MAX);
     const items = c.list.map((f) => {
-      /* D64 (K2484): which account paid is answered only to its owners (question-explorer R5): only then the label
-         names it, `{owner}` from ai-use R6's `enabled_by` */
+      /* D64 (K2484; DEC-189 (7)): which account paid is answered only to its owners (question-explorer R5): only then the
+         label names it, `{owner}` from ai-use R6's `enabled_by`; every other viewer's label names no account or person */
       const owned = filled(f.enabled_by);
-      const label = owned ? wordsOf("ai.label.explored", { owner: this.#owner(f.enabled_by, viewer).label }) : "machine";
-      const says = filled(f.says) ? f.says : "The system found this while exploring the question.";
-      return {
-        id: keyed("FINDING", "question-find", f.key), class: "FINDING", kind: "question-find",
-        label, ...(owned ? { word: "ai.label.explored" } : {}), mark: HINT_MARK, by: "the system's",
-        case: this.#homesAt([f.question], viewer),
+      const word = owned ? "ai.label.explored" : "ai.label.explored.member";
+      const label = wordsOf(word, owned ? { owner: this.#owner(f.enabled_by, viewer).owner } : {});
+      return this.#r17Item(me, viewer, now, "FINDING", "question-find", f.key, {
+        homes: [f.question], at: f.at, extra: { label, word, mark: HINT_MARK, by: "the system's" },
+        fills: { question: this.#titleOf(f.question, viewer) ?? f.question, what: filled(f.how) ? f.how : f.ref ?? f.find ?? "" },
         subject: { kind: "explore_find", id: f.find ?? null, question: f.question, ref: f.ref ?? null, find_kind: f.kind ?? null },
-        summary: `${HINT_MARK}: found while exploring ${f.question}`,
-        detail: `${HINT_MARK}. ${says}`,
         basis: { source: "question-explorer.findsFor", key: f.key, find: f.find ?? null, question: f.question,
                  bearing: f.bearing ?? null, how: f.how ?? null, false_alarm_rate: f.false_alarm_rate ?? null,
                  gold_set: f.gold_set ?? null, ...(owned ? { enabled_by: f.enabled_by } : {}),
                  detail: "a find is the system's work (question-explorer R5), offered once to each of the question's "
                        + "recipients who may see it; it is not evidence until a member takes it in." },
-        age: ageFrom(f.at, now, "no_find_instant"),
-        assignee: null, assignee_role: null,
-        recipients: [me],
-        options: this.#optionsOf([f.question]),
-      };
+        options: [f.question],
+      });
     });
     return { items, facts: { truncated: c.truncated || r.truncated === true } };
   }
@@ -1074,15 +1079,16 @@ export class NoticeProducers {
     const r = this.#steps.laterFound({ viewer, at: instantOf(now) });
     if (!r || r.ok !== true || !Array.isArray(r.found)) throw failure("steps");
     const c = cut(r.found.filter((e) => e && filled(e.key) && filled(e.step)), INVESTIGATION_ITEMS_MAX);
+    const zone = this.#zone();
     const items = c.list.map((e) => {
       const qs = Array.isArray(e.questions) ? e.questions.filter(filled) : [];
+      /* J1 (4): `{date}` the look's own day (`looked_at`, as steps answers it), else the entry's */
       return this.#r17Item(me, viewer, now, "FINDING", "step-later-found", e.key, {
         homes: qs, at: e.at,
+        fills: { what: this.#workOf(e.step, viewer), date: dayMonth(NoticeProducers.#localDay(e.looked_at ?? e.at, zone)) },
         subject: { kind: "step", id: e.step, look: e.look ?? null, observation: e.observation ?? null, questions: qs },
-        summary: `Data a step looked for has arrived: ${e.step}`,
-        detail: "Something a step looked for and did not find has since arrived. The earlier look stays as it was; you may "
-              + "revise the step's outcome for its questions.",
         basis: { source: "steps.laterFound", key: e.key, step: e.step, look: e.look ?? null, observation: e.observation ?? null,
+                 looked_at: e.looked_at ?? null, at: e.at ?? null,
                  detail: "a later arrival is steps' (its R23): told once to each recipient of a referring question who may "
                        + "see the step and what arrived, and to the member who did the step; no outcome moves by itself." },
       });
@@ -1098,10 +1104,8 @@ export class NoticeProducers {
       const reminder = e.kind === "reminder";
       return this.#r17Item(me, viewer, now, "OBLIGATION", reminder ? "step-reminder" : "step-date-due", e.key, {
         homes: [], due: dayOf(e.date), day: dayOf(e.date),
+        fills: { step: filled(e.work) ? e.work : this.#workOf(e.step, viewer), date: dayMonth(dayOf(e.date)) },
         subject: { kind: "step", id: e.step, work: e.work ?? null, date: e.date ?? null },
-        summary: reminder ? `A reminder you asked for: ${e.work ?? e.step}` : `A step you set a date for is past it: ${e.work ?? e.step}`,
-        detail: reminder ? `You asked to be reminded of this step on ${e.date}.`
-          : `You set this step to be done by ${e.date}, and it is not yet ended. This is told once.`,
         basis: { source: "steps.stepsDue", key: e.key, step: e.step, kind: e.kind, date: e.date ?? null,
                  detail: "a step's date and a reminder are steps' (its R12): told once, to the member who set the date or "
                        + "asked for the reminder, and to nobody else." },
@@ -1117,13 +1121,11 @@ export class NoticeProducers {
     const items = c.list.map((e) => {
       const projects = Array.isArray(e.projects) ? e.projects.filter((p) => p && filled(p.id)) : [];
       const totals = e.totals && typeof e.totals === "object" ? e.totals : {};
-      const money = Object.entries(totals).map(([cur, amt]) => `${amt} ${cur}`).join(", ");
       return this.#r17Item(me, viewer, now, "FINDING", "step-cost-shared", e.key, {
         homes: projects.map((p) => p.id),
+        fills: { step: this.#workOf(e.step, viewer), totals: Object.entries(totals).map(([cur, amt]) => `${amt} ${cur}`).join(", "),
+                 projects: projects.map((p) => p.name ?? p.id).join(", ") },
         subject: { kind: "step", id: e.step, totals, projects: projects.map((p) => ({ id: p.id, name: p.name ?? null })) },
-        summary: `A costed step is drawn on by ${projects.length} projects`,
-        detail: `This step's costs (${money || "none stated"}) serve questions that ${projects.map((p) => p.name ?? p.id).join(", ")} `
-              + "draw on. Civicsmith records no split and no payment; you may write to the other projects' owners.",
         basis: { source: "steps.costShares", key: e.key, step: e.step, totals, projects: projects.map((p) => p.id),
                  detail: "a shared cost is steps' (its R14): answered to each owner of each sharing project only, never "
                        + "when any of them is hidden; told once per step, totals and project set." },
@@ -1139,9 +1141,8 @@ export class NoticeProducers {
     const c = cut(ok, INVESTIGATION_ITEMS_MAX);
     const items = c.list.map((m) => this.#r17Item(me, viewer, now, "FINDING", "step-cost-message", String(m.message), {
       homes: [], at: m.at,
+      fills: { step: this.#workOf(m.step, viewer), member: m.writer ?? null, text: m.text ?? "" },
       subject: { kind: "step", id: m.step, message: m.message },
-      summary: `A message about a shared cost from ${m.writer ?? "another project's owner"}`,
-      detail: `${m.writer ?? "Another project's owner"} wrote about a cost your project shares: ${m.text ?? ""}`,
       basis: { source: "steps.costMessages", key: String(m.message), step: m.step, message: m.message,
                detail: "a cost message is steps' (its R15): relayed once to the owners of each other sharing project, with "
                      + "its writer's handle, naming no project unless its writer did." },
@@ -1155,13 +1156,10 @@ export class NoticeProducers {
     const c = cut(r.due.filter((e) => e && filled(e.key) && (e.kind === "overdue" || e.kind === "reminder")), INVESTIGATION_ITEMS_MAX);
     const items = c.list.map((e) => {
       const reminder = e.kind === "reminder";
-      const name = e.name ?? `milestone ${e.milestone}`;
       return this.#r17Item(me, viewer, now, reminder ? "OBLIGATION" : "FINDING", reminder ? "milestone-reminder" : "milestone-overdue", e.key, {
         homes: filled(e.project) ? [e.project] : [], due: dayOf(e.date), day: dayOf(e.date),
+        fills: { milestone: filled(e.name) ? e.name : String(e.milestone ?? ""), date: dayMonth(dayOf(e.date)) },
         subject: { kind: "milestone", id: e.milestone ?? null, project: e.project ?? null, name: e.name ?? null, date: e.date ?? null },
-        summary: reminder ? `A reminder you asked for: ${name}` : `A milestone has passed its date: ${name}`,
-        detail: reminder ? `You asked to be reminded of the milestone "${name}" today; its date is ${e.date}.`
-          : `The milestone "${name}" of a project you take part in was due on ${e.date}. This is told once.`,
         basis: { source: "investigation.milestonesOverdue", key: e.key, kind: e.kind, milestone: e.milestone ?? null,
                  project: e.project ?? null, date: e.date ?? null, state: e.state ?? null,
                  detail: "a milestone overdue is investigation's (its R3): told once to each joined participant; a reminder "
@@ -1176,16 +1174,14 @@ export class NoticeProducers {
     if (!r || r.ok !== true || !Array.isArray(r.prompts)) throw failure("investigation");
     const c = cut(r.prompts.filter((e) => e && filled(e.key) && filled(e.project)), INVESTIGATION_ITEMS_MAX);
     const items = c.list.map((e) => {
-      const name = this.#projectName(e.project, viewer) ?? e.project;
       const gaps = Array.isArray(e.gaps) ? e.gaps : [];
+      /* J1 (5): `{progress}` the source's own words: the objective, then each gap as it says itself */
+      const says = gaps.map((g) => (g && g.basis && filled(g.basis.says) ? g.basis.says : null)).filter(filled);
       return this.#r17Item(me, viewer, now, "FINDING", "project-quiet", e.key, {
         homes: [e.project],
+        fills: { project: this.#titleOf(e.project, viewer) ?? e.project, progress: [e.objective, ...says].filter(filled).join("; ") },
         subject: { kind: "project", id: e.project, spell: e.spell ?? null, objective: e.objective ?? null,
                    condition: e.condition ?? null, gaps, doors: Array.isArray(e.doors) ? [...e.doors] : [] },
-        summary: `A project you take part in has gone quiet: ${name}`,
-        detail: `${name} has gone quiet. Its objective: ${e.objective ?? "not stated"}; its condition: ${e.condition ?? "not stated"}; `
-              + `the record still lacks ${gaps.length} ${gaps.length === 1 ? "thing" : "things"} it names. Write it up, keep `
-              + "watching, close it with its gaps, or revise the objective.",
         basis: { source: "investigation.quietPrompts", key: e.key, project: e.project, spell: e.spell ?? null,
                  progress: e.progress ?? null,
                  detail: "a quiet spell is investigation's (its R18): told once per spell to the project's joined "
@@ -1201,10 +1197,8 @@ export class NoticeProducers {
     const c = cut(r.items.filter((e) => e && filled(e.key) && filled(e.case)), INVESTIGATION_ITEMS_MAX);
     const items = c.list.map((e) => this.#r17Item(me, viewer, now, "FINDING", "review-comment-left-out", e.key, {
       homes: filled(e.project) ? [e.project] : [],
+      fills: { case: this.#titleOf(e.case, viewer) ?? e.case },
       subject: { kind: "case", id: e.case, edition: e.edition ?? null, comments: Array.isArray(e.comments) ? [...e.comments] : [] },
-      summary: `Your comments on a review copy were not included: ${e.case}, edition ${e.edition}`,
-      detail: `${e.left_out ?? "Some"} of your comments on the review copy of ${e.case} were not included in its published `
-            + "edition. You may file a response in its docket.",
       basis: { source: "review.reviewCommentsLeftOut", key: e.key, case: e.case, edition: e.edition ?? null, left_out: e.left_out ?? null,
                detail: "a reviewer's comments left out are review's (its R33): told once to each member reviewer, who may "
                      + "file a response in the case's docket." },
@@ -1212,18 +1206,34 @@ export class NoticeProducers {
     return { items, facts: { truncated: c.truncated || r.truncated === true } };
   }
 
-  /** R17: one item of `kind`, keyed by its source's key, to this member alone (each source answers the viewer's own). */
-  #r17Item(me, viewer, now, cls, kind, key, { homes = [], due = null, day = null, at = null, subject, summary, detail, basis }) {
+  /** R17: one item of `kind`, keyed by its source's key, to this member alone (each source answers the viewer's own), its
+   *  summary and detail `queue.<kind>.summary|detail` with `fills`. `options` names the subjects queue's options are asked
+   *  for (the subject's own id when not given). */
+  #r17Item(me, viewer, now, cls, kind, key, { homes = [], due = null, day = null, at = null, extra = {}, fills, subject, basis, options = null }) {
     return {
-      id: keyed(cls, kind, key), class: cls, kind,
+      id: keyed(cls, kind, key), class: cls, kind, ...extra,
       case: homes.length ? this.#homesAt(homes, viewer) : this.#homesOf([]),
       ...(due ? { due } : {}),
-      subject, summary, detail, basis,
+      subject,
+      summary: wordsOf(`queue.${kind}.summary`, fills), detail: wordsOf(`queue.${kind}.detail`, fills), fills,
+      basis,
       age: day ? ageFrom(day, now, "no_due_day", this.#zone()) : ageFrom(at, now, "no_source_instant"),
       assignee: null, assignee_role: null,
       recipients: [me],
-      options: this.#optionsOf([subject.id].filter(filled)),
+      options: this.#optionsOf((options ?? [subject.id]).filter(filled)),
     };
+  }
+
+  /** R17: a step's work as steps answers it this viewer (`step`, its R4), else the step's id (J1 (4)); one read per step
+   *  in a read of `noticeItems`. A read that throws is steps' failure. */
+  #workOf(step, viewer) {
+    if (!this.#works) this.#works = new Map();
+    if (!this.#works.has(step)) {
+      let s = null;
+      if (typeof this.#steps.step === "function") { try { s = this.#steps.step({ step, viewer }); } catch { throw failure("steps"); } }
+      this.#works.set(step, s && s.ok !== false && filled(s.work) ? s.work : step);
+    }
+    return this.#works.get(step);
   }
 
   /** R14: whether this member is active (membership's member facts); a membership that throws is its failure. */
@@ -1245,6 +1255,13 @@ export class NoticeProducers {
       const z = view && view.time_zone && typeof view.time_zone.value === "string" ? view.time_zone.value : null;
       return z && typeof localDay("2026-01-01T00:00:00Z", z) === "string" ? z : null;
     } catch { return null; }
+  }
+
+  /** R16, R17: the local day of an instant in `zone` (civil-time), the UTC day when none is held; null when it is no
+   *  instant (a sentence then says no day, never a word of this module's own). */
+  static #localDay(at, zone) {
+    try { const d = localDay(at, zone || "UTC"); if (typeof d === "string") return d; } catch { /* below */ }
+    return null;
   }
 
   /** R13, R14, R15: the local day of an instant in `zone` (civil-time), as `following` reads it, the UTC day when none is held. */
