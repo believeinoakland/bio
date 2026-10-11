@@ -1,0 +1,230 @@
+<title>Civicsmith Dashboards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Source+Sans+3:wght@400;600;700&family=Source+Code+Pro:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column (the design-phase pages' format), with sketches and tables that break wider; sketches are small wireframes of each model's first screen. */
+:root {
+  --paper: #f7f6f2; --ink: #22262b; --muted: #5d6570; --rule: #d9d6cc; --panel: #ffffff;
+  --accent: #2f5d7c; --accent-soft: #e3ecf2; --due: #8a4b0f; --due-soft: #f6e9d9; --ok: #2f6b45;
+  --judge: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --plain: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --fact: "Source Code Pro", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #16191d; --ink: #e6e3dc; --muted: #a3a9b1; --rule: #343a41; --panel: #1e2227;
+  --accent: #8fb8d4; --accent-soft: #233340; --due: #e7b37a; --due-soft: #3a2c1c; --ok: #8cc9a1; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --paper: #16191d; --ink: #e6e3dc; --muted: #a3a9b1; --rule: #343a41; --panel: #1e2227;
+  --accent: #8fb8d4; --accent-soft: #233340; --due: #e7b37a; --due-soft: #3a2c1c; --ok: #8cc9a1; color-scheme: dark }
+body { background: var(--paper); color: var(--ink); font-family: var(--plain); font-size: 17px; line-height: 1.55; }
+.wrap { max-width: 46rem; margin: 0 auto; padding-inline: 18px; padding-block: 40px 72px; display: grid; gap: 28px; }
+.wide { max-width: 64rem; }
+h1, h2, h3 { font-family: var(--judge); line-height: 1.2; text-wrap: balance; margin: 0; }
+h1 { font-size: 2.3rem; font-weight: 700; }
+h2 { font-size: 1.5rem; font-weight: 600; padding-top: 12px; border-top: 1px solid var(--rule); }
+h3 { font-size: 1.15rem; font-weight: 600; }
+p, ul, ol { margin: 0; }
+section { display: grid; gap: 14px; }
+ul, ol { padding-left: 1.3rem; display: grid; gap: 6px; }
+.eyebrow { font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.lede { font-family: var(--judge); font-size: 1.2rem; }
+blockquote { margin: 0; padding: 12px 16px; border-left: 3px solid var(--accent); background: var(--accent-soft); font-family: var(--judge); font-style: italic; }
+.status { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: .92rem; color: var(--muted); }
+.status b { color: var(--ink); }
+.note { padding: 12px 16px; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; }
+.tw { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .95rem; }
+th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--rule); }
+th { font-weight: 600; color: var(--muted); font-size: .85rem; }
+td:first-child { font-weight: 600; }
+.models { display: grid; gap: 22px; }
+.model { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr); gap: 20px; padding: 18px; background: var(--panel); border: 1px solid var(--rule); border-radius: 8px; }
+.model.rec { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.model .body { display: grid; gap: 10px; min-width: 0; }
+.tag { display: inline-block; font-size: .75rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); }
+.gc { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; font-size: .93rem; }
+.gc h4 { margin: 0 0 4px; font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.gc ul { gap: 4px; }
+/* sketches */
+.sk { font-family: var(--plain); font-size: .68rem; line-height: 1.25; border: 1px solid var(--rule); border-radius: 6px; background: var(--paper); padding: 6px; display: grid; gap: 4px; align-content: start; }
+.sk .row { display: flex; gap: 4px; }
+.sk .rail { display: grid; gap: 3px; width: 3.4rem; flex: none; }
+.sk .rail span { padding: 2px 4px; border-radius: 3px; background: var(--accent-soft); color: var(--ink); }
+.sk .rail span.on { background: var(--accent); color: var(--paper); }
+.sk .main { flex: 1; display: grid; gap: 4px; align-content: start; min-width: 0; }
+.sk .card { border: 1px solid var(--rule); border-radius: 3px; padding: 3px 4px; background: var(--panel); }
+.sk .card b { display: block; }
+.sk .strip { background: var(--due-soft); color: var(--due); border-radius: 3px; padding: 3px 5px; font-weight: 600; }
+.sk .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.sk .q { border-left: 3px solid var(--due); }
+.sk .cap { color: var(--muted); }
+.chip { display: inline-block; padding: 0 6px; border-radius: 9px; font-size: .8rem; font-weight: 600; background: var(--due-soft); color: var(--due); }
+.chip.them { background: var(--accent-soft); color: var(--accent); }
+.clock { font-family: var(--fact); font-size: .88rem; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 10px 14px; display: grid; gap: 4px; }
+details { border-top: 1px solid var(--rule); padding-top: 10px; }
+summary { cursor: pointer; font-weight: 600; }
+summary:focus-visible, a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+a { color: var(--accent); }
+.src { font-size: .88rem; display: grid; gap: 6px; padding-top: 10px; }
+.src li { overflow-wrap: anywhere; }
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  h1 { font-size: 1.8rem; }
+  .model { grid-template-columns: 1fr; }
+  .gc { grid-template-columns: 1fr; }
+}
+</style>
+
+<main class="wrap">
+  <header style="display:grid;gap:12px">
+    <span class="eyebrow">Civicsmith design · research and early thinking · 11 October 2026</span>
+    <h1>Dashboards as the way into each part of Civicsmith</h1>
+    <p class="lede">You asked the design lane to research how Civicsmith could open onto a high-level dashboard for each major area, the way a car's screens open onto driving, navigation, climate and settings. This page reports what the research found, what changes from the screens you have now, and three ways to do it, with an early recommendation.</p>
+    <div class="status"><span><b>Nothing to answer yet.</b> You said you want to use the test instance first. When you have, I'll bring the choice back to you as question S20.</span></div>
+  </header>
+
+  <section>
+    <h2>What you asked for</h2>
+    <blockquote>"Dashboard" like interfaces that is the high level primary entry point for major functional areas of the system like investigation, action, membership, administration, and so forth. These dashboards are organizationally similar to modern automotive driver experiences that have high level dashes for driving, navigation, environment control, entertainment, vehicle settings, and so forth.</blockquote>
+    <p>I read "and so forth" as including <b>publication</b> (cases under review, waiting to be signed, or published), because it is the area with the most at stake and its own rhythm. That gives five areas: Investigation, Action, Publication, Membership and Administration.</p>
+  </section>
+
+  <section>
+    <h2>What changes from today's screens</h2>
+    <p>The screens on the layouts page are organized by <b>what you do</b> or <b>what a thing is</b>, not by area. The rail down the left reads: Home, Queue, Find, Add, Projects, People, Settings. Your direction groups the same places by area instead. Most screens stay as they are; what changes is the front door to each group of them.</p>
+    <div class="tw"><table>
+      <thead><tr><th>Area</th><th>Where its work lives today</th><th>What its dashboard would add</th></tr></thead>
+      <tbody>
+        <tr><td>Investigation</td><td>Projects, Find, Add, a project's questions and documents, People</td><td>Open questions and how strong their answers are, documents waiting to be checked, what came in since you last looked</td></tr>
+        <tr><td>Action</td><td>A project's plans, Start and send, the queue's deadline items</td><td>Every clock that is running, whose move it is, replies that came in, letters waiting for a second approval</td></tr>
+        <tr><td>Publication</td><td>The case editor, review copies, the publication ceremony</td><td>Cases in review, waiting for a signature, scheduled, published; comments to answer</td></tr>
+        <tr><td>Membership</td><td>Settings › Members, invitations, handles</td><td>Who joined, who is invited, who has left items behind, expertise on hand</td></tr>
+        <tr><td>Administration</td><td>Settings: the group, the assistant's accounts and limits, security tools, translations</td><td>The instance's health, the AI accounts' use this month, anything an administrator must act on</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>What the research found</h2>
+    <h3>From cars: the structure transfers, the dials don't</h3>
+    <p>Every current system studied (Android Automotive in Polestar and Volvo, Tesla, Rivian, BMW's new iDrive, Mercedes, Apple's CarPlay Ultra) keeps a few critical readings in one <b>fixed place that never moves</b>, whatever else is on screen. The areas are few and stay where they are, and each home tile shows a live state plus one or two controls, so the common action needs no trip inside. Mercedes' screen that rearranges itself by guessing what you need is the exception. European safety ratings and BMW are moving away from it, because people can't build habits on a screen that moves.</p>
+    <p>For Civicsmith that means borrowing the car's <b>structure</b>: a small fixed status zone, five areas in fixed places, and cards that carry state and an action. It means leaving out the car's <b>look</b>. Usability research is clear that gauges and dials are a poor way to show numbers on a screen.</p>
+    <p>The driving-safety limits (no glance over 2 seconds, no task over 12) don't apply at a desk. They translate into two tests for every dashboard: a volunteer sees <b>what needs them within about five seconds</b>, and does the commonest next step <b>in three steps or fewer</b>.</p>
+
+    <h3>From work software: the home page has become "your work", not charts</h3>
+    <p>GitHub made a new home page its default on 1 October 2026. It shows your own open work, capped at twelve items a list, and moves the activity feed to a tab of its own. Linear's home is an inbox, and in September 2026 it added a tab that separates what needs you now from what can wait. ServiceNow describes each area's landing page as "actionable data to help the user orient their day". The long-standing advice from dashboard designers is the same: a wall of number tiles with no threshold or action gets ignored.</p>
+    <p>Each area's dashboard would therefore follow one pattern in three tiers: <b>status first</b> (two to four readings, each tied to a threshold and opening its list), then <b>what needs you</b> (a short list, each item with its action on it), then <b>everything else</b> (recent work, and the way into the area's lists). There would be no charts to start with. Each dashboard would also have a written empty state for a new group, saying what will appear there and offering the one first step.</p>
+
+    <h3>From records-request and legal tools: whose move, and when</h3>
+    <p>MuckRock's statuses separate requests waiting on the requester ("Fix Required", "Payment Required") from those waiting on the agency ("Awaiting Response"). The agencies' own records-request software sorts by <b>due soon</b> and <b>overdue</b>, on a holiday-aware calendar, and emails staff a daily list. Legal practice software derives a chain of deadlines from one triggering event under a jurisdiction's rules, which is how Civicsmith's clocks already work.</p>
+    <p>Every item in Action would carry <span class="chip">Our move</span> or <span class="chip them">Their move</span>, and a clock would read as a sentence with its date and its rule, never as a countdown:</p>
+    <div class="clock"><span>Received 13 October. The city must answer by Friday 23 October: 10 days under the Public Records Act (Gov. Code § 7922.535). It may extend once, by written notice, by up to 14 days, to Friday 6 November.</span><span><span class="chip them">Their move</span> · on track</span></div>
+    <p>Many volunteers won't open Civicsmith on a schedule. A daily or weekly email that mirrors "what needs you" would reach them. That is a question of what Civicsmith tells people outside the app, so it would be yours to decide when we get there.</p>
+
+    <h3>Accessibility and phones</h3>
+    <p>WCAG 2.2, the standard Civicsmith meets, puts limits on a status zone that stays on screen. It must never cover what a keyboard user is focused on. The page must still work at 320 pixels wide. Due soon and overdue need words or an icon, not colour alone, and a reading that changes must be announced to screen readers. A phone's bottom bar holds three to five places: five areas plus a home is six, too many. So phones would get four places plus "More", with Membership and Administration under More (they are used least, as a car keeps vehicle settings behind its launcher), and the status zone would shrink to one chip, such as "3 need you", that opens a sheet.</p>
+  </section>
+
+  <section class="wide wrap" style="padding:0;max-width:64rem">
+    <h2>Three ways to do it</h2>
+    <p>All three share what the research supports: five areas in fixed places, each with a dashboard in the three tiers above, "whose move" and due-soon and overdue on every action item, a written empty state everywhere, and the accessibility rules above. They differ in <b>what you see first</b> and <b>where the status lives</b>.</p>
+    <div class="models">
+      <article class="model">
+        <div class="sk" aria-hidden="true"><span class="cap">Home</span><div class="grid2"><div class="card"><b>Investigation</b>4 documents to check</div><div class="card"><b>Action</b>2 due this week</div><div class="card"><b>Publication</b>1 to sign</div><div class="card"><b>Members</b>1 invited</div></div><div class="card"><b>Administration</b>all well</div></div>
+        <div class="body">
+          <span class="tag">Model A</span>
+          <h3>One home with a card per area</h3>
+          <p>After signing in, a home page shows five large cards, one per area, each with one to three lines of state and one action: "4 documents to check · Ask a question". A card opens its area. There is no status zone outside the home.</p>
+          <div class="gc">
+            <div><h4>Gains</h4><ul><li>The closest to your picture, and the easiest to explain</li><li>One place to start, five doors</li><li>The least to build</li></ul></div>
+            <div><h4>Costs</h4><ul><li>Work that crosses areas has nowhere to show</li><li>Leave the home and the status is gone</li><li>Rarely used areas take as much room as daily ones</li></ul></div>
+            <div><h4>Risk</h4><p>The cards drift into number tiles nobody acts on, and a deadline runs out while a member works inside an area.</p></div>
+          </div>
+        </div>
+      </article>
+      <article class="model">
+        <div class="sk" aria-hidden="true"><div class="strip">2 clocks due · our move · 1 to sign</div><div class="row"><div class="rail"><span class="on">Investig.</span><span>Action</span><span>Publish</span><span>Members</span><span>Admin</span></div><div class="main"><span class="cap">Investigation</span><div class="card">Open questions · strength</div><div class="card q">Needs you: 3</div><div class="card">Recent</div></div></div></div>
+        <div class="body">
+          <span class="tag">Model B</span>
+          <h3>A dashboard per area, under a status strip that never moves</h3>
+          <p>No separate home: Civicsmith opens on the area you last used. A rail (a bottom bar on phones) switches between five full dashboards. A thin strip across the top, the "instrument cluster", stays on every screen and holds only what crosses areas and can't wait: clocks due that are our move, items waiting for your review or signature, and replies not yet read.</p>
+          <div class="gc">
+            <div><h4>Gains</h4><ul><li>The closest to how a car is built: areas change, status stays</li><li>A deadline can't be missed in any area</li><li>Each role gets a full, specific dashboard</li></ul></div>
+            <div><h4>Costs</h4><ul><li>The most to design and build</li><li>The strip needs a strict rule for what earns a place on it</li><li>A strip that stays on screen is harder to make accessible</li></ul></div>
+            <div><h4>Risk</h4><p>Every feature wants a light on the strip until people stop reading it, and there is no single view of "my day".</p></div>
+          </div>
+        </div>
+      </article>
+      <article class="model rec">
+        <div class="sk" aria-hidden="true"><div class="strip">2 clocks due · our move · 1 to sign</div><div class="row"><div class="rail"><span class="on">Home</span><span>Investig.</span><span>Action</span><span>Publish</span><span>More</span></div><div class="main"><span class="cap">Needs you</span><div class="card q">Reply arrived: answer the city</div><div class="card q">Sign the Coliseum case</div><div class="card q">Check 4 documents</div><span class="cap">Needs the group</span><div class="card">2 replies unread</div></div></div></div>
+        <div class="body">
+          <span class="tag">Model C · recommended to try first</span>
+          <h3>"What needs you" as the home, with the area dashboards one step away, and a small status strip</h3>
+          <p>The home is a list in two parts, <b>Needs you</b> and <b>Needs the group</b>: clocks to act on, replies to read, documents to check, drafts to review, cases to sign, invitations. It is sorted by urgency and by whose move it is, and each item carries its action. Above it sits a short status strip (at most four readings, each tied to a deadline or to something blocked on us) that stays on every screen. The five area dashboards are one step away on the rail. This is close to today's Home and Queue, made into one place, with the dashboards added.</p>
+          <div class="gc">
+            <div><h4>Gains</h4><ul><li>Best for a volunteer who comes in once or twice a week: see what's theirs, do it, leave</li><li>Work that crosses areas sits side by side (a reply, the finding it bears on, the follow-up letter)</li><li>Where GitHub and Linear have moved this year</li></ul></div>
+            <div><h4>Costs</h4><ul><li>It is further from "a dashboard per area" as the very first screen, so the home has to be named well</li><li>It needs firm rules for what enters the list, snoozing, and who owns a shared item</li></ul></div>
+            <div><h4>Risk</h4><p>The list fills with noise unless items have owners and a way to wait. Signing or sending from the list must still go through the full dialog, never one tap.</p></div>
+          </div>
+        </div>
+      </article>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th></th><th>A · Home of cards</th><th>B · Area dashboards and strip</th><th>C · Needs-you home, dashboards, small strip</th></tr></thead>
+      <tbody>
+        <tr><td>Like a car</td><td>In look (the home tiles)</td><td>In structure (cluster and areas)</td><td>In structure, with "driving" as the home</td></tr>
+        <tr><td>A deadline always in view</td><td>No</td><td>Yes</td><td>Yes</td></tr>
+        <tr><td>An occasional volunteer</td><td>Good</td><td>Fair</td><td>Best</td></tr>
+        <tr><td>A coordinator or editor</td><td>Fair</td><td>Best</td><td>Good</td></tr>
+        <tr><td>Cost to build</td><td>Low</td><td>High</td><td>Medium to high</td></tr>
+        <tr><td>How it usually fails</td><td>Number tiles; a page of links</td><td>A strip nobody reads</td><td>A noisy list</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Early recommendation</h2>
+    <p><b>Try Model C first, with B's strip kept to four readings.</b> Most Civicsmith members are volunteers who come in between other things. For them, the first question is "what do I need to do?", and only after that "how is the investigation going?". C answers the first on arrival and keeps the second one step away, in a dashboard per area as you asked. The strip carries the one thing a car gets right that matters here: a legal deadline that is ours to meet stays in view wherever you are.</p>
+    <p><b>The risk</b> is the one each model shares in a different form: a front page that fills with things nobody acts on. The guard is the same in each: every reading has a threshold, and every item has an owner, an action, and a way to wait.</p>
+    <p><b>How I'd test it</b> before asking you to choose: sketch the home and the Action dashboard on the layouts page, then walk them with three to five volunteers against the two tests (what needs me within five seconds; the commonest next step in three steps or fewer). Then decide whether the strip earns its place.</p>
+  </section>
+
+  <section>
+    <h2>What happens next</h2>
+    <ul>
+      <li>Nothing is built from this page. The screens BOB builds for the test instance in the next two tranches are the ones on the layouts page as they stand (your ruling of 11 October, K2816).</li>
+      <li>Once you have used the test instance, tell me what you found yourself looking for, and where. I'll fold that in and bring you the choice as S20, with the sketches above drawn as real screens.</li>
+      <li>Two questions for you then, beyond the model: whether Civicsmith should email members a digest of what needs them, and whether Publication counts as its own area.</li>
+    </ul>
+  </section>
+
+  <section>
+    <details>
+      <summary>Sources (the research's main ones; press and vendor material marked)</summary>
+      <ul class="src">
+        <li>Android Automotive dashboard and system UI: <a href="https://docs.partner.android.com/drivingux/automotive-os/design-frameworks/dashboard">docs.partner.android.com</a>, <a href="https://developers.google.com/cars/design/automotive-os/product-experience/system-ui/portrait-reference/system-experience">developers.google.com</a></li>
+        <li>Tesla Model 3 owner's manual, the touchscreen: <a href="https://www.tesla.com/ownersmanual/model3/en_sg/GUID-518C51C1-E9AC-4A68-AE12-07F4FF8C881E.html">tesla.com</a></li>
+        <li>Polestar 2 home tiles (press): <a href="https://www.gearbrain.com/amp/review-android-automotive-polestar-2-2646843862">gearbrain.com</a></li>
+        <li>Mercedes MBUX Hyperscreen "zero layer": <a href="https://group.mercedes-benz.com/technology/digitalisation/connectivity/mbux-hyperscreen.html">mercedes-benz.com</a></li>
+        <li>BMW Panoramic iDrive (press): <a href="https://www.designboom.com/technology/bmw-panoramic-idrive-experience-ces-interview-01-07-2025/">designboom.com</a>, <a href="https://www.bmwblog.com/2025/01/23/bmw-rules-out-bigger-screens/">bmwblog.com</a></li>
+        <li>NHTSA visual-manual distraction guidelines (2013): <a href="https://www.federalregister.gov/documents/2013/04/26/2013-09883/visual-manual-nhtsa-driver-distraction-guidelines-for-in-vehicle-electronic-devices">federalregister.gov</a></li>
+        <li>Physical buttons against touchscreens, timed (Vi Bilägare): <a href="https://www.vibilagare.se/english/physical-buttons-outperform-touchscreens-new-cars-test-finds">vibilagare.se</a></li>
+        <li>Euro NCAP 2026 and physical controls (press): <a href="https://www.carwow.co.uk/editorial/driving-rules-and-laws/road-safety/rise-of-the-touchscreen-could-be-curbed-by-euro-ncap">carwow.co.uk</a></li>
+        <li>Nielsen Norman Group on dashboards, progressive disclosure, system status and empty states: <a href="https://www.nngroup.com/articles/dashboards-preattentive/">dashboards</a>, <a href="https://www.nngroup.com/articles/progressive-disclosure/">progressive disclosure</a>, <a href="https://www.nngroup.com/articles/visibility-system-status/">system status</a>, <a href="https://www.nngroup.com/articles/empty-state-interface-design/">empty states</a></li>
+        <li>Stephen Few, Information Dashboard Design (review): <a href="https://www.uxmatters.com/mt/archives/2007/04/book-review-information-dashboard-design.php">uxmatters.com</a></li>
+        <li>Shneiderman, "Overview first, zoom and filter, then details on demand" (1996): <a href="https://drum.lib.umd.edu/handle/1903/5784">drum.lib.umd.edu</a></li>
+        <li>GitHub's new dashboard, default from 1 October 2026: <a href="https://github.blog/changelog/2026-10-01-new-dashboard-experience-now-the-default">github.blog</a></li>
+        <li>Linear inbox, triage and priority inbox: <a href="https://linear.app/docs/inbox">inbox</a>, <a href="https://linear.app/docs/triage">triage</a>, <a href="https://linear.app/changelog/2026-09-03-priority-inbox">priority</a></li>
+        <li>ServiceNow workspace landing pages: <a href="https://docs.servicenow.com/bundle/vancouver-platform-user-interface/page/administer/workspace/task/use-landing-page.html">docs.servicenow.com</a></li>
+        <li>Asana users on a home they can only read (forum): <a href="https://forum.asana.com/t/home-tab-improvements/1139602">forum.asana.com</a></li>
+        <li>MuckRock request statuses: <a href="https://muckrock.notion.site/Request-status-definitions-3b685af8aba14d1ca03b0194ef9179ed">muckrock.notion.site</a></li>
+        <li>NextRequest in use by a California agency: <a href="https://information.auditor.ca.gov/reports/responses/2016-104/11">auditor.ca.gov</a></li>
+        <li>Clio court-rules calendaring: <a href="https://help.clio.com/hc/en-us/articles/9290016489883">help.clio.com</a></li>
+        <li>California Public Records Act, Gov. Code § 7922.535: <a href="https://codes.findlaw.com/ca/government-code/gov-sect-7922-535/">findlaw.com</a> (a pending bill, AB 1821, would change the days to business days; not confirmed enacted)</li>
+        <li>WCAG 2.2, what is new, focus not obscured, reflow, status messages: <a href="https://www.w3.org/WAI/standards-guidelines/wcag/new-in-22/">w3.org</a></li>
+        <li>Material navigation bar (3 to 5 places): <a href="https://developer.android.com/develop/ui/compose/components/navigation-bar">developer.android.com</a></li>
+      </ul>
+    </details>
+  </section>
+</main>
