@@ -843,6 +843,9 @@ export class AiRuns {
                  the `place` and `work` of a system step of its own, created once the run is open (K2490); a run naming
                  none is a member's, as every run before T41. */
               step = null, origin = null, place = null, work = null,
+              /* R77 (T45): the recorded response a re-examination run (`origin: "reexamination"`, mode `plan`) re-examines
+                 its plan after, an opaque id stored verbatim; read only on such a run. */
+              response = null,
               /* PL-18 / DEC-63: WHICH MEMBER IS ASKING, stamped server-side by
                  `control-plane` and empty for a machine credential. Never a
                  caller's word — a principal a caller can name is not one, which
@@ -876,7 +879,7 @@ export class AiRuns {
        its refusal (the DEC-49 guard's arm G), and each answer keeps its shape: the run, `started: false`, the code, its
        check and translation, then what that refusal adds. `run || null` because the first refusal is of a blank id. */
     const refusal = (code, more = {}) => {
-      const row = this.#checkRow(code);
+      const row = this.#checkRow(code) || { check: null, translation: null };
       return { run: run || null, started: false, code, check: row.check, translation: row.translation, ...more };
     };
     /* DEC-49 REGION is-airun-open-context — C-33.30. The request names no run id or no
@@ -1021,19 +1024,41 @@ export class AiRuns {
       return planRefusal("AI_RUN_PLAN_NO_SEARCH", `a planning run works from what the record already holds, so it declares `
         + `no '${search.bound}' allowance (it was given ${search.allowed})`, { bound: search.bound });
     /* END DEC-49 REGION is-airun-open-plan */
+    const runOrigin = origin == null ? "member" : String(origin).trim();
+    /* R77 (T45; Actions D21; v0.2 rule 16): THE RE-EXAMINATION RUN, after R46's refusals and before anything else about the
+       run's shape. A planning run is a member's (`member`, the default) or a re-examination of its plan after a recorded
+       response (`reexamination`), started within the member's act that records the response, never by a schedule or
+       another run (R46's one exception; that member is `actor`, R46's AI_RUN_PLAN_NEEDS_MEMBER above). The origin is
+       judged by `run-rules`' `originAllowed` (its R23), a RELAY, told the run's mode: one site mints AI_RUN_ORIGIN_UNKNOWN
+       (K231), so `reexamination` outside mode `plan`, and any origin of a planning run but those two, are refused there.
+       A re-examination names the `response`, stored verbatim, and one per plan and response runs at a time. */
+    const originSaid = originAllowed({ origin: runOrigin, mode: runMode,
+                                       investigateDeployable: this.#partDeployable("investigate") });
+    if (!originSaid || originSaid.ok !== true)
+      return { run, started: false, code: originSaid.code, check: originSaid.check, translation: originSaid.translation,
+               detail: originSaid.detail, note: "Nothing was written" };
+    const reexam = runMode === "plan" && runOrigin === "reexamination";
+    const responseId = reexam && typeof response === "string" && response.trim() !== "" ? response.trim() : null;
+    /* DEC-49 REGION is-airun-open-reexam */
+    if (reexam && !responseId)
+      return planRefusal("AI_RUN_REEXAM_NEEDS_RESPONSE", "a re-examination run names the response it re-examines the plan "
+        + "after: pass response=<the recorded response's id>");
+    /* asked here, in order, and again just before the insert (below), with no await between that ask and the write */
+    const reexamOpen = () => (reexam && this.#reexamRunning(plan, responseId)
+      ? planRefusal("AI_RUN_REEXAM_OPEN", "a re-examination of this plan after this response is already running; "
+        + "its result is the one to read", { plan: String(plan).slice(0, 60), response: responseId.slice(0, 60) })
+      : null);
+    const runningAlready = reexamOpen();
+    if (runningAlready) return runningAlready;
+    /* END DEC-49 REGION is-airun-open-reexam */
     /* R73 (T41; run-rules R23): THE ORIGIN AND THE STEP, after the mode and the plan and before the bounds. The origin
        is judged by `run-rules`' `originAllowed`, a RELAY (an exploring run only while `investigate` may deploy, its chain
        and its test bar both held). A run that works as a system step of its own (an exploring run, each of R74's) names
        that step's `place` and `work`, never a step (K2490): the step is created after the run is open (steps R1's
        machine arm needs a run it holds). A member's run may instead work an existing `step` she can see (absent and
-       unseen alike, steps R2); a run names one or the other, never both. */
-    const runOrigin = origin == null ? "member" : String(origin).trim();
+       unseen alike, steps R2); a run names one or the other, never both. The origin was judged above (R77's place). */
     const stepId = step == null || String(step).trim() === "" ? null : String(step).trim();
     const ownStep = place != null || work != null;
-    const originSaid = originAllowed({ origin: runOrigin, investigateDeployable: this.#partDeployable("investigate") });
-    if (!originSaid || originSaid.ok !== true)
-      return { run, started: false, code: originSaid.code, check: originSaid.check, translation: originSaid.translation,
-               detail: originSaid.detail, note: "Nothing was written" };
     /* DEC-49 REGION is-airun-open-step */
     if (runOrigin === "explore" && (!ownStep || stepId))
       return refusal("AI_RUN_EXPLORE_NEEDS_STEP", { detail: "an exploring run works as a system step of its own: pass the "
@@ -1099,6 +1124,10 @@ export class AiRuns {
     if (this.#one(`SELECT run FROM ai_runs WHERE run = ?`, run))
       return refusal("AI_RUN_ALREADY_OPEN", { note: "a run with this id already exists" });
     /* END DEC-49 REGION is-airun-open-already */
+    /* R77: asked again here, with no await between it and the insert, so two acts recording the same response cannot both
+       open a re-examination run while the lens and the account above were awaited. The refusal is the one above's. */
+    const runningNow = reexamOpen();
+    if (runningNow) return runningNow;
 
     /* REC-207 — THE RE-RUN LINK IS JUDGED BEFORE IT IS WRITTEN, because a link the record cannot stand
        behind is worse than none: `aiRunClose` settles a bias debt on the strength of this field, so a
@@ -1164,7 +1193,9 @@ export class AiRuns {
     /* DEC-49 REGION is-airun-open-check */
     if (held || runMode === "plan") {
       let said;
-      try { said = held ? held.fn({ contextType: String(contextType), contextId: String(contextId), plan, actor, viewer }) : undefined; }
+      /* R77: the check also receives the run's origin and, for a re-examination, the response (null otherwise). */
+      try { said = held ? held.fn({ contextType: String(contextType), contextId: String(contextId), plan, actor, viewer,
+                                    origin: runOrigin, response: responseId }) : undefined; }
       catch { said = undefined; }
       if (said !== null)
         return said && typeof said === "object" && typeof said.code === "string"
@@ -1183,8 +1214,8 @@ export class AiRuns {
         `INSERT INTO ai_runs (run, status, label, mode, context_type, context_id,
            principal_plane, principal_claude, principal_claude_ref, skill_version,
            bias_manifest, standard_pair, created, updated, expires, ticks, state, lens_at_open,
-           rerun_of, plan, step, origin)
-         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?)`,
+           rerun_of, plan, step, origin, response)
+         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?)`,
         run, label, runMode, String(contextType), String(contextId),
         /* SK-1: TRIMMED, and the reason is PL-4's measurement one field over —
            a value that survives a falsiness guard while naming nothing reads as
@@ -1202,8 +1233,8 @@ export class AiRuns {
         reRuns || null,
         /* R46: verbatim, and only a planning run carries one (any other mode naming a plan was refused above). */
         runMode === "plan" ? plan : null,
-        /* R73: the step and the origin, judged above */
-        stepId, runOrigin);
+        /* R73: the step and the origin, judged above; R77: a re-examination's response, verbatim (trimmed, as judged) */
+        stepId, runOrigin, responseId);
       for (const b of Array.isArray(bounds) ? bounds : []) {
         if (!b || !Object.prototype.hasOwnProperty.call(RUN_BOUNDS, String(b.bound))) continue;
         this.sql.exec(
@@ -1252,6 +1283,7 @@ export class AiRuns {
              ...(reRuns ? { rerun_of: reRuns } : {}),
              ...(systemStep ? { step: systemStep } : stepId ? { step: stepId } : {}),
              ...(runOrigin !== "member" ? { origin: runOrigin } : {}),
+             ...(responseId ? { response: responseId } : {}),
              ...AiRuns.#aiRunGateStated(gate) };
   }
 
@@ -1319,6 +1351,13 @@ export class AiRuns {
       else { const { run: _r, started: _s, ...refusal } = opened || {}; runs.push({ step: stepId, refusal }); }
     }
     return { ok: true, estimate, runs };
+  }
+
+  /** R77: whether a re-examination run for `plan` after `response` is running (a planning run of that origin naming both).
+   *  Read whole, not through any viewer's sight: one per plan and response, whoever could see it. */
+  #reexamRunning(plan, response) {
+    return !!this.#one(`SELECT 1 x FROM ai_runs WHERE status = 'running' AND mode = 'plan' AND origin = 'reexamination'
+                          AND plan = ? AND response = ? LIMIT 1`, String(plan), String(response));
   }
 
   /** R73: whether `viewer` may see step `id` (steps R2, R4's `step`); false where steps is not reachable or answers
@@ -2191,6 +2230,8 @@ export class AiRuns {
       ...((cost = this.#costFor(row, viewer)) ? { cost } : {}),
       /* R46: the plan a planning run works on; the key exists only on a run in mode `plan`. */
       ...(row.mode === "plan" ? { plan: row.plan ?? null } : {}),
+      /* R77: the response a re-examination run re-examines its plan after; the key exists only on such a run. */
+      ...(row.origin === "reexamination" ? { response: row.response ?? null } : {}),
     } };
   }
 
@@ -2820,10 +2861,12 @@ export class AiRuns {
       if (!id) return null;
       const seen = this.#bundleGate("r.context_id", viewer);
       const r = this.#one(`SELECT r.run, r.status, r.mode, r.context_type, r.context_id, r.principal_plane, r.principal_claude,
-                                  r.plan FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, id, ...seen.args);
+                                  r.plan, r.origin, r.response FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, id, ...seen.args);
       return r ? { run: r.run, status: r.status, mode: r.mode, context_type: r.context_type,
                    context_id: r.context_id, principal_plane: r.principal_plane, principal_claude: r.principal_claude,
-                   ...(r.mode === "plan" ? { plan: r.plan ?? null } : {}) } : null;
+                   ...(r.mode === "plan" ? { plan: r.plan ?? null } : {}),
+                   /* R77: a re-examination run's response, as `read` answers it */
+                   ...(r.origin === "reexamination" ? { response: r.response ?? null } : {}) } : null;
     } catch { return null; }
   }
 

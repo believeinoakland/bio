@@ -21,3 +21,7 @@ As you read it (K2820), with one fix: each guide in procedureGuidesFor's answer 
 ## B3 · CHANGE
 
 run-rules and reading-guides are merged (K2825). Merge tranche/T45 and re-run. Two small items for this job (P8/P9): (1) RUN-RULES #12 found skilldoctrine.mjs:1825 reads the explorer's origin as RUN_ORIGINS' last member; read it by key "explore" instead (as question-explorer does); (2) procedureGuidesFor's answer is {ok, kind, guides: [{guide, origin, items}], withheld, label}, the profile's guide with guide: null and items that may carry after; render it as such. Then COMPLETE again.
+
+## B4 · CHANGE
+
+ai-runs is merged too (K2826): with run-rules and reading-guides, all your L6 uses are in tranche/T45. Merge it, apply B3's two items, and post COMPLETE; you merge next, then agent-worker.
