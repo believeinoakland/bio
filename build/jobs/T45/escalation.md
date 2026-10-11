@@ -21,3 +21,29 @@ Built on my branch (pushed): R6, R14, R23, R25, R30, R32 and R31's code; R31's t
 7. **R23:** the attachment records `premise_override: {ground, reason, by, at}` from `actionRead`'s `premise_override` (ground null until actions R74).
 8. **R32:** context lists actions resting on the determination or on any finding in `determinationRead().findings[].finding`, excluding every `breach: true` action, each `{action, kind, sent_at, resolution, state}`.
 9. Not in my requirements but named by conformance R33: refusing a void determination through `determinationVoided` at R1/R27/R29. Today a void one (outcomes read undetermined) answers `NOT_NONCOMPLIANT`. Add a line if you want `DETERMINATION_VOID`.
+
+## J3 · COMPLETE
+
+**Completion (T45-32), head bbf7750cd7 on `job/T45/escalation` (tranche/T45 merged at d9df7faade).**
+
+**Applied:** R6 (no reply owed: neither the clock nor a `no_response` entry triggers; the read's note says "no reply owed"), R14 (a curing act of the same office linked through `conformance.curesOf`, `cure_standing: true`, restores compliance per standard; `COMPLIANCE_NOT_RESTORED` names per standard what is missing), R23 (an overridden action attaches once it rests on this determination; the attachment entry records `premise_override: {ground, reason, by, at}`, shown in the history), R30 (every item `public: true`; an escalation whose attached actions are all confidential is not answered; a confidential attachment never is), R32 (`context` in the read). R16's and R25's T45 sentences and R30's stop sentence depend on R31.
+
+**Deferred:** R31, as B2 directs (T46, N910, K2844). Its built version (stop, reopen, C-116.47 `MACHINE_CANNOT_STOP`, C-116.48 `NOT_STOPPED`, `NOT_OPEN` widened, two ops arms, tests) is in commit f0c0e4574d. It was reverted here and is named by a `test.todo`. Items 3 and 4 of J2 are void with it: no new op, no new row and no `where` change ship in T45. Its parts in R16 (never listing a stopped escalation), R25 (the two arms) and R30 (the stop and reopening) go with it to T46. Their *(not yet met: T45)* marks may want T46 too; that is your fold.
+
+**Found in other modules (also in J2):** (1) `actions` R87 exposes no read of the confidential scope, so I read `actionRead().confidential === true`. (2) `conformance` R37's answer shape is not stated, and my read tolerates several shapes. (5) R30 makes deliberation public through case-authoring R57. (9) `conformance` R33 names escalation among the refusers of a void determination, which escalation's requirements do not say. No artifact made stale by me: no new op ships.
+
+**Own code read whole** (index, checks, doc, ops, schema) and all tests read whole. The reading set was read as K2700 allows: requirements, code and tests whole by me; the used modules' public parts and the later users' lines read whole by a helper, whose digest cites each section. Flaws: none found beyond the above. `#compliance` now also skips a void compliant determination.
+
+**Tests:** `node --test bio-plane/test/m/escalation/`: tests 70, pass 69, fail 0, todo 1. Users of my services:
+- `test/m/monitoring`, `legacy-store`, `plane`, `action-plans`, `queue-producers`: 465 pass, 2 fail. Both are inherited reds (rule 4 (9), (11)).
+- `affordances`, `control-plane`, `op-declarations`, `op-grades`, `answer-envelope`: 653 pass, 11 fail, identical with and without my change (inherited reds).
+
+**Checks:**
+- format: 153 modules, 152 requirements files; 0 failures.
+- architecture escalation: 18 product files, 65 relative imports; 0 failures.
+- coverage escalation: 32 of 32 live requirement ids named by a test; 0 failures.
+- ownership escalation tranche/T45: 10 files changed; 0 failures.
+
+New test files: `stopped.test.mjs` (the todo) and `t45.test.mjs`, under my tests path.
+
+Size (session_01HztAVfrFX3rGVayQh2NyNt): test runs 16, module lines 2218
