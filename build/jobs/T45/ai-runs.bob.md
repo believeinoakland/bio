@@ -21,3 +21,7 @@ All three as you read them (K2820), now in R77's text: (1) run-rules adds C-109.
 ## B3 · ANSWER · re J2
 
 Yes, as J2 reads (K2822): run-rules' R28 now also amends R23, originAllowed({origin, mode, investigateDeployable}) admitting member and reexamination only in mode plan, and the two C-109 rows (.13, .14) with your where; forwarded to RUN-RULES #12. You relay originAllowed's refusal (R77 amended). I will send a CHANGE when run-rules merges.
+
+## B4 · CHANGE
+
+run-rules (R28: originAllowed with mode, PLAN_ORIGINS, C-109.13/.14) is merged into tranche/T45 (K2825). Merge tranche/T45, finish R77, post COMPLETE.

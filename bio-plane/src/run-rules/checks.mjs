@@ -606,7 +606,7 @@ export const AI_RUN_OPEN_CHECKS = {
   },
 };
 
-/* R15 (K660; BIO_Action_v0_1.md §4 rule 1) / C-109.2–.7 — THE PLANNING RUN'S OPEN. A run in mode `plan` works on one
+/* R15 (K660; BIO_Action_v0_1.md §4 rule 1) / C-109.2–.7, and R28's C-109.13–.14 — THE PLANNING RUN'S OPEN. A run in mode `plan` works on one
  * action plan, for a member, inside a project, from what the record already holds, and proposes options; it neither
  * searches nor starts itself. `ai-runs` mints each of these at its open (its R46, R47), after `run-rules` R8 and its own
  * R40, nothing written on any, and reads the rows here by key as it does R11's. They join C-109, the open's family for
@@ -655,6 +655,21 @@ export const AI_RUN_PLAN_CHECKS = {
     where: 'src/ai-runs/index.mjs open > is-airun-open-check, reached from op=airunopen',
     translation: 'Nothing was run, because this kind of work has nothing in place yet to check what it is asked to '
       + 'work on. Rather than start without that check, the run is refused until the part that provides it is running.',
+  },
+  /* R28 (T45; K2820, K2822; ai-runs R77): A RE-EXAMINATION RUN, the planning run started inside the member's act that
+     records a response (v0.2 rule 16). Minted by ai-runs at its open after R46 and the origin (`originAllowed`, R23 as
+     R28 amends it), read here by key. DEC-83's form: the sentence, then the remedy. */
+  AI_RUN_REEXAM_NEEDS_RESPONSE: {
+    check: 'C-109.13',
+    where: 'src/ai-runs/index.mjs open > is-airun-open-reexam, reached from op=airunopen',
+    translation: 'Nothing was run, because a fresh look at the plan after a reply was asked for without saying which '
+      + 'reply it is about. Record the reply first; the fresh look starts from that reply.',
+  },
+  AI_RUN_REEXAM_OPEN: {
+    check: 'C-109.14',
+    where: 'src/ai-runs/index.mjs open > is-airun-open-reexam, reached from op=airunopen',
+    translation: 'Nothing was run, because a fresh look at this plan after this reply is already under way. Wait for it '
+      + 'to finish and read what it proposes.',
   },
 };
 

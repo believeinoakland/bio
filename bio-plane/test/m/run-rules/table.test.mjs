@@ -49,7 +49,10 @@ const AI_RUNS_ACTS = {
 const PLANNING = {
   AI_RUN_PLAN_REQUIRED: "C-109.2", AI_RUN_PLAN_UNEXPECTED: "C-109.3", AI_RUN_PLAN_NEEDS_PROJECT: "C-109.4",
   AI_RUN_PLAN_NEEDS_MEMBER: "C-109.5", AI_RUN_PLAN_NO_SEARCH: "C-109.6", AI_RUN_MODE_UNCHECKED: "C-109.7",
+  /* R28 (K2820, K2822; ai-runs R77): the re-examination run's two, in the same family */
+  AI_RUN_REEXAM_NEEDS_RESPONSE: "C-109.13", AI_RUN_REEXAM_OPEN: "C-109.14",
 };
+const REGION = { AI_RUN_MODE_UNCHECKED: "check", AI_RUN_REEXAM_NEEDS_RESPONSE: "reexam", AI_RUN_REEXAM_OPEN: "reexam" };
 const OBSERVATION_LOG_C22 = ["C-22.1", "C-22.2", "C-22.3", "C-22.4", "C-22.6", "C-22.9", "C-22.10", "C-22.17"];
 
 function wellFormed(code, row) {
@@ -110,7 +113,7 @@ test("R15: the rows of ai-runs R46–R47's codes join the table, each with its n
     wellFormed(code, row);
     assert.equal(AI_RUN_CHECKS[code], row);
     assert.equal(translationOf(code), row.translation);
-    assert.equal(row.where, `src/ai-runs/index.mjs open > is-airun-open-${code === "AI_RUN_MODE_UNCHECKED" ? "check" : "plan"}, reached from op=airunopen`);
+    assert.equal(row.where, `src/ai-runs/index.mjs open > is-airun-open-${REGION[code] ?? "plan"}, reached from op=airunopen`);
     assert.match(row.translation, /^Nothing was run, because /, `${code}: says nothing ran`);
   }
   /* no two planning codes share a sentence: each names its own condition */
@@ -145,6 +148,7 @@ test("R12: no place is named in the module's behaviour or outward text — its r
     JSON.stringify(RR.TEST_MATTER_SHAPE), JSON.stringify(RR.CIVICSMITH_TEST_SET), ...RR.RUN_ORIGINS,
     RR.checkTestBarRecord({}).detail, RR.checkPagesRead({ limits: [{}] }).detail, RR.originAllowed({ origin: "explore" }).detail,
     RR.originAllowed({ origin: "x" }).detail, RR.startAllowed({ mode: "enquire" }).detail,
+    RR.originAllowed({ origin: "x", mode: "plan" }).detail, JSON.stringify(RR.ACTION_DRAFTS), ...RR.PLAN_ORIGINS,
   ];
   for (const t of texts) assert.equal(PLACE.test(String(t)), false, String(t).slice(0, 80));
   /* control: the pattern does catch a place */
