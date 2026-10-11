@@ -9,6 +9,8 @@
  *   (R9, R10)
  *   stepWait, stepWaitRemove, stepByWhen, stepsDue, stepReminder  waits and dates
  *   (R11, R12)
+ *   registerDueHolder, stepsWaitingOn (R29, R30)                  one date, one reminder: a date an action's clock
+ *                                                                 holds, and the steps waiting on an arrival
  *   stepCostAdd, stepCostRemove, costShares, costMessage,         money cost, and the relay between the projects
  *   costMessages (R13–R15)                                        that share one
  *   questionFollow, following, findRecipients (R16, R17)          following a question
@@ -66,6 +68,8 @@ export const RECIPIENTS_LIMIT = Object.freeze({ default: 500, max: 1000 });
 const DRAW_PAGE = 500, DRAW_MAX = 10000;
 /** R23: how many later-found entries one `laterFound` read takes at most, oldest first. */
 export const LATER_FOUND_SCAN = 5000;
+/** R30: the most steps one `stepsWaitingOn` answers. */
+export const WAITING_ON_MAX = 200;
 /** R26: the figures registered with record-core's counts, one per acceptance form. */
 export const ACCEPTANCE_COUNT_KEYS = Object.freeze(["stepsAcceptedAsProposed", "stepsAcceptedEdited", "stepsAcceptedOwnInstead"]);
 
@@ -143,6 +147,7 @@ export function stepsOf(host, deps = {}) {
 export class Steps {
   #sql; #record; #membership; #log; #legEarning; #host; #viewFn; #now;
   #runHolder = null;                 // R1: {module, fn(by, run) → {enabled_by, principal} | null}
+  #dueHolder = null;                 // R29: {module, fn({step, byWhen, waits}) → {entry} | null}
   #arrivals = new Map();             // R11: kind → {module, read(id)}
   #productSight = new Map();         // R9: id prefix → {module, fn(id, viewer)}
   #declared = false;
@@ -209,6 +214,14 @@ export class Steps {
     const refused = listenerRefusal(this.#runHolder ? { module: this.#runHolder.module } : null, module, fn);
     if (refused) return refused;
     this.#runHolder = { module, fn };
+    return { ok: true, module };
+  }
+  /** R29: one later module (`action-clocks`, its R16) registers, once, whether it holds a step's date as an action's
+   *  clock entry: `fn({step, byWhen, waits})` answers null or `{entry}`. One date, one reminder. */
+  registerDueHolder(module, fn) {
+    const refused = listenerRefusal(this.#dueHolder ? { module: this.#dueHolder.module } : null, module, fn);
+    if (refused) return refused;
+    this.#dueHolder = { module, fn };
     return { ok: true, module };
   }
   /** R11: a later module registers the read of one kind of arrival: `read(id)` answers true (arrived), false, or
@@ -439,6 +452,23 @@ export class Steps {
     return { ...b, nearing, ...(today ? {} : { why: "no time zone is held for your group's Civicsmith, so the local day is not known" }) };
   }
 
+  /* R29: whether the registered holder holds the step's date as an action's clock entry: `{module, entry}`, or null
+     when the step has no date, nothing is registered, or the holder throws or answers anything but `{entry}` (so the
+     step's own item stays). The holder is told the step, its date as set and its live waits, as R11 records them. */
+  #heldBy(row) {
+    const b = parse(row.by_when_json);
+    if (!this.#dueHolder || !isObj(b)) return null;
+    const waits = this.#waitRows(row.step_id).map((w) => ({
+      wait: Number(w.wait_id),
+      on: w.on_kind === "step" ? { step: w.on_step } : w.on_kind === "date" ? { date: w.on_date }
+        : { arrival: { kind: w.arrival_kind, id: w.arrival_id } },
+    }));
+    let r;
+    try { r = this.#dueHolder.fn({ step: row.step_id, byWhen: b, waits }); } catch { return null; }
+    const entry = isObj(r) ? r.entry : undefined;
+    return filled(entry) || isObj(entry) ? { module: this.#dueHolder.module, entry } : null;
+  }
+
   /** R4: one step as every read answers it, for a viewer who sees it. */
   #view(row, viewer, today = this.#today(this.#now())) {
     const waits = this.#waitRows(row.step_id).map((w) => this.#waitView(w, viewer, today));
@@ -450,7 +480,7 @@ export class Steps {
       doer: row.doer_member ? this.#handle(row.doer_member) : "system",
       ...(row.doer_member ? {} : { enabled_by: row.enabled_by }),
       taken_in: this.#takenIn(row, viewer), state: this.#readState(row, waits), outcomes: this.#outcomes(row, viewer),
-      byWhen: this.#byWhenView(row, today), waits, learned: this.#learned(row.step_id), cost: this.#cost(row.step_id),
+      byWhen: this.#byWhenView(row, today), by_when_held: this.#heldBy(row), waits, learned: this.#learned(row.step_id), cost: this.#cost(row.step_id),
       later_found: this.#laterFoundOf(row.step_id, viewer), at: row.at,
     };
   }
@@ -997,6 +1027,25 @@ export class Steps {
     });
   }
 
+  /** R30: `stepsWaitingOn({kind, id})`, in process for `action-clocks`: the steps with a live arrival wait (R11) on
+   *  `{kind, id}`, each `{step, byWhen, state}` (`state` as R4 reads it, `waiting` included), at most
+   *  `WAITING_ON_MAX` by step id, with `truncated`. It asks no viewer and is never answered to a member; it writes
+   *  nothing and never throws. */
+  stepsWaitingOn({ kind = null, id = null } = {}) {
+    if (!filled(kind) || !filled(id)) return { ok: true, steps: [], truncated: false };
+    try {
+      const rows = this.#rows(`SELECT s.* FROM steps s WHERE s.step_id IN (SELECT w.step_id FROM step_waits w
+                                 WHERE w.on_kind = 'arrival' AND w.arrival_kind = ? AND w.arrival_id = ? AND w.removed_at IS NULL)
+                               ORDER BY s.step_id LIMIT ?`, kind.trim(), id.trim(), WAITING_ON_MAX + 1);
+      const today = this.#today(this.#now());
+      const steps = rows.slice(0, WAITING_ON_MAX).map((r) => {
+        const waits = this.#waitRows(r.step_id).map((w) => this.#waitView(w, null, today));
+        return { step: r.step_id, byWhen: parse(r.by_when_json), state: this.#readState(r, waits) };
+      });
+      return { ok: true, steps, truncated: rows.length > WAITING_ON_MAX };
+    } catch { return { ok: true, steps: [], truncated: false }; }
+  }
+
   /** R12: `stepByWhen({step, byWhen, by})`: a member sets (or, with null, clears) the date; she alone is told it is due. */
   stepByWhen({ step = null, byWhen = null, by = null } = {}) {
     const g = this.#gate(step, by, "stepByWhen", { memberOnly: true });
@@ -1024,7 +1073,9 @@ export class Steps {
   }
 
   /** R12: `stepsDue({viewer, at})`, for `notice-producers`: to the member who set each date only, each step past its
-   *  date and not closed, and each reminder she asked for, from its day; each with a stable key. */
+   *  date and not closed, and each reminder she asked for, from its day; each with a stable key. R29: a step whose
+   *  date the registered holder holds draws no past-date item (the action's clock entry is the one item); her own
+   *  reminders stay. */
   stepsDue({ viewer = null, at = null } = {}) {
     const member = this.#memberOf(viewer);
     const today = filled(at) ? this.#today(at) : null;
@@ -1034,6 +1085,7 @@ export class Steps {
     for (const r of this.#rows(`SELECT * FROM steps WHERE by_when_by = ? AND state NOT IN ('ended', 'set_aside') ORDER BY step_id LIMIT 1000`, member)) {
       const b = parse(r.by_when_json);
       if (!isObj(b) || !(b.date < today) || !this.#seen(r, viewer)) continue;
+      if (this.#heldBy(r)) continue;                 /* R29: the action's clock entry is that date's one item */
       due.push({ step: r.step_id, work: r.work, kind: "past_date", date: b.date, key: sha256HexSync(`steps:due:${r.step_id}:${b.date}`) });
     }
     for (const m of this.#rows(`SELECT m.seq, m.day, s.* FROM step_reminders m JOIN steps s ON s.step_id = m.step_id
