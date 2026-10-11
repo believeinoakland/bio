@@ -12380,10 +12380,14 @@ __export(jurisdictions_exports, {
   FACT_STATUSES: () => FACT_STATUSES,
   FISCAL_NAMED_BY: () => FISCAL_NAMED_BY,
   FORUM_KINDS: () => FORUM_KINDS,
+  KIND_SHAPES: () => KIND_SHAPES,
   LAW_LEVELS: () => LAW_LEVELS,
+  LEGAL_FACT_TRIGGERS: () => LEGAL_FACT_TRIGGERS,
   LOCAL_NAME_KINDS: () => LOCAL_NAME_KINDS,
   MEETING_MARKERS: () => MEETING_MARKERS,
   MEMBER_CAPACITIES: () => MEMBER_CAPACITIES,
+  OWED_BY: () => OWED_BY,
+  PHRASING_KINDS: () => PHRASING_KINDS,
   POLICY_HEADER_FIELDS: () => POLICY_HEADER_FIELDS,
   RECEIPT_RULES: () => RECEIPT_RULES,
   REVIEW_KINDS: () => REVIEW_KINDS,
@@ -12402,6 +12406,7 @@ __export(jurisdictions_exports, {
   TEMPLATE_USES: () => TEMPLATE_USES,
   TIERS: () => TIERS,
   UNITS: () => UNITS,
+  VENUE_FACTS: () => VENUE_FACTS,
   VENUE_HOW: () => VENUE_HOW,
   VOCABULARY: () => VOCABULARY,
   WEEKDAYS: () => WEEKDAYS,
@@ -12852,6 +12857,16 @@ var oakland_alameda_default = {
        Order's SUBJECT, EFFECTIVE DATE or DATE; OUSD's type lines. Measured on the families' primary pages (2026-10-07
        policies) and on the 50 policies doctypes captured from them the same day (K1930; `test/fixtures/policies.mjs`).
        Written without a trailing colon: a reader takes the label with or without one. */
+    /* R77 (T45): Penal Code § 933.05 sets the statuses in which a body answers a grand jury report: one of two per
+       finding ((a)), one of four per recommendation ((b)). */
+    response_statuses: [
+      { status: "finding_agreed", label: "The respondent agrees with the finding", citation: "Cal. Penal Code \xA7 933.05(a)(1)", applies_to: "grand_jury", basis: "2026-10-11 actions-law" },
+      { status: "finding_disputed", label: "The respondent disagrees wholly or partially with the finding", citation: "Cal. Penal Code \xA7 933.05(a)(2)", applies_to: "grand_jury", basis: "2026-10-11 actions-law" },
+      { status: "recommendation_implemented", label: "The recommendation has been implemented", citation: "Cal. Penal Code \xA7 933.05(b)(1)", applies_to: "grand_jury", basis: "2026-10-11 actions-law" },
+      { status: "recommendation_will_be_implemented", label: "The recommendation has not yet been implemented, but will be implemented in the future", citation: "Cal. Penal Code \xA7 933.05(b)(2)", applies_to: "grand_jury", basis: "2026-10-11 actions-law" },
+      { status: "recommendation_requires_analysis", label: "The recommendation requires further analysis", citation: "Cal. Penal Code \xA7 933.05(b)(3)", applies_to: "grand_jury", basis: "2026-10-11 actions-law" },
+      { status: "recommendation_not_implemented", label: "The recommendation will not be implemented because it is not warranted or is not reasonable", citation: "Cal. Penal Code \xA7 933.05(b)(4)", applies_to: "grand_jury", basis: "2026-10-11 actions-law" }
+    ],
     policy_headers: [
       { field: "type", pattern: { re: R`\bADMINISTRATIVE\s+INSTRUCTION\b` }, basis: "2026-10-07 policies" },
       { field: "type", pattern: { re: R`\bDEPARTMENTAL\s+GENERAL\s+ORDER\b` }, basis: "2026-10-07 policies" },
@@ -12893,15 +12908,70 @@ var oakland_alameda_default = {
     { term: "police", basis: "UNMEASURED" }
   ],
   records_laws: [
+    /* R76 (T45): each law's stages in its own order, in the product's stage names, with the law's own term; a stage the
+       law lacks is absent: the CPRA has no fee waiver and no administrative appeal, and charges direct costs of
+       duplication with no estimate stage (§ 7922.530(a)); mediation under OMC 2.20.270(C) is an action of its own (v0.2 §5). */
     {
       level: "state",
       name: "California Public Records Act",
       citation: "Cal. Gov. Code \xA7 7920.000 et seq.",
+      stages: [
+        { stage: "request", label: "request for a copy of records", citation: "Cal. Gov. Code \xA7 7922.530(a)" },
+        { stage: "extension_notice", label: "written notice extending the time limit in unusual circumstances", citation: "Cal. Gov. Code \xA7 7922.535(b)" },
+        { stage: "production", label: "records made promptly available", citation: "Cal. Gov. Code \xA7 7922.530(a)" },
+        { stage: "denial", label: "written determination that the request is denied", citation: "Cal. Gov. Code \xA7 7922.540(a)" },
+        { stage: "court_filing", label: "verified petition to the superior court", citation: "Cal. Gov. Code \xA7\xA7 7923.000, 7923.100" }
+      ],
+      requesters: {
+        text: "any person, including a corporation, partnership, firm or association; no purpose need be given",
+        citation: "Cal. Gov. Code \xA7\xA7 7920.520, 7921.300, 7922.530(a)",
+        status: "researched",
+        basis: "2026-10-11 actions-law"
+      },
       basis: "D-149"
     },
     /* The City's own records law, whose Immediate Disclosure Request is OMC 2.20.230 (time-law §2). */
-    { level: "city", name: "Oakland Sunshine Ordinance", citation: "Oakland Mun. Code ch. 2.20", basis: "2026-10-05 time-law" },
-    { level: "federal", name: "Freedom of Information Act", citation: "5 U.S.C. \xA7 552", basis: "2026-10-05 time-law" }
+    {
+      level: "city",
+      name: "Oakland Sunshine Ordinance",
+      citation: "Oakland Mun. Code ch. 2.20",
+      stages: [
+        { stage: "request", label: "Immediate Disclosure Request", citation: "Oakland Mun. Code \xA7 2.20.230(A), (B)" },
+        { stage: "extension_notice", label: "advice that additional time is needed", citation: "Oakland Mun. Code \xA7 2.20.230(A), (B)" },
+        { stage: "production", label: "disclosable records provided for inspection or copying", citation: "Oakland Mun. Code \xA7 2.20.230(B)" },
+        { stage: "denial", label: "withholding justified in writing", citation: "Oakland Mun. Code \xA7 2.20.250" },
+        { stage: "court_filing", label: "proceedings for injunctive relief, declaratory relief, or writ of mandate", citation: "Oakland Mun. Code \xA7 2.20.270(B)(1)" }
+      ],
+      requesters: {
+        text: "any person; no reason or use need be stated",
+        citation: "Oakland Mun. Code \xA7\xA7 2.20.230(D), 2.20.270(B)(1)",
+        status: "researched",
+        basis: "2026-10-11 actions-law"
+      },
+      basis: "2026-10-05 time-law"
+    },
+    {
+      level: "federal",
+      name: "Freedom of Information Act",
+      citation: "5 U.S.C. \xA7 552",
+      stages: [
+        { stage: "request", label: "request for records", citation: "5 U.S.C. \xA7 552(a)(3)(A)" },
+        { stage: "fee_waiver_request", label: "request for a waiver or reduction of fees", citation: "5 U.S.C. \xA7 552(a)(4)(A)(iii)" },
+        { stage: "extension_notice", label: "written notice of unusual circumstances", citation: "5 U.S.C. \xA7 552(a)(6)(B)(i)" },
+        { stage: "production", label: "records made promptly available", citation: "5 U.S.C. \xA7 552(a)(3)(A)" },
+        { stage: "denial", label: "determination denying the request", citation: "5 U.S.C. \xA7 552(a)(6)(A)(i)" },
+        { stage: "appeal", label: "appeal of an adverse determination", citation: "5 U.S.C. \xA7 552(a)(6)(A)(i), (ii)" },
+        { stage: "appeal_decision", label: "determination on the appeal", citation: "5 U.S.C. \xA7 552(a)(6)(A)(ii)" },
+        { stage: "court_filing", label: "complaint in the district court", citation: "5 U.S.C. \xA7 552(a)(4)(B)" }
+      ],
+      requesters: {
+        text: "any person; an element of the intelligence community does not make records available to a foreign government entity or its representative",
+        citation: "5 U.S.C. \xA7 552(a)(3)(A), (E)",
+        status: "researched",
+        basis: "2026-10-11 actions-law"
+      },
+      basis: "2026-10-05 time-law"
+    }
   ],
   standard_sources: [
     {
@@ -13100,7 +13170,8 @@ var oakland_alameda_default = {
     },
     { kind: "grand_jury", label: "complaint to the civil grand jury", tier: 1, basis: "D-182" },
     { kind: "controller_referral", label: "referral to the State Controller", tier: 1, basis: "D-182" },
-    { kind: "public_comment", label: "public comment to a body", basis: "UNMEASURED" },
+    /* Design Requirement 8 names "public comment at government meetings" Tier 1 (K2785). */
+    { kind: "public_comment", label: "public comment to a body", tier: 1, basis: "K2785" },
     { kind: "media", label: "media outreach", tier: 1, basis: "D-182" },
     { kind: "litigation_support", label: "support for litigation", basis: "UNMEASURED" },
     { kind: "request_for_comment", label: "request for comment on specific claims", basis: "DEC-13" },
@@ -13126,6 +13197,23 @@ var oakland_alameda_default = {
       },
       advisory: "File with caution: a procedural error can have the petition dismissed, usually without prejudice, so refiling is possible but costs time and money. Legal review before filing is recommended.",
       basis: "D-182"
+    },
+    /* R85 (T45): the Brown Act's demand to cure or correct, a precondition of an action to void (Gov. Code § 54960.1(b)),
+       at Tier 2 (K2785); and taking part as a formal party before a venue, Tier 2 with its advisory (v0.2 rule 13, K2780). */
+    {
+      kind: "brown_act_demand",
+      label: "demand to cure or correct an action taken in violation of the Brown Act",
+      tier: 2,
+      laws: ["California Government Code"],
+      advisory: "File with caution: the demand must be made in writing within the period the law sets, and an action to void must follow within 15 days of the body's answer, or be barred (Gov. Code \xA7 54960.1(c)). Legal review before filing is recommended.",
+      basis: "K2785"
+    },
+    {
+      kind: "party_participation",
+      label: "taking part as a formal party before a venue",
+      tier: 2,
+      advisory: "File with caution: a party's filings are bound by the venue's own rules of practice and deadlines, and a procedural error can cost the party its standing. Legal review before filing is recommended.",
+      basis: "K2780"
     },
     { kind: "assessment_challenge", label: "challenge to a tax, assessment or fee under Proposition 218", tier: 3, basis: "D-182" },
     { kind: "taxpayer_action", label: "taxpayer action (Code of Civil Procedure \xA7 526a)", tier: 3, basis: "D-182" },
@@ -13155,6 +13243,7 @@ var oakland_alameda_default = {
         citation: "Cal. Gov. Code \xA7 7922.535(b)"
       },
       observed: { closures: "city", status: "researched", basis: "2026-10-05 time-law" },
+      owed_by: "body",
       citation: "Cal. Gov. Code \xA7 7922.535(a)",
       status: "researched",
       basis: "2026-10-05 time-law"
@@ -13168,6 +13257,7 @@ var oakland_alameda_default = {
       direction: "forward",
       starts: "received",
       closures: "city",
+      owed_by: "body",
       citation: "Oakland Mun. Code \xA7 2.20.230",
       status: "researched",
       basis: "2026-10-05 time-law"
@@ -13181,6 +13271,7 @@ var oakland_alameda_default = {
       amount: 72,
       direction: "backward",
       starts: "act",
+      owed_by: "body",
       citation: "Cal. Gov. Code \xA7 54954.2(a)(1)",
       status: "researched",
       basis: "2026-10-05 time-law"
@@ -13192,6 +13283,7 @@ var oakland_alameda_default = {
       amount: 24,
       direction: "backward",
       starts: "act",
+      owed_by: "body",
       citation: "Cal. Gov. Code \xA7 54956(a)",
       status: "researched",
       basis: "2026-10-05 time-law"
@@ -13205,6 +13297,7 @@ var oakland_alameda_default = {
       direction: "backward",
       starts: "act",
       closures: "city",
+      owed_by: "body",
       citation: "Oakland Mun. Code \xA7 2.20.070",
       status: "researched",
       basis: "2026-10-05 time-law"
@@ -13222,6 +13315,7 @@ var oakland_alameda_default = {
       starts: "act",
       applies_on: ["mon"],
       due_at: "12:00",
+      owed_by: "body",
       citation: "Oakland Mun. Code \xA7 2.20.070(C)",
       status: "researched",
       basis: "2026-10-05 time-law"
@@ -13235,6 +13329,7 @@ var oakland_alameda_default = {
       starts: "act",
       roll: true,
       closures: "judicial",
+      owed_by: "group",
       citation: "Cal. Gov. Code \xA7 911.2(a) (death, personal injury, personal property, growing crops)",
       status: "researched",
       basis: "2026-10-05 time-law"
@@ -13248,6 +13343,7 @@ var oakland_alameda_default = {
       starts: "act",
       roll: true,
       closures: "judicial",
+      owed_by: "group",
       citation: "Cal. Gov. Code \xA7 911.2(a) (any other claim)",
       status: "researched",
       basis: "2026-10-05 time-law"
@@ -13261,6 +13357,7 @@ var oakland_alameda_default = {
       starts: "served",
       roll: true,
       closures: "judicial",
+      owed_by: "group",
       citation: "Cal. Gov. Code \xA7 945.6(a)(1)",
       status: "researched",
       basis: "2026-10-05 time-law"
@@ -13285,9 +13382,180 @@ var oakland_alameda_default = {
         { when: "the agency awaits information it reasonably requested from the requester", citation: "5 U.S.C. \xA7 552(a)(6)(A)(ii)(I)" },
         { when: "the agency awaits clarification of the requester's fee assessment", citation: "5 U.S.C. \xA7 552(a)(6)(A)(ii)(II)" }
       ],
+      owed_by: "body",
+      consequence: {
+        text: "shall be deemed to have exhausted his administrative remedies with respect to such request if the agency fails to comply with the applicable time limit provisions of this paragraph",
+        citation: "5 U.S.C. \xA7 552(a)(6)(C)(i)"
+      },
       citation: "5 U.S.C. \xA7 552(a)(6)(A)(i)",
       status: "researched",
-      basis: "2026-10-05 time-law"
+      basis: "2026-10-05 time-law, 2026-10-11 actions-law"
+    },
+    /* T45 (R75, R85): each with its primary source (2026-10-11 actions-law). Day periods under California law count by
+       CCP § 12 and roll on its § 12a closures, as the rules above do. Where the law states what failing a period means,
+       its words are quoted as the consequence. Whose duty each earlier rule is (`owed_by`) is read off the operative text
+       time-law quotes ("the legislative body shall post", "each agency … shall … determine", a claim "shall be
+       presented"). */
+    {
+      rule: "claim_board_action",
+      applies_to: "claim",
+      units: "days",
+      amount: 45,
+      count: "calendar",
+      direction: "forward",
+      starts: "filed",
+      roll: true,
+      closures: "judicial",
+      computation: "ccp_12",
+      owed_by: "body",
+      consequence: {
+        text: "the claim shall be deemed to have been rejected by the board on the last day of the period within which the board was required to act upon the claim",
+        citation: "Cal. Gov. Code \xA7 912.4(c)"
+      },
+      citation: "Cal. Gov. Code \xA7 912.4(a)",
+      status: "researched",
+      basis: "2026-10-11 actions-law"
+    },
+    {
+      rule: "foia_appeal_response",
+      applies_to: "records_request",
+      units: "days",
+      amount: 20,
+      count: "business",
+      direction: "forward",
+      starts: "received",
+      closures: "federal",
+      owed_by: "body",
+      consequence: {
+        text: "shall be deemed to have exhausted his administrative remedies with respect to such request if the agency fails to comply with the applicable time limit provisions of this paragraph",
+        citation: "5 U.S.C. \xA7 552(a)(6)(C)(i)"
+      },
+      citation: "5 U.S.C. \xA7 552(a)(6)(A)(ii)",
+      status: "researched",
+      basis: "2026-10-11 actions-law"
+    },
+    /* Gov. Code § 54960.1(c)(1): the demand within 90 days of the action, or 30 when an open-session action violated
+       § 54954.2 (the agenda); (c)(2)–(3): the body's 30 days to cure or correct. The 15 days to sue ((c)(4)) run from the
+       group's receipt of the body's answer or from the end of the 30 days, whichever is earlier: no anchor of R26 names
+       that, so it is absent and named in the job's record. */
+    {
+      rule: "brown_act_demand",
+      applies_to: "brown_act_demand",
+      units: "days",
+      amount: 90,
+      count: "calendar",
+      direction: "forward",
+      starts: "act",
+      roll: true,
+      closures: "judicial",
+      computation: "ccp_12",
+      owed_by: "group",
+      citation: "Cal. Gov. Code \xA7 54960.1(c)(1)",
+      status: "researched",
+      basis: "2026-10-11 actions-law"
+    },
+    {
+      rule: "brown_act_demand_agenda",
+      applies_to: "brown_act_demand",
+      units: "days",
+      amount: 30,
+      count: "calendar",
+      direction: "forward",
+      starts: "act",
+      roll: true,
+      closures: "judicial",
+      computation: "ccp_12",
+      owed_by: "group",
+      citation: "Cal. Gov. Code \xA7 54960.1(c)(1) (an action in open session in violation of \xA7 54954.2)",
+      status: "researched",
+      basis: "2026-10-11 actions-law"
+    },
+    {
+      rule: "brown_act_cure",
+      applies_to: "brown_act_demand",
+      units: "days",
+      amount: 30,
+      count: "calendar",
+      direction: "forward",
+      starts: "received",
+      roll: true,
+      closures: "judicial",
+      computation: "ccp_12",
+      owed_by: "body",
+      consequence: { text: "the inaction shall be deemed a decision not to cure or correct the challenged action", citation: "Cal. Gov. Code \xA7 54960.1(c)(3)" },
+      citation: "Cal. Gov. Code \xA7 54960.1(c)(2)",
+      status: "researched",
+      basis: "2026-10-11 actions-law"
+    },
+    /* Penal Code § 933(c): the governing body's comment within 90 days after the grand jury submits its final report, an
+       elected county officer's or agency head's within 60; § 933.05(b)(3): further analysis within six months of the
+       report's publication. The grand jury's act starts each count. */
+    {
+      rule: "grand_jury_body_comment",
+      applies_to: "grand_jury",
+      units: "days",
+      amount: 90,
+      count: "calendar",
+      direction: "forward",
+      starts: "third_party",
+      starter: { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury" },
+      roll: true,
+      closures: "judicial",
+      computation: "ccp_12",
+      owed_by: "body",
+      citation: "Cal. Penal Code \xA7 933(c)",
+      status: "researched",
+      basis: "2026-10-11 actions-law"
+    },
+    {
+      rule: "grand_jury_officer_comment",
+      applies_to: "grand_jury",
+      units: "days",
+      amount: 60,
+      count: "calendar",
+      direction: "forward",
+      starts: "third_party",
+      starter: { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury" },
+      roll: true,
+      closures: "judicial",
+      computation: "ccp_12",
+      owed_by: "body",
+      citation: "Cal. Penal Code \xA7 933(c) (an elected county officer or agency head)",
+      status: "researched",
+      basis: "2026-10-11 actions-law"
+    },
+    {
+      rule: "grand_jury_further_analysis",
+      applies_to: "grand_jury",
+      units: "months",
+      amount: 6,
+      direction: "forward",
+      starts: "third_party",
+      starter: { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury" },
+      roll: true,
+      closures: "judicial",
+      owed_by: "body",
+      citation: "Cal. Penal Code \xA7 933.05(b)(3)",
+      status: "researched",
+      basis: "2026-10-11 actions-law"
+    },
+    /* Code Civ. Proc. § 425.16(f): the special motion to strike, the group's own defence. */
+    {
+      rule: "anti_slapp_motion",
+      applies_to: "claim",
+      units: "days",
+      amount: 60,
+      count: "calendar",
+      direction: "forward",
+      starts: "served",
+      roll: true,
+      closures: "judicial",
+      computation: "ccp_12",
+      owed_by: "group",
+      defends: true,
+      citation: "Cal. Code Civ. Proc. \xA7 425.16(f)",
+      status: "researched",
+      basis: "2026-10-11 actions-law"
     }
   ],
   weekend: {
@@ -13386,8 +13654,66 @@ var oakland_alameda_default = {
       basis: "K1493"
     }
   ],
+  /* R79 (T45): the legal facts shown, with their citations, at the moment they matter (each read 2026-10-11 on its primary
+     source; quoted in `test/fixtures/actions-law.mjs`). Legal information, never advice: whether one applies is the
+     member's to judge. */
+  legal_facts: [
+    {
+      key: "recording_open_meeting",
+      trigger: "recording",
+      statement: "Anyone attending an open and public meeting of a local legislative body may record it, unless the body reasonably finds that the recording would persistently disrupt the meeting through noise, light or blocking the view.",
+      citation: "Cal. Gov. Code \xA7 54953.5(a)",
+      status: "researched",
+      basis: "2026-10-11 actions-law"
+    },
+    {
+      key: "recording_consent",
+      trigger: "recording",
+      statement: "Recording a confidential communication without the consent of every party to it is a crime in California; a communication in a public gathering or an open public proceeding is not confidential.",
+      citation: "Cal. Penal Code \xA7 632(a), (c)",
+      status: "researched",
+      basis: "2026-10-11 actions-law"
+    },
+    {
+      key: "lobbyist_registration",
+      trigger: "paid_attendee",
+      statement: "Anyone paid $1,000 or more in a calendar month to communicate with City officials to influence a City decision, or a salaried employee, officer or director of an organisation whose duties include doing so, is a local governmental lobbyist and must register with the Public Ethics Commission before lobbying.",
+      citation: "Oakland Mun. Code \xA7\xA7 3.20.030(D), 3.20.040(A)",
+      threshold: { amount: 1e3, unit: "USD in a calendar month" },
+      status: "researched",
+      basis: "2026-10-11 actions-law"
+    },
+    {
+      key: "serial_meeting",
+      trigger: "serial_meeting",
+      statement: "A majority of a legislative body's members may not, outside a noticed meeting, use a series of communications of any kind, directly or through intermediaries, to discuss, deliberate or act on business within the body's jurisdiction.",
+      citation: "Cal. Gov. Code \xA7 54952.2(b)(1)",
+      status: "researched",
+      basis: "2026-10-11 actions-law"
+    },
+    {
+      key: "campaign_spending",
+      trigger: "pending_measure_or_candidate",
+      statement: "Spending $1,000 or more in a calendar year on communications that expressly advocate for or against a clearly identified candidate or measure, not made at a candidate's or committee's behest, makes the spender a committee under the Political Reform Act.",
+      citation: "Cal. Gov. Code \xA7\xA7 82013(b), 82031",
+      threshold: { amount: 1e3, unit: "USD in a calendar year" },
+      status: "researched",
+      basis: "2026-10-11 actions-law"
+    },
+    {
+      key: "anti_slapp",
+      trigger: "threat_letter",
+      statement: "A lawsuit arising from a statement made before, or about an issue under review by, a legislative, executive or judicial body, or in a public forum on an issue of public interest, may be met by a special motion to strike, filed within 60 days of service of the complaint.",
+      citation: "Cal. Code Civ. Proc. \xA7 425.16(b)(1), (e), (f)",
+      status: "researched",
+      basis: "2026-10-11 actions-law"
+    }
+  ],
   /* Design Requirement 8's legal organisations, as Bob named them (K283 (2), K303): each takes up the
-     Tier 3 kinds given here; none takes up consent_decree_motion. Their public websites are unmeasured. */
+     Tier 3 kinds given here; none takes up consent_decree_motion. HJTA's public website is unmeasured. FAC's Legal
+     Hotline page (read 2026-10-11) states its scope: public records, open meetings, court access, and "First Amendment
+     protections for freedom of speech and freedom of the press", a journalist facing a subpoena named among its urgent
+     requests; so it is held as one that advises a group facing legal pressure against itself (R78, R85). */
   legal_organisations: [
     {
       name: "Howard Jarvis Taxpayers Association",
@@ -13398,8 +13724,9 @@ var oakland_alameda_default = {
     {
       name: "First Amendment Coalition",
       evaluates: ["constitutional_claim"],
+      defends: true,
       contacts: [{ how: "web", value: "https://firstamendmentcoalition.org" }],
-      basis: "UNMEASURED"
+      basis: "K303, 2026-10-11 actions-law"
     }
   ],
   /* Each office's published closure days for 2026, by the list that governs it (K925). The City's and the
@@ -13536,6 +13863,34 @@ var oakland_alameda_default = {
       ],
       status: "researched",
       basis: "2026-10-05 time-law; 2026-10-05 holidays-extra"
+    },
+    /* The legal public holidays of 5 U.S.C. § 6103(a) for 2027 (R85, M-T45-1), with the days OPM's 2027 schedule observes in
+       their place (§ 6103(b); E.O. 11582 § 3(a)): Juneteenth and Christmas fall on a Saturday, Independence Day on a
+       Sunday, and 2028's New Year's Day on a Saturday, observed 2027-12-31 (OPM's 2028 table). Neither the court (M-189's
+       page lists 2026 only) nor the City (M-190) has published 2027: those lists stay without 2027, undetermined. */
+    {
+      year: 2027,
+      list: "federal",
+      citation: "5 U.S.C. \xA7 6103(a), (b)",
+      days: [
+        { date: "2027-01-01", name: "New Year's Day" },
+        { date: "2027-01-18", name: "Birthday of Martin Luther King, Jr." },
+        { date: "2027-02-15", name: "Washington's Birthday" },
+        { date: "2027-05-31", name: "Memorial Day" },
+        { date: "2027-06-18", name: "Juneteenth National Independence Day (observed)" },
+        { date: "2027-06-19", name: "Juneteenth National Independence Day" },
+        { date: "2027-07-04", name: "Independence Day" },
+        { date: "2027-07-05", name: "Independence Day (observed)" },
+        { date: "2027-09-06", name: "Labor Day" },
+        { date: "2027-10-11", name: "Columbus Day" },
+        { date: "2027-11-11", name: "Veterans Day" },
+        { date: "2027-11-25", name: "Thanksgiving Day" },
+        { date: "2027-12-24", name: "Christmas Day (observed)" },
+        { date: "2027-12-25", name: "Christmas Day" },
+        { date: "2027-12-31", name: "New Year's Day 2028 (observed)" }
+      ],
+      status: "researched",
+      basis: "2026-10-11 actions-law"
     },
     /* The judicial holidays of 2018 and 2020, as the superior courts published them (San Diego Superior Court's
        schedules, agreeing with a statewide calendar; holidays-extra): Columbus Day was then a judicial holiday. */
@@ -13905,7 +14260,10 @@ var test_port_ellery_default = {
     response_statuses: [
       { status: "implemented", label: "Implemented", citation: "Test Stat. \xA7 3.40", basis: "TEST" },
       { status: "in_hand", label: "In hand", citation: "Test Stat. \xA7 3.40", basis: "TEST" },
-      { status: "declined", label: "Will not be implemented", citation: "Test Stat. \xA7 3.41", basis: "TEST" }
+      { status: "declined", label: "Will not be implemented", citation: "Test Stat. \xA7 3.41", basis: "TEST" },
+      /* R77: the statuses the Selectboard reports a bylaw complaint in */
+      { status: "upheld", label: "Complaint upheld", citation: "P.E.B.L. \xA7 9(4)", applies_to: "bylaw_complaint", basis: "TEST" },
+      { status: "not_upheld", label: "Complaint not upheld", citation: "P.E.B.L. \xA7 9(4)", applies_to: "bylaw_complaint", basis: "TEST" }
     ],
     member_types: [
       { member_type: "Selectperson", capacity: "elected", basis: "TEST" },
@@ -13919,7 +14277,20 @@ var test_port_ellery_default = {
   time_zone: { value: "America/Halifax", status: "researched", basis: "TEST" },
   search_terms: [{ term: "harbour", basis: "TEST" }],
   records_laws: [
-    { level: "state", name: "Freedom of Records Act (test)", citation: "Test Stat. \xA7 1.100", basis: "TEST" },
+    /* R84: its stages omit the fee waiver this law has none of */
+    {
+      level: "state",
+      name: "Freedom of Records Act (test)",
+      citation: "Test Stat. \xA7 1.100",
+      stages: [
+        { stage: "request", label: "application for records", citation: "Test Stat. \xA7 1.101" },
+        { stage: "denial", label: "notice of refusal", citation: "Test Stat. \xA7 1.120" },
+        { stage: "appeal", label: "application for internal review", citation: "Test Stat. \xA7 1.130" },
+        { stage: "appeal_decision", label: "decision on internal review", citation: "Test Stat. \xA7 1.131" }
+      ],
+      requesters: { text: "any resident of the state, or a body corporate registered in it", citation: "Test Stat. \xA7 1.102", status: "researched", basis: "TEST" },
+      basis: "TEST"
+    },
     { level: "city", name: "Port Ellery Open Government Bylaw", citation: "P.E.B.L. \xA7 4", basis: "TEST" },
     { level: "federal", name: "National Records Access Act (test)", citation: "Test U.S.C. \xA7 552", basis: "TEST" }
   ],
@@ -14012,7 +14383,16 @@ var test_port_ellery_default = {
       basis: "TEST"
     },
     { role: "Harbour District Board", body: "Port Ellery Harbour District", level: "district", elected: true, oversight: false, basis: "TEST" },
-    { role: "Examiner of Accounts", body: "Marlow County Audit Office", level: "county", elected: false, oversight: true, basis: "TEST" }
+    /* R74: an office keeping its own zone, unlike the profile's */
+    {
+      role: "Examiner of Accounts",
+      body: "Marlow County Audit Office",
+      level: "county",
+      elected: false,
+      oversight: true,
+      time_zone: { value: "America/St_Johns", status: "ruled", basis: "TEST" },
+      basis: "TEST"
+    }
   ],
   action_kinds: [
     {
@@ -14055,7 +14435,24 @@ var test_port_ellery_default = {
       label: "complaint under the bylaws",
       tier: 1,
       laws: ["Port Ellery Bylaws"],
-      venue: { name: "the Selectboard", how: "in_person", basis: "TEST" },
+      venue: {
+        name: "the Selectboard",
+        how: "in_person",
+        basis: "TEST",
+        /* R82, R87 (e) */
+        facts: [
+          { fact: "speaker_limit", value: "three minutes for each speaker, once on each item", citation: "P.E.B.L. \xA7 7(4)", status: "researched", basis: "TEST" },
+          {
+            fact: "comment_cutoff",
+            value: "written comment is taken until one hour before the sitting",
+            amount: { amount: 1, units: "hours" },
+            citation: "P.E.B.L. \xA7 7(5)",
+            status: "researched",
+            basis: "TEST"
+          },
+          { fact: "delivery_point", value: "the front counter of Port Ellery Town Hall", citation: "P.E.B.L. \xA7 7(1)", status: "ruled", basis: "TEST" }
+        ]
+      },
       template: attributed(
         "TPL-test-bylaw-complaint",
         "file",
@@ -14068,7 +14465,12 @@ var test_port_ellery_default = {
       kind: "commitment_claim",
       label: "claim on a budget commitment",
       tier: 3,
-      venue: { name: "Marlow County Court", how: "court", basis: "TEST" },
+      venue: {
+        name: "Marlow County Court",
+        how: "court",
+        basis: "TEST",
+        time_zone: { value: "America/Glace_Bay", status: "researched", basis: "TEST" }
+      },
       evidence: {
         standard: "Marlow County Court Rule 9.02 (test): a record authenticated by its custodian",
         accepts: [{ grade: "A", coattested: true }, { grade: "B" }],
@@ -14090,6 +14492,40 @@ var test_port_ellery_default = {
           at: "2026-08-22"
         }
       ),
+      basis: "TEST"
+    },
+    /* R81, R87: a kind of recognition's shape (R87 (a)) holding its Tier 1 set, each template with its purpose, name and
+       sources (R87 (b)) */
+    {
+      kind: "recognition_letter",
+      label: "letter of recognition",
+      tier: 1,
+      shape: "recognition",
+      venue: { name: "the Harbour District office", how: "mail", basis: "TEST" },
+      templates: [
+        {
+          ...attributed(
+            "TPL-test-recognition",
+            "file",
+            "To the {{counterparty_role}}: {{group}} recognises {{act}}.",
+            { reviewer: "Dee Example", kind: "member", scope: "the whole text", outcome: "no_concerns", at: "2026-08-23" }
+          ),
+          purpose: "initial",
+          name: "Letter of recognition",
+          sources: [{ citation: "P.E.B.L. \xA7 11" }]
+        },
+        {
+          ...attributed(
+            "TPL-test-recognition-follow-up",
+            "file",
+            "To the {{counterparty_role}}: {{group}} thanks you again for {{act}}.",
+            { reviewer: "Dee Example", kind: "member", scope: "the whole text", outcome: "no_concerns", at: "2026-08-24" }
+          ),
+          purpose: "follow_up",
+          name: "Follow-up letter of recognition",
+          sources: [{ citation: "P.E.B.L. \xA7 11(3)" }, { citation: "Test Stat. \xA7 2.7" }]
+        }
+      ],
       basis: "TEST"
     }
   ],
@@ -14213,6 +14649,49 @@ var test_port_ellery_default = {
       citation: "Marlow Ct. R. 31.2",
       status: "researched",
       basis: "TEST"
+    },
+    /* R75, R87 (c) (T45): owed by the group with the law's consequence; started by a third party's act; the group's defence */
+    {
+      rule: "complaint_particulars",
+      applies_to: "claim",
+      units: "days",
+      amount: 14,
+      count: "calendar",
+      direction: "forward",
+      starts: "filed",
+      owed_by: "group",
+      consequence: { text: "the claim shall be considered withdrawn", citation: "P.E.B.L. \xA7 9(3)" },
+      citation: "P.E.B.L. \xA7 9(2)",
+      status: "researched",
+      basis: "TEST"
+    },
+    {
+      rule: "examiner_reply",
+      applies_to: "claim",
+      units: "days",
+      amount: 28,
+      count: "calendar",
+      direction: "forward",
+      starts: "third_party",
+      starter: { role: "Examiner of Accounts", body: "Marlow County Audit Office" },
+      owed_by: "body",
+      citation: "Test Stat. \xA7 6.12",
+      status: "ruled",
+      basis: "TEST"
+    },
+    {
+      rule: "defence_filing",
+      applies_to: "claim",
+      units: "days",
+      amount: 21,
+      count: "calendar",
+      direction: "forward",
+      starts: "served",
+      owed_by: "group",
+      defends: true,
+      citation: "Marlow Ct. R. 15.1",
+      status: "researched",
+      basis: "TEST"
     }
   ],
   weekend: { days: ["sun"], citation: "Test Stat. \xA7 0.12", status: "researched", basis: "TEST" },
@@ -14324,7 +14803,79 @@ var test_port_ellery_default = {
       evaluates: ["commitment_claim"],
       contacts: [{ how: "web", value: "https://legal.marlow-county.example" }, { how: "phone", value: "+1 555 0100" }],
       basis: "TEST"
+    },
+    /* R78: an organisation that defends a group (and evaluates a Tier 3 kind; one evaluating none is R78's test's) */
+    {
+      name: "Ellery Free Speech Clinic (test)",
+      evaluates: ["commitment_claim"],
+      defends: true,
+      contacts: [{ how: "email", value: "clinic@free-speech.port-ellery.example" }],
+      basis: "TEST"
     }
+  ],
+  /* R79: one legal fact per trigger */
+  legal_facts: [
+    {
+      key: "paid_speaker_register",
+      trigger: "paid_attendee",
+      statement: "A person paid to address the Selectboard registers with the Town Clerk first.",
+      citation: "P.E.B.L. \xA7 14",
+      threshold: { amount: 250, unit: "GBP in a year" },
+      status: "researched",
+      basis: "TEST"
+    },
+    {
+      key: "sitting_recordings",
+      trigger: "recording",
+      statement: "Anyone may film a public sitting from the gallery.",
+      citation: "P.E.B.L. \xA7 7(6)",
+      applies_to: ["bylaw_complaint"],
+      status: "researched",
+      basis: "TEST"
+    },
+    {
+      key: "solicitor_letter",
+      trigger: "threat_letter",
+      statement: "A letter threatening suit over a complaint to the Selectboard does not stop the complaint.",
+      citation: "Test Stat. \xA7 8.3",
+      status: "ruled",
+      basis: "TEST"
+    },
+    {
+      key: "referendum_notice",
+      trigger: "pending_measure_or_candidate",
+      statement: "Spending on a pending referendum is declared to the Returning Officer.",
+      citation: "Test Stat. \xA7 10.2",
+      threshold: { amount: 500, unit: "GBP" },
+      status: "researched",
+      basis: "TEST"
+    },
+    {
+      key: "board_quorum_messages",
+      trigger: "serial_meeting",
+      statement: "Board members may not settle business by a chain of messages outside a sitting.",
+      citation: "P.E.B.L. \xA7 6(4)",
+      status: "researched",
+      basis: "TEST"
+    }
+  ],
+  /* R80, R87 (d): a sourced guide, in the profile's order, a route offered after an outcome */
+  procedure_guides: [
+    {
+      kind: "bylaw_complaint",
+      items: [
+        { route: "Ask the Town Clerk to place the complaint before the Selectboard", expect: "an acknowledgement within five days", citation: "P.E.B.L. \xA7 9(1)" },
+        { route: "Ask the Examiner of Accounts to review the Selectboard's answer", citation: "Test Stat. \xA7 6.10", after: ["denied", "none_stated"] }
+      ],
+      status: "researched",
+      basis: "TEST"
+    }
+  ],
+  /* R86: phrasings added to Civicsmith's own lists */
+  phrasings: [
+    { locale: "en-GB", kind: "assertion", phrase: "is in clear breach of", basis: "TEST" },
+    { locale: "en-GB", kind: "position", phrase: "the town ought to", basis: "TEST" },
+    { locale: "en-GB", kind: "own_benefit_ask", phrase: "a grant for our society", basis: "TEST" }
   ],
   /* The entries for one office and one venue come first: each adds its days to the year every office keeps (R43). */
   holidays: [
@@ -14448,7 +14999,11 @@ var SECTIONS = Object.freeze([
   "lawful_demands",
   "recurrences",
   /* T37 (R70) */
-  "local_names"
+  "local_names",
+  /* T45 (R79, R80, R86) */
+  "legal_facts",
+  "procedure_guides",
+  "phrasings"
 ]);
 var SPACES = Object.freeze([
   "enactment",
@@ -14497,7 +15052,7 @@ var VOCABULARY = Object.freeze([
 ]);
 var DATA_VOCABULARY = Object.freeze({
   vote_values: ["value", "label", "citation", "basis"],
-  response_statuses: ["status", "label", "citation", "basis"],
+  response_statuses: ["status", "label", "citation", "applies_to", "basis"],
   member_types: ["member_type", "capacity", "organisation", "basis"]
 });
 var MEMBER_CAPACITIES = Object.freeze(["elected", "appointed"]);
@@ -14520,7 +15075,28 @@ var POLICY_HEADER_FIELDS = Object.freeze([
 ]);
 var VENUE_HOW = Object.freeze(["portal", "mail", "email", "in_person", "court"]);
 var COUNTS = Object.freeze(["calendar", "business"]);
-var STARTS = Object.freeze(["received", "filed", "act", "known", "entered", "served", "hearing"]);
+var STARTS = Object.freeze(["received", "filed", "act", "known", "entered", "served", "hearing", "third_party"]);
+var OWED_BY = Object.freeze(["body", "group"]);
+var LEGAL_FACT_TRIGGERS = Object.freeze([
+  "paid_attendee",
+  "recording",
+  "threat_letter",
+  "pending_measure_or_candidate",
+  "serial_meeting"
+]);
+var VENUE_FACTS = Object.freeze([
+  "how_to_submit",
+  "anonymity",
+  "publishes",
+  "public_listing",
+  "speaker_limit",
+  "comment_cutoff",
+  "page_limit",
+  "interpreter_lead",
+  "delivery_point"
+]);
+var PHRASING_KINDS = Object.freeze(["assertion", "position", "own_benefit_ask"]);
+var KIND_SHAPES = Object.freeze(["recognition"]);
 var UNITS = Object.freeze(["days", "hours", "business_hours", "months", "years"]);
 var DIRECTIONS = Object.freeze(["forward", "backward"]);
 var COMPUTATION_RULES = Object.freeze(["exclude_first_include_last"]);
@@ -14554,6 +15130,10 @@ var LOCAL_NAME_KINDS = Object.freeze(["office", "law", "program", "place"]);
 var TIERS = Object.freeze([1, 2, 3]);
 var CONTACT_HOW = Object.freeze(["web", "email", "phone", "mail"]);
 var EVIDENCE_STANDARD_MAX = 200;
+var VENUE_FACT_MAX = 500;
+var TEMPLATE_NAME_MAX = 120;
+var PHRASE_MIN = 2;
+var PHRASE_MAX = 100;
 var TEMPLATE_FIELDS = Object.freeze([
   "id",
   "version",
@@ -14976,6 +15556,7 @@ function validateInto(p3, errors) {
   });
   const variantOrgs = new Set(own3(p3, "vocabulary") && isObj(p3.vocabulary) && Array.isArray(p3.vocabulary.body_variants) ? p3.vocabulary.body_variants.filter(isObj).map((v) => v.organisation).filter((o) => typeof o === "string" && KIND_RE.test(o)) : []);
   const variantOrg = (o) => typeof o === "string" && variantOrgs.has(o);
+  const profileKinds = new Set(own3(p3, "action_kinds") && Array.isArray(p3.action_kinds) ? p3.action_kinds.filter((k) => isObj(k) && typeof k.kind === "string" && KIND_RE.test(k.kind)).map((k) => k.kind) : []);
   if (own3(p3, "vocabulary")) {
     if (!isObj(p3.vocabulary)) err("vocabulary", "VALUE_INVALID", "vocabulary is an object keyed by vocabulary key");
     else for (const [key2, entries] of Object.entries(p3.vocabulary)) {
@@ -15005,6 +15586,8 @@ function validateInto(p3, errors) {
             str49(`${ea}.label`, e2.label, "label");
             str49(`${ea}.citation`, e2.citation, "citation");
           }
+          if (key2 === "response_statuses" && own3(e2, "applies_to") && !profileKinds.has(e2.applies_to))
+            err(`${ea}.applies_to`, "KIND_INVALID", `'${String(e2.applies_to)}' is no kind of this profile`);
           basis(ea, e2);
           return;
         }
@@ -15085,10 +15668,37 @@ function validateInto(p3, errors) {
   if (own3(p3, "records_laws")) list6("records_laws", p3.records_laws).forEach((l2, i) => {
     const at43 = `records_laws[${i}]`;
     if (!entry4(at43, l2)) return;
-    fields(at43, l2, ["level", "name", "citation", "basis"]);
+    fields(at43, l2, ["level", "name", "citation", "stages", "requesters", "basis"]);
     if (!LAW_LEVELS.includes(l2.level)) err(`${at43}.level`, "LEVEL_UNKNOWN", `level is one of ${LAW_LEVELS.join(", ")}`);
     str49(`${at43}.name`, l2.name, "name");
     str49(`${at43}.citation`, l2.citation, "citation");
+    if (own3(l2, "stages")) {
+      const seen = /* @__PURE__ */ new Set();
+      if (!Array.isArray(l2.stages) || !l2.stages.length) err(`${at43}.stages`, "VALUE_INVALID", "stages is a non-empty ordered list of {stage, label, citation}");
+      else l2.stages.forEach((st, j) => {
+        const sa = `${at43}.stages[${j}]`;
+        if (!isObj(st)) {
+          err(sa, "VALUE_INVALID", "a stage is {stage, label, citation}");
+          return;
+        }
+        fields(sa, st, ["stage", "label", "citation"]);
+        if (typeof st.stage !== "string" || !KIND_RE.test(st.stage)) err(`${sa}.stage`, "VALUE_INVALID", "stage matches ^[a-z][a-z0-9_]*$");
+        else if (seen.has(st.stage)) err(`${sa}.stage`, "VALUE_INVALID", `the stage ${st.stage} is given twice`);
+        else seen.add(st.stage);
+        str49(`${sa}.label`, st.label, "label");
+        str49(`${sa}.citation`, st.citation, "citation");
+      });
+    }
+    if (own3(l2, "requesters")) {
+      const r = l2.requesters, ra = `${at43}.requesters`;
+      if (!isObj(r)) err(ra, "VALUE_INVALID", "requesters is {text, citation, status, basis}");
+      else {
+        fields(ra, r, ["text", "citation", "status", "basis"]);
+        str49(`${ra}.text`, r.text, "text");
+        str49(`${ra}.citation`, r.citation, "citation");
+        statusBasis(ra, r);
+      }
+    }
     if (isStr(l2.name)) lawNames.add(l2.name);
     basis(at43, l2);
   });
@@ -15101,15 +15711,20 @@ function validateInto(p3, errors) {
       basis("locale", l2);
     }
   }
-  if (own3(p3, "time_zone")) {
-    const z = p3.time_zone;
-    if (!isObj(z)) err("time_zone", "VALUE_INVALID", "time_zone is {value, status, basis}");
-    else {
-      fields("time_zone", z, ["value", "status", "basis"]);
-      if (!isTimeZone(z.value)) err("time_zone.value", "VALUE_INVALID", "the value is an IANA time-zone name (Area/Location, or UTC)");
-      statusBasis("time_zone", z);
+  const zone = (path, z) => {
+    if (!isObj(z)) {
+      err(path, "VALUE_INVALID", "time_zone is {value, status, basis}");
+      return;
     }
-  }
+    fields(path, z, ["value", "status", "basis"]);
+    if (!isTimeZone(z.value)) err(`${path}.value`, "VALUE_INVALID", "the value is an IANA time-zone name (Area/Location, or UTC)");
+    statusBasis(path, z);
+  };
+  if (own3(p3, "time_zone")) zone("time_zone", p3.time_zone);
+  const amountOf = (path, a) => {
+    if (!isObj(a) || Object.keys(a).some((k) => k !== "amount" && k !== "units") || !isPosInt(a.amount) || !UNITS.includes(a.units))
+      err(path, "VALUE_INVALID", `an amount is {amount, units}, a positive integer of one of ${UNITS.join(", ")}`);
+  };
   const computationKeys = /* @__PURE__ */ new Set();
   if (own3(p3, "computation")) list6("computation", p3.computation).forEach((c, i) => {
     const at43 = `computation[${i}]`;
@@ -15185,6 +15800,7 @@ function validateInto(p3, errors) {
   });
   const roles2 = /* @__PURE__ */ new Set();
   const bodies = /* @__PURE__ */ new Set();
+  const offices = /* @__PURE__ */ new Set();
   const schemeKinds = new Map(own3(p3, "identifier_schemes") && Array.isArray(p3.identifier_schemes) ? p3.identifier_schemes.filter((x) => isObj(x) && isStr(x.scheme) && Array.isArray(x.entity_kinds)).map((x) => [x.scheme, x.entity_kinds]) : []);
   const identifier = (path, x, kind2) => {
     if (!isObj(x)) {
@@ -15199,7 +15815,8 @@ function validateInto(p3, errors) {
   if (own3(p3, "counterparties")) list6("counterparties", p3.counterparties).forEach((c, i) => {
     const at43 = `counterparties[${i}]`;
     if (!entry4(at43, c)) return;
-    fields(at43, c, ["role", "body", "level", "elected", "oversight", "hours", "ids", "within", "organisation", "basis"]);
+    fields(at43, c, ["role", "body", "level", "elected", "oversight", "hours", "time_zone", "ids", "within", "organisation", "basis"]);
+    if (own3(c, "time_zone")) zone(`${at43}.time_zone`, c.time_zone);
     if (own3(c, "ids")) {
       if (!isObj(c.ids) || !Object.keys(c.ids).length) err(`${at43}.ids`, "VALUE_INVALID", "ids is {office?, body?}, at least one");
       else {
@@ -15226,6 +15843,7 @@ function validateInto(p3, errors) {
     str49(`${at43}.body`, c.body, "body");
     if (isStr(c.role)) roles2.add(c.role);
     if (isStr(c.body)) bodies.add(c.body);
+    if (isStr(c.role) && isStr(c.body)) offices.add(`${c.role}\0${c.body}`);
     if (own3(c, "hours")) hours(`${at43}.hours`, c.hours);
     if (!COUNTERPARTY_LEVELS.includes(c.level)) err(`${at43}.level`, "LEVEL_UNKNOWN", `level is one of ${COUNTERPARTY_LEVELS.join(", ")}`);
     if (typeof c.elected !== "boolean") err(`${at43}.elected`, "VALUE_INVALID", "elected is true or false");
@@ -15233,18 +15851,79 @@ function validateInto(p3, errors) {
     basis(at43, c);
   });
   const kinds3 = /* @__PURE__ */ new Set();
-  const tier3 = /* @__PURE__ */ new Set();
+  const tier23 = /* @__PURE__ */ new Set();
   const venueKinds = /* @__PURE__ */ new Set();
   const templateIds = /* @__PURE__ */ new Set();
+  const templateOf = (ta, t2, k, inList) => {
+    if (!isObj(t2)) err(ta, "TEMPLATE_UNATTRIBUTED", `a template is {${TEMPLATE_FIELDS.join(", ")}}, never bare text`);
+    else {
+      fields(ta, t2, [...TEMPLATE_FIELDS, "name", "sources", ...inList ? ["purpose"] : []]);
+      for (const f17 of TEMPLATE_FIELDS)
+        if (!own3(t2, f17) || t2[f17] === void 0 || t2[f17] === null) err(`${ta}.${f17}`, "TEMPLATE_UNATTRIBUTED", `the template's ${f17} is missing`);
+      const bad2 = (f17, why2) => {
+        if (own3(t2, f17) && t2[f17] !== void 0 && t2[f17] !== null) err(`${ta}.${f17}`, "VALUE_INVALID", why2);
+      };
+      if (!(typeof t2.id === "string" && TEMPLATE_ID_RE.test(t2.id))) bad2("id", "id matches ^TPL-[a-z0-9][a-z0-9-]*$");
+      else if (templateIds.has(t2.id)) err(`${ta}.id`, "VALUE_INVALID", `'${t2.id}' is given twice in the profile`);
+      else templateIds.add(t2.id);
+      if (!isPosInt(t2.version)) bad2("version", "version is a positive integer");
+      if (!TEMPLATE_USES.includes(t2.use)) bad2("use", `use is ${TEMPLATE_USES.join(" or ")}`);
+      if (!isStr(t2.text)) bad2("text", "the text is non-empty");
+      if (typeof t2.notes !== "string") bad2("notes", "notes are text, possibly empty");
+      if (!isStr(t2.authored_by)) bad2("authored_by", "authored_by is a non-empty name");
+      if (!isStr(t2.approved_by)) bad2("approved_by", "approved_by is a non-empty name");
+      else if (isStr(t2.authored_by) && t2.approved_by.trim() === t2.authored_by.trim())
+        err(`${ta}.approved_by`, "VALUE_INVALID", "the approver is not the template's author");
+      if (!Array.isArray(t2.contributors) || !t2.contributors.every(isStr)) bad2("contributors", "contributors is a list of names");
+      if (!isDate(t2.approved_at)) bad2("approved_at", "approved_at is a real YYYY-MM-DD");
+      if (!Array.isArray(t2.reviews)) bad2("reviews", "reviews is a list of {reviewer, kind, organisation?, credential?, scope, outcome, at}");
+      else t2.reviews.forEach((r, j) => {
+        const ra = `${ta}.reviews[${j}]`;
+        if (!isObj(r)) {
+          err(ra, "VALUE_INVALID", "a review is {reviewer, kind, organisation?, credential?, scope, outcome, at}");
+          return;
+        }
+        fields(ra, r, [...REVIEW_REQUIRED, "organisation", "credential"]);
+        for (const f17 of REVIEW_REQUIRED)
+          if (!own3(r, f17) || r[f17] === void 0 || r[f17] === null) err(`${ra}.${f17}`, "TEMPLATE_UNATTRIBUTED", `the review's ${f17} is missing`);
+        const rbad = (f17, ok2, why2) => {
+          if (own3(r, f17) && r[f17] !== void 0 && r[f17] !== null && !ok2) err(`${ra}.${f17}`, "VALUE_INVALID", why2);
+        };
+        rbad("reviewer", isStr(r.reviewer), "the reviewer is a non-empty name");
+        rbad("kind", REVIEW_KINDS.includes(r.kind), `kind is ${REVIEW_KINDS.join(" or ")}`);
+        rbad("scope", isStr(r.scope), "the scope is non-empty text");
+        rbad("outcome", REVIEW_OUTCOMES.includes(r.outcome), `outcome is one of ${REVIEW_OUTCOMES.join(", ")}`);
+        rbad("at", isDate(r.at), "at is a real YYYY-MM-DD");
+        rbad("organisation", isStr(r.organisation), "the organisation is a non-empty name");
+        rbad("credential", isStr(r.credential), "the credential is non-empty text");
+      });
+      if (own3(t2, "basis") && t2.basis !== void 0 && t2.basis !== null) {
+        if (!(test2 && t2.basis === "TEST") && !(typeof t2.basis === "string" && t2.basis !== "" && basisParts(t2.basis).every((x) => K_REF.test(x))))
+          err(`${ta}.basis`, "BASIS_INVALID", t2.basis === "TEST" ? "TEST is a basis only in a test profile" : "a template rests on the ruling that approved it (K<n>)");
+      }
+      if (t2.use === "file" && k.tier === 3) err(ta, "TEMPLATE_TIER3", "a Tier 3 kind has no use: file template; a brief may serve it");
+    }
+    if (isObj(t2) && (inList || own3(t2, "name"))) {
+      if (!isStr(t2.name) || t2.name.length > TEMPLATE_NAME_MAX || /[\r\n]/.test(t2.name))
+        err(`${ta}.name`, "VALUE_INVALID", `name is a title of at most ${TEMPLATE_NAME_MAX} characters on one line`);
+    }
+    if (isObj(t2) && (inList || own3(t2, "sources"))) {
+      if (!Array.isArray(t2.sources) || !t2.sources.length) err(`${ta}.sources`, "VALUE_INVALID", "sources lists at least one public source {citation}");
+      else t2.sources.forEach((x, j) => {
+        if (!isObj(x) || Object.keys(x).some((f17) => f17 !== "citation") || !isStr(x.citation))
+          err(`${ta}.sources[${j}]`, "VALUE_INVALID", "a source is {citation}, non-empty");
+      });
+    }
+  };
   if (own3(p3, "action_kinds")) list6("action_kinds", p3.action_kinds).forEach((k, i) => {
     const at43 = `action_kinds[${i}]`;
     if (!entry4(at43, k)) return;
-    fields(at43, k, ["kind", "label", "tier", "laws", "venue", "template", "advisory", "evidence", "basis"]);
+    fields(at43, k, ["kind", "label", "tier", "laws", "venue", "template", "templates", "advisory", "evidence", "shape", "basis"]);
     if (typeof k.kind !== "string" || !KIND_RE.test(k.kind)) err(`${at43}.kind`, "KIND_INVALID", "kind matches ^[a-z][a-z0-9_]*$");
     else if (kinds3.has(k.kind)) err(`${at43}.kind`, "DUPLICATE_KIND", `'${k.kind}' is given twice`);
     else {
       kinds3.add(k.kind);
-      if (k.tier === 3) tier3.add(k.kind);
+      if (k.tier === 2 || k.tier === 3) tier23.add(k.kind);
     }
     str49(`${at43}.label`, k.label, "label");
     if (own3(k, "tier") && !TIERS.includes(k.tier)) err(`${at43}.tier`, "TIER_INVALID", "tier is 1, 2 or 3");
@@ -15255,67 +15934,48 @@ function validateInto(p3, errors) {
       const v = k.venue;
       if (!isObj(v)) err(`${at43}.venue`, "VALUE_INVALID", "a venue is {name, how, basis}");
       else {
-        fields(`${at43}.venue`, v, ["name", "how", "hours", "cutoff", "outages", "receipt", "basis"]);
+        fields(`${at43}.venue`, v, ["name", "how", "hours", "time_zone", "cutoff", "outages", "receipt", "facts", "basis"]);
         str49(`${at43}.venue.name`, v.name, "name");
         if (!VENUE_HOW.includes(v.how)) err(`${at43}.venue.how`, "VALUE_INVALID", `how is one of ${VENUE_HOW.join(", ")}`);
         if (own3(v, "hours")) hours(`${at43}.venue.hours`, v.hours);
+        if (own3(v, "time_zone")) zone(`${at43}.venue.time_zone`, v.time_zone);
+        if (own3(v, "facts")) {
+          const named2 = /* @__PURE__ */ new Set();
+          list6(`${at43}.venue.facts`, v.facts).forEach((f17, j) => {
+            const fa = `${at43}.venue.facts[${j}]`;
+            if (!entry4(fa, f17)) return;
+            fields(fa, f17, ["fact", "value", "amount", "citation", "status", "basis"]);
+            if (!VENUE_FACTS.includes(f17.fact)) err(`${fa}.fact`, "VALUE_INVALID", `fact is one of ${VENUE_FACTS.join(", ")}`);
+            else if (named2.has(f17.fact)) err(`${fa}.fact`, "VALUE_INVALID", `${f17.fact} is given twice for this venue`);
+            else named2.add(f17.fact);
+            if (!isStr(f17.value) || f17.value.length > VENUE_FACT_MAX) err(`${fa}.value`, "VALUE_INVALID", `value is text of at most ${VENUE_FACT_MAX} characters`);
+            if (own3(f17, "amount")) amountOf(`${fa}.amount`, f17.amount);
+            str49(`${fa}.citation`, f17.citation, "citation");
+            statusBasis(fa, f17);
+          });
+        }
         channel(`${at43}.venue`, v);
         basis(`${at43}.venue`, v);
         if (typeof k.kind === "string") venueKinds.add(k.kind);
       }
     }
-    if (own3(k, "template")) {
-      const t2 = k.template;
-      const ta = `${at43}.template`;
-      if (!isObj(t2)) err(ta, "TEMPLATE_UNATTRIBUTED", `a template is {${TEMPLATE_FIELDS.join(", ")}}, never bare text`);
+    if (own3(k, "template")) templateOf(`${at43}.template`, k.template, k, false);
+    if (own3(k, "templates")) {
+      if (own3(k, "template")) err(`${at43}.templates`, "VALUE_INVALID", "a kind gives its single template or its templates, not both");
+      if (!Array.isArray(k.templates) || !k.templates.length) err(`${at43}.templates`, "VALUE_INVALID", "templates is a non-empty list of templates");
       else {
-        fields(ta, t2, TEMPLATE_FIELDS);
-        for (const f17 of TEMPLATE_FIELDS)
-          if (!own3(t2, f17) || t2[f17] === void 0 || t2[f17] === null) err(`${ta}.${f17}`, "TEMPLATE_UNATTRIBUTED", `the template's ${f17} is missing`);
-        const bad2 = (f17, why2) => {
-          if (own3(t2, f17) && t2[f17] !== void 0 && t2[f17] !== null) err(`${ta}.${f17}`, "VALUE_INVALID", why2);
-        };
-        if (!(typeof t2.id === "string" && TEMPLATE_ID_RE.test(t2.id))) bad2("id", "id matches ^TPL-[a-z0-9][a-z0-9-]*$");
-        else if (templateIds.has(t2.id)) err(`${ta}.id`, "VALUE_INVALID", `'${t2.id}' is given twice in the profile`);
-        else templateIds.add(t2.id);
-        if (!isPosInt(t2.version)) bad2("version", "version is a positive integer");
-        if (!TEMPLATE_USES.includes(t2.use)) bad2("use", `use is ${TEMPLATE_USES.join(" or ")}`);
-        if (!isStr(t2.text)) bad2("text", "the text is non-empty");
-        if (typeof t2.notes !== "string") bad2("notes", "notes are text, possibly empty");
-        if (!isStr(t2.authored_by)) bad2("authored_by", "authored_by is a non-empty name");
-        if (!isStr(t2.approved_by)) bad2("approved_by", "approved_by is a non-empty name");
-        else if (isStr(t2.authored_by) && t2.approved_by.trim() === t2.authored_by.trim())
-          err(`${ta}.approved_by`, "VALUE_INVALID", "the approver is not the template's author");
-        if (!Array.isArray(t2.contributors) || !t2.contributors.every(isStr)) bad2("contributors", "contributors is a list of names");
-        if (!isDate(t2.approved_at)) bad2("approved_at", "approved_at is a real YYYY-MM-DD");
-        if (!Array.isArray(t2.reviews)) bad2("reviews", "reviews is a list of {reviewer, kind, organisation?, credential?, scope, outcome, at}");
-        else t2.reviews.forEach((r, j) => {
-          const ra = `${ta}.reviews[${j}]`;
-          if (!isObj(r)) {
-            err(ra, "VALUE_INVALID", "a review is {reviewer, kind, organisation?, credential?, scope, outcome, at}");
-            return;
-          }
-          fields(ra, r, [...REVIEW_REQUIRED, "organisation", "credential"]);
-          for (const f17 of REVIEW_REQUIRED)
-            if (!own3(r, f17) || r[f17] === void 0 || r[f17] === null) err(`${ra}.${f17}`, "TEMPLATE_UNATTRIBUTED", `the review's ${f17} is missing`);
-          const rbad = (f17, ok2, why2) => {
-            if (own3(r, f17) && r[f17] !== void 0 && r[f17] !== null && !ok2) err(`${ra}.${f17}`, "VALUE_INVALID", why2);
-          };
-          rbad("reviewer", isStr(r.reviewer), "the reviewer is a non-empty name");
-          rbad("kind", REVIEW_KINDS.includes(r.kind), `kind is ${REVIEW_KINDS.join(" or ")}`);
-          rbad("scope", isStr(r.scope), "the scope is non-empty text");
-          rbad("outcome", REVIEW_OUTCOMES.includes(r.outcome), `outcome is one of ${REVIEW_OUTCOMES.join(", ")}`);
-          rbad("at", isDate(r.at), "at is a real YYYY-MM-DD");
-          rbad("organisation", isStr(r.organisation), "the organisation is a non-empty name");
-          rbad("credential", isStr(r.credential), "the credential is non-empty text");
+        const purposes = /* @__PURE__ */ new Set();
+        k.templates.forEach((t2, j) => {
+          const ta = `${at43}.templates[${j}]`;
+          templateOf(ta, t2, k, true);
+          if (!isObj(t2)) return;
+          if (typeof t2.purpose !== "string" || !KIND_RE.test(t2.purpose)) err(`${ta}.purpose`, "VALUE_INVALID", "purpose matches ^[a-z][a-z0-9_]*$");
+          else if (purposes.has(t2.purpose)) err(`${ta}.purpose`, "VALUE_INVALID", `the purpose ${t2.purpose} is given twice in ${String(k.kind)}`);
+          else purposes.add(t2.purpose);
         });
-        if (own3(t2, "basis") && t2.basis !== void 0 && t2.basis !== null) {
-          if (!(test2 && t2.basis === "TEST") && !(typeof t2.basis === "string" && t2.basis !== "" && basisParts(t2.basis).every((x) => K_REF.test(x))))
-            err(`${ta}.basis`, "BASIS_INVALID", t2.basis === "TEST" ? "TEST is a basis only in a test profile" : "a template rests on the ruling that approved it (K<n>)");
-        }
-        if (t2.use === "file" && k.tier === 3) err(ta, "TEMPLATE_TIER3", "a Tier 3 kind has no use: file template; a brief may serve it");
       }
     }
+    if (own3(k, "shape") && !KIND_SHAPES.includes(k.shape)) err(`${at43}.shape`, "KIND_INVALID", `shape is one of ${KIND_SHAPES.join(", ")}`);
     if (own3(k, "advisory")) {
       if (!isStr(k.advisory)) err(`${at43}.advisory`, "VALUE_INVALID", "an advisory note is text");
       if (k.tier !== 2) err(`${at43}.advisory`, "ADVISORY_NOT_TIER2", "an advisory note is given only on a Tier 2 kind");
@@ -15362,6 +16022,7 @@ function validateInto(p3, errors) {
       "count",
       "direction",
       "starts",
+      "starter",
       "roll",
       "closures",
       "computation",
@@ -15370,6 +16031,9 @@ function validateInto(p3, errors) {
       "observed",
       "applies_on",
       "due_at",
+      "owed_by",
+      "consequence",
+      "defends",
       "citation",
       "status",
       "basis"
@@ -15392,6 +16056,22 @@ function validateInto(p3, errors) {
     }
     if (own3(d, "direction") && !DIRECTIONS.includes(d.direction)) err(`${at43}.direction`, "DIRECTION_UNKNOWN", `direction is ${DIRECTIONS.join(" or ")}`);
     if (!STARTS.includes(d.starts)) err(`${at43}.starts`, "ANCHOR_UNKNOWN", `starts is one of ${STARTS.join(", ")}`);
+    if (d.starts === "third_party") {
+      const st = d.starter;
+      if (!isObj(st) || Object.keys(st).some((k) => k !== "role" && k !== "body") || !offices.has(`${st.role}\0${st.body}`))
+        err(`${at43}.starter`, "ANCHOR_UNKNOWN", "a third_party start names its starter, {role, body} of a counterparty of this profile");
+    } else if (own3(d, "starter")) err(`${at43}.starter`, "VALUE_INVALID", "a starter is given only with starts: third_party");
+    if (own3(d, "owed_by") && !OWED_BY.includes(d.owed_by)) err(`${at43}.owed_by`, "VALUE_INVALID", `owed_by is ${OWED_BY.join(" or ")}`);
+    if (own3(d, "consequence")) {
+      const c = d.consequence;
+      if (!isObj(c)) err(`${at43}.consequence`, "VALUE_INVALID", "consequence is {text, citation}");
+      else {
+        fields(`${at43}.consequence`, c, ["text", "citation"]);
+        str49(`${at43}.consequence.text`, c.text, "text");
+        str49(`${at43}.consequence.citation`, c.citation, "citation");
+      }
+    }
+    if (own3(d, "defends") && d.defends !== true) err(`${at43}.defends`, "VALUE_INVALID", "defends is true, or absent");
     if (own3(d, "roll") && typeof d.roll !== "boolean") err(`${at43}.roll`, "VALUE_INVALID", "roll is true or false");
     if (own3(d, "closures") && !closureLists.has(d.closures))
       err(`${at43}.closures`, "CLOSURES_UNKNOWN", `no holidays entry of this profile is in a list named '${String(d.closures)}'`);
@@ -15435,12 +16115,15 @@ function validateInto(p3, errors) {
   if (own3(p3, "legal_organisations")) list6("legal_organisations", p3.legal_organisations).forEach((o, i) => {
     const at43 = `legal_organisations[${i}]`;
     if (!entry4(at43, o)) return;
-    fields(at43, o, ["name", "evaluates", "contacts", "basis"]);
+    fields(at43, o, ["name", "evaluates", "defends", "contacts", "basis"]);
     str49(`${at43}.name`, o.name, "name");
-    if (!Array.isArray(o.evaluates) || !o.evaluates.length) err(`${at43}.evaluates`, "VALUE_INVALID", "evaluates is a non-empty list of Tier 3 kinds");
-    else o.evaluates.forEach((k, j) => {
-      if (!tier3.has(k)) err(`${at43}.evaluates[${j}]`, "ORG_KIND_UNKNOWN", `'${String(k)}' is not a Tier 3 kind of this profile`);
+    if (own3(o, "defends") && typeof o.defends !== "boolean") err(`${at43}.defends`, "VALUE_INVALID", "defends is true or false");
+    if (own3(o, "evaluates") && !Array.isArray(o.evaluates)) err(`${at43}.evaluates`, "VALUE_INVALID", "evaluates is a list of Tier 2 or 3 kinds");
+    else if (Array.isArray(o.evaluates)) o.evaluates.forEach((k, j) => {
+      if (!tier23.has(k)) err(`${at43}.evaluates[${j}]`, "ORG_KIND_UNKNOWN", `'${String(k)}' is not a Tier 2 or 3 kind of this profile`);
     });
+    if (!(Array.isArray(o.evaluates) && o.evaluates.length) && o.defends !== true)
+      err(`${at43}.evaluates`, "ORG_PURPOSE_MISSING", "a legal organisation evaluates at least one Tier 2 or 3 kind, or defends a group (defends: true)");
     if (!Array.isArray(o.contacts) || !o.contacts.length) err(`${at43}.contacts`, "CONTACT_INVALID", "contacts is a non-empty list of {how, value}");
     else o.contacts.forEach((c, j) => {
       const ca = `${at43}.contacts[${j}]`;
@@ -15681,6 +16364,65 @@ function validateInto(p3, errors) {
     if (!isLocalDateTime(r.dtstart)) err(`${at43}.dtstart`, "RECURRENCE_INVALID", "dtstart is a local date-time YYYY-MM-DDTHH:MM[:SS], read in the profile's time_zone");
     str49(`${at43}.citation`, r.citation, "citation");
     statusBasis(at43, r);
+  });
+  if (own3(p3, "legal_facts")) {
+    const seen = /* @__PURE__ */ new Set();
+    list6("legal_facts", p3.legal_facts).forEach((f17, i) => {
+      const at43 = `legal_facts[${i}]`;
+      if (!entry4(at43, f17)) return;
+      fields(at43, f17, ["key", "trigger", "statement", "citation", "threshold", "applies_to", "status", "basis"]);
+      if (typeof f17.key !== "string" || !KIND_RE.test(f17.key)) err(`${at43}.key`, "VALUE_INVALID", "key matches ^[a-z][a-z0-9_]*$");
+      else if (seen.has(f17.key)) err(`${at43}.key`, "VALUE_INVALID", `'${f17.key}' is given twice`);
+      else seen.add(f17.key);
+      if (!LEGAL_FACT_TRIGGERS.includes(f17.trigger)) err(`${at43}.trigger`, "TRIGGER_UNKNOWN", `trigger is one of ${LEGAL_FACT_TRIGGERS.join(", ")}`);
+      str49(`${at43}.statement`, f17.statement, "statement");
+      str49(`${at43}.citation`, f17.citation, "citation");
+      if (own3(f17, "threshold")) {
+        const t2 = f17.threshold;
+        if (!isObj(t2) || Object.keys(t2).some((k) => k !== "amount" && k !== "unit") || typeof t2.amount !== "number" || !Number.isFinite(t2.amount) || t2.amount <= 0 || !isStr(t2.unit))
+          err(`${at43}.threshold`, "VALUE_INVALID", "threshold is {amount, unit}, a positive amount and its unit");
+      }
+      if (own3(f17, "applies_to")) {
+        if (!Array.isArray(f17.applies_to) || !f17.applies_to.length) err(`${at43}.applies_to`, "VALUE_INVALID", "applies_to is a non-empty list of kinds");
+        else f17.applies_to.forEach((k, j) => {
+          if (!profileKinds.has(k)) err(`${at43}.applies_to[${j}]`, "VALUE_INVALID", `'${String(k)}' is no kind of this profile`);
+        });
+      }
+      statusBasis(at43, f17);
+    });
+  }
+  if (own3(p3, "procedure_guides")) {
+    const guided = /* @__PURE__ */ new Set();
+    list6("procedure_guides", p3.procedure_guides).forEach((g, i) => {
+      const at43 = `procedure_guides[${i}]`;
+      if (!entry4(at43, g)) return;
+      fields(at43, g, ["kind", "items", "status", "basis"]);
+      if (!profileKinds.has(g.kind)) err(`${at43}.kind`, "KIND_INVALID", `'${String(g.kind)}' is no kind of this profile`);
+      else if (guided.has(g.kind)) err(`${at43}.kind`, "VALUE_INVALID", `${g.kind} has one guide`);
+      else guided.add(g.kind);
+      if (!Array.isArray(g.items) || !g.items.length) err(`${at43}.items`, "VALUE_INVALID", "items is a non-empty list of {route, expect?, citation, after?}");
+      else g.items.forEach((it, j) => {
+        const ia = `${at43}.items[${j}]`;
+        if (!entry4(ia, it)) return;
+        fields(ia, it, ["route", "expect", "citation", "after"]);
+        str49(`${ia}.route`, it.route, "route");
+        if (own3(it, "expect")) str49(`${ia}.expect`, it.expect, "expect");
+        str49(`${ia}.citation`, it.citation, "citation");
+        if (own3(it, "after") && (!Array.isArray(it.after) || !it.after.length || !it.after.every((o) => typeof o === "string" && KIND_RE.test(o)) || new Set(it.after).size !== it.after.length))
+          err(`${ia}.after`, "VALUE_INVALID", "after is a non-empty list of outcomes, each matching ^[a-z][a-z0-9_]*$, once");
+      });
+      statusBasis(at43, g);
+    });
+  }
+  if (own3(p3, "phrasings")) list6("phrasings", p3.phrasings).forEach((x, i) => {
+    const at43 = `phrasings[${i}]`;
+    if (!entry4(at43, x)) return;
+    fields(at43, x, ["locale", "kind", "phrase", "basis"]);
+    if (!isLocale(x.locale)) err(`${at43}.locale`, "LOCALE_INVALID", "locale is one well-formed BCP 47 language tag");
+    if (!PHRASING_KINDS.includes(x.kind)) err(`${at43}.kind`, "KIND_INVALID", `kind is one of ${PHRASING_KINDS.join(", ")}`);
+    if (typeof x.phrase !== "string" || x.phrase.trim().length < PHRASE_MIN || x.phrase.length > PHRASE_MAX || /[\r\n]/.test(x.phrase))
+      err(`${at43}.phrase`, "VALUE_INVALID", `phrase is ${PHRASE_MIN}\u2013${PHRASE_MAX} characters on one line`);
+    basis(at43, x);
   });
   if (own3(p3, "local_names")) {
     const seen = /* @__PURE__ */ new Set();
@@ -16007,12 +16749,32 @@ function merge(profiles2) {
     if (agree(given5)) view.time_zone = keep(given5);
     else conflict("time_zone", given5, "the active profiles name different time zones, so none is given: a time of day there is undetermined");
   }
-  for (const sec of ["search_terms", "records_laws", "legal_organisations"])
+  for (const sec of ["search_terms", "legal_organisations", "phrasings"])
     if (has3(sec)) {
       const v = [];
       for (const p3 of profiles2) union(v, p3[sec], p3.id);
       view[sec] = strip(v);
     }
+  if (has3("records_laws")) {
+    const v = [];
+    const byName = { stages: /* @__PURE__ */ new Map(), requesters: /* @__PURE__ */ new Map() };
+    for (const p3 of profiles2) for (const l2 of p3.records_laws || []) {
+      const { stages: stages2, requesters, ...rest } = l2;
+      union(v, [rest], p3.id);
+      for (const f17 of Object.keys(byName)) if (own3(l2, f17)) {
+        if (!byName[f17].has(l2.name)) byName[f17].set(l2.name, []);
+        byName[f17].get(l2.name).push({ profile: p3.id, value: l2[f17], basis: f17 === "requesters" ? l2[f17].basis : l2.basis });
+      }
+    }
+    for (const [f17, m] of Object.entries(byName)) for (const [name3, given5] of m) {
+      if (!agree(given5)) {
+        conflict(`records_laws[${name3}].${f17}`, given5, f17 === "stages" ? `the active profiles give ${name3} different stages, so which stages it has is undetermined` : `the active profiles say differently who may request under ${name3}, so it is undetermined`);
+        continue;
+      }
+      for (const l2 of v) if (l2.name === name3) l2[f17] = f17 === "requesters" ? keep(given5) : clone(given5[0].value);
+    }
+    view.records_laws = strip(v);
+  }
   if (has3("standard_sources")) {
     const FAMILY3 = "a family of documents";
     const given5 = profiles2.flatMap((p3) => (p3.standard_sources || []).map((e2) => ({ profile: p3.id, e: clone(e2) })));
@@ -16079,17 +16841,19 @@ function merge(profiles2) {
     const v = [];
     const marks2 = /* @__PURE__ */ new Map();
     const hoursOf = /* @__PURE__ */ new Map();
+    const zones = /* @__PURE__ */ new Map();
     const named2 = { ids: /* @__PURE__ */ new Map(), within: /* @__PURE__ */ new Map(), organisation: /* @__PURE__ */ new Map() };
     const push = (m, k, g) => {
       if (!m.has(k)) m.set(k, []);
       m.get(k).push(g);
     };
     for (const p3 of profiles2) for (const c of p3.counterparties || []) {
-      const { oversight, hours, ids, within: within3, organisation, ...rest } = c;
+      const { oversight, hours, time_zone, ids, within: within3, organisation, ...rest } = c;
       union(v, [rest], p3.id);
       const k = `${c.role}\0${c.body}`;
       if (own3(c, "oversight")) push(marks2, k, { profile: p3.id, value: oversight, basis: c.basis });
       if (own3(c, "hours")) push(hoursOf, k, { profile: p3.id, value: hours, basis: hours.basis });
+      if (own3(c, "time_zone")) push(zones, k, { profile: p3.id, value: time_zone, basis: time_zone.basis });
       for (const f17 of Object.keys(named2)) if (own3(c, f17)) push(named2[f17], k, { profile: p3.id, value: c[f17], basis: c.basis });
     }
     const each2 = (k, fn) => {
@@ -16124,6 +16888,20 @@ function merge(profiles2) {
         `the active profiles give different hours for ${role} (${body}), so its hours are undetermined`
       );
     }
+    for (const [k, given5] of zones) {
+      if (agree(given5)) {
+        each2(k, (c) => {
+          c.time_zone = keep(given5);
+        });
+        continue;
+      }
+      const [role, body] = k.split("\0");
+      conflict(
+        `counterparties[${role}/${body}].time_zone`,
+        given5,
+        `the active profiles give different time zones for ${role} (${body}), so its local day is undetermined`
+      );
+    }
     const NAMED4 = { ids: "identifiers", within: "organisations it is part of", organisation: "body-variant keys" };
     for (const [f17, m] of Object.entries(named2)) for (const [k, given5] of m) {
       if (agree(given5)) {
@@ -16152,13 +16930,20 @@ function merge(profiles2) {
       const e2 = { kind: kind2, label: [...new Set(given5.map((g) => g.k.label))].join("; ") };
       const laws = [...new Set(given5.flatMap((g) => g.k.laws || []))];
       if (given5.some((g) => own3(g.k, "laws"))) e2.laws = laws;
-      const WHAT = { tier: "risk tiers", venue: "venues", template: "templates", advisory: "advisory notes", evidence: "evidence standards" };
-      for (const f17 of ["tier", "venue", "template", "advisory", "evidence"]) {
+      const WHAT = {
+        tier: "risk tiers",
+        venue: "venues",
+        template: "templates",
+        advisory: "advisory notes",
+        evidence: "evidence standards",
+        shape: "shapes"
+      };
+      for (const f17 of ["tier", "venue", "template", "advisory", "evidence", "shape"]) {
         const carriesBasis = f17 === "venue" || f17 === "evidence" || f17 === "template";
         const vals = given5.filter((g) => own3(g.k, f17)).map((g) => {
           let value = clone(g.k[f17]);
           if (f17 === "venue" && isObj(value)) {
-            const { hours, cutoff, receipt, outages, ...rest } = value;
+            const { hours, time_zone, cutoff, receipt, outages, facts, ...rest } = value;
             value = rest;
           }
           return { profile: g.profile, value, basis: carriesBasis ? g.k[f17].basis : g.k.basis };
@@ -16171,21 +16956,49 @@ function merge(profiles2) {
         const SAYS = {
           hours: "its hours are undetermined",
           cutoff: "its cutoff is undetermined",
-          receipt: "receipt on a closed day stays the actual day only where no profile states otherwise; here it is undetermined"
+          receipt: "receipt on a closed day stays the actual day only where no profile states otherwise; here it is undetermined",
+          time_zone: "its local day is undetermined"
         };
-        for (const f17 of ["hours", "cutoff", "receipt"]) {
+        for (const f17 of ["hours", "cutoff", "receipt", "time_zone"]) {
           const vs = given5.filter((g) => isObj(g.k.venue) && own3(g.k.venue, f17)).map((g) => ({ profile: g.profile, value: g.k.venue[f17], basis: g.k.venue[f17].basis }));
           if (vs.length && agree(vs)) e2.venue[f17] = keep(vs);
           else if (vs.length) conflict(
             `action_kinds[${kind2}].venue.${f17}`,
             vs,
-            `the active profiles give different ${f17 === "hours" ? "hours" : f17 === "cutoff" ? "cutoffs" : "receipt rules"} for ${kind2}'s venue, so ${SAYS[f17]}`
+            `the active profiles give different ${{ hours: "hours", cutoff: "cutoffs", receipt: "receipt rules", time_zone: "time zones" }[f17]} for ${kind2}'s venue, so ${SAYS[f17]}`
           );
         }
         if (given5.some((g) => isObj(g.k.venue) && own3(g.k.venue, "outages"))) {
           const o = [];
           for (const g of given5) if (isObj(g.k.venue)) union(o, g.k.venue.outages, g.profile);
           e2.venue.outages = strip(o);
+        }
+        if (given5.some((g) => isObj(g.k.venue) && own3(g.k.venue, "facts"))) {
+          const byFact = /* @__PURE__ */ new Map();
+          for (const g of given5) if (isObj(g.k.venue)) for (const x of g.k.venue.facts || []) {
+            if (!byFact.has(x.fact)) byFact.set(x.fact, []);
+            byFact.get(x.fact).push({ profile: g.profile, value: x, basis: x.basis });
+          }
+          e2.venue.facts = [];
+          for (const [fact, vs] of byFact) {
+            if (agree(vs)) e2.venue.facts.push(keep(vs));
+            else conflict(`action_kinds[${kind2}].venue.facts[${fact}]`, vs, `the active profiles state ${kind2}'s venue's ${fact} differently, so it is undetermined`);
+          }
+        }
+      }
+      const setOf2 = (k) => own3(k, "templates") ? k.templates : own3(k, "template") ? [{ ...k.template, purpose: "initial" }] : null;
+      if (!given5.some((g) => own3(g.k, "templates"))) {
+        if (e2.template) e2.templates = [{ ...clone(e2.template), purpose: "initial" }];
+      } else if (given5.some((g) => setOf2(g.k))) {
+        const byPurpose = /* @__PURE__ */ new Map();
+        for (const g of given5) for (const t2 of setOf2(g.k) || []) {
+          if (!byPurpose.has(t2.purpose)) byPurpose.set(t2.purpose, []);
+          byPurpose.get(t2.purpose).push({ profile: g.profile, value: t2, basis: t2.basis });
+        }
+        e2.templates = [];
+        for (const [purpose, vs] of byPurpose) {
+          if (agree(vs)) e2.templates.push(keep(vs));
+          else conflict(`action_kinds[${kind2}].templates[${purpose}]`, vs, `the active profiles give different ${purpose} templates for ${kind2}, so none is given`);
         }
       }
       e2.basis = given5[0].k.basis;
@@ -16324,6 +17137,7 @@ var DEADLINE_ONE_VALUE = [
   "count",
   "direction",
   "starts",
+  "starter",
   "roll",
   "closures",
   "computation",
@@ -16332,6 +17146,9 @@ var DEADLINE_ONE_VALUE = [
   "observed",
   "applies_on",
   "due_at",
+  "owed_by",
+  "consequence",
+  "defends",
   "status"
 ];
 function normalDeadline(d) {
@@ -16344,7 +17161,10 @@ var ONE_PER_KEY = [
   ["fiscal_year", (e2) => e2.body, "fiscal years"],
   ["law_ranks", (e2) => `${e2.kind}\0${e2.level}`, "ranks"],
   ["proceeding_flows", (e2) => e2.kind, "proceeding flows"],
-  ["lawful_demands", (e2) => e2.kind, "lawful demands"]
+  ["lawful_demands", (e2) => e2.kind, "lawful demands"],
+  /* R79, R80 (T45) */
+  ["legal_facts", (e2) => e2.key, "legal facts"],
+  ["procedure_guides", (e2) => e2.kind, "procedure guides"]
 ];
 
 // ../docprofile/doctypes/index.mjs
@@ -169283,7 +170103,7 @@ var TEMPLATE_STATES = Object.freeze(["draft", "in_review", "approved", "updated"
 var TEMPLATE_USES2 = Object.freeze(["file", "brief"]);
 var REVIEW_OUTCOMES2 = Object.freeze(["no_concerns", "concerns", "changes_requested"]);
 var TEMPLATE_ORIGINS = Object.freeze(["group", "profile", "imported"]);
-var TEMPLATE_NAME_MAX = 200;
+var TEMPLATE_NAME_MAX2 = 200;
 var TEMPLATE_NOTES_MAX = 8e3;
 var PROPOSAL_WHY_MAX = 1e3;
 var GRANT_FIELD_MAX = 200;
@@ -169784,8 +170604,8 @@ var FilingTemplates = class _FilingTemplates {
     }
     if (use === "file" && this.#tierOf(kind2, profiles2) === 3)
       return refuse17("TEMPLATE_TIER3_FILE", "the kind's tier is 3: no file template is kept for it; a brief template may serve it", { kind: kind2 });
-    if (!oneLine4(name3, TEMPLATE_NAME_MAX))
-      return refuse17("TEMPLATE_NAME_REFUSED", `a template is named in one line of 1 to ${TEMPLATE_NAME_MAX} characters`, { max: TEMPLATE_NAME_MAX });
+    if (!oneLine4(name3, TEMPLATE_NAME_MAX2))
+      return refuse17("TEMPLATE_NAME_REFUSED", `a template is named in one line of 1 to ${TEMPLATE_NAME_MAX2} characters`, { max: TEMPLATE_NAME_MAX2 });
     const taken = this.#rows(`SELECT template_id FROM tpl_templates WHERE project IS ? AND name=?`, project, name3.trim()).map((r) => this.#groupTemplate(r.template_id)).find((t2) => t2 && !t2.retired && !t2.widened);
     if (taken) return refuse17("TEMPLATE_NAME_TAKEN", "the scope's library already holds a template by this name", { name: name3.trim() });
     return null;
