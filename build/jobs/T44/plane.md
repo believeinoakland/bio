@@ -23,9 +23,9 @@
 - Checks: format 0 failures; architecture 0; coverage 38 of 38, 0; ownership 0 (6 files against `tranche/T44`).
 - No file added outside the module's `paths` and `tests` (rule 3).
 
-**Merge.** Per the L11 order I merge `tranche/T44` when BOB's CHANGE announces the other four merges, then re-run the above.
+**Merge (B3, CHANGE; K2771, K2773).** `tranche/T44` merged into `job/T44/plane` after affordances, notice-producers, op-declarations and store-door, no conflict. Re-run on the merged branch: plane tests and release suite 197 pass, 0 fail; extraction's transcription tests 22 pass, 0 fail; affordances 226 pass, 0 fail (rule 4 (6)'s two reds cleared by T44-9, and its roster reads `class:ai/<tokenId>` as `roster: null`); checks format, architecture, coverage (38 of 38), ownership (6 files) all 0. No reds.
 
-Size (session_01Dwre5v9yYZxVWPCf2yNy66): test runs 6, module lines 232
+Size (session_01Dwre5v9yYZxVWPCf2yNy66): test runs 9, module lines 232
 
 ## J1 · QUESTION
 
