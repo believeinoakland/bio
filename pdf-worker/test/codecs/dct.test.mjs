@@ -1,11 +1,16 @@
-/* image-codecs R1, R6: `decodeBaselineJpeg`, `readJpegHeader`, `colourTransformOf`
- * and `DctRefusal` at their interface (build/requirements/image-codecs.md).
+/* image-codecs R1, R6, R11: `decodeBaselineJpeg`, `decodeBaselineJpegRows`,
+ * `readJpegHeader`, `colourTransformOf` and `DctRefusal` at their interface
+ * (build/requirements/image-codecs.md).
  *
  * INDEPENDENT EXPECTATIONS (R6). Every expected picture is Pillow 11.3.0's decode
  * (libjpeg-turbo 3.1.1, whose SIMD paths are bit-exact with libjpeg's C) of the
  * same bytes, rotated clockwise by the fixture's `rotate`, written by
  * `../fixtures/make-dct-fixtures.py` into `../fixtures/dct-variants.json`.
- * libjpeg-turbo shares no line with `dctdecode.mjs`. The refusals below that no
+ * libjpeg-turbo shares no line with `dctdecode.mjs`. `fixtures/dct-edges.json`
+ * (T44, from `fixtures/make-dct-edges.py`, Pillow 12.3.0 the same way) adds the
+ * sizes where a strip-wise decode has edges: one or two chroma samples wide, one
+ * row tall, heights ending inside an MCU row, restart intervals of one block.
+ * R11's rows are checked against R1's, which those digests pin. The refusals below that no
  * fixture carries are made by changing one field of a fixture's markers, each
  * named where it is made.
  *
@@ -18,12 +23,14 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
-import { decodeBaselineJpeg, readJpegHeader, colourTransformOf, DctRefusal } from "../../src/dctdecode.mjs";
+import { decodeBaselineJpeg, decodeBaselineJpegRows, readJpegHeader, colourTransformOf, DctRefusal } from "../../src/dctdecode.mjs";
 
 const FIX = JSON.parse(readFileSync(new URL("../fixtures/dct-variants.json", import.meta.url), "utf8"));
 const V = FIX.variants;
 const jpeg = (name) => new Uint8Array(Buffer.from(V.find((v) => v.name === name).jpeg_b64, "base64"));
 const sha = (b) => createHash("sha256").update(b).digest("hex");
+const EDGES = JSON.parse(readFileSync(new URL("fixtures/dct-edges.json", import.meta.url), "utf8"));
+const edge = (v) => new Uint8Array(Buffer.from(v.jpeg_b64, "base64"));
 
 /** Every code a DctRefusal carries, and the REFUSALS reason R1 says it answers as. */
 const CODES = {
@@ -106,21 +113,37 @@ test("R1 the fixtures' refusals: progressive, arithmetic-coded, four components,
   }
 });
 
+/** Every refusal no fixture carries, as [label, bytes, options, code]: each made
+ *  from a fixture by the one change its label names. R1 and R11 are driven over
+ *  the same table. */
+const OTHER_REFUSALS = () => [
+  ["not a JPEG", Uint8Array.from([1, 2, 3, 4, 5]), {}, "NOT_A_JPEG"],
+  ["not even bytes", "\xff\xd8\xff", {}, "NOT_A_JPEG"],
+  ["12-bit precision (SOF P = 12)", patched("grey-baseline", 0xc0, 0, 12), {}, "UNSUPPORTED_PRECISION"],
+  ["lossless (SOF3)", (() => { const d = jpeg("grey-baseline"); d[segmentAt(d, 0xc0) - 3] = 0xc3; return d; })(), {}, "UNSUPPORTED_PROCESS"],
+  ["hierarchical (DHP)", (() => { const d = jpeg("grey-baseline"); d[segmentAt(d, 0xdb) - 3] = 0xde; return d; })(), {}, "UNSUPPORTED_PROCESS"],
+  ["zero width (SOF X = 0)", (() => { const d = patched("grey-baseline", 0xc0, 3, 0); d[segmentAt(d, 0xc0) + 4] = 0; return d; })(), {}, "UNSUPPORTED_FRAME"],
+  ["sampling 3x1", patched("rgb-444", 0xc0, 7, 0x31), {}, "UNSUPPORTED_SAMPLING"],
+  ["a missing quantisation table", patched("grey-baseline", 0xc0, 8, 3), {}, "CORRUPT_DATA"],
+  ["the PDF expects three components of a grey file", jpeg("grey-baseline"), { expectComps: 3 }, "COMPONENT_MISMATCH"],
+  ["/ColorTransform 0 against a JFIF file", jpeg("rgb-444"), { colorTransform: 0 }, "COLOR_TRANSFORM_CONFLICT"],
+  ["the entropy data cut", jpeg("rgb-420-h2v2").subarray(0, 600), {}, "TRUNCATED"],
+  ["no SOS", jpeg("grey-baseline").subarray(0, 120), {}, "TRUNCATED"],
+  ["a restart interval cut short", jpeg("rgb-420-restart-cjpeg").subarray(0, 900), {}, "TRUNCATED"],
+  ["a restart marker out of order (RST0 written as RST5)", (() => {
+    const d = jpeg("rgb-420-restart-cjpeg");
+    let p = segmentAt(d, 0xda);
+    while (!(d[p] === 0xff && d[p + 1] === 0xd0)) p++;
+    d[p + 1] = 0xd5;
+    return d;
+  })(), {}, "CORRUPT_DATA"],
+];
+
 test("R1 every other refusal, each as the bytes require", () => {
   const cases = [
-    ["not a JPEG", () => decodeBaselineJpeg(Uint8Array.from([1, 2, 3, 4, 5])), "NOT_A_JPEG"],
-    ["not even bytes", () => readJpegHeader("\xff\xd8\xff"), "NOT_A_JPEG"],
-    ["12-bit precision (SOF P = 12)", () => decodeBaselineJpeg(patched("grey-baseline", 0xc0, 0, 12)), "UNSUPPORTED_PRECISION"],
-    ["lossless (SOF3)", () => { const d = jpeg("grey-baseline"); d[segmentAt(d, 0xc0) - 3] = 0xc3; return decodeBaselineJpeg(d); }, "UNSUPPORTED_PROCESS"],
-    ["hierarchical (DHP)", () => { const d = jpeg("grey-baseline"); d[segmentAt(d, 0xdb) - 3] = 0xde; return decodeBaselineJpeg(d); }, "UNSUPPORTED_PROCESS"],
-    ["zero width (SOF X = 0)", () => { const d = patched("grey-baseline", 0xc0, 3, 0); d[segmentAt(d, 0xc0) + 4] = 0; return decodeBaselineJpeg(d); }, "UNSUPPORTED_FRAME"],
-    ["sampling 3x1", () => decodeBaselineJpeg(patched("rgb-444", 0xc0, 7, 0x31)), "UNSUPPORTED_SAMPLING"],
-    ["a missing quantisation table", () => decodeBaselineJpeg(patched("grey-baseline", 0xc0, 8, 3)), "CORRUPT_DATA"],
-    ["the PDF expects three components of a grey file", () => decodeBaselineJpeg(jpeg("grey-baseline"), { expectComps: 3 }), "COMPONENT_MISMATCH"],
-    ["/ColorTransform 0 against a JFIF file", () => decodeBaselineJpeg(jpeg("rgb-444"), { colorTransform: 0 }), "COLOR_TRANSFORM_CONFLICT"],
+    ...OTHER_REFUSALS().map(([label, d, opts, code]) => [label, () => decodeBaselineJpeg(d, opts), code]),
+    ["not even bytes, to the header", () => readJpegHeader("\xff\xd8\xff"), "NOT_A_JPEG"],
     ["a quarter turn that is not one", () => decodeBaselineJpeg(jpeg("grey-baseline"), { rotate: 45 }), "UNSUPPORTED_ROTATION"],
-    ["the entropy data cut", () => decodeBaselineJpeg(jpeg("rgb-420-h2v2").subarray(0, 600)), "TRUNCATED"],
-    ["no SOS", () => decodeBaselineJpeg(jpeg("grey-baseline").subarray(0, 120)), "TRUNCATED"],
   ];
   const seen = new Set();
   for (const [label, fn, code] of cases) {
@@ -130,6 +153,8 @@ test("R1 every other refusal, each as the bytes require", () => {
   }
   for (const v of V.filter((x) => x.expect !== "ok")) seen.add(v.expect);
   assert.deepEqual([...seen].sort(), Object.keys(CODES).sort(), "every code R1's refusals take is driven");
+  /* A rotation that is not a quarter turn is judged after the data: damaged data answers as damaged. */
+  assert.equal(refusal(() => decodeBaselineJpeg(jpeg("rgb-420-h2v2").subarray(0, 600), { rotate: 45 })).code, "TRUNCATED");
 });
 
 test("R1 the options agree with the file: expectComps and a matching /ColorTransform decode as without them", () => {
@@ -306,4 +331,139 @@ test("R1 a Huffman table libjpeg refuses is a CORRUPT_DATA refusal naming the ta
     const { hts } = readJpegHeader(d);
     for (const list of [hts.dc, hts.ac]) for (const t of Object.values(list)) assert.ok(t.fast.length === 512 && t.maxcode[17] === 0x7fffffff, label);
   }
+});
+
+/* ── R1's edges and R11 (T44, N868) ──────────────────────────────────────── */
+
+test("R1 R6 the edge fixtures: libjpeg-turbo's samples one or two chroma samples wide, one row tall, ending inside an MCU row, restarting every block", () => {
+  assert.match(EDGES.provenance, /^Pillow 12\.3\.0 \(libjpeg-turbo /);
+  const samplings = new Set();
+  let narrow = 0, ragged = 0;
+  for (const v of EDGES.variants) {
+    const out = decodeBaselineJpeg(edge(v));
+    assert.deepEqual([out.width, out.height, out.comps], [v.width, v.height, v.mode === "L" ? 1 : 3], v.name);
+    assert.equal(sha(out.samples), v.pillow_sha256, `${v.name}: libjpeg-turbo's samples`);
+    samplings.add(out.source.sampling);
+    if (out.comps === 3 && out.source.sampling !== "1x1,1x1,1x1" && v.width <= 4) narrow++;
+    if (v.height % 16) ragged++;
+  }
+  for (const s of ["1x1", "1x1,1x1,1x1", "2x1,1x1,1x1", "2x2,1x1,1x1"]) assert.ok(samplings.has(s), s);
+  assert.ok(narrow >= 6, `${narrow} subsampled images whose chroma is one or two samples wide`);
+  assert.ok(ragged >= 20, `${ragged} images whose height ends inside an MCU row`);
+  assert.ok(EDGES.variants.some((v) => v.name.includes("restart-1-block")));
+});
+
+/** R11's answer: the rows `onRows` was handed, checked for order as they come, and what it returned. */
+function rowsOf(d, opts = {}) {
+  const calls = [];
+  let next = 0;
+  const info = decodeBaselineJpegRows(d, { ...opts, onRows(rows, y0, count) {
+    assert.ok(rows instanceof Uint8Array, "rows are bytes");
+    assert.equal(y0, next, "strips are handed over in order, top to bottom, none skipped");
+    assert.ok(Number.isInteger(count) && count > 0, "a strip holds rows");
+    calls.push({ rows: rows.slice(), y0, count });           // the buffer is reused: kept by copying
+    next = y0 + count;
+  } });
+  return { info, calls, joined: Buffer.concat(calls.map((c) => c.rows)) };
+}
+
+/** Every fixture R1 decodes, as [name, bytes]: the DCT variants and the edges. */
+const DECODABLE = [
+  ...V.filter((v) => v.expect === "ok").map((v) => [v.name, jpeg(v.name)]),
+  ...EDGES.variants.map((v) => [`edges ${v.name}`, edge(v)]),
+];
+
+test("R11 decodeBaselineJpegRows: its rows joined are R1's rotate-0 samples, byte for byte, for every fixture of every sampling (grey, 4:4:4, 4:2:2, 4:2:0, h1v2, restarts)", () => {
+  const samplings = new Set();
+  for (const [name, d] of DECODABLE) {
+    const whole = decodeBaselineJpeg(d, { rotate: 0 });
+    const { info, calls, joined } = rowsOf(d);
+    assert.deepEqual(info, { width: whole.width, height: whole.height, comps: whole.comps, source: whole.source }, `${name}: R1's answer without its samples`);
+    assert.equal(calls.at(-1).y0 + calls.at(-1).count, whole.height, `${name}: every row, and no more`);
+    for (const c of calls) assert.equal(c.rows.length, c.count * whole.width * whole.comps, `${name}: rows of width x comps bytes`);
+    assert.ok(Buffer.from(whole.samples).equals(joined), `${name}: R1's samples, byte for byte`);
+    samplings.add(whole.source.sampling);
+  }
+  for (const s of ["1x1", "1x1,1x1,1x1", "2x1,1x1,1x1", "2x2,1x1,1x1", "1x2,1x1,1x1"]) assert.ok(samplings.has(s), `sampling ${s}`);
+  /* And so libjpeg-turbo's, wherever a fixture's digest is of the unrotated picture. */
+  for (const v of V.filter((x) => x.expect === "ok" && x.rotate === 0)) assert.equal(sha(rowsOf(jpeg(v.name)).joined), v.pillow_sha256, v.name);
+  /* The options agree with the file: the same rows as without them. */
+  assert.equal(sha(rowsOf(jpeg("rgb-444"), { expectComps: 3, colorTransform: 1 }).joined), V.find((x) => x.name === "rgb-444").pillow_sha256);
+});
+
+test("R11 one MCU row at a time: no strip holds more than an MCU row's output rows (8 x vmax), and a tall image is handed over in many strips", () => {
+  for (const [name, d] of DECODABLE) {
+    const h = readJpegHeader(d);
+    const single = h.frame.comps.length === 1;
+    const vmax = Math.max(...h.frame.comps.map((c) => c.v));
+    const most = single ? 8 : 8 * vmax;
+    const { calls } = rowsOf(d);
+    for (const c of calls) assert.ok(c.count <= most, `${name}: a strip of ${c.count} rows, at most ${most}`);
+    assert.ok(calls.length >= Math.ceil(h.frame.height / most), `${name}: ${calls.length} strips for ${h.frame.height} rows`);
+  }
+});
+
+test("R11 every R1 refusal is raised the same way: the same DctRefusal, code, message and detail (control: a baseline fixture decodes)", () => {
+  const same = (label, d, opts = {}) => {
+    let r1, r11, handed = 0;
+    try { decodeBaselineJpeg(d, opts); } catch (e) { r1 = e; }
+    try { decodeBaselineJpegRows(d, { ...opts, onRows: () => { handed++; } }); } catch (e) { r11 = e; }
+    assert.ok(r1, `${label}: R1 refuses`);
+    assert.ok(r11 instanceof DctRefusal, `${label}: R11 refuses with a DctRefusal`);
+    assert.deepEqual([r11.code, r11.message, r11.detail], [r1.code, r1.message, r1.detail], `${label}: as R1 does`);
+    return { e: r11, handed };
+  };
+  const codes = new Set();
+  for (const v of V.filter((x) => x.expect !== "ok")) codes.add(same(v.name, jpeg(v.name)).e.code);
+  for (const [label, d, opts] of OTHER_REFUSALS()) {
+    const { e, handed } = same(label, d, opts);
+    codes.add(e.code);
+    /* A refusal from the header comes before any row is handed over. */
+    if (e.code !== "TRUNCATED" && e.code !== "CORRUPT_DATA") assert.equal(handed, 0, `${label}: nothing handed over`);
+  }
+  assert.deepEqual([...codes].sort(), Object.keys(CODES).filter((c) => c !== "UNSUPPORTED_ROTATION").sort(),
+    "every code R1 raises, but the rotation R11 never takes");
+  /* The control: a baseline fixture decodes, its rows handed over. */
+  const g = V.find((x) => x.name === "grey-baseline");
+  assert.equal(sha(rowsOf(jpeg(g.name)).joined), g.pillow_sha256);
+  /* R11 takes no rotation: one asked of it is not read. */
+  assert.equal(sha(rowsOf(jpeg(g.name), { rotate: 90 }).joined), g.pillow_sha256);
+});
+
+test("R11 data that runs out: the rows above the break are the picture's, and no row made of bits the data did not hold is handed over", () => {
+  const whole = decodeBaselineJpeg(jpeg("rgb-420-h2v2"));
+  const rowBytes = whole.width * 3;
+  for (const cut of [400, 600, 800, 1200]) {
+    const got = [];
+    let e;
+    try { decodeBaselineJpegRows(jpeg("rgb-420-h2v2").subarray(0, cut), { onRows: (rows) => got.push(rows.slice()) }); } catch (x) { e = x; }
+    assert.ok(e instanceof DctRefusal && e.code === "TRUNCATED", `cut at ${cut}: refused TRUNCATED`);
+    const handed = Buffer.concat(got);
+    assert.ok(handed.length < whole.samples.length, `cut at ${cut}: not the whole picture`);
+    assert.equal(handed.length % rowBytes, 0);
+    assert.ok(Buffer.from(whole.samples.subarray(0, handed.length)).equals(handed), `cut at ${cut}: only the picture's own rows`);
+  }
+});
+
+test("R11 onRows is required", () => {
+  assert.throws(() => decodeBaselineJpegRows(jpeg("grey-baseline")), TypeError);
+  assert.throws(() => decodeBaselineJpegRows(jpeg("grey-baseline"), { onRows: 1 }), TypeError);
+});
+
+test("R11 the strip's shape (K2737): rows a Uint8Array of count rows of width x comps bytes, interleaved as R1's rotate-0 samples, y0 the row's index in the unrotated frame", () => {
+  for (const [name, d] of DECODABLE) {
+    const whole = decodeBaselineJpeg(d, { rotate: 0 });
+    const rowBytes = whole.width * whole.comps;
+    decodeBaselineJpegRows(d, { onRows(rows, y0, count) {
+      assert.equal(Object.getPrototypeOf(rows), Uint8Array.prototype, `${name}: a Uint8Array`);
+      assert.equal(rows.length, count * rowBytes, `${name}: count rows of width x comps bytes`);
+      assert.ok(Buffer.from(whole.samples.subarray(y0 * rowBytes, (y0 + count) * rowBytes)).equals(rows), `${name}: rows ${y0}..${y0 + count - 1} of R1's rotate-0 samples`);
+    } });
+  }
+  /* A rotated fixture's strips are its unrotated frame's: y0 counts the stored rows. */
+  const v = V.find((x) => x.name === "rgb-420-rotate90");
+  const h = readJpegHeader(jpeg(v.name)).frame;
+  let last = 0;
+  decodeBaselineJpegRows(jpeg(v.name), { onRows(rows, y0, count) { assert.equal(rows.length, count * h.width * 3); last = y0 + count; } });
+  assert.equal(last, h.height, "every stored row, in the stored frame's height");
 });
