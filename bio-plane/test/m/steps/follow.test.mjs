@@ -83,3 +83,93 @@ test("R23: a PRESENT at a subject a step's look found absent gives the step a la
   w.s.questionFollow({ question: Q, on: true, by: CAT });
   assert.equal(w.s.laterFound({ viewer: CAT }).found.some((f) => f.step === s2), true, "once she follows Q, she sees both and is told");
 });
+
+test("R23 (T44): each later_found entry answers looked_at, the instant of the look (its observation-log entry's at), beside at, the instant what arrived was logged (negative control: the two differ, and looked_at is the look's, not the arrival's)", () => {
+  const w = world();
+  w.draw(Q, P1);
+  const id = w.step({ by: CAT });
+  w.clock = "2026-03-02T09:15:00.000Z";                        /* Cat looks on 2 March */
+  assert.equal(w.observationLog.observe({ actor_class: "member", actor: CAT, authority_kind: "step", authority: id, level: "document",
+    subject_kind: "address", subject: "https://example.org/budget.pdf", state: "LOOKED_ABSENT", detail: "not posted" }), null);
+  const lookRow = w.rows(`SELECT * FROM observation_log WHERE authority = ?`, id)[0];
+  assert.equal(lookRow.at, "2026-03-02T09:15:00Z");
+  w.clock = "2026-10-09T18:00:00.000Z";                        /* the budget arrives in October */
+  w.bundle("INFO-2026-0003-budget", { type: "information" });
+  w.capture("e".repeat(64), "INFO-2026-0003-budget");
+  assert.equal(w.observationLog.observe({ actor_class: "plane", authority_kind: "acquire", authority: "INFO-2026-0003-budget", level: "document",
+    subject_kind: "address", subject: "https://example.org/budget.pdf", state: "PRESENT", result_kind: "capture", result_ref: "e".repeat(64), detail: "new" }), null);
+  const arrived = w.rows(`SELECT * FROM observation_log WHERE state = 'PRESENT' AND subject = ?`, "https://example.org/budget.pdf")[0];
+  /* the step's own read (R4) and the notice read (R23) both answer it, for every one told */
+  const lf = w.s.step({ step: id, viewer: ANN }).later_found;
+  assert.deepEqual(lf, [{ look: Number(lookRow.seq), observation: Number(arrived.seq), at: arrived.at, looked_at: lookRow.at }]);
+  for (const v of [ANN, BOB, CAT]) {
+    const f = w.s.laterFound({ viewer: v }).found.filter((x) => x.step === id);
+    assert.equal(f.length, 1, v);
+    assert.equal(f[0].looked_at, lookRow.at, `${v}: looked_at is the look's own instant`);
+    assert.equal(f[0].at, arrived.at, `${v}: at is still the arrival's`);
+    assert.notEqual(f[0].looked_at, f[0].at, `${v}: the negative control, the two instants differ`);
+  }
+  /* each look of the step answers its own instant: a second look, later, answered by the same arrival's successor */
+  w.clock = "2026-04-20T12:00:00.000Z";
+  w.observationLog.observe({ actor_class: "member", actor: CAT, authority_kind: "step", authority: id, level: "document",
+    subject_kind: "address", subject: "https://example.org/minutes.pdf", state: "LOOKED_INDETERMINATE", condition: null, detail: "site down" });
+  w.clock = "2026-10-10T08:00:00.000Z";
+  w.capture("f".repeat(64), "INFO-2026-0003-budget");
+  w.observationLog.observe({ actor_class: "plane", authority_kind: "acquire", authority: "INFO-2026-0003-budget", level: "document",
+    subject_kind: "address", subject: "https://example.org/minutes.pdf", state: "PRESENT", result_kind: "capture", result_ref: "f".repeat(64), detail: "new" });
+  assert.deepEqual(w.s.step({ step: id, viewer: ANN }).later_found.map((e) => [e.looked_at, e.at]),
+    [["2026-03-02T09:15:00Z", "2026-10-09T18:00:00Z"], ["2026-04-20T12:00:00Z", "2026-10-10T08:00:00Z"]]);
+});
+
+test("R23 (T44): a store holding later_found entries from before looked_at gains the column at start, each entry filled from its look's own row; one whose look the log no longer holds answers null, never the arrival's instant", () => {
+  const w = world();
+  w.draw(Q, P1);
+  const id = w.step({ by: CAT });
+  w.clock = "2026-05-01T10:00:00.000Z";
+  w.observationLog.observe({ actor_class: "member", actor: CAT, authority_kind: "step", authority: id, level: "document",
+    subject_kind: "address", subject: "https://example.org/a.pdf", state: "LOOKED_ABSENT", detail: "not posted" });
+  w.clock = "2026-10-01T10:00:00.000Z";
+  w.bundle("INFO-2026-0004-a", { type: "information" });
+  w.capture("1".repeat(64), "INFO-2026-0004-a");
+  w.observationLog.observe({ actor_class: "plane", authority_kind: "acquire", authority: "INFO-2026-0004-a", level: "document",
+    subject_kind: "address", subject: "https://example.org/a.pdf", state: "PRESENT", result_kind: "capture", result_ref: "1".repeat(64), detail: "new" });
+  /* the store as T41 left it: the table without the column, and a second entry whose look is not held */
+  const held = w.rows(`SELECT step_id, look_seq, observation_seq, at FROM step_later_found`);
+  w.st.db.exec(`DROP TABLE step_later_found`);
+  w.st.db.exec(`CREATE TABLE step_later_found (seq INTEGER PRIMARY KEY AUTOINCREMENT, step_id TEXT NOT NULL, look_seq INTEGER NOT NULL,
+                observation_seq INTEGER NOT NULL, at TEXT NOT NULL, UNIQUE (step_id, look_seq, observation_seq))`);
+  for (const r of held) w.st.sql.exec(`INSERT INTO step_later_found (step_id, look_seq, observation_seq, at) VALUES (?,?,?,?)`, r.step_id, r.look_seq, r.observation_seq, r.at);
+  w.st.sql.exec(`INSERT INTO step_later_found (step_id, look_seq, observation_seq, at) VALUES (?,?,?,?)`, id, 999999, held[0].observation_seq, held[0].at);
+  w.s.migrate();
+  const lf = w.s.step({ step: id, viewer: ANN }).later_found;
+  assert.deepEqual(lf.map((e) => [e.look, e.looked_at, e.at]),
+    [[held[0].look_seq, "2026-05-01T10:00:00Z", "2026-10-01T10:00:00Z"], [999999, null, "2026-10-01T10:00:00Z"]]);
+  /* running it again changes nothing */
+  w.s.migrate();
+  assert.deepEqual(w.s.step({ step: id, viewer: ANN }).later_found, lf);
+});
+
+test("R23: laterFound's `at` is compared as an instant, never as a string (an entry logged in the same second as `at`, spelled with milliseconds, is told); a read past LATER_FOUND_SCAN entries says truncated", async () => {
+  const { LATER_FOUND_SCAN } = await import("../../../src/steps/index.mjs");
+  const w = world();
+  w.draw(Q, P1);
+  const id = w.step({ by: CAT });
+  w.observationLog.observe({ actor_class: "member", actor: CAT, authority_kind: "step", authority: id, level: "document",
+    subject_kind: "address", subject: "https://example.org/c.pdf", state: "LOOKED_ABSENT", detail: "not posted" });
+  w.clock = "2026-10-09T18:30:00.000Z";
+  w.bundle("INFO-2026-0005-c", { type: "information" });
+  w.capture("2".repeat(64), "INFO-2026-0005-c");
+  w.observationLog.observe({ actor_class: "plane", authority_kind: "acquire", authority: "INFO-2026-0005-c", level: "document",
+    subject_kind: "address", subject: "https://example.org/c.pdf", state: "PRESENT", result_kind: "capture", result_ref: "2".repeat(64), detail: "new" });
+  assert.equal(w.s.laterFound({ viewer: ANN, at: "2026-10-09T18:30:00.000Z" }).found.length, 1, "the same instant, spelled with milliseconds");
+  assert.equal(w.s.laterFound({ viewer: ANN, at: "2026-10-09T18:29:59.999Z" }).found.length, 0, "the negative control: an instant before it");
+  assert.equal(w.s.laterFound({ viewer: ANN }).truncated, false);
+  const e = w.rows(`SELECT * FROM step_later_found`)[0];
+  w.st.db.exec("BEGIN");
+  for (let i = 1; i <= LATER_FOUND_SCAN; i++)
+    w.st.sql.exec(`INSERT INTO step_later_found (step_id, look_seq, observation_seq, at, looked_at) VALUES (?,?,?,?,?)`, id, e.look_seq + i, e.observation_seq, e.at, e.looked_at);
+  w.st.db.exec("COMMIT");
+  const r = w.s.laterFound({ viewer: ANN });
+  assert.equal(r.truncated, true);
+  assert.equal(r.found.length, LATER_FOUND_SCAN);
+});
