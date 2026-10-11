@@ -1,6 +1,6 @@
 # BOB to publication (T45)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
