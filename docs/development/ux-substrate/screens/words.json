@@ -9,8 +9,11 @@
   "draft": 4,
   "photo": 13,
   "handle": 9,
-  "ai": 31,
-  "document": 4,
+  "ai": 63,
+  "date": 12,
+  "queue": 20,
+  "transcribe": 4,
+  "document": 5,
   "question": 1,
   "rail": 14,
   "tab": 2,
@@ -20,8 +23,8 @@
   "act": 483,
   "column": 33,
   "wizard": 239,
-  "total": 1006,
-  "protected": 388
+  "total": 1075,
+  "protected": 395
  },
  "words": [
   {
@@ -646,6 +649,12 @@
    "source": "mock-screens.js AI_USES"
   },
   {
+   "key": "ai.use.transcribe.name",
+   "en": "Reading page pictures",
+   "protected": false,
+   "source": "mock-screens.js AI_USES"
+  },
+  {
    "key": "ai.use.explore.name",
    "en": "Exploring",
    "protected": false,
@@ -782,17 +791,17 @@
   },
   {
    "key": "ai.refused.explorenotenabled",
-   "en": "Exploring is off on {whose} account, or has no limit of its own yet: it runs only within an exploring limit its owners set.",
+   "en": "Exploring is off on {whose} account. Its owners can switch it on.",
    "protected": false,
-   "source": "DEC-188",
-   "note": "EXPLORE_NOT_ENABLED"
+   "source": "DEC-189",
+   "note": "EXPLORE_NOT_ENABLED; an exploring limit is never required (ai-use R3): the overall limit judges exploring when no exploring limit is set"
   },
   {
    "key": "ai.queue.limitreached",
-   "en": "{account} reached its {period} limit{for_use} on {date}. {Uses} on it pause until {when}; its other uses go on.",
+   "en": "{account} reached its {period} limit for {use} on {date}. It pauses {use} until {when}; its other uses go on.",
    "protected": true,
-   "source": "DEC-188",
-   "note": "the told-once Noticed item; names no member"
+   "source": "DEC-189",
+   "note": "the told-once Noticed item, scope a use; names no member"
   },
   {
    "key": "ai.queue.suspended",
@@ -812,8 +821,15 @@
    "key": "ai.label.explored",
    "en": "Machine work · found while exploring · enabled by {owner}",
    "protected": true,
-   "source": "mock-screens.js explored",
-   "note": "enabled_by: the group, the project's name, or the member's handle"
+   "source": "DEC-189",
+   "note": "shown only to the paying account's owners (question-explorer R5); {owner}: the group, the project's name, or the member's handle"
+  },
+  {
+   "key": "ai.label.explored.member",
+   "en": "Machine work · found while exploring",
+   "protected": true,
+   "source": "DEC-189",
+   "note": "what every other member sees: which account paid, and who enabled it, are answered only to its owners"
   },
   {
    "key": "ai.owner.group",
@@ -821,6 +837,475 @@
    "protected": false,
    "source": "DEC-188",
    "note": "enabled_by for the group"
+  },
+  {
+   "key": "ai.period.day",
+   "en": "daily",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{period}"
+  },
+  {
+   "key": "ai.period.month",
+   "en": "monthly",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{period}"
+  },
+  {
+   "key": "ai.when.day",
+   "en": "tomorrow",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{when} for a daily limit"
+  },
+  {
+   "key": "ai.when.month",
+   "en": "on {month} 1",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{when} for a monthly limit; {month} from date.month.*"
+  },
+  {
+   "key": "date.month.january",
+   "en": "January",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "a month's name in a sentence"
+  },
+  {
+   "key": "date.month.february",
+   "en": "February",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "a month's name in a sentence"
+  },
+  {
+   "key": "date.month.march",
+   "en": "March",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "a month's name in a sentence"
+  },
+  {
+   "key": "date.month.april",
+   "en": "April",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "a month's name in a sentence"
+  },
+  {
+   "key": "date.month.may",
+   "en": "May",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "a month's name in a sentence"
+  },
+  {
+   "key": "date.month.june",
+   "en": "June",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "a month's name in a sentence"
+  },
+  {
+   "key": "date.month.july",
+   "en": "July",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "a month's name in a sentence"
+  },
+  {
+   "key": "date.month.august",
+   "en": "August",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "a month's name in a sentence"
+  },
+  {
+   "key": "date.month.september",
+   "en": "September",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "a month's name in a sentence"
+  },
+  {
+   "key": "date.month.october",
+   "en": "October",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "a month's name in a sentence"
+  },
+  {
+   "key": "date.month.november",
+   "en": "November",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "a month's name in a sentence"
+  },
+  {
+   "key": "date.month.december",
+   "en": "December",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "a month's name in a sentence"
+  },
+  {
+   "key": "ai.refused.limit.unjudged",
+   "en": "The assistant stopped here: Civicsmith couldn't check the use of {whose} account just now, and it spends nothing it can't count. Try again in a moment. Everything else works as usual.",
+   "protected": true,
+   "source": "DEC-189",
+   "note": "AI_LIMIT_REACHED when the limit can't be judged (ai-use R3 failing closed); in place of a {period} and {when}"
+  },
+  {
+   "key": "ai.limitfield.owner",
+   "en": "it doesn't say which account it is for",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{field} in ai.refused.limitinvalid"
+  },
+  {
+   "key": "ai.limitfield.scope",
+   "en": "that isn't something a limit can cover",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{field} in ai.refused.limitinvalid"
+  },
+  {
+   "key": "ai.limitfield.unit",
+   "en": "that isn't a unit a limit takes",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{field} in ai.refused.limitinvalid"
+  },
+  {
+   "key": "ai.limitfield.period",
+   "en": "that isn't a period a limit takes",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{field} in ai.refused.limitinvalid"
+  },
+  {
+   "key": "ai.limitfield.amount",
+   "en": "that isn't an amount a limit takes",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{field} in ai.refused.limitinvalid"
+  },
+  {
+   "key": "ai.limitfield.inclusive",
+   "en": "only a limit on one use can be on top of the overall limit",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{field} in ai.refused.limitinvalid"
+  },
+  {
+   "key": "ai.limitfield.use",
+   "en": "that isn't one of the assistant's uses",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{field} in ai.refused.limitinvalid"
+  },
+  {
+   "key": "ai.limitfield.count",
+   "en": "the count is a whole number, one or more",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{field} in ai.refused.limitinvalid"
+  },
+  {
+   "key": "ai.use.ask.inline",
+   "en": "asking",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{use} inside a sentence; {Use} at a sentence's start is ai.use.*.name"
+  },
+  {
+   "key": "ai.use.draft.inline",
+   "en": "drafting",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{use} inside a sentence; {Use} at a sentence's start is ai.use.*.name"
+  },
+  {
+   "key": "ai.use.run.inline",
+   "en": "runs",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{use} inside a sentence; {Use} at a sentence's start is ai.use.*.name"
+  },
+  {
+   "key": "ai.use.standing.inline",
+   "en": "standing questions",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{use} inside a sentence; {Use} at a sentence's start is ai.use.*.name"
+  },
+  {
+   "key": "ai.use.transcribe.inline",
+   "en": "reading page pictures",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{use} inside a sentence; {Use} at a sentence's start is ai.use.*.name"
+  },
+  {
+   "key": "ai.use.explore.inline",
+   "en": "exploring",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{use} inside a sentence; {Use} at a sentence's start is ai.use.*.name"
+  },
+  {
+   "key": "ai.use.suggestions.inline",
+   "en": "suggestions",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{use} inside a sentence; {Use} at a sentence's start is ai.use.*.name"
+  },
+  {
+   "key": "ai.account.group",
+   "en": "Your group's key",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{account} at a sentence's start"
+  },
+  {
+   "key": "ai.account.project",
+   "en": "{project}'s account",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{account} at a sentence's start"
+  },
+  {
+   "key": "ai.account.own",
+   "en": "Your own account",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{account} at a sentence's start"
+  },
+  {
+   "key": "ai.account.group.inline",
+   "en": "your group's key",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{account} inside a sentence"
+  },
+  {
+   "key": "ai.account.project.inline",
+   "en": "the project's account",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{account} inside a sentence"
+  },
+  {
+   "key": "ai.account.own.inline",
+   "en": "your own account",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{account} inside a sentence"
+  },
+  {
+   "key": "ai.queue.limitreached.overall",
+   "en": "{account} reached its {period} limit on {date}. Uses counted in its overall limit pause until {when}; uses with their own limit on top of it go on.",
+   "protected": true,
+   "source": "DEC-189",
+   "note": "the told-once Noticed item, scope overall; names no member"
+  },
+  {
+   "key": "ai.queue.limitreached.member",
+   "en": "{account}: a member reached the {period} amount each member may use, on {date}. Their uses on it pause until {when}; other members' go on.",
+   "protected": true,
+   "source": "DEC-189",
+   "note": "the told-once Noticed item, scope per_member; names no member"
+  },
+  {
+   "key": "ai.scope.group",
+   "en": "your group's work",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{scope} in ai.queue.exploreask for the group's key"
+  },
+  {
+   "key": "ai.scope.own",
+   "en": "your own questions",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{scope} in ai.queue.exploreask for a member's own account; a project's is its name"
+  },
+  {
+   "key": "queue.question-find.summary",
+   "en": "Found while looking into {question}: {what}",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "FINDING, Hint · machine work; labelled with ai.label.explored or ai.label.explored.member"
+  },
+  {
+   "key": "queue.question-find.detail",
+   "en": "The assistant found this while looking into a question you can see. It is a lead, not evidence: it becomes evidence only if a member opens it, checks it and cites the source.",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "FINDING, Hint · machine work; labelled with ai.label.explored or ai.label.explored.member"
+  },
+  {
+   "key": "queue.step-later-found.summary",
+   "en": "Found later: {what}",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "FINDING"
+  },
+  {
+   "key": "queue.step-later-found.detail",
+   "en": "You looked for this on {date} and didn't find it; it has since arrived. Your earlier look stays as it was, dated. Open the step to say whether this changes what it shows for each question.",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "FINDING"
+  },
+  {
+   "key": "queue.step-date-due.summary",
+   "en": "Past its date: {step}",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "OBLIGATION, to the member who set the date"
+  },
+  {
+   "key": "queue.step-date-due.detail",
+   "en": "You set {date} for this step, and it isn't done. Only you are told. Finish it, move the date, or end it with a reason.",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "OBLIGATION, to the member who set the date"
+  },
+  {
+   "key": "queue.step-reminder.summary",
+   "en": "Your reminder: {step}",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "OBLIGATION, to the member who asked"
+  },
+  {
+   "key": "queue.step-reminder.detail",
+   "en": "You asked to be reminded about this step today. Only you are told.",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "OBLIGATION, to the member who asked"
+  },
+  {
+   "key": "queue.step-cost-shared.summary",
+   "en": "Shared work: {step}",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "FINDING, to the owners of each project"
+  },
+  {
+   "key": "queue.step-cost-shared.detail",
+   "en": "This step's costs ({totals}) serve questions that {projects} each draw on. Its owners are told, so they can talk about sharing the cost; Civicsmith records no split and no payment.",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "FINDING, to the owners of each project"
+  },
+  {
+   "key": "queue.step-cost-message.summary",
+   "en": "A message about the cost of {step}",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "FINDING, to the owners of each other project"
+  },
+  {
+   "key": "queue.step-cost-message.detail",
+   "en": "{member}, an owner of another project that draws on this step, wrote: “{text}”",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "FINDING, to the owners of each other project"
+  },
+  {
+   "key": "queue.milestone-overdue.summary",
+   "en": "Overdue: {milestone}",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "FINDING"
+  },
+  {
+   "key": "queue.milestone-overdue.detail",
+   "en": "This milestone was due on {date}. Everyone who joined the project is told once.",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "FINDING"
+  },
+  {
+   "key": "queue.milestone-reminder.summary",
+   "en": "Your reminder: {milestone}",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "OBLIGATION, to the member who asked"
+  },
+  {
+   "key": "queue.milestone-reminder.detail",
+   "en": "You asked to be reminded about this milestone today. Only you are told.",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "OBLIGATION, to the member who asked"
+  },
+  {
+   "key": "queue.project-quiet.summary",
+   "en": "Quiet: {project}",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "FINDING, to the project's joined members"
+  },
+  {
+   "key": "queue.project-quiet.detail",
+   "en": "Nothing has moved in this project for a while. Where it stands: {progress}. You can write it up and act, keep watching its sources, close it with what remains unknown, or revise what it set out to show. Nobody is asked again until it moves.",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "FINDING, to the project's joined members"
+  },
+  {
+   "key": "queue.review-comment-left-out.summary",
+   "en": "Your comments were not included: {case}",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "FINDING, to each reviewer who is a member"
+  },
+  {
+   "key": "queue.review-comment-left-out.detail",
+   "en": "The case was published without your review comments. You may file a response in its docket, as anyone may.",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "FINDING, to each reviewer who is a member"
+  },
+  {
+   "key": "transcribe.refused.notdeployed",
+   "en": "Nothing was read or sent: the assistant's reading of page pictures isn't switched on in your group's Civicsmith yet. Each part of the assistant is switched on only after it passes Civicsmith's test investigations. You can type a page's words yourself meanwhile.",
+   "protected": false,
+   "source": "DEC-190",
+   "note": "TRANSCRIBE_NOT_DEPLOYED (C-51.7); names no account"
+  },
+  {
+   "key": "transcribe.label",
+   "en": "The assistant's reading of the page image · undetermined until a member checks a passage against the page",
+   "protected": true,
+   "source": "DEC-190",
+   "note": "the label on words from pagetranscribe (reading-pipeline R29's \"the AI's reading\")"
+  },
+  {
+   "key": "transcribe.none",
+   "en": "The assistant read pages {pages} but found no words it could give: {why}",
+   "protected": false,
+   "source": "DEC-190",
+   "note": "performed false; {why} the reason as answered"
+  },
+  {
+   "key": "transcribe.done",
+   "en": "The assistant read pages {pages}. Their words can now be found; each passage stays undetermined until a member checks it against the page.",
+   "protected": false,
+   "source": "DEC-190",
+   "note": "performed and written"
+  },
+  {
+   "key": "document.unread.pages",
+   "en": "Pages {pages} are pictures of text that Civicsmith's own reading couldn't make out, so their words can't be found or cited yet. The page images are kept as they are.",
+   "protected": false,
+   "source": "DEC-190",
+   "note": "the Document screen's section, shown only when such pages exist"
   },
   {
    "key": "document.cleaned.label",
@@ -1627,7 +2112,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_aikeepaway.label.setup",
+   "key": "act.aikeepaway.label.setup",
    "en": "Keep the group's material away from AI, with a reason",
    "protected": true,
    "source": "registry.json"
@@ -1645,7 +2130,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_ailimitset.label.setup",
+   "key": "act.ailimitset.label.setup",
    "en": "Set each member's daily use of the group's key",
    "protected": true,
    "source": "registry.json"
@@ -1663,7 +2148,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_securitytooladd.label.setup",
+   "key": "act.securitytooladd.label.setup",
    "en": "Add a security tool (optional)",
    "protected": true,
    "source": "registry.json"
@@ -1681,7 +2166,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_groupdescriptiondraft.label.group-identity",
+   "key": "act.groupdescriptiondraft.label.group-identity",
    "en": "Ask the assistant to help write it",
    "protected": true,
    "source": "registry.json"
@@ -1693,13 +2178,13 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_memberlanguageset.label.join",
+   "key": "act.memberlanguageset.label.join",
    "en": "Choose your language",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_handlecheck.label.join",
+   "key": "act.handlecheck.label.join",
    "en": "See whether a handle is free",
    "protected": true,
    "source": "registry.json"
@@ -1717,7 +2202,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_startfrom.label.home",
+   "key": "act.startfrom.label.home",
    "en": "Start from…",
    "protected": true,
    "source": "registry.json"
@@ -1789,13 +2274,13 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_accountusesset.label.members",
+   "key": "act.accountusesset.label.members",
    "en": "Set what the group's key pays for",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_ailimitset.label.members",
+   "key": "act.ailimitset.label.members",
    "en": "Set a limit on the group's key",
    "protected": true,
    "source": "registry.json"
@@ -1807,31 +2292,31 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_aikeepaway.label.members",
+   "key": "act.aikeepaway.label.members",
    "en": "Keep the group's material away from AI, with a reason",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_securitymap.label.security",
+   "key": "act.securitymap.label.security",
    "en": "Show the level for a period",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_securitytooladd.label.security",
+   "key": "act.securitytooladd.label.security",
    "en": "Add a security tool",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_securitytooltest.label.security",
+   "key": "act.securitytooltest.label.security",
    "en": "Test a security tool",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_securitytoolremove.label.security",
+   "key": "act.securitytoolremove.label.security",
    "en": "Remove a security tool",
    "protected": true,
    "source": "registry.json"
@@ -1843,13 +2328,13 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_handlechange.label.account",
+   "key": "act.handlechange.label.account",
    "en": "Change your handle",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_setpassword.label.account",
+   "key": "act.setpassword.label.account",
    "en": "Change your password",
    "protected": true,
    "source": "registry.json"
@@ -1867,7 +2352,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_memberlanguageset.label.account",
+   "key": "act.memberlanguageset.label.account",
    "en": "Choose your language",
    "protected": true,
    "source": "registry.json"
@@ -1903,13 +2388,13 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_accountusesset.label.connect",
+   "key": "act.accountusesset.label.connect",
    "en": "Set what your account pays for",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_ailimitset.label.connect",
+   "key": "act.ailimitset.label.connect",
    "en": "Set a limit on your account",
    "protected": true,
    "source": "registry.json"
@@ -1945,49 +2430,49 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_noterevise.label.notes",
+   "key": "act.noterevise.label.notes",
    "en": "Revise your note",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_notedelete.label.notes",
+   "key": "act.notedelete.label.notes",
    "en": "Delete your note",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_writinghelp.label.notes",
+   "key": "act.writinghelp.label.notes",
    "en": "Help me write this",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_translationdraft.label.translations",
+   "key": "act.translationdraft.label.translations",
    "en": "Ask the assistant to draft",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_translationadopt.label.translations",
+   "key": "act.translationadopt.label.translations",
    "en": "Adopt a translation",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_translationgrant.label.translations",
+   "key": "act.translationgrant.label.translations",
    "en": "Give a member the grant for a language",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_translationconfirm.label.translations",
+   "key": "act.translationconfirm.label.translations",
    "en": "Confirm a protected word",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_translationrevert.label.translations",
+   "key": "act.translationrevert.label.translations",
    "en": "Undo a change",
    "protected": true,
    "source": "registry.json"
@@ -2083,13 +2568,13 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_projectkeyset.label.queue",
+   "key": "act.projectkeyset.label.queue",
    "en": "Add an API key for a project",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_exploreapprove.label.queue",
+   "key": "act.exploreapprove.label.queue",
    "en": "Let the assistant explore today",
    "protected": true,
    "source": "registry.json"
@@ -2107,7 +2592,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_findin.label.finder",
+   "key": "act.findin.label.finder",
    "en": "Find in these",
    "protected": true,
    "source": "registry.json"
@@ -2161,7 +2646,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_writinghelp.label.capture",
+   "key": "act.writinghelp.label.capture",
    "en": "Help me write this",
    "protected": true,
    "source": "registry.json"
@@ -2197,7 +2682,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_archivelist.label.archive",
+   "key": "act.archivelist.label.archive",
    "en": "List the archive's files by state",
    "protected": true,
    "source": "registry.json"
@@ -2215,31 +2700,31 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_openoriginal.label.open-file",
+   "key": "act.openoriginal.label.open-file",
    "en": "Open the original",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_openwithwarning.label.open-file",
+   "key": "act.openwithwarning.label.open-file",
    "en": "Open the original after the warning, without a deeper check",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_safeview.label.open-file",
+   "key": "act.safeview.label.open-file",
    "en": "Read the safe view",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_deepercheck.label.open-file",
+   "key": "act.deepercheck.label.open-file",
    "en": "Ask for a deeper check",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_releasescanhold.label.open-file",
+   "key": "act.releasescanhold.label.open-file",
    "en": "Release, with a reason",
    "protected": true,
    "source": "registry.json"
@@ -2287,13 +2772,25 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_findin.label.document",
+   "key": "act.findin.label.document",
    "en": "Find in this",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_findin.label.find-in",
+   "key": "act.owed_pagetranscribe.label.document",
+   "en": "Have the assistant read pages",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.transcribe.label.document",
+   "en": "Type a page's words yourself",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.findin.label.find-in",
    "en": "Find in this",
    "protected": true,
    "source": "registry.json"
@@ -2353,7 +2850,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_findin.label.project",
+   "key": "act.findin.label.project",
    "en": "Find in this project",
    "protected": true,
    "source": "registry.json"
@@ -2383,43 +2880,43 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_projectkeyset.label.projectai",
+   "key": "act.projectkeyset.label.projectai",
    "en": "Hold the project's API key",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_projectsigninset.label.projectai",
+   "key": "act.projectsigninset.label.projectai",
    "en": "Use your own sign-in for the project",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_projectaccountswitch.label.projectai",
+   "key": "act.projectaccountswitch.label.projectai",
    "en": "Switch the project's account on or off",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_projectaccountremove.label.projectai",
+   "key": "act.projectaccountremove.label.projectai",
    "en": "Remove the project's account",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_projectkeynoticeseen.label.projectai",
+   "key": "act.projectkeynoticeseen.label.projectai",
    "en": "Read what the project's key means",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_accountusesset.label.projectai",
+   "key": "act.accountusesset.label.projectai",
    "en": "Set what the project's account pays for",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_ailimitset.label.projectai",
+   "key": "act.ailimitset.label.projectai",
    "en": "Set a limit on the project's account",
    "protected": true,
    "source": "registry.json"
@@ -2605,7 +3102,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_findin.label.timeline",
+   "key": "act.findin.label.timeline",
    "en": "Look for dates in this project",
    "protected": true,
    "source": "registry.json"
@@ -2653,7 +3150,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_findin.label.money",
+   "key": "act.findin.label.money",
    "en": "Look for it in this project",
    "protected": true,
    "source": "registry.json"
@@ -3043,7 +3540,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_writinghelp.label.case-editor",
+   "key": "act.writinghelp.label.case-editor",
    "en": "Help me write this",
    "protected": true,
    "source": "registry.json"
@@ -3091,19 +3588,19 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_publishat.label.ceremony",
+   "key": "act.publishat.label.ceremony",
    "en": "Publish at a set time, checked again then",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_obscuremark.label.ceremony",
+   "key": "act.obscuremark.label.ceremony",
    "en": "Mark who and what to obscure in a photo",
    "protected": true,
    "source": "registry.json"
   },
   {
-   "key": "act.owed_obscuremarkwithdraw.label.ceremony",
+   "key": "act.obscuremarkwithdraw.label.ceremony",
    "en": "Withdraw a mark on a photo, with a reason",
    "protected": true,
    "source": "registry.json"
@@ -3235,7 +3732,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_aikeepaway.does",
+   "key": "act.aikeepaway.does",
    "en": "Keeps the group's material away from AI, for every use or the ones you choose. It binds every account, the group's, any project's and members' own. Members see your reason on Settings › The assistant.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -3253,12 +3750,6 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.aicopyceilingset.does",
-   "en": "Sets the most each member may spend on the group's key in a day. At the limit the assistant pauses for them until the next day.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
    "key": "act.courtnoticeset.does",
    "en": "Chooses whether members are told, when they join and the first time they record something not public, what a court order could reach.",
    "protected": false,
@@ -3271,7 +3762,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_securitytooladd.does",
+   "key": "act.securitytooladd.does",
    "en": "Adds a security tool your organisation uses. Before it is turned on you see what it is sent, who receives it and how long it keeps files.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -3289,7 +3780,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_groupdescriptiondraft.does",
+   "key": "act.groupdescriptiondraft.does",
    "en": "Asks the assistant for a draft of your group's description, labelled as its draft. Nothing is saved until you keep it.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -3301,7 +3792,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_memberlanguageset.does",
+   "key": "act.memberlanguageset.does",
    "en": "Sets the language Civicsmith speaks to you. Documents stay in their own language.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -3313,7 +3804,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_startfrom.does",
+   "key": "act.startfrom.does",
    "en": "Starts from where you are: a problem you live with, a document, a deadline, a claim to check or a person. Each opens the right first step.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -3367,31 +3858,25 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.groupswitchset.does",
-   "en": "Sets whether, on the group's key, the assistant may suggest things unprompted and keep asking standing questions.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
    "key": "act.groupkeyremove.does",
    "en": "Removes the group's key for good. Members without their own account use Civicsmith without the assistant.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_securitymap.does",
+   "key": "act.securitymap.does",
    "en": "Shows how hard your group's Civicsmith was tried over the period you choose, against its usual. Counts only.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_securitytooltest.does",
+   "key": "act.securitytooltest.does",
    "en": "Sends a harmless test file or address to the tool and shows its answer, so you know it works before relying on it.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_securitytoolremove.does",
+   "key": "act.securitytoolremove.does",
    "en": "Stops using this tool. Notes it already wrote stay on the files they concern.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -3403,7 +3888,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_setpassword.does",
+   "key": "act.setpassword.does",
    "en": "Changes your password. Every other session signed in as you ends, so anyone using an old one must sign in again with the new password.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -3451,18 +3936,6 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.aiceilingset.does",
-   "en": "Sets the most your own account may spend in a day here, up to the limit the group set.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
-   "key": "act.accountswitchset.does",
-   "en": "Lets the assistant suggest things without being asked. Off unless you turn it on; each suggestion is yours to adopt or ignore.",
-   "protected": false,
-   "source": "mock-acts.js ACT_HELP"
-  },
-  {
    "key": "act.accountreferenceremove.does",
    "en": "Disconnects your own account. The group's key serves you instead, if the group has one.",
    "protected": true,
@@ -3493,49 +3966,49 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_noterevise.does",
+   "key": "act.noterevise.does",
    "en": "Changes your note. Notes are yours alone, so nothing else changes.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_notedelete.does",
+   "key": "act.notedelete.does",
    "en": "Deletes your note. If you turned it into something shared, that stays.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_writinghelp.does",
+   "key": "act.writinghelp.does",
    "en": "Asks the assistant to help word what you are writing, from what you typed. Its words arrive labelled as its draft; nothing is saved until you keep them.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_translationdraft.does",
+   "key": "act.translationdraft.does",
    "en": "Asks the assistant to draft translations of Civicsmith's words, labelled as drafts for a speaker to check.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_translationadopt.does",
+   "key": "act.translationadopt.does",
    "en": "Keeps a translation so members reading that language see it. Protected words need a second speaker's check first.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_translationgrant.does",
+   "key": "act.translationgrant.does",
    "en": "Lets a named member translate Civicsmith's words into one language.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_translationconfirm.does",
+   "key": "act.translationconfirm.does",
    "en": "Confirms a protected word as a second speaker, so members see it instead of the English.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_translationrevert.does",
+   "key": "act.translationrevert.does",
    "en": "Undoes a translation change in one step, back to what it replaced.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -3643,7 +4116,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_findin.does",
+   "key": "act.findin.does",
    "en": "Looks inside these documents for people, money figures, dates, requirements or a word. Each result shows its passage; nothing is recorded until you record it.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -3721,37 +4194,37 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_archivelist.does",
+   "key": "act.archivelist.does",
    "en": "Lists the archive's files by state: filed, already held, or not filed and why.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_openoriginal.does",
+   "key": "act.openoriginal.does",
    "en": "Opens the original file on your device. A low-risk file is checked first if its last check is over a week old.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_openwithwarning.does",
+   "key": "act.openwithwarning.does",
    "en": "Opens a high-risk original on your own device without a deeper check, after you confirm you will not enable macros or editing.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_safeview.does",
+   "key": "act.safeview.does",
    "en": "Shows a safe copy: each page as a picture, or a spreadsheet's figures as data. Nothing in it can run. Cite the original, not this.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_deepercheck.does",
+   "key": "act.deepercheck.does",
    "en": "Runs every check on this file: read whole, the built-in scanner again, and your group's outside tools. A clean result opens the original to everyone for 24 hours.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_releasescanhold.does",
+   "key": "act.releasescanhold.does",
    "en": "Gives your reason to release a file a scanner flagged. A second member's reason releases it; the machine never can.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -3805,43 +4278,43 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_accountusesset.does",
+   "key": "act.accountusesset.does",
    "en": "Switches one use on or off for this account: asking, drafting, runs, standing questions, suggestions, or exploring (No, Ask every day, Yes). An act this account would pay for, with its use off, stops; it never moves to another account.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_ailimitset.does",
+   "key": "act.ailimitset.does",
    "en": "Sets or removes one limit on this account: overall, for one use, or for each member's use, in dollars (estimated, API keys only), tokens or calls, a day or a month. It binds this account only.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_projectkeyset.does",
+   "key": "act.projectkeyset.does",
    "en": "Holds an Anthropic API key for this project, sealed and never shown again. Switched on, it pays for members' acts in the project, before their own accounts or the group's key.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_projectsigninset.does",
+   "key": "act.projectsigninset.does",
    "en": "Makes your own Claude sign-in the project's account, allowed only while you are its only member. If another member joins, it stops serving the project at once and you are told.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_projectaccountswitch.does",
+   "key": "act.projectaccountswitch.does",
    "en": "Turns the project's account on or off without removing it. While it is off, members' own accounts, then the group's key, serve in the project.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_projectaccountremove.does",
+   "key": "act.projectaccountremove.does",
    "en": "Removes the project's account. Members' own accounts, then the group's key, serve in the project from then on.",
    "protected": true,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_projectkeynoticeseen.does",
+   "key": "act.projectkeynoticeseen.does",
    "en": "Records that you have read what the project's key means, before the first act it pays for.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -3853,31 +4326,43 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_exploreapprove.does",
+   "key": "act.owed_pagetranscribe.does",
+   "en": "Has the assistant read up to 8 pages of this document that Civicsmith's own reading couldn't make out. The account that pays for your acts here pays, within its limits. Its words arrive labelled as the assistant's reading and stay undetermined until a member checks a passage against the page; the page images stay as they are.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.transcribe.does",
+   "en": "Types the words of a page yourself, from its image. Your typing is labelled as yours, and a second member can check it against the page.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.exploreapprove.does",
    "en": "Lets the assistant explore today, on this account, what it said is worth exploring. Without a yes today, it doesn't.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_handlechange.does",
+   "key": "act.handlechange.does",
    "en": "Changes the handle the record shows on your work. Members see your earlier handle beside it. Allowed until your work first appears in a published case; after that it is fixed.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_handlecheck.does",
+   "key": "act.handlecheck.does",
    "en": "Checks, as you type, whether this handle can be used in the group: free, already taken, or using characters a handle can't have. It never says who has a handle.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_obscuremarkwithdraw.does",
+   "key": "act.obscuremarkwithdraw.does",
    "en": "Withdraws a mark on a photo, with your reason, for example when it covers what the finding shows. The withdrawal is recorded beside the mark; the public copy follows the marks that stand.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_obscuremark.does",
+   "key": "act.obscuremark.does",
    "en": "Marks anyone in a photo who is not part of a finding, and any number plate, so the copy a published case carries shows them obscured, labelled. The original stays inside the group.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -4393,7 +4878,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_publishat.does",
+   "key": "act.publishat.does",
    "en": "Publishes at a set time. Civicsmith checks again then, and does not publish if anything changed since signing.",
    "protected": true,
    "source": "mock-acts.js ACT_HELP"

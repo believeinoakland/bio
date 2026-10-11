@@ -27,7 +27,7 @@ wiz('Set up and claim', 'install', True, [
  ('setup', 'profilesset', 'Choose the places whose rules apply, and the languages your members use.', 'Deadlines, holidays and offices come from these places, never from Civicsmith itself. If yours is not listed, choose Other: everything else works, and you enter due dates yourself.'),
  ('setup', 'officesseed', 'Review the offices, seats and holders Civicsmith filled in. Each is marked with where it came from.', 'Requests go to offices by role, so correct anything before members rely on it.'),
  ('setup', None, 'Read who in the group will see facts about people.', 'Facts from public documents follow those documents; a project\'s own notes about a person stay inside the project.'),
- ('setup', 'owed:aikeepaway DEC-172', "Read what the assistant is (and open More about this for the detail), then choose whether to keep the group's material away from AI.", "Any member may connect their own Claude account unless you keep the material away from AI; then members see who chose it and your reason. Everything works without the assistant."),
+ ('setup', 'aikeepaway', "Read what the assistant is (and open More about this for the detail), then choose whether to keep the group's material away from AI.", "Any member may connect their own Claude account unless you keep the material away from AI; then members see who chose it and your reason. Everything works without the assistant."),
  ('setup', 'groupkeyset', 'If the group will pay for the assistant, paste its Anthropic API key here. It is never shown again.', 'It serves every member with no account of their own; each is told once, before their first question, that it goes to Anthropic under the group\'s account. Leave it empty and members bring their own.'),
  ('setup', 'courtnoticeset', 'Choose whether members are told what a court can reach.', 'A court order your group cannot defeat can require anything not public to be shown. Some groups want every member told; the explanation is always one tap away.'),
  ('setup', 'hostingaccess', 'Record who holds the hosting account.', 'If you are ever unreachable, this is how the group gets back in.'),
@@ -36,13 +36,13 @@ wiz('Set up and claim', 'install', True, [
 ], [1, 2])
 
 wiz('Welcome a new member', 'join', True, [
- ('join', 'owed:memberlanguageset DEC-127', 'Choose your language.', 'Everything that follows should be in words you read easily. It starts from your device\'s setting.'),
+ ('join', 'memberlanguageset', 'Choose your language.', 'Everything that follows should be in words you read easily. It starts from your device\'s setting.'),
  ('join', 'enroll', 'Choose a handle and a password.', 'The record shows your handle on your work. It needn\'t be your legal name: a known name lends credibility, a pen name shields you, and administrators still know who you are.'),
  ('home', None, 'This is your group\'s home: what it is working on, and what is waiting on you.', 'Come back here whenever you lose your place.'),
  ('question', None, 'Two things to know first: a question\'s strength against its project\'s bar, and "Undetermined".', 'You will see these everywhere. Every other mark is explained where you meet it, one tap away.'),
  ('connect', None, 'Optional: connect your own Claude account, or skip.', 'The assistant serves only you, and every journey works without it.', {'via': 'Connect your Claude account'}),
  ('ties', None, 'Optional: tell the group about your own ties.', 'Only you and the administrators see them, and they let a case disclose a tie honestly.', {'via': 'Your ties'}),
- ('home', 'owed:startfrom DEC-129', 'Take a first step: join a project, capture a document, or record what you saw.', 'One small act is enough to begin. Nothing here has to be done in order.'),
+ ('home', 'startfrom', 'Take a first step: join a project, capture a document, or record what you saw.', 'One small act is enough to begin. Nothing here has to be done in order.'),
 ], [3], note='Final words once the redesign has settled (DEC-91).')
 
 wiz('Publication ceremony', 'ceremony', True, [
@@ -50,13 +50,13 @@ wiz('Publication ceremony', 'ceremony', True, [
  ('ceremony', 'publishpreflight', 'Check each finding\'s strength against the bar, and anything still open.', 'A reader sees each finding\'s strengths. Anything still open is disclosed, never hidden.'),
  ('case-editor', 'statementack', 'Read what the case leaves out, and who acknowledged it.', 'Saying what a case does not cover is part of its honesty.'),
  ('case-editor', 'attribute', 'Check each person the case names, with the reason they matter to a finding.', 'A case cannot be signed while any reason is missing.'),
- ('ceremony', 'owed:obscuremark DEC-180', 'Check each photo the case relies on: mark anyone in it who is not part of a finding, and any number plate.', 'The public copy shows them obscured and says so; the original stays inside the group.'),
+ ('ceremony', 'obscuremark', 'Check each photo the case relies on: mark anyone in it who is not part of a finding, and any number plate.', 'The public copy shows them obscured and says so; the original stays inside the group.'),
  ('ceremony', 'publishtensions', 'Read what will be disclosed: the timeline as it stands, and any calculation that differs or is not tied to the record.', 'Readers must see what the case could not settle.'),
  ('ceremony', None, 'Read the group\'s declared bias as it will appear.', 'Every published case carries the lens it was made through.'),
  ('ceremony', None, 'Preview the public page as a stranger will see it.', 'This is how a reader with no account meets your work.'),
  ('ceremony', 'publish', 'Each member publishing confirms they have no undeclared tie to anyone the case concerns.', 'Including anyone paid in its money. A tie disclosed is a strength; one found later is not.'),
  ('ceremony', 'caseratify', 'Sign with your key.', 'Publishing is permanent. Corrections come as a new edition, never by changing this one.'),
- ('ceremony', 'owed:publishat DEC-147', 'Publish now, or choose the time it becomes public, such as when a story citing it runs.', 'At that time Civicsmith checks again; if anything changed since you signed, it holds the case and tells you. You can cancel or move the time until then.'),
+ ('ceremony', 'publishat', 'Publish now, or choose the time it becomes public, such as when a story citing it runs.', 'At that time Civicsmith checks again; if anything changed since you signed, it holds the case and tells you. You can cancel or move the time until then.'),
 ], [15, 24])
 
 wiz('Get a record', 'finder', False, [
@@ -111,8 +111,8 @@ wiz('Connect your Claude account', 'connect', False, [
  ('connect', 'disclosureshown', 'Read what connecting means.', 'Your questions, and what is read to answer them, go to Anthropic under your own account.'),
  ('connect', 'owed:subscriptionsignin DEC-156', 'To connect your Claude subscription, open Anthropic\'s sign-in page, sign in and approve. Or use an API key, or skip.', 'You sign in on Anthropic\'s own page; Civicsmith never sees your Claude password. Skipping is a real choice: every journey stays open.'),
  ('connect', 'accountreferenceset', 'Copy the code Anthropic\'s page shows you, paste it here, and connect.', 'Your subscription then serves only your own questions. You can disconnect at any time.'),
- ('connect', 'owed:ailimitset DEC-188', 'Set a limit on your account, if you want one: for everything or for one use, a day or a month.', 'It binds only your own account. The group\'s and a project\'s limits never bind it.'),
- ('connect', 'owed:accountusesset DEC-188', 'Choose what your account pays for, and whether the assistant may suggest things without being asked. Suggestions are off unless you turn them on.', 'Some members want suggestions; others want quiet.'),
+ ('connect', 'ailimitset', 'Set a limit on your account, if you want one: for everything or for one use, a day or a month.', 'It binds only your own account. The group\'s and a project\'s limits never bind it.'),
+ ('connect', 'accountusesset', 'Choose what your account pays for, and whether the assistant may suggest things without being asked. Suggestions are off unless you turn them on.', 'Some members want suggestions; others want quiet.'),
  ('connect', 'accountreferenceremove', 'You can disconnect at any time, here.', 'Disconnecting removes the key or token from your group\'s Civicsmith.'),
 ], [4, 17])
 
@@ -163,9 +163,9 @@ wiz('Use another group\'s case', 'imported', False, [
 wiz('Translate the interface', 'translations', False, [
  ('translations', None, 'Choose the language.', 'Civicsmith\'s own translations come with releases. Your group fills gaps and improves wording.'),
  ('translations', None, 'See the words still untranslated.', 'A missing word shows in English, never blank.'),
- ('translations', 'owed:translationdraft DEC-127', 'Where you can reach the assistant, ask it to draft them all. Each is marked "Draft · the assistant\'s".', 'Your task becomes finding its errors. Without the assistant, type them yourself.'),
- ('translations', 'owed:translationadopt DEC-127', 'Read each draft against the English; keep it or correct it.', 'A word becomes the group\'s only when a granted member who knows the language keeps it.'),
- ('translations', 'owed:translationconfirm DEC-157', 'A protected word you changed, or typed without a draft, waits for a second check.', 'A second granted speaker, or an administrator reading the assistant\'s back-translation, confirms it. Until then members see the English.'),
+ ('translations', 'translationdraft', 'Where you can reach the assistant, ask it to draft them all. Each is marked "Draft · the assistant\'s".', 'Your task becomes finding its errors. Without the assistant, type them yourself.'),
+ ('translations', 'translationadopt', 'Read each draft against the English; keep it or correct it.', 'A word becomes the group\'s only when a granted member who knows the language keeps it.'),
+ ('translations', 'translationconfirm', 'A protected word you changed, or typed without a draft, waits for a second check.', 'A second granted speaker, or an administrator reading the assistant\'s back-translation, confirms it. Until then members see the English.'),
 ], [3])
 
 wiz('Start and send', 'plan', False, [

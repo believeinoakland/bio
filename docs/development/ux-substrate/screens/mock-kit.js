@@ -9,10 +9,10 @@ const pips = w => `<span class="cs-pips">${[1,2,3,4,5].map(i => `<i${i <= w ? ' 
 /* weights follow DEC-87 and DEC-88; an act whose weight is not yet set is treated as reasoned */
 const WEIGHT = {
   cite:1, sever:1, reinstate:1, select:1, search:1, queuesnooze:1, queuemute:1, taskforward:1, addparticipant:1, relate:1, followregister:1,
-  importwatch:1, standingquestionset:1, standingquestionend:1, accountswitchset:1, aiceilingset:1, keepversion:1, explore:1, explorepreset:1,
-  calculationdraw:1, clockpropose:1, owed_obscuremark:2, owed_handlecheck:1, owed_handlechange:2, owed_accountusesset:2, owed_ailimitset:2, owed_projectkeyset:2, owed_projectsigninset:2, owed_projectaccountswitch:2, owed_projectaccountremove:3, owed_projectkeynoticeseen:1, owed_projectaikeepaway:2, owed_exploreapprove:2, owed_obscuremarkwithdraw:2, owed_setpassword:2, selectionrelease:1, frontier:1, countask:1, bind:1, createset:1, monitor:1, reminderset:1, ruleanswer:1, suggest:1,
+  importwatch:1, standingquestionset:1, standingquestionend:1, keepversion:1, explore:1, explorepreset:1,
+  calculationdraw:1, clockpropose:1, obscuremark:2, handlecheck:1, handlechange:2, accountusesset:2, owed_pagetranscribe:2, transcribe:2, ailimitset:2, projectkeyset:2, projectsigninset:2, projectaccountswitch:2, projectaccountremove:3, projectkeynoticeseen:1, owed_projectaikeepaway:2, exploreapprove:2, obscuremarkwithdraw:2, selectionrelease:1, frontier:1, countask:1, bind:1, createset:1, monitor:1, reminderset:1, ruleanswer:1, suggest:1,
   airunopen:2, airunclose:1, wizards:1, person:1, heldcaptures:1, gradenote:1, invitelook:1, publishedcase:1, verify:1, disclosureshown:1,
-  projectjoin:1, owed_startfrom:1, deadlinecompute:1, optionstartpreview:1, publishpreflight:1, publishtensions:1, exploreverify:1,
+  projectjoin:1, startfrom:1, deadlinecompute:1, optionstartpreview:1, publishpreflight:1, publishtensions:1, exploreverify:1,
   addresseesuggest:1, tabledeclare:1, addworkbook:1, recordline:2, registerproceeding:2, declare:2, courtlink:2,
   conclude:2, narrow:2, promote:2, optiondispose:2, optionadd:2, optionadopt:2, optionpropose:1, scenarioset:2, checkpointrecord:2, plansubjectadd:2,
   proposedispose:2, heldsetaside:2, heldrestore:2, clockadopt:2, recordpersonfact:2, claimidentity:2, withdrawidentityclaim:2, createevent:2, recordfact:2,
@@ -22,16 +22,16 @@ const WEIGHT = {
   actionmove:2, actioncorrespond:2, actionpressure:2, actionhold:2, escalationopen:2, escalationadvance:2, declinetoescalate:2, standarddeclare:2,
   standardadopt:2, lawrelate:2, casedraft:2, whatchangedpropose:1, statementack:2, attribute:2, reviewgrant:2, reviewcomment:1, caseimport:2,
   testify:2, acquire:2, capture:2, capturerequest:1, hypothesishold:1, connectionassert:2, projectinvite:2, adoptversion:2, reminderanswer:2,
-  taskresolve:2, groupnameset:2, groupdomainset:2, profilesset:2, officesseed:2, assistantset:2, aicopyceilingset:2, hostingaccess:2, enroll:2,
+  taskresolve:2, groupnameset:2, groupdomainset:2, profilesset:2, officesseed:2, assistantset:2, hostingaccess:2, enroll:2,
   bootstrap:5, selftest:1, setpassword:2, accountreferenceset:2, projectcreated:2, wizarddraft:2, wizardrevise:1, wizardsubmit:2, wizardapprove:2,
-  filingrecordsent:2, owed_groupprofileset:2, owed_groupprofilevisibility:2, owed_memberlanguageset:1, owed_websitekeymint:2, owed_joinlinkset:2,
-  owed_noteadd:1, owed_noteconvert:2, owed_translationdraft:1, owed_translationadopt:2, owed_checkrequest:2, knock:2, sourcelink:2,
+  filingrecordsent:2, owed_groupprofileset:2, owed_groupprofilevisibility:2, memberlanguageset:1, owed_websitekeymint:2, owed_joinlinkset:2,
+  owed_noteadd:1, owed_noteconvert:2, translationdraft:1, translationadopt:2, owed_checkrequest:2, knock:2, sourcelink:2,
   retire:3, planclose:3, filingapprove:3, personexpunge:5, adminremove:3, accountreferenceremove:3, reviewrevoke:3, escalationend:3, wizardretire:3,
   signerrevokeown:3, importacceptwithdraw:3,
   release:4, attest:4, caseratify:4, docketpost:4, signerregisterown:4, claim:4, docketfile:2,
-  publish:5, owed_publishat:5, owed_findin:1, owed_securitymap:1, owed_archivelist:1, owed_openoriginal:1, owed_safeview:1, owed_deepercheck:1, owed_releasescanhold:2, owed_securitytooladd:2, owed_securitytooltest:1, owed_securitytoolremove:2, owed_aikeepaway:2, owed_openwithwarning:2,
+  publish:5, publishat:5, findin:1, securitymap:1, archivelist:1, openoriginal:1, safeview:1, deepercheck:1, releasescanhold:2, securitytooladd:2, securitytooltest:1, securitytoolremove:2, aikeepaway:2, openwithwarning:2,
 };
-const OUTWARD = new Set(['filingrecordsent', 'reviewgrant', 'knock', 'owed_groupprofilevisibility', 'disclosureshown', 'accountreferenceset', 'docketpost', 'publish', 'owed_publishat', 'owed_websitekeymint', 'owed_joinlinkset']);
+const OUTWARD = new Set(['filingrecordsent', 'reviewgrant', 'knock', 'owed_groupprofilevisibility', 'disclosureshown', 'accountreferenceset', 'docketpost', 'publish', 'publishat', 'owed_websitekeymint', 'owed_joinlinkset']);
 const key = op => op.startsWith('owed:') ? 'owed_' + op.slice(5).split(' ')[0] : op;
 /* a button carrying its act and weight. o: {tone, icon, out, quiet, id, help} */
 function btn(op, label, o = {}) {
@@ -62,7 +62,7 @@ const ladder = (k, steps, on, pend = []) => `<div class="cs-ladder" data-ladder=
 // (affordances R7) or a signed or irreversible one (weight 4 or 5: publishing, at once or at a set time, signing, attesting),
 // never where a labelled draft already fills the field, and not on the group's own description, which has its own guided
 // draft (DEC-152). With the member's suggestions switch off it works only from what they typed (K1841 (2)).
-const WRITE_ACT = 'owed:writinghelp DEC-153';
+const WRITE_ACT = 'writinghelp';
 const WRITE_REFUSED = new Set(['release', 'conclude', 'withdrawconclusion', 'reopen', 'publish', 'inquirydivide', 'inquiryground',
   'actionmove', 'actioncorrespond', 'actionlaws', 'actionrisktier', 'versionaccept', 'versionreject', 'versionconsider', 'versionrevert',
   'versionhide', 'versioncurrent', 'contradictionresolve', 'caseratify', 'personexpunge', 'bootstrap', 'groupdescriptionset']);

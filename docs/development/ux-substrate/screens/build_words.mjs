@@ -132,7 +132,7 @@ add('handle.refused.notmember', 'Only a member can change their own handle.', fa
 
 // 4c. AI accounts and limits (DEC-188; N812): who pays, what for, up to what; protected where they say who sees what
 add('ai.whopays', must(scr, 'mock-screens.js', 'For a member\\\'s act in a project that has its own AI account, that project\\\'s account pays. Otherwise the member\\\'s own account, if they connected one; otherwise the group\\\'s key. The account chosen is the one used: if it has reached a limit, or that use is switched off on it, the assistant stops for that act and says whose setting stopped it.').replace(/\\'/g, "'"), true, 'mock-screens.js AI_WHO_PAYS');
-for (const [k, name] of [['ask', 'Asking'], ['draft', 'Drafting'], ['run', 'Runs'], ['standing', 'Standing questions'], ['explore', 'Exploring'], ['suggestions', 'Suggestions']]) add(`ai.use.${k}.name`, name, false, 'mock-screens.js AI_USES');
+for (const [k, name] of [['ask', 'Asking'], ['draft', 'Drafting'], ['run', 'Runs'], ['standing', 'Standing questions'], ['transcribe', 'Reading page pictures'], ['explore', 'Exploring'], ['suggestions', 'Suggestions']]) add(`ai.use.${k}.name`, name, false, 'mock-screens.js AI_USES');
 for (const [k, t] of [['no', 'No'], ['ask', 'Ask every day'], ['yes', 'Yes']]) add(`ai.explore.${k}`, t, false, 'mock-screens.js aiExplore');
 add('ai.whose.group', 'your group\'s', false, 'DEC-188', 'whose, in the refusals');
 add('ai.whose.project', 'this project\'s', false, 'DEC-188', 'whose, in the refusals');
@@ -149,15 +149,67 @@ add('ai.refused.switchvalue', 'That isn\'t a setting this switch takes: a use is
 add('ai.refused.signinnotconnected', 'Connect your own Claude sign-in first, in Settings › The assistant; then it can serve this project.', false, 'DEC-188', 'SIGNIN_NOT_CONNECTED');
 add('ai.refused.limitinvalid', 'That limit can\'t be set: {field}. A limit is a positive amount in dollars, tokens or calls, for a day or a month.', false, 'DEC-188', 'AI_LIMIT_INVALID');
 add('ai.refused.unitunavailable', 'A limit in dollars needs an API key: a subscription doesn\'t report what a use costs. Set it in tokens or calls instead.', false, 'DEC-188', 'LIMIT_UNIT_UNAVAILABLE');
-add('ai.refused.explorenotenabled', 'Exploring is off on {whose} account, or has no limit of its own yet: it runs only within an exploring limit its owners set.', false, 'DEC-188', 'EXPLORE_NOT_ENABLED');
-add('ai.queue.limitreached', '{account} reached its {period} limit{for_use} on {date}. {Uses} on it pause until {when}; its other uses go on.', true, 'DEC-188', 'the told-once Noticed item; names no member');
-must(scr, 'mock-screens.js', 'reached its monthly limit for runs on 14 October. Runs on it pause until 1 November; its other uses go on.');
+add('ai.refused.explorenotenabled', 'Exploring is off on {whose} account. Its owners can switch it on.', false, 'DEC-189', 'EXPLORE_NOT_ENABLED; an exploring limit is never required (ai-use R3): the overall limit judges exploring when no exploring limit is set');
+add('ai.queue.limitreached', '{account} reached its {period} limit for {use} on {date}. It pauses {use} until {when}; its other uses go on.', true, 'DEC-189', 'the told-once Noticed item, scope a use; names no member');
+must(scr, 'mock-screens.js', 'reached its monthly limit for runs on 14 October. It pauses runs until 1 November; its other uses go on.');
 add('ai.queue.suspended', must(scr, 'mock-screens.js', 'a second member joined, and a sign-in serves a project only while it has one member. Members\\\' acts there now use their own accounts, or the group\\\'s key.').replace(/\\'/g, "'").replace(/^/, 'Your sign-in no longer serves {project}: '), true, 'mock-screens.js queue', 'the project account suspended; names no member');
 add('ai.queue.exploreask', 'The assistant found something worth exploring in {scope} today: {what}. Explore it today on {account}? If nobody says yes today, it doesn\'t.', false, 'DEC-188', 'the daily Ask, shown as Noticed with Explore today');
 must(scr, 'mock-screens.js', 'If nobody says yes today, it doesn\\\'t.');
-add('ai.label.explored', 'Machine work · found while exploring · enabled by {owner}', true, 'mock-screens.js explored', 'enabled_by: the group, the project\'s name, or the member\'s handle');
-must(scr, 'mock-screens.js', 'Machine work · found while exploring · enabled by');
+add('ai.label.explored', 'Machine work · found while exploring · enabled by {owner}', true, 'DEC-189', 'shown only to the paying account\'s owners (question-explorer R5); {owner}: the group, the project\'s name, or the member\'s handle');
+add('ai.label.explored.member', must(scr, 'mock-screens.js', 'Machine work · found while exploring'), true, 'DEC-189', 'what every other member sees: which account paid, and who enabled it, are answered only to its owners');
 add('ai.owner.group', 'the group', false, 'DEC-188', 'enabled_by for the group');
+
+// 4c'. The fills of the AI sentences (DEC-189; BOB's B124 and B126): each placeholder above that names a fixed word has a key
+for (const [k, t] of [['day', 'daily'], ['month', 'monthly']]) add(`ai.period.${k}`, t, false, 'DEC-189', '{period}');
+add('ai.when.day', 'tomorrow', false, 'DEC-189', '{when} for a daily limit');
+add('ai.when.month', 'on {month} 1', false, 'DEC-189', '{when} for a monthly limit; {month} from date.month.*');
+['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
+  .forEach(m => add(`date.month.${m}`, m[0].toUpperCase() + m.slice(1), false, 'DEC-189', 'a month\'s name in a sentence'));
+add('ai.refused.limit.unjudged', 'The assistant stopped here: Civicsmith couldn\'t check the use of {whose} account just now, and it spends nothing it can\'t count. Try again in a moment. Everything else works as usual.', true, 'DEC-189', 'AI_LIMIT_REACHED when the limit can\'t be judged (ai-use R3 failing closed); in place of a {period} and {when}');
+for (const [k, t] of [
+  ['owner', 'it doesn\'t say which account it is for'],
+  ['scope', 'that isn\'t something a limit can cover'],
+  ['unit', 'that isn\'t a unit a limit takes'],
+  ['period', 'that isn\'t a period a limit takes'],
+  ['amount', 'that isn\'t an amount a limit takes'],
+  ['inclusive', 'only a limit on one use can be on top of the overall limit'],
+  ['use', 'that isn\'t one of the assistant\'s uses'],
+  ['count', 'the count is a whole number, one or more'],
+]) add(`ai.limitfield.${k}`, t, false, 'DEC-189', '{field} in ai.refused.limitinvalid');
+for (const [k, t] of [['ask', 'asking'], ['draft', 'drafting'], ['run', 'runs'], ['standing', 'standing questions'], ['transcribe', 'reading page pictures'], ['explore', 'exploring'], ['suggestions', 'suggestions']])
+  add(`ai.use.${k}.inline`, t, false, 'DEC-189', '{use} inside a sentence; {Use} at a sentence\'s start is ai.use.*.name');
+add('ai.account.group', 'Your group\'s key', false, 'DEC-189', '{account} at a sentence\'s start');
+add('ai.account.project', '{project}\'s account', false, 'DEC-189', '{account} at a sentence\'s start');
+add('ai.account.own', 'Your own account', false, 'DEC-189', '{account} at a sentence\'s start');
+add('ai.account.group.inline', 'your group\'s key', false, 'DEC-189', '{account} inside a sentence');
+add('ai.account.project.inline', 'the project\'s account', false, 'DEC-189', '{account} inside a sentence');
+add('ai.account.own.inline', 'your own account', false, 'DEC-189', '{account} inside a sentence');
+add('ai.queue.limitreached.overall', '{account} reached its {period} limit on {date}. Uses counted in its overall limit pause until {when}; uses with their own limit on top of it go on.', true, 'DEC-189', 'the told-once Noticed item, scope overall; names no member');
+add('ai.queue.limitreached.member', '{account}: a member reached the {period} amount each member may use, on {date}. Their uses on it pause until {when}; other members\' go on.', true, 'DEC-189', 'the told-once Noticed item, scope per_member; names no member');
+add('ai.scope.group', 'your group\'s work', false, 'DEC-189', '{scope} in ai.queue.exploreask for the group\'s key');
+add('ai.scope.own', 'your own questions', false, 'DEC-189', '{scope} in ai.queue.exploreask for a member\'s own account; a project\'s is its name');
+
+// 4c''. Queue items from steps, milestones, projects and reviews (DEC-189; BOB's B126 (2), notice-producers R17): each kind's
+//     one-line summary and its detail, told once
+for (const [k, sum, det, note] of [
+  ['question-find', 'Found while looking into {question}: {what}', 'The assistant found this while looking into a question you can see. It is a lead, not evidence: it becomes evidence only if a member opens it, checks it and cites the source.', 'FINDING, Hint · machine work; labelled with ai.label.explored or ai.label.explored.member'],
+  ['step-later-found', 'Found later: {what}', 'You looked for this on {date} and didn\'t find it; it has since arrived. Your earlier look stays as it was, dated. Open the step to say whether this changes what it shows for each question.', 'FINDING'],
+  ['step-date-due', 'Past its date: {step}', 'You set {date} for this step, and it isn\'t done. Only you are told. Finish it, move the date, or end it with a reason.', 'OBLIGATION, to the member who set the date'],
+  ['step-reminder', 'Your reminder: {step}', 'You asked to be reminded about this step today. Only you are told.', 'OBLIGATION, to the member who asked'],
+  ['step-cost-shared', 'Shared work: {step}', 'This step\'s costs ({totals}) serve questions that {projects} each draw on. Its owners are told, so they can talk about sharing the cost; Civicsmith records no split and no payment.', 'FINDING, to the owners of each project'],
+  ['step-cost-message', 'A message about the cost of {step}', '{member}, an owner of another project that draws on this step, wrote: “{text}”', 'FINDING, to the owners of each other project'],
+  ['milestone-overdue', 'Overdue: {milestone}', 'This milestone was due on {date}. Everyone who joined the project is told once.', 'FINDING'],
+  ['milestone-reminder', 'Your reminder: {milestone}', 'You asked to be reminded about this milestone today. Only you are told.', 'OBLIGATION, to the member who asked'],
+  ['project-quiet', 'Quiet: {project}', 'Nothing has moved in this project for a while. Where it stands: {progress}. You can write it up and act, keep watching its sources, close it with what remains unknown, or revise what it set out to show. Nobody is asked again until it moves.', 'FINDING, to the project\'s joined members'],
+  ['review-comment-left-out', 'Your comments were not included: {case}', 'The case was published without your review comments. You may file a response in its docket, as anyone may.', 'FINDING, to each reviewer who is a member'],
+]) { add(`queue.${k}.summary`, sum, false, 'DEC-189', note); add(`queue.${k}.detail`, det, false, 'DEC-189', note); }
+
+// 4c'''. The assistant's reading of page pictures (DEC-190; BOB's B128, B129; extraction R71, C-51.7)
+add('transcribe.refused.notdeployed', 'Nothing was read or sent: the assistant\'s reading of page pictures isn\'t switched on in your group\'s Civicsmith yet. Each part of the assistant is switched on only after it passes Civicsmith\'s test investigations. You can type a page\'s words yourself meanwhile.', false, 'DEC-190', 'TRANSCRIBE_NOT_DEPLOYED (C-51.7); names no account');
+add('transcribe.label', 'The assistant\'s reading of the page image · undetermined until a member checks a passage against the page', true, 'DEC-190', 'the label on words from pagetranscribe (reading-pipeline R29\'s "the AI\'s reading")');
+add('transcribe.none', 'The assistant read pages {pages} but found no words it could give: {why}', false, 'DEC-190', 'performed false; {why} the reason as answered');
+add('transcribe.done', 'The assistant read pages {pages}. Their words can now be found; each passage stays undetermined until a member checks it against the page.', false, 'DEC-190', 'performed and written');
+add('document.unread.pages', must(scr, 'mock-screens.js', 'are pictures of text that Civicsmith\\\'s own reading couldn\\\'t make out, so their words can\\\'t be found or cited yet. The page images are kept as they are.').replace(/\\'/g, "'").replace(/^/, 'Pages {pages} '), false, 'DEC-190', 'the Document screen\'s section, shown only when such pages exist');
 
 // 4d. Supplied documents in a published case (BOB's drafts from T39, adopted as written; DEC-188)
 add('document.cleaned.label', 'Details of who made this file, and of its pictures, removed for publication; the group holds the original', true, 'DEC-188', 'COPY_CLEANED_LABEL');
