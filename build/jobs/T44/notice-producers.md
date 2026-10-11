@@ -28,3 +28,7 @@
 - No file was added outside `paths`/`tests`. No generated artifact is touched, but the plane bundle includes this module's source, so it is stale until L11's close regenerates it (rule 4 (5)).
 
 Size (session_01RhbWSRE68A8BuBfXi1xUnS): test runs 11, module lines 1418
+
+## J1 · COMPLETE
+
+T44-10 done (R16, R17). {date} uses date.daymonth, or date.daymonthyear outside the current local year. {when} after "until" uses ai.until.*. NOTICE_WORDS equals words.json, which clears rule 4 (6)'s three notice-producers reds by reading the words file. I fixed three flaws in this module: the zone is now read once per read, ISO instants with a fraction or offset are normalised for civil-time, and a duplicated helper was merged. Tests 97/97. Users: queue 137/137 and plane 191/191, no red. Checks format, architecture, coverage and ownership all 0 (6 files, all in paths/tests). For BOB, unchanged: R5, R6 and R13–R15 sentences still write ISO days because their requirements say so (draft doubt 6). The plane bundle is stale until L11's close. Details are in my record.
