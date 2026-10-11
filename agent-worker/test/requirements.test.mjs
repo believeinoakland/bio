@@ -1166,10 +1166,10 @@ section("R32, R33 · the cascade: the one account that arrived, at its own level
 
 section("R34 · SURFACE and fleet-member.json");
 {
-  t("R34, R54, R59, R66: SURFACE is {run: POST, ask: POST, draft: POST, signin: POST, version: GET}, every one mutating: false (K1601 (5))", SURFACE,
+  t("R34, R54, R59, R66, R72: SURFACE is {run: POST, ask: POST, draft: POST, signin: POST, transcribe: POST, version: GET}, every one mutating: false (K1601 (5))", SURFACE,
     { run: { method: "POST", mutating: false }, ask: { method: "POST", mutating: false },
       draft: { method: "POST", mutating: false }, signin: { method: "POST", mutating: false },
-      version: { method: "GET", mutating: false } });
+      transcribe: { method: "POST", mutating: false }, version: { method: "GET", mutating: false } });
   t("R34: the manifest names the entry, the surface, the test directory and the bundle recipe",
     [MANIFEST.entry, MANIFEST.surface, MANIFEST.testDir, MANIFEST.bundle?.entry, MANIFEST.bundle?.outfile, MANIFEST.bundle?.manifest],
     ["src/index.mjs", "SURFACE", "test", "src/index.mjs", "dist/agent-worker.bundled.mjs", "dist/agent-worker.bundle.json"]);
