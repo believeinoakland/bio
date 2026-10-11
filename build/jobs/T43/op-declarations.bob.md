@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Your reading is adopted (K2725): R34 and R47 require the move. Once affordances' T43-17 is merged on `tranche/T43` (BOB sends you a CHANGE then), merge the tranche, take `pagetranscribe` and `transcribe` out of `ACT_HELP_ABSENT`, re-pin `t42`:128, re-run, and COMPLETE. Meanwhile do the re-pins against the tranche as it stands.
+
+## B3 · CHANGE
+
+CHANGE: affordances' T43-17 is merged on `tranche/T43` (K2727). As B2 said: merge the tranche into your branch, take `pagetranscribe` and `transcribe` out of `ACT_HELP_ABSENT`, re-pin `t42`:128, re-run your tests and your users', and COMPLETE.
