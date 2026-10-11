@@ -288,13 +288,20 @@ export class PublicRead {
    *  throws. */
   groupFields() {
     const said = [];
+    /* The identity, copied out of the source's answer inside the guard, so an answer that throws when read is an
+       undetermined identity too, never a throw. */
     let id = null;
     try {
       const a = this.#groupIdentity ? this.#groupIdentity.identity() : null;
-      id = a && typeof a === "object" && !Array.isArray(a) && typeof a.then !== "function" ? a : null;
+      if (a && typeof a === "object" && !Array.isArray(a) && typeof a.then !== "function") {
+        const f = (k) => (Object.hasOwn(a, k) ? a[k] ?? null : null);
+        id = { group: f("group"), name: Object.hasOwn(a, "display_name") ? f("display_name") : f("name"),
+               domain: f("domain"), domain_verified_at: f("domain_verified_at"),
+               detail: typeof a.detail === "string" && a.detail ? a.detail : null };
+      }
     } catch { id = null; }
     if (!id) said.push(GROUP_IDENTITY_UNDETERMINED_SENTENCE);
-    else if (typeof id.detail === "string" && id.detail) said.push(id.detail);
+    else if (id.detail) said.push(id.detail);
     let stake;
     try {
       const record = this.#record();
@@ -306,9 +313,8 @@ export class PublicRead {
       stake = "undetermined";
       said.push(STAKE_UNDETERMINED_SENTENCE);
     }
-    const f = (k) => (id && Object.hasOwn(id, k) ? id[k] ?? null : null);
-    return { group: f("group"), name: id && Object.hasOwn(id, "display_name") ? id.display_name ?? null : f("name"),
-             domain: f("domain"), domain_verified_at: f("domain_verified_at"), stake,
+    return { group: id ? id.group : null, name: id ? id.name : null, domain: id ? id.domain : null,
+             domain_verified_at: id ? id.domain_verified_at : null, stake,
              detail: said.length ? said.join("; ") : GROUP_FIELDS_SENTENCE };
   }
 

@@ -71,7 +71,8 @@ test("R34 groupFields answers {group, name, domain, domain_verified_at, stake, d
 
 test("R34 R13 with no source registered, or one that throws or answers no object, the identity reads null with its detail, never a guess", () => {
   const cases = [["none", null], ["throws", () => { throw new Error("setup down"); }], ["null", () => null],
-                 ["a string", () => "parks-group"], ["a list", () => [IDENTITY]], ["a promise", async () => IDENTITY]];
+                 ["a string", () => "parks-group"], ["a list", () => [IDENTITY]], ["a promise", async () => IDENTITY],
+                 ["an answer that throws when read", () => ({ ...IDENTITY, get group() { throw new Error("unreadable"); } })]];
   for (const [what, identity] of cases) {
     const r = bare(recordOn());
     if (identity) assert.equal(r.registerGroupIdentity({ identity }).ok, true);
