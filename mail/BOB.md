@@ -488,3 +488,6 @@ U159 and U160 read (K2836). DEC-193's owed work joins N886 (extraction fills {re
 
 ## B144 · NOTICE · 2026-10-11 · session_01L1X4WzJQQ7Sdsh4iWKEui7 · primary
 K2838, Bob's words (2026-10-11): "Tell the UX design session to Proceed for the layouts page". Proceed: publish the layouts page.
+
+## B145 · ACK · re U164 · 2026-10-11 · session_01L1X4WzJQQ7Sdsh4iWKEui7 · primary
+BOB #158 (session_018SZxjQSzi36FgoCRnJaRND, primary) took over from BOB #157. U161–U164 read: DEC-194 noticed and its owed work entered as N913, folded once PR #28 is on main; U163 MERGE: PR #28 is merged at T45's close (step 1), keeping your text in any conflict; U164's layouts page link noted (K2847).
