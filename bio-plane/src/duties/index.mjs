@@ -17,7 +17,10 @@
  *   entities, standards, events, lines, money, provenance, content
  *                          the services of the modules this one uses, as their requirements state them; `plane` wires
  *                          the real ones (T33-90). A service a call needs and does not have answers undetermined.
- *   view()                 the active jurisdiction view (default: record-core's `jurisdiction_profiles` combined).
+ *   localFacts             `local-facts` on the same host (default: its factory, reached on first use), whose
+ *                          `governingView()` (its R12) is the view R5 and R30 read: the active profiles combined, with
+ *                          the group's confirmed rules added (T45; N858).
+ *   view()                 a test's own view in place of `local-facts.governingView` (absent in the plane).
  *   registry               connection-grammar's registry (default: the plane's default registry).
  *   factOf(entry)          a calendar entry's status on this instance (`local-facts`' R2, as `civil-time` R9 takes it;
  *                          plane wires it), so a disputed or corrected closure list moves the due date.
@@ -38,6 +41,7 @@ import { linesOf } from "../lines/index.mjs";
 import { noSuchFact, moneyOf } from "../money/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf, checkContentExtent } from "../content/index.mjs";
+import { localFactsOf } from "../local-facts/index.mjs";
 import { noSha } from "../extraction/index.mjs";
 import { OBSERVATION_LEVELS } from "../observation-log/index.mjs";
 import { compare, bounds, due as civilDue, overdueOn, expandRecurrence, isCalendarDate, validAt as civilValidAt } from "../civil-time/index.mjs";
@@ -152,13 +156,13 @@ export class Duties {
   #tracked = [];   /* R26: [{module, fn}] */
 
   constructor({ storage, record, membership = null, entities = null, standards = null, events = null, lines = null,
-                money = null, provenance = null, content = null, view = null, registry = defaultRegistry,
+                money = null, provenance = null, content = null, localFacts = null, view = null, registry = defaultRegistry,
                 now = null, clockMs = null, factOf = null } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.#deps = { entities, standards, events, lines, money, provenance, content };
+    this.#deps = { entities, standards, events, lines, money, provenance, content, localFacts };
     this.registry = registry;
     this.factOf = typeof factOf === "function" ? factOf : null;
     this.viewFn = typeof view === "function" ? view : null;
@@ -175,6 +179,7 @@ export class Duties {
   get money() { return this.#dep("money"); }
   get provenance() { return this.#dep("provenance"); }
   get content() { return this.#dep("content"); }
+  get localFacts() { return this.#dep("localFacts"); }
 
   /* N581: the viewer this module's reads of other modules carry: the caller's own, or `SYSTEM_VIEWER` for an internal
      read (`INTERNAL`) or an act's own checks (no viewer). */
@@ -185,9 +190,16 @@ export class Duties {
   #stamp() { return stampInstant("second", Date.parse(this.now())); }
   migrate() { migrateDuties(this.sql); }
 
-  /** The active jurisdiction view (record-core R26, jurisdictions R12–R16); `{}` when none combines. */
+  /** R5 (T45; N858): the view every rule, calendar and vocabulary here is read from: `local-facts.governingView()` (its
+   *  R12), the active profiles combined with the group's confirmed rules added, so a group's confirmed rule governs here
+   *  as in `action-clocks`; with no group rule it equals `combine`'s. Where no `local-facts` answers (a store built
+   *  without it), the active profiles combined (record-core R26, jurisdictions R12–R16). `{}` when none combines. */
   view() {
     if (this.viewFn) { try { return this.viewFn() || {}; } catch { return {}; } }
+    const lf = this.localFacts;
+    if (lf && typeof lf.governingView === "function") {
+      try { const v = lf.governingView(); return isObj(v) ? (isObj(v.view) && v.ok !== undefined ? v.view : v) : {}; } catch { return {}; }
+    }
     const ids = this.record.getSetting("jurisdiction_profiles");
     if (!Array.isArray(ids) || !ids.length) return {};
     const c = combineProfiles(ids);
@@ -1696,10 +1708,12 @@ export function dutiesOf(host, deps) {
       money: () => moneyOf(host, { record, membership }),
       provenance: () => provenanceOf(host, { record, membership }),
       content: () => contentOf(host, { record, membership }),
+      localFacts: () => localFactsOf(host, { record, membership }),
     };
     const pick = (k) => (d[k] !== undefined ? d[k] : real[k]);
     s = new Duties({ ...d, storage, record, membership, entities: pick("entities"), standards: pick("standards"), events: pick("events"),
-                     lines: pick("lines"), money: pick("money"), provenance: pick("provenance"), content: pick("content") });
+                     lines: pick("lines"), money: pick("money"), provenance: pick("provenance"), content: pick("content"),
+                     localFacts: pick("localFacts") });
     instances.set(host, s);
     if (s.registry === defaultRegistry) live.add(s);   /* the plane's instances, which the default registry serves */
     record.declareTable(MODULE, DUTIES_TABLES.map((t) => ({ ...t })));
