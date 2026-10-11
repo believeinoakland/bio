@@ -25,3 +25,7 @@
 **Checks (civicos-process).** format: 147 modules, 146 requirements files; 0 failures. architecture (ratification): 28 product files, 148 relative imports; 0 failures. coverage (ratification): 49 of 49 live requirement ids named by a test; 0 failures. ownership (ratification, tranche/T43): 1 files changed; 0 failures.
 
 Size (session_012ngwe4Kgzm9pxD9KFXVVr7): test runs 6, module lines 3735
+
+## J1 · COMPLETE
+
+T43-19 applied (tests only): converted-b.test.mjs writes one edition key per revision; :166's assertion unchanged and green, clearing rule 4 (11)'s ratification red. No other fixture writes a key twice (whole suite swept under an instrumented parser). Module 233/233; checks format, architecture, coverage (49/49), ownership all 0 failures. Users' reds are all rule 4's: case-authoring 4 (12), affordances t36:55 (10), op-declarations 8 (10), answer-envelope 5 (9); review, actions, plane green. Details and reading set in the record, commit 38197be5fb.
