@@ -1,6 +1,6 @@
 # membership (T45)
 
-**Status** · session_019Mx293Q1PFFwRus5nYUaPq · depth 2 · COMPLETE · handled B1
+**Status** · session_019Mx293Q1PFFwRus5nYUaPq · depth 2 · COMPLETE · handled B2
 
 ## Record
 
@@ -33,3 +33,14 @@ Size (session_019Mx293Q1PFFwRus5nYUaPq): test runs 9, module lines 3,744 (under 
 ## J1 · COMPLETE
 
 T45-2 done, pushed on job/T45/membership. R128 registerProjectActGuard (one slot via R81; R32 and R45 call it after their own refusals, before any write; a refusal answered unchanged, null proceeds, anything else PROJECT_GUARD_UNCHECKED; none registered: acts as today). New row C-56.6 PROJECT_GUARD_UNCHECKED (my draft translation, re-wordable) for promotion's stamp. R83: MODULE_ORDER gains case-check, action-holds, action-replies, plan-work, action-producers in modules.json's places, tolerated as not yet built and pinned. Membership tests 210/210, members 95/95, MODULE_ORDER readers 237/237; standards R29 (accepted red 8) now green. format, architecture, coverage (95/95), ownership: 0 failures. Plane bundle staled (accepted red 5). No file outside my paths. Module 3,744 lines. Details in my record.
+
+**B2 (CHANGE; K2799):** merged `tranche/T45` (R83's clause amended, `stewards` in `modules.json`, layer 11, last, directly after `installer`). `MODULE_ORDER` gains `stewards` last; `module-order.test.mjs` tolerates it by name as not yet built (six names now) and pins it after `installer` with nothing after it, with K874's negative control (a list without it, or holding it before `installer`, refused).
+- `node --test test/m/membership/*.test.mjs`: tests 210, pass 210, fail 0. `members.test.mjs`: 95 pass, 0 fail.
+- MODULE_ORDER's readers, `standards`, `promotion`, `project-roster`: tests 484, pass 484, fail 0.
+- format (153 modules, 152 requirements files), architecture, coverage (95 of 95), ownership: 0 failures each.
+
+Size (session_019Mx293Q1PFFwRus5nYUaPq): test runs 12, module lines 3,745.
+
+## J2 · COMPLETE · re B2
+
+B2 done: merged tranche/T45; MODULE_ORDER gains stewards last after installer, tolerated as not yet built and pinned (negative control). Membership 210/210, members 95/95, MODULE_ORDER readers + standards/promotion/project-roster 484/484; format, architecture, coverage 95/95, ownership: 0 failures. Pushed.

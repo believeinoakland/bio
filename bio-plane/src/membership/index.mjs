@@ -1,7 +1,7 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
  * Requirements: build/requirements/membership.md (R4–R128; T45's R128 `registerProjectActGuard` and R83 order (`case-check`,
- * `action-holds`, `action-replies`, `plan-work`, `action-producers`; T45-2, K2781, K657); T42's R83 order (`doorbell`, `case-account`; T42-3, K2607, K2608)
+ * `action-holds`, `action-replies`, `plan-work`, `action-producers`, `stewards`; T45-2, K2781, K2799, K657); T42's R83 order (`doorbell`, `case-account`; T42-3, K2607, K2608)
  * and R60's hold acts at a hidden project's EXISTENCE, met through R44 and R85 (N833, K2484; `actions` asks them); T40's R127 `joinedParticipants` (K2404), R122 `notTheOwner`, R123–R125 the handle check, the
  * handle change and its guard, R126's rows, R16, R17, R55 and R57 as amended, and R83's order with `ai-use` (T40-M; N797,
  * N799, N812; DEC-184, DEC-186; K2373, K2376, K2394); T38's R116–R121, project-roster's seams and N793's
@@ -254,7 +254,7 @@ export function notTheOwner(by, projectId, extra = null) {
    T42-3 (N826, N839; K657, K2607, K2608): `doorbell` after `capture` in layer 3, `case-account` after
    `case-disclosures` and before `case-authoring` in layer 8. T45-2 (K2781 (1), K2784, K657): `case-check` after `review`
    in layer 8, `action-holds` after `actions`, `action-replies` after `action-clocks` and `plan-work` after `action-plans`
-   in layer 9, `action-producers` after `machinery-producers` in layer 11. */
+   in layer 9, `action-producers` after `machinery-producers` in layer 11; `stewards` last, after `installer`, in layer 11 (K2799). */
 export const MODULE_ORDER = Object.freeze([
   /* 1 */ "record-grammar", "jurisdictions", "civil-time", "calc-grammar", "connection-grammar", "test-support",
           "runtime-limits", "signatures", "bundler", "court-citations", "id-spaces", "subresources", "ooxml",
@@ -282,7 +282,7 @@ export const MODULE_ORDER = Object.freeze([
   /* 11 */ "wizard-scripts", "op-grades", "affordances", "tasks", "machinery-producers", "action-producers",
            "queue-producers",
            "notice-producers", "queue", "setup-page", "setup-words", "instance-setup", "op-declarations", "admission",
-           "answer-envelope", "store-door", "control-plane", "plane", "legacy-ui", "installer",
+           "answer-envelope", "store-door", "control-plane", "plane", "legacy-ui", "installer", "stewards",
 ]);
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
