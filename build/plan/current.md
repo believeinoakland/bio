@@ -56,6 +56,8 @@ No merge order (independent).
 
 **L2 merge order:** record-core, membership, credentials, promotion last.
 
+**L1 closed (K2619).**
+
 ### L3
 - **T42-6 · doorbell** (new; by copy, K624) · (N826) R1–R25 as `capture-split.md` §4: the knock, rate, inbox, pull, knocker secret, tallies, C-85 and C-118.2/.3/.4/.7, `doorbellOf` · req: `requirements/doorbell.md` (BOB's, before L3's START) · merges first in L3.
 - **T42-7 · capture** · (N826) R30–R32, R47–R54, R56, R65–R67, R70–R72, R80, R85 retired "moved to doorbell R<n>"; R37 and R86 re-worded (§4); the moved tests leave capture (§6), `held.test.mjs`:546–563 rebuilt over `provenance.recordReceipt`; its doorbell code stays as a named copy (rule 3 (1)) · after T42-6.
