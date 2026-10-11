@@ -29,7 +29,7 @@ import { contentOf } from "../../../src/content/index.mjs";
 import { inquiryOf, legCapped } from "../../../src/inquiry/index.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { contradictionOf } from "../../../src/contradiction/index.mjs";
-import { Capture } from "../../../src/capture/index.mjs";
+import { captureOf } from "../../../src/capture/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 import { parseImportedFindingRef, importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/index.mjs";
@@ -88,10 +88,15 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
   const prov = provenanceOf(host, { record, membership, now: () => clock.now });
   prov.migrate();
   const attestation = attestationOf(host, { record, provenance: prov });
-  const capture = new Capture(st, { record, env: { INSTANCE_NAME: "test", VERSION: "0.0.0" }, governor: null,
-                                    provenance: prov, membership });
+  /* T42-23b (K2643): what `sources`' reads reach is built here, before any test's snapshot, as the plane builds it at
+     boot, so a test measuring what case-disclosures writes or creates (R7's "no new table") measures it alone.
+     Capture is this host's one instance (`captureOf`), the one the doorbell `sources` asks for pulled knocks
+     (`doorbellOf`) is built over, and acquisition's one instance for this host (its tables), which capture makes when
+     first reached (a repeat `captureOf` reaches it), is reached here. */
+  const capture = captureOf(host, { record, env: { INSTANCE_NAME: "test", VERSION: "0.0.0" }, provenance: prov, attestation });
   capture.migrate();
-  const sources = sourcesOf(host, { record, membership, capture, now: () => Date.parse(clock.now) });
+  const acquisition = capture.acquisition;
+  const sources = sourcesOf(host, { record, membership, now: () => Date.parse(clock.now) });
   const ex = extractionOf(host, { record, membership, calibration: { onCalibration() { return { ok: true }; } } });
   ex.migrate();
   const exProvider = {
@@ -175,7 +180,7 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
   }
   const w = {
     lens, marks, carriage, evidence, cover, clean, imports, checks, st, host, record, membership, promotion, prov, content, inquiry, strength, contradiction, runs, clock,
-    capture, sources, attestation, extraction: ex, entities, events, lines, money, people,
+    capture, acquisition, sources, attestation, extraction: ex, entities, events, lines, money, people,
     row: (q, ...a) => st.sql.exec(q, ...a)[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a),
     snapshot() {
