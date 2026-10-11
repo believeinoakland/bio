@@ -55681,7 +55681,7 @@ var Capture = class _Capture {
   /** This module's tables, at every boot, idempotent: a derived table whose key changed shape is dropped first
    *  (so the CREATE INDEX below never meets the old table, which would throw inside blockConcurrencyWhile and
    *  brick the Durable Object); the additive columns an older store lacks are added; every table and index is
-   *  created if absent; the tables are declared to record-core's purge (R21). */
+   *  created if absent; the tables are declared to record-core's purge (R87, R74's declarations). */
   migrate() {
     for (const [table4, needed] of CAPTURE_RESHAPE) {
       const cols = this.#cols(table4);
@@ -55834,38 +55834,6 @@ var Capture = class _Capture {
     if (viewer === void 0) return true;
     const gate = this.#captureGate("c.capture_sha", viewer);
     return !!this.#one(`SELECT 1 AS x FROM (SELECT ? AS capture_sha) c WHERE (${gate.sql})`, sha2, ...gate.args);
-  }
-  /* ==================================================================== *
-   * THE HELD COPY (K2708, K625's pattern; T43, N849): the source fingerprint, once this module's R56, `doorbell`'s R12
-   * since T42. Kept only because `admission`'s door window reaches it through `captureOf(ctx)` until admission re-points
-   * to `doorbell` (T43-21); it answers no requirement of this module, and capture's next job deletes it (N870, T44). The key's table,
-   * `knock_key`, is `doorbell`'s (its R25): created here with doorbell's own DDL only when absent, never declared here,
-   * so either module's read finds the one key.
-   * ==================================================================== */
-  /* The key the source fingerprint is computed under: the operator's secret binding when set, else the instance's
-     own, generated once and held in `knock_key`. */
-  #knockKey() {
-    const bound = this.env && typeof this.env.KNOCK_FINGERPRINT_KEY === "string" && this.env.KNOCK_FINGERPRINT_KEY;
-    if (bound) return te5.encode(bound);
-    const held2 = () => this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type = 'table' AND name = 'knock_key'`) ? this.#one(`SELECT key_hex FROM knock_key WHERE id = 1`) : null;
-    let r = held2();
-    if (!r) {
-      const k = new Uint8Array(32);
-      crypto.getRandomValues(k);
-      this.#tx(() => {
-        this.#sql.exec(`CREATE TABLE IF NOT EXISTS knock_key (id INTEGER PRIMARY KEY CHECK (id = 1), key_hex TEXT NOT NULL, created TEXT NOT NULL)`);
-        this.#sql.exec(`INSERT OR IGNORE INTO knock_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf2(k), stampSecond4());
-      });
-      r = held2();
-    }
-    return Uint8Array.from(r.key_hex.match(/../g).map((h) => parseInt(h, 16)));
-  }
-  /** The held copy of doorbell R12: a keyed digest (HMAC-SHA-256, first 16 bytes) of the connecting address, never the
-   *  address and never an unkeyed hash, which can be reversed by trying every address. */
-  async sourceFingerprint(address) {
-    const key2 = await crypto.subtle.importKey("raw", this.#knockKey(), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-    const mac = await crypto.subtle.sign("HMAC", key2, te5.encode(String(address || "unknown")));
-    return hexOf2(mac).slice(0, 32);
   }
   /* R77: the required-argument refusal for an argument this module reads that names nothing it knows (the control
      plane's C-61 shape, answered from the store as `monitoring`'s store-side refusals are). */
@@ -56926,7 +56894,7 @@ var Capture = class _Capture {
    *  (R79, R81) and not released, have a register document whose `origin` names `matched_sweep` equal to `sweep`. The
    *  register document is the bundle's `data/provenance.json` (State Rules §4.1), read on record-core's `files` read
    *  contract (its R37); a released document has left `collected` (`ratification` R24), so the state answers that
-   *  clause. The whole store, no viewer: only the daemon's hold reads it (`monitoring` R60). Writes nothing and never
+   *  clause. The whole store, no viewer: only the daemon's hold reads it (`link-sweep` R8). Writes nothing and never
    *  throws; an unknown sweep, or one that is not a non-empty string, answers 0. K1129: a store that cannot be read
    *  answers null (not known), never 0, so the hold fails closed. A register document held only as a blob
    *  (`files.content` NULL) is not counted. */
