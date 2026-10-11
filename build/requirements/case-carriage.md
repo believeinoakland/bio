@@ -56,7 +56,7 @@ Terms. A **material** is a row of the case document's `materials:` block (`case-
   - otherwise each open flag whose `(ref, edition, flag)` the flags block does not state is **undisclosed**: `{ref, edition, flag, issue}`.
 
   It answers null when the block states no row or every row stands, else `{withdrawn: [{ref, edition}], undisclosed}` (at most 200 undisclosed). Writes nothing. (K1316 (3), (4))
-- **R5** `sourcesLapsed(text, at)` answers the `sources:` rows of a case document (`case-grammar` R1's `caseDocumentBlocks`) that no longer hold at `at`, judged by `case-grammar`'s `sourceRowsStanding`.
+- **R5** `sourcesLapsed(text, at)` answers the `sources:` rows of a case document (`case-grammar` R27's `caseDocumentBlocks`) that no longer hold at `at`, judged by `case-grammar` R28's `sourceRowsStanding`.
   - The sources behind a capture are the pulled knocks `sources` minted for it (its `source_knocks` read contract, R15), first received first.
   - Each is asked `sources.publishableAt({source, audience: "public", at})` (its R8).
   - A capture with no knock, or a source whose answer is not `ok` with a list of entries, answers nothing, so its rows lapse (fail closed).
