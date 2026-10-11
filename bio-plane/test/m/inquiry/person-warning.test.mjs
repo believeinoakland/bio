@@ -130,3 +130,57 @@ test("R59 a machine's proposal records the warning pending, and carries it to th
   assert.equal(later.warning, undefined);
   assert.equal(rows(w, Q).length, 2);
 });
+
+/* R63 (T42; N837; K2526): `personFacts({text, subject?, viewer})`, R59's read, named in Provides with its own id. */
+test("R63 personFacts: the persons the subject, an ENT- id in the text and a live alias run of the text's words name, each answered once by id as {entity_id, kind, label, public_role, named}", () => {
+  const { w, ent, line } = setup();
+  const office = ent("office", "Harbor Master");
+  const subj = ent("person", "Sal Subject"), byId = ent("person", "Ida Written"), byAlias = ent("person", "Al Alias",
+    { aliases: ["the old harbor master's deputy"] }), official = ent("person", "Opal Official");
+  line("holds", official, office, { capacity: "appointed" });
+  const text = `Did ${byId} meet the old harbor master's deputy and Opal Official, and did ${byId} sign?`;
+  const before = w.count("entities");
+  const facts = w.k.personFacts({ text, subject: subj, viewer: V("alice") });
+  const want = [[subj, "Sal Subject", false], [byId, "Ida Written", false], [byAlias, "Al Alias", false],
+                [official, "Opal Official", true]]
+    .map(([entity_id, label, public_role]) => ({ entity_id, kind: "person", label, public_role, named: true }))
+    .sort((a, b) => (a.entity_id < b.entity_id ? -1 : 1));
+  assert.deepEqual(facts, want, "each source, each once, by id");
+  assert.equal(w.count("entities"), before, "writes nothing");
+  /* negative controls: each source removed, its person is not answered */
+  assert.deepEqual(w.k.personFacts({ text: "Was it signed?" }), [], "no source names anyone");
+  assert.deepEqual(w.k.personFacts({ text: "Did the old harbor master sign?" }), [], "a part of an alias is not the alias");
+});
+
+test("R63 the run bounds: an alias is a run of at most PERSON_NAME_WORDS_MAX (8) words over the text's first PERSON_TEXT_WORDS_MAX (120) words", async () => {
+  const { PERSON_NAME_WORDS_MAX, PERSON_TEXT_WORDS_MAX } = await import("../../../src/inquiry/index.mjs");
+  assert.deepEqual([PERSON_NAME_WORDS_MAX, PERSON_TEXT_WORDS_MAX], [8, 120]);
+  const { w, ent } = setup();
+  const eight = "one two three four five six seven eight", nine = "alpha beta gamma delta epsilon zeta eta theta iota";
+  const p8 = ent("person", "Ezra Eight", { aliases: [eight] }), p9 = ent("person", "Nina Nine", { aliases: [nine] });
+  const late = ent("person", "Lola Late", { aliases: ["lola late"] });
+  assert.deepEqual(w.k.personFacts({ text: `Did ${eight} sign?` }).map((f) => f.entity_id), [p8], "an 8-word alias is read");
+  assert.deepEqual(w.k.personFacts({ text: `Did ${nine} sign?` }), [], "a 9-word alias is past the run");
+  const pad = (n) => Array.from({ length: n }, () => "word").join(" ");
+  assert.deepEqual(w.k.personFacts({ text: `${pad(118)} lola late` }).map((f) => f.entity_id), [late], "words 119–120 are read");
+  assert.deepEqual(w.k.personFacts({ text: `${pad(119)} lola late` }), [], "an alias past word 120 is not read");
+  assert.ok(p9);
+});
+
+test("R63 an id the record does not hold, or not a person, is left out; a read that fails leaves what was found standing; it never throws", () => {
+  const { w, ent } = setup();
+  const p = ent("person", "Pia Person"), body = ent("body", "Pier Board", { sector: "government" });
+  ent("person", "Rex Alias", { aliases: ["rex alias"] });
+  assert.deepEqual(w.k.personFacts({ text: `Did ${body} or ENT-2026-999999 act?`, subject: "ENT-2026-888888" }), [],
+    "not a person, and ids the record does not hold");
+  /* the alias read fails: the subject and the id in the text still stand */
+  const real = w.entities.entitiesByAlias;
+  w.entities.entitiesByAlias = () => { throw new Error("boom"); };
+  try {
+    assert.deepEqual(w.k.personFacts({ text: `Did ${p} or rex alias act?`, subject: p }).map((f) => f.entity_id), [p]);
+  } finally { w.entities.entitiesByAlias = real; }
+  /* negative control: with the read restored the alias is found */
+  assert.equal(w.k.personFacts({ text: "Did rex alias act?" }).length, 1);
+  for (const a of [undefined, null, 7, {}, { text: 9, subject: {} }, { text: null, subject: 3 }])
+    assert.doesNotThrow(() => w.k.personFacts(a));
+});

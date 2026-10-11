@@ -6,6 +6,8 @@ import assert from "node:assert/strict";
 import { EXTRACT_PROPOSE_CHECKS, runProductionsOps, migrateRunProductions, passageProposalId, PROPOSED_CONNECTION_SAYS,
          BEARING_NOTE_SAYS, READ_PAGES_AT_A_TIME, DOC_PARAS_PER_PAGE } from "../../../src/run-productions/index.mjs";
 import { ACCEPTANCE_FORMS } from "../../../src/record-grammar/index.mjs";
+import { inquiryOf } from "../../../src/inquiry/index.mjs";
+import { basisVersionsOf as realBasisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { world, LAYER, Q, Q2, PROJ, DOC, DOC2, HIDDEN_PROJ, ALICE, BOB, MACHINE, sha } from "./fixture.mjs";
 
 const AK = "class:ai/k1";
@@ -485,4 +487,100 @@ test("R11, R21 (migration): a store whose proposed_readings predates T41-24 is r
   const snap = w.snapshot();
   migrateRunProductions(w.st.sql);
   assert.deepEqual(w.snapshot(), snap);
+});
+
+/* R25 (T42; N834; K2496, K31): the read registered with inquiry's R62 and basis-versions' R49 slots. A passage a run
+   proposed, minted on page 1; page 2 holds a passage nobody proposed. */
+function machineWorld() {
+  const { w, cap, propose } = base();
+  const r = propose({ refs: [{ ref: "the board", label: "The Board", quote: "The Board approved", source: P1 }] });
+  const [passage] = r.proposed;
+  assert.ok(passage.content_id, "the proposal made a content row");
+  const own = w.content.mint({ bundleId: DOC, captureSha: cap, extent: { kind: "pdf-page", page: 1 }, mintedBy: ALICE });
+  assert.equal(own.ok, true, JSON.stringify(own));
+  const read = (legs, author = ALICE) => w.p.machinePassage({ legs, author, viewer: author });
+  return { w, cap, passage, own: own.content_id, read };
+}
+
+test("R25: at start the module registers one read with inquiry's onMachinePassage (its R62) and one with basis-versions' (its R49), each the module's synchronous read", () => {
+  const { w, passage } = machineWorld();
+  assert.deepEqual(w.machinePassageSlots.map((s) => [s.slot, s.module]),
+                   [["inquiry", "run-productions"], ["basis-versions", "run-productions"]]);
+  const legs = [{ ord: 0, target: DOC, content_id: passage.content_id }];
+  for (const { fn } of w.machinePassageSlots) {
+    const out = fn({ legs, author: ALICE, viewer: ALICE });
+    assert.equal(out instanceof Promise, false, "synchronous");
+    refusedAs(out, "PROPOSAL_NOT_TAKEN_UP");
+    assert.equal(fn({ legs: [], author: ALICE, viewer: ALICE }), null, "the control: nothing to judge, nothing refused");
+  }
+});
+
+test("R25: a leg on a passage a run proposed stands as the author's only once she herself took it up (R22's acceptedFor); otherwise PROPOSAL_NOT_TAKEN_UP (C-104.32) names each leg and its proposal with R22's act as the remedy, and nothing is written; a leg resting on nothing a run proposed stands", () => {
+  const { w, cap, passage, own, read } = machineWorld();
+  const byId = { ord: 3, target: DOC, content_id: passage.content_id };
+  const byPart = { ord: 4, target: DOC, extent_kind: "pdf-page", extent_page: 0 };
+  const byPartAt = { ord: 5, target: DOC, extent_kind: "pdf-page", extent_page: 0, extent_capture: cap };
+  const before = w.snapshot();
+  /* The row it names, and the row its part resolves to (the capture presented now, or the one it names). */
+  for (const leg of [byId, byPart, byPartAt]) {
+    const r = read([leg]);
+    refusedAs(r, "PROPOSAL_NOT_TAKEN_UP");
+    assert.equal(r.check, "C-104.32");
+    assert.deepEqual(r.legs, [{ ord: leg.ord, target: DOC, content_id: passage.content_id, proposals: [passage.id] }]);
+    assert.equal(r.remedy, "op=proposalaccept");
+    assert.equal(r.author, ALICE);
+  }
+  /* Only the proposed leg of a mixed set is named; legs on nothing proposed stand. */
+  const mixed = read([{ ord: 0, target: Q }, { ord: 1, target: DOC, content_id: own }, byId,
+                      { ord: 6, target: DOC, extent_kind: "pdf-page", extent_page: 1 },
+                      { ord: 7, target: DOC, content_id: "e".repeat(64) }, { ord: 8, target: DOC }]);
+  assert.deepEqual(mixed.legs.map((l) => l.ord), [3]);
+  assert.equal(read([{ ord: 0, target: Q }, { ord: 1, target: DOC, content_id: own },
+                     { ord: 6, target: DOC, extent_kind: "pdf-page", extent_page: 1 }]), null, "nothing proposed: each stands");
+  assert.deepEqual(w.snapshot(), before, "the read writes nothing");
+  /* Another member's acceptance does not count. */
+  assert.equal(w.p.proposalAccept({ proposal: passage.id, form: "as_proposed", by: BOB, viewer: BOB }).ok, true);
+  refusedAs(read([byId]), "PROPOSAL_NOT_TAKEN_UP");
+  assert.equal(read([byId], BOB), null, "bob's own acceptance: the leg stands as his");
+  /* The negative control: her own acceptance, in any form, and every arm stands. */
+  assert.equal(w.p.proposalAccept({ proposal: passage.id, form: "edited", edit: "the board's approval", by: ALICE, viewer: ALICE }).ok, true);
+  assert.equal(read([byId, byPart, byPartAt]), null);
+  /* No author, or a machine's: no one has taken it up as theirs. */
+  refusedAs(read([byId], ""), "PROPOSAL_NOT_TAKEN_UP");
+  refusedAs(read([byId], AK), "PROPOSAL_NOT_TAKEN_UP");
+});
+
+test("R25: fail closed — an acceptance that cannot be read refuses the leg, a read that fails whole refuses every leg it was given, and the read never throws", () => {
+  const { w, passage, own, read } = machineWorld();
+  const leg = { ord: 0, target: DOC, content_id: passage.content_id };
+  const real = w.p.acceptedFor;
+  w.p.acceptedFor = () => { throw new Error("acceptances unreadable"); };
+  const r = read([leg, { ord: 1, target: DOC, content_id: own }]);
+  refusedAs(r, "PROPOSAL_NOT_TAKEN_UP");
+  assert.deepEqual(r.legs, [{ ord: 0, target: DOC, content_id: passage.content_id, proposals: [passage.id], unread: true }]);
+  w.p.acceptedFor = real;
+  assert.equal(w.p.proposalAccept({ proposal: passage.id, form: "as_proposed", by: ALICE, viewer: ALICE }).ok, true);
+  assert.equal(read([leg]), null, "the control: readable and taken up, it stands");
+  w.st.sql.exec(`ALTER TABLE proposed_readings RENAME TO proposed_readings_gone`);
+  const whole = read([leg, { ord: 1, target: DOC, content_id: own }]);
+  refusedAs(whole, "PROPOSAL_NOT_TAKEN_UP");
+  assert.deepEqual(whole.legs.map((l) => [l.ord, l.unread]), [[0, true], [1, true]]);
+  w.st.sql.exec(`ALTER TABLE proposed_readings_gone RENAME TO proposed_readings`);
+  for (const a of [undefined, null, {}, { legs: null }, { legs: [null, 5, "x", {}] }, { legs: [{ target: 7 }] }])
+    assert.doesNotThrow(() => w.p.machinePassage(a));
+  assert.equal(w.p.machinePassage({ legs: [null, 5, "x", {}], author: ALICE }), null);
+});
+
+test("R25 (inquiry R62, basis-versions R49, merged): the read is registered with both real slots, so a second registration by any module is refused LISTENER_DECLARED naming run-productions", () => {
+  const w = world({ realInquiry: true, realBasisVersions: true });
+  for (const slot of [inquiryOf(w.host), realBasisVersionsOf(w.host)]) {
+    const second = slot.onMachinePassage("another-module", () => null);
+    assert.equal(second.ok, false);
+    assert.equal(second.code, "LISTENER_DECLARED");
+    assert.match(JSON.stringify(second), /run-productions/);
+  }
+  /* The negative control: where run-productions registered elsewhere (the stand-ins), both real slots are open. */
+  const bare = world().host;
+  assert.equal(inquiryOf(bare).onMachinePassage("another-module", () => null).ok, true);
+  assert.equal(realBasisVersionsOf(bare).onMachinePassage("another-module", () => null).ok, true);
 });

@@ -1,4 +1,4 @@
-/* agent-model — HOW A MODEL TURN REACHES CLAUDE (R1–R13). Copied from `agent-worker/src/model.mjs` (Q0-1 seam
+/* agent-model — HOW A MODEL TURN REACHES CLAUDE (R1–R14). Copied from `agent-worker/src/model.mjs` (Q0-1 seam
  * (iii); K617, K1439) and extended with the two providers of K1429 and K1502.
  *
  * WHOSE ACCOUNT (R1, R2, R8, R9, R11). Every call carries the account reference that serves one member's act, as
@@ -29,7 +29,9 @@
  * builds carry only the pack, the table's own fields and this repository's words. `converse` sends `system` and
  * `messages` as given and returns each tool's answer as `text` blocks, or `search_result` blocks where the caller
  * marks it (`{search_results}`): citations as data (ladders §9.4). The sign-in path holds the same line in
- * `signin.mjs`.
+ * `signin.mjs`. A page's picture is record content too (R14): an `image` block the caller's `onTool` answers in its
+ * `blocks`, sent unchanged inside that `tool_result` on the `apikey` path; the sign-in relay carries text only, so
+ * there a transcript or a result holding one is refused (`IMAGE_NOT_RELAYED`) and nothing is sent.
  *
  * D-611 — THE SEGMENT IS BOUNDED ON BYTES. M-168 measured that what binds a segment is CPU spent re-serialising the
  * transcript, ~7–10 ms per MB, ~3 GB under the 30 s default. So every request is counted as sent, and one that
@@ -51,6 +53,9 @@ export const MODEL_FOR_MODE = Object.freeze({
   ask: "claude-opus-5",
   /* K1983: `agent-worker` R59's `POST /draft`; provisional like the rest until M-Q9. */
   draft: "claude-opus-5",
+  /* N832, K2611: `agent-worker` R72's `POST /transcribe`, a model that reads images (R14); provisional like the rest
+     until M-Q9. */
+  transcribe: "claude-opus-5",
 });
 export const MODEL_FOR_MODE_SOURCE = "provisional: today's default for every mode, until M-Q9 measures the cheapest "
   + "model passing K1504's bar (assistant-substrate §7) per mode";

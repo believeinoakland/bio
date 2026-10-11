@@ -1,16 +1,17 @@
 /* run-productions — what an AI run produces, and the only way it produces it (requirements:
- * `build/requirements/run-productions.md`, R1–R20; map: `build/extraction/run-productions.md`). Extracted from the
+ * `build/requirements/run-productions.md`, R1–R25; map: `build/extraction/run-productions.md`). Extracted from the
  * legacy store (PL-3/IS-4's suggest endpoint `suggestVersion` with `#suggestionPersisted` and `#suggestionFrontmatter`;
  * SK-8's `extractPropose` and `extractProposals` with `#posFields`; the dispatch of `op=suggest`, `op=extractpropose`
  * and `op=extractproposals`), from the legacy schema (`suggest_refusals`, `proposed_readings`) and from the check
  * catalogue (C-27 and C-104, now this module's own rows in `checks.mjs`).
  *
  * `runProductionsOf(ctx, deps)` answers the one instance per Durable Object storage (K61). It reaches `record-core`,
- * `membership`, `content`, `connections`, `ai-runs`, `strength`, `citation` and `basis-versions` through their
+ * `membership`, `content`, `connections`, `ai-runs`, `strength`, `citation`, `inquiry` and `basis-versions` through their
  * factories; a run is read only through ai-runs' `runFor` (its R28) and a bound through its `boundOf` and
  * `consumeBound` (its R29), never in this module's SQL (N194); whether the caller holds the run is `run-rules`'
- * `runPrincipalGate` (its R5). It declares its tables to purge (R17, K23) and registers
- * its candidate source with basis-versions (R14; its R40).
+ * `runPrincipalGate` (its R5). It declares its tables to purge (R17, K23), registers
+ * its candidate source with basis-versions (R14; its R40), and registers its machine-passage read with inquiry (its
+ * R62) and basis-versions (its R49) (R25).
  *
  * WHAT THIS MODULE DOES NOT DO (§4, §10): it accepts, hides, rejects or makes current nothing; it captures and requests
  * nothing; it notifies nobody; it opens no run, writes no run and no bound row (R18), and it reads a run only through
@@ -18,10 +19,11 @@
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
-import { contentOf, mintLabel } from "../content/index.mjs";
+import { contentOf, mintLabel, canonicalExtent, citationExtent, legContentId } from "../content/index.mjs";
 import { connectionsOf } from "../connections/index.mjs";
 import { strengthOf, ORIGIN_LIMIT, STRENGTH_AXES } from "../strength/index.mjs";
 import { citationOf } from "../citation/index.mjs";
+import { inquiryOf } from "../inquiry/index.mjs";
 import { basisVersionsOf, versionsIn, versionAsWritten, isBoilerplate } from "../basis-versions/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { runPrincipalGate, checkPagesRead, RUN_BOUNDS } from "../run-rules/index.mjs";
@@ -1217,6 +1219,63 @@ export class RunProductions {
     return { ok: true, scope: "group", counts: out };
   }
 
+  /** R25 (T42; N834; K2496, K31): THE READ REGISTERED WITH `inquiry.onMachinePassage` (its R62) AND
+   *  `basis-versions.onMachinePassage` (its R49): may each of these legs stand as `author`'s? A leg whose content row
+   *  is one a run proposed (R11) — the row it names (`content_id`), or the row its part resolves to (its document, the
+   *  capture it names or the one presented now, and its extent) — stands only when `acceptedFor` (R22) says `author`
+   *  herself took that proposal up; any other such leg is refused, each named with its proposals and R22's act as the
+   *  remedy. A leg resting on nothing a run proposed stands. Answers null or the refusal. An acceptance that cannot be
+   *  read refuses the leg (fail closed); a read that fails whole refuses every leg it was given. Synchronous, writes
+   *  nothing, never throws. */
+  machinePassage(a = {}) {
+    const { legs, author } = a && typeof a === "object" ? a : {};
+    const list = Array.isArray(legs) ? legs : [];
+    const who = nonBlank(author);
+    const refused = [];
+    for (const [i, leg] of list.entries()) {
+      const ord = leg && Number.isInteger(leg.ord) ? leg.ord : i;
+      const target = leg && typeof leg.target === "string" ? leg.target : null;
+      let contentIds = [], proposals = [];
+      try {
+        const named = legContentId(leg);
+        if (named) contentIds = [named];
+        else if (target && normalizeType(OBJECT_TYPES[target.split("-")[0]]) === "information") {
+          const capture = this.content.captureFor(target,
+            typeof leg.extent_capture === "string" && leg.extent_capture ? leg.extent_capture : null);
+          if (capture)
+            contentIds = this.#rows(`SELECT content_id FROM content WHERE bundle_id=? AND capture_sha=? AND extent=?`,
+                                    target, capture, canonicalExtent(citationExtent(leg))).map((r) => r.content_id);
+        }
+        if (contentIds.length)
+          proposals = this.#rows(
+            `SELECT id, content_id FROM proposed_readings WHERE content_id IN (SELECT value FROM json_each(?)) ORDER BY id`,
+            JSON.stringify(contentIds));
+      } catch {
+        refused.push({ ord, target, content_id: null, proposals: [], unread: true });
+        continue;
+      }
+      if (!proposals.length) continue;
+      let taken = false, unread = false;
+      for (const pr of proposals) {
+        try { if (who && this.acceptedFor({ proposal: pr.id, by: who }).accepted === true) { taken = true; break; } }
+        catch { unread = true; }
+      }
+      if (!taken)
+        refused.push({ ord, target, content_id: proposals[0].content_id, proposals: proposals.map((x) => x.id),
+                       ...(unread ? { unread: true } : {}) });
+    }
+    if (!refused.length) return null;
+    const UNREAD = " (the acceptance could not be read)";
+    /* DEC-49 REGION is-machine-passage */
+    return this.#refuse("PROPOSAL_NOT_TAKEN_UP",
+      `${refused.length} leg(s) cite as ${who || "no one"}'s a passage a machine proposed that ${who || "no one"} has not `
+      + `taken up: ${refused.map((r) => `leg ${r.ord} on ${r.target ?? "(none)"}${r.unread ? UNREAD : ""}`).join("; ")}. `
+      + `A machine's passage is cited as a member's only once she takes it up `
+      + `(op=proposalaccept: as proposed, edited, or her own instead)`,
+      { legs: refused, author: who, remedy: "op=proposalaccept" });
+    /* END DEC-49 REGION is-machine-passage */
+  }
+
   /** op=bearingnote — R23 (D22): A NOTE ON WHAT A DOCUMENT SAYS ABOUT A QUESTION, AND WHAT IT DOES NOT, written by a run
    *  its caller holds (R15), or, drafted interactively with no run (run-rules R25; K2482), by the member who asked, who
    *  may see both the document and the question. Each sentence `{text, quote, source}` is kept only when its quote passes extraction R42's
@@ -1367,6 +1426,9 @@ export function runProductionsOf(host, deps) {
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);
     /* R14: the extract arm of basis-versions' narrow candidates (its R40). */
     p.basisVersions.onCandidates(RUN_PRODUCTIONS_MODULE, (a) => p.candidates(a));
+    /* R25 (T42; N834): the one read of inquiry's R62 and basis-versions' R49 slots, `onMachinePassage`. */
+    const inquiry = d.inquiry || inquiryOf(host, { record, membership, content });
+    for (const slot of [inquiry, p.basisVersions]) slot.onMachinePassage(RUN_PRODUCTIONS_MODULE, (a) => p.machinePassage(a));
   }
   return p;
 }

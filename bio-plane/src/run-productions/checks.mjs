@@ -11,6 +11,7 @@
  *                                    production asks, re-worded true at every site.
  *   C-104.13–C-104.31                reading inside a held document (R21–R24, T41-24): the read's door, a proposed
  *                                    connection and its step, the accepting act, the bearing note; in the same family.
+ *   C-104.32                         (T42; R25) a member's leg on a machine-proposed passage she has not taken up.
  *
  * `SUGGEST_KINDS` is basis-versions' (R6), read from it and re-exported here; `SUGGEST_LEVELS` is this module's (R6;
  * N155, T18). Every code below is minted by this module's `index.mjs`, inside the region its row's `where` names. */
@@ -236,8 +237,9 @@ const SUGGEST_ROWS = {
  * NO_TARGET and NO_SUCH_BUNDLE, which have no row, and before the chain step's relayed refusal), `is-extract-connection`
  * and `is-extract-step` (R21), `is-extract-whole-batch` (after each reference's relayed check) and, in
  * `extractProposals`, `is-extract-scope` (EXTRACT_NO_SCOPE); `readPages > is-read-run` and `is-read-door` (R24), `proposalAccept >
- * is-accept` (R22) and `bearingNote > is-bearing` (R23). The relayed refusals (AI_RUN_NOT_PRINCIPAL, the text
- * chain's, extraction's per-reference rows) carry their own rows and stay outside every region here.
+ * is-accept` (R22), `bearingNote > is-bearing` (R23) and `machinePassage > is-machine-passage` (R25). The relayed
+ * refusals (AI_RUN_NOT_PRINCIPAL, the text chain's, extraction's per-reference rows) carry their own rows and stay
+ * outside every region here.
  *
  * TWO CODES ARE MINTED AT ONE OTHER SITE FOR THE SAME CONDITION: NOT_A_DOCUMENT and NO_BYTES_HELD, which content's
  * mint door (`src/content/index.mjs`) asks in the same words. Each sentence is written true at both (T4's `ABSENT`
@@ -453,6 +455,17 @@ const EXTRACT_PROPOSE_ROWS = {
     where: 'src/run-productions/index.mjs bearingNote > is-bearing',
     translation: 'None of this note\'s sentences could be tied to the document\'s own words where it said they were, so '
       + 'there is nothing to keep. A sentence that cannot be tied is left out, never kept on trust.',
+  },
+
+  /* R25 (T42; N834): the read this module registers with inquiry R62 and basis-versions R49. A member's leg on a
+     passage a run proposed stands as hers only once she has taken that proposal up (R22); refused otherwise, and when
+     her acceptance cannot be read (fail closed). The providers relay it unchanged. */
+  PROPOSAL_NOT_TAKEN_UP: {
+    check: 'C-104.32',
+    where: 'src/run-productions/index.mjs machinePassage > is-machine-passage',
+    translation: 'This cites as yours a passage a machine proposed, and you have not taken that proposal up. Take it up '
+      + 'first, as proposed, in your own words, or with your own reading instead; then you may cite it as yours. '
+      + 'Nothing was changed.',
   },
 };
 

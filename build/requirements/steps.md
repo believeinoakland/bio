@@ -59,6 +59,7 @@ Terms. A **step** is `STP-` (`record-grammar` R51). Its **place** is exactly one
 #### A proposed step, accepted (D3)
 
 - **R24** `stepPropose({place, work, why, run, by})` records a machine's or an assistant's proposed step apart, labelled the system's (`record-grammar` R42), never a step until accepted. `stepAccept({proposal, form, work?, project?, by})` is a member's act: `form` is one of `record-grammar` R52's forms (`as_proposed` creates the step as proposed; `edited` with her `work`; `own_instead` records the proposal set aside and her own step created by R1), recording which and who. Any joined member of a project drawing on the proposal's question may accept (`membership` R55); others are refused as R1 refuses. A proposal set aside stays readable with her reason.
+  - (T42; K2661) A decided proposal names the step it created only while that step is held; once that step is deleted, it names none, and the decision itself is kept.
 
 #### Several AI steps at once (D7)
 
@@ -90,7 +91,7 @@ Terms. A **step** is `STP-` (`record-grammar` R51). Its **place** is exactly one
 - **R21** (D44) A step holds no step; nothing here nests one step in another.
 - **R22** Tables are declared through `record-core.declareTable`: project-placed steps keyed and purged with their project; question-placed steps purged when their last referring question is; group steps with the whole store; follows `sight: "owner"`. No place is named in behaviour or outward text.
 - **R27** (H30 (2)) Nothing here reads the project's bar or gates a leg, a conclusion or a step by it.
-- **R28** (T42; N843; K231, K2566) R24's `stepAccept` refuses a proposed step that is absent or unseen with `NO_SUCH_STEP_PROPOSAL` (C-142.28, its number and translation unchanged), and never with `NO_SUCH_PROPOSAL` (intent's). *(not yet met: T42)*
+- **R28** (T42; N843; K231, K2566) R24's `stepAccept` refuses a proposed step that is absent or unseen with `NO_SUCH_STEP_PROPOSAL` (C-142.28, its number and translation unchanged), and never with `NO_SUCH_PROPOSAL` (intent's).
 
 ### Satisfies
 
