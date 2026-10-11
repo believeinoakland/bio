@@ -1,6 +1,6 @@
 # case-authoring (T43)
 
-**Status** · session_0115vgTqhQQu4wvo26nopLhu · depth 2 · WAITING ON BOB (J1) · handled B1
+**Status** · session_0115vgTqhQQu4wvo26nopLhu · depth 2 · WORKING · handled B1
 
 ## J1 · QUESTION
 
