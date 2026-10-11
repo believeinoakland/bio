@@ -1,6 +1,8 @@
 /* R6: the one path of a profile fact, and its parts. Pure; neither function throws.
  *
  *   <profile>/time_zone
+ *   <profile>/time_zone/role=<role>,body=<body>   a counterparty's own zone (jurisdictions R74), apart from the profile's
+ *   <profile>/time_zone/venue=<kind>              a kind's venue's own zone (jurisdictions R74)
  *   <profile>/holidays/<year>                     a holiday entry for every office
  *   <profile>/holidays/<year>/<offices>           one for the offices named: each `role=<role>` or `venue=<kind>`,
  *                                                 sorted and unique, joined by `,`
@@ -47,14 +49,42 @@ export function listToken(list) {
   return typeof list === "string" && LIST_RE.test(list) ? `list=${list}` : null;
 }
 
+/* The segment naming one office of an `hours` or office `time_zone` fact: a counterparty's `role` and `body`, or a
+   venue's `kind`; null for anything else. */
+function officeSegment(of) {
+  if (!isObj(of)) return null;
+  const keys = Object.keys(of).sort().join(",");
+  if (keys === "body,role" && name(of.role) && name(of.body)) return `role=${enc(of.role)},body=${enc(of.body)}`;
+  if (keys === "venue" && name(of.venue)) return `venue=${enc(of.venue)}`;
+  return null;
+}
+
+/* The office a segment names, as `officeSegment` spells it, or null. */
+function parseOfficeSegment(seg) {
+  let m = /^role=([^,]+),body=([^,]+)$/.exec(seg);
+  if (m) {
+    const role = dec(m[1]), body = dec(m[2]);
+    return role === null || body === null ? null : { role, body };
+  }
+  m = /^venue=([^,]+)$/.exec(seg);
+  const v = m && dec(m[1]);
+  return v === null || !m ? null : { venue: v };
+}
+
 /** R6: the path of one fact, or null when the parts name none. */
 export function factPath(parts) {
   try {
     if (!isObj(parts) || typeof parts.profile !== "string" || !PROFILE_RE.test(parts.profile)) return null;
     const { profile, fact } = parts;
     let p = null;
-    if (fact === "time_zone") p = `${profile}/time_zone`;
-    else if (fact === "holidays") {
+    if (fact === "time_zone") {
+      if (parts.office === undefined || parts.office === null) p = `${profile}/time_zone`;
+      else {
+        const o = officeSegment(parts.office);
+        if (!o) return null;
+        p = `${profile}/time_zone/${o}`;
+      }
+    } else if (fact === "holidays") {
       const y = typeof parts.year === "number" ? String(parts.year) : parts.year;
       if (typeof y !== "string" || !YEAR_RE.test(y)) return null;
       const l = listToken(parts.list);
@@ -62,12 +92,9 @@ export function factPath(parts) {
       if (o === null || l === null) return null;
       p = `${profile}/holidays/${y}${l ? `/${l}` : ""}${o ? `/${o}` : ""}`;
     } else if (fact === "hours") {
-      const of = parts.office;
-      if (!isObj(of)) return null;
-      const keys = Object.keys(of).sort().join(",");
-      if (keys === "body,role" && name(of.role) && name(of.body)) p = `${profile}/hours/role=${enc(of.role)},body=${enc(of.body)}`;
-      else if (keys === "venue" && name(of.venue)) p = `${profile}/hours/venue=${enc(of.venue)}`;
-      else return null;
+      const o = officeSegment(parts.office);
+      if (!o) return null;
+      p = `${profile}/hours/${o}`;
     } else return null;
     return p.length <= PATH_MAX ? p : null;
   } catch { return null; }
@@ -84,6 +111,11 @@ export function parseFactPath(path) {
     const [profile, fact] = seg;
     let parts = null;
     if (fact === "time_zone" && seg.length === 2) parts = { profile, fact };
+    else if (fact === "time_zone" && seg.length === 3) {
+      const office = parseOfficeSegment(seg[2]);
+      if (!office) return null;
+      parts = { profile, fact, office };
+    }
     else if (fact === "holidays" && seg.length >= 3 && seg.length <= 5) {
       parts = { profile, fact, year: Number(seg[2]) };
       let rest = seg.slice(3);
@@ -100,17 +132,9 @@ export function parseFactPath(path) {
         parts.offices = offices;
       }
     } else if (fact === "hours" && seg.length === 3) {
-      let m = /^role=([^,]+),body=([^,]+)$/.exec(seg[2]);
-      if (m) {
-        const role = dec(m[1]), body = dec(m[2]);
-        if (role === null || body === null) return null;
-        parts = { profile, fact, office: { role, body } };
-      } else {
-        m = /^venue=([^,]+)$/.exec(seg[2]);
-        const v = m && dec(m[1]);
-        if (v === null || !m) return null;
-        parts = { profile, fact, office: { venue: v } };
-      }
+      const office = parseOfficeSegment(seg[2]);
+      if (!office) return null;
+      parts = { profile, fact, office };
     } else return null;
     return factPath(parts) === path ? parts : null;
   } catch { return null; }

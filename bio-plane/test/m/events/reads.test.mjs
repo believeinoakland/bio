@@ -2,7 +2,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, testView, MEMBER, OUTSIDER } from "./fixture.mjs";
-import { LIMIT_MAX } from "../../../src/events/index.mjs";
+import { LIMIT_MAX, eventsOps } from "../../../src/events/index.mjs";
 
 const doc = { kind: "document" };
 
@@ -241,4 +241,68 @@ test("R40 sight: an event, dated fact or relation is answered only through attes
   assert.ok(d.length >= 10);
   assert.equal(d.find((t) => t.name === "event_when_cache").derive, "derived-rebuildable");
   assert.equal(d.find((t) => t.name === "event_attestations").sight, "source");
+});
+
+test("R28 R30 audience (T45): \"public\" or absent; any other value refused AUDIENCE_UNKNOWN after NO_SET with nothing read; every registered source receives the same audience unchanged (\"public\", or no audience key), the world's lane answered as without it, each source's lane exactly what the source answers, its public mark carried and never added", () => {
+  const w = world();
+  const p = w.entity("Gil");
+  w.event({ value: "2026-05-05", participants: [{ entityId: p, role: "actor", attestation: 0 }] });
+  w.event({ participants: [{ entityId: p, role: "actor", attestation: 0 }] });
+  /* stub sources that record what they are asked and answer by the audience, as actions R66 and docket R26 do */
+  const asked = { actions: [], docket: [], escalation: [] };
+  const all = [{ at: "2026-05-06", label: "we wrote", ref: "A-1", kind: "letter" }, { at: "2026-05-07", label: "kept inside", ref: "A-2", kind: "note" }];
+  w.ev.registerEventSource("actions", (a) => {
+    asked.actions.push(a);
+    return a.audience === "public" ? [{ ...all[0], public: true }] : all;
+  });
+  w.ev.registerEventSource("docket", (a) => { asked.docket.push(a); return { items: [{ at: "2026-05-08", label: "filed", ref: "D-1", kind: "entry", public: "yes" }] }; });
+  w.ev.registerEventSource("escalation", (a) => { asked.escalation.push(a); return []; });
+  const calls = () => Object.values(asked).reduce((n, l) => n + l.length, 0);
+  const lane = (t, m) => t.ours.sources.find((s) => s.source === m);
+
+  /* refusals: NO_SET first, then AUDIENCE_UNKNOWN for every other value, nothing read (no source asked, no world read: a bad date is never reached) */
+  assert.equal(w.ev.timeline({ set: [], audience: "secret", viewer: MEMBER }).reason, "NO_SET");
+  for (const bad of ["private", "", "PUBLIC", " public", "members", 1, true, false, {}, ["public"]]) {
+    const r = w.ev.timeline({ set: [p], audience: bad, from: "2026-02-31", viewer: MEMBER });
+    assert.deepEqual([r.ok, r.reason], [false, "AUDIENCE_UNKNOWN"], JSON.stringify(bad));
+    assert.match(r.detail, /public/);
+    assert.ok(!("world" in r) && !("ours" in r));
+  }
+  assert.equal(calls(), 0, "a refused audience asks no source");
+
+  /* control: under "public" every source records audience "public"; otherwise no audience key at all */
+  const pub = w.ev.timeline({ set: [p], audience: "public", viewer: MEMBER });
+  assert.equal(pub.ok, true);
+  for (const m of Object.keys(asked)) {
+    assert.equal(asked[m].length, 1, m);
+    assert.equal(asked[m][0].audience, "public", m);
+    assert.equal(asked[m][0].viewer, MEMBER, "the viewer still passed unchanged");
+  }
+  const plain = w.ev.timeline({ set: [p], viewer: MEMBER });
+  const nulled = w.ev.timeline({ set: [p], audience: null, viewer: MEMBER });
+  const undef = w.ev.timeline({ set: [p], audience: undefined, viewer: MEMBER });
+  for (const m of Object.keys(asked)) {
+    assert.equal(asked[m].length, 4, m);
+    for (const a of asked[m].slice(1)) assert.ok(!("audience" in a), `${m}: no audience key when the timeline was called without it`);
+  }
+  /* the world's lane is answered as without it */
+  assert.deepEqual(pub.world, plain.world);
+  assert.deepEqual(nulled, plain);
+  assert.deepEqual(undef, plain);
+  /* each source's lane is exactly what it answered: its own public items under "public", every item otherwise */
+  assert.deepEqual(lane(pub, "actions").items.map(({ order, ...x }) => x), [{ ...all[0], public: true }]);
+  assert.deepEqual(lane(plain, "actions").items.map(({ order, ...x }) => x), all, "nothing marked public, nothing added");
+  assert.ok(lane(plain, "actions").items.every((i) => !("public" in i)));
+  /* a mark that is not true is carried as no mark: this module never invents one */
+  assert.ok(lane(pub, "docket").items.every((i) => !("public" in i)));
+  assert.deepEqual(lane(pub, "escalation").items, []);
+  /* through the ops map: the url's audience is passed, absent when the url names none, refused when it names another */
+  const url = (q) => { const u = new URL("https://plane.test/op"); for (const [k, v] of Object.entries(q)) u.searchParams.set(k, v); return u; };
+  const before = asked.actions.length;
+  assert.equal(eventsOps(w.ev, url({ set: p, viewer: MEMBER, audience: "public" })).timeline().ok, true);
+  assert.equal(asked.actions.at(-1).audience, "public");
+  eventsOps(w.ev, url({ set: p, viewer: MEMBER })).timeline();
+  assert.ok(!("audience" in asked.actions.at(-1)));
+  assert.equal(eventsOps(w.ev, url({ set: p, viewer: MEMBER, audience: "everyone" })).timeline().reason, "AUDIENCE_UNKNOWN");
+  assert.equal(asked.actions.length, before + 2);
 });

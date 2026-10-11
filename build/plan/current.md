@@ -1,6 +1,6 @@
 # Plan T45
 
-**Status** · OPEN · BOB #156 · session_01L1X4WzJQQ7Sdsh4iWKEui7 · depth 1
+**Status** · OPEN · BOB #157 · session_01WVgWUVdGVxirrZA8mzQf8G · depth 1
 
 **Jobs** · jurisdictions: JURISDICTIONS #10 session_01YbCZYnryu1Ked4QncDkn47; membership: MEMBERSHIP #34 session_019Mx293Q1PFFwRus5nYUaPq; project-roster: PROJECT-ROSTER #3 session_01JnZy4CSrJYv25f2UVq4NE2; promotion: PROMOTION #43 session_01Bdm13v3k1joqVbrjhpKtUZ; events: EVENTS #6 session_01834bxkNUQSs2DdTKq9mwAW; local-facts: LOCAL-FACTS #5 session_01WsrEhcFfcP1igCUGdRgwEc; standards: STANDARDS #12 session_01Jg3rgoArLauFTLhqRQc2MS; duties: DUTIES #4 session_01MExgKh3t6GhAjLf6UXLh5d
 
@@ -31,7 +31,8 @@ It is the only module marked `legacy` in `modules.json`.
    8. ~~`standards` R29 "the move to layer 5", until T45-2~~ cleared at T45-2's merge (K2796);
    9. from T45-3's merge (K2797): plane `roster.test.mjs` "R5, R9 (T38-26; N783): project-roster's whole ops map is routed" (it pins the ops map, now with `projectscopeset`, `projectapprovalset`), until T45-47;
    10. skills `planning.test.mjs` R28 and `filing.test.mjs` R30 ("the Action document is canon", K2783), until T45-13;
-   6. (if T45-27's START finds the plane composes `actions`' start registrations itself) the plane's composition of the moved hold registrations, from L9's close until T45-47 (Measure first, M-T45-5).
+   11. from T45-6's merge (K2811): affordances `catalogue.test.mjs` "R1 R12 R24: the op maps of filing-templates and local-facts hold exactly their ops" until T45-39; plane `compose.test.mjs` "R11, R5: every op of local-facts' and filing-templates' maps is in the route map" until T45-47 (local-facts' four new ops `ruledraft`, `ruleconfirm`, `rulewithdraw`, `ruleoffer`; op-declarations T45-45 declares them, and a read op for `groupRules` (R12));
+   6. opened (M-T45-5 measured, K2815): the plane constructs `actionsOf(ctx)` at start and calls its `purgeHeld`; once `actions` (T45-27) deletes its doorbell and ratification registrations, the moved hold registrations are absent until the plane composes `actionHoldsOf` (T45-47): the tests that read them, from T45-27's merge until T45-47.
 5. **Readings recorded with the folds, told to Bob as done** (K2781, K2782, P17): breach actions need a live *noncompliant* determination (actions R8 (a)); docket entries by a member's act are filed at once and made public by the manager's signing (DEC-116); phrasing lists hold English now, any other language reads undetermined and is never "nothing found"; the own-benefit list stays narrow (a remedy of harm is never matched); `none_exists` kept beside §6's outcomes; Tier 1 template machinery built, `@records-request` withheld until a named writer and a professional review exist; D54's existence-sight kept for a member's own project; a member's own project is never rescued (K2782); `public_comment` at Tier 1 (Design Requirement 8); `legal_organisations` widened to Tier 2 and to defence; the re-examination run started inside the recording act (ai-runs R77 amending R46); a voided basis "marked" as derived on read.
 
 ## Entries
