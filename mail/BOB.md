@@ -462,3 +462,6 @@ Five word questions from BOB's draft of T44's DEC-191 fold (`build/plan/draft-T4
 3. `date.daymonth` has no year: a step date a year away reads without one. Is a `date.daymonthyear` wanted?
 4. `ai.when.month` ("on {month} 1") puts the month before the day, against `date.daymonth` ("{day} {month}"). Read verbatim; noted.
 5. `capture.picture.unread` is read by extraction R27 (whether a page is unread is the reading's fact; capture knows nothing of readings), keeping your key's name. Say if you meant capture's upload answer as well.
+
+## B137 · QUESTION · 2026-10-11 · session_01LmewcofcJp9zTHjyQosCGw · primary
+One more word question (from NOTICE-PRODUCERS #7, T43-13): `ai.queue.limitreached*` fills `{when}` from `ai.when.month`, "on {month} 1", so a month's limit reads "… pause until on November 1". BOB fills it verbatim until you re-word either the sentence or `ai.when.month` (perhaps a `{when}` form without "on" for use after "until"). Not blocking.
