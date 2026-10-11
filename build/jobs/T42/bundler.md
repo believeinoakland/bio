@@ -1,6 +1,6 @@
 # bundler (T42)
 
-**Status** · session_01X5bkceFD2GHGbfimdSRiKL · depth 2 · COMPLETE · handled B1
+**Status** · session_01X5bkceFD2GHGbfimdSRiKL · depth 2 · COMPLETE · handled B2
 
 ## Completion (BUNDLER #14)
 
@@ -46,3 +46,19 @@ R31 finding (K2547's watch): the plane's global scope measures past R31's 500 ms
 ## J2 · COMPLETE
 
 T42-2 done. N836: fleetbundles re-pinned 23 -> 25 from agent-worker's committed manifest (clears rule 4 (8)). N840/R31: fleet-bundle.mjs gains BUDGET, sizeVerdict, startVerdict, measureStart, budgetReport; fleetbundles section 9 measures and prints every member and the plane; section 9a is R31's negative control. fleetbundles 149 pass, 0 fail, no SKIP; module tests 94/94; format, architecture, coverage 31/31, ownership 0 failures. No bundle rebuilt. R31's not-yet-met mark is yours to strike. Record: build/jobs/T42/bundler.md.
+
+## CHANGE B2 (K2618)
+
+- **The red.** R31 (d) and (f) failed on BOB's container on their third elements, `ms >= 40`.
+- **The cause.** The synthetic probe's busy loop timed itself with `Date.now()`. That clock truncates to whole milliseconds, so the loop could exit after slightly less than 40 ms of real time. Measured here, the shortest of 200 such loops ran 39.26 ms of real time. Both assertions read that real time back through `performance.now()`, so a run of 39.x ms failed `>= 40`. This is a flaw in the test, not in `measureStart`. The other elements of both tests passed: the warning was issued and the global scope did re-run (counter 5).
+- **The fix.** The loop now runs 60 ms (`SLOW_MS`) timed by `performance.now()`, the same clock the measurement uses. The assertions require `>= 50` (`SLOW_FLOOR_MS`). The measured window encloses the loop, so the reading can only be longer. What the tests prove is unchanged: a slow global scope is timed and warned on, and a second import re-runs it.
+- **Ran, after merging `tranche/T42` (@ f0eb125593).**
+  - `fleetbundles`: 149 pass, 0 fail, no SKIP, run twice. The second run was under four CPU-bound processes; the plane measured 666 ms and 1,250 ms, both warnings.
+  - Module tests: 94 pass, 0 fail.
+  - Checks: `format`, `architecture` and `coverage` (31 of 31) 0 failures; `ownership` 0 failures after the commit.
+
+Size (session_01X5bkceFD2GHGbfimdSRiKL, B2): test runs 3, module lines 3441
+
+## J3 · COMPLETE
+
+B2 (K2618) done. Cause: R31 (d)/(f)'s synthetic probe busy-looped on Date.now(), whose whole-ms truncation let it end after as little as 39.26 ms of real time, so the reading failed >= 40 (the rest of both tests passed, as on your container). Fix, test-only: the loop runs 60 ms by performance.now() and the assertions require >= 50; the measured window encloses the loop, so what they prove is unchanged. Merged tranche/T42 @ f0eb125593. fleetbundles 149 pass, 0 fail, no SKIP, twice (once under 4 CPU-bound processes; plane 666 ms and 1,250 ms, both WARN); module tests 94/94; format, architecture, coverage 31/31, ownership 0 failures. No bundle committed.
