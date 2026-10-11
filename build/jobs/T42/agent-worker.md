@@ -16,7 +16,7 @@
 - R58 names "R28" among the places that carry the one sentence. The `/run` answer has no field carrying it: its `judgement_note` is per run, and R28 pins the exact key set. I left R28's answer unchanged, as the T35/T37 jobs did for `/ask` and `/draft`.
 - No pack is read (the draft's doubt 1, as R73 says).
 
-**Deferred / dependency:** `MODEL_FOR_MODE.transcribe` is agent-model's T42-19a, not yet merged. Without it `converse` refuses `MODE_UNKNOWN`, so `t42.test.mjs` is red on this branch until that merge. With the entry added locally and uncommitted (`transcribe: "claude-opus-5"`), I ran t42 at 112 passed, 0 failed, and its controls at 17 of 17. I re-run both on BOB's CHANGE.
+**Deferred:** nothing. The dependency on agent-model's `MODEL_FOR_MODE.transcribe` was cleared by B2 (T42-19a merged, K2649), and `tranche/T42` is merged here (a90dc4e3cf).
 
 **Found in another module (REPORT J1):**
 - `bio-plane/test/system/fleetbundles.test.mjs`:248–261 (bundler) pins agent-worker's bundle inputs as exactly 25. Once the bundle is regenerated the list gains `src/transcribe.mjs` (26).
@@ -25,3 +25,15 @@
 ## J1 · REPORT
 
 T42-20 built and pushed (378f05157c): POST /transcribe in src/transcribe.mjs, with R72–R75 and R31, R34, R58 and R63 applied. Coverage is 67 of 67 and format, architecture and ownership are green. Waiting on agent-model's MODEL_FOR_MODE.transcribe (T42-19a): without it t42.test.mjs is red (converse refuses MODE_UNKNOWN). Against a local, uncommitted copy of that entry it ran 112 passed, 0 failed, with its controls 17 of 17. I re-run on your CHANGE and then post COMPLETE. For you, from another module: (1) bio-plane/test/system/fleetbundles.test.mjs:248–261 (bundler) pins agent-worker's 25 inputs exactly, and after your layer-close regeneration it gains src/transcribe.mjs (26). (2) agent-worker/dist is stale from this change, so requirements.test R45 (2 lines) and fleetbundles' agent-worker staleness arms (3) are red until that regeneration. User suites: control-plane's 42 suites are all green. One reading, no answer needed: R58 says R28 carries the sentence, but the /run answer has no field for it (its key set is pinned), so I left R28 unchanged, as for /ask and /draft.
+
+## Completion (after B2)
+
+Entries applied: T42-20 whole (R72–R75 new; R31, R34, R58, R63 amended). Deferred: nothing.
+
+Tests and checks, on a90dc4e3cf:
+- `node test/t42.test.mjs`: t42: 112 passed, 0 failed. `node test/t42.control.mjs`: t42 control: 17 pass, 0 fail.
+- `npm test` (agent-worker): 14 suites, 13 pass. requirements.test is red only on R45's two lines (static and fresh: the stale bundle), which BOB regenerates at L6's close (B2). Every other line passes.
+- Users' suites (P11): control-plane, `bio-plane/test/m/control-plane/` (42 suites), all green. `fleetbundles`: red only on agent-worker's staleness arms; its input pin (:248–261) re-pins to 26 at regeneration (REPORT J1).
+- checks: format 0 failures; architecture 0 failures; coverage 67 of 67 live ids; ownership 7 files, 0 failures.
+
+Size (session_015HxKEDkguQKE7aafHdePDD): test runs 14, module lines 2980
