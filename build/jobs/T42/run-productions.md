@@ -70,3 +70,7 @@ T42-18 complete at the branch head (tranche/T42 merged, inquiry T42-12 included)
 **Checks:** `format: 147 modules, 146 requirements files; 0 failures`; `architecture: 10 product files, 60 relative imports; 0 failures`; `coverage: 1 modules, 25 of 25 live requirement ids named by a test; 0 failures`; `ownership: 6 files changed by run-productions between tranche/T42 and HEAD; 0 failures`.
 
 Size (session_014kGdQn9r6yt8hA7AVpanwj): test runs 12, module lines 2306
+
+## J3 · REPORT
+
+question-explorer is now red 0/27 because this job dropped the guard, as B5 asked. Its test/m/question-explorer/fixture.mjs:226-232 builds runProductionsOf with a basis-versions stand-in that has only onCandidates, so every world throws 'slot.onMachinePassage is not a function' (src/run-productions/index.mjs:1431). The same fixture passes no inquiry, which was J1's cause (module.test.mjs:28). Fix, in question-explorer's own fixture: add onMachinePassage: () => ({ ok: true }) to that stand-in and pass an inquiry: { onMachinePassage: () => ({ ok: true }) } dep. Please route it to QUESTION-EXPLORER #2 with J1's CHANGE; it must land before question-explorer merges.
