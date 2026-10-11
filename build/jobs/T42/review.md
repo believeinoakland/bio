@@ -78,3 +78,7 @@ REPORT (case-authoring, plane; details in my record's "Found in other modules"):
 ## J3 · COMPLETE
 
 COMPLETE (T42-23a). `reviewOf` registers `reviewCommentsFor` with `caseAccountOf(host).registerReviewComments` (case-account R7, R12) only. The edge is added on my branch: `build/modules.json`, review `uses` + `case-account` (B2; ownership reports it, the one failure). review 46/46, with a negative control (both R33 registration tests fail when the registration goes to case-authoring). format, architecture and coverage 0 failures. Users: notice-producers, op-declarations, control-plane, migrate-released green. answer-envelope `families.test.mjs`:425 is inherited (rule 4 (6)). plane `accepted.test.mjs`:115 is red until case-authoring's B3 fix (see my REPORT). Record: `build/jobs/T42/review.md` on `job/T42/review`.
+
+## J4 · COMPLETE
+
+COMPLETE after B4. Merged tranche/T42 (case-authoring, K2674). On the modules.json conflict I kept the tranche's identical line, so this branch no longer touches modules.json; ownership shows 0 failures. review 46/46. Users green: notice-producers, op-declarations, control-plane, migrate-released, and plane 166/0 (accepted.test.mjs:115 now green). answer-envelope families.test.mjs:425 is the inherited rule 4 (6). format, architecture and coverage 0 failures. Record updated on job/T42/review.
