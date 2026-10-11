@@ -46,7 +46,9 @@ R1 at 4:2:0 is under R1's "at most about 4.5 bytes per pixel" (PDF-PIXELS #4 J2)
 
 **Found for another module (REPORT J1)** · generated artifacts my change stales (§14): `ocr-worker/dist/ocr-worker.bundled.mjs` (+ `.bundle.json`, owner ocr-worker) and `bio-plane/dist/bio-plane.bundled.mjs` (owner not_product; plan rule 4 (5)), both from `pdf-worker/src/dctdecode.mjs`. pdf-worker's bundle does not include it. No requirement of another module changed; R1's header tables (image-cover's R1) are unchanged.
 
-Size (session_0192ECShmFQefWJ5mQLg6Ptw): test runs 10, module lines 3417
+**CHANGE B2 (K2737), applied on `95313b334d`** · `tranche/T44` merged. R11's new wording (strip a `Uint8Array` of `count` rows of `width × comps` bytes, interleaved as R1's rotate-0 samples; `y0` the unrotated row index; `rows` reusable once `onRows` returns) is what the code already did; no code change. Test added in `dct.test.mjs`: each strip on its own equals R1's rotate-0 samples at rows `y0..y0+count-1`, is a `Uint8Array` of `count × width × comps` bytes, and a rotated fixture's strips cover its stored frame. Re-run: image-codecs tests 65, pass 65, fail 0; format, architecture, coverage (11/11), ownership: 0 failures.
+
+Size (session_0192ECShmFQefWJ5mQLg6Ptw): test runs 11, module lines 3417
 
 ## J1 · REPORT
 
