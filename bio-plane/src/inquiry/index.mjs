@@ -19,7 +19,8 @@
  * REACHED as `inquiryOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first call
  * with `deps`, returned to every later caller. At creation it declares its tables to purge (R36), joins every promotion
  * (R11's check, R12's projection) and every re-read that stales content (content R41's `onStale`), and registers with
- * retrieval the `legs` field's relation (R36, its R62) and the migrated arm of `surfaced_in` (N405, its R56). Its
+ * retrieval the `legs` field's relation (R36, its R62), the migrated arm of `surfaced_in` (N405, its R56) and a
+ * question's `projects` on a search page's row (R60, its R78). It offers `onMachinePassage` (R62). Its
  * questions' findings are bias's work products (R53, bias R40) through `inquiryFindings`, which `plane` registers.
  * `deps`:
  *   record, membership, promotion, content, connections, entities, retrieval, provenance   the modules it uses,
@@ -53,8 +54,8 @@ import { notADisposition, DISPOSITIONS } from "../progressions/index.mjs";
 import { INQUIRY_TABLES, INQUIRY_DECLARATIONS, migrateInquiry, BUNDLE_FACTS, LEGS_RELATION } from "./schema.mjs";
 import { localDay, dayRange, isCalendarDate } from "../civil-time/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
-import { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHECKS, QUESTION_WORDS, INQUIRY_WARNINGS }
-  from "./checks.mjs";
+import { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHECKS, INQUIRY_PASSAGE_CHECKS, QUESTION_WORDS,
+         INQUIRY_WARNINGS } from "./checks.mjs";
 import { checkInquiryEntry, inquiryQuestionOf } from "./grammar.mjs";
 import { contradictionFindings, candidateOf, readResolution, exploresOf, CANDIDATE_RE } from "./contradiction.mjs";
 import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlock, setSection, appendSessionLog,
@@ -63,8 +64,8 @@ import { setScalar, setOrAddScalar, appendStateHistory, removeBlock, setOrAddBlo
 export { INQUIRY_SCHEMA, INQUIRY_TABLES, INQUIRY_DECLARATIONS, BUNDLE_FACTS, LEGS_RELATION, SUBJECT_COLUMN, moveBundleFacts, moveSubjectEntity }
   from "./schema.mjs";
 export * from "./grammar.mjs";
-export { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHECKS, QUESTION_WORDS, INQUIRY_WARNINGS }
-  from "./checks.mjs";
+export { INQUIRY_CONTRADICTION_CHECKS, INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHECKS, INQUIRY_PASSAGE_CHECKS, QUESTION_WORDS,
+         INQUIRY_WARNINGS } from "./checks.mjs";
 export { CONTRADICTION_COORDINATES, PLURALITY_DIFFERENCES, DISSOLVED_BY, NORM_CANONS, RESOLUTION_KINDS, resolutionFamily,
          resolutionLines, CANDIDATE_RE, QUALIFIER_MAX, HYPOTHESIS_MAX } from "./contradiction.mjs";
 
@@ -135,7 +136,7 @@ const unreferenced = (t) => isImportedRef(t) || (typeof t === "string"
 
 /** The catalogue row a refusal code has, if any: its check id and canned translation travel with it (DEC-49). */
 const ROW_FAMILIES = [INQUIRY_ROWS, SHARED_ACT_CHECKS, INQUIRY_DISPOSE_CHECKS, INQUIRY_CONTRADICTION_CHECKS,
-                      INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHECKS];
+                      INQUIRY_SURFACE_CHECKS, INQUIRY_BIAS_CHECKS, INQUIRY_PASSAGE_CHECKS];
 function withRow(answer) {
   if (!answer || answer.ok !== false || typeof answer.reason !== "string" || answer.check) return answer;
   const row = ROW_FAMILIES.map((f) => f && f[answer.reason]).find((r) => r && r.check);
@@ -179,6 +180,33 @@ export function biasNotInForce(args = {}) {
                    : `which is not in ${lens}`) };
   /* END DEC-49 REGION is-bias-application-in-force */
 }
+
+/** R62 (T42; N834; K231, K2496): the one spelling of `MACHINE_PASSAGE_UNCHECKED` (C-2.20): the read registered with
+ *  `onMachinePassage` threw or answered neither null nor a refusal, so whether each leg may stand as the member's own is
+ *  not known and the act is refused (fail closed). `basis-versions` R49 answers through it. `extra` adds the caller's
+ *  fields and never replaces these. Pure; never throws. */
+export function machinePassageUnchecked(detail, extra = {}) {
+  /* DEC-49 REGION is-machine-passage-checked */
+  const row = INQUIRY_PASSAGE_CHECKS.MACHINE_PASSAGE_UNCHECKED;
+  return { ...(extra && typeof extra === "object" ? extra : {}),
+           ok: false, reason: "MACHINE_PASSAGE_UNCHECKED", code: "MACHINE_PASSAGE_UNCHECKED", check: row.check,
+           translation: row.translation,
+           detail: typeof detail === "string" && detail ? detail
+             : "whether the passages this act cites were proposed by an assistant and taken up by the member could not be "
+               + "read, so the act is refused rather than passed on trust. Nothing was written." };
+  /* END DEC-49 REGION is-machine-passage-checked */
+}
+
+/* R62: the fields of a leg that name the passage it cites (its target, its content row, the capture its part was made
+   against, and its part), each as the leg states it; what the machine-passage read is asked about. */
+const passageOf = (leg, ord) => {
+  const out = { ord, target: typeof leg.target === "string" ? leg.target.trim() : leg.target };
+  for (const k of Object.keys(leg).sort())
+    if ((k === "content_id" || k === "extent_capture" || k.startsWith("extent_")) && leg[k] !== undefined && leg[k] !== null)
+      out[k] = leg[k];
+  return out;
+};
+const passageKey = (p) => { const { ord, ...rest } = p; return JSON.stringify(rest); };
 
 /* ------------------------------------------------------------------ R59: a person in no public role (D13) */
 
@@ -296,6 +324,7 @@ export class Inquiry {
   #onGrounded = null;    // {module, fn}: strength's pair (R28)
   #bias = null;          // R53: the lens a finding is made under is read here
   #onWaitSet = null;     // {module, fn}: scheduler's arming notice (R54; scheduler R9)
+  #onMachinePassage = null; // {module, fn}: whether a member may cite as hers a passage a machine proposed (R62)
   #view;                 // R55, R57: the active jurisdiction view, whose time_zone is the profile's
   #deps;
 
@@ -385,6 +414,53 @@ export class Inquiry {
     this.#onGrounded = { module, fn };
     return { ok: true, module };
   }
+  /** R62 (T42; N834; run-productions R25): the read that says whether a member may cite as hers a passage a machine
+   *  proposed. One registration, by any module (membership's `listenerRefusal`, its R81). `fn({legs, author, viewer})`
+   *  answers synchronously null (each leg stands) or a refusal. */
+  onMachinePassage(module, fn) {
+    const refused = listenerRefusal(this.#onMachinePassage, module, fn);
+    if (refused) return refused;
+    this.#onMachinePassage = { module, fn };
+    return { ok: true, module };
+  }
+
+  /* R62: asked by R11's check of a promotion of an inquiry by an author who is not a machine, over each leg the revision
+     adds or changes against the held document (a leg naming the same passage as a held leg, by target, content row,
+     capture and part, whatever its position, is unchanged and never asked). Null when nothing is registered, nothing
+     is asked, or `fn` answers null; a refusal from `fn` unchanged; anything else MACHINE_PASSAGE_UNCHECKED. */
+  #machinePassageRefusal(bundleId, legs, author) {
+    if (!this.#onMachinePassage) return null;
+    if (typeof author === "string" && isMachineIdentity(author)) return null;
+    const held = new Map();
+    let heldText = null;
+    try { heldText = this.record.readFile(bundleId, "bundle.md")?.text ?? null; } catch { heldText = null; }
+    const heldFm = typeof heldText === "string" ? parseFrontmatter(heldText).data : null;
+    for (const [i, l] of (heldFm && Array.isArray(heldFm.basis) ? heldFm.basis : []).entries())
+      if (l && typeof l === "object") { const k = passageKey(passageOf(l, i)); held.set(k, (held.get(k) || 0) + 1); }
+    const asked = [];
+    legs.forEach((l, i) => {
+      const p = passageOf(l, i), k = passageKey(p);
+      if (held.get(k)) held.set(k, held.get(k) - 1);
+      else asked.push(p);
+    });
+    if (!asked.length) return null;
+    const who = typeof author === "string" ? author : null;
+    /* DEC-49 REGION is-machine-passage-taken-up */
+    let r;
+    try { r = this.#onMachinePassage.fn({ legs: asked, author: who, viewer: who }); }
+    catch (e) {
+      return machinePassageUnchecked(`the read of whether these passages were taken up (${this.#onMachinePassage.module}) `
+        + `failed: ${fmSafe(e && e.message ? e.message : e).slice(0, 200)}. Nothing was written.`,
+        { legs: asked.map((p) => p.ord) });
+    }
+    if (r === null) return null;
+    if (r && typeof r === "object" && !Array.isArray(r) && typeof r.then !== "function" && r.ok === false
+        && typeof r.reason === "string" && r.reason) return r;
+    return machinePassageUnchecked(`the read of whether these passages were taken up (${this.#onMachinePassage.module}) `
+      + `answered neither null nor a refusal. Nothing was written.`, { legs: asked.map((p) => p.ord) });
+    /* END DEC-49 REGION is-machine-passage-taken-up */
+  }
+
   /* The re-evaluation an act raised, `{raised, failed, answer}`, or null when no module is registered to raise it. The
      listener answers the dependents (an array), or an object `{raised, listeners_failed?}` (reevaluation R8), which is
      kept itself as `answer` (N422): reevaluation writes the listeners that failed onto it after the outermost commit
@@ -483,6 +559,9 @@ export class Inquiry {
            project (or the instance), the acting member as viewer; one not in force, or undetermined, refused */
         const bf2 = this.biasAppliedFindings({ legs: basisLegs, project: basisFm.project, viewer: c.author });
         if (bf2.length) return { ok: false, reason: "BASIS_REFUSED", findings: bf2 };
+        /* R62 (N834): a passage a machine proposed stands as the author's only once she took it up (run-productions R25) */
+        const mp = this.#machinePassageRefusal(bundleId, basisLegs, c.author);
+        if (mp) return mp;
       }
     }
     /* REC-18: a subject entity the registry does not hold. */
@@ -914,36 +993,44 @@ export class Inquiry {
     } catch { return null; }
   }
 
-  /** R59 (D13; K2479, K2480): the record's facts for the persons `text` and `subject` may name, for `personWarning`:
+  /** R63 (T42; N837), R59 (D13; K2479, K2480): the record's facts for the persons `text` and `subject` may name, for `personWarning`:
    *  the subject entity, every `ENT-` id written in the text, and every entity whose live alias is a run of the text's
    *  words (at most `PERSON_NAME_WORDS_MAX` words a run, over its first `PERSON_TEXT_WORDS_MAX` words), through
    *  `entities.entitiesByAlias` (its R6); each person among them `{entity_id, kind, label, public_role, named: true}`,
    *  `public_role` true when `lines` holds, not withdrawn, a line of `PUBLIC_ROLE_LINES` from it (an office it holds,
-   *  is responsible for or acts for; a government body it belongs to or sits on). Never throws. */
+   *  is responsible for or acts for; a government body it belongs to or sits on). An id the record does not hold, or not
+   *  a person, is left out; a read that fails leaves what was found standing. Writes nothing; never throws. */
   personFacts(args = {}) {
     const { text = "", subject = null, viewer = null } = args && typeof args === "object" ? args : {};
     const ids = new Set();
     try {
       if (typeof subject === "string" && subject.trim()) ids.add(subject.trim());
       for (const m of (typeof text === "string" ? text : "").matchAll(ENTITY_ID_IN_TEXT)) ids.add(m[0]);
-      const words = wordsFold(text).split(" ").filter(Boolean).slice(0, PERSON_TEXT_WORDS_MAX);
+      /* R63: the text's words as written (split on white space), each asked both as written and with the punctuation at
+         its edges trimmed ("sign?" is "sign"), since entities folds an alias keeping its inner punctuation ("J. Roe",
+         "the master's deputy") and only white space and case (its R6) */
+      const words = (typeof text === "string" ? text : "").normalize("NFC").split(/\s+/).filter(Boolean)
+        .slice(0, PERSON_TEXT_WORDS_MAX);
+      const trimmed = words.map((x) => x.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ""));
       const ents = this.entities;
       const tried = new Set();
       if (ents && typeof ents.entitiesByAlias === "function")
         for (let i = 0; i < words.length; i++)
-          for (let n = 1; n <= PERSON_NAME_WORDS_MAX && i + n <= words.length; n++) {
-            const run = words.slice(i, i + n).join(" ");
-            if (tried.has(run)) continue;
-            tried.add(run);
-            let r = null;
-            try { r = ents.entitiesByAlias({ alias: run, viewer }); } catch { r = null; }
-            for (const e of (r && Array.isArray(r.entities) ? r.entities : []))
-              if (e && e.kind === "person" && typeof e.entity_id === "string") ids.add(e.entity_id);
-          }
+          for (let n = 1; n <= PERSON_NAME_WORDS_MAX && i + n <= words.length; n++)
+            for (const run of new Set([trimmed.slice(i, i + n).filter(Boolean).join(" "), words.slice(i, i + n).join(" ")])) {
+              const key = run.toLowerCase();
+              if (!run || tried.has(key)) continue;
+              tried.add(key);
+              let r = null;
+              try { r = ents.entitiesByAlias({ alias: run, viewer }); } catch { r = null; }
+              for (const e of (r && Array.isArray(r.entities) ? r.entities : []))
+                if (e && e.kind === "person" && typeof e.entity_id === "string") ids.add(e.entity_id);
+            }
     } catch { /* what was found stands */ }
     const out = [];
     for (const id of [...ids].sort()) {
-      const e = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, id);
+      let e = null;
+      try { e = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, id); } catch { e = null; }
       if (!e || e.kind !== "person") continue;
       out.push({ entity_id: e.entity_id, kind: e.kind, label: e.label, public_role: this.#publicRole(id), named: true });
     }
@@ -2826,6 +2913,11 @@ export function inquiryOf(host, deps) {
         /* R60 (H38): the question's document, read by a viewer, answers the projects R14 shows her */
         return { ...(m ? { surfaced_in: m } : {}), ...k.projectsOf(row.bundle_id, ctx && ctx.viewer) };
       });
+    /* R60 (T42; N830; retrieval R78): a question's row in a `search` page answers the projects R14 shows the viewer; a
+       row that is no question gains nothing. Synchronous, one entry per hit, keys R6's hit does not hold. */
+    if (retrieval && typeof retrieval.registerSearchDecoration === "function")
+      retrieval.registerSearchDecoration("inquiry", (hits, ctx) => hits.map((h) =>
+        (h && normalizeType(h.object_type) === "inquiry" ? k.projectsOf(h.bundle_id, ctx && ctx.viewer) : null)));
   }
   return k;
 }

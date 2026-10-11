@@ -367,6 +367,8 @@ import * as filFix from "../filings/fixture.mjs";
 import * as escFix from "../escalation/fixture.mjs";
 import * as capFix from "../capture/fixture.mjs";
 import * as monFix from "../monitoring/fixture.mjs";
+/* T42 (N826; K2656): `inboxresolve` is driven at `doorbell`'s interface (its R3), never capture's copy (deleted T43) */
+import * as dbFix from "../doorbell/fixture.mjs";
 
 const WHYLESS = [undefined, "", "   "];
 const sqlOf = (w) => w.st?.sql ?? w.s?.sql ?? w.sql ?? w.storage?.sql;
@@ -488,7 +490,7 @@ const REASONED_CASES = {
     return { w, act: (why) => w.esc.escalationOpen({ determination: w.D, reason: why, author: escFix.V("bob"), viewer: escFix.V("bob") }) }; },
   escalationattach: () => { const w = escFix.seeded(); escFix.toStage(w, 2); const a = w.action({ project: w.P, restsOn: [w.D] });
     return { w, act: (why) => w.esc.escalationAttach({ id: w.E, action: a, reason: why, author: escFix.V("bob"), viewer: escFix.V("bob") }) }; },
-  inboxresolve: async () => { const f = capFix.fresh({ evidence: capFix.bucket(), env: { INSTANCE_NAME: "inst" } });
+  inboxresolve: async () => { const f = dbFix.fresh({ evidence: dbFix.bucket(), env: { INSTANCE_NAME: "inst" } });
     const k = await f.c.knock({ content: "a tip", sourceAddress: "1.1.1.1" });
     return { w: f, act: (why) => f.c.inboxResolve({ knockId: k.knockId, status: "discarded", by: "member:m1", reason: why }) }; },
   /* T22's four */

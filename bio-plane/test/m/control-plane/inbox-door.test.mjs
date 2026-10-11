@@ -1,15 +1,16 @@
-/* control-plane: the inbox's door after capture's T22 folds (K1037; DEC-88 (2), DEC-108 (2)). R36's `pulled` resolve takes
-   capture R32's reason, refused `RESOLVE_NO_REASON` before anything is written and recorded on the knock's row with the
-   pull in the one act with its promotion, while `op=inboxpull` takes none; capture's refusals that state their status are
-   answered at it (R23); `op=inbox`'s `sort` and `dir` reach capture's `inboxList`. Driven through `makeFetch(hooks)` for
+/* control-plane: the inbox's door after capture's T22 folds (K1037; DEC-88 (2), DEC-108 (2)), the doorbell since T42's
+   split (`doorbell` R3, R13; N826, K2656). R36's `pulled` resolve takes doorbell R3's reason, refused `RESOLVE_NO_REASON`
+   before anything is written and recorded on the knock's row with the pull in the one act with its promotion, while
+   `op=inboxpull` takes none; the doorbell's refusals that state their status are
+   answered at it (R23); `op=inbox`'s `sort` and `dir` reach doorbell's `inboxList`. Driven through `makeFetch(hooks)` for
    the Worker's half and at the record store's door over a real record (`record.mjs`) for the store's. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, call, opCalls, FORGED } from "./harness.mjs";
 const { record: fixture } = await import("./record.mjs");
 const P = await import("../../../src/store-door/pull.mjs");
-const { captureOf, REASON_MAX } = await import("../../../src/capture/index.mjs");
-const { CAPTURE_CHECKS } = await import("../../../src/capture/checks.mjs");
+const { doorbellOf, REASON_MAX } = await import("../../../src/doorbell/index.mjs");
+const { DOORBELL_CHECKS } = await import("../../../src/doorbell/checks.mjs");
 const { provenanceOf } = await import("../../../src/provenance/index.mjs");
 const { recordOf } = await import("../../../src/record-core/index.mjs");
 
@@ -18,7 +19,7 @@ async function record() {
   const r = await fixture();
   const knock = async (text = "material for the group") =>
     (await r.go("knock?source=203.0.113.9", "POST", { content: text, note: "please look", contact: "knocker@example.org", now: Date.now() })).json.result;
-  const state = (knockId) => captureOf(r.ctx).inboxGet(knockId).item;
+  const state = (knockId) => doorbellOf(r.ctx).inboxGet(knockId).item;
   const held = (knockId, sha) => {
     const k = state(knockId);
     return { status: k.status, capture_sha: k.capture_sha ?? null, pulled_by: k.pulled_by ?? null,
@@ -28,14 +29,14 @@ async function record() {
   return { ...r, knock, state, held };
 }
 const UNTOUCHED = { status: "new", capture_sha: null, pulled_by: null, resolve_reason: null, receipt: false, home: null, bundles: 0 };
-/* What capture R32 refuses: absent, not a string, blank, over REASON_MAX code points. */
+/* What doorbell R3 refuses: absent, not a string, blank, over REASON_MAX code points. */
 const REASONLESS = [undefined, null, 7, "", "   \n\t", "x".repeat(REASON_MAX + 1)];
 
-test("R36 (capture R32, C-118.7; DEC-88 (2), K1037): the `pulled` resolve at the record store's door refuses a reason absent, not a string, blank or over 2,000 characters RESOLVE_NO_REASON at 400 with capture's own row, and nothing is written — the knock still new, no receipt, no capture, no bundle (negative control: 2,000 characters is a reason)", async () => {
+test("R36 (doorbell R3, R21, C-118.7; DEC-88 (2), K1037): the `pulled` resolve at the record store's door refuses a reason absent, not a string, blank or over 2,000 characters RESOLVE_NO_REASON at 400 with doorbell R21's row, and nothing is written — the knock still new, no receipt, no capture, no bundle (negative control: 2,000 characters is a reason)", async () => {
   const r = await record();
   const k = await r.knock();
   assert.deepEqual(r.held(k.knockId, k.sha256), UNTOUCHED);
-  const row = CAPTURE_CHECKS.RESOLVE_NO_REASON;
+  const row = DOORBELL_CHECKS.RESOLVE_NO_REASON;
   for (const reason of REASONLESS) {
     const a = await r.go(`inboxpullfile?${SESSION}&resolve=pulled`, "POST",
                          { knockId: k.knockId, status: "pulled", ...(reason === undefined ? {} : { reason }) });
@@ -45,7 +46,7 @@ test("R36 (capture R32, C-118.7; DEC-88 (2), K1037): the `pulled` resolve at the
     assert.equal(row.check, "C-118.7");
     assert.deepEqual(r.held(k.knockId, k.sha256), UNTOUCHED, `nothing written for ${JSON.stringify(reason)?.slice(0, 20)}`);
   }
-  /* a knock no knock answers to is refused first (capture's order), with nothing written */
+  /* a knock no knock answers to is refused first (the doorbell's order), with nothing written */
   const none = await r.go(`inboxpullfile?${SESSION}&resolve=pulled`, "POST", { knockId: "KNOCK-none", status: "pulled" });
   assert.equal(none.json.result.reason, "NO_SUCH_KNOCK");
   /* negative control: exactly REASON_MAX code points is admitted */
@@ -55,7 +56,7 @@ test("R36 (capture R32, C-118.7; DEC-88 (2), K1037): the `pulled` resolve at the
   assert.equal(r.held(k.knockId, k.sha256).status, "pulled");
 });
 
-test("R36 (capture R32, R65; DEC-88 (2), K1037): a reasoned `pulled` resolve is the pull with its promotion — the knock pulled by the member, its receipt, one new information bundle at collected holding the capture, the puller its author; `op=inboxpull` asked directly takes no reason, whatever its body carries", async () => {
+test("R36 (doorbell R3, R13; DEC-88 (2), K1037): a reasoned `pulled` resolve is the pull with its promotion — the knock pulled by the member, its receipt, one new information bundle at collected holding the capture, the puller its author; `op=inboxpull` asked directly takes no reason, whatever its body carries", async () => {
   const r = await record();
   const k = await r.knock("the minutes they did not publish");
   const a = await r.go(`inboxpullfile?${SESSION}&resolve=pulled`, "POST",
@@ -78,7 +79,7 @@ test("R36 (capture R32, R65; DEC-88 (2), K1037): a reasoned `pulled` resolve is 
   assert.equal((await r.go(`inboxpullfile?${SESSION}`, "POST", { knockId: f.knockId })).json.result.ok, true);
 });
 
-test("R36 (capture R32; DEC-88 (2); N499, K1117): an admitted `pulled` resolve's reason is recorded on the knock's row with the pull, through capture's `inboxResolve` (negative control: a direct pull records none)", async () => {
+test("R36 (doorbell R3; DEC-88 (2); N499, K1117): an admitted `pulled` resolve's reason is recorded on the knock's row with the pull, through doorbell's `inboxResolve` (negative control: a direct pull records none)", async () => {
   const r = await record();
   const k = await r.knock("the reason's row");
   const a = await r.go(`inboxpullfile?${SESSION}&resolve=pulled`, "POST", { knockId: k.knockId, status: "pulled", reason: "worth a look" });
@@ -92,13 +93,13 @@ test("R36 (capture R32; DEC-88 (2); N499, K1117): an admitted `pulled` resolve's
   assert.deepEqual([r.held(e.knockId, e.sha256).status, r.held(e.knockId, e.sha256).resolve_reason], ["pulled", null]);
 });
 
-test("R36 (capture R65's `within`; DEC-88 (2)): the reasoned `pulled` resolve and its promotion are one act — a promotion that refuses, or throws, leaves neither written: the knock new, no reason on its row, no receipt, no bundle", async () => {
+test("R36 (doorbell R13's `within`; DEC-88 (2)): the reasoned `pulled` resolve and its promotion are one act — a promotion that refuses, or throws, leaves neither written: the knock new, no reason on its row, no receipt, no bundle", async () => {
   for (const fault of [{ ok: false, reason: "PROMOTE_REFUSED_HERE", detail: "raced" }, "throw"]) {
     const r = await record();
     const k = await r.knock(`one act ${JSON.stringify(fault)}`);
     let asked = 0;
     const promotion = { promote() { asked++; if (fault === "throw") throw new Error("a store fault"); return fault; } };
-    const deps = { capture: captureOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: provenanceOf(r.ctx) };
+    const deps = { doorbell: doorbellOf(r.ctx), promotion, record: recordOf(r.ctx), provenance: provenanceOf(r.ctx) };
     const out = await P.pullAndFile(deps, { knockId: k.knockId, by: "ann", identity: "member:ann", viewer: "member:ann",
                                             resolve: true, reason: "worth a look" });
     assert.equal(out.ok, false, JSON.stringify(out).slice(0, 300));
@@ -129,7 +130,7 @@ test("R36, R17 (DEC-88 (2)): the Worker routes `inboxresolve` at `pulled` as the
   assert.deepEqual([inner.route, inner.body.reason, "resolve" in inner.params], ["inboxresolve", "r", false]);
 });
 
-test("R23, R36 (capture R32, R79, R81; K1037): a refusal of the resolve, the pull or the inbox list that states its status is answered at it — RESOLVE_NO_REASON 400, NO_SUCH_KNOCK 404, KNOCK_DISCARDED 409, a bad sort 400 — and one stating none, or none in 400–599, at the forward's own; the store's envelope is kept", async () => {
+test("R23, R36 (doorbell R3; K1037): a refusal of the resolve, the pull or the inbox list that states its status is answered at it — RESOLVE_NO_REASON 400, NO_SUCH_KNOCK 404, KNOCK_DISCARDED 409, a bad sort 400 — and one stating none, or none in 400–599, at the forward's own; the store's envelope is kept", async () => {
   const cases = [
     ["inboxresolve", { knockId: "K", status: "discarded" }, { ok: false, reason: "RESOLVE_NO_REASON", status: 400 }, 400],
     ["inboxresolve", { knockId: "K", status: "new" }, { ok: false, reason: "NO_SUCH_KNOCK" }, 404],
@@ -153,7 +154,7 @@ test("R23, R36 (capture R32, R79, R81; K1037): a refusal of the resolve, the pul
   }
 });
 
-test("R2, R26 (capture R32's sort, DEC-108 (2), K1023): `op=inbox`'s `sort`, `dir`, `limit` and `after` reach capture's `inboxList` as the caller sent them, for every caller the op admits; capture sorts by them, and an unknown sort or dir is capture's own required-argument refusal, naming it, with nothing read", async () => {
+test("R2, R26 (doorbell R3's sort, DEC-108 (2), K1023): `op=inbox`'s `sort`, `dir`, `limit` and `after` reach doorbell's `inboxList` as the caller sent them, for every caller the op admits; the doorbell sorts by them, and an unknown sort or dir is the doorbell's own required-argument refusal, naming it, with nothing read", async () => {
   const { env, S } = world();
   for (const [token, params] of [[S.ann, {}], [S.founder, {}], [env.PROBE_TOKEN, { store: "scratch" }]]) {
     env.calls.length = 0;
@@ -163,7 +164,7 @@ test("R2, R26 (capture R32's sort, DEC-108 (2), K1023): `op=inbox`'s `sort`, `di
     assert.deepEqual([inner.route, inner.params.status, inner.params.sort, inner.params.dir, inner.params.limit, inner.params.after],
                      ["inboxlist", "new", "project", "asc", "5", "C"]);
   }
-  /* at the record store's door, capture real */
+  /* at the record store's door, the doorbell real */
   const r = await record();
   const a = await r.knock("first"), b = await r.knock("second");
   for (const [sort, dir] of [["received", "desc"], ["received", "asc"], ["status", "asc"], ["secret", "desc"], ["project", "asc"]]) {
@@ -178,6 +179,6 @@ test("R2, R26 (capture R32's sort, DEC-108 (2), K1023): `op=inbox`'s `sort`, `di
     const x = (await r.go(`inboxlist?${q}`)).json.result;
     assert.deepEqual([x.ok, x.reason, x.argument, x.status], [false, "REQUIRED_ARGUMENT_MISSING", argument, 400], q);
   }
-  /* negative control: no sort is capture's default, received, newest first */
+  /* negative control: no sort is the doorbell's default, received, newest first */
   assert.deepEqual([(await r.go("inboxlist")).json.result.sort, (await r.go("inboxlist")).json.result.dir], ["received", "desc"]);
 });

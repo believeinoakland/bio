@@ -2,8 +2,10 @@
    that moved here (R29), no place named (R30), and the ops that route to the module (K3). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, AUTHORED } from "./fixture.mjs";
-import { caseAuthoringOps, caseAuthoringOwns, CASE_AUTHORING_TABLES, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS,
+import { world, V, AUTHORED, storage } from "./fixture.mjs";
+import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
+import { membershipOf } from "../../../src/membership/index.mjs";
+import { caseAuthoringOf, caseAuthoringOps, caseAuthoringOwns, CASE_AUTHORING_TABLES, CASE_DERIVATION_CHECKS, STATEMENT_ACK_CHECKS,
          CASE_DISCLOSURE_CHECKS, PUBLISH_ACT_CHECKS, STATEMENT_ACK_MAX, SEARCHED_LEVEL_OUTCOMES }
   from "../../../src/case-authoring/index.mjs";
 import * as CHECKS from "../../../src/case-authoring/checks.mjs";
@@ -62,14 +64,13 @@ test("R25, R65: every authorship field is a stamp — the author, an acknowledge
   assert.deepEqual([a.ok, a.acknowledgement.by], [true, "cy"]);
 });
 
-test("R28: statement_acknowledgements is declared whole to record-core's purge, with R39's what_changed_drafts and R64's account_drafts and account_acceptances beside it: a whole-store purge clears it, a bundle's purge does not", () => {
+test("R28: statement_acknowledgements is declared whole to record-core's purge, with R39's what_changed_drafts beside it (the account's two tables are case-account's, its R8): a whole-store purge clears it, a bundle's purge does not", () => {
   const { w, P } = setup();
   assert.deepEqual(CASE_AUTHORING_TABLES, [{ name: "statement_acknowledgements", keys: [] },
-                                           { name: "what_changed_drafts", keys: [] },
-                                           { name: "account_drafts", keys: [] },
-                                           { name: "account_acceptances", keys: [] }]);
+                                           { name: "what_changed_drafts", keys: [] }]);
   assert.deepEqual([caseAuthoringOwns("statement_acknowledgements"), caseAuthoringOwns({ name: "statement_acknowledgements" }),
-                    caseAuthoringOwns("case_documents")], [true, true, false]);
+                    caseAuthoringOwns("case_documents"), caseAuthoringOwns("account_drafts"), caseAuthoringOwns("account_acceptances")],
+                   [true, true, false, false, false]);
   const pub = w.publish(P, "alice", [Q]);
   assert.equal(w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: pub.caseId, edition: 1, reason: "read" }).ok, true);
   const one = w.record.purge({ bundleId: Q });
@@ -77,6 +78,27 @@ test("R28: statement_acknowledgements is declared whole to record-core's purge, 
   assert.ok("statement_acknowledgements" in (one.removed || one.tables || one.counts || one), "named in the report");
   w.record.purge({});
   assert.equal(w.count("statement_acknowledgements"), 0);
+});
+
+test("R28 (K2675): a declaration record-core refuses is thrown at creation and no instance is kept — another owner already holding statement_acknowledgements (TABLE_DECLARED) leaves none of this module's tables declared, so caseAuthoringOf throws naming the refusal and the next call throws again; negative control: a host where no other owner holds them creates the instance and its tables are declared", () => {
+  const host = { storage: storage() };
+  const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
+  for (const t of bare.split(";")) if (t.trim()) host.storage.db.exec(t);
+  const record = recordOf(host, { evidence: null, evidencePrefix: "bio/captures/" });
+  record.migrate();
+  const membership = membershipOf(host, { record });
+  membership.migrate();
+  assert.equal(record.declarePurge("another-owner", [{ name: "statement_acknowledgements", keys: [] }]).ok !== false, true);
+  for (let i = 0; i < 2; i++)
+    assert.throws(() => caseAuthoringOf(host, { record, membership }),
+                  /^Error: case-authoring: record-core refused its table declaration: TABLE_DECLARED \(statement_acknowledgements\)$/);
+  /* negative control: the fixture's host, where nothing else holds them — created, and the whole-store purge clears them */
+  const { w, P } = setup();
+  assert.equal(caseAuthoringOf(w.host), w.ca, "the one instance");
+  const pub = w.publish(P, "alice", [Q]);
+  assert.equal(w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: pub.caseId, edition: 1, reason: "read" }).ok, true);
+  w.record.purge({});
+  assert.equal(w.count("statement_acknowledgements"), 0, "declared, so cleared");
 });
 
 test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3–C-44.5 (and R58's C-44.6, new, N681), C-82.2–C-82.8 (C-82.8 new, DEC-88), C-32.6 (and R3's C-33.14), R56's CALCULATION_NOT_DISCLOSED (new, T33-69) and R61's STANDARDS_USE_REFUSED (C-136.2, new, T36) — every refusal carrying its check, code and translation; the family C-120.1–C-120.8 and C-120.10–C-120.29 (C-120.9 withdrawn unstamped; .14–.16 the people a case names, T33-68; .17–.18 a marked photo, T37; .19 an unchecked photo, T38; .20–.22 a member document's publication copy, T39, numbered provisionally until promotion's stamp; .23–.29 the account, T41) is case-disclosures' (its R22, N529), re-exported here and held nowhere in this module's own families (K529)", () => {

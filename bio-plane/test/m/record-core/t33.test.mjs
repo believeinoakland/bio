@@ -2,8 +2,9 @@
    for the ids minted from record-grammar's `ID_TABLE` (R1, R40, R62, R76), `declareTable` with its classes (R21, R46),
    the derived-cache convention (R77), the store gate (R78) and expunge with a tombstone (R79, R29). T34 (T34-9; N554,
    N593, K1728): `CALC` minted opaque (R62, R76), a derived-rebuildable table's `from` (R77), and the declaration's two
-   older refusals with their rows (R80). T41 (T41-2a; K2431): `STP` and `GUD` minted opaque, each named by R62. Over
-   `storage.mjs`, a fresh storage per test. No network. */
+   older refusals with their rows (R80). T41 (T41-2a; K2431): `STP` and `GUD` minted opaque, each named by R62. T42
+   (T42-2a; K2616, K2617): `ACD`, a case account draft, minted opaque by its form alone, its legacy sequential ids still
+   read, and named by R62. Over `storage.mjs`, a fresh storage per test. No network. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
@@ -67,7 +68,7 @@ test("R1 R2: the sequential step is the same inside a caller's transaction, and 
 });
 
 test("R76: allocId for every opaque prefix of ID_TABLE answers <prefix>-<year>-<16 of [a-z0-9]>, and allocIdOp the same; the counter is not stepped", () => {
-  assert.deepEqual([...OPAQUE].sort(), ["CALC", "EVT", "GUD", "IDC", "LIN", "MNY", "PFA", "STP"]);
+  assert.deepEqual([...OPAQUE].sort(), ["ACD", "CALC", "EVT", "GUD", "IDC", "LIN", "MNY", "PFA", "STP"]);
   const { s, rc } = fresh();
   for (const p of OPAQUE) {
     const seen = new Set();
@@ -159,9 +160,9 @@ test("R76 R62: after 64 hits in a row allocId answers MINT_EXHAUSTED for the pre
   assert.equal(rc.allocIdOp("PFA", "2026").ok, undefined, "a fresh draw succeeds again");
 });
 
-test("R62 (K1728, K2431): mintExhausted names each opaque prefix's object, a calculation's, a step's and a reading guide's among them, one fixed sentence per prefix", () => {
+test("R62 (K1728, K2431, K2617): mintExhausted names each opaque prefix's object, a calculation's, a step's, a reading guide's and a case account draft's among them, one fixed sentence per prefix", () => {
   const names = { EVT: "event", LIN: "line", MNY: "money fact", PFA: "person fact", IDC: "identity claim", CALC: "calculation",
-                  STP: "step", GUD: "reading guide" };
+                  STP: "step", GUD: "reading guide", ACD: "case account draft" };
   assert.deepEqual(Object.keys(names).sort(), [...OPAQUE].sort());
   for (const [p, what] of Object.entries(names)) {
     const r = mintExhausted(p);
@@ -195,6 +196,43 @@ test("R76 R62 (T41, K2431): STP and GUD are minted opaque, recorded in the ledge
   for (const p of ["STPX", "GUDE"]) {
     const { rc } = fresh();
     assert.equal(rc.allocId(p, "2026").id, `${p}-2026-0001`, `${p} is not opaque: the counter mints it`);
+    assert.equal(mintExhausted(p).detail, "your group's Civicsmith could not find a free id: every one it drew was already taken. Nothing was written.");
+  }
+});
+
+test("R76 R62 (T42, K2616, K2617): ACD, opaque with legacy: 'sequential', is minted opaque by its form alone, recorded in the ledger with no counter read or stepped, its four-digit ids minted before still read; after 64 hits it answers MINT_EXHAUSTED naming a case account draft; a prefix that only begins with its letters is named by no object", () => {
+  const row = ID_TABLE.find((e) => e.prefix === "ACD");
+  assert.deepEqual([row.form, row.legacy], ["opaque", "sequential"], "the row this test turns on (record-grammar R55)");
+  const { s, rc } = fresh();
+  /* a store where case-authoring minted ACD's four random digits through mintOpaqueId since T41, and a stray counter */
+  const legacy = rc.transact(() => rc.mintOpaqueId("ACD", "2026"));
+  assert.match(legacy, /^ACD-2026-\d{4}$/);
+  assert.ok(idPattern("ACD").test(legacy), "a four-digit ACD id minted before is still read as valid");
+  s.sql.exec(`INSERT INTO seq (scope,next) VALUES ('ACD-2026', 7)`);
+  const seqBefore = JSON.stringify(rows(s, `SELECT * FROM seq ORDER BY scope`));
+  for (const mint of [() => rc.allocId("ACD", "2026"), () => rc.allocIdOp("ACD", "2026"), () => rc.transact(() => rc.allocId("ACD", "2027"))]) {
+    const { id } = mint();
+    assert.match(id, /^ACD-\d{4}-[a-z0-9]{16}$/, "the opaque form, never the counter's");
+    assert.ok(idPattern("ACD").test(id));
+    assert.ok(ledger(s).some(([x, src]) => x === id && src === "opaque"), "recorded in the opaque-id ledger");
+  }
+  assert.equal(JSON.stringify(rows(s, `SELECT * FROM seq ORDER BY scope`)), seqBefore, "the ACD counter was neither read into an id nor stepped");
+  assert.ok(ledger(s).some(([x, src]) => x === legacy && src === "mint"), "and the legacy id stays spent");
+  /* 64 hits in a row: R62's one answer, naming a case account draft, and nothing written */
+  const tail = "gggggggggggggggg";
+  draws(bytesFor(tail), () => rc.allocId("ACD", "2026"));
+  const before = dump(s);
+  const r = draws(Array.from({ length: 64 }, () => bytesFor(tail)).flat(), () => rc.allocId("ACD", "2026"));
+  assert.deepEqual(r, mintExhausted("ACD"));
+  assert.deepEqual([r.ok, r.reason, r.code, r.check, r.prefix], [false, "MINT_EXHAUSTED", "MINT_EXHAUSTED", "C-59.6", "ACD"]);
+  assert.equal(r.translation, RECORD_CORE_CHECKS.MINT_EXHAUSTED.translation);
+  assert.equal(r.detail, "your group's Civicsmith could not find a free case account draft id: every one it drew was already taken. Nothing was written.");
+  assert.deepEqual(dump(s), before, "nothing was written");
+  assert.deepEqual(mintExhausted("ACD", { draft: "x", detail: "mine" }).detail, r.detail, "extra never replaces the sentence");
+  /* the negative controls: a prefix that only begins or ends with its letters is neither minted opaque nor named */
+  for (const p of ["ACDX", "XACD", "acd"]) {
+    const { rc: rc2 } = fresh();
+    assert.equal(rc2.allocId(p, "2026").id, `${p}-2026-0001`, `${p} is not opaque: the counter mints it`);
     assert.equal(mintExhausted(p).detail, "your group's Civicsmith could not find a free id: every one it drew was already taken. Nothing was written.");
   }
 });

@@ -23,10 +23,17 @@
  * C-118.7 is new with DEC-88 (R32: a resolve records the member's reason), C-118.8 and C-118.9 with DEC-97 (R79, R81:
  * setting held material aside and bringing it back); C-118.3 and C-85's sentences gained DEC-108's (R52) (K1019).
  *
- * C-118.10 is new with R86 (T41-8a; K2425 (4)): a member's upload names where the file came from. */
+ * C-118.10 is new with R86 (T41-8a; K2425 (4)): a member's upload names where the file came from.
+ *
+ * T42 (K2607, K2609): C-85 and C-118.2, .3, .4 and .7 moved with their raisers to `doorbell` (its R21), numbers and
+ * translations kept. Until capture's delete of its doorbell copy (T43, N849/N851) they stay defined once, here, and
+ * `doorbell`'s `checks.mjs` re-exports them, so no row is held twice; C-118's next free number stays this module's. */
 
 const at = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
 const inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
+/* K2627: the rows that moved to `doorbell` (its R21) name the raiser that is live, doorbell's, while they are defined here. */
+const inDoorbell = (fn, region) => `src/doorbell/index.mjs ${fn} > ${region}`;
+const atDoor = (fn, region) => `src/doorbell/door.mjs ${fn} > ${region}`;
 
 export const CAPTURE_CHECKS = Object.freeze({
   EVIDENCE_NOT_HELD: Object.freeze({
@@ -34,16 +41,16 @@ export const CAPTURE_CHECKS = Object.freeze({
     translation: 'The record holds no stored copy of a document under this fingerprint.',
   }),
   NO_SUCH_KNOCK: Object.freeze({
-    check: 'C-118.2', where: inIndex("#noSuchKnock", "is-knock-held"),
+    check: 'C-118.2', where: inDoorbell("#noSuchKnock", "is-knock-held"),
     translation: 'No knock in the inbox answers to this id. Nothing was changed.',
   }),
   KNOCKER_SECRET_WEAK: Object.freeze({
-    check: 'C-118.3', where: "src/capture/doorbell.mjs knockerSecretWeak > is-knocker-secret-strong",
+    check: 'C-118.3', where: atDoor("knockerSecretWeak", "is-knocker-secret-strong"),
     translation: 'A knocker secret this short could be guessed, letting someone else continue your pseudonym. Use a '
                + 'longer one, or ask the doorbell to make one. Nothing was received. The group can see how often its doorbell turns people away.',
   }),
   KNOCK_DISCARDED: Object.freeze({
-    check: 'C-118.4', where: inIndex("pullKnock", "is-knock-pullable"),
+    check: 'C-118.4', where: inDoorbell("pullKnock", "is-knock-pullable"),
     translation: 'This knock was set aside. Move it back to new before bringing it in. Nothing was written.',
   }),
   NOT_THE_CAPTURING_ACTOR: Object.freeze({
@@ -57,7 +64,7 @@ export const CAPTURE_CHECKS = Object.freeze({
                + 'empty. Write it. Nothing was written.',
   }),
   RESOLVE_NO_REASON: Object.freeze({
-    check: 'C-118.7', where: inIndex("inboxResolve", "is-resolve-reasoned"),
+    check: 'C-118.7', where: inDoorbell("inboxResolve", "is-resolve-reasoned"),
     translation: 'Changing a knock\'s status records why, in your own words, and no reason was given, or it is longer '
                + 'than 2,000 characters. Write one. Nothing was written.',
   }),
@@ -97,9 +104,10 @@ export const CAPTURE_CHECKS = Object.freeze({
    `KNOCK_PAYLOAD_TOO_LARGE`, `KNOCK_EMPTY`), because the older tokens are minted elsewhere in the plane and a row under
    either would have claimed those sites for this door's sentence.
 
-   Each `where` names the smallest span in which the refusal is enforced: the three helpers in `doorbell.mjs`, which
-   answer before the store is called, and the one region `is-knock-rate` in `Capture#knockRateRefusal`, whose two
-   adjacent lines are both rate refusals. The code is a string literal at its site (DEC-49's rule). The codes are READ
+   Each `where` names the smallest span in which the refusal is enforced: the three helpers in doorbell's `door.mjs`,
+   which answer before the store is called, and the one region `is-knock-rate` in doorbell's `#knockRateRefusal`, whose
+   two adjacent lines are both rate refusals (re-pointed to `doorbell`'s files in T42, K2627; capture's copy keeps the
+   same regions until its T43 delete). The code is a string literal at its site (DEC-49's rule). The codes are READ
    as well as minted, deliberately: `knockOp` compares the store's `reason` against the two rate codes to attach the
    bound (a surface keying on a code the plane sent, not a second mint).
 
@@ -109,7 +117,7 @@ export const CAPTURE_CHECKS = Object.freeze({
 export const KNOCK_CHECKS = {
   RATE_IP: {
     check: 'C-85.1',
-    where: 'src/capture/index.mjs #knockRateRefusal > is-knock-rate',
+    where: inDoorbell("#knockRateRefusal", "is-knock-rate"),
     translation: 'Your material was not received. This group\'s inbox is not taking any more material from where '
       + 'you are sending it '
       + 'just now. It is a limit on how fast one sender may knock, not a judgement about you or '
@@ -119,7 +127,7 @@ export const KNOCK_CHECKS = {
   },
   RATE_GLOBAL: {
     check: 'C-85.2',
-    where: 'src/capture/index.mjs #knockRateRefusal > is-knock-rate',
+    where: inDoorbell("#knockRateRefusal", "is-knock-rate"),
     translation: 'Your material was not received. This group\'s inbox is not taking any more material from anyone '
       + 'just now. The whole '
       + 'instance is at its limit rather than you — the cap exists so that no one sender can fill '
@@ -128,13 +136,13 @@ export const KNOCK_CHECKS = {
       + 'The group can see how often its doorbell turns people away.',
   },
   /* D-513 — THE THREE REFUSALS THIS DOOR MAKES BEFORE THE STORE IS CALLED. Each
-     `where` names a module-scope helper (capture's `doorbell.mjs` since T4) and
+     `where` names a module-scope helper (doorbell's `door.mjs` since T42, K2627) and
      the region inside it, because that is where each refusal is enforced; the two oversize
      rows are two conditions and deliberately not one row with a widened
      sentence. */
   KNOCK_ENVELOPE_TOO_LARGE: {
     check: 'C-85.3',
-    where: 'src/capture/doorbell.mjs knockEnvelopeTooLarge > is-knock-envelope-too-large',
+    where: atDoor("knockEnvelopeTooLarge", "is-knock-envelope-too-large"),
     translation: 'This group\'s inbox did not read what you sent, because the request itself is larger '
       + 'than this door accepts. Nothing was stored, nothing was opened, and nothing about your '
       + 'material was judged — its size was read off the request and it stopped there. The size this '
@@ -143,7 +151,7 @@ export const KNOCK_CHECKS = {
   },
   KNOCK_PAYLOAD_TOO_LARGE: {
     check: 'C-85.4',
-    where: 'src/capture/doorbell.mjs knockPayloadTooLarge > is-knock-payload-too-large',
+    where: atDoor("knockPayloadTooLarge", "is-knock-payload-too-large"),
     translation: 'This group\'s inbox read your material and cannot keep it, because it is larger than '
       + 'this inbox stores. That is a fact about how this group has set its Civicsmith up rather '
       + 'than a judgement about what you sent — a group that has configured evidence storage can keep '
@@ -152,7 +160,7 @@ export const KNOCK_CHECKS = {
   },
   KNOCK_EMPTY: {
     check: 'C-85.5',
-    where: 'src/capture/doorbell.mjs knockEmpty > is-knock-empty',
+    where: atDoor("knockEmpty", "is-knock-empty"),
     translation: 'This group\'s inbox has nothing to keep, because what you sent decoded to no bytes at '
       + 'all. The request itself was well formed and named its content, so this is most likely an '
       + 'empty file or an empty box rather than anything wrong with how you sent it. Nothing was '

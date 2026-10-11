@@ -1,9 +1,9 @@
 /* retrieval — runs the query language over the record and says what it could not see (build/requirements/retrieval.md).
  *
  * It keeps each bundle's metadata projection and text index current with its promotion (R1–R4); answers searches at
- * bundle grain and at meaning grain with the four-level statement (R5–R16, R54); checks the index against the corpus
- * (R17); holds a member's selections (R18–R22, R51, R52); answers one capture's content-axis state (R23–R27); and reads
- * the frontier (R35–R50, `frontier.mjs`). It builds no SQL of its own for a search — `query-language` compiles every
+ * bundle grain, the page carrying what later modules register (R78), and at meaning grain with the four-level
+ * statement (R5–R16, R54); checks the index against the corpus (R17); holds a member's selections (R18–R22, R51, R52);
+ * answers one capture's content-axis state (R23–R27); and reads the frontier (R35–R50, `frontier.mjs`). It builds no SQL of its own for a search — `query-language` compiles every
  * statement — and runs none that lacks the viewer's gate (R28). It mints nothing: a hit is an address (R32).
  *
  * K61: `retrievalOf(ctx, deps)` answers the one instance per Durable Object; it reaches record-core, membership,
@@ -128,6 +128,7 @@ export class Retrieval {
   #actionFacts = null;          // R53: {module, fn}
   #legGrades = null;            // R12: {module, fn}
   #decorations = [];            // the single-bundle projection's decorations: {module, fn}
+  #searchDecorations = [];      // R78: the search page's decorations: {module, fn, seq}
   #hiddenRuns = null;           // R39: {module, fn}
   #selectionListeners = [];     // R52: {module, fn, seq}
   #fields = [];                 // R62: {module, field, table, key, col, seq}
@@ -289,6 +290,43 @@ export class Retrieval {
     this.#decorations.push({ module, fn, seq: this.#decorations.length });
     this.#decorations.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
     return { ok: true, module };
+  }
+
+  /** R78 (N830; K2480; as R56): the `search` page's decorations (`inquiry`'s `projects` on a question's row, its R60):
+   *  `fn(hits, {viewer})` answers synchronously an array holding one object, or null, per hit, in the page's order, whose
+   *  keys are added to that hit. One registration per module, applied in the modules' order; R56's two refusals. */
+  registerSearchDecoration(module, fn) {
+    if (typeof module !== "string" || !module || typeof fn !== "function")
+      return { ok: false, reason: "DECORATION_MALFORMED", detail: "a registration names its module and its function" };
+    if (this.#searchDecorations.some((d) => d.module === module))
+      return { ok: false, reason: "DECORATION_DECLARED", module };
+    this.#searchDecorations.push({ module, fn, seq: this.#searchDecorations.length });
+    this.#searchDecorations.sort((a, b) => (this.#rank(a.module) - this.#rank(b.module)) || (a.seq - b.seq));
+    return { ok: true, module };
+  }
+
+  /* R78: the page's hits with each registered decoration's keys, in the modules' order. A decoration is handed frozen
+     copies, so it cannot change a hit; an answer that is not an array of one plain object or null per hit (a throw, a
+     promise, a short array) adds nothing; a key R6 answers is never replaced. With nothing added, the hits themselves. */
+  #decorateHits(hits, viewer) {
+    if (!this.#searchDecorations.length || !hits.length) return hits;
+    const own = hits.map((h) => new Set(Object.keys(h)));
+    const shown = Object.freeze(hits.map((h) => Object.freeze({ ...h })));
+    const plain = (v) => v === null || (typeof v === "object" && [Object.prototype, null].includes(Object.getPrototypeOf(v)));
+    const added = hits.map(() => ({}));
+    let any = false;
+    for (const d of this.#searchDecorations) {
+      let v;
+      try { v = d.fn(shown, { viewer }); } catch { continue; }
+      if (v && typeof v.then === "function") { Promise.resolve(v).catch(() => {}); continue; }
+      if (!Array.isArray(v) || v.length !== hits.length || !v.every(plain)) continue;
+      v.forEach((o, i) => {
+        if (!o) return;
+        const keep = Object.keys(o).filter((k) => !own[i].has(k));
+        if (keep.length) { added[i] = { ...added[i], ...Object.fromEntries(keep.map((k) => [k, o[k]])) }; any = true; }
+      });
+    }
+    return any ? hits.map((h, i) => (Object.keys(added[i]).length ? { ...h, ...added[i] } : h)) : hits;
   }
 
   /** R39, R57 (K80): the rows the frontier tallies leave out for a viewer — a run's rows in a project the viewer cannot
@@ -721,7 +759,7 @@ export class Retrieval {
     return this.#rows(stmt.sql, ...stmt.args);
   }
 
-  /** R6–R9: `op=search`. */
+  /** R6–R9, R78: `op=search`. Synchronous: a page's decorations (R78) answer synchronously too. */
   search(input = {}) {
     const mode = input.mode === "ids" ? "ids" : input.mode === "count" ? "count" : "page";
     const plan = this.#compile(input);
@@ -736,7 +774,8 @@ export class Retrieval {
       total, limit: plan.limit, offset: plan.offset,
     };
     if (mode === "page") {
-      out.hits = this.runQuery(plan.statements.page(), tally);
+      /* R78: the registered decorations add keys to the page's hits, and to nothing else in the answer. */
+      out.hits = this.#decorateHits(this.runQuery(plan.statements.page(), tally), input.viewer ?? null);
     } else if (mode === "ids") {
       /* Select-all: every id in the set, ordered identically to the page so the set an operator selected is the set
          they were looking at. */
@@ -1725,7 +1764,7 @@ function registerFigures(r) {
     throw new Error(`retrieval: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
 }
 
-/** R58, K3: the ops this module answers, as entries of the store's op map (its dispatcher spreads them in). `url` carries
+/** R58, K3: the ops this module answers (R78 adds none: its decorations reach `op=search`'s page through `search`), as entries of the store's op map (its dispatcher spreads them in). `url` carries
  *  the control plane's stamps (`viewer`, `owner`, `identity`), never taken from the caller's own parameters there. */
 export function retrievalRoutes(r, url, body) {
   const q = url.searchParams;

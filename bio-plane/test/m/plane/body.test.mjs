@@ -49,7 +49,7 @@ test("R6 (K2146; publication R73): a secret in the address is not read, hashed o
   assert.ok(!sent(none.seen[0]).includes("secretSha"));
 });
 
-test("R6 (K2062; capture R85): the public hook hands capture's knock the country the door read, so the store is told it beside the source; with none, none is sent", async () => {
+test("R6, R37 (K2062; doorbell R20): the public hook hands doorbell's knock the country the door read, so the store is told it beside the source; with none, none is sent", async () => {
   const knock = async (country) => {
     const seen = [];
     const stub = { fetch: async (r) => { seen.push(String(r instanceof Request ? r.url : r));

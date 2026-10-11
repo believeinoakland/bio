@@ -11,7 +11,7 @@
  * REACHED as `actionsOf(host, deps)` (K61): one instance per host, created on the first call. At creation it creates
  * its tables and declares them to record-core's purge (R36), registers its check and projection with promotion (R1–R3,
  * R7, R11, R33), action-grammar's audit arm with record-core (R51), its facts and projection decoration with retrieval (R12,
- * R25; retrieval R53, R56), its litigation-hold reader with capture (R55; capture R32), and its reader of the holds over
+ * R25; retrieval R53, R56), its litigation-hold reader with doorbell (R55; doorbell R3), and its reader of the holds over
  * a project with ratification (R69; ratification R45). The holds also answer whether a purge would reach held material
  * (R60), which the control plane asks before every purge (its R46). `place()` and `zoneOf` give R12's zone to other
  * modules (R68: retrieval, queue-producers).
@@ -25,7 +25,7 @@
  *   conformance    `determinationRead` (R8, R30), when provided (see R8 below); its module-level
  *                  `determinationSuperseded` (its R20), through which R8 answers a superseded determination (N312).
  *   entities       `readEntity` (its R5): whether an addressee's `entity_id` names a person (R9).
- *   capture        `registerReader` (its R32): the litigation-hold reader (R55); `null` registers none.
+ *   doorbell       `registerReader` (its R3): the litigation-hold reader (R55); `null` registers none.
  *   ratification   `registerHoldReader` (its R45): the reader of holds over a project (R69); `null` registers none.
  *   progressions  `readProgression` (its R5): the progressions and stages a records request's `seeks` names (R70).
  *   intent         `registerNoneExistsReader` (its R33): the reader of requests answered that none exists (R71);
@@ -43,7 +43,7 @@ import { promotionOf } from "../promotion/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { conformanceOf, determinationSuperseded } from "../conformance/index.mjs";
-import { captureOf } from "../capture/index.mjs";
+import { doorbellOf } from "../doorbell/index.mjs";
 import { ratificationOf } from "../ratification/index.mjs";
 import { entitiesOf, noSuchEntity } from "../entities/index.mjs";
 import { linesOf } from "../lines/index.mjs";
@@ -1853,10 +1853,11 @@ export class Actions {
    *  through a viewer's sight (D54: the founder's viewer no longer sees a hidden project, membership R43). */
   purgeHeld({ bundleId = null } = {}) {
     try {
+      const id = bundleId === null || bundleId === undefined ? "" : String(bundleId).trim();
+      /* the whole-store purge: R55's reader itself, so the two answers cannot drift apart (R60) */
+      if (!id) return this.holdInPlace();
       const rows = this.#standing();
       if (!rows.length) return false;
-      const id = bundleId === null || bundleId === undefined ? "" : String(bundleId).trim();
-      if (!id) return true;
       const held = new Set(rows.map((r) => r.project).filter(Boolean));
       if (held.has(id) || rows.some((r) => r.bundle_id === id)) return true;
       const info = this.record.bundleInfo(id);
@@ -2705,9 +2706,9 @@ export class Actions {
     return { ok: true, items, limit: max, truncated, cursor: truncated && tail ? `${tail.action}#${tail.ord}` : null };
   }
 
-  /** R55 (DEC-108; capture R32): whether any litigation hold is in place in the group: whether any entry of any action
+  /** R55 (DEC-108; doorbell R3): whether any litigation hold is in place in the group: whether any entry of any action
    *  the instance holds has `in_place` as its latest statement (R52), whatever the viewer. Synchronous; writes nothing
-   *  and never throws: a read that fails answers `true`, so capture clears nothing it cannot rule a hold out for. */
+   *  and never throws: a read that fails answers `true`, so doorbell clears nothing it cannot rule a hold out for. */
   holdInPlace() {
     try {
       const r = this.#one(`SELECT 1 AS held FROM action_holds h WHERE h.hold='in_place'
@@ -3142,7 +3143,7 @@ function proposalLabelFor(who, subject) {
 const instances = new WeakMap();
 
 /** K61: the one instance per host; at creation it declares its tables, registers its step, audit, facts and
- *  decoration (R3, R12, R25, R36, R51; retrieval R53, R56), its litigation-hold reader (R55; capture R32), its reader of
+ *  decoration (R3, R12, R25, R36, R51; retrieval R53, R56), its litigation-hold reader (R55; doorbell R3), its reader of
  *  holds over a project (R69; ratification R45) and its none-exists reader (R71; intent R33). */
 export function actionsOf(host, deps) {
   let a = instances.get(host);
@@ -3174,15 +3175,16 @@ export function actionsOf(host, deps) {
     const duties = d.duties === null ? null : a.duties;
     if (duties && typeof duties.registerTriggerSource === "function")
       duties.registerTriggerSource("actions", (args) => a.triggerSource(args || {}));
-    /* R55: once per host, as the registrations above. Capture's slot takes one registration (membership's
-       `listenerRefusal`); one already held by this module (another host over the same storage) stands, and one held by
-       any other module is a defect of the wiring, thrown as the purge declaration's is. Capture is handed the `env`
-       this module was given, so a capture made here first holds the plane's bindings (capture R58). */
-    const capture = d.capture === null ? null : (d.capture || captureOf(host, d.env ? { env: d.env } : {}));
-    if (capture) {
-      const r = capture.registerReader("litigation-hold", "actions", () => a.holdInPlace());
+    /* R55 (T42; N826): once per host, as the registrations above, with doorbell (its R3), no longer capture. Doorbell's
+       slot takes one registration (membership's `listenerRefusal`); one already held by this module (another host over
+       the same storage) stands, and one held by any other module is a defect of the wiring, thrown as the purge
+       declaration's is. Doorbell takes no `env` of its own: it reads capture's at each use (its R25), and capture adopts
+       the plane's when the plane builds it (capture R58). */
+    const doorbell = d.doorbell === null ? null : (d.doorbell || doorbellOf(host));
+    if (doorbell) {
+      const r = doorbell.registerReader("litigation-hold", "actions", () => a.holdInPlace());
       if (r && r.ok === false && r.module !== "actions")
-        throw new Error(`actions: capture refused the litigation-hold reader: ${r.reason}${r.module ? ` (held by ${r.module})` : ""}`);
+        throw new Error(`actions: doorbell refused the litigation-hold reader: ${r.reason}${r.module ? ` (held by ${r.module})` : ""}`);
     }
     /* R69 (K1830; ratification R45): once per host, the reader of holds over a project that publishing at a set time
        records and checks again. Ratification is reached on the host when the composition root starts this module with

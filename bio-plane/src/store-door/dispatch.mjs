@@ -8,7 +8,7 @@
    class whose `fetch` this is is `plane`'s (its R1, was control-plane's R35, moved at T19), which also spreads
    `controlPlaneRoutes` below into its map (the name kept, so plane's composition is unchanged). */
 import { credentialsOf } from "../credentials/index.mjs";
-import { captureOf } from "../capture/index.mjs";
+import { doorbellOf } from "../doorbell/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
@@ -365,8 +365,8 @@ export async function dispatch(req, store) {
    other module dispatches); the two own-key acts, credentials' since layer 2 (K757, K784), which credentials keeps out of
    its map (`by` spread, then overridden, as `signeradd`); R8's unattributed refusal count (`wizardrefusaltally`, the
    Worker's tally of a refusal it answered to a member's session, handed to `wizard-scripts.tallyRefusal` with the op and
-   the code alone; store-internal, op-declarations R6, so no caller reaches it, as capture's `doorbellrefused`); R7's
-   pull, a route of its own beside capture's `inboxpull`, which the Worker's `op=inboxpull` (and `op=inboxresolve` at
+   the code alone; store-internal, op-declarations R6, so no caller reaches it, as doorbell's `doorbellrefused`); R7's
+   pull, a route of its own beside doorbell's `inboxpull`, which the Worker's `op=inboxpull` (and `op=inboxresolve` at
    `pulled`) addresses; R11's ask routes; and R10's three drafts. The map keeps control-plane's name for it, so plane's
    composition is unchanged. */
 export function controlPlaneRoutes(ctx, url, body, grant = null) {
@@ -441,11 +441,12 @@ export function controlPlaneRoutes(ctx, url, body, grant = null) {
       return wizardScriptsOf(ctx).writingHelp({ op: b.op, field: b.field, told: b.told, draftHeld: b.draftHeld,
                                                 assistant, by: q("by"), viewer: q("viewer") });
     },
-    inboxpullfile: () => pullAndFile({ capture: captureOf(ctx), promotion: promotionOf(ctx), record: recordOf(ctx),
+    /* R7 (T42; N826; K2656): the pull is the doorbell's (its R13, R3), handed `doorbellOf(ctx)`, never capture's copy */
+    inboxpullfile: () => pullAndFile({ doorbell: doorbellOf(ctx), promotion: promotionOf(ctx), record: recordOf(ctx),
                                        provenance: provenanceOf(ctx) },
                                      { knockId: (typeof b.knockId === "string" && b.knockId) || q("id"),
                                        by: q("by"), identity: q("identity"), viewer: q("viewer"),
-                                       /* R7 (capture R32; DEC-88 (2)): the `pulled` resolve, marked by the Worker's
+                                       /* R7 (doorbell R3; DEC-88 (2)): the `pulled` resolve, marked by the Worker's
                                           own stamp, carries the body's reason; a direct pull carries none */
                                        ...(q("resolve") === "pulled" ? { resolve: true, reason: b.reason } : {}) }),
   };

@@ -19,7 +19,7 @@ import { checkContentExtent, canonicalExtent, describeExtent, extentRelation, CO
 import { eventsOf, noSuchEvent } from "../events/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { isHypothesisId, canonicalJson, sha256HexSync } from "../record-grammar/index.mjs";
+import { isHypothesisId, canonicalJson, sha256HexSync, SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
 import { bounds, compare, fiscalPeriod, validAt } from "../civil-time/index.mjs";
 import { parseFigure, add, subtract, relate, SUM_RULE } from "../calc-grammar/index.mjs";
 import { BOUNDS, LOWEST_GRADE, exhausted, defaultRegistry } from "../connection-grammar/index.mjs";
@@ -63,9 +63,13 @@ const clip = (s, n = TEXT_MAX) => String(s).trim().replace(/\s+/g, " ").slice(0,
 const isMachine = (by) => typeof by === "string" && by.startsWith("class:");
 const isMember = (by) => filled(by) && !isMachine(by);
 
-/** Every refusal: `{ok: false, reason, code, detail}`, a caller's own fields beside them. */
+/** Every refusal: `{ok: false, reason, code, detail}`, a caller's own fields beside them. R26 (T42; K2610): a code that
+ *  is one of record-grammar's shared act rows (`SHARED_ACT_CHECKS`, its R29), `NO_BASIS` (C-33.40) among them, answers
+ *  with that row's check and translation, never a bare code, so a member reads the one sentence every module gives for
+ *  it; `detail` keeps this site's particular. A caller's fields never replace them. */
 export function refusal(code, detail, extra = {}) {
-  return { ...extra, ok: false, reason: code, code, detail };
+  const row = Object.prototype.hasOwnProperty.call(SHARED_ACT_CHECKS, code) ? SHARED_ACT_CHECKS[code] : null;
+  return { ...extra, ok: false, reason: code, code, ...(row ? { check: row.check, translation: row.translation } : {}), detail };
 }
 const list = (xs) => xs.join(", ");
 

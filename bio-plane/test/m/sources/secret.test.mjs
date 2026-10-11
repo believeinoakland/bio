@@ -5,7 +5,7 @@ import { seeded, V, SECRET, OTHER_SECRET, T0 } from "./fixture.mjs";
 import { SOURCES_CHECKS, SECRET_NOT_RECOGNISED_ANSWER, CONSENT_STATEMENT, WITHDRAWAL_STATEMENT } from "../../../src/sources/index.mjs";
 
 const KNOCK_WINDOW = 10 * 60 * 1000;
-/* A ceiling on guesses, far above any bound capture's rate could state; reaching it means the rate never refused. */
+/* A ceiling on guesses, far above any bound the doorbell's rate could state; reaching it means the rate never refused. */
 const GUESS_CEILING = 100;
 
 /** Wrong guesses from one source, at the module's clock, until an attempt is refused: every attempt before it must be
@@ -66,7 +66,7 @@ test("R11 SECRET_NOT_RECOGNISED is answered identically for every failure: a wro
     [{ audience: "member" }, "lower than the public consent that stands"],
     [{ withdraw: "yes" }, "a malformed withdraw flag"],
   ]) {
-    w.tick(KNOCK_WINDOW);   // one attempt per window: capture's instance limit (its R31) never answers in its place
+    w.tick(KNOCK_WINDOW);   // one attempt per window: the doorbell's instance limit (its R2) never answers in its place
     const r = await w.s.consentBySecret({ ...good, ...bad, sourceAddress: `s-${answers.length}` });
     assert.equal(r.reason, "SECRET_NOT_RECOGNISED", why);
     answers.push(JSON.stringify(r));
@@ -83,7 +83,7 @@ test("R11 SECRET_NOT_RECOGNISED is answered identically for every failure: a wro
   assert.equal((await w.s.consentBySecret({ ...good, audience: "public", entry: e.entry, withdraw: true })).ok, true);
 });
 
-test("R11 the act is rate-bound as a knock is, in the same windows as knocks: a consent attempt counts as a knock from its source (capture R31, K530)", async () => {
+test("R11 the act is rate-bound as a knock is, in the same windows as knocks: a consent attempt counts as a knock from its source (doorbell R2, R17; K530)", async () => {
   const w = seeded();
   const { sourceId } = await w.pulled({ secret: SECRET });
   const e = w.disclose(sourceId);
@@ -97,7 +97,7 @@ test("R11 the act is rate-bound as a knock is, in the same windows as knocks: a 
   assert.equal(counted(), c0 + 3, "each attempt is counted in the instance's knock window, as a knock is");
   assert.deepEqual(w.spy.attempts.slice(n0, n0 + 2).map((x) => x.sourceAddress), ["203.0.113.9", "203.0.113.9"]);
   /* guesses from one source, in one window, until the window refuses: each guess the window admits is not recognised,
-     and the first refusal is the knock's per-source rate refusal (capture's bound, whatever it is, never stated here) */
+     and the first refusal is the knock's per-source rate refusal (the doorbell's bound, whatever it is, never stated here) */
   const refused = await guessUntilRefused(w, e.entry, "192.0.2.1");
   assert.equal(refused.reason, "RATE_IP", "the first refusal from one source is the knock's per-source rate, never SECRET_NOT_RECOGNISED");
   /* once refused, even the right secret from that source is refused by the rate, and nothing is recorded */
@@ -107,17 +107,17 @@ test("R11 the act is rate-bound as a knock is, in the same windows as knocks: a 
   assert.equal(w.count("source_consents"), n, "a rate refusal records nothing");
   /* another source is not bound by that one's count */
   assert.equal((await w.s.consentBySecret({ knockerSecret: SECRET, entry: e.entry, audience: "public", sourceAddress: "192.0.2.2" })).ok, true);
-  /* a capture that cannot count answers the one refusal, never an uncounted consent */
+  /* a doorbell that cannot count answers the one refusal, never an uncounted consent */
   const w2 = seeded();
   const s2 = await w2.pulled({ secret: SECRET });
   const e2 = w2.disclose(s2.sourceId);
-  w2.cap.knockAttempt = async () => { throw new Error("store silent"); };
+  w2.bell.knockAttempt = async () => { throw new Error("store silent"); };
   assert.equal((await w2.s.consentBySecret({ knockerSecret: SECRET, entry: e2.entry, audience: "group", sourceAddress: "z" })).reason,
                "SECRET_NOT_RECOGNISED");
   assert.equal(w2.count("source_consents"), 0);
 });
 
-test("R11 the rate is counted on one clock: an attempt the control plane sends no instant for is counted at this module's clock, never the wall clock, and the knock window holds across its edge (capture R31, R71)", async () => {
+test("R11 the rate is counted on one clock: an attempt the control plane sends no instant for is counted at this module's clock, never the wall clock, and the knock window holds across its edge (doorbell R2, R17)", async () => {
   const W = 10 * 60 * 1000;
   for (const offset of [-1, 0, 1, W / 2]) {
     const w = seeded();

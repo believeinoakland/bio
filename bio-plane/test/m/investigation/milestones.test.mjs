@@ -2,7 +2,7 @@
    and never a finding. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, ANN, BOB, CAT, DAN, OUT, AI, P1, P2, PH, Q1, Q2, Q3, QH } from "./fixture.mjs";
+import { world, ANN, BOB, BOSS, CAT, DAN, OUT, AI, P1, P2, PH, Q1, Q2, Q3, QH } from "./fixture.mjs";
 
 test("R1: milestoneSet, by a joined participant, waits on the project's questions and its steps; each refusal writes nothing", () => {
   const w = world();
@@ -35,6 +35,47 @@ test("R1: milestoneSet, by a joined participant, waits on the project's question
   assert.deepEqual(m.items.map((i) => [i.kind, i.ref]), [["question", Q1], ["step", s]]);
   assert.equal(m.by, "bob-h");
   assert.deepEqual(m.history.map((h) => h.act), ["set"]);
+});
+
+test("R1: a project not at FULL is answered as membership R44 says: at EXISTENCE an act or read naming the project is refused PROJECT_SEEN_NOT_A_PARTICIPANT carrying only its id and name (a hidden one's owners to an administrator), at NONE it is absent, and nothing inside it is widened", () => {
+  const w = world();
+  const ours = w.inv.milestoneSet({ project: P1, name: "Contract in hand", date: "2026-11-14", waitsOn: [Q1], by: ANN }).milestone;
+  const hidden = w.inv.milestoneSet({ project: PH, name: "Hidden date", date: "2026-11-14", waitsOn: [QH], by: CAT }).milestone;
+  assert.ok(ours && hidden);
+  const before = w.snapshot();
+  const sight = (project, viewer) => w.membership.sight(project, viewer);
+  assert.deepEqual([sight(P1, DAN), sight(PH, BOSS), sight(PH, DAN), sight(P1, BOB)], ["existence", "existence", "none", "full"], "the four sights this test drives");
+  /* every milestone act and read naming the project */
+  const byProject = (project, who) => [
+    w.inv.milestoneSet({ project, name: "n", date: "2026-11-14", waitsOn: [project === P1 ? Q1 : QH], by: who }),
+    w.inv.milestonesOf({ project, viewer: who }),
+  ];
+  /* EXISTENCE of a discoverable project: C-70.1, the id and name only */
+  for (const r of byProject(P1, DAN)) {
+    assert.deepEqual([r.ok, r.code, r.check, r.project, r.name], [false, "PROJECT_SEEN_NOT_A_PARTICIPANT", "C-70.1", P1, "Project One"]);
+    assert.deepEqual(Object.keys(r).sort(), ["check", "code", "detail", "name", "ok", "project", "reason", "translation"], "nothing else");
+    assert.equal(JSON.stringify(r).includes("Contract in hand"), false);
+  }
+  /* EXISTENCE of a hidden project, to an administrator neither invited nor joined: also its owners' handles */
+  for (const r of byProject(PH, BOSS)) {
+    assert.deepEqual([r.code, r.project, r.name, r.owners], ["PROJECT_SEEN_NOT_A_PARTICIPANT", PH, "Hidden Project", ["cat-h"]]);
+    assert.equal(JSON.stringify(r).includes("Hidden date"), false);
+  }
+  /* NONE: absent, exactly as a project that does not exist */
+  const absent = w.inv.milestonesOf({ project: "PROJ-2026-0099", viewer: DAN });
+  for (const r of byProject(PH, DAN)) assert.deepEqual({ ...r, project: null, detail: null }, { ...absent, project: null, detail: null });
+  assert.equal(absent.code, "NO_SUCH_PROJECT");
+  /* acts and reads naming something inside the project are never widened by EXISTENCE: the milestone is absent */
+  for (const [m, who] of [[ours, DAN], [hidden, BOSS], [hidden, DAN]]) {
+    for (const r of [w.inv.milestoneRevise({ milestone: m, name: "x", by: who }), w.inv.milestoneRemove({ milestone: m, reason: "r", by: who }),
+                     w.inv.milestoneItemRemove({ milestone: m, item: Q1, reason: "r", by: who }), w.inv.milestoneReminder({ milestone: m, at: "2026-11-10", by: who })])
+      assert.deepEqual([r.code, r.milestone], ["NO_SUCH_MILESTONE", m]);
+  }
+  assert.deepEqual(w.inv.milestonesOverdue({ viewer: BOSS, at: "2026-12-05T18:00:00Z" }).due, [], "no notice reaches below FULL");
+  assert.equal(w.snapshot(), before, "nothing was written");
+  /* the negative control: at FULL, a joined participant reads and acts */
+  assert.equal(w.inv.milestonesOf({ project: P1, viewer: BOB }).milestones[0].name, "Contract in hand");
+  assert.equal(w.inv.milestoneRevise({ milestone: ours, name: "Contract on file", by: BOB }).ok, true);
 });
 
 test("R1: milestoneRevise, milestoneRemove and milestoneItemRemove, each with history and a reason where one is owed", () => {
@@ -158,14 +199,14 @@ test("R4: milestones are never shared: another project drawing on the same quest
 
 test("R5: a milestone is the group's own date: never a duty, standard, clock or finding; nothing registers it as one", () => {
   const w = world();
+  const count = (t) => w.rows(`SELECT COUNT(*) AS n FROM ${t}`)[0].n;
+  const held = ["bundles", "observation_log", "inquiry_basis", "steps"].map((t) => [t, count(t)]);
   const { milestone } = w.inv.milestoneSet({ project: P1, name: "Before the board meeting", date: "2026-11-14", waitsOn: [Q1], by: ANN });
   const m = w.inv.milestonesOf({ project: P1, viewer: ANN }).milestones[0];
   const words = JSON.stringify(m);
   for (const k of ["duty", "standard", "clock", "finding", "breach", "deadline_basis", "law"]) assert.equal(words.includes(`"${k}`), false, k);
   /* it is held in this module's own tables only: no bundle, no leg, no observation, no promotion was written */
-  assert.equal(w.rows(`SELECT COUNT(*) AS n FROM bundles`)[0].n, 7, "the fixture's seven bundles, no more");
-  assert.equal(w.rows(`SELECT COUNT(*) AS n FROM observation_log`)[0].n, 0);
-  assert.equal(w.rows(`SELECT COUNT(*) AS n FROM inquiry_basis`)[0].n, 0);
+  assert.deepEqual(held.map(([t]) => [t, count(t)]), held, "setting it wrote no bundle, observation, leg or step");
   /* the negative control: it is held, here */
   assert.equal(w.rows(`SELECT COUNT(*) AS n FROM inv_milestones WHERE milestone_id = ?`, milestone)[0].n, 1);
 });

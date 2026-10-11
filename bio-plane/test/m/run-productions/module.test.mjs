@@ -66,9 +66,10 @@ test("R16: C-27.1–C-27.14, C-27.16–C-27.19 and C-104.1–C-104.31 are this m
   }
   assert.equal(Object.values(RP.SUGGEST_CHECKS).some((r) => r.check === "C-27.15"), false, "C-27.15 is basis-versions'");
   assert.ok(Object.isFrozen(RP.SUGGEST_CHECKS) && Object.isFrozen(RP.EXTRACT_PROPOSE_CHECKS));
-  /* C-104 is this module's own family: exactly thirty-one rows, numbered C-104.1 to C-104.31 (T41-24 added .13–.31). */
+  /* C-104 is this module's own family: exactly thirty-two rows, numbered C-104.1 to C-104.32 (T41-24 added .13–.31,
+     T42-18 .32, R25). */
   assert.deepEqual(Object.keys(RP.EXTRACT_PROPOSE_CHECKS).map((k) => RP.EXTRACT_PROPOSE_CHECKS[k].check),
-                   Array.from({ length: 31 }, (_, i) => `C-104.${i + 1}`));
+                   Array.from({ length: 32 }, (_, i) => `C-104.${i + 1}`));
   assert.deepEqual([...RP.EXTRACT_PROPOSE_CHECK_KEYS], Object.keys(RP.EXTRACT_PROPOSE_CHECKS));
   /* Each code's one site: the run's and the document's codes in the one helper every production asks. */
   const REGIONS = { NO_PROPOSER: "extractPropose > is-extract-run", NO_RUN: "productionRun > is-production-run",
@@ -86,7 +87,8 @@ test("R16: C-27.1–C-27.14, C-27.16–C-27.19 and C-104.1–C-104.31 are this m
     ACCEPT_FORM_UNKNOWN: "proposalAccept > is-accept", ACCEPT_NEEDS_HER_WORDS: "proposalAccept > is-accept",
     ACCEPT_AS_PROPOSED_TAKES_NO_WORDS: "proposalAccept > is-accept", PROPOSAL_ALREADY_ACCEPTED: "proposalAccept > is-accept",
     BEARING_NO_QUESTION: "bearingNote > is-bearing", BEARING_NO_CAPTURE: "bearingNote > is-bearing",
-    BEARING_NO_SENTENCES: "bearingNote > is-bearing", BEARING_NOTHING_TIED: "bearingNote > is-bearing" };
+    BEARING_NO_SENTENCES: "bearingNote > is-bearing", BEARING_NOTHING_TIED: "bearingNote > is-bearing",
+    PROPOSAL_NOT_TAKEN_UP: "machinePassage > is-machine-passage" };
   assert.deepEqual(Object.keys(RP.EXTRACT_PROPOSE_CHECKS).sort(), Object.keys(REGIONS).sort());
   for (const [k, region] of Object.entries(REGIONS)) {
     const r = RP.EXTRACT_PROPOSE_CHECKS[k];
@@ -144,6 +146,8 @@ test("R16: C-27.1–C-27.14, C-27.16–C-27.19 and C-104.1–C-104.31 are this m
   const B = (o) => see(w.p.bearingNote({ capture: w.content.captureFor(DOC), question: Q, run: "RUN-E", viewer: ALICE, caller: AK,
                                          sentences: [{ text: "It names the ordinance.", quote: "not in the text", source: PLACE }], ...o }));
   B({ question: DOC }); B({ capture: "0".repeat(64) }); B({ sentences: [] }); B({});
+  const cid = P({ refs: [{ ref: "k:7", refKind: "k", refKey: "7", source: PLACE }] }).proposed[0].content_id;
+  see(w.p.machinePassage({ legs: [{ ord: 0, target: DOC, content_id: cid }], author: BOB, viewer: BOB }));
   const mine = [...RP.SUGGEST_CHECK_KEYS, ...RP.EXTRACT_PROPOSE_CHECK_KEYS].sort();
   assert.deepEqual(mine.filter((k) => !driven.has(k)), [], "every row this module carries is driven out of it");
   for (const k of mine) {

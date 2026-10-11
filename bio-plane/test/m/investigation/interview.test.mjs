@@ -78,20 +78,25 @@ test("R12: interviewKeep, by a joined participant: each answer kept in her words
   assert.throws(() => w.st.sql.exec(`UPDATE inv_interviews SET answers_json = '[]' WHERE interview_id = ?`, a.interview), /never edited/);
 });
 
-test("R12: an interview is never evidence or a leg target: the check registered with promotion refuses it, NARRATIVE_NOT_A_LEG", () => {
+test("R12: an interview is never evidence or a leg target: the check registered with promotion refuses it, INTERVIEW_NOT_A_LEG (C-146.26), never hypotheses' NARRATIVE_NOT_A_LEG", () => {
   const w = world();
   const a = w.inv.interviewKeep({ project: P1, answers: SIX, by: ANN });
   const ordinary = w.step({ work: "An ordinary step" });
   const docFm = (target) => ({ basis: [{ target, role: "supports" }] });
   const r = w.inv.check({ docFm: docFm(a.step) });
   assert.equal(r.reason, "BASIS_REFUSED");
-  assert.deepEqual(r.findings.map((f) => [f.code, f.check, f.target]), [["NARRATIVE_NOT_A_LEG", "C-146.26", a.step]]);
+  assert.deepEqual(r.findings.map((f) => [f.code, f.check, f.target]), [["INTERVIEW_NOT_A_LEG", "C-146.26", a.step]]);
+  assert.equal(r.findings[0].translation, "An interview is a member's own account, which says where to look and is never what a finding rests on. Rest the finding on what was found in the record. Nothing was written.", "its translation kept");
+  assert.equal(INVESTIGATION_CHECKS.INTERVIEW_NOT_A_LEG.check, "C-146.26");
+  assert.equal(INVESTIGATION_CHECKS.NARRATIVE_NOT_A_LEG, undefined, "hypotheses' code (a shared note) is not minted here");
+  assert.equal(JSON.stringify(r).includes("NARRATIVE_NOT_A_LEG"), false, "the negative control: the old code is not answered");
   assert.equal(w.inv.check({ docFm: docFm(ordinary) }), null, "the negative control: an ordinary step is steps' own check's (STEP_NOT_A_LEG), not this one");
   assert.equal(w.inv.check({ docFm: docFm(Q1) }), null);
   /* through promotion itself */
   const p = w.promotion.promote({ bundleId: "INQ-2026-0010-z", base: null, snapKey: "k-z", author: ANN,
     files: [{ path: "bundle.md", text: inquiryMd("INQ-2026-0010-z", [{ target: a.step }]) }], meta: { object_type: "inquiry" } });
   assert.deepEqual([p.ok, p.reason], [false, "BASIS_REFUSED"], "refused at the write (steps' own check answers first, by module order)");
+  assert.equal(JSON.stringify(p).includes("NARRATIVE_NOT_A_LEG"), false);
   assert.equal(w.promotion.registerStep("investigation", { check: () => null }).ok, false, "this module's check is in promotion's chain");
 });
 

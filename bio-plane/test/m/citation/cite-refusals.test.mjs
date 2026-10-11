@@ -262,14 +262,25 @@ test("R1: past 1 MiB, CITATION_TOO_LARGE with how many would fit, nothing writte
   assert.equal(w.md(p), before);
 });
 
-test("R1: a refusal from the write (inquiry R11: BASIS_REFUSED, SELF_BASIS, BASIS_CYCLE) is answered unchanged, with the handle and drift", async () => {
+test("R1: a refusal from the write (inquiry R11: BASIS_REFUSED, SELF_BASIS, BASIS_CYCLE; (T42) inquiry R62's and run-productions R25's PROPOSAL_NOT_TAKEN_UP, MACHINE_PASSAGE_UNCHECKED) is answered unchanged, with the handle and drift", async () => {
   const { w, q } = await setup();
-  const refusal = { ok: false, reason: "BASIS_CYCLE", path: [q, "INQ-2026-0002", q], detail: "closes a cycle" };
+  let refusal = null;
   w.promotion.registerStep("inquiry", { check: (c) => (c.bundleId === q ? refusal : null) });
   const h = await w.select(["INFO-2026-0001"]);
-  const r = w.cit.cite({ project: q, handle: h, ...ANN, role: "supports" });
-  assert.deepEqual(r, { ...refusal, project: q, handle: h, drift: r.drift });
-  assert.equal(r.drift.kind, "enumerated");
+  for (const [reason, extra] of [["BASIS_REFUSED", { findings: [{ check: "C-2.8", detail: "d" }] }],
+                                 ["SELF_BASIS", { check: "C-33.22" }], ["BASIS_CYCLE", { path: [q, "INQ-2026-0002", q] }],
+                                 ["PROPOSAL_NOT_TAKEN_UP", { check: "C-104.32", legs: [{ ord: 0, target: "INFO-2026-0001" }] }],
+                                 ["MACHINE_PASSAGE_UNCHECKED", { check: "C-2.20" }]]) {
+    refusal = { ok: false, reason, code: reason, ...extra, detail: `refused: ${reason}` };
+    const before = w.md(q);
+    const r = w.cit.cite({ project: q, handle: h, ...ANN, role: "supports" });
+    assert.deepEqual(r, { ...refusal, project: q, handle: h, drift: r.drift }, reason);
+    assert.equal(r.drift.kind, "enumerated");
+    assert.equal(w.md(q), before, `${reason}: nothing written`);
+  }
+  /* Negative control: the write refusing nothing, the same cite lands. */
+  refusal = null;
+  assert.equal(w.cit.cite({ project: q, handle: h, ...ANN, role: "supports" }).ok, true);
 });
 
 test("R1: the refusals come in the stated order", async () => {

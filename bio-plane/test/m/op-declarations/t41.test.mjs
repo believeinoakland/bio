@@ -2,7 +2,7 @@
    DEC-188; K2373, K2435, K2457, K2484, K2486, K2496, K2525, K2529, K2554, K2560, K2561, K2569, K2570, K2574): T41's
    ops — a project's account and the one switch act (credentials), the limits and usage (ai-use), the handle (membership),
    the investigation's ops (steps, question-explorer, investigation, hypotheses, inquiry, run-productions,
-   reading-guides, leg-earning, case-authoring, review, ai-runs, actions), the upload (capture) — and the retirements.
+   reading-guides, leg-earning, case-authoring (case-account since T42, R48), review, ai-runs, actions), the upload (capture) — and the retirements.
    Each spec, row, session set, stamp and list is compared whole at the exported tables; each stamp whose owner exports a
    map is driven through that map, so a stamp named at a site the owner does not read is seen. Each comparison has a
    negative control. */
@@ -116,7 +116,7 @@ const R43 = {
   /* K2584 (J1 (1)): reading-guides' map's other five */
   guideproposetocivicsmith: BODYACT("reading-guides"), guidepropose: ["reading-guides", "runact", ["bodyBy", "principal", "viewer"]],
   guidefor: READ("reading-guides"), guide: READ("reading-guides"), guideproposals: READ("reading-guides"),
-  accountpropose: ACT("case-authoring"), accountdrafts: READ("case-authoring"),
+  accountpropose: ACT("case-account"), accountdrafts: READ("case-account"),
   approvalruleset: ["review", "admin", ["by", "viewer"]], caseapprove: ACT("review"), reviewcomments: READ("review"),
   aiestimate: READ("ai-use"), aiactual: READ("ai-use"),
   grouptestset: ACT("ai-runs"), grouptestresults: READ("ai-runs"),
@@ -238,10 +238,10 @@ test("R43 (K2496, K2561): readpages is declared as extractpropose is — its cla
   assert.notDeepEqual(plain(OPS.stepcreate), plain(OPS.extractpropose));
 });
 
-test("R43, R4, R6: each R43 op whose owner exports a map is served by it and its stamps reach the owner where it reads them — hypotheses' and reading-guides' by from the body, inquiry's, run-productions' and actions' from the query; the rest are served by the door's own map (control-plane R71: steps, question-explorer, investigation, leg-earning, case-authoring, review, ai-use's estimate and actual, ai-runs' three); milestonereminder's at is a body field, never a stamp; planPropose's machine arm is no op (N842) (negative control: a key the owner does not read does not reach)", async () => {
+test("R43, R4, R6: each R43 op whose owner exports a map is served by it and its stamps reach the owner where it reads them — hypotheses' and reading-guides' by from the body, inquiry's, run-productions' and actions' from the query; the rest are served by the door's own map (control-plane R71: steps, question-explorer, investigation, leg-earning, case-account (T42, R48), review, ai-use's estimate and actual, ai-runs' three); milestonereminder's at is a body field, never a stamp; planPropose's machine arm is no op (N842) (negative control: a key the owner does not read does not reach)", async () => {
   const MAPS = { hypotheses: hypothesesOps, inquiry: inquiryOps, "run-productions": runProductionsOps,
                  "reading-guides": readingGuidesOps, actions: actionsOps };
-  const DOOR = ["steps", "question-explorer", "investigation", "leg-earning", "case-authoring", "review"];
+  const DOOR = ["steps", "question-explorer", "investigation", "leg-earning", "case-account", "review"];
   let driven = 0;
   for (const [op, [fam, , st]] of Object.entries(R43)) {
     if (DOOR.includes(fam) || ["aiestimate", "aiactual", "stepsrunai", "grouptestset", "grouptestresults"].includes(op)) continue;

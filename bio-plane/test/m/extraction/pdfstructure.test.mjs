@@ -147,7 +147,8 @@ test("R32 R47: with ocr, before any byte is read or engine called: malformed fla
   const never = await w.x.pdfStructure({ ocr: "1", sha: "8".repeat(64), viewer: "class:admin", env: { OCR_WORKER: ocr } });
   const invisible = await w.x.pdfStructure({ ocr: "1", sha: hidden, viewer: "member:outsider", env: { OCR_WORKER: ocr } });
   assert.equal(never.body.detail, invisible.body.detail, "answered alike for one never filed");
-  assert.deepEqual(Object.keys(REEXTRACT_CHECKS).map((k) => REEXTRACT_CHECKS[k].check), ["C-51.1", "C-51.2", "C-51.3", "C-51.4", "C-51.5"]);
+  /* R47 (T42): the family's rows, C-51.7 being op=pagetranscribe's (R71; C-51.6 is R63's NO_SHA, kept apart) */
+  assert.deepEqual(Object.keys(REEXTRACT_CHECKS).map((k) => REEXTRACT_CHECKS[k].check), ["C-51.1", "C-51.2", "C-51.3", "C-51.4", "C-51.5", "C-51.7"]);
 });
 
 test("R33: with no page filled the answer's reextraction is performed false, written false, the cost, candidacy and why, and nothing is written", async () => {

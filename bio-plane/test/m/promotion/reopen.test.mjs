@@ -78,6 +78,12 @@ test("R24: reopenable from a disposition (REOPENABLE_FROM, R51) or as a case mem
   assert.equal(call(open.p).reason, "ILLEGAL_TRANSITION");
   const divided = setup("divided", { caseMember: new Set([ID]) });
   assert.equal(call(divided.p).reason, "ILLEGAL_TRANSITION");
+  /* A state named by an inherited key has no edges of its own: refused ILLEGAL_TRANSITION, never thrown (R37's kind of no). */
+  for (const key of ["toString", "constructor", "hasOwnProperty"]) {
+    const odd = setup(key, { caseMember: new Set([ID]) });
+    const x = call(odd.p);
+    assert.deepEqual([x.reason, x.from], ["ILLEGAL_TRANSITION", key], key);
+  }
 });
 
 test("R25: reopening is a new promotion over the head: state history, Session Log, prior/current state, cleared disposition and edition, carried files", () => {

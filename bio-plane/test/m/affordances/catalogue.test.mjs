@@ -530,17 +530,25 @@ test("R27 R32 R34 R35 R37: no op is graded `undetermined` that the rulings moved
     "translationdraft", "translationmark",
     /* op-grades R30 (T41): the ops it grades `undetermined` on R27's rule (t41.mjs), pinned by name */
     ...T41_UNDETERMINED,
+    /* op-grades R31 (T42; N832, K2613): a page's transcription, run as `pdfstructure` is, asking no reason (its R31) */
+    "pagetranscribe",
     ...Object.keys(OP_ALIASES).filter((a) => RUNG_ABSENT[OP_ALIASES[a]]?.ground === "undetermined")];
   const undetermined = undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op));
   for (const op of LATER) assert.equal(RUNG_ABSENT[op]?.ground, "undetermined", op);
   assert.deepEqual(undetermined, [...R27_LEFT].sort());
   assert.equal(undetermined.length, 21, "R27's count: DEC-88 moved 57 of the 78 into RUNGS");
   assert.equal(undeterminedOf(RUNG_ABSENT).length, LATER.length + 21,
-    "R27's count: 21, with R32's, R34's, R35's and R37's, and R40's, R45's, T36's, T37's and T41's beside them");
+    "R27's count: 21, with R32's, R34's, R35's and R37's, and R40's, R45's, T36's, T37's, T41's and T42's beside them");
   assert.deepEqual(undeterminedOf(T36_RUNG_ABSENT), ["deepercheck", "safecopyrequest"]);
   assert.deepEqual(undeterminedOf(T37_RUNG_ABSENT), ["translationdraft", "translationmark"]);
   assert.deepEqual(undeterminedOf(T41_RUNG_ABSENT), [...T41_UNDETERMINED].sort());
   assert.equal(Object.hasOwn(RUNG_ABSENT, "obscuremark"), false, "obscuremark is graded since T38 (op-grades R28)");
+  /* op-grades R31 (T42): pagetranscribe is `undetermined`, never ranked; left out of the pinned list, it is seen among
+     the rest (negative control) */
+  assert.equal(RUNG_ABSENT.pagetranscribe?.ground, "undetermined");
+  assert.equal(Object.hasOwn(RUNGS, "pagetranscribe"), false);
+  assert.deepEqual(undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op) || op === "pagetranscribe")
+    .filter((op) => !R27_LEFT.includes(op)), ["pagetranscribe"]);
   /* negative control: one of T37's two left out of the pinned list is seen among the rest */
   assert.deepEqual(undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op) || op === "translationmark")
     .filter((op) => !R27_LEFT.includes(op)), ["translationmark"]);
@@ -808,6 +816,8 @@ test("R19: the justification family holds the codes N345's reasoned acts refuse 
    which holds no account and so has no `NEEDS` row, as `knock` has none. */
 import { sourcesOps } from "../../../src/sources/index.mjs";
 import { captureOps } from "../../../src/capture/index.mjs";
+/* T42 (N826; K2656): the doorbell's routes are `doorbell`'s map (its R3, R13, R15, R18, R19), capture's copy deleted in T43 */
+import { doorbellOps } from "../../../src/doorbell/index.mjs";
 import { caseAuthoringOps } from "../../../src/case-authoring/index.mjs";
 const N364_RUNGS = { sourcedisclose: "reasoned", sourcelink: "reasoned", sourceconsent: "reasoned",
   sourceconsentwithdraw: "reversible", reattest: "attested", captureaccount: "attested" };
@@ -824,9 +834,9 @@ test("R2 R3 R7 R12: N364's ops each carry their rung or stated absence and their
   assert.deepEqual(Object.keys(sourcesOps({}, url, {})).filter((op) => !T33_OPS.has(op)).sort(), ["knockerconsent",
     "sourceconsent", "sourceconsentwithdraw", "sourcedisclose", "sourcelink", "sourceof", "sourcepublishable",
     "sourcereadlog", "sourcerung"]);
-  const cap = Object.keys(captureOps({}, url, {}, {}));
-  for (const op of ["inboxpull", "knocksof", "pulledknocks", "reattest", "lateattestations", "captureaccount", "captureaccounts"])
-    assert.ok(cap.includes(op), op);
+  const cap = Object.keys(captureOps({}, url, {}, {})), door = Object.keys(doorbellOps({}, url, {}));
+  for (const op of ["reattest", "lateattestations", "captureaccount", "captureaccounts"]) assert.ok(cap.includes(op), op);
+  for (const op of ["inboxpull", "knocksof", "pulledknocks"]) assert.ok(door.includes(op), op);
   assert.ok(Object.keys(caseAuthoringOps({}, url, {})).includes("publishpreflight"));
   for (const [op, r] of Object.entries(N364_RUNGS)) { assert.equal(RUNGS[op], r, op); assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op); }
   for (const [op, g] of Object.entries(N364_ABSENT)) {
@@ -858,7 +868,7 @@ test("R7: NON_ACTS.ratify says its pre-flight is op=publishpreflight (case-autho
   assert.match(NON_ACTS.inboxresolve, /`pulled` arm is the pull/);
   assert.match(NON_ACTS.inboxresolve, /op=inboxpull/);
   assert.match(NON_ACTS.inboxresolve, /reason on every arm/);
-  assert.equal(RUNGS.inboxresolve, "reasoned", "DEC-88; capture R32");
+  assert.equal(RUNGS.inboxresolve, "reasoned", "DEC-88; doorbell R3 (was capture R32)");
 });
 
 test("R3: the signer pair and knockerconsent are graded `credential`, as signeradd and knock; inboxpull `undetermined` "
@@ -1023,10 +1033,11 @@ test("R2 R3 R7 R12: T22's new ops — declinetoescalate, heldsetaside, heldresto
    + "plane's rows for them nothing is unaccounted", () => {
   const url = new URL("http://x/");
   const esc = Object.keys(escalationOps({}, url, {})), cap = Object.keys(captureOps({}, url, {}, {})),
-        mon = Object.keys(monitoringOps({}, url, {}));
+        mon = Object.keys(monitoringOps({}, url, {})), door = Object.keys(doorbellOps({}, url, {}));
   for (const op of ["declinetoescalate", "escalationstatus"]) assert.ok(esc.includes(op), op);
-  for (const op of ["heldsetaside", "heldrestore", "heldcaptures", "gradenote", "doorbelltally", "doorbellrefused"])
-    assert.ok(cap.includes(op), op);
+  for (const op of ["heldsetaside", "heldrestore", "heldcaptures", "gradenote"]) assert.ok(cap.includes(op), op);
+  /* T42 (N826): the tally and the Worker's refused count are the doorbell's (its R19) */
+  for (const op of ["doorbelltally", "doorbellrefused"]) assert.ok(door.includes(op), op);
   assert.ok(mon.includes("addressfrequencyset"));
   const named = (op) => Object.hasOwn(NON_ACTS, op) || Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op)
     || [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op);
@@ -1168,6 +1179,8 @@ import * as contentChecks from "../../../src/content/checks.mjs";
 import * as obsChecks from "../../../src/observation-log/checks.mjs";
 import * as entitiesChecks from "../../../src/entities/checks.mjs";
 import * as captureChecks from "../../../src/capture/checks.mjs";
+/* T42 (N826): RESOLVE_NO_REASON (C-118.7) is the doorbell's row (its R3, R21), the very object capture's table holds until T43 */
+import * as doorbellChecks from "../../../src/doorbell/checks.mjs";
 import * as monitoringChecks from "../../../src/monitoring/checks.mjs";
 import * as biasChecks from "../../../src/bias/checks.mjs";
 /* K1643: ATTRIBUTION_NO_REASON's row is case-tensions' (its R9), the split's copy from publication. */
@@ -1185,7 +1198,7 @@ test("R19: the justification family holds DEC-88's and T22's codes, each a row i
   const OWNERS = {
     TESTIMONY_NO_WORDS: provenanceChecks, TRANSCRIBE_NO_TEXT: contentChecks, ATTEST_NO_NOTE: contentChecks,
     LEAD_NO_WORDS: obsChecks, LEAD_LOOK_NO_DETAIL: obsChecks, LEAD_SHARE_NO_REASON: obsChecks,
-    ENTITY_NO_NOTE: entitiesChecks, NO_BASIS: { SHARED_ACT_CHECKS }, RESOLVE_NO_REASON: captureChecks,
+    ENTITY_NO_NOTE: entitiesChecks, NO_BASIS: { SHARED_ACT_CHECKS }, RESOLVE_NO_REASON: doorbellChecks,
     SET_ASIDE_NO_REASON: captureChecks, FREQUENCY_NO_REASON: monitoringChecks, BIAS_ADOPTION_NO_REASON: biasChecks,
     ATTRIBUTION_NO_REASON: caseTensionsChecks, BAR_NO_REASON: strengthChecks, PURSUIT_UNSTATED: intentChecks,
     NO_NOTE: intentChecks, INTENT_NO_REASON: intentChecks, STANDARD_NO_REASON: standardsChecks,

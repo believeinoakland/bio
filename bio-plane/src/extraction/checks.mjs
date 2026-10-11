@@ -68,6 +68,18 @@ export const REEXTRACT_CHECKS = {
       + 'read when it is filed into the record, so file it first; re-reading replaces a reading '
       + 'that already exists.',
   },
+  /* R71, R47 (T42; N832, K2611, K2613): `op=pagetranscribe` asked while the AI's part `transcribe` cannot be
+     switched on (no transcriber registered, R72, or its `deployable()`, run-rules R19's test bar, not exactly true).
+     Refused by name, as C-51.4 refuses an absent tier, before any account or content is read, so it names nothing
+     about any account. The number follows C-51.6, which is R63's `NO_SHA`. BOB's draft words, the design stream's
+     to replace. */
+  TRANSCRIBE_NOT_DEPLOYED: {
+    check: 'C-51.7',
+    where: 'src/extraction/index.mjs pageTranscribe > is-transcribe',
+    translation: 'Nothing was read or sent, because reading picture pages with the assistant is not switched on for '
+      + 'your group\'s Civicsmith yet: each part of the assistant is switched on only after it passes Civicsmith\'s '
+      + 'test investigations.',
+  },
 };
 
 /* DEC-49's reader, `driveRow`'s shape: the row of a C-51 code, and a throw for a code with no canned sentence
@@ -83,8 +95,8 @@ export const reextractRow = (code) => {
 /* R63 (N285, K275, K343): "a request names no capture digest" is one condition, so its code is minted at one site,
    `noSha` below, which this module's R27 and `content`'s R44, `entities`' R11, R12 and R14 and `progressions`' R19
    answer through. Its row is this module's, the next of its C-51 family (K107 (3)); the translation is the one
-   progressions' C-100.19 carried, which gives way to it. Kept apart from the re-read's `REEXTRACT_CHECKS`, whose five
-   rows are that act's. */
+   progressions' C-100.19 carried, which gives way to it. Kept apart from `REEXTRACT_CHECKS`, whose rows are the
+   re-read's five and `op=pagetranscribe`'s C-51.7 (R71). */
 export const EXTRACTION_CHECKS = Object.freeze({
   NO_SHA: Object.freeze({
     check: 'C-51.6',

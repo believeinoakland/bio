@@ -209,7 +209,7 @@ async function signing({ withActions }) {
   const body = { caseId: CASE, edition: 1, docSha, sigArmored: sig, attestorKey: key.keyB64, attestorMember: "alice",
                  gateVersion: "g1", deliveredBy: "member:alice", at };
   const a = withActions ? actions.actionsOf(w.host, { record: w.record, membership: w.membership, promotion: w.promotion,
-    ratification: w.r, retrieval: null, conformance: {}, capture: null, events: null, duties: null,
+    ratification: w.r, retrieval: null, conformance: {}, doorbell: null, events: null, duties: null,
     content: { captureFor: () => null }, now: () => Date.parse("2026-10-06T12:00:00Z") }) : null;
   const entry = (checked) => ({ case: CASE, edition: 1, doc_sha: docSha, signature: sig, signer: "alice",
     delivered_by: "member:alice", at: { ...at, zone: "America/Halifax" }, publish_at: "2026-10-09T12:30:00.000Z",

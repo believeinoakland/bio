@@ -389,13 +389,17 @@ const withLoopNote = (note, loop) => {
    thing: the stored CHAIN says which pages a tier-3 part produced and under which build (its `pixels`/`ocr` steps,
    grouped by part); the record's whole per-page UNITS hold the words. A page is kept only when both speak for it:
    a unit with a glyph on a page exactly one tier-3 part covers. Each kept part carries its own chain (the stored
-   steps without their stamped extent), so its pages stay under the build that read them. */
+   steps without their stamped extent), so its pages stay under the build that read them.
+   R30 (T42; N832, K2611): a part the AI transcribed (`pixels -> ai_transcription`, R29) is seeded by the same rule,
+   under its own chain, so a re-read keeps the AI's pages and never asks the OCR member or the AI for them again. */
+const TRANSCRIBED = ["ocr", "ai_transcription"];
+const SEEDED_STEPS = ["pixels", ...TRANSCRIBED];
 export function tier3SeedFrom(reading, units) {
   const chain = reading && Array.isArray(reading.text_source) ? reading.text_source : null;
   if (!chain || checkChain(chain) || !Array.isArray(units) || !units.length) return null;
   const groups = new Map();
   for (const step of chain) {
-    if (step.step !== "pixels" && step.step !== "ocr") continue;
+    if (!SEEDED_STEPS.includes(step.step)) continue;
     const key = JSON.stringify(step.extent ?? null);
     if (!groups.has(key)) groups.set(key, { extent: step.extent ?? null, chain: [] });
     const { extent, ...bare } = step;
@@ -403,8 +407,8 @@ export function tier3SeedFrom(reading, units) {
   }
   const parts = [];
   for (const g of groups.values()) {
-    if (!g.chain.some((x) => x.step === "ocr") || checkChain(g.chain)) continue;
-    if (g.extent == null && chain.some((x) => x.step !== "pixels" && x.step !== "ocr")) continue;
+    if (!g.chain.some((x) => TRANSCRIBED.includes(x.step)) || checkChain(g.chain)) continue;
+    if (g.extent == null && chain.some((x) => !SEEDED_STEPS.includes(x.step))) continue;
     parts.push({ chain: g.chain, covers: (p) => stepCovers({ step: "ocr", extent: g.extent ?? undefined }, p) });
   }
   const text = new Map(), pagesOf = parts.map(() => []);
@@ -504,18 +508,80 @@ export async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier
     const baseText = i2text;
     const kept = seed ? wantPages.filter((p) => seed.text.has(p)) : [];
     const askPages = wantPages.filter((p) => !kept.includes(p));
+    /* The merge and the chain, one rule for the member's answer and for the kept pages alone: `answer` is the I2 text
+       merged (the kept pages added), `fresh` the chain of the pages read now (null when none were). */
+    const compose = (answer, freshChain) => {
+      const m = mergeTier3Text(baseText, answer, wantPages, { kept });
+      if (!m.ok) return m;
+      i2text = m.text;
+      const appendedTo = Array.isArray(m.appended) ? m.appended : [];
+      /* The pages that kept their own text, from the TEXT: a page with no glyph is in no part (D-514), an
+         appended page is in the layer part and the engine's (D-635). */
+      const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : [])
+        .filter((p) => p && Number.isInteger(p.page)
+                    && (!m.filled.includes(p.page) || appendedTo.includes(p.page))
+                    && typeof p.text === "string" && glyphCount(p.text) > 0)
+        .map((p) => p.page);
+      const parts = [];
+      /*__REC102_TIER3_LAYER_PARTS_START__*/
+      /* REC-102 / D-372: the layer part is partitioned by the tier-2 merge's own per-page statement; a page
+         it does not speak for goes to the part at the document's own tier, never guessed into one. With
+         no partition this is the one part at `baseTier` it always was. */
+      const layerSet = new Set(layerPages);
+      const spokenFor = tier2PerPage
+        ? [[1, (tier2PerPage.tier1 || []).filter((p) => layerSet.has(p))],
+           [2, (tier2PerPage.tier2 || []).filter((p) => layerSet.has(p))]]
+        : [];
+      const spoken = new Set(spokenFor.flatMap(([, ps]) => ps));
+      for (const [tier, ps] of spokenFor)
+        if (ps.length) parts.push({ pages: ps, chain: layerChainFor(baseText, { tier, container: fmt }) });
+      const unspoken = layerPages.filter((p) => !spoken.has(p));
+      if (unspoken.length)
+        parts.push({ pages: unspoken, chain: layerChainFor(baseText, { tier: baseTier, container: fmt }) });
+      /*__REC102_TIER3_LAYER_PARTS_END__*/
+      /* D-616: the kept pages under the chain of the build that read them (R30: the AI's under its own), the pages
+         read now under this build's; one part when the two chains are the same. */
+      const keptIn = m.filled.filter((p) => kept.includes(p));
+      const fresh = m.filled.filter((p) => !kept.includes(p));
+      const t3parts = [];
+      for (const pt of [...(seed ? seed.parts : []).map((x) => ({ chain: x.chain,
+                           pages: x.pages.filter((p) => keptIn.includes(p)) })),
+                        ...(freshChain ? [{ chain: freshChain, pages: fresh }] : [])]) {
+        if (!pt.pages.length) continue;
+        const same = t3parts.find((q) => JSON.stringify(q.chain) === JSON.stringify(pt.chain));
+        if (same) same.pages = [...same.pages, ...pt.pages].sort((a, b) => a - b);
+        else t3parts.push({ chain: pt.chain, pages: [...pt.pages] });
+      }
+      parts.push(...t3parts);
+      /* One part gives its chain back unscoped; two give the scoped chain, its cap undetermined. A refusal
+         from the chain builder records no chain. */
+      const merged = mergedChain(parts);
+      chain = Array.isArray(merged) ? merged : null; chainSet = true;
+      /* R30: a kept page the AI read keeps the reading at the AI's tier (R29's 4). */
+      if (m.filled.length)
+        wiredTier = t3parts.some((pt) => pt.chain.some((s) => s.step === "ai_transcription")) ? 4 : 3;
+      filled = fresh; seeded = keptIn; unanswered = m.unanswered || [];
+      return { ...m, layerPages, appendedTo };
+    };
+    /* R30 (D-616): the kept pages alone, when the member is not asked for them or could not add to them; never
+       dropped because the member was absent, failed or had nothing left to read. */
+    const keepSeeded = () => (kept.length ? compose(withKeptPages(null, kept, seed), null) : { ok: false });
+    const keptSaid = () => `${seeded.length} of them were transcribed by an earlier reading of this capture and kept, `
+                         + `not asked for again`;
     if (env && env.OCR_WORKER && kept.length && !askPages.length) {
-      seeded = kept;
+      const k = keepSeeded();
+      if (!k.ok) seeded = kept;
       ocrNote = `every page of this document without a text layer (${kept.length}) was already transcribed `
               + `by an earlier reading of this capture, so the OCR member was not asked again`;
     } else if (env && env.OCR_WORKER) {
+      let failure = null;
       try {
         const asked = await askMemberPerPage(env, { sha, storeName, wantPages: askPages });
         loop = asked.loop || null;
         /* The status is read before the body: a 500's body may not parse, and "could not be reached" is a
            different finding from "answered an error". */
         if (!(asked.status >= 200 && asked.status < 300)) {
-          ocrNote = `the OCR member answered ${asked.status}, so this document stays unread`;
+          failure = `the OCR member answered ${asked.status}, so this document stays unread`;
         } else {
           const ocrAnswer = asked.answer;
           let calRef = null;
@@ -528,66 +594,29 @@ export async function tier3Extend(env, { sha, storeName, i2text, wiredTier, tier
           } catch { calRef = null; }
           const built = ocrTextFromMember(ocrAnswer, { calibration: calRef });
           if (built.ok) {
-            engine = { engine: String(ocrAnswer.engine), version: String(ocrAnswer.version), calibration: calRef };
-            const m = mergeTier3Text(baseText, withKeptPages(built.text, kept, seed), wantPages, { kept });
-            if (!m.ok) ocrNote = withLoopNote(m.why, loop);
+            const m = compose(withKeptPages(built.text, kept, seed), built.chain);
+            if (!m.ok) failure = withLoopNote(m.why, loop);
             else {
-              i2text = m.text;
-              const appendedTo = Array.isArray(m.appended) ? m.appended : [];
-              /* The pages that kept their own text, from the TEXT: a page with no glyph is in no part (D-514), an
-                 appended page is in the layer part and the engine's (D-635). */
-              const layerPages = (Array.isArray(m.text.pages) ? m.text.pages : [])
-                .filter((p) => p && Number.isInteger(p.page)
-                            && (!m.filled.includes(p.page) || appendedTo.includes(p.page))
-                            && typeof p.text === "string" && glyphCount(p.text) > 0)
-                .map((p) => p.page);
-              const parts = [];
-              /*__REC102_TIER3_LAYER_PARTS_START__*/
-              /* REC-102 / D-372: the layer part is partitioned by the tier-2 merge's own per-page statement; a page
-                 it does not speak for goes to the part at the document's own tier, never guessed into one. With
-                 no partition this is the one part at `baseTier` it always was. */
-              const layerSet = new Set(layerPages);
-              const spokenFor = tier2PerPage
-                ? [[1, (tier2PerPage.tier1 || []).filter((p) => layerSet.has(p))],
-                   [2, (tier2PerPage.tier2 || []).filter((p) => layerSet.has(p))]]
-                : [];
-              const spoken = new Set(spokenFor.flatMap(([, ps]) => ps));
-              for (const [tier, ps] of spokenFor)
-                if (ps.length) parts.push({ pages: ps, chain: layerChainFor(baseText, { tier, container: fmt }) });
-              const unspoken = layerPages.filter((p) => !spoken.has(p));
-              if (unspoken.length)
-                parts.push({ pages: unspoken, chain: layerChainFor(baseText, { tier: baseTier, container: fmt }) });
-              /*__REC102_TIER3_LAYER_PARTS_END__*/
-              /* D-616: the kept pages under the chain of the build that read them, the pages read now under this
-                 build's; one part when the two chains are the same. */
-              const keptIn = m.filled.filter((p) => kept.includes(p));
-              const fresh = m.filled.filter((p) => !kept.includes(p));
-              const t3parts = [];
-              for (const pt of [...(seed ? seed.parts : []).map((x) => ({ chain: x.chain,
-                                   pages: x.pages.filter((p) => keptIn.includes(p)) })),
-                                { chain: built.chain, pages: fresh }]) {
-                if (!pt.pages.length) continue;
-                const same = t3parts.find((q) => JSON.stringify(q.chain) === JSON.stringify(pt.chain));
-                if (same) same.pages = [...same.pages, ...pt.pages].sort((a, b) => a - b);
-                else t3parts.push({ chain: pt.chain, pages: [...pt.pages] });
-              }
-              parts.push(...t3parts);
-              /* One part gives its chain back unscoped; two give the scoped chain, its cap undetermined. A refusal
-                 from the chain builder records no chain. */
-              const merged = mergedChain(parts);
-              chain = Array.isArray(merged) ? merged : null; chainSet = true;
-              if (m.filled.length) wiredTier = 3;
-              filled = fresh; seeded = keptIn; unanswered = m.unanswered || [];
-              ocrNote = withLoopNote(tier3Note(m, built.note, layerPages.filter((p) => !appendedTo.includes(p))), loop);
-              if (keptIn.length)
-                ocrNote = `${ocrNote}; ${keptIn.length} of them were transcribed by an earlier reading of this `
-                        + `capture and kept, not asked for again`;
+              engine = { engine: String(ocrAnswer.engine), version: String(ocrAnswer.version), calibration: calRef };
+              ocrNote = withLoopNote(tier3Note(m, built.note, m.layerPages.filter((p) => !m.appendedTo.includes(p))), loop);
+              if (seeded.length) ocrNote = `${ocrNote}; ${keptSaid()}`;
             }
-          } else ocrNote = withLoopNote(built.why, loop);
+          } else failure = withLoopNote(built.why, loop);
         }
       } catch {
-        ocrNote = "the OCR member could not be reached, so this document stays unread";
+        failure = "the OCR member could not be reached, so this document stays unread";
       }
+      if (failure !== null) {
+        ocrNote = failure;
+        if (keepSeeded().ok && seeded.length) ocrNote = `${ocrNote}; ${keptSaid()}`;
+      }
+    } else if (keepSeeded().ok && seeded.length) {
+      /* R30: no member is bound, and the pages an earlier reading transcribed are kept all the same. */
+      const rest = unanswered.length;
+      ocrNote = `${seeded.length} page(s) of this document without a text layer were transcribed by an earlier reading `
+              + `of this capture and kept`
+              + (rest ? `; the other ${rest} have no text layer to read and no OCR engine is installed in your group's `
+                      + `Civicsmith, so nothing is claimed about what they say` : "");
     } else {
       /* DEC-149 (T35-24): member-facing, so it names the group's Civicsmith, never "this instance". */
       ocrNote = "this document has no text layer to read and no OCR engine is installed "
@@ -696,8 +725,10 @@ export async function tier4Extend(transcription, { sha, storeName, i2text, chain
                                                             ...(project != null ? { project } : {}) } });
   } catch { return not("the account that would pay for it could not be checked"); }
   if (!(account && account.ok === true)) return not(refusalSays(account));
+  /* N835 (ai-use R1): the paying owner is spelled from the bare member id, whether `member` was handed bare or
+     stamped `member:<id>`; `member:member:<id>` is no owner ai-use can judge. */
   const owner = account.level === "project" ? `project:${account.project}`
-    : account.level === "group" ? "group" : `member:${member}`;
+    : account.level === "group" ? "group" : `member:${member.startsWith("member:") ? member.slice(7) : member}`;
   if (typeof useCheck !== "function") return not("the limits of the account that would pay for it could not be checked");
   const at = typeof transcription.at === "string" && transcription.at ? transcription.at : new Date().toISOString();
   try {

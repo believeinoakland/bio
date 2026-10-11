@@ -3,7 +3,7 @@
  * (DEC-78 item 5: a dated, attributed history, never one overwritten field). Every table is declared to record-core's
  * purge as exempt (R13), each with its classes (R19): a source's history outlives any purge of the record. A value is held only in
  * `source_entries.value`, read only by the members `source_sight` lists (R5). The knocker secret is never held; only
- * the digest and pseudonym capture answers (capture R66). */
+ * the digest and pseudonym the doorbell answers (doorbell R14). */
 
 export const SOURCES_SCHEMA = `
 -- R1: one row per source: one per pseudonym (knocker_digest and pseudonym set), one per knock sent without a secret

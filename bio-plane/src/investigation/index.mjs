@@ -66,6 +66,8 @@ export const NAME_MAX = 200, REASON_MAX = 2000, REPORT_MAX = 20000, ANSWER_MAX =
 /** The plane's own viewer, which sees every record: R17's quiet is judged the same for every reader. */
 export const PLANE_VIEWER = "class:daemon";
 const STEP_CLOSED = Object.freeze(["ended", "set_aside"]);
+/** R18 (N846): the most captures `watchedProjects` carries for one project; past it the project's watch is unread. */
+export const WATCH_CAPTURES_MAX = 100000;
 const QUESTION_PAGE = 500, QUESTIONS_MAX = 2000, STEP_PAGE = 1000, STEPS_MAX = 5000;
 
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -967,13 +969,14 @@ export class Investigation {
 
   /** R20: `planAccept({proposal, form, text?, reason?, by})`: the member's one accepting act (record-grammar R52): a
    *  question by her own promotion, a step by `steps` R1 in her name; `own_instead` sets the proposal aside for her own
-   *  words. Nothing becomes a question or step without it. */
+   *  words. Nothing becomes a question or step without it. R23: a proposal absent or unseen is refused with this
+   *  module's own `NO_SUCH_PLANNING_PROPOSAL` (C-146.21), never intent's `NO_SUCH_PROPOSAL`. */
   planAccept({ proposal = null, form = null, text = null, reason = null, by = null } = {}) {
     const p = Number.isSafeInteger(Number(proposal)) && proposal !== null && proposal !== ""
       ? this.#one(`SELECT * FROM inv_plan_proposals WHERE proposal_id = ?`, Number(proposal)) : null;
     const a = this.#actor(by);
     if (a && a.machine) return refuse("INVESTIGATION_MEMBER_ONLY", "accepting a proposal is a member's act");
-    if (!p || !a || this.#projectSeen(p.project_id, a.viewer)) return refuse("NO_SUCH_PROPOSAL", "no proposal by that number is held that you can see", { proposal: proposal ?? null });
+    if (!p || !a || this.#projectSeen(p.project_id, a.viewer)) return refuse("NO_SUCH_PLANNING_PROPOSAL", "no planning proposal by that number is held that you can see", { proposal: proposal ?? null });
     const g = this.#memberGate(p.project_id, by, "planAccept");
     if (g.refusal) return g.refusal;
     if (p.status !== "proposed") return refuse("PLAN_DECIDED", `this proposal was ${p.status === "accepted" ? "taken up" : "set aside"}`, { proposal: Number(p.proposal_id) });
@@ -1118,17 +1121,43 @@ export class Investigation {
     });
   }
 
-  /** R18: `watchedProjects()` (in-process, for `monitoring`): each project a member chose to watch, with what `intent`
-   *  R7 says to watch. */
+  /** R18: `watchedProjects()` (in-process, for `monitoring`): each project a member chose to watch, with every source
+   *  `intent` R7 names for it, its `cursor` followed to the end (T42, N846). A project whose sources cannot be read
+   *  whole answers `watch: null` with `watch_unread` naming why, never a partial set as whole. */
   watchedProjects() {
     const out = [];
     for (const r of this.#rows(`SELECT project_id, MAX(at) AS at FROM inv_quiet_acts WHERE act = 'watch' GROUP BY project_id ORDER BY project_id`)) {
       if (!this.#watched(r.project_id)) continue;
-      let watch = null;
-      try { watch = this.#intent.watchSet({ project: r.project_id }); } catch { watch = null; }
-      out.push({ project: r.project_id, since: r.at, watch });
+      const w = this.#watchSetWhole(r.project_id);
+      out.push({ project: r.project_id, since: r.at, watch: w.watch, ...(w.unread ? { watch_unread: w.unread } : {}) });
     }
     return { ok: true, projects: out };
+  }
+
+  /* R18 (N846): intent R7's `watchSet` for `project`, every page: `{watch}` with its captures whole and `cursor` null, or
+     `{watch: null, unread}`. Its entities and progressions are the same on every page; a page that repeats its cursor,
+     an answer not of R7's shape, a measure intent says it cut (`measure_truncated`) or more than WATCH_CAPTURES_MAX
+     captures cannot be read whole. */
+  #watchSetWhole(project) {
+    const intent = this.#intent;
+    if (!intent || typeof intent.watchSet !== "function") return { watch: null, unread: "no intent module is present to name the sources" };
+    let first = null, after = null;
+    const captures = [];
+    try {
+      for (let page = 1; ; page++) {
+        const r = intent.watchSet({ project, after });
+        if (!isObj(r) || !Array.isArray(r.captures) || !Array.isArray(r.entities) || !Array.isArray(r.progressions))
+          return { watch: null, unread: `intent's watch set, page ${page}, could not be read` };
+        if (r.measure_truncated === true) return { watch: null, unread: "intent cut the condition's measure, so its entities are not whole" };
+        first = first ?? r;
+        captures.push(...r.captures);
+        if (captures.length > WATCH_CAPTURES_MAX) return { watch: null, unread: `more than ${WATCH_CAPTURES_MAX} captures are watched` };
+        if (r.truncated !== true && !filled(r.cursor)) break;
+        if (!filled(r.cursor) || r.cursor === after) return { watch: null, unread: `intent's watch set, page ${page}, names no next page` };
+        after = r.cursor;
+      }
+    } catch (e) { return { watch: null, unread: `intent's watch set could not be read: ${String((e && e.message) || e).slice(0, 160)}` }; }
+    return { watch: { entities: first.entities, progressions: first.progressions, captures, truncated: false, cursor: null } };
   }
 
   /* R18: whether a member's latest door on the project is to watch it. */
@@ -1140,7 +1169,8 @@ export class Investigation {
   /** R18 (K2524): `watchArrival({project, source, at})`, for `monitoring` only: a source a watched project keeps
    *  watching brought something new. The project's work reads reopened (no longer quiet, so a later quiet spell
    *  prompts again), and the arrival is answered with the project's reads. A project not watched is refused, writing
-   *  nothing. */
+   *  nothing. (T42, N846) Once the arrival is written it never throws: each read is taken after the write, one that
+   *  fails answered `{unread}` in its place; a refusal, or a failure before the write, records nothing. */
   watchArrival({ project = null, source = null, at = null } = {}) {
     const src = typeof source === "string" ? source.trim() : isObj(source) ? json(source) : "";
     if (!src || chars(src) > REASON_MAX || !filled(at) || !ISO.test(at)) return refuse("ARRIVAL_BAD", "an arrival is {project, source, at: an ISO instant}");
@@ -1154,9 +1184,19 @@ export class Investigation {
       return { ok: true };
     });
     if (!done || done.ok !== true) return done;
+    /* R18 (T42, N846): the arrival is written; from here nothing throws. Each read is taken after the write, and a read
+       that fails is answered `{unread}` in its place: one that throws, or one that refuses the plane's own viewer, who
+       sees every record of a project that exists (`milestonesOf` answers a failed read as absent). */
+    const read = (fn) => {
+      try {
+        const x = fn();
+        return isObj(x) && x.ok === false ? { unread: String(x.detail || x.reason || "the read was refused").slice(0, 160) } : x;
+      } catch (e) { return { unread: String((e && e.message) || e || "the read failed").slice(0, 160) }; }
+    };
     return { ok: true, project, arrival: { source: src, at }, reopened: true,
-             reads: { quiet: this.quietState({ project, viewer: PLANE_VIEWER }), standing: this.projectStanding({ project, viewer: PLANE_VIEWER }),
-                      milestones: this.milestonesOf({ project, viewer: PLANE_VIEWER }) } };
+             reads: { quiet: read(() => this.quietState({ project, viewer: PLANE_VIEWER })),
+                      standing: read(() => this.projectStanding({ project, viewer: PLANE_VIEWER })),
+                      milestones: read(() => this.milestonesOf({ project, viewer: PLANE_VIEWER })) } };
   }
 
   /** R18: `projectCloseWithGaps({project, reason, note?, by})`: the project closes with `closed_reason` `reason`
@@ -1248,7 +1288,8 @@ export class Investigation {
 
   /* ---- registered with promotion (R12) ---- */
 
-  /** R12 (promotion R39): no leg's target is an interview, refused inside `BASIS_REFUSED` as `NARRATIVE_NOT_A_LEG`. */
+  /** R12 (promotion R39): no leg's target is an interview, refused inside `BASIS_REFUSED` as `INTERVIEW_NOT_A_LEG`
+   *  (T42, N843: hypotheses' `NARRATIVE_NOT_A_LEG` names a shared note). */
   check(c) {
     if (!isObj(c) || !isObj(c.docFm) || !Array.isArray(c.docFm.basis)) return null;
     const findings = [];
@@ -1256,8 +1297,8 @@ export class Investigation {
       const target = isObj(leg) && typeof leg.target === "string" ? leg.target.trim() : null;
       if (!target || !isStepId(target)) return;
       if (!this.#one(`SELECT 1 AS x FROM inv_interviews WHERE step_id = ? LIMIT 1`, target)) return;
-      const row = INVESTIGATION_CHECKS.NARRATIVE_NOT_A_LEG;
-      findings.push({ check: row.check, code: "NARRATIVE_NOT_A_LEG", severity: "error", translation: row.translation,
+      const row = INVESTIGATION_CHECKS.INTERVIEW_NOT_A_LEG;
+      findings.push({ check: row.check, code: "INTERVIEW_NOT_A_LEG", severity: "error", translation: row.translation,
                       detail: `basis[${ord}] rests on ${target}, an intake interview: a member's narrative is never evidence (D20)`, ord, target });
     });
     return findings.length ? { ok: false, reason: "BASIS_REFUSED", findings, detail: "a leg rests on an interview, which is narrative and never evidence. Nothing was written." } : null;

@@ -176,6 +176,9 @@ const TAKEN_BACK_BY = {
   personfact: "personfactwithdraw", interestcheckswitch: "interestcheckswitch", hypothesishold: "hypothesiswithdraw",
   patternswitch: "patternswitch", workbookbind: "workbookunbind", followbody: "unfollow", followregister: "unfollow",
   followpersonquery: "unfollow", followportal: "unfollow", unfollow: "followbody", permeetingbody: "permeetingbody",
+  /* (T42) the three t33.mjs grades `reversible` that this map did not hold, so the set is now checked whole */
+  clockpropose: "clockpropose", capturerequestplatformmark: "capturerequestplatformunmark",
+  capturerequestplatformunmark: "capturerequestplatformmark",
 };
 /* the code each reasoned op is refused with when the member's account is absent (driven in affordances' R19 tests) */
 const REASON_CODE = {
@@ -203,6 +206,8 @@ test("R13 R3: every op T33 publishes is graded — each write its rung or one gr
   for (const op of Object.keys(T33_WRITES).filter((op) => !UNGATED_WRITES.includes(op)))
     assert.ok(!isRead(op) && NON_ACTS[op].length > 20, op);
   for (const op of UNGATED_WRITES) assert.ok(!Object.hasOwn(NON_ACTS, op), op);
+  assert.deepEqual(Object.keys(T33_WRITES).filter((op) => T33_WRITES[op] === "reversible").sort(),
+    Object.keys(TAKEN_BACK_BY).sort(), "every reversible T33 op names the act that takes it back");
   for (const [op, by] of Object.entries(TAKEN_BACK_BY)) {
     assert.equal(RUNGS[op], "reversible", op);
     assert.notEqual(gradeOf(by), null, by);

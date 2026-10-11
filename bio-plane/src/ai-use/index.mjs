@@ -92,8 +92,9 @@ export class AiUse {
 
   /* ===== START: the tables (R7) ===== */
 
-  /** R1, R2, R7: this module's tables, created if absent, the pre-T40 counter and ceilings carried over once, then
-   *  declared to record-core. Idempotent; run at the first construction (`aiUseOf`). */
+  /** R1, R2, R7: this module's tables, created if absent, the pre-T40 counter and ceilings carried over once and their
+   *  old tables dropped (T42; N848), then declared to record-core. Idempotent; run at the first construction
+   *  (`aiUseOf`). */
   migrate() {
     const cols = (t) => this.#rows(`PRAGMA table_info(${t})`).map((r) => r.name);
     const before = cols("ai_usage");
@@ -120,9 +121,15 @@ export class AiUse {
 
   /** R2 (B4): today's ceilings, once: a member's own daily ceiling becomes that member's account's `overall` day limits
    *  in tokens and calls; the copy-wide ceiling the group account's `per_member` day limits. Each is recorded in the
-   *  history as set by the migration. */
+   *  history as set by the migration. (T42; N848) Once carried, `ai_ceilings` is dropped, as the pre-T40 counter is, so
+   *  a migrated store holds no table a fresh one lacks; a store whose carry already ran but which still holds the table
+   *  drops it here, at its next migration. */
   #carryCeilings() {
-    if (this.#one(`SELECT name FROM ai_use_migrations WHERE name='ceilings'`)) return;
+    if (!this.#one(`SELECT name FROM ai_use_migrations WHERE name='ceilings'`)) this.#carryCeilingsOnce();
+    this.sql.exec(`DROP TABLE IF EXISTS ai_ceilings`);
+  }
+
+  #carryCeilingsOnce() {
     const now = stampInstant("second", Date.now());
     const held = this.#rows(`SELECT name FROM sqlite_master WHERE type='table' AND name='ai_ceilings'`).length
       ? this.#rows(`SELECT holder, tokens, calls FROM ai_ceilings ORDER BY holder`) : [];
@@ -473,16 +480,14 @@ export class AiUse {
     return false;
   }
 
-  /** R3, R6, R9: the owner's `explore` value (`credentials` R55): `no`, `ask` or `yes`; `no` when no account is held or
-   *  it cannot be read (fail closed). Read through `accountUses` as the account's own owner until credentials offers a
-   *  read that takes no viewer (K2480). */
+  /** R3, R6, R9: the owner's `explore` value (`credentials` R55): `no`, `ask` or `yes`, read through
+   *  `credentials.accountUsesOf` (its R62; T42, N831), with no viewer, never through `accountUses` asked as one of the
+   *  account's owners. `held` is read, never `uses` alone: the group's answer carries its defaults with `held: false`
+   *  (K2620). `no` when the account is not held, cannot be read, or holds any other value (fail closed). */
   #exploreOf(p) {
     try {
-      const as = p.kind === "member" ? `member:${p.id}`
-        : p.kind === "project" ? this.membership.projectOwners(p.id)[0] : this.membership.activeAdmins()[0];
-      if (!as) return "no";
-      const a = this.#credentials().accountUses({ owner: p.owner, viewer: as.startsWith("member:") || as === "admin" ? as : `member:${as}` });
-      const v = a && a.ok === true && a.held && a.uses ? a.uses.explore : "no";
+      const a = this.#credentials().accountUsesOf({ owner: p.owner });
+      const v = a && a.ok === true && a.held === true && !a.unreadable && a.uses ? a.uses.explore : "no";
       return ["no", "ask", "yes"].includes(v) ? v : "no";
     } catch { return "no"; }
   }

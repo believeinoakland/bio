@@ -7,10 +7,11 @@
  * recipients saying they have read the statement before it is signed. What the case discloses about what it rests on
  * (tensions, grades and co-attestation, sources, materials, accepted work and flags, grading facts, hunch debt) is
  * judged and spelled by `case-disclosures`, which `publishCase` asks in R55's order (N529, K1333). (T41; D56, D57, D60,
- * D61, D63) It also holds the case's account: the system's drafts of it (`accountPropose`, R64), the member's own account
- * and statements judged against what they cite (case-disclosures R30) and written as case-grammar's blocks (R63), the
- * fields a case may carry and no other (R65), the reviewers' comments the publisher chooses (R66) and the approvals the
- * group's rule requires (R68).
+ * D61, D63) It writes the case's account and the reviewers' comments the publisher chose into the document (R63), holds
+ * the fields a case may carry and no other (R65), the pre-flight's account step (R67) and the approvals the group's rule
+ * requires (R68). The account's own machinery (the system's drafts of it, its shape, its judgment against what it cites,
+ * a draft's acceptance, the review comments' reader) is `case-account`'s, which `publishCase` asks in R69's order (N839,
+ * K2608); three one-line pass-throughs to it stand until T43 (N850).
  *
  * Extracted from the legacy modules (T8, layer 8; K3, K6, K57, K61, K82 (5), K94, K102): `store.mjs` (`publishCase`,
  * `#caseCitations`, `#caseDocumentText`, `#searchedForCase` with its two evidence probes, the acknowledgements
@@ -33,9 +34,10 @@
  * it has as prepared, so one project's preparation never moves another project's pin.
  *
  * REACHED as `caseAuthoringOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the
- * first call with `deps`, returned to every later caller. At creation it creates its table and declares it to
- * record-core's purge (R28, K23). It registers with nothing (map §6 item 4); `review` registers its comments' reader here
- * (`registerReviewComments`, R66; K31's pattern).
+ * first call with `deps`, returned to every later caller. At creation it creates its tables and declares them to
+ * record-core's purge (R28, K23), and creates `case-account`'s one instance on the host, so that module's tables exist
+ * and are declared at every boot (its R12; the map's doubt 4). It registers with nothing (map §6 item 4); `review`
+ * registers its comments' reader through this module's pass-through to `case-account` until T43 (its R7; N850).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership   layer 2: `readFile`, `head`, `transact`, `mintOpaqueId`, `declarePurge`; `viewerPredicate`,
  *                        `isProjectOwner`, `isJoinedParticipant`, `existenceAct`.
@@ -46,7 +48,9 @@
  *   observations         observation-log's `missingCauseAt` (R17).
  *   reevaluation         `raise` (R15).
  *   publishSchedule      `waitingEditionOf` (publish-schedule R7; R58, R59; N823).
- *   runs                 ai-runs' `runFor`, the run an account draft names (R64).
+ *   account              `case-account` (N839, K2608): the account's shape, its draft, its judgment, the review
+ *                        comments chosen and a draft's acceptance (its R4–R7), asked in R69's order: its one instance on
+ *                        this host.
  *   publication          `storeCaseDocument`, `reauthorSection`, `hasCaseStanding`, `reviewProvider` (its R21, R23),
  *                        `criteriaFor` (its R75; R61).
  *   caseTensions         `caseRelation`, `attributionStatements` (case-tensions R1, R5; T33-62).
@@ -80,16 +84,14 @@ import { caseTensionsOf } from "../case-tensions/index.mjs";
 import { ratificationOf, SUBJECT_POSITIONS, completenessFields } from "../ratification/index.mjs";
 import { networkNoticesOf } from "../network-notices/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
-         isPublicHttpsLocator, proposalLabel, lawProposalState, idPattern, acceptanceRecord, ACCEPTANCE_FORMS, ACCEPT_MUST_REAUTHOR,
-         SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
-/* R64 (D56): the run an account draft came from, read as the proposer may see it (ai-runs' `runFor`). */
-import { aiRunsOf } from "../ai-runs/index.mjs";
+         isPublicHttpsLocator, proposalLabel, idPattern } from "../record-grammar/index.mjs";
+/* R63, R69 (N839, K2608): the account's machinery is `case-account`'s, asked in R69's order. */
+import { caseAccountOf } from "../case-account/index.mjs";
 /* R56, R57 (T33): case-grammar's `calculationsLines` and `timelineLines` (its R18, R20), the one spelling of each block. */
 import { SECTIONS, calculationsLines, timelineLines, materialsOf, passagesOf } from "../case-grammar/index.mjs";
-/* R63, R66, R68 (T41; D56, D60, D61): case-grammar's account, review-comment and approval blocks (its R23, R25, R26), the
-   one spelling of each, and the approval digest an approval names (its R26; K2528). */
-import { accountLines, accountSectionLines, reviewCommentsLines, approvalsLines, approvalSubjectSha, ACCOUNT_CITE_KINDS }
-  from "../case-grammar/index.mjs";
+/* R63, R68 (T41; D56, D60): case-grammar's account and approval blocks (its R23, R26), the one spelling of each, and the
+   approval digest an approval names (its R26; K2528). The review comments' block is `case-account` R7's answer. */
+import { accountLines, accountSectionLines, approvalsLines, approvalSubjectSha } from "../case-grammar/index.mjs";
 /* R61 (N717; K2129): how a case uses the standards it measures against, judged by `case-checker`'s pure R21. */
 import { checkStandardsUse } from "../case-checker/standards.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
@@ -164,27 +166,11 @@ const PUBLISHED_TARGETS_CHUNK = 200;
 export const AUTHORED_FIELDS = Object.freeze(["statement", "subjectJustification", "excluded", "whatChanged", "scope",
   "biasAcknowledgement", "account", "statementCites"]);
 /** R65: the act's other arguments, none of them authored prose: what it publishes and in what roles (R3–R9), what the
- *  owner discloses and attests (R55, R56), the account's draft (R64) and the review comments chosen (R66), and the
+ *  owner discloses and attests (R55, R56), the account's draft and the review comments chosen (R69), and the
  *  control plane's stamps. Any other field is `CASE_FIELD_NOT_ALLOWED`, naming it. */
 export const ACT_FIELDS = Object.freeze(["target", "targets", "project", "roles", "caseId", "newCase", "draft",
   "subjectPosition", "tensionsDisclosed", "selfAttested", "flagsDisclosed", "calculationsDisclosed", "peopleBases",
   "tieAttested", "accountDraft", "reviewComments", "viewer", "author"]);
-/** R63 (D56): the most sentences one account holds, and each sentence's longest text in code points (R3's bound). */
-export const ACCOUNT_SENTENCES_MAX = 200;
-/** R63: the most cites one sentence names. */
-export const ACCOUNT_CITES_MAX = 50;
-/** R64 (D56; run-rules R25): the framings a system draft of the account is written in: time order, by question, by rule. */
-export const ACCOUNT_FRAMINGS = Object.freeze(["time_order", "by_question", "by_rule"]);
-/** R64: the longest draft of an account, in code points, as R38's statement of what changed. */
-export const ACCOUNT_DRAFT_MAX = 8000;
-/** R64: the most drafts one list names (`truncated` when there are more), as R39's list. */
-export const ACCOUNT_DRAFTS_MAX = 500;
-/** R64: the prefix of an account draft's opaque id (record-core R6). */
-export const ACCOUNT_DRAFT_PREFIX = "ACD";
-/** R64 (record-grammar R52): the kind an accepted account draft is recorded under (run-rules R25's draft kind). */
-export const ACCOUNT_ACCEPT_KIND = "case_account";
-/** R66 (D61): the most review comments one act names in `reviewComments.included`. */
-export const REVIEW_COMMENTS_INCLUDED_MAX = 500;
 const str = (v) => String(v ?? "").trim();
 /** R56: what a `calculations:` row's `disclosed` states when the publisher listed a calculation that needed disclosure
  *  and gave no words of their own (case-grammar R18: null would read as "none was needed"). */
@@ -218,86 +204,6 @@ function standardsUseWords(r) {
       return `The case's use of its standards could not be judged (${r && r.field ? r.field : "its arguments"} malformed).`;
   }
 }
-/* R63 (D56; case-grammar R23): one cite `{kind, ref, ord}`, `kind` one of case-grammar's `ACCOUNT_CITE_KINDS` (a finding,
-   a leg of one with its `ord`, a passage by its `content_id`, a material by its `materials:` ref); null when malformed. */
-function citeOf(c) {
-  if (!c || typeof c !== "object" || Array.isArray(c)) return null;
-  const kind = str(c.kind), ref = str(c.ref);
-  if (!ACCOUNT_CITE_KINDS.includes(kind) || !ref || ref.length > 200 || /["\\\r\n]/.test(ref)) return null;
-  if (kind === "leg") return Number.isInteger(c.ord) && c.ord >= 1 ? { kind, ref, ord: c.ord } : null;
-  return c.ord == null ? { kind, ref, ord: null } : null;
-}
-/* R63: a list of cites, at most `ACCOUNT_CITES_MAX`, each `citeOf`'s; null when malformed. */
-function citesOf(v) {
-  if (v == null) return [];
-  if (!Array.isArray(v) || v.length > ACCOUNT_CITES_MAX) return null;
-  const out = v.map(citeOf);
-  return out.every(Boolean) ? out : null;
-}
-/** R63 (D56; K2533): `account` (`[{text, cites, bias_statement?}]`, absent read as none) and `statementCites` (`{statement,
- *  subject_justification, excluded: [per item], what_changed}`, each a list of cites, absent read as none) in their
- *  shapes, or `BAD_ACCOUNT` / `BAD_STATEMENT_CITES` naming the field. A sentence is words, at most `COMPLETENESS_MAX`
- *  code points, and carries no other field (a story has none to hide in, R65); its `bias_statement`, when given, names
- *  the printed bias statement whose framing it follows (D58). */
-export function accountShaped(account, statementCites, excludedCount = 0) {
-  const bad = (reason, field, detail) => ({ ok: false, reason, field, detail: `${field}: ${detail} Nothing was written.` });
-  const sentences = [];
-  if (account != null) {
-    if (!Array.isArray(account)) return bad("BAD_ACCOUNT", "account", "the account is a list of sentences, each {text, cites, bias_statement?}.");
-    if (account.length > ACCOUNT_SENTENCES_MAX)
-      return bad("BAD_ACCOUNT", "account", `an account is at most ${ACCOUNT_SENTENCES_MAX} sentences.`);
-    for (let i = 0; i < account.length; i++) {
-      const e = account[i], f = `account[${i}]`;
-      if (!e || typeof e !== "object" || Array.isArray(e)) return bad("BAD_ACCOUNT", f, "a sentence is {text, cites, bias_statement?}.");
-      const extra = Object.keys(e).filter((k) => !["text", "cites", "bias_statement"].includes(k) && e[k] !== undefined);
-      if (extra.length) return bad("BAD_ACCOUNT", `${f}.${extra[0]}`, "a sentence carries its words, what it cites and the bias "
-        + "statement its framing follows, and nothing else.");
-      if (typeof e.text !== "string" || !e.text.trim() || [...e.text].length > COMPLETENESS_MAX || /[\r\n]/.test(e.text))
-        return bad("BAD_ACCOUNT", `${f}.text`, `a sentence is words on one line, at most ${COMPLETENESS_MAX} characters.`);
-      const cites = citesOf(e.cites);
-      if (!cites) return bad("BAD_ACCOUNT", `${f}.cites`, `cites is a list of at most ${ACCOUNT_CITES_MAX} {kind, ref, ord}, kind `
-        + `one of ${ACCOUNT_CITE_KINDS.join(", ")}, ord the leg's for a leg and absent otherwise.`);
-      const framing = e.bias_statement == null ? null : str(e.bias_statement);
-      if (e.bias_statement != null && (!framing || framing.length > 200 || /["\\\r\n]/.test(framing)))
-        return bad("BAD_ACCOUNT", `${f}.bias_statement`, "names the printed bias statement whose framing the sentence follows.");
-      sentences.push({ text: e.text.trim(), cites, bias_statement: framing });
-    }
-  }
-  const sc = { statement: [], subject_justification: [], excluded: [], what_changed: [] };
-  if (statementCites != null) {
-    if (typeof statementCites !== "object" || Array.isArray(statementCites))
-      return bad("BAD_STATEMENT_CITES", "statementCites", "is {statement, subject_justification, excluded, what_changed}.");
-    for (const k of Object.keys(statementCites)) {
-      if (statementCites[k] === undefined) continue;
-      if (!(k in sc)) return bad("BAD_STATEMENT_CITES", `statementCites.${k}`, "names no statement.");
-      if (k === "excluded") {
-        const v = statementCites[k];
-        if (!Array.isArray(v) || v.length > excludedCount)
-          return bad("BAD_STATEMENT_CITES", "statementCites.excluded", "is one list of cites per exclusion row, in its order.");
-        for (let i = 0; i < v.length; i++) {
-          const c = citesOf(v[i]);
-          if (!c) return bad("BAD_STATEMENT_CITES", `statementCites.excluded[${i}]`, "is a list of {kind, ref, ord} cites.");
-          sc.excluded.push(c);
-        }
-      } else {
-        const c = citesOf(statementCites[k]);
-        if (!c) return bad("BAD_STATEMENT_CITES", `statementCites.${k}`, "is a list of {kind, ref, ord} cites.");
-        sc[k] = c;
-      }
-    }
-  }
-  return { ok: true, sentences, statementCites: sc };
-}
-/* R63: a cite's holding address, `kind:ref`, a leg's `#ord` after it. */
-const citeAddress = (c) => `${c.kind}:${c.ref}${c.kind === "leg" ? `#${c.ord}` : ""}`;
-/* R63 (R14's body): an exclusion row as the body prints it, the sentence R30 judges. */
-const exclusionSentence = (r) => `${r.target ? r.target + " — " : ""}${r.description || "(named above)"}: ${r.reason}`;
-/* R67: the `ord`s of the account's rows a refusal of case-disclosures R30 names: its `sentences` (each an ord or a row
-   with one), else its `ord`. */
-function namedOrds(r) {
-  const list = Array.isArray(r.sentences) ? r.sentences : r.ord != null ? [r.ord] : [];
-  return list.map((x) => (x && typeof x === "object" ? x.ord : x)).filter((x) => Number.isInteger(x));
-}
 /* R3's set: `targets` as a list, a comma-separated string, or the one `target`. */
 const membersOf = (targets, target) => [...new Set((Array.isArray(targets) ? targets
   : typeof targets === "string" && targets.trim() ? targets.split(",") : target ? [target] : [])
@@ -328,14 +234,14 @@ export class CaseAuthoring {
 
   constructor({ storage, record, membership, host = null, inquiry = null, basisVersions = null, strength = null,
                 bias = null, observations = null, reevaluation = null, publication = null, publishSchedule = null,
-                ratification = null, runs = null, networkNotices = null, disclosures = null, calculations = null,
+                ratification = null, account = null, networkNotices = null, disclosures = null, calculations = null,
                 workbooks = null, events = null, caseTensions = null, now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.membership = membership;
     this.#deps = { host, inquiry, basisVersions, strength, bias, observations, reevaluation, publication, publishSchedule,
-                   ratification, runs, networkNotices, disclosures, calculations, workbooks, events, caseTensions };
+                   ratification, account, networkNotices, disclosures, calculations, workbooks, events, caseTensions };
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
 
@@ -350,8 +256,9 @@ export class CaseAuthoring {
   /* R58, R59: the waiting edition's one read (publish-schedule R7), viewer-free and in-process. */
   get publishSchedule() { return this.#deps.publishSchedule ||= publishScheduleOf(this.#deps.host); }
   get ratification() { return this.#deps.ratification ||= ratificationOf(this.#deps.host); }
-  /* R64: the runs an account draft names (ai-runs' `runFor`, as the proposer may see them). */
-  get runs() { return this.#deps.runs ||= aiRunsOf(this.#deps.host); }
+  /* R69 (N839, K2608): `case-account`, the one instance on this host, asked in R69's order; created at this module's
+     creation (`caseAuthoringOf`), so its tables exist and are declared at every boot (its R12). */
+  get account() { return this.#deps.account ||= caseAccountOf(this.#deps.host); }
   get networkNotices() { return this.#deps.networkNotices ||= networkNoticesOf(this.#deps.host); }
   /* R55 (N529, K1333): `case-disclosures`, the one instance on this host, asked in R55's order. The composition builds
      it with what it reads (N536: `plane` composes `caseDisclosuresOf(ctx, {attestation})` first, K1355). */
@@ -762,8 +669,10 @@ export class CaseAuthoring {
                      + "the four statements (statement, subjectJustification, excluded with its reasons, whatChanged), the "
                      + "scope, the bias acknowledgement and the account, each sentence of which rests on what it cites "
                      + "(D57, D63). A story, context or human-interest passage has no place in a case. Nothing was written." };
-    /* R63 (D56): the account's shape, and the statements' citations (K2533), each refused by name before anything is read. */
-    const shaped = accountShaped(account, statementCites, rows.length);
+    /* R63, R69 (D56): the account's shape, and the statements' citations (K2533), each refused by name before anything is
+       read: `case-account` R5, asked last among R3's refusals, after R65. */
+    const A = this.account;
+    const shaped = A.accountShaped(account, statementCites, rows.length);
     if (shaped.ok === false) return shaped;
 
     /* R4: every member judged before any member moves (`#judgeMembers`). */
@@ -897,8 +806,8 @@ export class CaseAuthoring {
        An unsigned preparation of another case, or of another edition of this one, still refuses. Asked before an id is
        minted. */
     /* (K2540) An unsigned preparation of THIS case edition does not refuse: the new preparation replaces it (R14,
-       publication R21), which is how later approvals (R68) and a first edition's account from a draft (R64) are carried.
-       One of another case, or of another edition of this one, still does. */
+       publication R21), which is how later approvals (R68) and a first edition's account from a draft (`case-account`
+       R4) are carried. One of another case, or of another edition of this one, still does. */
     const thisEdition = theCase ? this.#highestEdition(theCase) + 1 : null;
     const replaced = (e) => e.state === "prepared" && theCase && e.case_id === theCase && Number(e.edition) === thisEdition;
     for (const p of prepared) {
@@ -1041,22 +950,23 @@ export class CaseAuthoring {
                        + `publication (DEC-20).` };
     }
 
-    /* R64 (D56; record-grammar R52): THE DRAFT THE ACCOUNT BEGAN AS, named by the member, and how she took it up. Her
-       account is hers: adopting the system's words unchanged would make her vouch for a statement she did not write,
-       so `as_proposed` is refused ACCEPT_MUST_REAUTHOR, record-grammar's one row. */
-    const drafted = this.#accountDraftJudged(accountDraft, theCase, shaped.sentences);
+    /* R69 (D56; record-grammar R52): after R10, THE DRAFT THE ACCOUNT BEGAN AS, named by the member, and how she took it
+       up (`case-account` R4). Her account is hers: adopting the system's words unchanged would make her vouch for a
+       statement she did not write, so `as_proposed` is refused ACCEPT_MUST_REAUTHOR, record-grammar's one row. */
+    const drafted = A.accountDraftJudged(accountDraft, theCase, shaped.sentences);
     if (drafted.ok === false) return drafted;
-    /* R63 (D56–D58, D63): EVERY SENTENCE OF THE ACCOUNT AND OF THE FOUR STATEMENTS, JUDGED AGAINST WHAT IT CITES by
-       `case-disclosures` R30, after R55's judgments and before R11, its first refusal answered; nothing is written. */
-    const accountJ = this.#accountJudged({ sentences: shaped.sentences, statementCites: shaped.statementCites, drafted,
+    /* R63, R69 (D56–D58, D63): EVERY SENTENCE OF THE ACCOUNT AND OF THE FOUR STATEMENTS, JUDGED AGAINST WHAT IT CITES
+       (`case-account` R6, through `case-disclosures` R30), after R55's judgments and before R11, its first refusal
+       answered; nothing is written. */
+    const accountJ = A.accountJudged({ sentences: shaped.sentences, statementCites: shaped.statementCites, drafted,
       statement: stmt, justification: just, excluded: rows, changed, prepared, reached, lens: lensRead, caseId: theCase,
       viewer });
     seen.account = accountJ;
     seen.accountDraft = drafted;
     if (accountJ.refusal) return accountJ.refusal;
-    /* R66 (D61): THE REVIEWERS' COMMENTS THE PUBLISHER CHOSE, read through the one registered reader (review R33); an
-       objection travels only when chosen, and the count left out is stated. */
-    const comments = this.#reviewCommentsChosen(reviewComments, theCase, edition, viewer, boundDraft);
+    /* R69 (D61): THE REVIEWERS' COMMENTS THE PUBLISHER CHOSE (`case-account` R7), read through the one registered reader
+       (review R33); an objection travels only when chosen, and the count left out is stated. */
+    const comments = A.reviewCommentsChosen(reviewComments, theCase, edition, viewer, boundDraft);
     if (comments.ok === false) return comments;
 
     const when = this.#when("second");
@@ -1210,7 +1120,8 @@ export class CaseAuthoring {
       timelineBlock: timelineLines(timeline.rows),
       peopleBlock: peopleLines(peopleJ.rows), memberTiesBlock: memberTieLines(tiesJ.rows),
       /* R63: case-grammar R23's block, every sentence of the account and of the four statements with what it cites, and
-         its body section when the account has a sentence. R66: case-grammar R25's block and the comments in words. */
+         its body section when the account has a sentence. R69: case-grammar R25's block and the comments in words, as
+         `case-account` R7 answers them. */
       accountBlock: accountLines(accountJ.rows),
       accountSection: shaped.sentences.length ? accountSectionLines(accountJ.rows) : [],
       reviewCommentsBlock: comments.block, reviewComments: comments.body,
@@ -1248,12 +1159,9 @@ export class CaseAuthoring {
        exclusions are projected in the same write. What this act answers with is what the store holds after the call. */
     const stored = this.publication.storeCaseDocument({ caseId: theCase, edition, text: docText, author: who, at: when,
                                                         draft: boundDraft });
-    /* R64 (record-grammar R52): the member's acceptance of the draft her account began as, in its one shape. */
-    if (drafted.draft) {
-      const accepted = acceptanceRecord({ proposal: drafted.draft, form: drafted.form, by: who, at: when, kind: ACCOUNT_ACCEPT_KIND });
-      this.sql.exec(`INSERT INTO account_acceptances (case_id, edition, draft_id, form, record, at) VALUES (?,?,?,?,?,?)`,
-                    theCase, edition, drafted.draft, drafted.form, JSON.stringify(accepted), when);
-    }
+    /* R69 (record-grammar R52): after the document is stored, the member's acceptance of the draft her account began as,
+       in its one shape (`case-account` R4's `acceptanceRecorded`), inside this act's transaction; none without a draft. */
+    if (drafted.draft) A.acceptanceRecorded({ caseId: theCase, edition, drafted, by: who, at: when });
     /* R34's steps read what this act read, from the same values (never a second reading). */
     Object.assign(seen, { approvals: { ...approvals, digest: approvalDigest }, workingOn, excluded: rows, searched, manifest, bias: back, captures: captureRows, sources: sourceRows,
                           materials: materialBlocks, accepted: accepted.rows, flags: flagRows,
@@ -1300,7 +1208,7 @@ export class CaseAuthoring {
                                ? { acknowledgements_unbindable_writer_undetermined: acks.unboundWriterUndetermined }
                                : {}) },
              author: who, at: when, weight: "single",
-             /* R63, R64, R66, R68: the account as written into the document, the draft it began as, the review comments
+             /* R63, R69, R68: the account as written into the document, the draft it began as, the review comments
                 carried and the count left out, and the approvals carried, each only when there is one. */
              ...(shaped.sentences.length ? { account: { sentences: accountJ.rows.filter((r) => r.kind === "account"),
                                                        draft: drafted.draft ?? null, form: drafted.form ?? null } } : {}),
@@ -1323,203 +1231,6 @@ export class CaseAuthoring {
                  : `Then ratify EACH of these ${written.length} findings (op=ratify): every finding is signed `
                  + `on its own bytes because the finding is the unit of truth, and this case edition becomes `
                  + `servable as a container when the last of them lands.`) };
-  }
-
-  /** R64 (D56; record-grammar R52): the draft the account began as, `accountDraft` naming one of this case's
-   *  `case_account` drafts by id, or `{draft, form}`. Answers `{ok: true, draft, framing, form}` (all null when none is
-   *  named) or the refusal: `BAD_ACCOUNT` (a malformed name or form, or a draft named for an act that writes no account),
-   *  `NO_SUCH_ACCOUNT_DRAFT` (not a draft of this case), `ACCEPT_MUST_REAUTHOR` (record-grammar's shared row: taken up as
-   *  proposed, the form given or the sentences the draft's words unchanged). The form, when not given, is `edited`. */
-  #accountDraftJudged(accountDraft, caseId, sentences) {
-    const none = { ok: true, draft: null, framing: null, form: null };
-    if (accountDraft == null || accountDraft === "") return none;
-    const named = typeof accountDraft === "string" ? accountDraft
-      : accountDraft && typeof accountDraft === "object" && !Array.isArray(accountDraft) ? accountDraft.draft : null;
-    const given = accountDraft && typeof accountDraft === "object" ? accountDraft.form ?? null : null;
-    const bad = (field, detail) => ({ ok: false, reason: "BAD_ACCOUNT", field, detail: `${field}: ${detail} Nothing was written.` });
-    if (typeof named !== "string" || !named.trim()) return bad("accountDraft", "names an account draft by its id, or {draft, form}.");
-    if (given !== null && !ACCEPTANCE_FORMS.includes(given))
-      return bad("accountDraft.form", `is one of ${ACCEPTANCE_FORMS.join(", ")}.`);
-    if (!sentences.length) return bad("accountDraft", "names the draft an account began as, and this act writes no account.");
-    const d = this.#one(`SELECT draft_id, text, framing FROM account_drafts WHERE draft_id=? AND case_id=? AND kind='case_account'`,
-                        named.trim(), caseId);
-    if (!d)
-      return { ok: false, reason: "NO_SUCH_ACCOUNT_DRAFT", caseId, draft: named.trim(),
-               detail: `no draft of ${caseId}'s account answers to ${named.trim()} (accountDrafts lists them). Name one of them, `
-                     + "or write the account from nothing and publish again. Nothing was written." };
-    const words = (t) => String(t ?? "").replace(/\s+/g, " ").trim();
-    const unchanged = words(d.text) === words(sentences.map((x) => x.text).join(" "));
-    const form = given === "own_instead" ? "own_instead" : unchanged ? "as_proposed" : given ?? "edited";
-    /* DEC-49 REGION is-account-reauthored */
-    if (form === "as_proposed")
-      return refusal(SHARED_ACT_CHECKS, ACCEPT_MUST_REAUTHOR, { draft: d.draft_id, caseId,
-        detail: `the account is draft ${d.draft_id}'s words as the system proposed them. The published account is the `
-              + "member's own (D56): write it in your words, from the draft or from nothing, and publish again. Nothing "
-              + "was written." });
-    /* END DEC-49 REGION is-account-reauthored */
-    return { ok: true, draft: d.draft_id, framing: d.framing ?? null, form };
-  }
-
-  /** R63 (D56–D58, D63; K2531, K2533): `case-grammar` R23's rows — each sentence of the account (`kind: account`, in its
-   *  order), then the four statements (`statement`, `subject_justification`, one `excluded` row per exclusion as the body
-   *  prints it, `what_changed` for an edition above 1), each with its cites — judged by `case-disclosures` R30
-   *  (`accountJudged`) against what they cite as `viewer` reads it, the lens in force (R40's read), the members'
-   *  conclusions and the system's `account_check` flags on this case. Answers `{rows, refusals, results, refusal}`:
-   *  `results` maps each row's `ord` to the codes naming it (empty: it passed); `refusal` the first, or null. A judgment
-   *  that answers no list is `ACCOUNT_CHECK_UNDETERMINED` (fail closed, K2531). Writes nothing. */
-  #accountJudged({ sentences, statementCites, drafted = null, statement, justification, excluded, changed = null,
-                   prepared, reached, lens, caseId, viewer }) {
-    const began = drafted && drafted.draft && drafted.form === "edited"
-      ? { began_as: "machine_draft", draft: drafted.draft } : { began_as: "member", draft: null };
-    const sc = statementCites || { statement: [], subject_justification: [], excluded: [], what_changed: [] };
-    const rows = [];
-    let ord = 0;
-    for (const x of sentences) rows.push({ ord: ++ord, text: x.text, cites: x.cites, kind: "account",
-                                           bias_statement: x.bias_statement ?? null, ...began });
-    /* a blank statement is no sentence to judge: R3 refuses it first (the pre-flight's own read may still meet one) */
-    const stated = (kind, text, cites, origin = { began_as: "member", draft: null }) => {
-      if (typeof text === "string" && text.trim()) rows.push({ ord: ++ord, text, cites: cites || [], kind, bias_statement: null, ...origin });
-    };
-    stated("statement", statement, sc.statement);
-    stated("subject_justification", justification, sc.subject_justification);
-    (excluded || []).forEach((r, i) => stated("excluded", exclusionSentence(r), sc.excluded[i]));
-    if (changed && changed.ok !== false)
-      stated("what_changed", changed.text, sc.what_changed,
-             changed.began_as === "machine_draft" ? { began_as: "machine_draft", draft: changed.draft } : undefined);
-    const cited = this.#citedFor(rows, prepared, reached, viewer);
-    const conclusions = prepared.map((p) => {
-      const basis = this.inquiry.basisFor(p.id);
-      const claim = p.conclusion && p.conclusion.claim ? p.conclusion.claim : null;
-      return { finding: p.id, claim: claim && claim.text != null ? claim.text : null, claim_state: claim ? claim.state ?? null : null,
-               legs: basis && basis.ok !== false && Array.isArray(basis.legs) ? basis.legs : [] };
-    });
-    const flags = caseId ? this.#accountFlags(caseId, drafted && drafted.draft ? drafted.draft : null) : [];
-    let judged = null;
-    try {
-      judged = this.disclosures.accountJudged({ account: rows.filter((r) => r.kind === "account"),
-        statements: rows.filter((r) => r.kind !== "account"), cited, lens, conclusions, flags, viewer });
-    } catch (e) { judged = { why: String(e && e.message || e).slice(0, 160) }; }
-    const refusals = judged && Array.isArray(judged.refusals) ? judged.refusals.filter((r) => r && typeof r === "object")
-      : [{ ok: false, reason: "ACCOUNT_CHECK_UNDETERMINED", code: "ACCOUNT_CHECK_UNDETERMINED",
-           detail: "the account could not be checked against what it cites"
-                 + (judged && judged.why ? ` (${judged.why})` : "") + ", so whether every sentence stands is not known. "
-                 + "Try again. Nothing was written." }];
-    const results = new Map(rows.map((r) => [r.ord, []]));
-    for (const r of refusals) for (const o of namedOrds(r)) if (results.has(o)) results.get(o).push(r.code ?? r.reason);
-    return { rows, refusals, results, flags, refusal: refusals[0] ?? null };
-  }
-
-  /* R63 (K2531, K2536): the `account_check` flags the system raised on this case's account (R64's table), in proposal
-     order: every one proposed after the account draft the act names, or all of them with none named. */
-  #accountFlags(caseId, afterDraft = null) {
-    const out = [];
-    const after = afterDraft ? this.#one(`SELECT seq FROM account_drafts WHERE draft_id=?`, afterDraft)?.seq ?? 0 : 0;
-    for (const r of this.#rows(`SELECT flags FROM account_drafts WHERE case_id=? AND kind='account_check' AND seq>?
-                                ORDER BY seq`, caseId, after)) {
-      let f = null;
-      try { f = JSON.parse(r.flags); } catch { f = null; }
-      for (const x of Array.isArray(f) ? f : []) out.push({ kind: "account_check", ord: x.ord ?? null, text: x.text ?? null,
-                                                             cites: Array.isArray(x.cites) ? x.cites : [] });
-    }
-    return out;
-  }
-
-  /** R63 (case-disclosures R30; answers R33's `{holdings, rules, looks}`): what the rows cite, as `viewer` reads it, one
-   *  holding per distinct cite, its `address` the cite spelled `kind:ref` (a leg's `#ord` after it) so a row's cites find
-   *  their holdings, its `quote` the cited thing's own words: a finding's text (record-core R13), a leg as its basis
-   *  states it (inquiry's `basisFor`), a passage's text (content R45's unit, extraction's indexed text), a material's
-   *  indexed text (`case-disclosures` R6's materials). A cite the viewer cannot read has no holding, so its sentence
-   *  rests on nothing read. */
-  #citedFor(rows, prepared, reached, viewer) {
-    const gate = viewerPredicate(viewer);
-    const seenBy = (id) => gate.scope !== "DENY"
-      && !!this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, id, ...gate.args);
-    const indexed = (sha, extent = null) => this.#rows(`SELECT text FROM capture_text WHERE capture_sha=?`
-      + (extent ? ` AND extent=?` : ``) + ` ORDER BY seq`, ...(extent ? [sha, extent] : [sha]))
-      .map((r) => r.text).filter((t) => typeof t === "string").join("\n");
-    const materials = (reached && Array.isArray(reached.materials)) ? reached.materials : [];
-    const holdings = [], done = new Set();
-    for (const c of rows.flatMap((r) => r.cites)) {
-      const address = citeAddress(c);
-      if (done.has(address)) continue;
-      done.add(address);
-      let quote = "";
-      try {
-        if (c.kind === "finding") quote = seenBy(c.ref) ? this.#liveText(c.ref) ?? "" : "";
-        else if (c.kind === "leg") {
-          const basis = seenBy(c.ref) ? this.inquiry.basisFor(c.ref) : null;
-          const leg = basis && basis.ok !== false && Array.isArray(basis.legs) ? basis.legs[c.ord - 1] : null;
-          quote = leg ? JSON.stringify(leg) : "";
-        } else if (c.kind === "passage") {
-          const u = this.#one(`SELECT capture_sha, bundle_id, extent FROM content WHERE content_id=?`, c.ref);
-          quote = u && seenBy(u.bundle_id) ? indexed(u.capture_sha, u.extent) : "";
-        } else if (c.kind === "material") {
-          const m = materials.find((x) => x.ref === c.ref);
-          quote = m && m.sha ? indexed(m.sha) : "";
-        }
-      } catch { quote = ""; }
-      if (quote) holdings.push({ address, quote });
-    }
-    return { holdings, rules: [], looks: [] };
-  }
-
-  /** R66 (D61; review R33, K2483): the reviewers' comments the publisher chose (`reviewComments: {included: [ids]}`),
-   *  read through the one reader `registerReviewComments` holds, asked `{case, edition, viewer, draft}`. Answers
-   *  `{ok: true, carried, left_out, block, body}` — `left_out` a count, or null when undetermined (none registered, or a
-   *  list cut at its bound or unread with nothing chosen) — or the refusal: `BAD_REVIEW_COMMENTS` (malformed),
-   *  `REVIEW_COMMENTS_UNREAD` (comments chosen and the list could not be read), `REVIEW_COMMENT_NOT_FOUND` (an id not
-   *  among the case's comments, named). With none registered no comment travels. */
-  #reviewCommentsChosen(reviewComments, caseId, edition, viewer, draft) {
-    const bad = (detail) => ({ ok: false, reason: "BAD_REVIEW_COMMENTS", field: "reviewComments",
-                               detail: `reviewComments: ${detail} Nothing was written.` });
-    let included = [];
-    if (reviewComments != null) {
-      const inc = typeof reviewComments === "object" && !Array.isArray(reviewComments) ? reviewComments.included : undefined;
-      if (inc === undefined || !Array.isArray(inc) || inc.length > REVIEW_COMMENTS_INCLUDED_MAX
-          || !inc.every((x) => typeof x === "string" && x.trim()))
-        return bad(`is {included: [comment ids]}, at most ${REVIEW_COMMENTS_INCLUDED_MAX}.`);
-      included = [...new Set(inc.map((x) => x.trim()))];
-    }
-    const out = (carried, leftOut) => ({ ok: true, carried, left_out: leftOut,
-      block: reviewCommentsLines({ comments: carried, left_out: leftOut }), body: { comments: carried, left_out: leftOut } });
-    const reader = this.#reviewCommentsReader;
-    if (!reader) return out([], null);
-    let read = null;
-    try { read = reader({ case: caseId, edition, viewer, draft: draft ?? null }); } catch { read = null; }
-    const list = Array.isArray(read) ? read : read && Array.isArray(read.comments) ? read.comments : null;
-    if (!list) {
-      if (included.length)
-        return { ok: false, reason: "REVIEW_COMMENTS_UNREAD", caseId, edition,
-                 detail: "the comments on this case's review copies could not be read, so the ones chosen cannot be carried. "
-                       + "Try again. Nothing was written." };
-      return out([], null);
-    }
-    const rows = list.filter((c) => c && typeof c === "object");
-    const byId = new Map(rows.map((c) => [String(c.comment_id ?? c.id ?? ""), c]));
-    const missing = included.filter((id) => !byId.has(id));
-    if (missing.length)
-      return { ok: false, reason: "REVIEW_COMMENT_NOT_FOUND", caseId, edition, comments: missing,
-               detail: `${missing.join(", ")}: no comment on this case's review copies answers to that id. Choose among the `
-                     + "comments the review copies hold. Nothing was written." };
-    const chosen = new Set(included);
-    const carried = rows.filter((c) => chosen.has(String(c.comment_id ?? c.id ?? "")))
-      .map((c) => ({ reviewer: c.reviewer ?? null, text: c.text ?? null, at: c.at ?? null }));
-    const cut = !Array.isArray(read) && read && read.truncated === true;
-    return out(carried, cut ? null : rows.length - carried.length);
-  }
-
-  /* R66 (K31's pattern): the one reader of the case's review comments, `review`'s R33, registered at its start. */
-  #reviewCommentsReader = null;
-  /** R66 (D61; K2483): `review` registers `reviewCommentsFor` here once, at its start. A second registration is refused
-   *  `REVIEW_COMMENTS_DECLARED`, and one that is not a function `MALFORMED`; each changes nothing. */
-  registerReviewComments(fn) {
-    if (typeof fn !== "function")
-      return { ok: false, reason: "MALFORMED", field: "fn", detail: "the review comments' reader is a function of {case, edition, viewer, draft}" };
-    if (this.#reviewCommentsReader)
-      return { ok: false, reason: "REVIEW_COMMENTS_DECLARED",
-               detail: "a reader of the case's review comments is already registered, once, at start" };
-    this.#reviewCommentsReader = fn;
-    return { ok: true };
   }
 
   /** R68 (D60; K2528, K2533): the rule in force and the approvals held for the approval digest `docSha`, read through
@@ -1659,116 +1370,16 @@ export class CaseAuthoring {
   }
 
   /* ==========================================================================================================
-   * accountPropose, accountDrafts: the system's drafts of a case's account (R64; D56)
-   *
-   * A DRAFT IS NEVER THE ACCOUNT. An AI run drafts the account from the case's cited evidence, in a framing (time order,
-   * by question, by rule), or flags the sentences of a member's account the evidence does not support (`account_check`,
-   * run-rules R25); each is labelled machine work. The member writes the account at op=publish (R63) from a draft,
-   * recording the draft and the form she took it up in (record-grammar R52), or from nothing; the published account is
-   * hers. Drafts are append-only.
+   * R69 (N850; K1333, K2608): THREE ONE-LINE PASS-THROUGHS TO `case-account`, unused by new code, each answering exactly
+   * as it answers: they stand only while `review` (T42-23a), `control-plane` (T42-29) and `plane` (T42-30) re-point,
+   * and T43 deletes them.
    * ========================================================================================================== */
-
-  /* R64: the case a draft may be proposed for, `viewer` seeing its project: published (publication R40's `cases`) or
-     prepared and unsigned (its `case_documents`, the preparation's `case_project`), so a first edition's account is
-     drafted before anything is published. Every other case, and one the viewer cannot see, answers alike (R27). */
-  #caseForDrafts(caseId, viewer) {
-    const id = str(caseId);
-    const owner = id ? this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id)?.project_id ?? this.#preparedProject(id) : null;
-    const gate = viewerPredicate(viewer);
-    if (owner && gate.scope !== "DENY"
-        && this.#one(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, owner, ...gate.args))
-      return { ok: true, caseId: id };
-    return { ok: false, reason: "NO_SUCH_CASE",
-             detail: "no case you can see answers to that id, published or prepared. A case you cannot see is answered as "
-                   + "one that does not exist. Nothing was written." };
-  }
-
-  /* R64: the label a draft carries, machine work when its proposer is a machine (record-grammar's `lawProposalState`,
-     its R43's states). record-grammar's `proposalLabel` holds no subject for an account draft yet (reported, T41-43). */
-  static #accountLabel(by, kind) {
-    const state = lawProposalState(by);
-    const what = kind === "account_check" ? "flagged sentences of a member's account that the evidence they cite does not support"
-      : "drafted this case's account from its cited evidence";
-    const says = state === "machine_proposed"
-      ? `a machine credential ${what}. That is machine work, labelled as machine work: it is never the case's account, `
-        + "which a member writes in her own words"
-      : state === "member_proposed"
-        ? `a member ${what}. It is a draft, never the case's account, and the record holds who proposed it`
-        : `the record does not say who ${what}. It is a draft, never the case's account`;
-    return { by: by ?? null, state, machine_work: state === "machine_proposed", says };
-  }
-
-  /** R64 (D56; K2536): store a draft of `case`'s account from `run`: `kind` `case_account` (default; `text` in one of
-   *  `ACCOUNT_FRAMINGS`) or `account_check` (`flags: [{ord, text, cites}]` in place of `text`). Refusals, in order, each
-   *  writing nothing: `NO_SUCH_CASE`; `BAD_ACCOUNT_DRAFT` (an unknown kind, a text blank or over `ACCOUNT_DRAFT_MAX`, or
-   *  flags malformed); `BAD_ACCOUNT_FRAMING`; `NO_SUCH_RUN` (a run `ai-runs.runFor` does not answer for `viewer`).
-   *  Answers `{ok: true, draft: {id, case, kind, framing, text, flags, run, label, at}}`. */
-  accountPropose({ case: caseId = null, kind = "case_account", framing = null, text = undefined, flags = undefined,
-                   run = null, proposedBy = null, viewer = null } = {}) {
-    const seen = this.#caseForDrafts(caseId, viewer);
-    if (seen.ok === false) return seen;
-    const bad = (field, detail) => ({ ok: false, reason: "BAD_ACCOUNT_DRAFT", case: seen.caseId, field,
-                                      detail: `${field}: ${detail} Nothing was written.` });
-    if (kind !== "case_account" && kind !== "account_check") return bad("kind", "is case_account or account_check.");
-    let words = null, flagged = null;
-    if (kind === "case_account") {
-      if (!ACCOUNT_FRAMINGS.includes(framing))
-        return { ok: false, reason: "BAD_ACCOUNT_FRAMING", case: seen.caseId, allowed: ACCOUNT_FRAMINGS,
-                 detail: `a draft of the account is written in one framing: ${ACCOUNT_FRAMINGS.join(", ")}. Nothing was written.` };
-      const length = typeof text === "string" ? [...text].length : null;
-      if (length === null || !text.trim() || length > ACCOUNT_DRAFT_MAX)
-        return bad("text", `a draft of the account is words, at most ${ACCOUNT_DRAFT_MAX} characters.`);
-      words = text;
-    } else {
-      if (!Array.isArray(flags) || !flags.length || flags.length > ACCOUNT_SENTENCES_MAX)
-        return bad("flags", `is a list of 1 to ${ACCOUNT_SENTENCES_MAX} {ord, text, cites}.`);
-      flagged = [];
-      for (let i = 0; i < flags.length; i++) {
-        const f = flags[i];
-        const cites = f && typeof f === "object" ? citesOf(f.cites) : null;
-        if (!f || typeof f !== "object" || !Number.isInteger(f.ord) || f.ord < 1 || typeof f.text !== "string" || !f.text.trim()
-            || [...f.text].length > COMPLETENESS_MAX || !cites)
-          return bad(`flags[${i}]`, "is {ord, text, cites}: the sentence's ord and words, and what it cites.");
-        flagged.push({ ord: f.ord, text: f.text, cites });
-      }
-    }
-    const r = str(run);
-    let found = null;
-    try { found = r ? this.runs.runFor(r, viewer) : null; } catch { found = null; }
-    if (!found)
-      return { ok: false, reason: "NO_SUCH_RUN", case: seen.caseId, run: r || null,
-               detail: "a draft of the account names the run that wrote it, and no run you can see answers to that id. "
-                     + "Nothing was written." };
-    const by = proposedBy == null || !String(proposedBy).trim() ? null : String(proposedBy).trim();
-    const label = CaseAuthoring.#accountLabel(by, kind);
-    return this.record.transact(() => {
-      const at = this.#when("millisecond");
-      const id = this.record.mintOpaqueId(ACCOUNT_DRAFT_PREFIX, at.slice(0, 4), "", (x) =>
-        !!this.#one(`SELECT 1 AS x FROM account_drafts WHERE draft_id=?`, x));
-      if (!id) return mintExhausted(ACCOUNT_DRAFT_PREFIX);
-      this.sql.exec(`INSERT INTO account_drafts (draft_id, case_id, kind, framing, text, flags, run, proposed_by, label, at)
-                     VALUES (?,?,?,?,?,?,?,?,?,?)`, id, seen.caseId, kind, kind === "case_account" ? framing : null, words,
-                    flagged ? JSON.stringify(flagged) : null, r, by, JSON.stringify(label), at);
-      return { ok: true, draft: { id, case: seen.caseId, kind, framing: kind === "case_account" ? framing : null, text: words,
-                                  flags: flagged, run: r, label, at },
-               next: kind === "case_account"
-                 ? `a member writes the account at op=publish, from this draft (accountDraft: "${id}") in her own words, or `
-                   + "from nothing; until then it is a draft and never the case's account"
-                 : "the member answers each flag at op=publish by tying the sentence to evidence or removing it" };
-    });
-  }
-
-  /** R64: `case`'s account drafts, oldest first, each `{id, kind, framing, text, flags, run, label, at}`, at most
-   *  `ACCOUNT_DRAFTS_MAX` (`truncated` when there are more). `NO_SUCH_CASE` as `accountPropose` answers it. Writes nothing. */
-  accountDrafts({ case: caseId = null, viewer = null } = {}) {
-    const seen = this.#caseForDrafts(caseId, viewer);
-    if (seen.ok === false) return seen;
-    const rows = this.#rows(`SELECT draft_id, kind, framing, text, flags, run, label, at FROM account_drafts WHERE case_id=?
-                             ORDER BY seq LIMIT ?`, seen.caseId, ACCOUNT_DRAFTS_MAX + 1);
-    return { ok: true, case: seen.caseId, truncated: rows.length > ACCOUNT_DRAFTS_MAX,
-             drafts: rows.slice(0, ACCOUNT_DRAFTS_MAX).map((x) => ({ id: x.draft_id, kind: x.kind, framing: x.framing ?? null,
-               text: x.text ?? null, flags: x.flags ? JSON.parse(x.flags) : null, run: x.run, label: JSON.parse(x.label), at: x.at })) };
-  }
+  /** `case-account` R1, R2 (the system's drafts of a case's account). */
+  accountPropose(args) { return this.account.accountPropose(args); }
+  /** `case-account` R3 (the case's account drafts, oldest first). */
+  accountDrafts(args) { return this.account.accountDrafts(args); }
+  /** `case-account` R7 (the one reader of the case's review comments, registered once). */
+  registerReviewComments(fn) { return this.account.registerReviewComments(fn); }
 
   /** R2, asked by `op=publish` and by R32's read alike: the publishing project named, seen, a project, and owned by
    *  `who`. Answers the refusal itself (`ok: false` at the top level, N370) or `{ok: true, proj, gate}`. */
@@ -2074,7 +1685,7 @@ export class CaseAuthoring {
               const calc = this.#calculationsJudged(judged.prepared, partition.memberRoles, a.calculationsDisclosed ?? null,
                                                     calculationFacts);
               if (calc.refusal) found.push(calc.refusal);
-              const shapedHere = accountShaped(a.account ?? null, null, 0);
+              const shapedHere = this.account.accountShaped(a.account ?? null, null, 0);
               const authored = { statement: str(a.statement), scope: str(a.scope), justification: str(a.subjectJustification),
                                  bias: str(a.biasAcknowledgement), excluded: Array.isArray(a.excluded) ? a.excluded : [],
                                  account: shapedHere.ok ? shapedHere.sentences : [] };
@@ -2082,13 +1693,15 @@ export class CaseAuthoring {
               found.push(...D.peopleJudged(named, a.peopleBases ?? null, a.viewer ?? null).refusals);
               found.push(...D.tieAttestationJudged([who], named, named.money_parties || [],
                 attestedBy(who, a.tieAttested ?? null, this.#when("second")), a.viewer ?? null).refusals);
-              /* R63: case-disclosures R30 over the account and the statements, read here when op=publish refused before
-                 it asked (its own read, `seen.account`, otherwise): the case it would publish when it can be told without
-                 the act (named, or the one the members serve), and no "what changed" row, the edition not being known. */
+              /* R63, R69: `case-account` R5 and R6 (case-disclosures R30) over the account and the statements, read
+                 here when op=publish refused before it asked (its own read, `seen.account`, otherwise): the case it would
+                 publish when it can be told without the act (named, or the one the members serve), and no "what changed"
+                 row, the edition not being known. */
               if (!seen.account) {
-                const sa = accountShaped(a.account ?? null, a.statementCites ?? null, Array.isArray(a.excluded) ? a.excluded.length : 0);
+                const sa = this.account.accountShaped(a.account ?? null, a.statementCites ?? null,
+                                                      Array.isArray(a.excluded) ? a.excluded.length : 0);
                 if (sa.ok !== false)
-                  accountRead = this.#accountJudged({ sentences: sa.sentences, statementCites: sa.statementCites,
+                  accountRead = this.account.accountJudged({ sentences: sa.sentences, statementCites: sa.statementCites,
                     statement: str(a.statement), justification: str(a.subjectJustification),
                     excluded: (Array.isArray(a.excluded) ? a.excluded : []).filter((r) => r && typeof r === "object")
                       .map((r) => ({ target: str(r.target) || null, description: str(r.description), reason: str(r.reason) })),
@@ -2103,7 +1716,7 @@ export class CaseAuthoring {
         });
       } catch (e) { if (e !== PREFLIGHT_ROLLBACK) throw e; }
     }
-    /* R63: every refusal of case-disclosures R30, every unanswered flag among them. */
+    /* R63: every refusal of case-disclosures R30 (`case-account` R6), every unanswered flag among them. */
     const account = seen.account || accountRead;
     if (account) found.push(...account.refusals);
     found.push(...ratify.refusals);
@@ -2202,8 +1815,8 @@ export class CaseAuthoring {
       { step: 5, name: "the edition this creates",
         ...(ok ? { case: answer.caseId, edition: answer.edition, minted: answer.minted, members: seen.memberEditions }
                : { stated: notReached }) },
-      /* R67 (D56): each sentence of the account with its citations, its check result (case-disclosures R30) and, for a
-         system draft, its framing; the four statements' rows beside it, judged the same way. */
+      /* R67 (D56): each sentence of the account with its citations, its check result (`case-account` R6) and, for a
+         system draft (`case-account` R1), its framing; the four statements' rows beside it, judged the same way. */
       { step: 6, name: "the account",
         ...(account ? { sentences: account.rows.map((r) => ({ ord: r.ord, kind: r.kind, text: r.text, cites: r.cites,
                                                             bias_statement: r.bias_statement,
@@ -2953,8 +2566,11 @@ export class CaseAuthoring {
 
 const instances = new WeakMap();
 
-/** K61: the one instance per host, created on the first call with `deps`. It creates its table and declares it to
- *  record-core's purge (R28, K23). */
+/** K61: the one instance per host, created on the first call with `deps`. It creates its tables and declares them to
+ *  record-core's purge (R28, K23), and creates `case-account`'s instance on the host (its R12), so that module's tables
+ *  exist and are declared at every boot before `plane` names it (the map's doubt 4). R28 (K2675): a declaration
+ *  record-core refuses (`TABLE_DECLARED`: another owner already holds a table, so none of this module's is declared) is
+ *  thrown at creation and no instance is kept, rather than leaving the tables silently outside the purge. */
 export function caseAuthoringOf(host, deps) {
   let c = instances.get(host);
   if (!c) {
@@ -2963,9 +2579,12 @@ export function caseAuthoringOf(host, deps) {
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     c = new CaseAuthoring({ ...d, host, storage, record, membership });
-    instances.set(host, c);
     c.migrate();
-    record.declarePurge("case-authoring", CASE_AUTHORING_TABLES);
+    const declared = record.declarePurge("case-authoring", CASE_AUTHORING_TABLES);
+    if (declared && declared.ok === false)
+      throw new Error(`case-authoring: record-core refused its table declaration: ${declared.reason} (${declared.table})`);
+    instances.set(host, c);
+    void c.account;
   }
   return c;
 }

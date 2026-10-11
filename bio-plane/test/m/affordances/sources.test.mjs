@@ -1,5 +1,5 @@
 /* affordances and N364's acts, driven at their own modules' interfaces over their fixtures: `sources` over its real
-   record-core, membership and capture (test/m/sources/fixture.mjs), and `capture`'s late co-attestation and account over
+   record-core, membership, capture and (T42) doorbell (test/m/sources/fixture.mjs), and `capture`'s late co-attestation and account over
    its own (test/m/capture/fixture.mjs), which the plane fixture does not reach (the durable object does not route
    `sourcesOps`). Measured here: the backing of the source acts graded `reasoned` (R19), of the withdrawal graded
    `reversible` and the two capture acts graded `attested` (R2), and that `sourceconsent`, an ACTS row, answers a machine with no MACHINE_* code, so it is rightly

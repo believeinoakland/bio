@@ -1,13 +1,13 @@
-/* capture: the inbox's T22 folds at the module's interface (DEC-88, DEC-108; K1019): a resolve takes the member's own
-   reason (R32, C-118.7), `inboxList` sorts (R32), the discard clearing waits on a litigation-hold reader (R32), and the
-   doorbell keeps a count-only tally of the knocks it turns away (R80). The doorbell's op handler over a Durable Object
+/* doorbell: the inbox's T22 folds at the module's interface (DEC-88, DEC-108; K1019), moved from capture's tests (the
+   map's §6) and re-labelled: a resolve takes the member's own reason (R3, C-118.7), `inboxList` sorts (R3), the discard clearing waits on a litigation-hold reader (R3), and the
+   doorbell keeps a count-only tally of the knocks it turns away (R19). The doorbell's op handler over a Durable Object
    stub answering through the module's own routes, and the store side beneath it (fixture.mjs). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket, sha, register } from "./fixture.mjs";
-import { captureOps, REASON_MAX, TALLY_DAYS, CAPTURE_READERS } from "../../../src/capture/index.mjs";
-import { knockOp, KNOCK } from "../../../src/capture/doorbell.mjs";
-import { CAPTURE_CHECKS } from "../../../src/capture/checks.mjs";
+import { doorbellOps, REASON_MAX, TALLY_DAYS, DOORBELL_READERS } from "../../../src/doorbell/index.mjs";
+import { knockOp, KNOCK } from "../../../src/doorbell/door.mjs";
+import { DOORBELL_CHECKS } from "../../../src/doorbell/checks.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
 const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
@@ -18,7 +18,7 @@ const helpers = { json, requiredArgument, storeSilent, doAnswer };
 const stubOf = (c) => ({ calls: [], async fetch(req) {
   const url = new URL(req.url); this.calls.push(url.pathname);
   const body = req.method === "POST" ? JSON.parse(await req.text() || "null") : null;
-  return json({ ok: true, result: await captureOps(c, url, body, c.env)[url.pathname.slice(1)]() });
+  return json({ ok: true, result: await doorbellOps(c, url, body)[url.pathname.slice(1)]() });
 } });
 const knockReq = (payload, { ip = "203.0.113.1", raw = null } = {}) =>
   new Request("https://plane/?op=knock", { method: "POST", headers: { "cf-connecting-ip": ip }, body: raw ?? JSON.stringify(payload) });
@@ -31,16 +31,16 @@ function setup() {
 }
 const everything = (rows) => rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name)
   .map((t) => [t, JSON.stringify(rows(`SELECT * FROM ${t}`))]);
-const route = (c, name, qs = "", body = null) => captureOps(c, new URL(`http://x/${name}?${qs}`), body, c.env)[name]();
+const route = (c, name, qs = "", body = null) => doorbellOps(c, new URL(`http://x/${name}?${qs}`), body)[name]();
 const W = KNOCK.windowMs;
 
-/* ---- R32: the member's reason (DEC-88 (2); C-118.7) ---- */
+/* ---- R3: the member's reason (DEC-88 (2); C-118.7) ---- */
 
-test("R32 R37 (C-118.7): every resolve takes the member's own reason; absent, not a string, blank or over 2,000 characters is RESOLVE_NO_REASON, after BAD_STATUS and NO_SUCH_KNOCK and before anything is written", async () => {
+test("R3 R21 (C-118.7): every resolve takes the member's own reason; absent, not a string, blank or over 2,000 characters is RESOLVE_NO_REASON, after BAD_STATUS and NO_SUCH_KNOCK and before anything is written", async () => {
   const { c, rows, prov } = setup();
   const k = await c.knock({ content: "a tip", sourceAddress: "1.1.1.1" });
-  const row = CAPTURE_CHECKS.RESOLVE_NO_REASON;
-  assert.deepEqual([row.check, row.where], ["C-118.7", "src/capture/index.mjs inboxResolve > is-resolve-reasoned"]);
+  const row = DOORBELL_CHECKS.RESOLVE_NO_REASON;
+  assert.equal(row.check, "C-118.7");
   const before = everything(rows);
   for (const status of ["discarded", "new", "pulled"])
     for (const reason of [undefined, null, 42, {}, ["why"], "", "   ", "\n\t ", "x".repeat(REASON_MAX + 1)]) {
@@ -58,7 +58,7 @@ test("R32 R37 (C-118.7): every resolve takes the member's own reason; absent, no
   assert.equal(REASON_MAX, 2000);
 });
 
-test("R32: a reasoned discard, and a return to new, are recorded on the inbox row with the reason, who and when; the member reads carry them; the route takes the body's reason", async () => {
+test("R3: a reasoned discard, and a return to new, are recorded on the inbox row with the reason, who and when; the member reads carry them; the route takes the body's reason", async () => {
   const { c, rows } = setup();
   const k = await c.knock({ content: "a tip", sourceAddress: "1.1.1.1" });
   const d = c.inboxResolve({ knockId: k.knockId, status: "discarded", by: "member:m1", reason: "an advertisement, not a tip" });
@@ -75,7 +75,7 @@ test("R32: a reasoned discard, and a return to new, are recorded on the inbox ro
   assert.equal(route(c, "inboxresolve", "", { knockId: k.knockId, status: "discarded", by: "member:m2" }).reason, "RESOLVE_NO_REASON");
 });
 
-test("R32 R65: inboxResolve to pulled is the pull once its reason is admitted, the reason recorded on the row with the pull; pullKnock asked directly takes no reason", async () => {
+test("R3 R13: inboxResolve to pulled is the pull once its reason is admitted, the reason recorded on the row with the pull; pullKnock asked directly takes no reason", async () => {
   const { c, rows, prov } = setup();
   const k = await c.knock({ content: "memo", sourceAddress: "1.1.1.1" });
   const p = await c.inboxResolve({ knockId: k.knockId, status: "pulled", by: "m1", reason: "the budget memo we asked for" });
@@ -83,7 +83,7 @@ test("R32 R65: inboxResolve to pulled is the pull once its reason is admitted, t
   assert.deepEqual({ ...rows(`SELECT status, resolved_by, pulled_by, resolve_reason FROM inbox`)[0] },
                    { status: "pulled", resolved_by: "m1", pulled_by: "m1", resolve_reason: "the budget memo we asked for" });
   assert.equal(prov.receipts.length, 1);
-  /* direct: no reason taken, none recorded, the pull made as R65 states */
+  /* direct: no reason taken, none recorded, the pull made as R13 states */
   const k2 = await c.knock({ content: "memo two", sourceAddress: "1.1.1.2" });
   const d = await c.pullKnock({ knockId: k2.knockId, by: "m1" });
   assert.deepEqual([d.ok, d.existed], [true, false]);
@@ -93,7 +93,7 @@ test("R32 R65: inboxResolve to pulled is the pull once its reason is admitted, t
 /* N499 (K1105): the `pulled` arm passes `at` and `within` to the pull, so control-plane R36's reasoned resolve is one act
    with its promotion and the reason lands on the knock's row inside it. A table of the test's own stands for the
    promotion. */
-test("R32 R65 (N499): a reasoned pulled resolve given at and within records the reason on the knock's row inside the pull's one act; within's refusal or throw rolls the pull back, reason and all", async () => {
+test("R3 R13 (N499): a reasoned pulled resolve given at and within records the reason on the knock's row inside the pull's one act; within's refusal or throw rolls the pull back, reason and all", async () => {
   const { c, rows, s, prov } = setup();
   s.db.exec(`CREATE TABLE promoted (knock TEXT, sha TEXT)`);
   const everything = () => rows(`SELECT name FROM sqlite_master WHERE type='table'`).map((r) => r.name)
@@ -132,13 +132,13 @@ test("R32 R65 (N499): a reasoned pulled resolve given at and within records the 
   assert.deepEqual([d.ok, d.status, called], [true, "discarded", 0]);
   assert.notEqual(c.inboxGet(k3.knockId).item.resolved, "2000-01-01T00:00:00Z");
   const k4 = await c.knock({ content: "the audit", sourceAddress: "1.2.3.7" });
-  const via = await captureOps(c, new URL("http://x/inboxresolve"), { knockId: k4.knockId, status: "pulled", by: "m1", reason: "audit",
-                                                                    at: "2000-01-01T00:00:00Z" }, c.env).inboxresolve();
+  const via = await doorbellOps(c, new URL("http://x/inboxresolve"), { knockId: k4.knockId, status: "pulled", by: "m1", reason: "audit",
+                                                                     at: "2000-01-01T00:00:00Z" }).inboxresolve();
   assert.equal(via.ok, true);
   assert.notEqual(via.pulled_at, "2000-01-01T00:00:00Z", "a body's `at` is not the pull's instant");
 });
 
-/* ---- R32: the inbox's sort (DEC-108 (2)) ---- */
+/* ---- R3: the inbox's sort (DEC-108 (2)) ---- */
 
 /* Six knocks: two with a secret; three pulled into documents of projects B, A and none, one more pulled with its home
    gone. Received a minute apart, k0 oldest. */
@@ -161,7 +161,7 @@ async function sortWorld() {
 }
 const order = (r, ids) => r.inbox.map((x) => ids.indexOf(x.knock_id));
 
-test("R32 (DEC-108 (2)): inboxList sorts by received (the default, newest first), status, secret or project, either way, ties by received newest first; a knock with no project sorts last in either direction", async () => {
+test("R3 (DEC-108 (2)): inboxList sorts by received (the default, newest first), status, secret or project, either way, ties by received newest first; a knock with no project sorts last in either direction", async () => {
   const { c, ids } = await sortWorld();
   const list = (sort, dir) => c.inboxList(null, { sort, dir });
   assert.deepEqual(order(c.inboxList(null), ids), [5, 4, 3, 2, 1, 0], "today's order unchanged");
@@ -183,7 +183,7 @@ test("R32 (DEC-108 (2)): inboxList sorts by received (the default, newest first)
   assert.deepEqual(order(c.inboxList("pulled", { sort: "project", dir: "asc" }), ids), [2, 0, 5, 3], "with a status");
 });
 
-test("R32 (N90, DEC-108 (2)): a sorted list pages by `after` over every knock once, in its order; an unknown sort or dir is the required-argument refusal naming it, with nothing read", async () => {
+test("R3 (N90, DEC-108 (2)): a sorted list pages by `after` over every knock once, in its order; an unknown sort or dir is the required-argument refusal naming it, with nothing read", async () => {
   const { c, ids, rows } = await sortWorld();
   for (const [sort, dir] of [["received", "desc"], ["status", "asc"], ["secret", "desc"], ["project", "asc"], ["project", "desc"]]) {
     const whole = order(c.inboxList(null, { sort, dir }), ids);
@@ -208,10 +208,10 @@ test("R32 (N90, DEC-108 (2)): a sorted list pages by `after` over every knock on
   assert.equal(c.inboxList(null, { sort: "project", after: "nope" }).reason, "BAD_CURSOR");
 });
 
-/* ---- R32: the litigation hold's pause of the discard clearing (DEC-108 (5)) ---- */
+/* ---- R3: the litigation hold's pause of the discard clearing (DEC-108 (5)) ---- */
 
-test("R32 (DEC-108 (5)): nothing discarded is cleared while a hold may be in place: no reader registered, one that fails or does not answer, or one that reports a hold, each pauses the clearing; only a reader answering no hold lets it run", () => {
-  assert.deepEqual([...CAPTURE_READERS], ["litigation-hold", "batch-examination", "captured-for"]);
+test("R3 (DEC-108 (5)): nothing discarded is cleared while a hold may be in place: no reader registered, one that fails or does not answer, or one that reports a hold, each pauses the clearing; only a reader answering no hold lets it run", () => {
+  assert.deepEqual([...DOORBELL_READERS], ["litigation-hold"], "this module's one reader slot");
   const may = (fn) => { const { c } = fresh(); if (fn) assert.equal(c.registerReader("litigation-hold", "actions", fn).ok, true); return c.mayClearDiscarded().may; };
   assert.equal(may(null), false, "none registered: nothing is cleared");
   assert.equal(may(() => true), false, "a hold in place");
@@ -233,11 +233,11 @@ test("R32 (DEC-108 (5)): nothing discarded is cleared while a hold may be in pla
   assert.equal(c.mayClearDiscarded().may, true, "the first registration stands");
 });
 
-/* ---- R80: the doorbell's count-only tally (DEC-108 (6); BOB's privacy ruling) ---- */
+/* ---- R19: the doorbell's count-only tally (DEC-108 (6); BOB's privacy ruling) ---- */
 
 const tallyRows = (rows) => rows(`SELECT day, refused, limit_reached FROM doorbell_tally ORDER BY day`).map((r) => ({ ...r }));
 
-test("R80 R53 R71: every knock the doorbell turns away is counted by its UTC day, the envelope, a required argument, base64, empty, size, a weak secret and either rate limit, and every knockAttempt refusal; an admitted knock and a GET are not", async () => {
+test("R19 R10 R17: every knock the doorbell turns away is counted by its UTC day, the envelope, a required argument, base64, empty, size, a weak secret and either rate limit, and every knockAttempt refusal; an admitted knock and a GET are not", async () => {
   const { send, c, rows } = setup();
   const day = new Date().toISOString().slice(0, 10);
   await send(null, { raw: "x".repeat(KNOCK.maxBytes + 4097) });
@@ -266,7 +266,7 @@ test("R80 R53 R71: every knock the doorbell turns away is counted by its UTC day
   assert.equal(tallyRows(rows).reduce((n, r) => n + r.refused, 0), 9);
 });
 
-test("R80: the knocks that found the whole-doorbell limit reached are counted apart, a RATE_IP among them when the instance was full too, and the day it was last reached is kept as a date", async () => {
+test("R19: the knocks that found the whole-doorbell limit reached are counted apart, a RATE_IP among them when the instance was full too, and the day it was last reached is kept as a date", async () => {
   const { c, rows } = setup();
   const t0 = Date.parse("2026-03-04T12:00:00Z"), t1 = Date.parse("2026-03-06T08:00:00Z");
   for (let i = 0; i < 10; i++) await c.knock({ content: `g${i}`, sourceAddress: i < 5 ? "10.0.0.1" : `10.0.1.${i}`, now: t0 });
@@ -283,7 +283,7 @@ test("R80: the knocks that found the whole-doorbell limit reached are counted ap
   assert.deepEqual(fresh().c.doorbellTally({ viewer: "member:m1" }), { ok: true, days: [], last_limit_reached: null }, "never reached: null");
 });
 
-test("R80 (BOB's privacy ruling): the tally keeps 30 UTC days and drops any older, and holds no address, fingerprint, time, digest, pseudonym, note, contact or content", async () => {
+test("R19 (BOB's privacy ruling): the tally keeps 30 UTC days and drops any older, and holds no address, fingerprint, time, digest, pseudonym, note, contact or content", async () => {
   const { c, rows } = setup();
   const day0 = Date.parse("2026-01-01T10:00:00Z");
   for (let d = 0; d < 40; d++) await c.knock({ contentB64: "!!!", sourceAddress: "198.51.100.7", now: day0 + d * 86400000 });
@@ -304,7 +304,7 @@ test("R80 (BOB's privacy ruling): the tally keeps 30 UTC days and drops any olde
     assert.ok(!text.includes(x), `the tally holds no ${x}`);
 });
 
-test("R80: doorbellTally answers a member session only, writes nothing, decides nothing; a count that cannot be written never changes the refusal's answer", async () => {
+test("R19: doorbellTally answers a member session only, writes nothing, decides nothing; a count that cannot be written never changes the refusal's answer", async () => {
   const { c, rows, send } = setup();
   await send({ contentText: "" });
   const before = everything(rows);

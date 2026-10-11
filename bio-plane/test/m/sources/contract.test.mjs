@@ -27,7 +27,7 @@ test("R15 source_knocks is a read contract: exactly the columns (knock_id, sourc
   const p1 = await w.knock({ secret: SECRET }), p2 = await w.knock({ secret: SECRET });
   const pNew = await w.knock({ secret: SECRET }), pGone = await w.knock({ secret: SECRET });
   await w.pull(p1); await w.pull(p2);
-  assert.equal(w.cap.inboxResolve({ knockId: pGone.knock_id, status: "discarded", by: "bob", reason: "not material for the group" }).ok, true);
+  assert.equal(w.bell.inboxResolve({ knockId: pGone.knock_id, status: "discarded", by: "bob", reason: "not material for the group" }).ok, true);
   /* knocks without a secret: one pulled and read, one pulled and never read */
   const b1 = await w.knock(), b2 = await w.knock();
   await w.pull(b1); await w.pull(b2);
@@ -37,7 +37,7 @@ test("R15 source_knocks is a read contract: exactly the columns (knock_id, sourc
   const B1 = w.s.sourceOf({ captureSha: b1.sha256, viewer: V("bob") }).sourceId;
   assert.deepEqual(table(), expect([[P, [p1, p2]], [B1, [b1]]]),
                    "p2's row is written when the source is minted, though its capture was never read; b2's source is not minted");
-  /* each row is the receipt the capture's own source states (capture R65) */
+  /* each row is the receipt the capture's own source states (doorbell R13) */
   const stated = w.s.sourceOf({ captureSha: p2.sha256, viewer: V("carol") }).source.receipt;
   const row = table().find((r) => r.knock_id === p2.knock_id);
   assert.deepEqual({ knock_id: row.knock_id, sha256: row.capture_sha, bytes: row.bytes, received: row.received }, stated);

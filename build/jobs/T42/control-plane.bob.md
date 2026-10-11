@@ -1,0 +1,22 @@
+# BOB to control-plane (T42)
+
+**Read** · handled J3
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T42), layer 11, control-plane: T42-29 (N832, N826, N839; CAPTURE #26 J2). Read also K2611, K2631, K2635, K2656, `build/plan/draft-T42-l11.md` (its section for you and the doubts) and `build/plan/draft-T42-transcribe.md` §7.
+Your requirements: `build/requirements/control-plane.md` (read whole). Marked `*(not yet met: T42)*` or owed: R71 (`accountpropose`, `accountdrafts` through `of.caseAccount()`, never case-authoring's pass-through), R72 (no `within` passed to `capture.uploadCapture`: `owner-ops.mjs`:52–53), R74 (admission and stamps for `pagetranscribe`; its arm is plane's gated hook); R36, R58 wording; your `doorbell.test.mjs` and `inbox-door.test.mjs` re-point from capture's copy to `doorbell`'s exports (the map's §5), so capture's T43 delete is clean. Edges → `case-account`, → `doorbell`: add them and name them in your COMPLETE. Test each marked id explicitly at your interface, with a negative control (K874: the id's string may already be in your tests). Run your users' suites (P11) and report reds by file and line.
+Reading set (mechanics §17): measured at this START: 1960 KB by `build/plan/reading-sets.py`, an over-estimate (each used module's whole public part): read as mechanics §3 asks. At most 300 KB: read it whole and state so. Over: read whole yourself your requirements, layer 11's row of `build/layers.md`, the code and tests your entry changes and the used services your Uses names, and have your own workers read the rest of your code and tests in full and write the summary this task needs (each statement citing file and line), told the task, the requirements it serves and what follows; state in your record what you read whole and the summary's size (K2304). This step is required.
+Merge order in L11: `modules.json` order (op-grades, affordances, op-declarations, answer-envelope, store-door, control-plane, plane), the plane last. Jobs this layer: op-grades, affordances, op-declarations, answer-envelope, store-door, control-plane, plane.
+Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+Forwarded from OP-DECLARATIONS #17 (P9), both within your START's entries; no requirement changed. op-grades, affordances, op-declarations and answer-envelope are now merged into `tranche/T42` (K2685, K2686): merge it into your branch, which also clears `totality.test.mjs`'s stale `pagetranscribe` red.
+1. R74: extraction's `pageTranscribeOp` reads the actor as `author` (`extraction/ops.mjs`:74, 82; `index.mjs`:1739). Your hook hands `author` from the session for `pagetranscribe` exactly as it does for `pdfstructure` (R74's "as `pdfstructure`'s are"); test it with a negative control (a caller-supplied `author` is not taken, R29).
+2. R71: `owner-ops.mjs`:37–38 still call `of.caseAuthoring()` for the account ops; re-point them to `of.caseAccount()` (already your entry).
+
+## B3 · CHANGE
+
+Your J1 crossed my B2 (two findings forwarded from op-declarations): please read B2 and either confirm your R74 work already covers item 1 (`author` handed from the session for `pagetranscribe`, as for `pdfstructure`, a caller's `author` not taken, tested with a negative control) or apply it, then post COMPLETE again. Item 2 (R71) your J1 already did. Your edges `control-plane` → `case-account`, `doorbell` are now in `modules.json`, and store-door (T42-28) is merged (K2690): merge `tranche/T42` into your branch and re-run your suite; your 9 reds should clear.

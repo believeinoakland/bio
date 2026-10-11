@@ -44,8 +44,9 @@
  *   caseTensions         `attributionInForce` (its R6, was publication R39; R16), read directly and never through
  *                        `publication`, which no longer answers it (its R61; T35-60, N597, K1643).
  *   caseAuthoring        `publishCase` (its R18; R13) and `statementAcknowledgements`, whose list carries its
- *                        `withheld_stated` sentence (its R20; R15); `registerReviewComments` (its R66), filled at
- *                        start with R33's `reviewCommentsFor` (K2483).
+ *                        `withheld_stated` sentence (its R20; R15).
+ *   caseAccount          `registerReviewComments` (its R7; was case-authoring R66, retired), filled at start with
+ *                        R33's `reviewCommentsFor` (K2483; T42-23a, N839, K2608), on the one instance for the host.
  *   ratification         `registerApprovalReader` (its R50), filled at start with R30–R31's rule and approvals (R32).
  *   caseGrammar          `reviewCommentsOf` (its R25), the comments a signed document carries (R33's left-out read);
  *                        `approvalSubjectSha` (its R26; K2528), the digest an approval names (R31).
@@ -67,6 +68,7 @@ import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { publicationOf } from "../publication/index.mjs";
 import { caseTensionsOf } from "../case-tensions/index.mjs";
 import { caseAuthoringOf } from "../case-authoring/index.mjs";
+import { caseAccountOf } from "../case-account/index.mjs";
 import { ratificationOf } from "../ratification/index.mjs";
 import * as caseGrammar from "../case-grammar/index.mjs";
 import { isMachineIdentity, parseFrontmatter } from "../record-grammar/index.mjs";
@@ -248,13 +250,13 @@ export class Review {
   #seeded = false;
 
   constructor({ storage, record, membership, host = null, strength = null, basisVersions = null, publication = null,
-                caseTensions = null, caseAuthoring = null, ratification = null, caseGrammar: grammar = null,
-                now = null } = {}) {
+                caseTensions = null, caseAuthoring = null, caseAccount = null, ratification = null,
+                caseGrammar: grammar = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.#deps = { host, storage, strength, basisVersions, publication, caseTensions, caseAuthoring, ratification,
-                   caseGrammar: grammar };
+    this.#deps = { host, storage, strength, basisVersions, publication, caseTensions, caseAuthoring, caseAccount,
+                   ratification, caseGrammar: grammar };
     this.now = typeof now === "function" ? now : () => stampInstant("millisecond");
   }
 
@@ -269,6 +271,8 @@ export class Review {
                                                               ...(basisVersions ? { basisVersions } : {}) });
   }
   get caseAuthoring() { return this.#deps.caseAuthoring ||= caseAuthoringOf(this.#deps.host); }
+  /* R33 (T42-23a): case-account's one instance for the host (its R12), which holds the review-comments reader. */
+  get caseAccount() { return this.#deps.caseAccount ||= caseAccountOf(this.#deps.host); }
   get ratification() { return this.#deps.ratification ||= ratificationOf(this.#deps.host); }
   /* case-grammar is pure: its module, unless a test passed its own. */
   get caseGrammar() { return this.#deps.caseGrammar || caseGrammar; }
@@ -855,7 +859,7 @@ export class Review {
              reviewer_kind: recipient ? "recipient" : "member", text: c.text, at: c.at };
   }
 
-  /** R33 (D61): THE COMMENTS ON A CASE EDITION'S REVIEW COPIES, for the publisher's choice (`case-authoring` R66 reads
+  /** R33 (D61): THE COMMENTS ON A CASE EDITION'S REVIEW COPIES, for the publisher's choice (`case-account` R7 reads
    *  it through `registerReviewComments`, filled at start): every comment made while its draft stood at (case,
    *  edition), on a draft of that case's project, and, when `draft` is named (the draft `publishCase` binds), that
    *  draft's comments made while it named no case, which is how a new or derived case's copies are reached. Fenced as
@@ -955,7 +959,7 @@ const instances = new WeakMap();
 
 /** K61: the one instance per host, created on the first call with `deps`. It creates its tables, declares them to
  *  purge (R24), and fills publication's review provider (publication R23), replacing legacy-store's fill (K206),
- *  ratification's approval reader (R32) and case-authoring's review comments (R33). */
+ *  ratification's approval reader (R32) and case-account's review comments (R33). */
 export function reviewOf(host, deps) {
   let r = instances.get(host);
   if (!r) {
@@ -971,8 +975,9 @@ export function reviewOf(host, deps) {
     r.publication.registerReviewProvider("review", r.provider());
     /* R32 (D60): the approval rule and approvals, read by ratification's gates (its R49, R50). */
     r.ratification.registerApprovalReader(r.approvalReader());
-    /* R33 (D61; K2483): the comments on a case's review copies, read by publishCase (case-authoring R66). */
-    r.caseAuthoring.registerReviewComments((args) => r.reviewCommentsFor(args));
+    /* R33 (D61; K2483; T42-23a): the comments on a case's review copies, read for publishCase by case-account (its
+       R7), registered there once and never through case-authoring's pass-through, which would register it twice. */
+    r.caseAccount.registerReviewComments((args) => r.reviewCommentsFor(args));
   }
   return r;
 }
