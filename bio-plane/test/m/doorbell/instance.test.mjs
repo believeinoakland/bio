@@ -37,21 +37,23 @@ test("R25 (K61): doorbellOf answers one instance per storage, whoever asks and h
   assert.notEqual(doorbellOf(host().ctx), d, "negative control: another storage, another instance");
 });
 
-test("R25: at its creation it creates its six tables with capture's DDL and declares them exempt from purge; capture's held declaration is not a failure", () => {
-  /* capture migrated first, as the plane migrates it: capture declares the six, doorbell's declaration is held */
+/* T43 (N851, N864; K2689): written to this module's own ownership of its six tables. Until capture's delete (T43-8)
+   capture still declares them first, so the two ownership arms below are red by name (plan T43 rule 4 (5)). */
+test("R25: at its creation it creates its six tables with capture's DDL and declares them exempt from purge, as their owner", () => {
+  /* capture migrated first, as the plane migrates it: the six are this module's, every one exempt */
   const h = host();
   const d = doorbellOf(h.ctx);
   for (const t of SIX) assert.ok(h.tables().includes(t), t);
   assert.deepEqual([...DOORBELL_EXEMPT_TABLES].sort(), [...SIX].sort());
-  assert.deepEqual(declared(h.record), Object.fromEntries(SIX.map((t) => [t, ["capture", "exempt"]])), "held by capture, every one exempt");
+  assert.deepEqual(declared(h.record), Object.fromEntries(SIX.map((t) => [t, ["doorbell", "exempt"]])), "held by doorbell, every one exempt");
   assert.equal(d.declareTables(), false, "asked again, nothing more is declared");
-  /* doorbell made before capture's migrate (the plane builds both before it migrates): capture still holds the six
-     (J1's reading 2), and capture's own migrate after it does not throw */
+  /* doorbell made before capture's migrate (the plane builds both before it migrates): capture's own migrate after it
+     does not throw, and the six stay this module's */
   const early = host({ migrateCapture: false });
   doorbellOf(early.ctx);
   for (const t of SIX) assert.ok(early.tables().includes(t), `${t}, made at doorbell's creation`);
   assert.doesNotThrow(() => early.cap.migrate(), "capture's migrate after doorbell's creation");
-  assert.deepEqual(declared(early.record), Object.fromEntries(SIX.map((t) => [t, ["capture", "exempt"]])));
+  assert.deepEqual(declared(early.record), Object.fromEntries(SIX.map((t) => [t, ["doorbell", "exempt"]])));
   /* with no copy declaring them (capture's delete, T43): doorbell holds them itself, exempt */
   const alone = host({ migrateCapture: false });
   const bare = new Doorbell(alone.s, { capture: { env: {} }, record: alone.record });
