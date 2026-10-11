@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, DEAD, AUTHORED, WHAT_CHANGED } from "./fixture.mjs";
-import { outcomesOf, OUTCOMES_HEAD } from "../../../src/case-grammar/index.mjs";
+import { outcomesOf, OUTCOMES_HEAD, accountOf } from "../../../src/case-grammar/index.mjs";
 import { PUBLISH_ACT_CHECKS, OUTCOME_KINDS, AUTHORED_FIELDS, ACT_FIELDS } from "../../../src/case-authoring/index.mjs";
 
 const DOC = "INFO-2026-0001-a", Q = "INQ-2026-0001-q";
@@ -202,4 +202,45 @@ test("R71 (controls): a replaced preparation still carries a pending outcome; on
   const e3 = nextEdition(w, P, caseId, 3);
   assert.deepEqual([e3.ok, e3.edition], [true, 3], JSON.stringify(e3).slice(0, 300));
   assert.deepEqual(outcomesOf(w.fm(docText(w, e3))).map((r) => r.outcome), [b], "only what no ratified edition carries");
+});
+
+test("R71, R69: each pending outcome's text is judged with case-account R6's judgment as a row of kind outcome, after the four statements; its refusal is answered as R69's are, naming the outcome, and nothing is written; with the same act's outcome withdrawn the act prepares", () => {
+  const { w, P, caseId } = setup();
+  w.doc(DOC2);
+  w.finding(Q, [{ target: DOC }, { target: DOC2 }]);
+  const a = w.ca.carryOutcome({ case: caseId, ...OUTCOME, text: "The council saved 40,000 dollars.", by: "alice" }).outcome;
+  /* case-disclosures R30's judgment stood in: it refuses the outcome's sentence as stating a fact its cites do not hold */
+  w.judgeAccount = ({ statements }) => ({ refusals: statements.filter((r) => r.kind === "outcome").map((r) => ({ ok: false,
+    reason: "ACCOUNT_FACT_NOT_IN_CITED", code: "ACCOUNT_FACT_NOT_IN_CITED", sentences: [r.ord] })) });
+  const before = w.snapshot();
+  const r = nextEdition(w, P, caseId, 2);
+  assert.deepEqual([r.ok, r.code, r.outcomes], [false, "ACCOUNT_FACT_NOT_IN_CITED", [a]], JSON.stringify(r).slice(0, 300));
+  assert.deepEqual(w.snapshot(), before, "nothing written");
+  const handed = w.judged.at(-1).statements.filter((x) => x.kind === "outcome");
+  assert.deepEqual(handed.map((x) => [x.text, x.cites, x.outcome]), [["The council saved 40,000 dollars.", [{ kind: "finding", ref: Q, ord: null }], a]]);
+  const kinds = w.judged.at(-1).statements.map((x) => x.kind);
+  assert.ok(kinds.lastIndexOf("statement") < kinds.indexOf("outcome"), "after the four statements");
+  /* the pre-flight lists it among blockers, as op=publish refuses it first */
+  const pre = w.ca.publishPreflight({ ...AUTHORED, whatChanged: WHAT_CHANGED, project: P, targets: [Q], roles: { [Q]: "load_bearing" },
+                                      viewer: V("alice"), author: "alice", caseId, ...fresh(2) });
+  assert.equal(pre.first.code, "ACCOUNT_FACT_NOT_IN_CITED");
+  /* control: withdrawn, nothing to judge, and the act prepares; the account block holds no outcome row */
+  w.ca.withdrawCarriedOutcome({ outcome: a, reason: "the figure was wrong", by: "alice" });
+  const ok = nextEdition(w, P, caseId, 2);
+  assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
+  assert.equal(w.judged.at(-1).statements.some((x) => x.kind === "outcome"), false);
+});
+
+test("R71 (real judgment): a carried outcome passes case-account R6 and is written into the account block as a row of kind outcome beside the outcomes: block", () => {
+  const { w, P, caseId } = setup();
+  w.doc(DOC2);
+  w.finding(Q, [{ target: DOC }, { target: DOC2 }]);
+  const a = w.ca.carryOutcome({ case: caseId, ...OUTCOME, by: "alice" }).outcome;
+  const e2 = nextEdition(w, P, caseId, 2);
+  assert.equal(e2.ok, true, JSON.stringify(e2).slice(0, 400));
+  const fm = w.fm(docText(w, e2));
+  const rows = accountOf(fm);
+  const list = Array.isArray(rows) ? rows : rows && rows.rows ? rows.rows : [];
+  assert.ok(list.some((r) => r.kind === "outcome" && r.text === OUTCOME.text), JSON.stringify(rows).slice(0, 400));
+  assert.deepEqual(outcomesOf(fm).map((r) => r.outcome), [a]);
 });

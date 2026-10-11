@@ -1074,8 +1074,10 @@ export class CaseAuthoring {
        (`case-account` R6, through `case-disclosures` R30), after R55's judgments and before R11, its first refusal
        answered; nothing is written. */
     const accountJ = A.accountJudged({ sentences: shaped.sentences, statementCites: shaped.statementCites, drafted,
-      statement: stmt, justification: just, excluded: rows, changed, prepared, reached, lens: lensRead, caseId: theCase,
-      viewer });
+      statement: stmt, justification: just, excluded: rows, changed,
+      /* R71 (T45; D6c, D63): each pending outcome's text, judged as a statement is (`kind: outcome`, case-account R6) */
+      outcomes: outcomes.map(({ outcome, text, cites }) => ({ outcome, text, cites })),
+      prepared, reached, lens: lensRead, caseId: theCase, viewer });
     seen.account = accountJ;
     seen.accountDraft = drafted;
     if (accountJ.refusal) return accountJ.refusal;
