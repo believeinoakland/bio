@@ -17,3 +17,7 @@ Merge order in L2: membership first (R128, which you register into: merge `tranc
 ## B2 · ANSWER · re J1
 
 Yes: family C-147 is yours, rows C-147.1–.8 in that order, exported as PROJECT_SCOPE_CHECKS; NO_REASON and NOT_THE_OWNER stay as R3–R5 answer them; translations BOB's drafts from draft-T45-lower §10, re-wordable by the UX stream (K2794). Your readings (a), (b), (c) stand as stated. To avoid collisions, T45's other new families are reserved now: C-148 case-check, C-149 action-holds, C-150 action-replies, C-151 plan-work, C-152 action-producers.
+
+## B3 · CHANGE
+
+membership (T45-2) is merged into tranche/T45 (K2796): R128 `registerProjectActGuard` and R83's MODULE_ORDER are there, with row C-56.6. Merge tranche/T45 into your branch before continuing.
