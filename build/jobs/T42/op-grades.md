@@ -33,3 +33,7 @@
 - `ownership` against `tranche/T42`: 6 files changed; 0 failures.
 
 Size (session_015JYSkqkTmdKAbSMNiSw1fb): test runs 8, module lines 2636
+
+## J1 · COMPLETE
+
+T42-25a done: R31 (pagetranscribe, undetermined, NON_ACTS row, phone true, no machine refusal) in new src/op-grades/t42.mjs; R1's inboxresolve/inboxpull re-pointed to doorbell R3, R13; t41.mjs accountpropose now names case-account R1, R2 (no pinned digest covers it). op-grades 51/51; format, architecture, coverage (31/31), ownership 0 failures. Expected users' reds until later L11 merges: affordances catalogue.test.mjs:536 (T42-25b re-pin) and control-plane totality.test.mjs:20 stale pagetranscribe (clears at op-declarations R47). Details in my record.
