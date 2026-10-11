@@ -64,7 +64,9 @@ test("R46, R47: a plan run passing the registered check lands with its plan stor
                    { ok: true, module: "action-plans", mode: "plan" });
   const r = await w.runs.open(OPEN({ run: "P1", mode: "plan", plan: PLN, ...BOB, bounds: [{ bound: "proposals", allowed: 5 }] }));
   assert.equal(r.started, true, JSON.stringify(r));
-  assert.deepEqual(heard, [{ contextType: "project", contextId: PROJ, plan: PLN, actor: "bob", viewer: "member:bob" }]);
+  /* R77 (T45): the check also receives the run's origin, and the response (null but for a re-examination) */
+  assert.deepEqual(heard, [{ contextType: "project", contextId: PROJ, plan: PLN, actor: "bob", viewer: "member:bob",
+                             origin: "member", response: null }]);
   assert.equal(w.row(`SELECT plan, mode FROM ai_runs WHERE run='P1'`).plan, PLN);
   const s = (await w.runs.read({ run: "P1", viewer: "member:bob" })).session;
   assert.deepEqual([s.mode, s.plan], ["plan", PLN]);
