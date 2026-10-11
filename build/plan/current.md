@@ -31,6 +31,7 @@ It is the only module marked `legacy` in `modules.json`.
    7. `test/system/migrate-released.test.mjs`'s `ai_ceilings` arm (T41 rule 4 (24)) until T42-17 (N848);
    8. (cleared at T42-2's merge, K2612) `fleetbundles` agent-worker's input count (K2520 (a));
    9. from T42-6's merge: doorbell R25's ownership arm until capture's delete (T43; rule 3 (4));
+   11. (K2617) record-core `t33.test.mjs`:69 (R76) and :162 (R62), which lack `ACD`, from T42-1's merge until T42-2a.
    10. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
 
 **Text owed before each layer's START (BOB's wording, P5):**
@@ -48,11 +49,12 @@ It is the only module marked `legacy` in `modules.json`.
 No merge order (independent).
 
 ### L2
+- **T42-2a · record-core** · (RECORD-GRAMMAR #13 J3, K2617) R62's `mintExhausted` gains its sentence for `ACD`, R76's opaque prefixes gain `ACD` (record-grammar R55); `t33.test.mjs`:69 (R76) and :162 (R62) re-pinned · red accepted by name until this merge (rule 4 (11)).
 - **T42-3 · membership** · (N833, K2484) R60's hold acts (`actions` R52, R56, R57) reachable at `EXISTENCE`; (K657) R83's `MODULE_ORDER` names `doorbell` and `case-account` at their places · req: R60 (written), R83 (re-pin from `modules.json`).
 - **T42-4 · credentials** · (N831, K2480) `accountUsesOf({owner})`: an in-plane read with no route and no viewer, failing closed · req: the new id, from `draft-T42-reqs.md`.
 - **T42-5 · promotion** · stamps T41's L3–L11 rows and T42's L1–L2 rows (record-grammar's C-33.40 `where`; any row L2 adds) · K1680 · req: the rows' behaviour.
 
-**L2 merge order:** membership, credentials, promotion last.
+**L2 merge order:** record-core, membership, credentials, promotion last.
 
 ### L3
 - **T42-6 · doorbell** (new; by copy, K624) · (N826) R1–R25 as `capture-split.md` §4: the knock, rate, inbox, pull, knocker secret, tallies, C-85 and C-118.2/.3/.4/.7, `doorbellOf` · req: `requirements/doorbell.md` (BOB's, before L3's START) · merges first in L3.
