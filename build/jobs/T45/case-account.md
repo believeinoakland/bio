@@ -49,3 +49,7 @@ Other modules (also in my record): (1) N901 as confirmed in B2 (c): case-disclos
 ## J3 · COMPLETE
 
 T45-20 done on 2eee810f4e (tranche/T45 merged after B2): R6 (carried outcomes), R13 (advocacyCheck, advocacyChecksOf, table advocacy_checks), R14 (counsel matters never evidence) met; family C-153 (3 rows). case-account 32/32; case-authoring 185/185, review 46/46; format, architecture, coverage (14/14), ownership (8 files) all 0 failures. One new red in another module: answer-envelope's family list (J2 (2)). Record in build/jobs/T45/case-account.md.
+
+## J4 · COMPLETE
+
+B3 processed: tranche/T45 (case-grammar, publication) merged at cbde421679; no code change needed. case-account 32/32, case-authoring 185/185, review 46/46; answer-envelope's 4 reds unchanged (J2 (2)); format, architecture, coverage (14/14), ownership (8 files) 0 failures. Record updated.
