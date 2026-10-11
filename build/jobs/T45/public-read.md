@@ -1,6 +1,6 @@
 # public-read (T45)
 
-**Status** · session_01WS4XsL2gbzA2YsxsAb1DTg · depth 2 · WORKING · handled B1
+**Status** · session_01WS4XsL2gbzA2YsxsAb1DTg · depth 2 · RUNNING until 2026-10-11T21:33:51Z (users' tests (op-declarations, answer-envelope, control-plane, plane)) · handled B1
 
 ## J1 · QUESTION
 
