@@ -39,3 +39,7 @@ Two readings I am building on; I carry on with them unless you answer otherwise.
 **Found in other modules:** see REPORT J2 (plane's door test). Generated artifacts: none staled by this job beyond rule 4 (10)'s standing ones (no bundle input changed: the plane does not import doorbell yet).
 
 Size (session_01LUJMTyBUMuQMAruQweWeZp): test runs 11, module lines 1048
+
+## J2 · REPORT
+
+**plane (T42-30): the whole-plane test of `op=knock` at the door.** The map's §6 moves `capture/plane.test.mjs` 66–75 (`op=knock` reached with no token under Miniflare, an empty knock answering C-85.5) to doorbell. I did not move it: until plane's T42-30 the plane's door (`plane/door.mjs`:16, 43) calls capture's `capturePublicOp`, so in L3 the test exercises capture's copy and the plane's interface, not doorbell's. Doorbell's own door is tested at its interface (`doorbellPublicOp`, `test/m/doorbell/ops.test.mjs`). If capture's job removes that test as §6 lists, nothing tests `op=knock` at the whole plane's door until T42-30; suggested: plane's T42-30 carries it, re-pointed to `doorbellPublicOp` (its R5), and capture's job keeps it until then.
