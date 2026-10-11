@@ -68,3 +68,14 @@ Size (session_01JFq9iL3m4uA8zW6LpJSnxm): test runs 9, module lines 3268
 - format 0; architecture 0; coverage 70/70, 0; ownership 11 files, 0.
 
 Size (session_01JFq9iL3m4uA8zW6LpJSnxm): test runs 13, module lines 3301
+
+## J5 · COMPLETE
+
+**B4 applied: tranche/T45 (run-rules R27, K2825) merged in** (4812b0ef3e). No code change was needed. B4's note on `procedureGuidesFor`'s answer (`ok`, `withheld`, `guide: null` for the profile's) is read through `planeAnswer`: an inner `ok: false` is a refused read, so it is UNDETERMINED in `why` (R51), and any other answer is carried as data.
+
+**Tests and checks** (run whole, never stopped)
+- `npm test`: 14 of 15 files green, including `t45: 207 passed, 0 failed`. The R27 arms are green.
+- The only red is `requirements.test.mjs` R45 ×2: the committed bundle is stale, for BOB's regeneration at L6's close.
+- format 0; architecture 0; coverage 70/70, 0; ownership 11 files, 0.
+
+Size (session_01JFq9iL3m4uA8zW6LpJSnxm): test runs 14, module lines 3308
