@@ -184,8 +184,11 @@ export function world({ group = "test-group" } = {}) {
   /* calculations' read (its R8–R10), standing in: `calcs[id] = {answer, hiddenFrom?}`, `answer` the stored calculation
      as read answers it; absent and withheld alike `{ok: true, found: false, calc_id}` */
   const calcs = new Map();
+  /* every call of the stand-in's read is counted (R30: a refused act reads no calculation) */
+  const calcReads = { n: 0 };
   const calculations = {
     async read({ calcId = null, viewer = null } = {}) {
+      calcReads.n++;
       const c = calcs.get(calcId);
       if (!c || !viewer || (c.hiddenFrom || []).includes(viewer)) return { ok: true, found: false, calc_id: calcId };
       return { ok: true, found: true, calc_id: calcId, ...structuredClone(c.answer) };
@@ -196,7 +199,7 @@ export function world({ group = "test-group" } = {}) {
                                   officeEntityOf: ({ role, body }) => offices.get(`${role}|${body}`) ?? null });
   const w = {
     st, host, record, membership, promotion, content, k, strength, reevaluation, publication, standards, contradiction, c,
-    clock, ex, entities, events, offices, view, calcs,
+    clock, ex, entities, events, offices, view, calcs, calcReads,
     row: (q, ...a) => st.sql.exec(q, ...a).toArray()[0] ?? null,
     rows: (q, ...a) => st.sql.exec(q, ...a).toArray(),
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,

@@ -37,7 +37,8 @@
  *   standards     `standardRead`, `inForceAt` (R1, R3, R9, R10); `noSuchStandard` (its R17: R1's `NO_SUCH_STANDARD`);
  *                 `bindsAt` (its R43: R27, whether a standard binds the act's body at the act's dates).
  *   calculations  `read` (its R9: R29's measures, their denominators, populations and derivations). Asynchronous, so an
- *                 act with a measure row answers a Promise of its answer (every other act answers synchronously).
+ *                 act with a measure row answers a Promise of its answer (every other act answers synchronously); the
+ *                 refusals that need no measure are asked first and answered at once, reading no calculation (R30).
  *   contradiction `candidatesFor` (R21: the two sides of the candidate a contradiction inquiry took up; N345).
  *   events       `readEvent`, `eventForAct` (R25, R26); `noSuchEvent` its one answer to an absent or unseen event.
  *   entities     `readEntity` (R25: whether the actor's entity is an `office`; R28: or an organisation, or a person).
@@ -505,15 +506,13 @@ export class Conformance {
      From T33 it is `{id, event, actor: {role, body, entity_id, entity_why?}, evidence, when}`, `when` the event's as the
      author read it. A pre-T33 act keeps its description, date and period; aliased, `event` is its event, otherwise null
      with `act_unaliased: true` and the sentence saying so. */
-  #actView(r, seen = null) {
+  #actView(r, seen = null, acts = null) {
     const all = safeJson(r.act_evidence, []);
     const evidence = seen ? seen.contents(all) : all;
     const actor = { role: r.act_role, body: r.act_body, entity_id: r.act_entity ?? null,
                     ...(r.act_entity ? {} : { entity_why: r.act_event ? NO_OFFICE_ENTITY : ACTOR_BEFORE_ENTITIES }) };
     if (r.act_event) return { id: r.act_id, event: r.act_event, actor, evidence, when: safeJson(r.act_when, null) };
-    let f = null;
-    try { f = this.events.eventForAct(r.act_id); } catch { f = null; }
-    const event = f && f.found && str(f.event_id) ? f.event_id : null;
+    const event = this.#aliasOf(r.act_id, acts);
     return { id: r.act_id, event, actor, evidence, when: null, description: r.act_description, at: r.act_at ?? null,
              period: r.act_at ? null : { from: r.act_from, to: r.act_to },
              ...(event ? {} : { act_unaliased: true, act_says: UNALIASED_SAYS }) };
@@ -545,24 +544,34 @@ export class Conformance {
   /* R24 (K903 (4), DEC-36): one read's sight. Each filter keeps what `viewer` may see and leaves the rest out whole (no
      id, no placeholder, no count), noting that something was withheld; the read then states `out_of_view: true`, and
      nothing more. An id or content id the record does not hold (a proposal's free words) is authored, and stands. */
-  #sight(viewer) {
+  #sight(viewer, memo = null) {
     const self = this;
+    /* R11: with `memo`, a page's, each id's sight is asked once for the page; each item still notes its own withholding */
+    const once = (key, ask) => {
+      if (!memo) return ask();
+      if (!memo.has(key)) memo.set(key, ask());
+      return memo.get(key);
+    };
     return {
       withheld: false,
       sees(id) {
-        if (self.membership.inSight(id, viewer)) return true;
-        let info = null;
-        try { info = self.record.bundleInfo(id); } catch { info = null; }
-        if (!info) return true;
-        this.withheld = true;
-        return false;
+        const v = once(`b:${id}`, () => {
+          if (self.membership.inSight(id, viewer)) return true;
+          let info = null;
+          try { info = self.record.bundleInfo(id); } catch { info = null; }
+          return !info;
+        });
+        if (!v) this.withheld = true;
+        return v;
       },
       seesContent(cid) {
-        let row = null;
-        try { row = self.content.contentRow(cid); } catch { row = null; }
-        if (!row || self.membership.inSight(row.bundle_id, viewer)) return true;
-        this.withheld = true;
-        return false;
+        const v = once(`c:${cid}`, () => {
+          let row = null;
+          try { row = self.content.contentRow(cid); } catch { row = null; }
+          return !row || self.membership.inSight(row.bundle_id, viewer);
+        });
+        if (!v) this.withheld = true;
+        return v;
       },
       contents(list) { return (Array.isArray(list) ? list : []).filter((cid) => this.seesContent(cid)); },
       mark(answer) { return this.withheld ? { ...answer, out_of_view: true } : answer; },
@@ -883,12 +892,21 @@ export class Conformance {
   }
 
   /* R7, R11, R26: the event a determination's act is, an `ACT-` id resolved through its alias; null for one not aliased. */
-  #eventOfRow(r) {
+  #eventOfRow(r, acts = null) {
     if (r.act_event) return r.act_event;
     if (!ACT_RE.test(String(r.act_id ?? ""))) return r.act_id ?? null;
+    return this.#aliasOf(r.act_id, acts);
+  }
+
+  /* R26: the event an `ACT-` id is an alias of (`events.eventForAct`), or null when none is linked. With `acts`, a
+     page's memo (R11), each distinct id is asked once. */
+  #aliasOf(actId, acts = null) {
+    if (acts && acts.has(actId)) return acts.get(actId);
     let f = null;
-    try { f = this.events.eventForAct(r.act_id); } catch { f = null; }
-    return f && f.found && str(f.event_id) ? f.event_id : null;
+    try { f = this.events.eventForAct(actId); } catch { f = null; }
+    const event = f && f.found && str(f.event_id) ? f.event_id : null;
+    if (acts) acts.set(actId, event);
+    return event;
   }
 
   /* ===================================================================== *
@@ -901,14 +919,20 @@ export class Conformance {
   determine(input = {}) {
     const rows = isObj(input) && Array.isArray(input.rows) ? input.rows : [];
     if (!rows.some((r) => isObj(r) && isObj(r.did))) return this.#determine(input, null);
-    /* R29: a measure is read first (calculations' read is asynchronous), then the act runs as every other does */
+    /* R30: every refusal that needs no measure is asked first, and answered at once, so a refused act reads no
+       calculation. R29: then the measures are read (calculations' read is asynchronous), and the act runs as every
+       other does, asking R1's refusals again in their order (the record may have moved while the measures were read). */
+    const head = this.#determineHead(input);
+    if (head) return head;
     const viewer = input.viewer != null ? input.viewer : input.author ?? null;
     return this.#measures(rows, viewer).then((m) => this.#determine(input, m));
   }
 
-  #determine(input, measures) {
-    const { project = null, act = null, findings = null, standards = null, rows = null, questions = null,
-            supersedes = null, reason = null, proposal = null, cause = null, author = null } = isObj(input) ? input : {};
+  /* R1's refusals that need no measure, in R1's order (R30): a machine or empty author, the project unseen, the author
+     not joined, then R18's size cap (the cause's evidence with it). Answers the first refusal, or null. */
+  #determineHead(input) {
+    const { project = null, act = null, findings = null, standards = null, rows = null, questions = null, cause = null,
+            author = null } = isObj(input) ? input : {};
     const viewer = input && input.viewer != null ? input.viewer : author;
     const byMachine = this.#refuseMachine(author);
     if (byMachine) return byMachine;
@@ -917,10 +941,17 @@ export class Conformance {
     if (unseen) return unseen;
     const notJoined = this.#participantRefusal(pid, author);
     if (notJoined) return notJoined;
-    const large = this.#sizeRefusal({ findings, standards, rows, questions,
-                                      evidence: isObj(act) ? act.evidence : null })
+    return this.#sizeRefusal({ findings, standards, rows, questions, evidence: isObj(act) ? act.evidence : null })
       || this.#sizeRefusal({ evidence: isObj(cause) && Array.isArray(cause.evidence) ? cause.evidence : null }, "cause");
-    if (large) return large;
+  }
+
+  #determine(input, measures) {
+    const { project = null, act = null, findings = null, standards = null, rows = null, questions = null,
+            supersedes = null, reason = null, proposal = null, cause = null, author = null } = isObj(input) ? input : {};
+    const viewer = input && input.viewer != null ? input.viewer : author;
+    const head = this.#determineHead(input);
+    if (head) return head;
+    const pid = str(project);
     const a = this.#actOf(act, pid, supersedes, viewer);
     if (!a.ok) return a;
     const f = this.#pinFindings(findings, pid);
@@ -1219,7 +1250,9 @@ export class Conformance {
   }
 
   /** R11: the determinations the filters admit, in id order, at most 200 a page (a lower `limit` honoured), `truncated`
-   *  measured by reading one past; only those in projects the viewer sees in full (R15). */
+   *  measured by reading one past; only those in projects the viewer sees in full (R15). A page's reads do not grow
+   *  with its items (N841): supersessions, standards and findings are read once for the page, each `ACT-` alias and
+   *  each id's sight once per distinct id. */
   determinationsFor({ project = null, act = null, standard = null, finding = null, outcome = null, live = null,
                       after = null, limit = null, viewer = null } = {}) {
     const pid = str(project);
@@ -1229,8 +1262,9 @@ export class Conformance {
     const gate = viewerPredicate(viewer);
     const where = [`d.determination_id > ?`, `(${gate.sql})`], args = [str(after) ?? "", ...gate.args];
     if (pid) { where.push(`d.project_id = ?`); args.push(pid); }
+    const acts = new Map();   // R11: the page's `ACT-` aliases, each distinct id asked once
     if (str(act)) {
-      const ids = this.#actIds(str(act));
+      const ids = this.#actIds(str(act), acts);
       where.push(`d.act_id IN (${ids.map(() => "?").join(",")})`);
       args.push(...ids);
     }
@@ -1255,16 +1289,33 @@ export class Conformance {
       `SELECT d.* FROM determinations d JOIN bundles b ON b.bundle_id = d.project_id
         WHERE ${where.join(" AND ")} ORDER BY d.determination_id LIMIT ?`, ...args, cap + 1);
     const truncated = page.length > cap;
+    const listed = page.slice(0, cap);
+    /* R11 (N841): the page's supersessions, standards and findings are each read once for the page, never per item */
+    const byItem = (sql) => {
+      const out = new Map();
+      if (!listed.length) return out;
+      for (const x of this.#rows(sql, JSON.stringify(listed.map((r) => r.determination_id)))) {
+        if (!out.has(x.determination_id)) out.set(x.determination_id, []);
+        out.get(x.determination_id).push(x);
+      }
+      return out;
+    };
+    const supersededBy = byItem(`SELECT superseded AS determination_id, superseded_by FROM determination_supersessions
+                                 WHERE superseded IN (SELECT value FROM json_each(?))`);
+    const outcomesOf = byItem(`SELECT determination_id, standard_id, outcome FROM determination_standards
+                               WHERE determination_id IN (SELECT value FROM json_each(?)) ORDER BY determination_id, ord`);
+    const findingsOf = byItem(`SELECT determination_id, finding_id, case_id, edition, version_sha, role
+                               FROM determination_findings WHERE determination_id IN (SELECT value FROM json_each(?))
+                               ORDER BY determination_id, ord`);
+    const sight = new Map();
     /* R24: each item withholds whole what the viewer may not see and states `out_of_view: true` itself; the page never. */
-    const items = page.slice(0, cap).map((r) => {
-      const by = this.#one(`SELECT superseded_by FROM determination_supersessions WHERE superseded=?`, r.determination_id);
-      const seen = this.#sight(viewer);
-      return seen.mark({ id: r.determination_id, project: r.project_id, act: this.#actView(r, seen),
-               outcomes: this.#rows(`SELECT standard_id, outcome FROM determination_standards WHERE determination_id=?
-                                     ORDER BY ord LIMIT ?`, r.determination_id, LIMITS.standards)
+    const items = listed.map((r) => {
+      const [by] = supersededBy.get(r.determination_id) || [];
+      const seen = this.#sight(viewer, sight);
+      return seen.mark({ id: r.determination_id, project: r.project_id, act: this.#actView(r, seen, acts),
+               outcomes: (outcomesOf.get(r.determination_id) || []).slice(0, LIMITS.standards)
                  .filter((s) => seen.sees(s.standard_id)).map((s) => ({ standard: s.standard_id, outcome: s.outcome })),
-               findings: this.#rows(`SELECT finding_id, case_id, edition, version_sha, role FROM determination_findings
-                                     WHERE determination_id=? ORDER BY ord LIMIT ?`, r.determination_id, LIMITS.findings)
+               findings: (findingsOf.get(r.determination_id) || []).slice(0, LIMITS.findings)
                  .filter((f) => seen.sees(f.finding_id))
                  .map((f) => ({ finding: f.finding_id, case: f.case_id, edition: Number(f.edition),
                                 version_sha: f.version_sha, role: f.role })),
@@ -1276,18 +1327,16 @@ export class Conformance {
 
   /* R11, R26: the act ids that name the same act as `act`: the event an `ACT-` alias resolves to, and every pre-T33
      `ACT-` id this module holds that resolves to that event (bounded); an id not aliased names only itself. */
-  #actIds(act) {
+  #actIds(act, acts = null) {
     let event = act;
     if (ACT_RE.test(act)) {
-      let f = null;
-      try { f = this.events.eventForAct(act); } catch { f = null; }
-      if (!f || !f.found || !str(f.event_id)) return [act];
-      event = f.event_id;
+      event = this.#aliasOf(act, acts);
+      if (!event) return [act];
     }
     const out = new Set([act, event]);
     for (const r of this.#rows(`SELECT DISTINCT act_id FROM determinations WHERE act_event IS NULL AND act_id LIKE 'ACT-%'
                                 ORDER BY act_id LIMIT 1000`))
-      if (this.#eventOfRow(r) === event) out.add(r.act_id);
+      if (this.#eventOfRow(r, acts) === event) out.add(r.act_id);
     return [...out];
   }
 
@@ -1302,9 +1351,21 @@ export class Conformance {
   comparisonPropose(input = {}) {
     const rows = isObj(input) && Array.isArray(input.rows) ? input.rows : [];
     if (!rows.some((r) => isObj(r) && isObj(r.did))) return this.#propose(input, null);
-    /* R29: a measure is read first (calculations' read is asynchronous) */
+    /* R30: the project and the cap are asked first, and answered at once, so a refused comparison reads no calculation;
+       R29: then the measures are read (calculations' read is asynchronous) */
+    const head = this.#proposeHead(input);
+    if (head) return head;
     const viewer = input.viewer != null ? input.viewer : input.proposer ?? null;
     return this.#measures(rows, viewer).then((m) => this.#propose(input, m));
+  }
+
+  /* R12's refusals that need no measure, in order (R30): the project unseen, then R18's cap. Answers one, or null. */
+  #proposeHead(input) {
+    const { project = null, act = null, standards = null, rows = null, questions = null, proposer = null }
+      = isObj(input) ? input : {};
+    const viewer = input && input.viewer != null ? input.viewer : proposer;
+    return this.#projectRefusal(str(project), viewer)
+      || this.#sizeRefusal({ standards, rows, questions, evidence: isObj(act) ? act.evidence : null });
   }
 
   #propose(input, measures) {
@@ -1312,10 +1373,8 @@ export class Conformance {
             contradiction = null } = isObj(input) ? input : {};
     const viewer = input && input.viewer != null ? input.viewer : proposer;
     const pid = str(project);
-    const unseen = this.#projectRefusal(pid, viewer);
-    if (unseen) return unseen;
-    const large = this.#sizeRefusal({ standards, rows, questions, evidence: isObj(act) ? act.evidence : null });
-    if (large) return large;
+    const head = this.#proposeHead(input);
+    if (head) return head;
     /* DEC-49 REGION is-proposal-outcomeless */
     if (namesOutcome(input))
       return refusal("PROPOSAL_CANNOT_DETERMINE", "a comparison carries rows and questions and never an outcome: only a "

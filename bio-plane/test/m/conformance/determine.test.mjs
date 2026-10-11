@@ -570,3 +570,55 @@ test("R23: a supersession with no reason is CONFORMANCE_NO_REASON (C-113.22), on
   const ok = w.c.determine(input({ supersedes: first.id, reason: ` ${"r".repeat(REASON_MAX)} ` }));
   assert.deepEqual([ok.ok, ok.reason], [true, "r".repeat(REASON_MAX)]);
 });
+
+test("R30: determine and comparisonPropose ask every refusal that needs no measure (a machine author, the project unseen, the author not joined, the size cap) before reading any R29 measure, so a refused act reads no calculation; the refusals and their order are otherwise unchanged (negative controls)", async () => {
+  const { w, proj, std, input } = scene();
+  w.membership.projectInvite({ projectId: proj, handle: "h_sam", by: "olive", viewer: V("olive") });
+  const hidden = w.project("Hidden", "olive");
+  const measure = { ...input().rows[0], did: { calc: "CALC-2026-0099", result_key: "rk" } };
+  const words = input().rows[0];
+  /* each refusal R30 names, with a measure row; and the same input with the row's `did` in words */
+  const cases = [
+    ["MACHINE_CANNOT_DETERMINE", (rows) => input({ rows, author: MACHINE })],
+    ["MACHINE_CANNOT_DETERMINE", (rows) => input({ rows, author: "" })],
+    ["NO_SUCH_PROJECT", (rows) => input({ rows, project: "PROJ-2026-9999-none" })],
+    ["NO_SUCH_PROJECT", (rows) => input({ rows, project: hidden, author: V("quinn"), viewer: V("quinn") })],
+    ["PROJECT_SEEN_NOT_A_PARTICIPANT", (rows) => input({ rows, author: V("ron"), viewer: V("ron") })],
+    ["DETERMINATION_NOT_A_PARTICIPANT", (rows) => input({ rows, author: V("sam"), viewer: V("sam") })],
+    ["DETERMINATION_TOO_LARGE", (rows) => input({ rows: Array(LIMITS.rows + 1).fill(rows[0]) })],
+    ["DETERMINATION_TOO_LARGE", (rows) => input({ rows, standards: Array(LIMITS.standards + 1).fill({ standard: std, outcome: "noncompliant" }) })],
+    ["DETERMINATION_TOO_LARGE", (rows) => input({ rows, cause: { statement: "a cause", evidence: Array(LIMITS.evidence + 1).fill("x") } })],
+  ];
+  for (const [code, make] of cases) {
+    const before = w.calcReads.n;
+    const snap = w.snapshot();
+    const r = await w.c.determine(make([measure]));
+    refused(r, code);
+    assert.equal(w.calcReads.n, before, `${code}: no calculation read`);
+    assert.deepEqual(w.snapshot(), snap, "nothing written");
+    assert.deepEqual(r, w.c.determine(make([words])), `${code}: the same answer as with no measure`);
+  }
+  /* a comparison: the project unseen and the cap */
+  const cmp = (over) => ({ project: proj, act: input().act, standards: [std], rows: [measure], proposer: V("olive"),
+                           viewer: V("olive"), ...over });
+  for (const [code, over] of [["NO_SUCH_PROJECT", { project: hidden, proposer: V("quinn"), viewer: V("quinn") }],
+                              ["NO_SUCH_PROJECT", { project: "PROJ-2026-9999-none" }],
+                              ["DETERMINATION_TOO_LARGE", { rows: Array(LIMITS.rows + 1).fill(measure) }],
+                              ["DETERMINATION_TOO_LARGE", { standards: Array(LIMITS.standards + 1).fill(std) }]]) {
+    const before = w.calcReads.n;
+    const r = await w.c.comparisonPropose(cmp(over));
+    refused(r, code);
+    assert.equal(w.calcReads.n, before, `comparison ${code}: no calculation read`);
+  }
+  /* the negative controls: past those refusals the measure is read, and the refusals after it keep R1's order (a
+     refusal that is not R30's, NO_FINDINGS, is still answered after the measure's read) */
+  let before = w.calcReads.n;
+  refused(await w.c.determine(input({ rows: [measure] })), "NO_SUCH_CALCULATION");
+  assert.equal(w.calcReads.n, before + 1, "a valid head reads the measure");
+  before = w.calcReads.n;
+  refused(await w.c.determine(input({ rows: [measure], findings: [] })), "NO_FINDINGS");
+  assert.equal(w.calcReads.n, before + 1);
+  before = w.calcReads.n;
+  refused(await w.c.comparisonPropose(cmp({})), "NO_SUCH_CALCULATION");
+  assert.equal(w.calcReads.n, before + 1);
+});
