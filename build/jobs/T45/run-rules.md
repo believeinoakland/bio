@@ -1,3 +1,11 @@
 # run-rules (T45)
 
 **Status** · session_01DETMLAxY6u5dz56gNM7dy6 · depth 2 · RUNNING until 2026-10-11T21:11:39Z (plane migrate-released.test.mjs (user of run-rules)) · handled B1
+
+## J1 · REPORT
+
+**The action drafts' read reach and `credentials`' grant list (B1 asked me to say whether I found otherwise).** I found otherwise. `credentials`' `AI_GRANT_OPS` (`bio-plane/src/credentials/index.mjs`:74) holds no read op of an action, a plan, a determination or correspondence: none of `action`, `actions`, `plan`, `plans`, `planproposals`, `determination`, `determinations`, `actionquotes` (all declared non-mutating in `op-declarations`) is on it. Its record reads are `standard`, `standards`, `standardinforce`, `search`, `frontier`, `meaningrows`, `entity`, `timeline` and the like. So under R27 as worded ("through the record reads the grant already admits, no op added"), an `infractiondraft` can read the matter's standards and search results but not its plan, actions, correspondence or findings by op, and a `bearingdraft` can read neither the action nor the reply. Either `credentials` adds those read ops to `AI_GRANT_OPS` (a change to its R28 list, BOB's), or `agent-worker` R76 hands the draft the records it is asked about in the request, as the translation draft is handed its words. run-rules is right either way: R27's `DRAFT_REACH` and `draftMayRead` say what the drafts may read, not which op serves it. I changed nothing outside my module.
+
+**Generated artifacts staled by my change.** `agent-worker/dist/agent-worker.bundled.mjs` (run-rules is one of its inputs): `agent-worker/test/requirements.test.mjs` R45 "the static check finds nothing" and "a fresh build is byte-identical to the committed bundle" fail with my change and pass without it. The plane bundle too, as every merge stales it (rule 4 (5)). Both are regenerated at the layer's close.
+
+**`skills` reads the explorer's origin by position.** `bio-plane/src/skilldoctrine.mjs`:1825 takes `RUN_ORIGINS[RUN_ORIGINS.length - 1]` as the explorer's origin. An origin appended to R23's list would silently become the explorer's label. I left `RUN_ORIGINS` alone for that reason (R28 put it to my wording). Reading it by key, `"explore"`, as `question-explorer` does (`index.mjs`:61), would remove the trap: a small change for `skills`' next job.
