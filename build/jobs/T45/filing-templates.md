@@ -46,3 +46,7 @@ Unchanged by my merge (same reds before and after, all in rule 4): affordances, 
 T45-30 done: R15, R26, R28, R23 (C-125.33, .34) applied; rule 4 (7)'s reads.test.mjs R26 red green. 63/63 tests; format, architecture, coverage (28/28), ownership 0 failures. No file outside my paths. Record's Completion section has the rest; REPORT J2 names the reds in filings (32) and wizard-scripts (7) that R15 makes in their fixtures.
 
 **B3 (CHANGE, action-grammar merged, K2855):** `tranche/T45` merged; no stand-in to switch (this module reads only `RISK_TIERS` from `action-grammar`, the real module throughout). Re-run: 63/63 pass; format, architecture, coverage (28/28), ownership 0 failures. Size (session_01XfDsBCCLPY5tHHgjXGSvMH): test runs 10, module lines 1853
+
+## J4 · COMPLETE
+
+B3 handled: tranche/T45 merged (action-grammar real; nothing here was a stand-in, only RISK_TIERS is read). 63/63 tests; format, architecture, coverage 28/28, ownership 0 failures. J2's report on filings and wizard-scripts stands.
