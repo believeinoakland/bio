@@ -18,7 +18,7 @@ export function answersOps(a, url, body) {
     /* R13 */
     asktallies: () => a.tallies({ viewer, from: q(url, "from") ?? b.from ?? null, to: q(url, "to") ?? b.to ?? null }),
     ruleservicesswitch: () => a.ruleServicesSwitch({ on: b.on === true, by: viewer }),
-    /* R15–R20 */
+    /* R15–R20, R34 */
     /* R15, R28: a saved query or a find (`{scope, kinds, term?}`, as `retrieval.findIn` takes them) */
     standingset: () => a.standingQuestionSet({ author: viewer, owner: q(url, "owner"), question: b.question ?? null,
                                                 query: b.query ?? null, find: b.find ?? null, cadence: b.cadence ?? null,
@@ -26,6 +26,8 @@ export function answersOps(a, url, body) {
     standing: () => (q(url, "id") ?? b.id ? a.standingQuestionRead({ id: q(url, "id") ?? b.id, viewer })
                                            : a.standingQuestionsOf({ viewer })),
     standingend: () => a.standingQuestionEnd({ id: q(url, "id") ?? b.id ?? null, author: viewer }),
+    /* R34: the author changes the end date */
+    standingendset: () => a.standingQuestionEndSet({ id: q(url, "id") ?? b.id ?? null, ends: b.ends ?? null, author: viewer }),
     standinganswers: () => a.standingAnswersFor({ member: viewer, after: q(url, "after") ?? b.after ?? null,
                                                   limit: q(url, "limit") ?? b.limit ?? null }),
     standingaiswitch: () => a.standingAiSwitch({ on: b.on === true, by: viewer }),
