@@ -1014,6 +1014,9 @@ export class CaseAuthoring {
     /* R13 — DEC-12 as DEC-44 rehomes it: the CASE's edition is its highest published edition plus one; each member's
        own edition is its own (CASE-5: the next on its own published chain, unless R13's crossed arm below). */
     const edition = this.#highestEdition(theCase) + 1;
+    /* R71 (T45; N855 (6c); Actions D5, D6c): every pending, unwithdrawn outcome carried for this case, in the order carried,
+       for an edition above its highest ratified one (a minted case has none). */
+    const outcomes = minted ? [] : this.#pendingOutcomes(theCase);
     /* R70, R34 (T45; N880): the case R7 resolved and the members at the bytes R13 pins, for the sign step's open requests
        (read by the pre-flight only; nothing of them enters the document). */
     seen.openRequestsAt = { case: theCase, members: prepared.map((p) => ({ bundle_id: p.id, version_sha: p.bundleSha })) };
@@ -1277,7 +1280,7 @@ export class CaseAuthoring {
        in its one shape (`case-account` R4's `acceptanceRecorded`), inside this act's transaction; none without a draft. */
     if (drafted.draft) A.acceptanceRecorded({ caseId: theCase, edition, drafted, by: who, at: when });
     /* R34's steps read what this act read, from the same values (never a second reading). */
-    Object.assign(seen, { approvals: { ...approvals, digest: approvalDigest }, workingOn, excluded: rows, searched, manifest, bias: back, captures: captureRows, sources: sourceRows,
+    Object.assign(seen, { outcomes, approvals: { ...approvals, digest: approvalDigest }, workingOn, excluded: rows, searched, manifest, bias: back, captures: captureRows, sources: sourceRows,
                           materials: materialBlocks, accepted: accepted.rows, flags: flagRows,
                           tensions: read.entries, memberEditions: [...frozen].map(([target, z]) =>
                             ({ target, edition: z.edition, crossed: z.crossed })) });
@@ -1528,6 +1531,12 @@ export class CaseAuthoring {
   #noSuchCase() {
     return { ok: false, reason: "NO_SUCH_CASE", detail: "no published case you can see answers to that id. A case not yet "
       + "published, and one you cannot see, are answered alike. Nothing was written." };
+  }
+
+  /* R71: the outcomes `publishCase` writes into an edition of `caseId`: each pending one, in the order carried. */
+  #pendingOutcomes(caseId) {
+    const states = this.#outcomeStates(caseId);
+    return this.#outcomeRows(caseId).filter((r) => (states.get(r.outcome) || {}).state === "pending");
   }
 
   /* R71: every outcome carried for `caseId`, in the order carried. */
@@ -2044,6 +2053,9 @@ export class CaseAuthoring {
             + ` ${REPUBLISH_SENTENCE}`
             + (notice !== null ? ` ${NOTICE_SEALS_SENTENCE}` : ""),
         working_on: notice,
+        /* R71 (T45): the outcomes carried into this edition, each as it will be written. */
+        ...(ok ? { outcomes: (seen.outcomes || []).map(({ outcome, kind, text, cites, on, carried_by }) =>
+                     ({ outcome, kind, text, cites, on, carried_by })) } : {}),
         ...(ok ? { case: answer.caseId, edition: answer.edition, document: answer.caseDocument,
                    pinned: answer.findings.map((f) => ({ target: f.target, bundleSha: f.bundleSha })) }
                : { stated: notReached }) },
