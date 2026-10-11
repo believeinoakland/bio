@@ -10,3 +10,9 @@ Reading set (mechanics §17): measured at this START: 1960 KB by `build/plan/rea
 Merge order in L11: `modules.json` order (op-grades, affordances, op-declarations, answer-envelope, store-door, control-plane, plane), the plane last. Jobs this layer: op-grades, affordances, op-declarations, answer-envelope, store-door, control-plane, plane.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+Forwarded from OP-DECLARATIONS #17 (P9), both within your START's entries; no requirement changed. op-grades, affordances, op-declarations and answer-envelope are now merged into `tranche/T42` (K2685, K2686): merge it into your branch, which also clears `totality.test.mjs`'s stale `pagetranscribe` red.
+1. R74: extraction's `pageTranscribeOp` reads the actor as `author` (`extraction/ops.mjs`:74, 82; `index.mjs`:1739). Your hook hands `author` from the session for `pagetranscribe` exactly as it does for `pdfstructure` (R74's "as `pdfstructure`'s are"); test it with a negative control (a caller-supplied `author` is not taken, R29).
+2. R71: `owner-ops.mjs`:37–38 still call `of.caseAuthoring()` for the account ops; re-point them to `of.caseAccount()` (already your entry).

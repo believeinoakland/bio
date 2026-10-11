@@ -1428,7 +1428,7 @@ export const ACTS = [
     applies: () => false },
 ];
 
-/* D-126 — THE FOURTH WEIGHT, `per-item`, AND THE THREE ACTS THAT TAKE A SET.
+/* D-126 — THE FOURTH WEIGHT, `per-item`, AND THE FOUR ACTS THAT TAKE A SET.
  *
  * NOTIFICATIONS.md §Applying a handler to a selection: *"each item independently succeeds or is RETAINED
  * WITH A REASON."* `refuse` stops the whole set on drift and hands over nothing; `report` proceeds and says
