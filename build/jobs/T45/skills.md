@@ -45,3 +45,22 @@ If reading-guides' job settles another shape, I will match it when you merge tra
 - format: 0 failures. architecture: 0 failures. coverage: 46 of 46, 0 failures. ownership: 0 failures.
 
 Size (session_01Y1gCFWV8D7jsn2qWspkB6T): test runs 14, module lines 3032
+
+## J3 · COMPLETE
+
+**B3 CHANGE applied** (K2825). I merged `tranche/T45` (run-rules and reading-guides in).
+1. The explorer's origin is now read by key from `RUN_ORIGINS` (`RUN_ORIGINS.find((o) => o === "explore")`, as question-explorer reads it), no longer as its last member.
+2. R46 renders `procedureGuidesFor`'s answer as built, `{ok, kind, guides: [{guide, origin, items}], withheld, label}`:
+   - the profile's guide (`guide: null`, origin `profile`) renders with `guide: null` and its items unchanged, `after` included;
+   - a throw naming it reads "the profile's guide for <kind>";
+   - `withheld` guides are not in `guides` and render nothing;
+   - the label is carried unchanged; the test uses reading-guides' own `PROCEDURE_GUIDE_LABEL`.
+
+**Tests and checks.**
+- skills: 113 pass, 0 fail. `action.test.mjs` now uses the built shape, the profile's id-less guide with `after`, and a throw naming it.
+- Users and providers:
+  - investigation, answer-envelope, control-plane, reading-guides, run-rules: 387 tests, 386 pass, 1 fail. The fail is the inherited R53 (rule 4 (12)).
+  - agent-worker: 13 pass, 1 fail. In `requirements.test.mjs`, R45's stale bundle: the `run-rules` sources changed at its merge, so agent-worker's bundle is stale (rule 4 (5); regenerated at the layer's close). Not from skills: its bundle has no skills input.
+- format, architecture, coverage (46 of 46), ownership: 0 failures.
+
+Size (session_01Y1gCFWV8D7jsn2qWspkB6T): test runs 18, module lines 3036
