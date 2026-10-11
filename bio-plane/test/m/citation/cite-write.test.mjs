@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, STAMP, sha } from "./fixture.mjs";
 import { CITE_LOG_SAMPLE } from "../../../src/citation/index.mjs";
+import { machinePassageUnchecked } from "../../../src/inquiry/index.mjs";
 
 const ANN = { viewer: V("ann"), owner: "o", author: "member:ann", identity: V("ann") };
 
@@ -218,16 +219,16 @@ test("R7: weight is not a parameter — cite is report whatever the caller sends
    answered unchanged (R1). Driven through the real inquiry, booted on the host, with the read registered by the test. */
 test("R1 (T42): through the real inquiry, the machine-passage read's refusal (run-productions R25's PROPOSAL_NOT_TAKEN_UP) is answered unchanged with the handle and drift, nothing written; a read that throws or answers anything else is inquiry R62's MACHINE_PASSAGE_UNCHECKED; a read answering null lets the leg land", async () => {
   const w = world({ inquiry: true });
-  const cap = w.info("INFO-2026-0001");
-  const q = w.inquiry("INQ-2026-0001");
+  const cap = w.info("INFO-2026-0001-doc");
+  const q = w.inquiry("INQ-2026-0001-q");
   const p = w.project();
   let answer = () => null;
   const calls = [];
   const reg = w.inquiryModule.onMachinePassage("run-productions", (a) => { calls.push(a); return answer(a); });
   assert.ok(!reg || reg.ok !== false, `registered: ${JSON.stringify(reg)}`);
-  const h = await w.select(["INFO-2026-0001"]);
+  const h = await w.select(["INFO-2026-0001-doc"]);
   const taken = { ok: false, reason: "PROPOSAL_NOT_TAKEN_UP", code: "PROPOSAL_NOT_TAKEN_UP", check: "C-104.32",
-                  legs: [{ ord: 0, target: "INFO-2026-0001", proposal: "PROP-1" }],
+                  legs: [{ ord: 0, target: "INFO-2026-0001-doc", proposal: "PROP-1" }],
                   detail: "this passage was proposed by a run and you have not taken it up" };
   answer = () => taken;
   const snap = w.snapshot();
@@ -240,17 +241,21 @@ test("R1 (T42): through the real inquiry, the machine-passage read's refusal (ru
   /* The read was asked once, of the leg this cite adds, with the act's author. */
   assert.equal(calls.length, 1);
   assert.deepEqual([calls[0].author, calls[0].viewer], ["member:ann", "member:ann"], "the viewer is the author (K2648)");
-  assert.deepEqual(calls[0].legs.map((l) => [l.target, l.extent_capture]), [["INFO-2026-0001", cap]]);
+  assert.deepEqual(calls[0].legs.map((l) => [l.target, l.extent_capture]), [["INFO-2026-0001-doc", cap]]);
   /* Fail closed: a read that throws, or answers anything but null or a refusal, is MACHINE_PASSAGE_UNCHECKED (C-2.20). */
   for (const odd of [() => { throw new Error("cannot read acceptances"); }, () => "yes", () => ({ ok: true }), () => undefined]) {
     answer = odd;
     const u = w.cit.cite({ project: q, handle: h, ...ANN, role: "supports" });
     assert.deepEqual([u.ok, u.reason, u.check, u.handle, u.project], [false, "MACHINE_PASSAGE_UNCHECKED", "C-2.20", h, q], String(odd));
     assert.equal(typeof u.drift, "object");
+    /* inquiry's one spelling of the refusal (its R62, K231), relayed as it came. */
+    const { detail, ...spelled } = machinePassageUnchecked("x", { legs: [0] });
+    assert.deepEqual({ ...u, detail: undefined, project: undefined, handle: undefined, drift: undefined },
+                     { ...spelled, detail: undefined, project: undefined, handle: undefined, drift: undefined });
     assert.deepEqual(w.snapshot(), snap, "nothing written");
   }
   /* The same refusal through a found passage: handle null, drift false. */
-  const [match] = w.find("INFO-2026-0001", "budget", { pages: { [cap]: ["The budget line."] } });
+  const [match] = w.find("INFO-2026-0001-doc", "budget", { pages: { [cap]: ["The budget line."] } });
   answer = () => taken;
   const f = w.cit.cite({ project: q, found: match, ...ANN, role: "supports" });
   for (const [k, v] of Object.entries(taken)) assert.deepEqual(f[k], v, k);
@@ -264,5 +269,5 @@ test("R1 (T42): through the real inquiry, the machine-passage read's refusal (ru
   answer = () => null;
   const ok = w.cit.cite({ project: q, handle: h, ...ANN, role: "supports" });
   assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
-  assert.deepEqual(w.fm(q).basis.map((l) => l.target), ["INFO-2026-0001"]);
+  assert.deepEqual(w.fm(q).basis.map((l) => l.target), ["INFO-2026-0001-doc"]);
 });
