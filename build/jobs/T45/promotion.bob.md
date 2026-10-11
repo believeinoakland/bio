@@ -22,3 +22,7 @@ All seven readings stand (K2795). On (7): `projectScope` never throws (project-r
 ## B3 · CHANGE
 
 membership (T45-2) is merged into tranche/T45 (K2796): R128 `registerProjectActGuard` and R83's MODULE_ORDER are there, with row C-56.6. Merge tranche/T45 into your branch before continuing.
+
+## B4 · CHANGE
+
+project-roster (T45-3) is merged into tranche/T45 (K2797): R23 `projectScope` is there, with rows C-147.1–.8 for your stamp (and membership's C-56.6). Merge tranche/T45 into your branch, then stamp; you are L2's last merge.
