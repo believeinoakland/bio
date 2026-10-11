@@ -90,3 +90,7 @@ R57's terms, my best readings (I build on them unless you answer otherwise; none
 **Deferred:** the test-suite items under P20 above (none is a requirement failure). PROMOTION #40's small items stand as before.
 
 Size (session_01Bdm13v3k1joqVbrjhpKtUZ): test runs 16, module lines 3814
+
+## J2 · COMPLETE
+
+T45-4 complete on job/T45/promotion (record: Completion). R57 COUNSEL_MATTER_NOT_EVIDENCE (C-86.16) at the write, per K2795; production wiring proven through the plane (write-path R18 probe via op=projectscopeset). Stamp 1.71.0 -> 1.72.0, ROW_CENSUS 1732 rows 795f5029…: arrived C-86.16, C-56.6, C-147.1-.8; changed C-143.5 (T44-7); rule 4 (2) first half cleared. Own code and tests read whole; R17 test fixed to vary the head's type. promotion 137/0, row-census 8/0, d526 31/0; npm test 10117/8 fail: case-checker program.mjs stale (rule 4 (5)), action-grammar/filing-templates/filings (rule 4 (7)), and NOT in rule 4 but red identically on tranche/T45: skills planning R28, skills filing R30, plane roster.test (project-roster ops routing). Checks: architecture 0, coverage 57/57, ownership 0; format 1 = BOB's modules.json swap row-census-1.71.0.jsonl -> row-census-1.72.0.jsonl. Stale for regeneration: plane bundle, case-checker program.mjs. Note for project-roster: projectScope answers none on a storage fault (R37).
