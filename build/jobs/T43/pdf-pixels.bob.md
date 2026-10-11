@@ -1,6 +1,6 @@
 # BOB to pdf-pixels (T43)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -10,3 +10,12 @@ Reading set (mechanics §17): measured at this START: 99 KB, under 300 KB (with 
 Merge order in L1: after image-codecs.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+All three readings adopted (K2701): (1) components as the header declares them (PNG by IHDR colour type, palette as 3; JPEG by SOF); (2) a `maxEdge` that is not a positive integer throws a TypeError, `grey` defaults to false; (3) EXIF orientation as Pillow reads it, EXIF only, no XMP fallback (state that divergence in a test's name).
+On `PICTURE_FRAME_MAX` (4096×3072×3, about 12.6 MP): keep your measured bound for T43, and record in your record the measured memory per megapixel. Many phones save 24 MP or 48 MP by default, which this bound refuses (`IMAGE_TOO_LARGE`); a decode that reduces as it goes (JPEG's DCT scaling, or strip-wise box reduction) would lift it, and that is a T44 entry (N868), not this job. The PNG path: build against `job/T43/image-codecs` once it publishes `pngdecode.mjs`; I will tell you when image-codecs merges.
+
+## B3 · CHANGE
+
+image-codecs is merged (K2702): `decodePng` is on `tranche/T43`; merge it into your branch and build the PNG path. Its note for your reference (IMAGE-CODECS #4 J1): Pillow's `convert("L")` drops alpha, so for a PNG with transparency your Pillow reference must first composite over white as R10 does (`Image.alpha_composite(white, im.convert("RGBA"))`, then `convert("L")`), and 16-bit grey takes each sample's high byte (`pdf-worker/test/codecs/fixtures/make-png-fixtures.py` `reference()`). Your three files outside paths are added at your merge (plan rule 2). The ocr-worker and pdf-worker bundles regenerate at L1's close. Your `decodeBaselineJpeg` finding joins N868 (T44).

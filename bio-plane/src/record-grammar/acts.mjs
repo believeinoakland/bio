@@ -5,7 +5,8 @@
    translation unchanged; that family holds them by reference until its last owner takes its rows (rule 1). C-33.41's
    `where` was re-pointed on the move (N430, K720): `src/store.mjs actNoCitation`, which it named, was deleted by
    LEGACY-STORE #8, and the code is minted at entities' and progressions' sites, each through its module's one refusal
-   helper. The row change was stamped by 1.49.0 (PROMOTION #20, T19 layer 2). */
+   helper. The row change was stamped by 1.49.0 (PROMOTION #20, T19 layer 2). C-33.40's `where` names all five of its
+   sites since T43 (N857), stamped with that tranche's census. */
 
 export const SHARED_ACT_CHECKS = Object.freeze({
   /* ---------------------------------------------------------------------------
@@ -43,11 +44,14 @@ export const SHARED_ACT_CHECKS = Object.freeze({
   NO_BASIS: {
     check: 'C-33.40',
     /* (N827, K2467; T42) every site that answers with this row: inquiry's helper (basis-versions raises through it),
-       progressions' and entities' one refusal helpers, each named with the acts it serves. */
+       progressions' and entities' one refusal helpers, each named with the acts it serves. (T43; N857, K2643) money's
+       and lines' one refusal helpers join them: money's `refusal` for a fund's type (`setFundType`) and lines'
+       `noBasis` for `recordLine`'s basis forms, each of which reads this row and adds none of its own. */
     where: 'src/inquiry/index.mjs actNoBasis > is-act-no-basis (inquiry\'s, and basis-versions\' through it), '
       + 'src/progressions/checks.mjs refusal (progressions\' first declaration and revision of a declared flow, '
-      + 'src/progressions/index.mjs), and src/entities/index.mjs actShapeRefusal (entities\' held identifier and '
-      + 'grade-D testimony)',
+      + 'src/progressions/index.mjs), src/entities/index.mjs actShapeRefusal (entities\' held identifier and '
+      + 'grade-D testimony), src/money/index.mjs refusal (money\'s fund type, `setFundType`), and '
+      + 'src/lines/index.mjs noBasis (lines\' basis forms, `recordLine`)',
     translation: 'This asks the record to stand behind something without saying what it rests on. '
       + 'Say what that is first — what the question is grounded in, what you personally observed, or '
       + 'why a settled thing is being changed — and the record carries it beside the claim, in your '

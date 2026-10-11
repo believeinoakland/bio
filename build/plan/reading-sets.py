@@ -1,4 +1,4 @@
-# Measures each module job's reading set (N739, K2053): its requirements whole, the public parts of the modules it uses, its code.
+# Measures each module job's reading set (N739, K2053): its requirements whole, the public parts of the modules it uses, its code and its tests (mechanics §6 step 2; tests added N867, K2700).
 # Run from the product root: python3 build/plan/reading-sets.py
 import json,os,re,sys
 d=json.load(open('build/modules.json'));ms=d if isinstance(d,list) else d['modules']
@@ -23,9 +23,10 @@ for m in ms:
     own=len(req(m['id']).encode()); pub=sum(len(public(u).encode()) for u in m.get('uses',[]))
     # code: most specific path owning each file is approx: sum paths
     code=sum(size(p) for p in m['paths'])
-    rows.append(((own+pub+code)//1000,m['id'],m['layer'],own,pub,code,len(m.get('uses',[]))))
+    tests=sum(size(p) for p in m.get('tests',[]))
+    rows.append(((own+pub+code+tests)//1000,m['id'],m['layer'],own,pub,code,tests,len(m.get('uses',[]))))
 rows.sort(reverse=True)
-print('KB id layer own_req used_public code n_uses')
+print('KB id layer own_req used_public code tests n_uses')
 for r in rows: print(*r)
 print('over 300 KB:',sum(r[0]>300 for r in rows))
 import statistics
