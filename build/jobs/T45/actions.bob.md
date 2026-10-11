@@ -14,3 +14,11 @@ Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 1190 KB with your tests (K2700), over the 600 KB limit, mostly the used modules' public parts (an upper bound). Read your requirements and code whole, and your tests whole where you can; for what remains over the limit, give helpers in your session your entries and what follows them (the later layers that use your new services), have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Merge order in L9: conformance, consequences, action-grammar, action-holds, actions, action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work. You use conformance, action-grammar, consequences, merged before you in this layer: merge `tranche/T45` into your branch when BOB announces each one's merge (a CHANGE), and build meanwhile against your reading of their folded requirements.
+
+## B2 · CHANGE
+
+R80 re-worded (K2845, wording only, no new behaviour): a second receipt record appends, and actionRead answers them as receipts: [{ord, kind, at, how, party?, ...}], oldest first, so the latest is last. action-clocks R2 reads that field. Merge tranche/T45 before continuing.
+
+## B3 · CHANGE
+
+K2848: R79 re-worded (no new behaviour beyond the read's field): actionRead answers press_terms ({on_record, embargo_until?, release_at?}) with press_terms_history. filings R46 reads it. Merge tranche/T45 before continuing.
