@@ -80,3 +80,7 @@ T45-27 done: every entry applied, the moved hold code deleted; actions 110 pass,
 **B11 (K2861).** `REPLY_OWED_REFUSED` has one site: `#t45Fields` hands `{reply_owed, reply_owed_reason}` to action-grammar's `actionFieldFindings` and its own `is-reply-owed-reason` region is deleted (REPORT 1's third point closed). `node --test bio-plane/test/m/actions/*.test.mjs`: 110 pass, 0 fail; the four checks 0 failures.
 
 Size (session_01WosqkVPWcWM1u4LjrLwHUN): test runs 31, module lines 3962
+
+## J5 · COMPLETE
+
+B11 applied: reply_owed and its reason judged by action-grammar alone, my region deleted; actions 110 pass, the four checks clean. The rest of J4 stands.
