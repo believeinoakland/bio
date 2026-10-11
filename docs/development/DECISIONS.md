@@ -3024,3 +3024,17 @@ decided: 2026-10-11 · the design session (P17)
 reasoning recorded in: this entry; `screens/build_words.mjs`, `screens/words.json` (1,099 words, 395 protected).
 owed: (BOB, T44) the keys read as named: extraction (`transcribe.refused`, `transcribe.failed`, `transcribe.why.*`), ai-use (`ai.when.month`), notice-producers (`ai.until.*`), the screens' dates (`date.daymonthyear`).
 
+### DEC-193 · answered
+raised: 2026-10-11 · the UX design session with Bob on his primary account (session_014uT5e8EjnRxmEeUDDg2cYa; the development process also runs on his primary account since K2511) (BOB's B139, for T45's N886)
+for: bob-session
+question: The `{reason}` of `transcribe.refused` for agent-worker R72's refusals after the pages are posted.
+why it is Bob's: it is not: word detail beneath DEC-192 (2); decided by the design session (P17) and reported.
+provisional: nothing shown (200, performed false, no sentence).
+alternative: one sentence for every code.
+recommendation: as decided below.
+reversal cost: low; words read by key.
+response: **Decided by the design session, 2026-10-11.** Each fills `transcribe.refused`'s `{reason}` as a sentence of its own: `transcribe.reason.requestfault` for `BAD_BODY`, `BAD_SHA` and `BAD_PAGES` (Civicsmith's own fault, said so; try again, then tell an administrator); `transcribe.reason.noaccount` (`NO_ACCOUNT`: where to connect an account); `transcribe.reason.badaccount` (`BAD_ACCOUNT`: its owners can check it); `transcribe.reason.needsapikey` (`TRANSCRIBE_NEEDS_API_KEY`: an API key is needed, a sign-in can't; type the words meanwhile).
+decided: 2026-10-11 · the design session (P17)
+reasoning recorded in: this entry; `screens/build_words.mjs`, `screens/words.json` (1,103 words, 395 protected).
+owed: (BOB, T45, N886) extraction fills `{reason}` from these keys by the worker's code.
+

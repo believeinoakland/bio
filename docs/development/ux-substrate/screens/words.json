@@ -12,7 +12,7 @@
   "ai": 73,
   "date": 14,
   "queue": 20,
-  "transcribe": 15,
+  "transcribe": 19,
   "capture": 1,
   "document": 5,
   "question": 1,
@@ -24,7 +24,7 @@
   "act": 483,
   "column": 33,
   "wizard": 239,
-  "total": 1099,
+  "total": 1103,
   "protected": 395
  },
  "words": [
@@ -1430,6 +1430,34 @@
    "protected": false,
    "source": "DEC-192",
    "note": "a provider ending"
+  },
+  {
+   "key": "transcribe.reason.requestfault",
+   "en": "Civicsmith sent the assistant a request it couldn't use. The fault is Civicsmith's, not yours: try again, and if it happens again, tell an administrator.",
+   "protected": false,
+   "source": "DEC-193",
+   "note": "{reason} in transcribe.refused for BAD_BODY, BAD_SHA, BAD_PAGES (agent-worker R72)"
+  },
+  {
+   "key": "transcribe.reason.noaccount",
+   "en": "No AI account pays for this here. Connect your own in Settings › The assistant, or ask an administrator about the group's key.",
+   "protected": false,
+   "source": "DEC-193",
+   "note": "{reason} for NO_ACCOUNT"
+  },
+  {
+   "key": "transcribe.reason.badaccount",
+   "en": "The AI account that pays for this here can't be used as it is set up. Its owners can check it in its settings.",
+   "protected": false,
+   "source": "DEC-193",
+   "note": "{reason} for BAD_ACCOUNT"
+  },
+  {
+   "key": "transcribe.reason.needsapikey",
+   "en": "Reading page pictures needs an Anthropic API key, and the account that pays here is a Claude sign-in. Its owners can add an API key; meanwhile you can type a page's words yourself.",
+   "protected": false,
+   "source": "DEC-193",
+   "note": "{reason} for TRANSCRIBE_NEEDS_API_KEY"
   },
   {
    "key": "transcribe.picture.unprepared",
