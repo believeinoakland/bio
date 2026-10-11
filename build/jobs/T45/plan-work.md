@@ -39,3 +39,9 @@ Seven points the requirements leave open. I am building on the reading given for
   (architecture, coverage and ownership run with `modules.json` naming the two paths above in a working copy only, not committed: BOB adds them.)
 
 Size (session_01KvuonAaLKfAEaHnozQTt17): test runs 14, module lines 1318
+
+## J2 · REPORT
+
+Two findings in other modules (also in my record).
+(a) actions / action-plans: an action started by `action-plans.optionStart` carries no `project` (`record.bundleInfo(id).project` is null), so `actions`' sight (`viewerPredicate`'s "outside every project" arm) answers it to any member. In plan-work's test world dave, outside project P, reads P's plan's action through `actions.actionRead`. Against action-plans R25 (a plan is read only by who may see its project) and DEC-36. plan-work's own reads withhold it only where `actionRead` does.
+(b) action-plans exports no one site for `MACHINE_CANNOT_PLAN` (C-124.1; `#member` is private). plan-work relays its row from `ACTION_PLAN_CHECKS` in `machineCannotPlan()`, a second site for the code (K231). An exported `machineCannotPlan(extra?)` in action-plans would make it one; I would then answer through it.
