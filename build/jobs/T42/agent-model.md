@@ -22,3 +22,7 @@
 - `format`: 147 modules, 146 requirements files; 0 failures. `architecture`: 5 product files, 6 relative imports; 0 failures. `coverage`: 14 of 14 live requirement ids named by a test; 0 failures. `ownership`: 4 files changed by agent-model between tranche/T42 and HEAD; 0 failures.
 
 Size (session_01HRAiKgMDasxpLF2LBqtZq6): test runs 6, module lines 861
+
+## J1 · COMPLETE
+
+T42-19a applied: R1 (MODEL_FOR_MODE.transcribe, priced) and R14 (image blocks only inside tool_result; sent unchanged on apikey, counted by the meter; IMAGE_NOT_RELAYED on signin, nothing sent). agent-model 20/20 pass, negative control 3 fail on old source; format, architecture, coverage (14/14), ownership 0 failures. Users' suite: agent-worker requirements.test.mjs:1458 and :1460 (R45 bundle static/fresh) red because agent-worker's committed bundle inlines agent-model's source (generated artifact, not mine; regenerate at T42-20 or the layer close); 305/305 on tranche/T42 before. Record: build/jobs/T42/agent-model.md.
