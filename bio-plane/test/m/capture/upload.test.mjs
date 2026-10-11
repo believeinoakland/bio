@@ -28,10 +28,10 @@ const streamOf = (chunk, n) => {
   return s;
 };
 
-test("R86 (fence): a by that is absent, blank or a machine identity is MEMBER_SESSION_REQUIRED, first and writing nothing; a member, the founder included, is admitted", async () => {
+test("R86 (its own member-session fence): a by that is not a signed-in member's stamp (absent, not a string, blank, naming no member, or a machine identity) is MEMBER_SESSION_REQUIRED (403), first and writing nothing, so a machine credential is refused by it; a member, the founder included, is admitted", async () => {
   const { c, state } = setup();
   const before = state();
-  for (const by of [undefined, null, "", "  ", 7, "class:ai", "class:admin", "daemon", "ai", "token:member"]) {
+  for (const by of [undefined, null, "", "  ", 7, {}, ["m1"], "member:", "member:  ", "class:ai", "class:admin", "class:probe", "daemon", "ai", "token:member"]) {
     /* first: with every other refusal tripped too */
     const r = await c.uploadCapture({ bytes: new Uint8Array(0), statement: "", name: 5, by });
     assert.deepEqual([r.ok, r.reason, r.status], [false, "MEMBER_SESSION_REQUIRED", 403], String(by));
@@ -114,7 +114,7 @@ test("R86 (acquisition R10): more than 256 MiB is TOO_LARGE (413) with the strea
   assert.ok(fit.b.held.has(`bio/captures/${sha(chunk)}`), "the part held under its own digest");
 });
 
-test("R86 R65 R16: an upload holds the bytes under their digest, writes one upload receipt at upload:<sha256> with by and her statement, records her as the capture's actor, and answers the document graded received, attributed to her, naming no member as its source; no bundle", async () => {
+test("R86 (acquisition R16): an upload holds the bytes under their digest, writes one upload receipt at upload:<sha256> with by and her statement, records her as the capture's actor, and answers the document graded received, attributed to her, naming no member as its source; no bundle", async () => {
   const { c, rows, b, prov } = setup();
   const bytes = te.encode("minutes of the closed session");
   const d = sha(bytes);
@@ -146,6 +146,9 @@ test("R86 R65 R16: an upload holds the bytes under their digest, writes one uplo
   assert.equal(doc.authority_state, "undetermined");
   assert.equal(typeof doc.profile, "object");
   assert.equal(doc.profile.source_content_type, null, "profiled from the bytes, no declared type");
+  /* acquisition.profileOf over the bytes with no response: no header and no transport, recorded or invented */
+  assert.ok(!/"transport"|"headers"|"content_type"/.test(JSON.stringify(doc.capture)), "no transport or header in the capture");
+  assert.ok(!("transport" in doc) && !("headers" in doc), "no transport or header on the document");
   assert.ok(!("knocker_note" in doc) && !("contact" in doc));
   assert.deepEqual(tables(), before, "no bundle, register or file row: it writes no bundle");
   /* no name given: no name_stated */
@@ -201,8 +204,8 @@ test("R86 (provenance R59, R62): a later fetch of the same bytes from a public a
   assert.deepEqual(c.provenance.receipts.filter((x) => x.via === "upload").map((x) => x.statement), [STATEMENT], "the upload's statement stays");
 });
 
-/* R86 takes `within` exactly as R65 does (N380): the act and the control plane's promotion are one. */
-test("R86 (R65's within): within is called inside the upload's own transaction after the receipt and the actor; its refusal, throw or promise rolls the upload back whole (UPLOAD_WITHIN_FAILED, one fixed sentence)", async () => {
+/* R86's own `within` (N380's seam; store-door R7): the upload and the control plane's promotion are one act. */
+test("R86 (its own within): within is called with the document inside the upload's own transaction after the receipt and the actor; its {ok: false} rolls the upload back and is the answer; a throw or an answer that is not synchronous rolls it back as UPLOAD_WITHIN_FAILED (500, one fixed sentence, never the thrown message); any other answer is carried as within", async () => {
   const { c, rows, s } = setup();
   s.db.exec(`CREATE TABLE promoted (sha TEXT)`);
   const seen = [];
@@ -231,6 +234,18 @@ test("R86 (R65's within): within is called inside the upload's own transaction a
     assert.deepEqual(everything(t.rows), before, "nothing written");
   }
   assert.equal(UPLOAD_WITHIN_FAILED_DETAIL, "the act run with the upload did not complete, so the upload was rolled back and nothing was written");
+  /* never the thrown message, whatever is thrown */
+  for (const within of [() => { throw "secret at /srv/plane/x.mjs:9"; }, () => { throw { message: "/srv/y", stack: "/srv/y" }; }, () => { throw undefined; }]) {
+    const f = await t.c.uploadCapture({ ...ok, within });
+    assert.deepEqual(f, { ok: false, reason: "UPLOAD_WITHIN_FAILED", status: 500, detail: UPLOAD_WITHIN_FAILED_DETAIL });
+  }
+  assert.deepEqual(everything(t.rows), before, "nothing written");
+  /* any other answer is carried as `within` beside the upload's own, and the upload stands */
+  const carried = [[7, 7], ["done", "done"], [null, null], [undefined, null], [{ ok: true, n: 1 }, { ok: true, n: 1 }], [[1, 2], [1, 2]]];
+  for (const [i, [answer, want]] of carried.entries()) {
+    const u = await t.c.uploadCapture({ ...ok, bytes: te.encode(`carried ${i}`), within: () => answer });
+    assert.deepEqual([u.ok, u.existed, u.within], [true, false, want], JSON.stringify(answer));
+  }
   /* then filed as ever */
   assert.deepEqual([(await t.c.uploadCapture({ ...ok, within: () => ({ ok: true }) })).existed], [false]);
 });

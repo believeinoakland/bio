@@ -1,7 +1,7 @@
 /* capture — what capture keeps (layer 3): the evidence store by digest, what capture learns about sources and sites
  * (reachability, site assets, links and the host's chrome, capture sessions, the platform's ceiling, the render
- * allowance), the event queue an undetermined capture raises, the doorbell (`doorbell.mjs`) and the information
- * grammar (`grammar.mjs`, C-2.7). The acquisition act is `acquisition`'s since T18 (K617): `acquire` and
+ * allowance), the event queue an undetermined capture raises, a member's upload (R86) and the information grammar
+ * (`grammar.mjs`, C-2.7). The acquisition act is `acquisition`'s since T18 (K617): `acquire` and
  * `archiveLookup` hand it this module's store (R73). It writes no bundle: no intake path writes live state.
  * Requirements: build/requirements/capture.md (R8, R15, R21–R32, R37–R40, R43–R59, R63–R86). Extracted from `legacy-store` and
  * `legacy-index` in T4 (T4-4); the reasoning the legacy comments carried is kept beside the code it explains.
@@ -12,9 +12,17 @@
  * attestation's `attest` (its R1–R3) for R68's late co-attestation, and holds attestation's instance for the storage
  * (`attestationOf(ctx)`), which the acquisition act reaches as `cap.attestation` to sign an archive-sourced receipt
  * (its R4; R73, K1224). It reads provenance's `register` and `captured_locators` only on their stated read contract (provenance R48). It
- * calls no later module: a later module registers a listener (R44, R55; `on`) or a reader (R32's litigation hold, R78's
- * batch examination, R83's questions a document was captured for; `registerReader`). At its first construction for a
- * storage it registers its grammar (R37) and its figures (R75) with record-core. */
+ * calls no later module: a later module registers a listener (R44, R55; `on`) or a reader (R78's batch examination,
+ * R83's questions a document was captured for; `registerReader`, and the doorbell copy's litigation hold). At its first construction for a
+ * storage it registers its grammar (R37) and its figures (R75) with record-core.
+ *
+ * THE DOORBELL COPY (T42, K2607, K625). The doorbell (the knock, its rate and tallies, the inbox, the pull, the knocker
+ * secret; once this module's R30–R32, R47–R54, R56, R65–R67, R70–R72, R80, R85) is `doorbell`'s since T42, moved by
+ * copy. What this module still holds of it (`doorbell.mjs`, the block "The doorbell's store side" and the methods after
+ * it up to `#pulledDocument`, `knocksOf`, `pulledKnocksOf`, `mayClearDiscarded`, their constants, rows, tables and
+ * routes) is a named copy kept only because `plane/door.mjs` imports `capture/doorbell.mjs` until plane's layer-11 job:
+ * it is unused by new code, answers no requirement of this module, and is deleted in T43 (N849) once `sources`,
+ * `actions`, `answer-envelope`, `store-door` and `plane` have re-pointed to `doorbell`. Nothing new calls it. */
 import { isPublicHttpsLocator, createSha256, isMachineIdentity } from "../record-grammar/index.mjs";
 import { KNOCK, isWeakKnockerSecret, knockerSecretWeak } from "./doorbell.mjs";
 import { CAPTURE_CHECKS, KNOCK_CHECKS } from "./checks.mjs";
@@ -76,7 +84,7 @@ const rawReplayOf = (archived) => {
 };
 const REPLAY_MAX = 256 * 1024 * 1024;
 
-/* N380: the tag a throw of `pullKnock`'s `within` is carried out of the transaction under. */
+/* N380: the tag a throw of `within` (R86's, and the doorbell copy's `pullKnock`) is carried out of the transaction under. */
 const WITHIN_FAULT = Symbol("within's fault");
 /** R65 (N409, K609): the one sentence `PULL_WITHIN_FAILED` answers, whatever `within` threw or answered. */
 export const PULL_WITHIN_FAILED_DETAIL =
@@ -174,7 +182,8 @@ const taskCursorPlace = (after) => {
 export const CAPTURE_EVENTS = Object.freeze(["source-outcome", "task", "compute", "observation"]);
 
 /* The readers a later module may register, once at start, each taking one registration whoever makes it: whether any
-   litigation hold is in place (R32; `actions` R52), the batch-release examination of one document (R78;
+   litigation hold is in place (the doorbell copy's, until T43; `actions` R52, which registers it with `doorbell` from
+   its T42 job), the batch-release examination of one document (R78;
    `ratification` R34) and the questions a document was captured for (R83; `capture-requests` R48). */
 export const CAPTURE_READERS = Object.freeze(["litigation-hold", "batch-examination", "captured-for"]);
 
@@ -441,7 +450,7 @@ export class Capture {
     return { ok: true, slot, module };
   }
 
-  /** R32 (DEC-108 (5)): whether a discarded knock's row or bytes may be cleared now. Only when the registered
+  /** THE DOORBELL COPY (T43's delete), as doorbell R3 (DEC-108 (5)): whether a discarded knock's row or bytes may be cleared now. Only when the registered
    *  litigation-hold reader answers, synchronously, that no hold is in place (`false`); with none registered, or one
    *  that fails or answers anything else, nothing discarded is cleared. Writes nothing and never throws. */
   mayClearDiscarded() {
@@ -508,7 +517,9 @@ export class Capture {
   }
 
   /* ==================================================================== *
-   * The doorbell's store side (R31, R32, R47, R48, R53, R54, R56)
+   * The doorbell's store side: THE DOORBELL COPY, deleted in T43 (N849; K2607, K625). `doorbell`'s since T42 (its
+   * R1–R20, once this module's R31, R32, R47, R48, R53, R54, R56 …); kept unchanged, unused by new code, until
+   * `plane`, `store-door`, `actions`, `sources` and `answer-envelope` have re-pointed. Through `pulledKnocksOf`.
    * ==================================================================== */
 
   /** R56: the key the source fingerprint is computed under: the operator's secret binding when set, else the
@@ -978,7 +989,7 @@ export class Capture {
              ...(typeof within === "function" ? { within: done.within } : {}) };
   }
 
-  /* N380 (R65, R86): the caller's act, called inside the act's own transaction with its own copy of the document. Its
+  /* N380 (R86, and the doorbell copy's pull): the caller's act, called inside the act's own transaction with its own copy of the document. Its
      throw is tagged so a fault of the act's own still throws; an answer that is not synchronous (a promise would outlive
      the transaction, its outcome dropped with it) is tagged likewise. Answers what `within` answered. */
   static #callWithin(within, document) {
@@ -1030,9 +1041,10 @@ export class Capture {
    * ==================================================================== */
 
   /** R86: a signed-in member brings into the record a file she holds, which no one fetched. Refused in order, each
-   *  writing nothing: the member-session fence (`by` absent, blank or a machine identity: `MEMBER_SESSION_REQUIRED`, as
-   *  R80's read answers it); `UPLOAD_NO_STATEMENT` (C-118.10); a `name` that is not a string or is over 300 characters
-   *  (the required-argument refusal naming it); no evidence store (R65's answer); then `NO_BODY`, `EMPTY` and
+   *  writing nothing: the member-session fence (`by` absent, not a string, blank, naming no member (`member:` alone)
+   *  or a machine identity: `MEMBER_SESSION_REQUIRED`, 403); `UPLOAD_NO_STATEMENT` (C-118.10); a `name` that is not a
+   *  string or is over 300 characters (the required-argument refusal naming it); no evidence store (the installation's
+   *  storage-absent refusal, `acquisition`'s C-68.1); then `NO_BODY`, `EMPTY` and
    *  `TOO_LARGE` (the stream cancelled) as `acquisition` R10 names them. The parts a refused stream already stored stay
    *  content-addressed and named by no row, receipt or document, as R10's do.
    *
@@ -1042,11 +1054,11 @@ export class Capture {
    *  actor (R69); and the answer carries the provenance document (`#uploadedDocument`), graded received, never fetched
    *  (`provenance` R63). Bytes the record already holds (`provenance.registerHolds` answers them registered or acquired)
    *  answer `existed: true` with no document, the receipt written as a second
-   *  sighting, and `within` not called. `within` is R65's seam: called inside the act's transaction after the receipt
-   *  and the actor; its `{ok: false}` rolls the upload back and is the answer; a throw or a promise rolls it back as
+   *  sighting, and `within` not called. `within` (N380's seam, `store-door` R7): called inside the upload's own
+   *  transaction after the receipt and the actor; its `{ok: false}` rolls the upload back and is the answer; a throw or a promise rolls it back as
    *  `UPLOAD_WITHIN_FAILED`. It writes no bundle. */
   async uploadCapture({ bytes, statement, name = null, by, at = null, within = null } = {}) {
-    if (typeof by !== "string" || !by.trim() || isMachineIdentity(by))
+    if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by))
       return { ok: false, reason: "MEMBER_SESSION_REQUIRED", status: 403,
                detail: "a file is brought into the record by a signed-in member, whose stamp names them; nothing was written" };
     /* DEC-49 REGION is-upload-stated */
@@ -1161,7 +1173,7 @@ export class Capture {
              ...(typeof within === "function" ? { within: done.within } : {}) };
   }
 
-  /* R86: the provenance document of an upload, built as R65's for a pulled knock: received from the member, never
+  /* R86: the provenance document of an upload, built as a pulled knock's is (doorbell R13): received from the member, never
      fetched (provenance R63): no fetched letter, no header, no transport. She is its actor, never its source (`sources`
      R12): the source is the uploader's receipt, naming no member; her words on where it came from, and the name she gave
      it, travel as her statements, never as evidence of their truth. The file is named from the digest. */
@@ -1195,7 +1207,7 @@ export class Capture {
     };
   }
 
-  /** R67: the knocks sharing a pseudonym, oldest first, to a member session (the op's fence), with the continuity
+  /** THE DOORBELL COPY (T43's delete), as doorbell R15: the knocks sharing a pseudonym, oldest first, to a member session (the op's fence), with the continuity
    *  sentence and never an identity: no contact is answered (R70). At most `limit` (N90), paged by `after`. */
   knocksOf({ pseudonym, limit = null, after = null } = {}) {
     if (typeof pseudonym !== "string" || !pseudonym)
@@ -1211,7 +1223,7 @@ export class Capture {
              limit: cap, truncated, next: truncated ? cursorOf([last.received, last.knock_id]) : null };
   }
 
-  /** R72 (K539; for `sources` R1): every knock pulled into a capture, oldest received first, to a member session (the
+  /** THE DOORBELL COPY (T43's delete), as doorbell R18 (K539; for `sources` R1): every knock pulled into a capture, oldest received first, to a member session (the
    *  op's fence), never a contact (R70); `[]` for none. One keyed read (`inbox_capture`). Never throws. */
   pulledKnocksOf(captureSha) {
     try {
@@ -1226,7 +1238,8 @@ export class Capture {
    * The capturing member, and late co-attestation (`acquisition` R16's actor, R68, R69)
    * ==================================================================== */
 
-  /** `acquisition` R16, R69: record `actor` as one who captured `captureSha` (a member session's acquire, a knock's pull). Kept once
+  /** `acquisition` R16, R69: record `actor` as one who captured `captureSha` (a member session's acquire, an upload
+   *  (R86), a knock's pull: `doorbell` R13 calls it). Kept once
    *  per pair, at the first instant. */
   recordCaptureActor({ captureSha, actor, at = null } = {}) {
     if (typeof captureSha !== "string" || !HEX64.test(captureSha) || typeof actor !== "string" || !actor) return { recorded: false };
@@ -2868,6 +2881,8 @@ export function captureOps(c, url, body, env) {
     dropcapturesession: () => c.dropCaptureSession({ session: q("session") }),
     sitechrome: () => c.siteChrome({ host: q("host"), threshold: Number(q("threshold")) || 0.6, limit: page.limit }),
     recordcapturelimit: () => c.recordCaptureLimit(body || {}),
+    /* THE DOORBELL COPY's routes (T43's delete; `doorbell`'s `doorbellOps` since T42): knock, inboxlist, inboxget,
+       inboxresolve, doorbellrefused, doorbelltally, inboxpull, knocksof, pulledknocks. */
     /* R85: `country` is the control plane's stamp in the query, never the body's (nor is `sourceAddress`). */
     knock: () => c.knock({ ...(body || {}), sourceAddress: q("source"), country: q("country") }),
     inboxlist: () => c.inboxList(q("status") || null, { ...page, sort: q("sort"), dir: q("dir") }),

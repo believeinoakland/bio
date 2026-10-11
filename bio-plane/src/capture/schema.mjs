@@ -1,6 +1,11 @@
 /* capture's tables (layers.md ruling 3): the DDL this module owns, moved verbatim from the legacy schema text
  * (T4-4), and the additive columns an older store gains at boot. `Capture#migrate` runs it. SQL comments are `--`
- * lines, dropped before the statements run. */
+ * lines, dropped before the statements run.
+ *
+ * THE DOORBELL COPY (T43's delete; K2607, K625): `inbox`, `knock_rate`, `knocker_key`, `doorbell_tally`,
+ * `doorbell_limit_last`, `knock_key` and the `inbox` additive columns are `doorbell`'s since T42 (it creates the same DDL
+ * and treats capture's declaration as held, plan rule 3 (4)); they stay here, unchanged, until capture's T43 job
+ * deletes them with the copy. */
 export const CAPTURE_SCHEMA = `
 -- The knock: quarantined public intake. Payload bytes live in R2 under
 -- <store>/inbox/<sha256> when R2 is configured, else inline here (small
@@ -528,8 +533,8 @@ export const CAPTURE_RESHAPE = [["links", "citation_norm"]];
 
 /* record-core R21/R46: what purge clears (whole-store only: none is keyed to a bundle) and what it never clears.
    The exempt tables are operational facts (the inbox, the doorbell's rate, its tally (R80) and its two keys among them) about this
-   instance, not corpus-derived; that the inbox and both keys outlive a whole-store purge is R56's and R66's test
-   (`test/m/capture/figures.test.mjs`). */
+   instance, not corpus-derived; that the inbox and both keys outlive a whole-store purge is doorbell R12's and R14's
+   test since T42 (the doorbell copy's tables, T43's delete). */
 export const CAPTURE_PURGED_TABLES = ["task_queue", "source_reachability", "link_verdicts", "links", "site_asset_refs",
   "site_assets", "reuse_verdicts", "capture_sessions", "site_chrome_refs", "site_chrome", "link_chrome", "capture_validators",
   "capture_actors", "capture_accounts", "late_attestations", "held_acts", "held_act_questions"];

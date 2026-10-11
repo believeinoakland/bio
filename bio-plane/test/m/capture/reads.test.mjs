@@ -1,6 +1,6 @@
-/* capture: the bounded reads (N90: R24–R28, R32 as amended), the `links` read contract (R57, N109) and the one
-   instance per storage (R58, N122), at the module's interface. Each test names the requirement ids it checks in its
-   title. A fresh store per test; no network. */
+/* capture: the bounded reads (N90: R24–R28 as amended; the inbox's is `doorbell`'s since T42), the `links` read
+   contract (R57, N109) and the one instance per storage (R58, N122), at the module's interface. Each test names the
+   requirement ids it checks in its title. A fresh store per test; no network. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, receipt, register, bucket, governor, provenance, storage, H } from "./fixture.mjs";
@@ -151,27 +151,6 @@ test("R26 (N90): reuseVerdicts lists at most `limit`, newest first, with truncat
   const r = route(c, "reuseverdicts", "bundle=INFO-1");
   assert.deepEqual([r.limit, r.verdicts.length, r.truncated], [READ_LIMIT.default, 21, false]);
   assert.deepEqual(c.reuseVerdicts({}), { verdicts: [] });
-});
-
-test("R32 (N90): inboxList lists at most `limit` knocks newest first, paged by `after` over every knock once, by status too; a route that names no limit is bounded", async () => {
-  const { c } = fresh({ evidence: bucket() });
-  const W = 600000;
-  for (let i = 0; i < 205; i++)
-    await c.knock({ content: `k${i}`, sourceAddress: `s${i}`, perIpLimit: 1e9, globalLimit: 1e9, now: W * 10 + i * 1000 });
-  const first = route(c, "inboxlist");
-  assert.deepEqual([first.inbox.length, first.limit, first.truncated], [READ_LIMIT.default, READ_LIMIT.default, true]);
-  const rest = route(c, "inboxlist", `after=${encodeURIComponent(first.next)}`);
-  assert.deepEqual([rest.inbox.length, rest.truncated, rest.next], [5, false, null]);
-  const ids = [...first.inbox, ...rest.inbox].map((k) => k.knock_id);
-  assert.equal(new Set(ids).size, 205, "every knock once");
-  const received = [...first.inbox, ...rest.inbox].map((k) => k.received);
-  assert.deepEqual(received, [...received].sort().reverse(), "newest first");
-  const k0 = c.inboxList(null, { limit: 205 }).inbox.at(-1);
-  await c.inboxResolve({ knockId: k0.knock_id, status: "pulled", by: "member:m", reason: "brought in" });
-  const pulled = pages((p) => c.inboxList("pulled", p), 1);
-  assert.deepEqual(pulled.flatMap((p) => p.inbox.map((k) => k.knock_id)), [k0.knock_id]);
-  assert.equal(c.inboxList("new", { limit: 1000 }).inbox.length, 204);
-  assert.equal(c.inboxList(null, { after: "nope" }).reason, "BAD_CURSOR");
 });
 
 test("R57 (N109): links is a read contract: source_capture, address_norm, partition and first_seen carry their stated meaning, and first_seen is kept when a capture's rows are filed again", () => {

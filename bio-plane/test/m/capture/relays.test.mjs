@@ -1,17 +1,15 @@
-/* capture R64 (N339, N349, K421, K444): the four handlers that relay a store answer (`linksOp`, `archiveLookupOp`,
-   `acquireOp`, `knockOp`) answer the store's own refusal with its status, code and sentence, and only a reply that is no
-   answer as the silence, carrying the store's correlation id when it gave one. The control plane's helpers are
-   stand-ins that behave as its R23, R25 and R30 state them (`doAnswer`, `storeSilent`, `storeRefusal`); each relay is
+/* capture R64 (N339, N349, K421, K444): the three handlers that relay a store answer (`linksOp`, `archiveLookupOp`,
+   `acquireOp`; `knockOp`'s relay is `doorbell`'s since T42) answer the store's own refusal with its status, code and
+   sentence, and only a reply that is no answer as the silence, carrying the store's correlation id when it gave one.
+   The control plane's helpers are stand-ins that behave as its R23, R25 and R30 state them (`doAnswer`, `storeSilent`, `storeRefusal`); each relay is
    exercised with `storeRefusal` handed in and without it (the plane's door hands it; a caller handing only
    `{json, storeSilent, doAnswer}`, as the retired legacy-index's did, is still answered alike), and the answers must
    be the same. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { linksOp, archiveLookupOp, acquireOp, relayUnanswered } from "../../../src/capture/ops.mjs";
-import { knockOp } from "../../../src/capture/doorbell.mjs";
 
 const json = (o, status = 200) => new Response(JSON.stringify(o), { status, headers: { "content-type": "application/json" } });
-const requiredArgument = (op, argument, shape, error) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument, shape, error });
 const storageAbsent = (op, error) => json({ ok: false, reason: "EVIDENCE_STORAGE_NOT_CONFIGURED", op, error }, 503);
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 /* control-plane R23, R25: a reply with `ok: false` below 500 is the store's own refusal, `refused` with its `reply`;
@@ -44,8 +42,6 @@ const RELAYS = {
   acquire: async (store, h) => (await acquireOp(new Request("https://p/?op=acquire", { method: "POST", body: JSON.stringify({ locator: "https://t.example/d" }) }),
                                                 { CAPTURES: { put() {}, get() {} } }, store,
                                                 { ...h, storageAbsent, cls: "member", member: true, sessMember: "m1", storeName: "bio" })).response,
-  knock: (store, h) => knockOp(new Request("https://p/?op=knock", { method: "POST", headers: { "cf-connecting-ip": "203.0.113.9" },
-                                                                  body: JSON.stringify({ contentText: "a tip" }) }), {}, store, { ...h, requiredArgument }),
 };
 const handed = { "with storeRefusal": { json, storeSilent, storeRefusal, doAnswer }, "without it": { json, storeSilent, doAnswer } };
 const read = async (r) => ({ status: r.status, text: await r.text() });

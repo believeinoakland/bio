@@ -23,7 +23,11 @@
  * C-118.7 is new with DEC-88 (R32: a resolve records the member's reason), C-118.8 and C-118.9 with DEC-97 (R79, R81:
  * setting held material aside and bringing it back); C-118.3 and C-85's sentences gained DEC-108's (R52) (K1019).
  *
- * C-118.10 is new with R86 (T41-8a; K2425 (4)): a member's upload names where the file came from. */
+ * C-118.10 is new with R86 (T41-8a; K2425 (4)): a member's upload names where the file came from.
+ *
+ * T42 (K2607, K2609): C-85 and C-118.2, .3, .4 and .7 moved with their raisers to `doorbell` (its R21), numbers and
+ * translations kept. Until capture's delete of its doorbell copy (T43, N849/N851) they stay defined once, here, and
+ * `doorbell`'s `checks.mjs` re-exports them, so no row is held twice; C-118's next free number stays this module's. */
 
 const at = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
 const inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;

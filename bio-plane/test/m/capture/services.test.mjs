@@ -439,12 +439,6 @@ test("R74 (N418): every statement that changes the store, from every writer this
   };
   const as = async (name, fn) => { writer = name; await fn(); writer = null; };
   const nav = (a) => ({ ref: a, address: a, address_norm: a, type: "deferred", chrome: true, chrome_basis: "<nav>" });
-  await as("knock", () => c.knock({ content: "k1", sourceAddress: "1.1.1.1", knockerSecret: "a knocker secret of twenty-plus" }));
-  await as("knockAttempt", () => c.knockAttempt({ sourceAddress: "1.1.1.2" }));
-  const kid = c.inboxList(null).inbox[0].knock_id;
-  await as("inboxResolve", () => c.inboxResolve({ knockId: kid, status: "discarded", by: "m1", reason: "not for us" }));
-  await as("inboxResolve", () => c.inboxResolve({ knockId: kid, status: "new", by: "m1", reason: "after all" }));
-  await as("pullKnock", () => c.pullKnock({ knockId: kid, by: "m1" }));
   await as("recordCaptureActor", () => c.recordCaptureActor({ captureSha: C, actor: "m1" }));
   await as("recordCaptureAccount", async () => {
     const r = await c.recordCaptureAccount({ captureSha: C, text: "mine", signature: await sshsign(key, captureAccountStatement(C, "mine"), NS_RATIFY), by: "m1" });
@@ -473,7 +467,6 @@ test("R74 (N418): every statement that changes the store, from every writer this
   await as("taskEventRemove", () => c.taskEventRemove({ kind: "authority-undetermined", captureSha: A }));
   await as("recordValidators", () => c.recordValidators({ addressNorm: "https://h.example/p", captureSha: A, etag: "e" }));
   await as("recordSourceOutcome", () => c.recordSourceOutcome({ addressNorm: "https://h.example/p", outcome: "fetch_failed" }));
-  await as("doorbellRefused", () => c.doorbellRefused({}));
   await as("uploadCapture", async () => assert.equal((await c.uploadCapture({ bytes: new Uint8Array([9, 9]), statement: "mine", by: "m1" })).ok, true));
   s.db.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version)
              VALUES ('INFO-9', 'information', 'g', 't', 'collected', '2026-01-01', '2026-01-01', 'x', 1)`);
@@ -483,10 +476,11 @@ test("R74 (N418): every statement that changes the store, from every writer this
   await as("restoreHeld", () => assert.equal(c.restoreHeld({ ids: ["INFO-9"], reason: "r", author: "member:m1" }).ok, true));
   s.sql.exec = exec;
   assert.deepEqual(outside, [], "no statement changed the store outside a transaction");
-  for (const w of ["knock", "knockAttempt", "inboxResolve", "pullKnock", "recordCaptureActor", "recordCaptureAccount", "reattest", "renderAdmit",
+  /* the doorbell's writers (knock, knockAttempt, inboxResolve, pullKnock, doorbellRefused) are `doorbell`'s, its R22 (T42) */
+  for (const w of ["recordCaptureActor", "recordCaptureAccount", "reattest", "renderAdmit",
                    "renderSpend", "recordLinks", "recordLinkVerdict", "deriveSiteChrome", "saveCaptureSession", "loadCaptureSession",
                    "dropCaptureSession", "recordSiteAssets", "recordReuseVerdicts", "recordCaptureLimit", "taskEnqueue", "taskEventAttempt",
-                   "taskEventRemove", "recordValidators", "recordSourceOutcome", "doorbellRefused", "uploadCapture", "setAside", "restoreHeld"])
+                   "taskEventRemove", "recordValidators", "recordSourceOutcome", "uploadCapture", "setAside", "restoreHeld"])
     assert.ok(inside.has(w), `${w} wrote, through transact`);
 });
 
