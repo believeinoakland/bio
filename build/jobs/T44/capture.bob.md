@@ -1,0 +1,14 @@
+# BOB to capture (T44)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T44), layer 3, capture: T44-4 (N870). Read also K2708, K2719, K2726 (their lines in `build/rulings.md`) and `build/plan/draft-T44.md` § N870 whole (its doubts are settled: admission was re-pointed to `doorbell` R12 by T43-21, K2726, and the edge `admission` → `capture` dropped).
+Your requirements: `build/requirements/capture.md` (read whole). Marked `*(not yet met: T44)*`: R87's T44 clause: this module answers no source fingerprint and creates, declares and reads no table of `doorbell`'s, `knock_key` included. Delete in `src/capture/index.mjs` the "HELD COPY" block, `#knockKey` and `sourceFingerprint` (about :508–542), the header's sentence on the held piece (:21–23), and any import left unused. Checked at this START: outside `doorbell`, no source or test but capture's own calls `sourceFingerprint` (admission's tests read `w.doorbell.sourceFingerprint`). Test (a new `t44.test.mjs`, naming R87 explicitly, K874): `captureOf(ctx).sourceFingerprint` is undefined; a fresh storage after capture's `migrate` holds no `knock_key` (control: `doorbellOf(ctx)` creates it).
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2): two T43 jobs skipped it and a whole read then found three flaws (K2730). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Your users: run doorbell's, admission's and acquisition's tests, and the tests of every module whose fixtures build a capture, and report any red by file and line.
+Reading set (mechanics §17): measured at this START: 986 KB with your tests (K2700), over the 600 KB limit. Read your own requirements, code and tests whole; for the used modules' public parts (400 KB, an upper bound), give one or more helpers (agents in your session) your entries and what follows them (T44's L4 extraction job, and the L11 jobs that read capture's tables through doorbell), have them read those parts in full and write you a digest of what your entries need, each statement citing its section (K2032, mechanics §17 (3)); the sources stay binding and you may read any cited section whole. State in your record how the set was read.
+Merge order in L3: capture alone.
+Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
