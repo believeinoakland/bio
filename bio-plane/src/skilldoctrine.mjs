@@ -1822,8 +1822,10 @@ export function actionDraftingLayer(catalog) {
 /** The text fields of a procedure guide's item R16 reads (`reading-guides` R13: `{route, expect?, citation}`). */
 const PROCEDURE_ITEM_FIELDS = Object.freeze(["route", "expect", "citation"]);
 
-/** THE `procedure_guide` LAYER over what the caller passed (R46): `procedureGuidesFor`'s answer, `{kind, guides: [{guide,
- *  origin, items}], label}` (`guide` the guide's id; reading-guides R13, K2820), or a list of them (one per action kind).
+/** THE `procedure_guide` LAYER over what the caller passed (R46): `procedureGuidesFor`'s answer, `{ok, kind, guides:
+ *  [{guide, origin, items}], withheld, label}` (`guide` the guide's id, null for the profile's, whose items may carry
+ *  `after`, carried as given; reading-guides R13, K2820, K2825), or a list of them (one per action kind). A guide R13
+ *  withheld is not passed in its `guides`, and is not rendered.
  *  A stated absence in R9's form with no guide; with guides, `sourcing` `guide`, each named with its kind and origin in
  *  the answer's order, its items only, and each answer's label carried unchanged. Throws naming the guide and the item
  *  when an item carries a control-flow pattern (R16). */
@@ -1850,16 +1852,18 @@ export function procedureGuideLayer(answers) {
         kind,
         label,
         guides: guides.map(({ guide, origin, items }) => {
-          const name = typeof guide === "string" && guide ? guide : "an unnamed guide";
+          /* The profile's guide has no id (`guide: null`, reading-guides R13; K2825): it is named by its kind. */
+          const id = typeof guide === "string" && guide ? guide : null;
+          const name = id ?? (origin === "profile" ? `the profile's guide for ${kind ?? "an unnamed kind"}` : "an unnamed guide");
           items.forEach((item, i) => {
             const texts = PROCEDURE_ITEM_FIELDS.map((f) => item?.[f]).filter((t) => typeof t === "string");
             const found = [...new Set(texts.flatMap(controlFlowAuthority))];
             if (found.length > 0)
-              throw new Error(`the procedure guide ${name} item ${i + 1} (${JSON.stringify(item?.route ?? null)}) carries `
+              throw new Error(`the procedure guide ${id ?? `(${name})`} item ${i + 1} (${JSON.stringify(item?.route ?? null)}) carries `
                 + `a clause of conduct (${found.join("; ")}): a guide lists routes and replies to expect, never how the `
                 + "AI may behave");
           });
-          return { kind, guide: name, origin: origin ?? null, items };
+          return { kind, guide: id, origin: origin ?? null, items };
         }),
       })),
       note: "a procedure guide lists the routes the profile or the group knows for one kind of action, in its order and "
@@ -2021,9 +2025,10 @@ export function exploreLayer() {
     load_when: "the system explores a question no member asked it to, where an account owner has turned exploring on",
     sourcing: "authored",
     body: {
-      /* run-rules R23: the explorer's runs carry the origin after every member-started run's (`RUN_ORIGINS`' first),
-         in the mode the law lookup reads from the order, the one after the first deployed (R18). */
-      origin: RUN_ORIGINS[RUN_ORIGINS.length - 1],
+      /* run-rules R23: the explorer's runs carry the origin `explore`, read from `RUN_ORIGINS` by key (as
+         question-explorer reads it), never by position, in the mode the law lookup reads from the order, the one after
+         the first deployed (R18). */
+      origin: RUN_ORIGINS.find((o) => o === "explore"),
       mode: LEGAL_LOOKUP_MODE,
       reuses: Object.keys(judgementLayers()),
       clauses: EXPLORE_CLAUSES,

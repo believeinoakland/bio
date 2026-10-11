@@ -6,6 +6,7 @@ import { renderPack, packVersion, SOURCING } from "../../../src/skillpack.mjs";
 import { actionDraftingLayer, procedureGuideLayer, ACTION_DRAFTING_RULES, ACTION_DRAFTING_ACTS, ACTION_RULE_TABLE,
          ACTION_RULES, FILING_RULES, ACTION_SOURCE, ACTION_SECTION, controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
 import { DRAFT_MODE } from "../../../src/run-rules/index.mjs";
+import { PROCEDURE_GUIDE_LABEL } from "../../../src/reading-guides/index.mjs";
 import { SRC, read, norm, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
 
 /* The acts R45 names, as `op=affordances` would publish them once agent-worker's draft tasks are declared (its R76):
@@ -132,15 +133,16 @@ test("R45 R16 R24 R26 no string of the layer, present or absent, carries control
 /* `reading-guides.procedureGuidesFor`'s answer (its R13; K2820), `{kind, guides: [{guide, origin, items}], label}`, as
    the run's caller passes it: the profile's guide first, then the group's approved ones, each its id with its origin
    and items, and the legal-information label. */
-const LABEL = { key: "guide.procedure.legalinfo", says: "legal information, not legal advice" };
+const LABEL = PROCEDURE_GUIDE_LABEL;
 const ITEMS = [
-  { route: "Ask for reconsideration by the records officer", expect: "A reply or a denial", citation: "Code § 1.2" },
+  { route: "Ask for reconsideration by the records officer", expect: "A reply or a denial", citation: "Code § 1.2",
+    after: ["denied", "partial"] },
   { route: "Complain to the oversight office", citation: "Code § 3.4" },
 ];
 const GROUP_ITEMS = [{ route: "Send the request again by mail", expect: "The office must respond within 10 days",
                        citation: "Code § 1.5" }];
-const answer = (over = {}) => ({ kind: "records_request", label: LABEL, guides: [
-  { guide: "profile:records_request", origin: "civicsmith", items: ITEMS },
+const answer = (over = {}) => ({ ok: true, kind: "records_request", label: LABEL, withheld: [], guides: [
+  { guide: null, origin: "profile", items: ITEMS },
   { guide: "GUD-2026-abcdefghijklmnop", origin: "group", items: GROUP_ITEMS, state: "group", author: "m1" },
 ], ...over });
 
@@ -168,8 +170,10 @@ test("R46 the procedure_guide layer: with no guide passed, a stated absence in R
   assert.equal(proc.kind, "records_request");
   assert.equal(proc.label, LABEL, "the answer's legal-information label, unchanged");
   assert.deepEqual(proc.guides.map((g) => [g.guide, g.origin]),
-    [["profile:records_request", "civicsmith"], ["GUD-2026-abcdefghijklmnop", "group"]], "the answer's order: the profile's first");
-  assert.equal(proc.guides[0].items, ITEMS, "the items, unchanged");
+    [[null, "profile"], ["GUD-2026-abcdefghijklmnop", "group"]], "the answer's order: the profile's first, with no id");
+  assert.equal(proc.guides[0].items, ITEMS, "the items, unchanged, the profile's `after` included");
+  assert.deepEqual(proc.guides[0].items[0].after, ["denied", "partial"]);
+  assert.ok(!("withheld" in proc) && !("ok" in proc), "a withheld guide is not passed, and nothing of it renders");
   for (const g of proc.guides) {
     assert.deepEqual(Object.keys(g).sort(), ["guide", "items", "kind", "origin"], "the items only: no state or author");
     assert.equal(g.kind, "records_request");
@@ -194,6 +198,9 @@ test("R46 R16 a procedure guide carries no clause of conduct: an item R16 finds,
     assert.throws(() => procedureGuideLayer(a), /procedure guide GUD-9 item 2 .*carries a clause of conduct/);
     assert.throws(() => renderPack(published(), { procedure_guides: a }), /GUD-9 item 2/);
   }
+  /* The profile's guide, which has no id, is named by its kind. */
+  const prof = answer({ guides: [{ guide: null, origin: "profile", items: [{ route: "Repeat until the office replies", citation: "Code § 1" }] }] });
+  assert.throws(() => procedureGuideLayer(prof), /procedure guide \(the profile's guide for records_request\) item 1 .*carries a clause of conduct/);
   /* The control: a procedure's own words ("must respond within 10 days", "send") are not conduct, and render. */
   assert.deepEqual(controlFlowAuthority(GROUP_ITEMS[0].expect), []);
   assert.doesNotThrow(() => renderPack(published(), { procedure_guides: answer() }));
