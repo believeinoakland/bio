@@ -15,6 +15,6 @@
 **Deferred:** none. **In other modules:** nothing found.
 
 **Tests.** `node --test test/m/answer-envelope/`: tests 30, pass 30, fail 0. Users (P11) `control-plane`, `store-door`, `plane`: tests 425, pass 425, fail 0. Layer tests: none (manifest).
-**Checks.** format: 147 modules, 146 requirements files; 0 failures. architecture: 9 product files, 107 relative imports; 0 failures. coverage: 11 of 11 live requirement ids named by a test; 0 failures. ownership (after commit): see below.
+**Checks.** format: 147 modules, 146 requirements files; 0 failures. architecture: 9 product files, 107 relative imports; 0 failures. coverage: 11 of 11 live requirement ids named by a test; 0 failures. ownership: 4 files changed by answer-envelope between tranche/T42 and HEAD; 0 failures.
 
 Size (session_01GfbfuPey5USVmCuUZXmE4L): test runs 4, module lines 838
