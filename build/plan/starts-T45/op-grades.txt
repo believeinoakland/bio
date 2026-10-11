@@ -10,3 +10,5 @@ Reading set (mechanics §17): measured at this START: 412 KB with your tests, un
 Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, installer, stewards, plane.
 Also (K2817, K2820): grade duties' `dutyfromresponse`, `dutiesarising` and reading-guides' `procedureguides`.
 Also (K2839): case-check's ops `publishcheck` (mutating, graded as publish) and `casecheck` (a read).
+
+(K2857) From consequences' merge (T45-24): add `ADDRESSED_NO_REASON` and `SUCCESS_NO_REASON` to `JUSTIFICATION_REFUSALS` and grade `successrevise` `reasoned`; affordances' `backing.test.mjs` R19 reads red on them until you and T45-39 merge.
