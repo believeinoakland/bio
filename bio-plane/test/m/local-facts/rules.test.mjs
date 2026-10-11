@@ -63,7 +63,7 @@ test("R10 a member drafts a rule from its primary source, answered {ok, rule, st
   row(r, "RULE_IN_PROFILE");
   assert.deepEqual(r.held, { section: "legal_facts", key: "sitting_recordings", profile: TP });
   /* NO_REASON: none, blank, over 500 characters */
-  for (const reason of [undefined, "  ", "x".repeat(501)]) row(draft(DL, { reason }), "NO_REASON");
+  for (const reason of [undefined, "  ", "x".repeat(501)]) row(draft(DL, { reason }), "RULE_NO_REASON");
   assert.equal(n(), 0, "no refusal wrote anything");
   /* the controls: each lands */
   assert.deepEqual(draft(DL, { reason: "x".repeat(500) }), { ok: true, rule: "GR-1", state: "drafted", at: "2026-09-28T01:00:00Z" });
@@ -95,8 +95,8 @@ test("R11 a member other than the drafter confirms; refusals in order (machine, 
   const r1 = draft().rule;                         // Tier 2
   const before = n();
   for (const by of [MACHINE, "", undefined]) row(confirm("GR-99", { by }), "MACHINE_CANNOT_CONFIRM");
-  for (const rule of ["GR-99", "GR-0", "gr-1", "", undefined, 7]) row(confirm(rule), "NO_SUCH_RULE");
-  row(confirm(r1, { viewer: "nobody" }), "NO_SUCH_RULE");
+  for (const rule of ["GR-99", "GR-0", "gr-1", "", undefined, 7]) row(confirm(rule), "NO_SUCH_GROUP_RULE");
+  row(confirm(r1, { viewer: "nobody" }), "NO_SUCH_GROUP_RULE");
   /* a self-confirmation refused, in either spelling of the same member, with a statement or without */
   row(confirm(r1, { by: V("bob"), viewer: V("bob"), statement: QUAL }), "RULE_SELF_CONFIRM");
   const founder = draft({ ...DL, rule: "founders" }, { by: "admin", viewer: "admin" }).rule;
@@ -246,9 +246,9 @@ test("R13 ruleWithdraw by any member with a reason: kept, never deleted; a repea
   const r = draft().rule;
   confirm(r, { statement: QUAL });
   for (const by of [MACHINE, ""]) row(w.lf.ruleWithdraw({ rule: r, reason: "x", by }), "MACHINE_CANNOT_DRAFT_RULE");
-  row(w.lf.ruleWithdraw({ rule: "GR-42", reason: "x", by: V("dan") }), "NO_SUCH_RULE");
-  row(w.lf.ruleWithdraw({ rule: r, reason: "x", by: V("dan"), viewer: "nobody" }), "NO_SUCH_RULE");
-  for (const reason of [undefined, " ", "y".repeat(501)]) row(w.lf.ruleWithdraw({ rule: r, reason, by: V("dan") }), "NO_REASON");
+  row(w.lf.ruleWithdraw({ rule: "GR-42", reason: "x", by: V("dan") }), "NO_SUCH_GROUP_RULE");
+  row(w.lf.ruleWithdraw({ rule: r, reason: "x", by: V("dan"), viewer: "nobody" }), "NO_SUCH_GROUP_RULE");
+  for (const reason of [undefined, " ", "y".repeat(501)]) row(w.lf.ruleWithdraw({ rule: r, reason, by: V("dan") }), "RULE_NO_REASON");
   const before = n();
   assert.deepEqual(w.lf.ruleWithdraw({ rule: r, reason: "repealed", by: V("dan"), viewer: V("dan") }),
                    { ok: true, rule: r, state: "withdrawn", already: false, at: "2026-09-28T01:00:00Z" });
@@ -266,8 +266,8 @@ test("R13 ruleOffer: a confirmed rule's entry, source and confirmed {at, with_st
   const r = draft().rule;
   row(w.lf.ruleOffer({ rule: r, viewer: V("dan") }), "RULE_NOT_CONFIRMED");
   confirm(r, { statement: QUAL });
-  row(w.lf.ruleOffer({ rule: "GR-9", viewer: V("dan") }), "NO_SUCH_RULE");
-  row(w.lf.ruleOffer({ rule: r, viewer: "nobody" }), "NO_SUCH_RULE");
+  row(w.lf.ruleOffer({ rule: "GR-9", viewer: V("dan") }), "NO_SUCH_GROUP_RULE");
+  row(w.lf.ruleOffer({ rule: r, viewer: "nobody" }), "NO_SUCH_GROUP_RULE");
   const o = w.lf.ruleOffer({ rule: r, by: V("dan"), viewer: V("dan") });
   assert.equal(o.ok, true);
   assert.deepEqual(JSON.parse(o.bytes), { section: "deadlines", entry: DL,
@@ -314,7 +314,7 @@ test("R10 R11 R13 the ops map: ruledraft, ruleconfirm, rulewithdraw and ruleoffe
   const url = (q) => new URL(`https://plane.example/?${q}`);
   const d = localFactsOps(w.lf, url("viewer=member%3Abob"), { section: "deadlines", entry: DL, source: src, reason: "x", by: V("bob"), viewer: "nobody" }).ruledraft();
   assert.equal(d.ok, true, JSON.stringify(d));
-  assert.equal(localFactsOps(w.lf, url("viewer=nobody"), { rule: d.rule, by: V("carol"), statement: QUAL }).ruleconfirm().reason, "NO_SUCH_RULE",
+  assert.equal(localFactsOps(w.lf, url("viewer=nobody"), { rule: d.rule, by: V("carol"), statement: QUAL }).ruleconfirm().reason, "NO_SUCH_GROUP_RULE",
                "the URL's viewer, not the body's");
   assert.equal(localFactsOps(w.lf, url("viewer=member%3Acarol"), { rule: d.rule, by: V("carol"), statement: QUAL, viewer: "nobody" }).ruleconfirm().ok, true);
   assert.equal(localFactsOps(w.lf, url(`rule=${d.rule}&viewer=member%3Adan`), null).ruleoffer().ok, true);

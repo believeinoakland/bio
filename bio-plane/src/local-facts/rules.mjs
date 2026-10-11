@@ -164,7 +164,7 @@ export class GroupRules {
    * ===================================================================== */
 
   /** R10: a member drafts a rule from its primary source. Refusals in order, each writing nothing:
-   *  MACHINE_CANNOT_DRAFT_RULE, RULE_SECTION_UNKNOWN, RULE_ENTRY_INVALID, RULE_NO_SOURCE, RULE_IN_PROFILE, NO_REASON.
+   *  MACHINE_CANNOT_DRAFT_RULE, RULE_SECTION_UNKNOWN, RULE_ENTRY_INVALID, RULE_NO_SOURCE, RULE_IN_PROFILE, RULE_NO_REASON (R10's NO_REASON, owner-prefixed as K231).
    *  Answers `{ok, rule, state: "drafted"}`. */
   ruleDraft(a = {}) {
     const b = isObj(a) ? a : {};
@@ -252,7 +252,7 @@ export class GroupRules {
   }
 
   /** R11: a member other than the drafter confirms a drafted rule. Refusals in order: MACHINE_CANNOT_CONFIRM (by the
-   *  caller, `machineRefusal`), NO_SUCH_RULE, RULE_SELF_CONFIRM, RULE_NOT_DRAFTED, RULE_NEEDS_QUALIFICATION. A Tier 1
+   *  caller, `machineRefusal`), NO_SUCH_GROUP_RULE, RULE_SELF_CONFIRM, RULE_NOT_DRAFTED, RULE_NEEDS_QUALIFICATION. A Tier 1
    *  rule asks no statement and records none given. */
   ruleConfirm(b, machineRefusal) {
     const machine = machineRefusal(b.by);
@@ -317,7 +317,7 @@ export class GroupRules {
    * ===================================================================== */
 
   /** R13: any member withdraws a rule with a reason; kept, never deleted; it leaves `governingView` from then on.
-   *  Refusals: MACHINE_CANNOT_DRAFT_RULE (R14), NO_SUCH_RULE, NO_REASON; a repeat answers `already: true`. */
+   *  Refusals: MACHINE_CANNOT_DRAFT_RULE (R14), NO_SUCH_GROUP_RULE, RULE_NO_REASON; a repeat answers `already: true`. */
   ruleWithdraw(a = {}) {
     const b = isObj(a) ? a : {};
     const machine = machineRuleRefusal(b.by);
@@ -339,7 +339,7 @@ export class GroupRules {
 
   /** R13: a confirmed, unwithdrawn rule as canonical bytes with their digest, for a member to carry to the shared
    *  profile's maintainers: its section, entry, primary source and `confirmed: {at, with_statement}`. It never carries
-   *  the statement's words or a handle; the instance transmits nothing. Refusals: NO_SUCH_RULE (also to a viewer not
+   *  the statement's words or a handle; the instance transmits nothing. Refusals: NO_SUCH_GROUP_RULE (also to a viewer not
    *  naming a member), RULE_NOT_CONFIRMED. Writes nothing. */
   ruleOffer(a = {}) {
     const b = isObj(a) ? a : {};
@@ -373,14 +373,15 @@ function machineRuleRefusal(by) {
 function reasonRefusal(reason) {
   /* DEC-49 REGION is-rule-reason */
   if (reason && reason.length <= RULE_REASON_MAX) return null;
-  return refusal("NO_REASON", `say why, in 1 to ${RULE_REASON_MAX} characters.`, { max: RULE_REASON_MAX });
+  return refusal("RULE_NO_REASON", `say why, in 1 to ${RULE_REASON_MAX} characters.`, { max: RULE_REASON_MAX });
   /* END DEC-49 REGION is-rule-reason */
 }
 
-/* R11, R13: no rule of the group's by that id, or none the viewer may see. */
+/* R11, R13: no rule of the group's by that id, or none the viewer may see (R11's NO_SUCH_RULE, owner-prefixed as K231:
+   `action-clocks` answers a bare NO_SUCH_RULE for a profile's deadline). */
 function noSuchRule(id) {
   /* DEC-49 REGION is-rule-named */
-  return refusal("NO_SUCH_RULE", "the group holds no rule of its own by that id.",
+  return refusal("NO_SUCH_GROUP_RULE", "the group holds no rule of its own by that id.",
                  { rule: typeof id === "string" ? id.slice(0, 40) : null });
   /* END DEC-49 REGION is-rule-named */
 }

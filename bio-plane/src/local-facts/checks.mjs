@@ -61,11 +61,11 @@ export const LOCAL_FACTS_CHECKS = Object.freeze({
     translation: "Your jurisdiction profiles, or a rule your group already applies, hold this rule already. Dispute "
       + "the profile's fact, or offer your correction to the profile's maintainers, instead. Nothing was written.",
   },
-  NO_REASON: {
+  RULE_NO_REASON: {
     check: "C-126.11", where: atRule("reasonRefusal", "is-rule-reason"),
     translation: "Say why, in at most 500 characters. None was given, or it is too long. Nothing was written.",
   },
-  NO_SUCH_RULE: {
+  NO_SUCH_GROUP_RULE: {
     check: "C-126.12", where: atRule("noSuchRule", "is-rule-named"),
     translation: "Your group holds no rule of its own by that name. Nothing was written.",
   },
