@@ -98,6 +98,17 @@ test("R2: a void check stays void when its cause is undone (a preparation stored
   assert.equal(w.c.caseCheckOf({ case: CASE }).state, "held");
 });
 
+test("R2 (K2833; N907, T46): the three lapse causes are judged at the read until case-carriage answers over an interval: a lapse undone reads held again (the stated gap), while a replaced preparation or a moved member stays void (control)", () => {
+  const w = standard();
+  const r = held(w);
+  w.cc.sources = [{ capture: "c" }];
+  voidWith(w.c.caseCheckOf({ check: r.check }), ["source_lapsed"]);
+  w.cc.sources = [];
+  assert.equal(w.c.caseCheckOf({ check: r.check }).state, "held", "judged at the read");
+  w.move(F1, "elsewhere"); w.move(F1, r.members[0].version_sha);
+  voidWith(w.c.caseCheckOf({ check: r.check }), ["member_moved"]);
+});
+
 test("R2: undetermined when any read fails (each lapse read throwing or answering outside its shape, the checked text unreadable): it fails closed, never held, and never throws (control: the same check reads held)", () => {
   const boom = () => { throw new Error("unreadable"); };
   const cases = [["sources", boom], ["sources", "not a list"], ["accepted", boom], ["accepted", "yes"],

@@ -11,8 +11,11 @@
  * WHAT VOIDS A CHECK (R2; l8 doubt 3): any move of the stored preparation's `doc_sha` (a re-authored acknowledgement
  * list among them), a member whose current bundle is no longer the one pinned, and the commit's three lapse reads
  * (`case-carriage` R4, R5, R13, as `publication` R51, R57, R59 ask them at the commit). Nothing is stored about a lapse:
- * each read computes it, and a void check stays void when its cause is undone, because the cause is read against the
- * check's own pins. Any read that fails answers `undetermined`, never `held` (fail closed).
+ * each read computes it. A void check stays void when its cause is undone for a replaced preparation (preparations only
+ * move forward) and a moved member (its commit count, record-core's `row_version`, never returns). The three lapse
+ * causes are judged at the read until case-carriage answers them over an interval (K2833; N907, T46): a lapse undone
+ * in between reads held again, and the commit re-reads all three. Any read that fails answers `undetermined`, never
+ * `held` (fail closed).
  *
  * REACHED as `caseCheckOf(host, deps)` (K61): one instance per host, created on the first call with `deps`, returned
  * to every later caller. At creation it creates its table and declares it to record-core's purge (R4).
