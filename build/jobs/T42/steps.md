@@ -57,3 +57,21 @@ It also checks that nothing was written. Negative control: the same proposal, ac
 - ownership steps tranche/T42: 0 failures (re-run after the commit, below).
 
 Size (session_01WWPqUf9HsGVbwvRQC3juMx): test runs 17, module lines 3
+
+## J1 · COMPLETE
+
+T42-14 applied, so R28 is met.
+- C-142.28 is re-coded in place as NO_SUCH_STEP_PROPOSAL, with its number and translation kept.
+- The R28 test covers every absent or unseen path and has a negative control; it fails on the old code.
+- steps: 34 pass, 0 fail.
+- All four checks report 0 failures.
+
+Users' suites are green except two:
+- answer-envelope: families.test.mjs:420 (HELD_EARLIER) still pins steps' C-142.28 under NO_SUCH_PROPOSAL, so the test at :425 is red. Your START expected this until T42-27, and I left it unchanged. The suite's other red is hypotheses' C-134.22/.23, which is red on the tranche code too.
+- test/system/migrate-released.test.mjs fails the same way on the tranche code (rule 4 (7)).
+
+bio-plane/dist/bio-plane.bundled.mjs is stale for this row; it is regenerated at the layer close.
+
+One small flaw in my module is deferred, with the reason in my record: a proposal's step_id can point at a step deleted later.
+
+Record: build/jobs/T42/steps.md.
