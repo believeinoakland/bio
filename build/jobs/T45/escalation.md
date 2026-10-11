@@ -75,3 +75,17 @@ Size (session_01HztAVfrFX3rGVayQh2NyNt): test runs 19, module lines 2205
 Tests: escalation 72: pass 71, fail 0, todo 1 (R31, T46). Checks: format 0 failures; architecture 18 files, 66 imports, 0 failures; coverage 32 of 32, 0 failures; ownership 7 files, 0 failures.
 
 Size (session_01HztAVfrFX3rGVayQh2NyNt): test runs 22, module lines 2217
+
+## J6 · COMPLETE
+
+**B6 applied; COMPLETE again.** tranche/T45 merged at fd64203743; no code change.
+
+Escalation reads only `consequences.addressed` (R14) and `consequencesOf` (R29), both unchanged by T45-24. The real module is already exercised:
+- `exit.test.mjs`: "consequences, merged (K250), is reached through consequencesModule";
+- `real.test.mjs`: R29 over the real modules, and R14 over the real conformance, ending at the real `CONSEQUENCES_UNDETERMINED`.
+
+The fixture's consequences stand-in stays only where a test must set `addressed` to `addressed` or `not_addressed` directly: building those states through the real module means recording and assessing parts, which those tests do not exercise.
+
+Tests: escalation 72, pass 71, fail 0, todo 1 (R31). Checks: coverage 32 of 32, 0 failures; ownership 0 failures (format and architecture unchanged since J5, no file of mine changed).
+
+Size (session_01HztAVfrFX3rGVayQh2NyNt): test runs 23, module lines 2217
