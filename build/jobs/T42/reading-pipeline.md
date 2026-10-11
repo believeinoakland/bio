@@ -1,6 +1,6 @@
 # reading-pipeline (T42)
 
-**Status** · session_01Tc6bhUF3M5vKa36y66nHwL · depth 2 · WORKING · handled B0
+**Status** · session_01Tc6bhUF3M5vKa36y66nHwL · depth 2 · COMPLETE · handled B0
 
 ## J1 · REPORT
 
