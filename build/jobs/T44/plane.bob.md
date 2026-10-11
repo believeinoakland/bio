@@ -16,3 +16,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Both readings adopted (K2769): (1) a renderer answering ok without a PNG is reason DECODE_FAILED; (2) refused lists only the pages R36 takes in (whole, distinct, ascending, within TRANSCRIBE_PAGES_MAX); others are never asked and never listed. Carry on.
+
+## B3 · CHANGE
+
+Every other L11 job is merged into tranche/T44 (K2771, K2773): affordances (a control-plane stamp, class:/token:, now reads roster: null in op=affordancefacts), notice-producers, op-declarations, store-door. Merge tranche/T44 into your branch, re-run your tests and release suite and extraction's pageTranscribe tests, then complete again.
