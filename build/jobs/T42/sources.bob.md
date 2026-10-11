@@ -1,6 +1,6 @@
 # BOB to sources (T42)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 271 KB, under 300 KB: read
 Merge order in L3: doorbell, capture, then sources.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+ANSWER (K2628): adopted: `uses` = record-grammar, record-core, membership, capture, doorbell, provenance (capture for your fixture only; product code reaches knocks through doorbell). R11's wording now names `doorbell` R2 (tranche @ 23a4aabdf8; merge it). Name the final `uses` in your COMPLETE.
