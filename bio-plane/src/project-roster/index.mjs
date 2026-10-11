@@ -1,7 +1,9 @@
 /* project-roster — the acts on a project's working group that follow its setup: the roster and its removals record,
  * the owners' votes and an administrator's rescue, the visibility history and the directory, and requests to join.
  *
- * Requirements: build/requirements/project-roster.md (R1–R20). Split from membership for size at T38 (N783; K617,
+ * Requirements: build/requirements/project-roster.md (R1–R24). T45 adds a project's scope (R21–R23: a counsel matter, a
+ * member's own project; the guard membership calls before an invitation or a visibility change, its R128) and the
+ * second-approval setting (R24), the acts it names checked against the active profiles' `action_kinds`. Split from membership for size at T38 (N783; K617,
  * K624, K2270: variant C1′ of `build/plan/membership-split.md`), by copy: each act's behaviour is membership's as T37
  * left it, its answers byte for byte. Inviting, joining, leaving and removing, the visibility setting, what a caller may
  * see of a project, the fence and the participation record stay `membership`'s.
@@ -9,18 +11,19 @@
  *
  * SHAPE (K61). `projectRosterOf(ctx)` answers the one instance for a Durable Object's storage, over `ctx.storage.sql`,
  * reaching record-core by `recordOf(ctx)` and membership by `membershipOf(ctx)` on the same `ctx`; a test may pass its
- * own as `projectRosterOf(ctx, { record, membership })`. This module writes only its own three tables (`schema.mjs`).
+ * own as `projectRosterOf(ctx, { record, membership })`. This module writes only its own five tables (`schema.mjs`).
  * It reads membership's tables only through membership's stated read contract (its R120) and writes them only through
  * `participationWrite` (its R118); it joins record-core's `bundles` only on its read contract (record-core R37) and
  * asks every other bundle fact of `core.bundleInfo` (R34). Calls go one way: membership never calls this module but
- * through the two notice slots this module registers in (membership R116, R117). */
+ * through the two notice slots and the one guard this module registers in (membership R116, R117, R128). */
 import { MACHINE_CLASS_PREFIX } from "../record-grammar/index.mjs";
+import { combine } from "../../../jurisdictions/index.mjs";
 import { recordOf } from "../record-core/index.mjs";
 import { Membership, membershipOf, noSuchProject, viewerPredicate } from "../membership/index.mjs";
 import { PROJECT_ROSTER_SCHEMA, PROJECT_ROSTER_TABLES } from "./schema.mjs";
-import { PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS } from "./checks.mjs";
+import { PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, PROJECT_SCOPE_CHECKS } from "./checks.mjs";
 export { PROJECT_ROSTER_TABLES } from "./schema.mjs";
-export { PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS } from "./checks.mjs";
+export { PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS, PROJECT_SCOPE_CHECKS } from "./checks.mjs";
 
 const ROOT_ADMIN = Membership.ROOT_ADMIN;
 
@@ -70,13 +73,16 @@ export class ProjectRoster {
    * registered listener inside its act, after its writes, and reads the number answered back: R116 puts
    * `request: "granted"` on its answer when it is at least 1, R117 puts it as `requests_lapsed`. Registered once, at
    * start (`projectRosterOf` calls it once per storage); each answer is membership's R81. Until membership offers a
-   * slot there is nothing to register with, and its answer reads null. */
+   * slot there is nothing to register with, and its answer reads null. R22 (T45) registers the scope's guard in
+   * membership's project-act guard (its R128) the same way. */
   start() {
     const invited = typeof this.m.onProjectInvited === "function"
       ? this.m.onProjectInvited("project-roster", (notice) => this.#invited(notice)) : null;
     const hidden = typeof this.m.onProjectHidden === "function"
       ? this.m.onProjectHidden("project-roster", (notice) => this.#hidden(notice)) : null;
-    return { invited, hidden };
+    const guard = typeof this.m.registerProjectActGuard === "function"
+      ? this.m.registerProjectActGuard("project-roster", (notice) => this.#guard(notice)) : null;
+    return { invited, hidden, guard };
   }
 
   /* R15: the invitee's open request to that project, closed `granted` by the inviting owner at the act's time. A
@@ -173,7 +179,13 @@ export class ProjectRoster {
       /* R2: every removal an owner made: who removed whom, when, and the owner's reason. */
       removals: this.#rows(`SELECT member_id, removed_by, comment, at FROM project_removals
                              WHERE project_id=? ORDER BY seq`, projectId).map((x) => ({
-        handle: handleOf(x.member_id), removedBy: handleOf(x.removed_by), reason: x.comment, at: x.at })) };
+        handle: handleOf(x.member_id), removedBy: handleOf(x.removed_by), reason: x.comment, at: x.at })),
+      /* R21, R24 (T45): the scope's history and the second-approval setting's, each act with who made it and why. */
+      scopes: this.#rows(`SELECT scope, reason, set_by, at FROM project_scopes WHERE project_id=? ORDER BY seq`, projectId)
+        .map((x) => ({ scope: x.scope, reason: x.reason, by: handleOf(x.set_by), at: x.at })),
+      approvals: this.#rows(`SELECT needs, reason, set_by, at FROM project_approval_settings WHERE project_id=?
+                              ORDER BY seq`, projectId)
+        .map((x) => ({ needs: JSON.parse(x.needs), reason: x.reason, by: handleOf(x.set_by), at: x.at })) };
   }
 
   /* ===== R3–R7 — OWNERSHIP (§7.10, §7.13) =====
@@ -246,7 +258,11 @@ export class ProjectRoster {
       const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT" });
       if (refused) return refused;
     }
+    /* R22 (T45; Bob, K2782): a member's own project is never rescued. Asked after NOT_AN_ADMIN, so only an
+       administrator learns it, and before the rescue's own refusals; it names nothing beyond the project's id. */
     const blocked = this.m.rescueRefusal(projectId, by);
+    if (blocked && blocked.reason === "NOT_AN_ADMIN") return blocked;
+    if (this.projectScope(projectId).scope === "own") return this.#scopeOwn(projectId, "rescue");
     if (blocked) return blocked;
     const why = String(reason ?? "").trim();
     if (!why) return { ok: false, reason: "NO_REASON", detail: "authority changes are recorded with a reason" };
@@ -353,6 +369,196 @@ export class ProjectRoster {
   #recordOwnerDecision(projectId, kind, target, deciders, reasons, at) {
     this.sql.exec(`INSERT INTO project_owner_decisions (project_id, kind, target, deciders, reasons, at)
                    VALUES (?,?,?,?,?,?)`, projectId, kind, target, JSON.stringify(deciders), JSON.stringify(reasons), at);
+  }
+
+  /* ===== R21–R24 (T45; Actions D4, D27; v0.2 rules 9, 15, 20) — A PROJECT'S SCOPE AND ITS SECOND APPROVAL =====
+   *
+   * Two settings on a project, each a member's act with a reason, appended and never rewritten; the latest governs.
+   *   SCOPE     `counsel_matter` (its members alone see counsel's correspondence and dates; never published or used as
+   *             evidence) or `own` (a member's own hidden project: her source role, her own text and its check), or
+   *             `none`. Only a hidden project takes one. A scope is read at the act that would publish, cite or send,
+   *             by the producers (R23), and never applied to anything already done.
+   *   GUARD     membership asks this module before an invitation and a visibility change (its R128): an `own` project
+   *             takes no invitation, and neither scope may be made discoverable. Its rescue is refused here (R22).
+   *   APPROVAL  the acts that need a second member's approval before sending, set by an owner; enforced by `filings`.
+   * Neither setting names a member: each is a fact about the project. */
+  static PROJECT_SCOPES = Object.freeze(["counsel_matter", "own", "none"]);
+  static REASON_MAX = 2000;
+
+  /* A refusal with its C-147 row. */
+  static #scopeRefusal(code, projectId, detail, extra = {}) {
+    const row = PROJECT_SCOPE_CHECKS[code];
+    return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
+             project: projectId ?? null, ...extra };
+  }
+
+  /* R21, R24: a reason is required, and bounded. Answers the trimmed reason, or null for absent, blank or too long. */
+  static #reason(reason) {
+    if (typeof reason !== "string") return null;
+    const why = reason.trim();
+    return why && why.length <= ProjectRoster.REASON_MAX ? why : null;
+  }
+
+  static #noReason(detail) {
+    return { ok: false, reason: "NO_REASON", detail };
+  }
+
+  /* R22: PROJECT_SCOPE_OWN, minted here for the guard's invitation and relayed by the rescue (R5). It names the
+     project's id and nothing else, so the rescue at an administrator's EXISTENCE says no more than that sight shows. */
+  #scopeOwn(projectId, act) {
+    /* DEC-49 REGION is-project-scope-guard */
+    return ProjectRoster.#scopeRefusal("PROJECT_SCOPE_OWN", projectId, act === "rescue"
+      ? "this is a member's own project (Action v0.2 rule 15), and it is never rescued: her source role and her own "
+        + "text stay hers, even when she can no longer act. Nothing was written."
+      : "this is a member's own project (Action v0.2 rule 15): nobody else is invited to it. Nothing was written.");
+    /* END DEC-49 REGION is-project-scope-guard */
+  }
+
+  /* R22: THE GUARD membership calls inside an invitation (its R32) and a visibility change (its R45), after their own
+     refusals and before any write (its R128). Answers a refusal, or null to let the act proceed. */
+  #guard({ act, projectId, setting } = {}) {
+    const { scope } = this.projectScope(projectId);
+    if (act === "invite" && scope === "own") return this.#scopeOwn(projectId, "invite");
+    /* DEC-49 REGION is-project-scope-guard */
+    if (act === "visibility" && setting === "discoverable" && (scope === "counsel_matter" || scope === "own"))
+      return ProjectRoster.#scopeRefusal("PROJECT_SCOPE_KEEPS_HIDDEN", projectId,
+        `this project is ${scope === "own" ? "a member's own project" : "a counsel matter"}, and that scope keeps it `
+        + "hidden (Action v0.2 rule 15). Remove the scope first if it should be discoverable. Nothing was written.",
+        { scope });
+    /* END DEC-49 REGION is-project-scope-guard */
+    return null;
+  }
+
+  /** R23: THE SCOPE, `{scope, since, by}`, the latest record's; `none` with no record and for an id that names no
+   *  project. It asks no viewer (it states only the scope, as membership's `visibilityOf` states only the setting; its
+   *  callers gate by sight), writes nothing and never throws. */
+  projectScope(projectId) {
+    try {
+      if (typeof projectId !== "string" || !projectId) return { scope: "none", since: null, by: null };
+      const r = this.#one(`SELECT scope, set_by, at FROM project_scopes WHERE project_id=? ORDER BY seq DESC LIMIT 1`,
+        projectId);
+      return r ? { scope: r.scope, since: r.at, by: r.set_by } : { scope: "none", since: null, by: null };
+    } catch { return { scope: "none", since: null, by: null }; }
+  }
+
+  /** R21: SET A PROJECT'S SCOPE. Sight first (the Terms'), then position, then the scope's own refusals, each writing
+   *  nothing. The participant is asked of membership's fence (its R55, `joined`) as the member `by` names, so a caller
+   *  that is no member of the project, a machine credential or the founder included, is refused there. */
+  projectScopeSet({ projectId, scope, reason, by, viewer = null } = {}) {
+    { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT", project: projectId });
+      if (refused) return refused; }
+    const who = typeof by === "string" && /^[A-Za-z0-9._:-]{1,128}$/.test(by) ? by : "unnamed:caller";
+    { const denied = this.m.projectAuthority(projectId, `member:${who}`, "joined", "projectscopeset");
+      if (denied) return denied; }
+    const refusal = (code, detail, extra) => ProjectRoster.#scopeRefusal(code, projectId, detail, extra);
+    const current = this.projectScope(projectId).scope;
+    /* DEC-49 REGION is-project-scope-set */
+    if (!ProjectRoster.PROJECT_SCOPES.includes(scope))
+      return refusal("PROJECT_SCOPE_UNKNOWN",
+        `${JSON.stringify(String(scope ?? "").slice(0, 40))} is not a scope: a project is a counsel matter `
+        + "(counsel_matter), a member's own project (own), or neither (none). Nothing was written.");
+    const why = ProjectRoster.#reason(reason);
+    if (!why) return ProjectRoster.#noReason(
+      `a project's scope is set with a reason of at most ${ProjectRoster.REASON_MAX} characters. Nothing was written.`);
+    if (this.m.visibilityOf(projectId) !== "hidden")
+      return refusal("PROJECT_SCOPE_NEEDS_HIDDEN",
+        "a scope is set only on a hidden project (Action v0.2 rule 15); its owners set it hidden first. Nothing was "
+        + "written.");
+    if (scope === "own" || current === "own") {
+      const participants = this.#one(`SELECT COUNT(*) AS n FROM project_participants WHERE project_id=?`, projectId).n;
+      if (!this.m.isProjectOwner(projectId, by) || participants !== 1)
+        return refusal("PROJECT_SCOPE_OWN_NOT_SOLE",
+          "a project becomes, or stops being, a member's own project only by its owner while that owner is its one "
+          + "participant, in any state. Nothing was written.");
+    }
+    if (scope === current)
+      return refusal("PROJECT_SCOPE_UNCHANGED", `the project's scope is already ${scope}. Nothing was written.`);
+    /* END DEC-49 REGION is-project-scope-set */
+    const at = new Date().toISOString();
+    this.sql.exec(`INSERT INTO project_scopes (project_id, scope, reason, set_by, at) VALUES (?,?,?,?,?)`,
+      projectId, scope, why, by, at);
+    return { ok: true, projectId, scope, previous: current, reason: why, by, at,
+             detail: "the scope applies from now on, to every act that would publish, cite or send; nothing already "
+                   + "published, sent or cited changes." };
+  }
+
+  /* R24: the active profiles' view (record-core's `getSetting`, `jurisdictions.combine`), for its `{kind}` entries;
+     an empty view when none is active or the setting cannot be read, so every kind is then unknown. */
+  #actionKinds() {
+    let ids = null;
+    try { ids = this.core && typeof this.core.getSetting === "function" ? this.core.getSetting("jurisdiction_profiles") : null; }
+    catch { ids = null; }
+    const c = combine(Array.isArray(ids) ? ids : []);
+    const kinds = c && c.ok && Array.isArray(c.view.action_kinds) ? c.view.action_kinds : [];
+    return new Set(kinds.map((k) => k && k.kind).filter((k) => typeof k === "string"));
+  }
+
+  /* R24: an entry is exactly one of `{kind}`, `{tier}` (1, 2 or 3) or `{public: true}`; answers it normalised, or null. */
+  static #approvalEntry(e) {
+    if (!e || typeof e !== "object" || Array.isArray(e)) return null;
+    const keys = Object.keys(e);
+    if (keys.length !== 1) return null;
+    if (keys[0] === "kind") return typeof e.kind === "string" && /^[a-z][a-z0-9_]*$/.test(e.kind) ? { kind: e.kind } : null;
+    if (keys[0] === "tier") return [1, 2, 3].includes(e.tier) ? { tier: e.tier } : null;
+    if (keys[0] === "public") return e.public === true ? { public: true } : null;
+    return null;
+  }
+
+  /** R24: SET WHICH ACTS NEED A SECOND MEMBER'S APPROVAL. An owner's act (administrators and the founder included, as
+   *  R3), after sight; each entry checked, then each kind against the active profiles' view, then the reason. */
+  projectApprovalSet({ projectId, needs, reason, by, viewer = null } = {}) {
+    { const refused = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT", project: projectId });
+      if (refused) return refused; }
+    if (!this.m.isProjectOwner(projectId, by))
+      return { ok: false, reason: "NOT_THE_OWNER",
+               detail: "only an owner of this project sets which of its acts need a second member's approval" };
+    const refusal = (code, detail, extra) => ProjectRoster.#scopeRefusal(code, projectId, detail, extra);
+    /* DEC-49 REGION is-project-approval-set */
+    if (!Array.isArray(needs))
+      return refusal("APPROVAL_RULE_INVALID", "the rules are a list, empty to restore one member's approval. Nothing "
+        + "was written.", { entry: null, index: null });
+    const clean = [];
+    for (const [i, e] of needs.entries()) {
+      const n = ProjectRoster.#approvalEntry(e);
+      if (!n)
+        return refusal("APPROVAL_RULE_INVALID", `rule ${i + 1} is not one of {kind}, {tier} (1, 2 or 3) or `
+          + "{public: true}. Nothing was written.", { entry: e ?? null, index: i });
+      clean.push(n);
+    }
+    const held = clean.some((n) => n.kind) ? this.#actionKinds() : new Set();
+    for (const [i, n] of clean.entries())
+      if (n.kind && !held.has(n.kind))
+        return refusal("APPROVAL_KIND_UNKNOWN", `${JSON.stringify(n.kind)} is not a kind of action in your group's `
+          + "active jurisdiction profiles. Nothing was written.", { entry: n, index: i });
+    /* END DEC-49 REGION is-project-approval-set */
+    const why = ProjectRoster.#reason(reason);
+    if (!why) return ProjectRoster.#noReason(
+      `a project's approval setting is set with a reason of at most ${ProjectRoster.REASON_MAX} characters. Nothing `
+      + "was written.");
+    const at = new Date().toISOString();
+    this.sql.exec(`INSERT INTO project_approval_settings (project_id, needs, reason, set_by, at) VALUES (?,?,?,?,?)`,
+      projectId, JSON.stringify(clean), why, by, at);
+    return { ok: true, projectId, needs: clean, reason: why, by, at,
+             detail: clean.length ? "the acts these rules match need a second member's approval before sending."
+               : "one member approves every act, the default." };
+  }
+
+  /** R24: DOES AN ACT NEED A SECOND APPROVAL? `{needed, matched}`, `matched` the latest setting's entries that apply:
+   *  a `{kind}` entry naming `kind`; a `{tier}` entry equal to `tier`, and every `{tier}` entry when the tier is null
+   *  or undetermined (anything but 1, 2 or 3: an undetermined tier is never read as Tier 1, v0.2 §6); `{public: true}`
+   *  when `public` is true. No setting, or an id naming nothing, needs none. Writes nothing and never throws. */
+  secondApprovalNeeded({ projectId, kind = null, tier = null, public: audience = false } = {}) {
+    try {
+      const r = typeof projectId === "string" && projectId
+        ? this.#one(`SELECT needs FROM project_approval_settings WHERE project_id=? ORDER BY seq DESC LIMIT 1`, projectId)
+        : null;
+      const needs = r ? JSON.parse(r.needs) : [];
+      const undetermined = ![1, 2, 3].includes(tier);
+      const matched = needs.filter((n) => ("kind" in n && n.kind === kind)
+        || ("tier" in n && (undetermined || n.tier === tier))
+        || ("public" in n && audience === true));
+      return { needed: matched.length > 0, matched };
+    } catch { return { needed: false, matched: [] }; }
   }
 
   /* ===== R8, R9 — THE VISIBILITY HISTORY AND THE DIRECTORY (§7.14) ===== */
@@ -716,6 +922,8 @@ export function projectRosterOf(ctx, { record = null, membership = null } = {}) 
 /* The ops this module answers, as entries of the plane's op map (the composition root, `plane`, spreads them in after
    membership's; their names, declarations and grades are unchanged by the split). `url` is the request URL, whose query
    carries the control plane's stamps (`by`, `viewer`); every parameter is read from it, never from a body. */
+const parseList = (v) => { try { return JSON.parse(v); } catch { return v; } };
+
 export function projectRosterOps(r, url, body, env) {
   const q = (k) => url.searchParams.get(k);
   return {
@@ -739,5 +947,11 @@ export function projectRosterOps(r, url, body, env) {
       answer: q("answer"), comment: q("comment"), by: q("by"), viewer: q("viewer") }),
     projectrequests: () => r.projectRequests({ projectId: q("projectId"), by: q("by"), viewer: q("viewer"),
       limit: q("limit") }),
+    /* T45 (R21, R24): `needs` is the list as JSON; anything that is not JSON reaches the service as given and is
+       refused APPROVAL_RULE_INVALID there. */
+    projectscopeset: () => r.projectScopeSet({ projectId: q("projectId"), scope: q("scope"), reason: q("reason"),
+      by: q("by"), viewer: q("viewer") }),
+    projectapprovalset: () => r.projectApprovalSet({ projectId: q("projectId"), needs: parseList(q("needs")),
+      reason: q("reason"), by: q("by"), viewer: q("viewer") }),
   };
 }
