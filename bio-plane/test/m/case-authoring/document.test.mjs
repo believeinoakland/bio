@@ -143,7 +143,9 @@ test("R15: the answer carries the case, whether it was minted, its edition, the 
   assert.deepEqual(Object.keys(one).sort(), ["author", "at", "bias_acknowledgement", "bias_manifest", "bundleSha",
     "caseDocument", "caseId", "case_citations", "completeness", "edition", "findings", "minted", "next", "ok", "project",
     "required", "roles", "scope", "state", "target", "tensions", "tensions_highlighted", "tensions_legs_unread",
-    "weight"].sort());
+    "timeline", "weight"].sort());
+  /* R57 (T45): the published record of actions written and the count its sources did not mark public */
+  assert.deepEqual(one.timeline, { we_did: 0, withheld: 0 });
   assert.deepEqual([one.tensions, one.tensions_highlighted], [[], 0], "nothing to disclose: stated, zero included");
   const row = docOf(w, one);
   assert.deepEqual(one.caseDocument, { case_id: one.caseId, edition: 1, doc_sha: row.doc_sha,

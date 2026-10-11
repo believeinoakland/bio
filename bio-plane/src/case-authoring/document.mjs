@@ -190,7 +190,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
                                    lens: lensRead = null, method = null, materials = null, group = null,
                                    accepted = null, grading = null, passages = null,
                                    calculations = [], calculationsBlock = [], timeline = [], timelineLeftOut = 0,
-                                   timelineCut = [], timelineUnread = null,
+                                   timelineCut = [], timelineUnread = null, timelineWithheld = 0,
                                    timelineBlock = [], peopleBlock = [], memberTiesBlock = [],
                                    accountBlock = [], accountSection = [], reviewCommentsBlock = [], reviewComments = null,
                                    approvalsBlock = [] }) {
@@ -453,7 +453,7 @@ export function caseDocumentText({ caseId, edition, project, workingOn = null, s
     ...acceptedBodyLines(accepted),
     ...(attributions.length ? attributionBodyLines(attributions) : []),
     ...calculationBodyLines(calculations),
-    ...timelineBodyLines(timeline, timelineLeftOut, { cut: timelineCut, unread: timelineUnread }),
+    ...timelineBodyLines(timeline, timelineLeftOut, { cut: timelineCut, unread: timelineUnread, withheld: timelineWithheld }),
     "## What This Excludes",
     "",
     statement,
@@ -636,14 +636,16 @@ export function calculationBodyLines(rows) {
 }
 
 /** R57 (C11; K1494): the timeline, in words: what the world did and what the group did, as two lists, never one; each
- *  item with the source it rests on; how many items had no source and were left out; each lane events cut at its limit
+ *  item with the source it rests on; how many items had no source and were left out; how many of the group's acts their
+ *  source did not mark public (`withheld`, T45) and were left out; each lane events cut at its limit
  *  (`cut`: `they_did`, or `we_did:<source>`), so a cut list never reads as whole; and a read that failed (`unread`),
  *  stated rather than read as an empty timeline (R26). */
-export function timelineBodyLines(rows, leftOut = 0, { cut = [], unread = null } = {}) {
+export function timelineBodyLines(rows, leftOut = 0, { cut = [], unread = null, withheld = 0 } = {}) {
   if (unread) return ["## Timeline", "", `The timeline could not be read when this case was published (${unread}). It is `
     + "stated as not read, not as empty: this case claims nothing about what happened or what the group did.", ""];
   const cuts = Array.isArray(cut) ? cut : [];
-  if ((!rows || !rows.length) && !leftOut && !cuts.length) return [];
+  const kept = Math.max(0, Math.floor(Number(withheld) || 0));
+  if ((!rows || !rows.length) && !leftOut && !cuts.length && !kept) return [];
   const lane = (name, title) => {
     const items = (rows || []).filter((r) => r.lane === name);
     return [title, "", ...(items.length ? items.map((r) => `${r.ord}. ${r.when} — ${r.label ?? r.ref} (${r.ref}; source ${r.source})`)
@@ -654,6 +656,10 @@ export function timelineBodyLines(rows, leftOut = 0, { cut = [], unread = null }
     + "merged into one.", "",
     ...lane("they_did", "### What they did"), ...lane("we_did", "### What we did"),
     ...(leftOut ? [`${leftOut} item(s) had no source this record could cite and are left out.`, ""] : []),
+    /* R57 (T45; v0.2 rules 15, 17): what we did is the case's published record of actions; an act its source did not
+       mark for the public is left out and counted, never written. */
+    ...(kept ? [`${kept} of the group's own act(s) were not marked public by the record that holds them and are left out of `
+      + "this published record of what we did.", ""] : []),
     ...cuts.map((c) => (c === "they_did" ? "The list of what they did stops at its bound: the record holds more than this case lists."
       : `What we did, from ${c.slice("we_did:".length)}, stops at its bound: that source holds more than this case lists.`)),
     ...(cuts.length ? [""] : [])];

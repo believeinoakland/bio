@@ -77,7 +77,9 @@ import { basisVersionsOf } from "../basis-versions/index.mjs";
 import { strengthOf, STRENGTH_AXES } from "../strength/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 import { reevaluationOf } from "../reevaluation/index.mjs";
-import { publicationOf } from "../publication/index.mjs";
+import { publicationOf, CASE_SOURCES_CHECKS } from "../publication/index.mjs";
+/* R72 (T45; N892): a project's scope, project-roster R23's. */
+import { projectRosterOf } from "../project-roster/index.mjs";
 /* R58, R59 (N823; K2438): the waiting edition is `publish-schedule`'s (its R1, read through its R7), since publication's
    third split. */
 import { publishScheduleOf } from "../publish-schedule/index.mjs";
@@ -87,7 +89,7 @@ import { networkNoticesOf } from "../network-notices/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, OBJECT_TYPES, BASIS_GRADES,
          isPublicHttpsLocator, proposalLabel, idPattern } from "../record-grammar/index.mjs";
 /* R63, R69 (N839, K2608): the account's machinery is `case-account`'s, asked in R69's order. */
-import { caseAccountOf } from "../case-account/index.mjs";
+import { caseAccountOf, accountShaped } from "../case-account/index.mjs";
 /* R56, R57 (T33): case-grammar's `calculationsLines` and `timelineLines` (its R18, R20), the one spelling of each block. */
 import { SECTIONS, calculationsLines, timelineLines, materialsOf, passagesOf } from "../case-grammar/index.mjs";
 /* R63, R68 (T41; D56, D60): case-grammar's account and approval blocks (its R23, R26), the one spelling of each, and the
@@ -228,21 +230,68 @@ function refusal(family, key, extra = {}) {
 /* Each family's own helper, the code its literal first argument, so the DEC-49 guard judges the code at each site
    against the rows that govern it (N259, N275). */
 const derivationRefusal = (key, extra) => refusal(CASE_DERIVATION_CHECKS, key, extra);
+/** R71 (T45): the kinds of outcome a member's act carries into a case's next edition. */
+export const OUTCOME_KINDS = Object.freeze(["success", "cure", "harm_addressed"]);
+/** R71: the prefix of a carried outcome's opaque id (record-core R6), drawn through record-core's ledger. */
+export const CARRIED_OUTCOME_PREFIX = "OUTC";
+/** R71: the longest reason for withdrawing a carried outcome, in code points (R19's bound). */
+export const CARRY_REASON_MAX = 2000;
+/* R71: a calendar date `YYYY-MM-DD` that exists. */
+const isDate = (v) => {
+  if (typeof v !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false;
+  const d = new Date(`${v}T00:00:00Z`);
+  return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === v;
+};
+/* PENDING CASE-GRAMMAR'S MERGE (T45-16): case-grammar R29's `outcomesOf(fm)` reads the `outcomes:` block back; until it
+   is on the tranche this reads the same rows from the parsed front matter, and is replaced by its import at the merge. */
+const outcomesOf = (fm) => (fm && Array.isArray(fm.outcomes) ? fm.outcomes.filter((o) => o && typeof o === "object") : []);
 const actRefusal = (key, extra) => refusal(PUBLISH_ACT_CHECKS, key, extra);
+
+/** R70 (T45; N880; Actions D13; v0.2 rule 8): the doors the open-requests source gives. */
+const OPEN_REQUESTS_DOORS = Object.freeze(["openRequestsOn"]);
+/** R34 (T45; N880): the sign step's fact lines, the UX design stream's words by key; until given, one plain sentence. */
+export const OPEN_REQUEST_KEYS = Object.freeze({ line: "signing.openrequest.line", noreply: "signing.openrequest.noreply",
+                                                 unread: "signing.openrequest.unread" });
+const isCount = (n) => Number.isInteger(n) && n >= 0;
+/* R70: one row the source answers, as R70 shapes it, or null when it is not one. */
+function openRequestRow(r) {
+  if (!r || typeof r !== "object" || Array.isArray(r)) return null;
+  const whom = typeof r.whom === "string" ? r.whom.trim() : "";
+  const asked = typeof r.asked_at === "string" ? r.asked_at.trim() : "";
+  if (!whom || !asked) return null;
+  if (r.window_closes !== null && (typeof r.window_closes !== "string" || !r.window_closes.trim())) return null;
+  const a = r.answers;
+  if (a !== null && !(a && typeof a === "object" && !Array.isArray(a) && isCount(a.answered) && isCount(a.claims)
+                      && a.answered <= a.claims)) return null;
+  return { whom, asked_at: asked, window_closes: r.window_closes === null ? null : r.window_closes.trim(),
+           answers: a === null ? null : { answered: a.answered, claims: a.claims } };
+}
+/** R34: one row's four facts in one plain sentence, until the UX design stream gives the words. */
+export function openRequestSentence(r) {
+  return `${r.whom} was asked for comment on ${r.asked_at}; `
+    + (r.window_closes ? `the window for a reply closes on ${r.window_closes}; ` : "no date is stated for the window to close; ")
+    + (r.answers ? `the reply answers ${r.answers.answered} of the ${r.answers.claims} claims the request laid out.`
+                 : "no reply is recorded.");
+}
+export const OPEN_REQUESTS_UNREAD_SENTENCE = "Whether any request for comment on this case is still open could not be "
+  + "read, so none is listed here.";
 
 export class CaseAuthoring {
   #deps;
+  /* R70: the one source of a case's open requests for comment, registered once at start (`action-replies` R3). */
+  #openRequests = null;
 
   constructor({ storage, record, membership, host = null, inquiry = null, basisVersions = null, strength = null,
                 bias = null, observations = null, reevaluation = null, publication = null, publishSchedule = null,
                 ratification = null, account = null, networkNotices = null, disclosures = null, calculations = null,
-                workbooks = null, events = null, caseTensions = null, now = null } = {}) {
+                workbooks = null, events = null, caseTensions = null, projectRoster = null, now = null } = {}) {
     this.sql = storage.sql;
     this.storage = storage;
     this.record = record;
     this.membership = membership;
     this.#deps = { host, inquiry, basisVersions, strength, bias, observations, reevaluation, publication, publishSchedule,
-                   ratification, account, networkNotices, disclosures, calculations, workbooks, events, caseTensions };
+                   ratification, account, networkNotices, disclosures, calculations, workbooks, events, caseTensions,
+                   projectRoster };
     this.now = typeof now === "function" ? now : (precision) => stampInstant(precision);
   }
 
@@ -270,6 +319,8 @@ export class CaseAuthoring {
   get workbooks() { return this.#deps.workbooks ||= workbooksOf(this.#deps.host); }
   /* R57: the timeline of the members' subjects and the events their legs cite (events R28–R30). */
   get events() { return this.#deps.events ||= eventsOf(this.#deps.host); }
+  /* R72 (T45; N892): `projectScope` (project-roster R23), asking no viewer. */
+  get projectRoster() { return this.#deps.projectRoster ||= projectRosterOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   /* R8, R55 (T33-62): `caseRelation` and `attributionStatements` are `case-tensions`' (its R1, R5): its one instance on
      this host, whose provider `publication` registers when it is created (publication R61), so publication is reached
      first. */
@@ -279,6 +330,54 @@ export class CaseAuthoring {
   }
 
   migrate() { migrateCaseAuthoring(this.sql); }
+
+  /* ==========================================================================================================
+   * R70 (T45; N880; Actions D13; v0.2 rule 8): THE OPEN REQUESTS AT SIGNING. A later module (`action-replies`, its R3)
+   * fills, once at start, the one source of a case's open requests for comment; R34's sign step lists what it answers.
+   * Nothing here refuses, writes, or enters the document (publication R77's pattern).
+   * ========================================================================================================== */
+  /** R70: `registerOpenRequests({openRequestsOn})`, or `registerOpenRequests(module, source)`. A second registration is
+   *  refused `PROVIDER_DECLARED`, one without the door `PROVIDER_MALFORMED`, each registering nothing. */
+  registerOpenRequests(moduleOrSource, maybeSource = undefined) {
+    const source = typeof moduleOrSource === "string" ? maybeSource : moduleOrSource;
+    const module = typeof moduleOrSource === "string" ? str(moduleOrSource) : str(source && source.module) || "unnamed";
+    if (!source || typeof source !== "object" || !OPEN_REQUESTS_DOORS.every((d) => typeof source[d] === "function"))
+      return { ok: false, reason: "PROVIDER_MALFORMED",
+               detail: `the open requests' source gives the door ${OPEN_REQUESTS_DOORS.join(", ")}. Nothing was registered.` };
+    if (this.#openRequests)
+      return { ok: false, reason: "PROVIDER_DECLARED", module: this.#openRequests.module,
+               detail: `the open requests' source is already registered by ${this.#openRequests.module}. Nothing was registered.` };
+    this.#openRequests = { module, openRequestsOn: source.openRequestsOn };
+    return { ok: true, module };
+  }
+
+  /** R70: whether the open requests' source is registered, and by whom. */
+  openRequestsSource() {
+    return this.#openRequests ? { registered: true, module: this.#openRequests.module } : { registered: false, module: null };
+  }
+
+  /** R70: the open requests for comment on `case`, its `members` (`[{bundle_id, version_sha}]`) at the pinned bytes, as
+   *  `viewer` asks: `{ok: true, rows}` in the source's order, `[]` with none registered; `{ok: false, undetermined: true}`
+   *  when the source throws or answers anything but a list of R70's rows. Synchronous; never throws. */
+  openRequestsOn({ case: caseId = null, members = [], viewer = null } = {}) {
+    if (!this.#openRequests) return { ok: true, rows: [] };
+    let read;
+    try { read = this.#openRequests.openRequestsOn({ case: caseId, members, viewer }); }
+    catch (e) { return { ok: false, undetermined: true, why: String(e && e.message || e).slice(0, 200) }; }
+    if (!Array.isArray(read)) return { ok: false, undetermined: true, why: "the source answered no list" };
+    const rows = read.map(openRequestRow);
+    if (rows.some((r) => r === null)) return { ok: false, undetermined: true, why: "the source answered a malformed row" };
+    return { ok: true, rows };
+  }
+
+  /* R34: the sign step's `open_requests`, read once from the case and pins the rolled-back run resolved. */
+  #openRequestsStep(at, viewer) {
+    if (!at) return { read: false, stated: "not reached: op=publish refuses before the case and its pins are known" };
+    const r = this.openRequestsOn({ case: at.case, members: at.members, viewer });
+    if (!r.ok) return { read: false, undetermined: true, key: OPEN_REQUEST_KEYS.unread, says: OPEN_REQUESTS_UNREAD_SENTENCE };
+    return { read: true, lines: r.rows.map((row) => ({ ...row, key: row.answers ? OPEN_REQUEST_KEYS.line : OPEN_REQUEST_KEYS.noreply,
+                                                        says: openRequestSentence(row) })) };
+  }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
   #one(q, ...a) { for (const r of this.sql.exec(q, ...a)) return r; return null; }
@@ -506,9 +605,13 @@ export class CaseAuthoring {
     const ids = [...new Set(set)];
     /* `cut` names each lane events answered `truncated` (its R29, R30: cut at its limit), so the document says the list
        stops there rather than reading as whole; `unread` is a read that failed, stated rather than read as empty. */
-    const out = { set: ids, rows: [], left_out: 0, cut: [], unread: null };
+    /* R57 (T45; N855 (6a); Actions D4, D6a, D22; v0.2 rules 15, 17): `withheld` counts the `we_did` items a source did
+       not mark `public: true`, left out of the published record of actions and never written (the fail-closed guard;
+       what is left out of it is the producers' to decide, never a filter here). */
+    const out = { set: ids, rows: [], left_out: 0, withheld: 0, cut: [], unread: null };
     if (!ids.length) return out;
-    const read = this.events.timeline({ set: ids, viewer });
+    /* R57 (T45): the published record of actions is asked for the public (events R28, R30). */
+    const read = this.events.timeline({ set: ids, viewer, audience: "public" });
     if (!read || read.ok === false) return { ...out, unread: read ? read.reason ?? "TIMELINE_UNREAD" : "TIMELINE_UNREAD" };
     if (read.world && read.world.truncated === true) out.cut.push("they_did");
     for (const src of (read.ours && read.ours.sources) || []) if (src && src.truncated === true) out.cut.push(`we_did:${src.source}`);
@@ -527,6 +630,7 @@ export class CaseAuthoring {
     for (const src of (read.ours && read.ours.sources) || []) {
       if (src.error) { out.left_out += 1; continue; }
       for (const it of src.items || []) {
+        if (!it || it.public !== true) { out.withheld += 1; continue; }
         if (!str(it.ref)) { out.left_out += 1; continue; }
         out.rows.push({ lane: "we_did", ord: ++ord, when: it.placed_nowhere || !it.at ? "nowhere" : String(it.at),
                         label: it.label ?? it.kind ?? null, ref: str(it.ref), source: `${src.source}:${str(it.ref)}` });
@@ -680,6 +784,11 @@ export class CaseAuthoring {
     const judged = this.#judgeMembers(members, proj, viewer, gate);
     if (judged.ok === false) return judged;
     const { prepared } = judged;
+
+    /* R72 (T45; N892; Actions D4; v0.2 rule 15): NOTHING OF A COUNSEL MATTER IS PREPARED FOR PUBLICATION, asked after R2's
+       and R4's refusals and before anything is written or an id is drawn (`#counselMatters`). */
+    const counsel = this.#counselMatters(proj, prepared);
+    if (counsel) return counsel;
 
     /* R5: the authored load-bearing partition (`#rolesOf`). */
     const partition = this.#rolesOf(prepared, roles, members);
@@ -905,6 +1014,9 @@ export class CaseAuthoring {
     /* R13 — DEC-12 as DEC-44 rehomes it: the CASE's edition is its highest published edition plus one; each member's
        own edition is its own (CASE-5: the next on its own published chain, unless R13's crossed arm below). */
     const edition = this.#highestEdition(theCase) + 1;
+    /* R70, R34 (T45; N880): the case R7 resolved and the members at the bytes R13 pins, for the sign step's open requests
+       (read by the pre-flight only; nothing of them enters the document). */
+    seen.openRequestsAt = { case: theCase, members: prepared.map((p) => ({ bundle_id: p.id, version_sha: p.bundleSha })) };
     /* R38 (DEC-101 (1)(2)): an edition above 1 says what changed in it and why, judged once the edition is known and
        before anything is written (`#whatChangedJudged`). A first edition carries none. */
     const changed = edition > 1 ? this.#whatChangedJudged(whatChanged, theCase, edition) : null;
@@ -1118,6 +1230,7 @@ export class CaseAuthoring {
       /* R56, R57: case-grammar's blocks (its R18, R20); R55: case-disclosures' people and member-ties blocks (its R28). */
       calculations: calcJ.rows, calculationsBlock: calculationsLines(calcJ.rows),
       timeline: timeline.rows, timelineLeftOut: timeline.left_out, timelineCut: timeline.cut, timelineUnread: timeline.unread,
+      timelineWithheld: timeline.withheld,
       timelineBlock: timelineLines(timeline.rows),
       peopleBlock: peopleLines(peopleJ.rows), memberTiesBlock: memberTieLines(tiesJ.rows),
       /* R63: case-grammar R23's block, every sentence of the account and of the four statements with what it cites, and
@@ -1209,6 +1322,9 @@ export class CaseAuthoring {
                                ? { acknowledgements_unbindable_writer_undetermined: acks.unboundWriterUndetermined }
                                : {}) },
              author: who, at: when, weight: "single",
+             /* R57 (T45): the published record of actions as written, and the count of the group's acts its sources did
+                not mark public, left out and never written. */
+             timeline: { we_did: timeline.rows.filter((r) => r.lane === "we_did").length, withheld: timeline.withheld },
              /* R63, R69, R68: the account as written into the document, the draft it began as, the review comments
                 carried and the count left out, and the approvals carried, each only when there is one. */
              ...(shaped.sentences.length ? { account: { sentences: accountJ.rows.filter((r) => r.kind === "account"),
@@ -1302,6 +1418,142 @@ export class CaseAuthoring {
                      + `(op=whatchangeddrafts&case=${caseId} lists them). Name one of them, or write the statement in `
                      + `your own words (whatChanged: {text}) and publish again. Nothing was written.` };
     return { ok: true, text, began_as: "machine_draft", draft: d.draft_id, adopted_as_drafted: text === d.text };
+  }
+
+  /* ==========================================================================================================
+   * R71 (T45; N855 (6c); Actions D5, D6c; v0.2 §3 Success record, rule 17): OUTCOMES CARRIED INTO A CASE'S NEXT EDITION.
+   *
+   * A service with no op: its one caller is `consequences`' carrying act (its R22, `op=outcomecarry`), inside that
+   * member's act, for a success record, a harm addressed and a cure. This module reads nothing of layer 9. An outcome is
+   * PENDING until a ratified edition's signed document holds it, read from publication's `case_documents` (its R40), so
+   * no write marks it carried and a replaced preparation carries it again. Rows are append-only.
+   * ========================================================================================================== */
+  /** R71: record one pending outcome of `case` for its next edition, by the member `by`, and answer `{ok: true,
+   *  outcome}`. Refusals, in order, each writing nothing: `MACHINE_CANNOT_CARRY_OUTCOME`; `NO_SUCH_CASE` (no ratified
+   *  edition, or a project `by` does not see in full, one answer); `CARRY_NOT_A_PARTICIPANT`; `BAD_CARRIED_OUTCOME`
+   *  naming the field. Writes inside its caller's transaction. */
+  carryOutcome({ case: caseId = null, kind = null, text = undefined, cites = undefined, on = null, by = null } = {}) {
+    const C = PUBLISH_ACT_CHECKS;
+    const who = str(by);
+    /* DEC-49 REGION is-carry-machine */
+    if (!who || isMachineIdentity(who))
+      return refusal(C, "MACHINE_CANNOT_CARRY_OUTCOME", { detail: "an outcome is carried into a case's next edition by a "
+        + "member's act, and no member, or an automated credential, asked. Nothing was written." });
+    /* END DEC-49 REGION is-carry-machine */
+    const ratified = this.#ratifiedCase(caseId, who);
+    if (!ratified) return this.#noSuchCase();
+    /* DEC-49 REGION is-carry-participant */
+    if (!this.membership.isJoinedParticipant(ratified.project, who))
+      return refusal(C, "CARRY_NOT_A_PARTICIPANT", { case: ratified.caseId, detail: `${who} has not joined `
+        + `${ratified.project}, the project that makes this case. Nothing was written.` });
+    /* END DEC-49 REGION is-carry-participant */
+    const bad = (field, why) => refusal(C, "BAD_CARRIED_OUTCOME", { field, detail: `${field}: ${why} Nothing was written.` });
+    const shaped = accountShaped([{ text: "cites", cites }], null, 0);
+    /* DEC-49 REGION is-carry-shaped */
+    if (!OUTCOME_KINDS.includes(kind)) return bad("kind", `an outcome is one of ${OUTCOME_KINDS.join(", ")}.`);
+    if (typeof text !== "string" || !text.trim() || [...text].length > COMPLETENESS_MAX || /["\\\r\n]/.test(text))
+      return bad("text", `the member's statement is words on one line, at most ${COMPLETENESS_MAX} characters, with no `
+        + "quote, backslash or line break.");
+    if (cites === undefined || cites === null || shaped.ok === false)
+      return bad("cites", "what the outcome rests on is a list of cites in case-account R5's shape, {kind, ref, ord}.");
+    if (!isDate(on)) return bad("on", "the date the outcome occurred, YYYY-MM-DD.");
+    /* END DEC-49 REGION is-carry-shaped */
+    const at = this.#when("millisecond");
+    const id = this.record.mintOpaqueId(CARRIED_OUTCOME_PREFIX, at.slice(0, 4), "", (x) =>
+      !!this.#one(`SELECT 1 AS x FROM carried_outcomes WHERE outcome_id=?`, x));
+    if (!id) return mintExhausted(CARRIED_OUTCOME_PREFIX);
+    this.sql.exec(`INSERT INTO carried_outcomes (outcome_id, case_id, kind, text, cites, on_date, carried_by, at)
+                   VALUES (?,?,?,?,?,?,?,?)`, id, ratified.caseId, kind, text.trim(),
+                  JSON.stringify(shaped.sentences[0].cites), on, who, at);
+    return { ok: true, outcome: id };
+  }
+
+  /** R71: withdraw a pending outcome, with `reason` (R19's bounds). Refusals, in order, each writing nothing:
+   *  `MACHINE_CANNOT_CARRY_OUTCOME`; `NO_SUCH_CARRIED_OUTCOME` (absent, or of a case whose project `by` does not see in
+   *  full, alike); `CARRIED_OUTCOME_SETTLED` (a ratified edition carries it, or it was withdrawn); `CARRY_NO_REASON`. */
+  withdrawCarriedOutcome({ outcome = null, reason = undefined, by = null } = {}) {
+    const C = PUBLISH_ACT_CHECKS;
+    const who = str(by);
+    if (!who || isMachineIdentity(who))
+      return refusal(C, "MACHINE_CANNOT_CARRY_OUTCOME", { detail: "an outcome is withdrawn from a case's next edition by a "
+        + "member's act, and no member, or an automated credential, asked. Nothing was written." });
+    const row = str(outcome) ? this.#one(`SELECT outcome_id, case_id FROM carried_outcomes WHERE outcome_id=?`, str(outcome)) : null;
+    /* DEC-49 REGION is-carried-outcome-found */
+    if (!row || !this.#ratifiedCase(row.case_id, who))
+      return refusal(C, "NO_SUCH_CARRIED_OUTCOME", { outcome: str(outcome) || null,
+        detail: "no outcome carried into a case you can see answers to that id. Nothing was written." });
+    /* END DEC-49 REGION is-carried-outcome-found */
+    const state = this.#outcomeStates(row.case_id).get(row.outcome_id);
+    /* DEC-49 REGION is-carried-outcome-pending */
+    if (state && state.state !== "pending")
+      return refusal(C, "CARRIED_OUTCOME_SETTLED", { outcome: row.outcome_id, state: state.state,
+        ...(state.edition ? { edition: state.edition } : {}),
+        detail: state.state === "carried" ? `edition ${state.edition} of ${row.case_id}, signed, carries this outcome. `
+          + "Nothing was written." : "this outcome was already withdrawn. Nothing was written." });
+    /* END DEC-49 REGION is-carried-outcome-pending */
+    /* DEC-49 REGION is-carry-reasoned */
+    if (typeof reason !== "string" || !reason.trim() || [...reason].length > CARRY_REASON_MAX)
+      return refusal(C, "CARRY_NO_REASON", { detail: `withdrawing an outcome is recorded with your own words on why, at most `
+        + `${CARRY_REASON_MAX} characters. Nothing was written.` });
+    /* END DEC-49 REGION is-carry-reasoned */
+    const at = this.#when("millisecond");
+    this.sql.exec(`INSERT INTO carried_outcome_withdrawals (outcome_id, reason, by, at) VALUES (?,?,?,?)`,
+                  row.outcome_id, reason, who, at);
+    return { ok: true, outcome: row.outcome_id, withdrawn: { reason, by: who, at } };
+  }
+
+  /** R71: the case's outcomes, in the order carried, each `{outcome, kind, text, cites, on, carried_by, carried_at, state}`,
+   *  `state` `pending`, `carried` (with its `edition`) or `withdrawn` (with its `withdrawal`). Fenced as R19's member door:
+   *  a member who is a joined participant of the case's project; every other caller receives R19's dead answer. */
+  carriedOutcomesOf({ case: caseId = null, viewer = null } = {}) {
+    const v = String(viewer ?? "");
+    const who = v.startsWith("member:") ? v.slice("member:".length) : "";
+    const ratified = who ? this.#ratifiedCase(caseId, who) : null;
+    if (!ratified || !this.membership.isJoinedParticipant(ratified.project, who)) return this.#review().deadAnswer();
+    const states = this.#outcomeStates(ratified.caseId);
+    return { ok: true, case: ratified.caseId,
+             outcomes: this.#outcomeRows(ratified.caseId).map((r) => ({ ...r, ...states.get(r.outcome) })) };
+  }
+
+  /* R71: the case `caseId` names when it has a ratified edition (publication R40's `cases`, written at the first
+     ratification) whose project `who` sees in full (membership R44), `{caseId, project}`; else null. */
+  #ratifiedCase(caseId, who) {
+    const id = str(caseId);
+    const row = id ? this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id) : null;
+    if (!row || this.membership.sight(row.project_id, `member:${who}`) !== "full") return null;
+    return { caseId: id, project: row.project_id };
+  }
+
+  /* R71: NO_SUCH_CASE, one answer for a case with no ratified edition and one whose project the member does not see. */
+  #noSuchCase() {
+    return { ok: false, reason: "NO_SUCH_CASE", detail: "no published case you can see answers to that id. A case not yet "
+      + "published, and one you cannot see, are answered alike. Nothing was written." };
+  }
+
+  /* R71: every outcome carried for `caseId`, in the order carried. */
+  #outcomeRows(caseId) {
+    return this.#rows(`SELECT outcome_id, kind, text, cites, on_date, carried_by, at FROM carried_outcomes
+                       WHERE case_id=? ORDER BY seq`, caseId)
+      .map((r) => ({ outcome: r.outcome_id, kind: r.kind, text: r.text, cites: JSON.parse(r.cites), on: r.on_date,
+                     carried_by: r.carried_by, carried_at: r.at }));
+  }
+
+  /* R71: each outcome's state, read at the act: `carried` with the edition when a ratified edition's signed document
+     holds it (publication R40's `case_documents`, its `outcomes:` block, case-grammar R29), else `withdrawn` with the
+     withdrawal, else `pending`. */
+  #outcomeStates(caseId) {
+    const carriedIn = new Map();
+    for (const d of this.#rows(`SELECT edition, text FROM case_documents WHERE case_id=? AND ratified_at IS NOT NULL
+                                AND sig_armored IS NOT NULL ORDER BY edition`, caseId))
+      for (const o of outcomesOf(parseFrontmatter(d.text).data || {}))
+        if (o && o.outcome && !carriedIn.has(o.outcome)) carriedIn.set(o.outcome, Number(d.edition));
+    const out = new Map();
+    for (const r of this.#outcomeRows(caseId)) {
+      if (carriedIn.has(r.outcome)) { out.set(r.outcome, { state: "carried", edition: carriedIn.get(r.outcome) }); continue; }
+      const w = this.#one(`SELECT reason, by, at FROM carried_outcome_withdrawals WHERE outcome_id=?`, r.outcome);
+      out.set(r.outcome, w ? { state: "withdrawn", withdrawal: { reason: w.reason, by: w.by, at: w.at } } : { state: "pending" });
+    }
+    return out;
   }
 
   /* ==========================================================================================================
@@ -1474,6 +1726,30 @@ export class CaseAuthoring {
                         preparedIn: rel && rel.prepared ? rel.prepared.case_id ?? null : null });
       }
     return { ok: true, prepared };
+  }
+
+  /** R72 (T45; N892; Actions D4; v0.2 rule 15; `project-roster` R23; `publication` R78): the publishing project and the
+   *  project each member finding was committed with (record-core R34's `bundleInfo`), each asked of
+   *  `project-roster.projectScope`; any at `counsel_matter` is `COUNSEL_MATTER_NOT_PUBLISHED`, publication R78's one row
+   *  (read through its export, no copy held here), naming each project and the members committed with it. Else null. */
+  #counselMatters(proj, prepared) {
+    const projects = new Map([[proj, []]]);
+    for (const p of prepared) {
+      const info = this.record.bundleInfo(p.id);
+      const of = info && typeof info.project === "string" && info.project ? info.project : null;
+      if (of) projects.set(of, [...(projects.get(of) || []), p.id]);
+    }
+    const counsel = [...projects].filter(([id]) => this.projectRoster.projectScope(id).scope === "counsel_matter")
+      .map(([id, members]) => ({ project: id, publishing: id === proj, members }));
+    if (!counsel.length) return null;
+    const row = CASE_SOURCES_CHECKS.COUNSEL_MATTER_NOT_PUBLISHED || {};
+    /* DEC-49 REGION is-counsel-matter-published */
+    return { ok: false, reason: "COUNSEL_MATTER_NOT_PUBLISHED", code: "COUNSEL_MATTER_NOT_PUBLISHED", check: row.check ?? null,
+             translation: row.translation ?? null, projects: counsel,
+             detail: `${counsel.map((c) => (c.publishing ? `${c.project} (the publishing project)`
+                       : `${c.project} (holding ${c.members.join(", ")})`)).join("; ")}: a counsel matter is never published, `
+                   + "and this case would rest on one. Nothing was prepared." };
+    /* END DEC-49 REGION is-counsel-matter-published */
   }
 
   /** R5, asked by `op=publish` and by R34's pre-flight alike: the authored load-bearing partition. Answers the refusal
@@ -1829,7 +2105,10 @@ export class CaseAuthoring {
                     ? "Signing waits until every approver the group names has approved this version. An approval given "
                       + "after this preparation is carried once the case is prepared again; its version does not change."
                     : "Every approval the group requires is given for this version, and the document carries them." }) },
+      /* R34 (T45; N880; Actions D13; v0.2 rule 8): the open requests for comment, in this step and nowhere else, never a
+         blocker, never `first`, never `ready` (DEC-13: no reason is asked for signing while a window is open). */
       { step: 8, name: "sign", signer: str(a.author) || null,
+        open_requests: this.#openRequestsStep(seen.openRequestsAt || null, a.viewer ?? null),
         ratification: ratify.reached ? { reached: true, refusals: ratify.refusals }
                                      : { reached: false, why: ratify.why },
         next: ok ? `op=caseratify over op=publish's document (case ${answer.caseId}, edition ${answer.edition})`

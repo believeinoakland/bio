@@ -1,6 +1,6 @@
-/* case-authoring's tables (requirements: `build/requirements/case-authoring.md`, R20, R28, R39): the statement's
- * acknowledgements, moved from `schema.mjs` unchanged (K4), and the drafts of an edition's statement of what changed (R39,
- * T23). The system's drafts of a case's account and the members' acceptances of them are `case-account`'s (its R8, R12;
+/* case-authoring's tables (requirements: `build/requirements/case-authoring.md`, R20, R28, R39, R71): the statement's
+ * acknowledgements, moved from `schema.mjs` unchanged (K4), the drafts of an edition's statement of what changed (R39,
+ * T23), and the outcomes carried into a case's next edition with their withdrawals (R71, T45). The system's drafts of a case's account and the members' acceptances of them are `case-account`'s (its R8, R12;
  * N839, K2608), which creates them with the same DDL, so a running store's rows are kept. Every other table this module
  * writes is `publication`'s, through its R21. */
 
@@ -47,11 +47,41 @@ CREATE TABLE IF NOT EXISTS what_changed_drafts (
   at          TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS what_changed_drafts_case ON what_changed_drafts(case_id, seq);
+
+-- R71 (T45; N855 (6c); Actions D5, D6c): OUTCOMES CARRIED INTO A CASE'S NEXT EDITION, by a member's act, one row per
+-- act, append-only. kind is success, cure or harm_addressed; text the member's statement; cites the JSON list of
+-- case-account R5's cites; on_date the date the outcome occurred. No column marks one carried: an outcome is pending
+-- until a ratified edition's signed document holds it (publication R40's case_documents), so a replaced preparation
+-- carries it again. Working material: the whole-store purge clears it; a carried one lives on in the signed document.
+CREATE TABLE IF NOT EXISTS carried_outcomes (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  outcome_id TEXT NOT NULL UNIQUE,
+  case_id    TEXT NOT NULL,
+  kind       TEXT NOT NULL CHECK (kind IN ('success','cure','harm_addressed')),
+  text       TEXT NOT NULL,
+  cites      TEXT NOT NULL,
+  on_date    TEXT NOT NULL,
+  carried_by TEXT NOT NULL,
+  at         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS carried_outcomes_case ON carried_outcomes(case_id, seq);
+
+-- R71: a pending outcome's withdrawal, with the member's reason, one row per act, append-only.
+CREATE TABLE IF NOT EXISTS carried_outcome_withdrawals (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  outcome_id TEXT NOT NULL UNIQUE,
+  reason     TEXT NOT NULL,
+  by         TEXT NOT NULL,
+  at         TEXT NOT NULL
+);
 `;
 
-/** R28: declared whole to record-core's purge (K23): a whole-store purge clears them, and no bundle keys them. */
+/** R28, R71: declared whole to record-core's purge (K23): a whole-store purge clears them, and no bundle keys them. */
 export const CASE_AUTHORING_TABLES = Object.freeze([{ name: "statement_acknowledgements", keys: [] },
-                                                    { name: "what_changed_drafts", keys: [] }]);
+                                                    { name: "what_changed_drafts", keys: [] },
+                                                    /* R71 (T45): R28's form */
+                                                    { name: "carried_outcomes", keys: [] },
+                                                    { name: "carried_outcome_withdrawals", keys: [] }]);
 
 /** Creates the table where absent, and adds R19's `reason` column (DEC-88) to a table created before it, never filling
  *  it: an acknowledgement recorded before the acknowledger's words were asked for carries none (K1050). Idempotent. */
