@@ -707,7 +707,8 @@ export function askBoundReached(bounds, used) {
  *  with no member's act, it starts only when `standing` names its author, a member, and the mode is `ask` (R16's
  *  read-only reach; R17's bounds and the author's own account and ceiling are held by its callers). A draft (R21; T35,
  *  N686, DEC-153) starts only at the act of the member who asked for the help: the exception is `ask`'s alone, so with
- *  no member's act a draft is refused whatever `standing` holds; so is the mode `enquire` (R24; T41-21), the interview
+ *  no member's act a draft is refused whatever `standing` holds, whatever its kind (R22's, R25's and R27's kinds
+ *  alike: the detail names no kind); so is the mode `enquire` (R24; T41-21), the interview
  *  and planning, which starts only at the act of the member whose matter it is. Anything else — a token class, the scheduler, a blank
  *  or unrecognised stamp — is `AI_RUN_NOT_A_MEMBER_ACT` (C-22.19): fail closed. Never throws. */
 export function startAllowed(asked) {
@@ -725,7 +726,7 @@ export function startAllowed(asked) {
       ? "the interview and planning start only at the act of the member whose matter it is, and the standing "
         + "question's exception is an ask's alone (K1481). Nothing was started"
       : m === "draft"
-      ? "a draft of a member's own words starts only at the act of the member who asked for the help, and the "
+      ? "a draft, of whatever kind, starts only at the act of the member who asked for the help, and the "
         + "standing question's exception is an ask's alone (DEC-153, K1481). Nothing was started"
       : author
       ? `a standing question starts only an ask, which reads and answers; it cannot start a run in mode `
