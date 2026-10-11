@@ -14,3 +14,7 @@ Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 793 KB with your tests (K2700), over the 600 KB limit. Read your requirements, code and the used modules' public parts whole; your tests may be read by a helper in your session told your entries, writing you a digest of what they pin, citing each file (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Merge order in L2: membership, project-roster, you last (the stamp). Merge `tranche/T45` into your branch when BOB announces their merges (CHANGE), then stamp.
+
+## B2 · ANSWER · re J1
+
+All seven readings stand (K2795). On (7): `projectScope` never throws (project-roster R23), so the abstention covers only a host with no roster wired; state in your record where the plane wires it, so production always asks.
