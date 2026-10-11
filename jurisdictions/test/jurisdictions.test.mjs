@@ -591,10 +591,16 @@ test("R20 no service treats a profile by its identity", () => {
     const orig = get(id);
     const renamed = { ...get(id), id: "renamed-x", name: "Renamed", covers: ["Somewhere Else"] };
     assert.deepEqual(validate(renamed), validate(orig));
-    const scrub = (view) => JSON.parse(JSON.stringify(view, (k, val) =>
-      (["id", "name", "covers", "profile", "profiles"].includes(k) ? undefined : val)));
+    /* the profile tags go at every depth; `id`, `name` and `covers` only as the view's own, so a fact's own name (a legal
+       organisation's, a template's, R87) is still compared */
+    const tags = (v) => JSON.parse(JSON.stringify(v, (k, val) => (["profile", "profiles"].includes(k) ? undefined : val)));
+    const scrub = (view) => { const { id: _i, name: _n, covers: _c, ...rest } = tags(view); return rest; };
+    const scrubResult = (r) => ({ ...tags(r), view: scrub(r.view) });
     assert.deepEqual(scrub(combine([renamed]).view), scrub(combine([orig]).view));
-    assert.deepEqual(scrub(combine([renamed, TEST === id ? FIRST : TEST])), scrub(combine([orig, TEST === id ? FIRST : TEST])));
+    assert.deepEqual(scrubResult(combine([renamed, TEST === id ? FIRST : TEST])), scrubResult(combine([orig, TEST === id ? FIRST : TEST])));
+    /* the T45 fields are in what is compared (R83 by this test) */
+    const v = scrub(combine([orig]).view);
+    for (const s of ["legal_facts", "records_laws", "deadlines", "legal_organisations"]) assert.ok(v[s] && v[s].length, `${id} ${s}`);
   }
 });
 
@@ -708,11 +714,13 @@ test("R30 the first profile's action sections: the snapshot's action kinds renam
   assert.ok(f.action_kinds.slice(renamed.length).every((k) => k.tier === 2 || k.tier === 3));
   for (const k of f.action_kinds) assert.match(k.kind, /^[a-z][a-z0-9_]*$/);
   /* Roadmap v5 §8 names Tier 1 for records requests, grand jury complaints, State Controller referrals and
-     media outreach, and no tier for the others; D-182 adopted §8's words. */
+     media outreach, and no tier for the others; D-182 adopted §8's words. R85 (T45) adds public comment at Tier 1, on
+     Design Requirement 8's words (K2785), and two Tier 2 kinds (K2785; v0.2 rule 13, K2780). */
   const tiers = Object.fromEntries(f.action_kinds.map((k) => [k.kind, k.tier]));
-  assert.deepEqual(Object.fromEntries(Object.entries(tiers).filter(([k]) => renamed.includes(k))), { records_request: 1, grand_jury: 1, controller_referral: 1, public_comment: undefined,
+  assert.deepEqual(Object.fromEntries(Object.entries(tiers).filter(([k]) => renamed.includes(k))), { records_request: 1, grand_jury: 1, controller_referral: 1, public_comment: 1,
     media: 1, litigation_support: undefined, request_for_comment: undefined, other: undefined });
-  for (const k of f.action_kinds) if (k.tier !== undefined) assert.equal(k.basis, "D-182", k.kind);
+  const T45_TIERED = { public_comment: "K2785", brown_act_demand: "K2785", party_participation: "K2780" };
+  for (const k of f.action_kinds) if (k.tier !== undefined) assert.equal(k.basis, T45_TIERED[k.kind] ?? "D-182", k.kind);
   const rr = f.action_kinds.find((k) => k.kind === "records_request");
   assert.deepEqual(rr.laws, ["California Public Records Act", "Oakland Sunshine Ordinance"]);
   const d = f.deadlines.find((x) => x.rule === "records_response");
@@ -815,14 +823,17 @@ test("R31 LAW_LEVELS: federal, state, county, city in that order, the one vocabu
   assert.deepEqual(v.records_laws.map((l) => [l.name, l.level]), [["Records Law", "state"], ["Federal Act", "federal"]]);
 });
 
-test("R32 legal_organisations: name, evaluates (Tier 3 kinds of the profile, non-empty), contacts {how, value}", () => {
+test("R32 R78 legal_organisations: name, evaluates (Tier 2 or 3 kinds of the profile, R78), contacts {how, value}", () => {
   assert.ok(validate(sample()).ok);
   for (const how of ["web", "email", "phone", "mail"]) assert.ok(breakIt((p) => { p.legal_organisations[0].contacts[0].how = how; }).ok, how);
   assert.ok(hasError(breakIt((p) => { p.legal_organisations[0].evaluates = ["records_request"]; }), "ORG_KIND_UNKNOWN", "legal_organisations[0].evaluates[0]"), "Tier 1 kind");
-  assert.ok(hasError(breakIt((p) => { p.legal_organisations[0].evaluates = ["records_petition"]; }), "ORG_KIND_UNKNOWN"), "Tier 2 kind");
+  /* R78 (T45) widens R32: a Tier 2 kind may be evaluated */
+  assert.ok(breakIt((p) => { p.legal_organisations[0].evaluates = ["records_petition"]; }).ok, "Tier 2 kind");
   assert.ok(hasError(breakIt((p) => { p.legal_organisations[0].evaluates = ["code_complaint", "nowhere"]; }), "ORG_KIND_UNKNOWN", "legal_organisations[0].evaluates[1]"));
-  assert.ok(hasError(breakIt((p) => { delete p.action_kinds[1].tier; }), "ORG_KIND_UNKNOWN"), "a kind with no tier is not Tier 3");
-  for (const bad of [[], "code_complaint", null]) assert.ok(hasError(breakIt((p) => { p.legal_organisations[0].evaluates = bad; }), "VALUE_INVALID", "legal_organisations[0].evaluates"), JSON.stringify(bad));
+  assert.ok(hasError(breakIt((p) => { delete p.action_kinds[1].tier; }), "ORG_KIND_UNKNOWN"), "a kind with no tier is not Tier 2 or 3");
+  /* R78: an empty list is no purpose unless the entry defends (ORG_PURPOSE_MISSING) */
+  assert.ok(hasError(breakIt((p) => { p.legal_organisations[0].evaluates = []; }), "ORG_PURPOSE_MISSING", "legal_organisations[0].evaluates"));
+  for (const bad of ["code_complaint", null]) assert.ok(hasError(breakIt((p) => { p.legal_organisations[0].evaluates = bad; }), "VALUE_INVALID", "legal_organisations[0].evaluates"), JSON.stringify(bad));
   assert.ok(hasError(breakIt((p) => { p.legal_organisations[0].name = ""; }), "VALUE_INVALID", "legal_organisations[0].name"));
   assert.ok(hasError(breakIt((p) => { p.legal_organisations[0].contacts[0].extra = 1; }), "UNKNOWN_SECTION", "legal_organisations[0].contacts[0].extra"));
   assert.ok(hasError(breakIt((p) => { delete p.legal_organisations[0].basis; }), "BASIS_MISSING", "legal_organisations[0].basis"));
@@ -926,12 +937,13 @@ test("R36 the test profile supplies R31's levels, oversight, a Tier 2 advisory, 
   /* the Tier 3 kinds §8 names are held, for the organisations that evaluate them */
   assert.ok(f.action_kinds.filter((k) => k.tier === 3).length >= 3);
   /* the legal organisations Bob named (K283 (2), K303): exactly these two, each taking up its Tier 3 kinds,
-     each reached by its public website, each unmeasured; none takes up consent_decree_motion */
+     each reached by its public website; none takes up consent_decree_motion. HJTA unmeasured; FAC's defence scope
+     measured on its published page (R85, as amended in T45; J1's reading), so its basis names that measurement */
   assert.deepEqual(f.legal_organisations, [
     { name: "Howard Jarvis Taxpayers Association", evaluates: ["assessment_challenge", "taxpayer_action"],
       contacts: [{ how: "web", value: "https://www.hjta.org" }], basis: "UNMEASURED" },
-    { name: "First Amendment Coalition", evaluates: ["constitutional_claim"],
-      contacts: [{ how: "web", value: "https://firstamendmentcoalition.org" }], basis: "UNMEASURED" },
+    { name: "First Amendment Coalition", evaluates: ["constitutional_claim"], defends: true,
+      contacts: [{ how: "web", value: "https://firstamendmentcoalition.org" }], basis: "K303, 2026-10-11 actions-law" },
   ]);
   const tier3 = new Set(f.action_kinds.filter((k) => k.tier === 3).map((k) => k.kind));
   for (const o of f.legal_organisations) {
@@ -941,7 +953,7 @@ test("R36 the test profile supplies R31's levels, oversight, a Tier 2 advisory, 
   assert.ok(!f.legal_organisations.some((o) => o.evaluates.includes("consent_decree_motion")));
   /* the combined view carries them, tagged with the first profile */
   const lv = combine([FIRST]).view.legal_organisations;
-  assert.deepEqual(lv.map((o) => [o.name, o.profile, o.basis]), f.legal_organisations.map((o) => [o.name, FIRST, "UNMEASURED"]));
+  assert.deepEqual(lv.map((o) => [o.name, o.profile, o.basis]), f.legal_organisations.map((o) => [o.name, FIRST, o.basis]));
   /* §8's Tier 2 kind carries the advisory note recommending legal review; Tier 3 kinds have no template */
   const t2 = f.action_kinds.filter((k) => k.tier === 2);
   assert.ok(t2.length >= 1 && t2.every((k) => /legal review/i.test(k.advisory)));

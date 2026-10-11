@@ -90,7 +90,9 @@ test("R58 vote_values {value, label, citation, basis} and response_statuses {sta
     assert.deepEqual(l.conflicts, []);
     assert.equal(l.view.vocabulary[key].filter((e) => e[name] === get(TEST).vocabulary[key][0][name]).length, 2, key);
     /* no default: a profile that gives none supplies none, and the view has none */
-    assert.equal(combine([FIRST]).view.vocabulary[key], undefined, `${key}: the first profile gives none, so none`);
+    /* the first profile gives no vote values; its response statuses are Penal Code § 933.05's, for the grand jury (R85, T45) */
+    if (key === "vote_values") assert.equal(combine([FIRST]).view.vocabulary[key], undefined, `${key}: the first profile gives none, so none`);
+    else assert.ok(combine([FIRST]).view.vocabulary[key].every((e) => e.applies_to === "grand_jury" && /933\.05/.test(e.citation)), key);
     const none = get(TEST); delete none.vocabulary[key]; none.id = "test-none";
     assert.ok(validate(none).ok);
     assert.equal(combine([none]).view.vocabulary[key], undefined, key);
