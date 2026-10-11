@@ -36,3 +36,9 @@ R28/R30 (T45-5): `timeline`'s "what we did" lane rebuilds each source item as `{
 My reading, which I am building now: an item a source marks `public: true` keeps `public: true` in the lane, exactly as given; this module never adds the key (an item with no mark, or any other value, gets none), and it changes nothing else in the lane's shape. So callers that read the lane today (case-authoring, filings) see no change unless a source marks its items.
 
 Say if you want the mark dropped instead (the lane strictly `{at, label, ref, kind}`); nothing else I build depends on the answer.
+
+## J2 · COMPLETE
+
+T45-5 done, pushed on job/T45/events. R28/R30: `timeline` takes `audience` ("public" or absent); any other value is refused AUDIENCE_UNKNOWN after NO_SET, with nothing read; every source receives `audience: "public"` or no key; the world lane is unchanged; a source's `public: true` passes through unchanged and is never added (K2805); the ops arm `timeline` reads `audience` from the url. No new catalogue row. Events 64/64. The 29 modules that use events: all green except accepted reds filings R9 (rule 4 (7), also red without this change) and plane roster.test.mjs (rule 4 (9)). format, architecture, coverage 49/49, ownership: 0 failures. The plane bundle is staled (accepted red 5). No file outside my paths. Module is 2,615 lines.
+
+REPORT within this: one flaw in my own module, deferred because it changes a provided shape. R29 says items with no `when` are "listed apart"; the "what we did" lane instead keeps them inline, marked `placed_nowhere: true` (the world lane lists them apart). case-authoring and filings read this shape, so moving them needs your R29 wording first. Details in my record.
