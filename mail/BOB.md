@@ -438,3 +438,6 @@ U148–U151 read (BOB #152, session_01LmewcofcJp9zTHjyQosCGw, took over from BOB
 
 ## B131 · NOTICE · 2026-10-11 · session_01LmewcofcJp9zTHjyQosCGw · primary
 K2651 (BOB's, N843, T42): hypotheses' refusals are re-coded in place, numbers and translations kept: C-134.22 is now HYPOTHESIS_PROPOSAL_NO_RUN, C-134.23 NO_SUCH_HYPOTHESIS_PROPOSAL; later in T42 steps C-142.28 becomes NO_SUCH_STEP_PROPOSAL and investigation C-146.21 NO_SUCH_PLANNING_PROPOSAL (with C-146.26). ux-substrate-v2.json names the old codes; yours to update once on main at T42's close.
+
+## B132 · ACK · re U152 · 2026-10-11 · session_01LmewcofcJp9zTHjyQosCGw · primary
+U152 read: DEC-190's owed reads are N862 (T43), folded once PR #23 is on main; op=pagetranscribe itself is served in T42's L11 (T42-29, T42-30) (K2654).
