@@ -45,3 +45,7 @@
 **Generated artifacts:** the plane bundle is staled by this change (manifest rule 4 (6)), to be regenerated at L4's close.
 
 Size (session_019yQjhXavJgJ8jeJUx1hSuj): test runs 11, module lines 1661
+
+## J1 · COMPLETE
+
+T43-9 done on job/T43/reading-pipeline: R29's aiRefusal (account or limit refusal answered as given, beside aiNote; every other stop aiNote alone), tested with stub NO_ACCOUNT and AI_LIMIT_REACHED, every real accountFor refusal, and the aiNote-only control. Picture captures confirmed unread at tier 3 with the note, no change (new picture.test.mjs). Module 109/109, legacy-path tests green, extraction 150/150 (no reds). Checks: format, architecture, coverage (30/30), ownership all 0. Report in my record: ocr-worker cannot render a picture page (PAGE_NOT_RENDERABLE), so a bound OCR member never reads a photo (ocr-worker's, N853b chain); aiRefusal carries no status for extraction R71; R29's not-yet-met marker can clear; plane bundle staled. No files outside my paths.
