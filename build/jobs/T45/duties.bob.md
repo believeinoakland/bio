@@ -13,3 +13,7 @@ Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 695 KB with your tests (K2700), over the 600 KB limit, mostly the used modules' public parts (an upper bound). Read your requirements, code and tests whole; for the used public parts, give helpers in your session your entries and what follows them (the later layers that read your new services), have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Merge order in L5: events, local-facts, standards, duties (`modules.json` order; each independent of the others' T45 change except duties after standards).
+
+## B2 · ANSWER · re J1
+
+Yes: the edge duties → local-facts is now in modules.json on tranche/T45 (K2804). Your reading of R5 stands. Merge tranche/T45 into your branch for the edge.
