@@ -30,9 +30,10 @@ It is the only module marked `legacy` in `modules.json`.
    6. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close;
    7. `fleetbundles` agent-worker's 25-input pin until T43-2;
    8. action-clocks `overdue.test.mjs`:151 and action-plans `invariants.test.mjs`:50 until T43-8 (N864);
-   9. from T43-8's merge (capture's delete): answer-envelope R7's totality and pinned-row tests miss doorbell's family until T43-14 (N851).
+   9. from T43-7's first merge (K2709): answer-envelope R7's totality and pinned-row tests miss doorbell's family until T43-14 (N851).
    10. (found at T43's L1, K2704; red on `main` since T42's close) DEC-189's words merged at T42's close (2bfa372ccc): ai-use `counting`:167, `limits`:198, `reads`:144 until T43-11; notice-producers `accounts`:36, 47, 88 until T43-13; affordances `t36`:55 until T43-17; op-declarations `t34`:68, 145, 307, `t37`:105, 177, 218, `t38`:76, 87 until T43-18; and from T42-8 (636f27bb74), case-carriage `invariants`:66, `rereads`:149, 167, 195, 212 until T43-16.
    11. (from T43-6's merge, K2706: the write door's stricter C-2.1, N854) action-clocks `calendar.test.mjs`:60, 132, 201, 247, 278 and `factreader.test.mjs`:39, 72, 80, 119, 138 (`fixture.mjs`:162 prepends a second `counterparty` key) until T43-20; ratification `converted-b.test.mjs`:166 (:180 prepends `edition` twice) until T43-19.
+   12. (from T43-8's merge, K2710: capture no longer creates doorbell's tables) admission `harness.mjs`:189 (5 R21 tests) until T43-21; case-disclosures `fixture.mjs`:260 (4 tests) until T43-22; case-authoring's fixture (4 tests) until T43-12; control-plane `envelope.test.mjs`:391 (`NO_SUCH_KNOCK` pinned in capture's table) until T43-23.
 
 ## Entries
 
@@ -65,14 +66,17 @@ It is the only module marked `legacy` in `modules.json`.
 ### L8
 - **T43-16 · case-carriage** · (K2704) `test/m/case-carriage/fixture.mjs`:33 hands `sources` `doorbell` (`{pulledKnocksOf}`), not `capture`, since T42-8; tests only · clears rule 4 (10)'s case-carriage reds · merges in L8 before case-authoring.
 - **T43-19 · ratification** · (K2706) `converted-b.test.mjs`:180 writes one `edition` key, not two (the write door refuses a duplicate key since T43-6, R38); tests only · clears rule 4 (11)'s ratification red.
-- **T43-12 · case-authoring** · (N850, K2608) R69: `accountPropose`, `accountDrafts`, `registerReviewComments` deleted, `case-account`'s alone; Uses struck; `account.test.mjs` re-pointed · req: `draft-T43-cleanup.md`. case-account's two wording lines are BOB's, folded before L8's START (no job).
+- **T43-22 · case-disclosures** · (K2710) `fixture.mjs`:260 builds doorbell's tables (`doorbellOf`) before inserting into `inbox`, which capture no longer creates since T43-8; tests only · clears rule 4 (12)'s case-disclosures reds.
+- **T43-12 · case-authoring** · (N850, K2608) R69: `accountPropose`, `accountDrafts`, `registerReviewComments` deleted, `case-account`'s alone; Uses struck; `account.test.mjs` re-pointed; its fixture builds doorbell's tables before inserting into `inbox` (K2710, rule 4 (12)) · req: `draft-T43-cleanup.md`. case-account's two wording lines are BOB's, folded before L8's START (no job).
 
 ### L9
 - **T43-20 · action-clocks** · (K2706) `fixture.mjs`:162 writes one `counterparty` key, not a second one prepended (the write door refuses a duplicate key since T43-6, R38); tests only · clears rule 4 (11)'s action-clocks reds.
 
 ### L11
+- **T43-21 · admission** · (K2708; CAPTURE #27 J1) `src/admission/window.mjs`:82 builds the door window's fingerprint through `doorbellOf(ctx).sourceFingerprint` (doorbell R12), not capture's held copy; `modules.json` edge `admission` → `doorbell` (BOB's, at the job's COMPLETE); `harness.mjs`:189 takes `knock_key`'s DDL from doorbell's schema (K2710, rule 4 (12)) · then capture's held `sourceFingerprint` is deleted in T44 (N870).
 - **T43-17 · affordances** · (K2704; DEC-189, DEC-190) `t36.test.mjs`:55 re-pinned to the design's 213 texts (37 acts re-keyed from `owed_<op>`, four retired); `ACT_HELP` gains the design's texts for `pagetranscribe` and `transcribe` (both ops declared) · clears rule 4 (10)'s affordances red.
 - **T43-18 · op-declarations** · (K2704; DEC-189) `t34`, `t37`, `t38` re-pinned to the design's registry (37 acts now served functions; four still owed) and `mock-acts.js`'s re-keyed names; tests only · clears rule 4 (10)'s op-declarations reds.
+- **T43-23 · control-plane** · (K2710) `envelope.test.mjs`:391 reads `NO_SUCH_KNOCK` from doorbell's family, not capture's table; tests only · clears rule 4 (12)'s control-plane red · after T43-14.
 - **T43-13 · notice-producers** · (N856, DEC-189) R16's limit-reached item by scope and its fills by key; R17's ten kinds' `summary` and `detail` by key, `ai.label.explored.member` for members who do not own the account; `NOTICE_WORDS` re-read from `words.json` (its `{for_use}`/`{Uses}` fills and the retired key `act.owed_exploreapprove.label.queue` predate DEC-189; clears rule 4 (10)'s notice-producers reds, K2704) · req: `draft-T43-words.md` (`{date}`: the local day, month by `date.month.*`, until B133 is answered).
 - **T43-14 · answer-envelope** · (N851) new R12: `CHECK_FAMILY_FILES` lists `src/doorbell/checks.mjs` after capture's; `families.test.mjs`:353 · clears rule 4 (9).
 - **T43-15 · plane** · (N862, DEC-190) R24: the `bundle` screen's acts gain `reading`, `pagetranscribe`, `transcribe`; (N853b) R36: a `NOT_A_PDF` page rendered by `renderPictureToPixels` (grey, `TRANSCRIBE_PICTURE_EDGE` 1,568 px, checked against the provider's documentation at the START); (N866) R6's gated hook's `ai` author aligned with control-plane R17 or the op's recorded D-311 form · req: the drafts; N866's text before L11's START.

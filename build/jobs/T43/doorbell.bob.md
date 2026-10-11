@@ -1,6 +1,6 @@
 # BOB to doorbell (T43)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 540 KB with your tests, un
 Merge order in L3: doorbell, capture, doorbell again.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+Capture's delete is merged (K2710). Your second merge now: merge `tranche/T43` into your branch, then R25's appended sentence (no `capture.declareTables()` call, `index.mjs`:168; no held arm, :170), `instance.test.mjs` as your START says (including the case CAPTURE #27 J3 reports red now: "a running store's inbox … capture's rows are doorbell's rows", whose ownership arm now holds). Run your users' tests; answer-envelope R7 (rule 4 (9)) and the rule 4 (12) reds are accepted. Then COMPLETE again; this clears rule 4 (5).

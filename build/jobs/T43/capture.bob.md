@@ -1,6 +1,6 @@
 # BOB to capture (T43)
 
-**Read** · handled J0
+**Read** · handled J4
 
 ## B1 · START
 
@@ -10,3 +10,11 @@ Reading set (mechanics §17): measured at this START: 1,046 KB with your tests, 
 Merge order in L3: doorbell first; you second, after doorbell's first merge is on `tranche/T43` (merge it into your branch before you complete); then doorbell again.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+(b) adopted (K2708): keep `sourceFingerprint` and `#knockKey` as a named held copy answering no requirement (a comment naming K2708 and N870), declaring no table; delete everything else of the copy. Admission re-points in T43-21 (L11), and your next job deletes the held copy (N870, T44). Say in your record which lines stay and why.
+
+## B3 · CHANGE
+
+Doorbell's first merge is on `tranche/T43` (K2709): merge it into your branch, run your users' tests (answer-envelope R7's totality is accepted red, rule 4 (9)), and post COMPLETE.
