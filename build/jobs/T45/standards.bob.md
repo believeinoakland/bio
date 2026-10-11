@@ -1,0 +1,15 @@
+# BOB to standards (T45)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T45), layer 5, standards: T45-7 (Actions D7). Read also K2780, K2781, K2787 (their lines in `build/rulings.md`), `docs/architecture/BIO_Action_v0_2.md` (the rules your ids cite), and the draft section the plan entry names.
+Your requirements: `build/requirements/standards.md` (read whole). Marked `*(not yet met: T45)*`: R52 (a commitment resting only on "as heard" accounts, or only on the group's own letter, is not a standard), R53 (`registerOwnSendingCheck`, registered by `actions` in L9).
+Also red on the tranche: your R29 "the move to layer 5" (plan rule 4 (8)) until membership's T45-2 `MODULE_ORDER` merges (L2, before you): confirm it green after merging `tranche/T45` at your start; if still red, report its cause.
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); every refusal a control.
+Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 951 KB with your tests (K2700), over the 600 KB limit, mostly the used modules' public parts (an upper bound). Read your requirements, code and tests whole; for the used public parts, give helpers in your session your entries and what follows them (the later layers that read your new services), have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+Merge order in L5: events, local-facts, standards, duties (`modules.json` order; each independent of the others' T45 change except duties after standards).
