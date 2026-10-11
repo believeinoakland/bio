@@ -485,3 +485,22 @@ test("R36: with no AGENT_WORKER bound, the act answers 200 with performed: false
   assert.equal(aiRunsOf(y.ctx).testBarRecord(PASSED).ok, true);
   assert.equal((await y.call(stamps(await stored(y)))).body.transcription.performed, true);
 });
+
+test("R6 (control-plane R17; CONTROL-PLANE #29 J1, B3): the gated hook stamps an `ai` credential's principal as the viewer its arms receive (pdfstructure's, the queue's, affordances'), as the generic forward does; a binding class is `class:<cls>`", async () => {
+  const run = async (op, cls, aiCred) => {
+    const seen = [];
+    const stub = { fetch: async (r) => { seen.push(String(r instanceof Request ? r.url : r));
+      return new Response(JSON.stringify({ ok: true, result: { status: 200, body: { ok: true } } }), { headers: { "content-type": "application/json" } }); } };
+    const env = { STORE: { idFromName: (n) => n, get: () => stub }, CAPTURES: { get: async () => null } };
+    const url = new URL(`http://x/api/?op=${op}&sha256=${"c".repeat(64)}`);
+    await gatedOp({ req: new Request(url), url, env, op, cls, viaSession: false, sessMember: null, sessViewer: null,
+      sessIdentity: null, sessRights: [], sessCaps: [], aiCred, storeName: "bio", stub });
+    return seen.map((u) => new URL(u).searchParams.get("viewer")).filter((v) => v !== null);
+  };
+  const ai = { principal: "member:ann", tokenId: "t1" };
+  assert.deepEqual(await run("pdfstructure", "ai", ai), ["member:ann"]);
+  const aff = await run("affordances", "ai", ai);
+  assert.ok(aff.length > 0 && aff.every((v) => v === "member:ann"), JSON.stringify(aff));
+  /* negative control: a binding class is stamped as its class, never a principal */
+  assert.deepEqual(await run("pdfstructure", "admin", null), ["class:admin"]);
+});

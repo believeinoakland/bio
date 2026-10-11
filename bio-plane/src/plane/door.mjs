@@ -50,9 +50,9 @@ export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, 
                                 sessCaps, aiCred, storeName, stub, grantMember }) {
   const store = () => env.STORE.get(env.STORE.idFromName(storeName));
   /* The stamps, from the authenticated caller: a session's member, viewer and identity; an `ai` credential's principal
-     where the act reads its member (REC-134); a binding class as `class:<cls>`, or `token:<cls>` as an author (D-311). */
-  const viewer = viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`;
-  const principalViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
+     as its viewer and identity (control-plane R17, as its generic forward stamps it; REC-134); a binding class as
+     `class:<cls>`, or `token:<cls>` as an author (D-311). */
+  const viewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
   const identity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
   const author = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
   const by = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
@@ -67,9 +67,9 @@ export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, 
   if (op === "registeraudit") return registerAuditOp(env, store(), { json, doAnswer, storeSilent, storeRefusal, captureKey,
     storeName, cls });
   if (INSTANCE_SETUP_OPS.includes(op)) return instanceSetupOp(op, url, env, storeName, { cls, scratch: SCRATCH, json, doAnswer,
-    storeSilent, storeRefusal, viewer: principalViewer });
+    storeSilent, storeRefusal, viewer });
   if (CONNECTIONS_OPS.includes(op)) return connectionsOp(op, url, store, { json, doAnswer, storeRefusal, storeSilent,
-    viewer: principalViewer, identity });
+    viewer, identity });
   if (GOVERNOR_OPS.includes(op)) return governorOpResponse(op, url, store, { json, doAnswer, storeRefusal, storeSilent });
   {
     const c = await captureOp(op, req, url, env, store, { json, storeSilent, storeRefusal, doAnswer, storageAbsent,

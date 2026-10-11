@@ -11,6 +11,8 @@
 - R35 (N839): `controlPlaneOwnerOps`' getter `caseAccount: () => caseAccountOf(ctx)` replaces `caseAuthoring`.
 - Edges (`modules.json`, as B1 and K2613 direct): plane → `doorbell`, `case-account`, `pdf-pixels`, `run-rules`, and `agent-worker` (test-only: R36's test holds `TRANSCRIBE_PAGES_MAX` and `TRANSCRIBE_IMAGE_MAX_BYTES` equal to agent-worker's; the architecture check refuses the import without it). BOB's to keep or strike.
 
+**B3 (CHANGE; CONTROL-PLANE #29 J1):** `door.mjs`' gated hook stamped an `ai` caller's `viewer` `class:ai` while control-plane R17 (and its generic forward, `control-plane/index.mjs`:931, :1959) stamps the credential's principal. The arms reading `viewer` are affordances', the queue's, capture's (`captureOp`), extraction's (`pdfstructure`, `pagetranscribe`), and instance-setup's and connections' (which already took the principal as `principalViewer`). Fixed in place: `viewer` is the principal for `ai`, `principalViewer` folded into it (5 lines). Test `t42.test.mjs` (R6, B3): `pdfstructure` and `affordances` from an `ai` caller reach the store with `viewer=member:ann`; negative control: a binding class is `class:admin`; the test fails on the old line (checked). Not changed, noted for BOB: `author` for an `ai` caller is `token:ai` here, where R17 names `class:ai/<tokenId>` (REC-134); `pagetranscribe` refuses `ai` regardless, and no arm I changed reads it differently. Suites after the fix: plane 184 (1 fail, R35, as before), control-plane 216/0, affordances 232/0, queue 136/0, capture 123/0, extraction 150/0, connections 119/0.
+
 **Measured (draft-T42-transcribe.md §8 doubt 1):** `scan-dct-page.pdf` (3300×2550 colour DCT, 4:2:0) renders with `decodeDct` to a 1,136,289 B PNG in ~0.7 s CPU (node, 3 runs: 705–762 ms); the CCITT G4 page 129,366 B in ~0.3 s. Eight such pages ≈ 6 s CPU in the object per act, each PNG under the 5 MiB limit (doubt 2 not met by these pages). No cap change proposed.
 
 **Deferred:** none.
@@ -25,7 +27,7 @@
 - Users' suites (P11): no module uses `plane`.
 - `checks/format.mjs`: 0 failures; `architecture.mjs bio plane`: 0 failures; `coverage.mjs bio plane`: 38 of 38 live ids named, 0 failures; `ownership.mjs bio plane tranche/T42`: 1 failure, `build/modules.json` outside plane's paths (the edges B1 asks this job to add).
 
-Size (session_019KPdWXgGFwpp8DJJjNuRry): test runs 7, module lines 1,683 (`src/plane/`, 139 new in `transcribe.mjs`)
+Size (session_019KPdWXgGFwpp8DJJjNuRry): test runs 23, module lines 1,683 (`src/plane/`, 139 new in `transcribe.mjs`)
 
 ## J1 · QUESTION
 
@@ -36,4 +38,4 @@ Two readings of R36, applied; the job carries on on them.
 
 ## J2 · COMPLETE
 
-T42-30 applied (R35, R36, R37, R38); record's Completion section has the detail. Edges added in modules.json: plane → doorbell, case-account, pdf-pixels, run-rules (as B1 asks), and agent-worker (test-only: R36's equality test of TRANSCRIBE_PAGES_MAX / TRANSCRIBE_IMAGE_MAX_BYTES; architecture refuses the import without it) — yours to keep or strike. K2684's two outcomes named in R36's tests. Plane suite 182/183: the one red is R35's test (t42.test.mjs), because control-plane's owner-ops.mjs:37–38 still call of.caseAuthoring() until T42-29 merges (before the plane in L11's order). migrate-released 1/1; no users of plane. Checks: format 0, architecture 0, coverage 38/38; ownership 1 (build/modules.json, the edges). Measured: 3300×2550 colour DCT page → 1.1 MB PNG, ~0.7 s CPU/page with decodeDct (8 pages ≈ 6 s/act); no cap change proposed. Size (session_019KPdWXgGFwpp8DJJjNuRry): test runs 7, module lines 1,683.
+T42-30 applied (R35, R36, R37, R38); record's Completion section has the detail. Edges added in modules.json: plane → doorbell, case-account, pdf-pixels, run-rules (as B1 asks), and agent-worker (test-only: R36's equality test of TRANSCRIBE_PAGES_MAX / TRANSCRIBE_IMAGE_MAX_BYTES; architecture refuses the import without it) — yours to keep or strike. K2684's two outcomes named in R36's tests. Plane suite 182/183: the one red is R35's test (t42.test.mjs), because control-plane's owner-ops.mjs:37–38 still call of.caseAuthoring() until T42-29 merges (before the plane in L11's order). migrate-released 1/1; no users of plane. Checks: format 0, architecture 0, coverage 38/38; ownership 1 (build/modules.json, the edges). Measured: 3300×2550 colour DCT page → 1.1 MB PNG, ~0.7 s CPU/page with decodeDct (8 pages ≈ 6 s/act); no cap change proposed. Size (session_019KPdWXgGFwpp8DJJjNuRry): test runs 23, module lines 1,683.
