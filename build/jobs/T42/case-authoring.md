@@ -78,3 +78,7 @@ T42-23 complete on job/T42/case-authoring (tranche/T42 merged after K2673). Agai
 Checks: format, architecture and coverage report 0 failures. Ownership: 3 files changed, 0 failures (the modules.json edges are now on the tranche).
 
 Size (session_017gKhVp4wij8NKw7oL1jXhs): test runs 37, module lines 3707
+
+## J5 · COMPLETE
+
+B4 applied (K2675): caseAuthoringOf now throws 'case-authoring: record-core refused its table declaration: <reason> (<table>)' when declarePurge refuses, and caches no instance until the declaration succeeds (sources/credentials pattern). New test 'R28 (K2675)' in invariants.test.mjs with a negative control; it fails with the fix reverted. tranche/T42 merged (review in). Runs: case-authoring 184/184, case-account 21/21, review 46/46, affordances 232/232, op-declarations 128/128, control-plane 216/216, plane 166/166, answer-envelope 28/29 (families.test.mjs:425, accepted red 6). Checks: format, architecture, coverage, ownership all 0 failures. Record updated.
