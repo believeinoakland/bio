@@ -4,6 +4,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, toStage, V, OFFICE, ms } from "./fixture.mjs";
+import * as conformanceExports from "../../../src/conformance/index.mjs";
 
 const by = (who) => ({ author: V(who), viewer: V(who) });
 const read = (w, nowMs) => w.esc.escalationRead({ id: w.E, viewer: V("bob"), ...(nowMs ? { nowMs } : {}) });
@@ -139,18 +140,33 @@ test("R23 an overridden action with no rests_on leg naming this escalation's det
   assert.equal("premise_override" in attach(w, plain), false);
 });
 
-test("R30 every item the timeline source answers carries public: true (case-authoring R57), and its labels carry no member's reason; the stop and reopening wait on R31 (T46)", () => {
+test("R30 an opening, stage move, attachment or end carries public: true; an evaluation, decline or suspension (and the resumption that ends one) is the group's deliberation and carries public: false (v0.2 rule 15; K2850); no label carries a member's reason; the stop and reopening wait on R31 (T46)", () => {
   const w = seeded({ structure: true });
   w.clerk = w.ent("office", "Town Clerk");
   w.D = w.determine({ project: w.P, actor: { ...OFFICE.clerk, entity_id: w.clerk },
                       outcomes: [{ standard: "STD-2026-0001-a", outcome: "noncompliant" }] });
-  w.clock.now = "2026-09-28T01:00:00Z";
-  w.esc.escalationOpen({ reason: "SECRET-OPENING", determination: w.D, ...by("bob") });
-  w.E = w.esc.escalationsFor({ determination: w.D, viewer: V("bob") }).items[0].id;
+  w.clock.now = "2026-09-20T00:00:00Z";
+  w.E = w.esc.escalationOpen({ reason: "SECRET-OPENING", determination: w.D, ...by("bob") }).id;
+  w.clock.now = "2026-09-21T00:00:00Z";
   w.esc.escalationDecline({ id: w.E, to: 2, reason: "SECRET-DECLINE", ...by("bob") });
   w.esc.escalationSuspend({ id: w.E, reason: "SECRET-SUSPEND", ...by("bob") });
+  w.esc.escalationResume({ id: w.E, reason: "SECRET-RESUME", ...by("bob") });
+  adv(w, 2);
+  const n = w.action({ project: w.P, restsOn: [w.D] });
+  attach(w, n, { reason: "SECRET-ATTACH" });
+  w.correspond(n, "sent", "2026-09-02");
+  adv(w, 3);
+  w.correspond(n, "received", "2026-09-10");
+  adv(w, 4);
+  w.esc.escalationEvaluate({ id: w.E, response: { action: n, ord: 1 }, reading: "complied", reason: "SECRET-EVAL", ...by("bob") });
+  w.determine({ project: w.P, act: w.determinations.get(w.D).act.id, outcomes: [{ standard: "STD-2026-0001-a", outcome: "compliant" }],
+                at: "2026-09-22T00:00:00Z" });
+  w.addressedBy.set(w.D, { state: "addressed", parts: [{ id: "CONS-2026-0001-p" }] });
+  w.clock.now = "2026-09-23T00:00:00Z";
+  assert.equal(w.esc.escalationEnd({ id: w.E, ...by("bob") }).ok, true);
   const items = w.source.fn({ set: [w.clerk], viewer: V("bob") }).items;
-  assert.deepEqual(items.map((x) => [x.kind, x.public]), [["open", true], ["decline", true], ["suspend", true]]);
+  assert.deepEqual(items.map((x) => [x.kind, x.public]), [["open", true], ["decline", false], ["suspend", false],
+    ["resume", false], ["advance", true], ["attach", true], ["advance", true], ["advance", true], ["evaluate", false], ["end", true]]);
   assert.ok(!JSON.stringify(items).includes("SECRET"), "no reason in any item");
 });
 
@@ -203,4 +219,26 @@ test("R32 the read answers context: the actions the viewer may see resting on th
   assert.deepEqual(edge(r, 3).ids, [breach, `${breach}#0`]);
   /* nothing attaches as context: a non-breach action is refused NOT_A_BREACH_ACTION */
   assert.equal(attach(w, rfc).reason, "NOT_A_BREACH_ACTION");
+});
+
+test("R1 R27 a void determination (conformance R33) is refused DETERMINATION_VOID through conformance.determinationVoided, after DETERMINATION_SUPERSEDED and before NOT_NONCOMPLIANT; nothing written; control: the same determination not void opens", { skip: typeof conformanceExports.determinationVoided !== "function" && "conformance's determinationVoided (T45-23) not merged yet" }, () => {
+  const w = seeded();
+  const d = w.determinations.get(w.D);
+  const causes = [{ kind: "check_voided", check: "CHK-1" }];
+  /* R33: void stays live, its outcomes read undetermined, the recorded ones beside them */
+  d.void = { causes };
+  const outcomes = d.outcomes;
+  d.outcomes = outcomes.map((o) => ({ standard: o.standard, outcome: "undetermined", recorded_outcome: o.outcome }));
+  const before = w.snapshot();
+  for (const act of ["escalationOpen", "declineToEscalate"]) {
+    const r = w.esc[act]({ reason: "Worth it.", determination: w.D, ...by("bob") });
+    assert.deepEqual(r, conformanceExports.determinationVoided(w.D, causes), act);
+  }
+  /* after the supersession: a superseded void determination answers DETERMINATION_SUPERSEDED */
+  w.supersede(w.D, "CONF-2026-0999-next");
+  assert.equal(w.esc.escalationOpen({ reason: "Worth it.", determination: w.D, ...by("bob") }).reason, "DETERMINATION_SUPERSEDED");
+  assert.deepEqual(w.snapshot(), before);
+  /* control */
+  d.superseded_by = null; delete d.void; d.outcomes = outcomes;
+  assert.equal(w.esc.escalationOpen({ reason: "Worth it.", determination: w.D, ...by("bob") }).ok, true);
 });

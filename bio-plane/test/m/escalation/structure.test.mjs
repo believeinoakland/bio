@@ -215,7 +215,9 @@ test("R30 escalation registers once with events.registerEventSource at start; fo
   const history = read(w).history;
   assert.deepEqual(all.items.map((x) => x.kind), history.map((h) => h.kind));
   assert.deepEqual(all.items.map((x) => x.at), history.map((h) => h.at));
-  assert.ok(all.items.every((x) => x.ref === w.E && Object.keys(x).sort().join() === "at,kind,label,public,ref" && x.public === true));
+  assert.ok(all.items.every((x) => x.ref === w.E && Object.keys(x).sort().join() === "at,kind,label,public,ref"));
+  /* K2850: outward acts public, the group's deliberation not */
+  assert.ok(all.items.every((x) => x.public === !["evaluate", "decline", "suspend", "resume"].includes(x.kind)), "public by kind");
   assert.deepEqual([...new Set(all.items.map((x) => x.kind))].sort(), [...TIMELINE_KINDS].sort());
   const label = (k) => all.items.find((x) => x.kind === k).label;
   assert.equal(label("open"), `Escalation ${w.E} opened at stage 1 (documentation)`);

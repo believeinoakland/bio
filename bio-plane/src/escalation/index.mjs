@@ -67,6 +67,8 @@ import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { conformanceOf, noSuchDetermination, determinationSuperseded } from "../conformance/index.mjs";
+/* conformance R33's `determinationVoided` (T45-23), read off the module so this one loads before that job merges. */
+import * as conformanceExports from "../conformance/index.mjs";
 import { consequencesModule } from "../consequences/index.mjs";
 import { Actions, actionsOf, actionFacts, actionOverdue, localToday, zoneOf, noSuchAction } from "../actions/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
@@ -99,6 +101,9 @@ export const ACCOUNTABILITY_PURPOSES = Object.freeze(["official_request", "overs
 export const OVERSIGHT_KINDS = Object.freeze(["oversees", "appoints"]);
 /** R30: the escalation's own acts, as the timeline's "what we did" lane names them (the log's kinds). */
 export const TIMELINE_KINDS = Object.freeze(["open", "advance", "attach", "evaluate", "decline", "suspend", "resume", "end"]);
+/** R30 (K2850): the acts that are the group's deliberation, answered `public: false` (a resumption with the suspension
+ *  it ends); every other act is outward. */
+const DELIBERATION = new Set(["evaluate", "decline", "suspend", "resume"]);
 /** R30: the lane's bound when the timeline states none, and its most (events R27's clamp). */
 export const TIMELINE_LIMIT = 100;
 export const TIMELINE_MAX = 500;
@@ -551,25 +556,16 @@ export class Escalation {
     return str(a.role) !== "" && a.role === b.role && a.body === b.body;
   }
 
-  /* R14 (T45; conformance R37): the standing cure links on the escalation's determination as `curesOf` answers them to
-     this viewer, `[{link, cure, standard, by, at, cure_standing}]`; none where conformance holds no such read yet or
-     answers none, so only the same act can restore compliance (never read as restored). */
+  /* R14 (T45; conformance R37, K2850): the standing cure links on the escalation's determination as `curesOf` answers
+     them to this viewer, `{standards: [{standard, link, ended}]}`, `link` the standing link `{link, cure, standard, by,
+     at, cure_standing}` or null; none where conformance holds no such read yet or answers none, so only the same act
+     can restore compliance (never read as restored). */
   #cures(e, viewer) {
     if (typeof this.conformance.curesOf !== "function") return [];
     const r = this.conformance.curesOf({ determination: e.determination, viewer });
-    if (!r || r.ok === false) return [];
-    const out = [];
-    const take = (x, standard) => {
-      if (!isObj(x)) return;
-      if (isObj(x.link) && !("cure" in x)) return take(x.link, standard ?? x.standard);
-      if (typeof x.cure === "string") out.push({ ...x, standard: x.standard ?? standard ?? null });
-    };
-    for (const k of ["standing", "links", "items", "standards", "cures"]) {
-      const v = r[k];
-      if (Array.isArray(v)) v.forEach((x) => take(x, isObj(x) ? x.standard : null));
-      else if (isObj(v)) for (const [std, x] of Object.entries(v)) take(x, std);
-    }
-    return out;
+    if (!r || r.ok === false || !Array.isArray(r.standards)) return [];
+    return r.standards.filter((x) => isObj(x) && isObj(x.link) && typeof x.link.cure === "string")
+      .map((x) => ({ ...x.link, standard: x.link.standard ?? x.standard }));
   }
 
   #consequencesState(e, viewer) {
@@ -931,6 +927,10 @@ export class Escalation {
       const next = by ? this.conformance.determinationRead({ id: by, viewer }) : null;
       return determinationSuperseded(determination, next && next.ok !== false ? by : null);
     }
+    /* R1, R27 (T45; conformance R33; K2850): a void determination, answered by conformance's one site, after the
+       supersession and before NOT_NONCOMPLIANT. */
+    if (isObj(d.void) && typeof conformanceExports.determinationVoided === "function")
+      return conformanceExports.determinationVoided(determination, Array.isArray(d.void.causes) ? d.void.causes : []);
     const pursued = outcomesOf(d).filter((o) => o.outcome === "noncompliant").map((o) => o.standard);
     /* DEC-49 REGION is-determination-noncompliant */
     if (!pursued.length)
@@ -1529,8 +1529,9 @@ export class Escalation {
         if (x.kind === "attach" && (!seen.get(x.action) || secret.has(x.action))) continue;
         const t = instantMs(x.at);
         if (!(t >= lo && t <= hi)) continue;
-        /* case-authoring R57: each item marked public; a label names no person and no reason (a stop is dated only) */
-        items.push({ at: x.at, label: timelineLabel(e.id, x), ref: e.id, kind: x.kind, public: true });
+        /* case-authoring R57, v0.2 rule 15 (K2850): an outward act is public, the group's deliberation (evaluation,
+           decline, suspension) is not; a label names no person and no reason */
+        items.push({ at: x.at, label: timelineLabel(e.id, x), ref: e.id, kind: x.kind, public: !DELIBERATION.has(x.kind) });
       }
     }
     items.sort((a, b) => instantOrder(a.at, b.at) || (a.ref < b.ref ? -1 : a.ref > b.ref ? 1 : 0));

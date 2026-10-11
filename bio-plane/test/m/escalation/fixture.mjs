@@ -114,7 +114,8 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [], s
       return { ok: true, items, cursor: items.at(-1)?.id ?? null, truncated: all.length > cap };
     },
   };
-  /* conformance R37 (T45): the cure links, `curesOf` answering per standard the standing link or null (a test may set
+  /* conformance R37 (T45; K2850): the cure links, `curesOf` answering `{standards: [{standard, link, ended}]}`, the
+     standing link or null (a test may set
      `conformance.curesOf` to another shape, or delete it, to drive escalation R14's defensive read). */
   const cureLinks = [];
   conformance.curesOf = ({ determination, standard, viewer }) => {
@@ -126,8 +127,9 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [], s
     return { ok: true, determination, standards: stds.map((x) => {
       const l = mine.filter((y) => y.standard === x && !y.ended).at(-1);
       return { standard: x, link: l ? { link: l.link, cure: l.cure, standard: x, by: V("alice"), at: l.at,
-                                         cure_standing: !determinations.get(l.cure).superseded_by } : null };
-    }), ended: mine.filter((y) => y.ended) };
+                                         cure_standing: !determinations.get(l.cure).superseded_by } : null,
+               ended: mine.filter((y) => y.standard === x && y.ended) };
+    }) };
   };
   /* consequences' stand-in: `addressed` per determination, `undetermined` "no consequence recorded" by default (K172). */
   const addressedBy = new Map();
