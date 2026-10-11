@@ -242,7 +242,8 @@ function startOf(starts, ledger, receipts) {
   const firstSent = ledger.findIndex((x) => x && x.direction === "sent" && isDayLike(x.at));
   const recs = (Array.isArray(receipts) ? receipts : []).filter((x) => isObj(x) && isDayLike(x.at) && Number.isInteger(Number(x.ord))
     && ledger[Number(x.ord)] && ledger[Number(x.ord)].direction === "sent");
-  const latest = (list) => list.reduce((a, x) => (a === null || String(x.recorded_at ?? x.at) >= String(a.recorded_at ?? a.at) ? x : a), null);
+  /* actions R80 (K2845): its read answers them oldest first, so the latest is last. */
+  const latest = (list) => (list.length ? list[list.length - 1] : null);
   if (starts === "served") {
     const s = latest(recs.filter((x) => x.kind === "service"));
     return s ? { day: s.at.slice(0, 10), from: "service" }

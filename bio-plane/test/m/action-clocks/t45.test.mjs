@@ -45,9 +45,9 @@ test("R2 (T45) a received rule counts from the receipt actions records when one 
   const s = P();
   assert.deepEqual([s.entry.date, s.start, s.start_from, s.start_note, s.trace.start_from, s.trace.start_note],
     ["2026-09-07", "2026-09-01", "sent", "receipt not recorded: counted from sending", "sent", "receipt not recorded: counted from sending"]);
-  /* a receipt recorded on the sent entry (Thu 3 Sept): counted from it, the trace saying so; the latest record governs. */
-  w.receipts.set(A, [{ ord: 0, kind: "receipt", at: "2026-09-02", how: "portal", recorded_at: "2026-09-02T10:00:00Z" },
-                     { ord: 0, kind: "receipt", at: "2026-09-03T09:30", how: "the clerk's stamp", recorded_at: "2026-09-04T10:00:00Z" }]);
+  /* a receipt recorded on the sent entry (Thu 3 Sept): counted from it, the trace saying so; the latest record (the last, actions R80) governs. */
+  w.receipts.set(A, [{ ord: 0, kind: "receipt", at: "2026-09-02", how: "portal" },
+                     { ord: 0, kind: "receipt", at: "2026-09-03T09:30", how: "the clerk's stamp" }]);
   const r = P();
   assert.deepEqual([r.entry.date, r.start, r.start_from, r.start_note, r.trace.start_from], ["2026-09-09", "2026-09-03", "receipt", undefined, "receipt"]);
   /* a service record is not a receipt; a receipt on another entry is not the first sending's. */
