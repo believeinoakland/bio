@@ -1,6 +1,6 @@
 # action-grammar (T45)
 
-**Status** · session_01A5ieNwm4E8kvPnNLANz7kS · depth 2 · COMPLETE · handled B3
+**Status** · session_01A5ieNwm4E8kvPnNLANz7kS · depth 2 · COMPLETE · handled B4
 
 ## J1 · COMPLETE
 
@@ -69,3 +69,20 @@ Size (session_01A5ieNwm4E8kvPnNLANz7kS): test runs 16, module lines 2792
 **Checks:** format 0 failures (153 modules); architecture . action-grammar 12 files, 27 imports, 0 failures; coverage 25 of 25; ownership 9 files, 0 failures.
 
 Size (session_01A5ieNwm4E8kvPnNLANz7kS): test runs 22, module lines 2810
+
+## J3 · COMPLETE
+
+**B4 applied** (K2859), after merging `tranche/T45`, on `job/T45/action-grammar`. Every id is still met.
+
+1. **Moved hold rows retired.** C-117.17 `PRESSURE_MARKED`, .18 `PRESSURE_NO_ENTRY`, .20 `MACHINE_CANNOT_SET_HOLD`, .21 `HOLD_REFUSED`, .23 `HOLD_RELEASE_IS_ITS_OWN_ACT`, .24 `HOLD_PROJECTS_REFUSED`, .25 `HOLD_ALREADY_RELEASED` are gone, numbers never reused (one comment in `checks.mjs` names them with .22). The pressure rows `actions` still mints, C-117.14–.16, stay (verified by grep: `actions` mints those three and none of the retired seven). Tests pin the retirement and the three kept.
+2. **R22's text rule.** `office_words` with a quotation mark, backslash or line break is `OFFICE_STATUS_WITHOUT_OUTCOME`; `found_elsewhere_note` with any of them is `FOUND_ELSEWHERE_REFUSED`.
+3. **`REPLY_OWED_REFUSED` has one site.** `actionFieldFindings` now judges the reason too: `reply_owed` and `reply_owed_reason` (1 to `REPLY_OWED_REASON_MAX` = 500 characters, no quotation mark, backslash or line break) stated together or not at all. One finding per write, and the audit judges the same. **`actions` must change (T45-27's site):** `#t45Fields` hands me `{reply_owed}` alone (actions/index.mjs ~1023), so every reply_owed write is now refused there for want of a reason. It must hand `{reply_owed, reply_owed_reason}` and delete its own `is-reply-owed-reason` region (~1027–1031); the refusal then comes from my finding. Until then `actions` is red: "R82 reply_owed: false, set by a member with a reason…" and "R36 (T45) the new tables…" (its fixture sets reply_owed with a reason). Please accept those two by name, or say if you would rather I accept a missing reason for now.
+
+**Found:** answer-envelope's `families.test.mjs` "R2, R7 (N520, N522, …): the list reads accepted-work's C-21.4 …" pins `action-grammar`'s `PRESSURE_MARKED` row (with `PRESSURE_REFUSED` and `MACHINE_CANNOT_MARK_PRESSURE`) and now throws on the retired one. It needs a re-pin to action-holds' C-149 (answer-envelope's job, T45-49). Please accept it by name.
+
+**Users' tests,** compared against `tranche/T45` itself in a separate worktree: filings 35/35, escalation 62/1, affordances 218/8, action-holds 33/2 are identical on the tranche (not mine). filing-templates 63/0, action-clocks 55/0, setup-page 83/0, instance-setup 135/0. actions 108/2 (item 3). answer-envelope 25/6 (the tranche's 5 plus the one under Found). action-replies has no tests.
+
+**Tests:** action-grammar 61 pass, 0 fail.
+**Checks:** format 0 failures; architecture . action-grammar 12 files, 27 imports, 0 failures; coverage 25 of 25; ownership 4 files, 0 failures.
+
+Size (session_01A5ieNwm4E8kvPnNLANz7kS): test runs 29, module lines 2733

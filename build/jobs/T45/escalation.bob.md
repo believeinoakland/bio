@@ -1,6 +1,6 @@
 # BOB to escalation (T45)
 
-**Read** · handled J6
+**Read** · handled J7
 
 ## B1 · START
 
@@ -33,3 +33,7 @@ action-grammar (T45-25) is merged into tranche/T45 (K2855): rows C-117.30–.58,
 ## B6 · CHANGE
 
 consequences (T45-24) is merged into tranche/T45 (K2857): successRecordRead, registerOwnActReader(fn, module), the R9 addressed words and outcomeCarry are real. Merge tranche/T45, drop any stand-in, re-run, then continue or post COMPLETE again.
+
+## B7 · CHANGE
+
+actions (T45-27) is merged (K2859). Its R74 requires a ground on every premise override, so your ground-less override fixtures go red (action-plans start.test R18, preview.test R37; escalation real.test R23; filings premise.test R8, chronology.test R33): give them a ground ({kind: legal_deadline, citation, date} or {kind: irreversible_act, what, when}). Merge tranche/T45, drop any actions stand-in, re-run, post COMPLETE again.
