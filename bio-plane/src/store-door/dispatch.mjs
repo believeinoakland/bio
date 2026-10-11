@@ -269,10 +269,10 @@ function underGrant(store, grant, asked, op, body, answer) {
    `credentials.aiKeptAway({use: "draft"})` answers it (its R35, the one site; N765: in place of instance-setup's retired
    `ASSISTANT_OFF`), so under keep-away no account is read and no draft routed; then the account that serves the member's
    draft and its limit, as `answers.askAccount({member, kind: "draft"})` answers them (its R30: `credentials.accountFor`
-   with kind `draft`, then `ai-use.useCheck`), its refusal relayed as given (`AI_NO_ACCOUNT`, `AI_USE_SWITCHED_OFF`,
-   `AI_LIMIT_REACHED`, its fail-closed `LIMITS_UNREADABLE` or `ACCOUNT_UNREADABLE`, or credentials' own, such as a key's
-   notice due). Admitted, the handler receives `{on, account: {kind, level}}`: `on` as instance-setup's `assistantState()`
-   answers it (its R53, R55), and which account serves, never the key, which stays in credentials. (K2574; wizard-scripts
+   with kind `draft`, then `ai-use.useCheck`), its refusal relayed as given (`NO_ACCOUNT`, credentials R35's row, K2577;
+   `AI_USE_SWITCHED_OFF`, `AI_LIMIT_REACHED`, its fail-closed `LIMITS_UNREADABLE` or `ACCOUNT_UNREADABLE`, or
+   credentials' own, such as a key's notice due). Admitted, the handler receives `{on, account: {kind, level}}`: `on`
+   as instance-setup's `assistantState()` answers it (its R53, R55), and which account serves, never the key, which stays in credentials. (K2574; wizard-scripts
    R27) For `writinghelp` alone the account's or limit's refusal is not answered here: it is handed to `writingHelp` as
    `assistant.refusal` (`{on, account: null, refusal}`), which orders it among its own refusals; keep-away stays first,
    at the door. So `assistantFor` answers `{refusal}` (keep-away), `{declined, on}` (askAccount's refusal) or

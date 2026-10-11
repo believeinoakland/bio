@@ -12,7 +12,8 @@ import "./harness.mjs";
 const { record: fixture } = await import("./record.mjs");
 const P = await import("../../../src/store-door/pull.mjs");
 const { doorbellOf, REASON_MAX, PULL_WITHIN_FAILED_DETAIL } = await import("../../../src/doorbell/index.mjs");
-/* C-118.7 is defined in capture's table until T43 and re-exported by the doorbell (its R21; K2609) */
+/* C-118.7 is the doorbell's alone, defined in its own table (its R21; since T43, K2609, K2726): no other module's table
+   is read for it */
 const { DOORBELL_CHECKS } = await import("../../../src/doorbell/checks.mjs");
 const { captureOf } = await import("../../../src/capture/index.mjs");
 const { provenanceOf } = await import("../../../src/provenance/index.mjs");
@@ -42,7 +43,7 @@ const heldOf = (r, knockId, sha) => {
            receipt: provenanceOf(r.ctx).registerHolds({ sha }).acquired, home: provenanceOf(r.ctx).homeOf(sha) };
 };
 
-test("R7 (doorbell R3, C-118.7; DEC-88 (2), K1037): the `pulled` resolve at the record store's door refuses a reason absent, not a string, blank or over 2,000 characters RESOLVE_NO_REASON at 400 with the doorbell's row (defined in capture's table until T43), and nothing is written — the knock still new, no receipt, no capture, no bundle (negative control: 2,000 characters is a reason)", async () => {
+test("R7 (doorbell R3, C-118.7; DEC-88 (2), K1037): the `pulled` resolve at the record store's door refuses a reason absent, not a string, blank or over 2,000 characters RESOLVE_NO_REASON at 400 with the doorbell's row (its R21, C-118.7 defined in its own table alone; K2726), and nothing is written — the knock still new, no receipt, no capture, no bundle (negative control: 2,000 characters is a reason)", async () => {
   const r = await record();
   const k = await r.knock();
   assert.deepEqual(r.held(k.knockId, k.sha256), UNTOUCHED);
