@@ -64,14 +64,15 @@ export const ACTION_HOLDS_CHECKS = Object.freeze({
       + 'legal pressure, or a counsel matter. What this named is not one you can see at the place the hold is placed, '
       + 'so nothing was written.',
   }),
-  /* R11 (v0.2 rules 10, 12): the hold notice, sent by a member's own hand. */
+  /* R11 (v0.2 rules 10, 12): the hold notice, sent by a member's own hand; `HOLD_NOT_IN_PLACE` minted only by the exported
+     `holdNotInPlace`, which `filings` R47 calls too (K2848). */
   MACHINE_CANNOT_SEND: Object.freeze({
     check: 'C-149.10', where: at("holdNoticeSent", "is-machine-send"),
     translation: 'Recording that the hold notice was sent is a member\'s statement of what she did. The credential '
       + 'that asked here is an automated one, so it cannot record it. Sign in to record it yourself.',
   }),
   HOLD_NOT_IN_PLACE: Object.freeze({
-    check: 'C-149.11', where: at("holdNoticeSent", "is-hold-not-in-place"),
+    check: 'C-149.11', where: at("holdNotInPlace", "is-hold-not-in-place"),
     translation: 'A hold notice is recorded for a hold that is in place, and the hold at this place is not: none has '
       + 'been placed, or it was released. Nothing was written.',
   }),

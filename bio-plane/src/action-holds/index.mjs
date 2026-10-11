@@ -82,6 +82,29 @@ export function withRow(r) {
 }
 const refuse = (code, detail, extra) => withRow({ ok: false, reason: code, detail, ...(extra || {}) });
 
+/* R11 (K231, K2848). THE ONE ANSWER TO ONE CONDITION: the hold at a place is not in place (none placed, or released), so
+   no hold notice is recorded for it. This module's `holdNoticeSent` answers it through here, and so does `filings` R47
+   (the notice's text), so `HOLD_NOT_IN_PLACE` is minted at one site with its one row (C-149.11). `place` is R2's
+   (`{target, ord?}`, `{project}` or `{case}`); its keys are answered beside the row as given, each a string or a whole
+   number, and nothing else of it. The detail is one fixed sentence. Writes nothing and never throws. */
+const HOLD_NOT_IN_PLACE_DETAIL = "a hold notice is recorded for a hold in place, and the hold at this place is not in place: "
+  + "none has been placed there, or it was released. Nothing was written.";
+export function holdNotInPlace(place = null) {
+  let keys = {};
+  try {
+    const p = place && typeof place === "object" && !Array.isArray(place) ? place : {};
+    for (const k of ["target", "ord", "project", "case"]) {
+      const v = p[k];
+      if (typeof v === "string" || (Number.isInteger(v) && v >= 0) || (k === "ord" && v === null && "target" in p)) keys[k] = v;
+    }
+  } catch { keys = {}; }
+  /* DEC-49 REGION is-hold-not-in-place */
+  const row = ACTION_HOLDS_CHECKS.HOLD_NOT_IN_PLACE;
+  return { ok: false, reason: "HOLD_NOT_IN_PLACE", code: "HOLD_NOT_IN_PLACE", check: row.check, translation: row.translation,
+           ...keys, detail: HOLD_NOT_IN_PLACE_DETAIL };
+  /* END DEC-49 REGION is-hold-not-in-place */
+}
+
 const clampLimit = (v, dflt, max) => { const n = Math.floor(Number(v)); return Number.isFinite(n) && n > 0 ? Math.min(n, max) : dflt; };
 const str = (v) => (typeof v === "string" ? v.trim() : "");
 /* A value given as an object or its JSON, or null. */
@@ -768,11 +791,7 @@ export class ActionHolds {
     const { place: pl } = found;
     const where = ActionHolds.#placeKeys(pl);
     const latest = this.#one(`SELECT hold FROM action_holds WHERE bundle_id=? AND ord=? ORDER BY seq DESC LIMIT 1`, pl.bundle, pl.ord);
-    /* DEC-49 REGION is-hold-not-in-place */
-    if (!latest || latest.hold !== "in_place")
-      return refuse("HOLD_NOT_IN_PLACE", "a hold notice is recorded for a hold in place, and the hold at this place is "
-        + `${latest ? "released" : "not placed"}. Nothing was written.`, where);
-    /* END DEC-49 REGION is-hold-not-in-place */
+    if (!latest || latest.hold !== "in_place") return holdNotInPlace(where);
     const day = String(at ?? "").trim();
     if (!isCalendarDate(day))
       return withRow({ ok: false, reason: "BAD_DATE", at: day, detail: "the day the notice was sent is a YYYY-MM-DD the "
