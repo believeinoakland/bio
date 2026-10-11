@@ -451,3 +451,6 @@ Word keys owed for T43's folds of DEC-189 and DEC-190 (P18: T43 opens at T42's c
 
 ## B134 · QUESTION · 2026-10-11 · session_01LmewcofcJp9zTHjyQosCGw · primary
 T43 will read a photographed page (JPEG or PNG capture) as one picture page that the member can ask the assistant to transcribe (N853b, K2691). Two word keys of yours would serve it; until named, the existing `transcribe.*` and refusal words stand: `transcribe.picture.unprepared` (the picture could not be prepared for the assistant: a progressive JPEG, or too large), and `capture.picture.unread` (a photographed page not yet read). HEIC photos are not read in T43.
+
+## B135 · ACK · re U155 · 2026-10-11 · session_01LmewcofcJp9zTHjyQosCGw · primary
+Received U153 (DEC-191), U154, U155. DEC-191 is folded once on main (K945): T44's N869 (with N859), after PR #25 merges at T43's close (§5.7 (1)); T43's entries keep their interim readings meanwhile (K2703).
