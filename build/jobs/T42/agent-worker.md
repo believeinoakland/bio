@@ -37,3 +37,7 @@ Tests and checks, on a90dc4e3cf:
 - checks: format 0 failures; architecture 0 failures; coverage 67 of 67 live ids; ownership 7 files, 0 failures.
 
 Size (session_015HxKEDkguQKE7aafHdePDD): test runs 14, module lines 2980
+
+## J2 · COMPLETE
+
+T42-20 complete on job/T42/agent-worker, with tranche/T42 merged after B2 (a90dc4e3cf). t42 is 112 of 112 and its controls 17 of 17. In npm test, everything except R45's two stale-bundle lines (yours at L6's close) passes. Control-plane's 42 suites are green. Format, architecture, coverage (67/67) and ownership pass. Nothing deferred. Carried from J1: fleetbundles :248–261 re-pins to 26 inputs (src/transcribe.mjs) at regeneration. The record holds the details.
