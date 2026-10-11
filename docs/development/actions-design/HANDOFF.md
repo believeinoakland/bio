@@ -109,3 +109,11 @@ Numbered entries; BOB answers each in rulings (K). Decision states live in `DECI
 - **Assistant (D11b):** stays with facts and requests to examine/apply existing requirements; never drafts or proposes position sentences.
 - **Election notice:** when an action's text names a pending measure or candidate, the campaign-spending rule is shown once with its citation, as legal information (D8); never a block. Thanks to an elected office whose holder is a candidate gets the same notice.
 - Testimony as an action: factual testimony on any matter plus asking a body to examine or apply an existing requirement (original option (b)); position sentences in it are pointed out for the member to remove or keep outside Civicsmith.
+
+## H16 · 2026-10-11 · Actions D12 ruled: who speaks and who is named
+
+**Carries:** Bob, 2026-10-11, typed in BOB #155's session and relayed verbatim (K2742): "D12: as recommended" (page §7 D12, S1 §B12). **Requirements must say:**
+- **Public comment:** at preparation the member chooses "for the group" (approved, stamped per `filings` R22, held to Action rules and the D2 record check) or "as myself" (kept in her own notes, no group stamp, not the group's action). With D11, policy positions are never prepared as the group's act; the evidence check (H15) is available on either.
+- **Reporter:** a press action is addressed by role and outlet (Action rules 6 and 10); the journalist's name is kept as the role's holder inside the group (`actions` R25 holder pattern, R45 `contact`), never published by the system (K1483, K1484 row 5).
+- **Press terms:** a terms note on each press action (`actions` R9 press arm), e.g. "on the record; embargo 22 Oct 06:00"; no named-spokesperson attribute (no member attribute decides who may act).
+- **Thanks:** a recognition text may name staff acting in their official roles, with a one-time reminder that public thanks names them publicly; no per-person consent.
