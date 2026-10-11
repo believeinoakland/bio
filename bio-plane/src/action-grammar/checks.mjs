@@ -834,6 +834,8 @@ export const PARTNERS_MAX = 20;
 /** R20, R22: the longest partner role or organisation, and a speaker's member id. */
 export const PARTNER_TEXT_MAX = 200;
 export const SPEAKER_MAX = 200;
+/** R23 (K2859): the longest reason a member gives for whether a reply is owed. */
+export const REPLY_OWED_REASON_MAX = 500;
 /** R24: the most claims one reply is laid out by. */
 export const BEARING_CLAIMS_MAX = 50;
 
@@ -1019,8 +1021,9 @@ export function entryFieldFindings(entries, i, facts) {
       out.push(coded(`${at} carries the office's status with no outcome: the office's own wording is quoted beside a `
         + 'received entry\'s outcome, never in its place (R22)', 'OFFICE_STATUS_WITHOUT_OUTCOME', ['record the outcome, then quote the office\'s status beside it']));
     const words = e.office_words;
-    if (!(typeof words === 'string' && words.trim() && words.length <= FIELD_TEXT_MAX && !/[\r\n]/.test(words)))
-      out.push(coded(`${at}.office_words is not the office's wording of 1 to ${FIELD_TEXT_MAX} characters on one line (R22)`,
+    if (!writable(words, FIELD_TEXT_MAX))
+      out.push(coded(`${at}.office_words is not the office's wording of 1 to ${FIELD_TEXT_MAX} characters with no quotation `
+        + 'mark, backslash or line break (R22)',
         'OFFICE_STATUS_WITHOUT_OUTCOME', ['quote the office\'s own words as office_words']));
     if (stated(e.office_status)) {
       const held = isBlock(facts) && Array.isArray(facts.responseStatuses)
@@ -1035,9 +1038,10 @@ export function entryFieldFindings(entries, i, facts) {
       out.push(coded(`${at} carries found_elsewhere on a '${String(e.direction).slice(0, 40)}' entry: a response found `
         + 'elsewhere is something received (R22)', 'FOUND_ELSEWHERE_REFUSED'));
     else if (!FOUND_ELSEWHERE_KINDS.includes(e.found_elsewhere)
-             || (stated(e.found_elsewhere_note) && !(typeof e.found_elsewhere_note === 'string' && e.found_elsewhere_note.length <= FIELD_TEXT_MAX)))
+             || (stated(e.found_elsewhere_note) && !(typeof e.found_elsewhere_note === 'string'
+                 && e.found_elsewhere_note.length <= FIELD_TEXT_MAX && !UNWRITABLE.test(e.found_elsewhere_note))))
       out.push(coded(`${at}.found_elsewhere is not one of ${FOUND_ELSEWHERE_KINDS.join(', ')}, with a found_elsewhere_note of `
-        + `at most ${FIELD_TEXT_MAX} characters (R22)`, 'FOUND_ELSEWHERE_REFUSED'));
+        + `at most ${FIELD_TEXT_MAX} characters and no quotation mark, backslash or line break (R22)`, 'FOUND_ELSEWHERE_REFUSED'));
     if (!(typeof e.artifact_sha === 'string' && e.artifact_sha.trim()))
       out.push(coded(`${at} records a response found elsewhere with no artifact_sha: it is held as a capture, never as `
         + 'an account alone (R22)', 'FOUND_ELSEWHERE_NEEDS_CAPTURE', ['capture where it was found and record its sha256']));
@@ -1055,6 +1059,8 @@ export function entryFieldFindings(entries, i, facts) {
 }
 
 /** R23 (T45; S1 §C 2, 8; v0.2 rule 6, §5): `reply_owed` absent, `true` or `false`, else `REPLY_OWED_REFUSED`;
+ *  `reply_owed` and `reply_owed_reason` (1 to `REPLY_OWED_REASON_MAX` characters by R8's text rule) are stated together or
+ *  not at all, else `REPLY_OWED_REFUSED` (K2859: `actions` R82's reason, answered through here);
  *  `follows_action` absent or `{action, ord?}`, `action` an action's record id, `ord` a non-negative integer, else
  *  `FOLLOWS_ACTION_REFUSED`, and equal to `ctx.bundleId` (the document's own id, when the caller has it)
  *  `FOLLOWS_ACTION_SELF`. Pure; never throws. */
@@ -1064,6 +1070,13 @@ export function actionFieldFindings(fm, ctx, findings) {
   if (stated(fm.reply_owed) && fm.reply_owed !== true && fm.reply_owed !== false)
     findings.push(coded(`reply_owed '${String(fm.reply_owed).slice(0, 40)}' is not true or false (R23)`, 'REPLY_OWED_REFUSED',
       ['state reply_owed: false when the body owes the group no reply, or leave it out']));
+  /* K2859 (`actions` R82): reply_owed is stated with the member's reason, `reply_owed_reason`, and the reason with it; the
+     one site of this condition, so `actions` answers its write through this arm (K231). */
+  else if (stated(fm.reply_owed) !== stated(fm.reply_owed_reason)
+           || (stated(fm.reply_owed_reason) && !writable(fm.reply_owed_reason, REPLY_OWED_REASON_MAX)))
+    findings.push(coded(`reply_owed is stated with reply_owed_reason, the member's reason of 1 to ${REPLY_OWED_REASON_MAX} `
+      + 'characters with no quotation mark, backslash or line break, and the reason only with it (R23)', 'REPLY_OWED_REFUSED',
+      ['state reply_owed and your reason for it together']));
   const fa = fm.follows_action;
   if (stated(fa)) {
     const ok = isBlock(fa) && !extraKeys(fa, ['action', 'ord']).length && typeof fa.action === 'string'
@@ -1761,56 +1774,10 @@ export const ACTION_CATALOGUE_CHECKS = {
     translation: 'Pressure is marked on something the group received. The entry named records something sent, or a '
       + 'reply that never came, so nothing was written.',
   },
-  PRESSURE_MARKED: {
-    check: 'C-117.17',
-    where: 'src/actions/index.mjs actionPressure > is-pressure-marked',
-    translation: 'That entry is already marked as pressure, and a mark is never rewritten. Nothing was written.',
-  },
-  PRESSURE_NO_ENTRY: {
-    check: 'C-117.18',
-    where: 'src/actions/index.mjs actionPressure > is-pressure-entry',
-    translation: 'The entry is named by its position in the action\'s correspondence, counted from zero, and no entry '
-      + 'stands at the position given. Nothing was written.',
-  },
-  /* R52 (K899 (7), DEC-61; N-A19): a litigation hold stated on a `legal` pressure mark, in place or released, with a
-     reason. Minted by `actions`' `actionHold` (its regions `is-hold` and `is-hold-legal-mark`). */
-  MACHINE_CANNOT_SET_HOLD: {
-    check: 'C-117.20',
-    where: 'src/actions/index.mjs actionHold > is-hold',
-    translation: 'Saying whether a litigation hold is in place is a member\'s judgement, and somebody answers for it. '
-      + 'The credential that asked here is an automated one, so it cannot say. Sign in to record it yourself.',
-  },
-  HOLD_REFUSED: {
-    check: 'C-117.21',
-    where: 'src/actions/index.mjs actionHold > is-hold',
-    translation: 'A litigation hold is recorded as in place or released, with a reason of up to 500 characters and no '
-      + 'quotation mark, backslash or line break. This one was not, so nothing was written.',
-  },
-  /* C-117.22 HOLD_NO_LEGAL_MARK retired (T45; R9; `actions` R52 amended, Actions D10): a hold is placed at a place, with
-     no legal mark asked; its number is never reused. */
-  /* R52, R56, R58 (DEC-113; K1251, K1252; N518): a hold's release is its own act (`actionHoldRelease`, rung terminal), a
-     hold names the projects it covers, and the "is this project held?" read names the projects it asks about. Minted
-     by `actions`: C-117.23 in `actionHold`, C-117.24 in the one helper `actionHold` and `projectHolds` both ask,
-     C-117.25 in `actionHold`'s body, which the release runs through (K1281). New in T27 layer 9; awaiting T28's stamp. */
-  HOLD_RELEASE_IS_ITS_OWN_ACT: {
-    check: 'C-117.23',
-    where: 'src/actions/index.mjs actionHold > is-hold-release-own-act',
-    translation: 'Releasing a litigation hold is its own act, recorded with its own reason, so that a release is never '
-      + 'a side effect of placing one. This asked to release a hold through the act that places one, so nothing was '
-      + 'written. Use the release act.',
-  },
-  HOLD_PROJECTS_REFUSED: {
-    check: 'C-117.24',
-    where: 'src/actions/index.mjs #holdProjects > is-hold-projects',
-    translation: 'Projects are named as a list of their ids, at most fifty different ones, and asking whether projects '
-      + 'are held names at least one. The list given was not of that form, so it was refused and nothing was written.',
-  },
-  HOLD_ALREADY_RELEASED: {
-    check: 'C-117.25',
-    where: 'src/actions/index.mjs actionHold > is-hold-already-released',
-    translation: 'That litigation hold is already released, and a release is stated once. Nothing was written. If the '
-      + 'group is preserving again, place a new hold.',
-  },
+  /* T45 (K2845, K2859): the moved hold rows retired once `actions` deleted its copy of the hold code (`action-holds`'
+     C-149 holds them now): C-117.17 PRESSURE_MARKED, .18 PRESSURE_NO_ENTRY, .20 MACHINE_CANNOT_SET_HOLD, .21 HOLD_REFUSED,
+     .23 HOLD_RELEASE_IS_ITS_OWN_ACT, .24 HOLD_PROJECTS_REFUSED, .25 HOLD_ALREADY_RELEASED; and C-117.22 HOLD_NO_LEGAL_MARK
+     (R9). Their numbers are never reused. */
   /* R62, R65 (K1657; ACTIONS #12 J2 (1)): the codes `actions` mints for the addressee suggestion's subject and for the
      proceeding an action belongs to. New in T33 layer 9; awaiting promotion's stamp. */
   NO_SUBJECT: {

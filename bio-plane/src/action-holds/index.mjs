@@ -14,9 +14,9 @@
  *
  * REACHED as `actionHoldsOf(host, deps)` (K61): one instance per host, created on the first call. At creation it creates
  * its tables and declares them to record-core's purge (R13), and registers its litigation-hold reader with doorbell (R4;
- * doorbell R3) and its reader of the holds over a project with ratification (R10; ratification R45). In the copy window
- * (reconciliation R19) `actions` holds both registrations and the first three tables' purge declaration; a refusal
- * naming `actions` as the holder leaves `actions`' standing, so one registration stands at any time.
+ * doorbell R3) and its reader of the holds over a project with ratification (R10; ratification R45), each once; since
+ * `actions`' job (T45-27) deleted its own (reconciliation R19; B5), these are the only ones (the plane composes this
+ * module at start, T45-47).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership   `transact`, `stampInstant`, `bundleInfo`, `readFile`, `declarePurge`; `viewerPredicate`,
  *                        `sight`, `visibilityOf`, `existenceAct`, `noSuchProject` (R2, R6–R8, R12).
@@ -30,6 +30,7 @@
  * provenance's `register` (`capture_sha`), its R48; publication's `cases` (`case_id`, `project_id`), its R40. */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
+import { actionsOf } from "../actions/index.mjs";
 import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
 import { docketOf } from "../docket/index.mjs";
 import { projectRosterOf } from "../project-roster/index.mjs";
@@ -39,7 +40,7 @@ import { isCalendarDate } from "../civil-time/index.mjs";
 import { parseFrontmatter, normalizeType, isMachineIdentity, BUNDLE_ID_RE } from "../record-grammar/index.mjs";
 import { ACTION_ACT_CHECKS, ACTION_CATALOGUE_CHECKS } from "../action-grammar/index.mjs";
 import { ACTION_HOLDS_CHECKS } from "./checks.mjs";
-import { ACTION_HOLDS_TABLES, COPIED_TABLES, migrateActionHolds } from "./schema.mjs";
+import { ACTION_HOLDS_TABLES, migrateActionHolds } from "./schema.mjs";
 
 export { ACTION_HOLDS_SCHEMA, ACTION_HOLDS_TABLES } from "./schema.mjs";
 export { ACTION_HOLDS_CHECKS } from "./checks.mjs";
@@ -72,7 +73,7 @@ const WHOLE = -1;
 const HOLD_MODE = Symbol("dec113-hold-mode");
 
 /* The catalogue-backed refusals: each carries its code, check and translation. This module's own rows (C-149) win over
-   `action-grammar`'s for a code both hold (the moved rows, in the copy window). */
+   `action-grammar`'s for a code both hold (the moved C-117 rows, until `action-grammar` retires them). */
 const ROWS = Object.assign({}, ACTION_ACT_CHECKS, ACTION_CATALOGUE_CHECKS, ACTION_HOLDS_CHECKS);
 export function withRow(r) {
   if (!r || typeof r !== "object" || r.ok !== false || typeof r.reason !== "string") return r;
@@ -120,11 +121,12 @@ const given = (v) => v !== undefined && v !== null && !(typeof v === "string" &&
 export class ActionHolds {
   #deps;
 
-  constructor({ storage, record, membership, host = null, docket = undefined, roster = undefined, now = null, env = null } = {}) {
+  constructor({ storage, record, membership, host = null, actions = undefined, docket = undefined, roster = undefined, now = null,
+                env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.#deps = { host, docket, roster };
+    this.#deps = { host, actions, docket, roster };
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : null;
   }
@@ -138,6 +140,9 @@ export class ActionHolds {
     return this.#deps[name] || null;
   }
   get docket() { return this.#reach("docket", (h) => docketOf(h)); }
+  /* R1: `actions`' `actionRead`, which answers a pressure mark stated with an entry at `actionCorrespond` (on the entry's
+     own bytes, `pressure_kind` and `pressure_note`; K2849). Reached on the same host unless a test passes its own. */
+  get actions() { return this.#reach("actions", (h) => actionsOf(h)); }
   get roster() { return this.#reach("roster", (h) => projectRosterOf(h, { record: this.record, membership: this.membership })); }
 
   migrate() { migrateActionHolds(this.sql); }
@@ -221,7 +226,7 @@ export class ActionHolds {
     const notReceived = this.#pressureRefusal({ who, mark, direction: entry.direction });
     if (notReceived) return { ...notReceived, target, ord: n };
     /* DEC-49 REGION is-pressure-marked */
-    if (this.#one(`SELECT ord FROM action_pressure WHERE bundle_id=? AND ord=?`, target, n))
+    if (this.#one(`SELECT ord FROM action_pressure WHERE bundle_id=? AND ord=?`, target, n) || entry.pressure_kind !== undefined)
       return refuse("PRESSURE_MARKED", "that entry is already marked as pressure, and a mark is never rewritten. "
         + "Nothing was written.", { target, ord: n });
     /* END DEC-49 REGION is-pressure-marked */
@@ -316,7 +321,7 @@ export class ActionHolds {
       const m = objectOf(v);
       const t = m ? str(String(m.target ?? "")) : "", n = m ? positionOf(m.ord) : NaN;
       if (!t || !Number.isInteger(n) || place.kind === "project" || t !== place.bundle || (place.kind === "entry" && n !== place.ord)
-          || !this.#one(`SELECT ord FROM action_pressure WHERE bundle_id=? AND ord=?`, t, n)) return no();
+          || !this.#marks({ action: t, viewer }).some((m) => m.ord === n)) return no();
       return { from: { kind, ref: `${t}#${n}` } };
     }
     if (kind === "pressure") {
@@ -657,6 +662,46 @@ export class ActionHolds {
     } catch { return true; }
   }
 
+  /* ================================================================ R1: the marks, wherever they were stated */
+
+  /* R1 (T45; K2849): every pressure mark on an action the viewer may see, `{bundle_id, ord, kind, note, marked_by, at,
+     project}`, in (action id, position) order: those `actionPressure` wrote in this module's table, and those stated with
+     the entry at `actions`' `actionCorrespond`, which stay on the entry and are read through `actions.actionRead` (its
+     `entries[].pressure`; who and when are the entry's `author` and `recorded_at`). `action` or `project` keeps one
+     action's or one project's actions; `kind` one kind; `after` is a cursor (`<action>#<position>`) or an action id.
+     Throws when the actions cannot be read, so no caller answers a short list. */
+  #marks({ action = null, project = null, kind = null, after = null, viewer = null } = {}) {
+    const gate = viewerPredicate(viewer);
+    const only = action ? { sql: "AND b.bundle_id = ?", args: [action] } : project ? { sql: "AND b.project = ?", args: [project] }
+      : { sql: "", args: [] };
+    const out = new Map();
+    for (const r of this.#rows(`SELECT m.bundle_id, m.ord, m.kind, m.note, m.marked_by, m.at, b.project FROM action_pressure m
+      JOIN bundles b ON b.bundle_id = m.bundle_id WHERE b.object_type='action' AND (${gate.sql}) ${only.sql}`, ...gate.args, ...only.args))
+      out.set(`${r.bundle_id}#${r.ord}`, { ...r, project: r.project ?? null });
+    const stated = this.#rows(`SELECT b.bundle_id, b.project FROM bundles b JOIN files f ON f.bundle_id = b.bundle_id AND f.path = 'bundle.md'
+      WHERE b.object_type='action' AND (${gate.sql}) ${only.sql} AND f.content LIKE '%pressure_kind:%' ORDER BY b.bundle_id`,
+      ...gate.args, ...only.args);
+    if (stated.length && !this.actions) throw new Error("action-holds: the actions cannot be read");
+    for (const c of stated) {
+      const r = this.actions.actionRead({ id: c.bundle_id, viewer });
+      if (!r || r.ok === false) continue;
+      const ledger = new Map((Array.isArray(r.correspondence) ? r.correspondence : []).map((e) => [e.ord, e]));
+      for (const e of Array.isArray(r.entries) ? r.entries : []) {
+        const p = e && e.pressure && typeof e.pressure === "object" ? e.pressure : null;
+        const key = `${c.bundle_id}#${e.ord}`;
+        if (!p || typeof p.kind !== "string" || out.has(key)) continue;
+        const l = ledger.get(e.ord) || {};
+        out.set(key, { bundle_id: c.bundle_id, ord: e.ord, kind: p.kind, note: typeof p.note === "string" ? p.note : "",
+                       marked_by: l.author ?? null, at: l.recorded_at ?? null, project: c.project ?? null });
+      }
+    }
+    const at = after ? /^(.+)#(\d+)$/.exec(String(after)) : null;
+    const past = (m) => !after ? true : at ? (m.bundle_id > at[1] || (m.bundle_id === at[1] && m.ord > Number(at[2])))
+      : m.bundle_id > String(after);
+    return [...out.values()].filter((m) => (!kind || m.kind === kind) && past(m))
+      .sort((x, y) => (x.bundle_id < y.bundle_id ? -1 : x.bundle_id > y.bundle_id ? 1 : x.ord - y.ord));
+  }
+
   /* ================================================================ R3: what still wants a hold */
 
   /** R3 (K899 (7); reconciliation R14; for `action-producers` R5): every `legal` pressure the viewer may see on which no
@@ -678,16 +723,13 @@ export class ActionHolds {
     const sees = (p) => { if (!full.has(p)) full.set(p, this.#seesFull(p, viewer)); return full.get(p); };
     /* (1) the action marks */
     if (!docketAt && !recordAt) {
-      const gate = viewerPredicate(viewer);
-      const at = from ? /^(.+)#(\d+)$/.exec(from) : null;
-      const seek = at ? { sql: "AND (p.bundle_id > ? OR (p.bundle_id = ? AND p.ord > ?))", args: [at[1], at[1], Number(at[2])] }
-        : from ? { sql: "AND p.bundle_id > ?", args: [from] } : { sql: "", args: [] };
-      const rows = this.#rows(`SELECT p.bundle_id, p.ord, p.note, p.marked_by, p.at FROM action_pressure p
-        JOIN bundles b ON b.bundle_id = p.bundle_id
-        WHERE p.kind='legal' AND b.object_type='action' AND (${gate.sql}) ${seek.sql}
-          AND NOT EXISTS (SELECT 1 FROM action_holds h WHERE h.bundle_id = p.bundle_id AND h.ord = p.ord)
-          AND NOT EXISTS (SELECT 1 FROM action_holds h WHERE h.from_kind = 'mark' AND h.from_ref = p.bundle_id || '#' || p.ord)
-        ORDER BY p.bundle_id, p.ord LIMIT ?`, ...gate.args, ...seek.args, max + 1);
+      let marks;
+      try { marks = this.#marks({ kind: "legal", after: from, viewer }); } catch {
+        return { ok: false, reason: "ACTIONS_UNREADABLE", detail: "the actions' marks could not be read; this is not an empty list" };
+      }
+      const placed = new Set(this.#rows(`SELECT DISTINCT bundle_id || '#' || ord AS k FROM action_holds`).map((r) => r.k));
+      const prompted = new Set(this.#rows(`SELECT from_ref FROM action_holds WHERE from_kind = 'mark'`).map((r) => r.from_ref));
+      const rows = marks.filter((m) => !placed.has(`${m.bundle_id}#${m.ord}`) && !prompted.has(`${m.bundle_id}#${m.ord}`)).slice(0, max + 1);
       const projects = new Map();
       for (const r of rows) {
         if (!projects.has(r.bundle_id)) {
@@ -864,15 +906,10 @@ export class ActionHolds {
     const recordAt = from ? PRESSURE_REF_RE.exec(from) : null;
     const items = [];
     if (!recordAt) {
-      const gate = viewerPredicate(viewer);
-      const at = from ? /^(.+)#(\d+)$/.exec(from) : null;
-      const seek = at ? { sql: "AND (m.bundle_id > ? OR (m.bundle_id = ? AND m.ord > ?))", args: [at[1], at[1], Number(at[2])] }
-        : from ? { sql: "AND m.bundle_id > ?", args: [from] } : { sql: "", args: [] };
-      const only = a ? { sql: "AND m.bundle_id = ?", args: [a] } : p ? { sql: "AND b.project = ?", args: [p] } : { sql: "", args: [] };
-      const rows = this.#rows(`SELECT m.bundle_id, m.ord, m.kind, m.note, m.marked_by, m.at, b.project FROM action_pressure m
-        JOIN bundles b ON b.bundle_id = m.bundle_id
-        WHERE b.object_type='action' AND (${gate.sql}) ${only.sql} ${seek.sql}
-        ORDER BY m.bundle_id, m.ord LIMIT ?`, ...gate.args, ...only.args, ...seek.args, max + 1);
+      let rows;
+      try { rows = this.#marks({ action: a || null, project: a ? null : p || null, after: from, viewer }).slice(0, max + 1); } catch {
+        return { ok: false, reason: "ACTIONS_UNREADABLE", detail: "the actions' marks could not be read; this is not an empty list" };
+      }
       for (const r of rows)
         items.push({ arrived: { action: r.bundle_id, ord: r.ord },
                      project: r.project && this.#mayName(r.project, viewer) ? r.project : null,
@@ -917,9 +954,7 @@ for (const m of ["actionPressure", "actionHold", "actionHoldRelease", "holdRelea
 const instances = new WeakMap();
 
 /** K61: the one instance per host; at creation it declares its tables (R13) and registers its litigation-hold reader
- *  (R4; doorbell R3) and its reader of holds over a project (R10; ratification R45). In the copy window (reconciliation
- *  R19) `actions` holds the first three tables' declaration and both registrations: a refusal naming `actions` leaves
- *  `actions`' standing, and this module registers once `actions`' job (T45-27) has deleted its own. */
+ *  (R4; doorbell R3) and its reader of holds over a project (R10; ratification R45). */
 export function actionHoldsOf(host, deps) {
   let h = instances.get(host);
   if (!h) {
@@ -930,29 +965,21 @@ export function actionHoldsOf(host, deps) {
     h = new ActionHolds({ ...d, host, storage, record, membership });
     instances.set(host, h);
     h.migrate();
-    /* R13: declared once; the copied tables stay declared by `actions` until its job drops them from its list. */
+    /* R13: declared once (a declaration this module already holds, from another host over the same storage, stands). */
     const declared = record.declarePurge("action-holds", [...ACTION_HOLDS_TABLES]);
-    if (declared && declared.ok === false) {
-      if (declared.reason !== "TABLE_DECLARED" || !["actions", "action-holds"].includes(declared.declaredBy))
-        throw new Error(`action-holds: record-core refused the purge declaration: ${declared.reason}`);
-      if (declared.declaredBy === "actions") {
-        const own = ACTION_HOLDS_TABLES.filter((t) => !COPIED_TABLES.includes(t));
-        const r = record.declarePurge("action-holds", own);
-        if (r && r.ok === false && r.declaredBy !== "action-holds")
-          throw new Error(`action-holds: record-core refused the purge declaration: ${r.reason}`);
-      }
-    }
+    if (declared && declared.ok === false && !(declared.reason === "TABLE_DECLARED" && declared.declaredBy === "action-holds"))
+      throw new Error(`action-holds: record-core refused the purge declaration: ${declared.reason}`);
     /* R4 (T42; N826): once per host, with doorbell (its R3). One already held by this module (another host over the same
-       storage) or by `actions` (the copy window) stands; one held by any other module is a defect of the wiring. */
+       storage) stands; one held by any other module is a defect of the wiring. */
     const doorbell = d.doorbell === null ? null : (d.doorbell || doorbellOf(host));
     if (doorbell) {
       const r = doorbell.registerReader("litigation-hold", "action-holds", () => h.holdInPlace());
-      if (r && r.ok === false && !["actions", "action-holds"].includes(r.module))
+      if (r && r.ok === false && r.module !== "action-holds")
         throw new Error(`action-holds: doorbell refused the litigation-hold reader: ${r.reason}${r.module ? ` (held by ${r.module})` : ""}`);
     }
     /* R10 (K1830; ratification R45): once per host, the reader of holds over a project that publishing at a set time
        records and checks again. Ratification is reached on the host when the composition root starts this module with
-       its environment, or given; a reader already held (`HOLD_READER_DECLARED`: `actions`' in the copy window) stands. */
+       its environment, or given; a reader already held (`HOLD_READER_DECLARED`) stands. */
     let ratification = null;
     if (d.ratification !== null && (d.ratification || d.env)) {
       try { ratification = d.ratification || ratificationOf(host); } catch { ratification = null; }

@@ -1,6 +1,6 @@
 # action-holds (T45)
 
-**Status** · session_017mnrg7XiyPMjqqHoEvnMZ7 · depth 2 · COMPLETE · handled B4
+**Status** · session_017mnrg7XiyPMjqqHoEvnMZ7 · depth 2 · COMPLETE · handled B5
 
 ## Record
 
@@ -42,7 +42,9 @@ Not-yet-met marks this job meets: **R1–R13**, each named by a test: `pressure.
 
 **Re-run after B4** (K2855: `action-grammar` merged; `tranche/T45` merged into this branch, 887af4a699). This module used no stand-in for `action-grammar` (its C-117.14–.16 and C-33.6–.9 rows are read from the real module). `action-holds`: tests 35, pass 35, fail 0. `actions`: tests 111, pass 109, fail 2, `t20` "R52 actionHold: refusals in R52's order… (C-117.20-.22)" and `t27` "R57 holdReleasePreview…": both red on `tranche/T45` alone (no file of mine involved), from `action-grammar`'s merge retiring `HOLD_NO_LEGAL_MARK`'s row; `actions`' job (T45-27) deletes those moved tests. `checks/format.mjs` 0 failures; `checks/architecture.mjs action-holds` 0 failures.
 
-Size (session_017mnrg7XiyPMjqqHoEvnMZ7): test runs 17, module lines 1184
+**After B5** (K2859: `actions` merged, its hold code deleted; `tranche/T45` merged into this branch). (1) R1: a mark stated at `actionCorrespond` now stays on the entry (flat `pressure_kind`, `pressure_note`); one reader, `#marks`, unions this module's table with the entries' marks read through `actions.actionRead` (`entries[].pressure`, who and when the entry's `author` and `recorded_at`), and `holdsDue`, `pressureFor` and a hold's `from: {mark}` read it (a failed actions read answers `ACTIONS_UNREADABLE`, never a short list); `actionPressure` answers `PRESSURE_MARKED` for an entry marked either way. `pressure.test.mjs` R1 tests the entry-stated mark on the bytes, read here, due, and prompting a hold. (2) The copy window's code is gone: `actionHoldsOf` declares all five tables and registers both readers as its own; a reader held by any other module, `actions` included, is a fault of the wiring (thrown). `readers.test.mjs`' copy-window test replaced by one for the ended window. Re-run: `action-holds` 35/35; `actions` 110/110; `checks/format.mjs` 0, `architecture.mjs action-holds` 10 product files 0, `coverage.mjs action-holds` 13/13 0, `ownership.mjs action-holds tranche/T45` 5 files 0 failures (paths now in `modules.json`).
+
+Size (session_017mnrg7XiyPMjqqHoEvnMZ7): test runs 22, module lines 1213
 
 ## J1 · QUESTION
 
@@ -64,3 +66,7 @@ T45-26 done on b2df39c1a5 (tranche/T45 merged after B3): R1–R13 met, the copy 
 ## J3 · COMPLETE
 
 B4 applied: tranche/T45 merged (887af4a699); no stand-in of action-grammar was in use. action-holds 35/35; format and architecture 0 failures. actions 109/111: t20 'R52 actionHold…(C-117.20-.22)' and t27 'R57 holdReleasePreview…' are red on tranche/T45 alone, from action-grammar's merge retiring HOLD_NO_LEGAL_MARK's row; T45-27 deletes those moved tests. Record updated.
+
+## J4 · COMPLETE
+
+B5 applied: tranche/T45 merged. (1) R1: entry-stated marks (pressure_kind/pressure_note) read through actions.actionRead and unioned with my table in holdsDue, pressureFor and from:{mark}; pressure.test.mjs R1 brought in line. (2) Copy-window code removed: all five tables declared and both readers registered as my own; the copy-window test replaced by one for the ended window. action-holds 35/35, actions 110/110; format, architecture, coverage 13/13, ownership all 0 failures. Record updated.

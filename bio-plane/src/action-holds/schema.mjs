@@ -90,8 +90,6 @@ CREATE TABLE IF NOT EXISTS pressure_records (
 /** The tables, each keyed by `bundle_id` (record-core R21, R46). */
 export const ACTION_HOLDS_TABLES = Object.freeze(["action_pressure", "action_holds", "action_hold_projects",
   "hold_notices", "pressure_records"]);
-/** The tables `actions` declared before the copy (T45-26): declared there until its own job (T45-27) drops them. */
-export const COPIED_TABLES = Object.freeze(["action_pressure", "action_holds", "action_hold_projects"]);
 
 /** Creates the tables, and R2's two `from` columns on a hold table created before them; idempotent. */
 export function migrateActionHolds(sql) {

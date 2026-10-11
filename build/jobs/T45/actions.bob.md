@@ -1,6 +1,6 @@
 # BOB to actions (T45)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -50,3 +50,7 @@ consequences (T45-24) is merged into tranche/T45 (K2857): successRecordRead, reg
 ## B10 · RESUME
 
 Your record reads WAITING ON BOB (J3), but J1–J3 were answered (B4) and B5–B9 are CHANGEs you have handled; nothing of yours waits on me. Your session is past half its window (about 66%): finish the step in hand (the test comparison), push it, note the next step in your record, and if work remains post BLOCKED (cause: context) so I restart you as ACTIONS #17; otherwise post COMPLETE.
+
+## B11 · CHANGE
+
+action-grammar is merged again (K2861): REPLY_OWED_REFUSED now has one site, action-grammar's actionFieldFindings, which judges reply_owed and reply_owed_reason together (reason 1–500, no quote, backslash or line break; stated together or not at all). In #t45Fields (~1023) hand {reply_owed, reply_owed_reason} and delete your own is-reply-owed-reason region (~1027–1031); your tests 'R82 reply_owed: false, set by a member with a reason…' and 'R36 (T45) the new tables…' go green. Merge tranche/T45, re-run, post COMPLETE. If your context is past half, note the step and post BLOCKED (context) instead.

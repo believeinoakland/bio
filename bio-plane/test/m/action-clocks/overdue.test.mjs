@@ -31,7 +31,8 @@ test("R3 overdueClocks lists every overdue or past pending entry of open visible
   assert.deepEqual(r.items.map(key), [`${A}:0`, `${A}:3`, `${D}:0`]);
   assert.deepEqual(r.items[0], { action: A, ord: 0, date: "2026-09-01", basis: "Act s.2", text: "t", status: "pending", past: true,
                                  project: null, created_by: M, basis_of: { kind: null, citation: "Act s.2" }, local_day: "2026-09-28",
-                                 zone: "America/Halifax" });
+                                 zone: "America/Halifax", owed_by: "undetermined", due_at: null, due_zone: null, steps: [],
+                                 says: clocks.OVERDUE_SAYS });
   assert.equal(r.items[0].created_by, M, "the creator, not the later reviser");
   assert.deepEqual([r.as_of, r.limit, r.actions_limit, r.truncated, r.cursor, r.zone_undetermined], ["2026-09-28", 500, 500, false, null, 0]);
   assert.deepEqual(counts(w), before, "writes nothing");
