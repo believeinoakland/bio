@@ -1,28 +1,27 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #153 (`session_01M1HKb2JkFH595E438e39Cz`, primary account, depth 1), 2026-10-11 ~09:30 UTC, refreshing at ~55% of its window (547k of 1M) with T43's L4 running and no step half done. Read `build/rulings-active.md` first; this BOB's rulings are K2684–K2713.
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #154 (`session_01EVm8g7mziJQi1eQQrAtbNW`, primary account, depth 1), 2026-10-11 ~12:58 UTC, refreshing at ~52% of its window (524k of 1M) at the T43/T44 boundary, no step half done. Read `build/rulings-active.md` first; this BOB's rulings are K2715–K2733.
 
 ## Where things stand
 
-- **T42 closed** onto `main` (PR #24, K2696; PR #23 DEC-189/190 merged first, K2695). Archive `plan/archive/T42.md` with Outcome and usage.
-- **T43 is open** on `tranche/T43` (plan `build/plan/current.md`; read its rules 1–4 whole: rule 4 lists every accepted red by name, now (1)–(12)). Opened 2026-10-11 ~06:45 UTC (K2697). Bob's meter: not yet given for T43 (asked at the opening).
-- **L1, L2, L3 closed** (K2705, K2707, K2711). L4 running: reading-pipeline merged (K2712); **EXTRACTION #20** `session_01PpDwes3iUurs4FGnAcYgt6` working, its J1 answered (B3, K2713), rung 09:28. Merge it, then close L4 (§5.6).
-- **Entries added since the opening** (P10, K1249; each in the plan): T43-16 case-carriage (L8), T43-17 affordances, T43-18 op-declarations (L11) (K2704: DEC-189's words broke their tests at T42's close); T43-19 ratification (L8), T43-20 action-clocks (L9) (K2706: fixtures writing a key twice, refused by the stricter door); T43-21 admission (L11; K2708, K2710); T43-22 case-disclosures (L8), T43-23 control-plane (L11, after T43-14) (K2710). T43-11 and T43-13 widened (re-read words from `words.json`).
-- **Requirement text** for every layer is folded (K2698, plus K2684 plane R36). STARTs written for L1–L4 in `plan/starts-T43/`; the rest are to write: L6 ai-use; L8 case-carriage, ratification, case-disclosures, case-authoring (case-account wording is folded, no job); L9 action-clocks; L11 affordances, admission, notice-producers, op-declarations, answer-envelope, control-plane, plane. Template: `plan/starts-T43/capture.txt` (a set over 600 KB gets its own workers' digest, K2700; measure with `build/plan/reading-sets.py`). Merge order per the plan's L11 line (modules.json order, plane last; T43-23 after T43-14).
-- **Timers:** backstop `BOB #153 backstop` (`trig_01763AeZ1dLXbJM99BpsRhjF`, 09:39) and `WATCH #153: tranche/T43` (`trig_01KJq5kpkourKZDR467SFbst`, into ROOT #5). Delete both at takeover (§5.1 (5)).
-- **ROOT #5** (`session_0187SrKsqhqzSTqwDk2hzcXy`): 311k of 1M at 06:10; it stays until 55% (K2679, K2687). Its BOB #153 prompt asked for a new ROOT under the old 300k rule; K2687 answers that.
-- **Channel:** UX-DESIGN read to U156, B135 posted. DEC-191 (U153) answered B133/B134; it is on PR #25 (U155 MERGE) and is folded in T44 (N869, K2703).
+- **T43 closed** onto `main` (PR #26, `b9ec6c6eb5`, K2733; PR #25 DEC-191/DEC-192 merged first, K2732). Archive `plan/archive/T43.md` with its Outcome, the reds carried to T44 by name, and usage.
+- **T44 is not open.** `build/plan/next.md` is its source; `build/plan/draft-T44.md` (adopted, K2719) holds the requirement text for N868, N869 (with N859) and N870; DEC-192 (now on `main`) amends N869 as N876 states (K2729: its doubts 1–4, 7, 8 are answered by DEC-192; re-word the draft's N869 lines at the opening).
+- **Doable in T44** (each states its module and hard reason): N868 (L1 image-codecs then pdf-pixels), N870 (L3 capture), N869+N859+N876 (L4 extraction; L6 ai-use with N871; L11 notice-producers, plane), N872 (L8 case-carriage), N873 (steps), N874 (L11 plane and affordances), N875 (L11 store-door), N877 and N878 (L11 affordances, op-declarations), and promotion's stamp (rule 4 (2): rows T43's L3+ jobs changed; K1680). Left out with their hard reasons as `archive/T43.md` "Left out" lists (N751, N780, N794, N824, N828, N829, N842, N847, N852, N853c, N855, N858, N861, N865, T41's carried rows).
+- **Timers:** backstop `BOB #154 backstop` (`trig_01AjuMtHwJgAMyLrGd5KPNmU`) kept until your takeover (§5.8 (3)); delete it at takeover. No WATCH (deleted at T43's close).
+- **ROOT #5** (`session_0187SrKsqhqzSTqwDk2hzcXy`): 320k of 1M at 09:31; it stays until 55% (Bob's K2679; K2715 answered the start prompt's old "ROOT #7").
+- **Channel:** UX-DESIGN read to U158; B138 (ACK of DEC-192) posted. Design lanes: investigation H43 (done), actions H15 (nothing handed off).
+- **Container:** `npm ci` was run here in agent-runner (`--ignore-scripts`), sheet-worker, file-scanner; a fresh container needs it again before `fleetbundles` (K1980).
 
 ## Open with Bob
 
-- His weekly meter reading for T43 (asked at the opening).
+- His weekly meter reading (not given for T43; asked again at its close).
 - UX-DESIGN (`session_014uT5e8EjnRxmEeUDDg2cYa`) waits on Bob's "proceed" before publishing the layouts page.
-- ACTIONS-DESIGN #2 (`session_01RukQneSYmxg4FvfJ9aXccd`): HANDOFF read to H15; D12–D16, D18, D19 open with Bob. INVESTIGATION-DESIGN: H43 (done).
+- ACTIONS-DESIGN #2 (`session_01RukQneSYmxg4FvfJ9aXccd`): D12–D16, D18, D19 open with Bob.
 
 ## Next steps, in order
 
-1. Take over (§5.1): archive BOB #153 once idle and write its `BOB-final` row under T43; delete its backstop and WATCH; arm your own (WATCH into ROOT #5).
-2. Watch L4 (§5.4); merge extraction (§5.5); close L4 (§5.6: regenerate in K1540's order; `npm ci` in agent-runner `--ignore-scripts`, sheet-worker, file-scanner, agent-worker if the container restarted). L5 has no entry; start L6 (ai-use), then L8, L9, L11 as the plan lists.
-3. Close T43 (§5.7): (1) PR #25 (UX-DESIGN's MERGE, U155; K945: keep its text in any conflict; a draft is marked ready first, as K1885, K2068, K2169, K2258, K2695), merging `main` into the tranche if it moved; then **run every module's tests** (`.github/scripts/module-tests.mjs`, K2704) as well as `checks/run.mjs`, and fix or accept by name any red; (2) archive the plan `CLOSING`; (3) PR `tranche/T43` → `main`, merged with the GitHub merge tool (method `merge`) on Bob's standing direction in the product's CLAUDE.md (K1177) and the standing list (`mcp__github__merge_pull_request`); no refusal of either merge is recorded; (4) delete timers; (5) report to Bob, ask his meter.
-4. Open T44 at once (§5.2) from `next.md`: N849…N870 as each states; new this tranche: N865 (legacy-ui, Bob's), N866 (plane author stamp), N868 (larger photos), N869 (DEC-191, after PR #25), N870 (capture's held fingerprint copy, after T43-21); N859 waits with N869.
+1. Take over (§5.1): archive BOB #154 once idle and write its `BOB-final` row under T43; delete its backstop.
+2. Open T44 at once (§5.2): write it from `next.md` with its legacy census (legacy-ui stays, K633) and rule 4 from `archive/T43.md`'s carried reds; fold `draft-T44.md` (with DEC-192's re-wordings) into requirements before each layer's START; create `tranche/T44` from `main`; arm the WATCH (into ROOT #5); start L1. Ask Bob for his meter in one line.
+3. In STARTs: a job reads its own code and tests whole (P20, mechanics §6 step 2); two T43 jobs skipped it and affordances' whole read then found three flaws (K2726, K2727, K2730): say so in each START.
+4. At T44's close: merge `main` if it moved, run every module's tests (`module-tests.mjs`, ~45 min) and the checks; accept or fix every red by name before the PR (K2704, K2732); then PR `tranche/T44` → `main`, merged with the GitHub merge tool (method `merge`, full 40-character head sha) on Bob's standing direction in the product's CLAUDE.md (K1177; standing list `mcp__github__merge_pull_request`); no refusal of it is recorded.
 5. Commit build state only to the tranche branch; `main` moves only by §5.7.
