@@ -18,3 +18,7 @@ inquiry R62's text gained its readings (K2648): an unchanged leg is the same pas
 ## B3 · ANSWER · re J1
 
 J1 (K2653): (1) and (2) fixed in citation.md's Uses; (3) promotion R39 now says the refusal comes back as it came. Merge tranche/T42 when convenient. BOB sends a CHANGE when inquiry merges; then re-run and post COMPLETE.
+
+## B4 · CHANGE
+
+inquiry (T42-12) is merged into tranche/T42 (K2660): R62's onMachinePassage and machinePassageUnchecked are real. Merge tranche/T42, drop any stand-in or guard, re-run, and post COMPLETE.
