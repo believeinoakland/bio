@@ -189,8 +189,13 @@ async function drive(path, body, { planeCfg = {}, model = {}, noPlane = false } 
   } finally { globalThis.fetch = saved; }
 }
 const TC = (text = "The office broke the law. We ask for the minutes.") => ({ op: "textcheck", text });
-const INF = (audience = "oversight") => ({ op: "infractiondraft", matter: "PROJ-T45", audience });
-const BEAR = { op: "bearingdraft", action: ACTION_ID, reply: `${ACTION_ID}#1` };
+/* K2824: the records a draft is about arrive in the task, from the door; `doc` is the record text they carry. */
+const RECORD = (doc = SENT) => ({ plan: { id: PLAN_ID, title: "the plan" }, actions: [{ id: ACTION_ID, kind: "records_request" }],
+  correspondence: [{ ord: 1, direction: "received", text: `the reply says ${doc}` }], findings: [{ id: "F-1", text: doc }] });
+const INF = (audience = "oversight", doc = SENT) => ({ op: "infractiondraft", matter: "PROJ-T45", audience, record: RECORD(doc) });
+const BEARX = (doc = SENT) => ({ op: "bearingdraft", action: ACTION_ID, reply: `${ACTION_ID}#1`,
+  action_record: { id: ACTION_ID, claims: ["the minutes were withheld"] }, reply_record: { ord: 1, text: `we decline: ${doc}` } });
+const BEAR = BEARX();
 const draftBody = (task, extra = {}) => ({ task, account: ACCOUNT, pack: PACK, ...extra });
 const readBody = (task, extra = {}) => ({ task, account: ACCOUNT, grant: GRANT, ...extra });
 const nothing = (r) => [r.plane.length, r.model.length];
@@ -229,8 +234,15 @@ section("R76 · POST /draft for an action: the three tasks, and their refusals i
     { op: "textcheck", text: "x".repeat(TEXTCHECK_TEXT_MAX + 1) }, { op: "textcheck", text: 7 },
     { ...TC(), extra: 1 }, { op: "infractiondraft", matter: "PROJ-T45" }, { op: "infractiondraft", matter: "PROJ-T45", audience: "press" },
     { op: "infractiondraft", matter: "", audience: "public" }, { op: "infractiondraft", matter: "x".repeat(201), audience: "public" },
-    { ...INF(), told: "x" }, { op: "bearingdraft", action: ACTION_ID }, { op: "bearingdraft", action: ACTION_ID, reply: "" },
-    { op: "bearingdraft", action: 5, reply: "R" }, { ...BEAR, claims: [] }];
+    { ...INF(), told: "x" }, { op: "bearingdraft", action: ACTION_ID }, { ...BEAR, reply: "" },
+    { ...BEAR, action: 5 }, { ...BEAR, claims: [] },
+    /* K2824: an absent or malformed record is BAD_TASK. */
+    { op: "infractiondraft", matter: "PROJ-T45", audience: "public" }, { ...INF(), record: null }, { ...INF(), record: [] },
+    { ...INF(), record: { actions: [], correspondence: [] } }, { ...INF(), record: { ...RECORD(), findings: "F-1" } },
+    { ...INF(), record: { ...RECORD(), plan: "PLN" } }, { ...INF(), record: { ...RECORD(), members: [] } },
+    { ...INF(), record: { ...RECORD(), findings: ["x".repeat(200001)] } },
+    { op: "bearingdraft", action: ACTION_ID, reply: "R" }, { ...BEAR, action_record: undefined }, { ...BEAR, reply_record: {} },
+    { ...BEAR, action_record: "the action" }, { ...BEAR, reply_record: ["text"] }];
   for (const task of badTasks) {
     r = await drive("draft", readBody(task));
     t(`R76: the task ${JSON.stringify(task).slice(0, 70)} answers 400 BAD_TASK, before any plane or model call`,
@@ -294,9 +306,9 @@ section("R76 · textcheck: each sentence pointed out, quoted exactly, never rewr
 section("R76 · infractiondraft and bearingdraft: read only through the grant, only ASK_OPS, and answered in shape");
 {
   let r = await drive("draft", readBody(INF()));
-  t("R76: infractiondraft with a grant is offered the read tool beside the draft", r.model[0].body.tools.map((x) => x.name), ["read", "draft"]);
+  t("R76: infractiondraft with a grant is offered read_facts (its records) and the read tool beside the draft", r.model[0].body.tools.map((x) => x.name), ["read_facts", "read", "draft"]);
   t("R76 (R55): the read tool's ops are exactly ASK_OPS (no op added, run-rules R27)",
-    r.model[0].body.tools[0].input_schema.properties.op.enum, [...ASK_OPS]);
+    r.model[0].body.tools.find((x) => x.name === "read").input_schema.properties.op.enum, [...ASK_OPS]);
   t("R76 (R48): the pack is read by op=agentpack under the grant, then the reads", r.plane.map((c) => c.op), ["agentpack", "search"]);
   t("R76 (R60): every plane call carries the grant in the Authorization header and no URL carries it",
     [r.plane.every((c) => c.authorization === `Bearer ${GRANT}`), r.plane.some((c) => c.url.includes(GRANT))], [true, false]);
@@ -364,8 +376,8 @@ section("R77 (R60–R62) · record text that tells the model what to say comes b
   for (const kind of INJ_KINDS) {
     const doc = ACTION_INJECTIONS[kind];
     const runs = {
-      infractiondraft: await drive("draft", readBody(INF()), { planeCfg: { doc } }),
-      bearingdraft: await drive("draft", readBody(BEAR), { planeCfg: { doc } }),
+      infractiondraft: await drive("draft", readBody(INF("oversight", doc)), { planeCfg: { doc } }),
+      bearingdraft: await drive("draft", readBody(BEARX(doc)), { planeCfg: { doc } }),
       /* textcheck reads nothing: the text arrives only as the member's own prepared words. */
       textcheck: await drive("draft", draftBody(TC(`${INJ_WORDS(kind)}. INJECT:${kind}`))),
     };
@@ -386,6 +398,14 @@ section("R77 (R60–R62) · record text that tells the model what to say comes b
         JSON.stringify(runs.infractiondraft.out.draft).includes(INJ_WORDS(kind)) && !JSON.stringify({ ...runs.infractiondraft.out, draft: null }).includes(INJ_WORDS(kind)), true);
   }
   const r = await drive("draft", readBody(INF()));
+  t("R76 (K2824): the records the door handed in open the conversation as read_facts' result, and read_facts is offered",
+    [JSON.stringify(r.model[0].body.messages[1].content[0]), r.model[0].body.tools.map((x) => x.name)],
+    [JSON.stringify({ type: "tool_use", id: "facts_1", name: "read_facts", input: {} }), ["read_facts", "read", "draft"]]);
+  const b = await drive("draft", readBody(BEAR));
+  t("R76 (K2824, R61): bearingdraft's action and reply records reach the model only inside tool_result content",
+    [b.model.some((c) => toolResultText(c).includes(`we decline: ${SENT}`)), b.model.some((c) => nonToolResultText(c).includes(SENT))], [true, false]);
+  const big = await drive("draft", readBody({ ...INF(), record: { ...RECORD(), findings: [{ id: "F-2", file_b64: "QUJD".repeat(100) }] } }));
+  t("R76 (K2824, R63): bytes in a handed-in record never reach the model", big.model.some((c) => c.raw.includes("QUJD".repeat(100))), false);
   t("R77 (R61): record text reached the model only inside tool_result content",
     [r.model.some((c) => toolResultText(c).includes(SENT)), r.model.some((c) => nonToolResultText(c).includes(SENT))], [true, false]);
 }
