@@ -18,3 +18,7 @@ Merge order in L2: membership, project-roster, you last (the stamp). Merge `tran
 ## B2 · ANSWER · re J1
 
 All seven readings stand (K2795). On (7): `projectScope` never throws (project-roster R23), so the abstention covers only a host with no roster wired; state in your record where the plane wires it, so production always asks.
+
+## B3 · CHANGE
+
+membership (T45-2) is merged into tranche/T45 (K2796): R128 `registerProjectActGuard` and R83's MODULE_ORDER are there, with row C-56.6. Merge tranche/T45 into your branch before continuing.
