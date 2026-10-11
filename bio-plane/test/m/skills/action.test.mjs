@@ -129,8 +129,9 @@ test("R45 R16 R24 R26 no string of the layer, present or absent, carries control
   assert.ok(controlFlowAuthority("Keep going until the draft reads well.").length > 0, "the scan can fire");
 });
 
-/* `reading-guides.procedureGuidesFor`'s answer (its R13), as the run's caller passes it: the profile's guide first,
-   then the group's approved ones, each with its origin, and the legal-information label. */
+/* `reading-guides.procedureGuidesFor`'s answer (its R13; K2820), `{kind, guides: [{guide, origin, items}], label}`, as
+   the run's caller passes it: the profile's guide first, then the group's approved ones, each its id with its origin
+   and items, and the legal-information label. */
 const LABEL = { key: "guide.procedure.legalinfo", says: "legal information, not legal advice" };
 const ITEMS = [
   { route: "Ask for reconsideration by the records officer", expect: "A reply or a denial", citation: "Code § 1.2" },
@@ -139,13 +140,13 @@ const ITEMS = [
 const GROUP_ITEMS = [{ route: "Send the request again by mail", expect: "The office must respond within 10 days",
                        citation: "Code § 1.5" }];
 const answer = (over = {}) => ({ kind: "records_request", label: LABEL, guides: [
-  { guide: { id: "profile:records_request", kind: "records_request", purpose: "procedure", items: ITEMS }, origin: "civicsmith" },
-  { guide: { id: "GUD-2026-abcdefghijklmnop", kind: "records_request", purpose: "procedure", items: GROUP_ITEMS,
-             state: "group", author: "m1" }, origin: "group" },
+  { guide: "profile:records_request", origin: "civicsmith", items: ITEMS },
+  { guide: "GUD-2026-abcdefghijklmnop", origin: "group", items: GROUP_ITEMS, state: "group", author: "m1" },
 ], ...over });
 
 test("R46 the procedure_guide layer: with no guide passed, a stated absence in R9's form and the pack still renders; with procedureGuidesFor's answer, sourcing guide, each guide named with its kind and origin in the answer's order, its items only, the legal-information label carried", () => {
-  for (const none of [undefined, null, [], {}, "x", [{ kind: "k", guides: [] }], { guides: [{ guide: null, origin: "group" }] }]) {
+  for (const none of [undefined, null, [], {}, "x", [{ kind: "k", guides: [] }], { guides: [{ guide: "GUD-1", origin: "group" }] },
+                      { guides: [null, "GUD-1"] }]) {
     const layer = procedureGuideLayer(none);
     assert.deepEqual(Object.keys(layer).sort(), ["absent_because", "body", "load_when", "sourcing"], JSON.stringify(none));
     assert.equal(layer.load_when, "never, in this edition");
@@ -170,7 +171,7 @@ test("R46 the procedure_guide layer: with no guide passed, a stated absence in R
     [["profile:records_request", "civicsmith"], ["GUD-2026-abcdefghijklmnop", "group"]], "the answer's order: the profile's first");
   assert.equal(proc.guides[0].items, ITEMS, "the items, unchanged");
   for (const g of proc.guides) {
-    assert.deepEqual(Object.keys(g).sort(), ["guide", "items", "kind", "origin"], "the items only: no state, author or purpose");
+    assert.deepEqual(Object.keys(g).sort(), ["guide", "items", "kind", "origin"], "the items only: no state or author");
     assert.equal(g.kind, "records_request");
   }
   assert.ok(pack.resident.disclosable.some((d) => d.layer === "procedure_guide" && d.load_when === layer.load_when));
@@ -189,7 +190,7 @@ test("R46 R16 a procedure guide carries no clause of conduct: an item R16 finds,
                                ["citation", "at most three passes over the code"]]) {
     assert.ok(controlFlowAuthority(text).length > 0, `the scan fires on ${text}`);
     const bad = { route: "File the complaint", citation: "Code § 9", [field]: text };
-    const a = answer({ guides: [answer().guides[0], { guide: { id: "GUD-9", kind: "records_request", items: [...GROUP_ITEMS, bad] }, origin: "group" }] });
+    const a = answer({ guides: [answer().guides[0], { guide: "GUD-9", origin: "group", items: [...GROUP_ITEMS, bad] }] });
     assert.throws(() => procedureGuideLayer(a), /procedure guide GUD-9 item 2 .*carries a clause of conduct/);
     assert.throws(() => renderPack(published(), { procedure_guides: a }), /GUD-9 item 2/);
   }

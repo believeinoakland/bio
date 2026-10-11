@@ -1822,17 +1822,17 @@ export function actionDraftingLayer(catalog) {
 /** The text fields of a procedure guide's item R16 reads (`reading-guides` R13: `{route, expect?, citation}`). */
 const PROCEDURE_ITEM_FIELDS = Object.freeze(["route", "expect", "citation"]);
 
-/** THE `procedure_guide` LAYER over what the caller passed (R46): `procedureGuidesFor`'s answer, or a list of them (one
- *  per action kind). A stated absence in R9's form with no guide; with guides, `sourcing` `guide`, each named with its
- *  kind and origin, its items only, and each answer's label carried unchanged. Throws naming the guide and the item
+/** THE `procedure_guide` LAYER over what the caller passed (R46): `procedureGuidesFor`'s answer, `{kind, guides: [{guide,
+ *  origin, items}], label}` (`guide` the guide's id; reading-guides R13, K2820), or a list of them (one per action kind).
+ *  A stated absence in R9's form with no guide; with guides, `sourcing` `guide`, each named with its kind and origin in
+ *  the answer's order, its items only, and each answer's label carried unchanged. Throws naming the guide and the item
  *  when an item carries a control-flow pattern (R16). */
 export function procedureGuideLayer(answers) {
   const list = Array.isArray(answers) ? answers : answers && typeof answers === "object" ? [answers] : [];
   const sets = list.filter((a) => a && typeof a === "object").map((a) => ({
     kind: typeof a.kind === "string" ? a.kind : null,
     label: a.label ?? null,
-    guides: (Array.isArray(a.guides) ? a.guides : [])
-      .filter((g) => g && typeof g === "object" && g.guide && typeof g.guide === "object"),
+    guides: (Array.isArray(a.guides) ? a.guides : []).filter((g) => g && typeof g === "object" && Array.isArray(g.items)),
   })).filter((a) => a.guides.length > 0);
   if (sets.length === 0) return {
     load_when: "never, in this edition",
@@ -1849,9 +1849,8 @@ export function procedureGuideLayer(answers) {
       procedures: sets.map(({ kind, label, guides }) => ({
         kind,
         label,
-        guides: guides.map(({ guide, origin }) => {
-          const name = typeof guide.id === "string" ? guide.id : "an unnamed guide";
-          const items = Array.isArray(guide.items) ? guide.items : [];
+        guides: guides.map(({ guide, origin, items }) => {
+          const name = typeof guide === "string" && guide ? guide : "an unnamed guide";
           items.forEach((item, i) => {
             const texts = PROCEDURE_ITEM_FIELDS.map((f) => item?.[f]).filter((t) => typeof t === "string");
             const found = [...new Set(texts.flatMap(controlFlowAuthority))];
@@ -1860,7 +1859,7 @@ export function procedureGuideLayer(answers) {
                 + `a clause of conduct (${found.join("; ")}): a guide lists routes and replies to expect, never how the `
                 + "AI may behave");
           });
-          return { kind: guide.kind ?? kind, guide: name, origin: origin ?? guide.origin ?? null, items };
+          return { kind, guide: name, origin: origin ?? null, items };
         }),
       })),
       note: "a procedure guide lists the routes the profile or the group knows for one kind of action, in its order and "
