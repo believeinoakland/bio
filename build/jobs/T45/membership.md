@@ -29,3 +29,7 @@ Not-yet-met marks this job meets: **R128** and **R83's T45 clause** (test file `
 - No layer tests are named in the manifest.
 
 Size (session_019Mx293Q1PFFwRus5nYUaPq): test runs 9, module lines 3,744 (under 4,000, K617).
+
+## J1 · COMPLETE
+
+T45-2 done, pushed on job/T45/membership. R128 registerProjectActGuard (one slot via R81; R32 and R45 call it after their own refusals, before any write; a refusal answered unchanged, null proceeds, anything else PROJECT_GUARD_UNCHECKED; none registered: acts as today). New row C-56.6 PROJECT_GUARD_UNCHECKED (my draft translation, re-wordable) for promotion's stamp. R83: MODULE_ORDER gains case-check, action-holds, action-replies, plan-work, action-producers in modules.json's places, tolerated as not yet built and pinned. Membership tests 210/210, members 95/95, MODULE_ORDER readers 237/237; standards R29 (accepted red 8) now green. format, architecture, coverage (95/95), ownership: 0 failures. Plane bundle staled (accepted red 5). No file outside my paths. Module 3,744 lines. Details in my record.
