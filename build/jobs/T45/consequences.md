@@ -18,3 +18,15 @@ Reported, decided by me (no answer needed):
 - R20's last sentence: the read `actions` R93 uses is `successRecordRead`, not `successRecordsFor`.
 - The five harm words are exported as one frozen `ADDRESSED_WORDS` (affordances R51).
 - New rows take C-114.23 onward, in R9's and the Rows line's order.
+
+## J2 · REPORT
+
+Built on `job/T45/consequences`: R1 (void refusal), R9 amended, R17–R23 and R22 (with B2's and B3's rulings). My tests: 55 pass. The one red is `void.test.mjs` (R1), which imports `conformance.determinationVoided`, absent until conformance merges. I will switch to the named import and re-run on your CHANGE, then post COMPLETE. Checks: format, architecture, coverage (23 of 23) and ownership all show 0 failures.
+
+New reds my change makes in later modules' tests. I compared each against `tranche/T45` (where a test was already red, the cause added is mine):
+- **affordances** `catalogue.test.mjs` "R1 R12: … layer 9's op maps hold exactly its 41 mutating ops, 19 ungated reads … 62 ops". My five new ops break the count: `successrecord`, `successrevise`, `outcomecarry` (acts) and `successread`, `successrecords` (reads). That is T45-39's to re-pin.
+- **affordances** `backing.test.mjs` R19, "consequencerevise and addressedrecord … refused without their reason with a code in JUSTIFICATION_REFUSALS". `addressedrecord` now refuses a missing reason with `ADDRESSED_NO_REASON` (R9 as amended), which is not in `op-grades`' `JUSTIFICATION_REFUSALS`. T45-38 should add `ADDRESSED_NO_REASON` and `SUCCESS_NO_REASON`, and grade `successrevise` `reasoned`.
+- **op-declarations** `t33.test.mjs` "R19, R6" was already red. It now also lacks specs for my five ops (T45-45).
+- No new red in: escalation, filings (R9 was already red under rule 4 (7)), actions, action-plans, op-grades, plane, control-plane, answer-envelope, queue-producers, monitoring.
+
+For the plane (T45-47) and actions (T45-27): `registerOwnActReader(fn, module = "actions")` registers once, through `membership.listenerRefusal`.
