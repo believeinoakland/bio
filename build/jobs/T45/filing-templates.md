@@ -30,3 +30,13 @@ Two readings, building on each meanwhile.
 **Tests and checks:** `node --test bio-plane/test/m/filing-templates/*.test.mjs`: tests 63, pass 63, fail 0 (new file `offer.test.mjs`, 7 tests). Users' tests run before and after (above). `checks/format.mjs`: 0 failures; `checks/architecture.mjs bio filing-templates`: 0 failures; `checks/coverage.mjs bio filing-templates`: 28 of 28 live ids named, 0 failures; `checks/ownership.mjs bio filing-templates tranche/T45`: 7 files, 0 failures.
 
 Size (session_01XfDsBCCLPY5tHHgjXGSvMH): test runs 9, module lines 1853
+
+## J2 · REPORT
+
+Reds my merge makes in two later modules' tests (their fixtures, not their code), for you to place.
+
+With R15 in force (v0.2 rule 11), a profile template is offered only with a named writer, `sources`, a professional `no_concerns` review and another approver. The test profile's templates (`jurisdictions` R84) never carry `sources` and a professional `no_concerns` review together (records request: no sources; bylaw complaint, recognition letters: member reviews only; commitment brief: a professional review with `concerns`), so none is offered.
+- `filings` (T45-31, next after me): 32 tests newly red, each a draft or packet from a test-profile template refused `TEMPLATE_NOT_REVIEWED` (C-125.33), e.g. "R28 R3 a filing takes at most one of template and text…", "R9 the six sections…", "R31 counselPacket takes a brief template…".
+- `wizard-scripts` (T45-37): 7 newly red, its `{template}` drafts refused `WIZARD_DRAFT_REFUSED` for the same cause, e.g. "R12 R2 a {template} draft named @ and a handle reaches filing-templates' offeredVersion by name".
+Options: (a) each user's own job gives its fixture attributed templates, as my tests do (`fixture.mjs` `reviewedOf()`/`attributed()`: add sources and a professional review), meanwhile accepted reds; (b) a `jurisdictions` change making the test profile's templates fully attributed (one place, but L1 is closed and it would hide R15's not-offered case from users). I recommend (a): filings merges right after me and its R28/R31 tests should exercise the not-offered answer anyway.
+Unchanged by my merge (same reds before and after, all in rule 4): affordances, answer-envelope, control-plane, plane, queue-producers; `migrate-released` passes.
