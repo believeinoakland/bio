@@ -45,3 +45,7 @@ action-holds is merged again (K2860): holdsDue, pressureFor and from:{mark} now 
 ## B9 · CHANGE
 
 action-clocks (T45-28) and action-replies (T45-29) are merged into tranche/T45 (K2862): clockState, receipts-based counting, R16's holder, and arose_from links are real. Merge tranche/T45, drop any stand-in, re-run (action-plans: fix your R27 fixture now, B6), post COMPLETE again.
+
+## B10 · CHANGE
+
+action-plans (T45-33) and your J8 are merged into tranche/T45 (K2864). On the merged tranche your tests read 12 pass, 27 fail: every fixture start is refused DOCUMENT_FIRST_NO_REASON (action-plans R42: an option going outside the group before its infraction is documented needs why_first). Merge tranche/T45, give the fixture's starts a why_first (and keep a control that one without it is refused), drop any action-plans stand-in, re-run, post COMPLETE.
