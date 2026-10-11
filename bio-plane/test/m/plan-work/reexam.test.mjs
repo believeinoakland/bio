@@ -106,17 +106,19 @@ test("R10: the projects linked by arose_from both ways are re-examined; a respon
   await w.settle();
   assert.deepEqual(w.reexamined(q.action, ordQ).map((x) => x.plan), [q.plan]);
   assert.equal(w.marks.get(w.PL).length, 1, "P's plan gained nothing from Q's response");
-  /* forward: Q arose from P's response, so a later response on P's action re-examines Q's plan too */
-  const next = w.nextOrd(s.action);
-  w.links.arose.set(`${s.action}#${next}`, [{ arising: { project: w.Q } }]);
+  /* forward: dave records that Q arose from P's response (action-replies R2), so a later response in P re-examines Q too */
+  const link = w.replies.aroseFromLink({ target: s.action, ord: ordP, arising: { project: w.Q }, ...by("dave") });
+  assert.equal(link.ok, true, JSON.stringify(link));
   const ordP2 = await receive(w, s.action, "2026-10-05");
-  assert.equal(ordP2, next);
   assert.deepEqual(w.reexamined(s.action, ordP2).map((x) => x.plan).sort(), [w.PL, q.plan].sort());
   /* backward: P arose from a response on Q's action, so a response in P re-examines Q's plan */
   const w2 = world();
   const s2 = w2.started({ subjects: [w2.S1] });
   const q2 = planInQ(w2);
-  w2.links.arisen.set(w2.P, [{ target: q2.action, ord: 0 }]);
+  const oq = w2.actions.actionCorrespond({ target: q2.action, direction: "received", at: "2026-10-02", account: "a call", ...by("dave") }).ord;
+  await w2.settle();
+  const back = w2.replies.aroseFromLink({ target: q2.action, ord: oq, arising: { project: w2.P }, ...by("bob") });
+  assert.equal(back.ok, true, JSON.stringify(back));
   const ord = await receive(w2, s2.action);
   assert.deepEqual(w2.reexamined(s2.action, ord).map((x) => x.plan).sort(), [w2.PL, q2.plan].sort());
   /* a closed plan is not re-examined */

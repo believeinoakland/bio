@@ -1,7 +1,7 @@
 /* plan-work over the modules it uses: action-plans' test world (its fixture) gives the real record, membership,
-   promotion, actions, action-clocks, action-plans and (merged, K2856) action-holds, on a real SQLite database; plan-work is built over them with
+   promotion, actions, action-clocks, action-plans, action-holds and action-replies (merged, K2856, K2862), on a real SQLite database; plan-work is built over them with
    stand-ins, in the shape of their Provides, for the modules whose facts a test controls: escalation (`escalationsFor`
-   R22, `escalationRead` R2, the fixture's own), filings (`filingsFor` R13), conformance (`curesOf` R37; a test may read it through the real module), action-replies (`aroseFrom`, `arisenFrom` R2), duties
+   R22, `escalationRead` R2, the fixture's own), filings (`filingsFor` R13), conformance (`curesOf` R37; a test may read it through the real module), duties
    (`dutiesArisingIn` R31), reading-guides (`procedureGuidesFor` R13) and ai-runs (`open` R77). action-plans' T45
    services this module calls (`planMark` R43 in K2848's shape, `registerCloseSnapshot` R44, the marks in `planRead`) are
    stood in over the real module until its job merges (plan rule 1). Every test drives plan-work at its interface. */
@@ -9,6 +9,7 @@ import { seeded, opened, option, choose, V, MACHINE, by, OFFICE, ms, DAY, NOW } 
 import { createHash } from "node:crypto";
 import { planWorkOf } from "../../../src/plan-work/index.mjs";
 import { actionHoldsOf } from "../../../src/action-holds/index.mjs";
+import { actionRepliesOf } from "../../../src/action-replies/index.mjs";
 
 export { V, MACHINE, by, OFFICE, ms, DAY, NOW, option, choose };
 
@@ -58,11 +59,9 @@ export function world(opts = {}) {
   /* action-holds, real (T45-26 merged, K2856), over the same host; its doorbell and ratification readers not registered */
   const actionHolds = actionHoldsOf(w.host, { record: w.record, membership: w.membership, now: () => ms(w.clock.now),
                                               doorbell: null, ratification: null });
-  const links = { arose: new Map(), arisen: new Map() };
-  const actionReplies = {
-    aroseFrom: ({ target, ord }) => ({ ok: true, items: links.arose.get(`${target}#${ord}`) || [] }),
-    arisenFrom: ({ project }) => ({ ok: true, items: links.arisen.get(project) || [] }),
-  };
+  /* action-replies, real (T45-29 merged, K2862): its arose_from links and their two reads */
+  const actionReplies = actionRepliesOf(w.host, { record: w.record, membership: w.membership, actions: w.actions, caseAuthoring: null,
+                                                  now: () => ms(w.clock.now) });
   const dutyCalls = [];
   const duties = { dutiesArisingIn: (a) => { dutyCalls.push(a); return w.dutiesAnswer ? w.dutiesAnswer(a) : { ok: true, duties: [], all_met: false }; } };
   const guides = new Map();         // kind -> guides
@@ -80,7 +79,7 @@ export function world(opts = {}) {
   const pw = planWorkOf(w.host, { record: w.record, membership: w.membership, actionPlans: ap, actions,
     escalation: w.stand.escalation, filings, conformance, actionHolds, actionReplies, duties, readingGuides, aiRuns,
     now: () => w.clock.now, ...(opts.deps || {}) });
-  Object.assign(w, { pw, apx: ap, marks, offers, aside, closers, cures, drafts, holds: actionHolds, links, dutyCalls, guides, runs });
+  Object.assign(w, { pw, apx: ap, marks, offers, aside, closers, cures, drafts, holds: actionHolds, replies: actionReplies, dutyCalls, guides, runs });
   /** Start a chosen option addressed to the office and answer its action's id. */
   w.started = (fields = {}, extra = {}) => {
     const o = option(w, { addressee: OFFICE, ...fields });

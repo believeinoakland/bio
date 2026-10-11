@@ -20,7 +20,7 @@
  *   actionPlans            `planRead`, `plansFor`, `planMark`, `registerCloseSnapshot` (its R6, R7, R43, R44).
  *   actions                `actionRead`, `registerResponseListener`, `place` (its R29, R95, R68).
  *   actionHolds            `projectHolds`, `holdsDue`, `holdsOf` (its R7, R3, R2; R7, R11); through its factory (K2856).
- *   actionReplies          `aroseFrom`, `arisenFrom` (its R2; R10).
+ *   actionReplies          `aroseFrom`, `arisenFrom` (its R2; R10); through its factory (K2862).
  *   escalation             `escalationsFor`, `escalationRead` (its R22, R2; R2, R3, R11).
  *   filings                `filingsFor` (its R13; R2, R6).
  *   conformance            `curesOf` (its R37; R2).
@@ -36,6 +36,7 @@ import { actionPlansOf, noSuchPlan, refusePlanClosed, refuseReason, refuseKeys, 
 import { isObj, str, isDay, isLine, normSubject, subjectKey } from "../action-plans/values.mjs";
 import { actionsOf, zoneOf } from "../actions/index.mjs";
 import { actionHoldsOf } from "../action-holds/index.mjs";
+import { actionRepliesOf } from "../action-replies/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
 import { conformanceOf } from "../conformance/index.mjs";
@@ -750,25 +751,34 @@ export class PlanWork {
     return { ok: true, reexamined: done };
   }
 
-  /* R10: the response's project and the projects linked to it by `arose_from` both ways (`action-replies` R2). */
+  /* R10: the response's project and the projects linked to it by `arose_from` both ways (`action-replies` R2): those
+     that arose from a response on the responded action or on an action started from one of the project's plans
+     (`aroseFrom`, every response of each), and those whose responses the project arose from (`arisenFrom`). A link is
+     recorded on a response after it is held, so the project's links, not the new response's, are what reach further. */
   #linkedProjects(action, ord, project) {
     const out = new Set(typeof project === "string" && project ? [project] : []);
     const r = this.#maybe("actionReplies");
-    if (!r) return out;
+    if (!r || !out.size) return out;
     try {
-      const fwd = r.aroseFrom({ target: action, ord, viewer: PLANE });
-      for (const x of ok(fwd) ? fwd.items || fwd.arising || [] : []) {
-        const a = isObj(x.arising) ? x.arising : x;
-        if (typeof a.project === "string") out.add(a.project);
-        if (typeof a.plan === "string") { const p = this.#plan(a.plan, null); if (p) out.add(p.project); }
+      const actions = new Set([action]);
+      const l = this.actionPlans.plansFor({ project, viewer: PLANE });
+      for (const x of ok(l) ? l.items || [] : []) {
+        const p = this.#plan(x.id, null);
+        for (const o of p ? p.options || [] : []) if (o.action && typeof o.action.id === "string") actions.add(o.action.id);
       }
-      for (const pr of [...out]) {
-        const back = r.arisenFrom({ project: pr }, PLANE);
-        for (const x of ok(back) ? back.items || back.responses || [] : []) {
-          const src = typeof x.target === "string" ? x.target : x.action;
-          const p = typeof src === "string" ? this.#projectOfAction(src) : null;
-          if (p) out.add(p);
+      for (const a of actions) {
+        const fwd = r.aroseFrom({ target: a, viewer: PLANE });
+        for (const x of ok(fwd) ? fwd.items || [] : []) {
+          const ar = isObj(x.arising) ? x.arising : x;
+          if (typeof ar.project === "string") out.add(ar.project);
+          if (typeof ar.plan === "string") { const p = this.#plan(ar.plan, null); if (p) out.add(p.project); }
         }
+      }
+      const back = r.arisenFrom({ project }, PLANE);
+      for (const x of ok(back) ? back.items || [] : []) {
+        const src = typeof x.action === "string" ? x.action : x.target;
+        const p = typeof src === "string" ? this.#projectOfAction(src) : null;
+        if (p) out.add(p);
       }
     } catch { /* an unreadable link reaches no further project */ }
     return out;
@@ -1089,7 +1099,7 @@ export function planWorkOf(host, deps) {
       duties: lazy("duties", () => dutiesOf(host, base)),
       readingGuides: lazy("readingGuides", () => readingGuidesOf(host, base)),
       aiRuns: lazy("aiRuns", () => aiRunsOf(host)),
-      actionHolds: lazy("actionHolds", () => actionHoldsOf(host, base)), actionReplies: d.actionReplies ?? null });
+      actionHolds: lazy("actionHolds", () => actionHoldsOf(host, base)), actionReplies: lazy("actionReplies", () => actionRepliesOf(host, base)) });
     instances.set(host, i);
     i.migrate();
     record.declarePurge("plan-work", PLAN_WORK_TABLES);
