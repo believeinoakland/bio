@@ -45,3 +45,7 @@ Size (session_012qi9yvQTQeqGH156Kzdsx8): test runs 14, module lines 3227
 ## J3 · REPORT
 
 Reds my merge makes in other modules (green on tranche/T43 before it); all test-visible but admission's, which is too: (1) admission test/m/admission/harness.mjs:189 cuts knock_key's DDL from capture's CAPTURE_DERIVED_SCHEMA, now gone: 5 R21 tests red; the held copy creates the table itself; fix with T43-21 (doorbell's schema). (2) case-disclosures fixture.mjs:260 and case-authoring fixture.mjs insert into inbox, which capture's migrate no longer creates: 4 red each; their fixtures need doorbellOf's tables. (3) control-plane envelope.test.mjs:391 pins NO_SUCH_KNOCK in capture's table: 1 red, rule 4 (9)'s cause, until T43-14. (4) doorbell instance.test.mjs 'a running store's inbox … capture's rows are doorbell's rows' red (its ownership arm now holds): for doorbell's second merge. Inherited, same on the base: ratification 1, affordances 1, op-declarations 8.
+
+## J4 · COMPLETE
+
+T43-8 complete on job/T43/capture (tranche/T43 with doorbell's first merge merged in): N849 delete with K2708's held copy, N863 R58, N864 R87. capture 125/0, cap13 22/0, d57 24/0; rule 4 (8) cleared (12/0); users' results and the four reds this merge makes are in the record and J3. Checks: format, architecture, coverage 40/40, ownership: 0 failures.
