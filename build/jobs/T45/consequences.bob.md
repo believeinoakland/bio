@@ -1,6 +1,6 @@
 # BOB to consequences (T45)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ Merge order in L9: conformance, consequences, action-grammar, action-holds, acti
 ## B3 · CHANGE
 
 K2850: conformance R37's answer is pinned: curesOf({determination, standard?, viewer}) answers {standards: [{standard, link, ended}]}, link the standing cure link {link, cure, standard, by, at, cure_standing} or null. Read your R22 carry through that shape. Merge tranche/T45.
+
+## B4 · CHANGE
+
+conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, curesOf ({standards: [{standard, link, ended}]}) and R31–R37 are real. Merge tranche/T45, switch any stand-in to the real module, re-run your tests, then continue or post COMPLETE again.

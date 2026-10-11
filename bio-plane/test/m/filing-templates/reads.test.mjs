@@ -1,7 +1,7 @@
 /* filing-templates: the reads (R14, R15, R20, R24, R25), at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, world, draft, approved, V, MACHINE, TEST, HARBOUR, TEXT, sha, secret, twoProfiles } from "./fixture.mjs";
+import { seeded, world, draft, approved, V, MACHINE, TEST, HARBOUR, TEXT, sha, secret, twoProfiles, reviewedOf, attributed, PROFILE_IDS, PRO_REVIEW } from "./fixture.mjs";
 import * as ft from "../../../src/filing-templates/index.mjs";
 import * as jurisdictions from "../../../../jurisdictions/index.mjs";
 
@@ -10,10 +10,11 @@ const code = (r) => [r.ok, r.reason, r.code, r.check, r.translation];
 const row = (c) => ft.FILING_TEMPLATE_CHECKS[c];
 const refused = (r, c) => { assert.deepEqual(code(r), [false, c, c, row(c).check, row(c).translation], JSON.stringify(r).slice(0, 300)); return r; };
 const ids = (r) => r.templates.map((t) => t.id);
-const PROFILE_IDS = ["TPL-test-records-request", "TPL-test-bylaw-complaint", "TPL-test-commitment-brief"];
+/* R15 (T45): the test profile's templates as v0.2 rule 11 offers them, each with sources and a professional review */
+const reviewed = reviewedOf();
 
 test("R14 templatesFor lists every offered version (approved and updated, of templates not retired) with its metadata, the latest approved marked default; drafts, reviews and withdrawn versions never offered", () => {
-  const w = seeded();
+  const w = seeded({ jur: reviewed });
   const a = approved(w);
   w.clock.now = "2026-10-02T00:00:00Z";
   const two = w.ft.templateDraft({ template: a.template, text: "Two {{group}}", author: A, viewer: A });
@@ -32,12 +33,12 @@ test("R14 templatesFor lists every offered version (approved and updated, of tem
                    ["alice", "alice", 1, "bob", "2026-10-01T12:00:00Z", two.version]);
   assert.equal(r.templates.some((x) => x.name === "Only a draft"), false);
   /* newest first; the profile's templates are older (approved 2026-09-01) */
-  assert.deepEqual(ids(r).slice(-3).sort(), [...PROFILE_IDS].sort());
+  assert.deepEqual(ids(r).slice(-PROFILE_IDS.length).sort(), [...PROFILE_IDS].sort());
   assert.equal(ids(r)[0], a.template);
 });
 
 test("R14 filters: kind, use, profile (templates naming it and the general ones, each saying whether written for it), and state lists drafts, in review, withdrawn, retired (with reason) or open proposals; at most 200 with truncated", () => {
-  const w = seeded({ profiles: [TEST, HARBOUR], jur: twoProfiles });
+  const w = seeded({ profiles: [TEST, HARBOUR], jur: reviewedOf(twoProfiles) });
   const gen = approved(w, { name: "General", profiles: "general" });
   w.clock.now = "2026-10-02T00:00:00Z";
   const har = draft(w, { name: "Harbour only", profiles: [HARBOUR] });
@@ -46,7 +47,7 @@ test("R14 filters: kind, use, profile (templates naming it and the general ones,
   assert.equal(w.ft.templateApprove({ version: har.version, by: B, viewer: B }).ok, true, "Tier 1 under the harbour profile");
   const under = (p) => w.ft.templatesFor({ profile: p, viewer: A }).templates.map((t) => [t.id, t.written_for]);
   assert.deepEqual(under(TEST).filter(([id]) => !id.startsWith("TPL-test")), [[gen.template, false]]);
-  assert.deepEqual(under(TEST).filter(([id]) => id.startsWith("TPL-test")).map(([, f]) => f), [true, true, true]);
+  assert.deepEqual(under(TEST).filter(([id]) => id.startsWith("TPL-test")).map(([, f]) => f), PROFILE_IDS.map(() => true));
   assert.deepEqual(under(HARBOUR), [[har.template, true], [gen.template, false]], "a general template under two profiles");
   assert.deepEqual(ids(w.ft.templatesFor({ kind: "bylaw_complaint", viewer: A })), ["TPL-test-bylaw-complaint"]);
   assert.deepEqual(ids(w.ft.templatesFor({ use: "brief", viewer: A })), ["TPL-test-commitment-brief"]);
@@ -220,7 +221,7 @@ test("R20 each item names the template's project, its scope's (R1): a project te
 });
 
 test("R24 a project's template is seen by whoever may see the project; group and profile templates by every member; one hidden is absent from every read and act, and no count names it", () => {
-  const w = seeded();
+  const w = seeded({ jur: reviewed });
   const a = approved(w);
   w.ft.templatePropose({ template: a.template, text: "p {{group}}", why: "w", proposer: B, viewer: B });
   /* dave sees neither P nor its template */
@@ -253,7 +254,7 @@ test("R24 a project's template is seen by whoever may see the project; group and
   refused(w.ft.templateApprove({ version: a.version, widen: true, by: E, viewer: E }), "NO_SUCH_TEMPLATE");
   /* negative controls: an invited administrator sees it whole; so does an administrator, and the founder, of a
      discoverable project, as before D54 */
-  const open = seeded();
+  const open = seeded({ jur: reviewed });
   const oa = approved(open);
   open.discoverable(open.P);
   for (const viewer of [E, "admin"]) assert.equal(ids(open.ft.templatesFor({ viewer })).includes(oa.template), true, `${viewer}: discoverable`);
@@ -267,7 +268,7 @@ test("R24 a project's template is seen by whoever may see the project; group and
 });
 
 test("R25 offeredVersion answers the version a filing may use with its metadata: absent, the latest approved (default); a named updated version with updated_by; refusals NO_SUCH_TEMPLATE, TEMPLATE_RETIRED, TEMPLATE_NOT_OFFERED; writes nothing", () => {
-  const w = seeded();
+  const w = seeded({ jur: reviewed });
   const d = draft(w, { name: "Never approved" });
   refused(w.ft.offeredVersion({ template: d.template, viewer: A }), "TEMPLATE_NOT_OFFERED");
   const a = approved(w);
@@ -304,15 +305,17 @@ test("R26 a template's handle: its name case-folded, each run of characters othe
 });
 
 test("R26 offeredVersion takes {name, project?, version?} in place of template: among templates not retired that the viewer may see, the project's first (when given), then the group's, then the active profiles'; the first scope holding the handle answers, and R25 answers its version exactly as for its id; writes nothing", () => {
-  const w = seeded();
+  const w = seeded({ jur: reviewed });
   const E = V("erin");
   w.join(w.P, "erin", "invited"); /* D54: the administrator who widens P's templates sees the hidden P as invited */
   const P = { project: w.P };
   const by = (name, x = {}) => w.ft.offeredVersion({ name, viewer: A, ...x });
   const same = (named, id, x = {}) => assert.deepEqual(named, w.ft.offeredVersion({ template: id, viewer: A, ...x }));
-  /* the profile's templates, by their names' handles (R15: a profile template's name is its kind's label) */
+  /* the profile's templates, by their own names' handles (R15, R26: each template's own name; a single template written
+     without one, by its kind's label) */
   const pt = jurisdictions.get(TEST).action_kinds;
-  for (const k of pt) same(by(`@${ft.templateHandle(k.label)}`), k.template.id);
+  for (const k of pt)
+    for (const t of k.templates || [k.template]) same(by(`@${ft.templateHandle(t.name || k.label)}`), t.id);
   same(by("@request-under-the-records-act", P), "TPL-test-records-request");
   /* two project templates whose names share a handle, then one widened: project first when given, else the group's */
   const wide = approved(w, { name: "Records request" });
@@ -376,7 +379,7 @@ test("R26 refusals in order, each writing nothing: template and name both or nei
   const bad = structuredClone(twoProfiles.get(HARBOUR));
   bad.action_kinds.find((k) => k.kind === "records_request").template = { ...structuredClone(jurisdictions.get(TEST).action_kinds[0].template),
     id: "TPL-test-harbour-records" };
-  const jur = { ...twoProfiles, get: (id) => (id === HARBOUR ? structuredClone(bad) : twoProfiles.get(id)) };
+  const jur = reviewedOf({ ...twoProfiles, get: (id) => (id === HARBOUR ? structuredClone(bad) : twoProfiles.get(id)) });
   const w2 = seeded({ profiles: [TEST, HARBOUR], jur });
   refused(w2.ft.offeredVersion({ name: "@request-under-the-records-act", viewer: A }), "TEMPLATE_NAME_AMBIGUOUS");
   assert.equal(w2.ft.offeredVersion({ template: "TPL-test-harbour-records", viewer: A }).ok, true, "each still named by its id");

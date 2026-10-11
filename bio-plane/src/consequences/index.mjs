@@ -14,6 +14,13 @@
  * successor (R6). A member records each part addressed or not, with evidence (R9), which `escalation` reads.
  * Significance is not here (K12): no answer carries a significance, severity, priority or score (R11).
  *
+ * T45 (N855 6c; v0.2 §3, rules 1, 16, 17): an `addressed` statement is reasoned, may carry plain words and never a
+ * percentage (R9); no new part is recorded on a void determination (R1, conformance R33). This module also holds the
+ * SUCCESS RECORD (R17–R21): a member's statement of what changed and when, on evidence, with figures computed as R2
+ * computes a part, a sequence that is never a cause, and a cause only on evidence other than the group's own act (the
+ * reader `actions` registers, R19). A success record is never a consequence part (R23). An outcome (a success, a harm
+ * addressed, a cure) is carried into a case's next edition only through `case-authoring.carryOutcome` (R22).
+ *
  * A new module (layer 9): no `from`, nothing moved. REACHED as `consequencesModule(host, deps)` (K171 (17)): one instance
  * per host (the Durable Object's `ctx`), created on the first call with `deps`, returned to every later caller. At
  * creation it creates its tables and declares them to record-core's purge (R13, K23). Each part is also a `CONS-`
@@ -41,24 +48,29 @@
  *   entities       `readEntity` (R10: the person entity, its label and aliases); default `entitiesOf(host)`.
  *   people         `sourceLinkSight(person)` (its R34; N600): the source↔person link's sight, null when no link is
  *                  held (R10, R16); default `peopleOf(host)`.
+ *   caseAuthoring  `carryOutcome` (its R71; R22); default `caseAuthoringOf(host)`. (T45) conformance's
+ *                  `determinationVoided`, `curesOf` (its R33, R37; R1, R22); civil-time's `isCalendarDate`, `parseEdtf`
+ *                  (R17); membership's `noSuchProject`, `listenerRefusal` (R17, R19).
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock, to the second).
  *
  * READ CONTRACTS it joins in its own SQL: none. Its own tables are `./schema.mjs`. */
 
-import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
-import { membershipOf } from "../membership/index.mjs";
+import { recordOf, stampInstant, instantOrder, mintExhausted } from "../record-core/index.mjs";
+import { membershipOf, noSuchProject, listenerRefusal } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
-import { conformanceOf, noSuchDetermination, determinationSuperseded } from "../conformance/index.mjs";
+import { conformanceOf, noSuchDetermination, determinationSuperseded, determinationVoided } from "../conformance/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
 import { peopleOf } from "../people/index.mjs";
+import { caseAuthoringOf } from "../case-authoring/index.mjs";
 import { isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
+import { isCalendarDate, parseEdtf } from "../civil-time/index.mjs";
 import { BASIS_GRADES } from "../record-grammar/grades.mjs";
 import { OPS, RATIO_ROUNDING, exactOf, isZero, order, readFigure, passageHolds, compute, measureOfFigure,
          addMeasures } from "./measures.mjs";
@@ -90,8 +102,25 @@ export const UNDETERMINED_WHY = Object.freeze({
 const NO_UNIT = "no measure is stated, so the computation has no unit";
 /** R3: the longest rationale an assessment carries. */
 export const RATIONALE_MAX = 2000;
-/** R6, R9: the longest reason a revision or an addressed record carries (conformance R7's bound). */
+/** R6: the longest reason a revision of a part carries (conformance R7's bound). */
 export const REASON_MAX = 500;
+/** R9 (T45; v0.2 rule 17): the plain words an `addressed` statement may carry, at most `ADDRESSED_WORDS_MAX` distinct. */
+export const ADDRESSED_WORDS = Object.freeze(["remedied", "mitigated", "compensated", "acknowledged", "cannot_be_undone"]);
+export const ADDRESSED_WORDS_MAX = 5;
+/** R9 (T45): the keys that would state redress as a figure, refused wherever they appear in a statement. */
+export const REDRESS_FIGURE_KEYS = Object.freeze(["percent", "percentage", "share", "ratio", "score"]);
+/** R9, R17, R19, R21 (T45): the longest reason or statement a member writes here. */
+export const STATEMENT_MAX = 2000;
+/** R17 (T45): a success record's caps. */
+export const SUCCESS_LIMITS = Object.freeze({ evidence: 50, figures: 20, sequence: 1000 });
+/** R20 (T45): the longest page of success records. */
+export const SUCCESS_PAGE_MAX = 200;
+/** R22 (T45): what an outcome carried into a case's next edition is (case-authoring R71's kinds). */
+export const CARRY_KINDS = Object.freeze({ success: "success", addressed: "harm_addressed", cure: "cure" });
+/** R19 (T45): the sentences a success record's read answers beside its sequence and its absent cause (keys the UX
+ *  stream words). */
+export const SEQUENCE_NOT_CAUSE = "consequences.success.sequence_not_cause";
+export const CAUSE_NOT_STATED = "consequences.success.cause_not_stated";
 
 /* A causation inquiry has concluded when its state is one of these (inquiry R1: `published` is read, never entered). */
 const CONCLUDED = new Set(["concluded", "published"]);
@@ -136,7 +165,7 @@ function alreadySuperseded(id, next) {
                 { id, superseded_by: next });
 }
 
-/** R6, R9: a revision's or an addressed record's reason: null when it is stated and within `REASON_MAX`. */
+/** R6: a revision's reason: null when it is stated and within `REASON_MAX` (an addressed record's is R9's own, T45). */
 function reasonRefusal(reason) {
   if (!str(reason)) return refuse("NO_REASON", `the record says why.${NOTHING}`);
   if (reason.trim().length > REASON_MAX)
@@ -154,6 +183,18 @@ function basisUnreadable(why, extra = {}) {
  *  theirs). */
 function foreignRefusal(code, why, extra = {}) {
   return { ok: false, reason: code, code, detail: `${String(why ?? "").replace(/\.?\s*$/, "")}.${NOTHING}`, ...extra };
+}
+
+/** R9 (T45): the first key, anywhere in a statement, that states redress as a figure (`REDRESS_FIGURE_KEYS`, case
+ *  folded); null when none. */
+function redressFigureKey(v, depth = 0) {
+  if (depth > 8 || v === null || typeof v !== "object") return null;
+  for (const [k, x] of Object.entries(v)) {
+    if (!Array.isArray(v) && REDRESS_FIGURE_KEYS.includes(String(k).toLowerCase())) return k;
+    const inner = redressFigureKey(x, depth + 1);
+    if (inner) return inner;
+  }
+  return null;
 }
 
 /* ===================================================================== *
@@ -263,13 +304,13 @@ export class Consequences {
 
   constructor({ storage, record, membership, promotion, host = null, conformance = null, content = null,
                 provenance = null, inquiry = null, strength = null, money = null, calculations = null, entities = null,
-                people = null, passageText = null, now = null } = {}) {
+                people = null, caseAuthoring = null, passageText = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.#deps = { host, conformance, content, provenance, inquiry, strength, money, calculations, entities, people,
-                   passageText };
+                   caseAuthoring, passageText };
     this.now = typeof now === "function" ? now : () => stampInstant("second");
   }
 
@@ -283,6 +324,10 @@ export class Consequences {
   get calculations() { return this.#deps.calculations ||= (this.#deps.host ? calculationsOf(this.#deps.host) : null); }
   get entities() { return this.#deps.entities ||= (this.#deps.host ? entitiesOf(this.#deps.host) : null); }
   get people() { return this.#deps.people ||= (this.#deps.host ? peopleOf(this.#deps.host) : null); }
+  get caseAuthoring() { return this.#deps.caseAuthoring ||= (this.#deps.host ? caseAuthoringOf(this.#deps.host) : null); }
+
+  /* R19 (T45): the one registered reader of the group's own acts (`actions` fills it). */
+  #ownActReader = null;
 
   migrate() { migrateConsequences(this.sql); }
 
@@ -330,7 +375,9 @@ export class Consequences {
     const sup = body.superseded_by ?? body.supersededBy ?? body.links?.superseded_by ?? null;
     const live = body.live === false ? false : !(Array.isArray(sup) ? sup.length : sup);
     const supersededBy = (Array.isArray(sup) ? sup[0] : isObj(sup) ? sup.id : sup) ?? null;
-    return { id, project: body.project ?? null, outcome, live, supersededBy: str(supersededBy) };
+    /* conformance R33: a void determination is answered with `void: {causes}`, derived on its every read. */
+    const voided = isObj(body.void) ? (Array.isArray(body.void.causes) ? body.void.causes : []) : null;
+    return { id, project: body.project ?? null, outcome, live, supersededBy: str(supersededBy), voided };
   }
 
   /* A part's row, or null when absent or in a project the viewer may not see (R13: one answer). */
@@ -507,6 +554,9 @@ export class Consequences {
     const d = this.#determination(determination, who);
     if (!d || !this.#seesProject(d.project, who)) return noSuchDetermination(determination ?? null);
     if (!d.live) return determinationSuperseded(d.id, d.supersededBy);
+    /* R1 (T45; l9a doubt 8): no new part, nor a revision, on a void determination (conformance R33), answered through
+       conformance's one site; the parts already recorded stand and are read as before. */
+    if (d.voided) return determinationVoided(d.id, d.voided);
     if (!str(standard) || d.outcome(standard) !== "noncompliant")
       return refuse("CONSEQUENCE_NOT_NONCOMPLIANT", `${d.id}'s outcome for ${str(standard) ?? "that standard"} is `
         + `${d.outcome(standard) ?? "not stated"}, not noncompliant: a consequence is what a breach did.${NOTHING}`,
@@ -589,7 +639,7 @@ export class Consequences {
   /* R2, R4: a computation over the record. Each operand is read for its figure and grade (`#readOperand`); the value is
      calc-grammar's exact arithmetic over them. An operand not held, or a figure its passage does not hold, leaves the
      computation lacking it (undetermined); calc-grammar's and money's refusals are the act's. */
-  #computation(basis, measure, who) {
+  #computation(basis, measure, who, figure = false) {
     const op = str(basis.op);
     if (!op || !OPS.includes(op))
       return basisUnreadable(`a computation names its op, one of ${OPS.join(", ")}`, { op: basis.op ?? null });
@@ -604,9 +654,9 @@ export class Consequences {
     if (read.some((r) => r && typeof r.then === "function"))
       return Promise.all(read).then((all) => {
         const late = all.find((r) => r.ok === false);
-        return late || this.#finish(op, all, measure, who);
+        return late || this.#finish(op, all, measure, who, figure);
       });
-    return this.#finish(op, read, measure, who);
+    return this.#finish(op, read, measure, who, figure);
   }
 
   /* R2: one operand read: `{ok: true, kind, ref, key?, figure?, exact?, fig?, capture_sha?, grade, route, determined,
@@ -675,12 +725,13 @@ export class Consequences {
   }
 
   /* R2, R4: the computation finished over its read operands. */
-  #finish(op, operands, measure, who) {
+  #finish(op, operands, measure, who, figure = false) {
     const stored = operands.map(({ ok, fig, lacking, ...o }) => o);
     const docOps = stored.map(operandAsGiven);
     const missing = operands.find((o) => o.lacking);
     let lacking = missing ? missing.lacking : null;
-    if (!lacking && !measure) lacking = { code: "not_assessed", why: NO_UNIT };
+    /* R18: a success record's figure states no measure: its unit and currency are the arithmetic's own. */
+    if (!lacking && !measure && !figure) lacking = { code: "not_assessed", why: NO_UNIT };
     let result = null;
     if (!lacking) {
       /* R2: a total across money facts money refuses is refused by its code (its R10). */
@@ -704,30 +755,33 @@ export class Consequences {
        measure's currency when it names one; no other unit). */
     const r = measureOfFigure(result.figure);
     const dims = r.unit !== undefined ? `unit ${r.unit}` : r.currency !== undefined ? `currency ${r.currency}` : null;
+    if (figure) return { ok: true, state: "computed", op, operands: stored, figure: r, ...this.#weakest(stored),
+                         rounding: op === "ratio" ? RATIO_ROUNDING : null };
     if (r.unit !== undefined || (r.currency !== undefined && (measure.unit !== "money"
         || (measure.currency && measure.currency !== r.currency))))
       return foreignRefusal("UNIT_MISMATCH", `the operands' result is in ${dims}, and the measure is of ${measure.unit}`
         + `${measure.currency ? ` in ${measure.currency}` : ""}`);
     const value = r.range ? { range: r.range } : { value: r.value };
     const currency = measure.currency ?? r.currency;
-    /* DEC-21: the part's grade is its weakest operand's grade, named; one undetermined operand leaves it
-       undetermined, naming that operand. */
-    const rank = (g) => BASIS_GRADES.indexOf(g);
-    const open = stored.findIndex((o) => !o.grade);
-    let grade = null; let gradeWhy;
-    if (open >= 0) {
-      gradeWhy = `operand ${open}'s ${GRADE_OF[stored[open].kind]} is undetermined (${stored[open].basis ?? stored[open].route ?? "no route"}), `
-               + "so the weakest link is not known";
-    } else {
-      const w = stored.reduce((acc, o, i) => (rank(o.grade) > rank(stored[acc].grade) ? i : acc), 0);
-      grade = stored[w].grade;
-      gradeWhy = `the weakest operand is ${w} (${NAMED[stored[w].kind]} ${stored[w].ref}), whose ${GRADE_OF[stored[w].kind]} is ${grade} `
-               + `(${stored[w].route}); a computation is as strong as its weakest figure (DEC-21)`;
-    }
+    const { grade, gradeWhy } = this.#weakest(stored);
     const exact = { ...value, precision: r.precision, ...(r.approximate ? { approximate: true } : {}),
                     ...(op === "ratio" ? { rounding: RATIO_ROUNDING } : {}) };
     return { ok: true, state: "computed", op, measure: { ...unitOnly, ...(currency ? { currency } : {}), ...value },
              value: exact, grade, gradeWhy, operands: stored, doc: { op, operands: docOps, value: exact, grade } };
+  }
+
+  /* DEC-21 (R2, R18): a computation's grade is its weakest operand's grade, named; one undetermined operand leaves it
+     undetermined, naming that operand. */
+  #weakest(stored) {
+    const rank = (g) => BASIS_GRADES.indexOf(g);
+    const open = stored.findIndex((o) => !o.grade);
+    if (open >= 0)
+      return { grade: null, gradeWhy: `operand ${open}'s ${GRADE_OF[stored[open].kind]} is undetermined `
+        + `(${stored[open].basis ?? stored[open].route ?? "no route"}), so the weakest link is not known` };
+    const w = stored.reduce((acc, o, i) => (rank(o.grade) > rank(stored[acc].grade) ? i : acc), 0);
+    const grade = stored[w].grade;
+    return { grade, gradeWhy: `the weakest operand is ${w} (${NAMED[stored[w].kind]} ${stored[w].ref}), whose `
+      + `${GRADE_OF[stored[w].kind]} is ${grade} (${stored[w].route}); a computation is as strong as its weakest figure (DEC-21)` };
   }
 
   #operands(id) {
@@ -828,7 +882,9 @@ export class Consequences {
       const recorded = parse(a.evidence) || [];
       const evidence = recorded.filter((x) => this.#resolvesEvidence(x, who));
       if (evidence.length < recorded.length) withheld = true;
-      out.addressed = { state: a.state, evidence, reason: a.reason, by: a.author, at: a.at };
+      const plain = parse(a.words);
+      out.addressed = { state: a.state, evidence, reason: a.reason, ...(Array.isArray(plain) ? { words: plain } : {}),
+                        by: a.author, at: a.at };
     } else {
       out.addressed = { state: "never_assessed", says: "no member has recorded whether this consequence has been addressed" };
     }
@@ -921,7 +977,8 @@ export class Consequences {
    * ===================================================================== */
 
   /** R9: a member records a part addressed or not, with evidence and a reason. */
-  addressedRecord({ id = null, state = null, evidence = null, reason = null, author = null, viewer = null } = {}) {
+  addressedRecord(args = {}) {
+    const { id = null, state = null, evidence = null, reason = null, words = undefined, author = null, viewer = null } = args;
     if (machine(author))
       return refuse("MACHINE_CANNOT_ADDRESS", "whether a consequence has been addressed is a member's judgment, with "
         + "evidence; a machine never records it. Nothing was written.");
@@ -934,16 +991,39 @@ export class Consequences {
     if (!ADDRESSED_STATES.includes(state))
       return refuse("ADDRESSED_UNKNOWN_STATE", `a part is recorded ${ADDRESSED_STATES.join(" or ")}. Nothing was written.`,
                     { state: state ?? null });
-    const bad = reasonRefusal(reason); if (bad) return bad;
+    /* R9 (T45): the reason is required for both states, at most 2,000 characters. */
+    if (!str(reason))
+      return refuse("ADDRESSED_NO_REASON", `whether a part is addressed or not is said with a reason.${NOTHING}`);
+    if ([...reason.trim()].length > STATEMENT_MAX)
+      return refuse("ADDRESSED_BAD_REASON", `a reason is at most ${STATEMENT_MAX} characters.${NOTHING}`);
+    /* R9 (T45; v0.2 rule 17): no percentage, share, ratio or score of redress, anywhere in the statement. */
+    const figureKey = redressFigureKey(args);
+    if (figureKey || (Array.isArray(words) && words.some((x) => typeof x === "string" && x.includes("%"))))
+      return refuse("ADDRESSED_NO_PERCENTAGE", `${figureKey ? `"${figureKey}" states` : "a % in words states"} redress as a `
+        + `figure; say it in words, with evidence.${NOTHING}`, figureKey ? { key: figureKey } : {});
+    /* R9 (T45): the plain words, at most five distinct of the list, on `addressed` alone. */
+    let plain = null;
+    if (words !== undefined && words !== null) {
+      const list = Array.isArray(words) ? words : null;
+      const why = state !== "addressed" ? "plain words are carried only by a part recorded addressed"
+        : !list ? "words are a list"
+        : list.some((x) => !ADDRESSED_WORDS.includes(x)) ? `each word is one of ${ADDRESSED_WORDS.join(", ")}`
+        : new Set(list).size !== list.length ? "each word is given once"
+        : list.length > ADDRESSED_WORDS_MAX ? `at most ${ADDRESSED_WORDS_MAX} words` : null;
+      if (why) return refuse("ADDRESSED_WORD_REFUSED", `${why}.${NOTHING}`);
+      plain = [...list];
+    }
     const ev = evidence == null ? [] : Array.isArray(evidence) ? evidence : [evidence];
     if (state === "addressed" && !ev.length)
       return refuse("ADDRESSED_NO_EVIDENCE", "a consequence is recorded addressed with the evidence that it was: content "
         + "or findings in the record. Partial redress does not end an escalation. Nothing was written.");
     const unseen = this.#evidenceRefusal(ev, who, "evidence is"); if (unseen) return unseen;
     const at = this.#when();
-    this.record.transact(() => this.sql.exec(`INSERT INTO consequence_addressed (part_id, state, evidence, reason, author, at)
-      VALUES (?,?,?,?,?,?)`, r.bundle_id, state, JSON.stringify(ev.map(String)), reason.trim(), str(author), at));
-    return { ok: true, id: r.bundle_id, state, evidence: ev.map(String), reason: reason.trim(), by: str(author), at };
+    this.record.transact(() => this.sql.exec(`INSERT INTO consequence_addressed (part_id, state, evidence, reason, author, at,
+      words) VALUES (?,?,?,?,?,?,?)`, r.bundle_id, state, JSON.stringify(ev.map(String)), reason.trim(), str(author), at,
+      json(plain)));
+    return { ok: true, id: r.bundle_id, state, evidence: ev.map(String), reason: reason.trim(), ...(plain ? { words: plain } : {}),
+             by: str(author), at };
   }
 
   /** R9: per part, and overall: `addressed` only when every live part is addressed; any undetermined part or unproven
@@ -971,6 +1051,351 @@ export class Consequences {
                why: `${not.map((p) => p.id).join(", ")} ${not.length === 1 ? "is" : "are"} not addressed or never `
                   + "assessed; partial redress does not end an escalation" };
     return { ok: true, determination: d.id, state: "addressed", parts, why: "every live part is recorded addressed, with evidence" };
+  }
+
+  /* ===================================================================== *
+   * R17–R21, R23 (T45): THE SUCCESS RECORD. Per matter, a member's statement of what changed and when, on evidence,
+   * optionally with figures computed exactly as R2 computes a part (R18); it may state the sequence of events, and says
+   * the group's action caused the change only on evidence other than the group's own act (R19). Never a consequence
+   * part (R23): no read of parts reads, lists or counts one. Its own append-only rows (`success_records`), fenced by
+   * its project as a part is (R13), declared to purge. Until `record-grammar` registers its object type, nothing is
+   * promoted (the job's reading, J1).
+   * ===================================================================== */
+
+  /** R19: `actions` registers, once, the reader of the group's own acts: `fn({ids, viewer})` answers the ids that are an
+   *  action of this group or the capture of one of its `sent` entries. A second registration, or a malformed one, is
+   *  membership's refusal (`listenerRefusal`, K31's pattern). */
+  registerOwnActReader(fn, module = "actions") {
+    const refused = listenerRefusal(this.#ownActReader ? { module: this.#ownActReader.module } : null, module, fn);
+    if (refused) return refused;
+    this.#ownActReader = { module, fn };
+    return { ok: true, module };
+  }
+
+  /** R17: record a success record. Synchronous, except that a figure naming a calculation operand answers a promise of
+   *  the same answer (R2's rule). */
+  successRecord(args = {}) { return this.#success(args, null); }
+
+  /** R21: a success record is never edited: a revision records a successor with R17's refusals and a reason; the
+   *  earlier one stays readable with the link. Each field not given is carried from the earlier record. */
+  successRevise(args = {}) {
+    const { id = null, reason = null, author = null, viewer = null } = args;
+    const who = viewer ?? (str(author) || null);
+    const machineRefused = this.#successRefusal("machine", { author });
+    if (machineRefused) return machineRefused;
+    const old = this.#successRow(id, who);
+    if (!old) return noSuchSuccessRecord(id, true);
+    const next = this.#successSuccessor(old.id);
+    if (next) return successSuperseded(old.id, next);
+    if (!str(reason))
+      return refuse("SUCCESS_NO_REASON", `a revision of a success record says why.${NOTHING}`);
+    if ([...reason.trim()].length > STATEMENT_MAX)
+      return refuse("SUCCESS_BAD_REASON", `a reason is at most ${STATEMENT_MAX} characters.${NOTHING}`);
+    const pick = (k, stored) => (k in args ? args[k] : stored);
+    const figures = (parse(old.figures) || []).map((f) => ({ label: f.label, basis: f.basis }));
+    return this.#success({
+      project: old.project, matter: pick("matter", parse(old.matter)), statement: pick("statement", old.statement),
+      changed_on: pick("changed_on", old.changed_on), evidence: pick("evidence", parse(old.evidence)),
+      figures: pick("figures", figures), sequence: pick("sequence", old.sequence), cause: pick("cause", parse(old.cause)),
+      author, viewer,
+    }, { supersedes: old.id, reason: reason.trim() });
+  }
+
+  /** R18: a figure computed for a member to adopt: `{ok: true, figure}`, labelled machine work when a machine computed
+   *  it, or R2's refusal. Writes nothing; a machine may call it, and never records the success record (R17). */
+  successFigure({ label = null, basis = null, author = null, viewer = null } = {}) {
+    const who = viewer ?? (str(author) || null);
+    const f = this.#successFigures([{ label, basis }], who, machine(author));
+    const done = (r) => (r.ok === false ? r : { ok: true, figure: r.figures[0] });
+    return f && typeof f.then === "function" ? f.then(done) : done(f);
+  }
+
+  /* R17's refusals in order; R18's and R19's in their places. */
+  #success({ project = null, matter = null, statement = null, changed_on = null, evidence = null, figures = null,
+             sequence = null, cause = null, author = null, viewer = null } = {}, rev) {
+    const who = viewer ?? (str(author) || null);
+    const early = this.#successRefusal("machine", { author })
+      || this.#successRefusal("project", { project, who })
+      || this.#successRefusal("participant", { project, author })
+      || this.#successRefusal("statement", { statement, sequence })
+      || this.#successRefusal("date", { changed_on })
+      || this.#successRefusal("evidence", { evidence, who });
+    if (early) return early;
+    const figs = figures == null ? [] : figures;
+    const computed = this.#successFigures(figs, who, false);
+    const then = (fr) => {
+      if (fr.ok === false) return fr;
+      const c = this.#causeRefusal(cause, who);
+      if (c && c.ok === false) return c;
+      const large = this.#successRefusal("size", { evidence, figures: figs, sequence });
+      if (large) return large;
+      return this.#successLand({ project: project.trim(), matter, statement: statement.trim(), changed_on: changed_on.trim(),
+        evidence: evidence.map(String), figures: fr.figures, sequence: str(sequence), cause: c ? c.cause : null,
+        author: str(author), who, rev });
+    };
+    return computed && typeof computed.then === "function" ? computed.then(then) : then(computed);
+  }
+
+  /* R17: one refusal of a success record's own conditions, or null. Every code of R17's is minted here (K231). */
+  #successRefusal(which, a) {
+    if (which === "machine")
+      return machine(a.author) ? refuse("MACHINE_CANNOT_RECORD_SUCCESS", "a success record is a member's statement; a "
+        + `machine may compute a figure for a member to adopt, and never records one.${NOTHING}`) : null;
+    if (which === "project")
+      return !str(a.project) || !this.#seesProject(a.project.trim(), a.who ?? INTERNAL) || !this.#projectHeld(a.project.trim())
+        ? noSuchProject(str(a.project)) : null;
+    if (which === "participant") {
+      const denied = this.membership.projectAuthority(a.project.trim(), str(a.author), "joined", "successRecord");
+      return denied ? refuse("SUCCESS_NOT_A_PARTICIPANT", `recording a success is work inside ${a.project.trim()}, and `
+        + `${str(a.author)} has not joined it.${NOTHING}`, { project: a.project.trim() }) : null;
+    }
+    if (which === "statement") {
+      if (!str(a.statement) || [...a.statement.trim()].length > STATEMENT_MAX)
+        return refuse("SUCCESS_NO_STATEMENT", `what changed is stated in the member's words, 1 to ${STATEMENT_MAX} `
+          + `characters.${NOTHING}`);
+      if (a.sequence != null && typeof a.sequence !== "string")
+        return refuse("SUCCESS_NO_STATEMENT", `the sequence of events is the member's text.${NOTHING}`, { part: "sequence" });
+      return null;
+    }
+    if (which === "date")
+      return isSuccessDate(a.changed_on) ? null : refuse("SUCCESS_BAD_DATE", "when the change took place is a real "
+        + `calendar date, YYYY-MM-DD, or an EDTF band of dates.${NOTHING}`, { changed_on: a.changed_on ?? null });
+    if (which === "evidence") {
+      const ev = a.evidence;
+      const unseen = Array.isArray(ev) ? ev.filter((x) => !this.#resolvesEvidence(x, a.who ?? INTERNAL)) : null;
+      return !Array.isArray(ev) || !ev.length || unseen.length ? refuse("SUCCESS_NO_EVIDENCE", "a success rests on "
+        + `evidence: content or findings this record holds and you may see.${NOTHING}`) : null;
+    }
+    /* size: the caps, named. */
+    const over = a.evidence.length > SUCCESS_LIMITS.evidence ? ["evidence", SUCCESS_LIMITS.evidence]
+      : a.figures.length > SUCCESS_LIMITS.figures ? ["figures", SUCCESS_LIMITS.figures]
+      : typeof a.sequence === "string" && [...a.sequence.trim()].length > SUCCESS_LIMITS.sequence ? ["sequence", SUCCESS_LIMITS.sequence]
+      : null;
+    return over ? refuse("SUCCESS_TOO_LARGE", `${over[0]} is over its cap of ${over[1]}.${NOTHING}`,
+                         { part: over[0], cap: over[1] }) : null;
+  }
+
+  /* R17: whether a project is held (membership answers sight for a held one only). */
+  #projectHeld(project) {
+    const info = this.record.bundleInfo(project);
+    return !!info && normalizeType(info.type) === "project";
+  }
+
+  /* R18: each figure `{label, basis: {op, operands}}` computed exactly as R2 computes a part (`#computation`, figure
+     mode: no measure, its unit and currency the arithmetic's), with its operands shown and the weakest grade named. A
+     stated `value` or `range` is SUCCESS_FIGURE_NOT_COMPUTED; R2's refusals are the act's. `{figures}`, a refusal, or a
+     promise of either (a calculation operand). */
+  #successFigures(figures, who, byMachine) {
+    if (!Array.isArray(figures))
+      return basisUnreadable("a success record's figures are a list, each {label, basis: {op, operands}}");
+    for (const [i, f] of figures.entries()) {
+      if (!isObj(f) || !str(f.label) || f.label.trim().length > 200)
+        return basisUnreadable(`figure ${i} is {label, basis: {op, operands}}, its label words of at most 200 characters`,
+                               { figure: i });
+      const stated = ["value", "range"].some((k) => k in f || (isObj(f.basis) && k in f.basis));
+      if (stated || !isObj(f.basis) || !("op" in f.basis || "operands" in f.basis))
+        return refuse("SUCCESS_FIGURE_NOT_COMPUTED", `figure ${i} (${str(f.label) ?? "unlabelled"}) is computed from cited `
+          + `sources, never stated: give its computation {op, operands}.${NOTHING}`, { figure: i });
+    }
+    const all = figures.map((f) => this.#computation(f.basis, null, who, true));
+    const shape = (rs) => {
+      const bad = rs.find((r) => r.ok === false);
+      if (bad) return bad;
+      return { ok: true, figures: rs.map((r, i) => figureAnswer(figures[i], r, byMachine)) };
+    };
+    return all.some((r) => r && typeof r.then === "function") ? Promise.all(all).then(shape) : shape(all);
+  }
+
+  /* R19: the cause, checked: null without one; `{ok: true, cause}`; or its refusal. The own-act reader decides
+     SUCCESS_CAUSE_OWN_ACT_ONLY; with none, or one that throws or answers no list, the cause is unchecked and refused. */
+  #causeRefusal(cause, who) {
+    if (cause === null || cause === undefined) return null;
+    const c = isObj(cause) ? cause : {};
+    if (!str(c.statement) || [...c.statement.trim()].length > STATEMENT_MAX)
+      return refuse("SUCCESS_CAUSE_UNSTATED", "that the group's action caused the change is stated in the member's words, "
+        + `1 to ${STATEMENT_MAX} characters.${NOTHING}`);
+    const ev = c.evidence;
+    if (!Array.isArray(ev) || !ev.length || ev.length > SUCCESS_LIMITS.evidence
+        || ev.some((x) => !this.#resolvesEvidence(x, who ?? INTERNAL)))
+      return refuse("SUCCESS_CAUSE_NOT_EVIDENCED", `a cause rests on 1 to ${SUCCESS_LIMITS.evidence} items of evidence `
+        + `this record holds and you may see.${NOTHING}`);
+    const ids = ev.map(String);
+    let own = null;
+    try { own = this.#ownActReader ? this.#ownActReader.fn({ ids: [...ids], viewer: who ?? INTERNAL }) : null; } catch { own = null; }
+    if (!Array.isArray(own))
+      return refuse("SUCCESS_CAUSE_UNCHECKABLE", "whether the cause's evidence is only the group's own acts could not be "
+        + `read, so the cause is not accepted; the sequence of events may be stated instead.${NOTHING}`);
+    const mine = new Set(own.map(String));
+    if (ids.every((x) => mine.has(x)))
+      return refuse("SUCCESS_CAUSE_OWN_ACT_ONLY", "every item of the cause's evidence is the group's own act, which is "
+        + `never evidence that it caused the change; the sequence of events may be stated instead.${NOTHING}`);
+    return { ok: true, cause: { statement: c.statement.trim(), evidence: ids } };
+  }
+
+  #successLand({ project, matter, statement, changed_on, evidence, figures, sequence, cause, author, who, rev }) {
+    const at = this.#when();
+    return this.record.transact(() => {
+      const id = this.record.mintOpaqueId(SUCCESS_PREFIX, at.slice(0, 4), "", (x) =>
+        !!this.#one(`SELECT 1 AS x FROM success_records WHERE id=?`, x));
+      if (!id) return mintExhausted(SUCCESS_PREFIX);
+      this.sql.exec(`INSERT INTO success_records (id, project, matter, statement, changed_on, evidence, figures, sequence,
+          cause, author, at, supersedes, reason) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+        id, project, json(matter), statement, changed_on, JSON.stringify(evidence), JSON.stringify(figures), sequence,
+        json(cause), author, at, rev ? rev.supersedes : null, rev ? rev.reason : null);
+      return { ok: true, id, success: this.#successAnswer(this.#one(`SELECT * FROM success_records WHERE id=?`, id), who) };
+    });
+  }
+
+  /* A success record's row, or null when absent or in a project the viewer may not see (R13's one answer). */
+  #successRow(id, viewer) {
+    if (!str(id)) return null;
+    const r = this.#one(`SELECT * FROM success_records WHERE id=?`, id.trim());
+    return r && this.#seesProject(r.project, viewer) ? r : null;
+  }
+
+  #successSuccessor(id) { return this.#one(`SELECT id FROM success_records WHERE supersedes=?`, id)?.id ?? null; }
+
+  /* R20, R15: a success record as the viewer may see it: evidence, a figure's operands and the cause's evidence the
+     viewer may not see leave their lists, `out_of_view: true` saying only that something was withheld. */
+  #successAnswer(r, viewer) {
+    const who = viewer ?? INTERNAL;
+    let withheld = false;
+    const seen = (ids) => { const out = ids.filter((x) => this.#resolvesEvidence(x, who)); if (out.length < ids.length) withheld = true; return out; };
+    const figures = (parse(r.figures) || []).map((f) => {
+      const place = new Map();
+      const operands = (f.operands || []).filter((o, i) => {
+        const ok = this.#seesOperand(o.kind, o[o.kind], who);
+        if (ok) place.set(i, place.size); else withheld = true;
+        return ok;
+      });
+      const g = f.grade ? { ...f.grade, why: figureGradeWhy(f.grade, place) } : f.grade;
+      const u = f.undetermined ? { ...f.undetermined, why: place.size < (f.operands || []).length
+        ? UNDETERMINED_WHY[f.undetermined.code] ?? f.undetermined.why : f.undetermined.why } : undefined;
+      const basis = f.basis ? { ...f.basis, operands: (f.basis.operands || []).filter((o, i) => place.has(i)) } : f.basis;
+      return { ...f, basis, operands, ...(g ? { grade: g } : {}), ...(u ? { undetermined: u } : {}) };
+    });
+    const cause = parse(r.cause);
+    const next = this.#successSuccessor(r.id);
+    const out = { id: r.id, project: r.project, matter: parse(r.matter), statement: r.statement, changed_on: r.changed_on,
+      evidence: seen(parse(r.evidence) || []), figures,
+      sequence: r.sequence ? { text: r.sequence, says: SEQUENCE_NOT_CAUSE } : null,
+      cause: cause ? { statement: cause.statement, evidence: seen(cause.evidence || []) } : null,
+      ...(cause ? {} : { cause_says: CAUSE_NOT_STATED }),
+      author: r.author, at: r.at, supersedes: r.supersedes, reason: r.reason, superseded_by: next, live: !next,
+      carries: this.#carriesOf(r.id) };
+    if (withheld) out.out_of_view = true;
+    return out;
+  }
+
+  /* R15's sight of one operand, by its kind (R2's three). */
+  #seesOperand(kind, ref, who) {
+    if (kind === "money") return this.#seesFact(ref, who);
+    if (kind === "calculation") return this.#seesCalculation(ref, who);
+    const row = this.content.contentRow(ref);
+    return !!row && this.membership.inSight(row.bundle_id, who);
+  }
+
+  #carriesOf(recordId, ref = null) {
+    return this.#rows(`SELECT * FROM consequence_carries WHERE record_id=? AND (? IS NULL OR ref=?) ORDER BY seq`,
+                      recordId, ref, ref)
+      .map((c) => ({ carried: c.outcome, kind: c.kind, case: c.case_id, by: c.by, at: c.at }));
+  }
+
+  /** R20: one success record, superseded or not, with its links and carries; absent and unseen are one answer. */
+  successRecordRead({ id = null, viewer = null } = {}) {
+    const r = this.#successRow(id, viewer);
+    if (!r) return noSuchSuccessRecord(id);
+    return { ok: true, success: this.#successAnswer(r, viewer) };
+  }
+
+  /** R20: the live success records the viewer may see, of one project or matter if named, at most 200 per page in id
+   *  order after `after`, `truncated` when more follow. A project the viewer may not see is membership's one answer. */
+  successRecordsFor({ project = null, matter = null, after = null, limit = null, viewer = null } = {}) {
+    if (str(project) && (!this.#seesProject(project.trim(), viewer) || !this.#projectHeld(project.trim())))
+      return noSuchProject(project.trim());
+    const n = Number.isInteger(limit) && limit > 0 ? Math.min(limit, SUCCESS_PAGE_MAX) : SUCCESS_PAGE_MAX;
+    const key = matter == null ? null : canonical(matter);
+    const rows = this.#rows(`SELECT r.* FROM success_records r WHERE (? IS NULL OR r.project=?) AND (? IS NULL OR r.id > ?)
+        AND NOT EXISTS (SELECT 1 FROM success_records s WHERE s.supersedes = r.id) ORDER BY r.id`,
+      str(project), str(project), str(after), str(after))
+      .filter((r) => this.#seesProject(r.project, viewer) && (key === null || canonical(parse(r.matter)) === key));
+    const page = rows.slice(0, n);
+    return { ok: true, records: page.map((r) => this.#successAnswer(r, viewer)), truncated: rows.length > n,
+             ...(rows.length > n ? { next: page[page.length - 1].id } : {}) };
+  }
+
+  /* ===================================================================== *
+   * R22 (T45): CARRYING AN OUTCOME INTO THE CASE'S NEXT EDITION, only through case-authoring's `carryOutcome` (its R71).
+   * Only text and cites pass: figures, sequence and cause stay here, unpublished, so a carried outcome states no cause.
+   * ===================================================================== */
+
+  /** R22: `{carry, case, text?, author, viewer}`, `carry` one of `{success: id}`, `{addressed: part}` or
+   *  `{cure: {determination, standard}}` (the job's reading, J1). Answers carryOutcome's answer. */
+  outcomeCarry({ carry = null, case: caseId = null, text = null, author = null, viewer = null } = {}) {
+    if (machine(author))
+      return refuse("MACHINE_CANNOT_CARRY", `carrying an outcome into a case's next edition is a member's act.${NOTHING}`);
+    const who = viewer ?? str(author);
+    const c = isObj(carry) ? carry : {};
+    const which = ["success", "addressed", "cure"].filter((k) => c[k] !== undefined && c[k] !== null);
+    let out;
+    if (which.length !== 1) return noSuchSuccessRecord(null, true, "a carry names one of {success}, {addressed} or {cure}");
+    if (which[0] === "success") {
+      const r = this.#successRow(c.success, who);
+      if (!r) return noSuchSuccessRecord(c.success, true);
+      const next = this.#successSuccessor(r.id);
+      if (next) return successSuperseded(r.id, next);
+      out = { record: r.id, ref: null, kind: CARRY_KINDS.success, text: r.statement, cites: citesOf(parse(r.evidence) || []),
+              on: r.changed_on };
+    } else if (which[0] === "addressed") {
+      const p = this.#part(c.addressed, who);
+      if (!p) return noSuchPart(c.addressed, true);
+      const a = this.#addressedOf(p.bundle_id);
+      if (!a || a.state !== "addressed")
+        return refuse("CARRY_NOT_ADDRESSED", `${p.bundle_id}'s latest statement is ${a ? a.state : "none"}, not addressed.${NOTHING}`,
+                      { part: p.bundle_id });
+      out = { record: p.bundle_id, ref: null, kind: CARRY_KINDS.addressed, text: a.reason, cites: citesOf(parse(a.evidence) || []),
+              on: String(a.at).slice(0, 10) };
+    } else {
+      const cure = this.#standingCure(c.cure, who);
+      if (cure.ok === false) return cure;
+      out = { record: cure.determination, ref: cure.standard, kind: CARRY_KINDS.cure, text, cites: cure.cites, on: cure.on };
+    }
+    const ca = this.caseAuthoring;
+    const by = memberOf(author);
+    const at = this.#when();
+    return this.record.transact(() => {
+      const r = ca.carryOutcome({ case: caseId, kind: out.kind, text: out.text, cites: out.cites, on: out.on, by });
+      if (!r || r.ok !== true) return r;
+      this.sql.exec(`INSERT INTO consequence_carries (record_id, kind, ref, case_id, outcome, by, at) VALUES (?,?,?,?,?,?,?)`,
+                    out.record, out.kind, out.ref, String(caseId), String(r.outcome), str(author), at);
+      return r;
+    });
+  }
+
+  /* R22: the standing cure link of a determination and standard (`conformance.curesOf`, its R37), with the curing
+     determination's act date and findings (`determinationRead`): `{determination, standard, on, cites}`, conformance's
+     refusal passed through, or CARRY_NO_CURE. */
+  #standingCure(cure, who) {
+    const k = isObj(cure) ? cure : {};
+    const conf = this.conformance;
+    if (!str(k.determination) || !str(k.standard) || !conf || typeof conf.curesOf !== "function")
+      return noCure(k);
+    let res;
+    try { res = conf.curesOf({ determination: k.determination.trim(), standard: k.standard.trim(), viewer: who ?? INTERNAL }); }
+    catch { return noCure(k); }
+    if (isObj(res) && res.ok === false) return res;
+    const link = standingLink(res, k.standard.trim());
+    if (!link || link.cure_standing === false || !str(link.cure)) return noCure(k);
+    let d = null;
+    try { d = conf.determinationRead({ id: link.cure, viewer: who ?? INTERNAL }); } catch { d = null; }
+    const body = isObj(d) && d.ok !== false ? (isObj(d.determination) ? { ...d, ...d.determination } : d) : null;
+    if (!body) return noCure(k);
+    const when = isObj(body.act) ? body.act.when : body.when;
+    const on = typeof when === "string" ? when : isObj(when) ? when.value ?? null : null;
+    const findings = (Array.isArray(body.findings) ? body.findings : [])
+      .map((f) => (typeof f === "string" ? f : isObj(f) ? f.finding ?? f.id ?? null : null)).filter((x) => str(x));
+    return { ok: true, determination: k.determination.trim(), standard: k.standard.trim(),
+             on: typeof on === "string" ? on.slice(0, 10) : null, cites: findings.map((f) => ({ kind: "finding", ref: f })) };
   }
 }
 
@@ -1031,6 +1456,94 @@ function resultFigure(results, key) {
   return isFigure(x) ? x : null;
 }
 const isFigure = (x) => isObj(x) && typeof x.precision === "string" && (typeof x.value === "string" || typeof x.low === "string");
+
+/* ===================================================================== *
+ * R17–R22 (T45): THE SUCCESS RECORD'S PIECES. Pure.
+ * ===================================================================== */
+
+/* R17: a success record's id prefix (opaque, `record-core.mintOpaqueId`). */
+const SUCCESS_PREFIX = "SUC";
+
+/** R20, R22: no success record answers to the id, or the reader may not see it: one answer. */
+function noSuchSuccessRecord(id, wrote = false, why = null) {
+  return refuse("NO_SUCH_SUCCESS_RECORD", `${why ? `${why}; ` : ""}no success record answers to that id here; one you may `
+    + `not see is answered exactly as one that does not exist.${wrote ? NOTHING : ""}`, { id: str(id) });
+}
+
+/** R21, R22: the success record has a successor, which carries the record forward. */
+function successSuperseded(id, next) {
+  return refuse("SUCCESS_SUPERSEDED", `${id} has been revised by ${next}; act on that one.${NOTHING}`,
+                { id, superseded_by: next });
+}
+
+/** R22: no standing cure is linked for that determination and standard (the job's reading, J1). */
+function noCure(k) {
+  return refuse("CARRY_NO_CURE", `no standing cure is linked to ${str(k.determination) ?? "that determination"} for `
+    + `${str(k.standard) ?? "that standard"}.${NOTHING}`, { determination: str(k.determination), standard: str(k.standard) });
+}
+
+/* R22: the standing link `curesOf` answers for one standard (its R37 answer, K2850: `{standards: [{standard, link,
+   ended}]}`, `link` the standing link `{link, cure, standard, by, at, cure_standing}` or null); null when none stands. */
+function standingLink(res, standard) {
+  const rows = isObj(res) && Array.isArray(res.standards) ? res.standards : [];
+  const row = rows.find((x) => isObj(x) && x.standard === standard);
+  return row && isObj(row.link) ? row.link : null;
+}
+
+/* R22: evidence ids as case-account R5's cites: a passage by its content id, a finding by its id. */
+const citesOf = (ids) => ids.map((x) => (HEX64.test(String(x)) ? { kind: "passage", ref: String(x) } : { kind: "finding", ref: String(x) }));
+
+/* R22: case-authoring's `by` is the member's own id, the stamp without its `member:` mark. */
+const memberOf = (who) => (str(who) ? str(who).replace(/^member:/, "") : null);
+
+/** R17: a real calendar date (`civil-time.isCalendarDate`) or an EDTF band (`civil-time.parseEdtf`). */
+export function isSuccessDate(v) {
+  if (typeof v !== "string" || !v.trim()) return false;
+  const t = v.trim();
+  if (isCalendarDate(t)) return true;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(t)) return false;
+  try { const r = parseEdtf(t); return !!r && !r.refused; } catch { return false; }
+}
+
+/* R20: a matter's canonical form, keys sorted, so `{plan, matter}` matches however it was spelled. */
+function canonical(v) {
+  if (Array.isArray(v)) return `[${v.map(canonical).join(",")}]`;
+  if (isObj(v)) return `{${Object.keys(v).sort().map((k) => `${JSON.stringify(k)}:${canonical(v[k])}`).join(",")}}`;
+  return JSON.stringify(v ?? null);
+}
+
+/* R18: one figure as answered: its label, its computation as given (so a revision recomputes it), the operands shown
+   with their grades, the value exactly as calc-grammar gives it, the weakest grade named, or undetermined with why;
+   labelled machine work when a machine computed it (R2's label). */
+function figureAnswer(given, r, byMachine) {
+  const operands = r.operands.map((o) => {
+    const exact = o.exact || null;
+    return { kind: o.kind, ...operandAsGiven(o), ...(exact ? (exact.range ? { range: exact.range } : { value: exact.value }) : {}),
+             ...(exact && exact.precision ? { precision: exact.precision } : {}),
+             ...(o.kind === "content" ? { capture: o.capture_sha ?? null } : {}),
+             grade: o.grade ?? null, route: o.route ?? null, determined: !!o.determined };
+  });
+  const base = { label: given.label.trim(), basis: { op: r.op, operands: r.operands.map(operandAsGiven) }, op: r.op, operands,
+    label_says: byMachine ? { machine_work: true, says: "machine work: computed from the operands shown, for a member to adopt" }
+      : { machine_work: false, says: "computed from the operands shown" } };
+  if (r.state !== "computed")
+    return { ...base, state: "undetermined", undetermined: { code: r.undeterminedCode, why: r.undeterminedWhy,
+             says: "undetermined: not known, and never read as zero" } };
+  const f = r.figure;
+  return { ...base, state: "computed", ...(f.range ? { range: f.range } : { value: f.value }), precision: f.precision,
+           ...(f.currency !== undefined ? { currency: f.currency } : {}), ...(r.rounding ? { rounding: r.rounding } : {}),
+           grade: { grade: r.grade, determined: r.grade !== null, why: r.gradeWhy },
+           says: "calc-grammar's exact arithmetic over the operands, never the author's and never floating point" };
+}
+
+/* R15 for a figure's grade sentence: renumbered among the operands answered, or the finding with no place or id. */
+function figureGradeWhy(g, place) {
+  if (typeof g.why !== "string") return g.why;
+  const t = renumbered(g.why, place);
+  if (t !== null) return t;
+  return g.grade === null ? "an operand's grade is undetermined, so the weakest link is not known"
+    : `the weakest operand's grade is ${g.grade}; a computation is as strong as its weakest figure (DEC-21)`;
+}
 
 /* ===================================================================== *
  * R15: THE SENTENCES A PART RECORDED ABOUT ITS OPERANDS, AS ONE VIEWER READS THEM
@@ -1144,5 +1657,14 @@ export function consequencesOps(c, url, body) {
                                              viewer: qp("viewer") }),
     addressedrecord: () => c.addressedRecord({ ...b, ...stamps }),
     addressed: () => c.addressed({ determination: qp("determination"), viewer: qp("viewer") }),
+    /* T45 (R17–R22). */
+    successrecord: () => c.successRecord({ ...b, ...stamps }),
+    successrevise: () => c.successRevise({ ...b, ...stamps }),
+    successread: () => c.successRecordRead({ id: qp("id"), viewer: qp("viewer") }),
+    successrecords: () => c.successRecordsFor({ project: qp("project"), after: qp("after"),
+      limit: qp("limit") === null ? null : Number(qp("limit")),
+      matter: qp("plan") !== null || qp("matter") !== null ? { plan: qp("plan"), matter: qp("matter") } : null,
+      viewer: qp("viewer") }),
+    outcomecarry: () => c.outcomeCarry({ ...b, ...stamps }),
   };
 }

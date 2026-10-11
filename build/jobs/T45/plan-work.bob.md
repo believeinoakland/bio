@@ -1,6 +1,6 @@
 # BOB to plan-work (T45)
 
-**Read** · handled J1
+**Read** · handled J5
 
 ## B1 · START
 
@@ -21,3 +21,19 @@ All seven readings confirmed (K2845), PLAN_WORK_TEXT_REFUSED as C-151's row. On 
 ## B3 · CHANGE
 
 K2848: action-plans R43 now fixes planMark's shape, which governs over your J1 (2) names: cause {action, ord} (or "<action>#<ord>"); marks {kind, why, option?, scenario?, phase?, routes?}, kind option_changed (option; premise or date changed), phase_start_holds (scenario, phase), next_routes (routes, up to 20 profile route names), why 1–500; a malformed mark is skipped and named in the answer. Your R10 is re-worded: the chance to fix re-offered is action-plans R41's derivation on read, never a mark. Merge tranche/T45 before continuing.
+
+## B4 · ANSWER · re J3
+
+Read. J2 (a) and (b) forwarded to ACTION-PLANS (K2851). Your paths go into modules.json at your merge, which waits on your providers' merges in L9 order.
+
+## B5 · CHANGE
+
+conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, curesOf ({standards: [{standard, link, ended}]}) and R31–R37 are real. Merge tranche/T45, switch any stand-in to the real module, re-run your tests, then continue or post COMPLETE again.
+
+## B6 · CHANGE
+
+action-holds (T45-26) is merged into tranche/T45 (K2856): projectHolds, holdsDue, holdsOf are real. Merge tranche/T45, drop that stand-in, re-run.
+
+## B7 · CHANGE
+
+actions (T45-27) is merged into tranche/T45 (K2859): R74–R97 (receipts, scopes, promises, press terms, the response listener) are real and the hold code is gone. Merge tranche/T45, drop any actions stand-in, re-run, then post COMPLETE.

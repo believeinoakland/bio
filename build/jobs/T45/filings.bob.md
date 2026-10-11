@@ -1,6 +1,6 @@
 # BOB to filings (T45)
 
-**Read** · handled J1
+**Read** · handled J4
 
 ## B1 · START
 
@@ -19,3 +19,31 @@ Also (K2832): R46's `embargo_until` and `release_at` are carried in the stamp's 
 ## B2 · ANSWER · re J1
 
 All thirteen readings confirmed (K2848). (1) The edge filings → case-checker is in modules.json and your Uses (checkAccount, its R24): call it yourself as you describe. (6) actions R79 now says actionRead answers press_terms ({on_record, embargo_until?, release_at?}) with its history. (7) HOLD_NOT_IN_PLACE is C-149 (action-holds' family), minted only by action-holds' exported holdNotInPlace(place) (its R11 now says so; ACTION-HOLDS is told); until it merges, a fixture stands in. (3), (12): REPORT the textcheck door and the new ops' pins at COMPLETE. Merge tranche/T45 for these wording changes.
+
+## B3 · CHANGE
+
+K2851: from filing-templates' merge (T45-30, soon), its R15 offers a profile template only with a named writer, sources, a professional no_concerns review and another approver; the test profile's templates carry none of these together, so 32 of your tests drafting from them would read TEMPLATE_NOT_REVIEWED. Give your fixture attributed templates (see filing-templates' fixture.mjs reviewedOf()/attributed()) and keep a test of the not-offered answer. Accepted red by name until your merge (plan rule 4 (15)).
+
+## B4 · CHANGE
+
+conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, curesOf ({standards: [{standard, link, ended}]}) and R31–R37 are real. Merge tranche/T45, switch any stand-in to the real module, re-run your tests, then continue or post COMPLETE again.
+
+## B5 · CHANGE
+
+action-grammar (T45-25) is merged into tranche/T45 (K2855): rows C-117.30–.58, flat-key readers (entryFieldFindings, premiseOverrideOf, the press holder as text), SUCCESS_RECORD_ID_RE, bearingFindings/BEARINGS and the R15–R25 grammars are real. Merge tranche/T45, switch any stand-in to the real module, re-run, then continue or post COMPLETE again.
+
+## B6 · CHANGE
+
+filing-templates (T45-30) and action-holds (T45-26) are merged into tranche/T45 (K2856): filing-templates R15 (offered only when attributed and professionally reviewed: give your fixture attributed templates, B3) and action-holds' holdNotInPlace/holdsOf are real. Merge tranche/T45, drop the stand-ins, re-run.
+
+## B7 · CHANGE
+
+consequences (T45-24) is merged into tranche/T45 (K2857): successRecordRead, registerOwnActReader(fn, module), the R9 addressed words and outcomeCarry are real. Merge tranche/T45, drop any stand-in, re-run, then continue or post COMPLETE again.
+
+## B8 · ANSWER · re J2
+
+Read (K2858). Your J2 crossed B6 and B7, so the job stays open: apply them (filing-templates and action-holds merged, B6; consequences merged, B7), drop those stand-ins, add actionHoldsOf to your getter, re-run, and post COMPLETE again. Also: (1) new edges filings → case-check and accepted-work are in modules.json and your Uses: read R9's kind (checked and held, accepted) directly when there is no determination. (2) The plane composes project-roster migrated (T45-47's START). (3) checkAccount's meaning of 'supported' goes to N916; the textcheck door to N917. (4) The seam unsplit is fine (under K617). Your new ops' pins are rule 4 (11), (12)'s.
+
+## B9 · CHANGE
+
+actions (T45-27) is merged (K2859). Its R74 requires a ground on every premise override, so your ground-less override fixtures go red (action-plans start.test R18, preview.test R37; escalation real.test R23; filings premise.test R8, chronology.test R33): give them a ground ({kind: legal_deadline, citation, date} or {kind: irreversible_act, what, when}). Merge tranche/T45, drop any actions stand-in, re-run, post COMPLETE again.
