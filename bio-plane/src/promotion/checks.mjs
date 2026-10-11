@@ -98,6 +98,16 @@ export const PROMOTION_CHECKS = {
       + "what it has published), so it is never written by hand. Only closing a project, with its reason, or reopening "
       + "it is written. Nothing was written.",
   },
+  /* R57 (T45; N892; Actions D4, v0.2 rules 15, 16): a counsel matter is never evidence. A leg or a live `cites` entry
+     this promotion newly names, resting on a bundle of a project whose scope is `counsel_matter` (`project-roster`
+     R23), is refused unless the citing document is of that same project. */
+  COUNSEL_MATTER_NOT_EVIDENCE: {
+    check: "C-86.16",
+    where: "src/promotion/index.mjs #promote > is-counsel-matter-evidence",
+    translation: "This document cites material kept in a counsel matter, and a counsel matter is never used as "
+      + "evidence outside its own project: its members alone see it. Nothing was written. Cite the material from "
+      + "inside the counsel matter's project, or rest the point on something else.",
+  },
   BUNDLE_ID_DISAGREES: {
     check: "C-1.1",
     where: "src/promotion/index.mjs #promote > is-promote-bundle-id",
