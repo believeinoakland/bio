@@ -26,3 +26,13 @@
 - format: 0 failures. architecture: 0 failures. coverage: 34 of 34 live ids, 0 failures. ownership: 6 files changed, 1 failure: `build/modules.json`, the `affordances` → `doorbell` edge B1 directed (K2656). This is the same case as K2670 and K2674, so I'm asking BOB to accept it by name.
 
 Size (session_01PxX2Bm2JD3fpmmPKa3jkr5): test runs 10, module lines 28
+
+## J1 · COMPLETE
+
+T42-25b applied (tests only; no requirement changed). The details are in this record, under "Record".
+- `catalogue.test.mjs`: `LATER` gains `pagetranscribe` (op-grades R31), with a negative control. `backing.test.mjs`: `inboxresolve` is driven through `doorbell`'s fixture (its R3). For the clean T43 delete, `catalogue.test.mjs` now also reads the doorbell's routes from `doorbellOps` and `RESOLVE_NO_REASON`'s row from `doorbell/checks.mjs`. No affordances file reaches capture's doorbell copy any more.
+- **Edge added: `affordances` → `doorbell`** in `build/modules.json` `uses`. It is ownership's one failure; please accept it by name, as in K2670 and K2674.
+- **Merge after op-grades (T42-25a).** Until op-grades merges, `catalogue.test.mjs`:510 (R27's test) is red: `pagetranscribe` is ungraded. It is the only red. With R31 simulated locally, 232 of 232 pass.
+- Users' suites (P11), all green: tasks 106, queue 136, op-declarations 128, store-door 43, control-plane 216, plane 166.
+- Checks: format, architecture and coverage (34 of 34) show 0 failures. Ownership shows 1 failure, the edge above.
+- For BOB: the Size paragraph in `affordances.md` is stale (it says 2,225 lines; the files are now facts, door and words).
