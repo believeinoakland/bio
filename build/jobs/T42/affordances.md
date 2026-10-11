@@ -23,6 +23,6 @@
 - affordances: 232 tests, 231 pass, 1 fail (the R27 test, waiting on T42-25a, above); 232 of 232 pass with R31 simulated.
 - Users' suites (P11), all green: tasks 106/106, queue 136/136, op-declarations 128/128, store-door 43/43, control-plane 216/216, plane 166/166.
 - Layer tests: none (manifest).
-- format: 0 failures. architecture: 0 failures. coverage: 34 of 34 live ids, 0 failures. ownership: see the line below.
+- format: 0 failures. architecture: 0 failures. coverage: 34 of 34 live ids, 0 failures. ownership: 6 files changed, 1 failure: `build/modules.json`, the `affordances` → `doorbell` edge B1 directed (K2656). This is the same case as K2670 and K2674, so I'm asking BOB to accept it by name.
 
 Size (session_01PxX2Bm2JD3fpmmPKa3jkr5): test runs 10, module lines 28
