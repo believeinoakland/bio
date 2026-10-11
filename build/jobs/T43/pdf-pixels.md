@@ -28,7 +28,8 @@ The decoder's live working set, counted from its buffers: the component planes, 
 **Found in other modules:** image-codecs R1: `decodeBaselineJpeg` holds both upsampled chroma planes beside its output (24.4 MB of 79 MB at 12 MP); converting colour row by row would cut its live set to about 4.5 bytes per pixel (J2). ocr-worker's bundle (and pdf-worker's, if it takes `pagepixels.mjs`) is staled by `pagepixels.mjs` (§14): ocr-worker R19's manifest test is red until L1's close regenerates it.
 **Tests:** `pagepixels.test.mjs` 362 passed, 0 failed (R42/R43: 28 Pillow 12.3.0 variants, every orientation, every reduction path, the 4032×3024 Orientation-6 photo → 1008×1344 grey, 155,814 B; each refusal beside its control; three pictures in workerd); `imagecrop` 54/0, `jbig2` 179/0, `jpx` 205/0. Users: content 132/0; plane t42, t33, ask (R36) 47/0; ocr-worker 198/1 (the stale bundle only).
 **Checks:** format 0 failures; coverage 27 of 27 live ids, 0 failures; architecture 1 failure and ownership 3, all the three new files not yet in `modules.json` (`pdf-worker/src/picturepixels.mjs` to paths; `pdf-worker/test/fixtures/picture-variants.json`, `pdf-worker/test/fixtures/make-picture-fixtures.py` to tests), cleared when BOB adds them (plan rule 2, K1043).
-Size (session_019UE5f9dE91LZQFBmRUVev4): test runs 22, module lines 401
+**After B3 (CHANGE, K2702):** merged `tranche/T43` (image-codecs merged; its `pngdecode.mjs` byte-identical to the one built against). Re-run: pagepixels 362/0, imagecrop 54/0, jbig2 179/0, jpx 205/0; content 132/0, plane R36 files 47/0, ocr-worker 198/1 (the stale bundle, regenerated at L1's close). Checks: format, architecture, coverage (27/27) and ownership each 0 failures. The PNG reference already composites over white with `Image.alpha_composite` before `convert("L")`, as B3 notes.
+Size (session_019UE5f9dE91LZQFBmRUVev4): test runs 29, module lines 401
 
 ## J1 · QUESTION
 
