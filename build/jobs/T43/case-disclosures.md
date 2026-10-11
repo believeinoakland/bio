@@ -1,6 +1,6 @@
 # case-disclosures (T43)
 
-**Status** · session_018GVoxZK3C1A3DkJm7htB9G · depth 2 · COMPLETE · handled B0
+**Status** · session_018GVoxZK3C1A3DkJm7htB9G · depth 2 · COMPLETE · handled B1
 
 ## Record: T43-22 (K2710)
 
