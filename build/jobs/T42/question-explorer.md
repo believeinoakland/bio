@@ -33,3 +33,7 @@ T42-19 (N845) R15 applied: questionExplorerOf migrates before declaring to purge
 **Checks:** format, architecture, coverage (15 of 15), ownership: 0 failures.
 
 Size (session_01RQyJav79UQDg97kG4FrsPk): test runs 22, module lines 1046
+
+## J2 · COMPLETE
+
+B3 (K2664) applied: tranche/T42 merged; the basis-versions stand-in gains onMachinePassage (beside B2's inquiry stand-in). question-explorer 28/28 on the merged tranche. Users' suites there: scheduler 129, notice-producers 90, op-declarations 128, control-plane 216, plane 166 all green; migrate-released 585 PASS 0 FAIL; answer-envelope 28/29, its red families.test.mjs:425 (HELD_EARLIER C-142.28) is rule 4 (6) per K2651. Checks: format, architecture, coverage 15/15, ownership: 0 failures.
