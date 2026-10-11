@@ -28,3 +28,7 @@
 - Generated artifacts staled: `case-checker/program.mjs`, the plane bundle (regenerated at layer close).
 
 Size (session_012hin3suQbyht8NAUmKGuMq): test runs 5, module lines 2532
+
+## J1 · COMPLETE
+
+T43-1 complete (0a1de9dee3). R29: C-33.40's where names all five NO_BASIS sites (inquiry actNoBasis, progressions refusal, entities actShapeRefusal, money refusal/setFundType, lines noBasis/recordLine); row change for T43-6's stamp (row-census-1.69.0 pins T42's text). R56: idDisagrees(fm, folderName) exported from the entry, byte-for-byte, non-string id false; checkIdentity's C-1.1 runs it (R40 parity unchanged). record-grammar 87/87; checks format, architecture, coverage (54/54), ownership (7 files) 0 failures. Users' suites: 10044 tests, 23 fail; none mine. Stale generated artifact: case-checker program.test.mjs:19 (program.mjs; rule 4 (6)) and the plane bundle. 22 red identically on tranche/T43 without me: rule 4 (8)'s two, plus 20 not named in rule 4 (affordances t36:55; ai-use counting:167, limits:198, reads:144; case-carriage invariants:66, rereads:149/167/195/212; notice-producers accounts:36/47/88; op-declarations t34:68/145/307, t37:105/177/218, t38:76/87). Record: build/jobs/T43/record-grammar.md, Completion section.
