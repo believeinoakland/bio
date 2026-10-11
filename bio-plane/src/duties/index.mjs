@@ -47,7 +47,7 @@ import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { DUTIES_CHECKS, refusal } from "./checks.mjs";
 import { DUTIES_TABLES, migrateDuties } from "./schema.mjs";
 import { MODALITIES, SOURCE_KINDS, TRIGGER_KINDS, BASIS_KINDS, OCCURRENCE_STATES, PUBLIC_KINDS, ORGANISATION_KINDS,
-         ACTING_LINES, LEVEL_SEARCHED, CONNECTION_KINDS, OCCURRENCE_KEY_RE, USE_KINDS, NOTICED } from "./vocab.mjs";
+         ACTING_LINES, LEVEL_SEARCHED, CONNECTION_KINDS, OCCURRENCE_KEY_RE, USE_KINDS, NOTICED, STATED_BASIS } from "./vocab.mjs";
 
 export { DUTIES_CHECKS } from "./checks.mjs";
 export { DUTIES_SCHEMA, DUTIES_TABLES, DUTIES_TABLE_NAMES } from "./schema.mjs";
@@ -62,6 +62,8 @@ export const TRACK_BACK_DAYS = 366;
 export const SCHEDULER_STAMP = "class:scheduler";
 /** Bounds on a member's words, in characters. */
 export const WORDS_MAX = 4000, CLAUSE_MAX = 2000, REASON_MAX = 2000;
+/** R31: the captures one `dutiesArisingIn` read names, at most. */
+export const CAPTURES_MAX = 200;
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const str = (v) => (typeof v === "string" ? v.trim() : "");
@@ -307,7 +309,9 @@ export class Duties {
     const tm = isObj(f.time) ? f.time : {};
     /* DEC-49 REGION is-duty-basis */
     if (!BASIS_KINDS.includes(tm.basis))
-      return refusal("UNKNOWN_BASIS_KIND", `a due date's basis is one of ${BASIS_KINDS.join(", ")}.`, { bases: [...BASIS_KINDS] });
+      return refusal("UNKNOWN_BASIS_KIND", `a due date's basis is one of ${BASIS_KINDS.join(", ")}.${tm.basis === STATED_BASIS
+        ? " A deadline the other side has stated is a deadline on the group, as are the group's own obligations to a venue: "
+          + "they are the group's own deadlines on its actions, never a body's obligation here." : ""}`, { bases: [...BASIS_KINDS] });
     /* END DEC-49 REGION is-duty-basis */
     /* DEC-49 REGION is-duty-time */
     if (tm.basis === "rule" && !said(tm.rule)) return refusal("BAD_TIME", "a rule basis names the rule (time.rule) it is computed from.");
@@ -1375,6 +1379,45 @@ export class Duties {
   }
 
   /* ===================================================================== *
+   * R31: the duties arising in named captures, and whether all are met
+   * ===================================================================== */
+
+  /** R31 (T45; N855; Actions D6d; v0.2 rule 17): the adopted, unwithdrawn duties whose `arising_in` is one of
+   *  `captures`, each with its occurrences' states as R9 derives them as of `asOf`, and `all_met`: at least one such
+   *  duty, every one with at least one occurrence, every occurrence `met` or `met_late` (a promise kept late is kept).
+   *  A duty the viewer may not see is neither answered nor counted (`partial: true`). Writes nothing; never throws. */
+  dutiesArisingIn(a = {}) {
+    try {
+      const b = isObj(a) ? a : {};
+      const caps = Array.isArray(b.captures) ? b.captures : null;
+      /* DEC-49 REGION is-duty-captures */
+      if (!caps || caps.length < 1 || caps.length > CAPTURES_MAX || !caps.every((c) => said(c) && /^[0-9a-f]{64}$/.test(c)))
+        return refusal("BAD_CAPTURES", `name 1 to ${CAPTURES_MAX} captures, each by its sha256.`, { max: CAPTURES_MAX });
+      /* END DEC-49 REGION is-duty-captures */
+      if (!said(b.asOf) || !ISO_TS_RE.test(b.asOf)) return refusal("NO_AS_OF", "asOf is an instant (YYYY-MM-DDTHH:MM:SSZ); nothing reads now itself.");
+      const set = [...new Set(caps)];
+      const rows = this.#rows(`SELECT * FROM duties WHERE arising_in IN (${set.map(() => "?").join(",")}) AND withdrawn_at IS NULL ORDER BY duty_id`, ...set);
+      const duties = [];
+      let partial = false;
+      for (const d of rows) {
+        const fields = this.#fieldsOf(d.duty_id, d.version);
+        if (!this.visible(fields, b.viewer)) { partial = true; continue; }
+        const from = addDays(d.adopted_at.slice(0, 10), -TRACK_BACK_DAYS), to = b.asOf.slice(0, 10);
+        const { occurrences, source_errors } = this.#derive(d, fields, from, to, b.asOf, b.viewer);
+        duties.push({ duty_id: d.duty_id, arising_in: d.arising_in, modality: fields.modality, obligor: fields.obligor,
+                      performance: fields.performance, time: fields.time,
+                      occurrences: occurrences.map((o) => ({ key: o.key, trigger: o.trigger, due: o.due, state: o.state, why: o.why })),
+                      ...(source_errors.length ? { source_errors } : {}) });
+      }
+      const all_met = duties.length > 0
+        && duties.every((x) => x.occurrences.length > 0 && x.occurrences.every((o) => o.state === "met" || o.state === "met_late"));
+      return { ok: true, captures: set, as_of: b.asOf, duties, count: duties.length, all_met, ...(partial ? { partial: true } : {}) };
+    } catch (e) {
+      return { ok: true, captures: [], as_of: null, duties: [], count: 0, all_met: false, undetermined: { why: `the read failed: ${String(e && e.message || e).slice(0, 200)}` } };
+    }
+  }
+
+  /* ===================================================================== *
    * R17: restrictions and thresholds set against money facts
    * ===================================================================== */
 
@@ -1613,6 +1656,8 @@ export function dutiesOps(s, url, body) {
     uselink: () => s.linkUse(act()),
     useunlink: () => s.unlinkUse(act()),
     reviewpropose: () => s.proposeReview(act()),
+    dutyfromresponse: () => s.proposeFromResponse(act()),
+    dutiesarising: () => s.dutiesArisingIn({ captures: (q("captures") || "").split(",").filter(Boolean), asOf: q("as_of"), viewer: q("viewer") }),
   };
 }
 
