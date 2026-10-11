@@ -72,3 +72,7 @@ Adds to J2 (same cause): R9's press `holder: {name}` (action-grammar R8) is a ma
 **Tests and checks.** `node --test bio-plane/test/m/actions/*.test.mjs`: 110 pass, 0 fail. action-clocks 55 pass. Full `test/m/**` against `tranche/T45`: 18 new reds, all listed above (none in this module); 5 gone. `checks/format.mjs`: 0 failures; `architecture.mjs bio actions`: 0 failures; `coverage.mjs bio actions`: 70 of 70 ids named, 0 failures; `ownership.mjs bio actions tranche/T45`: 0 failures. The plane bundle is staled (rule 4 (5)).
 
 Size (session_01WosqkVPWcWM1u4LjrLwHUN): test runs 30, module lines 3967
+
+## J4 · COMPLETE
+
+T45-27 done: every entry applied, the moved hold code deleted; actions 110 pass, the four checks clean. Completion and seven REPORT items in my record (stale C-117 hold rows; R22 text rule; action-holds R1 vs its pressure test, needs your call; other modules' ground-less override tests; op maps; the accepted queue/plane hold callers; modules.json uses).
