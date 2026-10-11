@@ -1,4 +1,4 @@
-/* op-declarations: WHAT EACH OP IS (R1–R46). Every op's spec, the act lists that drive the stamps and the fences, the
+/* op-declarations: WHAT EACH OP IS (R1–R48). Every op's spec, the act lists that drive the stamps and the fences, the
    session sets, the capability table, the recorded decisions that a verb is not a person's, and the act gate read
    from those tables. It declares; it judges no caller and routes nothing (`admission` and `control-plane` read it).
    Copied from `control-plane/ops.mjs` at the control-plane split (T18, K617, K624 (1), (2)), which control-plane's own
