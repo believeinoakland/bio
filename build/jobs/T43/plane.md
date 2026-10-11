@@ -33,3 +33,13 @@ No other arm of the hook takes `author`. The only requirement naming `token:ai` 
 ## J1 · REPORT
 
 Work done and pushed on job/T43/plane (e01bd20633): R24, R36, R6 applied; 191/191 plane tests incl. the release suite and migrate-released; four checks clean. Per the merge order I wait for the other L11 jobs to merge, then merge tranche/T43, re-run, and post COMPLETE. Findings for you in my record: the hook's `by` for an `ai` caller is still `class:ai` (R6 names only author); plane's Uses wording for renderPictureToPixels. No op keeps the `token:` form for an ai author (reasons in the record). Ring me when L11's other merges are in.
+
+## Completion (B2's CHANGE)
+
+`tranche/T43` merged into `job/T43/plane` (every other L11 job merged but affordances, which may merge again, B2). Re-run on the merge:
+- `node --test "test/m/plane/*.test.mjs" test/system/migrate-released.test.mjs`: tests 191, pass 191, fail 0 (the release suite among them). There are no reds, so none falls under rule 4.
+- format: 147 modules, 0 failures. architecture: 50 product files, 0 failures. coverage: 38 of 38, 0 failures. ownership: 7 files, 0 failures.
+
+My findings are K2726's (`by` as N874 in T44; R36's Uses wording done by BOB).
+
+Size (session_01V89kk4XDE4kvMKxapFk858): test runs 5, module lines 254
