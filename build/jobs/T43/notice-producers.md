@@ -35,3 +35,45 @@ A finding in another module, `steps`, measured against its R23 and R4.
 Proposed: steps R23's entry also answers `looked_at`, the instant of the look (the observation-log entry `look`). Notice-producers already reads `looked_at` when it is present (J1 (4)), so no change here follows.
 
 No generated artifact went stale: notice-producers is bundled only into the plane bundle, which BOB regenerates at L11's close.
+
+## J4 · COMPLETE
+
+T43-13 is done on `job/T43/notice-producers`: one work commit over `tranche/T43`, module files only.
+
+**Entries applied (N856, DEC-189; K2704, K2720)**
+- **R16's limit-reached item is now read by scope:**
+  - `ai.queue.limitreached` for a use;
+  - `.overall` for the overall limit;
+  - `.member` for the per-member limit.
+
+  Every fill is read by key: `{account}` from `ai.account.group|project|own` (`{project}` is the project's name); `{period}` from `ai.period.*`; `{use}` from `ai.use.<use>.inline`; `{when}` from `ai.when.day`, or from `ai.when.month` with the next period's `date.month.*`. `{date}` is the profile's local day, written "{day} {month}" with the month from `date.month.*`.
+- **The Ask item:** `{scope}` comes from `ai.scope.group|own` or the project's name, and `{account}` from `ai.account.<kind>.inline`. Its act reads `act.exploreapprove.label.queue`, which replaces the retired `act.owed_…` key.
+- **R17:** each of the ten kinds' `summary` and `detail` now reads `queue.<kind>.summary|detail`, filled from the source's own facts. A step's work comes from `steps.step` (R4). The explored label is `ai.label.explored` (with `{owner}`) for the paying account's owners, and `ai.label.explored.member` for every other viewer.
+- **`NOTICE_WORDS` re-read from `words.json`:** 60 keys, verbatim. The `{for_use}`/`{Uses}` fills and `LIMIT_*` constants are gone, and so is the import of `ai-use/checks.mjs`; no notice-producers file imports it now (grep).
+- **Unjudged entries:** confirmed that `limitsReached` never lists one (J1 (7)). An entry whose period, day or period end cannot be read is no item.
+- **Readings:**
+  - J1 (1)–(7) as B2 adopted them (K2725).
+  - J2 replaces one fill of J1 (6): `{owner}` for a member's own account is "your own account" (`ai.account.own.inline`), not a handle.
+  - B2 answered J1 after J2 replaced it, so it was read, not applied; the built work matches it except for J2's fill.
+- **Nothing deferred.**
+
+**Found in another module:** J3 (steps R23 should answer the look's `looked_at`). Generated artifacts: only the plane bundle includes this module, and it is regenerated at L11's close.
+
+**How the reading set was read (§17):** I read my own requirements, code and tests whole. A helper agent in this session read the used modules' public parts (ai-use, credentials, steps, question-explorer, investigation, review, civil-time, membership, queue, queue-producers, and plane's reads) in full and wrote me a digest, each statement citing its section. I checked the entry shapes I fill from by running the real providers in their test worlds.
+
+**Tests**
+- `node --test bio-plane/test/m/notice-producers/`: 95 pass, 0 fail (it was 87/3). Rule 4 (10)'s reds (`accounts.test.mjs`:36, 47, 88) are cleared: those tests are rewritten for DEC-189 and pass.
+  - New `words.test.mjs`: every word equals `words.json`; every key DEC-189 names is held; the retired key is absent.
+  - Each scope's sentence is tested against the other two.
+  - The member's label is tested against the owner's.
+  - Each of the ten kinds is tested verbatim.
+- No layer tests are named in the manifest.
+- **Users:** queue 136/0 plus `conclude-project` 1/0; plane 184/0 plus `migrate-released` 1/0. No reds.
+
+**Checks**
+- format: 147 modules, 146 requirements files; 0 failures.
+- architecture: 14 product files, 68 relative imports; 0 failures.
+- coverage: 17 of 17 live requirement ids named by a test; 0 failures.
+- ownership: 6 files changed by notice-producers; 0 failures.
+
+Size (session_0185KLN8pZrLcZSM86tkn1wY): test runs 14, module lines 1381
