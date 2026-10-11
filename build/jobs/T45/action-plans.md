@@ -59,3 +59,11 @@ Size (session_01TfC1CmNozvRZtyciH6cRgT): test runs 13, module lines 3275
 Tests: `bio-plane/test/m/action-plans/` 75 pass, 0 fail. Checks: format 0 failures; architecture 0; coverage 45 of 45; ownership 15 files, 0 failures. Everything in J3 otherwise stands.
 
 Size (session_01TfC1CmNozvRZtyciH6cRgT): test runs 14, module lines 3274
+
+## J5 · COMPLETE
+
+**B7 applied.** `tranche/T45` merged (actions T45-27). R18's `premise_override` is now `{ground, reason}` (actions R74): the ground is written into the action's front matter as actions writes it (`ground_kind`, `ground_citation`, `ground_date`, … under `premise_override`), and judged by actions (`OVERRIDE_NO_GROUND`, `OVERRIDE_GROUND_REFUSED` pass through); a bare string is still read as the reason alone. R37's preview answers `premise_override: {ground, reason}`. Fixtures given a `legal_deadline` ground; controls added: the same override without a ground is refused `OVERRIDE_NO_GROUND` (start and preview), and the action's read answers the member's ground. The fixture already used the real `actions` (no stand-in to drop).
+
+Tests: `bio-plane/test/m/action-plans/` 75 pass, 0 fail. Checks: format 0 failures; architecture 0; coverage 45 of 45; ownership 15 files, 0 failures. B6 (action-clocks' merge) still awaits its CHANGE.
+
+Size (session_01TfC1CmNozvRZtyciH6cRgT): test runs 17, module lines 3290
