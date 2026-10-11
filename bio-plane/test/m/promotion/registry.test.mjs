@@ -230,7 +230,7 @@ test("R38 (N854): C-1.1 at the door is record-grammar's idDisagrees: a padded id
                            replay: true }).ok, true);
 });
 
-test("R38 (N854): C-2.1 at the door is record-grammar's parser: a revision is BUNDLE_MD_UNREADABLE whenever parseFrontmatter answers any C-2.1 finding, a clean front matter passes, a C-2.4 buried key is not this refusal", () => {
+test("R38 (N854, K2706): C-2.1 at the door is record-grammar's parser: a creation or a revision is BUNDLE_MD_UNREADABLE whenever parseFrontmatter answers any C-2.1 finding, a clean front matter passes, a C-2.4 buried key is not this refusal", () => {
   const clean = infoDoc(ID);
   const at = (needle, insert) => clean.replace(needle, `${needle}${insert}`);
   const cases = [
@@ -260,6 +260,16 @@ test("R38 (N854): C-2.1 at the door is record-grammar's parser: a revision is BU
       assert.equal(record.dump(), before, `${what}: nothing written`);
     }
     if (what.startsWith("clean")) assert.equal(r.ok, true, JSON.stringify(r));
+    /* K2706: a creation is asked the same, so nothing is admitted that its next revision would be refused. */
+    const NEW = "INFO-2026-0301";
+    const madeBefore = record.dump();
+    const c = p.promote(create(NEW, text.replaceAll(ID, NEW)));
+    assert.equal(c.reason === "BUNDLE_MD_UNREADABLE", c21.length > 0, `creation, ${what}: ${JSON.stringify(c).slice(0, 300)}`);
+    if (c21.length) {
+      assert.deepEqual([c.ok, c.check, c.why, c.grammar], [false, "C-2.1", "front_matter", c21.map((x) => x.message.replaceAll(ID, NEW))], what);
+      assert.equal(record.dump(), madeBefore, `creation, ${what}: nothing written`);
+    }
+    if (what.startsWith("clean")) assert.equal(c.ok, true, JSON.stringify(c));
   }
   /* Readability comes before the compare-and-swap (R17): a duplicate key over a stale base is still unreadable. */
   const { p, head } = held();

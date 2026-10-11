@@ -459,19 +459,17 @@ class Promotion {
     /* R7, R17: readability is judged before any fence that reads the document's content. */
     if (!sentMd) return { ok: false, reason: "NO_BUNDLE_MD", detail: "a promotion carries its bundle.md" };
     /* DEC-49 REGION is-promote-readable */
-    if (base !== null) {
-      if (typeof sentMd.text !== "string")
-        return refusal("BUNDLE_MD_UNREADABLE",
-          "this revision's bundle.md is held as a blob, so no rule about the revision can read it. Nothing was written.",
-          { why: "blob" });
-      /* R38 (N854): any C-2.1 finding refuses, not only a block the parser answers no data for (a key given twice, a
-         line outside the grammar), since the catalogue refuses the same bytes. */
-      if (!sentFm || sentGrammar.length)
-        return refusal("BUNDLE_MD_UNREADABLE",
-          `this revision's bundle.md has no front matter block the record's grammar can read (${cut(sentGrammar.join("; "), 300)}), `
-          + "so no rule about the revision can read it. Nothing was written.",
-          { why: "front_matter", grammar: sentGrammar.slice(0, 20) });
-    }
+    if (base !== null && typeof sentMd.text !== "string")
+      return refusal("BUNDLE_MD_UNREADABLE",
+        "this revision's bundle.md is held as a blob, so no rule about the revision can read it. Nothing was written.",
+        { why: "blob" });
+    /* R38 (N854, K2706): any C-2.1 finding refuses, at a creation as at a revision, not only a block the parser answers
+       no data for (a key given twice, a line outside the grammar), since the catalogue refuses the same bytes. */
+    if (typeof sentMd.text === "string" && (sentGrammar.length || (base !== null && !sentFm)))
+      return refusal("BUNDLE_MD_UNREADABLE",
+        `this ${base === null ? "creation" : "revision"}'s bundle.md has no front matter block the record's grammar can `
+        + `read (${cut(sentGrammar.join("; "), 300)}), so no rule about it can read it. Nothing was written.`,
+        { why: "front_matter", grammar: sentGrammar.slice(0, 20) });
     /* END DEC-49 REGION is-promote-readable */
 
     /* R19: `visibility` only on a project's creation, `discoverable` only with an owner. */

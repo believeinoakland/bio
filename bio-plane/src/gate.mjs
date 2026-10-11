@@ -952,8 +952,9 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    CHANGED AT THE WRITE DOOR, no row line moving (this job, R38, N854): C-1.1 and C-2.1 are judged by
    record-grammar's own arms, as `checkBundle` judges them: a non-replay promotion is refused BUNDLE_ID_DISAGREES exactly
    when `idDisagrees` is true (an id padded with white space is refused where it was trimmed and passed; a non-string id is
-   C-1.2's and no longer refused here), and a revision is refused BUNDLE_MD_UNREADABLE on any C-2.1 finding of
-   `parseFrontmatter` (a key given twice, a line outside the grammar), not only on a block it reads no data from.
+   C-1.2's and no longer refused here), and a creation or a revision is refused BUNDLE_MD_UNREADABLE on any C-2.1 finding
+   of `parseFrontmatter` (a key given twice, a line outside the grammar), not only a revision whose block it reads no
+   data from (K2706).
    CHANGED IN WHAT THE GATES RUN, no row line moving: none a T42 L3–L11 or T43 L1–L2 job record names beyond the rows
    above (inquiry's registered check now answers C-2.20 and investigation's C-146.26 under its new code, each counted
    with its row). T43's layer 1 changed C-33.40's `where` and no other row; its layer 2 is this job alone.
