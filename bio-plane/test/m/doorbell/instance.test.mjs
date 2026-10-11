@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { storage, provenance, fresh, bucket, H } from "./fixture.mjs";
 import { doorbellOf, doorbellOps, Doorbell, DOORBELL_EXEMPT_TABLES, READ_LIMIT } from "../../../src/doorbell/index.mjs";
 import { captureOf } from "../../../src/capture/index.mjs";
-import { CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA } from "../../../src/capture/schema.mjs";
+import { CAPTURE_EXEMPT_TABLES, CAPTURE_PURGED_TABLES } from "../../../src/capture/schema.mjs";
 import { recordOf } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
@@ -37,8 +37,7 @@ test("R25 (K61): doorbellOf answers one instance per storage, whoever asks and h
   assert.notEqual(doorbellOf(host().ctx), d, "negative control: another storage, another instance");
 });
 
-/* T43 (N851, N864; K2689): written to this module's own ownership of its six tables. Until capture's delete (T43-8)
-   capture still declares them first, so the two ownership arms below are red by name (plan T43 rule 4 (5)). */
+/* T43 (N851, N864; K2689, K2710): this module owns its six tables; since capture's delete no other module declares them. */
 test("R25: at its creation it creates its six tables with capture's DDL and declares them exempt from purge, as their owner", () => {
   /* capture migrated first, as the plane migrates it: the six are this module's, every one exempt */
   const h = host();
@@ -48,12 +47,15 @@ test("R25: at its creation it creates its six tables with capture's DDL and decl
   assert.deepEqual(declared(h.record), Object.fromEntries(SIX.map((t) => [t, ["doorbell", "exempt"]])), "held by doorbell, every one exempt");
   assert.equal(d.declareTables(), false, "asked again, nothing more is declared");
   /* doorbell made before capture's migrate (the plane builds both before it migrates): capture's own migrate after it
-     does not throw, and the six stay this module's */
+     declares capture's own tables without throwing, and the six stay this module's */
   const early = host({ migrateCapture: false });
   doorbellOf(early.ctx);
   for (const t of SIX) assert.ok(early.tables().includes(t), `${t}, made at doorbell's creation`);
   assert.doesNotThrow(() => early.cap.migrate(), "capture's migrate after doorbell's creation");
   assert.deepEqual(declared(early.record), Object.fromEntries(SIX.map((t) => [t, ["doorbell", "exempt"]])));
+  const captures = early.record.declaredTables().filter((x) => x.module === "capture").map((x) => x.name).sort();
+  assert.deepEqual(captures, [...CAPTURE_EXEMPT_TABLES, ...CAPTURE_PURGED_TABLES].sort(), "capture declared its own tables, every one");
+  assert.ok(!captures.some((t) => SIX.includes(t)), "and none of the six");
   /* with no copy declaring them (capture's delete, T43): doorbell holds them itself, exempt */
   const alone = host({ migrateCapture: false });
   const bare = new Doorbell(alone.s, { capture: { env: {} }, record: alone.record });
@@ -73,21 +75,50 @@ test("R25: any other refusal of the declaration throws, naming the table, before
   const s = storage();
   const refusing = { declarePurge: () => ({ ok: false, reason: "TABLE_NAME_INVALID", table: "knock_rate" }), transact: (fn) => fn() };
   assert.throws(() => new Doorbell(s, { capture: { env: {} }, record: refusing }).migrate(), /TABLE_NAME_INVALID \(knock_rate\)/);
-  /* negative control: capture's TABLE_DECLARED is held */
+  /* T43 (N864): no held arm: a TABLE_DECLARED naming capture throws alike */
   const held = { declarePurge: () => ({ ok: false, reason: "TABLE_DECLARED", table: "inbox", declaredBy: "capture" }), transact: (fn) => fn() };
-  assert.doesNotThrow(() => new Doorbell(storage(), { capture: { env: {} }, record: held }).migrate());
+  assert.throws(() => new Doorbell(storage(), { capture: { env: {} }, record: held }).migrate(), /TABLE_DECLARED \(inbox\)/);
+  /* negative control: an admitted declaration makes the instance */
+  const admits = { declarePurge: () => ({ ok: true }), transact: (fn) => fn() };
+  assert.doesNotThrow(() => new Doorbell(storage(), { capture: { env: {} }, record: admits }).migrate());
 });
 
-test("R25: a running store's inbox, keys and tally are kept as they are, with no data move: capture's rows are doorbell's rows", async () => {
+/* The six tables' columns as `capture` created them before T43 (its `schema.mjs` at T42's close): name, type, not null,
+   default, primary key. A running store holds them so; this module's DDL must read the same. */
+const AS_CAPTURE_MADE_THEM = {
+  inbox: [["knock_id","TEXT",0,null,1],["sha256","TEXT",1,null,0],["bytes","INTEGER",1,null,0],["content","TEXT",0,null,0],["in_r2","INTEGER",1,"0",0],
+          ["note","TEXT",0,null,0],["contact","TEXT",0,null,0],["received","TEXT",1,null,0],["status","TEXT",1,"'new'",0],["resolved","TEXT",0,null,0],
+          ["resolved_by","TEXT",0,null,0],["resolve_reason","TEXT",0,null,0],["knocker_digest","TEXT",0,null,0],["pseudonym","TEXT",0,null,0],
+          ["capture_sha","TEXT",0,null,0],["pulled_by","TEXT",0,null,0],["pulled_at","TEXT",0,null,0],["pulled_document","TEXT",0,null,0],
+          ["content_b64","TEXT",0,null,0]],
+  knock_rate: [["bucket","TEXT",0,null,1],["count","INTEGER",1,null,0]],
+  knock_key: [["id","INTEGER",0,null,1],["key_hex","TEXT",1,null,0],["created","TEXT",1,null,0]],
+  knocker_key: [["id","INTEGER",0,null,1],["key_hex","TEXT",1,null,0],["created","TEXT",1,null,0]],
+  doorbell_tally: [["day","TEXT",0,null,1],["refused","INTEGER",1,"0",0],["limit_reached","INTEGER",1,"0",0]],
+  doorbell_limit_last: [["id","INTEGER",0,null,1],["day","TEXT",1,null,0]],
+};
+const columns = (s, t) => s.sql.exec(`PRAGMA table_info(${t})`).map((r) => [r.name, r.type, r.notnull, r.dflt_value, r.pk]);
+
+test("R25: a running store's inbox, keys and tally are kept as they are, with no data move: the rows a store already holds are doorbell's rows", async () => {
+  /* a running store: rows written before this instance (a doorbell over it before a restart, or capture's copy before
+     T43, by the same DDL), then a fresh instance over the same storage */
   const h = host({ env: { CAPTURES: bucket() } });
-  /* rows capture's copy wrote before doorbell existed */
-  const before = await h.cap.knock({ content: "an old knock", sourceAddress: "198.51.100.1", knockerSecret: "a knocker secret of twenty-plus" });
+  const SECRET = "a knocker secret of twenty-plus";
+  const first = new Doorbell(h.s, { capture: h.cap, record: null }); /* the earlier instance: its own isolate, no declaration here */
+  first.migrate();
+  const before = await first.knock({ content: "an old knock", sourceAddress: "198.51.100.1", knockerSecret: SECRET });
   assert.equal(before.ok, true);
-  const fp = await h.cap.sourceFingerprint("198.51.100.1");
+  first.doorbellRefused({ country: "NZ" });
+  const fp = await first.sourceFingerprint("198.51.100.1");
+  const rows = () => SIX.map((t) => [t, JSON.stringify(h.s.sql.exec(`SELECT * FROM ${t}`))]);
+  const held = rows();
   const d = doorbellOf(h.ctx);
+  assert.notEqual(d, first);
+  assert.deepEqual(rows(), held, "creation moved, cleared or re-wrote nothing");
   assert.equal(d.inboxGet(before.knockId).item.sha256, before.sha256, "the same row, read by the doorbell");
   assert.equal(await d.sourceFingerprint("198.51.100.1"), fp, "the same instance key");
-  assert.equal((await d.knockerDigestOf("a knocker secret of twenty-plus")).pseudonym, before.pseudonym, "the same knocker key");
+  assert.equal((await d.knockerDigestOf(SECRET)).pseudonym, before.pseudonym, "the same knocker key");
+  assert.equal(d.doorbellTally({ viewer: "member:m1" }).days[0].refused, 1, "the same tally");
   /* an older store whose inbox lacks the additive columns gains them, keeping its rows */
   const old = storage();
   old.db.exec(`CREATE TABLE inbox (knock_id TEXT PRIMARY KEY, sha256 TEXT NOT NULL, bytes INTEGER NOT NULL, content TEXT,
@@ -99,12 +130,14 @@ test("R25: a running store's inbox, keys and tally are kept as they are, with no
   for (const c of ["knocker_digest", "pseudonym", "capture_sha", "pulled_by", "pulled_at", "pulled_document", "content_b64", "resolve_reason"])
     assert.ok(cols.includes(c), c);
   assert.equal(old.sql.exec(`SELECT count(*) n FROM inbox`)[0].n, 1, "the row kept");
-  /* the DDL is capture's, unchanged: each of the six tables' columns read the same under either */
-  const viaCapture = storage();
-  for (const st of [CAPTURE_SCHEMA, CAPTURE_DERIVED_SCHEMA].join(";\n").split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";")) if (st.trim()) viaCapture.db.exec(st);
+  /* the DDL is capture's, unchanged: each of the six tables' columns read as capture made them */
   const viaDoorbell = storage();
   new Doorbell(viaDoorbell, { capture: { env: {} }, record: null }).migrate();
-  for (const t of SIX) assert.deepEqual(viaDoorbell.sql.exec(`PRAGMA table_info(${t})`), viaCapture.sql.exec(`PRAGMA table_info(${t})`), t);
+  for (const t of SIX) assert.deepEqual(columns(viaDoorbell, t), AS_CAPTURE_MADE_THEM[t], t);
+  /* negative control: a table made otherwise reads otherwise */
+  const other = storage();
+  other.db.exec(`CREATE TABLE knock_rate (bucket TEXT PRIMARY KEY, count INTEGER)`);
+  assert.notDeepEqual(columns(other, "knock_rate"), AS_CAPTURE_MADE_THEM.knock_rate);
 });
 
 test("R25 (the map's doubt 5): its env is capture's for the same storage, read at each use; it takes no env of its own", async () => {

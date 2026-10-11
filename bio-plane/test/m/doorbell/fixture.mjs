@@ -2,8 +2,7 @@
    membership's and credentials' tables, provenance's read contract, an evidence bucket and the providers' stand-ins;
    `test/m/capture/fixture.mjs`, which this module may import, capture being earlier in the order), with this module's
    instance made over the same storage and capture's instance (`doorbellOf(ctx, {capture})`, R25). `c` is the doorbell;
-   `cap` is capture, which keeps its own copy of the doorbell's tables' declaration until its T43 delete (K625, N849), so
-   until then every fixture also runs R25's held arm. */
+   `cap` is capture, which since its T43 delete (K625, N849) declares none of the doorbell's tables. */
 import { fresh as captureFresh } from "../capture/fixture.mjs";
 import { doorbellOf } from "../../../src/doorbell/index.mjs";
 export { sha, storage, bucket, governor, provenance, receipt, register, network, H } from "../capture/fixture.mjs";
