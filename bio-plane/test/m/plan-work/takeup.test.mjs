@@ -80,18 +80,18 @@ test("R11: takeUpsFor pages after a cursor and, for a viewer, lists only items s
 });
 
 const KEY = (w) => `outcome:${w.D}#STD-2026-0001-a`;
-const SHA = "a".repeat(64), SHA2 = "b".repeat(64);
 
 test("R13: matterPromiseDuties reads the adopted duties arising in the captures of the received entries of the plan's actions serving the matter, with all_met and partial", () => {
   const { w, s } = setup();
   w.correspond(s.action, "sent");
-  const o1 = w.correspond(s.action, "received", "2026-10-03");
-  const o2 = w.correspond(s.action, "received", "2026-10-04");
-  w.shas.set(`${s.action}#${o1}`, SHA); w.shas.set(`${s.action}#${o2}`, SHA2);
+  /* two replies held as captures, and one held as a member's account (no capture to read) */
+  const SHA = w.capture("We will repair the lights by May."), SHA2 = w.capture("And publish the schedule.");
+  w.correspond(s.action, "received", "2026-10-03", { artifactSha: SHA });
+  w.correspond(s.action, "received", "2026-10-04", { artifactSha: SHA2 });
+  w.correspond(s.action, "received", "2026-10-04");
   /* another matter's action: its capture is not read for S1 */
   const t = w.started({ subjects: [w.S3], summary: "Other" });
-  const o3 = w.correspond(t.action, "received", "2026-10-05");
-  w.shas.set(`${t.action}#${o3}`, "c".repeat(64));
+  w.correspond(t.action, "received", "2026-10-05", { artifactSha: w.capture("Another matter's reply.") });
   w.dutiesAnswer = ({ captures }) => ({ ok: true, captures, duties: [{ duty_id: "DUT-1", arising_in: SHA, occurrences: [{ state: "met" }] }],
                                         all_met: true, partial: true });
   const r = w.pw.matterPromiseDuties({ plan: w.PL, matter: w.S1, nowMs: ms("2026-10-10T00:00:00Z"), viewer: V("bob") });
@@ -111,7 +111,7 @@ test("R13: control: a matter with no promise answers all_met false with no dutie
   const r = w.pw.matterPromiseDuties({ plan: w.PL, matter: w.S1, viewer: V("bob") });
   assert.deepEqual([r.ok, r.all_met, r.duties, r.partial], [true, false, [], false]);
   assert.equal(w.dutyCalls.length, 0, "no capture, nothing asked");
-  w.shas.set(`${s.action}#0`, SHA);
+  w.correspond(s.action, "received", "2026-10-04", { artifactSha: w.capture("A promise.") });
   w.dutiesAnswer = () => { throw new Error("down"); };
   const bad = w.pw.matterPromiseDuties({ plan: w.PL, matter: w.S1, viewer: V("bob") });
   assert.deepEqual([bad.ok, bad.all_met, bad.duties], [true, false, []]);

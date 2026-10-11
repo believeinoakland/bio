@@ -131,7 +131,8 @@ test("R4: planReviewOpen answers what changed since the last review entry: respo
   assert.equal(r.last_review.decided, "Wait for the reply.");
   assert.deepEqual(r.responses.map((x) => [x.action, x.at]), [[s.action, "2026-10-05"]]);
   assert.deepEqual(r.dates_passed.map((x) => [x.kind, x.at]), [["clock", "2026-10-04"]]);
-  assert.deepEqual(r.marks.map((x) => x.kind), ["option_changed"]);
+  /* the response itself set off a re-examination (its mark), and the mark written by hand: both since the review */
+  assert.deepEqual(r.marks.map((x) => [x.kind, x.why]), [["option_changed", `a response was recorded on ${s.action}, the action this option started`], ["option_changed", "x"]]);
   /* after a new review entry nothing has changed */
   w.clock.now = "2026-10-06T00:00:00Z";
   w.pw.planReviewRecord({ plan: w.PL, decided: "Read the reply.", ...by("bob") });

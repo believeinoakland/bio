@@ -14,10 +14,19 @@ function setup() {
   w.correspond(s.action, "sent", "2026-10-01");
   w.actions.actionMove({ target: s.action, to: "active", reason: "sent", ...by("bob") });
   w.actions.actionMove({ target: s.action, to: "awaiting_response", reason: "asked", ...by("bob") });
+  /* an overridden breach action: started from the plan, then revised by a member to state the breach with its
+     override's ground and reason (actions R8, R74) */
   const o = option(w, { subjects: [w.SI], addressee: OFFICE });
   choose(w, [o]);
-  const b = w.ap.optionStart({ plan: w.PL, option: o, kind: "other", breach: true, premise_override: "the meeting is on Monday", ...by("bob") });
+  const b = w.ap.optionStart({ plan: w.PL, option: o, kind: "other", ...by("bob") });
   assert.equal(b.ok, true, JSON.stringify(b));
+  const head = w.record.head(b.action);
+  const text = w.text(b.action).replace("\ncorrespondence: []", ["", "breach: true", "premise_override:", "  ground_kind: irreversible_act",
+    '  ground_what: "the hall is to be demolished"', "  ground_when: 2026-10-12T19:00",
+    '  reason: "the meeting is on Monday"', "correspondence: []"].join("\n"));
+  const rev = w.promotion.promote({ bundleId: b.action, base: head.bundleSha, snapKey: "ovr1", author: V("bob"),
+    files: [{ path: "bundle.md", text }], meta: { object_type: "action" } });
+  assert.equal(rev.ok, true, JSON.stringify(rev).slice(0, 400));
   const d = option(w, { summary: "Call the papers" });
   w.ap.optionDispose({ plan: w.PL, options: [d], disposition: "declined", reason: "too early to go public", ...by("bob") });
   w.ap.scenarioSet({ plan: w.PL, scenario: 2, name: "Loud line", phases: [{ id: "x", name: "X", options: [], starts: "plan_start" }], ...by("bob") });
@@ -49,7 +58,8 @@ test("R7: whereItStands answers waits with their basis, next dates, holds, overr
   const resp = r.waits.find((x) => x.action === s.action && x.waiting === "response");
   assert.equal(resp.since, "2026-10-01"); assert.ok(resp.basis);
   assert.deepEqual(r.next.map((x) => [x.kind, x.at]), [["clock", "2026-11-01"]]);
-  assert.deepEqual(r.overrides.map((x) => [x.action, x.reason, x.by]), [[b.action, "the meeting is on Monday", V("bob")]]);
+  assert.deepEqual(r.overrides.map((x) => [x.action, x.reason, x.by, x.ground && x.ground.kind]),
+    [[b.action, "the meeting is on Monday", V("bob"), "irreversible_act"]]);
   assert.deepEqual(r.declined.map((x) => [x.option, x.reason]), [[d, "too early to go public"]]);
   assert.deepEqual(r.set_aside.map((x) => [x.scenario, x.reason]), [[2, "we chose the quiet line"]]);
   assert.deepEqual(r.escalations.map((x) => [x.escalation, x.state, x.stage]).slice(0, 1), [["ESC-2026-0001-e", "open", 2]]);

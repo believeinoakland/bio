@@ -43,7 +43,7 @@ import { dutiesOf, INTERNAL as DUTIES_INTERNAL } from "../duties/index.mjs";
 import { readingGuidesOf } from "../reading-guides/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { expandRecurrence } from "../civil-time/index.mjs";
-import { isMachineIdentity, parseFrontmatter } from "../record-grammar/index.mjs";
+import { isMachineIdentity, parseFrontmatter, sha256HexSync } from "../record-grammar/index.mjs";
 import { PLAN_WORK_TABLES, migratePlanWork } from "./schema.mjs";
 import { PLAN_WORK_CHECKS, refusal } from "./checks.mjs";
 
@@ -718,12 +718,16 @@ export class PlanWork {
     const done = [];
     try {
       const response = `${action}#${ord}`;
-      const projects = this.#linkedProjects(action, ord, project);
+      /* an action started from a plan may carry no project of its own: its plan's project is the response's */
+      const own = typeof project === "string" && project ? project : this.#projectOfAction(action);
+      const projects = this.#linkedProjects(action, ord, own);
       const plans = new Set();
       for (const pr of projects) {
         const l = this.actionPlans.plansFor({ project: pr, viewer: PLANE });
         for (const x of ok(l) ? l.items || [] : []) if (x.state === "open" || x.state === "paused") plans.add(x.id);
       }
+      /* claimed and marked with no await between, so a response re-examines each plan once */
+      const claimed = [];
       for (const id of [...plans].sort()) {
         if (this.#rows(`SELECT 1 AS x FROM pw_reexams WHERE plan_id=? AND response=?`, id, response).length) continue;
         const marks = this.#reexamine(id, action, ord, recorder);
@@ -732,10 +736,15 @@ export class PlanWork {
           try { marked = this.actionPlans.planMark({ plan: id, marks, cause: { action, ord } }); }
           catch (e) { marked = { ok: false, why: String(e && e.message || e).slice(0, 200) }; }
         }
-        const run = await this.#openRun(id, response, recorder, at);
-        this.sql.exec(`INSERT OR IGNORE INTO pw_reexams (plan_id, response, at, marks_json, marked_json, run, run_json) VALUES (?,?,?,?,?,?,?)`,
-          id, response, this.now(), JSON.stringify(marks), marked ? JSON.stringify(marked) : null, run.run ?? null, JSON.stringify(run));
-        done.push({ plan: id, marks, run });
+        this.sql.exec(`INSERT INTO pw_reexams (plan_id, response, at, marks_json, marked_json) VALUES (?,?,?,?,?)`,
+          id, response, this.now(), JSON.stringify(marks), marked ? JSON.stringify(marked) : null);
+        claimed.push({ plan: id, marks });
+      }
+      for (const c of claimed) {
+        const run = await this.#openRun(c.plan, response, recorder, at);
+        this.sql.exec(`INSERT OR IGNORE INTO pw_reexam_runs (plan_id, response, run, run_json, at) VALUES (?,?,?,?,?)`,
+          c.plan, response, run.run ?? null, JSON.stringify(run), this.now());
+        done.push({ ...c, run });
       }
     } catch (e) { done.push({ failed: String(e && e.message || e).slice(0, 200) }); }
     return { ok: true, reexamined: done };
@@ -837,7 +846,7 @@ export class PlanWork {
     const p = this.#plan(planId, null);
     if (!p) return { opened: false, why: "the plan could not be read" };
     const stamp = at ?? this.now();
-    const run = `RXM-${stamp.slice(0, 10).replace(/-/g, "")}-${await hex12(`${planId}|${response}`)}`;
+    const run = `RXM-${stamp.slice(0, 10).replace(/-/g, "")}-${sha256HexSync(`${planId}|${response}`).slice(0, 12)}`;
     try {
       const r = await ai.open({ run, contextType: "project", contextId: p.project, mode: "plan", plan: planId,
         origin: "reexamination", response, label: "re-examining the plan after a recorded response",
@@ -852,7 +861,8 @@ export class PlanWork {
   reexaminations({ plan, viewer } = {}) {
     const p = this.#plan(plan, viewer);
     if (!p) return noSuchPlan(plan ?? null);
-    return { ok: true, plan: p.id, items: this.#rows(`SELECT * FROM pw_reexams WHERE plan_id=? ORDER BY at, response`, p.id)
+    return { ok: true, plan: p.id, items: this.#rows(`SELECT x.*, r.run_json FROM pw_reexams x LEFT JOIN pw_reexam_runs r
+        ON r.plan_id = x.plan_id AND r.response = x.response WHERE x.plan_id=? ORDER BY x.at, x.response`, p.id)
       .map((r) => ({ response: r.response, at: r.at, marks: unjson(r.marks_json, []), run: unjson(r.run_json, null) })) };
   }
 
@@ -996,11 +1006,6 @@ function prepView(rows) {
 function safeExpand(a) {
   try { const r = expandRecurrence(a); return r && Array.isArray(r.instances) ? r : { reason: r && (r.why || r.reason || r.code) || null }; }
   catch { return null; }
-}
-
-async function hex12(s) {
-  const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
-  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 12);
 }
 
 /* ===================================================================== *

@@ -79,15 +79,23 @@ CREATE TABLE IF NOT EXISTS pw_takeups (
   at         TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS pw_takeups_member ON pw_takeups(member, seq);
--- R10: each re-examination a recorded response set off, per plan: the marks written and the run opened or refused.
+-- R10: each re-examination a recorded response set off, per plan, with the marks written; claimed in the same
+-- synchronous step that writes the marks, so a response re-examines a plan once.
 CREATE TABLE IF NOT EXISTS pw_reexams (
   plan_id      TEXT NOT NULL,
   response     TEXT NOT NULL,
   at           TEXT NOT NULL,
   marks_json   TEXT NOT NULL,
   marked_json  TEXT,
-  run          TEXT,
-  run_json     TEXT,
+  PRIMARY KEY (plan_id, response)
+);
+-- R10: the re-examination run opened, or why not, once its opening has answered.
+CREATE TABLE IF NOT EXISTS pw_reexam_runs (
+  plan_id   TEXT NOT NULL,
+  response  TEXT NOT NULL,
+  run       TEXT,
+  run_json  TEXT NOT NULL,
+  at        TEXT NOT NULL,
   PRIMARY KEY (plan_id, response)
 );
 `;
@@ -102,6 +110,7 @@ export const PLAN_WORK_TABLES = Object.freeze([
   { name: "pw_reports", keys: ["plan_id"] },
   { name: "pw_takeups", keys: ["owner_id"] },
   { name: "pw_reexams", keys: ["plan_id"] },
+  { name: "pw_reexam_runs", keys: ["plan_id"] },
 ]);
 
 export function migratePlanWork(sql) {
