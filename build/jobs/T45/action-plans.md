@@ -67,3 +67,11 @@ Size (session_01TfC1CmNozvRZtyciH6cRgT): test runs 14, module lines 3274
 Tests: `bio-plane/test/m/action-plans/` 75 pass, 0 fail. Checks: format 0 failures; architecture 0; coverage 45 of 45; ownership 15 files, 0 failures. B6 (action-clocks' merge) still awaits its CHANGE.
 
 Size (session_01TfC1CmNozvRZtyciH6cRgT): test runs 17, module lines 3290
+
+## J6 · COMPLETE
+
+**B8 (and B6) applied.** `tranche/T45` merged (action-clocks T45-28, action-replies T45-29). The fixture now builds observation-log's tables before the modules, as the plane does, so R27's purge test passes with action-clocks' steps registration (its R16). The fixture already used the real `actions` and `action-clocks`; no stand-in of either remains. No product code changed.
+
+Tests: `bio-plane/test/m/action-plans/` 75 pass, 0 fail. Checks: format, architecture, coverage (45 of 45), ownership all 0 failures.
+
+Size (session_01TfC1CmNozvRZtyciH6cRgT): test runs 19, module lines 3290
