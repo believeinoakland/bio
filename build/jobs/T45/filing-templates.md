@@ -40,3 +40,7 @@ With R15 in force (v0.2 rule 11), a profile template is offered only with a name
 - `wizard-scripts` (T45-37): 7 newly red, its `{template}` drafts refused `WIZARD_DRAFT_REFUSED` for the same cause, e.g. "R12 R2 a {template} draft named @ and a handle reaches filing-templates' offeredVersion by name".
 Options: (a) each user's own job gives its fixture attributed templates, as my tests do (`fixture.mjs` `reviewedOf()`/`attributed()`: add sources and a professional review), meanwhile accepted reds; (b) a `jurisdictions` change making the test profile's templates fully attributed (one place, but L1 is closed and it would hide R15's not-offered case from users). I recommend (a): filings merges right after me and its R28/R31 tests should exercise the not-offered answer anyway.
 Unchanged by my merge (same reds before and after, all in rule 4): affordances, answer-envelope, control-plane, plane, queue-producers; `migrate-released` passes.
+
+## J3 · COMPLETE
+
+T45-30 done: R15, R26, R28, R23 (C-125.33, .34) applied; rule 4 (7)'s reads.test.mjs R26 red green. 63/63 tests; format, architecture, coverage (28/28), ownership 0 failures. No file outside my paths. Record's Completion section has the rest; REPORT J2 names the reds in filings (32) and wizard-scripts (7) that R15 makes in their fixtures.
