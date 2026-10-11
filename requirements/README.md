@@ -1,6 +1,6 @@
 # The requirements canon
 
-**Status** · APPROVED by Bob 2026-09-25 (TRANSITION.md T3), as drafted by BOB #37 the same day, including its three calls: unreviewed drafts are canon as they stand, a document named by section is canon only there, and Bob's DEC rulings are canon. The canon is the one place every module's requirements cite, by section (PROCESS-MECHANICS §1, P5). Files stay where they are until T8 moves them here. A document listed "by section" is canon only in the sections named; the rest is history. AMENDED at T18's opening by a worker for BOB #75, 2026-09-30 (K608 (1)): `BIO_Action_v0_1.md` listed as canon (whole), and Case Making's canon part narrowed as its §6 says. AMENDED 2026-10-05 by BOB #111 (K1432): `BIO_Capability_Ladders_v0_1.md` listed as canon (whole).
+**Status** · APPROVED by Bob 2026-09-25 (TRANSITION.md T3), as drafted by BOB #37 the same day, including its three calls: unreviewed drafts are canon as they stand, a document named by section is canon only there, and Bob's DEC rulings are canon. The canon is the one place every module's requirements cite, by section (PROCESS-MECHANICS §1, P5). Files stay where they are until T8 moves them here. A document listed "by section" is canon only in the sections named; the rest is history. AMENDED at T18's opening by a worker for BOB #75, 2026-09-30 (K608 (1)): `BIO_Action_v0_1.md` listed as canon (whole), and Case Making's canon part narrowed as its §6 says. AMENDED 2026-10-05 by BOB #111 (K1432): `BIO_Capability_Ladders_v0_1.md` listed as canon (whole). AMENDED 2026-10-11 by a worker for BOB (K2780): `BIO_Action_v0_2.md` listed as canon (whole) in place of `BIO_Action_v0_1.md`, which is kept as history; Case Making's action sections are governed by v0.2.
 
 ## Canon
 
@@ -21,9 +21,9 @@
 | `docs/architecture/BIO_Content_Framework_v0_10.md` | whole | content: extraction substrate (Part I) and the content, meaning and retrieval model (Part II) |
 | `docs/architecture/BIO_Intake_Doctrine_v1_1.md` | whole | how material enters the record: provenance, the intake contract, capture grades |
 | `docs/architecture/BIO_Membership_Architecture_v2.md` | whole | members, administrators, capabilities, invitations, projects, verified export |
-| `docs/architecture/BIO_Case_Making_v0_1.md` | whole except §2's action paragraphs and §THE ACTION PLAN (history since K608; `BIO_Action_v0_1.md` governs them) | the inquiry, the claim, the case |
+| `docs/architecture/BIO_Case_Making_v0_1.md` | whole except §2's action paragraphs and §THE ACTION PLAN (history since K608; `BIO_Action_v0_2.md` governs them, K2780) | the inquiry, the claim, the case |
 | `docs/architecture/BIO_Investigation_v0_1.md` | whole | the project as an investigation (under construct 8): the objective and its condition, steps, saving steps and questions, the system's part, AI use, the first message, narrative and evidence, people, and what is new in publishing a case (K2417, K2419, K2420) |
-| `docs/architecture/BIO_Action_v0_1.md` | whole | the Action layer (construct 16): standards, determinations, consequences, action plans, actions, filings and communications, escalation (K608 (1); its working papers in `docs/development/action-design/`) |
+| `docs/architecture/BIO_Action_v0_2.md` | whole | the Action layer (construct 16): standards, determinations, consequences and success records, action plans, actions, filings and communications, escalation (K2780; its design in `docs/development/actions-design/`; replaces `BIO_Action_v0_1.md`, kept as history, K608 (1)) |
 | `docs/architecture/BIO_Declared_Bias_v0_1.md` | whole | bias as a declared, justified construct; hunch debt; masking safeguards |
 | `docs/architecture/BIO_Interaction_Constructs_v0_1.md` | whole | QUEUE and ACT, the rung ladder, UNDETERMINED as a display primitive |
 | `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` | whole | the assistant and the AI roles |
@@ -32,7 +32,7 @@
 | `docs/architecture/BIO_State_Rules_Consistency_v1_5.md` | §3 onward | the record's shape and rules: ids, schemas, state machines, relationships, invariants I-1…I-20 |
 | `docs/architecture/BIO_Technical_Architecture_Decisions_v10.md` | the general rules, not the mechanisms | the technology decisions that remain live |
 | `docs/architecture/BIO_Bundle_Skill_Composite_Design_v1_7.md` | the bundle format, promotion semantics and C-series checks | the format the plane must still satisfy |
-| `docs/architecture/BIO_Capability_Ladders_v0_1.md` | whole; a rung not yet built is a planned design, re-verified when its stage is planned (K1432) | the capability ladders of time, organisations and obligations, people, events, money, law, courts, analysis and questions: every need found, every rung L0–L5 with its design, what must exist first, realism and performance, and the decisions it raises (all ruled, K1494; the backward question deferred by Bob, D-165); every construct to L5 (B1 (c)) |
+| `docs/architecture/BIO_Capability_Ladders_v0_1.md` | whole; a rung not yet built is a planned design, re-verified when its stage is planned (K1432) | the capability ladders of time, organisations and obligations, people, events, money, law, courts, analysis, questions and actions (§9A, K2780): every need found, every rung L0–L5 with its design, what must exist first, realism and performance, and the decisions it raises (all ruled, K1494; the backward question deferred by Bob, D-165); every construct to L5 (B1 (c)) |
 
 **Construct detail (level 2)**
 
