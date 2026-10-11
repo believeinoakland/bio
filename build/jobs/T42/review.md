@@ -51,3 +51,10 @@ Started; read B1. Reading: my requirements whole, layer 8's row of `layers.md`, 
 QUESTION (one, the edge): `build/modules.json` on `tranche/T42` lists review's `uses` without `case-account`, so `checks/architecture.mjs review` will refuse my import of `caseAccountOf`. The file is BOB's. Best reading: BOB adds `case-account` to review's `uses` (as the split map §5 says: "edge `case-account` added"), alongside the CHANGE that tells me case-account merged. I carry on meanwhile on that reading.
 
 Plan (my reading of R33 with case-account R7, R12): `reviewOf` registers `reviewCommentsFor` with `caseAccountOf(host).registerReviewComments` (reached lazily on the host, or a `caseAccount` dep a test passes), and no longer with case-authoring's pass-through (registering both would hit case-account's `REVIEW_COMMENTS_DECLARED` if the pass-through forwards). Nothing else changes. Prepared against case-account's requirements with a stand-in; I merge `tranche/T42` and run against the real module when your CHANGE arrives.
+
+## J2 · REPORT
+
+REPORT (case-authoring, plane; details in my record's "Found in other modules"):
+1. plane `accepted.test.mjs`:115 (R17) is red with review's change and green on `tranche/T42` @ 9581f7011a without it. Review now builds case-account at boot (`store.mjs`:307, before case-authoring at :313). case-authoring's `CASE_AUTHORING_TABLES` (`schema.mjs`:88–89) still lists `account_drafts` and `account_acceptances`, so its `declarePurge` is refused `TABLE_DECLARED` and case-authoring is never declared. This is the fix your B3 gives case-authoring; it clears at T42-23's merge. Merge review after case-authoring, or accept the red until then.
+2. case-authoring ignores `declarePurge`'s answer (`index.mjs`:2968), so that refusal was silent.
+3. An improvement this change brings: before it, review built case-authoring at its own start with no deps, so the plane's `caseAuthoringOf(ctx, {publishSchedule})` at `store.mjs`:313 got that instance and its `publishSchedule` was dropped. Now review reaches case-authoring only lazily, so the plane's deps are the ones used.
