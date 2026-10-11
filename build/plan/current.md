@@ -1,4 +1,10 @@
-# Plan T45 (draft for BOB)
+# Plan T45
+
+**Status** · OPEN
+
+**Jobs** · 
+
+**At T45's opening (K2784):** opened 2026-10-11 from `main` @ a969c420b2 (T44 closed by PR #27, K2784). Development runs (Bob, K2605); the 80% pause (K2341) and the account-switch rule stand. Bob's meter: 35% weekly during T44's L2 (K2741); asked again at this opening. New modules entered in `modules.json` and `layers.md` at this opening, empty (K1043): `case-check`, `action-holds`, `action-replies`, `plan-work`, `action-producers` (K2781 (1)); membership's `MODULE_ORDER` follows in T45-2 (K657).
 
 **Sources** · `next.md` N751…N895 (each re-tested at the opening); `archive/T44.md` Outcome (its carried reds); the six fold drafts `draft-T45-{lower,l8,l9a,l9b,grammar,upper}.md` (requirement text, BOB's wording at each layer's fold, P5), read with K2780 (canon v0.2 placed), K2781 (packaging and readings) and K2782 (Bob: own projects never rescued; stewards' contact now, service later); the actions lane's `REQUIREMENTS-HANDOFF.md` (H31, folded as N893); the channel; `rulings-active.md`. The cross-draft points below are BOB's (P17), decided at each layer's fold and recorded in `rulings.md`.
 
