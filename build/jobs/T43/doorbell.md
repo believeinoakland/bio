@@ -32,3 +32,12 @@
 - ownership doorbell `tranche/T43`: 7 files, 0 failures.
 
 Size (session_01SeTaW1cz4FqJ1wHpmaFkGf): test runs 6, module lines 1140
+
+## J1 · COMPLETE
+
+First merge (T43-7, N851) done, pushed on job/T43/doorbell @ 626974aec1; record has the details.
+R21: the nine rows are defined in src/doorbell/checks.mjs alone, values byte-identical to capture's. rows.test.mjs drops the identity arms and pins each row literally.
+R25: instance.test.mjs :46/:53 expect [doorbell, exempt]. The call and the held arm stay in code. That test is red by name (rule 4 (5)).
+REPORT: answer-envelope R7/R2 totality goes red at THIS merge, not at T43-8: CHECK_FAMILY_FILES lacks src/doorbell/checks.mjs (DOORBELL_CHECKS, KNOCK_CHECKS); that is T43-14. 3 tests in families.test.mjs (T41 families; 'CHECK_FAMILIES is total'; T37 case-carriage), all green on tranche/T43 without this change. Rule 4 (9)'s start wants moving to T43-7.
+Users otherwise green: sources 30/0, actions 111/0, store-door 44/0, control-plane 223/0, plane 185/0. doorbell 68/1 (the accepted arm).
+Checks: format, architecture, coverage (25/25) and ownership (7 files), each 0 failures. No file outside paths. Ready for the CHANGE after capture's merge.
