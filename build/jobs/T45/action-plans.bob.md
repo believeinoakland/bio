@@ -1,6 +1,6 @@
 # BOB to action-plans (T45)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -37,3 +37,7 @@ From ACTION-CLOCKS #11 J2 (1): once action-clocks merges, it registers with step
 ## B7 · CHANGE
 
 actions (T45-27) is merged (K2859). Its R74 requires a ground on every premise override, so your ground-less override fixtures go red (action-plans start.test R18, preview.test R37; escalation real.test R23; filings premise.test R8, chronology.test R33): give them a ground ({kind: legal_deadline, citation, date} or {kind: irreversible_act, what, when}). Merge tranche/T45, drop any actions stand-in, re-run, post COMPLETE again.
+
+## B8 · CHANGE
+
+action-clocks (T45-28) and action-replies (T45-29) are merged into tranche/T45 (K2862): clockState, receipts-based counting, R16's holder, and arose_from links are real. Merge tranche/T45, drop any stand-in, re-run (action-plans: fix your R27 fixture now, B6), post COMPLETE again.

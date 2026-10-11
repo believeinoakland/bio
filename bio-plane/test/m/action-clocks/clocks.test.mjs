@@ -138,7 +138,9 @@ test("R2 clockPropose computes from the profile's deadline through civil-time, s
   assert.equal(p.proposal.entry.date, "2026-09-07");
   assert.match(p.proposal.entry.basis, new RegExp(dl.citation.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   assert.match(p.proposal.entry.basis, /profile basis: TEST/);
-  assert.deepEqual(Object.keys(p.proposal.entry).sort(), ["basis", "basis_kind", "date", "description", "status", "text"]);
+  assert.deepEqual(Object.keys(p.proposal.entry).sort(), ["basis", "basis_kind", "date", "description", "owed_by", "status", "text"]);
+  assert.equal(p.proposal.entry.owed_by, "undetermined", "R18: the profile's deadline does not say whose it is");
+  assert.deepEqual([p.proposal.start_from, p.proposal.start_note], ["sent", "receipt not recorded: counted from sending"]);
   assert.equal(p.proposal.entry.basis_kind, "rule", "R7: a profile deadline's basis is a rule");
   assert.equal(p.proposal.key, `${dl.rule}@${MACHINE}`);
   /* civil-time's trace is answered with it: the rule, its citation, the list counted on, the Sunday skipped (C-2). */

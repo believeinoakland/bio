@@ -1,6 +1,6 @@
 # BOB to plan-work (T45)
 
-**Read** · handled J5
+**Read** · handled J7
 
 ## B1 · START
 
@@ -37,3 +37,11 @@ action-holds (T45-26) is merged into tranche/T45 (K2856): projectHolds, holdsDue
 ## B7 · CHANGE
 
 actions (T45-27) is merged into tranche/T45 (K2859): R74–R97 (receipts, scopes, promises, press terms, the response listener) are real and the hold code is gone. Merge tranche/T45, drop any actions stand-in, re-run, then post COMPLETE.
+
+## B8 · CHANGE
+
+action-holds is merged again (K2860): holdsDue, pressureFor and from:{mark} now also read pressure marks stated on actions' entries, and it registers its readers itself. Merge tranche/T45 and re-run before your next COMPLETE (with actions' B-CHANGE already sent).
+
+## B9 · CHANGE
+
+action-clocks (T45-28) and action-replies (T45-29) are merged into tranche/T45 (K2862): clockState, receipts-based counting, R16's holder, and arose_from links are real. Merge tranche/T45, drop any stand-in, re-run (action-plans: fix your R27 fixture now, B6), post COMPLETE again.

@@ -2,11 +2,8 @@
    provenance and actions, on a real SQLite database standing in for a Durable Object's storage, answering as workerd's
    does), with this module started on the same host. The actions a test marks and holds are real actions written through
    `actions`' own promotion step; `docket` is the real module on the host unless a test passes its own; ratification's
-   hold-reader registration (R10) is a stand-in the test reads.
-
-   `registrations` says who holds the two start registrations (R4, R10; reconciliation R19): "mine" (the default) starts
-   `actions` with none, as after its job (T45-27) deletes its own, so this module's stand; "actions" starts `actions`
-   with both, as in the copy window. Every test drives `action-holds` at its interface. */
+   hold-reader registration (R10) is a stand-in the test reads; doorbell is the real module on the host. `actions`
+   registers neither since its job (T45-27). Every test drives `action-holds` at its interface. */
 import assert from "node:assert/strict";
 import { world as actionsWorld, V, MACHINE, actionMd, CP, NOW_MS, sha } from "../actions/fixture.mjs";
 import { actionHoldsOf } from "../../../src/action-holds/index.mjs";
@@ -18,14 +15,13 @@ export const ALICE = V("alice");
 export const received = (n) => ["correspondence:", ...Array.from({ length: n }, (_, i) =>
   ["  - direction: received", "    at: 2026-09-03", `    account: "reply ${i}"`, "    author: member:alice"]).flat()];
 
-export function world({ registrations = "mine", holds = {}, ...opts } = {}) {
-  const mine = registrations === "mine";
-  const w = actionsWorld({ ...opts, deps: { ...(mine ? { doorbell: null, ratification: null } : {}), ...(opts.deps || {}) } });
+export function world({ holds = {}, ...opts } = {}) {
+  const w = actionsWorld(opts);
   const holdReaders = [];
   const ratification = { registerHoldReader: (r) => (holdReaders.push(r), { ok: true }) };
   w.holdReaders = holdReaders;
   w.h = actionHoldsOf(w.host, { record: w.record, membership: w.membership, now: () => w.clock.ms,
-                                ratification: mine ? ratification : null, ...holds });
+                                ratification, ...holds });
   /** A project owned by `owner`, hidden unless `visibility` says otherwise; answers its id. */
   let k = 0;
   w.project = (owner, visibility = null) => {

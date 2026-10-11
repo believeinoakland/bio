@@ -1,6 +1,7 @@
 /* action-holds R1 at its interface: pressure marked on a received entry (moved from `actions` R48, K597 (1); T45,
    K2781 (1)): stated with `actions`' `actionCorrespond` or later by this module's `actionPressure`, in one table, never
-   rewriting the entry; read apart from the ledger by `pressureFor` (R12's read, in place of `actions` R25's list and
+   rewriting the entry (one stated with the entry stays on the entry, flat, and is read through `actions.actionRead`,
+   K2849); read apart from the ledger by `pressureFor` (R12's read, in place of `actions` R25's list and
    `actionsFor`'s `pressure: true`). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -11,7 +12,7 @@ import * as grammar from "../../../src/action-grammar/index.mjs";
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b";
 const M = V("alice");
 
-test("R1 pressure: marked on a received entry by a member, with actionCorrespond or later by actionPressure; never rewritten; read apart; pressureFor lists the actions holding one", () => {
+test("R1 pressure: marked on a received entry by a member, with actionCorrespond or later by actionPressure; never rewritten; read apart, the entry's through actionRead; pressureFor lists the actions holding one", () => {
   const w = world();
   const s = w.doc("INFO-2026-0001-d");
   w.action(A);
@@ -22,7 +23,16 @@ test("R1 pressure: marked on a received entry by a member, with actionCorrespond
   w.a.actionCorrespond({ target: A, direction: "sent", at: "2026-09-02", account: "asked", viewer: M, author: M });
   const at = c({ pressure: P });
   assert.deepEqual([at.ok, at.ord, at.pressure], [true, 1, P]);
-  assert.ok(!/pressure/.test(w.text(A)), "the mark is never in the entry's bytes");
+  /* (K2849) a mark stated with the entry stays on the entry, flat, and is read here through actions.actionRead */
+  assert.deepEqual([w.fm(A).correspondence[1].pressure_kind, w.fm(A).correspondence[1].pressure_note], ["legal", P.note]);
+  assert.equal(w.rows(`SELECT COUNT(*) AS n FROM action_pressure WHERE bundle_id=?`, A)[0].n, 0, "not in this module's table");
+  const stated = w.h.pressureFor({ action: A, viewer: M }).items[0];
+  assert.deepEqual([stated.arrived, stated.kind, stated.note, stated.by, stated.at],
+    [{ action: A, ord: 1 }, "legal", P.note, M, "2026-09-28T12:00:00Z"], "who and when are the entry's");
+  assert.deepEqual(w.h.holdsDue({ viewer: M }).items.map((x) => x.arrived), [{ action: A, ord: 1 }], "a legal mark on the entry is due");
+  assert.deepEqual(w.h.actionHold({ target: A, from: { mark: { target: A, ord: 1 } }, hold: "in_place", reason: "r", viewer: M,
+                                    author: M }).from, { mark: { target: A, ord: 1 } }, "and may prompt a hold");
+  assert.deepEqual(w.h.holdsDue({ viewer: M }).items, [], "which takes it off the list");
   /* later, by actionPressure */
   w.a.actionCorrespond({ target: A, direction: "received", at: "2026-09-04", artifactSha: s, viewer: M, author: M });
   const X = (x) => w.h.actionPressure({ target: A, ord: 2, pressure: { kind: "retaliation", note: "funding cut" }, viewer: M, author: M, ...x });
