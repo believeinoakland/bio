@@ -40,3 +40,42 @@ On B3 (K2831), before I build it: the latch as ruled leaves no real check `held`
 - (c) As (b), but until T46 a check older than its last lapse-read instant… not workable: there is no instant to compare against.
 
 I am carrying on with everything else, building the lapse reads under (b), behind one switch, so (a) is a one-line change if you choose it.
+
+## J5 · COMPLETE
+
+**T45-22 applied: R1–R5, built fresh.** Readings as ruled: K2829 (J1), J3's `inputs_sha` repeat, and K2833 (J4, option (b)). Branch `job/T45/case-check`, merged with `tranche/T45` after B5 (case-authoring and publication in).
+
+**Files added; BOB adds them to `modules.json` (plan rule 3):**
+- `paths`: `bio-plane/src/case-check/` (`index.mjs`, `schema.mjs`, `checks.mjs`; 417 lines in all).
+- `tests`: `bio-plane/test/m/case-check/` (`fixture.mjs`, `hold.test.mjs`, `state.test.mjs`, `versions.test.mjs`, `invariants.test.mjs`, `real.test.mjs`).
+
+**What is built.**
+- **R1** `checkAndHold`, all in one transaction:
+  - Runs the pre-flight (case-authoring R34). When it is not ready, answers `{ok: false, ready: false, first, blockers}` with the leading refusal's fields, writing nothing.
+  - Runs a dry `publishCase` (its R18) to learn the case edition.
+  - A repeat of the same act while held answers `existed: true`. The act's identity is `inputs_sha`, a SHA-256 of its canonical inputs, the viewer stamp left out.
+  - Otherwise `publishCase` stores the preparation, and the check is recorded in table `case_checks`: `CHK` opaque id, `doc_sha`, members, `member_rows` (each member's `row_version`), `checked_at`, `by`, `inputs_sha`.
+- **R2** `caseCheckOf`: states `published` > `void` (`why` lists every cause in R2's order, with `moved`, `key` and `keys`) > `held`. Any failed read is `undetermined`, never `held`. Fenced through `publication.hasCaseStanding`, the absent case's answer is C-148.1. Never throws.
+- **R3** `heldFindingVersions`: only the latest check of an edition, and only while held. C-148.2 `NO_ID`.
+- **R4** Append-only. Purge declared `{keys: [], whole: …}`: cleared unless the edition is ratified.
+- **R5** Keys `case.check.held`, `case.check.void.<why>`, `case.check.undetermined`. No refusal row for any state.
+- **Ops** (`caseCheckOps`): `publishcheck` gathers `calculationsAtPublication` first and reads `aiCred` as `publishpreflight` does. `casecheck` with no stamp is fenced as no one.
+
+**Deferred.** The latch for the three lapse causes waits for case-carriage's `…LapsedSince` reads (T46, N907, K2833). Until then they are judged at the read, and a test states the gap. Every provider read is "now" only: `sourcesLapsed` takes one instant; `acceptedWorkLapsed` and `marksLapsed` take none.
+
+**Found in other modules (REPORT):**
+- (1) `promotion`'s `src/gate.mjs` should list `CASE_CHECK_CHECKS` (C-148.1, C-148.2): T46's stamp, N902 (B2).
+- (2) `plane` composes `caseCheckOps` (ops `publishcheck`, `casecheck`) and creates `caseCheckOf` at start (T45-47).
+- (3) `op-declarations` and `op-grades`/`affordances` specify and grade `publishcheck` (mutating, graded as `publish`) and `casecheck` (a read) (T45-45, T45-38/39).
+- (4) A note on case-authoring R7: an unpublished case cannot be named, so a held preparation whose member moves is re-checked as a new case id. That is case-authoring's derivation as ruled; no change asked.
+
+**Tests and checks.**
+- `node --test test/m/case-check/*.test.mjs` (in `bio-plane/`): `ℹ pass 31`, `ℹ fail 0`. Three of those run against the real case-authoring, publication and case-carriage.
+- `format`: `153 modules, 152 requirements files; 0 failures`.
+- With the paths above entered in `modules.json` locally (not committed):
+  - `architecture`: `9 product files, 24 relative imports …; 0 failures`.
+  - `coverage`: `5 of 5 live requirement ids named by a test; 0 failures`.
+  - `ownership`: `10 files changed by case-check between tranche/T45 and HEAD; 0 failures`.
+  - Without the entry, ownership and coverage fail only on those paths.
+
+Size (session_0147VSsrfyRUc6H7GZeANVWi): test runs 16, module lines 417
