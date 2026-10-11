@@ -16007,10 +16007,10 @@ function merge(profiles2) {
         "who issues it is undetermined"
       ]
     ];
-    for (const [keyOf5, facts, what, says] of ONE) {
+    for (const [keyOf6, facts, what, says] of ONE) {
       const groups = /* @__PURE__ */ new Map();
       for (const g of given5) {
-        const k = keyOf5(g.e);
+        const k = keyOf6(g.e);
         if (k === null) continue;
         if (!groups.has(k)) groups.set(k, []);
         groups.get(k).push(g);
@@ -16219,11 +16219,11 @@ function merge(profiles2) {
     if (agree(given5)) view[sec] = keep(given5);
     else conflict(sec, given5, sec === "weekend" ? "the active profiles name different weekends, so none is given: a business-day count or a roll is undetermined" : "the active profiles give different instrument-key segments, so no key is composed");
   }
-  for (const [sec, keyOf5, what] of ONE_PER_KEY) {
+  for (const [sec, keyOf6, what] of ONE_PER_KEY) {
     if (!has3(sec)) continue;
     const byKey = /* @__PURE__ */ new Map();
     for (const p3 of profiles2) for (const e2 of p3[sec] || []) {
-      const k = keyOf5(e2);
+      const k = keyOf6(e2);
       if (!byKey.has(k)) byKey.set(k, []);
       byKey.get(k).push({ profile: p3.id, value: e2, basis: e2.basis });
     }
@@ -20530,7 +20530,7 @@ var RecordCore = class _RecordCore {
       }
       return 0;
     };
-    const keyOf5 = (r) => Object.fromEntries(d.key.map((c) => [c, r[c]]));
+    const keyOf6 = (r) => Object.fromEntries(d.key.map((c) => [c, r[c]]));
     const DONE2 = Symbol("compared");
     let out;
     try {
@@ -20550,7 +20550,7 @@ var RecordCore = class _RecordCore {
             j++;
             continue;
           }
-          out = { same: false, first: k === 0 ? { key: keyOf5(h), held: { ...h }, rebuilt: { ...r } } : k < 0 ? { key: keyOf5(h), held: { ...h }, rebuilt: null } : { key: keyOf5(r), held: null, rebuilt: { ...r } } };
+          out = { same: false, first: k === 0 ? { key: keyOf6(h), held: { ...h }, rebuilt: { ...r } } : k < 0 ? { key: keyOf6(h), held: { ...h }, rebuilt: null } : { key: keyOf6(r), held: null, rebuilt: { ...r } } };
           break;
         }
         throw DONE2;
@@ -28366,11 +28366,11 @@ function observedMs(v) {
   return ms5;
 }
 var PART_VERIFY_READ_MAX = 8 * 1024 * 1024;
-async function partsHeld(bucket, keyOf5, parts) {
+async function partsHeld(bucket, keyOf6, parts) {
   const missing2 = [], disagree = [], unverified = [];
   for (const p3 of parts) {
     const name3 = { file: p3.file, sha256: p3.sha256, bytes: p3.bytes };
-    const h = await bucket.head(keyOf5(p3.sha256));
+    const h = await bucket.head(keyOf6(p3.sha256));
     if (!h) {
       missing2.push(name3);
       continue;
@@ -28381,7 +28381,7 @@ async function partsHeld(bucket, keyOf5, parts) {
     }
     let digest2 = h.checksums?.sha256 ? hexBytes(h.checksums.sha256) : null;
     if (!digest2 && h.size <= PART_VERIFY_READ_MAX) {
-      const o = await bucket.get(keyOf5(p3.sha256));
+      const o = await bucket.get(keyOf6(p3.sha256));
       if (o) digest2 = hexBytes(await crypto.subtle.digest("SHA-256", await o.arrayBuffer()));
     }
     if (!digest2) unverified.push({ ...name3, why: "no stored checksum, and too large to read here" });
@@ -34630,7 +34630,7 @@ function expandRecurrence(args) {
   let k = 0;
   const span3 = r.freq === "WEEKLY" ? 7 * r.interval : r.freq === "MONTHLY" ? 28 * r.interval : 365 * r.interval;
   if (fromDay - dtDay > 2 * span3) k = Math.max(0, Math.floor((fromDay - dtDay) / (r.freq === "WEEKLY" ? 7 * r.interval : r.freq === "MONTHLY" ? 31 * r.interval : 366 * r.interval)) - 1);
-  const instances72 = [];
+  const instances73 = [];
   const notes = [];
   let truncated5 = false;
   for (let guard = 0; guard < 1e5; guard++, k++) {
@@ -34659,7 +34659,7 @@ function expandRecurrence(args) {
         notes.push(`${dayText(n2)} excluded (EXDATE)`);
         continue;
       }
-      if (instances72.length >= MAX_INSTANCES) {
+      if (instances73.length >= MAX_INSTANCES) {
         truncated5 = true;
         stop2 = true;
         break;
@@ -34667,7 +34667,7 @@ function expandRecurrence(args) {
       if (it.shifted) notes.push(`${dayText(n2)}: the wall time does not occur in ${zone}; the instance is the time after the gap`);
       const w = it.t + offsetAt(it.t, zone), wn = Math.floor(w / 86400), ws = w - wn * 86400;
       const p24 = (x) => String(x).padStart(2, "0");
-      instances72.push({
+      instances73.push({
         value: ds.dt.precision === "day" ? dayText(wn) : `${dayText(wn)}T${p24(Math.floor(ws / 3600))}:${p24(Math.floor(ws / 60) % 60)}`,
         precision: ds.dt.precision === "day" ? "day" : "minute",
         zone,
@@ -34677,8 +34677,8 @@ function expandRecurrence(args) {
     if (stop2) break;
   }
   const trace = { rrule, dtstart, zone, from, to, limits: { months: MAX_MONTHS, instances: MAX_INSTANCES }, notes, runtime: runtimeVersions() };
-  if (truncated5) trace.notes.push(`stopped at ${instances72.length >= MAX_INSTANCES ? `${MAX_INSTANCES} instances` : `${MAX_MONTHS} months after from`}`);
-  return { instances: instances72, truncated: truncated5, trace };
+  if (truncated5) trace.notes.push(`stopped at ${instances73.length >= MAX_INSTANCES ? `${MAX_INSTANCES} instances` : `${MAX_MONTHS} months after from`}`);
+  return { instances: instances73, truncated: truncated5, trace };
 }
 function periodFor(y, f17) {
   const [mm, dd] = f17.start.split("-").map(Number);
@@ -44019,6 +44019,8 @@ __export(checks_exports13, {
 });
 var at4 = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
 var inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
+var inDoorbell = (fn, region) => `src/doorbell/index.mjs ${fn} > ${region}`;
+var atDoor = (fn, region) => `src/doorbell/door.mjs ${fn} > ${region}`;
 var CAPTURE_CHECKS = Object.freeze({
   EVIDENCE_NOT_HELD: Object.freeze({
     check: "C-118.1",
@@ -44027,17 +44029,17 @@ var CAPTURE_CHECKS = Object.freeze({
   }),
   NO_SUCH_KNOCK: Object.freeze({
     check: "C-118.2",
-    where: inIndex("#noSuchKnock", "is-knock-held"),
+    where: inDoorbell("#noSuchKnock", "is-knock-held"),
     translation: "No knock in the inbox answers to this id. Nothing was changed."
   }),
   KNOCKER_SECRET_WEAK: Object.freeze({
     check: "C-118.3",
-    where: "src/capture/doorbell.mjs knockerSecretWeak > is-knocker-secret-strong",
+    where: atDoor("knockerSecretWeak", "is-knocker-secret-strong"),
     translation: "A knocker secret this short could be guessed, letting someone else continue your pseudonym. Use a longer one, or ask the doorbell to make one. Nothing was received. The group can see how often its doorbell turns people away."
   }),
   KNOCK_DISCARDED: Object.freeze({
     check: "C-118.4",
-    where: inIndex("pullKnock", "is-knock-pullable"),
+    where: inDoorbell("pullKnock", "is-knock-pullable"),
     translation: "This knock was set aside. Move it back to new before bringing it in. Nothing was written."
   }),
   NOT_THE_CAPTURING_ACTOR: Object.freeze({
@@ -44052,7 +44054,7 @@ var CAPTURE_CHECKS = Object.freeze({
   }),
   RESOLVE_NO_REASON: Object.freeze({
     check: "C-118.7",
-    where: inIndex("inboxResolve", "is-resolve-reasoned"),
+    where: inDoorbell("inboxResolve", "is-resolve-reasoned"),
     translation: "Changing a knock's status records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written."
   }),
   MACHINE_CANNOT_SET_ASIDE: Object.freeze({
@@ -44076,32 +44078,32 @@ var CAPTURE_CHECKS = Object.freeze({
 var KNOCK_CHECKS = {
   RATE_IP: {
     check: "C-85.1",
-    where: "src/capture/index.mjs #knockRateRefusal > is-knock-rate",
+    where: inDoorbell("#knockRateRefusal", "is-knock-rate"),
     translation: "Your material was not received. This group's inbox is not taking any more material from where you are sending it just now. It is a limit on how fast one sender may knock, not a judgement about you or about what you sent, and it lifts on its own shortly \u2014 the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later and it will arrive. The group can see how often its doorbell turns people away."
   },
   RATE_GLOBAL: {
     check: "C-85.2",
-    where: "src/capture/index.mjs #knockRateRefusal > is-knock-rate",
+    where: inDoorbell("#knockRateRefusal", "is-knock-rate"),
     translation: "Your material was not received. This group's inbox is not taking any more material from anyone just now. The whole instance is at its limit rather than you \u2014 the cap exists so that no one sender can fill the inbox \u2014 and it lifts on its own shortly; the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later. The group can see how often its doorbell turns people away."
   },
   /* D-513 — THE THREE REFUSALS THIS DOOR MAKES BEFORE THE STORE IS CALLED. Each
-     `where` names a module-scope helper (capture's `doorbell.mjs` since T4) and
+     `where` names a module-scope helper (doorbell's `door.mjs` since T42, K2627) and
      the region inside it, because that is where each refusal is enforced; the two oversize
      rows are two conditions and deliberately not one row with a widened
      sentence. */
   KNOCK_ENVELOPE_TOO_LARGE: {
     check: "C-85.3",
-    where: "src/capture/doorbell.mjs knockEnvelopeTooLarge > is-knock-envelope-too-large",
+    where: atDoor("knockEnvelopeTooLarge", "is-knock-envelope-too-large"),
     translation: "This group's inbox did not read what you sent, because the request itself is larger than this door accepts. Nothing was stored, nothing was opened, and nothing about your material was judged \u2014 its size was read off the request and it stopped there. The size this inbox will read is published beside this message. Send the material again smaller, or as more than one knock, and it will be read. The group can see how often its doorbell turns people away."
   },
   KNOCK_PAYLOAD_TOO_LARGE: {
     check: "C-85.4",
-    where: "src/capture/doorbell.mjs knockPayloadTooLarge > is-knock-payload-too-large",
+    where: atDoor("knockPayloadTooLarge", "is-knock-payload-too-large"),
     translation: "This group's inbox read your material and cannot keep it, because it is larger than this inbox stores. That is a fact about how this group has set its Civicsmith up rather than a judgement about what you sent \u2014 a group that has configured evidence storage can keep far more \u2014 and the size this one can keep is published beside this message. Nothing was stored. Send something smaller, or ask the group's members how to get the whole of it to them. The group can see how often its doorbell turns people away."
   },
   KNOCK_EMPTY: {
     check: "C-85.5",
-    where: "src/capture/doorbell.mjs knockEmpty > is-knock-empty",
+    where: atDoor("knockEmpty", "is-knock-empty"),
     translation: "This group's inbox has nothing to keep, because what you sent decoded to no bytes at all. The request itself was well formed and named its content, so this is most likely an empty file or an empty box rather than anything wrong with how you sent it. Nothing was stored. Check what you attached and knock again. The group can see how often its doorbell turns people away."
   }
 };
@@ -55087,6 +55089,8 @@ var rawReplayOf = (archived) => {
 var REPLAY_MAX = 256 * 1024 * 1024;
 var WITHIN_FAULT = Symbol("within's fault");
 var PULL_WITHIN_FAILED_DETAIL = "the act run with the pull did not complete, so the pull was rolled back and nothing was written";
+var DECLARED = Object.freeze({ ok: true, module: "capture", declared: true });
+var NO_DECLARATION_SEAM = Object.freeze({ ok: false, module: "capture", declared: false, reason: "NO_DECLARATION_SEAM" });
 var RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA]);
 var UPLOAD_PART = 8 * 1024 * 1024;
 var UPLOAD_STATEMENT_MAX = 2e3;
@@ -55364,17 +55368,34 @@ var Capture = class _Capture {
     }
     this.declareTables();
   }
+  /** R87 (K2629): declares capture's tables to record-core (R74's purge declarations: the purged and the exempt) once
+   *  per storage, and answers the same, `DECLARED`, on this and every later call, never throwing for a table it already
+   *  holds: a second call, a second instance over the same record (record-core holds every one of these tables as
+   *  `capture`'s) and `doorbell` R25's call before its own declaration all answer it. A record with no declaration seam
+   *  answers `NO_DECLARATION_SEAM`, every time. Only a refusal for a table another module holds, or a malformed
+   *  declaration, is a wiring fault and throws. */
   declareTables() {
-    if (this.#declared || !this.core || typeof this.core.declarePurge !== "function") return false;
-    const answer = this.core.declarePurge(
-      "capture",
-      CAPTURE_PURGED_TABLES.map((name3) => ({ name: name3, keys: [] })),
-      { exempt: CAPTURE_EXEMPT_TABLES }
-    );
-    if (answer && answer.ok === false)
-      throw new Error(`capture: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
+    if (this.#declared) return DECLARED;
+    if (!this.core || typeof this.core.declarePurge !== "function") return NO_DECLARATION_SEAM;
+    const mine = [...CAPTURE_PURGED_TABLES, ...CAPTURE_EXEMPT_TABLES];
+    let held2 = [];
+    try {
+      held2 = typeof this.core.declaredTables === "function" ? this.core.declaredTables() : [];
+    } catch {
+      held2 = [];
+    }
+    const byCapture = new Set(held2.filter((d) => d && d.module === "capture").map((d) => d.name));
+    if (!mine.every((t2) => byCapture.has(t2))) {
+      const answer = this.core.declarePurge(
+        "capture",
+        CAPTURE_PURGED_TABLES.map((name3) => ({ name: name3, keys: [] })),
+        { exempt: CAPTURE_EXEMPT_TABLES }
+      );
+      if (answer && answer.ok === false)
+        throw new Error(`capture: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
+    }
     this.#declared = true;
-    return true;
+    return DECLARED;
   }
   /* ---- listeners (R44, R55) ---- */
   /** A later module registers, once at start, a listener for one of `CAPTURE_EVENTS`. Listeners are called after
@@ -55415,7 +55436,7 @@ var Capture = class _Capture {
     this.#readers.set(slot, { module, fn });
     return { ok: true, slot, module };
   }
-  /** R32 (DEC-108 (5)): whether a discarded knock's row or bytes may be cleared now. Only when the registered
+  /** THE DOORBELL COPY (T43's delete), as doorbell R3 (DEC-108 (5)): whether a discarded knock's row or bytes may be cleared now. Only when the registered
    *  litigation-hold reader answers, synchronously, that no hold is in place (`false`); with none registered, or one
    *  that fails or answers anything else, nothing discarded is cleared. Writes nothing and never throws. */
   mayClearDiscarded() {
@@ -55489,7 +55510,9 @@ var Capture = class _Capture {
     return !!this.#one(`SELECT 1 AS x FROM (SELECT ? AS capture_sha) c WHERE (${gate.sql})`, sha2, ...gate.args);
   }
   /* ==================================================================== *
-   * The doorbell's store side (R31, R32, R47, R48, R53, R54, R56)
+   * The doorbell's store side: THE DOORBELL COPY, deleted in T43 (N849; K2607, K625). `doorbell`'s since T42 (its
+   * R1–R20, once this module's R31, R32, R47, R48, R53, R54, R56 …); kept unchanged, unused by new code, until
+   * `plane`, `store-door`, `actions`, `sources` and `answer-envelope` have re-pointed. Through `pulledKnocksOf`.
    * ==================================================================== */
   /** R56: the key the source fingerprint is computed under: the operator's secret binding when set, else the
    *  instance's own, generated once and held in `knock_key`. */
@@ -56095,7 +56118,7 @@ var Capture = class _Capture {
       ...typeof within3 === "function" ? { within: done.within } : {}
     };
   }
-  /* N380 (R65, R86): the caller's act, called inside the act's own transaction with its own copy of the document. Its
+  /* N380 (R86, and the doorbell copy's pull): the caller's act, called inside the act's own transaction with its own copy of the document. Its
      throw is tagged so a fault of the act's own still throws; an answer that is not synchronous (a promise would outlive
      the transaction, its outcome dropped with it) is tagged likewise. Answers what `within` answered. */
   static #callWithin(within3, document) {
@@ -56159,9 +56182,10 @@ var Capture = class _Capture {
    * A file a member holds (R86; N821, K2425 (4))
    * ==================================================================== */
   /** R86: a signed-in member brings into the record a file she holds, which no one fetched. Refused in order, each
-   *  writing nothing: the member-session fence (`by` absent, blank or a machine identity: `MEMBER_SESSION_REQUIRED`, as
-   *  R80's read answers it); `UPLOAD_NO_STATEMENT` (C-118.10); a `name` that is not a string or is over 300 characters
-   *  (the required-argument refusal naming it); no evidence store (R65's answer); then `NO_BODY`, `EMPTY` and
+   *  writing nothing: the member-session fence (`by` absent, not a string, blank, naming no member (`member:` alone)
+   *  or a machine identity: `MEMBER_SESSION_REQUIRED`, 403); `UPLOAD_NO_STATEMENT` (C-118.10); a `name` that is not a
+   *  string or is over 300 characters (the required-argument refusal naming it); no evidence store (the installation's
+   *  storage-absent refusal, `acquisition`'s C-68.1); then `NO_BODY`, `EMPTY` and
    *  `TOO_LARGE` (the stream cancelled) as `acquisition` R10 names them. The parts a refused stream already stored stay
    *  content-addressed and named by no row, receipt or document, as R10's do.
    *
@@ -56171,11 +56195,11 @@ var Capture = class _Capture {
    *  actor (R69); and the answer carries the provenance document (`#uploadedDocument`), graded received, never fetched
    *  (`provenance` R63). Bytes the record already holds (`provenance.registerHolds` answers them registered or acquired)
    *  answer `existed: true` with no document, the receipt written as a second
-   *  sighting, and `within` not called. `within` is R65's seam: called inside the act's transaction after the receipt
-   *  and the actor; its `{ok: false}` rolls the upload back and is the answer; a throw or a promise rolls it back as
+   *  sighting, and `within` not called. `within` (N380's seam, `store-door` R7): called inside the upload's own
+   *  transaction after the receipt and the actor; its `{ok: false}` rolls the upload back and is the answer; a throw or a promise rolls it back as
    *  `UPLOAD_WITHIN_FAILED`. It writes no bundle. */
   async uploadCapture({ bytes: bytes2, statement, name: name3 = null, by, at: at43 = null, within: within3 = null } = {}) {
-    if (typeof by !== "string" || !by.trim() || isMachineIdentity(by))
+    if (typeof by !== "string" || !memberIdOf(by).trim() || isMachineIdentity(by))
       return {
         ok: false,
         reason: "MEMBER_SESSION_REQUIRED",
@@ -56347,7 +56371,7 @@ var Capture = class _Capture {
       ...typeof within3 === "function" ? { within: done.within } : {}
     };
   }
-  /* R86: the provenance document of an upload, built as R65's for a pulled knock: received from the member, never
+  /* R86: the provenance document of an upload, built as a pulled knock's is (doorbell R13): received from the member, never
      fetched (provenance R63): no fetched letter, no header, no transport. She is its actor, never its source (`sources`
      R12): the source is the uploader's receipt, naming no member; her words on where it came from, and the name she gave
      it, travel as her statements, never as evidence of their truth. The file is named from the digest. */
@@ -56386,7 +56410,7 @@ var Capture = class _Capture {
       attestation_attempts: []
     };
   }
-  /** R67: the knocks sharing a pseudonym, oldest first, to a member session (the op's fence), with the continuity
+  /** THE DOORBELL COPY (T43's delete), as doorbell R15: the knocks sharing a pseudonym, oldest first, to a member session (the op's fence), with the continuity
    *  sentence and never an identity: no contact is answered (R70). At most `limit` (N90), paged by `after`. */
   knocksOf({ pseudonym, limit = null, after = null } = {}) {
     if (typeof pseudonym !== "string" || !pseudonym)
@@ -56413,7 +56437,7 @@ var Capture = class _Capture {
       next: truncated5 ? cursorOf([last.received, last.knock_id]) : null
     };
   }
-  /** R72 (K539; for `sources` R1): every knock pulled into a capture, oldest received first, to a member session (the
+  /** THE DOORBELL COPY (T43's delete), as doorbell R18 (K539; for `sources` R1): every knock pulled into a capture, oldest received first, to a member session (the
    *  op's fence), never a contact (R70); `[]` for none. One keyed read (`inbox_capture`). Never throws. */
   pulledKnocksOf(captureSha) {
     try {
@@ -56428,7 +56452,8 @@ var Capture = class _Capture {
   /* ==================================================================== *
    * The capturing member, and late co-attestation (`acquisition` R16's actor, R68, R69)
    * ==================================================================== */
-  /** `acquisition` R16, R69: record `actor` as one who captured `captureSha` (a member session's acquire, a knock's pull). Kept once
+  /** `acquisition` R16, R69: record `actor` as one who captured `captureSha` (a member session's acquire, an upload
+   *  (R86), a knock's pull: `doorbell` R13 calls it). Kept once
    *  per pair, at the first instant. */
   recordCaptureActor({ captureSha, actor, at: at43 = null } = {}) {
     if (typeof captureSha !== "string" || !HEX645.test(captureSha) || typeof actor !== "string" || !actor) return { recorded: false };
@@ -58588,6 +58613,8 @@ function captureOps(c, url, body, env) {
     dropcapturesession: () => c.dropCaptureSession({ session: q10("session") }),
     sitechrome: () => c.siteChrome({ host: q10("host"), threshold: Number(q10("threshold")) || 0.6, limit: page2.limit }),
     recordcapturelimit: () => c.recordCaptureLimit(body || {}),
+    /* THE DOORBELL COPY's routes (T43's delete; `doorbell`'s `doorbellOps` since T42): knock, inboxlist, inboxget,
+       inboxresolve, doorbellrefused, doorbelltally, inboxpull, knocksof, pulledknocks. */
     /* R85: `country` is the control plane's stamp in the query, never the body's (nor is `sourceAddress`). */
     knock: () => c.knock({ ...body || {}, sourceAddress: q10("source"), country: q10("country") }),
     inboxlist: () => c.inboxList(q10("status") || null, { ...page2, sort: q10("sort"), dir: q10("dir") }),
@@ -81096,12 +81123,12 @@ var RUN = {
     const lf = fieldOf(L3, st.on.left, st.as, "the join's left field");
     const rf = fieldOf(R10, st.on.right, st.as, "the join's right field");
     const set = [];
-    let keyOf5;
+    let keyOf6;
     if (st.space !== void 0) {
       if (typeof opts.resolveId !== "function") {
         return { kind: "table", value: undetermined2(`no resolver for the space "${st.space}"`), inputRows: L3.size, set };
       }
-      keyOf5 = (v) => {
+      keyOf6 = (v) => {
         let k;
         try {
           k = opts.resolveId(st.space, v);
@@ -81125,7 +81152,7 @@ var RUN = {
         if (!pairs.has(a)) pairs.set(a, []);
         pairs.get(a).push(`\0${String(b0)}`);
       }
-      keyOf5 = (v, side) => {
+      keyOf6 = (v, side) => {
         if (side === "right") return [`\0${String(v)}`];
         return pairs.has(String(v)) ? pairs.get(String(v)) : undetermined2(`"${String(v).slice(0, 64)}" is not in the crosswalk`);
       };
@@ -81137,7 +81164,7 @@ var RUN = {
       const v = readRight(row12);
       if (empty(v)) set.push({ side: "right", row: j, why: `"${rf.name}" is empty` });
       else {
-        const k = keyOf5(v, "right");
+        const k = keyOf6(v, "right");
         if (isUndetermined(k)) set.push({ side: "right", row: j, why: k.why });
         else for (const key2 of k) {
           const js = index2.get(key2);
@@ -81158,7 +81185,7 @@ var RUN = {
       const v = readLeft(lrow);
       if (empty(v)) set.push({ side: "left", row: i, why: `"${lf.name}" is empty` });
       else {
-        const ks = keyOf5(v, "left");
+        const ks = keyOf6(v, "left");
         if (isUndetermined(ks)) set.push({ side: "left", row: i, why: ks.why });
         else for (const m of matches(index2, ks)) {
           if (streamed) {
@@ -87545,6 +87572,1008 @@ try {
 } catch {
 }
 
+// src/doorbell/checks.mjs
+var DOORBELL_CHECKS = Object.freeze({
+  NO_SUCH_KNOCK: CAPTURE_CHECKS.NO_SUCH_KNOCK,
+  KNOCKER_SECRET_WEAK: CAPTURE_CHECKS.KNOCKER_SECRET_WEAK,
+  KNOCK_DISCARDED: CAPTURE_CHECKS.KNOCK_DISCARDED,
+  RESOLVE_NO_REASON: CAPTURE_CHECKS.RESOLVE_NO_REASON
+});
+
+// src/doorbell/door.mjs
+var KNOCK2 = {
+  windowMs: 10 * 60 * 1e3,
+  perIp: 5,
+  // knocks per source per window (DEC-108 (3))
+  global: 10,
+  // knocks per instance per window (DEC-108 (3)); bounds hostile writes to the evidence store
+  maxBytes: 8 * 1024 * 1024,
+  // with an evidence store: enough for a captured PDF
+  maxInline: 64 * 1024
+  // without one: inline into the store, small only
+};
+KNOCK2.statedPerIp = `at most ${KNOCK2.perIp} knocks from one source in any ${KNOCK2.windowMs / 6e4} minutes, estimated by a sliding window`;
+KNOCK2.statedGlobal = `at most ${KNOCK2.global} knocks to this group's inbox in any ${KNOCK2.windowMs / 6e4} minutes, estimated by a sliding window`;
+var KNOCKER_SECRET_MIN2 = 20;
+function isWeakKnockerSecret2(secret) {
+  if (secret === void 0 || secret === null) return false;
+  return typeof secret !== "string" || [...secret].length < KNOCKER_SECRET_MIN2;
+}
+function knockerSecretWeak2() {
+  const row12 = DOORBELL_CHECKS.KNOCKER_SECRET_WEAK;
+  return {
+    ok: false,
+    reason: "KNOCKER_SECRET_WEAK",
+    code: "KNOCKER_SECRET_WEAK",
+    check: row12.check,
+    translation: row12.translation,
+    minChars: KNOCKER_SECRET_MIN2
+  };
+}
+
+// src/doorbell/schema.mjs
+var DOORBELL_SCHEMA = `
+-- The knock: quarantined public intake. Payload bytes live in R2 under
+-- <store>/inbox/<sha256> when R2 is configured, else inline here (small
+-- only). Nothing reads this table except member review; nothing here
+-- touches the record until a member pulls it through the gate.
+CREATE TABLE IF NOT EXISTS inbox (
+  knock_id    TEXT PRIMARY KEY,
+  sha256      TEXT NOT NULL,
+  bytes       INTEGER NOT NULL,
+  content     TEXT,
+  in_r2       INTEGER NOT NULL DEFAULT 0,
+  note        TEXT,
+  contact     TEXT,
+  received    TEXT NOT NULL,
+  status      TEXT NOT NULL DEFAULT 'new',
+  resolved    TEXT,
+  resolved_by TEXT,
+  -- R3 (DEC-88 (2)): the member's own reason for the last status change, beside who (resolved_by) and when (resolved).
+  resolve_reason TEXT,
+  -- R14: the knocker's continuity, never the secret: a keyed digest of it and the pseudonym derived from that
+  -- digest, each NULL for a knock sent without a secret.
+  knocker_digest TEXT,
+  pseudonym   TEXT,
+  -- R13: the capture a pull filed, who pulled it and when. Set once, by the pull; NULL until then.
+  capture_sha TEXT,
+  pulled_by   TEXT,
+  pulled_at   TEXT,
+  pulled_document TEXT,
+  -- Inline knocks only (no evidence store): the bytes themselves, base64, so a pull holds exactly what was
+  -- received; content keeps the text a member reads. NULL with an evidence store, and on a row written before it.
+  content_b64 TEXT
+);
+CREATE INDEX IF NOT EXISTS inbox_status ON inbox(status);
+
+-- The doorbell's rate account (R2): one count per window bucket, the source's (a keyed fingerprint, R12) and the
+-- instance's. The estimate weights the previous window's bucket by how much of it is still inside the trailing
+-- window, so each accepted knock prunes every bucket but the current and the previous one.
+CREATE TABLE IF NOT EXISTS knock_rate (
+  bucket TEXT PRIMARY KEY,
+  count  INTEGER NOT NULL
+);
+
+-- R14: the key the knocker's secret is digested under when the operator binds none (KNOCKER_SECRET_KEY): R12's
+-- pattern, a separate key. One row, generated at first use, never answered by any op.
+CREATE TABLE IF NOT EXISTS knocker_key (
+  id      INTEGER PRIMARY KEY CHECK (id = 1),
+  key_hex TEXT NOT NULL,
+  created TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS inbox_pseudonym ON inbox(pseudonym, received);
+CREATE INDEX IF NOT EXISTS inbox_capture ON inbox(capture_sha, received);
+
+-- R19 (DEC-108 (6), BOB's privacy ruling): the doorbell's count-only tally of the knocks it turned away. One row per
+-- UTC day, the last 30 kept: how many were refused, and how many of those found the whole-doorbell limit reached.
+-- No address, fingerprint, time of a knock, digest, pseudonym, note, contact or content: two counters and a date.
+CREATE TABLE IF NOT EXISTS doorbell_tally (
+  day           TEXT PRIMARY KEY,
+  refused       INTEGER NOT NULL DEFAULT 0,
+  limit_reached INTEGER NOT NULL DEFAULT 0
+);
+-- R19: the day the whole-doorbell limit was last reached, a date only. One row.
+CREATE TABLE IF NOT EXISTS doorbell_limit_last (
+  id  INTEGER PRIMARY KEY CHECK (id = 1),
+  day TEXT NOT NULL
+);
+
+-- R12: the key the doorbell's source fingerprint is computed under when the operator binds none
+-- (KNOCK_FINGERPRINT_KEY). One row, generated at first use, never answered by any op.
+CREATE TABLE IF NOT EXISTS knock_key (
+  id      INTEGER PRIMARY KEY CHECK (id = 1),
+  key_hex TEXT NOT NULL,
+  created TEXT NOT NULL
+)`;
+var DOORBELL_ADDITIVE_COLUMNS = [
+  ["inbox", "knocker_digest", "TEXT"],
+  // R14: the knocker's keyed digest
+  ["inbox", "pseudonym", "TEXT"],
+  // R14
+  ["inbox", "capture_sha", "TEXT"],
+  // R13: the capture a pull filed
+  ["inbox", "pulled_by", "TEXT"],
+  // R13
+  ["inbox", "pulled_at", "TEXT"],
+  // R13
+  ["inbox", "pulled_document", "TEXT"],
+  // R13: the document a pull answered, answered again to a repeat
+  ["inbox", "content_b64", "TEXT"],
+  // R13: an inline knock's bytes as received
+  ["inbox", "resolve_reason", "TEXT"]
+  // R3 (DEC-88): the member's reason for a status change
+];
+var DOORBELL_EXEMPT_TABLES = Object.freeze([
+  "inbox",
+  "knock_rate",
+  "knock_key",
+  "knocker_key",
+  "doorbell_tally",
+  "doorbell_limit_last"
+]);
+
+// src/doorbell/index.mjs
+var stampSecond5 = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
+var ISO_INSTANT2 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+var HEX646 = /^[0-9a-f]{64}$/;
+var te7 = new TextEncoder();
+var hexOf3 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
+var b64Of2 = (bytes2) => {
+  let out = "";
+  for (let i = 0; i < bytes2.length; i += 32768) out += String.fromCharCode(...bytes2.subarray(i, i + 32768));
+  return btoa(out);
+};
+var B322 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+var base32Of2 = (bytes2) => {
+  let bits = 0, value = 0, out = "";
+  for (const b of bytes2) {
+    value = value << 8 | b;
+    bits += 8;
+    while (bits >= 5) {
+      out += B322[value >>> bits - 5 & 31];
+      bits -= 5;
+    }
+  }
+  if (bits > 0) out += B322[value << 5 - bits & 31];
+  return out;
+};
+var pseudonymOf2 = (digestHex) => `knocker-${base32Of2(Uint8Array.from(String(digestHex).slice(0, 20).match(/../g).map((h) => parseInt(h, 16)))).match(/.{4}/g).join("-")}`;
+var WITHIN_FAULT2 = Symbol("within's fault");
+var PULL_WITHIN_FAILED_DETAIL2 = "the act run with the pull did not complete, so the pull was rolled back and nothing was written";
+var READ_LIMIT2 = Object.freeze({ default: 200, max: 1e3 });
+var limitOf2 = (asked) => {
+  const n2 = Math.floor(Number(asked));
+  return asked != null && asked !== "" && Number.isFinite(n2) && n2 > 0 ? Math.min(READ_LIMIT2.max, n2) : READ_LIMIT2.default;
+};
+var cursorOf2 = (parts) => btoa(String.fromCharCode(...te7.encode(JSON.stringify(parts)))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+var keyOf2 = (cursor, n2) => {
+  try {
+    const bytes2 = Uint8Array.from(atob(String(cursor).replace(/-/g, "+").replace(/_/g, "/")), (ch) => ch.charCodeAt(0));
+    const k = JSON.parse(new TextDecoder().decode(bytes2));
+    return Array.isArray(k) && k.length === n2 && k.every((x) => typeof x === "string") ? k : null;
+  } catch {
+    return null;
+  }
+};
+var badCursor2 = () => ({ ok: false, reason: "BAD_CURSOR", detail: "`after` is not a cursor this read answered as `next`" });
+var DOORBELL_READERS = Object.freeze(["litigation-hold"]);
+var REASON_MAX7 = 2e3;
+var reasonGiven2 = (r) => typeof r === "string" && r.trim() !== "" && [...r].length <= REASON_MAX7;
+var TALLY_DAYS2 = 30;
+var INBOX_SORTS2 = Object.freeze(["received", "status", "secret", "project"]);
+var SORT_DIRS2 = Object.freeze(["asc", "desc"]);
+var instances19 = /* @__PURE__ */ new WeakMap();
+function doorbellOf(ctx, deps = {}) {
+  const storage = ctx && ctx.storage ? ctx.storage : ctx;
+  let d = instances19.get(storage);
+  if (d) return d;
+  const capture2 = deps.capture ?? captureOf(ctx);
+  d = new Doorbell(storage, {
+    capture: capture2,
+    record: deps.record ?? capture2.core,
+    provenance: deps.provenance ?? capture2.provenance,
+    credentials: deps.credentials ?? null
+  });
+  d.migrate();
+  instances19.set(storage, d);
+  return d;
+}
+var Doorbell = class _Doorbell {
+  #sql;
+  #storage;
+  #readers = /* @__PURE__ */ new Map();
+  #declared = false;
+  constructor(storage, { capture: capture2, record = null, provenance = null, credentials = null } = {}) {
+    this.#storage = storage;
+    this.#sql = storage.sql;
+    this.capture = capture2;
+    this.core = record;
+    this.provenance = provenance;
+    this.credentials = credentials;
+  }
+  /** R25 (the map's doubt 5): the storage's `env` (the `CAPTURES` evidence bucket, `KNOCK_FINGERPRINT_KEY`,
+   *  `KNOCKER_SECRET_KEY`, `INSTANCE_NAME`, `VERSION`), read at each use from capture's instance for the same storage,
+   *  so capture R58's adoption rule is the only one that decides it. */
+  get env() {
+    return this.capture && this.capture.env || {};
+  }
+  /* credentials' instance for this storage (R20's security tally, its R44), reached when first needed. */
+  #credentials() {
+    if (!this.credentials) this.credentials = credentialsOf({ storage: this.#storage }, { record: this.core });
+    return this.credentials;
+  }
+  #rows(q10, ...a) {
+    return [...this.#sql.exec(q10, ...a)];
+  }
+  /* R22 (N418, K650): every write this module makes runs through record-core's `transact` (its R32): one transaction, a
+     savepoint inside a caller's, rolled back whole by a throw or an `ok: false` answer, and record-core's `afterCommit`
+     (its R66) holds what is called inside it until the outermost commit. Only a Doorbell built with no record (a bare
+     storage) falls back to the storage's own `transactionSync`. `fn` is synchronous. */
+  #tx(fn) {
+    return this.core && typeof this.core.transact === "function" ? this.core.transact(fn) : this.#storage.transactionSync(fn);
+  }
+  #one(q10, ...a) {
+    const r = this.#rows(q10, ...a);
+    return r.length ? r[0] : null;
+  }
+  #cols(t2) {
+    return this.#rows(`PRAGMA table_info(${t2})`).map((r) => r.name);
+  }
+  /* ---- creation (R25) ---- */
+  /** R25: this module's tables, idempotent: the additive columns an older store's `inbox` lacks are added; every table
+   *  and index is created if absent, by the DDL capture created them by, so a running store's rows are kept with no
+   *  data move; the six are declared to record-core's purge as exempt. */
+  migrate() {
+    for (const [table4, column, decl] of DOORBELL_ADDITIVE_COLUMNS) {
+      const have = this.#cols(table4);
+      if (have.length && !have.includes(column)) this.#sql.exec(`ALTER TABLE ${table4} ADD COLUMN ${column} ${decl}`);
+    }
+    const bare5 = DOORBELL_SCHEMA.split("\n").filter((l2) => !l2.trim().startsWith("--")).join("\n");
+    for (const st of bare5.split(";")) {
+      const t2 = st.trim();
+      if (t2) this.#sql.exec(t2);
+    }
+    this.declareTables();
+  }
+  /** R25 (the map's doubt 4; plan T42 rule 3 (4)): the six tables declared to record-core's purge, every one exempt.
+   *  While `capture` keeps its copy (K625), it declares the same six with the same class; so its declaration is asked
+   *  first (`capture.declareTables`, idempotent, capture R87; K2629), whatever order the host builds the two in, and a refusal
+   *  `TABLE_DECLARED` whose `declaredBy` is `capture` is held, not a failure: the instance is made and nothing is thrown.
+   *  Any other refusal throws, naming the table. A record with no declaration (a test's stand-in) is left alone. */
+  declareTables() {
+    if (this.#declared || !this.core || typeof this.core.declarePurge !== "function") return false;
+    if (this.capture && typeof this.capture.declareTables === "function") this.capture.declareTables();
+    const answer = this.core.declarePurge("doorbell", [], { exempt: [...DOORBELL_EXEMPT_TABLES] });
+    if (answer && answer.ok === false && !(answer.reason === "TABLE_DECLARED" && answer.declaredBy === "capture"))
+      throw new Error(`doorbell: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
+    this.#declared = true;
+    return true;
+  }
+  /* ---- the litigation-hold reader (R3) ---- */
+  /** R3: a later module (`actions`, its R55) registers, once at start, the litigation-hold reader, the one slot of
+   *  `DOORBELL_READERS`: its own slot, apart from capture's copy (plan T42 rule 3 (2): registered only where `actions`
+   *  registers it, the other copy answering fail-closed). The slot takes one registration whoever makes it; a second, or
+   *  a malformed one, is membership's `listenerRefusal` (its R81); another slot's name is `UNKNOWN_READER`. */
+  registerReader(slot, module, fn) {
+    if (!DOORBELL_READERS.includes(slot)) return { ok: false, reason: "UNKNOWN_READER", slot };
+    const refused5 = listenerRefusal(this.#readers.get(slot) || null, module, fn, { slot });
+    if (refused5) return refused5;
+    this.#readers.set(slot, { module, fn });
+    return { ok: true, slot, module };
+  }
+  /** R3 (DEC-108 (5)): whether a discarded knock's row or bytes may be cleared now. Only when the registered
+   *  litigation-hold reader answers, synchronously, that no hold is in place (`false`); with none registered, or one
+   *  that fails or answers anything else, nothing discarded is cleared. Writes nothing and never throws. */
+  mayClearDiscarded() {
+    const reader = this.#readers.get("litigation-hold");
+    if (!reader) return { may: false, basis: "no reader of litigation holds is registered, so a hold cannot be ruled out" };
+    let held2;
+    try {
+      held2 = reader.fn();
+    } catch {
+      held2 = void 0;
+    }
+    if (held2 === false) return { may: true, basis: `${reader.module} reports no litigation hold in place` };
+    if (held2 === true) return { may: false, basis: `${reader.module} reports a litigation hold in place` };
+    if (held2 && typeof held2.then === "function") Promise.resolve(held2).catch(() => {
+    });
+    return { may: false, basis: `${reader.module} did not answer whether a litigation hold is in place` };
+  }
+  /* ==================================================================== *
+   * The doorbell's store side (R2, R3, R4, R5, R10, R11, R12)
+   * ==================================================================== */
+  /** R12: the key the source fingerprint is computed under: the operator's secret binding when set, else the
+   *  instance's own, generated once and held in `knock_key`. */
+  #knockKey() {
+    const bound = this.env && typeof this.env.KNOCK_FINGERPRINT_KEY === "string" && this.env.KNOCK_FINGERPRINT_KEY;
+    if (bound) return te7.encode(bound);
+    let r = this.#one(`SELECT key_hex FROM knock_key WHERE id = 1`);
+    if (!r) {
+      const k = new Uint8Array(32);
+      crypto.getRandomValues(k);
+      this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO knock_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf3(k), stampSecond5()));
+      r = this.#one(`SELECT key_hex FROM knock_key WHERE id = 1`);
+    }
+    return Uint8Array.from(r.key_hex.match(/../g).map((h) => parseInt(h, 16)));
+  }
+  /** R2, R12: a keyed digest (HMAC-SHA-256, first 16 bytes) of the connecting address, never the address and
+   *  never an unkeyed hash, which can be reversed by trying every address. */
+  async sourceFingerprint(address) {
+    const key2 = await crypto.subtle.importKey("raw", this.#knockKey(), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    const mac = await crypto.subtle.sign("HMAC", key2, te7.encode(String(address || "unknown")));
+    return hexOf3(mac).slice(0, 32);
+  }
+  /** R14: the key the knocker's secret is digested under: the operator's secret binding `KNOCKER_SECRET_KEY` when set,
+   *  else the instance's own, generated once (256 random bits) and held in `knocker_key`, exempt from purge and
+   *  answered by no op: R12's pattern, a separate key. With `create: false` it answers null rather than make one. */
+  #knockerKey({ create = true } = {}) {
+    const bound = this.env && typeof this.env.KNOCKER_SECRET_KEY === "string" && this.env.KNOCKER_SECRET_KEY;
+    if (bound) return te7.encode(bound);
+    let r = this.#one(`SELECT key_hex FROM knocker_key WHERE id = 1`);
+    if (!r) {
+      if (!create) return null;
+      const k = new Uint8Array(32);
+      crypto.getRandomValues(k);
+      this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO knocker_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf3(k), stampSecond5()));
+      r = this.#one(`SELECT key_hex FROM knocker_key WHERE id = 1`);
+    }
+    return Uint8Array.from(r.key_hex.match(/../g).map((h) => parseInt(h, 16)));
+  }
+  /* R14: the HMAC-SHA-256 of a secret under the knocker key, as 64 hex. */
+  static async #knockerDigest(key2, secret) {
+    const k = await crypto.subtle.importKey("raw", key2, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    return hexOf3(await crypto.subtle.sign("HMAC", k, te7.encode(secret)));
+  }
+  /** R14: `{knocker_digest, pseudonym}` for a secret presented at this instance (`sources`' consent by secret). It
+   *  writes nothing and never throws: with no knocker key yet (no knock has carried a secret here, and none is bound)
+   *  or a secret that is not a non-empty string, both are null, and `basis` says which; a secret this instance never
+   *  received answers its digest and pseudonym, which match no knock. */
+  async knockerDigestOf(secret) {
+    try {
+      if (typeof secret !== "string" || secret === "")
+        return { knocker_digest: null, pseudonym: null, basis: "no secret was presented" };
+      const key2 = this.#knockerKey({ create: false });
+      if (!key2) return {
+        knocker_digest: null,
+        pseudonym: null,
+        basis: "no knock carrying a secret has been received by your group's Civicsmith, so no secret is recognised"
+      };
+      const knocker_digest = await _Doorbell.#knockerDigest(key2, secret);
+      return { knocker_digest, pseudonym: pseudonymOf2(knocker_digest) };
+    } catch {
+      return { knocker_digest: null, pseudonym: null, basis: "the digest could not be computed" };
+    }
+  }
+  /* D-508 / DEC-49: THE ONE HELPER THE TWO RATE REFUSALS ARE MINTED THROUGH. The row is read from this module's
+     table (`KNOCK_CHECKS`, C-85) at the moment of the refusal, so this file holds no member-facing word, and THE CODE
+     STAYS A STRING LITERAL AT ITS SITE. It THROWS on a missing row (R9): a throw is a 500 in a test, which is loud,
+     where a missing sentence is silent and reaches a stranger with no account and no other way to find out. */
+  static #rateRefusal(code, extra) {
+    const row12 = KNOCK_CHECKS[code];
+    if (!row12 || typeof row12.translation !== "string" || !row12.translation)
+      throw new Error(`knock: ${code} has no KNOCK_CHECKS row with a canned translation (DEC-49).`);
+    return { ok: false, reason: code, code, check: row12.check, translation: row12.translation, ...extra || {} };
+  }
+  /* D-496: a TWO-BUCKET WEIGHTED SLIDING WINDOW, because a fixed bucket published a bound it did not hold: a caller
+     who sends the limit just before the edge and again just after it got TWICE the published number inside one
+     window. The estimate weights the PREVIOUS bucket by how much of it is still inside the trailing window —
+     `est = prev x (1 - elapsed/W) + cur` — refused at `est >= limit`. It is APPROXIMATE IN BOTH DIRECTIONS (it
+     assumes the previous bucket's knocks were spread evenly), which is why the published sentence says
+     "estimated by a sliding window". */
+  #knockRateRefusal({ ipBucket, ipPrevBucket, globalBucket, globalPrevBucket, elapsedFrac, perIpLimit, globalLimit }) {
+    const cnt = (b) => b ? this.#one(`SELECT count FROM knock_rate WHERE bucket=?`, b)?.count || 0 : 0;
+    const decay = 1 - Math.min(1, Math.max(0, Number(elapsedFrac) || 0));
+    const est = (cur, prev) => cnt(prev) * decay + cnt(cur);
+    const full = est(globalBucket, globalPrevBucket) >= globalLimit;
+    const tag2 = (r) => Object.defineProperty(r, _Doorbell.#LIMIT_REACHED, { value: full, enumerable: false });
+    if (est(ipBucket, ipPrevBucket) >= perIpLimit) return tag2(_Doorbell.#rateRefusal("RATE_IP"));
+    if (full) return tag2(_Doorbell.#rateRefusal("RATE_GLOBAL"));
+    return null;
+  }
+  /* R19: the mark a rate refusal carries, unseen in its answer, saying whether the whole doorbell was full. */
+  static #LIMIT_REACHED = Symbol("the whole-doorbell limit was reached");
+  /** R19: count one knock the doorbell turned away in the day's tally, and whether it found the whole-doorbell limit
+   *  reached (R5), dropping any day older than the last `TALLY_DAYS`. Two counters and a date: no address, fingerprint,
+   *  time, digest, pseudonym, note, contact or content. A count that cannot be written is ignored: it never changes a
+   *  refusal's answer, and it decides nothing. */
+  #tallyRefusal(nowMs, limitReached = false) {
+    try {
+      const at43 = Number.isFinite(Number(nowMs)) ? Number(nowMs) : Date.now();
+      const day2 = new Date(at43).toISOString().slice(0, 10);
+      const oldest = new Date(Date.parse(`${day2}T00:00:00Z`) - (TALLY_DAYS2 - 1) * 864e5).toISOString().slice(0, 10);
+      const reached = limitReached === true ? 1 : 0;
+      this.#tx(() => {
+        this.#sql.exec(
+          `INSERT INTO doorbell_tally (day, refused, limit_reached) VALUES (?, 1, ?)
+                        ON CONFLICT(day) DO UPDATE SET refused = refused + 1, limit_reached = limit_reached + excluded.limit_reached`,
+          day2,
+          reached
+        );
+        if (reached) this.#sql.exec(`INSERT INTO doorbell_limit_last (id, day) VALUES (1, ?)
+                                     ON CONFLICT(id) DO UPDATE SET day = MAX(day, excluded.day)`, day2);
+        this.#sql.exec(`DELETE FROM doorbell_tally WHERE day < ?`, oldest);
+      });
+    } catch {
+    }
+  }
+  /** R20 (N703; K1875, DEC-165, DEC-166): one refused hand-over in the security tally, through `credentials`'
+   *  `securityCount({kind: "handover", country})` (its R44), beside R19's tally. `country` is the control plane's stamp
+   *  (Cloudflare's two-letter label for the request), never the body's; nothing else of the knock reaches the count. A
+   *  count that cannot be written is dropped: it never changes the refusal's answer, R10's order or R19's tally, and
+   *  this module keeps no table for it. */
+  #securityCount(country) {
+    try {
+      const cr = this.#credentials();
+      if (cr && typeof cr.securityCount === "function")
+        cr.securityCount({ kind: "handover", country: typeof country === "string" && country ? country : null });
+    } catch {
+    }
+  }
+  /* R19, R20: a refusal answered, counted first in both tallies. */
+  #refusedKnock(answer, nowMs, country = null) {
+    this.#tallyRefusal(nowMs, answer && answer[_Doorbell.#LIMIT_REACHED] === true);
+    this.#securityCount(country);
+    return answer;
+  }
+  /** R19, R20: a knock the Worker refused before the store was asked to keep anything (R6–R8, the required-argument
+   *  refusals, R14's weak secret), counted in the doorbell's tally and the security tally (`country` the control
+   *  plane's stamp, or null). Answers `{counted: true}` and never throws. */
+  doorbellRefused({ now = null, country = null } = {}) {
+    this.#refusedKnock(null, now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now(), country);
+    return { counted: true };
+  }
+  /** R19: the tally, to a member session only: the kept days with at least one refusal, newest first, and the day the
+   *  whole-doorbell limit was last reached, or null. It is status, read where the inbox is read; it writes nothing and
+   *  never notifies. */
+  doorbellTally({ viewer = null, now = null } = {}) {
+    if (!viewerPredicate(viewer).member || !/^member:/.test(String(viewer)))
+      return {
+        ok: false,
+        reason: "MEMBER_SESSION_REQUIRED",
+        status: 403,
+        detail: "the doorbell's tally is read by a signed-in member; nothing was read"
+      };
+    const at43 = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
+    const today2 = new Date(at43).toISOString().slice(0, 10);
+    const oldest = new Date(Date.parse(`${today2}T00:00:00Z`) - (TALLY_DAYS2 - 1) * 864e5).toISOString().slice(0, 10);
+    const days = this.#rows(`SELECT day, refused, limit_reached FROM doorbell_tally WHERE day >= ? AND refused > 0 ORDER BY day DESC`, oldest).map((r) => ({ day: r.day, refused: Number(r.refused), limit_reached: Number(r.limit_reached) }));
+    const last = this.#one(`SELECT day FROM doorbell_limit_last WHERE id = 1`);
+    return { ok: true, days, last_limit_reached: last ? last.day : null };
+  }
+  /* R2: the two windows one knock is asked against: the source's (a keyed fingerprint, R12) and the instance's, the
+     current bucket and the previous one, with how far into the current window `nowMs` is. */
+  async #rateWindows({ sourceAddress, nowMs, windowMs = KNOCK2.windowMs, perIpLimit = KNOCK2.perIp, globalLimit = KNOCK2.global }) {
+    const win = Math.floor(nowMs / windowMs);
+    const fp = await this.sourceFingerprint(sourceAddress);
+    return {
+      ipBucket: `ip:${fp}:${win}`,
+      ipPrevBucket: `ip:${fp}:${win - 1}`,
+      globalBucket: `all:${win}`,
+      globalPrevBucket: `all:${win - 1}`,
+      elapsedFrac: (nowMs - win * windowMs) / windowMs,
+      perIpLimit,
+      globalLimit,
+      win
+    };
+  }
+  /* R2: ask the rate again and, when it admits, count one knock in both windows; in the caller's transaction, so a
+     race cannot slip past the caps. Answers the rate refusal, or null once counted. */
+  #countKnock(rate) {
+    const late = this.#knockRateRefusal(rate);
+    if (late) return late;
+    for (const b of [rate.ipBucket, rate.globalBucket])
+      this.#sql.exec(`INSERT INTO knock_rate (bucket,count) VALUES (?,1) ON CONFLICT(bucket) DO UPDATE SET count=count+1`, b);
+    this.#sql.exec(
+      `DELETE FROM knock_rate WHERE bucket NOT LIKE '%:' || ? AND bucket NOT LIKE '%:' || ?`,
+      String(rate.win),
+      String(rate.win - 1)
+    );
+    return null;
+  }
+  /** R17 (K539; for `sources` R11): an attempt that counts as a knock from its source. R2's two windows are asked
+   *  exactly as `knock` asks them: a refusal is R2's (`RATE_IP` or `RATE_GLOBAL`, with `stated`, the published bound)
+   *  and counts nothing; an admitted attempt is counted in both windows, in one transaction that asks again, and
+   *  answers null. Nothing else is written. */
+  async knockAttempt({ sourceAddress = null, now = null, country = null } = {}) {
+    const nowMs = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
+    const rate = await this.#rateWindows({ sourceAddress, nowMs });
+    const refusal35 = this.#knockRateRefusal(rate) || this.#tx(() => this.#countKnock(rate));
+    if (!refusal35) return null;
+    this.#refusedKnock(refusal35, nowMs, country);
+    return { ...refusal35, stated: refusal35.reason === "RATE_IP" ? KNOCK2.statedPerIp : KNOCK2.statedGlobal };
+  }
+  /** R2, R3, R10, R11: an accepted knock. `sourceAddress` is the connecting address, reduced here to a keyed
+   *  fingerprint. The rate is asked first and changes nothing when it refuses; the bytes (with an evidence store)
+   *  are stored BEFORE the row, so a row never stands without its bytes (R11: a failed store answers a failure
+   *  and leaves no row); the row and the rate count land in ONE transaction that asks the rate again, so a race
+   *  cannot slip past the caps. A knock refused on that second ask stores no bytes of its own: the object is
+   *  removed unless another knock's row already names the same digest. */
+  async knock({
+    contentB64 = null,
+    content = null,
+    note,
+    contact,
+    sourceAddress = null,
+    windowMs = KNOCK2.windowMs,
+    perIpLimit = KNOCK2.perIp,
+    globalLimit = KNOCK2.global,
+    now = null,
+    knockerSecret = null,
+    generateSecret = false,
+    country = null
+  } = {}) {
+    const nowMs = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
+    let bytes2;
+    try {
+      bytes2 = contentB64 != null ? Uint8Array.from(atob(contentB64), (c) => c.charCodeAt(0)) : te7.encode(String(content ?? ""));
+    } catch {
+      return this.#refusedKnock({ ok: false, reason: "BAD_CONTENT", detail: "the content did not decode" }, nowMs, country);
+    }
+    if (isWeakKnockerSecret2(knockerSecret)) return this.#refusedKnock(knockerSecretWeak2(), nowMs, country);
+    const sha2 = hexOf3(await crypto.subtle.digest("SHA-256", bytes2));
+    const rate = await this.#rateWindows({ sourceAddress, nowMs, windowMs, perIpLimit, globalLimit });
+    const early = this.#knockRateRefusal(rate);
+    if (early) return this.#refusedKnock(early, nowMs, country);
+    const bucket = this.env && typeof this.env.CAPTURES?.put === "function" ? this.env.CAPTURES : null;
+    const key2 = `bio/inbox/${sha2}`;
+    let stored2 = false;
+    if (bucket) {
+      try {
+        const held2 = typeof bucket.head === "function" ? await bucket.head(key2) : null;
+        if (!held2) {
+          await bucket.put(key2, bytes2, { sha256: await crypto.subtle.digest("SHA-256", bytes2) });
+          stored2 = true;
+        }
+      } catch (e2) {
+        return {
+          ok: false,
+          reason: "KNOCK_NOT_STORED",
+          status: 502,
+          detail: "the material could not be stored, so nothing was received and no inbox row was written"
+        };
+      }
+    }
+    let secret = typeof knockerSecret === "string" ? knockerSecret : null, generated = null;
+    if (!secret && generateSecret === true) {
+      const r = new Uint8Array(16);
+      crypto.getRandomValues(r);
+      secret = generated = base32Of2(r);
+    }
+    const knockerDigest = secret ? await _Doorbell.#knockerDigest(this.#knockerKey(), secret) : null;
+    const pseudonym = knockerDigest ? pseudonymOf2(knockerDigest) : null;
+    const knockId = `KNOCK-${new Date(nowMs).toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
+    const received = new Date(nowMs).toISOString();
+    const answer = this.#tx(() => {
+      const late = this.#countKnock(rate);
+      if (late) return late;
+      this.#sql.exec(
+        `INSERT INTO inbox (knock_id,sha256,bytes,content,in_r2,note,contact,received,status,knocker_digest,pseudonym,content_b64)
+         VALUES (?,?,?,?,?,?,?,?,'new',?,?,?)`,
+        knockId,
+        sha2,
+        bytes2.length,
+        bucket ? null : new TextDecoder().decode(bytes2),
+        bucket ? 1 : 0,
+        String(note ?? "").slice(0, 2e3),
+        String(contact ?? "").slice(0, 300),
+        received,
+        knockerDigest,
+        pseudonym,
+        bucket ? null : b64Of2(bytes2)
+      );
+      return { ok: true, knockId, sha256: sha2, bytes: bytes2.length, pseudonym, ...generated ? { secret: generated } : {} };
+    });
+    if (!answer.ok && stored2 && !this.#one(`SELECT 1 AS x FROM inbox WHERE sha256 = ?`, sha2)) {
+      try {
+        await bucket.delete?.(key2);
+      } catch {
+      }
+    }
+    return answer.ok ? answer : this.#refusedKnock(answer, nowMs, country);
+  }
+  /** R3: only a signed-in member reaches these (the op's fence). N90: at most `limit` knocks, paged by `after`: a
+   *  doorbell anyone may ring must not answer a member with everything it was ever handed. Each row names its knocker's
+   *  pseudonym and digest (R14, null without a secret), once pulled its capture (R13), the reason, who and when of its
+   *  last status change, and `project`: the project of the document a pulled knock was brought into (its capture's home,
+   *  provenance R4 over the register's read contract, R48, and that bundle's `project`, record-core R37), null until
+   *  then. DEC-108 (2): sorted by `sort` (`received`, the default, newest first; `status`; `secret`, whether a knocker
+   *  secret was presented; `project`, a knock with none last in either direction) in `dir`, ties by received time,
+   *  newest first. An unknown `sort` or `dir` is the required-argument refusal naming it, with nothing read. */
+  inboxList(status, { limit = null, after = null, sort = null, dir = null } = {}) {
+    const by = sort == null || sort === "" ? "received" : sort;
+    if (!INBOX_SORTS2.includes(by)) return _Doorbell.#badArgument("inbox", "sort", INBOX_SORTS2.join(" | "), by);
+    const way = dir == null || dir === "" ? by === "received" ? "desc" : "asc" : dir;
+    if (!SORT_DIRS2.includes(way)) return _Doorbell.#badArgument("inbox", "dir", SORT_DIRS2.join(" | "), way);
+    const cap = limitOf2(limit);
+    const from = after ? keyOf2(after, 4) : null;
+    if (after && !from) return badCursor2();
+    const k1 = {
+      received: "i.received",
+      status: "i.status",
+      secret: "CASE WHEN i.knocker_digest IS NULL THEN '0' ELSE '1' END",
+      project: "COALESCE(b.project, '')"
+    }[by];
+    const k0 = by === "project" ? "CASE WHEN b.project IS NULL OR b.project = '' THEN '1' ELSE '0' END" : "'0'";
+    const op = way === "asc" ? ">" : "<";
+    const found3 = this.#rows(
+      `SELECT * FROM (SELECT i.knock_id, i.sha256, i.bytes, i.in_r2, i.note, i.contact, i.received, i.status, i.resolved,
+                             i.resolved_by, i.resolve_reason, i.knocker_digest, i.pseudonym, i.capture_sha, i.pulled_by,
+                             i.pulled_at, b.project AS project, ${k0} AS k0, ${k1} AS k1
+                        FROM inbox i LEFT JOIN register r ON r.capture_sha = i.capture_sha
+                        LEFT JOIN bundles b ON b.bundle_id = r.bundle_id
+                       WHERE ${status ? "i.status = ?" : "1=1"}) q
+        WHERE ${from ? `(k0 > ? OR (k0 = ? AND (k1 ${op} ? OR (k1 = ? AND (received, knock_id) < (?, ?)))))` : "1=1"}
+        ORDER BY k0 ASC, k1 ${way.toUpperCase()}, received DESC, knock_id DESC LIMIT ?`,
+      ...status ? [status] : [],
+      ...from ? [from[0], from[0], from[1], from[1], from[2], from[3]] : [],
+      cap + 1
+    );
+    const rows3 = found3.slice(0, cap), truncated5 = found3.length > cap, last = rows3[rows3.length - 1];
+    const inbox = rows3.map(({ k0: _k0, k1: _k1, ...r }) => ({ ...r, project: r.project || null }));
+    return {
+      inbox,
+      sort: by,
+      dir: way,
+      limit: cap,
+      truncated: truncated5,
+      next: truncated5 ? cursorOf2([String(last.k0), String(last.k1), last.received, last.knock_id]) : null
+    };
+  }
+  /* R3 (DEC-108 (2)): the required-argument refusal for an argument this module reads that names nothing it knows
+     (the control plane's C-61 shape, answered from the store as `monitoring`'s store-side refusals are). */
+  static #badArgument(op, argument, shape, given5) {
+    return {
+      ok: false,
+      reason: "REQUIRED_ARGUMENT_MISSING",
+      op,
+      argument,
+      shape,
+      status: 400,
+      error: `${argument} must be one of ${shape}; ${JSON.stringify(String(given5)).slice(0, 80)} is not`,
+      detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried none the operation could use. Nothing was read.`
+    };
+  }
+  /* R3 (K383, K275): a knock id no knock answers to, read or resolved, is one condition with its own code and row
+     (C-118.2), not capture R63's `EVIDENCE_NOT_HELD`; minted here alone, so the read and the resolve answer it identically. */
+  #noSuchKnock(knockId) {
+    const row12 = DOORBELL_CHECKS.NO_SUCH_KNOCK;
+    return {
+      ok: false,
+      reason: "NO_SUCH_KNOCK",
+      code: "NO_SUCH_KNOCK",
+      check: row12.check,
+      translation: row12.translation,
+      knockId: typeof knockId === "string" ? knockId : null
+    };
+  }
+  inboxGet(knockId) {
+    if (typeof knockId !== "string" || !knockId) return this.#noSuchKnock(knockId);
+    const r = this.#one(`SELECT knock_id, sha256, bytes, content, in_r2, note, contact, received, status, resolved, resolved_by,
+                                resolve_reason, knocker_digest, pseudonym, capture_sha, pulled_by, pulled_at FROM inbox WHERE knock_id=?`, knockId);
+    return r ? { ok: true, item: r } : this.#noSuchKnock(knockId);
+  }
+  /** R3: a member moves a knock to `discarded` or back to `new`, recorded with who, when and the member's own reason
+   *  (DEC-88 (2)). `pulled` is R13's act for that knock and answers as `pullKnock` does (a promise), once its reason is
+   *  admitted, the reason recorded on the row with the pull: a knock becomes `pulled` only by being brought in. Refused
+   *  in order: `BAD_STATUS`, `NO_SUCH_KNOCK`, `RESOLVE_NO_REASON` (C-118.7), each before anything is written. N499
+   *  (K1105): the `pulled` arm takes `at` and `within` as `pullKnock` does, so the control plane's reasoned resolve is
+   *  one act with its promotion (control-plane R36) and the reason lands on the row inside it; the other arms ignore
+   *  them. */
+  inboxResolve({ knockId, status, by, reason: reason2, at: at43 = null, within: within3 = null } = {}) {
+    if (!["pulled", "discarded", "new"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
+    if (typeof knockId !== "string" || !knockId || !this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId))
+      return this.#noSuchKnock(knockId);
+    if (!reasonGiven2(reason2)) {
+      const row12 = DOORBELL_CHECKS.RESOLVE_NO_REASON;
+      return {
+        ok: false,
+        reason: "RESOLVE_NO_REASON",
+        code: "RESOLVE_NO_REASON",
+        check: row12.check,
+        translation: row12.translation,
+        knockId,
+        status: 400,
+        maxChars: REASON_MAX7
+      };
+    }
+    if (status === "pulled") return this.#pull({ knockId, by, at: at43, within: within3 }, reason2);
+    this.#tx(() => this.#sql.exec(
+      `UPDATE inbox SET status=?, resolved=?, resolved_by=?, resolve_reason=? WHERE knock_id=?`,
+      status,
+      (/* @__PURE__ */ new Date()).toISOString(),
+      by ?? null,
+      reason2,
+      knockId
+    ));
+    return { ok: true, knockId, status, resolve_reason: reason2 };
+  }
+  /** R13 (N364; DEC-78 item 1): bring a knock into the record as a capture. The member-session fence is the op's; `by`
+   *  is its stamp. Refused in order: `NO_SUCH_KNOCK` (C-118.2), `KNOCK_DISCARDED` (C-118.4), capture R63's absence when the
+   *  knock's bytes are gone. A knock already pulled answers `existed: true` with the same document. Otherwise, in one
+   *  act: the bytes are held under their own digest in the evidence store, one acquisition receipt is written
+   *  (`via: "doorbell"`, address `knock:<knockId>`), the knock becomes `pulled` naming the capture, `by` and the
+   *  instant, and `by` is recorded as the capture's actor. The answer carries the provenance document (`acquisition` R16) the
+   *  control plane promotes at `collected`; it never carries `contact` (R16), and nothing here writes a bundle (`acquisition` R25).
+   *
+   *  N380 (K559): `within`, the seam that makes the pull and the control plane's promotion one act (control-plane R36).
+   *  `pullKnock` is async and the record's transaction is synchronous, so no caller can wrap both; `within(document)` is
+   *  called INSIDE the pull's own transaction, after the receipt, the knock's `pulled` update and the actor, and what it
+   *  writes lands or rolls back with them. Its `{ok: false, …}` rolls the whole pull back and is the answer; a throw, or
+   *  an answer that is not synchronous (a promise would outlive the transaction), rolls it back as `PULL_WITHIN_FAILED`.
+   *  Any other answer is carried as `within`. A knock already pulled does not call it: its pull is not being made. The
+   *  bytes put under their own digest before the transaction stay, content-addressed and already held as the knock's. */
+  pullKnock({ knockId, by, at: at43 = null, within: within3 = null } = {}) {
+    return this.#pull({ knockId, by, at: at43, within: within3 }, null);
+  }
+  /* R13, and R3's `pulled` arm: the pull, with the resolve's admitted reason recorded on the row beside it (null for a
+     pull asked directly, which takes no reason). */
+  async #pull({ knockId, by, at: at43 = null, within: within3 = null } = {}, reason2) {
+    if (typeof by !== "string" || !by.trim())
+      return {
+        ok: false,
+        reason: "NO_PULLER",
+        status: 400,
+        detail: "a knock is brought in by a member, whose stamp names them; none was given, so nothing was written"
+      };
+    if (typeof knockId !== "string" || !knockId) return this.#noSuchKnock(knockId);
+    const row12 = this.#one(`SELECT * FROM inbox WHERE knock_id = ?`, knockId);
+    if (!row12) return this.#noSuchKnock(knockId);
+    if (row12.status === "discarded") {
+      const k = DOORBELL_CHECKS.KNOCK_DISCARDED;
+      return {
+        ok: false,
+        reason: "KNOCK_DISCARDED",
+        code: "KNOCK_DISCARDED",
+        check: k.check,
+        translation: k.translation,
+        knockId,
+        status: 409
+      };
+    }
+    if (row12.capture_sha) {
+      let document2 = null;
+      try {
+        document2 = row12.pulled_document ? JSON.parse(row12.pulled_document) : null;
+      } catch {
+        document2 = null;
+      }
+      return {
+        ok: true,
+        existed: true,
+        knockId,
+        capture: { sha256: row12.capture_sha, bytes: row12.bytes },
+        pulled_by: row12.pulled_by,
+        pulled_at: row12.pulled_at,
+        ...document2 ? { document: document2 } : {}
+      };
+    }
+    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
+    if (!ev) {
+      const row13 = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
+      return {
+        ok: false,
+        reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
+        code: "EVIDENCE_STORAGE_NOT_CONFIGURED",
+        check: row13.check,
+        translation: row13.translation,
+        status: 503,
+        knockId,
+        detail: "this group's Civicsmith has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written"
+      };
+    }
+    let bytes2 = null;
+    try {
+      if (row12.in_r2) {
+        const bucket = this.env && typeof this.env.CAPTURES?.get === "function" ? this.env.CAPTURES : null;
+        const obj = bucket ? await bucket.get(`bio/inbox/${row12.sha256}`) : null;
+        if (obj) bytes2 = new Uint8Array(await obj.arrayBuffer());
+      } else if (typeof row12.content_b64 === "string") {
+        bytes2 = Uint8Array.from(atob(row12.content_b64), (c) => c.charCodeAt(0));
+      } else if (typeof row12.content === "string") {
+        bytes2 = te7.encode(row12.content);
+      }
+    } catch {
+      bytes2 = null;
+    }
+    if (bytes2 && hexOf3(await crypto.subtle.digest("SHA-256", bytes2)) !== row12.sha256) bytes2 = null;
+    if (!bytes2) {
+      const a = evidenceAbsent(row12.sha256, "bio", {
+        knockId,
+        status: 404,
+        detail: "the knock's bytes are no longer held as received (gone, or no longer hashing to the knock's digest), so nothing was written"
+      });
+      return a.body;
+    }
+    const sha2 = row12.sha256;
+    try {
+      if (!await ev.head(sha2)) await ev.put(sha2, bytes2);
+    } catch {
+      return {
+        ok: false,
+        reason: "PULL_NOT_STORED",
+        status: 502,
+        knockId,
+        detail: "the knock's bytes could not be held under their own digest, so nothing was written"
+      };
+    }
+    const when = typeof at43 === "string" && ISO_INSTANT2.test(at43) ? at43 : stampSecond5();
+    const address = `knock:${knockId}`;
+    const profile = await profileOf({
+      ev,
+      sha: sha2,
+      ct: null,
+      total: bytes2.length,
+      multipart: false,
+      headers: {},
+      locator: address,
+      view: profileView(this.core),
+      retrieved: when,
+      origin: "fetch"
+    });
+    const document = this.#pulledDocument(row12, { by, at: when, profile });
+    const receiptOf = (fn) => {
+      try {
+        return fn();
+      } catch (e2) {
+        return { recorded: false, error: String(e2 && e2.message || e2).slice(0, 200) };
+      }
+    };
+    const withinFailed = () => ({ ok: false, reason: "PULL_WITHIN_FAILED", status: 500, knockId, detail: PULL_WITHIN_FAILED_DETAIL2 });
+    let done;
+    try {
+      done = this.#tx(() => {
+        const receipt = receiptOf(() => this.provenance?.recordReceipt?.({
+          address,
+          addressNorm: address,
+          captureSha: sha2,
+          retrieved: when,
+          via: DOORBELL_VIA,
+          retrievalLocator: null
+        }));
+        if (!receipt || receipt.recorded !== true)
+          return {
+            ok: false,
+            reason: "RECEIPT_NOT_WRITTEN",
+            status: 502,
+            knockId,
+            detail: "the acquisition receipt could not be written, so the knock stays as it was and nothing was filed"
+          };
+        this.#sql.exec(
+          `UPDATE inbox SET status = 'pulled', resolved = ?, resolved_by = ?, capture_sha = ?, pulled_by = ?, pulled_at = ?,
+                          pulled_document = ?, resolve_reason = ? WHERE knock_id = ?`,
+          when,
+          by,
+          sha2,
+          by,
+          when,
+          JSON.stringify(document),
+          reason2,
+          knockId
+        );
+        this.capture.recordCaptureActor({ captureSha: sha2, actor: by, at: when });
+        if (typeof within3 !== "function") return { ok: true, receipt };
+        const w = _Doorbell.#callWithin(within3, document);
+        if (w && typeof w === "object" && w.ok === false) return { ...w, knockId: w.knockId ?? knockId };
+        return { ok: true, receipt, within: w ?? null };
+      });
+    } catch (e2) {
+      if (e2 && typeof e2 === "object" && WITHIN_FAULT2 in e2) return withinFailed();
+      throw e2;
+    }
+    if (!done.ok) return done;
+    return {
+      ok: true,
+      existed: false,
+      knockId,
+      capture: { sha256: sha2, bytes: bytes2.length },
+      pulled_by: by,
+      pulled_at: when,
+      receipt: { address, via: DOORBELL_VIA, retrieved: when, observation: done.receipt.observation ?? null },
+      document,
+      ...typeof within3 === "function" ? { within: done.within } : {}
+    };
+  }
+  /* N380 (R13, capture R86): the caller's act, called inside the act's own transaction with its own copy of the document. Its
+     throw is tagged so a fault of the act's own still throws; an answer that is not synchronous (a promise would outlive
+     the transaction, its outcome dropped with it) is tagged likewise. Answers what `within` answered. */
+  static #callWithin(within3, document) {
+    let w;
+    try {
+      w = within3(structuredClone(document));
+    } catch {
+      throw { [WITHIN_FAULT2]: true };
+    }
+    if (w && typeof w.then === "function") {
+      Promise.resolve(w).catch(() => {
+      });
+      throw { [WITHIN_FAULT2]: true };
+    }
+    return w;
+  }
+  /* R13 (`acquisition` R16): the provenance document of a pulled knock. Received, not fetched (provenance R51): no fetched letter, no
+     transport; the knocker is its source, unnamed, and the note travels as the knocker's words, never as evidence of
+     their truth. The contact is never in it (R16). */
+  #pulledDocument(row12, { by, at: at43, profile }) {
+    const locator = `knock:${row12.knock_id}`;
+    const name3 = String(row12.knock_id).replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100);
+    return {
+      file: `snapshots/${name3}`,
+      locator,
+      retrieved: at43,
+      profile,
+      authority_state: "undetermined",
+      authority_basis: `material handed to the group through its doorbell by an unnamed knocker; no authority is asserted; recorded ${at43} for resolution through the task list`,
+      provenance_chain: [{
+        /* R13 (N541): the first hop's `who` in acquisition's one spelling (its R33), never a copy. A document pulled
+           before T31 keeps its `who` as written (DEC-124), answered again as stored (`pulled_document`). */
+        who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
+        asserts: `these bytes were received at the doorbell of your group's Civicsmith as knock ${row12.knock_id} at ${row12.received}, and brought into the record by ${by} at ${at43}; they were received, not fetched from any address`,
+        evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
+        bound: false,
+        via: DOORBELL_VIA
+      }],
+      capture: {
+        method: "doorbell knock, received, hashed at receipt",
+        grade: null,
+        grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED",
+        actor_class: "member",
+        actor: by,
+        sha256: row12.sha256,
+        encoding: "binary",
+        bytes: row12.bytes
+      },
+      source: {
+        kind: "knocker",
+        named: false,
+        pseudonym: row12.pseudonym ?? null,
+        receipt: { knock_id: row12.knock_id, sha256: row12.sha256, bytes: row12.bytes, received: row12.received }
+      },
+      knocker_note: { text: String(row12.note ?? ""), words_of: "the knocker", evidence_of_truth: false },
+      origin: { kind: "doorbell", knock_id: row12.knock_id },
+      attestation_attempts: []
+    };
+  }
+  /** R15: the knocks sharing a pseudonym, oldest first, to a member session (the op's fence), with the continuity
+   *  sentence and never an identity: no contact is answered (R16). At most `limit` (N90), paged by `after`. */
+  knocksOf({ pseudonym, limit = null, after = null } = {}) {
+    if (typeof pseudonym !== "string" || !pseudonym)
+      return { ok: false, reason: "NO_PSEUDONYM", detail: "knocksOf names the pseudonym whose knocks it lists" };
+    const cap = limitOf2(limit);
+    const from = after ? keyOf2(after, 2) : ["", ""];
+    if (!from) return badCursor2();
+    const found3 = this.#rows(
+      `SELECT knock_id, sha256, bytes, note, received, status, capture_sha FROM inbox
+        WHERE pseudonym = ? AND (received, knock_id) > (?, ?) ORDER BY received, knock_id LIMIT ?`,
+      pseudonym,
+      ...from,
+      cap + 1
+    );
+    const knocks = found3.slice(0, cap), truncated5 = found3.length > cap, last = knocks[knocks.length - 1];
+    return {
+      ok: true,
+      pseudonym,
+      continuity: "the same knocker secret was presented",
+      knocks,
+      count: knocks.length,
+      limit: cap,
+      truncated: truncated5,
+      next: truncated5 ? cursorOf2([last.received, last.knock_id]) : null
+    };
+  }
+  /** R18 (K539; for `sources` R1): every knock pulled into a capture, oldest received first, to a member session (the
+   *  op's fence), never a contact (R16); `[]` for none. One keyed read (`inbox_capture`). Never throws. */
+  pulledKnocksOf(captureSha) {
+    try {
+      const sha2 = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
+      if (!HEX646.test(sha2)) return [];
+      return this.#rows(`SELECT knock_id, sha256, bytes, received, pseudonym, knocker_digest FROM inbox
+                          WHERE capture_sha = ? ORDER BY received, knock_id`, sha2).map((r) => ({ ...r }));
+    } catch {
+      return [];
+    }
+  }
+};
+
 // src/sources/checks.mjs
 var checks_exports22 = {};
 __export(checks_exports22, {
@@ -87844,7 +88873,7 @@ var CONSENT_STATEMENT = "This consent is permanent for anything published under 
 var WITHDRAWAL_STATEMENT = "This withdrawal binds only later publications: what was published under the consent stays published.";
 var NOT_RECORDED = "known to the group, not recorded";
 var claimSentence = (claimedBy, at43) => `named by ${claimedBy} on ${String(at43).slice(0, 10)}; not confirmed by the group`;
-var HEX646 = /^[0-9a-f]{64}$/;
+var HEX647 = /^[0-9a-f]{64}$/;
 var DATE = /^\d{4}-\d{2}-\d{2}$/;
 var str6 = (v) => typeof v === "string" ? v.trim() : "";
 var isObj26 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -87877,15 +88906,15 @@ var Sources = class _Sources {
   #sql;
   #record;
   #membership;
-  #captureRef;
+  #doorbellRef;
   #provenanceRef;
   #clock;
   #listeners = [];
-  constructor({ storage, record, membership, capture: capture2 = null, provenance = null, now = null } = {}) {
+  constructor({ storage, record, membership, doorbell = null, provenance = null, now = null } = {}) {
     this.#sql = storage.sql;
     this.#record = record;
     this.#membership = membership;
-    this.#captureRef = capture2;
+    this.#doorbellRef = doorbell;
     this.#provenanceRef = provenance;
     this.#clock = typeof now === "function" ? now : () => Date.now();
     migrateSources(this.#sql);
@@ -87893,8 +88922,8 @@ var Sources = class _Sources {
     if (declared2 && declared2.ok === false)
       throw new Error(`sources: record-core refused its table declaration: ${declared2.reason} (${declared2.table})`);
   }
-  get #capture() {
-    return typeof this.#captureRef === "function" ? this.#captureRef() : this.#captureRef;
+  get #doorbell() {
+    return typeof this.#doorbellRef === "function" ? this.#doorbellRef() : this.#doorbellRef;
   }
   get #provenance() {
     if (typeof this.#provenanceRef === "function") this.#provenanceRef = this.#provenanceRef();
@@ -87938,12 +88967,12 @@ var Sources = class _Sources {
   #source(id) {
     return typeof id === "string" && id ? this.#one(`SELECT * FROM sources WHERE source_id = ?`, id) : null;
   }
-  /** Every knock pulled into the capture, oldest received first: capture's one keyed read (its R72). */
+  /** Every knock pulled into the capture, oldest received first: the doorbell's one keyed read (its R18). */
   #pulledKnocks(captureSha) {
-    const list6 = this.#capture.pulledKnocksOf(captureSha);
+    const list6 = this.#doorbell.pulledKnocksOf(captureSha);
     return Array.isArray(list6) ? list6.filter((k) => k && typeof k.knock_id === "string" && k.sha256 === captureSha) : [];
   }
-  /** R1: capture R65's `source`, verbatim, from the knock's row. */
+  /** R1: doorbell R13's `source`, verbatim, from the knock's row. */
   static stated(k) {
     return {
       kind: "knocker",
@@ -87985,23 +89014,23 @@ var Sources = class _Sources {
       String(k.received)
     );
   }
-  /** R15: every pulled knock of a pseudonym's source bound to it, from capture's `knocksOf` (its R67), when the source
+  /** R15: every pulled knock of a pseudonym's source bound to it, from the doorbell's `knocksOf` (its R15), when the source
    *  is minted and before each act that may move its rung (R10), so a capture the source stands behind has its row
    *  whichever of its captures was read (reevaluation R28 reads them). A knock without a secret is its source's only
-   *  knock, bound when read. In the caller's transaction; a capture that does not answer binds nothing more. */
+   *  knock, bound when read. In the caller's transaction; a doorbell that does not answer binds nothing more. */
   #bindKnocks(src) {
     if (!src || !src.pseudonym) return;
     let after = null;
     for (; ; ) {
       let page2;
       try {
-        page2 = this.#capture.knocksOf({ pseudonym: src.pseudonym, limit: 1e3, after });
+        page2 = this.#doorbell.knocksOf({ pseudonym: src.pseudonym, limit: 1e3, after });
       } catch {
         return;
       }
       if (!page2 || page2.ok === false || !Array.isArray(page2.knocks)) return;
       for (const k of page2.knocks)
-        if (k && k.status === "pulled" && typeof k.knock_id === "string" && HEX646.test(String(k.sha256)) && k.capture_sha === k.sha256)
+        if (k && k.status === "pulled" && typeof k.knock_id === "string" && HEX647.test(String(k.sha256)) && k.capture_sha === k.sha256)
           this.#bindKnock(k, src.source_id);
       if (!page2.truncated || !page2.next) return;
       after = page2.next;
@@ -88012,7 +89041,7 @@ var Sources = class _Sources {
   sourceOf(args = {}) {
     const { captureSha, viewer } = isObj26(args) ? args : {};
     const reader = this.#memberOf(viewer);
-    if (!reader || typeof captureSha !== "string" || !HEX646.test(captureSha)) return noSuchSource(null, { captureSha: HEX646.test(String(captureSha)) ? captureSha : null });
+    if (!reader || typeof captureSha !== "string" || !HEX647.test(captureSha)) return noSuchSource(null, { captureSha: HEX647.test(String(captureSha)) ? captureSha : null });
     const knocks = this.#pulledKnocks(captureSha);
     if (!knocks.length) return noSuchSource(null, { captureSha });
     const ids = this.#record.transact(() => {
@@ -88368,7 +89397,7 @@ var Sources = class _Sources {
   }
   async #digestOf(secret) {
     try {
-      const d = await this.#capture.knockerDigestOf(secret);
+      const d = await this.#doorbell.knockerDigestOf(secret);
       return d && typeof d.knocker_digest === "string" && d.knocker_digest ? d : null;
     } catch {
       return null;
@@ -88518,16 +89547,16 @@ var Sources = class _Sources {
     }
   }
   /* ---- R11: consent by the knocker's own secret, no account ---- */
-  /** R11 (`op=knockerconsent`). Counted in the knock's rate windows as a knock from its source (capture R31, K530);
+  /** R11 (`op=knockerconsent`). Counted in the knock's rate windows as a knock from its source (doorbell R2, R17; K530);
    *  a rate refusal answers as the knock's does. Every other failure answers `SECRET_NOT_RECOGNISED`, byte for byte
    *  the same. `sourceAddress` and `now` are the control plane's, as for a knock. */
   async consentBySecret(args = {}) {
     const a = isObj26(args) ? args : {};
-    const cap = this.#capture;
+    const bell = this.#doorbell;
     let rate;
     try {
       const stamped2 = a.now != null && a.now !== "" && Number.isFinite(Number(a.now)) ? Number(a.now) : null;
-      rate = await cap.knockAttempt({ sourceAddress: a.sourceAddress ?? null, now: stamped2 ?? this.#nowMs() });
+      rate = await bell.knockAttempt({ sourceAddress: a.sourceAddress ?? null, now: stamped2 ?? this.#nowMs() });
     } catch {
       return SECRET_NOT_RECOGNISED_ANSWER;
     }
@@ -88580,7 +89609,7 @@ var Sources = class _Sources {
       return noService("terms", `the vendor's terms, when stated, are text of at most ${TERMS_MAX} characters`);
     const terms = str6(a.terms) || null;
     const captureSha = typeof a.captureSha === "string" ? a.captureSha.trim().toLowerCase() : null;
-    if (!captureSha || !HEX646.test(captureSha)) return noSuchCapture(null);
+    if (!captureSha || !HEX647.test(captureSha)) return noSuchCapture(null);
     let doc;
     try {
       doc = this.#captureDocument(captureSha);
@@ -88617,7 +89646,7 @@ var Sources = class _Sources {
   keyedResultOf(captureSha) {
     try {
       const sha2 = typeof captureSha === "string" ? captureSha.trim().toLowerCase() : "";
-      if (!HEX646.test(sha2)) return null;
+      if (!HEX647.test(sha2)) return null;
       const m = this.#lastMark(sha2);
       if (!m) return null;
       return {
@@ -88656,7 +89685,7 @@ function sourcesOf(ctx, deps = {}) {
       storage,
       record,
       membership: deps.membership ?? membershipOf(ctx, { record }),
-      capture: deps.capture ?? (() => captureOf(ctx)),
+      doorbell: deps.doorbell ?? (() => doorbellOf(ctx)),
       provenance: deps.provenance ?? (() => provenanceOf(ctx, { record })),
       now: deps.now ?? null
     });
@@ -89029,7 +90058,7 @@ var TRACK_BACK_DAYS = 366;
 var SCHEDULER_STAMP = "class:scheduler";
 var WORDS_MAX2 = 4e3;
 var CLAUSE_MAX = 2e3;
-var REASON_MAX7 = 2e3;
+var REASON_MAX8 = 2e3;
 var isObj27 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var str7 = (v) => typeof v === "string" ? v.trim() : "";
 var said6 = (v) => typeof v === "string" && v.trim() !== "";
@@ -89063,8 +90092,8 @@ function noClause(clause2) {
   return refusal14("NO_CLAUSE", `name the clause the obligation rests on, in 1 to ${CLAUSE_MAX} characters.`, { max: CLAUSE_MAX });
 }
 function noReason(reason2) {
-  if (said6(reason2) && reason2.length <= REASON_MAX7) return null;
-  return refusal14("DUTY_NO_REASON", `give your reason, in 1 to ${REASON_MAX7} characters.`, { max: REASON_MAX7 });
+  if (said6(reason2) && reason2.length <= REASON_MAX8) return null;
+  return refusal14("DUTY_NO_REASON", `give your reason, in 1 to ${REASON_MAX8} characters.`, { max: REASON_MAX8 });
 }
 function noDuty() {
   return refusal14("NO_DUTY", "an obligation is named by its id (DUT-...).");
@@ -89987,10 +91016,10 @@ var Duties = class _Duties {
   }
   #derive(d, fields, from, to, asOf, viewer) {
     const view = this.view();
-    const { instances: instances72, errors } = this.#instances(d.duty_id, d.version, fields, from, to, viewer);
+    const { instances: instances73, errors } = this.#instances(d.duty_id, d.version, fields, from, to, viewer);
     const occurrences2 = [];
     const inForce = this.inForce(fields, asOf.slice(0, 10), viewer);
-    for (const inst of instances72) {
+    for (const inst of instances73) {
       if (d.withdrawn_at && inst.date && !isUndet(inst.date) && compare2(inst.date, d.withdrawn_at) === "after") continue;
       const key2 = _Duties.occurrenceKey(d.duty_id, d.version, inst.kind, inst.ref);
       occurrences2.push(this.#occurrence(d, fields, inst, key2, asOf, view, inForce, viewer));
@@ -90089,8 +91118,8 @@ var Duties = class _Duties {
   /* An occurrence key the duty derives in a broad window around `asOf` (two years either side), or null. */
   #occurrenceAt(d, fields, key2, asOf) {
     const day2 = asOf.slice(0, 10);
-    const { instances: instances72 } = this.#instances(d.duty_id, d.version, fields, addDays2(day2, -731), addDays2(day2, 731), INTERNAL);
-    for (const inst of instances72) if (_Duties.occurrenceKey(d.duty_id, d.version, inst.kind, inst.ref) === key2) return inst;
+    const { instances: instances73 } = this.#instances(d.duty_id, d.version, fields, addDays2(day2, -731), addDays2(day2, 731), INTERNAL);
+    for (const inst of instances73) if (_Duties.occurrenceKey(d.duty_id, d.version, inst.kind, inst.ref) === key2) return inst;
     return null;
   }
   /** R12: a member matches an event (or a held exception) to an occurrence, recorded with who, when and why, and
@@ -90738,19 +91767,19 @@ function dutiesOps(s, url, body) {
     reviewpropose: () => s.proposeReview(act2())
   };
 }
-var instances19 = /* @__PURE__ */ new WeakMap();
+var instances20 = /* @__PURE__ */ new WeakMap();
 var live3 = /* @__PURE__ */ new Set();
 function neighboursRead(bound) {
   return (args) => {
     const a = isObj27(args) ? args : {};
     const { host, ...rest } = a;
-    const s = host !== void 0 && host !== null ? instances19.get(host) : bound || (live3.size === 1 ? [...live3][0] : null);
+    const s = host !== void 0 && host !== null ? instances20.get(host) : bound || (live3.size === 1 ? [...live3][0] : null);
     if (!s) return { refused: "OWNER_HOST_AMBIGUOUS", why: host !== void 0 && host !== null ? "no duties instance answers for the host named" : "several stores hold duties in this isolate; the read names its host" };
     return s.neighbours(rest);
   };
 }
 function dutiesOf(host, deps) {
-  let s = instances19.get(host);
+  let s = instances20.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -90779,7 +91808,7 @@ function dutiesOf(host, deps) {
       provenance: pick4("provenance"),
       content: pick4("content")
     });
-    instances19.set(host, s);
+    instances20.set(host, s);
     if (s.registry === defaultRegistry) live3.add(s);
     record.declareTable(MODULE2, DUTIES_TABLES.map((t2) => ({ ...t2 })));
     for (const t2 of DUTIES_TABLES) record.registerStoreGate(MODULE2, t2.name, (row12, ctx) => s.oneHome(row12, ctx));
@@ -91252,11 +92281,11 @@ var roleNames2 = (roles2) => Array.isArray(roles2) ? roles2.map((r) => isObj29(r
 var memberOf2 = (by) => typeof by !== "string" || !by.trim() || isMachineIdentity(by) ? null : by.startsWith("member:") ? by.slice(7) || null : by.trim();
 var viewerMember = (viewer) => viewer === "admin" ? "admin" : typeof viewer === "string" && viewer.startsWith("member:") && viewer.length > 7 ? viewer.slice(7) : null;
 var bounded = (items, max = READ_LIST_MAX, truncated5 = false) => ({ items: items.slice(0, max), truncated: truncated5 || items.length > max });
-var instances20 = /* @__PURE__ */ new WeakMap();
+var instances21 = /* @__PURE__ */ new WeakMap();
 var live4 = /* @__PURE__ */ new Set();
 function peopleOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let p3 = instances20.get(storage);
+  let p3 = instances21.get(storage);
   if (!p3) {
     const d = deps || {};
     const record = d.record ?? recordOf(ctx);
@@ -91285,7 +92314,7 @@ function peopleOf(ctx, deps = {}) {
       money: pick4("money"),
       duties: pick4("duties")
     });
-    instances20.set(storage, p3);
+    instances21.set(storage, p3);
   }
   return p3;
 }
@@ -93038,7 +94067,7 @@ var People = class _People {
   static forHost(host) {
     if (host) {
       const storage = host.storage ? host.storage : host;
-      return instances20.get(storage) || null;
+      return instances21.get(storage) || null;
     }
     const alive = [];
     for (const r of live4) {
@@ -95583,9 +96612,9 @@ function observationOf(o, sql) {
     leadReferentVisible: (kind2, ref, viewer) => o.referentVisible(kind2, ref, viewer)
   };
 }
-var instances21 = /* @__PURE__ */ new WeakMap();
+var instances22 = /* @__PURE__ */ new WeakMap();
 function retrievalOf(host, deps) {
-  let r = instances21.get(host);
+  let r = instances22.get(host);
   if (!r) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -95595,7 +96624,7 @@ function retrievalOf(host, deps) {
     const storage = d.storage || (host.storage ?? host);
     const observation = d.observation || observationOf(observationLogOf(host), storage.sql);
     r = new Retrieval({ ...d, storage, record, membership, promotion, extraction, observation, host });
-    instances21.set(host, r);
+    instances22.set(host, r);
     const answer = typeof record.declareTable === "function" ? record.declareTable("retrieval", retrievalTables(r)) : record.declarePurge("retrieval", RETRIEVAL_PURGE);
     if (answer && answer.ok === false)
       throw new Error(`retrieval: record-core refused its table declaration: ${answer.reason} (${answer.table})`);
@@ -96982,9 +98011,9 @@ var LegEarning = class {
     };
   }
 };
-var instances22 = /* @__PURE__ */ new WeakMap();
+var instances23 = /* @__PURE__ */ new WeakMap();
 function legEarningOf(host, deps) {
-  let k = instances22.get(host);
+  let k = instances23.get(host);
   if (!k) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -96992,7 +98021,7 @@ function legEarningOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const content = d.content || contentOf(host, { record, membership });
     k = new LegEarning({ ...d, host, storage: d.storage || host.storage, record, membership, promotion, content });
-    instances22.set(host, k);
+    instances23.set(host, k);
     if (typeof record.declareTable === "function")
       record.declareTable("leg-earning", LEG_EARNING_TABLES.map((t2) => ({ ...t2, keys: [...t2.keys] })));
   }
@@ -97642,8 +98671,8 @@ var EVALUATORS = {
     const p3 = deps.progressions;
     if (!p3 || typeof p3.proposalsFeed !== "function") return { results: [], denominator: { n: null, why: "the progressions module is not reachable here" }, evaluated: 0 };
     const feed = await p3.proposalsFeed(Date.parse(deps.now));
-    const instances72 = list3(feed, "instances").filter(plain3).slice(0, UNITS_MAX);
-    const rows3 = instances72.map((x) => {
+    const instances73 = list3(feed, "instances").filter(plain3).slice(0, UNITS_MAX);
+    const rows3 = instances73.map((x) => {
       const ooo = list3(x.findings, "findings").filter((f17) => plain3(f17) && f17.kind === "out_of_order");
       return { x, ooo, row: { instance: `${x.progression_key ?? x.progressionKey}\0${x.entity_id ?? x.entityId}`, late: ooo.length ? "true" : "false" } };
     });
@@ -101157,9 +102186,9 @@ var Calculations = class {
     }
   }
 };
-var instances23 = /* @__PURE__ */ new WeakMap();
+var instances24 = /* @__PURE__ */ new WeakMap();
 function calculationsOf(host, deps) {
-  let c = instances23.get(host);
+  let c = instances24.get(host);
   if (!c) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -101167,7 +102196,7 @@ function calculationsOf(host, deps) {
     const content = d.content || contentOf(host, { record, membership });
     const provenance = d.provenance || content.provenance || provenanceOf(host, { record, membership });
     c = new Calculations({ ...d, storage: d.storage || host.storage, host, record, membership, content, provenance });
-    instances23.set(host, c);
+    instances24.set(host, c);
     const declared2 = record.declareTable("calculations", CALCULATIONS_TABLES);
     if (!declared2 || declared2.ok === false) throw new Error(`calculations' tables could not be declared: ${JSON.stringify(declared2)}`);
     joinUpstream(c);
@@ -101693,7 +102722,7 @@ var DISPOSITION_REASON_MAX = 160;
 var NOTE_MAX = 1e3;
 var BASIS_MAX = 4e3;
 var CITATION_MAX = 2e3;
-var REASON_MAX8 = 4e3;
+var REASON_MAX9 = 4e3;
 var REQUIRED_FIRES = /* @__PURE__ */ new Set(["always", "usually", "unless_exception"]);
 var SINGLE = /* @__PURE__ */ new Set(["1", "0..1"]);
 var DISPOSE_ITEM_KEYS = [["key"], ["progressionKey", "stageKey"]];
@@ -102867,7 +103896,7 @@ var Progressions = class _Progressions {
     if (unconcerned) return unconcerned;
     const at43 = this.now();
     const by = declaredBy == null ? null : String(declaredBy).slice(0, 200);
-    const r = rsn.slice(0, REASON_MAX8), c = cite.slice(0, CITATION_MAX);
+    const r = rsn.slice(0, REASON_MAX9), c = cite.slice(0, CITATION_MAX);
     let version = 1;
     this.record.transact(() => {
       const last = this.#one(
@@ -103216,7 +104245,7 @@ var Progressions = class _Progressions {
       const d = recorded.get(pk + "::" + sk);
       return !!(d && d.applies);
     };
-    const instances72 = [];
+    const instances73 = [];
     const groups = /* @__PURE__ */ new Map();
     for (const p3 of this.#pairs()) {
       const inst = this.#assemble(p3.progression_key, p3.entity_id);
@@ -103228,7 +104257,7 @@ var Progressions = class _Progressions {
       const findings = [...missing2, ...overdueF, ...others];
       if (!findings.length) continue;
       const entityLabel = inst.entity ? inst.entity.label : null;
-      instances72.push({
+      instances73.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -103308,10 +104337,10 @@ var Progressions = class _Progressions {
     })).sort((a, b) => a.key < b.key ? -1 : a.key > b.key ? 1 : 0);
     return {
       ok: true,
-      instances: instances72,
+      instances: instances73,
       proposals,
       dispositions,
-      instance_count: instances72.length,
+      instance_count: instances73.length,
       proposal_count: proposals.length,
       disposition_count: dispositions.length
     };
@@ -103334,7 +104363,7 @@ var Progressions = class _Progressions {
       established: f17.grade_determined === true && isEstablished(f17.grade),
       needs_confirmation: f17.grade === "C"
     });
-    const instances72 = [];
+    const instances73 = [];
     for (const r of rows3) {
       const ck = r.progression_key + "\0" + r.entity_id;
       let a = assembled.get(ck);
@@ -103353,7 +104382,7 @@ var Progressions = class _Progressions {
       const missing2 = inst.findings.filter((f17) => f17.kind === "missing_predecessor");
       const others = inst.findings.filter((f17) => f17.kind !== "missing_predecessor");
       const findings = [...missing2, ...a.overdue, ...others].map(project).map((f17) => ({ ...f17, disposition: a.decided.get(f17.stage_key) ?? null }));
-      instances72.push({
+      instances73.push({
         progression_key: inst.progression_key,
         progression_label: inst.label,
         definition_version: inst.definition_version,
@@ -103366,7 +104395,7 @@ var Progressions = class _Progressions {
         open_finding_count: findings.filter((f17) => !(f17.disposition && f17.disposition.applies)).length
       });
     }
-    return { ok: true, capture_sha: captureSha, count: instances72.length, instances: instances72 };
+    return { ok: true, capture_sha: captureSha, count: instances73.length, instances: instances73 };
   }
   /* ===================================================================== *
    * THE CONNECTION OWNER (R40; connection-grammar R2, R6–R9; B1a.8).
@@ -103536,9 +104565,9 @@ function progressionOps(p3, url, body) {
     captureprogressions: () => p3.captureProgressions({ captureSha: q10("sha256"), nowMs: q10("now") })
   };
 }
-var instances24 = /* @__PURE__ */ new WeakMap();
+var instances25 = /* @__PURE__ */ new WeakMap();
 function progressionsOf(host, deps) {
-  let p3 = instances24.get(host);
+  let p3 = instances25.get(host);
   if (!p3) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -103559,7 +104588,7 @@ function progressionsOf(host, deps) {
     if (declared2 && declared2.ok === false)
       throw new Error(`progressions: record-core refused its tables: ${declared2.reason} ${declared2.table || ""}`.trim());
     registerFigures5(p3);
-    instances24.set(host, p3);
+    instances25.set(host, p3);
   }
   made2.add(p3);
   return p3;
@@ -103578,7 +104607,7 @@ var OWNER_REGISTRATION2 = registerOwner({
     const { host = null, ...args } = a && typeof a === "object" ? a : {};
     if (args.viewer === void 0 || args.viewer === null || args.viewer === "")
       return { refused: "VIEWER_MISSING", why: "a read names the member reading; an absent viewer is neither an administrator nor the public" };
-    const p3 = host ? instances24.get(host) : made2.size === 1 ? [...made2][0] : null;
+    const p3 = host ? instances25.get(host) : made2.size === 1 ? [...made2][0] : null;
     if (!p3) return { refused: "OWNER_HOST_AMBIGUOUS", why: host ? "progressions holds no instance for that host" : `progressions holds ${made2.size} instances in this isolate and the read names no host` };
     return p3.neighbours(args);
   }
@@ -107098,9 +108127,9 @@ Changes: ${grounds.length ? `${rowsOut.length} group(s) over ${legs.length} leg(
     }
   }
 };
-var instances25 = /* @__PURE__ */ new WeakMap();
+var instances26 = /* @__PURE__ */ new WeakMap();
 function inquiryOf(host, deps) {
-  let k = instances25.get(host);
+  let k = instances26.get(host);
   if (!k) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -107108,7 +108137,7 @@ function inquiryOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const content = d.content || contentOf(host, { record, membership });
     k = new Inquiry({ ...d, host, storage: d.storage || host.storage, record, membership, promotion, content });
-    instances25.set(host, k);
+    instances26.set(host, k);
     void k.legEarning;
     record.declareTable("inquiry", INQUIRY_DECLARATIONS.map((d2) => ({ ...d2 })));
     if (typeof record.registerAuditContext === "function")
@@ -107694,7 +108723,7 @@ var BIAS_DEBT_SETTLED_MAX = 1e3;
 var BIAS_DEBT_VIEWER = "class:daemon";
 var BIAS_COUNT_KEYS = Object.freeze(["biasStatements", "biasAdoptions"]);
 var SETTLED_BY_AN_ACT = /* @__PURE__ */ new Set(["rerun", "resolved"]);
-var ISO_INSTANT2 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+var ISO_INSTANT3 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 var RESIDUE_SECTION = /\n## What This Does Not Enforce[^\S\n]*\n([\s\S]*?)(?=\n## |$)/;
 var enc2 = new TextEncoder();
 var safeJson19 = (s) => {
@@ -108808,7 +109837,7 @@ var Bias = class _Bias {
         "this obligation has already been settled, and a settlement is appended rather than replaced",
         { run: id, settled: _Bias.#settledView(row12) }
       );
-    const when = at43 && ISO_INSTANT2.test(at43) ? at43 : stampInstant("second");
+    const when = at43 && ISO_INSTANT3.test(at43) ? at43 : stampInstant("second");
     const settled = this.#settle({
       run: id,
       kind: "resolved",
@@ -109306,15 +110335,15 @@ function refOf(target) {
   return parseImportedFindingRef(t2) ? t2 : null;
 }
 var pairKey = (leg2) => `${refOf(leg2.target)}\0${typeof leg2.target_edition}\0${String(leg2.target_edition)}`;
-var instances26 = /* @__PURE__ */ new WeakMap();
+var instances27 = /* @__PURE__ */ new WeakMap();
 function acceptedWorkOf(host, deps) {
-  let w = instances26.get(host);
+  let w = instances27.get(host);
   if (!w) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const promotion = d.promotion || promotionOf(host, { record });
     w = new AcceptedWork({ record });
-    instances26.set(host, w);
+    instances27.set(host, w);
     promotion.registerStep("accepted-work", { check: (c) => w.check(c) });
   }
   return w;
@@ -112696,9 +113725,9 @@ Changes: reading '${nameWritten}' derived from '${src.vname}', in state suggeste
     };
   }
 };
-var instances27 = /* @__PURE__ */ new WeakMap();
+var instances28 = /* @__PURE__ */ new WeakMap();
 function basisVersionsOf(host, deps) {
-  let bv = instances27.get(host);
+  let bv = instances28.get(host);
   if (!bv) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -112726,7 +113755,7 @@ function basisVersionsOf(host, deps) {
       promotion,
       content
     });
-    instances27.set(host, bv);
+    instances28.set(host, bv);
     record.declarePurge("basis-versions", BASIS_VERSIONS_TABLES);
     registerBasisVersionGrammar(record);
     promotion.registerStep("basis-versions", { check: (c) => bv.check(c), project: (c) => bv.project(c) });
@@ -116319,7 +117348,7 @@ var Strength = class _Strength {
     const ctx = { captureBounds, levels: lv, refs: /* @__PURE__ */ new Map(), ownTop };
     const observed = this.#observationReader();
     const keys = /* @__PURE__ */ new Map();
-    const keyOf5 = (author) => {
+    const keyOf6 = (author) => {
       if (author == null) return null;
       if (!keys.has(author)) keys.set(author, `a${keys.size + 1}`);
       return keys.get(author);
@@ -116342,7 +117371,7 @@ var Strength = class _Strength {
         captures: kind0 === "document" && leg2.target_id ? this.#rows(`SELECT capture_sha FROM register WHERE bundle_id=? ORDER BY capture_sha`, leg2.target_id).map((r) => r.capture_sha) : []
       };
       if (kind2 === "observation") {
-        const k = keyOf5(observed(leg2.target_id).author);
+        const k = keyOf6(observed(leg2.target_id).author);
         if (k) out.author_key = k;
       }
       if (kind0 === "document" && leg2.grade_axis === "capture" && leg2.grade != null && captureBounds) {
@@ -116682,7 +117711,7 @@ function strengthOps(s, url, body) {
     })
   };
 }
-var instances28 = /* @__PURE__ */ new WeakMap();
+var instances29 = /* @__PURE__ */ new WeakMap();
 function strengthTables(s) {
   const rest = { expunge: "none", export: "admin-only", version_chain: false };
   return [
@@ -116699,7 +117728,7 @@ function strengthTables(s) {
   ];
 }
 function strengthOf(host, deps) {
-  let s = instances28.get(host);
+  let s = instances29.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -116711,7 +117740,7 @@ function strengthOf(host, deps) {
       return f17 && f17.ok ? f17.value || null : null;
     });
     s = new Strength({ ...d, host, storage, record, membership, promotion, producingGroup });
-    instances28.set(host, s);
+    instances29.set(host, s);
     s.migrate();
     const declared2 = record.declareTable("strength", strengthTables(s));
     if (!declared2 || declared2.ok === false) throw new Error(`strength's tables could not be declared: ${JSON.stringify(declared2)}`);
@@ -117310,11 +118339,11 @@ var STORED_ROW = `candidate, key, a_kind, a_ref, a_version, a_bundle_id, b_kind,
   proposed_by, label, reason, state, origin, at, a_side, b_side`;
 var RUN_GATE_DECLARED = "RUN_GATE_DECLARED";
 var RUN_GATE_MALFORMED = "RUN_GATE_MALFORMED";
-var instances29 = /* @__PURE__ */ new WeakMap();
+var instances30 = /* @__PURE__ */ new WeakMap();
 var live5 = /* @__PURE__ */ new Set();
 function contradictionOf(ctx, opts = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let c = instances29.get(storage);
+  let c = instances30.get(storage);
   if (!c) {
     const record = opts.record ?? recordOf(ctx);
     const lazy = (given5, make) => given5 ?? make;
@@ -117330,7 +118359,7 @@ function contradictionOf(ctx, opts = {}) {
       money: lazy(opts.money, () => moneyOf2(ctx, { record })),
       inquiry: lazy(opts.inquiry, () => inquiryServices(ctx))
     });
-    instances29.set(storage, c);
+    instances30.set(storage, c);
     live5.add(c);
     const promotion = typeof opts.promotion === "object" && opts.promotion ? opts.promotion : promotionOf(ctx, { record });
     if (promotion && typeof promotion.registerStep === "function")
@@ -117370,7 +118399,7 @@ function ownerNeighbours3(args) {
   const a = args && typeof args === "object" && !Array.isArray(args) ? args : {};
   const { host, ...rest } = a;
   let c = null;
-  if (host !== void 0 && host !== null) c = instances29.get(host.storage ? host.storage : host) ?? null;
+  if (host !== void 0 && host !== null) c = instances30.get(host.storage ? host.storage : host) ?? null;
   else if (live5.size === 1) c = [...live5][0];
   if (!c) return {
     refused: "OWNER_HOST_AMBIGUOUS",
@@ -124667,9 +125696,9 @@ Why: ${line2}
     return fm ? checkReevalPending(fm) : [];
   }
 };
-var instances30 = /* @__PURE__ */ new WeakMap();
+var instances31 = /* @__PURE__ */ new WeakMap();
 function reevaluationOf(host, deps) {
-  let r = instances30.get(host);
+  let r = instances31.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -124677,7 +125706,7 @@ function reevaluationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     r = new Reevaluation({ ...d, host, storage, record, membership, promotion });
-    instances30.set(host, r);
+    instances31.set(host, r);
     r.migrate();
     record.declarePurge("reevaluation", REEVALUATION_TABLES);
     r.inquiry.onRaised("reevaluation", ({ target, cause, since, viewer }) => r.raise({ target, source: cause, since, viewer }));
@@ -125460,7 +126489,7 @@ var MATERIAL_OBSCURED_MARKED_FIELD = "obscured_marked";
 var ATTESTATION_LEVELS = Object.freeze(["group", "project", "cover", "name"]);
 var ANONYMOUS_ATTESTATION_LEVELS = Object.freeze(["group", "project"]);
 var GROUP_ATTESTATION_SIGNATURE = "case";
-var HEX647 = /^[0-9a-f]{64}$/;
+var HEX648 = /^[0-9a-f]{64}$/;
 var obscuredOf = (o) => {
   try {
     return obscuredSpelled(o);
@@ -125469,7 +126498,7 @@ var obscuredOf = (o) => {
   }
 };
 var obscuredSpelled = (o) => o && typeof o === "object" && !Array.isArray(o) ? {
-  obscured_copy: typeof o.copy === "string" && HEX647.test(o.copy) ? o.copy : null,
+  obscured_copy: typeof o.copy === "string" && HEX648.test(o.copy) ? o.copy : null,
   obscured_label: typeof o.label === "string" && o.label.trim() ? o.label : null,
   ...typeof o.marked === "boolean" ? { [MATERIAL_OBSCURED_MARKED_FIELD]: o.marked } : {}
 } : null;
@@ -125674,7 +126703,7 @@ var CASE_FILE_MANIFEST_FIELDS = Object.freeze([
 var CASE_FILE_KEY_FIELDS = Object.freeze(["key", "fingerprint"]);
 var CASE_FILE_PART_FIELDS = Object.freeze(["index", "sha256", "bytes"]);
 var CASE_FILE_FILE_FIELDS = Object.freeze(["path", "sha256", "bytes", "part", "kind"]);
-var HEX648 = /^[0-9a-f]{64}$/;
+var HEX649 = /^[0-9a-f]{64}$/;
 var SEGMENT2 = /^[A-Za-z0-9][A-Za-z0-9._-]{0,199}$/;
 var FINGERPRINT = /^SHA256:[A-Za-z0-9+/]{43}$/;
 var SLUG3 = /^[a-z0-9](?:[a-z0-9-]{0,38}[a-z0-9])?$/;
@@ -125702,14 +126731,14 @@ var CHAIN_DIRS = Object.freeze({ archive: "archives", container: "containers" })
 var chainLeaf = (kind2, sha2) => kind2 === "container" ? `${sha2}.json` : sha2;
 function caseFilePath(kind2, key2 = null) {
   if (Object.hasOwn(SINGLE_PATHS, kind2)) return SINGLE_PATHS[kind2];
-  if (Object.hasOwn(CHAIN_DIRS, kind2)) return Array.isArray(key2) && key2.length === 2 && SEGMENT2.test(String(key2[0] ?? "")) && HEX648.test(String(key2[1] ?? "")) ? `materials/${key2[0]}/${CHAIN_DIRS[kind2]}/${chainLeaf(kind2, key2[1])}` : null;
+  if (Object.hasOwn(CHAIN_DIRS, kind2)) return Array.isArray(key2) && key2.length === 2 && SEGMENT2.test(String(key2[0] ?? "")) && HEX649.test(String(key2[1] ?? "")) ? `materials/${key2[0]}/${CHAIN_DIRS[kind2]}/${chainLeaf(kind2, key2[1])}` : null;
   if (Object.hasOwn(FINDING_FILES, kind2)) return SEGMENT2.test(String(key2 ?? "")) ? `findings/${key2}/${FINDING_FILES[kind2]}` : null;
   if (Object.hasOwn(MATERIAL_FILES, kind2)) return SEGMENT2.test(String(key2 ?? "")) ? `materials/${key2}/${MATERIAL_FILES[kind2]}` : null;
   if (kind2 === "attestation" && Array.isArray(key2) && key2.length === 2 && key2.every((k) => SEGMENT2.test(String(k ?? ""))))
     return `attestations/${key2[0]}/${key2[1]}`;
   if (kind2 === "calculation") {
     if (key2 === "prov") return CASE_FILE_PROV_PATH;
-    if (Array.isArray(key2)) return key2.length === 2 && SEGMENT2.test(String(key2[0] ?? "")) && HEX648.test(String(key2[1] ?? "")) ? `calculations/${key2[0]}/inputs/${key2[1]}` : null;
+    if (Array.isArray(key2)) return key2.length === 2 && SEGMENT2.test(String(key2[0] ?? "")) && HEX649.test(String(key2[1] ?? "")) ? `calculations/${key2[0]}/inputs/${key2[1]}` : null;
     return SEGMENT2.test(String(key2 ?? "")) && key2 !== "prov" ? `calculations/${key2}/${CALCULATION_FILE}` : null;
   }
   return null;
@@ -125719,12 +126748,12 @@ function caseFileEntryOf(path) {
   for (const [kind2, p3] of Object.entries(SINGLE_PATHS)) if (path === p3) return { kind: kind2 };
   if (path === CASE_FILE_PROV_PATH) return { kind: "calculation", prov: true };
   const parts = path.split("/");
-  if (parts.length === 4 && parts[0] === "calculations" && SEGMENT2.test(parts[1]) && parts[1] !== "prov.jsonld" && parts[2] === "inputs" && HEX648.test(parts[3]))
+  if (parts.length === 4 && parts[0] === "calculations" && SEGMENT2.test(parts[1]) && parts[1] !== "prov.jsonld" && parts[2] === "inputs" && HEX649.test(parts[3]))
     return { kind: "calculation", calc: parts[1], input: parts[3] };
   if (parts.length === 4 && parts[0] === "materials" && SEGMENT2.test(parts[1])) {
     const kind2 = Object.keys(CHAIN_DIRS).find((k) => CHAIN_DIRS[k] === parts[2]);
     const sha2 = kind2 === "container" ? parts[3].endsWith(".json") ? parts[3].slice(0, -5) : "" : parts[3];
-    if (!kind2 || !HEX648.test(sha2)) return null;
+    if (!kind2 || !HEX649.test(sha2)) return null;
     return kind2 === "archive" ? { kind: kind2, ref: parts[1], archive: sha2 } : { kind: kind2, ref: parts[1], member: sha2 };
   }
   if (parts.length !== 3 || !SEGMENT2.test(parts[1])) return null;
@@ -125778,7 +126807,7 @@ function caseFileManifestCheck(manifest, given5 = {}) {
       no9("case", "case", `the case is named by its id, and this manifest states ${shown(manifest.case)}`);
     if (!Number.isSafeInteger(manifest.edition) || manifest.edition < 1)
       no9("edition", "edition", `the edition is a whole number from 1, and this manifest states ${shown(manifest.edition)}`);
-    if (typeof manifest.case_document_sha !== "string" || !HEX648.test(manifest.case_document_sha))
+    if (typeof manifest.case_document_sha !== "string" || !HEX649.test(manifest.case_document_sha))
       no9("case_document_sha", "sha256", `the case document's SHA-256 is 64 lower-case hex digits, and this manifest states ${shown(manifest.case_document_sha)}`);
     if (!Array.isArray(manifest.keys) || !manifest.keys.length)
       no9("keys", "keys", "the manifest names at least one signing key, with its fingerprint");
@@ -125801,7 +126830,7 @@ function caseFileManifestCheck(manifest, given5 = {}) {
       if (!plain6(p3)) return no9(at43, "part", `a part is {index, sha256, bytes}, and this is ${shown(p3)}`);
       for (const f17 of Object.keys(p3)) if (!CASE_FILE_PART_FIELDS.includes(f17)) no9(`${at43}.${f17}`, "unknown_field", `a part has no field ${shown(f17)}`);
       if (p3.index !== i + 1) no9(`${at43}.index`, "part_index", `the parts are numbered from 1 in order, so this one is ${i + 1}, and it states ${shown(p3.index)}`);
-      if (typeof p3.sha256 !== "string" || !HEX648.test(p3.sha256)) no9(`${at43}.sha256`, "sha256", `a part's SHA-256 is 64 lower-case hex digits, and this is ${shown(p3.sha256)}`);
+      if (typeof p3.sha256 !== "string" || !HEX649.test(p3.sha256)) no9(`${at43}.sha256`, "sha256", `a part's SHA-256 is 64 lower-case hex digits, and this is ${shown(p3.sha256)}`);
       if (!Number.isSafeInteger(p3.bytes) || p3.bytes < 0) no9(`${at43}.bytes`, "bytes", `a part's size is a whole number of bytes, and this is ${shown(p3.bytes)}`);
     });
     const files = Array.isArray(manifest.files) ? manifest.files : null;
@@ -125824,7 +126853,7 @@ function caseFileManifestCheck(manifest, given5 = {}) {
         if (paths.has(f17.path)) no9(`${at43}.path`, "path_twice", `${shown(f17.path)} is listed twice`);
         paths.add(f17.path);
       }
-      if (typeof f17.sha256 !== "string" || !HEX648.test(f17.sha256)) no9(`${at43}.sha256`, "sha256", `a file's SHA-256 is 64 lower-case hex digits, and this is ${shown(f17.sha256)}`);
+      if (typeof f17.sha256 !== "string" || !HEX649.test(f17.sha256)) no9(`${at43}.sha256`, "sha256", `a file's SHA-256 is 64 lower-case hex digits, and this is ${shown(f17.sha256)}`);
       else if (entry4 && entry4.input && f17.sha256 !== entry4.input)
         no9(`${at43}.sha256`, "input_sha", `a calculation's input is named by its SHA-256, and ${shown(f17.path)} is listed with another`);
       else if (entry4 && entry4.archive && f17.sha256 !== entry4.archive)
@@ -126056,7 +127085,7 @@ var RECOMPUTE_STATUSES = Object.freeze([
      `calc` is its capture's SHA-256, its `inputs` empty and its `result_key` null (it carries no recipe to key). */
   "not_recomputed"
 ]);
-var HEX649 = /^[0-9a-f]{64}$/;
+var HEX6410 = /^[0-9a-f]{64}$/;
 var plain7 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var objects4 = (xs) => Array.isArray(xs) ? xs.filter(plain7) : [];
 var str15 = (v) => typeof v === "string" && v ? v : null;
@@ -126065,12 +127094,12 @@ function inputsOf(v) {
   if (!pairs) return null;
   const out = {};
   for (const [name3, sha2] of pairs) {
-    if (typeof name3 !== "string" || !name3 || typeof sha2 !== "string" || !HEX649.test(sha2) || Object.hasOwn(out, name3)) return null;
+    if (typeof name3 !== "string" || !name3 || typeof sha2 !== "string" || !HEX6410.test(sha2) || Object.hasOwn(out, name3)) return null;
     out[name3] = sha2;
   }
   return out;
 }
-function keyOf2(recipe2, inputs, method) {
+function keyOf3(recipe2, inputs, method) {
   try {
     return plain7(recipe2) && inputs && typeof method === "string" && method ? resultKey(recipe2, inputs, { methodVersion: method }) : null;
   } catch {
@@ -126087,7 +127116,7 @@ function calculationRow(r) {
     inputs,
     method_version: method,
     results: plain7(r.results) ? r.results : null,
-    result_key: keyOf2(recipe2, inputs, method),
+    result_key: keyOf3(recipe2, inputs, method),
     recompute: RECOMPUTE_STATUSES.includes(r.recompute) ? r.recompute : null,
     disclosed: str15(r.disclosed)
   };
@@ -126107,7 +127136,7 @@ function calculationsOf2(fm) {
         inputs: inputsOf(v.inputs),
         method_version: str15(v.method_version),
         results: plain7(v.results) ? v.results : null,
-        result_key: typeof v.result_key === "string" && HEX649.test(v.result_key) ? v.result_key : null,
+        result_key: typeof v.result_key === "string" && HEX6410.test(v.result_key) ? v.result_key : null,
         recompute: RECOMPUTE_STATUSES.includes(v.recompute) ? v.recompute : null,
         disclosed: str15(v.disclosed)
       };
@@ -127581,8 +128610,8 @@ function migrateCorpusExport(sql) {
 var PAGE_ROWS = 1e3;
 var PAGE_BYTES = 256 * 1024;
 var CHUNK = 500;
-var te7 = new TextEncoder();
-var hexOf3 = (u8) => {
+var te8 = new TextEncoder();
+var hexOf4 = (u8) => {
   let s = "";
   for (const b of u8) s += b.toString(16).padStart(2, "0");
   return s;
@@ -127592,7 +128621,7 @@ function canonical(v) {
   if (typeof v === "string" || typeof v === "boolean") return JSON.stringify(v);
   if (typeof v === "number") return Number.isFinite(v) ? JSON.stringify(v) : "null";
   if (typeof v === "bigint") return JSON.stringify(String(v));
-  if (v instanceof Uint8Array) return `{"$bytes":${JSON.stringify(hexOf3(v))}}`;
+  if (v instanceof Uint8Array) return `{"$bytes":${JSON.stringify(hexOf4(v))}}`;
   if (v instanceof ArrayBuffer) return canonical(new Uint8Array(v));
   if (Array.isArray(v)) return `[${v.map(canonical).join(",")}]`;
   if (typeof v === "object")
@@ -127600,7 +128629,7 @@ function canonical(v) {
   return "null";
 }
 function pageBytes({ table: table4, owner, index: index2, rows: rows3 }) {
-  return te7.encode(canonical({ table: table4, owner, index: index2, rows: rows3 }));
+  return te8.encode(canonical({ table: table4, owner, index: index2, rows: rows3 }));
 }
 var quote = (name3) => `"${String(name3).replace(/"/g, '""')}"`;
 var TablePager = class {
@@ -127644,7 +128673,7 @@ var TablePager = class {
       const got = this.#after(from, CHUNK);
       for (const r of got) {
         const row12 = this.#content(r);
-        const n2 = te7.encode(canonical(row12)).length + 1;
+        const n2 = te8.encode(canonical(row12)).length + 1;
         if (rows3.length && (rows3.length >= PAGE_ROWS || size + n2 > PAGE_BYTES)) return { rows: rows3, after, last, more: true };
         rows3.push(row12);
         size += n2;
@@ -128201,8 +129230,8 @@ var EXPORT_LOG_LIMIT_DEFAULT = 200;
 var EXPORT_LOG_LIMIT_MAX = 1e3;
 var EXPORT_NOTE_MAX = 280;
 var CREATION_BASE = sha256HexSync("");
-var HEX6410 = /^[0-9a-f]{64}$/;
-var te8 = new TextEncoder();
+var HEX6411 = /^[0-9a-f]{64}$/;
+var te9 = new TextEncoder();
 var CorpusExport = class {
   constructor({ storage, record, now = null, entities: entities2 = null, events = null, lines: lines2 = null, money = null } = {}) {
     this.sql = storage.sql;
@@ -128443,7 +129472,7 @@ function verifyCorpusExport(input) {
     };
     const part = (where, sha2, size, hashReason, sizeReason) => {
       const want = lower(sha2);
-      if (!HEX6410.test(want)) {
+      if (!HEX6411.test(want)) {
         failures.push({ reason: hashReason, ...where, expected: "a SHA-256 digest", found: describe3(sha2) });
         return false;
       }
@@ -128601,7 +129630,7 @@ function verifyTables(manifest, held2, failures, counts, declared2) {
       counts.pages++;
       const at43 = { ...where, page: p3 ? p3.index ?? null : null };
       const want = lower(p3 && p3.sha256);
-      if (!HEX6410.test(want)) {
+      if (!HEX6411.test(want)) {
         failures.push({ reason: "PAGE_HASH_MISMATCH", ...at43, expected: "a SHA-256 digest", found: describe3(p3 && p3.sha256) });
         continue;
       }
@@ -128677,7 +129706,7 @@ function bytesOf2(given5) {
     const v = index2.has(key2) ? get2(index2.get(key2)) : void 0;
     if (v instanceof Uint8Array) return v;
     if (v instanceof ArrayBuffer) return new Uint8Array(v);
-    if (typeof v === "string") return te8.encode(v);
+    if (typeof v === "string") return te9.encode(v);
     return null;
   };
 }
@@ -128690,9 +129719,9 @@ function corpusExportOps(ce, q10) {
     exportrender: () => ce.exportRendering({ format: q10("format"), viewer: q10("viewer") })
   };
 }
-var instances31 = /* @__PURE__ */ new WeakMap();
+var instances32 = /* @__PURE__ */ new WeakMap();
 function corpusExportOf(host, deps) {
-  let c = instances31.get(host);
+  let c = instances32.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -128704,7 +129733,7 @@ function corpusExportOf(host, deps) {
       money: d.money ?? (() => moneyOf2(host, { record }))
     };
     c = new CorpusExport({ ...d, ...owners2, storage, record });
-    instances31.set(host, c);
+    instances32.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declarePurge("corpus-export", [], { exempt: [...CORPUS_EXPORT_EXEMPT] });
   }
@@ -131379,11 +132408,11 @@ var safeJson21 = (s) => {
     return null;
   }
 };
-var HEX6411 = /^[0-9a-f]{64}$/;
+var HEX6412 = /^[0-9a-f]{64}$/;
 var str20 = (v) => typeof v === "string" && v.trim() ? v.trim() : "";
-var te9 = new TextEncoder();
+var te10 = new TextEncoder();
 var digestOf2 = (v) => String(v ?? "").trim().replace(/^sha256:/i, "").toLowerCase();
-var shaOf4 = (text7) => createSha256().update(te9.encode(String(text7))).hex();
+var shaOf4 = (text7) => createSha256().update(te10.encode(String(text7))).hex();
 var obscuredOf2 = (m) => {
   const ob = m && m.obscured && typeof m.obscured === "object" ? m.obscured : null;
   return ob ? { copy: str20(ob.copy).toLowerCase() } : null;
@@ -131489,7 +132518,7 @@ var CaseCarriage = class _CaseCarriage {
     const seen = /* @__PURE__ */ new Set(), named2 = /* @__PURE__ */ new Set();
     const hold = (ref, kind2, sha2, text7, bytes2, derived = false) => {
       const inline = typeof text7 === "string";
-      const size = inline ? te9.encode(text7).length : Number.isInteger(bytes2) ? bytes2 : null;
+      const size = inline ? te10.encode(text7).length : Number.isInteger(bytes2) ? bytes2 : null;
       if (!named2.has(`${sha2}\0${ref}`)) {
         named2.add(`${sha2}\0${ref}`);
         files.push({ sha256: sha2, ref, path: `materials/${sha2}`, kind: kind2, bytes: size });
@@ -131513,7 +132542,7 @@ var CaseCarriage = class _CaseCarriage {
         sha256: what === "extracted_text" ? str20(m.text_sha).toLowerCase() || null : sha2 || null,
         why: why2
       });
-      if (!HEX6411.test(sha2)) {
+      if (!HEX6412.test(sha2)) {
         miss(kind2 === "observation" ? "observation" : "document", "the row names no SHA-256");
         continue;
       }
@@ -131553,7 +132582,7 @@ var CaseCarriage = class _CaseCarriage {
       } catch {
         text7 = null;
       }
-      if (typeof text7 === "string" && HEX6411.test(textSha) && shaOf4(text7) === textSha) hold(ref, "extracted_text", textSha, text7);
+      if (typeof text7 === "string" && HEX6412.test(textSha) && shaOf4(text7) === textSha) hold(ref, "extracted_text", textSha, text7);
       else miss("extracted_text", "your group's Civicsmith holds no whole extracted text of that document at its stated digest");
       this.#holdTokens(ref, home, sha2, hold, unheld);
       if (!member2) this.#holdArchives(ref, home, sha2, hold, unheld, images);
@@ -131589,7 +132618,7 @@ var CaseCarriage = class _CaseCarriage {
     for (const t2 of this.#tokenFiles(home, sha2)) {
       const f17 = this.#fileRow(home.bundle_id, t2);
       if (f17 && typeof f17.text === "string") hold(ref, "attestation", shaOf4(f17.text), f17.text);
-      else if (f17 && typeof f17.blobSha === "string" && HEX6411.test(f17.blobSha)) hold(ref, "attestation", f17.blobSha, null, f17.bytes);
+      else if (f17 && typeof f17.blobSha === "string" && HEX6412.test(f17.blobSha)) hold(ref, "attestation", f17.blobSha, null, f17.bytes);
       else unheld.push({ ref: ref || null, kind: "attestation", sha256: sha2, why: `the timestamp token ${t2} is not held` });
     }
   }
@@ -131610,7 +132639,7 @@ var CaseCarriage = class _CaseCarriage {
       if (!entry4) return;
       const c = entry4.container;
       const archive = str20(c.archive_sha256).toLowerCase();
-      if (digestOf2(c.member_sha256) !== cur || !HEX6411.test(archive)) {
+      if (digestOf2(c.member_sha256) !== cur || !HEX6412.test(archive)) {
         unheld.push({ ref: ref || null, kind: "container", sha256: cur, why: "the container record does not name this document" });
         return;
       }
@@ -131792,7 +132821,7 @@ var CaseCarriage = class _CaseCarriage {
   #holdCopy(ref, sha2, ob, hold, unheld) {
     let r = null;
     try {
-      if (HEX6411.test(ob.copy) && HEX6411.test(sha2))
+      if (HEX6412.test(ob.copy) && HEX6412.test(sha2))
         r = this.#one(`SELECT bytes FROM photo_copies WHERE capture=? AND sha256=? LIMIT 1`, sha2, ob.copy) || this.#one(`SELECT bytes FROM document_copies WHERE capture=? AND sha256=? AND state='copy' LIMIT 1`, sha2, ob.copy);
     } catch {
       r = null;
@@ -131850,7 +132879,7 @@ var CaseCarriage = class _CaseCarriage {
         verdict = rows3.filter((r) => r.idx >= 0 && r.kind !== "dir" && r.kind !== "symlink").some((r) => {
           const name3 = typeof r.name === "string" ? r.name : "";
           if (!name3 || IMAGE_EXT.test(name3)) return true;
-          const s = HEX6411.test(str20(r.sha256).toLowerCase()) ? str20(r.sha256).toLowerCase() : null;
+          const s = HEX6412.test(str20(r.sha256).toLowerCase()) ? str20(r.sha256).toLowerCase() : null;
           if (s && this.#isPhoto(s)) return true;
           if (s && this.#isArchive(s)) return this.#holdsImage(s, memo, path);
           return ARCHIVE_EXT.test(name3);
@@ -131869,8 +132898,8 @@ var CaseCarriage = class _CaseCarriage {
      told by the `capture.content_type` its home's provenance records, else its register path's extension. */
   #photo(captureSha, viewer) {
     const sha2 = digestOf2(captureSha);
-    const none = () => refusal18("NO_SUCH_PHOTO", "no photo you can see is held under that digest", { capture: HEX6411.test(sha2) ? sha2 : null });
-    if (!HEX6411.test(sha2) || typeof viewer !== "string" || !viewer.trim()) return none();
+    const none = () => refusal18("NO_SUCH_PHOTO", "no photo you can see is held under that digest", { capture: HEX6412.test(sha2) ? sha2 : null });
+    if (!HEX6412.test(sha2) || typeof viewer !== "string" || !viewer.trim()) return none();
     let homes = [];
     try {
       homes = this.#rows(`SELECT r.bundle_id, r.path FROM register r JOIN bundles b ON b.bundle_id=r.bundle_id
@@ -132176,7 +133205,7 @@ var CaseCarriage = class _CaseCarriage {
       if (!ob && !whole2) continue;
       const ref = str20(m.ref) || null, sha2 = str20(m.sha).toLowerCase();
       if (!ob) {
-        if (!HEX6411.test(sha2)) continue;
+        if (!HEX6412.test(sha2)) continue;
         if (this.#isPhoto(sha2)) {
           out.push({ ref, sha: sha2, kind: "photo", why: PHOTO_ONLY_AS_COPY });
           continue;
@@ -132187,7 +133216,7 @@ var CaseCarriage = class _CaseCarriage {
         else if (member2 && member2.state !== "clean") out.push({ ref, sha: sha2, kind: "document", why: MEMBER_DOCUMENT_ONLY_AS_COPY });
         continue;
       }
-      if (HEX6411.test(sha2) && !this.#isPhoto(sha2)) {
+      if (HEX6412.test(sha2) && !this.#isPhoto(sha2)) {
         let s = UNDETERMINED;
         try {
           s = this.#documentState(sha2);
@@ -132234,7 +133263,7 @@ var CaseCarriage = class _CaseCarriage {
     const last = this.#one(`SELECT state, sha256, refused_code, refused_detail FROM document_copies WHERE capture=?
                             ORDER BY seq DESC LIMIT 1`, sha2);
     if (last && last.state === "clean") return { state: "clean", copy: null, refused: null };
-    if (last && last.state === "copy" && HEX6411.test(String(last.sha256 ?? ""))) return { state: "copy", copy: last.sha256, refused: null };
+    if (last && last.state === "copy" && HEX6412.test(String(last.sha256 ?? ""))) return { state: "copy", copy: last.sha256, refused: null };
     if (last && last.state === "refused")
       return { state: "refused", copy: null, refused: { code: last.refused_code ?? null, detail: last.refused_detail ?? null } };
     const queued = !!this.#one(`SELECT 1 AS x FROM document_copy_queue WHERE capture=?`, sha2);
@@ -132260,7 +133289,7 @@ var CaseCarriage = class _CaseCarriage {
   documentCopy(captureSha) {
     try {
       const sha2 = digestOf2(captureSha);
-      if (!HEX6411.test(sha2)) return { ...UNDETERMINED };
+      if (!HEX6412.test(sha2)) return { ...UNDETERMINED };
       const s = this.#documentState(sha2);
       if (s.missing) this.#enqueue(sha2);
       return { state: s.state, copy: s.copy, refused: s.refused };
@@ -132366,7 +133395,7 @@ var CaseCarriage = class _CaseCarriage {
     try {
       const via = String(event2 && event2.via || "direct");
       const sha2 = digestOf2(event2 && event2.capture_sha);
-      if (FETCHED_VIAS.includes(via) || !HEX6411.test(sha2)) return { ok: true, queued: false };
+      if (FETCHED_VIAS.includes(via) || !HEX6412.test(sha2)) return { ok: true, queued: false };
       if (this.#one(`SELECT 1 AS x FROM document_copies WHERE capture=? LIMIT 1`, sha2)) return { ok: true, queued: false };
       return { ok: true, queued: this.#enqueue(sha2) };
     } catch {
@@ -132513,9 +133542,9 @@ var CaseCarriage = class _CaseCarriage {
     }
   }
 };
-var instances32 = /* @__PURE__ */ new WeakMap();
+var instances33 = /* @__PURE__ */ new WeakMap();
 function caseCarriageOf(host, deps) {
-  let c = instances32.get(host);
+  let c = instances33.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -132524,7 +133553,7 @@ function caseCarriageOf(host, deps) {
     const promotion = d.promotion || promotionOf(host, { record, membership });
     const provenance = d.provenance || provenanceOf(host, { record, membership, promotion });
     c = new CaseCarriage({ ...d, host, storage, record, membership, promotion, provenance });
-    instances32.set(host, c);
+    instances33.set(host, c);
     c.migrate();
     const declared2 = record.declareTable("case-carriage", [
       ...CASE_CARRIAGE_EXEMPT.map((name3) => ({
@@ -132756,7 +133785,7 @@ var PUBLICATION_DOORS = Object.freeze([
   "reauthorSection"
 ]);
 var pageOf = (limit, max) => Math.max(1, Math.min(Math.floor(Number(limit)) || max, max));
-var HEX6412 = /^[0-9a-f]{64}$/;
+var HEX6413 = /^[0-9a-f]{64}$/;
 var str21 = (v) => typeof v === "string" && v.trim() ? v.trim() : "";
 var NO_PROVIDER = "no module has registered the publication provider, so this module reads no case";
 var CaseTensions = class {
@@ -133215,7 +134244,7 @@ var CaseTensions = class {
    *  edition's (a later edition INHERITS the prior choice until the author changes it). None is none: nothing is ever
    *  prefilled. R7: a capture's SHA-256 (never a bundle id) reads its attesting member's choice, on the same rule. */
   attributionInForce(caseId, edition, observation) {
-    if (typeof observation === "string" && HEX6412.test(observation))
+    if (typeof observation === "string" && HEX6413.test(observation))
       return this.#one(
         `SELECT level, edition, chosen_by, chosen_at, reason FROM capture_attributions
                          WHERE case_id=? AND capture_sha=? AND edition<=? ORDER BY edition DESC LIMIT 1`,
@@ -133247,7 +134276,7 @@ var CaseTensions = class {
     } catch {
       rows3 = null;
     }
-    return [...new Set((Array.isArray(rows3) ? rows3 : []).filter((r) => r && typeof r.capture === "string" && HEX6412.test(r.capture) && (r.basis == null || r.basis === "null")).map((r) => r.capture))];
+    return [...new Set((Array.isArray(rows3) ? rows3 : []).filter((r) => r && typeof r.capture === "string" && HEX6413.test(r.capture) && (r.basis == null || r.basis === "null")).map((r) => r.capture))];
   }
   /* R5, R7: everything an edition's attribution statements are about: its observations, then its off-the-record
      captures, keyed by their SHA-256. */
@@ -133266,7 +134295,7 @@ var CaseTensions = class {
       return d ? this.#attributedReachedBy(d.text) : [];
     })();
     return obsList.map((obs) => {
-      const key2 = HEX6412.test(String(obs)) ? { capture: obs } : { observation: obs };
+      const key2 = HEX6413.test(String(obs)) ? { capture: obs } : { observation: obs };
       const act2 = this.attributionInForce(caseId, edition, obs);
       if (!act2) return {
         ...key2,
@@ -133275,7 +134304,7 @@ var CaseTensions = class {
         chosen_at_edition: null,
         why: "its author has chosen no level for this edition or any earlier one"
       };
-      const g = HEX6412.test(String(obs)) ? { author: act2.chosen_by } : this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 LIMIT 1`, obs);
+      const g = HEX6413.test(String(obs)) ? { author: act2.chosen_by } : this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 LIMIT 1`, obs);
       const m = g ? this.membership.memberFacts(g.author) : null;
       const shown3 = act2.level === "group" ? this.#producingGroup() : act2.level === "project" ? project : act2.level === "cover" ? m && m.cover ? m.cover : null : act2.level === "name" ? m && m.handle ? m.handle : null : null;
       if (shown3 === null && act2.level !== "group")
@@ -133349,7 +134378,7 @@ var CaseTensions = class {
   attributionStatedFor(observation) {
     const id = String(observation ?? "");
     if (!id) return false;
-    const field3 = HEX6412.test(id) ? "capture" : "observation";
+    const field3 = HEX6413.test(id) ? "capture" : "observation";
     const docs = this.#list("signedDocumentsNaming", `  - ${field3}: ${id}`, STATED_FOR_DOCS);
     return docs.some((d) => {
       const rows3 = (parseFrontmatter(String(d && d.text || "")).data || {}).observation_attributions;
@@ -133420,7 +134449,7 @@ var CaseTensions = class {
     const reg = obs ? this.#one(`SELECT author FROM register WHERE bundle_id=? AND authored=1 LIMIT 1`, obs) : null;
     const named2 = cap ? { capture: cap } : { observation: obs || null };
     if (cap) {
-      if (!HEX6412.test(cap) || !doc || !this.#capturesReachedBy(doc.text).includes(cap))
+      if (!HEX6413.test(cap) || !doc || !this.#capturesReachedBy(doc.text).includes(cap))
         return refusal35(
           "ATTRIBUTION_NOT_AN_OBSERVATION",
           `${cap.slice(0, 80)} is not material from a source the named case edition shows as Withheld, so it has no attesting member to choose how they are credited`,
@@ -133572,9 +134601,9 @@ var CaseTensions = class {
     });
   }
 };
-var instances33 = /* @__PURE__ */ new WeakMap();
+var instances34 = /* @__PURE__ */ new WeakMap();
 function caseTensionsOf2(host, deps) {
-  let c = instances33.get(host);
+  let c = instances34.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -133582,7 +134611,7 @@ function caseTensionsOf2(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new CaseTensions({ ...d, host, storage, record, membership, promotion });
-    instances33.set(host, c);
+    instances34.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declareTable("case-tensions", CASE_TENSIONS_TABLES.map((t2) => ({ ...t2, keys: [...t2.keys] })));
     promotion.registerFact("caseMember", "case-tensions", (id) => {
@@ -133647,7 +134676,7 @@ var safeJson22 = (s) => {
     return null;
   }
 };
-var HEX6413 = /^[0-9a-f]{64}$/;
+var HEX6414 = /^[0-9a-f]{64}$/;
 var isStandardId2 = (v) => BUNDLE_ID_RE.test(v) && v.startsWith("STD-");
 var CRITERIA_NOT_RECORDED = "the criteria were not recorded: this edition was committed before published cases recorded them";
 var ACCESS_WORDS = Object.freeze({ free: "Free to read", reading_room: "Reading room only", paywalled: "Behind a paywall" });
@@ -134561,7 +135590,7 @@ var Publication = class {
         if (!rows3.has(key2)) rows3.set(key2, { standard: standard2, portion, body, named: [], requires: false });
         const r = rows3.get(key2);
         const cid = str22(leg2.content_id).toLowerCase();
-        if (!HEX6413.test(cid)) r.requires = true;
+        if (!HEX6414.test(cid)) r.requires = true;
         else if (!r.named.includes(cid)) r.named.push(cid);
       }
     }
@@ -134642,7 +135671,7 @@ var Publication = class {
     let carried = /* @__PURE__ */ new Set();
     try {
       const m = materialsOf(fm);
-      carried = new Set((m && Array.isArray(m.materials) ? m.materials : []).filter((r) => r && typeof r === "object" && (r.included === true || r.included === "true")).map((r) => str22(r.sha).toLowerCase()).filter((x) => HEX6413.test(x)));
+      carried = new Set((m && Array.isArray(m.materials) ? m.materials : []).filter((r) => r && typeof r === "object" && (r.included === true || r.included === "true")).map((r) => str22(r.sha).toLowerCase()).filter((x) => HEX6414.test(x)));
     } catch {
       carried = /* @__PURE__ */ new Set();
     }
@@ -135641,7 +136670,7 @@ var Publication = class {
       );
       let files = 0;
       for (const f17 of Array.isArray(manifest.files) ? manifest.files : []) {
-        if (!f17 || typeof f17 !== "object" || typeof f17.sha256 !== "string" || !HEX6413.test(f17.sha256) || typeof f17.path !== "string" || !f17.path) continue;
+        if (!f17 || typeof f17 !== "object" || typeof f17.sha256 !== "string" || !HEX6414.test(f17.sha256) || typeof f17.path !== "string" || !f17.path) continue;
         this.sql.exec(
           `INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
            ON CONFLICT(sha256,bundle_id,path) DO NOTHING`,
@@ -136083,9 +137112,9 @@ var Publication = class {
     return reg;
   }
 };
-var instances34 = /* @__PURE__ */ new WeakMap();
+var instances35 = /* @__PURE__ */ new WeakMap();
 function publicationOf(host, deps) {
-  let p3 = instances34.get(host);
+  let p3 = instances35.get(host);
   if (!p3) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -136093,7 +137122,7 @@ function publicationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     p3 = new Publication({ ...d, host, storage, record, membership, promotion });
-    instances34.set(host, p3);
+    instances35.set(host, p3);
     p3.migrate();
     p3.purgeDeclaration = record.declareTable("publication", PUBLICATION_DECLARATIONS.map((t2) => ({ ...t2 })));
     void p3.corpusExport;
@@ -136537,16 +137566,16 @@ case_project: ${pid}
     };
   }
 };
-var instances35 = /* @__PURE__ */ new WeakMap();
+var instances36 = /* @__PURE__ */ new WeakMap();
 function projectStageOf(host, deps) {
-  let s = instances35.get(host);
+  let s = instances36.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     s = new ProjectStage({ ...d, host, storage, record, membership });
-    instances35.set(host, s);
+    instances36.set(host, s);
   }
   return s;
 }
@@ -136860,7 +137889,7 @@ var DOCKET_VOCABULARIES = Object.freeze({
   docket_proposals: PROPOSALS,
   docket_pressure_kinds: PRESSURE_KINDS
 });
-var REASON_MAX9 = 2e3;
+var REASON_MAX10 = 2e3;
 var NAME_MAX = 200;
 var NOTE_MAX3 = 500;
 var SUMMARY_MAX = 600;
@@ -137192,8 +138221,8 @@ var Docket = class {
         return { refusal: refuse13("NO_SUCH_DOCKET_ENTRY", "answers names no receipted record entry of this case", { answers: str24(answers) }) };
       answering = r.entry_id;
     }
-    if (!PROPOSALS.includes(proposed) || !words(reason2, REASON_MAX9))
-      return { refusal: refuse13("DOCKET_NO_REASON", `proposed is record, public or both, with a reason of 1 to ${REASON_MAX9} characters`) };
+    if (!PROPOSALS.includes(proposed) || !words(reason2, REASON_MAX10))
+      return { refusal: refuse13("DOCKET_NO_REASON", `proposed is record, public or both, with a reason of 1 to ${REASON_MAX10} characters`) };
     return { fields: { edition: ed, from: fromRow, capture: cap, kind: kind2, proposed, reason: reason2, answers: answering, contests: yes(contests) } };
   }
   /** R1, R11, R13: files a record entry, or, with `takesBack`, takes an earlier record entry back with a reason. */
@@ -137261,8 +138290,8 @@ var Docket = class {
     const id = str24(takesBack);
     const r = this.#entryRefusal(c.case, id);
     if (r) return r;
-    if (!words(reason2, REASON_MAX9))
-      return refuse13("DOCKET_NO_REASON", `a take-back carries a reason of 1 to ${REASON_MAX9} characters`);
+    if (!words(reason2, REASON_MAX10))
+      return refuse13("DOCKET_NO_REASON", `a take-back carries a reason of 1 to ${REASON_MAX10} characters`);
     const out = this.record.transact(() => {
       if (this.#recordState(id).state !== "pending")
         return refuse13("DOCKET_ENTRY_SETTLED", "the entry was settled meanwhile", { entry: id });
@@ -137333,7 +138362,7 @@ var Docket = class {
   /* R4's kind refusals (R7, R8, R10–R12), the shelf and a reaction's summary and archive copy. Answers the fields the
      entry carries by kind. */
   #kindRefusal(c, kind2, a, rec, recFields) {
-    const reasonOk = (req) => req ? words(a.reason, REASON_MAX9) : a.reason === null || a.reason === void 0 || a.reason === "" || words(a.reason, REASON_MAX9);
+    const reasonOk = (req) => req ? words(a.reason, REASON_MAX10) : a.reason === null || a.reason === void 0 || a.reason === "" || words(a.reason, REASON_MAX10);
     const out = {};
     const ed = a.edition === "all" ? "all" : int2(a.edition);
     if (rec) {
@@ -137355,7 +138384,7 @@ var Docket = class {
       return { refusal: refuse13("DOCKET_NOT_ATTRIBUTED", `a grant names its holder in one line of 1 to ${NAME_MAX} characters`) };
     const needsReason = ["withdrawal", "standing-granted", "standing-withdrawn", "take-back", "receipt", "court-order"].includes(kind2);
     if (!reasonOk(needsReason))
-      return { refusal: refuse13("DOCKET_NO_REASON", `${needsReason ? "this kind carries" : "a reason given is"} a reason of 1 to ${REASON_MAX9} characters`) };
+      return { refusal: refuse13("DOCKET_NO_REASON", `${needsReason ? "this kind carries" : "a reason given is"} a reason of 1 to ${REASON_MAX10} characters`) };
     if (kind2 === "receipt") {
       const f17 = recFields.from;
       if (!["response", "statement"].includes(rec.kind) || !["subject", "holder"].includes(f17.kind))
@@ -137429,8 +138458,8 @@ var Docket = class {
         "a court order is placed with the order itself captured, its origin locator held",
         { capture: typeof capture2 === "string" ? capture2 : null }
       ) };
-    if (!words(reason2, REASON_MAX9))
-      return { refusal: refuse13("DOCKET_NO_REASON", `a court order carries the manager's reason of 1 to ${REASON_MAX9} characters`) };
+    if (!words(reason2, REASON_MAX10))
+      return { refusal: refuse13("DOCKET_NO_REASON", `a court order carries the manager's reason of 1 to ${REASON_MAX10} characters`) };
     const effect = o.effect;
     const hasParts = o.parts !== void 0 && o.parts !== null;
     const partsOk = Array.isArray(o.parts) && o.parts.length > 0 && o.parts.every((x) => oneLine2(x, PART_MAX)) && new Set(o.parts.map((x) => x.trim())).size === o.parts.length;
@@ -137662,7 +138691,7 @@ var Docket = class {
       return refuse13("DOCKET_NOT_THE_MANAGER", "only an owner of the case's project declines a submission", { case: k.c.case });
     const settled = this.#entryRefusal(k.c.case, id);
     if (settled) return settled;
-    if (!words(reason2, REASON_MAX9)) return refuse13("DOCKET_NO_REASON", `a decline carries a reason of 1 to ${REASON_MAX9} characters`);
+    if (!words(reason2, REASON_MAX10)) return refuse13("DOCKET_NO_REASON", `a decline carries a reason of 1 to ${REASON_MAX10} characters`);
     const at43 = this.#stamp();
     const out = this.record.transact(() => {
       if (this.#recordState(id).state !== "pending") return refuse13("DOCKET_ENTRY_SETTLED", "the entry was settled meanwhile", { entry: id });
@@ -138062,16 +139091,16 @@ for (const m of ["docketFile", "docketPressure", "docketPrepare", "docketDecline
     return withRow2(await fn.apply(this, a));
   };
 }
-var instances36 = /* @__PURE__ */ new WeakMap();
+var instances37 = /* @__PURE__ */ new WeakMap();
 function docketOf(host, deps) {
-  let k = instances36.get(host);
+  let k = instances37.get(host);
   if (!k) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     k = new Docket({ ...d, host, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances36.set(host, k);
+    instances37.set(host, k);
     k.migrate();
     k.purgeDeclaration = record.declarePurge("docket", DOCKET_TABLES.map((name3) => ({ name: name3, keys: [] })));
     k.countsRegistration = record.registerCounts("docket", ["docketRecordEntries", "docketPublicEntries", "docketMarks"], () => {
@@ -138403,7 +139432,7 @@ function standingsOf(fm) {
   return out;
 }
 var heldText = (v) => typeof v === "string" ? v : v && typeof v.text === "string" ? v.text : null;
-var HEX6414 = /^[0-9a-f]{64}$/;
+var HEX6415 = /^[0-9a-f]{64}$/;
 function withholdChains(withheld, manifest) {
   const files = manifest && Array.isArray(manifest.files) ? manifest.files : [];
   for (const d of files) {
@@ -138444,7 +139473,7 @@ var SHARE_NO_DENOMINATOR_SENTENCE = "the signed document states no denominator f
 var TIMELINE_SENTENCE = "the timeline as the case document froze it at signing: what they did and what we did, apart and never interleaved, each item with its source; an item that could be placed at no time is listed apart";
 function inputHashes(inputs) {
   const shas = Array.isArray(inputs) ? inputs.map((i) => i && typeof i === "object" ? i.sha256 ?? i.sha : i) : inputs && typeof inputs === "object" ? Object.values(inputs).map((i) => i && typeof i === "object" ? i.sha256 ?? i.sha : i) : [];
-  return [...new Set(shas.map((s) => String(s ?? "").toLowerCase()).filter((s) => HEX6414.test(s)))];
+  return [...new Set(shas.map((s) => String(s ?? "").toLowerCase()).filter((s) => HEX6415.test(s)))];
 }
 var isNowhere = (when) => when === "nowhere" || !!(when && typeof when === "object" && when.nowhere === true);
 function outputOf(key2, result2) {
@@ -138817,7 +139846,7 @@ var PublicRead = class {
       const doc = state ? signedParts(state.document) : null;
       if (!doc) continue;
       const rows3 = (materialsOf(doc.fm) || {}).materials;
-      this.#originalsByEdition.set(k, (Array.isArray(rows3) ? rows3 : []).filter((r) => r && r.obscured != null).flatMap((r) => [r.sha, r.text_sha]).map((s) => String(s ?? "").toLowerCase()).filter((s) => HEX6414.test(s)));
+      this.#originalsByEdition.set(k, (Array.isArray(rows3) ? rows3 : []).filter((r) => r && r.obscured != null).flatMap((r) => [r.sha, r.text_sha]).map((s) => String(s ?? "").toLowerCase()).filter((s) => HEX6415.test(s)));
     }
     const originals = new Set([...this.#originalsByEdition.values()].flat());
     if (!originals.size || !matches2.some((m) => m && m.kind === "archive")) return originals;
@@ -138826,7 +139855,7 @@ var PublicRead = class {
       const c = safeJson23(heldText(this.publication.publishedMaterialText(r.sha256)));
       const member2 = c && typeof c.member_sha256 === "string" ? c.member_sha256.toLowerCase() : null;
       const archive = c && typeof c.archive_sha256 === "string" ? c.archive_sha256.toLowerCase() : null;
-      if (member2 && HEX6414.test(archive ?? "") && !records.has(member2)) records.set(member2, { archive });
+      if (member2 && HEX6415.test(archive ?? "") && !records.has(member2)) records.set(member2, { archive });
     }
     for (const a of this.#archivesHolding(originals, { records })) originals.add(a);
     return originals;
@@ -139340,13 +140369,13 @@ var PublicRead = class {
     const findings = [...members2, ...reached];
     const mats = materialsOf(doc.fm) || {};
     const rows3 = Array.isArray(mats.materials) ? mats.materials : [];
-    const text7 = (sha2) => HEX6414.test(String(sha2 ?? "")) ? heldText(this.publication.publishedMaterialText(sha2)) : null;
+    const text7 = (sha2) => HEX6415.test(String(sha2 ?? "")) ? heldText(this.publication.publishedMaterialText(sha2)) : null;
     const copied = rows3.filter((m) => m && m.obscured != null);
     const included = rows3.filter((m) => m && m.obscured == null && (m.included === true || m.included === "true"));
     const heldList = this.publication.heldMaterialsOf(c, ed);
-    const heldHere = new Set((Array.isArray(heldList) ? heldList : []).map((x) => String(x && x.sha != null ? x.sha : "").toLowerCase()).filter((s) => HEX6414.test(s)));
+    const heldHere = new Set((Array.isArray(heldList) ? heldList : []).map((x) => String(x && x.sha != null ? x.sha : "").toLowerCase()).filter((s) => HEX6415.test(s)));
     const pool = this.#archivePool([...included, ...copied].map((m) => m.ref), text7, heldHere);
-    const originals = new Set(copied.map((m) => String(m.sha ?? "").toLowerCase()).filter((s) => HEX6414.test(s)));
+    const originals = new Set(copied.map((m) => String(m.sha ?? "").toLowerCase()).filter((s) => HEX6415.test(s)));
     const holdsOriginal = this.#archivesHolding(originals, this.#archivePool([...included, ...copied].map((m) => m.ref), text7));
     const materials = included.map((m) => originals.has(String(m.sha ?? "").toLowerCase()) ? { ref: m.ref, kind: m.kind, sha: m.sha ?? null, text_sha: m.text_sha ?? null, original_of_copy: true, archives: [] } : {
       ref: m.ref,
@@ -139359,9 +140388,9 @@ var PublicRead = class {
     });
     const obscured = copied.map((m) => {
       const copy = String(m.obscured && m.obscured.copy != null ? m.obscured.copy : "").toLowerCase();
-      const registered5 = HEX6414.test(copy) && !!this.#one(`SELECT 1 AS x FROM published_shas WHERE sha256=? AND bundle_id=?
+      const registered5 = HEX6415.test(copy) && !!this.#one(`SELECT 1 AS x FROM published_shas WHERE sha256=? AND bundle_id=?
         AND kind='obscured' AND path=('materials/' || sha256) LIMIT 1`, copy, m.ref);
-      return { ref: m.ref, copy: HEX6414.test(copy) ? copy : null, label: m.obscured ? m.obscured.label ?? null : null, registered: registered5 };
+      return { ref: m.ref, copy: HEX6415.test(copy) ? copy : null, label: m.obscured ? m.obscured.label ?? null : null, registered: registered5 };
     });
     const refs = new Set(included.map((m) => m.ref));
     const accounts = (caseDocumentBlocks(state.document.text).captures || []).flatMap((cap) => (cap.accounts || []).map((a) => ({ capture: cap.capture, ...a })));
@@ -139435,7 +140464,7 @@ var PublicRead = class {
         const c = safeJson23(t2);
         const member2 = c && typeof c.member_sha256 === "string" ? c.member_sha256.toLowerCase() : null;
         const archive = c && typeof c.archive_sha256 === "string" ? c.archive_sha256.toLowerCase() : null;
-        if (member2 && HEX6414.test(archive ?? "") && !records.has(member2)) records.set(member2, { sha: r.sha256, text: t2, archive });
+        if (member2 && HEX6415.test(archive ?? "") && !records.has(member2)) records.set(member2, { sha: r.sha256, text: t2, archive });
       }
     }
     return { archives, records, text: text7 };
@@ -139447,7 +140476,7 @@ var PublicRead = class {
      it unheld. A material that is no member answers `[]`. An archive already walked ends the walk (a cycle). */
   #archiveChain(sha2, { archives, records, text: text7 }, holdsOriginal = /* @__PURE__ */ new Set()) {
     const s = String(sha2 ?? "").toLowerCase();
-    if (!HEX6414.test(s)) return [];
+    if (!HEX6415.test(s)) return [];
     const chain3 = [], walked = /* @__PURE__ */ new Set([s]);
     for (let cur = s; records.has(cur); ) {
       const rec = records.get(cur);
@@ -139577,13 +140606,13 @@ var PublicRead = class {
   #editionItems(caseId, state, manifestSha, manifest) {
     const items = [];
     const doc = state && state.document;
-    if (doc && HEX6414.test(String(doc.doc_sha ?? "")))
+    if (doc && HEX6415.test(String(doc.doc_sha ?? "")))
       items.push({ sha256: doc.doc_sha, paths: [caseFilePath("case_document"), ...this.#rows(
         `SELECT path FROM published_shas WHERE sha256=? AND bundle_id=?`,
         doc.doc_sha,
         caseId
       ).map((r) => r.path)] });
-    if (HEX6414.test(String(manifestSha ?? ""))) items.push({ sha256: manifestSha, paths: ["manifest.json", "MANIFEST.json"] });
+    if (HEX6415.test(String(manifestSha ?? ""))) items.push({ sha256: manifestSha, paths: ["manifest.json", "MANIFEST.json"] });
     const files = manifest && Array.isArray(manifest.files) ? manifest.files : manifest && Array.isArray(manifest.parts) ? manifest.parts : [];
     const originalOf = /* @__PURE__ */ new Map();
     if (files.some((f17) => f17 && f17.kind === "obscured")) {
@@ -139597,7 +140626,7 @@ var PublicRead = class {
       items.push({ sha256: f17.sha256, paths: ref ? [
         f17.path,
         caseFilePath("document", ref),
-        ...HEX6414.test(String(originalOf.get(ref) ?? "")) ? [originalOf.get(ref)] : []
+        ...HEX6415.test(String(originalOf.get(ref) ?? "")) ? [originalOf.get(ref)] : []
       ] : [f17.path] });
     }
     for (const f17 of state && state.findings || []) {
@@ -139635,7 +140664,7 @@ var PublicRead = class {
    *  the hashes asked, each a court order in force withholds, with each order (its case, edition, effect, parts and
    *  docket entry). `{ok: true, withheld: {<sha256>: [order…]}}`; a hash nothing withholds is not listed. Writes nothing. */
   withheldOf(shas) {
-    const want = (Array.isArray(shas) ? shas : String(shas ?? "").split(",")).map((s) => String(s).trim().toLowerCase()).filter((s) => HEX6414.test(s));
+    const want = (Array.isArray(shas) ? shas : String(shas ?? "").split(",")).map((s) => String(s).trim().toLowerCase()).filter((s) => HEX6415.test(s));
     if (!want.length) return { ok: true, withheld: {} };
     const { bySha } = this.#withheldIndex();
     return { ok: true, withheld: Object.fromEntries(want.filter((s) => bySha.has(s)).map((s) => [s, bySha.get(s)])) };
@@ -139891,16 +140920,16 @@ var PublicRead = class {
     return legacy.map((r) => ({ case_id: r.case_id, edition: Number(r.edition) }));
   }
 };
-var instances37 = /* @__PURE__ */ new WeakMap();
+var instances38 = /* @__PURE__ */ new WeakMap();
 function publicReadOf(host, deps) {
-  let r = instances37.get(host);
+  let r = instances38.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const publication = d.publication || publicationOf(host);
     const docket = d.docket || docketOf(host);
     r = new PublicRead({ storage, publication, docket });
-    instances37.set(host, r);
+    instances38.set(host, r);
   }
   return r;
 }
@@ -140259,7 +141288,7 @@ function climb(hash, pos, path) {
   }
   return h;
 }
-var HEX6415 = /^[0-9a-f]{64}$/;
+var HEX6416 = /^[0-9a-f]{64}$/;
 var b64ToBytes3 = (s) => {
   try {
     return Uint8Array.from(atob(String(s)), (c) => c.charCodeAt(0));
@@ -140270,9 +141299,9 @@ var b64ToBytes3 = (s) => {
 function verifyOpening(opening) {
   try {
     const o = opening && typeof opening === "object" ? opening : null;
-    if (!o || !HEX6415.test(o.seal) || !HEX6415.test(o.week_root) || !Array.isArray(o.leaves))
+    if (!o || !HEX6416.test(o.seal) || !HEX6416.test(o.week_root) || !Array.isArray(o.leaves))
       return { ok: false, leaves: false, seal: false, timestamp: "not_bound", detail: "not an opening" };
-    const okPath = (p3, size) => Array.isArray(p3) && 2 ** p3.length === size && p3.every((x) => HEX6415.test(x));
+    const okPath = (p3, size) => Array.isArray(p3) && 2 ** p3.length === size && p3.every((x) => HEX6416.test(x));
     const leaves = o.leaves.length > 0 && o.leaves.every((x) => x && x.leaf && Number.isInteger(x.position) && x.position >= 0 && x.position < o.size && okPath(x.path, o.size) && climb(leafHash(x.leaf), x.position, x.path) === o.seal);
     const seal = Number.isInteger(o.seal_position) && okPath(o.seal_path, o.week_size) && climb(weekLeafHash(o.seal), o.seal_position, o.seal_path) === o.week_root;
     let timestamp = "untimestamped";
@@ -140331,7 +141360,7 @@ var clamp5 = (v, dflt, max) => {
   return v != null && v !== "" && Number.isFinite(n2) ? Math.min(Math.max(n2, 1), max) : dflt;
 };
 var yes2 = (v) => v === true || v === "true" || v === "1" || v === 1;
-var te10 = new TextEncoder();
+var te11 = new TextEncoder();
 var td2 = new TextDecoder();
 var b644 = (bytes2) => {
   let s = "";
@@ -141379,16 +142408,16 @@ for (const m of ["prepareNotice", "postNotice"]) {
     return withRow3(await fn.apply(this, a));
   };
 }
-var instances38 = /* @__PURE__ */ new WeakMap();
+var instances39 = /* @__PURE__ */ new WeakMap();
 function networkNoticesOf(host, deps) {
-  let n2 = instances38.get(host);
+  let n2 = instances39.get(host);
   if (!n2) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     n2 = new NetworkNotices({ ...d, host, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances38.set(host, n2);
+    instances39.set(host, n2);
     n2.migrate();
     record.declarePurge("network-notices", NETWORK_NOTICES_TABLES.map((name3) => ({ name: name3, keys: [] })));
     const publicRead = d.publicRead || publicReadOf(host);
@@ -142043,9 +143072,9 @@ var PublishSchedule = class {
     };
   }
 };
-var instances39 = /* @__PURE__ */ new WeakMap();
+var instances40 = /* @__PURE__ */ new WeakMap();
 function publishScheduleOf(host, deps) {
-  let ps = instances39.get(host);
+  let ps = instances40.get(host);
   if (!ps) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -142053,7 +143082,7 @@ function publishScheduleOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const publication = d.publication || publicationOf(host, { record, membership });
     ps = new PublishSchedule({ storage, record, membership, publication, now: d.now });
-    instances39.set(host, ps);
+    instances40.set(host, ps);
     ps.migrate();
     ps.purgeDeclaration = record.declareTable("publish-schedule", PUBLISH_SCHEDULE_DECLARATIONS.map((t2) => ({ ...t2 })));
     if (publication && typeof publication.registerWaitingEditions === "function") {
@@ -143011,8 +144040,8 @@ function testimonyCaseRefusal(caseId, edition, legacy) {
     detail: `a finding in ${caseId} rests on an observation whose own files name its author (written before \xA74.1) or cannot be read to show they do not (${legacy.slice(0, 5).join(", ")}); publishing it could publish that name at any level (MEMBER-KNOWLEDGE-DESIGN.md \xA74.1)`
   };
 }
-var keyOf3 = (r) => r.observation || !r.capture ? { observation: r.observation } : { capture: r.capture };
-var idOf = (r) => Object.values(keyOf3(r))[0];
+var keyOf4 = (r) => r.observation || !r.capture ? { observation: r.observation } : { capture: r.capture };
+var idOf = (r) => Object.values(keyOf4(r))[0];
 function attributionUnchosenRefusal(caseId, edition, attr2) {
   const unchosen = (attr2 && Array.isArray(attr2.current) ? attr2.current : []).filter((r) => !r.level);
   if (!unchosen.length) return null;
@@ -143022,16 +144051,16 @@ function attributionUnchosenRefusal(caseId, edition, attr2) {
     ...rowOf11("ATTRIBUTION_UNCHOSEN"),
     caseId,
     edition,
-    unchosen: unchosen.slice(0, 50).map((r) => ({ ...keyOf3(r), why: r.why })),
+    unchosen: unchosen.slice(0, 50).map((r) => ({ ...keyOf4(r), why: r.why })),
     detail: `${unchosen.length} observation${unchosen.length === 1 ? "" : "s"} or attested capture${unchosen.length === 1 ? "" : "s"} this edition reaches ${unchosen.length === 1 ? "has" : "have"} no level chosen by its author or attesting member: ${unchosen.slice(0, 5).map(idOf).join(", ")} (MEMBER-KNOWLEDGE-DESIGN.md \xA74.4). Each chooses with op=attribute; nothing is filled in for them`
   };
 }
 function attributionStaleRefusal(caseId, edition, attr2) {
   const current2 = attr2 && Array.isArray(attr2.current) ? attr2.current : [];
   const stated2 = attr2 && Array.isArray(attr2.stated) ? attr2.stated : [];
-  const statedOf2 = new Map(stated2.map((r) => [JSON.stringify(keyOf3(r)), r]));
+  const statedOf2 = new Map(stated2.map((r) => [JSON.stringify(keyOf4(r)), r]));
   const drift = current2.filter((r) => {
-    const st = statedOf2.get(JSON.stringify(keyOf3(r)));
+    const st = statedOf2.get(JSON.stringify(keyOf4(r)));
     return !st || st.level !== r.level || (st.shown ?? null) !== (r.shown ?? null);
   });
   if (!drift.length && stated2.length === current2.length) return null;
@@ -147042,13 +148071,13 @@ var Ratification = class _Ratification {
 };
 var COPIED_HOLDS = /* @__PURE__ */ new Set(["evidence", "derived"]);
 var copiedMaterials = (x) => (Array.isArray(x) ? x : Array.isArray(x?.materials) ? x.materials : []).filter((m) => m && COPIED_HOLDS.has(m.held) && typeof m.sha === "string").map((m) => ({ sha: m.sha, held: m.held }));
-var instances40 = /* @__PURE__ */ new WeakMap();
+var instances41 = /* @__PURE__ */ new WeakMap();
 var MINT_SEED = Object.freeze([
   Object.freeze(["CASE", "cases", "case_id"]),
   Object.freeze(["CASE", "case_documents", "case_id"])
 ]);
 function ratificationOf(host, deps) {
-  let r = instances40.get(host);
+  let r = instances41.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -147056,7 +148085,7 @@ function ratificationOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     r = new Ratification({ ...d, host, storage, record, membership, promotion });
-    instances40.set(host, r);
+    instances41.set(host, r);
     promotion.registerCaseCatalogue("ratification", checkCaseDocument);
     (d.capture || captureOf(host)).registerReader("batch-examination", "ratification", (id) => r.examine(id));
     promotion.registerStep("ratification", { check: (c) => r.check(c) });
@@ -149869,17 +150898,17 @@ var WORK_MAX = 500;
 var LEARNED_MAX = 2e3;
 var MESSAGE_MAX = 2e3;
 var WHY_MAX3 = 2e3;
-var REASON_MAX10 = 2e3;
+var REASON_MAX11 = 2e3;
 var WHAT_MAX = 500;
 var SOURCE_MAX2 = 500;
-var READ_LIMIT2 = Object.freeze({ default: 200, max: 1e3 });
+var READ_LIMIT3 = Object.freeze({ default: 200, max: 1e3 });
 var LIKE_MAX = 50;
 var LIKE_SCAN = 5e3;
 var RECIPIENTS_LIMIT = Object.freeze({ default: 500, max: 1e3 });
 var DRAW_PAGE = 500;
 var DRAW_MAX = 1e4;
 var ACCEPTANCE_COUNT_KEYS = Object.freeze(["stepsAcceptedAsProposed", "stepsAcceptedEdited", "stepsAcceptedOwnInstead"]);
-var HEX6416 = /^[0-9a-f]{64}$/;
+var HEX6417 = /^[0-9a-f]{64}$/;
 var CURRENCY = /^[A-Z]{3}$/;
 var AMOUNT = /^\d+(?:\.\d+)?$/;
 var isObj34 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
@@ -149893,7 +150922,7 @@ var parse6 = (s) => {
   }
 };
 var chars = (s) => [...s].length;
-var limitOf2 = (v, { default: d, max }) => {
+var limitOf3 = (v, { default: d, max }) => {
   const n2 = Number(v);
   return v === void 0 || v === null || v === "" || !Number.isInteger(n2) ? d : Math.min(max, Math.max(1, n2));
 };
@@ -149918,18 +150947,18 @@ function likeness(a, b) {
 }
 var LIKE_THRESHOLD = 0.5;
 var dayNumber3 = (d) => Date.UTC(Number(d.slice(0, 4)), Number(d.slice(5, 7)) - 1, Number(d.slice(8, 10))) / 864e5;
-var instances41 = /* @__PURE__ */ new WeakMap();
+var instances42 = /* @__PURE__ */ new WeakMap();
 var storageOf2 = (host) => host && host.storage ? host.storage : host;
 function stepsOf(host, deps = {}) {
   const storage = storageOf2(host);
-  let s = instances41.get(storage);
+  let s = instances42.get(storage);
   if (!s) {
     const record = deps.record ?? recordOf(host);
     const membership = deps.membership ?? membershipOf(host, { record });
     const promotion = deps.promotion ?? promotionOf(host, { record, membership });
     const observationLog = deps.observationLog ?? observationLogOf(host, { record, membership });
     s = new Steps(storage, { ...deps, record, membership, observationLog, host });
-    instances41.set(storage, s);
+    instances42.set(storage, s);
     s.migrate();
     const fail = (what, r) => {
       if (r && r.ok === false) throw new Error(`steps: ${what} refused: ${r.reason || r.code}`);
@@ -150325,7 +151354,7 @@ var Steps = class _Steps {
   }
   /* R4: a bounded page of steps from `rows` (already ordered by id) that the viewer sees, in `state` when given. */
   #page(rows3, viewer, { state, after, limit }) {
-    const lim = limitOf2(limit, READ_LIMIT2);
+    const lim = limitOf3(limit, READ_LIMIT3);
     const today2 = this.#today(this.#now());
     const out = [];
     let truncated5 = false;
@@ -150382,7 +151411,7 @@ var Steps = class _Steps {
       const rows3 = this.#rows(`SELECT * FROM steps WHERE place_kind = 'group' ORDER BY step_id`);
       return { ok: true, ...this.#page(rows3, viewer, { state, after, limit }) };
     } catch {
-      return { ok: true, steps: [], limit: limitOf2(limit, READ_LIMIT2), truncated: false, next: null };
+      return { ok: true, steps: [], limit: limitOf3(limit, READ_LIMIT3), truncated: false, next: null };
     }
   }
   /* ---- creating (R1, R8) ---- */
@@ -150579,8 +151608,8 @@ var Steps = class _Steps {
       return refuse15("STEP_BAD_END", `a step ends as ${CLOSED.join(" or ")}, once, from planned or underway; it is ${row12.state}`, { step: row12.step_id, state: row12.state });
     const o = this.#outcomeList(row12, outcomes, actor.viewer);
     if (o.refusal) return o.refusal;
-    if (reason2 !== null && reason2 !== void 0 && (!filled8(reason2) || chars(reason2) > REASON_MAX10))
-      return refuse15("STEP_BAD_TEXT", `a reason is 1\u2013${REASON_MAX10} characters`);
+    if (reason2 !== null && reason2 !== void 0 && (!filled8(reason2) || chars(reason2) > REASON_MAX11))
+      return refuse15("STEP_BAD_TEXT", `a reason is 1\u2013${REASON_MAX11} characters`);
     if (actor.machine) {
       if (o.list.some(([, v]) => v !== "undetermined") || learned !== null && learned !== void 0)
         return refuse15("STEP_MACHINE_NO_OUTCOME", "the system records neither an outcome nor a learned line (D33)", { step: row12.step_id });
@@ -150653,7 +151682,7 @@ var Steps = class _Steps {
   /** R7: `stepsLike({work, questions?, viewer, limit?})`: the steps the viewer sees whose work matches, open and ended
    *  alike, best first, at most 50. */
   stepsLike({ work = null, questions = null, viewer = null, limit = void 0 } = {}) {
-    const lim = limitOf2(limit, { default: LIKE_MAX, max: LIKE_MAX });
+    const lim = limitOf3(limit, { default: LIKE_MAX, max: LIKE_MAX });
     const norm3 = normaliseWork(work);
     if (!norm3 || !filled8(viewer)) return { ok: true, steps: [], limit: lim, truncated: false };
     const within3 = Array.isArray(questions) && questions.length ? new Set(questions) : null;
@@ -150703,12 +151732,12 @@ var Steps = class _Steps {
     if (!isObj34(p3) || !PRODUCT_KINDS2.includes(p3.kind) || !filled8(p3.id)) return bad2(`a product is {kind: ${PRODUCT_KINDS2.join(" | ")}, id}`);
     const id = p3.id.trim();
     if (p3.kind === "record" && !isRecordId(id)) return bad2("a record is named by an id the record's id grammar knows");
-    if ((p3.kind === "capture" || p3.kind === "content") && !HEX6416.test(id)) return bad2(`a ${p3.kind} is named by its 64-character digest`);
+    if ((p3.kind === "capture" || p3.kind === "content") && !HEX6417.test(id)) return bad2(`a ${p3.kind} is named by its 64-character digest`);
     if (p3.kind === "lead" && !/^LEAD-\d{4}-\d{4}-[0-9a-f]{12}$/.test(id)) return bad2("a lead is named by its LEAD- id");
     if (p3.kind === "connection") {
       let ok2 = false;
       try {
-        ok2 = HEX6416.test(id) && isObj34(p3.derivation) && derivedId(p3.derivation) === id;
+        ok2 = HEX6417.test(id) && isObj34(p3.derivation) && derivedId(p3.derivation) === id;
       } catch {
         ok2 = false;
       }
@@ -151085,7 +152114,7 @@ var Steps = class _Steps {
   /** R17: `findRecipients({question, after?, limit?})` (in-process): the joined participants of every project drawing
    *  on the question, less those who stopped following it, plus those who chose to, each while she may see it. */
   findRecipients({ question = null, after = null, limit = void 0 } = {}) {
-    const lim = limitOf2(limit, RECIPIENTS_LIMIT);
+    const lim = limitOf3(limit, RECIPIENTS_LIMIT);
     let all = null;
     try {
       all = this.#recipients(question);
@@ -151195,7 +152224,7 @@ var Steps = class _Steps {
   }
   /** R24: `stepProposals({viewer, after?, limit?})`: the proposals the viewer sees, a set-aside one with its reason. */
   stepProposals({ viewer = null, after = null, limit = void 0 } = {}) {
-    const lim = limitOf2(limit, READ_LIMIT2);
+    const lim = limitOf3(limit, READ_LIMIT3);
     const from = Number.isSafeInteger(Number(after)) && after !== null && after !== "" ? Number(after) : 0;
     const out = [];
     let truncated5 = false;
@@ -151242,7 +152271,7 @@ var Steps = class _Steps {
     if (bad2) return bad2;
     const words5 = form === "as_proposed" ? pr.work : work;
     if (!filled8(words5) || chars(words5.trim()) > WORK_MAX) return refuse15("STEP_NO_WORK", `the work is 1\u2013${WORK_MAX} characters`);
-    if (form === "own_instead" && (!filled8(reason2) || chars(reason2) > REASON_MAX10)) return refuse15("STEP_BAD_TEXT", `say why it is set aside, in 1\u2013${REASON_MAX10} characters`);
+    if (form === "own_instead" && (!filled8(reason2) || chars(reason2) > REASON_MAX11)) return refuse15("STEP_BAD_TEXT", `say why it is set aside, in 1\u2013${REASON_MAX11} characters`);
     const place = pr.place_kind === "project" ? { project: pr.project_id } : pr.place_kind === "group" ? { group: true } : { questions: this.#proposalRefs(pr.proposal_id) };
     const at43 = this.#at();
     return this.#record.transact(() => {
@@ -155600,13 +156629,13 @@ function calculationFrom(answer) {
   const c = answer.calculation && typeof answer.calculation === "object" ? answer.calculation : answer;
   return c && c.recipe && Array.isArray(c.inputs) ? c : null;
 }
-var instances42 = /* @__PURE__ */ new WeakMap();
+var instances43 = /* @__PURE__ */ new WeakMap();
 function workbooksOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let w = instances42.get(storage);
+  let w = instances43.get(storage);
   if (!w) {
     w = new Workbooks({ storage, recompute: ctx && typeof ctx.recompute === "function" ? ctx.recompute : null, ...deps });
-    instances42.set(storage, w);
+    instances43.set(storage, w);
   }
   return w;
 }
@@ -158010,9 +159039,9 @@ var versionsOut = () => ({
   calc_versions: [...CHECKER_VERSIONS.calc_versions]
 });
 var accountStatement = captureAccountStatement;
-var te11 = new TextEncoder();
+var te12 = new TextEncoder();
 var td3 = new TextDecoder("utf-8", { fatal: false });
-var HEX6417 = /^[0-9a-f]{64}$/;
+var HEX6418 = /^[0-9a-f]{64}$/;
 var isObj36 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var str32 = (v) => typeof v === "string" ? v : null;
 var shaOf6 = (bytes2) => createSha256().update(bytes2).hex();
@@ -158500,7 +159529,7 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = void 
       files: files.filter((f17) => f17.content && f17.kind !== "complete_edition").map((f17) => ({ path: f17.path, kind: f17.kind, sha256: f17.sha256, bytes: f17.bytes, content: f17.content }))
     };
     const rendered = completeEditionOf(caseFile);
-    const rb = typeof rendered === "string" ? te11.encode(rendered) : asBytes2(rendered && rendered.bytes !== void 0 ? rendered.bytes : rendered);
+    const rb = typeof rendered === "string" ? te12.encode(rendered) : asBytes2(rendered && rendered.bytes !== void 0 ? rendered.bytes : rendered);
     if (!rb) {
       complete_edition.detail = "this checker could not render the complete edition from the case file";
       caseLevel.differs.push(entry2("complete_edition", ceFile.path, complete_edition.detail));
@@ -158574,7 +159603,7 @@ async function check({ parts, documents = [], keys = null, lens: lensArg = void 
       const cap = str32(row12.capture_sha) || "";
       const mat = materials.find((x) => x.sha === cap) || null;
       const where = `a passage of ${cap || "an unnamed document"} relied on by ${id}`;
-      if (!HEX6417.test(String(row12.content_id ?? "")) || contentIdFor(cap, row12.extent, row12.chain ?? null) !== row12.content_id) {
+      if (!HEX6418.test(String(row12.content_id ?? "")) || contentIdFor(cap, row12.extent, row12.chain ?? null) !== row12.content_id) {
         differs.push(entry2("passage", id, `${where} does not recompute to the content id it states (${String(row12.content_id)})`));
         continue;
       }
@@ -161085,16 +162114,16 @@ for (const m of ["importCaseFile", "completeImportedDocument", "recordDocketRead
     return withRow4(await fn.apply(this, a));
   };
 }
-var instances43 = /* @__PURE__ */ new WeakMap();
+var instances44 = /* @__PURE__ */ new WeakMap();
 function caseImportOf(host, deps) {
-  let c = instances43.get(host);
+  let c = instances44.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     c = new CaseImport({ ...d, host, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances43.set(host, c);
+    instances44.set(host, c);
     c.migrate();
     c.purgeDeclaration = record.declarePurge("case-import", CASE_IMPORT_TABLES.map((name3) => ({ name: name3, keys: [] })));
     c.countsRegistration = record.registerCounts(
@@ -161577,7 +162606,7 @@ function chainsOf(members2, io, depth) {
 var PHOTO_STATES = Object.freeze(["marked", "nothing_to_obscure", "unchecked"]);
 var PHOTO_NOT_COVERABLE_WORDS = PHOTO_WORDS["photo.refused.format"];
 var PHOTO_UNCHECKED_WORDS = PHOTO_WORDS["photo.refused.unchecked"];
-var HEX6418 = /^[0-9a-f]{64}$/i;
+var HEX6419 = /^[0-9a-f]{64}$/i;
 function photoRead(read3) {
   const unread = (why2) => ({ photo: null, unread: true, why: why2 });
   let a = null;
@@ -161594,7 +162623,7 @@ function photoRead(read3) {
   const standing = a.marks.filter((m) => m.withdrawn == null);
   const state = !standing.length ? "unchecked" : standing.some((m) => m.areas.length) ? "marked" : "nothing_to_obscure";
   if (state !== a.state) return unread(`the marks read answered ${a.state} where the standing marks say ${state}`);
-  const copy = a.copy && typeof a.copy === "object" && typeof a.copy.sha256 === "string" && HEX6418.test(a.copy.sha256) ? a.copy.sha256.toLowerCase() : null;
+  const copy = a.copy && typeof a.copy === "object" && typeof a.copy.sha256 === "string" && HEX6419.test(a.copy.sha256) ? a.copy.sha256.toLowerCase() : null;
   const refused5 = a.refused && typeof a.refused === "object" && typeof a.refused.code === "string" ? { code: a.refused.code, detail: a.refused.detail ?? null } : null;
   if (a.copy != null && !copy || a.refused != null && !refused5)
     return unread("the marks read answered a shape it does not state");
@@ -161617,7 +162646,7 @@ function documentRead(read3) {
   if (a.state === "undetermined") return unread("case-carriage could not read the copy's state");
   if (a.state === "photo") return unread("the copy's state read answered photo for a document that is no photo");
   if (a.state === "copy") {
-    return typeof a.copy === "string" && HEX6418.test(a.copy) ? { state: "copy", copy: a.copy.toLowerCase(), refused: null } : unread("the copy's state read answered copy with no SHA-256");
+    return typeof a.copy === "string" && HEX6419.test(a.copy) ? { state: "copy", copy: a.copy.toLowerCase(), refused: null } : unread("the copy's state read answered copy with no SHA-256");
   }
   if (a.state === "refused")
     return a.refused && typeof a.refused === "object" && typeof a.refused.code === "string" && a.refused.code ? { state: "refused", copy: null, refused: { code: a.refused.code, detail: a.refused.detail ?? null } } : unread("the copy's state read answered refused with no code");
@@ -162799,11 +163828,11 @@ var CaseDisclosures = class {
     const listed2 = basesListed(peopleBases);
     if (listed2.ok === false) return { refusals: [listed2], rows: [] };
     const persons = named2 && Array.isArray(named2.named) ? named2.named : [];
-    const keyOf5 = /* @__PURE__ */ new Map();
-    for (const p3 of persons) for (const m of [p3.person, ...Array.isArray(p3.members) ? p3.members : []]) keyOf5.set(m, p3.person);
+    const keyOf6 = /* @__PURE__ */ new Map();
+    for (const p3 of persons) for (const m of [p3.person, ...Array.isArray(p3.members) ? p3.members : []]) keyOf6.set(m, p3.person);
     const basisOf2 = /* @__PURE__ */ new Map();
     for (const d of listed2.byPerson.values()) {
-      const key2 = keyOf5.get(d.person);
+      const key2 = keyOf6.get(d.person);
       if (key2 !== void 0 && !basisOf2.has(key2)) basisOf2.set(key2, d);
     }
     const contacts = this.#contactValues(persons, viewer);
@@ -163442,15 +164471,15 @@ function marksDecide(m) {
   const whole2 = m.held && typeof m.held === "object" ? m.held.whole !== false : true;
   return whole2 || m.rests_under !== "supporting";
 }
-var instances44 = /* @__PURE__ */ new WeakMap();
+var instances45 = /* @__PURE__ */ new WeakMap();
 function caseDisclosuresOf(host, deps) {
-  let c = instances44.get(host);
+  let c = instances45.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     c = new CaseDisclosures({ ...d, host, storage, record });
-    instances44.set(host, c);
+    instances45.set(host, c);
   }
   return c;
 }
@@ -167368,16 +168397,16 @@ case_project: ${project}
     };
   }
 };
-var instances45 = /* @__PURE__ */ new WeakMap();
+var instances46 = /* @__PURE__ */ new WeakMap();
 function caseAuthoringOf(host, deps) {
-  let c = instances45.get(host);
+  let c = instances46.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     c = new CaseAuthoring({ ...d, host, storage, record, membership });
-    instances45.set(host, c);
+    instances46.set(host, c);
     c.migrate();
     record.declarePurge("case-authoring", CASE_AUTHORING_TABLES);
   }
@@ -169389,16 +170418,16 @@ for (const m of [
     return withRow5(fn.apply(this, a));
   };
 }
-var instances46 = /* @__PURE__ */ new WeakMap();
+var instances47 = /* @__PURE__ */ new WeakMap();
 function filingTemplatesOf(host, deps) {
-  let f17 = instances46.get(host);
+  let f17 = instances47.get(host);
   if (!f17) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     f17 = new FilingTemplates({ ...d, storage, record, membership, env: d.env ?? host.env ?? null });
-    instances46.set(host, f17);
+    instances47.set(host, f17);
     f17.migrate();
     record.declarePurge("filing-templates", [...FILING_TEMPLATES_TABLES]);
     record.registerMintSeed("filing-templates", FILING_TEMPLATES_MINT_SEED.map((x) => [...x]));
@@ -169768,7 +170797,7 @@ var RECORDED_LIMIT_DEFAULT2 = 100;
 var RECORDED_LIMIT_MAX2 = 500;
 var LIST_PAGE = 200;
 var RELATIONS2 = ["same", "narrower", "wider"];
-var HEX6419 = /^[0-9a-f]{64}$/;
+var HEX6420 = /^[0-9a-f]{64}$/;
 var BUNDLE_MD_HISTORY = (key2) => `_history/bundle_${key2}.md`;
 var isObj39 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var said8 = (v) => typeof v === "string" && v.trim() !== "";
@@ -169790,7 +170819,7 @@ function citationsIn(c, data, type) {
   if (type === "inquiry") {
     for (const l2 of Array.isArray(data.basis) ? data.basis : []) {
       if (!isObj39(l2) || !said8(l2.target)) continue;
-      const cid = typeof l2.content_id === "string" && HEX6419.test(l2.content_id.trim()) ? l2.content_id.trim() : null;
+      const cid = typeof l2.content_id === "string" && HEX6420.test(l2.content_id.trim()) ? l2.content_id.trim() : null;
       const row12 = cid && typeof c.content.contentRow === "function" ? c.content.contentRow(cid) : null;
       const ext = row12 && said8(row12.extent_kind) ? { kind: row12.extent_kind, ...isObj39(row12.extent) ? row12.extent : {} } : citationExtent(l2);
       const key2 = canonicalExtent2(known2(ext) ? ext : { kind: "document" });
@@ -169882,7 +170911,7 @@ function recordedBy2(c, memo, args) {
     const sha2 = a.captureSha.trim().toLowerCase();
     const cap = clamp7(a.limit);
     const answer = (items, truncated5) => ({ ok: true, module: "citation", capture_sha: sha2, items, truncated: truncated5 });
-    if (!HEX6419.test(sha2)) return answer([], false);
+    if (!HEX6420.test(sha2)) return answer([], false);
     const home = c.provenance && typeof c.provenance.homeOf === "function" ? c.provenance.homeOf(sha2) : null;
     const doc = home && said8(home.bundleId) ? home.bundleId : null;
     if (!doc || !c.membership.inSight(doc, a.viewer)) return answer([], false);
@@ -170734,7 +171763,7 @@ Changes: cites edges to ${listed2} moved to '${to}'. Reason: ${why2}.
     };
   }
 };
-var instances47 = /* @__PURE__ */ new WeakMap();
+var instances48 = /* @__PURE__ */ new WeakMap();
 function inquiryServices2(k) {
   return {
     earned: (subject, targets, contentIds) => k.earned(subject, targets, contentIds),
@@ -170744,7 +171773,7 @@ function inquiryServices2(k) {
   };
 }
 function citationOf(host, deps) {
-  let c = instances47.get(host);
+  let c = instances48.get(host);
   if (!c) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -170755,7 +171784,7 @@ function citationOf(host, deps) {
     const inquiry = d.inquiry || inquiryServices2(inquiryOf(host, { record, membership, promotion, content }));
     const provenance = d.provenance || provenanceOf(host, { record, membership, promotion });
     c = new Citation({ ...d, storage: d.storage || host.storage, record, membership, promotion, content, retrieval, provenance, inquiry });
-    instances47.set(host, c);
+    instances48.set(host, c);
     if (retrieval && typeof retrieval.registerRecordedBy === "function")
       retrieval.registerRecordedBy("citation", (a) => c.recordedBy(a));
   }
@@ -173209,9 +174238,9 @@ for (const m of [
     return withRow6(fn.apply(this, a));
   };
 }
-var instances48 = /* @__PURE__ */ new WeakMap();
+var instances49 = /* @__PURE__ */ new WeakMap();
 function wizardScriptsOf(host, deps) {
-  let w = instances48.get(host);
+  let w = instances49.get(host);
   if (!w) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -173220,7 +174249,7 @@ function wizardScriptsOf(host, deps) {
     const filingTemplates = d.filingTemplates || filingTemplatesOf(host, { record, membership });
     const credentials = d.credentials || (() => credentialsOf(host, { record, membership }));
     w = new WizardScripts({ ...d, storage, record, membership, filingTemplates, credentials, env: d.env ?? host.env ?? null });
-    instances48.set(host, w);
+    instances49.set(host, w);
     w.migrate();
     record.declareTable("wizard-scripts", WIZARD_SCRIPTS_TABLE_CLASSES.map((t2) => ({ ...t2 })));
     record.registerMintSeed("wizard-scripts", WIZARD_SCRIPTS_MINT_SEED.map((x) => [...x]));
@@ -173537,12 +174566,12 @@ var AffordanceFacts = class {
     return { ok: true, screens, wizard_scripts, writing_help_refused: w.writingHelpRefused() };
   }
 };
-var instances49 = /* @__PURE__ */ new WeakMap();
+var instances50 = /* @__PURE__ */ new WeakMap();
 function affordancesOf(host, deps) {
-  let a = instances49.get(host);
+  let a = instances50.get(host);
   if (!a) {
     a = new AffordanceFacts(host, deps);
-    instances49.set(host, a);
+    instances50.set(host, a);
   }
   return a;
 }
@@ -175036,17 +176065,17 @@ var Answers = class {
     return standingAnswersFor(this, a);
   }
 };
-var instances50 = /* @__PURE__ */ new WeakMap();
+var instances51 = /* @__PURE__ */ new WeakMap();
 function answersOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let a = instances50.get(storage);
+  let a = instances51.get(storage);
   if (!a) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const useCheck = d.useCheck || ((x) => aiUseOf(host, { record, membership }).useCheck(x));
     a = new Answers({ ...d, storage: d.storage || storage, record, membership, useCheck });
-    instances50.set(storage, a);
+    instances51.set(storage, a);
     const declared2 = record.declareTable("answers", ANSWERS_TABLES);
     if (!declared2 || declared2.ok === false) throw new Error(`answers' tables could not be declared: ${JSON.stringify(declared2)}`);
   }
@@ -183435,7 +184464,7 @@ function aiConfinementDeclaration(confinedTo) {
     } } };
   return { confinedTo: SCRATCH };
 }
-var hexOf4 = (raw) => [...raw].map((x) => x.toString(16).padStart(2, "0")).join("");
+var hexOf5 = (raw) => [...raw].map((x) => x.toString(16).padStart(2, "0")).join("");
 async function aiCredentialMint(asked, cls3) {
   const a = asked && typeof asked === "object" && !Array.isArray(asked) ? asked : {};
   const declared2 = aiScopeDeclaration(a.writes);
@@ -183444,7 +184473,7 @@ async function aiCredentialMint(asked, cls3) {
   if (confinement.refusal) return { refusal: { status: confinement.refusal.status, body: { ...confinement.refusal.body, op: "aicredentialmint", cls: cls3 } } };
   const raw = new Uint8Array(32);
   crypto.getRandomValues(raw);
-  const secret = `aik-${hexOf4(raw)}`;
+  const secret = `aik-${hexOf5(raw)}`;
   return { secret, secretSha: await sha256hex(secret), writes: declared2.writes, confinedTo: confinement.confinedTo };
 }
 async function reviewGrantSecret() {
@@ -183453,8 +184482,8 @@ async function reviewGrantSecret() {
   const secret = "rv1_" + btoa(String.fromCharCode(...raw)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
   return { secret, secretSha: await sha256hex(secret) };
 }
-var DECLARED = Object.freeze({ SESSION_OPS, UNATTENDED_BY_DECISION });
-function sessionOpGate(kind2, op, spec, method, tables = DECLARED) {
+var DECLARED2 = Object.freeze({ SESSION_OPS, UNATTENDED_BY_DECISION });
+function sessionOpGate(kind2, op, spec, method, tables = DECLARED2) {
   const { SESSION_OPS: SESSION_OPS2, UNATTENDED_BY_DECISION: UNATTENDED_BY_DECISION2 } = tables;
   if (!spec.mutating || op === "capture" && method === "GET" || SESSION_OPS2[kind2].has(op))
     return null;
@@ -183520,7 +184549,7 @@ function projectCreationGate(caps3) {
     "creating a project needs the create-projects capability. This account may still contribute to projects it has been invited to, if it holds contribute."
   );
 }
-async function admit({ url, env, op, spec, method, presented, doAnswer: doAnswer2, tables = DECLARED, credential = null }) {
+async function admit({ url, env, op, spec, method, presented, doAnswer: doAnswer2, tables = DECLARED2, credential = null }) {
   const t2 = credentialOf(credential, url).token;
   const bound = await bindingOf(t2, env);
   let cls3 = bound === RETIRED ? null : bound;
@@ -183718,10 +184747,10 @@ async function sourceOf3(req, env) {
   if (address === null) return UNSTATED_SOURCE;
   const bound = env && typeof env.KNOCK_FINGERPRINT_KEY === "string" && env.KNOCK_FINGERPRINT_KEY ? env.KNOCK_FINGERPRINT_KEY : null;
   if (!bound) return storeSource(address, env);
-  const te12 = new TextEncoder();
-  const key2 = await crypto.subtle.importKey("raw", te12.encode(bound), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key2, te12.encode(address)));
-  return hexOf4(mac).slice(0, 32);
+  const te13 = new TextEncoder();
+  const key2 = await crypto.subtle.importKey("raw", te13.encode(bound), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const mac = new Uint8Array(await crypto.subtle.sign("HMAC", key2, te13.encode(address)));
+  return hexOf5(mac).slice(0, 32);
 }
 var CORRELATION = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 async function storeSource(address, env) {
@@ -186233,7 +187262,7 @@ var safeJson26 = (s) => {
     return null;
   }
 };
-var HEX6420 = /^[0-9a-f]{64}$/;
+var HEX6421 = /^[0-9a-f]{64}$/;
 var ENTITY_ID2 = idPattern("ENT");
 var EXPLORING_RUN_MODE = "investigate";
 var PAGES_BOUND = Object.prototype.hasOwnProperty.call(RUN_BOUNDS, "pages") ? "pages" : null;
@@ -186580,7 +187609,7 @@ var RunProductions = class _RunProductions {
       const named2 = legsIn[i]?.extent_capture;
       const isDoc = normalizeType(row12.object_type) === "information";
       if (named2 !== void 0 && named2 !== null && named2 !== "") {
-        const held3 = isDoc && typeof named2 === "string" && HEX6420.test(named2) ? this.content.captureFor(t2, named2) : null;
+        const held3 = isDoc && typeof named2 === "string" && HEX6421.test(named2) ? this.content.captureFor(t2, named2) : null;
         if (!held3) {
           unreachable.push({ ord: i, target: t2, why: "the capture it names is not one this record holds for it" });
           continue;
@@ -187620,7 +188649,7 @@ Changes: reading '${name3}' proposed as ${kind2}, in state suggested, carrying r
         `no question you can see is named ${qid.slice(0, 80) || "(none)"}`,
         { question: qid.slice(0, 80) || null }
       );
-    const read3 = HEX6420.test(sha2) ? this.#one(`SELECT bundle_id FROM readings WHERE capture_sha=?`, sha2) : null;
+    const read3 = HEX6421.test(sha2) ? this.#one(`SELECT bundle_id FROM readings WHERE capture_sha=?`, sha2) : null;
     const doc = read3 ? this.#one(
       `SELECT b.bundle_id, b.object_type FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`,
       read3.bundle_id,
@@ -187786,9 +188815,9 @@ Changes: reading '${name3}' proposed as ${kind2}, in state suggested, carrying r
     return out;
   }
 };
-var instances51 = /* @__PURE__ */ new WeakMap();
+var instances52 = /* @__PURE__ */ new WeakMap();
 function runProductionsOf(host, deps) {
-  let p3 = instances51.get(host);
+  let p3 = instances52.get(host);
   if (!p3) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -187812,7 +188841,7 @@ function runProductionsOf(host, deps) {
       legEarning: d.legEarning || legEarningOf(host, { record, membership, content }),
       now: d.now || null
     });
-    instances51.set(host, p3);
+    instances52.set(host, p3);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);
     p3.basisVersions.onCandidates(RUN_PRODUCTIONS_MODULE, (a) => p3.candidates(a));
   }
@@ -191045,7 +192074,7 @@ var GUIDE_ORIGINS = Object.freeze(["civicsmith", "group", "adopted"]);
 var GUIDE_STATES = Object.freeze(["draft", "usable_by_author", "group", "retired"]);
 var GUIDE_VERDICTS = Object.freeze(["approve", "refuse"]);
 var GUIDES_MAX = 200;
-var REASON_MAX11 = 500;
+var REASON_MAX12 = 500;
 var RUN_MAX = 200;
 var GUIDE_OFFER_FORMAT = "bio-reading-guide-offer/1";
 var GUIDE_LIBRARY_PROPOSAL_FORMAT = "bio-reading-guide-library-proposal/1";
@@ -191517,8 +192546,8 @@ function retiredRefusal(id) {
   return refusal27("GUIDE_RETIRED", `${id} has been retired. Nothing was written.`, { guide: id });
 }
 function reasonRefusal(why2, required2) {
-  if (required2 && !why2 || why2.length > REASON_MAX11)
-    return refusal27("GUIDE_REASON_MISSING", `a reason is given in at most ${REASON_MAX11} characters. Nothing was written.`);
+  if (required2 && !why2 || why2.length > REASON_MAX12)
+    return refusal27("GUIDE_REASON_MISSING", `a reason is given in at most ${REASON_MAX12} characters. Nothing was written.`);
   return null;
 }
 function offerable(row12) {
@@ -191546,16 +192575,16 @@ function readingGuidesOps(s, url, body) {
     guideproposals: () => s.guideProposals({ kind: qp("kind") ?? b.kind, viewer: qp("viewer") })
   };
 }
-var instances52 = /* @__PURE__ */ new WeakMap();
+var instances53 = /* @__PURE__ */ new WeakMap();
 function readingGuidesOf(host, deps) {
-  let s = instances52.get(host);
+  let s = instances53.get(host);
   if (!s) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     s = new ReadingGuides({ ...d, storage, record, membership });
-    instances52.set(host, s);
+    instances53.set(host, s);
     record.declareTable("reading-guides", READING_GUIDES_TABLE_CLASSES.map((e2) => ({ ...e2, keys: [...e2.keys] })));
   }
   return s;
@@ -196598,7 +197627,7 @@ var CREDENTIAL_COUNT_KINDS = Object.freeze(["signin", "credential", "rate", "han
 var TOOL_USES = Object.freeze(["on_request", "routine"]);
 var onOwnServers = (recipient) => typeof recipient === "string" && (/^the organization\b/i.test(recipient.trim()) || /^[^,(]+\(the organization's own [^)]+\)$/i.test(recipient.trim()));
 var derivedKey = (store, sha2) => `${store}/derived/${sha2}`;
-var HEX6421 = /^[0-9a-f]{64}$/;
+var HEX6422 = /^[0-9a-f]{64}$/;
 var LIST = Object.freeze({ default: 200, max: 1e3 });
 var INTERNAL_VIEWER2 = `${MACHINE_CLASS_PREFIX}daemon`;
 var iso2 = (ms5) => new Date(ms5).toISOString();
@@ -196748,7 +197777,7 @@ var FileSafety = class _FileSafety {
   #onReceipt(event2) {
     try {
       const sha2 = shaOf8(event2 && event2.capture_sha);
-      if (!HEX6421.test(sha2)) return { ok: true, queued: false };
+      if (!HEX6422.test(sha2)) return { ok: true, queued: false };
       const at43 = second(this.now());
       const fresh = !this.#one(`SELECT 1 AS x FROM fs_files WHERE capture_sha = ?`, sha2);
       this.sql.exec(`INSERT OR IGNORE INTO fs_files (capture_sha, queued_at, render_state) VALUES (?, ?, 'queued')`, sha2, at43);
@@ -196809,7 +197838,7 @@ var FileSafety = class _FileSafety {
      capture. */
   #held(captureSha, viewer) {
     const sha2 = shaOf8(captureSha);
-    if (!HEX6421.test(sha2)) return { sha: sha2, refused: refusal32("FILE_NOT_HELD", "captureSha names a capture by its SHA-256, 64 hex.", { captureSha: captureSha ?? null }) };
+    if (!HEX6422.test(sha2)) return { sha: sha2, refused: refusal32("FILE_NOT_HELD", "captureSha names a capture by its SHA-256, 64 hex.", { captureSha: captureSha ?? null }) };
     const absent = () => ({ sha: sha2, refused: refusal32("FILE_NOT_HELD", "No capture this viewer may see is held under this digest. Nothing was read.", { captureSha: sha2 }) });
     const home = this.#home(sha2);
     const known3 = !!home || !!this.#one(`SELECT 1 AS x FROM fs_files WHERE capture_sha = ?`, sha2) || this.#receiptsOf(sha2).length > 0;
@@ -197190,7 +198219,7 @@ var FileSafety = class _FileSafety {
         let cycle = false;
         for (const e2 of [...by("filed"), ...by("already_held")]) {
           const m = shaOf8(e2.sha256);
-          if (!HEX6421.test(m)) {
+          if (!HEX6422.test(m)) {
             archive.members_high++;
             continue;
           }
@@ -197453,7 +198482,7 @@ var FileSafety = class _FileSafety {
     const r = await this.#scanner("/render", { store: this.store, target: this.#target(sha2), route });
     const bucket = this.#bucket();
     const derived = r.bytes && r.status === 200 ? r.headers.get("x-derived-sha256") : null;
-    if (!derived || !HEX6421.test(derived) || !bucket) {
+    if (!derived || !HEX6422.test(derived) || !bucket) {
       const code = r.unreachable ? "SCANNER_UNREACHABLE" : r.body && r.body.code || (!bucket ? "R2_NOT_CONFIGURED" : "RENDER_FAILED");
       this.sql.exec(
         `UPDATE fs_files SET render_state = 'failed', render_route = ?, render_reason = ?, render_detail = ? WHERE capture_sha = ?`,
@@ -198175,7 +199204,7 @@ var FileSafety = class _FileSafety {
     this.#spend(tool);
     const r = await this.#scanner("/provider/cdr", { store: this.store, target: this.#target(sha2), tool: spec });
     const copySha = r.bytes && r.status === 200 ? r.headers.get("x-derived-sha256") : null;
-    if (!copySha || !HEX6421.test(copySha)) {
+    if (!copySha || !HEX6422.test(copySha)) {
       const code = r.unreachable ? "SCANNER_UNREACHABLE" : r.body && r.body.code || "SAFE_COPY_FAILED";
       if (code === "PRIVATE_MODE_NOT_HONOURED") this.#switchOff(tool, code);
       return fail(code, r.body && r.body.detail ? String(r.body.detail).slice(0, 300) : null);
@@ -202601,7 +203630,7 @@ var CaptureRequests = class _CaptureRequests {
    *  stamps them. Nothing is held while unattended capture is not configured, because nothing will complete. Whether a
    *  run is running is ai-runs' own answer (`runFor`, read with a machine viewer). */
   waitSource() {
-    const walk3 = (q10, args, keyOf5, take) => {
+    const walk3 = (q10, args, keyOf6, take) => {
       let after = "", scanned = 0;
       for (; ; ) {
         const page2 = this.#rows(q10, ...args, after, CAPTURE_REQUEST_WAIT_BATCH);
@@ -202610,7 +203639,7 @@ var CaptureRequests = class _CaptureRequests {
         }
         scanned += page2.length;
         if (page2.length < CAPTURE_REQUEST_WAIT_BATCH || scanned >= CAPTURE_REQUEST_READ_MAX) return;
-        after = keyOf5(page2[page2.length - 1]);
+        after = keyOf6(page2[page2.length - 1]);
       }
     };
     const running = (run2) => {
@@ -203219,10 +204248,10 @@ var CAPTURE_REQUESTS_TABLES = Object.freeze([
     version_chain: false
   })
 ]);
-var instances53 = /* @__PURE__ */ new WeakMap();
+var instances54 = /* @__PURE__ */ new WeakMap();
 function captureRequestsOf(host, deps = {}) {
   const storage = host && host.storage ? host.storage : host;
-  let c = instances53.get(storage);
+  let c = instances54.get(storage);
   if (!c) {
     const env = deps.env || {};
     const record = deps.record || recordOf(host);
@@ -203247,7 +204276,7 @@ function captureRequestsOf(host, deps = {}) {
     };
     d.steps = deps.steps === void 0 ? stepsOf(host, { record, observationLog: d.observations, promotion: d.promotion }) : deps.steps;
     c = new CaptureRequests(storage, d);
-    instances53.set(storage, c);
+    instances54.set(storage, c);
     if (typeof record.declareTable === "function") {
       const declared2 = record.declareTable(CAPTURE_REQUESTS_MODULE, CAPTURE_REQUESTS_TABLES.map((t2) => ({ ...t2 })));
       if (declared2 && declared2.ok === false)
@@ -205622,9 +206651,9 @@ function intentOps(i, url, body) {
     workobjective: () => i.workObjective({ ...b, viewer: qp("viewer") })
   };
 }
-var instances54 = /* @__PURE__ */ new WeakMap();
+var instances55 = /* @__PURE__ */ new WeakMap();
 function intentOf(host, deps) {
-  let i = instances54.get(host);
+  let i = instances55.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -205645,7 +206674,7 @@ function intentOf(host, deps) {
       captureRequests: d.captureRequests || (() => captureRequestsOf(host)),
       money: d.money || (() => moneyOf2(host))
     });
-    instances54.set(host, i);
+    instances55.set(host, i);
     record.declarePurge("intent", INTENT_TABLES);
     promotion.registerStep("intent", { check: (c) => i.check(c), project: (c) => i.project(c) });
     record.registerAuditCheck("intent", (image) => i.auditCheck(image));
@@ -205847,7 +206876,7 @@ function migrateConformance(sql) {
 var OUTCOMES3 = Object.freeze(["compliant", "noncompliant", "unclear"]);
 var READINGS2 = Object.freeze(["aligns", "diverges", "open"]);
 var SIGNIFICANCE_KEYS = Object.freeze(["significance", "severity", "priority", "urgency", "rank", "score"]);
-var REASON_MAX12 = 500;
+var REASON_MAX13 = 500;
 var DETERMINATIONS_PAGE_MAX = 200;
 var LIMITS = Object.freeze({ findings: 50, standards: 50, rows: 200, questions: 20, evidence: 50 });
 var TEXT_MAX3 = 4e3;
@@ -206755,9 +207784,9 @@ var Conformance = class _Conformance {
       return refusal29("SUPERSEDES_ANOTHER_ACT", `${id} is a determination of ${prev.act_id}, and this names ${act2.event}. Nothing was written.`, { supersedes: id, act: act2.event, predecessor_act: prevEvent ?? prev.act_id });
     const why2 = typeof reason2 === "string" ? reason2.trim() : reason2 == null ? "" : null;
     if (why2 === "")
-      return refusal29("CONFORMANCE_NO_REASON", "superseding a determination says why it is superseded; this names no reason. Nothing was written.", { supersedes: id, max: REASON_MAX12 });
-    if (why2 === null || why2.length > REASON_MAX12)
-      return refusal29("CONFORMANCE_BAD_REASON", `superseding a determination says why, as text of at most ${REASON_MAX12} characters. Nothing was written.`, { supersedes: id, max: REASON_MAX12 });
+      return refusal29("CONFORMANCE_NO_REASON", "superseding a determination says why it is superseded; this names no reason. Nothing was written.", { supersedes: id, max: REASON_MAX13 });
+    if (why2 === null || why2.length > REASON_MAX13)
+      return refusal29("CONFORMANCE_BAD_REASON", `superseding a determination says why, as text of at most ${REASON_MAX13} characters. Nothing was written.`, { supersedes: id, max: REASON_MAX13 });
     const by = this.#one(`SELECT superseded_by FROM determination_supersessions WHERE superseded=?`, id);
     if (by) return determinationSuperseded(id, by.superseded_by, { supersedes: id });
     return { ok: true, prev, reason: why2 };
@@ -207867,9 +208896,9 @@ function determinationDoc({
   ];
   return lines2.join("\n");
 }
-var instances55 = /* @__PURE__ */ new WeakMap();
+var instances56 = /* @__PURE__ */ new WeakMap();
 function conformanceOf(host, deps) {
-  let c = instances55.get(host);
+  let c = instances56.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -207877,7 +208906,7 @@ function conformanceOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new Conformance({ ...d, host, storage, record, membership, promotion });
-    instances55.set(host, c);
+    instances56.set(host, c);
     c.migrate();
     record.declarePurge("conformance", CONFORMANCE_TABLES);
     promotion.registerStep("conformance", { check: (x) => c.check(x) });
@@ -211762,9 +212791,9 @@ function proposalLabelFor(who2, subject) {
   const base2 = lawProposalLabel(who2);
   return { by: base2.by, state: base2.state, machine_work: base2.machine_work, says: PROPOSAL_SAYS2[subject][base2.state] };
 }
-var instances56 = /* @__PURE__ */ new WeakMap();
+var instances57 = /* @__PURE__ */ new WeakMap();
 function actionsOf(host, deps) {
-  let a = instances56.get(host);
+  let a = instances57.get(host);
   if (!a) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -211772,7 +212801,7 @@ function actionsOf(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     a = new Actions({ ...d, host, storage, record, membership, promotion });
-    instances56.set(host, a);
+    instances57.set(host, a);
     a.migrate();
     void a.conformance;
     record.declarePurge("actions", [...ACTIONS_TABLES]);
@@ -213693,16 +214722,16 @@ for (const m of ["pendingClocks", "clockPropose", "reminderSet", "reminderAnswer
     return withRow8(fn.apply(this, a));
   };
 }
-var instances57 = /* @__PURE__ */ new WeakMap();
+var instances58 = /* @__PURE__ */ new WeakMap();
 function actionClocksOf(host, deps) {
-  let a = instances57.get(host);
+  let a = instances58.get(host);
   if (!a) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     a = new ActionClocks({ ...d, host, storage, record, membership });
-    instances57.set(host, a);
+    instances58.set(host, a);
     a.migrate();
     void a.actions;
     for (const t2 of ["action_reminders", "action_clock_proposals"])
@@ -213962,7 +214991,7 @@ var UNDETERMINED_WHY = Object.freeze({
 });
 var NO_UNIT = "no measure is stated, so the computation has no unit";
 var RATIONALE_MAX = 2e3;
-var REASON_MAX13 = 500;
+var REASON_MAX14 = 500;
 var CONCLUDED = /* @__PURE__ */ new Set(["concluded", "published"]);
 var INTERNAL3 = `${MACHINE_CLASS_PREFIX}admin`;
 var str42 = (v) => typeof v === "string" && v.trim() ? v.trim() : null;
@@ -213981,7 +215010,7 @@ var machine2 = (who2) => !str42(who2) || isMachineIdentity(str42(who2));
 var second3 = (iso7) => String(iso7).replace(/\.\d+Z$/, "Z");
 var fold6 = (t2) => String(t2).normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase();
 var rand12 = (n2) => [...crypto.getRandomValues(new Uint8Array(n2))].map((b) => b.toString(16).padStart(2, "0")).join("");
-var HEX6422 = /^[0-9a-f]{64}$/;
+var HEX6423 = /^[0-9a-f]{64}$/;
 var DATE4 = /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2}))?$/;
 var aliasesOf = (ent) => (Array.isArray(ent.aliases) ? ent.aliases : []).filter((a) => isObj49(a) ? !a.withdrawn : typeof a === "string").map((a) => isObj49(a) ? a.alias : a);
 function refuse21(code, detail, extra = {}) {
@@ -214008,8 +215037,8 @@ function alreadySuperseded(id, next) {
 }
 function reasonRefusal2(reason2) {
   if (!str42(reason2)) return refuse21("NO_REASON", `the record says why.${NOTHING}`);
-  if (reason2.trim().length > REASON_MAX13)
-    return refuse21("BAD_REASON", `a reason is at most ${REASON_MAX13} characters.${NOTHING}`);
+  if (reason2.trim().length > REASON_MAX14)
+    return refuse21("BAD_REASON", `a reason is at most ${REASON_MAX14} characters.${NOTHING}`);
   return null;
 }
 function basisUnreadable(why2, extra = {}) {
@@ -214288,7 +215317,7 @@ var Consequences = class {
   /* R9, R3: an evidence or rests-on id resolves to a content row, or a finding (an inquiry), the author may see. */
   #resolvesEvidence(id, who2) {
     if (!str42(id)) return false;
-    if (HEX6422.test(id)) {
+    if (HEX6423.test(id)) {
       const row12 = this.content.contentRow(id);
       return !!row12 && this.membership.inSight(row12.bundle_id, who2);
     }
@@ -214324,7 +215353,7 @@ var Consequences = class {
       );
     const notNamed = (why2) => refuse21("AFFECTED_PERSON_NOT_NAMED", `${why2}: a person is recorded as affected only as a document in the record names them.${NOTHING}`, { entity: person.entity, named_in: person.named_in ?? null });
     if (!person.named_in) return notNamed("no passage naming the person is given (named_in)");
-    const row12 = HEX6422.test(person.named_in) ? this.content.contentRow(person.named_in) : null;
+    const row12 = HEX6423.test(person.named_in) ? this.content.contentRow(person.named_in) : null;
     if (!row12 || !this.membership.inSight(row12.bundle_id, who2)) return notNamed("named_in is not content of a held capture you may see");
     const text7 = this.#passageText(person.named_in);
     const names2 = [ent.label, ...aliasesOf(ent)].filter((x) => str42(x)).map(fold6);
@@ -215187,9 +216216,9 @@ function partDoc(id, p3) {
     ""
   ].join("\n");
 }
-var instances58 = /* @__PURE__ */ new WeakMap();
+var instances59 = /* @__PURE__ */ new WeakMap();
 function consequencesModule(host, deps) {
-  let c = instances58.get(host);
+  let c = instances59.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -215197,7 +216226,7 @@ function consequencesModule(host, deps) {
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     c = new Consequences({ ...d, host, storage, record, membership, promotion });
-    instances58.set(host, c);
+    instances59.set(host, c);
     c.migrate();
     record.declarePurge("consequences", CONSEQUENCES_TABLES);
   }
@@ -217471,15 +218500,15 @@ ${inbandBlock(quartet)}`, inband: quartet };
     return { case: caseId, edition, ...b, determinations_read: true };
   }
 };
-var instances59 = /* @__PURE__ */ new WeakMap();
+var instances60 = /* @__PURE__ */ new WeakMap();
 function filingsOf(host, deps) {
-  let f17 = instances59.get(host);
+  let f17 = instances60.get(host);
   if (!f17) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     f17 = new Filings({ ...d, host, storage, record });
-    instances59.set(host, f17);
+    instances60.set(host, f17);
     f17.migrate();
     record.declarePurge("filings", FILINGS_TABLES);
     f17.publicRead.registerEvidenceBlock("filings", "available_actions", (arg) => f17.evidenceBlock(arg));
@@ -217869,7 +218898,7 @@ var OVERSIGHT_KINDS = Object.freeze(["oversees", "appoints"]);
 var TIMELINE_KINDS = Object.freeze(["open", "advance", "attach", "evaluate", "decline", "suspend", "resume", "end"]);
 var TIMELINE_LIMIT = 100;
 var TIMELINE_MAX = 500;
-var REASON_MAX14 = 2e3;
+var REASON_MAX15 = 2e3;
 var DUE_MAX = 500;
 var JUDGMENT_KEYS = Object.freeze(["significance", "severity", "priority", "urgency", "score", "rank"]);
 var PROPOSAL_SAYS4 = "proposed by the escalation protocol's derivation over the record at the time of reading; it is not an act. A member advances it or declines it, with a reason.";
@@ -219210,7 +220239,7 @@ var Escalation = class _Escalation {
       label: proposalLabel(DRAFTED_BY, "escalation_reason"),
       parts,
       length: [...text7].length,
-      reason_max: REASON_MAX14,
+      reason_max: REASON_MAX15,
       next: "a member sends it, as offered or edited, as the reason of an opening (op=escalationopen); the reason then recorded is the member's own. Nothing was written."
     };
   }
@@ -219303,8 +220332,8 @@ function refuseNoSuchResponse(why2) {
 }
 function refuseReason2(reason2) {
   const r = str44(reason2);
-  if (!r || r.length > REASON_MAX14)
-    return refusal30("ESCALATION_NO_REASON", `a reason of 1 to ${REASON_MAX14} characters is required. Nothing was written.`);
+  if (!r || r.length > REASON_MAX15)
+    return refusal30("ESCALATION_NO_REASON", `a reason of 1 to ${REASON_MAX15} characters is required. Nothing was written.`);
   return null;
 }
 function refuseJudgment(args) {
@@ -219349,9 +220378,9 @@ for (const name3 of [
     }
   } });
 }
-var instances60 = /* @__PURE__ */ new WeakMap();
+var instances61 = /* @__PURE__ */ new WeakMap();
 function escalationOf(host, deps) {
-  let i = instances60.get(host);
+  let i = instances61.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -219377,7 +220406,7 @@ function escalationOf(host, deps) {
       entities: entities2,
       lines: lines2
     });
-    instances60.set(host, i);
+    instances61.set(host, i);
     i.migrate();
     record.declarePurge("escalation", ESCALATION_TABLES);
     promotion.registerStep("escalation", { check: (c) => i.check(c), project: (c) => i.project(c) });
@@ -219552,7 +220581,7 @@ var LOOK_STATES = Object.freeze(["not_yet_looked_for", "looked_for_and_not_found
 var INTERVIEW_WORK = "Intake interview";
 var FIND_WORK_PREFIX = "Find the record: ";
 var NAME_MAX2 = 200;
-var REASON_MAX15 = 2e3;
+var REASON_MAX16 = 2e3;
 var REPORT_MAX = 2e4;
 var ANSWER_MAX = 2e4;
 var CLAIM_MAX = 2e3;
@@ -219582,17 +220611,17 @@ function refuse22(code, detail, extra = {}) {
   const row12 = INVESTIGATION_CHECKS[code];
   return { ...extra, ok: false, reason: code, code, check: row12.check, translation: row12.translation, detail };
 }
-var instances61 = /* @__PURE__ */ new WeakMap();
+var instances62 = /* @__PURE__ */ new WeakMap();
 var storageOf3 = (host) => host && host.storage ? host.storage : host;
 function investigationOf(host, deps = {}) {
   const storage = storageOf3(host);
-  let s = instances61.get(storage);
+  let s = instances62.get(storage);
   if (!s) {
     const record = deps.record ?? recordOf(host);
     const membership = deps.membership ?? membershipOf(host, { record });
     const promotion = deps.promotion ?? promotionOf(host, { record, membership });
     s = new Investigation(storage, { ...deps, record, membership, promotion, host });
-    instances61.set(storage, s);
+    instances62.set(storage, s);
     s.migrate();
     const r = promotion.registerStep(OWNER3, { check: (c) => s.check(c) });
     if (r && r.ok === false) throw new Error(`investigation: registerStep refused: ${r.reason || r.code}`);
@@ -219964,7 +220993,7 @@ var Investigation = class _Investigation {
   milestoneRemove({ milestone = null, reason: reason2 = null, by = null } = {}) {
     const g = this.#milestoneGate(milestone, by, "milestoneRemove");
     if (g.refusal) return g.refusal;
-    if (!filled17(reason2) || chars2(reason2) > REASON_MAX15) return refuse22("INVESTIGATION_NO_REASON", `say why, in 1\u2013${REASON_MAX15} characters`);
+    if (!filled17(reason2) || chars2(reason2) > REASON_MAX16) return refuse22("INVESTIGATION_NO_REASON", `say why, in 1\u2013${REASON_MAX16} characters`);
     const at43 = this.#at();
     return this.#record.transact(() => {
       this.#sql.exec(`UPDATE inv_milestones SET removed_by = ?, removed_at = ?, removed_reason = ? WHERE milestone_id = ?`, by, at43, reason2.trim(), g.m.milestone_id);
@@ -219979,7 +221008,7 @@ var Investigation = class _Investigation {
     const ref = typeof item3 === "string" ? item3.trim() : isObj52(item3) ? String(item3.ref ?? item3.question ?? item3.step ?? "").trim() : "";
     const row12 = this.#itemRows(g.m.milestone_id).find((r) => !r.removed_at && r.ref === ref);
     if (!row12) return refuse22("MILESTONE_ITEM_UNKNOWN", "this milestone waits on no item by that id", { item: ref || null });
-    if (!filled17(reason2) || chars2(reason2) > REASON_MAX15) return refuse22("INVESTIGATION_NO_REASON", `say why, in 1\u2013${REASON_MAX15} characters`);
+    if (!filled17(reason2) || chars2(reason2) > REASON_MAX16) return refuse22("INVESTIGATION_NO_REASON", `say why, in 1\u2013${REASON_MAX16} characters`);
     const at43 = this.#at();
     return this.#record.transact(() => {
       this.#sql.exec(`UPDATE inv_milestone_items SET removed_by = ?, removed_at = ?, removed_reason = ? WHERE item_id = ?`, by, at43, reason2.trim(), row12.item_id);
@@ -220675,7 +221704,7 @@ ${about ?? ""}`, g.actor.viewer);
     if (!ACCEPTANCE_FORMS.includes(form)) return refuse22("PLAN_BAD_FORM", `the form is one of ${ACCEPTANCE_FORMS.join(", ")}`);
     const words5 = form === "as_proposed" ? p3.text : text7;
     if (!filled17(words5) || chars2(words5.trim()) > PLAN_MAX) return refuse22("PLAN_NO_TEXT", `1\u2013${PLAN_MAX} characters`);
-    if (reason2 !== null && reason2 !== void 0 && (!filled17(reason2) || chars2(reason2) > REASON_MAX15)) return refuse22("INVESTIGATION_NO_REASON", `1\u2013${REASON_MAX15} characters`);
+    if (reason2 !== null && reason2 !== void 0 && (!filled17(reason2) || chars2(reason2) > REASON_MAX16)) return refuse22("INVESTIGATION_NO_REASON", `1\u2013${REASON_MAX16} characters`);
     const at43 = this.#at();
     return this.#record.transact(() => {
       let made3;
@@ -220910,7 +221939,7 @@ ${about ?? ""}`, g.actor.viewer);
    *  nothing. */
   watchArrival({ project = null, source: source2 = null, at: at43 = null } = {}) {
     const src = typeof source2 === "string" ? source2.trim() : isObj52(source2) ? json17(source2) : "";
-    if (!src || chars2(src) > REASON_MAX15 || !filled17(at43) || !ISO.test(at43)) return refuse22("ARRIVAL_BAD", "an arrival is {project, source, at: an ISO instant}");
+    if (!src || chars2(src) > REASON_MAX16 || !filled17(at43) || !ISO.test(at43)) return refuse22("ARRIVAL_BAD", "an arrival is {project, source, at: an ISO instant}");
     const b = filled17(project) ? this.#record.bundleInfo(project) : null;
     if (!b || b.type !== "project" || !this.#watched(project))
       return refuse22("PROJECT_NOT_WATCHED", "no member chose to watch this project's sources", { project: filled17(project) ? project : null });
@@ -220939,7 +221968,7 @@ ${about ?? ""}`, g.actor.viewer);
     const g = this.#doorGate(project, by, "projectCloseWithGaps");
     if (g.refusal) return g.refusal;
     if (!CLOSED_REASONS2.includes(reason2)) return refuse22("CLOSE_BAD_REASON", `the reason is one of ${CLOSED_REASONS2.join(", ")}`);
-    if (note !== null && note !== void 0 && (!filled17(note) || chars2(note) > REASON_MAX15)) return refuse22("INVESTIGATION_NO_REASON", `1\u2013${REASON_MAX15} characters`);
+    if (note !== null && note !== void 0 && (!filled17(note) || chars2(note) > REASON_MAX16)) return refuse22("INVESTIGATION_NO_REASON", `1\u2013${REASON_MAX16} characters`);
     const gaps = this.#intent.gaps({ project, viewer: g.actor.viewer });
     const kept = gaps && gaps.ok !== false ? { gaps: gaps.gaps ?? [], ...gaps.why ? { why: gaps.why } : {} } : { gaps: null, why: "the gaps could not be read" };
     const at43 = this.#at();
@@ -224468,17 +225497,17 @@ var Monitoring = class {
     }
   }
 };
-var instances62 = /* @__PURE__ */ new WeakMap();
+var instances63 = /* @__PURE__ */ new WeakMap();
 function monitoringOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let m = instances62.get(storage);
+  let m = instances63.get(storage);
   if (!m) {
     const d = deps || {};
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     const promotion = d.promotion || promotionOf(host, { record, membership });
     m = new Monitoring({ ...d, host, storage: d.storage || storage, record, membership, promotion });
-    instances62.set(storage, m);
+    instances63.set(storage, m);
     m.migrate();
     record.declarePurge("monitoring", [...MONITORING_TABLES]);
     if (typeof record.registerCounts === "function")
@@ -225354,10 +226383,10 @@ var LinkSweep = class {
 };
 
 // src/link-sweep/index.mjs
-var instances63 = /* @__PURE__ */ new WeakMap();
+var instances64 = /* @__PURE__ */ new WeakMap();
 function linkSweepOf(host, deps) {
   const storage = host && host.storage ? host.storage : host;
-  let s = instances63.get(storage);
+  let s = instances64.get(storage);
   if (!s) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -225379,7 +226408,7 @@ function linkSweepOf(host, deps) {
       captureRequests: lazy(d.captureRequests, () => captureRequestsOf(host, { record })),
       monitoring: lazy(d.monitoring, () => monitoringOf(host, { record, membership, promotion }))
     });
-    instances63.set(storage, s);
+    instances64.set(storage, s);
     s.migrate();
     record.declarePurge(LINK_SWEEP_MODULE, LINK_SWEEP_TABLES.map((t2) => ({ name: t2.name, keys: [...t2.keys] })));
     s.registration = s.registerWithMonitoring();
@@ -226429,9 +227458,9 @@ function moneyChecksOps(c, url, body) {
     moneynoticed: () => c.noticed({ project: q10("project"), viewer: q10("viewer"), limit: q10("limit") })
   };
 }
-var instances64 = /* @__PURE__ */ new WeakMap();
+var instances65 = /* @__PURE__ */ new WeakMap();
 function moneyChecksOf(host, deps) {
-  let c = instances64.get(host);
+  let c = instances65.get(host);
   if (!c) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -226446,7 +227475,7 @@ function moneyChecksOf(host, deps) {
       progressions: d.progressions || progressionsOf(host, { record }),
       money: d.money || moneyOf2(host, { record, membership })
     });
-    instances64.set(host, c);
+    instances65.set(host, c);
     c.migrate();
     const declared2 = record.declareTable("money-checks", moneyChecksTables((scope) => c.rebuild(scope)));
     if (declared2 && declared2.ok === false) throw new Error(`money-checks: record-core refused its tables: ${declared2.reason}`);
@@ -227343,7 +228372,7 @@ function readDataset(text7) {
   return { rows: lines2.slice(1).map((l2) => Object.fromEntries(head.map((h, i) => [h, l2[i] ?? null]))) };
 }
 var same2 = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
-var keyOf4 = (row12, key2) => {
+var keyOf5 = (row12, key2) => {
   const v = row12 ? row12[key2] : void 0;
   return v === void 0 || v === null || v === "" ? null : String(v);
 };
@@ -227351,7 +228380,7 @@ function index(rows3, key2) {
   const by = /* @__PURE__ */ new Map(), repeated = /* @__PURE__ */ new Set();
   let missing2 = 0;
   for (const r of rows3) {
-    const k = keyOf4(r, key2);
+    const k = keyOf5(r, key2);
     if (k === null) {
       missing2++;
       continue;
@@ -227419,10 +228448,10 @@ function wholeSecondFrom(v) {
     return null;
   }
 }
-var instances65 = /* @__PURE__ */ new WeakMap();
+var instances66 = /* @__PURE__ */ new WeakMap();
 function followingOf(host, deps = {}) {
   const storage = host && host.storage ? host.storage : host;
-  let f17 = instances65.get(storage);
+  let f17 = instances66.get(storage);
   if (!f17) {
     const record = deps.record || recordOf(host);
     const membership = deps.membership || membershipOf(host, { record });
@@ -227443,7 +228472,7 @@ function followingOf(host, deps = {}) {
       standards: lazy(deps.standards, () => standardsOf(host, { record, membership })),
       monitoring: lazy(deps.monitoring, () => monitoringOf(host, { record, membership }))
     });
-    instances65.set(storage, f17);
+    instances66.set(storage, f17);
     f17.migrate();
   }
   return f17;
@@ -229370,9 +230399,9 @@ var Scheduler = class {
   }
 };
 var DAILY_OWNER = Object.freeze([["duty-transitions", "duties"], ["interest-checks", "people"], ["money-detectors", "moneyChecks"]]);
-var instances66 = /* @__PURE__ */ new WeakMap();
+var instances67 = /* @__PURE__ */ new WeakMap();
 function schedulerOf(ctx, env = null, deps = {}) {
-  let s = instances66.get(ctx);
+  let s = instances67.get(ctx);
   if (!s) {
     const e2 = env || {};
     const owners2 = deps.owners || {
@@ -229399,7 +230428,7 @@ function schedulerOf(ctx, env = null, deps = {}) {
     };
     const zone = deps.zone || (() => viewZone3(recordOf(ctx)));
     s = new Scheduler({ storage: deps.storage || ctx.storage, env: e2, owners: owners2, zone });
-    instances66.set(ctx, s);
+    instances67.set(ctx, s);
     if (!deps.owners)
       s.listenTo({
         retrieval: retrievalOf(ctx),
@@ -238157,7 +239186,7 @@ var TIERS2 = Object.freeze([1, 2, 3, "undetermined"]);
 var JUDGEMENTS = Object.freeze(["met", "not_met"]);
 var DUTY_STATES = Object.freeze(["met", "met_late", "overdue", "undetermined"]);
 var TITLE_MAX = 200;
-var REASON_MAX16 = 500;
+var REASON_MAX17 = 500;
 var SUMMARY_MAX2 = 200;
 var DETAIL_MAX2 = 5e3;
 var WHY_MAX4 = 500;
@@ -240329,8 +241358,8 @@ function refusePlanClosed(plan) {
 }
 function refuseReason3(reason2, needed) {
   const given5 = reason2 !== void 0 && reason2 !== null && reason2 !== "";
-  if (needed && !given5 || given5 && !isLine(reason2, REASON_MAX16))
-    return refusal31("PLAN_NO_REASON", `a reason of 1 to ${REASON_MAX16} characters, with no quotation mark, backslash or line break, is required here. Nothing was written.`, { max: REASON_MAX16 });
+  if (needed && !given5 || given5 && !isLine(reason2, REASON_MAX17))
+    return refusal31("PLAN_NO_REASON", `a reason of 1 to ${REASON_MAX17} characters, with no quotation mark, backslash or line break, is required here. Nothing was written.`, { max: REASON_MAX17 });
   return null;
 }
 function refuseKeys(args) {
@@ -240394,9 +241423,9 @@ for (const name3 of [
     }
   } });
 }
-var instances67 = /* @__PURE__ */ new WeakMap();
+var instances68 = /* @__PURE__ */ new WeakMap();
 function actionPlansOf(host, deps) {
-  let i = instances67.get(host);
+  let i = instances68.get(host);
   if (!i) {
     const d = deps || {};
     const storage = d.storage || host.storage;
@@ -240422,7 +241451,7 @@ function actionPlansOf(host, deps) {
       duties: lazy("duties", () => dutiesOf(host, base2)),
       aiRuns: lazy("aiRuns", () => aiRunsOf(host))
     });
-    instances67.set(host, i);
+    instances68.set(host, i);
     i.migrate();
     record.declarePurge("action-plans", ACTION_PLANS_TABLES);
     promotion.registerStep("action-plans", { check: (c) => i.check(c), project: (c) => i.project(c) });
@@ -241657,37 +242686,37 @@ function cardinalityGroups(feed) {
   }
   return out.sort((a, b) => b.n - a.n || cmpKey(a, b));
 }
-function gradeOver(instances72) {
-  const undetermined3 = instances72.some((i) => !i.grade_determined || !i.grade);
+function gradeOver(instances73) {
+  const undetermined3 = instances73.some((i) => !i.grade_determined || !i.grade);
   return {
     grade_determined: !undetermined3,
-    grade: undetermined3 ? null : instances72.map((i) => i.grade).reduce((a, b) => weakerGrade(a, b))
+    grade: undetermined3 ? null : instances73.map((i) => i.grade).reduce((a, b) => weakerGrade(a, b))
   };
 }
 function proposalSeen(p3, seen) {
-  const instances72 = (p3.instances || []).filter(seen);
-  if (!instances72.length) return null;
-  const overdue_count = instances72.filter((i) => i.overdue === true).length;
+  const instances73 = (p3.instances || []).filter(seen);
+  if (!instances73.length) return null;
+  const overdue_count = instances73.filter((i) => i.overdue === true).length;
   const overdue = overdue_count > 0;
   return {
     ...p3,
-    instances: instances72,
-    n: instances72.length,
+    instances: instances73,
+    n: instances73.length,
     overdue_count,
     overdue,
-    ...gradeOver(instances72),
+    ...gradeOver(instances73),
     kinds: overdue ? ["missing_predecessor", "overdue_successor"] : ["missing_predecessor"]
   };
 }
 function groupSeen(g, seen) {
-  const instances72 = g.instances.filter(seen);
-  if (!instances72.length) return null;
+  const instances73 = g.instances.filter(seen);
+  if (!instances73.length) return null;
   return {
     ...g,
-    instances: instances72,
-    n: instances72.length,
-    document_count: instances72.reduce((s, i) => s + (Number(i.document_count) || 0), 0),
-    ...gradeOver(instances72)
+    instances: instances73,
+    n: instances73.length,
+    document_count: instances73.reduce((s, i) => s + (Number(i.document_count) || 0), 0),
+    ...gradeOver(instances73)
   };
 }
 function cardinalityDetail(g) {
@@ -241695,8 +242724,8 @@ function cardinalityDetail(g) {
   return `${g.n} ${plural(g.n, "instance", "instances")} of this progression thread more than one document at '${stageName(g)}' (${g.document_count} in all), which is declared to hold ${held2}: a finding, which decides nothing about which of them belongs (framework 8.2)`;
 }
 function proposalFindingItems(feed, { subjectsOf, homesOf, optionsOf, subjectsMax = 8 } = {}) {
-  const subjectsFor = (instances72, into = []) => {
-    for (const inst of instances72)
+  const subjectsFor = (instances73, into = []) => {
+    for (const inst of instances73)
       for (const b of subjectsOf(inst.progression_key, inst.entity_id) || [])
         if (!into.includes(b)) into.push(b);
     return into;
@@ -245367,7 +246396,7 @@ var EXPLORE_FIND_SAYS = "The system found this while exploring the question. It 
 var EXPLORE_ASK_RECHECK_MS = 36e5;
 var EXPLORE_SKILL = "explore@1";
 var EXPLORE_PRINCIPAL = "class:ai";
-var HEX6423 = /^[0-9a-f]{64}$/;
+var HEX6424 = /^[0-9a-f]{64}$/;
 var str47 = (x) => typeof x === "string" && x.trim() !== "" ? x.trim() : null;
 var json21 = (v) => v == null ? null : canonicalJson(v);
 var parse20 = (s) => {
@@ -245896,7 +246925,7 @@ var QuestionExplorer = class {
   /** The documents a find rests on, within the paying owner's sight, or null when it is not held or not seen. */
   #locate(kind2, ref, owner) {
     if (kind2 === "capture") {
-      if (typeof ref !== "string" || !HEX6423.test(ref)) return null;
+      if (typeof ref !== "string" || !HEX6424.test(ref)) return null;
       const a = this.retrieval.contentAxis({ captureSha: ref, viewer: this.principal });
       if (!a || a.found === false || !a.bundle_id) return null;
       return this.#ownerSees(owner, a.bundle_id) ? { ref, bundle_id: a.bundle_id, bundle_b: null } : null;
@@ -245913,7 +246942,7 @@ var QuestionExplorer = class {
     }
     if (kind2 === "connection") {
       const k = ref && typeof ref === "object" ? ref : null;
-      if (!k || !HEX6423.test(String(k.a ?? "")) || !HEX6423.test(String(k.b ?? "")) || !str47(k.entity)) return null;
+      if (!k || !HEX6424.test(String(k.a ?? "")) || !HEX6424.test(String(k.b ?? "")) || !str47(k.entity)) return null;
       const read3 = this.connections.read({ captureSha: k.a, limit: 2e3, viewer: this.principal });
       const rows3 = read3 && (read3.connections || read3.rows) || [];
       const row12 = rows3.map((x) => x.connection || x).find((x) => x && x.entity_id === k.entity && [x.a_capture_sha, x.b_capture_sha].includes(k.a) && [x.a_capture_sha, x.b_capture_sha].includes(k.b));
@@ -246337,9 +247366,9 @@ var QuestionExplorer = class {
     return this.aiRuns.groupTestResults({ part: EXPLORE_TEST_PART, viewer });
   }
 };
-var instances68 = /* @__PURE__ */ new WeakMap();
+var instances69 = /* @__PURE__ */ new WeakMap();
 function questionExplorerOf(host, deps) {
-  let p3 = instances68.get(host);
+  let p3 = instances69.get(host);
   if (!p3) {
     const d = deps || {};
     const record = d.record || recordOf(host);
@@ -246364,7 +247393,7 @@ function questionExplorerOf(host, deps) {
       principal: d.principal || EXPLORE_PRINCIPAL,
       now: d.now || null
     });
-    instances68.set(host, p3);
+    instances69.set(host, p3);
     record.declarePurge(QUESTION_EXPLORER_MODULE, QUESTION_EXPLORER_TABLES);
   }
   return p3;
@@ -247442,16 +248471,16 @@ var Review = class {
     return out;
   }
 };
-var instances69 = /* @__PURE__ */ new WeakMap();
+var instances70 = /* @__PURE__ */ new WeakMap();
 function reviewOf(host, deps) {
-  let r = instances69.get(host);
+  let r = instances70.get(host);
   if (!r) {
     const d = deps || {};
     const storage = d.storage || host.storage;
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     r = new Review({ ...d, host, storage, record, membership });
-    instances69.set(host, r);
+    instances70.set(host, r);
     r.migrate();
     record.declarePurge("review", REVIEW_TABLES);
     r.seedLedger();
@@ -253063,7 +254092,7 @@ function reads(owner, table4, f17, q10) {
 
 // src/store-door/pull.mjs
 var PULL_BUNDLE_SLUG = "doorbell-knock";
-var hexOf5 = (b) => [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
+var hexOf6 = (b) => [...b].map((x) => x.toString(16).padStart(2, "0")).join("");
 var enc8 = (text7) => {
   const b = new TextEncoder().encode(text7);
   return { text: text7, bytes: b.length, sha256: createSha256().update(b).hex() };
@@ -253131,7 +254160,7 @@ function filing2(record, doc, { knockId, by, identity, viewer, at: at43 }) {
   return {
     bundleId: id,
     base: null,
-    snapKey: `${at43.replace(/[-:]/g, "")}_${hexOf5(raw)}`,
+    snapKey: `${at43.replace(/[-:]/g, "")}_${hexOf6(raw)}`,
     /* The puller is the author, and the session's two identity stamps are op=promote's (control-plane R17). */
     author: by,
     actorMemberId: by,
@@ -254666,7 +255695,7 @@ var PAIRED_KINDS = Object.freeze(["cause", "identity", "relation"]);
 var HYPOTHESIS_LABEL = "hypothesis";
 var HUNCH_KINDS = Object.freeze([Object.freeze({ kind: "hunch", word: "a member's hunch", class: "hunch" })]);
 var STATEMENT_MAX2 = 4e3;
-var REASON_MAX17 = 2e3;
+var REASON_MAX18 = 2e3;
 var ABOUT_MAX2 = 50;
 var UNDATED_WHY2 = "a hunch states no period of its own, so whether it holds at a date is not determined";
 var DERIVED_ID_RE2 = /^[0-9a-f]{64}$/;
@@ -254699,14 +255728,14 @@ function refuse25(code, detail, extra = {}) {
   const row12 = HYPOTHESES_CHECKS[code];
   return { ok: false, reason: code, code, check: row12.check, translation: row12.translation, detail, ...extra };
 }
-var instances70 = /* @__PURE__ */ new WeakMap();
+var instances71 = /* @__PURE__ */ new WeakMap();
 var live6 = /* @__PURE__ */ new Set();
 var storageOf4 = (host) => host && host.storage ? host.storage : host;
 function ownerNeighbours4(args) {
   const a = isObj56(args) ? args : {};
   const { host, ...rest } = a;
   let h = null;
-  if (host !== void 0 && host !== null) h = instances70.get(storageOf4(host)) ?? null;
+  if (host !== void 0 && host !== null) h = instances71.get(storageOf4(host)) ?? null;
   else if (live6.size === 1) h = [...live6][0];
   if (!h) return {
     refused: "OWNER_HOST_AMBIGUOUS",
@@ -254717,7 +255746,7 @@ function ownerNeighbours4(args) {
 defaultRegistry.registerOwner({ owner: OWNER4, kinds: [...HUNCH_KINDS], neighbours: ownerNeighbours4 });
 function hypothesesOf(host, deps = {}) {
   const storage = storageOf4(host);
-  let h = instances70.get(storage);
+  let h = instances71.get(storage);
   if (!h) {
     const record = deps.record ?? recordOf(host);
     const membership = deps.membership ?? membershipOf(host, { record });
@@ -254729,7 +255758,7 @@ function hypothesesOf(host, deps = {}) {
       host,
       explore: deps.explore ?? null
     });
-    instances70.set(storage, h);
+    instances71.set(storage, h);
     live6.add(h);
     h.migrate();
     const r = promotion.registerStep(OWNER4, { check: (c) => h.check(c) });
@@ -254923,7 +255952,7 @@ var Hypotheses = class _Hypotheses {
     if (!r) return { refusal: _Hypotheses.#noSuch(hypothesisId) };
     if (isMachineIdentity(by)) return { refusal: refuse25("MACHINE_CANNOT_HYPOTHESISE", "the act's stamp is a machine's; only a member changes a hypothesis (K1473)") };
     if (!filled20(reason2)) return { refusal: refuse25("HYPOTHESIS_NO_REASON", "a change to a hypothesis says why, in the member's words") };
-    return { row: r, reason: reason2.trim().slice(0, REASON_MAX17) };
+    return { row: r, reason: reason2.trim().slice(0, REASON_MAX18) };
   }
   /** R2: `revise({hypothesisId, statement?, about?, reason, by})` appends a revision; the hypothesis keeps its id. */
   revise({ hypothesisId = null, statement = void 0, about = void 0, reason: reason2 = null, by = null } = {}) {
@@ -255166,7 +256195,7 @@ var Hypotheses = class _Hypotheses {
     if (!filled20(reason2)) return refuse25("PROPOSAL_NO_REASON", "setting the system's proposal aside says why, in the member's words");
     if (p3.state !== "open") return _Hypotheses.#notOpen(p3);
     const at43 = this.#now();
-    const why2 = reason2.trim().slice(0, REASON_MAX17);
+    const why2 = reason2.trim().slice(0, REASON_MAX18);
     return this.#record.transact(() => {
       this.#sql.exec(`UPDATE ${PROPOSALS_TABLE} SET state = 'set_aside', acted_by = ?, acted_at = ?, reason = ? WHERE proposal_id = ?`, by, at43, why2, p3.proposal_id);
       return { ok: true, proposal: p3.proposal_id, label: SYSTEM_LABEL, set_aside: { by, at: at43, reason: why2 } };
@@ -255654,7 +256683,7 @@ var ADMISSION_TABLES = Object.freeze([Object.freeze({
   derive: "stored",
   version_chain: false
 })]);
-var instances71 = /* @__PURE__ */ new WeakMap();
+var instances72 = /* @__PURE__ */ new WeakMap();
 var DoorWindow = class {
   constructor({ storage, fingerprint: fingerprint2 }) {
     this.storage = storage;
@@ -255703,7 +256732,7 @@ var DoorWindow = class {
 };
 function admissionOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
-  let a = instances71.get(storage);
+  let a = instances72.get(storage);
   if (!a) {
     const record = deps.record || recordOf(ctx);
     const fingerprint2 = typeof deps.fingerprint === "function" ? deps.fingerprint : (address) => captureOf(ctx).sourceFingerprint(address);
@@ -255712,7 +256741,7 @@ function admissionOf(ctx, deps = {}) {
     const d = record.declareTable("admission", ADMISSION_TABLES.map((t2) => ({ ...t2 })));
     if (d && d.ok === false && d.reason !== "TABLE_DECLARED")
       throw new Error(`admission: record-core refused its table: ${d.reason}`);
-    instances71.set(storage, a);
+    instances72.set(storage, a);
   }
   return a;
 }
@@ -258027,10 +259056,10 @@ function groupings(rows3) {
 }
 
 // ../budget-doctypes/assess.mjs
-function keyed2(items, keyOf5) {
+function keyed2(items, keyOf6) {
   const seen = /* @__PURE__ */ new Map(), out = /* @__PURE__ */ new Map();
   for (const it of items) {
-    const k = keyOf5(it);
+    const k = keyOf6(it);
     const n2 = (seen.get(k) || 0) + 1;
     seen.set(k, n2);
     out.set(n2 === 1 ? k : `${k} #${n2}`, it);
