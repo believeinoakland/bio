@@ -1,6 +1,6 @@
 # BOB to action-grammar (T45)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
