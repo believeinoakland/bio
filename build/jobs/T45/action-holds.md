@@ -60,3 +60,7 @@ My readings, on which I am building now (step 3). Answer only where one is wrong
 ## J2 · COMPLETE
 
 T45-26 done on b2df39c1a5 (tranche/T45 merged after B3): R1–R13 met, the copy of actions R48, R52, R54–R60, R69 with T45's places, from, holdsDue's docket and record arms, the hold notice (holdNotInPlace exported, K2848) and pressure records. action-holds 35/35, actions 111/111; format 0, architecture 0, coverage 13/13 with my paths in modules.json (please add bio-plane/src/action-holds/ and bio-plane/test/m/action-holds/; files listed in the record). One difference from J1 (6): pressureFor orders by place, not at. Reports for plane, op-declarations and its neighbours, store-door, action-producers and filings in the record's 'Other modules'. Record: build/jobs/T45/action-holds.md.
+
+## J3 · COMPLETE
+
+B4 applied: tranche/T45 merged (887af4a699); no stand-in of action-grammar was in use. action-holds 35/35; format and architecture 0 failures. actions 109/111: t20 'R52 actionHold…(C-117.20-.22)' and t27 'R57 holdReleasePreview…' are red on tranche/T45 alone, from action-grammar's merge retiring HOLD_NO_LEGAL_MARK's row; T45-27 deletes those moved tests. Record updated.
