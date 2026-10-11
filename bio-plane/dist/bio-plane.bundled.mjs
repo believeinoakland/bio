@@ -44272,33 +44272,15 @@ function noSha(detail = null) {
 // src/capture/checks.mjs
 var checks_exports13 = {};
 __export(checks_exports13, {
-  CAPTURE_CHECKS: () => CAPTURE_CHECKS,
-  KNOCK_CHECKS: () => KNOCK_CHECKS
+  CAPTURE_CHECKS: () => CAPTURE_CHECKS
 });
 var at4 = (fn, region) => `src/capture/ops.mjs ${fn} > ${region}`;
 var inIndex = (fn, region) => `src/capture/index.mjs ${fn} > ${region}`;
-var inDoorbell = (fn, region) => `src/doorbell/index.mjs ${fn} > ${region}`;
-var atDoor = (fn, region) => `src/doorbell/door.mjs ${fn} > ${region}`;
 var CAPTURE_CHECKS = Object.freeze({
   EVIDENCE_NOT_HELD: Object.freeze({
     check: "C-118.1",
     where: at4("evidenceAbsent", "is-evidence-held"),
     translation: "The record holds no stored copy of a document under this fingerprint."
-  }),
-  NO_SUCH_KNOCK: Object.freeze({
-    check: "C-118.2",
-    where: inDoorbell("#noSuchKnock", "is-knock-held"),
-    translation: "No knock in the inbox answers to this id. Nothing was changed."
-  }),
-  KNOCKER_SECRET_WEAK: Object.freeze({
-    check: "C-118.3",
-    where: atDoor("knockerSecretWeak", "is-knocker-secret-strong"),
-    translation: "A knocker secret this short could be guessed, letting someone else continue your pseudonym. Use a longer one, or ask the doorbell to make one. Nothing was received. The group can see how often its doorbell turns people away."
-  }),
-  KNOCK_DISCARDED: Object.freeze({
-    check: "C-118.4",
-    where: inDoorbell("pullKnock", "is-knock-pullable"),
-    translation: "This knock was set aside. Move it back to new before bringing it in. Nothing was written."
   }),
   NOT_THE_CAPTURING_ACTOR: Object.freeze({
     check: "C-118.5",
@@ -44309,11 +44291,6 @@ var CAPTURE_CHECKS = Object.freeze({
     check: "C-118.6",
     where: inIndex("recordCaptureAccount", "is-account-worded"),
     translation: "An account of how you captured a document says what happened in your own words, and this one is empty. Write it. Nothing was written."
-  }),
-  RESOLVE_NO_REASON: Object.freeze({
-    check: "C-118.7",
-    where: inDoorbell("inboxResolve", "is-resolve-reasoned"),
-    translation: "Changing a knock's status records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written."
   }),
   MACHINE_CANNOT_SET_ASIDE: Object.freeze({
     check: "C-118.8",
@@ -44333,38 +44310,6 @@ var CAPTURE_CHECKS = Object.freeze({
     translation: "A file brought into the record records where it came from, in your own words, and none was given, or it is longer than 2,000 characters. Write it. Nothing was written."
   })
 });
-var KNOCK_CHECKS = {
-  RATE_IP: {
-    check: "C-85.1",
-    where: inDoorbell("#knockRateRefusal", "is-knock-rate"),
-    translation: "Your material was not received. This group's inbox is not taking any more material from where you are sending it just now. It is a limit on how fast one sender may knock, not a judgement about you or about what you sent, and it lifts on its own shortly \u2014 the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later and it will arrive. The group can see how often its doorbell turns people away."
-  },
-  RATE_GLOBAL: {
-    check: "C-85.2",
-    where: inDoorbell("#knockRateRefusal", "is-knock-rate"),
-    translation: "Your material was not received. This group's inbox is not taking any more material from anyone just now. The whole instance is at its limit rather than you \u2014 the cap exists so that no one sender can fill the inbox \u2014 and it lifts on its own shortly; the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later. The group can see how often its doorbell turns people away."
-  },
-  /* D-513 — THE THREE REFUSALS THIS DOOR MAKES BEFORE THE STORE IS CALLED. Each
-     `where` names a module-scope helper (doorbell's `door.mjs` since T42, K2627) and
-     the region inside it, because that is where each refusal is enforced; the two oversize
-     rows are two conditions and deliberately not one row with a widened
-     sentence. */
-  KNOCK_ENVELOPE_TOO_LARGE: {
-    check: "C-85.3",
-    where: atDoor("knockEnvelopeTooLarge", "is-knock-envelope-too-large"),
-    translation: "This group's inbox did not read what you sent, because the request itself is larger than this door accepts. Nothing was stored, nothing was opened, and nothing about your material was judged \u2014 its size was read off the request and it stopped there. The size this inbox will read is published beside this message. Send the material again smaller, or as more than one knock, and it will be read. The group can see how often its doorbell turns people away."
-  },
-  KNOCK_PAYLOAD_TOO_LARGE: {
-    check: "C-85.4",
-    where: atDoor("knockPayloadTooLarge", "is-knock-payload-too-large"),
-    translation: "This group's inbox read your material and cannot keep it, because it is larger than this inbox stores. That is a fact about how this group has set its Civicsmith up rather than a judgement about what you sent \u2014 a group that has configured evidence storage can keep far more \u2014 and the size this one can keep is published beside this message. Nothing was stored. Send something smaller, or ask the group's members how to get the whole of it to them. The group can see how often its doorbell turns people away."
-  },
-  KNOCK_EMPTY: {
-    check: "C-85.5",
-    where: atDoor("knockEmpty", "is-knock-empty"),
-    translation: "This group's inbox has nothing to keep, because what you sent decoded to no bytes at all. The request itself was well formed and named its content, so this is most likely an empty file or an empty box rather than anything wrong with how you sent it. Nothing was stored. Check what you attached and knock again. The group can see how often its doorbell turns people away."
-  }
-};
 
 // src/capture/ops.mjs
 function relayUnanswered(out, op, { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) {
@@ -50844,37 +50789,6 @@ function registerFigures(c) {
     throw new Error(`content: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
 }
 
-// src/capture/doorbell.mjs
-var KNOCK = {
-  windowMs: 10 * 60 * 1e3,
-  perIp: 5,
-  // knocks per source per window (DEC-108 (3))
-  global: 10,
-  // knocks per instance per window (DEC-108 (3)); bounds hostile writes to the evidence store
-  maxBytes: 8 * 1024 * 1024,
-  // with an evidence store: enough for a captured PDF
-  maxInline: 64 * 1024
-  // without one: inline into the store, small only
-};
-KNOCK.statedPerIp = `at most ${KNOCK.perIp} knocks from one source in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
-KNOCK.statedGlobal = `at most ${KNOCK.global} knocks to this group's inbox in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
-var KNOCKER_SECRET_MIN = 20;
-function isWeakKnockerSecret(secret) {
-  if (secret === void 0 || secret === null) return false;
-  return typeof secret !== "string" || [...secret].length < KNOCKER_SECRET_MIN;
-}
-function knockerSecretWeak() {
-  const row12 = CAPTURE_CHECKS.KNOCKER_SECRET_WEAK;
-  return {
-    ok: false,
-    reason: "KNOCKER_SECRET_WEAK",
-    code: "KNOCKER_SECRET_WEAK",
-    check: row12.check,
-    translation: row12.translation,
-    minChars: KNOCKER_SECRET_MIN
-  };
-}
-
 // src/capture/grammar.mjs
 var f8 = (check2, severity, message2, repairs) => {
   const out = { check: check2, severity, message: message2 };
@@ -54920,47 +54834,6 @@ function credentialsOps(c, url, body, env) {
 
 // src/capture/schema.mjs
 var CAPTURE_SCHEMA = `
--- The knock: quarantined public intake. Payload bytes live in R2 under
--- <store>/inbox/<sha256> when R2 is configured, else inline here (small
--- only). Nothing reads this table except member review; nothing here
--- touches the record until a member pulls it through the gate.
-CREATE TABLE IF NOT EXISTS inbox (
-  knock_id    TEXT PRIMARY KEY,
-  sha256      TEXT NOT NULL,
-  bytes       INTEGER NOT NULL,
-  content     TEXT,
-  in_r2       INTEGER NOT NULL DEFAULT 0,
-  note        TEXT,
-  contact     TEXT,
-  received    TEXT NOT NULL,
-  status      TEXT NOT NULL DEFAULT 'new',
-  resolved    TEXT,
-  resolved_by TEXT,
-  -- R32 (DEC-88 (2)): the member's own reason for the last status change, beside who (resolved_by) and when (resolved).
-  resolve_reason TEXT,
-  -- R66: the knocker's continuity, never the secret: a keyed digest of it and the pseudonym derived from that
-  -- digest, each NULL for a knock sent without a secret.
-  knocker_digest TEXT,
-  pseudonym   TEXT,
-  -- R65: the capture a pull filed, who pulled it and when. Set once, by the pull; NULL until then.
-  capture_sha TEXT,
-  pulled_by   TEXT,
-  pulled_at   TEXT,
-  pulled_document TEXT,
-  -- Inline knocks only (no evidence store): the bytes themselves, base64, so a pull holds exactly what was
-  -- received; content keeps the text a member reads. NULL with an evidence store, and on a row written before it.
-  content_b64 TEXT
-);
-CREATE INDEX IF NOT EXISTS inbox_status ON inbox(status);
-
--- The doorbell's rate account (R31): one count per window bucket, the source's (a keyed fingerprint, R56) and the
--- instance's. The estimate weights the previous window's bucket by how much of it is still inside the trailing
--- window, so each accepted knock prunes every bucket but the current and the previous one.
-CREATE TABLE IF NOT EXISTS knock_rate (
-  bucket TEXT PRIMARY KEY,
-  count  INTEGER NOT NULL
-);
-
 -- What this RUNTIME was observed to allow, as opposed to what we choose to
 -- spend. Cloudflare's per-invocation subrequest limit differs by account, can
 -- change on either plan without notice, and is not documented anywhere this
@@ -55332,16 +55205,7 @@ CREATE TABLE IF NOT EXISTS capture_validators (
   at            TEXT NOT NULL,
   PRIMARY KEY (address_norm, capture_sha)
 );
--- R66: the key the knocker's secret is digested under when the operator binds none (KNOCKER_SECRET_KEY): R56's
--- pattern, a separate key. One row, generated at first use, never answered by any op.
-CREATE TABLE IF NOT EXISTS knocker_key (
-  id      INTEGER PRIMARY KEY CHECK (id = 1),
-  key_hex TEXT NOT NULL,
-  created TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS inbox_pseudonym ON inbox(pseudonym, received);
-CREATE INDEX IF NOT EXISTS inbox_capture ON inbox(capture_sha, received);
--- acquisition R16, R69: each member this module stamped as capturing a capture (a member session's acquire, a knock's pull).
+-- acquisition R16, R69: each member this module stamped as capturing a capture (a member session's acquire, an upload, and doorbell R13's pull of a knock).
 -- Several members who captured the same bytes are each its actor. Written once per pair, never removed but by purge.
 CREATE TABLE IF NOT EXISTS capture_actors (
   capture_sha TEXT NOT NULL,
@@ -55373,19 +55237,6 @@ CREATE TABLE IF NOT EXISTS late_attestations (
   outcome     TEXT NOT NULL,
   PRIMARY KEY (capture_sha, seq)
 );
--- R80 (DEC-108 (6), BOB's privacy ruling): the doorbell's count-only tally of the knocks it turned away. One row per
--- UTC day, the last 30 kept: how many were refused, and how many of those found the whole-doorbell limit reached.
--- No address, fingerprint, time of a knock, digest, pseudonym, note, contact or content: two counters and a date.
-CREATE TABLE IF NOT EXISTS doorbell_tally (
-  day           TEXT PRIMARY KEY,
-  refused       INTEGER NOT NULL DEFAULT 0,
-  limit_reached INTEGER NOT NULL DEFAULT 0
-);
--- R80: the day the whole-doorbell limit was last reached, a date only. One row.
-CREATE TABLE IF NOT EXISTS doorbell_limit_last (
-  id  INTEGER PRIMARY KEY CHECK (id = 1),
-  day TEXT NOT NULL
-);
 -- R79, R81 (DEC-97 (2)): setting held material aside and bringing it back, each act appended with its reason, who and
 -- when, never rewritten or removed; a document's latest act decides whether it is set aside.
 CREATE TABLE IF NOT EXISTS held_acts (
@@ -55406,14 +55257,7 @@ CREATE TABLE IF NOT EXISTS held_act_questions (
   question  TEXT NOT NULL,
   PRIMARY KEY (bundle_id, seq, question)
 );
-CREATE INDEX IF NOT EXISTS held_act_questions_q ON held_act_questions (question, bundle_id, seq);
--- R56: the key the doorbell's source fingerprint is computed under when the operator binds none
--- (KNOCK_FINGERPRINT_KEY). One row, generated at first use, never answered by any op.
-CREATE TABLE IF NOT EXISTS knock_key (
-  id      INTEGER PRIMARY KEY CHECK (id = 1),
-  key_hex TEXT NOT NULL,
-  created TEXT NOT NULL
-)`;
+CREATE INDEX IF NOT EXISTS held_act_questions_q ON held_act_questions (question, bundle_id, seq)`;
 var CAPTURE_ADDITIVE_COLUMNS = [
   ["site_assets", "last_fetched_by", "TEXT"],
   // CAP-14: which capture's fetch served a reused part
@@ -55421,24 +55265,8 @@ var CAPTURE_ADDITIVE_COLUMNS = [
   // CAP-14
   ["render_allowance", "reserved_ms", "INTEGER NOT NULL DEFAULT 0"],
   // D-492: 0 is the measured truth
-  ["links", "chrome_basis", "TEXT"],
+  ["links", "chrome_basis", "TEXT"]
   // D-340: the region a contained link sat in
-  ["inbox", "knocker_digest", "TEXT"],
-  // R66: the knocker's keyed digest
-  ["inbox", "pseudonym", "TEXT"],
-  // R66
-  ["inbox", "capture_sha", "TEXT"],
-  // R65: the capture a pull filed
-  ["inbox", "pulled_by", "TEXT"],
-  // R65
-  ["inbox", "pulled_at", "TEXT"],
-  // R65
-  ["inbox", "pulled_document", "TEXT"],
-  // R65: the document a pull answered, answered again to a repeat
-  ["inbox", "content_b64", "TEXT"],
-  // R65: an inline knock's bytes as received
-  ["inbox", "resolve_reason", "TEXT"]
-  // R32 (DEC-88): the member's reason for a status change
 ];
 var CAPTURE_RESHAPE = [["links", "citation_norm"]];
 var CAPTURE_PURGED_TABLES = [
@@ -55460,17 +55288,7 @@ var CAPTURE_PURGED_TABLES = [
   "held_acts",
   "held_act_questions"
 ];
-var CAPTURE_EXEMPT_TABLES = [
-  "inbox",
-  "knock_rate",
-  "capture_limits",
-  "render_allowance",
-  "render_slots",
-  "knock_key",
-  "knocker_key",
-  "doorbell_tally",
-  "doorbell_limit_last"
-];
+var CAPTURE_EXEMPT_TABLES = ["capture_limits", "render_allowance", "render_slots"];
 
 // src/capture/index.mjs
 var stampSecond4 = (when = Date.now()) => new Date(when).toISOString().replace(/\.\d+Z$/, "Z");
@@ -55478,26 +55296,6 @@ var ISO_INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 var HEX645 = /^[0-9a-f]{64}$/;
 var te5 = new TextEncoder();
 var hexOf2 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-var b64Of = (bytes2) => {
-  let out = "";
-  for (let i = 0; i < bytes2.length; i += 32768) out += String.fromCharCode(...bytes2.subarray(i, i + 32768));
-  return btoa(out);
-};
-var B32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-var base32Of = (bytes2) => {
-  let bits = 0, value = 0, out = "";
-  for (const b of bytes2) {
-    value = value << 8 | b;
-    bits += 8;
-    while (bits >= 5) {
-      out += B32[value >>> bits - 5 & 31];
-      bits -= 5;
-    }
-  }
-  if (bits > 0) out += B32[value << 5 - bits & 31];
-  return out;
-};
-var pseudonymOf = (digestHex) => `knocker-${base32Of(Uint8Array.from(String(digestHex).slice(0, 20).match(/../g).map((h) => parseInt(h, 16)))).match(/.{4}/g).join("-")}`;
 var memberIdOf = (who2) => typeof who2 === "string" ? who2.replace(/^member:/, "") : "";
 var lateSentence = (at43) => `proves the bytes existed by ${at43}, not at capture`;
 var rawReplayOf = (archived) => {
@@ -55506,8 +55304,8 @@ var rawReplayOf = (archived) => {
 };
 var REPLAY_MAX = 256 * 1024 * 1024;
 var WITHIN_FAULT = Symbol("within's fault");
-var PULL_WITHIN_FAILED_DETAIL = "the act run with the pull did not complete, so the pull was rolled back and nothing was written";
 var DECLARED = Object.freeze({ ok: true, module: "capture", declared: true });
+var NOT_YET_DECLARED = Object.freeze({ ok: true, module: "capture", declared: false });
 var NO_DECLARATION_SEAM = Object.freeze({ ok: false, module: "capture", declared: false, reason: "NO_DECLARATION_SEAM" });
 var RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA]);
 var UPLOAD_PART = 8 * 1024 * 1024;
@@ -55588,12 +55386,10 @@ var taskCursorPlace = (after) => {
   return k && k[0] === TASK_CURSOR_TAG ? { enqueued: k[1], captureSha: k[2], kind: k[3] } : null;
 };
 var CAPTURE_EVENTS = Object.freeze(["source-outcome", "task", "compute", "observation"]);
-var CAPTURE_READERS = Object.freeze(["litigation-hold", "batch-examination", "captured-for"]);
+var CAPTURE_READERS = Object.freeze(["batch-examination", "captured-for"]);
 var WITHHELD_QUESTION = "Captured for a question you may not see";
 var REASON_MAX = 2e3;
 var reasonGiven = (r) => typeof r === "string" && r.trim() !== "" && [...r].length <= REASON_MAX;
-var TALLY_DAYS = 30;
-var INBOX_SORTS = Object.freeze(["received", "status", "secret", "project"]);
 var SORT_DIRS = Object.freeze(["asc", "desc"]);
 var HELD_SORTS = Object.freeze(["age", "source", "project"]);
 var HELD_FILES_IN_ROW = 50;
@@ -55633,8 +55429,13 @@ function captureOf(ctx, opts = {}) {
   if (opts.env != null && given5.has("env") && !sameEnv2(c.env, opts.env)) refuse26("env");
   if (opts.governor != null && given5.has("governor") && c.governor !== opts.governor) refuse26("governor");
   if (opts.ownHosts != null && given5.has("ownHosts") && !Capture.sameHosts(c.ownHosts, opts.ownHosts)) refuse26("ownHosts");
-  for (const [name3, held2] of [["record", c.core], ["provenance", c.provenance], ["attestation", c.attestation], ["acquisition", c.acquisition]])
-    if (opts[name3] != null && opts[name3] !== held2) refuse26(name3);
+  for (const [name3, held2] of [
+    ["record", () => c.core],
+    ["provenance", () => c.provenance],
+    ["attestation", () => c.attestation],
+    ["acquisition", () => c.acquisition]
+  ])
+    if (opts[name3] != null && opts[name3] !== held2()) refuse26(name3);
   if (opts.env != null && !given5.has("env")) {
     c.env = opts.env;
     given5.add("env");
@@ -55786,16 +55587,28 @@ var Capture = class _Capture {
     }
     this.declareTables();
   }
-  /** R87 (K2629): declares capture's tables to record-core (R74's purge declarations: the purged and the exempt) once
-   *  per storage, and answers the same, `DECLARED`, on this and every later call, never throwing for a table it already
-   *  holds: a second call, a second instance over the same record (record-core holds every one of these tables as
-   *  `capture`'s) and `doorbell` R25's call before its own declaration all answer it. A record with no declaration seam
-   *  answers `NO_DECLARATION_SEAM`, every time. Only a refusal for a table another module holds, or a malformed
-   *  declaration, is a wiring fault and throws. */
+  /** R87 (K2629; T43, N864, K2680): declares capture's tables to record-core (R74's purge declarations: the purged and
+   *  the exempt) once per storage, and only when every one of them exists in the storage, as after `migrate`. Before
+   *  that it declares none and answers `NOT_YET_DECLARED`, so a caller that reaches it before capture's migrate (a host
+   *  building another module first) declares nothing of capture's uncreated tables. Once declared it answers the same,
+   *  `DECLARED`, on this and every later call, never throwing for a table it already holds: a second call, and a second
+   *  instance over the same record (record-core holds every one of these tables as `capture`'s), answer it. A record
+   *  with no declaration seam answers `NO_DECLARATION_SEAM`, every time. Only a refusal for a table another module
+   *  holds, or a malformed declaration, is a wiring fault and throws. */
   declareTables() {
     if (this.#declared) return DECLARED;
     if (!this.core || typeof this.core.declarePurge !== "function") return NO_DECLARATION_SEAM;
     const mine = [...CAPTURE_PURGED_TABLES, ...CAPTURE_EXEMPT_TABLES];
+    let present3;
+    try {
+      present3 = new Set(this.#rows(
+        `SELECT name FROM sqlite_master WHERE type = 'table' AND name IN (SELECT value FROM json_each(?))`,
+        JSON.stringify(mine)
+      ).map((r) => r.name));
+    } catch {
+      present3 = /* @__PURE__ */ new Set();
+    }
+    if (!mine.every((t2) => present3.has(t2))) return NOT_YET_DECLARED;
     let held2 = [];
     try {
       held2 = typeof this.core.declaredTables === "function" ? this.core.declaredTables() : [];
@@ -55845,7 +55658,7 @@ var Capture = class _Capture {
   emit(event2, payload) {
     return this.#emit(event2, payload);
   }
-  /** R32, R78, R83: a later module registers, once at start, the reader of one of `CAPTURE_READERS`. Each slot takes one
+  /** R78, R83: a later module registers, once at start, the reader of one of `CAPTURE_READERS`. Each slot takes one
    *  registration whoever makes it; a second, or a malformed one, is membership's `listenerRefusal` (its R81). */
   registerReader(slot, module, fn) {
     if (!CAPTURE_READERS.includes(slot)) return { ok: false, reason: "UNKNOWN_READER", slot };
@@ -55853,24 +55666,6 @@ var Capture = class _Capture {
     if (refused5) return refused5;
     this.#readers.set(slot, { module, fn });
     return { ok: true, slot, module };
-  }
-  /** THE DOORBELL COPY (T43's delete), as doorbell R3 (DEC-108 (5)): whether a discarded knock's row or bytes may be cleared now. Only when the registered
-   *  litigation-hold reader answers, synchronously, that no hold is in place (`false`); with none registered, or one
-   *  that fails or answers anything else, nothing discarded is cleared. Writes nothing and never throws. */
-  mayClearDiscarded() {
-    const reader = this.#readers.get("litigation-hold");
-    if (!reader) return { may: false, basis: "no reader of litigation holds is registered, so a hold cannot be ruled out" };
-    let held2;
-    try {
-      held2 = reader.fn();
-    } catch {
-      held2 = void 0;
-    }
-    if (held2 === false) return { may: true, basis: `${reader.module} reports no litigation hold in place` };
-    if (held2 === true) return { may: false, basis: `${reader.module} reports a litigation hold in place` };
-    if (held2 && typeof held2.then === "function") Promise.resolve(held2).catch(() => {
-    });
-    return { may: false, basis: `${reader.module} did not answer whether a litigation hold is in place` };
   }
   /* ---- the acquisition act, `acquisition`'s (K617) ---- */
   /** R73: `acquisition`'s `acquire` (its R1–R23) with this module's store handed in; answers `{status, body}`. */
@@ -55928,349 +55723,39 @@ var Capture = class _Capture {
     return !!this.#one(`SELECT 1 AS x FROM (SELECT ? AS capture_sha) c WHERE (${gate.sql})`, sha2, ...gate.args);
   }
   /* ==================================================================== *
-   * The doorbell's store side: THE DOORBELL COPY, deleted in T43 (N849; K2607, K625). `doorbell`'s since T42 (its
-   * R1–R20, once this module's R31, R32, R47, R48, R53, R54, R56 …); kept unchanged, unused by new code, until
-   * `plane`, `store-door`, `actions`, `sources` and `answer-envelope` have re-pointed. Through `pulledKnocksOf`.
+   * THE HELD COPY (K2708, K625's pattern; T43, N849): the source fingerprint, once this module's R56, `doorbell`'s R12
+   * since T42. Kept only because `admission`'s door window reaches it through `captureOf(ctx)` until admission re-points
+   * to `doorbell` (T43-21); it answers no requirement of this module, and capture's next job deletes it (N870, T44). The key's table,
+   * `knock_key`, is `doorbell`'s (its R25): created here with doorbell's own DDL only when absent, never declared here,
+   * so either module's read finds the one key.
    * ==================================================================== */
-  /** R56: the key the source fingerprint is computed under: the operator's secret binding when set, else the
-   *  instance's own, generated once and held in `knock_key`. */
+  /* The key the source fingerprint is computed under: the operator's secret binding when set, else the instance's
+     own, generated once and held in `knock_key`. */
   #knockKey() {
     const bound = this.env && typeof this.env.KNOCK_FINGERPRINT_KEY === "string" && this.env.KNOCK_FINGERPRINT_KEY;
     if (bound) return te5.encode(bound);
-    let r = this.#one(`SELECT key_hex FROM knock_key WHERE id = 1`);
+    const held2 = () => this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type = 'table' AND name = 'knock_key'`) ? this.#one(`SELECT key_hex FROM knock_key WHERE id = 1`) : null;
+    let r = held2();
     if (!r) {
       const k = new Uint8Array(32);
       crypto.getRandomValues(k);
-      this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO knock_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf2(k), stampSecond4()));
-      r = this.#one(`SELECT key_hex FROM knock_key WHERE id = 1`);
+      this.#tx(() => {
+        this.#sql.exec(`CREATE TABLE IF NOT EXISTS knock_key (id INTEGER PRIMARY KEY CHECK (id = 1), key_hex TEXT NOT NULL, created TEXT NOT NULL)`);
+        this.#sql.exec(`INSERT OR IGNORE INTO knock_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf2(k), stampSecond4());
+      });
+      r = held2();
     }
     return Uint8Array.from(r.key_hex.match(/../g).map((h) => parseInt(h, 16)));
   }
-  /** R31, R56: a keyed digest (HMAC-SHA-256, first 16 bytes) of the connecting address, never the address and
-   *  never an unkeyed hash, which can be reversed by trying every address. */
+  /** The held copy of doorbell R12: a keyed digest (HMAC-SHA-256, first 16 bytes) of the connecting address, never the
+   *  address and never an unkeyed hash, which can be reversed by trying every address. */
   async sourceFingerprint(address) {
     const key2 = await crypto.subtle.importKey("raw", this.#knockKey(), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
     const mac = await crypto.subtle.sign("HMAC", key2, te5.encode(String(address || "unknown")));
     return hexOf2(mac).slice(0, 32);
   }
-  /** R66: the key the knocker's secret is digested under: the operator's secret binding `KNOCKER_SECRET_KEY` when set,
-   *  else the instance's own, generated once (256 random bits) and held in `knocker_key`, exempt from purge and
-   *  answered by no op: R56's pattern, a separate key. With `create: false` it answers null rather than make one. */
-  #knockerKey({ create = true } = {}) {
-    const bound = this.env && typeof this.env.KNOCKER_SECRET_KEY === "string" && this.env.KNOCKER_SECRET_KEY;
-    if (bound) return te5.encode(bound);
-    let r = this.#one(`SELECT key_hex FROM knocker_key WHERE id = 1`);
-    if (!r) {
-      if (!create) return null;
-      const k = new Uint8Array(32);
-      crypto.getRandomValues(k);
-      this.#tx(() => this.#sql.exec(`INSERT OR IGNORE INTO knocker_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf2(k), stampSecond4()));
-      r = this.#one(`SELECT key_hex FROM knocker_key WHERE id = 1`);
-    }
-    return Uint8Array.from(r.key_hex.match(/../g).map((h) => parseInt(h, 16)));
-  }
-  /* R66: the HMAC-SHA-256 of a secret under the knocker key, as 64 hex. */
-  static async #knockerDigest(key2, secret) {
-    const k = await crypto.subtle.importKey("raw", key2, { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-    return hexOf2(await crypto.subtle.sign("HMAC", k, te5.encode(secret)));
-  }
-  /** R66: `{knocker_digest, pseudonym}` for a secret presented at this instance (`sources`' consent by secret). It
-   *  writes nothing and never throws: with no knocker key yet (no knock has carried a secret here, and none is bound)
-   *  or a secret that is not a non-empty string, both are null, and `basis` says which; a secret this instance never
-   *  received answers its digest and pseudonym, which match no knock. */
-  async knockerDigestOf(secret) {
-    try {
-      if (typeof secret !== "string" || secret === "")
-        return { knocker_digest: null, pseudonym: null, basis: "no secret was presented" };
-      const key2 = this.#knockerKey({ create: false });
-      if (!key2) return {
-        knocker_digest: null,
-        pseudonym: null,
-        basis: "no knock carrying a secret has been received by your group's Civicsmith, so no secret is recognised"
-      };
-      const knocker_digest = await _Capture.#knockerDigest(key2, secret);
-      return { knocker_digest, pseudonym: pseudonymOf(knocker_digest) };
-    } catch {
-      return { knocker_digest: null, pseudonym: null, basis: "the digest could not be computed" };
-    }
-  }
-  /* D-508 / DEC-49: THE ONE HELPER THE TWO RATE REFUSALS ARE MINTED THROUGH. The row is read from this module's
-     table (`KNOCK_CHECKS`, C-85) at the moment of the refusal, so this file holds no member-facing word, and THE CODE
-     STAYS A STRING LITERAL AT ITS SITE. It THROWS on a missing row (R52): a throw is a 500 in a test, which is loud,
-     where a missing sentence is silent and reaches a stranger with no account and no other way to find out. */
-  static #rateRefusal(code, extra) {
-    const row12 = KNOCK_CHECKS[code];
-    if (!row12 || typeof row12.translation !== "string" || !row12.translation)
-      throw new Error(`knock: ${code} has no KNOCK_CHECKS row with a canned translation (DEC-49).`);
-    return { ok: false, reason: code, code, check: row12.check, translation: row12.translation, ...extra || {} };
-  }
-  /* D-496: a TWO-BUCKET WEIGHTED SLIDING WINDOW, because a fixed bucket published a bound it did not hold: a caller
-     who sends the limit just before the edge and again just after it got TWICE the published number inside one
-     window. The estimate weights the PREVIOUS bucket by how much of it is still inside the trailing window —
-     `est = prev x (1 - elapsed/W) + cur` — refused at `est >= limit`. It is APPROXIMATE IN BOTH DIRECTIONS (it
-     assumes the previous bucket's knocks were spread evenly), which is why the published sentence says
-     "estimated by a sliding window". */
-  #knockRateRefusal({ ipBucket, ipPrevBucket, globalBucket, globalPrevBucket, elapsedFrac, perIpLimit, globalLimit }) {
-    const cnt = (b) => b ? this.#one(`SELECT count FROM knock_rate WHERE bucket=?`, b)?.count || 0 : 0;
-    const decay = 1 - Math.min(1, Math.max(0, Number(elapsedFrac) || 0));
-    const est = (cur, prev) => cnt(prev) * decay + cnt(cur);
-    const full = est(globalBucket, globalPrevBucket) >= globalLimit;
-    const tag2 = (r) => Object.defineProperty(r, _Capture.#LIMIT_REACHED, { value: full, enumerable: false });
-    if (est(ipBucket, ipPrevBucket) >= perIpLimit) return tag2(_Capture.#rateRefusal("RATE_IP"));
-    if (full) return tag2(_Capture.#rateRefusal("RATE_GLOBAL"));
-    return null;
-  }
-  /* R80: the mark a rate refusal carries, unseen in its answer, saying whether the whole doorbell was full. */
-  static #LIMIT_REACHED = Symbol("the whole-doorbell limit was reached");
-  /** R80: count one knock the doorbell turned away in the day's tally, and whether it found the whole-doorbell limit
-   *  reached (R48), dropping any day older than the last `TALLY_DAYS`. Two counters and a date: no address, fingerprint,
-   *  time, digest, pseudonym, note, contact or content. A count that cannot be written is ignored: it never changes a
-   *  refusal's answer, and it decides nothing. */
-  #tallyRefusal(nowMs, limitReached = false) {
-    try {
-      const at43 = Number.isFinite(Number(nowMs)) ? Number(nowMs) : Date.now();
-      const day2 = new Date(at43).toISOString().slice(0, 10);
-      const oldest = new Date(Date.parse(`${day2}T00:00:00Z`) - (TALLY_DAYS - 1) * 864e5).toISOString().slice(0, 10);
-      const reached = limitReached === true ? 1 : 0;
-      this.#tx(() => {
-        this.#sql.exec(
-          `INSERT INTO doorbell_tally (day, refused, limit_reached) VALUES (?, 1, ?)
-                        ON CONFLICT(day) DO UPDATE SET refused = refused + 1, limit_reached = limit_reached + excluded.limit_reached`,
-          day2,
-          reached
-        );
-        if (reached) this.#sql.exec(`INSERT INTO doorbell_limit_last (id, day) VALUES (1, ?)
-                                     ON CONFLICT(id) DO UPDATE SET day = MAX(day, excluded.day)`, day2);
-        this.#sql.exec(`DELETE FROM doorbell_tally WHERE day < ?`, oldest);
-      });
-    } catch {
-    }
-  }
-  /** R85 (N703; K1875, DEC-165, DEC-166): one refused hand-over in the security tally, through `credentials`'
-   *  `securityCount({kind: "handover", country})` (its R44), beside R80's tally. `country` is the control plane's stamp
-   *  (Cloudflare's two-letter label for the request), never the body's; nothing else of the knock reaches the count. A
-   *  count that cannot be written is dropped: it never changes the refusal's answer, R53's order or R80's tally, and
-   *  this module keeps no table for it. */
-  #securityCount(country) {
-    try {
-      const cr = this.#credentials();
-      if (cr && typeof cr.securityCount === "function")
-        cr.securityCount({ kind: "handover", country: typeof country === "string" && country ? country : null });
-    } catch {
-    }
-  }
-  /* R80, R85: a refusal answered, counted first in both tallies. */
-  #refusedKnock(answer, nowMs, country = null) {
-    this.#tallyRefusal(nowMs, answer && answer[_Capture.#LIMIT_REACHED] === true);
-    this.#securityCount(country);
-    return answer;
-  }
-  /** R80, R85: a knock the Worker refused before the store was asked to keep anything (R49–R51, the required-argument
-   *  refusals, R66's weak secret), counted in the doorbell's tally and the security tally (`country` the control
-   *  plane's stamp, or null). Answers `{counted: true}` and never throws. */
-  doorbellRefused({ now = null, country = null } = {}) {
-    this.#refusedKnock(null, now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now(), country);
-    return { counted: true };
-  }
-  /** R80: the tally, to a member session only: the kept days with at least one refusal, newest first, and the day the
-   *  whole-doorbell limit was last reached, or null. It is status, read where the inbox is read; it writes nothing and
-   *  never notifies. */
-  doorbellTally({ viewer = null, now = null } = {}) {
-    if (!viewerPredicate(viewer).member || !/^member:/.test(String(viewer)))
-      return {
-        ok: false,
-        reason: "MEMBER_SESSION_REQUIRED",
-        status: 403,
-        detail: "the doorbell's tally is read by a signed-in member; nothing was read"
-      };
-    const at43 = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
-    const today2 = new Date(at43).toISOString().slice(0, 10);
-    const oldest = new Date(Date.parse(`${today2}T00:00:00Z`) - (TALLY_DAYS - 1) * 864e5).toISOString().slice(0, 10);
-    const days = this.#rows(`SELECT day, refused, limit_reached FROM doorbell_tally WHERE day >= ? AND refused > 0 ORDER BY day DESC`, oldest).map((r) => ({ day: r.day, refused: Number(r.refused), limit_reached: Number(r.limit_reached) }));
-    const last = this.#one(`SELECT day FROM doorbell_limit_last WHERE id = 1`);
-    return { ok: true, days, last_limit_reached: last ? last.day : null };
-  }
-  /* R31: the two windows one knock is asked against: the source's (a keyed fingerprint, R56) and the instance's, the
-     current bucket and the previous one, with how far into the current window `nowMs` is. */
-  async #rateWindows({ sourceAddress, nowMs, windowMs = KNOCK.windowMs, perIpLimit = KNOCK.perIp, globalLimit = KNOCK.global }) {
-    const win = Math.floor(nowMs / windowMs);
-    const fp = await this.sourceFingerprint(sourceAddress);
-    return {
-      ipBucket: `ip:${fp}:${win}`,
-      ipPrevBucket: `ip:${fp}:${win - 1}`,
-      globalBucket: `all:${win}`,
-      globalPrevBucket: `all:${win - 1}`,
-      elapsedFrac: (nowMs - win * windowMs) / windowMs,
-      perIpLimit,
-      globalLimit,
-      win
-    };
-  }
-  /* R31: ask the rate again and, when it admits, count one knock in both windows; in the caller's transaction, so a
-     race cannot slip past the caps. Answers the rate refusal, or null once counted. */
-  #countKnock(rate) {
-    const late = this.#knockRateRefusal(rate);
-    if (late) return late;
-    for (const b of [rate.ipBucket, rate.globalBucket])
-      this.#sql.exec(`INSERT INTO knock_rate (bucket,count) VALUES (?,1) ON CONFLICT(bucket) DO UPDATE SET count=count+1`, b);
-    this.#sql.exec(
-      `DELETE FROM knock_rate WHERE bucket NOT LIKE '%:' || ? AND bucket NOT LIKE '%:' || ?`,
-      String(rate.win),
-      String(rate.win - 1)
-    );
-    return null;
-  }
-  /** R71 (K539; for `sources` R11): an attempt that counts as a knock from its source. R31's two windows are asked
-   *  exactly as `knock` asks them: a refusal is R31's (`RATE_IP` or `RATE_GLOBAL`, with `stated`, the published bound)
-   *  and counts nothing; an admitted attempt is counted in both windows, in one transaction that asks again, and
-   *  answers null. Nothing else is written. */
-  async knockAttempt({ sourceAddress = null, now = null, country = null } = {}) {
-    const nowMs = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
-    const rate = await this.#rateWindows({ sourceAddress, nowMs });
-    const refusal36 = this.#knockRateRefusal(rate) || this.#tx(() => this.#countKnock(rate));
-    if (!refusal36) return null;
-    this.#refusedKnock(refusal36, nowMs, country);
-    return { ...refusal36, stated: refusal36.reason === "RATE_IP" ? KNOCK.statedPerIp : KNOCK.statedGlobal };
-  }
-  /** R31, R32, R53, R54: an accepted knock. `sourceAddress` is the connecting address, reduced here to a keyed
-   *  fingerprint. The rate is asked first and changes nothing when it refuses; the bytes (with an evidence store)
-   *  are stored BEFORE the row, so a row never stands without its bytes (R54: a failed store answers a failure
-   *  and leaves no row); the row and the rate count land in ONE transaction that asks the rate again, so a race
-   *  cannot slip past the caps. A knock refused on that second ask stores no bytes of its own: the object is
-   *  removed unless another knock's row already names the same digest. */
-  async knock({
-    contentB64 = null,
-    content = null,
-    note,
-    contact,
-    sourceAddress = null,
-    windowMs = KNOCK.windowMs,
-    perIpLimit = KNOCK.perIp,
-    globalLimit = KNOCK.global,
-    now = null,
-    knockerSecret = null,
-    generateSecret = false,
-    country = null
-  } = {}) {
-    const nowMs = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
-    let bytes2;
-    try {
-      bytes2 = contentB64 != null ? Uint8Array.from(atob(contentB64), (c) => c.charCodeAt(0)) : te5.encode(String(content ?? ""));
-    } catch {
-      return this.#refusedKnock({ ok: false, reason: "BAD_CONTENT", detail: "the content did not decode" }, nowMs, country);
-    }
-    if (isWeakKnockerSecret(knockerSecret)) return this.#refusedKnock(knockerSecretWeak(), nowMs, country);
-    const sha2 = hexOf2(await crypto.subtle.digest("SHA-256", bytes2));
-    const rate = await this.#rateWindows({ sourceAddress, nowMs, windowMs, perIpLimit, globalLimit });
-    const early = this.#knockRateRefusal(rate);
-    if (early) return this.#refusedKnock(early, nowMs, country);
-    const bucket = this.env && typeof this.env.CAPTURES?.put === "function" ? this.env.CAPTURES : null;
-    const key2 = `bio/inbox/${sha2}`;
-    let stored2 = false;
-    if (bucket) {
-      try {
-        const held2 = typeof bucket.head === "function" ? await bucket.head(key2) : null;
-        if (!held2) {
-          await bucket.put(key2, bytes2, { sha256: await crypto.subtle.digest("SHA-256", bytes2) });
-          stored2 = true;
-        }
-      } catch (e2) {
-        return {
-          ok: false,
-          reason: "KNOCK_NOT_STORED",
-          status: 502,
-          detail: "the material could not be stored, so nothing was received and no inbox row was written"
-        };
-      }
-    }
-    let secret = typeof knockerSecret === "string" ? knockerSecret : null, generated = null;
-    if (!secret && generateSecret === true) {
-      const r = new Uint8Array(16);
-      crypto.getRandomValues(r);
-      secret = generated = base32Of(r);
-    }
-    const knockerDigest = secret ? await _Capture.#knockerDigest(this.#knockerKey(), secret) : null;
-    const pseudonym = knockerDigest ? pseudonymOf(knockerDigest) : null;
-    const knockId = `KNOCK-${new Date(nowMs).toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
-    const received = new Date(nowMs).toISOString();
-    const answer = this.#tx(() => {
-      const late = this.#countKnock(rate);
-      if (late) return late;
-      this.#sql.exec(
-        `INSERT INTO inbox (knock_id,sha256,bytes,content,in_r2,note,contact,received,status,knocker_digest,pseudonym,content_b64)
-         VALUES (?,?,?,?,?,?,?,?,'new',?,?,?)`,
-        knockId,
-        sha2,
-        bytes2.length,
-        bucket ? null : new TextDecoder().decode(bytes2),
-        bucket ? 1 : 0,
-        String(note ?? "").slice(0, 2e3),
-        String(contact ?? "").slice(0, 300),
-        received,
-        knockerDigest,
-        pseudonym,
-        bucket ? null : b64Of(bytes2)
-      );
-      return { ok: true, knockId, sha256: sha2, bytes: bytes2.length, pseudonym, ...generated ? { secret: generated } : {} };
-    });
-    if (!answer.ok && stored2 && !this.#one(`SELECT 1 AS x FROM inbox WHERE sha256 = ?`, sha2)) {
-      try {
-        await bucket.delete?.(key2);
-      } catch {
-      }
-    }
-    return answer.ok ? answer : this.#refusedKnock(answer, nowMs, country);
-  }
-  /** R32: only a signed-in member reaches these (the op's fence). N90: at most `limit` knocks, paged by `after`: a
-   *  doorbell anyone may ring must not answer a member with everything it was ever handed. Each row names its knocker's
-   *  pseudonym and digest (R66, null without a secret), once pulled its capture (R65), the reason, who and when of its
-   *  last status change, and `project`: the project of the document a pulled knock was brought into (its capture's home,
-   *  provenance R4 over the register's read contract, R48, and that bundle's `project`, record-core R37), null until
-   *  then. DEC-108 (2): sorted by `sort` (`received`, the default, newest first; `status`; `secret`, whether a knocker
-   *  secret was presented; `project`, a knock with none last in either direction) in `dir`, ties by received time,
-   *  newest first. An unknown `sort` or `dir` is the required-argument refusal naming it, with nothing read. */
-  inboxList(status, { limit = null, after = null, sort = null, dir = null } = {}) {
-    const by = sort == null || sort === "" ? "received" : sort;
-    if (!INBOX_SORTS.includes(by)) return _Capture.#badArgument("inbox", "sort", INBOX_SORTS.join(" | "), by);
-    const way = dir == null || dir === "" ? by === "received" ? "desc" : "asc" : dir;
-    if (!SORT_DIRS.includes(way)) return _Capture.#badArgument("inbox", "dir", SORT_DIRS.join(" | "), way);
-    const cap = limitOf(limit);
-    const from = after ? keyOf(after, 4) : null;
-    if (after && !from) return badCursor();
-    const k1 = {
-      received: "i.received",
-      status: "i.status",
-      secret: "CASE WHEN i.knocker_digest IS NULL THEN '0' ELSE '1' END",
-      project: "COALESCE(b.project, '')"
-    }[by];
-    const k0 = by === "project" ? "CASE WHEN b.project IS NULL OR b.project = '' THEN '1' ELSE '0' END" : "'0'";
-    const op = way === "asc" ? ">" : "<";
-    const found3 = this.#rows(
-      `SELECT * FROM (SELECT i.knock_id, i.sha256, i.bytes, i.in_r2, i.note, i.contact, i.received, i.status, i.resolved,
-                             i.resolved_by, i.resolve_reason, i.knocker_digest, i.pseudonym, i.capture_sha, i.pulled_by,
-                             i.pulled_at, b.project AS project, ${k0} AS k0, ${k1} AS k1
-                        FROM inbox i LEFT JOIN register r ON r.capture_sha = i.capture_sha
-                        LEFT JOIN bundles b ON b.bundle_id = r.bundle_id
-                       WHERE ${status ? "i.status = ?" : "1=1"}) q
-        WHERE ${from ? `(k0 > ? OR (k0 = ? AND (k1 ${op} ? OR (k1 = ? AND (received, knock_id) < (?, ?)))))` : "1=1"}
-        ORDER BY k0 ASC, k1 ${way.toUpperCase()}, received DESC, knock_id DESC LIMIT ?`,
-      ...status ? [status] : [],
-      ...from ? [from[0], from[0], from[1], from[1], from[2], from[3]] : [],
-      cap + 1
-    );
-    const rows3 = found3.slice(0, cap), truncated5 = found3.length > cap, last = rows3[rows3.length - 1];
-    const inbox = rows3.map(({ k0: _k0, k1: _k1, ...r }) => ({ ...r, project: r.project || null }));
-    return {
-      inbox,
-      sort: by,
-      dir: way,
-      limit: cap,
-      truncated: truncated5,
-      next: truncated5 ? cursorOf([String(last.k0), String(last.k1), last.received, last.knock_id]) : null
-    };
-  }
-  /* R32 (DEC-108 (2)): the required-argument refusal for an argument this module reads that names nothing it knows
-     (the control plane's C-61 shape, answered from the store as `monitoring`'s store-side refusals are). */
+  /* R77: the required-argument refusal for an argument this module reads that names nothing it knows (the control
+     plane's C-61 shape, answered from the store as `monitoring`'s store-side refusals are). */
   static #badArgument(op, argument, shape, given5) {
     return {
       ok: false,
@@ -56296,247 +55781,7 @@ var Capture = class _Capture {
       detail: `op=${op} needs '${argument}' in the shape ${shape}, and this request carried none the operation could use. Nothing was written.`
     };
   }
-  /* R32 (K383, K275): a knock id no knock answers to, read or resolved, is one condition with its own code and row
-     (C-118.2), not R63's `EVIDENCE_NOT_HELD`; minted here alone, so the read and the resolve answer it identically. */
-  #noSuchKnock(knockId) {
-    const row12 = CAPTURE_CHECKS.NO_SUCH_KNOCK;
-    return {
-      ok: false,
-      reason: "NO_SUCH_KNOCK",
-      code: "NO_SUCH_KNOCK",
-      check: row12.check,
-      translation: row12.translation,
-      knockId: typeof knockId === "string" ? knockId : null
-    };
-  }
-  inboxGet(knockId) {
-    if (typeof knockId !== "string" || !knockId) return this.#noSuchKnock(knockId);
-    const r = this.#one(`SELECT knock_id, sha256, bytes, content, in_r2, note, contact, received, status, resolved, resolved_by,
-                                resolve_reason, knocker_digest, pseudonym, capture_sha, pulled_by, pulled_at FROM inbox WHERE knock_id=?`, knockId);
-    return r ? { ok: true, item: r } : this.#noSuchKnock(knockId);
-  }
-  /** R32: a member moves a knock to `discarded` or back to `new`, recorded with who, when and the member's own reason
-   *  (DEC-88 (2)). `pulled` is R65's act for that knock and answers as `pullKnock` does (a promise), once its reason is
-   *  admitted, the reason recorded on the row with the pull: a knock becomes `pulled` only by being brought in. Refused
-   *  in order: `BAD_STATUS`, `NO_SUCH_KNOCK`, `RESOLVE_NO_REASON` (C-118.7), each before anything is written. N499
-   *  (K1105): the `pulled` arm takes `at` and `within` as `pullKnock` does, so the control plane's reasoned resolve is
-   *  one act with its promotion (control-plane R36) and the reason lands on the row inside it; the other arms ignore
-   *  them. */
-  inboxResolve({ knockId, status, by, reason: reason2, at: at43 = null, within: within3 = null } = {}) {
-    if (!["pulled", "discarded", "new"].includes(status)) return { ok: false, reason: "BAD_STATUS" };
-    if (typeof knockId !== "string" || !knockId || !this.#one(`SELECT knock_id FROM inbox WHERE knock_id=?`, knockId))
-      return this.#noSuchKnock(knockId);
-    if (!reasonGiven(reason2)) {
-      const row12 = CAPTURE_CHECKS.RESOLVE_NO_REASON;
-      return {
-        ok: false,
-        reason: "RESOLVE_NO_REASON",
-        code: "RESOLVE_NO_REASON",
-        check: row12.check,
-        translation: row12.translation,
-        knockId,
-        status: 400,
-        maxChars: REASON_MAX
-      };
-    }
-    if (status === "pulled") return this.#pull({ knockId, by, at: at43, within: within3 }, reason2);
-    this.#tx(() => this.#sql.exec(
-      `UPDATE inbox SET status=?, resolved=?, resolved_by=?, resolve_reason=? WHERE knock_id=?`,
-      status,
-      (/* @__PURE__ */ new Date()).toISOString(),
-      by ?? null,
-      reason2,
-      knockId
-    ));
-    return { ok: true, knockId, status, resolve_reason: reason2 };
-  }
-  /** R65 (N364; DEC-78 item 1): bring a knock into the record as a capture. The member-session fence is the op's; `by`
-   *  is its stamp. Refused in order: `NO_SUCH_KNOCK` (C-118.2), `KNOCK_DISCARDED` (C-118.4), R63's absence when the
-   *  knock's bytes are gone. A knock already pulled answers `existed: true` with the same document. Otherwise, in one
-   *  act: the bytes are held under their own digest in the evidence store, one acquisition receipt is written
-   *  (`via: "doorbell"`, address `knock:<knockId>`), the knock becomes `pulled` naming the capture, `by` and the
-   *  instant, and `by` is recorded as the capture's actor. The answer carries the provenance document (`acquisition` R16) the
-   *  control plane promotes at `collected`; it never carries `contact` (R70), and nothing here writes a bundle (`acquisition` R25).
-   *
-   *  N380 (K559): `within`, the seam that makes the pull and the control plane's promotion one act (control-plane R36).
-   *  `pullKnock` is async and the record's transaction is synchronous, so no caller can wrap both; `within(document)` is
-   *  called INSIDE the pull's own transaction, after the receipt, the knock's `pulled` update and the actor, and what it
-   *  writes lands or rolls back with them. Its `{ok: false, …}` rolls the whole pull back and is the answer; a throw, or
-   *  an answer that is not synchronous (a promise would outlive the transaction), rolls it back as `PULL_WITHIN_FAILED`.
-   *  Any other answer is carried as `within`. A knock already pulled does not call it: its pull is not being made. The
-   *  bytes put under their own digest before the transaction stay, content-addressed and already held as the knock's. */
-  pullKnock({ knockId, by, at: at43 = null, within: within3 = null } = {}) {
-    return this.#pull({ knockId, by, at: at43, within: within3 }, null);
-  }
-  /* R65, and R32's `pulled` arm: the pull, with the resolve's admitted reason recorded on the row beside it (null for a
-     pull asked directly, which takes no reason). */
-  async #pull({ knockId, by, at: at43 = null, within: within3 = null } = {}, reason2) {
-    if (typeof by !== "string" || !by.trim())
-      return {
-        ok: false,
-        reason: "NO_PULLER",
-        status: 400,
-        detail: "a knock is brought in by a member, whose stamp names them; none was given, so nothing was written"
-      };
-    if (typeof knockId !== "string" || !knockId) return this.#noSuchKnock(knockId);
-    const row12 = this.#one(`SELECT * FROM inbox WHERE knock_id = ?`, knockId);
-    if (!row12) return this.#noSuchKnock(knockId);
-    if (row12.status === "discarded") {
-      const k = CAPTURE_CHECKS.KNOCK_DISCARDED;
-      return {
-        ok: false,
-        reason: "KNOCK_DISCARDED",
-        code: "KNOCK_DISCARDED",
-        check: k.check,
-        translation: k.translation,
-        knockId,
-        status: 409
-      };
-    }
-    if (row12.capture_sha) {
-      let document2 = null;
-      try {
-        document2 = row12.pulled_document ? JSON.parse(row12.pulled_document) : null;
-      } catch {
-        document2 = null;
-      }
-      return {
-        ok: true,
-        existed: true,
-        knockId,
-        capture: { sha256: row12.capture_sha, bytes: row12.bytes },
-        pulled_by: row12.pulled_by,
-        pulled_at: row12.pulled_at,
-        ...document2 ? { document: document2 } : {}
-      };
-    }
-    const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
-    if (!ev) {
-      const row13 = INSTALLATION_CHECKS.EVIDENCE_STORAGE_NOT_CONFIGURED;
-      return {
-        ok: false,
-        reason: "EVIDENCE_STORAGE_NOT_CONFIGURED",
-        code: "EVIDENCE_STORAGE_NOT_CONFIGURED",
-        check: row13.check,
-        translation: row13.translation,
-        status: 503,
-        knockId,
-        detail: "this group's Civicsmith has no evidence storage configured, so the knock's bytes cannot be held under their own digest; nothing was written"
-      };
-    }
-    let bytes2 = null;
-    try {
-      if (row12.in_r2) {
-        const bucket = this.env && typeof this.env.CAPTURES?.get === "function" ? this.env.CAPTURES : null;
-        const obj = bucket ? await bucket.get(`bio/inbox/${row12.sha256}`) : null;
-        if (obj) bytes2 = new Uint8Array(await obj.arrayBuffer());
-      } else if (typeof row12.content_b64 === "string") {
-        bytes2 = Uint8Array.from(atob(row12.content_b64), (c) => c.charCodeAt(0));
-      } else if (typeof row12.content === "string") {
-        bytes2 = te5.encode(row12.content);
-      }
-    } catch {
-      bytes2 = null;
-    }
-    if (bytes2 && hexOf2(await crypto.subtle.digest("SHA-256", bytes2)) !== row12.sha256) bytes2 = null;
-    if (!bytes2) {
-      const a = evidenceAbsent(row12.sha256, "bio", {
-        knockId,
-        status: 404,
-        detail: "the knock's bytes are no longer held as received (gone, or no longer hashing to the knock's digest), so nothing was written"
-      });
-      return a.body;
-    }
-    const sha2 = row12.sha256;
-    try {
-      if (!await ev.head(sha2)) await ev.put(sha2, bytes2);
-    } catch {
-      return {
-        ok: false,
-        reason: "PULL_NOT_STORED",
-        status: 502,
-        knockId,
-        detail: "the knock's bytes could not be held under their own digest, so nothing was written"
-      };
-    }
-    const when = typeof at43 === "string" && ISO_INSTANT.test(at43) ? at43 : stampSecond4();
-    const address = `knock:${knockId}`;
-    const profile = await profileOf({
-      ev,
-      sha: sha2,
-      ct: null,
-      total: bytes2.length,
-      multipart: false,
-      headers: {},
-      locator: address,
-      view: profileView(this.core),
-      retrieved: when,
-      origin: "fetch"
-    });
-    const document = this.#pulledDocument(row12, { by, at: when, profile });
-    const receiptOf = (fn) => {
-      try {
-        return fn();
-      } catch (e2) {
-        return { recorded: false, error: String(e2 && e2.message || e2).slice(0, 200) };
-      }
-    };
-    const withinFailed = () => ({ ok: false, reason: "PULL_WITHIN_FAILED", status: 500, knockId, detail: PULL_WITHIN_FAILED_DETAIL });
-    let done;
-    try {
-      done = this.#tx(() => {
-        const receipt = receiptOf(() => this.provenance?.recordReceipt?.({
-          address,
-          addressNorm: address,
-          captureSha: sha2,
-          retrieved: when,
-          via: DOORBELL_VIA,
-          retrievalLocator: null
-        }));
-        if (!receipt || receipt.recorded !== true)
-          return {
-            ok: false,
-            reason: "RECEIPT_NOT_WRITTEN",
-            status: 502,
-            knockId,
-            detail: "the acquisition receipt could not be written, so the knock stays as it was and nothing was filed"
-          };
-        this.#sql.exec(
-          `UPDATE inbox SET status = 'pulled', resolved = ?, resolved_by = ?, capture_sha = ?, pulled_by = ?, pulled_at = ?,
-                          pulled_document = ?, resolve_reason = ? WHERE knock_id = ?`,
-          when,
-          by,
-          sha2,
-          by,
-          when,
-          JSON.stringify(document),
-          reason2,
-          knockId
-        );
-        this.recordCaptureActor({ captureSha: sha2, actor: by, at: when });
-        if (typeof within3 !== "function") return { ok: true, receipt };
-        const w = _Capture.#callWithin(within3, document);
-        if (w && typeof w === "object" && w.ok === false) return { ...w, knockId: w.knockId ?? knockId };
-        return { ok: true, receipt, within: w ?? null };
-      });
-    } catch (e2) {
-      if (e2 && typeof e2 === "object" && WITHIN_FAULT in e2) return withinFailed();
-      throw e2;
-    }
-    if (!done.ok) return done;
-    return {
-      ok: true,
-      existed: false,
-      knockId,
-      capture: { sha256: sha2, bytes: bytes2.length },
-      pulled_by: by,
-      pulled_at: when,
-      receipt: { address, via: DOORBELL_VIA, retrieved: when, observation: done.receipt.observation ?? null },
-      document,
-      ...typeof within3 === "function" ? { within: done.within } : {}
-    };
-  }
-  /* N380 (R86, and the doorbell copy's pull): the caller's act, called inside the act's own transaction with its own copy of the document. Its
+  /* N380 (R86): the caller's act, called inside the act's own transaction with its own copy of the document. Its
      throw is tagged so a fault of the act's own still throws; an answer that is not synchronous (a promise would outlive
      the transaction, its outcome dropped with it) is tagged likewise. Answers what `within` answered. */
   static #callWithin(within3, document) {
@@ -56552,49 +55797,6 @@ var Capture = class _Capture {
       throw { [WITHIN_FAULT]: true };
     }
     return w;
-  }
-  /* R65, R16: the provenance document of a pulled knock. Received, not fetched (provenance R51): no fetched letter, no
-     transport; the knocker is its source, unnamed, and the note travels as the knocker's words, never as evidence of
-     their truth. The contact is never in it (R70). */
-  #pulledDocument(row12, { by, at: at43, profile }) {
-    const locator = `knock:${row12.knock_id}`;
-    const name3 = String(row12.knock_id).replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100);
-    return {
-      file: `snapshots/${name3}`,
-      locator,
-      retrieved: at43,
-      profile,
-      authority_state: "undetermined",
-      authority_basis: `material handed to the group through its doorbell by an unnamed knocker; no authority is asserted; recorded ${at43} for resolution through the task list`,
-      provenance_chain: [{
-        /* R65 (N541): the first hop's `who` in acquisition's one spelling (its R33), never a copy. A document pulled
-           before T31 keeps its `who` as written (DEC-124), answered again as stored (`pulled_document`). */
-        who: firstHopWho(this.env.INSTANCE_NAME, this.env.VERSION),
-        asserts: `these bytes were received at the doorbell of your group's Civicsmith as knock ${row12.knock_id} at ${row12.received}, and brought into the record by ${by} at ${at43}; they were received, not fetched from any address`,
-        evidence: "the knock's receipt: its digest, taken as the bytes arrived, and its instant",
-        bound: false,
-        via: DOORBELL_VIA
-      }],
-      capture: {
-        method: "doorbell knock, received, hashed at receipt",
-        grade: null,
-        grade_basis: "CAPTURE_RECEIVED_NOT_FETCHED",
-        actor_class: "member",
-        actor: by,
-        sha256: row12.sha256,
-        encoding: "binary",
-        bytes: row12.bytes
-      },
-      source: {
-        kind: "knocker",
-        named: false,
-        pseudonym: row12.pseudonym ?? null,
-        receipt: { knock_id: row12.knock_id, sha256: row12.sha256, bytes: row12.bytes, received: row12.received }
-      },
-      knocker_note: { text: String(row12.note ?? ""), words_of: "the knocker", evidence_of_truth: false },
-      origin: { kind: "doorbell", knock_id: row12.knock_id },
-      attestation_attempts: []
-    };
   }
   /* ==================================================================== *
    * A file a member holds (R86; N821, K2425 (4))
@@ -56827,45 +56029,6 @@ var Capture = class _Capture {
       origin: { kind: "upload" },
       attestation_attempts: []
     };
-  }
-  /** THE DOORBELL COPY (T43's delete), as doorbell R15: the knocks sharing a pseudonym, oldest first, to a member session (the op's fence), with the continuity
-   *  sentence and never an identity: no contact is answered (R70). At most `limit` (N90), paged by `after`. */
-  knocksOf({ pseudonym, limit = null, after = null } = {}) {
-    if (typeof pseudonym !== "string" || !pseudonym)
-      return { ok: false, reason: "NO_PSEUDONYM", detail: "knocksOf names the pseudonym whose knocks it lists" };
-    const cap = limitOf(limit);
-    const from = after ? keyOf(after, 2) : ["", ""];
-    if (!from) return badCursor();
-    const found3 = this.#rows(
-      `SELECT knock_id, sha256, bytes, note, received, status, capture_sha FROM inbox
-        WHERE pseudonym = ? AND (received, knock_id) > (?, ?) ORDER BY received, knock_id LIMIT ?`,
-      pseudonym,
-      ...from,
-      cap + 1
-    );
-    const knocks = found3.slice(0, cap), truncated5 = found3.length > cap, last = knocks[knocks.length - 1];
-    return {
-      ok: true,
-      pseudonym,
-      continuity: "the same knocker secret was presented",
-      knocks,
-      count: knocks.length,
-      limit: cap,
-      truncated: truncated5,
-      next: truncated5 ? cursorOf([last.received, last.knock_id]) : null
-    };
-  }
-  /** THE DOORBELL COPY (T43's delete), as doorbell R18 (K539; for `sources` R1): every knock pulled into a capture, oldest received first, to a member session (the
-   *  op's fence), never a contact (R70); `[]` for none. One keyed read (`inbox_capture`). Never throws. */
-  pulledKnocksOf(captureSha) {
-    try {
-      const sha2 = typeof captureSha === "string" ? captureSha.toLowerCase() : "";
-      if (!HEX645.test(sha2)) return [];
-      return this.#rows(`SELECT knock_id, sha256, bytes, received, pseudonym, knocker_digest FROM inbox
-                          WHERE capture_sha = ? ORDER BY received, knock_id`, sha2).map((r) => ({ ...r }));
-    } catch {
-      return [];
-    }
   }
   /* ==================================================================== *
    * The capturing member, and late co-attestation (`acquisition` R16's actor, R68, R69)
@@ -59031,20 +58194,6 @@ function captureOps(c, url, body, env) {
     dropcapturesession: () => c.dropCaptureSession({ session: q10("session") }),
     sitechrome: () => c.siteChrome({ host: q10("host"), threshold: Number(q10("threshold")) || 0.6, limit: page2.limit }),
     recordcapturelimit: () => c.recordCaptureLimit(body || {}),
-    /* THE DOORBELL COPY's routes (T43's delete; `doorbell`'s `doorbellOps` since T42): knock, inboxlist, inboxget,
-       inboxresolve, doorbellrefused, doorbelltally, inboxpull, knocksof, pulledknocks. */
-    /* R85: `country` is the control plane's stamp in the query, never the body's (nor is `sourceAddress`). */
-    knock: () => c.knock({ ...body || {}, sourceAddress: q10("source"), country: q10("country") }),
-    inboxlist: () => c.inboxList(q10("status") || null, { ...page2, sort: q10("sort"), dir: q10("dir") }),
-    inboxget: () => c.inboxGet(q10("id")),
-    /* N499: a body names no `at` or `within`: the pull's instant and its joined act are an in-process caller's. */
-    inboxresolve: () => {
-      const b = body || {};
-      return c.inboxResolve({ knockId: b.knockId, status: b.status, by: b.by, reason: b.reason });
-    },
-    /* R80: the Worker's count of a knock it refused before the store; the tally read by the stamped viewer. */
-    doorbellrefused: () => c.doorbellRefused({ now: body && body.now, country: q10("country") }),
-    doorbelltally: () => c.doorbellTally({ viewer: q10("viewer") ?? "" }),
     /* R76, R77, R79, R81: by the caller's stamped viewer; an unstamped call sees nothing. The author is the stamp. */
     gradenote: () => c.gradeNoteOf({ captureSha: q10("capture") ?? (body && body.captureSha), viewer: q10("viewer") ?? "" }),
     heldcaptures: () => c.heldCaptures({
@@ -59067,10 +58216,6 @@ function captureOps(c, url, body, env) {
       author: q10("by") ?? q10("author"),
       viewer: q10("viewer") ?? ""
     }),
-    /* N364: the control plane stamps `by` (the member session); a stamp in the query wins over a body's copy. */
-    inboxpull: () => c.pullKnock({ knockId: body && body.knockId || q10("id"), by: q10("by") ?? (body && body.by) }),
-    knocksof: () => c.knocksOf({ pseudonym: q10("pseudonym") ?? (body && body.pseudonym), ...page2 }),
-    pulledknocks: () => c.pulledKnocksOf(q10("capture") ?? (body && body.captureSha)),
     reattest: () => c.reattest({ ...body || {}, by: q10("by") ?? (body && body.by) ?? null }),
     lateattestations: () => c.lateAttestationsOf(q10("capture") ?? (body && body.captureSha)),
     captureaccount: () => c.recordCaptureAccount({ ...body || {}, by: q10("by") ?? (body && body.by) }),
@@ -87996,15 +87141,63 @@ try {
 }
 
 // src/doorbell/checks.mjs
+var inIndex2 = (fn, region) => `src/doorbell/index.mjs ${fn} > ${region}`;
+var atDoor = (fn, region) => `src/doorbell/door.mjs ${fn} > ${region}`;
 var DOORBELL_CHECKS = Object.freeze({
-  NO_SUCH_KNOCK: CAPTURE_CHECKS.NO_SUCH_KNOCK,
-  KNOCKER_SECRET_WEAK: CAPTURE_CHECKS.KNOCKER_SECRET_WEAK,
-  KNOCK_DISCARDED: CAPTURE_CHECKS.KNOCK_DISCARDED,
-  RESOLVE_NO_REASON: CAPTURE_CHECKS.RESOLVE_NO_REASON
+  NO_SUCH_KNOCK: Object.freeze({
+    check: "C-118.2",
+    where: inIndex2("#noSuchKnock", "is-knock-held"),
+    translation: "No knock in the inbox answers to this id. Nothing was changed."
+  }),
+  KNOCKER_SECRET_WEAK: Object.freeze({
+    check: "C-118.3",
+    where: atDoor("knockerSecretWeak", "is-knocker-secret-strong"),
+    translation: "A knocker secret this short could be guessed, letting someone else continue your pseudonym. Use a longer one, or ask the doorbell to make one. Nothing was received. The group can see how often its doorbell turns people away."
+  }),
+  KNOCK_DISCARDED: Object.freeze({
+    check: "C-118.4",
+    where: inIndex2("pullKnock", "is-knock-pullable"),
+    translation: "This knock was set aside. Move it back to new before bringing it in. Nothing was written."
+  }),
+  RESOLVE_NO_REASON: Object.freeze({
+    check: "C-118.7",
+    where: inIndex2("inboxResolve", "is-resolve-reasoned"),
+    translation: "Changing a knock's status records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written."
+  })
 });
+var KNOCK_CHECKS = {
+  RATE_IP: {
+    check: "C-85.1",
+    where: inIndex2("#knockRateRefusal", "is-knock-rate"),
+    translation: "Your material was not received. This group's inbox is not taking any more material from where you are sending it just now. It is a limit on how fast one sender may knock, not a judgement about you or about what you sent, and it lifts on its own shortly \u2014 the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later and it will arrive. The group can see how often its doorbell turns people away."
+  },
+  RATE_GLOBAL: {
+    check: "C-85.2",
+    where: inIndex2("#knockRateRefusal", "is-knock-rate"),
+    translation: "Your material was not received. This group's inbox is not taking any more material from anyone just now. The whole instance is at its limit rather than you \u2014 the cap exists so that no one sender can fill the inbox \u2014 and it lifts on its own shortly; the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later. The group can see how often its doorbell turns people away."
+  },
+  /* D-513 — THE THREE REFUSALS THIS DOOR MAKES BEFORE THE STORE IS CALLED. Each `where` names a module-scope helper in
+     `door.mjs` and the region inside it, because that is where each refusal is enforced; the two oversize rows are two
+     conditions and deliberately not one row with a widened sentence. */
+  KNOCK_ENVELOPE_TOO_LARGE: {
+    check: "C-85.3",
+    where: atDoor("knockEnvelopeTooLarge", "is-knock-envelope-too-large"),
+    translation: "This group's inbox did not read what you sent, because the request itself is larger than this door accepts. Nothing was stored, nothing was opened, and nothing about your material was judged \u2014 its size was read off the request and it stopped there. The size this inbox will read is published beside this message. Send the material again smaller, or as more than one knock, and it will be read. The group can see how often its doorbell turns people away."
+  },
+  KNOCK_PAYLOAD_TOO_LARGE: {
+    check: "C-85.4",
+    where: atDoor("knockPayloadTooLarge", "is-knock-payload-too-large"),
+    translation: "This group's inbox read your material and cannot keep it, because it is larger than this inbox stores. That is a fact about how this group has set its Civicsmith up rather than a judgement about what you sent \u2014 a group that has configured evidence storage can keep far more \u2014 and the size this one can keep is published beside this message. Nothing was stored. Send something smaller, or ask the group's members how to get the whole of it to them. The group can see how often its doorbell turns people away."
+  },
+  KNOCK_EMPTY: {
+    check: "C-85.5",
+    where: atDoor("knockEmpty", "is-knock-empty"),
+    translation: "This group's inbox has nothing to keep, because what you sent decoded to no bytes at all. The request itself was well formed and named its content, so this is most likely an empty file or an empty box rather than anything wrong with how you sent it. Nothing was stored. Check what you attached and knock again. The group can see how often its doorbell turns people away."
+  }
+};
 
 // src/doorbell/door.mjs
-var KNOCK2 = {
+var KNOCK = {
   windowMs: 10 * 60 * 1e3,
   perIp: 5,
   // knocks per source per window (DEC-108 (3))
@@ -88015,8 +87208,8 @@ var KNOCK2 = {
   maxInline: 64 * 1024
   // without one: inline into the store, small only
 };
-KNOCK2.statedPerIp = `at most ${KNOCK2.perIp} knocks from one source in any ${KNOCK2.windowMs / 6e4} minutes, estimated by a sliding window`;
-KNOCK2.statedGlobal = `at most ${KNOCK2.global} knocks to this group's inbox in any ${KNOCK2.windowMs / 6e4} minutes, estimated by a sliding window`;
+KNOCK.statedPerIp = `at most ${KNOCK.perIp} knocks from one source in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
+KNOCK.statedGlobal = `at most ${KNOCK.global} knocks to this group's inbox in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
 function knockEnvelopeTooLarge() {
   const row12 = KNOCK_CHECKS.KNOCK_ENVELOPE_TOO_LARGE;
   if (!row12 || typeof row12.translation !== "string" || !row12.translation)
@@ -88027,7 +87220,7 @@ function knockEnvelopeTooLarge() {
     code: "KNOCK_ENVELOPE_TOO_LARGE",
     check: row12.check,
     translation: row12.translation,
-    maxBytes: KNOCK2.maxBytes
+    maxBytes: KNOCK.maxBytes
   };
 }
 function knockPayloadTooLarge(cap, evidence) {
@@ -88050,12 +87243,12 @@ function knockEmpty() {
     throw new Error("knockEmpty: KNOCK_EMPTY has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
   return { ok: false, reason: "KNOCK_EMPTY", code: "KNOCK_EMPTY", check: row12.check, translation: row12.translation };
 }
-var KNOCKER_SECRET_MIN2 = 20;
-function isWeakKnockerSecret2(secret) {
+var KNOCKER_SECRET_MIN = 20;
+function isWeakKnockerSecret(secret) {
   if (secret === void 0 || secret === null) return false;
-  return typeof secret !== "string" || [...secret].length < KNOCKER_SECRET_MIN2;
+  return typeof secret !== "string" || [...secret].length < KNOCKER_SECRET_MIN;
 }
-function knockerSecretWeak2() {
+function knockerSecretWeak() {
   const row12 = DOORBELL_CHECKS.KNOCKER_SECRET_WEAK;
   return {
     ok: false,
@@ -88063,7 +87256,7 @@ function knockerSecretWeak2() {
     code: "KNOCKER_SECRET_WEAK",
     check: row12.check,
     translation: row12.translation,
-    minChars: KNOCKER_SECRET_MIN2
+    minChars: KNOCKER_SECRET_MIN
   };
 }
 async function knockOp(req, env, store, { json: json24, requiredArgument: requiredArgument2, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, country = null }) {
@@ -88075,7 +87268,7 @@ async function knockOp(req, env, store, { json: json24, requiredArgument: requir
     return json24(answer, status);
   };
   const raw = await req.arrayBuffer();
-  if (raw.byteLength > KNOCK2.maxBytes + 4096) return refuse26(knockEnvelopeTooLarge(), 413);
+  if (raw.byteLength > KNOCK.maxBytes + 4096) return refuse26(knockEnvelopeTooLarge(), 413);
   let body;
   try {
     body = JSON.parse(new TextDecoder().decode(raw));
@@ -88097,9 +87290,9 @@ async function knockOp(req, env, store, { json: json24, requiredArgument: requir
   }
   if (bytes2.length === 0) return refuse26(knockEmpty(), 400);
   const evidence = typeof env.CAPTURES?.put === "function";
-  const cap = evidence ? KNOCK2.maxBytes : KNOCK2.maxInline;
+  const cap = evidence ? KNOCK.maxBytes : KNOCK.maxInline;
   if (bytes2.length > cap) return refuse26(knockPayloadTooLarge(cap, evidence), 413);
-  if (isWeakKnockerSecret2(body.knockerSecret)) return refuse26(knockerSecretWeak2(), 400);
+  if (isWeakKnockerSecret(body.knockerSecret)) return refuse26(knockerSecretWeak(), 400);
   const source2 = req.headers.get("cf-connecting-ip") || "unknown";
   const out = await doAnswer2(store.fetch(new Request(`http://do/knock?source=${encodeURIComponent(source2)}${stamp4}`, {
     method: "POST",
@@ -88109,11 +87302,11 @@ async function knockOp(req, env, store, { json: json24, requiredArgument: requir
       content: typeof body.contentB64 === "string" ? null : body.contentText,
       note: body.note,
       contact: body.contact,
-      windowMs: KNOCK2.windowMs,
+      windowMs: KNOCK.windowMs,
       ...typeof body.knockerSecret === "string" ? { knockerSecret: body.knockerSecret } : {},
       ...body.generateSecret === true ? { generateSecret: true } : {},
-      perIpLimit: KNOCK2.perIp,
-      globalLimit: KNOCK2.global,
+      perIpLimit: KNOCK.perIp,
+      globalLimit: KNOCK.global,
       /* D-487: the window's instant is the control plane's, read once, as it always was. */
       now: Date.now()
     })
@@ -88123,7 +87316,7 @@ async function knockOp(req, env, store, { json: json24, requiredArgument: requir
   const rec = out.result || {};
   if (!rec.ok) {
     if (rec.reason === "RATE_IP" || rec.reason === "RATE_GLOBAL")
-      return json24({ ok: false, ...rec, stated: rec.reason === "RATE_IP" ? KNOCK2.statedPerIp : KNOCK2.statedGlobal }, 429);
+      return json24({ ok: false, ...rec, stated: rec.reason === "RATE_IP" ? KNOCK.statedPerIp : KNOCK.statedGlobal }, 429);
     return json24({ ok: false, ...rec }, rec.status || 502);
   }
   return json24({
@@ -88257,28 +87450,28 @@ var ISO_INSTANT2 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
 var HEX646 = /^[0-9a-f]{64}$/;
 var te7 = new TextEncoder();
 var hexOf3 = (b) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-var b64Of2 = (bytes2) => {
+var b64Of = (bytes2) => {
   let out = "";
   for (let i = 0; i < bytes2.length; i += 32768) out += String.fromCharCode(...bytes2.subarray(i, i + 32768));
   return btoa(out);
 };
-var B322 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
-var base32Of2 = (bytes2) => {
+var B32 = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+var base32Of = (bytes2) => {
   let bits = 0, value = 0, out = "";
   for (const b of bytes2) {
     value = value << 8 | b;
     bits += 8;
     while (bits >= 5) {
-      out += B322[value >>> bits - 5 & 31];
+      out += B32[value >>> bits - 5 & 31];
       bits -= 5;
     }
   }
-  if (bits > 0) out += B322[value << 5 - bits & 31];
+  if (bits > 0) out += B32[value << 5 - bits & 31];
   return out;
 };
-var pseudonymOf2 = (digestHex) => `knocker-${base32Of2(Uint8Array.from(String(digestHex).slice(0, 20).match(/../g).map((h) => parseInt(h, 16)))).match(/.{4}/g).join("-")}`;
+var pseudonymOf = (digestHex) => `knocker-${base32Of(Uint8Array.from(String(digestHex).slice(0, 20).match(/../g).map((h) => parseInt(h, 16)))).match(/.{4}/g).join("-")}`;
 var WITHIN_FAULT2 = Symbol("within's fault");
-var PULL_WITHIN_FAILED_DETAIL2 = "the act run with the pull did not complete, so the pull was rolled back and nothing was written";
+var PULL_WITHIN_FAILED_DETAIL = "the act run with the pull did not complete, so the pull was rolled back and nothing was written";
 var READ_LIMIT2 = Object.freeze({ default: 200, max: 1e3 });
 var limitOf2 = (asked) => {
   const n2 = Math.floor(Number(asked));
@@ -88298,8 +87491,8 @@ var badCursor2 = () => ({ ok: false, reason: "BAD_CURSOR", detail: "`after` is n
 var DOORBELL_READERS = Object.freeze(["litigation-hold"]);
 var REASON_MAX7 = 2e3;
 var reasonGiven2 = (r) => typeof r === "string" && r.trim() !== "" && [...r].length <= REASON_MAX7;
-var TALLY_DAYS2 = 30;
-var INBOX_SORTS2 = Object.freeze(["received", "status", "secret", "project"]);
+var TALLY_DAYS = 30;
+var INBOX_SORTS = Object.freeze(["received", "status", "secret", "project"]);
 var SORT_DIRS2 = Object.freeze(["asc", "desc"]);
 var instances19 = /* @__PURE__ */ new WeakMap();
 function doorbellOf(ctx, deps = {}) {
@@ -88374,16 +87567,14 @@ var Doorbell = class _Doorbell {
     }
     this.declareTables();
   }
-  /** R25 (the map's doubt 4; plan T42 rule 3 (4)): the six tables declared to record-core's purge, every one exempt.
-   *  While `capture` keeps its copy (K625), it declares the same six with the same class; so its declaration is asked
-   *  first (`capture.declareTables`, idempotent, capture R87; K2629), whatever order the host builds the two in, and a refusal
-   *  `TABLE_DECLARED` whose `declaredBy` is `capture` is held, not a failure: the instance is made and nothing is thrown.
-   *  Any other refusal throws, naming the table. A record with no declaration (a test's stand-in) is left alone. */
+  /** R25 (the map's doubt 4; T43, N864, K2680): the six tables declared to record-core's purge, every one exempt. Since
+   *  `capture`'s delete (T43; N849) no other module declares them, so this module asks no other's declaration first and
+   *  holds no refusal: any refusal throws, naming the table, before the caller gets an instance. A record with no
+   *  declaration (a test's stand-in) is left alone. */
   declareTables() {
     if (this.#declared || !this.core || typeof this.core.declarePurge !== "function") return false;
-    if (this.capture && typeof this.capture.declareTables === "function") this.capture.declareTables();
     const answer = this.core.declarePurge("doorbell", [], { exempt: [...DOORBELL_EXEMPT_TABLES] });
-    if (answer && answer.ok === false && !(answer.reason === "TABLE_DECLARED" && answer.declaredBy === "capture"))
+    if (answer && answer.ok === false)
       throw new Error(`doorbell: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
     this.#declared = true;
     return true;
@@ -88478,7 +87669,7 @@ var Doorbell = class _Doorbell {
         basis: "no knock carrying a secret has been received by your group's Civicsmith, so no secret is recognised"
       };
       const knocker_digest = await _Doorbell.#knockerDigest(key2, secret);
-      return { knocker_digest, pseudonym: pseudonymOf2(knocker_digest) };
+      return { knocker_digest, pseudonym: pseudonymOf(knocker_digest) };
     } catch {
       return { knocker_digest: null, pseudonym: null, basis: "the digest could not be computed" };
     }
@@ -88519,7 +87710,7 @@ var Doorbell = class _Doorbell {
     try {
       const at43 = Number.isFinite(Number(nowMs)) ? Number(nowMs) : Date.now();
       const day2 = new Date(at43).toISOString().slice(0, 10);
-      const oldest = new Date(Date.parse(`${day2}T00:00:00Z`) - (TALLY_DAYS2 - 1) * 864e5).toISOString().slice(0, 10);
+      const oldest = new Date(Date.parse(`${day2}T00:00:00Z`) - (TALLY_DAYS - 1) * 864e5).toISOString().slice(0, 10);
       const reached = limitReached === true ? 1 : 0;
       this.#tx(() => {
         this.#sql.exec(
@@ -88574,14 +87765,14 @@ var Doorbell = class _Doorbell {
       };
     const at43 = now != null && now !== "" && Number.isFinite(Number(now)) ? Number(now) : Date.now();
     const today2 = new Date(at43).toISOString().slice(0, 10);
-    const oldest = new Date(Date.parse(`${today2}T00:00:00Z`) - (TALLY_DAYS2 - 1) * 864e5).toISOString().slice(0, 10);
+    const oldest = new Date(Date.parse(`${today2}T00:00:00Z`) - (TALLY_DAYS - 1) * 864e5).toISOString().slice(0, 10);
     const days = this.#rows(`SELECT day, refused, limit_reached FROM doorbell_tally WHERE day >= ? AND refused > 0 ORDER BY day DESC`, oldest).map((r) => ({ day: r.day, refused: Number(r.refused), limit_reached: Number(r.limit_reached) }));
     const last = this.#one(`SELECT day FROM doorbell_limit_last WHERE id = 1`);
     return { ok: true, days, last_limit_reached: last ? last.day : null };
   }
   /* R2: the two windows one knock is asked against: the source's (a keyed fingerprint, R12) and the instance's, the
      current bucket and the previous one, with how far into the current window `nowMs` is. */
-  async #rateWindows({ sourceAddress, nowMs, windowMs = KNOCK2.windowMs, perIpLimit = KNOCK2.perIp, globalLimit = KNOCK2.global }) {
+  async #rateWindows({ sourceAddress, nowMs, windowMs = KNOCK.windowMs, perIpLimit = KNOCK.perIp, globalLimit = KNOCK.global }) {
     const win = Math.floor(nowMs / windowMs);
     const fp = await this.sourceFingerprint(sourceAddress);
     return {
@@ -88619,7 +87810,7 @@ var Doorbell = class _Doorbell {
     const refusal36 = this.#knockRateRefusal(rate) || this.#tx(() => this.#countKnock(rate));
     if (!refusal36) return null;
     this.#refusedKnock(refusal36, nowMs, country);
-    return { ...refusal36, stated: refusal36.reason === "RATE_IP" ? KNOCK2.statedPerIp : KNOCK2.statedGlobal };
+    return { ...refusal36, stated: refusal36.reason === "RATE_IP" ? KNOCK.statedPerIp : KNOCK.statedGlobal };
   }
   /** R2, R3, R10, R11: an accepted knock. `sourceAddress` is the connecting address, reduced here to a keyed
    *  fingerprint. The rate is asked first and changes nothing when it refuses; the bytes (with an evidence store)
@@ -88633,9 +87824,9 @@ var Doorbell = class _Doorbell {
     note,
     contact,
     sourceAddress = null,
-    windowMs = KNOCK2.windowMs,
-    perIpLimit = KNOCK2.perIp,
-    globalLimit = KNOCK2.global,
+    windowMs = KNOCK.windowMs,
+    perIpLimit = KNOCK.perIp,
+    globalLimit = KNOCK.global,
     now = null,
     knockerSecret = null,
     generateSecret = false,
@@ -88648,7 +87839,7 @@ var Doorbell = class _Doorbell {
     } catch {
       return this.#refusedKnock({ ok: false, reason: "BAD_CONTENT", detail: "the content did not decode" }, nowMs, country);
     }
-    if (isWeakKnockerSecret2(knockerSecret)) return this.#refusedKnock(knockerSecretWeak2(), nowMs, country);
+    if (isWeakKnockerSecret(knockerSecret)) return this.#refusedKnock(knockerSecretWeak(), nowMs, country);
     const sha2 = hexOf3(await crypto.subtle.digest("SHA-256", bytes2));
     const rate = await this.#rateWindows({ sourceAddress, nowMs, windowMs, perIpLimit, globalLimit });
     const early = this.#knockRateRefusal(rate);
@@ -88676,10 +87867,10 @@ var Doorbell = class _Doorbell {
     if (!secret && generateSecret === true) {
       const r = new Uint8Array(16);
       crypto.getRandomValues(r);
-      secret = generated = base32Of2(r);
+      secret = generated = base32Of(r);
     }
     const knockerDigest = secret ? await _Doorbell.#knockerDigest(this.#knockerKey(), secret) : null;
-    const pseudonym = knockerDigest ? pseudonymOf2(knockerDigest) : null;
+    const pseudonym = knockerDigest ? pseudonymOf(knockerDigest) : null;
     const knockId = `KNOCK-${new Date(nowMs).toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
     const received = new Date(nowMs).toISOString();
     const answer = this.#tx(() => {
@@ -88698,7 +87889,7 @@ var Doorbell = class _Doorbell {
         received,
         knockerDigest,
         pseudonym,
-        bucket ? null : b64Of2(bytes2)
+        bucket ? null : b64Of(bytes2)
       );
       return { ok: true, knockId, sha256: sha2, bytes: bytes2.length, pseudonym, ...generated ? { secret: generated } : {} };
     });
@@ -88720,7 +87911,7 @@ var Doorbell = class _Doorbell {
    *  newest first. An unknown `sort` or `dir` is the required-argument refusal naming it, with nothing read. */
   inboxList(status, { limit = null, after = null, sort = null, dir = null } = {}) {
     const by = sort == null || sort === "" ? "received" : sort;
-    if (!INBOX_SORTS2.includes(by)) return _Doorbell.#badArgument("inbox", "sort", INBOX_SORTS2.join(" | "), by);
+    if (!INBOX_SORTS.includes(by)) return _Doorbell.#badArgument("inbox", "sort", INBOX_SORTS.join(" | "), by);
     const way = dir == null || dir === "" ? by === "received" ? "desc" : "asc" : dir;
     if (!SORT_DIRS2.includes(way)) return _Doorbell.#badArgument("inbox", "dir", SORT_DIRS2.join(" | "), way);
     const cap = limitOf2(limit);
@@ -88957,7 +88148,7 @@ var Doorbell = class _Doorbell {
         return { recorded: false, error: String(e2 && e2.message || e2).slice(0, 200) };
       }
     };
-    const withinFailed = () => ({ ok: false, reason: "PULL_WITHIN_FAILED", status: 500, knockId, detail: PULL_WITHIN_FAILED_DETAIL2 });
+    const withinFailed = () => ({ ok: false, reason: "PULL_WITHIN_FAILED", status: 500, knockId, detail: PULL_WITHIN_FAILED_DETAIL });
     let done;
     try {
       done = this.#tx(() => {
