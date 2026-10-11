@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 1373 KB by `build/plan/rea
 Merge order in L6: `modules.json` order; inquiry and basis-versions (the seam owners) before run-productions; agent-model before agent-worker. Jobs this layer: inquiry, hypotheses, steps, citation, basis-versions, ai-use, run-productions, question-explorer, agent-model, agent-worker.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+agent-model (T42-19a) is merged into tranche/T42 (K2649): MODEL_FOR_MODE.transcribe and R14's image block in tool_result (IMAGE_NOT_RELAYED on a sign-in account). Merge tranche/T42 into your branch. Your requirements.test.mjs:1458/:1460 (R45 bundle static/fresh) read red until the bundle is regenerated: BOB regenerates it at L6's close; do not hand-edit dist/.
