@@ -2,7 +2,7 @@
    entities, connections, inquiry, basis-versions, strength, contradiction, sources), on a real SQLite database (node:sqlite)
    standing in for a Durable Object's storage. What a later module registers (publication's facts `caseMember` and
    `publishedRegistry`, its R7), the readings content reads through extraction (its R30 `readingOf`, R36 `unitsOf`), retrieval's
-   selections, ai-runs' run gate (contradiction R21) and capture's pulled knocks (`pulledKnocksOf`, its R72, the one read
+   selections, ai-runs' run gate (contradiction R21) and the doorbell's pulled knocks (`pulledKnocksOf`, its R18, the one read
    `sources` makes of it) are stand-ins the test controls. Every test drives
    `reevaluation` at its interface. */
 import { DatabaseSync } from "node:sqlite";
@@ -178,9 +178,9 @@ export function world({ caseMembers = new Set(), group = "test-group", earnedOve
   /* inquiry as this module reads it; a test may bound what the record earns (R5). */
   const inquiry = new Proxy(k, { get: (t, p) => (p === "earned" && earnedOverride
     ? earnedOverride : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
-  /* sources (R28), the real one; the knocks capture pulled are the stand-in `knocks` (capture sha -> knock rows). */
+  /* sources (R28), the real one; the knocks the doorbell pulled are the stand-in `knocks` (capture sha -> knock rows). */
   const knocks = new Map();
-  const sources = sourcesOf(host, { record, membership, capture: { pulledKnocksOf: (s) => knocks.get(s) || [] },
+  const sources = sourcesOf(host, { record, membership, doorbell: { pulledKnocksOf: (s) => knocks.get(s) || [] },
                                     now: () => Date.parse(clock.now) });
   /* events, calculations and standards (R34–R36): quiet stand-ins unless a test passes its own, built over this host */
   const quiet = quietUpstreams();
@@ -288,7 +288,7 @@ export function world({ caseMembers = new Set(), group = "test-group", earnedOve
                                 ON CONFLICT(bundle_id) DO UPDATE SET inquiry_subject_entity = excluded.inquiry_subject_entity`,
                                inquiryId, subject);
     },
-    /** A knock pulled into capture `capSha` (capture R65), and its source read by a member (sources R1): the source id. */
+    /** A knock pulled into capture `capSha` (doorbell R13), and its source read by a member (sources R1): the source id. */
     knocked(capSha, { pseudonym = null, knockId = `K-${capSha.slice(0, 8)}-${++n}` } = {}) {
       if (!st.sql.exec(`SELECT 1 AS x FROM members WHERE member_id='bob'`).length) w.member("bob");
       const list = knocks.get(capSha) || [];
