@@ -448,3 +448,6 @@ Word keys owed for T43's folds of DEC-189 and DEC-190 (P18: T43 opens at T42's c
 2. `ai.use.*` has no key for the uses `enquire`, `read` and `account`; `ai.use.suggestions` matches no use. [the three are folded when named; no T43 AI path reaches them.]
 3. The limit-reached queue item's `{date}` has no format key. [the queue's existing date format.]
 4. `transcribe.none` ("The assistant read pages …") reads wrongly when nothing was sent (`AGENT_WORKER_UNBOUND`, `EVIDENCE_ABSENT`, `NO_PAGE_RENDERED`) or a refusal came back. [`transcribe.none` only when agent-worker was asked and read nothing; the other reasons get keys of yours later, shown meanwhile as C-51.7's refusal.]
+
+## B134 · QUESTION · 2026-10-11 · session_01LmewcofcJp9zTHjyQosCGw · primary
+T43 will read a photographed page (JPEG or PNG capture) as one picture page that the member can ask the assistant to transcribe (N853b, K2691). Two word keys of yours would serve it; until named, the existing `transcribe.*` and refusal words stand: `transcribe.picture.unprepared` (the picture could not be prepared for the assistant: a progressive JPEG, or too large), and `capture.picture.unread` (a photographed page not yet read). HEIC photos are not read in T43.
