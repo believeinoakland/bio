@@ -1,5 +1,5 @@
-**Writer** · UX-DESIGN · session_01SCHPX2mpSDpBNA9wprUm5H · secondary · since 2026-10-07
-**Read** · handled BOB B122
+**Writer** · UX-DESIGN · session_014uT5e8EjnRxmEeUDDg2cYa · primary · since 2026-10-10
+**Read** · handled BOB B129
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -822,3 +822,16 @@ The design stream pauses at Bob's request, so that development continues on his 
 
 ## U147 · MERGE · 2026-10-10 · session_01SCHPX2mpSDpBNA9wprUm5H · secondary
 PR believeinoakland/bio#21 (claude/gallant-brown-zg0wc1, fast-forwarded to main @ 8af83ac9, head 6222d39f or later) is ready to merge at a tranche boundary: the handover (HANDOFF §0, NEXT-SESSION-PROMPT). The successor's later commits ride with it. Keep the design session's text in any conflict (K945).
+
+## U148 · NOTICE · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
+The design stream resumes on Bob's primary account: this session took over from session_01SCHPX2mpSDpBNA9wprUm5H (K2521; not visible from here to archive). B122–B129 read. The layouts page's new link: https://claude.ai/artifact/PjJoJCxMe1LHjt3wPq6rfa. Branch claude/gallant-brown-zg0wc1 was fast-forwarded to main @ 65490c5e after PR #21's merge.
+
+## U149 · NOTICE · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
+DEC-189 (decided by this session beneath Bob's K2350, K2352, K2353, K2400 (A5) and D64; amends DEC-188): (1) `ai.refused.explorenotenabled` is "Exploring is off on {whose} account. Its owners can switch it on."; an exploring limit is never required (ai-use R3), and the panel's help says so. (2) `ai.label.explored.member`, "Machine work · found while exploring", is what members who don't own the paying account see; `ai.label.explored` with `{owner}` only for its owners. (3) The 37 owed acts whose ops main serves name the served op; `ACT_HELP`/`WEIGHT` keys drop `owed_`, so words.json holds `act.<op>.*`; 3 stay owed (`subscriptionsignin`, `infolevelset`, `projectaikeepaway`). (4) The retired `aiceilingset`, `aicopyceilingset`, `accountswitchset`, `groupswitchset` texts are removed. (5) Fills keyed: `ai.period.day|month`, `ai.when.day|month` with `date.month.*`, `ai.limitfield.<field>` (owner, scope, unit, period, amount, inclusive, use, count), and `ai.refused.limit.unjudged` in place of a reached limit when R3 fails closed. (6) `ai.queue.limitreached` (a use: "{account} reached its {period} limit for {use} on {date}. It pauses {use} until {when}; its other uses go on."), `.overall`, `.member`; `{for_use}`/`{Uses}` gone; `ai.account.group|project|own` (+ `.inline`), `ai.use.<k>.inline`, `ai.scope.group|own`. (7) `queue.<kind>.summary|detail` for R17's ten kinds.
+Folded: BIO_Interaction_Constructs_v0_1.md (who pays, RULED 2026-10-11); words.json (1,064 words, 392 protected); the screens. On PR believeinoakland/bio#23. Owed (DEC-189's owed: line): ai-use reads its fills and `ai.refused.limit.unjudged` by key, and the B123 wording in `AI_USE_WORDS`; notice-producers reads R16's and R17's words by key.
+
+## U150 · ANSWER · re B123, B124, B126 · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
+B123 (1)–(4), B124 and B126 (1)–(3) are answered by DEC-189 (U149): every point taken as you put it; for B124, ai-use's fills are kept as keys (owner and use re-worded), with one addition, `ai.refused.limit.unjudged`, since a limit that couldn't be judged was not reached. B125 noted (the "five" dropped where the pages say it). B128/B129 (`pagetranscribe`'s words and placement) come next, in a later DEC.
+
+## U151 · MERGE · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
+PR believeinoakland/bio#23 (claude/gallant-brown-zg0wc1, from main @ 65490c5e, head c33f67fb or later) is ready to merge at a tranche boundary: DEC-189 and HANDOFF §0′. Keep the design session's text in any conflict (K945).
