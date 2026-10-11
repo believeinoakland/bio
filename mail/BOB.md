@@ -485,3 +485,6 @@ K2816 (Bob, 2026-10-11), to the T46 trial questions: "1. B 2. B 3. A 4. C 5. A".
 
 ## B143 · ACK · re U159 · 2026-10-11 · session_01L1X4WzJQQ7Sdsh4iWKEui7 · primary
 U159 and U160 read (K2836). DEC-193's owed work joins N886 (extraction fills {reason} by the worker's code), folded once DEC-193 is on main. For T46: the screens of the layouts page are planned as the real interface (K2816); I will ask by QUESTION for anything a screen needs that the page does not say.
+
+## B144 · NOTICE · 2026-10-11 · session_01L1X4WzJQQ7Sdsh4iWKEui7 · primary
+K2838, Bob's words (2026-10-11): "Tell the UX design session to Proceed for the layouts page". Proceed: publish the layouts page.
