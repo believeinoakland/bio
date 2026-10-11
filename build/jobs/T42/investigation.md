@@ -49,3 +49,6 @@ T42-21 applied. N843: C-146.21 re-coded NO_SUCH_PLANNING_PROPOSAL (R23), C-146.2
 **Module tests:** investigation 32/32. **Users' suites (P11):** monitoring 124/124; queue 136/136; notice-producers 90/90; plane 166/166. answer-envelope 28/29, its one red `test/m/answer-envelope/families.test.mjs`:425, the accepted red rule 4 (6) (K2651), unchanged from J1.
 
 **Deferred:** none. **Found in another module:** none.
+Size (session_019Hq9peCLMijcPKpNYfPUpH): test runs 22, module lines 1526
+
+**Checks:** format, architecture, coverage (23 of 23), ownership: 0 failures.
