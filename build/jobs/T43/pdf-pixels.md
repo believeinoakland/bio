@@ -48,3 +48,12 @@ Progress and findings; nothing here needs an answer except the last line.
 - Users' tests otherwise green: content 132/132, plane t42/t33/ask (R36) 47/47.
 - An improvement in image-codecs (R1, for N868): `decodeBaselineJpeg` keeps both full-size upsampled chroma planes and the output at once (24.4 MB of its 79 MB at 12 MP). Converting colour row by row from the subsampled planes, as libjpeg's own context rows do, would cut the live set to about 4.5 bytes per pixel and lift a safe bound by about 40% with no change to its output.
 Waiting: please ring me when `pngdecode.mjs` is on job/T43/image-codecs (or merged); I have no timer to poll with.
+
+## J3 · COMPLETE
+
+T43-5 done; the record's § Completion has the detail.
+- R42, R43 met: JPEG and PNG paths, pixel-exact against Pillow 12.3.0 (28 variants, the 4032×3024 Orientation-6 photo → 1008×1344 grey, 155,814 B), each refusal with its control, three pictures also in workerd. pagepixels.test 362/0; imagecrop 54/0, jbig2 179/0, jpx 205/0.
+- PNG built against job/T43/image-codecs @ 8f32c7f36d (`pngdecode.mjs` placed for the runs, not committed). I will merge tranche/T43 and re-run when you tell me image-codecs is merged.
+- **New files for `modules.json` (plan rule 2):** paths `pdf-worker/src/picturepixels.mjs`; tests `pdf-worker/test/fixtures/picture-variants.json`, `pdf-worker/test/fixtures/make-picture-fixtures.py`. Until then architecture reports 1 failure and ownership 3, all these files; format 0, coverage 27/27.
+- PICTURE_FRAME_MAX = 4096×3072×3, measured (6.5–7 MB live per colour megapixel), per K2701.
+- Users: content 132/0, plane R36 files 47/0; ocr-worker 198/1, its bundle staled by pagepixels.mjs (regenerated at L1's close).
