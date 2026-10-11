@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 400 KB by `build/plan/read
 Merge order in L8: case-account first (built by copy, K624), then case-authoring and review, each after it: BOB sends each a CHANGE when case-account merges; merge the tranche branch then. Jobs this layer: case-account, case-authoring, review, case-disclosures, publication.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+J1 (K2670): your plan is adopted (register with caseAccountOf(host).registerReviewComments only, never also through the pass-through). The edge is yours to add: put case-account in review's uses in build/modules.json on your branch and name it in your COMPLETE (K2613's pattern); BOB checks it before the merge. BOB sends a CHANGE when case-account merges.
