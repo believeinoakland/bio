@@ -8,7 +8,7 @@
    action-holds' reads, R2, R11, R12) is a stand-in answering as its requirement states (K2848 (7)). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, STRANGER, F, DOC, CASE, PROFILE, WHY, sha, grammar, actionsWith } from "./fixture.mjs";
+import { world, V, MACHINE, STRANGER, F, DOC, CASE, PROFILE, WHY, sha, grammar, actionsWith, templatesOver } from "./fixture.mjs";
 import { KEYED, FILINGS_CHECKS, sentencesOf, groupLine, counselMarking } from "../../../src/filings/index.mjs";
 import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
@@ -440,4 +440,15 @@ test("R10 a packet for an action of a counsel-matter project carries, beside the
   const e = await x.f.counselPacketExport({ id: p.id, author: V("olive"), viewer: V("olive") });
   assert.ok(e.bytes.split("\n").filter((l) => l === KEYED["packet.privileged.warning"]).length >= 8);
   assert.equal(x.f.counselPacketRead({ id: p.id, viewer: V("olive") }).privileged.key, "packet.privileged");
+});
+
+test("R28 R41 (K2851) a profile template filing-templates does not offer (no professional review, no sources: its R15) is refused with its own TEMPLATE_NOT_REVIEWED when named or taken by default, and is not offered after the act; the reviewed copy is", async () => {
+  const x = world();
+  const bare = x.filingsWith({ filingTemplates: templatesOver(x.w, undefined, { reviewed: false }) });
+  const A = x.action();
+  const r = bare.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") });
+  assert.equal(r.reason, "TEMPLATE_NOT_REVIEWED", JSON.stringify(r).slice(0, 300));
+  assert.equal(bare.filingPrepare({ action: A, template: { id: "TPL-test-bylaw-complaint" }, preparer: V("bo"), viewer: V("bo") }).reason, "TEMPLATE_NOT_REVIEWED");
+  assert.equal(bare.templatesForAction({ action: A, viewer: V("bo") }).versions.some((v) => v.template === "TPL-test-bylaw-complaint"), false);
+  assert.equal(x.f.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") }).ok, true, "control: reviewed, offered");
 });

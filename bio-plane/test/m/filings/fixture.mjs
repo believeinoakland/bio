@@ -261,12 +261,28 @@ export function localFactsOver(w, profiles, now = () => w.clock.now) {
 
 /** The real filing-templates on the world's storage (its tables and opaque-id seed made by its factory on the host),
  *  its active profiles `profiles` when given. */
-export function templatesOver(w, profiles) {
-  const made = filingTemplatesOf(w.host, { record: w.record, membership: w.membership });
-  if (profiles === undefined) return made;
-  const { record, get } = over(w, profiles);
-  return new FilingTemplates({ storage: w.st, record, membership: w.membership, jurisdictions: { get },
+export function templatesOver(w, profiles, { reviewed: rev = true } = {}) {
+  filingTemplatesOf(w.host, { record: w.record, membership: w.membership });
+  const { record, get } = profiles === undefined ? { record: w.record, get: profileOf } : over(w, profiles);
+  return new FilingTemplates({ storage: w.st, record, membership: w.membership, jurisdictions: { get: rev ? reviewed(get) : get },
                                now: () => Date.parse(w.clock.now) });
+}
+
+/** filing-templates R15 (T45, K2851): a profile template is offered only with a named writer, public sources, a
+ *  professional's `no_concerns` review and an approver other than its writer. The test profiles' templates carry the
+ *  writer and approver; each read through here gains sources and a professional's review, as filing-templates' own
+ *  fixture gives them (its `attributed`). `templatesOver(w, p, {reviewed: false})` reads them as they are. */
+export const PRO_REVIEW = Object.freeze({ reviewer: "Dee Example", kind: "professional", organisation: "Marlow Commons Legal Society (test)",
+                                          credential: "solicitor (test)", scope: "the whole text", outcome: "no_concerns", at: "2026-08-25" });
+function reviewed(get) {
+  const fix = (t) => ({ ...t, sources: t.sources && t.sources.length ? t.sources : [{ citation: "P.E.B.L. § 1" }],
+                        reviews: [...(t.reviews || []).filter((r) => r.kind !== "professional"), PRO_REVIEW] });
+  return (id) => {
+    const p = get(id);
+    if (!p || typeof p !== "object") return p;
+    return { ...p, action_kinds: (p.action_kinds || []).map((k) => ({ ...k, ...(k.template ? { template: fix(k.template) } : {}),
+                                                                      ...(Array.isArray(k.templates) ? { templates: k.templates.map(fix) } : {}) })) };
+  };
 }
 
 /* record-core with `profiles` as its active jurisdiction profiles, and the profiles' reader. */
