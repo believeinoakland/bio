@@ -1,14 +1,15 @@
-/* affordances: R19's backing (and R2's for the rungs a published act or a terminal state backs) for the acts the plane
-   fixture does not reach, each driven at its owning module's own interface over that module's fixture: `narrow`,
-   `triage`, layer 9's, action-plans', actions R52's, R30's, and (T22) every op DEC-88 bands `reasoned` or `terminal` and
-   T22's four new reasoned acts. Everything else R19 drives is in `plane.test.mjs`. */
+/* affordances: R19's backing — of `op-grades`' rungs (its R1, R3), including those a published act or a terminal state
+   backs, and (R24) of the stated absences that ask no reason — for the acts the plane fixture does not reach, each
+   driven at its owning module's own interface over that module's fixture: `narrow`, `triage`, layer 9's,
+   action-plans', actions R52's, filing-templates' and local-facts', and (T22) every op DEC-88 bands `reasoned` or
+   `terminal` and T22's four new reasoned acts. Everything else R19 drives is in `plane.test.mjs`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, block, version, merge, V } from "../basis-versions/fixture.mjs";
 import { seeded, V as IV } from "../intent/fixture.mjs";
 import { JUSTIFICATION_REFUSALS, RUNGS, RUNG_ABSENT } from "../../../src/op-grades/index.mjs";
 
-test("R19: narrow, graded `reasoned` (R27), called well-formed but without its account of what changed, is refused "
+test("R19: narrow, graded `reasoned` (K211), called well-formed but without its account of what changed, is refused "
    + "with a code in JUSTIFICATION_REFUSALS, and with one it is accepted", () => {
   const DOC = "INFO-2026-0001-a", Q2 = "INQ-2026-0002-r", Q = "INQ-2026-0001-q";
   const w = world();
@@ -101,7 +102,7 @@ test("R19: escalationevaluate, escalationadvance, escalationdecline and escalati
   assert.equal(ev.ok, true, JSON.stringify(ev).slice(0, 300));
 });
 
-test("R2: escalationresume, graded `reversible` (K264), is taken back by a published act — a further suspension — and "
+test("R19: escalationresume, graded `reversible` (K264), is taken back by a published act — a further suspension — and "
    + "escalationsuspend, which it takes back, is stated at its higher rung `reasoned`", () => {
   const who = { author: EV("bob"), viewer: EV("bob") };
   const w = escSeeded(); opened(w);
@@ -163,7 +164,7 @@ test("R19: plansubjectadd, plansubjectremove, optionrevise, optiondispose (setti
   assert.equal(w.ap.optionDispose({ plan: w.PL, options: [w.A], disposition: "chosen", ...apBy("bob") }).ok, true);
 });
 
-test("R2: scenarioset, graded `reversible` (K727), asks no reason and is taken back by a published act — a further "
+test("R19: scenarioset, graded `reversible` (K727), asks no reason and is taken back by a published act — a further "
    + "scenarioset replaces it whole, the earlier version kept in history", () => {
   assert.equal(RUNGS.scenarioset, "reversible");
   const w = apSeeded(); apOpened(w); const A = apOption(w); apChoose(w, [A]);
@@ -178,7 +179,7 @@ test("R2: scenarioset, graded `reversible` (K727), asks no reason and is taken b
 /* K918 (T20): actions R52's hold statement, graded `reasoned`, driven at actions' interface over its fixture: on a
    `legal` pressure mark, a hold stated well-formed but without its reason is refused HOLD_REFUSED, in the justification
    family, and with one it is accepted; a later statement corrects it forward, the earlier kept. Since DEC-113 (T27) a
-   release is its own act (R33, actions R56), so `actionhold` is driven `in_place` only and the release through
+   release is its own act (op-grades R8, actions R56), so `actionhold` is driven `in_place` only and the release through
    `actionHoldRelease`. */
 import { world as aWorld, V as AV } from "../actions/fixture.mjs";
 /* With `inProject`, the action sits in a project alice owns, promoted as a project is, so a hold covers it (actions R52). */
@@ -200,7 +201,7 @@ const holdScene = ({ inProject = false } = {}) => {
                                     viewer: M, author: M }).ok, true);
   return { w, A, M, P };
 };
-test("R19 R2: actionhold, graded `reasoned` (K918), is refused without its reason on a legal pressure mark, with a code "
+test("R19: actionhold, graded `reasoned` (K918), is refused without its reason on a legal pressure mark, with a code "
    + "in JUSTIFICATION_REFUSALS, and accepted with one; a later statement corrects it forward, the earlier kept", () => {
   const { w, A, M } = holdScene();
   assert.equal(RUNGS.actionhold, "reasoned");
@@ -216,13 +217,13 @@ test("R19 R2: actionhold, graded `reasoned` (K918), is refused without its reaso
   assert.deepEqual(w.a.actionRead({ id: A, viewer: M }).pressure[0].holds.map((h) => h.hold), ["in_place", "in_place"]);
 });
 
-/* R33 (DEC-113; K1134 (3); actions R56, R57): the release, graded `terminal` as a named exception to R27, driven at
+/* op-grades R8 (DEC-113; K1134 (3); actions R56, R57): the release, graded `terminal` as a named exception to op-grades R3, driven at
    actions' interface. Its reason is backed by HOLD_REFUSED as `actionhold`'s is (in the justification family, nothing
    written). Its rung by what it does: it records, with the release, the projects it restarted (what R57's preview
    answered at that instant, the statement's projects); once released, the hold is not released again
    (HOLD_ALREADY_RELEASED), and the restarted projects stand released — no act takes a release back into the same hold:
    a later `in_place` is a new hold, stated anew, and the release stays in the record. */
-test("R19 R2 R33: actionholdrelease, graded `terminal`, is refused without its reason (HOLD_REFUSED, in the family) and "
+test("R19: actionholdrelease, graded `terminal` (K1134), is refused without its reason (HOLD_REFUSED, in the family) and "
    + "writes nothing; with one it records what it restarted — R57's answer — and cannot be walked back: released again is "
    + "refused HOLD_ALREADY_RELEASED, and the release stays in the record under any later hold", () => {
   assert.equal(RUNGS.actionholdrelease, "terminal");
@@ -281,7 +282,7 @@ test("R19 R34: docketfile and docketdecline, graded `reasoned`, are refused with
   assert.equal(t.ok, true, JSON.stringify(t).slice(0, 300));
 });
 
-test("R2 R34: docketpost, graded `attested`, publishes only under the manager's own registered signature over the "
+test("R19: docketpost, graded `attested` (DEC-116), publishes only under the manager's own registered signature over the "
    + "prepared statement — another member's key, or a signature over other bytes, is refused DOCKET_SIGNATURE_REFUSED "
    + "and writes nothing; signed by the manager, it is posted", async () => {
   assert.equal(RUNGS.docketpost, "attested");
@@ -520,7 +521,7 @@ const CODE = { testify: "TESTIMONY_NO_WORDS", transcribe: "TRANSCRIBE_NO_TEXT", 
   declinetoescalate: "ESCALATION_NO_REASON", heldsetaside: "SET_ASIDE_NO_REASON", heldrestore: "SET_ASIDE_NO_REASON",
   addressfrequencyset: "FREQUENCY_NO_REASON" };
 
-test("R19 R2: every op DEC-88 bands `reasoned` and T22's four, called well-formed without its authored reason (or "
+test("R19: every op DEC-88 bands `reasoned` and T22's four, called well-formed without its authored reason (or "
    + "words), is refused with a code in JUSTIFICATION_REFUSALS and writes nothing; given one, it is accepted", async () => {
   const want = [...Object.keys(REASONED_CASES)].sort();
   const DEC88_RULED = ["testify", "lead", "leadlook", "leadshare", "transcribe", "transcriptionattest", "attesttext",
@@ -549,7 +550,7 @@ test("R19 R2: every op DEC-88 bands `reasoned` and T22's four, called well-forme
   assert.deepEqual(bad, []);
 });
 
-/* K1025's four (R19): an act R2 bands `reasoned` whose recorded grounds serve as its reason is backed by those grounds
+/* K1025's four (R19): an act op-grades R1 bands `reasoned` whose recorded grounds serve as its reason is backed by those grounds
    and is not refused for a reason it does not take. Each is driven at its owner's interface: refused, with nothing
    written, where the grounds are absent; accepted with its grounds and no further reason. */
 import * as conFix from "../consequences/fixture.mjs";
@@ -634,7 +635,7 @@ test("R19: consequencerecord is backed by its arms — the assessed arm's absent
 
 /* DEC-88's two `terminal` acts: each cannot be walked back — an ended escalation takes no further act and is never
    reopened (escalation R14), and a filing is approved at most once (filings R6, ALREADY_APPROVED). */
-test("R2 R19: escalationend and filingapprove, graded `terminal` (DEC-88), cannot be walked back — a second approval is "
+test("R19: escalationend and filingapprove, graded `terminal` (DEC-88), cannot be walked back — a second approval is "
    + "refused ALREADY_APPROVED, and no act moves an ended escalation", async () => {
   assert.deepEqual([RUNGS.escalationend, RUNGS.filingapprove], ["terminal", "terminal"]);
   const x = filFix.world(); const act = x.action({});
@@ -663,14 +664,14 @@ test("R2 R19: escalationend and filingapprove, graded `terminal` (DEC-88), canno
   assert.equal(w.esc.escalationRead({ id: w.E, viewer: escFix.V("bob") }).state, "ended", "never reopened");
 });
 
-/* R35 (DEC-96 items 1, 2; N520, N522): case-import's four reasoned acts, driven at case-import's interface over its
+/* op-grades R10 (DEC-96 items 1, 2; N520, N522): case-import's four reasoned acts, driven at case-import's interface over its
    fixture (real record-core, membership, strength and accepted-work tables; case-checker's answer scripted). Each is
    called well-formed but without its account — absent, null, empty, blank, or past its 2,000-character bound — and is
    refused with its owner's code, in the family, writing nothing; with it, it is accepted. Each is corrected forward and
    never erased: a withdrawn acceptance and a cleared flag stay in the record. The two `undetermined` writes ask no reason
    at all: an import and a completion are accepted with none given. */
 import * as ci from "../case-import/fixture.mjs";
-test("R19 R35: importaccept, importacceptwithdraw, importflag and importflagclear, graded `reasoned`, are refused "
+test("R19: importaccept, importacceptwithdraw, importflag and importflagclear, graded `reasoned`, are refused "
    + "without their account with IMPORT_ACCEPT_NO_REASON or IMPORT_FLAG_NO_ISSUE (in the family) and write nothing, are "
    + "accepted with it, and are corrected forward: the acceptance and the flag stay in the record", async () => {
   for (const op of ["importaccept", "importacceptwithdraw", "importflag", "importflagclear"]) assert.equal(RUNGS[op], "reasoned", op);
@@ -720,8 +721,8 @@ test("R19 R35: importaccept, importacceptwithdraw, importflag and importflagclea
   assert.equal(s.w.count("case_import_flags"), 1, "the flag stays in the history after its clear");
 });
 
-test("R3 R35: caseimport and caseimportdocument, graded `undetermined`, ask no authored reason — each is accepted with "
-   + "none given — and are named in RUNG_ABSENT, not RUNGS", async () => {
+test("R24: caseimport and caseimportdocument, stated absent (`undetermined`) and never ranked, ask no authored reason — "
+   + "each is accepted with none given", async () => {
   const w = ci.seeded();
   const LETTER = ci.bytes("%PDF the letter the case relies on");
   w.script.set(ci.F2, { role: "supporting", result: "recreated_in_part", missing: [{ sha: ci.sha(LETTER), words: "the letter" }],

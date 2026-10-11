@@ -95,6 +95,12 @@ test("R17 R37: the door answers the catalogue in the control plane's envelope, h
   const tr = await affordancesOp(at(`&target=${FACTS.target}`), t.stub, t.deps);
   assert.ok(!("screens" in tr.body.result) && !("wizard_scripts" in tr.body.result));
   assert.ok(!t.asked.some((u) => u.includes("affordancescreens")));
+  /* R15's reading of an absent stamp: with no viewer stamped, the screens are asked with none, never `viewer=` */
+  for (const viewer of [null, undefined]) {
+    const n = door();
+    await affordancesOp(at(""), n.stub, { ...n.deps, viewer });
+    assert.deepEqual(n.asked, ["http://do/actionkinds", "http://do/affordancescreens?"], String(viewer));
+  }
 });
 
 test("R37: a store silence or refusal on the screens is answered by the control plane's own answers, never as no "
