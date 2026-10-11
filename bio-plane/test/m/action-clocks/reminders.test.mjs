@@ -114,7 +114,7 @@ test("R5 remindersDue lists each unanswered reminder whose day has come, on a pe
   assert.deepEqual(at("2026-09-29T02:59:59Z").items, [], "not on the UTC day: the action's local day is still the 28th");
   const d = at("2026-09-29T03:00:00Z");
   assert.deepEqual(d.items, [{ action: A, ord: 0, date: "2026-09-01", basis: "Act s.2", text: "t", on: "2026-09-29", set_by: BOB,
-                               project: null, zone: "America/Halifax" }], "N609: the zone its reminder was judged due in");
+                               project: null, zone: "America/Halifax", steps: [] }], "N609: the zone its reminder was judged due in");
   assert.deepEqual(at("2026-10-01T08:00:00Z").items.map((x) => [x.ord, x.on]), [[0, "2026-09-29"], [1, "2026-10-01"]]);
   /* answered: gone. */
   w.clock.ms = Date.parse("2026-10-01T09:00:00Z");
@@ -259,7 +259,7 @@ test("R4 R6 the ops reminderset and reminderanswer read the control plane's stam
   const a = op("reminderanswer", `target=${A}&entry=0&on=2026-10-01&author=${M}&viewer=${M}`);
   assert.deepEqual(a, { ok: true, target: A, entry: 0, answered: ["2026-09-20"], next: "2026-10-01" });
   assert.deepEqual(Object.keys(clocks.actionClocksOps(w.c, new URL("https://x/"), null)).sort(),
-    ["clockadopt", "clocklateness", "clocksics", "reminderanswer", "reminderset"]);
+    ["clockadopt", "clocklateness", "clocksics", "clockstate", "reminderanswer", "reminderset"]);
 });
 
 test("R4 (N427) reminderRefused(arm, detail, extra?) is exported, the one answer REMINDER_REFUSED is minted through: its row, its arm and detail, a caller's extra fields never replacing them; it writes nothing and never throws", () => {
