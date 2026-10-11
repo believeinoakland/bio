@@ -78,7 +78,7 @@ Terms are `case-authoring`'s and `publication`'s. An **account** is a list of se
 ### Uses
 
 - `record-grammar`: `proposalLabel` (its R54 subjects `case_account`, `account_check`; R1, R2), `acceptanceRecord`, `ACCEPTANCE_FORMS`, `ACCEPT_MUST_REAUTHOR`, `SHARED_ACT_CHECKS` (its R52; R4), `parseFrontmatter`.
-- `record-core`: `recordOf`, `transact`, `mintOpaqueId`, `mintExhausted` (its R62; R1), `stampInstant`, `declarePurge` (R8), `readFile`; the `bundles` read contract (its R37; R1, R6).
+- `record-core`: `recordOf`, `transact`, `allocId` (record-grammar R55's opaque form; K2670), `mintExhausted` (its R62; R1), `stampInstant`, `declarePurge` (R8), `readFile`; the `bundles` read contract (its R37; R1, R6).
 - `membership`: `viewerPredicate` (R1, R6, R10).
 - `inquiry`: `basisFor` (R6).
 - `content`: the `content` read contract (its R45; R6).
