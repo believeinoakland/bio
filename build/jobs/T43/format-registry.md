@@ -29,3 +29,7 @@
 **Reading set (mechanics §17)** · 125 KB at START, under 300 KB: read whole myself: `requirements/format-registry.md`; `plan/draft-T43-n853b.md`; K2611, K2691; the plan's T43 entries and "Rules at the opening"; `layers.md`'s table and layer-1 contract; the public parts of `office-readers`, `odf-reader`, `pdf-reader` and `ooxml`; `formats.mjs` and every file under `test/m/format-registry/`.
 
 Size (session_012CR9FjettQwdGvBEvk8MPR): test runs 12, module lines 393
+
+## J1 · COMPLETE
+
+T43-3 applied: jpeg (R29) and png (R30) picture entries in formats.mjs, one builder, registered after csv and before zip; roster twelve (R23). New test/m/format-registry/pictures.test.mjs with negative controls (PDF/HTML/ZIP/office/ODF/GIF/TIFF/HEIC/WebP not pictures; a picture never zip; listFormats order); ten->twelve roster pins in builtins, registry, zip tests. format-registry 42/0; coverage 30/30; format, architecture, ownership 0 failures. Users green: acquisition 158, capture 123 (+4 extra), reading-pipeline 104, extraction 150, content 132, file-safety 53, link-sweep 29, monitoring 124, doorbell 69, sources 30; no other pin of ten entries. Stale: plane bundle (dist/bio-plane.bundled.mjs). Observation, unchanged (R23 order): a JPEG/PNG whose first KiB holds %PDF- or <html detects as pdf/html. No new files outside paths. Record: build/jobs/T43/format-registry.md.
