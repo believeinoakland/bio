@@ -197,7 +197,7 @@ Row C-44.6 (R58; N681), in the case-identity family; its translation is BOB's dr
   - after R10, its R4 (`accountDraftJudged`), then its R6 (`accountJudged`, after R55's judgments and before R11), then its R7 (`reviewCommentsChosen`), whose chosen comments and count left out go into `case-grammar` R25's block, the count stated (undetermined when `case-account` R7 answers it so);
   - after the document is stored, its R4's `acceptanceRecorded`, inside this act's transaction, when the account began as a draft.
 
-  Each first refusal is answered, and nothing is written. R34's pre-flight asks R5 and R6 as `publishCase` does (R63, R67). (T43; N850; K2608) This module answers none of `accountPropose`, `accountDrafts` or `registerReviewComments`; they are `case-account`'s alone. *(not yet met: T43)*
+  Each first refusal is answered, and nothing is written. R34's pre-flight asks R5 and R6 as `publishCase` does (R63, R67). (T43; N850; K2608) This module answers none of `accountPropose`, `accountDrafts` or `registerReviewComments`; they are `case-account`'s alone.
 
 ### Satisfies
 

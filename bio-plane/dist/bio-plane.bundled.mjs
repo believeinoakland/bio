@@ -167389,23 +167389,6 @@ var CaseAuthoring = class {
       }))
     };
   }
-  /* ==========================================================================================================
-   * R69 (N850; K1333, K2608): THREE ONE-LINE PASS-THROUGHS TO `case-account`, unused by new code, each answering exactly
-   * as it answers: they stand only while `review` (T42-23a), `control-plane` (T42-29) and `plane` (T42-30) re-point,
-   * and T43 deletes them.
-   * ========================================================================================================== */
-  /** `case-account` R1, R2 (the system's drafts of a case's account). */
-  accountPropose(args) {
-    return this.account.accountPropose(args);
-  }
-  /** `case-account` R3 (the case's account drafts, oldest first). */
-  accountDrafts(args) {
-    return this.account.accountDrafts(args);
-  }
-  /** `case-account` R7 (the one reader of the case's review comments, registered once). */
-  registerReviewComments(fn) {
-    return this.account.registerReviewComments(fn);
-  }
   /** R2, asked by `op=publish` and by R32's read alike: the publishing project named, seen, a project, and owned by
    *  `who`. Answers the refusal itself (`ok: false` at the top level, N370) or `{ok: true, proj, gate}`. */
   #authority(project, viewer, who2) {
