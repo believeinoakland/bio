@@ -1,6 +1,6 @@
 # BOB to run-rules (T45)
 
-**Read** · handled J1
+**Read** · handled J0
 
 ## B1 · START
 
