@@ -1,6 +1,6 @@
 # affordances (T43)
 
-**Status** · session_01S81AeYUiK3j4br2K1UYVmu · depth 2 · COMPLETE · handled B1
+**Status** · session_01S81AeYUiK3j4br2K1UYVmu · depth 2 · COMPLETE · handled B2
 
 ## J1 · REPORT
 
@@ -56,3 +56,40 @@ Without my change only rule 4 (10)'s eight reds stand (t34:68, 145, 307; t37:105
 - ownership . affordances tranche/T43: 3 files changed; 0 failures.
 
 Size (session_01S81AeYUiK3j4br2K1UYVmu): test runs 9, module lines 2335
+
+## J3 · COMPLETE
+
+**B2 (K2727) done on `job/T43/affordances` (3aae21ab77): the module's code and tests read whole; three flaws fixed.** BOB merges again (code changed).
+
+**Read whole by me, now:** `src/affordances.mjs`, `src/affordances/{door,facts,words,act-help}.mjs`, and all 21 test files under `test/m/affordances/` (with `t36.test.mjs` and `build/requirements/affordances.md`, read in J2). So the reading set is complete: my requirements, code and tests whole. The used modules' public parts were digested by a helper, as J2 records.
+
+**Fixed (my module; P8)**
+1. **R16 / R10, `affordances.mjs`.** `inquirydivide`, `inquiryground`, `versionhide` and `sever`/`reinstate`'s information-and-inquiry arms read their counts with `?? 0`. `retire` and the project arms used `countOf`. Under `?? 0`, a hand-built facts object carrying ids was compared as an array: `rested_on.working: []` withheld `inquirydivide` though nothing rests on the question. Every count now goes through `countOf`. The result is unchanged for numbers, null and absent. `derive.test.mjs` adds id-array values for `basis_legs`, `rested_on.working`, `cited_by_case` and `basis_versions` to its oracle corpus. The old code fails R8 and R9 there; the new code passes.
+2. **R15, `affordances/door.mjs`.** The door sent an absent `author` or `by` as `author=` / `by=`. The facts read `author: ""` as a machine (`actor_is_machine: true`), not null as R15 says. Its own test's comment claimed null. Similarly, an absent `identity` was sent as the string "undefined".
+   - Now each stamp the control plane did not hand in (null or undefined) is left off the query. A stamp handed in, `""` included, is sent as given.
+   - This was latent: `plane/door.mjs` always stamps an author.
+   - `door.test.mjs` re-pinned with a control that `""` is still sent. The old code fails it.
+3. **Robustness, `deriveActs`.** It read `a.id in MACHINE_REFUSALS`, which takes inherited keys. It now uses `Object.hasOwn`, as `decorate` does.
+4. **Comments.** `countOf`'s comment sat between `anyVersionEdgeTo`'s comment and its function; moved. "these three ops" in the per-item block now reads "these ops" (there are four).
+
+**Deferred, with why (for BOB)**
+- **Retired ids in test titles.** Many titles in `catalogue`, `t31`, `t33` and `t34` name retired requirement ids: R2, R3, R7, R27, R30–R35, R37, R38, R40, R45, all moved to `op-grades` (K1974). These tests pin op-grades' tables, largely duplicating op-grades' own tests. They also carry live R12 / R24 / R19 checks. Thinning them is a test-scope decision, and I do not weaken tests unasked. Coverage passes either way.
+- **Factory caching.** `affordancesOf(host, deps)` caches per host in a WeakMap, so a second call on the same host with other `deps` gets the first instance. This is the K61 pattern every module's factory shares; it is not a hazard in any current test (each builds a fresh host).
+- **R48's wording.** The text still names PR #19's 215 entries. T43-17 re-pinned to the registry on `tranche/T43` (213, DEC-189, DEC-190). The requirement's next version should fold that; this is BOB's text.
+
+**Found in other modules:** unchanged from J1. op-declarations' `ACT_HELP_ABSENT` still names `transcribe` and `pagetranscribe` (`t36`:292, `t42`:128).
+
+**Tests (after the fixes)**
+- affordances 233/0.
+- My users:
+  - tasks 106/0; queue 138/0; store-door 44/0; plane (with `migrate-released`) 185/0.
+  - op-declarations 123/10: rule 4 (10)'s eight (`t34`:68, 145, 307; `t37`:105, 177, 218; `t38`:76, 87), plus J1's two (`t36`:292, `t42`:128).
+  - control-plane 222/1: `envelope.test.mjs`:387, rule 4 (12) (the same R22 test as :391 before `tranche/T43` was merged in).
+
+**Checks**
+- format: 147 modules, 0 failures.
+- architecture . affordances: 25 files, 268 imports, 0 failures.
+- coverage . affordances: 34 of 34 live ids, 0 failures.
+- ownership . affordances tranche/T43: 5 files, 0 failures.
+
+Size (session_01S81AeYUiK3j4br2K1UYVmu): test runs 14, module lines 2337
