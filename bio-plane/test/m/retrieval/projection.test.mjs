@@ -247,7 +247,7 @@ test("R5, R56: decorations run in the modules' total order, whatever order they 
   assert.equal(one.first, true);
 });
 
-test("R58: migrate() creates the projection table, its indexes, the keyed text index and the selection tables and backfills, idempotently; retrievalRoutes answers every op of R1–R54 and R63–R65 for the router", async () => {
+test("R58: migrate() creates the projection table, its indexes, the keyed text index and the selection tables and backfills, idempotently; retrievalRoutes answers every op of R1–R54, R63–R65 and R73 for the router (R78 adds none)", async () => {
   const w = world();
   w.doc("INFO-1", { source_status: "live" }, { files: [{ path: "n.md", text: "hello water" }] });
   const cols = w.rows(`PRAGMA table_info(bundle_projection)`).map((c) => c.name);
