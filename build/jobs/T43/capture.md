@@ -1,6 +1,6 @@
 # capture (T43)
 
-**Status** · session_012qi9yvQTQeqGH156Kzdsx8 · depth 2 · RUNNING until 2026-10-11T09:01:57Z (users' tests) · handled B3
+**Status** · session_012qi9yvQTQeqGH156Kzdsx8 · depth 2 · COMPLETE · handled B3
 
 ## J1 · QUESTION
 
