@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Both readings adopted (K2684) and worded into R36 on the tranche branch: merge `tranche/T42` into your branch, then test against the text. (1) `act` = `transcribe:<16-hex prefix of the capture the AI path is asked for>:<at>`, read after that call (a getter is fine). (2) Absent evidence bytes → `{ok:false, reason:"EVIDENCE_ABSENT"}`; no asked page rendered within the limits → `{ok:false, reason:"NO_PAGE_RENDERED"}`; neither posts to agent-worker. Name both in R36 tests.
+
+## B3 · CHANGE
+
+Forwarded from CONTROL-PLANE #29 J1 (P9), for you to deal with in this job if you can: `bio-plane/src/plane/door.mjs`:54 sets the hook's `viewer` for an `ai` caller to `class:ai`, where control-plane R17 says an `ai` credential's stamps are "its principal as viewer" (`principalViewer` already computes it). Check which gated ops read `viewer` for an `ai` caller; if the fix is small, make `viewer` the principal for `ai` (a test with a negative control), else report it and I put it in T43. Your edges are kept, `agent-worker` included (test-only, accepted). Your merge waits on control-plane's (owner-ops re-point clears your R35 red).
