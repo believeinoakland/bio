@@ -21,9 +21,10 @@ test("R9 R19 R25: determinationRead answers R1's fields, the act's event with wh
   assert.deepEqual([r.id, r.project, r.author, r.at, r.supersedes, r.superseded_by, r.live, r.basis_changed],
     [d.id, proj, V("olive"), "2026-09-28T01:00:00Z", null, null, true, null]);
   /* the one shape (K248): exactly these keys, which consequences, actions, filings and escalation read */
-  assert.deepEqual(Object.keys(r).sort(), ["act", "at", "author", "basis_changed", "cause", "cause_says", "event", "findings", "id",
-    "live", "ok", "outcomes", "outcomes_differ", "outcomes_differ_says", "project", "proposal", "questions", "reason",
-    "standards", "superseded_by", "supersedes"]);
+  /* (T45) with R37's `cured_by` and `cures`; a determination that is not void carries no `void` key (R33) */
+  assert.deepEqual(Object.keys(r).sort(), ["act", "at", "author", "basis_changed", "cause", "cause_says", "cured_by", "cures",
+    "event", "findings", "id", "live", "ok", "outcomes", "outcomes_differ", "outcomes_differ_says", "project", "proposal",
+    "questions", "reason", "standards", "superseded_by", "supersedes"]);
   /* N345: no cause stated reads "cause not established" (R22); one standard, so the outcomes do not differ (R9) */
   assert.deepEqual([r.cause, r.cause_says, r.outcomes_differ, r.outcomes_differ_says],
     [null, "cause not established", false, null]);
@@ -48,6 +49,7 @@ test("R9 R19 R25: determinationRead answers R1's fields, the act's event with wh
              content: [ev.content] }], disagreement: null }]);
   const [f] = r.findings;
   assert.deepEqual([f.finding, f.case, f.edition, f.version_sha, f.role], [F, "CASE-2026-0001", 1, pin, "load_bearing"]);
+  assert.deepEqual(f.basis, { kind: "published", case: "CASE-2026-0001", edition: 1 });
   assert.deepEqual(f.frozen, { capture: { state: "graded", grade: "B" }, connection: { state: "graded", grade: "C" }, testimony: null });
   const live = w.strength.inquiryStrength({ id: F, viewer: V("pat") });
   assert.deepEqual(f.live, { capture: { state: live.capture.state, grade: live.capture.grade },
