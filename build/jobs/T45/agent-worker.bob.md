@@ -13,3 +13,7 @@ Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 2266 KB with your tests (K2700), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entries and what follows them (the later layers that use your new services), have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Merge order in L6: steps, run-rules, ai-runs, reading-guides, skills, answers, agent-worker (agent-worker after run-rules and skills: merge `tranche/T45` into your branch when BOB announces theirs, a CHANGE).
+
+## B2 · ANSWER · re J1
+
+All as you read them (K2820), now in R78's text: response id "<action id>#<ord>"; op=action for the entry and kind; op=reading for the text; op=procedureguides ({kind}, reading-guides R13's read, declared by op-declarations in L11); malformed id or unrouted op undetermined in why; PLANE_OPS gains exactly action, reading, procedureguides. Your R76 readings stand (text 1-20,000; ids <=200; no told; ASK_OPS; whole-shape DRAFT_UNFORMED). Merge tranche/T45 for R78.
