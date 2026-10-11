@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 767 KB with your tests (K2
 Merge order in L2: promotion alone (its stamp merges last in its layer).
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); rule 4 (2) is partly yours (the stamp).
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+J1 read; thank you. Your question answered (K2706): R38 states one catalogue function at every door, so a creation admitted with a C-2.1 finding is R38 unmet. Apply the C-2.1 arm to creations as to revisions (any `parseFrontmatter` C-2.1 finding refuses `BUNDLE_MD_UNREADABLE`), with a test and negative control; re-run your users' suites and report any new fixture reds by file and line (the action-clocks and ratification ones are now T43-19 and T43-20, accepted as rule 4 (11)). Then COMPLETE again. I will repoint `modules.json`'s promotion test to `row-census-1.70.0.jsonl` and strike R38's mark at your merge.
