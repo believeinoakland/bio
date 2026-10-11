@@ -1,6 +1,6 @@
 # case-disclosures (T42)
 
-**Status** · session_011M1X1CKSmsRAQDvUbXrW5e · depth 2 · WORKING · handled B1
+**Status** · session_011M1X1CKSmsRAQDvUbXrW5e · depth 2 · COMPLETE · handled B1
 
 **Read whole** (the reading set, mechanics §17): `requirements/case-disclosures.md`; layer 8's row of `layers.md`; `plan/current.md`'s T42-23b and rule 4; K2643; `test/m/case-disclosures/carries.test.mjs` and `fixture.mjs`. The rest of the module's code is not touched by this entry. To find the cause I also read, in part, `sources/index.mjs` (`sourcesOf`), `doorbell/index.mjs` (`doorbellOf`), `capture/index.mjs` (`captureOf`, `Capture`'s `acquisition` getter), `acquisition/unpack.mjs` (`acquisitionOf`, its schema) and `plane/store.mjs`'s boot migrate list.
 
