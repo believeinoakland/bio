@@ -66,3 +66,7 @@ T45-26 done on b2df39c1a5 (tranche/T45 merged after B3): R1–R13 met, the copy 
 ## J3 · COMPLETE
 
 B4 applied: tranche/T45 merged (887af4a699); no stand-in of action-grammar was in use. action-holds 35/35; format and architecture 0 failures. actions 109/111: t20 'R52 actionHold…(C-117.20-.22)' and t27 'R57 holdReleasePreview…' are red on tranche/T45 alone, from action-grammar's merge retiring HOLD_NO_LEGAL_MARK's row; T45-27 deletes those moved tests. Record updated.
+
+## J4 · COMPLETE
+
+B5 applied: tranche/T45 merged. (1) R1: entry-stated marks (pressure_kind/pressure_note) read through actions.actionRead and unioned with my table in holdsDue, pressureFor and from:{mark}; pressure.test.mjs R1 brought in line. (2) Copy-window code removed: all five tables declared and both readers registered as my own; the copy-window test replaced by one for the ended window. action-holds 35/35, actions 110/110; format, architecture, coverage 13/13, ownership all 0 failures. Record updated.
