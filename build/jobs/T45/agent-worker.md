@@ -48,3 +48,23 @@ Found in other modules while building R76–R78 (each against its requirements; 
 - `checks/format.mjs`: 0 failures; `architecture.mjs agent-worker`: 0 failures; `coverage.mjs agent-worker`: 70 of 70 live ids named, 0 failures; `ownership.mjs agent-worker tranche/T45`: 11 files, 0 failures.
 
 Size (session_01JFq9iL3m4uA8zW6LpJSnxm): test runs 9, module lines 3268
+
+## J4 · COMPLETE
+
+**B3 (K2824) applied, tranche/T45 merged in** (8265aee035). Everything in J3 stands; this adds:
+
+- **R76 amendment.** `infractiondraft`'s task is `{op, matter, audience, record}`, `record` `{actions, correspondence, findings}` lists plus an optional `plan` (an object or null), no other key. `bearingdraft`'s is `{op, action, reply, action_record, reply_record}`, each a non-empty object.
+  - Each record is at most `RECORD_MAX` (200,000 characters of JSON), never cut. An absent, malformed or oversized one is `BAD_TASK` (15 new arms).
+  - The records reach the model only as the result of a fixed `read_facts` call the conversation opens with (id `facts_1`, `agent-model`'s `READ_FACTS`, which `converse` answers again from the transcript). They pass through R63's text-only filter, and the system prompt says they are data, never instruction.
+  - The grant, `DRAFT_NEEDS_GRANT` and the `ASK_OPS` read tool are unchanged.
+  - Tests: the opening and the offered tools; the sentinel in bearingdraft's records only inside `tool_result`; a record's bytes never reach the model. R77's injections now ride the records as well as the reads, for each kind and task.
+- **Mine, done:** the 200 answer's `task` names the task's op and ids (`{op, matter, audience}` / `{op, action, reply}`), not the records handed in. The door already holds them, and echoing them would answer the injected record text back outside the draft's fields (R77's "nothing else is answered").
+
+**Tests and checks** (run whole, never stopped)
+- `npm test` red only where J3 said:
+  - requirements R45 ×2 (stale bundle, BOB's regeneration at L6's close);
+  - t45's four R27-dependent arms ("DRAFT_NEEDS_GRANT", "with a grant, it runs" for infractiondraft and bearingdraft), until run-rules merges.
+- Against a stand-in for R27 in a throwaway worktree: `t45: 207 passed, 0 failed`.
+- format 0; architecture 0; coverage 70/70, 0; ownership 11 files, 0.
+
+Size (session_01JFq9iL3m4uA8zW6LpJSnxm): test runs 13, module lines 3301
