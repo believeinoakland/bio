@@ -38384,6 +38384,7 @@ __export(inquiry_exports, {
   INQUIRY_DECLARATIONS: () => INQUIRY_DECLARATIONS,
   INQUIRY_DISPOSE_CHECKS: () => INQUIRY_DISPOSE_CHECKS,
   INQUIRY_MACHINE: () => INQUIRY_MACHINE,
+  INQUIRY_PASSAGE_CHECKS: () => INQUIRY_PASSAGE_CHECKS,
   INQUIRY_ROWS: () => INQUIRY_ROWS,
   INQUIRY_SCHEMA: () => INQUIRY_SCHEMA,
   INQUIRY_SURFACE_CHECKS: () => INQUIRY_SURFACE_CHECKS,
@@ -38425,6 +38426,7 @@ __export(inquiry_exports, {
   inquiryQuestionOf: () => inquiryQuestionOf,
   leadLegFindings: () => leadLegFindings,
   legCapped: () => legCapped,
+  machinePassageUnchecked: () => machinePassageUnchecked,
   moveBundleFacts: () => moveBundleFacts,
   moveSubjectEntity: () => moveSubjectEntity,
   personWarning: () => personWarning,
@@ -105243,6 +105245,13 @@ var INQUIRY_BIAS_CHECKS = {
     translation: "A leg says a statement of the lens shaped how it was weighed, and that statement is not in the lens in force for this question's project now, or whether it is could not be read. Name a statement of the lens in force, or take the application off the leg. Nothing was written."
   }
 };
+var INQUIRY_PASSAGE_CHECKS = {
+  MACHINE_PASSAGE_UNCHECKED: {
+    check: "C-2.20",
+    where: "src/inquiry/index.mjs machinePassageUnchecked > is-machine-passage-checked, reached from check > is-machine-passage-taken-up",
+    translation: "Whether a passage this question now rests on was proposed by an assistant and taken up by you could not be read, so the question is refused rather than let through. Nothing was written. Try again."
+  }
+};
 var QUESTION_WORDS = Object.freeze({
   "question.refused.drawnon": "This question can't be set aside for the whole group, because a project draws on it. Set it aside in your project instead; that leaves it as it is everywhere else."
 });
@@ -105635,7 +105644,8 @@ var ROW_FAMILIES2 = [
   INQUIRY_DISPOSE_CHECKS,
   INQUIRY_CONTRADICTION_CHECKS,
   INQUIRY_SURFACE_CHECKS,
-  INQUIRY_BIAS_CHECKS
+  INQUIRY_BIAS_CHECKS,
+  INQUIRY_PASSAGE_CHECKS
 ];
 function withRow(answer) {
   if (!answer || answer.ok !== false || typeof answer.reason !== "string" || answer.check) return answer;
@@ -105674,6 +105684,29 @@ function biasNotInForce(args = {}) {
     detail: `${at43 ?? "a bias application"} names the bias statement ${id === null ? "(none)" : `'${fmSafe(id)}'`}, ` + (inForce === null ? `and whether it is in ${lens} could not be read, so the application is refused rather than trusted` : `which is not in ${lens}`)
   };
 }
+function machinePassageUnchecked(detail, extra = {}) {
+  const row12 = INQUIRY_PASSAGE_CHECKS.MACHINE_PASSAGE_UNCHECKED;
+  return {
+    ...extra && typeof extra === "object" ? extra : {},
+    ok: false,
+    reason: "MACHINE_PASSAGE_UNCHECKED",
+    code: "MACHINE_PASSAGE_UNCHECKED",
+    check: row12.check,
+    translation: row12.translation,
+    detail: typeof detail === "string" && detail ? detail : "whether the passages this act cites were proposed by an assistant and taken up by the member could not be read, so the act is refused rather than passed on trust. Nothing was written."
+  };
+}
+var passageOf2 = (leg2, ord) => {
+  const out = { ord, target: typeof leg2.target === "string" ? leg2.target.trim() : leg2.target };
+  for (const k of Object.keys(leg2).sort())
+    if ((k === "content_id" || k === "extent_capture" || k.startsWith("extent_")) && leg2[k] !== void 0 && leg2[k] !== null)
+      out[k] = leg2[k];
+  return out;
+};
+var passageKey = (p3) => {
+  const { ord, ...rest } = p3;
+  return JSON.stringify(rest);
+};
 var PUBLIC_ROLE_LINES = Object.freeze({
   office: Object.freeze(["holds", "responsible_for", "acts_for"]),
   government_body: Object.freeze(["belongs_to", "seat_on"])
@@ -105786,6 +105819,8 @@ var Inquiry = class _Inquiry {
   // R53: the lens a finding is made under is read here
   #onWaitSet = null;
   // {module, fn}: scheduler's arming notice (R54; scheduler R9)
+  #onMachinePassage = null;
+  // {module, fn}: whether a member may cite as hers a passage a machine proposed (R62)
   #view;
   // R55, R57: the active jurisdiction view, whose time_zone is the profile's
   #deps;
@@ -105917,6 +105952,56 @@ var Inquiry = class _Inquiry {
     this.#onGrounded = { module, fn };
     return { ok: true, module };
   }
+  /** R62 (T42; N834; run-productions R25): the read that says whether a member may cite as hers a passage a machine
+   *  proposed. One registration, by any module (membership's `listenerRefusal`, its R81). `fn({legs, author, viewer})`
+   *  answers synchronously null (each leg stands) or a refusal. */
+  onMachinePassage(module, fn) {
+    const refused5 = listenerRefusal(this.#onMachinePassage, module, fn);
+    if (refused5) return refused5;
+    this.#onMachinePassage = { module, fn };
+    return { ok: true, module };
+  }
+  /* R62: asked by R11's check of a promotion of an inquiry by an author who is not a machine, over each leg the revision
+     adds or changes against the held document (a leg naming the same passage as a held leg, by target, content row,
+     capture and part, whatever its position, is unchanged and never asked). Null when nothing is registered, nothing
+     is asked, or `fn` answers null; a refusal from `fn` unchanged; anything else MACHINE_PASSAGE_UNCHECKED. */
+  #machinePassageRefusal(bundleId, legs, author) {
+    if (!this.#onMachinePassage) return null;
+    if (typeof author === "string" && isMachineIdentity(author)) return null;
+    const held2 = /* @__PURE__ */ new Map();
+    let heldText2 = null;
+    try {
+      heldText2 = this.record.readFile(bundleId, "bundle.md")?.text ?? null;
+    } catch {
+      heldText2 = null;
+    }
+    const heldFm = typeof heldText2 === "string" ? parseFrontmatter(heldText2).data : null;
+    for (const [i, l2] of (heldFm && Array.isArray(heldFm.basis) ? heldFm.basis : []).entries())
+      if (l2 && typeof l2 === "object") {
+        const k = passageKey(passageOf2(l2, i));
+        held2.set(k, (held2.get(k) || 0) + 1);
+      }
+    const asked = [];
+    legs.forEach((l2, i) => {
+      const p3 = passageOf2(l2, i), k = passageKey(p3);
+      if (held2.get(k)) held2.set(k, held2.get(k) - 1);
+      else asked.push(p3);
+    });
+    if (!asked.length) return null;
+    const who2 = typeof author === "string" ? author : null;
+    let r;
+    try {
+      r = this.#onMachinePassage.fn({ legs: asked, author: who2, viewer: who2 });
+    } catch (e2) {
+      return machinePassageUnchecked(
+        `the read of whether these passages were taken up (${this.#onMachinePassage.module}) failed: ${fmSafe(e2 && e2.message ? e2.message : e2).slice(0, 200)}. Nothing was written.`,
+        { legs: asked.map((p3) => p3.ord) }
+      );
+    }
+    if (r === null) return null;
+    if (r && typeof r === "object" && !Array.isArray(r) && typeof r.then !== "function" && r.ok === false && typeof r.reason === "string" && r.reason) return r;
+    return machinePassageUnchecked(`the read of whether these passages were taken up (${this.#onMachinePassage.module}) answered neither null nor a refusal. Nothing was written.`, { legs: asked.map((p3) => p3.ord) });
+  }
   /* The re-evaluation an act raised, `{raised, failed, answer}`, or null when no module is registered to raise it. The
      listener answers the dependents (an array), or an object `{raised, listeners_failed?}` (reevaluation R8), which is
      kept itself as `answer` (N422): reevaluation writes the listeners that failed onto it after the outermost commit
@@ -106021,6 +106106,8 @@ var Inquiry = class _Inquiry {
         if (hf.length) return { ok: false, reason: "BASIS_REFUSED", findings: hf };
         const bf2 = this.biasAppliedFindings({ legs: basisLegs, project: basisFm.project, viewer: c.author });
         if (bf2.length) return { ok: false, reason: "BASIS_REFUSED", findings: bf2 };
+        const mp = this.#machinePassageRefusal(bundleId, basisLegs, c.author);
+        if (mp) return mp;
       }
     }
     if (isInquiry && docFm && !replay && typeof docFm.subject_entity === "string" && docFm.subject_entity.trim() !== "") {
@@ -106523,41 +106610,49 @@ var Inquiry = class _Inquiry {
       return null;
     }
   }
-  /** R59 (D13; K2479, K2480): the record's facts for the persons `text` and `subject` may name, for `personWarning`:
+  /** R63 (T42; N837), R59 (D13; K2479, K2480): the record's facts for the persons `text` and `subject` may name, for `personWarning`:
    *  the subject entity, every `ENT-` id written in the text, and every entity whose live alias is a run of the text's
    *  words (at most `PERSON_NAME_WORDS_MAX` words a run, over its first `PERSON_TEXT_WORDS_MAX` words), through
    *  `entities.entitiesByAlias` (its R6); each person among them `{entity_id, kind, label, public_role, named: true}`,
    *  `public_role` true when `lines` holds, not withdrawn, a line of `PUBLIC_ROLE_LINES` from it (an office it holds,
-   *  is responsible for or acts for; a government body it belongs to or sits on). Never throws. */
+   *  is responsible for or acts for; a government body it belongs to or sits on). An id the record does not hold, or not
+   *  a person, is left out; a read that fails leaves what was found standing. Writes nothing; never throws. */
   personFacts(args = {}) {
     const { text: text7 = "", subject = null, viewer = null } = args && typeof args === "object" ? args : {};
     const ids = /* @__PURE__ */ new Set();
     try {
       if (typeof subject === "string" && subject.trim()) ids.add(subject.trim());
       for (const m of (typeof text7 === "string" ? text7 : "").matchAll(ENTITY_ID_IN_TEXT)) ids.add(m[0]);
-      const words5 = wordsFold(text7).split(" ").filter(Boolean).slice(0, PERSON_TEXT_WORDS_MAX);
+      const words5 = (typeof text7 === "string" ? text7 : "").normalize("NFC").split(/\s+/).filter(Boolean).slice(0, PERSON_TEXT_WORDS_MAX);
+      const trimmed2 = words5.map((x) => x.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, ""));
       const ents = this.entities;
       const tried = /* @__PURE__ */ new Set();
       if (ents && typeof ents.entitiesByAlias === "function")
         for (let i = 0; i < words5.length; i++)
-          for (let n2 = 1; n2 <= PERSON_NAME_WORDS_MAX && i + n2 <= words5.length; n2++) {
-            const run2 = words5.slice(i, i + n2).join(" ");
-            if (tried.has(run2)) continue;
-            tried.add(run2);
-            let r = null;
-            try {
-              r = ents.entitiesByAlias({ alias: run2, viewer });
-            } catch {
-              r = null;
+          for (let n2 = 1; n2 <= PERSON_NAME_WORDS_MAX && i + n2 <= words5.length; n2++)
+            for (const run2 of /* @__PURE__ */ new Set([trimmed2.slice(i, i + n2).filter(Boolean).join(" "), words5.slice(i, i + n2).join(" ")])) {
+              const key2 = run2.toLowerCase();
+              if (!run2 || tried.has(key2)) continue;
+              tried.add(key2);
+              let r = null;
+              try {
+                r = ents.entitiesByAlias({ alias: run2, viewer });
+              } catch {
+                r = null;
+              }
+              for (const e2 of r && Array.isArray(r.entities) ? r.entities : [])
+                if (e2 && e2.kind === "person" && typeof e2.entity_id === "string") ids.add(e2.entity_id);
             }
-            for (const e2 of r && Array.isArray(r.entities) ? r.entities : [])
-              if (e2 && e2.kind === "person" && typeof e2.entity_id === "string") ids.add(e2.entity_id);
-          }
     } catch {
     }
     const out = [];
     for (const id of [...ids].sort()) {
-      const e2 = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, id);
+      let e2 = null;
+      try {
+        e2 = this.#one(`SELECT entity_id, kind, label FROM entities WHERE entity_id=?`, id);
+      } catch {
+        e2 = null;
+      }
       if (!e2 || e2.kind !== "person") continue;
       out.push({ entity_id: e2.entity_id, kind: e2.kind, label: e2.label, public_role: this.#publicRole(id), named: true });
     }
@@ -108495,6 +108590,8 @@ function inquiryOf(host, deps) {
         const m = k.migratedSurfacing(row12.bundle_id);
         return { ...m ? { surfaced_in: m } : {}, ...k.projectsOf(row12.bundle_id, ctx && ctx.viewer) };
       });
+    if (retrieval && typeof retrieval.registerSearchDecoration === "function")
+      retrieval.registerSearchDecoration("inquiry", (hits, ctx) => hits.map((h) => h && normalizeType(h.object_type) === "inquiry" ? k.projectsOf(h.bundle_id, ctx && ctx.viewer) : null));
   }
   return k;
 }
@@ -112014,6 +112111,14 @@ var safeJson20 = (s) => {
 var isInquiryId = (id) => normalizeType(OBJECT_TYPES[String(id ?? "").split("-")[0]]) === "inquiry";
 var INQUIRY_TYPES = JSON.stringify(["inquiry", ...Object.keys(LEGACY_TYPE_ALIASES).filter((t2) => LEGACY_TYPE_ALIASES[t2] === "inquiry")]);
 var drawsOn = (fm, inquiryId) => (Array.isArray(fm?.references) ? fm.references : []).some((x) => x && typeof x === "object" && x.rel === "cites" && x.status !== "severed" && String(x.target ?? "").trim() === inquiryId);
+function passageLeg(version, ord, row12) {
+  const r = row12 && typeof row12 === "object" ? row12 : {};
+  const out = { version, ord, target: typeof r.target === "string" ? r.target.trim() : r.target ?? null };
+  for (const [k, v] of Object.entries(r))
+    if ((k === "content_id" || k === "extent_capture" || k.startsWith("extent_")) && v !== void 0 && v !== null && v !== "")
+      out[k] = v;
+  return out;
+}
 function conclusionBiasApplied(raw) {
   const row12 = CONCLUDE_ACT_CHECKS.BAD_BIAS_APPLIED;
   const bad2 = (detail, findings2 = []) => ({ refused: {
@@ -112044,6 +112149,8 @@ function conclusionBiasApplied(raw) {
 var BasisVersions = class _BasisVersions {
   #candidateSource = null;
   // R25's extract arm: {module, fn}
+  #machinePassage = null;
+  // R49's read: {module, fn}
   constructor({
     storage,
     record,
@@ -112248,7 +112355,55 @@ var BasisVersions = class _BasisVersions {
           })
         };
     }
+    const author = typeof c.author === "string" ? c.author.trim() : "";
+    if (this.#machinePassage && !(author && isMachineIdentity(author))) {
+      const asked = [];
+      for (const v of offered) {
+        const held2 = this.#one(`SELECT state FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, bundleId, v.name);
+        const accepting = !!held2 && held2.state !== "accepted" && v.state === "accepted" && typeof v.author === "string" && isMachineIdentity(v.author.trim());
+        if (held2 && !accepting) continue;
+        for (const l2 of v.legs) asked.push(passageLeg(v.name, l2.src_ord, docLegs[l2.src_ord]));
+      }
+      if (asked.length) {
+        const refused5 = this.#machinePassageRefusal(asked, author);
+        if (refused5) return refused5;
+      }
+    }
     return null;
+  }
+  /** R49: one registration of the read that says whether a member may cite as hers a passage a machine proposed; a
+   *  malformed or second registration is refused by membership's one site (its R81), as R40's is. */
+  onMachinePassage(module, fn) {
+    const refused5 = listenerRefusal(this.#machinePassage, module, fn);
+    if (refused5) return refused5;
+    this.#machinePassage = { module, fn };
+    return { ok: true, module };
+  }
+  /* R49: the registered read's verdict over `legs`, asked once: null when each may stand as `author`'s (or nothing is
+     registered), its refusal unchanged, or inquiry R62's `MACHINE_PASSAGE_UNCHECKED` for a read that throws or answers
+     anything else (fail closed). The viewer is the acting member, as R3's accepted-work read is asked. */
+  #machinePassageRefusal(legs, author) {
+    const src = this.#machinePassage;
+    if (!src || !legs.length) return null;
+    let ans;
+    try {
+      ans = src.fn({ legs, author, viewer: author });
+    } catch (e2) {
+      ans = { thrown: e2 };
+    }
+    if (ans === null) return null;
+    if (ans && typeof ans === "object" && !("thrown" in ans) && ans.ok === false && typeof ans.then !== "function")
+      return ans;
+    const row12 = machinePassageUnchecked(
+      `the read registered by ${src.module} that says whether ${author} may cite as theirs a passage a machine proposed ${ans && typeof ans === "object" && "thrown" in ans ? "failed" : "answered neither a verdict nor a refusal"}, so ${legs.length} leg(s) of a basis version are refused rather than trusted. Nothing was written.`,
+      { legs: legs.map((l2) => ({ version: l2.version, ord: l2.ord, target: l2.target })) }
+    );
+    return {
+      ...row12,
+      ok: false,
+      reason: row12?.reason ?? row12?.code ?? "MACHINE_PASSAGE_UNCHECKED",
+      findings: Array.isArray(row12?.findings) ? row12.findings : [row12]
+    };
   }
   /** R7: both tables re-derived WHOLE from the document in the promotion's transaction, the ONLY write to either. Each
    *  document leg's content row is the one it names, else content's resolution over the leg's plan; there is no
@@ -112967,7 +113122,18 @@ var BasisVersions = class _BasisVersions {
       affirmed: affirmedParts === null ? null : affirmedParts.split("	"),
       ...act2 === "current" ? { project: projectId } : {}
     };
-    if (preview) return { ...receipt, preview: true, would: act2, wrote: false };
+    if (preview) {
+      if (to === "accepted" && from !== "accepted" && typeof row12.author === "string" && isMachineIdentity(row12.author.trim())) {
+        const vlegs = Array.isArray(fm.basis_version_legs) ? fm.basis_version_legs : [];
+        const asked = [];
+        vlegs.forEach((l2, i) => {
+          if (l2 && typeof l2 === "object" && String(l2.version ?? "").trim() === vname) asked.push(passageLeg(vname, i, l2));
+        });
+        const refused5 = this.#machinePassageRefusal(asked, who2);
+        if (refused5) return { ...refused5, act: act2, target, version: vname, preview: true, wrote: false };
+      }
+      return { ...receipt, preview: true, would: act2, wrote: false };
+    }
     if (act2 === "current") {
       const p3 = this.#setProjectCurrentVersion(projectRow, target, vname, who2, when, why2);
       if (!p3.ok) return { ...p3, ok: false, reason: p3.reason, act: act2, target, version: vname, project: projectId };
@@ -149910,8 +150076,9 @@ var AiUse = class _AiUse {
     return typeof this.record.transact === "function" ? this.record.transact(fn) : fn();
   }
   /* ===== START: the tables (R7) ===== */
-  /** R1, R2, R7: this module's tables, created if absent, the pre-T40 counter and ceilings carried over once, then
-   *  declared to record-core. Idempotent; run at the first construction (`aiUseOf`). */
+  /** R1, R2, R7: this module's tables, created if absent, the pre-T40 counter and ceilings carried over once and their
+   *  old tables dropped (T42; N848), then declared to record-core. Idempotent; run at the first construction
+   *  (`aiUseOf`). */
   migrate() {
     const cols = (t2) => this.#rows(`PRAGMA table_info(${t2})`).map((r) => r.name);
     const before2 = cols("ai_usage");
@@ -149941,9 +150108,14 @@ var AiUse = class _AiUse {
   }
   /** R2 (B4): today's ceilings, once: a member's own daily ceiling becomes that member's account's `overall` day limits
    *  in tokens and calls; the copy-wide ceiling the group account's `per_member` day limits. Each is recorded in the
-   *  history as set by the migration. */
+   *  history as set by the migration. (T42; N848) Once carried, `ai_ceilings` is dropped, as the pre-T40 counter is, so
+   *  a migrated store holds no table a fresh one lacks; a store whose carry already ran but which still holds the table
+   *  drops it here, at its next migration. */
   #carryCeilings() {
-    if (this.#one(`SELECT name FROM ai_use_migrations WHERE name='ceilings'`)) return;
+    if (!this.#one(`SELECT name FROM ai_use_migrations WHERE name='ceilings'`)) this.#carryCeilingsOnce();
+    this.sql.exec(`DROP TABLE IF EXISTS ai_ceilings`);
+  }
+  #carryCeilingsOnce() {
     const now = stampInstant("second", Date.now());
     const held2 = this.#rows(`SELECT name FROM sqlite_master WHERE type='table' AND name='ai_ceilings'`).length ? this.#rows(`SELECT holder, tokens, calls FROM ai_ceilings ORDER BY holder`) : [];
     for (const c of held2) {
@@ -150332,15 +150504,14 @@ var AiUse = class _AiUse {
     }
     return false;
   }
-  /** R3, R6, R9: the owner's `explore` value (`credentials` R55): `no`, `ask` or `yes`; `no` when no account is held or
-   *  it cannot be read (fail closed). Read through `accountUses` as the account's own owner until credentials offers a
-   *  read that takes no viewer (K2480). */
+  /** R3, R6, R9: the owner's `explore` value (`credentials` R55): `no`, `ask` or `yes`, read through
+   *  `credentials.accountUsesOf` (its R62; T42, N831), with no viewer, never through `accountUses` asked as one of the
+   *  account's owners. `held` is read, never `uses` alone: the group's answer carries its defaults with `held: false`
+   *  (K2620). `no` when the account is not held, cannot be read, or holds any other value (fail closed). */
   #exploreOf(p3) {
     try {
-      const as = p3.kind === "member" ? `member:${p3.id}` : p3.kind === "project" ? this.membership.projectOwners(p3.id)[0] : this.membership.activeAdmins()[0];
-      if (!as) return "no";
-      const a = this.#credentials().accountUses({ owner: p3.owner, viewer: as.startsWith("member:") || as === "admin" ? as : `member:${as}` });
-      const v = a && a.ok === true && a.held && a.uses ? a.uses.explore : "no";
+      const a = this.#credentials().accountUsesOf({ owner: p3.owner });
+      const v = a && a.ok === true && a.held === true && !a.unreadable && a.uses ? a.uses.explore : "no";
       return ["no", "ask", "yes"].includes(v) ? v : "no";
     } catch {
       return "no";
@@ -151039,6 +151210,12 @@ CREATE TRIGGER IF NOT EXISTS step_proposal_refs_last AFTER DELETE ON step_propos
   DELETE FROM step_proposals WHERE proposal_id = OLD.proposal_id AND place_kind = 'questions'
     AND NOT EXISTS (SELECT 1 FROM step_proposal_refs r WHERE r.proposal_id = OLD.proposal_id);
 END;
+-- a decided proposal never names a step that has gone (T42, K2655); its own trigger, so a store whose steps_gone
+-- predates it gains it, and the update after it clears what such a store already left
+CREATE TRIGGER IF NOT EXISTS steps_gone_proposals AFTER DELETE ON steps BEGIN
+  UPDATE step_proposals SET step_id = NULL WHERE step_id = OLD.step_id;
+END;
+UPDATE step_proposals SET step_id = NULL WHERE step_id IS NOT NULL AND step_id NOT IN (SELECT step_id FROM steps);
 `;
 var STEPS_TABLES = Object.freeze([
   Object.freeze({ name: "step_refs", keys: ["question_id"] }),
@@ -151202,7 +151379,7 @@ var STEPS_CHECKS = {
     where: at19("stepAccept"),
     translation: "A proposed step is taken up as proposed, taken up with your own wording, or set aside for a step of your own. Nothing was written."
   },
-  NO_SUCH_PROPOSAL: {
+  NO_SUCH_STEP_PROPOSAL: {
     check: "C-142.28",
     where: at19("stepAccept"),
     translation: "There is no proposed step here by that id that you can see. Nothing was written."
@@ -152603,7 +152780,7 @@ var Steps = class _Steps {
     const a = this.#actor(by);
     if (a && a.machine) return refuse15("STEP_MEMBER_ONLY", "accepting a proposed step is a member's act");
     const pr = Number.isSafeInteger(Number(proposal)) && proposal !== null && proposal !== "" ? this.#one(`SELECT * FROM step_proposals WHERE proposal_id = ?`, Number(proposal)) : null;
-    if (!a || !this.#proposalSeen(pr, a.viewer)) return refuse15("NO_SUCH_PROPOSAL", "no proposal by that id is held that you may see", { proposal: proposal ?? null });
+    if (!a || !this.#proposalSeen(pr, a.viewer)) return refuse15("NO_SUCH_STEP_PROPOSAL", "no proposed step by that id is held that you may see", { proposal: proposal ?? null });
     if (pr.status !== "proposed") return refuse15("STEP_PROPOSAL_DECIDED", `this proposal was ${pr.status === "accepted" ? "taken up" : "set aside"}`, { proposal: Number(pr.proposal_id) });
     if (!ACCEPTANCE_FORMS.includes(form)) return refuse15("STEP_BAD_FORM", `the form is one of ${ACCEPTANCE_FORMS.join(", ")}`);
     const bad2 = this.#mayAccept(pr, a);
@@ -186176,12 +186353,12 @@ var HYPOTHESES_CHECKS = {
     where: act("hypothesisPropose"),
     translation: "A proposal of the system's carries its measured false-alarm rate, a share between 0 and 1. Nothing was written."
   },
-  PROPOSAL_NO_RUN: {
+  HYPOTHESIS_PROPOSAL_NO_RUN: {
     check: "C-134.22",
     where: act("hypothesisPropose"),
     translation: "A proposal of the system's names the run that made it. Nothing was written."
   },
-  NO_SUCH_PROPOSAL: {
+  NO_SUCH_HYPOTHESIS_PROPOSAL: {
     check: "C-134.23",
     where: acts("hypothesisTakeUp", "hypothesisSetAside"),
     translation: "There is no proposal here by that id that you can see. Nothing was written."
@@ -186542,6 +186719,14 @@ var EXTRACT_PROPOSE_ROWS = {
     check: "C-104.31",
     where: "src/run-productions/index.mjs bearingNote > is-bearing",
     translation: "None of this note's sentences could be tied to the document's own words where it said they were, so there is nothing to keep. A sentence that cannot be tied is left out, never kept on trust."
+  },
+  /* R25 (T42; N834): the read this module registers with inquiry R62 and basis-versions R49. A member's leg on a
+     passage a run proposed stands as hers only once she has taken that proposal up (R22); refused otherwise, and when
+     her acceptance cannot be read (fail closed). The providers relay it unchanged. */
+  PROPOSAL_NOT_TAKEN_UP: {
+    check: "C-104.32",
+    where: "src/run-productions/index.mjs machinePassage > is-machine-passage",
+    translation: "This cites as yours a passage a machine proposed, and you have not taken that proposal up. Take it up first, as proposed, in your own words, or with your own reading instead; then you may cite it as yours. Nothing was changed."
   }
 };
 var SUGGEST_CHECK_KEYS = Object.freeze(Object.keys(SUGGEST_ROWS));
@@ -188960,6 +189145,77 @@ Changes: reading '${name3}' proposed as ${kind2}, in state suggested, carrying r
       if (out[r.kind] && r.form in out[r.kind]) out[r.kind][r.form] = Number(r.n);
     return { ok: true, scope: "group", counts: out };
   }
+  /** R25 (T42; N834; K2496, K31): THE READ REGISTERED WITH `inquiry.onMachinePassage` (its R62) AND
+   *  `basis-versions.onMachinePassage` (its R49): may each of these legs stand as `author`'s? A leg whose content row
+   *  is one a run proposed (R11) — the row it names (`content_id`), or the row its part resolves to (its document, the
+   *  capture it names or the one presented now, and its extent) — stands only when `acceptedFor` (R22) says `author`
+   *  herself took that proposal up; any other such leg is refused, each named with its proposals and R22's act as the
+   *  remedy. A leg resting on nothing a run proposed stands. Answers null or the refusal. An acceptance that cannot be
+   *  read refuses the leg (fail closed); a read that fails whole refuses every leg it was given. Synchronous, writes
+   *  nothing, never throws. */
+  machinePassage(a = {}) {
+    const { legs, author } = a && typeof a === "object" ? a : {};
+    const list6 = Array.isArray(legs) ? legs : [];
+    const who2 = nonBlank(author);
+    const refused5 = [];
+    for (const [i, leg2] of list6.entries()) {
+      const ord = leg2 && Number.isInteger(leg2.ord) ? leg2.ord : i;
+      const target = leg2 && typeof leg2.target === "string" ? leg2.target : null;
+      let contentIds = [], proposals = [];
+      try {
+        const named2 = legContentId(leg2);
+        if (named2) contentIds = [named2];
+        else if (target && normalizeType(OBJECT_TYPES[target.split("-")[0]]) === "information") {
+          const capture2 = this.content.captureFor(
+            target,
+            typeof leg2.extent_capture === "string" && leg2.extent_capture ? leg2.extent_capture : null
+          );
+          if (capture2)
+            contentIds = this.#rows(
+              `SELECT content_id FROM content WHERE bundle_id=? AND capture_sha=? AND extent=?`,
+              target,
+              capture2,
+              canonicalExtent2(citationExtent(leg2))
+            ).map((r) => r.content_id);
+        }
+        if (contentIds.length)
+          proposals = this.#rows(
+            `SELECT id, content_id FROM proposed_readings WHERE content_id IN (SELECT value FROM json_each(?)) ORDER BY id`,
+            JSON.stringify(contentIds)
+          );
+      } catch {
+        refused5.push({ ord, target, content_id: null, proposals: [], unread: true });
+        continue;
+      }
+      if (!proposals.length) continue;
+      let taken = false, unread = false;
+      for (const pr of proposals) {
+        try {
+          if (who2 && this.acceptedFor({ proposal: pr.id, by: who2 }).accepted === true) {
+            taken = true;
+            break;
+          }
+        } catch {
+          unread = true;
+        }
+      }
+      if (!taken)
+        refused5.push({
+          ord,
+          target,
+          content_id: proposals[0].content_id,
+          proposals: proposals.map((x) => x.id),
+          ...unread ? { unread: true } : {}
+        });
+    }
+    if (!refused5.length) return null;
+    const UNREAD = " (the acceptance could not be read)";
+    return this.#refuse(
+      "PROPOSAL_NOT_TAKEN_UP",
+      `${refused5.length} leg(s) cite as ${who2 || "no one"}'s a passage a machine proposed that ${who2 || "no one"} has not taken up: ${refused5.map((r) => `leg ${r.ord} on ${r.target ?? "(none)"}${r.unread ? UNREAD : ""}`).join("; ")}. A machine's passage is cited as a member's only once she takes it up (op=proposalaccept: as proposed, edited, or her own instead)`,
+      { legs: refused5, author: who2, remedy: "op=proposalaccept" }
+    );
+  }
   /** op=bearingnote — R23 (D22): A NOTE ON WHAT A DOCUMENT SAYS ABOUT A QUESTION, AND WHAT IT DOES NOT, written by a run
    *  its caller holds (R15), or, drafted interactively with no run (run-rules R25; K2482), by the member who asked, who
    *  may see both the document and the question. Each sentence `{text, quote, source}` is kept only when its quote passes extraction R42's
@@ -189183,6 +189439,8 @@ function runProductionsOf(host, deps) {
     instances52.set(host, p3);
     record.declarePurge(RUN_PRODUCTIONS_MODULE, RUN_PRODUCTIONS_TABLES);
     p3.basisVersions.onCandidates(RUN_PRODUCTIONS_MODULE, (a) => p3.candidates(a));
+    const inquiry = d.inquiry || inquiryOf(host, { record, membership, content });
+    for (const slot of [inquiry, p3.basisVersions]) slot.onMachinePassage(RUN_PRODUCTIONS_MODULE, (a) => p3.machinePassage(a));
   }
   return p3;
 }
@@ -247733,6 +247991,7 @@ function questionExplorerOf(host, deps) {
       now: d.now || null
     });
     instances69.set(host, p3);
+    p3.migrate();
     record.declarePurge(QUESTION_EXPLORER_MODULE, QUESTION_EXPLORER_TABLES);
   }
   return p3;
@@ -256432,7 +256691,7 @@ var Hypotheses = class _Hypotheses {
    *  stored apart from what members hold, labelled the system's with how it was worked out and its measured false-alarm
    *  rate. Refusals in order, each writing nothing: `NO_SUCH_BUNDLE` (no inquiry by that id), `NOT_AN_INQUIRY`,
    *  `UNKNOWN_HYPOTHESIS_KIND`, `HYPOTHESIS_NO_STATEMENT`, `BAD_ABOUT`, `PROPOSAL_NO_HOW`, `PROPOSAL_NO_RATE`,
-   *  `PROPOSAL_NO_RUN`. Answers `{ok, proposal, kind, label: "the system's", at}`. */
+   *  `HYPOTHESIS_PROPOSAL_NO_RUN`. Answers `{ok, proposal, kind, label: "the system's", at}`. */
   hypothesisPropose({ inquiry = null, kind: kind2 = null, statement = null, about = null, how = null, false_alarm_rate = null, run: run2 = null } = {}) {
     const b = filled20(inquiry) ? this.#record.bundleInfo(inquiry) : null;
     if (!b) return refuse25("NO_SUCH_BUNDLE", "no inquiry by that id is held", { inquiry: filled20(inquiry) ? inquiry : null });
@@ -256446,7 +256705,7 @@ var Hypotheses = class _Hypotheses {
     const rate = typeof false_alarm_rate === "number" ? false_alarm_rate : NaN;
     if (!Number.isFinite(rate) || rate < 0 || rate > 1)
       return refuse25("PROPOSAL_NO_RATE", "a proposal of the system's carries its measured false-alarm rate, a number from 0 to 1", { false_alarm_rate: false_alarm_rate ?? null });
-    if (!filled20(run2)) return refuse25("PROPOSAL_NO_RUN", "a proposal of the system's names the run that made it");
+    if (!filled20(run2)) return refuse25("HYPOTHESIS_PROPOSAL_NO_RUN", "a proposal of the system's names the run that made it");
     const at43 = this.#now();
     return this.#record.transact(() => {
       const id = this.#record.allocId("HYP", at43.slice(0, 4));
@@ -256484,7 +256743,7 @@ var Hypotheses = class _Hypotheses {
   #openProposal(id, by) {
     const p3 = isHypothesisId(id) ? this.#one(`SELECT * FROM ${PROPOSALS_TABLE} WHERE proposal_id = ?`, id) : null;
     if (!p3 || !this.#membership.inSight(p3.bundle_id, by))
-      return { refusal: refuse25("NO_SUCH_PROPOSAL", "no proposal by that id is held, or it is not one you may see", { proposal: filled20(id) ? id : null }) };
+      return { refusal: refuse25("NO_SUCH_HYPOTHESIS_PROPOSAL", "no proposal by that id is held, or it is not one you may see", { proposal: filled20(id) ? id : null }) };
     if (isMachineIdentity(by)) return { refusal: refuse25("MACHINE_CANNOT_HYPOTHESISE", "the act's stamp is a machine's; only a member takes up or sets aside the system's proposal (K1473)") };
     return { row: p3 };
   }
@@ -256497,7 +256756,7 @@ var Hypotheses = class _Hypotheses {
   }
   /** R17: `hypothesisTakeUp({proposal, form, statement?, by})`, a member's act (`record-grammar` R52): holds the proposal
    *  by R1 as hers (`as_proposed` in its words, `edited` or `own_instead` in hers), noting it came from the system.
-   *  Refusals in order, each writing nothing: `NO_SUCH_PROPOSAL`, `MACHINE_CANNOT_HYPOTHESISE`, `PROPOSAL_FORM_UNKNOWN`,
+   *  Refusals in order, each writing nothing: `NO_SUCH_HYPOTHESIS_PROPOSAL`, `MACHINE_CANNOT_HYPOTHESISE`, `PROPOSAL_FORM_UNKNOWN`,
    *  `PROPOSAL_NOT_OPEN`, `HYPOTHESIS_NO_STATEMENT` (an edited or own statement absent), then R1's own, unchanged. */
   hypothesisTakeUp({ proposal = null, form = null, statement = null, by = null } = {}) {
     const m = this.#openProposal(proposal, by);
@@ -256525,7 +256784,7 @@ var Hypotheses = class _Hypotheses {
     });
   }
   /** R18: `hypothesisSetAside({proposal, reason, by})`, a member's act: the proposal stays readable, with who set it
-   *  aside, when and why. Refusals in order, each writing nothing: `NO_SUCH_PROPOSAL`, `MACHINE_CANNOT_HYPOTHESISE`,
+   *  aside, when and why. Refusals in order, each writing nothing: `NO_SUCH_HYPOTHESIS_PROPOSAL`, `MACHINE_CANNOT_HYPOTHESISE`,
    *  `PROPOSAL_NO_REASON`, `PROPOSAL_NOT_OPEN`. */
   hypothesisSetAside({ proposal = null, reason: reason2 = null, by = null } = {}) {
     const m = this.#openProposal(proposal, by);
