@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS plan_option_proposals (
 );
 CREATE INDEX IF NOT EXISTS plan_option_proposals_plan ON plan_option_proposals(plan_id, n);
 CREATE INDEX IF NOT EXISTS plan_option_proposals_run ON plan_option_proposals(run, run_ord);
--- R14: every version of each scenario (1-3); the latest is in force.
+-- R14: every version of each scenario (numbered from 1, any number of them); the latest is in force.
 CREATE TABLE IF NOT EXISTS plan_scenarios (
   plan_id      TEXT NOT NULL,
   scenario     INTEGER NOT NULL,

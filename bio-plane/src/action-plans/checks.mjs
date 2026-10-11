@@ -16,7 +16,8 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   MACHINE_CANNOT_PLAN: {
     check: 'C-124.1', where: at("#member", "is-plan-member"),
     translation: 'An action plan is the group\'s own working material, and only a member opens it, changes what it is '
-      + 'about or closes it. An assistant may propose options; it may not do this. Sign in as a member. Nothing was written.',
+      + 'about, sets a scenario aside or restores it, pauses, resumes or closes it. An assistant may propose options; it '
+      + 'may not do this. Sign in as a member. Nothing was written.',
   },
   PLAN_NO_TITLE: {
     check: 'C-124.2', where: at("planOpen", "is-plan-titled"),
@@ -161,7 +162,8 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
   },
   SCENARIO_OUT_OF_RANGE: {
     check: 'C-124.30', where: at("scenarioSet", "is-scenario-numbered"),
-    translation: 'A plan holds at most three scenarios, numbered 1, 2 and 3. Nothing was written.',
+    translation: 'A scenario is numbered with a positive whole number: 1, 2, 3 and on. A plan holds as many scenarios as '
+      + 'the group wants. Nothing was written.',
   },
   SCENARIO_NAME_REFUSED: {
     check: 'C-124.31', where: at("scenarioSet", "is-scenario-named"),
@@ -298,6 +300,43 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
     check: 'C-124.57', where: at("refuseProviderUnavailable", "is-provider-present"),
     translation: 'An action plan reads matters, actions and runs held by other parts of the record, and one of them '
       + 'is not in your group\'s Civicsmith yet, so the plan is not answered in part. Nothing was written.',
+  },
+
+  /* ---- R39, R40, R42, R20 (T45): scenarios set aside, the paused state, document first, the close ---- */
+  NO_SUCH_SCENARIO: {
+    check: 'C-124.58', where: at("#scenarioAct", "is-scenario-held"),
+    translation: 'The plan holds no scenario of that number. Nothing was written.',
+  },
+  SCENARIO_ALREADY_SET_ASIDE: {
+    check: 'C-124.59', where: at("#scenarioAct", "is-scenario-in-use"),
+    translation: 'That scenario is already set aside. It is kept whole, with its reason, and can be restored. Nothing was '
+      + 'written.',
+  },
+  SCENARIO_NOT_SET_ASIDE: {
+    check: 'C-124.60', where: at("#scenarioAct", "is-scenario-aside"),
+    translation: 'That scenario is not set aside, so there is nothing to restore. Nothing was written.',
+  },
+  PLAN_NOT_OPEN: {
+    check: 'C-124.61', where: at("#pauseAct", "is-plan-pausable"),
+    translation: 'This plan is already paused. Resume it, or close it, instead. Nothing was written.',
+  },
+  PLAN_NOT_PAUSED: {
+    check: 'C-124.62', where: at("#pauseAct", "is-plan-paused"),
+    translation: 'This plan is not paused, so there is nothing to resume. Nothing was written.',
+  },
+  DOCUMENT_FIRST_NO_REASON: {
+    check: 'C-124.63', where: at("optionStart", "is-document-first"),
+    translation: 'This step goes outside the group before the infraction it is about has been documented. That is your '
+      + 'call to make: say in your own words, in 1 to 500 characters with no quotation mark, backslash or line break, why '
+      + 'this goes first. Nothing was written.',
+  },
+  LOOK_AGAIN_REFUSED: {
+    check: 'C-124.64', where: at("#pauseAct", "is-look-again-day"),
+    translation: 'A day to look at the plan again is written year-month-day. Nothing was written.',
+  },
+  CLOSE_NOTE_TOO_LONG: {
+    check: 'C-124.65', where: at("planClose", "is-close-note"),
+    translation: 'A closing note on what the group would do differently is at most 4,000 characters. Nothing was written.',
   },
 });
 
