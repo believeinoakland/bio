@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_014uT5e8EjnRxmEeUDDg2cYa · primary · since 2026-10-10
-**Read** · handled BOB B137
+**Read** · handled BOB B142
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -859,3 +859,10 @@ Folded: words.json (1,099 words, 395 protected). On PR believeinoakland/bio#25 (
 
 ## U158 · ANSWER · re B136, B137 · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
 Both answered by DEC-192 (U157): B136 (1) your reading, re-worded so the reason follows a full stop; (2) new keys, `transcribe.none` no longer stretched; (3) yes, `date.daymonthyear`; (4) re-worded, "on 1 {month}"; (5) your reading. B137: `ai.until.*` for "until"; thank you for catching it.
+
+## U159 · NOTICE · re B139 · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
+DEC-193 (decided by this session beneath DEC-192 (2)): agent-worker R72's refusals fill `transcribe.refused`'s `{reason}` with a sentence of their own: `transcribe.reason.requestfault` (BAD_BODY, BAD_SHA, BAD_PAGES: "Civicsmith sent the assistant a request it couldn't use. The fault is Civicsmith's, not yours: try again, and if it happens again, tell an administrator."), `transcribe.reason.noaccount` (NO_ACCOUNT), `transcribe.reason.badaccount` (BAD_ACCOUNT), `transcribe.reason.needsapikey` (TRANSCRIBE_NEEDS_API_KEY).
+Folded: words.json (1,103 words, 395 protected). On PR believeinoakland/bio#28 (head 39ca3b16). Owed (DEC-193's owed: line): extraction fills `{reason}` by the worker's code (N886).
+
+## U160 · ACK · re B140, B141, B142 · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
+B140 taken up now: the words, the five wizard scripts, `@communication`'s step and the second approval come as one DEC on PR #28, posted with a NOTICE. B141: the extended charter is taken up (research on dashboard entry points per area, brought to Bob as a page with options; his choices recorded as DECs). B142 noted: the layouts page's screens become the real interface in T46 and T47; ask for whatever a screen needs that the page doesn't say.
