@@ -32359,9 +32359,9 @@ async function acquire(cap, body0, {
   const authorityAsserted = typeof body.authority === "string" && body.authority.trim() ? body.authority.trim() : null;
   const retrieved = stampSecond2();
   const pv = profileView(cap.core);
-  const renderAsked = Object.prototype.hasOwnProperty.call(body, "render") && body.render !== false;
+  const renderAsked2 = Object.prototype.hasOwnProperty.call(body, "render") && body.render !== false;
   let renderer = null, renderReserved = 0, renderSlot = null;
-  if (renderAsked) {
+  if (renderAsked2) {
     if (body.render !== true)
       return answer2(400, {
         ok: false,
@@ -32473,7 +32473,7 @@ async function acquire(cap, body0, {
     } catch {
     }
   };
-  const validators = crHeldSha && !renderAsked ? cap.validatorsOf({ addressNorm: addrNorm, captureSha: crHeldSha }) : null;
+  const validators = crHeldSha && !renderAsked2 ? cap.validatorsOf({ addressNorm: addrNorm, captureSha: crHeldSha }) : null;
   const conditional = validators ? {
     ...validators.etag ? { "if-none-match": validators.etag } : {},
     ...validators.lastModified ? { "if-modified-since": validators.lastModified } : {}
@@ -32757,7 +32757,7 @@ async function acquire(cap, body0, {
   };
   const name3 = (body.file || locator.split("/").pop() || "capture").replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 100) || "capture";
   let renderRecorded = null, shellRecorded = null, renderedAuth = null;
-  if (renderAsked) {
+  if (renderAsked2) {
     const pageUrl = resolvedUrl || locator;
     let answerR = null, rbytes = null, rb = null;
     if (multipart || detectFormat(null, ct || null).format !== "html") {
@@ -174653,6 +174653,10 @@ function wizardScriptsOps(m, url, body) {
 }
 
 // src/affordances/facts.mjs
+var rosterActor = (by) => {
+  const actor = typeof by === "string" && by.trim() ? by.trim() : null;
+  return actor === null || isMachineStamp(actor) ? null : actor;
+};
 var AffordanceFacts = class {
   constructor(host, deps) {
     this.host = host;
@@ -174722,9 +174726,8 @@ var AffordanceFacts = class {
     });
   }
   /* R14, R15, R18 (D-311, N45): THE CALLER'S ROSTER POSITION IN THIS PROJECT — the PAIR (this target, this caller),
-     asked of `by`, the string the roster acts themselves receive (`class:<cls>` for every bearer, which holds no row),
-     so the pre-flight asks the question of the same caller the act will. Each field is read through the predicate its
-     act's refusal runs:
+     asked of `by`, the string the roster acts themselves receive, so the pre-flight asks the question of the same caller
+     the act will. Each field is read through the predicate its act's refusal runs:
        owner                  `isProjectOwner` (invite, remove, owner-add, owner-remove: NOT_THE_OWNER)
        state                  `participation` (join's NOT_INVITED, leave's NOT_A_PARTICIPANT / NOT_JOINED)
        owner_floor_clear      owner-remove's floor for EVERY target: `ownerMath` over the owners (LAST_OWNER, R40),
@@ -174734,9 +174737,12 @@ var AffordanceFacts = class {
                               an owner who is the last committed one is refused LAST_COMMITTED_OWNER
        rescue_open            `rescueRefusal` is null (the rescue's three caller-and-project conditions, R75)
      "Committed" is R35's: an owner whose participation is not `leaving` (R65's owners, R74's state). Null on a target
-     that is not a project and when no `by` was sent (a DO-internal call). */
+     that is not a project, when no `by` was sent (a DO-internal call), and (R15) for a caller with no roster position:
+     a stamp the control plane mints for a credential (`isMachineStamp`: `class:<cls>` for a bearer, `class:ai` or, since
+     control-plane R17, `class:ai/<tokenId>` for an assistant; N874), which no participation row names. Every act these
+     facts offer asks a stated `true`, so the null offers nothing, as a stamp's answers did. */
   #roster(projectId, by) {
-    const actor = typeof by === "string" && by.trim() ? by.trim() : null;
+    const actor = rosterActor(by);
     if (actor === null) return null;
     const m = this.membership();
     const p3 = m.participation(projectId, actor);
@@ -174760,7 +174766,7 @@ var AffordanceFacts = class {
   #existenceFacts(target, viewer, identity, author, by) {
     const m = this.membership();
     if (typeof target !== "string" || m.sight(target, viewer) !== Membership.SIGHT_EXISTENCE || m.visibilityOf(target) !== "hidden") return null;
-    const actor = typeof by === "string" && by.trim() ? by.trim() : null;
+    const actor = rosterActor(by);
     const who2 = m.positionalMember(viewer, identity);
     return {
       ok: true,
@@ -176719,7 +176725,7 @@ async function affordancesOp(url, stub, {
   cls: cls3
 }) {
   const target = url.searchParams.get("target");
-  const second4 = target ? `http://do/affordancefacts?${stamped2({ target, viewer, identity, author, by })}` : `http://do/affordancescreens?viewer=${encodeURIComponent(viewer ?? "")}`;
+  const second4 = target ? `http://do/affordancefacts?${stamped2({ target, viewer, identity, author, by })}` : `http://do/affordancescreens?${stamped2({ viewer })}`;
   const [kOut, out] = await Promise.all([doAnswer2(stub.fetch("http://do/actionkinds")), doAnswer2(stub.fetch(second4))]);
   if (kOut.refused) return storeRefusal2(kOut);
   if (!kOut.answered) return storeSilent2("affordances", kOut.correlation);
@@ -180155,8 +180161,9 @@ var ACTS = [
      record permits the move, not that this caller's parameters will pass.
      `=== true` EVERYWHERE, and it is the shape an ADDITION takes: `f.roster` is null when no
      position could be asked (a DO-internal call, a non-project target), and an undetermined
-     position must not publish an act. A bearer's `by` is `class:<cls>`, which holds no row, so a
-     machine credential is offered none of the seven — each of which its class is refused.
+     position must not publish an act. A credential's `by` is a minted stamp (`class:<cls>`; an assistant's
+     `class:ai/<tokenId>`, N874), which holds no position, so its `f.roster` is null (R15) and a machine credential is
+     offered none of the seven — each of which its class is refused.
      Weight `single`, conclude's precedent: one project's roster at a time, no set to apply. */
   {
     id: "projectinvite",
@@ -181290,7 +181297,9 @@ var OP_FAMILIES = Object.freeze({
      capture's digest) and the optional `project` (whose account the member asks to pay) are read from the request's
      address, as `pdfstructure`'s `sha256`, neither a secret nor a stamp. Distinct from content's manual `transcribe`.
      Its handler is extraction's exported `pageTranscribeOp`, which `EXTRACTION_OPS` does not list (K2635), reached
-     through the plane's gated hook (control-plane R74, plane R36). Not on `AI_GRANT_OPS`. */
+     through the plane's gated hook (control-plane R74, plane R36). Not on `AI_GRANT_OPS`. T44 (R47, R21; DEC-191;
+     K2732): the registry as PR #25 left it marks `pagetranscribe` a served act, no longer `owed:pagetranscribe`, read
+     as this declared op with no alias. */
   extraction: family({
     owner: "extraction",
     cite: "extraction R71; R47; K2611, K2613, K2635, K2656",
@@ -243058,7 +243067,7 @@ var MachineryProducers = class _MachineryProducers {
   #conditionsNotice(me, viewer, now) {
     if (!me) return [];
     const scope = this.#ownedProjects(me, viewer, _MachineryProducers.QUEUE_NOTICE_PROJECTS);
-    const DAY6 = _MachineryProducers.DAY_MS;
+    const DAY7 = _MachineryProducers.DAY_MS;
     const zone = this.#instanceZone();
     const today2 = _MachineryProducers.#today(now, zone);
     const out = [];
@@ -243140,7 +243149,7 @@ var MachineryProducers = class _MachineryProducers {
           const since = closed ? closed.published_at || (isCalendarDate(closed.as_of) ? closed.as_of : null) : null;
           const closedDay = _MachineryProducers.#localDayOf(since, zone);
           const closedMs = Date.parse(closed && closed.published_at || "");
-          const stands = closedDay && today2 ? _MachineryProducers.#daysBetween(closedDay, today2, zone) < _MachineryProducers.NOTICE_CLOSED_DAYS : !Number.isFinite(closedMs) || now - closedMs < _MachineryProducers.NOTICE_CLOSED_DAYS * DAY6;
+          const stands = closedDay && today2 ? _MachineryProducers.#daysBetween(closedDay, today2, zone) < _MachineryProducers.NOTICE_CLOSED_DAYS : !Number.isFinite(closedMs) || now - closedMs < _MachineryProducers.NOTICE_CLOSED_DAYS * DAY7;
           if (stands) {
             item3("notice-project-closed", n2, {
               since,
@@ -249102,8 +249111,9 @@ var NOTICE_WORDS = Object.freeze({
   "ai.scope.own": "your own questions",
   "ai.period.day": "daily",
   "ai.period.month": "monthly",
-  "ai.when.day": "tomorrow",
-  "ai.when.month": "on {month} 1",
+  /* R16 (DEC-192 (5)): `{when}` after "until" in `ai.queue.limitreached*` (the refusals' `ai.when.*` are ai-use's) */
+  "ai.until.day": "tomorrow",
+  "ai.until.month": "1 {month}",
   "ai.use.ask.inline": "asking",
   "ai.use.draft.inline": "drafting",
   "ai.use.run.inline": "runs",
@@ -249111,6 +249121,12 @@ var NOTICE_WORDS = Object.freeze({
   "ai.use.transcribe.inline": "reading page pictures",
   "ai.use.explore.inline": "exploring",
   "ai.use.suggestions.inline": "suggestions",
+  "ai.use.enquire.inline": "interviews and planning",
+  "ai.use.read.inline": "reading inside documents",
+  "ai.use.account.inline": "a case's account",
+  /* R16, R17 (DEC-191 (3), DEC-192 (3)): a local day in a sentence, with its year only when not in the current local year */
+  "date.daymonth": "{day} {month}",
+  "date.daymonthyear": "{day} {month} {year}",
   "date.month.january": "January",
   "date.month.february": "February",
   "date.month.march": "March",
@@ -249172,10 +249188,19 @@ var MONTHS8 = Object.freeze([
 function monthName(m) {
   return Number.isInteger(m) && m >= 1 && m <= 12 ? wordsOf(`date.month.${MONTHS8[m - 1]}`) : null;
 }
-function dayMonth(day2) {
-  const x = typeof day2 === "string" ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(day2) : null;
-  const name3 = x ? monthName(Number(x[2])) : null;
-  return name3 ? `${Number(x[3])} ${name3}` : null;
+var DAY5 = /^(\d{4})-(\d{2})-(\d{2})$/;
+function dayInSentence(day2, today2) {
+  const x = typeof day2 === "string" ? DAY5.exec(day2) : null;
+  const month = x ? monthName(Number(x[2])) : null;
+  if (!month) return null;
+  const t2 = typeof today2 === "string" ? DAY5.exec(today2) : null;
+  const fills = { day: String(Number(x[3])), month, year: x[1] };
+  return wordsOf(t2 && t2[1] === x[1] ? "date.daymonth" : "date.daymonthyear", fills);
+}
+function untilWords(period, next) {
+  if (period === "day") return wordsOf("ai.until.day");
+  const name3 = period === "month" ? monthName(next) : null;
+  return name3 ? wordsOf("ai.until.month", { month: name3 }) : null;
 }
 
 // src/notice-producers/index.mjs
@@ -249243,6 +249268,7 @@ var bare3 = (m) => {
 };
 var isMachine6 = (m) => typeof m === "string" && (m.startsWith(MACHINE_AUTHOR_PREFIX) || m.startsWith(MACHINE_CLASS_PREFIX));
 var instantOf3 = (ms5) => new Date(ms5).toISOString().replace(/\.\d{3}Z$/, "Z");
+var INSTANT2 = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 var dayOf8 = (v) => {
   const d = typeof v === "string" ? v.slice(0, 10) : "";
   return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null;
@@ -249271,6 +249297,8 @@ var NoticeProducers = class _NoticeProducers {
   #optionsFn = null;
   #works = null;
   /* R17: each step's work, read once a read (`#workOf`) */
+  #zoneRead;
+  /* R13–R17: the profile's zone, read once a read (`#zone`); undefined until read */
   constructor({ host, storage, deps = {} } = {}) {
     this.#host = host;
     this.sql = storage.sql;
@@ -249419,6 +249447,7 @@ var NoticeProducers = class _NoticeProducers {
       this.#homesFn = null;
       this.#optionsFn = null;
       this.#works = null;
+      this.#zoneRead = void 0;
     }
   }
   /* ------------------------------------------------------------------ R7: sight */
@@ -250237,12 +250266,13 @@ var NoticeProducers = class _NoticeProducers {
     const r = this.#aiUse.limitsReached({ viewer, at: instantOf3(now) });
     if (!r || r.ok !== true || r.unreadable === true || !Array.isArray(r.reached)) throw failure("ai-use");
     const zone = this.#zone();
+    const today2 = _NoticeProducers.#localDay(now, zone);
     const ok2 = [];
     for (const e2 of r.reached) {
       if (!e2 || !filled18(e2.key) || !filled18(e2.owner) || !filled18(e2.scope) || !LIMIT_PERIODS2.includes(e2.period)) continue;
       const day2 = _NoticeProducers.#localDay(e2.reached_at, zone);
       const when = _NoticeProducers.#periodEnd(e2.period, e2.period_start, day2);
-      const date = dayMonth(day2);
+      const date = dayInSentence(day2, today2);
       if (when && date) ok2.push({ e: e2, when, date });
     }
     const { list: list6, truncated: truncated6 } = cut8(ok2, ACCOUNT_ITEMS_MAX);
@@ -250352,15 +250382,14 @@ var NoticeProducers = class _NoticeProducers {
     )[0];
     return row12 && filled18(row12.title) ? row12.title : null;
   }
-  /** R16's `{when}`: a day's limit `ai.when.day`; a month's `ai.when.month` with `{month}` the next period's month from
-   *  `date.month.*` (as ai-use R13), the period read from `period_start`, else the local day it was reached; null when
-   *  neither is read. */
+  /** R16's `{when}` after "until" (DEC-192 (5)): a day's limit `ai.until.day`; a month's `ai.until.month` with `{month}`
+   *  the next period's month from `date.month.*` ("… pause until 1 November"), the period read from `period_start`, else
+   *  the local day it was reached; null when neither is read. */
   static #periodEnd(period, start, day2) {
-    if (period === "day") return wordsOf("ai.when.day");
+    if (period === "day") return untilWords("day");
     const from = dayOf8(start) ?? dayOf8(day2);
     const m = from ? Number(from.slice(5, 7)) : NaN;
-    const next = Number.isInteger(m) && m >= 1 && m <= 12 ? monthName(m % 12 + 1) : null;
-    return next ? wordsOf("ai.when.month", { month: next }) : null;
+    return Number.isInteger(m) && m >= 1 && m <= 12 ? untilWords(period, m % 12 + 1) : null;
   }
   /* ================================================================== R17 · the investigation's items
    * (N820; K2405, K2417, K2418, K2484, K2525; DEC-189 (2), (7); N856). Each source answers this viewer its own items,
@@ -250404,13 +250433,13 @@ var NoticeProducers = class _NoticeProducers {
     const r = this.#steps.laterFound({ viewer, at: instantOf3(now) });
     if (!r || r.ok !== true || !Array.isArray(r.found)) throw failure("steps");
     const c = cut8(r.found.filter((e2) => e2 && filled18(e2.key) && filled18(e2.step)), INVESTIGATION_ITEMS_MAX);
-    const zone = this.#zone();
+    const zone = this.#zone(), today2 = _NoticeProducers.#localDay(now, zone);
     const items = c.list.map((e2) => {
       const qs = Array.isArray(e2.questions) ? e2.questions.filter(filled18) : [];
       return this.#r17Item(me, viewer, now, "FINDING", "step-later-found", e2.key, {
         homes: qs,
         at: e2.at,
-        fills: { what: this.#workOf(e2.step, viewer), date: dayMonth(_NoticeProducers.#localDay(e2.looked_at ?? e2.at, zone)) },
+        fills: { what: this.#workOf(e2.step, viewer), date: dayInSentence(_NoticeProducers.#localDay(filled18(e2.looked_at) ? e2.looked_at : e2.at, zone), today2) },
         subject: { kind: "step", id: e2.step, look: e2.look ?? null, observation: e2.observation ?? null, questions: qs },
         basis: {
           source: "steps.laterFound",
@@ -250429,6 +250458,7 @@ var NoticeProducers = class _NoticeProducers {
   #stepsDue(me, viewer, now) {
     const r = this.#steps.stepsDue({ viewer, at: instantOf3(now) });
     if (!r || r.ok !== true || !Array.isArray(r.due)) throw failure("steps");
+    const today2 = _NoticeProducers.#localDay(now, this.#zone());
     const c = cut8(r.due.filter((e2) => e2 && filled18(e2.key) && filled18(e2.step) && (e2.kind === "past_date" || e2.kind === "reminder")), INVESTIGATION_ITEMS_MAX);
     const items = c.list.map((e2) => {
       const reminder = e2.kind === "reminder";
@@ -250436,7 +250466,7 @@ var NoticeProducers = class _NoticeProducers {
         homes: [],
         due: dayOf8(e2.date),
         day: dayOf8(e2.date),
-        fills: { step: filled18(e2.work) ? e2.work : this.#workOf(e2.step, viewer), date: dayMonth(dayOf8(e2.date)) },
+        fills: { step: filled18(e2.work) ? e2.work : this.#workOf(e2.step, viewer), date: dayInSentence(dayOf8(e2.date), today2) },
         subject: { kind: "step", id: e2.step, work: e2.work ?? null, date: e2.date ?? null },
         basis: {
           source: "steps.stepsDue",
@@ -250500,6 +250530,7 @@ var NoticeProducers = class _NoticeProducers {
   #milestones(me, viewer, now) {
     const r = this.#investigation.milestonesOverdue({ viewer, at: instantOf3(now) });
     if (!r || r.ok !== true || !Array.isArray(r.due)) throw failure("investigation");
+    const today2 = _NoticeProducers.#localDay(now, this.#zone());
     const c = cut8(r.due.filter((e2) => e2 && filled18(e2.key) && (e2.kind === "overdue" || e2.kind === "reminder")), INVESTIGATION_ITEMS_MAX);
     const items = c.list.map((e2) => {
       const reminder = e2.kind === "reminder";
@@ -250507,7 +250538,7 @@ var NoticeProducers = class _NoticeProducers {
         homes: filled18(e2.project) ? [e2.project] : [],
         due: dayOf8(e2.date),
         day: dayOf8(e2.date),
-        fills: { milestone: filled18(e2.name) ? e2.name : String(e2.milestone ?? ""), date: dayMonth(dayOf8(e2.date)) },
+        fills: { milestone: filled18(e2.name) ? e2.name : String(e2.milestone ?? ""), date: dayInSentence(dayOf8(e2.date), today2) },
         subject: { kind: "milestone", id: e2.milestone ?? null, project: e2.project ?? null, name: e2.name ?? null, date: e2.date ?? null },
         basis: {
           source: "investigation.milestonesOverdue",
@@ -250621,8 +250652,13 @@ var NoticeProducers = class _NoticeProducers {
       throw failure("membership");
     }
   }
-  /** R13, R14, R15: the profile's time zone (the jurisdiction view's), or null when none is held. */
+  /** R13–R17: the profile's time zone (the jurisdiction view's), or null when none is held; read once a read of
+   *  `noticeItems` (R17 asks it for each dated item). */
   #zone() {
+    if (this.#zoneRead === void 0) this.#zoneRead = this.#readZone();
+    return this.#zoneRead;
+  }
+  #readZone() {
     try {
       let view = this.#deps.view;
       if (typeof view === "function") view = view();
@@ -250638,24 +250674,23 @@ var NoticeProducers = class _NoticeProducers {
       return null;
     }
   }
-  /** R16, R17: the local day of an instant in `zone` (civil-time), the UTC day when none is held; null when it is no
-   *  instant (a sentence then says no day, never a word of this module's own). */
+  /** R16, R17: the local day of an instant (ms, or an ISO date-time, its fraction of a second or offset read as the same
+   *  instant, since civil-time reads only whole-second UTC) in `zone` (civil-time), the UTC day when none is held; null when
+   *  it is no instant (a sentence then says no day, never a word of this module's own). */
   static #localDay(at43, zone) {
+    const ms5 = typeof at43 === "number" ? at43 : typeof at43 === "string" && INSTANT2.test(at43) ? Date.parse(at43) : NaN;
+    const t2 = Number.isFinite(ms5) ? instantOf3(ms5) : at43;
     try {
-      const d = localDay(at43, zone || "UTC");
+      const d = localDay(t2, zone || "UTC");
       if (typeof d === "string") return d;
     } catch {
     }
     return null;
   }
-  /** R13, R14, R15: the local day of an instant in `zone` (civil-time), as `following` reads it, the UTC day when none is held. */
+  /** R13, R14, R15: the local day of an instant in `zone`, as `following` reads it; its own first ten characters when it
+   *  is no instant civil-time reads, else "an earlier date". */
   static #localDate(at43, zone) {
-    try {
-      const d = localDay(at43, zone || "UTC");
-      if (typeof d === "string") return d;
-    } catch {
-    }
-    return dayOf8(at43) ?? "an earlier date";
+    return _NoticeProducers.#localDay(at43, zone) ?? dayOf8(at43) ?? "an earlier date";
   }
 };
 var OF13 = /* @__PURE__ */ new WeakMap();
@@ -253572,7 +253607,7 @@ async function gatedOp({
   const viewer = viaSession ? sessViewer : cls3 === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls3}`;
   const identity = viaSession ? sessIdentity : cls3 === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls3}`;
   const author = viaSession ? sessMember : cls3 === "ai" ? `${MACHINE_CLASS_PREFIX}ai/${aiCred.tokenId}` : `${MACHINE_AUTHOR_PREFIX}${cls3}`;
-  const by = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls3}`;
+  const by = viaSession ? sessMember : cls3 === "ai" ? `${MACHINE_CLASS_PREFIX}ai/${aiCred.tokenId}` : `${MACHINE_CLASS_PREFIX}${cls3}`;
   if (op === "ask") return askOp({ req, url, env, viaSession, sessMember, grantMember });
   if (op === "affordances")
     return affordancesOp(url, store(), {
@@ -256107,7 +256142,7 @@ function sharedSet(ctx, reader, { kind: kind2, node, span: span3, a, b }) {
 }
 
 // src/explore/rederive.mjs
-var DAY5 = /^\d{4}-\d{2}-\d{2}$/;
+var DAY6 = /^\d{4}-\d{2}-\d{2}$/;
 var DERIVED_ID = /^[0-9a-f]{64}$/;
 var no6 = (why2, extra = {}) => ({ ok: true, matches: false, why: why2, ...extra });
 var INPUT_NOT_READ = "no connection by this id is read at either end of the derivation for this viewer within this scope, so what it rests on is not settled";
@@ -256124,7 +256159,7 @@ function rederive(ctx, arg) {
   if (!entry4) return no6(`no owner registered the kind ${a.kind}`);
   if (entry4.class !== "derived") return no6(`${a.kind} is of class ${entry4.class}, not a derived kind`);
   const recomputed = derivedId({ kind: a.kind, from: a.from, to: a.to, as_of: a.as_of, method: a.method });
-  const at43 = DAY5.test(a.as_of) ? { value: a.as_of, precision: "day", zone: "UTC" } : a.as_of;
+  const at43 = DAY6.test(a.as_of) ? { value: a.as_of, precision: "day", zone: "UTC" } : a.as_of;
   const reader = makeReader(ctx, { at: at43, viewer: a.viewer, scope });
   const items = reader.read(entry4.owner, a.from, [a.kind]);
   if (!items) {
@@ -258061,8 +258096,12 @@ function base642(bytes2) {
   return btoa(s);
 }
 var pagesAsked = (pages) => [...new Set((Array.isArray(pages) ? pages : []).filter((p3) => Number.isInteger(p3) && p3 >= 0))].sort((a, b) => a - b).slice(0, TRANSCRIBE_PAGES_MAX);
-async function renderPages(bytes2, pages, render2 = renderPageToPixels, picture = renderPictureToPixels) {
-  const out = [];
+function refusalOf(page2, r) {
+  const reason2 = r && typeof r.reason === "string" && r.reason ? r.reason : "DECODE_FAILED";
+  return { page: page2, reason: reason2, ...r && typeof r.process === "string" && r.process ? { process: r.process } : {} };
+}
+async function renderAsked(bytes2, pages, render2 = renderPageToPixels, picture = renderPictureToPixels) {
+  const sent = [], refused5 = [];
   for (const page2 of pagesAsked(pages)) {
     let r;
     try {
@@ -258077,12 +258116,22 @@ async function renderPages(bytes2, pages, render2 = renderPageToPixels, picture 
         r = null;
       }
     }
-    if (!r || r.ok !== true || r.mediaType !== PNG) continue;
-    const png = r.bytes instanceof Uint8Array ? r.bytes : r.bytes ? new Uint8Array(r.bytes) : null;
-    if (!png || png.length === 0 || png.length > TRANSCRIBE_IMAGE_MAX_BYTES) continue;
-    out.push({ page: page2, media_type: PNG, data: base642(png) });
+    if (!r || r.ok !== true) {
+      refused5.push(refusalOf(page2, r));
+      continue;
+    }
+    const png = r.mediaType !== PNG ? null : r.bytes instanceof Uint8Array ? r.bytes : r.bytes ? new Uint8Array(r.bytes) : null;
+    if (!png || png.length === 0) {
+      refused5.push({ page: page2, reason: "DECODE_FAILED" });
+      continue;
+    }
+    if (png.length > TRANSCRIBE_IMAGE_MAX_BYTES) {
+      refused5.push({ page: page2, reason: "IMAGE_TOO_LARGE" });
+      continue;
+    }
+    sent.push({ page: page2, media_type: PNG, data: base642(png) });
   }
-  return out;
+  return { sent, refused: refused5 };
 }
 function aiPath(ctx, env, { member: member2, at: at43, act: act2, onSha }) {
   return async function transcribe({ account = null, capture_sha = null, pages = [] } = {}) {
@@ -258099,8 +258148,8 @@ function aiPath(ctx, env, { member: member2, at: at43, act: act2, onSha }) {
       bytes2 = null;
     }
     if (!bytes2) return { ok: false, reason: "EVIDENCE_ABSENT" };
-    const rendered = await renderPages(bytes2, pages);
-    if (!rendered.length) return { ok: false, reason: "NO_PAGE_RENDERED" };
+    const { sent: rendered, refused: refused5 } = await renderAsked(bytes2, pages);
+    if (!rendered.length) return { ok: false, reason: "NO_PAGE_RENDERED", refused: refused5 };
     const a = account && typeof account === "object" ? account : {};
     const body = JSON.stringify({
       capture_sha: sha2,
@@ -261176,8 +261225,8 @@ var Store = class extends DurableObject {
       coarchiveset: () => acquisitionOf(ctx).coArchiveSet({ on: body ? body.on : void 0, by: url.searchParams.get("by") }),
       coarchivestate: () => acquisitionOf(ctx).coArchiveState(),
       ...captureOps(captureOf(ctx), url, body, env),
-      /* R37 (N826; K2630): doorbell's nine routes, directly after capture's map, so each name capture's map still carries
-         until its T43 delete is answered by doorbell's instance, never capture's copy. */
+      /* R37 (N826; K2630): doorbell's nine routes, directly after capture's map, each answered by doorbell's instance
+         (capture's copy deleted in T43, N849). */
       ...doorbellOps(doorbellOf(ctx), url, body),
       /* R26: file-safety's ops (op-declarations R32), at its place directly after doorbell's map. */
       ...fileSafetyOps(fileSafetyOf(ctx), url, body, env),
