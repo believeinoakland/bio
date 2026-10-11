@@ -37,3 +37,7 @@ action-holds (T45-26) is merged into tranche/T45 (K2856): projectHolds, holdsDue
 ## B7 · CHANGE
 
 actions (T45-27) is merged into tranche/T45 (K2859): R74–R97 (receipts, scopes, promises, press terms, the response listener) are real and the hold code is gone. Merge tranche/T45, drop any actions stand-in, re-run, then post COMPLETE.
+
+## B8 · CHANGE
+
+action-holds is merged again (K2860): holdsDue, pressureFor and from:{mark} now also read pressure marks stated on actions' entries, and it registers its readers itself. Merge tranche/T45 and re-run before your next COMPLETE (with actions' B-CHANGE already sent).
