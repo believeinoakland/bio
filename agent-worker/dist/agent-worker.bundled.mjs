@@ -865,7 +865,12 @@ var ID_TABLE = Object.freeze([
      objects are: a counter would tell a reader how many steps a group took, hidden projects' included. Their owners are
      named here before they hold code (P8). */
   row("STP", "steps", "opaque"),
-  row("GUD", "reading-guides", "opaque")
+  row("GUD", "reading-guides", "opaque"),
+  /* T42-1 (R55; N839, K2608): an account draft (`case-account`, case-authoring's until L8), opaque, as `STP` and `GUD`
+     are. Since T41 case-authoring has minted it through record-core's `mintOpaqueId`, four random digits, which is the
+     sequential shape; so its row carries `legacy: 'sequential'` as `CALC`'s does (K1728): those ids stay readable, and
+     minting through `allocId` follows `form` alone. Its owner is named before it holds code (P8). */
+  row("ACD", "case-account", "opaque", "sequential")
 ]);
 var YEAR = "\\d{4}";
 var CORE = { sequential: "\\d{4,}", opaque: "[a-z0-9]{16}" };
