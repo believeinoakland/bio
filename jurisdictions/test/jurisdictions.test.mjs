@@ -113,7 +113,7 @@ test("R2 patterns ({re, flags} from i and u) and bases (measurement, dated entry
   for (const path of paths) {
     const r = breakIt((p) => { delete walkFacts.at(p, path).basis; });
     /* a template missing its basis is missing part of its attribution (R40) */
-    assert.ok(hasError(r, path.endsWith(".template") ? "TEMPLATE_UNATTRIBUTED" : "BASIS_MISSING", `${path}.basis`), path);
+    assert.ok(hasError(r, /\.template$|\.templates\[\d+\]$/.test(path) ? "TEMPLATE_UNATTRIBUTED" : "BASIS_MISSING", `${path}.basis`), path);
   }
   /* Patterns: a source that compiles, flags from i and u only, each once. */
   for (const flags of ["", "i", "u", "iu", "ui"]) assert.ok(breakIt((p) => { p.vocabulary.bodies[0].pattern = { re: "x", flags }; }).ok, flags);

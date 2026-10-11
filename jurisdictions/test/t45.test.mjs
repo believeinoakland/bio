@@ -326,8 +326,17 @@ test("R84 the test profile supplies R74–R82 (and R86, R87), with values differ
   for (const r of t.deadlines.filter((d) => d.owed_by)) assert.ok(!f.deadlines.some((d) => d.rule === r.rule), r.rule);
   const zones = (p) => [...p.counterparties.map((c) => c.time_zone && c.time_zone.value), ...p.action_kinds.map((k) => k.venue && k.venue.time_zone && k.venue.time_zone.value)].filter(Boolean);
   for (const z of zones(t)) assert.ok(!zones(f).includes(z) && z !== f.time_zone.value, z);
-  /* every T45 fact rests on TEST, and the two combine with no conflict on a T45 key */
+  /* every T45 fact rests on TEST, carries a basis it cannot lose (R2), and the two combine with no conflict on a T45 key */
   walkFacts(t, (fact, path) => assert.equal(fact.basis, "TEST", path));
+  const T45_PATH = /time_zone$|requesters$|templates\[\d+\]$|venue\.facts\[\d+\]$|^legal_facts|^procedure_guides|^phrasings/;
+  let n = 0;
+  walkFacts(get(TEST), (fact, path) => {
+    if (!T45_PATH.test(path) || path === "time_zone") return;
+    n++;
+    const r = breakT((p) => { delete walkFacts.at(p, path).basis; });
+    assert.ok(hasError(r, /templates\[\d+\]$/.test(path) ? "TEMPLATE_UNATTRIBUTED" : "BASIS_MISSING", `${path}.basis`), path);
+  });
+  assert.ok(n >= 16, `${n} T45 facts`);
   const both = combine([FIRST, TEST]);
   assert.ok(both.ok);
   assert.ok(!both.conflicts.some((c) => /legal_facts|procedure_guides|phrasings|templates|facts\[|time_zone\]|records_laws|owed_by|consequence|starter|defends|shape/.test(c.at)),

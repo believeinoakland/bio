@@ -12,7 +12,8 @@ import TEST from "./profiles/test-port-ellery.mjs";
 import { BASIS_GRADES } from "../bio-plane/src/record-grammar/index.mjs";
 
 /* ------------------------------------------------------------------------------------------------ */
-/* The profile's shape (R1–R7, R23–R26, R31–R33, R39–R44; `locale` and `systems[].links`, N77 and N96). */
+/* The profile's shape (R1–R7, R23–R26, R31–R33, R39–R44; `locale` and `systems[].links`, N77 and N96; T33's R46–R54, T34's
+   R58–R60, T35's R63–R69, T37's R70, T45's R74–R87). */
 
 export const SECTIONS = Object.freeze(["id", "name", "covers", "test", "spaces", "systems", "mixed_hosts",
   "crosswalks", "vocabulary", "practice", "search_terms", "records_laws", "standard_sources",
@@ -254,7 +255,8 @@ function applyForm(form, raw, prefixes = []) {
 /* ------------------------------------------------------------------------------------------------ */
 /* validate (R10, R11, R28, R35).                                                                   */
 
-/** Judge a profile against R1–R7, R23–R26, R31–R33 and R37–R44. `{ok, errors}`, every error found. Never throws. */
+/** Judge a profile against R1–R7, R23–R26, R31–R33, R37–R44 and the later tranches' additions (R46–R87). `{ok, errors}`,
+ *  every error found. Never throws. */
 export function validate(profile) {
   const errors = [];
   try { validateInto(profile, errors); }
@@ -1480,7 +1482,7 @@ export function get(id) {
 }
 
 /* ------------------------------------------------------------------------------------------------ */
-/* combine (R12–R16, R29, R34, R41–R44).                                                            */
+/* combine (R12–R16, R29, R34, R41–R44, R55, R66, R72, R74–R87).                                   */
 
 /* A stable key for "equal in everything but its basis and profile". Object keys are sorted so the
    order a profile writes its fields in never makes two equal entries differ. */
