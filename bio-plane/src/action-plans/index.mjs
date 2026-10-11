@@ -1,8 +1,11 @@
-/* action-plans — the action plan (requirements: `build/requirements/action-plans.md`; `BIO_Action_v0_1.md` §3, §4):
+/* action-plans — the action plan (requirements: `build/requirements/action-plans.md`; `BIO_Action_v0_2.md` §3, §4):
  * a project's working material for deciding what to do about one or more matters, an inquiry still open (suspected)
  * or a determination's outcomes (determined). It holds options the assistant suggests or a member adds, each bound to
- * the matters it serves; the member's choice of which to pursue; up to three scenarios laying the chosen options out
- * over time, with checkpoints a member judges; and the link from each started option to the Action it created.
+ * the matters it serves; the member's choice of which to pursue; any number of scenarios laying the chosen options out
+ * over time, with checkpoints a member judges, each in use or set aside; and the link from each started option to the
+ * Action it created. Since T45 (`BIO_Action_v0_2.md`) a plan may be paused, offers the infraction's two standing options
+ * (R41, R42), holds the re-examination's machine marks apart (R43), and keeps a frozen summary and a note at its close
+ * (R20, R44, R45). A pause is its log's, the document staying `open` (record-grammar's `action_plan` states).
  *
  * A new module (T18, layer 9, last): nothing moves from the legacy modules. Escalation's record-object pattern is the
  * model (its index.mjs and doc.mjs).
