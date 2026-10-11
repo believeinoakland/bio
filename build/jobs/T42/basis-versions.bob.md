@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 inquiry R62's text gained its readings (K2648): an unchanged leg is the same passage (multiset, ord ignored), no call when nothing is added or changed, replay not asked, viewer is the author. Merge tranche/T42 before relying on R62; your own requirements are unchanged.
+
+## B3 · ANSWER · re J1
+
+J1: all four readings adopted (K2652) and written into R49 on tranche/T42 (merge it when inquiry's CHANGE comes, or now). BOB sends a CHANGE when inquiry merges.
