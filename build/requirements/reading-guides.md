@@ -23,6 +23,7 @@ Terms. A **guide** is `GUD-` (`record-grammar` R53): `{id, kind, origin, items, 
 - **R7** `guideRetire({guide, reason, by})` by an approver of its scope; retired guides stay readable; nothing is deleted.
 - **R8** `guidesOf({kind?, state?, viewer})` lists guides the viewer may see, at most 200, `truncated`.
 - **R12** `guidePropose({kind, items, run, by})` stores a machine draft apart, labelled (`record-grammar` R42); only a member's R2 act with `based_on` makes it a guide.
+- **R13** (T45; N858; Actions D8; v0.2 rule 11) A guide may have `purpose` `procedure` (a reading guide's is `reading`, the default): `kind` an `action_kinds` kind of the active profiles' view (`GUIDE_KIND_UNKNOWN` otherwise), each item `{route, expect?, citation}`, `route` and `expect` short plain strings, `citation` required (`GUIDE_ITEM_UNSOURCED`). R2, R3, R6–R8 and R12 hold for it. R4's check for a procedure guide applies only its op form, its party-to-conduct list and `skills` R16's control-flow check (a procedure names acts and duties, "send", "must", by nature); its look-for opening and its act and rule words do not apply. `procedureGuidesFor({kind, viewer})` answers the profile's guide for `kind` (from `combine`, `jurisdictions` R80) first, then the group's approved procedure guides in the order approved, each with its origin; no rank, score or preferred route; every answer carries `label` keyed `guide.procedure.legalinfo` (canon's words, v0.2 rule 11: "legal information, not legal advice"). Never throws. *(not yet met: T45)*
 
 ## Private
 
@@ -32,6 +33,7 @@ Terms. A **guide** is `GUD-` (`record-grammar` R53): `{id, kind, origin, items, 
 - `civil-time`: dates of reviews and adoptions.
 - `record-core`: `declareTable` (R9).
 - `membership`: members, the group's sight (R2, R3, R7).
+- (T45) `jurisdictions` (L1): `combine`'s view, its `action_kinds` and `procedure_guides` (its R25, R80), for R13; the active profiles through `record-core` `getSetting` (an existing edge).
 
 ### Invariants
 
@@ -42,6 +44,7 @@ Terms. A **guide** is `GUD-` (`record-grammar` R53): `{id, kind, origin, items, 
 ### Satisfies
 
 - The investigation design of record (K2417): D8, D24, D65; D1's "reading-guide library".
+- `BIO_Action_v0_2.md` rule 11 (K2780; T45, N893): procedure guides per kind, legal information, unranked, a group's own beside the profile's (R13).
 
 ### Suggestions
 

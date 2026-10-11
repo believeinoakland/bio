@@ -40,6 +40,8 @@ Terms. A **step** is `STP-` (`record-grammar` R51). Its **place** is exactly one
 
 - **R11** `stepWait({step, on, by})`, `on` one of `{step}`, `{arrival: {kind, id}}`, `{date}`; `stepWaitRemove`. A step with an unmet wait reads `waiting`, naming each wait; `stepStart` on it is refused `STEP_WAITING`, naming them. A wait closing a loop is refused `STEP_WAIT_CYCLE`, naming the path; a wait on a step seen more narrowly than the waiting one `STEP_WAIT_NARROWER`. A step wait is met when that step is `ended` or `set_aside` (the read says which). Arrivals are answered by sources later modules register (`registerArrivalSource(kind, read)`: `capture-requests` for a capture request, `actions` for a records request); an arrival nobody can read is `undetermined`, never met.
 - **R12** `byWhen` is `{date, basis, source?}`, `basis` `law`, `meeting` or `own`. A date within 7 local days (`civil-time`) answers `nearing: true` and changes nothing else. `stepsDue({viewer, at})` answers, to the member who set the date only, each step past its date and not ended, with a stable key per step and date, for `notice-producers` (told once, DEC-94). `stepReminder({step, at, by})` records a reminder the member asked for, answered by `stepsDue` on that day to her alone.
+- **R29** (T45; Actions DESIGN §2.6; v0.2 rule 6; S1 §C 1) One date, one reminder. `registerDueHolder(module, fn)`: one later module (`action-clocks`, its R16) registers once at start (`membership.listenerRefusal`). `fn({step, byWhen, waits})` answers null or `{entry}` when that module holds the same date as an action's clock entry. `stepsDue` (R12) leaves out a step whose `byWhen` a holder answers held, and every read of a step (R4) answers `by_when_held: {module, entry}` beside `byWhen` (null when not held). A holder that throws or answers anything else is read as not held, so the step's own item stays. Control: with no holder, R12 answers as today. *(not yet met: T45)*
+- **R30** (T45; v0.2 rule 6) `stepsWaitingOn({kind, id})` (in process, for `action-clocks`) answers the steps with an arrival wait (R11) on `{kind, id}`, each `{step, byWhen, state}`, at most 200 with `truncated`; never answered to a member; writes nothing. *(not yet met: T45)*
 
 #### Money cost (D29, D49, D64)
 
@@ -83,6 +85,7 @@ Terms. A **step** is `STP-` (`record-grammar` R51). Its **place** is exactly one
 - `observation-log`: authority kind `step` and the resolver registration (its R1, R13; R9, R18), `onLookAnswered` (its R37; R23).
 - `leg-earning`: `projectsDrawingOnPaged` (its R13) for R14 and R17; `projectsShownOn` (its R14).
 - `inquiry`: what an inquiry is and who may see it (R1, R2, R7, R24).
+- (T45) `membership`: `listenerRefusal`, for R29's registration (an existing edge). The edge `action-clocks` → `steps` (R29, R30) is `action-clocks`' (L9 → L6, earlier).
 
 ### Invariants
 
@@ -96,6 +99,7 @@ Terms. A **step** is `STP-` (`record-grammar` R51). Its **place** is exactly one
 ### Satisfies
 
 - The investigation design of record (`investigation-design.html`, approved by Bob, K2417): D27–D50, H38, H39, D64 as `build/plan/draft-T41-investigation.md` §1 and §2.2 place them; canon `BIO_Investigation_v0_1.md` once approved (owed, K2418).
+- `BIO_Action_v0_2.md` rule 6 (K2780; T45, N893): one date, one reminder, a step's date held by an action's clock entry (R29, R30); the actions design §2.6.
 
 ### Suggestions
 

@@ -49,6 +49,9 @@ The AI run's rules without a store: the bounds, endings and statuses a run can h
 - **R25** (D56, D22) `DRAFT_KINDS` gains `case_account` (the system's draft of a case's account from its evidence, possibly in several framings: time order, by question, by rule), `account_check` (the system's flags on a member's account, R44 of `skills`) and `bearing_note` (`run-productions` R23); each is R21's mode in every other respect, its reach `ASK_SCOPE` narrowed to the case's or the source's own record.
 - **R26** (D2) `RUN_BOUNDS` gains `pages`, the number of pages of held documents a run may read; a run in mode `extract` or `investigate` reading inside a document declares it, the plane counts it as `mints` is counted, and a read of a document under a "no AI" material limit (`credentials` R57) is refused inside the run whatever the bound.
 
+**T45: the action drafts** (T45-10; N861, N887; Actions D11b, D21, D25; R-reconciliation R10)
+- **R27** (T45; N861, N887; Actions D11b, D21, D25; v0.2 rules 1, 2, 9, 16, 19, 21) `DRAFT_KINDS` gains `textcheck`, `infractiondraft` and `bearingdraft` (`agent-worker` R76), after R25's three, each R21's mode in every other respect: interactive, no run, no run row, read-only, R17's `ASK_BOUNDS`, started only at the asking member's own act (R18). Their reach (`DRAFT_REACH`): `textcheck` reads nothing of the record, given only the prepared text it is asked about (as R22's translation is given only its words); `infractiondraft` reads, through the asking member's grant, only the matter's own record the member may see (its plan, actions, correspondence and findings), and `bearingdraft` only the action and the reply it is asked about with the request's claims, each through the record reads the grant already admits (`credentials`' `AI_GRANT_OPS`, no op added) and no write op of any module. `draftMayRead({kind, firsthand, suggestions})` answers `true` for `infractiondraft` and `bearingdraft` whatever `suggestions` (the member asks for a reading of named records, as an ask does) while `firsthand` is absent or false, and `false` for `textcheck`; its answers for R22's and R25's kinds are unchanged. The three deploy by one flag of their own, `action_drafts` (a name `deployedModesFor`'s `flags` may carry), false until a reviewed change of its own sets it once R19's test bar is held for each of the three (`draft:<kind>`); `draftKindDeployed({kind, flags})` answers `true` for one of them only when both `draft`'s flag and `action_drafts` are true, for R22's and R25's kinds exactly when `draft`'s flag is true, and `false` for an unknown kind; `draft`'s flag alone never deploys them. `startAllowed` for them is R18's for any draft. Pure; never throws. *(not yet met: T45)*
+
 ## Private
 
 ### Uses
@@ -69,6 +72,7 @@ The AI run's rules without a store: the bounds, endings and statuses a run can h
 - `BIO_Action_v0_1.md` §4 rule 1 (the planning run: R13–R15; K660).
 - DEC-152 and DEC-153 with Bob's K1841 (writing help: never a member's reason, rule 1; from what the member typed, and with the suggestions switch on what the group holds, rule 7), and the Roles canon §3 as amended citing DEC-153 (R16, R18, R21; T35).
 - DEC-127 (5) and DEC-157 (2), (4) (the translation draft, from the words alone; R22; N669, K1793, K1804, K2200).
+- `BIO_Action_v0_2.md` rules 1, 2, 9, 16, 19, 21 (K2780; T45, N893): the assistant's action drafts, labelled, read-only, at a member's own act, their reach and their flag (R27).
 - `build/layers.md`, layer 6's contract.
 
 ### Suggestions
