@@ -74,3 +74,15 @@ My best reading, already built: capture's `t44.test.mjs` names R87 and checks th
 Against the old code all three fail; against the new code all three pass.
 
 The literal `doorbellOf(ctx)` control belongs in doorbell's own tests (doorbell R12/R25 already test the key there, by admission's tests). Carrying on unless you say otherwise.
+
+## J2 · COMPLETE
+
+T44-4 complete on job/T44/capture (record: Completion).
+- Deleted: the held sourceFingerprint, #knockKey and the HELD COPY block; R87's T44 clause is met.
+- Test: t44.test.mjs, 3 tests naming R87. All 3 fail on the old code and pass on the new. Control as adopted in B2 (K2758).
+- Own code and tests read whole; two stale citations fixed (migrate's R21 -> R87; heldCount's monitoring R60 -> link-sweep R8).
+- Tests: capture 128/0, cap13 22/0, d57 24/0.
+- Users: doorbell 69/0, admission 43/0, acquisition 158/0, and 20 more modules whose fixtures build a capture, all green except rule 4 (6)'s accepted reds (affordances t36.test.mjs:54,:93; op-declarations t34.test.mjs:148).
+- Staled: the plane bundle (fleetbundles 133/4, all bio-plane staleness; 137/0 on the tranche's sources). Regenerate at L3's close.
+- Checks: format 0, architecture 0, coverage 40/40, ownership 4 files 0.
+- Found (wording only): credentials R38 and R44 and membership R123 still cite capture R56/R31, which are now doorbell R12/R2/R20.
