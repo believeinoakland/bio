@@ -16,11 +16,11 @@
  * R83's questions a document was captured for; `registerReader`). At its first construction for a
  * storage it registers its grammar (R37) and its figures (R75) with record-core.
  *
- * THE DOORBELL (T42, K2607; T43, N849). The doorbell (the knock, its rate and tallies, the inbox, the pull, the knocker
- * secret; once this module's R30–R32, R47–R54, R56, R65–R67, R70–R72, R80, R85) is `doorbell`'s; this module's copy of it
- * was deleted in T43 (N849), its rows (R37) and tables with it. One piece is held (K2708, N870), by K625's pattern, until `admission`
- * re-points: `sourceFingerprint` (once R56, now doorbell R12), which admission's door window still reaches through
- * `captureOf(ctx)`; it answers no requirement of this module and nothing new calls it. */
+ * THE DOORBELL (T42, K2607; T43, N849; T44, N870). The doorbell (the knock, its rate and tallies, the inbox, the pull,
+ * the knocker secret, the source fingerprint and its key; once this module's R30–R32, R47–R54, R56, R65–R67, R70–R72,
+ * R80, R85) is `doorbell`'s; this module's copy of it was deleted in T43 (N849), its rows (R37) and tables with it, and
+ * the last held piece, `sourceFingerprint`, in T44 (N870, K2708). This module answers no source fingerprint and creates,
+ * declares and reads no table of `doorbell`'s, `knock_key` included (R87). */
 import { isPublicHttpsLocator, createSha256, isMachineIdentity } from "../record-grammar/index.mjs";
 import { CAPTURE_CHECKS } from "./checks.mjs";
 import { INFORMATION_GRAMMAR } from "./grammar.mjs";
@@ -366,7 +366,7 @@ export class Capture {
   /** This module's tables, at every boot, idempotent: a derived table whose key changed shape is dropped first
    *  (so the CREATE INDEX below never meets the old table, which would throw inside blockConcurrencyWhile and
    *  brick the Durable Object); the additive columns an older store lacks are added; every table and index is
-   *  created if absent; the tables are declared to record-core's purge (R21). */
+   *  created if absent; the tables are declared to record-core's purge (R87, R74's declarations). */
   migrate() {
     for (const [table, needed] of CAPTURE_RESHAPE) {
       const cols = this.#cols(table);
@@ -503,42 +503,6 @@ export class Capture {
     if (viewer === undefined) return true;
     const gate = this.#captureGate("c.capture_sha", viewer);
     return !!this.#one(`SELECT 1 AS x FROM (SELECT ? AS capture_sha) c WHERE (${gate.sql})`, sha, ...gate.args);
-  }
-
-  /* ==================================================================== *
-   * THE HELD COPY (K2708, K625's pattern; T43, N849): the source fingerprint, once this module's R56, `doorbell`'s R12
-   * since T42. Kept only because `admission`'s door window reaches it through `captureOf(ctx)` until admission re-points
-   * to `doorbell` (T43-21); it answers no requirement of this module, and capture's next job deletes it (N870, T44). The key's table,
-   * `knock_key`, is `doorbell`'s (its R25): created here with doorbell's own DDL only when absent, never declared here,
-   * so either module's read finds the one key.
-   * ==================================================================== */
-
-  /* The key the source fingerprint is computed under: the operator's secret binding when set, else the instance's
-     own, generated once and held in `knock_key`. */
-  #knockKey() {
-    const bound = this.env && typeof this.env.KNOCK_FINGERPRINT_KEY === "string" && this.env.KNOCK_FINGERPRINT_KEY;
-    if (bound) return te.encode(bound);
-    const held = () => (this.#one(`SELECT 1 AS x FROM sqlite_master WHERE type = 'table' AND name = 'knock_key'`)
-      ? this.#one(`SELECT key_hex FROM knock_key WHERE id = 1`) : null);
-    let r = held();
-    if (!r) {
-      const k = new Uint8Array(32);
-      crypto.getRandomValues(k);
-      this.#tx(() => {
-        this.#sql.exec(`CREATE TABLE IF NOT EXISTS knock_key (id INTEGER PRIMARY KEY CHECK (id = 1), key_hex TEXT NOT NULL, created TEXT NOT NULL)`);
-        this.#sql.exec(`INSERT OR IGNORE INTO knock_key (id, key_hex, created) VALUES (1, ?, ?)`, hexOf(k), stampSecond());
-      });
-      r = held();
-    }
-    return Uint8Array.from(r.key_hex.match(/../g).map((h) => parseInt(h, 16)));
-  }
-
-  /** The held copy of doorbell R12: a keyed digest (HMAC-SHA-256, first 16 bytes) of the connecting address, never the
-   *  address and never an unkeyed hash, which can be reversed by trying every address. */
-  async sourceFingerprint(address) {
-    const key = await crypto.subtle.importKey("raw", this.#knockKey(), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
-    const mac = await crypto.subtle.sign("HMAC", key, te.encode(String(address || "unknown")));
-    return hexOf(mac).slice(0, 32);
   }
 
   /* R77: the required-argument refusal for an argument this module reads that names nothing it knows (the control
@@ -1336,7 +1300,7 @@ export class Capture {
    *  (R79, R81) and not released, have a register document whose `origin` names `matched_sweep` equal to `sweep`. The
    *  register document is the bundle's `data/provenance.json` (State Rules §4.1), read on record-core's `files` read
    *  contract (its R37); a released document has left `collected` (`ratification` R24), so the state answers that
-   *  clause. The whole store, no viewer: only the daemon's hold reads it (`monitoring` R60). Writes nothing and never
+   *  clause. The whole store, no viewer: only the daemon's hold reads it (`link-sweep` R8). Writes nothing and never
    *  throws; an unknown sweep, or one that is not a non-empty string, answers 0. K1129: a store that cannot be read
    *  answers null (not known), never 0, so the hold fails closed. A register document held only as a blob
    *  (`files.content` NULL) is not counted. */
