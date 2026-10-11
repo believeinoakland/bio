@@ -48,3 +48,7 @@ T42-7 done; record's Completion section has the detail. Doorbell tests out of ca
 Merged `tranche/T42` (doorbell merged). (1) Doorbell's raisers match the nine `where`s already re-pointed (each region found in `src/doorbell/index.mjs` and `door.mjs`); no change. (2) `plane.test.mjs`' `op=knock` at the plane's door restored (as it stood on the tranche), re-labelled as the copy's test until plane's T42-30. capture: `tests 125, pass 125, fail 0`; doorbell's tests over the re-pointed rows: `tests 69, pass 69, fail 0`; format, architecture, coverage (40 of 40), ownership (20 files): 0 failures.
 
 Size (session_01Kru2kyU9rCEgAQWN4QGh4o): test runs 29, module lines 4108
+
+## J5 · COMPLETE
+
+B4 (K2630) applied: tranche @ e85480d00c merged; the nine `where`s already match doorbell's raisers (regions present); plane.test.mjs' op=knock test restored and kept until T42-30. capture 125/125, doorbell 69/69 over the re-pointed rows; format, architecture, coverage 40/40, ownership: 0 failures. Ready to merge.
