@@ -166,7 +166,8 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [], s
       const legs = (Array.isArray(fm.action_basis) ? fm.action_basis : []).map((l) => ({ target: l.target, kind: l.kind }));
       return { ok: true, id, current_state: fm.current_state ?? null, kind: fm.action_kind ?? null,
                resolution: fm.resolution ?? null, ...(confidential.has(id) ? { confidential: true } : {}),
-               ...(fm.reply_owed !== undefined && !replyFromDocOnly ? { reply_owed: fm.reply_owed } : {}),
+               /* actions R82, as its read answers it: `{owed, ...}`, absent reading owed */
+               ...(!replyFromDocOnly ? { reply_owed: { owed: fm.reply_owed !== false } } : {}),
                correspondence: structuredClone(ledgers.get(id) || []), legs,
                premise_override: fm.premise_override ?? null,
                breach: fm.breach === true, counterparty: fm.counterparty ?? null, clock: Array.isArray(fm.clock) ? fm.clock : [] };

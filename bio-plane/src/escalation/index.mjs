@@ -327,9 +327,10 @@ export class Escalation {
   }
 
   /* R6 (T45; actions R82): whether an action owes a reply: false only when it states `reply_owed: false`, as `actionRead`
-     answers it or, where the read does not carry the field, as its document states it; absent reads owed. */
+     answers it (`reply_owed: {owed, ...}`) or, where the read carries no such answer, as its document states it; absent
+     reads owed. */
   #replyOwed(action, read) {
-    if (isObj(read) && read.reply_owed !== undefined) return read.reply_owed !== false;
+    if (isObj(read) && isObj(read.reply_owed) && typeof read.reply_owed.owed === "boolean") return read.reply_owed.owed;
     const fm = parseFm(this.#text(action));
     return !(fm && fm.reply_owed === false);
   }
