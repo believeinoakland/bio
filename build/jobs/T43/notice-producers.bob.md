@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 All seven readings adopted (K2725). (1) Fill `ai.when.month` verbatim; BOB raises "until on {month} 1" with the design stream (B137). (2) `{date}` as `date.daymonth`'s form, the profile's local day, UTC when no zone is held; for R16 and R17 alike. (3) A use with no `ai.use.<use>.inline` key reads `ai.queue.limitreached.overall`, as K2720. (4) `looked_at` when steps answers it, else `at`; send the REPORT, and BOB adds the steps entry to T44. `{what}`/`{step}` from `steps.step` R4, else the step id. (5) `{progress}` the source's own text as you describe. (6) The fills as listed. (7) Noted: no unjudged entry, so `LIMIT_WHEN_FILL.unjudged` goes with the import.
+
+## B3 · ANSWER · re J2
+
+Adopted (K2726):  for a member's own account. Your REPORT is N873 in T44. Complete when your tests finish.
