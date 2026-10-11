@@ -1,7 +1,8 @@
 /* publication over the modules it uses, each the real one (record-core, membership, credentials, promotion, provenance,
    content, connections, inquiry, basis-versions, reevaluation; content reached through connections), on a real SQLite database (node:sqlite) standing in for a Durable Object's
    storage. What a later module registers (instance-setup's fact `producingGroup`, review's provider) is a stand-in the
-   test controls; so are `standards` and `entities` when a test gives them (R72 reads them at a commit). The ceremonies that write through this module (`ratification`, `case-authoring`) are played by the
+   test controls; so are `standards` and `entities` when a test gives them (R72 reads them at a commit), and
+   project-roster's `projectScope` (its R23; R78 reads it at a commit), answering from `w.scopes`, each ask in `w.scopeAsks`. The ceremonies that write through this module (`ratification`, `case-authoring`) are played by the
    test through R21 and R22, exactly as those modules call them. Every test drives `publication` at its interface. */
 import { DatabaseSync } from "node:sqlite";
 import { createHash } from "node:crypto";
@@ -104,7 +105,7 @@ const NO_READINGS = {
 export const planeWorld = (opts = {}) => world({ ...opts, workerd: true });
 
 export function world({ group = "test-group", workerd = false, contradiction = null, standards = null, entities = null,
-                        carriage = null } = {}) {
+                        carriage = null, realRoster = false } = {}) {
   const st = storage({ workerd });
   const all = (c) => (Array.isArray(c) ? c : c.toArray());
   const host = { storage: st };
@@ -156,14 +157,20 @@ export function world({ group = "test-group", workerd = false, contradiction = n
                                                           : { capture_sha: sha, units: [], state: null }) };
   const capture = { captureAccountsOf: (sha) => ({ captureSha: sha, actors: (actors.get(sha) || []).map((a) => ({ actor: a, at: NOW })),
                                                    accounts: [] }) };
+  /* R78: project-roster's R23 read, `{scope, since, by}`, `none` for a project with no scope set. */
+  const scopes = new Map(), scopeAsks = [];
+  const roster = { projectScope: (id) => { scopeAsks.push(id);
+    return scopes.has(id) ? { scope: scopes.get(id), since: NOW, by: "olive" } : { scope: "none", since: null, by: null }; } };
+  /* `realRoster`: no stand-in, so this module reaches project-roster itself, on this host (R78's default). */
   const p = publicationOf(host, { record, membership, credentials, promotion, inquiry: k, basisVersions, reevaluation: r,
+                                  ...(realRoster ? {} : { roster }),
                                   ...(contradiction ? { contradiction } : {}), ...(standards ? { standards } : {}),
                                   ...(entities ? { entities } : {}), sources: src, acceptedWork, extraction,
                                   capture, provenance: prov, now: () => clock.now, ...(carriage || {}) });
   let n = 0;
   const w = {
     st, host, record, membership, credentials, promotion, prov, content, connections, k, basisVersions, r, p, clock, groupRef, src,
-    acceptedWork, units, actors,
+    acceptedWork, units, actors, scopes, scopeAsks,
     /** A knock pulled into the capture `captureSha` (capture R65), and its source minted as `sources` R1 mints it. */
     knock(captureSha, { knockId = `KNOCK-${knocks.length + 1}`, pseudonym = null, received = NOW, viewer = V("olive") } = {}) {
       knocks.push({ knock_id: knockId, sha256: captureSha, bytes: 10, received, pseudonym, knocker_digest: pseudonym ? `d-${pseudonym}` : null });
