@@ -1,6 +1,6 @@
 # control-plane (T43)
 
-**Status** · session_01DfugQdQ5JweBPDomQkf9rS · depth 2 · WORKING · handled B2
+**Status** · session_01DfugQdQ5JweBPDomQkf9rS · depth 2 · WAITING ON BOB (J1) · handled B2
 
 ## Work
 
