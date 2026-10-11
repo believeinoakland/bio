@@ -1,6 +1,6 @@
 # promotion — requirements
 
-**Status** · In force: approved by Bob 2026-09-26 (a product module, P17), with later folds reviewed. Last changed T40 (T40-4: a stamp of the rows R34 and R50 count, awaiting stamp at T39's close and minted by T40's L1–L2 jobs; no requirement changed; K2370, K2377, K2378). Before that T35 (T35-16: a stamp of the rows R34 and R50 count, and served wording no requirement quotes; no requirement changed; K1855, K1899 (1)); every requirement met.
+**Status** · In force: approved by Bob 2026-09-26 (a product module, P17), with later folds reviewed. Last changed T40 (T40-4: a stamp of the rows R34 and R50 count, awaiting stamp at T39's close and minted by T40's L1–L2 jobs; no requirement changed; K2370, K2377, K2378). Before that T35 (T35-16: a stamp of the rows R34 and R50 count, and served wording no requirement quotes; no requirement changed; K1855, K1899 (1)); every requirement met. Last changed T43 (T43-6: R38 amended, C-1.1 and C-2.1 judged by `record-grammar`'s arms; N854; K2625, K2689), not yet met.
 
 ## Public
 
@@ -135,7 +135,7 @@ The one write path by which a bundle enters or changes in the record. It holds t
 - **R35** `promote`, `reopen` and `runCaseGate` make no network call; `runGate`'s only outside question is the injected `hasCapture`. A time this module records is its own clock's stamp or the document's stated time. No ordering this module or its checks performs uses a caller-supplied time.
 - **R36** No place is named in this module or its checks. A local fact a check needs comes from a jurisdiction profile the caller supplies.
 - **R37** Every "no" names which kind of no. An undetermined fact is never rounded to a refusal or a pass (R17, R27).
-- **R38** A rule enforced both at this module's doors and in the catalogue is one catalogue function run at both, never two implementations. The two never disagree about the same bytes (State Rules v1.5 §8; `layers.md`, "The checks are carried").
+- **R38** A rule enforced both at this module's doors and in the catalogue is one catalogue function run at both, never two implementations. The two never disagree about the same bytes (State Rules v1.5 §8; `layers.md`, "The checks are carried"). (T43; N854; K2625) C-1.1 and C-2.1 are judged at the door by `record-grammar`'s arms: a non-replay creation or revision is refused `BUNDLE_ID_DISAGREES` exactly when `record-grammar.idDisagrees(fm, bundleId)` is true (an id differing only by surrounding white space is refused; a non-string id is C-1.2's, not refused here); a revision's `bundle.md` is refused `BUNDLE_MD_UNREADABLE` whenever `parseFrontmatter` answers any C-2.1 finding, not only when it answers no data. *(not yet met: T43)*
 
 ### Satisfies
 
