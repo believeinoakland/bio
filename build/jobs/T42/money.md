@@ -35,3 +35,7 @@ No generated artifact made stale beyond the plane bundle (rule 4 (10)). `modules
 - `ownership: 3 files changed by money between tranche/T42 and HEAD; 0 failures`
 
 Size (session_01Ux9Ca6B1viDvKwTEe8rhGB): test runs 4, module lines 1434
+
+## J1 · REPORT
+
+Two findings outside money (record, Completion). (1) record-grammar: C-33.40's where (acts.mjs) names inquiry's, progressions' and entities' NO_BASIS sites but not money's refusal (setFundType) nor, after T42-11a, lines'; R29 says it names every site. A row change, with its stamp. (2) case-disclosures: test/m/case-disclosures/carries.test.mjs:139 (R7 'no new table', 159 !== 157) is red identically on tranche/T42 @ f997b738cd without money's change, and is not in rule 4.
