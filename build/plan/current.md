@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #153 · session_01M1HKb2JkFH595E438e39Cz · depth 1
 
-**Jobs** · 
+**Jobs** · record-grammar: RECORD-GRAMMAR #14 session_012hin3suQbyht8NAUmKGuMq
 
 **At T43's opening (K2697):** opened 2026-10-11 from `main` @ 0b28d3b32d (T42 closed, K2696; PR #23, DEC-189 and DEC-190, on `main`). Development runs (Bob, K2605); the 80% pause (K2341) and the account-switch rule stand. Bob's meter: 26% weekly during T42's L9 (K2677); asked again at this opening.
 
