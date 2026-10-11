@@ -974,7 +974,29 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    fork's title written as the grammar reads it back) moves no row and no gate.
    ROW_CENSUS (R50) re-pinned to this tree: 1722 rows. Rows a T44 job in layers 3–11 adds or changes are T45's stamp
    (plan T44, rule 4 item 2). */
-export const CATALOG_VERSION = "1.71.0";
+/* 1.72.0 (PROMOTION #43, T45-4, 2026-10-11; T44's rule 4 item 2, T45's rule 4 item 2; N892; K1680, K2786, K2795, K2796,
+   K2797): MINOR. The stamp of every row awaiting it at T44's close (T44's layers 3–11) and of T45's layers 1 and 2, read
+   by diffing R50's census lines of `tranche/T45` after membership and project-roster merged against 1.71.0's own
+   (`test/fixtures/row-census-1.71.0.jsonl`: 1722 rows, c6a39c14…): ten new rows, one changed, none re-keyed, none
+   retired.
+   ARRIVED (10): project-roster C-147.1 PROJECT_SCOPE_UNKNOWN, C-147.2 PROJECT_SCOPE_NEEDS_HIDDEN, C-147.3
+   PROJECT_SCOPE_OWN_NOT_SOLE, C-147.4 PROJECT_SCOPE_UNCHANGED (a project's scope, its R21), C-147.5 PROJECT_SCOPE_OWN,
+   C-147.6 PROJECT_SCOPE_KEEPS_HIDDEN (its project-act guard, R22), C-147.7 APPROVAL_RULE_INVALID, C-147.8
+   APPROVAL_KIND_UNKNOWN (the second-approval setting, R24) (the new family `PROJECT_SCOPE_CHECKS`; T45-3, K2797);
+   membership C-56.6 PROJECT_GUARD_UNCHECKED (the project-act guard, its R128; T45-2, K2796); this module's C-86.16
+   COUNSEL_MATTER_NOT_EVIDENCE (R57: a leg or a live `cites` entry newly naming a counsel matter's bundle from another
+   project, or from none, is refused at the write; K2795's readings).
+   CHANGED (1), code and number unmoved: ai-use C-143.5 EXPLORE_OUT_OF_SCOPE (`where` now `#outOfScope`, translation
+   naming `{whose}` account and what its owners "chose to explore"; T44-7, AI-USE's record). C-143.6's line is unmoved
+   (T44-7 changed how it is read, by key, not its row).
+   T45's layer 1 (jurisdictions) added and changed no row.
+   CHANGED IN WHAT THE GATES RUN, no row line moving: the promote door gains R57's own refusal, counted with its row
+   above; membership's `MODULE_ORDER` gains the five new T45 modules (`case-check`, `action-holds`, `action-replies`,
+   `plan-work` and `action-producers`; K2781 (1)), none of which registers a gate step yet, so no gate's
+   order moves.
+   ROW_CENSUS (R50) re-pinned to this tree: 1732 rows. Rows a T45 job in layers 3–11 adds or changes are T46's stamp
+   (plan T45, rule 4 item 2). */
+export const CATALOG_VERSION = "1.72.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -1066,8 +1088,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1722,
-  digest: "c6a39c147c0d39e23be4897ce55c043e5ae5e7fcef5ac58f5d86aa5ff26d3e66" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1732,
+  digest: "795f50296de9ee78e846d9f933b0a42eb178f03747e89c92f540f5074f1382a5" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();

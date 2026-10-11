@@ -147,6 +147,18 @@ probe("ENVELOPE_DATES_DISAGREE", () => promote("INFO-2026-0124-x", info("INFO-20
 probe("STATE_MOVE_UNDECLARED", () => promote(INFO2, info(INFO2).replace("current_state: collected", "current_state: nonsense"),
   { base: held2.bundleSha }));
 probe("PROJECT_STAGE_COMPUTED", () => promote(null, common(null, "project", "project@1", "Staged", "matured").concat("---", "").join("\n")));
+/* R57: a question of no project resting a leg on a bundle of a counsel matter (a hidden project its owner scoped
+   `counsel_matter` through project-roster's own act, its R21). */
+probe("COUNSEL_MATTER_NOT_EVIDENCE", async () => {
+  const proj = await promote(null, common(null, "project", "project@1", "Counsel", "forming", ['objective: "Brief counsel on the harbor contract."']).concat("---", "").join("\n"),
+    { ownerMemberId: "ruth" });
+  assert.equal(proj.ok, true, JSON.stringify(proj));
+  const scoped = await call(`/projectscopeset?projectId=${proj.bundleId}&scope=counsel_matter&reason=counsel&by=ruth&viewer=member:ruth`);
+  assert.equal(scoped.ok, true, JSON.stringify(scoped));
+  const held = await promote("INFO-2026-0126-z", info("INFO-2026-0126-z", [`project: ${proj.bundleId}`]));
+  assert.equal(held.ok, true, JSON.stringify(held));
+  return promote("INQ-2026-0127-a", inquiry("INQ-2026-0127-a", [...refs(["INFO-2026-0126-z"]), ...legs(["INFO-2026-0126-z"])]));
+});
 
 /* The answer each probe must meet: its reason, or the envelope that relays it (with the row's check among findings). */
 const ENVELOPE = { SELF_BASIS: null, BASIS_CYCLE: null, VERSION_LEG_UNRESOLVED: null, VERSION_FROZEN: null };
@@ -165,7 +177,7 @@ const RELAYED = [
 
 test("R18: every refusal sited at the promote write is enforced there — each row is met by name", async () => {
   /* This module's own rows sited at this write (C-86, C-97 whole since T18; the act-shape, machine-fence, C-59, C-26.12
-     and C-64.1 rows since T19; `PROMOTION_CHECKS`' thirteen since T41), read from its tables. */
+     and C-64.1 rows since T19; `PROMOTION_CHECKS`' thirteen since T41, fourteen since T45), read from its tables. */
   const own = { PROMOTED_TYPE_CHECKS: P.PROMOTED_TYPE_CHECKS, PROJECT_CREATION_VISIBILITY_CHECKS: P.PROJECT_CREATION_VISIBILITY_CHECKS,
                 PROMOTION_ROW_CHECKS: P.PROMOTION_ROW_CHECKS, PROJECT_MINT_CHECKS: P.PROJECT_MINT_CHECKS,
                 PROMOTION_CHECKS: P.PROMOTION_CHECKS };
@@ -180,7 +192,7 @@ test("R18: every refusal sited at the promote write is enforced there — each r
                  ["VERSION_FROZEN", "C-25.11", "basis-versions"], ["VERSION_LEG_UNRESOLVED", "C-25.16", "basis-versions"],
                  ["SURFACED_BY_REWRITTEN", "C-66.5", "inquiry"]];
   for (const [code, check, family] of LATER) rows.push({ family, code, check, where: "" });
-  assert.equal(rows.length, 34, `the rows sited at the promote write: ${rows.length}`);
+  assert.equal(rows.length, 35, `the rows sited at the promote write: ${rows.length}`);
   /* A code is probed once, should two of these tables ever hold it (C-26.12 and C-64.1 were held twice in T19). */
   const probed = new Set();
   for (const row of rows) {
