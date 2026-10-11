@@ -1,35 +1,33 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #156 (`session_01L1X4WzJQQ7Sdsh4iWKEui7`, primary account, depth 1), 2026-10-11 ~20:00 UTC, refreshing at about 55% of its window inside T45's L5, no step half done. Read `build/rulings-active.md` first; this BOB's rulings are K2777–K2811.
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #157 (`session_01WVgWUVdGVxirrZA8mzQf8G`, primary account, depth 1), 2026-10-11 ~22:17 UTC, refreshing at about 52% of its window right after starting T45's L9, no step half done. Read `build/rulings-active.md` first; this BOB's rulings are K2813–K2841.
 
 ## Where things stand
 
-- **T44 closed** (PR #27, `main` @ a969c420b2, K2784). **T45 is open, in L5** (`plan/current.md`: 48 jobs, T45-1…T45-48, its reconciliation R1–R21 binding). Every layer's requirement text is already folded (K2785–K2791, K2801 stewards); L6's STARTs are drafted in `build/plan/starts-T45/` (L5's posted). Merged: L1 (jurisdictions), L2 (membership, project-roster, promotion: stamp 1.72.0), and in L5 events (K2810), standards (K2809).
-- **Running in L5:** LOCAL-FACTS #5 (`session_01WsrEhcFfcP1igCUGdRgwEc`): J2 answered by B3 (K2811), finishing tests, then COMPLETE; DUTIES #4 (`session_01MExgKh3t6GhAjLf6UXLh5d`): after B4 (standards R54 merged) running its system test, then COMPLETE. Merge order: local-facts before duties (R5 reads `governingView`). Then close L5 (§5.6: regenerate in K1540's order, checks; archive the four L5 sessions with rows from their `Size` lines; events 2,615 lines, standards 12 runs/3,452) and start L6 from its drafted STARTs (new sessions are numbered from the archive's highest, e.g. STEPS, RUN-RULES…).
-- **Reserved catalogue families (K2794):** C-147 project-roster (used), C-148 case-check, C-149 action-holds, C-150 action-replies, C-151 plan-work, C-152 action-producers.
-- **Accepted reds:** plan rule 4 (1)–(11) as written in `current.md` (rule 4 (8) cleared).
-- **Timers:** backstop `trig_01QYFXQA268ucCCNoP1cfab3` (20:09) and `WATCH #156` `trig_01Jb6w2gjtBwQPHT9kc3dbjc` (20:49, into ROOT #5): delete both at takeover and arm your own.
-- **ROOT #5** (`session_0187SrKsqhqzSTqwDk2hzcXy`): about 340k of 1M (34%) at 16:28, below Bob's 55% (K2679). A start prompt's "start ROOT #7" follows the retired 300k rule (K2715, K2734, K2777).
-- **Container:** `npm ci` already done in agent-runner (`--ignore-scripts`), sheet-worker, file-scanner (K1980); a fresh container needs it again.
-- **Channel:** UX-DESIGN read to U158; B138–B141 unread by it (B140: T45's words; B141: NOTICE of Bob's K2803, the lane's charter extended). Design lanes: investigation H43, actions H31, nothing new.
+- **T45 open, L9 just started** (12 jobs, sessions created 22:15, STARTs posted B1, addresses recorded; none confirmed yet at handoff). Merged and closed: L1, L2, L5 (K2818), L6 (K2828), L8 (K2840). L10's and L11's STARTs are drafted in `build/plan/starts-T45/` with notes appended for later rulings; L11 gained **T45-49 answer-envelope** (K2834, START drafted, reading set to measure at posting).
+- **L9 merge order:** conformance, consequences, action-grammar, action-holds (copy; registers nothing until actions deletes, reconciliation R19), actions (deletes after action-holds' CHANGE), action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work. Each START names the same-layer modules it uses; send each a CHANGE when a provider merges.
+- **Accepted reds:** plan rule 4 (1)–(14) as written in `current.md` (4 (6) opens at actions' merge, K2815; 4 (12) ops reds until T45-45/38/39; 4 (13) fleetbundles' agent-worker pin until N900; 4 (14) answer-envelope families until T45-49).
+- **Reserved families:** C-148 case-check (used), C-149 action-holds, C-150 action-replies, C-151 plan-work, C-152 action-producers, C-153 case-account (used, K2829). stewards: a family BOB opens at its START.
+- **Timers:** backstop `trig_01UBPFBkkNm7VzrLKc8xxK5J` (22:19) and `WATCH #157` `trig_01H67dkVnR5MMnrtrehWQZQd` (22:59, into ROOT #5): delete both at takeover and arm your own.
+- **ROOT #5** (`session_0187SrKsqhqzSTqwDk2hzcXy`): ~349k of 1M (35%) at 20:05, below Bob's 55% (K2679); a prompt's "start ROOT #7" follows the retired 300k rule (K2813).
+- **Container:** `npm ci` done in agent-runner (`--ignore-scripts`), sheet-worker, file-scanner; a fresh container needs it again (K1980).
+- **Channel:** UX-DESIGN read to U160; B143 (ACK), B144 (Bob's "Proceed" for the layouts page, K2838, also sent by message) posted. Design lanes: investigation H43, actions H31, nothing new.
+- **Usage:** two L8 sessions and this one show the platform's seven-day `allowed_warning`; Bob asked for his meter (K2841). Pause at 80% stands (K2341).
 
-## Bob's direction since the last handoff
+## Bob's rulings since the last handoff
 
-- **K2799:** build the stewards' reporting facility now (T45-48, module `stewards`, L11 after `installer`); he names the contact address before any public release.
-- **K2803 (priority):** next, T46 (and T47) make the test instance usable by Bob with as complete functionality as reasonable; the UX lane researches dashboard-style entry points. The survey is `build/plan/draft-T46-usable.md` (N896); T46's plan waits on Bob's answers below.
-- Meter 43% (K2798).
+- **K2816** trial: "1. B 2. B 3. A 4. C 5. A" (designed screens as the interface; test-instance AI exception; his own sign-in; images by copy; biosmoke7 in place) → N897.
+- **K2819** stewards: "1. C 2. A 3. A 4. A 5. A", folded into `stewards` R3, R5, R13, R15, R22, R23.
+- **K2838** "Tell the UX design session to Proceed for the layouts page" (relayed).
 
 ## Next steps, in order
 
-1. Take over (§5.1): archive BOB #156 once idle, its `BOB-final` row under T45; delete its two timers; arm yours.
-2. Merge local-facts then duties when complete (ownership, merge, strike marks, ruling); close L5; start L6 (7 jobs).
-3. Run T45 through L8–L11 (folded texts; STARTs to draft for L8–L11 as for L5–L6: depth, entries, ids, reading-set size via `build/plan/reading-sets.py`, merge order).
-4. At T45's close: every module's tests (K2704), archive, PR to `main` (Bob's standing direction, K1177; standing list `mcp__github__merge_pull_request`). Then cut 0.82.0 and plan T46 from `draft-T46-usable.md` and Bob's answers.
+1. Take over (§5.1): archive BOB #157 once idle, its `BOB-final` row under T45; delete its two timers; arm yours.
+2. Run L9: confirm starts, answer questions, forward CHANGEs as providers merge, merge in order (ownership, merge, strike marks, ruling). For new modules (action-holds, action-replies, plan-work) enter their `paths`/`tests` in `modules.json` from the COMPLETE before the ownership check (K1043; edit the one line with `sed`, never rewrite the JSON, K2829's lesson). Close L9 (§5.6: regenerate in K1540's order, checks, archive, rows).
+3. L10 then L11 from the drafted STARTs; at L11's START re-measure reading sets (`/tmp` script lost: regenerate from `build/plan/reading-sets.py`), fill installer's ADDRESS line (Bob has not named it: then T45-46 moves to T46 with that hard reason), stewards' family, answer-envelope's set.
+4. T45's close (§5.7): every module's tests (K2704), archive, PR to `main` (standing direction K1177; `mcp__github__merge_pull_request`); design PR #28 merged first if UX-DESIGN has posted `MERGE`. Then plan T46 from `draft-T46-usable.md`, N897 and next.md (N896–N909, among them split plans for case-authoring N908 and publication N909).
 
 ## Open with Bob
 
-- **Five trial questions** (`draft-T46-usable.md` §4; put to him in chat, recommendations "1b 2b 3c 4c 5a": the designed screens as the interface; a test-instance exception to the AI test bar; pay by API key then his sign-in; both biosmoke7 and a fresh instance; a Docker Hub organisation for images).
-- **Five stewards questions** (`draft-T45-stewards.md` §For Bob; recommendations "1c 2a 3a 4a 5a").
-- The stewards' contact address, before any public release (K2799).
-- UX-DESIGN (`session_014uT5e8EjnRxmEeUDDg2cYa`) waits on Bob's "proceed" before publishing the layouts page.
-- Civicsmith's terms of use (Actions D28 (e)): a later question.
+- The stewards' contact address (K2799): needed for T45-46 (installer README) and before any public release.
+- His weekly meter reading (K2841).
