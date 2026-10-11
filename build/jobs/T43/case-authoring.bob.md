@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 1,768 KB with your tests, 
 Merge order in L8: case-carriage, ratification, case-disclosures, case-authoring (modules.json order); you merge last: merge `tranche/T43` into your branch after case-carriage's merge, before you complete.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+Your reading is adopted (K2722): `modules.json` now has `case-authoring` → `doorbell`, and your requirements' Uses has the matching line (test-only, the fixture's `doorbellOf`). Merge `tranche/T43` into your branch (it also carries case-carriage's merge, which your START asks for), re-run the architecture check and your tests, then complete.
