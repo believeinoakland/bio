@@ -36,6 +36,7 @@ const BATTERY = `async (RG) => {
   out.push(RG.ID_TABLE, String(RG.idPattern("EVT")), RG.isHypothesisId("HYP-2026-10000"));
   out.push(RG.isStepId("STP-2026-a1b2c3d4e5f6g7h8"), RG.isGuideId("GUD-2026-0001"), RG.ACCEPTANCE_FORMS, RG.ACCEPT_MUST_REAUTHOR);
   out.push(RG.acceptanceRecord({ proposal: "p", form: "edited", by: "alice", at: "2026-10-09T00:00:00Z", kind: "step" }));
+  out.push(RG.idDisagrees({ id: "INFO-2026-0001-a" }, "INFO-2026-0001-a"), RG.idDisagrees({ id: " INFO-2026-0001-a" }, "INFO-2026-0001-a"));
   out.push(RG.deriveInquiryTitle("  a   question\\nmore"), RG.inquiryQuestionOf("x\\n## Question\\nq\\n## B"), RG.vocabFor(RG.STATES, "problem"));
   out.push(RG.sectionText("## A\\na\\n## B", "## A"), RG.isCaseMemberBytes({ published_strength: [{ axis: "a" }, { axis: "b" }] }));
   for (const w of ["token:x", "alice", "", "plane"]) out.push(RG.proposalLabel(w, "standard"), RG.contentMintState(w));
@@ -78,9 +79,9 @@ const MOVED = ["BUNDLE_ID_RE", "ANN_ID_RE", "FILENAME_RE", "ISO_TS_RE", "OBJECT_
   "isCaseMemberBytes", "vocabFor", "STATES", "sectionText", "LAW_PROPOSAL_STATES", "lawProposalState", "PROPOSAL_STATES",
   "proposalLabel", "CONTENT_MINTED_BY_PLANE", "CONTENT_MINT_STATES", "contentMintState"];
 /* Provided here from the first without a catalogue twin: `checkBundle`, `EXTENSION_ARMS`, the shared act rows (R29) and
-   T33's id table (R46–R48); T41's step and guide ids and the one accepting act (R51–R53). */
+   T33's id table (R46–R48); T41's step and guide ids and the one accepting act (R51–R53); T43's C-1.1 judgment (R56). */
 const OWN = ["b64ToBytes", "SHARED_ACT_CHECKS", "EXTENSION_ARMS", "checkBundle", "ID_TABLE", "idPattern", "isHypothesisId",
-  "isStepId", "isGuideId", "ACCEPTANCE_FORMS", "ACCEPT_MUST_REAUTHOR", "acceptanceRecord"];
+  "isStepId", "isGuideId", "ACCEPTANCE_FORMS", "ACCEPT_MUST_REAUTHOR", "acceptanceRecord", "idDisagrees"];
 
 test("one binding per name: the module's entry answers each provided name with the one binding its part holds", () => {
   assert.deepEqual(Object.keys(RG).sort(), [...MOVED, ...OWN].sort());

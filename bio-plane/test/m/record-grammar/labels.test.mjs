@@ -315,6 +315,33 @@ test("R29 C-33.40's where names every site that raises NO_BASIS: inquiry's actNo
   for (const f of w.match(/src\/[\w/.-]+\.mjs/g)) assert.ok(existsSync(new URL(`../../../${f}`, import.meta.url)), f);
 });
 
+/* T43 (N857, K2643): C-33.40's where names all five sites that raise NO_BASIS, money's and lines' beside the three T42
+   named. As above, it reads the where and the files it names, never their code (P4). */
+const NO_BASIS_SITES = [
+  ["src/inquiry/index.mjs", "actNoBasis", /basis-versions/],
+  ["src/progressions/checks.mjs", "refusal", /first declaration and revision of a declared flow/],
+  ["src/entities/index.mjs", "actShapeRefusal", /held identifier and grade-D testimony/],
+  ["src/money/index.mjs", "refusal", /setFundType/],
+  ["src/lines/index.mjs", "noBasis", /recordLine/],
+];
+const SITE_RE = /src\/[\w/.-]+\.mjs [A-Za-z]+\b/g;
+const sitesOf = (w) => (w.match(SITE_RE) || []).filter((s) => !s.startsWith("src/progressions/index.mjs"));
+const namesAllFive = (w) => NO_BASIS_SITES.every(([file, helper, acts]) => sitesOf(w).includes(`${file} ${helper}`) && acts.test(w));
+test("R29 C-33.40's where names all five NO_BASIS sites: inquiry's actNoBasis, progressions' refusal, entities' actShapeRefusal, money's refusal (setFundType), lines' noBasis (recordLine); each file exists", () => {
+  const w = SHARED_ACT_CHECKS.NO_BASIS.where;
+  assert.ok(namesAllFive(w), w);
+  /* The five are named once each, in this order, and no other site is named. */
+  assert.deepEqual(sitesOf(w), NO_BASIS_SITES.map(([file, helper]) => `${file} ${helper}`));
+  for (const [file] of NO_BASIS_SITES) assert.ok(existsSync(new URL(`../../../${file}`, import.meta.url)), file);
+  /* Negative control: T42's where, which named three of the five, does not satisfy this; nor does one missing either new site. */
+  const t42 = "src/inquiry/index.mjs actNoBasis > is-act-no-basis (inquiry's, and basis-versions' through it), "
+    + "src/progressions/checks.mjs refusal (progressions' first declaration and revision of a declared flow, "
+    + "src/progressions/index.mjs), and src/entities/index.mjs actShapeRefusal (entities' held identifier and grade-D testimony)";
+  assert.equal(namesAllFive(t42), false);
+  assert.equal(namesAllFive(w.replace("src/money/index.mjs refusal", "src/money/index.mjs")), false);
+  assert.equal(namesAllFive(w.replace("src/lines/index.mjs noBasis", "src/lines/index.mjs")), false);
+});
+
 test("R29 C-33.41's where names entities' and progressions' sites, not store.mjs actNoCitation, and each file exists", () => {
   const w = SHARED_ACT_CHECKS.NO_CITATION.where;
   assert.match(w, /^src\/entities\/index\.mjs actShapeRefusal\b/);

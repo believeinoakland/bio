@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { checkBundle, EXTENSION_ARMS } from "../../../src/record-grammar/index.mjs";
+import { checkBundle, EXTENSION_ARMS, idDisagrees } from "../../../src/record-grammar/index.mjs";
 import { fixtures, STUBS, sha256, NOW } from "./fixtures/bundles.mjs";
 
 const EXPECTED = JSON.parse(readFileSync(new URL("./fixtures/expected.json", import.meta.url), "utf8"));
@@ -214,4 +214,38 @@ test("R39 an object_type naming no type by its own key (toString, constructor, _
   assert.deepEqual(legacy, EXPECTED["legacy problem spelling"]);
   assert.ok(legacy.findings.some((f) => f.message === "required heading '## Statement' is missing"), "judged by focus's headings");
   assert.ok(!legacy.findings.some((f) => ["C-2.5", "C-4.1"].includes(f.check)));
+});
+
+/* T43 (N854; K231, K2625): `idDisagrees` is the one C-1.1 judgment, which `checkBundle` and the write door (promotion R38)
+   both run: a string id not equal, byte for byte, to the folder name. */
+test("R56 idDisagrees(fm, folderName): true exactly when fm.id is a string not equal byte for byte to folderName; checkBundle's C-1.1 is that answer", async () => {
+  const ID = "INFO-2026-0001-a";
+  /* Negative control: an exact id is not refused. */
+  assert.equal(idDisagrees({ id: ID }, ID), false);
+  /* A padded id is refused: no trimming, on either side, of any white space. */
+  for (const pad of [` ${ID}`, `${ID} `, `\t${ID}`, `${ID}\n`, ` ${ID}`, `${ID}\r`]) assert.equal(idDisagrees({ id: pad }, ID), true, JSON.stringify(pad));
+  assert.equal(idDisagrees({ id: ID }, ` ${ID}`), true);
+  /* Any other byte difference: case, another id, the empty string, a lookalike letter. */
+  for (const other of [ID.toUpperCase(), "INFO-2026-0002-a", "", "INFO-2026-0001-a-b", "INFO-2026-0001-а"]) assert.equal(idDisagrees({ id: other }, ID), true, other);
+  /* A non-string id is not this arm's (C-1.2 refuses it), nor is an absent id or front matter. */
+  for (const id of [undefined, null, 20260001, true, [ID], { toString: () => ID }, new String(ID)]) assert.equal(idDisagrees({ id }, ID), false, String(id));
+  for (const fm of [undefined, null, {}, { title: ID }]) assert.equal(idDisagrees(fm, ID), false, JSON.stringify(fm));
+  /* checkBundle raises C-1.1 exactly when idDisagrees answers true, over the same bytes. */
+  const base = fixtures()["clean information"];
+  const cases = [[ID, ID], [` ${ID}`, ID], [`${ID} `, ID], [ID, ` ${ID}`], ["INFO-2026-0002-a", ID], [ID.toUpperCase(), ID]];
+  let refused = 0;
+  for (const [id, folderName] of cases) {
+    const text = base.files.get("bundle.md").replace(`id: ${ID}`, `id: "${id}"`);
+    assert.notEqual(text, base.files.get("bundle.md"));
+    const r = await run({ ...base, folderName, files: new Map([...base.files, ["bundle.md", text]]) });
+    const c11 = r.findings.filter((f) => f.check === "C-1.1");
+    assert.equal(c11.length, idDisagrees({ id }, folderName) ? 1 : 0, JSON.stringify([id, folderName]));
+    if (c11.length) { refused++; assert.equal(c11[0].message, `folder name '${folderName}' does not equal frontmatter id '${id}'`); }
+  }
+  assert.equal(refused, cases.length - 1);
+  /* A non-string id draws C-1.2 and no C-1.1. */
+  const num = base.files.get("bundle.md").replace(`id: ${ID}`, "id: 20260001");
+  const rn = await run({ ...base, files: new Map([...base.files, ["bundle.md", num]]) });
+  assert.ok(rn.findings.some((f) => f.check === "C-1.2"));
+  assert.ok(!rn.findings.some((f) => f.check === "C-1.1"));
 });
