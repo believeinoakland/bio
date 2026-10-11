@@ -1409,12 +1409,12 @@ export class CaseDisclosures {
   }
 }
 
-/* R6, R29 (T40; DEC-185 (1); K2483): the label a photo's copy carries, `case-carriage`'s words (its R11), and the key a
-   reader's surface shows it by. */
 /* R30: one cite as a comparable key, a string as itself and `case-grammar` R23's `{kind, ref, ord}` by those fields. */
 const citeKey = (c) => (typeof c === "string" ? c : JSON.stringify([c && c.kind ? c.kind : null, c && c.ref != null ? c.ref : null,
                                                                     c && c.ord != null ? c.ord : null]));
 
+/* R6, R29 (T40; DEC-185 (1); K2483): the label a photo's copy carries, `case-carriage`'s words (its R11), and the key a
+   reader's surface shows it by. */
 function photoLabel(marked) {
   return marked
     ? { label: OBSCURED_LABEL, marked: true, label_key: "photo.obscured.label" }

@@ -92,11 +92,19 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
      boot, so a test measuring what case-disclosures writes or creates (R7's "no new table") measures it alone.
      Capture is this host's one instance (`captureOf`), the one the doorbell `sources` asks for pulled knocks
      (`doorbellOf`) is built over, and acquisition's one instance for this host (its tables), which capture makes when
-     first reached (a repeat `captureOf` reaches it), is reached here. */
+     first reached (a repeat `captureOf` reaches it), is reached here. T43-22 (K2710): the doorbell's one instance for
+     this host, which `sources` reaches on its first read of pulled knocks (`doorbellOf(ctx)`), is reached here too,
+     through `sources` (doorbell is no module case-disclosures uses), so its tables (`inbox` among them, doorbell R25),
+     which capture no longer creates (capture R58, R87; N849), exist before any knock is inserted (`knocked`) and
+     before any snapshot: a capture no knock was pulled into has no source, and the read writes nothing. */
   const capture = captureOf(host, { record, env: { INSTANCE_NAME: "test", VERSION: "0.0.0" }, provenance: prov, attestation });
   capture.migrate();
   const acquisition = capture.acquisition;
   const sources = sourcesOf(host, { record, membership, now: () => Date.parse(clock.now) });
+  const unsourced = sources.sourceOf({ captureSha: "0".repeat(64), viewer: "admin" });
+  if (unsourced.ok !== false) throw new Error(`fixture: a capture no knock was pulled into answered a source`);
+  if (!st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' AND name='inbox'`).length)
+    throw new Error("fixture: the doorbell's tables were not built through sources");
   const ex = extractionOf(host, { record, membership, calibration: { onCalibration() { return { ok: true }; } } });
   ex.migrate();
   const exProvider = {
@@ -255,7 +263,7 @@ export function world({ group = "test-group", deps = {}, realImports = false, re
     prepared: (ids) => ids.map((id) => ({ id, bundleSha: w.head(id) })),
     /** case-authoring R5's partition, every member load-bearing unless named in `supporting`. */
     roles: (ids, supporting = []) => ids.map((id) => ({ target: id, role: supporting.includes(id) ? "supporting" : "load_bearing" })),
-    /** A knock the doorbell received, already pulled into `captureSha` (capture R65, R72). */
+    /** A knock the doorbell received, already pulled into `captureSha` (doorbell R13, R18), a row of its `inbox`. */
     knocked(captureSha, { knockId = `KNOCK-2026-09-27-${captureSha.slice(0, 8)}`, received = T0, pseudonym = null } = {}) {
       st.sql.exec(`INSERT INTO inbox (knock_id, sha256, bytes, received, status, capture_sha, pulled_by, pulled_at,
                    pseudonym) VALUES (?, ?, 1, ?, 'pulled', ?, 'alice', ?, ?)`,
