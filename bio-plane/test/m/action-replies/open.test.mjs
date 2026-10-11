@@ -1,0 +1,105 @@
+/* action-replies' open requests at signing at its interface (R3, R4), through `case-authoring` R70's real seam. */
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { world, M, BOB, INQ, INQ2, INQ3, INFO, RFC, RFC2, REQ, PROJ2, leg, WINDOW } from "./fixture.mjs";
+import { ActionReplies, actionRepliesOf } from "../../../src/action-replies/index.mjs";
+import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
+
+const RFC3 = "ACTN-2026-0004-rfc", RFC4 = "ACTN-2026-0005-rfc", RFC5 = "ACTN-2026-0006-rfc", RFC6 = "ACTN-2026-0007-rfc";
+const members = (...ids) => ids.map((bundle_id) => ({ bundle_id, version_sha: "a".repeat(64) }));
+const WHOM = "Town Clerk, Town of Port Ellery";
+
+test("R3 at start the source is registered once with case-authoring R70, in its names; a second registration is refused there", () => {
+  const w = world({ signing: true });
+  assert.deepEqual(w.ca.openRequestsSource(), { registered: true, module: "action-replies" });
+  assert.equal(actionRepliesOf(w.host), w.r, "one instance per host: nothing registered twice");
+  const again = w.ca.registerOpenRequests("action-replies", { openRequestsOn: () => [] });
+  assert.equal(again.reason, "PROVIDER_DECLARED");
+  assert.deepEqual(w.ca.openRequestsSource(), { registered: true, module: "action-replies" });
+  /* with no case-authoring given and no environment, nothing is registered */
+  assert.equal(world().ca, null);
+});
+
+test("R3 control: each open request for comment on the case's members is answered once as R70's row; a resolved or abandoned one is not; nor one never sent, one on no member, or another kind; it writes nothing", () => {
+  const w = world({ signing: true });
+  /* RFC: open, sent, a reply laid out claim by claim */
+  w.rfc(RFC, { legs: [leg(INQ, "advances"), leg(INQ2, "advances")] });
+  w.say(RFC, "sent", "2026-09-10");
+  const got = w.say(RFC, "received", "2026-09-20");
+  assert.equal(w.r.actionReplyBearing({ target: RFC, ord: got, author: M, viewer: M,
+    claims: [{ claim: INQ, bearing: "new_evidence" }, { claim: INQ2, bearing: "not_addressed" }] }).ok, true);
+  /* RFC2: open, sent, no reply; its window waived first, then a later dated entry */
+  w.rfc(RFC2, { legs: [leg(INQ2, "advances"), leg(INFO, "rests_on")],
+                clock: [...WINDOW("2026-10-01", "waived"), ...WINDOW("2026-10-20").slice(1)] });
+  w.say(RFC2, "sent", "2026-09-12");
+  /* RFC3: resolved; RFC4: abandoned; RFC5: never sent; RFC6: on no member of the case; REQ: another kind */
+  for (const id of [RFC3, RFC4, RFC5]) w.rfc(id);
+  for (const id of [RFC3, RFC4]) w.say(id, "sent");
+  w.a.actionMove({ target: RFC3, to: "active", reason: "go", viewer: M, author: M });
+  w.a.actionMove({ target: RFC3, to: "resolved", resolution: "completed", reason: "done", viewer: M, author: M });
+  w.a.actionMove({ target: RFC4, to: "abandoned", reason: "dropped", viewer: M, author: M });
+  w.rfc(RFC6, { legs: [leg(INQ3, "advances")] });
+  w.say(RFC6, "sent");
+  w.action(REQ, ["action_basis:", ...leg(INQ, "advances")]);
+  w.say(REQ, "sent");
+  const before = w.counts();
+  const rows = w.r.openRequestsOn({ case: "case-1", members: members(INQ, INQ2), viewer: M });
+  assert.deepEqual(rows, [
+    { whom: WHOM, asked_at: "2026-09-10", window_closes: "2026-10-15", answers: { answered: 1, claims: 2 } },
+    { whom: WHOM, asked_at: "2026-09-12", window_closes: "2026-10-20", answers: null },
+  ]);
+  /* through the seam, as R34's sign step reads it */
+  assert.deepEqual(w.ca.openRequestsOn({ case: "case-1", members: members(INQ, INQ2), viewer: M }), { ok: true, rows });
+  assert.deepEqual(w.counts(), before, "writes nothing");
+  /* the members alone decide which requests are on the case: a finding the request rests on counts too */
+  assert.deepEqual(w.r.openRequestsOn({ members: members(INFO), viewer: M }).map((r) => r.asked_at), ["2026-09-12"]);
+  assert.deepEqual(w.r.openRequestsOn({ members: [], viewer: M }), []);
+});
+
+test("R3 answers: null with a reply but no layout; the latest layout's claims, answered those not `not_addressed`; null window when the action states none dated", () => {
+  const w = world();
+  w.rfc(RFC);
+  w.say(RFC, "sent", "2026-09-10");
+  const got = w.say(RFC, "received", "2026-09-20");
+  const on = () => w.r.openRequestsOn({ members: members(INQ), viewer: M })[0];
+  assert.equal(on().answers, null, "a reply recorded with no layout");
+  w.r.actionReplyBearing({ target: RFC, ord: got, claims: [{ claim: INQ, bearing: "not_addressed" }], author: M, viewer: M });
+  assert.deepEqual(on().answers, { answered: 0, claims: 1 });
+  w.r.actionReplyBearing({ target: RFC, ord: got, claims: [{ claim: INQ, bearing: "disputed_without_evidence" }], author: M, viewer: M });
+  assert.deepEqual(on().answers, { answered: 1, claims: 1 }, "the latest layout");
+  /* a proposal is not a layout */
+  w.r.actionBearingPropose({ target: RFC, ord: got, claims: [{ claim: INQ, bearing: "not_addressed" }], proposer: "class:ai", viewer: "class:ai" });
+  assert.deepEqual(on().answers, { answered: 1, claims: 1 });
+  /* a window stated only as waived reads null */
+  const x = world();
+  x.rfc(RFC, { clock: WINDOW("2026-10-15", "waived") });
+  x.say(RFC, "sent", "2026-09-10");
+  assert.equal(x.r.openRequestsOn({ members: members(INQ), viewer: M })[0].window_closes, null);
+});
+
+test("R3 R4 a request the viewer may not see is not answered; when the requests cannot be read it throws, and case-authoring answers undetermined, never []", () => {
+  const w = world({ signing: true });
+  w.rfc(RFC);
+  w.say(RFC, "sent", "2026-09-10");
+  w.bundle(PROJ2, "project");
+  w.participant(PROJ2, "alice");
+  w.st.db.prepare(`UPDATE bundles SET project=? WHERE bundle_id=?`).run(PROJ2, RFC);
+  assert.equal(w.r.openRequestsOn({ members: members(INQ), viewer: M }).length, 1);
+  assert.deepEqual(w.r.openRequestsOn({ members: members(INQ), viewer: BOB }), [], "withheld as absent");
+  /* an actions module that cannot read */
+  for (const actions of [{ actionsFor: () => ({ ok: false, reason: "BROKEN" }) }, { actionsFor: () => { throw new Error("down"); } },
+                         { actionsFor: () => ({ ok: true, items: [{ id: RFC, state: "active" }] }), actionRead: () => ({ ok: false, reason: "BROKEN" }) }]) {
+    const r = new ActionReplies({ storage: w.st, record: w.record, membership: w.membership, actions });
+    assert.throws(() => r.openRequestsOn({ members: members(INQ), viewer: M }), /could not be read|down/);
+  }
+});
+
+test("R3 through the seam, this source when it cannot read is undetermined, never []", () => {
+  const w = world();
+  const broken = new ActionReplies({ storage: w.st, record: w.record, membership: w.membership,
+                                     actions: { actionsFor: () => ({ ok: false, reason: "BROKEN" }) } });
+  const ca = caseAuthoringOf(w.host, { record: w.record, membership: w.membership });
+  assert.equal(ca.registerOpenRequests("action-replies", { openRequestsOn: (a) => broken.openRequestsOn(a) }).ok, true);
+  const r = ca.openRequestsOn({ case: "c", members: members(INQ), viewer: M });
+  assert.deepEqual([r.ok, r.undetermined], [false, true]);
+});
