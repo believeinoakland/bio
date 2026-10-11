@@ -52,3 +52,7 @@ T42-21 applied. N843: C-146.21 re-coded NO_SUCH_PLANNING_PROPOSAL (R23), C-146.2
 Size (session_019Hq9peCLMijcPKpNYfPUpH): test runs 22, module lines 1526
 
 **Checks:** format, architecture, coverage (23 of 23), ownership: 0 failures.
+
+## J2 · COMPLETE · re B2
+
+B2 (K2667) applied, tests only: R1's not-at-FULL clause tested at the interface across existence (discoverable stranger; hidden project's administrator, with owners), none (as absent) and acts inside the project (NO_SUCH_MILESTONE), negative control a joined participant at full; R5 measures bundles/observations/legs/steps before and after rather than pinning a fixture count; reports.test.mjs NOWISH declared first, fixed instant, each test passes alone. investigation 32/32. Users: monitoring 124, queue 136, notice-producers 90, plane 166 green; answer-envelope 28/29, red only families.test.mjs:425 (rule 4 (6), K2651). Checks format, architecture, coverage 23/23, ownership: 0 failures. Nothing deferred.
