@@ -67,7 +67,9 @@ export async function pdfStructureOp(url, env, store, { json, storeSilent, store
 
 /** R71: op=pagetranscribe, refused here as R31 refuses: no evidence storage (the storage-absent refusal), a digest
  *  that is not 64 lowercase hex (the required-argument refusal); the rest is the Durable Object's (`pageTranscribe`),
- *  handed the control plane's stamps and the project the act names as its payer (`project`, when given). */
+ *  handed the control plane's stamps and the project the act names as its payer (`project`, when given). Exported for
+ *  control-plane R74 to route (L11); not in `EXTRACTION_OPS`, so the plane's door does not reach it before op-declarations
+ *  R47 declares it (K2635). */
 export async function pageTranscribeOp(url, env, store, { json, storeSilent, storeRefusal, doAnswer, storageAbsent,
                                                           requiredArgument, cls, session, caps, viewer, author, storeName }) {
   const op = "pagetranscribe";
@@ -85,16 +87,14 @@ export async function pageTranscribeOp(url, env, store, { json, storeSilent, sto
 }
 
 /* The ops `extractionOp` answers, which the control plane routes here (host-governor's `GOVERNOR_OPS` precedent). */
-export const EXTRACTION_OPS = Object.freeze(["pdfstructure", "pagetranscribe"]);
+export const EXTRACTION_OPS = Object.freeze(["pdfstructure"]);
 
-/** The control plane's dispatch of this module's ops (legacy-index map §4.4, K649 (7)): `op=pdfstructure` (R31–R35)
- *  and (T42) `op=pagetranscribe` (R71),
+/** The control plane's dispatch of this module's op (legacy-index map §4.4, K649 (7)): `op=pdfstructure` (R31–R35),
  *  moved out of `src/index.mjs` with the stamps it hands, which stay the control plane's (the caller class, whether
  *  a member session asked and its capabilities, the viewer, the author). `getStore` answers the Durable Object stub
  *  the op is scoped to. Answers the op's response, or null for an op that is not this module's. */
 export async function extractionOp(op, url, env, getStore, stamps) {
   if (op === "pdfstructure") return pdfStructureOp(url, env, getStore(), stamps);
-  if (op === "pagetranscribe") return pageTranscribeOp(url, env, getStore(), stamps);
   return null;
 }
 

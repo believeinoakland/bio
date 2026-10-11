@@ -286,7 +286,7 @@ test("R71: past its refusals an absent object is capture's one answer for it, an
   assert.deepEqual(tr.calls.transcribe, []);
 });
 
-test("R71: the control plane's half refuses no evidence storage and a malformed digest (as R31), forwards the stamps and the payer project, is reached through extractionOp (EXTRACTION_OPS), and the store's route answers pageTranscribe with them", async () => {
+test("R71: the control plane's half refuses no evidence storage and a malformed digest (as R31) and forwards the stamps and the payer project; the door does not reach it before L11 declares it (not in EXTRACTION_OPS, extractionOp answers null, K2635); the store's route answers pageTranscribe with the stamps", async () => {
   const json = (b, s = 200) => ({ b, s });
   const helpers = { json, storeSilent: (op) => ({ silent: op }), storageAbsent: (op, e) => ({ absent: op, e }),
     requiredArgument: (op, arg, shape) => ({ reason: "REQUIRED_ARGUMENT_MISSING", op, argument: arg, shape }) };
@@ -297,8 +297,11 @@ test("R71: the control plane's half refuses no evidence storage and a malformed 
   let asked = null;
   const store = { fetch: async (p) => { asked = new URL(String(p)); return new Response(JSON.stringify({ ok: true, result: { status: 501, body: { reason: "TRANSCRIBE_NOT_DEPLOYED" } } })); } };
   const stamps = { ...helpers, cls: "member", session: true, caps: ["contribute"], viewer: "member:m1", author: "member:m1", storeName: "ns" };
-  assert.ok(EXTRACTION_OPS.includes("pagetranscribe"));
-  const out = await extractionOp("pagetranscribe", new URL("http://p/?sha256=" + "B".repeat(64) + "&project=PROJ-2"), { CAPTURES: { get() {} } }, () => store, stamps);
+  assert.equal(EXTRACTION_OPS.includes("pagetranscribe"), false);
+  let stores = 0;
+  assert.equal(await extractionOp("pagetranscribe", new URL("http://p/?sha256=" + "b".repeat(64)), { CAPTURES: { get() {} } }, () => { stores++; return store; }, stamps), null);
+  assert.equal(stores, 0);
+  const out = await pageTranscribeOp(new URL("http://p/?sha256=" + "B".repeat(64) + "&project=PROJ-2"), { CAPTURES: { get() {} } }, store, stamps);
   assert.deepEqual(out, { b: { reason: "TRANSCRIBE_NOT_DEPLOYED" }, s: 501 });
   assert.equal(asked.pathname, "/pagetranscribe");
   assert.deepEqual(Object.fromEntries(asked.searchParams), { sha256: "b".repeat(64), cls: "member", session: "1", caps: "contribute",
@@ -315,4 +318,34 @@ test("R71: the control plane's half refuses no evidence storage and a malformed 
   assert.deepEqual(tr.calls.transcription.map((c) => [c.member, c.project]), [["member:m9", "PROJ-2"]]);
   const nope = extractionOps(w.x, new URL(`http://x/pagetranscribe?sha256=${d}&cls=member&session=1&caps=view`), null, {});
   assert.equal((await nope.pagetranscribe()).body.reason, "REEXTRACT_NOT_CAPABLE");
+});
+
+test("R71 R35 (reading-pipeline R30, K2635): a second transcription asks the AI only for pages still unread and keeps every page already read, the AI's and OCR's, with or without the OCR member bound; with nothing left it asks no one and writes nothing", async () => {
+  const { w, d } = await held();
+  /* first: OCR (bound) reads page 2, the AI page 1 */
+  const first = transcriber({ answer: () => ({ ok: true, engine: "claude-test", version: "2026-01", pages: [{ page: 1, text: "AI text of page 1" }] }) });
+  w.x.registerTranscriber("plane", first.t);
+  const four = i2([{ page: 0, text: "Minutes" }, { page: 1, text: "", undetermined: [noText(1)] },
+                   { page: 2, text: "", undetermined: [noText(2)] }, { page: 3, text: "", undetermined: [noText(3)] }]);
+  const a = await withEntry(pdf(four, 4), () => w.x.pageTranscribe({ captureSha: d, ...member1, env: { OCR_WORKER: member((b) => ocrAnswer(b.pages.filter((p) => p === 2))) } }));
+  assert.deepEqual([a.body.transcription.written, a.body.transcription.pages, first.calls.transcribe.map((q) => q.pages)], [true, [1], [[1, 3]]]);
+  /* second, on a store whose OCR member is gone: the AI is asked for page 3 alone; pages 1 (AI) and 2 (OCR) are kept */
+  const fresh2 = transcriber({ answer: (pages) => ({ ok: true, engine: "claude-test", version: "2026-02", pages: pages.map((p) => ({ page: p, text: `AI text of page ${p}` })) }) });
+  /* the store keeps its first registration (one per storage); the second act runs through it with a new answer */
+  first.t.transcription = fresh2.t.transcription;
+  const b = await withEntry(pdf(four, 4), () => w.x.pageTranscribe({ captureSha: d, ...member1, env: {} }));
+  assert.deepEqual(fresh2.calls.transcribe.map((q) => q.pages), [[3]], "only the page still unread");
+  assert.equal(b.body.transcription.written, true);
+  const texts = w.rows(`SELECT seq, text FROM capture_text WHERE capture_sha=? ORDER BY seq`, d).map((r) => [r.seq, r.text]);
+  assert.deepEqual(texts, [[0, "Minutes"], [1, "AI text of page 1"], [2, "ocr text of page 2"], [3, "AI text of page 3"]], "nothing dropped");
+  const chain = JSON.parse(w.one(`SELECT reading FROM readings WHERE capture_sha=?`, d).reading).text_source;
+  const engines = chain.filter((s) => s.step === "ai_transcription").map((s) => s.version);
+  assert.deepEqual([...new Set(engines)].sort(), ["2026-01", "2026-02"], "each kept page stays under the build that read it");
+  assert.ok(chain.some((s) => s.step === "ocr"));
+  /* third: nothing left unread; no one is asked and nothing is written */
+  const before = writes(w);
+  const c = await withEntry(pdf(four, 4), () => w.x.pageTranscribe({ captureSha: d, ...member1, env: { OCR_WORKER: member(() => { throw new Error("never"); }) } }));
+  assert.deepEqual([c.body.transcription.performed, c.body.transcription.written], [false, false]);
+  assert.equal(fresh2.calls.transcribe.length, 1, "the AI is not asked again");
+  assert.equal(writes(w), before);
 });

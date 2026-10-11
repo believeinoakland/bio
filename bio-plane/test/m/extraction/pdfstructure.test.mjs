@@ -56,7 +56,7 @@ test("R31 (K649 (7)): the control plane's dispatch reaches op=pdfstructure (EXTR
   const stamps = { json, storeSilent: (op) => ({ silent: op }), storageAbsent: (op) => ({ absent: op }), requiredArgument: () => ({}),
                    cls: "member", session: true, caps: ["contribute"], viewer: "member:m1", author: "member:m1", storeName: "ns" };
   const env = { CAPTURES: { get() {} } };
-  assert.deepEqual([...EXTRACTION_OPS], ["pdfstructure", "pagetranscribe"], "R71 (T42): op=pagetranscribe beside it");
+  assert.deepEqual([...EXTRACTION_OPS], ["pdfstructure"]);
   assert.ok(Object.isFrozen(EXTRACTION_OPS));
   for (const op of ["acquire", "capture", "reading", "pdfstructurex", "", null])
     assert.equal(await extractionOp(op, new URL("http://p/?sha256=" + "a".repeat(64)), env, getStore, stamps), null, String(op));
