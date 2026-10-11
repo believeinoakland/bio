@@ -1,6 +1,6 @@
 /* admission: R21's window, its store side (`window.mjs`: `admissionOf`, `admissionOps`' `doorwindow`, K2038) and its
    Worker side (`sourceOf`, `doorWindowGate`), driven at the module's interface over a real SQLite database
-   (node:sqlite) and capture's own fingerprint (its R56). */
+   (node:sqlite) and the doorbell's own fingerprint (its R12). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { A, O, doAnswer, refused, storeWorld, bridged } from "./harness.mjs";
@@ -14,7 +14,7 @@ const T0 = Date.UTC(2026, 9, 7, 12, 0, 0);   /* a bucket's start: 10-minute buck
 const reqFrom = (address, extra = {}) => new Request("https://plane.example/api", {
   method: "POST", headers: address === undefined ? {} : { "cf-connecting-ip": address }, ...extra });
 
-test("R21 (store side): one window per source over the requests to public ops — at most 300 in any 10 minutes by the two-bucket estimate, refused at ≥ 300 counting nothing, with stated and retryAfter; the fingerprint is capture R56's under the same key; rows hold the fingerprint, the bucket and the count only, and are dropped once both buckets have passed; a request with no address is one shared source; the table is admission's own, declared with its classes; doorwindow is a store-internal route with no spec", async () => {
+test("R21 (store side): one window per source over the requests to public ops — at most 300 in any 10 minutes by the two-bucket estimate, refused at ≥ 300 counting nothing, with stated and retryAfter; the fingerprint is doorbell R12's under the same key; rows hold the fingerprint, the bucket and the count only, and are dropped once both buckets have passed; a request with no address is one shared source; the table is admission's own, declared with its classes; doorwindow is a store-internal route with no spec", async () => {
   for (const env of [{ KNOCK_FINGERPRINT_KEY: "bound-key-0123" }, {}]) {
     const w = storeWorld({ env });
     /* declared once, admission's, with record-core R21's classes; the same instance per storage */
@@ -26,7 +26,7 @@ test("R21 (store side): one window per source over the requests to public ops �
     assert.deepEqual(Object.keys(w.ops({})), ["doorwindow"]);
     assert.equal(Object.hasOwn(OPS, "doorwindow"), false);
     const addr = "203.0.113.9", other = "198.51.100.4";
-    const fp = await w.capture.sourceFingerprint(addr);
+    const fp = await w.doorbell.sourceFingerprint(addr);
     /* 300 admitted in one bucket, the 301st refused, and refused again without being counted */
     for (let i = 0; i < 300; i++) {
       const r = await w.ops({ address: addr, now: T0 + i }).doorwindow();
@@ -63,12 +63,12 @@ test("R21 (store side): one window per source over the requests to public ops �
   }
 });
 
-test("R21 (Worker side): sourceOf answers capture R56's fingerprint of CF-Connecting-IP when the key is bound (unbound, the store's: t38.test.mjs), one shared source when no address is stated, never the address; countryOf is Cloudflare's label", async () => {
+test("R21 (Worker side): sourceOf answers doorbell R12's fingerprint of CF-Connecting-IP when the key is bound (unbound, the store's: t38.test.mjs), one shared source when no address is stated, never the address; countryOf is Cloudflare's label", async () => {
   const key = "bound-key-0123";
   const w = storeWorld({ env: { KNOCK_FINGERPRINT_KEY: key } });
   for (const addr of ["203.0.113.9", "2001:db8::1"]) {
     const fp = await A.sourceOf(reqFrom(addr), { KNOCK_FINGERPRINT_KEY: key });
-    assert.equal(fp, await w.capture.sourceFingerprint(addr), "the same digest as capture's");
+    assert.equal(fp, await w.doorbell.sourceFingerprint(addr), "the same digest as the doorbell's");
     assert.match(fp, /^[0-9a-f]{32}$/);
     assert.equal(fp.includes(addr), false);
     assert.equal(await A.sourceOf(reqFrom(addr), {}), null, "unbound, and no store to ask (t38.test.mjs asks one)");
@@ -89,7 +89,7 @@ test("R21 (the gate): every request to a public op, whoever calls and whatever i
     env.calls.length = 0;
     const r = await A.doorWindowGate({ req: reqFrom(addr), env, op, spec: OPS[op], doAnswer, now: T0 });
     assert.equal(r.refusal, undefined, op);
-    assert.equal(r.source, await w.capture.sourceFingerprint(addr), op);
+    assert.equal(r.source, await w.doorbell.sourceFingerprint(addr), op);
     assert.equal(env.calls.length, 1, op);
     const [c] = env.calls;
     assert.deepEqual([c.ns, c.route, c.method, c.href, c.body.address], ["bio", "doorwindow", "POST", "http://do/doorwindow", addr], op);

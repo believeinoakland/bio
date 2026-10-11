@@ -4,12 +4,14 @@
    no spec, no caller), which `plane` composes into the store's route map as it does every module's map.
 
    WHAT IS KEPT. A row holds a source's keyed fingerprint, a bucket (the window's number) and a count, nothing else; a
-   source's rows are dropped once both of its buckets have passed. The fingerprint is `capture` R56's, made by capture's
-   own `sourceFingerprint` under the same key (the `KNOCK_FINGERPRINT_KEY` binding, else the instance's key in
-   capture's table), so the connecting address the Worker hands in the request's body is digested here and never
-   kept, logged or answered. A request that states no address counts under one shared source of its own. */
+   source's rows are dropped once both of its buckets have passed. The fingerprint is `doorbell` R12's, made by the
+   doorbell's own `sourceFingerprint` under the same key (the `KNOCK_FINGERPRINT_KEY` binding, else the instance's key
+   in doorbell's `knock_key`), so the connecting address the Worker hands in the request's body is digested here and
+   never kept, logged or answered. A request that states no address counts under one shared source of its own.
+   T43 (T43-21; K2708, K2719): reached through `doorbellOf(ctx)`, no longer through capture's held copy, which T44
+   deletes (N870); this module imports nothing of `capture`. */
 import { recordOf } from "../record-core/index.mjs";
-import { captureOf } from "../capture/index.mjs";
+import { doorbellOf } from "../doorbell/index.mjs";
 import { DOOR_WINDOW, DOOR_WINDOW_STATED, UNSTATED_SOURCE, doorWindowEstimate, doorRetryAfter } from "./index.mjs";
 
 export { UNSTATED_SOURCE };
@@ -72,14 +74,15 @@ class DoorWindow {
 }
 
 /** The one instance for a Durable Object's storage: it migrates its table and declares it (record-core R21). `deps`
- *  may name the record-core instance, and `fingerprint(address)` in place of capture's (R56) for a host with none. */
+ *  may name the record-core instance, and `fingerprint(address)` in place of the doorbell's (its R12) for a host with
+ *  none. The doorbell's instance for the storage is reached at the first fingerprint asked, not at creation. */
 export function admissionOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let a = instances.get(storage);
   if (!a) {
     const record = deps.record || recordOf(ctx);
     const fingerprint = typeof deps.fingerprint === "function" ? deps.fingerprint
-      : (address) => captureOf(ctx).sourceFingerprint(address);
+      : (address) => doorbellOf(ctx).sourceFingerprint(address);
     a = new DoorWindow({ storage, fingerprint });
     a.migrate();
     const d = record.declareTable("admission", ADMISSION_TABLES.map((t) => ({ ...t })));
