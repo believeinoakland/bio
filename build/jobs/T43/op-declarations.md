@@ -1,6 +1,6 @@
 # op-declarations (T43)
 
-**Status** · session_0126JHqriJqLtHSVj8Cj7oxW · depth 2 · RUNNING until 2026-10-11T11:53:18Z (users' tests (admission, control-plane, plane)) · handled B2
+**Status** · session_0126JHqriJqLtHSVj8Cj7oxW · depth 2 · RUNNING until 2026-10-11T11:59:56Z (plane's migrate-released.test.mjs) · handled B2
 
 ## J1 · QUESTION
 
