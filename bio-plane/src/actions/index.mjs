@@ -131,6 +131,8 @@ export const OPEN_ITEMS_MAX = 200;
 /** R80, R74: a local date-time, `YYYY-MM-DDTHH:MM`. */
 const LOCAL_DT_RE = /^(\d{4}-\d{2}-\d{2})T([01]\d|2[0-3]):[0-5]\d$/;
 /* R74: the flat keys a premise override's ground is held under (J2's reading). */
+/* R8 (e), R93 (K2849): a success record's id, `SUC-<year>-<counter>` (consequences R17). */
+const SUCCESS_ID_RE = /^SUC-\d{4}-\d{4,}$/;
 /* R88: the kinds of promise, action-grammar's `PROMISE_KINDS` (its R2) where it holds them. */
 const PROMISE_KINDS_HELD = Object.freeze(["embargo", "anonymity", "other"]);
 /* R81, R83, R94: the flat keys an entry's T45 fields are held under (J2's reading). */
@@ -1248,7 +1250,7 @@ export class Actions {
      R20), or null when it names none the viewer may see, none is live, or no success record can be read here. */
   #successRecord(id, viewer) {
     const cons = this.consequences;
-    if (!cons || typeof cons.successRecordRead !== "function" || typeof id !== "string") return null;
+    if (!cons || typeof cons.successRecordRead !== "function" || typeof id !== "string" || !SUCCESS_ID_RE.test(id)) return null;
     let r = null;
     try { r = cons.successRecordRead({ id, viewer }); } catch { r = null; }
     return r && r.ok !== false && !r.superseded_by ? r : null;
@@ -3086,6 +3088,8 @@ export class Actions {
       }).filter((x) => Object.keys(x).length > 1),
       follows_action: fm.follows_action && typeof fm.follows_action === "object" ? fm.follows_action : null,
       followed_by: this.#followedBy(id, viewer),
+      /* R87 (K2850): the latest scope statement, false with none, and its statements. */
+      confidential: this.#confidential(id),
       scope: this.#scopeOf(id),
       promises: this.#promisesOf(id),
     };
@@ -3395,7 +3399,7 @@ export class Actions {
                    counterparty: counterpartyName(fm.counterparty), counterparty_state: fm.counterparty?.state ?? null,
                    /* R9 (T45): a press addressee's holder, kept inside the group: the read and this list only. */
                    ...(cp && cp.kind === "press" && typeof cp.holder === "string" && cp.holder.trim() ? { holder: { name: cp.holder.trim() } } : {}),
-                   ...(voids ? { basis_void: voids } : {}) });
+                   ...(voids ? { basis_void: voids } : {}), confidential: this.#confidential(r.bundle_id) });
       }
       if (truncated || rows.length <= max) break;
     }
@@ -3645,15 +3649,13 @@ export class Actions {
              held_as: sha ? "capture" : "testimony", ...(sha ? { artifact_sha: sha } : { account: acct }),
              author: who, recorded_at: recorded, weight: "single" };
   }
-  /* R80, R25: each sent entry's receipt records, the latest first. */
+  /* R80, R25 (K2845): every receipt record, oldest first, so an entry's latest is its last. */
   #receiptsOf(id) {
-    const out = {};
-    for (const r of this.#rows(`SELECT ord, seq, kind, at, how, party, artifact_sha, account, author, recorded_at
-      FROM action_receipts WHERE bundle_id=? ORDER BY ord, seq DESC`, id))
-      (out[r.ord] ||= []).push({ seq: r.seq, kind: r.kind, at: r.at, how: r.how, party: r.party ?? null,
+    return this.#rows(`SELECT ord, seq, kind, at, how, party, artifact_sha, account, author, recorded_at
+      FROM action_receipts WHERE bundle_id=? ORDER BY recorded_at, ord, seq`, id)
+      .map((r) => ({ ord: r.ord, seq: r.seq, kind: r.kind, at: r.at, how: r.how, ...(r.party !== null ? { party: r.party } : {}),
         held_as: r.artifact_sha ? "capture" : "testimony", ...(r.artifact_sha ? { artifact_sha: r.artifact_sha } : { account: r.account }),
-        by: r.author, recorded_at: r.recorded_at });
-    return Object.entries(out).map(([ord, list]) => ({ ord: Number(ord), latest: list[0], earlier: list.slice(1) }));
+        by: r.author, recorded_at: r.recorded_at }));
   }
 
   /** R87 (T45; Actions D4; v0.2 rule 15): a member sets (`true`) or removes (`false`) the action's confidential scope,
@@ -4010,8 +4012,7 @@ export function actionsOf(host, deps) {
     const consequences = d.consequences === null ? null : a.consequences;
     if (consequences && typeof consequences.registerOwnActReader === "function") {
       const reader = (args) => a.ownActIds(args || {});
-      if (consequences.registerOwnActReader.length >= 2) consequences.registerOwnActReader("actions", reader);
-      else consequences.registerOwnActReader(reader);
+      consequences.registerOwnActReader(reader);
     }
     const standards = d.standards === null ? null : a.standards;
     if (standards && typeof standards.registerOwnSendingCheck === "function")
