@@ -57,3 +57,7 @@ Five readings I am building on (carrying on; none blocks me):
 - `checks/format.mjs`: 0 failures. `architecture.mjs bio extraction`: 0 failures. `coverage.mjs`: 49 of 49 live ids, 0 failures. `ownership.mjs … tranche/T43`: 0 failures.
 
 Size (session_01PpDwes3iUurs4FGnAcYgt6): test runs 16, module lines 3153
+
+## J2 · COMPLETE
+
+T43-10 complete on job/T43/extraction (record: Completion (T43-10)). R27, R47, R71, R73 met; 157 of 157 module tests pass; users' tests show the 27 inherited reds identically on branch and tranche; the four checks clean. One red named: the row census, C-51.7's re-worded translation, under rule 4 (2). No file outside my paths. Merged tranche/T43 @ its tip.
