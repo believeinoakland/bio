@@ -125,9 +125,12 @@ test("R47, R6 (K2635, K2656): pagetranscribe's handler is extraction's exported 
   assert.equal(bad.answer.status, 400);
 });
 
-test("R47, R34 (N862): pagetranscribe has no text in affordances' ACT_HELP and is named in ACT_HELP_ABSENT under the last ground alone, an act the design has not yet explained; every member-session op is explained or named, never both, and every named op is held by OPS (negative control: an explained op is named under no ground)", () => {
-  assert.equal(explained("pagetranscribe"), false, "ACT_HELP explains pagetranscribe: R34 now asks it leave ACT_HELP_ABSENT");
-  assert.deepEqual(ground("pagetranscribe"), ["unexplained"]);
+test("R47, R34 (N862; T43: DEC-190, K2725): pagetranscribe, and content's manual transcribe beside it, are explained in affordances' ACT_HELP since its T43-17 (the design's texts) and so named under no ground of ACT_HELP_ABSENT, the last ground they held until then; every member-session op is explained or named, never both, and every named op is held by OPS (negative control: an explained op is named under no ground)", () => {
+  for (const op of ["pagetranscribe", "transcribe"]) {
+    assert.ok(SESSION_OPS.member.has(op), `${op} is no member op`);
+    assert.equal(explained(op), true, `${op}: no ACT_HELP text`);
+    assert.deepEqual(ground(op), [], `${op} is explained and named`);
+  }
   assert.match(ACT_HELP_ABSENT.unexplained.ground, /not yet explained/);
   const named = Object.values(ACT_HELP_ABSENT).flatMap((g) => [...g.ops]);
   for (const op of SESSION_OPS.member) {
