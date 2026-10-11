@@ -308,7 +308,7 @@ test("R4, R6: an opaque id standing in a live row when the module starts is neve
   const membership = membershipOf(host, { record });
   membership.migrate();
   reviewOf(host, { record, membership, publication: { registerReviewProvider: () => ({ ok: true }) },
-                   caseAuthoring: { registerReviewComments: () => ({ ok: true }) },
+                   caseAccount: { registerReviewComments: () => ({ ok: true }) },
                    ratification: { registerApprovalReader: () => ({ ok: true }) } });
   const minted = st.sql.exec(`SELECT id FROM minted_ids ORDER BY id`).toArray().map((r) => r.id);
   for (const id of ["DRAFT-2026-0417", "DRAFT-2026-7316", "RVG-2026-7316"]) assert.ok(minted.includes(id), id);
@@ -320,7 +320,7 @@ test("R4, R6: an opaque id standing in a live row when the module starts is neve
   const bare = storage();
   assert.doesNotThrow(() => reviewOf({ storage: bare }, { record: { declarePurge() {}, seedMintLedger() { throw new Error("no table"); } },
     membership: {}, publication: { registerReviewProvider: () => ({ ok: true }) },
-    caseAuthoring: { registerReviewComments: () => ({ ok: true }) },
+    caseAccount: { registerReviewComments: () => ({ ok: true }) },
     ratification: { registerApprovalReader: () => ({ ok: true }) } }));
 });
 
