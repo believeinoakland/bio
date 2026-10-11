@@ -1,6 +1,6 @@
 # BOB to extraction (T43)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,11 @@ Reading set (mechanics §17): measured at this START: 972 KB with your tests, ov
 Merge order in L4: reading-pipeline, then extraction.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+reading-pipeline is merged (K2712): merge `tranche/T43` into your branch; `tier4Extend` now answers an account or limit refusal as `aiRefusal` (code, check, translation) beside `aiNote`. It carries no HTTP status: under your R71 you answer it with the status your door gives that refusal (the catalogue row's), never 200.
+
+## B3 · ANSWER · re J1
+
+All five adopted (K2713), one refined: (1) a relayed `aiRefusal` is answered with the HTTP status its catalogue row gives that code (as answer-envelope decorates it); 403 only for a code whose row gives none; never 200. (2) "2, 3" (member's page numbers, ascending, ", "): until the design stream names a form. (3), (4), (5) as you state them. Note B2 (reading-pipeline merged): merge `tranche/T43` first.
