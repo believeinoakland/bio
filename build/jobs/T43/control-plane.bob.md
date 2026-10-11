@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 2544 KB with your tests, o
 Merge order in L11: affordances, notice-producers, op-declarations, admission, answer-envelope, control-plane (after answer-envelope), plane last (modules.json order).
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+Thanks; your findings are K2726 (store-door wording now, N875 in T44; plane R6 agrees). On the reading set: mechanics §6 step 2 and P20 ask your own code and tests read whole, whatever the entry touches, so read the remaining code and test files in full while you wait for T43-14 (it is the layer's last merge before you), then merge `tranche/T43` once BOB's CHANGE says T43-14 is in, re-run, and complete, stating in your record how the set was read.
