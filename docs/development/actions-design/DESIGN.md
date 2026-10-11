@@ -115,6 +115,15 @@ Bob asked what support an extended action needs as it progresses; ruled "All as 
 - **B · Second approval**: a project's owners may name acts (by kind, tier, or "public") that need a second member's approval before sending; default one member. A project setting, not a member attribute.
 - **C · Notes and comments** on options, actions and drafts, inside the plan, never published (DEC-25), under the plan's sight.
 
+### 2.12 Power without misuse (D28)
+
+Bob asked what abuse the capabilities invite and how to balance it; analysis of thirteen risks on the page §7 D28; ruled "all as recommended":
+- **D28a volume as facts:** at preparation, the group's open items with the same office (requests, complaints, overdue replies) shown, never blocking (`actions` read over its own records by addressee).
+- **D28b no self-benefit:** a chance-to-fix notice (D26) or demand asks only for what the standard requires, remedy of the harm, and the law's routes; asks for the group's or members' benefit are never prepared (a refusal at preparation, like rule 9's advocacy line; the assertion/phrasing check extended with such asks, AI where enabled).
+- **D28c naming:** the office and the responsible official in role; staff below named only where the evidence turns on their act, each pointed out for the member to confirm.
+- **D28d actor visible:** the group's public identity (name, slug, verified domain; Publication §7 / REC-163–164) and declared stake on everything sent (in-band stamp fields) and published; a claim on accepted findings shows the source group's identity and stake.
+- **D28e recourse:** a report path for abuse of Civicsmith itself to its stewards (outside any group instance), whose remedies are withdrawal of shared services only, never edits to a group's record; a plain guide for groups on what they hold and who could compel it. Terms of use come to Bob separately.
+
 ## 3. Kinds of action
 
 The product's own kinds are those whose rules it enforces; all others come from the profile (Action §5 #6). The design adds **shapes** (what a kind needs from the record and the screens), each a profile kind unless marked product:

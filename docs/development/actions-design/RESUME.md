@@ -69,3 +69,4 @@
 - 2026-10-11: D25 (a; audiences), D26 ruled; folded into DESIGN §2.1a, page §8.1a, canon v0.2 rule 19; H28.
 - 2026-10-11: D27 (managing the process) ruled all as recommended; DESIGN §2.11, page D27 and §8.7a, canon rule 20, ladder AC21; H29.
 - 2026-10-11: Bob asked about abuse risks and balance; analysis and D28a–e put on the page.
+- 2026-10-11: D28 ruled all as recommended; DESIGN §2.12, page §8.7b, canon rule 21; H30.
