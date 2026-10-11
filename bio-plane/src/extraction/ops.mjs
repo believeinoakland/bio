@@ -65,15 +65,36 @@ export async function pdfStructureOp(url, env, store, { json, storeSilent, store
   return unanswered(r, op, { json, storeSilent, storeRefusal }) ?? json(r.result.body, r.result.status);
 }
 
-/* The ops `extractionOp` answers, which the control plane routes here (host-governor's `GOVERNOR_OPS` precedent). */
-export const EXTRACTION_OPS = Object.freeze(["pdfstructure"]);
+/** R71: op=pagetranscribe, refused here as R31 refuses: no evidence storage (the storage-absent refusal), a digest
+ *  that is not 64 lowercase hex (the required-argument refusal); the rest is the Durable Object's (`pageTranscribe`),
+ *  handed the control plane's stamps and the project the act names as its payer (`project`, when given). */
+export async function pageTranscribeOp(url, env, store, { json, storeSilent, storeRefusal, doAnswer, storageAbsent,
+                                                          requiredArgument, cls, session, caps, viewer, author, storeName }) {
+  const op = "pagetranscribe";
+  if (typeof env.CAPTURES?.get !== "function") return storageAbsent(op, "R2 is not configured on this instance");
+  const sha = (url.searchParams.get("sha256") || "").toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(sha))
+    return json({ ok: false, ...requiredArgument(op, "sha256", "<64 lowercase hex>",
+      "pagetranscribe requires sha256=<64 lowercase hex>") }, 400);
+  const q = new URLSearchParams({ sha256: sha, cls: cls || "", session: session ? "1" : "0",
+    caps: [...(caps || [])].join(","), viewer: viewer || "", author: author || "", store: storeName || "bio" });
+  const project = url.searchParams.get("project");
+  if (project) q.set("project", project);
+  const r = await ask(store, `http://x/pagetranscribe?${q}`, undefined, doAnswer);
+  return unanswered(r, op, { json, storeSilent, storeRefusal }) ?? json(r.result.body, r.result.status);
+}
 
-/** The control plane's dispatch of this module's op (legacy-index map §4.4, K649 (7)): `op=pdfstructure` (R31–R35),
+/* The ops `extractionOp` answers, which the control plane routes here (host-governor's `GOVERNOR_OPS` precedent). */
+export const EXTRACTION_OPS = Object.freeze(["pdfstructure", "pagetranscribe"]);
+
+/** The control plane's dispatch of this module's ops (legacy-index map §4.4, K649 (7)): `op=pdfstructure` (R31–R35)
+ *  and (T42) `op=pagetranscribe` (R71),
  *  moved out of `src/index.mjs` with the stamps it hands, which stay the control plane's (the caller class, whether
  *  a member session asked and its capabilities, the viewer, the author). `getStore` answers the Durable Object stub
  *  the op is scoped to. Answers the op's response, or null for an op that is not this module's. */
 export async function extractionOp(op, url, env, getStore, stamps) {
   if (op === "pdfstructure") return pdfStructureOp(url, env, getStore(), stamps);
+  if (op === "pagetranscribe") return pageTranscribeOp(url, env, getStore(), stamps);
   return null;
 }
 

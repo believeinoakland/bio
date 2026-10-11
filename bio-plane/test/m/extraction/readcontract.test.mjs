@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bundle } from "./fixture.mjs";
+import { CAPTURE_TEXT_UNIT_CAP } from "../../../src/extraction/index.mjs";
 import { normAlias, labelTerms } from "../../../src/extraction/index.mjs";
 import { readingSourceJson } from "../../../src/textchain.mjs";
 import { canonicalExtent } from "../../../src/textchain.mjs";
@@ -23,9 +24,11 @@ const CONTRACT = {
   reading_ref_terms: ["capture_sha", "bundle_id", "ref", "src", "term"],
   capture_text_skipped: ["capture_sha", "bundle_id", "first_seq", "last_seq", "units", "first_extent", "first_ref",
                          "last_extent", "last_ref", "side"],
+  /* T42 (N839, K2608): read by case-account, the text of the passages an account cites */
+  capture_text: ["capture_sha", "bundle_id", "extent", "seq", "text", "truncated"],
 };
 
-test("R58: the four tables carry every column the contract names", () => {
+test("R58: the contract's tables (readings, reading_refs, reading_ref_terms, capture_text_skipped, capture_text) carry every column it names", () => {
   const w = fresh();
   for (const [t, cols] of Object.entries(CONTRACT)) {
     const have = w.rows(`PRAGMA table_info(${t})`).map((c) => c.name);
@@ -138,4 +141,27 @@ test("R58 R19 (N151): reading_text_source: one row per capture whose reading car
   assert.deepEqual(JSON.parse(w.one(`SELECT chain FROM reading_text_source WHERE capture_sha=?`, S1).chain), layer);
   w.x.writeReading({ bundleId: "B-1", captureSha: S1, reading: reading([], { text_source: undefined }) });
   assert.equal(w.one(`SELECT chain FROM reading_text_source WHERE capture_sha=?`, S1), null);
+});
+
+test("R58 R22 R61 (T42; N839): capture_text: one row per indexed unit, capture_sha and bundle_id the writer's, extent content's canonicalExtent of the unit, seq its reading order, text the unit's text capped per unit with truncated marking a cut unit; a replaced reading replaces the rows, and an authored observation (R61) is one row at the whole document", () => {
+  const w = fresh();
+  bundle(w.s, "B-1"); bundle(w.s, "B-2");
+  const long = "x".repeat(CAPTURE_TEXT_UNIT_CAP + 5);
+  const units = [{ extent: { kind: "pdf-page", page: 2, rect: null }, seq: 2, text: long },
+                 { extent: { kind: "pdf-page", page: 0, rect: null }, seq: 0, text: "Page one" },
+                 { extent: { kind: "pdf-page", page: 1, rect: null }, seq: 1, text: "   " }];
+  w.x.writeReading({ bundleId: "B-1", captureSha: S1, reading: reading(), textUnits: units });
+  const rows = w.rows(`SELECT capture_sha, bundle_id, extent, seq, text, truncated FROM capture_text WHERE capture_sha=? ORDER BY seq`, S1)
+    .map((r) => ({ ...r }));
+  assert.deepEqual(rows, [
+    { capture_sha: S1, bundle_id: "B-1", extent: canonicalExtent(units[1].extent), seq: 0, text: "Page one", truncated: 0 },
+    { capture_sha: S1, bundle_id: "B-1", extent: canonicalExtent(units[0].extent), seq: 2, text: long.slice(0, CAPTURE_TEXT_UNIT_CAP), truncated: 1 },
+  ], "a blank unit is no row; the long one is cut and marked");
+  /* control: a unit that fits is not marked */
+  assert.equal(rows[0].truncated, 0);
+  w.x.writeReading({ bundleId: "B-2", captureSha: S1, reading: reading(), textUnits: [units[1]] });
+  assert.deepEqual(w.rows(`SELECT bundle_id, seq FROM capture_text WHERE capture_sha=?`, S1).map((r) => [r.bundle_id, r.seq]), [["B-2", 0]]);
+  w.x.indexTestimony({ bundleId: "B-1", captureSha: S2, words: "I attended.", author: "member:m1" });
+  assert.deepEqual(w.rows(`SELECT bundle_id, extent, seq, text, truncated FROM capture_text WHERE capture_sha=?`, S2).map((r) => ({ ...r })),
+                   [{ bundle_id: "B-1", extent: canonicalExtent({ kind: "document" }), seq: 0, text: "I attended.", truncated: 0 }]);
 });
