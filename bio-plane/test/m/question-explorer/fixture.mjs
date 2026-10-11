@@ -89,7 +89,9 @@ export function questionMd(id, { subject = null, surfacedBy = "human", state = "
           "state_history: []", "---", "", "## Question", "", "What happened?", ""].join("\n");
 }
 
-export function world({ gateOpen = true, testSet = TEST_SET } = {}) {
+/* `migrate: false` builds the explorer through its factory alone, as a host that never calls its `migrate()` (R15);
+   `w.tablesBefore` then names the explore tables the storage held just before the factory ran. */
+export function world({ gateOpen = true, testSet = TEST_SET, migrate = true } = {}) {
   const st = storage();
   const host = { storage: st };
   for (const t of RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n").split(";"))
@@ -231,6 +233,8 @@ export function world({ gateOpen = true, testSet = TEST_SET } = {}) {
     extraction: { unitsOf: (sha) => ({ units: w.units[sha] || [], state: "indexed" }) },
     strength: {}, citation: {}, basisVersions: { onCandidates: () => ({ ok: true }) }, now: () => Date.parse(clock.now) });
   runProductions.migrate();
+  const tablesBefore = [...st.sql.exec(`SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'explore_%' ORDER BY name`)]
+    .map((r) => r.name);
   const p = questionExplorerOf(host, {
     record, membership, credentials, connections, retrieval, inquiry, legEarning, basisVersions, aiRuns, captureRequests,
     runProductions,
@@ -239,8 +243,8 @@ export function world({ gateOpen = true, testSet = TEST_SET } = {}) {
     testSet,
     now: () => Date.parse(clock.now),
   });
-  p.migrate();
-  Object.assign(w, { p, legEarning, realSteps, aiUse, realAiUse, aiRuns, captureRequests, connections, retrieval });
+  if (migrate) p.migrate();
+  Object.assign(w, { p, tablesBefore, legEarning, realSteps, aiUse, realAiUse, aiRuns, captureRequests, connections, retrieval });
 
   let rev = 0;
   w.bundle = (id, type, text, { project = null, state = null } = {}) => {
