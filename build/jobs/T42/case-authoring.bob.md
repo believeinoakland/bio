@@ -18,3 +18,7 @@ J1 read. The edges are yours (K2670, K2613's pattern): in build/modules.json on 
 ## B3 · CHANGE
 
 case-account (T42-22) is merged into tranche/T42 (K2673). Merge tranche/T42, drop your stand-in, run against the real module, add your uses edges in modules.json (case-authoring: + case-account, - ai-runs; review: + case-account), and post COMPLETE. case-authoring: CASE_AUTHORING_TABLES must not still list account_drafts/account_acceptances once caseAccountOf is created eagerly (declarePurge refuses the whole list on TABLE_DECLARED; map §7); the acceptance write is this.account.acceptanceRecorded({caseId, edition, drafted, by, at}).
+
+## B4 · CHANGE
+
+From REVIEW #12 J2 (K2675, P9): caseAuthoringOf ignores declarePurge's answer (src/case-authoring/index.mjs:2968), so a refused declaration (TABLE_DECLARED, as before T42-23's table fix) left case-authoring undeclared silently. Your module, your job is open: handle the answer as other modules do (record-core's refusal surfaced at creation, e.g. sources throws 'record-core refused its table declaration'), test it with a negative control, merge tranche/T42 (review merged), re-run your users' suites and post COMPLETE.
