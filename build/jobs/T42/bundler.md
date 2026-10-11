@@ -58,3 +58,7 @@ T42-2 done. N836: fleetbundles re-pinned 23 -> 25 from agent-worker's committed 
   - Checks: `format`, `architecture` and `coverage` (31 of 31) 0 failures; `ownership` 0 failures after the commit.
 
 Size (session_01X5bkceFD2GHGbfimdSRiKL, B2): test runs 3, module lines 3441
+
+## J3 · COMPLETE
+
+B2 (K2618) done. Cause: R31 (d)/(f)'s synthetic probe busy-looped on Date.now(), whose whole-ms truncation let it end after as little as 39.26 ms of real time, so the reading failed >= 40 (the rest of both tests passed, as on your container). Fix, test-only: the loop runs 60 ms by performance.now() and the assertions require >= 50; the measured window encloses the loop, so what they prove is unchanged. Merged tranche/T42 @ f0eb125593. fleetbundles 149 pass, 0 fail, no SKIP, twice (once under 4 CPU-bound processes; plane 666 ms and 1,250 ms, both WARN); module tests 94/94; format, architecture, coverage 31/31, ownership 0 failures. No bundle committed.
