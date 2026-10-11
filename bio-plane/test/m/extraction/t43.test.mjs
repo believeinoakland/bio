@@ -84,7 +84,7 @@ test("R71 (T43, N862): a written transcription's label is transcribe.label and s
   assert.deepEqual([x.body.transcription.performed, x.body.transcription.written, "says" in x.body], [true, false, false]);
 });
 
-test("R71 (T43, N862, K2689): transcribe.none only when agent-worker was asked and filled nothing, {why} the reason as answered; a reason that posted nothing, or no page left, is performed false with no says", async () => {
+test("R71 (T43, N862, K2689): transcribe.none only when agent-worker was asked and filled nothing, {why} the reason as answered; no page left is performed false with no says (the other unfilled reasons are T44's: t44.test.mjs)", async () => {
   const { w, d } = await heldScan();
   w.x.registerTranscriber("plane", transcriber({ answer: () => ({ ok: true, engine: "claude-test", version: "1", pages: [] }) }).t);
   const before = writes(w);
@@ -92,18 +92,6 @@ test("R71 (T43, N862, K2689): transcribe.none only when agent-worker was asked a
   assert.deepEqual([r.status, r.body.transcription.performed, r.body.transcription.written], [200, false, false]);
   assert.equal(r.body.says, WORD("transcribe.none").replace("{pages}", "2, 3").replace("{why}", r.body.transcription.why));
   assert.equal(writes(w), before);
-  for (const reason of ["AGENT_WORKER_UNBOUND", "EVIDENCE_ABSENT", "NO_PAGE_RENDERED"]) {
-    const v = await heldScan();
-    v.w.x.registerTranscriber("plane", transcriber({ answer: () => ({ ok: false, reason }) }).t);
-    const x = await withEntry(pdfEntry(SCAN, 3), () => v.w.x.pageTranscribe({ captureSha: v.d, ...member1 }));
-    assert.deepEqual([x.status, x.body.transcription.performed, "says" in x.body], [200, false, false], reason);
-    assert.match(x.body.transcription.why, new RegExp(reason));
-  }
-  /* control: an agent-worker refusal after it was asked is said */
-  const s = await heldScan();
-  s.w.x.registerTranscriber("plane", transcriber({ answer: () => ({ ok: false, reason: "AGENT_WORKER_SILENT" }) }).t);
-  const y = await withEntry(pdfEntry(SCAN, 3), () => s.w.x.pageTranscribe({ captureSha: s.d, ...member1 }));
-  assert.match(y.body.says, /^The assistant read pages 2, 3 but found no words it could give: .*AGENT_WORKER_SILENT/);
   const n = await heldScan();
   n.w.x.registerTranscriber("plane", transcriber().t);
   const z = await withEntry(pdfEntry(i2([{ page: 0, text: "all text" }]), 1), () => n.w.x.pageTranscribe({ captureSha: n.d, ...member1 }));

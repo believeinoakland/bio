@@ -135,7 +135,8 @@ test("R71 R47 R72: the refusals in order, each by its row, before any byte is re
   k.w.x.registerTranscriber("plane", kt.t);
   const n0 = gets(k.w);
   const away = await k.w.x.pageTranscribe({ captureSha: k.d, project: "PROJ-PAYER", ...member1 });
-  assert.deepEqual(away, { status: 403, body: KEPT });
+  /* (T44; N869) relayed as given, with transcribe.refused beside its fields: t44.test.mjs */
+  assert.deepEqual(away, { status: 403, body: { ...KEPT, says: WORD("transcribe.refused").replace("{reason}", KEPT.translation) } });
   assert.deepEqual(kt.calls.keptAway, [{ project: "PROJ-1", use: "transcribe" }], "the capture's project, never the payer's");
   assert.equal(gets(k.w), n0, "nothing read");
   assert.deepEqual([kt.calls.transcription, kt.calls.transcribe], [[], []], "nothing rendered or sent");

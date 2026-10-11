@@ -1547,13 +1547,16 @@ export class Extraction {
     return r && typeof r.p === "string" && r.p ? r.p : null;
   }
 
-  /** R71 (`op=pagetranscribe`; N832, D21): a member's act, the AI's reading of the pages of a stored PDF reading that
-   *  Civicsmith's own text recognition could not read (reading-pipeline R29), on the account that pays for that act.
+  /** R71 (`op=pagetranscribe`; N832, D21): a member's act, the AI's reading of the pages of a stored reading (a PDF's,
+   *  or a picture file's one page, R73) that Civicsmith's own text recognition could not read (reading-pipeline R29),
+   *  on the account that pays for that act.
    *  The control plane has refused a malformed digest and an instance with no evidence storage, and stamps `cls`,
    *  `session`, `caps`, `viewer` and `by`. Every refusal comes before any byte is read, any account is read or any page
    *  is rendered (C-51.2, C-51.3, C-51.7, C-51.5, then the transcriber's keep-away refusal relayed as given). Then the
    *  text as R33–R35 compose it (tier 2; tier 3 seeded with the pages the stored reading holds, the OCR member asked
-   *  only when bound), `reading-pipeline.tier4Extend`, and R34's write. Answers `{status, body}`. */
+   *  only when bound), `reading-pipeline.tier4Extend`, and R34's write. Answers `{status, body}`. (T44) With nothing
+   *  filled, `says` is read by key by what the AI path answered (`unfilledOutcome`); a refusal says
+   *  `transcribe.refused` beside its own fields. */
   async pageTranscribe({ captureSha = null, project = null, cls = null, session = false, caps = [], viewer = null,
                          by = null, storeName = "bio", env = null } = {}) {
     const e = env || this.env || {};
@@ -1588,7 +1591,7 @@ export class Extraction {
     /* `credentials.aiKeptAway` (its R57), the one site of both codes, relayed as given; it fails closed itself, and a
        transcriber that throws here fails the request, nothing read or sent (no code is minted here for it). */
     const away = reg.t.keptAway({ project: this.#projectOfBundle(basis.bundleId), use: TRANSCRIBE_USE });
-    if (away) return { status: 403, body: away };
+    if (away) return { status: 403, body: withRefusedSays(away) };
     /* END DEC-49 REGION is-transcribe */
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     const obj = ev ? await ev.get(sha) : null;
@@ -1635,15 +1638,20 @@ export class Extraction {
           return asked.answer; } }
       : tx;
     const t4 = await tier4Extend(handed, { sha, storeName, i2text: t3.i2text, chain: chain3, wiredTier: t3.wiredTier });
-    /* R71 (N853a): an account or limit refusal relayed by tier 4 is answered as that refusal; nothing is written. */
+    /* R71 (N853a, K2713): an account or limit refusal relayed by tier 4 is answered as that refusal, nothing written;
+       (T44; N869, N876) it also says `transcribe.refused`. */
     const refusal = t4.aiRefusal && typeof t4.aiRefusal === "object" ? t4.aiRefusal : null;
-    if (refusal && !t4.filled.length) return { status: refusalStatus(refusal), body: refusal };
+    if (refusal && !t4.filled.length) return { status: refusalStatus(refusal), body: withRefusedSays(refusal) };
     if (!t4.filled.length) {
       const why = t4.aiNote || "the AI was not asked to transcribe, and nothing about this capture was changed";
-      const posted = asked.pages !== null && !(asked.answer && asked.answer.ok === false && NO_POST_REASONS.includes(asked.answer.reason));
+      const outcome = asked.pages === null ? null : unfilledOutcome(asked.answer, fmt);
+      /* (T44) a refusal agent-worker answered after the post, carrying its row's translation, is that refusal too. */
+      if (outcome && outcome.refusal) return { status: refusalStatus(outcome.refusal), body: withRefusedSays(outcome.refusal) };
+      const says = !outcome ? null
+        : outcome.none ? fillWords("transcribe.none", { pages: pagesSaid(asked.pages), why })
+        : fillWords(outcome.key, { why: fillWords(outcome.why) });
       return { status: 200, body: { ok: true, op, sha256: sha,
-        transcription: { performed: false, written: false, why },
-        ...(posted ? { says: fillWords("transcribe.none", { pages: pagesSaid(asked.pages), why }) } : {}) } };
+        transcription: { performed: false, written: false, why }, ...(says ? { says } : {}) } };
     }
     /* R71 by R34's rule: the stored reading's type, `at` the capture instant, page count and container extent carried,
        reading-pipeline R18's provenance, the read's own counts and emitted fields, and `reextracted`. */
@@ -1761,9 +1769,52 @@ function unwrittenWhy(w, act) {
            + "was read and NOT recorded" };
 }
 
-/* R71 (N862, K2689): the transcriber's reasons that posted nothing to agent-worker (plane R36), answered with
-   `performed: false` and the reason until the design stream names their words (B133). */
-const NO_POST_REASONS = Object.freeze(["AGENT_WORKER_UNBOUND", "EVIDENCE_ABSENT", "NO_PAGE_RENDERED"]);
+/* R71 (T44; N869, N876; DEC-191 (4), (5), DEC-192 (1), (2); K2689, K2713): the transcriber's reasons that posted
+   nothing to agent-worker (plane R36), each with its `transcribe.why.*` key. */
+const NOT_SENT_WHY = Object.freeze({ AGENT_WORKER_UNBOUND: "transcribe.why.unbound",
+  EVIDENCE_ABSENT: "transcribe.why.evidenceabsent", NO_PAGE_RENDERED: "transcribe.why.norender" });
+/* agent-worker R74's ending (R59's, spelled `MODEL_SILENT` or `MODEL_REFUSED` with `ending`): every page ended silent
+   or refused at the provider. */
+const ENDINGS = Object.freeze(["silent", "refused"]);
+const ENDING_CODES = Object.freeze(["MODEL_SILENT", "MODEL_REFUSED"]);
+
+/* R71 (T44): a photographed page's renderer refusal (plane R36's `refused`, `{page, reason, process?}`) that has its own
+   words: one too large, or a JPEG in a progressive process. Null for any other, which is `transcribe.why.norender`. */
+function pictureWhy(refused) {
+  for (const r of Array.isArray(refused) ? refused : []) {
+    if (!r || typeof r !== "object") continue;
+    if (r.reason === "IMAGE_TOO_LARGE") return "transcribe.picture.why.toolarge";
+    if (r.reason === "UNSUPPORTED_JPEG_PROCESS" && typeof r.process === "string" && r.process.includes("progressive"))
+      return "transcribe.picture.why.progressive";
+  }
+  return null;
+}
+
+/* R71 (T44): what the AI path answered when it was called and nothing was filled, read from the transcriber's own
+   answer (`tier4Extend` keeps only a sentence of it): `{key, why}` for a sentence with a `{why}` key, `{none: true}`
+   for a post agent-worker answered `ok: true` filling nothing, `{refusal}` for a refusal agent-worker answered after
+   the post with its row's translation, or null when no key says it (the transcriber threw, or a refusal with no row to
+   translate it, which is reported, never given a sentence of this module's own). `fmt` is R73's detected format. */
+function unfilledOutcome(a, fmt) {
+  if (!a || typeof a !== "object") return null;
+  if (a.ok === true) return { none: true };
+  if (NOT_SENT_WHY[a.reason]) {
+    const picture = a.reason === "NO_PAGE_RENDERED" && PICTURE_FORMATS.includes(fmt) ? pictureWhy(a.refused) : null;
+    return picture ? { key: "transcribe.picture.unprepared", why: picture } : { key: "transcribe.notsent", why: NOT_SENT_WHY[a.reason] };
+  }
+  if (a.reason === "AGENT_WORKER_SILENT") return { key: "transcribe.failed", why: "transcribe.why.silent" };
+  if (ENDINGS.includes(a.ending) || ENDING_CODES.includes(a.code) || ENDING_CODES.includes(a.reason))
+    return { key: "transcribe.failed", why: "transcribe.why.ended" };
+  if (typeof a.translation === "string" && a.translation) return { refusal: a };
+  return null;
+}
+
+/* R71 (T44; DEC-192 (1)): a refusal as relayed, with `says` `transcribe.refused`, `{reason}` its translation exactly as
+   relayed (its own placeholders left for the screen, its fields beside it); one with no translation says nothing. */
+function withRefusedSays(r) {
+  const t = r && typeof r.translation === "string" && r.translation ? r.translation : null;
+  return t ? { ...r, says: fillWords("transcribe.refused", { reason: t }) } : r;
+}
 
 /* R27, R71 (T44; N853b, N869): the formats a photographed page is captured in (`format-registry` R29–R30). */
 const PICTURE_FORMATS = Object.freeze(["jpeg", "png"]);

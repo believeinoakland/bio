@@ -42,3 +42,124 @@ test("R27 (T44; N869, N876; DEC-191 (5), DEC-192 (6)): a jpeg or png reading wit
   const hidden = w.x.readingFor("1".repeat(64), "member:outsider");
   assert.deepEqual(["unread_pages" in hidden, "unread_says" in hidden], [false, false]);
 });
+
+/* ---- R71: `says` by key when nothing was filled ---- */
+
+/* The composition root's transcriber, deployable, its AI path answering `answer` (plane R36's shapes). */
+function transcriber({ answer, account = null, limit = null, away = null }) {
+  const calls = { transcribe: [] };
+  const t = {
+    deployable: () => true,
+    keptAway: () => away,
+    transcription: ({ member, project, at }) => ({ member, project, at, act: `transcribe:t44:${at}`,
+      credentials: { accountFor: async () => account ?? { ok: true, kind: "apikey", level: "member", key: "k" } },
+      useCheck: async () => limit,
+      transcribe: async (q) => { calls.transcribe.push(q); return typeof answer === "function" ? answer(q) : answer; } }),
+  };
+  return { t, calls };
+}
+const pdfEntry = (text, pages) => ({ format: "pdf",
+  detect: (b) => (b && new TextDecoder().decode(b.slice(0, 5)) === "%PDF-" ? { format: "pdf", confidence: "certain", signals: [] } : null),
+  structure: async () => ({ ok: true, text: structuredClone(text), pages, notes: [] }) });
+const SCAN = i2([{ page: 0, text: "Minutes of the meeting" }, { page: 1, text: "", undetermined: [noText(1)] },
+                 { page: 2, text: "", undetermined: [noText(2)] }]);
+/* A baseline JPEG's first bytes (SOI, APP0 JFIF): the jpeg entry reads the signature and decodes nothing. */
+const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01, 0x01, 0x00, 0x00, 0x01,
+                             0x00, 0x01, 0x00, 0x00, 0xff, 0xd9]);
+
+/* Runs one act over a stored three-page scan (or, with `photo`, an uploaded JPEG's one page) and answers what came back,
+   whether anything was written, and what the AI path was asked. */
+async function act(opts, { photo = false } = {}) {
+  const w = fresh();
+  bundle(w.s, "B-1");
+  const d = await hold(w.evidence, photo ? JPEG : "%PDF-1.7 " + Math.random());
+  w.x.writeReading({ bundleId: "B-1", captureSha: d, profileFormat: photo ? "jpeg" : "pdf", reading: { content_type: "generic",
+    reader_version: 1, found: false, entities: [], facts: {}, at: "2026-09-01T00:00:00Z", basis: "b", text_source: null,
+    page_count: photo ? 1 : 3, text_container: photo ? "jpeg" : "pdf" } });
+  const tr = transcriber(opts);
+  w.x.registerTranscriber("plane", tr.t);
+  const before = writes(w);
+  const run = () => w.x.pageTranscribe({ captureSha: d, ...member1 });
+  const r = photo ? await run() : await withEntry(pdfEntry(SCAN, 3), run);
+  return { r, written: writes(w) !== before, asked: tr.calls.transcribe.map((q) => q.pages) };
+}
+const unfilled = (r) => [r.status, r.body.ok, r.body.transcription.performed, r.body.transcription.written];
+
+test("R71 (T44; N869; DEC-191 (4)): nothing sent (AGENT_WORKER_UNBOUND, EVIDENCE_ABSENT, NO_PAGE_RENDERED) stays 200 performed false, nothing written, and says transcribe.notsent with {why} from transcribe.why.*, by key; control: a post agent-worker answered ok filling nothing says transcribe.none", async () => {
+  for (const [reason, why] of [["AGENT_WORKER_UNBOUND", "transcribe.why.unbound"], ["EVIDENCE_ABSENT", "transcribe.why.evidenceabsent"],
+                               ["NO_PAGE_RENDERED", "transcribe.why.norender"]]) {
+    const { r, written, asked } = await act({ answer: { ok: false, reason } });
+    assert.deepEqual(asked, [[1, 2]], reason);
+    assert.deepEqual(unfilled(r), [200, true, false, false], reason);
+    assert.match(r.body.transcription.why, new RegExp(reason));
+    assert.equal(r.body.says, fill("transcribe.notsent", { why: WORD(why) }), reason);
+    assert.equal(written, false);
+  }
+  const none = (await act({ answer: { ok: true, engine: "claude-test", version: "1", pages: [] } })).r;
+  assert.equal(none.body.says, fill("transcribe.none", { pages: "2, 3", why: none.body.transcription.why }));
+  assert.doesNotMatch(none.body.says, /^Nothing was sent/);
+});
+
+test("R71 (T44; N869; DEC-191 (5)): a photo whose page plane R36's refused names IMAGE_TOO_LARGE, or UNSUPPORTED_JPEG_PROCESS in a progressive process, says transcribe.picture.unprepared with its transcribe.picture.why.*; any other refusal of a picture's page, NO_PAGE_RENDERED without refused, and a PDF's page too large say transcribe.notsent with transcribe.why.norender", async () => {
+  const refusedAs = (...refused) => ({ answer: { ok: false, reason: "NO_PAGE_RENDERED", ...(refused.length ? { refused } : {}) } });
+  const unprepared = (why) => fill("transcribe.picture.unprepared", { why: WORD(why) });
+  const norender = fill("transcribe.notsent", { why: WORD("transcribe.why.norender") });
+  for (const [opts, says] of [
+    [refusedAs({ page: 0, reason: "IMAGE_TOO_LARGE" }), unprepared("transcribe.picture.why.toolarge")],
+    [refusedAs({ page: 0, reason: "UNSUPPORTED_JPEG_PROCESS", process: "progressive-huffman" }), unprepared("transcribe.picture.why.progressive")],
+    [refusedAs({ page: 0, reason: "UNSUPPORTED_JPEG_PROCESS", process: "differential-progressive-arithmetic" }), unprepared("transcribe.picture.why.progressive")],
+    /* controls: no own words for these */
+    [refusedAs({ page: 0, reason: "DECODE_FAILED" }), norender],
+    [refusedAs({ page: 0, reason: "UNSUPPORTED_JPEG_PROCESS", process: "lossless-huffman" }), norender],
+    [refusedAs({ page: 0, reason: "UNSUPPORTED_JPEG_PROCESS" }), norender],
+    [refusedAs(), norender],
+  ]) {
+    const { r, written, asked } = await act(opts, { photo: true });
+    assert.deepEqual(asked, [[0]]);
+    assert.deepEqual(unfilled(r), [200, true, false, false]);
+    assert.equal(r.body.says, says, JSON.stringify(opts.answer.refused));
+    assert.equal(written, false);
+  }
+  /* control: a PDF's page refused as too large is no photo */
+  const pdf = (await act(refusedAs({ page: 1, reason: "IMAGE_TOO_LARGE" }, { page: 2, reason: "IMAGE_TOO_LARGE" }))).r;
+  assert.equal(pdf.body.says, norender);
+});
+
+test("R71 (T44; N876; DEC-192 (2)): sent and nothing back: AGENT_WORKER_SILENT says transcribe.failed with transcribe.why.silent; agent-worker R74's ending (MODEL_SILENT, MODEL_REFUSED) transcribe.failed with transcribe.why.ended; 200 performed false, nothing written; never transcribe.none", async () => {
+  for (const [answer, why] of [
+    [{ ok: false, reason: "AGENT_WORKER_SILENT" }, "transcribe.why.silent"],
+    [{ ok: false, reason: "MODEL_SILENT", code: "MODEL_SILENT", ending: "silent", detail: "d", worker: "agent-worker", usage: {} }, "transcribe.why.ended"],
+    [{ ok: false, reason: "MODEL_REFUSED", code: "MODEL_REFUSED", ending: "refused", detail: "d", worker: "agent-worker" }, "transcribe.why.ended"],
+  ]) {
+    const { r, written } = await act({ answer });
+    assert.deepEqual(unfilled(r), [200, true, false, false], answer.reason);
+    assert.equal(r.body.says, fill("transcribe.failed", { why: WORD(why) }), answer.reason);
+    assert.doesNotMatch(r.body.says, /found no words/);
+    assert.equal(written, false);
+  }
+});
+
+test("R71 (T44; N869, N876; DEC-192 (1); K2713): a refusal (tier 4's aiRefusal, the keep-away refusal, agent-worker's after the post with its row) keeps its envelope, ok false with its code, check, translation and a refusal's status, nothing written, and gains says transcribe.refused with {reason} its translation exactly as relayed, its placeholders left for the screen; controls: agent-worker's refusal with no row (BAD_PAGES) says nothing of this module's own, and a declining AI with no row is 200 performed false", async () => {
+  const NO_ACCOUNT = { ok: false, reason: "NO_ACCOUNT", code: "NO_ACCOUNT", check: "C-29.20", translation: "No Claude account serves you here.", detail: "none" };
+  const KEPT = { ok: false, reason: "PROJECT_AI_KEPT_AWAY", code: "PROJECT_AI_KEPT_AWAY", check: "C-29.38",
+                 translation: "This project keeps its material away from AI{for_uses}. {member} set this on {date}: “{reason}”.",
+                 keep_away: { reason: "privacy", set_by: "member:m2", set_at: "2026-10-01" }, project: "P", use: "transcribe" };
+  const WORKER = { ok: false, reason: "SOME_REFUSAL", code: "SOME_REFUSAL", check: "C-1.1", translation: "A refusal of {who}.", worker: "agent-worker" };
+  for (const [opts, refusal, sent] of [[{ account: NO_ACCOUNT, answer: null }, NO_ACCOUNT, false], [{ away: KEPT, answer: null }, KEPT, false],
+                                       [{ answer: WORKER }, WORKER, true]]) {
+    const { r, written, asked } = await act(opts);
+    assert.equal(r.body.ok, false, refusal.code);
+    assert.ok(r.status >= 400 && r.status < 500, "a refusal's status, never 200");
+    assert.deepEqual(r.body, { ...refusal, says: WORD("transcribe.refused").replace("{reason}", refusal.translation) });
+    assert.equal("transcription" in r.body, false);
+    assert.deepEqual(asked.length > 0, sent);
+    assert.equal(written, false);
+  }
+  assert.match((await act({ away: KEPT, answer: null })).r.body.says, /\{member\} set this on \{date\}: “\{reason\}”\.$/, "placeholders kept");
+  for (const answer of [{ ok: false, reason: "BAD_PAGES", code: "BAD_PAGES", detail: "d", worker: "agent-worker" }, { ok: false, reason: "busy" }]) {
+    const { r, written } = await act({ answer });
+    assert.deepEqual(unfilled(r), [200, true, false, false], answer.reason);
+    assert.equal("says" in r.body, false, `${answer.reason}: no row, no sentence`);
+    assert.equal(written, false);
+  }
+});
