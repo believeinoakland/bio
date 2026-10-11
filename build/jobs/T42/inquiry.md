@@ -1,6 +1,6 @@
 # inquiry (T42)
 
-**Status** · session_01EDm9ED7cpaUXzcsWKrLJar · depth 2 · COMPLETE · handled B2
+**Status** · session_01EDm9ED7cpaUXzcsWKrLJar · depth 2 · COMPLETE · handled B3
 
 ## Reading (mechanics §17, K2304)
 
