@@ -64,3 +64,7 @@ Readings of R34 I am building on (carrying on meanwhile; none blocks me):
 - ownership public-read tranche/T45: 4 files changed; 0 failures.
 
 Size (session_01WS4XsL2gbzA2YsxsAb1DTg): test runs 15, module lines 3648
+
+## J3 · REPORT
+
+Correction to J2's test line: plane is 194 pass / 2 fail (rule 4 (11), (9)) on its own; `test/system/migrate-released.test.mjs` was run separately after the batch run hit its time limit: 1 pass, 0 fail. Nothing else changes.
