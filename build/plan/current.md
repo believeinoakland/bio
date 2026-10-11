@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #152 · session_01LmewcofcJp9zTHjyQosCGw · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #13 session_01TfvYox4Sw4X6dSjqk6M1oK; bundler: BUNDLER #14 session_01X5bkceFD2GHGbfimdSRiKL; record-core: RECORD-CORE #20 session_013PmyJwtkkmXmvfs4xFhWb6; membership: MEMBERSHIP #33 session_01RzYrca5P3xs9xcgtmKsFnL; credentials: CREDENTIALS #12 session_01SmVin6JuSDfPb4PyoweFzP; promotion: PROMOTION #40 session_0152YS47KdFKKexnY73o2BzS; doorbell: DOORBELL #1 session_01LUJMTyBUMuQMAruQweWeZp; capture: CAPTURE #26 session_01Kru2kyU9rCEgAQWN4QGh4o; sources: SOURCES #13 session_01SnzeWkLZjLCzHaakfd3erC; reading-pipeline: READING-PIPELINE #10 session_01Tc6bhUF3M5vKa36y66nHwL; extraction: EXTRACTION #19 session_014f4EL4v2VbnLjwqMpQYA8o; retrieval: RETRIEVAL #17 session_019vnhhXM8NuoLEZ5m4aXXJA; lines: LINES #3 session_0163snLavE1iNycSFMG4uPJy; money: MONEY #4 session_01Ux9Ca6B1viDvKwTEe8rhGB
+**Jobs** · record-grammar: RECORD-GRAMMAR #13 session_01TfvYox4Sw4X6dSjqk6M1oK; bundler: BUNDLER #14 session_01X5bkceFD2GHGbfimdSRiKL; record-core: RECORD-CORE #20 session_013PmyJwtkkmXmvfs4xFhWb6; membership: MEMBERSHIP #33 session_01RzYrca5P3xs9xcgtmKsFnL; credentials: CREDENTIALS #12 session_01SmVin6JuSDfPb4PyoweFzP; promotion: PROMOTION #40 session_0152YS47KdFKKexnY73o2BzS; doorbell: DOORBELL #1 session_01LUJMTyBUMuQMAruQweWeZp; capture: CAPTURE #26 session_01Kru2kyU9rCEgAQWN4QGh4o; sources: SOURCES #13 session_01SnzeWkLZjLCzHaakfd3erC; reading-pipeline: READING-PIPELINE #10 session_01Tc6bhUF3M5vKa36y66nHwL; extraction: EXTRACTION #19 session_014f4EL4v2VbnLjwqMpQYA8o; retrieval: RETRIEVAL #17 session_019vnhhXM8NuoLEZ5m4aXXJA; lines: LINES #3 session_0163snLavE1iNycSFMG4uPJy; money: MONEY #4 session_01Ux9Ca6B1viDvKwTEe8rhGB; inquiry: INQUIRY #17 session_01EDm9ED7cpaUXzcsWKrLJar; hypotheses: HYPOTHESES #6 session_01Fm5UfnSMEt4ujf1MKJezUn; steps: STEPS #2 session_01WWPqUf9HsGVbwvRQC3juMx; citation: CITATION #11 session_01Ry8XJgz92P5UcBrruehLrc; basis-versions: BASIS-VERSIONS #14 session_01AkVF4j1J6wBNaS7xV4FvCJ; ai-use: AI-USE #3 session_01AMQaBZVH3bFkd2cy8mBiz3; run-productions: RUN-PRODUCTIONS #9 session_014kGdQn9r6yt8hA7AVpanwj; question-explorer: QUESTION-EXPLORER #2 session_01RQyJav79UQDg97kG4FrsPk; agent-model: AGENT-MODEL #6 session_01HRAiKgMDasxpLF2LBqtZq6; agent-worker: AGENT-WORKER #17 session_015HxKEDkguQKE7aafHdePDD
 
 **At T42's opening (K2607):** opened 2026-10-10 from `main` @ 65490c5e33 (T41 closed, K2603), with `tranche/T41`'s later build state merged in (K1703); Bob: "keep going until I tell you to pause" (K2605). Bob's meter at the opening: 18% weekly (primary; K2615). Development runs through every layer; the 80% pause (K2341) and the account-switch rule stand.
 
@@ -27,7 +27,7 @@ It is the only module marked `legacy` in `modules.json`.
    3. the UI's DEC-88 tests (Bob's), carried;
    4. legacy-ui `statement-ack.test.mjs` (N794, K633);
    5. (cleared at T42-3's merge, K2623) membership R83's `MODULE_ORDER` tests; since then each new module named "not yet built" until its own merge;
-   6. answer-envelope `catalogue-end.test.mjs`'s pins for `PROPOSAL_NO_RUN` and `NO_SUCH_PROPOSAL` (T41 rule 4 (21)) until T42-27 (N843);
+   6. answer-envelope `catalogue-end.test.mjs`'s pins for `PROPOSAL_NO_RUN` and `NO_SUCH_PROPOSAL` (T41 rule 4 (21)) until T42-27 (N843); from T42-13's merge also `families.test.mjs`:425 (`HELD_EARLIER` lists C-142.28 as held earlier) until T42-14, T42-21 and T42-27 (K2651);
    7. `test/system/migrate-released.test.mjs`'s `ai_ceilings` arm (T41 rule 4 (24)) until T42-17 (N848);
    8. (cleared at T42-2's merge, K2612) `fleetbundles` agent-worker's input count (K2520 (a));
    9. from T42-6's merge: doorbell R25's ownership arm until capture's delete (T43; rule 3 (4));
@@ -36,6 +36,8 @@ It is the only module marked `legacy` in `modules.json`.
    13. (cleared at T42-7's merge, K2631) from T42-6's merge, doorbell R21's `where` arm until CAPTURE #26 re-points the nine rows (K2627).
    10. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
    14. from T42-8's merge (sources re-pointed to `doorbellOf`, 636f27bb74): case-disclosures `carries.test.mjs`:139 (R7 "no new table", 159 vs 157: `acquisition`'s `archive_entries` and `unpack_days` created at first use inside the read) until T42-23b (MONEY #4 J1; K2643).
+   15. from L6's close (agent-worker's bundle regenerated with `src/transcribe.mjs`, T42-20): bundler's `test/system/fleetbundles.test.mjs`:248–261 pins agent-worker's 25 inputs, 26 after it, until N860 (T43; bundler's layer L1 closed in T42; AGENT-WORKER #17 J1; K2650).
+   (7) cleared at T42-17's merge (K2650).
 
 **Text owed before each layer's START (BOB's wording, P5):**
 - L2: credentials' `accountUsesOf` (N831), from `draft-T42-reqs.md`.

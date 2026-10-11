@@ -33,7 +33,7 @@ Terms. An **owner** is the holder of one AI account: `group` (its administrators
   - Anything else is refused `AI_LIMIT_INVALID`, naming the field.
   - Who may set it is the owner's own act: the member (`NOT_YOUR_CEILING`); a project owner (`credentials`' R54 refusals); an active administrator (`NOT_AN_ADMIN`).
   - At most one limit is held per owner, scope, unit and period. Each set is appended with who and when.
-  - The migration writes today's ceilings as B4 says: a member's own daily ceiling becomes that member's account's `overall` day limits in tokens and calls; the copy-wide ceiling becomes the group account's `per_member` day limits. (T42; N848; K2592) Once carried, `ai_ceilings` is dropped in the same migration, as R1's pre-T40 counter table is, so a migrated store holds no table a fresh one lacks. A store whose carry already ran but which still holds the table drops it at its next migration. Idempotent. *(not yet met: T42)*
+  - The migration writes today's ceilings as B4 says: a member's own daily ceiling becomes that member's account's `overall` day limits in tokens and calls; the copy-wide ceiling becomes the group account's `per_member` day limits. (T42; N848; K2592) Once carried, `ai_ceilings` is dropped in the same migration, as R1's pre-T40 counter table is, so a migrated store holds no table a fresh one lacks. A store whose carry already ran but which still holds the table drops it at its next migration. Idempotent.
 
 **Judging** (`useCheck`)
 - **R3** (D38 C, D39; B3, B5; was `ai-runs` R50's judging half) `useCheck({owner, member, use, at})` answers `null` or `AI_LIMIT_REACHED` with `{whose, scope, unit, period}` and its plain-words row, naming no cost.
@@ -42,7 +42,7 @@ Terms. An **owner** is the holder of one AI account: `group` (its administrators
     - its `overall` limit, counted over the uses that are not exclusive, unless `use`'s limit is exclusive;
     - its `per_member` limit, counted over `member`'s use of that account.
   - It judges only the paying account's limits (D38: never another account's money limits).
-  - For `explore` it refuses `EXPLORE_NOT_ENABLED` when the owner's `explore` setting is `no` (A5, B6; K2400). With `yes` and no `explore` limit held, `explore` is judged against the `overall` limit alone; `ask` without that day's approval is R6's answer, not this one's. (T42; N831) The owner's `explore` value is read through `credentials.accountUsesOf` (its R62), with no viewer. It reads as `no` when the account is not held, cannot be read, or holds a value other than `no`, `ask` or `yes` (fail closed). It is never read through `accountUses` asked as one of the account's owners. *(not yet met: T42)*
+  - For `explore` it refuses `EXPLORE_NOT_ENABLED` when the owner's `explore` setting is `no` (A5, B6; K2400). With `yes` and no `explore` limit held, `explore` is judged against the `overall` limit alone; `ask` without that day's approval is R6's answer, not this one's. (T42; N831) The owner's `explore` value is read through `credentials.accountUsesOf` (its R62), with no viewer. It reads as `no` when the account is not held, cannot be read, or holds a value other than `no`, `ask` or `yes` (fail closed). It is never read through `accountUses` asked as one of the account's owners.
   - It writes nothing and never throws. A counter that cannot be read answers the refusal (fail closed).
 
 **Reads** (`aiUsage`, `aiUsageMine`, `limitsReached`)
