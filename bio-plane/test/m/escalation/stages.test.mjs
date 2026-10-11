@@ -234,21 +234,20 @@ test("R9 escalationAttach refuses in order MACHINE_CANNOT_ATTACH, NO_SUCH_ESCALA
   assert.deepEqual(read(w).actions.map((a) => [a.action, a.stage]), [[good, 2], [both, 2]]);
 });
 
-test("R23 escalationAttach refuses an action carrying a premise_override (actions R8) ACTION_PREMISE_OVERRIDDEN, after NO_SUCH_ACTION and before NOT_A_BREACH_ACTION, at every stage, whatever its legs; nothing is written, and the same action without the override attaches", () => {
+test("R23 escalationAttach refuses an action carrying a premise_override (actions R8) ACTION_PREMISE_OVERRIDDEN, after NO_SUCH_ACTION and before NOT_A_BREACH_ACTION, at every stage, while it has no rests_on leg naming this escalation's determination; nothing is written, and the same action without the override attaches", () => {
   const w = seeded();
   opened(w);
   const row = ESCALATION_CHECKS.ACTION_PREMISE_OVERRIDDEN;
   assert.equal(row.check, "C-116.45");
   /* the override's own case: a breach action resting on no determined breach */
   const bare = w.action({ project: w.P, restsOn: [], override: "The office has not answered; no determination yet." });
-  /* with a leg on this determination, or on another, or recorded without breach: the override still refuses first */
-  const legged = w.action({ project: w.P, restsOn: [w.D], override: "Stated anyway." });
+  /* with a leg on another determination, or recorded without breach: the override still refuses first */
   const other = w.action({ project: w.P, restsOn: ["CONF-2026-0777-other"], override: "Another matter." });
   const noBreach = w.action({ project: w.P, breach: false, restsOn: [], override: "Not a breach." });
   const plain = w.action({ project: w.P, restsOn: [w.D] });
   const before = w.snapshot();
   const overridden = (stageName) => {
-    for (const a of [bare, legged, other, noBreach]) {
+    for (const a of [bare, other, noBreach]) {
       const r = attach(w, a);
       assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation, r.action],
         [false, "ACTION_PREMISE_OVERRIDDEN", "ACTION_PREMISE_OVERRIDDEN", "C-116.45", row.translation, a], `${a} at ${stageName}`);
@@ -274,7 +273,7 @@ test("R23 escalationAttach refuses an action carrying a premise_override (action
   for (const stage of [5, 7]) {
     const x = seeded();
     toStage(x, stage);
-    const a = x.action({ project: x.P, restsOn: [x.D], override: "Overridden." });
+    const a = x.action({ project: x.P, restsOn: [], override: "Overridden." });
     assert.equal(x.esc.escalationAttach({ reason: "This act serves the stage.", id: x.E, action: a, author: V("bob"), viewer: V("bob"), purpose: "testimony",
       standards: ["STD-2026-0001-a"] }).reason, "ACTION_PREMISE_OVERRIDDEN", `stage ${stage}`);
   }

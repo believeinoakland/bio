@@ -217,6 +217,24 @@ const recordedAtOf = (d) => d.at ?? null;
  *  by actions' own rule (`Actions.overrideOf`), read after `actionRead` has answered the action to this viewer. */
 const overrideOf = (text) => Actions.overrideOf(parseFm(text));
 
+/** R30 (T45; actions R87): whether `actions` answers an action confidential, by its latest scope statement as the read
+ *  carries it (`confidential: true`, or a scope stating it); anything else reads not confidential. */
+function isConfidential(read) {
+  if (!isObj(read)) return false;
+  if (read.confidential === true) return true;
+  const sc = read.scope;
+  return sc === "confidential" || (isObj(sc) && (sc.confidential === true || sc.scope === "confidential"));
+}
+
+/** R23 (T45; actions R8 (c), R74, R25): the override an attachment records and the read shows: its ground, reason, who
+ *  and when, from `actionRead`'s `premise_override` (the document's, by actions' rule, where the read lacks a field); a
+ *  ground not stated reads null, never filled. */
+function overrideShown(read, fromDoc) {
+  const r = isObj(read) ? read : {};
+  return { ground: isObj(r.ground) ? r.ground : null, reason: str(r.reason) || (fromDoc && fromDoc.reason) || null,
+           by: str(r.by) || null, at: str(r.at) || null };
+}
+
 /** actions R25/R29 (K253): an action's correspondence ledger, in order, `[{ord, direction, at, recorded_at}]`. */
 function ledgerOf(block) {
   const raw = Array.isArray(block.correspondence) ? block.correspondence : [];
@@ -312,6 +330,14 @@ export class Escalation {
     return r && r.ok !== false ? ledgerOf(r) : null;
   }
 
+  /* R6 (T45; actions R82): whether an action owes a reply: false only when it states `reply_owed: false`, as `actionRead`
+     answers it or, where the read does not carry the field, as its document states it; absent reads owed. */
+  #replyOwed(action, read) {
+    if (isObj(read) && read.reply_owed !== undefined) return read.reply_owed !== false;
+    const fm = parseFm(this.#text(action));
+    return !(fm && fm.reply_owed === false);
+  }
+
   /* R26 (K903 (4), DEC-36): each attached action as `actions` answers it to this viewer, read once per attachment and
      shared by the triggers and the actions; null where `actionRead` refuses it, which withholds it whole. */
   #sight(attached, viewer) {
@@ -398,10 +424,19 @@ export class Escalation {
       const alts = [];
       for (const a of acts) {
         const s = firstSent(a.action);
+        /* R6 (T45; actions R82): an action stating reply_owed: false owes no reply, so neither its clock nor the lack of
+           a reply (a no_response entry) triggers; a reply that does come (received) still does. */
+        const owed = this.#replyOwed(a.action, seen.get(a.action));
         if (s) {
-          const reply = s.ledger.slice(s.index + 1).find((x) => x.direction === "received" || x.direction === "no_response");
+          const reply = s.ledger.slice(s.index + 1)
+            .find((x) => x.direction === "received" || (owed && x.direction === "no_response"));
           if (reply) alts.push({ ms: Math.max(instantMs(s.entry.at), instantMs(reply.at)),
                                  ids: [a.action, `${a.action}#${s.entry.ord}`, `${a.action}#${reply.ord}`] });
+        }
+        if (!owed) {
+          notes.push({ action: a.action, reply_owed: false, says: "no reply owed: this notification action states that "
+                       + "no reply is owed, so stage 3 never triggers on it by time or by the lack of a reply" });
+          continue;
         }
         const facts = actionFacts(this.#text(a.action), nowMs, place) || {};
         if (!facts.clock_next)
@@ -473,6 +508,8 @@ export class Escalation {
   #compliance(e, viewer) {
     if (!e.act) return { state: "undetermined", ids: [], why: "the determination names no act id, so no later determination of the same act can be found" };
     const per = [];
+    /* R14 (T45; conformance R37): the cure links standing on the escalation's determination, per standard */
+    const cures = this.#cures(e, viewer);
     for (const standard of e.standards) {
       const found = [];
       let after = null;
@@ -480,21 +517,66 @@ export class Escalation {
         const r = this.conformance.determinationsFor({ act: e.act, standard, outcome: "compliant", live: true, after, viewer });
         if (!r || r.ok === false) return { state: "undetermined", ids: [], why: "the determinations of the act could not be read" };
         for (const d of r.items || []) {
-          const o = outcomesOf(d).find((x) => x.standard === standard);
-          if (o && o.outcome === "compliant" && liveOf(d) && actIdOf(d) === e.act
-              && instantOrder(recordedAtOf(d), e.openedAt) > 0) found.push(d.id);
+          if (this.#restores(d, standard, e, viewer)) found.push(d.id);
         }
         if (!r.truncated) break;
         after = r.cursor ?? (r.items || []).at(-1)?.id ?? null;
         if (!after) break;
       }
-      per.push({ standard, met: found.length > 0, ids: found });
+      /* a curing act: a later act of the same office a member linked as the cure, its determination standing */
+      const cured = [];
+      for (const link of cures.filter((c) => c.standard === standard && c.cure_standing === true && typeof c.cure === "string")) {
+        const d = this.conformance.determinationRead({ id: link.cure, viewer });
+        if (d && d.ok !== false && this.#restores(d, standard, e, viewer, true)) cured.push({ cure: link.cure, link: link.link ?? null });
+      }
+      const ids = [...found, ...cured.map((c) => c.cure).filter((c) => !found.includes(c))];
+      per.push({ standard, met: ids.length > 0, ids, ...(cured.length ? { cured_by: cured } : {}),
+                 ...(ids.length ? {} : { missing: "no live compliant determination, recorded after the escalation opened, of the "
+                   + "same act or of a later act of the same office linked as its cure" }) });
     }
     const lacking = per.filter((p) => !p.met).map((p) => p.standard);
     return { state: lacking.length ? "not_met" : "met", ids: per.flatMap((p) => p.ids), standards: per,
-             why: lacking.length ? `no live compliant determination of the same act recorded after the escalation opened `
-                                   + `for: ${lacking.join(", ")}`
-                                 : "every standard pursued has a live compliant determination of the same act recorded after the escalation opened" };
+             why: lacking.length ? `no live compliant determination of the same act, or of a curing act of the same office, `
+                                   + `recorded after the escalation opened for: ${lacking.join(", ")}`
+                                 : "every standard pursued has a live compliant determination, of the same act or of its "
+                                   + "linked cure, recorded after the escalation opened" };
+  }
+
+  /* R14: a determination that restores compliance for `standard`: live, compliant for it, recorded after the escalation
+     opened, and of the same act; or, for a cure, of a later act of the same office (conformance R36's rule: equal
+     office entity, else, where either is not named, equal role and body). */
+  #restores(d, standard, e, viewer, cure = false) {
+    const o = outcomesOf(d).find((x) => x.standard === standard);
+    if (!o || o.outcome !== "compliant" || !liveOf(d) || isObj(d.void)) return false;
+    if (!(instantOrder(recordedAtOf(d), e.openedAt) > 0)) return false;
+    if (!cure) return actIdOf(d) === e.act;
+    if (actIdOf(d) === e.act) return true;
+    const mine = this.conformance.determinationRead({ id: e.determination, viewer });
+    const a = isObj(actOf(mine || {}).actor) ? actOf(mine).actor : null, b = isObj(actOf(d).actor) ? actOf(d).actor : null;
+    if (!a || !b) return false;
+    if (str(a.entity_id) && str(b.entity_id)) return a.entity_id === b.entity_id;
+    return str(a.role) !== "" && a.role === b.role && a.body === b.body;
+  }
+
+  /* R14 (T45; conformance R37): the standing cure links on the escalation's determination as `curesOf` answers them to
+     this viewer, `[{link, cure, standard, by, at, cure_standing}]`; none where conformance holds no such read yet or
+     answers none, so only the same act can restore compliance (never read as restored). */
+  #cures(e, viewer) {
+    if (typeof this.conformance.curesOf !== "function") return [];
+    const r = this.conformance.curesOf({ determination: e.determination, viewer });
+    if (!r || r.ok === false) return [];
+    const out = [];
+    const take = (x, standard) => {
+      if (!isObj(x)) return;
+      if (isObj(x.link) && !("cure" in x)) return take(x.link, standard ?? x.standard);
+      if (typeof x.cure === "string") out.push({ ...x, standard: x.standard ?? standard ?? null });
+    };
+    for (const k of ["standing", "links", "items", "standards", "cures"]) {
+      const v = r[k];
+      if (Array.isArray(v)) v.forEach((x) => take(x, isObj(x) ? x.standard : null));
+      else if (isObj(v)) for (const [std, x] of Object.entries(v)) take(x, std);
+    }
+    return out;
   }
 
   #consequencesState(e, viewer) {
@@ -709,6 +791,7 @@ export class Escalation {
       opened_reason: e.openedReason,
       as_of: iso(at), actor, history: this.#history(e.id), standards: e.standards, actions: this.#actionsOf(e, viewer, seen, actor),
       evaluations: this.#evaluations(e.id), triggers, notes, proposed, exit: this.#exit(e, viewer),
+      context: this.#context(e, d, viewer),
     };
     answer = this.#withhold(answer, attached, seen);
     if (e.state === "suspended")
@@ -934,15 +1017,18 @@ export class Escalation {
     /* actions R43 (N217, K275): the one answer to an action absent, unseen or not an action, minted there. */
     if (!a || a.ok === false) return noSuchAction(action);
     const override = overrideOf(this.#text(action));
+    const legs = Array.isArray(a.legs) ? a.legs : [];
+    const restsHere = legs.some((l) => isObj(l) && l.kind === "rests_on" && l.target === e.determination);
+    /* R23 (T45; actions R8 (d); K600 (a) revised): refused only while the action has no rests_on leg naming this
+       escalation's determination; once a member's revision adds one, it attaches, the override shown with it. */
     /* DEC-49 REGION is-premise-established */
-    if (override)
+    if (override && !restsHere)
       return refusal("ACTION_PREMISE_OVERRIDDEN", "that action states a premise_override: it was recorded without a "
                      + "determined breach to rest on, and an escalation pursues a determined breach only. Nothing was written.",
                      { action, premise_override: override });
     /* END DEC-49 REGION is-premise-established */
-    const legs = Array.isArray(a.legs) ? a.legs : [];
     /* DEC-49 REGION is-breach-action */
-    if (a.breach !== true || !legs.some((l) => isObj(l) && l.kind === "rests_on" && l.target === e.determination))
+    if (a.breach !== true || !restsHere)
       return refusal("NOT_A_BREACH_ACTION", "an escalation's act is an action whose document states breach: true and "
                      + "that rests on this escalation's determination. Nothing was written.", { determination: e.determination });
     /* END DEC-49 REGION is-breach-action */
@@ -957,7 +1043,8 @@ export class Escalation {
       return refusal("ALREADY_ATTACHED", "that action is already attached to an escalation, at one stage. Nothing was written.",
                      held.escalation_id === e.id ? { escalation: e.id, stage: held.stage } : {});
     /* END DEC-49 REGION is-attached-once */
-    const entry = { kind: "attach", action, stage: e.stage, reason: str(reason), author, at: this.now() };
+    const entry = { kind: "attach", action, stage: e.stage, reason: str(reason), author, at: this.now(),
+                    ...(override ? { premise_override: overrideShown(a.premise_override, override) } : {}) };
     if (e.stage === 7) {
       /* DEC-49 REGION is-accountability-purpose */
       if (!ACCOUNTABILITY_PURPOSES.includes(purpose))
@@ -997,7 +1084,7 @@ export class Escalation {
     const w = this.#append(e, entry, { blurb: "Action attached" });
     if (!w.ok) return w;
     return { ok: true, id: e.id, action, stage: e.stage, ...(e.stage === 7 ? { purpose, standards: entry.standards } : {}),
-             reason: entry.reason, author, at: entry.at };
+             reason: entry.reason, author, at: entry.at, ...(entry.premise_override ? { premise_override: entry.premise_override } : {}) };
   }
 
   /** R10: a member's reading of a response, at stage 4. */
@@ -1497,17 +1584,47 @@ export class Escalation {
     for (const r of this.#rows(`SELECT escalation_id FROM escalations ORDER BY escalation_id`)) {
       const e = this.#row(r.escalation_id, viewer);
       if (!e || !concerned(e.determination)) continue;
-      const seen = this.#sight(this.#attachments(e.id), viewer);
+      const attached = this.#attachments(e.id);
+      const seen = this.#sight(attached, viewer);
+      /* R30 (T45; actions R87, v0.2 rule 15): an escalation every attached action of which is confidential is not
+         answered at all (one with none attached is answered), and a confidential action's attachment never is */
+      const secret = new Set(attached.filter((a) => isConfidential(seen.get(a.action))).map((a) => a.action));
+      if (attached.length && secret.size === new Set(attached.map((a) => a.action)).size) continue;
       for (const x of this.#history(e.id)) {
         if (x.unreadable || !TIMELINE_KINDS.includes(x.kind)) continue;
-        if (x.kind === "attach" && !seen.get(x.action)) continue;
+        if (x.kind === "attach" && (!seen.get(x.action) || secret.has(x.action))) continue;
         const t = instantMs(x.at);
         if (!(t >= lo && t <= hi)) continue;
-        items.push({ at: x.at, label: timelineLabel(e.id, x), ref: e.id, kind: x.kind });
+        /* case-authoring R57: each item marked public; a label names no person and no reason (a stop is dated only) */
+        items.push({ at: x.at, label: timelineLabel(e.id, x), ref: e.id, kind: x.kind, public: true });
       }
     }
     items.sort((a, b) => instantOrder(a.at, b.at) || (a.ref < b.ref ? -1 : a.ref > b.ref ? 1 : 0));
     return { items: items.slice(0, cap), truncated: items.length > cap, limit: cap };
+  }
+
+  /* R32 (T45; S1 §C 13): the evidence-seeking acts beside the escalation: the actions the viewer may see that rest on its
+     determination or on one of its findings and are not breach actions, each with its kind, first sent date and
+     resolution, in id order. Never an attachment, never a trigger. `undetermined` where they could not be read. */
+  #context(e, d, viewer) {
+    const targets = [e.determination, ...(d && d.ok !== false && Array.isArray(d.findings)
+      ? d.findings.map((f) => (isObj(f) ? str(f.finding) : "")).filter(Boolean) : [])];
+    const ids = new Set();
+    for (const t of [...new Set(targets)]) {
+      const listed = this.#actionsResting(t, viewer);
+      if (!listed) return { state: "undetermined", items: [], says: "the actions resting on the determination could not be read" };
+      listed.forEach((id) => ids.add(id));
+    }
+    const items = [];
+    for (const id of [...ids].sort()) {
+      const a = this.actions.actionRead({ id, viewer });
+      if (!a || a.ok === false || a.breach === true) continue;
+      const sent = ledgerOf(a).find((x) => x.direction === "sent");
+      items.push({ action: id, kind: a.kind ?? null, sent_at: sent ? sent.at : null,
+                   resolution: typeof a.resolution === "string" ? a.resolution : null, state: a.current_state ?? null });
+    }
+    return { items, says: "evidence-seeking acts on the determination or its findings (records requests, requests for "
+             + "comment and the like): context, never attached and never a trigger" };
   }
 
   /* R29: the ids of the actions resting on the determination that `viewer` may see (`actions.actionsFor`, its R30),
