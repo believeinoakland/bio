@@ -72,3 +72,7 @@ My own worker read the rest of the module whole: `checks.mjs`, `schema.mjs` and 
 **Deferred:** none. **Found in another module:** nothing. **Generated artifacts:** the plane bundle and `program.mjs` are made stale by this change to plane source (rule 4 (10), regenerated at the layer's close). **For BOB:** R11 and R30 are met; their `*(not yet met: T42)*` marks are BOB's to strike.
 
 Size (session_01LHHoRgwt6hGfxJ2Qx2MQgt): test runs 8, module lines 2145
+
+## J1 · COMPLETE
+
+T42-24 applied: R30 (head refusals asked before any measure; no calculation read on a refusal) and R11 (determinationsFor: fixed statements per page, eventForAct once per distinct ACT- id; answer unchanged). New tests determine.test.mjs:574 and reads.test.mjs:430, each failing on the old code. conformance 89/89; users green except answer-envelope families.test.mjs:425 (rule 4 (6), accepted); checks 0 failures. R11 and R30 marks are yours to strike. Record: build/jobs/T42/conformance.md.
