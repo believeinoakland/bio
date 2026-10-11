@@ -29,6 +29,7 @@ It is the only module marked `legacy` in `modules.json`.
    5. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close;
    7. from T45-1's merge (K2792): `action-grammar` `grammar.test.mjs` "R1, R11: actionKinds(view)" until T45-25; `filing-templates` `reads.test.mjs` "R26 offeredVersion" until T45-30; `filings` `packet.test.mjs` "R9 the six sections" until T45-31 (the test profile grew, R84);
    8. ~~`standards` R29 "the move to layer 5", until T45-2~~ cleared at T45-2's merge (K2796);
+   9. from T45-3's merge (K2797): plane `roster.test.mjs` "R5, R9 (T38-26; N783): project-roster's whole ops map is routed" (it pins the ops map, now with `projectscopeset`, `projectapprovalset`), until T45-47;
    6. (if T45-27's START finds the plane composes `actions`' start registrations itself) the plane's composition of the moved hold registrations, from L9's close until T45-47 (Measure first, M-T45-5).
 5. **Readings recorded with the folds, told to Bob as done** (K2781, K2782, P17): breach actions need a live *noncompliant* determination (actions R8 (a)); docket entries by a member's act are filed at once and made public by the manager's signing (DEC-116); phrasing lists hold English now, any other language reads undetermined and is never "nothing found"; the own-benefit list stays narrow (a remedy of harm is never matched); `none_exists` kept beside §6's outcomes; Tier 1 template machinery built, `@records-request` withheld until a named writer and a professional review exist; D54's existence-sight kept for a member's own project; a member's own project is never rescued (K2782); `public_comment` at Tier 1 (Design Requirement 8); `legal_organisations` widened to Tier 2 and to defence; the re-examination run started inside the recording act (ai-runs R77 amending R46); a voided basis "marked" as derived on read.
 
@@ -109,7 +110,7 @@ It is the only module marked `legacy` in `modules.json`.
 - **T45-46 · installer** · (**N894**, K2782) its README publishes the stewards' contact address, what they may do (withdraw shared services, never edit a group's record), and the plain guide to what a group holds and who could compel it; the same text in the public documentation (BOB's commit) · text BOB's; **the address is Bob's to name** (one act, asked at the opening).
 - **T45-47 · plane** · composition: the new modules' start registrations (`action-holds`, `action-replies`, `plan-work`, `following`'s, `case-authoring` R70's source, `steps` R29's holder, `standards` R53, `consequences` R19), the new ops' handlers; clears rule 4 (6) if opened · merges last in L11.
 
-**L11 merge order:** wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, installer, plane last. `control-plane` and `answer-envelope` join (before plane) only where their op maps must name a new module's ops, decided at T45-45's merge.
+**L11 merge order:** wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, installer, plane last. `control-plane`, `store-door` (its `projectId` parameter list) and `answer-envelope` join (before plane) only where their op maps must name a new module's ops, decided at T45-45's merge.
 
 ### New modules: places and id moves (K617, K624, K657, K1043)
 
