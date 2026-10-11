@@ -19,7 +19,7 @@
  *   record, membership     layer 2: `transact`, `readFile`, `bundleInfo`, `declarePurge`; `memberFacts`.
  *   actionPlans            `planRead`, `plansFor`, `planMark`, `registerCloseSnapshot` (its R6, R7, R43, R44).
  *   actions                `actionRead`, `registerResponseListener`, `place` (its R29, R95, R68).
- *   actionHolds            `projectHolds`, `holdsDue`, `holdsOf` (its R7, R3, R2; R7, R11).
+ *   actionHolds            `projectHolds`, `holdsDue`, `holdsOf` (its R7, R3, R2; R7, R11); through its factory (K2856).
  *   actionReplies          `aroseFrom`, `arisenFrom` (its R2; R10).
  *   escalation             `escalationsFor`, `escalationRead` (its R22, R2; R2, R3, R11).
  *   filings                `filingsFor` (its R13; R2, R6).
@@ -35,6 +35,7 @@ import { actionPlansOf, noSuchPlan, refusePlanClosed, refuseReason, refuseKeys, 
          ACTION_PLAN_CHECKS } from "../action-plans/index.mjs";
 import { isObj, str, isDay, isLine, normSubject, subjectKey } from "../action-plans/values.mjs";
 import { actionsOf, zoneOf } from "../actions/index.mjs";
+import { actionHoldsOf } from "../action-holds/index.mjs";
 import { escalationOf } from "../escalation/index.mjs";
 import { filingsOf } from "../filings/index.mjs";
 import { conformanceOf } from "../conformance/index.mjs";
@@ -654,7 +655,7 @@ export class PlanWork {
       const ids = new Set(acts.map((x) => x.action.id));
       const due = h.holdsDue({ viewer: sightOf(viewer) });
       return { state: "read",
-               project: ok(project) ? (project.items || project.projects || project.holds || []) : { state: "undetermined", why: "the project's holds could not be read" },
+               project: ok(project) ? project.projects || [] : { state: "undetermined", why: "the project's holds could not be read" },
                due: ok(due) ? (due.items || []).filter((x) => ids.has(x.action) || x.project === p.project) : { state: "undetermined", why: "the holds due could not be read" },
                source: { module: "action-holds" } };
     } catch { return { state: "undetermined", why: "the holds could not be read" }; }
@@ -901,7 +902,7 @@ export class PlanWork {
         const place = typeof item.target === "string" ? { target: item.target, ...(item.ord !== undefined ? { ord: item.ord } : {}) }
           : typeof item.project === "string" ? { project: item.project } : null;
         const r = h && place ? h.holdsOf({ ...place, viewer: sightOf(viewer) }) : null;
-        if (ok(r) && (r.statements || r.items || []).length)
+        if (ok(r) && Array.isArray(r.holds) && r.holds.length)
           found = { item: { kind: k, ...place }, owner: place.target ?? place.project };
       }
     } catch (e) { if (e instanceof ProviderAbsent) throw e; found = null; }
@@ -1083,7 +1084,7 @@ export function planWorkOf(host, deps) {
       duties: lazy("duties", () => dutiesOf(host, base)),
       readingGuides: lazy("readingGuides", () => readingGuidesOf(host, base)),
       aiRuns: lazy("aiRuns", () => aiRunsOf(host)),
-      actionHolds: d.actionHolds ?? null, actionReplies: d.actionReplies ?? null });
+      actionHolds: lazy("actionHolds", () => actionHoldsOf(host, base)), actionReplies: d.actionReplies ?? null });
     instances.set(host, i);
     i.migrate();
     record.declarePurge("plan-work", PLAN_WORK_TABLES);

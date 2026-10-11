@@ -1,13 +1,13 @@
 /* plan-work over the modules it uses: action-plans' test world (its fixture) gives the real record, membership,
-   promotion, actions, action-clocks and action-plans, on a real SQLite database; plan-work is built over them with
+   promotion, actions, action-clocks, action-plans and (merged, K2856) action-holds, on a real SQLite database; plan-work is built over them with
    stand-ins, in the shape of their Provides, for the modules whose facts a test controls: escalation (`escalationsFor`
-   R22, `escalationRead` R2, the fixture's own), filings (`filingsFor` R13), conformance (`curesOf` R37), action-holds
-   (`projectHolds` R7, `holdsDue` R3, `holdsOf` R2), action-replies (`aroseFrom`, `arisenFrom` R2), duties
+   R22, `escalationRead` R2, the fixture's own), filings (`filingsFor` R13), conformance (`curesOf` R37; a test may read it through the real module), action-replies (`aroseFrom`, `arisenFrom` R2), duties
    (`dutiesArisingIn` R31), reading-guides (`procedureGuidesFor` R13) and ai-runs (`open` R77). action-plans' T45
    services this module calls (`planMark` R43 in K2848's shape, `registerCloseSnapshot` R44, the marks in `planRead`) are
    stood in over the real module until its job merges (plan rule 1). Every test drives plan-work at its interface. */
 import { seeded, opened, option, choose, V, MACHINE, by, OFFICE, ms, DAY, NOW } from "../action-plans/fixture.mjs";
 import { planWorkOf } from "../../../src/plan-work/index.mjs";
+import { actionHoldsOf } from "../../../src/action-holds/index.mjs";
 
 export { V, MACHINE, by, OFFICE, ms, DAY, NOW, option, choose };
 
@@ -54,16 +54,9 @@ export function world(opts = {}) {
   } };
   const drafts = new Map();         // action -> [{filing, purpose, approval, sending}]
   const filings = { filingsFor: ({ action }) => ({ ok: true, action, drafts: drafts.get(action) || [] }) };
-  const holds = { project: [], due: [], of: new Map() };
-  const actionHolds = {
-    projectHolds: ({ projects }) => ({ ok: true, items: projects.map((p) => ({ project: p, held: holds.project.includes(p) })) }),
-    holdsDue: () => ({ ok: true, items: holds.due }),
-    holdsOf: ({ target, project, viewer }) => {
-      const k = target ?? project;
-      if (viewer === V("dave")) return { ok: false, reason: "NO_SUCH_BUNDLE" };
-      return holds.of.has(k) ? { ok: true, statements: holds.of.get(k) } : { ok: false, reason: "NO_SUCH_BUNDLE" };
-    },
-  };
+  /* action-holds, real (T45-26 merged, K2856), over the same host; its doorbell and ratification readers not registered */
+  const actionHolds = actionHoldsOf(w.host, { record: w.record, membership: w.membership, now: () => ms(w.clock.now),
+                                              doorbell: null, ratification: null });
   const links = { arose: new Map(), arisen: new Map() };
   const actionReplies = {
     aroseFrom: ({ target, ord }) => ({ ok: true, items: links.arose.get(`${target}#${ord}`) || [] }),
@@ -94,7 +87,7 @@ export function world(opts = {}) {
   const pw = planWorkOf(w.host, { record: w.record, membership: w.membership, actionPlans: ap, actions,
     escalation: w.stand.escalation, filings, conformance, actionHolds, actionReplies, duties, readingGuides, aiRuns,
     now: () => w.clock.now, ...(opts.deps || {}) });
-  Object.assign(w, { pw, apx: ap, marks, offers, aside, closers, cures, drafts, holds, links, dutyCalls, guides, runs, shas, listeners });
+  Object.assign(w, { pw, apx: ap, marks, offers, aside, closers, cures, drafts, holds: actionHolds, links, dutyCalls, guides, runs, shas, listeners });
   /** Start a chosen option addressed to the office and answer its action's id. */
   w.started = (fields = {}, extra = {}) => {
     const o = option(w, { addressee: OFFICE, ...fields });

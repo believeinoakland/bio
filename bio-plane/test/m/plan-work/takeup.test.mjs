@@ -13,14 +13,16 @@ function setup() {
     phases: [{ id: "ask", name: "Ask", options: [s.option], starts: "plan_start", checkpoint: { after_days: 10 } }], ...by("bob") });
   w.stand.escalation.escalationRead = ({ id, viewer }) => (viewer === V("dave") || id !== "ESC-2026-0001-e" ? { ok: false, reason: "NO_SUCH_ESCALATION" }
     : { ok: true, id, stage: 3, history: [], proposed: [{ from: 3, to: 4, ids: [], instant: "2026-10-20T00:00:00Z" }] });
-  w.holds.of.set(s.action, [{ hold: "in_place", reason: "letter", by: V("bob") }]);
+  /* on the project: an action started from a plan carries no project, so a hold on it is seen by every member (J2 (a)) */
+  const h = w.holds.actionHold({ project: w.P, hold: "in_place", reason: "a letter from their lawyer", ...by("bob") });
+  assert.equal(h.ok, true, JSON.stringify(h));
   return { w, s };
 }
 const ITEMS = (w, s) => ({
   clock: { kind: "clock", action: s.action, entry: 0 },
   checkpoint: { kind: "checkpoint", plan: w.PL, scenario: 1, phase: "ask" },
   escalation_stage: { kind: "escalation_stage", escalation: "ESC-2026-0001-e", stage: 4 },
-  hold: { kind: "hold", target: s.action },
+  hold: { kind: "hold", project: w.P },
 });
 
 test("R11: itemTakeUp: a member who can see a clock entry, a checkpoint, a proposed escalation stage or a hold routes its to-dos to herself; a take-up by the member herself lands", () => {
@@ -45,7 +47,7 @@ test("R11: refusals: MACHINE_CANNOT_PLAN; NO_SUCH_ITEM, absent and invisible ali
   assert.equal(code(m), "MACHINE_CANNOT_PLAN"); assert.equal(m.check, ACTION_PLAN_CHECKS.MACHINE_CANNOT_PLAN.check);
   const absent = [{ kind: "clock", action: s.action, entry: 7 }, { kind: "clock", action: "ACTN-2026-0999", entry: 0 },
     { kind: "checkpoint", plan: w.PL, scenario: 1, phase: "none" }, { kind: "checkpoint", plan: w.PL, scenario: 9, phase: "ask" },
-    { kind: "escalation_stage", escalation: "ESC-2026-0001-e", stage: 6 }, { kind: "hold", target: "ACTN-2026-0999" },
+    { kind: "escalation_stage", escalation: "ESC-2026-0001-e", stage: 6 }, { kind: "hold", target: "ACTN-2026-0999" }, { kind: "hold", project: w.Q },
     { kind: "assignment" }, null, "clock"];
   for (const item of absent) {
     const r = w.pw.itemTakeUp({ item, ...by("alice") });

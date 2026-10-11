@@ -23,13 +23,24 @@ function setup() {
   w.ap.scenarioSet({ plan: w.PL, scenario: 2, name: "Loud line", phases: [{ id: "x", name: "X", options: [], starts: "plan_start" }], ...by("bob") });
   w.aside.set(w.PL, new Map([[2, "we chose the quiet line"]]));
   w.escalations.set(w.D, [{ id: "ESC-2026-0001-e", state: "open", stage: 2, history: [] }]);
-  w.holds.project.push(w.P);
-  w.holds.due.push({ action: s.action, ord: 1, project: w.P, note: "a letter from their lawyer" }, { action: "ACTN-2026-0999", ord: 0, project: w.Q });
+  /* action-holds, real: a hold in place on the project; a legal pressure mark on the action's reply, no hold yet (due) */
+  assert.equal(w.holds.actionHold({ project: w.P, hold: "in_place", reason: "a letter from their lawyer", ...by("bob") }).ok, true);
+  const reply = w.correspond(s.action, "received", "2026-10-02");
+  const mark = w.holds.actionPressure({ target: s.action, ord: reply, pressure: { kind: "legal", note: "a lawyer's letter" }, ...by("bob") });
+  assert.equal(mark.ok, true, JSON.stringify(mark));
+  w.dueOrd = reply;
   return { w, s, b, d };
 }
 
 test("R7: whereItStands answers waits with their basis, next dates, holds, overrides with reasons, declined options and set-aside scenarios with reasons, escalations and watches; writes nothing", () => {
   const { w, s, b, d } = setup();
+  /* an action outside the plan, with a legal mark and no hold: never the plan's (the control below) */
+  const other = w.actions.actionCreate({ document: w.text(s.action).replace(/plan: .*\n/, "").replace(/option: .*\n/, ""), ...by("bob") });
+  assert.equal(other.ok, true, JSON.stringify(other));
+  const o = w.correspond(other.id, "received", "2026-10-02");
+  assert.equal(w.holds.actionPressure({ target: other.id, ord: o, pressure: { kind: "legal", note: "x" }, ...by("bob") }).ok, true);
+  /* the first read reaches the modules action-holds reads (docket, publication), which create their tables */
+  w.pw.whereItStands({ plan: w.PL, viewer: V("bob") });
   const rows = w.snapshot();
   const r = w.pw.whereItStands({ plan: w.PL, nowMs: ms("2026-10-10T00:00:00Z"), viewer: V("bob") });
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 400));
@@ -42,14 +53,15 @@ test("R7: whereItStands answers waits with their basis, next dates, holds, overr
   assert.deepEqual(r.declined.map((x) => [x.option, x.reason]), [[d, "too early to go public"]]);
   assert.deepEqual(r.set_aside.map((x) => [x.scenario, x.reason]), [[2, "we chose the quiet line"]]);
   assert.deepEqual(r.escalations.map((x) => [x.escalation, x.state, x.stage]).slice(0, 1), [["ESC-2026-0001-e", "open", 2]]);
-  assert.deepEqual(r.holds.project, [{ project: w.P, held: true }]);
-  assert.deepEqual(r.holds.due.map((x) => x.action), [s.action], "only the plan's actions and project");
+  assert.deepEqual(r.holds.project.map((x) => [x.project, x.held, x.recorded_by]), [[w.P, true, V("bob")]]);
+  assert.deepEqual(r.holds.due.map((x) => [x.action, x.ord]), [[s.action, w.dueOrd]], "the plan's actions' marks with no hold");
   assert.equal(r.watches.state, "undetermined", "no watch reader registered");
   assert.equal(r.matters.length, 3);
   /* every item names its source */
   for (const sec of ["matters", "waits", "next", "overrides", "declined", "set_aside", "escalations"])
     for (const x of r[sec]) assert.ok(x.source && x.source.module, `${sec}: ${JSON.stringify(x)}`);
   assert.deepEqual(w.snapshot(), rows, "a read writes nothing");
+  assert.deepEqual(w.pw.whereItStands({ plan: w.PL, nowMs: ms("2026-10-10T00:00:00Z"), viewer: V("bob") }).holds.due.map((x) => x.action), [s.action]);
   assert.deepEqual(w.pw.whereItStands({ plan: w.PL, viewer: V("dave") }), noSuchPlan(w.PL));
   /* an action the viewer may not see is withheld whole */
   w.hide(V("alice"), b.action);
