@@ -35,8 +35,9 @@ import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, GATE_MARK, listenerRefusal } from "../membership/index.mjs";
 import { promotionOf, EDGE_REASON_MAX } from "../promotion/index.mjs";
 import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog } from "../promotion/text.mjs";
-/* R48: `biasNotInForce`, inquiry's one spelling of a bias application not in force (its R61) */
-import { inquiryOf, legCapped, actNoBasis, biasNotInForce } from "../inquiry/index.mjs";
+/* R48: `biasNotInForce`, inquiry's one spelling of a bias application not in force (its R61); R49:
+   `machinePassageUnchecked`, its one spelling of a machine-passage read that answered nothing usable (its R62) */
+import { inquiryOf, legCapped, actNoBasis, biasNotInForce, machinePassageUnchecked } from "../inquiry/index.mjs";
 import { biasOf } from "../bias/index.mjs";
 /* The extent grammar is content's face (N99): its `extentRelation` holds D-670's space rule and the `envelope` kind,
    which the retired check catalogue's copy (legacy-checks) did not. */
@@ -110,6 +111,18 @@ const INQUIRY_TYPES = JSON.stringify(["inquiry", ...Object.keys(LEGACY_TYPE_ALIA
 const drawsOn = (fm, inquiryId) => (Array.isArray(fm?.references) ? fm.references : []).some((x) =>
   x && typeof x === "object" && x.rel === "cites" && x.status !== "severed" && String(x.target ?? "").trim() === inquiryId);
 
+/* R49: a version leg as the machine-passage read is handed it, inquiry R62's leg shape with its version: `{version,
+   ord, target, content_id?, extent_capture?, extent_*?}`, `ord` its row in `basis_version_legs`, fields absent when
+   the row does not carry them. */
+function passageLeg(version, ord, row) {
+  const r = row && typeof row === "object" ? row : {};
+  const out = { version, ord, target: typeof r.target === "string" ? r.target.trim() : (r.target ?? null) };
+  for (const [k, v] of Object.entries(r))
+    if ((k === "content_id" || k === "extent_capture" || k.startsWith("extent_")) && v !== undefined && v !== null && v !== "")
+      out[k] = v;
+  return out;
+}
+
 /* R48: a conclusion's `bias_applied`, as a caller sends it (a list, or its JSON from a query string), judged by
    inquiry-grammar R18's one shape check (`biasAppliedFindings`) with a conclusion's own effects and this module's
    C-25.35: `{entries}` (empty when none was sent), each statement trimmed as a member's id is, or `{refused}`. */
@@ -134,6 +147,7 @@ function conclusionBiasApplied(raw) {
 
 export class BasisVersions {
   #candidateSource = null;   // R25's extract arm: {module, fn}
+  #machinePassage = null;    // R49's read: {module, fn}
 
   constructor({ storage, record, membership, promotion, content, inquiry = null, acceptedWork = null, bias = null,
                 now } = {}) {
@@ -320,7 +334,57 @@ export class BasisVersions {
                               + "whose acceptance at the edition named could not be established"}` } : {}) };
                  }) };
     }
+    /* R49 (N834): a member's revision cites as hers only the machine-proposed passages she took up. Asked over each leg
+       of a version this revision adds (a held version is frozen and never asked again) and, where the revision accepts a
+       version a machine authored, that version's legs, the accepting member as author. A machine's own promotion (its
+       `suggested` version, R28) is never asked. */
+    const author = typeof c.author === "string" ? c.author.trim() : "";
+    /* only a machine is exempt: a promotion naming no author is not shown to be one, so it is asked (fail closed) */
+    if (this.#machinePassage && !(author && isMachineIdentity(author))) {
+      const asked = [];
+      for (const v of offered) {
+        const held = this.#one(`SELECT state FROM inquiry_basis_versions WHERE bundle_id=? AND name=?`, bundleId, v.name);
+        const accepting = !!held && held.state !== "accepted" && v.state === "accepted"
+          && typeof v.author === "string" && isMachineIdentity(v.author.trim());
+        if (held && !accepting) continue;
+        for (const l of v.legs) asked.push(passageLeg(v.name, l.src_ord, docLegs[l.src_ord]));
+      }
+      if (asked.length) {
+        const refused = this.#machinePassageRefusal(asked, author);
+        if (refused) return refused;
+      }
+    }
     return null;
+  }
+
+  /** R49: one registration of the read that says whether a member may cite as hers a passage a machine proposed; a
+   *  malformed or second registration is refused by membership's one site (its R81), as R40's is. */
+  onMachinePassage(module, fn) {
+    const refused = listenerRefusal(this.#machinePassage, module, fn);
+    if (refused) return refused;
+    this.#machinePassage = { module, fn };
+    return { ok: true, module };
+  }
+
+  /* R49: the registered read's verdict over `legs`, asked once: null when each may stand as `author`'s (or nothing is
+     registered), its refusal unchanged, or inquiry R62's `MACHINE_PASSAGE_UNCHECKED` for a read that throws or answers
+     anything else (fail closed). The viewer is the acting member, as R3's accepted-work read is asked. */
+  #machinePassageRefusal(legs, author) {
+    const src = this.#machinePassage;
+    if (!src || !legs.length) return null;
+    let ans;
+    try { ans = src.fn({ legs, author, viewer: author }); }
+    catch (e) { ans = { thrown: e }; }
+    if (ans === null) return null;
+    if (ans && typeof ans === "object" && !("thrown" in ans) && ans.ok === false && typeof ans.then !== "function")
+      return ans;
+    const row = machinePassageUnchecked(
+      `the read registered by ${src.module} that says whether ${author} may cite as theirs a passage a machine `
+      + `proposed ${ans && typeof ans === "object" && "thrown" in ans ? "failed" : "answered neither a verdict nor a refusal"}, `
+      + `so ${legs.length} leg(s) of a basis version are refused rather than trusted. Nothing was written.`,
+      { legs: legs.map((l) => ({ version: l.version, ord: l.ord, target: l.target })) });
+    return { ...row, ok: false, reason: row?.reason ?? row?.code ?? "MACHINE_PASSAGE_UNCHECKED",
+             findings: Array.isArray(row?.findings) ? row.findings : [row] };
   }
 
   /** R7: both tables re-derived WHOLE from the document in the promotion's transaction, the ONLY write to either. Each
@@ -926,7 +990,20 @@ export class BasisVersions {
       affirmed: affirmedParts === null ? null : affirmedParts.split("\t"),
       ...(act === "current" ? { project: projectId } : {}),
     };
-    if (preview) return { ...receipt, preview: true, would: act, wrote: false };
+    if (preview) {
+      /* R49 under R14: accepting a machine's version asks the machine-passage read over its legs; the write asks it in
+         R6's check of the promotion, so a preview asks it here, once, and answers the same refusal */
+      if (to === "accepted" && from !== "accepted" && typeof row.author === "string" && isMachineIdentity(row.author.trim())) {
+        const vlegs = Array.isArray(fm.basis_version_legs) ? fm.basis_version_legs : [];
+        const asked = [];
+        vlegs.forEach((l, i) => {
+          if (l && typeof l === "object" && String(l.version ?? "").trim() === vname) asked.push(passageLeg(vname, i, l));
+        });
+        const refused = this.#machinePassageRefusal(asked, who);
+        if (refused) return { ...refused, act, target, version: vname, preview: true, wrote: false };
+      }
+      return { ...receipt, preview: true, would: act, wrote: false };
+    }
 
     /* R15 (REC-166): make-current writes only the project; the question is not promoted at all. */
     if (act === "current") {
