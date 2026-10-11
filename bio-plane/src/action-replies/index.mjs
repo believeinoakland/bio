@@ -150,16 +150,17 @@ export class ActionReplies {
   /* R1 (action-grammar R24): the layout's shape, its claims among the legs; the claims as stored, or the refusal. */
   #bearingShape(claims, a, target) {
     const findings = [];
-    try { bearingFindings(claims, ActionReplies.#legTargets(a), findings); }
-    catch (e) { findings.push({ check: "C-2.10", severity: "error", code: "BEARING_REFUSED", message: `the layout could not be read: ${String(e && e.message || e).slice(0, 200)}` }); }
+    bearingFindings(claims, ActionReplies.#legTargets(a), findings);   /* pure; never throws (action-grammar R24) */
     const errs = findings.filter((f) => f && f.severity !== "warning");
     /* DEC-49 REGION is-bearing-shape */
     if (errs.length) {
       const first = errs[0];
+      /* the item the grammar names (`claims[i]` in its message), or null for the list as a whole */
+      const named = /claims\[(\d+)\]/.exec(String(first.message ?? first.detail ?? ""));
       return refuse("BEARING_REFUSED", first.message ?? first.detail ?? null, { target,
-        item: first.item ?? first.index ?? null,
+        item: first.item ?? (named ? Number(named[1]) : null),
         findings: errs.map((f) => ({ check: f.check, detail: f.message ?? f.detail ?? null, ...(f.code ? { code: f.code } : {}),
-                                     ...(f.item !== undefined ? { item: f.item } : f.index !== undefined ? { item: f.index } : {}) })) });
+                                     ...(f.repairs ? { repairs: f.repairs } : {}) })) });
     }
     /* END DEC-49 REGION is-bearing-shape */
     return { ok: true, claims: claims.map((c) => ({ claim: c.claim, bearing: c.bearing,
