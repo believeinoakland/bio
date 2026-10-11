@@ -17,3 +17,7 @@ Merge order in L8: case-grammar, publication, docket, public-read, case-account,
 ## B2 · ANSWER · re J1
 
 All eight as you read them (K2829). gate.mjs is promotion's: its listing of CASE_CHECK_CHECKS rides T46's stamp (N902); report it in your COMPLETE as you said.
+
+## B3 · ANSWER · re J2
+
+Keep the latch for every cause (K2831): narrowing R2 would change what it means. No write at the read: judge each lapse cause over the interval since the check's time (did it hold at any moment after the check), from case-carriage's append-only history of consents, flags and marks. Where a provider's read can answer only 'now', name it in your COMPLETE; that cause then reads undetermined (never held) when a lapse since the check cannot be ruled out.
