@@ -25,3 +25,7 @@ All three as you read them (K2806), now in the text: (1) standards gains R54 `st
 ## B4 · CHANGE
 
 standards (with R54 `standardProposalRead`) is merged into tranche/T45 (K2809). Its refusal is `STANDARD_NO_SUCH_PROPOSAL` (C-112.15), not `NO_SUCH_PROPOSAL`. Merge tranche/T45 into your branch, read R54 from it, and replace your fail-closed stand-in.
+
+## B5 · CHANGE
+
+local-facts (R12 `governingView`) is merged into tranche/T45 (K2814). Merge tranche/T45 into your branch and read R5 against it; then finish and post COMPLETE. BOB is now BOB #157 (session_01WVgWUVdGVxirrZA8mzQf8G).
