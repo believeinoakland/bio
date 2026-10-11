@@ -4,7 +4,8 @@
  * a member-facing translation (the requirements' "Errors" for `promote`). C-86.5 to C-86.14 were written for `op=promote` by the
  * Batch30 rows D-546, D-578, D-615, D-628, D-692, D-707 and D-726 (never landed; reachable on
  * `snapshot/pre-refactor-2026-09-25`'s branches), and are carried here with their wording. `BUNDLE_ID_DISAGREES`
- * (R14, D-738) is the catalogue's C-1.1 asked at the door; `BUNDLE_MD_UNREADABLE` (R17, D-741) is C-2.1's.
+ * (R14, D-738) is the catalogue's C-1.1 asked at the door through record-grammar's `idDisagrees`; `BUNDLE_MD_UNREADABLE`
+ * (R17, D-741) is C-2.1's, refused on any C-2.1 finding of record-grammar's parser (R38, N854).
  *
  * Each row's `where` names the marked region of `promote` that mints its code (N118; the catalogue's "WHAT A `where`
  * MEANS", REC-71), so the DEC-49 guard reads exactly that span. The four codes that name what the request must carry

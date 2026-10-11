@@ -931,7 +931,36 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    neither of which registers a gate step yet, so no gate's order moves.
    ROW_CENSUS (R50) re-pinned to this tree: 1719 rows. Rows a T42 job in layers 3–11 adds or changes (doorbell's
    re-pointed `where`s among them) are T43's stamp (plan T42, rule 4 item 2). */
-export const CATALOG_VERSION = "1.69.0";
+/* 1.70.0 (PROMOTION #41, T43-6, 2026-10-11; T42's rule 4 item 2, T43's rule 4 item 2; N854; K1680, K2625, K2689):
+   MINOR. The stamp of every row awaiting it at T42's close (T42's layers 3–11) and of T43's layers 1 and 2, read by
+   diffing R50's census lines of `tranche/T43` at its layer 2 against 1.69.0's own (`test/fixtures/row-census-1.69.0.jsonl`:
+   1719 rows, 8902282a…): three new rows, five re-keyed (five lines arrived, five departed), ten changed, none retired.
+   Each is one a job record names (T42's RUN-PRODUCTIONS', INQUIRY's, EXTRACTION's, HYPOTHESES', STEPS', INVESTIGATION's
+   and DOORBELL's; T43's RECORD-GRAMMAR's).
+   ARRIVED (3): run-productions C-104.32 PROPOSAL_NOT_TAKEN_UP (`machinePassage`); inquiry C-2.20
+   MACHINE_PASSAGE_UNCHECKED (its own table, `INQUIRY_PASSAGE_CHECKS`); extraction C-51.7 TRANSCRIBE_NOT_DEPLOYED
+   (`pageTranscribe`).
+   RE-KEYED (5), number, `where` and translation unmoved (the old code departed, the new arrived; N843): hypotheses
+   C-134.22 HYPOTHESIS_PROPOSAL_NO_RUN, was PROPOSAL_NO_RUN, and C-134.23 NO_SUCH_HYPOTHESIS_PROPOSAL, was
+   NO_SUCH_PROPOSAL; steps C-142.28 NO_SUCH_STEP_PROPOSAL, was NO_SUCH_PROPOSAL; investigation C-146.21
+   NO_SUCH_PLANNING_PROPOSAL, was NO_SUCH_PROPOSAL, and C-146.26 INTERVIEW_NOT_A_LEG, was NARRATIVE_NOT_A_LEG.
+   CHANGED (10), code and number unmoved. `where` only: doorbell's nine, still held in capture's `KNOCK_CHECKS` and
+   `CAPTURE_CHECKS` and re-pointed to the doorbell sites that mint them (K2609): C-85.1, C-85.2 (`src/doorbell/index.mjs
+   #knockRateRefusal`), C-85.3–.5 (`src/doorbell/door.mjs`), C-118.2, C-118.4, C-118.7 (`src/doorbell/index.mjs`),
+   C-118.3 (`src/doorbell/door.mjs`); record-grammar C-33.40 NO_BASIS (all five sites, money's `setFundType` and lines'
+   `recordLine` added, N857).
+   CHANGED AT THE WRITE DOOR, no row line moving (this job, R38, N854): C-1.1 and C-2.1 are judged by
+   record-grammar's own arms, as `checkBundle` judges them: a non-replay promotion is refused BUNDLE_ID_DISAGREES exactly
+   when `idDisagrees` is true (an id padded with white space is refused where it was trimmed and passed; a non-string id is
+   C-1.2's and no longer refused here), and a creation or a revision is refused BUNDLE_MD_UNREADABLE on any C-2.1 finding
+   of `parseFrontmatter` (a key given twice, a line outside the grammar), not only a revision whose block it reads no
+   data from (K2706).
+   CHANGED IN WHAT THE GATES RUN, no row line moving: none a T42 L3–L11 or T43 L1–L2 job record names beyond the rows
+   above (inquiry's registered check now answers C-2.20 and investigation's C-146.26 under its new code, each counted
+   with its row). T43's layer 1 changed C-33.40's `where` and no other row; its layer 2 is this job alone.
+   ROW_CENSUS (R50) re-pinned to this tree: 1722 rows. Rows a T43 job in layers 3–11 adds or changes are T44's stamp
+   (plan T43, rule 4 item 2). */
+export const CATALOG_VERSION = "1.70.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -1023,8 +1052,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1719,
-  digest: "8902282a60165dd94e0dd306bc7b27e739b9452089c82025852730e91e3878cd" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1722,
+  digest: "f73c10a32dc065f1781c666557e31268ca43f3d7cb75b7053a9361ab0dbc84c6" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();
