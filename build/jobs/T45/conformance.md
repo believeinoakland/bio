@@ -28,7 +28,7 @@ Also (K2832): R32's `identity`, `stake` and `edition_date` read from `case-impor
 
 **Deferred.** None.
 
-**Found in other modules (REPORT J3).**
+**Found in other modules (REPORT J2).**
 1. `affordances` `catalogue.test.mjs` "R1 R12: … layer 9's op maps hold exactly its 41 mutating ops…" is newly red: conformance's map gains `curelink`, `cureunlink` (acts) and `cures` (a read). Owed to op-declarations (T45-45), op-grades (T45-38: `curelink` and `cureunlink` reasoned acts, as draft-T45-upper line 180 grades them), affordances (T45-39). The already-red op-declarations R19/R6, control-plane R2/R53 tests now also miss these ops.
 2. `answer-envelope` "R7, R2, R10: every code decorated before the catalogue's end reads the same check and translation…" is newly red: C-113.7's translation re-worded (R2), and rows C-113.37–C-113.44 new; they await promotion's stamp (T46, accepted red 2) and answer-envelope's re-pin.
 3. `build/layers.md` layer 9's conformance row, Contract paragraph and uses line still read "published findings" and do not list the edges to `case-check`, `case-import`, `accepted-work` (BOB's).
