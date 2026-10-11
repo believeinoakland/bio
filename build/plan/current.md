@@ -31,6 +31,7 @@ It is the only module marked `legacy` in `modules.json`.
    7. `fleetbundles` agent-worker's 25-input pin until T43-2;
    8. action-clocks `overdue.test.mjs`:151 and action-plans `invariants.test.mjs`:50 until T43-8 (N864);
    9. from T43-8's merge (capture's delete): answer-envelope R7's totality and pinned-row tests miss doorbell's family until T43-14 (N851).
+   10. (found at T43's L1, K2704; red on `main` since T42's close) DEC-189's words merged at T42's close (2bfa372ccc): ai-use `counting`:167, `limits`:198, `reads`:144 until T43-11; notice-producers `accounts`:36, 47, 88 until T43-13; affordances `t36`:55 until T43-17; op-declarations `t34`:68, 145, 307, `t37`:105, 177, 218, `t38`:76, 87 until T43-18; and from T42-8 (636f27bb74), case-carriage `invariants`:66, `rereads`:149, 167, 195, 212 until T43-16.
 
 ## Entries
 
@@ -58,17 +59,20 @@ It is the only module marked `legacy` in `modules.json`.
 - **T43-10 · extraction** · (N853a) R71: a relayed refusal answered as that refusal, nothing written; (N853b) R73: the format read from the stored bytes, R71 names a picture's one page; (N862, DEC-190) R47 `transcribe.refused.notdeployed`, R71 `transcribe.label` and `says` (`transcribe.done` | `transcribe.none`, the latter only when agent-worker was asked and filled nothing), R27 `unread_pages` and `unread_says` (`document.unread.pages`) · req: the three drafts · after T43-9.
 
 ### L6
-- **T43-11 · ai-use** · (N856, DEC-189) R3's unjudged refusal (`ai.refused.limit.unjudged`), R13's fills read by key (`ai.period.*`, `ai.when.*`, `date.month.*`, `ai.use.*`, `ai.limitfield.*`), `AI_USE_WORDS` equal to `words.json`; (N862, DEC-190) Terms (nine use kinds), R13 `ai.use.transcribe.*` · req: `draft-T43-words.md` (a key `words.json` lacks for a use with no T43 AI path, `enquire`, `read`, `account`, is not tested until named, B133).
+- **T43-11 · ai-use** · (N856, DEC-189) R3's unjudged refusal (`ai.refused.limit.unjudged`), R13's fills read by key (`ai.period.*`, `ai.when.*`, `date.month.*`, `ai.use.*`, `ai.limitfield.*`), `AI_USE_WORDS` equal to `words.json` (today its copy of `ai.refused.explorenotenabled` predates DEC-189: clears rule 4 (10)'s ai-use reds, K2704); (N862, DEC-190) Terms (nine use kinds), R13 `ai.use.transcribe.*` · req: `draft-T43-words.md` (a key `words.json` lacks for a use with no T43 AI path, `enquire`, `read`, `account`, is not tested until named, B133).
 
 ### L8
+- **T43-16 · case-carriage** · (K2704) `test/m/case-carriage/fixture.mjs`:33 hands `sources` `doorbell` (`{pulledKnocksOf}`), not `capture`, since T42-8; tests only · clears rule 4 (10)'s case-carriage reds · merges in L8 before case-authoring.
 - **T43-12 · case-authoring** · (N850, K2608) R69: `accountPropose`, `accountDrafts`, `registerReviewComments` deleted, `case-account`'s alone; Uses struck; `account.test.mjs` re-pointed · req: `draft-T43-cleanup.md`. case-account's two wording lines are BOB's, folded before L8's START (no job).
 
 ### L11
-- **T43-13 · notice-producers** · (N856, DEC-189) R16's limit-reached item by scope and its fills by key; R17's ten kinds' `summary` and `detail` by key, `ai.label.explored.member` for members who do not own the account · req: `draft-T43-words.md` (`{date}`: the local day, month by `date.month.*`, until B133 is answered).
+- **T43-17 · affordances** · (K2704; DEC-189, DEC-190) `t36.test.mjs`:55 re-pinned to the design's 213 texts (37 acts re-keyed from `owed_<op>`, four retired); `ACT_HELP` gains the design's texts for `pagetranscribe` and `transcribe` (both ops declared) · clears rule 4 (10)'s affordances red.
+- **T43-18 · op-declarations** · (K2704; DEC-189) `t34`, `t37`, `t38` re-pinned to the design's registry (37 acts now served functions; four still owed) and `mock-acts.js`'s re-keyed names; tests only · clears rule 4 (10)'s op-declarations reds.
+- **T43-13 · notice-producers** · (N856, DEC-189) R16's limit-reached item by scope and its fills by key; R17's ten kinds' `summary` and `detail` by key, `ai.label.explored.member` for members who do not own the account; `NOTICE_WORDS` re-read from `words.json` (its `{for_use}`/`{Uses}` fills and the retired key `act.owed_exploreapprove.label.queue` predate DEC-189; clears rule 4 (10)'s notice-producers reds, K2704) · req: `draft-T43-words.md` (`{date}`: the local day, month by `date.month.*`, until B133 is answered).
 - **T43-14 · answer-envelope** · (N851) new R12: `CHECK_FAMILY_FILES` lists `src/doorbell/checks.mjs` after capture's; `families.test.mjs`:353 · clears rule 4 (9).
 - **T43-15 · plane** · (N862, DEC-190) R24: the `bundle` screen's acts gain `reading`, `pagetranscribe`, `transcribe`; (N853b) R36: a `NOT_A_PDF` page rendered by `renderPictureToPixels` (grey, `TRANSCRIBE_PICTURE_EDGE` 1,568 px, checked against the provider's documentation at the START); (N866) R6's gated hook's `ai` author aligned with control-plane R17 or the op's recorded D-311 form · req: the drafts; N866's text before L11's START.
 
-**L11 merge order:** notice-producers, answer-envelope, plane last.
+**L11 merge order:** `modules.json` order (affordances, notice-producers, op-declarations, answer-envelope), plane last.
 
 ## Left out of T43 (one hard reason each, re-tested today)
 
