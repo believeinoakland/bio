@@ -20,3 +20,7 @@
 - `format`: 0 failures. `coverage store-door`: 13 of 13 live ids named, 0 failures. `ownership store-door tranche/T42`: 0 failures. `architecture store-door`: 4 failures, all the undeclared `doorbell` edge above.
 
 Size (session_019dgq3DdRUfHkp8bBr7TPbY): test runs 5, module lines 615
+
+## J1 · COMPLETE
+
+T42-28 applied: R7, `inboxpullfile` hands `pullAndFile` `doorbellOf(ctx)` as `deps.doorbell` (doorbell R13 pull, R3 resolve); new R7 test with negative control, red on the old code. EDGE for you: modules.json store-door uses gains `doorbell` (keep `capture`); ownership refused my writing it, so architecture shows 4 failures (test imports of doorbell) until you add it. Users: plane 167/167; control-plane 212/216, the 4 reds are its own tests calling pullAndFile with deps.capture (doorbell.test.mjs:404, 445, 473; inbox-door.test.mjs:101), re-pointed in T42-29. store-door 44/44; format, coverage (13/13), ownership 0 failures. Details and deferred test gaps in my record.
