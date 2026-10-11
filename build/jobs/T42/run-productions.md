@@ -48,4 +48,4 @@ Other users: skills, op-declarations, store-door, control-plane, plane and agent
 
 **Checks:** `format: 147 modules, 146 requirements files; 0 failures`; `architecture: 10 product files, 59 relative imports; 0 failures`; `coverage: 1 modules, 25 of 25 live requirement ids named by a test; 0 failures`; `ownership: 6 files changed by run-productions between tranche/T42 and HEAD; 0 failures`.
 
-Size (session_014kGdQn9r6yt8hA7AVpanwj): test runs 9, module lines 2205
+Size (session_014kGdQn9r6yt8hA7AVpanwj): test runs 9, module lines 2309
