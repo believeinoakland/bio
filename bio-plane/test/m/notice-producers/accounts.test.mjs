@@ -39,7 +39,7 @@ function namesNoMember(it) {
   return bad;
 }
 
-test("R16 a use's limit reached reads ai.queue.limitreached, by key: {account} from ai.account.project with the project's name, {period} from ai.period.day, {use} from ai.use.<use>.inline, {date} the local day reached_at falls on (day, then its month from date.month.*), {when} from ai.when.day; keyed by the entry's own key; nothing before it is reached, nothing to another member", async () => {
+test("R16 a use's limit reached reads ai.queue.limitreached, by key: {account} from ai.account.project with the project's name, {period} from ai.period.day, {use} from ai.use.<use>.inline, {date} the local day reached_at falls on (date.daymonth), {when} from ai.until.day; keyed by the entry's own key; nothing before it is reached, nothing to another member", async () => {
   const { w, items } = await setup();
   w.u.aiLimitSet({ owner: "project:P", scope: "ask", unit: "calls", period: "day", amount: 1, by: "ann" });
   assert.deepEqual(items("ann", "ai-limit-reached"), [], "negative control: not yet reached");
@@ -48,14 +48,14 @@ test("R16 a use's limit reached reads ai.queue.limitreached, by key: {account} f
   const [it] = items("ann", "ai-limit-reached");
   assert.equal(it.id, `FINDING::ai-limit-reached::${reached[0].key}`, "the source's own key, as given");
   const expected = say("ai.queue.limitreached", { account: say("ai.account.project", { project: "Project P" }), period: say("ai.period.day"),
-    use: say("ai.use.ask.inline"), date: `9 ${say("date.month.october")}`, when: say("ai.when.day") });
+    use: say("ai.use.ask.inline"), date: `9 ${say("date.month.october")}`, when: say("ai.until.day") });
   assert.equal(it.detail, expected);
   assert.equal(it.detail, "Project P's account reached its daily limit for asking on 9 October. It pauses asking until tomorrow; its other uses go on.");
   assert.equal(it.word, "ai.queue.limitreached");
   /* negative control (K874): not the overall limit's sentence, nor the per-member limit's */
   for (const other of ["ai.queue.limitreached.overall", "ai.queue.limitreached.member"])
     assert.notEqual(it.detail, say(other, { account: say("ai.account.project", { project: "Project P" }), period: say("ai.period.day"),
-      date: `9 ${say("date.month.october")}`, when: say("ai.when.day") }), other);
+      date: `9 ${say("date.month.october")}`, when: say("ai.until.day") }), other);
   assert.equal(it.class, "FINDING");
   assert.equal(NOTICE_KINDS[it.kind], "FINDING");
   assert.equal(it.label, NOTICED_LABEL);
@@ -78,7 +78,7 @@ test("R16 the overall limit reads ai.queue.limitreached.overall and the per-memb
   w.count("project:P", "bob", "run", { at: "2026-10-09T11:00:00Z" });
   const got = Object.fromEntries(items("ann", "ai-limit-reached").map((i) => [i.subject.scope, i]));
   const fills = { account: say("ai.account.project", { project: "Project P" }), period: say("ai.period.day"),
-                  date: `9 ${say("date.month.october")}`, when: say("ai.when.day") };
+                  date: `9 ${say("date.month.october")}`, when: say("ai.until.day") };
   assert.equal(got.overall.detail, say("ai.queue.limitreached.overall", fills));
   assert.equal(got.overall.word, "ai.queue.limitreached.overall");
   assert.equal(got.per_member.detail, say("ai.queue.limitreached.member", fills));
@@ -92,33 +92,33 @@ test("R16 the overall limit reads ai.queue.limitreached.overall and the per-memb
   assert.deepEqual(items("bob", "ai-limit-reached"), [], "the member who reached it owns no account: told nothing here");
 });
 
-test("R16 a month's limit on a member's own account: {account} from ai.account.own, {period} ai.period.month, {when} ai.when.month with the next period's month from date.month.*; the group's limit from ai.account.group, to its administrators only", async () => {
+test("R16 a month's limit on a member's own account: {account} from ai.account.own, {period} ai.period.month, {when} after \"until\" from ai.until.month with the next period's month from date.month.*; the group's limit from ai.account.group, to its administrators only", async () => {
   const { w, items } = await setup();
   w.u.aiLimitSet({ owner: "member:ann", scope: "ask", unit: "calls", period: "month", amount: 1, by: "ann" });
   w.count("member:ann", "ann", "ask", { at: "2026-10-09T11:45:00Z" });
   const [own] = items("ann", "ai-limit-reached");
   assert.equal(own.subject.id, "own");
   assert.equal(own.detail, say("ai.queue.limitreached", { account: say("ai.account.own"), period: say("ai.period.month"), use: say("ai.use.ask.inline"),
-    date: `9 ${say("date.month.october")}`, when: say("ai.when.month", { month: say("date.month.november") }) }));
-  assert.match(own.detail, / until on November 1;/, "ai.when.month verbatim (J1 (1))");
-  assert.doesNotMatch(own.detail, /December|October 1\b/, "negative control: the next period's month, not this one's nor a later one");
+    date: `9 ${say("date.month.october")}`, when: say("ai.until.month", { month: say("date.month.november") }) }));
+  assert.match(own.detail, / until 1 November;/, "ai.until.month: \"… pause until 1 November\" (DEC-192 (5))");
+  assert.doesNotMatch(own.detail, /until on |December|1 October\b/, "negative control: not the refusals' words (\"on 1 November\"), nor this period's month or a later one");
   assert.deepEqual(namesNoMember(own), []);
   /* a December period ends on January 1 */
   w.u.aiLimitSet({ owner: "member:ann", scope: "draft", unit: "calls", period: "month", amount: 1, by: "ann", at: "2026-12-02T00:00:00Z" });
   w.count("member:ann", "ann", "draft", { at: "2026-12-03T09:00:00Z" });
   const dec = items("ann", "ai-limit-reached", "2026-12-03T10:00:00Z").find((i) => i.subject.scope === "draft");
   assert.ok(dec, "December's draft limit reached");
-  assert.match(dec.detail, /on 3 December\. It pauses drafting until on January 1;/);
+  assert.match(dec.detail, /on 3 December\. It pauses drafting until 1 January;/, "a December period ends on 1 January");
   /* the group's account, to its administrators */
   w.count("group", "bob", "ask", { calls: 3 });
   w.u.aiLimitSet({ owner: "group", scope: "ask", unit: "calls", period: "day", amount: 2, by: "admin", at: AT });
   const [g] = items("second", "ai-limit-reached");
   assert.equal(g.detail, say("ai.queue.limitreached", { account: say("ai.account.group"), period: say("ai.period.day"), use: say("ai.use.ask.inline"),
-    date: `9 ${say("date.month.october")}`, when: say("ai.when.day") }));
+    date: `9 ${say("date.month.october")}`, when: say("ai.until.day") }));
   assert.deepEqual(items("ann", "ai-limit-reached").filter((i) => i.subject.id === "group"), [], "negative control: ann is no administrator");
 });
 
-test("R16 a limit's {date} is the profile's local day reached_at falls on, never the UTC day; a use with no ai.use.<use>.inline key reads the overall limit's sentence (J1 (3)); an entry whose period or day cannot be read is no item", async () => {
+test("R16 a limit's {date} is the profile's local day reached_at falls on, never the UTC day; every use of ai-use's nine reads its ai.use.<use>.inline (DEC-191 (2)), a scope with no such key the overall limit's sentence (J1 (3)); an entry whose period or day cannot be read is no item", async () => {
   const { w } = await setup();
   const at = "2026-10-10T02:00:00Z";                        /* 9 October, 19:00, in Los Angeles */
   const entry = (x) => ({ key: "ai-limit:group:ask:calls:day:2026-10-09", owner: "group", scope: "ask", unit: "calls", period: "day",
@@ -127,11 +127,17 @@ test("R16 a limit's {date} is the profile's local day reached_at falls on, never
     aiUse: { exploreAsksPending: () => ({ ok: true, asks: [] }), limitsReached: () => ({ ok: true, reached }) } })).read("second", { now: AT }), "ai-limit-reached");
   assert.match(run([entry()])[0].detail, / on 9 October\./, "the local day in the profile's zone");
   assert.match(run([entry()], UTC)[0].detail, / on 10 October\./, "negative control: in UTC it is the 10th");
-  assert.equal(WORDS["ai.use.enquire.inline"], undefined, "words.json on main names no inline words for enquire yet (DEC-191, T44)");
-  const [q] = run([entry({ scope: "enquire", key: "ai-limit:group:enquire:calls:day:2026-10-09" })]);
-  assert.equal(q.word, "ai.queue.limitreached.overall");
+  for (const use of ["ask", "draft", "run", "standing", "transcribe", "explore", "enquire", "read", "account"]) {
+    const [u] = run([entry({ scope: use, key: `ai-limit:group:${use}:calls:day:2026-10-09` })]);
+    assert.equal(u.word, "ai.queue.limitreached", use);
+    assert.equal(u.detail, say("ai.queue.limitreached", { account: say("ai.account.group"), period: say("ai.period.day"),
+      use: say(`ai.use.${use}.inline`), date: `9 ${say("date.month.october")}`, when: say("ai.until.day") }), use);
+  }
+  assert.equal(WORDS["ai.use.nosuchuse.inline"], undefined);
+  const [q] = run([entry({ scope: "nosuchuse", key: "ai-limit:group:nosuchuse:calls:day:2026-10-09" })]);
+  assert.equal(q.word, "ai.queue.limitreached.overall", "negative control: a scope words.json names no use for");
   assert.equal(q.detail, say("ai.queue.limitreached.overall", { account: say("ai.account.group"), period: say("ai.period.day"),
-    date: `9 ${say("date.month.october")}`, when: say("ai.when.day") }));
+    date: `9 ${say("date.month.october")}`, when: say("ai.until.day") }));
   for (const bad of [{ period: "week" }, { period: null }, { reached_at: "not an instant" }, { period: "month", period_start: null, reached_at: null }])
     assert.deepEqual(run([entry(bad)]), [], JSON.stringify(bad));
 });
@@ -205,3 +211,45 @@ test("R16 R1 a read that does not answer is its provider's failure, named in fac
   assert.equal(w.snapshot(), before, "the read writes nothing");
 });
 
+
+/* R16 (T44; N869, N876; DEC-191 (3), DEC-192 (3), (5)): `{date}` is `date.daymonth`, or `date.daymonthyear` when the local day
+   reached_at falls on is not in the current local year; `{when}` after "until" is `ai.until.*`. Over ai-use R5's entries as
+   it answers them, in a profile west of UTC. */
+test("R16 (T44) {date}: reached_at on 7 October local reads \"7 October\" (date.daymonth, no leading zero); an instant that is the 6th locally and the 7th in UTC reads \"6 October\" (control); a day in another local year reads \"{day} {month} {year}\" (date.daymonthyear; control: this year's has no year); {when} reads \"1 November\" after \"until\"", async () => {
+  const { w } = await setup();
+  const LA = () => ({ time_zone: { value: "America/Los_Angeles" } });
+  const entry = (x) => ({ key: "ai-limit:group:ask:calls:day:k", owner: "group", scope: "ask", unit: "calls", period: "day", ...x });
+  const run = (reached, now, view = LA) => ofKind(reader(fresh(w.ctx, { membership: w.m, credentials: w.c, view,
+    aiUse: { exploreAsksPending: () => ({ ok: true, asks: [] }), limitsReached: () => ({ ok: true, reached }) } })).read("second", { now }), "ai-limit-reached")[0];
+  const fills = (date, when = say("ai.until.day")) => ({ account: say("ai.account.group"), period: say("ai.period.day"), use: say("ai.use.ask.inline"), date, when });
+  const oct = say("date.month.october");
+  /* 7 October, 08:00 local */
+  const seventh = run([entry({ period_start: "2026-10-07", reached_at: "2026-10-07T15:00:00Z" })], "2026-10-07T20:00:00Z");
+  assert.equal(seventh.detail, say("ai.queue.limitreached", fills(say("date.daymonth", { day: "7", month: oct }))));
+  assert.match(seventh.detail, / on 7 October\. /);
+  assert.doesNotMatch(seventh.detail, /07 October|2026/, "no leading zero, and no year in the current year");
+  /* 6 October, 20:00 local, the 7th in UTC: the local day */
+  const sixth = run([entry({ period_start: "2026-10-06", reached_at: "2026-10-07T03:00:00Z" })], "2026-10-07T04:00:00Z");
+  assert.match(sixth.detail, / on 6 October\. /);
+  assert.match(run([entry({ period_start: "2026-10-07", reached_at: "2026-10-07T03:00:00Z" })], "2026-10-07T04:00:00Z", UTC).detail, / on 7 October\. /,
+    "control: in UTC it is the 7th");
+  assert.match(run([entry({ period_start: "2026-10-06", reached_at: "2026-10-07T03:00:00.250Z" })], "2026-10-07T04:00:00Z").detail, / on 6 October\. /,
+    "an instant with a fraction of a second reads the same day");
+  /* another local year: reached on 31 December 2025, read on 1 January 2026 (local) */
+  const dec = say("date.month.december");
+  const other = run([entry({ period_start: "2025-12-31", reached_at: "2025-12-31T20:00:00Z" })], "2026-01-01T20:00:00Z");
+  assert.equal(other.detail, say("ai.queue.limitreached", fills(say("date.daymonthyear", { day: "31", month: dec, year: "2025" }))));
+  assert.match(other.detail, / on 31 December 2025\. /);
+  /* control: the current local year is the profile's: at 05:00 UTC on 1 January it is still 31 December 2025 locally */
+  const same = run([entry({ period_start: "2025-12-31", reached_at: "2025-12-31T20:00:00Z" })], "2026-01-01T05:00:00Z");
+  assert.equal(same.detail, say("ai.queue.limitreached", fills(say("date.daymonth", { day: "31", month: dec }))));
+  assert.doesNotMatch(same.detail, /2025/, "control: this year's day names no year");
+  /* {when} after "until": a month's limit pauses until the 1st of the next month */
+  const month = run([entry({ period: "month", period_start: "2026-10-01", reached_at: "2026-10-07T15:00:00Z", key: "ai-limit:group:ask:calls:month:k" })],
+    "2026-10-07T20:00:00Z");
+  assert.equal(month.detail, say("ai.queue.limitreached", { ...fills(`7 ${oct}`, say("ai.until.month", { month: say("date.month.november") })),
+    period: say("ai.period.month") }));
+  assert.match(month.detail, / until 1 November;/);
+  assert.doesNotMatch(month.detail, /until on|November 1/, "control: not the refusals' ai.when.month");
+  assert.match(seventh.detail, / until tomorrow;/, "a day's limit: ai.until.day");
+});
