@@ -391,7 +391,7 @@ export class Hypotheses {
    *  stored apart from what members hold, labelled the system's with how it was worked out and its measured false-alarm
    *  rate. Refusals in order, each writing nothing: `NO_SUCH_BUNDLE` (no inquiry by that id), `NOT_AN_INQUIRY`,
    *  `UNKNOWN_HYPOTHESIS_KIND`, `HYPOTHESIS_NO_STATEMENT`, `BAD_ABOUT`, `PROPOSAL_NO_HOW`, `PROPOSAL_NO_RATE`,
-   *  `PROPOSAL_NO_RUN`. Answers `{ok, proposal, kind, label: "the system's", at}`. */
+   *  `HYPOTHESIS_PROPOSAL_NO_RUN`. Answers `{ok, proposal, kind, label: "the system's", at}`. */
   hypothesisPropose({ inquiry = null, kind = null, statement = null, about = null, how = null, false_alarm_rate = null, run = null } = {}) {
     const b = filled(inquiry) ? this.#record.bundleInfo(inquiry) : null;
     if (!b) return refuse("NO_SUCH_BUNDLE", "no inquiry by that id is held", { inquiry: filled(inquiry) ? inquiry : null });
@@ -405,7 +405,7 @@ export class Hypotheses {
     const rate = typeof false_alarm_rate === "number" ? false_alarm_rate : NaN;
     if (!Number.isFinite(rate) || rate < 0 || rate > 1)
       return refuse("PROPOSAL_NO_RATE", "a proposal of the system's carries its measured false-alarm rate, a number from 0 to 1", { false_alarm_rate: false_alarm_rate ?? null });
-    if (!filled(run)) return refuse("PROPOSAL_NO_RUN", "a proposal of the system's names the run that made it");
+    if (!filled(run)) return refuse("HYPOTHESIS_PROPOSAL_NO_RUN", "a proposal of the system's names the run that made it");
     const at = this.#now();
     return this.#record.transact(() => {
       const id = this.#record.allocId("HYP", at.slice(0, 4));
@@ -430,7 +430,7 @@ export class Hypotheses {
   #openProposal(id, by) {
     const p = isHypothesisId(id) ? this.#one(`SELECT * FROM ${PROPOSALS_TABLE} WHERE proposal_id = ?`, id) : null;
     if (!p || !this.#membership.inSight(p.bundle_id, by))
-      return { refusal: refuse("NO_SUCH_PROPOSAL", "no proposal by that id is held, or it is not one you may see", { proposal: filled(id) ? id : null }) };
+      return { refusal: refuse("NO_SUCH_HYPOTHESIS_PROPOSAL", "no proposal by that id is held, or it is not one you may see", { proposal: filled(id) ? id : null }) };
     if (isMachineIdentity(by)) return { refusal: refuse("MACHINE_CANNOT_HYPOTHESISE", "the act's stamp is a machine's; only a member takes up or sets aside the system's proposal (K1473)") };
     return { row: p };
   }
@@ -441,7 +441,7 @@ export class Hypotheses {
 
   /** R17: `hypothesisTakeUp({proposal, form, statement?, by})`, a member's act (`record-grammar` R52): holds the proposal
    *  by R1 as hers (`as_proposed` in its words, `edited` or `own_instead` in hers), noting it came from the system.
-   *  Refusals in order, each writing nothing: `NO_SUCH_PROPOSAL`, `MACHINE_CANNOT_HYPOTHESISE`, `PROPOSAL_FORM_UNKNOWN`,
+   *  Refusals in order, each writing nothing: `NO_SUCH_HYPOTHESIS_PROPOSAL`, `MACHINE_CANNOT_HYPOTHESISE`, `PROPOSAL_FORM_UNKNOWN`,
    *  `PROPOSAL_NOT_OPEN`, `HYPOTHESIS_NO_STATEMENT` (an edited or own statement absent), then R1's own, unchanged. */
   hypothesisTakeUp({ proposal = null, form = null, statement = null, by = null } = {}) {
     const m = this.#openProposal(proposal, by);
@@ -464,7 +464,7 @@ export class Hypotheses {
   }
 
   /** R18: `hypothesisSetAside({proposal, reason, by})`, a member's act: the proposal stays readable, with who set it
-   *  aside, when and why. Refusals in order, each writing nothing: `NO_SUCH_PROPOSAL`, `MACHINE_CANNOT_HYPOTHESISE`,
+   *  aside, when and why. Refusals in order, each writing nothing: `NO_SUCH_HYPOTHESIS_PROPOSAL`, `MACHINE_CANNOT_HYPOTHESISE`,
    *  `PROPOSAL_NO_REASON`, `PROPOSAL_NOT_OPEN`. */
   hypothesisSetAside({ proposal = null, reason = null, by = null } = {}) {
     const m = this.#openProposal(proposal, by);
