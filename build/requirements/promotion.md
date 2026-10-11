@@ -121,7 +121,11 @@ The one write path by which a bundle enters or changes in the record. It holds t
 
 ## Private
 
+- **R57** (T45; N892; Actions D4; v0.2 rules 15, 16; `project-roster` R23) A counsel matter is never evidence: a document is refused `COUNSEL_MATTER_NOT_EVIDENCE`, writing nothing, when a leg, citation or `cites` entry names a bundle committed with a project whose scope is `counsel_matter` (`project-roster` R23) and the citing document's own project is a different one. Within the counsel matter's own project such references are accepted. A scope set after a document was promoted changes nothing already promoted (`project-roster` R21). Controls: the same reference from inside that project, and to a bundle of a project of scope `none`, are accepted. *(not yet met: T45)*
+
 ### Uses
+
+- `project-roster.projectScope` (R23): the scope a cited bundle's project holds (R57). (T45)
 
 - `record-core`: `transact` and `commit` (R2, R3; every row R3 writes goes through them), `mintOpaqueId` and `mintExhausted` (its R62) (a project's id, R19; N322), `bundleInfo`, and `readImage`, whose write order R30 depends on (record-core R16).
 - `record-grammar` (the id grammar and vocabulary its checks read) and `test-support` (tests only).
