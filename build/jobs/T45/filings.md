@@ -102,3 +102,11 @@ Size (session_0162rfUAY9xvRvZ6LS5J1DNM): test runs 24, module lines 3347
 **Tests:** filings 92 pass, 0 fail. **Checks:** format 0; architecture (19 files, 89 imports) 0; coverage 48 of 48; ownership 11 files, 0.
 
 Size (session_0162rfUAY9xvRvZ6LS5J1DNM): test runs 30, module lines 3347
+
+## J6 · COMPLETE
+
+**B10, B11 processed; merged tranche/T45** (action-holds again, K2860; action-clocks and action-replies, K2862). No filings code changed: I used no stand-in for action-clocks or action-replies, and action-holds' wider `pressureFor` leaves R9's defence packet test as it was (the mark is made through action-holds' `actionPressure`).
+
+**Tests:** filings 92 pass, 0 fail. **Checks:** format 0; architecture (19 files, 89 imports) 0; coverage 48 of 48; ownership 11 files, 0. Stand-ins left as in J5 (actions R75's held and accepted disclosures; docket's R27 marks).
+
+Size (session_0162rfUAY9xvRvZ6LS5J1DNM): test runs 32, module lines 3347
