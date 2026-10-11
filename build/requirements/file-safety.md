@@ -1,6 +1,6 @@
 # file-safety — requirements
 
-**Status** · In force: a new product module (layer 3, directly after `capture`), by Bob's K1913, K1928, K1929, K1939 and K1949 (with DEC-173), packaged by BOB (K2008, K2063), entering at T36's opening; every requirement not yet met (T36). Last changed T37 (T37-8: R12, R15, R21, R27, R28, R31, R33, R35, R36 amended; R39–R41 new; K2099, K2129, K2130, K2153, K2155, K2160, K2161).
+**Status** · In force: a new product module (layer 3, after `capture` and, since T42, `doorbell`; K2727), by Bob's K1913, K1928, K1929, K1939 and K1949 (with DEC-173), packaged by BOB (K2008, K2063), entering at T36's opening; every requirement not yet met (T36). Last changed T37 (T37-8: R12, R15, R21, R27, R28, R31, R33, R35, R36 amended; R39–R41 new; K2099, K2129, K2130, K2153, K2155, K2160, K2161).
 
 **Size (P6).** About 1,500–2,200 lines with tests for R1–R26; the security tools, safe copy, reputation and forwarding (R27–R37) add about 800–1,200.
 

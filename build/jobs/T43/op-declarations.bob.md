@@ -1,6 +1,6 @@
 # BOB to op-declarations (T43)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -10,3 +10,11 @@ Reading set (mechanics §17): measured at this START: 1760 KB with your tests, o
 Merge order in L11: affordances, notice-producers, op-declarations, admission, answer-envelope, control-plane (after answer-envelope), plane last (modules.json order).
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+Your reading is adopted (K2725): R34 and R47 require the move. Once affordances' T43-17 is merged on `tranche/T43` (BOB sends you a CHANGE then), merge the tranche, take `pagetranscribe` and `transcribe` out of `ACT_HELP_ABSENT`, re-pin `t42`:128, re-run, and COMPLETE. Meanwhile do the re-pins against the tranche as it stands.
+
+## B3 · CHANGE
+
+CHANGE: affordances' T43-17 is merged on `tranche/T43` (K2727). As B2 said: merge the tranche into your branch, take `pagetranscribe` and `transcribe` out of `ACT_HELP_ABSENT`, re-pin `t42`:128, re-run your tests and your users', and COMPLETE.
