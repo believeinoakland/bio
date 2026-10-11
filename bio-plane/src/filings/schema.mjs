@@ -152,7 +152,7 @@ CREATE TABLE IF NOT EXISTS filing_second_approvals (
 );
 -- R47: A HOLD NOTICE'S TEXT, prepared for a hold in place and labelled as a
 -- draft; keyed to the hold's action, or to none for a project's hold.
-CREATE TABLE IF NOT EXISTS hold_notices (
+CREATE TABLE IF NOT EXISTS filing_hold_notices (
   notice_id     TEXT PRIMARY KEY,
   action_id     TEXT,
   place         TEXT NOT NULL,
@@ -202,7 +202,7 @@ export const FILINGS_TABLES = Object.freeze([
   { name: "filing_templates", keys: ["action_id"] },
   { name: "joint_signatories", keys: ["action_id"] },
   { name: "filing_second_approvals", keys: ["action_id"] },
-  { name: "hold_notices", keys: ["action_id"] },
+  { name: "filing_hold_notices", keys: ["action_id"] },
 ]);
 
 /** Creates the tables; idempotent. */

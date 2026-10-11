@@ -4,8 +4,8 @@
    the assertion gate (R43), "as myself" (R44), recognition (R45), the review copy (R46), the hold notice (R47), junior
    staff (R48), legal facts (R49), and packets without a determination, for defence and in counsel matters (R8–R10).
    Driven at the module's interface over the real modules (action-grammar's phrasing lists, its R16–R19, among them);
-   what a layer-9 provider merging before filings does not yet answer (actions' disclosures, partners and press terms, R75, R78, R79;
-   action-holds' reads, R2, R11, R12) is a stand-in answering as its requirement states (K2848 (7)). */
+   what a layer-9 provider merging before filings does not yet answer (actions' disclosures, partners and press terms, R75, R78,
+   R79) is a stand-in answering as its requirement states (K2848 (7)); docket's legal marks are a stand-in for its R27 read. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, STRANGER, F, DOC, CASE, PROFILE, WHY, sha, actionsWith, templatesOver } from "./fixture.mjs";
@@ -341,25 +341,26 @@ test("R46 a press action's review copy carries the embargo and release times on 
   assert.equal(comm(f, x.action(), { text: "Words." }).text, "Words.", "not a press action: no line");
 });
 
-test("R47 holdNoticePrepare: for a hold in place, a plain notice telling members what to keep outside Civicsmith (the place, the reason, the date, the kinds of material), labelled, naming no recipient; a released hold prepares nothing (HOLD_NOT_IN_PLACE, action-holds' own)", async () => {
+test("R47 holdNoticePrepare: for a hold in place (action-holds R2), a plain notice telling members what to keep outside Civicsmith (the place, the reason, the date, the kinds of material), labelled, naming no recipient; a released hold prepares nothing (HOLD_NOT_IN_PLACE, action-holds' own); no module answering holds: refused, never passed", async () => {
   const x = world();
-  const A = x.action();
-  const statements = { [A]: [{ hold: "in_place", reason: "a solicitor's letter", by: V("olive"), at: "2026-09-20T10:00:00Z" }],
-                       released: [{ hold: "in_place", reason: "r", at: "2026-09-01" }, { hold: "released", reason: "settled", at: "2026-09-10" }] };
-  const actionHolds = { holdsOf: ({ target }) => ({ ok: true, statements: statements[target] || [] }),
-                        holdNotInPlace: (place) => ({ ok: false, reason: "HOLD_NOT_IN_PLACE", code: "HOLD_NOT_IN_PLACE", check: "C-149.x", place }) };
-  const f = f45(x, { actionHolds });
-  const n = f.holdNoticePrepare({ place: { target: A }, preparer: V("bo"), viewer: V("bo") });
+  const h = x.f.actionHolds;
+  const A = x.action(), R = x.action();
+  for (const id of [A, R])
+    assert.equal(h.actionHold({ target: id, hold: "in_place", reason: "a solicitor's letter", author: V("olive"), viewer: V("olive") }).ok, true);
+  assert.equal(h.actionHoldRelease({ target: R, reason: "settled", author: V("olive"), viewer: V("olive") }).ok, true);
+  const n = x.f.holdNoticePrepare({ place: { target: A }, preparer: V("bo"), viewer: V("bo") });
   assert.equal(n.ok, true, JSON.stringify(n).slice(0, 300));
   assert.match(n.text, /a solicitor's letter/);
-  assert.match(n.text, /2026-09-20/);
+  assert.match(n.text, /since 2026-/);
   assert.match(n.text, /Keep, outside Civicsmith/);
   for (const m of ["olive", "bo", "cy"]) assert.equal(n.text.includes(m), false, "names no member");
   assert.equal(n.label.state, "member_proposed");
-  const r = f.holdNoticePrepare({ place: { target: "released" }, preparer: V("bo"), viewer: V("bo") });
-  assert.deepEqual([r.reason, r.check], ["HOLD_NOT_IN_PLACE", "C-149.x"], "action-holds' refusal passed through");
-  assert.equal(f.holdNoticePrepare({ place: { target: A }, preparer: "" }).reason, "FILING_NO_PREPARER");
-  assert.equal(x.f.holdNoticePrepare({ place: { target: A }, preparer: V("bo"), viewer: V("bo") }).reason, "HOLD_NOT_IN_PLACE", "no module: refused, never passed");
+  const r = x.f.holdNoticePrepare({ place: { target: R }, preparer: V("bo"), viewer: V("bo") });
+  assert.equal(r.reason, "HOLD_NOT_IN_PLACE", JSON.stringify(r).slice(0, 300));
+  assert.match(String(r.check), /^C-149\./, "action-holds' own row (K2848 (7))");
+  assert.equal(x.f.holdNoticePrepare({ place: { target: A }, preparer: "" }).reason, "FILING_NO_PREPARER");
+  const none = x.filingsWith({ host: null, actionHolds: null });
+  assert.equal(none.holdNoticePrepare({ place: { target: A }, preparer: V("bo"), viewer: V("bo") }).reason, "HOLD_NOT_IN_PLACE");
 });
 
 test("R48 a sentence naming staff below the responsible official is pointed out only through the assistant's textcheck (reads_as staff_named), labelled, never refusing; with the assistant off the draft says the check did not run", async () => {
@@ -390,10 +391,9 @@ test("R8 R9 a packet needs no determination and no override: with none, the fact
   const Q = "INQ-2026-0002-quay";
   x.inquiry(Q, { legs: [{ target: DOC }] });
   const A = x.action({ kind: "commitment_claim", legs: [{ target: Q, kind: "advances" }] });
-  const pressure = { pressureFor: ({ action }) => ({ ok: true, items: action ? [{ action, ord: 0, kind: "legal", note: "a solicitor's letter", at: "2026-09-21" }] : [] }) };
   const docket = { docketPressureMarks: () => ({ ok: true, marks: [{ mark: 1, entry: "DKT-1", case: CASE, project: x.proj, kind: "legal", note: "a threat", at: "2026-09-22" },
                                                                    { mark: 2, entry: "DKT-2", case: "CASE-OTHER", project: "PRJ-other", kind: "legal", note: "elsewhere", at: "2026-09-23" }], cursor: null }) };
-  const f = f45(x, { actionHolds: pressure, docket });
+  const f = f45(x, { docket });
   const claim = f.counselPacket({ reason: WHY, action: A, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
   assert.equal(claim.ok, true, JSON.stringify(claim).slice(0, 300));
   assert.equal(claim.purpose, "claim");
@@ -404,11 +404,16 @@ test("R8 R9 a packet needs no determination and no override: with none, the fact
   for (const k of ["challenged", "pressure", "defence_deadlines"]) assert.equal(k in claim.sections, false, `a claim packet has no ${k}`);
   /* a defence packet on an action resting on the determination of the case's finding: the case's docket marks */
   const B = x.action({ kind: "commitment_claim" });
+  /* a pressure mark on the action's correspondence (actions R15, listed by action-holds' pressureFor, its R12) */
+  const c = x.actions.actionCorrespond({ target: B, direction: "received", at: "2026-09-21", account: "a solicitor's letter arrived",
+                                         pressure: { kind: "legal", note: "a solicitor's letter" }, author: V("bo"), viewer: V("bo") });
+  assert.equal(c.ok, true, JSON.stringify(c).slice(0, 300));
   const def = f.counselPacket({ reason: WHY, action: B, counsel: COUNSEL, purpose: "defence", author: V("olive"), viewer: V("olive"),
                                 challenged: [{ statement: "The group said the order was let without a vote.", findings: [F] }] });
   assert.equal(def.ok, true, JSON.stringify(def).slice(0, 300));
   assert.deepEqual(def.sections.challenged.items.map((c) => [c.statement, c.findings.map((y) => y.finding)]), [["The group said the order was let without a vote.", [F]]]);
-  assert.deepEqual(def.sections.pressure.items.map((p) => [p.from, p.at]), [["action-holds", "2026-09-21"], ["docket", "2026-09-22"]], "the case's own docket only");
+  assert.deepEqual(def.sections.pressure.items.map((p) => [p.from, p.source]), [["action-holds", `${B}#0`], ["docket", "docket:DKT-1"]], "the case's own docket only");
+  assert.equal(def.sections.pressure.items[1].at, "2026-09-22");
   const defending = combine([PROFILE]).view.deadlines.filter((r) => r.defends === true).map((r) => r.rule);
   assert.deepEqual(def.sections.defence_deadlines.items.map((d) => d.rule), defending);
   assert.equal(f.counselPacket({ reason: WHY, action: A, counsel: COUNSEL, purpose: "attack", author: V("olive"), viewer: V("olive") }).reason, "FILING_MARK_REFUSED");

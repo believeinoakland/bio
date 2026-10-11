@@ -76,6 +76,7 @@ import { eventsOf } from "../events/index.mjs";
 import { filingTemplatesOf, FILING_BLANKS, FILING_TEXT_MAX, blanksOf, withRow as templatesRow }
   from "../filing-templates/index.mjs";
 import { docketOf } from "../docket/index.mjs";
+import { actionHoldsOf, holdNotInPlace } from "../action-holds/index.mjs";
 import { projectRosterOf } from "../project-roster/index.mjs";
 /* action-grammar's T45 reads (`pointOut`, its R18; `assertionResolutionFindings`, `assertionsUnresolved`, its R19) are
    read off its namespace, so a read it does not answer yet is undetermined here, never a failed link (K248). */
@@ -259,10 +260,9 @@ export class Filings {
   get projectRoster() {
     return this.#deps.projectRoster ||= (this.#deps.host ? projectRosterOf(this.#deps.host, { record: this.record }) : null);
   }
-  /* R9, R47 (T45): action-holds' `pressureFor` (its R12) and the hold at a place (its R2), handed in where the plane
-     composes it (`actionHoldsOf`, K2815); with none, a defence packet's pressure and a hold notice are undetermined,
-     said so (K248). */
-  get actionHolds() { return this.#deps.actionHolds || null; }
+  /* R9, R47 (T45): action-holds' `pressureFor` (its R12) and the hold at a place (its R2), from `actionHoldsOf` on the
+     same host unless given; with none, a defence packet's pressure and a hold notice are undetermined, said so (K248). */
+  get actionHolds() { return this.#deps.actionHolds ||= (this.#deps.host ? actionHoldsOf(this.#deps.host) : null); }
 
   migrate() { migrateFilings(this.sql); }
 
@@ -1537,14 +1537,13 @@ export class Filings {
                                ...(Number.isInteger(place.ord) ? { ord: place.ord } : {}),
                                ...(str(place.project) ? { project: str(place.project) } : {}) } : {};
     if (!h || typeof h.holdsOf !== "function")
-      return { ok: false, reason: "HOLD_NOT_IN_PLACE", place: p, why: "no module answers holds here, so no hold is read as in place" };
+      return { ...holdNotInPlace(p), why: "no module answers holds here, so no hold is read as in place" };
     const r = this.#call(() => h.holdsOf({ ...p, viewer }));
-    if (!r || r.ok === false) return r || { ok: false, reason: "HOLD_NOT_IN_PLACE", place: p, why: "the hold could not be read" };
+    if (!r || r.ok === false) return r || { ...holdNotInPlace(p), why: "the hold could not be read" };
     const list = Array.isArray(r.statements) ? r.statements : Array.isArray(r.holds) ? r.holds : Array.isArray(r.items) ? r.items : [];
     const latest = list.length ? list[list.length - 1] : null;
     if (!latest || latest.hold !== "in_place")
-      return typeof h.holdNotInPlace === "function" ? h.holdNotInPlace(p)
-        : { ok: false, reason: "HOLD_NOT_IN_PLACE", place: p, detail: "no hold is in place here, so no notice is prepared" };
+      return holdNotInPlace(p);
     const where = p.project ? `the project ${p.project}` : Number.isInteger(p.ord) ? `entry ${p.ord} of the action ${p.target}` : `the action ${p.target}`;
     const kinds = "documents, letters and emails, messages, notes, recordings, photographs and files, in any form and on any device";
     const lines = [
@@ -1558,7 +1557,7 @@ export class Filings {
     const text = lines.join("\n");
     return this.record.transact(() => {
       const { id } = this.record.allocId("HLN", at.slice(0, 4));
-      this.sql.exec(`INSERT INTO hold_notices (notice_id, action_id, place, text, sources, preparer, prepared_at) VALUES (?,?,?,?,?,?,?)`,
+      this.sql.exec(`INSERT INTO filing_hold_notices (notice_id, action_id, place, text, sources, preparer, prepared_at) VALUES (?,?,?,?,?,?,?)`,
                     id, p.target ?? null, json(p), text, json(sources), who, at);
       return { ok: true, id, place: p, text, sources, label: proposalLabel(who, "communication"), prepared_by: who, at, evidence: false,
                says: "a notice prepared from the record: it names no recipient and records no one's compliance; a member sends it "
@@ -2018,9 +2017,11 @@ export class Filings {
       for (const q of [{ action: a.id }, ...(a.project ? [{ project: a.project }] : [])]) {
         const r = this.#call(() => h.pressureFor({ ...q, limit: PRESSURE_MAX, viewer }));
         if (!r || r.ok === false) { pressureSays = "the pressure recorded could not be read in full"; continue; }
-        for (const x of Array.isArray(r.items) ? r.items : [])
+        for (const x of Array.isArray(r.items) ? r.items : []) {
+          const where = isObj(x.arrived) ? x.arrived : {};
           if (!pressure.some((p) => json(p.item) === json(x))) pressure.push({ from: "action-holds", item: x, at: x.at ?? null,
-            source: x.pressure ?? (x.action ? `${x.action}#${x.ord ?? "?"}` : a.id) });
+            source: str(where.pressure) ?? (str(where.action) ? `${where.action}#${where.ord ?? "?"}` : a.id) });
+        }
         if (r.truncated) pressureSays = `more than the ${PRESSURE_MAX} pressure items read are held: the list is truncated`;
       }
     } else pressureSays = "no module answers the pressure recorded on actions here, so it is undetermined";
