@@ -22,7 +22,7 @@
 
 **Tests and checks** (on `tranche/T42` @ f997b738cd merged):
 - lines (`test/m/lines/`): `tests 33, pass 33, fail 0`.
-- users (P11): local-facts 38/0, money 70/0, money-checks 48/0, duties 49/0, people 46/0, calculations 55/0, inquiry 193/0, strength 143/0, answers 58/0, corpus-export 25/0, case-disclosures 94/1 (report 2), case-authoring 181/0, actions 109/0, escalation 63/0, affordances 232/0, instance-setup 135/0, op-declarations 128/0, plane 166/0; `system/migrate-released`: MIGRATE_RESULT.
+- users (P11): local-facts 38/0, money 70/0, money-checks 48/0, duties 49/0, people 46/0, calculations 55/0, inquiry 193/0, strength 143/0, answers 58/0, corpus-export 25/0, case-disclosures 94/1 (report 2), case-authoring 181/0, actions 109/0, escalation 63/0, affordances 232/0, instance-setup 135/0, op-declarations 128/0, plane 166/0; `system/migrate-released`: one FAIL of its checks, "born on 0.80.0: and no table a fresh store lacks", got `["ai_ceilings"]`, the accepted red of rule 4 (7) until T42-17, not caused by lines.
 - `format: 147 modules, 146 requirements files; 0 failures`; `architecture: 10 product files, 41 relative imports; 0 failures`; `coverage: 1 modules, 22 of 22 live requirement ids named by a test; 0 failures`; `ownership: 5 files changed by lines between tranche/T42 and HEAD; 0 failures`.
 
-Size (session_0163snLavE1iNycSFMG4uPJy): test runs 26, module lines 962
+Size (session_0163snLavE1iNycSFMG4uPJy): test runs 30, module lines 962
