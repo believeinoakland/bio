@@ -75,23 +75,24 @@ test("R55: after each walk, every compute listener is handed the measurement {me
   assert.equal(heard.length, 1);
 });
 
-test("R38: no place is named in this module's answers or rows' words, and a pulled knock is profiled only through the instance's profile view", async () => {
-  const { CAPTURE_CHECKS, KNOCK_CHECKS } = await import("../../../src/capture/checks.mjs");
+test("R38: no place is named in this module's answers or its own rows' words, and an upload is profiled only through the instance's profile view", async () => {
+  const { CAPTURE_CHECKS } = await import("../../../src/capture/checks.mjs");
   const place = /oakland|alameda|california/i;
-  for (const [code, row] of Object.entries({ ...CAPTURE_CHECKS, ...KNOCK_CHECKS })) assert.ok(!place.test(row.translation), code);
+  for (const [code, row] of Object.entries(CAPTURE_CHECKS)) assert.ok(!place.test(row.translation), code);
   const w = world();
   w.core.setSetting("jurisdiction_profiles", ["test-port-ellery"], "member:admin");
+  const te = new TextEncoder();
+  const up = (c, text) => c.uploadCapture({ bytes: te.encode(text), statement: "handed to me", by: "m1", at: "2026-09-30T10:00:00Z" });
   const answers = [];
-  const k = await w.c.knock({ content: "minutes of the meeting", note: "n", sourceAddress: "1.1.1.1" });
-  answers.push(k, await w.c.knock({ content: "", sourceAddress: "1.1.1.1", knockerSecret: "short" }), w.c.inboxGet("KNOCK-none"));
-  const pulled = await w.c.pullKnock({ knockId: k.knockId, by: "m1", at: "2026-09-30T10:00:00Z" });
-  answers.push(pulled, await w.c.recordCaptureAccount({ captureSha: pulled.capture.sha256, text: "", signature: "", by: "m2" }),
+  const uploaded = await up(w.c, "minutes of the meeting");
+  answers.push(uploaded, await w.c.uploadCapture({ bytes: te.encode("x"), statement: "", by: "m1" }),
+               await w.c.uploadCapture({ bytes: te.encode("x"), statement: "s", by: "class:ai" }),
+               await w.c.recordCaptureAccount({ captureSha: uploaded.capture.sha256, text: "", signature: "", by: "m2" }),
                w.c.sourceReachability({ addressNorm: "https://x.example/" }), w.c.siteChrome({ host: "x.example" }),
-               w.c.resolveLinks({ sourceCapture: pulled.capture.sha256 }), w.c.navChanges({ host: "x.example" }),
+               w.c.resolveLinks({ sourceCapture: uploaded.capture.sha256 }), w.c.navChanges({ host: "x.example" }),
                w.c.renderAdmit({ allowanceMs: 1, reserveMs: 0, at: "2026-09-30T00:00:00Z" }));
   assert.ok(!place.test(JSON.stringify(answers)), "no answer names a place");
-  assert.deepEqual(pulled.document.profile.jurisdiction_view, ["test-port-ellery"], "local vocabulary only through the instance's view");
+  assert.deepEqual(uploaded.document.profile.jurisdiction_view, ["test-port-ellery"], "local vocabulary only through the instance's view");
   const none = world();
-  const k2 = await none.c.knock({ content: "minutes", sourceAddress: "2.2.2.2" });
-  assert.equal((await none.c.pullKnock({ knockId: k2.knockId, by: "m1" })).document.profile.jurisdiction_view, null, "no setting: no view claimed");
+  assert.equal((await up(none.c, "minutes")).document.profile.jurisdiction_view, null, "no setting: no view claimed");
 });
