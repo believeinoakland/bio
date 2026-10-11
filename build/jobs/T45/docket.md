@@ -29,6 +29,7 @@ Readings I am building on (carrying on meanwhile; none blocks me):
 **Tests and checks** (after merging `tranche/T45` @ B3):
 - docket `node --test bio-plane/test/m/docket/`: 75 pass, 0 fail (new `t45.test.mjs`, 16 tests).
 - Users of docket (public-read 158/0, network-notices 73/0, case-import 96/0, queue-producers 84/0, events 64/0, filings 69/1, affordances 224/2, control-plane 220/3, plane 194/2, answer-envelope 27/4): each identical with and without this job.
+- `bio-plane/test/system/migrate-released.test.mjs` (plane's, as a user): 1 pass, 0 fail.
 - `format`: 0 failures. `architecture docket`: 0 failures. `coverage docket`: 28 of 28 live ids. `ownership docket tranche/T45`: 0 failures.
 
 Size (session_01WJkNJBh3kNMavvSr8hujuE): test runs 9, module lines 1637
