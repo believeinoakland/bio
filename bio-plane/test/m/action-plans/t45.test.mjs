@@ -237,7 +237,12 @@ test("R41: a matter that may be an infraction has two standing offers, documenta
   const again = offers()[1].offered_again;
   assert.equal(again.step, "action_sent"); assert.equal(again.ref, s.action);
   /* a matter fixed (a standing cure, conformance R37) is offered no chance to fix; documentation still stands */
-  w.stand.conformance.curesOf = ({ standard }) => ({ ok: true, standards: [{ standard, link: "L-1", cure_standing: true }] });
+  /* conformance R37's answer (its real shape, K2852): an ended link is not a cure; a standing one is */
+  w.stand.conformance.curesOf = ({ determination, standard }) => ({ ok: true, determination, cures: [],
+    standards: [{ standard, link: null, ended: [{ link: "LINK-1", ended: { reason: "undone", by: V("bob"), at: "2026-10-05T00:00:00Z" } }] }] });
+  assert.deepEqual(offers().map((o) => o.kind), ["document_infraction", "chance_to_fix"], "an ended cure fixes nothing");
+  w.stand.conformance.curesOf = ({ determination, standard }) => ({ ok: true, determination, cures: [],
+    standards: [{ standard, link: { link: "LINK-2", cure: "ACT-2026-0009-action", by: V("bob"), at: "2026-10-06T00:00:00Z" }, ended: [] }] });
   assert.deepEqual(offers().map((o) => o.kind), ["document_infraction"]);
   assert.equal(code(adopt({ offer: { subject: w.S1, kind: "chance_to_fix" } })), "NO_SUCH_PLAN_PROPOSAL");
   delete w.stand.conformance.curesOf;

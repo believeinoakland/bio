@@ -993,8 +993,8 @@ export class ActionPlans {
     try {
       const r = c.curesOf({ determination: s.determination, standard: s.standard, viewer });
       if (!ok(r)) return null;
-      const list = Array.isArray(r.standards) ? r.standards : Array.isArray(r.items) ? r.items : Array.isArray(r.cures) ? r.cures : [];
-      return list.some((x) => x && x.standard === s.standard && (x.cure_standing === true || (x.link && x.cure_standing !== false)));
+      /* conformance R37: per standard, `link` the standing cure or null; the ended links are apart. */
+      return (Array.isArray(r.standards) ? r.standards : []).some((x) => x && x.standard === s.standard && isObj(x.link));
     } catch { return null; }
   }
   /* R41, R42: each option adopted from an offer, by option id, `{subject, kind}`; from the history. */
