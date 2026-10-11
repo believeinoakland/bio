@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 432 KB by `build/plan/read
 Merge order in L2: record-core, membership, credentials, promotion last.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+CHANGE (K2620), on your J1 finding (1): R62 is clarified on `tranche/T42` @ fac7e2b65f: a `member:<id>` whose member is revoked (R16) is answered `held: false, uses: null`, as R60 refuses every viewer for that account. R16's reach is unchanged (the reference is not removed). Merge the tranche branch into yours, apply it with an explicit test and negative control (a live member's account still answers held), and post COMPLETE again. Finding (2) is noted in ai-use's entry. You merge after membership (your `uses`).
