@@ -2,7 +2,7 @@
    tray, and that a machine proposes and nothing else. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, opened, option, choose, V, MACHINE, AGENT, RUN_PRINCIPAL, by, OFFICE } from "./fixture.mjs";
+import { seeded, opened, option, choose, V, MACHINE, AGENT, RUN_PRINCIPAL, by, OFFICE, FIRST } from "./fixture.mjs";
 import { DISCLOSURE, noSuchPlan, actionPlansOf, actionPlansOps } from "../../../src/action-plans/index.mjs";
 
 const code = (r) => r.code ?? r.reason;
@@ -102,7 +102,7 @@ test("R32: a machine proposal answers its disclosure, why, sources and work_kind
   const opt = w.ap.planRead({ id: w.PL, viewer: V("bob") }).options[0];
   assert.equal(opt.disclosure, sentence); assert.equal(opt.origin.assistant, true);
   choose(w, [a.option]);
-  const s = w.ap.optionStart({ plan: w.PL, option: a.option, kind: "other", ...by("bob") });
+  const s = w.ap.optionStart({ plan: w.PL, option: a.option, kind: "other", ...by("bob"), ...FIRST });
   assert.equal(s.ok, true);
   const text = w.text(s.action);
   assert.equal(/assistant|machine work|disclosure|RUN-/.test(text), false, "the disclosure stops at adoption");

@@ -122,7 +122,7 @@ export const ACTION_PLAN_CHECKS = Object.freeze({
       + 'not what this record is for. Send the act without them. Nothing was written.',
   },
   NO_SUCH_PLAN_PROPOSAL: {
-    check: 'C-124.22', where: at("optionAdopt", "is-proposal-seen"),
+    check: 'C-124.22', where: at("refuseNoSuchProposal", "is-proposal-seen"),
     translation: 'No proposal for an option answers to that id in a plan you may see. Nothing was written.',
   },
   PROPOSAL_ADOPTED: {

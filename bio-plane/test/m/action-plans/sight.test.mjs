@@ -4,7 +4,7 @@
    `hide`); bob sees everything, and each test's negative control is his answer, unchanged and with no `out_of_view`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, opened, option, choose, V, by, OFFICE, ms, NOW } from "./fixture.mjs";
+import { seeded, opened, option, choose, V, by, OFFICE, ms, NOW, FIRST } from "./fixture.mjs";
 
 const AT = ms(NOW);
 const read = (w, who) => w.ap.planRead({ id: w.PL, viewer: V(who), nowMs: AT });
@@ -68,7 +68,7 @@ test("R35 (R6): a started option whose action the viewer may not see has no acti
   opened(w);
   const a = option(w, { addressee: OFFICE });
   choose(w, [a]);
-  const s = w.ap.optionStart({ plan: w.PL, option: a, kind: "other", ...by("bob") });
+  const s = w.ap.optionStart({ plan: w.PL, option: a, kind: "other", ...by("bob"), ...FIRST });
   assert.equal(s.ok, true, JSON.stringify(s).slice(0, 300));
   const before = read(w, "bob");
   assert.equal(before.options[0].action.id, s.action);

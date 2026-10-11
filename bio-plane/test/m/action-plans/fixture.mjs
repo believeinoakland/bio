@@ -297,3 +297,5 @@ export function choose(w, options, extra = {}) {
 }
 
 export const by = (who, extra = {}) => ({ author: V(who), viewer: V(who), ...extra });
+/** R42: a member's reason for taking an outward step before the infraction it serves is documented. */
+export const FIRST = Object.freeze({ why_first: "A deadline comes first" });

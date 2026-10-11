@@ -3,13 +3,13 @@
    Each case's negative control is optionStart itself, asked the same afterwards. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, opened, option, choose, V, MACHINE, by, OFFICE } from "./fixture.mjs";
+import { seeded, opened, option, choose, V, MACHINE, by, OFFICE, FIRST } from "./fixture.mjs";
 import { actionPlansOps, noSuchPlan } from "../../../src/action-plans/index.mjs";
 import { contactNotAMember } from "../../../src/actions/index.mjs";
 
 const code = (r) => r.code ?? r.reason;
 const DATES = [{ date: "2026-11-01", basis: "the records statute, ten days" }, { date: "2026-12-01", basis: "the order of 2026" }];
-const args = (w, opt, extra = {}) => ({ plan: w.PL, option: opt, kind: "other", ...by("bob"), ...extra });
+const args = (w, opt, extra = {}) => ({ plan: w.PL, option: opt, kind: "other", ...by("bob"), ...FIRST, ...extra });
 const preview = (w, opt, extra = {}) => w.ap.optionStartPreview(args(w, opt, extra));
 const start = (w, opt, extra = {}) => w.ap.optionStart(args(w, opt, extra));
 
@@ -151,7 +151,7 @@ test("R37: op=optionstartpreview reaches the preview with the stamped author and
   const url = (q) => new URL(`https://plane.test/?${new URLSearchParams(q)}`);
   const ops = (q, body) => actionPlansOps(w.ap, url(q), body);
   const before = w.snapshot();
-  const p = ops({ author: V("bob"), viewer: V("bob"), plan: w.PL, option: a, kind: "other" }, { author: MACHINE, viewer: MACHINE })
+  const p = ops({ author: V("bob"), viewer: V("bob"), plan: w.PL, option: a, kind: "other" }, { author: MACHINE, viewer: MACHINE, ...FIRST })
     .optionstartpreview();
   assert.equal(p.ok, true); assert.equal(p.would_start, true, JSON.stringify(p));
   const m = ops({ author: MACHINE, viewer: V("bob"), plan: w.PL, option: a, kind: "other" }, { author: V("bob") }).optionstartpreview();
