@@ -113,7 +113,7 @@ Terms. A **period** is `{from, to}`, each a `YYYY-MM-DD` date or null; null is "
 
 ## Private
 
-- **R54** (T45; DUTIES #4 J2, K2806) `standardProposalRead({proposal, viewer})` answers one R9 proposal the viewer may see: `{ok: true, proposal: {id, kind, adoption}}`, `adoption` null until a member adopts it (R10), then `{standard, by, at}` naming the adopted `STD-`. A proposal id that names none, or one the viewer may not see, is answered alike, `NO_SUCH_PROPOSAL`, with nothing read beyond it. It writes nothing and never throws. Read by `duties` R30. Controls: an unadopted proposal answers `adoption: null`; an adopted one its standard. *(not yet met: T45)*
+- **R54** (T45; DUTIES #4 J2, K2806) `standardProposalRead({proposal, viewer})` answers one R9 proposal the viewer may see: `{ok: true, proposal: {id, kind, adoption}}`, `adoption` null until a member adopts it (R10), then `{standard, by, at}` naming the adopted `STD-`. A proposal id that names none, or one the viewer may not see, is answered alike, `STANDARD_NO_SUCH_PROPOSAL` (C-112.15, R10's code), with nothing read beyond it; a proposal adopted as a standard the viewer may not read answers so too. It writes nothing and never throws. Read by `duties` R30. Controls: an unadopted proposal answers `adoption: null`; an adopted one its standard. *(not yet met: T45)*
 
 ### Uses
 
