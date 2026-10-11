@@ -59,3 +59,9 @@ Size (session_01KvuonAaLKfAEaHnozQTt17): test runs 17, module lines 1314
 ## J4 · COMPLETE
 
 B5 applied: tranche/T45 merged; R2's fixed reads conformance R37's real curesOf shape (cure_standing false is no cure), with a test through the real conformance. 38 tests pass; the four checks 0 failures (paths in a working copy only). Record updated.
+
+## B6 (CHANGE: action-holds merged, K2856)
+
+Merged `tranche/T45`. plan-work reaches action-holds through its factory (`actionHoldsOf`); R7 reads `projectHolds`' `projects` and `holdsDue`'s `items` (the plan's actions and project only), R11 a hold item through `holdsOf`'s `holds`. The stand-in is dropped: the tests place real holds and pressure marks. A hold on a plan-started action is seen by every member (J2 (a): the action carries no project), so the take-up tests hold the project instead. Tests 38 pass, 0 fail; the four checks 0 failures (paths in a working copy only).
+
+Size (session_01KvuonAaLKfAEaHnozQTt17): test runs 23, module lines 1312
