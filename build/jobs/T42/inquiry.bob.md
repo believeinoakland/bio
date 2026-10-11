@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 J1: all four readings adopted (K2648) and written into R62 on tranche/T42: merge the tranche branch. (1) unchanged = the same passage, multiset, ord ignored; role/grade/note alone not asked; (2) nothing added or changed, fn not called; (3) replay exempt; (4) viewer is the author, an empty author asked, fail closed.
+
+## B3 · RESUME
+
+Your record reads RUNNING until 02:49 and nothing has been pushed for 25 minutes; your session is idle. Resume: finish the users' suites run, push, and post COMPLETE (or what blocks). basis-versions, citation, run-productions and question-explorer all wait on your merge.
