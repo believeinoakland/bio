@@ -626,7 +626,7 @@ test("R18 R9 R10: projectjoin and projectleave are each offered exactly where th
 });
 
 test("R18: projectleave is offered to an owner only while another owner is committed (not leaving), which is when "
-   + "membership R35 accepts it, and owner-remove stays offered where R40 accepts it (N45)", async () => {
+   + "membership R35 accepts it, and owner-remove stays offered where membership R40 accepts it (N45)", async () => {
   W.PD = await W.project("Affordances project PD");
   must("iris owns PD", await W.own("PD", "iris"));
   for (const [h, tok] of [["pam", W.PAM], ["zed", W.ZED]]) {
@@ -725,7 +725,7 @@ test("R19: the reasoned registry, progression and theme acts, and intent's three
   assert.deepEqual(Object.entries(got).filter(([, c]) => !JUSTIFICATION_REFUSALS.includes(c)), []);
 });
 
-test("R19 R35 R37: together the two drives reach every op RUNGS grades `reasoned`", () => {
+test("R19: together the two drives reach every op RUNGS grades `reasoned`", () => {
   const driven = ["release", "dispose", "sever", "reinstate", "conclude", "reopen", "inquirydivide", "inquiryground",
     "actionmove", "versionreject", "versionconsider", "withdrawconclusion", "projectownerremove", "projectownerrescue",
     "adminremove", "connectionassert", "filemembershipjudge", "relationdeclare", "aliaswithdraw", "relationwithdraw",
@@ -776,7 +776,7 @@ test("R19 R35 R37: together the two drives reach every op RUNGS grades `reasoned
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "reasoned" && !driven.includes(op)), awaitingOwner);
 });
 
-test("R19 R2: inquiryground is `reasoned` where it revises what stands — a FIRST grouping replaces nothing and asks no "
+test("R19: inquiryground is `reasoned` where it revises what stands — a FIRST grouping replaces nothing and asks no "
    + "reason; a restructure without one is refused with a code in JUSTIFICATION_REFUSALS (K212)", async () => {
   const q = W.INQ2;
   const first = await POST(`op=inquiryground&token=${W.IRIS}&target=${E(q)}`, { grounds: [{ ground: "g1", legs: [0] }] });

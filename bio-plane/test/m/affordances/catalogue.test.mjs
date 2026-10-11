@@ -1,6 +1,9 @@
-/* affordances: the catalogue (R1–R7), the rung backing that can be read off the tables (R19's structural half), the
-   decorated shape's rung totality (R24) and the no-place rule (R25), each at the module's exports. What the acting
-   modules answer when the acts are performed (R18–R20) is driven through the plane in `plane.test.mjs`. */
+/* affordances: the catalogue (R1, R4–R6), the rung backing that can be read off the tables (R19's structural half), the
+   totality over the control plane's table and the owners' op maps (R12), the decorated shape's rung totality (R24) and
+   the no-place rule (R25), each at the module's exports. The grades themselves (RUNGS, RUNG_ABSENT, NON_ACTS,
+   MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, CONSEQUENCE_STATEMENTS) are `op-grades`' (its R1–R31), pinned in its own
+   tests; what is pinned here of them is only what those tests do not yet pin (N877). What the acting modules answer when
+   the acts are performed (R18–R20) is driven through the plane in `plane.test.mjs`. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -29,22 +32,21 @@ import { list as profiles, get as profile } from "../../../../jurisdictions/inde
 const { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, VOCABULARIES } = A;
 const { NON_ACTS, RUNGS, RUNG_ABSENT, RUNG_LADDER, RUNG_ABSENCE_GROUNDS, IRREVERSIBLE_CORRECTION_PATH, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS } = G;
 const ids = (xs) => xs.map((a) => a.id).sort();
-/* R40 (T33-85): T33's grades and reasons, the tables spread into RUNGS, RUNG_ABSENT and NON_ACTS; held to the op maps in
-   t33.test.mjs, so the tests below that predate T33 set them aside where they count a closed set. */
+/* op-grades R13 (T33-85): T33's grades and reasons, the tables spread into RUNGS, RUNG_ABSENT and NON_ACTS; held to the op
+   maps in t33.test.mjs, so the tests below that predate T33 set them aside where they count a closed set. */
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
 const T33_OPS = new Set([...Object.keys(T33_RUNGS), ...Object.keys(T33_RUNG_ABSENT), ...Object.keys(T33_NON_ACTS)]);
-/* R45 (K1864): T34's grades and R21's aliases, held to their owners and ops in t34.test.mjs, set aside as T33's are. */
+/* op-grades R17 (K1864): T34's grades and op-declarations R21's aliases, held to their owners and ops in t34.test.mjs, set aside as T33's are. */
 import { T34_RUNGS, T34_RUNG_ABSENT, OP_ALIASES } from "../../../src/op-grades/t34.mjs";
 /* K1974 (A-1): the grading tables are `op-grades'`, which holds T35's grades (its R21, R22) to their owners in its own
    `t35.test.mjs`; set aside here as T33's and T34's are. */
-import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS, T35_CONSEQUENCE_STATEMENTS } from "../../../src/op-grades/t35.mjs";
+import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS } from "../../../src/op-grades/t35.mjs";
 /* T36 (K2121, K2156): op-grades R23–R25 grade K2092's five ops, file-safety's 23 and credentials' keep-away in its
-   `t36.mjs`; each grade is pinned below by name, as its owner's requirements give it, never read back from the table. */
-import { T36_RUNGS, T36_RUNG_ABSENT, T36_NON_ACTS, T36_CONSEQUENCE_STATEMENTS } from "../../../src/op-grades/t36.mjs";
-import { T37_RUNGS, T37_RUNG_ABSENT } from "../../../src/op-grades/t37.mjs";
+   `t36.mjs`; the ops the closures below name are named by hand, as their owners' requirements give them, never read
+   back from the table. */
+import { T36_NON_ACTS } from "../../../src/op-grades/t36.mjs";
 /* T41 (op-grades R29, R30; K2569, K2570): the handle ops and the ops op-declarations R41, R43 and R45 declare, graded in
-   op-grades' `t41.mjs`; each grade is pinned below by name, as op-grades R30 words it, never read back from the table. */
-import { T41_RUNGS, T41_RUNG_ABSENT } from "../../../src/op-grades/t41.mjs";
+   op-grades' `t41.mjs`; named below by hand, as op-grades R30 words them, never read back from the table. */
 const T41_REASONED = ["projectaikeepaway", "milestoneremove", "milestoneitemremove", "projectclosewithgaps",
   "hypothesissetaside", "guidereview", "guideretire", "stepaccept"];
 const T41_REVERSIBLE = ["stepcreate", "stepstart", "stepend", "stepwait", "stepwaitremove", "stepcostadd", "stepcostremove",
@@ -99,9 +101,9 @@ test("R1: PER_ITEM_ACTS holds the four set acts, weight per-item, set key items,
   ]);
 });
 
-/* R2 as folded (K211, K221): K221 adds `triage` and `reevaluationrecord` to the reasoned rung; K264 layer 9's seven
-   (restored in T9 with N216), K309; N310 `determine` (conformance's N233). */
-/* DEC-88's three bands (K1038, J1), word for word as R2 lists them, and K1019's and K1023's four T22 acts. */
+/* op-grades R1 as folded (K211, K221): K221 adds `triage` and `reevaluationrecord` to the reasoned rung; K264 layer 9's
+   seven (restored in T9 with N216), K309; N310 `determine` (conformance's N233). */
+/* DEC-88's three bands (K1038, J1), word for word as op-grades R1 lists them, and K1019's and K1023's four T22 acts. */
 const DEC88 = {
   reversible: ["suggest", "extractpropose", "contradictionpropose", "themepropose", "standardpropose", "comparisonpropose",
     "theorypropose", "actionriskpropose", "actionlawspropose", "filingprepare", "contentmint", "casedraft", "reviewcomment",
@@ -121,15 +123,17 @@ const bandsOf = (rungs) => {
   for (const k of Object.keys(got)) got[k].sort();
   return got;
 };
-test("R2 R35 R37 R38: the rung ladder, low to high, and RUNGS' assignment — DEC-88's three bands word for word among them — with "
-   + "its negative controls: an op moved to the wrong band, or one of the 57 left out of RUNGS, is seen", () => {
-  assert.deepEqual(RUNG_LADDER, ["reversible", "reasoned", "terminal", "attested", "irreversible"]);
-  assert.deepEqual([DEC88.reversible.length, DEC88.reasoned.length, DEC88.terminal.length], [25, 30, 2]);
+/* op-grades' content its own tests do not yet pin (N877; reported to BOB): RUNGS is a closed assignment — every op it
+   ranks is one the rulings rank, in its band, and no other — so a rung given to an op no ruling ranks is seen (R19:
+   a rung is backed only where a ruling gives it). Each op's own band is pinned in op-grades' tests. */
+test("R19: RUNGS' assignment is closed — DEC-88's three bands word for word among the bands, and no op ranked that no "
+   + "ruling ranks — with its negative controls: an op moved to the wrong band, or one of the 57 left out of RUNGS, is "
+   + "seen", () => {
   const want = {
-    irreversible: ["publish", "publishat", "publishatmove" /* R42 */],
-    attested: ["attest", "caseratify", "ratify", "reattest", "captureaccount" /* N364 */, "noticepost" /* R32 */,
-      "docketpost" /* R34 */],
-    terminal: ["retire", "actionholdrelease" /* R33: a named exception to R27 */],
+    irreversible: ["publish", "publishat", "publishatmove" /* op-grades R14 */],
+    attested: ["attest", "caseratify", "ratify", "reattest", "captureaccount" /* N364 */, "noticepost" /* op-grades R7 */,
+      "docketpost" /* op-grades R9 */],
+    terminal: ["retire", "actionholdrelease" /* op-grades R8: a named exception to its R3 */],
     reversible: ["actionlaws", "cite", "escalationresume", "projectvisibilityset", "versionaccept", "versioncurrent",
       "versionhide", "versionrevert", "sourceconsentwithdraw" /* N364, K558 */, "scenarioset" /* K727 */],
     reasoned: ["actionmove", "actionrisktier", "addressedrecord", "adminremove", "aliaswithdraw", "aspirationdepart",
@@ -146,24 +150,24 @@ test("R2 R35 R37 R38: the rung ladder, low to high, and RUNGS' assignment — DE
       "plansubjectadd", "plansubjectremove", "optionrevise", "optiondispose", "planclose",
       /* K918: actions R52's hold statement */
       "actionhold",
-      /* R30: a template's retirement and a member's act on a local fact */
+      /* op-grades R6: a template's retirement and a member's act on a local fact */
       "templateretire", "factconfirm", ...DEC88.reasoned, ...T22_REASONED,
-      /* R34: the docket's filing and the manager's decline */
+      /* op-grades R9: the docket's filing and the manager's decline */
       "docketfile", "docketdecline",
-      /* R35: DEC-96's four reasoned acts on an imported case */
+      /* op-grades R10: DEC-96's four reasoned acts on an imported case */
       "importaccept", "importacceptwithdraw", "importflag", "importflagclear",
-      /* R37: a wizard script's retirement */
+      /* op-grades R11: a wizard script's retirement */
       "wizardretire"],
   };
-  /* R38: the watch of an imported case's docket and its end, each taking the other back */
+  /* op-grades R12: the watch of an imported case's docket and its end, each taking the other back */
   want.reversible.push("importwatch", "importunwatch");
-  /* R42: cancelling a set time, taken back by a new signing */
+  /* op-grades R14: cancelling a set time, taken back by a new signing */
   want.reversible.push("publishatcancel");
   want.reversible.push(...DEC88.reversible);
   want.terminal.push(...DEC88.terminal);
-  /* R40: T33's rungs, each graded in t33.mjs and held there to its owner (t33.test.mjs) */
+  /* op-grades R13: T33's rungs, each graded in t33.mjs and held there to its owner (t33.test.mjs) */
   for (const [op, r] of Object.entries(T33_RUNGS)) want[r].push(op);
-  /* R45: T34's rungs (t34.mjs), and each alias at its op's rung */
+  /* op-grades R17: T34's rungs (t34.mjs), and each alias at its op's rung */
   for (const [op, r] of Object.entries(T34_RUNGS)) want[r].push(op);
   /* op-grades R22 (T35): T35's rungs (t35.mjs) */
   for (const [op, r] of Object.entries(T35_RUNGS)) want[r].push(op);
@@ -171,12 +175,10 @@ test("R2 R35 R37 R38: the rung ladder, low to high, and RUNGS' assignment — DE
      file-safety R17, credentials R51); pinned by name */
   const T36_REASONED = ["standardinforcethrough", "standardinforcethroughwithdraw", "spotcheckvisit", "releasescanhold",
     "aikeepaway"];
-  assert.deepEqual(Object.keys(T36_RUNGS).sort(), [...T36_REASONED].sort());
   want.reasoned.push(...T36_REASONED);
   /* op-grades R27 (T37; DEC-157 (5)): the three translation acts an administrator's one-act undo takes back, each
      `reversible`, asking no reason; pinned by name */
   const T37_REVERSIBLE = ["translationadopt", "translationconfirm", "translationrevert"];
-  assert.deepEqual(Object.keys(T37_RUNGS).sort(), [...T37_REVERSIBLE].sort());
   want.reversible.push(...T37_REVERSIBLE);
   /* op-grades R28 (T38; N788, DEC-183 (2)): a mark on a photo is withdrawn only with the member's reason (case-carriage
      R14, `WITHDRAW_NO_REASON`), so `obscuremarkwithdraw` is `reasoned` and `obscuremark`, which it takes back,
@@ -185,7 +187,6 @@ test("R2 R35 R37 R38: the rung ladder, low to high, and RUNGS' assignment — DE
   want.reversible.push("obscuremark");
   /* op-grades R30 (T41): the eight that ask the member's reason, each backed by its owner's refusal (t41-backing.test.mjs),
      and the nineteen each taken back by a further act; pinned by name */
-  assert.deepEqual(Object.keys(T41_RUNGS).sort(), [...T41_REASONED, ...T41_REVERSIBLE].sort());
   want.reasoned.push(...T41_REASONED);
   want.reversible.push(...T41_REVERSIBLE);
   for (const [a, op] of Object.entries(OP_ALIASES)) if (Object.hasOwn(RUNGS, op)) want[RUNGS[op]].push(a);
@@ -196,31 +197,17 @@ test("R2 R35 R37 R38: the rung ladder, low to high, and RUNGS' assignment — DE
   const { suggest, ...withoutOne } = RUNGS;
   assert.equal(suggest, "reversible");
   assert.notDeepEqual(bandsOf(withoutOne), want);
-  for (const op of [...DEC88.reversible, ...DEC88.reasoned, ...DEC88.terminal, ...T22_REASONED])
-    assert.ok(!Object.hasOwn(RUNG_ABSENT, op), `${op} left RUNG_ABSENT`);
 });
 
-test("R2: the correction path states that correction moves forward and nothing is erased (DEC-19)", () => {
-  assert.match(IRREVERSIBLE_CORRECTION_PATH, /FORWARD/);
-  assert.match(IRREVERSIBLE_CORRECTION_PATH, /edition/);
-  assert.match(IRREVERSIBLE_CORRECTION_PATH, /withdrawal/);
-  assert.match(IRREVERSIBLE_CORRECTION_PATH, /Nothing is\s+erased/);
+test("R4 (DEC-19): the correction path published as vocabularies.rung_correction_path names the further edition and the "
+   + "withdrawal by which an irreversible act is corrected forward", () => {
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB) */
+  assert.match(VOCABULARIES.rung_correction_path, /edition/);
+  assert.match(VOCABULARIES.rung_correction_path, /withdrawal/);
 });
 
-test("R3: RUNG_ABSENT names each op with one ground of RUNG_ABSENCE_GROUNDS, each ground carries its sentence, "
-   + "and no op is in both RUNGS and RUNG_ABSENT", () => {
-  assert.deepEqual(Object.keys(RUNG_ABSENCE_GROUNDS).sort(),
-    ["caller-owned", "credential", "observational", "substrate", "undetermined"]);
-  for (const s of Object.values(RUNG_ABSENCE_GROUNDS)) assert.ok(typeof s === "string" && s.length > 40);
-  for (const [op, e] of Object.entries(RUNG_ABSENT)) {
-    assert.ok(Object.hasOwn(RUNG_ABSENCE_GROUNDS, e.ground), `${op}: ${e.ground}`);
-    assert.ok(typeof e.is === "string" && e.is.length > 0, op);
-  }
-  assert.deepEqual(Object.keys(RUNGS).filter((op) => Object.hasOwn(RUNG_ABSENT, op)), []);
-});
-
-test("R3 R12: against a table of every op the catalogue classifies, with each rung-classified op mutating, nothing is "
-   + "unaccounted — the tables are consistent with one another", () => {
+test("R12 R24: against a table of every op the catalogue classifies, with each rung-classified op mutating, nothing is "
+   + "unaccounted — the tables are consistent with one another — and every act carries a rung or a stated absence", () => {
   const ops = new Set([...Object.keys(NON_ACTS), ...ACTS.map((a) => a.id), ...Object.keys(RUNGS), ...Object.keys(RUNG_ABSENT)]);
   const table = [...ops].map((op) => ({ op, mutating: Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op),
     gated: Object.hasOwn(NON_ACTS, op) || ACTS.some((a) => a.id === op) }));
@@ -233,7 +220,7 @@ test("R4 R36: VOCABULARIES carries exactly the named vocabularies", () => {
     "basis_roles", "entity_kinds", "relation_kinds", "stage_requiredness", "action_basis_kinds",
     "correspondence_directions", "correspondence_stages", "correspondence_outcomes", "resolutions", "risk_tiers",
     "version_states", "version_edges", "version_reason_required", "rung_ladder", "rung_correction_path",
-    "rung_absence_grounds", "rung_consequences" /* R31 */, "sufficiency_claim_states", "content_mint_states",
+    "rung_absence_grounds", "rung_consequences" /* op-grades R4 */, "sufficiency_claim_states", "content_mint_states",
     /* N345 */ "contradiction_coordinates", "plurality_differences", "resolution_kinds", "norm_canons",
     "dismissal_reasons",
     /* R30 */ "template_states", "template_uses", "template_review_outcomes", "local_fact_acts",
@@ -401,32 +388,21 @@ test("R6: DISPOSITIONS is inquiry's, STAGE_REQUIREDNESS progressions', ENTITY_KI
   assert.equal(A.PER_ITEM_MAX, 100);
 });
 
-test("R7: MACHINE_REFUSALS maps exactly the acts R7 names, withdrawconclusion to MACHINE_CANNOT_CONCLUDE and the six "
-   + "version acts to MACHINE_CANNOT_MOVE_VERSION", () => {
-  const VERSION = ["versionaccept", "versionreject", "versionconsider", "versionrevert", "versioncurrent", "versionhide"];
-  assert.deepEqual(Object.keys(MACHINE_REFUSALS).sort(), ["release", "conclude", "withdrawconclusion", "reopen", "publish",
-    "inquirydivide", "inquiryground", "actionmove", "actioncorrespond", "actionlaws", "actionrisktier", ...VERSION,
-    "contradictionresolve"].sort());
-  assert.equal(MACHINE_REFUSALS.contradictionresolve, "MACHINE_CANNOT_ACT_ON_CANDIDATE");
-  assert.equal(MACHINE_REFUSALS.withdrawconclusion, "MACHINE_CANNOT_CONCLUDE");
-  assert.equal(MACHINE_REFUSALS.conclude, "MACHINE_CANNOT_CONCLUDE");
-  for (const v of VERSION) assert.equal(MACHINE_REFUSALS[v], "MACHINE_CANNOT_MOVE_VERSION");
-  for (const c of Object.values(MACHINE_REFUSALS)) assert.match(c, /^MACHINE_[A-Z_]+$/);
-});
-
-test("R7: NON_ACTS gives every op it names a reason, names no act, and a reason begins `capture-directed:` exactly "
-   + "for the members of CAPTURE_ACTS", () => {
+test("R1 R12: NON_ACTS gives every op it names a reason and names no act, and a reason begins `capture-directed:` "
+   + "exactly for the members of CAPTURE_ACTS", () => {
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): each reason more than ten characters */
   for (const [op, r] of Object.entries(NON_ACTS)) assert.ok(typeof r === "string" && r.length > 10, op);
   assert.deepEqual(ACTS.map((a) => a.id).filter((id) => Object.hasOwn(NON_ACTS, id)), []);
   assert.deepEqual(Object.keys(NON_ACTS).filter((op) => NON_ACTS[op].startsWith("capture-directed:")).sort(),
     ids(CAPTURE_ACTS));
 });
 
-test("R19 R33 R42: `terminal` is given only while STATES.information.edges.retired is empty — to retire, DEC-88's two "
-   + "and R33's named exception actionholdrelease — and `irreversible` only to publish and the two that set when a signed "
-   + "case edition publishes, publishat and publishatmove", () => {
+test("R19: `terminal` is given only while STATES.information.edges.retired is empty — to retire, DEC-88's two and "
+   + "actionholdrelease (K1134) — and `irreversible` only to publish and the two that set when a signed case edition "
+   + "publishes, publishat and publishatmove", () => {
   const terminal = Object.keys(RUNGS).filter((op) => RUNGS[op] === "terminal");
   assert.deepEqual(STATES.information.edges.retired, []);
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the closed set of `terminal` ops */
   assert.deepEqual(terminal.sort(), ["actionholdrelease", "escalationend", "filingapprove", "retire"]);
   assert.deepEqual(Object.keys(RUNGS).filter((op) => RUNGS[op] === "irreversible").sort(), ["publish", "publishat", "publishatmove"]);
 });
@@ -434,7 +410,7 @@ test("R19 R33 R42: `terminal` is given only while STATES.information.edges.retir
 test("R19: the justification family names only codes that ask the member for an account, and holds the "
    + "codes the reasoned ops refuse with", () => {
   for (const c of JUSTIFICATION_REFUSALS) assert.match(c, /^[A-Z_]+$/);
-  assert.ok(JUSTIFICATION_REFUSALS.includes("NO_EVIDENCE"), "N364 (R2): a source act's account is its evidence");
+  assert.ok(JUSTIFICATION_REFUSALS.includes("NO_EVIDENCE"), "N364 (op-grades R1): a source act's account is its evidence");
   for (const c of ["NO_REASON", "VERSION_NO_REASON", "NO_ACKNOWLEDGMENT", "NO_MITIGATION", "NO_CONCLUSION",
     "NO_FALSIFIER", "NO_JUSTIFICATION", "THEME_WITHDRAW_NO_REASON", "FILE_MEMBERSHIP_NO_REASON",
     "CONNECTION_ASSERT_NO_BASIS", "NO_LESSON", "BIAS_DEBT_NO_REASON", "RISK_TIER_REASON_REFUSED", "NARROW_NO_DESCRIPTION", "REEVALUATION_NOTE_MALFORMED",
@@ -499,7 +475,7 @@ test("R25 R48: no place any jurisdiction profile names appears in this module's 
   assert.ok(typeof NON_ACTS.idmatch === "string" && NON_ACTS.idmatch.length > 40);
 });
 
-/* R27 as ruled (K211): of the 42 ops graded `undetermined` before T7, three moved to `reasoned` and four to
+/* op-grades R3 as ruled (K211): of the 42 ops graded `undetermined` before T7, three moved to `reasoned` and four to
    `reversible`; the other 34 stay, with intent's seven graded on the same rule (K211 Q4). Whether each `reasoned`
    op really refuses without an account is R19's drive (plane.test.mjs, backing.test.mjs). */
 const R27_LEFT = ["inboxpull", "contradictionrecommend", "contradictionoptin", "contradictionrespond", "communicationprepare",
@@ -507,52 +483,46 @@ const R27_LEFT = ["inboxpull", "contradictionrecommend", "contradictionoptin", "
   "checkpointrecord", "optionstart", "templatedraft", "templaterevise", "templatepropose", "templatesubmit",
   "templatereview", "templatecomment", "templateapprove"];
 const undeterminedOf = (absent) => Object.keys(absent).filter((op) => absent[op].ground === "undetermined").sort();
-test("R27 R32 R34 R35 R37: no op is graded `undetermined` that the rulings moved (K211, DEC-88), and exactly the 21 R27 names "
-   + "remain `undetermined`, with R32's whatchangedpropose, R34's docketpressure and R35's caseimport and "
-   + "caseimportdocument beside them — R27's count reads 25 with them; one of DEC-88's 57 left there is seen", () => {
-  const moved = { biasdebtresolve: "reasoned", actionrisktier: "reasoned", narrow: "reasoned", versionaccept: "reversible",
-    versioncurrent: "reversible", actionlaws: "reversible", projectvisibilityset: "reversible" };
-  for (const [op, r] of Object.entries(moved)) { assert.equal(RUNGS[op], r, op); assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op); }
-  /* R32 (T23) and R34 (T27) each grade one more op `undetermined` on R27's rule, after R27's count, and R35 (T28) two */
+/* op-grades' content its own tests do not yet pin (N877; reported to BOB): the `undetermined` ground is closed — exactly
+   the ops the rulings left there hold it, and no other — so an op stated absent `undetermined` without a ruling is
+   seen (R24: a null rung reaches a caller only beside a stated, ruled absence). Each op's own ground is pinned in
+   op-grades' tests. */
+test("R24: the `undetermined` ground is closed — exactly the 21 ops K211 and DEC-88 left there, and the ops ruled onto "
+   + "it later on the same rule beside them, hold it, and no other; one of DEC-88's 57 left there, or a later op left "
+   + "out of the list, is seen", () => {
+  /* op-grades R7 (T23) and R9 (T27) each grade one more op `undetermined` on its R3's rule, after that count, and R10
+     (T28) two */
   const LATER = ["whatchangedpropose", "docketpressure", "caseimport", "caseimportdocument",
-    /* R37 (T31): wizard-scripts' five drafting and approving acts, as the template acts */
+    /* op-grades R11 (T31): wizard-scripts' five drafting and approving acts, as the template acts */
     "wizarddraft", "wizardrevise", "wizardpropose", "wizardsubmit", "wizardapprove",
-    /* R40 (T33): the ops T33 grades `undetermined` on the same rule (t33.mjs) */
+    /* op-grades R13 (T33): the ops T33 grades `undetermined` on the same rule (t33.mjs) */
     ...undeterminedOf(T33_RUNG_ABSENT),
-    /* R45 (T34): tasks' two, and the aliases of undetermined ops (t34.mjs) */
+    /* op-grades R17 (T34): tasks' two, and the aliases of undetermined ops (t34.mjs) */
     ...undeterminedOf(T34_RUNG_ABSENT),
     /* op-grades R22 (T35): `unpack` (t35.mjs) */
     ...undeterminedOf(T35_RUNG_ABSENT),
     /* op-grades R24 (T36): a member's request on a file, asking no reason, that no act takes back (file-safety R13, R33) */
     "deepercheck", "safecopyrequest",
     /* op-grades R27 (T37): the assistant's labelled translation drafts and a member's "looks wrong", none asking a
-       reason and none taken back (instance-setup's T37 requirements); `obscuremark` left for `RUNGS` in T38 (R28) */
+       reason and none taken back (instance-setup's T37 requirements); `obscuremark` left for `RUNGS` in T38 (its R28) */
     "translationdraft", "translationmark",
-    /* op-grades R30 (T41): the ops it grades `undetermined` on R27's rule (t41.mjs), pinned by name */
+    /* op-grades R30 (T41): the ops it grades `undetermined` on its R3's rule (t41.mjs), pinned by name */
     ...T41_UNDETERMINED,
     /* op-grades R31 (T42; N832, K2613): a page's transcription, run as `pdfstructure` is, asking no reason (its R31) */
     "pagetranscribe",
     ...Object.keys(OP_ALIASES).filter((a) => RUNG_ABSENT[OP_ALIASES[a]]?.ground === "undetermined")];
   const undetermined = undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op));
-  for (const op of LATER) assert.equal(RUNG_ABSENT[op]?.ground, "undetermined", op);
   assert.deepEqual(undetermined, [...R27_LEFT].sort());
-  assert.equal(undetermined.length, 21, "R27's count: DEC-88 moved 57 of the 78 into RUNGS");
+  assert.equal(undetermined.length, 21, "op-grades R3's count: DEC-88 moved 57 of the 78 into RUNGS");
   assert.equal(undeterminedOf(RUNG_ABSENT).length, LATER.length + 21,
-    "R27's count: 21, with R32's, R34's, R35's and R37's, and R40's, R45's, T36's, T37's, T41's and T42's beside them");
-  assert.deepEqual(undeterminedOf(T36_RUNG_ABSENT), ["deepercheck", "safecopyrequest"]);
-  assert.deepEqual(undeterminedOf(T37_RUNG_ABSENT), ["translationdraft", "translationmark"]);
-  assert.deepEqual(undeterminedOf(T41_RUNG_ABSENT), [...T41_UNDETERMINED].sort());
-  assert.equal(Object.hasOwn(RUNG_ABSENT, "obscuremark"), false, "obscuremark is graded since T38 (op-grades R28)");
-  /* op-grades R31 (T42): pagetranscribe is `undetermined`, never ranked; left out of the pinned list, it is seen among
-     the rest (negative control) */
-  assert.equal(RUNG_ABSENT.pagetranscribe?.ground, "undetermined");
-  assert.equal(Object.hasOwn(RUNGS, "pagetranscribe"), false);
+    "op-grades R3's count: 21, with every later op beside them");
+  /* negative control (op-grades R31, T42): pagetranscribe left out of the pinned list is seen among the rest */
   assert.deepEqual(undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op) || op === "pagetranscribe")
     .filter((op) => !R27_LEFT.includes(op)), ["pagetranscribe"]);
   /* negative control: one of T37's two left out of the pinned list is seen among the rest */
   assert.deepEqual(undeterminedOf(RUNG_ABSENT).filter((op) => !LATER.includes(op) || op === "translationmark")
     .filter((op) => !R27_LEFT.includes(op)), ["translationmark"]);
-  /* the 78 held before DEC-88: the 21 and the 57 together, each of the 57 now ranked in RUNGS */
+  /* the 78 held before DEC-88: the 21 and the 57 together (each of the 57's rung is pinned in op-grades' tests) */
   const before78 = ["inboxresolve", "taskforward", "taskresolve", "actioncorrespond", "actionlawspropose",
     "projectfork", "biasadopt", "strengthbar", "entitycreate", "entityalias", "resolve", "attesttext", "thread",
     "airunopen", "airunclose", "suggest", "contentmint", "extractpropose", "connectionchoose", "transcribe",
@@ -572,21 +542,15 @@ test("R27 R32 R34 R35 R37: no op is graded `undetermined` that the rulings moved
     "communicationprepare", "templatesave", "actioncreate", "actionpressure",
     /* K727: action-plans' six */
     "planopen", "optionadd", "optionpropose", "optionadopt", "checkpointrecord", "optionstart",
-    /* R30: K921's seven */
+    /* op-grades R6: K921's seven */
     "templatedraft", "templaterevise", "templatepropose", "templatesubmit", "templatereview", "templatecomment",
     "templateapprove"].sort();
   assert.equal(before78.length, 78);
   const moved57 = before78.filter((op) => !R27_LEFT.includes(op));
   assert.deepEqual(moved57.sort(), [...DEC88.reversible, ...DEC88.reasoned, ...DEC88.terminal].sort());
-  for (const op of moved57) assert.ok(Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
   /* negative control: one of the 57 left in RUNG_ABSENT reads a different count */
   const left = { ...RUNG_ABSENT, suggest: { ground: "undetermined", is: "x" } };
   assert.notDeepEqual(undeterminedOf(left), [...R27_LEFT].sort());
-});
-
-test("R27: no new rung is added — the ladder keeps its five", () => {
-  assert.deepEqual(RUNG_LADDER, ["reversible", "reasoned", "terminal", "attested", "irreversible"]);
-  assert.ok(Object.values(RUNGS).every((r) => RUNG_LADDER.includes(r)));
 });
 
 /* K208 (2), K264, T9 with N216: every op layers 7–10 add is accounted for, keyed to each module's op map, now the
@@ -595,9 +559,10 @@ test("R27: no new rung is added — the ladder keeps its five", () => {
    no NEEDS row, K153, so a row would read `stale`). actions' `actionriskpropose` keeps its row; monitoring's
    `monitoring`, a read, is named nowhere. K705, K709 (T18): filings' `communicationprepare` and `templatesave` and
    actions' `actioncreate` and `actionpressure` join the writes, `action` and `actions` the reads. K992 (T21): `templates`
-   left filings' op map for filing-templates' (its R14), whose ops R30 grades in the test after this one. N490 (T24):
-   action-plans' `optionstartpreview` (its R37) is a read the control plane gates as the act it previews, stamped `author`
-   and `viewer`, so it is the one layer-9 read with a `NEEDS` row and takes a `NON_ACTS` reason by R7's rule. */
+   left filings' op map for filing-templates' (its R14), whose ops op-grades R6 grades. N490 (T24): action-plans'
+   `optionstartpreview` (its R37) is a read the control plane gates as the act it previews, stamped `author` and
+   `viewer`, so it is the one layer-9 read with a `NEEDS` row and takes a `NON_ACTS` reason by op-grades R5's rule. The
+   rungs and grounds below are pinned in op-grades' tests; only their keys are read here. */
 import { standardsOps } from "../../../src/standards/index.mjs";
 import { conformanceOps } from "../../../src/conformance/index.mjs";
 import { consequencesOps } from "../../../src/consequences/index.mjs";
@@ -638,70 +603,68 @@ const LAYER9_GATED_READS = ["optionstartpreview" /* N490: action-plans R37 */,
   "standardinforce" /* K1689: gated since T33, a NEEDS row of null (op-declarations) */];
 /* actions' op map holds acts and reads catalogued long before layer 9; only the ops K709 adds join this set. */
 const ACTIONS_NEW = ["actioncreate", "actionpressure", "actionhold" /* K902 */, "action", "actions"];
-/* K2049 (B4): the ops standards adds in T35 (its R35–R43), graded by op-grades in its `t35.mjs` (R22, K2043) and set aside
+/* K2049 (B4): the ops standards adds in T35 (its R35–R43), graded by op-grades in its `t35.mjs` (its R22, K2043) and set aside
    from layer 9's closed set as T33's are, pinned here to standards' map. */
 const STANDARDS_T35 = ["standardforce", "standardforcepropose", "standardforcewithdraw", "standardrelease",
   "standardadoption", "standardimpose", "standardbenchmark", "forcesof", "overridesof", "editioninforce", "bindsat"];
 /* K2121 (T36): standards' in-force-through record, its withdrawal and its read (its R50; K2092), graded by op-grades R23 in
-   its `t36.mjs` and pinned apart as T35's are: the two writes `reasoned`, the read a `read:` reason and no rung. */
-const STANDARDS_T36 = { standardinforcethrough: "reasoned", standardinforcethroughwithdraw: "reasoned", inforcethroughof: null };
-test("R3 R7 R12: (K2049: standards' T35 ops pinned apart) layer 9's 41 mutating ops each carry a NON_ACTS reason and their ruled rung or stated absence, its "
-   + "19 ungated reads none, its two gated reads (optionstartpreview, N490; standardinforce, K1689) a `read:` reason and no rung, and the op maps "
-   + "hold exactly those 62 ops (K264; conformance's comparisonfacts, N345; K705, K709, K727, K902; K992: `templates` is "
-   + "filing-templates')", () => {
+   its `t36.mjs` and pinned apart as T35's are. */
+const STANDARDS_T36 = ["standardinforcethrough", "standardinforcethroughwithdraw", "inforcethroughof"];
+test("R1 R12: (K2049: standards' T35 ops pinned apart) layer 9's op maps hold exactly its 41 mutating ops, 19 ungated reads "
+   + "and two gated reads (optionstartpreview, N490; standardinforce, K1689) — 62 ops (K264; conformance's comparisonfacts, "
+   + "N345; K705, K709, K727, K902; K992: `templates` is filing-templates') — none an act, each write and gated read "
+   + "named in NON_ACTS, the ungated reads in no registry, standards' T35 and T36 ops in op-grades' tables; and with the "
+   + "control plane's rows nothing is unaccounted", () => {
   const url = new URL("http://x/");
   const keys = (f) => Object.keys(f({}, url, {}));
   const ESCALATION = ["escalationopen", "escalationattach", "escalationevaluate", "escalationadvance", "escalationdecline",
     "escalationend", "escalationsuspend", "escalationresume", "escalation", "escalationsdue"];
   const actions = keys(actionsOps);
   assert.deepEqual(ACTIONS_NEW.filter((op) => !actions.includes(op)), [], "actions' op map holds K709's four and K902's actionhold");
-  /* R40 (K1571, K1658): standards' and action-clocks' T33 ops are graded in t33.mjs and held there (t33.test.mjs) */
+  /* op-grades R13 (K1571, K1658): standards' and action-clocks' T33 ops are graded in t33.mjs and held there (t33.test.mjs) */
   const ops = [...keys(standardsOps), ...keys(conformanceOps), ...keys(consequencesOps), ...keys(filingsOps), ...ESCALATION,
                ...ACTIONS_NEW, ...keys(actionPlansOps), ...keys(actionClocksOps)]
                .filter((op) => (!T33_OPS.has(op) || LAYER9_GATED_READS.includes(op)) && !STANDARDS_T35.includes(op)
-                 && !Object.hasOwn(STANDARDS_T36, op));
-  /* K2049: standards' T35 ops are in its map, each named in op-grades' T35 table — a write with a T35 rung or absence, a
-     read (`read:`) with neither */
+                 && !STANDARDS_T36.includes(op));
+  /* K2049: standards' T35 ops are in its map, each named in op-grades' T35 table */
   const standards = keys(standardsOps);
   assert.deepEqual(STANDARDS_T35.filter((op) => !standards.includes(op)), []);
   for (const op of STANDARDS_T35) {
     assert.ok(Object.hasOwn(T35_NON_ACTS, op) && NON_ACTS[op] === T35_NON_ACTS[op], op);
-    assert.equal(Object.hasOwn(T35_RUNGS, op) || Object.hasOwn(T35_RUNG_ABSENT, op), !T35_NON_ACTS[op].startsWith("read:"), op);
   }
-  /* K2121: standards' T36 ops are in its map, each named in op-grades' T36 table at the grade pinned above */
-  for (const [op, rung] of Object.entries(STANDARDS_T36)) {
+  /* K2121: standards' T36 ops are in its map, each named in op-grades' T36 table */
+  for (const op of STANDARDS_T36) {
     assert.ok(standards.includes(op), op);
     assert.ok(Object.hasOwn(T36_NON_ACTS, op) && NON_ACTS[op] === T36_NON_ACTS[op], op);
-    assert.equal(RUNGS[op], rung ?? undefined, op);
-    assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op);
-    assert.equal(NON_ACTS[op].startsWith("read: "), rung === null, op);
   }
   const mutating = [...Object.keys(LAYER9_RUNGS), ...Object.keys(LAYER9_ABSENT)];
   assert.equal(mutating.length, 41);
   assert.equal(LAYER9_READS.length, 19);
   assert.deepEqual([...ops].sort(), [...mutating, ...LAYER9_READS, ...LAYER9_GATED_READS].sort());
   for (const op of mutating) {
+    /* op-grades' content its own tests do not yet pin (N877; reported to BOB): each write's reason, no capture act */
     assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 10 && !NON_ACTS[op].startsWith("capture-directed:"), op);
     assert.ok(!ACTS.some((a) => a.id === op), op);
   }
-  for (const [op, r] of Object.entries(LAYER9_RUNGS)) { assert.equal(RUNGS[op], r, op); assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op); }
-  for (const [op, g] of Object.entries(LAYER9_ABSENT)) {
-    assert.equal(RUNG_ABSENT[op]?.ground, g, op); assert.ok(!Object.hasOwn(RUNGS, op), op);
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): counselpacketexport's ground, and each
+     stated absence's sentence */
+  assert.equal(RUNG_ABSENT.counselpacketexport?.ground, LAYER9_ABSENT.counselpacketexport);
+  for (const op of Object.keys(LAYER9_ABSENT))
     assert.ok(typeof RUNG_ABSENT[op].is === "string" && RUNG_ABSENT[op].is.length > 20, op);
-  }
   const named = (op) => Object.hasOwn(NON_ACTS, op) || Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op)
     || [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op);
   assert.deepEqual(LAYER9_READS.filter(named), []);
-  /* N490 (R7): the gated read carries a `read:` reason in the form of the others, and no rung (R3 grades the ops that
-     write), and is no act */
+  /* N490 (op-grades R5): the gated read carries a `read:` reason in the form of the others, and no rung (op-grades R2
+     grades the ops that write), and is no act */
   for (const op of LAYER9_GATED_READS) {
+    /* op-grades' content its own tests do not yet pin (N877; reported to BOB) */
     assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ") && NON_ACTS[op].length > 40, op);
     assert.match(NON_ACTS[op], /writes nothing$/, op);
     assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
     assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op), op);
   }
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB) */
   assert.ok(Object.hasOwn(NON_ACTS, "actionriskpropose"));
-  assert.equal(RUNGS.actionriskpropose, "reversible", "DEC-88");
   assert.ok(!named("monitoring"));
   /* the control plane's rows for these ops, as op-declarations declares them (K263's routing, now its): gated and
      mutating for the writes, the reads ungated but the preview; nothing is unaccounted */
@@ -723,9 +686,9 @@ test("R3 R7 R12: (K2049: standards' T35 ops pinned apart) layer 9's 41 mutating 
 });
 
 /* N321 (T13, K424): `op=projectstage` (publication R44) is a read stamping `viewer`, carried as every project read is:
-   not mutating and with no `NEEDS` row, `op=profiles`' precedent (K416). So it takes no rung (R3 grades the ops that
-   write) and no `NON_ACTS` row (a row for an ungated op reads `stale`, R12), and no registry names it. */
-test("R3 R7 R12: op=projectstage, an ungated read, is named in no registry, and a table carrying it as one leaves "
+   not mutating and with no `NEEDS` row, `op=profiles`' precedent (K416). So it takes no rung (op-grades R2 grades the ops
+   that write) and no `NON_ACTS` row (a row for an ungated op reads `stale`, R12), and no registry names it. */
+test("R12: op=projectstage, an ungated read, is named in no registry, and a table carrying it as one leaves "
    + "nothing unaccounted; carried as mutating or gated, it would be named", () => {
   const named = (op) => Object.hasOwn(NON_ACTS, op) || Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op)
     || [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op);
@@ -740,66 +703,41 @@ test("R3 R7 R12: op=projectstage, an ungated read, is named in no registry, and 
 });
 
 /* N345 (K481, K490): contradiction's twelve new ops (its op map, beside `contradictionpropose` and `contradictionpairs`),
-   entities' `resolutiondefect` (K485) and case-authoring's `publishtensions` (K498). The seven that write each carry a
-   rung or a stated absence (R2, R3) and a `NON_ACTS` reason unless an act (R7); the reads R7 names carry a `NON_ACTS`
+   entities' `resolutiondefect` (K485) and case-authoring's `publishtensions` (K498). The seven that write are graded in
+   op-grades (its R1, R2) and each carries a `NON_ACTS` reason unless an act (op-grades R5); the reads carry a `NON_ACTS`
    reason, so the control plane gates each with a `NEEDS` row, as it gates `contradictionpairs` (R12). */
 import { contradictionOps } from "../../../src/contradiction/index.mjs";
-const N345_WRITES = { contradictiondismiss: "reasoned", contradictionclarify: "reasoned", contradictiontakeup: "reasoned",
-  contradictionresolve: "reasoned", resolutiondefect: "reasoned",
-  contradictionrecommend: "undetermined", contradictionoptin: "undetermined", contradictionrespond: "undetermined" };
+const N345_WRITES = ["contradictiondismiss", "contradictionclarify", "contradictiontakeup", "contradictionresolve",
+  "resolutiondefect", "contradictionrecommend", "contradictionoptin", "contradictionrespond"];
 const N345_READS = ["contradictioncandidates", "contradictiontensions", "contradictionfacts", "contradictionnotices",
   "contradictionresponses", "publishtensions"];
-test("R2 R3 R7 R12: N345's ops — contradiction's twelve, resolutiondefect and publishtensions — each carries its rung or "
-   + "stated absence and its registry, and with the control plane's rows for them nothing is unaccounted", () => {
+test("R1 R12: N345's ops — contradiction's op map holds its twelve, contradictionresolve is an act and never a non-act "
+   + "too, the reads carry no grade — and with the control plane's rows for them nothing is unaccounted", () => {
   const url = new URL("http://x/");
   const twelve = Object.keys(contradictionOps({}, url, {})).filter((op) => !["contradictionpropose", "contradictionpairs"].includes(op));
-  assert.deepEqual(twelve.sort(), [...Object.keys(N345_WRITES), ...N345_READS]
-    .filter((op) => op.startsWith("contradiction")).sort());
-  for (const [op, r] of Object.entries(N345_WRITES)) {
-    if (r === "undetermined") { assert.equal(RUNG_ABSENT[op]?.ground, "undetermined", op); assert.ok(!Object.hasOwn(RUNGS, op), op); }
-    else { assert.equal(RUNGS[op], r, op); assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op); }
-  }
+  assert.deepEqual(twelve.sort(), [...N345_WRITES, ...N345_READS].filter((op) => op.startsWith("contradiction")).sort());
   assert.ok(ACTS.some((a) => a.id === "contradictionresolve"));
-  for (const op of [...Object.keys(N345_WRITES), ...N345_READS].filter((op) => op !== "contradictionresolve"))
-    assert.ok(typeof NON_ACTS[op] === "string" && !NON_ACTS[op].startsWith("capture-directed:"), op);
+  assert.ok(!Object.hasOwn(NON_ACTS, "contradictionresolve"), "an ACTS row, never a non-act too");
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the reads carry no grade; the three
+     stated absences carry their sentence; contradictionpairs' reason names its five keys */
   for (const op of N345_READS) assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
-  const table = [...Object.keys(N345_WRITES).map((op) => ({ op, mutating: true, gated: true })),
+  for (const op of ["contradictionrecommend", "contradictionoptin", "contradictionrespond"])
+    assert.ok(RUNG_ABSENT[op].is.length > 40, op);
+  assert.match(NON_ACTS.contradictionpairs, /five named keys/);
+  const table = [...N345_WRITES.map((op) => ({ op, mutating: true, gated: true })),
     ...N345_READS.map((op) => ({ op, mutating: false, gated: true }))];
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
-  assert.deepEqual(r.stale.filter((op) => Object.hasOwn(N345_WRITES, op) || N345_READS.includes(op)), []);
-  /* carried ungated, a read R7 names would read stale: the control plane gates each */
+  assert.deepEqual(r.stale.filter((op) => N345_WRITES.includes(op) || N345_READS.includes(op)), []);
+  /* carried ungated, a read op-grades R5 names would read stale: the control plane gates each */
   assert.ok(A.unaccounted(N345_READS.map((op) => ({ op, mutating: false, gated: false }))).stale.includes("publishtensions"));
 });
 
-test("R7: NON_ACTS gives N345's ops the reasons R7 states — candidate-directed, run-directed, a registry correction, "
-   + "conflict-directed (DEC-85), and read", () => {
-  for (const op of ["contradictiondismiss", "contradictionclarify", "contradictiontakeup"])
-    assert.ok(NON_ACTS[op].startsWith("candidate-directed: keyed by a candidate, reached where its sides are shown"), op);
-  assert.ok(NON_ACTS.contradictionrecommend.startsWith("run-directed:"));
-  assert.ok(NON_ACTS.resolutiondefect.startsWith("registry correction, keyed by a resolution"));
-  for (const op of ["contradictionoptin", "contradictionrespond"])
-    assert.ok(NON_ACTS[op].startsWith("conflict-directed: keyed by a candidate and the member's project, reached from the "
-      + "conflict's notice"), op);
-  for (const op of N345_READS) assert.ok(NON_ACTS[op].startsWith("read: "), op);
-  assert.match(NON_ACTS.contradictionpairs, /five named keys/);
-  assert.ok(!Object.hasOwn(NON_ACTS, "contradictionresolve"), "an ACTS row, never a non-act too");
-});
-
-/* R7 (K516): contradiction's measures (its R39, R40) are in-process and no op, so no registry names them. */
-test("R7 R12: contradiction's measures are no op and are named in no registry", () => {
+/* K516: contradiction's measures (its R39, R40) are in-process and no op, so no registry names them. */
+test("R12: contradiction's measures are no op and are named in no registry", () => {
   assert.ok(!Object.keys(contradictionOps({}, new URL("http://x/"), {})).includes("contradictionmeasures"));
   for (const t of [NON_ACTS, RUNGS, RUNG_ABSENT]) assert.ok(!Object.hasOwn(t, "contradictionmeasures"));
   assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === "contradictionmeasures"));
-});
-
-test("R3 R27: contradictionrecommend, contradictionoptin and contradictionrespond are graded `undetermined`, each "
-   + "with its sentence; no new rung is added for them", () => {
-  for (const op of ["contradictionrecommend", "contradictionoptin", "contradictionrespond"]) {
-    assert.equal(RUNG_ABSENT[op].ground, "undetermined", op);
-    assert.ok(RUNG_ABSENT[op].is.length > 40, op);
-  }
-  assert.equal(RUNG_LADDER.length, 5);
 });
 
 test("R19: the justification family holds the codes N345's reasoned acts refuse with when the member's account is "
@@ -811,26 +749,26 @@ test("R19: the justification family holds the codes N345's reasoned acts refuse 
 });
 
 /* N364 (K530): the ops sources, capture, membership and case-authoring add, keyed to their op maps where they have one
-   (membership's signer pair is routed by the control plane alone). Each op that writes carries its rung or stated
-   absence (R2, R3); each carries a `NON_ACTS` reason (R7, R12) except `sourceconsent`, an act, and `knockerconsent`,
-   which holds no account and so has no `NEEDS` row, as `knock` has none. */
+   (membership's signer pair is routed by the control plane alone). Each op that writes is graded in op-grades (its R1,
+   R2); each carries a `NON_ACTS` reason (op-grades R5; R12) except `sourceconsent`, an act, and `knockerconsent`, which
+   holds no account and so has no `NEEDS` row, as `knock` has none. */
 import { sourcesOps } from "../../../src/sources/index.mjs";
 import { captureOps } from "../../../src/capture/index.mjs";
 /* T42 (N826; K2656): the doorbell's routes are `doorbell`'s map (its R3, R13, R15, R18, R19), capture's copy deleted in T43 */
 import { doorbellOps } from "../../../src/doorbell/index.mjs";
 import { caseAuthoringOps } from "../../../src/case-authoring/index.mjs";
-const N364_RUNGS = { sourcedisclose: "reasoned", sourcelink: "reasoned", sourceconsent: "reasoned",
-  sourceconsentwithdraw: "reversible", reattest: "attested", captureaccount: "attested" };
-const N364_ABSENT = { signerregister: "credential", signerrevoke: "credential", knockerconsent: "credential",
-  inboxpull: "undetermined" };
+const N364_WRITES = ["sourcedisclose", "sourcelink", "sourceconsent", "sourceconsentwithdraw", "reattest", "captureaccount",
+  "signerregister", "signerrevoke", "knockerconsent", "inboxpull"];
+const N364_ABSENT = ["signerregister", "signerrevoke", "knockerconsent", "inboxpull"];
 const N364_READS = ["sourceof", "sourcerung", "sourcereadlog", "sourcepublishable", "knocksof", "pulledknocks",
   "lateattestations", "captureaccounts", "publishpreflight"];
-test("R2 R3 R7 R12: N364's ops each carry their rung or stated absence and their registry, and with the control "
-   + "plane's rows for them nothing is unaccounted", () => {
+test("R1 R12: N364's ops — the op maps of sources, capture, the doorbell and case-authoring hold them, sourceconsent is "
+   + "an act and never a non-act, every other op named in NON_ACTS but knockerconsent — and with the control plane's "
+   + "rows for them nothing is unaccounted", () => {
   const url = new URL("http://x/");
-  const writes = [...Object.keys(N364_RUNGS), ...Object.keys(N364_ABSENT)];
+  const writes = N364_WRITES;
   /* the op maps hold them: every source op, capture's seven new ones, case-authoring's pre-flight */
-  /* `sourcekeyed` (K1550) is T33's, graded in t33.mjs (R40) */
+  /* `sourcekeyed` (K1550) is T33's, graded in t33.mjs (op-grades R13) */
   assert.deepEqual(Object.keys(sourcesOps({}, url, {})).filter((op) => !T33_OPS.has(op)).sort(), ["knockerconsent",
     "sourceconsent", "sourceconsentwithdraw", "sourcedisclose", "sourcelink", "sourceof", "sourcepublishable",
     "sourcereadlog", "sourcerung"]);
@@ -838,18 +776,22 @@ test("R2 R3 R7 R12: N364's ops each carry their rung or stated absence and their
   for (const op of ["reattest", "lateattestations", "captureaccount", "captureaccounts"]) assert.ok(cap.includes(op), op);
   for (const op of ["inboxpull", "knocksof", "pulledknocks"]) assert.ok(door.includes(op), op);
   assert.ok(Object.keys(caseAuthoringOps({}, url, {})).includes("publishpreflight"));
-  for (const [op, r] of Object.entries(N364_RUNGS)) { assert.equal(RUNGS[op], r, op); assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op); }
-  for (const [op, g] of Object.entries(N364_ABSENT)) {
-    assert.equal(RUNG_ABSENT[op]?.ground, g, op); assert.ok(!Object.hasOwn(RUNGS, op), op);
-    assert.ok(RUNG_ABSENT[op].is.length > 40, op);
-  }
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): each stated absence's sentence, the reads
+     carrying no grade and a `read:` reason, each named op's reason, and no reason for knockerconsent or knock */
+  for (const op of N364_ABSENT) assert.ok(RUNG_ABSENT[op].is.length > 40, op);
   for (const op of N364_READS) assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
   const named = [...writes, ...N364_READS].filter((op) => op !== "sourceconsent" && op !== "knockerconsent");
   for (const op of named)
     assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 40 && !NON_ACTS[op].startsWith("capture-directed:"), op);
-  assert.ok(ACTS.some((a) => a.id === "sourceconsent") && !Object.hasOwn(NON_ACTS, "sourceconsent"));
-  assert.ok(!Object.hasOwn(NON_ACTS, "knockerconsent") && !Object.hasOwn(NON_ACTS, "knock"));
   for (const op of N364_READS) assert.ok(NON_ACTS[op].startsWith("read: "), op);
+  assert.ok(!Object.hasOwn(NON_ACTS, "knockerconsent") && !Object.hasOwn(NON_ACTS, "knock"));
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): ratify's pre-flight is no longer deferred,
+     and inboxresolve's reason names its pulled arm as the pull */
+  assert.doesNotMatch(NON_ACTS.ratify, /deferred/i);
+  assert.match(NON_ACTS.inboxresolve, /`pulled` arm is the pull/);
+  assert.match(NON_ACTS.inboxresolve, /op=inboxpull/);
+  assert.match(NON_ACTS.inboxresolve, /reason on every arm/);
+  assert.ok(ACTS.some((a) => a.id === "sourceconsent") && !Object.hasOwn(NON_ACTS, "sourceconsent"));
   /* the control plane's rows (J1 (5)): the ten writes mutating, every op but knockerconsent gated */
   const table = [...writes.map((op) => ({ op, mutating: true, gated: op !== "knockerconsent" })),
     ...N364_READS.map((op) => ({ op, mutating: false, gated: true }))];
@@ -861,33 +803,13 @@ test("R2 R3 R7 R12: N364's ops each carry their rung or stated absence and their
   assert.deepEqual(A.unaccounted([{ op: "knockerconsent", mutating: true, gated: true }]).unpublished, ["knockerconsent"]);
 });
 
-test("R7: NON_ACTS.ratify says its pre-flight is op=publishpreflight (case-authoring R34), no longer deferred; "
-   + "inboxresolve's names its pulled arm as the pull", () => {
-  assert.match(NON_ACTS.ratify, /op=publishpreflight \(case-authoring R34\)/);
-  assert.doesNotMatch(NON_ACTS.ratify, /deferred/i);
-  assert.match(NON_ACTS.inboxresolve, /`pulled` arm is the pull/);
-  assert.match(NON_ACTS.inboxresolve, /op=inboxpull/);
-  assert.match(NON_ACTS.inboxresolve, /reason on every arm/);
-  assert.equal(RUNGS.inboxresolve, "reasoned", "DEC-88; doorbell R3 (was capture R32)");
-});
-
-test("R3: the signer pair and knockerconsent are graded `credential`, as signeradd and knock; inboxpull `undetermined` "
-   + "on R27's rule; none is in both RUNGS and RUNG_ABSENT", () => {
-  for (const op of ["signerregister", "signerrevoke"]) assert.equal(RUNG_ABSENT[op].ground, RUNG_ABSENT.signeradd.ground, op);
-  assert.equal(RUNG_ABSENT.knockerconsent.ground, RUNG_ABSENT.knock.ground);
-  assert.equal(RUNG_ABSENT.inboxpull.ground, "undetermined");
-  for (const op of ["signerregister", "signerrevoke", "knockerconsent", "inboxpull"]) assert.ok(!Object.hasOwn(RUNGS, op), op);
-});
-
 /* K899 (7), K902, K918 (T20): actions R52's `op=actionhold`, a member's hold statement on a `legal` pressure mark: graded
-   `reasoned` (R2, R27; its backing is driven in backing.test.mjs) and named in NON_ACTS (R7), keyed by the entry the
+   `reasoned` in op-grades (its backing is driven in backing.test.mjs) and named in NON_ACTS, keyed by the entry the
    mark is on. With the control plane's row for it (mutating, gated) nothing is unaccounted (R12). */
-test("R2 R7 R12 R19: actionhold, actions R52's op, is graded `reasoned`, HOLD_REFUSED is in the justification family, "
-   + "it is named in NON_ACTS as entry-directed, and with the control plane's row for it nothing is unaccounted", () => {
+test("R1 R12 R24: actionhold, actions R52's op — actions' op map holds it, it is no act, its NON_ACTS reason is "
+   + "entry-directed, with the control plane's row for it nothing is unaccounted, and it decorates with a rung", () => {
   assert.ok(Object.keys(actionsOps({}, new URL("http://x/"), {})).includes("actionhold"), "actions' op map holds it");
-  assert.equal(RUNGS.actionhold, "reasoned");
-  assert.ok(!Object.hasOwn(RUNG_ABSENT, "actionhold"));
-  assert.ok(JUSTIFICATION_REFUSALS.includes("HOLD_REFUSED"));
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB) */
   assert.equal(NON_ACTS.actionhold, "entry-directed: keyed by (action, entry ordinal); appends a hold statement and "
     + "never rewrites the entry or its mark");
   assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === "actionhold"));
@@ -901,118 +823,80 @@ test("R2 R7 R12 R19: actionhold, actions R52's op, is graded `reasoned`, HOLD_RE
     ["reasoned", null], "R24: a rung, never a bare null");
 });
 
-/* R30 (K921, K922 (3), T21): the ops of `filing-templates` and `local-facts`, keyed to their op maps. The two that ask an
-   account are graded `reasoned` (their backing is driven in backing.test.mjs), the grant pair `credential` as
-   `reviewgrant` and `reviewrevoke`, the other seven template acts `undetermined` on R27's rule; every op, the reads
-   included, carries its `NON_ACTS` reason, so the control plane gates each with a `NEEDS` row (op-declarations and
-   control-plane's T21 share; until they merge, these rows read `stale` against the real table, red by name: plan rule 3). */
+/* K921, K922 (3), T21: the ops of `filing-templates` and `local-facts`, keyed to their op maps, graded in op-grades (its
+   R6); every op, the reads included, carries its `NON_ACTS` reason, so the control plane gates each with a `NEEDS` row
+   (op-declarations and control-plane's T21 share; until they merge, these rows read `stale` against the real table,
+   red by name: plan rule 3). Their vocabularies (R30) are R4's test. */
 import { filingTemplatesOps } from "../../../src/filing-templates/index.mjs";
 import { localFactsOps } from "../../../src/local-facts/index.mjs";
-const R30_RUNGS = { templateretire: "reasoned", factconfirm: "reasoned" };
-const R30_ABSENT = { templatereviewgrant: "credential", templategrantrevoke: "credential",
-  templatedraft: "undetermined", templaterevise: "undetermined", templatepropose: "undetermined",
-  templatesubmit: "undetermined", templatereview: "undetermined", templatecomment: "undetermined",
-  templateapprove: "undetermined" };
-const R30_READS = ["templates", "templateread", "templatecomments", "factstatus", "factsdue"];
-const R30_WRITES = [...Object.keys(R30_RUNGS), ...Object.keys(R30_ABSENT)];
-const TEMPLATE_DIRECTED = "template-directed: keyed by a template or one of its versions, reached from the template "
-  + "library; writes this module's rows and moves no bundle";
+const TEMPLATE_WRITES = ["templateretire", "factconfirm", "templatereviewgrant", "templategrantrevoke", "templatedraft",
+  "templaterevise", "templatepropose", "templatesubmit", "templatereview", "templatecomment", "templateapprove"];
+const TEMPLATE_READS = ["templates", "templateread", "templatecomments", "factstatus", "factsdue"];
 const GRANT_DOOR = "reached also through a review grant's door";
 
-test("R30 R2 R3 R12: the op maps of filing-templates and local-facts hold exactly R30's ops; templateretire and "
-   + "factconfirm are `reasoned`, the grant pair `credential` as reviewgrant and reviewrevoke, K921's seven "
-   + "`undetermined`, and with the control plane's rows for them nothing is unaccounted", () => {
+test("R1 R12 R24: the op maps of filing-templates and local-facts hold exactly their ops; none is an act; each write "
+   + "decorates with a rung or a stated absence; and with the control plane's rows for them nothing is unaccounted", () => {
   const url = new URL("http://x/");
   assert.deepEqual([...Object.keys(filingTemplatesOps({}, url, {})), ...Object.keys(localFactsOps({}, url, {}))].sort(),
-    [...R30_WRITES, ...R30_READS].sort());
-  for (const [op, r] of Object.entries(R30_RUNGS)) { assert.equal(RUNGS[op], r, op); assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op); }
-  for (const [op, g] of Object.entries(R30_ABSENT)) {
-    assert.equal(RUNG_ABSENT[op]?.ground, g, op); assert.ok(!Object.hasOwn(RUNGS, op), op);
+    [...TEMPLATE_WRITES, ...TEMPLATE_READS].sort());
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): each stated absence's sentence, the
+     revoke's ground as reviewrevoke's, the reads ungraded with a `read:` reason, only the four a grant reaches naming
+     its door, and templatesave's draft-directed reason and its absence citing filings R32 */
+  for (const op of TEMPLATE_WRITES.filter((op) => Object.hasOwn(RUNG_ABSENT, op)))
     assert.ok(typeof RUNG_ABSENT[op].is === "string" && RUNG_ABSENT[op].is.length > 40, op);
-  }
-  assert.equal(RUNG_ABSENT.templatereviewgrant.ground, RUNG_ABSENT.reviewgrant.ground);
   assert.equal(RUNG_ABSENT.templategrantrevoke.ground, RUNG_ABSENT.reviewrevoke.ground);
-  for (const op of R30_READS) assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
-  assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => R30_WRITES.includes(a.id) || R30_READS.includes(a.id)));
+  for (const op of TEMPLATE_READS) assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+  for (const op of ["templateread", "templatecomments"]) assert.ok(NON_ACTS[op]?.startsWith("read: "), op);
+  const DOOR = ["templatereview", "templatecomment", "templateread", "templatecomments"];
+  for (const op of [...TEMPLATE_WRITES.filter((op) => op.startsWith("template")), ...TEMPLATE_READS])
+    assert.equal(NON_ACTS[op].includes(GRANT_DOOR), DOOR.includes(op), op);
+  assert.ok(typeof NON_ACTS.templatesave === "string" && NON_ACTS.templatesave.startsWith("draft-directed:"));
+  assert.match(RUNG_ABSENT.templatesave.is, /filings R32/);
+  assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => TEMPLATE_WRITES.includes(a.id) || TEMPLATE_READS.includes(a.id)));
   /* R24: each write decorates with a rung or a stated absence, never both and never neither */
-  for (const op of R30_WRITES) {
+  for (const op of TEMPLATE_WRITES) {
     const d = A.decorate({ id: op, label: "x" }, null);
     assert.equal((d.rung === null) !== (d.rung_absence === null), true, op);
   }
   /* the control plane's rows: the writes mutating and gated, the reads gated (each has a NON_ACTS reason) */
-  const table = [...R30_WRITES.map((op) => ({ op, mutating: true, gated: true })),
-    ...R30_READS.map((op) => ({ op, mutating: false, gated: true }))];
+  const table = [...TEMPLATE_WRITES.map((op) => ({ op, mutating: true, gated: true })),
+    ...TEMPLATE_READS.map((op) => ({ op, mutating: false, gated: true }))];
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
-  assert.deepEqual(r.stale.filter((op) => R30_WRITES.includes(op) || R30_READS.includes(op)), []);
+  assert.deepEqual(r.stale.filter((op) => TEMPLATE_WRITES.includes(op) || TEMPLATE_READS.includes(op)), []);
   /* carried by no row (the real table before op-declarations' and control-plane's merges), every one reads stale */
-  assert.deepEqual([...R30_WRITES, ...R30_READS].filter((op) => !A.unaccounted([]).stale.includes(op)), []);
-  /* and the totality holds with them: R3 R12's consistency test above covers the whole catalogue */
+  assert.deepEqual([...TEMPLATE_WRITES, ...TEMPLATE_READS].filter((op) => !A.unaccounted([]).stale.includes(op)), []);
+  /* and the totality holds with them: the R12 consistency test above covers the whole catalogue */
 });
 
-test("R30 R7: NON_ACTS gives each of R30's ops its reason — the template acts template-directed, the review, the "
-   + "comment and the two reads a grant reaches naming the grant's door, factconfirm fact-directed, the reads `read:` — "
-   + "and templatesave's rows stay", () => {
-  const TEMPLATE_ACTS = ["templatedraft", "templaterevise", "templatepropose", "templatesubmit", "templatereviewgrant",
-    "templategrantrevoke", "templatereview", "templatecomment", "templateapprove", "templateretire"];
-  const DOOR = ["templatereview", "templatecomment", "templateread", "templatecomments"];
-  for (const op of TEMPLATE_ACTS) assert.ok(NON_ACTS[op]?.startsWith(TEMPLATE_DIRECTED), op);
-  for (const op of ["templates", "templateread", "templatecomments", "factstatus", "factsdue"])
-    assert.ok(NON_ACTS[op]?.startsWith("read: "), op);
-  for (const op of [...TEMPLATE_ACTS, ...R30_READS]) assert.equal(NON_ACTS[op].includes(GRANT_DOOR), DOOR.includes(op), op);
-  assert.equal(NON_ACTS.factconfirm, "fact-directed: keyed by a profile fact's path, reached from the calendar and "
-    + "offices; moves no bundle");
-  for (const op of [...R30_WRITES, ...R30_READS]) assert.ok(!NON_ACTS[op].startsWith("capture-directed:"), op);
-  /* filings R32's templatesave keeps its rows: a NON_ACTS reason and its `undetermined` ground */
-  assert.ok(typeof NON_ACTS.templatesave === "string" && NON_ACTS.templatesave.startsWith("draft-directed:"));
-  assert.equal(RUNG_ABSENT.templatesave.ground, "undetermined");
-  assert.match(RUNG_ABSENT.templatesave.is, /filings R32/);
-});
-
-test("R30 R19: TEMPLATE_REASON_REFUSED and FACT_HOW_REFUSED are in the justification family, and each is a code its "
-   + "owner answers with (its own checks table)", () => {
-  for (const c of ["TEMPLATE_REASON_REFUSED", "FACT_HOW_REFUSED"]) assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
+test("R19: TEMPLATE_REASON_REFUSED and FACT_HOW_REFUSED are each a code its owner answers with (its own checks table), "
+   + "and the template and fact refusals that ask an object, a choice or a form stay out of the justification family", () => {
   assert.ok(Object.hasOwn(filingTemplates.FILING_TEMPLATE_CHECKS, "TEMPLATE_REASON_REFUSED"));
   assert.ok(Object.hasOwn(localFacts.LOCAL_FACTS_CHECKS, "FACT_HOW_REFUSED"));
-  /* the template and fact refusals that ask for an object, a choice or a form, never an account, stay out */
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the template and fact refusals that ask for
+     an object, a choice or a form, never an account, stay out */
   for (const c of ["NO_SUCH_TEMPLATE", "TEMPLATE_TEXT_REFUSED", "NOT_A_DRAFT", "NO_SUCH_FACT", "FACT_ACT_REFUSED",
     "FACT_VALUE_REFUSED", "MACHINE_CANNOT_CONFIRM", "REVIEW_REFUSED"]) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
 });
 
-/* R31 (DEC-88 (4); K1038): the six judgement calls' consequence statements, published beside the ladder as
-   `VOCABULARIES.rung_consequences`, the very object `CONSEQUENCE_STATEMENTS`; the rung names unchanged (R27); no key
-   added to the decorated act (R11), so op=affordances and a queue item's options keep their shape. */
-test("R31 R33 R4 R11: CONSEQUENCE_STATEMENTS holds exactly the six with their friction — the full dialog for attribute, "
-   + "leadshare, entitycreate, strengthbar and filingapprove, in-place for workobjective — and R33's actionholdrelease, "
-   + "the full dialog, each with its statement, published as VOCABULARIES.rung_consequences by reference, the rungs "
-   + "unchanged and the decorated act's keys too", () => {
+/* op-grades R4 (DEC-88 (4); K1038): the judgement calls' consequence statements, published beside the ladder as
+   `VOCABULARIES.rung_consequences`, the very object `CONSEQUENCE_STATEMENTS` (R4); no key added to the decorated act
+   (R11), so op=affordances and a queue item's options keep their shape. The statements, their friction and their ops'
+   rungs are pinned in op-grades' tests. */
+test("R4 R11 R25: CONSEQUENCE_STATEMENTS is published as VOCABULARIES.rung_consequences by reference, in the static "
+   + "vocabularies, vocabulariesFor and the no-target answer; the decorated act's keys are unchanged by it; and its "
+   + "statements are outward text", () => {
   const C = G.CONSEQUENCE_STATEMENTS;
-  assert.deepEqual(Object.fromEntries(Object.entries(C).map(([op, c]) => [op, c.friction])), {
-    attribute: "dialog", leadshare: "dialog", entitycreate: "dialog", strengthbar: "dialog", filingapprove: "dialog",
-    workobjective: "in-place", actionholdrelease: "dialog",
-    /* op-grades R21 (DEC-142): T35's, beside actionholdrelease */
-    ...Object.fromEntries(Object.entries(T35_CONSEQUENCE_STATEMENTS).map(([op, c]) => [op, c.friction])),
-    /* op-grades R24 (DEC-173 (2)): openwithwarning's, the full dialog */
-    openwithwarning: "dialog" });
-  assert.equal(C.openwithwarning, T36_CONSEQUENCE_STATEMENTS.openwithwarning);
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): every entry `{friction, statement}` with a
+     statement over 80 characters, and filingapprove's naming that it is approved once */
   for (const [op, c] of Object.entries(C)) {
     assert.deepEqual(Object.keys(c).sort(), ["friction", "statement"], op);
     assert.ok(typeof c.statement === "string" && c.statement.length > 80, op);
   }
+  assert.match(C.filingapprove.statement, /approved once/);
   assert.equal(VOCABULARIES.rung_consequences, C, "the same object, never a copy");
   assert.equal(A.vocabulariesFor(["x"]).rung_consequences, C);
   assert.equal(A.affordancesAnswer({ kinds: null, gate: null }).vocabularies.rung_consequences, C);
-  /* the rungs are the ladder's own: five reasoned, filingapprove terminal (its statement is its terminal effect) */
-  assert.deepEqual(Object.keys(C).map((op) => [op, RUNGS[op]]), [["attribute", "reasoned"], ["leadshare", "reasoned"],
-    ["entitycreate", "reasoned"], ["strengthbar", "reasoned"], ["filingapprove", "terminal"], ["workobjective", "reasoned"],
-    ["actionholdrelease", "terminal"], ["personexpunge", "reasoned"] /* op-grades R21: the dialog is its weight */,
-    ["standardrelease", "reasoned"] /* op-grades R4, R21 (K2049, K2052) */,
-    ["openwithwarning", undefined] /* op-grades R24: beside its ground, no rung */]);
-  assert.equal(RUNG_ABSENT.openwithwarning.ground, "observational");
-  assert.match(C.openwithwarning.statement, /never recorded/);
-  assert.match(C.workobjective.statement, /budget and scope/);
-  assert.match(C.filingapprove.statement, /approved once/);
-  assert.match(C.leadshare.statement, /cannot be un-read/);
   /* R11: the decorated shape is unchanged — no consequence key on any act */
   const KEYS = ["id", "label", "weight", "needs", "mode", "rung", "rung_absence", "prompt", "phone" /* R36 */];
   for (const a of [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS]) assert.deepEqual(Object.keys(A.decorate(a, null)), KEYS, a.id);
@@ -1022,15 +906,16 @@ test("R31 R33 R4 R11: CONSEQUENCE_STATEMENTS holds exactly the six with their fr
 });
 
 /* K1019, K1023, K1037 (T22; plan layer 11): the ops escalation, capture and monitoring added, keyed to their op maps.
-   The four writes are `reasoned` (R2) with a NON_ACTS reason; capture's three reads carry a NON_ACTS reason (each has
-   a present `NEEDS` row in op-declarations, as capture's other reads); escalation's status read has no `NEEDS` row
-   (`escalationsdue`'s shape), so no registry names it; `doorbellrefused` is store-internal and named nowhere. T23's
-   ops (escalationreasondraft, whatchangedpropose, whatchangeddrafts among them) are R32's, in the test after this one. */
+   The four writes are `reasoned` (op-grades R1) with a NON_ACTS reason; capture's three reads carry a NON_ACTS reason
+   (each has a present `NEEDS` row in op-declarations, as capture's other reads); escalation's status read has no `NEEDS`
+   row (`escalationsdue`'s shape), so no registry names it; `doorbellrefused` is store-internal and named nowhere. T23's
+   ops (escalationreasondraft, whatchangedpropose, whatchangeddrafts among them) are op-grades R7's, in the test after
+   this one. */
 import { escalationOps } from "../../../src/escalation/index.mjs";
 import { monitoringOps } from "../../../src/monitoring/index.mjs";
-test("R2 R3 R7 R12: T22's new ops — declinetoescalate, heldsetaside, heldrestore and addressfrequencyset `reasoned`, "
-   + "capture's three reads named `read:`, escalationstatus and doorbellrefused named nowhere — and with the control "
-   + "plane's rows for them nothing is unaccounted", () => {
+test("R12: T22's new ops — escalation's, capture's, the doorbell's and monitoring's op maps hold them, the four writes "
+   + "and capture's three reads named in NON_ACTS, escalationstatus and doorbellrefused named nowhere — and with the "
+   + "control plane's rows for them nothing is unaccounted", () => {
   const url = new URL("http://x/");
   const esc = Object.keys(escalationOps({}, url, {})), cap = Object.keys(captureOps({}, url, {}, {})),
         mon = Object.keys(monitoringOps({}, url, {})), door = Object.keys(doorbellOps({}, url, {}));
@@ -1043,10 +928,10 @@ test("R2 R3 R7 R12: T22's new ops — declinetoescalate, heldsetaside, heldresto
     || [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op);
   const WRITES = ["declinetoescalate", "heldsetaside", "heldrestore", "addressfrequencyset"];
   const READS = ["heldcaptures", "gradenote", "doorbelltally"];
-  for (const op of WRITES) {
-    assert.equal(RUNGS[op], "reasoned", op);
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the writes' reasons, and the reads' `read:`
+     reasons with no grade */
+  for (const op of WRITES)
     assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 40 && !NON_ACTS[op].startsWith("capture-directed:"), op);
-  }
   for (const op of READS) {
     assert.ok(NON_ACTS[op]?.startsWith("read: "), op);
     assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
@@ -1062,68 +947,48 @@ test("R2 R3 R7 R12: T22's new ops — declinetoescalate, heldsetaside, heldresto
   assert.deepEqual([...WRITES, ...READS].filter((op) => !A.unaccounted([]).stale.includes(op)), []);
 });
 
-/* R32 (N485: K1025, K1035; K1094; DEC-111, K1100; T23): the ops T23 adds, by R7 and R27, and R12's totality with them.
+/* op-grades R7 (N485: K1025, K1035; K1094; DEC-111, K1100; T23): the ops T23 adds, and R12's totality with them.
    case-authoring's and escalation's are read from their op maps; `sweeps` left monitoring's for link-sweep's at T24's L10
-   (N506, link-sweep R1–R12), and link-sweep is not in this module's uses, so it is named as R32 names it; network-notices is not in this module's
-   uses, so its four ops (its op map: `noticeprepare`, `noticepost`, `notices`, `directorysubmission`) and its three
-   public reads (registered through public-read R18) are named as its record states them (build/jobs/T23/network-notices.md;
-   K1150). R32 names no grade or reason for `directorysubmission`, so it is not asserted here either way. */
-const R32_GRADES = { whatchangedpropose: ["absent", "undetermined"], noticepost: ["rung", "attested"] };
-const R32_WRITE_REASONS = {
-  whatchangedpropose: "case-directed: keyed by a published case, reached from its next edition; a draft, never a "
-    + "statement until a member adopts it",
-  noticepost: "project-directed: keyed by a project, reached from the project; an owner's signed notice",
-};
-const R32_READS = ["escalationreasondraft", "whatchangeddrafts", "sweeps", "noticeprepare", "notices"];
-const R32_PUBLIC = ["activitymethod", "noticespublic", "groupkeyspublic"];
-const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? ["rung", RUNGS[op]]
-  : Object.hasOwn(RUNG_ABSENT, op) ? ["absent", RUNG_ABSENT[op].ground] : null;
-test("R32 R2 R3 R7 R12: T23's ops — whatchangedpropose `undetermined` as templatepropose, noticepost `attested` as "
-   + "caseratify, each with R32's NON_ACTS reason, the five reads `read:` and network-notices' public reads `read: public, "
-   + "no credential` — and with the control plane's rows for them nothing is unaccounted; a misgraded op, an ungated "
-   + "read and an op left out are each seen", () => {
+   (N506, link-sweep R1–R12), and link-sweep is not in this module's uses, so it is named as op-grades R7 names it;
+   network-notices is not in this module's uses, so its four ops (its op map: `noticeprepare`, `noticepost`, `notices`,
+   `directorysubmission`) and its three public reads (registered through public-read R18) are named as its record states
+   them (build/jobs/T23/network-notices.md; K1150). op-grades R7 names no grade or reason for `directorysubmission`, so it
+   is not asserted here either way. The grades and reasons are pinned in op-grades' tests. */
+const T23_WRITES = ["whatchangedpropose", "noticepost"];
+const T23_READS = ["escalationreasondraft", "whatchangeddrafts", "sweeps", "noticeprepare", "notices"];
+const T23_PUBLIC = ["activitymethod", "noticespublic", "groupkeyspublic"];
+test("R1 R12 R24: T23's ops — case-authoring's and escalation's op maps hold theirs, each write decorates with a rung "
+   + "or a stated absence, none is an act — and with the control plane's rows for them nothing is unaccounted; an "
+   + "ungated read and an op left out are each seen", () => {
   const url = new URL("http://x/");
   const ca = Object.keys(caseAuthoringOps({}, url, {})), esc = Object.keys(escalationOps({}, url, {}));
   for (const op of ["whatchangedpropose", "whatchangeddrafts"]) assert.ok(ca.includes(op), op);
   assert.ok(esc.includes("escalationreasondraft"));
-  /* each write's grade, on R27's rule and beside the op R32 names as its precedent */
-  const grades = Object.fromEntries(Object.keys(R32_GRADES).map((op) => [op, gradeOf(op)]));
-  assert.deepEqual(grades, R32_GRADES);
-  assert.equal(RUNG_ABSENT.whatchangedpropose.ground, RUNG_ABSENT.templatepropose.ground);
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): whatchangedpropose's sentence, the reads'
+     reasons, and no grade on any read */
   assert.ok(RUNG_ABSENT.whatchangedpropose.is.length > 40);
-  assert.equal(RUNGS.noticepost, RUNGS.caseratify);
-  for (const op of Object.keys(R32_GRADES)) assert.ok(!(Object.hasOwn(RUNGS, op) && Object.hasOwn(RUNG_ABSENT, op)), op);
-  /* negative control: the same comparison sees noticepost graded otherwise, or whatchangedpropose given a rung */
-  assert.notDeepEqual({ ...grades, noticepost: ["rung", "reasoned"] }, R32_GRADES);
-  assert.notDeepEqual({ ...grades, whatchangedpropose: ["rung", "reversible"] }, R32_GRADES);
-  /* R24: each write decorates with a rung or a stated absence, never both and never neither */
-  for (const op of Object.keys(R32_GRADES)) {
-    const d = A.decorate({ id: op, label: "x" }, null);
-    assert.equal((d.rung === null) !== (d.rung_absence === null), true, op);
-  }
-  /* each NON_ACTS reason as R32 words it; the reads write no rung; none is an act or a capture act */
-  for (const [op, r] of Object.entries(R32_WRITE_REASONS)) assert.equal(NON_ACTS[op], r, op);
-  for (const op of R32_READS) {
+  for (const op of T23_READS) {
     assert.ok(NON_ACTS[op]?.startsWith("read: ") && NON_ACTS[op].length > 40, op);
     assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
   }
-  for (const op of R32_PUBLIC) {
-    assert.equal(NON_ACTS[op], "read: public, no credential", op);
-    assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+  for (const op of T23_PUBLIC) assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+  /* R24: each write decorates with a rung or a stated absence, never both and never neither */
+  for (const op of T23_WRITES) {
+    const d = A.decorate({ id: op, label: "x" }, null);
+    assert.equal((d.rung === null) !== (d.rung_absence === null), true, op);
   }
-  const ALL = [...Object.keys(R32_GRADES), ...R32_READS, ...R32_PUBLIC];
+  const ALL = [...T23_WRITES, ...T23_READS, ...T23_PUBLIC];
   assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => ALL.includes(a.id)));
-  for (const op of ALL) assert.ok(!NON_ACTS[op].startsWith("capture-directed:"), op);
   /* the control plane's rows (op-declarations R10): the two writes mutating, every op gated (each has a NON_ACTS reason) */
-  const table = [...Object.keys(R32_GRADES).map((op) => ({ op, mutating: true, gated: true })),
-    ...[...R32_READS, ...R32_PUBLIC].map((op) => ({ op, mutating: false, gated: true }))];
+  const table = [...T23_WRITES.map((op) => ({ op, mutating: true, gated: true })),
+    ...[...T23_READS, ...T23_PUBLIC].map((op) => ({ op, mutating: false, gated: true }))];
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => ALL.includes(op)), []);
   /* negative controls: carried by no row (the real table before op-declarations' merge), each reads stale; a read
      carried ungated reads stale; a new op the catalogue leaves out reads unpublished and unranked */
   assert.deepEqual(ALL.filter((op) => !A.unaccounted([]).stale.includes(op)), []);
-  for (const op of [...R32_READS, ...R32_PUBLIC])
+  for (const op of [...T23_READS, ...T23_PUBLIC])
     assert.ok(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
   const left = A.unaccounted([...table, { op: "noticeunnamed", mutating: true, gated: true }]);
   assert.deepEqual([left.unpublished, left.unranked], [["noticeunnamed"], ["noticeunnamed"]]);
@@ -1133,29 +998,26 @@ test("R32 R2 R3 R7 R12: T23's ops — whatchangedpropose `undetermined` as templ
    provenance's op map (its R53) for provenance-routes' (its R9), and `op=attest` is answered by attestation's door arm
    (`attestOp`, attestation R1–R3) with the code it reaches. No grade or reason moves with them (provenance-routes' and
    attestation's requirements change no meaning): the two route writes keep `substrate` and their `document-directed:`
-   reasons, `attest` keeps `attested`, its capture-directed reason and its CAPTURE_ACTS row with the fence, and the
+   reasons, `attest` keeps its grade (op-grades' tests) and its CAPTURE_ACTS row with the fence, and the
    read carries no `NEEDS` row (op-declarations, not in this module's uses, so the rows are written out here as its
    table carries them), so it is named nowhere (R12). */
 import { provenanceRouteOps } from "../../../src/provenance-routes/index.mjs";
 import { attestOp } from "../../../src/attestation/index.mjs";
-test("R1 R2 R3 R5 R7 R12 (N512): provenance-routes' three ops, keyed to its op map, and attestation's `attest` keep "
-   + "their grades and reasons — the two route writes `substrate` with `document-directed:` reasons, the read named "
-   + "nowhere, `attest` `attested` and capture-directed with the fence — and with the control plane's rows nothing is "
-   + "unaccounted; a misgraded or unnamed op is seen", () => {
+test("R1 R5 R12 (N512): provenance-routes' op map holds its three ops and attestation answers `attest` — the two route "
+   + "writes with their ground and `document-directed:` reasons, the read named nowhere, `attest` a capture act with the "
+   + "fence and no ACTS row — and with the control plane's rows nothing is unaccounted; an unnamed op is seen", () => {
   const routeOps = Object.keys(provenanceRouteOps({}, new URL("http://x/"), {})).sort();
   assert.deepEqual(routeOps, ["provenancechain", "provenanceroute", "provenanceroutes"]);
   assert.equal(typeof attestOp, "function");
   const WRITES = ["provenancechain", "provenanceroute"];
   for (const op of WRITES) {
+    /* op-grades' content its own tests do not yet pin (N877; reported to BOB) */
     assert.equal(RUNG_ABSENT[op]?.ground, "substrate", op);
     assert.ok(!Object.hasOwn(RUNGS, op), op);
     assert.ok(NON_ACTS[op]?.startsWith("document-directed: ") && NON_ACTS[op].length > 60, op);
     assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => a.id === op), op);
   }
   for (const t of [NON_ACTS, RUNGS, RUNG_ABSENT]) assert.ok(!Object.hasOwn(t, "provenanceroutes"));
-  assert.equal(RUNGS.attest, "attested");
-  assert.ok(!Object.hasOwn(RUNG_ABSENT, "attest"));
-  assert.ok(NON_ACTS.attest.startsWith("capture-directed:"));
   assert.deepEqual(CAPTURE_ACTS.find((a) => a.id === "attest"), { id: "attest", label: "Co-attest this capture", prompt: A.ATTEST_FENCE });
   assert.ok(!ACTS.some((a) => a.id === "attest"));
   /* the control plane's rows: the two writes and `attest` mutating and gated, the read neither */
@@ -1215,102 +1077,81 @@ test("R19: the justification family holds DEC-88's and T22's codes, each a row i
     "MACHINE_CANNOT_SET_ASIDE", "LEAD_TOO_LONG", "STANDARD_NO_TEXT", "NO_COUNSEL"]) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
 });
 
-/* R33 (DEC-113; K1134 (3), K1252; T27): the litigation hold's release and its two reads, keyed to actions' op map
+/* op-grades R8 (DEC-113; K1134 (3), K1252; T27): the litigation hold's release and its two reads, keyed to actions' op map
    (op-declarations R12 carries their rows: the release mutating, every op gated and stamped `viewer`). The release is
-   `terminal`, R27's named exception, with a consequence statement beside it; the preview and the held-project answer are
-   reads. Their backing is driven at actions' interface in backing.test.mjs. */
-const R33_READS = ["actionholdpreview", "projectholds"];
-test("R33 R2 R7 R12 R20: actionholdrelease is `terminal`, a named exception to R27 (actionhold stays `reasoned`), "
-   + "HOLD_REFUSED backs its reason, its consequence statement says what releasing restarts and that it cannot be undone, "
-   + "NON_ACTS names it entry-directed and its two reads `read:`, it is not in MACHINE_REFUSALS, and with the control "
-   + "plane's rows nothing is unaccounted; a misgraded release or an unnamed read is seen", () => {
+   `terminal`, op-grades R3's named exception, with a consequence statement beside it, published here by reference (R4);
+   the preview and the held-project answer are reads. Their backing is driven at actions' interface in backing.test.mjs. */
+const HOLD_READS = ["actionholdpreview", "projectholds"];
+test("R1 R4 R12 R24: actionholdrelease — actions' op map holds it and its two reads, its consequence statement is "
+   + "published as vocabularies.rung_consequences by reference, none is an act, it decorates `terminal` and never a bare "
+   + "null, and with the control plane's rows nothing is unaccounted; an unnamed read is seen", () => {
   const ops = Object.keys(actionsOps({}, new URL("http://x/"), {}));
-  for (const op of ["actionholdrelease", ...R33_READS]) assert.ok(ops.includes(op), `actions' op map holds ${op}`);
-  assert.equal(RUNGS.actionholdrelease, "terminal");
-  assert.equal(RUNGS.actionhold, "reasoned", "placing stays light (K918)");
-  assert.ok(!Object.hasOwn(RUNG_ABSENT, "actionholdrelease"));
-  assert.ok(JUSTIFICATION_REFUSALS.includes("HOLD_REFUSED"));
-  /* the consequence statement: the dialog, what is restarted for the projects the surface reads beside it, and that it
-     cannot be undone */
+  for (const op of ["actionholdrelease", ...HOLD_READS]) assert.ok(ops.includes(op), `actions' op map holds ${op}`);
   const c = G.CONSEQUENCE_STATEMENTS.actionholdrelease;
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the statement's keys and its full words on
+     what is purged again and the assistant transcripts deleted */
   assert.deepEqual(Object.keys(c).sort(), ["friction", "statement"]);
-  assert.equal(c.friction, "dialog");
-  assert.match(c.statement, /restarts deletion for the projects shown beside this/);
   assert.match(c.statement, /material may be purged again/);
   assert.match(c.statement, /assistant transcripts for them past the time limit will be deleted on each member's device when it is next opened/);
-  assert.match(c.statement, /This cannot be undone\.$/);
   assert.equal(VOCABULARIES.rung_consequences.actionholdrelease, c);
-  /* NON_ACTS, word for word for the release; the reads begin `read:` and write nothing */
-  assert.equal(NON_ACTS.actionholdrelease, "entry-directed: keyed by (action, entry ordinal); appends a release and never "
-    + "rewrites the entry, its mark or an earlier statement");
-  for (const op of R33_READS) {
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the reads write nothing and carry no grade */
+  for (const op of HOLD_READS) {
     assert.ok(NON_ACTS[op]?.startsWith("read: ") && NON_ACTS[op].length > 40, op);
     assert.match(NON_ACTS[op], /writes nothing$/, op);
     assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
   }
-  assert.ok(!Object.hasOwn(MACHINE_REFUSALS, "actionholdrelease") && !Object.hasOwn(MACHINE_REFUSALS, "actionhold"));
-  assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => ["actionholdrelease", ...R33_READS].includes(a.id)));
+  assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => ["actionholdrelease", ...HOLD_READS].includes(a.id)));
   assert.deepEqual([A.decorate({ id: "actionholdrelease", label: "x" }, null).rung,
                     A.decorate({ id: "actionholdrelease", label: "x" }, null).rung_absence], ["terminal", null], "R24");
   const table = [{ op: "actionholdrelease", mutating: true, gated: true },
-    ...R33_READS.map((op) => ({ op, mutating: false, gated: true }))];
+    ...HOLD_READS.map((op) => ({ op, mutating: false, gated: true }))];
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => table.some((t) => t.op === op)), []);
   /* negative controls: carried ungated, a read reads stale; carried by no row, each reads stale */
-  for (const op of R33_READS) assert.ok(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
-  assert.deepEqual(["actionholdrelease", ...R33_READS].filter((op) => !A.unaccounted([]).stale.includes(op)), []);
+  for (const op of HOLD_READS) assert.ok(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
+  assert.deepEqual(["actionholdrelease", ...HOLD_READS].filter((op) => !A.unaccounted([]).stale.includes(op)), []);
 });
 
 /* R34 (DEC-116, DEC-100; N520; T27): the docket's ops, keyed to docket's op map (its `docketOps`), and its two public
-   reads (docket R14, R15, registered through public-read, not in this module's uses, so named as R34 names them).
-   op-declarations R13 carries their rows. The reasoned pair's backing and the post's signature are driven at docket's
-   interface in backing.test.mjs. */
-const R34_GRADES = { docketfile: ["rung", "reasoned"], docketdecline: ["rung", "reasoned"], docketpost: ["rung", "attested"],
-  docketpressure: ["absent", "undetermined"] };
-const R34_READS = ["docket", "docketprepare", "docketinvitation"];
-const R34_PUBLIC = ["docketpublic", "docketfeed"];
-const CASE_DIRECTED = "case-directed: keyed by a published case, reached from its docket; never evidence, moves no bundle";
-test("R34 R2 R3 R4 R7 R12 R19: the docket's ops — docketfile and docketdecline `reasoned`, DOCKET_NO_REASON in the "
-   + "family, docketpost `attested` as noticepost, docketpressure `undetermined` as actionpressure, each case-directed in "
-   + "NON_ACTS, its reads `read:` and its public reads `read: public, no credential`, its four vocabularies the owner's "
-   + "objects — and with the control plane's rows nothing is unaccounted; a misgraded op or one left out is seen", () => {
+   reads (docket R14, R15, registered through public-read, not in this module's uses, so named as op-grades R9 names
+   them). op-declarations R13 carries their rows. Their grades are op-grades R9's, pinned in its tests; their four
+   vocabularies are R34's, here. The reasoned pair's backing and the post's signature are driven at docket's interface
+   in backing.test.mjs. */
+const DOCKET_WRITES = ["docketfile", "docketdecline", "docketpost", "docketpressure"];
+const DOCKET_READS = ["docket", "docketprepare", "docketinvitation"];
+const DOCKET_PUBLIC = ["docketpublic", "docketfeed"];
+test("R1 R4 R12 R19 R24 R34: the docket's ops — docket's op map holds exactly them, DOCKET_NO_REASON is a row of its "
+   + "owner's checks, each write decorates with a rung or a stated absence, none is an act, its four vocabularies are "
+   + "the owner's objects — and with the control plane's rows nothing is unaccounted; an op left out is seen", () => {
   const ops = Object.keys(docket.docketOps({}, new URL("http://x/"), {})).sort();
-  assert.deepEqual(ops, [...Object.keys(R34_GRADES), ...R34_READS].sort(), "docket's op map holds exactly these");
-  const grades = Object.fromEntries(Object.keys(R34_GRADES).map((op) => [op, gradeOf(op)]));
-  assert.deepEqual(grades, R34_GRADES);
-  assert.equal(RUNGS.docketpost, RUNGS.noticepost);
-  assert.equal(RUNG_ABSENT.docketpressure.ground, RUNG_ABSENT.actionpressure.ground);
+  assert.deepEqual(ops, [...DOCKET_WRITES, ...DOCKET_READS].sort(), "docket's op map holds exactly these");
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): docketpressure's sentence */
   assert.ok(RUNG_ABSENT.docketpressure.is.length > 40);
-  assert.ok(JUSTIFICATION_REFUSALS.includes("DOCKET_NO_REASON"));
   assert.ok(Object.hasOwn(docket.DOCKET_CHECKS, "DOCKET_NO_REASON"), "a row of its owner's checks");
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the docket's refusals that ask an object, a
+     kind or a signature stay out of the justification family */
   for (const c of ["DOCKET_KIND_UNKNOWN", "DOCKET_NO_CAPTURE", "NO_SUCH_DOCKET_ENTRY", "MACHINE_CANNOT_MARK_DOCKET_PRESSURE",
     "DOCKET_SIGNATURE_REFUSED"]) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
-  /* negative controls: the same comparison sees a misgraded op */
-  assert.notDeepEqual({ ...grades, docketpost: ["rung", "reasoned"] }, R34_GRADES);
-  assert.notDeepEqual({ ...grades, docketpressure: ["rung", "reversible"] }, R34_GRADES);
-  for (const op of Object.keys(R34_GRADES)) {
+  for (const op of DOCKET_WRITES) {
     const d = A.decorate({ id: op, label: "x" }, null);
     assert.equal((d.rung === null) !== (d.rung_absence === null), true, `R24: ${op}`);
-    assert.equal(NON_ACTS[op], CASE_DIRECTED, op);
   }
-  for (const op of R34_READS) {
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the reads write nothing, and no read or
+     public read carries a grade */
+  for (const op of DOCKET_READS) {
     assert.ok(NON_ACTS[op]?.startsWith("read: ") && NON_ACTS[op].length > 40, op);
     assert.match(NON_ACTS[op], /writes nothing$/, op);
     assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
   }
-  for (const op of R34_PUBLIC) {
-    assert.equal(NON_ACTS[op], "read: public, no credential", op);
-    assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
-  }
-  const ALL = [...Object.keys(R34_GRADES), ...R34_READS, ...R34_PUBLIC];
+  for (const op of DOCKET_PUBLIC) assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+  const ALL = [...DOCKET_WRITES, ...DOCKET_READS, ...DOCKET_PUBLIC];
   assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => ALL.includes(a.id)));
-  assert.deepEqual(ALL.filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), []);
-  /* R4: the four vocabularies, docket's own objects (its DOCKET_VOCABULARIES), by reference */
+  /* R4, R34: the four vocabularies, docket's own objects (its DOCKET_VOCABULARIES), by reference */
   for (const [k, v] of Object.entries(docket.DOCKET_VOCABULARIES)) assert.equal(VOCABULARIES[k], v, k);
   /* the control plane's rows (op-declarations R13): the four writes mutating, every op gated */
-  const table = [...Object.keys(R34_GRADES).map((op) => ({ op, mutating: true, gated: true })),
-    ...[...R34_READS, ...R34_PUBLIC].map((op) => ({ op, mutating: false, gated: true }))];
+  const table = [...DOCKET_WRITES.map((op) => ({ op, mutating: true, gated: true })),
+    ...[...DOCKET_READS, ...DOCKET_PUBLIC].map((op) => ({ op, mutating: false, gated: true }))];
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => ALL.includes(op)), []);
@@ -1319,72 +1160,57 @@ test("R34 R2 R3 R4 R7 R12 R19: the docket's ops — docketfile and docketdecline
   assert.deepEqual([left.unpublished, left.unranked], [["docketunnamed"], ["docketunnamed"]]);
 });
 
-/* R35 (DEC-112 (6), DEC-96 items 1, 2; N520, N522; T28): case-import's eight ops, keyed to its op map (`caseImportOps`),
-   and case-checker's two public reads (its R15, registered through public-read R18; case-checker is not in this module's
-   uses, so they are named as R35 names them). op-declarations R14 carries their rows. The four reasoned acts' backing is
-   driven at case-import's interface in backing.test.mjs. */
+/* op-grades R10 (DEC-112 (6), DEC-96 items 1, 2; N520, N522; T28): case-import's eight ops, keyed to its op map
+   (`caseImportOps`), and case-checker's two public reads (its R15, registered through public-read R18; case-checker is
+   not in this module's uses, so they are named as op-grades R10 names them). op-declarations R14 carries their rows.
+   Their grades are pinned in op-grades' tests. The four reasoned acts' backing is driven at case-import's interface in
+   backing.test.mjs. */
 import { caseImportOps, CASE_IMPORT_CHECKS } from "../../../src/case-import/index.mjs";
-const R35_GRADES = { importaccept: ["rung", "reasoned"], importacceptwithdraw: ["rung", "reasoned"],
-  importflag: ["rung", "reasoned"], importflagclear: ["rung", "reasoned"],
-  caseimport: ["absent", "undetermined"], caseimportdocument: ["absent", "undetermined"] };
-const R35_READS = ["importedcases", "importedcase"];
-const R35_PUBLIC = ["casechecker", "casefilespec"];
-const IMPORT_DIRECTED = "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached "
-  + "from the imported cases; writes this module's rows and moves no bundle";
-test("R35 R2 R3 R7 R12 R19 R27: case-import's ops — importaccept, importacceptwithdraw, importflag and importflagclear "
-   + "`reasoned`, IMPORT_ACCEPT_NO_REASON and IMPORT_FLAG_NO_ISSUE in the family, caseimport and caseimportdocument "
-   + "`undetermined` as inboxpull, the six import-directed in NON_ACTS, its reads `read:` and case-checker's public reads "
-   + "`read: public, no credential`, none in MACHINE_REFUSALS and no vocabulary added — and with the control plane's rows "
-   + "nothing is unaccounted; a misgraded op or one left out is seen", () => {
-  /* R38's watch acts (T31) are graded in t31.test.mjs */
+const IMPORT_WRITES = ["importaccept", "importacceptwithdraw", "importflag", "importflagclear", "caseimport",
+  "caseimportdocument"];
+const IMPORT_READS = ["importedcases", "importedcase"];
+const IMPORT_PUBLIC = ["casechecker", "casefilespec"];
+test("R1 R4 R12 R19 R24: case-import's ops — its op map holds exactly them, IMPORT_ACCEPT_NO_REASON and "
+   + "IMPORT_FLAG_NO_ISSUE are rows of its own checks and every other code of them stays out of the justification "
+   + "family, each write decorates with a rung or a stated absence, none is an act, no vocabulary is added — and with "
+   + "the control plane's rows nothing is unaccounted; an op left out is seen", () => {
+  /* op-grades R12's watch acts (T31) are held in t31.test.mjs */
   const ops = Object.keys(caseImportOps({}, new URL("http://x/"), {})).filter((op) => !["importwatch", "importunwatch"].includes(op)).sort();
-  assert.deepEqual(ops, [...Object.keys(R35_GRADES), ...R35_READS].sort(), "case-import's op map holds exactly these, beside R38's two");
-  const grades = Object.fromEntries(Object.keys(R35_GRADES).map((op) => [op, gradeOf(op)]));
-  assert.deepEqual(grades, R35_GRADES);
-  for (const op of ["caseimport", "caseimportdocument"]) {
-    assert.equal(RUNG_ABSENT[op].ground, RUNG_ABSENT.inboxpull.ground, op);
-    assert.ok(RUNG_ABSENT[op].is.length > 40, op);
-  }
-  /* R19: both codes are in the family, each a row of its owner's checks; the import's other refusals ask an object, a
-     member or a state, never an account, and stay out */
-  for (const c of ["IMPORT_ACCEPT_NO_REASON", "IMPORT_FLAG_NO_ISSUE"]) {
-    assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
+  assert.deepEqual(ops, [...IMPORT_WRITES, ...IMPORT_READS].sort(), "case-import's op map holds exactly these, beside the two watch acts");
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): each stated absence's sentence */
+  for (const op of ["caseimport", "caseimportdocument"]) assert.ok(RUNG_ABSENT[op].is.length > 40, op);
+  /* R19: both codes are rows of their owner's checks; the import's other refusals ask an object, a member or a state,
+     never an account, and stay out */
+  for (const c of ["IMPORT_ACCEPT_NO_REASON", "IMPORT_FLAG_NO_ISSUE"])
     assert.ok(Object.hasOwn(CASE_IMPORT_CHECKS, c), `${c} is a row of its owner's checks`);
-  }
   for (const c of Object.keys(CASE_IMPORT_CHECKS).filter((c) => !["IMPORT_ACCEPT_NO_REASON", "IMPORT_FLAG_NO_ISSUE"].includes(c)))
     assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
-  /* negative controls: the same comparison sees a misgraded op */
-  assert.notDeepEqual({ ...grades, importflag: ["rung", "reversible"] }, R35_GRADES);
-  assert.notDeepEqual({ ...grades, caseimport: ["rung", "reasoned"] }, R35_GRADES);
-  for (const op of Object.keys(R35_GRADES)) {
+  for (const op of IMPORT_WRITES) {
     const d = A.decorate({ id: op, label: "x" }, null);
     assert.equal((d.rung === null) !== (d.rung_absence === null), true, `R24: ${op}`);
-    assert.equal(NON_ACTS[op], IMPORT_DIRECTED, op);
   }
-  for (const op of R35_READS) {
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the reads write nothing, and no read or
+     public read carries a grade */
+  for (const op of IMPORT_READS) {
     assert.ok(NON_ACTS[op]?.startsWith("read: ") && NON_ACTS[op].length > 40, op);
     assert.match(NON_ACTS[op], /writes nothing$/, op);
     assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
   }
-  for (const op of R35_PUBLIC) {
-    assert.equal(NON_ACTS[op], "read: public, no credential", op);
-    assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
-  }
-  const ALL = [...Object.keys(R35_GRADES), ...R35_READS, ...R35_PUBLIC];
+  for (const op of IMPORT_PUBLIC) assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
+  const ALL = [...IMPORT_WRITES, ...IMPORT_READS, ...IMPORT_PUBLIC];
   assert.ok(![...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS].some((a) => ALL.includes(a.id)));
-  assert.deepEqual(ALL.filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), [], "MACHINE_REFUSALS holds only ACTS (R7, R20)");
-  /* no vocabulary is added: R4's list is unchanged by R35 (its test above holds the exact keys), and none names an import */
+  /* R4: no vocabulary is added, and none names an import */
   assert.deepEqual(Object.keys(VOCABULARIES).filter((k) => /import|checker|case_file/.test(k)), []);
   /* the control plane's rows (op-declarations R14): the six writes mutating, every op gated */
-  const table = [...Object.keys(R35_GRADES).map((op) => ({ op, mutating: true, gated: true })),
-    ...[...R35_READS, ...R35_PUBLIC].map((op) => ({ op, mutating: false, gated: true }))];
+  const table = [...IMPORT_WRITES.map((op) => ({ op, mutating: true, gated: true })),
+    ...[...IMPORT_READS, ...IMPORT_PUBLIC].map((op) => ({ op, mutating: false, gated: true }))];
   const r = A.unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => ALL.includes(op)), []);
   /* negative controls: carried by no row, each reads stale; a read carried ungated reads stale; an op left out reads
      unpublished and unranked */
   assert.deepEqual(ALL.filter((op) => !A.unaccounted([]).stale.includes(op)), []);
-  for (const op of [...R35_READS, ...R35_PUBLIC])
+  for (const op of [...IMPORT_READS, ...IMPORT_PUBLIC])
     assert.ok(A.unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
   const left = A.unaccounted([...table, { op: "importunnamed", mutating: true, gated: true }]);
   assert.deepEqual([left.unpublished, left.unranked], [["importunnamed"], ["importunnamed"]]);
