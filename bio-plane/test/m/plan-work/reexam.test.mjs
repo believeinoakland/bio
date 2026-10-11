@@ -42,7 +42,7 @@ test("R10: at start the module registers with actions' response listener; a reco
   assert.deepEqual(mine.marks.map((m) => [m.kind, m.option ?? m.phase]), [["option_changed", s.option], ["phase_start_holds", "ask"]]);
   assert.ok(mine.marks.every((m) => typeof m.why === "string" && m.why.length >= 1 && m.why.length <= 500));
   /* written through planMark in action-plans R43's shape, with the response as cause */
-  const held = w.marks.get(w.PL);
+  const held = w.marksOf(w.PL);
   assert.equal(held.length, 2);
   assert.deepEqual(held[0].cause, { action: s.action, ord });
   assert.deepEqual(w.pw.reexaminations({ plan: w.PL, viewer: V("bob") }).items[0].marks, mine.marks);
@@ -51,18 +51,20 @@ test("R10: at start the module registers with actions' response listener; a reco
   /* once per plan and response: the listener called again for the same response writes nothing more */
   const again = await w.respond(s.action, ord);
   assert.deepEqual(again.reexamined, []);
-  assert.equal(w.marks.get(w.PL).length, 2);
+  assert.equal(w.marksOf(w.PL).length, 2);
   /* a mark the plan already holds is not written again after a later response */
   const ord2 = await receive(w, s.action, "2026-10-04");
   assert.deepEqual(w.reexamined(s.action, ord2)[0].marks, []);
 });
 
-test("R10: an action started from a plan carries no project of its own, and its responses re-examine its plan's project", async () => {
+test("R10: a response whose action names no project re-examines the plans of its plan's project", async () => {
   const w = world();
   const s = w.started({ subjects: [w.S1] });
-  assert.equal(w.record.bundleInfo(s.action).project, null);
   const ord = await receive(w, s.action);
   assert.deepEqual(w.reexamined(s.action, ord).map((x) => x.plan), [w.PL]);
+  /* actions answers the action's own project; where it names none, the plan's project is the response's */
+  const r = await w.pw.onResponse({ action: s.action, ord: 99, project: null, recorder: V("bob"), at: w.clock.now });
+  assert.deepEqual(r.reexamined.map((x) => x.plan), [w.PL]);
 });
 
 test("R10: the guide's next routes for the action's kind after the response's outcome are one next_routes mark; the chance to fix is never a mark", async () => {
@@ -73,7 +75,6 @@ test("R10: the guide's next routes for the action's kind after the response's ou
     { route: "Thank them", citation: "Rule 5", after: ["complied"] },
     { route: "Wait", citation: "Rule 6" }] },
     { guide: "GUD-2026-0001-g", origin: "group", items: [{ route: "Appeal to the board", citation: "Rule 9", after: ["denied", "partial"] }] }]);
-  w.offers.set(w.PL, [{ subject: w.S1, key: `outcome:${w.D}#STD-2026-0001-a`, kind: "chance_to_fix" }]);
   w.correspond(s.action, "sent", "2026-10-01");
   const ord = await receive(w, s.action, "2026-10-03", { account: "letter", outcome: "denied" });
   const marks = w.reexamined(s.action, ord)[0].marks;
@@ -105,9 +106,11 @@ test("R10: the projects linked by arose_from both ways are re-examined; a respon
   const ordQ = w.actions.actionCorrespond({ target: q.action, direction: "received", at: "2026-10-04", account: "a call", ...by("dave") }).ord;
   await w.settle();
   assert.deepEqual(w.reexamined(q.action, ordQ).map((x) => x.plan), [q.plan]);
-  assert.equal(w.marks.get(w.PL).length, 1, "P's plan gained nothing from Q's response");
-  /* forward: dave records that Q arose from P's response (action-replies R2), so a later response in P re-examines Q too */
-  const link = w.replies.aroseFromLink({ target: s.action, ord: ordP, arising: { project: w.Q }, ...by("dave") });
+  assert.equal(w.marksOf(w.PL).length, 1, "P's plan gained nothing from Q's response");
+  /* forward: bob, who has joined both projects, records that Q arose from P's response (action-replies R2), so a later
+     response in P re-examines Q too */
+  w.join(w.Q, "bob");
+  const link = w.replies.aroseFromLink({ target: s.action, ord: ordP, arising: { project: w.Q }, ...by("bob") });
   assert.equal(link.ok, true, JSON.stringify(link));
   const ordP2 = await receive(w, s.action, "2026-10-05");
   assert.deepEqual(w.reexamined(s.action, ordP2).map((x) => x.plan).sort(), [w.PL, q.plan].sort());
@@ -117,6 +120,7 @@ test("R10: the projects linked by arose_from both ways are re-examined; a respon
   const q2 = planInQ(w2);
   const oq = w2.actions.actionCorrespond({ target: q2.action, direction: "received", at: "2026-10-02", account: "a call", ...by("dave") }).ord;
   await w2.settle();
+  w2.join(w2.Q, "bob");
   const back = w2.replies.aroseFromLink({ target: q2.action, ord: oq, arising: { project: w2.P }, ...by("bob") });
   assert.equal(back.ok, true, JSON.stringify(back));
   const ord = await receive(w2, s2.action);
@@ -146,7 +150,7 @@ test("R10: one re-examination run per plan, mode plan, origin reexamination, the
   const t = w2.started({ subjects: [w2.S1] });
   const o2 = await receive(w2, t.action);
   assert.equal(w2.reexamined(t.action, o2)[0].run.refused.code, "AI_RUN_MODE_NOT_DEPLOYED");
-  assert.equal(w2.marks.get(w2.PL).length, 1);
+  assert.equal(w2.marksOf(w2.PL).length, 1);
   /* called for a response no member recorded (actions never does so): no run */
   const w3 = world();
   const u = w3.started({ subjects: [w3.S1] });

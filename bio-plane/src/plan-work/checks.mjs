@@ -4,7 +4,7 @@
  * revise. Refusals of the modules this one uses are relayed with their own rows, through their exported sites:
  * `NO_SUCH_PLAN` (`action-plans.noSuchPlan`, its R22), `PLAN_CLOSED` (`refusePlanClosed`), `PLAN_NO_REASON`
  * (`refuseReason`, its R4's rule), `OPTION_KEY_REFUSED` (`refuseKeys`, its R26), `NO_SUCH_OPTION`
- * (`refuseNoSuchOption`) and `MACHINE_CANNOT_PLAN` (its row, C-124.1, read from `ACTION_PLAN_CHECKS`); a second
+ * (`refuseNoSuchOption`) and `MACHINE_CANNOT_PLAN` (`machineCannotPlan`, K2851); a second
  * registration's refusal is `membership.listenerRefusal`'s. */
 
 const at = (fn, region) => `src/plan-work/index.mjs ${fn} > ${region}`;

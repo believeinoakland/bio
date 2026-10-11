@@ -125,7 +125,7 @@ test("R4: planReviewOpen answers what changed since the last review entry: respo
   w.pw.planReviewRecord({ plan: w.PL, decided: "Wait for the reply.", ...by("bob") });
   w.clock.now = "2026-10-05T12:00:00Z";
   w.correspond(s.action, "received", "2026-10-05");
-  w.apx.planMark({ plan: w.PL, marks: [{ kind: "option_changed", option: s.option, why: "x" }], cause: { action: s.action, ord: 1 } });
+  w.ap.planMark({ plan: w.PL, marks: [{ kind: "option_changed", option: s.option, why: "x" }], cause: { action: s.action, ord: 1 } });
   const r = w.pw.planReviewOpen({ plan: w.PL, nowMs: ms("2026-10-06T00:00:00Z"), viewer: V("bob") });
   assert.equal(r.since, "2026-10-02T12:00:00Z");
   assert.equal(r.last_review.decided, "Wait for the reply.");
