@@ -2,7 +2,7 @@
    signers, R14, R15) and the invariants (R16, R17, R19–R22), at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, world, file, prepare, post, fileAndPlace, V, MACHINE, CASE, SUBJECT, NOW, DAY, keyFor, sha } from "./fixture.mjs";
+import { seeded, world, file, prepare, post, fileAndPlace, V, MACHINE, CASE, SUBJECT, NOW, DAY, keyFor, sha, OUTCOME } from "./fixture.mjs";
 import { DOCKET_CHECKS, DOCKET_TABLES, DOCKET_UNREADABLE, OUTWARD_ACT_WARNING, RESEND_INVITATION, CHECKPOINT_OFFER, RECEIPT_REASON,
          RECORD_STATES, CORE_KINDS, DOCKET_VOCABULARIES, SHELVES, ENTRY_KINDS, PROPOSALS, PRESSURE_KINDS, ATOM_MEDIA_TYPE, docketOps,
          docketAddress, feedAddress, feedHref }
@@ -73,7 +73,7 @@ test("R9 coreDue: the subject's responses and statements and a live holder's res
                      { case: CASE, edition: 2, member: w.F2, candidate: "CAND-2", state: "open" }];   /* F2 is supporting */
   const resp = file(w).entry;
   const stmt = file(w, { kind: "statement", capture: w.swept.sha }).entry;
-  const outcome = file(w, { kind: "outcome" }).entry;
+  const outcome = file(w, OUTCOME).entry;
   const reaction = file(w, { kind: "reaction", from: { kind: "other", name: "A blog" } }).entry;
   await post(w, { kind: "standing-granted", edition: 1, holder: "The Tenants' Union", reason: "named in the case" });
   const holderResp = file(w, { from: { kind: "holder", grant: 1 } }).entry;
@@ -339,7 +339,8 @@ test("R22 each refusal code is a row of this module's own table, one new family;
     "DOCKET_NO_EDITION", "DOCKET_NO_GROUP_SLUG", "DOCKET_NO_REASON", "DOCKET_NO_STANDING", "DOCKET_NO_SUMMARY", "DOCKET_SIGNATURE_REFUSED",
     "DOCKET_STALE", "DOCKET_TAKE_BACK_FINAL", "DOCKET_WARNING_NOT_ACKNOWLEDGED", "DOCKET_WITHDRAWAL_FINAL", "DOCKET_WRONG_SHELF",
     "MACHINE_CANNOT_FILE_DOCKET", "MACHINE_CANNOT_MARK_DOCKET_PRESSURE", "MACHINE_CANNOT_PLACE_DOCKET", "NO_SUCH_DOCKET_ENTRY",
-    "DOCKET_PRESSURE_MARKED", "DOCKET_PRESSURE_REFUSED", "DOCKET_ORDER_UNREADABLE", "DOCKET_NOTHING_SEALED"].sort());
+    "DOCKET_PRESSURE_MARKED", "DOCKET_PRESSURE_REFUSED", "DOCKET_ORDER_UNREADABLE", "DOCKET_NOTHING_SEALED",
+    "DOCKET_OUTCOME_UNREADABLE"].sort());
   const checks = Object.values(DOCKET_CHECKS).map((r) => r.check);
   assert.equal(new Set(checks).size, checks.length, "one row per code");
   for (const c of checks) assert.match(c, /^C-129\.\d+$/, "one family");

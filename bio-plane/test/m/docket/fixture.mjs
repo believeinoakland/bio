@@ -10,7 +10,8 @@
    the real `case-tensions` reads for its `caseTensions` (its R4) through the provider the real `publication` registers
    (its R61). `publication`'s `stampEdition` and `registerOrderSource` (its R62) are the real module's, reached through a
    pass-through that a test can make refuse or throw, to show the post undone; and `reevaluation` is a recorder of
-   `registerDocket` and `docketActed` (its R30), which can be made to throw. `events` is the real module (its R30). The group slug
+   `registerDocket` and `docketActed` (its R30), which can be made to throw. `project-roster`'s `projectScope` (its R23) is a
+   stand-in answering each project's scope (`none` unless a test sets one). `events` is the real module (its R30). The group slug
    is the fact `producingGroup` (promotion R40), registered as instance-setup does. Every test drives `docket` at its
    interface. */
 import { DatabaseSync } from "node:sqlite";
@@ -134,9 +135,14 @@ export function world({ slug = SLUG, before = null } = {}) {
   const reeval = { registrations: [], acted: [], throws: false,
     registerDocket(module, fns) { reeval.registrations.push({ module, fns }); return { ok: true, module }; },
     docketActed(q) { reeval.acted.push(q); if (reeval.throws) throw new Error("listener down"); return { ok: true, told: true }; } };
+  /* project-roster R23 (T45): each project's scope, `none` unless a test sets one; `roster.throws` makes the read throw. */
+  const roster = { scopes: new Map(), asked: [], throws: false,
+    projectScope(id) { roster.asked.push(id); if (roster.throws) throw new Error("roster down");
+      const scope = roster.scopes.get(id);
+      return scope ? { scope, since: "2026-10-01T00:00:00Z", by: "member:alice" } : { scope: "none", since: null, by: null }; } };
   let n = 0;
   const w = {
-    st, host, caseTensions, publication: realPublication, record, membership, credentials, promotion, provenance, attestation, clock, evidence, subjects, names, tensions, reeval, stamps,
+    st, host, roster, caseTensions, publication: realPublication, record, membership, credentials, promotion, provenance, attestation, clock, evidence, subjects, names, tensions, reeval, stamps,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     /** Every table's rows, for "nothing written" and "byte-identical" (the record's own and every module's here). */
@@ -206,7 +212,8 @@ export function world({ slug = SLUG, before = null } = {}) {
   if (typeof before === "function") before(w);
   w.events = eventsOf(host, { record, membership, provenance, now: () => clock.now });
   w.docket = docketOf(host, { record, membership, credentials, promotion, provenance, attestation, inquiry, entities,
-                              reevaluation: reeval, publication, caseTensions, events: w.events, now: () => clock.now });
+                              reevaluation: reeval, publication, caseTensions, events: w.events, projectRoster: roster,
+                              now: () => clock.now });
   return w;
 }
 
@@ -230,6 +237,8 @@ export function seeded(opts = {}) {
   return w;
 }
 
+/** R1 (T45): the fields an `outcome` entry states beside its kind: what it was, when, and the member's summary. */
+export const OUTCOME = { kind: "outcome", outcome: { kind: "cure", on: "2026-09-30" }, summary: "The office corrected the published totals." };
 /** A response from the subject, proposed for both, by bob unless named. */
 export const RESPONSE = (w) => ({ case: CASE, edition: 1, kind: "response", from: { kind: "subject", entity: SUBJECT },
                                   capture: w.cap.sha, proposed: "both", reason: "The subject's reply to edition 1." });

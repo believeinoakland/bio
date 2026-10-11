@@ -3,7 +3,7 @@
    control: the same call with only that condition put right is accepted. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, world, file, V, MACHINE, CASE, SUBJECT, OTHER_SUBJECT, RESPONSE, post } from "./fixture.mjs";
+import { seeded, world, file, V, MACHINE, CASE, SUBJECT, OTHER_SUBJECT, RESPONSE, OUTCOME, post } from "./fixture.mjs";
 import { DOCKET_CHECKS, FOUND_BY, PRESSURE_KINDS } from "../../../src/docket/index.mjs";
 
 const rowOk = (r, code) => {
@@ -81,8 +81,8 @@ test("R1 the form checks, each refused with nothing written, each with its contr
   rowOk(file(w, { kind: "reaction" }), "DOCKET_KIND_UNKNOWN");
   rowOk(file(w, { kind: "response", from: { kind: "other", name: "A columnist" } }), "DOCKET_KIND_UNKNOWN");
   rowOk(file(w, { kind: "statement", from: { kind: "other", name: "A columnist" } }), "DOCKET_KIND_UNKNOWN");
-  assert.equal(file(w, { kind: "outcome", from: { kind: "other", name: "The council" } }).ok, true);
-  assert.equal(file(w, { kind: "outcome" }).ok, true);
+  assert.equal(file(w, { ...OUTCOME, from: { kind: "other", name: "The council" } }).ok, true);
+  assert.equal(file(w, OUTCOME).ok, true);
   for (const x of [{ proposed: "maybe" }, { proposed: null }, { reason: "" }, { reason: "  " }, { reason: "r".repeat(2001) }, { reason: null }])
     refusedThenAccepted(w, () => file(w, x), () => file(w, { proposed: "record", reason: "r".repeat(2000) }), "DOCKET_NO_REASON");
   for (const proposed of ["record", "public", "both"]) assert.equal(file(w, { proposed }).ok, true);
