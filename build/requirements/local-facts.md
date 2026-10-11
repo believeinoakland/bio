@@ -38,6 +38,8 @@ Terms. A **fact** is one of: a `holidays` entry's year (keyed by its year, its `
 
 ### Uses
 
+- `provenance.homeOf` (R-line `homeOf(captureSha)`): a rule source capture's home bundle, judged for sight before R10's content check (T45, K2807).
+
 - `jurisdictions`: `combine`'s view and `get` (`holidays`, `hours`, `time_zone`, each with its `status` and `basis`; `validate` for a correction's value).
 - `record-grammar`: `isMachineIdentity`.
 - `record-core`: `transact`, `stampInstant`, `getSetting` (the active profiles), `declarePurge`, `declareTable` (its R21; R9, T33-28).
