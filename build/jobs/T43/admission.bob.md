@@ -1,0 +1,12 @@
+# BOB to admission (T43)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T43), layer 11, admission: T43-21 (K2708, widened by K2710). Read also K2708, K2710 (their lines in `build/rulings.md`) and the plan's rule 4 (12).
+Your requirements: `build/requirements/admission.md` (read whole); none is marked for T43. The entry: `src/admission/window.mjs`:82 builds the door window's fingerprint through `doorbellOf(ctx).sourceFingerprint` (doorbell R12), not capture's held copy, which T44 deletes (N870); and `harness.mjs`:189 takes `knock_key`'s DDL from doorbell's declared schema, not capture's (capture no longer creates doorbell's tables since T43-8). Your tests re-point too (K2719): `window.test.mjs`:29, 71, 92 and `t38.test.mjs`:27, 61, 69 call `w.capture.sourceFingerprint`; they call doorbell's (R12), so capture's held copy can be deleted in T44 (N870) with no admission test red; afterwards `git grep sourceFingerprint bio-plane/src/admission bio-plane/test/m/admission` names doorbell's only. R21 and your Uses already name `doorbell` R12 (re-worded by BOB, K2719; no change in meaning). Your COMPLETE names the new `uses` edge `admission` → `doorbell` and, if no admission file still imports capture, the edge `admission` → `capture` dropped; BOB edits `modules.json` before the ownership check (until then the architecture check shows the new import red: expected). A test shows the window's fingerprint equal to doorbell R12's for the same source (control: a different source differs), and that no admission file imports capture's `sourceFingerprint`. It clears rule 4 (12)'s admission reds (5 R21 tests): confirm they pass. Run your users' tests (answer-envelope, control-plane, plane) and report reds by file and line, naming any rule 4 already accepts.
+Reading set (mechanics §17): measured at this START: 549 KB with your tests, under the 600 KB limit (K2700): read it all whole (your requirements; the used modules' Purpose and the services your Uses names, doorbell's R12 among them; your code and tests).
+Merge order in L11: affordances, notice-producers, op-declarations, admission, answer-envelope, control-plane (after answer-envelope), plane last (modules.json order).
+Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).

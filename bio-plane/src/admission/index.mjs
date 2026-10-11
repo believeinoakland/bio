@@ -783,9 +783,9 @@ export function doorRateLimited(retryAfter) {
 }
 
 /* R21 — WHO IS CALLING, AS A KEYED FINGERPRINT: the connecting address as Cloudflare states it (`CF-Connecting-IP`),
-   digested as `capture` R56 digests it (HMAC-SHA-256, its first 16 bytes in hex, under the same key). In the Worker
-   that key is at hand only when the `KNOCK_FINGERPRINT_KEY` binding is set; otherwise it is capture's own, held in the
-   store, and (T38; N792, K2247) the store makes the fingerprint: asked through `doorwindow` with `count: false`, which
+   digested as `doorbell` R12 digests it (HMAC-SHA-256, its first 16 bytes in hex, under the same key; T43, K2708). In
+   the Worker that key is at hand only when the `KNOCK_FINGERPRINT_KEY` binding is set; otherwise it is the doorbell's
+   instance key, held in the store, and (T38; N792, K2247) the store makes the fingerprint: asked through `doorwindow` with `count: false`, which
    counts, refuses and writes nothing, so for one address `setpassword`'s `source` (stamped from here, control-plane R68)
    equals `login`'s (the window's, `doorWindowGate`) with or without the binding. A store that cannot be asked, or does
    not answer, gives `null`, named in the log by correlation id only; this never throws. A request that states no address
@@ -809,8 +809,8 @@ export async function sourceOf(req, env) {
   return hexOf(mac).slice(0, 32);
 }
 
-/* R21 (T38): the store's fingerprint of `address` under capture's instance key, by `doorwindow` with `count: false`, the
-   address in the body of a POST to `bio`'s store and nothing in its address. The reply is read on the door's contract
+/* R21 (T38): the store's fingerprint of `address` under the doorbell's instance key (its R12), by `doorwindow` with
+   `count: false`, the address in the body of a POST to `bio`'s store and nothing in its address. The reply is read on the door's contract
    (`ok: true` with a string `source` is an answer; anything else, unreadable included, is not), and the store's own
    internal error is named in the log by its correlation id alone. `null` when there is no answer. */
 const CORRELATION = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
