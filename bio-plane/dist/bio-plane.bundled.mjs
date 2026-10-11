@@ -6689,7 +6689,7 @@ async function* cut(source2, row12) {
       yield await src.read(at43, length);
     }
   }
-  const finish2 = async () => {
+  const finish = async () => {
     if (size !== declared2) return corrupt6("size_mismatch");
     if ((crc ^ 4294967295) >>> 0 !== row12.crc32) return corrupt6("crc_mismatch");
     return { ok: true, sha256: await sha2.finish(), crc32: row12.crc32, size };
@@ -6705,7 +6705,7 @@ async function* cut(source2, row12) {
     } catch {
       return unreadable2;
     }
-    return finish2();
+    return finish();
   }
   let ds;
   try {
@@ -6750,7 +6750,7 @@ async function* cut(source2, row12) {
     const whole2 = size === declared2 && (crc ^ 4294967295) >>> 0 === row12.crc32;
     return corrupt6(whole2 ? "stream_end_mismatch" : "inflate_failed");
   }
-  return finish2();
+  return finish();
 }
 var VBA_AUTORUN_NAMES = Object.freeze([
   "AutoExec",
@@ -8266,7 +8266,7 @@ function walkDocumentTables(xml) {
     if (c.vMerge === "restart") t2.vOwner.set(c.col, entry4);
     else t2.vOwner.delete(c.col);
   };
-  const finish2 = (t2, rows3) => {
+  const finish = (t2, rows3) => {
     closeCell(t2);
     done[t2.table] = {
       table: t2.table,
@@ -8285,7 +8285,7 @@ function walkDocumentTables(xml) {
     if (skipped(name3, closing, selfClosed)) continue;
     const top2 = stack.length ? stack[stack.length - 1] : null;
     if (closing) {
-      if (name3 === "tbl" && stack.length) finish2(stack.pop(), top2.rows);
+      if (name3 === "tbl" && stack.length) finish(stack.pop(), top2.rows);
       else if (name3 === "tr" && top2) {
         closeCell(top2);
         if (top2.tc > top2.maxTc) top2.maxTc = top2.tc;
@@ -8336,7 +8336,7 @@ function walkDocumentTables(xml) {
   }
   while (stack.length) {
     const t2 = stack.pop();
-    finish2(t2, t2.rows || null);
+    finish(t2, t2.rows || null);
   }
   return done;
 }
@@ -17526,23 +17526,23 @@ function readMementoAnswer({ url, status, headers } = {}) {
   };
 }
 var HEX642 = /^[0-9a-f]{64}$/;
-function mementoRow(answer, { sha256: sha2562, bytes: bytes2 } = {}) {
-  if (!answer || answer.ok !== true || answer.kind !== "memento") return null;
+function mementoRow(answer2, { sha256: sha2562, bytes: bytes2 } = {}) {
+  if (!answer2 || answer2.ok !== true || answer2.kind !== "memento") return null;
   const hex11 = typeof sha2562 === "string" ? sha2562.toLowerCase() : "";
   if (!HEX642.test(hex11)) return null;
   return {
     urlkey: null,
-    timestamp: answer.timestamp,
-    original: answer.original,
-    mimetype: answer.mimetype || void 0,
-    statuscode: answer.status == null ? "unstated" : String(answer.status),
+    timestamp: answer2.timestamp,
+    original: answer2.original,
+    mimetype: answer2.mimetype || void 0,
+    statuscode: answer2.status == null ? "unstated" : String(answer2.status),
     digest: bytes2 === 0 ? EMPTY_BODY_DIGEST : hex11
   };
 }
-function mementoHop(chosen, mementoUri, { archive = WAYBACK_MEMENTO, answer = null } = {}) {
+function mementoHop(chosen, mementoUri, { archive = WAYBACK_MEMENTO, answer: answer2 = null } = {}) {
   const name3 = archive && typeof archive.name === "string" && archive.name ? archive.name : "an unnamed Memento archive";
   const via = archive && typeof archive.via === "string" && archive.via ? archive.via : null;
-  const a = answer && answer.ok === true && answer.kind === "memento" ? answer : null;
+  const a = answer2 && answer2.ok === true && answer2.kind === "memento" ? answer2 : null;
   return {
     who: name3,
     asserts: `these bytes were served for ${chosen.original} at ${chosen.archived_at}, with HTTP status ${chosen.statuscode}`,
@@ -18220,11 +18220,11 @@ function b64bytes(s) {
     return null;
   }
 }
-async function keepRenderBodies(answer, { put: put2, sha256: sha2562 }) {
-  if (!answer || !Array.isArray(answer.requests)) return null;
+async function keepRenderBodies(answer2, { put: put2, sha256: sha2562 }) {
+  if (!answer2 || !Array.isArray(answer2.requests)) return null;
   let kept = 0, spent = 0;
   const out = [];
-  for (const r of answer.requests) {
+  for (const r of answer2.requests) {
     if (!r || typeof r !== "object" || !isStr2(r.url) || r.outcome !== "completed") {
       out.push(null);
       continue;
@@ -18280,10 +18280,10 @@ function originKey(u) {
     return null;
   }
 }
-function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: at43, digests: digests2 = null }) {
-  if (!answer || typeof answer !== "object" || answer.ok !== true)
-    return { ok: false, problem: `the renderer did not answer ok (${answer && answer.error ? String(answer.error).slice(0, 200) : "no answer"})` };
-  if (typeof answer.html !== "string" || answer.html.length === 0)
+function renderBlock(answer2, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: at43, digests: digests2 = null }) {
+  if (!answer2 || typeof answer2 !== "object" || answer2.ok !== true)
+    return { ok: false, problem: `the renderer did not answer ok (${answer2 && answer2.error ? String(answer2.error).slice(0, 200) : "no answer"})` };
+  if (typeof answer2.html !== "string" || answer2.html.length === 0)
     return { ok: false, problem: "the renderer answered with no rendered document" };
   const undetermined3 = [];
   const hostOf4 = (u) => {
@@ -18293,10 +18293,10 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: a
       return null;
     }
   };
-  const pageHost = hostOf4(answer.navigated_to) || hostOf4(pageUrl);
+  const pageHost = hostOf4(answer2.navigated_to) || hostOf4(pageUrl);
   let requests = null, data = null, subresources = null;
-  if (Array.isArray(answer.requests)) {
-    const at44 = new Map(answer.requests.map((r, i) => [r, i]));
+  if (Array.isArray(answer2.requests)) {
+    const at44 = new Map(answer2.requests.map((r, i) => [r, i]));
     const digestOf4 = (r) => {
       const i = at44.get(r);
       const d = Array.isArray(digests2) ? digests2[i] : null;
@@ -18307,7 +18307,7 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: a
         ...HEX643.test(String(r.sha256 || "")) ? { renderer_sha256: r.sha256 } : {}
       };
     };
-    const rq = answer.requests.filter((r) => r && typeof r === "object" && isStr2(r.url));
+    const rq = answer2.requests.filter((r) => r && typeof r === "object" && isStr2(r.url));
     const by = (o) => rq.filter((r) => r.outcome === o).length;
     const blockedBy = {};
     for (const r of rq) if (r.outcome === "blocked") {
@@ -18355,9 +18355,9 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: a
     undetermined3.push("requests: the renderer did not record the page's requests, so render.requests and render.data are undetermined");
   }
   let scriptsExecuted = "undetermined", thirdParty = "undetermined";
-  if (Array.isArray(answer.scripts)) {
+  if (Array.isArray(answer2.scripts)) {
     const origins = /* @__PURE__ */ new Map();
-    for (const s of answer.scripts) {
+    for (const s of answer2.scripts) {
       if (!s || !isStr2(s.url)) continue;
       const k = originKey(s.url);
       if (!k) continue;
@@ -18372,10 +18372,10 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: a
     if (v === null || v === void 0) undetermined3.push(`${k}: not reported by the renderer`);
     return v ?? null;
   };
-  const waitFired = pick4("wait.fired", answer.wait && isStr2(answer.wait.fired) ? answer.wait.fired : null);
+  const waitFired = pick4("wait.fired", answer2.wait && isStr2(answer2.wait.fired) ? answer2.wait.fired : null);
   const firedClass = waitFiredClass(waitFired, asked.wait);
   const completeness = firedClass === "condition" ? "condition_met" : firedClass === "settled" ? "settled_with_open_requests" : "undetermined";
-  const ll = answer.wait && answer.wait.long_lived && typeof answer.wait.long_lived === "object" ? answer.wait.long_lived : null;
+  const ll = answer2.wait && answer2.wait.long_lived && typeof answer2.wait.long_lived === "object" ? answer2.wait.long_lived : null;
   const longLived = ll ? {
     older_than_s: num(ll.older_than_s),
     count: Number.isInteger(ll.count) && ll.count >= 0 ? ll.count : null,
@@ -18389,12 +18389,12 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: a
     undetermined3.push(`completeness: ${isStr2(waitFired) ? `the renderer reported the wait fired on \`${waitFired}\`, which is neither the \`${asked.wait && asked.wait.until || "(none asked)"}\` condition your group's Civicsmith asked for nor a timeout` : "the renderer did not report which wait ended the render"}, so whether the render ran to its condition is undetermined and this rendering may be incomplete.`);
   const render2 = {
     of: shellSha,
-    engine: pick4("engine", isStr2(answer.engine) ? answer.engine : null),
-    engine_version: pick4("engine_version", isStr2(answer.engine_version) ? answer.engine_version : null),
-    viewport: pick4("viewport", answer.viewport && num(answer.viewport.width) && num(answer.viewport.height) ? { width: answer.viewport.width, height: answer.viewport.height } : null),
-    dpr: pick4("dpr", num(answer.dpr)),
-    locale: pick4("locale", isStr2(answer.locale) ? answer.locale : null),
-    timezone: pick4("timezone", isStr2(answer.timezone) ? answer.timezone : null),
+    engine: pick4("engine", isStr2(answer2.engine) ? answer2.engine : null),
+    engine_version: pick4("engine_version", isStr2(answer2.engine_version) ? answer2.engine_version : null),
+    viewport: pick4("viewport", answer2.viewport && num(answer2.viewport.width) && num(answer2.viewport.height) ? { width: answer2.viewport.width, height: answer2.viewport.height } : null),
+    dpr: pick4("dpr", num(answer2.dpr)),
+    locale: pick4("locale", isStr2(answer2.locale) ? answer2.locale : null),
+    timezone: pick4("timezone", isStr2(answer2.timezone) ? answer2.timezone : null),
     /* D-499: the renderer's own word, and the plane's three-valued reading of it. */
     wait: { asked: asked.wait, fired: waitFired, fired_class: firedClass, ...longLived ? { long_lived: longLived } : {} },
     /* D-499 / BOB #32: `condition_met` says the wait ended on the condition ASKED —
@@ -18402,9 +18402,9 @@ function renderBlock(answer, { pageUrl, shellSha, asked = RENDER_DEFAULTS, at: a
        carries its reason in `undetermined[]` above. The GRADE is untouched either
        way: grade tracks directness, never technique or completeness. */
     completeness,
-    elapsed_ms: pick4("elapsed_ms", num(answer.elapsed_ms)),
-    navigated_to: isStr2(answer.navigated_to) ? answer.navigated_to : null,
-    status: num(answer.status),
+    elapsed_ms: pick4("elapsed_ms", num(answer2.elapsed_ms)),
+    navigated_to: isStr2(answer2.navigated_to) ? answer2.navigated_to : null,
+    status: num(answer2.status),
     requests,
     subresources,
     data,
@@ -20886,10 +20886,10 @@ async function audit(record, { after, limit, viewer, sight }) {
     if (!sighted.has(id)) sighted.set(id, !!one4(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, id, ...args));
     return sighted.get(id);
   };
-  const { page: page2, ...answer } = await record.auditPass({ after, limit, visible });
+  const { page: page2, ...answer2 } = await record.auditPass({ after, limit, visible });
   void page2;
   const total2 = one4(`SELECT COUNT(*) AS n FROM bundles b WHERE (${gate.sql})`, ...args);
-  return { ...answer, total: total2 ? Number(total2.n) : 0 };
+  return { ...answer2, total: total2 ? Number(total2.n) : 0 };
 }
 
 // src/host-governor/schema.mjs
@@ -21005,9 +21005,9 @@ var HostGovernor = class {
       if (t2) this.sql.exec(t2);
     }
     if (this.#declared || !this.core || typeof this.core.declarePurge !== "function") return;
-    const answer = this.core.declarePurge("host-governor", [], { exempt: ["host_governor"] });
-    if (answer && answer.ok === false)
-      throw new Error(`host-governor: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
+    const answer2 = this.core.declarePurge("host-governor", [], { exempt: ["host_governor"] });
+    if (answer2 && answer2.ok === false)
+      throw new Error(`host-governor: record-core refused its purge declaration: ${answer2.reason} (${answer2.table})`);
     this.#declared = true;
   }
   #declared = false;
@@ -22254,13 +22254,13 @@ var Membership = class _Membership {
   /* R115 (was R59), through record-core's `declarePurge` (its R21) once record-core provides it. */
   declareTables() {
     if (this.#declared) return false;
-    const answer = this.core.declarePurge(
+    const answer2 = this.core.declarePurge(
       "membership",
       MEMBERSHIP_PROJECT_TABLES.map((name3) => ({ name: name3, keys: ["project_id"] })),
       { exempt: [...MEMBERSHIP_EXEMPT_TABLES] }
     );
-    if (answer && answer.ok === false)
-      throw new Error(`membership: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
+    if (answer2 && answer2.ok === false)
+      throw new Error(`membership: record-core refused its purge declaration: ${answer2.reason} (${answer2.table})`);
     this.#declared = true;
     return true;
   }
@@ -27183,7 +27183,7 @@ var Promotion = class {
           for (const [k, v] of Object.entries(out)) if (!(k in extras)) extras[k] = v;
         }
       }
-      const answer = {
+      const answer2 = {
         ok: true,
         bundleId,
         bundleSha: committed.bundleSha,
@@ -27201,7 +27201,7 @@ var Promotion = class {
           says: "neither the document nor the request stated these, so this revision keeps the values the record already held for it"
         } } : {}
       };
-      for (const [k, v] of Object.entries(extras)) if (!(k in answer)) answer[k] = v;
+      for (const [k, v] of Object.entries(extras)) if (!(k in answer2)) answer2[k] = v;
       this.#announce({
         bundleId,
         bundleSha: committed.bundleSha,
@@ -27210,7 +27210,7 @@ var Promotion = class {
         snapKey,
         base: head ? base2 : EMPTY_STRING_SHA
       });
-      return answer;
+      return answer2;
     });
   }
   /* R19: is `key` (projectNameKey) the name of any project but `except`, deactivated ones included? */
@@ -27506,7 +27506,7 @@ Changes: state ${head.currentState} to open. Reason: ${why2}.
       }
     });
     if (!promoted.ok) return { ...promoted, target };
-    const answer = { ok: true, target, from: head.currentState, to: "open", why: why2, author: who2, at: when, weight: "single" };
+    const answer2 = { ok: true, target, from: head.currentState, to: "open", why: why2, author: who2, at: when, weight: "single" };
     for (const l2 of this.#reopenListeners) {
       let out;
       try {
@@ -27519,9 +27519,9 @@ Changes: state ${head.currentState} to open. Reason: ${why2}.
         });
         continue;
       }
-      if (isObj3(out) && !has(answer, l2.module)) answer[l2.module] = out;
+      if (isObj3(out) && !has(answer2, l2.module)) answer2[l2.module] = out;
     }
-    return answer;
+    return answer2;
   }
 };
 function promotionOps(promotion, url, body) {
@@ -27557,9 +27557,9 @@ var info2Registered = /* @__PURE__ */ new WeakSet();
 function registerInfo2Grammar(record) {
   if (!record || typeof record.registerGrammar !== "function" || info2Registered.has(record)) return;
   info2Registered.add(record);
-  const answer = record.registerGrammar("promotion", INFO2_GRAMMAR);
-  if (answer && answer.ok === false)
-    throw new Error(`promotion: record-core refused the information@2 grammar: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
+  const answer2 = record.registerGrammar("promotion", INFO2_GRAMMAR);
+  if (answer2 && answer2.ok === false)
+    throw new Error(`promotion: record-core refused the information@2 grammar: ${answer2.reason}${answer2.heldBy ? ` (held by ${answer2.heldBy})` : ""}`);
 }
 function stepContext(c) {
   return c;
@@ -32061,7 +32061,7 @@ async function archiveLookup(cap, { address, at: at43 } = {}) {
   if (!asked.ok) return { status: asked.status, body: asked.payload };
   const el = await archiveEligibility(cap, address);
   if (!el.ok) return { status: el.status, body: el.payload };
-  const m = await mementoLookup(cap, address, { asked, take: async ({ res, answer, locator }) => {
+  const m = await mementoLookup(cap, address, { asked, take: async ({ res, answer: answer2, locator }) => {
     const h = await hashBody(res);
     if (h.failed) return { fail: archiveBroke(h.failed) };
     if (h.oversize)
@@ -32073,7 +32073,7 @@ async function archiveLookup(cap, { address, at: at43 } = {}) {
         retrieval_locator: locator,
         detail: "the memento exceeds what this surface will capture even in parts"
       } } };
-    const row12 = mementoRow(answer, { sha256: h.sha, bytes: h.bytes });
+    const row12 = mementoRow(answer2, { sha256: h.sha, bytes: h.bytes });
     return selectCapture([row12]).ok ? { sha: h.sha, bytes: h.bytes } : { row: row12 };
   } });
   if (!m.ok) return { status: m.status, body: m.payload };
@@ -32204,14 +32204,14 @@ async function acquire(cap, body0, {
   fileScanner = null
 } = {}) {
   const body = body0 && typeof body0 === "object" ? { ...body0 } : {};
-  const answer = (status, b) => ({ status, body: b });
+  const answer2 = (status, b) => ({ status, body: b });
   const op = "acquire";
   const own8 = ownHostsOf(cap, ownHosts);
   const ev = cap.core && typeof cap.core.evidenceStore === "function" ? cap.core.evidenceStore() : null;
   if (!ev) return evidenceStorageAbsent(op, "your group's Civicsmith has no evidence storage configured", { code: false });
   if (!captureRequest && body.via === "capture-request") {
     const row12 = CAPTURE_REQUEST_ARM_CHECKS.CAPTURE_NOT_DRAINING;
-    return answer(403, {
+    return answer2(403, {
       ok: false,
       reason: "CAPTURE_NOT_DRAINING",
       code: "CAPTURE_NOT_DRAINING",
@@ -32224,7 +32224,7 @@ async function acquire(cap, body0, {
     });
   }
   if (cls3 === "daemon" && body.via !== "archive.org" && !captureRequest)
-    return answer(403, {
+    return answer2(403, {
       ok: false,
       reason: "NOT_PERMITTED",
       op,
@@ -32234,7 +32234,7 @@ async function acquire(cap, body0, {
   let archiveHopRecorded = null, archiveAddress = null, archiveAsked = null, archiveAt = null;
   if (body.via === "archive.org") {
     if (cls3 !== "admin" && cls3 !== "probe" && cls3 !== "daemon")
-      return answer(403, {
+      return answer2(403, {
         ok: false,
         reason: "NOT_PERMITTED",
         op,
@@ -32243,15 +32243,15 @@ async function acquire(cap, body0, {
       });
     const addr = body.address;
     if (typeof addr !== "string" || !isPublicHttpsLocator(addr))
-      return answer(400, {
+      return answer2(400, {
         ok: false,
         reason: "BAD_ADDRESS",
         detail: "an archive-sourced capture names the document address, not a replay locator"
       });
     archiveAt = askedInstant(body.at);
-    if (!archiveAt.ok) return answer(archiveAt.status, archiveAt.payload);
+    if (!archiveAt.ok) return answer2(archiveAt.status, archiveAt.payload);
     const el = await archiveEligibility(cap, addr);
-    if (!el.ok) return answer(el.status, el.payload);
+    if (!el.ok) return answer2(el.status, el.payload);
     archiveAsked = addr;
     delete body.locator;
   }
@@ -32269,7 +32269,7 @@ async function acquire(cap, body0, {
       const sc = captureRequest.scope;
       if (!Array.isArray(sc) || !sc.length || !sc.every((p3) => typeof p3 === "string" && p3 !== "")) {
         const row12 = SWEEP_SCOPE_CHECKS.SWEEP_SCOPE_MISSING;
-        return answer(400, {
+        return answer2(400, {
           ok: false,
           reason: "SWEEP_SCOPE_MISSING",
           code: "SWEEP_SCOPE_MISSING",
@@ -32291,7 +32291,7 @@ async function acquire(cap, body0, {
   {
     const supplied2 = callerSuppliedHopFacts(body);
     if (supplied2.length)
-      return answer(400, {
+      return answer2(400, {
         ok: false,
         reason: "DRIVE_HOP_FACT_SUPPLIED",
         ...driveRow("DRIVE_HOP_FACT_SUPPLIED"),
@@ -32302,7 +32302,7 @@ async function acquire(cap, body0, {
     const drive = readDriveAddress(body.locator);
     if (drive) {
       if (drive.shape === "folder")
-        return answer(422, {
+        return answer2(422, {
           ok: false,
           reason: "DRIVE_FOLDER_NOT_A_DOCUMENT",
           ...driveRow("DRIVE_FOLDER_NOT_A_DOCUMENT"),
@@ -32312,7 +32312,7 @@ async function acquire(cap, body0, {
           detail: drive.why
         });
       if (drive.shape === "file")
-        return answer(422, {
+        return answer2(422, {
           ok: false,
           reason: "DRIVE_KIND_UNDETERMINED",
           ...driveRow("DRIVE_KIND_UNDETERMINED"),
@@ -32322,7 +32322,7 @@ async function acquire(cap, body0, {
           detail: drive.why
         });
       if (drive.shape === "unknown")
-        return answer(422, {
+        return answer2(422, {
           ok: false,
           reason: "DRIVE_SHAPE_UNRECOGNISED",
           ...driveRow("DRIVE_SHAPE_UNRECOGNISED"),
@@ -32345,12 +32345,12 @@ async function acquire(cap, body0, {
   }
   let locator = session ? session.locator : body.locator;
   if (!(archiveAsked && !session) && (typeof locator !== "string" || !isPublicHttpsLocator(locator)))
-    return answer(400, {
+    return answer2(400, {
       ok: false,
       reason: "BAD_LOCATOR",
       detail: "a locator must be https on a public host: no bare IP address, no localhost, no credentials in the address"
     });
-  if (!archiveAsked && !session && onOwnHost(locator, own8)) return answer(403, { ...ownHostRefused(locator), op });
+  if (!archiveAsked && !session && onOwnHost(locator, own8)) return answer2(403, { ...ownHostRefused(locator), op });
   if (session) return continueCapture(cap, { body, session, cls: cls3, storeName, ev, own: own8 });
   const authorityAsserted = typeof body.authority === "string" && body.authority.trim() ? body.authority.trim() : null;
   const retrieved = stampSecond2();
@@ -32359,7 +32359,7 @@ async function acquire(cap, body0, {
   let renderer = null, renderReserved = 0, renderSlot = null;
   if (renderAsked) {
     if (body.render !== true)
-      return answer(400, {
+      return answer2(400, {
         ok: false,
         reason: "RENDER_FLAG_MALFORMED",
         ...renderRow("RENDER_FLAG_MALFORMED"),
@@ -32368,7 +32368,7 @@ async function acquire(cap, body0, {
       });
     const conflict = body.via === "archive.org" ? "via: archive.org (an archived replay)" : driveCapture ? "a Google Drive export (a document, not a page)" : body.continue ? "continue: <session> (a capture already filed)" : null;
     if (conflict)
-      return answer(400, {
+      return answer2(400, {
         ok: false,
         reason: "RENDER_ARM_CONFLICT",
         ...renderRow("RENDER_ARM_CONFLICT"),
@@ -32378,7 +32378,7 @@ async function acquire(cap, body0, {
       });
     renderer = rendererFor(cap.env);
     if (typeof renderer.render !== "function")
-      return answer(501, {
+      return answer2(501, {
         ok: false,
         reason: "RENDER_NO_RENDERER",
         ...renderRow("RENDER_NO_RENDERER"),
@@ -32400,7 +32400,7 @@ async function acquire(cap, body0, {
         g = null;
       }
       if (g && g.admitted === false)
-        return answer(429, {
+        return answer2(429, {
           ok: false,
           reason: "RENDER_HOST_COOLING_OFF",
           ...renderRow("RENDER_HOST_COOLING_OFF"),
@@ -32423,7 +32423,7 @@ async function acquire(cap, body0, {
       adm = null;
     }
     if (adm && adm.state === "waiting")
-      return answer(429, {
+      return answer2(429, {
         ok: false,
         reason: "RENDER_AT_CAPACITY",
         ...renderRow("RENDER_AT_CAPACITY"),
@@ -32433,7 +32433,7 @@ async function acquire(cap, body0, {
       });
     if (adm && adm.state === "admitted") renderSlot = adm.slot || null;
     if (!adm || adm.state !== "admitted")
-      return answer(429, {
+      return answer2(429, {
         ok: false,
         reason: "RENDER_DEFERRED",
         ...renderRow("RENDER_DEFERRED"),
@@ -32449,12 +32449,12 @@ async function acquire(cap, body0, {
   );
   let archiveMemento = null;
   if (archiveAsked) {
-    const m = await mementoLookup(cap, archiveAsked, { fetchPurpose: "acquire", asked: archiveAt, take: async ({ res: res2, answer: answer2 }) => {
+    const m = await mementoLookup(cap, archiveAsked, { fetchPurpose: "acquire", asked: archiveAt, take: async ({ res: res2, answer: answer3 }) => {
       const p3 = await peekBody(res2);
       if (p3.failed) return { fail: archiveBroke(p3.failed) };
-      return p3.empty ? { row: mementoRow(answer2, { sha256: EMPTY_SHA256, bytes: 0 }) } : { res: p3.res };
+      return p3.empty ? { row: mementoRow(answer3, { sha256: EMPTY_SHA256, bytes: 0 }) } : { res: p3.res };
     } });
-    if (!m.ok) return answer(m.status, m.payload);
+    if (!m.ok) return answer2(m.status, m.payload);
     archiveMemento = m;
     locator = m.locator;
     archiveAddress = m.answer.original;
@@ -32487,7 +32487,7 @@ async function acquire(cap, body0, {
       });
       if (g.refusedByGovernor) {
         await noteOutcome("governed", null);
-        return answer(429, {
+        return answer2(429, {
           ok: false,
           reason: "HOST_COOLING_OFF",
           detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1e3)}s`,
@@ -32507,12 +32507,12 @@ async function acquire(cap, body0, {
       }
       if (next && onOwnHost(next, own8)) {
         cancelBody(res);
-        return answer(403, { ...ownHostRefused(next, { redirected_from: url, status: res.status }), op });
+        return answer2(403, { ...ownHostRefused(next, { redirected_from: url, status: res.status }), op });
       }
       if (sweepScope && (!next || !inSweepScope(next, sweepScope))) {
         cancelBody(res);
         const row12 = SWEEP_SCOPE_CHECKS.SWEEP_REDIRECT_OUT_OF_SCOPE;
-        return answer(422, {
+        return answer2(422, {
           ok: false,
           reason: "SWEEP_REDIRECT_OUT_OF_SCOPE",
           code: "SWEEP_REDIRECT_OUT_OF_SCOPE",
@@ -32534,7 +32534,7 @@ async function acquire(cap, body0, {
     }
   } catch (e2) {
     await noteOutcome("fetch_failed", null);
-    return answer(502, {
+    return answer2(502, {
       ok: false,
       reason: "FETCH_FAILED",
       locator,
@@ -32548,7 +32548,7 @@ async function acquire(cap, body0, {
       await res.body?.cancel?.();
     } catch {
     }
-    return answer(200, {
+    return answer2(200, {
       ok: true,
       existed: true,
       unchanged: true,
@@ -32568,7 +32568,7 @@ async function acquire(cap, body0, {
   } : null;
   if (driveCapture && !res.ok) {
     await noteOutcome("source_refused", res.status);
-    return answer(502, {
+    return answer2(502, {
       ok: false,
       reason: "DRIVE_EXPORT_UNREACHABLE",
       ...driveRow("DRIVE_EXPORT_UNREACHABLE"),
@@ -32588,7 +32588,7 @@ async function acquire(cap, body0, {
         await res.body?.cancel?.();
       } catch {
       }
-      return answer(502, {
+      return answer2(502, {
         ok: false,
         reason: "DRIVE_EXPORT_IS_THE_SHELL",
         ...driveRow("DRIVE_EXPORT_IS_THE_SHELL"),
@@ -32605,7 +32605,7 @@ async function acquire(cap, body0, {
   }
   if (!res.ok) {
     await noteOutcome("source_refused", res.status);
-    return answer(502, { ok: false, reason: "SOURCE_REFUSED", status: res.status, locator });
+    return answer2(502, { ok: false, reason: "SOURCE_REFUSED", status: res.status, locator });
   }
   if (!archiveMemento) await noteOutcome("success", res.status);
   const PART2 = 8 * 1024 * 1024;
@@ -32640,15 +32640,15 @@ async function acquire(cap, body0, {
   const driveHead = driveCapture ? new Uint8Array(1024) : null;
   let driveHeadBytes = 0;
   const reader = res.body && res.body.getReader ? res.body.getReader() : null;
-  if (!reader) return answer(502, { ok: false, reason: "NO_BODY", locator });
+  if (!reader) return answer2(502, { ok: false, reason: "NO_BODY", locator });
   for (; ; ) {
     let chunk2;
     try {
       chunk2 = await reader.read();
     } catch (e2) {
-      if (archiveMemento) return answer(502, archiveBroke(String(e2 && e2.message || e2)).payload);
+      if (archiveMemento) return answer2(502, archiveBroke(String(e2 && e2.message || e2)).payload);
       await noteOutcome("fetch_failed", null);
-      return answer(502, {
+      return answer2(502, {
         ok: false,
         reason: "FETCH_FAILED",
         locator,
@@ -32681,7 +32681,7 @@ async function acquire(cap, body0, {
       } catch {
       }
       await noteOutcome("source_refused", res.status);
-      return answer(502, {
+      return answer2(502, {
         ok: false,
         reason: "DRIVE_EXPORT_BYTES_ARE_THE_SHELL",
         ...driveRow("DRIVE_EXPORT_BYTES_ARE_THE_SHELL"),
@@ -32702,7 +32702,7 @@ async function acquire(cap, body0, {
       await reader.cancel();
     } catch {
     }
-    return answer(413, {
+    return answer2(413, {
       ok: false,
       reason: "TOO_LARGE",
       bytes: total2,
@@ -32714,16 +32714,16 @@ async function acquire(cap, body0, {
   let sha2 = whole2.hex();
   if (archiveMemento) {
     const c = chooseMemento(archiveMemento, sha2, total2, archiveAsked, archiveAt);
-    if (!c.ok) return answer(c.status, c.payload);
+    if (!c.ok) return answer2(c.status, c.payload);
     archiveHopRecorded = c.hop;
     await noteOutcome("success", res.status);
   }
-  if (total2 === 0) return answer(502, { ok: false, reason: "EMPTY", locator });
+  if (total2 === 0) return answer2(502, { ok: false, reason: "EMPTY", locator });
   let existed = false, existedUndetermined = null;
   const multipart = parts.length > 1;
   if (!multipart) {
     if (parts[0].sha256 !== sha2)
-      return answer(500, { ok: false, reason: "HASH_DISAGREEMENT", detail: "the incremental hash and the block hash of the same bytes differ" });
+      return answer2(500, { ok: false, reason: "HASH_DISAGREEMENT", detail: "the incremental hash and the block hash of the same bytes differ" });
     existed = partHeldBefore[0];
   } else {
     let reg = null;
@@ -32761,7 +32761,7 @@ async function acquire(cap, body0, {
         cap.renderSpend({ ms: 0, releaseMs: renderReserved, slot: renderSlot, at: retrieved });
       } catch {
       }
-      return answer(422, {
+      return answer2(422, {
         ok: false,
         reason: "RENDER_NOT_A_PAGE",
         ...renderRow("RENDER_NOT_A_PAGE"),
@@ -32785,7 +32785,7 @@ async function acquire(cap, body0, {
     rb = renderBlock(answerR, { pageUrl, shellSha: sha2, asked, at: retrieved });
     if (rb.ok) rbytes = new TextEncoder().encode(answerR.html);
     if (!rb.ok || rbytes.length > MAX)
-      return answer(502, {
+      return answer2(502, {
         ok: false,
         reason: "RENDER_FAILED",
         ...renderRow("RENDER_FAILED"),
@@ -33016,7 +33016,7 @@ async function acquire(cap, body0, {
       };
     }
   }
-  return answer(200, {
+  return answer2(200, {
     ok: true,
     existed,
     ...existedUndetermined ? { existed_undetermined: existedUndetermined } : {},
@@ -38403,11 +38403,11 @@ var INQUIRY_GRAMMARS = Object.freeze(SLOTS.map((s) => Object.freeze({
 var registered = /* @__PURE__ */ new WeakSet();
 function registerInquiryGrammar(record) {
   if (!record || typeof record.registerGrammar !== "function" || registered.has(record)) return null;
-  const answer = record.registerGrammar("inquiry-grammar", INQUIRY_GRAMMAR);
-  if (answer && answer.ok === false)
-    throw new Error(`inquiry-grammar: record-core refused the inquiry grammar: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
+  const answer2 = record.registerGrammar("inquiry-grammar", INQUIRY_GRAMMAR);
+  if (answer2 && answer2.ok === false)
+    throw new Error(`inquiry-grammar: record-core refused the inquiry grammar: ${answer2.reason}${answer2.heldBy ? ` (held by ${answer2.heldBy})` : ""}`);
   registered.add(record);
-  return answer;
+  return answer2;
 }
 
 // src/inquiry/index.mjs
@@ -38958,6 +38958,54 @@ function colourTransformOf(h) {
   return { ycc: true, why: "libjpeg's default for three components" };
 }
 function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform = null } = {}) {
+  const deg = ((rotate | 0) % 360 + 360) % 360;
+  if (deg % 90) {
+    decodeStrips(d, expectComps, colorTransform, () => {
+    });
+    throw new DctRefusal("UNSUPPORTED_ROTATION", { rotate });
+  }
+  let out = null, W2 = 0, H2 = 0;
+  const info = decodeStrips(d, expectComps, colorTransform, (rows3, y0, count2, { W: W3, H, nc }) => {
+    if (!out) {
+      [W2, H2] = deg === 90 || deg === 270 ? [H, W3] : [W3, H];
+      out = new Uint8Array(W2 * H2 * nc);
+    }
+    if (deg === 0) {
+      out.set(rows3, y0 * W3 * nc);
+      return;
+    }
+    for (let j = 0; j < count2; j++) {
+      const y = y0 + j;
+      for (let x = 0; x < W3; x++) {
+        let X, Y;
+        if (deg === 90) {
+          X = H - 1 - y;
+          Y = x;
+        } else if (deg === 180) {
+          X = W3 - 1 - x;
+          Y = H - 1 - y;
+        } else {
+          X = y;
+          Y = W3 - 1 - x;
+        }
+        const o = (Y * W2 + X) * nc, s = (j * W3 + x) * nc;
+        out[o] = rows3[s];
+        if (nc === 3) {
+          out[o + 1] = rows3[s + 1];
+          out[o + 2] = rows3[s + 2];
+        }
+      }
+    }
+  });
+  return { width: W2, height: H2, comps: info.comps, samples: out, source: info.source };
+}
+function decodeBaselineJpegRows(d, { expectComps = null, colorTransform = null, onRows } = {}) {
+  if (typeof onRows !== "function") throw new TypeError("decodeBaselineJpegRows needs an onRows(rows, y0, count) function");
+  return decodeStrips(d, expectComps, colorTransform, (rows3, y0, count2) => {
+    onRows(rows3, y0, count2);
+  });
+}
+function decodeStrips(d, expectComps, colorTransform, emit) {
   const h = readJpegHeader(d);
   const { frame, qt, hts, scan } = h;
   const nc = frame.comps.length;
@@ -38981,27 +39029,41 @@ function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform 
     if (!ok2 || c.h < 1 || c.v < 1) throw new DctRefusal("UNSUPPORTED_SAMPLING", { sampling });
     if (!qt[c.tq]) throw new DctRefusal("CORRUPT_DATA", { note: `quantisation table ${c.tq} missing` });
   }
-  const mcux = Math.ceil(frame.width / (8 * hmax)), mcuy = Math.ceil(frame.height / (8 * vmax));
-  const planes = frame.comps.map((c, i) => {
+  const W2 = frame.width, H = frame.height;
+  const single2 = nc === 1;
+  const mcux = Math.ceil(W2 / (8 * hmax)), mcuy = Math.ceil(H / (8 * vmax));
+  const unitsPerRow = single2 ? Math.ceil(W2 / 8) : mcux;
+  const strips = single2 ? Math.ceil(H / 8) : mcuy;
+  const outPerStrip = single2 ? 8 : 8 * vmax;
+  const planes = frame.comps.map((c) => {
     const sc = scan.comps.find((s) => s.id === c.id);
     if (!sc || !hts.dc[sc.td] || !hts.ac[sc.ta]) throw new DctRefusal("CORRUPT_DATA", { note: `Huffman table missing for component ${c.id}` });
-    const bw = mcux * c.h, bh = mcuy * c.v;
+    const hx = single2 ? 1 : hmax / c.h, vx = single2 ? 1 : vmax / c.v;
+    const stride = mcux * c.h * 8, rowsPer = single2 ? 8 : 8 * c.v;
+    const dw = Math.ceil(W2 * c.h / hmax);
     return {
       c,
-      i,
       dc: hts.dc[sc.td],
       ac: hts.ac[sc.ta],
       q: qt[c.tq],
       pred: 0,
-      stride: bw * 8,
-      rows: bh * 8,
-      data: new Uint8Array(bw * 8 * bh * 8),
-      dw: Math.ceil(frame.width * c.h / hmax),
-      dh: Math.ceil(frame.height * c.v / vmax)
+      hx,
+      vx,
+      stride,
+      rowsPer,
+      dw,
+      dh: Math.ceil(H * c.v / vmax),
+      base: 0,
+      /* slot 0 the row above this MCU row, slots 1..rowsPer the MCU row's own */
+      data: new Uint8Array((rowsPer + 1) * stride),
+      /* one upsampled row, for a component that is upsampled */
+      tmp: hx === 1 && vx === 1 ? null : new Uint8Array(dw * hx)
     };
   });
+  const waits = planes.some((pl) => pl.vx === 2);
   const br = new Bits(d, scan.dataAt);
   const coef = new Int32Array(64);
+  let fabricated = false;
   const decodeBlock = (pl, bx, by) => {
     coef.fill(0);
     const t2 = br.decode(pl.dc);
@@ -39023,11 +39085,79 @@ function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform 
       coef[ZIGZAG[k]] = br.receiveExtend(s) << 16 >> 16;
       k++;
     }
-    idctIslow(coef, pl.q, pl.data, by * 8 * pl.stride + bx * 8, pl.stride);
+    if (!fabricated) idctIslow(coef, pl.q, pl.data, (1 + by * 8) * pl.stride + bx * 8, pl.stride);
   };
-  const single2 = nc === 1;
-  const totalUnits = single2 ? Math.ceil(frame.width / 8) * Math.ceil(frame.height / 8) : mcux * mcuy;
-  const unitsPerRow = single2 ? Math.ceil(frame.width / 8) : mcux;
+  const rowAt = (pl, y) => ((y < 0 ? 0 : y >= pl.dh ? pl.dh - 1 : y) - pl.base + 1) * pl.stride;
+  const fullRow = (pl, oy) => {
+    const { hx, vx, data: src, dw, tmp } = pl;
+    if (vx === 1) {
+      if (hx === 1) return [src, rowAt(pl, oy)];
+      h2v1Row(src, rowAt(pl, oy), dw, tmp, 0);
+      return [tmp, 0];
+    }
+    const cy = oy >> 1, below = oy & 1;
+    const r0 = rowAt(pl, cy);
+    if (hx === 1) {
+      const r1 = rowAt(pl, below ? cy + 1 : cy - 1), bias = below ? 2 : 1;
+      for (let x = 0; x < dw; x++) tmp[x] = src[r0 + x] * 3 + src[r1 + x] + bias >> 2;
+    } else if (dw <= 2) {
+      for (let x = 0; x < dw; x++) tmp[2 * x] = tmp[2 * x + 1] = src[r0 + x];
+    } else {
+      const r1 = rowAt(pl, below ? cy + 1 : cy - 1);
+      let thiscol = src[r0] * 3 + src[r1], nextcol = src[r0 + 1] * 3 + src[r1 + 1], lastcol;
+      tmp[0] = thiscol * 4 + 8 >> 4;
+      tmp[1] = thiscol * 3 + nextcol + 7 >> 4;
+      let q10 = 2;
+      for (let x = 2; x < dw; x++) {
+        lastcol = thiscol;
+        thiscol = nextcol;
+        nextcol = src[r0 + x] * 3 + src[r1 + x];
+        tmp[q10++] = thiscol * 3 + lastcol + 8 >> 4;
+        tmp[q10++] = thiscol * 3 + nextcol + 7 >> 4;
+      }
+      lastcol = thiscol;
+      thiscol = nextcol;
+      tmp[q10++] = thiscol * 3 + lastcol + 8 >> 4;
+      tmp[q10] = thiscol * 4 + 7 >> 4;
+    }
+    return [tmp, 0];
+  };
+  const shape = { W: W2, H, nc };
+  const strip3 = new Uint8Array(outPerStrip * W2 * nc);
+  let emitted = 0;
+  const emitTo = (limit) => {
+    while (limit - emitted > outPerStrip) emitTo(emitted + outPerStrip);
+    if (limit <= emitted) return;
+    const count2 = limit - emitted, rows3 = strip3.subarray(0, count2 * W2 * nc);
+    for (let j = 0; j < count2; j++) {
+      const oy = emitted + j;
+      let o = j * W2 * nc;
+      if (nc === 1) {
+        const [a2, ao2] = fullRow(planes[0], oy);
+        rows3.set(a2.subarray(ao2, ao2 + W2), o);
+        continue;
+      }
+      const [a, ao] = fullRow(planes[0], oy), [b, bo] = fullRow(planes[1], oy), [c, co] = fullRow(planes[2], oy);
+      if (colour.ycc) {
+        for (let x = 0; x < W2; x++, o += 3) {
+          const Y = a[ao + x], cb = b[bo + x], cr = c[co + x];
+          rows3[o] = clamp8(Y + CR_R[cr]);
+          rows3[o + 1] = clamp8(Y + Math.floor((CB_G[cb] + CR_G[cr]) / 65536));
+          rows3[o + 2] = clamp8(Y + CB_B[cb]);
+        }
+      } else {
+        for (let x = 0; x < W2; x++, o += 3) {
+          rows3[o] = a[ao + x];
+          rows3[o + 1] = b[bo + x];
+          rows3[o + 2] = c[co + x];
+        }
+      }
+    }
+    const y0 = emitted;
+    emitted = limit;
+    emit(rows3, y0, count2, shape);
+  };
+  const totalUnits = unitsPerRow * strips;
   let restartsLeft = h.restart, rstExpect = 0;
   for (let u = 0; u < totalUnits; u++) {
     if (h.restart) {
@@ -39043,58 +39173,27 @@ function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform 
       }
       restartsLeft--;
     }
-    const ux = u % unitsPerRow, uy = (u - ux) / unitsPerRow;
-    if (single2) decodeBlock(planes[0], ux, uy);
+    const ux = u % unitsPerRow;
+    if (single2) decodeBlock(planes[0], ux, 0);
     else for (const pl of planes)
       for (let v = 0; v < pl.c.v; v++) for (let hh = 0; hh < pl.c.h; hh++)
-        decodeBlock(pl, ux * pl.c.h + hh, uy * pl.c.v + v);
+        decodeBlock(pl, ux * pl.c.h + hh, v);
+    if (ux !== unitsPerRow - 1) continue;
+    if (!fabricated && br.fabricated()) fabricated = true;
+    if (fabricated) continue;
+    const k = (u + 1) / unitsPerRow - 1;
+    emitTo(k === strips - 1 ? H : Math.min(H, (k + 1) * outPerStrip - (waits ? 1 : 0)));
+    for (const pl of planes) {
+      pl.data.copyWithin(0, pl.rowsPer * pl.stride, (pl.rowsPer + 1) * pl.stride);
+      pl.base += pl.rowsPer;
+    }
   }
   if (br.fabricated())
     throw new DctRefusal("TRUNCATED", { note: `entropy-coded data ended before the last MCU (${br.fabricated()} bits zero-filled)` });
-  const W2 = frame.width, H = frame.height;
-  const full = planes.map((pl) => upsample(pl, W2, H, hmax, vmax));
-  const deg = ((rotate | 0) % 360 + 360) % 360;
-  if (deg % 90) throw new DctRefusal("UNSUPPORTED_ROTATION", { rotate });
-  const [W22, H2] = deg === 90 || deg === 270 ? [H, W2] : [W2, H];
-  const out = new Uint8Array(W22 * H2 * nc);
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W2; x++) {
-      let X, Y;
-      if (deg === 0) {
-        X = x;
-        Y = y;
-      } else if (deg === 90) {
-        X = H - 1 - y;
-        Y = x;
-      } else if (deg === 180) {
-        X = W2 - 1 - x;
-        Y = H - 1 - y;
-      } else {
-        X = y;
-        Y = W2 - 1 - x;
-      }
-      const o = (Y * W22 + X) * nc;
-      if (nc === 1) {
-        out[o] = full[0].data[y * full[0].stride + x];
-        continue;
-      }
-      const a = full[0].data[y * full[0].stride + x], b = full[1].data[y * full[1].stride + x], c = full[2].data[y * full[2].stride + x];
-      if (colour.ycc) {
-        out[o] = clamp8(a + CR_R[c]);
-        out[o + 1] = clamp8(a + Math.floor((CB_G[b] + CR_G[c]) / 65536));
-        out[o + 2] = clamp8(a + CB_B[b]);
-      } else {
-        out[o] = a;
-        out[o + 1] = b;
-        out[o + 2] = c;
-      }
-    }
-  }
   return {
-    width: W22,
-    height: H2,
+    width: W2,
+    height: H,
     comps: nc,
-    samples: out,
     source: {
       width: W2,
       height: H,
@@ -39104,56 +39203,6 @@ function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform 
       colour: colour ? colour.why + (colour.ycc ? " -> YCbCr" : " -> no transform") : "grey"
     }
   };
-}
-function upsample(pl, W2, H, hmax, vmax) {
-  const hx = hmax / pl.c.h, vx = vmax / pl.c.v;
-  if (hx === 1 && vx === 1) return { data: pl.data, stride: pl.stride };
-  const { data: src, stride: ss, dw, dh } = pl;
-  const row12 = (y) => (y < 0 ? 0 : y >= dh ? dh - 1 : y) * ss;
-  const outW = dw * hx;
-  const dst = new Uint8Array(outW * dh * vx);
-  if (vx === 1) {
-    for (let y = 0; y < dh; y++) {
-      const r = row12(y), o = y * outW;
-      h2v1Row(src, r, dw, dst, o);
-    }
-  } else if (hx === 1) {
-    for (let y = 0; y < dh; y++) {
-      const r0 = row12(y);
-      for (let v = 0; v < 2; v++) {
-        const r1 = row12(v === 0 ? y - 1 : y + 1), bias = v === 0 ? 1 : 2, o = (2 * y + v) * outW;
-        for (let x = 0; x < dw; x++) dst[o + x] = src[r0 + x] * 3 + src[r1 + x] + bias >> 2;
-      }
-    }
-  } else if (dw <= 2) {
-    for (let y = 0; y < dh * 2; y++) {
-      const r = row12(y >> 1), o = y * outW;
-      for (let x = 0; x < dw; x++) dst[o + 2 * x] = dst[o + 2 * x + 1] = src[r + x];
-    }
-  } else {
-    for (let y = 0; y < dh; y++) {
-      const r0 = row12(y);
-      for (let v = 0; v < 2; v++) {
-        const r1 = row12(v === 0 ? y - 1 : y + 1), o = (2 * y + v) * outW;
-        let thiscol = src[r0] * 3 + src[r1], nextcol = src[r0 + 1] * 3 + src[r1 + 1], lastcol;
-        dst[o] = thiscol * 4 + 8 >> 4;
-        dst[o + 1] = thiscol * 3 + nextcol + 7 >> 4;
-        let q10 = o + 2;
-        for (let x = 2; x < dw; x++) {
-          lastcol = thiscol;
-          thiscol = nextcol;
-          nextcol = src[r0 + x] * 3 + src[r1 + x];
-          dst[q10++] = thiscol * 3 + lastcol + 8 >> 4;
-          dst[q10++] = thiscol * 3 + nextcol + 7 >> 4;
-        }
-        lastcol = thiscol;
-        thiscol = nextcol;
-        dst[q10++] = thiscol * 3 + lastcol + 8 >> 4;
-        dst[q10] = thiscol * 4 + 7 >> 4;
-      }
-    }
-  }
-  return { data: dst, stride: outW };
 }
 function h2v1Row(src, r, dw, dst, o) {
   if (dw <= 2) {
@@ -42138,7 +42187,7 @@ var REFUSALS = {
   PAGE_UNREADABLE: "the page object could not be read",
   PAGE_HAS_TEXT_LAYER: "the page carries a text layer; it does not need pixels",
   NOT_IMAGE_ONLY: "the page carries marks that are not an embedded image",
-  NO_IMAGE_ON_PAGE: "the page references no image XObject",
+  NO_IMAGE_ON_PAGE: "the page paints no image",
   MULTIPLE_IMAGES_ON_PAGE: "the page composes several images; compositing is not built",
   IMAGE_UNREADABLE: "the image XObject's stream could not be read",
   UNSUPPORTED_FILTER: "the image's filter chain has no decoder here",
@@ -44455,13 +44504,13 @@ async function acquireOp(req, env, store, {
   }));
   const unanswered3 = relayUnanswered(r, "acquire", { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
   if (unanswered3) return { response: unanswered3 };
-  const { status, body: answer } = r.result;
-  if (!answer || answer.ok !== true || !answer.document) return { response: json24(answer, status) };
-  return { answer };
+  const { status, body: answer2 } = r.result;
+  if (!answer2 || answer2.ok !== true || !answer2.document) return { response: json24(answer2, status) };
+  return { answer: answer2 };
 }
-function withReading(answer, { reading: reading2, textUnits, textUnitsOverBound }) {
-  const { file, locator, retrieved, profile, ...rest } = answer.document;
-  return { ...answer, document: {
+function withReading(answer2, { reading: reading2, textUnits, textUnitsOverBound }) {
+  const { file, locator, retrieved, profile, ...rest } = answer2.document;
+  return { ...answer2, document: {
     file,
     locator,
     retrieved,
@@ -45357,8 +45406,8 @@ async function tier3Extend(env, {
     const baseText = i2text;
     const kept = seed ? wantPages.filter((p3) => seed.text.has(p3)) : [];
     const askPages = wantPages.filter((p3) => !kept.includes(p3));
-    const compose4 = (answer, freshChain) => {
-      const m = mergeTier3Text(baseText, answer, wantPages, { kept });
+    const compose4 = (answer2, freshChain) => {
+      const m = mergeTier3Text(baseText, answer2, wantPages, { kept });
       if (!m.ok) return m;
       i2text = m.text;
       const appendedTo = Array.isArray(m.appended) ? m.appended : [];
@@ -46532,13 +46581,13 @@ var Extraction = class _Extraction {
    *  migrations' row exempt (R66, R68). */
   declareTables() {
     if (this.#declared || !this.core || typeof this.core.declarePurge !== "function") return false;
-    const answer = this.core.declarePurge(
+    const answer2 = this.core.declarePurge(
       "extraction",
       [...EXTRACTION_TABLES, ...EXTRACTION_WHOLE_ONLY.map((name3) => ({ name: name3, keys: [] }))],
       { exempt: [...EXTRACTION_EXEMPT] }
     );
-    if (answer && answer.ok === false)
-      throw new Error(`extraction: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
+    if (answer2 && answer2.ok === false)
+      throw new Error(`extraction: record-core refused its purge declaration: ${answer2.reason} (${answer2.table})`);
     this.#declared = true;
     return true;
   }
@@ -46573,9 +46622,9 @@ var Extraction = class _Extraction {
    *  module registering twice) is a defect of the wiring and throws, as the purge declaration's does. */
   registerFigures() {
     if (this.#counted || !this.core || typeof this.core.registerCounts !== "function") return false;
-    const answer = this.core.registerCounts("extraction", [..._Extraction.COUNT_KEYS], (hid) => this.counts(hid));
-    if (answer && answer.ok === false)
-      throw new Error(`extraction: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
+    const answer2 = this.core.registerCounts("extraction", [..._Extraction.COUNT_KEYS], (hid) => this.counts(hid));
+    if (answer2 && answer2.ok === false)
+      throw new Error(`extraction: record-core refused its figures: ${answer2.reason}${answer2.heldBy ? ` (held by ${answer2.heldBy})` : ""}`);
     this.#counted = true;
     return true;
   }
@@ -46829,7 +46878,7 @@ var Extraction = class _Extraction {
     const captureClass = typeof reading2.content_type === "string" && reading2.content_type ? reading2.content_type : null;
     const written2 = JSON.parse(JSON.stringify(reading2));
     let settle2;
-    const answer = new Promise((r) => {
+    const answer2 = new Promise((r) => {
       settle2 = r;
     });
     this.core.afterCommit(() => {
@@ -46844,7 +46893,7 @@ var Extraction = class _Extraction {
       if (this.#host && typeof this.#host.waitUntil === "function") this.#host.waitUntil(run2);
       settle2(run2);
     });
-    return answer;
+    return answer2;
   }
   /* D-536 (R23): every distinct reading kept in arrival order, keyed by the digest of its JSON, before the row is
      replaced; one equal to the latest kept is not kept again; a capture whose one reading predates the history has
@@ -50831,22 +50880,22 @@ var CONTENT_TABLE_CLASSES = Object.freeze({
   version_chain: false
 });
 function declareTables(record) {
-  const answer = record.declareTable("content", CONTENT_TABLES.map((name3) => ({ name: name3, ...CONTENT_TABLE_CLASSES })));
-  if (answer && answer.ok === false)
-    throw new Error(`content: record-core refused its tables: ${answer.code || answer.reason}${answer.table ? ` (${answer.table})` : ""}`);
+  const answer2 = record.declareTable("content", CONTENT_TABLES.map((name3) => ({ name: name3, ...CONTENT_TABLE_CLASSES })));
+  if (answer2 && answer2.ok === false)
+    throw new Error(`content: record-core refused its tables: ${answer2.code || answer2.reason}${answer2.table ? ` (${answer2.table})` : ""}`);
 }
 function joinTestimony(c) {
   const p3 = c.provenance;
   if (!p3 || typeof p3.onTestimony !== "function") return;
-  const answer = p3.onTestimony("content", { check: (t2) => c.testimonyCheck(t2), project: (t2) => c.testimonyProject(t2) });
-  if (answer && answer.ok === false) throw new Error(`content: provenance refused its testimony registration: ${answer.code || answer.reason}`);
+  const answer2 = p3.onTestimony("content", { check: (t2) => c.testimonyCheck(t2), project: (t2) => c.testimonyProject(t2) });
+  if (answer2 && answer2.ok === false) throw new Error(`content: provenance refused its testimony registration: ${answer2.code || answer2.reason}`);
 }
 function registerFigures(c) {
   const record = c.record;
   if (!record || typeof record.registerCounts !== "function") return;
-  const answer = record.registerCounts("content", [...CONTENT_COUNT_KEYS], (hid) => c.counts(hid));
-  if (answer && answer.ok === false)
-    throw new Error(`content: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
+  const answer2 = record.registerCounts("content", [...CONTENT_COUNT_KEYS], (hid) => c.counts(hid));
+  if (answer2 && answer2.ok === false)
+    throw new Error(`content: record-core refused its figures: ${answer2.reason}${answer2.heldBy ? ` (held by ${answer2.heldBy})` : ""}`);
 }
 
 // src/capture/grammar.mjs
@@ -51932,12 +51981,12 @@ var Credentials = class _Credentials {
      effect of resetting the corpus, and an export that carried a secret would publish it. */
   declareTables() {
     if (this.#declared) return false;
-    const answer = this.core.declareTable(
+    const answer2 = this.core.declareTable(
       "credentials",
       [...CREDENTIALS_TABLES, ...CREDENTIALS_PROJECT_TABLES, CREDENTIALS_HISTORY_TABLE].map((t2) => ({ ...t2, ...t2.keys ? { keys: [...t2.keys] } : {} }))
     );
-    if (answer && answer.ok === false)
-      throw new Error(`credentials: record-core refused its table declaration: ${answer.reason} (${answer.table})`);
+    if (answer2 && answer2.ok === false)
+      throw new Error(`credentials: record-core refused its table declaration: ${answer2.reason} (${answer2.table})`);
     this.#declared = true;
     return true;
   }
@@ -55513,16 +55562,16 @@ function captureOf(ctx, opts = {}) {
 }
 function registerGrammar(record) {
   if (!record || typeof record.registerGrammar !== "function") return;
-  const answer = record.registerGrammar("capture", INFORMATION_GRAMMAR);
-  if (answer && answer.ok === false)
-    throw new Error(`capture: record-core refused the information grammar: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
+  const answer2 = record.registerGrammar("capture", INFORMATION_GRAMMAR);
+  if (answer2 && answer2.ok === false)
+    throw new Error(`capture: record-core refused the information grammar: ${answer2.reason}${answer2.heldBy ? ` (held by ${answer2.heldBy})` : ""}`);
 }
 function registerFigures2(c) {
   const record = c.core;
   if (!record || typeof record.registerCounts !== "function") return;
-  const answer = record.registerCounts("capture", [...Capture.COUNT_KEYS], (hid) => c.counts(hid));
-  if (answer && answer.ok === false)
-    throw new Error(`capture: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
+  const answer2 = record.registerCounts("capture", [...Capture.COUNT_KEYS], (hid) => c.counts(hid));
+  if (answer2 && answer2.ok === false)
+    throw new Error(`capture: record-core refused its figures: ${answer2.reason}${answer2.heldBy ? ` (held by ${answer2.heldBy})` : ""}`);
 }
 var Capture = class _Capture {
   #sql;
@@ -55677,13 +55726,13 @@ var Capture = class _Capture {
     }
     const byCapture = new Set(held2.filter((d) => d && d.module === "capture").map((d) => d.name));
     if (!mine.every((t2) => byCapture.has(t2))) {
-      const answer = this.core.declarePurge(
+      const answer2 = this.core.declarePurge(
         "capture",
         CAPTURE_PURGED_TABLES.map((name3) => ({ name: name3, keys: [] })),
         { exempt: CAPTURE_EXEMPT_TABLES }
       );
-      if (answer && answer.ok === false)
-        throw new Error(`capture: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
+      if (answer2 && answer2.ok === false)
+        throw new Error(`capture: record-core refused its purge declaration: ${answer2.reason} (${answer2.table})`);
     }
     this.#declared = true;
     return DECLARED;
@@ -63123,22 +63172,22 @@ var isObj11 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var filled2 = (v) => typeof v === "string" && v.trim() !== "";
 var isThenable = (v) => v !== null && (typeof v === "object" || typeof v === "function") && typeof v.then === "function";
 var isRefusal = (a) => isObj11(a) && filled2(a.refused);
-function answerFailures(answer, ctx) {
+function answerFailures(answer2, ctx) {
   const out = [];
   const fail = (check2, why2) => out.push({ check: check2, why: why2 });
-  if (isThenable(answer)) return [{ check: "answer", why: "neighbours must answer synchronously" }];
-  if (!isObj11(answer) || !Array.isArray(answer.items)) return [{ check: "answer", why: "an answer is {items, next?, truncated?, hub?, unread?}" }];
-  const { items } = answer;
-  if (answer.unread !== void 0) {
-    const u = answer.unread;
+  if (isThenable(answer2)) return [{ check: "answer", why: "neighbours must answer synchronously" }];
+  if (!isObj11(answer2) || !Array.isArray(answer2.items)) return [{ check: "answer", why: "an answer is {items, next?, truncated?, hub?, unread?}" }];
+  const { items } = answer2;
+  if (answer2.unread !== void 0) {
+    const u = answer2.unread;
     if (!Array.isArray(u) || u.some((e2) => !isObj11(e2) || !filled2(e2.what) || !filled2(e2.why))) {
       fail("unread", "unread is a list of {what, why}, each a non-empty string");
     }
   }
   if (items.length > BOUNDS.fanout) fail("fanout", `a page holds at most ${BOUNDS.fanout} items; this one holds ${items.length}`);
   const asked = Array.isArray(ctx.kinds) ? ctx.kinds : null;
-  if (answer.hub !== void 0) {
-    const h = answer.hub;
+  if (answer2.hub !== void 0) {
+    const h = answer2.hub;
     const mine = ctx.ownKinds.filter((k) => !asked || asked.includes(k));
     const pool = mine.length ? mine : ctx.ownKinds;
     const bound = pool.length ? Math.min(...pool.map(hubBoundOf)) : BOUNDS.hub;
@@ -63240,17 +63289,17 @@ function createRegistry() {
     const e2 = byOwner.get(a.owner);
     if (!e2) return refuse6("OWNER_UNKNOWN", `${String(a.owner).slice(0, 60)} is not a registered owner`);
     const { owner: _o, ...args } = a;
-    let answer;
+    let answer2;
     try {
-      answer = e2.neighbours(args);
+      answer2 = e2.neighbours(args);
     } catch (err) {
       return refuse6("OWNER_FAILED", `${e2.owner}'s read threw: ${String(
         /** @type {any} */
         err?.message ?? err
       ).slice(0, 200)}`);
     }
-    if (isRefusal(answer)) return answer;
-    const failures = answerFailures(answer, {
+    if (isRefusal(answer2)) return answer2;
+    const failures = answerFailures(answer2, {
       owner: e2.owner,
       ownKinds: e2.kinds.map((k) => k.kind),
       kinds: a.kinds,
@@ -63262,7 +63311,7 @@ function createRegistry() {
     if (failures.length) {
       return { refused: "OWNER_NONCONFORMING", why: `${e2.owner}'s answer breaks the neighbours contract: ${failures[0].check}: ${failures[0].why}`, failures };
     }
-    return answer;
+    return answer2;
   }
   return Object.freeze({ registerOwner: registerOwner2, owners: owners2, kindOf: kindOf4, checkConnection: checkConnection2, neighbours: neighbours2 });
 }
@@ -63873,9 +63922,9 @@ var OWNER_REGISTRATION = registerOwner({
 });
 function registerFigures3(e2, record) {
   if (!record || typeof record.registerCounts !== "function") return;
-  const answer = record.registerCounts("entities", [...Entities.COUNT_KEYS], (hid) => e2.counts(hid));
-  if (answer && answer.ok === false)
-    throw new Error(`entities: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
+  const answer2 = record.registerCounts("entities", [...Entities.COUNT_KEYS], (hid) => e2.counts(hid));
+  if (answer2 && answer2.ok === false)
+    throw new Error(`entities: record-core refused its figures: ${answer2.reason}${answer2.heldBy ? ` (held by ${answer2.heldBy})` : ""}`);
 }
 var Entities = class _Entities {
   #sql;
@@ -65202,9 +65251,9 @@ var Entities = class _Entities {
         src ? src.id : null
       );
       const count2 = () => Number(this.#one(`SELECT COUNT(*) AS n FROM resolution_defects WHERE capture_sha=? AND ref=? AND entity_id=?`, ...key2).n);
-      const answer = { ok: true, capture_sha: captureSha, ref, entity_id: entityId };
+      const answer2 = { ok: true, capture_sha: captureSha, ref, entity_id: entityId };
       if (prior)
-        return { ...answer, already: true, defect: _Entities.#defectView({ ...prior, bundle_id: null }, (id) => id), defect_count: count2() };
+        return { ...answer2, already: true, defect: _Entities.#defectView({ ...prior, bundle_id: null }, (id) => id), defect_count: count2() };
       const at43 = this.#now();
       this.#sql.exec(
         `INSERT INTO resolution_defects (capture_sha,bundle_id,ref,entity_id,reason,source_module,source_id,reported_by,at)
@@ -65220,7 +65269,7 @@ var Entities = class _Entities {
         at43
       );
       return {
-        ...answer,
+        ...answer2,
         defect: { reason: why2, source: src, by: reporter, at: at43 },
         defect_count: count2(),
         detail: "the report is kept beside the resolution; the grade, the resolution and every connection are unchanged"
@@ -67660,7 +67709,7 @@ var Connections = class _Connections {
     const occurrence = pick4 ? pick4.occurrence : null;
     const position = pick4 ? readingSourceFromColumns(pick4.pos_kind, pick4.pos, pick4.pos_ref) : null;
     const at43 = this.now();
-    const answer = (wrote, prior) => ({
+    const answer2 = (wrote, prior) => ({
       ok: true,
       wrote,
       a_capture_sha: aSha,
@@ -67682,7 +67731,7 @@ var Connections = class _Connections {
       machine_pair_ref: side === "a" ? conn.a_ref : conn.b_ref,
       says: (wrote ? `recorded: ` : `already the choice, so nothing was written: `) + `on end ${side.toUpperCase()} of this connection the on-point mention of ${entityId} is ${mention.ref}` + (position ? ` (read at ${position.ref})` : ` (the reading did not record where)`) + `, as chosen by ${wrote ? who2 : cur.chosen_by}. A citation of a part of this document now answers from this mention; the machine's strongest-graded pair is kept beside it, unchanged`
     });
-    if (cur && cur.ref === mention.ref && (cur.occurrence ?? null) === occurrence) return answer(false, null);
+    if (cur && cur.ref === mention.ref && (cur.occurrence ?? null) === occurrence) return answer2(false, null);
     this.#transact(() => {
       if (cur)
         this.sql.exec(
@@ -67711,7 +67760,7 @@ var Connections = class _Connections {
       );
       return { ok: true };
     });
-    return answer(true, cur ? {
+    return answer2(true, cur ? {
       ref: cur.ref,
       ...cur.occurrence != null ? { occurrence: cur.occurrence } : {},
       chosen_by: cur.chosen_by,
@@ -70126,7 +70175,7 @@ var ObservationLog = class _ObservationLog {
    *  gave it. */
   #rowBundles(row12, viewer) {
     const out = [];
-    let unresolved = false, answer = null;
+    let unresolved = false, answer2 = null;
     if (row12.result_kind === "capture" && row12.result_ref) {
       const b = this.#captureHome(row12.result_ref);
       if (b) out.push(b);
@@ -70149,7 +70198,7 @@ var ObservationLog = class _ObservationLog {
             break;
           }
           if (r === true || r === false) {
-            answer = answer === false ? false : r;
+            answer2 = answer2 === false ? false : r;
             break;
           }
           if (this.#bundleHeld(a)) out.push(a);
@@ -70178,7 +70227,7 @@ var ObservationLog = class _ObservationLog {
           break;
       }
     }
-    return { bundles: out, unresolved, answer };
+    return { bundles: out, unresolved, answer: answer2 };
   }
   /** R13 — may `viewer` see this row? A credential with no person behind it sees every row; an absent or unrecognised
    *  viewer sees none; otherwise every bundle the row names must be visible (membership's one predicate), a resolver's
@@ -70187,8 +70236,8 @@ var ObservationLog = class _ObservationLog {
     const gate = viewerPredicate(viewer);
     if (gate.scope === "member") return true;
     if (gate.scope === "DENY" || !row12 || typeof row12 !== "object") return false;
-    const { bundles, unresolved, answer } = this.#rowBundles(row12, viewer);
-    if (unresolved || answer === false) return false;
+    const { bundles, unresolved, answer: answer2 } = this.#rowBundles(row12, viewer);
+    if (unresolved || answer2 === false) return false;
     return bundles.every((id) => this.membership.inSight(id, viewer));
   }
   /** R13's predicate for one viewer, compiled once (the frontier's arms filter many rows). */
@@ -70203,8 +70252,8 @@ var ObservationLog = class _ObservationLog {
     };
     return (row12) => {
       if (!row12 || typeof row12 !== "object") return false;
-      const { bundles, unresolved, answer } = this.#rowBundles(row12, viewer);
-      if (unresolved || answer === false) return false;
+      const { bundles, unresolved, answer: answer2 } = this.#rowBundles(row12, viewer);
+      if (unresolved || answer2 === false) return false;
       return bundles.every(sees);
     };
   }
@@ -73915,8 +73964,8 @@ function recordedBy(k, args) {
     }
     const sha2 = a.captureSha.trim().toLowerCase();
     const cap = clamp2(a.limit);
-    const answer = (items, truncated6) => ({ ok: true, module: "events", capture_sha: sha2, items, truncated: truncated6 });
-    if (!k.heldCapture(sha2, a.viewer)) return answer([], false);
+    const answer2 = (items, truncated6) => ({ ok: true, module: "events", capture_sha: sha2, items, truncated: truncated6 });
+    if (!k.heldCapture(sha2, a.viewer)) return answer2([], false);
     const seen = /* @__PURE__ */ new Map();
     const sees = (bundleId) => {
       const key2 = bundleId ?? "\0";
@@ -74002,7 +74051,7 @@ function recordedBy(k, args) {
     }
     const cmp3 = (x, y) => x < y ? -1 : x > y ? 1 : 0;
     kept.sort((p3, q10) => cmp3(p3.key, q10.key) || cmp3(p3.item.record, q10.item.record) || cmp3(p3.item.field, q10.item.field));
-    return answer(kept.slice(0, cap).map((x) => x.item), kept.length > cap);
+    return answer2(kept.slice(0, cap).map((x) => x.item), kept.length > cap);
   } catch (e2) {
     return refuse9("RECORDED_BY_UNREADABLE", String(e2 && e2.message || e2).slice(0, 200));
   }
@@ -75471,7 +75520,7 @@ var Events = class _Events {
     const ids = Array.isArray(set) ? set.filter(said5).map((s) => s.trim()) : typeof set === "string" ? set.split(",").filter(said5) : [];
     if (!ids.length) return refuse10("NO_SET", "a timeline is of an explicit set of entity or event ids; a project's or inquiry's scope is resolved by its caller");
     const want = Array.isArray(lanes) && lanes.length ? lanes : ["world", "ours"];
-    const answer = { ok: true, set: ids };
+    const answer2 = { ok: true, set: ids };
     if (want.includes("world")) {
       const items = /* @__PURE__ */ new Map();
       for (const id of ids) {
@@ -75490,11 +75539,11 @@ var Events = class _Events {
       const r = this.#range(all.filter((i) => i.when), from, to);
       if (r.bad) return refuse10("BAD_DATE", r.bad);
       const b = this.#bounded([...r.items, ...all.filter((i) => !i.when)], limit);
-      answer.world = { label: "what they did", items: b.items, placed_nowhere: b.placed_nowhere, limit: b.limit, truncated: b.truncated };
+      answer2.world = { label: "what they did", items: b.items, placed_nowhere: b.placed_nowhere, limit: b.limit, truncated: b.truncated };
     }
     if (want.includes("ours")) {
       const cap = clamp3(limit);
-      answer.ours = { label: "what we did", sources: this.#sources.map((s) => {
+      answer2.ours = { label: "what we did", sources: this.#sources.map((s) => {
         try {
           const got = s.fn({ set: ids, from, to, limit: cap, viewer });
           const list6 = Array.isArray(got) ? got : got && Array.isArray(got.items) ? got.items : [];
@@ -75516,7 +75565,7 @@ var Events = class _Events {
         }
       }) };
     }
-    return answer;
+    return answer2;
   }
   /* An event of the set, with the events within it and those that concern it. */
   #eventsAround(eventId3, viewer) {
@@ -82414,9 +82463,9 @@ var LawRecords = class {
     const read3 = typeof citation2 === "string" ? (this.k.recognise(citation2).citations || [])[0] || null : isObj23(citation2) ? citation2 : null;
     const c = read3 && Number.isInteger(Number(read3.volume)) && typeof read3.reporter === "string" && Number.isInteger(Number(read3.page)) ? { volume: Number(read3.volume), reporter: read3.reporter, page: Number(read3.page) } : null;
     const base2 = { ok: true, citation: c, as_given: typeof citation2 === "string" ? citation2.slice(0, 400) : citation2 ?? null };
-    let answer;
+    let answer2;
     if (!c) {
-      answer = {
+      answer2 = {
         ...base2,
         state: "not verified",
         verified: false,
@@ -82425,7 +82474,7 @@ var LawRecords = class {
       };
     } else {
       const held2 = this.#statedIn(c, viewer);
-      answer = held2.found.length ? {
+      answer2 = held2.found.length ? {
         ...base2,
         state: "verified",
         verified: true,
@@ -82439,7 +82488,7 @@ var LawRecords = class {
         why: `no held capture you may see states ${c.volume} ${c.reporter} ${c.page}${held2.truncated ? `; only the first ${SCAN_MAX} court standards were read` : ""}: whether the case exists is not decided here`
       };
     }
-    if (!lookup2) return { ...answer, lookup: null };
+    if (!lookup2) return { ...answer2, lookup: null };
     const text7 = typeof citation2 === "string" ? citation2 : c ? `${c.volume} ${c.reporter} ${c.page}` : null;
     let l2;
     try {
@@ -82448,12 +82497,12 @@ var LawRecords = class {
       l2 = { ok: false, reason: "LOOKUP_FAILED" };
     }
     if (!l2 || l2.ok !== true)
-      return { ...answer, lookup: {
+      return { ...answer2, lookup: {
         on: false,
         reason: l2 ? l2.reason ?? null : "NO_TEXT",
         says: "the keyed citation lookup did not answer (it is switched off, holds no key, or refused); this answer stands without it"
       } };
-    return { ...answer, lookup: {
+    return { ...answer2, lookup: {
       on: true,
       service: l2.service ?? null,
       citations: l2.citations ?? [],
@@ -84780,7 +84829,7 @@ var Standards = class {
       if (!row12 || viewer !== null && !this.#readable(sid, viewer)) return refuseNoSuchStandard(sid);
       const ent = this.#entity(b, viewer);
       const bodyLabel = ent ? ent.label : b || "the body";
-      const answer = (state, why2, rests_on) => ({
+      const answer2 = (state, why2, rests_on) => ({
         ok: true,
         standard: sid,
         body: b || null,
@@ -84794,11 +84843,11 @@ var Standards = class {
         }
       });
       const r = this.#bindingOf(row12, b, date, viewer, /* @__PURE__ */ new Set());
-      if (r.state === "binds") return answer("binds", r.why, r.rests_on);
-      if (r.state === "undetermined") return answer("undetermined", r.why, r.rests_on);
+      if (r.state === "binds") return answer2("binds", r.why, r.rests_on);
+      if (r.state === "undetermined") return answer2("undetermined", r.why, r.rests_on);
       if (BENCHMARK_KINDS.includes(row12.kind))
-        return answer("benchmark", `nothing held puts ${sid} in force on ${bodyLabel} on ${date}: it is a benchmark, not binding on the body`, r.rests_on);
-      return answer("undetermined", "whether this law binds the body is not recorded", r.rests_on);
+        return answer2("benchmark", `nothing held puts ${sid} in force on ${bodyLabel} on ${date}: it is a benchmark, not binding on the body`, r.rests_on);
+      return answer2("undetermined", "whether this law binds the body is not recorded", r.rests_on);
     } catch {
       return {
         ok: true,
@@ -87328,9 +87377,9 @@ async function knockOp(req, env, store, { json: json24, requiredArgument: requir
   if (req.method !== "POST") return json24({ ok: false, error: "knock is a POST" }, 405);
   const place = typeof country === "string" && country ? country : null;
   const stamp4 = place ? `&country=${encodeURIComponent(place)}` : "";
-  const refuse27 = async (answer, status) => {
+  const refuse27 = async (answer2, status) => {
     await tallyRefusal(store, doAnswer2, place);
-    return json24(answer, status);
+    return json24(answer2, status);
   };
   const raw = await req.arrayBuffer();
   if (raw.byteLength > KNOCK.maxBytes + 4096) return refuse27(knockEnvelopeTooLarge(), 413);
@@ -87638,9 +87687,9 @@ var Doorbell = class _Doorbell {
    *  declaration (a test's stand-in) is left alone. */
   declareTables() {
     if (this.#declared || !this.core || typeof this.core.declarePurge !== "function") return false;
-    const answer = this.core.declarePurge("doorbell", [], { exempt: [...DOORBELL_EXEMPT_TABLES] });
-    if (answer && answer.ok === false)
-      throw new Error(`doorbell: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
+    const answer2 = this.core.declarePurge("doorbell", [], { exempt: [...DOORBELL_EXEMPT_TABLES] });
+    if (answer2 && answer2.ok === false)
+      throw new Error(`doorbell: record-core refused its purge declaration: ${answer2.reason} (${answer2.table})`);
     this.#declared = true;
     return true;
   }
@@ -87805,10 +87854,10 @@ var Doorbell = class _Doorbell {
     }
   }
   /* R19, R20: a refusal answered, counted first in both tallies. */
-  #refusedKnock(answer, nowMs, country = null) {
-    this.#tallyRefusal(nowMs, answer && answer[_Doorbell.#LIMIT_REACHED] === true);
+  #refusedKnock(answer2, nowMs, country = null) {
+    this.#tallyRefusal(nowMs, answer2 && answer2[_Doorbell.#LIMIT_REACHED] === true);
     this.#securityCount(country);
-    return answer;
+    return answer2;
   }
   /** R19, R20: a knock the Worker refused before the store was asked to keep anything (R6–R8, the required-argument
    *  refusals, R14's weak secret), counted in the doorbell's tally and the security tally (`country` the control
@@ -87938,7 +87987,7 @@ var Doorbell = class _Doorbell {
     const pseudonym = knockerDigest ? pseudonymOf(knockerDigest) : null;
     const knockId = `KNOCK-${new Date(nowMs).toISOString().slice(0, 10)}-${crypto.randomUUID().slice(0, 8)}`;
     const received = new Date(nowMs).toISOString();
-    const answer = this.#tx(() => {
+    const answer2 = this.#tx(() => {
       const late = this.#countKnock(rate);
       if (late) return late;
       this.#sql.exec(
@@ -87958,13 +88007,13 @@ var Doorbell = class _Doorbell {
       );
       return { ok: true, knockId, sha256: sha2, bytes: bytes2.length, pseudonym, ...generated ? { secret: generated } : {} };
     });
-    if (!answer.ok && stored2 && !this.#one(`SELECT 1 AS x FROM inbox WHERE sha256 = ?`, sha2)) {
+    if (!answer2.ok && stored2 && !this.#one(`SELECT 1 AS x FROM inbox WHERE sha256 = ?`, sha2)) {
       try {
         await bucket.delete?.(key2);
       } catch {
       }
     }
-    return answer.ok ? answer : this.#refusedKnock(answer, nowMs, country);
+    return answer2.ok ? answer2 : this.#refusedKnock(answer2, nowMs, country);
   }
   /** R3: only a signed-in member reaches these (the op's fence). N90: at most `limit` knocks, paged by `after`: a
    *  doorbell anyone may ring must not answer a member with everything it was ever handed. Each row names its knocker's
@@ -96490,9 +96539,9 @@ function retrievalOf(host, deps) {
     const observation = d.observation || observationOf(observationLogOf(host), storage.sql);
     r = new Retrieval({ ...d, storage, record, membership, promotion, extraction, observation, host });
     instances22.set(host, r);
-    const answer = typeof record.declareTable === "function" ? record.declareTable("retrieval", retrievalTables(r)) : record.declarePurge("retrieval", RETRIEVAL_PURGE);
-    if (answer && answer.ok === false)
-      throw new Error(`retrieval: record-core refused its table declaration: ${answer.reason} (${answer.table})`);
+    const answer2 = typeof record.declareTable === "function" ? record.declareTable("retrieval", retrievalTables(r)) : record.declarePurge("retrieval", RETRIEVAL_PURGE);
+    if (answer2 && answer2.ok === false)
+      throw new Error(`retrieval: record-core refused its table declaration: ${answer2.reason} (${answer2.table})`);
     r.joinPromotion();
     registerFigures4(r);
   }
@@ -96521,9 +96570,9 @@ var RETRIEVAL_COUNT_KEYS = Object.freeze(["indexed", "selections", "selectionIte
 function registerFigures4(r) {
   const record = r.record;
   if (!record || typeof record.registerCounts !== "function") return;
-  const answer = record.registerCounts("retrieval", [...RETRIEVAL_COUNT_KEYS], (hid) => r.counts(hid));
-  if (answer && answer.ok === false)
-    throw new Error(`retrieval: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
+  const answer2 = record.registerCounts("retrieval", [...RETRIEVAL_COUNT_KEYS], (hid) => r.counts(hid));
+  if (answer2 && answer2.ok === false)
+    throw new Error(`retrieval: record-core refused its figures: ${answer2.reason}${answer2.heldBy ? ` (held by ${answer2.heldBy})` : ""}`);
 }
 function retrievalRoutes(r, url, body) {
   const q10 = url.searchParams;
@@ -101295,7 +101344,7 @@ var Calculations = class {
     if (d.refused) return no4(d.refused, `${d.why}. Nothing was written.`);
     const key2 = sha({ set: ref, kind: kind2, seed: usedSeed, n: n2, method: d.method, ...asked !== null ? { question: asked } : {} });
     const held2 = this.#one(`SELECT * FROM calc_draws WHERE draw_key=?`, key2);
-    const answer = (r) => ({
+    const answer2 = (r) => ({
       ok: true,
       draw: r.draw_key,
       set: r.set_sha,
@@ -101311,7 +101360,7 @@ var Calculations = class {
       drawn_at: r.drawn_at,
       says: "a seeded, recorded random draw over a frozen set: anyone with the set, the seed and SHA-256 reproduces it"
     });
-    if (held2) return { ...answer(held2), already: true };
+    if (held2) return { ...answer2(held2), already: true };
     const at43 = this.now();
     this.record.transact(() => {
       this.sql.exec(
@@ -101333,7 +101382,7 @@ var Calculations = class {
       );
       return { ok: true };
     });
-    return answer(this.#one(`SELECT * FROM calc_draws WHERE draw_key=?`, key2));
+    return answer2(this.#one(`SELECT * FROM calc_draws WHERE draw_key=?`, key2));
   }
   /* R18: a recorded draw drawn again from its set, seed and method: `{reproduced, sample}`. */
   #reproduce(d) {
@@ -101649,7 +101698,7 @@ var Calculations = class {
     const built = tb.finish();
     if (built.fault || built.tooLarge) return no4("TABLE_TOO_LARGE", "the uses do not fit one table. Nothing was written.", { bound: "cells", max: TABLE_MAX_CELLS });
     const at43 = this.now();
-    const answer = () => ({
+    const answer2 = () => ({
       ok: true,
       ...this.#tableAnswer(this.#one(`SELECT * FROM calc_tables WHERE sha=?`, built.sha)),
       filter: filter2,
@@ -101658,7 +101707,7 @@ var Calculations = class {
       n: ids.length,
       says: `the held uses of powers you may see, ${ids.length} acts: a population, not a census of every use made`
     });
-    if (this.#one(`SELECT 1 AS x FROM calc_uses WHERE sha=?`, built.sha)) return { ...answer(), already: true };
+    if (this.#one(`SELECT 1 AS x FROM calc_uses WHERE sha=?`, built.sha)) return { ...answer2(), already: true };
     const ev = this.record.evidenceStore();
     if (!ev) return no4("NO_EVIDENCE_STORE", "your group's Civicsmith has no evidence store set up, so the table's bytes cannot be held. Nothing was written.");
     try {
@@ -101699,7 +101748,7 @@ var Calculations = class {
       );
       return { ok: true };
     });
-    return answer();
+    return answer2();
   }
   /** R33: `applicationRecipes()`: the recipes of application, as data, each with its inputs and parameters. */
   applicationRecipes() {
@@ -103624,7 +103673,7 @@ var Progressions = class _Progressions {
           p3.dated_fact_id ?? null
         );
     });
-    const answer = { ...this.#answer(key2, eid, viewer), threaded: norm3.length, threaded_by: by, at: at43 };
+    const answer2 = { ...this.#answer(key2, eid, viewer), threaded: norm3.length, threaded_by: by, at: at43 };
     if (this.threadListeners.length) {
       let scanned = false, nextDeadline = null;
       const deadline = () => {
@@ -103647,7 +103696,7 @@ var Progressions = class _Progressions {
         }
       }
     }
-    return answer;
+    return answer2;
   }
   /* R37: a placement's `event` (an `EVT-` the document attests) and `datedFact` (a dated fact held for its capture),
      each optional: `{event_id, dated_fact_id}`, or the refusal. A refusal writes nothing. */
@@ -104480,9 +104529,9 @@ var OWNER_REGISTRATION2 = registerOwner({
 function registerFigures5(p3) {
   const record = p3.record;
   if (!record || typeof record.registerCounts !== "function") return;
-  const answer = record.registerCounts("progressions", [...Progressions.COUNT_KEYS], (hid) => p3.counts(hid));
-  if (answer && answer.ok === false)
-    throw new Error(`progressions: record-core refused its figures: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
+  const answer2 = record.registerCounts("progressions", [...Progressions.COUNT_KEYS], (hid) => p3.counts(hid));
+  if (answer2 && answer2.ok === false)
+    throw new Error(`progressions: record-core refused its figures: ${answer2.reason}${answer2.heldBy ? ` (held by ${answer2.heldBy})` : ""}`);
 }
 
 // src/inquiry/schema.mjs
@@ -105171,10 +105220,10 @@ var ROW_FAMILIES2 = [
   INQUIRY_BIAS_CHECKS,
   INQUIRY_PASSAGE_CHECKS
 ];
-function withRow(answer) {
-  if (!answer || answer.ok !== false || typeof answer.reason !== "string" || answer.check) return answer;
-  const row12 = ROW_FAMILIES2.map((f17) => f17 && f17[answer.reason]).find((r) => r && r.check);
-  return row12 ? { ...answer, check: row12.check, translation: row12.translation, ...row12.key ? { key: row12.key } : {} } : answer;
+function withRow(answer2) {
+  if (!answer2 || answer2.ok !== false || typeof answer2.reason !== "string" || answer2.check) return answer2;
+  const row12 = ROW_FAMILIES2.map((f17) => f17 && f17[answer2.reason]).find((r) => r && r.check);
+  return row12 ? { ...answer2, check: row12.check, translation: row12.translation, ...row12.key ? { key: row12.key } : {} } : answer2;
 }
 function supersededByOf(row12) {
   const v = row12 && typeof row12.inquiry_superseded_by === "string" ? row12.inquiry_superseded_by : "";
@@ -109664,15 +109713,15 @@ var Bias = class _Bias {
     if (typeof rank7 !== "function" || read3.length < 2) return read3;
     const PLACE = Symbol("place");
     const items = read3.map((r, i) => ({ kind: "bundle", id: r.wp && r.wp.context && r.wp.context.id != null ? String(r.wp.context.id) : null, waitingSince: _Bias.#instantMs(r.wp && r.wp.registered), [PLACE]: i }));
-    let answer;
+    let answer2;
     try {
-      answer = rank7(items, now);
+      answer2 = rank7(items, now);
     } catch {
       return read3;
     }
-    if (!Array.isArray(answer)) return read3;
+    if (!Array.isArray(answer2)) return read3;
     const order4 = [], taken = /* @__PURE__ */ new Set();
-    for (const x of answer) {
+    for (const x of answer2) {
       const i = x && typeof x === "object" ? x[PLACE] : void 0;
       if (Number.isInteger(i) && !taken.has(i)) {
         taken.add(i);
@@ -110176,13 +110225,13 @@ var AcceptedWork = class {
     if (!src) return { absent: true, reason: ACCEPTED_WORK_ABSENT, detail: ABSENT_DETAIL };
     if (!src[name3]) return { absent: true, reason: ACCEPTED_WORK_ABSENT, detail: MOVES_ABSENT_DETAIL };
     try {
-      const answer = src[name3](pick4(argsOf(given5)));
-      if (isThenable2(answer)) {
-        Promise.resolve(answer).catch(() => {
+      const answer2 = src[name3](pick4(argsOf(given5)));
+      if (isThenable2(answer2)) {
+        Promise.resolve(answer2).catch(() => {
         });
         return unreadable(`${src.module} answered later than the read can wait`);
       }
-      return answer;
+      return answer2;
     } catch (e2) {
       return unreadable(String(e2 && e2.message ? e2.message : e2));
     }
@@ -111494,11 +111543,11 @@ var grammarRegistered = /* @__PURE__ */ new WeakSet();
 function registerBasisVersionGrammar(record) {
   if (!record || typeof record.registerGrammar !== "function" || grammarRegistered.has(record)) return null;
   registerInquiryGrammar(record);
-  const answer = record.registerGrammar("basis-versions", BASIS_VERSION_GRAMMAR);
-  if (answer && answer.ok === false)
-    throw new Error(`basis-versions: record-core refused the version grammar: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
+  const answer2 = record.registerGrammar("basis-versions", BASIS_VERSION_GRAMMAR);
+  if (answer2 && answer2.ok === false)
+    throw new Error(`basis-versions: record-core refused the version grammar: ${answer2.reason}${answer2.heldBy ? ` (held by ${answer2.heldBy})` : ""}`);
   grammarRegistered.add(record);
-  return answer;
+  return answer2;
 }
 
 // src/basis-versions/schema.mjs
@@ -125554,7 +125603,7 @@ var Reevaluation = class {
       return this.#refuse("VERSION_ADOPT_UNWRITABLE", `no version name could be formed for ${r.holder}.`, { notice: r.notice_id });
     const line2 = text7.replace(/\s*[\r\n]+\s*/g, " ");
     const description = `Adopts a newer version of ${r.target_id}${home !== r.target_id ? ` (held as ${home})` : ""}${r.newer_content ? ", at another address" : ""}: leg ${r.ord} rests on capture ${r.newer_capture.slice(0, 12)} in place of ${r.capture_sha.slice(0, 12)} (notice ${r.notice_id}). Every other leg is as the live basis holds it. Why: ${line2}`;
-    const answer = this.record.transact(() => {
+    const answer2 = this.record.transact(() => {
       const w = this.basisVersions.appendVersion({
         target: r.holder,
         version: { name: name3, description, relationship: labels.size > 1 ? "or" : "and" },
@@ -125574,7 +125623,7 @@ Why: ${line2}
                       WHERE notice_id=? AND state='open'`, who2, when, text7, name3, r.notice_id);
       return { ok: true, bundleSha: w.bundleSha ?? null };
     });
-    if (!answer.ok) return answer;
+    if (!answer2.ok) return answer2;
     return {
       ok: true,
       notice: r.notice_id,
@@ -125588,7 +125637,7 @@ Why: ${line2}
       newer_capture: r.newer_capture,
       version: name3,
       state: "suggested",
-      bundleSha: answer.bundleSha,
+      bundleSha: answer2.bundleSha,
       ...legs[r.ord].grade ? { grade_not_carried: {
         grade: legs[r.ord].grade,
         why: "the grade was given to the passage in the earlier capture; the newer passage is not graded until a member grades it"
@@ -131059,11 +131108,11 @@ async function coverAreas(bytes2, { areas } = {}) {
     if (d.length > COVER_MAX_BYTES)
       throw new CoverRefusal("PHOTO_TOO_LARGE", `the photo is ${d.length} bytes, over the ${COVER_MAX_BYTES} this module covers`);
     checkAreas(areas);
-    let answer;
-    if (isJpeg(d)) answer = coverJpeg(d, areas, COVER_MAX_PIXELS);
-    else if (isPng(d)) answer = await coverPng(d, areas, COVER_MAX_PIXELS);
+    let answer2;
+    if (isJpeg(d)) answer2 = coverJpeg(d, areas, COVER_MAX_PIXELS);
+    else if (isPng(d)) answer2 = await coverPng(d, areas, COVER_MAX_PIXELS);
     else throw new CoverRefusal("NOT_A_COVERABLE_FORMAT", "the photo is neither a JPEG nor a PNG");
-    return { ok: true, ...answer };
+    return { ok: true, ...answer2 };
   } catch (e2) {
     if (e2 instanceof CoverRefusal) return { ok: false, code: e2.code, detail: e2.detail };
     throw e2;
@@ -138618,7 +138667,7 @@ var Docket = class {
     const held2 = this.#held.get(key2);
     if (held2 && held2.expiresMs > nowMs && held2.record === (rec ? rec.entry_id : null)) return held2.answer;
     const expiresMs = nowMs + PREPARED_TTL_MS;
-    const answer = {
+    const answer2 = {
       ok: true,
       entry: text7,
       digest: digest2,
@@ -138627,7 +138676,7 @@ var Docket = class {
       expires: this.#stamp(expiresMs)
     };
     this.#held.set(key2, {
-      answer,
+      answer: answer2,
       expiresMs,
       case: c.case,
       seq,
@@ -138640,7 +138689,7 @@ var Docket = class {
       edition: x.edition,
       order: ordered2 ? ordered2.order : null
     });
-    return answer;
+    return answer2;
   }
   /** R5: publishes the entry `by` prepared, with its signature. */
   async docketPost({ digest: digest2 = null, signature = null, acknowledged = null, by = null, viewer = null } = {}) {
@@ -139063,7 +139112,7 @@ var Docket = class {
     const rows3 = this.#entries(c.case);
     const entries = rows3.map((e2) => this.#publicView(e2, backs));
     const last = rows3[rows3.length - 1];
-    const answer = (captures2, extra) => ({
+    const answer2 = (captures2, extra) => ({
       ok: true,
       case: c.case,
       group: this.#slug(),
@@ -139073,7 +139122,7 @@ var Docket = class {
       feed: feedAddress(c.case),
       ...extra
     });
-    if (want === "omit") return answer({}, { captures_omitted: true });
+    if (want === "omit") return answer2({}, { captures_omitted: true });
     const captures = {};
     const store = this.#call(() => this.record.evidenceStore());
     for (const e2 of entries) {
@@ -139088,7 +139137,7 @@ var Docket = class {
       }
       captures[f17.capture.sha256] = bytes2 ? b643(bytes2) : null;
     }
-    return answer(captures);
+    return answer2(captures);
   }
   /** R14 (K1276): the date of the case's latest public entry, the `last_entry` `docketPublic` answers, or null; synchronous,
    *  viewer-free, reading no capture's bytes. For `public-read` R20's `docket_last_entry`. */
@@ -141694,7 +141743,7 @@ var NetworkNotices = class {
     if (held2 && held2.expiresMs > nowMs) return held2.answer;
     const expiresMs = nowMs + PREPARED_TTL_MS2;
     const caution = !this.#anyPublishedEdition() && this.#openCount(s.nid) >= 2 ? CAUTION_TWO_OPEN : null;
-    const answer = {
+    const answer2 = {
       ok: true,
       revision: text7,
       digest: digest2,
@@ -141703,8 +141752,8 @@ var NetworkNotices = class {
       caution,
       expires: this.#stamp(expiresMs)
     };
-    this.#held.set(key2, { answer, expiresMs, pid: c.pid, nid, n: s.n, revision, text: text7, digest: digest2, final, firstRevision: !s.nid });
-    return answer;
+    this.#held.set(key2, { answer: answer2, expiresMs, pid: c.pid, nid, n: s.n, revision, text: text7, digest: digest2, final, firstRevision: !s.nid });
+    return answer2;
   }
   /** R4, R5, R6, R11: publishes the revision `by` prepared, with its signature, and the `posted` attestation over it,
    *  in one transaction. */
@@ -142801,20 +142850,20 @@ async function takeOne(p3, r, at43) {
     delivered_by: r.delivered_by ?? null,
     checked: safeJson24(r.checked, null)
   };
-  let answer = null;
+  let answer2 = null;
   const pub = p3.scheduledPublisher();
   if (pub) {
     try {
-      answer = await pub.publishScheduled(entry4, at43);
+      answer2 = await pub.publishScheduled(entry4, at43);
     } catch {
-      answer = null;
+      answer2 = null;
     }
   }
   const now = one(p3, `SELECT state FROM scheduled_editions WHERE seq=?`, r.seq);
   if (!now || now.state !== "waiting") return { case: r.case_id, edition: Number(r.edition), state: now ? now.state : null };
   const signed3 = one(p3, `SELECT ratified_at FROM case_documents WHERE case_id=? AND edition=? AND doc_sha=?
                           AND sig_armored IS NOT NULL`, r.case_id, Number(r.edition), r.doc_sha);
-  const stops = answer && Array.isArray(answer.stopped) && answer.stopped.length ? answer.stopped.map((s) => ({
+  const stops = answer2 && Array.isArray(answer2.stopped) && answer2.stopped.length ? answer2.stopped.map((s) => ({
     code: String(s && s.code || ""),
     translation: String(s && s.translation || ""),
     ...s && s.check ? { check: String(s.check) } : {},
@@ -149706,9 +149755,9 @@ var AiUse = class _AiUse {
    *  whole store, a project's limits, their history, its reached rows and its asks also with the project. */
   declareTables() {
     if (this.#declared) return false;
-    const answer = this.record.declareTable("ai-use", AI_USE_TABLES.map((t2) => ({ ...t2, keys: [...t2.keys] })));
-    if (answer && answer.ok === false)
-      throw new Error(`ai-use: record-core refused its table declaration: ${answer.reason} (${answer.table})`);
+    const answer2 = this.record.declareTable("ai-use", AI_USE_TABLES.map((t2) => ({ ...t2, keys: [...t2.keys] })));
+    if (answer2 && answer2.ok === false)
+      throw new Error(`ai-use: record-core refused its table declaration: ${answer2.reason} (${answer2.table})`);
     this.#declared = true;
     return true;
   }
@@ -156549,18 +156598,18 @@ var ReadLog = class {
     }
   }
   /** A read served under the grant, recorded as answered. */
-  add(op, args, answer, at43 = null) {
-    const entry4 = { seq: this.entries.length + 1, op, args: args ?? null, answer, at: at43 };
+  add(op, args, answer2, at43 = null) {
+    const entry4 = { seq: this.entries.length + 1, op, args: args ?? null, answer: answer2, at: at43 };
     this.entries.push(entry4);
-    this.#indexObject(answer);
+    this.#indexObject(answer2);
     return entry4;
   }
   /** R7: a rule service's answer, recorded under the next `rule_id`. */
-  addRule(answer, at43 = null) {
+  addRule(answer2, at43 = null) {
     const rule_id = `rule:${this.rules.size + 1}`;
-    const held2 = { ...answer, rule_id };
+    const held2 = { ...answer2, rule_id };
     this.rules.set(rule_id, held2);
-    this.add("rule", { service: answer.service ?? null }, held2, at43);
+    this.add("rule", { service: answer2.service ?? null }, held2, at43);
     return held2;
   }
   rule(id) {
@@ -158448,9 +158497,9 @@ ${usage}
     }
   }
   if (!parts.length) return { text: usage + "\n", status: 2 };
-  const answer = await checkCaseFile({ parts, documents, ...keys ? { keys } : {}, ...lens !== void 0 ? { lens } : {} });
-  const lines2 = answer.findings.map((f17) => `${f17.finding}: ${RESULT_WORDS2[f17.result] ?? f17.result}`);
-  return { text: [...lines2, "", answer.statement, "", JSON.stringify(answer, null, 2), ""].join("\n"), status: 0 };
+  const answer2 = await checkCaseFile({ parts, documents, ...keys ? { keys } : {}, ...lens !== void 0 ? { lens } : {} });
+  const lines2 = answer2.findings.map((f17) => `${f17.finding}: ${RESULT_WORDS2[f17.result] ?? f17.result}`);
+  return { text: [...lines2, "", answer2.statement, "", JSON.stringify(answer2, null, 2), ""].join("\n"), status: 0 };
 }
 var proc = globalThis.process;
 if (proc && proc.versions && proc.versions.node && Array.isArray(proc.argv) && typeof proc.argv[1] === "string") {
@@ -158497,9 +158546,9 @@ var registered2 = /* @__PURE__ */ new WeakMap();
 function registerCaseCheckerPublicReads(host, deps = {}) {
   if (registered2.has(host)) return registered2.get(host);
   const publicRead = deps.publicRead || publicReadOf(host);
-  const answer = publicRead.registerPublicReads("case-checker", caseCheckerPublicReads());
-  registered2.set(host, answer);
-  return answer;
+  const answer2 = publicRead.registerPublicReads("case-checker", caseCheckerPublicReads());
+  registered2.set(host, answer2);
+  return answer2;
 }
 
 // src/case-import/index.mjs
@@ -158761,15 +158810,15 @@ function recreateOne(row12, ord, byContent, byStated) {
   }
   return done(differs.length ? "differs" : "recreated", differs, recomputed);
 }
-function checkerCalcOf(answer, calc, result2) {
-  const list6 = isObj37(answer) && Array.isArray(answer.calculations) ? answer.calculations : null;
+function checkerCalcOf(answer2, calc, result2) {
+  const list6 = isObj37(answer2) && Array.isArray(answer2.calculations) ? answer2.calculations : null;
   const c = list6 ? list6.find((x) => isObj37(x) && x.calc === calc) : null;
   if (!c) return null;
   const read3 = CHECKER_CALC[c.result] ?? null;
   return { result: c.result ?? null, agrees_with_this_copy: read3 === result2 };
 }
-function signatureVerified(answer) {
-  const s = isObj37(answer) ? answer.signatures : null;
+function signatureVerified(answer2) {
+  const s = isObj37(answer2) ? answer2.signatures : null;
   const c = isObj37(s) ? isObj37(s.case) ? s.case : isObj37(s.case_document) ? s.case_document : null : null;
   for (const k of ["verified", "ok", "valid"]) if (c && typeof c[k] === "boolean") return c[k];
   return null;
@@ -158922,8 +158971,8 @@ var CaseImport = class _CaseImport {
   /* R3, R12: records one recreation, inside the caller's transaction: its run, and each finding's result with what is
      missing, what differs, the recomputed pair and the checker's versions; each finding's published pair beside it
      (R16). Answers the run's number. */
-  #recordCheck(importId, edition, answer, { cause, document = null, by, at: at43, published, calcs = [] }) {
-    const { findings = [], ...rest } = answer;
+  #recordCheck(importId, edition, answer2, { cause, document = null, by, at: at43, published, calcs = [] }) {
+    const { findings = [], ...rest } = answer2;
     const checker = isObj37(rest.checker) ? rest.checker : null;
     this.sql.exec(
       `INSERT INTO case_import_checks (import_id, edition, cause, document_sha, checker, answer, checked_by, checked_at)
@@ -159082,7 +159131,7 @@ var CaseImport = class _CaseImport {
         `edition ${who2.edition} of this case is held with other bytes; an edition never changes`,
         { import: importId, edition: who2.edition, held: held2.manifest_sha, given: manifestSha }
       );
-    const answer = await this.#recreate(list6, []);
+    const answer2 = await this.#recreate(list6, []);
     const calcs = this.#calculationsOf(Array.isArray(read3.files) ? read3.files : [], read3.manifest, []);
     const at43 = this.#stamp();
     const published = this.#publishedPairs(files);
@@ -159141,7 +159190,7 @@ var CaseImport = class _CaseImport {
           f17.content.length,
           listed2.get(f17.path)?.part ?? 0
         );
-      this.#recordCheck(importId, who2.edition, answer, { cause: "import", by: k.member, at: at43, published, calcs });
+      this.#recordCheck(importId, who2.edition, answer2, { cause: "import", by: k.member, at: at43, published, calcs });
       return { ok: true };
     });
     if (!out || out.ok !== true) {
@@ -159225,15 +159274,15 @@ var CaseImport = class _CaseImport {
   #recreationView(importId, edition) {
     const c = this.#latestCheck(importId, edition);
     if (!c) return null;
-    const answer = parse7(c.answer, {});
+    const answer2 = parse7(c.answer, {});
     return {
       check: Number(c.rn),
       cause: c.cause,
       document: c.document_sha ?? null,
       checked_at: c.checked_at,
       checker: parse7(c.checker, {}),
-      statement: str32(answer.statement) ?? STATEMENT,
-      ...answer.unread ? { unread: answer.unread } : {},
+      statement: str32(answer2.statement) ?? STATEMENT,
+      ...answer2.unread ? { unread: answer2.unread } : {},
       findings: this.#results(c.rn).map(({ published, ...r }) => r),
       calculations: this.#calculations(c.rn)
     };
@@ -159442,8 +159491,8 @@ var CaseImport = class _CaseImport {
         if (parts.some((p3) => !p3)) failed3 = LENS_NOT_REWEIGHED;
         else {
           try {
-            const answer = { ...lastAnswer, findings: rec.findings.map((f17) => ({ ...f17 })) };
-            out = fn({ parts, documents: this.#documents(i.import_id, ed), answer, lens: reader });
+            const answer2 = { ...lastAnswer, findings: rec.findings.map((f17) => ({ ...f17 })) };
+            out = fn({ parts, documents: this.#documents(i.import_id, ed), answer: answer2, lens: reader });
             if (out && typeof out.then === "function") {
               out = null;
               failed3 = LENS_NOT_REWEIGHED;
@@ -159542,7 +159591,7 @@ var CaseImport = class _CaseImport {
     const at43 = this.#stamp();
     const parts = this.#parts(e2.import_id, ed);
     const documents = [...this.#documents(e2.import_id, ed), b];
-    const answer = await this.#recreate(parts, documents);
+    const answer2 = await this.#recreate(parts, documents);
     const held2 = parts.some((p3) => !p3) ? null : this.#call(() => readCaseFile2(parts), null);
     const heldFiles = held2 && Array.isArray(held2.files) ? held2.files : [];
     const published = this.#publishedPairs(heldFiles);
@@ -159559,7 +159608,7 @@ var CaseImport = class _CaseImport {
           k.member,
           at43
         );
-      this.#recordCheck(e2.import_id, ed, answer, { cause: "completion", document: sha2, by: k.member, at: at43, published, calcs });
+      this.#recordCheck(e2.import_id, ed, answer2, { cause: "completion", document: sha2, by: k.member, at: at43, published, calcs });
       return { ok: true };
     });
     if (!out || out.ok !== true) return out;
@@ -160071,7 +160120,7 @@ var CaseImport = class _CaseImport {
    *  import does not yet hold, each verified or refused. After the read commits, `reevaluation.citedCaseMoved` (its R33) is
    *  told of each new move; a throw there never undoes the read and is named under `listeners_failed`. Read as the plane;
    *  never throws. */
-  async recordDocketRead({ import: importId = null, docket = null, at: at43 = null, outcome = null, reason: reason2 = null, answer = null } = {}) {
+  async recordDocketRead({ import: importId = null, docket = null, at: at43 = null, outcome = null, reason: reason2 = null, answer: answer2 = null } = {}) {
     try {
       const i = this.#import(importId);
       if (!i) return this.#noSuchEdition(importId, null);
@@ -160088,13 +160137,13 @@ var CaseImport = class _CaseImport {
       let why2 = outcome === "unreadable" ? typeof reason2 === "string" ? reason2.slice(0, 200) : null : out === "read" ? null : "outcome_unknown";
       let list6 = null;
       if (out === "read") {
-        if (!isObj37(answer) || !Array.isArray(answer.entries)) {
+        if (!isObj37(answer2) || !Array.isArray(answer2.entries)) {
           out = "unreadable";
           why2 = "not_a_docket";
-        } else if (answer.group !== i.source_group || answer.case !== i.case_id) {
+        } else if (answer2.group !== i.source_group || answer2.case !== i.case_id) {
           out = "unreadable";
           why2 = "not_this_case";
-        } else list6 = answer.entries;
+        } else list6 = answer2.entries;
       }
       const checked = list6 ? await this.#checkEntries(i, list6) : [];
       const recordedAt = this.#stamp();
@@ -160111,8 +160160,8 @@ var CaseImport = class _CaseImport {
           readAt3,
           out,
           why2,
-          isObj37(answer) && Array.isArray(answer.entries) ? answer.entries.length : 0,
-          isObj37(answer) && typeof answer.last_entry === "string" ? answer.last_entry.slice(0, 64) : null,
+          isObj37(answer2) && Array.isArray(answer2.entries) ? answer2.entries.length : 0,
+          isObj37(answer2) && typeof answer2.last_entry === "string" ? answer2.last_entry.slice(0, 64) : null,
           recordedAt
         );
         const readRn = Number(this.#one(`SELECT MAX(rn) AS rn FROM case_import_docket_reads`).rn);
@@ -161945,13 +161994,13 @@ var CaseDisclosures = class {
     const listed2 = flagsListed(flagsDisclosed);
     if (listed2.ok === false) return { refusals: [listed2], open: [], byFlag: /* @__PURE__ */ new Map() };
     const reads2 = editions.map((e2) => {
-      let answer;
+      let answer2;
       try {
-        answer = this.caseImport.openFlagsOn({ import: e2.import, edition: e2.edition });
+        answer2 = this.caseImport.openFlagsOn({ import: e2.import, edition: e2.edition });
       } catch (x) {
-        answer = { failed: String(x && x.message || x).slice(0, 160) };
+        answer2 = { failed: String(x && x.message || x).slice(0, 160) };
       }
-      return { ...e2, answer };
+      return { ...e2, answer: answer2 };
     });
     const j = flagsJudged(reads2, listed2);
     const refusals = [];
@@ -162528,22 +162577,22 @@ var CaseDisclosures = class {
       if (r && r.ok === true && r.in_force === true) printed2.push(statement);
     }
     const refusals = [];
-    let answer = null;
+    let answer2 = null;
     try {
       const check2 = this.caseChecker && this.caseChecker.checkAccount;
-      answer = typeof check2 === "function" ? check2({ account: sentences, cited, printed: printed2, conclusions }) : null;
+      answer2 = typeof check2 === "function" ? check2({ account: sentences, cited, printed: printed2, conclusions }) : null;
     } catch {
-      answer = null;
+      answer2 = null;
     }
     const byOrd2 = new Map(sentences.map((x) => [x.ord, x]));
-    const all = answer && answer.ok === true && Array.isArray(answer.departures) ? answer.departures : null;
+    const all = answer2 && answer2.ok === true && Array.isArray(answer2.departures) ? answer2.departures : null;
     const known3 = all && all.every((d) => d && ACCOUNT_ARMS.includes(d.code) && byOrd2.has(d.ord));
     const departures = known3 ? all.filter((d) => d.code !== "ACCOUNT_SENTENCE_UNSUPPORTED" || byOrd2.get(d.ord).kind === "account") : null;
     if (!known3) {
       if (sentences.length)
         refusals.push(disclosureRefusal("ACCOUNT_CHECK_UNDETERMINED", {
           sentences: marked(sentences),
-          detail: `the account could not be checked against what it cites (${answer && answer.ok === false ? `the check answered ${answer.reason ?? "a refusal"}` : "the check answered nothing it states"}), so whether each of its ${sentences.length} sentence(s) stands is not known. Try again. Nothing was written.`
+          detail: `the account could not be checked against what it cites (${answer2 && answer2.ok === false ? `the check answered ${answer2.reason ?? "a refusal"}` : "the check answered nothing it states"}), so whether each of its ${sentences.length} sentence(s) stands is not known. Try again. Nothing was written.`
         }));
     } else {
       const named2 = (code) => marked([...new Set(departures.filter((d) => d.code === code).map((d) => d.ord))].map((o) => byOrd2.get(o)));
@@ -164475,15 +164524,15 @@ var parse8 = (s) => {
 };
 var refusal24 = (reason2, detail, extra = {}) => ({ ok: false, reason: reason2, detail, ...extra });
 var cut6 = (list6) => list6.length > LIST_MAX3 ? { list: list6.slice(0, LIST_MAX3), left: list6.length - LIST_MAX3 } : { list: list6, left: 0 };
-function tableFrom(answer) {
-  if (!answer || answer.ok === false || answer.found === false) return null;
-  const t2 = answer.table && typeof answer.table === "object" ? answer.table : answer;
+function tableFrom(answer2) {
+  if (!answer2 || answer2.ok === false || answer2.found === false) return null;
+  const t2 = answer2.table && typeof answer2.table === "object" ? answer2.table : answer2;
   if (!Array.isArray(t2.fields) || !Array.isArray(t2.rows)) return null;
-  return { sha: t2.sha ?? null, fields: t2.fields, rows: t2.rows, grade_facts: t2.grade_facts ?? answer.grade_facts ?? null };
+  return { sha: t2.sha ?? null, fields: t2.fields, rows: t2.rows, grade_facts: t2.grade_facts ?? answer2.grade_facts ?? null };
 }
-function calculationFrom(answer) {
-  if (!answer || answer.ok === false || answer.found === false) return null;
-  const c = answer.calculation && typeof answer.calculation === "object" ? answer.calculation : answer;
+function calculationFrom(answer2) {
+  if (!answer2 || answer2.ok === false || answer2.found === false) return null;
+  const c = answer2.calculation && typeof answer2.calculation === "object" ? answer2.calculation : answer2;
   return c && c.recipe && Array.isArray(c.inputs) ? c : null;
 }
 var instances46 = /* @__PURE__ */ new WeakMap();
@@ -164881,34 +164930,34 @@ var Workbooks = class {
   async recompute({ captureSha, project, by } = {}) {
     const wb = await this.#workbook(captureSha, project, by);
     if (!wb) return this.#absent(captureSha, project);
-    let answer = null, why2 = null, reason2 = null;
+    let answer2 = null, why2 = null, reason2 = null;
     if (!this.engine) {
       reason2 = "NO_ENGINE";
       why2 = "no engine bound";
     } else {
       try {
-        answer = await this.engine(wb.capture_sha);
+        answer2 = await this.engine(wb.capture_sha);
       } catch (e2) {
-        answer = null;
+        answer2 = null;
         why2 = `no answer: ${e2 && e2.message ? e2.message : e2}`;
       }
-      if (!answer || typeof answer !== "object") {
+      if (!answer2 || typeof answer2 !== "object") {
         reason2 = "NO_ANSWER";
         why2 = why2 || "no answer";
-        answer = null;
-      } else if (answer.ok !== true) {
-        reason2 = typeof answer.reason === "string" ? answer.reason : "NO_ANSWER";
-        why2 = typeof answer.why === "string" ? answer.why : reason2;
-        answer = null;
-      } else if (!Array.isArray(answer.cells)) {
+        answer2 = null;
+      } else if (answer2.ok !== true) {
+        reason2 = typeof answer2.reason === "string" ? answer2.reason : "NO_ANSWER";
+        why2 = typeof answer2.why === "string" ? answer2.why : reason2;
+        answer2 = null;
+      } else if (!Array.isArray(answer2.cells)) {
         reason2 = "NO_ANSWER";
         why2 = "the engine's answer holds no cells";
-        answer = null;
+        answer2 = null;
       }
     }
     const at43 = this.now();
     let rec;
-    if (!answer) rec = {
+    if (!answer2) rec = {
       status: NOT_RECOMPUTED,
       engine: null,
       engine_version: null,
@@ -164922,7 +164971,7 @@ var Workbooks = class {
         cache_stale: []
       }
     };
-    else rec = { ...pair(answer, this.#cells(wb)), engine: answer.engine ?? null, engine_version: answer.engine_version ?? null, reason: null, why: null };
+    else rec = { ...pair(answer2, this.#cells(wb)), engine: answer2.engine ?? null, engine_version: answer2.engine_version ?? null, reason: null, why: null };
     return this.record.transact(() => {
       this.sql.exec(
         `INSERT INTO workbook_recomputes (capture_sha, project, status, engine, engine_version, at, by, reason, why, answer)
@@ -165165,12 +165214,12 @@ var Workbooks = class {
     };
   }
 };
-function pair(answer, cells) {
+function pair(answer2, cells) {
   const held2 = new Map(cells.map((c) => [`${c.sheet}!${c.cell}`, c]));
   const counts = { compared: 0, agreed: 0, differed: 0, not_recomputed: 0, volatile: 0, cache_stale: 0 };
   const differing = [], notRecomputed = [], volatile = [], cacheStale = [];
   const seen = /* @__PURE__ */ new Set();
-  for (const e2 of answer.cells) {
+  for (const e2 of answer2.cells) {
     const ref = e2 && e2.source && typeof e2.source.ref === "string" ? e2.source.ref : null;
     if (!ref) continue;
     seen.add(ref);
@@ -167623,12 +167672,12 @@ var CaseAuthoring = class {
     const carried = given5.viewer && typeof given5.viewer === "object" ? given5.viewer : null;
     const a = carried ? { ...given5, viewer: carried.stamp ?? null } : given5;
     const seen = {};
-    let answer = null, text7 = null;
+    let answer2 = null, text7 = null;
     try {
       this.record.transact(() => {
-        answer = this.#publishCase(a, { preflight: true, seen, calculationFacts });
-        if (answer && answer.ok === true) {
-          const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, answer.caseId, answer.edition);
+        answer2 = this.#publishCase(a, { preflight: true, seen, calculationFacts });
+        if (answer2 && answer2.ok === true) {
+          const d = this.#one(`SELECT text FROM case_documents WHERE case_id=? AND edition=?`, answer2.caseId, answer2.edition);
           text7 = d ? d.text : null;
         }
         throw PREFLIGHT_ROLLBACK;
@@ -167636,7 +167685,7 @@ var CaseAuthoring = class {
     } catch (e2) {
       if (e2 !== PREFLIGHT_ROLLBACK) throw e2;
     }
-    const first = answer && answer.ok === false ? answer : null;
+    const first = answer2 && answer2.ok === false ? answer2 : null;
     const ratify = text7 === null ? {
       reached: false,
       refusals: [],
@@ -167754,7 +167803,7 @@ var CaseAuthoring = class {
     const blockers = [];
     for (const r of found3) if (!(first && same3(r, first)) && !blockers.some((b) => same3(b, r))) blockers.push(r);
     const notice = auth && auth.ok !== false ? this.#workingOn(auth.proj) : null;
-    const steps = this.#preflightSteps(a, answer, seen, ratify, notice, rests, account);
+    const steps = this.#preflightSteps(a, answer2, seen, ratify, notice, rests, account);
     return { ok: true, wrote: false, ready: !first && !blockers.length && ratify.reached, first, blockers, steps };
   }
   /* R34: ratification R18 over the text op=publish would store, with `signer` the act's author, folded into
@@ -167777,9 +167826,9 @@ var CaseAuthoring = class {
   /* R34: the six steps (DEC-80 item 2; the Photos step, DEC-180 (3)), each read from the rolled-back run when it
      published, and each part it could not reach stated as not reached, never filled. Step three carries R32's read as
      the ceremony shows it. */
-  #preflightSteps(a, answer, seen, ratify, notice = null, rests = null, account = null) {
-    const ok2 = !!(answer && answer.ok === true);
-    const notReached = ok2 ? null : `not reached: op=publish refuses first (${answer ? answer.reason : "no answer"})`;
+  #preflightSteps(a, answer2, seen, ratify, notice = null, rests = null, account = null) {
+    const ok2 = !!(answer2 && answer2.ok === true);
+    const notReached = ok2 ? null : `not reached: op=publish refuses first (${answer2 ? answer2.reason : "no answer"})`;
     const tensions = this.tensionsToDisclose({
       project: a.project ?? null,
       targets: a.targets ?? null,
@@ -167794,19 +167843,19 @@ var CaseAuthoring = class {
         says: `Signing publishes this case edition, and each finding in it at the version pinned here. A published edition is never withdrawn or edited: it is corrected only by a later edition. ${REPUBLISH_SENTENCE}` + (notice !== null ? ` ${NOTICE_SEALS_SENTENCE}` : ""),
         working_on: notice,
         ...ok2 ? {
-          case: answer.caseId,
-          edition: answer.edition,
-          document: answer.caseDocument,
-          pinned: answer.findings.map((f17) => ({ target: f17.target, bundleSha: f17.bundleSha }))
+          case: answer2.caseId,
+          edition: answer2.edition,
+          document: answer2.caseDocument,
+          pinned: answer2.findings.map((f17) => ({ target: f17.target, bundleSha: f17.bundleSha }))
         } : { stated: notReached }
       },
       {
         step: 2,
         name: "what this rests on",
         ...ok2 ? {
-          roles: answer.roles,
-          required: answer.required,
-          pairs: answer.findings.map((f17) => ({ target: f17.target, role: f17.role, strength: f17.strength }))
+          roles: answer2.roles,
+          required: answer2.required,
+          pairs: answer2.findings.map((f17) => ({ target: f17.target, role: f17.role, strength: f17.strength }))
         } : { stated: notReached },
         /* R53: each accepted_work: row, as `case-disclosures` R13 reads it. */
         accepted_work: rests ? rests.accepted : { stated: "not reached: the members or their roles are refused first" }
@@ -167856,7 +167905,7 @@ var CaseAuthoring = class {
       {
         step: 5,
         name: "the edition this creates",
-        ...ok2 ? { case: answer.caseId, edition: answer.edition, minted: answer.minted, members: seen.memberEditions } : { stated: notReached }
+        ...ok2 ? { case: answer2.caseId, edition: answer2.edition, minted: answer2.minted, members: seen.memberEditions } : { stated: notReached }
       },
       /* R67 (D56): each sentence of the account with its citations, its check result (`case-account` R6) and, for a
          system draft (`case-account` R1), its framing; the four statements' rows beside it, judged the same way. */
@@ -167896,7 +167945,7 @@ var CaseAuthoring = class {
         name: "sign",
         signer: str36(a.author) || null,
         ratification: ratify.reached ? { reached: true, refusals: ratify.refusals } : { reached: false, why: ratify.why },
-        next: ok2 ? `op=caseratify over op=publish's document (case ${answer.caseId}, edition ${answer.edition})` : "op=publish first"
+        next: ok2 ? `op=caseratify over op=publish's document (case ${answer2.caseId}, edition ${answer2.edition})` : "op=publish first"
       }
     ];
   }
@@ -171140,11 +171189,11 @@ function recordedBy2(c, memo, args) {
     }
     const sha2 = a.captureSha.trim().toLowerCase();
     const cap = clamp7(a.limit);
-    const answer = (items, truncated6) => ({ ok: true, module: "citation", capture_sha: sha2, items, truncated: truncated6 });
-    if (!HEX6420.test(sha2)) return answer([], false);
+    const answer2 = (items, truncated6) => ({ ok: true, module: "citation", capture_sha: sha2, items, truncated: truncated6 });
+    if (!HEX6420.test(sha2)) return answer2([], false);
     const home = c.provenance && typeof c.provenance.homeOf === "function" ? c.provenance.homeOf(sha2) : null;
     const doc = home && said8(home.bundleId) ? home.bundleId : null;
-    if (!doc || !c.membership.inSight(doc, a.viewer)) return answer([], false);
+    if (!doc || !c.membership.inSight(doc, a.viewer)) return answer2([], false);
     if (!c.inquiry || typeof c.inquiry.restingOn !== "function")
       return { ok: false, reason: "INQUIRY_UNAVAILABLE", detail: "the legs that cite a passage are found through the inquiry module's leg projection, and your group's Civicsmith was created without it, so this read could not be made." };
     const inquiries = [...new Set(((c.inquiry.restingOn(doc) || {}).dependents || []).map((d) => d.bundle_id))].sort();
@@ -171191,7 +171240,7 @@ function recordedBy2(c, memo, args) {
       }
     }
     kept.sort((p3, q10) => cmp2(p3.key, q10.key) || cmp2(p3.item.record, q10.item.record) || cmp2(p3.item.field, q10.item.field));
-    return answer(kept.slice(0, cap).map((x) => x.item), kept.length > cap);
+    return answer2(kept.slice(0, cap).map((x) => x.item), kept.length > cap);
   } catch (e2) {
     return { ok: false, reason: "RECORDED_BY_UNREADABLE", detail: String(e2 && e2.message || e2).slice(0, 200) };
   }
@@ -174980,7 +175029,7 @@ function scrubNode(node, hidden) {
   }
   return { drop: false, value: out, removed: 0 };
 }
-function scrubRead(answer, hidden = () => false) {
+function scrubRead(answer2, hidden = () => false) {
   try {
     const h = (id) => {
       try {
@@ -174989,8 +175038,8 @@ function scrubRead(answer, hidden = () => false) {
         return true;
       }
     };
-    if (!plain13(answer) && !Array.isArray(answer)) return answer;
-    const r = scrubNode(answer, h);
+    if (!plain13(answer2) && !Array.isArray(answer2)) return answer2;
+    const r = scrubNode(answer2, h);
     return r.drop ? { ok: true, found: false } : r.value;
   } catch {
     return { ok: true, found: false };
@@ -175066,17 +175115,17 @@ function shapeRefusal2(a) {
   if (a.label !== ANSWER_LABEL) return malformed4("label", `an answer is labelled "${ANSWER_LABEL}"`);
   return null;
 }
-function checkAnswer(answer, { readLog = null, viewer = null } = {}) {
+function checkAnswer(answer2, { readLog = null, viewer = null } = {}) {
   try {
-    const bad2 = shapeRefusal2(answer);
+    const bad2 = shapeRefusal2(answer2);
     if (bad2) return bad2;
     const log = readLog instanceof ReadLog && (readLog.viewer === null || readLog.viewer === viewer) ? readLog : new ReadLog({ viewer });
     const withheld = [];
-    const out = JSON.parse(JSON.stringify(answer));
+    const out = JSON.parse(JSON.stringify(answer2));
     const say = (code) => ANSWERS_CHECKS[code].translation;
-    const { holdOk, ruleOk, lookOk, codes } = judge2(answer.sentences, answer, log);
+    const { holdOk, ruleOk, lookOk, codes } = judge2(answer2.sentences, answer2, log);
     const kept = /* @__PURE__ */ new Set();
-    out.sentences = answer.sentences.map((s, i) => {
+    out.sentences = answer2.sentences.map((s, i) => {
       const code = codes[i];
       if (code) {
         withheld.push({ sentence: `s${i + 1}`, code, translation: say(code) });
@@ -175085,37 +175134,37 @@ function checkAnswer(answer, { readLog = null, viewer = null } = {}) {
       kept.add(`s${i + 1}`);
       return out.sentences[i];
     });
-    answer.holdings.forEach((_, i) => {
+    answer2.holdings.forEach((_, i) => {
       if (!holdOk[i]) {
         out.holdings[i] = null;
         withheld.push({ holding: `h${i + 1}`, code: "ANSWER_CITES_UNREAD", translation: say("ANSWER_CITES_UNREAD") });
       }
     });
-    answer.rules.forEach((_, i) => {
+    answer2.rules.forEach((_, i) => {
       if (!ruleOk[i]) {
         out.rules[i] = null;
         withheld.push({ rule: `r${i + 1}`, code: "ANSWER_RULE_NOT_PLANE", translation: say("ANSWER_RULE_NOT_PLANE") });
       }
     });
-    answer.looks.forEach((_, i) => {
+    answer2.looks.forEach((_, i) => {
       if (!lookOk[i]) {
         out.looks[i] = null;
         withheld.push({ look: `l${i + 1}`, code: "ANSWER_ABSENCE_WITHOUT_LEVEL", translation: say("ANSWER_ABSENCE_WITHOUT_LEVEL") });
       }
     });
-    if (answer.summary && verdictIn(answer.summary.text, [...answer.holdings.map((h) => h.quote), ...answer.rules.map((r) => r.quote)])) {
+    if (answer2.summary && verdictIn(answer2.summary.text, [...answer2.holdings.map((h) => h.quote), ...answer2.rules.map((r) => r.quote)])) {
       out.summary = null;
       withheld.push({ summary: true, code: "ANSWER_VERDICT_WORD", translation: say("ANSWER_VERDICT_WORD") });
-    } else if (answer.summary && answer.summary.rests_on.some((id) => !kept.has(id))) {
-      const first = withheld.find((w) => answer.summary.rests_on.includes(w.sentence));
+    } else if (answer2.summary && answer2.summary.rests_on.some((id) => !kept.has(id))) {
+      const first = withheld.find((w) => answer2.summary.rests_on.includes(w.sentence));
       out.summary = null;
       withheld.push({ summary: true, code: first.code, translation: first.translation });
     }
-    if (answer.clarifying === null && answer.sentences.length && !kept.size) {
+    if (answer2.clarifying === null && answer2.sentences.length && !kept.size) {
       out.summary = null;
       out.not_established = [
         ...out.not_established,
-        { withheld: answer.sentences.length, codes: [...new Set(withheld.filter((w) => w.sentence).map((w) => w.code))] }
+        { withheld: answer2.sentences.length, codes: [...new Set(withheld.filter((w) => w.sentence).map((w) => w.code))] }
       ];
     }
     return { ok: true, answer: out, withheld };
@@ -175777,7 +175826,7 @@ async function runOne(self, r, now) {
   const changed = first ? [] : Object.entries(occ).filter(([k, s]) => k in prevOcc && prevOcc[k] !== s).map(([k, s]) => ({ occurrence: k, from: prevOcc[k], to: s }));
   const found3 = newIds.length > 0 || changed.length > 0;
   const finds = found3 ? { ids: newIds, occurrences: changed } : null;
-  let answer = null, withheld = null, held2 = null;
+  let answer2 = null, withheld = null, held2 = null;
   if (found3) {
     const hb = await heldBack(self, r, now);
     held2 = hb.held;
@@ -175796,7 +175845,7 @@ async function runOne(self, r, now) {
         });
         const checked = checkAnswer(given5, { readLog: log, viewer: r.author });
         if (checked.ok) {
-          answer = checked.answer;
+          answer2 = checked.answer;
           withheld = checked.withheld;
         } else {
           held2 = { condition: "answer_refused", code: checked.code };
@@ -175818,7 +175867,7 @@ async function runOne(self, r, now) {
     self.sql.exec(`UPDATE standing_questions SET last_run_at=?, next_due=?, last_ids_json=?, last_occ_json=?, last_digest=?
                    WHERE stq_id=?`, now, next, json12(ids), json12(occ), res.digest ?? null, r.stq_id);
     if (found3) self.sql.exec(`INSERT INTO standing_runs (stq_id, author, at, new_found, finds_json, answer_json, withheld_json, held_back_json)
-                              VALUES (?,?,?,1,?,?,?,?)`, r.stq_id, r.author, now, json12(finds), json12(answer), json12(withheld), json12(held2));
+                              VALUES (?,?,?,1,?,?,?,?)`, r.stq_id, r.author, now, json12(finds), json12(answer2), json12(withheld), json12(held2));
     else self.sql.exec(`INSERT INTO standing_runs (stq_id, author, at, new_found) VALUES (?,?,?,0)`, r.stq_id, r.author, now);
     return { ok: true };
   });
@@ -176061,7 +176110,7 @@ var Answers = class {
    *  links, hidden rows and the rows of projects kept away from AI for the grant's use (`ask` unless named: `draft`,
    *  or `standing` for R19's run, fixed when the grant's log opens), recorded in the grant's read log, and answered as
    *  recorded. Writes no row (R14). */
-  logRead({ grant = null, op = null, args = null, answer = null, viewer = null, use = "ask" } = {}) {
+  logRead({ grant = null, op = null, args = null, answer: answer2 = null, viewer = null, use = "ask" } = {}) {
     if (!askAdmits(op)) return {
       ok: false,
       reason: "GRANT_OP_REFUSED",
@@ -176077,7 +176126,7 @@ var Answers = class {
       op,
       detail: "a read under a grant names the grant and its member"
     };
-    const clean3 = scrubRead(answer, this.hidden(viewer, log.use));
+    const clean3 = scrubRead(answer2, this.hidden(viewer, log.use));
     log.add(op, args, clean3, this.now());
     return clean3;
   }
@@ -176117,7 +176166,7 @@ var Answers = class {
       r = notHeld("meaning", `the service failed: ${String(e2 && e2.message || e2).slice(0, 200)}`);
     }
     if (!plain17(r)) r = notHeld("meaning", "the service gave no answer");
-    const answer = r.not_held ? { ok: true, service, not_held: r.not_held } : {
+    const answer2 = r.not_held ? { ok: true, service, not_held: r.not_held } : {
       ok: true,
       service,
       value: r.value ?? null,
@@ -176130,8 +176179,8 @@ var Answers = class {
       ...r.limits ? { limits: r.limits } : {}
     };
     const log = grant ? this.#logFor(grant, viewer) : null;
-    if (log) return log.addRule(scrubRead(answer, this.hidden(viewer, log.use)), asOf);
-    return answer;
+    if (log) return log.addRule(scrubRead(answer2, this.hidden(viewer, log.use)), asOf);
+    return answer2;
   }
   /* ===================================================================== *
    * AN ASK'S ACCOUNT (R30; D38, B3)
@@ -176192,9 +176241,9 @@ var Answers = class {
    * THE CHECK AND THE TALLIES (R4, R13, R14)
    * ===================================================================== */
   /** R4 over the grant's own read log, counted (R13). */
-  check({ answer = null, grant = null, viewer = null, mode = "ask" } = {}) {
+  check({ answer: answer2 = null, grant = null, viewer = null, mode = "ask" } = {}) {
     const log = this.readLog(grant);
-    const r = checkAnswer(answer, { readLog: log.viewer === viewer ? log : null, viewer });
+    const r = checkAnswer(answer2, { readLog: log.viewer === viewer ? log : null, viewer });
     this.countAsk({
       outcome: r.ok ? "answered" : "refused",
       codes: r.ok ? r.withheld.map((w) => w.code) : [r.code],
@@ -176602,11 +176651,11 @@ async function affordancesOp(url, stub, {
   if (kOut.refused) return storeRefusal2(kOut);
   if (!kOut.answered) return storeSilent2("affordances", kOut.correlation);
   const kinds3 = kOut.result?.kinds;
-  const answer = (result3) => json24({ ok: true, result: result3, store: storeName, tokenClass: cls3 }, 200);
+  const answer2 = (result3) => json24({ ok: true, result: result3, store: storeName, tokenClass: cls3 }, 200);
   if (out.refused) return storeRefusal2(out);
   if (!target) {
     if (!out.answered || !out.result) return storeSilent2("affordances", out.correlation);
-    return answer(affordancesAnswer({
+    return answer2(affordancesAnswer({
       kinds: kinds3,
       gate,
       screens: out.result.screens,
@@ -176620,7 +176669,7 @@ async function affordancesOp(url, stub, {
   const result2 = affordancesAnswer({ target, facts, kinds: kinds3, gate });
   if (result2.ok === false)
     return json24({ ...result2, store: storeName, tokenClass: cls3 }, result2.reason === "NO_SUCH_BUNDLE" ? 404 : 400);
-  return answer(result2);
+  return answer2(result2);
 }
 
 // src/op-grades/t33.mjs
@@ -185066,9 +185115,9 @@ var CREDENTIAL_REFUSED_AT = Object.freeze({
   joinlinkinvite: Object.freeze(["NO_SUCH_JOIN_LINK"])
 });
 var RATE_REFUSED = Object.freeze(["DOOR_RATE_LIMITED", "WEBSITE_DAILY_CAP", "JOIN_LINK_DAILY_CAP"]);
-function refusalCode(answer) {
-  if (!answer || typeof answer !== "object") return null;
-  const b = answer.body && typeof answer.body === "object" ? answer.body : answer;
+function refusalCode(answer2) {
+  if (!answer2 || typeof answer2 !== "object") return null;
+  const b = answer2.body && typeof answer2.body === "object" ? answer2.body : answer2;
   if (b.ok === true) return null;
   const c = typeof b.code === "string" ? b.code : typeof b.reason === "string" ? b.reason : null;
   return c;
@@ -185079,8 +185128,8 @@ function namesMember(presented) {
   if (cred && typeof cred.principal === "string" && cred.principal.startsWith("member:")) return true;
   return typeof p3.token === "string" && SESSION_TOKEN_SHAPE.test(p3.token);
 }
-function securityKindOf({ op = null, answer = null, presented = null } = {}) {
-  const code = refusalCode(answer);
+function securityKindOf({ op = null, answer: answer2 = null, presented = null } = {}) {
+  const code = refusalCode(answer2);
   if (!code) return null;
   if (RATE_REFUSED.includes(code)) return "rate";
   if (CREDENTIAL_REFUSED_ANYWHERE.includes(code)) return "credential";
@@ -185091,12 +185140,12 @@ function securityKindOf({ op = null, answer = null, presented = null } = {}) {
     return "credential";
   return null;
 }
-async function securityTally({ op = null, answer = null, presented = null, req = null, env = null, doAnswer: doAnswer2 = null } = {}) {
+async function securityTally({ op = null, answer: answer2 = null, presented = null, req = null, env = null, doAnswer: doAnswer2 = null } = {}) {
   let counted = null;
   try {
-    const kind2 = securityKindOf({ op, answer, presented });
+    const kind2 = securityKindOf({ op, answer: answer2, presented });
     if (!kind2) return null;
-    const anyone = NAMES_NO_MEMBER.includes(refusalCode(answer));
+    const anyone = NAMES_NO_MEMBER.includes(refusalCode(answer2));
     counted = { kind: kind2, country: !anyone && namesMember(presented) ? null : countryOf(req) };
   } catch {
     return null;
@@ -191804,7 +191853,7 @@ function readResponsibilities(raw, sections, from, locate) {
     const body = lines2.filter((l2) => l2.start > head.start && l2.start < stop2 && l2.text.trim() && !FURNITURE3.test(l2.text) && !((recurs.get(l2.text.trim()) || 0) >= 3 && !/[.;:]\s*$/.test(l2.text)));
     const table4 = [];
     let party = null, pending = [], cur = null, ok2 = true, why2 = null, expect = 1;
-    const finish2 = () => {
+    const finish = () => {
       if (cur) {
         cur.end = cur.lastEnd;
         delete cur.lastEnd;
@@ -191843,7 +191892,7 @@ function readResponsibilities(raw, sections, from, locate) {
             why2 = "an action does not end before the next party's numbering starts, so where it stops and the next party begins cannot be told";
             break;
           }
-          finish2();
+          finish();
           const pStart = pending.length ? pending[0].start + indentOf(pending[0]) : l2.start + indentOf(l2);
           const pEnd = inline ? l2.start + indentOf(l2) + l2.text.trim().indexOf(m[1]) + m[1].trimEnd().length : pending[pending.length - 1].end;
           party = { text: raw.slice(pStart, pEnd).replace(/\s+/g, " ").trim(), start: pStart };
@@ -191852,7 +191901,7 @@ function readResponsibilities(raw, sections, from, locate) {
         } else {
           if (cur && pending.length) cur.lastEnd = pending[pending.length - 1].end;
           pending = [];
-          finish2();
+          finish();
         }
         const aStart = l2.start + indentOf(l2) + l2.text.trim().indexOf(`${m[2]}.`, m[1].length ? m[1].length : 0);
         cur = { party: party.text, step: m[2], start: m[1].trim() && n2 === 1 ? party.start : aStart, aStart, lastEnd: l2.end };
@@ -191873,7 +191922,7 @@ function readResponsibilities(raw, sections, from, locate) {
       cur.lastEnd = pending[pending.length - 1].end;
       pending = [];
     }
-    finish2();
+    finish();
     const start = head.start + indentOf(head);
     extents.push({ start, end: stop2 });
     if (!ok2 || !table4.length) {
@@ -203467,15 +203516,15 @@ var CaptureRequests = class _CaptureRequests {
       cadenceMs,
       [PLACE]: i
     }));
-    let answer;
+    let answer2;
     try {
-      answer = rank7(items, now);
+      answer2 = rank7(items, now);
     } catch {
       return read3;
     }
-    if (!Array.isArray(answer)) return read3;
+    if (!Array.isArray(answer2)) return read3;
     const order4 = [], taken = /* @__PURE__ */ new Set();
-    for (const x of answer) {
+    for (const x of answer2) {
       const i = x && typeof x === "object" ? x[PLACE] : void 0;
       if (Number.isInteger(i) && !taken.has(i)) {
         taken.add(i);
@@ -204269,20 +204318,20 @@ var CaptureRequests = class _CaptureRequests {
         return recordsRefusal("unknown-request", "no records request you can see answers to that id. Nothing was written.", { request: request || null });
       if (row12.state === "answered")
         return recordsRefusal("answered", `${request} already holds its answer (${row12.answer}), and an answer is never replaced. Nothing was written.`, { request });
-      const answer = typeof args.answer === "string" ? args.answer.trim() : args.answer;
-      if (!RECORDS_ANSWERS.includes(answer))
+      const answer2 = typeof args.answer === "string" ? args.answer.trim() : args.answer;
+      if (!RECORDS_ANSWERS.includes(answer2))
         return recordsRefusal("unknown-answer", `answer=${shown2(args.answer)} is not one of ${RECORDS_ANSWERS.join(", ")}. Nothing was written.`, { request });
-      const capture2 = answer === "produced" ? text4(args.capture).trim() : "";
-      if (answer === "produced" && !(/^[0-9a-f]{64}$/.test(capture2) && this.#captureHeld(capture2, viewer)))
+      const capture2 = answer2 === "produced" ? text4(args.capture).trim() : "";
+      if (answer2 === "produced" && !(/^[0-9a-f]{64}$/.test(capture2) && this.#captureHeld(capture2, viewer)))
         return recordsRefusal("no-capture", `an answer of 'produced' names the capture of what the issuer produced, one the record holds and you can see; ${capture2 ? `${capture2.slice(0, 64)} is not` : "none was named"}. Nothing was written.`, { request });
-      const note = answer === "withheld" && typeof args.note === "string" ? args.note.trim() : "";
-      if (answer === "withheld" && (!note || note.length > RECORDS_GROUND_MAX))
+      const note = answer2 === "withheld" && typeof args.note === "string" ? args.note.trim() : "";
+      if (answer2 === "withheld" && (!note || note.length > RECORDS_GROUND_MAX))
         return recordsRefusal("no-ground", `an answer of 'withheld' records the issuer's stated ground in at most ${RECORDS_GROUND_MAX} characters; ${note ? `this one is ${note.length}` : "none was given"}. Nothing was written.`, { request });
       const at43 = stampInstant("second", this.#nowMs());
       this.#sql.exec(
         `UPDATE records_requests SET state='answered', answer=?, answer_capture=?, answer_note=?, answered_by=?,
                         answered_at=? WHERE request=? AND state='open'`,
-        answer,
+        answer2,
         capture2 || null,
         note || null,
         by,
@@ -204760,11 +204809,11 @@ var PROJECT_GRAMMAR = Object.freeze({
 var registered4 = /* @__PURE__ */ new WeakSet();
 function registerProjectGrammar(record) {
   if (!record || typeof record.registerGrammar !== "function" || registered4.has(record)) return null;
-  const answer = record.registerGrammar("intent", { ids: [...PROJECT_GRAMMAR.ids], arm: PROJECT_GRAMMAR.arm });
-  if (answer && answer.ok === false)
-    throw new Error(`intent: record-core refused the project grammar: ${answer.reason}${answer.heldBy ? ` (held by ${answer.heldBy})` : ""}`);
+  const answer2 = record.registerGrammar("intent", { ids: [...PROJECT_GRAMMAR.ids], arm: PROJECT_GRAMMAR.arm });
+  if (answer2 && answer2.ok === false)
+    throw new Error(`intent: record-core refused the project grammar: ${answer2.reason}${answer2.heldBy ? ` (held by ${answer2.heldBy})` : ""}`);
   registered4.add(record);
-  return answer;
+  return answer2;
 }
 
 // src/intent/doc.mjs
@@ -207788,8 +207837,8 @@ var Conformance = class _Conformance {
       contents(list6) {
         return (Array.isArray(list6) ? list6 : []).filter((cid) => this.seesContent(cid));
       },
-      mark(answer) {
-        return this.withheld ? { ...answer, out_of_view: true } : answer;
+      mark(answer2) {
+        return this.withheld ? { ...answer2, out_of_view: true } : answer2;
       }
     };
   }
@@ -208050,8 +208099,8 @@ var Conformance = class _Conformance {
       r = null;
     }
     const ok2 = isObj47(r) && r.ok !== false;
-    const answer = ok2 && ["in_force", "not_in_force", "undetermined"].includes(r.state) ? r.state : "undetermined";
-    return { date, answer, why: ok2 ? r.why ?? null : isObj47(r) ? r.detail ?? r.reason ?? null : "standards did not answer" };
+    const answer2 = ok2 && ["in_force", "not_in_force", "undetermined"].includes(r.state) ? r.state : "undetermined";
+    return { date, answer: answer2, why: ok2 ? r.why ?? null : isObj47(r) ? r.detail ?? r.reason ?? null : "standards did not answer" };
   }
   /* R1: every standard has a row, and every row states what the standard requires, what was done and its reading. R29:
      what was done may be a measure, read beforehand (`measures`, in row order); its refusal is answered here. */
@@ -219823,9 +219872,9 @@ var Escalation = class _Escalation {
    *  history, an id naming it or one of its ledger entries (`<id>`, `<id>#<ord>`) leaves an advance's trigger ids, and
    *  a response naming it loses the key. With one withheld, no entry carries the log's `seq` (K913). The escalation's own acts stand. `out_of_view: true` says only that something
    *  was withheld; with nothing withheld the answer is as before, with no such key. */
-  #withhold(answer, attached, seen) {
+  #withhold(answer2, attached, seen) {
     const hidden = new Set(attached.filter((a) => !seen.get(a.action)).map((a) => a.action));
-    if (!hidden.size) return answer;
+    if (!hidden.size) return answer2;
     const names2 = (x) => typeof x === "string" && (hidden.has(x) || hidden.has(x.replace(/#\d+$/, "")));
     const response = (v) => {
       if (!isObj51(v.response) || !hidden.has(v.response.action)) return v;
@@ -219836,15 +219885,15 @@ var Escalation = class _Escalation {
       const { seq: _, ...rest } = v;
       return rest;
     };
-    const history = answer.history.filter((h) => !(h.kind === "attach" && hidden.has(h.action))).map((h) => {
+    const history = answer2.history.filter((h) => !(h.kind === "attach" && hidden.has(h.action))).map((h) => {
       const x = unnumbered(response(h));
       return isObj51(x.trigger) && Array.isArray(x.trigger.ids) ? { ...x, trigger: { ...x.trigger, ids: x.trigger.ids.filter((i) => !names2(i)) } } : x;
     });
-    const proposed = answer.proposed.map((p3) => ({ ...p3, declines: p3.declines.map(unnumbered) }));
+    const proposed = answer2.proposed.map((p3) => ({ ...p3, declines: p3.declines.map(unnumbered) }));
     return {
-      ...answer,
+      ...answer2,
       history,
-      evaluations: answer.evaluations.map((v) => unnumbered(response(v))),
+      evaluations: answer2.evaluations.map((v) => unnumbered(response(v))),
       proposed,
       out_of_view: true
     };
@@ -219860,7 +219909,7 @@ var Escalation = class _Escalation {
     const proposed = this.#proposed(e2, triggers, at43);
     const d = this.conformance.determinationRead({ id: e2.determination, viewer });
     const actor = d && d.ok !== false ? this.#actor(d, viewer) : { role: null, body: null, entity_id: null, state: "unresolved", why: "the determination does not answer to this reader" };
-    let answer = {
+    let answer2 = {
       ok: true,
       id: e2.id,
       project: e2.project,
@@ -219884,16 +219933,16 @@ var Escalation = class _Escalation {
       proposed,
       exit: this.#exit(e2, viewer)
     };
-    answer = this.#withhold(answer, attached, seen);
+    answer2 = this.#withhold(answer2, attached, seen);
     if (e2.state === "suspended")
-      answer.suspended = { since: e2.stateSince, says: "suspended: its proposals are not reported as due, its clocks keep running in the actions, and it is not ended" };
-    if (e2.state === "ended") answer.ended = { at: e2.stateSince, says: "ended: compliance was restored and the consequences addressed" };
-    if (e2.stage === 7) answer.targets = this.#targets(actor, dayOf5(at43), viewer);
+      answer2.suspended = { since: e2.stateSince, says: "suspended: its proposals are not reported as due, its clocks keep running in the actions, and it is not ended" };
+    if (e2.state === "ended") answer2.ended = { at: e2.stateSince, says: "ended: compliance was restored and the consequences addressed" };
+    if (e2.stage === 7) answer2.targets = this.#targets(actor, dayOf5(at43), viewer);
     if (e2.stage === 5) {
       const av = this.filings.availableActions({ determination: e2.determination, viewer });
-      answer.available = av && av.ok !== false ? av : { state: "undetermined", says: "the actions available against the determination's offices could not be read" };
+      answer2.available = av && av.ok !== false ? av : { state: "undetermined", says: "the actions available against the determination's offices could not be read" };
     }
-    return answer;
+    return answer2;
   }
   /* ===================================================================== *
    * THE WRITE (R18, R21): every act is one promotion of the escalation's document through `promotion`.
@@ -221784,15 +221833,15 @@ ${ls2.map((l2) => `- ${l2.text} [${l2.source.kind} ${l2.source.id}]`).join("\n")
       draft = isObj52(from_draft) ? _Investigation.#answers(from_draft.answers) : null;
       if (!draft) return refuse22("INTERVIEW_BAD_ANSWERS", "the assistant's draft holds the same six answers");
     }
-    const kept = mine.map((answer, i) => {
+    const kept = mine.map((answer2, i) => {
       const began = !!draft && draft[i] !== "";
       return {
         index: i,
         question: INTAKE_QUESTIONS[i],
-        answer,
+        answer: answer2,
         kind: "narrative",
         began_as_draft: began,
-        kept: began ? draft[i] === answer ? "unchanged" : "edited" : null
+        kept: began ? draft[i] === answer2 ? "unchanged" : "edited" : null
       };
     });
     const warning = this.#warning(mine.join("\n"), g.actor.viewer);
@@ -223201,9 +223250,9 @@ var Monitoring = class {
    *  the look's. Answers `{status, body}`: the HTTP status the control plane answers with, and the answer. */
   async monitor({ bundleId = null, viewer = null, actorClass = "machine", actor = null } = {}) {
     const op = "monitor";
-    const answer = (body, status2 = 200) => ({ status: status2, body });
+    const answer2 = (body, status2 = 200) => ({ status: status2, body });
     if (typeof bundleId !== "string" || !bundleId)
-      return answer({
+      return answer2({
         ok: false,
         reason: "REQUIRED_ARGUMENT_MISSING",
         op,
@@ -223214,25 +223263,25 @@ var Monitoring = class {
       }, 400);
     const img = this.membership.inSight(bundleId, viewer) ? this.record.readImage(bundleId) : null;
     if (!img || typeof img["bundle.md"] !== "string")
-      return answer({ ok: false, reason: "ABSENT", bundleId }, 404);
+      return answer2({ ok: false, reason: "ABSENT", bundleId }, 404);
     const live7 = img["bundle.md"];
     const fm = parseFrontmatter(live7).data || {};
     if (!fm.monitoring || fm.monitoring.enabled !== true)
-      return answer({
+      return answer2({
         ok: false,
         reason: "NOT_MONITORED",
         detail: "this record does not ask to be monitored"
       }, 409);
     const locator = fm.source?.locator;
     if (typeof locator !== "string" || !isPublicHttpsLocator(locator))
-      return answer({
+      return answer2({
         ok: false,
         reason: "NO_LOCATOR",
         detail: "monitoring needs a public https locator in source.locator"
       }, 409);
     const driveTick = readDriveAddress(locator);
     if (driveTick && driveTick.shape === "folder")
-      return answer({
+      return answer2({
         ok: false,
         reason: "DRIVE_FOLDER_NOT_A_DOCUMENT",
         ...driveRow2("DRIVE_FOLDER_NOT_A_DOCUMENT"),
@@ -223243,7 +223292,7 @@ var Monitoring = class {
         detail: driveTick.why + " Watching it is the same question one step on: a tick would compare Google's listing page, whose bytes are rebuilt on every render, and report a change nobody made."
       }, 422);
     if (driveTick && driveTick.shape === "file")
-      return answer({
+      return answer2({
         ok: false,
         reason: "DRIVE_KIND_UNDETERMINED",
         ...driveRow2("DRIVE_KIND_UNDETERMINED"),
@@ -223259,7 +223308,7 @@ var Monitoring = class {
         detail: driveTick.why + " No export address can be composed, so there is nothing this tick could compare but the application page."
       }, 422);
     if (driveTick && driveTick.shape === "unknown")
-      return answer({
+      return answer2({
         ok: false,
         reason: "DRIVE_SHAPE_UNRECOGNISED",
         ...driveRow2("DRIVE_SHAPE_UNRECOGNISED"),
@@ -223312,7 +223361,7 @@ var Monitoring = class {
       if (g.refusedByGovernor) {
         const observation2 = monitorLook({ outcome: "governed", reason: g.reason });
         await this.#recordOutcome(addressNorm, "governed", null, checked);
-        return answer({
+        return answer2({
           ok: false,
           reason: "HOST_COOLING_OFF",
           detail: `the per-host governor is holding requests to this host (${g.reason}); retry in about ${Math.ceil((g.retry_in_ms || 0) / 1e3)}s`,
@@ -223347,7 +223396,7 @@ var Monitoring = class {
             reason: `the Drive export address answered \`${declaredType}\`, which is the application shell`
           });
           this.#recordRun(addressNorm, false, checked);
-          return answer({
+          return answer2({
             ok: false,
             reason: "DRIVE_TICK_EXPORT_IS_THE_SHELL",
             ...driveRow2("DRIVE_TICK_EXPORT_IS_THE_SHELL"),
@@ -223388,7 +223437,7 @@ var Monitoring = class {
               reason: `the Drive export address served HTML under \`${servedType || "no content type"}\``
             });
             this.#recordRun(addressNorm, false, checked);
-            return answer({
+            return answer2({
               ok: false,
               reason: "DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL",
               ...driveRow2("DRIVE_TICK_EXPORT_BYTES_ARE_THE_SHELL"),
@@ -223671,7 +223720,7 @@ var Monitoring = class {
       }
     };
     const arrivals = reached ? { ...reached, reported: reached.reported.filter(sees), failed: reached.failed.filter(sees) } : null;
-    return answer({
+    return answer2({
       ok: !!promoted?.ok,
       checked,
       status,
@@ -224462,20 +224511,20 @@ var Monitoring = class {
   #ranked(list6, item3, rank7, now) {
     if (typeof rank7 !== "function" || !Array.isArray(list6) || list6.length < 2) return list6;
     const PLACE = Symbol("place");
-    let items, answer;
+    let items, answer2;
     try {
       items = list6.map((e2, i) => ({ ...item3(e2), [PLACE]: i }));
     } catch {
       return list6;
     }
     try {
-      answer = rank7(items, now);
+      answer2 = rank7(items, now);
     } catch {
       return list6;
     }
-    if (!Array.isArray(answer)) return list6;
+    if (!Array.isArray(answer2)) return list6;
     const order4 = [], taken = /* @__PURE__ */ new Set();
-    for (const x of answer) {
+    for (const x of answer2) {
       const i = x && typeof x === "object" ? x[PLACE] : void 0;
       if (Number.isInteger(i) && !taken.has(i)) {
         taken.add(i);
@@ -224622,7 +224671,7 @@ var Monitoring = class {
    *  R25): a docket entry is never evidence. Answers `{kind: "read" | "unreadable" | "governed" | "failed", entry}`. */
   async #readDocket(w, at43) {
     const base2 = { import: w.import, docket: w.docket };
-    let outcome = "unreadable", reason2 = null, answer = null;
+    let outcome = "unreadable", reason2 = null, answer2 = null;
     if (typeof w.docket !== "string" || !isPublicHttpsLocator(w.docket)) reason2 = "fetch_failed";
     else {
       try {
@@ -224655,14 +224704,14 @@ var Monitoring = class {
             else if (!j || typeof j !== "object" || j.ok !== true || !j.result || typeof j.result !== "object" || Array.isArray(j.result) || !Array.isArray(j.result.entries)) reason2 = "not_a_docket";
             else {
               outcome = "read";
-              answer = j.result;
+              answer2 = j.result;
             }
           }
         }
       } catch {
         outcome = "unreadable";
         reason2 = "fetch_failed";
-        answer = null;
+        answer2 = null;
       }
     }
     let r;
@@ -224673,7 +224722,7 @@ var Monitoring = class {
         at: at43,
         outcome,
         ...reason2 ? { reason: reason2 } : {},
-        ...answer ? { answer } : {}
+        ...answer2 ? { answer: answer2 } : {}
       });
     } catch (e2) {
       return { kind: "failed", entry: { ...base2, reason: String(e2 && e2.message || e2).slice(0, 160) } };
@@ -225894,8 +225943,8 @@ var Monitoring = class {
    *  asks nothing. Asking is a read, so a commit that recorded no response costs one read and changes nothing. */
   actionCommitted({ bundleId = null, type = null, replay = false } = {}) {
     if (replay || type !== "action" || !bundleId) return null;
-    const answer = this.escalationsDue(this.now());
-    this.#escalated = { at: stampInstant("second", this.now()), action: bundleId, answer };
+    const answer2 = this.escalationsDue(this.now());
+    this.#escalated = { at: stampInstant("second", this.now()), action: bundleId, answer: answer2 };
     return this.#escalated;
   }
   #escalated = null;
@@ -229325,13 +229374,13 @@ var Following = class {
     const h = this.host;
     const nowMs = Number.isFinite(now) ? now : this.now();
     const at43 = instant3(nowMs);
-    const answer = { configured: true, at: at43, epoch: null, read: [], captured: [], unscheduled: [], member_act_required: [], failed: [], paused: h.paused() };
-    if (answer.paused.paused) return { ...answer, note: "the daemon is paused by an administrator: nothing was read" };
-    if (h.running.has(FOLLOW_CONSUMER)) return { ...answer, busy: true };
+    const answer2 = { configured: true, at: at43, epoch: null, read: [], captured: [], unscheduled: [], member_act_required: [], failed: [], paused: h.paused() };
+    if (answer2.paused.paused) return { ...answer2, note: "the daemon is paused by an administrator: nothing was read" };
+    if (h.running.has(FOLLOW_CONSUMER)) return { ...answer2, busy: true };
     h.running.add(FOLLOW_CONSUMER);
     try {
       const p3 = this.plan(nowMs);
-      answer.unscheduled = p3.unscheduled.map((u) => ({ address: u.address, bundle: u.bundle, ...u.body ? { body: u.body } : {}, reason: u.unscheduled }));
+      answer2.unscheduled = p3.unscheduled.map((u) => ({ address: u.address, bundle: u.bundle, ...u.body ? { body: u.body } : {}, reason: u.unscheduled }));
       const read3 = typeof rank7 === "function" ? p3.due.slice(0, FOLLOW_TICK_BATCH * 10) : p3.due;
       const batch = h.ranked(read3, (x) => ({
         kind: x.kind === "meeting" ? "meeting" : `follow:${x.follow.kind}`,
@@ -229339,7 +229388,7 @@ var Following = class {
         waitingSince: x.dueMs > 0 ? x.dueMs : null
       }), rank7, nowMs).slice(0, FOLLOW_TICK_BATCH);
       const epoch = h.openEpoch(FOLLOW_CONSUMER, nowMs, EPOCH_MS);
-      answer.epoch = epoch;
+      answer2.epoch = epoch;
       const skipped = [];
       for (const x of batch) {
         const key2 = this.#subjectKey(x);
@@ -229349,17 +229398,17 @@ var Following = class {
         }
         try {
           const r = x.kind === "meeting" ? await this.#readMeeting(x, nowMs) : await this.#readFollow(x.follow, nowMs);
-          if (r.member_act_required) answer.member_act_required.push(r.member_act_required);
-          else answer.read.push(r.read);
-          for (const c of r.captured || []) answer.captured.push(c);
-          for (const f17 of r.failed || []) answer.failed.push(f17);
+          if (r.member_act_required) answer2.member_act_required.push(r.member_act_required);
+          else answer2.read.push(r.read);
+          for (const c of r.captured || []) answer2.captured.push(c);
+          for (const f17 of r.failed || []) answer2.failed.push(f17);
         } catch (e2) {
-          answer.failed.push({ subject: key2, reason: String(e2 && e2.message || e2).slice(0, 200) });
+          answer2.failed.push({ subject: key2, reason: String(e2 && e2.message || e2).slice(0, 200) });
         }
       }
-      if (skipped.length) answer.skipped = skipped;
-      if (!answer.failed.length && !skipped.length) h.closeEpoch(FOLLOW_CONSUMER, epoch);
-      return answer;
+      if (skipped.length) answer2.skipped = skipped;
+      if (!answer2.failed.length && !skipped.length) h.closeEpoch(FOLLOW_CONSUMER, epoch);
+      return answer2;
     } finally {
       h.running.delete(FOLLOW_CONSUMER);
     }
@@ -233075,12 +233124,12 @@ var InstanceSetup = class _InstanceSetup {
       detail = !slug2 ? "this store records no producing group, so there is no slug for the file to name" : "the claim carries no instance address for the file to name";
     } else {
       const first = await this.#readWellKnown(domain, GROUP_WELL_KNOWN_PATH, address, slug2);
-      let answer = first;
+      let answer2 = first;
       if (first.verdict === "absent") {
         const before2 = await this.#readWellKnown(domain, GROUP_WELL_KNOWN_PATH_BEFORE_T31, address, slug2);
-        answer = { ...before2, detail: `${first.detail}; read instead: ${before2.detail}` };
+        answer2 = { ...before2, detail: `${first.detail}; read instead: ${before2.detail}` };
       }
-      ({ verdict, status, detail } = answer);
+      ({ verdict, status, detail } = answer2);
     }
     const at43 = this.#iso();
     this.#sql.exec(`INSERT INTO group_domain_checks (domain, verdict, checked_at, trigger, status, detail)
@@ -235673,17 +235722,17 @@ function planeInternalError(e2, req) {
     op = u.searchParams.get("op") || u.pathname;
   } catch {
   }
-  const answer = planeInternalAnswer(correlation);
+  const answer2 = planeInternalAnswer(correlation);
   try {
     console.error(JSON.stringify({
-      event: answer.reason,
+      event: answer2.reason,
       correlation,
       op: String(op).slice(0, 200),
       stack: String(e2 && e2.stack || e2)
     }));
   } catch {
   }
-  return json20(answer, 500);
+  return json20(answer2, 500);
 }
 function planeInternalAnswer(correlation) {
   return {
@@ -235870,12 +235919,12 @@ function filing(id, doc, { project, archiveSha, at: at43 }) {
     register: blobs.map((b) => ({ sha256: b.sha256, path: b.path, encoding: "binary", bytes: b.bytes }))
   };
 }
-function archiveDocuments(op, answer) {
-  if (!answer || typeof answer !== "object" || answer.ok !== true) return [];
-  const unpacked = op === "acquire" ? answer.unpack : answer;
+function archiveDocuments(op, answer2) {
+  if (!answer2 || typeof answer2 !== "object" || answer2.ok !== true) return [];
+  const unpacked = op === "acquire" ? answer2.unpack : answer2;
   if (!unpacked || typeof unpacked !== "object" || unpacked.ok !== true) return [];
   const files = Array.isArray(unpacked.documents) ? unpacked.documents : [];
-  const own8 = op === "acquire" && answer.document && typeof answer.document === "object" ? [answer.document] : [];
+  const own8 = op === "acquire" && answer2.document && typeof answer2.document === "object" ? [answer2.document] : [];
   return [...own8, ...files].filter((d) => d && d.capture && /^[0-9a-f]{64}$/.test(String(d.capture.sha256 || "")));
 }
 async function promoteArchive({ stub, doAnswer: doAnswer2, docs, project = null, archiveSha = null, who: who2 }) {
@@ -253184,16 +253233,16 @@ async function extractionOp(op, url, env, getStore, stamps) {
   if (op === "pdfstructure") return pdfStructureOp(url, env, getStore(), stamps);
   return null;
 }
-async function acquireReadingOp(answer, store, { json: json24 = jsonAnswer, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, storeName }) {
+async function acquireReadingOp(answer2, store, { json: json24 = jsonAnswer, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, storeName }) {
   const r = await ask(store, `http://x/extractread?store=${encodeURIComponent(storeName || "bio")}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ document: answer.document })
+    body: JSON.stringify({ document: answer2.document })
   }, doAnswer2);
   const relayed = unanswered2(r, "acquire", { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
   if (relayed) return { response: relayed };
   const out = r.result;
-  const body = withReading(answer, {
+  const body = withReading(answer2, {
     reading: out.reading,
     textUnits: out.text_units || null,
     textUnitsOverBound: out.text_units_over_bound || 0
@@ -253347,8 +253396,8 @@ async function draftOnObject(ctx, env, {
       return [];
     }
   };
-  const out = (status, answer2, grant2 = null, suggestions2 = false) => json22({
-    ...answer2 && typeof answer2 === "object" && !Array.isArray(answer2) ? answer2 : { ok: false, answer: answer2 },
+  const out = (status, answer3, grant2 = null, suggestions2 = false) => json22({
+    ...answer3 && typeof answer3 === "object" && !Array.isArray(answer3) ? answer3 : { ok: false, answer: answer3 },
     grant: grant2,
     suggestions: suggestions2,
     read: readOf(grant2)
@@ -253392,13 +253441,13 @@ async function draftOnObject(ctx, env, {
   } catch {
     return out(502, { ok: false, reason: "AGENT_WORKER_SILENT", detail: "the assistant member did not answer. Nothing was kept." }, grant, suggestions);
   }
-  let answer;
+  let answer2;
   try {
-    answer = await res.json();
+    answer2 = await res.json();
   } catch {
     return out(502, { ok: false, reason: "AGENT_WORKER_SILENT", detail: "the assistant member's answer was not JSON. Nothing was kept." }, grant, suggestions);
   }
-  return out(res.status, answer, grant, suggestions);
+  return out(res.status, answer2, grant, suggestions);
 }
 
 // src/plane/door.mjs
@@ -253518,7 +253567,7 @@ async function gatedOp({
       storeName,
       key: (s) => captureKey(storeName, s),
       viewer,
-      readAcquired: (answer, st) => acquireReadingOp(answer, st, { json: json20, storeSilent, storeRefusal, doAnswer, storeName })
+      readAcquired: (answer2, st) => acquireReadingOp(answer2, st, { json: json20, storeSilent, storeRefusal, doAnswer, storeName })
     });
     if (c) return c;
   }
@@ -253681,12 +253730,12 @@ var ProjectRoster = class _ProjectRoster {
      project's votes and requests behind. */
   declareTables() {
     if (this.#declared) return false;
-    const answer = this.core.declarePurge(
+    const answer2 = this.core.declarePurge(
       "project-roster",
       PROJECT_ROSTER_TABLES.map((name3) => ({ name: name3, keys: ["project_id"] }))
     );
-    if (answer && answer.ok === false)
-      throw new Error(`project-roster: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
+    if (answer2 && answer2.ok === false)
+      throw new Error(`project-roster: record-core refused its purge declaration: ${answer2.reason} (${answer2.table})`);
     this.#declared = true;
     return true;
   }
@@ -254301,12 +254350,12 @@ var ProjectRoster = class _ProjectRoster {
    *  membership's `isProjectOwner` (§7's one owner predicate), so an administrator, the founder and every machine
    *  credential are refused by name. GRANT writes `invited`, `invited_by` the granting owner — never `joined` (§7.4).
    *  DECLINE is recorded with the owner's optional comment. A refused grant leaves the request open. */
-  projectRequestAnswer({ projectId, handle, answer, comment = null, by, viewer = null } = {}) {
+  projectRequestAnswer({ projectId, handle, answer: answer2, comment = null, by, viewer = null } = {}) {
     {
       const refused5 = this.#ownedProject(projectId, viewer, { ok: false, reason: "NOT_A_PROJECT", project: projectId });
       if (refused5) return refused5;
     }
-    const want = String(answer ?? "");
+    const want = String(answer2 ?? "");
     const refusal36 = (code, detail, extra = {}) => {
       const row12 = PROJECT_JOIN_REQUEST_CHECKS[code];
       return {
@@ -254774,18 +254823,18 @@ async function pullAndFile(deps, { knockId, by, identity, viewer, resolve = fals
   const within3 = (doc) => promoteOrFault(deps, doc, who2);
   const pulled = await (resolve ? doorbell.inboxResolve({ knockId, status: "pulled", by, reason: reason2, at: at43, within: within3 }) : doorbell.pullKnock({ knockId, by, at: at43, within: within3 }));
   if (!pulled || pulled.ok !== true) return pulled;
-  const { within: filed, ...answer } = pulled;
-  if (!pulled.existed) return { ...answer, bundle: bundleOf(filed) };
+  const { within: filed, ...answer2 } = pulled;
+  if (!pulled.existed) return { ...answer2, bundle: bundleOf(filed) };
   const home = provenance.homeOf(pulled.capture && pulled.capture.sha256);
-  if (home) return { ...answer, bundle: { bundleId: home.bundleId, bundleSha: null, existed: true } };
-  if (!pulled.document) return { ...answer, bundle: null };
+  if (home) return { ...answer2, bundle: { bundleId: home.bundleId, bundleSha: null, existed: true } };
+  if (!pulled.document) return { ...answer2, bundle: null };
   let again;
   try {
     again = promoteIn(deps, pulled.document, { ...who2, at: pulled.pulled_at || at43 });
   } catch {
     again = { ok: false, reason: "PROMOTE_FAILED", status: 502, detail: "the promotion did not complete." };
   }
-  if (again && again.ok === true) return { ...answer, bundle: bundleOf(again) };
+  if (again && again.ok === true) return { ...answer2, bundle: bundleOf(again) };
   return {
     ...again || { ok: false, reason: "PROMOTE_FAILED" },
     ok: false,
@@ -254951,14 +255000,14 @@ function existenceRead(membershipOf2, op, url, body) {
 }
 function storeInternalError(e2, op) {
   const correlation = crypto.randomUUID();
-  const answer = internalAnswer(correlation);
+  const answer2 = internalAnswer(correlation);
   console.error(JSON.stringify({
-    event: answer.reason,
+    event: answer2.reason,
     correlation,
     op: String(op || "").slice(0, 200),
     stack: String(e2 && e2.stack || e2)
   }));
-  return answer;
+  return answer2;
 }
 function internalAnswer(correlation) {
   const row12 = DISPATCH_CHECKS.STORE_INTERNAL_ERROR;
@@ -255020,10 +255069,10 @@ function handOn(req, url) {
     if (v !== null) for (const k of keys) url.searchParams.set(k, v);
   }
 }
-function underGrant(store, grant, asked, op, body, answer) {
-  if (!grant || op === "rule" || !askAdmits(op)) return answer;
+function underGrant(store, grant, asked, op, body, answer2) {
+  if (!grant || op === "rule" || !askAdmits(op)) return answer2;
   const { grant: _g, viewer, ...args } = asked;
-  return store.logRead({ grant, op, args: { ...args, ...body && typeof body === "object" ? body : {} }, answer, viewer });
+  return store.logRead({ grant, op, args: { ...args, ...body && typeof body === "object" ? body : {} }, answer: answer2, viewer });
 }
 var ACCOUNT_UNREAD = Object.freeze({
   ok: false,
@@ -255088,9 +255137,9 @@ async function dispatch(req, store) {
     }
     const existence = existenceRead(() => store.membership(), op, url, body);
     if (existence) return Response.json({ ok: true, result: existence });
-    const answer = await map[op]();
-    if (answer instanceof Response) return answer;
-    return Response.json({ ok: true, result: underGrant(store, grant, asked, op, body, answer) });
+    const answer2 = await map[op]();
+    if (answer2 instanceof Response) return answer2;
+    return Response.json({ ok: true, result: underGrant(store, grant, asked, op, body, answer2) });
   } catch (e2) {
     return Response.json(storeInternalError(e2, op), { status: 500 });
   }
@@ -255704,7 +255753,7 @@ function walk2(ctx, w) {
   paths = /** @type {any[]} */
   orderPaths(paths, w.sortBy ? { by: w.sortBy } : {});
   const complete = r.complete();
-  const answer = {
+  const answer2 = {
     ok: true,
     from: w.from,
     ...w.to ? { to: w.to } : {},
@@ -255725,9 +255774,9 @@ function walk2(ctx, w) {
     note: NOT_ASSERTED,
     ...stop2 ? exhausted({ visited, reason: stop2 }) : {}
   };
-  if (!paths.length) answer.absence = absence(w, complete, unread);
-  else if (unread.length) answer.unread = unread;
-  return answer;
+  if (!paths.length) answer2.absence = absence(w, complete, unread);
+  else if (unread.length) answer2.unread = unread;
+  return answer2;
 }
 function describePath(registry, hops, by) {
   const marks2 = [];
@@ -257701,6 +257750,7 @@ async function decodePng(bytes2) {
 
 // ../pdf-worker/src/picturepixels.mjs
 var PICTURE_FRAME_MAX = 4096 * 3072 * 3;
+var PICTURE_SOURCE_MAX = 16384 * 12288 * 3;
 var refuse26 = (reason2, detail = {}) => {
   if (!(reason2 in REFUSALS)) throw new Error(`undeclared refusal: ${reason2}`);
   return { ok: false, reason: reason2, why: REFUSALS[reason2], ...detail };
@@ -257763,37 +257813,81 @@ function orientationIn(t2) {
   }
   return 1;
 }
-var TURN = [0, 0, 0, 180, 180, 90, 90, 270, 270];
-var MIRROR = [false, false, true, false, true, true, false, true, false];
+var AXES2 = [
+  null,
+  [true, false, false],
+  [true, true, false],
+  [true, true, true],
+  [true, false, true],
+  [false, false, false],
+  [false, false, true],
+  [false, true, true],
+  [false, true, false]
+];
+var orientedSize = (w, h, o) => AXES2[o][0] ? [w, h] : [h, w];
+function boxMap(len, k, reversed) {
+  const m = new Int32Array(len);
+  for (let i = 0; i < len; i++) m[i] = Math.floor((reversed ? len - 1 - i : i) / k);
+  return m;
+}
 var multiplier = (n2) => Math.trunc(Math.fround(4294967296 / Math.fround(256 * n2)));
 var reductionFor = (width, height, maxEdge) => Math.max(1, Math.ceil(Math.max(width, height) / maxEdge));
-function finish(s, w, h, comps, { grey, mirror, k }) {
+function reducer(w, h, comps, { grey, orientation, k }) {
+  const [xToX, xRev, yRev] = AXES2[orientation];
   const oc = grey && comps === 3 ? 1 : comps;
-  const W2 = Math.ceil(w / k), H = Math.ceil(h / k);
+  const xBox = boxMap(w, k, xRev), yBox = boxMap(h, k, yRev);
+  const nbx = Math.ceil(w / k), nby = Math.ceil(h / k);
+  const W2 = xToX ? nbx : nby, H = xToX ? nby : nbx;
   const out = new Uint8Array(W2 * H * oc);
-  const sums = new Float64Array(oc);
+  const sums = new Float64Array(nbx * oc);
   const shift2 = k === 2 ? 2 : k === 4 ? 4 : 0;
-  for (let Y = 0; Y < H; Y++) {
-    const y0 = Y * k, bh = Math.min(k, h - y0);
-    for (let X = 0; X < W2; X++) {
-      const x0 = X * k, bw = Math.min(k, w - x0);
-      sums.fill(0);
-      for (let y = y0; y < y0 + bh; y++) {
-        for (let x = x0; x < x0 + bw; x++) {
-          const i = (y * w + (mirror ? w - 1 - x : x)) * comps;
-          if (oc !== comps) sums[0] += s[i] * 19595 + s[i + 1] * 38470 + s[i + 2] * 7471 + 32768 >>> 16;
-          else for (let c = 0; c < comps; c++) sums[c] += s[i + c];
-        }
-      }
-      const n2 = bw * bh, amend = n2 >> 1;
+  let band = -1, bandRows = 0, seen = 0;
+  const flush = () => {
+    const bh = bandRows;
+    for (let bx = 0; bx < nbx; bx++) {
+      const bw = Math.min(k, w - bx * k), n2 = bw * bh, amend = n2 >> 1;
       const mul = bw === k && bh === k && shift2 ? 0 : multiplier(n2);
-      const o = (Y * W2 + X) * oc;
+      const o = (xToX ? band * W2 + bx : bx * W2 + band) * oc;
       for (let c = 0; c < oc; c++) {
-        out[o + c] = mul ? Math.floor((sums[c] + amend) * mul / 16777216) : sums[c] + amend >>> shift2;
+        const s = sums[bx * oc + c];
+        out[o + c] = mul ? Math.floor((s + amend) * mul / 16777216) : s + amend >>> shift2;
       }
     }
-  }
-  return { samples: out, width: W2, height: H, comps: oc };
+    sums.fill(0);
+    bandRows = 0;
+  };
+  const toGrey = oc !== comps;
+  return {
+    rows(strip3, y0, count2) {
+      if (y0 !== seen) throw new Error(`rows out of order: ${y0} after ${seen}`);
+      const stride = w * comps;
+      for (let r = 0; r < count2; r++) {
+        const b = yBox[y0 + r];
+        if (b !== band) {
+          if (band >= 0) flush();
+          band = b;
+        }
+        bandRows++;
+        let i = r * stride;
+        if (toGrey) {
+          for (let x = 0; x < w; x++, i += 3) sums[xBox[x]] += strip3[i] * 19595 + strip3[i + 1] * 38470 + strip3[i + 2] * 7471 + 32768 >>> 16;
+        } else if (oc === 1) {
+          for (let x = 0; x < w; x++) sums[xBox[x]] += strip3[i++];
+        } else {
+          for (let x = 0; x < w; x++) {
+            const s = xBox[x] * oc;
+            for (let c = 0; c < oc; c++) sums[s + c] += strip3[i++];
+          }
+        }
+      }
+      seen += count2;
+    },
+    done() {
+      if (seen !== h) throw new Error(`${seen} of ${h} rows`);
+      flush();
+      return { samples: out, width: W2, height: H, comps: oc };
+    }
+  };
 }
 async function sha256Hex16(u8) {
   const d = await crypto.subtle.digest("SHA-256", u8);
@@ -257805,7 +257899,6 @@ async function renderPictureToPixels(bytes2, pageIndex, { maxEdge, grey = false 
   const format = b && sniff(b);
   if (!format) return refuse26("NOT_A_PICTURE");
   if (pageIndex !== 0) return refuse26("NO_SUCH_PAGE", { page: pageIndex, pageCount: 1 });
-  let pic;
   if (format === "jpeg") {
     let h;
     try {
@@ -257813,34 +257906,37 @@ async function renderPictureToPixels(bytes2, pageIndex, { maxEdge, grey = false 
     } catch (e2) {
       return jpegRefusal(e2);
     }
-    const source2 = { format, width: h.frame.width, height: h.frame.height, comps: h.frame.comps.length };
-    const tooBig = overBound(source2);
-    if (tooBig) return tooBig;
+    const source3 = { format, width: h.frame.width, height: h.frame.height, comps: h.frame.comps.length };
     const orientation = exifOrientation2(b);
-    let out;
+    const k2 = reductionFor(...orientedSize(source3.width, source3.height, orientation), maxEdge);
+    const tooBig2 = overBound(source3, PICTURE_SOURCE_MAX, "PICTURE_SOURCE_MAX") ?? overReduced(source3, k2);
+    if (tooBig2) return tooBig2;
+    const red2 = reducer(source3.width, source3.height, source3.comps, { grey, orientation, k: k2 });
     try {
-      out = decodeBaselineJpeg(b, { rotate: TURN[orientation] });
+      decodeBaselineJpegRows(b, { onRows: (rows3, y0, count2) => red2.rows(rows3, y0, count2) });
     } catch (e2) {
       return jpegRefusal(e2);
     }
-    pic = { ...out, source: source2, orientation };
-  } else {
-    const hd = pngHeader(b);
-    const source2 = { format, width: hd ? hd.width : null, height: hd ? hd.height : null, comps: hd ? hd.comps : null };
-    const tooBig = hd && overBound(source2);
-    if (tooBig) return tooBig;
-    let out;
-    try {
-      out = await decodePng(b);
-    } catch (e2) {
-      return pngRefusal(e2);
-    }
-    if (!hd) Object.assign(source2, { width: out.width, height: out.height, comps: out.comps });
-    pic = { ...out, source: source2, orientation: 1 };
+    return answer(red2.done(), { source: source3, orientation, k: k2 });
   }
+  const hd = pngHeader(b);
+  const source2 = { format, width: hd ? hd.width : null, height: hd ? hd.height : null, comps: hd ? hd.comps : null };
+  const tooBig = hd && overBound(source2, PICTURE_FRAME_MAX, "PICTURE_FRAME_MAX");
+  if (tooBig) return tooBig;
+  let pic;
+  try {
+    pic = await decodePng(b);
+  } catch (e2) {
+    return pngRefusal(e2);
+  }
+  if (!hd) Object.assign(source2, { width: pic.width, height: pic.height, comps: pic.comps });
   const k = reductionFor(pic.width, pic.height, maxEdge);
-  const r = finish(pic.samples, pic.width, pic.height, pic.comps, { grey, mirror: MIRROR[pic.orientation], k });
+  const red = reducer(pic.width, pic.height, pic.comps, { grey, orientation: 1, k });
+  red.rows(pic.samples, 0, pic.height);
   pic.samples = null;
+  return answer(red.done(), { source: source2, orientation: 1, k });
+}
+async function answer(r, { source: source2, orientation, k }) {
   return {
     ok: true,
     page: 0,
@@ -257850,15 +257946,19 @@ async function renderPictureToPixels(bytes2, pageIndex, { maxEdge, grey = false 
     width: r.width,
     height: r.height,
     upright: true,
-    orientation: pic.orientation,
+    orientation,
     reduced_by: k,
-    source: pic.source,
+    source: source2,
     pixels_sha256: await sha256Hex16(r.samples)
   };
 }
-function overBound({ width, height, comps }) {
+function overBound({ width, height, comps }, bound, name3) {
   const samples2 = width * height * comps;
-  return samples2 > PICTURE_FRAME_MAX ? refuse26("IMAGE_TOO_LARGE", { page: 0, width, height, comps, samples: samples2, bound: PICTURE_FRAME_MAX }) : null;
+  return samples2 > bound ? refuse26("IMAGE_TOO_LARGE", { page: 0, width, height, comps, samples: samples2, bound, bound_name: name3 }) : null;
+}
+function overReduced({ width, height, comps }, k) {
+  const samples2 = Math.ceil(width / k) * Math.ceil(height / k) * comps;
+  return samples2 > PICTURE_FRAME_MAX ? refuse26("IMAGE_TOO_LARGE", { page: 0, width, height, comps, reduced_by: k, samples: samples2, bound: PICTURE_FRAME_MAX, bound_name: "PICTURE_FRAME_MAX" }) : null;
 }
 function jpegRefusal(e2) {
   if (!(e2 instanceof DctRefusal)) return refuse26("DECODE_FAILED", { page: 0, note: String(e2 && e2.message || e2) });
@@ -257941,27 +258041,27 @@ function aiPath(ctx, env, { member: member2, at: at43, act: act2, onSha }) {
         suggestions: false
       }
     });
-    let answer;
+    let answer2;
     try {
       const res = await w.fetch("https://agent-worker/transcribe", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body
       });
-      answer = await res.json();
+      answer2 = await res.json();
     } catch {
       return { ok: false, reason: "AGENT_WORKER_SILENT" };
     }
-    if (!answer || typeof answer !== "object" || Array.isArray(answer)) return { ok: false, reason: "AGENT_WORKER_SILENT" };
-    if (answer.usage && typeof answer.usage === "object") {
+    if (!answer2 || typeof answer2 !== "object" || Array.isArray(answer2)) return { ok: false, reason: "AGENT_WORKER_SILENT" };
+    if (answer2.usage && typeof answer2.usage === "object") {
       const entry4 = {
         owner: ownerOf2(a, member2),
         member: member2,
         use: USE,
         mode: USE,
-        model: typeof answer.engine === "string" && answer.engine ? answer.engine : null,
-        usage: answer.usage,
-        calls: answer.calls,
+        model: typeof answer2.engine === "string" && answer2.engine ? answer2.engine : null,
+        usage: answer2.usage,
+        calls: answer2.calls,
         at: at43,
         act: act2()
       };
@@ -257970,8 +258070,8 @@ function aiPath(ctx, env, { member: member2, at: at43, act: act2, onSha }) {
       } catch {
       }
     }
-    if (answer.ok === true) return answer;
-    return { ...answer, ok: false, reason: answer.reason ?? answer.code ?? null };
+    if (answer2.ok === true) return answer2;
+    return { ...answer2, ok: false, reason: answer2.reason ?? answer2.code ?? null };
   };
 }
 var Transcriber = class {
