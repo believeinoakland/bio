@@ -12,3 +12,7 @@ Reading set (mechanics §17): measured at this START: 263 KB, under 600 KB (K270
 Merge order in L1: image-codecs, then pdf-pixels.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+K2737: R11's strip shape is now worded in your requirements (merge tranche/T44): `rows` a Uint8Array of `count` rows, each `width × comps` bytes, interleaved as R1's samples with rotate 0; `y0` the first row's index in the unrotated frame; the decoder may reuse `rows` once `onRows` returns. PDF-PIXELS #5 builds against it; test it. Publish your branch early (push) so pdf-pixels can build against it.
