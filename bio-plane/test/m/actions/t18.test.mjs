@@ -1,6 +1,6 @@
 /* actions' T18 entries at its interface: N-A4 (R7's `completed`, R8's premise override, R9's addressee arms with
    `ADDRESSEE_NOT_AN_OFFICE`, R45 `contact`, R46 the plan link, R47 `actionCreate` and the ops `action`/`actions`,
-   R48 pressure with `actionPressure`, R49 no grade refusal) and the converts `risk-tier` (R51/R7, R25/R12, the D-505
+   R48 pressure (its act moved to `action-holds` R1, T45; the key at `actionCorrespond` stays, R15), R49 no grade refusal) and the converts `risk-tier` (R51/R7, R25/R12, the D-505
    union arms; its R40 table is action-grammar's since T19) and `d526-refusal-order` (R2 with no envelope type). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -198,13 +198,11 @@ test("R47 actionCreate is a promotion of an action document, its id minted; op=a
   assert.deepEqual(list.items.map((x) => x.id), [c.id, aud.id, op.id]);
 });
 
-test("R48 pressure: marked on a received entry by a member, with actionCorrespond or later by actionPressure; never rewritten; read apart; actionsFor pressure", () => {
+test("R15 R34 (T45; action-holds R1) a pressure mark stated with a received entry stays on the entry, flat, and the read answers it; a mark on a sent entry or of another shape is refused by its row; the act and its table are action-holds'", () => {
   const w = world();
   const s = w.doc("INFO-2026-0001-d");
   w.action(A);
-  w.action(B);
   const P = { kind: "legal", note: "a letter threatening a suit" };
-  /* at the act */
   const c = (x) => w.a.actionCorrespond({ target: A, direction: "received", at: "2026-09-03", artifactSha: s, viewer: M, author: M, ...x });
   assert.deepEqual([c({ pressure: { kind: "lawsuit", note: "x" } }).reason, c({ pressure: { kind: "legal", note: "" } }).reason,
     c({ pressure: { kind: "legal", note: 'a"b' } }).reason, c({ pressure: { kind: "legal", note: "x".repeat(501) } }).reason],
@@ -213,38 +211,17 @@ test("R48 pressure: marked on a received entry by a member, with actionCorrespon
   assert.deepEqual([sent.reason, sent.check], ["PRESSURE_NOT_RECEIVED", "C-117.16"]);
   assert.equal(w.fm(A).correspondence, undefined, "nothing was written");
   w.a.actionCorrespond({ target: A, direction: "sent", at: "2026-09-02", account: "asked", viewer: M, author: M });
-  const before = w.text(A);
   const at = c({ pressure: P });
   assert.deepEqual([at.ok, at.ord, at.pressure], [true, 1, P]);
-  assert.ok(!/pressure/.test(w.text(A)), "the mark is never in the entry's bytes");
-  assert.ok(w.text(A).length > before.length);
-  /* later, by actionPressure */
-  w.a.actionCorrespond({ target: A, direction: "received", at: "2026-09-04", artifactSha: s, viewer: M, author: M });
-  const X = (x) => w.a.actionPressure({ target: A, ord: 2, pressure: { kind: "retaliation", note: "funding cut" }, viewer: M, author: M, ...x });
-  const mach = X({ author: MACHINE });
-  assert.deepEqual([mach.reason, mach.check], ["MACHINE_CANNOT_MARK_PRESSURE", "C-117.14"]);
-  assert.deepEqual([X({ target: "" }).reason, X({ pressure: { kind: "x", note: "y" } }).reason, X({ target: "ACTN-2026-0404-x" }).reason,
-    X({ target: "INFO-2026-0001-d" }).reason, X({ ord: 9 }).reason, X({ ord: "one" }).reason, X({ ord: 0 }).reason, X({ ord: 1 }).reason],
-    ["NO_TARGET", "PRESSURE_REFUSED", "NO_SUCH_BUNDLE", "NOT_AN_ACTION", "PRESSURE_NO_ENTRY", "PRESSURE_NO_ENTRY",
-     "PRESSURE_NOT_RECEIVED", "PRESSURE_MARKED"]);
-  const text = w.text(A);
-  const ok = X({ ord: "2" });
-  assert.deepEqual([ok.ok, ok.ord, ok.by, ok.at], [true, 2, M, "2026-09-28T12:00:00Z"]);
-  assert.equal(w.text(A), text, "never rewrites the entry");
-  assert.deepEqual([X({}).reason, X({}).check], ["PRESSURE_MARKED", "C-117.17"]);
-  /* the read lists them apart from the ledger */
-  const r = w.a.actionRead({ id: A, viewer: M });
-  assert.deepEqual(r.pressure.map((p) => [p.ord, p.kind, p.by]), [[1, "legal", M], [2, "retaliation", M]]);
-  assert.equal(r.correspondence.length, 3);
-  assert.deepEqual(w.a.actionsFor({ viewer: M, pressure: true }).items.map((x) => x.id), [A]);
-  assert.equal(w.a.actionsFor({ viewer: M }).items.length, 2);
+  assert.deepEqual([w.fm(A).correspondence[1].pressure_kind, w.fm(A).correspondence[1].pressure_note], ["legal", P.note], "on the entry, flat");
+  assert.deepEqual(w.a.actionRead({ id: A, viewer: M }).entries.find((e) => e.ord === 1).pressure, P);
   /* the op */
-  const op = actions.actionsOps(w.a, new URL(`https://x/?target=${B}&ord=0&pressure_kind=other&pressure_note=n&viewer=${M}&author=${M}`), null)
-    .actionpressure();
-  assert.equal(op.reason, "PRESSURE_NO_ENTRY");
-  /* purged with the action */
-  w.record.purge({ bundleId: A });
-  assert.equal(w.rows(`SELECT COUNT(*) AS n FROM action_pressure WHERE bundle_id=?`, A)[0].n, 0);
+  const op = actions.actionsOps(w.a, new URL(`https://x/?target=${A}&direction=received&at=2026-09-04&artifact_sha=${s}&pressure_kind=other&pressure_note=n&viewer=${M}&author=${M}`), null)
+    .actioncorrespond();
+  assert.deepEqual(op.pressure, { kind: "other", note: "n" });
+  /* the act and its table moved (R48 retired here): no op, no table of this module's */
+  assert.equal(actions.actionsOps(w.a, new URL("https://x/"), null).actionpressure, undefined);
+  assert.ok(!actions.ACTIONS_TABLES.includes("action_pressure"));
 });
 
 test("R49 no action is refused for the grade of what it rests on: a breach action resting on a determination and a document of any grade lands", () => {

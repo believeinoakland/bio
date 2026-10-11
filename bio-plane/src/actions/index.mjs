@@ -11,22 +11,25 @@
  * REACHED as `actionsOf(host, deps)` (K61): one instance per host, created on the first call. At creation it creates
  * its tables and declares them to record-core's purge (R36), registers its check and projection with promotion (R1–R3,
  * R7, R11, R33), action-grammar's audit arm with record-core (R51), its facts and projection decoration with retrieval (R12,
- * R25; retrieval R53, R56), its litigation-hold reader with doorbell (R55; doorbell R3), and its reader of the holds over
- * a project with ratification (R69; ratification R45). The holds also answer whether a purge would reach held material
- * (R60), which the control plane asks before every purge (its R46). `place()` and `zoneOf` give R12's zone to other
- * modules (R68: retrieval, queue-producers).
+ * R25; retrieval R53, R56), its "what we did" and trigger sources with events and duties (R66, R67), its none-exists
+ * reader with intent (R71), and its own-act reader and own-sending check with consequences and standards (R97). The
+ * pressure marks and litigation holds, their reads and their registrations with doorbell and ratification, are
+ * `action-holds`' since T45 (R48, R52, R54–R60, R69; K2781 (1)). `place()` and `zoneOf` give R12's zone to other modules
+ * (R68: retrieval, queue-producers).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership, promotion   layer 2: `transact`, `acquireLease`, `releaseLease`, `head`, `readFile`, `livePaths`,
  *                                   `declarePurge`, `registerAuditCheck`, `getSetting`, `bundleInfo`; `viewerPredicate`,
- *                                   `sight`, `visibilityOf`, `existenceAct`, `noSuchProject` (R52, R56–R59);
- *                                   `promote`, `registerStep`.
+ *                                   `memberFacts`, `listenerRefusal` (R45, R94, R95); `promote`, `registerStep`.
  *   retrieval      `registerActionFacts`, `registerProjectionDecoration` (its R53, R56).
  *   content        `captureFor` (R11).
- *   conformance    `determinationRead` (R8, R30), when provided (see R8 below); its module-level
- *                  `determinationSuperseded` (its R20), through which R8 answers a superseded determination (N312).
- *   entities       `readEntity` (its R5): whether an addressee's `entity_id` names a person (R9).
- *   doorbell       `registerReader` (its R3): the litigation-hold reader (R55); `null` registers none.
- *   ratification   `registerHoldReader` (its R45): the reader of holds over a project (R69); `null` registers none.
+ *   conformance    `determinationRead` (R8, R30, R75, R76), when provided (see R8 below); its module-level
+ *                  `determinationSuperseded` (its R20) and `determinationVoided` (its R33), through which R8 answers.
+ *   entities       `readEntity` (its R5): whether an addressee's `entity_id` names a person, an office or an
+ *                  organisation (R9, R77, R78).
+ *   consequences   `successRecordRead` (its R20; R8 (e), R93), `registerOwnActReader` (its R19; R97).
+ *   standards      `standardRead`, `inForceAt` (R64), `registerOwnSendingCheck` (its R53; R97).
+ *   project-roster `projectScope` (its R23): a counsel matter's acts are never in R66's items.
+ *   local-facts    `governingView` (its R12): the view of kinds, venues, records laws and statuses (R10).
  *   progressions  `readProgression` (its R5): the progressions and stages a records request's `seeks` names (R70).
  *   intent         `registerNoneExistsReader` (its R33): the reader of requests answered that none exists (R71);
  *                  `null` registers none.
@@ -38,7 +41,7 @@
  * connections' `refs` (`bundle_id`, `target_id`, `kind`) for R25's `responses`. */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, noSuchProject, listenerRefusal } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
@@ -46,8 +49,6 @@ import { conformanceOf, determinationSuperseded, determinationVoided } from "../
 import { consequencesModule } from "../consequences/index.mjs";
 import { projectRosterOf } from "../project-roster/index.mjs";
 import { localFactsOf } from "../local-facts/index.mjs";
-import { doorbellOf } from "../doorbell/index.mjs";
-import { ratificationOf } from "../ratification/index.mjs";
 import { entitiesOf, noSuchEntity, ORGANISATION_KINDS } from "../entities/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { eventsOf } from "../events/index.mjs";
@@ -100,18 +101,8 @@ const PLAN_ID_RE = new RegExp(`^${idPattern("PLN").source.slice(1, -1)}(-[a-z0-9
 const ENTITY_ID_RE = idPattern("ENT");
 /** R48 (K597 (1)): the kinds of pressure a received entry may be marked with. */
 export const PRESSURE_KINDS = Object.freeze(["legal", "retaliation", "discrediting", "other"]);
-/** R52 (K899 (7), DEC-61): what a litigation hold on a `legal` pressure mark is stated as. */
-export const HOLD_STATES = Object.freeze(["in_place", "released"]);
-/** R54: the most marks one `holdsDue` page lists. */
-export const HOLDS_DUE_MAX = 500;
-/** R59: the most statements one `holdsReleased` page lists. */
-export const HOLDS_RELEASED_MAX = 500;
 /** R71 (intent R33): the most answers `noneExistsFor` gives. */
 export const NONE_EXISTS_MAX = 50;
-/** R52, R58 (DEC-113): the most distinct projects one hold statement names, and one `projectHolds` read asks. */
-export const HOLD_PROJECTS_MAX = 50;
-/* R52: a project's id, a bundle id of the project prefix. */
-const PROJECT_ID_RE = { test: (x) => BUNDLE_ID_RE.test(x) && x.startsWith("PROJ-") };
 /** R28: the longest basis a proposed tier carries. */
 export const RISK_PROPOSAL_BASIS_MAX = 500;
 /** R74 (T45): the quick route offered beside `OVERRIDE_NO_GROUND` (reconciliation R16). */
@@ -151,9 +142,6 @@ const LAWS_ACT = Symbol("d149-laws-act");
 /* REC-214: the one write that may change an action's risk tier after intake, or append to its history, is
    `actionRiskTier`, and it says so to `promote` under this Symbol, for LAWS_ACT's reason. */
 const RISK_TIER_ACT = Symbol("rec214-risk-tier-act");
-/* R52, R56, R57 (DEC-113): which hold act `actionHold`'s body runs (`hold`, `release` or `preview`). A Symbol, so no
-   request can carry one: the release and the preview reach that body only through their own methods. */
-const HOLD_MODE = Symbol("dec113-hold-mode");
 
 /* The catalogue-backed refusals: each carries its code, check and translation (the Provides' "Terms"). */
 const ROWS = Object.assign({}, ACTION_FENCE_CHECKS, ACTION_ACT_CHECKS, GOVERNING_LAW_CHECKS, QUOTE_CHECKS,
@@ -1101,8 +1089,11 @@ export class Actions {
    *  `found_elsewhere`, `found_elsewhere_note`; J2's reading), `speaker` as written. Other keys as they are. */
   static entryFields(e) {
     if (!e || typeof e !== "object") return e;
-    const { office_words, office_status, found_elsewhere, found_elsewhere_note, ...rest } = e;
+    const { office_words, office_status, found_elsewhere, found_elsewhere_note, pressure_kind, pressure_note, ...rest } = e;
     const out = { ...rest };
+    if (pressure_kind !== undefined || pressure_note !== undefined)
+      out.pressure = { ...(pressure_kind !== undefined ? { kind: pressure_kind } : {}),
+                       ...(pressure_note !== undefined ? { note: pressure_note } : {}) };
     if (office_words !== undefined || office_status !== undefined)
       out.office_status = { ...(office_words !== undefined ? { words: office_words } : {}),
                             ...(office_status !== undefined ? { status: office_status } : {}) };
@@ -1695,7 +1686,7 @@ export class Actions {
           `${k} is at most ${NOTE_MAX} characters and cannot contain a quote, a backslash, or a `
           + `newline: the restricted frontmatter grammar has no escapes`, { field: k });
     /* END DEC-49 REGION is-quote-writable */
-    /* R48: a pressure mark stated with the entry, judged as `actionPressure` judges one. */
+    /* R48 (`action-holds` R1): a pressure mark stated with the entry, judged as `action-holds`' `actionPressure` judges one. */
     const mark = pressure === null || pressure === undefined || pressure === "" ? null : Actions.#pressureOf(pressure);
     if (pressure !== null && pressure !== undefined && pressure !== "") {
       const pr = this.#pressureRefusal({ who, mark, direction });
@@ -1759,6 +1750,9 @@ export class Actions {
       ...quote,
       ...life,
       ...t45.fields,
+      /* R48 (moved to `action-holds` R1, T45; K2781 (1)): a pressure mark stated with the entry stays on the entry, flat
+         (K2849), and `action-holds` reads it through `actionRead`; its act and table are that module's. */
+      ...(mark ? { pressure_kind: mark.kind, pressure_note: mark.note } : {}),
       /* SERVER-STAMPED. Present on both arms — who put this entry on the record
          is part of the record even when the record is bytes. */
       author: who,
@@ -1888,8 +1882,6 @@ export class Actions {
     /* R83 (T45): a response found elsewhere is linked by the member to the action, never by a responds_to edge. */
     const responded = direction === "received" && sha && t45.fields.found_elsewhere === undefined
       ? this.#respondsToInto(sha, target, who) : null;
-    if (mark) this.sql.exec(`INSERT INTO action_pressure (bundle_id, ord, kind, note, marked_by, at) VALUES (?,?,?,?,?,?)`,
-      target, ord, mark.kind, mark.note, who, when);
     const marked = mark ? { kind: mark.kind, note: mark.note } : null;
     const answer = { ok: true, target, ord, direction, at: day, author: who, recorded_at: when,
              held_as: sha ? "capture" : "testimony",
@@ -1954,7 +1946,8 @@ export class Actions {
              raw: typeof v.note === "string" ? v.note : "" };
   }
 
-  /* R48 (K597 (1)): the conditions on a pressure mark, at `actionCorrespond` and `actionPressure` alike. */
+  /* R48 (K597 (1); `action-holds` R1): the conditions on a pressure mark stated at `actionCorrespond`; `actionPressure` is
+     `action-holds`' since T45 and judges its own. */
   #pressureRefusal({ who, mark, direction }) {
     /* DEC-49 REGION is-pressure */
     if (!who || isMachineIdentity(who))
@@ -1969,288 +1962,6 @@ export class Actions {
         + "Nothing was written.");
     /* END DEC-49 REGION is-pressure */
     return null;
-  }
-
-  /** R48: `actionPressure` marks pressure on a received entry already recorded, in this module's own table; the entry
-   *  is never rewritten (R34). */
-  actionPressure({ target, ord = null, pressure = null, viewer = null, author = null } = {}) {
-    const who = String(author ?? "").trim();
-    const mark = Actions.#pressureOf(pressure);
-    if (!who || isMachineIdentity(who)) return this.#pressureRefusal({ who });
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    const shape = this.#pressureRefusal({ who, mark, direction: "received" });
-    if (shape) return { ...shape, target };
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action")
-      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
-    const fm = this.#heldFm(target) || {};
-    const ledger = Array.isArray(fm.correspondence) ? fm.correspondence : [];
-    const n = typeof ord === "number" ? ord : /^\d+$/.test(String(ord ?? "").trim()) ? Number(String(ord).trim()) : NaN;
-    const entry = Number.isInteger(n) ? ledger[n] : undefined;
-    /* DEC-49 REGION is-pressure-entry */
-    if (!entry || typeof entry !== "object")
-      return refuse("PRESSURE_NO_ENTRY", "no correspondence entry stands at that position. Nothing was written.",
-        { target, ord: ord ?? null, entries: ledger.length });
-    /* END DEC-49 REGION is-pressure-entry */
-    const notReceived = this.#pressureRefusal({ who, mark, direction: entry.direction });
-    if (notReceived) return { ...notReceived, target, ord: n };
-    /* DEC-49 REGION is-pressure-marked */
-    if (this.#one(`SELECT ord FROM action_pressure WHERE bundle_id=? AND ord=?`, target, n))
-      return refuse("PRESSURE_MARKED", "that entry is already marked as pressure, and a mark is never rewritten. "
-        + "Nothing was written.", { target, ord: n });
-    /* END DEC-49 REGION is-pressure-marked */
-    const at = stampInstant("second", this.#nowMs(null));
-    this.sql.exec(`INSERT INTO action_pressure (bundle_id, ord, kind, note, marked_by, at) VALUES (?,?,?,?,?,?)`,
-      target, n, mark.kind, mark.note, who, at);
-    return { ok: true, target, ord: n, pressure: { kind: mark.kind, note: mark.note }, by: who, at, weight: "single" };
-  }
-
-  /** R52 (K899 (7), DEC-61, DEC-113; N-A19): a member states a litigation hold `in_place` on a received entry marked
-   *  pressure of kind `legal`, with a reason and the projects it records (the action's own, filled in here, and those
-   *  named). Each statement is appended to this module's own tables and never rewritten; the latest for an entry is
-   *  its hold. While it stands, no material of a project it covers, nor the action, is purged (R60).
-   *  The same body runs `actionHoldRelease` (R56) and `holdReleasePreview` (R57) under `HOLD_MODE`, so each hold
-   *  refusal is minted at the one region its row names (C-117.20–.25). */
-  actionHold({ target, ord = null, hold = null, reason = null, projects = null, viewer = null, author = null,
-               [HOLD_MODE]: mode = "hold" } = {}) {
-    const who = String(author ?? "").trim();
-    const preview = mode === "preview", release = mode === "release";
-    const h = release ? "released" : typeof hold === "string" ? hold.trim() : "";
-    const why = typeof reason === "string" ? reason.trim() : "";
-    /* DEC-49 REGION is-hold */
-    const machine = !preview && (!who || isMachineIdentity(who))
-      ? refuse("MACHINE_CANNOT_SET_HOLD", "saying whether a litigation hold is in place is a member's judgement; a "
-        + "machine credential may not state it. Nothing was written.") : null;
-    const shape = !preview && (!HOLD_STATES.includes(h) || !why || why.length > NOTE_MAX || /["\\\r\n]/.test(why))
-      ? refuse("HOLD_REFUSED", `a litigation hold is one of ${HOLD_STATES.join(", ")}, with a reason of 1 to ${NOTE_MAX} `
-        + "characters and no quote, backslash or line break. Nothing was written.", { legal: HOLD_STATES, max: NOTE_MAX })
-      : null;
-    /* END DEC-49 REGION is-hold */
-    if (machine) return machine;
-    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
-    /* DEC-49 REGION is-hold-release-own-act */
-    if (mode === "hold" && h === "released")
-      return refuse("HOLD_RELEASE_IS_ITS_OWN_ACT", "a hold is released by its own act, op=actionholdrelease, which "
-        + "states what the release restarts. Nothing was written.", { target });
-    /* END DEC-49 REGION is-hold-release-own-act */
-    if (shape) return { ...shape, target };
-    let named = [];
-    if (mode === "hold") {
-      const p = this.#holdProjects(projects, false);
-      if (!p.ok) return { ...p, target };
-      named = p.projects;
-    }
-    const b = this.#visibleAction(target, viewer);
-    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
-    if (normalizeType(b.object_type) !== "action")
-      return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
-    const n = typeof ord === "number" ? ord : /^\d+$/.test(String(ord ?? "").trim()) ? Number(String(ord).trim()) : NaN;
-    const mark = Number.isInteger(n)
-      ? this.#one(`SELECT kind FROM action_pressure WHERE bundle_id=? AND ord=?`, target, n) : null;
-    /* DEC-49 REGION is-hold-legal-mark */
-    if (!mark || mark.kind !== "legal")
-      return refuse("HOLD_NO_LEGAL_MARK", "a litigation hold is stated on a received entry marked as legal pressure; the "
-        + "entry named carries no such mark. Nothing was written.", { target, ord: ord ?? null });
-    /* END DEC-49 REGION is-hold-legal-mark */
-    const latest = this.#one(`SELECT seq, hold FROM action_holds WHERE bundle_id=? AND ord=? ORDER BY seq DESC LIMIT 1`,
-      target, n);
-    if (preview) {
-      const all = this.#restarts(target, n);
-      const seen = all.filter((p) => this.#mayName(p, viewer));
-      return { ok: true, target, ord: n, hold: latest ? latest.hold : null, restarts: seen,
-               out_of_view: seen.length < all.length };
-    }
-    /* DEC-49 REGION is-hold-already-released */
-    if (release && latest && latest.hold === "released")
-      return refuse("HOLD_ALREADY_RELEASED", "this entry's hold is already released; a release ends a hold in place. "
-        + "Nothing was written.", { target, ord: n });
-    /* END DEC-49 REGION is-hold-already-released */
-    /* R52: the first named project the author may not name answers as membership answers it (its R77, R78). */
-    for (const p of named) {
-      if (this.#mayName(p, viewer)) continue;
-      let existence = null;
-      try { existence = this.membership.existenceAct(p, viewer); } catch { existence = null; }
-      return existence || noSuchProject(p);
-    }
-    const at = stampInstant("second", this.#nowMs(null));
-    /* R56: `restarted` is what R57 would answer at this instant, whatever the author sees, read and written in one
-       transaction with the statement, so no hold lands between the read and the write. */
-    const written = this.record.transact(() => {
-      const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_holds WHERE bundle_id=? AND ord=?`, target, n).n;
-      let list;
-      if (release) list = this.#restarts(target, n);
-      else {
-        let own = null;
-        try { own = this.record.bundleInfo(target)?.project ?? null; } catch { own = null; }
-        list = [...new Set([...(own ? [own] : []), ...named])];
-      }
-      this.sql.exec(`INSERT INTO action_holds (bundle_id, ord, seq, hold, reason, stated_by, at) VALUES (?,?,?,?,?,?,?)`,
-        target, n, seq, h, why, who, at);
-      for (const p of list)
-        this.sql.exec(`INSERT INTO action_hold_projects (bundle_id, ord, seq, project) VALUES (?,?,?,?)`, target, n, seq, p);
-      return { ok: true, list };
-    });
-    if (release)
-      return { ok: true, target, ord: n, hold: "released", reason: why, by: who, at,
-               restarted: written.list.filter((p) => this.#mayName(p, viewer)) };
-    return { ok: true, target, ord: n, hold: h, reason: why, by: who, at,
-             projects: [...this.#covered(target, n)].sort().filter((p) => this.#mayName(p, viewer)) };
-  }
-
-  /** R56 (DEC-113; K1134 (3)): a member states `released` on an entry, recording what it restarted. */
-  actionHoldRelease({ target, ord = null, reason = null, viewer = null, author = null } = {}) {
-    return this.actionHold({ target, ord, reason, viewer, author, [HOLD_MODE]: "release" });
-  }
-
-  /** R57 (DEC-113): what releasing an entry's hold would restart, before any member releases it. Writes nothing. */
-  holdReleasePreview({ target, ord = null, viewer = null } = {}) {
-    return this.actionHold({ target, ord, viewer, [HOLD_MODE]: "preview" });
-  }
-
-  /* R52, R58 (C-117.24): a list of project ids, given as a list, its JSON, or ids separated by commas. At R52
-     (`exact` false) absent is none, repeats are one, and at most 50 distinct; at R58 (`exact` true) 1 to 50, each once. */
-  #holdProjects(value, exact) {
-    let list = value;
-    if (typeof list === "string") {
-      const t = list.trim();
-      if (t.startsWith("[")) { try { list = JSON.parse(t); } catch { list = null; } }
-      else list = t ? t.split(",").map((x) => x.trim()) : [];
-    }
-    const absent = value === null || value === undefined || (typeof value === "string" && !value.trim());
-    const ids = Array.isArray(list) ? list : null;
-    const distinct = ids ? new Set(ids) : null;
-    /* DEC-49 REGION is-hold-projects */
-    if ((!absent || exact) && (!ids || ids.some((x) => typeof x !== "string" || !PROJECT_ID_RE.test(x))
-        || distinct.size > HOLD_PROJECTS_MAX || (exact && (!ids.length || distinct.size !== ids.length))))
-      return refuse("HOLD_PROJECTS_REFUSED", `projects is a list of ${exact ? "1 to " : "at most "}${HOLD_PROJECTS_MAX} `
-        + `distinct project ids (PROJ-…)${exact ? ", each named once" : ""}. Nothing was ${exact ? "read" : "written"}.`,
-        { max: HOLD_PROJECTS_MAX });
-    /* END DEC-49 REGION is-hold-projects */
-    return { ok: true, projects: absent ? [] : [...distinct] };
-  }
-
-  /* R52 (D54; K2484): whether the viewer may name a project here: she sees it at FULL, or, as an administrator neither
-     invited nor joined, a HIDDEN project at EXISTENCE (membership R44, R85's `visibilityOf`), which reaches its id and
-     hold state and never its contents. A discoverable project's EXISTENCE names nothing. Anything else, a failure
-     included, is not. */
-  #mayName(project, viewer) {
-    try {
-      const sight = this.membership.sight(project, viewer);
-      if (sight === "full") return true;
-      return sight === "existence" && this.membership.visibilityOf(project) === "hidden";
-    } catch { return false; }
-  }
-
-  /* R52: every `in_place` statement of a hold still in place (no `released` statement after it on its entry), one row per
-     project it records (`project` null for a statement recording none). Throws when the tables cannot be read. */
-  #standing() {
-    return this.#rows(`SELECT h.bundle_id, h.ord, h.seq, h.stated_by, h.at, p.project FROM action_holds h
-      LEFT JOIN action_hold_projects p ON p.bundle_id = h.bundle_id AND p.ord = h.ord AND p.seq = h.seq
-      WHERE h.hold = 'in_place' AND NOT EXISTS (SELECT 1 FROM action_holds r WHERE r.bundle_id = h.bundle_id
-        AND r.ord = h.ord AND r.seq > h.seq AND r.hold = 'released')
-      ORDER BY h.at, h.bundle_id, h.ord, h.seq, p.project`);
-  }
-
-  /* R52: the projects an entry's hold covers now (none unless it is in place). */
-  #covered(id, ord) {
-    return new Set(this.#standing().filter((r) => r.bundle_id === id && r.ord === ord && r.project).map((r) => r.project));
-  }
-
-  /* R56, R57: the projects an entry's hold covers that no other hold in place covers, sorted, whatever the viewer. */
-  #restarts(id, ord) {
-    const rows = this.#standing();
-    const mine = new Set(), others = new Set();
-    for (const r of rows) if (r.project) (r.bundle_id === id && r.ord === ord ? mine : others).add(r.project);
-    return [...mine].filter((p) => !others.has(p)).sort();
-  }
-
-  /** R58 (DEC-113): for each of 1 to 50 projects, whether a hold in place covers it: `held: true` with the `at` and `by`
-   *  of the earliest such statement, `false`, or `null` for a project absent or one the viewer may not name (R52). A read it cannot
-   *  complete is a refusal, never `false`. Names no action, entry or reason. Writes nothing. */
-  projectHolds({ projects = null, viewer = null } = {}) {
-    const asked = this.#holdProjects(projects, true);
-    if (!asked.ok) return asked;
-    let rows;
-    try { rows = this.#standing(); } catch {
-      return { ok: false, reason: "HOLDS_UNREADABLE", detail: "the litigation holds could not be read, so whether these "
-        + "projects are held cannot be said. Ask again." };
-    }
-    const earliest = new Map();
-    for (const r of rows) if (r.project && !earliest.has(r.project)) earliest.set(r.project, r);
-    return { ok: true, projects: asked.projects.map((p) => {
-      if (!this.#mayName(p, viewer)) return { project: p, held: null };
-      const e = earliest.get(p);
-      return e ? { project: p, held: true, since: e.at, recorded_by: e.stated_by } : { project: p, held: false };
-    }) };
-  }
-
-  /** R69 (K1830; ratification R45): R58's answer for one project, read as the plane (whatever the viewer): `{held:
-   *  true, since, recorded_by}` (the earliest `in_place` statement, among holds still in place, recording it) or
-   *  `{held: false}` after reading every hold; `null` when the read cannot complete (no project named, or the holds
-   *  unreadable). Names no action, entry or reason. Writes nothing; never throws. */
-  holdsOn(args = {}) {
-    try {
-      const p = args && typeof args.project === "string" ? args.project.trim() : "";
-      if (!p) return null;
-      const e = this.#standing().find((r) => r.project === p);
-      return e ? { held: true, since: e.at, recorded_by: e.stated_by } : { held: false };
-    } catch { return null; }
-  }
-
-  /** R59 (DEC-113; for `queue-producers` R29): every `released` statement that ended a hold in place, on an action the
-   *  viewer may see, with the hold's placers and the projects it restarted that the viewer may name; at most 500 per page in
-   *  (action, position, sequence) order. `cursor` is the last answered, `<action>#<position>#<sequence>`, when
-   *  `truncated`, else null; `after` is a cursor or an action id, read as after all that action's statements. */
-  holdsReleased({ after = null, limit = null, viewer = null } = {}) {
-    const max = clampLimit(limit, HOLDS_RELEASED_MAX, HOLDS_RELEASED_MAX);
-    const gate = viewerPredicate(viewer);
-    const from = after === null || after === undefined || after === "" ? null : String(after);
-    const at = from ? /^(.+)#(\d+)#(\d+)$/.exec(from) : null;
-    const seek = at
-      ? { sql: "AND (r.bundle_id > ? OR (r.bundle_id = ? AND (r.ord > ? OR (r.ord = ? AND r.seq > ?))))",
-          args: [at[1], at[1], Number(at[2]), Number(at[2]), Number(at[3])] }
-      : from ? { sql: "AND r.bundle_id > ?", args: [from] } : { sql: "", args: [] };
-    const rows = this.#rows(`SELECT r.bundle_id, r.ord, r.seq, r.reason, r.stated_by, r.at FROM action_holds r
-      JOIN bundles b ON b.bundle_id = r.bundle_id
-      WHERE r.hold = 'released' AND b.object_type = 'action' AND (${gate.sql}) ${seek.sql}
-        AND (SELECT p.hold FROM action_holds p WHERE p.bundle_id = r.bundle_id AND p.ord = r.ord AND p.seq < r.seq
-             ORDER BY p.seq DESC LIMIT 1) = 'in_place'
-      ORDER BY r.bundle_id, r.ord, r.seq LIMIT ?`, ...gate.args, ...seek.args, max + 1);
-    const truncated = rows.length > max;
-    const items = rows.slice(0, max).map((r) => ({
-      action: r.bundle_id, ord: r.ord, seq: r.seq, released_by: r.stated_by, released_at: r.at, reason: r.reason,
-      placers: this.#rows(`SELECT stated_by FROM action_holds WHERE bundle_id = ? AND ord = ? AND seq < ? AND hold = 'in_place'
-        AND seq > COALESCE((SELECT MAX(s.seq) FROM action_holds s WHERE s.bundle_id = ? AND s.ord = ? AND s.seq < ?
-                            AND s.hold = 'released'), 0)
-        GROUP BY stated_by ORDER BY MIN(seq)`, r.bundle_id, r.ord, r.seq, r.bundle_id, r.ord, r.seq).map((x) => x.stated_by),
-      restarted: this.#rows(`SELECT project FROM action_hold_projects WHERE bundle_id = ? AND ord = ? AND seq = ?
-        ORDER BY project`, r.bundle_id, r.ord, r.seq).map((x) => x.project).filter((p) => this.#mayName(p, viewer)),
-    }));
-    const tail = items[items.length - 1];
-    return { ok: true, items, limit: max, truncated,
-             cursor: truncated && tail ? `${tail.action}#${tail.ord}#${tail.seq}` : null };
-  }
-
-  /** R60 (DEC-113; K1252, K1253; asked by `control-plane` R46): whether a purge of the record would reach held material,
-   *  whatever the viewer. No `bundleId`: whether any hold is in place. A `bundleId`: whether a hold is in place and the
-   *  bundle is a held project, belongs to one, is an action carrying a hold in place, or has no project that can be
-   *  determined. Synchronous, so it is asked in the purge's own turn; writes nothing, never throws, and answers `true`
-   *  when the holds cannot be read. It reads every hold and every bundle's project whatever any viewer may see, never
-   *  through a viewer's sight (D54: the founder's viewer no longer sees a hidden project, membership R43). */
-  purgeHeld({ bundleId = null } = {}) {
-    try {
-      const id = bundleId === null || bundleId === undefined ? "" : String(bundleId).trim();
-      /* the whole-store purge: R55's reader itself, so the two answers cannot drift apart (R60) */
-      if (!id) return this.holdInPlace();
-      const rows = this.#standing();
-      if (!rows.length) return false;
-      const held = new Set(rows.map((r) => r.project).filter(Boolean));
-      if (held.has(id) || rows.some((r) => r.bundle_id === id)) return true;
-      const info = this.record.bundleInfo(id);
-      if (!info) return true;
-      return !!(info.project && held.has(info.project));
-    } catch { return true; }
   }
 
   /** R47: `actionCreate` is the same write as a promotion of an action document (R1–R3, R5–R11, R45, R46 and action-grammar R3 and R6 at the act): the plane
@@ -2911,6 +2622,8 @@ export class Actions {
       ...(e.office_status !== undefined ? [`    office_status: ${e.office_status}`] : []),
       ...(e.found_elsewhere !== undefined ? [`    found_elsewhere: ${e.found_elsewhere}`] : []),
       ...(e.found_elsewhere_note !== undefined ? [`    found_elsewhere_note: "${e.found_elsewhere_note}"`] : []),
+      ...(e.pressure_kind !== undefined ? [`    pressure_kind: ${e.pressure_kind}`] : []),
+      ...(e.pressure_note !== undefined ? [`    pressure_note: "${e.pressure_note}"`] : []),
       `    author: ${e.author}`,
       `    recorded_at: "${e.recorded_at}"`,
     ];
@@ -2984,10 +2697,6 @@ export class Actions {
       option: fm.option === undefined || fm.option === null ? null : fm.option,
       /* R8: the premise override, with who stated it and when. */
       premise_override: this.#overrideRead(row.bundle_id, fm),
-      /* R48: the received entries marked as pressure, apart from the ledger; R52: a `legal` mark with its holds. */
-      pressure: this.#rows(`SELECT ord, kind, note, marked_by, at FROM action_pressure WHERE bundle_id=? ORDER BY ord`,
-        row.bundle_id).map((r) => ({ ord: r.ord, kind: r.kind, note: r.note, by: r.marked_by, at: r.at,
-                                     ...(r.kind === "legal" ? this.#holdsOf(row.bundle_id, r.ord, viewer) : {}) })),
       /* T33-73: the action's date (R9, R64, R65), the office addressee's entity and holder on it (R9), each law's held
          standard with its in-force state on it (R64), and the proceeding with its status on it (R65). */
       ...this.#t33Read(fm, viewer),
@@ -3026,6 +2735,7 @@ export class Actions {
         return { ord, ...(p.speaker !== undefined ? { speaker: p.speaker } : {}),
                  ...(p.office_status ? { office_status: p.office_status } : {}),
                  ...(p.found_elsewhere ? { found_elsewhere: p.found_elsewhere } : {}),
+                 ...(p.pressure ? { pressure: p.pressure } : {}),
                  ...(fm.action_kind === "records_request" && typeof p.stage === "string"
                    ? { stage_in_law: stageInLaw(p.stage, stages) } : {}) };
       }).filter((x) => Object.keys(x).length > 1),
@@ -3161,57 +2871,6 @@ export class Actions {
     return { as_of_date: asOf, addressee, law_standards, proceeding };
   }
 
-  /* R52: an entry's hold statements, oldest first, each with those of its projects the viewer may name (an
-     `in_place` statement's `projects`, a release's `restarted`), and its current hold (the latest; null while none). */
-  #holdsOf(id, ord, viewer) {
-    const holds = this.#rows(`SELECT seq, hold, reason, stated_by, at FROM action_holds WHERE bundle_id=? AND ord=?
-      ORDER BY seq`, id, ord).map((h) => {
-      const projects = this.#rows(`SELECT project FROM action_hold_projects WHERE bundle_id=? AND ord=? AND seq=?
-        ORDER BY project`, id, ord, h.seq).map((p) => p.project).filter((p) => this.#mayName(p, viewer));
-      return { seq: h.seq, hold: h.hold, reason: h.reason, by: h.stated_by, at: h.at,
-               [h.hold === "released" ? "restarted" : "projects"]: projects };
-    });
-    return { holds, hold: holds.length ? holds[holds.length - 1].hold : null };
-  }
-
-  /** R54 (K899 (7); for `queue-producers` R19): every `legal` pressure mark on a visible action on which no hold is
-   *  stated, whatever the action's state (a legal matter outlives the action), at most 500 per page in (action id,
-   *  position) order. `cursor` is the last mark answered, `<action>#<position>`, when `truncated`, else null; `after`
-   *  is a previous page's cursor or an action id, read as after all that action's marks. Writes nothing. */
-  holdsDue({ after = null, limit = null, viewer = null } = {}) {
-    const max = clampLimit(limit, HOLDS_DUE_MAX, HOLDS_DUE_MAX);
-    const gate = viewerPredicate(viewer);
-    const from = after === null || after === undefined || after === "" ? null : String(after);
-    const at = from ? /^(.+)#(\d+)$/.exec(from) : null;
-    const seek = at ? { sql: "AND (p.bundle_id > ? OR (p.bundle_id = ? AND p.ord > ?))", args: [at[1], at[1], Number(at[2])] }
-      : from ? { sql: "AND p.bundle_id > ?", args: [from] } : { sql: "", args: [] };
-    const rows = this.#rows(`SELECT p.bundle_id, p.ord, p.note, p.marked_by, p.at FROM action_pressure p
-      JOIN bundles b ON b.bundle_id = p.bundle_id
-      WHERE p.kind='legal' AND b.object_type='action' AND (${gate.sql}) ${seek.sql}
-        AND NOT EXISTS (SELECT 1 FROM action_holds h WHERE h.bundle_id = p.bundle_id AND h.ord = p.ord)
-      ORDER BY p.bundle_id, p.ord LIMIT ?`, ...gate.args, ...seek.args, max + 1);
-    const truncated = rows.length > max;
-    const projects = new Map();
-    const items = rows.slice(0, max).map((r) => {
-      if (!projects.has(r.bundle_id)) projects.set(r.bundle_id, this.#projectOf(this.#heldFm(r.bundle_id), viewer));
-      return { action: r.bundle_id, ord: r.ord, note: r.note, marked_by: r.marked_by, marked_at: r.at,
-               project: projects.get(r.bundle_id) };
-    });
-    const tail = items[items.length - 1];
-    return { ok: true, items, limit: max, truncated, cursor: truncated && tail ? `${tail.action}#${tail.ord}` : null };
-  }
-
-  /** R55 (DEC-108; doorbell R3): whether any litigation hold is in place in the group: whether any entry of any action
-   *  the instance holds has `in_place` as its latest statement (R52), whatever the viewer. Synchronous; writes nothing
-   *  and never throws: a read that fails answers `true`, so doorbell clears nothing it cannot rule a hold out for. */
-  holdInPlace() {
-    try {
-      const r = this.#one(`SELECT 1 AS held FROM action_holds h WHERE h.hold='in_place'
-        AND h.seq = (SELECT MAX(s.seq) FROM action_holds s WHERE s.bundle_id = h.bundle_id AND s.ord = h.ord) LIMIT 1`);
-      return r !== null;
-    } catch { return true; }
-  }
-
   /** R71 (H30 (1); intent R33; K2505): registered with `intent.registerNoneExistsReader`: the `records_request` actions
    *  the viewer may see whose `seeks` (action-grammar's `seeksOf`) names that progression, entity and stage and whose
    *  correspondence holds a `received` entry with outcome `none_exists`, each `{action, ord, at}` (the entry's position
@@ -3241,20 +2900,6 @@ export class Actions {
         : p.action < q.action ? -1 : p.action > q.action ? 1 : p.ord - q.ord));
       return out.slice(0, NONE_EXISTS_MAX);
     } catch { return []; }
-  }
-
-  /* R54: the action's project, as `action-clocks` answers it: the project of the first determination among its
-     `rests_on` legs the viewer may read (conformance's `determinationRead`), null when it rests on none. */
-  #projectOf(fm, viewer) {
-    const conf = this.conformance;
-    if (!conf || typeof conf.determinationRead !== "function") return null;
-    for (const l of (Array.isArray(fm && fm.action_basis) ? fm.action_basis : [])) {
-      if (!l || typeof l !== "object" || l.kind !== "rests_on" || typeof l.target !== "string") continue;
-      let d = null;
-      try { d = conf.determinationRead({ id: l.target, viewer }); } catch { d = null; }
-      if (d && d.ok !== false && typeof d.project === "string" && d.project) return d.project;
-    }
-    return null;
   }
 
   /* R8: the override as the document states it, stamped with who and when from this module's table; null when the
@@ -3306,14 +2951,12 @@ export class Actions {
 
   /** R30: visible actions by filters, in id order, at most 200 per page, `truncated` by reading one past. */
   actionsFor({ determination = null, counterparty = null, state = null, kind = null, after = null, limit = null,
-               pressure = null, proceeding = null, basis_void = null, follows = null, viewer = null } = {}) {
+               proceeding = null, basis_void = null, follows = null, viewer = null } = {}) {
     const max = clampLimit(limit, ACTIONS_PAGE_MAX, ACTIONS_PAGE_MAX);
     const gate = viewerPredicate(viewer);
     const where = [`b.object_type='action'`, `(${gate.sql})`, `b.bundle_id>?`], fixed = [...gate.args];
     const tail = [];
     if (state) { where.push(`b.current_state=?`); tail.push(String(state)); }
-    /* R48: `pressure: true` lists only the actions holding a pressure mark. */
-    if (pressure === true || pressure === "true") where.push(`EXISTS (SELECT 1 FROM action_pressure p WHERE p.bundle_id=b.bundle_id)`);
     if (determination) { where.push(`EXISTS (SELECT 1 FROM action_basis l WHERE l.bundle_id=b.bundle_id AND l.kind='rests_on' AND l.target_id=?)`); tail.push(String(determination)); }
     const out = [];
     let truncated = false;
@@ -3882,8 +3525,7 @@ export class Actions {
 /* The acts answer their catalogue-backed refusals with code, check and translation (the Provides' "Terms"). */
 for (const m of ["actionMove", "actionCorrespond", "actionLaws", "actionLawsPropose", "actionRiskTier", "actionQuotes",
                  "actionReceipt", "actionScope", "actionPromise",
-                 "actionRiskPropose", "actionSeeksPropose", "actionPressure", "actionHold", "actionHoldRelease", "holdReleasePreview",
-                 "projectHolds", "actionCreate", "check"]) {
+                 "actionRiskPropose", "actionSeeksPropose", "actionCreate", "check"]) {
   const fn = Actions.prototype[m];
   Actions.prototype[m] = function (...a) { return withRow(fn.apply(this, a)); };
 }
@@ -3959,27 +3601,6 @@ export function actionsOf(host, deps) {
     const standards = d.standards === null || !(d.standards || d.env) ? null : a.standards;
     if (standards && typeof standards.registerOwnSendingCheck === "function")
       standards.registerOwnSendingCheck("actions", (args) => a.ownSending(args || {}));
-    /* R55 (T42; N826): once per host, as the registrations above, with doorbell (its R3), no longer capture. Doorbell's
-       slot takes one registration (membership's `listenerRefusal`); one already held by this module (another host over
-       the same storage) stands, and one held by any other module is a defect of the wiring, thrown as the purge
-       declaration's is. Doorbell takes no `env` of its own: it reads capture's at each use (its R25), and capture adopts
-       the plane's when the plane builds it (capture R58). */
-    const doorbell = d.doorbell === null ? null : (d.doorbell || doorbellOf(host));
-    if (doorbell) {
-      const r = doorbell.registerReader("litigation-hold", "actions", () => a.holdInPlace());
-      if (r && r.ok === false && r.module !== "actions")
-        throw new Error(`actions: doorbell refused the litigation-hold reader: ${r.reason}${r.module ? ` (held by ${r.module})` : ""}`);
-    }
-    /* R69 (K1830; ratification R45): once per host, the reader of holds over a project that publishing at a set time
-       records and checks again. Ratification is reached on the host when the composition root starts this module with
-       its environment (the plane, which builds ratification next), or given; a host on which it cannot be created
-       registers nothing there, and a reader already held (`HOLD_READER_DECLARED`) stands. */
-    let ratification = null;
-    if (d.ratification !== null && (d.ratification || d.env)) {
-      try { ratification = d.ratification || ratificationOf(host); } catch { ratification = null; }
-    }
-    if (ratification && typeof ratification.registerHoldReader === "function")
-      ratification.registerHoldReader({ holdsOn: (args) => a.holdsOn(args) });
     /* R71 (intent R33; K2505): once per host, the reader of records requests answered that no such record exists,
        reached as ratification is (the composition root's environment, or given); a reader already held
        (`NONE_EXISTS_READER_DECLARED`) stands. */
@@ -4035,28 +3656,12 @@ export function actionsOps(a, url, body) {
                                          viewer: q("viewer"), author: q("author") }),
     action: () => a.actionRead({ id: q("id") || q("target") || b.id || null, viewer: q("viewer"), now: q("now") }),
     actions: () => a.actionsFor({ determination: q("determination"), counterparty: q("counterparty"), state: q("state"),
-                                  kind: q("kind"), after: q("after"), limit: q("limit"), pressure: q("pressure"),
+                                  kind: q("kind"), after: q("after"), limit: q("limit"),
                                   proceeding: q("proceeding"), basis_void: q("basis_void"), follows: q("follows"),
                                   viewer: q("viewer") }),
     /* R62: the offices the record holds as custodian of or responsible for a subject, suggested; a read. */
     addresseesuggest: () => a.addresseeSuggest({ action: q("action") || b.action || null, subject: q("subject") || b.subject || null,
                                                  viewer: q("viewer") }),
-    /* R48: a pressure mark on a recorded received entry. */
-    actionpressure: () => a.actionPressure({ target: q("target") || b.target, ord: q("ord") ?? b.ord ?? null,
-      pressure: b.pressure ?? (q("pressure_kind") !== null || q("pressure_note") !== null
-        ? { kind: q("pressure_kind") ?? "", note: q("pressure_note") ?? "" } : null),
-      viewer: q("viewer"), author: q("author") }),
-    /* R52: a litigation hold on a `legal` pressure mark (declared to the door by op-declarations, K902). */
-    actionhold: () => a.actionHold({ target: q("target") || b.target, ord: q("ord") ?? b.ord ?? null,
-      hold: q("hold") ?? b.hold ?? null, reason: q("reason") ?? b.reason ?? null, projects: b.projects ?? q("projects"),
-      viewer: q("viewer"), author: q("author") }),
-    /* R56, R57, R58 (DEC-113): the hold's release, what it would restart, and whether projects are held (routed with the
-       stamps op-declarations R12 declares; control-plane R47). */
-    actionholdrelease: () => a.actionHoldRelease({ target: q("target") || b.target, ord: q("ord") ?? b.ord ?? null,
-      reason: q("reason") ?? b.reason ?? null, viewer: q("viewer"), author: q("author") }),
-    actionholdpreview: () => a.holdReleasePreview({ target: q("target") || b.target, ord: q("ord") ?? b.ord ?? null,
-      viewer: q("viewer") }),
-    projectholds: () => a.projectHolds({ projects: b.projects ?? q("projects"), viewer: q("viewer") }),
     actionquotes: () => a.actionQuotes({ counterparty: q("counterparty"), request: q("request"), answers: q("answers"),
                                          viewer: q("viewer") }),
     /* R42 (N231): the kinds this instance accepts, a read for every signed-in class (the op's spec is the control

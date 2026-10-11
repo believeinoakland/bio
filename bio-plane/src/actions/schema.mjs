@@ -1,8 +1,8 @@
-/* actions' tables (requirements: `build/requirements/actions.md`, R3, R8, R19, R28, R36, R48, R52; K4). Moved from
- * `schema.mjs` (legacy-store) with their comments; `action_risk_proposals` (R28, REC-215) is new;
- * `action_clock_proposals` (R32) moved to `action-clocks` (K617); `action_overrides` (R8) and `action_pressure` (R48)
- * are T18's, `action_holds` (R52) T20's, `action_hold_projects`
- * (R52, R56; DEC-113) T27's. Each is keyed by the action's `bundle_id` and declared to record-core's purge
+/* actions' tables (requirements: `build/requirements/actions.md`, R3, R8, R19, R28, R36, R73, R79, R80, R82, R87, R88;
+ * K4). Moved from `schema.mjs` (legacy-store) with their comments; `action_risk_proposals` (R28, REC-215) is new;
+ * `action_clock_proposals` (R32) moved to `action-clocks` (K617); `action_overrides` (R8) is T18's; T45 adds the receipts,
+ * scopes, promises and field histories, and moves `action_pressure`, `action_holds` and `action_hold_projects` (R48, R52)
+ * to `action-holds` (its R13, K2781 (1)). Each is keyed by the action's `bundle_id` and declared to record-core's purge
  * (K23), so a purge of that action clears its rows. The projection columns on `bundles` are retrieval's; this module
  * only supplies their values (R12). */
 
@@ -199,51 +199,6 @@ CREATE TABLE IF NOT EXISTS action_overrides (
   at          TEXT NOT NULL     -- when it first landed
 );
 
--- R48 (K597 (1)): PRESSURE MARKED ON A RECEIVED ENTRY - a threat, retaliation,
--- discrediting or legal harassment directed at the group. A member's mark, kept
--- in this table and never written into the entry (the ledger is append-only,
--- R34); one mark per entry.
-CREATE TABLE IF NOT EXISTS action_pressure (
-  bundle_id   TEXT NOT NULL,    -- the action
-  ord         INTEGER NOT NULL, -- the received correspondence entry
-  kind        TEXT NOT NULL,    -- legal | retaliation | discrediting | other
-  note        TEXT NOT NULL,
-  marked_by   TEXT NOT NULL,    -- the member who marked it
-  at          TEXT NOT NULL,
-  PRIMARY KEY (bundle_id, ord)
-);
-
--- R52 (K899 (7), DEC-61): A LITIGATION HOLD stated on a received entry marked
--- pressure of kind legal: in_place (the group is preserving what the matter may
--- reach) or released, with the member's reason. Each statement is appended and
--- never rewritten; the latest for an entry (its highest seq) is its hold. While
--- an entry's hold is in_place, no material of a project it covers, and not the
--- action itself, is purged (R60; DEC-113, K1252).
-CREATE TABLE IF NOT EXISTS action_holds (
-  bundle_id   TEXT NOT NULL,    -- the action
-  ord         INTEGER NOT NULL, -- the received entry carrying the legal mark
-  seq         INTEGER NOT NULL, -- the statement's place among that entry's, from 1
-  hold        TEXT NOT NULL,    -- in_place | released
-  reason      TEXT NOT NULL,
-  stated_by   TEXT NOT NULL,    -- the member who stated it
-  at          TEXT NOT NULL,
-  PRIMARY KEY (bundle_id, ord, seq)
-);
-
--- R52, R56 (DEC-113): A HOLD STATEMENT'S PROJECTS. For an in_place statement,
--- the projects it records: the action's own project (filled in by this module)
--- and each project the member named. For a released statement, the projects
--- it restarted (R56's restarted, computed in the release's transaction,
--- whatever the releasing member may see). Appended with its statement and
--- never rewritten.
-CREATE TABLE IF NOT EXISTS action_hold_projects (
-  bundle_id   TEXT NOT NULL,    -- the action
-  ord         INTEGER NOT NULL, -- the entry carrying the hold
-  seq         INTEGER NOT NULL, -- the statement (action_holds.seq)
-  project     TEXT NOT NULL,    -- a project id
-  PRIMARY KEY (bundle_id, ord, seq, project)
-);
-
 -- R73 (K2561): A PROPOSAL OF WHAT A RECORDS REQUEST SEEKS, stored apart from the
 -- action's own seeks (a member's statement, R70, R72) and labelled by who
 -- proposed it. One proposer's restatement replaces that proposer's rows only.
@@ -319,8 +274,7 @@ CREATE TABLE IF NOT EXISTS action_field_history (
 
 /** The tables, each keyed to the action by `bundle_id` (record-core R21, R46). */
 export const ACTIONS_TABLES = Object.freeze(["action_basis", "correspondence", "action_quotes",
-  "action_law_proposals", "action_risk_proposals", "action_overrides", "action_pressure", "action_holds",
-  "action_hold_projects", "action_seeks_proposals", "action_receipts", "action_scopes", "action_promises",
+  "action_law_proposals", "action_risk_proposals", "action_overrides", "action_seeks_proposals", "action_receipts", "action_scopes", "action_promises",
   "action_field_history"]);
 
 /** Creates the tables; idempotent. */
