@@ -1,6 +1,6 @@
 # BOB to action-replies (T45)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
