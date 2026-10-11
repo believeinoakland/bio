@@ -38,3 +38,7 @@ conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, cu
 ## B7 · CHANGE
 
 action-grammar (T45-25) is merged into tranche/T45 (K2855): rows C-117.30–.58, flat-key readers (entryFieldFindings, premiseOverrideOf, the press holder as text), SUCCESS_RECORD_ID_RE, bearingFindings/BEARINGS and the R15–R25 grammars are real. Merge tranche/T45, switch any stand-in to the real module, re-run, then continue or post COMPLETE again.
+
+## B8 · CHANGE
+
+action-holds (T45-26) is merged into tranche/T45 (K2856). As B1 says: delete your copy of the moved hold code (R48, R52, R54–R60, R69 moved to action-holds; its tables, registrations, refusals and the t20/t27 tests that read C-117.22), retire each id 'moved to action-holds R<n>', and switch the call; the plane's purgeHeld and queue-producers' hold callers are accepted red by name (rule 4 (6), K2849). Merge tranche/T45 first.
