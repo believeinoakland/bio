@@ -6,7 +6,7 @@
    observation published), at each of the four levels, nothing this module publishes names the member: every row of
    the published projection (R40's tables and the signed case document) and every published answer this module gives.
    The needles are the member id always, and the handle and the cover wherever the chosen level does not publish them
-   (R17: each level publishes its own value). The positive controls: the working record does hold the member id (the
+   (`case-tensions` R5, was this module's R17: each level publishes its own value). The positive controls: the working record does hold the member id (the
    register's author, the attribution act's chooser), and the matcher sees the signer's name and each level's value in
    the same population. */
 import { test } from "node:test";
@@ -83,7 +83,7 @@ function publishedAnswers(w, obs, docSha) {
 const hits = (population, needle) =>
   Object.entries(population).filter(([, v]) => JSON.stringify(v).includes(needle)).map(([k]) => k);
 
-test("R17 R25 R40 after a real publication at each attribution level, no published row and no published answer names the member id, nor the handle or cover the level does not publish", () => {
+test("R25 R40 (case-tensions R5, was R17) after a real publication at each attribution level, no published row and no published answer names the member id, nor the handle or cover the level does not publish", () => {
   assert.deepEqual([...ATTRIBUTION_LEVELS], ["group", "project", "cover", "name"]);
   for (const level of ATTRIBUTION_LEVELS) {
     const { w, proj, obs, acts, docSha } = published(level);
@@ -133,7 +133,7 @@ test("R17 R25 R40 after a real publication at each attribution level, no publish
   }
 });
 
-test("R17 R25 the unsigned preparation, which names the member nowhere either, is not in the published population until signed, and the level's value enters it only with the signature", () => {
+test("R25 (case-tensions R5, was R17) the unsigned preparation, which names the member nowhere either, is not in the published population until signed, and the level's value enters it only with the signature", () => {
   const w = world();
   w.member("olive");
   w.member(M, { handle: HANDLE, cover: COVER });
