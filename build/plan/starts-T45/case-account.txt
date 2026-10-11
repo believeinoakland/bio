@@ -6,4 +6,4 @@ Every new id needs an explicit test naming it (K874); every refusal a control. A
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 535 KB with your tests, under the 600 KB limit: read it all whole.
-Merge order in L8: case-grammar, publication, docket, public-read, case-account, case-authoring, case-check.
+Merge order in L8: case-grammar, publication, docket, public-read, case-account, case-authoring, case-check. You use publication, case-grammar, merged before you in this layer: merge `tranche/T45` into your branch when BOB announces each one's merge (a CHANGE), and build meanwhile against your reading of their folded requirements.
