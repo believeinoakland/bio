@@ -2,9 +2,9 @@
    a recorded receipt or service and its governing view; R3's `owed_by`, `due_at`, `steps` and `noticed_by`, and no
    body's date while no reply is owed; R7's `stated` kind; R16 one date, one reminder, over the real `steps`; R17 a
    duty's Noticed item; R18 who owes an entry, the member's statement of one (`clockState`) and `ourDeadlines`. On the
-   test profile and variants of it; instance clock 2026-09-28T12:00Z, zone America/Halifax (UTC−3). Until `actions`'
-   T45 job lands its receipt records (its R80), the fixture's `w.receipts` stands in for the `receipts` its read
-   answers; `duties` (R17) is a stand-in answering `dutiesOf` and `occurrencesOf` in `duties` R7's and R9's shapes. */
+   test profile and variants of it; instance clock 2026-09-28T12:00Z, zone America/Halifax (UTC−3). Receipts and
+   service are recorded through the real `actions.actionReceipt` (its R80); `duties` (R17) is a stand-in answering
+   `dutiesOf` and `occurrencesOf` in `duties` R7's and R9's shapes. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, actionMd, CP, CLK } from "./fixture.mjs";
@@ -34,6 +34,9 @@ function variant() {
   assert.equal(combine([p]).ok, true, JSON.stringify(combine([p]).errors || []).slice(0, 400));
   return p;
 }
+/* actions R80: a member records a receipt or service on the sent entry at `ord`. */
+const receipt = (w, target, ord, kind, at, extra = {}) =>
+  assert.equal(w.actions.actionReceipt({ target, ord, kind, at, how: "the clerk's stamp", account: "seen by me", viewer: M, author: M, ...extra }).ok, true);
 const sent = (w, id, at) => assert.equal(w.actions.actionCorrespond({ target: id, direction: "sent", at, account: "sent", viewer: M, author: M }).ok, true);
 
 test("R2 (T45) a received rule counts from the receipt actions records when one is held, saying so in its trace; with none, from the first sent entry, saying \"receipt not recorded: counted from sending\"", () => {
@@ -46,15 +49,20 @@ test("R2 (T45) a received rule counts from the receipt actions records when one 
   assert.deepEqual([s.entry.date, s.start, s.start_from, s.start_note, s.trace.start_from, s.trace.start_note],
     ["2026-09-07", "2026-09-01", "sent", "receipt not recorded: counted from sending", "sent", "receipt not recorded: counted from sending"]);
   /* a receipt recorded on the sent entry (Thu 3 Sept): counted from it, the trace saying so; the latest record (the last, actions R80) governs. */
-  w.receipts.set(A, [{ ord: 0, kind: "receipt", at: "2026-09-02", how: "portal" },
-                     { ord: 0, kind: "receipt", at: "2026-09-03T09:30", how: "the clerk's stamp" }]);
+  receipt(w, A, 0, "receipt", "2026-09-02");
+  receipt(w, A, 0, "receipt", "2026-09-03T09:30");
+  assert.equal(w.actions.actionRead({ id: A, viewer: M }).receipts.length, 2, "actions' read answers both");
   const r = P();
   assert.deepEqual([r.entry.date, r.start, r.start_from, r.start_note, r.trace.start_from], ["2026-09-09", "2026-09-03", "receipt", undefined, "receipt"]);
   /* a service record is not a receipt; a receipt on another entry is not the first sending's. */
-  w.receipts.set(A, [{ ord: 0, kind: "service", at: "2026-09-03", how: "by hand", party: "the clerk" }, { ord: 5, kind: "receipt", at: "2026-09-03", how: "x" }]);
-  assert.equal(P().start_from, "sent");
+  w.action(B);
+  sent(w, B, "2026-09-01"); sent(w, B, "2026-09-02");
+  receipt(w, B, 0, "service", "2026-09-03", { party: "the clerk" });
+  receipt(w, B, 1, "receipt", "2026-09-03");
+  assert.equal(w.c.clockPropose({ target: B, rule: "records_answer", proposer: M, viewer: M }).proposal.start_from, "sent");
   /* the stored proposal keeps which event it counted from. */
-  assert.equal(JSON.parse(w.rows(`SELECT trace_json FROM action_clock_proposals WHERE bundle_id=?`, A)[0].trace_json).start_from, "sent");
+  assert.deepEqual([A, B].map((id) => JSON.parse(w.rows(`SELECT trace_json FROM action_clock_proposals WHERE bundle_id=?`, id)[0].trace_json).start_from),
+    ["receipt", "sent"]);
 });
 
 test("R2 (T45) a served rule counts from the recorded service on that party, and reads undetermined, with why, when none is held", () => {
@@ -65,9 +73,9 @@ test("R2 (T45) a served rule counts from the recorded service on that party, and
   /* control: no service held: undetermined, never counted from sending. */
   const u = P();
   assert.equal(u.entry.date, null); assert.match(u.undetermined, /no service/);
-  w.receipts.set(A, [{ ord: 0, kind: "receipt", at: "2026-09-02", how: "portal" }]);
+  receipt(w, A, 0, "receipt", "2026-09-02");
   assert.equal(P().entry.date, null, "a receipt is not a service");
-  w.receipts.set(A, [{ ord: 0, kind: "service", at: "2026-09-04", how: "by hand", party: "the Town Clerk" }]);
+  receipt(w, A, 0, "service", "2026-09-04", { party: "the Town Clerk" });
   const s = P();
   assert.deepEqual([s.entry.date, s.start, s.start_from], ["2026-09-14", "2026-09-04", "service"]);
 });

@@ -7,9 +7,8 @@
    (id → {project, sees: [viewers]}), and content a stand-in presenting no capture; local-facts is the real one (R10, R11),
    and so are promotion (R13's revision) and standards (R7, R13; created on first use). `override` maps a profile id to
    a profile object the instance resolves in its place (both this module and local-facts take `combine`, local-facts
-   `get`), so a test can run on a variant of the test profile. T45: steps is the real one (R16), registered with at start;
-   `w.receipts` stands in for the receipt and service records `actions`' read answers (its R80) until its T45 job lands
-   them. Every test drives `action-clocks` at its interface. */
+   `get`), so a test can run on a variant of the test profile. T45: steps is the real one (R16), registered with at start.
+   Every test drives `action-clocks` at its interface. */
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
@@ -145,16 +144,11 @@ export function world({ profiles = ["test-port-ellery"], override = null } = {})
   const zoneView = () => { const g = localFacts.governingView(); return g && g.ok ? g.view : null; };
   const steps = stepsOf(host, { record, membership, promotion, observationLog, legEarning: null, view: zoneView,
                                 now: () => new Date(clock.ms).toISOString() });
-  /* R2 (actions R80): the receipt and service records actions' read answers as `receipts`; until actions' T45 job lands
-     them, `w.receipts` (action id → records) stands in for that field of its read. */
-  const receipts = new Map();
-  const realRead = actions.actionRead.bind(actions);
-  actions.actionRead = (a) => { const r = realRead(a); return r && r.ok !== false && receipts.has(a.id) && !Array.isArray(r.receipts) ? { ...r, receipts: receipts.get(a.id) } : r; };
   const c = actionClocksOf(host, { record, membership, promotion, actions, conformance, localFacts, steps, combine: combineOver,
                                    now: () => clock.ms });
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, actions, localFacts, c, clock, determinations, steps, receipts,
+    st, host, record, membership, promotion, actions, localFacts, c, clock, determinations, steps,
     /** The real standards module on this host (R7, R13), created on first use; its text's content ids resolve, through a
      *  content stand-in, to the document `INFO-2026-0099-std`, which the first call promotes. */
     standards: () => {
