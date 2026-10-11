@@ -38,3 +38,7 @@ Size (session_01Kru2kyU9rCEgAQWN4QGh4o): test runs 26, module lines 4108
 ## J2 · REPORT
 
 Two things outside capture. (1) control-plane: `src/control-plane/owner-ops.mjs`:52–53 passes `within: q("within")` (a query string) to `capture.uploadCapture`; capture ignores it since it is not a function, but it reads as unintended. (2) The plane bundle (and anything bundling capture's source) is staled by this job's source change, rule 4 (10).
+
+## J3 · COMPLETE
+
+T42-7 done; record's Completion section has the detail. Doorbell tests out of capture (map §6), held R76 rebuilt over provenance.recordReceipt({via: DOORBELL_VIA}), R86 tested against its own wording (fence now also refuses `member:` naming no member), the doorbell copy named as T43's delete throughout, R37 rebuilt, K2627's nine `where`s re-pointed to doorbell's files (map §2 names; I match doorbell's COMPLETE at my merge), R87 met and tested with negative controls (K2629). capture 124/124; uploadCapture's users 118/118 unchanged; the rows' readers 299/300, the one failure identical on tranche/T42 (rule 4 (6)). format, architecture, coverage (40/40), ownership: 0 failures. Measure 4,108 while the copy is kept. R86 and R87 can lose their not-yet-met marks at merge.
