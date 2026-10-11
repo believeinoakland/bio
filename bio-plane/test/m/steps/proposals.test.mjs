@@ -97,3 +97,26 @@ test("R28: stepAccept refuses a proposed step that is absent or unseen with NO_S
   assert.equal(ok.ok, true);
   assert.notEqual(ok.code, "NO_SUCH_STEP_PROPOSAL");
 });
+
+test("R24, R6: a decided proposal never names a step that has gone — deleting the step it created clears the proposal's step, and a store holding such a name is cleared at start (negative control: a proposal whose step is held still names it)", () => {
+  const w = world();
+  w.runs();
+  w.draw(QP1, P1);
+  const prop = (work) => w.s.stepPropose({ place: { questions: [QP1] }, work, why: "y", run: "RUN-1", by: AI }).proposal;
+  const a = prop("Ask the clerk"), b = prop("Read the agenda");
+  const ra = w.s.stepAccept({ proposal: a, form: "as_proposed", by: ANN });
+  const rb = w.s.stepAccept({ proposal: b, form: "as_proposed", by: ANN });
+  const shown = (id) => w.s.stepProposals({ viewer: ANN }).proposals.find((x) => x.proposal === id);
+  assert.equal(shown(a).step, ra.step);
+  assert.equal(w.s.stepDelete({ step: ra.step, by: ANN }).deleted, true);
+  assert.deepEqual([shown(a).status, shown(a).form, shown(a).step], ["accepted", "as_proposed", null], "the decision stays; the gone step is not named");
+  assert.equal(w.rows(`SELECT COUNT(*) AS n FROM step_proposals WHERE step_id = ?`, ra.step)[0].n, 0);
+  assert.equal(shown(b).step, rb.step, "negative control: a held step is still named");
+  /* a store that already holds a gone step's name (its trigger made before this one) is cleared when the module starts */
+  w.rows(`DROP TRIGGER steps_gone_proposals`);
+  assert.equal(w.s.stepDelete({ step: rb.step, by: ANN }).deleted, true);
+  assert.equal(shown(b).step, rb.step, "without the trigger, the name is left");
+  w.s.migrate();
+  assert.equal(shown(b).step, null);
+  assert.equal(w.rows(`SELECT COUNT(*) AS n FROM sqlite_master WHERE type = 'trigger' AND name = 'steps_gone_proposals'`)[0].n, 1);
+});

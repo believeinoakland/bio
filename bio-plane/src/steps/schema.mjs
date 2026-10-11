@@ -183,6 +183,12 @@ CREATE TRIGGER IF NOT EXISTS step_proposal_refs_last AFTER DELETE ON step_propos
   DELETE FROM step_proposals WHERE proposal_id = OLD.proposal_id AND place_kind = 'questions'
     AND NOT EXISTS (SELECT 1 FROM step_proposal_refs r WHERE r.proposal_id = OLD.proposal_id);
 END;
+-- a decided proposal never names a step that has gone (T42, K2655); its own trigger, so a store whose steps_gone
+-- predates it gains it, and the update after it clears what such a store already left
+CREATE TRIGGER IF NOT EXISTS steps_gone_proposals AFTER DELETE ON steps BEGIN
+  UPDATE step_proposals SET step_id = NULL WHERE step_id = OLD.step_id;
+END;
+UPDATE step_proposals SET step_id = NULL WHERE step_id IS NOT NULL AND step_id NOT IN (SELECT step_id FROM steps);
 `;
 
 /* R22: each table with how a purge reaches it. `keys` names the column that ties its rows to a bundle; `[]` is reached
