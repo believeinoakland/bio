@@ -43,3 +43,12 @@ Size (session_01LUJMTyBUMuQMAruQweWeZp): test runs 11, module lines 1048
 ## J2 · REPORT
 
 **plane (T42-30): the whole-plane test of `op=knock` at the door.** The map's §6 moves `capture/plane.test.mjs` 66–75 (`op=knock` reached with no token under Miniflare, an empty knock answering C-85.5) to doorbell. I did not move it: until plane's T42-30 the plane's door (`plane/door.mjs`:16, 43) calls capture's `capturePublicOp`, so in L3 the test exercises capture's copy and the plane's interface, not doorbell's. Doorbell's own door is tested at its interface (`doorbellPublicOp`, `test/m/doorbell/ops.test.mjs`). If capture's job removes that test as §6 lists, nothing tests `op=knock` at the whole plane's door until T42-30; suggested: plane's T42-30 carries it, re-pointed to `doorbellPublicOp` (its R5), and capture's job keeps it until then.
+
+## J3 · COMPLETE
+
+COMPLETE, T42-6 (R1–R25). Record: `build/jobs/T42/doorbell.md` "Completion (T42-6)", branch `job/T42/doorbell`.
+- **paths** `["bio-plane/src/doorbell/"]`, **tests** `["bio-plane/test/m/doorbell/"]`; **uses** add `docprofile` and `signatures` (test-only, layer 1; two moved tests import them), else architecture fails those two imports.
+- **Raisers for capture's `where`s (K2627):** `src/doorbell/index.mjs #noSuchKnock > is-knock-held`, `… pullKnock > is-knock-pullable`, `… inboxResolve > is-resolve-reasoned`, `… #knockRateRefusal > is-knock-rate`; `src/doorbell/door.mjs knockEnvelopeTooLarge > is-knock-envelope-too-large`, `knockPayloadTooLarge > is-knock-payload-too-large`, `knockEmpty > is-knock-empty`, `knockerSecretWeak > is-knocker-secret-strong`.
+- **Tests:** 69, pass 67, fail 2: R21's `where` arm, red until CAPTURE #26's merge (K2627); with capture's re-point applied locally, 69/0.
+- **Checks** (doorbell's entry set locally as above): format 0, architecture 0, coverage 25/25, ownership 0 (15 files).
+- Deferred: none. REPORT J2: plane's door test of `op=knock`.
