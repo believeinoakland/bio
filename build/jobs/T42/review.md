@@ -1,6 +1,6 @@
 # review (T42)
 
-**Status** · session_01Q9tRjtcTJSD2S8QXLJKLdc · depth 2 · WORKING · handled B3
+**Status** · session_01Q9tRjtcTJSD2S8QXLJKLdc · depth 2 · COMPLETE · handled B4
 
 ## Completion (T42-23a; N839, K2608, K2614; B1, B2 (K2670), B3 (K2673))
 
@@ -44,6 +44,22 @@
 
 Size (session_01Q9tRjtcTJSD2S8QXLJKLdc): test runs 12, module lines 1310
 
+**After B4 (K2674; `tranche/T42` @ 5c85c27818 merged; case-authoring merged):** `build/modules.json` conflicted on review's line. I kept the tranche's line, which is identical in content (case-authoring's job added the same edge), so this branch no longer changes `modules.json`. I re-ran everything:
+- review: 46/46.
+- Users (P11):
+  - notice-producers: 90/0
+  - op-declarations: 128/0
+  - control-plane: 216/0
+  - plane: 166/0. `accepted.test.mjs`:115 is cleared by case-authoring's fix.
+  - migrate-released: 1/0
+  - answer-envelope: 28/1, `families.test.mjs`:425, the inherited rule 4 (6).
+- `format: 147 modules, 146 requirements files; 0 failures`
+- `architecture: 9 product files, 47 relative imports (0 naming no tracked file, not judged); 0 failures`
+- `coverage: 1 modules, 33 of 33 live requirement ids named by a test; 0 failures`
+- `ownership: 5 files changed by review between tranche/T42 and HEAD; 0 failures`
+
+Size (session_01Q9tRjtcTJSD2S8QXLJKLdc), after B4: test runs 19, module lines 1310
+
 ## J1 · QUESTION
 
 Started; read B1. Reading: my requirements whole, layer 8's row of `layers.md`, case-account's requirements whole (R7 and R12 are what I call), K2608, K2614, `case-account-split.md` §5, plan T42-23a, and my module's whole code (index 1008, checks 170, schema 127) and tests (fixture 221, acts 407, copy 459, doors 211, invariants 219, approvals 249), all read myself, no worker summary (0 KB summary).
@@ -62,3 +78,7 @@ REPORT (case-authoring, plane; details in my record's "Found in other modules"):
 ## J3 · COMPLETE
 
 COMPLETE (T42-23a). `reviewOf` registers `reviewCommentsFor` with `caseAccountOf(host).registerReviewComments` (case-account R7, R12) only. The edge is added on my branch: `build/modules.json`, review `uses` + `case-account` (B2; ownership reports it, the one failure). review 46/46, with a negative control (both R33 registration tests fail when the registration goes to case-authoring). format, architecture and coverage 0 failures. Users: notice-producers, op-declarations, control-plane, migrate-released green. answer-envelope `families.test.mjs`:425 is inherited (rule 4 (6)). plane `accepted.test.mjs`:115 is red until case-authoring's B3 fix (see my REPORT). Record: `build/jobs/T42/review.md` on `job/T42/review`.
+
+## J4 · COMPLETE
+
+COMPLETE after B4. Merged tranche/T42 (case-authoring, K2674). On the modules.json conflict I kept the tranche's identical line, so this branch no longer touches modules.json; ownership shows 0 failures. review 46/46. Users green: notice-producers, op-declarations, control-plane, migrate-released, and plane 166/0 (accepted.test.mjs:115 now green). answer-envelope families.test.mjs:425 is the inherited rule 4 (6). format, architecture and coverage 0 failures. Record updated on job/T42/review.
