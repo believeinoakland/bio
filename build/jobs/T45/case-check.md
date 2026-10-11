@@ -1,6 +1,6 @@
 # case-check (T45)
 
-**Status** · session_0147VSsrfyRUc6H7GZeANVWi · depth 2 · WORKING · handled B5
+**Status** · session_0147VSsrfyRUc6H7GZeANVWi · depth 2 · COMPLETE · handled B5
 
 ## J1 · QUESTION
 
