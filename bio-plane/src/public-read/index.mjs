@@ -27,12 +27,15 @@
  *                  and `docketFeed` (its R15), for R20, R21 and R25:
  *                  the docket's public answers, which this module serves and never composes (N520; default:
  *                  `docketOf(host)`).
+ *   record         `record-core`, for its `getSetting` (its R25) of the one setting `declared_stake`, for R34 (default:
+ *                  `recordOf(host)`, reached at the read, so a world without it reads the stake undetermined).
  *   storage        the Durable Object's storage (default: the host's).
  *
  * READ CONTRACT it reads in its own SQL, and never writes: `publication` R40's `published_bundles`, `published_cases`,
  * `published_case_members`, `cases`, `published_edges` and `published_shas`. */
 
 import { publicationOf } from "../publication/index.mjs";
+import { recordOf } from "../record-core/index.mjs";
 import { docketOf } from "../docket/index.mjs";
 import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
          LENS_CLOSING_SENTENCES, workingOnOf, methodOf, materialsOf, standingOf, gradingFactsOf, passagesOf,
@@ -196,15 +199,32 @@ function outputOf(key, result) {
   return { key, ...one(result), label: COMPUTED_FACT };
 }
 
+/* R34 (T45; N883, N892 (d); Actions D16, D28d; v0.2 rule 21): the group's per-group fields, stated in words where they
+   are undetermined or absent (R13): never a guess, never an unread stake read as none. */
+export const DECLARED_STAKE_SETTING = "declared_stake";
+export const GROUP_FIELDS_SENTENCE = "the group's public identity and the stake it declares, as its own administrators "
+  + "set them";
+export const GROUP_IDENTITY_UNDETERMINED_SENTENCE = "the group's public identity is undetermined: no source of it "
+  + "answered at this read, so nothing here names the group, and that is not a statement that it has no name";
+export const STAKE_NONE_SENTENCE = "the group has declared no stake: its administrators have set none";
+export const STAKE_UNDETERMINED_SENTENCE = "the group's declared stake could not be read, so it is undetermined, which "
+  + "is not a statement that the group declared none";
+export const GROUP_FIELDS_CURRENT_SENTENCE = "the group's public identity and declared stake as they stand at this "
+  + "read, labelled current: they are not read from this edition's signed document or its case file, and a later "
+  + "declaration changes nothing published";
+
 export class PublicRead {
   #evidenceBlock = null; // R8: {module, name, fn}, filled once
   #publicReads = new Map(); // R18: name -> {module, params, read}, each name registered once
   #originalsByEdition = new Map(); // R23 (T38): `case NUL edition` -> the originals of the material its signed document states as carried by copy
+  #groupIdentity = null; // R34: {identity}, filled once
+  #record; // R34: () => record-core, reached at the read
 
-  constructor({ storage, publication, docket } = {}) {
+  constructor({ storage, publication, docket, record = null } = {}) {
     this.sql = storage.sql;
     this.publication = publication;
     this.docket = docket;
+    this.#record = typeof record === "function" ? record : () => record;
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -242,6 +262,61 @@ export class PublicRead {
                    + "case's signed bytes, and nothing of it is a claim the case makes" };
   }
 
+
+  /* ---------------------------------------------------------------- R34: the group's per-group fields */
+
+  /** R34: takes, once at start, the one source of the group's public identity: `identity()` answers it as
+   *  `instance-setup`'s `groupIdentityPublic` does (its R10: `group`, `display_name`, `domain`, `domain_verified_at`).
+   *  A second registration is refused `PROVIDER_DECLARED`, one without the door `PROVIDER_MALFORMED`; each registers
+   *  nothing (`publication` R77's pattern). */
+  registerGroupIdentity({ identity } = {}) {
+    if (typeof identity !== "function")
+      return { ok: false, reason: "PROVIDER_MALFORMED",
+               detail: "the group's identity source is registered with its door, identity(); nothing was registered" };
+    if (this.#groupIdentity)
+      return { ok: false, reason: "PROVIDER_DECLARED",
+               detail: "the group's identity source is already registered; the first stands, and nothing was registered" };
+    this.#groupIdentity = { identity };
+    return { ok: true };
+  }
+
+  /** R34: the group's per-group fields, synchronously, with no credential and no viewer: `{group, name, domain,
+   *  domain_verified_at, stake, detail}`. The first four are exactly what the registered source answers (`name` its
+   *  display name); with none registered, or one that throws or answers no object, all four are null and `detail` says
+   *  the identity is undetermined. `stake` is `record-core`'s setting `declared_stake` as held: null when never set,
+   *  `"undetermined"` when it cannot be read, never null then. It reads nothing else (R10), writes nothing and never
+   *  throws. */
+  groupFields() {
+    const said = [];
+    /* The identity, copied out of the source's answer inside the guard, so an answer that throws when read is an
+       undetermined identity too, never a throw. */
+    let id = null;
+    try {
+      const a = this.#groupIdentity ? this.#groupIdentity.identity() : null;
+      if (a && typeof a === "object" && !Array.isArray(a) && typeof a.then !== "function") {
+        const f = (k) => (Object.hasOwn(a, k) ? a[k] ?? null : null);
+        id = { group: f("group"), name: Object.hasOwn(a, "display_name") ? f("display_name") : f("name"),
+               domain: f("domain"), domain_verified_at: f("domain_verified_at"),
+               detail: typeof a.detail === "string" && a.detail ? a.detail : null };
+      }
+    } catch { id = null; }
+    if (!id) said.push(GROUP_IDENTITY_UNDETERMINED_SENTENCE);
+    else if (id.detail) said.push(id.detail);
+    let stake;
+    try {
+      const record = this.#record();
+      if (!record || typeof record.getSetting !== "function") throw new Error("no record");
+      const v = record.getSetting(DECLARED_STAKE_SETTING);
+      stake = v === undefined ? null : v;
+      if (stake === null) said.push(STAKE_NONE_SENTENCE);
+    } catch {
+      stake = "undetermined";
+      said.push(STAKE_UNDETERMINED_SENTENCE);
+    }
+    return { group: id ? id.group : null, name: id ? id.name : null, domain: id ? id.domain : null,
+             domain_verified_at: id ? id.domain_verified_at : null, stake,
+             detail: said.length ? said.join("; ") : GROUP_FIELDS_SENTENCE };
+  }
 
   /* ---------------------------------------------------------------- R18: the registered public reads */
 
@@ -1147,6 +1222,9 @@ export class PublicRead {
              edition_index: theCase ? editions.map((e) => ({ ...e, withdrawn: withdrawn.get(Number(e.edition)) ?? null }))
                                     : editions,
              latest_edition: editions.length ? editions[editions.length - 1].edition : ed,
+             /* R34: the group's identity and declared stake as they stand now, labelled current; never read from or
+                written into the signed document or the case file (R23). */
+             group_fields: { ...this.groupFields(), current: true }, group_fields_detail: GROUP_FIELDS_CURRENT_SENTENCE,
              case_detail: "a published case is a CONTAINER over one or more FINDINGS (DEC-44). Each finding "
                         + "carries its OWN conclusion, falsifier, basis and its own frozen PAIR of strengths; "
                         + "the case carries the scope that brought them together, the completeness "
@@ -1725,7 +1803,9 @@ export function publicReadOf(host, deps) {
     const storage = d.storage || host.storage;
     const publication = d.publication || publicationOf(host);
     const docket = d.docket || docketOf(host);
-    r = new PublicRead({ storage, publication, docket });
+    /* R34: record-core, reached at the read (a throw there reads the stake undetermined). */
+    const record = d.record || (() => recordOf(host));
+    r = new PublicRead({ storage, publication, docket, record });
     instances.set(host, r);
   }
   return r;
