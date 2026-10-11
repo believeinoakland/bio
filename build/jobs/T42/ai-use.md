@@ -35,3 +35,7 @@
 - `ownership: 3 files changed by ai-use between tranche/T42 and HEAD; 0 failures`
 
 Size (session_01AMQaBZVH3bFkd2cy8mBiz3): test runs 16, module lines 1139
+
+## J1 · COMPLETE
+
+T42-17 complete at the branch head (tranche/T42 @ fadb0f8ff1 merged). R2 (N848): migrate() drops ai_ceilings after the carry (DROP TABLE IF EXISTS on every migration; the carry still once), so a store whose carry already ran drops it at its next migration. R3/R6/R9 (N831, K2620): #exploreOf reads credentials.accountUsesOf({owner}), no viewer, reading held === true (not unreadable) before uses.explore, failing closed to no; accountUses is no longer called for it. t42.test.mjs: 5 tests (R2 x2, R3 x3) with negative controls; with index.mjs reverted 4 of 5 fail. ai-use 54/54. migrate-released 585 pass, 0 fail: the ai_ceilings arm (born on 0.80.0, no table a fresh store lacks) is green, which clears rule 4 (7). Users: all green except answer-envelope catalogue-end.test.mjs:27 (inherited rule 4 (6), red without this change). Checks 0 failures each. REPORT inside: ai-use's own EXPLORE_OUT_OF_SCOPE (C-143.5) and EXPLORE_ASK_INVALID (C-143.6) are not in R8 and carry sentences written in checks.mjs with no words.json key, against R13. AI_USE_WORDS is a copy of words.json. This needs words keys and R8/R13 text: deferred in the record. Details in the record's Completion section.
