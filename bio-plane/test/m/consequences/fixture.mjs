@@ -152,7 +152,8 @@ export function world({ passages = true, group = "test-group", superseded = null
 
   /* conformance R9, as far as R1 reads it; R33's `void: {causes}` (its outcomes then read undetermined, the recorded one
      beside them), and the act's `when` and the findings R22 reads of a curing determination. R37's `curesOf` answers
-     per standard the standing link a test states in `cures` (keyed `determination|standard`), or null. */
+     `{standards: [{standard, link, ended}]}` (K2850), `link` the standing link a test states in `cures` (keyed
+     `determination|standard`), or null. */
   const determinations = new Map();
   const cures = new Map();
   const conformance = {
@@ -171,8 +172,8 @@ export function world({ passages = true, group = "test-group", superseded = null
       if (!d || (viewer != null && membership.sight(d.project, viewer) !== "full"))
         return { ok: false, reason: "NO_SUCH_DETERMINATION", determination };
       const stds = standard ? [standard] : d.outcomes.map((o) => o.standard);
-      return { ok: true, determination, cures: Object.fromEntries(stds.map((st) => [st, cures.get(`${determination}|${st}`) ?? null])),
-               ended: [] };
+      return { ok: true, determination,
+               standards: stds.map((st) => ({ standard: st, link: cures.get(`${determination}|${st}`) ?? null, ended: [] })) };
     },
   };
   /* case-authoring R71's `carryOutcome`, as R22 calls it: each call recorded in `carried`; a case named in

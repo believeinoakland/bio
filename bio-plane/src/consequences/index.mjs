@@ -1483,18 +1483,12 @@ function noCure(k) {
     + `${str(k.standard) ?? "that standard"}.${NOTHING}`, { determination: str(k.determination), standard: str(k.standard) });
 }
 
-/* R22: the standing link `curesOf` answers for one standard, read from its answer per standard (an object keyed by
-   standard, or a list of links naming theirs); null when none stands. */
+/* R22: the standing link `curesOf` answers for one standard (its R37 answer, K2850: `{standards: [{standard, link,
+   ended}]}`, `link` the standing link `{link, cure, standard, by, at, cure_standing}` or null); null when none stands. */
 function standingLink(res, standard) {
-  if (!isObj(res)) return null;
-  for (const key of ["cures", "links", "standards", "cured_by"]) {
-    const v = res[key];
-    if (Array.isArray(v)) {
-      const l = v.find((x) => isObj(x) && x.standard === standard && !x.ended);
-      if (l) return l;
-    } else if (isObj(v) && standard in v) return isObj(v[standard]) ? v[standard] : null;
-  }
-  return isObj(res.link) || (str(res.link) && res.standard === standard) ? (isObj(res.link) ? res.link : res) : null;
+  const rows = isObj(res) && Array.isArray(res.standards) ? res.standards : [];
+  const row = rows.find((x) => isObj(x) && x.standard === standard);
+  return row && isObj(row.link) ? row.link : null;
 }
 
 /* R22: evidence ids as case-account R5's cites: a passage by its content id, a finding by its id. */
