@@ -20,3 +20,12 @@
 **Checks:** `format: 147 modules, 146 requirements files; 0 failures`; `architecture: 10 product files, 57 relative imports; 0 failures`; `coverage: 1 modules, 25 of 25 live requirement ids named by a test; 0 failures`; `ownership: 6 files changed by run-productions between tranche/T42 and HEAD; 0 failures`.
 
 **Next:** on the CHANGEs for inquiry (T42-12) and basis-versions (T42-16), merge `tranche/T42`, drop the guard, run R25 against the real slots, then re-run steps 5–7 and post COMPLETE.
+
+## J1 · REPORT
+
+R25 is built against stand-ins and run-productions passes 57/57. Two things for you.
+
+1. **A red in question-explorer that this change causes.** `bio-plane/test/m/question-explorer/module.test.mjs`:28 ("the module's tables are declared to record-core's purge…") fails with `no such table: inquiry_findings`; it passes 27/27 on `tranche/T42`. Cause: `runProductionsOf` now builds `inquiry` through `inquiryOf` (an edge already in `uses`) so it can register with R62, and `inquiryOf` declares inquiry's tables to purge. question-explorer's world calls `runProductionsOf(host)` (`src/question-explorer/index.mjs`:884) on a store that never creates inquiry's tables, so `record.purge` fails. In production the plane creates and migrates inquiry anyway. Proposed fix, in question-explorer's own test fixture: create inquiry's tables (migrate it), or pass `runProductionsOf` a `runProductions` stand-in. question-explorer is open in this layer (QUESTION-EXPLORER #2); please route it to them by CHANGE.
+2. **Waiting on the two providers.** Until inquiry (T42-12) and basis-versions (T42-16) merge, the registration is guarded: the read registers only where `onMachinePassage` exists. At each CHANGE I merge `tranche/T42`, drop the guard, run R25 against the real slots and post COMPLETE.
+
+Other users: skills, op-declarations, store-door, control-plane, plane and agent-worker are green. answer-envelope `catalogue-end.test.mjs`:17 (rule 4 (6)) and `migrate-released`'s `ai_ceilings` (rule 4 (7)) are inherited reds. C-104.32 joins rule 4 (2). Details are in the record's Progress section.
