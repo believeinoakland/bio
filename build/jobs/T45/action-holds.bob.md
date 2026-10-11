@@ -26,3 +26,7 @@ K2848: R11 re-worded: export holdNotInPlace(place), the one minter of HOLD_NOT_I
 ## B4 · CHANGE
 
 action-grammar (T45-25) is merged into tranche/T45 (K2855): rows C-117.30–.58, flat-key readers (entryFieldFindings, premiseOverrideOf, the press holder as text), SUCCESS_RECORD_ID_RE, bearingFindings/BEARINGS and the R15–R25 grammars are real. Merge tranche/T45, switch any stand-in to the real module, re-run, then continue or post COMPLETE again.
+
+## B5 · CHANGE
+
+actions (T45-27) is merged (K2859) and its hold code deleted, so the copy window has ended. (1) Your R1 stands as written: a pressure key stated at actions.actionCorrespond stays on the entry (flat: pressure_kind, pressure_note) and is read here through actionRead; make your readers read it there and bring pressure.test.mjs R1 in line (actions built it so). (2) readers.test.mjs 'R4 R10 the copy window' is now red by design: register as your own (the plane composes actionHoldsOf in T45-47) and replace that test with one for the ended window. Merge tranche/T45, re-run, post COMPLETE.
