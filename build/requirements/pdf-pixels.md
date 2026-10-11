@@ -4,7 +4,7 @@
 
 ### Purpose
 
-A PDF page, or an image a page places, as upright PNG pixels: page analysis, filter chains and routes,
+A PDF page, an image a page places, or a picture file (R42), as upright PNG pixels: page analysis, filter chains and routes,
 rotation, PNG, and crop, with their declared refusal vocabularies (`REFUSALS`, `CROP_REFUSALS`). Tier 3
 (`ocr-worker`) and `content` read through it. It writes nothing and holds no binding.
 
@@ -91,6 +91,10 @@ Status.
 - **R34** Never composites marks drawn over the image and never applies the placement's own rotation or
   flip: the crop is the image exactly as the file stores it (EXTRACTION-BREADTH §3.4).
 
+**A picture file** (T43; N853b; K2611, K2691):
+- **R42** `renderPictureToPixels(bytes, pageIndex, {maxEdge, grey})` (`picturepixels.mjs`) answers `{ok: true, page: 0, route: "decoded-picture", mediaType: "image/png", bytes, width, height, upright: true, orientation, reduced_by, source: {format, width, height, comps}, pixels_sha256}` or `{ok: false, reason, why, …}`. Refusals: bytes neither JPEG nor PNG, `NOT_A_PICTURE`; `pageIndex` not 0, `NO_SUCH_PAGE` (`pageCount: 1`); `width × height × components` from the header over the exported `PICTURE_FRAME_MAX` (measured by the job), `IMAGE_TOO_LARGE`, before any decode; a codec's refusal mapped as R22 and R25 map them, total over `PNG_REFUSES`. Otherwise it decodes (`image-codecs` R1, R10), orients (R43), turns grey when `grey`, reduces by the smallest integer factor bringing the long edge to `maxEdge` or less (a box average; partial edge boxes over the pixels present), and encodes an 8-bit PNG, pixel-exact against Pillow (`exif_transpose`, `convert("L")`, `reduce(k)`). It never answers the file's own bytes. *(not yet met: T43)*
+- **R43** A JPEG's EXIF Orientation (APP1, tag 0x0112), values 1–8, is applied exactly, mirroring included; a missing or unreadable tag counts as 1. A PNG is never turned. *(not yet met: T43)*
+
 ## Private
 
 ### Uses
@@ -102,7 +106,7 @@ Status.
 
 ### Invariants
 
-- **R39** Every `ok:false` answer's `reason` is a key of the declared `REFUSALS` (pixels) or
+- **R39** Every `ok:false` answer's `reason` (R42's among them, T43) is a key of the declared `REFUSALS` (pixels) or
   `CROP_REFUSALS` (crop) object, and `why` is exactly that key's own text; a reason outside the set is a
   defect in this module, never a caller's to interpret.
 - **R40** Pure per call: the same bytes and options always answer the same way; no clock, no randomness,
