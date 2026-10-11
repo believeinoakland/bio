@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 373 KB by `build/plan/read
 Merge order in L8: case-account first (built by copy, K624), then case-authoring and review, each after it: BOB sends each a CHANGE when case-account merges; merge the tranche branch then. Jobs this layer: case-account, case-authoring, review, case-disclosures, publication.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+J1 (K2670): agreed, nothing to route; your Uses now names allocId (wording, on tranche/T42).
