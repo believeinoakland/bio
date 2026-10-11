@@ -28,3 +28,7 @@ The checks (format, architecture, coverage, ownership) were all 0 failures. Arch
 - A worker read the rest whole and wrote a 9,026-byte summary citing file and line: `document.mjs`, `checks.mjs`, `searched.mjs` and the 22 other test files. None uses a moved name. `tensions.test` uses `w.runs` for contradiction's gate, which stays. `carries.test` 65/75 counts tables across a publish, which still holds because the fixture creates case-account's tables first.
 
 **For BOB.** `modules.json`'s case-authoring `uses` still lists `ai-runs` and lacks `case-account`. That edge is BOB's (the map's §3; START); the architecture check will need it once case-account's files are tracked.
+
+## J1 · REPORT
+
+Prepared T42-23 against requirements/case-account.md and pushed (901399311f): moved bodies and tables deleted, publishCase/publishPreflight ask case-account in R69's order, three pass-throughs kept, caseAccountOf created eagerly, fixture builds caseAccountOf first, explicit R69 tests with negative controls. Verified against an uncommitted stand-in copied per the map §2 (since deleted): case-authoring 183/183; review, affordances, op-declarations, control-plane, plane all green; answer-envelope 28/29, the red families.test.mjs:425 is accepted red 6 (same with my change stashed). Checks 0 failures. For BOB: modules.json case-authoring uses still lists ai-runs and lacks case-account (BOB's edge). Waiting on case-account's CHANGE to merge tranche/T42 and re-run against the real module.
