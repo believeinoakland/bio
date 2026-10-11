@@ -145,7 +145,7 @@ test("R21: each alias names the function its op's arm calls — driven through t
   assert.ok(!calls.some(([k]) => String(k).toLowerCase() === "createevent"));
 });
 
-test("R21, R27 (K1901; T36, K2084; T37, K2159, K2171; T38, K2300): an act the registry marks `owed` is no op until its ruling's op is declared under its own name, and then it is that op, read as served with no alias made — on PR #14's registry the ten T34's and T35's ops declare, the nine R32 and R33 declare the eight T37 declares (R35–R39) and, on PR #15's registry, R40's obscuremarkwithdraw (T38), `owed:placewanted` gone; (T43; DEC-189 (3), DEC-190) 37 of them re-pointed to their declared ops and subscriptionsignin, projectaikeepaway and pagetranscribe owed and served; no spec names `owed:`; infolevelset, the one owed act no owner serves, has no spec", () => {
+test("R21, R27 (K1901; T36, K2084; T37, K2159, K2171; T38, K2300): an act the registry marks `owed` is no op until its ruling's op is declared under its own name, and then it is that op, read as served with no alias made — on PR #14's registry the ten T34's and T35's ops declare, the nine R32 and R33 declare the eight T37 declares (R35–R39) and, on PR #15's registry, R40's obscuremarkwithdraw (T38), `owed:placewanted` gone; (T43; DEC-189 (3), DEC-190) 37 of them re-pointed to their declared ops and subscriptionsignin and projectaikeepaway owed and served; (R47, T44; DEC-191, K2732) on PR #25's registry pagetranscribe a served act, owed no longer, declared once under its own name with no alias; no spec names `owed:`; infolevelset, the one owed act no owner serves, has no spec", () => {
   for (const op of Object.keys(OPS)) assert.ok(!op.includes(":") && !op.includes(" "), op);
   const owed = actsOf("owed").map((a) => a.replace(/^owed:/, "").split(" ")[0]);
   /* the registry as PR #13 left it (T36): the owed acts whose ops this module declares under those names — T34's and
@@ -166,18 +166,27 @@ test("R21, R27 (K1901; T36, K2084; T37, K2159, K2171; T38, K2300): an act the re
   assert.ok(!owed.includes("placewanted") && Object.hasOwn(OPS, "placewanted"));
   /* T43 (DEC-189 (3), DEC-190; K2704): the registry as it stands on `tranche/T43` re-points 37 of those owed acts to
      the ops this module declares — each now named under its own name as a `declared` or `function` act, owed no
-     longer — and keeps owed two it served already (`subscriptionsignin`, R36; `projectaikeepaway`, R41) and one more,
-     `pagetranscribe` (K2611; R47), each read as served under its declared op with no alias */
-  const STILL_OWED = ["subscriptionsignin", "projectaikeepaway", "pagetranscribe"];
+     longer — and keeps owed two it served already (`subscriptionsignin`, R36; `projectaikeepaway`, R41), each read as
+     served under its declared op with no alias */
+  const STILL_OWED = ["subscriptionsignin", "projectaikeepaway"];
   const served = [...actsOf("declared"), ...actsOf("function")];
   for (const op of DECLARED.filter((o) => !STILL_OWED.includes(o))) {
     assert.ok(served.includes(op) && !owed.includes(op), `${op} is not re-pointed to its declared op`);
   }
   assert.equal(DECLARED.filter((o) => !STILL_OWED.includes(o)).length, 37);
-  /* and the one owed act no owner serves in T37 to T43 */
+  /* T44 (R47; DEC-191; K2732): the registry as PR #25 left it marks `pagetranscribe` (K2611) a served act, owed no
+     longer: R21 reads it as served, its spec the declared one (extraction's family, R47) and no alias made */
+  const SERVED_T44 = ["pagetranscribe"];
+  for (const op of SERVED_T44) {
+    assert.ok(served.includes(op) && !owed.includes(op), `${op} is not a served act of the registry`);
+    assert.equal(registry.screens.flatMap((s) => s.acts).filter((a) => a.op === op && a.status === "declared").length, 1,
+                 `${op} is not declared once`);
+    assert.ok(Object.hasOwn(O.OP_FAMILIES.extraction.kinds, op), `${op}: not in extraction's family`);
+  }
+  /* and the one owed act no owner serves in T37 to T44 */
   const UNDECLARED = ["infolevelset"];
   assert.deepEqual([...new Set(owed)].sort(), [...STILL_OWED, ...UNDECLARED].sort());
-  for (const op of [...DECLARED, ...STILL_OWED]) {
+  for (const op of [...DECLARED, ...STILL_OWED, ...SERVED_T44]) {
     assert.ok(Object.hasOwn(OPS, op), `${op} is owed or re-pointed and declared: no spec`);
     assert.ok(!Object.hasOwn(OP_ALIASES, op) && !Object.values(OP_ALIASES).includes(op), `${op} is aliased`);
   }
