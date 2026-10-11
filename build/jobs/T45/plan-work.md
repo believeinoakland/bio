@@ -75,7 +75,7 @@ B6 applied: tranche/T45 merged; action-holds reached through its factory, the st
 Merged `tranche/T45`. The actions stand-ins are dropped: R10 is driven by actions' real `registerResponseListener` (registered at start, `{ok, module}`), and R13 reads real captures registered in the record. Two fixes found by the real wiring:
 - actions' R95 passes `project` as `record.bundleInfo(action).project`, null for an action started from a plan (J2 (a)); R10 now takes the response's project from the action's plan when it has none, else no plan was ever re-examined.
 - the re-examination is claimed (its `pw_reexams` row, with the marks) in the same synchronous step as its marks, before the run's opening is awaited; the run goes to a new append-only table `pw_reexam_runs` (declared to purge). So a response re-examines a plan once even when called again meanwhile. The run id's hash is `record-grammar.sha256HexSync` (no await).
-Found in another module (REPORT J7): `action-plans` R18 composes `premise_override: {reason}` only, which `actions` R74 now refuses `OVERRIDE_NO_GROUND`; action-plans' own `start.test.mjs` R18 and `preview.test.mjs` R37 are red on the merged tranche (2 of 63).
+Found in another module (REPORT J6): `action-plans` R18 composes `premise_override: {reason}` only, which `actions` R74 now refuses `OVERRIDE_NO_GROUND`; action-plans' own `start.test.mjs` R18 and `preview.test.mjs` R37 are red on the merged tranche (2 of 63).
 Tests 39 pass, 0 fail; the four checks 0 failures (paths in a working copy only).
 
 Size (session_01KvuonAaLKfAEaHnozQTt17): test runs 30, module lines 1329
