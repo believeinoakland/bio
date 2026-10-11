@@ -66,3 +66,4 @@
 - 2026-10-11: Bob: the canon draft should reflect the design without change history (like the investigation design); rewritten clean; H25.
 - 2026-10-11: BOB #155's whole-read review applied to the canon draft, ladder (§9A form) and DESIGN §10–§12; H26.
 - 2026-10-11: BOB #155 re-check applied (H27).
+- 2026-10-11: D25 (a; audiences), D26 ruled; folded into DESIGN §2.1a, page §8.1a, canon v0.2 rule 19; H28.
