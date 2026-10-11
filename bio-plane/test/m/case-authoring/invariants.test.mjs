@@ -67,7 +67,10 @@ test("R25, R65: every authorship field is a stamp — the author, an acknowledge
 test("R28: statement_acknowledgements is declared whole to record-core's purge, with R39's what_changed_drafts beside it (the account's two tables are case-account's, its R8): a whole-store purge clears it, a bundle's purge does not", () => {
   const { w, P } = setup();
   assert.deepEqual(CASE_AUTHORING_TABLES, [{ name: "statement_acknowledgements", keys: [] },
-                                           { name: "what_changed_drafts", keys: [] }]);
+                                           { name: "what_changed_drafts", keys: [] },
+                                           /* R71 (T45): the carried outcomes and their withdrawals */
+                                           { name: "carried_outcomes", keys: [] },
+                                           { name: "carried_outcome_withdrawals", keys: [] }]);
   assert.deepEqual([caseAuthoringOwns("statement_acknowledgements"), caseAuthoringOwns({ name: "statement_acknowledgements" }),
                     caseAuthoringOwns("case_documents"), caseAuthoringOwns("account_drafts"), caseAuthoringOwns("account_acceptances")],
                    [true, true, false, false, false]);
@@ -75,7 +78,7 @@ test("R28: statement_acknowledgements is declared whole to record-core's purge, 
   assert.equal(w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: pub.caseId, edition: 1, reason: "read" }).ok, true);
   const one = w.record.purge({ bundleId: Q });
   assert.equal(w.count("statement_acknowledgements"), 1, "keyed to no bundle");
-  assert.ok("statement_acknowledgements" in (one.removed || one.tables || one.counts || one), "named in the report");
+  assert.equal(one.removed.statement_acknowledgements, 0, "named in the report, nothing removed by a bundle's purge");
   w.record.purge({});
   assert.equal(w.count("statement_acknowledgements"), 0);
 });
@@ -129,7 +132,10 @@ test("R29: each check moved here as an invariant with its row — C-44.1, C-44.3
   assert.equal(Object.values(CASE_DISCLOSURE_CHECKS).some((v) => v.check === "C-120.9"), false, "withdrawn, never used");
   assert.deepEqual(Object.entries(PUBLISH_ACT_CHECKS).map(([k, v]) => [k, v.check]),
     [["MACHINE_CANNOT_PUBLISH", "C-32.6"], ["NO_STATEMENT", "C-33.14"], ["CALCULATION_NOT_DISCLOSED", "C-136.1"],
-     ["STANDARDS_USE_REFUSED", "C-136.2"]]);
+     ["STANDARDS_USE_REFUSED", "C-136.2"],
+     /* R71 (T45): the carried outcomes' six rows */
+     ["MACHINE_CANNOT_CARRY_OUTCOME", "C-136.3"], ["CARRY_NOT_A_PARTICIPANT", "C-136.4"], ["BAD_CARRIED_OUTCOME", "C-136.5"],
+     ["NO_SUCH_CARRIED_OUTCOME", "C-136.6"], ["CARRIED_OUTCOME_SETTLED", "C-136.7"], ["CARRY_NO_REASON", "C-136.8"]]);
   /* R61's new row (T36): its region, and its translation the requirements' own, word for word (case-authoring.md R29) */
   assert.equal(PUBLISH_ACT_CHECKS.STANDARDS_USE_REFUSED.where, "src/case-authoring/index.mjs #publishCase > is-standards-use");
   assert.equal(PUBLISH_ACT_CHECKS.STANDARDS_USE_REFUSED.translation, "This case uses a standard as a published case may not: "

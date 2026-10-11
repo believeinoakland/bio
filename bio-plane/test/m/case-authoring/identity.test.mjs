@@ -2,7 +2,7 @@
    draft the publisher names (R9) and C-21.1 at case altitude (R10). Every refusal is asked before a case id is drawn. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, readingLines, currentLines } from "./fixture.mjs";
+import { world, V, readingLines, currentLines, AUTHORED, WHAT_CHANGED } from "./fixture.mjs";
 import { CASE_DERIVATION_CHECKS } from "../../../src/case-authoring/index.mjs";
 import { mintExhausted } from "../../../src/record-core/index.mjs";
 
@@ -215,7 +215,14 @@ test("R10: the statement, subject justification, exclusion list or bias acknowle
     [{ ...FRESH, biasAcknowledgement: x.bias_acknowledgement }, "BIAS_ACKNOWLEDGEMENT_CARRIED_FORWARD", "bias_acknowledgement"],
   ];
   for (const [over, reason, field] of cases) {
-    if (!reason) continue;
+    /* the negative control: an exclusion list that differs (here emptied) is no carried-forward claim; asked of the
+       pre-flight, which runs op=publish and writes nothing */
+    if (!reason) {
+      const pre = w.ca.publishPreflight({ ...AUTHORED, whatChanged: WHAT_CHANGED, project: A, targets: [Q2],
+        roles: { [Q2]: "load_bearing" }, viewer: V("alice"), author: "alice", ...next, ...over });
+      assert.equal(/CARRIED_FORWARD$/.test(String(pre.first && pre.first.reason)), false, JSON.stringify(pre.first).slice(0, 200));
+      continue;
+    }
     const r = w.publish(A, "alice", [Q2], { ...next, ...over });
     assert.deepEqual([r.ok, r.reason, r.field, r.check, r.caseId, r.edition, r.prior], [false, reason, field, "C-21.1", x.caseId, 2, 1], field);
   }
