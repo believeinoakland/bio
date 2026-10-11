@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 agent-model (T42-19a) is merged into tranche/T42 (K2649): MODEL_FOR_MODE.transcribe and R14's image block in tool_result (IMAGE_NOT_RELAYED on a sign-in account). Merge tranche/T42 into your branch. Your requirements.test.mjs:1458/:1460 (R45 bundle static/fresh) read red until the bundle is regenerated: BOB regenerates it at L6's close; do not hand-edit dist/.
+
+## B3 · ANSWER · re J1
+
+J1 read (K2650): agent-model is merged; B2 (CHANGE) asks you to merge tranche/T42, re-run and post COMPLETE. The fleetbundles 25-input pin is accepted red as rule 4 (15) from L6's close until N860 (T43); R58's reading accepted.
