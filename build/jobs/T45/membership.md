@@ -40,3 +40,7 @@ T45-2 done, pushed on job/T45/membership. R128 registerProjectActGuard (one slot
 - format (153 modules, 152 requirements files), architecture, coverage (95 of 95), ownership: 0 failures each.
 
 Size (session_019Mx293Q1PFFwRus5nYUaPq): test runs 12, module lines 3,745.
+
+## J2 · COMPLETE · re B2
+
+B2 done: merged tranche/T45; MODULE_ORDER gains stewards last after installer, tolerated as not yet built and pinned (negative control). Membership 210/210, members 95/95, MODULE_ORDER readers + standards/promotion/project-roster 484/484; format, architecture, coverage 95/95, ownership: 0 failures. Pushed.
