@@ -48,3 +48,24 @@
 No file outside my `paths` and `tests` (rule 3).
 
 Size (session_01A5ieNwm4E8kvPnNLANz7kS): test runs 16, module lines 2792
+
+## J2 · COMPLETE
+
+**B2 and B3 applied** (K2845, K2849), after merging `tranche/T45` (5c838d1042), on `job/T45/action-grammar`. J1 stands except as below; every id is still met.
+
+**B2 (R9):** no C-117 row for `action-holds`' or `action-replies`' codes: `HOLD_PLACE_REFUSED`, `MACHINE_CANNOT_SEND`, `HOLD_NOT_IN_PLACE` and the six action-replies codes are gone, `BEARING_REFUSED` among them (R24 still pushes that code; its row is C-150's, said in the code). The moved hold rows (C-117.14–.21, .23–.25) stay until your CHANGE at actions' merge. The T45 rows are now **C-117.30–.58**, renumbered contiguously (none was stamped).
+
+**B3:**
+- (a) Flat keys. `entryFieldFindings` reads `office_words`, `office_status` (token), `found_elsewhere` (kind token), `found_elsewhere_note`: a status token without `office_words` is `OFFICE_STATUS_WITHOUT_OUTCOME`; a note without a kind `FOUND_ELSEWHERE_REFUSED`. The press `holder` is read as the flat text `holder: "<name>"` (the presented `{name}` also accepted). New export `premiseOverrideOf(po)`: the bytes' `reason`, `ground_kind`, `ground_citation`, `ground_date` | `ground_what`, `ground_when` presented as `{reason, ground}` (`ground: null` for a pre-T45 override; an already-presented one passes through). The audit reads the override through it; `actions` may present with it too.
+- (b) The `where`s of the codes actions mints are exactly yours, all `src/actions/index.mjs …` (OVERRIDE_* and PARTNERS_REFUSED included, though my arms also push those codes).
+- (c) `MACHINE_CANNOT_SET_COPIED` is C-117.58, `#t45Fields > is-machine-set-copied`.
+- (d) C-117.19's translation now covers only the reason: "The reason the group acts without a determination is written in up to 500 characters with no quotation mark, backslash or line break. This reason was not, so nothing was written. The ground it rests on is checked on its own."
+- (e) `actionBasisFindings` accepts a `rests_on` target matching `SUCCESS_RECORD_ID_RE` (`^SUC-\d{4}-\d{4}$`, exported; checked against consequences' `mintOpaqueId`: four digits, no slug) with no canonical-id finding. On an `advances` leg it is refused as before. Tested under R6.
+
+**Found (new):** answer-envelope's "R7, R2, R10: every code decorated before the catalogue's end reads the same check and translation" goes red on C-117.19's re-wording (digest 60b4c0c2… → eed710c4…), as (d) intends. Please accept it by name until its re-pin or stamp. Found 2 of J1 (two `actions` hold tests reading C-117.22) is unchanged.
+
+**Tests:** action-grammar 62 pass, 0 fail. My users: action-clocks 55/0, escalation 63/0, setup-page 83/0, instance-setup 135/0; actions 109/2 (J1's Found 2); filing-templates 55/1 and filings 69/1 (rule 4 (7)); affordances 224/2 (rule 4 (11), (12)); answer-envelope 26/5 (rule 4 (14), plus the new one above).
+
+**Checks:** format 0 failures (153 modules); architecture . action-grammar 12 files, 27 imports, 0 failures; coverage 25 of 25; ownership 9 files, 0 failures.
+
+Size (session_01A5ieNwm4E8kvPnNLANz7kS): test runs 22, module lines 2810
