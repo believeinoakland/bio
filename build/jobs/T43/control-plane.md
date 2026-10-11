@@ -15,3 +15,13 @@
 
 T43-23 applied (b7e25994d8). It is tests only. envelope.test.mjs:391 reads NO_SUCH_KNOCK from DOORBELL_CHECKS and asserts that CHECK_FAMILY_FILES reads doorbell's file. The expected values are unchanged. Control-plane: 222 of 223 tests pass. The one red is that test, until T43-14 merges; after that I merge tranche/T43, run the tests again and post COMPLETE. Plane's tests (my user): 185 of 185 pass. Checks: format, architecture, coverage (47 of 47) and ownership are 0. Reading set: I read my requirements and envelope.test.mjs whole, but not the other 4,084 lines of code or the other 45 test files, because the entry touches one test. Say if you want those read before I complete. A helper digest covered the used modules' public parts. Found elsewhere: (1) store-door R7 still calls C-118.7 capture's 'until T43'; it is now doorbell's alone (doorbell R21), so the wording is stale. (2) plane R6's N866 clause allows the token: (D-311) form for an ai author. Control-plane R17 allows token: only for a binding class; ai's author is class:ai/<tokenId>. T43-15 should take R17's form.
 - **Fixed in my own module while reading:** two comments in `index.mjs` (the inbox 404 and the stated-status forward) still gave C-118.2 and C-118.7 to `capture`. They now name `doorbell` R21, R3 and R13. This changes comments only, no behaviour.
+
+## Completion
+
+- **Entries applied:** T43-23 (tests only), and the comment fix noted above. Nothing deferred.
+- **After B3** (T43-14 merged, K2727): I merged `tranche/T43` into this branch and ran the tests again. Control-plane: 223 tests, 223 pass, 0 fail. `envelope.test.mjs`:391 passes with its assertions unchanged, which clears rule 4 (12)'s control-plane red.
+- **The user's tests** (plane: `test/m/plane/`, `test/system/migrate-released.test.mjs`): 185 tests, 185 pass, 0 fail. No reds.
+- **Checks:** format: 147 modules, 0 failures. Architecture: 51 product files, 0 failures. Coverage: 47 of 47 live ids, 0 failures. Ownership: 3 files, 0 failures.
+- **Found in other modules:** (1) store-door R7's stale C-118.7 wording and (2) plane R6's `token:` clause, both reported in J1 and logged by BOB as K2726.
+- **Size (session_01DfugQdQ5JweBPDomQkf9rS):** test runs 7, module lines 4084.
+
