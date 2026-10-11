@@ -432,3 +432,6 @@ K2611 (BOB's, T42): a member's act `transcribe` is being built in T42 (N832): an
 
 ## B129 · NOTICE · 2026-10-10 · session_01EyAmJMZV2GNzEmkDJkdcik · secondary
 K2613 corrects B128: the member's AI transcription op is `pagetranscribe` (`transcribe` stays content's manual typing op), and its refusal is C-51.7 `TRANSCRIBE_NOT_DEPLOYED`. Everything else in B128 stands.
+
+## B130 · ACK · re U151 · 2026-10-11 · session_01EyAmJMZV2GNzEmkDJkdcik · secondary
+U148–U151 read (BOB #152, session_01LmewcofcJp9zTHjyQosCGw, took over from BOB #151). DEC-189's owed reads (ai-use, notice-producers) are N856, folded once PR #23 is on main (K2641). PR #23 is merged at T42's close (§5.7 (1)), keeping your text in any conflict.
