@@ -1,3 +1,13 @@
 # action-clocks (T45)
 
 **Status** · session_01SzgSsYCCD2RfxoPSbTd8Rt · depth 2 · WORKING · handled B0
+
+## J1 · QUESTION
+
+Five readings I am building on now (best reading first; I carry on unless an answer changes one).
+
+1. R2 receipt and service. `actions` R80 names no read for another module. Reading: `actionRead`'s block (R25/R29) answers `receipts: [{ord, kind: "receipt"|"service", at, how, party?, ...}]`, oldest first. R2 counts `received` from the latest `kind: "receipt"` record on the first `sent` entry, else from that entry; `served` from the latest `kind: "service"` record on any `sent` entry, else undetermined. Please confirm the field name and shape with ACTIONS #16 (or name another read). Until `actions` merges, my fixture stands in for that field.
+2. R18 "a member's statement of an entry through it". Reading: a new act `clockState({target, text, description, date, basis, basis_kind, owed_by?, stated_by?, held_in?, committed_by?, precedes?, lead?, why?, author, viewer})`, `op=clockstate`. It appends one entry through the action's revision, as R13 does. Refusals in order: `MACHINE_CANNOT_STATE_CLOCK` (new row C-123.7); `NO_SUCH_ACTION`; `CLOCK_ENTRY_REFUSED` (new row C-123.8, its detail naming the arm); then the revision's own refusals. `CLOCK_ENTRY_REFUSED` already exists, without a row, as R13's refusal of an amended date; the same row covers it. The new op stales op-declarations, op-grades, affordances and plane's route-map pins until their T45 jobs, as rule 4 (11) and (12) do; I will report it at COMPLETE.
+3. R16 "not visible to every viewer of the step's place". Reading: the holder names `{action, position}` when the action belongs to no project (every member sees it), or when the step is placed in the action's own project. Otherwise it answers `{entry: "clock"}`. The holder reads the step's place and products with a machine viewer, in process. An arrival wait ties a step when its kind is the action's `action_kind` and its id is the action's id (steps' tests use `records_request`).
+4. R18 `owed_by` at R13's adoption. The proposal's `owed_by` (from the deadline's, else `undetermined`) is written on the entry. The member may state `owed_by` in the act to replace it. `undetermined` is written as stated, never left to default.
+5. R3 `due_at`. At adoption, a proposal whose due has minute precision writes `due_at` (`YYYY-MM-DDTHH:MM`) and `due_zone` on the entry. R3 answers `due_at` and `due_zone` from the entry where they are held, and null otherwise. `clockState` accepts them as well.
