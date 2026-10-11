@@ -1,6 +1,6 @@
 # case-authoring (T42)
 
-**Status** · session_017gKhVp4wij8NKw7oL1jXhs · depth 2 · WORKING · handled B1
+**Status** · session_017gKhVp4wij8NKw7oL1jXhs · depth 2 · WAITING ON BOB (J1) · handled B1
 
 ## Progress (prepared against case-account's requirements; waiting on its CHANGE)
 
