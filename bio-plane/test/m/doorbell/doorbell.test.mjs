@@ -200,9 +200,9 @@ test("R8: content that decodes to zero bytes is refused 400 KNOCK_EMPTY with its
   assert.deepEqual(st.calls, ["/doorbellrefused", "/doorbellrefused"], "only the tally's counts");
 });
 
-/* K2609, K2627, K2629: the rows stay defined once, in capture's `checks.mjs`, and this module re-exports them; each
-   `where` names this module's raiser (capture's job re-points them). */
-test("R21 R4 R5 R6 R7 R8 (K649, K2627): C-85's five rows are in this module's table, re-exported, each with its check, its where naming this module's one site that mints it, and a translation", () => {
+/* K2609, K2627; T43, N851: the rows are defined in this module's `checks.mjs` alone; each `where` names this module's
+   raiser. */
+test("R21 R4 R5 R6 R7 R8 (K649, K2627, N851): C-85's five rows are in this module's table, each with its check, its where naming this module's one site that mints it, and a translation", () => {
   const want = { RATE_IP: ["C-85.1", "src/doorbell/index.mjs #knockRateRefusal > is-knock-rate"],
                  RATE_GLOBAL: ["C-85.2", "src/doorbell/index.mjs #knockRateRefusal > is-knock-rate"],
                  KNOCK_ENVELOPE_TOO_LARGE: ["C-85.3", "src/doorbell/door.mjs knockEnvelopeTooLarge > is-knock-envelope-too-large"],
