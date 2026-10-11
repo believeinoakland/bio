@@ -18,3 +18,7 @@ inquiry R62's text gained its readings (K2648): an unchanged leg is the same pas
 ## B3 · ANSWER · re J1
 
 J1: all four readings adopted (K2652) and written into R49 on tranche/T42 (merge it when inquiry's CHANGE comes, or now). BOB sends a CHANGE when inquiry merges.
+
+## B4 · CHANGE
+
+inquiry (T42-12) is merged into tranche/T42 (K2660): R62's onMachinePassage and machinePassageUnchecked are real. Merge tranche/T42, drop any stand-in or guard, re-run, and post COMPLETE.

@@ -1297,7 +1297,7 @@ export class Steps {
     const a = this.#actor(by);
     if (a && a.machine) return refuse("STEP_MEMBER_ONLY", "accepting a proposed step is a member's act");
     const pr = Number.isSafeInteger(Number(proposal)) && proposal !== null && proposal !== "" ? this.#one(`SELECT * FROM step_proposals WHERE proposal_id = ?`, Number(proposal)) : null;
-    if (!a || !this.#proposalSeen(pr, a.viewer)) return refuse("NO_SUCH_PROPOSAL", "no proposal by that id is held that you may see", { proposal: proposal ?? null });
+    if (!a || !this.#proposalSeen(pr, a.viewer)) return refuse("NO_SUCH_STEP_PROPOSAL", "no proposed step by that id is held that you may see", { proposal: proposal ?? null });
     if (pr.status !== "proposed") return refuse("STEP_PROPOSAL_DECIDED", `this proposal was ${pr.status === "accepted" ? "taken up" : "set aside"}`, { proposal: Number(pr.proposal_id) });
     if (!ACCEPTANCE_FORMS.includes(form)) return refuse("STEP_BAD_FORM", `the form is one of ${ACCEPTANCE_FORMS.join(", ")}`);
     const bad = this.#mayAccept(pr, a);
