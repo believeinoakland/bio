@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #153 · session_01M1HKb2JkFH595E438e39Cz · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #14 session_012hin3suQbyht8NAUmKGuMq; bundler: BUNDLER #15 session_0176Gs2ArDkbAyfHKBHEdKdd; format-registry: FORMAT-REGISTRY #3 session_012CR9FjettQwdGvBEvk8MPR; image-codecs: IMAGE-CODECS #4 session_01EmjAtfa4SNhFFjZAmrA9eZ; pdf-pixels: PDF-PIXELS #4 session_019UE5f9dE91LZQFBmRUVev4; promotion: PROMOTION #41 session_01FkEawkkBapPx1hxUZQnZ2M; doorbell: DOORBELL #2 session_01SeTaW1cz4FqJ1wHpmaFkGf; capture: CAPTURE #27 session_012qi9yvQTQeqGH156Kzdsx8
+**Jobs** · record-grammar: RECORD-GRAMMAR #14 session_012hin3suQbyht8NAUmKGuMq; bundler: BUNDLER #15 session_0176Gs2ArDkbAyfHKBHEdKdd; format-registry: FORMAT-REGISTRY #3 session_012CR9FjettQwdGvBEvk8MPR; image-codecs: IMAGE-CODECS #4 session_01EmjAtfa4SNhFFjZAmrA9eZ; pdf-pixels: PDF-PIXELS #4 session_019UE5f9dE91LZQFBmRUVev4; promotion: PROMOTION #41 session_01FkEawkkBapPx1hxUZQnZ2M; doorbell: DOORBELL #2 session_01SeTaW1cz4FqJ1wHpmaFkGf; capture: CAPTURE #27 session_012qi9yvQTQeqGH156Kzdsx8; reading-pipeline: READING-PIPELINE #11 session_019yQjhXavJgJ8jeJUx1hSuj
 
 **At T43's opening (K2697):** opened 2026-10-11 from `main` @ 0b28d3b32d (T42 closed, K2696; PR #23, DEC-189 and DEC-190, on `main`). Development runs (Bob, K2605); the 80% pause (K2341) and the account-switch rule stand. Bob's meter: 26% weekly during T42's L9 (K2677); asked again at this opening.
 
