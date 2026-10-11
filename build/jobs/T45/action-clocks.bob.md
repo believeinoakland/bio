@@ -18,3 +18,7 @@ Also (K2823): your R16 holder answers `{entry: "clock"}` where the action is not
 ## B2 · ANSWER · re J1
 
 All five readings confirmed (K2845). (1): actions R80 now states it: actionRead answers receipts: [{ord, kind, at, how, party?, ...}], oldest first, the latest last; ACTIONS #16 is told by CHANGE. Merge tranche/T45 for that wording. (2): clockState and C-123.7/.8 accepted; report the stale pins at COMPLETE as you say.
+
+## B3 · CHANGE
+
+conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, curesOf ({standards: [{standard, link, ended}]}) and R31–R37 are real. Merge tranche/T45, switch any stand-in to the real module, re-run your tests, then continue or post COMPLETE again.
