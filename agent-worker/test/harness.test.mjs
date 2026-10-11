@@ -124,9 +124,10 @@ const t = (label, got, want) => {
 };
 
 /* R37, R53: the op declaration this member exports, pinned here floor and ceiling (N402: never parsed from the plane). */
-const PINNED_READS = ["agentpack", "airun", "airunlog", "airunspawn", "availableactions", "basisversions",
-  "consequencesof", "determination", "meaningrows", "plan", "plans", "profiles", "publishededitions", "search",
-  "standard", "versionchain", "whoami"];
+/* R78 (T45): a re-examination run's reads, action, reading and procedureguides. */
+const PINNED_READS = ["action", "agentpack", "airun", "airunlog", "airunspawn", "availableactions", "basisversions",
+  "consequencesof", "determination", "meaningrows", "plan", "plans", "procedureguides", "profiles", "publishededitions",
+  "reading", "search", "standard", "versionchain", "whoami"];
 const PINNED_WRITES = ["airunclose", "airuntick", "capturerequest", "optionpropose", "suggest"];
 const WORKER_SRC_PATH = fileURLToPath(new URL("../src/index.mjs", import.meta.url));
 const WORKER_SRC = readFileSync(WORKER_SRC_PATH, "utf8");

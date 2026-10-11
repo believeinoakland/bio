@@ -89,10 +89,10 @@ section("R48 · a plane from before T36-37, whose op=affordances still carries a
 
 section("R37 · PLANE_OPS is exactly R37's list, agentpack among the reads, and no call of this member reads op=affordances");
 {
-  t("R37: PLANE_OPS' reads and writes are exactly R37's (with R53's plan-mode ops), agentpack read and affordances absent",
+  t("R37, R78: PLANE_OPS' reads and writes are exactly R37's (with R53's plan-mode ops and R78's re-examination reads), agentpack read and affordances absent",
     [Object.keys(PLANE_OPS).filter((o) => !PLANE_OPS[o].mutating).sort(), Object.keys(PLANE_OPS).filter((o) => PLANE_OPS[o].mutating).sort()],
-    [["agentpack", "airun", "airunlog", "airunspawn", "availableactions", "basisversions", "consequencesof", "determination",
-      "meaningrows", "plan", "plans", "profiles", "publishededitions", "search", "standard", "versionchain", "whoami"],
+    [["action", "agentpack", "airun", "airunlog", "airunspawn", "availableactions", "basisversions", "consequencesof", "determination",
+      "meaningrows", "plan", "plans", "procedureguides", "profiles", "publishededitions", "reading", "search", "standard", "versionchain", "whoami"],
      ["airunclose", "airuntick", "capturerequest", "optionpropose", "suggest"]]);
   t("R37: an ask's own calls name agentpack for its pack and not affordances, and neither is in ASK_OPS",
     [Object.keys(ASK_PLANE_OPS).sort(), ["agentpack", "affordances"].filter((o) => ASK_OPS.includes(o))],

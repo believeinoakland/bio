@@ -70,6 +70,8 @@ function planeStub(rec, cfg) {
       case "airun": return ok({ run: u.searchParams.get("run"), found: true, session: {
         id: u.searchParams.get("run"), mode: cfg.mode, status: S.status, plan: cfg.mode === "plan" ? PLAN_ID : null,
         context: cfg.mode === "plan" ? { type: "project", id: PROJECT, questions: [] } : { type: "inquiry", id: "INQ-421" },
+        /* R78: a re-examination run carries its origin and the response it re-examines (ai-runs R77). */
+        ...(cfg.origin ? { origin: cfg.origin, response: "ACT-421#1" } : {}),
         max_passes: 1, principal: { plane: "member:ruth", claude: cfg.payer ?? MEMBER, ref: cfg.payer ?? MEMBER, skill: PACK_VERSION },
         state: S.state, budget: WIDE.map((b) => ({ ...b, consumed: 0, unit: null })) } });
       case "airunlog": return ok({ run: u.searchParams.get("run"), found: true, entries: [], limit: 200, truncated: false });
@@ -106,6 +108,11 @@ function planeStub(rec, cfg) {
       case "availableactions": return ok({ actions: [] });
       case "publishededitions": return ok({ id: u.searchParams.get("id"), editions: [] });
       case "profiles": return ok({ profiles: [], view: { deadlines: [], venues: [], legal_organisations: [] } });
+      /* R78: the action, the reply's reading and the procedure guide a re-examination run reads. */
+      case "action": return ok({ ok: true, id: u.searchParams.get("id"), kind: "records_request",
+        correspondence: [{ ord: 1, direction: "received", at: "2026-10-01", artifact_sha: "b".repeat(64) }] });
+      case "reading": return ok({ ok: true, found: true, capture_sha: u.searchParams.get("sha256"), reading: { text: "the reply" } });
+      case "procedureguides": return ok({ guides: [], label: { key: "guide.procedure.legalinfo" } });
       case "optionpropose": S.proposals.push(body); return ok({ ok: true, proposal: `PRP-${S.proposals.length}` });
       /* R54 — the ask's own calls (K1601 (3)), and its reads: every op of ASK_OPS answers when the drive is an ask. */
       case "askceiling":
@@ -236,7 +243,8 @@ export async function driveMember() {
   const was = MODES.plan.deployed;
   MODES.plan.deployed = true;
   try {
-    await withGlobalFetch(drives.plan, () => ask(drives.plan, { mode: "plan" }, "run", post({
+    /* R78: a re-examination run, so its reads are reached too. */
+    await withGlobalFetch(drives.plan, () => ask(drives.plan, { mode: "plan", origin: "reexamination" }, "run", post({
       run_id: "run-421p", store: "scratch", credential: AIK,
       judgements: [{ candidates: [{ summary: "Ask the clerk for the minutes", category: "awareness",
                                     subjects: [SUBJECTS[0]], why: "the record is silent on them" }] }] })));
