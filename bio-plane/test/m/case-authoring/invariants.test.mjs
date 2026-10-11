@@ -78,7 +78,7 @@ test("R28: statement_acknowledgements is declared whole to record-core's purge, 
   assert.equal(w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: pub.caseId, edition: 1, reason: "read" }).ok, true);
   const one = w.record.purge({ bundleId: Q });
   assert.equal(w.count("statement_acknowledgements"), 1, "keyed to no bundle");
-  assert.ok("statement_acknowledgements" in (one.removed || one.tables || one.counts || one), "named in the report");
+  assert.equal(one.removed.statement_acknowledgements, 0, "named in the report, nothing removed by a bundle's purge");
   w.record.purge({});
   assert.equal(w.count("statement_acknowledgements"), 0);
 });

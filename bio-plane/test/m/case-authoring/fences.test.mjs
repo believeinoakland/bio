@@ -55,6 +55,7 @@ test("R2: authority in order — NO_PUBLISHING_PROJECT; a project seen only at e
   assert.deepEqual([admin.ok, admin.reason, admin.check, admin.project, admin.name, admin.owners],
     [false, "PROJECT_SEEN_NOT_A_PARTICIPANT", PROJECT_VISIBILITY_CHECKS.PROJECT_SEEN_NOT_A_PARTICIPANT.check, P, "Team", ["h_alice"]]);
   assert.equal(JSON.stringify(admin).includes(Q), false, "nothing inside the project is named");
+  assert.deepEqual(w.snapshot(), before, "no refusal wrote");
   /* a discoverable project, asked by a member outside it: the existence refusal, membership's own (C-70.1) */
   assert.equal(w.membership.projectVisibilitySet({ projectId: P, setting: "discoverable", reason: "open to all",
                                                    by: "alice", viewer: V("alice") }).ok, true);
@@ -71,14 +72,12 @@ test("R2: authority in order — NO_PUBLISHING_PROJECT; a project seen only at e
   assert.deepEqual([ownerOnly.project, ownerOnly.author], [P, "cy"]);
   w.st.sql.exec(`UPDATE project_participants SET owner=1 WHERE project_id=? AND member_id='cy'`, P);
   assert.equal(w.publish(P, "cy", [Q]).ok, true, "an owner publishes");
-  const after = w.snapshot();
-  assert.notDeepEqual(after, before);
+  assert.equal(w.rows(`SELECT case_id FROM case_documents`).length, 1, "the owner's act, and only it, prepared a case");
 });
 
 test("R3: authored fields in order — NO_TARGET, DUPLICATE_MEMBER, NO_STATEMENT, NO_SUBJECT_POSITION (one of SUBJECT_POSITIONS), NO_SUBJECT_JUSTIFICATION, NO_EXCLUSION_FIELD (an empty list legal), NO_SCOPE, NO_BIAS_ACKNOWLEDGEMENT, BAD_EXCLUSION with ord, BAD_COMPLETENESS; nothing written", () => {
   const { w, P } = setup();
   const before = w.snapshot();
-  const all = { ...AUTHORED };
   const act = (over, targets = [Q]) => w.publish(P, "alice", targets, over);
   assert.deepEqual(reasons(act({}, [])), [false, "NO_TARGET"]);
   assert.deepEqual(reasons(act({ targets: null, target: null }, [])), [false, "NO_TARGET"]);
@@ -99,6 +98,7 @@ test("R3: authored fields in order — NO_TARGET, DUPLICATE_MEMBER, NO_STATEMENT
   });
   const pos = act({ subjectPosition: "contacted" });
   assert.deepEqual([pos.reason, pos.allowed], ["NO_SUBJECT_POSITION", ["sought_and_answered", "sought_no_answer", "not_sought"]]);
+  assert.deepEqual(w.snapshot(), before, "no refusal wrote");
   /* each declared position passes this gate (the one act that publishes leaves an unsigned preparation, so the others
      are asked of their own refusal, which is later: R8) */
   for (const p of pos.allowed) assert.notEqual(act({ subjectPosition: p }).reason, "NO_SUBJECT_POSITION", `${p} is a position`);
@@ -127,7 +127,6 @@ test("R3: authored fields in order — NO_TARGET, DUPLICATE_MEMBER, NO_STATEMENT
   assert.ok(!["NO_EXCLUSION_FIELD", "BAD_EXCLUSION"].includes(act({ excluded: [] }).reason), "an empty exclusion list is a claim, and legal");
   const firstPublish = w.rows(`SELECT case_id FROM case_documents`).length;
   assert.equal(firstPublish, 1, "one act published (the first well-formed one); no refusal wrote a document");
-  void before; void all;
 });
 
 test("R5: roles is a map from member id to load_bearing or supporting, with no default — BAD_ROLES, NO_MEMBER_ROLE, BAD_MEMBER_ROLE, NO_LOAD_BEARING_MEMBER", () => {
