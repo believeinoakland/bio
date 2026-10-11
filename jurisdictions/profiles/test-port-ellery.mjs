@@ -342,19 +342,18 @@ export default {
         { reviewer: "Dee Example", kind: "professional", organisation: "Marlow Commons Legal Society (test)",
           credential: "solicitor (test)", scope: "the whole text", outcome: "concerns", at: "2026-08-22" }),
       basis: "TEST" },
-    /* R81, R87 (b): a kind holding its Tier 1 set, each template with its purpose, name and sources */
-    { kind: "harbour_petition", label: "petition to the Harbour District Board", tier: 1,
+    /* R81, R87: a kind of recognition's shape (R87 (a)) holding its Tier 1 set, each template with its purpose, name and
+       sources (R87 (b)) */
+    { kind: "recognition_letter", label: "letter of recognition", tier: 1, shape: "recognition",
       venue: { name: "the Harbour District office", how: "mail", basis: "TEST" },
       templates: [
-        { ...attributed("TPL-test-harbour-petition", "file", "To the {{counterparty_role}}: {{group}} asks the Board to examine {{act}}.",
+        { ...attributed("TPL-test-recognition", "file", "To the {{counterparty_role}}: {{group}} recognises {{act}}.",
             { reviewer: "Dee Example", kind: "member", scope: "the whole text", outcome: "no_concerns", at: "2026-08-23" }),
-          purpose: "initial", name: "Petition to the Harbour District Board", sources: [{ citation: "P.E.B.L. § 11" }] },
-        { ...attributed("TPL-test-harbour-follow-up", "file", "To the {{counterparty_role}}: {{group}} has had no answer on {{act}}.",
+          purpose: "initial", name: "Letter of recognition", sources: [{ citation: "P.E.B.L. § 11" }] },
+        { ...attributed("TPL-test-recognition-follow-up", "file", "To the {{counterparty_role}}: {{group}} thanks you again for {{act}}.",
             { reviewer: "Dee Example", kind: "member", scope: "the whole text", outcome: "no_concerns", at: "2026-08-24" }),
-          purpose: "follow_up", name: "Follow-up to a harbour petition", sources: [{ citation: "P.E.B.L. § 11(3)" }, { citation: "Test Stat. § 2.7" }] }],
+          purpose: "follow_up", name: "Follow-up letter of recognition", sources: [{ citation: "P.E.B.L. § 11(3)" }, { citation: "Test Stat. § 2.7" }] }],
       basis: "TEST" },
-    /* R87 (a): a kind of recognition's shape */
-    { kind: "recognition_letter", label: "letter of recognition", tier: 1, shape: "recognition", basis: "TEST" },
   ],
   deadlines: [
     /* the pre-T33 form, `days: n`, read as units: days, amount: n */
@@ -382,10 +381,10 @@ export default {
     { rule: "filing_reply", applies_to: "commitment_claim", units: "days", amount: 7, count: "calendar", direction: "backward", starts: "filed",
       roll: true, closures: "court", computation: "clear_days", citation: "Marlow Ct. R. 31.2", status: "researched", basis: "TEST" },
     /* R75, R87 (c) (T45): owed by the group with the law's consequence; started by a third party's act; the group's defence */
-    { rule: "complaint_particulars", applies_to: "bylaw_complaint", units: "days", amount: 14, count: "calendar", direction: "forward",
-      starts: "filed", owed_by: "group", consequence: { text: "the complaint shall be considered withdrawn", citation: "P.E.B.L. § 9(3)" },
+    { rule: "complaint_particulars", applies_to: "claim", units: "days", amount: 14, count: "calendar", direction: "forward",
+      starts: "filed", owed_by: "group", consequence: { text: "the claim shall be considered withdrawn", citation: "P.E.B.L. § 9(3)" },
       citation: "P.E.B.L. § 9(2)", status: "researched", basis: "TEST" },
-    { rule: "examiner_reply", applies_to: "commitment_claim", units: "days", amount: 28, count: "calendar", direction: "forward",
+    { rule: "examiner_reply", applies_to: "claim", units: "days", amount: 28, count: "calendar", direction: "forward",
       starts: "third_party", starter: { role: "Examiner of Accounts", body: "Marlow County Audit Office" }, owed_by: "body",
       citation: "Test Stat. § 6.12", status: "ruled", basis: "TEST" },
     { rule: "defence_filing", applies_to: "claim", units: "days", amount: 21, count: "calendar", direction: "forward", starts: "served",
@@ -447,8 +446,8 @@ export default {
     { name: "Marlow Commons Legal Society (test)", evaluates: ["commitment_claim"],
       contacts: [{ how: "web", value: "https://legal.marlow-county.example" }, { how: "phone", value: "+1 555 0100" }],
       basis: "TEST" },
-    /* R78: an organisation that defends a group, evaluating no kind */
-    { name: "Ellery Free Speech Clinic (test)", evaluates: [], defends: true,
+    /* R78: an organisation that defends a group (and evaluates a Tier 3 kind; one evaluating none is R78's test's) */
+    { name: "Ellery Free Speech Clinic (test)", evaluates: ["commitment_claim"], defends: true,
       contacts: [{ how: "email", value: "clinic@free-speech.port-ellery.example" }], basis: "TEST" },
   ],
   /* R79: one legal fact per trigger */

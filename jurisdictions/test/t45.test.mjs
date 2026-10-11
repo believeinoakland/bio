@@ -67,7 +67,7 @@ test("R75 a deadline's owed_by and consequence; a start by a third party's act n
   assert.deepEqual(OWED_BY, ["body", "group"]);
   assert.ok(Object.isFrozen(OWED_BY) && STARTS.includes("third_party"));
   assert.equal(t.deadlines[cp].owed_by, "group");
-  assert.deepEqual(t.deadlines[cp].consequence, { text: "the complaint shall be considered withdrawn", citation: "P.E.B.L. § 9(3)" });
+  assert.deepEqual(t.deadlines[cp].consequence, { text: "the claim shall be considered withdrawn", citation: "P.E.B.L. § 9(3)" });
   for (const ob of OWED_BY) assert.ok(breakT((p) => { p.deadlines[cp].owed_by = ob; }).ok, ob);
   for (const bad of ["office", "", true]) assert.ok(hasError(breakT((p) => { p.deadlines[cp].owed_by = bad; }), "VALUE_INVALID", `${D}.owed_by`), String(bad));
   assert.ok(breakT((p) => { delete p.deadlines[cp].owed_by; }).ok, "absent: undetermined, never refused");
@@ -87,7 +87,7 @@ test("R75 a deadline's owed_by and consequence; a start by a third party's act n
     const r = f === "starter"
       ? against((b) => { b.deadlines[er].starter = { role: "Town Clerk", body: "City of Port Ellery" }; })
       : against((b) => fn(b.deadlines[cp]));
-    const rule = f === "starter" ? "examiner_reply/commitment_claim" : "complaint_particulars/bylaw_complaint";
+    const rule = f === "starter" ? "examiner_reply/claim" : "complaint_particulars/claim";
     assert.deepEqual(conflictsAt(r), [`deadlines[${rule}].${f}`], f);
     assert.equal(r.view.deadlines.find((d) => `${d.rule}/${d.applies_to}` === rule)[f], undefined, `${f} withheld`);
   }
@@ -138,13 +138,14 @@ test("R77 a response status may name the kind whose venue reports in it; KIND_IN
 test("R78 legal_organisations evaluate Tier 2 or 3 kinds, or defend a group (defends: true); ORG_PURPOSE_MISSING with neither", () => {
   const t = get(TEST);
   const d = ix(t.legal_organisations, (o) => o.defends === true), O = `legal_organisations[${d}]`;
-  assert.deepEqual([t.legal_organisations[d].evaluates, t.legal_organisations[d].defends], [[], true]);
+  assert.equal(t.legal_organisations[d].defends, true);
+  assert.ok(breakT((p) => { p.legal_organisations[d].evaluates = []; }).ok, "defends with no kind evaluated");
   assert.ok(breakT((p) => { delete p.legal_organisations[d].evaluates; }).ok, "defends alone");
   assert.ok(breakT((p) => { p.legal_organisations[d].evaluates = ["records_request"]; }).ok, "a Tier 2 kind (records_request is Tier 2 here)");
   assert.ok(breakT((p) => { p.legal_organisations[d].evaluates = ["commitment_claim", "records_request"]; p.legal_organisations[d].defends = false; }).ok);
   assert.ok(hasError(breakT((p) => { p.legal_organisations[d].evaluates = ["bylaw_complaint"]; }), "ORG_KIND_UNKNOWN", `${O}.evaluates[0]`), "Tier 1");
   assert.ok(hasError(breakT((p) => { p.legal_organisations[d].evaluates = ["nowhere"]; }), "ORG_KIND_UNKNOWN", `${O}.evaluates[0]`));
-  for (const fn of [(o) => { o.defends = false; }, (o) => { delete o.defends; }, (o) => { delete o.defends; delete o.evaluates; }])
+  for (const fn of [(o) => { o.evaluates = []; o.defends = false; }, (o) => { o.evaluates = []; delete o.defends; }, (o) => { delete o.defends; delete o.evaluates; }])
     assert.ok(hasError(breakT((p) => fn(p.legal_organisations[d])), "ORG_PURPOSE_MISSING", `${O}.evaluates`));
   for (const bad of ["yes", 1, null]) assert.ok(hasError(breakT((p) => { p.legal_organisations[d].defends = bad; }), "VALUE_INVALID", `${O}.defends`), String(bad));
   /* unioned in combine (R34): a different defends is a different entry, kept */
@@ -208,7 +209,7 @@ test("R80 R87 procedure_guides: one sourced guide per kind, items in the profile
 
 test("R81 R87 a kind's templates: each attributed (R40), with purpose (once per kind), name and sources; TEMPLATE_TIER3 for each; one value per purpose", () => {
   const t = get(TEST);
-  const hp = kindAt(t, "harbour_petition"), K = `action_kinds[${hp}]`;
+  const hp = kindAt(t, "recognition_letter"), K = `action_kinds[${hp}]`;
   assert.deepEqual(t.action_kinds[hp].templates.map((x) => x.purpose), ["initial", "follow_up"]);
   for (const bad of ["Initial", "", null]) assert.ok(hasError(breakT((p) => { p.action_kinds[hp].templates[0].purpose = bad; }), "VALUE_INVALID", `${K}.templates[0].purpose`), String(bad));
   assert.ok(hasError(breakT((p) => { p.action_kinds[hp].templates[1].purpose = "initial"; }), "VALUE_INVALID", `${K}.templates[1].purpose`), "once per kind");
@@ -232,12 +233,12 @@ test("R81 R87 a kind's templates: each attributed (R40), with purpose (once per 
   const same = against(() => {});
   const vbr = same.view.action_kinds.find((k) => k.kind === "bylaw_complaint");
   assert.deepEqual([vbr.templates.length, vbr.templates[0].purpose, vbr.templates[0].id], [1, "initial", vbr.template.id]);
-  const vhp = same.view.action_kinds.find((k) => k.kind === "harbour_petition");
-  assert.deepEqual(vhp.templates.map((x) => [x.purpose, x.name, x.bases.length]), [["initial", "Petition to the Harbour District Board", 2], ["follow_up", "Follow-up to a harbour petition", 2]]);
+  const vhp = same.view.action_kinds.find((k) => k.kind === "recognition_letter");
+  assert.deepEqual(vhp.templates.map((x) => [x.purpose, x.name, x.bases.length]), [["initial", "Letter of recognition", 2], ["follow_up", "Follow-up letter of recognition", 2]]);
   /* one value per purpose: a difference anywhere in one template withholds that template only */
   const d = against((b) => { b.action_kinds[hp].templates[1].sources.pop(); });
-  assert.deepEqual(conflictsAt(d), ["action_kinds[harbour_petition].templates[follow_up]"]);
-  assert.deepEqual(d.view.action_kinds.find((k) => k.kind === "harbour_petition").templates.map((x) => x.purpose), ["initial"]);
+  assert.deepEqual(conflictsAt(d), ["action_kinds[recognition_letter].templates[follow_up]"]);
+  assert.deepEqual(d.view.action_kinds.find((k) => k.kind === "recognition_letter").templates.map((x) => x.purpose), ["initial"]);
   /* a single template against a set's initial: one key, compared whole */
   const m = combine([TEST, other((b) => { b.action_kinds[br].templates = [{ ...b.action_kinds[br].template, purpose: "initial", name: "N", sources: [{ citation: "C" }] }]; delete b.action_kinds[br].template; })]);
   assert.deepEqual(conflictsAt(m), ["action_kinds[bylaw_complaint].templates[initial]"]);
@@ -453,7 +454,7 @@ test("R87 the fields later modules read: a kind's shape, a deadline's defends, a
   assert.deepEqual(conflictsAt(dd), [], "a profile that is silent does not disagree");
   /* (b), (d), (e) are judged in R81, R80 and R82's tests; here, that the view carries each as written */
   const v = combine([TEST]).view;
-  assert.ok(v.action_kinds.find((k) => k.kind === "harbour_petition").templates.every((x) => x.name && x.sources.length));
+  assert.ok(v.action_kinds.find((k) => k.kind === "recognition_letter").templates.every((x) => x.name && x.sources.length));
   assert.deepEqual(v.procedure_guides[0].items[1].after, ["denied", "none_stated"]);
   assert.ok(v.action_kinds.find((k) => k.kind === "bylaw_complaint").venue.facts.some((x) => x.fact === "delivery_point"));
 });
