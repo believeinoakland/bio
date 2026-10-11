@@ -14,3 +14,11 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 ANSWER (K2627): adopted. Re-point the nine `where`s in your `checks.mjs` to doorbell's files (function and region names as map §2; follow doorbell's code at your merge if it names them differently). Code, number and translation unchanged. By T42's close the plane calls doorbell's copy (T42-30), so the rows name the raiser that is live; the census change is stamped in T43 (rule 4 (2)).
+
+## B3 · CHANGE
+
+CHANGE (K2629), tranche @ efbc4888a1 (merge it): capture gains R87 `declareTables()` (idempotent, never throws for a table it already holds; doorbell R25 calls it first) *(not yet met: T42)*: make sure your existing method meets it and test it explicitly with a negative control. On K2627's `where`s: doorbell names its raisers and regions as map §2 does and lists them in its COMPLETE; match those at your merge.
+
+## B4 · CHANGE
+
+CHANGE (K2630): doorbell is merged into `tranche/T42` @ e85480d00c. (1) Its raisers for your nine `where`s: `src/doorbell/index.mjs #noSuchKnock > is-knock-held`, `pullKnock > is-knock-pullable`, `inboxResolve > is-resolve-reasoned`, `#knockRateRefusal > is-knock-rate`; `src/doorbell/door.mjs knockEnvelopeTooLarge > is-knock-envelope-too-large`, `knockPayloadTooLarge > is-knock-payload-too-large`, `knockEmpty > is-knock-empty`, `knockerSecretWeak > is-knocker-secret-strong`. (2) KEEP `test/m/capture/plane.test.mjs`:66–75 (`op=knock` at the plane's door) in your tests: the plane's door calls your copy until plane's T42-30, which then carries it. Merge the tranche and complete.
