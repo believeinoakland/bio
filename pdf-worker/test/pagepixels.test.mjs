@@ -1,5 +1,5 @@
 /* renderPageToPixels and the shared decode rules: R13–R26, R39, R40 and R41 of
- * build/requirements/pdf-pixels.md.
+ * build/requirements/pdf-pixels.md; renderPictureToPixels, R42 and R43.
  *
  * INDEPENDENT EXPECTATIONS (R40). The CCITT digests come from Pillow (libtiff's
  * G4) through pypdf 6.14.2 / Pillow 11.3.0, run 2026-08-08; the DCT digests and
@@ -20,6 +20,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { renderPageToPixels, REFUSALS } from "../src/pagepixels.mjs";
+import { renderPictureToPixels, PICTURE_FRAME_MAX } from "../src/picturepixels.mjs";
 import { CROP_REFUSALS } from "../src/imagecrop.mjs";
 import { openPdf, pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
 import { makePdf, onePage, content, image, readPng, turn, hex, deflateSync, runner } from "./make-pdf.mjs";
@@ -465,6 +466,113 @@ export default { async fetch(req) {
   }
 }
 
+console.log("\n--- R42, R43: a picture file, against Pillow 12.3.0 ---");
+{
+  /* `fixtures/picture-variants.json` is written by `make-picture-fixtures.py`
+     with Pillow 12.3.0: each expected digest is Pillow's `exif_transpose`,
+     `convert("L")` and `reduce(k)` over the same file (a PNG is never turned),
+     never this module's own output (R40). */
+  const PV = JSON.parse(Buffer.from(F("fixtures/picture-variants.json")).toString("utf8"));
+  t("R42 (the reference is Pillow 12.3.0)", PV.pillow, "12.3.0");
+  const pic = (name) => new Uint8Array(Buffer.from(PV.variants.find((v) => v.name === name).b64, "base64"));
+  const picture = async (...a) => { const r = await renderPictureToPixels(...a); answers.push(r); return r; };
+  const chunks = (png) => { const b = Buffer.from(png), out = []; for (let o = 8; o < b.length; o += 12 + b.readUInt32BE(o)) out.push(b.toString("latin1", o + 4, o + 8)); return out; };
+
+  for (const v of PV.variants.filter((x) => x.expect.length && !x.name.startsWith("photo"))) {
+    for (const e of v.expect) {
+      const r = await picture(pic(v.name), 0, { maxEdge: e.max_edge, grey: e.grey });
+      const png = r.ok ? readPng(r.bytes) : {};
+      t(`R42 R43 ${v.name}, maxEdge ${e.max_edge}${e.grey ? ", grey" : ""}: Pillow's pixels`,
+        [r.ok ? r.route : r.reason, r.orientation, r.reduced_by, r.width, r.height, r.pixels_sha256, png.colorType, png.samples && hex(png.samples)],
+        ["decoded-picture", e.orientation, e.reduced_by, e.width, e.height, e.pillow_sha256, e.mode === "L" ? 0 : 2, e.pillow_sha256]);
+      t(`R42 ${v.name}, maxEdge ${e.max_edge}: the source as the file states it`, r.source && [r.source.format, r.source.width, r.source.height],
+        [e.source.format, e.source.width, e.source.height]);
+    }
+  }
+  {
+    /* K2701: R43 reads EXIF only. Pillow's `exif_transpose` also takes an XMP
+       `tiff:Orientation` when EXIF has none; this module does not. */
+    const e = PV.variants.find((v) => v.name === "orient-xmp-6-only").expect[0];
+    const r = await picture(pic("orient-xmp-6-only"), 0, { maxEdge: 64, grey: true });
+    t("R43 an XMP tiff:Orientation 6 with no EXIF tag is NOT applied (EXIF only; a stated divergence from Pillow, which would turn it)",
+      [r.orientation, r.width, r.height, r.pixels_sha256], [1, 37, 23, e.pillow_sha256]);
+  }
+  t("R43 (every orientation 1–8 is among them, and both byte orders)", [1, 2, 3, 4, 5, 6, 7, 8].every((o) => PV.variants.some((v) => v.name === `orient-${o}`))
+    && PV.variants.some((v) => v.name === "orient-6-big-endian"), true);
+  t("R42 (every reduction path Pillow has is among them: k = 2, 3, 4, 5 and over 5)",
+    [2, 3, 4, 5, 6].every((k) => PV.variants.some((v) => v.expect.some((e) => k === 6 ? e.reduced_by > 5 : e.reduced_by === k))), true);
+
+  /* The photograph R42's entry names: a phone held upright. */
+  const PHOTO = pic("photo-4032x3024-o6");
+  const pe = PV.variants.find((v) => v.name === "photo-4032x3024-o6").expect[0];
+  const ph = await picture(PHOTO, 0, { maxEdge: 1568, grey: true });
+  t("R42 the success shape", Object.keys(ph).sort(), ["bytes", "height", "mediaType", "ok", "orientation", "page", "pixels_sha256",
+    "reduced_by", "route", "source", "upright", "width"]);
+  t("R42 R43 a 4032×3024 colour JPEG, Orientation 6: a portrait grey PNG, long edge at most 1,568, Pillow's pixels",
+    [ph.ok, ph.page, ph.route, ph.mediaType, ph.upright, ph.orientation, ph.reduced_by, ph.width, ph.height, ph.height > ph.width,
+      Math.max(ph.width, ph.height) <= 1568, ph.pixels_sha256],
+    [true, 0, "decoded-picture", "image/png", true, 6, 3, 1008, 1344, true, true, pe.pillow_sha256]);
+  t("R42 the photograph's source", ph.source, { format: "jpeg", width: 4032, height: 3024, comps: 3 });
+  const php = readPng(ph.bytes);
+  t("R42 an 8-bit grey PNG under 5 MiB whose samples are the pixels_sha256",
+    [php.bitDepth, php.colorType, ph.bytes.length < 5 * 1048576, hex(php.samples)], [8, 0, true, pe.pillow_sha256]);
+  t("R42 never the file's own bytes: a PNG of IHDR, IDAT and IEND only, carrying no EXIF",
+    [chunks(ph.bytes), Buffer.from(ph.bytes).includes("Exif")], [["IHDR", "IDAT", "IEND"], false]);
+
+  console.log("\n--- R42: the refusals, each beside a control that is accepted (K874) ---");
+  const SMALL = pic("orient-1");
+  const ok = await picture(SMALL, 0, { maxEdge: 64, grey: true });
+  t("R42 (control) a JPEG as a Uint8Array renders", ok.ok, true);
+  t("R42 (control) the same JPEG as an ArrayBuffer renders the same picture",
+    (await picture(SMALL.slice().buffer, 0, { maxEdge: 64, grey: true })).pixels_sha256, ok.pixels_sha256);
+  for (const [label, bytes] of [["a PDF", imagePage(GREY_IMG, { w: 3, h: 2 })], ["a GIF", new TextEncoder().encode("GIF89a\x01\x00\x01\x00")],
+    ["no bytes", new Uint8Array(0)], ["null", null], ["a string", "\xff\xd8\xff"], ["two bytes of a JPEG signature", Uint8Array.from([0xff, 0xd8, 0x00, 0xe0])],
+    ["seven bytes of a PNG signature", Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x00])]]) {
+    const r = await picture(bytes, 0, { maxEdge: 64, grey: true });
+    t(`R42 ${label}: NOT_A_PICTURE, no bytes`, fields(r, "ok", "reason", "bytes"), [false, "NOT_A_PICTURE", undefined]);
+  }
+  for (const i of [1, -1, 0.5, "0", null]) {
+    const r = await picture(SMALL, i, { maxEdge: 64, grey: true });
+    t(`R42 page ${JSON.stringify(i)}: NO_SUCH_PAGE with pageCount 1`, fields(r, "ok", "reason", "pageCount"), [false, "NO_SUCH_PAGE", 1]);
+  }
+  /* The bound is read from the header, before any decode: a frame one column
+     over it is refused although its data could not even be decoded, and one
+     exactly at it gets past the bound to the decoder's own refusal. */
+  const sof = (() => { for (let p = 2; ; ) { if (SMALL[p + 1] === 0xc0) return p; p += 2 + ((SMALL[p + 2] << 8) | SMALL[p + 3]); } })();
+  const jpegSized = (w, h) => { const b = SMALL.slice(); b[sof + 5] = h >> 8; b[sof + 6] = h & 255; b[sof + 7] = w >> 8; b[sof + 8] = w & 255; return b; };
+  const big = await picture(jpegSized(4097, 3072), 0, { maxEdge: 64, grey: true });
+  t("R42 a JPEG header over PICTURE_FRAME_MAX: IMAGE_TOO_LARGE, stating the frame and the bound",
+    fields(big, "ok", "reason", "width", "height", "comps", "samples", "bound"), [false, "IMAGE_TOO_LARGE", 4097, 3072, 3, 4097 * 3072 * 3, PICTURE_FRAME_MAX]);
+  const at = await picture(jpegSized(4096, 3072), 0, { maxEdge: 64, grey: true });
+  t("R42 (control) a JPEG header exactly at the bound reaches the decoder", [at.ok, at.reason !== "IMAGE_TOO_LARGE"], [false, true]);
+  t("R42 (the bound admits the 12-megapixel cameras)", [4032 * 3024, 4000 * 3000, 4080 * 3072].every((n) => n * 3 <= PICTURE_FRAME_MAX), true);
+  const ihdr = (w, h, ct) => {
+    const b = Buffer.alloc(33); Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(b);
+    b.writeUInt32BE(13, 8); b.write("IHDR", 12, "latin1"); b.writeUInt32BE(w, 16); b.writeUInt32BE(h, 20); b[24] = 8; b[25] = ct;
+    return new Uint8Array(b);
+  };
+  for (const [label, w, h, ct, n] of [["an RGB PNG", 4097, 3072, 2, 3], ["an RGBA PNG (four channels)", 3600, 3000, 6, 4]]) {
+    const r = await picture(ihdr(w, h, ct), 0, { maxEdge: 64, grey: true });
+    t(`R42 ${label} header over the bound: IMAGE_TOO_LARGE before any decode`, fields(r, "ok", "reason", "samples"), [false, "IMAGE_TOO_LARGE", w * h * n]);
+  }
+  const atPng = await picture(ihdr(4096, 3072, 2), 0, { maxEdge: 64, grey: true });
+  t("R42 (control) a PNG header at the bound reaches the decoder", [atPng.ok, atPng.reason !== "IMAGE_TOO_LARGE"], [false, true]);
+  for (const [name, reason] of [["refuse-progressive", "UNSUPPORTED_JPEG_PROCESS"], ["refuse-cmyk", "UNSUPPORTED_SAMPLES"], ["refuse-truncated", "TRUNCATED_IMAGE_DATA"]]) {
+    const r = await picture(pic(name), 0, { maxEdge: 64, grey: true });
+    t(`R42 the JPEG codec's refusal, mapped as R22 maps it: ${name} is ${reason}, no bytes`, fields(r, "ok", "reason", "page", "bytes"), [false, reason, 0, undefined]);
+  }
+  for (const bad of [0, -3, 1.5, undefined, "64"]) {
+    let threw = null;
+    try { await renderPictureToPixels(SMALL, 0, { maxEdge: bad, grey: true }); } catch (e) { threw = e.constructor.name; }
+    t(`R42 a maxEdge of ${JSON.stringify(bad)} is the caller's error: a TypeError, not an answer`, threw, "TypeError");
+  }
+
+  console.log("\n--- R40: a picture, pure per call ---");
+  const key = (r) => JSON.stringify({ ...r, bytes: r.bytes ? hex(r.bytes) : null });
+  const a = await picture(pic("orient-7"), 0, { maxEdge: 10, grey: false }), b = await picture(pic("orient-7"), 0, { maxEdge: 10, grey: false });
+  t("R40 R42 the same picture and options: the same answer twice", key(a) === key(b), true);
+}
+
 console.log("\n--- R41: no place named ---");
 {
   /* The same list pdf-worker's R38 test uses. Comments are removed from the code
@@ -476,7 +584,7 @@ console.log("\n--- R41: no place named ---");
   t(`R41 no answer given in this file names a place (${answers.length} answers)`, told, []);
   const src = (f) => readFileSync(fileURLToPath(new URL(`../src/${f}`, import.meta.url)), "utf8");
   const code = (f) => src(f).replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:])\/\/[^\n]*/g, "$1");
-  const MINE = ["imagecrop.mjs", "pagepixels-worker.mjs", "pagepixels.mjs"];
+  const MINE = ["imagecrop.mjs", "pagepixels-worker.mjs", "pagepixels.mjs", "picturepixels.mjs"];
   t("R41 (the module's files are all there)", MINE.every((f) => readdirSync(fileURLToPath(new URL("../src", import.meta.url))).includes(f)), true);
   t("R41 no place is named in the module's code", MINE.filter((f) => PLACES.test(code(f))), []);
   /* The control: the same reading does see a place where one is written. */
