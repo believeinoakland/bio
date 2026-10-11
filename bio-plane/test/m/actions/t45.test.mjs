@@ -566,3 +566,11 @@ test("R8 R74 R77 R78 R79 R80 R82 R85 R86 R87 R88 (T45) each code this module min
                       "SCOPE_UNCHANGED", "MACHINE_CANNOT_RECORD_PROMISE", "PROMISE_REFUSED"])
     assert.ok(rows.some(([c]) => c === code), `${code} has its row`);
 });
+
+test("R97 over the real consequences (its R19): actions' reader is the one registered; a second registration is refused naming actions", () => {
+  const w = world({ deps: { env: {} } });
+  const again = w.a.consequences.registerOwnActReader(() => [], "monitoring");
+  assert.deepEqual([again.ok, again.reason, again.module], [false, "LISTENER_DECLARED", "actions"]);
+  w.action(A);
+  assert.deepEqual(w.a.ownActIds({ ids: [A, "ACTN-2026-0404-x"] }), [A], "control: an id of no action is not answered");
+});
