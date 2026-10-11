@@ -76,6 +76,8 @@ import { eventsOf } from "../events/index.mjs";
 import { filingTemplatesOf, FILING_BLANKS, FILING_TEXT_MAX, blanksOf, withRow as templatesRow }
   from "../filing-templates/index.mjs";
 import { docketOf } from "../docket/index.mjs";
+import { caseCheckOf } from "../case-check/index.mjs";
+import { acceptedWorkOf } from "../accepted-work/index.mjs";
 import { actionHoldsOf, holdNotInPlace } from "../action-holds/index.mjs";
 import { projectRosterOf } from "../project-roster/index.mjs";
 /* action-grammar's T45 reads (`pointOut`, its R18; `assertionResolutionFindings`, `assertionsUnresolved`, its R19) are
@@ -208,11 +210,11 @@ export class Filings {
                 attestation = null, content = null,
                 actions = null, conformance = null, standards = null, consequences = null, promotion = null, strength = null, actionClocks = null,
                 localFacts = null, filingTemplates = null, events = null, docket = null, projectRoster = null,
-                actionHolds = null, grammar = null, accountCheck = null,
+                actionHolds = null, caseCheck = null, acceptedWork = null, grammar = null, accountCheck = null,
                 producingGroup = null, profiles = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
-    this.#deps = { host, membership, publication, publicRead, provenance, attestation, content, actions, conformance, standards, consequences, promotion, strength, actionClocks, localFacts, filingTemplates, events, docket, projectRoster, actionHolds };
+    this.#deps = { host, membership, publication, publicRead, provenance, attestation, content, actions, conformance, standards, consequences, promotion, strength, actionClocks, localFacts, filingTemplates, events, docket, projectRoster, actionHolds, caseCheck, acceptedWork };
     /* R38, R39, R43: action-grammar's pure reads (its R18, R19), its module unless a test hands in its own; R34: the
        sentence judgment, `case-checker.checkAccount` (its R24) unless handed in. */
     this.grammar = grammar && typeof grammar === "object" ? grammar : actionGrammar;
@@ -263,6 +265,10 @@ export class Filings {
   /* R9, R47 (T45): action-holds' `pressureFor` (its R12) and the hold at a place (its R2), from `actionHoldsOf` on the
      same host unless given; with none, a defence packet's pressure and a hold notice are undetermined, said so (K248). */
   get actionHolds() { return this.#deps.actionHolds ||= (this.#deps.host ? actionHoldsOf(this.#deps.host) : null); }
+  /* R9 (T45; K2858): an unpublished finding's kind read alone: checked for publication and held (`case-check`'s
+     `heldFindingVersions`, its R3), or another group's accepted (`accepted-work`'s `acceptedFinding`, its R2). */
+  get caseCheck() { return this.#deps.caseCheck ||= (this.#deps.host ? caseCheckOf(this.#deps.host) : null); }
+  get acceptedWork() { return this.#deps.acceptedWork ||= (this.#deps.host ? acceptedWorkOf(this.#deps.host) : null); }
 
   migrate() { migrateFilings(this.sql); }
 
@@ -1618,15 +1624,15 @@ export class Filings {
              claim: { question: str(fm && fm.title), conclusion,
                       ...(conclusion ? {} : { conclusion_why: "the published finding states no conclusion section" }) },
              citations: legs.map((l) => ({ target: str(l.target), ...(str(l.content_id) ? { content_id: str(l.content_id) } : {}),
+                                           ...(l.target_edition != null ? { edition: l.target_edition } : {}),
                                            ...(str(l.role) ? { role: str(l.role) } : {}), source })) };
   }
 
   /* R9 (T45), R23, R34: one finding or inquiry as it stands, read only when `viewer` may see it (`content.sees`, its
      R37; null otherwise): at its latest published edition (case, edition, pinned bytes, the pair that edition froze) as
      `publication.publishedEditionsOf` answers it (its R37), or, never published, at its live bytes with the grade
-     `strength.inquiryStrength` answers (its R6), its kind `unpublished`. Whether an unpublished finding is checked for
-     publication and held, or another group's accepted, is read only through a determination (conformance R9's per-finding
-     `basis`): read alone, it is said not determined here. */
+     `strength.inquiryStrength` answers (its R6), its kind `unpublished`, or `checked_held` when a held check names it
+     (case-check R3; K2858), read at the version that check pins. */
   #findingRead(id, viewer) {
     const c = this.content;
     const target = str(id);
@@ -1640,13 +1646,37 @@ export class Filings {
       return this.#fact({ id: target, case: last.case, edition: last.edition, version_sha: last.version_sha, kind: "published",
                           grade: last.strength ? { pair: last.strength, source: `${target}@${last.case}/${last.edition}` }
                             : { state: "undetermined", why: "the edition states no frozen pair" } });
+    /* checked for publication and held (case-check R3): read at the version the latest held check pins */
+    const cc = this.caseCheck;
+    const held = cc && typeof cc.heldFindingVersions === "function" ? this.#call(() => cc.heldFindingVersions({ finding: target })) : null;
+    const h = held && held.ok !== false && Array.isArray(held.items) && held.items.length ? held.items[held.items.length - 1] : null;
     const f = this.#call(() => this.record.readFile(target, "bundle.md"));
     const s = this.strength && typeof this.strength.inquiryStrength === "function"
       ? this.#call(() => this.strength.inquiryStrength({ id: target, viewer })) : null;
     const grade = s && s.ok !== false && (s.capture || s.connection)
       ? { pair: { capture: s.capture ?? null, connection: s.connection ?? null }, source: `strength:${target}` }
       : { state: "undetermined", why: "the finding's grade could not be read" };
+    if (h) {
+      const pinned = h.version_sha ? this.#call(() => this.record.textAtSha(target, h.version_sha)) : null;
+      return { ...this.#fact({ id: target, kind: "checked_held", version_sha: h.version_sha ?? null, grade },
+                             typeof pinned === "string" ? pinned : f && typeof f.text === "string" ? f.text : null),
+               held: { case: h.case, edition: h.edition, check: h.check, checked_at: h.checked_at, source: `check:${h.check}` } };
+    }
     return this.#fact({ id: target, kind: "unpublished", grade }, f && typeof f.text === "string" ? f.text : null);
+  }
+
+  /* R9 (T45; K2858): another group's finding a leg names, accepted by this group (`accepted-work.acceptedFinding`, its
+     R2, as `viewer` may see it, with an acceptance in force), its kind `accepted`, its grade the pair the source edition
+     publishes; null otherwise. */
+  #acceptedRead(ref, edition, viewer) {
+    const w = this.acceptedWork;
+    if (!str(ref) || !w || typeof w.acceptedFinding !== "function") return null;
+    const r = this.#call(() => w.acceptedFinding({ ref: str(ref), edition, viewer }));
+    if (!isObj(r) || r.absent || r.unreadable || !isObj(r.acceptance)) return null;
+    return { finding: str(ref), case: r.case ?? null, edition: r.edition ?? edition ?? null, version_sha: null, kind: "accepted",
+             accepted: { group: r.group ?? null, import: r.import ?? null, accepted_at: r.acceptance.at ?? null, accepted_by: r.acceptance.by ?? null },
+             grade: r.pair ? { pair: r.pair, source: `accepted:${r.import ?? ref}` } : { state: "undetermined", why: "the source edition states no pair" },
+             claim: { question: null, conclusion: str(r.result) || null }, citations: [], source: `accepted:${str(ref)}${r.edition != null ? `@${r.edition}` : ""}` };
   }
 
   /* R9 (T45; Actions D9, v0.2 rule 12): each matter the action rests on, its support as it stands: with a live
@@ -1662,7 +1692,8 @@ export class Filings {
       if (!inq) continue;
       facts.push({ ...inq, matter: inq.finding, determined: false, says: "not determined: no member has made a determination on it" });
       for (const c of inq.citations || []) {
-        const f = c.target && c.target !== inq.finding ? this.#findingRead(c.target, viewer) : null;
+        const f = c.target && c.target !== inq.finding
+          ? this.#findingRead(c.target, viewer) || this.#acceptedRead(c.target, c.edition ?? null, viewer) : null;
         if (f && !facts.some((x) => x.finding === f.finding))
           facts.push({ ...f, matter: inq.finding, determined: false, says: "a finding the inquiry holds, not determined" });
       }

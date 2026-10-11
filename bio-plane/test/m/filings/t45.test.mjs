@@ -457,3 +457,39 @@ test("R28 R41 (K2851) a profile template filing-templates does not offer (no pro
   assert.equal(bare.templatesForAction({ action: A, viewer: V("bo") }).versions.some((v) => v.template === "TPL-test-bylaw-complaint"), false);
   assert.equal(x.f.filingPrepare({ action: A, preparer: V("bo"), viewer: V("bo") }).ok, true, "control: reviewed, offered");
 });
+
+test("R9 (K2858) with no determination, an unpublished finding a held check names reads checked_held (case-check's heldFindingVersions), and another group's finding a leg names, accepted here, reads accepted with its group and the edition's pair (accepted-work's acceptedFinding); one neither names reads unpublished", async () => {
+  const x = world();
+  const H = "INQ-2026-0004-held", U = "INQ-2026-0005-plain";
+  const IMP = "a".repeat(64), REF = `imported:${IMP}/INQ-2026-0042-source`;
+  x.inquiry(H, { legs: [{ target: DOC }] });
+  x.inquiry(U, { legs: [{ target: DOC }] });
+  const acceptedWork = x.f.acceptedWork;
+  const reg = acceptedWork.registerAcceptedWork("test-import", {
+    finding: ({ ref }) => (ref === REF ? { ref, import: IMP, group: "Hayward Parents for Accountability", case: "CASE-2026-0007", edition: 3,
+                                           finding: "INQ-2026-0042-source", result: "the order was let without a vote", pair: { capture: { grade: "B" } },
+                                           acceptance: { by: V("olive"), at: "2026-09-20", reason: "checked", checked: true, gaps: [] } } : null),
+    openFlags: () => ({ flags: [], complete: true }), withdrawals: () => ({ withdrawals: [], cursor: null }) });
+  assert.equal(reg.ok, true, JSON.stringify(reg));
+  const Q = "INQ-2026-0002-quay";
+  x.inquiry(Q, { legs: [{ target: H }, { target: U }] });
+  const leg = `basis:\n  - target: ${REF}\n    role: supports\n    target_edition: 3\n`;
+  const rq = x.promote(Q, x.text(Q).replace("basis:\n", leg));
+  assert.equal(rq.ok, true, JSON.stringify(rq).slice(0, 400));
+  /* case-check's R3 answered as it is required (a held check naming H), and accepted-work's real registration with
+     case-import's finding read stood in */
+  const real = x.f.caseCheck;
+  const caseCheck = new Proxy(real, { get: (t, k) => (k === "heldFindingVersions"
+    ? ({ finding }) => ({ ok: true, items: finding === H ? [{ case: "CASE-2026-0009-held", edition: 1, project: x.proj, version_sha: x.head(H), role: "load_bearing",
+                                                         check: "CHK-2026-0001", checked_at: "2026-11-03" }] : [] })
+    : typeof t[k] === "function" ? t[k].bind(t) : t[k]) });
+  const f = x.filingsWith({ caseCheck, acceptedWork });
+  const A = x.action({ kind: "commitment_claim", legs: [{ target: Q, kind: "advances" }] });
+  const p = f.counselPacket({ reason: WHY, action: A, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
+  assert.equal(p.ok, true, JSON.stringify(p).slice(0, 300));
+  const by = Object.fromEntries(p.sections.facts.items.map((i) => [i.finding, i]));
+  assert.deepEqual([by[Q].kind, by[H].kind, by[U].kind, by[REF].kind], ["unpublished", "checked_held", "unpublished", "accepted"]);
+  assert.deepEqual([by[H].held.check, by[H].held.checked_at], ["CHK-2026-0001", "2026-11-03"]);
+  assert.deepEqual([by[REF].accepted.group, by[REF].grade.pair.capture.grade], ["Hayward Parents for Accountability", "B"]);
+  for (const i of p.sections.facts.items) assert.equal(i.determined, false);
+});
