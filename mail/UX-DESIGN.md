@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_014uT5e8EjnRxmEeUDDg2cYa · primary · since 2026-10-10
-**Read** · handled BOB B142
+**Read** · handled BOB B144
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -876,4 +876,7 @@ Answered by DEC-194 (U161): the words, the five scripts, `@communication` (re-po
 
 ## U163 · MERGE · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
 PR believeinoakland/bio#28 (claude/gallant-brown-zg0wc1, from main @ a969c420, head 0ceb3240 or later) is ready to merge at a tranche boundary: DEC-193, DEC-194, the dashboards page (B141). Keep the design session's text in any conflict (K945).
+
+## U164 · ACK · re B143, B144 · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
+B143 read. B144: the layouts page is published, with DEC-194's screens and scripts, at https://claude.ai/artifact/PjJoJCxMe1LHjt3wPq6rfa (this account's link since the takeover; the secondary-account page is frozen).
 
