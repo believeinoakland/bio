@@ -335,18 +335,18 @@ test("R36 R37 R9: the link is appended and read per standard (cured_by, curesOf)
   const l = w.c.cureLink(link());
   assert.equal(l.ok, true);
   const read = w.c.curesOf({ determination: target.id, viewer: V("pat") });
-  assert.deepEqual(read.standards, [{ standard: std, standing: { link: l.link, cure: cure.id, standard: std, by: V("olive"),
-                                                                    at: l.standards[0].standing.at, reason: null, cure_standing: true },
+  assert.deepEqual(read.standards, [{ standard: std, link: { link: l.link, cure: cure.id, standard: std, by: V("olive"),
+                                                                    at: l.standards[0].link.at, reason: null, cure_standing: true },
                                        ended: [] }]);
   const r = w.c.determinationRead({ id: target.id, viewer: V("pat") });
   assert.deepEqual(r.cured_by, read.standards);
   assert.deepEqual(w.c.determinationRead({ id: cure.id, viewer: V("pat") }).cures,
-                   [{ link: l.link, determination: target.id, standard: std, by: V("olive"), at: read.standards[0].standing.at }]);
+                   [{ link: l.link, determination: target.id, standard: std, by: V("olive"), at: read.standards[0].link.at }]);
   assert.deepEqual(w.c.curesOf({ determination: target.id, standard: std, viewer: V("pat") }).standards, read.standards);
   assert.deepEqual(w.c.curesOf({ determination: target.id, standard: "STD-2026-0099-none", viewer: V("pat") }).standards, []);
   /* the cure superseded: not standing, with why; nothing moves */
   w.c.determine(compliant({ supersedes: cure.id, reason: "restated" }));
-  const after = w.c.curesOf({ determination: target.id, viewer: V("pat") }).standards[0].standing;
+  const after = w.c.curesOf({ determination: target.id, viewer: V("pat") }).standards[0].link;
   assert.deepEqual([after.link, after.cure_standing, after.cure_why], [l.link, false, "the curing determination has been superseded"]);
   /* unlink: R7's reason codes, a machine refused, an unknown link one answer */
   for (const reason of [undefined, "", "  "]) refused(nothing(w, () => w.c.cureUnlink({ link: l.link, reason, author: V("olive"), viewer: V("olive") })), "CONFORMANCE_NO_REASON");
@@ -360,7 +360,7 @@ test("R36 R37 R9: the link is appended and read per standard (cured_by, curesOf)
   const again = nothing(w, () => w.c.cureUnlink({ link: l.link, reason: "again", author: V("olive"), viewer: V("olive") }));
   assert.deepEqual([again.ok, again.wrote, again.ended.reason], [true, false, "the cure was restated"]);
   const ended = w.c.curesOf({ determination: target.id, viewer: V("pat") }).standards[0];
-  assert.deepEqual([ended.standing, ended.ended.map((x) => [x.link, x.ended.reason])], [null, [[l.link, "the cure was restated"]]]);
+  assert.deepEqual([ended.link, ended.ended.map((x) => [x.link, x.ended.reason])], [null, [[l.link, "the cure was restated"]]]);
   assert.deepEqual(w.c.determinationRead({ id: cure.id, viewer: V("pat") }).cures, [], "an ended link is no cure");
   /* a new link may stand after the ending (the superseding cure) */
   const next = w.c.determinationsFor({ live: true, viewer: V("pat") }).items.find((i) => i.supersedes === cure.id);
@@ -381,12 +381,12 @@ test("R37 R24: a cure the viewer may not see is withheld whole and the read stat
   assert.equal(cure.ok, true, JSON.stringify(cure).slice(0, 300));
   assert.equal(w.c.cureLink(link({ cure: cure.id })).ok, true);
   const pat = w.c.curesOf({ determination: target.id, viewer: V("pat") });
-  assert.deepEqual([pat.standards[0].standing, pat.out_of_view], [null, true]);
+  assert.deepEqual([pat.standards[0].link, pat.out_of_view], [null, true]);
   assert.equal(JSON.stringify(pat).includes(cure.id), false);
   const pr = w.c.determinationRead({ id: target.id, viewer: V("pat") });
-  assert.deepEqual([pr.cured_by[0].standing, pr.out_of_view], [null, true]);
+  assert.deepEqual([pr.cured_by[0].link, pr.out_of_view], [null, true]);
   const olive = w.c.curesOf({ determination: target.id, viewer: V("olive") });
-  assert.deepEqual([olive.standards[0].standing.cure, "out_of_view" in olive], [cure.id, false]);
+  assert.deepEqual([olive.standards[0].link.cure, "out_of_view" in olive], [cure.id, false]);
   refused(w.c.curesOf({ determination: target.id, viewer: V("quinn") }), "NO_SUCH_DETERMINATION");
 });
 
@@ -432,7 +432,7 @@ test("R36 R37: the ops curelink, cureunlink and cures route to the services, the
   refused(w.op("curelink", { author: MACHINE, viewer: MACHINE }, body), "MACHINE_CANNOT_LINK_CURE");
   const l = w.op("curelink", { author: V("olive"), viewer: V("olive") }, { ...body, author: MACHINE });
   assert.equal(l.ok, true, JSON.stringify(l).slice(0, 300));
-  assert.equal(w.op("cures", { determination: target.id, viewer: V("pat") }).standards[0].standing.link, l.link);
+  assert.equal(w.op("cures", { determination: target.id, viewer: V("pat") }).standards[0].link.link, l.link);
   refused(w.op("cures", { determination: target.id, viewer: V("quinn") }), "NO_SUCH_DETERMINATION");
   const e = w.op("cureunlink", { author: V("olive"), viewer: V("olive") }, { link: l.link, reason: "mistaken" });
   assert.deepEqual([e.ok, e.wrote], [true, true]);

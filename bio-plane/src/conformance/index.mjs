@@ -1977,7 +1977,7 @@ export class Conformance {
     const cured_by = stds.map((sid) => {
       const mine = links.filter((l) => l.standard_id === sid && visible(l.cure_id));
       const standing = mine.find((l) => !l.end_at);
-      return { standard: sid, standing: standing ? this.#linkView(standing, viewer, memo) : null,
+      return { standard: sid, link: standing ? this.#linkView(standing, viewer, memo) : null,
                ended: mine.filter((l) => l.end_at).map((l) => ({ ...this.#linkView(l, viewer, memo),
                  ended: { reason: l.end_reason, by: l.end_by, at: l.end_at } })) };
     });
