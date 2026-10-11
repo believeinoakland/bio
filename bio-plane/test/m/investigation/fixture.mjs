@@ -126,6 +126,7 @@ export function world(opts = {}) {
   };
   const personWarning = ({ text, viewer }) => (w.personNamed && String(text).includes(w.personNamed)
     ? { code: "PERSON_IN_NO_PUBLIC_ROLE", key: "k", translation: "t", persons: [{ entity_id: "ENT-2026-0009", label: w.personNamed }], viewer } : null);
+  w.intent = intent;          // the stand-in itself, so a test may answer differently (R18's pages, a failing read)
   w.inv = investigationOf(host, { record, membership, promotion, steps, legEarning, basisVersions, intent, inquiry, captureRequests,
                                   provenance: prov, view, now, personWarning });
   for (const [m, role] of [["ann", "member"], ["bob", "member"], ["cat", "member"], ["dan", "member"], ["out", "member"], ["boss", "admin"]])
