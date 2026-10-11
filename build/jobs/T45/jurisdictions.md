@@ -49,7 +49,7 @@ Not-yet-met marks this job meets: **R74–R87**, each named by `jurisdictions/te
 - Tests that pinned pre-T45 text (R26 anchors, R30 tiers, R32's Tier 2, R36's FAC, R47's lists, R56's rule set, R58's "the first gives none") re-pinned to the amended requirements (B2), none loosened.
 - Deferred: none.
 
-**Other modules (REPORT J3):** none changed. R84 makes the test profile grow (a kind holding `templates` and a `shape`, a defending organisation, deadlines owed by the group, by a body after a third party's act, and in the group's defence); three tests of other modules pin that profile's exact contents and go red, each in a module whose own T45 job reads the new fields:
+**Other modules (REPORT J2):** none changed. R84 makes the test profile grow (a kind holding `templates` and a `shape`, a defending organisation, deadlines owed by the group, by a body after a third party's act, and in the group's defence); three tests of other modules pin that profile's exact contents and go red, each in a module whose own T45 job reads the new fields:
 - `action-grammar` `grammar.test.mjs` "R1, R11: actionKinds(view)…": the test profile's kinds listed exactly; now also `recognition_letter`.
 - `filing-templates` `reads.test.mjs` "R26 offeredVersion…": reads `k.template.id` for every test-profile kind; `recognition_letter` holds `templates` (R81), not `template` (refused together, K2788). Its T45 job reads R81's templates.
 - `filings` `packet.test.mjs` "R9 the six sections…": the packet's `claim` deadlines listed exactly; now also `complaint_particulars`, `examiner_reply`, `defence_filing`.
