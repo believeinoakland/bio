@@ -21,3 +21,7 @@ Merge order in L8: case-grammar, publication, docket, public-read, case-account,
 ## B3 · CHANGE
 
 case-grammar and publication are merged into tranche/T45 (K2833; publication's COUNSEL_MATTER_NOT_PUBLISHED row is C-122.8 in CASE_SOURCES_CHECKS). Merge tranche/T45 into your branch and re-run against them.
+
+## B4 · CHANGE
+
+case-account is merged into tranche/T45 (K2834), with case-grammar and publication (K2833): all your L8 uses are in. Merge tranche/T45, replace your stand-in outcomes reader with case-grammar's outcomesOf/outcomesLines/outcomesSectionLines and case-account R6's outcome judging, and post COMPLETE.

@@ -1,5 +1,5 @@
-/* case-account's tables (requirements: `build/requirements/case-account.md`, R1–R4, R8, R12): the system's drafts of a
- * case's account and the members' acceptances of them, copied from `case-authoring/schema.mjs` with the same DDL
+/* case-account's tables (requirements: `build/requirements/case-account.md`, R1–R4, R8, R12, R13): the system's drafts
+ * of a case's account and the members' acceptances of them, copied from `case-authoring/schema.mjs` with the same DDL
  * (K624; N839), so a running store's drafts and acceptances are kept, with no data move. Every other table this module
  * reads is another module's read contract, named where it is read. */
 
@@ -40,11 +40,28 @@ CREATE TABLE IF NOT EXISTS account_acceptances (
   at        TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS account_acceptances_case ON account_acceptances(case_id, edition, seq);
+
+-- R13 (T45; N861; Actions D11a; v0.2 rule 9): A MEMBER'S OWN TEXT AND ITS CHECK AGAINST THE RECORD, kept in her own
+-- hidden project (project-roster R23's scope own) and nowhere else. One row per check, append-only: nothing updates or
+-- deletes a row but the whole-store purge. sentences is the text as she brought it (JSON [{text, cites}]); result is
+-- what the check answered per sentence (JSON [{ord, result, codes, findings}]). No column holds a signature, digest,
+-- stamp or label: nothing here is usable as a mark outside, and no service offers a row to another module.
+CREATE TABLE IF NOT EXISTS advocacy_checks (
+  seq         INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id  TEXT NOT NULL,
+  author      TEXT NOT NULL,
+  sentences   TEXT NOT NULL,
+  result      TEXT NOT NULL,
+  at          TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS advocacy_checks_project ON advocacy_checks(project_id, seq);
 `;
 
-/** R8: declared whole to record-core's purge (K23): a whole-store purge clears them, and no bundle keys them. */
+/** R8, R13: declared whole to record-core's purge (K23): a whole-store purge clears them, and no bundle keys them. The
+ *  advocacy checks are working material, declared in R8's form. */
 export const CASE_ACCOUNT_TABLES = Object.freeze([{ name: "account_drafts", keys: [] },
-                                                  { name: "account_acceptances", keys: [] }]);
+                                                  { name: "account_acceptances", keys: [] },
+                                                  { name: "advocacy_checks", keys: [] }]);
 
 /** R12: creates the tables where absent (`CREATE TABLE IF NOT EXISTS`, case-authoring's DDL), keeping every row a
  *  running store holds. Idempotent. */
