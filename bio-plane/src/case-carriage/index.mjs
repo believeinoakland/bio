@@ -52,13 +52,12 @@
  * acquisition's `archive_entries` (R38's record of an archive's listing: `archive_sha`, `idx`, `name`, `kind`, `state`,
  * `sha256`), to tell whether an archive holds an image. */
 
-import { membershipOf } from "../membership/index.mjs";
+import { membershipOf, listenerRefusal } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { createSha256, canonicalJson, isMachineIdentity } from "../record-grammar/index.mjs";
 import { coverAreas, COVER_MAX_BYTES } from "../image-cover/index.mjs";
 import { cleanDocument, CLEAN_MAX_BYTES } from "../doc-clean/index.mjs";
-import { listenerRefusal } from "../membership/index.mjs";
 import { provenanceOf, FETCHED_VIAS } from "../provenance/index.mjs";
 import { sourcesOf } from "../sources/index.mjs";
 import { extractionOf } from "../extraction/index.mjs";
@@ -364,8 +363,8 @@ export class CaseCarriage {
       .filter((d) => d && typeof d === "object" && d.capture && digestOf(d.capture.sha256) === sha);
   }
 
-  /** R2 (K1317): what a committed case edition held, `[{sha, held}]` in the order held, `held` `inline` or `evidence`,
-   *  as R1 wrote it, so a retried ratification copies what is left (ratification R39); `[]` for an edition that held
+  /** R2 (K1317): what a committed case edition held, `[{sha, held}]` in the order held, `held` `inline`, `evidence` or
+   *  (T37) `derived`, as R1 wrote it, so a retried ratification copies what is left (ratification R39); `[]` for an edition that held
    *  nothing or was never committed. Writes nothing; never throws. */
   heldMaterialsOf(caseId, edition) {
     try {
