@@ -47,13 +47,18 @@
  *
  * T36 (T36-15): a version read from captures reads only their own receipts (R38, `provenance.receiptsOfCapture`); who
  * recorded what from a passage, in `events` R49's shape (R49, `recordedBy`); and a version known in force through a date
- * by a member's record from a source checked that day (R50), which R20 reads where no end is stated (R51). */
+ * by a member's record from a source checked that day (R50), which R20 reads where no end is stated (R51).
+ *
+ * T45 (T45-7; Actions D7; v0.2 §3 Standard): a spoken commitment is a standard only once confirmed in writing or stated
+ * publicly. A `commitment` resting only on members' "as heard" accounts (`provenance` R28's authored observations, read
+ * through its R48 contract) is refused (R52), and so is one resting only on the group's own sending, which a later
+ * module (`actions`) tells this one through the check it registers at start (R53, `registerOwnSendingCheck`). */
 
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
 import { normalizeType } from "../record-grammar/types.mjs";
 import { proposalLabel } from "../record-grammar/labels.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, listenerRefusal } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf, contentIdFor, canonicalExtent, describeExtent, extentRelation,
          CONTENT_EXTENT_KINDS } from "../content/index.mjs";
@@ -174,6 +179,7 @@ export function periodInForce(period, date) {
 export class Standards {
   #writing = null;   // the standard this module is promoting, for its own check (R11)
   #law;              // R48: `law-relations`' LawRecords, over this instance's internal reads
+  #ownSending = null;   // R53: {module, fn}, the one check a later module registers at start
 
   constructor({ storage, record, membership, promotion, content = null, combine = combineProfiles, now = null,
                 events = null, keyedStore = null, citationLookup = acquisitionCitationLookup,
@@ -389,6 +395,9 @@ export class Standards {
     if (law.ok === false) return law;
     const t35 = this.#t35Fields(a, { cite, kind: a.kind, issuer, texts, period, supersedes, viewer, copy: law.fields.copy });
     if (t35.ok === false) return t35;
+    /* R52, R53: after every refusal R1 lists, before anything is written */
+    const heard = this.#commitmentRefusal(a.kind, heldAs.held, texts, heldAs.detail);
+    if (heard) return heard;
     return { ok: true, fields: { cite, kind: a.kind, issuer, reason: a.reason, texts, period, supersedes, held: heldAs.held,
                                  held_detail: heldAs.detail, ...law.fields, ...t35.fields } };
   }
@@ -454,6 +463,78 @@ export class Standards {
                                      : { captureSha: p.captureSha.trim().toLowerCase(), extent: p.extent })),
       request: sr.request == null ? null : sr.request.trim(),
       answer: sr.answer == null ? null : { captureSha: sr.answer.captureSha.trim().toLowerCase(), extent: sr.answer.extent } } };
+  }
+
+  /* ===================================================================== *
+   * R52, R53: A SPOKEN COMMITMENT, AND THE GROUP'S OWN LETTER (T45; Actions D7; v0.2 §3 Standard)
+   * ===================================================================== */
+
+  /** R53 (`membership` R125's form): the one check a later module (`actions`) registers once at start, answering whether
+   *  a capture is the group's own sending: `fn({captureSha})` → true or false. The slot takes one registration whoever
+   *  makes it, so its refusals are `membership.listenerRefusal`'s (its R81), naming the holder. */
+  registerOwnSendingCheck(module, fn) {
+    const refused = listenerRefusal(this.#ownSending, module, fn);
+    if (refused) return refused;
+    this.#ownSending = { module, fn };
+    return { ok: true, module };
+  }
+
+  /* R52: whether a capture is a member's authored observation (`provenance` R28: the register entry its testimony path
+     wrote, `authored` 1, its R48 read contract). */
+  #authoredCapture(captureSha) {
+    return typeof captureSha === "string" && captureSha !== ""
+      && !!this.#one(`SELECT 1 AS x FROM register WHERE capture_sha=? AND authored=1 LIMIT 1`, captureSha);
+  }
+
+  /* R53: whether the registered check answers a capture is the group's own sending. A check that throws or answers
+     anything but true or false (a promise included) is read as true for that capture (fail closed); with none
+     registered, false, and only R52's authored test applies. */
+  #ownSendingCapture(captureSha) {
+    const check = this.#ownSending;
+    if (!check) return false;
+    let r;
+    try { r = check.fn({ captureSha }); } catch { return true; }
+    if (r === true || r === false) return r;
+    if (r && typeof r.then === "function") r.then(null, () => {});
+    return true;
+  }
+
+  /* R52, R53: a commitment held `text` whose every text row, or held `cited` whose citing passage, is of a member's
+     authored observation (COMMITMENT_AS_HEARD), or of such observations and the group's own sending with at least one
+     of the latter (COMMITMENT_OWN_LETTER): it rests on no confirmation by the body. Null for any other kind, a
+     commitment held `absent`, or one with at least one row from another capture (the body's letter, its minutes, a
+     recording or its own publication). Writes nothing. */
+  #commitmentRefusal(kind, held, texts, detail) {
+    if (kind !== "commitment" || (held !== "text" && held !== "cited")) return null;
+    const rows = held === "text"
+      ? texts.map((id) => { const row = this.content.contentRow(id); return { content_id: id, capture_sha: row ? row.capture_sha : null }; })
+      : [{ content_id: detail.content_id, capture_sha: detail.captureSha }];
+    if (!rows.length) return null;
+    const seen = new Map();
+    const of = (sha) => {
+      if (!seen.has(sha)) {
+        const heard = this.#authoredCapture(sha);
+        seen.set(sha, heard ? "heard" : this.#ownSendingCapture(sha) ? "own" : "other");
+      }
+      return seen.get(sha);
+    };
+    const marked = rows.map((r) => ({ ...r, is: of(r.capture_sha) }));
+    if (marked.some((r) => r.is === "other")) return null;
+    const ids = marked.map((r) => r.content_id);
+    if (marked.every((r) => r.is === "heard")) {
+      /* DEC-49 REGION is-commitment-confirmed */
+      return refusal("COMMITMENT_AS_HEARD", `${ids.join(", ").slice(0, 400)} ${ids.length === 1 ? "is" : "are each"} a `
+                     + "member's account of what was heard. A spoken commitment is a standard only once confirmed in writing "
+                     + "or stated publicly. Nothing was written.", { content_ids: ids });
+      /* END DEC-49 REGION is-commitment-confirmed */
+    }
+    /* DEC-49 REGION is-commitment-not-own-letter */
+    return refusal("COMMITMENT_OWN_LETTER", `${ids.join(", ").slice(0, 400)} ${ids.length === 1 ? "is" : "are each"} of the `
+                   + "group's own sending or a member's account of what was heard; the group's confirming letter is not the "
+                   + "body's confirmation. Nothing was written.",
+                   { content_ids: ids, own_sending: marked.filter((r) => r.is === "own").map((r) => r.content_id),
+                     as_heard: marked.filter((r) => r.is === "heard").map((r) => r.content_id) });
+    /* END DEC-49 REGION is-commitment-not-own-letter */
   }
 
   /* R2, R47: a standard's named text as content ids: each a content id, or a found extent ({capture_sha, extent}, a

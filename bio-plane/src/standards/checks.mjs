@@ -273,6 +273,20 @@ export const STANDARDS_CHECKS = Object.freeze({
     check: 'C-112.62', where: at("inForceThroughWithdraw", "is-through-record-held"),
     translation: 'No record of a version known in force through a date answers to that id here. Nothing was written.',
   },
+  /* T45-7 (R52, R53; Actions D7; v0.2 §3 Standard): rows minted in T45, awaiting promotion's stamp (T46). */
+  COMMITMENT_AS_HEARD: {
+    check: 'C-112.63', where: at("#commitmentRefusal", "is-commitment-confirmed"),
+    translation: 'A spoken commitment becomes a standard only once it is confirmed in writing or stated publicly. Every '
+      + 'passage named for this one is a member\'s account of what was heard, which stays that member\'s own observation. '
+      + 'Name the body\'s letter, its minutes, a recording or its own publication that states it. Nothing was written.',
+  },
+  COMMITMENT_OWN_LETTER: {
+    check: 'C-112.64', where: at("#commitmentRefusal", "is-commitment-not-own-letter"),
+    translation: 'A commitment becomes a standard once the body confirms it in writing or states it publicly. Every '
+      + 'passage named for this one is from your group\'s own letters or members\' accounts, and your group\'s confirming '
+      + 'letter is not the body\'s confirmation. Name the body\'s reply, its minutes, a recording or its own publication '
+      + 'that states it. Nothing was written.',
+  },
 });
 
 /** A refusal carrying its row: its reason, code, check id and translation. Called with the code as a literal at each
