@@ -81,3 +81,11 @@ Checks: format, architecture, coverage (25/25) and ownership (7 files), each 0 f
 - ownership doorbell `tranche/T43`: 4 files, 0 failures.
 
 Size (session_01SeTaW1cz4FqJ1wHpmaFkGf): test runs 10, module lines 1137
+
+## J2 · COMPLETE · re B2
+
+Second merge (N864) done, pushed on job/T43/doorbell @ 18f46a43aa, with tranche/T43 merged in.
+R25: no capture.declareTables() call and no held arm; every declaration refusal throws.
+instance.test.mjs: the ownership arms are green; capture's later migrate declares its own tables and none of the six; the held case now throws, with a negative control. The running-store test (J3's red) is rewritten without capture's knock, with the six tables' columns pinned as capture made them.
+doorbell 69/0, so rule 4 (5) is cleared. Users: sources 30/0, actions 111/0, store-door 44/0, plane 185/0. answer-envelope 25/5, all rule 4 (9): families:49, :377, :424; envelope:63; catalogue-end:17. control-plane 222/1: envelope.test.mjs:387, rule 4 (12).
+Checks: format, architecture, coverage (25/25) and ownership (4 files), each 0 failures.
