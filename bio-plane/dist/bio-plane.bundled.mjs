@@ -42124,6 +42124,81 @@ function decodeParms(doc, dict, idx) {
   if (p3 && p3.t === "arr") p3 = doc.resolve(p3.items[idx] ?? p3.items[p3.items.length - 1]);
   return p3 && p3.t === "dict" ? p3.map : null;
 }
+function inheritedAttr2(doc, pageMap, key2) {
+  let p3 = pageMap;
+  for (let d = 0; p3 && d <= 32; d++) {
+    if (p3[key2] !== void 0) return doc.resolve(p3[key2]);
+    p3 = doc.dictOf(p3.Parent);
+  }
+  return void 0;
+}
+function pageRotate(doc, pageMap) {
+  const r = inheritedAttr2(doc, pageMap, "Rotate");
+  if (r === void 0) return 0;
+  if (!Number.isInteger(r) || r % 90 !== 0) return null;
+  return (r % 360 + 360) % 360;
+}
+async function pageContentText(doc, pageMap) {
+  const c = doc.resolve(pageMap.Contents);
+  const parts = [];
+  const one4 = async (v) => {
+    const st = doc.resolve(v);
+    if (!st || st.t !== "stream") return;
+    const data = await doc.streamDecoded(st);
+    if (data) parts.push(LATIN13.decode(data));
+  };
+  if (c && c.t === "arr") {
+    for (const it of c.items) await one4(it);
+  } else await one4(pageMap.Contents);
+  return parts.join("\n");
+}
+function maskedContent(s) {
+  let out = "";
+  let i = 0;
+  while (i < s.length) {
+    const ch = s[i];
+    if (ch === "(") {
+      let depth = 1;
+      i++;
+      while (i < s.length && depth > 0) {
+        if (s[i] === "\\") {
+          i += 2;
+          continue;
+        }
+        if (s[i] === "(") depth++;
+        else if (s[i] === ")") depth--;
+        i++;
+      }
+      out += " () ";
+      continue;
+    }
+    if (ch === "<" && s[i + 1] !== "<") {
+      const e2 = s.indexOf(">", i);
+      i = e2 === -1 ? s.length : e2 + 1;
+      out += " <> ";
+      continue;
+    }
+    if (ch === "%") {
+      const e2 = s.indexOf("\n", i);
+      i = e2 === -1 ? s.length : e2 + 1;
+      out += " ";
+      continue;
+    }
+    if (ch === "B" && s[i + 1] === "I" && /[\s/]/.test(s[i + 2] || " ")) {
+      const id = s.indexOf("ID", i);
+      if (id !== -1) {
+        const ei = s.indexOf("EI", id);
+        i = ei === -1 ? s.length : ei + 2;
+        out += " INLINEIMAGE ";
+        continue;
+      }
+    }
+    out += ch;
+    i++;
+  }
+  return out;
+}
+var VECTOR_OPS = /(^|\s)(f\*?|F|B\*?|b\*?|S|s|sh)(\s|$)/;
 function imageOf(doc, placement) {
   const src = imagePlacementSource(placement);
   const st = src ? src.stream : null;
@@ -42138,6 +42213,130 @@ function imageOf(doc, placement) {
     colorSpace: nameOf2(doc, d.ColorSpace) || (d.ColorSpace ? "\xABindirect\xBB" : null),
     isMask: doc.resolve(d.ImageMask) === true,
     filters: placement.filters
+  };
+}
+async function analyzePage(doc, pageIndex) {
+  if (!Number.isInteger(pageIndex) || pageIndex < 0 || pageIndex >= doc.pageCount) return null;
+  const pageMap = doc.pageDict(pageIndex);
+  if (!pageMap) return null;
+  const painted = await pdfPageImages(doc, pageIndex);
+  const images = painted.images ? painted.images.map((pl) => imageOf(doc, pl)) : [];
+  let content = "";
+  try {
+    content = await pageContentText(doc, pageMap);
+  } catch {
+    content = "";
+  }
+  const masked = maskedContent(content);
+  let textShown = null;
+  try {
+    textShown = await pageShowsText(doc, pageMap);
+  } catch {
+    textShown = null;
+  }
+  const mediaBox = (() => {
+    const m = inheritedAttr2(doc, pageMap, "MediaBox");
+    if (!m || m.t !== "arr" || m.items.length < 4) return null;
+    const v = m.items.map((x) => numOf2(doc, x));
+    if (v.some((x) => x == null)) return null;
+    return { w: Math.abs(v[2] - v[0]), h: Math.abs(v[3] - v[1]) };
+  })();
+  return {
+    page: pageIndex,
+    contentBytes: content.length,
+    contentReadable: content.length > 0 || !pageMap.Contents,
+    hasTextOps: textShown === true,
+    textShown,
+    hasVectorOps: VECTOR_OPS.test(masked),
+    hasInlineImage: masked.includes("INLINEIMAGE"),
+    images: images.map(({ obj, ...rest }) => rest),
+    _images: images,
+    imagesWhy: painted.why,
+    drawnImageNames: images.map((im) => im.name),
+    imageCount: images.length,
+    mediaBox,
+    rotate: pageRotate(doc, pageMap)
+  };
+}
+async function renderPageToPixels(bytes2, pageIndex, opts = {}) {
+  const doc = await loadPdf2(bytes2);
+  if (!doc) return refuse4("NOT_A_PDF");
+  if (doc.isEncrypted()) return refuse4("ENCRYPTED");
+  const a = await analyzePage(doc, pageIndex);
+  if (!a) {
+    const n2 = doc.pageCount;
+    return pageIndex >= 0 && pageIndex < n2 ? refuse4("PAGE_UNREADABLE", { page: pageIndex }) : refuse4("NO_SUCH_PAGE", { page: pageIndex, pageCount: n2 });
+  }
+  if (a.rotate === null) {
+    return refuse4("PAGE_UNREADABLE", { page: pageIndex, note: "/Rotate is not a multiple of 90" });
+  }
+  if (a.hasTextOps && !opts.allowTextPage) {
+    return refuse4("PAGE_HAS_TEXT_LAYER", { page: pageIndex, imageCount: a.imageCount });
+  }
+  if (a.imagesWhy) {
+    return refuse4("PAGE_UNREADABLE", { page: pageIndex, note: a.imagesWhy });
+  }
+  if (a.imageCount === 0) {
+    return refuse4(a.hasVectorOps ? "NOT_IMAGE_ONLY" : "NO_IMAGE_ON_PAGE", {
+      page: pageIndex,
+      hasVectorOps: a.hasVectorOps,
+      hasInlineImage: a.hasInlineImage
+    });
+  }
+  if (a.imageCount > 1) {
+    return refuse4("MULTIPLE_IMAGES_ON_PAGE", {
+      page: pageIndex,
+      imageCount: a.imageCount,
+      images: a.images.map((i) => ({ width: i.width, height: i.height, filters: i.filters }))
+    });
+  }
+  const im = a._images[0];
+  if (!im.obj) {
+    return refuse4("IMAGE_UNREADABLE", { page: pageIndex, filters: im.filters, note: "an inline image; reading inline images is not built" });
+  }
+  const out = await decodeImage(doc, im, { ...opts, rotate: a.rotate });
+  if (!out.ok) return { ...out, page: pageIndex };
+  return {
+    ok: true,
+    page: pageIndex,
+    route: out.route,
+    mediaType: out.mediaType,
+    bytes: out.bytes,
+    width: out.width ?? im.width,
+    height: out.height ?? im.height,
+    /* Are these pixels the page as a READER sees it? A route that could not
+     * apply the page's own /Rotate says so HERE rather than leaving a consumer
+     * to discover it in its output. See the note on rotateBilevel. */
+    upright: out.upright,
+    rotate_deg: a.rotate,
+    source: {
+      filters: im.filters,
+      colorSpace: im.colorSpace,
+      bitsPerComponent: im.bpc,
+      imageMask: im.isMask
+    },
+    page_geometry: {
+      mediaBoxPt: a.mediaBox,
+      rotate: a.rotate,
+      dpi: a.mediaBox && im.width && im.height ? { x: +(im.width / (a.mediaBox.w / 72)).toFixed(1), y: +(im.height / (a.mediaBox.h / 72)).toFixed(1) } : null
+    },
+    page_marks: { hasTextOps: a.hasTextOps, hasVectorOps: a.hasVectorOps },
+    ...out.ccitt ? { ccitt: out.ccitt } : {},
+    ...out.dct ? { dct: out.dct } : {},
+    ...out.jbig2 ? { jbig2: out.jbig2 } : {},
+    ...out.jpx ? { jpx: out.jpx } : {},
+    /* THE DIGEST OF THE PICTURE, NOT OF THE FILE — and this field exists because
+     * the cross-runtime arm of the probe found the file digest to be RUNTIME-
+     * DEPENDENT. `CompressionStream("deflate")` is a platform service, and
+     * workerd's and node's produce different (both valid) deflate streams for
+     * identical input: the same page rendered by the same code came out
+     * 147,251 B on workerd and 152,499 B on node. The PIXELS were identical.
+     * A record that hashes the FILE therefore records a value no verifier on a
+     * different runtime can reproduce, which is the whole point of a hash here.
+     * So a decoded route also carries `pixels_sha256`, taken over the normalised
+     * samples before any container is built. A pass-through route does not need
+     * one: its bytes are the publisher's own and are byte-stable by definition. */
+    ...out.pixelsSha256 ? { pixels_sha256: out.pixelsSha256 } : {}
   };
 }
 async function decodeImage(doc, im, opts) {
@@ -50612,39 +50811,6 @@ var KNOCK = {
 };
 KNOCK.statedPerIp = `at most ${KNOCK.perIp} knocks from one source in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
 KNOCK.statedGlobal = `at most ${KNOCK.global} knocks to this group's inbox in any ${KNOCK.windowMs / 6e4} minutes, estimated by a sliding window`;
-function knockEnvelopeTooLarge() {
-  const row12 = KNOCK_CHECKS.KNOCK_ENVELOPE_TOO_LARGE;
-  if (!row12 || typeof row12.translation !== "string" || !row12.translation)
-    throw new Error("knockEnvelopeTooLarge: KNOCK_ENVELOPE_TOO_LARGE has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
-  return {
-    ok: false,
-    reason: "KNOCK_ENVELOPE_TOO_LARGE",
-    code: "KNOCK_ENVELOPE_TOO_LARGE",
-    check: row12.check,
-    translation: row12.translation,
-    maxBytes: KNOCK.maxBytes
-  };
-}
-function knockPayloadTooLarge(cap, evidence) {
-  const row12 = KNOCK_CHECKS.KNOCK_PAYLOAD_TOO_LARGE;
-  if (!row12 || typeof row12.translation !== "string" || !row12.translation)
-    throw new Error("knockPayloadTooLarge: KNOCK_PAYLOAD_TOO_LARGE has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
-  return {
-    ok: false,
-    reason: "KNOCK_PAYLOAD_TOO_LARGE",
-    code: "KNOCK_PAYLOAD_TOO_LARGE",
-    check: row12.check,
-    translation: row12.translation,
-    maxBytes: cap,
-    detail: evidence ? void 0 : "this group's inbox stores knocks inline; large material needs its evidence storage configured"
-  };
-}
-function knockEmpty() {
-  const row12 = KNOCK_CHECKS.KNOCK_EMPTY;
-  if (!row12 || typeof row12.translation !== "string" || !row12.translation)
-    throw new Error("knockEmpty: KNOCK_EMPTY has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
-  return { ok: false, reason: "KNOCK_EMPTY", code: "KNOCK_EMPTY", check: row12.check, translation: row12.translation };
-}
 var KNOCKER_SECRET_MIN = 20;
 function isWeakKnockerSecret(secret) {
   if (secret === void 0 || secret === null) return false;
@@ -50660,89 +50826,6 @@ function knockerSecretWeak() {
     translation: row12.translation,
     minChars: KNOCKER_SECRET_MIN
   };
-}
-async function knockOp(req, env, store, { json: json24, requiredArgument: requiredArgument2, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, country = null }) {
-  if (req.method !== "POST") return json24({ ok: false, error: "knock is a POST" }, 405);
-  const place = typeof country === "string" && country ? country : null;
-  const stamp4 = place ? `&country=${encodeURIComponent(place)}` : "";
-  const refuse26 = async (answer, status) => {
-    await tallyRefusal(store, doAnswer2, place);
-    return json24(answer, status);
-  };
-  const raw = await req.arrayBuffer();
-  if (raw.byteLength > KNOCK.maxBytes + 4096) return refuse26(knockEnvelopeTooLarge(), 413);
-  let body;
-  try {
-    body = JSON.parse(new TextDecoder().decode(raw));
-  } catch {
-    body = null;
-  }
-  if (!body || typeof body.contentB64 !== "string" && typeof body.contentText !== "string")
-    return refuse26({ ok: false, ...requiredArgument2(
-      "knock",
-      "contentB64 or contentText",
-      "a JSON body with contentB64=<base64> or contentText=<text>",
-      "knock requires contentB64 or contentText, plus optional note and contact"
-    ) }, 400);
-  let bytes2;
-  try {
-    bytes2 = typeof body.contentB64 === "string" ? Uint8Array.from(atob(body.contentB64), (c) => c.charCodeAt(0)) : new TextEncoder().encode(body.contentText);
-  } catch {
-    return refuse26({ ok: false, ...requiredArgument2("knock", "contentB64", "<base64>", "contentB64 is not valid base64") }, 400);
-  }
-  if (bytes2.length === 0) return refuse26(knockEmpty(), 400);
-  const evidence = typeof env.CAPTURES?.put === "function";
-  const cap = evidence ? KNOCK.maxBytes : KNOCK.maxInline;
-  if (bytes2.length > cap) return refuse26(knockPayloadTooLarge(cap, evidence), 413);
-  if (isWeakKnockerSecret(body.knockerSecret)) return refuse26(knockerSecretWeak(), 400);
-  const source2 = req.headers.get("cf-connecting-ip") || "unknown";
-  const out = await doAnswer2(store.fetch(new Request(`http://do/knock?source=${encodeURIComponent(source2)}${stamp4}`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      contentB64: typeof body.contentB64 === "string" ? body.contentB64 : null,
-      content: typeof body.contentB64 === "string" ? null : body.contentText,
-      note: body.note,
-      contact: body.contact,
-      windowMs: KNOCK.windowMs,
-      ...typeof body.knockerSecret === "string" ? { knockerSecret: body.knockerSecret } : {},
-      ...body.generateSecret === true ? { generateSecret: true } : {},
-      perIpLimit: KNOCK.perIp,
-      globalLimit: KNOCK.global,
-      /* D-487: the window's instant is the control plane's, read once, as it always was. */
-      now: Date.now()
-    })
-  })));
-  const unanswered3 = relayUnanswered(out, "knock", { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
-  if (unanswered3) return unanswered3;
-  const rec = out.result || {};
-  if (!rec.ok) {
-    if (rec.reason === "RATE_IP" || rec.reason === "RATE_GLOBAL")
-      return json24({ ok: false, ...rec, stated: rec.reason === "RATE_IP" ? KNOCK.statedPerIp : KNOCK.statedGlobal }, 429);
-    return json24({ ok: false, ...rec }, rec.status || 502);
-  }
-  return json24({
-    ok: true,
-    knockId: rec.knockId,
-    sha256: rec.sha256,
-    bytes: rec.bytes,
-    received: "Your material is in the group's inbox awaiting member review.",
-    pseudonym: typeof rec.pseudonym === "string" ? rec.pseudonym : null,
-    ...typeof rec.secret === "string" ? { secret: rec.secret } : {}
-  }, 200);
-}
-async function tallyRefusal(store, doAnswer2, country = null) {
-  try {
-    await doAnswer2(store.fetch(new Request(`http://do/doorbellrefused${country ? `?country=${encodeURIComponent(country)}` : ""}`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ now: Date.now() })
-    })));
-  } catch {
-  }
-}
-function capturePublicOp(op, req, env, store, hooks) {
-  return op === "knock" ? knockOp(req, env, store, hooks) : null;
 }
 
 // src/capture/grammar.mjs
@@ -73582,16 +73665,16 @@ function placeAgainst(w, s) {
   if (w.start && s.end && w.start >= s.end) return "after";
   return "overlaps";
 }
-function orderByWhen(items, idOf4) {
+function orderByWhen(items, idOf5) {
   const placed2 = items.filter((i) => i.when), nowhere = items.filter((i) => !i.when);
   const key2 = (w) => w.start || w.end || "";
-  placed2.sort((x, y) => (key2(x.when) < key2(y.when) ? -1 : key2(x.when) > key2(y.when) ? 1 : 0) || String(x.when.end || "").localeCompare(String(y.when.end || "")) || String(idOf4(x)).localeCompare(String(idOf4(y))));
+  placed2.sort((x, y) => (key2(x.when) < key2(y.when) ? -1 : key2(x.when) > key2(y.when) ? 1 : 0) || String(x.when.end || "").localeCompare(String(y.when.end || "")) || String(idOf5(x)).localeCompare(String(idOf5(y))));
   const out = placed2.map((i, n2) => {
     const with_ = [];
     for (let k = Math.max(0, n2 - 25); k < Math.min(placed2.length, n2 + 26); k++) {
       if (k === n2) continue;
       const s = sequenceOf(i.when, placed2[k].when);
-      if (s && s.undetermined) with_.push(idOf4(placed2[k]));
+      if (s && s.undetermined) with_.push(idOf5(placed2[k]));
     }
     return { ...i, order: with_.length ? { undetermined: true, with: with_, band: { start: i.when.start, end: i.when.end } } : { undetermined: false } };
   });
@@ -76111,9 +76194,9 @@ var Events = class _Events {
     if (!f17 && !t2) return { items };
     return { items: items.filter((i) => i.when && (!f17 || placeAgainst(i.when, f17) !== "before") && (!t2 || placeAgainst(i.when, t2) !== "after")) };
   }
-  #bounded(items, limit, idOf4 = (i) => i.event_id) {
+  #bounded(items, limit, idOf5 = (i) => i.event_id) {
     const cap = clamp3(limit);
-    const o = orderByWhen(items, idOf4);
+    const o = orderByWhen(items, idOf5);
     const truncated5 = o.placed.length > cap;
     return {
       items: o.placed.slice(0, cap),
@@ -87887,6 +87970,39 @@ var KNOCK2 = {
 };
 KNOCK2.statedPerIp = `at most ${KNOCK2.perIp} knocks from one source in any ${KNOCK2.windowMs / 6e4} minutes, estimated by a sliding window`;
 KNOCK2.statedGlobal = `at most ${KNOCK2.global} knocks to this group's inbox in any ${KNOCK2.windowMs / 6e4} minutes, estimated by a sliding window`;
+function knockEnvelopeTooLarge() {
+  const row12 = KNOCK_CHECKS.KNOCK_ENVELOPE_TOO_LARGE;
+  if (!row12 || typeof row12.translation !== "string" || !row12.translation)
+    throw new Error("knockEnvelopeTooLarge: KNOCK_ENVELOPE_TOO_LARGE has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
+  return {
+    ok: false,
+    reason: "KNOCK_ENVELOPE_TOO_LARGE",
+    code: "KNOCK_ENVELOPE_TOO_LARGE",
+    check: row12.check,
+    translation: row12.translation,
+    maxBytes: KNOCK2.maxBytes
+  };
+}
+function knockPayloadTooLarge(cap, evidence) {
+  const row12 = KNOCK_CHECKS.KNOCK_PAYLOAD_TOO_LARGE;
+  if (!row12 || typeof row12.translation !== "string" || !row12.translation)
+    throw new Error("knockPayloadTooLarge: KNOCK_PAYLOAD_TOO_LARGE has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
+  return {
+    ok: false,
+    reason: "KNOCK_PAYLOAD_TOO_LARGE",
+    code: "KNOCK_PAYLOAD_TOO_LARGE",
+    check: row12.check,
+    translation: row12.translation,
+    maxBytes: cap,
+    detail: evidence ? void 0 : "this group's inbox stores knocks inline; large material needs its evidence storage configured"
+  };
+}
+function knockEmpty() {
+  const row12 = KNOCK_CHECKS.KNOCK_EMPTY;
+  if (!row12 || typeof row12.translation !== "string" || !row12.translation)
+    throw new Error("knockEmpty: KNOCK_EMPTY has no KNOCK_CHECKS row with a canned translation (DEC-49). A code with no sentence behind it must not reach a knocker.");
+  return { ok: false, reason: "KNOCK_EMPTY", code: "KNOCK_EMPTY", check: row12.check, translation: row12.translation };
+}
 var KNOCKER_SECRET_MIN2 = 20;
 function isWeakKnockerSecret2(secret) {
   if (secret === void 0 || secret === null) return false;
@@ -87902,6 +88018,89 @@ function knockerSecretWeak2() {
     translation: row12.translation,
     minChars: KNOCKER_SECRET_MIN2
   };
+}
+async function knockOp(req, env, store, { json: json24, requiredArgument: requiredArgument2, storeSilent: storeSilent2, storeRefusal: storeRefusal2, doAnswer: doAnswer2, country = null }) {
+  if (req.method !== "POST") return json24({ ok: false, error: "knock is a POST" }, 405);
+  const place = typeof country === "string" && country ? country : null;
+  const stamp4 = place ? `&country=${encodeURIComponent(place)}` : "";
+  const refuse26 = async (answer, status) => {
+    await tallyRefusal(store, doAnswer2, place);
+    return json24(answer, status);
+  };
+  const raw = await req.arrayBuffer();
+  if (raw.byteLength > KNOCK2.maxBytes + 4096) return refuse26(knockEnvelopeTooLarge(), 413);
+  let body;
+  try {
+    body = JSON.parse(new TextDecoder().decode(raw));
+  } catch {
+    body = null;
+  }
+  if (!body || typeof body.contentB64 !== "string" && typeof body.contentText !== "string")
+    return refuse26({ ok: false, ...requiredArgument2(
+      "knock",
+      "contentB64 or contentText",
+      "a JSON body with contentB64=<base64> or contentText=<text>",
+      "knock requires contentB64 or contentText, plus optional note and contact"
+    ) }, 400);
+  let bytes2;
+  try {
+    bytes2 = typeof body.contentB64 === "string" ? Uint8Array.from(atob(body.contentB64), (c) => c.charCodeAt(0)) : new TextEncoder().encode(body.contentText);
+  } catch {
+    return refuse26({ ok: false, ...requiredArgument2("knock", "contentB64", "<base64>", "contentB64 is not valid base64") }, 400);
+  }
+  if (bytes2.length === 0) return refuse26(knockEmpty(), 400);
+  const evidence = typeof env.CAPTURES?.put === "function";
+  const cap = evidence ? KNOCK2.maxBytes : KNOCK2.maxInline;
+  if (bytes2.length > cap) return refuse26(knockPayloadTooLarge(cap, evidence), 413);
+  if (isWeakKnockerSecret2(body.knockerSecret)) return refuse26(knockerSecretWeak2(), 400);
+  const source2 = req.headers.get("cf-connecting-ip") || "unknown";
+  const out = await doAnswer2(store.fetch(new Request(`http://do/knock?source=${encodeURIComponent(source2)}${stamp4}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      contentB64: typeof body.contentB64 === "string" ? body.contentB64 : null,
+      content: typeof body.contentB64 === "string" ? null : body.contentText,
+      note: body.note,
+      contact: body.contact,
+      windowMs: KNOCK2.windowMs,
+      ...typeof body.knockerSecret === "string" ? { knockerSecret: body.knockerSecret } : {},
+      ...body.generateSecret === true ? { generateSecret: true } : {},
+      perIpLimit: KNOCK2.perIp,
+      globalLimit: KNOCK2.global,
+      /* D-487: the window's instant is the control plane's, read once, as it always was. */
+      now: Date.now()
+    })
+  })));
+  const unanswered3 = relayUnanswered(out, "knock", { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 });
+  if (unanswered3) return unanswered3;
+  const rec = out.result || {};
+  if (!rec.ok) {
+    if (rec.reason === "RATE_IP" || rec.reason === "RATE_GLOBAL")
+      return json24({ ok: false, ...rec, stated: rec.reason === "RATE_IP" ? KNOCK2.statedPerIp : KNOCK2.statedGlobal }, 429);
+    return json24({ ok: false, ...rec }, rec.status || 502);
+  }
+  return json24({
+    ok: true,
+    knockId: rec.knockId,
+    sha256: rec.sha256,
+    bytes: rec.bytes,
+    received: "Your material is in the group's inbox awaiting member review.",
+    pseudonym: typeof rec.pseudonym === "string" ? rec.pseudonym : null,
+    ...typeof rec.secret === "string" ? { secret: rec.secret } : {}
+  }, 200);
+}
+async function tallyRefusal(store, doAnswer2, country = null) {
+  try {
+    await doAnswer2(store.fetch(new Request(`http://do/doorbellrefused${country ? `?country=${encodeURIComponent(country)}` : ""}`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ now: Date.now() })
+    })));
+  } catch {
+  }
+}
+function doorbellPublicOp(op, req, env, store, hooks) {
+  return op === "knock" ? knockOp(req, env, store, hooks) : null;
 }
 
 // src/doorbell/schema.mjs
@@ -88866,6 +89065,28 @@ var Doorbell = class _Doorbell {
     }
   }
 };
+function doorbellOps(d, url, body) {
+  const q10 = (k) => url.searchParams.get(k);
+  const page2 = { limit: q10("limit") || READ_LIMIT2.default, after: q10("after") || null };
+  return {
+    /* R20: `country` is the control plane's stamp in the query, never the body's (nor is `sourceAddress`). */
+    knock: () => d.knock({ ...body || {}, sourceAddress: q10("source"), country: q10("country") }),
+    inboxlist: () => d.inboxList(q10("status") || null, { ...page2, sort: q10("sort"), dir: q10("dir") }),
+    inboxget: () => d.inboxGet(q10("id")),
+    /* N499: a body names no `at` or `within`: the pull's instant and its joined act are an in-process caller's. */
+    inboxresolve: () => {
+      const b = body || {};
+      return d.inboxResolve({ knockId: b.knockId, status: b.status, by: b.by, reason: b.reason });
+    },
+    /* R19: the Worker's count of a knock it refused before the store; the tally read by the stamped viewer. */
+    doorbellrefused: () => d.doorbellRefused({ now: body && body.now, country: q10("country") }),
+    doorbelltally: () => d.doorbellTally({ viewer: q10("viewer") ?? "" }),
+    /* N364: the control plane stamps `by` (the member session); a stamp in the query wins over a body's copy. */
+    inboxpull: () => d.pullKnock({ knockId: body && body.knockId || q10("id"), by: q10("by") ?? (body && body.by) }),
+    knocksof: () => d.knocksOf({ pseudonym: q10("pseudonym") ?? (body && body.pseudonym), ...page2 }),
+    pulledknocks: () => d.pulledKnocksOf(q10("capture") ?? (body && body.captureSha))
+  };
+}
 
 // src/sources/checks.mjs
 var checks_exports22 = {};
@@ -106721,17 +106942,17 @@ var Inquiry = class _Inquiry {
    *  recorded (undetermined, never filled in), no re-run link, and `registered` (when it was made, null when not
    *  recorded); `visible` is the question's own sight (R33). */
   workProducts() {
-    const idOf4 = (key2) => typeof key2 === "string" && key2.startsWith(FINDING_KEY) ? key2.slice(FINDING_KEY.length) : "";
+    const idOf5 = (key2) => typeof key2 === "string" && key2.startsWith(FINDING_KEY) ? key2.slice(FINDING_KEY.length) : "";
     return {
       list: (after, limit) => this.#rows(
         `SELECT bundle_id FROM (SELECT bundle_id FROM inquiry_findings UNION SELECT bundle_id FROM bundles
            WHERE object_type='inquiry' AND current_state='concluded' AND COALESCE(project, '') <> '')
           WHERE bundle_id > ? ORDER BY bundle_id LIMIT ?`,
-        idOf4(String(after ?? "")) || "",
+        idOf5(String(after ?? "")) || "",
         Math.max(1, Math.floor(Number(limit) || 50))
       ).map((r) => FINDING_KEY + r.bundle_id),
       read: async (key2) => {
-        const id = idOf4(key2);
+        const id = idOf5(key2);
         const info = id ? this.record.bundleInfo(id) : null;
         if (!info) return null;
         const f17 = this.#one(`SELECT * FROM inquiry_findings WHERE bundle_id=?`, id);
@@ -106747,7 +106968,7 @@ var Inquiry = class _Inquiry {
         };
       },
       visible: async (key2, viewer) => {
-        const id = idOf4(key2);
+        const id = idOf5(key2);
         return !!id && this.membership.inSight(id, viewer) === true;
       }
     };
@@ -177931,7 +178152,7 @@ var T41_RUNG_ABSENT = {
   guideadopt: { ground: "undetermined", is: "a member imports another group's offered guide as adopted, usable only after review (reading-guides R6)" },
   /* (K2583) as guideoffer */
   guideproposetocivicsmith: { ground: "undetermined", is: "a member exports a guide many groups use, marked as a proposal for Civicsmith's library; Civicsmith's adoption is a release's (reading-guides R6)" },
-  accountpropose: { ground: "undetermined", is: "stores the system's draft of a case's account or its check flags, labelled machine work; the published account is a member's (case-authoring R64)" },
+  accountpropose: { ground: "undetermined", is: "stores the system's draft of a case's account or its check flags, labelled machine work; the published account is a member's (case-account R1, R2)" },
   caseapprove: { ground: "undetermined", is: "a named approver approves one case edition's document by its digest, an optional reason kept; a later document needs a new approval (review R31)" },
   grouptestset: { ground: "undetermined", is: "a member adds a group's own test investigation for an assistant part, its answers written by people; it never opens or closes a gate (ai-runs R75)" },
   captureupload: { ground: "undetermined", is: "a member uploads bytes as a capture in her own name, with its receipt (capture R86)" },
@@ -178041,7 +178262,7 @@ var T41_NON_ACTS = {
   guidefor: R9("the reading guide in force for a document kind, the viewer's own, the group's or Civicsmith's, with its origin"),
   guide: R9("one reading guide the viewer may see, with its items, state and history"),
   guideproposals: R9("the machine drafts of reading guides, each labelled the system's"),
-  /* case-authoring, review (R43) */
+  /* case-account (T42; N839), review (R43) */
   accountpropose: "case-directed: keyed by a case, reached from its account; the system's draft of the account, labelled machine work, never the published account until a member writes it",
   accountdrafts: R9("a case's drafts of its account, each labelled machine work"),
   approvalruleset: "setting: the members whose approval a case needs before it is signed, or none; an administrator's act, appended; moves no bundle",
@@ -178054,6 +178275,16 @@ var T41_NON_ACTS = {
   actionseekspropose: "action-directed: a machine (or a member) proposes what an action seeks, keyed by (action, proposer); labelled machine work and never the action's own",
   /* capture (R45) */
   captureupload: "upload-directed: a member's bytes held as a capture under their digest, in her own name, with its receipt; reached from the upload, never beside a bundle"
+};
+
+// src/op-grades/t42.mjs
+var T42_RUNG_ABSENT = {
+  /* on R3's rule, as captureupload (R30): it writes a reading that a later re-read or an attestation corrects forward,
+     asks no reason, and no published act takes it back */
+  pagetranscribe: { ground: "undetermined", is: "at a member's act, the AI reads the pages of a capture Civicsmith could not read, on the account that pays and within its limits; the text is kept labelled the AI's reading and undetermined, the earlier reading kept, and a later re-read or an attestation corrects it forward (extraction R71, R72)" }
+};
+var T42_NON_ACTS = {
+  pagetranscribe: "reading-directed: keyed by a capture; at a member's act, the AI reads the pages Civicsmith could not, on the account that pays and within its limits; the text is labelled the AI's reading and undetermined; moves no bundle"
 };
 
 // src/op-grades/index.mjs
@@ -178469,9 +178700,9 @@ var RUNGS2 = {
   workobjective: "reasoned",
   // INTENT_NO_REASON (intent R18, R30) · why the run is opened (R4)
   /* `inboxresolve`: DEC-88 banded it reversible while it only set a status; reasoned since DEC-78's pull is built
-     (capture R65) and capture R32 requires the member's reason on every arm. */
+     (`doorbell` R13, was capture R65) and `doorbell` R3 (was capture R32) requires the member's reason on every arm. */
   inboxresolve: "reasoned",
-  // RESOLVE_NO_REASON (capture R32)
+  // RESOLVE_NO_REASON (doorbell R3)
   /* terminal (DEC-88): the act cannot be walked back — an ended escalation is never reopened, and a filing is
      approved at most once. */
   escalationend: "terminal",
@@ -178633,9 +178864,10 @@ var RUNG_ABSENT = {
      (RUNGS); these 21 are what it left `undetermined` (R3), each on R3's rule: no authored reason is asked and no
      published act takes it back. R7 adds T23's `whatchangedpropose`, R9 the docket's `docketpressure` and R10 `case-import`'s `caseimport` and
      `caseimportdocument` on the same rule, at the foot of this table. */
-  /* N364 (capture R65), on R3's rule: pulling a knock files its bytes as a capture with a receipt, in the puller's
-     name; no reason is asked and no published act takes it back (a pulled knock stays pulled, and the capture stands). */
-  inboxpull: { ground: "undetermined", is: "a member pulls a knock into the record: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled, in one act; never un-pulled (capture R65)" },
+  /* N364 (`doorbell` R13, was capture R65), on R3's rule: pulling a knock files its bytes as a capture with a receipt,
+     in the puller's name; no reason is asked and no published act takes it back (a pulled knock stays pulled, and the
+     capture stands). */
+  inboxpull: { ground: "undetermined", is: "a member pulls a knock into the record: its bytes held under their own digest, a doorbell receipt written and the knock marked pulled, in one act; never un-pulled (doorbell R13)" },
   /* N345 (K481), on R3's rule. `contradictionrecommend` is `contradictionpropose`'s ground for its reason: a run
      proposes, and it is machine work. The opt-in and the response (DEC-85) ask no authored reason (their words are
      optional, a response's text is what is relayed, not an account of a decision), and no published act takes either
@@ -178712,13 +178944,15 @@ var RUNG_ABSENT = {
   wizardeditorrevoke: { ground: "credential", is: "an administrator revokes an advanced-editor grant, appended and never deleted (wizard-scripts R8)" },
   wizardprogress: { ground: "observational", is: "adds one to an unattributed daily tally of a script version's start, step reached or finish; names no member, case or project, and stopping is no event (wizard-scripts R15)" },
   /* R13 (T33-85): T33's ops, graded in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs, T36's in
-     ./t36.mjs, T37's in ./t37.mjs and T41's in ./t41.mjs (T38's ./t38.mjs states no absence). */
+     ./t36.mjs, T37's in ./t37.mjs, T41's in ./t41.mjs and T42's (R31) in ./t42.mjs (T38's ./t38.mjs states no
+     absence). */
   ...T33_RUNG_ABSENT,
   ...T34_RUNG_ABSENT,
   ...T35_RUNG_ABSENT,
   ...T36_RUNG_ABSENT,
   ...T37_RUNG_ABSENT,
-  ...T41_RUNG_ABSENT
+  ...T41_RUNG_ABSENT,
+  ...T42_RUNG_ABSENT
 };
 var MACHINE_REFUSALS = {
   release: "MACHINE_CANNOT_RELEASE",
@@ -178914,7 +179148,7 @@ var NON_ACTS = {
   discharge: "exception document, keyed by (progression, entity, stage)",
   proposedispose: "ages a DERIVED proposal, keyed by (progression, stage) \u2014 not a bundle",
   /* Inbox and publication. */
-  inboxresolve: "inbox disposition, keyed by knock id, with the member's reason on every arm (capture R32, RESOLVE_NO_REASON): sets a knock aside or back to new, and its `pulled` arm is the pull, a filing act that answers as op=inboxpull does (capture R32, R65)",
+  inboxresolve: "inbox disposition, keyed by knock id, with the member's reason on every arm (doorbell R3, RESOLVE_NO_REASON): sets a knock aside or back to new, and its `pulled` arm is the pull, a filing act that answers as op=inboxpull does (doorbell R3, R13)",
   /* N364 (capture R65–R69, R72; DEC-78, DEC-81 item 3). A knock is not a bundle (capture R32) and a capture is keyed by
      its sha, so none of these has an object in a state beside which to offer it. `inboxpull` is `inboxresolve`'s
      subject, filed; the late co-attestation and the capturing member's account are capture-directed in subject but
@@ -179379,14 +179613,15 @@ var NON_ACTS = {
   groupdescriptiondraft: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
   writinghelp: "draft: answers a labelled machine draft into a member's own field; writes nothing of the record; the member's words only by the member's own act of keeping it",
   /* R13 (T33-85): T33's ops, their reasons in ./t33.mjs, T34's in ./t34.mjs, T35's in ./t35.mjs,
-     T36's in ./t36.mjs, T37's in ./t37.mjs, T38's in ./t38.mjs and T41's in ./t41.mjs. */
+     T36's in ./t36.mjs, T37's in ./t37.mjs, T38's in ./t38.mjs, T41's in ./t41.mjs and T42's in ./t42.mjs. */
   ...T33_NON_ACTS,
   ...T34_NON_ACTS,
   ...T35_NON_ACTS,
   ...T36_NON_ACTS,
   ...T37_NON_ACTS,
   ...T38_NON_ACTS,
-  ...T41_NON_ACTS
+  ...T41_NON_ACTS,
+  ...T42_NON_ACTS
 };
 var IRREVERSIBLE_WEIGHT = Object.freeze([
   ...Object.keys(RUNGS2).filter((op) => RUNGS2[op] === "irreversible"),
@@ -181562,10 +181797,11 @@ var OP_FAMILIES = Object.freeze({
   /* T41 (R43; leg-earning R14; K2569): the projects a question is shown on, a session's read. No arm in leg-earning's
      map: control-plane R71. */
   "leg-earning": family({ owner: "leg-earning", cite: "leg-earning R14; R43; K2569", ops: { projectsshownon: "ownread" } }),
-  /* T41 (R43; case-authoring R64; K2569): an account of a case proposed for its authors, from a session only (R43),
-     `contribute`, `by` stamped (the door hands it as the owner's `proposedBy`); the case's account drafts a session's
-     read. No arm in case-authoring's map: control-plane R71. */
-  "case-authoring": family({ owner: "case-authoring", cite: "case-authoring R64; R43; K2569", actor: QUERY("by"), ops: {
+  /* T41 (R43; K2569), T42 (R48; case-account R1, R3; N839; K2608, K2656): an account of a case proposed for its authors,
+     from a session only (R43), `contribute`, `by` stamped (the door hands it as the owner's `proposedBy`); the case's
+     account drafts a session's read. The family is `case-account`'s since its split from `case-authoring` (K2608),
+     specs unchanged. No arm in case-account's map: control-plane R71. */
+  "case-account": family({ owner: "case-account", cite: "case-account R1, R3; R43; K2569, K2608", actor: QUERY("by"), ops: {
     accountpropose: "member",
     accountdrafts: "ownread"
   } }),
@@ -181576,7 +181812,20 @@ var OP_FAMILIES = Object.freeze({
     approvalruleset: "admin",
     caseapprove: "member",
     reviewcomments: "ownread"
-  } })
+  } }),
+  /* T42 (R47; extraction R71; N832; K2611, K2613, K2635, K2656): the AI's transcription of a stored PDF reading's pages
+     its own text recognition could not read, a member's act from their own session (classes `admin`, `member`;
+     `machineClasses: []`), `contribute`, `by` stamped and the `viewer` the owner reads sight by; `sha256` (the
+     capture's digest) and the optional `project` (whose account the member asks to pay) are read from the request's
+     address, as `pdfstructure`'s `sha256`, neither a secret nor a stamp. Distinct from content's manual `transcribe`.
+     Its handler is extraction's exported `pageTranscribeOp`, which `EXTRACTION_OPS` does not list (K2635), reached
+     through the plane's gated hook (control-plane R74, plane R36). Not on `AI_GRANT_OPS`. */
+  extraction: family({
+    owner: "extraction",
+    cite: "extraction R71; R47; K2611, K2613, K2635, K2656",
+    actor: QUERY("by"),
+    ops: { pagetranscribe: "member" }
+  })
 });
 var FAMILY_OPS = frozenList(Object.values(OP_FAMILIES).flatMap((f17) => Object.keys(f17.kinds)));
 var FAMILY_SESSION_OPS = frozenList(Object.values(OP_FAMILIES).flatMap((f17) => Object.keys(f17.kinds).filter((op) => !OP_KINDS[f17.kinds[op]].public)));
@@ -184444,6 +184693,7 @@ var ACT_HELP_ABSENT = Object.freeze({
       "noticepost",
       "objectivecondition",
       "optionrevise",
+      "pagetranscribe",
       "participantcorrect",
       "patterngate",
       "patternswitch",
@@ -237566,6 +237816,14 @@ function makeFetch(hooks = {}) {
       inner.searchParams.set("cls", viaSession ? "member" : cls3);
       inner.searchParams.set("member", viaSession ? "1" : "0");
     }
+    if (op === "pagetranscribe" || op === "pdfstructure") {
+      inner.searchParams.set("cls", cls3);
+      inner.searchParams.set("session", viaSession ? "1" : "0");
+      inner.searchParams.set("caps", [...sessCaps || []].join(","));
+      inner.searchParams.set("viewer", stampOf2.viewer);
+      inner.searchParams.set("author", viaSession ? sessMember : actor);
+      inner.searchParams.set("store", storeName);
+    }
     if (op === "lease") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls3}`);
     if (op === "monitorpause") inner.searchParams.set("actor", viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls3}`);
     const IDENTITY_READS = ["leadlook", "leadread", "leadshare", "leadlist", "frontier"];
@@ -238705,12 +238963,12 @@ var Tasks = class _Tasks {
   #routeTask(bundleId) {
     const info = this.#record.bundleInfo(bundleId);
     const b = info ? { object_type: info.type } : null;
-    const ownerOf2 = (projectId) => {
+    const ownerOf3 = (projectId) => {
       const id = this.#membership.projectOwners(projectId).find((m) => (this.#membership.memberFacts(m) || {}).status === "active");
       return id ? { member_id: id } : null;
     };
     if (b && b.object_type === "project") {
-      const o = ownerOf2(bundleId);
+      const o = ownerOf3(bundleId);
       if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: "owner of the referred project" };
     }
     const citeEdges = /* @__PURE__ */ new Map();
@@ -238725,7 +238983,7 @@ var Tasks = class _Tasks {
     }
     const cite = [...citeEdges].find(([pid, kinds3]) => !kinds3.every((k) => this.#connections.edgeSevered(pid, bundleId, k || null)));
     if (cite) {
-      const o = ownerOf2(cite[0]);
+      const o = ownerOf3(cite[0]);
       if (o) return { assignee: o.member_id, assignee_role: "project-manager", basis: `owner of ${cite[0]}, which cites this record` };
     }
     const first = this.#membership.activeAdmins().find((m) => m !== "admin" && this.#membership.inSight(bundleId, `member:${m}`));
@@ -253443,6 +253701,44 @@ async function pdfStructureOp(url, env, store, {
   const r = await ask(store, `http://x/pdfstructure?${q10}`, void 0, doAnswer2);
   return unanswered2(r, op, { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) ?? json24(r.result.body, r.result.status);
 }
+async function pageTranscribeOp(url, env, store, {
+  json: json24,
+  storeSilent: storeSilent2,
+  storeRefusal: storeRefusal2,
+  doAnswer: doAnswer2,
+  storageAbsent: storageAbsent2,
+  requiredArgument: requiredArgument2,
+  cls: cls3,
+  session,
+  caps: caps3,
+  viewer,
+  author,
+  storeName
+}) {
+  const op = "pagetranscribe";
+  if (typeof env.CAPTURES?.get !== "function") return storageAbsent2(op, "R2 is not configured on this instance");
+  const sha2 = (url.searchParams.get("sha256") || "").toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(sha2))
+    return json24({ ok: false, ...requiredArgument2(
+      op,
+      "sha256",
+      "<64 lowercase hex>",
+      "pagetranscribe requires sha256=<64 lowercase hex>"
+    ) }, 400);
+  const q10 = new URLSearchParams({
+    sha256: sha2,
+    cls: cls3 || "",
+    session: session ? "1" : "0",
+    caps: [...caps3 || []].join(","),
+    viewer: viewer || "",
+    author: author || "",
+    store: storeName || "bio"
+  });
+  const project = url.searchParams.get("project");
+  if (project) q10.set("project", project);
+  const r = await ask(store, `http://x/pagetranscribe?${q10}`, void 0, doAnswer2);
+  return unanswered2(r, op, { json: json24, storeSilent: storeSilent2, storeRefusal: storeRefusal2 }) ?? json24(r.result.body, r.result.status);
+}
 var EXTRACTION_OPS = Object.freeze(["pdfstructure"]);
 async function extractionOp(op, url, env, getStore, stamps) {
   if (op === "pdfstructure") return pdfStructureOp(url, env, getStore(), stamps);
@@ -253688,7 +253984,7 @@ async function publicOp({ req, url, env, op, stub, fp, presentedAi, credential =
     if (pd) return pd;
   }
   {
-    const knocked = await capturePublicOp(op, req, env, stub, { json: json20, requiredArgument, storeSilent, storeRefusal, doAnswer, country });
+    const knocked = await doorbellPublicOp(op, req, env, stub, { json: json20, requiredArgument, storeSilent, storeRefusal, doAnswer, country });
     if (knocked) return knocked;
   }
   return bootstrapOp(url, env, fp, { stub, json: json20, storeSilent, storeRefusal, doAnswer });
@@ -253711,8 +254007,7 @@ async function gatedOp({
   grantMember
 }) {
   const store = () => env.STORE.get(env.STORE.idFromName(storeName));
-  const viewer = viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls3}`;
-  const principalViewer = viaSession ? sessViewer : cls3 === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls3}`;
+  const viewer = viaSession ? sessViewer : cls3 === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls3}`;
   const identity = viaSession ? sessIdentity : cls3 === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls3}`;
   const author = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls3}`;
   const by = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls3}`;
@@ -253758,14 +254053,14 @@ async function gatedOp({
     doAnswer,
     storeSilent,
     storeRefusal,
-    viewer: principalViewer
+    viewer
   });
   if (CONNECTIONS_OPS.includes(op)) return connectionsOp(op, url, store, {
     json: json20,
     doAnswer,
     storeRefusal,
     storeSilent,
-    viewer: principalViewer,
+    viewer,
     identity
   });
   if (GOVERNOR_OPS.includes(op)) return governorOpResponse(op, url, store, { json: json20, doAnswer, storeRefusal, storeSilent });
@@ -253788,6 +254083,20 @@ async function gatedOp({
     if (c) return c;
   }
   if (EXTRACTION_OPS.includes(op)) return extractionOp(op, url, env, store, {
+    json: json20,
+    storeSilent,
+    storeRefusal,
+    doAnswer,
+    storageAbsent,
+    requiredArgument,
+    cls: cls3,
+    session: viaSession,
+    caps: sessCaps,
+    viewer,
+    author,
+    storeName
+  });
+  if (op === "pagetranscribe") return pageTranscribeOp(url, env, store(), {
     json: json20,
     storeSilent,
     storeRefusal,
@@ -254793,9 +255102,10 @@ function controlPlaneOwnerOps(of, url, body) {
     stepsrunai: () => of.aiRuns().openMany({ ...b, principalPlane: q10("principal") ?? q10("by"), actor: q10("by"), viewer: q10("viewer") }),
     grouptestset: () => of.aiRuns().groupTestSet({ ...b, by: q10("by") }),
     grouptestresults: () => of.aiRuns().groupTestResults({ part: f17("part"), viewer: q10("viewer") }),
-    /* case-authoring R64 (K2569): a proposed account of a case, labelled with its proposer as `whatchangedpropose`'s are. */
-    accountpropose: () => of.caseAuthoring().accountPropose({ ...b, proposedBy: bare4(q10("by")), viewer: q10("viewer") }),
-    accountdrafts: () => of.caseAuthoring().accountDrafts({ case: f17("case"), viewer: q10("viewer") }),
+    /* case-account R1, R3 (R71; T42, N839, K2656): a proposed account of a case, labelled with its proposer as
+       `whatchangedpropose`'s are, asked of `case-account` itself, never through `case-authoring`'s pass-through. */
+    accountpropose: () => of.caseAccount().accountPropose({ ...b, proposedBy: bare4(q10("by")), viewer: q10("viewer") }),
+    accountdrafts: () => of.caseAccount().accountDrafts({ case: f17("case"), viewer: q10("viewer") }),
     /* review R30, R31, R33 (K2529): the approval rule, an approval, and the comments on a case (`draft` optional). */
     approvalruleset: () => of.review().approvalRuleSet({ approvers: b.approvers, by: bare4(q10("by")) }),
     caseapprove: () => of.review().caseApprove({
@@ -254816,14 +255126,9 @@ function controlPlaneOwnerOps(of, url, body) {
     projectsshownon: () => of.legEarning().projectsShownOn({ id: f17("id"), viewer: q10("viewer") }),
     /* capture R86 (R72; K2458): a member's upload, the request's raw body handed on as `bytes` (a stream, never read
        here), its words from the address, `by` the door's. Capture's own map holds no arm for it, so this one calls its
-       service by name, as R71's do. */
-    captureupload: () => of.capture().uploadCapture({
-      bytes: body,
-      statement: q10("statement"),
-      name: q10("name"),
-      within: q10("within"),
-      by: q10("by")
-    }),
+       service by name, as R71's do. No `within` (T42; K2631, K2656): capture R86's `within` is a function an in-process
+       caller hands, never a request's field, so one in the address reaches nothing. */
+    captureupload: () => of.capture().uploadCapture({ bytes: body, statement: q10("statement"), name: q10("name"), by: q10("by") }),
     /* R71 (steps R9): STORE-INTERNAL, no spec, so no caller reaches it (R2): the door ties a member's landed capture to
        the step she named, `recordProduct` asked only for a step she may see; one she may not is answered as steps
        answers an unseen step. */
@@ -255023,11 +255328,11 @@ function promoteOrFault(deps, doc, who2) {
 }
 var bundleOf = (p3) => ({ bundleId: p3.bundleId, bundleSha: p3.bundleSha ?? null });
 async function pullAndFile(deps, { knockId, by, identity, viewer, resolve = false, reason: reason2, now = Date.now } = {}) {
-  const { capture: capture2, provenance } = deps;
+  const { doorbell, provenance } = deps;
   const at43 = stampInstant("second", +now());
   const who2 = { knockId, by, identity, viewer, at: at43 };
   const within3 = (doc) => promoteOrFault(deps, doc, who2);
-  const pulled = await (resolve ? capture2.inboxResolve({ knockId, status: "pulled", by, reason: reason2, at: at43, within: within3 }) : capture2.pullKnock({ knockId, by, at: at43, within: within3 }));
+  const pulled = await (resolve ? doorbell.inboxResolve({ knockId, status: "pulled", by, reason: reason2, at: at43, within: within3 }) : doorbell.pullKnock({ knockId, by, at: at43, within: within3 }));
   if (!pulled || pulled.ok !== true) return pulled;
   const { within: filed, ...answer } = pulled;
   if (!pulled.existed) return { ...answer, bundle: bundleOf(filed) };
@@ -255433,9 +255738,10 @@ function controlPlaneRoutes(ctx, url, body, grant = null) {
         viewer: q10("viewer")
       });
     },
+    /* R7 (T42; N826; K2656): the pull is the doorbell's (its R13, R3), handed `doorbellOf(ctx)`, never capture's copy */
     inboxpullfile: () => pullAndFile(
       {
-        capture: captureOf(ctx),
+        doorbell: doorbellOf(ctx),
         promotion: promotionOf(ctx),
         record: recordOf(ctx),
         provenance: provenanceOf(ctx)
@@ -255445,7 +255751,7 @@ function controlPlaneRoutes(ctx, url, body, grant = null) {
         by: q10("by"),
         identity: q10("identity"),
         viewer: q10("viewer"),
-        /* R7 (capture R32; DEC-88 (2)): the `pulled` resolve, marked by the Worker's
+        /* R7 (doorbell R3; DEC-88 (2)): the `pulled` resolve, marked by the Worker's
            own stamp, carries the body's reason; a direct pull carries none */
         ...q10("resolve") === "pulled" ? { resolve: true, reason: b.reason } : {}
       }
@@ -257683,6 +257989,153 @@ function archiveUnpackConsumer({ capture: capture2, env }) {
       return { archiveunpack: out };
     }
   };
+}
+
+// src/plane/transcribe.mjs
+var TRANSCRIBE_PAGES_MAX = 8;
+var TRANSCRIBE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+var PNG = "image/png";
+var USE = "transcribe";
+var idOf4 = (m) => typeof m === "string" && m.startsWith("member:") ? m.slice(7) : m;
+function ownerOf2(account, member2) {
+  if (account && account.level === "project") return `project:${account.project}`;
+  if (account && account.level === "group") return "group";
+  return `member:${idOf4(member2)}`;
+}
+function base642(bytes2) {
+  let s = "";
+  for (let i = 0; i < bytes2.length; i += 32768) s += String.fromCharCode.apply(null, bytes2.subarray(i, i + 32768));
+  return btoa(s);
+}
+var pagesAsked = (pages) => [...new Set((Array.isArray(pages) ? pages : []).filter((p3) => Number.isInteger(p3) && p3 >= 0))].sort((a, b) => a - b).slice(0, TRANSCRIBE_PAGES_MAX);
+async function renderPages(bytes2, pages, render2 = renderPageToPixels) {
+  const out = [];
+  for (const page2 of pagesAsked(pages)) {
+    let r;
+    try {
+      r = await render2(bytes2, page2, { decodeDct: true });
+    } catch {
+      r = null;
+    }
+    if (!r || r.ok !== true || r.mediaType !== PNG) continue;
+    const png = r.bytes instanceof Uint8Array ? r.bytes : r.bytes ? new Uint8Array(r.bytes) : null;
+    if (!png || png.length === 0 || png.length > TRANSCRIBE_IMAGE_MAX_BYTES) continue;
+    out.push({ page: page2, media_type: PNG, data: base642(png) });
+  }
+  return out;
+}
+function aiPath(ctx, env, { member: member2, at: at43, act: act2, onSha }) {
+  return async function transcribe({ account = null, capture_sha = null, pages = [] } = {}) {
+    const w = env && env.AGENT_WORKER;
+    if (!w || typeof w.fetch !== "function") return { ok: false, reason: "AGENT_WORKER_UNBOUND" };
+    const sha2 = typeof capture_sha === "string" ? capture_sha : "";
+    onSha(sha2);
+    const ev = recordOf(ctx).evidenceStore();
+    let bytes2 = null;
+    try {
+      const obj = ev && sha2 ? await ev.get(sha2) : null;
+      bytes2 = obj ? new Uint8Array(await obj.arrayBuffer()) : null;
+    } catch {
+      bytes2 = null;
+    }
+    if (!bytes2) return { ok: false, reason: "EVIDENCE_ABSENT" };
+    const rendered = await renderPages(bytes2, pages);
+    if (!rendered.length) return { ok: false, reason: "NO_PAGE_RENDERED" };
+    const a = account && typeof account === "object" ? account : {};
+    const body = JSON.stringify({
+      capture_sha: sha2,
+      pages: rendered,
+      account: {
+        kind: a.kind,
+        level: a.level,
+        ...a.level === "project" ? { project: a.project } : {},
+        secret: a.key,
+        member: member2,
+        suggestions: false
+      }
+    });
+    let answer;
+    try {
+      const res = await w.fetch("https://agent-worker/transcribe", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body
+      });
+      answer = await res.json();
+    } catch {
+      return { ok: false, reason: "AGENT_WORKER_SILENT" };
+    }
+    if (!answer || typeof answer !== "object" || Array.isArray(answer)) return { ok: false, reason: "AGENT_WORKER_SILENT" };
+    if (answer.usage && typeof answer.usage === "object") {
+      const entry4 = {
+        owner: ownerOf2(a, member2),
+        member: member2,
+        use: USE,
+        mode: USE,
+        model: typeof answer.engine === "string" && answer.engine ? answer.engine : null,
+        usage: answer.usage,
+        calls: answer.calls,
+        at: at43,
+        act: act2()
+      };
+      try {
+        recordOf(ctx).transact(() => aiUseOf(ctx).countUsage(entry4));
+      } catch {
+      }
+    }
+    if (answer.ok === true) return answer;
+    return { ...answer, ok: false, reason: answer.reason ?? answer.code ?? null };
+  };
+}
+var Transcriber = class {
+  #ctx;
+  #env;
+  #set;
+  constructor(ctx, env, set) {
+    this.#ctx = ctx;
+    this.#env = env;
+    this.#set = set;
+  }
+  /* run-rules R19 on ai-runs' R75 records, `transcribe` being outside the order (no verification chain). */
+  deployable() {
+    try {
+      return partDeployableOn(this.#set, USE, { verifications: [], testBars: aiRunsOf(this.#ctx, this.#env).testBarRecords() }) === true;
+    } catch {
+      return false;
+    }
+  }
+  keptAway({ project = null, use = null } = {}) {
+    return credentialsOf(this.#ctx).aiKeptAway({ project, use });
+  }
+  /* The act's id is minted here at `at` and carries the capture's digest once the AI path is asked for it. */
+  transcription({ member: member2 = null, project = null, at: at43 = null } = {}) {
+    const instant5 = typeof at43 === "string" && at43 ? at43 : (/* @__PURE__ */ new Date()).toISOString();
+    let prefix = "";
+    const act2 = () => `${USE}:${prefix}:${instant5}`;
+    const ctx = this.#ctx, aiUse = aiUseOf(ctx);
+    const tx = {
+      member: member2,
+      project,
+      at: instant5,
+      credentials: credentialsOf(ctx),
+      useCheck: (q10) => aiUse.useCheck(q10),
+      transcribe: aiPath(ctx, this.#env, { member: member2, at: instant5, act: act2, onSha: (sha2) => {
+        prefix = sha2.slice(0, 16);
+      } })
+    };
+    Object.defineProperty(tx, "act", { get: act2, enumerable: true });
+    return tx;
+  }
+};
+var OF16 = /* @__PURE__ */ new WeakMap();
+function transcriberOf(ctx, env, deps = {}) {
+  const storage = ctx && ctx.storage ? ctx.storage : ctx;
+  let t2 = OF16.get(storage);
+  if (!t2) {
+    t2 = new Transcriber(ctx, env, deps.testSet || CIVICSMITH_TEST_SET);
+    OF16.set(storage, t2);
+  }
+  return t2;
 }
 
 // ../roster-reader/lines.mjs
@@ -260387,6 +260840,7 @@ var Store = class extends DurableObject {
     stepsOf(ctx, { promotion, observationLog: observationLogOf(ctx) });
     aiUseOf(ctx);
     aiRunsOf(ctx, env);
+    extractionOf(ctx).registerTranscriber("plane", transcriberOf(ctx, env));
     legEarningOf(ctx, { standards, duties: duties2 });
     hypothesesOf(ctx, { explore: this.explore });
     answersOf(ctx, {
@@ -260422,6 +260876,7 @@ var Store = class extends DurableObject {
     registerCaseCheckerPublicReads(ctx, { publicRead: publicReadOf(ctx) });
     caseImportOf(ctx, { env, checkCaseFile, strength: strengthOf(ctx), acceptedWork, reevaluation: reevaluationOf(ctx) });
     caseDisclosuresOf(ctx, { attestation });
+    caseAccountOf(ctx, { runs: aiRunsOf(ctx, env) });
     biasOf(ctx, { env });
     biasOf(ctx).registerWorkProducts("finding", inquiryFindings(ctx, biasOf(ctx)));
     citationOf(ctx);
@@ -260438,6 +260893,7 @@ var Store = class extends DurableObject {
     escalationOf(ctx);
     actionPlansOf(ctx);
     const capture2 = captureOf(ctx, { env, attestation });
+    doorbellOf(ctx);
     const fileSafety = fileSafetyOf(ctx, { env, store: this.#ownNamespace() || "bio" });
     const captureRequests = captureRequestsOf(ctx, {
       env,
@@ -260546,6 +261002,7 @@ var Store = class extends DurableObject {
     inquiryOf(this.ctx).migrate();
     governorOf(this.ctx, { env: this.env }).migrate();
     captureOf(this.ctx).migrate();
+    doorbellOf(this.ctx).migrate();
     fileSafetyOf(this.ctx).migrate();
     extractionOf(this.ctx).migrate();
     observationLogOf(this.ctx).migrate();
@@ -260659,7 +261116,10 @@ var Store = class extends DurableObject {
       coarchiveset: () => acquisitionOf(ctx).coArchiveSet({ on: body ? body.on : void 0, by: url.searchParams.get("by") }),
       coarchivestate: () => acquisitionOf(ctx).coArchiveState(),
       ...captureOps(captureOf(ctx), url, body, env),
-      /* R26: file-safety's ops (op-declarations R32), at its place directly after capture's map. */
+      /* R37 (N826; K2630): doorbell's nine routes, directly after capture's map, so each name capture's map still carries
+         until its T43 delete is answered by doorbell's instance, never capture's copy. */
+      ...doorbellOps(doorbellOf(ctx), url, body),
+      /* R26: file-safety's ops (op-declarations R32), at its place directly after doorbell's map. */
       ...fileSafetyOps(fileSafetyOf(ctx), url, body, env),
       ...calibrationOps(calibrationOf(ctx), url, body),
       ...biasOps(biasOf(ctx), url, body),
@@ -260760,10 +261220,12 @@ var Store = class extends DurableObject {
       ...admissionOps(admissionOf(ctx), url, body),
       /* R35 (K2585; control-plane R71, R72): the door's own map for the owners that export a service and no arm, handed
          each owner's one instance on this storage through getters, each asked only when its op is served. */
+      /* (T42; N839; K2656) `caseAccount`, the plane's one case-account instance (R38), for control-plane R71's account
+         ops; never case-authoring's pass-through. */
       ...controlPlaneOwnerOps({
         aiUse: () => aiUseOf(ctx),
         aiRuns: () => aiRunsOf(ctx, env),
-        caseAuthoring: () => caseAuthoringOf(ctx),
+        caseAccount: () => caseAccountOf(ctx),
         review: () => reviewOf(ctx),
         legEarning: () => legEarningOf(ctx),
         capture: () => captureOf(ctx),
