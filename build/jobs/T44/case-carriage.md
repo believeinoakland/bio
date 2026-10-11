@@ -32,3 +32,13 @@ Size (session_01RHnxNfEc1i2Xkd7pgZikrv): test runs 2, module lines 1382
 ## J1 · REPORT
 
 Found in another module (case-grammar). My Uses cite caseDocumentBlocks and sourceRowsStanding as "case-grammar R1", and my R5 relies on both. case-grammar exports both (src/case-grammar/blocks.mjs:125, 163), but neither name appears anywhere in build/requirements/case-grammar.md, public or private. So a service I use has no requirement that states it. Nothing in T44-8 depends on this. Detail in my record's Completion section.
+
+## J2 · COMPLETE
+
+T44-8 done on job/T44/case-carriage (work commit 6584e0c441, module files only; record f96bbfcea5).
+- N872: the two membership/index.mjs imports merged into one; behaviour unchanged; no requirement changes.
+- Whole read of my own code and tests (P20): two stale comments fixed (R2's held values now name derived; published_case_materials' schema comment now names a member document's copy). No behaviour flaw found. Nothing deferred.
+- Reading set (635 KB): my own files read whole myself; the 13 used modules' public parts (318,558 bytes) read in full by one helper, which wrote a digest citing sections (K2032). Nothing in them bears on the merge.
+- Tests: case-carriage 70 pass, 0 fail. User plane: 190 pass, 0 fail. case-import does not import me.
+- Checks: format, architecture, coverage (18 of 18) and ownership (3 files) all show 0 failures.
+- Found in another module: case-grammar's requirements omit caseDocumentBlocks and sourceRowsStanding (J1 REPORT). The plane bundle is staled as usual (rule 4 (5)).
