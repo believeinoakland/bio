@@ -149520,16 +149520,15 @@ __export(checks_exports42, {
   AI_USE_CHECKS: () => AI_USE_CHECKS2,
   AI_USE_WORDS: () => AI_USE_WORDS,
   LIMIT_FIELD_WORD: () => LIMIT_FIELD_WORD,
-  LIMIT_PERIOD_FILL: () => LIMIT_PERIOD_FILL,
-  LIMIT_WHEN_FILL: () => LIMIT_WHEN_FILL,
   LIMIT_WORD_BY_SCOPE: () => LIMIT_WORD_BY_SCOPE,
-  MONTH_NAMES: () => MONTH_NAMES,
   MONTH_WORD: () => MONTH_WORD,
   PERIOD_WORD: () => PERIOD_WORD,
   UNJUDGED_WORD: () => UNJUDGED_WORD,
   WHEN_WORD: () => WHEN_WORD,
   WHOSE_WORD: () => WHOSE_WORD,
-  useInlineWord: () => useInlineWord
+  fillWords: () => fillWords2,
+  useInlineWord: () => useInlineWord,
+  useNameWord: () => useNameWord
 });
 var at18 = (fn, region) => `src/ai-use/index.mjs ${fn} > ${region}`;
 var AI_USE_WORDS = Object.freeze({
@@ -149537,21 +149536,27 @@ var AI_USE_WORDS = Object.freeze({
   "ai.use.draft.name": "Drafting",
   "ai.use.run.name": "Runs",
   "ai.use.standing.name": "Standing questions",
-  "ai.use.transcribe.name": "Reading page pictures",
   "ai.use.explore.name": "Exploring",
+  "ai.use.enquire.name": "Interviews and planning",
+  "ai.use.read.name": "Reading inside documents",
+  "ai.use.transcribe.name": "Reading page pictures",
+  "ai.use.account.name": "A case's account",
   "ai.use.ask.inline": "asking",
   "ai.use.draft.inline": "drafting",
   "ai.use.run.inline": "runs",
   "ai.use.standing.inline": "standing questions",
-  "ai.use.transcribe.inline": "reading page pictures",
   "ai.use.explore.inline": "exploring",
+  "ai.use.enquire.inline": "interviews and planning",
+  "ai.use.read.inline": "reading inside documents",
+  "ai.use.transcribe.inline": "reading page pictures",
+  "ai.use.account.inline": "a case's account",
   "ai.whose.group": "your group's",
   "ai.whose.project": "this project's",
   "ai.whose.own": "your own",
   "ai.period.day": "daily",
   "ai.period.month": "monthly",
   "ai.when.day": "tomorrow",
-  "ai.when.month": "on {month} 1",
+  "ai.when.month": "on 1 {month}",
   "date.month.january": "January",
   "date.month.february": "February",
   "date.month.march": "March",
@@ -149579,6 +149584,8 @@ var AI_USE_WORDS = Object.freeze({
   "ai.limitfield.count": "the count is a whole number, one or more",
   "ai.refused.unitunavailable": "A limit in dollars needs an API key: a subscription doesn't report what a use costs. Set it in tokens or calls instead.",
   "ai.refused.explorenotenabled": "Exploring is off on {whose} account. Its owners can switch it on.",
+  "ai.refused.exploreoutofscope": "The assistant can't explore this question on {whose} account: it lies outside what the account's owners chose to explore.",
+  "ai.refused.exploreaskinvalid": "Nothing was recorded: an ask to explore names the day and what is worth exploring that day.",
   "ai.queue.exploreask": "The assistant found something worth exploring in {scope} today: {what}. Explore it today on {account}? If nobody says yes today, it doesn't."
 });
 var LIMIT_WORD_BY_SCOPE = Object.freeze({ overall: "ai.refused.limit.overall", per_member: "ai.refused.limit.member" });
@@ -149611,13 +149618,10 @@ var LIMIT_FIELD_WORD = Object.freeze(Object.fromEntries([
   "count"
 ].map((f17) => [f17, `ai.limitfield.${f17}`])));
 var useInlineWord = (use) => `ai.use.${use}.inline`;
-var LIMIT_PERIOD_FILL = Object.freeze({ day: AI_USE_WORDS[PERIOD_WORD.day], month: AI_USE_WORDS[PERIOD_WORD.month] });
-var LIMIT_WHEN_FILL = Object.freeze({
-  day: AI_USE_WORDS[WHEN_WORD.day],
-  month: AI_USE_WORDS[WHEN_WORD.month],
-  unjudged: "once its use can be checked"
-});
-var MONTH_NAMES = Object.freeze(MONTH_WORD.map((k) => AI_USE_WORDS[k]));
+var useNameWord = (use) => `ai.use.${use}.name`;
+function fillWords2(sentence2, fills) {
+  return Object.entries(fills).reduce((s, [k, v]) => s.split(`{${k}}`).join(String(v)), sentence2);
+}
 var AI_USE_CHECKS2 = Object.freeze({
   /* R3 (D38 C, D39; B3, B5, B7): a limit of the paying account is reached for the current period: its own use's, its
      overall one (over the uses that are not exclusive), or its per-member one. Carries `whose` (`group`, `project` or
@@ -149649,18 +149653,19 @@ var AI_USE_CHECKS2 = Object.freeze({
   },
   /* R6 (B6): the question lies outside what the owner may explore: the group's, a question of the record; a
      project's, a question it draws on (`connections.citesInto`); a member's, none yet (D36 open). Named by this job's
-     J1 (5), K2480; no `words.json` key exists for it, so its sentence is this row's own. */
+     J1 (5), K2480. (T44; N859, N869; DEC-191 (1)) Carries `whose` (`group`, `project` or `own`), as `AI_LIMIT_REACHED`
+     does; its sentence is `ai.refused.exploreoutofscope`, the answer's `{whose}` filled from `ai.whose.*` (R13). */
   EXPLORE_OUT_OF_SCOPE: {
     check: "C-143.5",
-    where: at18("exploreAllowed", "is-explore-out-of-scope"),
-    translation: "The assistant can't explore this question on this account: it lies outside what the account's owners explore."
+    where: at18("#outOfScope", "is-explore-out-of-scope"),
+    translation: AI_USE_WORDS["ai.refused.exploreoutofscope"]
   },
-  /* R9: an exploring ask or approval that names no day or no thing worth exploring. Named by this job's J2, K2486; no
-     `words.json` key exists for it. */
+  /* R9: an exploring ask or approval that names no day or no thing worth exploring. Named by this job's J2, K2486.
+     (T44; N859, N869; DEC-191 (1)) Its sentence is `ai.refused.exploreaskinvalid`. */
   EXPLORE_ASK_INVALID: {
     check: "C-143.6",
     where: at18("#askFault", "is-explore-ask-invalid"),
-    translation: "Nothing was recorded: an ask to explore names the day and what is worth exploring that day."
+    translation: AI_USE_WORDS["ai.refused.exploreaskinvalid"]
   }
 });
 
@@ -149795,27 +149800,28 @@ var AiUse = class _AiUse {
     const row12 = AI_USE_CHECKS2[code] || AI_RUNS_CHECKS[code] || { check: null, translation: null };
     return { ok: false, reason: code, code, check: row12.check, translation: row12.translation, detail, ...extra };
   }
-  /** R13 (K2514; T43, DEC-189 (1)): `AI_LIMIT_REACHED`'s sentence for `lim` reached in the period starting `start`,
-   *  answered whole so every caller relays a filled sentence, every fill read by key and none written here: `{whose}`
-   *  from `ai.whose.*`, `{use}` from `ai.use.<use>.inline`, `{period}` from `ai.period.*`, `{when}` from `ai.when.day`,
-   *  or `ai.when.month` with `{month}`, the next period's month, from `date.month.*`; never a cost. */
+  /** R13 (K2514; T43, DEC-189 (1); T44, DEC-191 (2), DEC-192 (4)): `AI_LIMIT_REACHED`'s sentence for `lim` reached in
+   *  the period starting `start`, answered whole so every caller relays a filled sentence, every fill read by key and
+   *  none written here: `{whose}` from `ai.whose.*`, `{use}` from `ai.use.<use>.inline` (`{Use}` from `.name`),
+   *  `{period}` from `ai.period.*`, `{when}` from `ai.when.day`, or `ai.when.month` with `{month}`, the next period's
+   *  month, from `date.month.*`; never a cost. */
   static #limitSentence(key2, whose, lim, start) {
     const w = (k) => AI_USE_WORDS[k];
-    let when = w(WHEN_WORD.day);
-    if (lim.period === "month") when = w(WHEN_WORD.month).replace("{month}", w(MONTH_WORD[Number(start.slice(5, 7)) % 12]));
-    return w(key2).replace("{whose}", w(WHOSE_WORD[whose])).replace("{period}", w(PERIOD_WORD[lim.period])).replace("{use}", w(useInlineWord(lim.scope)) ?? "").replace("{when}", when);
+    const when = lim.period === "month" ? fillWords2(w(WHEN_WORD.month), { month: w(MONTH_WORD[Number(start.slice(5, 7)) % 12]) }) : w(WHEN_WORD.day);
+    const fills = { whose: w(WHOSE_WORD[whose]), period: w(PERIOD_WORD[lim.period]), when };
+    if (USE_KINDS2.includes(lim.scope)) Object.assign(fills, { use: w(useInlineWord(lim.scope)), Use: w(useNameWord(lim.scope)) });
+    return fillWords2(w(key2), fills);
   }
   /** R3, R13: `AI_LIMIT_REACHED`, the one site that mints it (K231), naming no cost. For a limit reached, its sentence
-   *  read by its scope and filled whole (`#limitSentence`); a use's limit whose use has no `ai.use.<use>.inline` key
-   *  yet (`enquire`, `read`, `account`, no AI path in T43; B133) reads the overall sentence, which names no use. With
-   *  no `lim` the limit cannot be judged (T43; N856; DEC-189 (5): no paying account named, the use not a `USE_KINDS`
-   *  entry, or the counter unreadable): still the refusal, failing closed, but `unjudged: true` and no `scope`, `unit`
-   *  or `period`, since nothing was reached; its sentence `ai.refused.limit.unjudged` with `{whose}` only (the group's
-   *  words when no account is named, `whose` then null). */
+   *  read by its scope (a use's own, any of the nine: `ai.refused.limit`; T44, DEC-191 (2)) and filled whole
+   *  (`#limitSentence`). With no `lim` the limit cannot be judged (T43; N856; DEC-189 (5): no paying account named, the
+   *  use not a `USE_KINDS` entry, or the counter unreadable): still the refusal, failing closed, but `unjudged: true` and
+   *  no `scope`, `unit` or `period`, since nothing was reached; its sentence `ai.refused.limit.unjudged` with `{whose}`
+   *  only (the group's words when no account is named, `whose` then null; K2720). */
   #limitReached(p3, lim, use, start, why2 = null) {
     const whose = p3 ? whoseOf(p3) : null;
     if (!lim) {
-      const translation = AI_USE_WORDS[UNJUDGED_WORD].replace("{whose}", AI_USE_WORDS[WHOSE_WORD[whose || "group"]]);
+      const translation = fillWords2(AI_USE_WORDS[UNJUDGED_WORD], { whose: AI_USE_WORDS[WHOSE_WORD[whose || "group"]] });
       return {
         ...this.#refuse("AI_LIMIT_REACHED", `${why2} Nothing was started.`),
         translation,
@@ -149826,7 +149832,7 @@ var AiUse = class _AiUse {
       };
     }
     const scope = lim.scope;
-    const word2 = LIMIT_WORD_BY_SCOPE[scope] || (AI_USE_WORDS[useInlineWord(scope)] ? "ai.refused.limit" : LIMIT_WORD_BY_SCOPE.overall);
+    const word2 = LIMIT_WORD_BY_SCOPE[scope] || "ai.refused.limit";
     return {
       ...this.#refuse("AI_LIMIT_REACHED", `${p3.owner}'s ${lim.period} limit (${scope}, in ${lim.unit}) is reached for the period from ${start}. Nothing was started.`),
       translation: _AiUse.#limitSentence(word2, whose, lim, start),
@@ -149841,17 +149847,40 @@ var AiUse = class _AiUse {
   }
   /** R2: an invalid limit, naming the field, its sentence's `{field}` filled from `ai.limitfield.<field>` (R13). */
   #invalid(field3, detail) {
-    const translation = AI_USE_WORDS["ai.refused.limitinvalid"].replace("{field}", AI_USE_WORDS[LIMIT_FIELD_WORD[field3]]);
+    const translation = fillWords2(AI_USE_WORDS["ai.refused.limitinvalid"], { field: AI_USE_WORDS[LIMIT_FIELD_WORD[field3]] });
     return this.#refuse("AI_LIMIT_INVALID", `${detail} Nothing was changed.`, { field: field3, word: "ai.refused.limitinvalid", translation });
   }
   /** R3, R6, R9: exploring is `no` on the account. */
   #exploreOff(p3) {
     const whose = whoseOf(p3);
-    return { ...this.#refuse("EXPLORE_NOT_ENABLED", `exploring is set to no on ${p3.owner}'s account, so it pays for no exploring. Nothing was started.`), translation: AI_USE_WORDS["ai.refused.explorenotenabled"].replace("{whose}", AI_USE_WORDS[WHOSE_WORD[whose]]), word: "ai.refused.explorenotenabled", whose, owner: p3.owner };
+    return { ...this.#refuse("EXPLORE_NOT_ENABLED", `exploring is set to no on ${p3.owner}'s account, so it pays for no exploring. Nothing was started.`), translation: fillWords2(
+      AI_USE_WORDS["ai.refused.explorenotenabled"],
+      { whose: AI_USE_WORDS[WHOSE_WORD[whose]] }
+    ), word: "ai.refused.explorenotenabled", whose, owner: p3.owner };
   }
-  /** R9: an ask or approval naming no day or no thing worth exploring. */
+  /** R6, R8, R13 (T44; N859, N869; DEC-191 (1)): the question lies outside what `p`'s account explores. Carries `whose`
+   *  as `AI_LIMIT_REACHED` does; its sentence `ai.refused.exploreoutofscope`, `{whose}` filled from `ai.whose.*`. */
+  #outOfScope(p3) {
+    const whose = whoseOf(p3);
+    return this.#refuse(
+      "EXPLORE_OUT_OF_SCOPE",
+      `the question is not one ${p3.owner}'s account explores. Nothing was started.`,
+      {
+        owner: p3.owner,
+        whose,
+        word: "ai.refused.exploreoutofscope",
+        translation: fillWords2(AI_USE_WORDS["ai.refused.exploreoutofscope"], { whose: AI_USE_WORDS[WHOSE_WORD[whose]] })
+      }
+    );
+  }
+  /** R9: an ask or approval naming no day or no thing worth exploring; its sentence `ai.refused.exploreaskinvalid`
+   *  (R13; T44, DEC-191 (1)). */
   #askFault(field3, detail) {
-    return this.#refuse("EXPLORE_ASK_INVALID", `${detail} Nothing was recorded.`, { field: field3 });
+    return this.#refuse(
+      "EXPLORE_ASK_INVALID",
+      `${detail} Nothing was recorded.`,
+      { field: field3, word: "ai.refused.exploreaskinvalid", translation: AI_USE_WORDS["ai.refused.exploreaskinvalid"] }
+    );
   }
   /* ===== Time (R1–R5, R9) ===== */
   /** The group's zone (`retrieval` R69, as ai-runs reads it; K2480), or the one a test hands in; UTC when it cannot be
@@ -150435,12 +150464,7 @@ var AiUse = class _AiUse {
       const c = this.#credentials();
       const away = c.aiKeptAway({ use: "explore", ...p3.kind === "project" ? { project: p3.id } : {} });
       if (away) return away;
-      if (!this.#inScope(p3, question))
-        return this.#refuse(
-          "EXPLORE_OUT_OF_SCOPE",
-          `the question is not one ${p3.owner}'s account explores. Nothing was started.`,
-          { owner: p3.owner }
-        );
+      if (!this.#inScope(p3, question)) return this.#outOfScope(p3);
       if (p3.kind === "group") {
         const drawn = this.#connections().citesInto(question).confirmed.filter((b) => {
           const i = this.record.bundleInfo(b);
@@ -150517,7 +150541,7 @@ var AiUse = class _AiUse {
           what,
           asked_at: r.asked_at,
           word: "ai.queue.exploreask",
-          text: AI_USE_WORDS["ai.queue.exploreask"].replace("{what}", shown3),
+          text: fillWords2(AI_USE_WORDS["ai.queue.exploreask"], { what: shown3 }),
           estimate: this.#estimate(p3, "explore", "explore", 1)
         });
       }
@@ -150798,7 +150822,8 @@ CREATE TABLE IF NOT EXISTS step_later_found (
   step_id       TEXT NOT NULL,
   look_seq      INTEGER NOT NULL,   -- the earlier look, as the log holds it
   observation_seq INTEGER NOT NULL, -- what arrived
-  at            TEXT NOT NULL,
+  at            TEXT NOT NULL,      -- the instant what arrived was logged (the observation's at)
+  looked_at     TEXT,               -- the instant of the look (its at); added T44, older rows filled at start
   UNIQUE (step_id, look_seq, observation_seq)
 );
 CREATE TABLE IF NOT EXISTS step_cost_messages (
@@ -151081,6 +151106,7 @@ var LIKE_SCAN = 5e3;
 var RECIPIENTS_LIMIT = Object.freeze({ default: 500, max: 1e3 });
 var DRAW_PAGE = 500;
 var DRAW_MAX = 1e4;
+var LATER_FOUND_SCAN = 5e3;
 var ACCEPTANCE_COUNT_KEYS = Object.freeze(["stepsAcceptedAsProposed", "stepsAcceptedEdited", "stepsAcceptedOwnInstead"]);
 var HEX6417 = /^[0-9a-f]{64}$/;
 var CURRENCY = /^[A-Z]{3}$/;
@@ -151195,6 +151221,7 @@ var Steps = class _Steps {
         for (const st of part.slice(end2 + 4).split(";")) if (st.trim()) this.#sql.exec(st.trim());
       } else for (const st of part.split(";")) if (st.trim()) this.#sql.exec(st.trim());
     }
+    this.#lookedAtColumn();
     if (this.#declared) return { ok: true, already: true };
     const base2 = { purge: "clear", expunge: "none", export: "admin-only", sight: "bundle", derive: "stored", version_chain: false };
     const d = this.#record.declareTable(OWNER2, [
@@ -151204,6 +151231,18 @@ var Steps = class _Steps {
     if (d && d.ok === false) throw new Error(`steps: declareTable refused: ${d.reason}`);
     this.#declared = true;
     return { ok: true };
+  }
+  /* R23 (T44): a store made before `looked_at` gains the column, and each entry without it is filled from its look's
+     own row (observation-log R29's read contract: `seq`, `at`); the log is append-only, so the look's instant is the
+     one it was logged with. An entry whose look the log no longer holds stays null, answered as not known. */
+  #lookedAtColumn() {
+    const cols = this.#rows(`PRAGMA table_info(step_later_found)`).map((c) => c.name);
+    if (cols.length && !cols.includes("looked_at")) this.#sql.exec(`ALTER TABLE step_later_found ADD COLUMN looked_at TEXT`);
+    try {
+      this.#sql.exec(`UPDATE step_later_found SET looked_at = (SELECT o.at FROM observation_log o WHERE o.seq = step_later_found.look_seq)
+                      WHERE looked_at IS NULL`);
+    } catch {
+    }
   }
   /* ---- registrations (R1, R9, R11) ---- */
   /** R1: `ai-runs` registers, once, the read of whether a machine credential holds a run: `fn(by, run)` answers
@@ -151480,7 +151519,7 @@ var Steps = class _Steps {
     return Object.fromEntries(Object.keys(t2).sort().map((k) => [k, decStr(t2[k])]));
   }
   #laterFoundOf(stepId, viewer) {
-    return this.#rows(`SELECT look_seq, observation_seq, at FROM step_later_found WHERE step_id = ? ORDER BY seq`, stepId).filter((r) => this.#observationSeen(r.observation_seq, viewer)).map((r) => ({ look: Number(r.look_seq), observation: Number(r.observation_seq), at: r.at }));
+    return this.#rows(`SELECT look_seq, observation_seq, at, looked_at FROM step_later_found WHERE step_id = ? ORDER BY seq`, stepId).filter((r) => this.#observationSeen(r.observation_seq, viewer)).map((r) => ({ look: Number(r.look_seq), observation: Number(r.observation_seq), at: r.at, looked_at: r.looked_at ?? null }));
   }
   #observationSeen(seq, viewer) {
     try {
@@ -152301,28 +152340,35 @@ var Steps = class _Steps {
     return { ok: true, question, recipients: page2, limit: lim, truncated: rest.length > lim, next: rest.length > lim ? { after: page2[page2.length - 1] } : null };
   }
   /* ---- data found later (R23) ---- */
-  /** R23 (observation-log R37): an earlier look made for a step, answered by a `PRESENT` at its subject and level. */
+  /** R23 (observation-log R37): an earlier look made for a step, answered by a `PRESENT` at its subject and level. The
+   *  entry keeps both instants: `at`, when what arrived was logged, and `looked_at`, when the step looked (T44). */
   lookAnswered({ earlier = null, observation = null } = {}) {
     if (!isObj34(earlier) || !isObj34(observation) || earlier.authority_kind !== "step") return;
     if (!this.#held(earlier.authority)) return;
     this.#sql.exec(
-      `INSERT OR IGNORE INTO step_later_found (step_id, look_seq, observation_seq, at) VALUES (?,?,?,?)`,
+      `INSERT OR IGNORE INTO step_later_found (step_id, look_seq, observation_seq, at, looked_at) VALUES (?,?,?,?,?)`,
       earlier.authority,
       Number(earlier.seq),
       Number(observation.seq),
-      String(observation.at)
+      String(observation.at),
+      filled8(earlier.at) ? earlier.at : null
     );
   }
   /** R23: `laterFound({viewer, at})`, for `notice-producers`: each entry once, to each of R17's recipients of a
-   *  referring question who sees both the step and what arrived, and to the member who did the step. */
+   *  referring question who sees both the step and what arrived, and to the member who did the step. Each entry answers
+   *  `at` (what arrived) and `looked_at` (the look). Entries logged after `at` wait for a later call; at most
+   *  `LATER_FOUND_SCAN` entries are read, and `truncated` says when more are held. */
   laterFound({ viewer = null, at: at43 = null } = {}) {
     const member2 = this.#memberOf(viewer);
-    if (!member2) return { ok: true, found: [] };
+    if (!member2) return { ok: true, found: [], truncated: false };
     const found3 = [];
     const rcache = /* @__PURE__ */ new Map();
+    let truncated6 = false;
     try {
-      for (const e2 of this.#rows(`SELECT f.*, s.doer_member FROM step_later_found f JOIN steps s ON s.step_id = f.step_id ORDER BY f.seq LIMIT 5000`)) {
-        if (filled8(at43) && e2.at > at43) continue;
+      const rows3 = this.#rows(`SELECT f.*, s.doer_member FROM step_later_found f JOIN steps s ON s.step_id = f.step_id ORDER BY f.seq LIMIT ?`, LATER_FOUND_SCAN + 1);
+      truncated6 = rows3.length > LATER_FOUND_SCAN;
+      for (const e2 of rows3.slice(0, LATER_FOUND_SCAN)) {
+        if (filled8(at43) && !(instantOrder(e2.at, at43) <= 0)) continue;
         const row12 = this.#held(e2.step_id);
         if (!this.#seen(row12, viewer) || !this.#observationSeen(e2.observation_seq, viewer)) continue;
         const qs = this.#refs(e2.step_id);
@@ -152336,14 +152382,15 @@ var Steps = class _Steps {
           look: Number(e2.look_seq),
           observation: Number(e2.observation_seq),
           at: e2.at,
+          looked_at: e2.looked_at ?? null,
           questions: qs.filter((q10) => this.#membership.inSight(q10, viewer)),
           key: sha256HexSync(`steps:later:${e2.step_id}:${e2.observation_seq}`)
         });
       }
     } catch {
-      return { ok: true, found: [] };
+      return { ok: true, found: [], truncated: false };
     }
-    return { ok: true, found: found3 };
+    return { ok: true, found: found3, truncated: truncated6 };
   }
   /* ---- a proposed step, accepted (R24, R26) ---- */
   /** R24: `stepPropose({place, work, why, run, by})`: a machine's or an assistant's proposed step, held apart and
