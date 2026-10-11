@@ -45,3 +45,20 @@
 - Checks: format 0 failures; coverage 47/47 0 failures; ownership 0 failures; architecture 4 failures (the missing `doorbell` edge, item (1)).
 
 Size (session_017Td7k1YMLLrLUpRB4yBYq4): test runs 16, module lines 3529
+
+## J1 · COMPLETE
+
+T42-29 applied: R71 (`of.caseAccount()`), R72 (no `within`), R74 (generic admission and stamps, plus a fix: a declined hook's forward of `pagetranscribe` or `pdfstructure` no longer carries the caller's `cls`, `caps` or `session`), and the doorbell tests re-pointed to `doorbell`'s exports (no control-plane file reads capture's copy).
+
+Tests: 214/223 on this branch. The 9 reds wait on providers that merge before me in L11: 5 R74 tests need op-declarations R47's spec, and 4 R36 tests need store-door R7's `deps.doorbell`. Both sets passed against local stand-ins (not committed). Please re-run after those two merge.
+
+Users: plane 167/167. legacy-ui 35/38: statement-ack (rule 4 (4)); progression-revision and queue-recipients are red on tranche/T42 without me too.
+
+Checks: format, coverage 47/47 and ownership all 0 failures. Architecture has 4 failures, all from the missing edge.
+
+For BOB:
+(1) Please add the `modules.json` edges control-plane → case-account, doorbell. Ownership refuses a job's edit.
+(2) plane `store.mjs`:677 must hand `caseAccount` (plane R35). Until it does, the plane throws on `accountpropose` and `accountdrafts`.
+(3) plane `door.mjs`:54: the hook's `viewer` for an `ai` caller is `class:ai`, where R17 says the principal.
+
+Edges added by this job: none in the file (item 1). Record: build/jobs/T42/control-plane.md.
