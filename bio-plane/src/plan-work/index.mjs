@@ -53,8 +53,12 @@ export { PLAN_WORK_CHECKS } from "./checks.mjs";
 export const MATTER_STATES = Object.freeze(["ended", "fixed", "stopped", "acting", "fix_offered", "documented", "none"]);
 /** R11: the kinds of item a member may take up. */
 export const ITEM_KINDS = Object.freeze(["clock", "checkpoint", "escalation_stage", "hold"]);
-/** R10: the kinds of mark a re-examination writes through `action-plans.planMark`. */
-export const MARK_KINDS = Object.freeze(["premise_changed", "date_changed", "phase_started", "next_route", "chance_to_fix"]);
+/** R10: the kinds of mark a re-examination writes through `action-plans.planMark` (its R43, K2848). The chance to fix
+ *  re-offered is action-plans R41's derivation on read, never a mark. */
+export const MARK_KINDS = Object.freeze(["option_changed", "phase_start_holds", "next_routes"]);
+/** R10 (action-plans R43): a mark's `why` is 1 to 500 characters; `next_routes` names at most 20 routes. */
+export const MARK_WHY_MAX = 500;
+export const MARK_ROUTES_MAX = 20;
 /** R10: the skill version and bounds a re-examination run is opened under (a planning run: no search, R46). */
 export const REEXAM_SKILL = "planning@1";
 export const REEXAM_BOUNDS = Object.freeze([Object.freeze({ bound: "proposals", allowed: 20 }),
@@ -724,7 +728,7 @@ export class PlanWork {
         const marks = this.#reexamine(id, action, ord, recorder);
         let marked = null;
         if (marks.length) {
-          try { marked = this.actionPlans.planMark({ plan: id, marks, cause: { response, action, ord, at: at ?? this.now() } }); }
+          try { marked = this.actionPlans.planMark({ plan: id, marks, cause: { action, ord } }); }
           catch (e) { marked = { ok: false, why: String(e && e.message || e).slice(0, 200) }; }
         }
         const run = await this.#openRun(id, response, recorder, at);
@@ -767,49 +771,46 @@ export class PlanWork {
     return p ? p.project : null;
   }
 
-  /* R10: rule 1's marks for one plan after the response: options whose premise or regulated date changed, phases whose
-     start now holds, the procedure guide's next routes for the action's kind after the response's outcome, and the
-     chance to fix re-offered; a mark the plan already holds is not written again. */
+  /* R10: rule 1's marks for one plan after the response, in action-plans R43's kinds: an option whose premise or
+     regulated date changed (`option_changed`), a phase whose start now holds (`phase_start_holds`), and the procedure
+     guide's next routes for the action's kind after the response's outcome (`next_routes`); a mark the plan already
+     holds is not written again. The chance to fix re-offered is action-plans R41's own derivation, never marked here. */
   #reexamine(planId, action, ord, recorder) {
     const p = this.#plan(planId, null);
     if (!p) return [];
     const held = new Set((Array.isArray(p.marks) ? p.marks : []).map(markKey));
     const marks = [];
-    const add = (m) => { if (!held.has(markKey(m))) { held.add(markKey(m)); marks.push(m); } };
+    const add = (m) => { const x = { ...m, why: m.why.slice(0, MARK_WHY_MAX) }; if (!held.has(markKey(x))) { held.add(markKey(x)); marks.push(x); } };
     const checks = Array.isArray(p.checks) ? p.checks : [];
-    const responded = (p.options || []).filter((o) => o.action && o.action.id === action);
     for (const o of p.options || []) {
       if (["declined", "done"].includes(o.disposition)) continue;
       const notLive = (o.subjects_liveness || []).length && !(o.subjects_liveness || []).some((b) => b.liveness && b.liveness.state === "live");
-      if (responded.includes(o))
-        add({ kind: "premise_changed", option: o.id, why: `a response was recorded on ${action}, the action this option started` });
+      const dated = checks.filter((x) => x.option === o.id && (x.check === "date_past" || x.check === "date_before_phase"));
+      if (o.action && o.action.id === action)
+        add({ kind: "option_changed", option: o.id, why: `a response was recorded on ${action}, the action this option started` });
       else if (notLive)
-        add({ kind: "premise_changed", option: o.id, why: "every matter this option serves is no longer live" });
-      for (const c of checks.filter((x) => x.option === o.id && (x.check === "date_past" || x.check === "date_before_phase")))
-        add({ kind: "date_changed", option: o.id, date: c.date ?? null, why: c.says ?? c.check });
+        add({ kind: "option_changed", option: o.id, why: "every matter this option serves is no longer live" });
+      else if (dated.length)
+        add({ kind: "option_changed", option: o.id, why: dated[0].says ?? dated[0].check });
     }
     for (const sc of p.scenarios || []) {
       if (sc.set_aside) continue;
       for (const ph of sc.phases || [])
         if (ph.started && !ph.judgement)
-          add({ kind: "phase_started", scenario: sc.scenario, phase: ph.id, why: `the phase's start holds since ${ph.started_at ?? "now"}` });
+          add({ kind: "phase_start_holds", scenario: sc.scenario, phase: ph.id, why: `the phase's start holds since ${ph.started_at ?? "now"}` });
     }
     const outcome = this.#outcomeAt(action, ord);
     const a = this.#actionOf(action, null);
     const g = this.#maybe("readingGuides");
     if (a && g && typeof a.kind === "string" && outcome) {
       const r = g.procedureGuidesFor({ kind: a.kind, viewer: recorder });
+      const routes = [];
       for (const guide of ok(r) ? r.guides || [] : [])
         for (const it of guide.items || [])
-          if (isObj(it) && Array.isArray(it.after) && it.after.includes(outcome))
-            add({ kind: "next_route", guide: guide.guide ?? null, origin: guide.origin ?? null, route: it.route ?? null,
-                  citation: it.citation ?? null, after: [outcome], why: `the guide's next route for ${a.kind} after ${outcome}` });
-    }
-    const keys = new Set(responded.flatMap((o) => (o.subjects || []).map((s) => subjectKey(s))));
-    for (const off of Array.isArray(p.offers) ? p.offers : []) {
-      const key = off.key ?? (off.subject ? subjectKey(off.subject) : null);
-      if (off.kind === "chance_to_fix" && keys.has(key))
-        add({ kind: "chance_to_fix", subject: off.subject ?? null, why: "a response was recorded on an action serving this matter" });
+          if (isObj(it) && Array.isArray(it.after) && it.after.includes(outcome) && typeof it.route === "string" && !routes.includes(it.route))
+            routes.push(it.route);
+      if (routes.length)
+        add({ kind: "next_routes", routes: routes.slice(0, MARK_ROUTES_MAX), why: `the procedure guide's next routes for ${a.kind} after ${outcome}` });
     }
     return marks;
   }
@@ -982,7 +983,7 @@ function standingCure(r, standard) {
 /* R10: a mark's identity: its kind and what it names. */
 function markKey(m) {
   if (!isObj(m)) return "";
-  return [m.kind, m.option ?? "", m.scenario ?? "", m.phase ?? "", m.route ?? "", m.subject ? JSON.stringify(m.subject) : "", m.date ?? ""].join("|");
+  return [m.kind, m.option ?? "", m.scenario ?? "", m.phase ?? "", Array.isArray(m.routes) ? [...m.routes].sort().join(",") : ""].join("|");
 }
 
 /* R5: a preparation item's rows folded: its addition, take-ups and whether it is done. */

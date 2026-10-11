@@ -4,7 +4,7 @@
    R22, `escalationRead` R2, the fixture's own), filings (`filingsFor` R13), conformance (`curesOf` R37), action-holds
    (`projectHolds` R7, `holdsDue` R3, `holdsOf` R2), action-replies (`aroseFrom`, `arisenFrom` R2), duties
    (`dutiesArisingIn` R31), reading-guides (`procedureGuidesFor` R13) and ai-runs (`open` R77). action-plans' T45
-   services this module calls (`planMark` R43, `registerCloseSnapshot` R44, the marks and offers in `planRead`) are
+   services this module calls (`planMark` R43 in K2848's shape, `registerCloseSnapshot` R44, the marks in `planRead`) are
    stood in over the real module until its job merges (plan rule 1). Every test drives plan-work at its interface. */
 import { seeded, opened, option, choose, V, MACHINE, by, OFFICE, ms, DAY, NOW } from "../action-plans/fixture.mjs";
 import { planWorkOf } from "../../../src/plan-work/index.mjs";
@@ -24,11 +24,18 @@ export function world(opts = {}) {
       return { ...r, marks: marks.get(r.id) || [], offers: offers.get(r.id) || [],
                scenarios: r.scenarios.map((s) => (set.has(s.scenario) ? { ...s, set_aside: { reason: set.get(s.scenario) } } : s)) };
     };
+    /* action-plans R43 (K2848): `cause` {action, ord}; each mark {kind, why, option?, scenario?, phase?, routes?}, a
+       malformed one skipped and named */
     if (k === "planMark") return ({ plan, marks: m, cause }) => {
       const l = marks.get(plan) || [];
-      for (const x of m) l.push({ ...x, machine_work: true, cause, at: w.clock.now });
+      const skipped = [];
+      const good = (x) => typeof x.why === "string" && x.why.length >= 1 && x.why.length <= 500
+        && (x.kind === "option_changed" ? typeof x.option === "string"
+          : x.kind === "phase_start_holds" ? x.scenario !== undefined && typeof x.phase === "string"
+          : x.kind === "next_routes" ? Array.isArray(x.routes) && x.routes.length >= 1 && x.routes.length <= 20 : false);
+      m.forEach((x, i) => (good(x) ? l.push({ ...x, machine_work: true, cause, at: w.clock.now }) : skipped.push(i)));
       marks.set(plan, l);
-      return { ok: true, plan, marked: m.length };
+      return { ok: true, plan, marked: m.length - skipped.length, skipped };
     };
     if (k === "registerCloseSnapshot") return (module, fn) => {
       if (closers.length) return { ok: false, code: "LISTENER_DECLARED" };

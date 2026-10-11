@@ -35,12 +35,13 @@ test("R10: at start the module registers with actions' response listener; a resp
   const before = decisions(w);
   const r = await w.respond(s.action, ord);
   const mine = r.reexamined.find((x) => x.plan === w.PL);
-  assert.deepEqual(mine.marks.map((m) => [m.kind, m.option ?? m.phase]), [["premise_changed", s.option], ["phase_started", "ask"]]);
-  assert.ok(mine.marks.every((m) => typeof m.why === "string" && m.why));
-  /* written through planMark, with the response as cause, labelled machine work there */
+  assert.deepEqual(mine.marks.map((m) => [m.kind, m.option ?? m.phase]), [["option_changed", s.option], ["phase_start_holds", "ask"]]);
+  assert.ok(mine.marks.every((m) => typeof m.why === "string" && m.why.length >= 1 && m.why.length <= 500));
+  /* written through planMark in action-plans R43's shape, with the response as cause; none skipped */
   const held = w.marks.get(w.PL);
   assert.equal(held.length, 2);
-  assert.deepEqual(held[0].cause, { response: `${s.action}#${ord}`, action: s.action, ord, at: w.clock.now });
+  assert.deepEqual(held[0].cause, { action: s.action, ord });
+  assert.deepEqual(w.pw.reexaminations({ plan: w.PL, viewer: V("bob") }).items[0].marks, mine.marks);
   /* control: dispositions, scenarios, judgements and starts are byte-identical before and after */
   assert.deepEqual(decisions(w), before);
   /* once per plan and response: the same response again writes nothing more */
@@ -53,33 +54,36 @@ test("R10: at start the module registers with actions' response listener; a resp
   assert.deepEqual(third.reexamined[0].marks, []);
 });
 
-test("R10: the guide's next routes for the action's kind after the response's outcome, and the chance to fix re-offered, are marked", async () => {
+test("R10: the guide's next routes for the action's kind after the response's outcome are one next_routes mark; the chance to fix is never a mark", async () => {
   const w = world();
   const s = w.started({ subjects: [w.S1] });
   w.guides.set("other", [{ guide: null, origin: "profile", items: [
     { route: "Ask for reconsideration", citation: "Rule 4", after: ["denied"] },
     { route: "Thank them", citation: "Rule 5", after: ["complied"] },
-    { route: "Wait", citation: "Rule 6" }] }]);
-  w.offers.set(w.PL, [{ subject: w.S1, key: `outcome:${w.D}#STD-2026-0001-a`, kind: "chance_to_fix" },
-                      { subject: w.S3, key: `outcome:${w.D}#STD-2026-0003-c`, kind: "chance_to_fix" }]);
+    { route: "Wait", citation: "Rule 6" }] },
+    { guide: "GUD-2026-0001-g", origin: "group", items: [{ route: "Appeal to the board", citation: "Rule 9", after: ["denied", "partial"] }] }]);
   w.correspond(s.action, "sent", "2026-10-01");
-  /* a received entry stating an outcome, written as actions' lifecycle grammar allows */
   const r = w.actions.actionCorrespond({ target: s.action, direction: "received", at: "2026-10-03", account: "letter", outcome: "denied", ...by("bob") });
   assert.equal(r.ok, true, JSON.stringify(r));
-  const ord = r.ord;
-  const res = await w.respond(s.action, ord);
-  const kinds = res.reexamined[0].marks.map((m) => m.kind);
-  assert.ok(kinds.includes("chance_to_fix"));
-  assert.deepEqual(res.reexamined[0].marks.filter((m) => m.kind === "chance_to_fix").map((m) => m.subject), [w.S1],
-    "only the matters the responded action serves");
-  assert.deepEqual(res.reexamined[0].marks.filter((m) => m.kind === "next_route").map((m) => [m.route, m.citation, m.after]),
-    [["Ask for reconsideration", "Rule 4", ["denied"]]], "the route after denied only; one with no `after` is not a next route");
+  const res = await w.respond(s.action, r.ord);
+  const routes = res.reexamined[0].marks.filter((m) => m.kind === "next_routes");
+  assert.deepEqual(routes.map((m) => m.routes), [["Ask for reconsideration", "Appeal to the board"]],
+    "the routes after denied only, in the guides' order; one with no `after` is not a next route");
+  assert.equal(res.reexamined[0].marks.some((m) => !["option_changed", "phase_start_holds", "next_routes"].includes(m.kind)), false,
+    "no chance-to-fix mark: action-plans R41 derives it on read");
   /* control: a response stating no outcome offers no route */
   const w2 = world();
   w2.guides.set("other", [{ guide: null, origin: "profile", items: [{ route: "Ask for reconsideration", citation: "Rule 4", after: ["denied"] }] }]);
   const t = w2.started({ subjects: [w2.S1] });
   const o2 = w2.correspond(t.action, "received", "2026-10-03");
-  assert.equal((await w2.respond(t.action, o2)).reexamined[0].marks.some((m) => m.kind === "next_route"), false);
+  assert.equal((await w2.respond(t.action, o2)).reexamined[0].marks.some((m) => m.kind === "next_routes"), false);
+  /* at most 20 routes */
+  const w3 = world();
+  w3.guides.set("other", [{ guide: null, origin: "profile", items: Array.from({ length: 25 }, (_, i) => ({ route: `Route ${i}`, citation: "R", after: ["denied"] })) }]);
+  const u = w3.started({ subjects: [w3.S1] });
+  const o3 = w3.actions.actionCorrespond({ target: u.action, direction: "received", at: "2026-10-03", account: "letter", outcome: "denied", ...by("bob") }).ord;
+  const many = (await w3.respond(u.action, o3)).reexamined[0].marks.find((m) => m.kind === "next_routes");
+  assert.equal(many.routes.length, 20);
 });
 
 test("R10: the projects linked by arose_from both ways are re-examined; a response in an unlinked project marks nothing", async () => {
