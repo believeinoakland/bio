@@ -925,8 +925,10 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    above and run in the modules' total order (R39); intent's registered step gains a projection (its R32: the person
    warning at an objective's or condition's promotion, never a refusal). 1.68.0's note had steps and investigation
    registering none.
-   T42's layer 1 changed the two record-grammar `where`s above and no other row; T42's layer 2 (record-core, membership,
-   credentials) is re-pinned in place as each merges, so T42 names one catalogue.
+   T42's layer 1 changed the two record-grammar `where`s above and no other row. T42 LAYER 2, re-pinned in place after
+   record-core, membership and credentials merged (K2623): none added, changed or retired a row (the census over the
+   merged tranche is this pin, line for line); membership's `MODULE_ORDER` gains `doorbell` and `case-account` (T42-3),
+   neither of which registers a gate step yet, so no gate's order moves.
    ROW_CENSUS (R50) re-pinned to this tree: 1719 rows. Rows a T42 job in layers 3–11 adds or changes (doorbell's
    re-pointed `where`s among them) are T43's stamp (plan T42, rule 4 item 2). */
 export const CATALOG_VERSION = "1.69.0";

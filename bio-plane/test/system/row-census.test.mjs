@@ -173,7 +173,8 @@
    `build/jobs/T42/promotion.md`; 1719 rows, 8902282a…, over `tranche/T42` at its layer 2); the 1.68.0 snapshot (no stamp
    reads it) renamed to it; T41's layers 3–11 rows (154 new, 2 retired, 22 changed, each named by its job record; none
    declared here, accepted red 2 at T41's close) and T42's layer 1 rows (record-grammar's C-33.40 and C-33.54 `where`s)
-   stamped in 1.69.0. Re-pinned in place as each T42 layer-2 job merges, so T42 names one catalogue. A row a T42 job in
+   stamped in 1.69.0. Re-checked over `tranche/T42` after record-core's, membership's and credentials' merges (K2623):
+   the same 1719 rows, 8902282a…, so the pin stands, and T42 names one catalogue. A row a T42 job in
    layers 3–11 adds or changes turns this suite red, accepted by name until T43's layer-2 stamp (plan T42, rule 4 item 2),
    so none is declared. Negative control re-run on the stamp commit: its arms in the suite pass. */
 import "../stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
