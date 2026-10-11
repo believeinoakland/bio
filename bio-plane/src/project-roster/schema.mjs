@@ -56,8 +56,33 @@ CREATE TABLE IF NOT EXISTS project_owner_decisions (
   at         TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS project_owner_decisions_project ON project_owner_decisions(project_id, seq);
+
+-- R21 (T45; v0.2 rule 15): A PROJECT'S SCOPE, one row per act, append-only. The latest row is the scope; a project
+-- with none is 'none'. Every participant reads the history (R6's form).
+CREATE TABLE IF NOT EXISTS project_scopes (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id TEXT NOT NULL,
+  scope      TEXT NOT NULL CHECK (scope IN ('counsel_matter','own','none')),
+  reason     TEXT NOT NULL,
+  set_by     TEXT NOT NULL,
+  at         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS project_scopes_project ON project_scopes(project_id, seq);
+
+-- R24 (T45; v0.2 rule 20): WHICH ACTS NEED A SECOND MEMBER'S APPROVAL, one row per setting, append-only. needs is
+-- the JSON list of entries; the latest row governs; '[]' is the default (one member approves).
+CREATE TABLE IF NOT EXISTS project_approval_settings (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  project_id TEXT NOT NULL,
+  needs      TEXT NOT NULL,
+  reason     TEXT NOT NULL,
+  set_by     TEXT NOT NULL,
+  at         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS project_approval_settings_project ON project_approval_settings(project_id, seq);
 `;
 
-/* R18: the tables keyed by project and cleared with it. None is exempt. */
+/* R18: the tables keyed by project and cleared with it, the scope records and approval settings among them (T45).
+   None is exempt. */
 export const PROJECT_ROSTER_TABLES = Object.freeze(["project_join_requests", "project_owner_votes",
-  "project_owner_decisions"]);
+  "project_owner_decisions", "project_scopes", "project_approval_settings"]);

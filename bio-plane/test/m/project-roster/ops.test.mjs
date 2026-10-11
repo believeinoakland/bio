@@ -7,7 +7,7 @@ import { projectRosterOps, PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS } 
 
 const q = (o) => Object.entries(o).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&");
 
-test("R1 R3 R4 R5 R8 R9 R10 R11 R12 R14 each op answers its service, its parameters and stamps from the query; a body names nothing", async () => {
+test("R1 R3 R4 R5 R8 R9 R10 R11 R12 R14 R21 R24 each op answers its service, its parameters and stamps from the query; a body names nothing", async () => {
   const w = await world().group("ann", "bob", "cal");
   w.owned("PROJ-P", "ann", ["bob"]);
   w.m.projectVisibilitySet({ projectId: "PROJ-P", setting: "discoverable", by: "ann", viewer: V("ann") });
@@ -15,7 +15,8 @@ test("R1 R3 R4 R5 R8 R9 R10 R11 R12 R14 each op answers its service, its paramet
     projectRosterOps(w.r, new URL(`http://x/?${q(params)}`), body, {})[name]();
   assert.deepEqual(Object.keys(projectRosterOps(w.r, new URL("http://x/"), null, {})).sort(),
     ["projectdirectory", "projectowneradd", "projectownerremove", "projectownerrescue", "projectparticipants",
-     "projectrequest", "projectrequestanswer", "projectrequests", "projectrequestwithdraw", "projectvisibility"]);
+     "projectrequest", "projectrequestanswer", "projectrequests", "projectrequestwithdraw", "projectvisibility",
+     "projectapprovalset", "projectscopeset"].sort());
   /* reads */
   assert.deepEqual(op("projectparticipants", { projectId: "PROJ-P", by: "bob" }),
     w.r.projectParticipants({ projectId: "PROJ-P", by: "bob" }));
@@ -39,6 +40,19 @@ test("R1 R3 R4 R5 R8 R9 R10 R11 R12 R14 each op answers its service, its paramet
   assert.deepEqual([short.reason, short.deciders], ["VOTES_SHORT", ["ann"]]);
   assert.equal(op("projectownerrescue", { projectId: "PROJ-P", handle: "cal", by: "second", reason: "r", viewer: V("second") }).reason,
     "OWNERS_ARE_ACTIVE");
+  /* T45: the scope and the approval setting through the ops; `needs` is read as JSON, anything else refused */
+  w.project("PROJ-S");
+  w.m.projectClaimOwner({ projectId: "PROJ-S", memberId: "ann" });
+  const sc = op("projectscopeset", { projectId: "PROJ-S", scope: "counsel_matter", reason: "counsel", by: "ann", viewer: V("ann") });
+  assert.deepEqual([sc.ok, sc.scope, sc.by], [true, "counsel_matter", "ann"]);
+  assert.equal(w.r.projectScope("PROJ-S").scope, "counsel_matter");
+  const ap = op("projectapprovalset", { projectId: "PROJ-S", needs: JSON.stringify([{ tier: 2 }, { public: true }]),
+    reason: "care", by: "ann", viewer: V("ann") });
+  assert.deepEqual([ap.ok, ap.needs], [true, [{ tier: 2 }, { public: true }]]);
+  assert.equal(op("projectapprovalset", { projectId: "PROJ-S", needs: "not json", reason: "r", by: "ann", viewer: V("ann") }).reason,
+    "APPROVAL_RULE_INVALID");
+  assert.equal(op("projectscopeset", { projectId: "PROJ-S", scope: "none", reason: "r", by: "cal", viewer: V("cal") }).reason,
+    "NO_SUCH_PROJECT", "an outsider of hidden S: as an id naming nothing");
   /* a body's own `by`, `viewer` or parameters never reach a service */
   const forged = { by: "ann", viewer: V("ann"), projectId: "PROJ-P", handle: "cal" };
   assert.equal(op("projectowneradd", { projectId: "PROJ-P", handle: "bob", by: "cal", viewer: V("cal") }, forged).reason,
