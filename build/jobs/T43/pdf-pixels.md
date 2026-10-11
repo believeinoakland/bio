@@ -2,6 +2,24 @@
 
 **Status** · session_019UE5f9dE91LZQFBmRUVev4 · depth 2 · WORKING · handled B2
 
+### Work (kept current by the job)
+
+**Reading set** (mechanics §17): read whole — `roles/JOB.md`, `build/manifest.md`, `build/requirements/pdf-pixels.md`, the public parts of `image-codecs` (with R10's text), `pdf-reader` and `test-support`, layer 1's contract in `build/layers.md`, my plan entry and "Rules at the opening", `draft-T43-n853b.md`, K2611, K2691, K1888, and the module's code (`pagepixels.mjs`, `imagecrop.mjs`, `pagepixels-worker.mjs`) and `pagepixels.test.mjs`: about 99 KB, under 300 KB, as BOB measured.
+
+**Files outside the listed paths (plan rule 2, K1043):** `pdf-worker/src/picturepixels.mjs` (paths); `pdf-worker/test/fixtures/picture-variants.json` and `pdf-worker/test/fixtures/make-picture-fixtures.py` (tests). The tests themselves are in the listed `pagepixels.test.mjs`.
+
+**`PICTURE_FRAME_MAX` measured** (node 22, this container, `--expose-gc`, one process per run; peak RSS over the process's own baseline):
+
+| run | file | time | peak over baseline |
+| --- | --- | --- | --- |
+| `decodeBaselineJpeg` alone, 4032×3024 RGB 4:2:0, turned 90 | smooth fixture, 467 KB | 498 ms | 83.1 MB |
+| the same | noisy camera-like, q92, 7.6 MB | 896 ms | 78.0 MB |
+| `renderPictureToPixels` whole (grey, 1,568 px), before the one-pass fix | smooth / noisy | 1,059 / 1,219 ms | 96.4 / 90.9 MB |
+| the same, after grey, mirror and reduction became one pass | smooth / noisy | 774 / 1,126 ms | 91.8 / 92.2 MB |
+
+The decoder's live working set, counted from its buffers: the component planes, the upsampled chroma and the output, 6.5 bytes per pixel at 4:2:0 (79.2 MB for 12.19 MP), 7 at 4:2:2, 6 at 4:4:4, 2 for grey: **6.5–7 MB per colour megapixel live**, 6.8–7.6 MB per megapixel by peak RSS (which also counts garbage not yet collected). Everything after the decode adds only the reduced output (1.35 MB at 1,008×1,344).
+**Bound chosen: 4096 × 3072 × 3 = 37,748,736 samples (12.6 MP colour).** It admits the 12-megapixel cameras (4032×3024, 4000×3000, 4080×3072) and holds the decoder's live set at or under 88 MB (4:2:2's worst ratio), leaving about 40 MB of the plane object's 128 MB for the input bytes and the object's own state. A higher bound would put a 4:2:2 13+ MP decode within reach of the isolate's limit with nothing measured for the object's own share; 24 and 48 MP pictures are refused `IMAGE_TOO_LARGE` until a decode that reduces as it goes (T44, N868, K2701).
+
 ## J1 · QUESTION
 
 Three readings of R42/R43 I am building on; I carry on with them unless you answer otherwise.
