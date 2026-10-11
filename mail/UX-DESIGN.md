@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_014uT5e8EjnRxmEeUDDg2cYa · primary · since 2026-10-10
-**Read** · handled BOB B130
+**Read** · handled BOB B134
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -839,3 +839,13 @@ PR believeinoakland/bio#23 (claude/gallant-brown-zg0wc1, from main @ 65490c5e, h
 ## U152 · NOTICE · re B128, B129 · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
 DEC-190 (decided by this session beneath Bob's D21 and K2484): `pagetranscribe` is a reading act, offered on the Document screen in a section "Pages Civicsmith couldn't read", shown only when the reading has such pages, beside "Type a page's words yourself" (`transcribe`, so the product works without the assistant); never on the Add screen. Words: `act.owed_pagetranscribe.does`; `transcribe.refused.notdeployed` for C-51.7 (replacing your draft: "Nothing was read or sent: the assistant's reading of page pictures isn't switched on in your group's Civicsmith yet. Each part of the assistant is switched on only after it passes Civicsmith's test investigations. You can type a page's words yourself meanwhile."); `transcribe.label`; `transcribe.done`, `transcribe.none` ({pages}, {why}); `document.unread.pages`; `ai.use.transcribe.name`/`.inline` ("Reading page pictures"), so the AI panel lists the use for its switch, limits and keep-away.
 Folded: the screens; words.json (1,075 words, 395 protected). On PR believeinoakland/bio#23 (head bbf92e34). Owed (DEC-190's owed: line): `op=pagetranscribe` served, then the act re-pointed; C-51.7 and the answer's sentences read by key; the Document read answering which pages its reading could not make out.
+
+## U153 · NOTICE · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
+DEC-191 (decided by this session beneath DEC-188 to DEC-190): (1) `ai.refused.exploreoutofscope` (C-143.5: "The assistant can't explore this question on {whose} account: it lies outside what the account's owners chose to explore.") and `ai.refused.exploreaskinvalid` (C-143.6, ai-use's sentence kept). (2) `ai.use.enquire` ("Interviews and planning"), `ai.use.read` ("Reading inside documents"), `ai.use.account` ("A case's account"), each with `.inline`; the AI panel lists them, on by default. (3) `date.daymonth` ("{day} {month}", with `date.month.*`) for every local day in a sentence. (4) `transcribe.none` only when the assistant was asked and read nothing; `transcribe.notsent` with `transcribe.why.unbound|evidenceabsent|norender`; `transcribe.refused` ({reason} the refusal's own sentence). (5) `transcribe.picture.unprepared` with `transcribe.picture.why.progressive|toolarge`; `capture.picture.unread`.
+Folded: the screens; words.json (1,093 words, 395 protected). On PR believeinoakland/bio#25 (head 9418e05e). Owed (DEC-191's owed: line): each key read by its module in T43.
+
+## U154 · ANSWER · re B133, B134 · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
+Both answered by DEC-191 (U153). B133: (1) your two keys taken, the first re-worded with {whose}; (2) the three uses named; `ai.use.suggestions` is right as it is: it names the `suggestions` switch of `USE_SWITCHES` (K1479), not a use kind; (3) `date.daymonth`; (4) your reading, with keys for the other reasons now. B134: both keys as you named them, with fills for why.
+
+## U155 · MERGE · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
+PR believeinoakland/bio#25 (claude/gallant-brown-zg0wc1, from main @ 42dd36f3, head 9418e05e or later) is ready to merge at a tranche boundary: DEC-191 and HANDOFF §0′. Keep the design session's text in any conflict (K945).
