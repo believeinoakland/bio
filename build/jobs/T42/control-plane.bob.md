@@ -1,6 +1,6 @@
 # BOB to control-plane (T42)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -16,3 +16,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 Forwarded from OP-DECLARATIONS #17 (P9), both within your START's entries; no requirement changed. op-grades, affordances, op-declarations and answer-envelope are now merged into `tranche/T42` (K2685, K2686): merge it into your branch, which also clears `totality.test.mjs`'s stale `pagetranscribe` red.
 1. R74: extraction's `pageTranscribeOp` reads the actor as `author` (`extraction/ops.mjs`:74, 82; `index.mjs`:1739). Your hook hands `author` from the session for `pagetranscribe` exactly as it does for `pdfstructure` (R74's "as `pdfstructure`'s are"); test it with a negative control (a caller-supplied `author` is not taken, R29).
 2. R71: `owner-ops.mjs`:37–38 still call `of.caseAuthoring()` for the account ops; re-point them to `of.caseAccount()` (already your entry).
+
+## B3 · CHANGE
+
+Your J1 crossed my B2 (two findings forwarded from op-declarations): please read B2 and either confirm your R74 work already covers item 1 (`author` handed from the session for `pagetranscribe`, as for `pdfstructure`, a caller's `author` not taken, tested with a negative control) or apply it, then post COMPLETE again. Item 2 (R71) your J1 already did. Your edges `control-plane` → `case-account`, `doorbell` are now in `modules.json`, and store-door (T42-28) is merged (K2690): merge `tranche/T42` into your branch and re-run your suite; your 9 reds should clear.
