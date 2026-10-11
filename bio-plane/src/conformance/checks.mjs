@@ -24,7 +24,13 @@
  * their translations BOB's drafts, awaiting stamp until T36's promotion job (plan T35, accepted red 2). R29's absent or
  * unseen calculation is `calculations`' answer, `NO_SUCH_CALCULATION`, with no row of this module's. T37-36 (N770):
  * each `where` names the function that holds its region (C-113.12, .19, .29, .31, .32, .34, .35 re-pointed), codes,
- * numbers and translations unchanged; awaiting stamp until T38's promotion job. */
+ * numbers and translations unchanged; awaiting stamp until T38's promotion job. T45-23 (N828, N883; Actions D5, D16,
+ * D16a, D23, D24) adds C-113.37 `DETERMINATION_VOID` (R33, minted only by `determinationVoided`), C-113.38
+ * `DETERMINATION_NOT_ADOPTABLE` (R35) and C-113.39–C-113.44, the cure link's (R36), and re-words C-113.7
+ * `FINDING_NOT_PUBLISHED` for R2's three kinds of finding (its code and number unchanged); translations BOB's drafts,
+ * the UX stream's to revise, awaiting stamp until T46's promotion job (plan T45, accepted red 2). R32's refusals of an
+ * accepted finding (`IMPORTED_NOT_ACCEPTED` C-21.4, `ACCEPTED_WORK_UNREADABLE` C-21.5) are accepted-work's rows, minted
+ * through its `acceptedLegRefusals`, never copied here. */
 
 const at = (fn, region) => `src/conformance/index.mjs ${fn} > ${region}`;
 
@@ -71,8 +77,9 @@ export const CONFORMANCE_CHECKS = Object.freeze({
   },
   FINDING_NOT_PUBLISHED: {
     check: 'C-113.7', where: at("#pinFindings", "is-finding-published"),
-    translation: 'A determination rests only on findings this project has published in a ratified case edition. The '
-      + 'finding named is not one. Publish it first. Nothing was written.',
+    translation: 'A determination rests on findings of three kinds: published by this project in a ratified case '
+      + 'edition; checked for publication and held unsigned by this project; or another group\'s finding this group has '
+      + 'accepted at the edition named. The finding named is none of these. Nothing was written.',
   },
   NO_STANDARDS: {
     check: 'C-113.8', where: at("#readStandards", "is-standard-named"),
@@ -116,12 +123,12 @@ export const CONFORMANCE_CHECKS = Object.freeze({
       + 'another act. Nothing was written.',
   },
   CONFORMANCE_BAD_REASON: {
-    check: 'C-113.17', where: at("#supersession", "is-reason-stated"),
+    check: 'C-113.17', where: at("#reasonRefusal", "is-reason-stated"),
     translation: 'The reason for superseding a determination is not text of at most 500 characters. Say why, more '
       + 'briefly. Nothing was written.',
   },
   CONFORMANCE_NO_REASON: {
-    check: 'C-113.22', where: at("#supersession", "is-reason-given"),
+    check: 'C-113.22', where: at("#reasonRefusal", "is-reason-given"),
     translation: 'Superseding a determination says why it is superseded. Give the reason. Nothing was written.',
   },
   PROPOSAL_CANNOT_DETERMINE: {
@@ -187,6 +194,48 @@ export const CONFORMANCE_CHECKS = Object.freeze({
     check: 'C-113.36', where: at("#measureOf", "is-measure-denominated"),
     translation: 'A measure of what the office does is shown with what it counted and out of how many. This calculation '
       + 'states no denominator or no population. Nothing was written.',
+  },
+  DETERMINATION_VOID: {
+    check: 'C-113.37', where: at("determinationVoided", "is-determination-standing"),
+    translation: 'That determination reads undetermined: a finding it rests on no longer stands (its check was voided, or '
+      + 'the other group withdrew or revised the edition accepted). A member re-evaluates it by superseding it with a '
+      + 'determination resting on findings that stand. Nothing was written.',
+  },
+  DETERMINATION_NOT_ADOPTABLE: {
+    check: 'C-113.38', where: at("#refuseAdoption", "is-own-determination"),
+    translation: 'Another group\'s determination is never adopted as this group\'s. Make your own determination, against '
+      + 'standards in your group\'s record, resting on findings this group published, holds checked, or has accepted. '
+      + 'Nothing was written.',
+  },
+  MACHINE_CANNOT_LINK_CURE: {
+    check: 'C-113.39', where: at("#refuseCureMachine", "is-cure-member"),
+    translation: 'Naming a later act as the cure of a breach is a member\'s judgment. An assistant may not record it. '
+      + 'Sign in as a member. Nothing was written.',
+  },
+  CURE_TARGET_NOT_NONCOMPLIANT: {
+    check: 'C-113.40', where: at("#cureRefusal", "is-cure-target-noncompliant"),
+    translation: 'Only a noncompliant outcome is cured. The determination named is not noncompliant against that '
+      + 'standard. Nothing was written.',
+  },
+  CURE_NOT_COMPLIANT: {
+    check: 'C-113.41', where: at("#cureRefusal", "is-cure-compliant"),
+    translation: 'The curing act is one a member determined compliant against the same standard. The determination named '
+      + 'as the cure does not say so. Nothing was written.',
+  },
+  CURE_OTHER_OFFICE: {
+    check: 'C-113.42', where: at("#cureRefusal", "is-cure-same-office"),
+    translation: 'A breach is cured by a later act of the same office. The act named as the cure is another office\'s. '
+      + 'Nothing was written.',
+  },
+  CURE_NOT_LATER: {
+    check: 'C-113.43', where: at("#cureRefusal", "is-cure-later"),
+    translation: 'A cure comes after the act it cures. The act named as the cure is not shown to be later, or the date of '
+      + 'one of the two acts is not known. Nothing was written.',
+  },
+  CURE_LINKED: {
+    check: 'C-113.44', where: at("#cureRefusal", "is-cure-unlinked"),
+    translation: 'A cure is already recorded for that breach against that standard. End that link first, saying why. '
+      + 'Nothing was written.',
   },
   DETERMINATION_ONLY_BY_ITS_ACT: {
     check: 'C-113.21', where: at("check", "is-determination-act"),

@@ -19,3 +19,11 @@ Also (K2832): R46's `embargo_until` and `release_at` are carried in the stamp's 
 ## B2 · ANSWER · re J1
 
 All thirteen readings confirmed (K2848). (1) The edge filings → case-checker is in modules.json and your Uses (checkAccount, its R24): call it yourself as you describe. (6) actions R79 now says actionRead answers press_terms ({on_record, embargo_until?, release_at?}) with its history. (7) HOLD_NOT_IN_PLACE is C-149 (action-holds' family), minted only by action-holds' exported holdNotInPlace(place) (its R11 now says so; ACTION-HOLDS is told); until it merges, a fixture stands in. (3), (12): REPORT the textcheck door and the new ops' pins at COMPLETE. Merge tranche/T45 for these wording changes.
+
+## B3 · CHANGE
+
+K2851: from filing-templates' merge (T45-30, soon), its R15 offers a profile template only with a named writer, sources, a professional no_concerns review and another approver; the test profile's templates carry none of these together, so 32 of your tests drafting from them would read TEMPLATE_NOT_REVIEWED. Give your fixture attributed templates (see filing-templates' fixture.mjs reviewedOf()/attributed()) and keep a test of the not-offered answer. Accepted red by name until your merge (plan rule 4 (15)).
+
+## B4 · CHANGE
+
+conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, curesOf ({standards: [{standard, link, ended}]}) and R31–R37 are real. Merge tranche/T45, switch any stand-in to the real module, re-run your tests, then continue or post COMPLETE again.

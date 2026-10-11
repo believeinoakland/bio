@@ -30,3 +30,7 @@ J1–J3 answered (K2849). J1: (1) your order per leg confirmed. (2) your wheres 
 ## B5 · CHANGE
 
 K2850: R87 re-worded: actionRead and actionsFor answer the latest scope statement as confidential: true|false (false with none). escalation R30 reads it. Merge tranche/T45.
+
+## B6 · CHANGE
+
+conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, curesOf ({standards: [{standard, link, ended}]}) and R31–R37 are real. Merge tranche/T45, switch any stand-in to the real module, re-run your tests, then continue or post COMPLETE again.
