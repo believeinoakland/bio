@@ -503,11 +503,13 @@ export class ReadingGuides {
     }
   }
 
-  /** R13: the procedure guides for an action `kind`: the profile's (`jurisdictions` R80, from `combine`'s view) first,
-   *  then the group's approved procedure guides in the order approved (the group's when the viewer sees the group, R8),
-   *  each with its origin; no rank, score or preferred route. Each passes R4's procedure check again; one that no
-   *  longer does is passed over and named in `withheld`. Every answer carries `label` (`PROCEDURE_GUIDE_LABEL`).
-   *  Answers `{ok: true, kind, guides, withheld, label}`. Never throws. */
+  /** R13 (K2820): the procedure guides for an action `kind`: the profile's (`jurisdictions` R80, from `combine`'s view)
+   *  first, then the group's approved procedure guides in the order approved (the group's when the viewer sees the
+   *  group, R8), each `{guide, origin, items}` (`guide` the guide's id, null for the profile's, which has none; its
+   *  items as R80 holds them, `after` included); no rank, score or preferred route. Each passes R4's procedure check
+   *  again; one that no longer does is passed over and named in `withheld`. Every answer carries `label`
+   *  (`PROCEDURE_GUIDE_LABEL`). Answers `{ok: true, kind, guides, withheld, label}`; served by `op=procedureguides`.
+   *  Never throws. */
   procedureGuidesFor(args) {
     const label = { ...PROCEDURE_GUIDE_LABEL };
     try {
@@ -518,14 +520,15 @@ export class ReadingGuides {
       const guides = [], withheld = [];
       const pass = (g, items) => {
         const c = checkGuide(items, "procedure");
-        if (c.ok) guides.push(g);
-        else withheld.push({ guide: g.id ?? null, origin: g.origin, profile: g.profile ?? null, reason: c.reason, item: c.item ?? null });
+        const { profile, ...answer } = g;
+        if (c.ok) guides.push(answer);
+        else withheld.push({ guide: g.guide, origin: g.origin, profile: profile ?? null, reason: c.reason, item: c.item ?? null });
       };
       for (const pg of (Array.isArray(view.procedure_guides) ? view.procedure_guides : [])) {
         if (!isObj(pg) || pg.kind !== kind || !Array.isArray(pg.items)) continue;
         const items = pg.items.map((it) => (isObj(it) ? { ...it, ...(Array.isArray(it.after) ? { after: [...it.after] } : {}) } : it));
         /* R80's `after` (R87 (d)) is the profile's own field, carried as given; the check reads the route's texts */
-        pass({ origin: "profile", profile: pg.profile ?? null, kind, items, status: pg.status ?? null, basis: pg.basis ?? null },
+        pass({ guide: null, origin: "profile", items, profile: pg.profile ?? null },
              items.map((it) => (isObj(it) ? Object.fromEntries(Object.entries(it).filter(([k]) => k !== "after")) : it)));
       }
       if (this.#seesGroup(viewer)) {
@@ -533,7 +536,7 @@ export class ReadingGuides {
                                    JOIN (SELECT guide_id, MIN(seq) AS seq FROM reading_guide_history WHERE act='approve' GROUP BY guide_id) a
                                      ON a.guide_id = g.guide_id
                                  WHERE g.kind=? AND g.purpose='procedure' AND g.state='group' ORDER BY a.seq`, kind);
-        for (const r of rows) { const g = viewOf(r); pass(g, g.items); }
+        for (const r of rows) { const g = viewOf(r); pass({ guide: g.id, origin: g.origin, items: g.items }, g.items); }
       }
       return { ok: true, kind, guides, withheld, label };
     } catch {
@@ -658,6 +661,7 @@ export function readingGuidesOps(s, url, body) {
     guides: () => s.guidesOf({ kind: qp("kind") ?? b.kind, state: qp("state") ?? b.state, viewer: qp("viewer") }),
     guide: () => s.guideRead({ guide: qp("guide") ?? b.guide, viewer: qp("viewer") }),
     guideproposals: () => s.guideProposals({ kind: qp("kind") ?? b.kind, viewer: qp("viewer") }),
+    procedureguides: () => s.procedureGuidesFor({ kind: qp("kind") ?? b.kind, viewer: qp("viewer") }),   // R13 (K2820)
   };
 }
 

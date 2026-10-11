@@ -146,5 +146,5 @@ test("R2–R8 the ops this module hands the control plane: by in the body, viewe
   assert.equal(readingGuidesOps(w.g, url(`guide=${d.guide}&viewer=${ANN}`), {}).guide().guide.id, d.guide);
   assert.deepEqual(Object.keys(readingGuidesOps(w.g, url(""), {})).sort(),
     ["guide", "guideadopt", "guidedraft", "guidefor", "guideoffer", "guideproposals", "guidepropose", "guideproposetocivicsmith",
-     "guideretire", "guidereview", "guides"]);
+     "guideretire", "guidereview", "guides", "procedureguides"]);
 });

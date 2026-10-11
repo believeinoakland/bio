@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
 import { checkGuide, registerConductCheck, CONDUCT_LISTS, GUIDE_PURPOSES, PROCEDURE_ITEM_FIELDS, PROCEDURE_CONDUCT_LISTS,
          ROUTE_MAX, EXPECT_MAX, CITATION_MAX, ITEMS_MAX, PROCEDURE_GUIDE_LABEL, GUIDE_OFFER_FORMAT,
-         READING_GUIDES_SCHEMA } from "../../../src/reading-guides/index.mjs";
+         READING_GUIDES_SCHEMA, readingGuidesOps } from "../../../src/reading-guides/index.mjs";
 import { migrateReadingGuides } from "../../../src/reading-guides/schema.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { canonicalJson } from "../../../src/record-grammar/json.mjs";
@@ -173,7 +173,7 @@ test("R13 R6 a procedure guide is offered with its purpose in its bytes, and ado
   assert.deepEqual(b.g.guideRead({ guide: r.guide }).guide.items, STEPS);
   assert.deepEqual(b.g.procedureGuidesFor({ kind: KIND, viewer: ANN }).guides.map((g) => g.origin), ["profile"], "not usable before review");
   b.g.guideReview({ guide: r.guide, verdict: "approve", by: BOB });
-  assert.deepEqual(b.g.procedureGuidesFor({ kind: KIND, viewer: ANN }).guides.map((g) => [g.origin, g.id ?? null]),
+  assert.deepEqual(b.g.procedureGuidesFor({ kind: KIND, viewer: ANN }).guides.map((g) => [g.origin, g.guide]),
     [["profile", null], ["adopted", r.guide]]);
   /* refused where the adopting group's profiles hold no such kind, or the purpose is not procedure */
   row(world({ profiles: null }).g.guideAdopt({ bytes: offer.bytes, by: ANN }), "GUIDE_KIND_UNKNOWN");
@@ -200,27 +200,29 @@ test("R13 procedureGuidesFor: the profile's guide first, then the group's approv
   assert.equal(r.ok, true);
   assert.deepEqual(r.label, { ...PROCEDURE_GUIDE_LABEL });
   assert.deepEqual(r.withheld, []);
-  assert.deepEqual(r.guides.map((g) => [g.origin, g.id ?? null]), [["profile", null], ["group", second], ["group", first]]);
-  assert.ok(!r.guides.some((g) => g.id === mine), "a guide its author's alone is not the group's");
-  /* the profile's, as R80 holds it: its items in the profile's order, `after` carried, its source named */
-  assert.deepEqual(r.guides[0], { origin: "profile", profile: "test-port-ellery", kind: KIND, items: profileGuide.items,
-    status: profileGuide.status, basis: profileGuide.basis });
+  assert.deepEqual(r.guides.map((g) => [g.origin, g.guide]), [["profile", null], ["group", second], ["group", first]]);
+  assert.ok(!r.guides.some((g) => g.guide === mine), "a guide its author's alone is not the group's");
+  /* K2820's shape: each {guide, origin, items}; the profile's, as R80 holds it, its items in the profile's order, `after` carried */
+  assert.deepEqual(Object.keys(r).sort(), ["guides", "kind", "label", "ok", "withheld"]);
+  for (const g of r.guides) assert.deepEqual(Object.keys(g).sort(), ["guide", "items", "origin"]);
+  assert.deepEqual(r.guides[0], { guide: null, origin: "profile", items: profileGuide.items });
+  assert.deepEqual(r.guides[1].items, [step("Write to the Selectboard chair")]);
   assert.deepEqual(r.guides[0].items[1].after, ["denied", "none_stated"]);
   /* unranked: nothing in the answer ranks, scores or prefers */
   const keys = new Set(r.guides.flatMap((g) => [...Object.keys(g), ...g.items.flatMap((it) => Object.keys(it))]));
   for (const k of ["rank", "score", "preferred", "recommended", "order"]) assert.ok(!keys.has(k), k);
   /* a retired guide drops out; a viewer outside the group sees the profile's alone, still labelled */
   w.g.guideRetire({ guide: second, reason: "replaced", by: ANN });
-  assert.deepEqual(w.g.procedureGuidesFor({ kind: KIND, viewer: ANN }).guides.map((g) => g.id ?? null), [null, first]);
+  assert.deepEqual(w.g.procedureGuidesFor({ kind: KIND, viewer: ANN }).guides.map((g) => g.guide), [null, first]);
   for (const v of [REV, "stranger"]) {
     const o = w.g.procedureGuidesFor({ kind: KIND, viewer: v });
     assert.deepEqual([o.guides.map((g) => g.origin), o.label.key], [["profile"], "guide.procedure.legalinfo"], v);
   }
-  assert.deepEqual(w.g.procedureGuidesFor({ kind: KIND, viewer: MACHINE }).guides.map((g) => g.id ?? null), [null, first]);
+  assert.deepEqual(w.g.procedureGuidesFor({ kind: KIND, viewer: MACHINE }).guides.map((g) => g.guide), [null, first]);
   /* a kind with no profile guide answers the group's alone; a kind outside the view, none; each labelled */
   const rq = w.g.guideDraft({ kind: "records_request", purpose: "procedure", items: STEPS, by: ANN }).guide;
   w.g.guideReview({ guide: rq, verdict: "approve", by: BOB });
-  assert.deepEqual(w.g.procedureGuidesFor({ kind: "records_request", viewer: ANN }).guides.map((g) => [g.origin, g.id]), [["group", rq]]);
+  assert.deepEqual(w.g.procedureGuidesFor({ kind: "records_request", viewer: ANN }).guides.map((g) => [g.origin, g.guide]), [["group", rq]]);
   for (const kind of ["staff_report", "nope", undefined, 7])
     assert.deepEqual(w.g.procedureGuidesFor({ kind, viewer: ANN }), { ok: true, kind: typeof kind === "string" ? kind : null, guides: [], withheld: [],
       label: { ...PROCEDURE_GUIDE_LABEL } });
@@ -241,6 +243,11 @@ test("R13 procedureGuidesFor never throws, and passes over a guide the check no 
   assert.equal(w.g.procedureGuidesFor({ kind: KIND, viewer: ANN }).guides.length, 2, "control");
   for (const a of [undefined, null, 3, "x", [], { kind: {} }, { kind: KIND, viewer: {} }, { get kind() { throw new Error("x"); } }])
     assert.doesNotThrow(() => { const o = w.g.procedureGuidesFor(a); assert.equal(o.ok, true); assert.equal(o.label.key, "guide.procedure.legalinfo"); });
+  /* served to members by op=procedureguides ({kind}), the viewer from the URL (K2820) */
+  const url = new URL(`https://x/?kind=${KIND}&viewer=${ANN}`);
+  assert.deepEqual(readingGuidesOps(w.g, url, { viewer: "stranger" }).procedureguides(), w.g.procedureGuidesFor({ kind: KIND, viewer: ANN }));
+  assert.deepEqual(readingGuidesOps(w.g, new URL("https://x/?viewer=stranger"), { kind: KIND }).procedureguides().guides.map((g) => g.origin),
+    ["profile"], "kind from the body; a body cannot set the viewer");
   /* no profile set: no kind, no guide */
   const v = world({ profiles: null });
   assert.deepEqual(v.g.procedureGuidesFor({ kind: KIND, viewer: ANN }).guides, []);
