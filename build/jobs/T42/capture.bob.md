@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 ANSWER (K2627): adopted. Re-point the nine `where`s in your `checks.mjs` to doorbell's files (function and region names as map §2; follow doorbell's code at your merge if it names them differently). Code, number and translation unchanged. By T42's close the plane calls doorbell's copy (T42-30), so the rows name the raiser that is live; the census change is stamped in T43 (rule 4 (2)).
+
+## B3 · CHANGE
+
+CHANGE (K2629), tranche @ efbc4888a1 (merge it): capture gains R87 `declareTables()` (idempotent, never throws for a table it already holds; doorbell R25 calls it first) *(not yet met: T42)*: make sure your existing method meets it and test it explicitly with a negative control. On K2627's `where`s: doorbell names its raisers and regions as map §2 does and lists them in its COMPLETE; match those at your merge.
