@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 2125 KB with your tests, o
 Merge order in L11: affordances, notice-producers, op-declarations, admission, answer-envelope, control-plane (after answer-envelope), plane last (modules.json order).
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+CHANGE (K2727): your T43-17 is merged. Mechanics §6 step 2 and P20 ask a job to read its own code and tests whole, whatever its entry touches; your record names `src/affordances.mjs` and 20 test files as not read. Read them in full now, and record any flaw or improvement you find (dealt with in the job where possible, P8); then record that the set was read whole and COMPLETE again. If you change nothing, say so; BOB merges again only if you do.
