@@ -68,3 +68,22 @@ Size (session_01WS4XsL2gbzA2YsxsAb1DTg): test runs 15, module lines 3648
 ## J3 · REPORT
 
 Correction to J2's test line: plane is 194 pass / 2 fail (rule 4 (11), (9)) on its own; `test/system/migrate-released.test.mjs` was run separately after the batch run hit its time limit: 1 pass, 0 fail. Nothing else changes.
+
+## J4 · COMPLETE
+
+B3 applied: tranche/T45 (case-grammar, publication; K2833) merged into job/T45/public-read, no conflict, pushed. Their requirement changes touch nothing public-read reads.
+
+Re-run after the merge:
+- public-read: 165 pass, 0 fail.
+- Checks: format 0 failures (153 modules); architecture public-read 0 (48 files, 168 imports); coverage 34 of 34 ids, 0; ownership 4 files, 0.
+- Users:
+  - network-notices: 73/0.
+  - ratification: 233/0.
+  - filings: 69/1, rule 4 (7).
+  - op-declarations: 132/1, rule 4 (12).
+  - control-plane: 220/3, the same three as J2, red on the base too.
+  - plane: 194/2, rule 4 (11) and (9).
+  - case-checker: 76/1, R13 "the committed program.mjs is that build": rule 4 (5), program.mjs staled by the merge.
+  - answer-envelope: 27/4, its CHECK_FAMILIES / CHECK_FAMILY_FILES arms (R2, R7, R10–R12). Both case-checker's and answer-envelope's reds are identical on origin/tranche/T45 without my branch, so they are not mine (likely the new C-122.8 row and the stale program.mjs; for BOB's rule 4).
+
+Nothing else changes from J2.
