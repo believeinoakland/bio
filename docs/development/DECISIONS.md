@@ -2966,3 +2966,21 @@ response: **Decided by the design session, 2026-10-11.**
 decided: 2026-10-11 · the design session (P17)
 reasoning recorded in: this entry; `docs/architecture/BIO_Interaction_Constructs_v0_1.md` (who pays, RULED 2026-10-11); `screens/build_words.mjs`, `screens/words.json` (1,064 words, 392 protected); `screens/mock-screens.js`; `screens/mock-acts.js`; `screens/mock-kit.js`; `screens/registry.src.py`; `screens/library.src.py`; `screens/mock-journeys.js`; `screens/check_walk.mjs`; `layouts.html`.
 owed: (BOB) ai-use reads its fills by key (`ai.period.*`, `ai.when.*`, `date.month.*`, `ai.limitfield.*`, `ai.refused.limit.unjudged`); notice-producers reads R16's and R17's words by key (`ai.queue.limitreached*`, `ai.account.*`, `ai.use.*.inline`, `ai.scope.*`, `ai.label.explored.member`, `queue.*`); the B123 wording in ai-use's `AI_USE_WORDS`.
+
+### DEC-190 · answered
+raised: 2026-10-11 · the UX design session with Bob on his primary account (session_014uT5e8EjnRxmEeUDDg2cYa; the development process also runs on his primary account since K2511) (BOB's B128 and B129, for T42's N832, K2611, K2613)
+for: bob-session
+question: Where a member is offered the assistant's reading of page pictures (`pagetranscribe`), and its words: its help, its refusal C-51.7 `TRANSCRIBE_NOT_DEPLOYED`, its label and its answers.
+why it is Bob's: it is not: screen and word detail beneath Bob's D21 (the transcription tier) and K2484; decided by the design session (P17) and reported.
+provisional: BOB's draft refusal in `build/plan/draft-T42-transcribe.md` §3.
+alternative: offering it beside a capture on the Add screen.
+recommendation: as decided below.
+reversal cost: low; words read by key, the act owed until T42 serves it.
+response: **Decided by the design session, 2026-10-11.**
+(1) Placement: a reading act, never a capture act. The Document screen gains a section, "Pages Civicsmith couldn't read", shown only when the reading has such pages: it names them, says their words can't be found or cited yet and that the page images are kept, and offers "Have the assistant read pages …" (with the assistant) and "Type a page's words yourself" (`transcribe`, always, so the product works without the assistant). Capture comes before any reading, so the Add screen has nothing to offer it on.
+(2) Words: `act.owed_pagetranscribe.does` (up to 8 pages; the account that pays for the member's acts there pays, within its limits; labelled as the assistant's reading; undetermined until a member checks a passage against the page); `act.transcribe.does`; `transcribe.refused.notdeployed` (replacing BOB's draft: nothing read or sent; not switched on yet; each part is switched on only after it passes Civicsmith's test investigations; type a page's words yourself meanwhile; names no account); `transcribe.label`; `transcribe.done` and `transcribe.none` for the answer; `document.unread.pages`.
+(3) The AI panel lists the use: `ai.use.transcribe.name` "Reading page pictures" (and `.inline`), so owners can switch it and set a limit on it like any other use; the keep-away choices cover it.
+decided: 2026-10-11 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (Document; the AI panel's uses); `screens/mock-acts.js`; `screens/mock-kit.js`; `screens/registry.src.py`; `screens/check_walk.mjs`; `screens/build_words.mjs`, `screens/words.json` (1,075 words, 395 protected); `layouts.html`.
+owed: (BOB, T42) `op=pagetranscribe` served (the act then re-pointed from `owed:pagetranscribe K2611`); C-51.7's translation read by key `transcribe.refused.notdeployed`; the answer's sentences read by key; the Document read answering which pages its reading could not make out.
+

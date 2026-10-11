@@ -9,21 +9,22 @@
   "draft": 4,
   "photo": 13,
   "handle": 9,
-  "ai": 61,
+  "ai": 63,
   "date": 12,
   "queue": 20,
-  "document": 4,
+  "transcribe": 4,
+  "document": 5,
   "question": 1,
   "rail": 14,
   "tab": 2,
   "level": 2,
   "guide": 6,
   "screen": 95,
-  "act": 479,
+  "act": 483,
   "column": 33,
   "wizard": 239,
-  "total": 1064,
-  "protected": 392
+  "total": 1075,
+  "protected": 395
  },
  "words": [
   {
@@ -648,6 +649,12 @@
    "source": "mock-screens.js AI_USES"
   },
   {
+   "key": "ai.use.transcribe.name",
+   "en": "Reading page pictures",
+   "protected": false,
+   "source": "mock-screens.js AI_USES"
+  },
+  {
    "key": "ai.use.explore.name",
    "en": "Exploring",
    "protected": false,
@@ -1035,6 +1042,13 @@
    "note": "{use} inside a sentence; {Use} at a sentence's start is ai.use.*.name"
   },
   {
+   "key": "ai.use.transcribe.inline",
+   "en": "reading page pictures",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{use} inside a sentence; {Use} at a sentence's start is ai.use.*.name"
+  },
+  {
    "key": "ai.use.explore.inline",
    "en": "exploring",
    "protected": false,
@@ -1257,6 +1271,41 @@
    "protected": false,
    "source": "DEC-189",
    "note": "FINDING, to each reviewer who is a member"
+  },
+  {
+   "key": "transcribe.refused.notdeployed",
+   "en": "Nothing was read or sent: the assistant's reading of page pictures isn't switched on in your group's Civicsmith yet. Each part of the assistant is switched on only after it passes Civicsmith's test investigations. You can type a page's words yourself meanwhile.",
+   "protected": false,
+   "source": "DEC-190",
+   "note": "TRANSCRIBE_NOT_DEPLOYED (C-51.7); names no account"
+  },
+  {
+   "key": "transcribe.label",
+   "en": "The assistant's reading of the page image · undetermined until a member checks a passage against the page",
+   "protected": true,
+   "source": "DEC-190",
+   "note": "the label on words from pagetranscribe (reading-pipeline R29's \"the AI's reading\")"
+  },
+  {
+   "key": "transcribe.none",
+   "en": "The assistant read pages {pages} but found no words it could give: {why}",
+   "protected": false,
+   "source": "DEC-190",
+   "note": "performed false; {why} the reason as answered"
+  },
+  {
+   "key": "transcribe.done",
+   "en": "The assistant read pages {pages}. Their words can now be found; each passage stays undetermined until a member checks it against the page.",
+   "protected": false,
+   "source": "DEC-190",
+   "note": "performed and written"
+  },
+  {
+   "key": "document.unread.pages",
+   "en": "Pages {pages} are pictures of text that Civicsmith's own reading couldn't make out, so their words can't be found or cited yet. The page images are kept as they are.",
+   "protected": false,
+   "source": "DEC-190",
+   "note": "the Document screen's section, shown only when such pages exist"
   },
   {
    "key": "document.cleaned.label",
@@ -2725,6 +2774,18 @@
   {
    "key": "act.findin.label.document",
    "en": "Find in this",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_pagetranscribe.label.document",
+   "en": "Have the assistant read pages",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.transcribe.label.document",
+   "en": "Type a page's words yourself",
    "protected": true,
    "source": "registry.json"
   },
@@ -4261,6 +4322,18 @@
   {
    "key": "act.owed_projectaikeepaway.does",
    "en": "Keeps this project's material away from AI, for every use or the ones you choose, with a reason every member sees. It binds every account, whoever pays.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_pagetranscribe.does",
+   "en": "Has the assistant read up to 8 pages of this document that Civicsmith's own reading couldn't make out. The account that pays for your acts here pays, within its limits. Its words arrive labelled as the assistant's reading and stay undetermined until a member checks a passage against the page; the page images stay as they are.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.transcribe.does",
+   "en": "Types the words of a page yourself, from its image. Your typing is labelled as yours, and a second member can check it against the page.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

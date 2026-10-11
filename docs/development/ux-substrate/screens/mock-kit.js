@@ -10,7 +10,7 @@ const pips = w => `<span class="cs-pips">${[1,2,3,4,5].map(i => `<i${i <= w ? ' 
 const WEIGHT = {
   cite:1, sever:1, reinstate:1, select:1, search:1, queuesnooze:1, queuemute:1, taskforward:1, addparticipant:1, relate:1, followregister:1,
   importwatch:1, standingquestionset:1, standingquestionend:1, keepversion:1, explore:1, explorepreset:1,
-  calculationdraw:1, clockpropose:1, obscuremark:2, handlecheck:1, handlechange:2, accountusesset:2, ailimitset:2, projectkeyset:2, projectsigninset:2, projectaccountswitch:2, projectaccountremove:3, projectkeynoticeseen:1, owed_projectaikeepaway:2, exploreapprove:2, obscuremarkwithdraw:2, selectionrelease:1, frontier:1, countask:1, bind:1, createset:1, monitor:1, reminderset:1, ruleanswer:1, suggest:1,
+  calculationdraw:1, clockpropose:1, obscuremark:2, handlecheck:1, handlechange:2, accountusesset:2, owed_pagetranscribe:2, transcribe:2, ailimitset:2, projectkeyset:2, projectsigninset:2, projectaccountswitch:2, projectaccountremove:3, projectkeynoticeseen:1, owed_projectaikeepaway:2, exploreapprove:2, obscuremarkwithdraw:2, selectionrelease:1, frontier:1, countask:1, bind:1, createset:1, monitor:1, reminderset:1, ruleanswer:1, suggest:1,
   airunopen:2, airunclose:1, wizards:1, person:1, heldcaptures:1, gradenote:1, invitelook:1, publishedcase:1, verify:1, disclosureshown:1,
   projectjoin:1, startfrom:1, deadlinecompute:1, optionstartpreview:1, publishpreflight:1, publishtensions:1, exploreverify:1,
   addresseesuggest:1, tabledeclare:1, addworkbook:1, recordline:2, registerproceeding:2, declare:2, courtlink:2,

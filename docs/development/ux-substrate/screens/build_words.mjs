@@ -132,7 +132,7 @@ add('handle.refused.notmember', 'Only a member can change their own handle.', fa
 
 // 4c. AI accounts and limits (DEC-188; N812): who pays, what for, up to what; protected where they say who sees what
 add('ai.whopays', must(scr, 'mock-screens.js', 'For a member\\\'s act in a project that has its own AI account, that project\\\'s account pays. Otherwise the member\\\'s own account, if they connected one; otherwise the group\\\'s key. The account chosen is the one used: if it has reached a limit, or that use is switched off on it, the assistant stops for that act and says whose setting stopped it.').replace(/\\'/g, "'"), true, 'mock-screens.js AI_WHO_PAYS');
-for (const [k, name] of [['ask', 'Asking'], ['draft', 'Drafting'], ['run', 'Runs'], ['standing', 'Standing questions'], ['explore', 'Exploring'], ['suggestions', 'Suggestions']]) add(`ai.use.${k}.name`, name, false, 'mock-screens.js AI_USES');
+for (const [k, name] of [['ask', 'Asking'], ['draft', 'Drafting'], ['run', 'Runs'], ['standing', 'Standing questions'], ['transcribe', 'Reading page pictures'], ['explore', 'Exploring'], ['suggestions', 'Suggestions']]) add(`ai.use.${k}.name`, name, false, 'mock-screens.js AI_USES');
 for (const [k, t] of [['no', 'No'], ['ask', 'Ask every day'], ['yes', 'Yes']]) add(`ai.explore.${k}`, t, false, 'mock-screens.js aiExplore');
 add('ai.whose.group', 'your group\'s', false, 'DEC-188', 'whose, in the refusals');
 add('ai.whose.project', 'this project\'s', false, 'DEC-188', 'whose, in the refusals');
@@ -176,7 +176,7 @@ for (const [k, t] of [
   ['use', 'that isn\'t one of the assistant\'s uses'],
   ['count', 'the count is a whole number, one or more'],
 ]) add(`ai.limitfield.${k}`, t, false, 'DEC-189', '{field} in ai.refused.limitinvalid');
-for (const [k, t] of [['ask', 'asking'], ['draft', 'drafting'], ['run', 'runs'], ['standing', 'standing questions'], ['explore', 'exploring'], ['suggestions', 'suggestions']])
+for (const [k, t] of [['ask', 'asking'], ['draft', 'drafting'], ['run', 'runs'], ['standing', 'standing questions'], ['transcribe', 'reading page pictures'], ['explore', 'exploring'], ['suggestions', 'suggestions']])
   add(`ai.use.${k}.inline`, t, false, 'DEC-189', '{use} inside a sentence; {Use} at a sentence\'s start is ai.use.*.name');
 add('ai.account.group', 'Your group\'s key', false, 'DEC-189', '{account} at a sentence\'s start');
 add('ai.account.project', '{project}\'s account', false, 'DEC-189', '{account} at a sentence\'s start');
@@ -203,6 +203,13 @@ for (const [k, sum, det, note] of [
   ['project-quiet', 'Quiet: {project}', 'Nothing has moved in this project for a while. Where it stands: {progress}. You can write it up and act, keep watching its sources, close it with what remains unknown, or revise what it set out to show. Nobody is asked again until it moves.', 'FINDING, to the project\'s joined members'],
   ['review-comment-left-out', 'Your comments were not included: {case}', 'The case was published without your review comments. You may file a response in its docket, as anyone may.', 'FINDING, to each reviewer who is a member'],
 ]) { add(`queue.${k}.summary`, sum, false, 'DEC-189', note); add(`queue.${k}.detail`, det, false, 'DEC-189', note); }
+
+// 4c'''. The assistant's reading of page pictures (DEC-190; BOB's B128, B129; extraction R71, C-51.7)
+add('transcribe.refused.notdeployed', 'Nothing was read or sent: the assistant\'s reading of page pictures isn\'t switched on in your group\'s Civicsmith yet. Each part of the assistant is switched on only after it passes Civicsmith\'s test investigations. You can type a page\'s words yourself meanwhile.', false, 'DEC-190', 'TRANSCRIBE_NOT_DEPLOYED (C-51.7); names no account');
+add('transcribe.label', 'The assistant\'s reading of the page image · undetermined until a member checks a passage against the page', true, 'DEC-190', 'the label on words from pagetranscribe (reading-pipeline R29\'s "the AI\'s reading")');
+add('transcribe.none', 'The assistant read pages {pages} but found no words it could give: {why}', false, 'DEC-190', 'performed false; {why} the reason as answered');
+add('transcribe.done', 'The assistant read pages {pages}. Their words can now be found; each passage stays undetermined until a member checks it against the page.', false, 'DEC-190', 'performed and written');
+add('document.unread.pages', must(scr, 'mock-screens.js', 'are pictures of text that Civicsmith\\\'s own reading couldn\\\'t make out, so their words can\\\'t be found or cited yet. The page images are kept as they are.').replace(/\\'/g, "'").replace(/^/, 'Pages {pages} '), false, 'DEC-190', 'the Document screen\'s section, shown only when such pages exist');
 
 // 4d. Supplied documents in a published case (BOB's drafts from T39, adopted as written; DEC-188)
 add('document.cleaned.label', 'Details of who made this file, and of its pictures, removed for publication; the group holds the original', true, 'DEC-188', 'COPY_CLEANED_LABEL');

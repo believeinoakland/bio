@@ -1215,6 +1215,19 @@
      "modules": [
       "retrieval"
      ]
+    },
+    {
+     "op": "owed:pagetranscribe K2611",
+     "label": "Have the assistant read pages",
+     "status": "owed"
+    },
+    {
+     "op": "transcribe",
+     "label": "Type a page's words yourself",
+     "status": "declared",
+     "modules": [
+      "content"
+     ]
     }
    ],
    "journeys": [
