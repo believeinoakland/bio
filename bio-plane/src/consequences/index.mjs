@@ -62,8 +62,7 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { inquiryOf } from "../inquiry/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
-import { conformanceOf, noSuchDetermination, determinationSuperseded } from "../conformance/index.mjs";
-import * as conformanceExports from "../conformance/index.mjs";
+import { conformanceOf, noSuchDetermination, determinationSuperseded, determinationVoided } from "../conformance/index.mjs";
 import { moneyOf } from "../money/index.mjs";
 import { calculationsOf } from "../calculations/index.mjs";
 import { entitiesOf } from "../entities/index.mjs";
@@ -557,7 +556,7 @@ export class Consequences {
     if (!d.live) return determinationSuperseded(d.id, d.supersededBy);
     /* R1 (T45; l9a doubt 8): no new part, nor a revision, on a void determination (conformance R33), answered through
        conformance's one site; the parts already recorded stand and are read as before. */
-    if (d.voided) return conformanceExports.determinationVoided(d.id, d.voided);
+    if (d.voided) return determinationVoided(d.id, d.voided);
     if (!str(standard) || d.outcome(standard) !== "noncompliant")
       return refuse("CONSEQUENCE_NOT_NONCOMPLIANT", `${d.id}'s outcome for ${str(standard) ?? "that standard"} is `
         + `${d.outcome(standard) ?? "not stated"}, not noncompliant: a consequence is what a breach did.${NOTHING}`,

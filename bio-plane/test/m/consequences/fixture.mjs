@@ -150,7 +150,7 @@ export function world({ passages = true, group = "test-group", superseded = null
                subjectEntityOf: (id) => inquiry.subjectEntityOf(id) },
     producingGroup: () => group, now: () => clock.now });
 
-  /* conformance R9, as far as R1 reads it; R33's `void: {causes}` (its outcomes then read undetermined, the recorded one
+  /* conformance R9 in its real shape (K248), as far as this module reads it; R33's `void: {causes, says}` (its outcomes then read undetermined, the recorded one
      beside them), and the act's `when` and the findings R22 reads of a curing determination. R37's `curesOf` answers
      `{standards: [{standard, link, ended}]}` (K2850), `link` the standing link a test states in `cures` (keyed
      `determination|standard`), or null. */
@@ -164,8 +164,9 @@ export function world({ passages = true, group = "test-group", superseded = null
       const outcomes = d.void ? d.outcomes.map((o) => ({ standard: o.standard, outcome: "undetermined", recorded_outcome: o.outcome }))
         : d.outcomes;
       return { ok: true, id, project: d.project, outcomes, superseded_by: d.superseded_by ?? null,
-               act: { when: d.when ?? "2026-03-01" }, findings: d.findings ?? [],
-               ...(d.void ? { void: { causes: d.void } } : {}) };
+               act: { when: { value: d.when ?? "2026-03-01", precision: "day", zone: "America/Los_Angeles" } },
+               findings: (d.findings ?? []).map((finding) => ({ finding })), live: !d.superseded_by,
+               ...(d.void ? { void: { causes: d.void, says: "void" } } : {}) };
     },
     curesOf: ({ determination, standard, viewer }) => {
       const d = determinations.get(determination);
