@@ -20,8 +20,8 @@
    that throws on a code with no sentence behind it.
    =========================================================================== */
 /* R27, R47, R71 (T43; N862; DEC-190 (1), (2); K2689): the words of `words.json`
-   (`docs/development/ux-substrate/screens/words.json`) this module answers, each `en` verbatim, read by key. `{pages}`
-   and `{why}` are filled by `fillWords`; a row's `translation` is the word itself, never a copy. */
+   (`docs/development/ux-substrate/screens/words.json`) this module answers, each `en` verbatim, read by key. `{pages}`,
+   `{why}` and `{reason}` are filled by `fillWords`; a row's `translation` is the word itself, never a copy. */
 export const TRANSCRIBE_WORDS = Object.freeze({
   'transcribe.refused.notdeployed': 'Nothing was read or sent: the assistant\'s reading of page pictures isn\'t switched '
     + 'on in your group\'s Civicsmith yet. Each part of the assistant is switched on only after it passes Civicsmith\'s '
@@ -33,6 +33,23 @@ export const TRANSCRIBE_WORDS = Object.freeze({
     + 'until a member checks it against the page.',
   'document.unread.pages': 'Pages {pages} are pictures of text that Civicsmith\'s own reading couldn\'t make out, so '
     + 'their words can\'t be found or cited yet. The page images are kept as they are.',
+  /* (T44; N869, N876; DEC-191 (4), (5), DEC-192 (1), (2), (6); K2719) R71's sentence for each way nothing was filled,
+     and R27's for a photographed page. */
+  'transcribe.notsent': 'Nothing was sent to the assistant: {why}. The pages are as they were.',
+  'transcribe.why.unbound': 'the assistant can\'t be reached from your group\'s Civicsmith just now',
+  'transcribe.why.evidenceabsent': 'the document\'s stored copy can\'t be read just now',
+  'transcribe.why.norender': 'none of these pages could be turned into an image the assistant can read',
+  'transcribe.refused': 'The assistant didn\'t read these pages. {reason}',
+  'transcribe.failed': 'The pages were sent to the assistant, but no reading came back: {why}. Nothing was written; you '
+    + 'can try again.',
+  'transcribe.why.silent': 'it didn\'t answer in time',
+  'transcribe.why.ended': 'the AI service stopped before it finished',
+  'transcribe.picture.unprepared': 'This photo can\'t be prepared for the assistant: {why}. Take it again as an ordinary '
+    + 'photo, or type its words yourself.',
+  'transcribe.picture.why.progressive': 'it is saved in a form the assistant can\'t open (a progressive JPEG)',
+  'transcribe.picture.why.toolarge': 'it is too large',
+  'capture.picture.unread': 'A photographed page, not read yet: its words can\'t be found or cited until the assistant '
+    + 'reads it or a member types them.',
 });
 
 export const REEXTRACT_CHECKS = {
