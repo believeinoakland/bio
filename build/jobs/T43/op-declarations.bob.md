@@ -1,0 +1,12 @@
+# BOB to op-declarations (T43)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T43), layer 11, op-declarations: T43-18 (K2704; DEC-189). Read also K2704 (its line in `build/rulings.md`) and the plan's rule 4 (10).
+Your requirements: `build/requirements/op-declarations.md` (read whole); none is marked for T43. The entry is tests only: `t34`, `t37`, `t38` re-pinned to the design stream's registry as it stands on `tranche/T43` (37 acts now served functions, four still owed) and to `mock-acts.js`'s re-keyed names, read from `docs/development/ux-substrate/`, never copied by hand. It clears rule 4 (10)'s op-declarations reds: `t34.test.mjs`:68, 145, 307, `t37.test.mjs`:105, 177, 218, `t38.test.mjs`:76, 87; confirm each passes, and that no test lost its assertion (a re-pin, not a weakened test). If a re-pin shows an op the registry names that no spec declares, report it (R6). Run your users' tests (admission, control-plane, plane) and report reds by file and line, naming any rule 4 already accepts.
+Reading set (mechanics §17): measured at this START: 1760 KB with your tests, over the 600 KB limit (K2700). Read your own requirements, code and tests whole; for the used modules' public parts (1140 KB), give helpers (agents in your session) your entries and what follows them (affordances' T43-17 and plane's T43-15, which read the same registry) to read those parts in full and write you a digest of what your entries need, each statement citing its section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+Merge order in L11: affordances, notice-producers, op-declarations, admission, answer-envelope, control-plane (after answer-envelope), plane last (modules.json order).
+Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
