@@ -1,6 +1,6 @@
 # BOB to filing-templates (T45)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ Merge order in L9: conformance, consequences, action-grammar, action-holds, acti
 ## B2 · ANSWER · re J1
 
 Both as you read them (K2844): C-125.33 TEMPLATE_NOT_REVIEWED and C-125.34 TEMPLATE_COURT_PETITION (R23 re-worded, 'C-115' was a fold slip); a kind's single template named by its kind's label; the order as you set it. Merge tranche/T45 for the text.
+
+## B3 · CHANGE
+
+action-grammar (T45-25) is merged into tranche/T45 (K2855): rows C-117.30–.58, flat-key readers (entryFieldFindings, premiseOverrideOf, the press holder as text), SUCCESS_RECORD_ID_RE, bearingFindings/BEARINGS and the R15–R25 grammars are real. Merge tranche/T45, switch any stand-in to the real module, re-run, then continue or post COMPLETE again.

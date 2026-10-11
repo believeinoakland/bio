@@ -1,6 +1,6 @@
 # BOB to action-grammar (T45)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ Merge order in L9: conformance, consequences, action-grammar, action-holds, acti
 ## B2 · CHANGE
 
 R9 re-worded (K2845): action-holds' codes are its own family C-149 and action-replies' C-150; none of them is a C-117 row, so do not mint C-117 rows for HOLD_PLACE_REFUSED, MACHINE_CANNOT_SEND, HOLD_NOT_IN_PLACE or the six action-replies codes. The moved hold rows (the hold share of C-117.14–.25) stay while actions mints them; I will send a CHANGE retiring them at actions' merge. Merge tranche/T45 before continuing.
+
+## B3 · CHANGE
+
+K2849 (merge tranche/T45 first; R8, R15, R22 re-worded): (a) the record's bytes hold flat keys, the parser reading no nested map: on an entry office_words, office_status (token), found_elsewhere (kind token), found_elsewhere_note; premise_override's reason, ground_kind, ground_citation, ground_date | ground_what, ground_when (actions presents {ground, reason} and hands it to overrideGroundFindings); the press holder as text holder: "<name>". entryFieldFindings reads the flat keys. (b) Rows for the codes actions mints, all where src/actions/index.mjs: DETERMINATION_NOT_NONCOMPLIANT '#breachRefusal > is-breach-not-noncompliant'; OVERRIDE_NO_GROUND, OVERRIDE_GROUND_REFUSED '#overrideAndAddressee > is-override-ground'; MACHINE_CANNOT_SET_PARTNERS / _PRESS_TERMS / _REPLY_OWED '#t45Fields > is-machine-set-partners' / '-press-terms' / '-reply-owed'; PARTNERS_REFUSED (entity arm) '#t45Fields > is-partners-entity'; FOLLOWS_ACTION_REWRITTEN '#t45Fields > is-follows-action-rewritten'; RECEIPT_NOT_ON_SENT 'actionReceipt > is-receipt-on-sent'; NO_REPLY_OWED 'actionCorrespond > is-no-reply-owed'; STAGE_NOT_IN_LAW 'actionCorrespond > is-stage-in-law'; MACHINE_CANNOT_SET_SCOPE, SCOPE_NO_REASON, SCOPE_UNCHANGED 'actionScope > is-scope'; MACHINE_CANNOT_RECORD_PROMISE, PROMISE_REFUSED 'actionPromise > is-promise'. (c) a new row MACHINE_CANNOT_SET_COPIED ('#t45Fields > is-machine-set-copied'). (d) re-word C-117.19's translation: PREMISE_OVERRIDE_REFUSED is the reason's refusal; the ground's are R15's codes. (e) the basis grammar accepts a rests_on target SUC-<year>-<4 digits> (consequences' success record, K2845), until record-grammar registers the prefix (N911).
