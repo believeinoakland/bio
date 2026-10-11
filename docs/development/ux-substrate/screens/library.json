@@ -81,7 +81,7 @@
       },
       {
        "screen": "setup",
-       "act": "owed:aikeepaway DEC-172",
+       "act": "aikeepaway",
        "what": "Read what the assistant is (and open More about this for the detail), then choose whether to keep the group's material away from AI.",
        "why": "Any member may connect their own Claude account unless you keep the material away from AI; then members see who chose it and your reason. Everything works without the assistant."
       },
@@ -138,7 +138,7 @@
      "steps": [
       {
        "screen": "join",
-       "act": "owed:memberlanguageset DEC-127",
+       "act": "memberlanguageset",
        "what": "Choose your language.",
        "why": "Everything that follows should be in words you read easily. It starts from your device's setting."
       },
@@ -176,7 +176,7 @@
       },
       {
        "screen": "home",
-       "act": "owed:startfrom DEC-129",
+       "act": "startfrom",
        "what": "Take a first step: join a project, capture a document, or record what you saw.",
        "why": "One small act is enough to begin. Nothing here has to be done in order."
       }
@@ -227,7 +227,7 @@
       },
       {
        "screen": "ceremony",
-       "act": "owed:obscuremark DEC-180",
+       "act": "obscuremark",
        "what": "Check each photo the case relies on: mark anyone in it who is not part of a finding, and any number plate.",
        "why": "The public copy shows them obscured and says so; the original stays inside the group."
       },
@@ -263,7 +263,7 @@
       },
       {
        "screen": "ceremony",
-       "act": "owed:publishat DEC-147",
+       "act": "publishat",
        "what": "Publish now, or choose the time it becomes public, such as when a story citing it runs.",
        "why": "At that time Civicsmith checks again; if anything changed since you signed, it holds the case and tells you. You can cancel or move the time until then."
       }
@@ -613,13 +613,13 @@
       },
       {
        "screen": "connect",
-       "act": "owed:ailimitset DEC-188",
+       "act": "ailimitset",
        "what": "Set a limit on your account, if you want one: for everything or for one use, a day or a month.",
        "why": "It binds only your own account. The group's and a project's limits never bind it."
       },
       {
        "screen": "connect",
-       "act": "owed:accountusesset DEC-188",
+       "act": "accountusesset",
        "what": "Choose what your account pays for, and whether the assistant may suggest things without being asked. Suggestions are off unless you turn them on.",
        "why": "Some members want suggestions; others want quiet."
       },
@@ -939,19 +939,19 @@
       },
       {
        "screen": "translations",
-       "act": "owed:translationdraft DEC-127",
+       "act": "translationdraft",
        "what": "Where you can reach the assistant, ask it to draft them all. Each is marked \"Draft · the assistant's\".",
        "why": "Your task becomes finding its errors. Without the assistant, type them yourself."
       },
       {
        "screen": "translations",
-       "act": "owed:translationadopt DEC-127",
+       "act": "translationadopt",
        "what": "Read each draft against the English; keep it or correct it.",
        "why": "A word becomes the group's only when a granted member who knows the language keeps it."
       },
       {
        "screen": "translations",
-       "act": "owed:translationconfirm DEC-157",
+       "act": "translationconfirm",
        "what": "A protected word you changed, or typed without a draft, waits for a second check.",
        "why": "A second granted speaker, or an administrator reading the assistant's back-translation, confirms it. Until then members see the English."
       }

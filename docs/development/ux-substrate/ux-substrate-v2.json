@@ -5042,14 +5042,14 @@
      "note": "a machine's proposal names its planning run and is refused unless that run is running in mode plan for this plan (PROPOSAL_NO_RUN, PROPOSAL_RUN_NOT_RUNNING, PROPOSAL_RUN_OTHER_PLAN, PROPOSAL_BOUND_REACHED; action-plans R31); the plan mode is not deployed yet (run-rules R14; K660 (5))"
     },
     {
-     "name": "See the suggestions five at a time; ask for the next five",
+     "name": "See every suggestion the run made, strongest first",
      "who": "any viewer who may see the plan",
      "src": "action-plans R34; Bob, 2026-09-30 (K660 (2))",
      "op": "planproposals",
      "rung": "off-ladder",
      "rungGround": "read",
      "rungSrc": "a read, not a record act (action-plans R34 writes nothing)",
-     "note": "the run's five strongest first, in the assistant's order, with no score, rank figure or strength; 'next' gives the following five until none remain; a cursor this read did not give is PROPOSALS_CURSOR_REFUSED",
+     "note": "every proposal of the run, strongest first, in the assistant's order, with no score, rank figure or strength; no cut-off and no paging (K2554, Bob's Actions D17; the cursor and PROPOSALS_CURSOR_REFUSED retired)",
      "surface": "none (built at the plane; no member surface yet)",
      "frequency": "occasional",
      "frequencySrc": "worker's judgement from PATH.md §2 step 3 (basis open)"
@@ -5058,7 +5058,7 @@
    "shownAs": [
     "a separate tray marked as the assistant's, each with why; the project's kind of work named at the tray's head (PATH.md §2 step 3)",
     "never inside the options before a member adopts it (PATH.md §3)",
-    "five at a time, strongest first, in the assistant's order; no score, rank figure or strength is kept or shown (action-plans R34; K660 (2))",
+    "every proposal of the run at once, strongest first, in the assistant's order (K2554, Bob's Actions D17: no cut-off, no paging); no score, rank figure or strength is kept or shown (action-plans R34; K660 (2))",
     "the disclosure stops at adoption: an adopted option keeps it, with who adopted it, from which run and when; the action started from it and anything sent from that action do not carry it (action-plans R32; K660 (6))"
    ],
    "maturity": "built, gaps",
@@ -6718,7 +6718,7 @@
    "to": "option-proposal",
    "verb": "proposes",
    "cardinality": "1 to many",
-   "note": "machine work, labelled; five at a time, strongest first, no score (action-plans R34; K660); the plan mode is built and not yet deployed (run-rules R14)",
+   "note": "machine work, labelled; all at once, strongest first (K2554), no score (action-plans R34; K660); the plan mode is built and not yet deployed (run-rules R14)",
    "src": "action-plans R11, R24, R31-R34; skills R28-R29; agent-worker R50-R53"
   },
   {
@@ -7461,7 +7461,7 @@
      "actor": "member (the assistant proposes)",
      "act": "ask the assistant to 'Suggest options'; adopt any",
      "construct": "option-proposal",
-     "result": "suggestions in a separate tray, five at a time, strongest first, with no score; the member asks for the next five; adopted ones become undecided options (the assistant's plan mode is not yet deployed)",
+     "result": "suggestions in a separate tray, all at once, strongest first, with no score (K2554); adopted ones become undecided options (the assistant's plan mode is not yet deployed)",
      "src": "PATH.md §2 step 3; action-plans R11, R34; run-rules R14; K660",
      "basis": "fixed"
     },
@@ -7833,7 +7833,7 @@
    "ids": "System Design §3 rows 7, 13; DEC-92"
   },
   {
-   "what": "Assistant: only CHECK mode deployed; investigate and extract refused as not deployed; the plan mode, which proposes options for one plan five at a time, strongest first, with no score, is built in the assistant and the plane and not deployed, so the tray holds only members' own proposals; assistant pilot flow absent. Its look is decided, not yet built: a panel docked beside the surface it serves (side on wide screens, bottom on narrow ones), expandable, never floating; its text carries the one 'Machine work' treatment, and a wizard step highlights the real control",
+   "what": "Assistant: only CHECK mode deployed; investigate and extract refused as not deployed; the plan mode, which proposes options for one plan, all listed at once, strongest first, with no score, is built in the assistant and the plane and not deployed, so the tray holds only members' own proposals; assistant pilot flow absent. Its look is decided, not yet built: a panel docked beside the surface it serves (side on wide screens, bottom on narrow ones), expandable, never floating; its text carries the one 'Machine work' treatment, and a wizard step highlights the real control",
    "why": "deployment order: plan is switched on as soon as the assistant runs model turns, with no separate act of Bob's (K660 (5)); the panel is decided, not yet built (DEC-90)",
    "ids": "ai-runs R40, R44; run-rules R14; agent-worker R50-R53; action-plans R30-R34; AI Roles §2, §8; DEC-90; K660; draft-T20.md deferrals ('MODES.plan deployed')"
   },
@@ -9297,8 +9297,8 @@
    "src": "action-plans R12; Bob's ruling 6"
   },
   {
-   "term": "Five at a time (the assistant's suggestions)",
-   "plain": "The assistant's suggested options are shown five at a time, strongest first; the member asks for the next five until none remain. No score or rank is ever shown or kept: the order is the only sign of strength.",
+   "term": "Strongest first (the assistant's suggestions)",
+   "plain": "The assistant's suggested options are all shown at once, strongest first (K2554: no cut-off, no paging). No score or rank is ever shown or kept: the order is the only sign of strength.",
    "internalNames": [
     "planproposals",
     "next",
@@ -10022,7 +10022,7 @@
   },
   {
    "name": "Assistant tray (on the plan page)",
-   "purpose": "Where suggested options wait, apart from the plan, each with why and the project's kind of work named at its head, until a member adopts one: five at a time, strongest first, with no score, and a way to ask for the next five.",
+   "purpose": "Where suggested options wait, apart from the plan, each with why and the project's kind of work named at its head, until a member adopts one: all at once, strongest first, with no score (K2554).",
    "constructsShown": [
     "option-proposal",
     "ai-run"
@@ -10030,7 +10030,7 @@
    "actsOffered": [
     "Suggest options",
     "optionadopt (Adopt)",
-    "planproposals (the next five)"
+    "planproposals (every proposal of the run)"
    ],
    "existsInOldUI": "no",
    "src": "PATH.md §2 step 3, §3; build/plan/action-design/plan-page.html (approved by Bob, K608 (4)); action-plans R11, R30-R34; DEC-90 (the assistant panel); Bob, 2026-09-30 (K660) (status: its plane built in T18, K711; the assistant's plan mode built and not deployed until the assistant runs model turns, run-rules R14)"
