@@ -1,4 +1,4 @@
-/* promotion's own refusal rows: the write door's refusals, held here rather than in the catalogue (`legacy-checks`).
+/* promotion's own refusal rows: the write door's refusals, held here, in this module (moved from the retired catalogue, T18, K647).
  *
  * Each row is `{check, translation}`, the shape of the catalogue's DEC-49 rows, so a refusal carries its check id and
  * a member-facing translation (the requirements' "Errors" for `promote`). C-86.5 to C-86.14 were written for `op=promote` by the
