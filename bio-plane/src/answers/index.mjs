@@ -1,8 +1,8 @@
 /* answers — the plane's half of the assistant (requirements: `build/requirements/answers.md`; T33-53; K1450, K1474,
  * K1479, K1481, K1502, K1505 (14)). What an ask may read (R1, R2: `./scope.mjs`), what an answer must look like and the
  * checks every answer passes before a member sees it (R3–R6, R22: `./check.mjs`), the rule services every rule comes
- * from (R7–R12: `./rules.mjs`), the unattributed tallies (R13, R14), and a member's standing questions (R15–R21, R26,
- * R27: `./standing.mjs`). The model only understands the member's words, writes queries, quotes and translates; it never
+ * from (R7–R12: `./rules.mjs`), the unattributed tallies (R13, R14), and a member's standing questions (R15–R21, R26–R28,
+ * R34: `./standing.mjs`). The model only understands the member's words, writes queries, quotes and translates; it never
  * answers from its own knowledge.
  *
  * REACHED as `answersOf(host, deps)`: one instance per host, created on the first call with `deps`, its tables made
@@ -353,15 +353,20 @@ export class Answers {
     this.setListeners.push({ module, fn });
     return { ok: true, module };
   }
-  /** R27: each listener once, after the act; one that throws never undoes it, nor stops the others. Writes nothing. */
+  /** R27: each listener once, after the act's transaction: at once outside one, or just after the outermost commits
+   *  when the act runs inside another module's (`following` R25), never when that rolls back (`record-core` R66). One
+   *  that throws never undoes the act, nor stops the others. Writes nothing. */
   tellStanding(question, due) {
-    for (const l of this.setListeners) { try { l.fn({ question, due }); } catch { /* the act stands (R27) */ } }
+    const tell = () => { for (const l of this.setListeners) { try { l.fn({ question, due }); } catch { /* the act stands (R27) */ } } };
+    if (typeof this.record.afterCommit === "function") this.record.afterCommit(tell);
+    else tell();
   }
 
   standingQuestionSet(a) { return S.standingQuestionSet(this, a); }
   standingQuestionRead(a) { return S.standingQuestionRead(this, a); }
   standingQuestionsOf(a) { return S.standingQuestionsOf(this, a); }
   standingQuestionEnd(a) { return S.standingQuestionEnd(this, a); }
+  standingQuestionEndSet(a) { return S.standingQuestionEndSet(this, a); }
   standingDue(now) { return S.standingDue(this, now ?? this.now()); }
   standingWake(now) { return S.standingWake(this, now ?? this.now()); }
   standingTick(now) { return S.standingTick(this, now ?? this.now()); }
