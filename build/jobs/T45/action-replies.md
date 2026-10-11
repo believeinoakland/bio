@@ -25,3 +25,7 @@ Found elsewhere: record-grammar has no proposal subject for a reply layout (N912
 Tests: node --test bio-plane/test/m/action-replies/ — 16 pass, 0 fail. No layer tests named in the manifest.
 Checks (with my paths entered locally, not committed): format 153 modules, 0 failures; architecture 8 product files, 22 imports, 0 failures; coverage 4 of 4 live ids named, 0 failures; ownership 9 files changed, 0 failures.
 Size (session_01Y4ReYDmZmGL3tSnMbbX2V8): test runs 9, module lines 575
+
+## J4 · COMPLETE
+
+Re B5 (K2859): tranche/T45 merged with actions' T45-27; no actions stand-in was used (built on actionRead/actionsFor/actionCorrespond throughout). No code change needed. Tests: node --test bio-plane/test/m/action-replies/ — 16 pass, 0 fail. Checks (my paths entered locally, not committed): format 0 failures; architecture 8 files, 0 failures; coverage 4 of 4; ownership 9 files, 0 failures. Everything else as J3. Still to come: action-clocks' CHANGE (unused edge, K2845 (a)). Size (session_01Y4ReYDmZmGL3tSnMbbX2V8): test runs 10, module lines 575
