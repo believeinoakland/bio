@@ -75,3 +75,11 @@ Size (session_01TfC1CmNozvRZtyciH6cRgT): test runs 17, module lines 3290
 Tests: `bio-plane/test/m/action-plans/` 75 pass, 0 fail. Checks: format, architecture, coverage (45 of 45), ownership all 0 failures.
 
 Size (session_01TfC1CmNozvRZtyciH6cRgT): test runs 19, module lines 3290
+
+## J7 · COMPLETE
+
+**Replaces J6** (its fix failed the architecture check: the fixture imported observation-log, outside my uses). B6/B8 are now met the way B6 offered second: the fixture hands `actionClocksOf` a `steps` stand-in in the shape of steps' Provides (`registerDueHolder`, `productsOf`, `stepsOf`, `stepsWaitingOn`, `step`; no step stands for any entry), so no observation-log table is needed. `tranche/T45` merged (action-clocks T45-28, action-replies T45-29); real `actions` and `action-clocks` throughout. No product code changed.
+
+Tests: `bio-plane/test/m/action-plans/` 75 pass, 0 fail. Checks: format 0 failures; architecture 0 failures; coverage 45 of 45; ownership 0 failures.
+
+Size (session_01TfC1CmNozvRZtyciH6cRgT): test runs 20, module lines 3290
