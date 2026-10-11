@@ -32,3 +32,7 @@ Size (session_01EmjAtfa4SNhFFjZAmrA9eZ): test runs 8, module lines 3326
 ## J1 · REPORT
 
 pdf-pixels R42 (T43-5), a note for its Pillow reference, not a red: Pillow's convert("L") drops alpha, so exif_transpose -> convert("L") -> reduce(k) over a PNG with transparency will not match R10's samples. R10 is pinned to Image.alpha_composite(white, im.convert("RGBA")) then convert L/RGB, and for 16-bit grey (Pillow I;16, whose convert("L") clips) the high byte of each sample: pdf-worker/test/codecs/fixtures/make-png-fixtures.py reference(). Details in my record.
+
+## J2 · COMPLETE
+
+T43-4 applied: R10 decodePng/PNG_REFUSES/PngRefusal in NEW FILE pdf-worker/src/pngdecode.mjs, outside my paths: please add it to image-codecs' paths before the ownership check (plan rule 2, K1043); it is the cause of architecture's 2 failures and ownership's 1, nothing else. Pixel-exact against Pillow 12.3.0 over PngSuite 2017jul19 (176 files committed unchanged, 127 decoded, 49 refused) plus 6 Pillow-written variants; negative controls: interlaced -> UNSUPPORTED interlaced, truncated -> TRUNCATED (K874). Keys: interlaced, an unknown critical chunk, an image past the memory bound (61.3 MB, JPX's figure). image-codecs 57/57; coverage 10/10; format 0 failures. Users: pdf-pixels 4/4, ocr-worker 1/1; fleetbundles: no staleness. REPORT J1 for pdf-pixels' reference. Record: build/jobs/T43/image-codecs.md.
