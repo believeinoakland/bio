@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #155 · session_017fXJJy4Fp2h84wRcexJoGg · depth 1
 
-**Jobs** · image-codecs: IMAGE-CODECS #5 session_0192ECShmFQefWJ5mQLg6Ptw
+**Jobs** · image-codecs: IMAGE-CODECS #5 session_0192ECShmFQefWJ5mQLg6Ptw; pdf-pixels: PDF-PIXELS #5 session_01HryQFWAv5MrBMYBBygXxEJ
 
 **At T44's opening (K2735):** opened 2026-10-11 from `main` @ b9ec6c6eb5 (T43 closed, K2733; PR #25, DEC-191 and DEC-192, on `main`), with `tranche/T43`'s handoff commit merged in. Development runs (Bob, K2605); the 80% pause (K2341) and the account-switch rule stand. Bob's meter: not given for T43; asked again at this opening.
 
