@@ -75,3 +75,35 @@ bio-plane/dist/bio-plane.bundled.mjs is stale for this row; it is regenerated at
 One small flaw in my module is deferred, with the reason in my record: a proposal's step_id can point at a step deleted later.
 
 Record: build/jobs/T42/steps.md.
+
+## B2 · CHANGE (K2655): the deferred flaw, fixed in this job
+
+The flaw is fixed in this job, so the Completion section's "Deferred (own module)" no longer stands.
+
+**The fix** (`src/steps/schema.mjs`):
+- A new trigger, `steps_gone_proposals`, runs AFTER DELETE ON steps and clears `step_proposals.step_id` for the step that went. It is its own trigger because `CREATE TRIGGER IF NOT EXISTS steps_gone` would not change on a store that already holds `steps_gone`.
+- An idempotent update clears any `step_id` that already names no held step, on a store that predates the trigger.
+- As a result, a decided proposal keeps its status, form, reason and decider, and `stepProposals` answers `step: null` instead of naming a deleted step.
+
+**Requirement wording, for BOB.** No existing R id covers what `stepProposals` answers about the step: R24 says only that a set-aside proposal stays readable with its reason. A suggested line for R24: "A decided proposal names the step it created only while that step is held; once that step is deleted, it names none." The test is titled R24, R6, since R6 says a deletion leaves no row.
+
+**Test.** proposals.test.mjs has a new test, "R24, R6: a decided proposal never names a step that has gone…". It deletes the step an accepted proposal created and checks that the proposal is still accepted, keeps its form, and names no step. It then drops the trigger to stand for an older store, deletes a step, sees the name left behind, runs `migrate()`, and checks that the name is cleared and the trigger exists again. Negative control: a proposal whose step is still held still names it. The test fails with the schema change stashed (pass 0, fail 1).
+
+**Re-run, after merging `tranche/T42` at 93c845ce53.**
+- steps: 35 pass, 0 fail.
+- Users' suites: these all pass with 0 fail:
+  - ai-runs (81 pass)
+  - run-productions (54)
+  - capture-requests (108)
+  - question-explorer (27)
+  - investigation (28)
+  - affordances (232)
+  - notice-producers (90)
+  - op-declarations (128)
+  - control-plane (216)
+  - plane (166)
+  - `test/system/migrate-released.test.mjs` (1 pass, 0 fail; it now passes on this head)
+- answer-envelope: 28 pass, 1 fail. The one red is `families.test.mjs:425` (its pin at :420), the expected red until T42-27. The hypotheses red is gone on this head.
+- Checks: format, architecture, coverage (27 of 27) and ownership each report 0 failures.
+
+Size (session_01WWPqUf9HsGVbwvRQC3juMx): test runs 31, module lines 9
