@@ -2693,7 +2693,7 @@ async function captureSubresources({
   const bySha = /* @__PURE__ */ new Map();
   const byUrl = /* @__PURE__ */ new Map();
   const refToUrl = /* @__PURE__ */ new Map();
-  let attempted = 0, discovered = 0, spent = 0, truncated5 = false, budgetHit = false, platformHit = false;
+  let attempted = 0, discovered = 0, spent = 0, truncated6 = false, budgetHit = false, platformHit = false;
   let observedCeiling = null, deferred = 0, reused = 0;
   const siteObservations = [];
   const links = [];
@@ -2814,7 +2814,7 @@ async function captureSubresources({
       continue;
     }
     if (attempted >= cap) {
-      truncated5 = true;
+      truncated6 = true;
       settle2(item3, {
         ...stem,
         ok: false,
@@ -3102,9 +3102,9 @@ async function captureSubresources({
     limits: { cap, per_max_bytes: perMax, budget_bytes: budget, css_max_depth: CSS_MAX_DEPTH },
     discovered,
     attempted,
-    truncated: truncated5,
+    truncated: truncated6,
     budget_exhausted: budgetHit,
-    complete: !platformHit && !truncated5 && !budgetHit && deferred === 0,
+    complete: !platformHit && !truncated6 && !budgetHit && deferred === 0,
     compute: meter2.report(),
     reuse: {
       reused,
@@ -3190,7 +3190,7 @@ async function captureSubresources({
     companionText,
     companionSha,
     companionBytes,
-    truncated: truncated5,
+    truncated: truncated6,
     discovered,
     attempted,
     /* `renditions`, not `derived`. C-18.1 already spends `derived` on a
@@ -6670,7 +6670,7 @@ async function* relay(inner, settle2, index2) {
 }
 var CUT_WINDOW = 1 << 20;
 async function* cut(source2, row12) {
-  const corrupt5 = (detail) => ({ ok: false, why: "MEMBER_CORRUPT", detail, index: row12.index });
+  const corrupt6 = (detail) => ({ ok: false, why: "MEMBER_CORRUPT", detail, index: row12.index });
   const unreadable2 = { ok: false, why: "source_unreadable", index: row12.index };
   const src = sourceOf(source2);
   if (!src) return unreadable2;
@@ -6689,15 +6689,15 @@ async function* cut(source2, row12) {
       yield await src.read(at43, length);
     }
   }
-  const finish = async () => {
-    if (size !== declared2) return corrupt5("size_mismatch");
-    if ((crc ^ 4294967295) >>> 0 !== row12.crc32) return corrupt5("crc_mismatch");
+  const finish2 = async () => {
+    if (size !== declared2) return corrupt6("size_mismatch");
+    if ((crc ^ 4294967295) >>> 0 !== row12.crc32) return corrupt6("crc_mismatch");
     return { ok: true, sha256: await sha2.finish(), crc32: row12.crc32, size };
   };
   if (row12.method === 0) {
     try {
       for await (const w of windows()) {
-        if (size + w.length > declared2) return corrupt5("over_declared_size");
+        if (size + w.length > declared2) return corrupt6("over_declared_size");
         const piece2 = w.slice();
         await take(piece2);
         yield piece2;
@@ -6705,13 +6705,13 @@ async function* cut(source2, row12) {
     } catch {
       return unreadable2;
     }
-    return finish();
+    return finish2();
   }
   let ds;
   try {
     ds = new DecompressionStream("deflate-raw");
   } catch {
-    return corrupt5("inflate_failed");
+    return corrupt6("inflate_failed");
   }
   const writer = ds.writable.getWriter();
   const reader = ds.readable.getReader();
@@ -6736,7 +6736,7 @@ async function* cut(source2, row12) {
         reader.cancel().catch(() => {
         });
         await feeding;
-        return corrupt5("over_declared_size");
+        return corrupt6("over_declared_size");
       }
       await take(value);
       yield value;
@@ -6748,9 +6748,9 @@ async function* cut(source2, row12) {
   if (sourceFailed) return unreadable2;
   if (inflateError || !fedAll) {
     const whole2 = size === declared2 && (crc ^ 4294967295) >>> 0 === row12.crc32;
-    return corrupt5(whole2 ? "stream_end_mismatch" : "inflate_failed");
+    return corrupt6(whole2 ? "stream_end_mismatch" : "inflate_failed");
   }
-  return finish();
+  return finish2();
 }
 var VBA_AUTORUN_NAMES = Object.freeze([
   "AutoExec",
@@ -8266,7 +8266,7 @@ function walkDocumentTables(xml) {
     if (c.vMerge === "restart") t2.vOwner.set(c.col, entry4);
     else t2.vOwner.delete(c.col);
   };
-  const finish = (t2, rows3) => {
+  const finish2 = (t2, rows3) => {
     closeCell(t2);
     done[t2.table] = {
       table: t2.table,
@@ -8285,7 +8285,7 @@ function walkDocumentTables(xml) {
     if (skipped(name3, closing, selfClosed)) continue;
     const top2 = stack.length ? stack[stack.length - 1] : null;
     if (closing) {
-      if (name3 === "tbl" && stack.length) finish(stack.pop(), top2.rows);
+      if (name3 === "tbl" && stack.length) finish2(stack.pop(), top2.rows);
       else if (name3 === "tr" && top2) {
         closeCell(top2);
         if (top2.tc > top2.maxTc) top2.maxTc = top2.tc;
@@ -8336,7 +8336,7 @@ function walkDocumentTables(xml) {
   }
   while (stack.length) {
     const t2 = stack.pop();
-    finish(t2, t2.rows || null);
+    finish2(t2, t2.rows || null);
   }
   return done;
 }
@@ -10994,9 +10994,9 @@ var ODF_EVIDENTIARY_NORMALISE = Object.freeze({
     apply: odtNormalisedContentXml
   }
 });
-async function odfEvidentiaryDigest(bytes2, sha256Hex16) {
+async function odfEvidentiaryDigest(bytes2, sha256Hex17) {
   try {
-    return await odfEvidentiaryDigestUnguarded(bytes2, sha256Hex16);
+    return await odfEvidentiaryDigestUnguarded(bytes2, sha256Hex17);
   } catch (e2) {
     return {
       determined: false,
@@ -11006,7 +11006,7 @@ async function odfEvidentiaryDigest(bytes2, sha256Hex16) {
     };
   }
 }
-async function odfEvidentiaryDigestUnguarded(bytes2, sha256Hex16) {
+async function odfEvidentiaryDigestUnguarded(bytes2, sha256Hex17) {
   const b = asBytes(bytes2) ?? new Uint8Array(0);
   const no9 = (flavour2, basis) => ({ determined: false, flavour: flavour2, evidentiary: null, basis });
   let row12 = null;
@@ -11044,7 +11044,7 @@ async function odfEvidentiaryDigestUnguarded(bytes2, sha256Hex16) {
     determined: true,
     flavour,
     over: CONTENT_PART,
-    evidentiary: await sha256Hex16(digested),
+    evidentiary: await sha256Hex17(digested),
     basis: `the sha256 of the .${flavour} package's content.xml member (inflated, length and CRC-32 verified)${norm3 ? `, normalised by ${norm3.name}` : ", no byte rewritten"}, odf-evidentiary v${ODF_EVIDENTIARY_VERSION}; the ZIP envelope, meta.xml, settings.xml, styles.xml, thumbnails and embedded font faces are discounted; measured: ${ODF_EVIDENTIARY_MEASURED[flavour]}`
   };
 }
@@ -18926,7 +18926,7 @@ function mintExhausted(prefix, extra) {
   };
 }
 var PER_ITEM_MAX = 100;
-function perItem(act2, body, stamped2, one4, { itemKeys = null, sharedKeys = null } = {}) {
+function perItem(act2, body, stamped3, one4, { itemKeys = null, sharedKeys = null } = {}) {
   const refusal36 = (code, detail, extra) => {
     const row12 = PER_ITEM_CHECKS[code];
     return { ok: false, reason: code, code, check: row12.check, translation: row12.translation, detail, ...extra || {} };
@@ -18975,7 +18975,7 @@ function perItem(act2, body, stamped2, one4, { itemKeys = null, sharedKeys = nul
     }
     let r;
     try {
-      const b = { ...sharedFor(it), ...it, ...stamped2 };
+      const b = { ...sharedFor(it), ...it, ...stamped3 };
       delete b.items;
       r = one4(b);
     } catch (e2) {
@@ -19835,19 +19835,19 @@ var RecordCore = class _RecordCore {
    *  so is a module's second registration; no module name, no non-empty list of names, or no function is
    *  `COUNTS_MALFORMED`. A refused registration registers nothing. It writes nothing. */
   registerCounts(module, keys, counts) {
-    const refuse26 = (code, detail, more) => {
+    const refuse27 = (code, detail, more) => {
       const row12 = RECORD_CORE_CHECKS[code];
       return { ...more, ok: false, reason: code, code, check: row12.check, translation: row12.translation, detail };
     };
     if (typeof module !== "string" || !module.trim() || !Array.isArray(keys) || keys.length === 0 || !keys.every((k) => typeof k === "string" && k.trim() !== "") || typeof counts !== "function")
-      return refuse26("COUNTS_MALFORMED", "a counts registration names its module, a non-empty list of figure names and a function answering them; nothing was registered.", { module: typeof module === "string" ? module : null });
+      return refuse27("COUNTS_MALFORMED", "a counts registration names its module, a non-empty list of figure names and a function answering them; nothing was registered.", { module: typeof module === "string" ? module : null });
     let clash = this.#countsBy.some((r) => r.module === module) ? { heldBy: module } : null;
     for (let i = 0; !clash && i < keys.length; i++) {
       const held2 = keys.indexOf(keys[i]) < i ? module : this.#countsBy.find((r) => r.keys.includes(keys[i]))?.module;
       if (held2) clash = { key: keys[i], heldBy: held2 };
     }
     if (clash)
-      return refuse26("COUNTS_DECLARED", clash.key === void 0 ? `${module} has already registered its figures; nothing more was registered.` : `the figure ${clash.key} is already reported by ${clash.heldBy}; nothing was registered.`, { module, ...clash });
+      return refuse27("COUNTS_DECLARED", clash.key === void 0 ? `${module} has already registered its figures; nothing more was registered.` : `the figure ${clash.key} is already reported by ${clash.heldBy}; nothing was registered.`, { module, ...clash });
     this.#countsBy.push({ module, keys: [...keys], counts });
     return { ok: true, module, keys: [...keys] };
   }
@@ -21153,12 +21153,12 @@ function governorOf(ctx, { env = null, now = null, random = null, record = null 
     return g;
   }
   const given5 = SUPPLIED.get(g);
-  const refuse26 = (name3) => {
+  const refuse27 = (name3) => {
     throw new Error(`governorOf: a caller supplied a different \`${name3}\` for a storage whose governor already holds another one a caller gave; host-governor refuses it rather than run against either silently (R26)`);
   };
-  if (env != null && given5.has("env") && !sameEnv(g.env, env)) refuse26("env");
-  for (const name3 of ["now", "random"]) if (opts[name3] != null && given5.has(name3) && g[name3] !== opts[name3]) refuse26(name3);
-  if (record != null && record !== g.core) refuse26("record");
+  if (env != null && given5.has("env") && !sameEnv(g.env, env)) refuse27("env");
+  for (const name3 of ["now", "random"]) if (opts[name3] != null && given5.has(name3) && g[name3] !== opts[name3]) refuse27(name3);
+  if (record != null && record !== g.core) refuse27("record");
   for (const name3 of Object.keys(opts))
     if (opts[name3] != null && !given5.has(name3)) {
       g[name3] = opts[name3];
@@ -22177,7 +22177,7 @@ var MODULE_ORDER = Object.freeze([
 var isObj2 = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 var LISTENER_REFUSAL_FIELDS = /* @__PURE__ */ new Set(["ok", "reason", "code", "detail", "module", "check", "translation"]);
 function listenerRefusal(held2, module, fn, extra) {
-  const refuse26 = (code, detail, fields) => {
+  const refuse27 = (code, detail, fields) => {
     const row12 = MEMBERSHIP_CHECKS[code];
     let own8 = {};
     try {
@@ -22187,8 +22187,8 @@ function listenerRefusal(held2, module, fn, extra) {
     }
     return { ...own8, ok: false, reason: code, code, detail, ...fields, check: row12.check, translation: row12.translation };
   };
-  const malformed6 = (detail) => refuse26("LISTENER_MALFORMED", detail, {});
-  const declared2 = (detail, holder3) => refuse26("LISTENER_DECLARED", detail, { module: holder3 });
+  const malformed6 = (detail) => refuse27("LISTENER_MALFORMED", detail, {});
+  const declared2 = (detail, holder3) => refuse27("LISTENER_DECLARED", detail, { module: holder3 });
   try {
     if (typeof module !== "string" || !module || typeof fn !== "function")
       return malformed6("a listener names the module that registers it and its function");
@@ -22491,15 +22491,15 @@ var Membership = class _Membership {
   hostingAccess({ limit = null } = {}) {
     const cap = Math.max(1, Math.min(Number(limit) || _Membership.HOSTING_ACCESS_LIMIT, _Membership.HOSTING_ACCESS_LIMIT));
     const found3 = this.#rows(`SELECT holders, note, recorded_by, at FROM hosting_access ORDER BY seq LIMIT ?`, cap + 1);
-    const truncated5 = found3.length > cap;
+    const truncated6 = found3.length > cap;
     const current2 = this.#one(`SELECT holders, note, recorded_by, at FROM hosting_access ORDER BY seq DESC LIMIT 1`);
     return {
       ok: true,
       recorded: current2 !== null,
       current: current2,
-      history: truncated5 ? found3.slice(0, cap) : found3,
+      history: truncated6 ? found3.slice(0, cap) : found3,
       limit: cap,
-      truncated: truncated5
+      truncated: truncated6
     };
   }
   /* N70: the history's page size, a chosen ceiling (the directory's reasoning, now `project-roster`'s): generous enough that a
@@ -22545,8 +22545,8 @@ var Membership = class _Membership {
       self,
       cap + 1
     ).map((r) => ({ handle: r.handle, cover: r.cover, published: r.pairing_published === 1 }));
-    const truncated5 = found3.length > cap;
-    return { ok: true, pairings: truncated5 ? found3.slice(0, cap) : found3, limit: cap, truncated: truncated5 };
+    const truncated6 = found3.length > cap;
+    return { ok: true, pairings: truncated6 ? found3.slice(0, cap) : found3, limit: cap, truncated: truncated6 };
   }
   static MEMBER_PAIRINGS_LIMIT = 200;
   /* R18 (section 7.8; D54, T41-3): the projects a member participates in, for an administrator's roster, as the
@@ -24803,20 +24803,20 @@ var Membership = class _Membership {
   /** R109: an administrator records the description; each call appends a whole record and overwrites none. */
   groupDescriptionSet({ kinds: kinds3, otherKind = null, focus = null, purpose = null, visibility = null, by = null } = {}) {
     if (!this.isAdministrator(by)) return notAnAdmin(by, "describing the group");
-    const refuse26 = (code, detail, extra) => _Membership.#rowRefusal(code, `${detail} Nothing was written.`, extra);
+    const refuse27 = (code, detail, extra) => _Membership.#rowRefusal(code, `${detail} Nothing was written.`, extra);
     if (!Array.isArray(kinds3) || kinds3.some((k) => !_Membership.GROUP_KINDS.includes(k)))
-      return refuse26("GROUP_KIND_UNKNOWN", `the kinds are a list drawn from ${_Membership.GROUP_KINDS.join(", ")}, and may be empty.`);
+      return refuse27("GROUP_KIND_UNKNOWN", `the kinds are a list drawn from ${_Membership.GROUP_KINDS.join(", ")}, and may be empty.`);
     const ks = [...new Set(kinds3)];
     const other = ks.includes("other") ? _Membership.#text(otherKind) : null;
     if (ks.includes("other") && !other)
-      return refuse26("GROUP_KIND_OTHER_EMPTY", "`other` was chosen, and the kind it describes was left empty.");
+      return refuse27("GROUP_KIND_OTHER_EMPTY", "`other` was chosen, and the kind it describes was left empty.");
     const f17 = _Membership.#text(focus), p3 = _Membership.#text(purpose);
     for (const [name3, v, max] of [["otherKind", other, 120], ["focus", f17, 1e3], ["purpose", p3, 4e3]])
       if (v !== null && v.length > max)
-        return refuse26("GROUP_DESCRIPTION_TOO_LONG", `${name3} is at most ${max} characters.`, { field: name3, max });
+        return refuse27("GROUP_DESCRIPTION_TOO_LONG", `${name3} is at most ${max} characters.`, { field: name3, max });
     const vis = visibility === void 0 || visibility === null ? "members" : visibility;
     if (vis !== "members" && vis !== "public")
-      return refuse26("GROUP_VISIBILITY_UNKNOWN", "the description is seen by `members` or by the `public` too.");
+      return refuse27("GROUP_VISIBILITY_UNKNOWN", "the description is seen by `members` or by the `public` too.");
     const at43 = (/* @__PURE__ */ new Date()).toISOString();
     this.sql.exec(`INSERT INTO group_description (kinds, other_kind, focus, purpose, visibility, set_by, at)
                    VALUES (?,?,?,?,?,?,?)`, JSON.stringify(ks), other, f17, p3, vis, by, at43);
@@ -29427,19 +29427,19 @@ var Provenance = class {
    *  from a total that something was withheld. Nothing publishes how many rows
    *  the gate removed, because that count is the leak (REC-36). */
   versionChain({ addressNorm = null, at: at43 = null, limit = null, offset = 0, viewer = null } = {}) {
-    const refuse26 = (key2, detail) => {
+    const refuse27 = (key2, detail) => {
       const row12 = VERSION_CHAIN_CHECKS[key2];
       return { ok: false, reason: key2, check: row12.check, translation: row12.translation, detail };
     };
     const addr = addressNorm == null ? "" : String(addressNorm).trim();
     if (!addr)
-      return refuse26(
+      return refuse27(
         "VERSION_CHAIN_NO_ADDRESS",
         "op=versionchain answers for ONE document address: pass address=<url>. The plane normalises it with the same normaliser the capture wrote it with, so the address you captured is the address that answers."
       );
     const anchor = at43 == null ? "" : String(at43).trim().toLowerCase();
     if (anchor && !/^[0-9a-f]{64}$/.test(anchor))
-      return refuse26(
+      return refuse27(
         "VERSION_CHAIN_BAD_ANCHOR",
         `at=${JSON.stringify(String(at43).slice(0, 80))} is not a sha256. A version is anchored by the capture identity of its bytes, which is 64 hex characters.`
       );
@@ -29493,7 +29493,7 @@ var Provenance = class {
     if (anchor) {
       anchorRow = shape(this.#one(`${CHAIN2} SELECT * FROM chain WHERE capture_sha = ?`, ...args, anchor));
       if (!anchorRow)
-        return refuse26(
+        return refuse27(
           "VERSION_CHAIN_NO_SUCH_VERSION",
           `no version with capture ${anchor.slice(0, 12)}\u2026 is held at ${addr}. A capture the record does not hold, one filed at a different address, and one inside a project you were not invited to answer identically here, deliberately.`
         );
@@ -29917,12 +29917,12 @@ var hexToBytes = (hex11) => {
   for (let i = 0; i < out.length; i++) out[i] = parseInt(hex11.substr(i * 2, 2), 16);
   return out;
 };
-function timestampRequest(sha256Hex16, nonceBytes) {
+function timestampRequest(sha256Hex17, nonceBytes) {
   const nonce = nonceBytes || crypto.getRandomValues(new Uint8Array(8));
   return {
     der: derSequence(
       derIntegerSmall(1),
-      derSequence(derSequence(OID_SHA256, derNull()), derOctetString(hexToBytes(sha256Hex16))),
+      derSequence(derSequence(OID_SHA256, derNull()), derOctetString(hexToBytes(sha256Hex17))),
       derInteger(nonce),
       derBoolean(true)
     ),
@@ -31408,7 +31408,7 @@ async function archiveList(instOrStore, { archiveSha = null, viewer = null, stat
   const from = Number.isInteger(Number(after)) && after !== null && after !== "" ? Number(after) : -1;
   const picked = all.filter((e2) => (!want || e2.state === want) && e2.index > from);
   const page2 = picked.slice(0, lim);
-  const truncated5 = picked.length > page2.length;
+  const truncated6 = picked.length > page2.length;
   return {
     ok: true,
     archive: {
@@ -31431,8 +31431,8 @@ async function archiveList(instOrStore, { archiveSha = null, viewer = null, stat
     summary: summary2,
     entries: page2,
     limit: lim,
-    truncated: truncated5,
-    next: truncated5 ? page2[page2.length - 1].index : null
+    truncated: truncated6,
+    next: truncated6 ? page2[page2.length - 1].index : null
   };
 }
 function memberOf(store, captureSha) {
@@ -32673,9 +32673,9 @@ async function acquire(cap, body0, {
     if (heldBytes >= PART2) await flush(false);
   }
   if (driveCapture && driveHeadBytes > 0) {
-    const sniff = detectFormat(driveHead.subarray(0, driveHeadBytes), null);
+    const sniff2 = detectFormat(driveHead.subarray(0, driveHeadBytes), null);
     const declared2 = (res.headers.get("content-type") || "").split(";")[0].trim().toLowerCase();
-    if (sniff.format === "html") {
+    if (sniff2.format === "html") {
       try {
         await reader.cancel();
       } catch {
@@ -32691,9 +32691,9 @@ async function acquire(cap, body0, {
         export_address: driveCapture.exportAddress,
         declared_content_type: declared2 || null,
         refused_on: "the bytes",
-        detected: sniff,
+        detected: sniff2,
         drive: driveFacts,
-        detail: `the OpenDocument export address served bytes that are HTML \u2014 ${sniff.signals.join("; ")} \u2014 while declaring \`${declared2 || "(no content type)"}\`. That is the Google Drive APPLICATION, not the document, and the declared type did not say so. Detection here is bytes-first and certain, which is the whole reason this arm exists beside the one that reads the header. Nothing was filed, and the shell is never filed as the document.`
+        detail: `the OpenDocument export address served bytes that are HTML \u2014 ${sniff2.signals.join("; ")} \u2014 while declaring \`${declared2 || "(no content type)"}\`. That is the Google Drive APPLICATION, not the document, and the declared type did not say so. Detection here is bytes-first and certain, which is the whole reason this arm exists beside the one that reads the header. Nothing was filed, and the shell is never filed as the document.`
       });
     }
   }
@@ -34678,11 +34678,11 @@ function expandRecurrence(args) {
   if (fromDay - dtDay > 2 * span3) k = Math.max(0, Math.floor((fromDay - dtDay) / (r.freq === "WEEKLY" ? 7 * r.interval : r.freq === "MONTHLY" ? 31 * r.interval : 366 * r.interval)) - 1);
   const instances74 = [];
   const notes = [];
-  let truncated5 = false;
+  let truncated6 = false;
   for (let guard = 0; guard < 1e5; guard++, k++) {
     const p3 = periodStart(k);
     if (p3 * 86400 - 14 * 3600 >= limit) {
-      truncated5 = limit < ts.hi;
+      truncated6 = limit < ts.hi;
       break;
     }
     if (untilDay !== null && p3 > untilDay) break;
@@ -34696,7 +34696,7 @@ function expandRecurrence(args) {
         break;
       }
       if (it.t >= limit) {
-        if (limit < ts.hi) truncated5 = true;
+        if (limit < ts.hi) truncated6 = true;
         stop2 = true;
         break;
       }
@@ -34706,7 +34706,7 @@ function expandRecurrence(args) {
         continue;
       }
       if (instances74.length >= MAX_INSTANCES) {
-        truncated5 = true;
+        truncated6 = true;
         stop2 = true;
         break;
       }
@@ -34723,8 +34723,8 @@ function expandRecurrence(args) {
     if (stop2) break;
   }
   const trace = { rrule, dtstart, zone, from, to, limits: { months: MAX_MONTHS, instances: MAX_INSTANCES }, notes, runtime: runtimeVersions() };
-  if (truncated5) trace.notes.push(`stopped at ${instances74.length >= MAX_INSTANCES ? `${MAX_INSTANCES} instances` : `${MAX_MONTHS} months after from`}`);
-  return { instances: instances74, truncated: truncated5, trace };
+  if (truncated6) trace.notes.push(`stopped at ${instances74.length >= MAX_INSTANCES ? `${MAX_INSTANCES} instances` : `${MAX_MONTHS} months after from`}`);
+  return { instances: instances74, truncated: truncated6, trace };
 }
 function periodFor(y, f17) {
   const [mm, dd] = f17.start.split("-").map(Number);
@@ -38154,10 +38154,10 @@ var DERIVATION_FIELDS = Object.freeze(["kind", "from", "to", "as_of", "method"].
 function derivedConnectionLegFindings(label, leg2, findings) {
   const l2 = leg2 && typeof leg2 === "object" ? leg2 : {};
   if (typeof l2.target !== "string" || !DERIVED_CONNECTION_ID_RE.test(l2.target)) return false;
-  const refuse26 = (message2, repairs) => findings.push(derivedLegRefusal(message2, repairs));
+  const refuse27 = (message2, repairs) => findings.push(derivedLegRefusal(message2, repairs));
   const missing2 = DERIVATION_FIELDS.filter((k) => typeof l2[k] !== "string" || l2[k].trim() === "");
   for (const k of missing2) {
-    refuse26(
+    refuse27(
       `${label}.${k} is missing or empty on a leg on a derived connection (${l2.target}): the leg carries the five fields the connection was derived from (${DERIVATION_FIELDS.join(", ")}), each a non-empty string, so a reader can derive it again`,
       [`state ${k} on ${label}, as the connection's derivation gives it`]
     );
@@ -38171,7 +38171,7 @@ function derivedConnectionLegFindings(label, leg2, findings) {
       method: l2.derivation_method
     });
     if (id !== l2.target) {
-      refuse26(
+      refuse27(
         `${label}.target ${l2.target} is not the id of the derivation the leg carries (${id}): a derived connection is named by the SHA-256 of its five fields, so a leg whose target and fields disagree names two different connections`,
         [
           `set ${label}.target to ${id}, the id its derivation_* fields give`,
@@ -38185,7 +38185,7 @@ function derivedConnectionLegFindings(label, leg2, findings) {
     l2,
     `a derived connection (${l2.target})`,
     "its grade is its chain's, the weakest hop of the derivation, and never authored",
-    refuse26
+    refuse27
   );
   return true;
 }
@@ -38229,7 +38229,7 @@ function readBiasApplied(row12) {
 }
 function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, checkId = INQUIRY_GRAMMAR_CHECKS.BIAS_APPLICATION_MALFORMED.check } = {}) {
   let n2 = 0;
-  const refuse26 = (message2, repairs) => {
+  const refuse27 = (message2, repairs) => {
     findings.push(biasApplicationRefusal(checkId, message2, repairs));
     n2++;
   };
@@ -38237,7 +38237,7 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
   let entries;
   if (plainObject(value)) {
     if (carries(value.bias_applied)) {
-      refuse26(
+      refuse27(
         `${label}.bias_applied is not how a bias application is written: each one is written beside the other fields as numbered keys, ${FORM2}`,
         [`write each application as ${FORM2}, and remove bias_applied from ${label}`]
       );
@@ -38248,12 +38248,12 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
       if (!m) continue;
       const shown3 = k.slice(0, 60);
       if (!isCanonicalN(m[1])) {
-        refuse26(
+        refuse27(
           `${label}.${shown3} is not a key of a bias application: its number is written 1, 2, 3 and so on`,
           [`renumber ${shown3} on ${label}, the applications numbered from 1`]
         );
       } else if (!BIAS_APPLICATION_KEYS.includes(m[2])) {
-        refuse26(
+        refuse27(
           `${label}.${shown3} is not a key of a bias application, which writes ${BIAS_APPLICATION_KEYS.join(", ")} only`,
           [`remove ${shown3} from ${label}`]
         );
@@ -38263,7 +38263,7 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
     if (numbers.size !== top2) {
       const gaps = [];
       for (let i = 1; i <= top2 && gaps.length < 5; i++) if (!numbers.has(i)) gaps.push(i);
-      refuse26(
+      refuse27(
         `${label}'s bias applications are numbered up to ${top2} with ${gaps.join(", ")}${gaps.length === 5 ? " and more" : ""} missing: they are numbered from 1 with none left out, so a reader can tell none was dropped`,
         [`renumber the bias_<n>_ keys on ${label} 1, 2, 3 and so on`]
       );
@@ -38278,7 +38278,7 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
     if (!carries(value) || Array.isArray(value) && value.length === 0) return 0;
     const at43 = `${label}.bias_applied`;
     if (!Array.isArray(value)) {
-      refuse26(
+      refuse27(
         `${at43} is not a list: it lists each bias statement applied here, one {statement, effect} each`,
         [`make ${at43} a list of {statement, effect} items, or drop it \u2014 where no statement was applied there is none`]
       );
@@ -38288,7 +38288,7 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
     value.forEach((a, j) => {
       const item3 = `${at43}[${j}]`;
       if (!plainObject(a)) {
-        refuse26(
+        refuse27(
           `${item3} is not an object: an application names the statement applied and its effect, {statement, effect}`,
           [`state ${item3} as {statement, effect}, with from and to when the effect is grade_lowered`]
         );
@@ -38296,7 +38296,7 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
       }
       for (const k of Object.keys(a)) {
         if (!BIAS_APPLICATION_KEYS.includes(k)) {
-          refuse26(
+          refuse27(
             `${item3}.${k.slice(0, 40)} is not part of a bias application, which carries ${BIAS_APPLICATION_KEYS.join(", ")} only`,
             [`remove ${k.slice(0, 40)} from ${item3}`]
           );
@@ -38307,7 +38307,7 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
   }
   const count2 = Array.isArray(value) ? value.length : entries.length;
   if (count2 > BIAS_MAX) {
-    refuse26(
+    refuse27(
       `${label} carries ${count2} bias applications: at most ${BIAS_MAX} are recorded in one place`,
       [`keep the ${BIAS_MAX} applications that bear on it, or divide the question`]
     );
@@ -38316,19 +38316,19 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
   for (const { a, item: item3, field: field3 } of entries) {
     const st = a.statement;
     if (typeof st !== "string" || st.trim() === "") {
-      refuse26(
+      refuse27(
         `${field3("statement")} is missing or empty: an application names the bias statement applied, by its id as the project's declared bias holds it`,
         [`state ${field3("statement")}, the id of the statement in the project's declared bias`]
       );
     } else if ([...st].length > BIAS_STATEMENT_MAX || /["'\\\r\n#]/.test(st)) {
-      refuse26(
+      refuse27(
         `${field3("statement")} cannot be written in the record: a statement id is at most ${BIAS_STATEMENT_MAX} characters, with no quote, backslash, newline or #`,
         [`name the statement by an id of at most ${BIAS_STATEMENT_MAX} characters without those marks, as the declared bias holds it`]
       );
     }
     const effect = a.effect;
     if (typeof effect !== "string" || !effects.includes(effect)) {
-      refuse26(
+      refuse27(
         `${field3("effect")} '${String(effect).slice(0, 40)}' is not one of: ${effects.join(", ")}`,
         [`state what the statement did: ${effects.join(", ")}`]
       );
@@ -38336,16 +38336,16 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
     }
     if (effect === "grade_lowered") {
       const okFrom = BASIS_GRADES.includes(a.from), okTo = BASIS_GRADES.includes(a.to);
-      if (!okFrom) refuse26(
+      if (!okFrom) refuse27(
         `${field3("from")} '${String(a.from).slice(0, 40)}' is not one of: ${BASIS_GRADES.join(", ")}: a lowered grade names the letter it was lowered from`,
         [`state ${field3("from")}, the grade before the statement was applied`]
       );
-      if (!okTo) refuse26(
+      if (!okTo) refuse27(
         `${field3("to")} '${String(a.to).slice(0, 40)}' is not one of: ${BASIS_GRADES.join(", ")}: a lowered grade names the letter it was lowered to`,
         [`state ${field3("to")}, the grade after the statement was applied`]
       );
       if (okFrom && okTo && BASIS_GRADES.indexOf(a.to) <= BASIS_GRADES.indexOf(a.from)) {
-        refuse26(
+        refuse27(
           `${item3} lowers the grade from ${a.from} to ${a.to}, which is not lower: a statement applied as grade_lowered names a weaker letter than the one it started from`,
           [
             `state the letters the grade moved between, ${field3("to")} weaker than ${field3("from")}`,
@@ -38355,7 +38355,7 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
       }
     } else {
       for (const k of ["from", "to"]) {
-        if (carries(a[k])) refuse26(
+        if (carries(a[k])) refuse27(
           `${field3(k)} is set on a ${effect} application: only grade_lowered names the letters a grade moved between`,
           [`remove ${field3(k)}`]
         );
@@ -38364,7 +38364,7 @@ function biasAppliedFindings(label, value, findings, { effects = BIAS_EFFECTS, c
     if (typeof st === "string" && st.trim() !== "") {
       const key2 = `${st}\0${effect}`;
       if (seen.has(key2)) {
-        refuse26(
+        refuse27(
           `${item3} applies the statement ${st.slice(0, 60)} as ${effect} a second time (${seen.get(key2)} already does): one statement's one effect here is recorded once`,
           [`remove ${item3}`]
         );
@@ -43457,10 +43457,10 @@ var Calibration = class {
       );
       const d = drifted(verdict);
       const supersedes = prev ? prev.calibration_id : null;
-      let obligations = null, truncated5 = null;
+      let obligations = null, truncated6 = null;
       if (this.#listeners.length) {
         obligations = [];
-        truncated5 = false;
+        truncated6 = false;
         for (const l2 of this.#listeners) {
           const r = l2.fn({ calibration_id: id, engine: cal.engine, version: cal.version, supersedes, drift: d });
           if (r == null) continue;
@@ -43468,7 +43468,7 @@ var Calibration = class {
           if (!Array.isArray(r) && !cut10)
             throw new TypeError(`calibration listener ${l2.module} answered something other than a list of obligations`);
           obligations.push(...cut10 ? r.obligations : r);
-          if (cut10 && r.truncated === true) truncated5 = true;
+          if (cut10 && r.truncated === true) truncated6 = true;
         }
       }
       return {
@@ -43483,7 +43483,7 @@ var Calibration = class {
         drift: d,
         obligations_raised: obligations ? obligations.length : null,
         obligations,
-        obligations_truncated: truncated5,
+        obligations_truncated: truncated6,
         regraded: 0,
         why: `${id} records what probe ${cal.probe_id} measured of ${cal.engine} ${cal.version} on ${cal.at}: fidelity ${cal.cap ?? "undetermined"}. ${d.why}` + (obligations ? `` : `. No module derives obligations from calibrations in your group's Civicsmith, so none are named here (null, not none found)`)
       };
@@ -43654,7 +43654,7 @@ var Calibration = class {
    *  is OWED and not RUN, and the record says owed rather than treating the last measurement as current. It never
    *  records a calibration — that would be rule 1's claim-versus-measurement failure committed by the scheduler. */
   calibrationTick(now) {
-    const { rows: rows3, truncated: truncated5 } = this.#subjects();
+    const { rows: rows3, truncated: truncated6 } = this.#subjects();
     const due2 = [];
     for (const s of rows3) {
       const n2 = this.#nextProbe(s, now);
@@ -43668,7 +43668,7 @@ var Calibration = class {
     return {
       due: due2.length,
       subjects: due2,
-      truncated: truncated5,
+      truncated: truncated6,
       probes_run: 0,
       calibrations_written: 0,
       why: due2.length ? `${due2.length} engine(s) are due a calibration probe. Your group's Civicsmith runs no derivation engine of its own, so the probe is OWED and not RUN \u2014 and the record says owed rather than quietly treating the last measurement as current` : `no engine is due a probe`
@@ -46960,7 +46960,7 @@ var Extraction = class _Extraction {
       const k = extent && extent.kind === "pdf-page" && Number.isInteger(extent.page) ? chainKindFor(chain3, extent.page) : docKind && !chain3.some((s) => s && s.extent) ? docKind : null;
       return k || "undetermined";
     };
-    let bytes2 = 0, written2 = 0, truncatedUnits = 0, overBound = 0, unaddressable = 0;
+    let bytes2 = 0, written2 = 0, truncatedUnits = 0, overBound2 = 0, unaddressable = 0;
     const kinds3 = /* @__PURE__ */ new Set(), unaddressed = [];
     const seen = /* @__PURE__ */ new Set();
     const runs = [];
@@ -47003,7 +47003,7 @@ var Extraction = class _Extraction {
       const capped = full.length > CAPTURE_TEXT_UNIT_CAP ? full.slice(0, CAPTURE_TEXT_UNIT_CAP) : full;
       const size = new TextEncoder().encode(capped).length;
       if (written2 >= CAPTURE_TEXT_CAPTURE_UNIT_BOUND || bytes2 + size > CAPTURE_TEXT_CAPTURE_BOUND) {
-        overBound++;
+        overBound2++;
         skip(u, extent);
         continue;
       }
@@ -47072,7 +47072,7 @@ var Extraction = class _Extraction {
     }
     const wire = Number.isInteger(wireOverBound) && wireOverBound > 0 ? wireOverBound : 0;
     const offered = ordered2.length + wire;
-    const over = overBound + wire;
+    const over = overBound2 + wire;
     const chainKind = kinds3.size === 1 ? [...kinds3][0] : kinds3.size ? "mixed" : docKind || "undetermined";
     const state = !offered ? "none" : over || unaddressable ? "partial" : "whole";
     this.#sql.exec(
@@ -47223,7 +47223,7 @@ var Extraction = class _Extraction {
       ref,
       cap + 1
     );
-    const truncated5 = docs.length > cap;
+    const truncated6 = docs.length > cap;
     const keep2 = this.#redactor(viewer);
     const documents = [];
     for (const d of docs.slice(0, cap)) {
@@ -47250,7 +47250,7 @@ var Extraction = class _Extraction {
         ...rows3.length > 1 ? { occurrences: rows3.map((r) => readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref)) } : {}
       });
     }
-    return { ok: true, ref, count: documents.length, limit: cap, truncated: truncated5, documents };
+    return { ok: true, ref, count: documents.length, limit: cap, truncated: truncated6, documents };
   }
   /** R29 (`op=textprovenance`). */
   transcribedDocuments({ terminalStep: step = null, transcribed = null, limit = null, viewer = null } = {}) {
@@ -52139,7 +52139,7 @@ var Credentials = class _Credentials {
   async login({ role = ROOT, password, ttlSeconds = 43200, source: source2 = null, country = null } = {}) {
     const gate = await this.#gate({ role, source: source2, country, password });
     if (gate.paused) return gate.paused;
-    const refuse26 = () => {
+    const refuse27 = () => {
       this.#refusedAttempt(gate, country);
       return _Credentials.#refused();
     };
@@ -52147,16 +52147,16 @@ var Credentials = class _Credentials {
       const m = this.#memberFacts(role.slice(7));
       if (!m || m.status !== "active") {
         await _Credentials.#payLoginCost(password);
-        return refuse26();
+        return refuse27();
       }
     }
     const c = this.#one(`SELECT salt, hash, iterations FROM credentials WHERE role=?`, role);
     if (!c) {
       await _Credentials.#payLoginCost(password);
-      return refuse26();
+      return refuse27();
     }
     const got = await _Credentials.#derive(String(password ?? ""), c.salt, c.iterations);
-    if (!_Credentials.#same(got, c.hash)) return refuse26();
+    if (!_Credentials.#same(got, c.hash)) return refuse27();
     const token = _Credentials.#rand(32);
     const expires = Date.now() + ttlSeconds * 1e3;
     this.sql.exec(`DELETE FROM sessions WHERE expires < ?`, Date.now());
@@ -52863,14 +52863,14 @@ var Credentials = class _Credentials {
      `member` naming no member of the roster ('organisation', a project, a machine class) is refused as any principal
      but the acting member is: NOT_YOUR_ACCOUNT, or ACCOUNT_MEMBER_NOT_ACTIVE when it names the actor themself (K1756). */
   #accountBar(member2, by) {
-    const refuse26 = (code, detail) => _Credentials.#row(ACCOUNT_CHECKS, code, detail);
+    const refuse27 = (code, detail) => _Credentials.#row(ACCOUNT_CHECKS, code, detail);
     if (by === null || by === void 0 || by === "" || isMachineIdentity(by))
-      return refuse26("MACHINE_CANNOT_HOLD_ACCOUNT", "a member's Claude account is held only by that member's own act, from their own signed-in session; this caller has no member behind it. Nothing was written.");
+      return refuse27("MACHINE_CANNOT_HOLD_ACCOUNT", "a member's Claude account is held only by that member's own act, from their own signed-in session; this caller has no member behind it. Nothing was written.");
     const id = _Credentials.#memberOf(member2);
     if (id === null || _Credentials.#memberOf(by) !== id)
       return _Credentials.#notYours("a member's Claude account is acted on only by that member; another member, an administrator or the founder cannot. Nothing was written.");
     if (this.#memberFacts(id)?.status !== "active")
-      return refuse26("ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member holds a Claude account reference. Nothing was written.");
+      return refuse27("ACCOUNT_MEMBER_NOT_ACTIVE", "only an active member holds a Claude account reference. Nothing was written.");
     return null;
   }
   /* R22–R24, R27, R35: NOT_YOUR_ACCOUNT, minted here alone; `detail` is the asking act's fixed sentence. */
@@ -54209,17 +54209,17 @@ var Credentials = class _Credentials {
      default and set only by their own act, as a reference's is; a sign-in is never refused for being one. */
   async aiGrantMintStanding({ member: member2 = null, question = null } = {}) {
     const id = _Credentials.#memberOf(member2);
-    const refuse26 = (code, detail) => _Credentials.#row(ACCOUNT_CHECKS, code, detail, { member: id });
+    const refuse27 = (code, detail) => _Credentials.#row(ACCOUNT_CHECKS, code, detail, { member: id });
     if (id === null || isMachineIdentity(member2) || this.#memberFacts(id)?.status !== "active")
-      return refuse26("ACCOUNT_MEMBER_NOT_ACTIVE", "a standing question runs only for an active member. Nothing was minted.");
+      return refuse27("ACCOUNT_MEMBER_NOT_ACTIVE", "a standing question runs only for an active member. Nothing was minted.");
     const away = this.aiKeptAway({ use: "standing" });
     if (away) return away;
     const serving = this.#servingAccount(id);
     if (!serving) return this.#noAccount(id);
     if (!serving.standing)
-      return refuse26("STANDING_SWITCH_OFF", `standing questions are off for the ${serving.level === "group" ? "group's key" : serving.signin ? "member's own sign-in" : "member's own account"}, which would serve this one. Nothing was minted.`);
+      return refuse27("STANDING_SWITCH_OFF", `standing questions are off for the ${serving.level === "group" ? "group's key" : serving.signin ? "member's own sign-in" : "member's own account"}, which would serve this one. Nothing was minted.`);
     if (typeof question !== "string" || question.trim() === "")
-      return refuse26("NO_QUESTION", "no standing question was named. Nothing was minted.");
+      return refuse27("NO_QUESTION", "no standing question was named. Nothing was minted.");
     return this.#mintGrant(id, "", Date.now() + AI_GRANT_TTL_SECONDS * 1e3, "standing");
   }
   /* R28, R31: the live grant a token names, or null: unexpired and, for an ask's, its session live and the member's;
@@ -54608,13 +54608,13 @@ var Credentials = class _Credentials {
     };
     const admin = this.#roleIsAdmin(asked);
     const given5 = typeof code === "string" && code.trim() !== "";
-    const refuse26 = () => {
+    const refuse27 = () => {
       this.#refusedAttempt(gate, country);
       return _Credentials.#recoveryRefused();
     };
     if (!(matches2() !== null && admin && given5)) {
       await _Credentials.#payLoginCost(password);
-      return refuse26();
+      return refuse27();
     }
     const hashed = await _Credentials.#hashFor(password);
     const done = this.#tx(() => {
@@ -54627,7 +54627,7 @@ var Credentials = class _Credentials {
       this.sql.exec(`INSERT INTO recoveries (role, at) VALUES (?,?)`, asked, at43);
       return { ok: true, role: asked, remaining: unspent(asked).length };
     });
-    if (!done) return refuse26();
+    if (!done) return refuse27();
     this.#succeeded(gate);
     return done;
   }
@@ -55483,19 +55483,19 @@ function captureOf(ctx, opts = {}) {
     return c;
   }
   const given5 = supplied.get(c);
-  const refuse26 = (name3) => {
+  const refuse27 = (name3) => {
     throw new Error(`captureOf: a caller supplied a different \`${name3}\` for a storage whose capture already holds another one a caller gave; capture refuses it rather than run against either silently (R58)`);
   };
-  if (opts.env != null && given5.has("env") && !sameEnv2(c.env, opts.env)) refuse26("env");
-  if (opts.governor != null && given5.has("governor") && c.governor !== opts.governor) refuse26("governor");
-  if (opts.ownHosts != null && given5.has("ownHosts") && !Capture.sameHosts(c.ownHosts, opts.ownHosts)) refuse26("ownHosts");
+  if (opts.env != null && given5.has("env") && !sameEnv2(c.env, opts.env)) refuse27("env");
+  if (opts.governor != null && given5.has("governor") && c.governor !== opts.governor) refuse27("governor");
+  if (opts.ownHosts != null && given5.has("ownHosts") && !Capture.sameHosts(c.ownHosts, opts.ownHosts)) refuse27("ownHosts");
   for (const [name3, held2] of [
     ["record", () => c.core],
     ["provenance", () => c.provenance],
     ["attestation", () => c.attestation],
     ["acquisition", () => c.acquisition]
   ])
-    if (opts[name3] != null && opts[name3] !== held2()) refuse26(name3);
+    if (opts[name3] != null && opts[name3] !== held2()) refuse27(name3);
   if (opts.env != null && !given5.has("env")) {
     c.env = opts.env;
     given5.add("env");
@@ -56472,7 +56472,7 @@ var Capture = class _Capture {
         if (kept.length > cap) break;
       }
     }
-    const page2 = kept.slice(0, cap), truncated5 = kept.length > cap, last = page2[page2.length - 1];
+    const page2 = kept.slice(0, cap), truncated6 = kept.length > cap, last = page2[page2.length - 1];
     const at43 = now != null && Number.isFinite(Date.parse(now)) ? Date.parse(now) : Date.now();
     const rows3 = [];
     for (const r of page2) {
@@ -56497,8 +56497,8 @@ var Capture = class _Capture {
       sort: by,
       dir: way,
       limit: cap,
-      truncated: truncated5,
-      next: truncated5 ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null
+      truncated: truncated6,
+      next: truncated6 ? cursorOf([String(last.k0), String(last.k1), last.bundle_id]) : null
     };
   }
   /* R77 (DEC-167 (8)): for each document of a window, the archives its captures were cut out of or found in
@@ -56845,7 +56845,7 @@ var Capture = class _Capture {
         ...from ? [from[0], from[0], from[1], from[1], from[2]] : [],
         cap + 1
       );
-      const page2 = found3.slice(0, cap), truncated5 = found3.length > cap, last = page2[page2.length - 1];
+      const page2 = found3.slice(0, cap), truncated6 = found3.length > cap, last = page2[page2.length - 1];
       const documents = [...new Set(page2.map((r) => r.bundle_id))].map((document) => ({
         document,
         set_aside: this.#one(`SELECT act FROM held_acts WHERE bundle_id = ? ORDER BY seq DESC LIMIT 1`, document)?.act === "set_aside"
@@ -56856,8 +56856,8 @@ var Capture = class _Capture {
         acts: page2.map((r) => ({ document: r.bundle_id, act: r.act, reason: r.reason, author: r.author, at: r.at })),
         documents,
         limit: cap,
-        truncated: truncated5,
-        next: truncated5 ? cursorOf([last.at, last.bundle_id, String(last.seq)]) : null
+        truncated: truncated6,
+        next: truncated6 ? cursorOf([last.at, last.bundle_id, String(last.seq)]) : null
       };
     } catch {
       return {
@@ -57074,15 +57074,15 @@ var Capture = class _Capture {
       cap + 1
     );
     const rows3 = found3.slice(0, cap), last = rows3[rows3.length - 1];
-    const truncated5 = found3.length > cap;
+    const truncated6 = found3.length > cap;
     return {
       address_norm,
       count: rows3.length,
       sources: rows3,
       elements: [...new Set(rows3.map((r) => r.fragment).filter(Boolean))],
       limit: cap,
-      truncated: truncated5,
-      next: truncated5 ? cursorOf([last.source_capture, last.citation_norm, last.link_ref]) : null
+      truncated: truncated6,
+      next: truncated6 ? cursorOf([last.source_capture, last.citation_norm, last.link_ref]) : null
     };
   }
   /** R27. Resolve a capture's links against the record, with a contemporaneity verdict for each that resolves:
@@ -57109,10 +57109,10 @@ var Capture = class _Capture {
       ...src.args,
       window
     );
-    const truncated5 = found3.length > bound;
+    const truncated6 = found3.length > bound;
     const rows3 = found3.slice(0, bound);
-    const next = truncated5 ? cursorOf([rows3[rows3.length - 1].citation_norm, rows3[rows3.length - 1].link_ref]) : null;
-    if (!rows3.length) return { sourceCapture, resolved: 0, links: [], limit: cap, truncated: truncated5, next };
+    const next = truncated6 ? cursorOf([rows3[rows3.length - 1].citation_norm, rows3[rows3.length - 1].link_ref]) : null;
+    if (!rows3.length) return { sourceCapture, resolved: 0, links: [], limit: cap, truncated: truncated6, next };
     const T = stampSecond4(Date.parse(rows3[0].captured_at) || Date.parse(at43 || "") || Date.now());
     const out = [];
     const tally = { linked: 0, offsite: 0, intra: 0, anchor: 0, refused: 0 };
@@ -57218,7 +57218,7 @@ var Capture = class _Capture {
       verdicts,
       links: out,
       limit: cap,
-      truncated: truncated5,
+      truncated: truncated6,
       next,
       note: "undetermined is the resting state and the expected common case, not a failure: it means nothing established which version the source pointed at, which is different from the record holding nothing and different again from holding a later version"
     };
@@ -57396,8 +57396,8 @@ var Capture = class _Capture {
     if (!from) return badCursor();
     const found3 = this.#rows(`SELECT address_norm, state, pages, basis, at FROM link_chrome WHERE host = ? AND address_norm > ?
                                 ORDER BY address_norm LIMIT ?`, h, from[0], cap + 1);
-    const links = found3.slice(0, cap), truncated5 = found3.length > cap;
-    return { host: h, links, limit: cap, truncated: truncated5, next: truncated5 ? cursorOf([links[links.length - 1].address_norm]) : null };
+    const links = found3.slice(0, cap), truncated6 = found3.length > cap;
+    return { host: h, links, limit: cap, truncated: truncated6, next: truncated6 ? cursorOf([links[links.length - 1].address_norm]) : null };
   }
   /** R29. Regenerate a host's chrome by SCAN, which is what makes it derived: everything recomputed from `links`
    *  and the receipts. Bounded and paged: the first page (no `after`) clears the host's derived rows; each page
@@ -57424,15 +57424,15 @@ var Capture = class _Capture {
       const page2 = found3.slice(0, cap);
       const at43 = stampSecond4();
       for (const r of page2) this.#chromeDeriveCapture(r.capture_sha, at43);
-      const truncated5 = found3.length > cap;
+      const truncated6 = found3.length > cap;
       return {
         host: h,
         captures: page2.length,
         derived: page2.map((r) => r.capture_sha),
         limit: cap,
-        truncated: truncated5,
-        next: truncated5 ? page2[page2.length - 1].capture_sha : null,
-        ...truncated5 ? { partial: "more captures of this host remain: its chrome is PARTIAL until the page naming `next` is derived" } : {}
+        truncated: truncated6,
+        next: truncated6 ? page2[page2.length - 1].capture_sha : null,
+        ...truncated6 ? { partial: "more captures of this host remain: its chrome is PARTIAL until the page naming `next` is derived" } : {}
       };
     });
   }
@@ -57687,7 +57687,7 @@ var Capture = class _Capture {
       if (!host || !primarySha) return { host: null, recorded: 0 };
       const now = at43 || stampSecond4();
       const cap = limitOf(limit);
-      let truncated5 = false;
+      let truncated6 = false;
       let added = 0, changedCount = 0;
       const changed = [];
       const fromObs = (o) => typeof o.reused_from === "string" && HEX645.test(o.reused_from) ? o.reused_from : null;
@@ -57750,7 +57750,7 @@ var Capture = class _Capture {
               host,
               o.address_norm
             ).n);
-            if (reusedBy.length > cap) truncated5 = true;
+            if (reusedBy.length > cap) truncated6 = true;
             changed.push({
               address_norm: o.address_norm,
               was: cur.sha256,
@@ -57758,7 +57758,7 @@ var Capture = class _Capture {
               reused_by: reusedBy.slice(0, cap).map((a) => a.primary_sha),
               reused_by_count: count2
             });
-          } else truncated5 = true;
+          } else truncated6 = true;
         } else if (!o.reused) {
           this.#sql.exec(
             `UPDATE site_assets SET last_seen = ?, last_fetched = ?, last_fetched_by = ? WHERE host = ? AND address_norm = ?`,
@@ -57785,7 +57785,7 @@ var Capture = class _Capture {
           o.reused ? fromObs(o) : null
         );
       }
-      return { host, recorded: observations.length, added, changed: changedCount, changes: changed, limit: cap, truncated: truncated5 };
+      return { host, recorded: observations.length, added, changed: changedCount, changes: changed, limit: cap, truncated: truncated6 };
     });
   }
   /** CAP-4: the reused subresource PARTS of a bundle, so ratification can re-fetch each. Scoped to THIS bundle by
@@ -64292,8 +64292,8 @@ var Entities = class _Entities {
       const isOrg = ORGANISATION_KINDS2.includes(k);
       const rows3 = this.#rows(`SELECT entity_id, kind, label, note, declared_by, at, sector FROM entities
                                 WHERE kind=? AND entity_id > ? ORDER BY entity_id LIMIT ?`, k, from, cap + 1);
-      const truncated5 = rows3.length > cap;
-      const page2 = truncated5 ? rows3.slice(0, cap) : rows3;
+      const truncated6 = rows3.length > cap;
+      const page2 = truncated6 ? rows3.slice(0, cap) : rows3;
       const entities2 = page2.map((e2) => ({
         entity_id: e2.entity_id,
         kind: e2.kind,
@@ -64307,8 +64307,8 @@ var Entities = class _Entities {
         ...empty2,
         entities: entities2,
         count: entities2.length,
-        truncated: truncated5,
-        next: truncated5 ? entities2[entities2.length - 1].entity_id : null
+        truncated: truncated6,
+        next: truncated6 ? entities2[entities2.length - 1].entity_id : null
       };
     } catch (err) {
       return { ok: false, reason: "UNREADABLE", detail: `the registry could not be read: ${String(err && err.message || err).slice(0, 200)}` };
@@ -64773,8 +64773,8 @@ var Entities = class _Entities {
       norm3,
       ENTITY_COLLECTION_LIMIT + 1
     );
-    const truncated5 = rows3.length > ENTITY_COLLECTION_LIMIT;
-    return { rows: (truncated5 ? rows3.slice(0, ENTITY_COLLECTION_LIMIT) : rows3).map((r) => ({ capture_sha: r.capture_sha, ref: r.ref, grade: r.grade })), truncated: truncated5 };
+    const truncated6 = rows3.length > ENTITY_COLLECTION_LIMIT;
+    return { rows: (truncated6 ? rows3.slice(0, ENTITY_COLLECTION_LIMIT) : rows3).map((r) => ({ capture_sha: r.capture_sha, ref: r.ref, grade: r.grade })), truncated: truncated6 };
   }
   #relationView(r, from = null) {
     return {
@@ -64793,8 +64793,8 @@ var Entities = class _Entities {
   /* R39: one collection keyed on one entity, at most `max` in its stated order, `truncated` by reading one past. */
   #bounded(max, q10, ...a) {
     const rows3 = this.#rows(`${q10} LIMIT ?`, ...a, max + 1);
-    const truncated5 = rows3.length > max;
-    return { rows: truncated5 ? rows3.slice(0, max) : rows3, truncated: truncated5 };
+    const truncated6 = rows3.length > max;
+    return { rows: truncated6 ? rows3.slice(0, max) : rows3, truncated: truncated6 };
   }
   /* R5, R39, R38: the entity with its aliases (canonical first), the relations it is an end of (oldest first, at most
      1,000) and the defect reports on its resolutions (oldest first), the others at most 500; `keep` is the viewer's redactor (R32). */
@@ -65287,8 +65287,8 @@ var Entities = class _Entities {
     const scan = `SELECT capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, raised_from, resolved_by, at
                     FROM resolutions WHERE capture_sha=? ORDER BY ref, entity_id LIMIT ?`;
     const rows3 = this.#rows(scan, captureSha, cap + 1);
-    const truncated5 = rows3.length > cap;
-    const page2 = truncated5 ? rows3.slice(0, cap) : rows3;
+    const truncated6 = rows3.length > cap;
+    const page2 = truncated6 ? rows3.slice(0, cap) : rows3;
     const keep2 = this.#redactor(viewer);
     const withdrawn = this.#withdrawnNames(page2.map((r) => r.entity_id));
     const defects = this.#defectsOf(scan, [captureSha, cap], keep2);
@@ -65297,7 +65297,7 @@ var Entities = class _Entities {
       capture_sha: captureSha,
       count: page2.length,
       limit: cap,
-      truncated: truncated5,
+      truncated: truncated6,
       resolutions: page2.map((r) => {
         const bundle = keep2(r.bundle_id), hidden = !!r.bundle_id && bundle == null;
         return {
@@ -65340,8 +65340,8 @@ var Entities = class _Entities {
     const scanSql = `SELECT capture_sha, bundle_id, ref, entity_id, grade, method, basis, established, at
                        FROM resolutions WHERE entity_id=? ORDER BY grade, bundle_id, capture_sha LIMIT ?`;
     const scan = this.#rows(scanSql, entityId, cap + 1);
-    const truncated5 = scan.length > cap;
-    const rows3 = truncated5 ? scan.slice(0, cap) : scan;
+    const truncated6 = scan.length > cap;
+    const rows3 = truncated6 ? scan.slice(0, cap) : scan;
     const withdrawn = this.#withdrawnNames([entityId]);
     const defects = this.#defectsOf(scanSql, [entityId, cap], keep2);
     const documents = [..._Entities.#collapse(rows3).values()].map((r) => {
@@ -65368,7 +65368,7 @@ var Entities = class _Entities {
       resolution_count: rows3.length,
       documents,
       limit: cap,
-      truncated: truncated5
+      truncated: truncated6
     };
   }
   /** R16: the same collapse, unbounded and unfiltered, for `connections`, `progressions` and the earned-basis
@@ -65412,7 +65412,7 @@ var Entities = class _Entities {
     };
     const got = this.#namingCandidates(entityId, aliases, source2, cap, /* @__PURE__ */ new Map());
     const documents = got.merged.slice(0, cap);
-    const truncated5 = got.merged.length > cap || got.aliasPageFilled;
+    const truncated6 = got.merged.length > cap || got.aliasPageFilled;
     return {
       ok: true,
       entity_id: ent.entity_id,
@@ -65424,8 +65424,8 @@ var Entities = class _Entities {
       count: documents.length,
       documents,
       limit: cap,
-      truncated: truncated5,
-      detail: "these are CANDIDATES, not resolutions: a document whose reading carries this subject's name \u2014 as the reference the source assigned, as that reference's key, or as the name the reading recorded \u2014 offered for a member to confirm. Nothing here is established and no grade is minted by asking: op=resolve is the only thing that grades, and 'grade_if_resolved' says what it would mint, or null where the name merely sits inside a longer string and it would mint nothing. A document that carries this subject in words the reading recorded in none of those three, or under a spelling none of its registered names reaches, is still not here, and its absence says nothing about whether it exists." + (truncated5 ? ` THIS IS THE FIRST ${cap} AND NOT ALL OF THEM: the answer was cut at the bound this op applied, so a count taken from this list is a floor and never a total.` : "")
+      truncated: truncated6,
+      detail: "these are CANDIDATES, not resolutions: a document whose reading carries this subject's name \u2014 as the reference the source assigned, as that reference's key, or as the name the reading recorded \u2014 offered for a member to confirm. Nothing here is established and no grade is minted by asking: op=resolve is the only thing that grades, and 'grade_if_resolved' says what it would mint, or null where the name merely sits inside a longer string and it would mint nothing. A document that carries this subject in words the reading recorded in none of those three, or under a spelling none of its registered names reaches, is still not here, and its absence says nothing about whether it exists." + (truncated6 ? ` THIS IS THE FIRST ${cap} AND NOT ALL OF THEM: the answer was cut at the bound this op applied, so a count taken from this list is a floor and never a total.` : "")
     };
   }
   /* R17, R52: THE ONE CANDIDATE RULE, for one entity's live aliases over a `source` of reference matches: `matches(terms)`
@@ -65596,8 +65596,8 @@ var Entities = class _Entities {
         count: got.merged.length
       });
     }
-    const truncated5 = candidates.length > cap;
-    const page2 = truncated5 ? candidates.slice(0, cap) : candidates;
+    const truncated6 = candidates.length > cap;
+    const page2 = truncated6 ? candidates.slice(0, cap) : candidates;
     return {
       ok: true,
       kinds: want,
@@ -65606,8 +65606,8 @@ var Entities = class _Entities {
       candidates: page2,
       count: page2.length,
       limit: cap,
-      truncated: truncated5,
-      detail: "these are CANDIDATES, not resolutions, for every registered subject of these kinds, looked for only in the named captured documents you can see; each is what the name lookup for that one subject would offer were these documents all there is, and nothing is established or graded by asking" + (truncated5 ? `. THIS IS THE FIRST ${cap} AND NOT ALL OF THEM, so a count taken from it is a floor.` : "")
+      truncated: truncated6,
+      detail: "these are CANDIDATES, not resolutions, for every registered subject of these kinds, looked for only in the named captured documents you can see; each is what the name lookup for that one subject would offer were these documents all there is, and nothing is established or graded by asking" + (truncated6 ? `. THIS IS THE FIRST ${cap} AND NOT ALL OF THEM, so a count taken from it is a floor.` : "")
     };
   }
   /** R19 (N4): the query plan of R17's lookup, so a test can assert the term index CARRIES it. With no terms it
@@ -67018,7 +67018,7 @@ var Connections = class _Connections {
         });
     }
     const distinct2 = [...byCapture.values()];
-    const truncated5 = rowsCut || distinct2.length > endsCap;
+    const truncated6 = rowsCut || distinct2.length > endsCap;
     const ends = distinct2.length > endsCap ? distinct2.slice(0, endsCap) : distinct2;
     for (const e2 of ends) {
       e2.pos = null;
@@ -67117,7 +67117,7 @@ var Connections = class _Connections {
         endsCap,
         scan.length,
         cap,
-        truncated5 ? 1 : 0,
+        truncated6 ? 1 : 0,
         at43
       );
       return { ok: true };
@@ -67128,7 +67128,7 @@ var Connections = class _Connections {
         entityId,
         count: connections.length,
         documents: ends.length,
-        truncated: truncated5,
+        truncated: truncated6,
         entityKnown: !!ent,
         assertedBy: author
       });
@@ -67143,7 +67143,7 @@ var Connections = class _Connections {
       count: connections.length,
       connections,
       limit: cap,
-      truncated: truncated5
+      truncated: truncated6
     };
   }
   /* ================================================================ the pair and the choice (R6, R9, R14–R16) */
@@ -67292,8 +67292,8 @@ var Connections = class _Connections {
     } else {
       return { ok: false, reason: "NO_KEY", detail: "read connections by entity (id=ENT-...) or by capture (sha256=...)" };
     }
-    const truncated5 = scan.length > cap;
-    const rows3 = truncated5 ? scan.slice(0, cap) : scan;
+    const truncated6 = scan.length > cap;
+    const rows3 = truncated6 ? scan.slice(0, cap) : scan;
     const keep2 = this.redactor(viewer);
     const derivation = entityId ? this.derivationStatement(entityId) : void 0;
     return {
@@ -67317,7 +67317,7 @@ var Connections = class _Connections {
         };
       }),
       limit: cap,
-      truncated: truncated5,
+      truncated: truncated6,
       ...derivation ? { derivation } : {}
     };
   }
@@ -67369,8 +67369,8 @@ var Connections = class _Connections {
       row12.capture_sha,
       cap + 1
     );
-    const truncated5 = scan.length > cap;
-    const conns = truncated5 ? scan.slice(0, cap) : scan;
+    const truncated6 = scan.length > cap;
+    const conns = truncated6 ? scan.slice(0, cap) : scan;
     const g = this.#grade(row12, conns, this.redactor(viewer));
     return {
       ok: true,
@@ -67393,7 +67393,7 @@ var Connections = class _Connections {
         outside: g.outside.length
       },
       limit: cap,
-      truncated: truncated5,
+      truncated: truncated6,
       why: g.why
     };
   }
@@ -69211,7 +69211,7 @@ function derivationObservation({
   entityId = null,
   count: count2 = null,
   documents = null,
-  truncated: truncated5 = false,
+  truncated: truncated6 = false,
   entityKnown = null
 } = {}) {
   const id = typeof entityId === "string" && entityId ? entityId : null;
@@ -69220,7 +69220,7 @@ function derivationObservation({
   const docs = Number.isInteger(documents) ? documents : null;
   const ends = docs == null ? "an unrecorded number of" : String(docs);
   const unregistered = entityKnown === false ? "; this entity id is not in the subject registry, so the derivation ran over the resolutions that name it and nothing in the record describes it" : "";
-  if (truncated5 === true)
+  if (truncated6 === true)
     return {
       row: {
         state: "partial",
@@ -69926,13 +69926,13 @@ var ObservationLog = class _ObservationLog {
     entityId = null,
     count: count2 = null,
     documents = null,
-    truncated: truncated5 = false,
+    truncated: truncated6 = false,
     entityKnown = null,
     assertedBy = null
   } = {}) {
     const asserted = String(assertedBy || "system");
     const { actorClass, actor } = asserted === "system" ? { actorClass: "plane", actor: null } : actorOf(asserted);
-    const { row: row12 } = derivationObservation({ entityId, count: count2, documents, truncated: truncated5, entityKnown });
+    const { row: row12 } = derivationObservation({ entityId, count: count2, documents, truncated: truncated6, entityKnown });
     if (!row12) return { written: 0, refused: [], state: null };
     const bad2 = this.observe({
       actorClass,
@@ -72597,11 +72597,11 @@ WHERE ${gate.sql}`,
   };
 }
 function savedForm(query = {}, relation2 = null) {
-  const refuse26 = (reason2, detail, warnings = []) => ({ ok: false, reason: reason2, detail, warnings });
+  const refuse27 = (reason2, detail, warnings = []) => ({ ok: false, reason: reason2, detail, warnings });
   try {
     const o = query && typeof query === "object" ? query : {};
     if (Array.isArray(o.ids) ? o.ids.length > 0 : o.ids !== void 0 && o.ids !== null)
-      return refuse26("SAVED_QUERY_SELECTION", "it carries ids: a selection, not a search, and a selection is not re-run");
+      return refuse27("SAVED_QUERY_SELECTION", "it carries ids: a selection, not a search, and a selection is not re-run");
     const q10 = typeof o.q === "string" ? o.q : "";
     const implicitOp = o.implicitOp === "or" ? "or" : "and";
     const drops = [];
@@ -72617,11 +72617,11 @@ function savedForm(query = {}, relation2 = null) {
     const plan = compile4({ q: q10, implicitOp, zone: o.zone ?? null }, relation2);
     drops.push(...plan.drops);
     if (drops.length)
-      return refuse26("SAVED_QUERY_DROPS", `compiling it drops ${drops.length === 1 ? "a term" : `${drops.length} terms`}, so what would be saved is not what would run`, drops);
-    if (plan.ast === null) return refuse26("SAVED_QUERY_EMPTY", "no term of it compiles");
+      return refuse27("SAVED_QUERY_DROPS", `compiling it drops ${drops.length === 1 ? "a term" : `${drops.length} terms`}, so what would be saved is not what would run`, drops);
+    if (plan.ast === null) return refuse27("SAVED_QUERY_EMPTY", "no term of it compiles");
     return { ok: true, form: { v: 1, q: q10, implicitOp, sort, dir } };
   } catch {
-    return refuse26(
+    return refuse27(
       "SAVED_QUERY_DROPS",
       "its sort cannot be read, so what would be saved is not what would run",
       ["sort: not readable"]
@@ -73915,7 +73915,7 @@ function recordedBy(k, args) {
     }
     const sha2 = a.captureSha.trim().toLowerCase();
     const cap = clamp2(a.limit);
-    const answer = (items, truncated5) => ({ ok: true, module: "events", capture_sha: sha2, items, truncated: truncated5 });
+    const answer = (items, truncated6) => ({ ok: true, module: "events", capture_sha: sha2, items, truncated: truncated6 });
     if (!k.heldCapture(sha2, a.viewer)) return answer([], false);
     const seen = /* @__PURE__ */ new Map();
     const sees = (bundleId) => {
@@ -75449,12 +75449,12 @@ var Events = class _Events {
   #bounded(items, limit, idOf5 = (i) => i.event_id) {
     const cap = clamp3(limit);
     const o = orderByWhen(items, idOf5);
-    const truncated5 = o.placed.length > cap;
+    const truncated6 = o.placed.length > cap;
     return {
       items: o.placed.slice(0, cap),
       placed_nowhere: o.nowhere.slice(0, cap),
       limit: cap,
-      truncated: truncated5 || o.nowhere.length > cap
+      truncated: truncated6 || o.nowhere.length > cap
     };
   }
   /** R27: the events an entity takes part in or that concern it, ordered by R31, bounded. */
@@ -76693,9 +76693,9 @@ var Lines = class _Lines {
     const endArgs = dir === "both" ? [entity2, entity2] : [entity2];
     const rows3 = this.#rows(`SELECT l.* FROM lines l WHERE ${end2} AND l.kind IN (${kk.list.map(() => "?").join(",")}) AND ${g.sql}
                               ORDER BY l.at, l.line_id LIMIT ?`, ...endArgs, ...kk.list, ...g.args, cap + 1);
-    const truncated5 = rows3.length > cap;
-    const page2 = truncated5 ? rows3.slice(0, cap) : rows3;
-    return { ok: true, entity: entity2, direction: dir, count: page2.length, limit: cap, truncated: truncated5, lines: page2.map((r) => this.#view(r, viewer)) };
+    const truncated6 = rows3.length > cap;
+    const page2 = truncated6 ? rows3.slice(0, cap) : rows3;
+    return { ok: true, entity: entity2, direction: dir, count: page2.length, limit: cap, truncated: truncated6, lines: page2.map((r) => this.#view(r, viewer)) };
   }
   static #kindList(ks, within3) {
     if (ks === void 0 || ks === null || ks === "") return { list: [...within3] };
@@ -76718,14 +76718,14 @@ var Lines = class _Lines {
     if (bad2) return bad2;
     const kk = _Lines.#kindList(ks, STRUCTURE_KINDS);
     if (kk.refusal) return kk.refusal;
-    const { rows: rows3, truncated: truncated5 } = this.#liveAt("(l.from_entity = ? OR l.to_entity = ?)", [entity2, entity2], kk.list, viewer);
+    const { rows: rows3, truncated: truncated6 } = this.#liveAt("(l.from_entity = ? OR l.to_entity = ?)", [entity2, entity2], kk.list, viewer);
     const held2 = [], undetermined3 = [];
     for (const r of rows3) {
       const j = this.#judge(r, at43, viewer);
       if (j.state === "in") held2.push(this.#view(r, viewer));
       else if (j.state === "undetermined") undetermined3.push({ line: this.#view(r, viewer), why: j.why });
     }
-    return { ok: true, entity: entity2, at: at43, held: held2, undetermined: undetermined3, truncated: truncated5 };
+    return { ok: true, entity: entity2, at: at43, held: held2, undetermined: undetermined3, truncated: truncated6 };
   }
   /* ---- holderAt (R11, R12): the one home ---- */
   holderAt({ office, at: at43, viewer } = {}) {
@@ -76735,14 +76735,14 @@ var Lines = class _Lines {
       return refuse11("NOT_AN_OFFICE", "a holder is asked of an entity of kind office; a line to an organisation is a career, never a holder");
     const bad2 = _Lines.#atRefusal(at43);
     if (bad2) return bad2;
-    const { rows: rows3, truncated: truncated5 } = this.#liveAt("l.to_entity = ?", [office], ["holds"], viewer);
+    const { rows: rows3, truncated: truncated6 } = this.#liveAt("l.to_entity = ?", [office], ["holds"], viewer);
     const inn = [], und = [];
     for (const r of rows3) {
       const j = this.#judge(r, at43, viewer);
       if (j.state === "in") inn.push(r);
       else if (j.state === "undetermined") und.push({ line_id: r.line_id, why: j.why });
     }
-    if (inn.length === 1 && und.length === 0 && !truncated5) {
+    if (inn.length === 1 && und.length === 0 && !truncated6) {
       const v = this.#view(inn[0], viewer);
       return {
         ok: true,
@@ -76756,9 +76756,9 @@ var Lines = class _Lines {
         ends: v.ends
       };
     }
-    if (inn.length === 0 && und.length === 0 && !truncated5)
+    if (inn.length === 0 && und.length === 0 && !truncated6)
       return { ok: true, office, at: at43, holder: null, undetermined: "no line covers the date", lines: [] };
-    const why2 = inn.length > 1 ? `${inn.length} lines hold the post at the date` : truncated5 ? "more lines than one read holds name this office" : "a line naming this office may cover the date, and the record does not settle it";
+    const why2 = inn.length > 1 ? `${inn.length} lines hold the post at the date` : truncated6 ? "more lines than one read holds name this office" : "a line naming this office may cover the date, and the record does not settle it";
     return {
       ok: true,
       office,
@@ -76782,25 +76782,25 @@ var Lines = class _Lines {
       const b = _Lines.#atRefusal(at43);
       if (b) return b;
     }
-    const { rows: rows3, truncated: truncated5 } = this.#liveAt("l.to_entity = ?", [proceeding], ["party_to"], viewer);
+    const { rows: rows3, truncated: truncated6 } = this.#liveAt("l.to_entity = ?", [proceeding], ["party_to"], viewer);
     const party = (r) => ({ party: r.from_entity, role: r.role ?? null, line: this.#view(r, viewer) });
-    if (at43 === void 0 || at43 === null || at43 === "") return { ok: true, proceeding, parties: rows3.map(party), truncated: truncated5 };
+    if (at43 === void 0 || at43 === null || at43 === "") return { ok: true, proceeding, parties: rows3.map(party), truncated: truncated6 };
     const parties = [], undetermined3 = [];
     for (const r of rows3) {
       const j = this.#judge(r, at43, viewer);
       if (j.state === "in") parties.push(party(r));
       else if (j.state === "undetermined") undetermined3.push({ ...party(r), why: j.why });
     }
-    return { ok: true, proceeding, at: at43, parties, undetermined: undetermined3, truncated: truncated5 };
+    return { ok: true, proceeding, at: at43, parties, undetermined: undetermined3, truncated: truncated6 };
   }
   proceedingLinks({ proceeding, viewer } = {}) {
     const bad2 = this.#proceeding(proceeding, "a proceeding's links");
     if (bad2) return bad2;
-    const { rows: rows3, truncated: truncated5 } = this.#liveAt("(l.from_entity = ? OR l.to_entity = ?)", [proceeding, proceeding], PROCEEDING_LINKS, viewer);
+    const { rows: rows3, truncated: truncated6 } = this.#liveAt("(l.from_entity = ? OR l.to_entity = ?)", [proceeding, proceeding], PROCEEDING_LINKS, viewer);
     return {
       ok: true,
       proceeding,
-      truncated: truncated5,
+      truncated: truncated6,
       links: rows3.map((r) => ({
         kind: r.kind,
         direction: r.from_entity === proceeding ? "out" : "in",
@@ -78446,8 +78446,8 @@ var ProvenanceRoutes = class {
       after0,
       n2 + 1
     );
-    const truncated5 = raw.length > n2;
-    const page2 = truncated5 ? raw.slice(0, n2) : raw;
+    const truncated6 = raw.length > n2;
+    const page2 = truncated6 ? raw.slice(0, n2) : raw;
     const seen = /* @__PURE__ */ new Map();
     if (page2.length)
       for (const b of this.#rows(
@@ -78468,7 +78468,7 @@ var ProvenanceRoutes = class {
         ...routeFinding(b.object_type, m)
       });
     }
-    const cursor = truncated5 && page2.length ? page2[page2.length - 1].bundle_id : null;
+    const cursor = truncated6 && page2.length ? page2[page2.length - 1].bundle_id : null;
     const standing = {};
     for (const r of this.#rows(
       `SELECT m.finding AS f, COUNT(*) AS n FROM provenance_route_marks m
@@ -78500,7 +78500,7 @@ var ProvenanceRoutes = class {
       limit: n2,
       after: after0,
       cursor,
-      truncated: truncated5,
+      truncated: truncated6,
       /* `marked` is the TOTAL standing at this finding, beside a page bounded at
          `limit` — the two are different numbers and publishing only the page's
          would be REC-57's defect. */
@@ -82349,10 +82349,10 @@ var LawRecords = class {
       const p3 = portion == null || portion === "" ? null : String(portion);
       const start = [...this.k.idsAtKey(k, p3)];
       const seen = new Set(start), out = [];
-      let frontier = start, depth = 0, truncated5 = false;
+      let frontier = start, depth = 0, truncated6 = false;
       while (frontier.length) {
         if (depth >= BOUNDS.depth_default) {
-          truncated5 = true;
+          truncated6 = true;
           break;
         }
         depth++;
@@ -82389,8 +82389,8 @@ var LawRecords = class {
         portion: p3,
         held_under: start,
         addresses: out,
-        truncated: truncated5,
-        ...truncated5 ? { why: `the chain of renumberings and recodifications runs past ${BOUNDS.depth_default} steps; those past it are not followed` } : {}
+        truncated: truncated6,
+        ...truncated6 ? { why: `the chain of renumberings and recodifications runs past ${BOUNDS.depth_default} steps; those past it are not followed` } : {}
       };
     } catch {
       return {
@@ -84099,7 +84099,7 @@ var Standards = class {
       if (kept.length > n2 || page3.length < n2 + 1) break;
       cursor = page3[page3.length - 1].standard_id;
     }
-    const truncated5 = kept.length > n2;
+    const truncated6 = kept.length > n2;
     const page2 = kept.slice(0, n2);
     const items = page2.map(({ r, f: f17 }) => ({ ...this.#answer(r, viewer), ...f17 ? { in_force: { state: f17.state, why: f17.why } } : {} }));
     return {
@@ -84107,8 +84107,8 @@ var Standards = class {
       items,
       count: items.length,
       limit: n2,
-      truncated: truncated5,
-      cursor: truncated5 ? page2[page2.length - 1].r.standard_id : null,
+      truncated: truncated6,
+      cursor: truncated6 ? page2[page2.length - 1].r.standard_id : null,
       ...date ? { at: date, says: `standards in force on ${date}, or whose period does not decide it (stated undetermined); a standard whose period excludes the date is left out` } : {}
     };
   }
@@ -86557,13 +86557,13 @@ var Money = class _Money {
          AND (${g.sql})
        ORDER BY f.period_start, f.fact_id`, entity2, entity2, entity2, entity2, entity2, ...ks, ...ps, ...g.args);
     const facts = [], undetermined3 = [];
-    let truncated5 = false;
+    let truncated6 = false;
     for (const r of rows3) {
       const o = q10 ? _Money.#overlap({ start: r.period_start, end: r.period_end }, q10) : true;
       if (o === false) continue;
       const into = o === true ? facts : undetermined3;
       if (into.length >= lim) {
-        truncated5 = true;
+        truncated6 = true;
         continue;
       }
       into.push(this.#view_(r, viewer ?? ""));
@@ -86576,7 +86576,7 @@ var Money = class _Money {
       undetermined: undetermined3,
       ...undetermined3.length ? { undetermined_why: "these facts' periods state no end, so whether they overlap the period asked is not settled" } : {},
       limit: lim,
-      truncated: truncated5,
+      truncated: truncated6,
       says: "facts, never a total"
     };
   }
@@ -87201,6 +87201,11 @@ try {
 }
 
 // src/doorbell/checks.mjs
+var checks_exports22 = {};
+__export(checks_exports22, {
+  DOORBELL_CHECKS: () => DOORBELL_CHECKS,
+  KNOCK_CHECKS: () => KNOCK_CHECKS
+});
 var inIndex2 = (fn, region) => `src/doorbell/index.mjs ${fn} > ${region}`;
 var atDoor = (fn, region) => `src/doorbell/door.mjs ${fn} > ${region}`;
 var DOORBELL_CHECKS = Object.freeze({
@@ -87323,12 +87328,12 @@ async function knockOp(req, env, store, { json: json24, requiredArgument: requir
   if (req.method !== "POST") return json24({ ok: false, error: "knock is a POST" }, 405);
   const place = typeof country === "string" && country ? country : null;
   const stamp4 = place ? `&country=${encodeURIComponent(place)}` : "";
-  const refuse26 = async (answer, status) => {
+  const refuse27 = async (answer, status) => {
     await tallyRefusal(store, doAnswer2, place);
     return json24(answer, status);
   };
   const raw = await req.arrayBuffer();
-  if (raw.byteLength > KNOCK.maxBytes + 4096) return refuse26(knockEnvelopeTooLarge(), 413);
+  if (raw.byteLength > KNOCK.maxBytes + 4096) return refuse27(knockEnvelopeTooLarge(), 413);
   let body;
   try {
     body = JSON.parse(new TextDecoder().decode(raw));
@@ -87336,7 +87341,7 @@ async function knockOp(req, env, store, { json: json24, requiredArgument: requir
     body = null;
   }
   if (!body || typeof body.contentB64 !== "string" && typeof body.contentText !== "string")
-    return refuse26({ ok: false, ...requiredArgument2(
+    return refuse27({ ok: false, ...requiredArgument2(
       "knock",
       "contentB64 or contentText",
       "a JSON body with contentB64=<base64> or contentText=<text>",
@@ -87346,13 +87351,13 @@ async function knockOp(req, env, store, { json: json24, requiredArgument: requir
   try {
     bytes2 = typeof body.contentB64 === "string" ? Uint8Array.from(atob(body.contentB64), (c) => c.charCodeAt(0)) : new TextEncoder().encode(body.contentText);
   } catch {
-    return refuse26({ ok: false, ...requiredArgument2("knock", "contentB64", "<base64>", "contentB64 is not valid base64") }, 400);
+    return refuse27({ ok: false, ...requiredArgument2("knock", "contentB64", "<base64>", "contentB64 is not valid base64") }, 400);
   }
-  if (bytes2.length === 0) return refuse26(knockEmpty(), 400);
+  if (bytes2.length === 0) return refuse27(knockEmpty(), 400);
   const evidence = typeof env.CAPTURES?.put === "function";
   const cap = evidence ? KNOCK.maxBytes : KNOCK.maxInline;
-  if (bytes2.length > cap) return refuse26(knockPayloadTooLarge(cap, evidence), 413);
-  if (isWeakKnockerSecret(body.knockerSecret)) return refuse26(knockerSecretWeak(), 400);
+  if (bytes2.length > cap) return refuse27(knockPayloadTooLarge(cap, evidence), 413);
+  if (isWeakKnockerSecret(body.knockerSecret)) return refuse27(knockerSecretWeak(), 400);
   const source2 = req.headers.get("cf-connecting-ip") || "unknown";
   const out = await doAnswer2(store.fetch(new Request(`http://do/knock?source=${encodeURIComponent(source2)}${stamp4}`, {
     method: "POST",
@@ -87998,15 +88003,15 @@ var Doorbell = class _Doorbell {
       ...from ? [from[0], from[0], from[1], from[1], from[2], from[3]] : [],
       cap + 1
     );
-    const rows3 = found3.slice(0, cap), truncated5 = found3.length > cap, last = rows3[rows3.length - 1];
+    const rows3 = found3.slice(0, cap), truncated6 = found3.length > cap, last = rows3[rows3.length - 1];
     const inbox = rows3.map(({ k0: _k0, k1: _k1, ...r }) => ({ ...r, project: r.project || null }));
     return {
       inbox,
       sort: by,
       dir: way,
       limit: cap,
-      truncated: truncated5,
-      next: truncated5 ? cursorOf2([String(last.k0), String(last.k1), last.received, last.knock_id]) : null
+      truncated: truncated6,
+      next: truncated6 ? cursorOf2([String(last.k0), String(last.k1), last.received, last.knock_id]) : null
     };
   }
   /* R3 (DEC-108 (2)): the required-argument refusal for an argument this module reads that names nothing it knows
@@ -88338,7 +88343,7 @@ var Doorbell = class _Doorbell {
       ...from,
       cap + 1
     );
-    const knocks = found3.slice(0, cap), truncated5 = found3.length > cap, last = knocks[knocks.length - 1];
+    const knocks = found3.slice(0, cap), truncated6 = found3.length > cap, last = knocks[knocks.length - 1];
     return {
       ok: true,
       pseudonym,
@@ -88346,8 +88351,8 @@ var Doorbell = class _Doorbell {
       knocks,
       count: knocks.length,
       limit: cap,
-      truncated: truncated5,
-      next: truncated5 ? cursorOf2([last.received, last.knock_id]) : null
+      truncated: truncated6,
+      next: truncated6 ? cursorOf2([last.received, last.knock_id]) : null
     };
   }
   /** R18 (K539; for `sources` R1): every knock pulled into a capture, oldest received first, to a member session (the
@@ -88387,8 +88392,8 @@ function doorbellOps(d, url, body) {
 }
 
 // src/sources/checks.mjs
-var checks_exports22 = {};
-__export(checks_exports22, {
+var checks_exports23 = {};
+__export(checks_exports23, {
   SECRET_NOT_RECOGNISED_ANSWER: () => SECRET_NOT_RECOGNISED_ANSWER,
   SOURCES_CHECKS: () => SOURCES_CHECKS,
   badDisclosure: () => badDisclosure,
@@ -89367,8 +89372,8 @@ var Sources = class _Sources {
     const bell = this.#doorbell;
     let rate;
     try {
-      const stamped2 = a.now != null && a.now !== "" && Number.isFinite(Number(a.now)) ? Number(a.now) : null;
-      rate = await bell.knockAttempt({ sourceAddress: a.sourceAddress ?? null, now: stamped2 ?? this.#nowMs() });
+      const stamped3 = a.now != null && a.now !== "" && Number.isFinite(Number(a.now)) ? Number(a.now) : null;
+      rate = await bell.knockAttempt({ sourceAddress: a.sourceAddress ?? null, now: stamped3 ?? this.#nowMs() });
     } catch {
       return SECRET_NOT_RECOGNISED_ANSWER;
     }
@@ -89527,8 +89532,8 @@ function sourcesOps(s, url, body) {
 }
 
 // src/duties/checks.mjs
-var checks_exports23 = {};
-__export(checks_exports23, {
+var checks_exports24 = {};
+__export(checks_exports24, {
   DUTIES_CHECKS: () => DUTIES_CHECKS,
   refusal: () => refusal14
 });
@@ -90675,16 +90680,16 @@ var Duties = class _Duties {
     const limit = Number.isInteger(n2) ? Math.min(Math.max(n2, 1), LIST_MAX2) : LIST_DEFAULT2;
     const date = said6(b.at) ? b.at.slice(0, 10) : this.#stamp().slice(0, 10);
     const out = [], memo = {};
-    let truncated5 = false;
+    let truncated6 = false;
     for (const d of this.#rows(`SELECT * FROM duties WHERE ${as}=? ORDER BY duty_id`, b.entity)) {
       if (!this.visible(this.#fieldsOf(d.duty_id, d.version), b.viewer)) continue;
       if (out.length === limit) {
-        truncated5 = true;
+        truncated6 = true;
         break;
       }
       out.push(this.#dutyView(d, b.viewer, date, memo));
     }
-    return { ok: true, entity: b.entity, as, duties: out, count: out.length, limit, truncated: truncated5 };
+    return { ok: true, entity: b.entity, as, duties: out, count: out.length, limit, truncated: truncated6 };
   }
   /* ===================================================================== *
    * R9–R12, R16: occurrences derived on read
@@ -92092,7 +92097,7 @@ var partyEntity2 = (p3) => isObj29(p3) ? p3.entity ?? null : typeof p3 === "stri
 var roleNames2 = (roles2) => Array.isArray(roles2) ? roles2.map((r) => isObj29(r) ? r.role : r).filter(filled7) : [];
 var memberOf2 = (by) => typeof by !== "string" || !by.trim() || isMachineIdentity(by) ? null : by.startsWith("member:") ? by.slice(7) || null : by.trim();
 var viewerMember = (viewer) => viewer === "admin" ? "admin" : typeof viewer === "string" && viewer.startsWith("member:") && viewer.length > 7 ? viewer.slice(7) : null;
-var bounded = (items, max = READ_LIST_MAX, truncated5 = false) => ({ items: items.slice(0, max), truncated: truncated5 || items.length > max });
+var bounded = (items, max = READ_LIST_MAX, truncated6 = false) => ({ items: items.slice(0, max), truncated: truncated6 || items.length > max });
 var instances21 = /* @__PURE__ */ new WeakMap();
 var live4 = /* @__PURE__ */ new Set();
 function peopleOf(ctx, deps = {}) {
@@ -92663,8 +92668,8 @@ var People = class _People {
     if (!sameAs) return alone("undetermined", "the identity cluster's cache differs from its rebuild, so no cluster is answered until it is rebuilt");
     const seen = (c) => this.#seesProject(c.project, viewer);
     const members2 = /* @__PURE__ */ new Set([entityId]), links = [], claimIds = /* @__PURE__ */ new Set();
-    let truncated5 = false;
-    for (let frontier = [entityId]; frontier.length && !truncated5; ) {
+    let truncated6 = false;
+    for (let frontier = [entityId]; frontier.length && !truncated6; ) {
       const next = [];
       for (const x of frontier) {
         const rows3 = this.#rows(`SELECT * FROM identity_claims WHERE (a=? OR b=?) AND kind='same_as' AND withdrawn_at IS NULL
@@ -92672,7 +92677,7 @@ var People = class _People {
         for (const c of rows3) {
           if (claimIds.has(c.claim_id)) continue;
           if (claimIds.size >= CLUSTER_CLAIMS_MAX) {
-            truncated5 = true;
+            truncated6 = true;
             break;
           }
           claimIds.add(c.claim_id);
@@ -92680,14 +92685,14 @@ var People = class _People {
           for (const y of [c.a, c.b]) {
             if (members2.has(y)) continue;
             if (members2.size >= CLUSTER_MEMBERS_MAX) {
-              truncated5 = true;
+              truncated6 = true;
               continue;
             }
             members2.add(y);
             next.push(y);
           }
         }
-        if (truncated5) break;
+        if (truncated6) break;
       }
       frontier = next;
     }
@@ -92709,7 +92714,7 @@ var People = class _People {
       links,
       unsure,
       not_same_as: apart,
-      truncated: truncated5
+      truncated: truncated6
     };
   }
   static #claimView(c) {
@@ -93097,13 +93102,13 @@ var People = class _People {
   /* Every unwithdrawn line of the members, of these kinds, from the member's end; `truncated` when an owner's list was cut. */
   #linesOver(members2, kinds3, viewer) {
     const items = [];
-    let truncated5 = false;
+    let truncated6 = false;
     for (const m of members2) {
       const r = this.#lines.linesOf({ entity: m, kinds: kinds3, direction: "from", limit: READ_LIST_MAX, viewer });
-      if (r && r.truncated) truncated5 = true;
+      if (r && r.truncated) truncated6 = true;
       for (const l2 of listOf3(r)) if (!l2.withdrawn && kinds3.includes(l2.kind)) items.push(_People.#lineItem(l2, m));
     }
-    return { items, truncated: truncated5 };
+    return { items, truncated: truncated6 };
   }
   /* Items split by their validity at `at`: `in` answered, `undetermined` apart with why, `out` left out (R14). */
   static #atDate(items, at43, validOf2 = (x) => x.valid) {
@@ -93288,7 +93293,7 @@ var People = class _People {
     if (o) return o.refusal;
     const { cluster, members: members2 } = this.#over(entityId, viewer);
     const byId = /* @__PURE__ */ new Map();
-    let truncated5 = false;
+    let truncated6 = false;
     const put2 = (e2, m, as) => {
       const id = eventId2(e2);
       if (!filled7(id)) return;
@@ -93300,10 +93305,10 @@ var People = class _People {
     const all = (r) => [...listOf3(r), ...r && Array.isArray(r.placed_nowhere) ? r.placed_nowhere : []];
     for (const m of members2) {
       const s = this.#events.statementsOf({ entity: m, from, to, limit: READ_LIST_MAX, viewer });
-      if (s && s.truncated) truncated5 = true;
+      if (s && s.truncated) truncated6 = true;
       for (const e2 of all(s)) put2(e2, m, ["statement"]);
       const acts3 = this.#events.eventsFor({ entity: m, from, to, limit: READ_LIST_MAX, viewer });
-      if (acts3 && acts3.truncated) truncated5 = true;
+      if (acts3 && acts3.truncated) truncated6 = true;
       for (const e2 of all(acts3)) {
         const roles2 = roleNames2(e2.roles).filter((r) => STATEMENT_ROLES.includes(r));
         if (roles2.length) put2(e2, m, roles2);
@@ -93337,7 +93342,7 @@ var People = class _People {
       if (v !== "before" && v !== "after")
         unsettled.push({ a: items[i - 1].event_id, b: items[i].event_id, why: isObj29(s) && filled7(s.why) ? s.why : "the record does not settle their order" });
     }
-    const b = bounded(items, READ_LIST_MAX, truncated5);
+    const b = bounded(items, READ_LIST_MAX, truncated6);
     return {
       ok: true,
       found: true,
@@ -93384,10 +93389,10 @@ var People = class _People {
     const parts = isObj29(s) ? Array.isArray(s.held) ? s.held : listOf3(s) : [];
     for (const l2 of parts) if (l2.kind === "part_of" && lineTo(l2) === organisation && filled7(lineFrom(l2)) && !units.includes(lineFrom(l2))) units.push(lineFrom(l2));
     const held2 = [], undetermined3 = [];
-    let truncated5 = false;
+    let truncated6 = false;
     for (const u2 of units) {
       const r = this.#lines.linesOf({ entity: u2, kinds: ["holds"], direction: "to", limit: READ_LIST_MAX, viewer });
-      if (r && r.truncated) truncated5 = true;
+      if (r && r.truncated) truncated6 = true;
       for (const l2 of listOf3(r)) {
         if (l2.withdrawn || l2.kind !== "holds" || lineTo(l2) !== u2) continue;
         const j = _People.#judge(l2.valid, at43, _People.#through(l2));
@@ -93411,7 +93416,7 @@ var People = class _People {
         return { source: module, failed: true, level: `held as a table, read by ${module}`, error: String(e2 && e2.message || e2).slice(0, 200) };
       }
     }) : [{ source: null, level: "held as a table, not read" }];
-    const h = bounded(held2, READ_LIST_MAX, truncated5), u = bounded(undetermined3);
+    const h = bounded(held2, READ_LIST_MAX, truncated6), u = bounded(undetermined3);
     return {
       ok: true,
       organisation,
@@ -93832,19 +93837,19 @@ var People = class _People {
       const head = { check: c.check_id, version: Number(c.version), name: c.name, machine: !!Number(c.machine), denominator: c.denominator };
       if (!this.#gateOpen(c)) return { ...head, gated: true, reason: `this check's false-alarm rate is not yet measured at or below ${GATE_RATE_MAX * 100}% on a gold set, so its results are not shown` };
       const results = [];
-      let truncated5 = false;
+      let truncated6 = false;
       for (const r of this.#rows(`SELECT * FROM interest_check_results WHERE check_id=? AND version=? ORDER BY result_id`, c.check_id, Number(c.version))) {
         if (!this.#seesProject(r.project, viewer)) continue;
         const d = json6(r.derivation_json);
         const rows3 = isObj29(d) && Array.isArray(d.rows) ? d.rows : [];
         if (!rows3.every((row12) => this.#rowVisible(row12, viewer))) continue;
         if (results.length >= READ_LIST_MAX) {
-          truncated5 = true;
+          truncated6 = true;
           break;
         }
         results.push(this.#resultView(r, c));
       }
-      return { ...head, gated: false, results, count: results.length, truncated: truncated5 };
+      return { ...head, gated: false, results, count: results.length, truncated: truncated6 };
     });
     return { ok: true, checks: out };
   }
@@ -94236,14 +94241,14 @@ var Finder = class {
           else this.#requirements(c, d, set, add2);
         } else this.#figures(kind2, c, d, set, add2);
       }
-      const truncated5 = acc.truncated || acc.items.length > limit;
+      const truncated6 = acc.truncated || acc.items.length > limit;
       const items = acc.items.slice(0, limit);
-      const nothing = whole2 && items.length === 0 && acc.not_read.length === 0 && !truncated5;
+      const nothing = whole2 && items.length === 0 && acc.not_read.length === 0 && !truncated6;
       return {
         kind: kind2,
         items,
         count: items.length,
-        truncated: truncated5,
+        truncated: truncated6,
         nothing,
         ...nothing ? { says: "Nothing here" } : {},
         not_read: acc.not_read
@@ -95485,18 +95490,18 @@ var Retrieval = class _Retrieval {
    *  (REC-36). THE REFUSALS ARE DEC-49's SHAPE, from this module's own rows (C-23.1, C-23.2). */
   meaningRows(input = {}) {
     const known3 = Object.keys(MEANING);
-    const refuse26 = (key2, detail) => {
+    const refuse27 = (key2, detail) => {
       const row12 = MEANING_READ_CHECKS[key2];
       return { ok: false, reason: key2, check: row12.check, translation: row12.translation, detail };
     };
     const asked = input.rows == null ? "" : String(input.rows).trim().toLowerCase();
     if (!asked)
-      return refuse26(
+      return refuse27(
         "MEANING_ROWS_NO_ARM",
         `op=meaningrows answers at MEANING grain and must be told which: rows=${known3.join("|")}. Each reads a different table and answers a different question, so there is no default that would not be answering something you did not ask.`
       );
     if (!known3.includes(asked))
-      return refuse26(
+      return refuse27(
         "MEANING_ROWS_UNKNOWN_ARM",
         `no meaning of the kind ${JSON.stringify(asked)} is held. The kinds that are: ` + known3.map((k) => `${k} (${MEANING[k].rowGrain})`).join("; ")
       );
@@ -95585,8 +95590,8 @@ var Retrieval = class _Retrieval {
     const obs = this.observation;
     const V = obs.vocabulary;
     const raw = this.runQuery(plan.statements.meaning({ mode: "axis" }), tally);
-    const truncated5 = raw.length > MEANING_AXIS_CAP;
-    const page2 = truncated5 ? raw.slice(0, MEANING_AXIS_CAP) : raw;
+    const truncated6 = raw.length > MEANING_AXIS_CAP;
+    const page2 = truncated6 ? raw.slice(0, MEANING_AXIS_CAP) : raw;
     const firstAt = obs.firstRowAt("content");
     const counts = Object.fromEntries([...Object.keys(V.CONTENT_AXIS_STATES), V.CONTENT_AXIS_UNDETERMINED].map((k) => [k, 0]));
     const notRead2 = { never_looked: 0, undetermined: 0 };
@@ -95610,7 +95615,7 @@ var Retrieval = class _Retrieval {
     }
     return {
       captures_counted: page2.length,
-      truncated: truncated5,
+      truncated: truncated6,
       bound: MEANING_AXIS_CAP,
       ...counts,
       not_read: notRead2,
@@ -102425,8 +102430,8 @@ function migrateProgressions(sql) {
 }
 
 // src/progressions/checks.mjs
-var checks_exports24 = {};
-__export(checks_exports24, {
+var checks_exports25 = {};
+__export(checks_exports25, {
   DISPOSITIONS: () => DISPOSITIONS,
   GENERIC_CODES: () => GENERIC_CODES,
   PROGRESSION_CHECKS: () => PROGRESSION_CHECKS,
@@ -108165,8 +108170,8 @@ function inquiryOps(k, url, body) {
 }
 
 // src/bias/checks.mjs
-var checks_exports25 = {};
-__export(checks_exports25, {
+var checks_exports26 = {};
+__export(checks_exports26, {
   BIAS_BAR_PHRASING: () => BIAS_BAR_PHRASING,
   BIAS_CHECKS: () => BIAS_CHECKS,
   BIAS_STATEMENT_KINDS: () => BIAS_STATEMENT_KINDS,
@@ -110092,8 +110097,8 @@ function biasOps(b, url, body) {
 }
 
 // src/accepted-work/checks.mjs
-var checks_exports26 = {};
-__export(checks_exports26, {
+var checks_exports27 = {};
+__export(checks_exports27, {
   ACCEPTED_WORK_CHECKS: () => ACCEPTED_WORK_CHECKS
 });
 var ACCEPTED_WORK_CHECKS = {
@@ -110439,8 +110444,8 @@ function appendConclusionEntry(text7, inquiryId, f17) {
 }
 
 // src/basis-versions/checks.mjs
-var checks_exports27 = {};
-__export(checks_exports27, {
+var checks_exports28 = {};
+__export(checks_exports28, {
   BASIS_VERSION_CHECKS: () => BASIS_VERSION_CHECKS,
   BOILERPLATE_FORMS: () => BOILERPLATE_FORMS,
   CONCLUDE_ACT_CHECKS: () => CONCLUDE_ACT_CHECKS,
@@ -112058,18 +112063,18 @@ var BasisVersions = class _BasisVersions {
    *  (the bound counts VERSIONS); an inquiry the viewer may not see answers exactly as one with no versions, and
    *  `inquiry_present` appears only when it is visible. The run a version names is reported, never joined (§14b.7). */
   basisVersions({ id = null, limit = null, offset = 0, viewer = null, project = null } = {}) {
-    const refuse26 = (key2, detail) => {
+    const refuse27 = (key2, detail) => {
       const row12 = BASIS_VERSION_CHECKS[key2];
       return { ok: false, reason: key2, check: row12.check, code: key2, translation: row12.translation, detail };
     };
     const inq = id == null ? "" : String(id).trim();
     if (!inq)
-      return refuse26(
+      return refuse27(
         "BASIS_VERSIONS_NO_INQUIRY",
         "op=basisversions answers for ONE inquiry: pass id=<INQ-\u2026>. Versions are versions of a question's basis, and there is no default question."
       );
     if (!isInquiryId(inq))
-      return refuse26(
+      return refuse27(
         "BASIS_VERSIONS_NOT_AN_INQUIRY",
         `${inq.slice(0, 60)} is not an inquiry. Only an inquiry has a basis, so only an inquiry has versions of one; an empty list here would say this thing has none when it could not have any.`
       );
@@ -112450,7 +112455,7 @@ var BasisVersions = class _BasisVersions {
     const a = args || {};
     const to = VERSION_ACT_TO[act2] ?? null;
     const preview = a.preview === true || a.preview === "1" || a.preview === "true";
-    const refuse26 = (key2, detail, extra) => {
+    const refuse27 = (key2, detail, extra) => {
       const row13 = VERSION_ACT_CHECKS[key2];
       return {
         ok: false,
@@ -112465,40 +112470,40 @@ var BasisVersions = class _BasisVersions {
     };
     const target = String(a.target ?? "").trim();
     if (!target)
-      return refuse26(
+      return refuse27(
         "VERSION_ACT_NO_INQUIRY",
         "a reading belongs to one question: pass target=<INQ-\u2026>. There is no default question and there must not be one."
       );
     if (!isInquiryId(target))
-      return refuse26(
+      return refuse27(
         "VERSION_ACT_NOT_AN_INQUIRY",
         `${target.slice(0, 60)} is not an inquiry, so it holds no readings of its evidence to act on.`,
         { target }
       );
     const vname = String(a.version ?? "").trim();
     if (!vname)
-      return refuse26(
+      return refuse27(
         "VERSION_ACT_NO_VERSION",
         "a question can hold several readings of its evidence: pass version=<name>. Acting on the wrong one is worse than being asked which was meant.",
         { target }
       );
     const who2 = String(a.author ?? "").trim();
     if (!who2 || isMachineIdentity(who2))
-      return refuse26(
+      return refuse27(
         "MACHINE_CANNOT_MOVE_VERSION",
         `op=version${act2} moves what the record stands on or shows, and the credential that called it is ${who2 ? "a machine" : "unnamed"}. A machine credential may COMPOSE an account of the evidence and propose it, and may never accept it, turn it down, set it aside, hide it, or make it what a project stands on. Sign in as a member.`,
         { target, version: vname }
       );
     const b = this.#visible(target, a.viewer ?? null);
     if (!b)
-      return refuse26(
+      return refuse27(
         "VERSION_ACT_NO_SUCH_VERSION",
         "no question by that id is readable here, so it holds no reading by that name either.",
         { target, version: vname }
       );
     let text7 = this.#doc(target);
     if (text7 === null)
-      return refuse26(
+      return refuse27(
         "VERSION_ACT_UNWRITABLE",
         "this question has no readable file, so nothing about its readings can be moved.",
         { target, version: vname }
@@ -112507,7 +112512,7 @@ var BasisVersions = class _BasisVersions {
     const rows3 = Array.isArray(fm.basis_versions) ? fm.basis_versions : [];
     const idx = rows3.findIndex((r) => r && typeof r === "object" && String(r.name ?? "").trim() === vname);
     if (idx < 0)
-      return refuse26(
+      return refuse27(
         "VERSION_ACT_NO_SUCH_VERSION",
         `this question holds no reading named '${vname.slice(0, 60)}'. Readings are named so a member can ask for one by name, and a name nobody wrote is refused rather than matched to the nearest.`,
         { target, version: vname, known: rows3.map((r) => String(r?.name ?? "").trim()).filter(Boolean).slice(0, 20) }
@@ -112515,7 +112520,7 @@ var BasisVersions = class _BasisVersions {
     const row12 = rows3[idx];
     const from = typeof row12.state === "string" ? row12.state.trim() : "";
     if (act2 !== "current" && setVersionField(text7, vname, "hidden", row12.hidden === true) === null)
-      return refuse26(
+      return refuse27(
         "VERSION_ACT_UNWRITABLE",
         "this question's version block could not be rewritten in place, so nothing was changed.",
         { target, version: vname }
@@ -112525,7 +112530,7 @@ var BasisVersions = class _BasisVersions {
       if (!member2.ok)
         return { ...member2, ok: false, reason: member2.reason, code: member2.code, act: act2, target, version: vname };
       if (member2.value)
-        return refuse26(
+        return refuse27(
           "PUBLISHED_CANNOT_MOVE_VERSION",
           `'${vname}' belongs to a question that is PUBLISHED, and a published case froze this finding at the version its members signed. Moving a reading from ${from || "no recorded state"} to ${to} would change what this finding rests on underneath an edition already on the record, leaving it deriving something the published bytes contradict. Reopen it (op=reopen), move the reading, and publish what changed as a new edition \u2014 the route DEC-12 built for exactly this, and the one op=inquiryground and op=inquirydivide already send you down. The pinned edition keeps its own signature and keeps answering.`,
           { target, version: vname, from, to, state: b.current_state }
@@ -112533,19 +112538,19 @@ var BasisVersions = class _BasisVersions {
     }
     const why2 = String(a.reason ?? "").trim();
     if (versionNeedsReason(to) && !why2)
-      return refuse26(
+      return refuse27(
         "VERSION_NO_REASON",
         `op=version${act2} records WHY. ${to === "rejected" ? "The record of what was turned down is the anti-omission instrument (\xA76 rule 4) and it is worthless without the reason" : "Setting a reading aside without saying why leaves the next reader unable to tell a judgement from an oversight"}.`,
         { target, version: vname, from, to }
       );
     if (why2.length > VERSION_REASON_MAX || /["\\\r\n]/.test(why2) || versionNeedsReason(to) && why2.length < VERSION_REASON_MIN)
-      return refuse26(
+      return refuse27(
         "VERSION_REASON_MALFORMED",
         `a reason is at most ${VERSION_REASON_MAX} characters and cannot contain a quote, a backslash, or a newline: the restricted frontmatter grammar has no escapes. A reason for setting a reading aside or turning it down is at least ${VERSION_REASON_MIN} characters, the shortest the record keeps.`,
         { target, version: vname, reason_length: why2.length }
       );
     if (to !== null && !(VERSION_MACHINE.edges[from] || []).includes(to))
-      return refuse26(
+      return refuse27(
         "VERSION_ILLEGAL_TRANSITION",
         `'${vname}' is ${from || "in no recorded state"} and op=version${act2} would make it ${to}. The states are not a one-way ladder and being considered or turned down is reversible, but a reading a member ACCEPTED is a historical fact: it is corrected by turning it down or by putting it back under consideration, never by returning it to something nobody acted on.`,
         { target, version: vname, from, to, legal: VERSION_MACHINE.edges[from] || [] }
@@ -112556,7 +112561,7 @@ var BasisVersions = class _BasisVersions {
       if (inqTargets.length) {
         const cycle = this.inquiry.cyclePath(target, inqTargets);
         if (cycle)
-          return refuse26(
+          return refuse27(
             "VERSION_BASIS_CYCLE",
             `accepting '${vname}' would close a cycle: ${cycle.join(" -> ")}. An inquiry's basis is a DAG, and the chain above already rests on ${target}.`,
             { target, version: vname, path: cycle }
@@ -112573,7 +112578,7 @@ var BasisVersions = class _BasisVersions {
         const missing2 = declared2.filter((d) => !said10.includes(d));
         const unknown = said10.filter((s) => !declared2.includes(s));
         if (missing2.length || unknown.length)
-          return refuse26(
+          return refuse27(
             "VERSION_AFFIRMATION_INCOMPLETE",
             `'${vname.slice(0, 60)}' rests on ${declared2.length} separately sufficient parts and this answer counts the STRONGEST of them, so accepting it is a claim that each one would carry the finding on its own. ${missing2.length ? `Not affirmed: ${missing2.slice(0, 8).join(", ")}.` : ``}${unknown.length ? ` Named but not part of this reading: ${unknown.slice(0, 8).join(", ")}.` : ``} Pass affirmed=<every part, comma-separated>. DEC-32 rule 4: this cannot be carried by omission or by default, because that is exactly how a finding gets strengthened by repackaging.`,
             { target, version: vname, declared: declared2, affirmed: said10, missing: missing2, unknown }
@@ -112584,14 +112589,14 @@ var BasisVersions = class _BasisVersions {
     let projectId = null, projectRow = null;
     if (act2 === "current") {
       if (from !== "accepted")
-        return refuse26(
+        return refuse27(
           "VERSION_NOT_ACCEPTED",
           `'${vname}' is ${from || "in no recorded state"}. Current implies accepted (\xA76 rule 5), and exploring an unaccepted reading is done by CALCULATING OVER IT rather than by making it what everyone stands on \u2014 once a stance is shared, designating one temporarily would move a whole team's ground so one member could examine a possibility.`,
           { target, version: vname, from }
         );
       projectId = String(a.project ?? "").trim();
       if (!projectId)
-        return refuse26(
+        return refuse27(
           "VERSION_CURRENT_NO_PROJECT",
           "pass project=<PROJ-\u2026>: what a project stands on is the project's own dated declaration, and there is no default project.",
           { target, version: vname }
@@ -112602,7 +112607,7 @@ var BasisVersions = class _BasisVersions {
         if (existence) return existence;
       }
       if (!projectRow || normalizeType(projectRow.object_type) !== "project")
-        return refuse26(
+        return refuse27(
           "VERSION_CURRENT_UNRELATED",
           `${projectId.slice(0, 60)} is not a project readable here, so it holds no stance to move.`,
           { target, version: vname, project: projectId }
@@ -112611,13 +112616,13 @@ var BasisVersions = class _BasisVersions {
       if (denied) return denied;
       const ptext = this.#doc(projectId);
       if (!drawsOn(ptext !== null ? parseFrontmatter(ptext).data || {} : {}, target))
-        return refuse26(
+        return refuse27(
           "VERSION_CURRENT_UNRELATED",
           `${projectId} does not draw on ${target}, so it has no stance on this question to move. Cite the question into the project first.`,
           { target, version: vname, project: projectId }
         );
       if (setCurrentVersionRow(ptext, target, vname, who2, "") === null)
-        return refuse26(
+        return refuse27(
           "VERSION_ACT_UNWRITABLE",
           `${projectId}'s current_versions block could not be rewritten in place, so its stance cannot be recorded.`,
           { target, version: vname, project: projectId }
@@ -112667,7 +112672,7 @@ var BasisVersions = class _BasisVersions {
     }
     if (act2 === "hide" && text7 !== null) text7 = setVersionField(text7, vname, "hidden", hidden);
     if (text7 === null)
-      return refuse26(
+      return refuse27(
         "VERSION_ACT_UNWRITABLE",
         "this question's version block could not be rewritten in place, so nothing was changed.",
         { target, version: vname }
@@ -113384,7 +113389,7 @@ Changes: reading '${fmSafe2(name3)}' added, in state suggested.
     const max = NARROW_CANDIDATES_MAX;
     const out = [];
     const seen = /* @__PURE__ */ new Set();
-    let truncated5 = false;
+    let truncated6 = false;
     const counts = { reading: 0, extract: 0, marked: 0 };
     const push = (c) => {
       c.fields = c.content_id ? { content_id: c.content_id } : extentLegFields(c.extent);
@@ -113393,7 +113398,7 @@ Changes: reading '${fmSafe2(name3)}' added, in state suggested.
       if (extentRelation2(src.extent, c.extent) !== "narrower") return;
       seen.add(key2);
       if (counts[c.source] >= max) {
-        truncated5 = true;
+        truncated6 = true;
         return;
       }
       counts[c.source] += 1;
@@ -113409,7 +113414,7 @@ Changes: reading '${fmSafe2(name3)}' added, in state suggested.
       cap,
       max * 4 + 1
     );
-    if (refRows.length > max * 4) truncated5 = true;
+    if (refRows.length > max * 4) truncated6 = true;
     for (const r of refRows) {
       const pos = readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref);
       if (!pos) continue;
@@ -113434,7 +113439,7 @@ Changes: reading '${fmSafe2(name3)}' added, in state suggested.
         ext = null;
       }
       const extRows = ext && Array.isArray(ext.rows) ? ext.rows : [];
-      if (ext && ext.truncated) truncated5 = true;
+      if (ext && ext.truncated) truncated6 = true;
       for (const r of extRows) {
         const pos = r.position && typeof r.position === "object" ? r.position : readingSourceFromColumns(r.pos_kind, r.pos, r.pos_ref);
         if (!pos) continue;
@@ -113478,7 +113483,7 @@ Changes: reading '${fmSafe2(name3)}' added, in state suggested.
     return {
       candidates: out,
       counts,
-      truncated: truncated5,
+      truncated: truncated6,
       subject,
       read: !!this.#one(`SELECT 1 AS x FROM readings WHERE capture_sha=?`, cap)
     };
@@ -113863,8 +113868,8 @@ function basisVersionsOps(bv, url, body) {
 }
 
 // src/action-grammar/checks.mjs
-var checks_exports28 = {};
-__export(checks_exports28, {
+var checks_exports29 = {};
+__export(checks_exports29, {
   ACTION_ACT_CHECKS: () => ACTION_ACT_CHECKS,
   ACTION_BASIS_KINDS: () => ACTION_BASIS_KINDS,
   ACTION_CATALOGUE_CHECKS: () => ACTION_CATALOGUE_CHECKS,
@@ -115930,8 +115935,8 @@ function recomputePair({ legs = [], levels = null, version = null } = {}) {
 }
 
 // src/strength/checks.mjs
-var checks_exports29 = {};
-__export(checks_exports29, {
+var checks_exports30 = {};
+__export(checks_exports30, {
   PARTITION_INDEPENDENCE_CHECKS: () => PARTITION_INDEPENDENCE_CHECKS,
   STRENGTH_BAR_CHECKS: () => STRENGTH_BAR_CHECKS,
   VERSION_STRENGTH_CHECKS: () => VERSION_STRENGTH_CHECKS,
@@ -117918,8 +117923,8 @@ var CONTRADICTION_COLUMNS = Object.freeze([
 ]);
 
 // src/contradiction/checks.mjs
-var checks_exports30 = {};
-__export(checks_exports30, {
+var checks_exports31 = {};
+__export(checks_exports31, {
   CONTRADICTION_CANDIDATE_CHECKS: () => CONTRADICTION_CANDIDATE_CHECKS,
   CONTRADICTION_PAIR_CHECKS: () => CONTRADICTION_PAIR_CHECKS
 });
@@ -118694,8 +118699,8 @@ var Contradiction = class _Contradiction {
       ...g.args,
       cap + 1
     );
-    const truncated5 = rows3.length > cap;
-    const pairs = (truncated5 ? rows3.slice(0, cap) : rows3).map((r) => ({
+    const truncated6 = rows3.length > cap;
+    const pairs = (truncated6 ? rows3.slice(0, cap) : rows3).map((r) => ({
       key: "K1",
       inquiry: r.inquiry,
       a: this.#extent("leg", {
@@ -118716,7 +118721,7 @@ var Contradiction = class _Contradiction {
       }),
       why: "one question already rests on both of these, one supporting it and one cutting against it. What they SAY about each other is not read here"
     }));
-    return { pairs, truncated: truncated5, notes: [] };
+    return { pairs, truncated: truncated6, notes: [] };
   }
   /** R8 K2 — one subject, two held claims. Two inquiries with the same subject entity (inquiry R40's
    *  `inquiry_bundle_facts.inquiry_subject_entity`; a bundle with no row has none), each with an
@@ -118751,15 +118756,15 @@ var Contradiction = class _Contradiction {
       ...gb.args,
       cap + 1
     );
-    const truncated5 = rows3.length > cap;
-    const pairs = (truncated5 ? rows3.slice(0, cap) : rows3).map((r) => ({
+    const truncated6 = rows3.length > cap;
+    const pairs = (truncated6 ? rows3.slice(0, cap) : rows3).map((r) => ({
       key: "K2",
       subject_entity: r.entity_id,
       a: { kind: "claim", inquiry: r.a_inquiry, title: r.a_title ?? null, version: r.a_version, claim: r.a_claim },
       b: { kind: "claim", inquiry: r.b_inquiry, title: r.b_title ?? null, version: r.b_version, claim: r.b_claim },
       why: "two questions about the same registered subject, each with a reading the group ACCEPTED and a claim it therefore holds. Whether they can both be so is not read here"
     }));
-    return { pairs, truncated: truncated5, notes: [] };
+    return { pairs, truncated: truncated6, notes: [] };
   }
   /** K3 arm (a) — two accepted readings, of DIFFERENT inquiries, whose version legs rest on the SAME content row. */
   #k3Same(viewer, cap) {
@@ -118787,8 +118792,8 @@ var Contradiction = class _Contradiction {
       ...gb.args,
       cap + 1
     );
-    const truncated5 = rows3.length > cap;
-    return { rows: truncated5 ? rows3.slice(0, cap) : rows3, truncated: truncated5 };
+    const truncated6 = rows3.length > cap;
+    return { rows: truncated6 ? rows3.slice(0, cap) : rows3, truncated: truncated6 };
   }
   /** K3 arm (b) — THE SAME QUESTION WHERE NO PASSAGE IS NAMED, as a SECOND STATEMENT rather than a `UNION`: D-36's
    *  workerd ceiling of five compound terms, and a union would publish ONE figure over two joins that mean different
@@ -118822,8 +118827,8 @@ var Contradiction = class _Contradiction {
       ...gb.args,
       cap + 1
     );
-    const truncated5 = rows3.length > cap;
-    return { rows: truncated5 ? rows3.slice(0, cap) : rows3, truncated: truncated5 };
+    const truncated6 = rows3.length > cap;
+    return { rows: truncated6 ? rows3.slice(0, cap) : rows3, truncated: truncated6 };
   }
   /** R7, R8 K3 — both arms, each bounded on its own and each SAID in `arms`. */
   #k3(viewer, cap) {
@@ -118900,7 +118905,7 @@ var Contradiction = class _Contradiction {
       ...gb.args,
       cap + 1
     );
-    const truncated5 = rows3.length > cap;
+    const truncated6 = rows3.length > cap;
     const memo = /* @__PURE__ */ new Map();
     const pairs = [];
     let undetermined3 = 0, indistinct = 0;
@@ -118916,7 +118921,7 @@ var Contradiction = class _Contradiction {
       ...d.dated ? { date_precision: d.dated.precision, date_zone: d.dated.zone } : {},
       read: d.read
     });
-    for (const r of truncated5 ? rows3.slice(0, cap) : rows3) {
+    for (const r of truncated6 ? rows3.slice(0, cap) : rows3) {
       const da = this.#doc(r.a_capture, memo, viewer);
       const db = this.#doc(r.b_capture, memo, viewer);
       const kindsKnown = !!da.doctype && !!db.doctype;
@@ -118947,7 +118952,7 @@ var Contradiction = class _Contradiction {
     }
     return {
       pairs,
-      truncated: truncated5,
+      truncated: truncated6,
       undetermined: undetermined3,
       indistinct,
       missing: missing2,
@@ -118964,10 +118969,10 @@ var Contradiction = class _Contradiction {
     const bv = this.#b();
     const found3 = { inquiry: false, drawing_projects: false, concluded_stances: false, differing_claim: false };
     const pairs = [];
-    let truncated5 = false, examinedCut = false;
+    let truncated6 = false, examinedCut = false;
     const claims = /* @__PURE__ */ new Set();
     if (!bv || typeof bv.projectsDrawingOn !== "function" || typeof bv.conclusionOf !== "function")
-      return { pairs, truncated: truncated5, found: found3, notes: ["basis-versions' reads are not reachable here, so K5 compared nothing"] };
+      return { pairs, truncated: truncated6, found: found3, notes: ["basis-versions' reads are not reachable here, so K5 compared nothing"] };
     const vp = viewerPredicate(viewer);
     let after = "", examined = 0;
     outer: for (; ; ) {
@@ -118981,7 +118986,7 @@ var Contradiction = class _Contradiction {
       for (const r of page2) {
         after = r.id;
         if (examined >= K5_INQUIRIES_EXAMINED) {
-          truncated5 = true;
+          truncated6 = true;
           examinedCut = true;
           break outer;
         }
@@ -119004,7 +119009,7 @@ var Contradiction = class _Contradiction {
           const a = stances[i], b = stances[j];
           if (a.claim.trim() === b.claim.trim()) continue;
           if (pairs.length === cap) {
-            truncated5 = true;
+            truncated6 = true;
             break outer;
           }
           pairs.push({
@@ -119020,7 +119025,7 @@ var Contradiction = class _Contradiction {
     }
     return {
       pairs,
-      truncated: truncated5,
+      truncated: truncated6,
       found: found3,
       notes: examinedCut ? [`K5 examined the first ${K5_INQUIRIES_EXAMINED} questions this viewer may see and stopped: the questions after them were not compared`] : []
     };
@@ -119062,10 +119067,10 @@ var Contradiction = class _Contradiction {
       ...gb.args,
       cap + 1
     );
-    const truncated5 = rows3.length > cap;
+    const truncated6 = rows3.length > cap;
     const pairs = [];
     let openPeriod = 0, agreeing = 0;
-    for (const r of truncated5 ? rows3.slice(0, cap) : rows3) {
+    for (const r of truncated6 ? rows3.slice(0, cap) : rows3) {
       if (r.a_end === null || r.b_end === null) {
         openPeriod += 1;
         continue;
@@ -119093,7 +119098,7 @@ var Contradiction = class _Contradiction {
     const undetermined3 = openPeriod;
     return {
       pairs,
-      truncated: truncated5,
+      truncated: truncated6,
       undetermined: undetermined3,
       consistent: agreeing,
       notes: [
@@ -120092,7 +120097,7 @@ var Contradiction = class _Contradiction {
         items = at43 === -1 ? [] : items.slice(at43 + 1);
       }
       const page2 = items.slice(0, cap);
-      const truncated5 = items.length > cap || scanCut;
+      const truncated6 = items.length > cap || scanCut;
       const candidates = page2.map((x) => this.#present(x.row, x.view, viewer));
       const empty2 = candidates.length ? null : visible === 0 ? { level: "none_judged", says: "no candidate this viewer may see names it: no run's judgement is held here. Whether the pairing forms pairs here is the pairing read's answer" } : shown3 === 0 ? {
         level: "none_shown",
@@ -120105,7 +120110,7 @@ var Contradiction = class _Contradiction {
         wrote: false,
         on: { [subject.kind]: subject.id },
         limit: cap,
-        truncated: truncated5,
+        truncated: truncated6,
         cursor: candidates.length ? candidates[candidates.length - 1].candidate : null,
         candidates,
         not_shown: notShown,
@@ -120245,14 +120250,14 @@ var Contradiction = class _Contradiction {
           ref.version,
           TENSIONS_CANDIDATES_MAX + 1
         ).map((r) => r.candidate);
-        const truncated5 = ids.length > TENSIONS_CANDIDATES_MAX;
+        const truncated6 = ids.length > TENSIONS_CANDIDATES_MAX;
         const marks2 = [];
         for (const id of ids.slice(0, TENSIONS_CANDIDATES_MAX)) {
           const row12 = this.#candidate(id);
           const which = row12 ? _Contradiction.#whichSide(row12, ref) : null;
           if (which) marks2.push(...this.#marksOn(row12, which, viewer));
         }
-        return { referent: ref, marks: marks2, truncated: truncated5 };
+        return { referent: ref, marks: marks2, truncated: truncated6 };
       });
       return {
         ok: true,
@@ -120477,7 +120482,7 @@ var Contradiction = class _Contradiction {
                                   OR (b_ref || '@' || b_version) IN (SELECT value FROM json_each(?))
                                ORDER BY seq`, refs, refs).map((r) => r.candidate);
       const out = [];
-      let truncated5 = false;
+      let truncated6 = false;
       for (const id of ids) {
         const row12 = this.#candidate(id);
         const view = this.#view(row12);
@@ -120485,7 +120490,7 @@ var Contradiction = class _Contradiction {
         const standing = view.state === "open" || view.state === "explained_not_shown" || view.state === "taken_up" || view.state === "resolved" && view.kind === "irreconcilable";
         if (!standing) continue;
         if (out.length === UNRESOLVED_MAX) {
-          truncated5 = true;
+          truncated6 = true;
           break;
         }
         const asked = viewer !== void 0 && viewer !== null;
@@ -120520,7 +120525,7 @@ var Contradiction = class _Contradiction {
         finding: f17,
         sha: h,
         candidates: out,
-        truncated: truncated5,
+        truncated: truncated6,
         bound: UNRESOLVED_MAX,
         ...held2.undetermined_legs ? { undetermined_legs: held2.undetermined_legs } : {},
         says: "each is a tension on something this finding rests on, one level deep; deeper findings disclose their own when published"
@@ -121516,7 +121521,7 @@ var Contradiction = class _Contradiction {
       const n2 = Number(limit);
       const cap = limit === null || limit === void 0 || limit === "" || !Number.isFinite(n2) || n2 < 1 ? PAGE_MAX2 : Math.min(Math.floor(n2), PAGE_MAX2);
       const notices = [];
-      let truncated5 = false;
+      let truncated6 = false;
       for (const id of this.#partyCandidates(g.project)) {
         if (typeof after === "string" && after && !(id > after)) continue;
         const row12 = this.#candidate(id);
@@ -121527,7 +121532,7 @@ var Contradiction = class _Contradiction {
         const view = this.#view(row12);
         if (!isProjectConflict(view.weight, view.state)) continue;
         if (notices.length === cap) {
-          truncated5 = true;
+          truncated6 = true;
           break;
         }
         const parties = this.#parties(row12);
@@ -121552,7 +121557,7 @@ var Contradiction = class _Contradiction {
         wrote: false,
         project: g.project,
         limit: cap,
-        truncated: truncated5,
+        truncated: truncated6,
         cursor: notices.length ? notices[notices.length - 1].candidate : null,
         notices
       };
@@ -121885,8 +121890,8 @@ function contradictionOps(c, url, body) {
 }
 
 // src/reevaluation/checks.mjs
-var checks_exports31 = {};
-__export(checks_exports31, {
+var checks_exports32 = {};
+__export(checks_exports32, {
   REEVALUATION_ACT_CHECKS: () => REEVALUATION_ACT_CHECKS,
   REEVAL_POLICY_AGE_DAYS: () => REEVAL_POLICY_AGE_DAYS,
   REEVAL_SOURCES: () => REEVAL_SOURCES,
@@ -124377,14 +124382,14 @@ var Reevaluation = class {
       if (deps.length < CORRECTED_LIMIT_MAX) break;
     }
     const listed2 = entries.slice(0, cap);
-    const truncated5 = entries.length > cap;
+    const truncated6 = entries.length > cap;
     return {
       ok: true,
       entries: listed2,
       count: listed2.length,
       limit: cap,
-      truncated: truncated5,
-      cursor: truncated5 ? `${listed2[listed2.length - 1].dependent}#${listed2[listed2.length - 1].candidate}` : null,
+      truncated: truncated6,
+      cursor: truncated6 ? `${listed2[listed2.length - 1].dependent}#${listed2[listed2.length - 1].candidate}` : null,
       wrote: false,
       corrections_read: read3,
       ...read3 ? {} : { corrections_why: CORRECTIONS_UNREAD },
@@ -124434,14 +124439,14 @@ var Reevaluation = class {
     const entries = [...byKey.values()].filter((e2) => e2.dependent > aDep || e2.dependent === aDep && e2.entry > aEntry).sort((a, b) => cmp3(a.dependent, b.dependent) || cmp3(a.entry, b.entry));
     for (const e2 of entries) e2.legs.sort((a, b) => cmp3(a.target, b.target) || a.ord - b.ord);
     const listed2 = entries.slice(0, cap);
-    const truncated5 = entries.length > cap;
+    const truncated6 = entries.length > cap;
     return {
       ok: true,
       entries: listed2,
       count: listed2.length,
       limit: cap,
-      truncated: truncated5,
-      cursor: truncated5 ? `${listed2[listed2.length - 1].dependent}#${listed2[listed2.length - 1].entry}` : null,
+      truncated: truncated6,
+      cursor: truncated6 ? `${listed2[listed2.length - 1].dependent}#${listed2[listed2.length - 1].entry}` : null,
       wrote: false,
       ...dk.flags(),
       says: "each finding listed rests on a member finding of a case edition withdrawn on its docket, or is a member finding of an edition a filed response contests; nothing was moved or regraded, no docket entry is evidence, and a recorded re-evaluation closes the cause"
@@ -124608,14 +124613,14 @@ var Reevaluation = class {
     const entries = [...byKey.values()].filter((e2) => e2.dependent > aDep || e2.dependent === aDep && order4.get(e2.move) > aIdx).sort((a, b) => cmp3(a.dependent, b.dependent) || order4.get(a.move) - order4.get(b.move));
     for (const e2 of entries) e2.legs.sort((a, b) => cmp3(a.target, b.target) || a.ord - b.ord);
     const listed2 = entries.slice(0, cap);
-    const truncated5 = entries.length > cap;
+    const truncated6 = entries.length > cap;
     return {
       ok: true,
       entries: listed2,
       count: listed2.length,
       limit: cap,
-      truncated: truncated5,
-      cursor: truncated5 ? `${listed2[listed2.length - 1].dependent}#${listed2[listed2.length - 1].move}` : null,
+      truncated: truncated6,
+      cursor: truncated6 ? `${listed2[listed2.length - 1].dependent}#${listed2[listed2.length - 1].move}` : null,
       wrote: false,
       ...mv.flags(),
       ...refs.flags(),
@@ -124695,7 +124700,7 @@ var Reevaluation = class {
     };
     const tgt = String(target ?? "").trim();
     const cid = String(content ?? "").trim();
-    let legs = [], rows3 = [], truncated5 = false, inquiry = null;
+    let legs = [], rows3 = [], truncated6 = false, inquiry = null;
     if (tgt && cid || !tgt && !cid)
       return refusal36(
         "VERSION_NOTICE_NO_SUBJECT",
@@ -124724,7 +124729,7 @@ var Reevaluation = class {
         inquiry,
         max + 1
       );
-      truncated5 = page2.length > max;
+      truncated6 = page2.length > max;
       legs = page2.slice(0, max);
       const ids = [...new Set(legs.map((l2) => l2.content_id).filter(Boolean))];
       rows3 = ids.length ? this.#rows(`SELECT content_id, capture_sha, bundle_id, extent_kind, extent, ref, cited_as FROM content
@@ -124749,7 +124754,7 @@ var Reevaluation = class {
       notices,
       count: notices.length,
       limit: inquiry ? max : 1,
-      truncated: truncated5,
+      truncated: truncated6,
       states: VERSION_NOTICE_STATES,
       grades: VERSION_NOTICE_GRADES,
       wrote: false,
@@ -124860,7 +124865,7 @@ var Reevaluation = class {
       aOrd,
       cap + 1
     );
-    let truncated5 = page2.length > cap;
+    let truncated6 = page2.length > cap;
     const legs = page2.slice(0, cap);
     const holders = [...new Set(legs.map((l2) => l2.holder))];
     const divided = new Set(holders.length ? this.#rows(`SELECT bundle_id FROM bundles WHERE bundle_id IN (SELECT value FROM json_each(?))
@@ -124870,7 +124875,7 @@ var Reevaluation = class {
                      WHERE content_id IN (SELECT value FROM json_each(?)) LIMIT ?`, JSON.stringify(ids), ids.length) : []).map((r) => [r.content_id, r]));
     const memo = /* @__PURE__ */ new Map(), noticeMemo = /* @__PURE__ */ new Map();
     const across = this.#acrossReader(legs.length > 0, memo);
-    const cases = truncated5 ? null : this.#caseHalf(inCases ? aft.slice(CASE_CURSOR.length) : "", cap - legs.length, memo);
+    const cases = truncated6 ? null : this.#caseHalf(inCases ? aft.slice(CASE_CURSOR.length) : "", cap - legs.length, memo);
     const when = this.#when();
     const raised = [];
     let examined = 0, unread = 0;
@@ -124974,9 +124979,9 @@ var Reevaluation = class {
       return null;
     });
     const last = legs.length ? legs[legs.length - 1] : null;
-    let cursor = truncated5 && last ? `${last.holder}#${last.ord}` : null;
+    let cursor = truncated6 && last ? `${last.holder}#${last.ord}` : null;
     if (cases && cases.cursor !== null) {
-      truncated5 = true;
+      truncated6 = true;
       cursor = `${CASE_CURSOR}${cases.cursor}`;
     }
     const out = {
@@ -124986,7 +124991,7 @@ var Reevaluation = class {
       raised,
       count: raised.length,
       limit: cap,
-      truncated: truncated5,
+      truncated: truncated6,
       cursor,
       ...across.read() ? {} : { standards_read: false, standards_why: STANDARDS_UNREAD },
       ...cases && cases.absent ? { case_parts_absent: true, case_parts_why: "no module has registered the cited parts of a case edition, so no case's owners were told of a newer version of what it cites; that is not the same as none" } : {},
@@ -125810,8 +125815,8 @@ function delivererOf(stored2) {
 }
 
 // src/publication/checks.mjs
-var checks_exports32 = {};
-__export(checks_exports32, {
+var checks_exports33 = {};
+__export(checks_exports33, {
   CASE_DOCUMENT_FORMAT: () => CASE_DOCUMENT_FORMAT,
   CASE_DOCUMENT_FORMATS_ACCEPTED: () => CASE_DOCUMENT_FORMATS_ACCEPTED,
   CASE_DOCUMENT_FORMAT_LEGACY: () => CASE_DOCUMENT_FORMAT_LEGACY,
@@ -129418,7 +129423,7 @@ var CorpusExport = class {
         detail: `a rendering is one of ${FORMATS.join(", ")}; nothing was rendered or logged`
       };
     const at43 = this.#when();
-    const { body, truncated: truncated5 } = render(format, { sql: this.sql, record: this.record, ...this.#ownerDeps() }, viewer, at43);
+    const { body, truncated: truncated6 } = render(format, { sql: this.sql, record: this.record, ...this.#ownerDeps() }, viewer, at43);
     const items = itemsOf(format, body);
     this.sql.exec(
       `INSERT INTO export_log (at,scope,bundles,files,note,tables,rows,format) VALUES (?,'rendering',0,0,NULL,NULL,?,?)`,
@@ -129432,7 +129437,7 @@ var CorpusExport = class {
       format,
       standard: STANDARDS[format],
       items,
-      truncated: truncated5,
+      truncated: truncated6,
       rendering: body,
       recorded: "this rendering is in the append-only export log and is visible to every administrator"
     };
@@ -129829,18 +129834,18 @@ function orientationOf(t2) {
   if (!t2 || t2.length < 8) return 1;
   const le = t2[0] === 73 && t2[1] === 73;
   if (!le && !(t2[0] === 77 && t2[1] === 77)) return 1;
-  const u165 = (p3) => p3 + 2 > t2.length ? -1 : le ? t2[p3] | t2[p3 + 1] << 8 : t2[p3] << 8 | t2[p3 + 1];
-  const u326 = (p3) => p3 + 4 > t2.length ? -1 : le ? (t2[p3] | t2[p3 + 1] << 8 | t2[p3 + 2] << 16) + t2[p3 + 3] * 16777216 : t2[p3] * 16777216 + (t2[p3 + 1] << 16 | t2[p3 + 2] << 8 | t2[p3 + 3]);
-  if (u165(2) !== 42) return 1;
-  const ifd = u326(4);
-  const n2 = u165(ifd);
+  const u166 = (p3) => p3 + 2 > t2.length ? -1 : le ? t2[p3] | t2[p3 + 1] << 8 : t2[p3] << 8 | t2[p3 + 1];
+  const u327 = (p3) => p3 + 4 > t2.length ? -1 : le ? (t2[p3] | t2[p3 + 1] << 8 | t2[p3 + 2] << 16) + t2[p3 + 3] * 16777216 : t2[p3] * 16777216 + (t2[p3 + 1] << 16 | t2[p3 + 2] << 8 | t2[p3 + 3]);
+  if (u166(2) !== 42) return 1;
+  const ifd = u327(4);
+  const n2 = u166(ifd);
   if (ifd < 8 || n2 < 0) return 1;
   for (let i = 0; i < n2; i++) {
     const e2 = ifd + 2 + 12 * i;
     if (e2 + 12 > t2.length) return 1;
-    if (u165(e2) !== 274) continue;
-    if (u165(e2 + 2) !== 3 || u326(e2 + 4) !== 1) return 1;
-    const v = u165(e2 + 8);
+    if (u166(e2) !== 274) continue;
+    if (u166(e2 + 2) !== 3 || u327(e2 + 4) !== 1) return 1;
+    const v = u166(e2 + 8);
     return v >= 1 && v <= 8 ? v : 1;
   }
   return 1;
@@ -130098,14 +130103,14 @@ function coverJpeg(d, areas, maxPixels) {
   }
   const { frame, qt, hts, scan } = h;
   const nc = frame.comps.length;
-  const refuse26 = (note) => fromDct(new DctRefusal("UNSUPPORTED_PROCESS", { note }));
-  if (nc !== 1 && nc !== 3) throw refuse26(`${nc} components`);
-  if (scan.comps.length !== nc) throw refuse26(`multi-scan sequential: ${scan.comps.length} of ${nc} components in the first scan`);
+  const refuse27 = (note) => fromDct(new DctRefusal("UNSUPPORTED_PROCESS", { note }));
+  if (nc !== 1 && nc !== 3) throw refuse27(`${nc} components`);
+  if (scan.comps.length !== nc) throw refuse27(`multi-scan sequential: ${scan.comps.length} of ${nc} components in the first scan`);
   const hmax = Math.max(...frame.comps.map((c) => c.h)), vmax = Math.max(...frame.comps.map((c) => c.v));
   for (const c of frame.comps) {
     const hx = hmax / c.h, vx = vmax / c.v;
     if (!(c.h >= 1 && c.v >= 1 && (hx === 1 || hx === 2) && (vx === 1 || vx === 2)))
-      throw refuse26(`sampling ${frame.comps.map((x) => `${x.h}x${x.v}`).join(",")}`);
+      throw refuse27(`sampling ${frame.comps.map((x) => `${x.h}x${x.v}`).join(",")}`);
   }
   const ycc = nc === 3 && colourTransformOf(h).ycc;
   const single2 = nc === 1;
@@ -132293,8 +132298,8 @@ function migrateCaseCarriage(sql, storage = null) {
 }
 
 // src/case-carriage/checks.mjs
-var checks_exports33 = {};
-__export(checks_exports33, {
+var checks_exports34 = {};
+__export(checks_exports34, {
   CASE_CARRIAGE_CHECKS: () => CASE_CARRIAGE_CHECKS,
   CASE_CARRIAGE_WORDS: () => CASE_CARRIAGE_WORDS,
   COPY_CLEANED_LABEL: () => COPY_CLEANED_LABEL,
@@ -133610,8 +133615,8 @@ function caseCarriageOps(cc, url, body) {
 }
 
 // src/case-tensions/checks.mjs
-var checks_exports34 = {};
-__export(checks_exports34, {
+var checks_exports35 = {};
+__export(checks_exports35, {
   ATTRIBUTION_ACT_CHECKS: () => ATTRIBUTION_ACT_CHECKS,
   rowOf: () => rowOf6
 });
@@ -134007,7 +134012,7 @@ var CaseTensions = class {
         continue;
       }
       const byCandidate = /* @__PURE__ */ new Map();
-      let undetermined3 = false, truncated5 = false;
+      let undetermined3 = false, truncated6 = false;
       for (const viewer of viewers) {
         let r = null;
         try {
@@ -134019,18 +134024,18 @@ var CaseTensions = class {
           undetermined3 = true;
           continue;
         }
-        if (r.truncated) truncated5 = true;
+        if (r.truncated) truncated6 = true;
         if (r.undetermined_legs) undetermined3 = true;
         for (const c of r.candidates) {
           const had = byCandidate.get(c.candidate);
           if (!had || c.unseen_other_side && !had.unseen_other_side) byCandidate.set(c.candidate, c);
         }
       }
-      if (undetermined3 || truncated5)
+      if (undetermined3 || truncated6)
         unread.push({
           member: m.bundle_id,
           ...undetermined3 ? { undetermined: true } : {},
-          ...truncated5 ? { truncated: true } : {}
+          ...truncated6 ? { truncated: true } : {}
         });
       for (const [id, c] of byCandidate) {
         answered.add(id);
@@ -134209,8 +134214,8 @@ var CaseTensions = class {
       ...args,
       cap + 1
     );
-    const truncated5 = rows3.length > cap;
-    if (truncated5) rows3.length = cap;
+    const truncated6 = rows3.length > cap;
+    if (truncated6) rows3.length = cap;
     const flags2 = rows3.map((r) => ({
       case_id: r.case_id,
       edition: r.edition,
@@ -134231,7 +134236,7 @@ var CaseTensions = class {
       count: flags2.length,
       /* THE BOUND, BESIDE THE ANSWER: a truncated answer's `outstanding` and `projects_owing` are about THIS PAGE. */
       limit: cap,
-      truncated: truncated5,
+      truncated: truncated6,
       outstanding: flags2.filter((x) => x.outstanding).length,
       /* WHICH PROJECTS STILL OWE AN ACT, deduplicated; a case whose project is unknown appears as null. */
       projects_owing: [...new Set(flags2.filter((x) => x.outstanding).map((x) => x.project_id))].sort((a, b) => String(a) < String(b) ? -1 : 1),
@@ -135955,8 +135960,8 @@ var Publication = class {
       ...args,
       EDITIONS_OF_MAX + 1
     );
-    const truncated5 = rows3.length > EDITIONS_OF_MAX;
-    if (truncated5) rows3.length = EDITIONS_OF_MAX;
+    const truncated6 = rows3.length > EDITIONS_OF_MAX;
+    if (truncated6) rows3.length = EDITIONS_OF_MAX;
     const items = rows3.map((r) => {
       const frozen = this.caseDocMemberFrozen(r.case_id, Number(r.edition));
       const own8 = frozen ? frozen.get(id) || null : null;
@@ -135978,7 +135983,7 @@ var Publication = class {
         strength: Array.isArray(rowsOfPair) ? strength : null
       };
     });
-    return { ok: true, finding: id, items, limit: EDITIONS_OF_MAX, truncated: truncated5 };
+    return { ok: true, finding: id, items, limit: EDITIONS_OF_MAX, truncated: truncated6 };
   }
   /* ---------------------------------------------------------------- R41, R43: a case's cited parts, for reevaluation */
   /** R41 (N210, N163 (a); K363): a ratified case edition's cited parts, the latest ratified edition when `edition` is
@@ -136020,7 +136025,7 @@ var Publication = class {
       seen.add(k);
       parts.push({ bundle_id: target, capture_sha: capture2 });
     }
-    const truncated5 = parts.length > CITED_PARTS_MAX;
+    const truncated6 = parts.length > CITED_PARTS_MAX;
     return {
       ok: true,
       case: id,
@@ -136028,7 +136033,7 @@ var Publication = class {
       project: owner ? owner.project_id ?? null : null,
       parts: parts.slice(0, CITED_PARTS_MAX),
       limit: CITED_PARTS_MAX,
-      truncated: truncated5
+      truncated: truncated6
     };
   }
   /** R43 (N210; K359): the cases holding at least one ratified edition, in case id order after `after`, at most `limit`
@@ -136164,14 +136169,14 @@ var Publication = class {
       cap + 1,
       RESTING_FINDINGS_PER_CAPTURE + 1
     );
-    let truncated5 = page2.length > cap;
-    if (truncated5) page2.length = cap;
+    let truncated6 = page2.length > cap;
+    if (truncated6) page2.length = cap;
     const answered = [];
     let total2 = 0;
     for (const c of page2) {
       const n2 = Math.min(Number(c.n) || 0, RESTING_FINDINGS_PER_CAPTURE);
       if (total2 + n2 > RESTING_FINDINGS_PER_PAGE) {
-        truncated5 = true;
+        truncated6 = true;
         break;
       }
       total2 += n2;
@@ -136203,8 +136208,8 @@ var Publication = class {
         findings_truncated: c.cut
       })),
       limit: cap,
-      truncated: truncated5,
-      cursor: truncated5 && answered.length ? answered[answered.length - 1].capture_sha : null
+      truncated: truncated6,
+      cursor: truncated6 && answered.length ? answered[answered.length - 1].capture_sha : null
     };
   }
   /* ---------------------------------------------------------------- moved from the store */
@@ -137541,8 +137546,8 @@ case_project: ${pid}
 `,
       WORK_PRODUCTS_MAX + 1
     ).map((r) => r.case_id);
-    const truncated5 = ids.length > WORK_PRODUCTS_MAX;
-    if (truncated5) ids.length = WORK_PRODUCTS_MAX;
+    const truncated6 = ids.length > WORK_PRODUCTS_MAX;
+    if (truncated6) ids.length = WORK_PRODUCTS_MAX;
     const items = [];
     for (const id of ids) {
       const owned = this.#one(`SELECT project_id FROM cases WHERE case_id=?`, id);
@@ -137581,7 +137586,7 @@ case_project: ${pid}
     ) : null;
     return {
       items,
-      truncated: truncated5,
+      truncated: truncated6,
       published_editions: Number(all.n) || 0,
       readiness: !items.length ? "absent" : top2 < 0 ? "none" : READINESS_RUNGS[top2],
       first_ratified: first ? { case: first.case_id, edition: Number(first.edition) } : null,
@@ -137612,8 +137617,8 @@ function projectStageOps(s, url) {
 }
 
 // src/docket/checks.mjs
-var checks_exports35 = {};
-__export(checks_exports35, {
+var checks_exports36 = {};
+__export(checks_exports36, {
   DOCKET_CHECKS: () => DOCKET_CHECKS,
   rowOf: () => rowOf7
 });
@@ -139188,8 +139193,8 @@ function docketOps(m, url, body) {
 }
 
 // src/public-read/checks.mjs
-var checks_exports36 = {};
-__export(checks_exports36, {
+var checks_exports37 = {};
+__export(checks_exports37, {
   CASE_RESOLUTION_CHECKS: () => CASE_RESOLUTION_CHECKS,
   PUBLISHED_READ_CHECKS: () => PUBLISHED_READ_CHECKS,
   PUBLISHED_STORE_CHECKS: () => PUBLISHED_STORE_CHECKS,
@@ -140667,10 +140672,10 @@ var PublicRead = class {
      stamps are one read (`#stampedEditions`); only an edition with a stamp is opened. */
   #withheldIndex() {
     const editions = /* @__PURE__ */ new Map(), bySha = /* @__PURE__ */ new Map();
-    const stamped2 = this.#stampedEditions();
-    if (!stamped2.size) return { editions, bySha };
+    const stamped3 = this.#stampedEditions();
+    if (!stamped3.size) return { editions, bySha };
     for (const e2 of this.#rows(`SELECT case_id, edition, manifest_sha, manifest FROM published_cases ORDER BY case_id, edition`)) {
-      const stamps = stamped2.get(`${e2.case_id}\0${Number(e2.edition)}`);
+      const stamps = stamped3.get(`${e2.case_id}\0${Number(e2.edition)}`);
       if (!stamps) continue;
       const state = this.publication.caseEditionState(e2.case_id, Number(e2.edition));
       const manifest = safeJson23(e2.manifest);
@@ -140984,8 +140989,8 @@ function publicReadOps(r, url) {
 }
 
 // src/network-notices/checks.mjs
-var checks_exports37 = {};
-__export(checks_exports37, {
+var checks_exports38 = {};
+__export(checks_exports38, {
   NETWORK_NOTICE_CHECKS: () => NETWORK_NOTICE_CHECKS,
   rowOf: () => rowOf9
 });
@@ -142278,8 +142283,8 @@ var NetworkNotices = class {
       Number(pos[3]),
       cap + 1
     );
-    const truncated5 = rows3.length > cap;
-    if (truncated5) rows3.length = cap;
+    const truncated6 = rows3.length > cap;
+    if (truncated6) rows3.length = cap;
     const items = rows3.map((r) => {
       if (r.tie === 0) {
         const v = this.#one(`SELECT * FROM nn_revisions WHERE notice_id=? AND revision=?`, r.notice_id, r.n);
@@ -142311,8 +142316,8 @@ var NetworkNotices = class {
       ok: true,
       items,
       limit: cap,
-      truncated: truncated5,
-      next: truncated5 ? btoa(JSON.stringify([last.notice_id, last.published_at, last.tie, last.n])) : null
+      truncated: truncated6,
+      next: truncated6 ? btoa(JSON.stringify([last.notice_id, last.published_at, last.tie, last.n])) : null
     };
   }
   /** R21: the group slug, its owners' keys and the copy's keys, never a name, handle or member id. A key is listed
@@ -142541,8 +142546,8 @@ function migratePublishSchedule(sql) {
 }
 
 // src/publish-schedule/checks.mjs
-var checks_exports38 = {};
-__export(checks_exports38, {
+var checks_exports39 = {};
+__export(checks_exports39, {
   PUBLISH_SCHEDULE_CHECKS: () => PUBLISH_SCHEDULE_CHECKS,
   rowOf: () => rowOf10
 });
@@ -143136,8 +143141,8 @@ function publishScheduleOps(ps, url, body) {
 }
 
 // src/ratification/checks.mjs
-var checks_exports39 = {};
-__export(checks_exports39, {
+var checks_exports40 = {};
+__export(checks_exports40, {
   CASE_CITATION_VERSIONS: () => CASE_CITATION_VERSIONS,
   CASE_CONCLUSION_CHECKS: () => CASE_CONCLUSION_CHECKS,
   CASE_DOCUMENT_FAMILY: () => CASE_DOCUMENT_FAMILY,
@@ -147176,10 +147181,10 @@ var Ratification = class _Ratification {
       const v = carried ? String(carried.stamp ?? "").trim() : viewer === null || viewer === void 0 ? "" : String(viewer).trim();
       if (aiCred) refusals.push(machineCaseRefusal("ai"), operatorCaseRefusal("ai"));
       else if (v && isMachineIdentity(v)) {
-        const stamped2 = v.toLowerCase().startsWith(MACHINE_CLASS_PREFIX);
-        const rest = stamped2 ? v.slice(MACHINE_CLASS_PREFIX.length) : v;
-        const cls3 = stamped2 ? rest.split("/")[0] : v;
-        const bearer = stamped2 && !rest.includes("/") && v.toLowerCase() !== AGENT_ORGANISATION_STAMP;
+        const stamped3 = v.toLowerCase().startsWith(MACHINE_CLASS_PREFIX);
+        const rest = stamped3 ? v.slice(MACHINE_CLASS_PREFIX.length) : v;
+        const cls3 = stamped3 ? rest.split("/")[0] : v;
+        const bearer = stamped3 && !rest.includes("/") && v.toLowerCase() !== AGENT_ORGANISATION_STAMP;
         if (!bearer) refusals.push(machineCaseRefusal(cls3));
         refusals.push(operatorCaseRefusal(cls3));
       }
@@ -148158,8 +148163,8 @@ function ratificationOps(r, url, body) {
 }
 
 // src/run-rules/checks.mjs
-var checks_exports40 = {};
-__export(checks_exports40, {
+var checks_exports41 = {};
+__export(checks_exports41, {
   AI_RUNS_CHECKS: () => AI_RUNS_CHECKS,
   AI_RUNS_CONTEXT_CHECKS: () => AI_RUNS_CONTEXT_CHECKS,
   AI_RUN_ACT_SHAPE_CHECKS: () => AI_RUN_ACT_SHAPE_CHECKS,
@@ -149435,8 +149440,8 @@ var AI_USE_TABLES = Object.freeze([
 ].map((t2) => Object.freeze({ ...t2, keys: Object.freeze([...t2.keys]), ...CLASSES11 })));
 
 // src/ai-use/checks.mjs
-var checks_exports41 = {};
-__export(checks_exports41, {
+var checks_exports42 = {};
+__export(checks_exports42, {
   AI_USE_CHECKS: () => AI_USE_CHECKS2,
   AI_USE_WORDS: () => AI_USE_WORDS,
   LIMIT_FIELD_WORD: () => LIMIT_FIELD_WORD,
@@ -150816,8 +150821,8 @@ var STEPS_TABLES = Object.freeze([
 var FOLLOWS_TABLE = "question_follows";
 
 // src/steps/checks.mjs
-var checks_exports42 = {};
-__export(checks_exports42, {
+var checks_exports43 = {};
+__export(checks_exports43, {
   STEPS_CHECKS: () => STEPS_CHECKS
 });
 var at19 = (...fns) => fns.map((f17) => `src/steps/index.mjs ${f17}`).join("; ");
@@ -151451,19 +151456,19 @@ var Steps = class _Steps {
     const lim = limitOf3(limit, READ_LIMIT3);
     const today2 = this.#today(this.#now());
     const out = [];
-    let truncated5 = false;
+    let truncated6 = false;
     for (const r of rows3) {
       if (filled8(after) && r.step_id <= after) continue;
       if (!this.#seen(r, viewer)) continue;
       const v = this.#view(r, viewer, today2);
       if (filled8(state) && v.state !== state) continue;
       if (out.length === lim) {
-        truncated5 = true;
+        truncated6 = true;
         break;
       }
       out.push(v);
     }
-    return { steps: out, limit: lim, truncated: truncated5, next: truncated5 ? { after: out[out.length - 1].step } : null };
+    return { steps: out, limit: lim, truncated: truncated6, next: truncated6 ? { after: out[out.length - 1].step } : null };
   }
   /** R4: `stepsOn({question, viewer, state?, after?, limit?})`: the work done on a question; its header answers the
    *  question's `projects`, leg-earning R14's answer for this viewer. */
@@ -152321,16 +152326,16 @@ var Steps = class _Steps {
     const lim = limitOf3(limit, READ_LIMIT3);
     const from = Number.isSafeInteger(Number(after)) && after !== null && after !== "" ? Number(after) : 0;
     const out = [];
-    let truncated5 = false;
+    let truncated6 = false;
     for (const pr of this.#rows(`SELECT * FROM step_proposals WHERE proposal_id > ? ORDER BY proposal_id`, from)) {
       if (!this.#proposalSeen(pr, viewer)) continue;
       if (out.length === lim) {
-        truncated5 = true;
+        truncated6 = true;
         break;
       }
       out.push(this.#proposalView(pr, viewer));
     }
-    return { ok: true, proposals: out, limit: lim, truncated: truncated5, next: truncated5 ? { after: out[out.length - 1].proposal } : null };
+    return { ok: true, proposals: out, limit: lim, truncated: truncated6, next: truncated6 ? { after: out[out.length - 1].proposal } : null };
   }
   /* R24: whether a member may accept: a joined participant of a project drawing on the proposal's question (or, where
      none draws, one who sees it); of the project, for a project's proposal; any active member, for the group's. */
@@ -155635,8 +155640,8 @@ function aiRunsOps(runs, url, body) {
 }
 
 // src/case-import/checks.mjs
-var checks_exports43 = {};
-__export(checks_exports43, {
+var checks_exports44 = {};
+__export(checks_exports44, {
   CASE_IMPORT_CHECKS: () => CASE_IMPORT_CHECKS,
   rowOf: () => rowOf12
 });
@@ -156078,7 +156083,7 @@ function judge(args) {
   if (malformed6.length) return { ok: false, refusals: [...new Set(malformed6)].map((field3) => ({ code: "MALFORMED", field: field3 })) };
   const refusals = [];
   const seen = /* @__PURE__ */ new Set();
-  const refuse26 = (r) => {
+  const refuse27 = (r) => {
     const k = canonicalJson(r);
     if (!seen.has(k)) {
       seen.add(k);
@@ -156094,7 +156099,7 @@ function judge(args) {
   const copyrighted = judged.filter((r) => r.access !== "free");
   for (const r of copyrighted) {
     const caps3 = new Set((r.captures || []).map(shaKey).filter(Boolean));
-    for (const m of materials) if (m.included === true && caps3.has(shaKey(m.sha))) refuse26({ code: "COPYRIGHTED_TEXT_CARRIED", standard: r.standard, sha: shaKey(m.sha) });
+    for (const m of materials) if (m.included === true && caps3.has(shaKey(m.sha))) refuse27({ code: "COPYRIGHTED_TEXT_CARRIED", standard: r.standard, sha: shaKey(m.sha) });
   }
   const reliedOn = new Set(passages.filter((p3) => str30(p3.finding) && str30(p3.content_id)).map((p3) => p3.content_id));
   for (const r of copyrighted) {
@@ -156102,7 +156107,7 @@ function judge(args) {
     const quoted5 = [];
     for (const q10 of r.passages || []) if (isObj35(q10) && str30(q10.content)) quoted5.push(q10.content);
     for (const p3 of passages) if (str30(p3.content_id) && caps3.has(shaKey(p3.capture_sha))) quoted5.push(p3.content_id);
-    for (const content of quoted5) if (!reliedOn.has(content)) refuse26({ code: "COPYRIGHTED_PASSAGE_UNRELIED", standard: r.standard, content });
+    for (const content of quoted5) if (!reliedOn.has(content)) refuse27({ code: "COPYRIGHTED_PASSAGE_UNRELIED", standard: r.standard, content });
   }
   const members2 = Array.isArray(fm.case_findings) ? fm.case_findings.map(String) : [];
   const legs = gradingFactsOf(fm) || {};
@@ -156119,7 +156124,7 @@ function judge(args) {
     const found3 = [.../* @__PURE__ */ new Set([...wordsIn([c.claim, c.claim_detail]), ...caseWords])];
     const words5 = NONCONFORMING_WORDS.filter((w) => found3.includes(w));
     for (const standard2 of [...new Set(rows3.map((r) => r.standard))]) for (const word2 of words5)
-      refuse26({ code: "BENCHMARK_CALLED_NONCONFORMING", finding: finding6, standard: standard2, word: word2 });
+      refuse27({ code: "BENCHMARK_CALLED_NONCONFORMING", finding: finding6, standard: standard2, word: word2 });
   }
   const out = refusals.length ? { ok: false, refusals } : { ok: true };
   if (unjudged.length) out.unjudged = unjudged;
@@ -156391,8 +156396,8 @@ function readStoredZip(input) {
 }
 
 // src/answers/checks.mjs
-var checks_exports44 = {};
-__export(checks_exports44, {
+var checks_exports45 = {};
+__export(checks_exports45, {
   ANSWERS_CHECKS: () => ANSWERS_CHECKS,
   refusal: () => refusal21
 });
@@ -160531,8 +160536,8 @@ function caseImportOps(m, url, body) {
 }
 
 // src/case-disclosures/checks.mjs
-var checks_exports45 = {};
-__export(checks_exports45, {
+var checks_exports46 = {};
+__export(checks_exports46, {
   ACCOUNT_ARMS: () => ACCOUNT_ARMS,
   CASE_DISCLOSURE_CHECKS: () => CASE_DISCLOSURE_CHECKS,
   DOCUMENT_WORDS: () => DOCUMENT_WORDS,
@@ -165256,8 +165261,8 @@ function recomputeView(row12) {
 }
 
 // src/case-authoring/checks.mjs
-var checks_exports46 = {};
-__export(checks_exports46, {
+var checks_exports47 = {};
+__export(checks_exports47, {
   CASE_DERIVATION_CHECKS: () => CASE_DERIVATION_CHECKS,
   PUBLISH_ACT_CHECKS: () => PUBLISH_ACT_CHECKS,
   STATEMENT_ACK_CHECKS: () => STATEMENT_ACK_CHECKS
@@ -167376,11 +167381,11 @@ var CaseAuthoring = class {
     if (seen.ok === false) return seen;
     const rows3 = this.#rows(`SELECT draft_id, text, label, at FROM what_changed_drafts WHERE case_id=?
                              ORDER BY seq LIMIT ?`, seen.caseId, WHAT_CHANGED_DRAFTS_MAX + 1);
-    const truncated5 = rows3.length > WHAT_CHANGED_DRAFTS_MAX;
+    const truncated6 = rows3.length > WHAT_CHANGED_DRAFTS_MAX;
     return {
       ok: true,
       case: seen.caseId,
-      truncated: truncated5,
+      truncated: truncated6,
       drafts: rows3.slice(0, WHAT_CHANGED_DRAFTS_MAX).map((r) => ({
         id: r.draft_id,
         text: r.text,
@@ -168462,7 +168467,7 @@ case_project: ${project}
       linked,
       STATEMENT_ACK_MAX + 1
     );
-    const truncated5 = rows3.length > STATEMENT_ACK_MAX;
+    const truncated6 = rows3.length > STATEMENT_ACK_MAX;
     const all = rows3.slice(0, STATEMENT_ACK_MAX);
     const byPublisher = (r) => !!(exceptAuthor && r.acknowledger_kind === "participant" && r.acknowledger === exceptAuthor);
     const byTheWriter = (r) => !!(writer && writer.by && r.acknowledger_kind === "participant" && r.acknowledger === writer.by && !byPublisher(r));
@@ -168497,7 +168502,7 @@ case_project: ${project}
     const withheldWriterUndetermined = all.filter(undeterminedWithheld).length;
     return {
       statementSha: sha2,
-      truncated: truncated5,
+      truncated: truncated6,
       link: linked ? { draft: linked, by: link.by ?? null, at: link.at ?? null } : null,
       boundByLink: linked ? listed2.filter((r) => r.case_id == null).length : 0,
       byAuthor: all.filter(byPublisher).length,
@@ -168747,8 +168752,8 @@ function blanksOf(text7) {
 }
 
 // src/filing-templates/checks.mjs
-var checks_exports47 = {};
-__export(checks_exports47, {
+var checks_exports48 = {};
+__export(checks_exports48, {
   FILING_TEMPLATE_CHECKS: () => FILING_TEMPLATE_CHECKS,
   rowOf: () => rowOf13
 });
@@ -170545,13 +170550,13 @@ var FilingTemplates = class _FilingTemplates {
       ORDER BY vid, r.member`, ...seek.args);
     const seen = /* @__PURE__ */ new Map();
     const items = [];
-    let truncated5 = false;
+    let truncated6 = false;
     for (const r of rows3) {
       if (!seen.has(r.template_id)) seen.set(r.template_id, this.#template(r.template_id, viewer));
       const t2 = seen.get(r.template_id);
       if (!t2) continue;
       if (items.length === max) {
-        truncated5 = true;
+        truncated6 = true;
         break;
       }
       const project = t2.scope && typeof t2.scope === "object" ? t2.scope.project ?? null : null;
@@ -170568,7 +170573,7 @@ var FilingTemplates = class _FilingTemplates {
       });
     }
     const tail2 = items[items.length - 1];
-    return { ok: true, items, limit: max, truncated: truncated5, cursor: truncated5 && tail2 ? `${tail2.version}#${tail2.member}` : null };
+    return { ok: true, items, limit: max, truncated: truncated6, cursor: truncated6 && tail2 ? `${tail2.version}#${tail2.member}` : null };
   }
   /* ================================================================ the migration from filings (K927) */
   /** Each template `filings` R26 saved becomes a template of origin `group` with one `draft` version, author its saver,
@@ -170760,8 +170765,8 @@ function filingTemplatesOps(m, url, body) {
 }
 
 // src/citation/checks.mjs
-var checks_exports48 = {};
-__export(checks_exports48, {
+var checks_exports49 = {};
+__export(checks_exports49, {
   CITE_CHECKS: () => CITE_CHECKS,
   CITE_EXTENT_CHECKS: () => CITE_EXTENT_CHECKS
 });
@@ -171135,7 +171140,7 @@ function recordedBy2(c, memo, args) {
     }
     const sha2 = a.captureSha.trim().toLowerCase();
     const cap = clamp7(a.limit);
-    const answer = (items, truncated5) => ({ ok: true, module: "citation", capture_sha: sha2, items, truncated: truncated5 });
+    const answer = (items, truncated6) => ({ ok: true, module: "citation", capture_sha: sha2, items, truncated: truncated6 });
     if (!HEX6420.test(sha2)) return answer([], false);
     const home = c.provenance && typeof c.provenance.homeOf === "function" ? c.provenance.homeOf(sha2) : null;
     const doc = home && said8(home.bundleId) ? home.bundleId : null;
@@ -172067,8 +172072,8 @@ function citationOps(c, url) {
 }
 
 // src/wizard-scripts/checks.mjs
-var checks_exports49 = {};
-__export(checks_exports49, {
+var checks_exports50 = {};
+__export(checks_exports50, {
   WIZARD_SCRIPTS_CHECKS: () => WIZARD_SCRIPTS_CHECKS,
   rowOf: () => rowOf15
 });
@@ -173517,13 +173522,13 @@ var WizardScripts = class _WizardScripts {
     const rows3 = this.#rows(`SELECT b.*, ${vid} AS vid, v.author FROM wiz_breaks b JOIN wiz_versions v ON v.script_id=b.script_id AND v.version=b.version
                                ${seek.sql} ORDER BY b.at, vid, b.bid`, ...seek.args);
     const seen = /* @__PURE__ */ new Map(), entries = [];
-    let truncated5 = false, last = null;
+    let truncated6 = false, last = null;
     for (const r of rows3) {
       if (!seen.has(r.script_id)) seen.set(r.script_id, this.#script(r.script_id, viewer));
       const s = seen.get(r.script_id);
       if (!s) continue;
       if (entries.length === max) {
-        truncated5 = true;
+        truncated6 = true;
         break;
       }
       const f17 = parse10(r.refusal);
@@ -173540,7 +173545,7 @@ var WizardScripts = class _WizardScripts {
       });
       last = `${r.at}|${r.vid}`;
     }
-    return { ok: true, entries, limit: max, truncated: truncated5, cursor: truncated5 ? last : null };
+    return { ok: true, entries, limit: max, truncated: truncated6, cursor: truncated6 ? last : null };
   }
   /* ================================================================ R3: wizardDraft */
   #recordingRefusal(recorded) {
@@ -174259,8 +174264,8 @@ var WizardScripts = class _WizardScripts {
     const from = str38(after);
     const rest = from ? pairs.filter((p3) => p3.key > from) : pairs;
     const page2 = rest.slice(0, max);
-    const truncated5 = rest.length > max;
-    return { ok: true, entries: page2.map((p3) => p3.entry), cursor: truncated5 && page2.length ? page2[page2.length - 1].key : null, truncated: truncated5 };
+    const truncated6 = rest.length > max;
+    return { ok: true, entries: page2.map((p3) => p3.entry), cursor: truncated6 && page2.length ? page2[page2.length - 1].key : null, truncated: truncated6 };
   }
   /* ================================================================ R24, R27: writing help */
   /** R24 (in-process): whether the assistant may help word `field` of `op` for this viewer, `{offered: true}` or
@@ -174429,9 +174434,9 @@ var WizardScripts = class _WizardScripts {
     pairs.sort((a, b) => a.vid < b.vid ? -1 : a.vid > b.vid ? 1 : a.entry.owner < b.entry.owner ? -1 : a.entry.owner > b.entry.owner ? 1 : 0);
     const rest = cut10 ? pairs.filter((p3) => p3.vid > cut10[1] || p3.vid === cut10[1] && p3.entry.owner > cut10[2]) : pairs;
     const page2 = rest.slice(0, max);
-    const truncated5 = rest.length > max;
+    const truncated6 = rest.length > max;
     const tail2 = page2[page2.length - 1];
-    return { ok: true, entries: page2.map((p3) => p3.entry), limit: max, truncated: truncated5, cursor: truncated5 && tail2 ? `${tail2.vid}#${tail2.entry.owner}` : null };
+    return { ok: true, entries: page2.map((p3) => p3.entry), limit: max, truncated: truncated6, cursor: truncated6 && tail2 ? `${tail2.vid}#${tail2.entry.owner}` : null };
   }
 };
 for (const m of [
@@ -176417,6 +176422,8 @@ var ACT_HELP = Object.freeze({
   projectaccountremove: "Removes the project's account. Members' own accounts, then the group's key, serve in the project from then on.",
   projectkeynoticeseen: "Records that you have read what the project's key means, before the first act it pays for.",
   projectaikeepaway: "Keeps this project's material away from AI, for every use or the ones you choose, with a reason every member sees. It binds every account, whoever pays.",
+  pagetranscribe: "Has the assistant read up to 8 pages of this document that Civicsmith's own reading couldn't make out. The account that pays for your acts here pays, within its limits. Its words arrive labelled as the assistant's reading and stay undetermined until a member checks a passage against the page; the page images stay as they are.",
+  transcribe: "Types the words of a page yourself, from its image. Your typing is labelled as yours, and a second member can check it against the page.",
   exploreapprove: "Lets the assistant explore today, on this account, what it said is worth exploring. Without a yes today, it doesn't.",
   handlechange: "Changes the handle the record shows on your work. Members see your earlier handle beside it. Allowed until your work first appears in a published case; after that it is fixed.",
   handlecheck: "Checks, as you type, whether this handle can be used in the group: free, already taken, or using characters a handle can't have. It never says who has a handle.",
@@ -176575,6 +176582,7 @@ function affordancesAnswer({
     capture_acts
   };
 }
+var stamped2 = (q10) => new URLSearchParams(Object.entries(q10).filter(([, v]) => v !== null && v !== void 0).map(([k, v]) => [k, String(v)])).toString();
 async function affordancesOp(url, stub, {
   json: json24,
   doAnswer: doAnswer2,
@@ -176589,7 +176597,7 @@ async function affordancesOp(url, stub, {
   cls: cls3
 }) {
   const target = url.searchParams.get("target");
-  const second4 = target ? `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(viewer)}&identity=${encodeURIComponent(identity)}&author=${encodeURIComponent(author ?? "")}&by=${encodeURIComponent(by ?? "")}` : `http://do/affordancescreens?viewer=${encodeURIComponent(viewer ?? "")}`;
+  const second4 = target ? `http://do/affordancefacts?${stamped2({ target, viewer, identity, author, by })}` : `http://do/affordancescreens?viewer=${encodeURIComponent(viewer ?? "")}`;
   const [kOut, out] = await Promise.all([doAnswer2(stub.fetch("http://do/actionkinds")), doAnswer2(stub.fetch(second4))]);
   if (kOut.refused) return storeRefusal2(kOut);
   if (!kOut.answered) return storeSilent2("affordances", kOut.correlation);
@@ -179632,7 +179640,7 @@ var ACTS = [
     weight: "single",
     types: ["inquiry"],
     prompt: DIVIDE_PROMPT,
-    applies: (f17, ty) => ty === "inquiry" && edgesFrom(f17).includes("divided") && !f17.case_member && (f17.basis_legs ?? 0) >= 1 && (f17.rested_on?.working ?? 0) === 0
+    applies: (f17, ty) => ty === "inquiry" && edgesFrom(f17).includes("divided") && !f17.case_member && countOf2(f17.basis_legs) >= 1 && !(countOf2(f17.rested_on?.working) > 0)
   },
   /* REC-45 / DEC-32: AUTHORING THE STRUCTURE. An inquiry that RESTS ON
        something, and whose record is still working.
@@ -179690,7 +179698,7 @@ var ACTS = [
        would then refuse it. That is a pre-flight disagreeing with the refusal it
        fronts, which is DEC-8's headline failure and the one thing this file
        exists to prevent. `divided` is untouched: it is still a state. */
-    applies: (f17, ty) => ty === "inquiry" && (f17.basis_legs ?? 0) >= 1 && !f17.case_member && f17.current_state !== "divided"
+    applies: (f17, ty) => ty === "inquiry" && countOf2(f17.basis_legs) >= 1 && !f17.case_member && f17.current_state !== "divided"
   },
   /* S-10/S-11 step 1: citing. Published for BOTH ends, because the store's own
        guards are type-only on both: any information bundle may be cited (cite
@@ -179898,7 +179906,7 @@ var ACTS = [
     label: "Hide a reading from the display (it stays in the record)",
     weight: "single",
     types: ["inquiry"],
-    applies: (f17, ty) => ty === "inquiry" && (f17.basis_versions ?? 0) >= 1
+    applies: (f17, ty) => ty === "inquiry" && countOf2(f17.basis_versions) >= 1
   },
   /* REC-134 / C-56: `f.project_participant !== false` on the PROJECT arm of cite, sever and
      reinstate, and only there. Each of the three edits the project's own document, and the
@@ -179945,24 +179953,25 @@ var ACTS = [
             LEG is a real gap and it is a different act — it belongs to the basis
             family (`inquiryground`, the version machine), not to this pair, and it
             is reported as a class finding rather than smuggled in here. */
-  /* THE FACT IS READ DEFENSIVELY (`?? 0`), the posture every fact added since
+  /* THE FACT IS READ DEFENSIVELY (`countOf`; `?? 0` until T43-17), the posture every fact added since
      REC-16 takes — `basis_legs`, `rested_on`, `basis_version_states` — and
-     REC-72 learned why the hard way rather than by copying a style. `deriveActs`
+     REC-72 learned why the hard way rather than by copying a style. Every count goes through `countOf` (R16), so a
+     hand-built facts object that still carries ids is read as their number, never compared as an array. `deriveActs`
      is EXPORTED and two suites call it with hand-built facts objects; a fact
      read through a bare `.` threw a TypeError there, `repair-reachability`'s own
      `actsAt` helper SWALLOWED it in a `try/catch` and returned "no acts at any
      state", and its A3 judgement then reported six offenders that do not exist.
      An instrument reporting a wrong number is harder to notice than one
      reporting zero. In the plane the same crash would have taken the whole
-     `op=affordances` answer down for every object. Absent reads as ZERO, which
-     is the SAFE direction: an act is not published where the fact behind it is
-     not known, and DEC-8's rule is about never publishing one the op refuses. */
+     `op=affordances` answer down for every object. An absent count offers nothing
+     that needs one, which is the SAFE direction: an act is not published where the
+     fact behind it is not known, and DEC-8's rule is about never publishing one the op refuses. */
   {
     id: "sever",
     label: "Sever a citation",
     weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f17, ty) => (ty === "information" || ty === "inquiry") && (f17.cited_by_case?.confirmed ?? 0) > 0 || ty === "project" && countOf2(f17.cites_out?.confirmed) > 0 && f17.project_participant !== false
+    applies: (f17, ty) => (ty === "information" || ty === "inquiry") && countOf2(f17.cited_by_case?.confirmed) > 0 || ty === "project" && countOf2(f17.cites_out?.confirmed) > 0 && f17.project_participant !== false
   },
   /* REC-183 (State Rules §4.1, BOB #30): reinstating an edge onto a RETIRED Information bundle is
        refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
@@ -179980,7 +179989,7 @@ var ACTS = [
        IT IS NARROWED AND NOT DROPPED, which is the whole of the accepts-when: a project holding a
        severed edge onto a LIVE target must still be offered `reinstate`, and the store must still
        accept it. Withholding the act from every project would satisfy "never offer what is refused"
-       and cost a case the one recorded way to take a citation back up. `?? 0` for the posture every
+       and cost a case the one recorded way to take a citation back up. `countOf` for the posture every
        fact added since REC-16 takes: absent reads as ZERO, the safe direction, because `deriveActs`
        is exported and two suites call it with hand-built facts. */
   {
@@ -179988,7 +179997,7 @@ var ACTS = [
     label: "Reinstate a severed citation",
     weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f17, ty) => (ty === "information" || ty === "inquiry") && (f17.cited_by_case?.severed ?? 0) > 0 && !(ty === "information" && f17.current_state === "retired") || ty === "project" && countOf2(f17.cites_out?.severed_reinstatable) > 0 && f17.project_participant !== false
+    applies: (f17, ty) => (ty === "information" || ty === "inquiry") && countOf2(f17.cited_by_case?.severed) > 0 && !(ty === "information" && f17.current_state === "retired") || ty === "project" && countOf2(f17.cites_out?.severed_reinstatable) > 0 && f17.project_participant !== false
   },
   /* ===== D-311, 2026-09-23 · THE SEVEN ROSTER ACTS, FOLDED IN ON THE PER-PAIR FACT ==========
      They sat in NON_ACTS since REC-19 and D-310 decided they STAY there until a per-pair fact
@@ -180160,7 +180169,7 @@ var ACT_IDS = new Set(ACTS.map((a) => a.id));
 function deriveActs(facts) {
   const ty = normalizeType(facts.object_type);
   const machine3 = facts.actor_is_machine === true;
-  return ACTS.filter((a) => a.applies(facts, ty) && !(machine3 && a.id in MACHINE_REFUSALS));
+  return ACTS.filter((a) => a.applies(facts, ty) && !(machine3 && Object.hasOwn(MACHINE_REFUSALS, a.id)));
 }
 function decorate(act2, gate) {
   const id = act2.id;
@@ -184033,7 +184042,6 @@ var ACT_HELP_ABSENT = Object.freeze({
       "noticepost",
       "objectivecondition",
       "optionrevise",
-      "pagetranscribe",
       "participantcorrect",
       "patterngate",
       "patternswitch",
@@ -184137,7 +184145,6 @@ var ACT_HELP_ABSENT = Object.freeze({
       "themewithdraw",
       "theorypropose",
       "thread",
-      "transcribe",
       "transcriptionattest",
       "translationmark",
       "triage",
@@ -184169,8 +184176,8 @@ var ACT_HELP_ABSENT = Object.freeze({
 });
 
 // src/admission/checks.mjs
-var checks_exports50 = {};
-__export(checks_exports50, {
+var checks_exports51 = {};
+__export(checks_exports51, {
   ADMISSION_CHECKS: () => ADMISSION_CHECKS,
   AI_SCOPE_CHECKS: () => AI_SCOPE_CHECKS,
   GROUP_IDENTITY_FENCE_CHECKS: () => GROUP_IDENTITY_FENCE_CHECKS,
@@ -185112,8 +185119,8 @@ async function securityTally({ op = null, answer = null, presented = null, req =
 }
 
 // src/project-roster/checks.mjs
-var checks_exports51 = {};
-__export(checks_exports51, {
+var checks_exports52 = {};
+__export(checks_exports52, {
   PROJECT_JOIN_REQUEST_CHECKS: () => PROJECT_JOIN_REQUEST_CHECKS,
   PROJECT_ROSTER_CHECKS: () => PROJECT_ROSTER_CHECKS
 });
@@ -185649,8 +185656,8 @@ var CaptureCredentials = class _CaptureCredentials {
       }
       const found3 = this.#sweep(this.#rows(`SELECT c.* FROM ${CREDENTIALS_TABLE} c WHERE ${where.join(" AND ")}
                                             ORDER BY c.supplied_at, c.rowid LIMIT ?`, ...params, cap + 1));
-      const truncated5 = found3.length > cap;
-      return { entries: (truncated5 ? found3.slice(0, cap) : found3).map((r) => _CaptureCredentials.#entry(r)), limit: cap, truncated: truncated5 };
+      const truncated6 = found3.length > cap;
+      return { entries: (truncated6 ? found3.slice(0, cap) : found3).map((r) => _CaptureCredentials.#entry(r)), limit: cap, truncated: truncated6 };
     } catch {
       return empty2;
     }
@@ -185658,8 +185665,8 @@ var CaptureCredentials = class _CaptureCredentials {
 };
 
 // src/file-safety/checks.mjs
-var checks_exports52 = {};
-__export(checks_exports52, {
+var checks_exports53 = {};
+__export(checks_exports53, {
   FILE_SAFETY_CHECKS: () => FILE_SAFETY_CHECKS,
   PROVIDER_REASON_WORDS: () => PROVIDER_REASON_WORDS,
   THREAT_REASONS: () => THREAT_REASONS
@@ -185939,8 +185946,8 @@ var PROVIDER_REASON_WORDS = Object.freeze({
 });
 
 // src/money-checks/checks.mjs
-var checks_exports53 = {};
-__export(checks_exports53, {
+var checks_exports54 = {};
+__export(checks_exports54, {
   MONEY_CHECKS_CHECKS: () => MONEY_CHECKS_CHECKS,
   refusal: () => refusal27
 });
@@ -185977,8 +185984,8 @@ function refusal27(code, fields = {}) {
 }
 
 // src/hypotheses/checks.mjs
-var checks_exports54 = {};
-__export(checks_exports54, {
+var checks_exports55 = {};
+__export(checks_exports55, {
   HYPOTHESES_CHECKS: () => HYPOTHESES_CHECKS
 });
 var act = (fn) => `src/hypotheses/index.mjs ${fn}`;
@@ -186129,8 +186136,8 @@ var HYPOTHESES_CHECKS = {
 };
 
 // src/run-productions/checks.mjs
-var checks_exports55 = {};
-__export(checks_exports55, {
+var checks_exports56 = {};
+__export(checks_exports56, {
   EXTRACT_PROPOSE_CHECKS: () => EXTRACT_PROPOSE_CHECKS,
   EXTRACT_PROPOSE_CHECK_KEYS: () => EXTRACT_PROPOSE_CHECK_KEYS,
   ROWLESS_CODES: () => ROWLESS_CODES,
@@ -186475,8 +186482,8 @@ var SUGGEST_CHECKS = pick2(SUGGEST_ROWS, SUGGEST_CHECK_KEYS);
 var EXTRACT_PROPOSE_CHECKS = pick2(EXTRACT_PROPOSE_ROWS, EXTRACT_PROPOSE_CHECK_KEYS);
 
 // src/capture-requests/checks.mjs
-var checks_exports56 = {};
-__export(checks_exports56, {
+var checks_exports57 = {};
+__export(checks_exports57, {
   CAPTURE_PURPOSES: () => CAPTURE_PURPOSES,
   CAPTURE_REQUEST_CHECKS: () => CAPTURE_REQUEST_CHECKS,
   CAPTURE_SOURCE_CHECKS: () => CAPTURE_SOURCE_CHECKS,
@@ -186792,8 +186799,8 @@ var CAPTURE_SOURCE_CHECKS = Object.freeze({
 });
 
 // src/reading-guides/checks.mjs
-var checks_exports57 = {};
-__export(checks_exports57, {
+var checks_exports58 = {};
+__export(checks_exports58, {
   READING_GUIDES_CHECKS: () => READING_GUIDES_CHECKS,
   refusal: () => refusal28
 });
@@ -191797,7 +191804,7 @@ function readResponsibilities(raw, sections, from, locate) {
     const body = lines2.filter((l2) => l2.start > head.start && l2.start < stop2 && l2.text.trim() && !FURNITURE3.test(l2.text) && !((recurs.get(l2.text.trim()) || 0) >= 3 && !/[.;:]\s*$/.test(l2.text)));
     const table4 = [];
     let party = null, pending = [], cur = null, ok2 = true, why2 = null, expect = 1;
-    const finish = () => {
+    const finish2 = () => {
       if (cur) {
         cur.end = cur.lastEnd;
         delete cur.lastEnd;
@@ -191836,7 +191843,7 @@ function readResponsibilities(raw, sections, from, locate) {
             why2 = "an action does not end before the next party's numbering starts, so where it stops and the next party begins cannot be told";
             break;
           }
-          finish();
+          finish2();
           const pStart = pending.length ? pending[0].start + indentOf(pending[0]) : l2.start + indentOf(l2);
           const pEnd = inline ? l2.start + indentOf(l2) + l2.text.trim().indexOf(m[1]) + m[1].trimEnd().length : pending[pending.length - 1].end;
           party = { text: raw.slice(pStart, pEnd).replace(/\s+/g, " ").trim(), start: pStart };
@@ -191845,7 +191852,7 @@ function readResponsibilities(raw, sections, from, locate) {
         } else {
           if (cur && pending.length) cur.lastEnd = pending[pending.length - 1].end;
           pending = [];
-          finish();
+          finish2();
         }
         const aStart = l2.start + indentOf(l2) + l2.text.trim().indexOf(`${m[2]}.`, m[1].length ? m[1].length : 0);
         cur = { party: party.text, step: m[2], start: m[1].trim() && n2 === 1 ? party.start : aStart, aStart, lastEnd: l2.end };
@@ -191866,7 +191873,7 @@ function readResponsibilities(raw, sections, from, locate) {
       cur.lastEnd = pending[pending.length - 1].end;
       pending = [];
     }
-    finish();
+    finish2();
     const start = head.start + indentOf(head);
     extents.push({ start, end: stop2 });
     if (!ok2 || !table4.length) {
@@ -194187,8 +194194,8 @@ function judgementLayers() {
 var JUDGEMENT_VERSION = `${JUDGEMENT_ID}@${JUDGEMENT_EDITION}`;
 
 // src/question-explorer/checks.mjs
-var checks_exports58 = {};
-__export(checks_exports58, {
+var checks_exports59 = {};
+__export(checks_exports59, {
   EXPLORE_CHECKS: () => EXPLORE_CHECKS,
   EXPLORE_CHECK_KEYS: () => EXPLORE_CHECK_KEYS
 });
@@ -194226,8 +194233,8 @@ var EXPLORE_CHECKS = Object.freeze({
 var EXPLORE_CHECK_KEYS = Object.freeze(Object.keys(EXPLORE_CHECKS));
 
 // src/intent/checks.mjs
-var checks_exports59 = {};
-__export(checks_exports59, {
+var checks_exports60 = {};
+__export(checks_exports60, {
   INTENT_CHECKS: () => INTENT_CHECKS,
   refusal: () => refusal29
 });
@@ -194380,8 +194387,8 @@ function refusal29(code, detail, extra) {
 }
 
 // src/investigation/checks.mjs
-var checks_exports60 = {};
-__export(checks_exports60, {
+var checks_exports61 = {};
+__export(checks_exports61, {
   INVESTIGATION_CHECKS: () => INVESTIGATION_CHECKS,
   PERSON_WARNING_CODE: () => PERSON_WARNING_CODE
 });
@@ -194531,8 +194538,8 @@ var INVESTIGATION_CHECKS = {
 var PERSON_WARNING_CODE = "PERSON_IN_NO_PUBLIC_ROLE";
 
 // src/review/checks.mjs
-var checks_exports61 = {};
-__export(checks_exports61, {
+var checks_exports62 = {};
+__export(checks_exports62, {
   REVIEW_COPY_CHECKS: () => REVIEW_COPY_CHECKS
 });
 var at32 = (fn, region) => `src/review/index.mjs ${fn} > ${region}`;
@@ -194627,8 +194634,8 @@ var REVIEW_COPY_CHECKS = Object.freeze({
 });
 
 // src/conformance/checks.mjs
-var checks_exports62 = {};
-__export(checks_exports62, {
+var checks_exports63 = {};
+__export(checks_exports63, {
   CONFORMANCE_CHECKS: () => CONFORMANCE_CHECKS,
   refusal: () => refusal30
 });
@@ -194806,8 +194813,8 @@ function refusal30(code, detail, extra = {}) {
 }
 
 // src/consequences/checks.mjs
-var checks_exports63 = {};
-__export(checks_exports63, {
+var checks_exports64 = {};
+__export(checks_exports64, {
   CONSEQUENCES_CHECKS: () => CONSEQUENCES_CHECKS
 });
 var at34 = (fn) => `src/consequences/index.mjs ${fn}`;
@@ -194837,8 +194844,8 @@ var CONSEQUENCES_CHECKS = Object.freeze({
 });
 
 // src/action-clocks/checks.mjs
-var checks_exports64 = {};
-__export(checks_exports64, {
+var checks_exports65 = {};
+__export(checks_exports65, {
   ACTION_CLOCK_CHECKS: () => ACTION_CLOCK_CHECKS
 });
 var ACTION_CLOCK_CHECKS = {
@@ -194887,8 +194894,8 @@ var ACTION_CLOCK_CHECKS = {
 };
 
 // src/filings/checks.mjs
-var checks_exports65 = {};
-__export(checks_exports65, {
+var checks_exports66 = {};
+__export(checks_exports66, {
   FILINGS_CHECKS: () => FILINGS_CHECKS,
   rowOf: () => rowOf17
 });
@@ -195074,8 +195081,8 @@ function rowOf17(code) {
 }
 
 // src/escalation/checks.mjs
-var checks_exports66 = {};
-__export(checks_exports66, {
+var checks_exports67 = {};
+__export(checks_exports67, {
   ESCALATION_CHECKS: () => ESCALATION_CHECKS,
   refusal: () => refusal31
 });
@@ -195303,8 +195310,8 @@ function refusal31(code, detail, extra) {
 }
 
 // src/action-plans/checks.mjs
-var checks_exports67 = {};
-__export(checks_exports67, {
+var checks_exports68 = {};
+__export(checks_exports68, {
   ACTION_PLAN_CHECKS: () => ACTION_PLAN_CHECKS,
   refusal: () => refusal32
 });
@@ -195608,8 +195615,8 @@ function refusal32(code, detail, extra) {
 }
 
 // src/monitoring/checks.mjs
-var checks_exports68 = {};
-__export(checks_exports68, {
+var checks_exports69 = {};
+__export(checks_exports69, {
   CADENCE_ENUM: () => CADENCE_ENUM,
   CRITICALITY_ENUM: () => CRITICALITY_ENUM,
   DRIVE_TICK_CHECKS: () => DRIVE_TICK_CHECKS,
@@ -195782,8 +195789,8 @@ function checkGatheringGrammar(ctx, findings, sweepArm = null) {
 }
 
 // src/following/checks.mjs
-var checks_exports69 = {};
-__export(checks_exports69, {
+var checks_exports70 = {};
+__export(checks_exports70, {
   FOLLOWING_CHECKS: () => FOLLOWING_CHECKS,
   followRefusal: () => followRefusal
 });
@@ -195917,8 +195924,8 @@ function followRefusal(code, detail, extra = {}) {
 }
 
 // src/link-sweep/checks.mjs
-var checks_exports70 = {};
-__export(checks_exports70, {
+var checks_exports71 = {};
+__export(checks_exports71, {
   SWEEP_BOUNDS: () => SWEEP_BOUNDS,
   SWEEP_CADENCES: () => SWEEP_CADENCES,
   SWEEP_CHECKS: () => SWEEP_CHECKS,
@@ -196339,8 +196346,8 @@ function sweepGrammar(s, ids) {
 }
 
 // src/tasks/checks.mjs
-var checks_exports71 = {};
-__export(checks_exports71, {
+var checks_exports72 = {};
+__export(checks_exports72, {
   CHECK_REQUEST_CHECKS: () => CHECK_REQUEST_CHECKS,
   QUEUE_INBOX_CHECKS: () => QUEUE_INBOX_CHECKS,
   QUEUE_MACHINE_CHECKS: () => QUEUE_MACHINE_CHECKS,
@@ -196583,8 +196590,8 @@ var CHECK_REQUEST_CHECKS = Object.freeze({
 });
 
 // src/queue/checks.mjs
-var checks_exports72 = {};
-__export(checks_exports72, {
+var checks_exports73 = {};
+__export(checks_exports73, {
   QUEUE_ACT_CHECKS: () => QUEUE_ACT_CHECKS,
   QUEUE_MINT_CHECKS: () => QUEUE_MINT_CHECKS,
   queueRefusal: () => queueRefusal
@@ -204338,12 +204345,12 @@ var CaptureRequests = class _CaptureRequests {
         }
       }
       const rows3 = out.slice(0, cap);
-      const truncated5 = out.length > cap;
+      const truncated6 = out.length > cap;
       return {
         count: rows3.length,
         limit: cap,
-        truncated: truncated5,
-        next: truncated5 ? rows3[rows3.length - 1].request : null,
+        truncated: truncated6,
+        next: truncated6 ? rows3[rows3.length - 1].request : null,
         requests: rows3.map(_CaptureRequests.#recordsEntry)
       };
     } catch {
@@ -205443,7 +205450,7 @@ Reason: ${bodyText2(why2)}`
       JSON.stringify([...related]),
       MEASURE_MAX + 1
     );
-    const truncated5 = rows3.length > MEASURE_MAX;
+    const truncated6 = rows3.length > MEASURE_MAX;
     const threaded = rows3.slice(0, MEASURE_MAX).map((r) => r.entity_id);
     const need = cond.required || {};
     const stages2 = (need.stages || []).map(String);
@@ -205510,7 +205517,7 @@ Reason: ${bodyText2(why2)}`
         documents: this.#documents(inst)
       });
     }
-    return { key: key2, related: [...related].sort(), matched, meeting: meeting2, short, undetermined: undetermined3, truncated: truncated5 };
+    return { key: key2, related: [...related].sort(), matched, meeting: meeting2, short, undetermined: undetermined3, truncated: truncated6 };
   }
   /* R33: the first answer the registered reader gives for one stage of one instance, `{stage, action, ord, at, says}`,
      or null: none registered, an empty answer, or a reader that throws or answers otherwise meets no stage. */
@@ -205752,15 +205759,15 @@ Reason: ${bodyText2(why2)}`
       typeof after === "string" ? after : "",
       cap + 1
     );
-    const truncated5 = rows3.length > cap;
+    const truncated6 = rows3.length > cap;
     const captures = rows3.slice(0, cap).map((r) => r.capture_sha);
     return {
       entities: m.related,
       progressions: [m.key],
       captures,
       limit: cap,
-      truncated: truncated5,
-      cursor: truncated5 ? captures[captures.length - 1] : null,
+      truncated: truncated6,
+      cursor: truncated6 ? captures[captures.length - 1] : null,
       measure_truncated: m.truncated
     };
   }
@@ -205776,14 +205783,14 @@ Reason: ${bodyText2(why2)}`
     const named2 = [];
     for (const [kind2, list6] of [["address", addresses], ["bundle", bundles], ["request", requests]])
       for (const id of Array.isArray(list6) ? list6 : []) named2.push({ kind: kind2, id: typeof id === "string" ? id : null });
-    const truncated5 = named2.length > SERVES_MAX;
+    const truncated6 = named2.length > SERVES_MAX;
     const subjects = named2.slice(0, SERVES_MAX);
     const empty2 = (x) => ({ kind: x.kind, id: x.id, gaps: [], aspirations: [] });
     let ctx;
     try {
       ctx = this.#servesContext();
     } catch {
-      return { ok: true, serves: subjects.map(empty2), truncated: truncated5, context_truncated: false };
+      return { ok: true, serves: subjects.map(empty2), truncated: truncated6, context_truncated: false };
     }
     const serves = subjects.map((x) => {
       try {
@@ -205799,7 +205806,7 @@ Reason: ${bodyText2(why2)}`
         return empty2(x);
       }
     });
-    return { ok: true, serves, truncated: truncated5, context_truncated: ctx.cut };
+    return { ok: true, serves, truncated: truncated6, context_truncated: ctx.cut };
   }
   /* R28: what every subject in one call is measured against, gathered once under the plane's sight: the open gaps by
      the bundles documenting their short instances, and each held group or project aspiration with what it names.
@@ -206117,23 +206124,23 @@ ${bodyText2(note)}`
      so a cut says nothing of it (DEC-36, K391). */
   #heldAspirations(viewer, max = ASPIRATIONS_MAX) {
     const out = [];
-    let after = "", read3 = 0, truncated5 = false;
+    let after = "", read3 = 0, truncated6 = false;
     for (; ; ) {
       const page2 = this.record.listByType({ type: ASPIRATION, after, limit: 200 });
       for (const id of page2.ids) {
         const a = this.#pursuit(id, ASPIRATION, viewer);
         if (!a) continue;
         if (read3 === max) {
-          truncated5 = true;
+          truncated6 = true;
           break;
         }
         read3 += 1;
         if (a.head.currentState === "held") out.push(this.#aspirationView(a));
       }
-      if (truncated5 || page2.ids.length < 200 || !page2.cursor) break;
+      if (truncated6 || page2.ids.length < 200 || !page2.cursor) break;
       after = page2.cursor;
     }
-    return { held: out, truncated: truncated5 };
+    return { held: out, truncated: truncated6 };
   }
   #aspirationView(a) {
     const list6 = (v) => Array.isArray(v) ? v.map(String).filter((x) => x !== "") : [];
@@ -206170,7 +206177,7 @@ ${bodyText2(note)}`
       const p3 = this.#project(project, viewer);
       if (p3.refused) return p3.refused;
     }
-    const { held: held2, truncated: truncated5 } = this.#heldAspirations(viewer);
+    const { held: held2, truncated: truncated6 } = this.#heldAspirations(viewer);
     const dep = project ? this.#departures(project) : { latest: /* @__PURE__ */ new Map(), truncated: false };
     const departed = dep.latest;
     const group = held2.filter((a) => a.scope === "group" && !departed.has(a.id));
@@ -206183,7 +206190,7 @@ ${bodyText2(note)}`
       member: member2 || null,
       aspirations: [...group, ...own8, ...mine],
       limit: ASPIRATIONS_MAX,
-      truncated: truncated5,
+      truncated: truncated6,
       departures,
       departures_limit: DEPARTURES_MAX,
       departures_truncated: dep.truncated,
@@ -206198,7 +206205,7 @@ ${bodyText2(note)}`
   contacts({ viewer = null } = {}) {
     const { held: held2, truncated: cut10 } = this.#heldAspirations(viewer);
     const pairs = [];
-    let truncated5 = cut10;
+    let truncated6 = cut10;
     outer: for (let i = 0; i < held2.length; i++)
       for (let j = i + 1; j < held2.length; j++) {
         const a = held2[i], b = held2[j];
@@ -206206,7 +206213,7 @@ ${bodyText2(note)}`
         const progressions = a.progressions.filter((k) => b.progressions.includes(k));
         if (!entities2.length && !progressions.length) continue;
         if (pairs.length === CONTACTS_MAX) {
-          truncated5 = true;
+          truncated6 = true;
           break outer;
         }
         pairs.push({
@@ -206216,7 +206223,7 @@ ${bodyText2(note)}`
           says: "both name what is listed; the record does not say whether they agree"
         });
       }
-    return { ok: true, contacts: pairs, limit: CONTACTS_MAX, truncated: truncated5 };
+    return { ok: true, contacts: pairs, limit: CONTACTS_MAX, truncated: truncated6 };
   }
   /** R14: an aspiration's pursuit record: the goals opened under it and their objectives, the proposals triaged under
    *  them with each act and reason, the capture requests named in them with their outcome, and the dead ends. */
@@ -206378,21 +206385,21 @@ ${bodyText2(note)}`
      counted, so a cut says nothing of it (R23, DEC-36). */
   #projectsInOrder(viewer, max) {
     const ids = [];
-    let after = "", truncated5 = false;
+    let after = "", truncated6 = false;
     for (; ; ) {
       const page2 = this.record.listByType({ type: "project", after, limit: 200 });
       for (const id of page2.ids) {
         if (viewer != null && !this.membership.inSight(id, viewer)) continue;
         if (ids.length === max) {
-          truncated5 = true;
+          truncated6 = true;
           break;
         }
         ids.push(id);
       }
-      if (truncated5 || page2.ids.length < 200 || !page2.cursor) break;
+      if (truncated6 || page2.ids.length < 200 || !page2.cursor) break;
       after = page2.cursor;
     }
-    return { ids, truncated: truncated5 };
+    return { ids, truncated: truncated6 };
   }
   /* R16: whether a proposal key has a triage act recorded (any act takes it off the open list); one row, read through
      the key's index (N181 (4)). */
@@ -206421,7 +206428,7 @@ ${bodyText2(note)}`
   #setAside(viewer) {
     const rows3 = this.#rows(`SELECT proposal_key, act, project_id, inquiry_id, reason, author, at FROM intent_triage
                               WHERE act IN ('defer', 'dismiss') ORDER BY seq DESC LIMIT ?`, SET_ASIDE_MAX + 1);
-    const truncated5 = rows3.length > SET_ASIDE_MAX;
+    const truncated6 = rows3.length > SET_ASIDE_MAX;
     const list6 = rows3.slice(0, SET_ASIDE_MAX).map((r) => ({
       key: r.proposal_key,
       act: r.act,
@@ -206434,7 +206441,7 @@ ${bodyText2(note)}`
       const pid = this.#projectOfAct(d);
       return !pid || viewer == null || !this.#project(pid, viewer).refused;
     });
-    return { list: list6, truncated: truncated5 };
+    return { list: list6, truncated: truncated6 };
   }
   /** R15, R16: every open proposal from every source, each with its grade and basis; beside them, every proposal set
    *  aside (deferred or dismissed) with its reason, so a decision ages a proposal without hiding it. */
@@ -206676,7 +206683,7 @@ ${bodyText2(note)}`
                                                            ORDER BY m.rowid DESC LIMIT 1) AS last
                                  FROM bundles b WHERE b.object_type = 'inquiry' AND b.current_state = 'surfaced')
                              ORDER BY julianday(last), last, id LIMIT ?`, AGEING_READ_MAX + 1);
-    const truncated5 = rows3.length > AGEING_READ_MAX;
+    const truncated6 = rows3.length > AGEING_READ_MAX;
     const out = [];
     for (const { id, last } of rows3.slice(0, AGEING_READ_MAX)) {
       const d = this.#doc(id);
@@ -206685,7 +206692,7 @@ ${bodyText2(note)}`
       const since = Date.parse(last ?? d.fm.created);
       if (Number.isFinite(since)) out.push({ id, at: since + span3 });
     }
-    return { list: out, truncated: truncated5 };
+    return { list: out, truncated: truncated6 };
   }
   /* R17, R27: whether a question has entries and every one of them is a machine's (no member acted on it). Its distinct
      authors are read a page at a time in author order, each statement bounded, stopping at the first member's. */
@@ -208770,7 +208777,7 @@ var Conformance = class _Conformance {
       ...args,
       cap + 1
     );
-    const truncated5 = page2.length > cap;
+    const truncated6 = page2.length > cap;
     const listed2 = page2.slice(0, cap);
     const byItem = (sql) => {
       const out = /* @__PURE__ */ new Map();
@@ -208811,7 +208818,7 @@ var Conformance = class _Conformance {
         live: !by
       });
     });
-    return { ok: true, items, limit: cap, truncated: truncated5, cursor: truncated5 ? items[items.length - 1].id : null };
+    return { ok: true, items, limit: cap, truncated: truncated6, cursor: truncated6 ? items[items.length - 1].id : null };
   }
   /* R11, R26: the act ids that name the same act as `act`: the event an `ACT-` alias resolves to, and every pre-T33
      `ACT-` id this module holds that resolves to that event (bounded); an id not aliased names only itself. */
@@ -209295,9 +209302,9 @@ function conformanceOf(host, deps) {
 function conformanceOps(c, url, body) {
   const qp = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
-  const stamped2 = { author: qp("author"), viewer: qp("viewer") };
+  const stamped3 = { author: qp("author"), viewer: qp("viewer") };
   return {
-    determine: () => c.determine({ ...b, ...stamped2 }),
+    determine: () => c.determine({ ...b, ...stamped3 }),
     determination: () => c.determinationRead({ id: qp("id") ?? b.id, viewer: qp("viewer") }),
     determinations: () => c.determinationsFor({
       project: qp("project"),
@@ -211502,7 +211509,7 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
         AND (SELECT p.hold FROM action_holds p WHERE p.bundle_id = r.bundle_id AND p.ord = r.ord AND p.seq < r.seq
              ORDER BY p.seq DESC LIMIT 1) = 'in_place'
       ORDER BY r.bundle_id, r.ord, r.seq LIMIT ?`, ...gate.args, ...seek.args, max + 1);
-    const truncated5 = rows3.length > max;
+    const truncated6 = rows3.length > max;
     const items = rows3.slice(0, max).map((r) => ({
       action: r.bundle_id,
       ord: r.ord,
@@ -211522,8 +211529,8 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
       ok: true,
       items,
       limit: max,
-      truncated: truncated5,
-      cursor: truncated5 && tail2 ? `${tail2.action}#${tail2.ord}#${tail2.seq}` : null
+      truncated: truncated6,
+      cursor: truncated6 && tail2 ? `${tail2.action}#${tail2.ord}#${tail2.seq}` : null
     };
   }
   /** R60 (DEC-113; K1252, K1253; asked by `control-plane` R46): whether a purge of the record would reach held material,
@@ -212317,7 +212324,7 @@ Changes: responds_to edge added to ${actionId}.
           says: "no action you may read names this counterparty and carries a quote. The name is matched exactly as written, and an action whose counterparty is stated undetermined is reachable only by its request"
         };
     }
-    const truncated5 = rows3.length > max;
+    const truncated6 = rows3.length > max;
     const quotes = rows3.slice(0, max).map((q10) => {
       const entry4 = this.#one(
         `SELECT artifact_sha, artifact_bundle_id, account, author, party FROM correspondence
@@ -212359,7 +212366,7 @@ Changes: responds_to edge added to ${actionId}.
       ...ans ? { answers: Number(ans) } : {},
       quotes,
       count: quotes.length,
-      truncated: truncated5,
+      truncated: truncated6,
       max,
       ...absence2 ? { absence: absence2 } : {},
       says: "the record asserts only what was quoted, by whom, when, and for which request. It sets quotes side by side and judges none of them (DEC-24)."
@@ -212616,7 +212623,7 @@ Changes: responds_to edge added to ${actionId}.
       WHERE p.kind='legal' AND b.object_type='action' AND (${gate.sql}) ${seek.sql}
         AND NOT EXISTS (SELECT 1 FROM action_holds h WHERE h.bundle_id = p.bundle_id AND h.ord = p.ord)
       ORDER BY p.bundle_id, p.ord LIMIT ?`, ...gate.args, ...seek.args, max + 1);
-    const truncated5 = rows3.length > max;
+    const truncated6 = rows3.length > max;
     const projects = /* @__PURE__ */ new Map();
     const items = rows3.slice(0, max).map((r) => {
       if (!projects.has(r.bundle_id)) projects.set(r.bundle_id, this.#projectOf(this.#heldFm(r.bundle_id), viewer));
@@ -212630,7 +212637,7 @@ Changes: responds_to edge added to ${actionId}.
       };
     });
     const tail2 = items[items.length - 1];
-    return { ok: true, items, limit: max, truncated: truncated5, cursor: truncated5 && tail2 ? `${tail2.action}#${tail2.ord}` : null };
+    return { ok: true, items, limit: max, truncated: truncated6, cursor: truncated6 && tail2 ? `${tail2.action}#${tail2.ord}` : null };
   }
   /** R55 (DEC-108; doorbell R3): whether any litigation hold is in place in the group: whether any entry of any action
    *  the instance holds has `in_place` as its latest statement (R52), whatever the viewer. Synchronous; writes nothing
@@ -212779,7 +212786,7 @@ Changes: responds_to edge added to ${actionId}.
       tail2.push(String(determination));
     }
     const out = [];
-    let truncated5 = false;
+    let truncated6 = false;
     let from = after ? String(after) : "";
     for (; ; ) {
       const rows3 = this.#rows(`SELECT b.bundle_id, b.current_state FROM bundles b WHERE ${where.join(" AND ")}
@@ -212791,7 +212798,7 @@ Changes: responds_to edge added to ${actionId}.
         if (counterparty && counterpartyName(fm.counterparty) !== counterparty) continue;
         if (proceeding && fm.proceeding !== proceeding) continue;
         if (out.length === max) {
-          truncated5 = true;
+          truncated6 = true;
           break;
         }
         out.push({
@@ -212802,14 +212809,14 @@ Changes: responds_to edge added to ${actionId}.
           counterparty_state: fm.counterparty?.state ?? null
         });
       }
-      if (truncated5 || rows3.length <= max) break;
+      if (truncated6 || rows3.length <= max) break;
     }
     const cursor = out.length ? out[out.length - 1].id : null;
     return {
       ok: true,
       items: out,
       limit: max,
-      truncated: truncated5,
+      truncated: truncated6,
       cursor,
       ...determination && !this.conformance ? {
         determination_read: "undetermined",
@@ -214119,7 +214126,7 @@ var ActionClocks = class {
     const seek = at43 ? { id: at43[1], pos: Number(at43[2]) } : from ? { id: from, pos: Infinity } : null;
     const rows3 = candidates(seek ? seek.id : null, actionsMax + 1);
     const items = [];
-    let truncated5 = rows3.length > actionsMax;
+    let truncated6 = rows3.length > actionsMax;
     let full = false, lastRead = null;
     read: for (const r of rows3.slice(0, actionsMax)) {
       const fm = this.#heldFm(r.bundle_id) || {};
@@ -214129,7 +214136,7 @@ var ActionClocks = class {
         const it = item3(r, i, clock2[i]);
         if (!it) continue;
         if (items.length === max) {
-          full = truncated5 = true;
+          full = truncated6 = true;
           break read;
         }
         items.push(it);
@@ -214137,8 +214144,8 @@ var ActionClocks = class {
       lastRead = { id: r.bundle_id, end: Math.max(clock2.length - 1, Number.isFinite(skip) ? skip : 0, 0) };
     }
     const tail2 = items[items.length - 1];
-    const cursor = !truncated5 ? null : tail2 && (full || !lastRead || tail2.action === lastRead.id) ? `${tail2.action}#${tail2.ord}` : lastRead ? `${lastRead.id}#${lastRead.end}` : null;
-    return { items, truncated: truncated5, cursor };
+    const cursor = !truncated6 ? null : tail2 && (full || !lastRead || tail2.action === lastRead.id) ? `${tail2.action}#${tail2.ord}` : lastRead ? `${lastRead.id}#${lastRead.end}` : null;
+    return { items, truncated: truncated6, cursor };
   }
   /* ================================================================ the reads across actions (R1, R3, R7) */
   /** R1 (N237, N311): every `pending` clock entry dated before `before` across visible actions, at most 500 per page,
@@ -214549,7 +214556,7 @@ var ActionClocks = class {
       return docs.get(id);
     };
     const items = [];
-    let truncated5 = false;
+    let truncated6 = false;
     let cur = { sql: seek.sql, args: seek.args };
     for (; ; ) {
       const rows3 = this.#rows(
@@ -214573,7 +214580,7 @@ var ActionClocks = class {
         const { zone, day: local } = judgedOf(r.bundle_id);
         if (local === null || r.day > local) continue;
         if (items.length === max) {
-          truncated5 = true;
+          truncated6 = true;
           break;
         }
         items.push({
@@ -214588,7 +214595,7 @@ var ActionClocks = class {
           zone
         });
       }
-      if (truncated5 || rows3.length <= max || !last) break;
+      if (truncated6 || rows3.length <= max || !last) break;
       cur = {
         sql: `AND (r.bundle_id > ? OR (r.bundle_id = ? AND (r.entry > ? OR (r.entry = ? AND (r.day > ?
                      OR (r.day = ? AND r.set_by > ?))))))`,
@@ -214596,8 +214603,8 @@ var ActionClocks = class {
       };
     }
     const tail2 = items[items.length - 1];
-    const cursor = truncated5 && tail2 ? `${tail2.action}#${tail2.ord}#${tail2.on}#${tail2.set_by}` : null;
-    return { ok: true, as_of: today2, items, limit: max, truncated: truncated5, cursor };
+    const cursor = truncated6 && tail2 ? `${tail2.action}#${tail2.ord}#${tail2.on}#${tail2.set_by}` : null;
+    return { ok: true, as_of: today2, items, limit: max, truncated: truncated6, cursor };
   }
   /** R6 (`op=reminderanswer`; DEC-10, DEC-94 (1)): the member who set a due reminder answers it, with `on` another
    *  reminder on that later day, or without it no further reminder. Every due, unanswered reminder of the author's on
@@ -225163,8 +225170,8 @@ var Monitoring = class {
       ...after ? [after] : [],
       cap + 1
     );
-    const truncated5 = raw.length > cap;
-    const rows3 = truncated5 ? raw.slice(0, cap) : raw;
+    const truncated6 = raw.length > cap;
+    const rows3 = truncated6 ? raw.slice(0, cap) : raw;
     const shells = [], exported = [], undetermined3 = [], noBaseline = [], unreadable2 = [], notDocuments = {};
     let driveLinked = 0;
     for (const r of rows3) {
@@ -225228,8 +225235,8 @@ var Monitoring = class {
       generated: stampInstant("second", this.now()),
       swept: rows3.length,
       limit: cap,
-      truncated: truncated5,
-      cursor: truncated5 ? rows3[rows3.length - 1].id : null,
+      truncated: truncated6,
+      cursor: truncated6 ? rows3[rows3.length - 1].id : null,
       drive: driveLinked,
       shells,
       export: exported,
@@ -225749,12 +225756,12 @@ var Monitoring = class {
     const today2 = zone ? localDayOf2(nowMs, zone) : null;
     if (!today2)
       return { ok: true, at: at43, zone, marked: [], failed: [], truncated: false, escalations: null, undetermined: DEADLINE_NO_ZONE };
-    let items = [], truncated5 = false;
+    let items = [], truncated6 = false;
     try {
       const p3 = this.actionClocks.pendingClocks({ before: today2, limit: DEADLINE_RECHECK_MAX, viewer: MONITOR_VIEWER });
       if (p3 && p3.ok !== false) {
         items = Array.isArray(p3.items) ? p3.items : [];
-        truncated5 = !!p3.truncated;
+        truncated6 = !!p3.truncated;
       } else return { ok: false, reason: p3?.reason ?? "PENDING_CLOCKS_UNREAD", detail: p3?.detail ?? null };
     } catch (e2) {
       return { ok: false, reason: "PENDING_CLOCKS_UNREAD", detail: String(e2 && e2.message || e2).slice(0, 160) };
@@ -225774,7 +225781,7 @@ var Monitoring = class {
     }
     const escalations = marked.length ? this.escalationsDue(nowMs) : null;
     if (escalations) this.#escalated = { at: at43, action: marked.map((x) => x.action).join(", "), answer: escalations };
-    return { ok: true, at: at43, zone, day: today2, marked, failed: failed3, truncated: truncated5, escalations };
+    return { ok: true, at: at43, zone, day: today2, marked, failed: failed3, truncated: truncated6, escalations };
   }
   /** R50: the start of the local day (R34's zone, `civil-time.dayRange`) after the earliest date among the `pending`
    *  clock entries of the actions this module sees (action-clocks R1's `pendingClocks`, read as its machine viewer, every
@@ -227792,7 +227799,7 @@ var MoneyChecks = class _MoneyChecks {
     if (!this.#projectSeen(pid, viewer)) return noSuchProject(pid);
     const sees = this.#factSeer(viewer);
     const items = [];
-    let truncated5 = false;
+    let truncated6 = false;
     for (const v of this.#current()) {
       const g = this.#gate(v.detector_id, v.version);
       if (!_MoneyChecks.#gateOpen(g) || !this.#switchedOn(v.detector_id, pid)) continue;
@@ -227802,7 +227809,7 @@ var MoneyChecks = class _MoneyChecks {
         const inputs = parse18(r.inputs) || [];
         if (!inputs.length || !inputs.every((i) => sees(i.fact_id))) continue;
         if (items.length >= lim) {
-          truncated5 = true;
+          truncated6 = true;
           break;
         }
         items.push({
@@ -227824,9 +227831,9 @@ var MoneyChecks = class _MoneyChecks {
           gate: { gold_set: g.gold_set, false_alarm_rate: g.false_alarm_rate }
         });
       }
-      if (truncated5) break;
+      if (truncated6) break;
     }
-    return { ok: true, project: pid, label: NOTICED2, mark: HINT_MARK2, items, truncated: truncated5 };
+    return { ok: true, project: pid, label: NOTICED2, mark: HINT_MARK2, items, truncated: truncated6 };
   }
   /* R4: the shipped detectors, installed once as data, each version-kept like a member's. */
   installShipped() {
@@ -229494,7 +229501,7 @@ var Following = class {
     const to = f17.until_day || null;
     const period = { from: f17.from_day, to: f17.until_day };
     const captured = [], failed3 = [], imported = [];
-    let fetches = 0, truncated5 = false;
+    let fetches = 0, truncated6 = false;
     const legistarReading = (bytes2, locator, at43) => {
       try {
         return { content_type: KEY, reader_version: 1, found: true, at: at43, entities: [], facts: parse19({ locator, bytes: bytes2, at: at43 }) };
@@ -229504,7 +229511,7 @@ var Following = class {
     };
     const read3 = async (address, imports = true) => {
       if (fetches >= BODY_READ_FETCHES) {
-        truncated5 = true;
+        truncated6 = true;
         return null;
       }
       fetches++;
@@ -229556,7 +229563,7 @@ var Following = class {
     }
     const outcome = failed3.length ? "failed" : captured.length ? "captured" : "unchanged";
     return {
-      read: { follow: Number(f17.follow_id), kind: "body", outcome, fetches, imported: imported.length, ...truncated5 ? { truncated: true } : {} },
+      read: { follow: Number(f17.follow_id), kind: "body", outcome, fetches, imported: imported.length, ...truncated6 ? { truncated: true } : {} },
       captured,
       failed: failed3,
       outcome
@@ -235326,8 +235333,8 @@ function bootstrapOp(url, env, fp, { stub, json: json24, storeSilent: storeSilen
 }
 
 // src/answer-envelope/checks.mjs
-var checks_exports73 = {};
-__export(checks_exports73, {
+var checks_exports74 = {};
+__export(checks_exports74, {
   BOOTSTRAP_CHECKS: () => BOOTSTRAP_CHECKS,
   DISPATCH_CHECKS: () => DISPATCH_CHECKS,
   REPLAY_CHECKS: () => REPLAY_CHECKS,
@@ -235434,7 +235441,7 @@ var CHECK_FAMILY_FILES = Object.freeze([
   ["src/textchain.mjs", textchain_exports],
   ["src/record-core/checks.mjs", checks_exports2],
   ["src/membership/checks.mjs", checks_exports3],
-  ["src/project-roster/checks.mjs", checks_exports51],
+  ["src/project-roster/checks.mjs", checks_exports52],
   ["src/credentials/checks.mjs", checks_exports14],
   ["src/promotion/checks.mjs", checks_exports4],
   ["src/provenance/checks.mjs", checks_exports5],
@@ -235443,8 +235450,9 @@ var CHECK_FAMILY_FILES = Object.freeze([
   ["src/capture-sources/credentials.mjs", credentials_exports],
   ["src/acquisition/checks.mjs", checks_exports],
   ["src/capture/checks.mjs", checks_exports13],
-  ["src/file-safety/checks.mjs", checks_exports52],
-  ["src/sources/checks.mjs", checks_exports22],
+  ["src/doorbell/checks.mjs", checks_exports22],
+  ["src/file-safety/checks.mjs", checks_exports53],
+  ["src/sources/checks.mjs", checks_exports23],
   ["src/calibration/checks.mjs", checks_exports11],
   ["src/extraction/checks.mjs", checks_exports12],
   ["src/content/checks.mjs", checks_exports7],
@@ -235457,60 +235465,60 @@ var CHECK_FAMILY_FILES = Object.freeze([
   ["src/observation-log/checks.mjs", checks_exports9],
   ["src/law-relations/checks.mjs", checks_exports21],
   ["src/standards/checks.mjs", checks_exports20],
-  ["src/progressions/checks.mjs", checks_exports24],
-  ["src/money-checks/checks.mjs", checks_exports53],
-  ["src/duties/checks.mjs", checks_exports23],
-  ["src/bias/checks.mjs", checks_exports25],
+  ["src/progressions/checks.mjs", checks_exports25],
+  ["src/money-checks/checks.mjs", checks_exports54],
+  ["src/duties/checks.mjs", checks_exports24],
+  ["src/bias/checks.mjs", checks_exports26],
   ["src/retrieval/checks.mjs", checks_exports19],
   ["src/inquiry-grammar/checks.mjs", checks_exports10],
-  ["src/accepted-work/checks.mjs", checks_exports26],
+  ["src/accepted-work/checks.mjs", checks_exports27],
   ["src/inquiry/index.mjs", inquiry_exports],
-  ["src/hypotheses/checks.mjs", checks_exports54],
-  ["src/steps/checks.mjs", checks_exports42],
-  ["src/citation/checks.mjs", checks_exports48],
-  ["src/basis-versions/checks.mjs", checks_exports27],
-  ["src/strength/checks.mjs", checks_exports29],
-  ["src/contradiction/checks.mjs", checks_exports30],
-  ["src/run-rules/checks.mjs", checks_exports40],
-  ["src/ai-use/checks.mjs", checks_exports41],
-  ["src/run-productions/checks.mjs", checks_exports55],
-  ["src/capture-requests/checks.mjs", checks_exports56],
-  ["src/reading-guides/checks.mjs", checks_exports57],
+  ["src/hypotheses/checks.mjs", checks_exports55],
+  ["src/steps/checks.mjs", checks_exports43],
+  ["src/citation/checks.mjs", checks_exports49],
+  ["src/basis-versions/checks.mjs", checks_exports28],
+  ["src/strength/checks.mjs", checks_exports30],
+  ["src/contradiction/checks.mjs", checks_exports31],
+  ["src/run-rules/checks.mjs", checks_exports41],
+  ["src/ai-use/checks.mjs", checks_exports42],
+  ["src/run-productions/checks.mjs", checks_exports56],
+  ["src/capture-requests/checks.mjs", checks_exports57],
+  ["src/reading-guides/checks.mjs", checks_exports58],
   ["src/skilldoctrine.mjs", skilldoctrine_exports],
-  ["src/question-explorer/checks.mjs", checks_exports58],
-  ["src/answers/checks.mjs", checks_exports44],
-  ["src/intent/checks.mjs", checks_exports59],
-  ["src/investigation/checks.mjs", checks_exports60],
-  ["src/reevaluation/checks.mjs", checks_exports31],
-  ["src/case-carriage/checks.mjs", checks_exports33],
-  ["src/case-tensions/checks.mjs", checks_exports34],
-  ["src/publication/checks.mjs", checks_exports32],
-  ["src/publish-schedule/checks.mjs", checks_exports38],
-  ["src/docket/checks.mjs", checks_exports35],
-  ["src/public-read/checks.mjs", checks_exports36],
-  ["src/network-notices/checks.mjs", checks_exports37],
-  ["src/ratification/checks.mjs", checks_exports39],
-  ["src/case-import/checks.mjs", checks_exports43],
-  ["src/case-disclosures/checks.mjs", checks_exports45],
-  ["src/case-authoring/checks.mjs", checks_exports46],
-  ["src/review/checks.mjs", checks_exports61],
-  ["src/conformance/checks.mjs", checks_exports62],
-  ["src/consequences/checks.mjs", checks_exports63],
-  ["src/action-grammar/checks.mjs", checks_exports28],
-  ["src/action-clocks/checks.mjs", checks_exports64],
-  ["src/filing-templates/checks.mjs", checks_exports47],
-  ["src/filings/checks.mjs", checks_exports65],
-  ["src/escalation/checks.mjs", checks_exports66],
-  ["src/action-plans/checks.mjs", checks_exports67],
-  ["src/monitoring/checks.mjs", checks_exports68],
-  ["src/following/checks.mjs", checks_exports69],
-  ["src/link-sweep/checks.mjs", checks_exports70],
-  ["src/wizard-scripts/checks.mjs", checks_exports49],
-  ["src/tasks/checks.mjs", checks_exports71],
-  ["src/queue/checks.mjs", checks_exports72],
+  ["src/question-explorer/checks.mjs", checks_exports59],
+  ["src/answers/checks.mjs", checks_exports45],
+  ["src/intent/checks.mjs", checks_exports60],
+  ["src/investigation/checks.mjs", checks_exports61],
+  ["src/reevaluation/checks.mjs", checks_exports32],
+  ["src/case-carriage/checks.mjs", checks_exports34],
+  ["src/case-tensions/checks.mjs", checks_exports35],
+  ["src/publication/checks.mjs", checks_exports33],
+  ["src/publish-schedule/checks.mjs", checks_exports39],
+  ["src/docket/checks.mjs", checks_exports36],
+  ["src/public-read/checks.mjs", checks_exports37],
+  ["src/network-notices/checks.mjs", checks_exports38],
+  ["src/ratification/checks.mjs", checks_exports40],
+  ["src/case-import/checks.mjs", checks_exports44],
+  ["src/case-disclosures/checks.mjs", checks_exports46],
+  ["src/case-authoring/checks.mjs", checks_exports47],
+  ["src/review/checks.mjs", checks_exports62],
+  ["src/conformance/checks.mjs", checks_exports63],
+  ["src/consequences/checks.mjs", checks_exports64],
+  ["src/action-grammar/checks.mjs", checks_exports29],
+  ["src/action-clocks/checks.mjs", checks_exports65],
+  ["src/filing-templates/checks.mjs", checks_exports48],
+  ["src/filings/checks.mjs", checks_exports66],
+  ["src/escalation/checks.mjs", checks_exports67],
+  ["src/action-plans/checks.mjs", checks_exports68],
+  ["src/monitoring/checks.mjs", checks_exports69],
+  ["src/following/checks.mjs", checks_exports70],
+  ["src/link-sweep/checks.mjs", checks_exports71],
+  ["src/wizard-scripts/checks.mjs", checks_exports50],
+  ["src/tasks/checks.mjs", checks_exports72],
+  ["src/queue/checks.mjs", checks_exports73],
   ["src/setup.mjs", setup_exports],
-  ["src/admission/checks.mjs", checks_exports50],
-  ["src/answer-envelope/checks.mjs", checks_exports73]
+  ["src/admission/checks.mjs", checks_exports51],
+  ["src/answer-envelope/checks.mjs", checks_exports74]
 ].map((e2) => Object.freeze(e2)));
 var translated = (row12) => !!row12 && typeof row12 === "object" && typeof row12.translation === "string" && row12.translation !== "";
 function compose3() {
@@ -238021,7 +238029,7 @@ async function publicationDoorOp(op, url, stub, {
   storeRefusal: storeRefusal2,
   doAnswer: doAnswer2,
   readerOf: readerOf2,
-  sha256Hex: sha256Hex16,
+  sha256Hex: sha256Hex17,
   NS_RATIFY: NS_RATIFY2,
   caseRatifyStatement: caseRatifyStatement2,
   body = null
@@ -238051,7 +238059,7 @@ async function publicationDoorOp(op, url, stub, {
     const reader = await readerOf2();
     if (reader.silent) return storeSilent2(reader.silent, reader.correlation);
     const presented = await bodySecret(body);
-    const docSecret = presented !== null ? await sha256Hex16(presented) : "";
+    const docSecret = presented !== null ? await sha256Hex17(presented) : "";
     const inner = `http://do/casedocument?case=${encodeURIComponent(caseId)}&edition=${encodeURIComponent(ed)}&viewer=${encodeURIComponent(reader.viewer)}`;
     const out = await doAnswer2(docSecret ? stub.fetch(inner, {
       method: "POST",
@@ -239180,9 +239188,9 @@ var Tasks = class _Tasks {
   }
   static PER_ITEM_MAX = PER_ITEM_MAX;
   /* affordances.mjs: ONE number, published as set_acts[].max_items */
-  #perItem(act2, body, stamped2, one4) {
+  #perItem(act2, body, stamped3, one4) {
     const a = PER_ITEM_ACTS.find((x) => x.id === act2);
-    return perItem(act2, body, stamped2, one4, { itemKeys: a && a.item_keys, sharedKeys: a && a.shared_keys });
+    return perItem(act2, body, stamped3, one4, { itemKeys: a && a.item_keys, sharedKeys: a && a.shared_keys });
   }
   /* ------------------------------------------------------------------ the scheduler consumer (R1)
      `scheduler` is earlier and keeps its registry; this module registers into it at start (K31, scheduler R8). */
@@ -241550,7 +241558,7 @@ var ActionPlans = class {
     }
     let cursor = after ? String(after) : "";
     const items = [];
-    let truncated5 = false;
+    let truncated6 = false;
     for (; ; ) {
       const rows3 = this.#rows(`SELECT * FROM plans p WHERE p.plan_id > ? ${where.length ? `AND ${where.join(" AND ")}` : ""}
                                ORDER BY p.plan_id LIMIT ?`, cursor, ...args, cap + 1);
@@ -241558,7 +241566,7 @@ var ActionPlans = class {
         cursor = r.plan_id;
         if (!this.#sees(r.project_id, viewer)) continue;
         if (items.length === cap) {
-          truncated5 = true;
+          truncated6 = true;
           break;
         }
         const held2 = this.#subjectsOf(r.plan_id).map((x) => x.subject);
@@ -241574,9 +241582,9 @@ var ActionPlans = class {
           ...shown3.length !== held2.length ? { out_of_view: true } : {}
         });
       }
-      if (truncated5 || rows3.length <= cap) break;
+      if (truncated6 || rows3.length <= cap) break;
     }
-    return { ok: true, items, truncated: truncated5, cursor: truncated5 ? items.at(-1).id : null, limit: cap };
+    return { ok: true, items, truncated: truncated6, cursor: truncated6 ? items.at(-1).id : null, limit: cap };
   }
   /** R17: for open plans, the checkpoints whose day has come and that no member has judged, oldest first. */
   checkpointsDue({ nowMs, limit } = {}) {
@@ -241893,15 +241901,15 @@ function actionPlansOps(m, url, body) {
   const qp = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
   const pick4 = (k) => url.searchParams.has(k) ? qp(k) : b[k] ?? null;
-  const stamped2 = (extra = {}) => ({ ...b, ...extra, author: qp("author"), viewer: qp("viewer") });
+  const stamped3 = (extra = {}) => ({ ...b, ...extra, author: qp("author"), viewer: qp("viewer") });
   const now = () => {
     const n2 = Number(qp("now"));
     return Number.isFinite(n2) && qp("now") !== null ? n2 : void 0;
   };
   return {
-    planopen: () => m.planOpen(stamped2({ project: pick4("project"), title: pick4("title") })),
-    plansubjectadd: () => m.planSubjectAdd(stamped2({ plan: pick4("plan"), reason: pick4("reason") })),
-    plansubjectremove: () => m.planSubjectRemove(stamped2({ plan: pick4("plan"), reason: pick4("reason") })),
+    planopen: () => m.planOpen(stamped3({ project: pick4("project"), title: pick4("title") })),
+    plansubjectadd: () => m.planSubjectAdd(stamped3({ plan: pick4("plan"), reason: pick4("reason") })),
+    plansubjectremove: () => m.planSubjectRemove(stamped3({ plan: pick4("plan"), reason: pick4("reason") })),
     plan: () => m.planRead({ id: pick4("id") ?? pick4("plan"), nowMs: now(), viewer: qp("viewer") }),
     plans: () => m.plansFor({
       project: pick4("project"),
@@ -241911,8 +241919,8 @@ function actionPlansOps(m, url, body) {
       limit: pick4("limit"),
       viewer: qp("viewer")
     }),
-    optionadd: () => m.optionAdd(stamped2({ plan: pick4("plan") })),
-    optionrevise: () => m.optionRevise(stamped2({ plan: pick4("plan"), option: pick4("option") })),
+    optionadd: () => m.optionAdd(stamped3({ plan: pick4("plan") })),
+    optionrevise: () => m.optionRevise(stamped3({ plan: pick4("plan"), option: pick4("option") })),
     optionpropose: () => m.optionPropose({
       ...b,
       plan: pick4("plan"),
@@ -241921,18 +241929,18 @@ function actionPlansOps(m, url, body) {
       principal: qp("principal"),
       viewer: qp("viewer")
     }),
-    optionadopt: () => m.optionAdopt(stamped2({ proposal: pick4("proposal") })),
-    optiondispose: () => m.optionDispose(stamped2({ plan: pick4("plan"), disposition: pick4("disposition") })),
-    scenarioset: () => m.scenarioSet(stamped2({ plan: pick4("plan"), scenario: pick4("scenario") })),
-    checkpointrecord: () => m.checkpointRecord(stamped2({
+    optionadopt: () => m.optionAdopt(stamped3({ proposal: pick4("proposal") })),
+    optiondispose: () => m.optionDispose(stamped3({ plan: pick4("plan"), disposition: pick4("disposition") })),
+    scenarioset: () => m.scenarioSet(stamped3({ plan: pick4("plan"), scenario: pick4("scenario") })),
+    checkpointrecord: () => m.checkpointRecord(stamped3({
       plan: pick4("plan"),
       scenario: pick4("scenario"),
       phase: pick4("phase"),
       judged: pick4("judged")
     })),
-    optionstart: () => m.optionStart(stamped2({ plan: pick4("plan"), option: pick4("option"), kind: pick4("kind") })),
-    optionstartpreview: () => m.optionStartPreview(stamped2({ plan: pick4("plan"), option: pick4("option"), kind: pick4("kind") })),
-    planclose: () => m.planClose(stamped2({ id: pick4("id") ?? pick4("plan"), reason: pick4("reason") })),
+    optionstart: () => m.optionStart(stamped3({ plan: pick4("plan"), option: pick4("option"), kind: pick4("kind") })),
+    optionstartpreview: () => m.optionStartPreview(stamped3({ plan: pick4("plan"), option: pick4("option"), kind: pick4("kind") })),
+    planclose: () => m.planClose(stamped3({ id: pick4("id") ?? pick4("plan"), reason: pick4("reason") })),
     planproposals: () => m.planProposals({ plan: pick4("plan"), run: pick4("run"), viewer: qp("viewer") })
   };
 }
@@ -242781,7 +242789,7 @@ var MachineryProducers = class _MachineryProducers {
   #ownedProjects(me, viewer, cap) {
     const gate = viewerPredicate(viewer);
     const out = [];
-    let after = "", truncated5 = false;
+    let after = "", truncated6 = false;
     for (; ; ) {
       const rows3 = this.#rows(
         `SELECT b.bundle_id FROM bundles b WHERE b.object_type='project' AND b.bundle_id > ? AND (${gate.sql})
@@ -242794,15 +242802,15 @@ var MachineryProducers = class _MachineryProducers {
         const owners2 = this.#membership.projectOwners(r.bundle_id) || [];
         if (!owners2.includes(me)) continue;
         if (out.length === cap) {
-          truncated5 = true;
+          truncated6 = true;
           break;
         }
         out.push(r.bundle_id);
       }
-      if (truncated5 || rows3.length < _MachineryProducers.QUEUE_OBJECTIVE_GAP_PAGE) break;
+      if (truncated6 || rows3.length < _MachineryProducers.QUEUE_OBJECTIVE_GAP_PAGE) break;
       after = rows3[rows3.length - 1].bundle_id;
     }
-    return { projects: out, bound: cap, truncated: truncated5 };
+    return { projects: out, bound: cap, truncated: truncated6 };
   }
   /* ======================================================================
    * K1036 (8) · R4 — A SWEEP THAT NEEDS A MEMBER'S LOOK (link-sweep R8, R11; monitoring R60, R63 before N506).
@@ -244378,7 +244386,7 @@ var QueueProducers = class _QueueProducers {
     const log = this.#corpusExport.exportLog({ limit: cap });
     const page2 = log && Array.isArray(log.exports) ? log.exports : [];
     if (page2.length === 0) return [];
-    const truncated5 = log.truncated === true;
+    const truncated6 = log.truncated === true;
     const raisedTo = this.#activeAdmins();
     const homes = this.#homesOf([]);
     return page2.map((r) => {
@@ -244402,7 +244410,7 @@ var QueueProducers = class _QueueProducers {
           raised_to: raisedTo,
           bounds: {
             limit: cap,
-            truncated: truncated5,
+            truncated: truncated6,
             detail: "the newest exports are read up to this bound. An export past it is still in the log (op=exportlog, with a larger limit) and is not told here."
           },
           detail: "an export of the working corpus is recorded in the append-only export log and every administrator is notified (Membership v2 \xA78.1). This notice is derived from that log row and reaches every administrator named in raised_to and no one else. No act clears it yet: a disposition is scoped to a project and an export has none, and a member's own mute of a finding (D-125) is ruled but not built."
@@ -244518,7 +244526,7 @@ var QueueProducers = class _QueueProducers {
   #participatingProjects(me, viewer, cap) {
     const gate = viewerPredicate(viewer);
     const out = [];
-    let after = "", truncated5 = false;
+    let after = "", truncated6 = false;
     for (; ; ) {
       const rows3 = this.#rows(
         `SELECT b.bundle_id FROM bundles b WHERE b.object_type='project' AND b.bundle_id > ? AND (${gate.sql})
@@ -244531,15 +244539,15 @@ var QueueProducers = class _QueueProducers {
         const p3 = me ? this.#membership.participation(r.bundle_id, me) : null;
         if (me && !(p3 && (p3.state === "joined" || p3.state === "leaving"))) continue;
         if (out.length === cap) {
-          truncated5 = true;
+          truncated6 = true;
           break;
         }
         out.push(r.bundle_id);
       }
-      if (truncated5 || rows3.length < _QueueProducers.QUEUE_OBJECTIVE_GAP_PAGE) break;
+      if (truncated6 || rows3.length < _QueueProducers.QUEUE_OBJECTIVE_GAP_PAGE) break;
       after = rows3[rows3.length - 1].bundle_id;
     }
-    return { projects: out, bound: cap, truncated: truncated5 };
+    return { projects: out, bound: cap, truncated: truncated6 };
   }
   /** `objective-gap` (N172; intent R6): one FINDING per gap intent answers for each project `#objectiveGapProjects`
    *  names, homed under its project. A gap is a proposal intent derives on read; it is read here and never restated. */
@@ -244882,7 +244890,7 @@ var QueueProducers = class _QueueProducers {
   #ownedProjects(me, viewer, cap) {
     const gate = viewerPredicate(viewer);
     const out = [];
-    let after = "", truncated5 = false;
+    let after = "", truncated6 = false;
     for (; ; ) {
       const rows3 = this.#rows(
         `SELECT b.bundle_id FROM bundles b WHERE b.object_type='project' AND b.bundle_id > ? AND (${gate.sql})
@@ -244895,15 +244903,15 @@ var QueueProducers = class _QueueProducers {
         const owners2 = this.#membership.projectOwners(r.bundle_id) || [];
         if (!owners2.includes(me)) continue;
         if (out.length === cap) {
-          truncated5 = true;
+          truncated6 = true;
           break;
         }
         out.push(r.bundle_id);
       }
-      if (truncated5 || rows3.length < _QueueProducers.QUEUE_OBJECTIVE_GAP_PAGE) break;
+      if (truncated6 || rows3.length < _QueueProducers.QUEUE_OBJECTIVE_GAP_PAGE) break;
       after = rows3[rows3.length - 1].bundle_id;
     }
-    return { projects: out, bound: cap, truncated: truncated5 };
+    return { projects: out, bound: cap, truncated: truncated6 };
   }
   /** `tension-after-publication` (R6; N345, DEC-84 item 13): one FINDING per (case, candidate) `case-tensions`
    *  `caseTensions({project})` answers (its R4, was publication R50; N612), for each project the member owns, at most 50. It goes to those
@@ -245740,7 +245748,7 @@ var QueueProducers = class _QueueProducers {
         ORDER BY cd.case_id, cd.edition LIMIT ?`,
       cap + 1
     );
-    const truncated5 = rows3.length > cap;
+    const truncated6 = rows3.length > cap;
     const authorOf = /* @__PURE__ */ new Map();
     const authored = (obs) => {
       if (!authorOf.has(obs))
@@ -245781,7 +245789,7 @@ var QueueProducers = class _QueueProducers {
             level: null,
             why: row12.why ?? null,
             recipients_rule: "author",
-            bound: { editions_limit: cap, truncated: truncated5 },
+            bound: { editions_limit: cap, truncated: truncated6 },
             detail: "the edition is publication's prepared, unsigned case document (its R56), its attribution facts its own (its R2, R17); the observation's author is the register's (provenance R48). Only the author chooses the level (DEC-102 item 3), so only the author is told."
           },
           age: Number.isFinite(preparedMs) ? { state: "determined", since: e2.authored_at, ms: Math.max(0, now - preparedMs) } : {
@@ -247669,17 +247677,17 @@ var QuestionExplorer = class {
       if (!member2 || !this.gate().open) return { ok: true, finds: [], truncated: false };
       const ctx = { recipients: /* @__PURE__ */ new Map() };
       const out = [];
-      let truncated5 = false;
+      let truncated6 = false;
       for (const f17 of this.#rows(`SELECT * FROM explore_finds ORDER BY at DESC, find LIMIT 5000`)) {
         if (this.#doored(f17, member2)) continue;
         if (!this.#offeredTo(f17, member2, ctx)) continue;
         if (out.length >= n2) {
-          truncated5 = true;
+          truncated6 = true;
           break;
         }
         out.push(this.#item(f17, viewer));
       }
-      return { ok: true, finds: out, truncated: truncated5 };
+      return { ok: true, finds: out, truncated: truncated6 };
     } catch {
       return { ok: true, finds: [], truncated: false };
     }
@@ -248954,25 +248962,98 @@ function reviewOps(r, url, body) {
 
 // src/notice-producers/words.mjs
 var NOTICE_WORDS = Object.freeze({
-  "ai.queue.limitreached": "{account} reached its {period} limit{for_use} on {date}. {Uses} on it pause until {when}; its other uses go on.",
+  /* R16: the AI accounts' three items and the Ask's act (DEC-188 (6); DEC-189 (5), (6)) */
+  "ai.queue.limitreached": "{account} reached its {period} limit for {use} on {date}. It pauses {use} until {when}; its other uses go on.",
+  "ai.queue.limitreached.overall": "{account} reached its {period} limit on {date}. Uses counted in its overall limit pause until {when}; uses with their own limit on top of it go on.",
+  "ai.queue.limitreached.member": "{account}: a member reached the {period} amount each member may use, on {date}. Their uses on it pause until {when}; other members' go on.",
   "ai.queue.suspended": "Your sign-in no longer serves {project}: a second member joined, and a sign-in serves a project only while it has one member. Members' acts there now use their own accounts, or the group's key.",
   "ai.queue.exploreask": "The assistant found something worth exploring in {scope} today: {what}. Explore it today on {account}? If nobody says yes today, it doesn't.",
+  "act.exploreapprove.label.queue": "Let the assistant explore today",
+  /* R16: their fills */
+  "ai.account.group": "Your group's key",
+  "ai.account.project": "{project}'s account",
+  "ai.account.own": "Your own account",
+  "ai.account.group.inline": "your group's key",
+  "ai.account.project.inline": "the project's account",
+  "ai.account.own.inline": "your own account",
+  "ai.scope.group": "your group's work",
+  "ai.scope.own": "your own questions",
+  "ai.period.day": "daily",
+  "ai.period.month": "monthly",
+  "ai.when.day": "tomorrow",
+  "ai.when.month": "on {month} 1",
+  "ai.use.ask.inline": "asking",
+  "ai.use.draft.inline": "drafting",
+  "ai.use.run.inline": "runs",
+  "ai.use.standing.inline": "standing questions",
+  "ai.use.transcribe.inline": "reading page pictures",
+  "ai.use.explore.inline": "exploring",
+  "ai.use.suggestions.inline": "suggestions",
+  "date.month.january": "January",
+  "date.month.february": "February",
+  "date.month.march": "March",
+  "date.month.april": "April",
+  "date.month.may": "May",
+  "date.month.june": "June",
+  "date.month.july": "July",
+  "date.month.august": "August",
+  "date.month.september": "September",
+  "date.month.october": "October",
+  "date.month.november": "November",
+  "date.month.december": "December",
+  /* R17: the explored label (DEC-189 (7); D64) and its {owner} for the group */
   "ai.label.explored": "Machine work \xB7 found while exploring \xB7 enabled by {owner}",
+  "ai.label.explored.member": "Machine work \xB7 found while exploring",
   "ai.owner.group": "the group",
-  "ai.whose.group": "your group's",
-  "ai.whose.own": "your own",
-  "ai.use.ask.name": "Asking",
-  "ai.use.draft.name": "Drafting",
-  "ai.use.run.name": "Runs",
-  "ai.use.standing.name": "Standing questions",
-  "ai.use.explore.name": "Exploring",
-  "ai.use.suggestions.name": "Suggestions",
-  "act.owed_exploreapprove.label.queue": "Let the assistant explore today"
+  /* R17: the ten kinds' summary and detail (DEC-189 (2)) */
+  "queue.question-find.summary": "Found while looking into {question}: {what}",
+  "queue.question-find.detail": "The assistant found this while looking into a question you can see. It is a lead, not evidence: it becomes evidence only if a member opens it, checks it and cites the source.",
+  "queue.step-later-found.summary": "Found later: {what}",
+  "queue.step-later-found.detail": "You looked for this on {date} and didn't find it; it has since arrived. Your earlier look stays as it was, dated. Open the step to say whether this changes what it shows for each question.",
+  "queue.step-date-due.summary": "Past its date: {step}",
+  "queue.step-date-due.detail": "You set {date} for this step, and it isn't done. Only you are told. Finish it, move the date, or end it with a reason.",
+  "queue.step-reminder.summary": "Your reminder: {step}",
+  "queue.step-reminder.detail": "You asked to be reminded about this step today. Only you are told.",
+  "queue.step-cost-shared.summary": "Shared work: {step}",
+  "queue.step-cost-shared.detail": "This step's costs ({totals}) serve questions that {projects} each draw on. Its owners are told, so they can talk about sharing the cost; Civicsmith records no split and no payment.",
+  "queue.step-cost-message.summary": "A message about the cost of {step}",
+  "queue.step-cost-message.detail": "{member}, an owner of another project that draws on this step, wrote: \u201C{text}\u201D",
+  "queue.milestone-overdue.summary": "Overdue: {milestone}",
+  "queue.milestone-overdue.detail": "This milestone was due on {date}. Everyone who joined the project is told once.",
+  "queue.milestone-reminder.summary": "Your reminder: {milestone}",
+  "queue.milestone-reminder.detail": "You asked to be reminded about this milestone today. Only you are told.",
+  "queue.project-quiet.summary": "Quiet: {project}",
+  "queue.project-quiet.detail": "Nothing has moved in this project for a while. Where it stands: {progress}. You can write it up and act, keep watching its sources, close it with what remains unknown, or revise what it set out to show. Nobody is asked again until it moves.",
+  "queue.review-comment-left-out.summary": "Your comments were not included: {case}",
+  "queue.review-comment-left-out.detail": "The case was published without your review comments. You may file a response in its docket, as anyone may."
 });
 function wordsOf(key2, fills = {}) {
   const en = NOTICE_WORDS[key2];
   if (typeof en !== "string") throw new Error(`notice-producers: no words for ${key2}`);
   return en.replace(/\{([A-Za-z_]+)\}/g, (m, k) => Object.prototype.hasOwnProperty.call(fills, k) && fills[k] !== null && fills[k] !== void 0 ? String(fills[k]) : m);
+}
+var hasWords = (key2) => typeof NOTICE_WORDS[key2] === "string";
+var MONTHS8 = Object.freeze([
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december"
+]);
+function monthName(m) {
+  return Number.isInteger(m) && m >= 1 && m <= 12 ? wordsOf(`date.month.${MONTHS8[m - 1]}`) : null;
+}
+function dayMonth(day2) {
+  const x = typeof day2 === "string" ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(day2) : null;
+  const name3 = x ? monthName(Number(x[2])) : null;
+  return name3 ? `${Number(x[3])} ${name3}` : null;
 }
 
 // src/notice-producers/index.mjs
@@ -249024,18 +249105,15 @@ var NOTICE_KINDS = Object.freeze({
 });
 var ACCOUNT_ITEMS_MAX = 200;
 var INVESTIGATION_ITEMS_MAX = 200;
-var LIMIT_FOR_EACH_MEMBER = " for each member";
-var LIMIT_USES_OVERALL = "Uses counted in its overall limit";
-var LIMIT_USES_PER_MEMBER = "Each member's uses";
+var LIMIT_PERIODS2 = Object.freeze(["day", "month"]);
 var ASK_LABEL = "ask";
-var EXPLORE_APPROVE = Object.freeze({ id: "exploreapprove", label: NOTICE_WORDS["act.owed_exploreapprove.label.queue"], weight: "single" });
+var EXPLORE_APPROVE = Object.freeze({ id: "exploreapprove", label: wordsOf("act.exploreapprove.label.queue"), weight: "single" });
 var HOUR_MS2 = 36e5;
 var DAY_MS7 = 24 * HOUR_MS2;
 var failure = (provider) => Object.assign(new Error(`${provider} did not answer`), { provider });
 var filled18 = (v) => typeof v === "string" && v.trim() !== "";
 var keyed = (cls3, kind2, key2) => String(key2).startsWith(`${cls3}::${kind2}::`) ? String(key2) : `${cls3}::${kind2}::${key2}`;
 var cut8 = (list6, bound) => ({ list: list6.slice(0, bound), truncated: list6.length > bound });
-var capital = (t2) => typeof t2 === "string" && t2 ? t2[0].toUpperCase() + t2.slice(1) : t2;
 var bare3 = (m) => {
   const t2 = typeof m === "string" ? m.trim() : "";
   const x = /^member:(.+)$/.exec(t2);
@@ -249069,6 +249147,8 @@ var NoticeProducers = class _NoticeProducers {
   #deps;
   #homesFn = null;
   #optionsFn = null;
+  #works = null;
+  /* R17: each step's work, read once a read (`#workOf`) */
   constructor({ host, storage, deps = {} } = {}) {
     this.#host = host;
     this.sql = storage.sql;
@@ -249216,6 +249296,7 @@ var NoticeProducers = class _NoticeProducers {
     } finally {
       this.#homesFn = null;
       this.#optionsFn = null;
+      this.#works = null;
     }
   }
   /* ------------------------------------------------------------------ R7: sight */
@@ -249227,7 +249308,7 @@ var NoticeProducers = class _NoticeProducers {
     if (gate.scope === "DENY") return { projects: [], truncated: false };
     const where = gate.scope === "member" ? "1=1" : gate.sql;
     const out = [];
-    let truncated5 = false;
+    let truncated6 = false;
     for (const r of this.#rows(
       `SELECT b.bundle_id FROM bundles b WHERE b.object_type='project' AND (${where}) ORDER BY b.bundle_id`,
       ...gate.scope === "member" ? [] : gate.args
@@ -249235,12 +249316,12 @@ var NoticeProducers = class _NoticeProducers {
       const p3 = this.#membership.participation(r.bundle_id, me);
       if (!(p3 && (p3.state === "joined" || p3.state === "leaving"))) continue;
       if (out.length === NOTICE_PROJECTS_MAX) {
-        truncated5 = true;
+        truncated6 = true;
         break;
       }
       out.push(r.bundle_id);
     }
-    return { projects: out, truncated: truncated5 };
+    return { projects: out, truncated: truncated6 };
   }
   /** A home set made of the named cases themselves (each at depth 0, when this viewer sees it and it is a case) and
    *  every ancestor queue's walk reaches above them (queue R7). */
@@ -249274,7 +249355,7 @@ var NoticeProducers = class _NoticeProducers {
    * project that has not switched it off. One item per result, homed under every such project of the member's. */
   #interestChecks(me, projects, viewer, now) {
     const byKey = /* @__PURE__ */ new Map();
-    let truncated5 = false;
+    let truncated6 = false;
     let conditions = null;
     const conditionOf2 = (check2, version) => {
       if (conditions === null) {
@@ -249289,7 +249370,7 @@ var NoticeProducers = class _NoticeProducers {
       if (!r || r.ok === false || !Array.isArray(r.checks)) continue;
       for (const c of r.checks) {
         if (!c || c.gated !== false || !Array.isArray(c.results)) continue;
-        if (c.truncated === true) truncated5 = true;
+        if (c.truncated === true) truncated6 = true;
         for (const x of c.results) {
           if (!x || !filled18(x.result_id)) continue;
           const id = `FINDING::interest-check-noticed::${c.check}::${x.result_id}`;
@@ -249337,7 +249418,7 @@ var NoticeProducers = class _NoticeProducers {
         options: [TAKE_UP]
       });
     }
-    return { items, facts: { truncated: truncated5 } };
+    return { items, facts: { truncated: truncated6 } };
   }
   /* ================================================================== R3 · money detectors (money-checks R9, R10)
    * For each of the member's projects, the results `money-checks.noticed({project, viewer})` answers: only versions
@@ -249345,11 +249426,11 @@ var NoticeProducers = class _NoticeProducers {
    * a result whose gate is not stated at or under the bound is never raised. */
   #moneyDetectors(me, projects, viewer, now) {
     const byKey = /* @__PURE__ */ new Map();
-    let truncated5 = false;
+    let truncated6 = false;
     for (const project of projects) {
       const r = this.#moneyChecks.noticed({ project, viewer, limit: 500 });
       if (!r || r.ok === false || !Array.isArray(r.items)) continue;
-      if (r.truncated === true) truncated5 = true;
+      if (r.truncated === true) truncated6 = true;
       for (const x of r.items) {
         if (!x || !filled18(x.result_id) || !filled18(x.detector_id)) continue;
         const rate = x.gate ? Number(x.gate.false_alarm_rate) : NaN;
@@ -249404,7 +249485,7 @@ var NoticeProducers = class _NoticeProducers {
         options: [TAKE_UP]
       });
     }
-    return { items, facts: { truncated: truncated5 } };
+    return { items, facts: { truncated: truncated6 } };
   }
   /* ================================================================== R4 · standing answers (answers R20)
    * Each run of the member's own standing questions that found something new, one item per run, to its author alone
@@ -249412,10 +249493,10 @@ var NoticeProducers = class _NoticeProducers {
   #standingAnswers(me, viewer, now) {
     void viewer;
     const entries = [];
-    let after = null, truncated5 = false;
+    let after = null, truncated6 = false;
     for (let page2 = 0; ; page2 += 1) {
       if (page2 === STANDING_PAGES_MAX) {
-        truncated5 = true;
+        truncated6 = true;
         break;
       }
       const r = this.#answers.standingAnswersFor({ member: `member:${me}`, after });
@@ -249459,7 +249540,7 @@ var NoticeProducers = class _NoticeProducers {
         options: []
       });
     }
-    return { items, facts: { truncated: truncated5 } };
+    return { items, facts: { truncated: truncated6 } };
   }
   /** R4: what held the AI half back (answers R19), in plain words: the switch, the account, or the paying account's
    *  limit (`ai-use`'s `AI_LIMIT_REACHED`, its words as answers carries them; the retired ceiling's codes are gone,
@@ -249481,16 +249562,16 @@ var NoticeProducers = class _NoticeProducers {
     const asOf = instantOf3(now);
     const obligors = this.#rows(`SELECT DISTINCT obligor FROM duties WHERE obligor IS NOT NULL ORDER BY obligor`).map((r) => r.obligor);
     const items = [];
-    let count2 = 0, truncated5 = false;
+    let count2 = 0, truncated6 = false;
     for (const entity2 of obligors) {
-      if (truncated5) break;
+      if (truncated6) break;
       const r = this.#duties.dutiesOf({ entity: entity2, as: "obligor", viewer, limit: DUTIES_MAX });
       if (!r || r.ok === false || !Array.isArray(r.duties)) continue;
-      if (r.truncated === true) truncated5 = true;
+      if (r.truncated === true) truncated6 = true;
       for (const d of r.duties) {
         if (!d || !filled18(d.duty_id)) continue;
         if (count2 === DUTIES_MAX) {
-          truncated5 = true;
+          truncated6 = true;
           break;
         }
         count2 += 1;
@@ -249504,7 +249585,7 @@ var NoticeProducers = class _NoticeProducers {
         }
       }
     }
-    return { items, facts: { truncated: truncated5 } };
+    return { items, facts: { truncated: truncated6 } };
   }
   /** Who a duty's item goes to: the member who adopted it, else its project's owners (membership R65), else the
    *  administrators (membership R86); with the rule that chose them. */
@@ -249641,7 +249722,7 @@ var NoticeProducers = class _NoticeProducers {
     const lv = this.#credentials.securityLevel();
     if (!lv || typeof lv !== "object" || !SECURITY_LEVELS.includes(lv.level)) throw failure("credentials");
     if (lv.level !== "High") return { items: [], facts: {} };
-    const { start, through, truncated: truncated5 } = this.#episode(me, now);
+    const { start, through, truncated: truncated6 } = this.#episode(me, now);
     const from = instantOf3(start), to = instantOf3(now);
     const got = through === 0 ? "nothing got through" : `${through} ${through === 1 ? "sign-in or recovery" : "sign-ins or recoveries"} got through under a paused role`;
     return { items: [{
@@ -249669,7 +249750,7 @@ var NoticeProducers = class _NoticeProducers {
       assignee_role: null,
       recipients: [me],
       options: this.#optionsOf([])
-    }], facts: { truncated: truncated5 } };
+    }], facts: { truncated: truncated6 } };
   }
   /** R12: the episode reaching `now`: its first hour's start, the `through` count since, and whether the read reached
    *  the days kept still High. `securityMap` refusing is a failure of the provider (R1). */
@@ -249712,15 +249793,15 @@ var NoticeProducers = class _NoticeProducers {
       return false;
     };
     at43(cur);
-    let start = cur, truncated5 = false;
+    let start = cur, truncated6 = false;
     for (let h = cur - 1; ; h--) {
       if (h < floor) {
-        truncated5 = true;
+        truncated6 = true;
         break;
       }
       const high = highAt(h);
       if (high === null) {
-        truncated5 = true;
+        truncated6 = true;
         break;
       }
       if (!high) break;
@@ -249728,7 +249809,7 @@ var NoticeProducers = class _NoticeProducers {
     }
     let through = 0;
     for (let h = start; h <= cur; h++) through += (hours.get(h) || { through: 0 }).through;
-    return { start: start * HOUR_MS2, through, truncated: truncated5 };
+    return { start: start * HOUR_MS2, through, truncated: truncated6 };
   }
   /* ================================================================== R13 · a policy's silent change
    * (following R21; N652, K1727, K1740, DEC-145 (5)). The changes `policyChanges` answers this viewer whose later
@@ -249740,10 +249821,10 @@ var NoticeProducers = class _NoticeProducers {
   #policyChanges(me, viewer, now) {
     const since = now - POLICY_CHANGE_DAYS * DAY_MS7;
     const changes = [];
-    let after = null, read3 = 0, truncated5 = false;
+    let after = null, read3 = 0, truncated6 = false;
     for (; ; ) {
       if (read3 >= POLICY_CHANGES_MAX2) {
-        truncated5 = true;
+        truncated6 = true;
         break;
       }
       const r = this.#following.policyChanges({ since, after, limit: Math.min(POLICY_CHANGES_PAGE, POLICY_CHANGES_MAX2 - read3), viewer });
@@ -249753,7 +249834,7 @@ var NoticeProducers = class _NoticeProducers {
       if (r.cursor === null || r.cursor === void 0 || r.changes.length === 0) break;
       after = r.cursor;
     }
-    if (!changes.length) return { items: [], facts: { truncated: truncated5 } };
+    if (!changes.length) return { items: [], facts: { truncated: truncated6 } };
     const recipientOf = /* @__PURE__ */ new Map();
     let admins = null;
     const adminsNow = () => {
@@ -249830,7 +249911,7 @@ var NoticeProducers = class _NoticeProducers {
         options: this.#optionsOf([c.standard])
       });
     }
-    return { items, facts: { truncated: truncated5 } };
+    return { items, facts: { truncated: truncated6 } };
   }
   /* ================================================================== R14 · a file held after a scan
    * (file-safety R15, R16–R18, R38; N707, N710, DEC-169 (4), K1892, K1913, K1929). The `found` notes
@@ -249849,10 +249930,10 @@ var NoticeProducers = class _NoticeProducers {
     if (!this.#active(me)) return { items: [], facts: {} };
     const since = now - SCAN_FINDINGS_DAYS * DAY_MS7;
     const found3 = [];
-    let after = null, read3 = 0, truncated5 = false;
+    let after = null, read3 = 0, truncated6 = false;
     for (; ; ) {
       if (read3 >= SCAN_FINDINGS_MAX) {
-        truncated5 = true;
+        truncated6 = true;
         break;
       }
       const r = this.#fileSafety.scanFindings({ since, after, limit: Math.min(FILE_SAFETY_PAGE, SCAN_FINDINGS_MAX - read3), viewer });
@@ -249907,7 +249988,7 @@ var NoticeProducers = class _NoticeProducers {
         options: this.#optionsOf(home ? [home] : [])
       });
     }
-    return { items, facts: { truncated: truncated5 } };
+    return { items, facts: { truncated: truncated6 } };
   }
   /* ================================================================== R15 · a security tool switched off
    * (file-safety R27, R29, R31; K1929). To an active administrator alone: the events `securityToolEvents` answers
@@ -249923,10 +250004,10 @@ var NoticeProducers = class _NoticeProducers {
     }
     if (!admins.includes(me)) return { items: [], facts: {} };
     const events = [];
-    let after = null, read3 = 0, truncated5 = false;
+    let after = null, read3 = 0, truncated6 = false;
     for (; ; ) {
       if (read3 >= TOOL_EVENTS_MAX) {
-        truncated5 = true;
+        truncated6 = true;
         break;
       }
       const r = this.#fileSafety.securityToolEvents({ after, limit: Math.min(FILE_SAFETY_PAGE, TOOL_EVENTS_MAX - read3), viewer });
@@ -249937,7 +250018,7 @@ var NoticeProducers = class _NoticeProducers {
       after = r.cursor;
     }
     const offs = events.map((e2, i) => ({ e: e2, i })).filter(({ e: e2 }) => e2 && e2.event === TOOL_SWITCHED_OFF && filled18(e2.tool_id) && filled18(e2.at));
-    if (!offs.length) return { items: [], facts: { truncated: truncated5 } };
+    if (!offs.length) return { items: [], facts: { truncated: truncated6 } };
     const t2 = this.#fileSafety.securityTools({ viewer });
     if (!t2 || t2.ok !== true || !Array.isArray(t2.tools)) throw failure("file-safety");
     const tools = new Map(t2.tools.filter((x) => x && filled18(x.tool_id)).map((x) => [x.tool_id, x]));
@@ -249974,23 +250055,27 @@ var NoticeProducers = class _NoticeProducers {
         options: this.#optionsOf([])
       });
     }
-    return { items, facts: { truncated: truncated5 } };
+    return { items, facts: { truncated: truncated6 } };
   }
   /* ================================================================== R16 · the AI accounts' items
-   * (ai-use R5, R9; credentials R59; B7, K2353, K2376, K2488; DEC-188 (6), (7)). Each read is the viewer's own: ai-use
-   * and credentials answer only the accounts and projects the viewer owns, so each item goes to this member alone. Each
-   * is keyed by its source's own stable key, read as given and never composed here (K2488), so `queue` mints it once per
-   * account, limit and period. Its words are `words.json`'s, by key (`words.mjs`), the placeholders filled here (J1): it
-   * names whose account, which use and the period's end, and never a member. A read answering `unreadable` is its
+   * (ai-use R5, R9; credentials R59; B7, K2353, K2376, K2488; DEC-188 (6), (7); DEC-189 (5), (6); N856). Each read is the
+   * viewer's own: ai-use and credentials answer only the accounts and projects the viewer owns, so each item goes to this
+   * member alone. Each is keyed by its source's own stable key, read as given and never composed here (K2488), so `queue`
+   * mints it once per account, limit and period. Its sentence and every fill are `words.json`'s, by key (`words.mjs`):
+   * it names whose account, which use and the period's end, and never a member. A read answering `unreadable` is its
    * provider's failure (R1), never read as no item. */
   #exploreAsks(me, viewer, now) {
     const r = this.#aiUse.exploreAsksPending({ viewer, at: instantOf3(now) });
     if (!r || r.ok !== true || r.unreadable === true || !Array.isArray(r.asks)) throw failure("ai-use");
-    const { list: list6, truncated: truncated5 } = cut8(r.asks.filter((a) => a && filled18(a.key) && filled18(a.owner)), ACCOUNT_ITEMS_MAX);
+    const { list: list6, truncated: truncated6 } = cut8(r.asks.filter((a) => a && filled18(a.key) && filled18(a.owner)), ACCOUNT_ITEMS_MAX);
     const items = list6.map((a) => {
       const o = this.#owner(a.owner, viewer);
       const what = Array.isArray(a.what) ? a.what.filter(filled18).join("; ") : filled18(a.what) ? a.what : "";
-      const fills = { scope: o.scope, what, account: o.account };
+      const fills = {
+        scope: o.kind === "project" ? o.name : wordsOf(`ai.scope.${o.kind}`),
+        what,
+        account: wordsOf(`ai.account.${o.kind}.inline`)
+      };
       const text7 = wordsOf("ai.queue.exploreask", fills);
       return {
         id: keyed("FINDING", "explore-ask", a.key),
@@ -250020,26 +250105,37 @@ var NoticeProducers = class _NoticeProducers {
         options: [EXPLORE_APPROVE, ...this.#optionsOf(o.project ? [o.project] : [])]
       };
     });
-    return { items, facts: { truncated: truncated5 } };
+    return { items, facts: { truncated: truncated6 } };
   }
+  /* The "Noticed" item for a limit reached reads its sentence by the limit's scope (DEC-189 (5)): a use's
+     `ai.queue.limitreached`, the overall limit's `.overall`, the per-member limit's `.member`; a use with no
+     `ai.use.<use>.inline` key reads `.overall` (J1 (3), as K2720 for ai-use). An entry whose period, day or period end
+     cannot be read is no item: ai-use R5 answers each (R3's unjudged refusal is never listed: it reached nothing). */
   #limitsReached(me, viewer, now) {
     const r = this.#aiUse.limitsReached({ viewer, at: instantOf3(now) });
     if (!r || r.ok !== true || r.unreadable === true || !Array.isArray(r.reached)) throw failure("ai-use");
-    const ok2 = r.reached.filter((e2) => e2 && filled18(e2.key) && filled18(e2.owner) && filled18(e2.scope) && Object.prototype.hasOwnProperty.call(LIMIT_PERIOD_FILL, e2.period));
-    const { list: list6, truncated: truncated5 } = cut8(ok2, ACCOUNT_ITEMS_MAX);
     const zone = this.#zone();
-    const items = list6.map((e2) => {
+    const ok2 = [];
+    for (const e2 of r.reached) {
+      if (!e2 || !filled18(e2.key) || !filled18(e2.owner) || !filled18(e2.scope) || !LIMIT_PERIODS2.includes(e2.period)) continue;
+      const day2 = _NoticeProducers.#localDay(e2.reached_at, zone);
+      const when = _NoticeProducers.#periodEnd(e2.period, e2.period_start, day2);
+      const date = dayMonth(day2);
+      if (when && date) ok2.push({ e: e2, when, date });
+    }
+    const { list: list6, truncated: truncated6 } = cut8(ok2, ACCOUNT_ITEMS_MAX);
+    const items = list6.map(({ e: e2, when, date }) => {
       const o = this.#owner(e2.owner, viewer);
-      const use = NOTICE_WORDS[`ai.use.${e2.scope}.name`] ?? null;
+      const use = e2.scope !== "overall" && e2.scope !== "per_member" && hasWords(`ai.use.${e2.scope}.inline`) ? e2.scope : null;
+      const word2 = e2.scope === "per_member" ? "ai.queue.limitreached.member" : use ? "ai.queue.limitreached" : "ai.queue.limitreached.overall";
       const fills = {
-        account: capital(o.account),
-        period: LIMIT_PERIOD_FILL[e2.period],
-        for_use: e2.scope === "overall" ? "" : e2.scope === "per_member" ? LIMIT_FOR_EACH_MEMBER : use ? ` for ${use.toLowerCase()}` : "",
-        date: _NoticeProducers.#localDate(e2.reached_at, zone),
-        Uses: e2.scope === "overall" ? LIMIT_USES_OVERALL : e2.scope === "per_member" ? LIMIT_USES_PER_MEMBER : use ?? LIMIT_USES_OVERALL,
-        when: _NoticeProducers.#periodEnd(e2.period, e2.period_start)
+        account: wordsOf(`ai.account.${o.kind}`, { project: o.name }),
+        period: wordsOf(`ai.period.${e2.period}`),
+        ...use ? { use: wordsOf(`ai.use.${use}.inline`) } : {},
+        date,
+        when
       };
-      const text7 = wordsOf("ai.queue.limitreached", fills);
+      const text7 = wordsOf(word2, fills);
       return {
         id: keyed("FINDING", "ai-limit-reached", e2.key),
         class: "FINDING",
@@ -250050,7 +250146,7 @@ var NoticeProducers = class _NoticeProducers {
         subject: { kind: "ai_account", id: o.ref, scope: e2.scope, unit: e2.unit ?? null, period: e2.period, period_start: e2.period_start ?? null },
         summary: text7,
         detail: text7,
-        word: "ai.queue.limitreached",
+        word: word2,
         fills,
         basis: {
           source: "ai-use.limitsReached",
@@ -250071,14 +250167,14 @@ var NoticeProducers = class _NoticeProducers {
         options: this.#optionsOf(o.project ? [o.project] : [])
       };
     });
-    return { items, facts: { truncated: truncated5 } };
+    return { items, facts: { truncated: truncated6 } };
   }
   #accountsSuspended(me, viewer, now) {
     const r = this.#credentials.projectAccountsSuspended({ viewer, at: instantOf3(now) });
     if (!Array.isArray(r)) throw failure("credentials");
-    const { list: list6, truncated: truncated5 } = cut8(r.filter((e2) => e2 && filled18(e2.key) && filled18(e2.project)), ACCOUNT_ITEMS_MAX);
+    const { list: list6, truncated: truncated6 } = cut8(r.filter((e2) => e2 && filled18(e2.key) && filled18(e2.project)), ACCOUNT_ITEMS_MAX);
     const items = list6.map((e2) => {
-      const fills = { project: this.#projectName(e2.project, viewer) ?? e2.project };
+      const fills = { project: this.#titleOf(e2.project, viewer) ?? e2.project };
       const text7 = wordsOf("ai.queue.suspended", fills);
       return {
         id: keyed("FINDING", "project-account-suspended", e2.key),
@@ -250106,43 +250202,24 @@ var NoticeProducers = class _NoticeProducers {
         options: this.#optionsOf([e2.project])
       };
     });
-    return { items, facts: { truncated: truncated5 } };
+    return { items, facts: { truncated: truncated6 } };
   }
-  /** R16, R17: an AI account's owner as its words name it: `group`, `project:<id>` or `member:<id>` (ai-use's owners).
-   *  `ref` names it in an item without naming a member (`own` for a member's own account). */
+  /** R16, R17: an AI account's owner (ai-use's `group`, `project:<id>` or `member:<id>`) as its words name it: `kind`
+   *  `group`, `project` or `own` (the `ai.account.*` and `ai.scope.*` keys' last part), `name` a project's name (its
+   *  bundle's title when this viewer sees it, else its id), `ref` naming it in an item without naming a member, and
+   *  `owner`, R17's `{owner}`: the group's words, the project's name, or "your own account" (only its owner is told). */
   #owner(owner, viewer) {
     const s = typeof owner === "string" ? owner.trim() : "";
-    if (s === "group") return {
-      ref: "group",
-      project: null,
-      scope: NOTICE_WORDS["ai.owner.group"],
-      account: `${NOTICE_WORDS["ai.whose.group"]} account`,
-      label: NOTICE_WORDS["ai.owner.group"]
-    };
+    if (s === "group") return { kind: "group", ref: "group", project: null, name: null, owner: wordsOf("ai.owner.group") };
     const p3 = /^project:(.+)$/.exec(s);
     if (p3) {
-      const name3 = this.#projectName(p3[1], viewer) ?? p3[1];
-      return { ref: `project:${p3[1]}`, project: p3[1], scope: name3, account: `${name3}'s account`, label: name3 };
+      const name3 = this.#titleOf(p3[1], viewer) ?? p3[1];
+      return { kind: "project", ref: `project:${p3[1]}`, project: p3[1], name: name3, owner: name3 };
     }
-    const m = /^member:(.+)$/.exec(s);
-    let handle = null;
-    if (m) {
-      try {
-        handle = (this.#membership.memberFacts(m[1]) || {}).handle ?? null;
-      } catch {
-        handle = null;
-      }
-    }
-    return {
-      ref: "own",
-      project: null,
-      scope: `${NOTICE_WORDS["ai.whose.own"]} questions`,
-      account: `${NOTICE_WORDS["ai.whose.own"]} account`,
-      label: handle ?? NOTICE_WORDS["ai.whose.own"]
-    };
+    return { kind: "own", ref: "own", project: null, name: null, owner: wordsOf("ai.account.own.inline") };
   }
-  /** A project's name (its bundle's title) when this viewer sees it, else null. */
-  #projectName(id, viewer) {
+  /** A bundle's title (a project's name, a question's or a case's) when this viewer sees it, else null. */
+  #titleOf(id, viewer) {
     if (!filled18(id)) return null;
     const gate = viewerPredicate(viewer);
     if (gate.scope === "DENY") return null;
@@ -250153,39 +250230,37 @@ var NoticeProducers = class _NoticeProducers {
     )[0];
     return row12 && filled18(row12.title) ? row12.title : null;
   }
-  /** R16: when a period's uses go on again: `tomorrow` for a day's, the first of the next month by name for a month's
-   *  (ai-use's own fills, R13, so the two modules say it one way). */
-  static #periodEnd(period, start) {
-    if (period === "day") return LIMIT_WHEN_FILL.day;
-    const m = typeof start === "string" ? Number(start.slice(5, 7)) : NaN;
-    const name3 = Number.isInteger(m) && m >= 1 && m <= 12 ? MONTH_NAMES[m % 12] : null;
-    return name3 ? LIMIT_WHEN_FILL.month.replace(/^on /, "").replace("{month}", name3) : LIMIT_WHEN_FILL.unjudged;
+  /** R16's `{when}`: a day's limit `ai.when.day`; a month's `ai.when.month` with `{month}` the next period's month from
+   *  `date.month.*` (as ai-use R13), the period read from `period_start`, else the local day it was reached; null when
+   *  neither is read. */
+  static #periodEnd(period, start, day2) {
+    if (period === "day") return wordsOf("ai.when.day");
+    const from = dayOf8(start) ?? dayOf8(day2);
+    const m = from ? Number(from.slice(5, 7)) : NaN;
+    const next = Number.isInteger(m) && m >= 1 && m <= 12 ? monthName(m % 12 + 1) : null;
+    return next ? wordsOf("ai.when.month", { month: next }) : null;
   }
   /* ================================================================== R17 · the investigation's items
-   * (N820; K2405, K2417, K2418, K2484, K2525). Each source answers this viewer its own items, each with a stable key,
-   * told once (DEC-94): the item is keyed `<CLASS>::<kind>::<the source's key>`, the key as given (review's already has
-   * that form and is used whole). A source that throws or refuses contributes no item and is named in `facts.failed`;
-   * a source answering more than the bound is cut, `truncated` stated (as R13's). */
+   * (N820; K2405, K2417, K2418, K2484, K2525; DEC-189 (2), (7); N856). Each source answers this viewer its own items,
+   * each with a stable key, told once (DEC-94): the item is keyed `<CLASS>::<kind>::<the source's key>`, the key as given
+   * (review's already has that form and is used whole). Its `summary` and `detail` are `queue.<kind>.summary|detail`,
+   * by key, their placeholders filled from the source's own facts (J1 (4)–(6)). A source that throws or refuses
+   * contributes no item and is named in `facts.failed`; a source answering more than the bound is cut, `truncated`
+   * stated (as R13's). */
   #questionFinds(me, viewer, now) {
     const r = this.#questionExplorer.findsFor({ viewer, at: instantOf3(now), limit: INVESTIGATION_ITEMS_MAX });
     if (!r || r.ok !== true || !Array.isArray(r.finds)) throw failure("question-explorer");
     const c = cut8(r.finds.filter((f17) => f17 && filled18(f17.key) && filled18(f17.question)), INVESTIGATION_ITEMS_MAX);
     const items = c.list.map((f17) => {
       const owned = filled18(f17.enabled_by);
-      const label = owned ? wordsOf("ai.label.explored", { owner: this.#owner(f17.enabled_by, viewer).label }) : "machine";
-      const says = filled18(f17.says) ? f17.says : "The system found this while exploring the question.";
-      return {
-        id: keyed("FINDING", "question-find", f17.key),
-        class: "FINDING",
-        kind: "question-find",
-        label,
-        ...owned ? { word: "ai.label.explored" } : {},
-        mark: HINT_MARK3,
-        by: "the system's",
-        case: this.#homesAt([f17.question], viewer),
+      const word2 = owned ? "ai.label.explored" : "ai.label.explored.member";
+      const label = wordsOf(word2, owned ? { owner: this.#owner(f17.enabled_by, viewer).owner } : {});
+      return this.#r17Item(me, viewer, now, "FINDING", "question-find", f17.key, {
+        homes: [f17.question],
+        at: f17.at,
+        extra: { label, word: word2, mark: HINT_MARK3, by: "the system's" },
+        fills: { question: this.#titleOf(f17.question, viewer) ?? f17.question, what: filled18(f17.how) ? f17.how : f17.ref ?? f17.find ?? "" },
         subject: { kind: "explore_find", id: f17.find ?? null, question: f17.question, ref: f17.ref ?? null, find_kind: f17.kind ?? null },
-        summary: `${HINT_MARK3}: found while exploring ${f17.question}`,
-        detail: `${HINT_MARK3}. ${says}`,
         basis: {
           source: "question-explorer.findsFor",
           key: f17.key,
@@ -250198,12 +250273,8 @@ var NoticeProducers = class _NoticeProducers {
           ...owned ? { enabled_by: f17.enabled_by } : {},
           detail: "a find is the system's work (question-explorer R5), offered once to each of the question's recipients who may see it; it is not evidence until a member takes it in."
         },
-        age: ageFrom(f17.at, now, "no_find_instant"),
-        assignee: null,
-        assignee_role: null,
-        recipients: [me],
-        options: this.#optionsOf([f17.question])
-      };
+        options: [f17.question]
+      });
     });
     return { items, facts: { truncated: c.truncated || r.truncated === true } };
   }
@@ -250211,20 +250282,22 @@ var NoticeProducers = class _NoticeProducers {
     const r = this.#steps.laterFound({ viewer, at: instantOf3(now) });
     if (!r || r.ok !== true || !Array.isArray(r.found)) throw failure("steps");
     const c = cut8(r.found.filter((e2) => e2 && filled18(e2.key) && filled18(e2.step)), INVESTIGATION_ITEMS_MAX);
+    const zone = this.#zone();
     const items = c.list.map((e2) => {
       const qs = Array.isArray(e2.questions) ? e2.questions.filter(filled18) : [];
       return this.#r17Item(me, viewer, now, "FINDING", "step-later-found", e2.key, {
         homes: qs,
         at: e2.at,
+        fills: { what: this.#workOf(e2.step, viewer), date: dayMonth(_NoticeProducers.#localDay(e2.looked_at ?? e2.at, zone)) },
         subject: { kind: "step", id: e2.step, look: e2.look ?? null, observation: e2.observation ?? null, questions: qs },
-        summary: `Data a step looked for has arrived: ${e2.step}`,
-        detail: "Something a step looked for and did not find has since arrived. The earlier look stays as it was; you may revise the step's outcome for its questions.",
         basis: {
           source: "steps.laterFound",
           key: e2.key,
           step: e2.step,
           look: e2.look ?? null,
           observation: e2.observation ?? null,
+          looked_at: e2.looked_at ?? null,
+          at: e2.at ?? null,
           detail: "a later arrival is steps' (its R23): told once to each recipient of a referring question who may see the step and what arrived, and to the member who did the step; no outcome moves by itself."
         }
       });
@@ -250241,9 +250314,8 @@ var NoticeProducers = class _NoticeProducers {
         homes: [],
         due: dayOf8(e2.date),
         day: dayOf8(e2.date),
+        fills: { step: filled18(e2.work) ? e2.work : this.#workOf(e2.step, viewer), date: dayMonth(dayOf8(e2.date)) },
         subject: { kind: "step", id: e2.step, work: e2.work ?? null, date: e2.date ?? null },
-        summary: reminder ? `A reminder you asked for: ${e2.work ?? e2.step}` : `A step you set a date for is past it: ${e2.work ?? e2.step}`,
-        detail: reminder ? `You asked to be reminded of this step on ${e2.date}.` : `You set this step to be done by ${e2.date}, and it is not yet ended. This is told once.`,
         basis: {
           source: "steps.stepsDue",
           key: e2.key,
@@ -250263,12 +250335,14 @@ var NoticeProducers = class _NoticeProducers {
     const items = c.list.map((e2) => {
       const projects = Array.isArray(e2.projects) ? e2.projects.filter((p3) => p3 && filled18(p3.id)) : [];
       const totals2 = e2.totals && typeof e2.totals === "object" ? e2.totals : {};
-      const money = Object.entries(totals2).map(([cur, amt]) => `${amt} ${cur}`).join(", ");
       return this.#r17Item(me, viewer, now, "FINDING", "step-cost-shared", e2.key, {
         homes: projects.map((p3) => p3.id),
+        fills: {
+          step: this.#workOf(e2.step, viewer),
+          totals: Object.entries(totals2).map(([cur, amt]) => `${amt} ${cur}`).join(", "),
+          projects: projects.map((p3) => p3.name ?? p3.id).join(", ")
+        },
         subject: { kind: "step", id: e2.step, totals: totals2, projects: projects.map((p3) => ({ id: p3.id, name: p3.name ?? null })) },
-        summary: `A costed step is drawn on by ${projects.length} projects`,
-        detail: `This step's costs (${money || "none stated"}) serve questions that ${projects.map((p3) => p3.name ?? p3.id).join(", ")} draw on. Civicsmith records no split and no payment; you may write to the other projects' owners.`,
         basis: {
           source: "steps.costShares",
           key: e2.key,
@@ -250289,9 +250363,8 @@ var NoticeProducers = class _NoticeProducers {
     const items = c.list.map((m) => this.#r17Item(me, viewer, now, "FINDING", "step-cost-message", String(m.message), {
       homes: [],
       at: m.at,
+      fills: { step: this.#workOf(m.step, viewer), member: m.writer ?? null, text: m.text ?? "" },
       subject: { kind: "step", id: m.step, message: m.message },
-      summary: `A message about a shared cost from ${m.writer ?? "another project's owner"}`,
-      detail: `${m.writer ?? "Another project's owner"} wrote about a cost your project shares: ${m.text ?? ""}`,
       basis: {
         source: "steps.costMessages",
         key: String(m.message),
@@ -250308,14 +250381,12 @@ var NoticeProducers = class _NoticeProducers {
     const c = cut8(r.due.filter((e2) => e2 && filled18(e2.key) && (e2.kind === "overdue" || e2.kind === "reminder")), INVESTIGATION_ITEMS_MAX);
     const items = c.list.map((e2) => {
       const reminder = e2.kind === "reminder";
-      const name3 = e2.name ?? `milestone ${e2.milestone}`;
       return this.#r17Item(me, viewer, now, reminder ? "OBLIGATION" : "FINDING", reminder ? "milestone-reminder" : "milestone-overdue", e2.key, {
         homes: filled18(e2.project) ? [e2.project] : [],
         due: dayOf8(e2.date),
         day: dayOf8(e2.date),
+        fills: { milestone: filled18(e2.name) ? e2.name : String(e2.milestone ?? ""), date: dayMonth(dayOf8(e2.date)) },
         subject: { kind: "milestone", id: e2.milestone ?? null, project: e2.project ?? null, name: e2.name ?? null, date: e2.date ?? null },
-        summary: reminder ? `A reminder you asked for: ${name3}` : `A milestone has passed its date: ${name3}`,
-        detail: reminder ? `You asked to be reminded of the milestone "${name3}" today; its date is ${e2.date}.` : `The milestone "${name3}" of a project you take part in was due on ${e2.date}. This is told once.`,
         basis: {
           source: "investigation.milestonesOverdue",
           key: e2.key,
@@ -250335,10 +250406,11 @@ var NoticeProducers = class _NoticeProducers {
     if (!r || r.ok !== true || !Array.isArray(r.prompts)) throw failure("investigation");
     const c = cut8(r.prompts.filter((e2) => e2 && filled18(e2.key) && filled18(e2.project)), INVESTIGATION_ITEMS_MAX);
     const items = c.list.map((e2) => {
-      const name3 = this.#projectName(e2.project, viewer) ?? e2.project;
       const gaps = Array.isArray(e2.gaps) ? e2.gaps : [];
+      const says = gaps.map((g) => g && g.basis && filled18(g.basis.says) ? g.basis.says : null).filter(filled18);
       return this.#r17Item(me, viewer, now, "FINDING", "project-quiet", e2.key, {
         homes: [e2.project],
+        fills: { project: this.#titleOf(e2.project, viewer) ?? e2.project, progress: [e2.objective, ...says].filter(filled18).join("; ") },
         subject: {
           kind: "project",
           id: e2.project,
@@ -250348,8 +250420,6 @@ var NoticeProducers = class _NoticeProducers {
           gaps,
           doors: Array.isArray(e2.doors) ? [...e2.doors] : []
         },
-        summary: `A project you take part in has gone quiet: ${name3}`,
-        detail: `${name3} has gone quiet. Its objective: ${e2.objective ?? "not stated"}; its condition: ${e2.condition ?? "not stated"}; the record still lacks ${gaps.length} ${gaps.length === 1 ? "thing" : "things"} it names. Write it up, keep watching, close it with its gaps, or revise the objective.`,
         basis: {
           source: "investigation.quietPrompts",
           key: e2.key,
@@ -250368,9 +250438,8 @@ var NoticeProducers = class _NoticeProducers {
     const c = cut8(r.items.filter((e2) => e2 && filled18(e2.key) && filled18(e2.case)), INVESTIGATION_ITEMS_MAX);
     const items = c.list.map((e2) => this.#r17Item(me, viewer, now, "FINDING", "review-comment-left-out", e2.key, {
       homes: filled18(e2.project) ? [e2.project] : [],
+      fills: { case: this.#titleOf(e2.case, viewer) ?? e2.case },
       subject: { kind: "case", id: e2.case, edition: e2.edition ?? null, comments: Array.isArray(e2.comments) ? [...e2.comments] : [] },
-      summary: `Your comments on a review copy were not included: ${e2.case}, edition ${e2.edition}`,
-      detail: `${e2.left_out ?? "Some"} of your comments on the review copy of ${e2.case} were not included in its published edition. You may file a response in its docket.`,
       basis: {
         source: "review.reviewCommentsLeftOut",
         key: e2.key,
@@ -250382,24 +250451,45 @@ var NoticeProducers = class _NoticeProducers {
     }));
     return { items, facts: { truncated: c.truncated || r.truncated === true } };
   }
-  /** R17: one item of `kind`, keyed by its source's key, to this member alone (each source answers the viewer's own). */
-  #r17Item(me, viewer, now, cls3, kind2, key2, { homes = [], due: due2 = null, day: day2 = null, at: at43 = null, subject, summary: summary2, detail, basis }) {
+  /** R17: one item of `kind`, keyed by its source's key, to this member alone (each source answers the viewer's own), its
+   *  summary and detail `queue.<kind>.summary|detail` with `fills`. `options` names the subjects queue's options are asked
+   *  for (the subject's own id when not given). */
+  #r17Item(me, viewer, now, cls3, kind2, key2, { homes = [], due: due2 = null, day: day2 = null, at: at43 = null, extra = {}, fills, subject, basis, options = null }) {
     return {
       id: keyed(cls3, kind2, key2),
       class: cls3,
       kind: kind2,
+      ...extra,
       case: homes.length ? this.#homesAt(homes, viewer) : this.#homesOf([]),
       ...due2 ? { due: due2 } : {},
       subject,
-      summary: summary2,
-      detail,
+      summary: wordsOf(`queue.${kind2}.summary`, fills),
+      detail: wordsOf(`queue.${kind2}.detail`, fills),
+      fills,
       basis,
       age: day2 ? ageFrom(day2, now, "no_due_day", this.#zone()) : ageFrom(at43, now, "no_source_instant"),
       assignee: null,
       assignee_role: null,
       recipients: [me],
-      options: this.#optionsOf([subject.id].filter(filled18))
+      options: this.#optionsOf((options ?? [subject.id]).filter(filled18))
     };
+  }
+  /** R17: a step's work as steps answers it this viewer (`step`, its R4), else the step's id (J1 (4)); one read per step
+   *  in a read of `noticeItems`. A read that throws is steps' failure. */
+  #workOf(step, viewer) {
+    if (!this.#works) this.#works = /* @__PURE__ */ new Map();
+    if (!this.#works.has(step)) {
+      let s = null;
+      if (typeof this.#steps.step === "function") {
+        try {
+          s = this.#steps.step({ step, viewer });
+        } catch {
+          throw failure("steps");
+        }
+      }
+      this.#works.set(step, s && s.ok !== false && filled18(s.work) ? s.work : step);
+    }
+    return this.#works.get(step);
   }
   /** R14: whether this member is active (membership's member facts); a membership that throws is its failure. */
   #active(me) {
@@ -250425,6 +250515,16 @@ var NoticeProducers = class _NoticeProducers {
     } catch {
       return null;
     }
+  }
+  /** R16, R17: the local day of an instant in `zone` (civil-time), the UTC day when none is held; null when it is no
+   *  instant (a sentence then says no day, never a word of this module's own). */
+  static #localDay(at43, zone) {
+    try {
+      const d = localDay(at43, zone || "UTC");
+      if (typeof d === "string") return d;
+    } catch {
+    }
+    return null;
   }
   /** R13, R14, R15: the local day of an instant in `zone` (civil-time), as `following` reads it, the UTC day when none is held. */
   static #localDate(at43, zone) {
@@ -252814,9 +252914,9 @@ var Queue = class _Queue {
   static COUNT_KEYS = Object.freeze(["findingDispositions", "queueState", "queueItemMutes"]);
   static PER_ITEM_MAX = PER_ITEM_MAX;
   /* affordances.mjs: ONE number, published as set_acts[].max_items */
-  #perItem(act2, body, stamped2, one4) {
+  #perItem(act2, body, stamped3, one4) {
     const a = PER_ITEM_ACTS.find((x) => x.id === act2);
-    return perItem(act2, body, stamped2, one4, { itemKeys: a && a.item_keys, sharedKeys: a && a.shared_keys });
+    return perItem(act2, body, stamped3, one4, { itemKeys: a && a.item_keys, sharedKeys: a && a.shared_keys });
   }
   /* ------------------------------------------------------------------ the scheduler consumer (R22)
      `scheduler` is earlier and keeps its registry; this module registers into it at start (K31, scheduler R8). */
@@ -253349,7 +253449,7 @@ async function gatedOp({
   const store = () => env.STORE.get(env.STORE.idFromName(storeName));
   const viewer = viaSession ? sessViewer : cls3 === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls3}`;
   const identity = viaSession ? sessIdentity : cls3 === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls3}`;
-  const author = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls3}`;
+  const author = viaSession ? sessMember : cls3 === "ai" ? `${MACHINE_CLASS_PREFIX}ai/${aiCred.tokenId}` : `${MACHINE_AUTHOR_PREFIX}${cls3}`;
   const by = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls3}`;
   if (op === "ask") return askOp({ req, url, env, viaSession, sessMember, grantMember });
   if (op === "affordances")
@@ -254012,9 +254112,9 @@ var ProjectRoster = class _ProjectRoster {
       name: this.#bundle(r.id)?.title ?? null,
       request: r.rstate ? { state: r.rstate, asked: r.rasked, closed: r.rclosed ?? null } : null
     }));
-    const truncated5 = projects.length > cap;
-    const page2 = truncated5 ? projects.slice(0, cap) : projects;
-    return { ok: true, projects: page2, count: page2.length, limit: cap, truncated: truncated5 };
+    const truncated6 = projects.length > cap;
+    const page2 = truncated6 ? projects.slice(0, cap) : projects;
+    return { ok: true, projects: page2, count: page2.length, limit: cap, truncated: truncated6 };
   }
   /* D-479: THE DIRECTORY'S PAGE SIZE, a chosen ceiling and never a finding: generous enough that a member browsing for
      one project to ask to join rarely meets it, published whenever it cuts. It may be lowered, never raised (R9). */
@@ -255246,7 +255346,11 @@ var SCREENS = Object.freeze([
       "cite",
       "retire",
       "sever",
-      "reinstate"
+      "reinstate",
+      /* T43 (N862; DEC-190 (1)): the reading, its unread pages and their transcription by the AI */
+      "reading",
+      "pagetranscribe",
+      "transcribe"
     ],
     "One document as the record holds it: the captured bytes, what was extracted from them, what the record made of it, and what cites it."
   ),
@@ -256829,8 +256933,8 @@ var Hypotheses = class _Hypotheses {
       revised: r.revised ?? null,
       turned: this.#rows(`SELECT turned_into, made_id, at FROM member_note_turns WHERE note_id = ? AND member = ? ORDER BY seq`, r.note_id, member2).map((t2) => ({ into: t2.turned_into, id: t2.made_id, at: t2.at }))
     }));
-    const truncated5 = rows3.length > lim;
-    return { ok: true, notes, limit: lim, truncated: truncated5, next: truncated5 ? { after: notes[notes.length - 1].note } : null };
+    const truncated6 = rows3.length > lim;
+    return { ok: true, notes, limit: lim, truncated: truncated6, next: truncated6 ? { after: notes[notes.length - 1].note } : null };
   }
   /** R13: `noteTurn({note, into, by, hunch?, made?})` records that a note became an observation, a hunch or a question,
    *  by its author's own act: a hunch is held here (R1), a note past R1's statement bound refused, never cut (K1807);
@@ -257211,7 +257315,7 @@ function admissionOf(ctx, deps = {}) {
   let a = instances73.get(storage);
   if (!a) {
     const record = deps.record || recordOf(ctx);
-    const fingerprint2 = typeof deps.fingerprint === "function" ? deps.fingerprint : (address) => captureOf(ctx).sourceFingerprint(address);
+    const fingerprint2 = typeof deps.fingerprint === "function" ? deps.fingerprint : (address) => doorbellOf(ctx).sourceFingerprint(address);
     a = new DoorWindow({ storage, fingerprint: fingerprint2 });
     a.migrate();
     const d = record.declareTable("admission", ADMISSION_TABLES.map((t2) => ({ ...t2 })));
@@ -257331,9 +257435,445 @@ function archiveUnpackConsumer({ capture: capture2, env }) {
   };
 }
 
+// ../pdf-worker/src/pngdecode.mjs
+var PngRefusal = class extends Error {
+  constructor(code, detail = {}) {
+    super(`${code}${detail.feature ? `: ${detail.feature}` : detail.note ? `: ${detail.note}` : ""}`);
+    this.code = code;
+    this.detail = detail;
+  }
+};
+var unsupported4 = (feature, extra = {}) => new PngRefusal("UNSUPPORTED", { feature, ...extra });
+var corrupt5 = (note, extra = {}) => new PngRefusal("CORRUPT", { note, ...extra });
+var truncated5 = (note, extra = {}) => new PngRefusal("TRUNCATED", { note, ...extra });
+var PNG_REFUSES = Object.freeze({
+  "interlaced": "the image is stored Adam7-interlaced (IHDR interlace method 1), whose seven passes are not reassembled here",
+  "an unknown critical chunk": "a chunk the decoder must understand to draw the image (its type's first letter upper-case) is not one the standard defines",
+  "an image past the memory bound": "the decode would hold more at once than the memory bound: the 8-bit output, and beside it two rows of the stored image"
+});
+var MEMORY_BOUND2 = 613e5;
+var SIGNATURE2 = [137, 80, 78, 71, 13, 10, 26, 10];
+var DEPTHS = { 0: [1, 2, 4, 8, 16], 2: [8, 16], 3: [1, 2, 4, 8], 4: [8, 16], 6: [8, 16] };
+var CHANNELS2 = { 0: 1, 2: 3, 3: 1, 4: 2, 6: 4 };
+var CRC_TABLE6 = (() => {
+  const t2 = new Int32Array(256);
+  for (let n2 = 0; n2 < 256; n2++) {
+    let c = n2;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 3988292384 ^ c >>> 1 : c >>> 1;
+    t2[n2] = c;
+  }
+  return t2;
+})();
+function crc326(d, start, end2) {
+  let c = -1;
+  for (let i = start; i < end2; i++) c = CRC_TABLE6[(c ^ d[i]) & 255] ^ c >>> 8;
+  return (c ^ -1) >>> 0;
+}
+var u326 = (d, p3) => (d[p3] << 24 | d[p3 + 1] << 16 | d[p3 + 2] << 8 | d[p3 + 3]) >>> 0;
+var u165 = (d, p3) => d[p3] << 8 | d[p3 + 1];
+var KNOWN_CRITICAL = /* @__PURE__ */ new Set(["IHDR", "PLTE", "IDAT", "IEND"]);
+var USED_ANCILLARY = /* @__PURE__ */ new Set(["tRNS"]);
+function readChunks2(d) {
+  let p3 = 8, ihdr = null, plte = null, trns = null, ended = false;
+  const idat = [];
+  while (!ended) {
+    if (p3 + 8 > d.length) throw truncated5(`the data ends at byte ${p3}, before an IEND chunk`);
+    const len = u326(d, p3);
+    const type = String.fromCharCode(d[p3 + 4], d[p3 + 5], d[p3 + 6], d[p3 + 7]);
+    if (!/^[A-Za-z]{4}$/.test(type)) throw corrupt5(`a chunk type that is not four letters at byte ${p3}`, { at: p3 });
+    if (len > 2147483647) throw corrupt5(`the ${type} chunk declares a length past 2^31 - 1`, { chunk: type });
+    if (p3 + 12 + len > d.length) throw truncated5(`the ${type} chunk at byte ${p3} runs past the data`, { chunk: type });
+    const start = p3 + 8, end2 = start + len;
+    const critical = (d[p3 + 4] & 32) === 0;
+    if (critical || USED_ANCILLARY.has(type)) {
+      if (crc326(d, p3 + 4, end2) !== u326(d, end2)) throw corrupt5(`the ${type} chunk's CRC does not match its data`, { chunk: type, at: p3 });
+    }
+    if (critical && !KNOWN_CRITICAL.has(type)) throw unsupported4("an unknown critical chunk", { chunk: type });
+    if (!ihdr && type !== "IHDR") throw corrupt5(`the first chunk is ${type}, not IHDR`, { chunk: type });
+    switch (type) {
+      case "IHDR":
+        if (ihdr) throw corrupt5("a second IHDR chunk");
+        ihdr = readIhdr(d, start, len);
+        break;
+      case "PLTE":
+        if (!idat.length) plte = d.subarray(start, end2);
+        break;
+      case "tRNS":
+        if (!idat.length) trns = d.subarray(start, end2);
+        break;
+      case "IDAT":
+        if (len) idat.push(d.subarray(start, end2));
+        else if (!idat.length) idat.empty = true;
+        break;
+      case "IEND":
+        ended = true;
+        break;
+      default:
+        break;
+    }
+    p3 = end2 + 4;
+  }
+  if (!idat.length) throw corrupt5(idat.empty ? "the IDAT chunks hold no data" : "no IDAT chunk");
+  return { ihdr, plte, trns, idat };
+}
+function readIhdr(d, p3, len) {
+  if (len !== 13) throw corrupt5(`an IHDR of ${len} bytes, not 13`);
+  const h = {
+    width: u326(d, p3),
+    height: u326(d, p3 + 4),
+    depth: d[p3 + 8],
+    colourType: d[p3 + 9],
+    compression: d[p3 + 10],
+    filter: d[p3 + 11],
+    interlace: d[p3 + 12]
+  };
+  if (!h.width || !h.height || h.width > 2147483647 || h.height > 2147483647)
+    throw corrupt5(`an image of ${h.width}x${h.height}`, { width: h.width, height: h.height });
+  if (!(h.colourType in DEPTHS)) throw corrupt5(`colour type ${h.colourType}`, { colour_type: h.colourType });
+  if (!DEPTHS[h.colourType].includes(h.depth))
+    throw corrupt5(`bit depth ${h.depth} with colour type ${h.colourType}`, { colour_type: h.colourType, bit_depth: h.depth });
+  if (h.compression !== 0) throw corrupt5(`compression method ${h.compression}`);
+  if (h.filter !== 0) throw corrupt5(`filter method ${h.filter}`);
+  if (h.interlace > 1) throw corrupt5(`interlace method ${h.interlace}`);
+  return h;
+}
+function overWhite(c, a) {
+  if (a === 0) return 255;
+  const t2 = (c * a + 255 * (255 - a)) * 128 + 16384;
+  return (t2 >> 8) + t2 >> 8 >> 7;
+}
+var SCALE = { 1: 255, 2: 85, 4: 17, 8: 1 };
+async function decodePng(bytes2) {
+  const d = bytes2;
+  if (!(d instanceof Uint8Array) || d.length < 8 || SIGNATURE2.some((b, i) => d[i] !== b))
+    throw new PngRefusal("NOT_A_PNG", { note: "the bytes do not begin with the PNG signature" });
+  const { ihdr, plte, trns, idat } = readChunks2(d);
+  const { width: W2, height: H, depth, colourType } = ihdr;
+  if (ihdr.interlace === 1) throw unsupported4("interlaced", { width: W2, height: H });
+  const ch = CHANNELS2[colourType];
+  const comps = colourType === 0 || colourType === 4 ? 1 : 3;
+  const rowBytes = Math.ceil(W2 * ch * depth / 8);
+  const need = W2 * H * comps + 2 * (rowBytes + 1);
+  if (need > MEMORY_BOUND2)
+    throw unsupported4("an image past the memory bound", { working_set_bytes: need, bound_bytes: MEMORY_BOUND2, width: W2, height: H, components: comps });
+  let palette = null, alphaOf = null, key2 = null, transparency = colourType === 4 || colourType === 6 ? "alpha channel" : null;
+  if (colourType === 3) {
+    if (!plte) throw corrupt5("a palette image with no PLTE chunk before its image data");
+    if (!plte.length || plte.length % 3 || plte.length > 768) throw corrupt5(`a PLTE of ${plte.length} bytes`);
+    palette = plte;
+    alphaOf = new Uint8Array(256).fill(255);
+    if (trns) {
+      alphaOf.set(trns.subarray(0, Math.min(trns.length, plte.length / 3)));
+      transparency = "tRNS";
+    }
+  } else if (trns && colourType === 0 && trns.length === 2) {
+    key2 = [u165(trns, 0)];
+    transparency = "tRNS";
+  } else if (trns && colourType === 2 && trns.length === 6) {
+    key2 = [u165(trns, 0), u165(trns, 2), u165(trns, 4)];
+    transparency = "tRNS";
+  }
+  const entries = palette ? palette.length / 3 : 0;
+  const out = new Uint8Array(W2 * H * comps);
+  const bpp = Math.max(1, ch * depth >> 3);
+  let cur = new Uint8Array(rowBytes + 1), prev = new Uint8Array(rowBytes + 1);
+  let fill = 0, y = 0;
+  const emit = () => {
+    const f17 = cur[0], r = cur, q10 = prev, n2 = rowBytes + 1;
+    if (f17 === 1) {
+      for (let i = 1 + bpp; i < n2; i++) r[i] = r[i] + r[i - bpp] & 255;
+    } else if (f17 === 2) {
+      for (let i = 1; i < n2; i++) r[i] = r[i] + q10[i] & 255;
+    } else if (f17 === 3) {
+      for (let i = 1; i < n2; i++) r[i] = r[i] + ((i > bpp ? r[i - bpp] : 0) + q10[i] >> 1) & 255;
+    } else if (f17 === 4) {
+      for (let i = 1; i < n2; i++) {
+        const a = i > bpp ? r[i - bpp] : 0, b = q10[i], c = i > bpp ? q10[i - bpp] : 0;
+        const pa = Math.abs(b - c), pb = Math.abs(a - c), pc = Math.abs(a + b - 2 * c);
+        r[i] = r[i] + (pa <= pb && pa <= pc ? a : pb <= pc ? b : c) & 255;
+      }
+    } else if (f17 !== 0) throw corrupt5(`filter type ${f17} in row ${y}`, { row: y, filter: f17 });
+    writeRow(r, y);
+    [cur, prev] = [prev, cur];
+    y++;
+  };
+  const writeRow = (r, row12) => {
+    let o = row12 * W2 * comps;
+    if (depth < 8) {
+      const mask = (1 << depth) - 1, scale = SCALE[depth];
+      for (let x = 0; x < W2; x++) {
+        const bit = x * depth, v = r[1 + (bit >> 3)] >> 8 - depth - (bit & 7) & mask;
+        if (colourType === 3) o = paletteOut(v, o);
+        else out[o++] = key2 && v === key2[0] ? 255 : v * scale;
+      }
+      return;
+    }
+    const wide = depth === 16, s = wide ? 2 : 1;
+    for (let x = 0, i = 1; x < W2; x++, i += ch * s) {
+      switch (colourType) {
+        case 0:
+          out[o++] = key2 && (wide ? u165(r, i) : r[i]) === key2[0] ? 255 : r[i];
+          break;
+        case 3:
+          o = paletteOut(r[i], o);
+          break;
+        case 4:
+          out[o++] = overWhite(r[i], r[i + s]);
+          break;
+        case 2:
+          if (key2 && (wide ? u165(r, i) === key2[0] && u165(r, i + 2) === key2[1] && u165(r, i + 4) === key2[2] : r[i] === key2[0] && r[i + 1] === key2[1] && r[i + 2] === key2[2])) {
+            out[o++] = 255;
+            out[o++] = 255;
+            out[o++] = 255;
+          } else {
+            out[o++] = r[i];
+            out[o++] = r[i + s];
+            out[o++] = r[i + 2 * s];
+          }
+          break;
+        default: {
+          const a = r[i + 3 * s];
+          out[o++] = overWhite(r[i], a);
+          out[o++] = overWhite(r[i + s], a);
+          out[o++] = overWhite(r[i + 2 * s], a);
+        }
+      }
+    }
+  };
+  const paletteOut = (v, o) => {
+    if (v >= entries) throw corrupt5(`palette index ${v} past the palette's ${entries} entries`, { index: v, entries });
+    const a = alphaOf[v], p3 = 3 * v;
+    out[o] = overWhite(palette[p3], a);
+    out[o + 1] = overWhite(palette[p3 + 1], a);
+    out[o + 2] = overWhite(palette[p3 + 2], a);
+    return o + 3;
+  };
+  const ds = new DecompressionStream("deflate");
+  const writer = ds.writable.getWriter(), reader = ds.readable.getReader();
+  let extra = 0;
+  const writing = (async () => {
+    for (const part of idat) await writer.write(part);
+    await writer.close();
+  })();
+  writing.catch(() => {
+  });
+  try {
+    for (; ; ) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      let i = 0;
+      while (i < value.length) {
+        if (y === H) {
+          extra += value.length - i;
+          break;
+        }
+        const take = Math.min(value.length - i, rowBytes + 1 - fill);
+        cur.set(value.subarray(i, i + take), fill);
+        fill += take;
+        i += take;
+        if (fill === rowBytes + 1) {
+          fill = 0;
+          emit();
+        }
+      }
+      if (extra) break;
+    }
+  } catch (e2) {
+    if (e2 instanceof PngRefusal) {
+      reader.cancel().catch(() => {
+      });
+      throw e2;
+    }
+    const why2 = String(e2 && e2.message || e2 && e2.code || e2);
+    throw corrupt5(
+      y < H ? `the image data does not inflate (row ${y} of ${H})` : "the image data's zlib trailer is damaged or missing",
+      { rows: y, height: H, inflater: why2 }
+    );
+  }
+  if (extra) {
+    reader.cancel().catch(() => {
+    });
+    throw corrupt5("the image data inflates past the frame", { height: H, row_bytes: rowBytes });
+  }
+  if (y < H) throw truncated5(`the image data ends after ${y} of ${H} rows`, { rows: y, height: H });
+  return { width: W2, height: H, comps, samples: out, detail: { colour_type: colourType, bit_depth: depth, transparency } };
+}
+
+// ../pdf-worker/src/picturepixels.mjs
+var PICTURE_FRAME_MAX = 4096 * 3072 * 3;
+var refuse26 = (reason2, detail = {}) => {
+  if (!(reason2 in REFUSALS)) throw new Error(`undeclared refusal: ${reason2}`);
+  return { ok: false, reason: reason2, why: REFUSALS[reason2], ...detail };
+};
+var PNG_FEATURE_REASONS = featureReasons(PNG_REFUSES, { "an image past the memory bound": "IMAGE_TOO_LARGE" });
+var PNG_CODE_REASONS = { TRUNCATED: "TRUNCATED_IMAGE_DATA" };
+var PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
+function sniff(b) {
+  if (b.length >= 3 && b[0] === 255 && b[1] === 216 && b[2] === 255) return "jpeg";
+  if (b.length >= 8 && PNG_SIGNATURE.every((v, i) => b[i] === v)) return "png";
+  return null;
+}
+var PNG_CHANNELS = { 0: 1, 2: 3, 3: 3, 4: 2, 6: 4 };
+function pngHeader(b) {
+  if (b.length < 33) return null;
+  const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
+  if (dv.getUint32(8) !== 13 || String.fromCharCode(b[12], b[13], b[14], b[15]) !== "IHDR") return null;
+  const comps = PNG_CHANNELS[b[25]];
+  return comps ? { width: dv.getUint32(16), height: dv.getUint32(20), comps } : null;
+}
+var TIFF_INT = { 1: 1, 3: 2, 4: 4, 8: 2, 9: 4 };
+function exifOrientation2(b) {
+  let p3 = 2;
+  while (p3 + 4 <= b.length && b[p3] === 255) {
+    const m = b[p3 + 1];
+    if (m === 216 || m >= 208 && m <= 215 || m === 1) {
+      p3 += 2;
+      continue;
+    }
+    if (m === 218 || m === 217) break;
+    const len = b[p3 + 2] << 8 | b[p3 + 3];
+    const seg = b.subarray(p3 + 4, Math.min(b.length, p3 + 2 + len));
+    if (m === 225 && seg.length >= 6 && String.fromCharCode(...seg.subarray(0, 6)) === "Exif\0\0") {
+      return orientationIn(seg.subarray(6));
+    }
+    p3 += 2 + len;
+  }
+  return 1;
+}
+function orientationIn(t2) {
+  if (t2.length < 8) return 1;
+  const le = t2[0] === 73 && t2[1] === 73;
+  if (!le && !(t2[0] === 77 && t2[1] === 77)) return 1;
+  const dv = new DataView(t2.buffer, t2.byteOffset, t2.byteLength);
+  const u166 = (o) => dv.getUint16(o, le), u327 = (o) => dv.getUint32(o, le);
+  if (u166(2) !== 42) return 1;
+  const ifd = u327(4);
+  if (ifd + 2 > t2.length) return 1;
+  const n2 = u166(ifd);
+  for (let i = 0; i < n2; i++) {
+    const e2 = ifd + 2 + i * 12;
+    if (e2 + 12 > t2.length) return 1;
+    if (u166(e2) !== 274) continue;
+    const size = TIFF_INT[u166(e2 + 2)], count2 = u327(e2 + 4);
+    if (!size || count2 < 1) return 1;
+    const at43 = size * count2 <= 4 ? e2 + 8 : u327(e2 + 8);
+    if (at43 + size > t2.length) return 1;
+    const v = size === 1 ? t2[at43] : size === 2 ? u166(at43) : u327(at43);
+    return v >= 1 && v <= 8 ? v : 1;
+  }
+  return 1;
+}
+var TURN = [0, 0, 0, 180, 180, 90, 90, 270, 270];
+var MIRROR = [false, false, true, false, true, true, false, true, false];
+var multiplier = (n2) => Math.trunc(Math.fround(4294967296 / Math.fround(256 * n2)));
+var reductionFor = (width, height, maxEdge) => Math.max(1, Math.ceil(Math.max(width, height) / maxEdge));
+function finish(s, w, h, comps, { grey, mirror, k }) {
+  const oc = grey && comps === 3 ? 1 : comps;
+  const W2 = Math.ceil(w / k), H = Math.ceil(h / k);
+  const out = new Uint8Array(W2 * H * oc);
+  const sums = new Float64Array(oc);
+  const shift2 = k === 2 ? 2 : k === 4 ? 4 : 0;
+  for (let Y = 0; Y < H; Y++) {
+    const y0 = Y * k, bh = Math.min(k, h - y0);
+    for (let X = 0; X < W2; X++) {
+      const x0 = X * k, bw = Math.min(k, w - x0);
+      sums.fill(0);
+      for (let y = y0; y < y0 + bh; y++) {
+        for (let x = x0; x < x0 + bw; x++) {
+          const i = (y * w + (mirror ? w - 1 - x : x)) * comps;
+          if (oc !== comps) sums[0] += s[i] * 19595 + s[i + 1] * 38470 + s[i + 2] * 7471 + 32768 >>> 16;
+          else for (let c = 0; c < comps; c++) sums[c] += s[i + c];
+        }
+      }
+      const n2 = bw * bh, amend = n2 >> 1;
+      const mul = bw === k && bh === k && shift2 ? 0 : multiplier(n2);
+      const o = (Y * W2 + X) * oc;
+      for (let c = 0; c < oc; c++) {
+        out[o + c] = mul ? Math.floor((sums[c] + amend) * mul / 16777216) : sums[c] + amend >>> shift2;
+      }
+    }
+  }
+  return { samples: out, width: W2, height: H, comps: oc };
+}
+async function sha256Hex16(u8) {
+  const d = await crypto.subtle.digest("SHA-256", u8);
+  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+async function renderPictureToPixels(bytes2, pageIndex, { maxEdge, grey = false } = {}) {
+  if (!Number.isInteger(maxEdge) || maxEdge < 1) throw new TypeError("renderPictureToPixels: maxEdge must be a positive integer");
+  const b = bytes2 instanceof Uint8Array ? bytes2 : bytes2 instanceof ArrayBuffer ? new Uint8Array(bytes2) : null;
+  const format = b && sniff(b);
+  if (!format) return refuse26("NOT_A_PICTURE");
+  if (pageIndex !== 0) return refuse26("NO_SUCH_PAGE", { page: pageIndex, pageCount: 1 });
+  let pic;
+  if (format === "jpeg") {
+    let h;
+    try {
+      h = readJpegHeader(b);
+    } catch (e2) {
+      return jpegRefusal(e2);
+    }
+    const source2 = { format, width: h.frame.width, height: h.frame.height, comps: h.frame.comps.length };
+    const tooBig = overBound(source2);
+    if (tooBig) return tooBig;
+    const orientation = exifOrientation2(b);
+    let out;
+    try {
+      out = decodeBaselineJpeg(b, { rotate: TURN[orientation] });
+    } catch (e2) {
+      return jpegRefusal(e2);
+    }
+    pic = { ...out, source: source2, orientation };
+  } else {
+    const hd = pngHeader(b);
+    const source2 = { format, width: hd ? hd.width : null, height: hd ? hd.height : null, comps: hd ? hd.comps : null };
+    const tooBig = hd && overBound(source2);
+    if (tooBig) return tooBig;
+    let out;
+    try {
+      out = await decodePng(b);
+    } catch (e2) {
+      return pngRefusal(e2);
+    }
+    if (!hd) Object.assign(source2, { width: out.width, height: out.height, comps: out.comps });
+    pic = { ...out, source: source2, orientation: 1 };
+  }
+  const k = reductionFor(pic.width, pic.height, maxEdge);
+  const r = finish(pic.samples, pic.width, pic.height, pic.comps, { grey, mirror: MIRROR[pic.orientation], k });
+  pic.samples = null;
+  return {
+    ok: true,
+    page: 0,
+    route: "decoded-picture",
+    mediaType: "image/png",
+    bytes: await encodePng8(r.samples, r.width, r.height, r.comps),
+    width: r.width,
+    height: r.height,
+    upright: true,
+    orientation: pic.orientation,
+    reduced_by: k,
+    source: pic.source,
+    pixels_sha256: await sha256Hex16(r.samples)
+  };
+}
+function overBound({ width, height, comps }) {
+  const samples2 = width * height * comps;
+  return samples2 > PICTURE_FRAME_MAX ? refuse26("IMAGE_TOO_LARGE", { page: 0, width, height, comps, samples: samples2, bound: PICTURE_FRAME_MAX }) : null;
+}
+function jpegRefusal(e2) {
+  if (!(e2 instanceof DctRefusal)) return refuse26("DECODE_FAILED", { page: 0, note: String(e2 && e2.message || e2) });
+  return refuse26(DCT_TO_REFUSAL[e2.code] || "DECODE_FAILED", { page: 0, jpeg: e2.code, ...e2.detail });
+}
+function pngRefusal(e2) {
+  if (!(e2 instanceof PngRefusal)) return refuse26("DECODE_FAILED", { page: 0, note: String(e2 && e2.message || e2) });
+  const reason2 = e2.code === "UNSUPPORTED" ? PNG_FEATURE_REASONS[e2.detail?.feature] ?? "UNSUPPORTED_FILTER" : PNG_CODE_REASONS[e2.code] || "DECODE_FAILED";
+  return refuse26(reason2, { page: 0, png: e2.code, ...e2.detail });
+}
+
 // src/plane/transcribe.mjs
 var TRANSCRIBE_PAGES_MAX = 8;
 var TRANSCRIBE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+var TRANSCRIBE_PICTURE_EDGE = 1568;
 var PNG = "image/png";
 var USE = "transcribe";
 var idOf4 = (m) => typeof m === "string" && m.startsWith("member:") ? m.slice(7) : m;
@@ -257348,7 +257888,7 @@ function base642(bytes2) {
   return btoa(s);
 }
 var pagesAsked = (pages) => [...new Set((Array.isArray(pages) ? pages : []).filter((p3) => Number.isInteger(p3) && p3 >= 0))].sort((a, b) => a - b).slice(0, TRANSCRIBE_PAGES_MAX);
-async function renderPages(bytes2, pages, render2 = renderPageToPixels) {
+async function renderPages(bytes2, pages, render2 = renderPageToPixels, picture = renderPictureToPixels) {
   const out = [];
   for (const page2 of pagesAsked(pages)) {
     let r;
@@ -257356,6 +257896,13 @@ async function renderPages(bytes2, pages, render2 = renderPageToPixels) {
       r = await render2(bytes2, page2, { decodeDct: true });
     } catch {
       r = null;
+    }
+    if (r && r.ok === false && r.reason === "NOT_A_PDF") {
+      try {
+        r = await picture(bytes2, page2, { maxEdge: TRANSCRIBE_PICTURE_EDGE, grey: true });
+      } catch {
+        r = null;
+      }
     }
     if (!r || r.ok !== true || r.mediaType !== PNG) continue;
     const png = r.bytes instanceof Uint8Array ? r.bytes : r.bytes ? new Uint8Array(r.bytes) : null;
@@ -257622,7 +258169,7 @@ function namedAs(selfLines, kind2) {
   return { as, only_other: selfLines.length > 0 && !as.length };
 }
 var MONTH3 = "(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|June?|July?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)";
-var MONTHS8 = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+var MONTHS9 = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 var DATE_IN_ROWS = new RegExp(`\\b${MONTH3}\\.?\\s+\\d{1,2}\\b|\\b\\d{1,2}\\/\\d{1,2}\\/\\d{2,4}\\b`, "gi");
 var FULL_DATE = new RegExp(`\\b(${MONTH3})\\.?\\s+(\\d{1,2}),?\\s+(\\d{4})\\b|\\b(\\d{1,2})[/.-](\\d{1,2})[/.-](\\d{2,4})\\b|\\b(${MONTH3})\\.?,?\\s+(\\d{4})\\b`, "i");
 function datesIn2(text7) {
@@ -257636,7 +258183,7 @@ function statedDate(lines2) {
     const text7 = m[0];
     const offset = x.offset + m.index;
     if (m[1]) {
-      const mo2 = MONTHS8.indexOf(m[1].slice(0, 3).toLowerCase()) + 1;
+      const mo2 = MONTHS9.indexOf(m[1].slice(0, 3).toLowerCase()) + 1;
       return { text: text7, date: `${m[3]}-${pad3(mo2)}-${pad3(m[2])}`, precision: "day", offset };
     }
     if (m[4]) {
@@ -257649,7 +258196,7 @@ function statedDate(lines2) {
         ...y ? {} : { why: "the line states a two-digit year, which is not expanded" }
       };
     }
-    const mo = MONTHS8.indexOf(m[7].slice(0, 3).toLowerCase()) + 1;
+    const mo = MONTHS9.indexOf(m[7].slice(0, 3).toLowerCase()) + 1;
     return { text: text7, date: `${m[8]}-${pad3(mo)}`, precision: "month", offset };
   }
   return null;
@@ -259168,9 +259715,9 @@ function wraps(label, next, nextIsRow = false) {
   return nextIsRow && words5.length >= 4 && !/:$/.test(label.trim()) && label !== label.toUpperCase() && next.trim().split(/\s+/).length <= 2;
 }
 var TOTAL = /\b(?:sub-?)?totals?\b/i;
-var SCALE = /\b(in\s+(?:thousands|millions|billions)(?:\s+of\s+dollars)?|in\s+\$?\s?(?:000s|000's))\b/i;
+var SCALE2 = /\b(in\s+(?:thousands|millions|billions)(?:\s+of\s+dollars)?|in\s+\$?\s?(?:000s|000's))\b/i;
 function scaleIn(line2) {
-  const m = SCALE.exec(String(line2));
+  const m = SCALE2.exec(String(line2));
   return m ? m[1] : null;
 }
 var CAPTION = /^(?:table|schedule|exhibit)\s+[A-Z0-9][\w.-]*\s*[:.\-–—]?/i;
