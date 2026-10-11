@@ -17,7 +17,7 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { canonicalExtent, checkContentExtent, contentOf } from "../content/index.mjs";
 import { noSuchEntity, noEntity, entitiesOf } from "../entities/index.mjs";
 import { eventsOf } from "../events/index.mjs";
-import { isHypothesisId, isMachineIdentity, ISO_TS_RE } from "../record-grammar/index.mjs";
+import { isHypothesisId, isMachineIdentity, ISO_TS_RE, SHARED_ACT_CHECKS } from "../record-grammar/index.mjs";
 import { validAt, bounds as dtBounds, compare } from "../civil-time/index.mjs";
 import { defaultRegistry, BOUNDS } from "../connection-grammar/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
@@ -50,6 +50,12 @@ const PROCEEDING_LINKS = ["appeal_of", "consolidated_with", "remanded_to", "aris
 const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 const filled = (v) => typeof v === "string" && v.trim() !== "";
 const refuse = (reason, detail, extra = {}) => ({ ok: false, reason, code: reason, detail, ...extra });
+/* R22 (K2610; record-grammar R29; K231): a basis refusal answers with record-grammar's one shared row C-33.40, its check,
+   number and translation, never a bare code; the detail carries this site's particular. */
+const noBasis = (detail) => {
+  const row = SHARED_ACT_CHECKS.NO_BASIS;
+  return refuse("NO_BASIS", detail, { check: row.check, translation: row.translation });
+};
 const json = (v) => JSON.stringify(v);
 const parse = (s) => { try { return JSON.parse(s); } catch { return null; } };
 
@@ -417,7 +423,7 @@ export class Lines {
 
   /* A basis read into its form, or a refusal. `by` is the viewer the cited capture is checked against. */
   #basis(basis, by) {
-    if (!isObj(basis)) return { refusal: refuse("NO_BASIS", "a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony {statement}") };
+    if (!isObj(basis)) return { refusal: noBasis("a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony {statement}") };
     if ("captureSha" in basis || "extent" in basis) {
       const sha = typeof basis.captureSha === "string" ? basis.captureSha.trim().toLowerCase() : "";
       if (!sha) return { refusal: refuse("NO_SHA", "a passage names its capture by its sha256") };
@@ -435,17 +441,17 @@ export class Lines {
                assertion: this.#captureGrade(sha) };
     }
     if ("rule" in basis || "source" in basis) {
-      if (!filled(basis.rule)) return { refusal: refuse("NO_BASIS", "a system rule names the rule it applies") };
+      if (!filled(basis.rule)) return { refusal: noBasis("a system rule names the rule it applies") };
       const ids = isObj(basis.ids) ? { from: basis.ids.from ?? null, to: basis.ids.to ?? null } : null;
       const recordedAt = basis.recorded_at ?? null;
       if (recordedAt !== null && !(typeof recordedAt === "string" && ISO_TS_RE.test(recordedAt)))
-        return { refusal: refuse("NO_BASIS", "a register row's own record instant is an instant (YYYY-MM-DDTHH:MM:SSZ)") };
+        return { refusal: noBasis("a register row's own record instant is an instant (YYYY-MM-DDTHH:MM:SSZ)") };
       const system = filled(basis.system) ? basis.system.trim() : null;
       if (typeof basis.source === "string") {
         const sha = basis.source.trim().toLowerCase();
         const home = this.#captureHeld(sha, by);
         if (!home) return { refusal: refuse("CAPTURE_NOT_HELD", "the system rule's source is a capture the record does not hold, or it may not be seen") };
-        if (system && !recordedAt) return { refusal: refuse("NO_BASIS", `a ${system} register row states its own record instant (recorded_at)`) };
+        if (system && !recordedAt) return { refusal: noBasis(`a ${system} register row states its own record instant (recorded_at)`) };
         return { form: "rule", basis: { rule: basis.rule.trim(), source: sha, ...(ids ? { ids } : {}), ...(system ? { system } : {}),
                                         ...(recordedAt ? { recorded_at: recordedAt } : {}), ...(basis.row !== undefined ? { row: basis.row } : {}) },
                  captureSha: sha, sight: home.bundleId, assertion: this.#captureGrade(sha), recordedAt };
@@ -454,20 +460,20 @@ export class Lines {
         return { form: "rule", basis: { rule: basis.rule.trim(), source: { profile: basis.source.profile, entry: basis.source.entry },
                                         ...(ids ? { ids } : {}) },
                  captureSha: null, sight: null, assertion: PROFILE_ASSERTION_GRADE, recordedAt: null };
-      return { refusal: refuse("NO_BASIS", "a system rule's source is a held capture or a profile entry {profile, entry}") };
+      return { refusal: noBasis("a system rule's source is a held capture or a profile entry {profile, entry}") };
     }
     if ("statement" in basis) {
       if (!filled(basis.statement)) return { refusal: refuse("NO_STATEMENT", "a member's testimony states what they know, in their own words") };
       let sight = null;
       if (basis.project !== undefined && basis.project !== null) {
         const p = this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id = ? AND object_type = 'project'`, String(basis.project));
-        if (!p) return { refusal: refuse("NO_BASIS", "testimony inside a project names a project the record holds") };
+        if (!p) return { refusal: noBasis("testimony inside a project names a project the record holds") };
         sight = p.bundle_id;
       }
       return { form: "testimony", basis: { statement: basis.statement.trim().slice(0, STATEMENT_MAX), ...(sight ? { project: sight } : {}) },
                captureSha: null, sight, assertion: TESTIMONY_GRADE };
     }
-    return { refusal: refuse("NO_BASIS", "a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony {statement}") };
+    return { refusal: noBasis("a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony {statement}") };
   }
 
   /* ---- recordLine (R1–R5) ---- */

@@ -6,7 +6,7 @@ import { readdirSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { join, dirname } from "node:path";
 import { world, sha, ANN, MACHINE } from "./fixture.mjs";
-import { CONNECTION_KINDS, LINE_KINDS, CAPACITIES, ROLES } from "../../../src/lines/index.mjs";
+import { CONNECTION_KINDS, LINE_KINDS, STRUCTURE_KINDS, CAPACITIES, ROLES } from "../../../src/lines/index.mjs";
 import { FORBIDDEN_WORDS } from "../../../src/connection-grammar/index.mjs";
 
 const SRC = join(dirname(fileURLToPath(import.meta.url)), "../../../src");
@@ -19,6 +19,9 @@ test("R18 one home per fact at the store's gate: a line row holds no amount and 
   assert.equal(w.record.storeGate("lines", "lines", { ...good, amount: "1,000,000.00" }, "insert").code, "LINE_HOLDS_NO_AMOUNT");
   assert.equal(w.record.storeGate("lines", "lines", { ...good, currency: "USD" }, "insert").code, "LINE_HOLDS_NO_AMOUNT");
   assert.equal(w.record.storeGate("lines", "lines", { ...good, to_entity: "HYP-2026-0001" }, "insert").code, "LINE_NO_HYPOTHESIS");
+  assert.equal(w.record.storeGate("lines", "lines", { ...good, from_entity: "HYP-2026-0004" }, "insert").code, "LINE_NO_HYPOTHESIS");
+  assert.equal(w.record.storeGate("lines", "lines", { ...good, basis_json: JSON.stringify({ captureSha: "HYP-2026-0005", extent: { kind: "document" } }) }, "insert").code,
+               "LINE_NO_HYPOTHESIS");
   assert.equal(w.record.storeGate("lines", "lines", { ...good, basis_json: JSON.stringify({ rule: "r", source: "HYP-2026-0002" }) }, "insert").code,
                "LINE_NO_HYPOTHESIS");
   const r = w.l.recordLine({ kind: "funds", from: o, to: b, basis: { statement: "HYP-2026-0003" }, by: ANN });
@@ -45,8 +48,10 @@ test("R18 holderAt has no second implementation in any module, structure is neve
   const w = world();
   const p = w.ent("person", "Ada Example"), o = w.ent("office", "Harbour Master"), b = w.ent("body", "Port Board");
   const e = w.event("2020-01-01");
-  for (const k of ["part_of", "post_in", "reports_to", "oversees", "appoints", "funds", "acts_for", "responsible_for", "custodian_of", "successor_of"])
+  const placed = ["holds", "seat_on"];
+  for (const k of STRUCTURE_KINDS.filter((k) => !placed.includes(k)))
     w.say(k, o, b, { valid: { from: { event: e, edge: "start" }, to: "2030-01-01" } });
+  assert.equal(STRUCTURE_KINDS.length, 13, "every structure kind is written below");
   w.say("holds", p, o, { capacity: "elected", valid: { from: "2020-01-01" } });
   w.say("seat_on", o, b);
   assert.equal(w.one(`SELECT COUNT(*) AS n FROM entity_relations`).n, 0);
