@@ -20,10 +20,10 @@ const three = (w) => [
   { id: "thank", name: "Thank", options: [w.C], starts: { branch_of: "ask", when: "met" } },
 ];
 
-test("R14: a three-phase scenario with a checkpoint and both branches lands; refusals; replacing keeps history; at most three", () => {
+test("R14: a three-phase scenario with a checkpoint and both branches lands; refusals; replacing keeps history; any number of scenarios (T45: a fourth lands, 0 refuses)", () => {
   const w = setup();
   assert.equal(code(set(w, three(w), { author: MACHINE, viewer: MACHINE })), "MACHINE_CANNOT_SCHEDULE");
-  for (const n of [0, 4, "x", null]) assert.equal(code(set(w, three(w), { scenario: n })), "SCENARIO_OUT_OF_RANGE", String(n));
+  for (const n of [0, -1, 1.5, "x", null, "1e3"]) assert.equal(code(set(w, three(w), { scenario: n })), "SCENARIO_OUT_OF_RANGE", String(n));
   assert.equal(code(set(w, three(w), { name: "" })), "SCENARIO_NAME_REFUSED");
   const mal = set(w, [three(w)[0], { id: "x", name: "X", options: [], starts: "whenever" }]);
   assert.equal(code(mal), "PHASE_MALFORMED"); assert.equal(mal.index, 1);
@@ -53,7 +53,11 @@ test("R14: a three-phase scenario with a checkpoint and both branches lands; ref
   const s1 = read.scenarios.find((s) => s.scenario === 1);
   assert.equal(s1.name, "Shorter"); assert.equal(s1.version, 2);
   assert.deepEqual(s1.history.map((h) => [h.version, h.name]), [[1, "Main line"], [2, "Shorter"]]);
-  assert.equal(code(set(w, three(w), { scenario: 4 })), "SCENARIO_OUT_OF_RANGE", "a fourth scenario refuses");
+  /* T45 (Actions D19; K2780): a plan holds any number of scenarios; a fourth, and a twelfth, land */
+  assert.equal(set(w, three(w), { scenario: 4 }).ok, true, "a fourth scenario lands");
+  assert.equal(set(w, three(w), { scenario: "12" }).ok, true);
+  assert.deepEqual(w.ap.planRead({ id: w.PL, viewer: V("bob") }).scenarios.map((s) => s.scenario), [1, 2, 3, 4, 12]);
+  assert.match(code(set(w, three(w), { scenario: 0 })) && set(w, three(w), { scenario: 0 }).translation, /positive whole number/);
 });
 
 test("R15: a phase starting on another subject's track reads not started, then started when its escalation reaches the stage", () => {

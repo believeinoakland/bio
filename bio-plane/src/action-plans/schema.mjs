@@ -1,10 +1,11 @@
 /* action-plans' tables (requirements: `build/requirements/action-plans.md`, R2, R27). A plan is a record document of
  * its own type (`action_plan`, `PLN-`): its bundle, history and manifest are record-core's, and its document's Plan Log
  * is the record of every act on it. The tables below but two are that log's projections, written by the module's
- * registered promotion projection in the promotion's own transaction, so a read never parses the log. The two that are
+ * registered promotion projection in the promotion's own transaction, so a read never parses the log. The three that are
  * not are written by this module directly: `plan_option_proposals` (R11, R31: a proposal is stored apart from the plan,
  * and any credential, a machine's included, may make one; adoption is recorded on it by the projection) and
- * `plan_runs` (R32: the project's `work_kinds` as they stood when a planning run opened). Every row names the plan it
+ * `plan_runs` (R32: the project's `work_kinds` as they stood when a planning run opened) and `plan_marks` (R43: the
+ * re-examination's machine marks, which decide nothing). Every row names the plan it
  * is about and every table is declared to record-core's purge (R27). No row holds a cost, budget, amount, assignee,
  * hours or significance score (R26). */
 
@@ -86,7 +87,7 @@ CREATE TABLE IF NOT EXISTS plan_option_proposals (
 );
 CREATE INDEX IF NOT EXISTS plan_option_proposals_plan ON plan_option_proposals(plan_id, n);
 CREATE INDEX IF NOT EXISTS plan_option_proposals_run ON plan_option_proposals(run, run_ord);
--- R14: every version of each scenario (1-3); the latest is in force.
+-- R14: every version of each scenario (numbered from 1, any number of them); the latest is in force.
 CREATE TABLE IF NOT EXISTS plan_scenarios (
   plan_id      TEXT NOT NULL,
   scenario     INTEGER NOT NULL,
@@ -131,6 +132,17 @@ CREATE TABLE IF NOT EXISTS plan_runs (
   opened_at        TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS plan_runs_plan ON plan_runs(plan_id, opened_at);
+-- R43: the machine marks plan-work's re-examination writes (v0.2 rules 1, 16), apart from the plan's document, each with
+-- the response that caused it. A mark decides nothing: no disposition, scenario, judgement or start reads it. Appended only.
+CREATE TABLE IF NOT EXISTS plan_marks (
+  plan_id     TEXT NOT NULL,
+  n           INTEGER NOT NULL,
+  kind        TEXT NOT NULL,
+  mark_json   TEXT NOT NULL,
+  cause_json  TEXT NOT NULL,
+  at          TEXT NOT NULL,
+  PRIMARY KEY (plan_id, n)
+);
 `;
 
 /** R27: the tables, as record-core's `declarePurge` takes them. A single-bundle purge of a plan clears its rows. */
@@ -144,6 +156,7 @@ export const ACTION_PLANS_TABLES = Object.freeze([
   { name: "plan_checkpoints", keys: ["plan_id"] },
   { name: "plan_history", keys: ["plan_id"] },
   { name: "plan_runs", keys: ["plan_id"] },
+  { name: "plan_marks", keys: ["plan_id"] },
 ]);
 
 export function migrateActionPlans(sql) {

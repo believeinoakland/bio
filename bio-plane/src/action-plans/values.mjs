@@ -16,6 +16,14 @@ export const REFUSED_KEYS = Object.freeze(["budget", "cost", "assignee", "hours"
 export const TIERS = Object.freeze([1, 2, 3, "undetermined"]);
 /** R16: a checkpoint's judgements. */
 export const JUDGEMENTS = Object.freeze(["met", "not_met"]);
+/** R40: a plan's states (State Rules §4.4): open, paused, closed. */
+export const PLAN_STATES = Object.freeze(["open", "paused", "closed"]);
+/** R41: the two standing offers for a matter that may be an infraction, in the matter's order. */
+export const OFFER_KINDS = Object.freeze(["document_infraction", "chance_to_fix"]);
+/** R41: a determined outcome that may be an infraction. */
+export const INFRACTION_OUTCOMES = Object.freeze(["noncompliant", "unclear"]);
+/** R43: the machine marks of v0.2 rule 1. */
+export const MARK_KINDS = Object.freeze(["option_changed", "phase_start_holds", "next_routes"]);
 /** R38: the states of a duty occurrence a phase may start on (K1466). */
 export const DUTY_STATES = Object.freeze(["met", "met_late", "overdue", "undetermined"]);
 
@@ -26,10 +34,12 @@ export const DETAIL_MAX = 5000;
 export const WHY_MAX = 500;
 export const NOTE_MAX = 500;
 export const SUBJECTS_MAX = 50;
-export const SCENARIOS_MAX = 3;
 export const PHASES_MAX = 50;
 export const DATES_MAX = 20;
 export const CHECKPOINT_DAYS_MAX = 3650;
+export const CLOSE_NOTE_MAX = 4000;
+export const CLOSING_NOTES_MAX = 50;
+export const MARKS_MAX = 50;
 export const PLANS_PAGE_MAX = 200;
 export const DUE_MAX = 500;
 export const SOURCES_MAX = 50;

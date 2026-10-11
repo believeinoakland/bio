@@ -2,7 +2,7 @@
    project's kind of work. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, opened, option, choose, V, MACHINE, by, OFFICE, ms, DAY } from "./fixture.mjs";
+import { seeded, opened, option, choose, V, MACHINE, by, OFFICE, ms, DAY, FIRST } from "./fixture.mjs";
 import { contactNotAMember } from "../../../src/actions/index.mjs";
 import { reminderRefused } from "../../../src/action-clocks/index.mjs";
 
@@ -16,7 +16,8 @@ const spy = (w) => {
 };
 
 const code = (r) => r.code ?? r.reason;
-const start = (w, opt, extra = {}) => w.ap.optionStart({ plan: w.PL, option: opt, kind: "other", ...by("bob"), ...extra });
+/* R42 is its own test's (offers.test.mjs): each start here states why it goes before the documentation. */
+const start = (w, opt, extra = {}) => w.ap.optionStart({ plan: w.PL, option: opt, kind: "other", ...by("bob"), ...FIRST, ...extra });
 const DATES = [{ date: "2026-11-01", basis: "the records statute, ten days" }, { date: "2026-12-01", basis: "the order of 2026" }];
 
 test("R18: a chosen option starts an action carrying its addressee, dated clock entries with bases, legs, plan, option and contact", () => {
@@ -62,10 +63,16 @@ test("R18: a breach action on an inquiry-only subject is refused by actions R8, 
   const refused = start(w, a, { breach: true });
   assert.equal(code(refused), "ACTION_NO_DETERMINATION");
   assert.equal(w.count("bundles WHERE object_type='action'"), 0);
-  const r = start(w, a, { breach: true, premise_override: { reason: "The harm is ongoing and the hearing is next week" } });
+  const ground = { kind: "legal_deadline", citation: "the records statute, section 4", date: "2026-10-09" };
+  assert.equal(code(start(w, a, { breach: true, premise_override: { reason: "The harm is ongoing" } })), "OVERRIDE_NO_GROUND",
+    "actions R74: an override with no ground is refused, and passes through");
+  assert.equal(w.count("bundles WHERE object_type='action'"), 0);
+  const r = start(w, a, { breach: true, premise_override: { ground, reason: "The harm is ongoing and the hearing is next week" } });
   assert.equal(r.ok, true, JSON.stringify(r));
   assert.equal(w.fm(r.action).breach, true);
   assert.equal(w.fm(r.action).premise_override.reason, "The harm is ongoing and the hearing is next week");
+  assert.deepEqual(w.actions.actionRead({ id: r.action, viewer: V("bob") }).premise_override.ground, ground,
+    "the ground is the member's, carried to the action as actions reads it");
   /* on a live noncompliant determination, a breach action needs no override */
   const b = option(w, { subjects: [w.S1], addressee: OFFICE });
   choose(w, [b]);
@@ -148,7 +155,7 @@ test("R20: a member closes a plan with a reason; it stays readable; its subjects
   const c = w.ap.planClose({ id: w.PL, reason: "We are done", ...by("bob") });
   assert.equal(c.ok, true); assert.equal(c.state, "closed");
   const r = w.ap.planRead({ id: w.PL, viewer: V("bob") });
-  assert.equal(r.state, "closed"); assert.deepEqual(r.closed, { by: V("bob"), at: w.clock.now, reason: "We are done" });
+  assert.equal(r.state, "closed"); assert.deepEqual({ ...r.closed, summary: undefined }, { by: V("bob"), at: w.clock.now, reason: "We are done", note: null, summary: undefined });
   assert.equal(w.record.head(w.PL).currentState, "closed");
   assert.equal(JSON.stringify(w.fm(s.action)), actionBefore, "closing changes no action");
   assert.equal(code(w.ap.planClose({ id: w.PL, reason: "again", ...by("bob") })), "PLAN_CLOSED");

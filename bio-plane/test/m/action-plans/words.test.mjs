@@ -99,7 +99,7 @@ test("R36: every refusal this module mints, each detail's variants with it, and 
   /* R14–R16: scenarios and checkpoints */
   const set = (phases, extra = {}) => keep(w.ap.scenarioSet({ plan: w.PL, scenario: 1, name: "S", phases, ...by("bob"), ...extra }));
   const ph = (extra = {}) => ({ id: "p", name: "P", options: [a], starts: "plan_start", ...extra });
-  set([ph()], m); set([ph()], { scenario: 4 }); set([ph()], { name: "" }); set([]);
+  set([ph()], m); set([ph()], { scenario: 0 }); set([ph()], { name: "" }); set([]);
   for (const bad of [{ id: "" }, { name: "" }, { options: "x" }, { starts: "whenever" },
                      { starts: { when_subject: { kind: "wish" }, reaches: "resolved" } },
                      { starts: { when_subject: w.S1, reaches: "stage" } }, { starts: { when_subject: w.S1, reaches: "resolved", stage: 2 } },
@@ -121,13 +121,24 @@ test("R36: every refusal this module mints, each detail's variants with it, and 
   judge({}); judge({});
   set([ph({ checkpoint: { after_days: 1 } })], { scenario: 2 });
   /* R18, R37: starting, and its preview */
-  const startArgs = (extra) => ({ plan: w.PL, option: a, kind: "other", ...by("bob"), ...extra });
+  const startArgs = (extra) => ({ plan: w.PL, option: a, kind: "other", ...by("bob"), why_first: "A deadline comes first", ...extra });
+  /* R42: an outward step ahead of the documentation, with no reason given */
+  keep(w.ap.optionStartPreview(startArgs({ why_first: undefined }))); keep(w.ap.optionStart(startArgs({ why_first: undefined })));
   for (const extra of [m, { option: "opt-99" }, { contact: "nobody" }, { kind: "summon_dragons" }, {}]) {
     keep(w.ap.optionStartPreview(startArgs(extra)));
     keep(w.ap.optionStart(startArgs(extra)));
   }
   keep(w.ap.optionStartPreview(startArgs({}))); keep(w.ap.optionStart(startArgs({})));
   keep(w.ap.optionStartPreview(startArgs({ option: b }))); keep(w.ap.optionStart(startArgs({ option: b })));
+  /* R39, R40 (T45): scenarios set aside and restored, the plan paused and resumed */
+  const aside = (kind, extra) => keep(w.ap[kind]({ plan: w.PL, scenario: 2, reason: "r", ...by("bob"), ...extra }));
+  aside("scenarioSetAside", m); aside("scenarioSetAside", { scenario: 9 }); aside("scenarioRestore", {});
+  aside("scenarioSetAside", {}); aside("scenarioSetAside", {});
+  const pause = (kind, extra) => keep(w.ap[kind]({ id: w.PL, reason: "r", ...by("bob"), ...extra }));
+  pause("planResume", {}); pause("planPause", { look_again: "soon" }); pause("planPause", m); pause("planPause", {});
+  pause("planPause", {}); pause("planResume", {});
+  /* R41: an offer the plan does not stand ready to make */
+  keep(w.ap.optionAdopt({ plan: w.PL, offer: { subject: w.S2, kind: "chance_to_fix" }, ...by("bob") }));
   /* R30, R34: the run check and the tray */
   const check = w.reg.checks.find((c) => c.mode === "plan").fn;
   keep(check({ contextType: "project", contextId: w.Q, plan: w.PL, actor: V("bob"), viewer: V("bob") }));
@@ -150,6 +161,7 @@ test("R36: every refusal this module mints, each detail's variants with it, and 
   keep(w.ap.checkpointsDue({}));
   /* R20: closing, then every act a closed plan refuses */
   keep(w.ap.planClose({ id: w.PL, reason: "done", ...m }));
+  keep(w.ap.planClose({ id: w.PL, reason: "done", note: "x".repeat(4001), ...by("bob") }));
   keep(w.ap.planClose({ id: w.PL, ...by("bob") }));
   keep(w.ap.planClose({ id: w.PL, reason: "done", ...by("bob") }));
   keep(w.ap.planClose({ id: w.PL, reason: "done", ...by("bob") }));

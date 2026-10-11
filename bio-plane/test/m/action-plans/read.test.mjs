@@ -1,7 +1,7 @@
 /* action-plans R6–R8, R19: the plan's read, the list, liveness derived on read, and the checks. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, opened, option, choose, V, by, OFFICE, ms } from "./fixture.mjs";
+import { seeded, opened, option, choose, V, by, OFFICE, ms, FIRST } from "./fixture.mjs";
 import { noSuchPlan } from "../../../src/action-plans/index.mjs";
 
 const code = (r) => r.code ?? r.reason;
@@ -17,7 +17,7 @@ test("R6: planRead answers every named part, with a started option's action stat
     checkpoint: { after_days: 5 }, branches: { not_met: "p2" } }, { id: "p2", name: "P2", options: [], starts: { branch_of: "p", when: "not_met" } }],
     ...by("bob") }).ok, true);
   await w.ap.optionPropose({ plan: w.PL, summary: "Prop", category: "other", subjects: [w.S1], why: "w", proposer: V("alice"), viewer: V("alice") });
-  const s = w.ap.optionStart({ plan: w.PL, option: a, kind: "other", ...by("bob") });
+  const s = w.ap.optionStart({ plan: w.PL, option: a, kind: "other", ...by("bob"), ...FIRST });
   assert.equal(s.ok, true);
   w.escalations.set(w.D, [{ id: "ESC-2026-0001-escalation", state: "open", stage: 3, history: [] }]);
   assert.equal(w.reviseProject(w.P, "Budget watch", ["work_kinds: [reporting, legal]"], V("alice")).ok, true);
