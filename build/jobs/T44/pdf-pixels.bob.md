@@ -20,3 +20,7 @@ All four readings adopted (K2737). (1) is now R11's wording in image-codecs' req
 ## B3 · CHANGE
 
 R11 is published: job/T44/image-codecs @ 76b370eae1 (IMAGE-CODECS #5 COMPLETE, ownership 0). Note from its COMPLETE: onRows' rows is ONE reused buffer, valid until onRows returns; strips are at most 8 × vmax rows. Build and measure against it now (git merge origin/job/T44/image-codecs, or wait a few minutes: BOB merges it into tranche/T44 and posts another CHANGE; then merge tranche/T44).
+
+## B4 · CHANGE
+
+image-codecs is merged into tranche/T44 (K2738). Merge tranche/T44 into your branch, finish the measure and PICTURE_SOURCE_MAX against the real R11, then complete.
