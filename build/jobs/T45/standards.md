@@ -38,3 +38,18 @@ New rows C-112.63 `COMMITMENT_AS_HEARD`, C-112.64 `COMMITMENT_OWN_LETTER` (await
 - format: 0 failures. architecture: 0 failures. coverage: 44 of 44, 0 failures. ownership: 0 failures.
 
 Size (session_01Jg3rgoArLauFTLhqRQc2MS): test runs 9, module lines 3434
+
+## J3 · COMPLETE
+
+**B2 CHANGE applied** (K2806): `tranche/T45` merged; R54 `standardProposalRead({proposal, viewer})` built in `index.mjs`, an in-process read (no op), read by `duties` R30. K2808 noted (my J1 readings adopted; nothing to change).
+
+**One wording point for BOB (R54).** R54 names the refusal `NO_SUCH_PROPOSAL`, but that bare code is `intent`'s, for another condition (C-family of intent; duties R2 records the same clash, K1679). One code, one condition (DEC-49 arm A), so I answer through standards' own `STANDARD_NO_SUCH_PROPOSAL` (C-112.15, the code R10 already mints for "no proposal of a standard answers to that id"). No new row. Please re-word R54 to `STANDARD_NO_SUCH_PROPOSAL` (and duties R30's reading of it, if it names the code).
+
+**One reading (R54 with R37).** A proposal adopted as a standard the viewer may not read (a policy held at a hidden project's sight) is answered `STANDARD_NO_SUCH_PROPOSAL`, alike with an absent one, so an unseen `STD-` id is never named. A viewer the record admits to nothing is answered alike too.
+
+**Tests and checks.**
+- standards: 86 pass, 0 fail. A new R54 test in `t45.test.mjs` covers unadopted (`adoption: null`), adopted (standard, by, at), absent, unseen viewer, hidden adopted standard, writes nothing, never throws.
+- duties (the reader): 49 pass, 0 fail.
+- format: 0 failures. architecture: 0 failures. coverage: 45 of 45, 0 failures. ownership: 0 failures.
+
+Size (session_01Jg3rgoArLauFTLhqRQc2MS): test runs 12, module lines 3452
