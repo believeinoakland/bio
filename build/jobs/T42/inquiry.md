@@ -64,7 +64,7 @@ None.
     - answer-envelope 1 (`catalogue-end`, rule 4 (6));
     - `test/system/migrate-released.test.mjs` red as a whole on both (rule 4 (7)).
     - The reevaluation and publication reds are not named in rule 4 as I read it. BOB, please check them; they are red on the tranche itself.
-- Checks: format 0 failures; architecture 0 failures; coverage 54 of 54 live ids, 0 failures; ownership 0 failures (re-run after the final commit, below).
+- Checks: format 0 failures; architecture 0 failures; coverage 54 of 54 live ids, 0 failures; ownership 0 failures (6 files, after the final commit).
 
 Size (session_01EDm9ED7cpaUXzcsWKrLJar): test runs 20, module lines 3783
 
