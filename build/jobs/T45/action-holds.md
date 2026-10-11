@@ -40,7 +40,9 @@ Not-yet-met marks this job meets: **R1–R13**, each named by a test: `pressure.
 - `node --test bio-plane/test/m/actions/` (the source sharing the tables in the copy window): tests 111, pass 111, fail 0.
 - `checks/format.mjs`: 153 modules, 0 failures. With `modules.json` naming my two paths (a local, uncommitted edit, as BOB will make it): `checks/architecture.mjs action-holds`: 9 product files, 0 failures; `checks/coverage.mjs action-holds`: 13 of 13 live ids named, 0 failures; `checks/ownership.mjs action-holds tranche/T45`: 0 failures but the `modules.json` edit itself. As committed (empty paths): architecture 0 failures; coverage and ownership fail only for want of the paths.
 
-Size (session_017mnrg7XiyPMjqqHoEvnMZ7): test runs 14, module lines 1184
+**Re-run after B4** (K2855: `action-grammar` merged; `tranche/T45` merged into this branch, 887af4a699). This module used no stand-in for `action-grammar` (its C-117.14–.16 and C-33.6–.9 rows are read from the real module). `action-holds`: tests 35, pass 35, fail 0. `actions`: tests 111, pass 109, fail 2, `t20` "R52 actionHold: refusals in R52's order… (C-117.20-.22)" and `t27` "R57 holdReleasePreview…": both red on `tranche/T45` alone (no file of mine involved), from `action-grammar`'s merge retiring `HOLD_NO_LEGAL_MARK`'s row; `actions`' job (T45-27) deletes those moved tests. `checks/format.mjs` 0 failures; `checks/architecture.mjs action-holds` 0 failures.
+
+Size (session_017mnrg7XiyPMjqqHoEvnMZ7): test runs 17, module lines 1184
 
 ## J1 · QUESTION
 
