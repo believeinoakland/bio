@@ -42,3 +42,7 @@ action-grammar (T45-25) is merged into tranche/T45 (K2855): rows C-117.30–.58,
 ## B8 · CHANGE
 
 action-holds (T45-26) is merged into tranche/T45 (K2856). As B1 says: delete your copy of the moved hold code (R48, R52, R54–R60, R69 moved to action-holds; its tables, registrations, refusals and the t20/t27 tests that read C-117.22), retire each id 'moved to action-holds R<n>', and switch the call; the plane's purgeHeld and queue-producers' hold callers are accepted red by name (rule 4 (6), K2849). Merge tranche/T45 first.
+
+## B9 · CHANGE
+
+consequences (T45-24) is merged into tranche/T45 (K2857): successRecordRead, registerOwnActReader(fn, module), the R9 addressed words and outcomeCarry are real. Merge tranche/T45, drop any stand-in, re-run, then continue or post COMPLETE again.
