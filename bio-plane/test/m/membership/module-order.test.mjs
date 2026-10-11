@@ -49,7 +49,7 @@ const T33_NEW = ["civil-time", "calc-grammar", "connection-grammar", "court-cita
    layer 1, `file-safety` after `capture` in layer 3, `law-relations` before `standards` in layer 5, and L11's split
    (`op-grades` before `affordances`, `answer-envelope` and `store-door` after `admission`). Each pair is `[before, id,
    after]`, so the place is pinned by both neighbours. */
-const SINCE_T33 = [["sheet-worker", "file-scanner", "record-core"], ["capture", "file-safety", "sources"],
+const SINCE_T33 = [["sheet-worker", "file-scanner", "record-core"], ["doorbell", "file-safety", "sources"],
                    ["observation-log", "law-relations", "standards"], ["wizard-scripts", "op-grades", "affordances"],
                    ["admission", "answer-envelope", "store-door"], ["answer-envelope", "store-door", "control-plane"],
                    /* T37-44 (K1185, K2171): `image-cover` after `pdf-pixels` in layer 1 (`doc-clean` after it since T39). */
@@ -65,15 +65,20 @@ const SINCE_T33 = [["sheet-worker", "file-scanner", "record-core"], ["capture", 
                       neighbours `build/modules.json` places it between. */
                    ["hypotheses", "steps", "citation"], ["capture-requests", "reading-guides", "skills"],
                    ["skills", "question-explorer", "answers"], ["intent", "investigation", "reevaluation"],
-                   ["publication", "publish-schedule", "docket"]];
+                   ["publication", "publish-schedule", "docket"],
+                   /* T42-3 (N826, N839; K657, K2607, K2608): `doorbell` directly after `capture` in layer 3 (so
+                      `file-safety` now follows it), `case-account` directly before `case-authoring` in layer 8. */
+                   ["capture", "doorbell", "file-safety"], ["case-disclosures", "case-account", "case-authoring"]];
 /* Listed in the file before its job builds it (K1043's form: empty `paths`), tolerated by name until that merge
    (T33-19a's rule). The T33, T36 and T38 modules so tolerated have all merged (T38's `file-safety` and
    `project-roster` among them), so none is tolerated any longer; T39-M (K2343): `setup-words`, until its L11 job;
    T40-M (K2373): `ai-use`, until its L6 job (T40-7). T41-3 (K657, K2431): `setup-words` has merged and is held to
-   its paths; the five T41's opening adds are tolerated until each one's job merges. */
-const NOT_YET_BUILT = ["ai-use", "steps", "reading-guides", "question-explorer", "investigation", "publish-schedule"];
+   its paths; the five T41's opening adds are tolerated until each one's job merges. T42-3 (K657, K2607, K2608): `ai-use`
+   and T41's five have merged and are held to their paths; `doorbell` and `case-account`, which T42's opening adds, are
+   tolerated until each one's job merges (T42-6, T42-21). */
+const NOT_YET_BUILT = ["doorbell", "case-account"];
 
-test("R83 T36-6 T37-44 T38-4 T39-M T40-M T41-3 MODULE_ORDER holds the modules added since T33 in the file's places: file-scanner, file-safety, law-relations, op-grades, answer-envelope, store-door, image-cover, project-roster, doc-clean, setup-words, ai-use, steps, reading-guides, question-explorer, investigation, publish-schedule", async () => {
+test("R83 T36-6 T37-44 T38-4 T39-M T40-M T41-3 T42-3 MODULE_ORDER holds the modules added since T33 in the file's places: file-scanner, file-safety, law-relations, op-grades, answer-envelope, store-door, image-cover, project-roster, doc-clean, setup-words, ai-use, steps, reading-guides, question-explorer, investigation, publish-schedule, doorbell, case-account", async () => {
   const modules = await modulesJson();
   const layerOf = new Map(modules.map((m) => [m.id, m.layer]));
   for (const [before, id, after] of SINCE_T33) {
@@ -81,7 +86,7 @@ test("R83 T36-6 T37-44 T38-4 T39-M T40-M T41-3 MODULE_ORDER holds the modules ad
     assert.ok(at > 0, `${id} is held`);
     assert.deepEqual(MODULE_ORDER.slice(at - 1, at + 2), [before, id, after], `${before} → ${id} → ${after}`);
   }
-  assert.deepEqual(SINCE_T33.map(([, id]) => layerOf.get(id)), [1, 3, 5, 11, 11, 11, 1, 2, 1, 11, 6, 6, 6, 6, 7, 8],
+  assert.deepEqual(SINCE_T33.map(([, id]) => layerOf.get(id)), [1, 3, 5, 11, 11, 11, 1, 2, 1, 11, 6, 6, 6, 6, 7, 8, 3, 8],
     "each in its layer");
 });
 
@@ -104,7 +109,7 @@ test("R83 T33-19a MODULE_ORDER holds plan T33's order: the new modules in their 
   for (const id of T33_NEW) assert.ok(MODULE_ORDER.includes(id), `${id} is held in its place`);
 });
 
-test("R83 T33-19a T39-M T40-M T41-3 every module MODULE_ORDER holds is built, its paths on disk; a module listed before its job merges (ai-use, steps, reading-guides, question-explorer, investigation, publish-schedule) is named as not yet built, by name, and fails nothing", async (t) => {
+test("R83 T33-19a T39-M T40-M T41-3 T42-3 every module MODULE_ORDER holds is built, its paths on disk; a module listed before its job merges (doorbell, case-account) is named as not yet built, by name, and fails nothing", async (t) => {
   const modules = await modulesJson();
   const notYet = [];
   for (const m of modules) {
@@ -132,10 +137,39 @@ test("R83 T41-3 negative control: a list missing steps, or holding investigation
   assert.notDeepEqual(moved, ids, "investigation after reevaluation is not the file's order");
   const at = moved.indexOf("investigation");
   assert.notDeepEqual(moved.slice(at - 1, at + 2), ["intent", "investigation", "reevaluation"], "the pin refuses it");
-  for (const [before, id, after] of SINCE_T33.slice(-5)) {
+  for (const [before, id, after] of SINCE_T33.slice(-7, -2)) {
     const i = MODULE_ORDER.indexOf(id);
     assert.deepEqual(MODULE_ORDER.slice(i - 1, i + 2), [before, id, after], `${id} in its place in the real list`);
   }
+});
+
+/* K874's negative control for T42-3's re-pin: the list T41 left (without `doorbell` and `case-account`) is not the
+   file's; either module held out of its place is refused by its neighbour pin; and a module the plan does not name is
+   not tolerated as not yet built, nor is a module that has merged (`ai-use`, T41's five). */
+test("R83 T42-3 negative control: a list without doorbell or case-account, or holding either out of its place, is refused; the tolerated names are exactly the two unbuilt", async () => {
+  const modules = await modulesJson();
+  const ids = modules.map((m) => m.id);
+  const t41 = MODULE_ORDER.filter((id) => id !== "doorbell" && id !== "case-account");
+  assert.notDeepEqual(t41, ids, "T41's list is behind the file");
+  for (const id of ["doorbell", "case-account"])
+    assert.notDeepEqual(MODULE_ORDER.filter((x) => x !== id), ids, `a list without ${id} is not the file's`);
+  /* doorbell before capture, case-account after case-authoring: each is a different list, and its pin refuses it */
+  const pin = (list, before, id, after) => { const i = list.indexOf(id); return list.slice(i - 1, i + 2); };
+  const early = MODULE_ORDER.filter((x) => x !== "doorbell");
+  early.splice(early.indexOf("capture"), 0, "doorbell");
+  assert.notDeepEqual(early, ids);
+  assert.notDeepEqual(pin(early, "capture", "doorbell", "file-safety"), ["capture", "doorbell", "file-safety"]);
+  const late = MODULE_ORDER.filter((x) => x !== "case-account");
+  late.splice(late.indexOf("case-authoring") + 1, 0, "case-account");
+  assert.notDeepEqual(late, ids);
+  assert.notDeepEqual(pin(late, "case-disclosures", "case-account", "case-authoring"),
+    ["case-disclosures", "case-account", "case-authoring"]);
+  for (const [before, id, after] of SINCE_T33.slice(-2))
+    assert.deepEqual(pin(MODULE_ORDER, before, id, after), [before, id, after], `${id} in its place in the real list`);
+  /* only the plan's two unbuilt modules are tolerated: a merged one is held to its paths (each one's merge gives it them) */
+  assert.deepEqual([...NOT_YET_BUILT].sort(), ["case-account", "doorbell"]);
+  for (const id of ["ai-use", "steps", "reading-guides", "question-explorer", "investigation", "publish-schedule"])
+    assert.ok(!NOT_YET_BUILT.includes(id) && modules.find((m) => m.id === id).paths.length, `${id} merged: held to its paths`);
 });
 
 test("R83 MODULE_ORDER is frozen: no write changes it", () => {
