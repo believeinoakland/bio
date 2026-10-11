@@ -2,7 +2,7 @@
    entry cursor, N311, went with R31's held copy: N428.) */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, actionMd, CP } from "./fixture.mjs";
+import { world, V, actionMd, CP, NONCOMPLIANT } from "./fixture.mjs";
 import * as conformance from "../../../src/conformance/index.mjs";
 
 const M = V("alice");
@@ -10,9 +10,9 @@ const A = "ACTN-2026-0001-a";
 
 test("R8 (N312) a breach action resting only on a superseded determination is refused DETERMINATION_SUPERSEDED, answered through conformance R20", () => {
   const D1 = "CONF-2026-0001-determination", D2 = "CONF-2026-0002-determination", D3 = "CONF-2026-0003-determination";
-  const dets = { [D1]: { ok: true, id: D1, live: true, superseded_by: null },
-                 [D2]: { ok: true, id: D2, live: false, superseded_by: D1 },
-                 [D3]: { ok: true, id: D3, live: false, superseded_by: null } };
+  const dets = { [D1]: { ok: true, id: D1, live: true, superseded_by: null, outcomes: NONCOMPLIANT },
+                 [D2]: { ok: true, id: D2, live: false, superseded_by: D1, outcomes: NONCOMPLIANT },
+                 [D3]: { ok: true, id: D3, live: false, superseded_by: null, outcomes: NONCOMPLIANT } };
   const w = world({ conformance: { determinationRead: ({ id }) => dets[id] || { ok: false, reason: "NO_SUCH_DETERMINATION" } } });
   for (const id of [D1, D2, D3])
     assert.equal(w.promote(id, ["---", `id: ${id}`, "object_type: determination", `title: ${id}`, "current_state: recorded",

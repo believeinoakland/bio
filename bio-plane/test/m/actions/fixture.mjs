@@ -2,7 +2,7 @@
    promotion, provenance), on a real SQLite database (node:sqlite) standing in for a Durable Object's storage, answering
    as workerd's does (a cursor, and its LIKE/GLOB cap; K313, K316). What actions registers with retrieval, the
    capture content presents for a document (R11), connections' `refs` projection
-   (R25's `responses`) and ratification's hold-reader registration (R69) are stand-ins the test controls; conformance is the real module (it brings reevaluation and
+   (R25's `responses`) are stand-ins the test controls; conformance is the real module (it brings reevaluation and
    inquiry, whose columns on `bundles` are added here), or a stand-in in its R9 shape where a test passes one (R8). Every test drives
    `actions` at its interface. */
 import { createHash } from "node:crypto";
@@ -102,15 +102,13 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
   const prov = provenanceOf(host, { record, membership, promotion, now: () => new Date(clock.ms).toISOString() });
   prov.migrate();
   const captures = new Map();
-  const reg = { facts: [], decorations: [], holdReaders: [] };
-  /* ratification R45's registration (R69), recorded as the test reads it; t34's R69 test boots the real one */
-  const ratification = { registerHoldReader: (r) => (reg.holdReaders.push(r), { ok: true }) };
+  const reg = { facts: [], decorations: [] };
   const retrievalStub = retrieval ? {
     registerActionFacts: (m, fn) => { reg.facts.push({ m, fn }); return { ok: true }; },
     registerProjectionDecoration: (m, fn) => { reg.decorations.push({ m, fn }); return { ok: true }; },
   } : null;
   const a = actionsOf(host, { record: recordAs ? recordAs(record) : record, membership, promotion, retrieval: retrievalStub, conformance,
-                              content: { captureFor: (id) => captures.get(id) ?? null }, now: () => clock.ms, ratification, ...deps });
+                              content: { captureFor: (id) => captures.get(id) ?? null }, now: () => clock.ms, ...deps });
   /* the real conformance (the default dep) brings inquiry onto this host through reevaluation: its tables, as the
      store's boot migrates them. */
   if (!conformance) {
@@ -171,4 +169,28 @@ export function world({ profiles = ["test-port-ellery"], retrieval = true, confo
       reg.decorations[0].fn({ bundle_id: id, object_type: "action" }, { nowMs, viewer }),
   };
   return w;
+}
+
+/* R8 (T45; K2781 (4)): a breach action rests on a live determination noncompliant for at least one standard it names.
+   A stand-in's outcomes in conformance R9's shape. */
+export const STD = "STD-2026-0001-standard";
+export const NONCOMPLIANT = Object.freeze([{ standard: STD, outcome: "noncompliant" }]);
+export const COMPLIANT = Object.freeze([{ standard: STD, outcome: "compliant" }]);
+/** A determination as conformance's determine act leaves it, read back by the real `determinationRead`: its row, its
+ *  standard's outcome (the standard held, so a viewer who sees the project sees it, conformance R24), and its CONF-
+ *  document; `outcome` per standard. */
+export function realDetermination(w, D, project, { outcome = "noncompliant", author = V(ALICE) } = {}) {
+  if (!w.record.head(STD)) {
+    const r = w.promote(STD, ["---", `id: ${STD}`, "object_type: standard", `title: ${STD}`, "current_state: held",
+      'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"', "---", "", "s", ""].join("\n"), { extra: { replay: true } });
+    if (!r.ok) throw new Error(`fixture standard refused: ${JSON.stringify(r).slice(0, 300)}`);
+  }
+  w.st.sql.exec(`INSERT INTO determinations (determination_id, project_id, act_id, act_minted, act_description, act_role,
+    act_body, act_at, act_evidence, author, at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+    D, project, "ACT-2026-0001", 1, "the act", "Town Clerk", "Town of Port Ellery", "2026-09-01", "[]", author, "2026-09-02T00:00:00Z");
+  w.st.sql.exec(`INSERT INTO determination_standards (determination_id, ord, standard_id, outcome, in_force, in_force_why)
+    VALUES (?,?,?,?,?,?)`, D, 0, STD, outcome, "in_force", "the test's standard");
+  const r = w.promote(D, ["---", `id: ${D}`, "object_type: determination", `title: ${D}`, "current_state: recorded",
+    'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"', "---", "", "d", ""].join("\n"), { extra: { replay: true } });
+  if (!r.ok) throw new Error(`fixture determination refused: ${JSON.stringify(r).slice(0, 300)}`);
 }
