@@ -62,3 +62,18 @@ Status of providers: none of the L9 T45 code is built yet (action-grammar `point
 - ownership . filings tranche/T45: 11 files changed; 0 failures.
 
 Size (session_0162rfUAY9xvRvZ6LS5J1DNM): test runs 16, module lines 3315
+
+## J3 · COMPLETE
+
+**B3, B6, B7 processed; merged tranche/T45 (filing-templates, action-holds, consequences).** J2 stands, with these changes:
+
+- **action-holds real (B6):** filings reaches it through `actionHoldsOf` on the host and passes its exported `holdNotInPlace` (C-149) through, for a released hold and when no module answers. Its stand-in is gone: R47's test places and releases real holds; R9's defence packet reads a real pressure mark (actions R15) through `pressureFor`.
+- **A flaw found and fixed:** my new table `hold_notices` had the same name as action-holds' own; renamed `filing_hold_notices` (never released, no migration needed).
+- **filing-templates real (B3, B6):** the fixture reads profile templates attributed and professionally reviewed; t45's "R28 R41 (K2851)" test (an unreviewed template refused `TEMPLATE_NOT_REVIEWED`, not offered after the act) is now green.
+- **consequences (B7):** no stand-in was used; nothing to change.
+- Stand-ins left: `actions` R75/R78/R79 read fields (until actions merges) and docket's legal marks (its R27 read; a real mark needs a docket record entry the fixture does not build).
+
+**Tests:** filings 91 pass, 0 fail. escalation 63/0, action-plans 63/0 (re-run); affordances, answer-envelope, control-plane, plane as in J2 (identical to the tranche's accepted reds).
+**Checks:** format 0 failures; architecture (19 files, 87 imports) 0; coverage 48 of 48; ownership 11 files, 0 failures.
+
+Size (session_0162rfUAY9xvRvZ6LS5J1DNM): test runs 20, module lines 3315
