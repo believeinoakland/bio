@@ -15,10 +15,11 @@
  * and each project, a project key's notice, and the suspended sign-in accounts owners are told of; and, from T41 (T41-5;
  * N820, N796, DEC-188 (1), (7), (8)), four more kinds of use, `accountUsesSet` the one act that sets an account's
  * switches, a sign-in's own standing switch, the refusals' words read by key from `words.json`, and each account's
- * panel reads: its uses and keep-aways, and its change history. A project's name (R58) is its bundle's title, read
+ * panel reads: its uses and keep-aways, and its change history; and, from T42 (T42-4; N831), the in-plane read of
+ * an account's uses for a caller that does not own it. A project's name (R58) is its bundle's title, read
  * through record-core's `bundleInfo` (its R34).
  *
- * Requirements: build/requirements/credentials.md (R1–R61; R26 retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
+ * Requirements: build/requirements/credentials.md (R1–R62; R26 retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
  * 2, CREDENTIALS #1): the code is copied from `membership/index.mjs` and `schema.mjs`, without change of meaning, and
  * reads `members` only through membership's services (`memberFacts`, `sessionRights`, `isAdministrator`,
  * `activeAdmins`, `notAnAdmin`), never by SQL. Who the members are, and what each may do, is membership's; this module
@@ -1454,32 +1455,62 @@ export class Credentials {
   }
 
   /* R60 `accountUses` (`op=accountuses`): one account's uses and keep-aways, to its owners alone: `{owner, held,
-     uses, keptAway}`, `uses` every R55 switch with its value (its default where none was set; null when no account is
-     held, the group key's defaults before any act on it). For `member:<id>`, `uses` is the account `accountUsesSet`
-     sets (their reference when held, else their sign-in) and `accounts` answers each of the two. Never a key; writes
-     nothing; never throws (a store that cannot be read answers `unreadable: true`). */
+     uses, keptAway}`, the uses as `#usesAnswer` reads them. Never a key; writes nothing; never throws (a store that
+     cannot be read answers `unreadable: true`). */
   accountUses({ owner = null, viewer = null } = {}) {
     try {
       const bar = this.#ownerBar(owner, viewer);
       if (bar) return bar;
-      const keptAway = this.#limitsFor(owner);
-      if (owner === "group") {
-        const f = this.#groupKeyFacts();
-        return { ok: true, owner, held: f.held, uses: f.uses, keptAway };
-      }
-      if (owner.startsWith("project:")) {
-        const p = this.#projectAccountRow(owner.slice(8));
-        return { ok: true, owner, held: !!p, kind: p ? p.kind : null, uses: p ? Credentials.#usesOf(p) : null, keptAway };
-      }
-      const id = Credentials.#memberOf(owner);
-      const ref = this.#reference(id, Credentials.#USES_COLUMNS);
-      const sub = this.#one(`SELECT ${Credentials.#USES_COLUMNS} FROM subscription_connections WHERE member_id=?`, id);
-      const one = (r) => ({ held: !!r, uses: r ? Credentials.#usesOf(r) : null });
-      return { ok: true, owner, held: !!(ref || sub), uses: ref ? Credentials.#usesOf(ref) : sub ? Credentials.#usesOf(sub) : null,
-               accounts: { reference: one(ref), signin: one(sub) }, keptAway };
+      return { ...this.#usesAnswer(owner), keptAway: this.#limitsFor(owner) };
     } catch {
       return { ok: true, owner: typeof owner === "string" ? owner : null, held: null, uses: null, keptAway: null, unreadable: true };
     }
+  }
+
+  /* R62 `accountUsesOf` (T42; N831): an in-plane read, reached by no route and taking no viewer, of one account's uses
+     exactly as R60 answers them to its owners, without `keptAway`: the read an in-plane caller uses for an account it
+     does not own (ai-use R3, R6, R9). An `owner` not spelled as R55's answers `held: false, uses: null`; a store that
+     cannot be read answers `held: null, uses: null, unreadable: true`, never a default (no switch reads as on). Never a
+     key or a digest; writes nothing; never throws. */
+  accountUsesOf({ owner = null } = {}) {
+    const said = typeof owner === "string" ? owner : null;
+    try {
+      if (!Credentials.#usesOwnerSpelled(owner)) return { ok: true, owner: said, held: false, uses: null };
+      return this.#usesAnswer(owner);
+    } catch {
+      return { ok: true, owner: said, held: null, uses: null, unreadable: true };
+    }
+  }
+
+  /* R55, R62: `group`, `project:<id>` or `member:<id>`, the id non-empty, the member named once and no machine. */
+  static #usesOwnerSpelled(owner) {
+    if (owner === "group") return true;
+    if (typeof owner !== "string") return false;
+    if (owner.startsWith("project:")) return owner.length > 8;
+    const id = owner.startsWith("member:") ? owner.slice(7) : "";
+    return id !== "" && !id.startsWith("member:") && !isMachineIdentity(id);
+  }
+
+  /* R60, R62: one account's uses, `owner` spelled as R55's: `{ok, owner, held, uses}`, `uses` every R55 switch with
+     its value (its default where none was set; null when no account is held, the group key's defaults before any act
+     on it); a project's account also its `kind`. For `member:<id>`, `uses` is the account `accountUsesSet` sets (their
+     reference when held, else their sign-in) and `accounts` answers each of the two. Never a key; throws when the
+     store cannot be read, for its caller to answer `unreadable`. */
+  #usesAnswer(owner) {
+    if (owner === "group") {
+      const f = this.#groupKeyFacts();
+      return { ok: true, owner, held: f.held, uses: f.uses };
+    }
+    if (owner.startsWith("project:")) {
+      const p = this.#projectAccountRow(owner.slice(8));
+      return { ok: true, owner, held: !!p, kind: p ? p.kind : null, uses: p ? Credentials.#usesOf(p) : null };
+    }
+    const id = Credentials.#memberOf(owner);
+    const ref = this.#reference(id, Credentials.#USES_COLUMNS);
+    const sub = this.#one(`SELECT ${Credentials.#USES_COLUMNS} FROM subscription_connections WHERE member_id=?`, id);
+    const one = (r) => ({ held: !!r, uses: r ? Credentials.#usesOf(r) : null });
+    return { ok: true, owner, held: !!(ref || sub), uses: ref ? Credentials.#usesOf(ref) : sub ? Credentials.#usesOf(sub) : null,
+             accounts: { reference: one(ref), signin: one(sub) } };
   }
 
   /* R61 `accountHistory` (`op=accounthistory`): the account's changes, to its owners alone (R60's), in the order made,
@@ -2925,7 +2956,7 @@ export function credentialsOps(c, url, body, env) {
        the control plane's stamps and the session the one it authenticated (`session`, its stamp); a secret only ever
        in the body, never the query. The in-plane reads (`accountReferenceFor`, `accountFor`, `aiGrantAdmit`,
        `aiGrantHeld`, `aiGrantMintStanding`, `keyedServiceFor`; T35's `groupKeySwitches`, `subscriptionConnected`,
-       `securityLevel`; T36's `securityTotals`) are not routed; `securityCount` only as the store-internal
+       `securityLevel`; T36's `securityTotals`; T42's `accountUsesOf`, R62) are not routed; `securityCount` only as the store-internal
        `securitycount` (R50). Which credential reaches each op is
        op-declarations' and control-plane's (Q0-10; control-plane R53, R56). */
     accountreferenceset: () => c.accountReferenceSet({ ...(body || {}), by: url.searchParams.get("by") }),
