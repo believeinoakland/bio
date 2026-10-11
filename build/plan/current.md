@@ -26,7 +26,7 @@ It is the only module marked `legacy` in `modules.json`.
    2. row census: rows T41's L3–L11 jobs added stay `awaiting stamp` until T42-5 (promotion); rows T42's L3+ jobs add or change (doorbell's re-pointed `where`s among them), until T43's stamp;
    3. the UI's DEC-88 tests (Bob's), carried;
    4. legacy-ui `statement-ack.test.mjs` (N794, K633);
-   5. membership R83's `MODULE_ORDER` tests from the opening's insertion of `doorbell` and `case-account` until T42-3, then each new module named "not yet built" until its own merge;
+   5. (cleared at T42-3's merge, K2623) membership R83's `MODULE_ORDER` tests; since then each new module named "not yet built" until its own merge;
    6. answer-envelope `catalogue-end.test.mjs`'s pins for `PROPOSAL_NO_RUN` and `NO_SUCH_PROPOSAL` (T41 rule 4 (21)) until T42-27 (N843);
    7. `test/system/migrate-released.test.mjs`'s `ai_ceilings` arm (T41 rule 4 (24)) until T42-17 (N848);
    8. (cleared at T42-2's merge, K2612) `fleetbundles` agent-worker's input count (K2520 (a));
