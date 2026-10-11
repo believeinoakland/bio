@@ -3,7 +3,7 @@
    so `extraction` reaches nothing above its layer. It decides nothing about a page and holds no table: whether the AI's
    part may run is `run-rules`' (on `ai-runs`' R75 records), whether a project keeps its material away is `credentials`',
    the account and its limit are `credentials`' and `ai-use`'s (asked by `reading-pipeline.tier4Extend`), the rendering is
-   `pdf-pixels`', the reading `agent-worker`'s, and the count `ai-use`'s (R9). The account's secret leaves the object only
+   `pdf-pixels`' (a PDF page by its page renderer, a picture file by its picture renderer), the reading `agent-worker`'s, and the count `ai-use`'s (R9). The account's secret leaves the object only
    in the one `POST /transcribe` request body. */
 import { recordOf } from "../record-core/index.mjs";
 import { credentialsOf } from "../credentials/index.mjs";
@@ -11,6 +11,7 @@ import { aiUseOf } from "../ai-use/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { partDeployableOn, CIVICSMITH_TEST_SET } from "../run-rules/index.mjs";
 import { renderPageToPixels } from "../../../pdf-worker/src/pagepixels.mjs";
+import { renderPictureToPixels } from "../../../pdf-worker/src/picturepixels.mjs";
 
 /** R36: at most this many pages are rendered and sent for one act, `agent-worker`'s `TRANSCRIBE_PAGES_MAX` (its R72;
  *  K2611), held equal to it by this module's test (the plane does not bundle agent-worker). */
@@ -18,6 +19,10 @@ export const TRANSCRIBE_PAGES_MAX = 8;
 /** R36: a rendered page's PNG over this many bytes is not sent, `agent-worker`'s `TRANSCRIBE_IMAGE_MAX_BYTES` (its R72),
  *  held equal by this module's test. */
 export const TRANSCRIBE_IMAGE_MAX_BYTES = 5 * 1024 * 1024;
+/** R36 (T43; N853b; K2691, K2716): the long edge, in pixels, a picture file's page is reduced to at most before it is
+ *  sent: the provider's standard vision tier's long edge, so no model downscales it, and under the 2,000 px a request
+ *  of more than 20 images is held to (platform.claude.com, "Resolution and token cost", read 2026-10-11). */
+export const TRANSCRIBE_PICTURE_EDGE = 1568;
 /** The one picture kind `agent-worker` R63 admits: a PNG Civicsmith rendered itself, never the file's own stream. */
 const PNG = "image/png";
 const USE = "transcribe";
@@ -43,13 +48,18 @@ const pagesAsked = (pages) => [...new Set((Array.isArray(pages) ? pages : []).fi
   .sort((a, b) => a - b).slice(0, TRANSCRIBE_PAGES_MAX);
 
 /** R36: each asked page rendered by `pdf-pixels` with `decodeDct: true`, as `agent-worker` R72's `{page, media_type,
- *  data}`; a page the renderer refuses (or that throws), whose picture is not a PNG, or whose PNG is over
- *  TRANSCRIBE_IMAGE_MAX_BYTES is not sent and stays unread. One page is rendered at a time. */
-export async function renderPages(bytes, pages, render = renderPageToPixels) {
+ *  data}`; a page the page renderer answers `NOT_A_PDF` for is rendered by its picture renderer instead, grey, its long
+ *  edge at most TRANSCRIBE_PICTURE_EDGE (T43; N853b). A page either renderer refuses (or that throws), whose picture is
+ *  not a PNG, or whose PNG is over TRANSCRIBE_IMAGE_MAX_BYTES is not sent and stays unread. One page is rendered at a
+ *  time. */
+export async function renderPages(bytes, pages, render = renderPageToPixels, picture = renderPictureToPixels) {
   const out = [];
   for (const page of pagesAsked(pages)) {
     let r;
     try { r = await render(bytes, page, { decodeDct: true }); } catch { r = null; }
+    if (r && r.ok === false && r.reason === "NOT_A_PDF") {
+      try { r = await picture(bytes, page, { maxEdge: TRANSCRIBE_PICTURE_EDGE, grey: true }); } catch { r = null; }
+    }
     if (!r || r.ok !== true || r.mediaType !== PNG) continue;
     const png = r.bytes instanceof Uint8Array ? r.bytes : r.bytes ? new Uint8Array(r.bytes) : null;
     if (!png || png.length === 0 || png.length > TRANSCRIBE_IMAGE_MAX_BYTES) continue;
