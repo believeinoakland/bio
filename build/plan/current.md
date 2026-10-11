@@ -23,7 +23,7 @@ It is the only module marked `legacy` in `modules.json`.
 3. **Capture's split, settled (K2607, the map's readings):** (1) K625's pattern: capture's T42 job retires the twenty moved ids and keeps its doorbell code as a named copy, unused by new code; its delete is T43's, once `sources`, `actions`, `answer-envelope`, `store-door` and `plane` have re-pointed; (2) the two copies run the same SQL on the same rows meanwhile, the litigation-hold reader registered only where `actions` registers it (fail closed elsewhere); (3) C-118.2, .3, .4, .7 and C-85 move with their raisers, numbers kept; until capture's delete (T43) they stay defined once, in capture's `checks.mjs`, and doorbell's `checks.mjs` re-exports them (one row, one site, K231; K2609), so `answer-envelope` gains doorbell's file in T43 with the delete; (4) doorbell's migrate treats `TABLE_DECLARED` by `capture` as held, its R25 ownership arm accepted red until capture's delete; (5) `doorbellOf` reads `captureOf(ctx).env`; (6) `doorbell` sits directly after `capture`; (7) R65's actor goes through `capture.recordCaptureActor` inside a nested `transact`; (8) capture R86 states its own fence and `within`; (9) the measure is 4,059.
 4. **Accepted reds at the opening** (from T41's Outcome; re-confirmed against `node checks/run.mjs` at the opening: format, architecture, channels 0 failures; coverage red only on rule 4 (1)):
    1. coverage: every id marked `*(not yet met: T42)*` until its module's merge;
-   2. row census: rows T41's L3–L11 jobs added stay `awaiting stamp` until T42-5 (promotion); rows T42's L3+ jobs add or change (doorbell's re-pointed `where`s among them), until T43's stamp;
+   2. row census: (T41's L3–L11 rows and T42's L1–L2 rows stamped 1.69.0 at T42-5, K2625) rows T42's L3+ jobs add or change (doorbell's re-pointed `where`s among them), until T43's stamp;
    3. the UI's DEC-88 tests (Bob's), carried;
    4. legacy-ui `statement-ack.test.mjs` (N794, K633);
    5. (cleared at T42-3's merge, K2623) membership R83's `MODULE_ORDER` tests; since then each new module named "not yet built" until its own merge;
@@ -32,7 +32,7 @@ It is the only module marked `legacy` in `modules.json`.
    8. (cleared at T42-2's merge, K2612) `fleetbundles` agent-worker's input count (K2520 (a));
    9. from T42-6's merge: doorbell R25's ownership arm until capture's delete (T43; rule 3 (4));
    11. (cleared at T42-2a's merge, K2622) record-core `t33.test.mjs`:69 (R76) and :162 (R62), which lack `ACD`, from T42-1's merge until T42-2a.
-   12. (K2621) format: `modules.json` names promotion's `row-census-1.69.0.jsonl` (K2620) before T42-5 merges it; until that merge.
+   12. (cleared at T42-5's merge, K2625) format: `modules.json` names promotion's `row-census-1.69.0.jsonl` (K2620) before T42-5 merges it; until that merge.
    10. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
 
 **Text owed before each layer's START (BOB's wording, P5):**
