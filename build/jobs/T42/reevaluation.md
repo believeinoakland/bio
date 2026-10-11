@@ -16,7 +16,7 @@
 
 **Tests and checks.**
 - `node --test test/m/reevaluation/*.test.mjs`: tests 141, pass 141, fail 0 (red before: 7 R28 tests).
-- Users: docket 59/59, ratification 233/233, case-import 96/96, case-authoring 181/181, conformance 87/87, monitoring 124/124, scheduler 129/129, affordances 232/232, queue-producers 84/84, plane 166/166, `test/system/migrate-released.test.mjs` 1/1; publication 130/135 (5 inherited, above); answer-envelope 28/29 (1 inherited, above). No layer tests are named in the manifest.
+- Users: docket 59/59, ratification 233/233, case-import 96/96, case-authoring 181/181, conformance 87/87, monitoring 124/124, scheduler 129/129, affordances 232/232, queue-producers 84/84, plane 166/166, `test/system/migrate-released.test.mjs` 1/1; publication 129 pass, 5 fail of 135 (5 inherited, above); answer-envelope 28/29 (1 inherited, above). No layer tests are named in the manifest.
 - format: 147 modules, 146 requirements files; 0 failures.
 - architecture: 21 product files, 84 relative imports; 0 failures.
 - coverage: 36 of 36 live requirement ids named by a test; 0 failures.
