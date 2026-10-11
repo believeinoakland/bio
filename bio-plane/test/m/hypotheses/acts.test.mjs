@@ -88,7 +88,6 @@ test("R2 a hypothesis is never edited in place: revise appends a revision, withd
   }
   /* no refusal of this module answers the shared codes, and no row holds them */
   assert.ok(!("NO_STATEMENT" in HYPOTHESES_CHECKS) && !("NO_REASON" in HYPOTHESES_CHECKS));
-  assert.ok(Object.entries(HYPOTHESES_CHECKS).every(([code]) => code !== "NO_STATEMENT" && code !== "NO_REASON"));
   for (const hypothesisId of ["HYP-2026-0404", "nope", null])
     for (const act of ["revise", "withdraw"]) assert.equal(w.h[act]({ hypothesisId, reason: "r", by: ANN }).reason, "NO_SUCH_HYPOTHESIS");
   assert.equal(w.h.revise({ hypothesisId: id, about: [E1, E2], reason: "r", by: ANN }).reason, "BAD_ABOUT", "a relation keeps its two nodes");
