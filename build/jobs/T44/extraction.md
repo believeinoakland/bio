@@ -55,3 +55,7 @@ I read `tier4Extend` (reading-pipeline `index.mjs`:696–789) and `plane/transcr
 - `ownership extraction tranche/T44`: 0 failures.
 
 Size (session_018BewFdRoHKTRNejfX4TPW9): test runs 8, module lines 3229
+
+## J1 · REPORT
+
+Found in other modules (record § Completion): (1) none of agent-worker's R72 refusal codes has a check row to translate it (BAD_BODY, BAD_SHA, BAD_PAGES, NO_ACCOUNT [agent-worker's own; credentials' C-29.20 is another site's], BAD_ACCOUNT, TRANSCRIBE_NEEDS_API_KEY); per R71 each is answered 200 performed:false with no says. (2) plane transcribe.mjs reads only res.json(), so agent-worker's HTTP status is lost; a relayed worker refusal with a row would take R71's default 403. (3) plane R36's refused is not built yet (T44-13): until L11, a photo's NO_PAGE_RENDERED reads transcribe.why.norender.
