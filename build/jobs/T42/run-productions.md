@@ -74,3 +74,7 @@ Size (session_014kGdQn9r6yt8hA7AVpanwj): test runs 12, module lines 2306
 ## J3 · REPORT
 
 question-explorer is now red 0/27 because this job dropped the guard, as B5 asked. Its test/m/question-explorer/fixture.mjs:226-232 builds runProductionsOf with a basis-versions stand-in that has only onCandidates, so every world throws 'slot.onMachinePassage is not a function' (src/run-productions/index.mjs:1431). The same fixture passes no inquiry, which was J1's cause (module.test.mjs:28). Fix, in question-explorer's own fixture: add onMachinePassage: () => ({ ok: true }) to that stand-in and pass an inquiry: { onMachinePassage: () => ({ ok: true }) } dep. Please route it to QUESTION-EXPLORER #2 with J1's CHANGE; it must land before question-explorer merges.
+
+## J4 · COMPLETE
+
+T42-18 complete after B5 (tranche/T42 merged, basis-versions T42-16 included): R25's read is registered unconditionally with both real slots, inquiry R62 and basis-versions R49, and the guard is gone. A test with both real providers shows a second registration refused LISTENER_DECLARED naming run-productions, with open slots as the negative control. run-productions 58/58. Green: inquiry, citation, basis-versions, skills, op-declarations, store-door, control-plane, plane, migrate-released. Reds: question-explorer 0/27 (J3, its fixture's stand-ins), answer-envelope (rule 4 (6)), agent-worker R45 stale bundle (rule 4 (10)). Four checks 0 failures.
