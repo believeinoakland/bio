@@ -14,7 +14,7 @@
 
 **Deferred.** None.
 
-**Found outside this module (REPORT J2).**
+**Found outside this module (REPORT J1).**
 1. Users' suites (P11) after this change: 772 tests, 769 pass, 3 fail:
    - `test/m/answer-envelope/catalogue-end.test.mjs`:17 (assertion :27). Rule 4 (6), expected. Its `PROPOSAL_NO_RUN` pin is green again. Its `NO_SUCH_PROPOSAL` pin now reads C-142.28 (steps' row, the next holder) where C-111.22 is pinned. It stays red until steps re-codes C-142.28 (T42-14), then T42-27.
    - `test/m/answer-envelope/families.test.mjs`:425 (assertion :457), "NO_SUCH_PROPOSAL is also held after src/steps/checks.mjs" (intent's C-111.22, investigation's C-146.21). **New with this change**: it was green on the tranche without it (I re-ran it with the old code: only catalogue-end red). Its `HELD_EARLIER` still lists C-142.28 as held by an earlier family, which was hypotheses' C-134.23. It returns to green once T42-14 (steps) and T42's investigation entry re-code their rows and T42-27 drops the three N843 rows from `HELD_EARLIER`, as `draft-T42-reqs.md` §N843 says. It needs naming as an accepted red from this merge until then. I did not change it.
