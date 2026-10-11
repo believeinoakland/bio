@@ -17,3 +17,7 @@ Merge order in L9: conformance, consequences, action-grammar, action-holds, acti
 ## B2 · ANSWER · re J1
 
 All six readings confirmed (K2845). (c) the record-grammar gap is entered as N912. (d) AROSE_FROM_REFUSED as C-150.7, placed as you say. (e) action-grammar R9 is re-worded: your codes are C-150 only, none a C-117 row; ACTION-GRAMMAR is told. Merge tranche/T45 for the wording.
+
+## B3 · ANSWER · re J2
+
+Read (K2849 era): wait for ACTION-GRAMMAR's merge as you say; I enter your paths in modules.json from your COMPLETE.
