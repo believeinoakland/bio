@@ -1,7 +1,8 @@
 /* reading-pipeline R29 (T41-9; N820, D21; text-chain R104): the AI's reading of the pages Civicsmith's own text
  * recognition could not read, a transcription tier above tier 3, at a member's act on the account that pays for it,
  * within its limits (`use: "transcribe"`), never under a "no AI" material limit. Tested at the module's interface:
- * `read` with the `transcription` its caller hands in, and the pieces `tier4Pages` and `tier4Extend` (R23).
+ * `read` with the `transcription` its caller hands in, and the pieces `tier4Pages` and `tier4Extend` (R23); and R30, the
+ * re-read's seed (`tier3SeedFrom`, `tier3Extend`) keeping the pages the AI read.
  *
  * THE ACCOUNT IS REAL (K874's negative controls): record-core, membership and credentials over one SQLite database
  * (node:sqlite, the engine a Durable Object runs), and the account is asked of `credentials.accountFor` (its R56) as
@@ -16,11 +17,11 @@ import { credentialsOf } from "../../../src/credentials/index.mjs";
 import { derivationCap, captureBound, checkChain, describeChain } from "../../../src/textchain.mjs";
 import * as rp from "../../../src/reading-pipeline/index.mjs";
 import { bucket, evidenceStore, hold, doc, withEntry, i2, noText, folio, member, ocrAnswer } from "./fixture.mjs";
-import { registerDoctype } from "../../../../docprofile/registry.mjs";
+import { registerDoctype, readText } from "../../../../docprofile/registry.mjs";
 import { registerDoctypes } from "../../../../doctypes/index.mjs";
 
 registerDoctypes(registerDoctype);
-const { tier4Pages, tier4Extend, TRANSCRIBE_USE, AI_READING_LABEL, AI_TRANSCRIPTION_SOURCE } = rp;
+const { tier4Pages, tier4Extend, tier3SeedFrom, tier3Extend, TRANSCRIBE_USE, AI_READING_LABEL, AI_TRANSCRIPTION_SOURCE } = rp;
 
 const SEAL = "test-seal-secret-0123456789";
 const ANN_KEY = "sk-ann-own-key-never-shown";
@@ -249,4 +250,156 @@ test("R18 R19 (R29): readingProvenance credits a page an ai_transcription step c
   const c = rp.compareProvenance(ocr, p);
   assert.equal(c.state, "differs");
   assert.match(c.says, /page 1 was read by tier 3 on ocr-worker before and by tier 4 on an unnamed member now/);
+});
+
+test("R29 (N835, ai-use R1): the paying owner is spelled from the bare member id: a member handed stamped `member:ann` and one handed bare `ann` are both judged as owner `member:ann`, never `member:member:ann`, and both are served by her own account", async () => {
+  const { c } = await group();
+  for (const handed of ["member:ann", "ann"]) {
+    const lim = limits(null);
+    const a = ai((q) => model(q.pages));
+    const t4 = await tier4Extend({ member: handed, credentials: c, useCheck: lim.useCheck, transcribe: a.transcribe, at: "2026-10-11T00:00:00Z" },
+                                 { sha: "d", storeName: "bio", i2text: i2(PAGES), wiredTier: 1, chain: rp.layerChainFor(i2(PAGES), { tier: 1, container: "pdf" }) });
+    assert.deepEqual(lim.asked, [{ owner: "member:ann", member: handed, use: "transcribe", at: "2026-10-11T00:00:00Z" }], handed);
+    assert.doesNotMatch(JSON.stringify(lim.asked), /member:member:/, handed);
+    assert.deepEqual([a.calls.length, a.calls[0].account.level, a.calls[0].account.key, t4.filled, t4.wiredTier],
+                     [1, "member", ANN_KEY, [1, 2], 4], handed);
+  }
+  /* a project's and the group's owner are not the member's, whatever the member's spelling */
+  const w = await group();
+  w.c.projectKeyNoticeSeen({ member: "bob", project: "P1", by: "bob" });
+  const lim = limits(null);
+  await tier4Extend({ member: "member:bob", project: "P1", credentials: w.c, useCheck: lim.useCheck, transcribe: ai((q) => model(q.pages)).transcribe },
+                    { sha: "d", storeName: "bio", i2text: i2(PAGES), wiredTier: 1, chain: null });
+  assert.deepEqual(lim.asked.map((q) => q.owner), ["project:P1"]);
+});
+
+/* R30: a four-page scan. The first reading, at a member's act, had the OCR member read pages 0 and 2 (it gave nothing
+   for 1 and 3) and the AI read page 1 (it gave nothing for 3): the stored reading holds pages 0 and 2 under
+   `pixels -> ocr`, page 1 under `pixels -> ai_transcription`, and page 3 unread. */
+const SCAN4 = [0, 1, 2, 3].map((p) => ({ page: p, text: "", undetermined: [noText(p)] }));
+async function storedReading() {
+  const { c } = await group();
+  const ocr = member((body) => ocrAnswer(body.pages.filter((p) => p === 0 || p === 2)));
+  const a = ai((q) => model(q.pages.filter((p) => p === 1)));
+  const out = await readWith({ pages: SCAN4, env: { OCR_WORKER: ocr },
+    transcription: { member: "ann", credentials: c, useCheck: limits(null).useCheck, transcribe: a.transcribe } });
+  assert.deepEqual(a.calls.map((q) => q.pages), [[1, 3]], "the first reading asked the AI for the pages OCR left");
+  const units = out.text_units.map((u) => ({ page: u.extent.page, text: u.text }));
+  assert.deepEqual(units.map((u) => u.page), [0, 1, 2]);
+  return { c, reading: out.reading, units };
+}
+const stepsOf = (chain) => chain.map((s) => [s.step, s.extent ? s.extent.pages : null]);
+const reReadEnv = (answer) => ({ OCR_WORKER: member(answer) });
+
+test("R30 R23: tier3SeedFrom seeds the stored reading's pixels -> ai_transcription part beside its pixels -> ocr part, each under its own chain and with its own words", async () => {
+  const { reading, units } = await storedReading();
+  assert.deepEqual(stepsOf(reading.text_source),
+                   [["pixels", [0, 2]], ["ocr", [0, 2]], ["pixels", [1]], ["ai_transcription", [1]]]);
+  const seed = tier3SeedFrom(reading, units);
+  assert.deepEqual(seed.parts.map((p) => [p.pages, p.chain.map((s) => s.step)]),
+                   [[[0, 2], ["pixels", "ocr"]], [[1], ["pixels", "ai_transcription"]]]);
+  const ai1 = seed.parts[1].chain[1];
+  assert.deepEqual([ai1.engine, ai1.version, ai1.cap, ai1.measured_by, "extent" in ai1], ["vision-model", "3", null, AI_TRANSCRIPTION_SOURCE, false]);
+  assert.deepEqual([...seed.text.entries()].sort((x, y) => x[0] - y[0]),
+                   [[0, "ocr text of page 0"], [1, "the AI read page 1"], [2, "ocr text of page 2"]]);
+  /* negative controls: a unit on a page no transcribing part covers, and a chain that does not check, seed nothing */
+  assert.equal(tier3SeedFrom(reading, [{ page: 3, text: "never read" }]), null);
+  const broken = reading.text_source.map((s) => (s.step === "ai_transcription" ? { ...s, engine: undefined } : s));
+  assert.equal(tier3SeedFrom({ text_source: broken }, units), null, "a chain checkChain refuses is not seeded, as today");
+});
+
+test("R30 R6 R29: a re-read that asks the OCR member for the rest keeps the AI's page with its text and chain, asks neither the OCR member nor the AI for it again, and the reading it composes still carries it", async () => {
+  const { c, reading, units } = await storedReading();
+  const seed = tier3SeedFrom(reading, units);
+  const env = reReadEnv((body) => ocrAnswer(body.pages));
+  const t3 = await tier3Extend(env, { sha: "d", storeName: "bio", i2text: i2(SCAN4), wiredTier: 1, tier2PerPage: null, fmt: "pdf", seed });
+  assert.deepEqual(env.OCR_WORKER.calls.map((x) => x.body.pages), [[3]], "only the page nobody read is asked of the OCR member");
+  assert.deepEqual([t3.filled, t3.seeded, t3.stillWanting, t3.wiredTier], [[3], [0, 1, 2], false, 4]);
+  assert.deepEqual(t3.i2text.pages.map((p) => [p.page, p.text]),
+                   [[0, "ocr text of page 0"], [1, "the AI read page 1"], [2, "ocr text of page 2"], [3, "ocr text of page 3"]]);
+  assert.equal(checkChain(t3.chain), null);
+  assert.deepEqual(stepsOf(t3.chain), [["pixels", [0, 2, 3]], ["ocr", [0, 2, 3]], ["pixels", [1]], ["ai_transcription", [1]]]);
+  assert.match(t3.ocrNote, /3 of them were transcribed by an earlier reading of this capture and kept/);
+  /* the AI is not asked again: no page is left for it, and nothing is read of any account */
+  assert.deepEqual(tier4Pages(t3.i2text), []);
+  let accounts = 0;
+  const never = ai(() => { throw new Error("the AI must not be asked again"); });
+  const t4 = await tier4Extend({ member: "ann", credentials: { accountFor: async (q) => { accounts++; return c.accountFor(q); } },
+                                 useCheck: limits(null).useCheck, transcribe: never.transcribe },
+                               { sha: "d", storeName: "bio", i2text: t3.i2text, wiredTier: t3.wiredTier, chain: t3.chain });
+  assert.deepEqual([never.calls.length, accounts, t4.filled], [0, 0, []]);
+  /* the reading a re-read writes (readingFromWire over it, extraction R34) carries the AI's page and part */
+  const wired = readText(rp.decodeView(t3.i2text), { headers: null, locator: null, content_type: null, at: reading.at });
+  const r = rp.readingFromWire({ wired, docType: { type: { key: reading.content_type, version: reading.reader_version } },
+                                 chain: t3.chain, wiredTier: t3.wiredTier, fmt: "pdf", retrieved: reading.at,
+                                 tier2note: null, ocrNote: t3.ocrNote, tier3Candidate: t3.stillWanting });
+  assert.deepEqual(r.text_source, t3.chain);
+  assert.equal(r.text_tier, 4);
+  const u = rp.textUnitsFor(t3.i2text).textUnits;
+  assert.deepEqual(u.find((x) => x.extent.page === 1).text, "the AI read page 1");
+  const prov = await rp.readingProvenance({ text: t3.i2text, chain: t3.chain, tier: t3.wiredTier, container: "pdf" });
+  assert.deepEqual(prov.pages.map((p) => [p.page, p.tier]), [[0, 3], [1, 4], [2, 3], [3, 3]]);
+});
+
+test("R30: the AI's page is never dropped when the OCR member has every page already, fails, or is not bound; with none bound only the page nobody read is left for the AI", async () => {
+  const { c, reading, units } = await storedReading();
+  const seed = tier3SeedFrom(reading, units);
+  const go = (env, s = seed, text = i2(SCAN4)) => tier3Extend(env, { sha: "d", storeName: "bio", i2text: text, wiredTier: 1, tier2PerPage: null, fmt: "pdf", seed: s });
+  const keepsAi = (t3, label) => {
+    assert.equal(t3.i2text.pages.find((p) => p.page === 1).text, "the AI read page 1", label);
+    assert.ok(stepsOf(t3.chain).some(([s, pg]) => s === "ai_transcription" && JSON.stringify(pg) === "[1]"), label);
+    assert.equal(t3.wiredTier, 4, label);
+    assert.ok(!tier4Pages(t3.i2text).includes(1), `${label}: the AI is not asked for page 1 again`);
+  };
+  /* the OCR member answers an error */
+  const failing = reReadEnv(() => ({ status: 500, body: { ok: false } }));
+  const f = await go(failing);
+  assert.deepEqual([f.filled, f.seeded, f.stillWanting], [[], [0, 1, 2], true]);
+  assert.match(f.ocrNote, /^the OCR member answered 500, so this document stays unread; 3 of them were transcribed by an earlier reading/);
+  keepsAi(f, "member failed");
+  /* the OCR member cannot be reached */
+  const down = reReadEnv(() => new Error("down"));
+  const d = await go(down);
+  assert.match(d.ocrNote, /could not be reached/);
+  keepsAi(d, "member down");
+  /* no OCR member bound: kept, and only page 4 (index 3) is left for the AI */
+  const n = await go({});
+  assert.deepEqual([n.filled, n.seeded, n.stillWanting], [[], [0, 1, 2], true]);
+  assert.match(n.ocrNote, /3 page\(s\) of this document without a text layer were transcribed by an earlier reading of this capture and kept; the other 1 have no text layer to read and no OCR engine is installed/);
+  keepsAi(n, "no member");
+  assert.deepEqual(tier4Pages(n.i2text), [3]);
+  const a = ai((q) => model(q.pages));
+  const t4 = await tier4Extend({ member: "ann", credentials: c, useCheck: limits(null).useCheck, transcribe: a.transcribe },
+                               { sha: "d", storeName: "bio", i2text: n.i2text, wiredTier: n.wiredTier, chain: n.chain });
+  assert.deepEqual(a.calls.map((q) => q.pages), [[3]], "the AI is asked only for the page nobody read");
+  assert.deepEqual(stepsOf(t4.chain).filter(([s]) => s === "ai_transcription"), [["ai_transcription", [1]], ["ai_transcription", [3]]],
+                   "the AI's kept page keeps its part beside the new one");
+  assert.deepEqual(t4.i2text.pages.map((p) => p.text), ["ocr text of page 0", "the AI read page 1", "ocr text of page 2", "the AI read page 3"]);
+  /* every page held already: the OCR member is not asked, and the text and chain are the stored ones */
+  const full = tier3SeedFrom(reading, [...units, { page: 3, text: "x" }]);
+  assert.equal(full.text.has(3), false, "page 3 is no transcribing part's, so it is not seeded");
+  const three = i2(SCAN4.slice(0, 3));
+  const allKept = await go(reReadEnv(() => new Error("must not be asked")), seed, three);
+  assert.match(allKept.ocrNote, /every page of this document without a text layer \(3\) was already transcribed by an earlier reading/);
+  assert.deepEqual([allKept.filled, allKept.seeded, allKept.stillWanting], [[], [0, 1, 2], false]);
+  keepsAi(allKept, "all kept");
+  assert.deepEqual(tier4Pages(allKept.i2text), []);
+});
+
+test("R30 (negative control): a stored reading with only OCR parts is seeded as before, and a re-read of it is tier 3 with no AI part", async () => {
+  const ocr = member((body) => ocrAnswer(body.pages.filter((p) => p !== 3)));
+  const out = await readWith({ pages: SCAN4, env: { OCR_WORKER: ocr } });
+  const units = out.text_units.map((u) => ({ page: u.extent.page, text: u.text }));
+  const seed = tier3SeedFrom(out.reading, units);
+  const ocrChain = out.reading.text_source.filter((s) => s.step !== "layer").map(({ extent, ...bare }) => bare);
+  assert.deepEqual(seed.parts, [{ chain: ocrChain, pages: [0, 1, 2] }]);
+  const env = reReadEnv((body) => ocrAnswer(body.pages));
+  const t3 = await tier3Extend(env, { sha: "d", storeName: "bio", i2text: i2(SCAN4), wiredTier: 1, tier2PerPage: null, fmt: "pdf", seed });
+  assert.deepEqual(env.OCR_WORKER.calls.map((x) => x.body.pages), [[3]]);
+  assert.deepEqual([t3.filled, t3.seeded, t3.wiredTier], [[3], [0, 1, 2], 3]);
+  assert.ok(!t3.chain.some((s) => s.step === "ai_transcription"));
+  /* and with no seed, a member-less re-read says what it always said */
+  const none = await tier3Extend({}, { sha: "d", storeName: "bio", i2text: i2(SCAN4), wiredTier: 1, tier2PerPage: null, fmt: "pdf" });
+  assert.equal(none.ocrNote, "this document has no text layer to read and no OCR engine is installed in your group's Civicsmith, so nothing is claimed about what it says");
+  assert.deepEqual([none.chainSet, none.wiredTier, none.seeded], [false, 1, []]);
 });
