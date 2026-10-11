@@ -49,3 +49,7 @@ Other users: skills, op-declarations, store-door, control-plane, plane and agent
 **Checks:** `format: 147 modules, 146 requirements files; 0 failures`; `architecture: 10 product files, 59 relative imports; 0 failures`; `coverage: 1 modules, 25 of 25 live requirement ids named by a test; 0 failures`; `ownership: 6 files changed by run-productions between tranche/T42 and HEAD; 0 failures`.
 
 Size (session_014kGdQn9r6yt8hA7AVpanwj): test runs 9, module lines 2309
+
+## J2 · COMPLETE
+
+T42-18 complete at the branch head (tranche/T42 merged, inquiry T42-12 included): R25 machinePassage, registered unconditionally with inquiry's real R62 slot (tested: a second registration is refused LISTENER_DECLARED naming run-productions); C-104.32 PROPOSAL_NOT_TAKEN_UP. One guard remains: basis-versions' R49 slot is not on tranche/T42 yet, so the read registers there only where the slot exists. Dropping it now would make runProductionsOf throw. Send a CHANGE when T42-16 merges and I drop it and add its real-slot test. run-productions 58/58; inquiry, citation, basis-versions, skills, op-declarations, store-door, control-plane, plane and migrate-released are green. Reds: question-explorer module.test.mjs:28 (J1, with its job); answer-envelope catalogue-end:17 (rule 4 (6)); agent-worker requirements R45, a stale bundle from agent-worker/agent-model sources (rule 4 (10)). Four checks 0 failures. Details in the record's Completion section.
