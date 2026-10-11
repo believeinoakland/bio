@@ -92,11 +92,11 @@ export function world({ gradeAs = null } = {}) {
   cap.knockAttempt = (a) => { spy.attempts.push(a); return knockAttempt(a); };
   const prov = provenanceOf(host, { record, membership, now: () => new Date(clock.now).toISOString() });
   prov.migrate();
-  const s = sourcesOf(host, { record, membership, capture: cap, now: () => clock.now,
+  const s = sourcesOf(host, { record, membership, doorbell: cap, now: () => clock.now,
                               provenance: gradeAs ? { homeOf: (x) => prov.homeOf(x), captureGrade: () => gradeAs } : prov });
   let n = 0, b = 0;
   const w = {
-    st, host, record, membership, cap, spy, receipts, s, clock, prov,
+    st, host, record, membership, cap, bell: cap, spy, receipts, s, clock, prov,
     rows: (q, ...a) => st.rows(q, ...a),
     count: (t) => st.rows(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
     tick(ms = 1000) { clock.now += ms; },

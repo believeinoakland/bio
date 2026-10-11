@@ -5,9 +5,12 @@ import assert from "node:assert/strict";
 import { seeded, V, SECRET } from "./fixture.mjs";
 import { SOURCES_CHECKS, SOURCES_TABLES, SOURCES_TABLE_CLASSES, CONSENT_STATEMENT, WITHDRAWAL_STATEMENT, NOT_RECORDED, claimSentence,
          sourcesOps } from "../../../src/sources/index.mjs";
-import { captureOwns } from "../../../src/capture/index.mjs";
 
 const VALUE = "Unmistakable Value 7731";
+/** A table another module declares to record-core (its R21), so a `source…` table of an earlier module is not taken
+ *  for one of this module's: read from the declarations, never from another module's code. */
+const declaredElsewhere = (w) => { const o = new Set(w.record.declaredTables().filter((d) => d.module !== "sources").map((d) => d.name));
+                                   return (t) => o.has(t); };
 
 test("R13 every table here is exempt from purge: a whole-store and a one-bundle purge leave every row, and no other module may declare one", async () => {
   const w = seeded();
@@ -18,7 +21,7 @@ test("R13 every table here is exempt from purge: a whole-store and a one-bundle 
   w.s.recordConsent({ source: sourceId, entry: e.entry, audience: "group", evidence: "e", by: "bob" });
   assert.equal(w.s.markKeyedResult({ captureSha: w.captured().sha, service: "PeopleFinder", by: "bob" }).ok, true);
   assert.deepEqual([...SOURCES_TABLES].sort(), w.rows(`SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'source%'`)
-                     .map((r) => r.name).filter((t) => !captureOwns(t)).sort(),
+                     .map((r) => r.name).filter((t) => !declaredElsewhere(w)(t)).sort(),
                    "the declared list is every table this module holds");
   for (const t of SOURCES_TABLES) assert.ok(w.count(t) > 0, `${t} holds a row`);
   const before = w.snapshot();
@@ -127,7 +130,7 @@ test("R19 every table is declared explicitly through record-core's declareTable 
   const mine = w.record.declaredTables().filter((d) => d.module === "sources");
   assert.deepEqual(mine.map((d) => d.name), [...SOURCES_TABLES], "each table, once, in the module's order");
   assert.deepEqual([...SOURCES_TABLES].sort(), w.rows(`SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'source%'`)
-                     .map((r) => r.name).filter((t) => !captureOwns(t)).sort(), "and every table the module holds is declared");
+                     .map((r) => r.name).filter((t) => !declaredElsewhere(w)(t)).sort(), "and every table the module holds is declared");
   const CLASS_NAMES = ["purge", "expunge", "export", "sight", "derive", "version_chain"];
   for (const d of mine) {
     const own = SOURCES_TABLE_CLASSES.find((e) => e.name === d.name);
