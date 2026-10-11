@@ -1,6 +1,6 @@
 # credentials (T42)
 
-**Status** · session_01SmVin6JuSDfPb4PyoweFzP · depth 2 · WORKING · handled B1
+**Status** · session_01SmVin6JuSDfPb4PyoweFzP · depth 2 · COMPLETE · handled B1
 
 ## Completion (CREDENTIALS #12)
 
