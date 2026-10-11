@@ -35,6 +35,7 @@ It is the only module marked `legacy` in `modules.json`.
    12. (cleared at T42-5's merge, K2625) format: `modules.json` names promotion's `row-census-1.69.0.jsonl` (K2620) before T42-5 merges it; until that merge.
    13. (cleared at T42-7's merge, K2631) from T42-6's merge, doorbell R21's `where` arm until CAPTURE #26 re-points the nine rows (K2627).
    10. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
+   14. from T42-8's merge (sources re-pointed to `doorbellOf`, 636f27bb74): case-disclosures `carries.test.mjs`:139 (R7 "no new table", 159 vs 157: `acquisition`'s `archive_entries` and `unpack_days` created at first use inside the read) until T42-23b (MONEY #4 J1; K2643).
 
 **Text owed before each layer's START (BOB's wording, P5):**
 - L2: credentials' `accountUsesOf` (N831), from `draft-T42-reqs.md`.
@@ -98,6 +99,7 @@ No merge order (independent).
 - **T42-22 · case-account** (new; by copy, K624) · (N839, K2542, K2608) case-authoring R64, R66 and R63's account share moved (`case-account-split.md`); its drafts labelled through record-grammar R54; mints `ACD` opaque through record-core's `allocId` (record-grammar R55's legacy form keeps T41's ids valid; `mintExhausted`'s `MINTED_OBJECT` gains `ACD` if record-core's table needs it, reported at its START, K2616) · req: `requirements/case-account.md` (BOB's, before L8's START) · merges first in L8.
 - **T42-23 · case-authoring** · (N839, K2608) R64, R66 retired "moved to case-account R<n>"; R63, R65, R67, R68 stay, re-pointed; new R69 (the order `publishCase` asks case-account in); bodies and tables deleted, three one-line pass-throughs kept (`accountPropose`, `accountDrafts`, `registerReviewComments`; K1333) until T43 (N850); `uses` gains `case-account`, loses `ai-runs` · after T42-22 Its START requires an explicit R69 test (the string is in `fixture.mjs`:161 already, K874).
 - **T42-23a · review** · (N839, K2608) `reviewOf` registers its comments with `case-account` · after T42-22.
+- **T42-23b · case-disclosures** · (K2643; MONEY #4 J1) `carries.test.mjs`:139: its fixture builds the modules the read reaches (as the plane does at boot) before R7's snapshot, so the "no new table" arm measures case-disclosures alone; green on `main`, red since T42-8 made `sources` reach `doorbellOf`, which builds `capture` and `acquisition` at first use. Test-only; clears rule 4 (14).
 
 ### L9
 - **T42-24 · conformance** · (N841, K2558) refusals ahead of the measures; `determinationsFor` batched · req: from `draft-T42-reqs.md`.
