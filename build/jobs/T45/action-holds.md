@@ -2,6 +2,46 @@
 
 **Status** · session_017mnrg7XiyPMjqqHoEvnMZ7 · depth 2 · WORKING · handled B3
 
+## Record
+
+**How the reading set was read** (mechanics §17; START: 390 KB, read whole). Read whole by me: `roles/JOB.md`; `build/requirements/action-holds.md`; the plan's T45 opening rules, L9 entries, the new-module table and the reconciliation (R14, R19, R21 where they name this module); K2780, K2781, K2787 (and K2794, K2815, K2845, K2848 as they came); `draft-T45-l9a.md` "actions" §Size and "holds and pressure"; layer 9's contract in `build/layers.md`; `actions`' `index.mjs` and `schema.mjs` whole, and its tests `t18` (R48 part read in place), `t20`, `t22`, `t27`, `t34`, `t41` and `fixture.mjs` whole (the moved code and tests); the parts of `docket` (R27's two reads), `project-roster` (R23), `doorbell` (R3's `registerReader`, `mayClearDiscarded`), `ratification` (R45's `registerHoldReader`), `record-core` (`declarePurge`, `bundleInfo`, `transact`), `membership` (`noSuchProject`) and `action-grammar`'s C-117 and C-33 rows that this module calls. `BIO_Action_v0_2.md` rules 1, 10, 12 as the requirements cite them.
+
+**Entries applied (T45-26):**
+- **The copy (K624).** `actions` R48, R52, R54–R60, R69 copied into `bio-plane/src/action-holds/` as R1–R10, with their comments, renumbered by the plan's table; the moved tests copied into `bio-plane/test/m/action-holds/` with their assertions, renamed to the new ids. Where a moved test asserted `HOLD_NO_LEGAL_MARK` (C-117.22, retired), the entry place's own rule now stands (`HOLD_PLACE_REFUSED` for a position with no entry; an unmarked entry takes a hold, the control).
+- **R1** `actionPressure`, in the shared `action_pressure` table; a mark stated at `actions`' `actionCorrespond` lands in the same table and is read here alike (J1 (2), confirmed). R25's pressure list and `actionsFor`'s `pressure: true` are answered by `pressureFor`.
+- **R2** places: `{target}` (the whole action, stored at position -1), `{target, ord}` (an entry, any direction, marked or not), `{project}`, and `{case}` naming its owning project through publication's `cases` (J1 (5)); `NO_TARGET`, then `HOLD_PLACE_REFUSED` (C-149.8) for two places or a position that is no whole number, then the place's sight (`NO_SUCH_BUNDLE`, `NOT_AN_ACTION`, `HOLD_PLACE_REFUSED` for a position with no entry; a project the author may not name answered as R2's named projects). `from` in four forms, `HOLD_FROM_REFUSED` (C-149.9) after the place's refusals (J1 (4)); recorded with the statement (`from_kind`, `from_ref`) and answered by the read. A place's own project is filled in (an action's, or the project itself). `holdsOf` answers a place's statements and its notices.
+- **R3** `holdsDue` over three sources in one sequence with one cursor (J1 (7)): action marks (unresolved by a hold at the entry or `from` the mark), docket `legal` marks (read as the plane, kept where the viewer sees the project at FULL), `legal` pressure records; a failed docket read answers `DOCKET_UNREADABLE`, never a short list. Each item gains `arrived`. Its `project` is the action's own (record-core R34, as R2 defines it), named only where the viewer may name it: `actions` R54 had answered the project of the first determination the action rests on (conformance is not in this module's Uses).
+- **R4, R10** readers exported (`holdInPlace`, `holdsOn`) and registered at start; a refusal naming `actions` (the copy window) leaves `actions`' standing, another holder throws (J1 (8)). M-T45-7 verified in code: the real ratification's `op=publishat` records this module's `holdsOn`, and its scheduled publisher stops (`SCHEDULED_HOLD_CHANGED`) for a hold placed since signing, at an entry or at the project itself.
+- **R5–R9** release, preview, `projectHolds`, `holdsReleased`, `purgeHeld` read places; `holdsReleased` also lists a project place's releases to whoever may name the project (cursor position -1).
+- **R11** `holdNoticeSent` (`op=holdnoticesent`) in `hold_notices`; `HOLD_NOT_IN_PLACE` minted only by the exported `holdNotInPlace(place)` (B3, K2848), one fixed answer for released and never placed. No column or read names a recipient, read, acknowledgement or compliance.
+- **R12** `pressureRecord` (`op=pressurerecord`) in `pressure_records`, named `<project>#pressure/<n>`, creating no action; `pressureFor` lists marks and records together.
+- **R13** the machine fence on all five acts; the five tables declared to purge (in the copy window `actions` keeps the declaration of the three copied ones, this module declares its two; afterwards all five); invisible answered as absent.
+- **Rows** C-149.1–.11 in `checks.mjs` (`ACTION_HOLDS_CHECKS`); the pressure shape rows (C-117.14–.16) and the capture-or-account rows (C-33.6–.9) stay `action-grammar`'s, as `actions` mints them too (J1 (3), confirmed: C-117's moved share retires by your CHANGE to ACTION-GRAMMAR).
+- **Ops** in `actionHoldsOps`: `actionpressure`, `actionhold`, `actionholdrelease`, `actionholdpreview`, `projectholds` (the moved five, same names), `holdnoticesent`, `pressurerecord`.
+
+One difference from J1 as confirmed: (6) said `pressureFor` orders by `at` then place; it orders by place (marks by action and position, then records by project and sequence), the one cursor key `holdsDue` uses. BOB's to keep or change.
+
+Not-yet-met marks this job meets: **R1–R13**, each named by a test: `pressure.test.mjs` (R1), `holds.test.mjs` (R2, R5–R9, R13), `due.test.mjs` (R3), `readers.test.mjs` (R4, R9, R10), `hidden.test.mjs` (R2, R5–R9 at D54), `places.test.mjs` (R2, R11, R12, R13).
+
+**Files added** (for `modules.json`, plan rule 3): `bio-plane/src/action-holds/` (`index.mjs`, `checks.mjs`, `schema.mjs`) and `bio-plane/test/m/action-holds/` (`fixture.mjs`, `pressure.test.mjs`, `holds.test.mjs`, `due.test.mjs`, `readers.test.mjs`, `hidden.test.mjs`, `places.test.mjs`).
+
+**Flaws in my own module:** none known. Deferred: none.
+
+**Other modules (also the COMPLETE):**
+- `plane` (T45-47): compose `actionHoldsOf` at start (its registrations, R4, R10) and spread `actionHoldsOps`; the five moved op names collide with `actions`' until T45-27 deletes them.
+- `op-declarations` (T45-45), `op-grades`, `affordances`, `control-plane`: declare, grade and route `holdnoticesent` and `pressurerecord` (new), and re-point the five moved ops to this module. The reads `holdsOf`, `pressureFor` and `holdsDue` have no op in my requirements; if a member's screen needs them, an op each is owed.
+- `store-door` R4: re-point `purgeHeld` to this module (`actions`' copy stays until T45-27).
+- `action-producers` (T45-40): `holdsDue` items now carry `arrived`, docket and record items have no `action`/`ord`, and `project` is the action's own project (record-core R34), not the determination's as `actions` R54 answered.
+- `filings` R47: call `holdNotInPlace(place)` (exported).
+- Generated artifacts: none staled (nothing imports this module yet).
+
+**Tests and checks run** (final, on the commit below, `tranche/T45` merged in after B3):
+- `node --test bio-plane/test/m/action-holds/`: tests 35, pass 35, fail 0.
+- `node --test bio-plane/test/m/actions/` (the source sharing the tables in the copy window): tests 111, pass 111, fail 0.
+- `checks/format.mjs`: 153 modules, 0 failures. With `modules.json` naming my two paths (a local, uncommitted edit, as BOB will make it): `checks/architecture.mjs action-holds`: 9 product files, 0 failures; `checks/coverage.mjs action-holds`: 13 of 13 live ids named, 0 failures; `checks/ownership.mjs action-holds tranche/T45`: 0 failures but the `modules.json` edit itself. As committed (empty paths): architecture 0 failures; coverage and ownership fail only for want of the paths.
+
+Size (session_017mnrg7XiyPMjqqHoEvnMZ7): test runs 14, module lines 1184
+
 ## J1 · QUESTION
 
 My readings, on which I am building now (step 3). Answer only where one is wrong.
