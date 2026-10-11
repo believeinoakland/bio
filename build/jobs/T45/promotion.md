@@ -1,6 +1,6 @@
 # promotion (T45)
 
-**Status** · session_01Bdm13v3k1joqVbrjhpKtUZ · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_01Bdm13v3k1joqVbrjhpKtUZ · depth 2 · WAITING ON BOB (J1) · handled B3
 
 ## J1 · QUESTION
 
