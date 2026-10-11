@@ -30,3 +30,7 @@
 - `format`: 0 failures. `architecture`: 0 failures. `coverage`: 48 of 48 live ids named, 0 failures. `ownership`: 0 failures (re-run after this commit below).
 
 Size (session_01TsVxkir8obAQa6bT3By5Yw): test runs 6, module lines 4465
+
+## J1 · COMPLETE
+
+T45-17 done; record build/jobs/T45/publication.md. R78: commitCaseEdition refuses COUNSEL_MATTER_NOT_PUBLISHED (C-122.8, in CASE_SOURCES_CHECKS under that key as B2/K2830 asks; rowOf also exported from index.mjs as publicationRowOf) for the owning project or any member's committed project (its pinned bytes' project:) at counsel_matter. The check runs after R22's own MALFORMED/retry/CASE_PRODUCTION_DIVERGED and before R58, R51, R57, R59. A signed edition's retry still answers existed. R40 tested for case-check's reads. Stale R6/R17 test titles and R40's missing columns fixed. Publication tests 141/0. Users' tests show only rule-4 accepted reds. format, architecture, coverage and ownership: 0 failures. Plane bundle staled (rule 4 item 5). No new files outside paths.
