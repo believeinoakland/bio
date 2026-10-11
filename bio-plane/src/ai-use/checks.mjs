@@ -9,36 +9,42 @@
 
 const at = (fn, region) => `src/ai-use/index.mjs ${fn} > ${region}`;
 
-/* R13 (DEC-188 (7); T43, N856, N862: DEC-189, DEC-190): the words of `words.json`
-   (`docs/development/ux-substrate/screens/words.json`) this module's refusals and its Ask item read, each `en` verbatim,
-   by key, a test failing on any difference. A refusal reaches its member through every caller as it is answered
-   (ai-runs' open and tick, answers' ask and standing relay it unchanged), so each refusal's sentence is answered whole,
-   every placeholder filled by key and none by this module (K2514; DEC-189 (1)): `{whose}` from `ai.whose.*`, `{use}`
-   inside a sentence from `ai.use.<use>.inline` (`{Use}` at a sentence's start would read `ai.use.<use>.name`),
-   `{period}` from `ai.period.*`, `{when}` from `ai.when.*` with `{month}` from `date.month.*`, `{field}` from
-   `ai.limitfield.*`; R3's unjudged refusal reads `ai.refused.limit.unjudged`. Only the Ask item, a queue item
-   `notice-producers` renders, leaves `{scope}` and `{account}` for the screen. The `ai.use.*` keys for `enquire`,
-   `read` and `account`, uses with no AI path in T43, are not held until the design stream names them (B133). */
+/* R13 (DEC-188 (7); T43, N856, N862: DEC-189, DEC-190; T44, N859, N869, N876: DEC-191, DEC-192): the words of
+   `words.json` (`docs/development/ux-substrate/screens/words.json`) this module's refusals and its Ask item read, each `en`
+   verbatim, by key, a test failing on any difference. A refusal reaches its member through every caller as it is
+   answered (ai-runs' open and tick, answers' ask and standing relay it unchanged), so each refusal's sentence is answered
+   whole, every placeholder filled by key and none by this module (K2514; DEC-189 (1)): `{whose}` from `ai.whose.*`,
+   `{use}` inside a sentence from `ai.use.<use>.inline` and `{Use}` at a sentence's start from `ai.use.<use>.name`, for
+   all nine uses (DEC-191 (2)), `{period}` from `ai.period.*`, `{when}` from `ai.when.*` with `{month}` from
+   `date.month.*` (`ai.until.*` is the queue item's, notice-producers'), `{field}` from `ai.limitfield.*`; R3's unjudged
+   refusal reads `ai.refused.limit.unjudged`. Only the Ask item, a queue item `notice-producers` renders, leaves `{scope}`
+   and `{account}` for the screen. `ai.use.suggestions` names a switch, not a use, and is not read here. */
 export const AI_USE_WORDS = Object.freeze({
   'ai.use.ask.name': 'Asking',
   'ai.use.draft.name': 'Drafting',
   'ai.use.run.name': 'Runs',
   'ai.use.standing.name': 'Standing questions',
-  'ai.use.transcribe.name': 'Reading page pictures',
   'ai.use.explore.name': 'Exploring',
+  'ai.use.enquire.name': 'Interviews and planning',
+  'ai.use.read.name': 'Reading inside documents',
+  'ai.use.transcribe.name': 'Reading page pictures',
+  'ai.use.account.name': 'A case\'s account',
   'ai.use.ask.inline': 'asking',
   'ai.use.draft.inline': 'drafting',
   'ai.use.run.inline': 'runs',
   'ai.use.standing.inline': 'standing questions',
-  'ai.use.transcribe.inline': 'reading page pictures',
   'ai.use.explore.inline': 'exploring',
+  'ai.use.enquire.inline': 'interviews and planning',
+  'ai.use.read.inline': 'reading inside documents',
+  'ai.use.transcribe.inline': 'reading page pictures',
+  'ai.use.account.inline': 'a case\'s account',
   'ai.whose.group': 'your group\'s',
   'ai.whose.project': 'this project\'s',
   'ai.whose.own': 'your own',
   'ai.period.day': 'daily',
   'ai.period.month': 'monthly',
   'ai.when.day': 'tomorrow',
-  'ai.when.month': 'on {month} 1',
+  'ai.when.month': 'on 1 {month}',
   'date.month.january': 'January',
   'date.month.february': 'February',
   'date.month.march': 'March',
@@ -72,6 +78,10 @@ export const AI_USE_WORDS = Object.freeze({
   'ai.refused.unitunavailable': 'A limit in dollars needs an API key: a subscription doesn\'t report what a use costs. Set '
     + 'it in tokens or calls instead.',
   'ai.refused.explorenotenabled': 'Exploring is off on {whose} account. Its owners can switch it on.',
+  'ai.refused.exploreoutofscope': 'The assistant can\'t explore this question on {whose} account: it lies outside what '
+    + 'the account\'s owners chose to explore.',
+  'ai.refused.exploreaskinvalid': 'Nothing was recorded: an ask to explore names the day and what is worth exploring that '
+    + 'day.',
   'ai.queue.exploreask': 'The assistant found something worth exploring in {scope} today: {what}. Explore it today on '
     + '{account}? If nobody says yes today, it doesn\'t.',
 });
@@ -89,14 +99,14 @@ export const MONTH_WORD = Object.freeze(['january', 'february', 'march', 'april'
 export const LIMIT_FIELD_WORD = Object.freeze(Object.fromEntries(['owner', 'scope', 'unit', 'period', 'amount', 'inclusive',
   'use', 'count'].map((f) => [f, `ai.limitfield.${f}`])));
 export const useInlineWord = (use) => `ai.use.${use}.inline`;
+export const useNameWord = (use) => `ai.use.${use}.name`;
 
-/* Kept only for `notice-producers`, which imports them until its own T43-13 job reads its fills by key (reported to BOB,
-   T43-11): the same words read from the keys above, never used by this module's own sentences. `unjudged` is its
-   fallback's words, not this module's. */
-export const LIMIT_PERIOD_FILL = Object.freeze({ day: AI_USE_WORDS[PERIOD_WORD.day], month: AI_USE_WORDS[PERIOD_WORD.month] });
-export const LIMIT_WHEN_FILL = Object.freeze({ day: AI_USE_WORDS[WHEN_WORD.day], month: AI_USE_WORDS[WHEN_WORD.month],
-  unjudged: 'once its use can be checked' });
-export const MONTH_NAMES = Object.freeze(MONTH_WORD.map((k) => AI_USE_WORDS[k]));
+/* R13: one sentence filled by key: each `{name}` of `fills` replaced by its value, as given, never read as a replacement
+   pattern (a `$` in a member's own words, the Ask item's `{what}`, stays as written). A placeholder not in `fills` is
+   left for the screen. */
+export function fillWords(sentence, fills) {
+  return Object.entries(fills).reduce((s, [k, v]) => s.split(`{${k}}`).join(String(v)), sentence);
+}
 
 export const AI_USE_CHECKS = Object.freeze({
   /* R3 (D38 C, D39; B3, B5, B7): a limit of the paying account is reached for the current period: its own use's, its
@@ -129,18 +139,18 @@ export const AI_USE_CHECKS = Object.freeze({
   },
   /* R6 (B6): the question lies outside what the owner may explore: the group's, a question of the record; a
      project's, a question it draws on (`connections.citesInto`); a member's, none yet (D36 open). Named by this job's
-     J1 (5), K2480; no `words.json` key exists for it, so its sentence is this row's own. */
+     J1 (5), K2480. (T44; N859, N869; DEC-191 (1)) Carries `whose` (`group`, `project` or `own`), as `AI_LIMIT_REACHED`
+     does; its sentence is `ai.refused.exploreoutofscope`, the answer's `{whose}` filled from `ai.whose.*` (R13). */
   EXPLORE_OUT_OF_SCOPE: {
     check: 'C-143.5',
-    where: at('exploreAllowed', 'is-explore-out-of-scope'),
-    translation: 'The assistant can\'t explore this question on this account: it lies outside what the account\'s owners '
-      + 'explore.',
+    where: at('#outOfScope', 'is-explore-out-of-scope'),
+    translation: AI_USE_WORDS['ai.refused.exploreoutofscope'],
   },
-  /* R9: an exploring ask or approval that names no day or no thing worth exploring. Named by this job's J2, K2486; no
-     `words.json` key exists for it. */
+  /* R9: an exploring ask or approval that names no day or no thing worth exploring. Named by this job's J2, K2486.
+     (T44; N859, N869; DEC-191 (1)) Its sentence is `ai.refused.exploreaskinvalid`. */
   EXPLORE_ASK_INVALID: {
     check: 'C-143.6',
     where: at('#askFault', 'is-explore-ask-invalid'),
-    translation: 'Nothing was recorded: an ask to explore names the day and what is worth exploring that day.',
+    translation: AI_USE_WORDS['ai.refused.exploreaskinvalid'],
   },
 });

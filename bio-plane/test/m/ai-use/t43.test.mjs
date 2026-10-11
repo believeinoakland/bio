@@ -1,7 +1,7 @@
 /* ai-use T43 (T43-11): R3's unjudged refusal (N856, DEC-189 (5)), R13's fills read by key and `AI_USE_WORDS` equal to
    `words.json` (N856, DEC-189 (1), (5); N862, DEC-190 (3)), and the Terms' nine use kinds (N862), at the interface,
-   each with a negative control (K874). The `ai.use.*` keys for `enquire`, `read` and `account` are not tested until
-   the design stream names them (B133). */
+   each with a negative control (K874). The `ai.use.*` keys for `enquire`, `read` and `account`, named by DEC-191 (2),
+   are tested with all nine uses in `t44.test.mjs`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { standard, WORDS } from "./fixture.mjs";
@@ -12,7 +12,7 @@ const AT = "2026-10-09T12:00:00Z";
 const PLACEHOLDER = /\{[A-Za-z_]+\}/;
 const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november",
   "december"];
-/* The uses with an AI path in T43, whose `ai.use.*` keys R13 requires. */
+/* The uses with an AI path in T43, whose `ai.use.*` keys R13 required then (all nine since T44: `t44.test.mjs`). */
 const NAMED_USES = ["ask", "draft", "run", "standing", "explore", "transcribe"];
 
 /** Every key whose `en` differs between `held` and `file`, or that `file` lacks. */
@@ -99,7 +99,8 @@ test("R13 (T43) every fill is read by key: {use} from ai.use.<use>.inline (trans
     w.count("member:ann", "ann", "transcribe", { at });
     const r = w.u.useCheck({ owner: "member:ann", member: "ann", use: "transcribe", at });
     assert.equal(r.translation, sentence("transcribe", "month", at.slice(0, 10)), at);
-    assert.ok(r.translation.includes(`reading page pictures is reached. It works again on ${WORDS[`date.month.${MONTHS[m % 12]}`]} 1.`), at);
+    assert.ok(r.translation.includes(`reading page pictures is reached. It works again ${WORDS["ai.when.month"]
+      .replace("{month}", WORDS[`date.month.${MONTHS[m % 12]}`])}.`), at);
   }
   /* negative control: the day's limit reads the day's fills, not the month's */
   w.u.aiLimitSet({ owner: "member:ann", scope: "transcribe", unit: "calls", period: "month", amount: null, by: "ann" });
