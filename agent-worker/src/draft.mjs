@@ -22,13 +22,18 @@
  *
  * THE TRANSLATION DRAFT (R68–R70; T37). The door also routes `translationdraft` here: interface words the group's
  * language lacks, or one kept word read back into English. It reads nothing at all (`run-rules` R22) and is told
- * apart below, after the task is read. */
+ * apart below, after the task is read.
+ *
+ * THE ACTION DRAFTS (R76, R77; T45). The door also routes `textcheck`, `infractiondraft` and `bearingdraft` here, in
+ * `action-drafts.mjs`, on this file's pack read, read tool and endings. */
 import { admitRead, readTool, ASK_DECLARED } from "./ask.mjs";
 import { toolContent } from "./reads.mjs";
+import { ACTION_DRAFT_OPS, actionTaskOf, actionDraft } from "./action-drafts.mjs";
 import { askBoundReached, draftMayRead, TRANSLATION_DRAFT_MAX_WORDS } from "../../bio-plane/src/run-rules/index.mjs";
 
-/** The tasks a draft is asked for, and the field shapes of each (R59; R68, the translation draft). */
-export const DRAFT_OPS = Object.freeze(["writinghelp", "groupdescriptiondraft", "translationdraft"]);
+/** The tasks a draft is asked for, and the field shapes of each (R59; R68, the translation draft; R76, the action
+ *  drafts). */
+export const DRAFT_OPS = Object.freeze(["writinghelp", "groupdescriptiondraft", "translationdraft", ...ACTION_DRAFT_OPS]);
 /** R68: a translation draft's two directions. Its word list's bound is `run-rules`' (R22; K2201, K2213), read, never held
  *  here. */
 export const TRANSLATION_DIRECTIONS = Object.freeze(["to_language", "to_english"]);
@@ -60,6 +65,7 @@ export function taskOf(t) {
     return { op: "writinghelp", act: t.act, field: t.field };
   if (t.op === "groupdescriptiondraft" && sameKeys(t, ["op"])) return { op: "groupdescriptiondraft" };
   if (t.op === "translationdraft") return translationTaskOf(t);
+  if (ACTION_DRAFT_OPS.includes(t.op)) return actionTaskOf(t);
   return null;
 }
 
@@ -126,8 +132,7 @@ function draftOf(op, answer) {
 /** `POST /draft`. `deps` are the shell's own pieces (index.mjs): one route to the plane, one refusal helper, one
  *  account judgement. */
 export async function handleDraft(req, env, deps) {
-  const { refusal, json, askPlane, planeAnswer, publishedPack, accountOf, cascadeToken, converse, segmentMeter,
-          DEFAULT_MAX_SEGMENT_BYTES, now = () => Date.now() } = deps;
+  const { refusal, json, accountOf, cascadeToken, converse, segmentMeter, DEFAULT_MAX_SEGMENT_BYTES } = deps;
   if (typeof env.PLANE?.fetch !== "function")
     return refusal("PLANE_NOT_CONFIGURED",
       "this member reaches the record only through the plane service binding, and the binding is absent, so no "
@@ -141,9 +146,13 @@ export async function handleDraft(req, env, deps) {
       "a draft is asked for one task: help writing in one field of one act ({op: writinghelp, act, field}), a "
       + "draft of the group's description ({op: groupdescriptiondraft}), or a draft of interface words the group's "
       + "language lacks, or one kept word read back into English ({op: translationdraft, direction, language, words}: "
-      + `to_language with 1 to ${TRANSLATION_WORDS_MAX} distinct words, to_english with exactly one). What arrived is `
-      + "none of these.", 400);
+      + `to_language with 1 to ${TRANSLATION_WORDS_MAX} distinct words, to_english with exactly one), a check of a `
+      + "prepared text ({op: textcheck, text}), an infraction's documentation for an audience ({op: infractiondraft, "
+      + "matter, audience}) or the bearing of a reply on a request's claims ({op: bearingdraft, action, reply}). What "
+      + "arrived is none of these.", 400);
   if (task.op === "translationdraft") return translationDraft(body, task, env, deps);
+  if (ACTION_DRAFT_OPS.includes(task.op))
+    return actionDraft(body, task, env, deps, { packFor, grantReader, readTool, draftEnding, ASK_DECLARED });
   const told = toldOf(task.op, body.told);
   if (told == null)
     return refusal("BAD_TOLD", task.op === "writinghelp"
@@ -168,24 +177,9 @@ export async function handleDraft(req, env, deps) {
     return refusal("BAD_GRANT", "grant, when a draft may read, is the member's read-only grant: a non-empty string.", 400);
   const grant = grantSent ? body.grant : null;
 
-  /* THE PACK (R48). With a grant, the plane's `op=agentpack` read under it (N695). Without one this member has
-     no credential to read with, so the pack is the one the door sends beside the draft (`pack`, the rendered pack it
-     holds, control-plane R41), held to the same whole-pack test (J1's reading, pending BOB's answer). */
-  let pub;
-  if (grant) {
-    const asked = await askPlane(env, "agentpack", grant, null);
-    if (!asked.reached)
-      return refusal("PLANE_SILENT", "the record could not be reached, so nothing was read and no model was called.",
-        502, { detail_from_binding: asked.detail ?? null });
-    const a = planeAnswer(asked, "agentpack");
-    if (a.refused)
-      return json({ ok: false, reason: "PLANE_REFUSED", code: "PLANE_REFUSED", worker: "agent-worker", at: "agentpack",
-        detail: "the record refused this draft under the member's grant. Its refusal is passed through exactly as it "
-              + "was worded.", plane_status: asked.status ?? null, plane: asked.body ?? null }, 403);
-    pub = publishedPack(a.result);
-  } else {
-    pub = publishedPack({ pack: body.pack ?? null });
-  }
+  const gotPack = await packFor(grant, body, env, deps);
+  if (gotPack.refusal) return gotPack.refusal;
+  const pub = gotPack.pub;
   const layer = pub.ok ? pub.pack.disclosed?.[WRITING_HELP_LAYER] : null;
   if (!pub.ok || !isObject(layer) || layer.sourcing === "absent")
     return refusal("PACK_UNDETERMINED",
@@ -220,33 +214,9 @@ export async function handleDraft(req, env, deps) {
 
   const reference = (await cascadeToken(account)).reference;
   const meter = segmentMeter({ turnsBound: ASK_DECLARED.turns, bytesBound: DEFAULT_MAX_SEGMENT_BYTES });
-  const started = now();
-  const used = { turns: 0, bytes: 0, wall_ms: 0, reads: 0 };
-  const reached = () => { used.turns = meter.turns; used.wall_ms = Math.max(0, now() - started);
-                          return askBoundReached(ASK_DECLARED, used); };
-
   const got = await converse({
     reference, runner: env.RUNNER ?? null, mode: "draft", meter, system, messages, tools, finalTool: "draft",
-    maxTurns: ASK_DECLARED.turns,
-    onTool: async (name, input) => {
-      /* R55, R59: a read only with a grant, only of `ASK_OPS`; anything else is refused here, before any plane call,
-         and the refusal is the tool's result. */
-      if (name !== "read" || !grant)
-        return { content: `'${String(name).slice(0, 40)}' is not a tool of this draft`, error: true };
-      const bound = reached();
-      if (bound) return { content: { code: "DRAFT_BOUND_REACHED", bound,
-                                     detail: `the draft's ${bound} bound is reached; answer with the draft tool` }, error: true };
-      const admitted = admitRead(input);
-      if (admitted.refused) return { content: admitted.refused, error: true };
-      used.reads += 1;
-      const r = await askPlane(env, admitted.op, grant, null, admitted.query);
-      if (!r.reached) return { content: { code: "PLANE_SILENT", detail: "the plane did not answer this read; what it "
-                                            + "would have answered is not held" }, error: true };
-      const a = planeAnswer(r, admitted.op);
-      const { content } = toolContent(a.refused ? (a.refused.plane ?? { code: a.refused.code }) : a.result);
-      used.bytes += JSON.stringify(content ?? null).length;
-      return a.refused ? { content, error: true } : { content };
-    },
+    maxTurns: ASK_DECLARED.turns, onTool: grantReader({ env, grant, meter, deps }),
   });
   const spent = { usage: got.usage ?? null, calls: got.calls === undefined ? null : got.calls };
   if (got.answer !== undefined) {
@@ -258,7 +228,53 @@ export async function handleDraft(req, env, deps) {
   return draftEnding(refusal, got, spent);
 }
 
-/** A conversation that ended without a draft, named by its ending (R59, R70). */
+/** THE PACK (R48) a draft is instructed by: `{pub}` (`publishedPack`'s answer) or `{refusal}`. With a grant, the
+ *  plane's `op=agentpack` read under it (N695). Without one this member has no credential to read with, so the pack is
+ *  the one the door sends beside the draft (`pack`, the rendered pack it holds, control-plane R41), held to the same
+ *  whole-pack test (K1983). R59's and R76's drafts read it here. */
+async function packFor(grant, body, env, deps) {
+  const { refusal, json, askPlane, planeAnswer, publishedPack } = deps;
+  if (!grant) return { pub: publishedPack({ pack: body.pack ?? null }) };
+  const asked = await askPlane(env, "agentpack", grant, null);
+  if (!asked.reached)
+    return { refusal: refusal("PLANE_SILENT", "the record could not be reached, so nothing was read and no model was "
+      + "called.", 502, { detail_from_binding: asked.detail ?? null }) };
+  const a = planeAnswer(asked, "agentpack");
+  if (a.refused)
+    return { refusal: json({ ok: false, reason: "PLANE_REFUSED", code: "PLANE_REFUSED", worker: "agent-worker",
+      at: "agentpack", detail: "the record refused this draft under the member's grant. Its refusal is passed through "
+        + "exactly as it was worded.", plane_status: asked.status ?? null, plane: asked.body ?? null }, 403) };
+  return { pub: publishedPack(a.result) };
+}
+
+/** R55, R59, R76 — a draft's `onTool`: a read only with a grant, only of `ASK_OPS`, within the draft's bounds; anything
+ *  else is refused here, before any plane call, and the refusal is the tool's result (text only, R63). */
+function grantReader({ env, grant, meter, deps }) {
+  const { askPlane, planeAnswer, now = () => Date.now() } = deps;
+  const started = now();
+  const used = { turns: 0, bytes: 0, wall_ms: 0, reads: 0 };
+  const reached = () => { used.turns = meter.turns; used.wall_ms = Math.max(0, now() - started);
+                          return askBoundReached(ASK_DECLARED, used); };
+  return async (name, input) => {
+    if (name !== "read" || !grant)
+      return { content: `'${String(name).slice(0, 40)}' is not a tool of this draft`, error: true };
+    const bound = reached();
+    if (bound) return { content: { code: "DRAFT_BOUND_REACHED", bound,
+                                   detail: `the draft's ${bound} bound is reached; answer with the draft tool` }, error: true };
+    const admitted = admitRead(input);
+    if (admitted.refused) return { content: admitted.refused, error: true };
+    used.reads += 1;
+    const r = await askPlane(env, admitted.op, grant, null, admitted.query);
+    if (!r.reached) return { content: { code: "PLANE_SILENT", detail: "the plane did not answer this read; what it "
+                                          + "would have answered is not held" }, error: true };
+    const a = planeAnswer(r, admitted.op);
+    const { content } = toolContent(a.refused ? (a.refused.plane ?? { code: a.refused.code }) : a.result);
+    used.bytes += JSON.stringify(content ?? null).length;
+    return a.refused ? { content, error: true } : { content };
+  };
+}
+
+/** A conversation that ended without a draft, named by its ending (R59, R70, R76). */
 function draftEnding(refusal, got, spent) {
   if (got.stopped || got.exhausted)
     return refusal("DRAFT_BOUND_REACHED",

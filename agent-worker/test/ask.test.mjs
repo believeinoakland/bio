@@ -244,7 +244,7 @@ section("R55 · the ask's whole reach is ASK_OPS, equal to answers' ASK_SCOPE an
   t("R55: never a sources op, member history, an administrative op, an export, or a write",
     ASK_OPS.filter((o) => /^sources|history|admin|export|purge|suggest|tick|close|propose|capture|set$/.test(o)), []);
   t("R55, R37: an ask's reach is not PLANE_OPS: the run's ops are unchanged, and no write of a run is an ask's op",
-    [Object.keys(PLANE_OPS).filter((o) => PLANE_OPS[o].mutating).filter((o) => ASK_OPS.includes(o)), Object.keys(PLANE_OPS).length], [[], 22]);
+    [Object.keys(PLANE_OPS).filter((o) => PLANE_OPS[o].mutating).filter((o) => ASK_OPS.includes(o)), Object.keys(PLANE_OPS).length], [[], 25]);
   t("R55: the ask's own calls are not reads of the record, and none is in ASK_OPS",
     Object.keys(ASK_PLANE_OPS).filter((o) => ASK_OPS.includes(o)), []);
   const r = TRANSCRIPTS[0];

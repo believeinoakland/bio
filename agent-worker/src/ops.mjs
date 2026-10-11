@@ -40,12 +40,21 @@ export const PLANE_OPS = {
   availableactions:  { mutating: false, why: "R51 — the actions a determination makes available (filings.availableActions)" },
   publishededitions: { mutating: false, why: "R51 — a suspected subject's inquiry, as its findings stand published" },
   profiles:          { mutating: false, why: "R51 — the active jurisdiction profiles (jurisdictions.combine), read once" },
+  /* R78 (T45; N887) — a RE-EXAMINATION run's reads (ai-runs R77's `origin: "reexamination"`), besides R51's, and nothing
+     else: the recorded response and the procedure guide for its action's kind. */
+  action:            { mutating: false, why: "R78 — the action the recorded response is on: its kind and its correspondence entry (actions' actionRead)" },
+  reading:           { mutating: false, why: "R78 — the response's capture as the plane's readers extracted it, text only (extraction R27)" },
+  procedureguides:   { mutating: false, why: "R78 — the procedure guide for the action's kind, the profile's first (reading-guides.procedureGuidesFor, R13)" },
   airuntick:      { mutating: true,  why: "log-always and budget spend, through the plane's own producer" },
   suggest:        { mutating: true,  why: "PL-3 — ONE version, as formed. The only write that reaches the record" },
   capturerequest: { mutating: true,  why: "PL-4 — the internet level REQUESTS acquisition; it does not perform it" },
   airunclose:     { mutating: true,  why: "the ordinary exit, naming the bound (C-22.5)" },
   optionpropose:  { mutating: true,  why: "R52 — mode `plan`'s one write: ONE proposal to the run's plan, as formed (action-plans R11, R31)" },
 };
+
+/** R78 — A RE-EXAMINATION RUN'S `response` (ai-runs R77, stored verbatim; written by `plan-work` R10 from `actions`
+ *  R95's `{action, ord}`): `<action>#<ord>`, the action's id and the entry's place in its correspondence ledger. */
+export const RESPONSE_ID = /^(.{1,200})#(0|[1-9][0-9]{0,5})$/s;
 
 /** THE MEANING ARM THIS MEMBER READS AT (D-276). `op=meaningrows` chooses no arm for a caller (C-23.1), so the arm is
  *  declared: `leg`, one row per leg of an inquiry's basis, which is what a run that forms versions of a basis composes
