@@ -30,7 +30,7 @@
 3. **Step 3, use cases: done.** `research/U1-U5.md`, `U6-U10.md`, `U11-U15.md`, `U16-U20.md` (twenty traced cases, Oakland/California law cited, "verify" marks where unchecked); `research/S1-synthesis.md` (§A table, §B the sixteen consolidated decisions with "For BOB" refs, §C 27 details for the lane/BOB, §D 19 defects, §E capabilities needed).
 4. **Step 4, the design: in progress (decisions phase).**
    - **Ruled:** D1, D2, D3, D4, D5, D6 (2026-10-11, H11), D7, D8 (2026-10-11, H12), D9 (H13), D10 (H14), D17, D20, D21, D22, D23, D24 (words and readings in `DECISIONS.md`; requirements notes in HANDOFF H4–H8).
-   - **Open with Bob:** D11, D12, D13, D14, D15, D16, D18, D19.
+   - **Open with Bob:** D11a, D11b (follow-ups to Bob's D11 direction of 2026-10-11), D12, D13, D14, D15, D16, D18, D19.
 5. **Step 5: not started.** When Bob has answered: write the design itself on the page (requirements, capabilities, behaviour), folding S1 §C details and §E capabilities, the D20 principles 1–6, D21's re-examination, and a proposed capabilities ladder for actions (none exists in `BIO_Capability_Ladders_v0_1.md`); then a canon draft (amending `BIO_Action_v0_1.md`, including §2/rule 2 for D24, rule 2's classes for D1, the records-request rules D-147/148/149 given a home) for Bob's approval, then a hand-off to BOB for requirements, as the investigation lane's H43.
 
 ## Next actions for a successor
@@ -52,3 +52,4 @@
 - 2026-10-11: D8 ruled as recommended; H12.
 - 2026-10-11: D9 ruled (b); H13.
 - 2026-10-11: D10 ruled (a), (a); H14.
+- 2026-10-11: Bob's D11 direction (Civicsmith never rules on policy; members and groups may); follow-ups D11a, D11b put on the page.
