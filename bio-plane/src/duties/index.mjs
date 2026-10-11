@@ -198,7 +198,8 @@ export class Duties {
     if (this.viewFn) { try { return this.viewFn() || {}; } catch { return {}; } }
     const lf = this.localFacts;
     if (lf && typeof lf.governingView === "function") {
-      try { const v = lf.governingView(); return isObj(v) ? (isObj(v.view) && v.ok !== undefined ? v.view : v) : {}; } catch { return {}; }
+      /* combine's answer, `{ok, view, conflicts}`: its view, or nothing when it does not combine */
+      try { const v = lf.governingView(); return !isObj(v) || v.ok === false ? {} : v.ok === true ? (isObj(v.view) ? v.view : {}) : v; } catch { return {}; }
     }
     const ids = this.record.getSetting("jurisdiction_profiles");
     if (!Array.isArray(ids) || !ids.length) return {};

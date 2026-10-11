@@ -332,3 +332,31 @@ test("R5 the profile deadlines are local-facts.governingView's: a group's confir
   const real = world({ deps: { view: null } });
   assert.equal(real.duties.localFacts.constructor.name, "LocalFacts");
 });
+
+test("R5 over the real local-facts: a group rule a member drafts and another confirms governs a duty's due date; withdrawn, it no longer does", () => {
+  const w = world({ deps: { view: null } });
+  const lf = w.duties.localFacts;
+  assert.equal(typeof lf.governingView, "function");
+  const RULE = { rule: "group_notice", applies_to: "bylaw_complaint", units: "days", amount: 3, count: "calendar", starts: "act", citation: "Test Bylaw § 10" };
+  const a = w.declare({ trigger: { kind: "date", date: "2026-02-02" }, time: { basis: "rule", rule: RULE.rule, applies_to: RULE.applies_to } });
+  assert.equal(a.ok, true, JSON.stringify(a));
+  const occ = () => w.duties.occurrencesOf({ dutyId: a.duty_id, asOf: AS_OF, viewer: BOB }).occurrences[0];
+  assert.match(occ().why, /hold no rule group_notice for bylaw_complaint/, "no group rule yet: the profiles' view, which holds none");
+  const bylaw = w.passage("bylaw");
+  const d = lf.ruleDraft({ section: "deadlines", entry: RULE, source: { captureSha: bylaw.capSha, extent: { kind: "pdf-page", page: 0 } },
+                           reason: "the bylaw's own text", by: BOB, viewer: BOB });
+  assert.equal(d.ok, true, JSON.stringify(d).slice(0, 300));
+  assert.equal(occ().state, "undetermined", "a drafted rule does not govern");
+  const c = lf.ruleConfirm({ rule: d.rule, by: CAROL, viewer: CAROL });
+  assert.equal(c.ok, true, JSON.stringify(c).slice(0, 300));
+  const o = occ();
+  assert.equal(o.due.date.value, "2026-02-05", "the group's confirmed rule governs here");
+  assert.equal(o.due.basis_kind, "rule");
+  assert.equal(o.due.trace.citation, "Test Bylaw § 10");
+  assert.equal(lf.ruleWithdraw({ rule: d.rule, reason: "superseded", by: BOB, viewer: BOB }).ok, true);
+  assert.equal(occ().state, "undetermined", "a withdrawn rule leaves the view");
+  /* with no group rule, the view duties reads is combine's */
+  const gv = lf.governingView();
+  assert.equal(gv.ok, true);
+  assert.deepEqual(w.duties.view(), gv.view);
+});
