@@ -134,18 +134,18 @@ const TABLE = [
   ["IDC", "people", "opaque"],
   ["MTI", "people"], ["CHK", "people"], ["MSR", "money"], ["HYP", "hypotheses"], ["DUT", "duties"],
   ["CALC", "calculations", "opaque", "sequential"], ["STQ", "answers"],
-  ["STP", "steps", "opaque"], ["GUD", "reading-guides", "opaque"],
+  ["STP", "steps", "opaque"], ["GUD", "reading-guides", "opaque"], ["ACD", "case-account", "opaque", "sequential"],
 ].map(([prefix, owner, form = "sequential", legacy]) => (legacy ? { prefix, owner, form, legacy } : { prefix, owner, form }));
 const SEQUENTIAL = TABLE.filter((e) => e.form === "sequential").map((e) => e.prefix);
 const OPAQUE = TABLE.filter((e) => e.form === "opaque").map((e) => e.prefix);
 const TAIL = "a1b2c3d4e5f6g7h8";
 
-test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twice, holding exactly T33's census with T34's CALC opaque and its legacy sequential form, and T41's STP and GUD", () => {
+test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twice, holding exactly T33's census with T34's CALC opaque and its legacy sequential form, T41's STP and GUD, and T42's ACD", () => {
   assert.ok(Object.isFrozen(ID_TABLE));
   for (const e of ID_TABLE) {
     assert.ok(Object.isFrozen(e), e.prefix);
-    /* `legacy` only on a row whose form changed (K1728): CALC alone, and never the row's own form. */
-    assert.deepEqual(Object.keys(e).sort(), e.prefix === "CALC" ? ["form", "legacy", "owner", "prefix"] : ["form", "owner", "prefix"], e.prefix);
+    /* `legacy` only on a row read in an earlier form (K1728): CALC, and since T42 ACD (R55), never the row's own form. */
+    assert.deepEqual(Object.keys(e).sort(), ["CALC", "ACD"].includes(e.prefix) ? ["form", "legacy", "owner", "prefix"] : ["form", "owner", "prefix"], e.prefix);
     if ("legacy" in e) assert.ok(["sequential", "opaque"].includes(e.legacy) && e.legacy !== e.form, e.prefix);
     assert.match(e.prefix, /^[A-Z]+$/);
     assert.ok(typeof e.owner === "string" && /^[a-z][a-z-]*$/.test(e.owner), e.prefix);
@@ -156,7 +156,7 @@ test("R46 ID_TABLE: frozen, one {prefix, owner, form} per prefix, no prefix twic
   /* R1's prefixes sequential; ENT widened; the five new objects opaque, and since T34 CALC (N570); the other reserved six
      sequential, with STQ answers'. */
   for (const p of PREFIXES) assert.equal(ID_TABLE.find((e) => e.prefix === p).form, "sequential", p);
-  assert.deepEqual(OPAQUE, ["EVT", "LIN", "MNY", "PFA", "IDC", "CALC", "STP", "GUD"]);
+  assert.deepEqual(OPAQUE, ["EVT", "LIN", "MNY", "PFA", "IDC", "CALC", "STP", "GUD", "ACD"]);
   for (const p of ["MTI", "CHK", "MSR", "HYP", "DUT", "STQ", "ENT"]) assert.ok(SEQUENTIAL.includes(p), p);
   assert.deepEqual({ ...ID_TABLE.find((e) => e.prefix === "CALC") },
     { prefix: "CALC", owner: "calculations", form: "opaque", legacy: "sequential" });
@@ -280,4 +280,23 @@ test("R51 ID_TABLE gains STP (owner steps, opaque); isStepId is true exactly for
 
 test("R53 ID_TABLE gains GUD (owner reading-guides, opaque); isGuideId is true exactly for a string matching idPattern('GUD'); never throws", () => {
   opaqueIdTest("isGuideId", isGuideId, "GUD", "reading-guides");
+});
+
+/* T42 (R55; N839, K2608): the account draft's prefix, `case-account`'s, opaque, its four-digit ids minted since T41 read
+   as its legacy sequential form (K1728's pattern); with its negative controls (K874): an ACD id of the wrong form. */
+test("R55 ID_TABLE gains ACD (owner case-account, form opaque, legacy sequential): idPattern('ACD') matches an opaque core and the four-or-more-digit core minted since T41, and refuses every other form", () => {
+  assert.deepEqual({ ...ID_TABLE.find((e) => e.prefix === "ACD") },
+    { prefix: "ACD", owner: "case-account", form: "opaque", legacy: "sequential" });
+  assert.equal(ID_TABLE.filter((e) => e.prefix === "ACD").length, 1);
+  assert.equal(ID_TABLE.at(-1).prefix, "ACD", "after T41's rows");
+  const re = idPattern("ACD");
+  for (const ok of [`ACD-2026-${TAIL}`, "ACD-2026-0000000000000000", "ACD-1999-zzzzzzzzzzzzzzzz",
+    "ACD-2026-0417", "ACD-2026-9999", "ACD-2026-0000", "ACD-2026-10000"]) assert.ok(re.test(ok), ok);
+  /* Negative controls: the wrong form, the wrong prefix, a slug, an upper case, a short year, padding. */
+  for (const bad of ["ACD-2026-041", `ACD-2026-${TAIL.slice(1)}`, `ACD-2026-${TAIL}0`, `ACD-2026-${TAIL.toUpperCase()}`,
+    "ACD-2026-a1b2c3d4e5f6g7H8", "ACD-2026-0417-a", `ACD-2026-${TAIL}-a`, "ACD-2026-12345abc", "ACD-26-0417", `ACD-26-${TAIL}`,
+    "acd-2026-0417", `acd-2026-${TAIL}`, " ACD-2026-0417", "ACD-2026-0417\n", "ACD-2026-", "ACD", `STP-2026-${TAIL}`, "CASE-2026-0417",
+    `ACDX-2026-${TAIL}`, `XACD-2026-${TAIL}`]) assert.ok(!re.test(bad), bad);
+  /* An account draft is a row of its owner's table, never a bundle (R1, R3). */
+  assert.ok(!BUNDLE_ID_RE.test(`ACD-2026-${TAIL}-a`) && !BUNDLE_ID_RE.test("ACD-2026-0417-a") && !Object.hasOwn(OBJECT_TYPES, "ACD"));
 });

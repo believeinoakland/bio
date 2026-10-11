@@ -42,7 +42,12 @@ export const SHARED_ACT_CHECKS = Object.freeze({
      --------------------------------------------------------------------------- */
   NO_BASIS: {
     check: 'C-33.40',
-    where: 'src/inquiry/index.mjs actNoBasis > is-act-no-basis',
+    /* (N827, K2467; T42) every site that answers with this row: inquiry's helper (basis-versions raises through it),
+       progressions' and entities' one refusal helpers, each named with the acts it serves. */
+    where: 'src/inquiry/index.mjs actNoBasis > is-act-no-basis (inquiry\'s, and basis-versions\' through it), '
+      + 'src/progressions/checks.mjs refusal (progressions\' first declaration and revision of a declared flow, '
+      + 'src/progressions/index.mjs), and src/entities/index.mjs actShapeRefusal (entities\' held identifier and '
+      + 'grade-D testimony)',
     translation: 'This asks the record to stand behind something without saying what it rests on. '
       + 'Say what that is first — what the question is grounded in, what you personally observed, or '
       + 'why a settled thing is being changed — and the record carries it beside the claim, in your '
@@ -65,13 +70,13 @@ export const SHARED_ACT_CHECKS = Object.freeze({
      would make a member vouch for a legal or authored statement (an action's reason, a case statement, a testimony), is
      refused by the act's owner with this row, and only `edited` or `own_instead` lands (Investigation §5). The owners
      (`steps` R24, `hypotheses` R17, `run-productions` R22, `question-explorer` R6, `investigation` R12, R20,
-     `case-authoring` R64) read it from here and add no row of their own; the code is `ACCEPT_MUST_REAUTHOR`
+     `case-account` R4, case-authoring R64's account drafts moving there at L8; R55, K2608) read it from here and add no row of their own; the code is `ACCEPT_MUST_REAUTHOR`
      (acceptance.mjs). The translation states the meaning; the design stream words it later by key. */
   ACCEPT_MUST_REAUTHOR: {
     check: 'C-33.54',
     where: 'raised by the owner of each accepting act that would make a member vouch for a legal or authored statement '
-      + '(steps R24, hypotheses R17, run-productions R22, question-explorer R6, investigation R12 and R20, case-authoring '
-      + 'R64), from this shared row (record-grammar R52)',
+      + '(steps R24, hypotheses R17, run-productions R22, question-explorer R6, investigation R12 and R20, case-account '
+      + 'R4), from this shared row (record-grammar R52)',
     translation: 'Accepting this as it was proposed would make you vouch for words the machine wrote. Write it in your '
       + 'own words instead, by editing it or writing your own, and the record keeps that the words are yours.',
   },

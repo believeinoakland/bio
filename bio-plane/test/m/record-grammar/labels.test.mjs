@@ -21,7 +21,8 @@ test("R38 lawProposalState: blank is unstated, a machine identity machine_propos
 test("R38 PROPOSAL_STATES: one frozen table per subject, governing_laws REC-195's own, each with the three states' sentences", () => {
   assert.ok(Object.isFrozen(PROPOSAL_STATES));
   assert.deepEqual(Object.keys(PROPOSAL_STATES), ["governing_laws", "standard", "comparison", "filing_draft", "theory",
-    "plan_option", "communication", "template", "edition_statement", "escalation_reason", "wizard", "law_relation", "translation"]);
+    "plan_option", "communication", "template", "edition_statement", "escalation_reason", "wizard", "law_relation", "translation",
+    "case_account", "account_check"]);
   assert.ok(PROPOSAL_STATES.governing_laws === LAW_PROPOSAL_STATES);
   const said = new Set();
   for (const [subject, t] of Object.entries(PROPOSAL_STATES)) {
@@ -30,11 +31,11 @@ test("R38 PROPOSAL_STATES: one frozen table per subject, governing_laws REC-195'
     if (subject !== "governing_laws") assert.ok(Object.isFrozen(t), subject);
     assert.match(t.machine_proposed, /machine work, labelled as machine work/, subject);
   }
-  assert.equal(said.size, 13 * 3, "no two sentences are the same");
+  assert.equal(said.size, 15 * 3, "no two sentences are the same");
 });
 
 const SUBJECTS = ["governing_laws", "standard", "comparison", "filing_draft", "theory", "plan_option", "communication", "template",
-  "edition_statement", "escalation_reason", "wizard", "law_relation", "translation"];
+  "edition_statement", "escalation_reason", "wizard", "law_relation", "translation", "case_account", "account_check"];
 
 test("R42 PROPOSAL_STATES.template: after communication, frozen, three sentences of wording proposed for a filing template, machine work never drafts, reviews or approves", () => {
   assert.equal(Object.keys(PROPOSAL_STATES).indexOf("template"), 7);
@@ -93,9 +94,9 @@ test("R45 PROPOSAL_STATES.wizard: after escalation_reason, frozen, steps propose
     /not a script's steps until its author adopts them into a version/);
   assert.match(PROPOSAL_STATES.wizard.machine_proposed, /it is a draft, which can propose steps and can never draft, submit or approve a script/);
   /* The tables before it are unchanged in number and order (R42's eight first, then R43's and R44's); R49's follows it,
-     then R50's. */
+     then R50's, then R54's two. */
   assert.deepEqual(Object.keys(PROPOSAL_STATES), SUBJECTS);
-  assert.equal(Object.keys(PROPOSAL_STATES).at(-3), "wizard");
+  assert.equal(Object.keys(PROPOSAL_STATES).indexOf("wizard"), 10);
 });
 
 test("R49 PROPOSAL_STATES.law_relation: after wizard, frozen, a law relation, court link or treatment proposed, not one the record holds until a member records it; machine work can propose one and never record one", () => {
@@ -131,10 +132,10 @@ test("R49 PROPOSAL_STATES.law_relation: after wizard, frozen, a law relation, co
    START, before the change). */
 const TWELVE_BEFORE_R50 = "2ecddc263952880900d36d3aec02ae0508f51a8f573d95c2f6f98a8e992bc705";
 
-test("R50 PROPOSAL_STATES.translation: after law_relation and last, frozen, a draft translation of an interface word shown as \"Draft\", not the group's wording until a member granted that language adopts it; machine work can draft one and never adopt or confirm one; the other tables unchanged", () => {
+test("R50 PROPOSAL_STATES.translation: after law_relation (and before R54's two), frozen, a draft translation of an interface word shown as \"Draft\", not the group's wording until a member granted that language adopts it; machine work can draft one and never adopt or confirm one; the other tables unchanged", () => {
   const keys = Object.keys(PROPOSAL_STATES);
   assert.equal(keys.indexOf("translation"), keys.indexOf("law_relation") + 1);
-  assert.equal(keys.at(-1), "translation");
+  assert.equal(keys.indexOf("case_account"), keys.indexOf("translation") + 1, "R54's follow it");
   const t = PROPOSAL_STATES.translation;
   assert.ok(Object.isFrozen(t));
   assert.deepEqual(Object.keys(t), STATES3);
@@ -161,14 +162,84 @@ test("R50 PROPOSAL_STATES.translation: after law_relation and last, frozen, a dr
   assert.deepEqual(proposalLabel("alice", "translation"),
     { by: "alice", state: "member_proposed", machine_work: false, says: t.member_proposed });
   /* The other tables and their sentences are unchanged, every one of them, in order. */
-  const { translation, ...before } = PROPOSAL_STATES;
+  const { translation, case_account, account_check, ...before } = PROPOSAL_STATES;
   assert.ok(translation === t);
   assert.equal(RG.sha256HexSync(RG.canonicalJson(before)), TWELVE_BEFORE_R50);
   assert.deepEqual(Object.keys(before), SUBJECTS.slice(0, 12));
 });
 
-test("R38 R42 R44 R45 R49 R50 proposalLabel's RangeError for an unknown subject names all thirteen subjects, in order", () => {
-  assert.equal(SUBJECTS.length, 13);
+/* The thirteen tables as they stood before R54, every sentence, as one digest over their canonical JSON (taken at T42's
+   START from the committed module, before the change). */
+const THIRTEEN_BEFORE_R54 = "a5e77c2a4787012223d187d07dba679b43c2072a84c803a94c85c056a85450ad";
+
+test("R54 PROPOSAL_STATES gains case_account and account_check after translation, each frozen with the three states: a draft of a case's account from its cited evidence, never the case's account, which a member writes in her own words; flagged sentences of a member's account the evidence they cite does not support, a draft and never a finding of the group; machine work labelled as machine work; the other thirteen tables unchanged", () => {
+  const keys = Object.keys(PROPOSAL_STATES);
+  assert.equal(keys.length, 15);
+  assert.deepEqual(keys.slice(-3), ["translation", "case_account", "account_check"]);
+  const ca = PROPOSAL_STATES.case_account, ac = PROPOSAL_STATES.account_check;
+  for (const [subject, t] of [["case_account", ca], ["account_check", ac]]) {
+    assert.ok(Object.isFrozen(t), subject);
+    assert.deepEqual(Object.keys(t), STATES3, subject);
+    assert.match(t.machine_proposed, /^a machine credential /, subject);
+    assert.match(t.machine_proposed, /That is machine work, labelled as machine work: it is a draft/, subject);
+    assert.match(t.member_proposed, /^a member /, subject);
+    assert.match(t.member_proposed, /the record holds who proposed it$/, subject);
+    assert.match(t.unstated, /^the record does not say who /, subject);
+    /* Only the machine's sentence says machine work. */
+    for (const s of ["member_proposed", "unstated"]) assert.doesNotMatch(t[s], /machine/, `${subject} ${s}`);
+    /* Every state, every identity: the label R38 composes, through this subject's own sentence. */
+    for (const w of [...BLANKS, ...MACHINES, ...MEMBERS]) {
+      const state = lawProposalState(w);
+      assert.deepEqual(proposalLabel(w, subject), { by: w ?? null, state, machine_work: state === "machine_proposed", says: t[state] },
+        `${subject} ${String(w)}`);
+    }
+    assert.deepEqual(proposalLabel("token:skill", subject),
+      { by: "token:skill", state: "machine_proposed", machine_work: true, says: t.machine_proposed });
+    assert.deepEqual(proposalLabel("alice", subject), { by: "alice", state: "member_proposed", machine_work: false, says: t.member_proposed });
+    assert.deepEqual(proposalLabel(undefined, subject), { by: null, state: "unstated", machine_work: false, says: t.unstated });
+  }
+  /* case_account: a draft of a case's account drawn from its cited evidence, never the case's account, which a member
+     writes in her own words, in every state. */
+  for (const s of STATES3) {
+    assert.match(ca[s], /account of a case from its cited evidence/, s);
+    assert.match(ca[s], /never (be )?the case's account/, s);
+    assert.match(ca[s], /a member writes in her own words/, s);
+    assert.doesNotMatch(ca[s], /\bis the case's account\b/, s);
+  }
+  /* account_check: the sentences flagged are a member's account's that the evidence they cite does not support, a draft and
+     never a finding of the group, in every state. */
+  for (const s of STATES3) {
+    assert.match(ac[s], /flagged these sentences of a member's account as not supported by the evidence they cite/, s);
+    assert.match(ac[s], /never a finding of the group/, s);
+    assert.match(ac[s], /draft/, s);
+  }
+  /* The two subjects say different things: no sentence of one is the other's, and each names only its own object. */
+  for (const s of STATES3) {
+    assert.notEqual(ca[s], ac[s]);
+    assert.doesNotMatch(ca[s], /flagged/, s);
+    assert.doesNotMatch(ac[s], /cited evidence/, s);
+  }
+  /* The other tables and their sentences are unchanged, every one, in order. */
+  const { case_account, account_check, ...before } = PROPOSAL_STATES;
+  assert.ok(case_account === ca && account_check === ac);
+  assert.deepEqual(Object.keys(before), SUBJECTS.slice(0, 13));
+  assert.equal(RG.sha256HexSync(RG.canonicalJson(before)), THIRTEEN_BEFORE_R54);
+});
+
+test("R54 negative control: an unknown subject, near spellings of the two new ones included, throws a RangeError naming the fifteen subjects", () => {
+  const msg = (s) => `proposalLabel: '${s}' is not a proposal subject; one of ${SUBJECTS.join(", ")}`;
+  assert.ok(msg("x").endsWith("translation, case_account, account_check"));
+  for (const s of ["case_accounts", "Case_account", "caseAccount", "case-account", "account", "account_checks", "Account_check",
+    "accountCheck", "account-check", "check", "case", "case_account ", " account_check", "case_account_check"])
+    assert.throws(() => proposalLabel("token:skill", s), (e) => e instanceof RangeError && e.message === msg(s), s);
+  for (const s of [undefined, null, 15, {}, ["case_account"], new String("case_account")])
+    assert.throws(() => proposalLabel("alice", s), RangeError, String(s));
+  /* Control: the two new subjects themselves answer. */
+  for (const s of ["case_account", "account_check"]) assert.doesNotThrow(() => proposalLabel("alice", s), s);
+});
+
+test("R38 R42 R44 R45 R49 R50 R54 proposalLabel's RangeError for an unknown subject names all fifteen subjects, in order", () => {
+  assert.equal(SUBJECTS.length, 15);
   for (const s of ["templates", "edition", "escalation", "Edition_statement", "escalation_reasons", "wizards", "Wizard", "__proto__",
     "law_relations", "Law_relation", "law", "court_link", "treatment", "translations", "Translation", "draft", "interface_word"])
     assert.throws(() => proposalLabel("a", s), (e) => e instanceof RangeError
@@ -226,7 +297,22 @@ test("R29 the shared act rows: NO_BASIS C-33.40 and NO_CITATION C-33.41, {check,
   assert.equal(SHARED_ACT_CHECKS.NO_CITATION.check, "C-33.41");
   assert.equal(SHARED_ACT_CHECKS.NO_BASIS.translation, NO_BASIS_T);
   assert.equal(SHARED_ACT_CHECKS.NO_CITATION.translation, NO_CITATION_T);
-  assert.equal(SHARED_ACT_CHECKS.NO_BASIS.where, "src/inquiry/index.mjs actNoBasis > is-act-no-basis");
+});
+
+/* N827, K2467 (T42): C-33.40's where names every site that answers with its row, not inquiry's alone. The modules named
+   come later in the order, so this test reads the where and the files it names, never their code (P4). */
+test("R29 C-33.40's where names every site that raises NO_BASIS: inquiry's actNoBasis (basis-versions through it), progressions' refusal (first declaration and revision of a declared flow), entities' actShapeRefusal; each file exists", async () => {
+  const w = SHARED_ACT_CHECKS.NO_BASIS.where;
+  assert.match(w, /^src\/inquiry\/index\.mjs actNoBasis > is-act-no-basis\b/);
+  assert.match(w, /basis-versions/);
+  assert.match(w, /src\/progressions\/checks\.mjs refusal\b/);
+  assert.match(w, /src\/progressions\/index\.mjs/);
+  assert.match(w, /first declaration and revision of a declared flow/);
+  assert.match(w, /src\/entities\/index\.mjs actShapeRefusal\b/);
+  assert.match(w, /held identifier and grade-D testimony/);
+  /* Negative control: it no longer names inquiry's site alone. */
+  assert.notEqual(w, "src/inquiry/index.mjs actNoBasis > is-act-no-basis");
+  for (const f of w.match(/src\/[\w/.-]+\.mjs/g)) assert.ok(existsSync(new URL(`../../../${f}`, import.meta.url)), f);
 });
 
 test("R29 C-33.41's where names entities' and progressions' sites, not store.mjs actNoCitation, and each file exists", () => {
