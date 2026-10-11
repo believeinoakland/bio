@@ -11,3 +11,17 @@ Reading set (mechanics §17): measured at this START: 226 KB, under 300 KB: read
 Merge order in L1: none (independent).
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START; none is yours unless named here (rule 4 (8) is yours).
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+CHANGE (K2618): at L1's close, on `tranche/T42` @ 61e1b87835 with every bundle regenerated (record-grammar merged; `npm ci` in agent-runner, sheet-worker, agent-worker, file-scanner), `fleetbundles` fails two of R31's negative controls, twice in a row on BOB's container (everything else passes, the plane measured 411 ms):
+```
+  FAIL  R31: (d) a global scope slower than its budget warns, naming the member and the time, and never fails
+         want ["warn",[],true,true]
+         got  ["warn",[],false,true]
+  PASS  R31: (e) the import really evaluated the artifact's global scope, with its cloudflare: names and its upload parts as the platform hands them
+  FAIL  R31: (f) every measurement is a FRESH import — the global scope ran again, so no module cache can make it free
+         want [true,5,true]
+         got  [true,5,false]
+```
+Both look environment- or timing-dependent (a test that passed on your container). Merge the tranche branch into yours, find why (d)'s third element and (f)'s fresh-import proof come out false here, make both robust without weakening what they prove, and post COMPLETE again. Do not commit bundles.
