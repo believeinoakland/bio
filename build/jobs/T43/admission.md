@@ -28,3 +28,7 @@
 **Checks** (process repository): format 0 failures; coverage admission 22 of 22, 0 failures; ownership admission `tranche/T43` 0 failures; architecture admission 3 failures, each the new import of doorbell (`window.mjs`, `harness.mjs`, `t43.test.mjs`) that the edge `admission` → `doorbell` clears (expected, B1).
 
 Size (session_012MAkFR3nxswi8gLq5bSoFY): test runs 7, module lines 3401
+
+## J1 · COMPLETE
+
+T43-21 complete on job/T43/admission: window.mjs fingerprints through doorbellOf(ctx).sourceFingerprint (doorbell R12); harness builds the doorbell (its own knock_key DDL); window/t38 tests re-pointed; new t43.test.mjs (window = doorbell R12 for the same source, controls differ; no admission file imports capture). Edges for modules.json: NEW admission -> doorbell; DROP admission -> capture (no admission file imports it). admission 43/0 (rule 4 (12)'s 5 R21 reds cleared). Users: answer-envelope 25/5 (catalogue-end:17, envelope:63, families:49, 377, 424; rule 4 (9), same on base); control-plane 222/1 (envelope.test.mjs:387/391, rule 4 (12)); plane 185/0. Checks: format 0, coverage 22/22, ownership 0; architecture 3 = the doorbell import, cleared by the new edge.
