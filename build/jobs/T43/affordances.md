@@ -1,6 +1,6 @@
 # affordances (T43)
 
-**Status** · session_01S81AeYUiK3j4br2K1UYVmu · depth 2 · RUNNING until 2026-10-11T11:53:37Z (module and users' tests after B2's fixes) · handled B2
+**Status** · session_01S81AeYUiK3j4br2K1UYVmu · depth 2 · COMPLETE · handled B2
 
 ## J1 · REPORT
 
