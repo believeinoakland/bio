@@ -55,7 +55,12 @@
  * `account:` block gains "The account" right after the claims, each bias-framed sentence marked and its statement named;
  * one carrying R25's or R26's gains "What reviewers said" or "Approvals" right before "How to check this case
  * yourself". Each is added only when its block is carried, numbered as rendered, so an earlier edition re-renders byte
- * for byte. */
+ * for byte.
+ *
+ * THE OUTCOMES CARRIED INTO THE EDITION (T45; N855 (6c); Actions D5, D6c; v0.2 §3 Success record, rule 17). A document
+ * carrying R29's `outcomes:` block gains "Outcomes since the last edition" after the claims (and the account, when it
+ * carries one) and before the findings, each outcome with its kind, its date, its text and its cites. Added only when the
+ * block is carried, numbered as rendered, so an edition without it renders byte for byte as before T45. */
 
 import { parseFrontmatter, canonicalJson, createSha256 } from "../record-grammar/index.mjs";
 import { gradingMethodText } from "../strength/method.mjs";
@@ -70,6 +75,7 @@ import { standingOf } from "./standing.mjs";
 import { calculationsOf } from "./calculations.mjs";
 import { timelineOf } from "./timeline.mjs";
 import { accountOf, accountBiasMark, reviewCommentsOf, approvalsOf } from "./account.mjs";
+import { outcomesOf, outcomeWords } from "./outcomes.mjs";
 
 /** R14: the sections, in order, by their headings (the UX stream's words, until it gives them). */
 export const COMPLETE_EDITION_HEADINGS = Object.freeze(["The claims", "The findings", "The documents and observations",
@@ -85,6 +91,9 @@ export const CALCULATIONS_HEADING = "The calculations";
 export const ACCOUNT_HEADING = "The account";
 export const REVIEW_COMMENTS_HEADING = "What reviewers said";
 export const APPROVALS_HEADING = "Approvals";
+/** R14 (T45; N855 (6c)): the section a document carrying R29's block adds, after the claims (and the account) and before
+ *  the findings (key `case.outcomes.head`: the UX stream's words, until it gives them). */
+export const OUTCOMES_HEADING = "Outcomes since the last edition";
 /** R14 (C11): the timeline's two lanes, by their names in the edition. */
 export const TIMELINE_LANE_WORDS = Object.freeze({ they_did: "What they did", we_did: "What we did" });
 /** R14 (C:A-12): each recompute status in words. */
@@ -361,6 +370,9 @@ export function completeEditionOf(caseFile) {
        only when carried, so an edition signed before T41 renders byte for byte */
     const account = accountOf(fm);
     if (account) sections.splice(1, 0, [ACCOUNT_HEADING, accountHtml(account, lens)]);
+    /* T45 (R29): the outcomes after the claims and the account, before the findings, only when carried */
+    if (v6up && Array.isArray(fm.outcomes))
+      sections.splice(sections.findIndex(([h]) => h === COMPLETE_EDITION_HEADINGS[1]), 0, [OUTCOMES_HEADING, outcomesHtml(outcomesOf(fm))]);
     const comments = reviewCommentsOf(fm);
     const approvals = approvalsOf(fm);
     const before = sections.length - 1;
@@ -462,6 +474,11 @@ function accountHtml(rows, lens) {
         + `on ${said(s.subject)}: ${clause(s.text)})` : ""}` : "";
       return p(`${said(r.text, "")}${mark}`);
     })];
+}
+
+/* R29 (T45): each outcome carried into this edition, in the order carried, with its kind, date, text and cites. */
+function outcomesHtml(rows) {
+  return rows.length ? [ul(rows.map((r) => li(outcomeWords(r))))] : [p("No outcome is carried into this edition.")];
 }
 
 /* R25 (D61): the comments the publisher included, and how many were left out. */

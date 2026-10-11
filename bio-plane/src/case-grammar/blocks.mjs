@@ -1,9 +1,9 @@
-/* case-grammar — the `captures:` and `sources:` blocks of a `/5` or `/6` case document (requirements:
- * `build/requirements/case-grammar.md` R1, R6; copied from `publication/blocks.mjs` (K651), whose ids the comments below
- * keep: publication R20 is this module's R1, and R2, R10, R28, R51, R52 are publication's readers of it; N364: DEC-81
- * items 1 and 3, DEC-78 item 5; K497, K509).
+/* case-grammar — the `captures:` and `sources:` blocks of a `/5` or later case document (requirements:
+ * `build/requirements/case-grammar.md` R1, R6, R27 (`caseDocumentBlocks`), R28 (`sourceRowsStanding`); N888, K2767;
+ * copied from `publication/blocks.mjs` (K651), where they were publication R20, whose readers R51 and R52 the
+ * comments below still cite as `publication`'s; N364: DEC-81 items 1 and 3, DEC-78 item 5; K497, K509).
  * `case-authoring` writes them (its R14, R35–R37) with the line builders here, so the bytes are written one way, and
- * this is the one reading of them, beside R20's predicates, so no module parses them a second way.
+ * this is the one reading of them, beside R1's predicates, so no module parses them a second way.
  *
  * THE BLOCKS, as a `/5` document's front matter carries them (arrays of flat rows, the only grammar `parseFrontmatter`
  * reads, so a nested list is a block of its own keyed by its capture):
@@ -23,24 +23,24 @@
 import { parseFrontmatter } from "../record-grammar/index.mjs";
 import { caseDocumentRequiresTensionSection } from "./formats.mjs";
 
-/** R20: the fields of a `captures:` row, in the order they are written. */
+/** R1: the fields of a `captures:` row, in the order they are written. */
 export const CAPTURE_FIELDS = Object.freeze(["capture", "member", "grade", "grade_basis", "co_attested", "timestamp_at",
   "co_archive", "late", "self_attested_only"]);
-/** R20: the fields an acknowledged (self-attested only) capture adds. */
+/** R1: the fields an acknowledged (self-attested only) capture adds. */
 export const ACKNOWLEDGEMENT_FIELDS = Object.freeze(["acknowledgement_reason", "acknowledged_by", "acknowledged_at",
   "sentence"]);
-/** R20: the fields of a `sources:` row. */
+/** R1: the fields of a `sources:` row. */
 export const SOURCE_FIELDS = Object.freeze(["capture", "stated", "basis"]);
-/** R20: the bases a stated source row may carry (sources R8), and null for the unnamed statement. */
+/** R1, R28: the bases a stated source row may carry (sources R8), and null for the unnamed statement. */
 export const SOURCE_BASES = Object.freeze(["consent", "public_elsewhere"]);
 
-/** R10, R28: why a document older than `/5` answers both blocks null. */
+/** R27: why a document older than `/5` answers both blocks null. */
 export const BLOCKS_PREDATE_SENTENCE = "this case document's format predates the statement of each capture's grade, "
   + "co-attestation and source, so it states none; that is not a statement that there were none";
-/** R10, R28: a `/5` document that carries no readable block: what it stated is undetermined, never filled. */
+/** R27: a `/5` or later document that carries no readable block: what it stated is undetermined, never filled. */
 export const BLOCK_UNREADABLE_SENTENCE = "this case document declares a format that states each capture's grade, "
   + "co-attestation and source, but carries no readable block for it, so what it stated is undetermined";
-/** R51 (sources R4): how an entry recorded without its value is stated. */
+/** `publication` R51 (sources R4): how an entry recorded without its value is stated. */
 export const NOT_RECORDED_STATED = "known to the group, not recorded";
 
 /* A value on one front-matter line (R2): line breaks folded, quotes and backslashes made apostrophes, trimmed (as the
@@ -54,12 +54,18 @@ const scalar = (v) => (v === null || v === undefined ? "null" : typeof v === "bo
 const val = (v) => (v === undefined || v === null || v === "null" ? null : v);
 const bool = (v) => (v === true || v === "true" ? true : v === false || v === "false" ? false : null);
 const b64 = (s) => Buffer.from(String(s ?? ""), "utf8").toString("base64");
-const unb64 = (s) => { try { return typeof s === "string" && s ? Buffer.from(s, "base64").toString("utf8") : null; } catch { return null; } };
+/* R27: an account's bytes read back, or null where undecodable: a value that is not strict base64 (Node's decoder would
+   skip the bad characters and answer what was left), or whose bytes are not UTF-8, reads null, never a guess (R6). */
+const BASE64 = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+const utf8 = new TextDecoder("utf-8", { fatal: true });
+const unb64 = (s) => {
+  try { return typeof s === "string" && s && BASE64.test(s) ? utf8.decode(Buffer.from(s, "base64")) : null; } catch { return null; }
+};
 const rowsBlock = (key, rows, fields) => (rows.length
   ? [`${key}:`, ...rows.flatMap((r) => fields.filter((f) => f in r).map((f, i) => `${i ? "   " : "  -"} ${f}: ${scalar(r[f])}`))]
   : [`${key}: []`]);
 
-/** R51, R52: the one spelling of what the public may be told of one entry `sources.publishableAt` answered: its kind
+/** R28 (`publication` R51, R52): the one spelling of what the public may be told of one entry `sources.publishableAt` answered: its kind
  *  (and attribute), then its value, or that it is known without its value; a pseudonym link names the other source as
  *  answered; a hostile entry adds the exposer's claim sentence. Null for anything that is not an entry. */
 export function sourceStatement(entry) {
@@ -77,7 +83,7 @@ export function sourceStatement(entry) {
 export const WITHHELD_SOURCE_LABEL = "Withheld";
 export const WITHHELD_SOURCE_REASON = "the source has not consented to being named, and no public record names them";
 
-/** R51 (case-authoring R37; K1315 (8)): the statement for a capture whose source has nothing publishable, its identity
+/** R28 (`publication` R51; case-authoring R37; K1315 (8)): the statement for a capture whose source has nothing publishable, its identity
  *  withheld: the label, its reason, and the receipt's digest and time. The one spelling (it was "an unnamed source"). */
 export function unnamedSourceStatement(given) {
   const { capture = null, received = null } = given && typeof given === "object" ? given : {};
@@ -92,14 +98,14 @@ export const withheldSourceStatement = unnamedSourceStatement;
 export const sourceRowWithheld = (row) => !!row && typeof row === "object" && (row.basis ?? null) === null
   && typeof row.stated === "string" && row.stated.length > 0;
 
-/** R20: the `sources:` block's lines, from `[{capture, stated, basis}]`. */
+/** R1: the `sources:` block's lines, from `[{capture, stated, basis}]`. */
 export function sourceBlockLines(rows) {
   const list = (Array.isArray(rows) ? rows : []).filter((r) => r && typeof r === "object")
     .map((r) => ({ capture: r.capture ?? null, stated: r.stated ?? null, basis: r.basis ?? null }));
   return rowsBlock("sources", list, SOURCE_FIELDS);
 }
 
-/** R20: the `captures:` and `capture_accounts:` blocks' lines, from `[{capture, member, grade, grade_basis,
+/** R1: the `captures:` and `capture_accounts:` blocks' lines, from `[{capture, member, grade, grade_basis,
  *  co_attested, timestamp_at, co_archive, late, self_attested_only, acknowledgement?: {reason, acknowledged_by, at,
  *  sentence}, accounts?: [{by, at, text, signature}]}]`. */
 export function captureBlockLines(rows) {
@@ -118,10 +124,10 @@ export function captureBlockLines(rows) {
           ...rowsBlock("capture_accounts", accounts, ["capture", "by", "at", "text_b64", "signature_b64"])];
 }
 
-/** R2, R10, R20: the two blocks one case document's bytes state: `{captures, sources, detail}`. Both null (with
- *  `detail`) for a document before `/5`; a `/5` document missing a block answers that block null and says so (R28).
- *  Each capture carries its `accounts` (decoded, exact) and, when acknowledged, its `acknowledgement`. Pure; never
- *  throws. */
+/** R27: the two blocks one case document's bytes state: `{captures, sources, detail}`, the one reading of R1's
+ *  `captures:`, `capture_accounts:` and `sources:` blocks. Both null (with `detail`) for a document before `/5`; a `/5`
+ *  or later document missing a block answers that block null and says so. Each capture carries its `accounts` (decoded,
+ *  exact; null where undecodable) and, when acknowledged, its `acknowledgement`. Pure; never throws. */
 export function caseDocumentBlocks(text) {
   try {
     const fm = parseFrontmatter(String(text ?? "")).data || {};
@@ -155,28 +161,39 @@ export function caseDocumentBlocks(text) {
   }
 }
 
-/** R51, R52: which `sources:` rows no longer hold. `publishable(capture)` answers, for the capture, `{entries, received}`:
- *  every entry `publishableAt({audience: "public", at})` answers now over the sources behind it, and the receipt's
- *  time, or null when no source stands behind the capture. A row holds when its `stated` and `basis` are an answered
- *  entry's, or when it is the capture's withheld statement (`unnamedSourceStatement`) with `basis: null`; every other row is answered, so nothing
- *  is stated that `publishableAt` did not answer at the commit. */
+/** R28 (`publication` R51, R52): which `sources:` rows no longer hold, `[{capture, stated, basis}]` in input order.
+ *  `publishable(capture)` answers, for the capture, `{entries, received}`: every entry `publishableAt({audience:
+ *  "public", at})` answers now over the sources behind it, and the receipt's time, or null when no source stands behind
+ *  the capture; it is asked once per distinct capture, never for a row whose `capture` is not a string, and one that
+ *  throws counts as null. A row holds when its `stated` and `basis` are an answered entry's, or when it is the
+ *  capture's withheld statement (`unnamedSourceStatement`) with `basis: null`; every other row is answered, so nothing
+ *  is stated that `publishableAt` did not answer at the commit. FAIL CLOSED: an answer that is not an object, or whose
+ *  `entries` is not a list, holds no row of that capture. Pure; never throws. */
 export function sourceRowsStanding(rows, publishable) {
   const failed = [];
   const cache = new Map();
   for (const r of Array.isArray(rows) ? rows : []) {
-    const capture = r && typeof r.capture === "string" ? r.capture : null;
-    if (!cache.has(capture)) {
+    let capture = null;
+    let stated = null;
+    let basis = null;
+    try {
+      capture = r && typeof r.capture === "string" ? r.capture : null;
+      stated = r && typeof r.stated === "string" ? oneLine(r.stated) : null;
+      basis = r ? r.basis ?? null : null;
+    } catch { /* a row that cannot be read holds nothing: answered below with what was read */ }
+    if (capture !== null && !cache.has(capture)) {
       let p = null;
-      try { p = capture ? publishable(capture) : null; } catch { p = null; }
-      cache.set(capture, p);
+      try { p = publishable(capture); } catch { p = null; }
+      cache.set(capture, p && typeof p === "object" && Array.isArray(p.entries) ? p : null);
     }
-    const p = cache.get(capture);
-    const stated = r && typeof r.stated === "string" ? oneLine(r.stated) : null;
-    const basis = r ? r.basis ?? null : null;
-    const holds = !!p && stated !== null && (basis === null
-      ? stated === unnamedSourceStatement({ capture, received: p.received })
-      : SOURCE_BASES.includes(basis)
-        && (p.entries || []).some((e) => e && e.basis === basis && sourceStatement(e) === stated));
+    const p = capture === null ? null : cache.get(capture);
+    let holds = false;
+    try {
+      holds = !!p && stated !== null && (basis === null
+        ? stated === unnamedSourceStatement({ capture, received: p.received })
+        : SOURCE_BASES.includes(basis)
+          && p.entries.some((e) => e && e.basis === basis && sourceStatement(e) === stated));
+    } catch { holds = false; }
     if (!holds) failed.push({ capture, stated, basis });
   }
   return failed;
