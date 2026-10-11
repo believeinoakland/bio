@@ -44,6 +44,22 @@
 
 Size (session_01Q9tRjtcTJSD2S8QXLJKLdc): test runs 12, module lines 1310
 
+**After B4 (K2674; `tranche/T42` @ 5c85c27818 merged; case-authoring merged):** `build/modules.json` conflicted on review's line. I kept the tranche's line, which is identical in content (case-authoring's job added the same edge), so this branch no longer changes `modules.json`. I re-ran everything:
+- review: 46/46.
+- Users (P11):
+  - notice-producers: 90/0
+  - op-declarations: 128/0
+  - control-plane: 216/0
+  - plane: 166/0. `accepted.test.mjs`:115 is cleared by case-authoring's fix.
+  - migrate-released: 1/0
+  - answer-envelope: 28/1, `families.test.mjs`:425, the inherited rule 4 (6).
+- `format: 147 modules, 146 requirements files; 0 failures`
+- `architecture: 9 product files, 47 relative imports (0 naming no tracked file, not judged); 0 failures`
+- `coverage: 1 modules, 33 of 33 live requirement ids named by a test; 0 failures`
+- `ownership: 5 files changed by review between tranche/T42 and HEAD; 0 failures`
+
+Size (session_01Q9tRjtcTJSD2S8QXLJKLdc), after B4: test runs 19, module lines 1310
+
 ## J1 · QUESTION
 
 Started; read B1. Reading: my requirements whole, layer 8's row of `layers.md`, case-account's requirements whole (R7 and R12 are what I call), K2608, K2614, `case-account-split.md` §5, plan T42-23a, and my module's whole code (index 1008, checks 170, schema 127) and tests (fixture 221, acts 407, copy 459, doors 211, invariants 219, approvals 249), all read myself, no worker summary (0 KB summary).
