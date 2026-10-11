@@ -10,6 +10,9 @@ export const SOURCE_KINDS = Object.freeze(["standard", "court", "practice", "dep
 export const TRIGGER_KINDS = Object.freeze(["event", "recurrence", "source", "date"]);
 /** Terms: the due date's basis kinds (K1431); only `rule` is a deadline the law sets. */
 export const BASIS_KINDS = Object.freeze(["rule", "commitment", "dependency", "window"]);
+/** R23 (T45; Actions D15; v0.2 rule 6): the fifth basis kind K1431 gains, the other side's stated deadline, in
+ *  `action-clocks`' spelling (its R7). A deadline on the group, never a duty's basis here: refused. */
+export const STATED_BASIS = "stated";
 /** Terms: an occurrence's states (K1466). */
 export const OCCURRENCE_STATES = Object.freeze(["met", "met_late", "overdue", "pending", "discharged", "undetermined"]);
 /** The entity kinds an obligation's obligor may be without a further line (Terms: an office or a body). */

@@ -115,6 +115,23 @@ export const DUTIES_CHECKS = Object.freeze({
   NOT_A_POWER: row(39, "usesOfPower", "is-duty-power",
     "The uses of a power are read for a power: something an office may do. This obligation is not one. Nothing was "
     + "read or written."),
+  /* T45 (N855, N882; Actions D6d, D7): R30's and R31's own rows. */
+  BAD_CAPTURES: row(40, "dutiesArisingIn", "is-duty-captures",
+    "The obligations arising in documents are read for 1 to 200 captured documents, each named by its fingerprint "
+    + "(sha256). Nothing was read."),
+  RESPONSE_KIND_UNKNOWN: row(41, "proposeFromResponse", "is-duty-response-kind",
+    "An obligation proposed from a reply or a report is either a promise the body made or a response the report "
+    + "requires. This is neither. Nothing was written."),
+  RESPONSE_EXTENT_NOT_IN: row(42, "proposeFromResponse", "is-duty-response-extent",
+    "The passage quoted is not part of the reply or report the obligation arises in. Quote a passage of that "
+    + "document. Nothing was written."),
+  PROMISE_DATE_UNREAD: row(43, "proposeFromResponse", "is-duty-promise-date",
+    "A promise's date is read from the body's own words, and those words must state one whole calendar date. These "
+    + "do not (such as \"by spring\", a month without its day, or more than one date): they are kept as written and "
+    + "never completed. Nothing was written."),
+  DUTY_SOURCE_NOT_HELD: row(44, "adopt", "is-duty-source-held",
+    "This promise rests on a commitment that is still only proposed as a standard. Adopt that commitment as a "
+    + "standard first; the obligation then names it. Nothing was written."),
 });
 
 /** A refusal carrying its row. Called with the code as a literal at each site, so the DEC-49 guard reads which code

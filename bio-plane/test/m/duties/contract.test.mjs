@@ -99,7 +99,8 @@ test("R19 dutiesOps publishes one route arm per act and read, with the control p
   const w = world();
   const ops = w.ops("by=member:bob&viewer=member:bob", {});
   assert.deepEqual(Object.keys(ops).sort(), ["duty", "dutyadopt", "dutydeclare", "dutiesof", "dutymatch", "dutyoccurrences", "dutypropose", "dutyrevise",
-    "dutysetagainst", "dutytransition", "dutytransitions", "dutywithdraw", "powersof", "poweruses", "uselink", "useunlink", "reviewpropose"].sort());
+    "dutysetagainst", "dutytransition", "dutytransitions", "dutywithdraw", "powersof", "poweruses", "uselink", "useunlink", "reviewpropose",
+    "dutyfromresponse", "dutiesarising"].sort());
   const body = { ...w.fields(), clause: "s1", by: "member:mallory" };
   const d = w.ops("by=member:bob&viewer=member:bob", body).dutydeclare();
   assert.equal(d.ok, true);
