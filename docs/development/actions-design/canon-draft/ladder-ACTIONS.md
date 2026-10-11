@@ -1,6 +1,6 @@
 # §9A. ACTIONS (draft section for `BIO_Capability_Ladders_v0_1.md`)
 
-**Placement (BOB, on Bob's approval with `BIO_Action_v0_2.md`).** Inserted after §9 QUESTIONS. The document's title gains "and actions"; §1's list of needs registers gains §9A.2; an "Amended" line is added under the Status: "Amended 2026-10-<n> (K<n>; `BIO_Action_v0_2.md`): §9A ACTIONS added, from the actions design (`docs/development/actions-design/`), Bob's rulings Actions D1–D24, D11a, D11b, D16a."
+**APPROVED by Bob with `BIO_Action_v0_2.md`, as a whole, 2026-10-11. Placement (BOB).** Inserted after §9 QUESTIONS. The document's title gains "and actions"; §1's list of needs registers gains §9A.2; an "Amended" line is added under the Status: "Amended 2026-10-<n> (K<n>; `BIO_Action_v0_2.md`): §9A ACTIONS added, from the actions design (`docs/development/actions-design/`), Bob's rulings Actions D1–D24, D11a, D11b, D16a."
 
 ## 9A. ACTIONS
 
