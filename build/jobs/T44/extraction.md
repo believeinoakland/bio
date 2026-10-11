@@ -59,3 +59,7 @@ Size (session_018BewFdRoHKTRNejfX4TPW9): test runs 8, module lines 3229
 ## J1 · REPORT
 
 Found in other modules (record § Completion): (1) none of agent-worker's R72 refusal codes has a check row to translate it (BAD_BODY, BAD_SHA, BAD_PAGES, NO_ACCOUNT [agent-worker's own; credentials' C-29.20 is another site's], BAD_ACCOUNT, TRANSCRIBE_NEEDS_API_KEY); per R71 each is answered 200 performed:false with no says. (2) plane transcribe.mjs reads only res.json(), so agent-worker's HTTP status is lost; a relayed worker refusal with a row would take R71's default 403. (3) plane R36's refused is not built yet (T44-13): until L11, a photo's NO_PAGE_RENDERED reads transcribe.why.norender.
+
+## J2 · COMPLETE
+
+T44-5 done: R71 says by key for every unfilled answer (notsent, picture.unprepared, failed silent/ended, refused with envelope kept, none only for ok:true), R27 capture.picture.unread. Own code and tests read whole; two stale comments fixed. extraction 162 pass; reading-pipeline 112, content 132, case-carriage 70, plane 191, all 0 fail. format, architecture, coverage (49/49), ownership (6 files) 0 failures. No file outside my paths.
