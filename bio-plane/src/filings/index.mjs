@@ -75,6 +75,12 @@ import { localFactsOf } from "../local-facts/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { filingTemplatesOf, FILING_BLANKS, FILING_TEXT_MAX, blanksOf, withRow as templatesRow }
   from "../filing-templates/index.mjs";
+import { docketOf } from "../docket/index.mjs";
+import { projectRosterOf } from "../project-roster/index.mjs";
+/* action-grammar's T45 reads (`pointOut`, its R18; `assertionResolutionFindings`, `assertionsUnresolved`, its R19) are
+   read off its namespace, so a read it does not answer yet is undetermined here, never a failed link (K248). */
+import * as actionGrammar from "../action-grammar/index.mjs";
+import { checkAccount } from "../case-checker/account.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { isMachineIdentity, MACHINE_CLASS_PREFIX } from "../record-grammar/actors.mjs";
 import { proposalLabel } from "../record-grammar/labels.mjs";
@@ -84,10 +90,13 @@ import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { FILINGS_TABLES, migrateFilings } from "./schema.mjs";
 import { rowOf } from "./checks.mjs";
 import { deadlineDate, realDate, COUNTED_FROM } from "./dates.mjs";
+import { KEYED, keyed, sentencesOf, isQuestion, verdictsOf, asks, askAllowed, disclosureLines, OVERRIDE_HEAD,
+         overrideDisclosure } from "./outward.mjs";
 
 export { FILINGS_SCHEMA, FILINGS_TABLES } from "./schema.mjs";
 export { FILINGS_CHECKS } from "./checks.mjs";
 export { deadlineDate, COUNTED_FROM } from "./dates.mjs";
+export { KEYED, keyed, sentencesOf, OVERRIDE_HEAD, overrideDisclosure } from "./outward.mjs";
 
 /* R3, R28 (K922 (1)): the blanks, the longest text and `blanksOf` are `filing-templates`' (its R19), read there; this
    module holds no copy. */
@@ -114,18 +123,30 @@ export const FILINGS_FOR_MAX = 200;
 export const counselMarking = (counsel) => (counsel && counsel.name
   ? `Prepared for review by ${counsel.name}, ${counsel.organisation}. Not legal advice. Not for filing.`
   : "Prepared for the group's own review. Not legal advice. Not for filing.");
-/** R24: the words a draft, packet or communication prepared from an action carrying a premise override opens with. */
-export const OVERRIDE_HEAD = "Rests on an unestablished premise:";
-/** R24: the disclosure line, from the override as the action's read answers it (actions R8, R25). */
-export const overrideDisclosure = (o) =>
-  `${OVERRIDE_HEAD} ${o.reason} (stated by ${o.by ?? "an author the record does not name"} at ${o.at ?? "a time the record does not state"})`;
 /** R23: the longest purpose, in characters. */
 export const COMMUNICATION_PURPOSE_MAX = 500;
+/** R23, R37, R38: the purposes a communication may state by name (any other is the member's own words, R23). */
+export const COMMUNICATION_PURPOSES = Object.freeze(["document_infraction", "chance_to_fix"]);
+/** R37: the audiences a documenting version may be written for. */
+export const AUDIENCES = Object.freeze(["violating_party", "members", "oversight", "public", "broad"]);
+/** R44: whose act a public comment or testimony is. */
+export const VOICES = Object.freeze(["group", "self"]);
+/** R8: what a counsel packet is assembled for. */
+export const PACKET_PURPOSES = Object.freeze(["claim", "defence"]);
+/** R23: the most findings and inquiries a communication is drafted from; R9: the most challenged statements. */
+export const FROM_MAX = 50;
+export const CHALLENGED_MAX = 50;
+/** R34: the longest reason given for releasing a contradicted sentence; R36: the longest account of a partner's act. */
+export const RELEASE_REASON_MAX = 2000;
+export const ACCOUNT_MAX = 2000;
+/** R9: the most pressure items and docket marks a defence packet reads. */
+export const PRESSURE_MAX = 500;
 /** R28: the most offered `file` templates `TEMPLATE_NOT_NAMED` lists. */
 export const TEMPLATES_NAMED_MAX = 20;
 /** R22: the line that opens the in-band block below the text of approved or exported bytes. */
 export const INBAND_RULE = "---- in-band ----";
-/** R22: the in-band block appended to bytes leaving the instance: the quartet's hash, date, author and both floors,
+/** R22: the in-band block appended to bytes leaving the instance: the quartet's hash, date, author, both floors and
+ *  (T45) the group's public identity and declared stake,
  *  in words and as JSON, so a reader holding only the bytes can re-hash the text above the rule. */
 export function inbandBlock(q) {
   const f = q.floors || {};
@@ -133,7 +154,13 @@ export function inbandBlock(q) {
           `Hash: sha256 ${q.hash.sha256} over ${q.hash.over} (${q.hash.bytes} bytes; ${q.hash.canonical}).`,
           `Date: ${q.date ?? "undetermined"}. Author: ${q.author ?? "undetermined"}.`,
           `Floors: capture ${f.capture ?? "none"}, connection ${f.connection ?? "none"}. ${f.detail ?? ""}`.trimEnd(),
+          ...(q.group ? [groupLine(q.group)] : []),
           JSON.stringify(q), ""].join("\n");
+}
+/** R22 (T45): the group's public identity and declared stake in words, as the in-band block states them. */
+export function groupLine(g) {
+  const who = [g.name, g.domain].filter(Boolean).join(", ");
+  return `Group: ${who || "its public identity undetermined"}. Declared stake: ${g.stake == null ? "none declared" : g.stake}.`;
 }
 /** R15: the sentence a Tier 3 kind carries in the evidence package. */
 export const COUNSEL_SENTENCE = "Such an action requires competent counsel: no template is offered for it, and the "
@@ -169,24 +196,32 @@ const withRow = (r) => (r && typeof r.then === "function" ? r.then(withRowNow) :
 /** The services answered with DEC-49's rows. */
 const SERVICES = Object.freeze(["filingPrepare", "filingApprove", "filingRecordSent", "counselPacket", "counselPacketRead",
                                 "counselPacketExport", "filingsFor", "theoryPropose", "availableActions",
-                                "communicationPrepare", "templateSave"]);
+                                "communicationPrepare", "templateSave", "jointSignatory", "filingSecondApprove",
+                                "holdNoticePrepare", "templatesForAction"]);
 
 export class Filings {
   #deps;
+  #profilesGiven = false;
 
   constructor({ storage, record, host = null, membership = null, publication = null, publicRead = null, provenance = null,
                 attestation = null, content = null,
                 actions = null, conformance = null, standards = null, consequences = null, promotion = null, strength = null, actionClocks = null,
-                localFacts = null, filingTemplates = null, events = null,
+                localFacts = null, filingTemplates = null, events = null, docket = null, projectRoster = null,
+                actionHolds = null, grammar = null, accountCheck = null,
                 producingGroup = null, profiles = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
-    this.#deps = { host, membership, publication, publicRead, provenance, attestation, content, actions, conformance, standards, consequences, promotion, strength, actionClocks, localFacts, filingTemplates, events };
+    this.#deps = { host, membership, publication, publicRead, provenance, attestation, content, actions, conformance, standards, consequences, promotion, strength, actionClocks, localFacts, filingTemplates, events, docket, projectRoster, actionHolds };
+    /* R38, R39, R43: action-grammar's pure reads (its R18, R19), its module unless a test hands in its own; R34: the
+       sentence judgment, `case-checker.checkAccount` (its R24) unless handed in. */
+    this.grammar = grammar && typeof grammar === "object" ? grammar : actionGrammar;
+    this.accountCheck = typeof accountCheck === "function" ? accountCheck : checkAccount;
     /* R3 (N331): the producing group is promotion's fact `producingGroup` (its R40), read as `fact` answers it; a
        function handed in (as the retired legacy store's was) is kept and may answer a value, null, or the fact's answer.
        Absent, `#group` asks promotion itself, and says so when no promotion module is reachable (N355: no refusal code
        of promotion's is spelled here). */
     this.producingGroup = typeof producingGroup === "function" ? producingGroup : null;
+    this.#profilesGiven = typeof profiles === "function";
     this.profiles = typeof profiles === "function" ? profiles : () => this.record.getSetting("jurisdiction_profiles");
     this.now = typeof now === "function" ? now : () => stampInstant("second");
     for (const m of SERVICES) { const fn = this[m].bind(this); this[m] = (...a) => withRow(fn(...a)); }
@@ -218,6 +253,16 @@ export class Filings {
   get localFacts() { return this.#deps.localFacts ||= (this.#deps.host ? localFactsOf(this.#deps.host) : null); }
   /* R33: events' timeline (its R28–R30); with no host and none given, absent, and the chronology says it is unread. */
   get events() { return this.#deps.events ||= (this.#deps.host ? eventsOf(this.#deps.host) : null); }
+  /* R9 (T45): docket's `legal` marks (its R27), a defence packet's pressure received. */
+  get docket() { return this.#deps.docket ||= (this.#deps.host ? docketOf(this.#deps.host) : null); }
+  /* R10, R42 (T45): project-roster's scope (its R23) and second-approval setting (its R24). */
+  get projectRoster() {
+    return this.#deps.projectRoster ||= (this.#deps.host ? projectRosterOf(this.#deps.host, { record: this.record }) : null);
+  }
+  /* R9, R47 (T45): action-holds' `pressureFor` (its R12) and the hold at a place (its R2), handed in where the plane
+     composes it (`actionHoldsOf`, K2815); with none, a defence packet's pressure and a hold notice are undetermined,
+     said so (K248). */
+  get actionHolds() { return this.#deps.actionHolds || null; }
 
   migrate() { migrateFilings(this.sql); }
 
@@ -228,12 +273,16 @@ export class Filings {
 
   /* ---------------------------------------------------------------- the reads of the modules it uses */
 
-  /* R20: the active profiles' combined view (record-core R26, jurisdictions R12–R16), or none, with why. */
+  /* R20: the active profiles' combined view (record-core R26, jurisdictions R12–R16), or none, with why. (T45; R9, R39,
+     R49) The view that governs on this instance is `local-facts.governingView` (its R12: the profiles' view with the
+     group's confirmed rules); a caller that hands in its own active profiles (`profiles`) is answered their combined
+     view, as before. */
   #view() {
     const ids = this.#call(() => this.profiles());
     if (!Array.isArray(ids) || !ids.length)
       return { view: null, conflicts: [], why: "your group's Civicsmith has no active jurisdiction profile" };
-    const c = combine(ids);
+    const lf = this.#profilesGiven ? null : this.localFacts;
+    const c = lf && typeof lf.governingView === "function" ? this.#call(() => lf.governingView()) : combine(ids);
     if (!c || !c.ok) return { view: null, conflicts: [], why: "the active jurisdiction profiles do not combine" };
     return { view: c.view, conflicts: c.conflicts || [], why: null };
   }
@@ -257,14 +306,35 @@ export class Filings {
       governing_laws: isObj(a.governing_laws) ? a.governing_laws : null,
       law: str(a.law),
       premise_override: Filings.#override(a.premise_override),
+      /* T45: R24, R35 (`actions` R75's disclosures, in its order; null for a read that answers none), R36 (R78's
+         partners), R46 (R79's press terms), R43 (R8's breach), R10 and R42 (the action's project) */
+      disclosures: Array.isArray(a.disclosures) ? a.disclosures.filter(isObj) : null,
+      partners: Array.isArray(a.partners) ? a.partners.filter(isObj) : [],
+      press_terms: isObj(a.press_terms) ? a.press_terms : null,
+      breach: a.breach === true,
+      project: this.#bundleProject(target),
     };
   }
 
-  /* R24: the premise override an action carries (actions R8, shown in its read, R25: `{reason, by, at}`); null when it
-     carries none. */
+  /* R10, R42 (T45): the project the action belongs to, as record-core holds it for its bundle (its R34); null when it
+     names none, and the project of the determination it rests on is read in its place (`#projectOf`). */
+  #bundleProject(id) {
+    const b = this.#call(() => this.record.bundleInfo(id));
+    return b ? str(b.project) : null;
+  }
+
+  /* R24: the premise override an action carries (actions R8, shown in its read, R25: `{reason, by, at}`; R74 (T45): its
+     `ground`); null when it carries none. */
   static #override(o) {
     if (!isObj(o) || !str(o.reason)) return null;
-    return { reason: str(o.reason), by: str(o.by), at: str(o.at) };
+    return { reason: str(o.reason), by: str(o.by), at: str(o.at), ground: isObj(o.ground) ? o.ground : null };
+  }
+
+  /* R24, R35: what is printed first on everything prepared from the action: every disclosure its read answers, in its
+     order, else its override alone; null when there is none. */
+  static #disclosure(a) {
+    const lines = disclosureLines(a.disclosures, a.premise_override);
+    return lines.length ? lines.map((l) => l.text).join("\n") : null;
   }
 
   /* R1, R8, R13, R14: the one answer for an action that is absent, invisible, not an action, or unreadable because no
@@ -577,7 +647,8 @@ export class Filings {
   /** R1–R5, R24, R25, R28, R29: a draft pre-filled from the record into an offered version of a template the preparer
    *  names (`filing-templates`, the latest approved by default), into the member's own words (`text`), or, naming
    *  neither, into the latest approved version of the profile's `file` template for the action's kind. */
-  filingPrepare({ action = null, template = null, text = undefined, preparer = null, viewer = null } = {}) {
+  filingPrepare({ action = null, template = null, text = undefined, preparer = null, viewer = null, voice = null, audience = null,
+                  language = null, own_doing = null, names_pending = null, textcheck = null } = {}) {
     const who = str(preparer);
     /* DEC-49 REGION is-filing-prepare */
     if (!who) return { ok: false, reason: "FILING_NO_PREPARER", detail: "no stamped preparer: a draft names who prepared it" };
@@ -635,12 +706,20 @@ export class Filings {
       const mismatch = Filings.#kindMismatch(used, a);
       if (mismatch) return mismatch;
     }
+    /* T45: the marks the member states (R34, R39, R43, R44, R48), refused whole when malformed */
+    const mk = Filings.#marks({ voice, audience, language, own_doing, names_pending, textcheck });
+    if (!mk.ok) return mk;
     const when = this.#when();
     const { det, hidden } = this.#restsOn(a, viewer);
     const values = this.#values(a, det, hidden, entry, viewer, when);
     const filled = this.#fill(own ? text : used.text, values);
     const { blanks, unfilled } = filled;
-    let body = filled.text;
+    /* R40: a request for comment carries the sentence that the reply may be quoted unless it says otherwise */
+    const rfc = Filings.#isRfc(a, mk.marks, null);
+    const content = rfc && !filled.text.includes(KEYED["rfc.quoting"]) ? `${filled.text}\n\n${KEYED["rfc.quoting"]}` : filled.text;
+    /* R46: a press action's review copy carries its embargo and release times on its face */
+    const review = Filings.#reviewCopy(a);
+    let body = review ? `${review.text}\n\n${content}` : content;
     /* R29: a template not written for the kind's jurisdiction says so first, after any advisory */
     const notFor = used ? Filings.#notWrittenFor(used, entry) : null;
     if (notFor) body = `${notFor}\n\n${body}`;
@@ -655,7 +734,7 @@ export class Filings {
       }
     }
     /* R24: the override's disclosure, first on the face. */
-    const disclosure = a.premise_override ? overrideDisclosure(a.premise_override) : null;
+    const disclosure = Filings.#disclosure(a);
     if (disclosure) body = `${disclosure}\n\n${body}`;
     const venue = entry && isObj(entry.venue) ? { name: entry.venue.name ?? null, how: entry.venue.how ?? null,
                                                   source: `profile:${entry.venue.profile || entry.profile}/action_kinds/${entry.kind}/venue` }
@@ -665,16 +744,23 @@ export class Filings {
     const facts = det ? det.findings.map((f) => this.#fact(f)) : [];
     const exhibits = this.#exhibits(this.#citesOf(a, det, facts), standard);
     const basis = this.#basisOf(a, det, gov);
+    /* T45: R34's record check and R38, R39, R43, R48's pointers over the text the template or the member wrote (what
+       this module printed first is not judged), and R39, R45, R49's notices */
+    const outward = this.#outward(content, { a, facts: this.#matterFacts(a, det, viewer).facts, det, view: v.view, marks: mk.marks,
+                                             textcheck: mk.textcheck, form: "filing", viewer });
+    const notices = Filings.#notices(a, v.view, mk.marks);
+    const marks = { ...mk.marks, textcheck: mk.textcheck, printed: [disclosure, advisory && gov.tier === 2 ? advisory : null, notFor, review ? review.text : null].filter(Boolean),
+                    ...(review ? { review_copy: review } : {}), rfc };
     /* R29: the template and version, or null for the member's own words */
     const tpl = used ? Filings.#templateOf(used) : null;
     const year = when.slice(0, 4);
     return this.record.transact(() => {
       const { id } = this.record.allocId("FIL", year);
       this.sql.exec(`INSERT INTO filing_drafts (filing_id, action_id, kind, tier, governing, text, blanks, unfilled,
-                       advisory, venue, preparer, prepared_at, basis, exhibits, venue_standard, disclosure, template)
-                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                       advisory, venue, preparer, prepared_at, basis, exhibits, venue_standard, disclosure, template, outward, marks)
+                     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
         id, a.id, a.kind, gov.tier, json(gov), body, json(blanks), json(unfilled), advisory, json(venue), who, when, json(basis),
-        json(exhibits), json(standard), disclosure, json(tpl));
+        json(exhibits), json(standard), disclosure, json(tpl), json({ ...outward, notices }), json(marks));
       return { ok: true, id, action: a.id, tier: gov.tier, governing: gov, text: body, blanks, unfilled,
                ...(gov.tier === 2 ? { advisory } : {}), venue, template: tpl,
                ...(used ? { template_version: { name: used.name, state: used.state, profiles: used.profiles,
@@ -683,45 +769,466 @@ export class Filings {
                                                     says: `version ${used.number} is updated by ${used.updated_by}` } : {}) } } : {}),
                ...(notFor ? { not_written_for: notFor } : {}), disclosure,
                exhibits, venue_standard: standard, label: proposalLabel(who, "filing_draft"),
+               outward, notices, marks: mk.marks, ...(review ? { review_copy: review } : {}),
+               ...(mk.marks.voice === "self" ? { voice_says: { key: "filings.voice.self", text: KEYED["filings.voice.self"] } } : {}),
                prepared_by: who, at: when, evidence: false, says: DRAFT_SAYS };
     });
   }
 
   /* ---------------------------------------------------------------- R23: communicationPrepare */
 
-  /** R23, R24: a draft message, briefing or statement for an action whose addressee is anyone, from no template: the
-   *  words are the preparer's (a machine's from the published case and the plan). Stored apart, labelled as R5's
-   *  drafts are; R6's approval and R7's sending apply to it unchanged. */
-  communicationPrepare({ action = null, text = null, purpose = null, preparer = null, viewer = null } = {}) {
+  /** R23, R24, R37, R38 (T45): a draft message, briefing or statement for an action whose addressee is anyone, from no
+   *  template, drafted from the findings and inquiries the member chooses (`from`, published or not); a documenting
+   *  version (`purpose: "document_infraction"`, for an `audience`) or a chance-to-fix notice (`"chance_to_fix"`) is
+   *  assembled from the record when no words are given. Stored apart, labelled as R5's drafts are; R6's approval and
+   *  R7's sending apply to it unchanged. */
+  communicationPrepare({ action = null, text = null, purpose = null, from = null, audience = null, voice = null, language = null,
+                         own_doing = null, names_pending = null, textcheck = null, preparer = null, viewer = null } = {}) {
     const who = str(preparer);
+    const named = typeof purpose === "string" ? purpose.trim() : "";
+    const assembled = COMMUNICATION_PURPOSES.includes(named) && (text === null || text === undefined);
     /* DEC-49 REGION is-communication-prepare */
     if (!who) return { ok: false, reason: "COMMUNICATION_NO_PREPARER", detail: "no stamped preparer: a draft names who prepared it" };
     const a = this.#action(action, viewer);
     if (!a) return this.#noAction(action);
     const closed = this.#closed(a);
     if (closed) return closed;
-    if (typeof text !== "string" || !text.trim() || WELL_FORMED.test(text) || utf8(text) > FILING_TEXT_MAX)
+    if (!assembled && (typeof text !== "string" || !text.trim() || WELL_FORMED.test(text) || utf8(text) > FILING_TEXT_MAX))
       return { ok: false, reason: "COMMUNICATION_TEXT_REFUSED", max_bytes: FILING_TEXT_MAX,
                detail: `the communication's words must be non-empty UTF-8 text of at most ${FILING_TEXT_MAX} bytes` };
-    const why = typeof purpose === "string" ? purpose.trim() : "";
+    const why = named;
     if (!why || why.length > COMMUNICATION_PURPOSE_MAX || WELL_FORMED.test(why))
       return { ok: false, reason: "COMMUNICATION_PURPOSE_REFUSED", max: COMMUNICATION_PURPOSE_MAX,
                detail: `say what the communication is for, in at most ${COMMUNICATION_PURPOSE_MAX} characters` };
     /* END DEC-49 REGION is-communication-prepare */
+    const mk = Filings.#marks({ voice, audience, language, own_doing, names_pending, textcheck });
+    if (!mk.ok) return mk;
+    if (why === "document_infraction" && !mk.marks.audience)
+      return { ok: false, reason: "FILING_MARK_REFUSED", field: "audience",
+               detail: `a documenting version names its audience: one of ${AUDIENCES.join(", ")}` };
+    /* R23: the findings and inquiries chosen, each the preparer may see; one not seen answers as one absent */
+    const chosen = from == null ? [] : Array.isArray(from) ? from : null;
+    if (chosen === null || chosen.length > FROM_MAX || !chosen.every((x) => typeof x === "string" && x.trim()))
+      return { ok: false, reason: "FILING_MARK_REFUSED", field: "from", detail: `from lists at most ${FROM_MAX} finding or inquiry ids` };
+    const fromFacts = [];
+    for (const id of [...new Set(chosen.map((x) => x.trim()))]) {
+      const f = this.#findingRead(id, viewer);
+      /* DEC-49 REGION is-communication-prepare */
+      if (!f) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id,
+                       detail: "no finding or inquiry by that id is readable here; one you may not see answers the same" };
+      /* END DEC-49 REGION is-communication-prepare */
+      fromFacts.push(f);
+    }
     const when = this.#when();
-    const { det } = this.#restsOn(a, viewer);
-    const basis = this.#basisOf(a, det, this.governingTier(a));
-    const disclosure = a.premise_override ? overrideDisclosure(a.premise_override) : null;
-    const body = disclosure ? `${disclosure}\n\n${text}` : text;
+    const { det, hidden } = this.#restsOn(a, viewer);
+    const v = this.#view();
+    const basis = this.#basisOf(a, det, this.governingTier(a, v));
+    const disclosure = Filings.#disclosure(a);
+    const matters = this.#matterFacts(a, det, viewer).facts;
+    const facts = [...matters, ...fromFacts.filter((f) => !matters.some((x) => x.finding === f.finding))];
+    const rfc = Filings.#isRfc(a, mk.marks, why);
+    /* R37, R38: assembled from the record without AI, each part naming its source */
+    const parts = assembled ? this.#assembled(why, a, det, hidden, v, facts, mk.marks, viewer, when) : null;
+    let content = parts ? parts.map((x) => x.text).join("\n") : text;
+    if (rfc && !content.includes(KEYED["rfc.quoting"])) content = `${content}\n\n${KEYED["rfc.quoting"]}`;
+    const review = Filings.#reviewCopy(a);
+    let body = review ? `${review.text}\n\n${content}` : content;
+    if (disclosure) body = `${disclosure}\n\n${body}`;
+    /* R23: a request for comment's claims, from the chosen findings: a sourced list, machine work */
+    const claims = rfc && fromFacts.length ? {
+      items: fromFacts.map((f) => ({ finding: f.finding, kind: f.kind, claim: f.claim && (f.claim.conclusion || f.claim.question) || null,
+                                     source: f.source })),
+      label: { kind: "machine", machine_work: true, says: "the claims are assembled by the machine from the findings chosen: a proposal" } } : null;
+    const outward = this.#outward(content, { a, facts, det, view: v.view, marks: mk.marks, textcheck: mk.textcheck, purpose: why,
+                                             form: "communication", viewer });
+    const notices = Filings.#notices(a, v.view, mk.marks);
+    const marks = { ...mk.marks, textcheck: mk.textcheck, from: fromFacts.map((f) => f.finding), printed: [disclosure, review ? review.text : null].filter(Boolean),
+                    ...(review ? { review_copy: review } : {}), rfc, ...(parts ? { parts } : {}), ...(claims ? { claims } : {}) };
     return this.record.transact(() => {
       const { id } = this.record.allocId("FIL", when.slice(0, 4));
-      this.sql.exec(`INSERT INTO communication_drafts (filing_id, action_id, text, purpose, disclosure, preparer, prepared_at, basis)
-                     VALUES (?,?,?,?,?,?,?,?)`, id, a.id, body, why, disclosure, who, when, json(basis));
+      this.sql.exec(`INSERT INTO communication_drafts (filing_id, action_id, text, purpose, disclosure, preparer, prepared_at, basis,
+                       outward, marks) VALUES (?,?,?,?,?,?,?,?,?,?)`, id, a.id, body, why, disclosure, who, when, json(basis),
+                    json({ ...outward, notices }), json(marks));
       return { ok: true, id, action: a.id, form: "communication", text: body, purpose: why, disclosure,
                addressee: a.counterparty ?? null, label: proposalLabel(who, "communication"), prepared_by: who, at: when,
+               from: marks.from, ...(parts ? { parts } : {}), ...(claims ? { claims } : {}), outward, notices, marks: mk.marks,
+               ...(review ? { review_copy: review } : {}),
+               ...(mk.marks.voice === "self" ? { voice_says: { key: "filings.voice.self", text: KEYED["filings.voice.self"] } } : {}),
                evidence: false, says: "a draft communication: nobody has approved or sent it, and nothing is sent until a "
                  + "member approves it and sends it by their own hand" };
     });
+  }
+
+  /* R37 (Actions v0.2 rule 19): a documenting version assembled from the record, without AI: the act and its office,
+     the standard it is measured against, the evidence for each point with its grade, and what is still uncertain, each
+     part naming its source and an undetermined part said so; for the violating party, a time for review and response
+     (the action's own clock entry, its date and basis). R38 (rules 19, 21): a chance-to-fix notice: what correcting the
+     act and remedying its harm would look like under the standard, and a time: the law's period (a profile deadline for
+     the kind, cited) or the group's window (a clock entry whose basis is the group's own). */
+  #assembled(purpose, a, det, hidden, v, facts, marks, viewer, when) {
+    const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === a.kind) || null : null;
+    const val = this.#values(a, det, hidden, entry, viewer, when);
+    const part = (name, x, words) => ("value" in x ? { part: name, text: words(x.value), source: x.source }
+      : { part: name, text: `${name[0].toUpperCase()}${name.slice(1)}: undetermined, because ${x.why}.`, source: null, undetermined: true });
+    const office = [val.counterparty_role.value, val.counterparty_body.value].filter(Boolean).join(", ");
+    const out = [];
+    out.push(part("the act", val.act, (w) => `The act: ${w}${office ? `, by ${office}` : ""}.`));
+    out.push(part("the standard", val.standards, (w) => `The standard it is measured against: ${w}.`));
+    if (purpose === "document_infraction") {
+      const standard = this.#venueStandard(v, a.kind);
+      const exhibits = this.#exhibits(this.#citesOf(a, det, facts), standard);
+      for (const f of facts) {
+        const g = f.grade && f.grade.pair ? Object.entries(f.grade.pair).map(([k, x]) => `${k} ${x && x.grade ? x.grade : "undetermined"}`).join(", ") : "undetermined";
+        out.push({ part: "a point", text: `Point: ${f.claim && (f.claim.conclusion || f.claim.question) || f.finding} (finding ${f.finding}, ${f.kind}; grade ${g}).`, source: f.source });
+      }
+      for (const e of exhibits)
+        out.push({ part: "evidence", text: `Evidence: ${e.locator ?? e.sha256} (capture grade ${e.grade && e.grade.grade ? e.grade.grade : "undetermined"}).`,
+                   source: e.sha256 });
+      const unsure = [...facts.filter((f) => f.kind === "unpublished").map((f) => `finding ${f.finding} is not published`),
+                      ...exhibits.filter((e) => !(e.grade && e.grade.grade)).map((e) => `the grade of ${e.locator ?? e.sha256}`)];
+      out.push({ part: "still uncertain", text: unsure.length ? `Still uncertain: ${unsure.join("; ")}.` : "Still uncertain: nothing the record marks undetermined.",
+                 source: null });
+      if (marks.audience === "violating_party") {
+        const c = a.clock.find((x) => realDate(x.date) && str(x.basis) && (x.status ?? "pending") === "pending");
+        out.push(c ? { part: "a time for review and response", text: `We invite your review and response by ${c.date} (${c.basis}).`, source: `${a.id}/clock` }
+          : { part: "a time for review and response", text: "A time for review and response: undetermined, because the action's clock states none.",
+              source: null, undetermined: true });
+      }
+      return out;
+    }
+    /* chance_to_fix */
+    const asks = this.#allowedAsks(det, v.view, viewer).filter((x) => x.what !== "a route the profile names");
+    const requires = asks.filter((x) => x.what === "the standard's requirement");
+    out.push(requires.length ? { part: "correcting the act", text: `Correcting the act would look like this: ${requires.map((r) => r.words).join("; ")}.`,
+                                 source: requires.map((r) => r.source).join(", ") }
+      : { part: "correcting the act", text: "Correcting the act: undetermined, because no determination states what the standard requires.", source: null, undetermined: true });
+    const harm = asks.filter((x) => x.what === "remedy of a recorded consequence");
+    out.push(harm.length ? { part: "remedying the harm", text: `Remedying its harm would look like this: remedy for ${harm.map((r) => r.words).join("; ")}.`,
+                             source: harm.map((r) => r.source).join(", ") }
+      : { part: "remedying the harm", text: "Remedying its harm: no consequence of the act is recorded.", source: null });
+    const law = v.view && Array.isArray(v.view.deadlines) ? v.view.deadlines.find((d) => d.applies_to === a.kind && !d.defends) : null;
+    const window = a.clock.find((x) => realDate(x.date) && (x.basis_kind === "window"));
+    out.push(law ? { part: "a time", text: `The time the law allows: ${law.days ?? law.amount ?? "a period"} ${law.count ?? law.units ?? "days"} (${law.citation ?? "its citation not stated"}).`,
+                     source: `profile:${law.profile}/deadlines/${law.rule}` }
+      : window ? { part: "a time", text: `The time we set: by ${window.date} (${window.basis}).`, source: `${a.id}/clock` }
+      : { part: "a time", text: "A time: undetermined, because neither the profile nor the action's clock states one.", source: null, undetermined: true });
+    return out;
+  }
+
+  /* ---------------------------------------------------------------- T45: what an outward text is checked for */
+
+  /* R34, R37, R39, R43, R44, R48: the marks a member states at preparation, read and refused whole when malformed
+     (`FILING_MARK_REFUSED`, naming the field): `voice` (R44), `audience` (R37, R42), `language` (R43, a BCP 47 tag the
+     member states; never defaulted), `own_doing` (R34, sentence indexes the member marks as about the group's own
+     doing), `names_pending` (R39, the text names a pending measure or a candidate), `textcheck` (R43, R48: the
+     assistant's `textcheck` answer, handed in by the caller where enabled). */
+  static #marks({ voice, audience, language, own_doing: ownDoing, names_pending: pending, textcheck } = {}) {
+    const bad = (field, detail) => {
+      /* DEC-49 REGION is-filing-mark-refused */
+      return { ok: false, reason: "FILING_MARK_REFUSED", field, detail };
+      /* END DEC-49 REGION is-filing-mark-refused */
+    };
+    if (voice != null && !VOICES.includes(voice)) return bad("voice", `voice is one of ${VOICES.join(", ")}`);
+    if (audience != null && !AUDIENCES.includes(audience)) return bad("audience", `audience is one of ${AUDIENCES.join(", ")}`);
+    if (language != null && (typeof language !== "string" || !/^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{1,8})*$/.test(language)))
+      return bad("language", "language is a language tag, such as en or en-GB");
+    if (ownDoing != null && (!Array.isArray(ownDoing) || ownDoing.length > 5000 || !ownDoing.every((i) => Number.isInteger(i) && i >= 0)))
+      return bad("own_doing", "own_doing lists the indexes of sentences about the group's own doing");
+    if (pending != null && typeof pending !== "boolean") return bad("names_pending", "names_pending is true or false");
+    let tc = null;
+    if (textcheck != null) {
+      const items = isObj(textcheck) && Array.isArray(textcheck.sentences) ? textcheck.sentences : null;
+      if (!items || items.length > 5000 || !items.every((x) => isObj(x) && typeof x.quote === "string" && x.quote.trim() && typeof x.reads_as === "string"))
+        return bad("textcheck", "textcheck is the assistant's answer: {sentences: [{quote, reads_as, why}]}");
+      tc = items.map((x) => ({ quote: x.quote, reads_as: x.reads_as, ...(typeof x.why === "string" ? { why: x.why } : {}) }));
+    }
+    return { ok: true, marks: { voice: voice ?? null, audience: audience ?? null, language: language ?? null,
+                                own_doing: [...new Set(ownDoing || [])].sort((x, y) => x - y), names_pending: pending === true },
+             textcheck: tc };
+  }
+
+  /* R34: what each sentence is judged against: the findings of R35's three kinds the text rests on (`facts`, each read
+     at its pinned bytes by `#fact`, its question and conclusion) and the group's own dated correspondence on the action,
+     each a cite as `case-grammar` R23 spells one (a finding, or a material: the entry). */
+  static #recordCited(a, facts) {
+    const cited = [], conclusions = [];
+    for (const f of facts) {
+      if (!f || !f.finding || f.kind === "unpublished") continue;
+      const claim = f.claim && str(f.claim.conclusion);
+      cited.push({ kind: "finding", ref: f.finding, text: [f.claim && f.claim.question, claim].filter(Boolean).join(" ") });
+      if (claim) conclusions.push({ finding: f.finding, claim, claim_state: "adopted", legs: [] });
+    }
+    for (const [i, e] of a.correspondence.entries()) {
+      const at = realDate(String(e.at ?? "").slice(0, 10));
+      if (!at) continue;
+      const ord = Number.isInteger(e.ord) ? e.ord : i;
+      cited.push({ kind: "material", ref: `${a.id}#${ord}`,
+                   text: [at, e.direction, str(e.account), str(e.medium), str(e.party), isObj(e.quote) ? str(e.quote.text) : str(e.quote)]
+                     .filter(Boolean).join(" ") });
+    }
+    return { cited, conclusions };
+  }
+
+  /* R34 (Actions v0.2 rule 3): the record check, sentence by sentence over `sentences` (R34's one split): a question and
+     a sentence the member marks about the group's own doing are classed here and never judged; every other sentence is
+     judged by `case-checker.checkAccount` (its R24) against `#recordCited`'s cites: `supported` naming them,
+     `unsupported`, or `contradicted` naming what contradicts it. A judgment that throws reads every judged sentence
+     undetermined, never supported. */
+  #recordCheck(sentences, a, facts, ownDoing) {
+    const { cited, conclusions } = Filings.#recordCited(a, facts);
+    const judged = [];
+    const items = sentences.map((text, index) => {
+      if (isQuestion(text)) return { index, verdict: "question" };
+      if (ownDoing.includes(index)) return { index, verdict: "own_doing" };
+      judged.push(index);
+      return { index };
+    });
+    const refs = cited.map((c) => ({ kind: c.kind, ref: c.ref }));
+    let answer = null;
+    if (judged.length) {
+      try {
+        answer = this.accountCheck({ account: judged.map((i) => ({ ord: i, text: sentences[i], cites: refs, kind: "claim" })),
+                                     cited, printed: [], conclusions });
+      } catch { answer = null; }
+    }
+    const v = verdictsOf(judged, answer, refs.map((c) => c.ref));
+    for (const it of items) if (!it.verdict) Object.assign(it, v.get(it.index));
+    const count = (k) => items.filter((i) => i.verdict === k).length;
+    return { state: judged.length && (!answer || answer.ok !== true) ? "undetermined" : "read", items, cites: refs.map((c) => c.ref),
+             says: `${count("supported")} supported, ${count("unsupported")} not supported by the record (pointed out, never `
+                 + `refused), ${count("contradicted")} contradicted by it (held back unless a member releases it with a reason)`
+                 + `${count("undetermined") ? `, ${count("undetermined")} not judged` : ""}; questions are never flagged` };
+  }
+
+  /* R39, R43, R38: action-grammar's `pointOut` (its R18) for one phrasing kind over the sentences, in the member's
+     language, with the view's phrasings; a read it does not answer, or a language not stated, is undetermined, never
+     "nothing found". */
+  #pointOut(sentences, kind, language, view) {
+    const fn = this.grammar && this.grammar.pointOut;
+    if (typeof fn !== "function") return { state: "undetermined", why: "no module answers the phrasing lists here" };
+    if (!language) return { state: "undetermined", why: "no_list", says: "no language is stated for the draft, so no list is read" };
+    const r = this.#call(() => fn({ sentences, language, kind, ...(view ? { view } : {}) }));
+    return isObj(r) && str(r.state) ? r : { state: "undetermined", why: "the phrasing lists could not be read" };
+  }
+
+  /* R43, R48: the assistant's `textcheck` sentences of one reading, each matched to a sentence of R34's split by its
+     verbatim `quote` (K2824), never by its index, and labelled machine work; a quote no sentence holds is listed apart. */
+  static #machine(sentences, textcheck, readsAs) {
+    const items = [], unmatched = [];
+    for (const x of textcheck || []) {
+      if (x.reads_as !== readsAs) continue;
+      const index = sentences.findIndex((s) => s.includes(x.quote));
+      (index >= 0 ? items : unmatched).push({ ...(index >= 0 ? { index } : {}), quote: x.quote, ...(x.why ? { why: x.why } : {}),
+                                             label: { kind: "machine", machine_work: true, says: "pointed out by the assistant: machine work, a proposal" } });
+    }
+    return { items, unmatched };
+  }
+
+  /* R38: what a notice or demand may ask for: what a standard requires (the determination's comparison rows), remedy of
+     a recorded consequence (its affected part) and a route the profile names (a kind's label). */
+  #allowedAsks(det, view, viewer) {
+    const out = [];
+    const cdet = det && this.conformance ? this.#call(() => this.conformance.determinationRead({ id: det.id, viewer })) : null;
+    for (const s of cdet && Array.isArray(cdet.standards) ? cdet.standards : [])
+      for (const r of Array.isArray(s.rows) ? s.rows : [])
+        if (isObj(r) && str(r.requires)) out.push({ what: "the standard's requirement", words: str(r.requires), source: str(s.standard) });
+    const cons = det && this.consequences && typeof this.consequences.consequencesOf === "function"
+      ? this.#call(() => this.consequences.consequencesOf({ determination: det.id, viewer })) : null;
+    for (const p of cons && Array.isArray(cons.parts) ? cons.parts : [])
+      if (isObj(p.affected) && str(p.affected.description)) out.push({ what: "remedy of a recorded consequence", words: str(p.affected.description), source: p.id });
+    for (const k of view && Array.isArray(view.action_kinds) ? view.action_kinds : [])
+      if (str(k.label)) out.push({ what: "a route the profile names", words: str(k.label), source: `profile:${k.profile}/action_kinds/${k.kind}` });
+    return out;
+  }
+
+  /* R39, R45, R49: the notices shown once with a draft, never refusing: the election notice (a pending measure or a
+     candidate the member marks; the governing view's `legal_facts` of trigger `pending_measure_or_candidate`, its
+     citation), the recognition reminder (a kind the view marks `shape: recognition`), and each legal fact whose
+     `applies_to` names the kind. */
+  static #notices(a, view, marks) {
+    const out = [];
+    const facts = view && Array.isArray(view.legal_facts) ? view.legal_facts.filter(isObj) : [];
+    if (marks.names_pending) {
+      const election = facts.filter((f) => f.trigger === "pending_measure_or_candidate");
+      for (const f of election)
+        out.push({ kind: "election", key: "filings.election.notice", text: KEYED["filings.election.notice"], fact: f.key ?? null,
+                   citation: f.citation ?? null, statement: f.statement ?? null, source: `profile:${f.profile}/legal_facts/${f.key}` });
+      if (!election.length)
+        out.push({ kind: "election", key: "filings.election.notice", text: KEYED["filings.election.notice"], citation: null,
+                   says: "the governing view holds no campaign-spending rule, so its citation is undetermined" });
+    }
+    const entry = view && Array.isArray(view.action_kinds) ? view.action_kinds.find((k) => k.kind === a.kind) : null;
+    if (entry && entry.shape === "recognition")
+      out.push({ kind: "reminder", key: "recognition.staff_public", text: KEYED["recognition.staff_public"] });
+    for (const f of facts)
+      if (Array.isArray(f.applies_to) && f.applies_to.includes(a.kind))
+        out.push({ kind: "legal_fact", key: f.key ?? null, citation: f.citation ?? null, statement: f.statement ?? null,
+                   source: `profile:${f.profile}/legal_facts/${f.key}` });
+    return out;
+  }
+
+  /* R34, R38, R39, R43, R48: everything an outward text is checked for, over R34's one split of `body` (the text
+     without what this module printed first): the record check; the assertion phrasings (R43, the assistant's unioned,
+     labelled), own-benefit asks (R38: every text; a chance-to-fix notice's other asks too), position sentences (R39: a
+     text prepared as the group's comment or testimony), the staff the assistant names (R48, or that its check did not
+     run); `asks` only for a chance-to-fix notice. `form` is `filing`, `communication` or `briefing` (R34 alone). */
+  #outward(body, { a, facts, det = null, view = null, marks, textcheck = null, purpose = null, form, viewer }) {
+    const sentences = sentencesOf(body);
+    const out = { sentences, record_check: this.#recordCheck(sentences, a, facts, marks.own_doing) };
+    if (form === "briefing") return out;
+    const lang = marks.language;
+    const assertion = this.#pointOut(sentences, "assertion", lang, view);
+    const ownBenefit = this.#pointOut(sentences, "own_benefit_ask", lang, view);
+    out.pointed = {
+      assertion, assertion_machine: Filings.#machine(sentences, textcheck, "assertion"),
+      own_benefit_ask: ownBenefit,
+      ...(marks.voice === "group" ? { position: this.#pointOut(sentences, "position", lang, view) } : {}),
+      staff_named: textcheck ? Filings.#machine(sentences, textcheck, "staff_named")
+        : { items: [], ran: false, key: "filings.staff.not_run", says: KEYED["filings.staff.not_run"] },
+    };
+    if (purpose === "chance_to_fix") {
+      const allowed = this.#allowedAsks(det, view, viewer);
+      out.asks = sentences.flatMap((s, index) => {
+        if (!asks(s)) return [];
+        const ok = askAllowed(s, allowed);
+        return [ok ? { index, allowed: ok } : { index, pointed: true, says: "this sentence asks for something the standard, a recorded consequence or a profile route does not name" }];
+      });
+    }
+    if (assertion.state !== "read") out.no_list = { key: "phrasing.no_list", text: KEYED["phrasing.no_list"], why: assertion.why ?? null };
+    return out;
+  }
+
+  /* R43: the pointed sentences R19 reads: the phrasing list's and the assistant's, unioned by sentence. */
+  static #assertionPointed(o) {
+    const list = o.pointed && o.pointed.assertion;
+    const machine = (o.pointed && o.pointed.assertion_machine && o.pointed.assertion_machine.items) || [];
+    if ((!list || list.state !== "read") && !machine.length) return null;
+    const pointed = [...(list && list.state === "read" ? list.pointed || [] : []),
+                     ...machine.map((m) => ({ index: m.index, phrase: m.quote, origin: "machine" }))];
+    return { state: "read", language: list && list.language, kind: "assertion", pointed };
+  }
+
+  /* R34, R38, R40, R43: the approval's refusals over the check of the approved text, in order after R6's own:
+     `ASSERTION_RESOLUTION_REFUSED`, `ASSERTION_UNRESOLVED` (R43), `CONTRADICTED_HELD` unless released (R34),
+     `SELF_BENEFIT_ASK` (R38), `RFC_QUOTING_MISSING` (R40). Answers `{refusal}` or `{released, resolutions, breach}`. */
+  #outwardRefusal(o, { filing, release, resolutions, rfc, body }) {
+    const sentences = o.sentences;
+    const pointed = Filings.#assertionPointed(o);
+    let breach = false, recorded = [];
+    if (pointed) {
+      const findings = [];
+      const res = Array.isArray(resolutions) ? resolutions : resolutions == null ? [] : null;
+      const g = this.grammar;
+      if (res === null) findings.push({ detail: "resolutions is a list" });
+      else if (typeof g.assertionResolutionFindings === "function")
+        this.#call(() => g.assertionResolutionFindings({ sentences, pointed, resolutions: res }, findings));
+      /* DEC-49 REGION is-assertion-resolution-refused */
+      if (findings.length)
+        return { refusal: { ok: false, reason: "ASSERTION_RESOLUTION_REFUSED", filing, findings,
+                            detail: "a resolution names no pointed sentence, names one twice, or is malformed" } };
+      /* END DEC-49 REGION is-assertion-resolution-refused */
+      const u = typeof g.assertionsUnresolved === "function" ? this.#call(() => g.assertionsUnresolved({ sentences, pointed, resolutions: res })) : null;
+      /* DEC-49 REGION is-assertion-unresolved */
+      if (u && Array.isArray(u.unresolved) && u.unresolved.length)
+        return { refusal: { ok: false, reason: "ASSERTION_UNRESOLVED", filing,
+                            sentences: u.unresolved.map((i) => ({ index: i, text: sentences[i] })),
+                            detail: "each sentence pointed out as asserting a breach is resolved: rewritten, said to only ask, or the act treated as a breach claim" } };
+      /* END DEC-49 REGION is-assertion-unresolved */
+      breach = !!(u && u.breach_claim);
+      recorded = res;
+    }
+    const held = o.record_check.items.filter((i) => i.verdict === "contradicted");
+    const rel = Array.isArray(release) ? release : [];
+    const released = held.map((h) => rel.find((r) => isObj(r) && r.ord === h.index && typeof r.reason === "string" && r.reason.trim()
+                                                    && r.reason.trim().length <= RELEASE_REASON_MAX))
+      .filter(Boolean).map((r) => ({ ord: r.ord, reason: r.reason.trim() }));
+    /* DEC-49 REGION is-contradicted-held */
+    if (released.length < held.length)
+      return { refusal: { ok: false, reason: "CONTRADICTED_HELD", filing,
+                          sentences: held.filter((h) => !released.some((r) => r.ord === h.index))
+                            .map((h) => ({ index: h.index, text: sentences[h.index], contradicted_by: h.contradicted_by ?? null })),
+                          detail: "a contradicted sentence is held back unless the approval names it with a reason (release: [{ord, reason}])" } };
+    /* END DEC-49 REGION is-contradicted-held */
+    const own = o.pointed && o.pointed.own_benefit_ask && o.pointed.own_benefit_ask.state === "read" ? o.pointed.own_benefit_ask.pointed || [] : [];
+    /* DEC-49 REGION is-self-benefit-ask */
+    if (own.length)
+      return { refusal: { ok: false, reason: "SELF_BENEFIT_ASK", filing,
+                          sentences: [...new Set(own.map((p) => p.index))].map((i) => ({ index: i, text: sentences[i] })),
+                          detail: "rewrite each sentence that asks for the benefit of the group or its members; there is no override" } };
+    /* END DEC-49 REGION is-self-benefit-ask */
+    /* DEC-49 REGION is-rfc-quoting-missing */
+    if (rfc && !String(body ?? "").includes(KEYED["rfc.quoting"]))
+      return { refusal: { ok: false, reason: "RFC_QUOTING_MISSING", filing, sentence: KEYED["rfc.quoting"], key: "rfc.quoting",
+                          detail: "a request for comment carries the sentence that the reply may be quoted unless it says otherwise" } };
+    /* END DEC-49 REGION is-rfc-quoting-missing */
+    return { released, resolutions: recorded, breach };
+  }
+
+  /* R43: a `breach_claim` resolution makes the action a breach action through `actions`' revision: its `bundle.md`
+     promoted with `breach: true` under a short lease, so `actions`' step judges it (its R1, R8's gate) and its refusals
+     pass through as they came. An action already a breach action is left as it is. */
+  #breachRevision(id, who, viewer, when) {
+    const lease = this.record.acquireLease(id, who, 30000);
+    if (!lease || !lease.ok)
+      return { ok: false, reason: "LEASE_HELD", target: id, detail: "another member is writing to this action right now; nothing was approved" };
+    try {
+      const f = this.record.readFile(id, "bundle.md");
+      if (!f || typeof f.text !== "string") return { ok: false, reason: "NO_DOCUMENT", target: id, detail: "the action has no readable bundle.md" };
+      const lines = f.text.split("\n");
+      const end = lines[0] === "---" ? lines.indexOf("---", 1) : -1;
+      if (end === -1) return { ok: false, reason: "NO_DOCUMENT", target: id, detail: "the action's bundle.md has no front matter" };
+      const at = lines.findIndex((l, i) => i > 0 && i < end && /^breach:/.test(l));
+      if (at >= 0) lines[at] = "breach: true"; else lines.splice(end, 0, "breach: true");
+      const li = lines.findIndex((l, i) => i > 0 && i < lines.indexOf("---", 1) && /^last_updated:/.test(l));
+      if (li >= 0) lines[li] = `last_updated: "${when}"`;
+      const text = lines.join("\n");
+      let fm = {};
+      try { fm = parseFrontmatter(text).data || {}; } catch { fm = {}; }
+      const carried = [];
+      for (const path of this.record.livePaths(id) || []) {
+        if (path === "bundle.md") continue;
+        const c = this.record.readFile(id, path);
+        if (c) carried.push(typeof c.text === "string" ? { path, text: c.text } : { path, blobSha: c.blobSha, sha256: c.sha256, bytes: c.bytes });
+      }
+      const head = this.record.head(id);
+      const p = this.promotion.promote({ bundleId: id, base: head ? head.bundleSha : null,
+        snapKey: `${when.replace(/[-:]/g, "")}_breach`, author: who, viewer: viewer ?? who,
+        files: [{ path: "bundle.md", text }, ...carried],
+        meta: { object_type: fm.object_type ?? "action", title: fm.title, current_state: head ? head.currentState : fm.current_state,
+                prior_state: fm.prior_state ?? null, created: fm.created, last_updated: when } });
+      return p && p.ok ? { ok: true } : { ...(p || { ok: false, reason: "PROMOTION_FAILED" }), target: id };
+    } finally {
+      try { this.record.releaseLease(id, who); } catch { /* record-core never throws here */ }
+    }
+  }
+
+  /* R44: a text prepared as the member's own notes is not the group's act: never approved or recorded as sent. */
+  static #notTheGroups(d) {
+    const marks = parse(d.marks) || {};
+    /* DEC-49 REGION is-not-the-groups-act */
+    if (marks.voice === "self")
+      return { ok: false, reason: "NOT_THE_GROUPS_ACT", filing: d.filing_id, voice: "self",
+               detail: "prepared as yourself: your own notes are never approved, stamped or recorded as the group's act" };
+    /* END DEC-49 REGION is-not-the-groups-act */
+    return null;
+  }
+
+  /* R40, R37: whether a text is a request for comment: an action of the product kind `request_for_comment`, or a
+     documenting version for the violating party. */
+  static #isRfc(a, marks, purpose) {
+    return a.kind === "request_for_comment" || (purpose === "document_infraction" && marks.audience === "violating_party");
+  }
+
+  /* R46: a press action's review-copy line (actions R79's terms, as its read answers them), or null for an action that
+     is not a press action. */
+  static #reviewCopy(a) {
+    const press = isObj(a.counterparty) && a.counterparty.kind === "press";
+    if (!press) return null;
+    const t = a.press_terms;
+    const embargo = t && str(t.embargo_until), release = t && str(t.release_at);
+    if (!embargo && !release) return { embargo_until: null, release_at: null, key: "filings.review_copy.no_embargo", text: KEYED["filings.review_copy.no_embargo"] };
+    return { embargo_until: embargo, release_at: release, key: "filings.review_copy.terms",
+             text: keyed("filings.review_copy.terms", { embargo: embargo ?? "a time not stated", release: release ?? "a time not stated" }) };
   }
 
   /* R6: what a draft read, so its staleness is stated by name. */
@@ -776,9 +1283,24 @@ export class Filings {
 
   /* ---------------------------------------------------------------- R6: filingApprove */
 
-  /** R6, R22, R24: a member approves the draft's text or an edited text, at most once; the approved text is the
-   *  member's. The approved bytes carry R24's disclosure first where the draft did, and the in-band quartet (R22). */
-  async filingApprove({ filing = null, text = undefined, author = null, viewer = null } = {}) {
+  /* R34, R43: the approved text without what this module printed first on the draft (a disclosure, an advisory, the
+     not-written-for statement, a review copy's line), each removed only where it still opens the text as printed. */
+  static #content(body, printed) {
+    let t = body;
+    for (const p of Array.isArray(printed) ? printed : []) {
+      if (typeof p === "string" && p && t.startsWith(p)) t = t.slice(p.length).replace(/^\n+/, "");
+    }
+    return t;
+  }
+
+  /** R6, R22, R24, R34, R36, R38, R40, R43, R44, R46: a member approves the draft's text or an edited text, at most once;
+   *  the approved text is the member's. Its check is run again on the approved text: an assertion pointed out is
+   *  resolved (`resolutions`), a contradicted sentence released by name with a reason (`release`), an own-benefit ask
+   *  rewritten, a request for comment keeps its quoting sentence. The approved bytes carry R24's disclosure first where
+   *  the draft did, and the in-band quartet with the group's public fields (R22), a press review copy's times in its
+   *  subject (R46). A `breach_claim` resolution makes the action a breach action (R43). */
+  async filingApprove({ filing = null, text = undefined, release = null, resolutions = null, textcheck = null, author = null,
+                        viewer = null } = {}) {
     const who = str(author);
     /* DEC-49 REGION is-filing-approve */
     if (!who || isMachineIdentity(who))
@@ -787,6 +1309,8 @@ export class Filings {
                            : "no member is named as the one approving" };
     const d = this.#draft(filing, viewer);
     if (!d) return this.#noFiling(filing);
+    const self = Filings.#notTheGroups(d);
+    if (self) return self;
     const held = this.#alreadyApproved(d.filing_id);
     if (held) return held;
     const changed = this.#staleness(d);
@@ -800,18 +1324,43 @@ export class Filings {
     const unwritable = Filings.#unwritable(body, { filing: d.filing_id });
     if (unwritable) return unwritable;
     /* END DEC-49 REGION is-filing-approve */
+    /* T45: the check of the approved text (R34, R38, R39, R43, R48), the marks stated at preparation, and the
+       assistant's sentences handed in now (or those handed in at preparation) */
+    const marks = parse(d.marks) || {};
+    const tc = textcheck != null ? Filings.#marks({ textcheck }) : { ok: true, textcheck: marks.textcheck ?? null };
+    if (!tc.ok) return tc;
+    const a = this.#action(d.action_id, viewer);
+    const { det } = this.#restsOn(a, viewer);
+    const v = this.#view();
+    const fromFacts = (Array.isArray(marks.from) ? marks.from : []).map((id) => this.#findingRead(id, viewer)).filter(Boolean);
+    const matters = this.#matterFacts(a, det, viewer).facts;
+    const content = Filings.#content(body, marks.printed);
+    const checked = this.#outward(content, { a, facts: [...matters, ...fromFacts], det, view: v.view,
+      marks: { voice: marks.voice ?? null, audience: marks.audience ?? null, language: marks.language ?? null,
+               own_doing: Array.isArray(marks.own_doing) ? marks.own_doing : [], names_pending: marks.names_pending === true },
+      textcheck: tc.textcheck, purpose: d.purpose ?? null, form: d.form, viewer });
+    const gate = this.#outwardRefusal(checked, { filing: d.filing_id, release, resolutions, rfc: marks.rfc === true, body });
+    if (gate.refusal) return gate.refusal;
     const at = this.#when();
+    if (gate.breach && !a.breach) {
+      const r = this.#breachRevision(a.id, who, viewer, at);
+      if (!r.ok) return r;
+    }
     const sha = sha256HexSync(body);
     const face = d.disclosure && !body.startsWith(d.disclosure) ? `${d.disclosure}\n\n${body}` : body;
+    const review = isObj(marks.review_copy) ? marks.review_copy : null;
     const { bytes, inband } = await this.#stamped(face, {
       what: `the approved ${d.form === "communication" ? "communication" : "filing"} ${d.filing_id}`, date: at, author: who,
-      project: (parse(d.basis) || {}).project ?? null });
+      project: (parse(d.basis) || {}).project ?? null, review });
     const again = this.#alreadyApproved(d.filing_id);
     if (again) return again;
-    this.sql.exec(`INSERT INTO filing_approvals (filing_id, action_id, text, sha, approved_by, at, inband) VALUES (?,?,?,?,?,?,?)`,
-                  d.filing_id, d.action_id, body, sha, who, at, json(inband));
-    return { ok: true, filing: d.filing_id, action: d.action_id, form: d.form, approved_by: who, at, sha, edited: body !== d.text,
-             bytes, inband, disclosure: d.disclosure ?? null,
+    const record = { check: checked, released: gate.released, resolutions: gate.resolutions, breach_claim: gate.breach };
+    this.sql.exec(`INSERT INTO filing_approvals (filing_id, action_id, text, sha, approved_by, at, inband, outward, body_sha)
+                   VALUES (?,?,?,?,?,?,?,?,?)`, d.filing_id, d.action_id, body, sha, who, at, json(inband), json(record), sha);
+    return { ok: true, filing: d.filing_id, action: d.action_id, form: d.form, approved_by: who, at, sha, body_sha: sha,
+             edited: body !== d.text, bytes, inband, disclosure: d.disclosure ?? null,
+             check: checked, released: gate.released, resolutions: gate.resolutions, ...(gate.breach ? { breach_claim: true } : {}),
+             ...(checked.no_list ? { no_list: checked.no_list } : {}),
              says: "approved by the member named: the text is theirs. Your group's Civicsmith transmits nothing; a member files it "
                  + "by the venue's own means and records that it was sent" };
   }
@@ -830,15 +1379,26 @@ export class Filings {
                            : "no member is named as the one who sent it" };
     const d = this.#draft(filing, viewer);
     if (!d) return this.#noFiling(filing);
+    const self = Filings.#notTheGroups(d);
+    if (self) return self;
     if (!this.#one(`SELECT 1 AS x FROM filing_approvals WHERE filing_id=?`, d.filing_id))
       return { ok: false, reason: "NOT_APPROVED", filing: d.filing_id, detail: "a member approves the draft before it is recorded as sent" };
     const sent = this.#one(`SELECT ord, sent_on, recorded_by FROM filing_sendings WHERE filing_id=?`, d.filing_id);
     if (sent) return { ok: false, reason: "ALREADY_SENT", filing: d.filing_id, ord: sent.ord, at: sent.sent_on,
                        recorded_by: sent.recorded_by, detail: "this draft is already recorded as sent" };
+    /* R42: where the project names this act as needing a second member's approval, it is sent only once one is recorded */
+    const second = this.#secondNeeded(d, viewer);
+    if (second.needed && !this.#one(`SELECT 1 AS x FROM filing_second_approvals WHERE filing_id=?`, d.filing_id))
+      return { ok: false, reason: "SECOND_APPROVAL_NEEDED", filing: d.filing_id, matched: second.matched,
+               detail: "your project asks a second member to approve this act (op=filingsecondapprove) before it is sent" };
     /* END DEC-49 REGION is-filing-sent */
     if (!this.actions || typeof this.actions.actionCorrespond !== "function")
       return this.#noAction(d.action_id);
     const now = this.#when();
+    /* R46: a press review copy recorded sent before its release time is recorded as the review copy, saying so */
+    const review = isObj((parse(d.marks) || {}).review_copy) ? parse(d.marks).review_copy : null;
+    const asReview = review && str(review.release_at) && String(at ?? "") < str(review.release_at)
+      ? { review_copy: true, release_at: review.release_at, says: `recorded as the review copy: sent before its release time, ${review.release_at}` } : null;
     const out = this.record.transact(() => {
       const c = this.actions.actionCorrespond({ target: d.action_id, direction: "sent", at,
         ...(medium != null ? { medium } : {}), ...(artifactSha != null ? { artifactSha } : {}),
@@ -846,14 +1406,14 @@ export class Filings {
       if (!c || c.ok === false) return c || this.#noAction(d.action_id);
       const ord = Number.isInteger(Number(c.ord)) ? Number(c.ord) : null;
       this.sql.exec(`INSERT INTO filing_sendings (filing_id, action_id, ord, sent_on, medium, artifact_sha, account,
-                       recorded_by, recorded_at) VALUES (?,?,?,?,?,?,?,?,?)`,
-        d.filing_id, d.action_id, ord, String(at ?? ""), medium, artifactSha, account, who, now);
+                       recorded_by, recorded_at, review_copy) VALUES (?,?,?,?,?,?,?,?,?,?)`,
+        d.filing_id, d.action_id, ord, String(at ?? ""), medium, artifactSha, account, who, now, asReview ? json(asReview) : null);
       return { ok: true, ord, entry: c };
     });
     if (!out || out.ok === false) return out;
     return { ok: true, filing: d.filing_id, action: d.action_id, ord: out.ord, recorded_by: who, at: now,
              held_as: out.entry.held_as ?? (artifactSha ? "capture" : "testimony"),
-             proposed: this.#proposed(d, who, viewer),
+             proposed: this.#proposed(d, who, viewer), ...(asReview ? { review_copy: asReview } : {}),
              says: "recorded as sent by the member named. No action state moved and no clock entry was written: "
                  + "`proposed` is what a member may choose next" };
   }
@@ -885,15 +1445,169 @@ export class Filings {
     };
   }
 
+  /* ---------------------------------------------------------------- T45: R36, R41, R42, R47 */
+
+  /* R42: whether the action's project names this act as needing a second member's approval
+     (`project-roster.secondApprovalNeeded`, its R24): by the action's kind, the draft's governing tier, and whether it
+     is public (a text for the public or broadly, or the group's own comment or testimony). With no project or no module
+     answering, one approval sends. */
+  #secondNeeded(d, viewer) {
+    const roster = this.projectRoster;
+    const a = this.#action(d.action_id, MACHINE_READER);
+    const project = (a && a.project) || (parse(d.basis) || {}).project || null;
+    if (!a || !project || !roster || typeof roster.secondApprovalNeeded !== "function") return { needed: false, matched: [] };
+    const marks = parse(d.marks) || {};
+    const tier = Number.isInteger(d.tier) ? d.tier : this.governingTier(a).tier;
+    const r = this.#call(() => roster.secondApprovalNeeded({ projectId: project, kind: a.kind, tier,
+      public: ["public", "broad"].includes(marks.audience) || marks.voice === "group" }));
+    return isObj(r) && r.needed === true ? { needed: true, matched: Array.isArray(r.matched) ? r.matched : [] } : { needed: false, matched: [] };
+  }
+
+  /** R42: a second member's approval of an approved draft, by a member other than the approver; at most one. */
+  filingSecondApprove({ filing = null, author = null, viewer = null } = {}) {
+    const who = str(author);
+    /* DEC-49 REGION is-second-approve */
+    if (!who || isMachineIdentity(who))
+      return { ok: false, reason: "MACHINE_CANNOT_APPROVE",
+               detail: who ? `'${who.slice(0, 60)}' is a machine identity: a member approves` : "no member is named as the one approving" };
+    const d = this.#draft(filing, viewer);
+    if (!d) return this.#noFiling(filing);
+    const ap = this.#one(`SELECT approved_by FROM filing_approvals WHERE filing_id=?`, d.filing_id);
+    if (!ap) return { ok: false, reason: "NOT_APPROVED", filing: d.filing_id, detail: "a member approves the draft before a second member does" };
+    if (ap.approved_by === who)
+      return { ok: false, reason: "SAME_APPROVER", filing: d.filing_id, approved_by: who,
+               detail: "the second approval is made by a member other than the one who approved the text" };
+    /* END DEC-49 REGION is-second-approve */
+    const held = this.#one(`SELECT approved_by, at FROM filing_second_approvals WHERE filing_id=?`, d.filing_id);
+    if (held) return { ok: false, reason: "ALREADY_APPROVED", filing: d.filing_id, approved_by: held.approved_by, at: held.at,
+                       detail: "a second member has already approved this draft, and that approval stands" };
+    const at = this.#when();
+    this.sql.exec(`INSERT INTO filing_second_approvals (filing_id, action_id, approved_by, at) VALUES (?,?,?,?)`, d.filing_id, d.action_id, who, at);
+    return { ok: true, filing: d.filing_id, action: d.action_id, second_approved_by: who, at, approved_by: ap.approved_by,
+             says: "approved a second time by the member named; a member records the sending by their own hand" };
+  }
+
+  /** R36: a member records that a partner organisation approved the same text in its own copy, by its own act:
+   *  `body_sha` the approved text's fingerprint (SHA-256 over the text without the per-group fields, R22). */
+  jointSignatory({ filing = null, organisation = null, body_sha = null, account = null, author = null, viewer = null } = {}) {
+    const who = str(author);
+    /* DEC-49 REGION is-joint-signatory */
+    if (!who || isMachineIdentity(who))
+      return { ok: false, reason: "MACHINE_CANNOT_APPROVE",
+               detail: who ? `'${who.slice(0, 60)}' is a machine identity: a member records a partner's signature` : "no member is named" };
+    const d = this.#draft(filing, viewer);
+    if (!d) return this.#noFiling(filing);
+    const ap = this.#one(`SELECT sha, body_sha FROM filing_approvals WHERE filing_id=?`, d.filing_id);
+    if (!ap) return { ok: false, reason: "NOT_APPROVED", filing: d.filing_id, detail: "a joint text is approved here before a partner's signature is recorded" };
+    const a = this.#action(d.action_id, viewer);
+    const org = str(organisation);
+    const partner = a && org ? a.partners.find((p) => str(p.organisation) === org) : null;
+    if (!partner)
+      return { ok: false, reason: "NOT_A_PARTNER", filing: d.filing_id, organisation: org,
+               partners: a ? a.partners.map((p) => p.organisation) : [], detail: "the organisation is not among the action's partners" };
+    const fp = ap.body_sha || ap.sha;
+    if (str(body_sha) !== fp)
+      return { ok: false, reason: "JOINT_FINGERPRINT_MISMATCH", filing: d.filing_id, organisation: org, body_sha: fp,
+               detail: "the partner's text has another fingerprint: the same text was not approved" };
+    /* END DEC-49 REGION is-joint-signatory */
+    const how = typeof account === "string" ? account.trim() : "";
+    if (!how || how.length > ACCOUNT_MAX || /[\r\n]/.test(how))
+      return { ok: false, reason: "FILING_MARK_REFUSED", field: "account", detail: `say how the partner's act is known, on one line of at most ${ACCOUNT_MAX} characters` };
+    if (this.#one(`SELECT 1 AS x FROM joint_signatories WHERE filing_id=? AND organisation=?`, d.filing_id, org))
+      return { ok: false, reason: "ALREADY_APPROVED", filing: d.filing_id, organisation: org, detail: "this partner's signature is already recorded" };
+    const at = this.#when();
+    this.sql.exec(`INSERT INTO joint_signatories (filing_id, action_id, organisation, role, body_sha, account, recorded_by, at)
+                   VALUES (?,?,?,?,?,?,?,?)`, d.filing_id, d.action_id, org, str(partner.role), fp, how, who, at);
+    return { ok: true, filing: d.filing_id, action: d.action_id, organisation: org, role: str(partner.role), body_sha: fp, account: how,
+             recorded_by: who, at, says: "the partner approved the same text in its own copy, by its own act; no shared plan is made" };
+  }
+
+  /** R47 (Actions v0.2 rule 12): for a hold in place (`action-holds` R2, at an action, an entry or a project), a plain
+   *  notice telling members what to keep outside Civicsmith: the place, the reason as stated, the date and what kinds
+   *  of material to keep, assembled from the record and labelled as R5's drafts. It names no member as a recipient and
+   *  records nothing of any member's compliance; a member sends it by their own hand and records it (`action-holds`
+   *  R11). `HOLD_NOT_IN_PLACE` passed through. */
+  holdNoticePrepare({ place = null, preparer = null, viewer = null } = {}) {
+    const who = str(preparer);
+    /* DEC-49 REGION is-hold-notice-prepare */
+    if (!who) return { ok: false, reason: "FILING_NO_PREPARER", detail: "no stamped preparer: a notice names who prepared it" };
+    /* END DEC-49 REGION is-hold-notice-prepare */
+    const h = this.actionHolds;
+    const p = isObj(place) ? { ...(str(place.target) ? { target: str(place.target) } : {}),
+                               ...(Number.isInteger(place.ord) ? { ord: place.ord } : {}),
+                               ...(str(place.project) ? { project: str(place.project) } : {}) } : {};
+    if (!h || typeof h.holdsOf !== "function")
+      return { ok: false, reason: "HOLD_NOT_IN_PLACE", place: p, why: "no module answers holds here, so no hold is read as in place" };
+    const r = this.#call(() => h.holdsOf({ ...p, viewer }));
+    if (!r || r.ok === false) return r || { ok: false, reason: "HOLD_NOT_IN_PLACE", place: p, why: "the hold could not be read" };
+    const list = Array.isArray(r.statements) ? r.statements : Array.isArray(r.holds) ? r.holds : Array.isArray(r.items) ? r.items : [];
+    const latest = list.length ? list[list.length - 1] : null;
+    if (!latest || latest.hold !== "in_place")
+      return typeof h.holdNotInPlace === "function" ? h.holdNotInPlace(p)
+        : { ok: false, reason: "HOLD_NOT_IN_PLACE", place: p, detail: "no hold is in place here, so no notice is prepared" };
+    const where = p.project ? `the project ${p.project}` : Number.isInteger(p.ord) ? `entry ${p.ord} of the action ${p.target}` : `the action ${p.target}`;
+    const kinds = "documents, letters and emails, messages, notes, recordings, photographs and files, in any form and on any device";
+    const lines = [
+      "Litigation hold notice.",
+      `A hold is in place on ${where}, since ${latest.at ?? "a date the record does not state"}.`,
+      `The reason, as stated: ${latest.reason ?? "no reason is recorded"}.`,
+      `Keep, outside Civicsmith, every ${kinds} that concern it. Do not delete, alter or discard any of them until a member tells you the hold is released.`,
+    ];
+    const sources = [{ part: "the place", source: p.project || p.target }, { part: "the reason and the date", source: `hold:${p.project || p.target}${Number.isInteger(p.ord) ? `#${p.ord}` : ""}` }];
+    const at = this.#when();
+    const text = lines.join("\n");
+    return this.record.transact(() => {
+      const { id } = this.record.allocId("HLN", at.slice(0, 4));
+      this.sql.exec(`INSERT INTO hold_notices (notice_id, action_id, place, text, sources, preparer, prepared_at) VALUES (?,?,?,?,?,?,?)`,
+                    id, p.target ?? null, json(p), text, json(sources), who, at);
+      return { ok: true, id, place: p, text, sources, label: proposalLabel(who, "communication"), prepared_by: who, at, evidence: false,
+               says: "a notice prepared from the record: it names no recipient and records no one's compliance; a member sends it "
+                   + "by their own hand and records the sending (op=holdnoticesent)" };
+    });
+  }
+
+  /** R41 (Actions v0.2 rule 11): templates are offered only after the act is chosen: the offered `file` versions
+   *  (`filing-templates` R14, R25) for this action's kind at a governing tier of 1 or 2, latest first. It takes an
+   *  action, never a kind alone, and lists no kind or template as a suggestion of what to do. */
+  templatesForAction({ action = null, viewer = null } = {}) {
+    const a = this.#action(action, viewer);
+    if (!a) return this.#noAction(action);
+    const gov = this.governingTier(a);
+    if (gov.tier !== 1 && gov.tier !== 2)
+      return { ok: true, action: a.id, kind: a.kind, governing: gov, versions: [],
+               says: gov.tier === 3 ? "the governing tier is 3: no file template is offered; counsel is briefed by a counsel packet"
+                 : "the governing tier is undetermined: a member states it first, and no template is offered until then" };
+    const t = this.filingTemplates;
+    const list = t && typeof t.templatesFor === "function" ? this.#call(() => t.templatesFor({ kind: a.kind, use: "file", viewer })) : null;
+    if (!list || list.ok === false)
+      return { ok: true, action: a.id, kind: a.kind, governing: gov, versions: [], read: false,
+               says: "the group's templates could not be read here, so none is offered" };
+    const versions = list.templates.filter((x) => (x.use ?? "file") === "file")
+      .flatMap((x) => (x.versions || []).map((y) => ({ template: x.id, name: x.name ?? null, origin: x.origin ?? null, profiles: x.profiles ?? null,
+                                                       version: y.version ?? null, number: y.number ?? null, state: y.state ?? null,
+                                                       approved_at: y.approved ? y.approved.at ?? null : y.approved_at ?? null,
+                                                       ...(y.default ? { default: true } : {}) })))
+      .sort((p, q) => String(q.approved_at ?? "").localeCompare(String(p.approved_at ?? "")) || Number(q.number ?? 0) - Number(p.number ?? 0));
+    return { ok: true, action: a.id, kind: a.kind, governing: gov, versions, ...(list.truncated ? { truncated: true } : {}),
+             says: "the file templates offered for this action's kind, latest first" };
+  }
+
   /* ---------------------------------------------------------------- R8–R12: the counsel packet */
 
   /* R9's facts: the finding at its pinned bytes (record-core R60): its question, its conclusion and its citations, and
      the entity it concerns (its own `subject_entity`, R33's set). Only a finding `#det` kept is asked (R27: one withheld
      is no item). */
-  #fact(f) {
-    const source = `${f.id}@${f.case ?? "?"}/${f.edition ?? "?"}`;
-    const text = f.version_sha ? this.#call(() => this.record.textAtSha(f.id, f.version_sha)) : null;
-    const base = { finding: f.id, case: f.case ?? null, edition: f.edition ?? null, version_sha: f.version_sha ?? null, source };
+  #fact(f, live = undefined) {
+    const source = f.case ? `${f.id}@${f.case ?? "?"}/${f.edition ?? "?"}` : f.id;
+    const text = live !== undefined ? live : f.version_sha ? this.#call(() => this.record.textAtSha(f.id, f.version_sha)) : null;
+    /* T45 (R9, R34, R35): the kind of finding it is, as conformance's per-finding `basis` holds it (its R9, R31, R32):
+       published, checked for publication and held, or accepted from another group; a finding a determination holds
+       before T45 is published (conformance R2 admitted no other) */
+    const kind = f.kind ?? (isObj(f.basis) && ["checked_held", "accepted"].includes(f.basis.kind) ? f.basis.kind : "published");
+    const base = { finding: f.id, case: f.case ?? null, edition: f.edition ?? null, version_sha: f.version_sha ?? null, kind,
+                   ...(isObj(f.basis) && f.basis.kind === "accepted" ? { accepted: { group: f.basis.group ?? null, edition_date: f.basis.edition_date ?? null,
+                                                                                     accepted_at: f.basis.accepted_at ?? null } } : {}),
+                   ...(f.grade ? { grade: f.grade } : {}), source };
     if (typeof text !== "string")
       return { ...base, claim: { state: "undetermined", why: "the finding's published bytes are not held here as text" }, citations: [] };
     let fm = null;
@@ -906,6 +1620,55 @@ export class Filings {
                       ...(conclusion ? {} : { conclusion_why: "the published finding states no conclusion section" }) },
              citations: legs.map((l) => ({ target: str(l.target), ...(str(l.content_id) ? { content_id: str(l.content_id) } : {}),
                                            ...(str(l.role) ? { role: str(l.role) } : {}), source })) };
+  }
+
+  /* R9 (T45), R23, R34: one finding or inquiry as it stands, read only when `viewer` may see it (`content.sees`, its
+     R37; null otherwise): at its latest published edition (case, edition, pinned bytes, the pair that edition froze) as
+     `publication.publishedEditionsOf` answers it (its R37), or, never published, at its live bytes with the grade
+     `strength.inquiryStrength` answers (its R6), its kind `unpublished`. Whether an unpublished finding is checked for
+     publication and held, or another group's accepted, is read only through a determination (conformance R9's per-finding
+     `basis`): read alone, it is said not determined here. */
+  #findingRead(id, viewer) {
+    const c = this.content;
+    const target = str(id);
+    if (!target || !c || typeof c.sees !== "function" || this.#call(() => c.sees(target, viewer)) !== true) return null;
+    const info = this.#call(() => this.record.bundleInfo(target));
+    if (!info || info.type !== "inquiry") return null;
+    const e = this.publication && typeof this.publication.publishedEditionsOf === "function"
+      ? this.#call(() => this.publication.publishedEditionsOf({ finding: target })) : null;
+    const last = e && e.ok && e.items.length ? e.items[e.items.length - 1] : null;
+    if (last)
+      return this.#fact({ id: target, case: last.case, edition: last.edition, version_sha: last.version_sha, kind: "published",
+                          grade: last.strength ? { pair: last.strength, source: `${target}@${last.case}/${last.edition}` }
+                            : { state: "undetermined", why: "the edition states no frozen pair" } });
+    const f = this.#call(() => this.record.readFile(target, "bundle.md"));
+    const s = this.strength && typeof this.strength.inquiryStrength === "function"
+      ? this.#call(() => this.strength.inquiryStrength({ id: target, viewer })) : null;
+    const grade = s && s.ok !== false && (s.capture || s.connection)
+      ? { pair: { capture: s.capture ?? null, connection: s.connection ?? null }, source: `strength:${target}` }
+      : { state: "undetermined", why: "the finding's grade could not be read" };
+    return this.#fact({ id: target, kind: "unpublished", grade }, f && typeof f.text === "string" ? f.text : null);
+  }
+
+  /* R9 (T45; Actions D9, v0.2 rule 12): each matter the action rests on, its support as it stands: with a live
+     determination, its findings (as R9 had them), each with its kind; with none, each inquiry an `action_basis` leg
+     names (rests on or advances), with the findings its own legs name, each with its kind and grade, stated as not
+     determined. What the viewer may not see is left out (R27). */
+  #matterFacts(a, det, viewer) {
+    if (det) return { facts: det.findings.map((f) => this.#fact(f)), determined: true };
+    const facts = [];
+    for (const l of a.legs) {
+      if (l.kind && !["rests_on", "advances"].includes(l.kind)) continue;
+      const inq = this.#findingRead(l.target, viewer);
+      if (!inq) continue;
+      facts.push({ ...inq, matter: inq.finding, determined: false, says: "not determined: no member has made a determination on it" });
+      for (const c of inq.citations || []) {
+        const f = c.target && c.target !== inq.finding ? this.#findingRead(c.target, viewer) : null;
+        if (f && !facts.some((x) => x.finding === f.finding))
+          facts.push({ ...f, matter: inq.finding, determined: false, says: "a finding the inquiry holds, not determined" });
+      }
+    }
+    return { facts, determined: false };
   }
 
   /* R9, R25: the captures a draft or packet rests on: each a fact's citation cites, each piece of evidence the act
@@ -1019,8 +1782,11 @@ export class Filings {
   }
 
   /* R9's deadlines: every claim deadline of the view, its date from a recorded start event only. */
-  #deadlines(v, a, det, viewer) {
-    const rules = v.view && Array.isArray(v.view.deadlines) ? v.view.deadlines.filter((r) => r.applies_to === "claim") : [];
+  #deadlines(v, a, det, viewer, defence = false) {
+    /* T45 (R9; jurisdictions R87 (c)): a deadline marked `defends: true` is a defence deadline, set out only in a defence
+       packet's own section; every other deadline applying to `claim` is a claim deadline */
+    const rules = v.view && Array.isArray(v.view.deadlines)
+      ? v.view.deadlines.filter((r) => (defence ? r.defends === true : r.applies_to === "claim" && r.defends !== true)) : [];
     const entries = a.correspondence.map((e, i) => ({ ...e, ord: Number.isInteger(e.ord) ? e.ord : i }));
     const first = (dir) => entries.filter((e) => e.direction === dir && realDate(String(e.at ?? "").slice(0, 10)))
       .sort((x, y) => (String(x.at) < String(y.at) ? -1 : String(x.at) > String(y.at) ? 1 : x.ord - y.ord))[0] || null;
@@ -1173,10 +1939,12 @@ export class Filings {
   /* R9: the six sections and the consequences, each item naming its source. R8, R24: for an action resting on a
      premise override and no live determination, `det` is null: the facts section says in words that no determination
      is held, and nothing is drawn from one. R25: each exhibit read against the venue's standard. R33: the chronology. */
-  #assemble(a, det, viewer, marking, at) {
+  #assemble(a, det, viewer, marking, at, { purpose = "claim", challenged = [], privileged = null } = {}) {
     const v = this.#view();
-    const section = (title, items, extra = {}) => ({ title, marking, items, ...extra });
-    const facts = det ? det.findings.map((f) => this.#fact(f)) : [];
+    const section = (title, items, extra = {}) => ({ title, marking, ...(privileged ? { privileged } : {}), items, ...extra });
+    /* R9 (T45): with no determination, each matter's support as it stands, not determined */
+    const matters = this.#matterFacts(a, det, viewer);
+    const facts = matters.facts;
     const act = det ? det.act || {} : {};
     const { events, ...chronology } = this.#chronology(a, det, facts, viewer, at, marking);
     const standard = this.#venueStandard(v, a.kind);
@@ -1200,9 +1968,10 @@ export class Filings {
     const cons = det && this.consequences && typeof this.consequences.consequencesOf === "function"
       ? this.#call(() => this.consequences.consequencesOf({ determination: det.id, viewer })) : null;
     return {
-      facts: section("Facts", facts, det ? (det.withheld ? unseen : {}) : { says: "no determination is held: the action rests "
-        + "on a premise a member overrode, so no finding is set out as a fact" }),
-      chronology,
+      facts: section("Facts", facts, det ? (det.withheld ? unseen : {}) : { says: facts.length
+        ? "no determination is held: each matter's support is set out as it stands, each finding with its kind and grade, not determined"
+        : "no determination is held, and the action names no inquiry it rests on, so no finding is set out" }),
+      chronology: privileged ? { ...chronology, privileged } : chronology,
       exhibits: section("Exhibits", this.#exhibits(this.#citesOf(a, det, facts, events), standard), {
         venue_standard: standard,
         says: standard.state === "stated" ? "each exhibit's capture grade and co-attestation, beside the venue's standard; "
@@ -1221,6 +1990,66 @@ export class Filings {
         { says: !det ? "no determination is held, so no breach consequence is recorded against one"
             : cons && cons.ok !== false ? "as recorded, each part in its own state; nothing summed across states"
             : "the consequences could not be read, so they are undetermined" }),
+      /* R9 (T45): a defence packet's three sections */
+      ...(purpose === "defence" ? this.#defenceSections(a, det, facts, v, viewer, section, challenged) : {}),
+    };
+  }
+
+  /* R9 (T45; Actions D9, v0.2 rule 12): a defence packet's three sections. **Challenged statements**: each statement of
+     the group the opposition challenges, as the member names it, with the findings it rests on (each read as the reader
+     may see it, its sources its own legs) and its sources. **Pressure received**: each pressure mark and record on the
+     action and its project (`action-holds.pressureFor`, its R12) and each `legal` mark on the case's docket
+     (`docket.docketPressureMarks`, its R27, read as the plane and kept to the action's cases and project, and to the
+     projects the reader may see), with its date. **Defence deadlines**: each deadline marked `defends: true`
+     (jurisdictions R87 (c)), dated by R9's rule. No sentence here states that the group has a claim, or whether a
+     protection applies. */
+  #defenceSections(a, det, facts, v, viewer, section, challenged) {
+    let hidden = false;
+    const statements = challenged.map((c, i) => {
+      const fs = (c.findings || []).map((id) => { const f = this.#findingRead(id, viewer); if (!f) hidden = true; return f; }).filter(Boolean);
+      return { statement: c.statement, findings: fs.map((f) => ({ finding: f.finding, kind: f.kind, claim: f.claim, source: f.source })),
+               sources: fs.flatMap((f) => (f.citations || []).map((x) => ({ target: x.target, ...(x.content_id ? { content_id: x.content_id } : {}), source: f.source }))),
+               named_by: "the member", source: `challenged#${i}` };
+    });
+    const pressure = [];
+    let pressureSays = null;
+    const h = this.actionHolds;
+    if (h && typeof h.pressureFor === "function") {
+      for (const q of [{ action: a.id }, ...(a.project ? [{ project: a.project }] : [])]) {
+        const r = this.#call(() => h.pressureFor({ ...q, limit: PRESSURE_MAX, viewer }));
+        if (!r || r.ok === false) { pressureSays = "the pressure recorded could not be read in full"; continue; }
+        for (const x of Array.isArray(r.items) ? r.items : [])
+          if (!pressure.some((p) => json(p.item) === json(x))) pressure.push({ from: "action-holds", item: x, at: x.at ?? null,
+            source: x.pressure ?? (x.action ? `${x.action}#${x.ord ?? "?"}` : a.id) });
+        if (r.truncated) pressureSays = `more than the ${PRESSURE_MAX} pressure items read are held: the list is truncated`;
+      }
+    } else pressureSays = "no module answers the pressure recorded on actions here, so it is undetermined";
+    const cases = new Set(facts.map((f) => f.case).filter(Boolean));
+    const dk = this.docket;
+    if (dk && typeof dk.docketPressureMarks === "function") {
+      let after = null;
+      for (let n = 0; n < 20; n++) {
+        const r = this.#call(() => dk.docketPressureMarks({ kind: "legal", ...(after ? { after } : {}) }));
+        if (!r || r.ok === false) { pressureSays = "the docket's legal marks could not be read, so they are undetermined"; break; }
+        for (const m of r.marks || []) {
+          if (!(cases.has(m.case) || (a.project && m.project === a.project))) continue;
+          if (m.project && !this.#inSight(m.project, viewer)) { hidden = true; continue; }
+          pressure.push({ from: "docket", kind: m.kind, note: m.note ?? null, case: m.case, entry: m.entry, at: m.at ?? null, source: `docket:${m.entry}` });
+        }
+        if (!r.cursor) break;
+        after = r.cursor;
+      }
+    } else pressureSays = pressureSays || "no module answers the docket's marks here, so they are undetermined";
+    return {
+      challenged: section("Challenged statements", statements, {
+        says: statements.length ? "each statement of the group that is challenged, as a member names it, with the findings and sources it rests on"
+          : "no member has named a challenged statement", ...(hidden ? { out_of_view: true } : {}) }),
+      pressure: section("Pressure received", pressure, {
+        says: pressureSays || (pressure.length ? "each pressure mark and record, and each legal mark on the case's docket, with its date"
+          : "no pressure is recorded on this action, its project or its case's docket") }),
+      defence_deadlines: section("Defence deadlines", this.#deadlines(v, a, det, viewer, true),
+        { says: v.view ? `each deadline that applies to a defence; its date only from a recorded start event (${COUNTED_FROM}), else undetermined with why`
+                       : `${v.why}, so no defence deadline is known` }),
     };
   }
 
@@ -1276,7 +2105,8 @@ export class Filings {
   /** R8–R10, R12, R31: a counsel packet, for the counsel a member names or (below Tier 3) for the group's own review,
    *  with a `briefing` section filled from a `brief` template when one is named; assembling again makes a new version.
    *  `reason` is the author's words on why it is assembled, recorded with the version (DEC-88). */
-  counselPacket({ action = null, counsel = null, template = null, reason = undefined, author = null, viewer = null } = {}) {
+  counselPacket({ action = null, counsel = null, template = null, reason = undefined, purpose = null, challenged = null,
+                  author = null, viewer = null } = {}) {
     const who = str(author);
     /* DEC-49 REGION is-counsel-packet */
     if (!who || isMachineIdentity(who))
@@ -1320,51 +2150,77 @@ export class Filings {
       const mismatch = Filings.#kindMismatch(used, a);
       if (mismatch) return mismatch;
     }
+    /* R8 (T45): what the packet is for, `claim` (the default) or `defence`; a defence packet's challenged statements as
+       the member names them. `NO_DETERMINATION` is retired: a packet needs no determination and no override. */
+    const goal = purpose == null ? "claim" : purpose;
+    if (!PACKET_PURPOSES.includes(goal))
+      return { ok: false, reason: "FILING_MARK_REFUSED", field: "purpose", detail: `purpose is one of ${PACKET_PURPOSES.join(", ")}` };
+    const named = challenged == null ? [] : Array.isArray(challenged) ? challenged : null;
+    const okStatement = (x) => isObj(x) && typeof x.statement === "string" && x.statement.trim() && x.statement.length <= 2000
+      && (x.findings == null || (Array.isArray(x.findings) && x.findings.length <= FROM_MAX && x.findings.every((f) => typeof f === "string" && f.trim())));
+    if (named === null || named.length > CHALLENGED_MAX || !named.every(okStatement) || (named.length && goal !== "defence"))
+      return { ok: false, reason: "FILING_MARK_REFUSED", field: "challenged",
+               detail: `a defence packet names at most ${CHALLENGED_MAX} challenged statements, each {statement, findings?}` };
     const { det, hidden } = this.#restsOn(a, viewer);
-    /* DEC-49 REGION is-counsel-packet-basis */
-    if (!det && !a.premise_override)
-      return { ok: false, reason: "NO_DETERMINATION", action: a.id,
-               detail: this.conformance ? "the action rests on no live determination you may see, and states no premise override, so there are no facts to assemble"
-                 : "no module answers determinations here, so no live determination can be read" };
-    /* END DEC-49 REGION is-counsel-packet-basis */
     const marking = counselMarking(c);
+    /* R10 (T45; v0.2 rule 15): a packet for an action of a counsel-matter project carries the privilege marking and a
+       warning on sharing outside, beside the marking */
+    const project = a.project || (det ? det.project : null);
+    const privileged = this.#counselMatter(project)
+      ? { key: "packet.privileged", text: KEYED["packet.privileged"], warning: { key: "packet.privileged.warning", text: KEYED["packet.privileged.warning"] } }
+      : null;
     const at = this.#when();
-    const sections = this.#assemble(a, det, viewer, marking, at);
-    if (used) sections.briefing = this.#briefing(used, a, det, hidden, viewer, at, marking);
+    const sections = this.#assemble(a, det, viewer, marking, at, { purpose: goal,
+      challenged: named.map((x) => ({ statement: x.statement.trim(), findings: [...new Set((x.findings || []).map((f) => f.trim()))] })), privileged });
+    if (used) sections.briefing = this.#briefing(used, a, det, hidden, viewer, at, marking, privileged);
     const tpl = used ? Filings.#templateOf(used) : null;
     const basis = this.#packetBasis(det, a);
-    const disclosure = a.premise_override ? overrideDisclosure(a.premise_override) : null;
+    const disclosure = Filings.#disclosure(a);
     return this.record.transact(() => {
       const held = this.#one(`SELECT packet_id, MAX(version) AS v FROM counsel_packets WHERE action_id=? GROUP BY packet_id
                                ORDER BY packet_id LIMIT 1`, a.id);
       const id = held ? held.packet_id : this.record.allocId("CPK", at.slice(0, 4)).id;
       const version = held ? Number(held.v) + 1 : 1;
       this.sql.exec(`INSERT INTO counsel_packets (packet_id, version, action_id, counsel, author, at, sections, basis, disclosure,
-                       template, reason) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-                    id, version, a.id, json(c), who, at, json(sections), json(basis), disclosure, json(tpl), why);
-      return { ok: true, id, version, action: a.id, head: this.#head(id, version, a.id, c, who, at, marking, disclosure),
-               sections, marking, disclosure, fileable: false, template: tpl, reason: why, basis_changed: null };
+                       template, reason, purpose) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+                    id, version, a.id, json(c), who, at, json(sections), json(basis), disclosure, json(tpl), why, goal);
+      return { ok: true, id, version, action: a.id, head: this.#head(id, version, a.id, c, who, at, marking, disclosure, privileged, goal),
+               sections, marking, ...(privileged ? { privileged } : {}), purpose: goal, disclosure, fileable: false, template: tpl,
+               reason: why, basis_changed: null };
     });
   }
 
   /* R31: the packet's seventh section: a `brief` template's text filled from the record as R3 fills a filing, each filled
      blank naming its source, carrying R10's marking and, as R29's draft does, the statement that the template was not
      written for the kind's jurisdiction. */
-  #briefing(used, a, det, hidden, viewer, at, marking) {
+  #briefing(used, a, det, hidden, viewer, at, marking, privileged = null) {
     const v = this.#view();
     const entry = v.view && Array.isArray(v.view.action_kinds) ? v.view.action_kinds.find((k) => k.kind === a.kind) || null : null;
     const filled = this.#fill(used.text, this.#values(a, det, hidden, entry, viewer, at));
     const notFor = Filings.#notWrittenFor(used, entry);
-    return { title: "Briefing", marking, text: notFor ? `${notFor}\n\n${filled.text}` : filled.text,
-             items: filled.blanks, unfilled: filled.unfilled, template: Filings.#templateOf(used),
+    /* R34 (T45): the briefing is checked sentence by sentence against the record, its unsupported sentences pointed out */
+    const check = this.#outward(filled.text, { a, facts: this.#matterFacts(a, det, viewer).facts, det, view: v.view,
+      marks: { own_doing: [], voice: null, language: null, audience: null, names_pending: false }, form: "briefing", viewer });
+    return { title: "Briefing", marking, ...(privileged ? { privileged } : {}), text: notFor ? `${notFor}\n\n${filled.text}` : filled.text,
+             items: filled.blanks, unfilled: filled.unfilled, template: Filings.#templateOf(used), record_check: check.record_check,
              ...(notFor ? { not_written_for: notFor } : {}),
              says: "the group's briefing to counsel, filled from the record from a brief template; it is not a filing and "
                  + "cannot be filed as it stands" };
   }
 
-  #head(id, version, action, counsel, author, at, marking, disclosure = null) {
+  /* R10 (T45): whether a project is a counsel matter (`project-roster.projectScope`, its R23); with no project or no
+     module answering, it is not read as one. */
+  #counselMatter(project) {
+    const r = this.projectRoster;
+    if (!str(project) || !r || typeof r.projectScope !== "function") return false;
+    const s = this.#call(() => r.projectScope(str(project)));
+    return isObj(s) && s.scope === "counsel_matter";
+  }
+
+  #head(id, version, action, counsel, author, at, marking, disclosure = null, privileged = null, purpose = null) {
     return { packet: id, version, action, counsel: counsel && counsel.name ? counsel : null, assembled_by: author, at,
-             ...(disclosure ? { disclosure } : {}), marking, fileable: false,
+             ...(disclosure ? { disclosure } : {}), marking, ...(privileged ? { privileged } : {}),
+             ...(purpose ? { purpose } : {}), fileable: false,
              says: `prepared ${counsel && counsel.name ? "for counsel's review" : "for the group's own review, no counsel named"} `
                  + "from the record; it is never published and is not in a form that can be filed" };
   }
@@ -1406,9 +2262,14 @@ export class Filings {
     const counsel = parse(r.counsel);
     const marking = counselMarking(counsel);
     const causes = this.#basisChanged(parse(r.basis) || {}, viewer);
+    const sections = parse(r.sections);
+    /* R10: the privilege marking, as the version was assembled with it (every section carries it) */
+    const privileged = Object.values(sections || {}).map((x) => x && x.privileged).find(Boolean) || null;
     return { ok: true, id: r.packet_id, version: Number(r.version), action: r.action_id,
-             head: this.#head(r.packet_id, Number(r.version), r.action_id, counsel, r.author, r.at, marking, r.disclosure ?? null),
-             sections: parse(r.sections), marking, disclosure: r.disclosure ?? null, fileable: false,
+             head: this.#head(r.packet_id, Number(r.version), r.action_id, counsel, r.author, r.at, marking, r.disclosure ?? null,
+                              privileged, r.purpose ?? null),
+             sections, marking, ...(privileged ? { privileged } : {}), purpose: r.purpose ?? "claim",
+             disclosure: r.disclosure ?? null, fileable: false,
              template: this.#templateShown(parse(r.template), viewer), reason: r.reason ?? null,
              basis_changed: causes.length ? { causes } : null,
              versions: rows.map((x) => Number(x.version)) };
@@ -1429,11 +2290,13 @@ export class Filings {
   /** R10: the packet's bytes: one Markdown document, the marking on its head, every section and its manifest. */
   static render(v) {
     /* R24: the override's disclosure is the first line of the face. */
+    /* R10 (T45): a counsel matter's privilege marking and warning beside the marking, on the head and every section */
+    const priv = (p) => (p ? [p.text, p.warning ? p.warning.text : null].filter(Boolean).flatMap((t) => [t, ""]) : []);
     const lines = [...(v.disclosure ? [v.disclosure, ""] : []), `# Counsel packet ${v.id}, version ${v.version}`, "", v.marking, "",
-                   `Action: ${v.action}. Assembled by ${v.head.assembled_by} at ${v.head.at}.`, ""];
+                   ...priv(v.privileged), `Action: ${v.action}. Assembled by ${v.head.assembled_by} at ${v.head.at}.`, ""];
     const item = (x) => `- ${JSON.stringify(x)}`;
     for (const s of Object.values(v.sections || {})) {
-      lines.push(`## ${s.title}`, "", s.marking, "");
+      lines.push(`## ${s.title}`, "", s.marking, "", ...priv(s.privileged));
       if (s.says) lines.push(s.says, "");
       if (typeof s.text === "string") lines.push(s.text, "");
       for (const x of s.items || []) lines.push(item(x));
@@ -1450,7 +2313,7 @@ export class Filings {
       }
       lines.push("");
     }
-    lines.push("## Manifest of exhibits", "", v.marking, "");
+    lines.push("## Manifest of exhibits", "", v.marking, "", ...priv(v.privileged));
     for (const e of (v.sections && v.sections.exhibits ? v.sections.exhibits.items : [])) lines.push(`- ${e.sha256}`);
     lines.push("");
     return lines.join("\n");
@@ -1467,13 +2330,27 @@ export class Filings {
 
   /* R22: bytes leaving the instance: `face` (the text a member approved or the packet's rendering, R24's disclosure
      first where it applies), then the in-band block, its hash over `face` by the one hasher (`inbandQuartet`). */
-  async #stamped(face, { what, date, author, project }) {
+  async #stamped(face, { what, date, author, project, review = null }) {
+    /* R46 (K2832): a press review copy's embargo and release times ride in the stamp's subject content beside the text */
+    const subject = review ? { text: face, embargo_until: review.embargo_until ?? null, release_at: review.release_at ?? null } : face;
     const { quartet } = await inbandQuartet({
-      subject: face,
-      over: `${what}: the text above the line "${INBAND_RULE}", without the line break before it, as a JSON string; `
+      subject,
+      over: review
+        ? `${what}: an object of the text above the line "${INBAND_RULE}" (without the line break before it) as \`text\`, with `
+          + "the review copy's `embargo_until` and `release_at`; hash JSON.stringify(object, null, 1) as UTF-8"
+        : `${what}: the text above the line "${INBAND_RULE}", without the line break before it, as a JSON string; `
           + "hash JSON.stringify(text, null, 1) as UTF-8",
-      date, author, bar: this.#bar(project) });
+      date, author, bar: this.#bar(project), group: this.#groupFields() });
     return { bytes: `${face}\n${inbandBlock(quartet)}`, inband: quartet };
+  }
+
+  /* R22 (T45): the group's public identity and declared stake (`public-read.groupFields`, its R34), passed as the
+     quartet's `group`, outside what its hash covers (so a joint text's fingerprint, R36, is computed without them); with
+     no module answering, null, and the quartet carries no group. */
+  #groupFields() {
+    const p = this.publicRead;
+    const g = p && typeof p.groupFields === "function" ? this.#call(() => p.groupFields()) : null;
+    return isObj(g) ? g : null;
   }
 
   /** R11, R22: hands a member the packet's bytes, carrying the in-band quartet, and records who exported which version,
@@ -1524,15 +2401,17 @@ export class Filings {
     if (!a) return this.#noAction(action);
     /* R23: the action's communications are listed among its drafts, marked a communication. */
     const drafts = this.#seenRows(FILINGS_FOR_MAX + 1, viewer,
-      `SELECT d.filing_id, d.tier, d.preparer, d.prepared_at, d.basis, d.form, d.purpose, d.template, ap.approved_by,
-              ap.at AS approved_at, ap.sha, s.ord, s.sent_on, s.recorded_by, s.recorded_at
-         FROM (SELECT filing_id, tier, preparer, prepared_at, basis, 'filing' AS form, NULL AS purpose, template
+      `SELECT d.filing_id, d.tier, d.preparer, d.prepared_at, d.basis, d.form, d.purpose, d.template, d.marks, ap.approved_by,
+              ap.at AS approved_at, ap.sha, s.ord, s.sent_on, s.recorded_by, s.recorded_at, s.review_copy,
+              sa.approved_by AS second_by, sa.at AS second_at
+         FROM (SELECT filing_id, tier, preparer, prepared_at, basis, 'filing' AS form, NULL AS purpose, template, marks
                  FROM filing_drafts WHERE action_id=?
                UNION ALL
-               SELECT filing_id, NULL AS tier, preparer, prepared_at, basis, 'communication' AS form, purpose, NULL AS template
+               SELECT filing_id, NULL AS tier, preparer, prepared_at, basis, 'communication' AS form, purpose, NULL AS template, marks
                  FROM communication_drafts WHERE action_id=?) d
          LEFT JOIN filing_approvals ap ON ap.filing_id=d.filing_id
          LEFT JOIN filing_sendings s ON s.filing_id=d.filing_id
+         LEFT JOIN filing_second_approvals sa ON sa.filing_id=d.filing_id
         ORDER BY d.prepared_at, d.filing_id`, a.id, a.id);
     const versions = this.#seenRows(FILINGS_FOR_MAX + 1, viewer,
       `SELECT * FROM counsel_packets WHERE action_id=? ORDER BY at, packet_id, version`, a.id);
@@ -1543,11 +2422,17 @@ export class Filings {
         ...(d.form === "communication" ? { purpose: d.purpose } : { tier: d.tier, template: this.#templateShown(parse(d.template), viewer) }),
         label: proposalLabel(d.preparer, d.form === "communication" ? "communication" : "filing_draft"), at: d.prepared_at,
         approval: d.approved_by ? { approved_by: d.approved_by, at: d.approved_at, sha: d.sha } : null,
-        sending: d.recorded_by ? { ord: d.ord, sent_on: d.sent_on, recorded_by: d.recorded_by, at: d.recorded_at } : null })),
+        /* T45: R42's second approval, R36's partners' signatures, R44's voice, R46's review copy */
+        second_approval: d.second_by ? { approved_by: d.second_by, at: d.second_at } : null,
+        signatories: this.#rows(`SELECT organisation, role, body_sha, account, recorded_by, at FROM joint_signatories WHERE filing_id=?
+                                  ORDER BY at, organisation`, d.filing_id),
+        voice: (parse(d.marks) || {}).voice ?? null,
+        sending: d.recorded_by ? { ord: d.ord, sent_on: d.sent_on, recorded_by: d.recorded_by, at: d.recorded_at,
+                                   ...(d.review_copy ? { review_copy: parse(d.review_copy) } : {}) } : null })),
       drafts_truncated: drafts.length > FILINGS_FOR_MAX,
       packets: versions.slice(0, FILINGS_FOR_MAX).map((r) => {
         const causes = this.#basisChanged(parse(r.basis) || {}, viewer);
-        return { packet: r.packet_id, version: Number(r.version), counsel: parse(r.counsel), assembled_by: r.author, at: r.at,
+        return { packet: r.packet_id, version: Number(r.version), purpose: r.purpose ?? "claim", counsel: parse(r.counsel), assembled_by: r.author, at: r.at,
                  reason: r.reason ?? null, template: this.#templateShown(parse(r.template), viewer),
                  basis_changed: causes.length ? { causes } : null,
                  exports: this.#rows(`SELECT author, at, counsel, sha FROM counsel_packet_exports WHERE packet_id=? AND version=?
@@ -1762,24 +2647,35 @@ export function filingsOwns(t) {
 /** The module's ops (K3), as entries of the plane's one op map, which the plane composes and control-plane's routes
  *  spread (`control-plane/dispatch.mjs`). `viewer` and `author` are the control plane's stamps, read from the query after
  *  the body, so a caller's own copy never wins. */
+/* T45: the marks a member states at preparation, read from the body (R34, R37, R39, R43, R44, R48). */
+const marksOf = (b) => ({ voice: b.voice ?? null, audience: b.audience ?? null, language: b.language ?? null,
+                          own_doing: b.own_doing ?? null, names_pending: b.names_pending ?? null, textcheck: b.textcheck ?? null });
+
 export function filingsOps(f, url, body) {
   const q = (k) => url.searchParams.get(k);
   const b = body && typeof body === "object" ? body : {};
   return {
     filingprepare: () => f.filingPrepare({ action: b.action ?? q("action"), template: b.template ?? q("template"),
-                                           text: b.text ?? null, preparer: q("author"), viewer: q("viewer") }),
+                                           text: b.text ?? null, ...marksOf(b), preparer: q("author"), viewer: q("viewer") }),
     communicationprepare: () => f.communicationPrepare({ action: b.action ?? q("action"), text: b.text, purpose: b.purpose,
-                                                         preparer: q("author"), viewer: q("viewer") }),
+                                                         from: b.from ?? null, ...marksOf(b), preparer: q("author"), viewer: q("viewer") }),
     templatesave: () => f.templateSave({ filing: b.filing ?? q("filing"), template: b.template ?? q("template"),
                                          project: b.project ?? null, name: b.name ?? null, kind: b.kind ?? null, use: b.use ?? null,
                                          profiles: b.profiles ?? null, notes: b.notes ?? null, author: q("author"), viewer: q("viewer") }),
-    filingapprove: () => f.filingApprove({ filing: b.filing ?? q("filing"), text: b.text, author: q("author"), viewer: q("viewer") }),
+    filingapprove: () => f.filingApprove({ filing: b.filing ?? q("filing"), text: b.text, release: b.release ?? null,
+                                           resolutions: b.resolutions ?? null, textcheck: b.textcheck ?? null,
+                                           author: q("author"), viewer: q("viewer") }),
+    filingsecondapprove: () => f.filingSecondApprove({ filing: b.filing ?? q("filing"), author: q("author"), viewer: q("viewer") }),
+    jointsignatory: () => f.jointSignatory({ filing: b.filing ?? q("filing"), organisation: b.organisation ?? null, body_sha: b.body_sha ?? null,
+                                             account: b.account ?? null, author: q("author"), viewer: q("viewer") }),
+    holdnoticeprepare: () => f.holdNoticePrepare({ place: b.place ?? null, preparer: q("author"), viewer: q("viewer") }),
+    templatesforaction: () => f.templatesForAction({ action: q("action") ?? b.action ?? null, viewer: q("viewer") }),
     filingsent: () => f.filingRecordSent({ filing: b.filing ?? q("filing"), at: b.at ?? q("at"), medium: b.medium ?? null,
                                            artifactSha: b.artifactSha ?? b.artifact_sha ?? null, account: b.account ?? null,
                                            author: q("author"), viewer: q("viewer") }),
     counselpacket: () => f.counselPacket({ action: b.action ?? q("action"), counsel: b.counsel ?? null,
-                                           template: b.template ?? q("template"), reason: b.reason,
-                                           author: q("author"), viewer: q("viewer") }),
+                                           template: b.template ?? q("template"), reason: b.reason, purpose: b.purpose ?? null,
+                                           challenged: b.challenged ?? null, author: q("author"), viewer: q("viewer") }),
     counselpacketread: () => f.counselPacketRead({ id: q("id"), version: q("version"), viewer: q("viewer") }),
     counselpacketexport: () => f.counselPacketExport({ id: b.id ?? q("id"), version: b.version ?? q("version"),
                                                        author: q("author"), viewer: q("viewer") }),

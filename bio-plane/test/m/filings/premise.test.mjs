@@ -53,10 +53,12 @@ test("R3 the addressee's blanks follow its arm (actions R9): an office fills rol
     assert.match(u[n], /undetermined/, n);
 });
 
-test("R8 an action stating a premise override and no live determination gets a counsel packet: assembled with R24's disclosure, its facts section saying in words that no determination is held; without the override it is refused NO_DETERMINATION", async () => {
+test("R8 an action stating a premise override and no live determination gets a counsel packet: assembled with R24's disclosure, its facts section saying in words that no determination is held; without the override it is assembled too (T45), with no disclosure", async () => {
   const x = world();
   const bare = x.action({ kind: "commitment_claim", legs: [] });
-  assert.equal(x.f.counselPacket({ reason: WHY, action: bare, counsel: COUNSEL, author: V("olive"), viewer: V("olive") }).reason, "NO_DETERMINATION");
+  const plain = x.f.counselPacket({ reason: WHY, action: bare, counsel: COUNSEL, author: V("olive"), viewer: V("olive") });
+  assert.deepEqual([plain.ok, plain.disclosure], [true, null]);
+  assert.match(plain.sections.facts.says, /no determination is held/);
   const O = x.action({ kind: "commitment_claim", legs: [], breach: true, override: REASON });
   const o = x.read(O).premise_override;
   assert.equal(o.reason, REASON, "actions holds the override");

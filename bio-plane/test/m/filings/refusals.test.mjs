@@ -48,8 +48,6 @@ test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 each refusal of this module ca
   expect(f.counselPacket({ reason: WHY, action: T3, counsel, author: MACHINE }), "MACHINE_CANNOT_NAME_COUNSEL");
   expect(f.counselPacket({ action: T3, counsel, author: V("bo"), viewer: V("bo") }), "PACKET_NO_REASON");
   expect(f.counselPacket({ reason: WHY, action: T3, counsel: {}, author: V("bo"), viewer: V("bo") }), "NO_COUNSEL");
-  expect(f.counselPacket({ reason: WHY, action: x.action({ kind: "commitment_claim", legs: [] }), counsel, author: V("bo"), viewer: V("bo") }),
-         "NO_DETERMINATION");
   const p = f.counselPacket({ reason: WHY, action: T3, counsel, author: V("bo"), viewer: V("bo") });
   expect(f.counselPacketRead({ id: "NONE", viewer: V("bo") }), "NO_SUCH_PACKET");
   expect((await f.counselPacketExport({ id: p.id, author: MACHINE })), "MACHINE_CANNOT_EXPORT");
@@ -120,8 +118,8 @@ test("R1 R3 R8 R15 R21 with a layer-9 provider absent, filings refuses or states
   assert.match(d.unfilled.find((u) => u.name === "act").why, /no module answers determinations/);
   const T3 = x.action({ kind: "commitment_claim" });
   const p = noConformance.counselPacket({ reason: WHY, action: T3, counsel: { name: "A", organisation: "B" }, author: V("bo"), viewer: V("bo") });
-  assert.equal(p.reason, "NO_DETERMINATION");
-  assert.match(p.detail, /no module answers determinations/);
+  assert.deepEqual([p.ok, p.sections.facts.items], [true, []], "T45 (R8): no determination is read, and none is needed");
+  assert.match(p.sections.facts.says, /no determination is held/);
   /* no filing-templates module: a template is not readable, refused with that module's code; the member's words serve */
   const noTemplates = new Filings({ storage: x.st, record: x.record, publication: x.p, provenance: x.prov, content: x.content,
                                     actions: x.actions, standards: x.standards, conformance: x.conformance, now: () => x.clock.now });
