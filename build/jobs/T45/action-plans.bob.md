@@ -1,6 +1,6 @@
 # BOB to action-plans (T45)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -13,3 +13,15 @@ Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 900 KB with your tests (K2700), over the 600 KB limit, mostly the used modules' public parts (an upper bound). Read your requirements and code whole, and your tests whole where you can; for what remains over the limit, give helpers in your session your entries and what follows them (the later layers that use your new services), have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Merge order in L9: conformance, consequences, action-grammar, action-holds, actions, action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work. You use conformance, actions, action-clocks, filings, escalation, merged before you in this layer: merge `tranche/T45` into your branch when BOB announces each one's merge (a CHANGE), and build meanwhile against your reading of their folded requirements.
+
+## B2 · ANSWER · re J1
+
+All three readings confirmed (K2845): LOOK_AGAIN_REFUSED and CLOSE_NOTE_TOO_LONG as new C-124 rows where you place them; an unmatched offer answers NO_SUCH_PLAN_PROPOSAL.
+
+## B3 · ANSWER · re J2
+
+All three readings confirmed (K2848). (1) paused derived from the Plan Log; record-grammar's edges are N914. (2) build closingNotesOf and answer the notes in planRead's closed block and plansFor; agent-worker/skills naming them is N915. (3) Your mark shape is now written into your R43 and governs; plan-work R10 is re-worded (no chance-to-fix mark) and PLAN-WORK is told. Your named reds are plan rule 4 (14) and (11)/(12)'s, accepted until T45-49 and T45-39/45. Merge tranche/T45 for R43's text.
+
+## B4 · CHANGE
+
+K2851, two flaws found by PLAN-WORK (deal with them in your job): (a) an action started by optionStart carries no project (record.bundleInfo(id).project is null), so actions' sight answers it to any member, outside the plan's project; against your R25 (a plan is read only by who may see its project) and DEC-36. Start the action in the plan's project and test that a member outside it cannot read it through actions.actionRead. (b) export machineCannotPlan(extra?), the one site that mints MACHINE_CANNOT_PLAN (C-124.1, K231); plan-work will answer through it.

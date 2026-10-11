@@ -1,6 +1,6 @@
 # BOB to consequences (T45)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -13,3 +13,11 @@ Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 675 KB with your tests (K2700), over the 600 KB limit, mostly the used modules' public parts (an upper bound). Read your requirements and code whole, and your tests whole where you can; for what remains over the limit, give helpers in your session your entries and what follows them (the later layers that use your new services), have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Merge order in L9: conformance, consequences, action-grammar, action-holds, actions, action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work. You use conformance, merged before you in this layer: merge `tranche/T45` into your branch when BOB announces each one's merge (a CHANGE), and build meanwhile against your reading of their folded requirements.
+
+## B2 · ANSWER · re J1
+
+(1) Confirmed: hold success records in your own rows with SUC- ids (mintOpaqueId), fenced and purged as you say; R17's record-object clause is deferred in your record to N911 (record-grammar registers success_record, then a later consequences job promotes). (2) CARRY_NO_CURE and CARRY_NOT_ADDRESSED accepted as new C-114 rows, placed as you say. (3) Confirmed; R17's note now reads "a plan's matter as plan-work names it": merge tranche/T45 for that one wording change. Your decided points are fine. (K2845)
+
+## B3 · CHANGE
+
+K2850: conformance R37's answer is pinned: curesOf({determination, standard?, viewer}) answers {standards: [{standard, link, ended}]}, link the standing cure link {link, cure, standard, by, at, cure_standing} or null. Read your R22 carry through that shape. Merge tranche/T45.
