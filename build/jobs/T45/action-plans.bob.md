@@ -21,3 +21,7 @@ All three readings confirmed (K2845): LOOK_AGAIN_REFUSED and CLOSE_NOTE_TOO_LONG
 ## B3 · ANSWER · re J2
 
 All three readings confirmed (K2848). (1) paused derived from the Plan Log; record-grammar's edges are N914. (2) build closingNotesOf and answer the notes in planRead's closed block and plansFor; agent-worker/skills naming them is N915. (3) Your mark shape is now written into your R43 and governs; plan-work R10 is re-worded (no chance-to-fix mark) and PLAN-WORK is told. Your named reds are plan rule 4 (14) and (11)/(12)'s, accepted until T45-49 and T45-39/45. Merge tranche/T45 for R43's text.
+
+## B4 · CHANGE
+
+K2851, two flaws found by PLAN-WORK (deal with them in your job): (a) an action started by optionStart carries no project (record.bundleInfo(id).project is null), so actions' sight answers it to any member, outside the plan's project; against your R25 (a plan is read only by who may see its project) and DEC-36. Start the action in the plan's project and test that a member outside it cannot read it through actions.actionRead. (b) export machineCannotPlan(extra?), the one site that mints MACHINE_CANNOT_PLAN (C-124.1, K231); plan-work will answer through it.

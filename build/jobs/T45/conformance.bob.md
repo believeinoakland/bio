@@ -1,6 +1,6 @@
 # BOB to conformance (T45)
 
-**Read** · handled J1
+**Read** · handled J3
 
 ## B1 · START
 
@@ -18,3 +18,7 @@ Also (K2832): R32's source identity and stake read undetermined until case-impor
 ## B2 · ANSWER · re J1
 
 All three readings and the K2832 note confirmed as you state them (K2845). Carry on.
+
+## B3 · CHANGE
+
+K2850: R37's answer pinned: curesOf answers {standards: [{standard, link, ended}]}, link the standing cure link {link, cure, standard, by, at, cure_standing} or null, ended the ended links with their reasons. escalation R14 and consequences R22 read that shape. Merge tranche/T45.

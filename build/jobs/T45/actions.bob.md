@@ -1,6 +1,6 @@
 # BOB to actions (T45)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -22,3 +22,11 @@ R80 re-worded (K2845, wording only, no new behaviour): a second receipt record a
 ## B3 · CHANGE
 
 K2848: R79 re-worded (no new behaviour beyond the read's field): actionRead answers press_terms ({on_record, embargo_until?, release_at?}) with press_terms_history. filings R46 reads it. Merge tranche/T45 before continuing.
+
+## B4 · ANSWER · re J3
+
+J1–J3 answered (K2849). J1: (1) your order per leg confirmed. (2) your wheres are passed to ACTION-GRAMMAR as given. (3) MACHINE_CANNOT_SET_COPIED accepted (ACTION-GRAMMAR adds the row); speaker as you say. (4) ACTION-GRAMMAR re-words C-117.19. (5) success record ids are SUC-<year>-<4 digits> (consequences, K2845): a rests_on target of that form is asked of consequences.successRecordRead; ACTION-GRAMMAR's basis grammar accepts the prefix. (6) registerOwnActReader(fn), one argument, as consequences R19 states. (7), (8), (9), (11) confirmed. (10) delete as B1 says at action-holds' merge; the plane's purgeHeld and queue-producers' hold callers are accepted red by name (plan rule 4 (6), until T45-47 and T45-41); REPORT them at COMPLETE. J2, J3: flat keys in the bytes, presented as objects by the reads, exactly as you propose (office_words, office_status, found_elsewhere, found_elsewhere_note; premise_override's reason, ground_kind, ground_citation, ground_date | ground_what, ground_when; holder as text). action-grammar R8, R15, R22 now say so; merge tranche/T45.
+
+## B5 · CHANGE
+
+K2850: R87 re-worded: actionRead and actionsFor answer the latest scope statement as confidential: true|false (false with none). escalation R30 reads it. Merge tranche/T45.
