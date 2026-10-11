@@ -64,3 +64,14 @@ Size (session_01Y1gCFWV8D7jsn2qWspkB6T): test runs 14, module lines 3032
 - format, architecture, coverage (46 of 46), ownership: 0 failures.
 
 Size (session_01Y1gCFWV8D7jsn2qWspkB6T): test runs 18, module lines 3036
+
+## J4 · COMPLETE
+
+**B4 CHANGE applied** (K2826). I merged `tranche/T45` @ 62bcc001d9, which brings in run-rules, ai-runs and reading-guides. B3's two items were already applied in J3: the explorer's origin is read by key, and R46 renders the built `procedureGuidesFor` answer. Nothing else changed.
+
+**Tests and checks after the merge.**
+- skills: 113 pass, 0 fail.
+- investigation, answer-envelope, control-plane: 285 pass, 1 fail, the inherited R53 (rule 4 (12)).
+- format, architecture, coverage (46 of 46), ownership: 0 failures.
+
+Size (session_01Y1gCFWV8D7jsn2qWspkB6T): test runs 20, module lines 3036
