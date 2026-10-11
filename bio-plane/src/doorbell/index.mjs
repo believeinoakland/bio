@@ -3,8 +3,7 @@
  * reasoned resolve and pull into the record, the knocker secret and its pseudonym, and the two count-only tallies of the
  * knocks it turns away. A knock is not a capture and not a bundle: it writes no bundle, and no intake path writes live
  * state. Requirements: build/requirements/doorbell.md (R1–R25). Built by copy from `capture` (K624; N826, T42-6;
- * `build/extraction/capture-split.md`), its SQL unchanged; `capture` keeps its copy, unused by new code, until its T43
- * delete (K625, N849).
+ * `build/extraction/capture-split.md`), its SQL unchanged; `capture`'s copy was deleted in T43 (K625, N849).
  *
  * SHAPE (K61, R25). `doorbellOf(ctx, deps)` answers the one instance for a Durable Object's storage. It reaches
  * `capture`'s instance for the same storage (`captureOf(ctx)`, or `deps.capture`), from which it reads `env` at each use
@@ -96,7 +95,7 @@ const instances = new WeakMap();
  *  `deps`: `capture` (`captureOf(ctx)` by default: its `env` is read at each use, R25), `record` and `provenance`
  *  (capture's own by default), `credentials` (`credentialsOf` for the storage by default), each read on the first call
  *  only; a test may pass its own. At its creation it creates its six tables and declares them to purge (`migrate`); a
- *  refused declaration other than R25's held one throws, naming the table, before the caller gets an instance. */
+ *  refused declaration throws, naming the table, before the caller gets an instance. */
 export function doorbellOf(ctx, deps = {}) {
   const storage = ctx && ctx.storage ? ctx.storage : ctx;
   let d = instances.get(storage);
@@ -158,16 +157,14 @@ export class Doorbell {
     this.declareTables();
   }
 
-  /** R25 (the map's doubt 4; plan T42 rule 3 (4)): the six tables declared to record-core's purge, every one exempt.
-   *  While `capture` keeps its copy (K625), it declares the same six with the same class; so its declaration is asked
-   *  first (`capture.declareTables`, idempotent, capture R87; K2629), whatever order the host builds the two in, and a refusal
-   *  `TABLE_DECLARED` whose `declaredBy` is `capture` is held, not a failure: the instance is made and nothing is thrown.
-   *  Any other refusal throws, naming the table. A record with no declaration (a test's stand-in) is left alone. */
+  /** R25 (the map's doubt 4; T43, N864, K2680): the six tables declared to record-core's purge, every one exempt. Since
+   *  `capture`'s delete (T43; N849) no other module declares them, so this module asks no other's declaration first and
+   *  holds no refusal: any refusal throws, naming the table, before the caller gets an instance. A record with no
+   *  declaration (a test's stand-in) is left alone. */
   declareTables() {
     if (this.#declared || !this.core || typeof this.core.declarePurge !== "function") return false;
-    if (this.capture && typeof this.capture.declareTables === "function") this.capture.declareTables();
     const answer = this.core.declarePurge("doorbell", [], { exempt: [...DOORBELL_EXEMPT_TABLES] });
-    if (answer && answer.ok === false && !(answer.reason === "TABLE_DECLARED" && answer.declaredBy === "capture"))
+    if (answer && answer.ok === false)
       throw new Error(`doorbell: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
     this.#declared = true;
     return true;

@@ -1,6 +1,6 @@
 # doorbell (T43)
 
-**Status** · session_01SeTaW1cz4FqJ1wHpmaFkGf · depth 2 · COMPLETE · handled B1
+**Status** · session_01SeTaW1cz4FqJ1wHpmaFkGf · depth 2 · COMPLETE · handled B2
 
 ## Record: first merge (T43-7; N851)
 
@@ -41,3 +41,51 @@ R25: instance.test.mjs :46/:53 expect [doorbell, exempt]. The call and the held 
 REPORT: answer-envelope R7/R2 totality goes red at THIS merge, not at T43-8: CHECK_FAMILY_FILES lacks src/doorbell/checks.mjs (DOORBELL_CHECKS, KNOCK_CHECKS); that is T43-14. 3 tests in families.test.mjs (T41 families; 'CHECK_FAMILIES is total'; T37 case-carriage), all green on tranche/T43 without this change. Rule 4 (9)'s start wants moving to T43-7.
 Users otherwise green: sources 30/0, actions 111/0, store-door 44/0, control-plane 223/0, plane 185/0. doorbell 68/1 (the accepted arm).
 Checks: format, architecture, coverage (25/25) and ownership (7 files), each 0 failures. No file outside paths. Ready for the CHANGE after capture's merge.
+
+## Record: second merge (B2 CHANGE; N864)
+
+**Merged** `tranche/T43` (capture's delete, K2710). The diff touched only `requirements/doorbell.md` (R21's wording), which I re-read.
+
+**Entries applied.**
+- R25 (N864, K2680):
+  - `index.mjs` no longer calls `capture.declareTables()` and has no held arm. Any refusal of the declaration throws, naming the table.
+  - Comments are re-worded to say capture's copy is deleted.
+- `instance.test.mjs`:
+  - The ownership arms (`["doorbell", "exempt"]`) are now green.
+  - The early-host arm asserts that capture's migrate after doorbell's creation declares capture's own tables, every one and none of the six, without throwing.
+  - The old held case (`TABLE_DECLARED` naming capture) now throws, with a negative control: an admitted declaration makes the instance.
+- The "running store" test, red after capture's delete (CAPTURE #27 J3), is rewritten. It no longer knocks through capture's deleted copy:
+  - An earlier doorbell instance over the same storage writes the inbox, key and tally rows. Creating a fresh instance changes none of them, and the fresh instance reads them back.
+  - The six tables' columns are pinned literally as capture's `schema.mjs` made them at T42's close. I checked that against `10ba938d27`'s capture schema by script. A negative control shows a table made otherwise reads otherwise.
+- The fixture comment is updated.
+
+**Deferred.** None.
+
+**Tests.**
+- doorbell: 69 pass, 0 fail. Rule 4 (5) is cleared.
+- Users:
+  - sources: 30/0.
+  - actions: 111/0.
+  - store-door: 44/0.
+  - plane: 185/0.
+  - answer-envelope: 25/5. All five reds are accepted under rule 4 (9): doorbell's family is missing from `CHECK_FAMILY_FILES` until T43-14. They are:
+    - `families.test.mjs`:49, :377, :424
+    - `envelope.test.mjs`:63
+    - `catalogue-end.test.mjs`:17
+  - control-plane: 222/1. The red is `envelope.test.mjs`:387 (`NO_SUCH_KNOCK` pinned in capture's table), accepted under rule 4 (12) until T43-23.
+
+**Checks:**
+- format: 0 failures.
+- architecture doorbell: 0 failures.
+- coverage doorbell: 25/25, 0 failures.
+- ownership doorbell `tranche/T43`: 4 files, 0 failures.
+
+Size (session_01SeTaW1cz4FqJ1wHpmaFkGf): test runs 10, module lines 1137
+
+## J2 · COMPLETE · re B2
+
+Second merge (N864) done, pushed on job/T43/doorbell @ 18f46a43aa, with tranche/T43 merged in.
+R25: no capture.declareTables() call and no held arm; every declaration refusal throws.
+instance.test.mjs: the ownership arms are green; capture's later migrate declares its own tables and none of the six; the held case now throws, with a negative control. The running-store test (J3's red) is rewritten without capture's knock, with the six tables' columns pinned as capture made them.
+doorbell 69/0, so rule 4 (5) is cleared. Users: sources 30/0, actions 111/0, store-door 44/0, plane 185/0. answer-envelope 25/5, all rule 4 (9): families:49, :377, :424; envelope:63; catalogue-end:17. control-plane 222/1: envelope.test.mjs:387, rule 4 (12).
+Checks: format, architecture, coverage (25/25) and ownership (4 files), each 0 failures.
