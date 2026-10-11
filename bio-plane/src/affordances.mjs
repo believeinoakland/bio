@@ -698,6 +698,12 @@ export const CAPTURE_ACTS = [
 const edgesFrom = (f) =>
   (vocabFor(STATES, f.declared_type ?? f.object_type)?.edges?.[f.current_state]) || [];
 
+/* A count fact read as a number (R14, R16: facts are counts). An array — a hand-built facts object may still carry
+ * ids — reads as its length; anything else as null, which never narrows an act (R10): `retire`'s "no confirmed
+ * citation into it" is withheld only on a stated count above zero, and an act that needs at least one of something
+ * is offered only on a stated count. */
+const countOf = (v) => typeof v === "number" && Number.isFinite(v) ? v : Array.isArray(v) ? v.length : null;
+
 /* PL-2 / IS-2. `edgesFrom` one construct down: does ANY reading this question
  * holds have a legal move to `to`, according to the SIXTH state machine's own
  * edge table? The table is `VERSION_MACHINE`'s and there is no copy here.
@@ -709,12 +715,6 @@ const edgesFrom = (f) =>
  * without promising that this caller's parameters will pass. WHICH reading is
  * the act's own parameter, and the store refuses one that cannot make the move
  * by name (C-25.25), naming the legal set it could have made. */
-/* A count fact read as a number (R14, R16: facts are counts). An array — a hand-built facts object may still carry
- * ids — reads as its length; anything else as null, which never narrows an act (R10): `retire`'s "no confirmed
- * citation into it" is withheld only on a stated count above zero, and an act that needs at least one of something
- * is offered only on a stated count. */
-const countOf = (v) => typeof v === "number" && Number.isFinite(v) ? v : Array.isArray(v) ? v.length : null;
-
 const anyVersionEdgeTo = (f, to) =>
   (f.basis_version_states ?? []).some((s) => (VERSION_MACHINE.edges[s] || []).includes(to));
 
@@ -1051,8 +1051,8 @@ export const ACTS = [
     prompt: DIVIDE_PROMPT,
     applies: (f, ty) => ty === "inquiry" && edgesFrom(f).includes("divided")
                      && !f.case_member
-                     && (f.basis_legs ?? 0) >= 1
-                     && (f.rested_on?.working ?? 0) === 0 },
+                     && countOf(f.basis_legs) >= 1
+                     && !(countOf(f.rested_on?.working) > 0) },
   /* REC-45 / DEC-32: AUTHORING THE STRUCTURE. An inquiry that RESTS ON
      something, and whose record is still working.
 
@@ -1105,7 +1105,7 @@ export const ACTS = [
        would then refuse it. That is a pre-flight disagreeing with the refusal it
        fronts, which is DEC-8's headline failure and the one thing this file
        exists to prevent. `divided` is untouched: it is still a state. */
-    applies: (f, ty) => ty === "inquiry" && (f.basis_legs ?? 0) >= 1
+    applies: (f, ty) => ty === "inquiry" && countOf(f.basis_legs) >= 1
                      && !f.case_member && f.current_state !== "divided" },
   /* S-10/S-11 step 1: citing. Published for BOTH ends, because the store's own
      guards are type-only on both: any information bundle may be cited (cite
@@ -1262,7 +1262,7 @@ export const ACTS = [
      does not enforce — the cite precedent. */
   { id: "versionhide", label: "Hide a reading from the display (it stays in the record)", weight: "single",
     types: ["inquiry"],
-    applies: (f, ty) => ty === "inquiry" && (f.basis_versions ?? 0) >= 1 },
+    applies: (f, ty) => ty === "inquiry" && countOf(f.basis_versions) >= 1 },
   /* REC-134 / C-56: `f.project_participant !== false` on the PROJECT arm of cite, sever and
      reinstate, and only there. Each of the three edits the project's own document, and the
      store now refuses an actor who has not JOINED that project (`#projectAuthority`, §7.5) —
@@ -1306,21 +1306,22 @@ export const ACTS = [
           LEG is a real gap and it is a different act — it belongs to the basis
           family (`inquiryground`, the version machine), not to this pair, and it
           is reported as a class finding rather than smuggled in here. */
-  /* THE FACT IS READ DEFENSIVELY (`?? 0`), the posture every fact added since
+  /* THE FACT IS READ DEFENSIVELY (`countOf`; `?? 0` until T43-17), the posture every fact added since
      REC-16 takes — `basis_legs`, `rested_on`, `basis_version_states` — and
-     REC-72 learned why the hard way rather than by copying a style. `deriveActs`
+     REC-72 learned why the hard way rather than by copying a style. Every count goes through `countOf` (R16), so a
+     hand-built facts object that still carries ids is read as their number, never compared as an array. `deriveActs`
      is EXPORTED and two suites call it with hand-built facts objects; a fact
      read through a bare `.` threw a TypeError there, `repair-reachability`'s own
      `actsAt` helper SWALLOWED it in a `try/catch` and returned "no acts at any
      state", and its A3 judgement then reported six offenders that do not exist.
      An instrument reporting a wrong number is harder to notice than one
      reporting zero. In the plane the same crash would have taken the whole
-     `op=affordances` answer down for every object. Absent reads as ZERO, which
-     is the SAFE direction: an act is not published where the fact behind it is
-     not known, and DEC-8's rule is about never publishing one the op refuses. */
+     `op=affordances` answer down for every object. An absent count offers nothing
+     that needs one, which is the SAFE direction: an act is not published where the
+     fact behind it is not known, and DEC-8's rule is about never publishing one the op refuses. */
   { id: "sever", label: "Sever a citation", weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f, ty) => ((ty === "information" || ty === "inquiry") && (f.cited_by_case?.confirmed ?? 0) > 0)
+    applies: (f, ty) => ((ty === "information" || ty === "inquiry") && countOf(f.cited_by_case?.confirmed) > 0)
                      || (ty === "project" && countOf(f.cites_out?.confirmed) > 0 && f.project_participant !== false) },
   /* REC-183 (State Rules §4.1, BOB #30): reinstating an edge onto a RETIRED Information bundle is
      refused RETIRED_NOT_CITABLE for every caller, so the act is not offered on one (DEC-8), as `cite`
@@ -1338,12 +1339,12 @@ export const ACTS = [
      IT IS NARROWED AND NOT DROPPED, which is the whole of the accepts-when: a project holding a
      severed edge onto a LIVE target must still be offered `reinstate`, and the store must still
      accept it. Withholding the act from every project would satisfy "never offer what is refused"
-     and cost a case the one recorded way to take a citation back up. `?? 0` for the posture every
+     and cost a case the one recorded way to take a citation back up. `countOf` for the posture every
      fact added since REC-16 takes: absent reads as ZERO, the safe direction, because `deriveActs`
      is exported and two suites call it with hand-built facts. */
   { id: "reinstate", label: "Reinstate a severed citation", weight: "refuse",
     types: ["information", "inquiry", "project"],
-    applies: (f, ty) => ((ty === "information" || ty === "inquiry") && (f.cited_by_case?.severed ?? 0) > 0
+    applies: (f, ty) => ((ty === "information" || ty === "inquiry") && countOf(f.cited_by_case?.severed) > 0
                          && !(ty === "information" && f.current_state === "retired"))
                      || (ty === "project" && countOf(f.cites_out?.severed_reinstatable) > 0
                          && f.project_participant !== false) },
@@ -1434,7 +1435,7 @@ export const ACTS = [
  * WITH A REASON."* `refuse` stops the whole set on drift and hands over nothing; `report` proceeds and says
  * what moved; `single` has no set. `per-item` is none of them: every item is tried on its own, the ones
  * the act accepts are applied, and each one it refuses is kept, carrying that act's own refusal as its
- * reason. The mechanism is record-core's `perItem` (its R49), and these three ops reach it when the body carries
+ * reason. The mechanism is record-core's `perItem` (its R49), and these ops reach it when the body carries
  * `items` (a caller who sends no `items` gets the single act, unchanged). D-291 added a FOURTH, `op=resolve`,
  * whose items are captured documents rather than queue items (BIO_Interaction_Constructs §S).
  *
@@ -1477,7 +1478,7 @@ export function deriveActs(facts) {
   /* D-311: a machine is withheld what its class is refused — on a STATED true only; a null
      (no author stamp was sent) narrows nothing, D-310's three-valued shape. */
   const machine = facts.actor_is_machine === true;
-  return ACTS.filter((a) => a.applies(facts, ty) && !(machine && a.id in MACHINE_REFUSALS));
+  return ACTS.filter((a) => a.applies(facts, ty) && !(machine && Object.hasOwn(MACHINE_REFUSALS, a.id)));
 }
 
 /* R11: one act, decorated for a caller. `gate` is the control plane's, built from the tables that actually gate the

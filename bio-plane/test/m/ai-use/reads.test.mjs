@@ -197,11 +197,11 @@ test("R13 (K2514) every refusal's sentence reaches its caller whole, no placehol
     }
   }
   assert.equal(seen, 2 * (2 * 2 * (5 + 5 + 5) + 2 * (5 + 5)), "every owner, scope, period and use was judged");
-  /* R3 failing closed names no limit: {period} dropped, {when} the unjudged fill */
+  /* R3 failing closed names no limit: its own sentence, ai.refused.limit.unjudged, {whose} its only fill (T43) */
   for (const r of [w.u.useCheck({ owner: "nobody", member: "bob", use: "ask" }), w.u.useCheck({ owner: "group", member: "bob", use: "chat" })]) {
     assert.equal(r.code, "AI_LIMIT_REACHED");
-    assert.equal(r.translation, "The assistant stopped here: your group's limit is reached. It works again once its use can be checked. "
-      + "Everything else works as usual.");
+    assert.equal(r.translation, WORDS["ai.refused.limit.unjudged"].replace("{whose}", WORDS["ai.whose.group"]));
+    assert.doesNotMatch(r.translation, PLACEHOLDER);
   }
   /* AI_LIMIT_INVALID: {field} filled for every field it names, the limit's and the estimate's */
   const invalid = [w.u.aiLimitSet({ owner: "x", by: "admin" }), w.u.aiLimitSet({ owner: "group", scope: "x", by: "admin" }),

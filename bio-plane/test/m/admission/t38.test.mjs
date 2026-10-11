@@ -1,7 +1,8 @@
 /* admission: T38-24 (N792; K2247, K2300, K2318) — with no `KNOCK_FINGERPRINT_KEY` binding, `sourceOf` answers the
-   fingerprint the store makes under capture's instance key (R56), asked through `doorwindow` with `count: false`, so
-   `setpassword`'s source (sourceOf's, control-plane R68) equals `login`'s (the window's, doorWindowGate) with or without
-   the binding. Driven at the module's interface over the store side's real SQLite table. */
+   fingerprint the store makes under the doorbell's instance key (its R12; capture R56 until T43, K2708), asked through
+   `doorwindow` with `count: false`, so `setpassword`'s source (sourceOf's, control-plane R68) equals `login`'s (the
+   window's, doorWindowGate) with or without the binding. Driven at the module's interface over the store side's real
+   SQLite table. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { A, O, W, doAnswer, makeEnv, storeWorld, bridged } from "./harness.mjs";
@@ -24,10 +25,10 @@ test("R21 (T38, both arms): for one address sourceOf equals the window's source 
     const w = storeWorld({ env: key ? { KNOCK_FINGERPRINT_KEY: key } : {} });
     const env = bridged(w, { env: key ? { KNOCK_FINGERPRINT_KEY: key } : {} });
     for (const addr of addrs) {
-      const fp = await w.capture.sourceFingerprint(addr);
+      const fp = await w.doorbell.sourceFingerprint(addr);
       /* login: the window's source, counted once */
       const login = await A.doorWindowGate({ req: reqFrom(addr), env, spec: OPS.login, doAnswer, now: T0 });
-      assert.equal(login.source, fp, `${key ? "bound" : "unbound"}: the window's source is capture's fingerprint`);
+      assert.equal(login.source, fp, `${key ? "bound" : "unbound"}: the window's source is the doorbell's fingerprint`);
       const before = JSON.stringify(w.rows());
       /* setpassword: sourceOf's, the same source, nothing counted */
       env.calls.length = 0;
@@ -58,15 +59,15 @@ test("R21 (T38, both arms): for one address sourceOf equals the window's source 
   for (let i = 0; i < 300; i++) await A.doorWindowGate({ req: reqFrom(addr), env, spec: OPS.login, doAnswer, now: T0 + i });
   assert.equal((await A.doorWindowGate({ req: reqFrom(addr), env, spec: OPS.login, doAnswer, now: T0 + 400 })).refusal.status, 429);
   const full = JSON.stringify(w.rows());
-  assert.equal(await A.sourceOf(reqFrom(addr), env), await w.capture.sourceFingerprint(addr));
+  assert.equal(await A.sourceOf(reqFrom(addr), env), await w.doorbell.sourceFingerprint(addr));
   assert.equal(JSON.stringify(w.rows()), full);
 });
 
-test("R21 (T38, the store side): doorwindow with count exactly false answers { source } alone — capture R56's fingerprint, or the shared source with no address — and reads, counts, refuses and writes nothing (no row added, no passed bucket dropped); any other count is counted as before", async () => {
+test("R21 (T38, the store side): doorwindow with count exactly false answers { source } alone — doorbell R12's fingerprint, or the shared source with no address — and reads, counts, refuses and writes nothing (no row added, no passed bucket dropped); any other count is counted as before", async () => {
   for (const env of [{}, { KNOCK_FINGERPRINT_KEY: "k-1" }]) {
     const w = storeWorld({ env });
     const addr = "203.0.113.9";
-    const fp = await w.capture.sourceFingerprint(addr);
+    const fp = await w.doorbell.sourceFingerprint(addr);
     /* a passed bucket of another source, which a counting request would drop */
     w.sql.exec(`INSERT INTO ${W.DOOR_WINDOW_TABLE} (source, bucket, count) VALUES (?, ?, ?)`, "old", 1, 5);
     const before = JSON.stringify(w.rows());

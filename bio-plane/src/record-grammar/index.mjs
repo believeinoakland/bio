@@ -19,4 +19,4 @@ export { LAW_PROPOSAL_STATES, lawProposalState, PROPOSAL_STATES, proposalLabel, 
   CONTENT_MINT_STATES, contentMintState } from './labels.mjs';
 export { SHARED_ACT_CHECKS } from './acts.mjs';
 export { ACCEPTANCE_FORMS, ACCEPT_MUST_REAUTHOR, acceptanceRecord } from './acceptance.mjs';
-export { EXTENSION_ARMS, checkBundle } from './bundle.mjs';
+export { EXTENSION_ARMS, checkBundle, idDisagrees } from './bundle.mjs';

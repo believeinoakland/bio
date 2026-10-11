@@ -3,7 +3,7 @@
    "the plane" and "the instance" go; member-facing text says "your group's Civicsmith" or names the thing; the
    doorbell's P rows say "this group's", a knocker holding no credential, K1821 (2)), each string named by a test; and
    R20, the doorbell's refused hand-overs counted in `credentials`' security tally (its R44, real, over the fixture's
-   store). The rows C-85.3 and C-85.4 are capture's, re-exported (R21, K2609), so their lines are capture's. */
+   store). The rows C-85.3 and C-85.4 are this module's own (R21; T43, N851), so their lines are its `checks.mjs`'s. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket } from "./fixture.mjs";
@@ -44,7 +44,7 @@ const OLD = /this instance|the instance\b|the plane\b/;
 
 /* ---- DEC-149 rows (plan rule 4; `build/plan/draft-T35-dec149-l1-l7.md` rows 178–188) ---- */
 
-test("R6 R9 DEC-149 P (C-85.3, capture checks.mjs:138): the envelope refusal's translation says \"The size this inbox will read is published beside this message.\"", async () => {
+test("R6 R9 DEC-149 P (C-85.3, checks.mjs:96): the envelope refusal's translation says \"The size this inbox will read is published beside this message.\"", async () => {
   const { send } = setup();
   const r = await send(knock(null, { raw: "x".repeat(KNOCK.maxBytes + 4097) }));
   assert.equal(r.status, 413);
@@ -54,7 +54,7 @@ test("R6 R9 DEC-149 P (C-85.3, capture checks.mjs:138): the envelope refusal's t
   assert.doesNotMatch(r.body.translation, OLD);
 });
 
-test("R7 R9 DEC-149 P (C-85.4, capture checks.mjs:147; door.mjs:52): the payload refusal says \"larger than this inbox stores. That is a fact about how this group has set its Civicsmith up\", and its detail \"this group's inbox stores knocks inline; large material needs its evidence storage configured\"", async () => {
+test("R7 R9 DEC-149 P (C-85.4, checks.mjs:103; door.mjs:52): the payload refusal says \"larger than this inbox stores. That is a fact about how this group has set its Civicsmith up\", and its detail \"this group's inbox stores knocks inline; large material needs its evidence storage configured\"", async () => {
   const { send } = setup({ evidence: false });
   const r = await send(knock({ contentText: "x".repeat(KNOCK.maxInline + 1) }));
   assert.equal(r.status, 413);

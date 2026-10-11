@@ -91,6 +91,7 @@ const LATIN1 = new TextDecoder("latin1");
  *  no refusal is emitted that is not declared here. */
 export const REFUSALS = {
   NOT_A_PDF: "the bytes do not carry a %PDF- header",
+  NOT_A_PICTURE: "the bytes are neither a JPEG nor a PNG file",
   ENCRYPTED: "the document is encrypted; streams are ciphertext to this reader",
   NO_SUCH_PAGE: "the page index is outside the document",
   PAGE_UNREADABLE: "the page object could not be read",
@@ -108,9 +109,10 @@ export const REFUSALS = {
 };
 
 /* R25: the REFUSALS reason for each feature a codec refuses as UNSUPPORTED —
- * total over JBIG2_REFUSES and JPX_REFUSES by construction: every key the codec
- * declares is UNSUPPORTED_FILTER unless named here (K116). */
-const featureReasons = (declared, named) =>
+ * total over JBIG2_REFUSES and JPX_REFUSES (and, for `picturepixels.mjs`, R42,
+ * PNG_REFUSES) by construction: every key the codec declares is
+ * UNSUPPORTED_FILTER unless named here (K116). */
+export const featureReasons = (declared, named) =>
   Object.freeze(Object.fromEntries(Object.keys(declared).map((k) => [k, named[k] ?? "UNSUPPORTED_FILTER"])));
 const JBIG2_FEATURE_REASONS = featureReasons(JBIG2_REFUSES, {});
 const JPX_FEATURE_REASONS = featureReasons(JPX_REFUSES, { "an image past the memory bound": "IMAGE_TOO_LARGE" });
@@ -667,7 +669,7 @@ function jpxColourComponents(doc, csv) {
  * the page is REFUSED, because an independent decoder fed these bytes would
  * produce a different picture from the one the PDF means, and `pixels_sha256`
  * would then certify something nobody can check. */
-const DCT_TO_REFUSAL = {
+export const DCT_TO_REFUSAL = {
   UNSUPPORTED_PROCESS: "UNSUPPORTED_JPEG_PROCESS",
   UNSUPPORTED_PRECISION: "UNSUPPORTED_JPEG_PROCESS",
   UNSUPPORTED_COMPONENTS: "UNSUPPORTED_SAMPLES",
@@ -874,8 +876,9 @@ export function normalisePacked(packed, width, height) {
 /* An 8-bit page is 8x (grey) or 24x (RGB) the bytes of a bilevel one — a
  * 3300x2550 RGB scan is 25.2 MB of samples — so the filtered raster is fed to
  * the compressor in BANDS rather than built whole beside the samples, which
- * would be a second 25 MB copy in a 128 MB isolate (D-320). */
-async function encodePng8(samples, width, height, comps) {
+ * would be a second 25 MB copy in a 128 MB isolate (D-320). `picturepixels.mjs`
+ * writes its PNG with it too (R42). */
+export async function encodePng8(samples, width, height, comps) {
   const rowBytes = width * comps;
   const band = Math.max(1, Math.floor((1 << 20) / (rowBytes + 1)));
   const cs = new CompressionStream("deflate");

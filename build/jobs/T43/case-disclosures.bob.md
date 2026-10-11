@@ -1,0 +1,12 @@
+# BOB to case-disclosures (T43)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T43), layer 8, case-disclosures: T43-22 (K2710). Read also K2708, K2710 (their lines in `build/rulings.md`) and the plan's rule 4 (12).
+Your requirements: `build/requirements/case-disclosures.md` (read whole); none is marked for T43. The entry is tests only: `fixture.mjs`:260 builds doorbell's tables (`doorbellOf(ctx)`, doorbell's declared schema) before inserting into `inbox`, which capture no longer creates since T43-8 (capture R87, N849). It clears rule 4 (12)'s case-disclosures reds (4 tests): confirm each passes with its assertions unchanged. Run your users' tests (case-account, case-authoring, answer-envelope, plane) and report reds by file and line, naming any rule 4 already accepts (case-authoring's fixture is T43-12's).
+Reading set (mechanics §17): measured at this START: 1188 KB with your tests, over the 600 KB limit (K2700). Your entry changes tests only: read your own requirements, code and tests whole; for the used modules' public parts (718 KB), give helpers (agents in your session) your entry and what follows it (case-authoring's T43-12 in L8, which makes the same fixture fix) to read those parts in full and write you a digest of what your entry needs, each statement citing its section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+Merge order in L8: case-carriage, ratification, case-disclosures, case-authoring (modules.json order); you are independent of the others.
+Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).

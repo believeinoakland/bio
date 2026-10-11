@@ -4,9 +4,15 @@ import assert from "node:assert/strict";
 import { makePromotion, doc, infoDoc, create, revise, T0 } from "./fixtures.mjs";
 import { runCaseGate, runGate, GATE_VERSION, PROMOTED_TYPE_CHECKS, PROMOTION_ROW_CHECKS, PROJECT_MINT_CHECKS,
          PROMOTION_REGISTRATION_CHECKS, projectNameKey } from "../../../src/promotion/index.mjs";
-import { STATES, vocabFor } from "../../../src/record-grammar/index.mjs";
+import { STATES, vocabFor, parseFrontmatter, idDisagrees } from "../../../src/record-grammar/index.mjs";
 
 const ID = "INFO-2026-0001";
+function held() {
+  const env = makePromotion();
+  const head = env.p.promote(create(ID, infoDoc(ID)));
+  assert.equal(head.ok, true, JSON.stringify(head));
+  return { ...env, head };
+}
 
 test("R39: a later module registers once a check before the write and a projection after it, both in the one transaction, run in the modules' order", () => {
   const { p, record } = makePromotion();
@@ -187,6 +193,88 @@ test("R38: a rule held at the door and in the catalogue is the catalogue's one f
   assert.equal(back.check, PROMOTION_ROW_CHECKS.BIAS_ILLEGAL_TRANSITION.check);
   assert.deepEqual(back.legal_from, vocabFor(STATES, "bias").edges.adopted);
   void h; void record;
+});
+
+/* N854 (T43): R38's two arms, C-1.1 and C-2.1, each judged at the door by record-grammar's own function, held equal to it
+   over every case, with the negative controls K874 asks for (an exact id passes; a clean front matter passes). */
+test("R38 (N854): C-1.1 at the door is record-grammar's idDisagrees: a padded id is BUNDLE_ID_DISAGREES at creation and revision, an exact id passes, a non-string id is not this refusal, a replay is exempt", () => {
+  const { p, record } = makePromotion();
+  const head = p.promote(create(ID, infoDoc(ID)));
+  assert.equal(head.ok, true, JSON.stringify(head));
+  /* The id lines, as the document states them: exact (the control), padded inside quotes (the parser keeps the spaces),
+     trailing spaces outside quotes (the parser trims them, so exact), another id, a number and a list. */
+  const lines = [`"${ID}"`, `" ${ID}"`, `"${ID} "`, `${ID}   `, '"INFO-2026-0009"', "5", "[a]"];
+  let n = 0;
+  for (const line of lines) {
+    const text = infoDoc(ID).replace(`id: ${ID}`, `id: ${line}`);
+    const fm = parseFrontmatter(text).data;
+    const want = idDisagrees(fm, ID);
+    const other = `INFO-2026-01${String(++n).padStart(2, "0")}`;
+    const created = p.promote(create(other, text));   // filed under another id: refused exactly when it disagrees there
+    assert.equal(created.reason === "BUNDLE_ID_DISAGREES", idDisagrees(fm, other), `creation, id: ${line}`);
+    const before = record.dump();
+    const r = p.promote(revise(ID, record.head(ID).bundleSha, text, { snapKey: `r-${n}` }));
+    assert.equal(r.reason === "BUNDLE_ID_DISAGREES", want, `revision, id: ${line} -> ${JSON.stringify(r).slice(0, 200)}`);
+    if (want) {
+      assert.deepEqual([r.ok, r.code, r.check], [false, "BUNDLE_ID_DISAGREES", "C-1.1"]);
+      assert.equal(record.dump(), before, "nothing written");
+    } else assert.notEqual(r.reason, "BUNDLE_ID_DISAGREES");
+  }
+  /* The arms named: padded refused, exact passed (negative control), a number not this refusal. */
+  const padded = p.promote(create("INFO-2026-0201", infoDoc("INFO-2026-0201").replace("id: INFO-2026-0201", 'id: " INFO-2026-0201"')));
+  assert.deepEqual([padded.reason, padded.document_id, padded.bundle_id], ["BUNDLE_ID_DISAGREES", " INFO-2026-0201", "INFO-2026-0201"]);
+  assert.equal(p.promote(create("INFO-2026-0202", infoDoc("INFO-2026-0202").replace("id: INFO-2026-0202", 'id: "INFO-2026-0202"'))).ok, true);
+  assert.notEqual(p.promote(create("INFO-2026-0203", infoDoc("INFO-2026-0203").replace("id: INFO-2026-0203", "id: 5"))).reason, "BUNDLE_ID_DISAGREES");
+  /* A replay is exempt (R14). */
+  assert.equal(p.promote({ ...create("INFO-2026-0204", infoDoc("INFO-2026-0204").replace("id: INFO-2026-0204", 'id: " INFO-2026-0204"')),
+                           replay: true }).ok, true);
+});
+
+test("R38 (N854, K2706): C-2.1 at the door is record-grammar's parser: a creation or a revision is BUNDLE_MD_UNREADABLE whenever parseFrontmatter answers any C-2.1 finding, a clean front matter passes, a C-2.4 buried key is not this refusal", () => {
+  const clean = infoDoc(ID);
+  const at = (needle, insert) => clean.replace(needle, `${needle}${insert}`);
+  const cases = [
+    ["clean (the control)", clean],
+    ["a key given twice", at("title: A report\n", "title: A report\n")],
+    ["an array item outside any block", at("group: test-group\n", "  - stray\n")],
+    ["an array item indented 4", at("group: test-group\n", "refs:\n    - a\n")],
+    ["an array item inside a map block", at("group: test-group\n", "meta:\n  k: v\n  - a\n")],
+    ["an unfit indented key", at("group: test-group\n", "      odd: 1\n")],
+    ["a line outside the grammar", at("group: test-group\n", "this is not yaml\n")],
+    ["no front matter", "no front matter here"],
+    ["a fence never closed", "---\nid: x\n"],
+    ["a buried core key (C-2.4)", at("group: test-group\n", "      object_type: information\n")],
+  ];
+  for (const [what, text] of cases) {
+    const { p, record } = makePromotion();
+    const head = p.promote(create(ID, clean));
+    assert.equal(head.ok, true, JSON.stringify(head));
+    const parsed = parseFrontmatter(text);
+    const c21 = parsed.findings.filter((x) => x.check === "C-2.1");
+    const before = record.dump();
+    const r = p.promote(revise(ID, head.bundleSha, text));
+    assert.equal(r.reason === "BUNDLE_MD_UNREADABLE", c21.length > 0, `${what}: ${JSON.stringify(r).slice(0, 300)}`);
+    if (c21.length) {
+      assert.deepEqual([r.ok, r.code, r.check, r.why], [false, "BUNDLE_MD_UNREADABLE", "C-2.1", "front_matter"], what);
+      assert.deepEqual(r.grammar, c21.map((x) => x.message), what);
+      assert.equal(record.dump(), before, `${what}: nothing written`);
+    }
+    if (what.startsWith("clean")) assert.equal(r.ok, true, JSON.stringify(r));
+    /* K2706: a creation is asked the same, so nothing is admitted that its next revision would be refused. */
+    const NEW = "INFO-2026-0301";
+    const madeBefore = record.dump();
+    const c = p.promote(create(NEW, text.replaceAll(ID, NEW)));
+    assert.equal(c.reason === "BUNDLE_MD_UNREADABLE", c21.length > 0, `creation, ${what}: ${JSON.stringify(c).slice(0, 300)}`);
+    if (c21.length) {
+      assert.deepEqual([c.ok, c.check, c.why, c.grammar], [false, "C-2.1", "front_matter", c21.map((x) => x.message.replaceAll(ID, NEW))], what);
+      assert.equal(record.dump(), madeBefore, `creation, ${what}: nothing written`);
+    }
+    if (what.startsWith("clean")) assert.equal(c.ok, true, JSON.stringify(c));
+  }
+  /* Readability comes before the compare-and-swap (R17): a duplicate key over a stale base is still unreadable. */
+  const { p, head } = held();
+  assert.equal(p.promote(revise(ID, "0".repeat(64), cases[1][1])).reason, "BUNDLE_MD_UNREADABLE");
+  void head;
 });
 
 test("R40: fact(name, ...args) reads a registered fact for a later module; unprovided it is FACT_UNAVAILABLE, never a value; a throwing provider is FACT_FAILED", () => {

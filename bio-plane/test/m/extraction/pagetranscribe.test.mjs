@@ -15,6 +15,7 @@ import { REEXTRACT_CHECKS, extractionOps } from "../../../src/extraction/index.m
 import { pageTranscribeOp, extractionOp, EXTRACTION_OPS } from "../../../src/extraction/ops.mjs";
 import { listenerRefusal } from "../../../src/membership/index.mjs";
 import { evidenceAbsent } from "../../../src/capture/ops.mjs";
+import { WORD } from "./words.mjs";
 
 const SENTINEL = "sk-ant-SENTINEL-KEY-0000";
 const ONE_MATTER = { id: "t-set", version: 2, matters: [{ id: "m1" }] };
@@ -43,7 +44,10 @@ function transcriber({ set = ONE_MATTER, records = [PASSED], away = () => null, 
   return { t, calls };
 }
 
-const pdf = (text, pages) => ({ format: "pdf", structure: async (b) => (new TextDecoder().decode(b).startsWith("%PDF")
+/* R73: the stored bytes name the format, so the scripted entry detects its signature as the real one does. */
+const pdf = (text, pages) => ({ format: "pdf",
+  detect: (b) => (b && new TextDecoder().decode(b.slice(0, 5)) === "%PDF-" ? { format: "pdf", confidence: "certain", signals: [] } : null),
+  structure: async (b) => (new TextDecoder().decode(b).startsWith("%PDF")
   ? { ok: true, text: structuredClone(text), pages: pages ?? (text.pages || []).length, notes: [] }
   : { ok: false, reason: "NOT_A_PDF" }) });
 
@@ -159,7 +163,7 @@ test("R71 R72 R47 (C-51.7): not deployable is TRANSCRIBE_NOT_DEPLOYED, 501, its 
     w.x.registerTranscriber("plane", tr.t);
     const r = await w.x.pageTranscribe({ captureSha: d, ...member1 });
     assert.deepEqual([r.status, r.body.reason, r.body.check], [501, "TRANSCRIBE_NOT_DEPLOYED", "C-51.7"], name);
-    assert.equal(r.body.translation, "Nothing was read or sent, because reading picture pages with the assistant is not switched on for your group's Civicsmith yet: each part of the assistant is switched on only after it passes Civicsmith's test investigations.");
+    assert.equal(r.body.translation, WORD("transcribe.refused.notdeployed"), "R47 (T43): C-51.7's translation is words.json's, by key");
     assert.doesNotMatch(JSON.stringify(r.body), /SENTINEL|apikey|signin|level/, "it names nothing about any account");
     assert.deepEqual([tr.calls.keptAway, tr.calls.transcription, tr.calls.accountFor], [[], [], []], name);
   }
@@ -187,7 +191,7 @@ test("R71 R72 R34 R19 R23 R24 R44 (the whole chain, the bar held on a one-matter
   assert.equal(r.status, 200);
   const x = r.body.transcription;
   assert.deepEqual([x.performed, x.written, x.pages, x.engine, x.version, x.staled, x.observed.written, x.label],
-                   [true, true, [1], "claude-test", "2026-01", 3, 1, "the AI's reading"]);
+                   [true, true, [1], "claude-test", "2026-01", 3, 1, WORD("transcribe.label")]);
   assert.match(x.act, /^transcribe:abc:/);
   assert.match(x.note, /transcribed by the AI \(claude-test 2026-01\) at a member's request/);
   assert.match(x.note, /page 3 the AI did not transcribe|did not transcribe/);
@@ -234,11 +238,10 @@ test("R71 (tier 3 when bound): with the OCR member bound, OCR is asked first and
   assert.ok(stored.text_source.some((s) => s.step === "ocr") && stored.text_source.some((s) => s.step === "ai_transcription"));
 });
 
-test("R71: with no page filled the answer's transcription is performed false, written false, why tier4Extend's note, and nothing is written: no page left unread, the account refused, the AI declined", async () => {
+test("R71: with no page filled the answer's transcription is performed false, written false, why tier4Extend's note, and nothing is written: no page left unread, the AI declined", async () => {
   const runs = [
     [i2([{ page: 0, text: "all text" }]), {}, /no page was left that Civicsmith's own text recognition could not read/],
-    [SCAN, { account: { ok: false, code: "NO_ACCOUNT", detail: "no account serves this act" } }, /NO_ACCOUNT: no account serves this act/],
-    [SCAN, { limit: { ok: false, code: "AI_LIMIT_REACHED", detail: "limit reached" } }, /AI_LIMIT_REACHED/],
+    /* (T43, N853a) an account or limit refusal is answered as that refusal: t43.test.mjs */
     [SCAN, { answer: () => ({ ok: false, reason: "AGENT_WORKER_UNBOUND" }) }, /declined \(AGENT_WORKER_UNBOUND\)/],
   ];
   for (const [text, opts, why] of runs) {
@@ -271,7 +274,7 @@ test("R71 R34 R24: a transcription whose write a listener refuses is rolled back
   assert.deepEqual([ok.performed, ok.written, ok.why], [true, true, undefined]);
 });
 
-test("R71: past its refusals an absent object is capture's one answer for it, and a non-PDF the entry's own answer; nothing asked of the AI", async () => {
+test("R71 R73: past its refusals an absent object is capture's one answer for it, and bytes no entry with pages reads answer performed false naming the format, nothing written; nothing asked of the AI", async () => {
   const { w, d } = await held();
   const tr = transcriber();
   w.x.registerTranscriber("plane", tr.t);
@@ -281,8 +284,12 @@ test("R71: past its refusals an absent object is capture's one answer for it, an
   n.w.x.registerTranscriber("plane", tr.t);
   const notPdf = await hold(n.w.evidence, "not a pdf");
   n.w.x.writeReading({ bundleId: "B-1", captureSha: notPdf, reading: { entities: [], at: "a" } });
+  const before = writes(n.w);
   const r = await withEntry(pdf(SCAN), () => n.w.x.pageTranscribe({ captureSha: notPdf, ...member1 }));
-  assert.deepEqual([r.status, r.body.reason], [422, "NOT_A_PDF"]);
+  assert.deepEqual([r.status, r.body.ok, r.body.transcription.performed, r.body.transcription.written], [200, true, false, false]);
+  assert.equal(r.body.format, "undetermined");
+  assert.match(r.body.transcription.why, /no format your group's Civicsmith knows/);
+  assert.equal(writes(n.w), before);
   assert.deepEqual(tr.calls.transcribe, []);
 });
 

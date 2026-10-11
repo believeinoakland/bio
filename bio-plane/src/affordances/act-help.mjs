@@ -1,9 +1,12 @@
 /* affordances — ACT_HELP (R48; N726, DEC-174 (3) as amended (U117), DEC-99): the one table of what each act does, one
  * English explanation per op, keyed by op, held for translation (N669 keys the translations by this table's keys).
  *
- * GENERATED, never edited by hand, from the design stream's `docs/development/ux-substrate/screens/mock-acts.js` as
- * PR #19 merged it (`3660c18803`, DEC-188 (7), (8), U145), 215 entries (T41-52, K2484; before it PR #15's `c848b56671`,
- * 204, T38-31; PR #14's `e08cd35ecb`, 203, T37-27); a later design text is a re-generation. Each text is the design's,
+ * GENERATED, never edited by hand, from the design stream's `docs/development/ux-substrate/screens/mock-acts.js` as it
+ * stands on `tranche/T43` (DEC-189's `4455c7fbe5`, DEC-190's `bbf92e344a`), 213 entries (T43-17, K2704; before it PR #19's
+ * `3660c18803`, 215, T41-52; PR #15's `c848b56671`, 204, T38-31; PR #14's `e08cd35ecb`, 203, T37-27); a later design text
+ * is a re-generation. DEC-189 re-keyed 37 acts from `owed_<op>` (each already held under its op) and removed the four
+ * retired acts' texts; DEC-190 gave `transcribe` its text and `owed_pagetranscribe` the assistant's page reading, both
+ * held under their ops (declared since T42). Each text is the design's,
  * verbatim, in the design's order. Its keys are read as R48 reads them:
  *   - a declared op is that op;
  *   - an alias (`op-grades`' OP_ALIASES, `op-declarations` R21's table) is held under its op, never as a second entry;
@@ -15,13 +18,13 @@
  *     `translationadopt`, `translationconfirm`, `translationrevert`), the one it declares in T38 (T38-15, its R40:
  *     `obscuremarkwithdraw`) and the eleven it declares in T41 (its R41: `accountusesset`, `ailimitset`,
  *     `projectkeyset`, `projectsigninset`, `projectaccountswitch`, `projectaccountremove`, `projectkeynoticeseen`,
- *     `projectaikeepaway`, `exploreapprove`; its R42: `handlechange`, `handlecheck`), and under `owed_<op>` for the one
- *     still undeclared (`infolevelset`);
- *   - a retired op is not held: the file's texts for `aiceilingset`, `aicopyceilingset`, `accountswitchset` and
- *     `groupswitchset` (retired by DEC-188 (8): no longer declared) are left out.
+ *     `projectaikeepaway`, `exploreapprove`; its R42: `handlechange`, `handlecheck`), `pagetranscribe` (declared in T42),
+ *     and under `owed_<op>` for the one still undeclared (`infolevelset`);
+ *   - a retired op is not held (DEC-188 (8)'s `aiceilingset`, `aicopyceilingset`, `accountswitchset`, `groupswitchset`,
+ *     whose texts DEC-189 removed from the file).
  * PR #14 withdrew `projectcreated`, `countask`, `registerproceeding`, `deadlinecompute` and `claimidentity` and dropped
- * `assistantset` (DEC-182 (1)–(3)); PR #19 re-worded `aikeepaway` (its `owed_` text) and `groupkeyset`. So 211 of its
- * 215 entries are held. */
+ * `assistantset` (DEC-182 (1)–(3)); PR #19 re-worded `aikeepaway` (its `owed_` text) and `groupkeyset`. So all 213 of
+ * its entries are held. */
 export const ACT_HELP = Object.freeze({
   bootstrap: 'Installs Civicsmith in your group\'s own Cloudflare account under this short name. The short name is permanent: it appears in every address and beside every signature.',
   selftest: 'Runs Civicsmith\'s own checks on what was just installed, so you know it works before anyone joins.',
@@ -131,6 +134,8 @@ export const ACT_HELP = Object.freeze({
   projectaccountremove: 'Removes the project\'s account. Members\' own accounts, then the group\'s key, serve in the project from then on.',
   projectkeynoticeseen: 'Records that you have read what the project\'s key means, before the first act it pays for.',
   projectaikeepaway: 'Keeps this project\'s material away from AI, for every use or the ones you choose, with a reason every member sees. It binds every account, whoever pays.',
+  pagetranscribe: 'Has the assistant read up to 8 pages of this document that Civicsmith\'s own reading couldn\'t make out. The account that pays for your acts here pays, within its limits. Its words arrive labelled as the assistant\'s reading and stay undetermined until a member checks a passage against the page; the page images stay as they are.',
+  transcribe: 'Types the words of a page yourself, from its image. Your typing is labelled as yours, and a second member can check it against the page.',
   exploreapprove: 'Lets the assistant explore today, on this account, what it said is worth exploring. Without a yes today, it doesn\'t.',
   handlechange: 'Changes the handle the record shows on your work. Members see your earlier handle beside it. Allowed until your work first appears in a published case; after that it is fixed.',
   handlecheck: 'Checks, as you type, whether this handle can be used in the group: free, already taken, or using characters a handle can\'t have. It never says who has a handle.',

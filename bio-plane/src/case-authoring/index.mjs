@@ -11,7 +11,8 @@
  * the fields a case may carry and no other (R65), the pre-flight's account step (R67) and the approvals the group's rule
  * requires (R68). The account's own machinery (the system's drafts of it, its shape, its judgment against what it cites,
  * a draft's acceptance, the review comments' reader) is `case-account`'s, which `publishCase` asks in R69's order (N839,
- * K2608); three one-line pass-throughs to it stand until T43 (N850).
+ * K2608); its drafts' proposal and list and the reader's registration are `case-account`'s alone, and this module
+ * answers none of them (R69; T43, N850).
  *
  * Extracted from the legacy modules (T8, layer 8; K3, K6, K57, K61, K82 (5), K94, K102): `store.mjs` (`publishCase`,
  * `#caseCitations`, `#caseDocumentText`, `#searchedForCase` with its two evidence probes, the acknowledgements
@@ -37,7 +38,7 @@
  * first call with `deps`, returned to every later caller. At creation it creates its tables and declares them to
  * record-core's purge (R28, K23), and creates `case-account`'s one instance on the host, so that module's tables exist
  * and are declared at every boot (its R12; the map's doubt 4). It registers with nothing (map §6 item 4); `review`
- * registers its comments' reader through this module's pass-through to `case-account` until T43 (its R7; N850).
+ * registers its comments' reader with `case-account` itself (its R7; N850).
  * `deps` (each reached through its factory on the same host unless given; a test passes its own):
  *   record, membership   layer 2: `readFile`, `head`, `transact`, `mintOpaqueId`, `declarePurge`; `viewerPredicate`,
  *                        `isProjectOwner`, `isJoinedParticipant`, `existenceAct`.
@@ -1368,18 +1369,6 @@ export class CaseAuthoring {
              drafts: rows.slice(0, WHAT_CHANGED_DRAFTS_MAX).map((r) => ({ id: r.draft_id, text: r.text,
                                                                          label: JSON.parse(r.label), at: r.at })) };
   }
-
-  /* ==========================================================================================================
-   * R69 (N850; K1333, K2608): THREE ONE-LINE PASS-THROUGHS TO `case-account`, unused by new code, each answering exactly
-   * as it answers: they stand only while `review` (T42-23a), `control-plane` (T42-29) and `plane` (T42-30) re-point,
-   * and T43 deletes them.
-   * ========================================================================================================== */
-  /** `case-account` R1, R2 (the system's drafts of a case's account). */
-  accountPropose(args) { return this.account.accountPropose(args); }
-  /** `case-account` R3 (the case's account drafts, oldest first). */
-  accountDrafts(args) { return this.account.accountDrafts(args); }
-  /** `case-account` R7 (the one reader of the case's review comments, registered once). */
-  registerReviewComments(fn) { return this.account.registerReviewComments(fn); }
 
   /** R2, asked by `op=publish` and by R32's read alike: the publishing project named, seen, a project, and owned by
    *  `who`. Answers the refusal itself (`ok: false` at the top level, N370) or `{ok: true, proj, gate}`. */

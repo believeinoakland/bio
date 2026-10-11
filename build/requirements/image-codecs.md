@@ -4,7 +4,7 @@
 
 ### Purpose
 
-Pure image decoders: an image stream's bytes to samples, pixel-exact against an independent reference decoder, or a declared refusal. It knows nothing of PDF, PNG, storage or place.
+Pure image decoders: an image stream's bytes to samples, pixel-exact against an independent reference decoder, or a declared refusal. It knows nothing of PDF, storage or place; PNG it reads as an input (R10) and writes none.
 
 ### Provides
 
@@ -24,8 +24,10 @@ Pure image decoders: an image stream's bytes to samples, pixel-exact against an 
 - **R5** The MQ arithmetic decoder (ITU-T T.88 Annex E, T.800 Annex C) shared by R3 and R4: the same bytes and context states decode the same decisions as the standard's reference procedure.
 
 **All codecs**
-- **R6** Each decode is checked pixel-exact against a named independent decoder over fixtures that carry the raw stream and the reference's hash (libjpeg-turbo for R1, jbig2dec for R3, OpenJPEG for R4; CCITT against the page fixtures' reference hashes), never against this module's own earlier output.
-- **R7** Every `UNSUPPORTED` refusal's feature is a key of that codec's declared set, and every key is reachable; renaming or removing a key, or a refusal code, is a change to this requirement.
+- **R6** Each decode is checked pixel-exact against a named independent decoder over fixtures that carry the raw stream and the reference's hash (libjpeg-turbo for R1, jbig2dec for R3, OpenJPEG for R4, Pillow over PngSuite for R10 (T43); CCITT against the page fixtures' reference hashes), never against this module's own earlier output.
+- **R7** Every `UNSUPPORTED` refusal's feature is a key of that codec's declared set (`PNG_REFUSES` for R10, T43), and every key is reachable; renaming or removing a key, or a refusal code, is a change to this requirement.
+
+- **R10** (T43; N853b; K2611, K2691) `decodePng(bytes) → Promise<samples>`, `PNG_REFUSES`, `PngRefusal` (`pngdecode.mjs`): colour types 0, 2, 3, 4 and 6 at every legal depth, filters 0–4, IDAT inflated by `DecompressionStream("deflate")`, to 8-bit samples (alpha composited over white, 16-bit to its high byte, a palette expanded). An interlaced image, or a frame over the memory bound before allocation, is `UNSUPPORTED` with a `PNG_REFUSES` key; damaged or short data is refused under the codec's own codes. Pixel-exact against Pillow over PngSuite (R6).
 
 ## Private
 

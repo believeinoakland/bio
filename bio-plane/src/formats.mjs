@@ -259,9 +259,52 @@ registerFormat(odpEntry);
    registered entry claims `text/csv`. */
 registerFormat(csvEntry);
 
+/* THE PICTURE ENTRIES (T43; N853b, K2611, K2691) — a JPEG or PNG file, such as
+   a photographed page, read as ONE picture page with no text layer: the same
+   `no_text_layer` marker a scanned PDF page carries, so the reading path treats
+   a photo exactly as an un-OCR'd scan, with no format branch outside this
+   registry. They DECODE NOTHING: a picture's pixels are `pdf-pixels`' to make
+   (its `renderPictureToPixels`), never this registry's. Detected by the
+   format's own signature at offset 0, `certain`; with no bytes, by the exact
+   content type, `likely`. Registered after `csv` and before `zip`; no other
+   entry's signature can begin with either of theirs. HEIC and TIFF are not
+   registered (N853b §2 (a)): they stay `undetermined`. */
+function pictureEntry(format, signature, contentType, refusal) {
+  const signed = (bytes) => bytes instanceof Uint8Array && bytes.length >= signature.length
+    && signature.every((b, i) => bytes[i] === b);
+  const hex = signature.map((b) => b.toString(16).toUpperCase().padStart(2, "0")).join(" ");
+  return {
+    format,
+    detect(bytes, ct) {
+      if (bytes) {
+        return signed(bytes)
+          ? { format, confidence: "certain", signals: [`magic: ${hex} at offset 0`] }
+          : null;
+      }
+      if (ct === contentType)
+        return { format, confidence: "likely", signals: [`content type "${contentType}"`] };
+      return null;
+    },
+    parts: null,
+    /* One page, page 0, unread: the shape pdf-reader's Tier-1 text gives a
+       page with no text layer (its R14), fresh on every call. */
+    structure: async (bytes) => {
+      if (!signed(bytes)) return { ok: false, container: format, reason: refusal };
+      const m = { page: 0, reason: "no_text_layer", font: null, codes: "", count: 0 };
+      return { ok: true, pages: 1,
+               text: { document: "", pages: [{ page: 0, text: "", undetermined: [m] }],
+                       undetermined: [m], counts: { chars: 0, undetermined: 1 } } };
+    },
+    text: null,
+  };
+}
+
+registerFormat(pictureEntry("jpeg", [0xff, 0xd8, 0xff], "image/jpeg", "NOT_A_JPEG"));
+registerFormat(pictureEntry("png", [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], "image/png", "NOT_A_PNG"));
+
 /* THE ZIP ENTRY (T35-11; N688, K1844, K1852) — a plain ZIP archive, recognised
    so that it can be opened on capture: `acquisition` cuts its members, each a
-   capture of its own (Intake §3). It is the tenth entry and registered LAST,
+   capture of its own (Intake §3). It is the twelfth entry and registered LAST,
    so every office and OpenDocument entry is asked first in each pass.
 
    DETECT IS `ooxml.discriminate`'S `format:"zip"`, ANSWERED SYNCHRONOUSLY:

@@ -37,7 +37,9 @@ export const SCREENS = Object.freeze([
     + "the address, the instant and the claimed issuer are recorded as three separate claims."),
   screen("bundle", "The document",
     ["image", "projection", "links", "backlinks", "search", "affordances", "entity", "resolutions", "connections", "connectionchoose",
-     "captureprogressions", "acquire", "lease", "promote", "select", "release", "dispose", "attest", "cite", "retire", "sever", "reinstate"],
+     "captureprogressions", "acquire", "lease", "promote", "select", "release", "dispose", "attest", "cite", "retire", "sever", "reinstate",
+     /* T43 (N862; DEC-190 (1)): the reading, its unread pages and their transcription by the AI */
+     "reading", "pagetranscribe", "transcribe"],
     "One document as the record holds it: the captured bytes, what was extracted from them, what the record made of it, "
     + "and what cites it."),
   screen("inquiry", "The question",

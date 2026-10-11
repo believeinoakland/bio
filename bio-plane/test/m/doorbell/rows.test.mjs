@@ -1,7 +1,7 @@
-/* doorbell R21 (K2609): the refusal rows this module answers with, in its own table (`src/doorbell/checks.mjs`):
-   C-85.1–C-85.5 and C-118.2, .3, .4 and .7, each code, number and translation as the requirement's table states, held
-   once (re-exported from capture's `checks.mjs` while capture keeps its copy, K625), and each raiser answering through
-   its row. With a negative control for each C-85 refusal (K874): the case just inside the bound is admitted. */
+/* doorbell R21 (K2609; T43, N851): the refusal rows this module answers with, in its own table
+   (`src/doorbell/checks.mjs`): C-85.1–C-85.5 and C-118.2, .3, .4 and .7, each code, number and translation as the
+   requirement states and as `capture` held them, defined there alone, and each raiser answering through its row. With a
+   negative control for each C-85 refusal (K874): the case just inside the bound is admitted. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { fresh, bucket } from "./fixture.mjs";
@@ -17,18 +17,28 @@ const C118 = {
   KNOCK_DISCARDED: ["C-118.4", "This knock was set aside. Move it back to new before bringing it in. Nothing was written."],
   RESOLVE_NO_REASON: ["C-118.7", "Changing a knock's status records why, in your own words, and no reason was given, or it is longer than 2,000 characters. Write one. Nothing was written."],
 };
-const C85 = { RATE_IP: "C-85.1", RATE_GLOBAL: "C-85.2", KNOCK_ENVELOPE_TOO_LARGE: "C-85.3", KNOCK_PAYLOAD_TOO_LARGE: "C-85.4", KNOCK_EMPTY: "C-85.5" };
+/* C-85's five rows, each number and translation as `capture` held them at T42's close (R21: kept as capture held them). */
+const C85 = {
+  RATE_IP: ["C-85.1", "Your material was not received. This group's inbox is not taking any more material from where you are sending it just now. It is a limit on how fast one sender may knock, not a judgement about you or about what you sent, and it lifts on its own shortly — the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later and it will arrive. " + SEEN],
+  RATE_GLOBAL: ["C-85.2", "Your material was not received. This group's inbox is not taking any more material from anyone just now. The whole instance is at its limit rather than you — the cap exists so that no one sender can fill the inbox — and it lifts on its own shortly; the bound is published beside this message. Nothing was stored and nothing was read, so send the same material again a little later. " + SEEN],
+  KNOCK_ENVELOPE_TOO_LARGE: ["C-85.3", "This group's inbox did not read what you sent, because the request itself is larger than this door accepts. Nothing was stored, nothing was opened, and nothing about your material was judged — its size was read off the request and it stopped there. The size this inbox will read is published beside this message. Send the material again smaller, or as more than one knock, and it will be read. " + SEEN],
+  KNOCK_PAYLOAD_TOO_LARGE: ["C-85.4", "This group's inbox read your material and cannot keep it, because it is larger than this inbox stores. That is a fact about how this group has set its Civicsmith up rather than a judgement about what you sent — a group that has configured evidence storage can keep far more — and the size this one can keep is published beside this message. Nothing was stored. Send something smaller, or ask the group's members how to get the whole of it to them. " + SEEN],
+  KNOCK_EMPTY: ["C-85.5", "This group's inbox has nothing to keep, because what you sent decoded to no bytes at all. The request itself was well formed and named its content, so this is most likely an empty file or an empty box rather than anything wrong with how you sent it. Nothing was stored. Check what you attached and knock again. " + SEEN],
+};
 
-test("R21 (K2609): the table holds C-85.1–.5 and C-118.2, .3, .4, .7 and nothing else, each code, number and translation as stated, each row held once: capture's own row objects, re-exported", () => {
+test("R21 (K2609, N851): the table holds C-85.1–.5 and C-118.2, .3, .4, .7 and nothing else, each code, number and translation as capture held them, defined in this module's file alone", () => {
   assert.deepEqual(Object.keys(DOORBELL_CHECKS).sort(), Object.keys(C118).sort(), "the four C-118 rows, no other");
-  for (const [code, [check, translation]] of Object.entries(C118)) {
-    assert.deepEqual([DOORBELL_CHECKS[code].check, DOORBELL_CHECKS[code].translation], [check, translation], code);
-    assert.equal(DOORBELL_CHECKS[code], CAPTURE.CAPTURE_CHECKS[code], `${code}: the one row, not a copy`);
-    assert.ok(Object.isFrozen(DOORBELL_CHECKS[code]));
-  }
-  assert.deepEqual(Object.fromEntries(Object.entries(KNOCK_CHECKS).map(([k, r]) => [k, r.check])), C85, "the five C-85 rows, no other");
-  assert.equal(KNOCK_CHECKS, CAPTURE.KNOCK_CHECKS, "C-85's table is capture's own object");
-  for (const r of Object.values(KNOCK_CHECKS)) assert.ok(typeof r.translation === "string" && r.translation.includes(SEEN));
+  assert.deepEqual(Object.keys(KNOCK_CHECKS).sort(), Object.keys(C85).sort(), "the five C-85 rows, no other");
+  for (const [table, want] of [[DOORBELL_CHECKS, C118], [KNOCK_CHECKS, C85]])
+    for (const [code, [check, translation]] of Object.entries(want))
+      assert.deepEqual([table[code].check, table[code].translation], [check, translation], `${code}: its number and translation`);
+  for (const r of Object.values(DOORBELL_CHECKS)) assert.ok(Object.isFrozen(r));
+  assert.ok(Object.isFrozen(DOORBELL_CHECKS));
+  assert.ok(!Object.isFrozen(KNOCK_CHECKS), "C-85 is not frozen: R9's missing row fails loud, and its test removes a row");
+  /* defined here alone: no row, and neither table, is another module's object (capture's while it keeps its copy) */
+  assert.notEqual(KNOCK_CHECKS, CAPTURE.KNOCK_CHECKS, "C-85's table is this module's own object");
+  for (const code of Object.keys(C118)) assert.notEqual(DOORBELL_CHECKS[code], CAPTURE.CAPTURE_CHECKS[code], `${code}: this module's own row`);
+  for (const code of Object.keys(C85)) assert.notEqual(KNOCK_CHECKS[code], CAPTURE.KNOCK_CHECKS?.[code], `${code}: this module's own row`);
   /* C-118's other rows stay capture's: none of them is this module's */
   for (const code of ["EVIDENCE_NOT_HELD", "NOT_THE_CAPTURING_ACTOR", "ACCOUNT_NO_TEXT", "MACHINE_CANNOT_SET_ASIDE", "SET_ASIDE_NO_REASON", "UPLOAD_NO_STATEMENT"])
     assert.equal(DOORBELL_CHECKS[code], undefined, `${code} stays capture's`);

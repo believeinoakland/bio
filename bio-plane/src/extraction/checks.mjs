@@ -19,6 +19,22 @@
    code and the CANNED TRANSLATION are one row, read at the site through a helper
    that throws on a code with no sentence behind it.
    =========================================================================== */
+/* R27, R47, R71 (T43; N862; DEC-190 (1), (2); K2689): the words of `words.json`
+   (`docs/development/ux-substrate/screens/words.json`) this module answers, each `en` verbatim, read by key. `{pages}`
+   and `{why}` are filled by `fillWords`; a row's `translation` is the word itself, never a copy. */
+export const TRANSCRIBE_WORDS = Object.freeze({
+  'transcribe.refused.notdeployed': 'Nothing was read or sent: the assistant\'s reading of page pictures isn\'t switched '
+    + 'on in your group\'s Civicsmith yet. Each part of the assistant is switched on only after it passes Civicsmith\'s '
+    + 'test investigations. You can type a page\'s words yourself meanwhile.',
+  'transcribe.label': 'The assistant\'s reading of the page image · undetermined until a member checks a passage '
+    + 'against the page',
+  'transcribe.none': 'The assistant read pages {pages} but found no words it could give: {why}',
+  'transcribe.done': 'The assistant read pages {pages}. Their words can now be found; each passage stays undetermined '
+    + 'until a member checks it against the page.',
+  'document.unread.pages': 'Pages {pages} are pictures of text that Civicsmith\'s own reading couldn\'t make out, so '
+    + 'their words can\'t be found or cited yet. The page images are kept as they are.',
+});
+
 export const REEXTRACT_CHECKS = {
   /* The flag is present and is not `1`. Refused rather than read as absent:
      an `ocr=yes` answered with the plain read would tell a member the record
@@ -71,16 +87,27 @@ export const REEXTRACT_CHECKS = {
   /* R71, R47 (T42; N832, K2611, K2613): `op=pagetranscribe` asked while the AI's part `transcribe` cannot be
      switched on (no transcriber registered, R72, or its `deployable()`, run-rules R19's test bar, not exactly true).
      Refused by name, as C-51.4 refuses an absent tier, before any account or content is read, so it names nothing
-     about any account. The number follows C-51.6, which is R63's `NO_SHA`. BOB's draft words, the design stream's
-     to replace. */
+     about any account. The number follows C-51.6, which is R63's `NO_SHA`. (T43; N862; DEC-190 (2)) Its translation
+     is `words.json`'s `transcribe.refused.notdeployed`, read by key, never a copy (`TRANSCRIBE_WORDS` below). */
   TRANSCRIBE_NOT_DEPLOYED: {
     check: 'C-51.7',
     where: 'src/extraction/index.mjs pageTranscribe > is-transcribe',
-    translation: 'Nothing was read or sent, because reading picture pages with the assistant is not switched on for '
-      + 'your group\'s Civicsmith yet: each part of the assistant is switched on only after it passes Civicsmith\'s '
-      + 'test investigations.',
+    translation: TRANSCRIBE_WORDS['transcribe.refused.notdeployed'],
   },
 };
+
+/* R27, R71: the pages a sentence names, as the member counts them (a reading numbers its pages from 0, the member from
+   1), in ascending order, each once, joined by ", ". */
+export const pagesSaid = (pages) => [...new Set((Array.isArray(pages) ? pages : []).filter(Number.isInteger))]
+  .sort((a, b) => a - b).map((p) => String(p + 1)).join(", ");
+
+/* R27, R71: a word read by key with its placeholders filled; a throw for a key the list lacks, because a missing
+   sentence is silent and reaches a person while a throw is loud in a test (DEC-49's rule, as `reextractRow`). */
+export function fillWords(key, fill = {}) {
+  const en = TRANSCRIBE_WORDS[key];
+  if (typeof en !== "string" || !en) throw new Error(`fillWords: ${key} is not one of this module's words (words.json)`);
+  return en.replace(/\{([a-z_]+)\}/g, (m, k) => (Object.prototype.hasOwnProperty.call(fill, k) ? String(fill[k]) : m));
+}
 
 /* DEC-49's reader, `driveRow`'s shape: the row of a C-51 code, and a throw for a code with no canned sentence
    behind it, because a missing sentence is silent and reaches a person while a throw is loud in a test. */

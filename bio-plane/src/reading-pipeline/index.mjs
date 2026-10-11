@@ -703,12 +703,19 @@ const refusalSays = (r) => [r && r.code, r && (r.detail || r.translation)].filte
 
 /* R29: the tier-4 seam. `chain` is the chain settled through tier 3 (before a Drive export's conversion), `wiredTier`
    its tier. Answers `{i2text, chain, wiredTier, aiNote, filled, engine}`: unchanged, with the reason in `aiNote`,
-   whenever nothing was filled. Never throws. */
+   whenever nothing was filled. (T43; N853a, K2611) When the paying account or its limits refuse (`accountFor`'s
+   answer that is not `ok`, or `useCheck`'s refusal, each an object), that refusal is also answered as given in
+   `aiRefusal`, so the caller can answer it as the refusal it is; every other stop is `aiNote` alone, with no
+   `aiRefusal` key. Never throws. */
 export async function tier4Extend(transcription, { sha, storeName, i2text, chain, wiredTier }) {
   const out = { i2text, chain, wiredTier, aiNote: null, filled: [], engine: null };
   if (!transcription || typeof transcription !== "object") return out;
   const pages = tier4Pages(i2text);
   const not = (why) => { out.aiNote = `the AI was not asked to transcribe ${describePages(pages)}: ${why}`; return out; };
+  const refused = (r) => {
+    if (r && typeof r === "object") out.aiRefusal = r;
+    return not(refusalSays(r));
+  };
   if (!pages.length) {
     out.aiNote = "no page was left that Civicsmith's own text recognition could not read, so the AI was not asked "
                + "to transcribe";
@@ -724,7 +731,7 @@ export async function tier4Extend(transcription, { sha, storeName, i2text, chain
     account = await credentials.accountFor({ member, act: { kind: TRANSCRIBE_USE, member,
                                                             ...(project != null ? { project } : {}) } });
   } catch { return not("the account that would pay for it could not be checked"); }
-  if (!(account && account.ok === true)) return not(refusalSays(account));
+  if (!(account && account.ok === true)) return refused(account);
   /* N835 (ai-use R1): the paying owner is spelled from the bare member id, whether `member` was handed bare or
      stamped `member:<id>`; `member:member:<id>` is no owner ai-use can judge. */
   const owner = account.level === "project" ? `project:${account.project}`
@@ -733,7 +740,7 @@ export async function tier4Extend(transcription, { sha, storeName, i2text, chain
   const at = typeof transcription.at === "string" && transcription.at ? transcription.at : new Date().toISOString();
   try {
     const limit = await useCheck({ owner, member, use: TRANSCRIBE_USE, at });
-    if (limit) return not(refusalSays(limit));
+    if (limit) return refused(limit);
   } catch { return not("the limits of the account that would pay for it could not be checked"); }
   if (typeof transcribe !== "function") return not("no AI is set up to transcribe");
   let res;

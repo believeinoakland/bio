@@ -1,4 +1,4 @@
-/* image-codecs R6–R9, across every codec (build/requirements/image-codecs.md):
+/* image-codecs R6–R9, across every codec (R10 the PNG decoder among them) (build/requirements/image-codecs.md):
  * each checked against a named independent decoder (R6), refusal sets as
  * contracts (R7), purity (R8), and no place named (R9). Behaviour at the
  * interface only: what the module exports and answers. */
@@ -13,10 +13,13 @@ import { ccittDecode } from "../../src/ccittdecode.mjs";
 import { decodeJbig2, JBIG2_REFUSES, Jbig2Refusal } from "../../src/jbig2decode.mjs";
 import { decodeJpx, JPX_REFUSES, JpxRefusal } from "../../src/jpxdecode.mjs";
 import { MqDecoder, mqContexts } from "../../src/mq.mjs";
+import { decodePng, PNG_REFUSES, PngRefusal } from "../../src/pngdecode.mjs";
 
 const load = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url), "utf8"));
 const DCT = load("../fixtures/dct-variants.json"), JB = load("../fixtures/jbig2-variants.json");
 const JPX = load("../fixtures/jpx-variants.json"), CC = load("fixtures/ccitt-variants.json");
+const PNG = load("fixtures/png-variants.json");
+const pngFile = (name) => new Uint8Array(readFileSync(new URL(`fixtures/pngsuite/${name}`, import.meta.url)));
 const b64 = (s) => (s == null ? null : new Uint8Array(Buffer.from(s, "base64")));
 const sha = (b) => createHash("sha256").update(b).digest("hex");
 
@@ -29,6 +32,13 @@ const CALLS = [
   ...JPX.variants.map((v) => ["jpx", v.name, () => decodeJpx(b64(v.data_b64))]),
 ];
 const answer = (fn) => { try { return fn(); } catch (e) { return e; } };
+/** Every PNG fixture as [name, () => bytes]: the suite's files and the constructed ones.
+ *  `decodePng` answers a Promise, so its answers are awaited apart from CALLS'. */
+const PNG_INPUTS = [
+  ...PNG.suite.map((e) => [e.name, () => pngFile(e.name)]),
+  ...PNG.variants.map((v) => [v.name, () => b64(v.data_b64)]),
+];
+const pngAnswers = () => Promise.all(PNG_INPUTS.map(([, bytes]) => decodePng(bytes()).catch((e) => e)));
 /** An answer as a comparable value: the samples' digest and the rest, or the refusal. */
 function summary(a) {
   if (a instanceof Error) return { refused: a.constructor.name, code: a.code, message: a.message, detail: a.detail };
@@ -38,7 +48,8 @@ function summary(a) {
 
 test("R6 each codec's fixtures name an independent decoder and carry its digest for every picture", () => {
   for (const [fix, decoder, field] of [[DCT, /libjpeg-turbo/, "pillow_sha256"], [JB, /^jbig2dec /, "jbig2dec_sha256"],
-    [JPX, /OpenJPEG/, "opj_sha256"], [CC, /^libtiff /, "libtiff_sha256"]]) {
+    [JPX, /OpenJPEG/, "opj_sha256"], [CC, /^libtiff /, "libtiff_sha256"],
+    [{ provenance: PNG.provenance, variants: [...PNG.suite, ...PNG.variants] }, /^Pillow 12\.3\.0 .*PngSuite/, "pillow_sha256"]]) {
     assert.match(fix.provenance, decoder);
     for (const v of fix.variants.filter((x) => (x.expect ?? "ok") === "ok")) {
       assert.ok(v[field] || v.construction_sha256, `${v.name}: ${field}`);
@@ -60,7 +71,8 @@ test("R7 the declared refusal sets, exactly: renaming or removing a key is a cha
     "Huffman-coded refinement", "a necessary extension segment", "segment type", "several pages", "no page"]);
   assert.deepEqual(Object.keys(JPX_REFUSES), ["high-throughput coding", "a JP2 palette", "sYCC colour", "an extended capability",
     "packed packet headers", "an image past the memory bound"]);
-  for (const set of [JBIG2_REFUSES, JPX_REFUSES]) {
+  assert.deepEqual(Object.keys(PNG_REFUSES), ["interlaced", "an unknown critical chunk", "an image past the memory bound"]);
+  for (const set of [JBIG2_REFUSES, JPX_REFUSES, PNG_REFUSES]) {
     assert.ok(Object.isFrozen(set));
     for (const [k, why] of Object.entries(set)) assert.ok(typeof why === "string" && why.length > 20, k);
   }
@@ -91,6 +103,23 @@ test("R7 every refusal any fixture draws is one of its codec's codes, an UNSUPPO
    * (DCT's eleven are all driven in dct.test.mjs). */
   assert.deepEqual([...codes.jbig2].sort(), [...CLASSES.jbig2].sort());
   assert.deepEqual([...codes.jpx].sort(), [...CLASSES.jpx].sort());
+});
+
+test("R7 every refusal a PNG fixture draws is a PngRefusal under one of R10's codes, an UNSUPPORTED one naming a declared key", async () => {
+  const got = await pngAnswers();
+  const codes = new Set(), features = new Set();
+  for (const [i, a] of got.entries()) {
+    if (!(a instanceof Error)) continue;
+    const name = PNG_INPUTS[i][0];
+    assert.ok(a instanceof PngRefusal, `png ${name}: a PngRefusal`);
+    assert.ok(["NOT_A_PNG", "UNSUPPORTED", "TRUNCATED", "CORRUPT"].includes(a.code), `png ${name}: ${a.code}`);
+    if (a.code === "UNSUPPORTED") { assert.ok(a.detail.feature in PNG_REFUSES, `png ${name}: '${a.detail.feature}'`); features.add(a.detail.feature); }
+    codes.add(a.code);
+  }
+  assert.equal(got.filter((a) => a instanceof Error).length, 35 + 14);
+  /* The suite reaches these; TRUNCATED and the other two keys are driven in png.test.mjs. */
+  assert.deepEqual([...codes].sort(), ["CORRUPT", "NOT_A_PNG", "UNSUPPORTED"]);
+  assert.deepEqual([...features], ["interlaced"]);
 });
 
 test("R8 pure: the same bytes and options always answer the same way, in any order", () => {
@@ -138,16 +167,53 @@ test("R8 no state carried between calls: the input is never changed, and a secon
   assert.deepEqual(da, db);
 });
 
-test("R9 no place is named in anything the module declares or answers", () => {
+/** A PNG answer as a comparable value: the samples' digest and the rest, or the refusal. */
+const pngSummary = (a) => (a instanceof Error ? summary(a) : { digest: sha(a.samples), width: a.width, height: a.height, comps: a.comps, detail: a.detail });
+
+test("R8 pure, the PNG decoder too: the same bytes always answer the same way, in any order and all at once", async () => {
+  const first = [];
+  for (const [, bytes] of PNG_INPUTS) first.push(pngSummary(await decodePng(bytes()).catch((e) => e)));
+  const reversed = [];
+  for (const [, bytes] of [...PNG_INPUTS].reverse()) reversed.push(pngSummary(await decodePng(bytes()).catch((e) => e)));
+  assert.deepEqual(reversed.reverse(), first);
+  assert.deepEqual((await pngAnswers()).map(pngSummary), first, "every decode in flight at once");
+});
+
+test("R8 the PNG decoder reaches for no clock, no randomness and no I/O, and changes no input", async () => {
+  const want = (await pngAnswers()).map(pngSummary);
+  const saved = { now: Date.now, random: Math.random, perf: globalThis.performance, fetch: globalThis.fetch, crypto: globalThis.crypto };
+  const trap = (what) => () => { throw new Error(`the decoder reached for ${what}`); };
+  let got;
+  try {
+    Date.now = trap("the clock");
+    Math.random = trap("randomness");
+    Object.defineProperty(globalThis, "performance", { value: { now: trap("the clock") }, configurable: true, writable: true });
+    globalThis.fetch = trap("the network");
+    Object.defineProperty(globalThis, "crypto", { value: undefined, configurable: true, writable: true });
+    got = await pngAnswers();
+  } finally {
+    Date.now = saved.now; Math.random = saved.random; globalThis.fetch = saved.fetch;
+    Object.defineProperty(globalThis, "performance", { value: saved.perf, configurable: true, writable: true });
+    Object.defineProperty(globalThis, "crypto", { value: saved.crypto, configurable: true, writable: true });
+  }
+  for (const a of got) if (a instanceof Error) assert.doesNotMatch(a.message, /the decoder reached for/);
+  assert.deepEqual(got.map(pngSummary), want);
+  for (const [name, bytes] of PNG_INPUTS) {
+    const d = bytes(), before = sha(d);
+    await decodePng(d).catch(() => {});
+    assert.equal(sha(d), before, `png ${name}: input unchanged`);
+  }
+});
+
+test("R9 no place is named in anything the module declares or answers", async () => {
   const PLACES = /oakland|alameda|california|berkeley|san francisco|sacramento|los angeles|legistar/i;
   const said = [];
   const collect = (v, depth = 0) => {
     if (typeof v === "string") said.push(v);
     else if (v && typeof v === "object" && !ArrayBuffer.isView(v) && depth < 6) for (const [k, x] of Object.entries(v)) { said.push(k); collect(x, depth + 1); }
   };
-  collect(JBIG2_REFUSES); collect(JPX_REFUSES);
-  for (const [, , fn] of CALLS) {
-    const a = answer(fn);
+  collect(JBIG2_REFUSES); collect(JPX_REFUSES); collect(PNG_REFUSES);
+  for (const a of [...CALLS.map(([, , fn]) => answer(fn)), ...(await pngAnswers())]) {
     if (a instanceof Error) { said.push(a.message, a.code); collect(a.detail); } else collect(a);
   }
   assert.ok(said.length > 500);

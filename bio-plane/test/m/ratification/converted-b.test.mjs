@@ -176,8 +176,11 @@ test("R5 (publish): ratifying a finding's revised bytes, which no ratified case 
                          shas: [{ sha256: s, path: "bundle.md", kind: "bundle", bytes: 10 }], edges: [], deliveredBy: V("alice") });
   assert.equal(w.op("publish", {}, args(sha1)).ok, true, "the pinned bytes cross (the negative control)");
   const row = w.row(`SELECT * FROM published_bundles WHERE bundle_id=?`, Q1);
+  /* Each revision is the pinned bytes with one `edition` key, never one stacked on the last revision's (the write door
+     refuses a front-matter key written twice, promotion R38's C-2.1). */
+  const pinned = w.record.readFile(Q1, "bundle.md").text;
   for (const n of [2, 1]) {
-    w.promote(Q1, w.record.readFile(Q1, "bundle.md").text.replace(/^---\n/, `---\nedition: ${n}\n`));
+    w.promote(Q1, pinned.replace(/^---\n/, `---\nedition: ${n}\n`));
     const r = w.op("publish", {}, args(w.sha(Q1)));
     assert.deepEqual([r.ok, r.reason, r.check, r.translation, r.highest],
       [false, "RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE", "C-58.2", SCOPE.RATIFY_FINDING_NOT_IN_A_RATIFIED_CASE.translation, undefined], `edition ${n}`);

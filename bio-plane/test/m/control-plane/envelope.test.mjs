@@ -384,17 +384,20 @@ test("R23, R25 (N349): every silence the door answers itself carries the correla
   assert.deepEqual([sj.reason, sj.op, sj.correlation], ["STORE_DID_NOT_ANSWER", "knock", corr]);
 });
 
-test("R22 (N347): the door reads capture's table — EVIDENCE_NOT_HELD is C-118.1, NO_SUCH_KNOCK C-118.2, the old generic NOT_FOUND nothing; a forwarded NO_SUCH_KNOCK under result gains its row, and an answer already carrying it is unchanged", async () => {
+test("R22 (N347; T43-23, K2710): the door reads capture's table for EVIDENCE_NOT_HELD (C-118.1) and doorbell's family for NO_SUCH_KNOCK (C-118.2, there since T43-8), the old generic NOT_FOUND nothing; a forwarded NO_SUCH_KNOCK under result gains its row, and an answer already carrying it is unchanged", async () => {
   const { CAPTURE_CHECKS } = await import("../../../src/capture/checks.mjs");
+  const { DOORBELL_CHECKS } = await import("../../../src/doorbell/checks.mjs");
   assert.ok(M.CHECK_FAMILY_FILES.some(([, f]) => f.CAPTURE_CHECKS === CAPTURE_CHECKS), "capture's checks.mjs is read");
-  assert.deepEqual(M.dec49Row("EVIDENCE_NOT_HELD"), { check: "C-118.1", translation: CAPTURE_CHECKS.EVIDENCE_NOT_HELD.translation });
-  assert.deepEqual(M.dec49Row("NO_SUCH_KNOCK"), { check: "C-118.2", translation: CAPTURE_CHECKS.NO_SUCH_KNOCK.translation });
+  assert.ok(M.CHECK_FAMILY_FILES.some(([, f]) => f.DOORBELL_CHECKS === DOORBELL_CHECKS), "doorbell's checks.mjs is read");
+  const ROWS = { EVIDENCE_NOT_HELD: CAPTURE_CHECKS.EVIDENCE_NOT_HELD, NO_SUCH_KNOCK: DOORBELL_CHECKS.NO_SUCH_KNOCK };
+  assert.deepEqual(M.dec49Row("EVIDENCE_NOT_HELD"), { check: "C-118.1", translation: ROWS.EVIDENCE_NOT_HELD.translation });
+  assert.deepEqual(M.dec49Row("NO_SUCH_KNOCK"), { check: "C-118.2", translation: ROWS.NO_SUCH_KNOCK.translation });
   assert.equal(M.dec49Row("NOT_FOUND"), null);
   for (const [route, op, token, code] of [["inboxget", "inboxget", "ADMIN_TOKEN", "NO_SUCH_KNOCK"], ["capture", "capture", "ADMIN_TOKEN", "EVIDENCE_NOT_HELD"]]) {
     const w = world({ answer: (c) => (c.route === route ? reply({ ok: true, result: { ok: false, reason: code } })() : null) });
     const r = await call(w.env, { op, token: w.env[token], params: { id: "K1", sha256: "0".repeat(64) } });
     assert.deepEqual([r.json.result.code, r.json.result.check, r.json.result.translation],
-                     [code, CAPTURE_CHECKS[code].check, CAPTURE_CHECKS[code].translation], op);
+                     [code, ROWS[code].check, ROWS[code].translation], op);
   }
   /* an answer already carrying the fields is unchanged, and the retired code is not decorated */
   const mine = { ok: false, reason: "NO_SUCH_KNOCK", code: "NO_SUCH_KNOCK", check: "C-0", translation: "mine" };

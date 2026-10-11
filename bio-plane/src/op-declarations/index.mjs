@@ -3325,7 +3325,9 @@ const UNATTENDED_BY_DECISION = Object.freeze({
    and named here under no ground; every other member op T41 declares is named here, the reads under the read ground and
    the acts under the last, named back to the design stream.
    T42 (R34, R47; N832, N862; K2611): `pagetranscribe` is named under the last ground until the design stream's words
-   for it land in `ACT_HELP` (BOB's NOTICE to UX-DESIGN). */
+   for it land in `ACT_HELP` (BOB's NOTICE to UX-DESIGN).
+   T43 (R34, R47; DEC-190; K2725): affordances' T43-17 gives `ACT_HELP` the design's texts for `pagetranscribe` and
+   `transcribe`, so both leave the last ground and are named under none. */
 const ACT_HELP_ABSENT = Object.freeze({
   alias: Object.freeze({ ground: "An alias of a declared op (R21): its op's explanation serves it.",
     ops: frozenList([
@@ -3398,7 +3400,7 @@ const ACT_HELP_ABSENT = Object.freeze({
       "milestonerevise", "milestoneset", "moneycheckparam", "moneydetectordefine", "moneydetectorgate",
       "moneydetectorswitch", "moneyfundtype", "moneyingest", "moneysetpropose", "moneywithdraw", "monitorpause",
       "narrativeclaim", "noteshare", "noteunshare", "noticepost", "objectivecondition", "optionrevise",
-      "pagetranscribe", "participantcorrect", "patterngate", "patternswitch", "permeetingbody", "personfactwithdraw",
+      "participantcorrect", "patterngate", "patternswitch", "permeetingbody", "personfactwithdraw",
       "planaccept",
       "plansubjectremove", "progressiondefine", "projectclosewithgaps", "projectfork", "projectleave",
       "projectowneradd", "projectownerremove", "projectownerrescue", "projectremove", "projectrequest",
@@ -3416,7 +3418,7 @@ const ACT_HELP_ABSENT = Object.freeze({
       "stepstart", "stepwait", "stepwaitremove", "subscriptiondisconnect", "templateapprove", "templatecomment",
       "templatedraft", "templategrantrevoke", "templatepropose", "templateretire", "templatereview",
       "templatereviewgrant", "templaterevise", "templatesave", "templatesubmit", "themedeclare", "themeplace",
-      "themepropose", "themewithdraw", "theorypropose", "thread", "transcribe", "transcriptionattest",
+      "themepropose", "themewithdraw", "theorypropose", "thread", "transcriptionattest",
       "translationmark", "triage", "unfollow", "unpack", "uselink", "usesfreeze", "useunlink", "usewithdraw",
       "versionaccept", "versionconsider", "versioncurrent", "versionhide", "versionreject", "versionrevert", "waitlook",
       "websitekeyrevoke", "websitekeyset", "wizardeditorgrant", "wizardeditorrevoke", "wizardpropose",

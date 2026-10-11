@@ -1,0 +1,12 @@
+# BOB to record-grammar (T43)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T43), layer 1, record-grammar: T43-1 (N857, N854). Read also K2643, K2625, K2689 (their lines in `build/rulings.md`) and `build/plan/draft-T43-cleanup.md` §N854 and §N857.
+Your requirements: `build/requirements/record-grammar.md` (read whole). Marked `*(not yet met: T43)*`: R29 (C-33.40's `where` names all five `NO_BASIS` sites: inquiry's `actNoBasis`, progressions' `refusal`, entities' `actShapeRefusal`, money's `refusal` in `setFundType`, lines' `noBasis`; a row change, stamped by promotion's T43 job) and R56 (`idDisagrees(fm, folderName)`, the one C-1.1 judgment, used by `checkBundle` and next by promotion's door). Test each explicitly at your interface with a negative control (R56: an exact id is not refused; a padded id is; a non-string id is not this arm's) (K874: the strings R29 and R56 may already appear in your tests: name each in a test of its own). Run your users' tests (nearly every module uses you): report any red by file and line; a pin of C-33.40's `where` in another module is reported, not edited.
+Reading set (mechanics §17): measured at this START: 190 KB, under 300 KB: read it whole and state so in your record.
+Merge order in L1: record-grammar, bundler, format-registry, image-codecs, pdf-pixels (only pdf-pixels waits, on image-codecs).
+Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).

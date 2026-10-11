@@ -90,12 +90,22 @@ function hasFile_(ctx, path) {
 // Check families
 // ---------------------------------------------------------------------------
 
+/* R56 (T43; N854; K231, K2625): THE ONE C-1.1 JUDGMENT. Does the front matter's id disagree with the folder it is filed
+   under? True exactly when `fm.id` is a string not equal, byte for byte, to `folderName`: no trimming, no case fold, so an
+   id padded with white space disagrees. A non-string or absent id is not this arm's: C-1.2 refuses it. `checkIdentity`
+   below and the write door (promotion R38) both run this function, so the gate and the door cannot judge one id two
+   ways (one code, one site: K231). */
+export function idDisagrees(fm, folderName) {
+  const id = fm?.id;
+  return typeof id === 'string' && id !== folderName;
+}
+
 function checkIdentity(ctx, findings) {
   const id = ctx.fm?.id;
   if (typeof id !== 'string' || !BUNDLE_ID_RE.test(id)) {
     findings.push(f('C-1.2', 'error', `frontmatter id '${id}' does not match the canonical ID grammar`));
   }
-  if (typeof id === 'string' && id !== ctx.folderName) {
+  if (idDisagrees(ctx.fm, ctx.folderName)) {
     findings.push(f('C-1.1', 'error', `folder name '${ctx.folderName}' does not equal frontmatter id '${id}'`,
       ['restore folder name from frontmatter id', 'restore frontmatter id from folder name if history confirms it']));
   }

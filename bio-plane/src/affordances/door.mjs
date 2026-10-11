@@ -74,6 +74,11 @@ export function affordancesAnswer({ target = null, facts = null, kinds, gate, sc
            acts: deriveActs(facts).map(dec), vocabularies, capture_acts };
 }
 
+/* The facts' query: each stamp as the control plane handed it in, and a stamp it did not hand in (null or undefined) left
+   off, so the facts read it null (R15) — never sent as "", which `actor_is_machine` would read as no identity at all. */
+const stamped = (q) => new URLSearchParams(Object.entries(q).filter(([, v]) => v !== null && v !== undefined)
+  .map(([k, v]) => [k, String(v)])).toString();
+
 /** R17 at the door: `op=affordances`. `stub` is the store this request addresses; `json`, `doAnswer`, `storeSilent` and
  *  `storeRefusal` the control plane's envelope and silence answers; `gate` its act gate; `viewer`, `identity`, `author`
  *  and `by` its stamps for this caller (R15). */
@@ -87,9 +92,7 @@ export async function affordancesOp(url, stub, { json, doAnswer, storeSilent, st
     /* R13 (REC-25): an object the viewer may not see answers NO_SUCH_BUNDLE, identical to an absent one. The facts are
        asked with the stamps exactly as the acts receive them (D-311), so each question is asked of the caller the act
        will see. */
-    ? `http://do/affordancefacts?target=${encodeURIComponent(target)}&viewer=${encodeURIComponent(viewer)}`
-      + `&identity=${encodeURIComponent(identity)}`
-      + `&author=${encodeURIComponent(author ?? "")}&by=${encodeURIComponent(by ?? "")}`
+    ? `http://do/affordancefacts?${stamped({ target, viewer, identity, author, by })}`
     /* R37: the screens and offered scripts, asked of the store for this viewer. */
     : `http://do/affordancescreens?viewer=${encodeURIComponent(viewer ?? "")}`;
   const [kOut, out] = await Promise.all([doAnswer(stub.fetch("http://do/actionkinds")), doAnswer(stub.fetch(second))]);
