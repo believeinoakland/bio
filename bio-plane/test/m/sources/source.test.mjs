@@ -12,7 +12,7 @@ test("R1 a source exists for each pulled knock: one per pseudonym, one per knock
   const a = await w.pulled({ secret: SECRET });
   assert.equal(a.answer.ok, true);
   assert.match(a.sourceId, /^SRC-2026-\d{4}$/, "a source's id is minted opaque (record-core mintOpaqueId)");
-  /* verbatim: capture R65's source, from the knock's receipt */
+  /* verbatim: doorbell R13's source, from the knock's receipt */
   assert.deepEqual(a.answer.source, { kind: "knocker", named: false, pseudonym: a.row.pseudonym,
     receipt: { knock_id: a.row.knock_id, sha256: a.row.sha256, bytes: a.row.bytes, received: a.row.received } });
   assert.deepEqual(a.answer.history, [], "the current history, empty until something is disclosed");
@@ -50,8 +50,8 @@ test("R1 a source exists for each pulled knock: one per pseudonym, one per knock
   assert.equal(both.source.receipt.knock_id, k1.knock_id);
   assert.equal(both.sourceId, a.sourceId, "the earliest knock's source (the pseudonym's)");
   assert.deepEqual(both.sources.map((x) => x.source.receipt.knock_id), [k1.knock_id, k2.knock_id]);
-  /* one keyed read of capture's per read (its R72), never a walk of the inbox; one knock per 10-minute window, so
-     capture's rate windows (its R31) admit every one, whatever their bounds */
+  /* one keyed read of the doorbell's per read (its R18), never a walk of the inbox; one knock per 10-minute window, so
+     the doorbell's rate windows (its R2) admit every one, whatever their bounds */
   for (let i = 0; i < 50; i++) { w.tick(KNOCK_WINDOW); await w.pull(await w.knock()); }
   const reads = w.spy.reads;
   assert.equal(w.s.sourceOf({ captureSha: c2.row.sha256, viewer: V("bob") }).ok, true);
@@ -62,7 +62,7 @@ test("R1 refusals: NO_SUCH_SOURCE for a capture that is not a pulled knock, a kn
   const w = seeded();
   const fresh = await w.knock({ secret: SECRET });
   const discarded = await w.knock();
-  assert.equal(w.cap.inboxResolve({ knockId: discarded.knock_id, status: "discarded", by: "bob", reason: "not material for the group" }).ok, true);
+  assert.equal(w.bell.inboxResolve({ knockId: discarded.knock_id, status: "discarded", by: "bob", reason: "not material for the group" }).ok, true);
   const row = await w.knock({ secret: OTHER_SECRET });
   await w.pull(row);
   const before = w.snapshot();
@@ -92,7 +92,7 @@ test("R12 the capturing member is never recorded as the source of what someone e
   const w = seeded();
   const row = await w.knock({ secret: SECRET });
   const pulled = await w.pull(row, "bob");
-  assert.equal(pulled.document.capture.actor, "bob", "bob is the capture's actor (capture R65)");
+  assert.equal(pulled.document.capture.actor, "bob", "bob is the capture's actor (doorbell R13)");
   const r = w.s.sourceOf({ captureSha: row.sha256, viewer: V("bob") });
   assert.equal(r.source.kind, "knocker");
   assert.equal(r.source.named, false);

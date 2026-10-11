@@ -1,7 +1,9 @@
-/* sources over the modules it uses, each the real one: record-core, membership and capture (its doorbell, `pullKnock`,
-   `pulledKnocksOf`, `knockerDigestOf` and `knockAttempt`: capture R65, R66, R71, R72), on a real SQLite database
+/* sources over the modules it uses, each the real one: record-core, membership and doorbell (`knock`, `pullKnock`,
+   `pulledKnocksOf`, `knocksOf`, `knockerDigestOf` and `knockAttempt`: doorbell R2, R3, R13–R15, R17, R18; T42, K2628),
+   over capture's instance on the same storage (doorbell R25 reads its `env` from it, and R13 records the pulling
+   member as the capture's actor in capture's table, so the fixture builds and migrates it), on a real SQLite database
    (node:sqlite) standing in for a Durable Object's storage at the plane's shape (`sql.exec` answers a cursor, as
-   workerd's does). Capture's own providers, which `sources` never reaches, are stand-ins that behave as their Provides
+   workerd's does). The doorbell's and capture's own providers, which `sources` never reaches, are stand-ins that behave as their Provides
    state: provenance's `recordReceipt` (a receipt recorded) and an evidence bucket behind record-core's
    `evidenceStore`. `sources` itself reads the real provenance (`homeOf`, `captureGrade`: R16, R17) over register rows
    and receipts written as a promotion and an acquisition leave them (provenance R1, R13, R48; record-core's `bundles`
@@ -11,6 +13,7 @@ import { createHash } from "node:crypto";
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { Capture } from "../../../src/capture/index.mjs";
+import { doorbellOf } from "../../../src/doorbell/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 
@@ -85,18 +88,19 @@ export function world({ gradeAs = null } = {}) {
   const provenance = { recordReceipt(r) { receipts.push(r); return { recorded: true, observation: receipts.length }; } };
   const cap = new Capture(st, { record, env: { INSTANCE_NAME: "test", VERSION: "0.0.0" }, governor: null, provenance });
   cap.migrate();
-  /* capture's one keyed read, counted, so a test can show R1 asks it once (the instance's own method, wrapped) */
+  const bell = doorbellOf(host, { capture: cap });
+  /* the doorbell's one keyed read, counted, so a test can show R1 asks it once (the instance's own method, wrapped) */
   const spy = { reads: 0, attempts: [] };
-  const pulledKnocksOf = cap.pulledKnocksOf.bind(cap), knockAttempt = cap.knockAttempt.bind(cap);
-  cap.pulledKnocksOf = (x) => { spy.reads++; return pulledKnocksOf(x); };
-  cap.knockAttempt = (a) => { spy.attempts.push(a); return knockAttempt(a); };
+  const pulledKnocksOf = bell.pulledKnocksOf.bind(bell), knockAttempt = bell.knockAttempt.bind(bell);
+  bell.pulledKnocksOf = (x) => { spy.reads++; return pulledKnocksOf(x); };
+  bell.knockAttempt = (a) => { spy.attempts.push(a); return knockAttempt(a); };
   const prov = provenanceOf(host, { record, membership, now: () => new Date(clock.now).toISOString() });
   prov.migrate();
-  const s = sourcesOf(host, { record, membership, capture: cap, now: () => clock.now,
+  const s = sourcesOf(host, { record, membership, doorbell: bell, now: () => clock.now,
                               provenance: gradeAs ? { homeOf: (x) => prov.homeOf(x), captureGrade: () => gradeAs } : prov });
   let n = 0, b = 0;
   const w = {
-    st, host, record, membership, cap, spy, receipts, s, clock, prov,
+    st, host, record, membership, bell, spy, receipts, s, clock, prov,
     rows: (q, ...a) => st.rows(q, ...a),
     count: (t) => st.rows(`SELECT COUNT(*) AS n FROM ${t}`)[0].n,
     tick(ms = 1000) { clock.now += ms; },
@@ -111,17 +115,17 @@ export function world({ gradeAs = null } = {}) {
       st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
                    VALUES (?, ?, ?, ?, ?, '["contribute"]', ?, 't')`, id, `Cover ${id}`, `h_${id}`, role, status, `t${id}`);
     },
-    /** A knock at capture's doorbell (its R31, R32, R66): the inbox row, as `pulledKnocksOf` will answer it. */
+    /** A knock at the doorbell (its R2, R3, R14): the inbox row, as `pulledKnocksOf` will answer it. */
     async knock({ content = `material ${++n}`, secret = null, at = null, sourceAddress = null } = {}) {
-      const k = await cap.knock({ content, note: "a note", contact: "someone@example.org", knockerSecret: secret,
+      const k = await bell.knock({ content, note: "a note", contact: "someone@example.org", knockerSecret: secret,
                                   sourceAddress: sourceAddress ?? `198.51.100.${++n % 250}`, now: at ?? (clock.now + n) });
       if (!k.ok) throw new Error(`fixture knock refused: ${JSON.stringify(k)}`);
       const r = st.rows(`SELECT knock_id, sha256, bytes, received, pseudonym, knocker_digest FROM inbox WHERE knock_id = ?`, k.knockId)[0];
       return { ...r };
     },
-    /** capture R65: a member brings the knock in. */
+    /** doorbell R13: a member brings the knock in. */
     async pull(k, by = "bob") {
-      const r = await cap.pullKnock({ knockId: k.knock_id, by });
+      const r = await bell.pullKnock({ knockId: k.knock_id, by });
       if (!r.ok) throw new Error(`fixture pull refused: ${JSON.stringify(r)}`);
       return r;
     },
