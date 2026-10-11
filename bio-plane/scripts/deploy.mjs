@@ -91,17 +91,18 @@ if (!slug || !version || !assetPath || !TOKEN || !ACCT) {
 
 /* ---- D-201: this script deploys THE PLANE, and nothing else ----
  *
- * The metadata below is the plane's: it declares VERSION, INSTANCE_NAME and the
- * two R2 buckets, and its keep_bindings is ["secret_text",
- * "durable_object_namespace"] — which does NOT include `service`. Point this at
- * a worker whose bindings are a different shape and the PUT does not merely
- * deploy the wrong code, it DELETES the bindings that made that worker work.
+ * The metadata below is the plane's: it declares VERSION, INSTANCE_NAME, the
+ * plane's vars, its two R2 buckets and its service bindings, derived from the
+ * plane's own wrangler.jsonc (bundler R13), and keeps only the instance's
+ * `secret_text`, `durable_object_namespace` and `service` bindings (R18). Point
+ * this at a worker whose bindings are a different shape and the PUT does not
+ * merely deploy the wrong code: it binds the plane's vars, buckets and services
+ * into that worker and DROPS every binding of a class it neither sends nor keeps.
  *
- * `civicos`, the UI worker, has exactly ONE binding — `service PLANE ->
- * biosmoke7` — and it is what makes /api reach the plane at all. Deploying it
- * through this script would drop that binding and leave the site serving HTML
- * whose every request fails. Until now the only thing standing between that and
- * a live outage was that nobody had tried it.
+ * `civicos`, the UI worker, is what makes /api reach the plane at all; through
+ * this script it would be overwritten with the plane's code and the plane's
+ * bindings. Until now the only thing standing between that and a live outage
+ * was that nobody had tried it.
  *
  * A slug ALLOWLIST is not available: plane instances are named by the groups
  * that install them, so their slugs are arbitrary by design and cannot be

@@ -245,7 +245,11 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      manifest this suite reads (`agent-worker/dist/agent-worker.bundle.json`, rebuilt at T41 L6's close; its staleness
      arm green). Two arrive and none leaves: run-rules' `test-bar.mjs` and `test-set.mjs`, which `run-rules/index.mjs`
      imports since T41-21, so every member reaching run-rules builds them in. */
-  t("agent-worker's 25 inputs are all recorded — its seven own modules, agent-harness and agent-model across trees, the plane's denylist, run-rules with what it imports, and record-grammar through observation-log",
+  /* RE-PINNED 2026-10-11 (BUNDLER #15, T43-2; N860, K2650, T43 rule 4 (7)): 25 -> 26 inputs, from the committed
+     manifest this suite reads (`agent-worker/dist/agent-worker.bundle.json`, rebuilt at T42's L6 close; its staleness
+     arm green). One arrives and none leaves: the member's own `src/transcribe.mjs`, which its `index.mjs` imports since
+     T42-20. */
+  t("agent-worker's 26 inputs are all recorded — its eight own modules, agent-harness and agent-model across trees, the plane's denylist, run-rules with what it imports, and record-grammar through observation-log",
     (agent?.inputs || []).map((i) => i.path).sort(),
     [
      "../agent-harness/src/harness.mjs", "../agent-harness/src/subsession.mjs",
@@ -257,7 +261,7 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      "../bio-plane/src/run-rules/rules.mjs", "../bio-plane/src/run-rules/skill-version.mjs",
      "../bio-plane/src/run-rules/test-bar.mjs", "../bio-plane/src/run-rules/test-set.mjs",
      "../bio-plane/src/tokens.mjs", "src/ask.mjs", "src/cascade.mjs", "src/draft.mjs", "src/index.mjs", "src/ops.mjs",
-     "src/reads.mjs", "src/signin.mjs",
+     "src/reads.mjs", "src/signin.mjs", "src/transcribe.mjs",
     ]);
   t("and it vendors nothing: the member still imports NOTHING from npm",
     (agent?.vendoredInputs || []).length, 0);
