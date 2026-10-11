@@ -33,3 +33,7 @@ Readings I am building on (carrying on meanwhile; none blocks me):
 - `format`: 0 failures. `architecture docket`: 0 failures. `coverage docket`: 28 of 28 live ids. `ownership docket tranche/T45`: 0 failures.
 
 Size (session_01WJkNJBh3kNMavvSr8hujuE): test runs 9, module lines 1637
+
+## J2 · REPORT
+
+Not docket's: answer-envelope has 4 reds (its CHECK_FAMILIES totality tests: R2/R7 K585, R7/R2 T37, R10/R11 T41, R12 T43) on tranche/T45 itself after publication's merge (K2833). They are identical with and without docket's change (checked on a clean tranche/T45 worktree). The likely cause is that answer-envelope's list does not yet reach publication's new row C-122.8. docket's new row C-129.29 is in docket's own file, which that list already reads.
