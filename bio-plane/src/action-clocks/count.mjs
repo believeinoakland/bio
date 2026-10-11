@@ -9,7 +9,8 @@
  * entry is a local fact at its own path (N562; `local-facts` R6), read and stated as any holiday year is; and civil-time
  * counts on a correction that governs whatever its status now (N603, its R16), so the count hands it every answer as
  * read and no longer rewrites the view itself. T35-62: R11's paths include the entries of each named closure list a
- * live deadline counts or rolls on (`closureListsRead`; N689). */
+ * live deadline counts or rolls on (`closureListsRead`; N689). T45: a count starts from the receipt or service `actions`
+ * records (its R80; `startOf`), saying which. */
 
 import { evaluateRule, localDay, isCalendarDate } from "../civil-time/index.mjs";
 import { stampInstant } from "../record-core/index.mjs";
@@ -231,6 +232,33 @@ function askOnce(factOf, h) {
   return f && typeof f === "object" ? f : { status: "absent", why: "the reader gave no answer" };
 }
 
+/* R2 (T45; N882; actions R80): the day a rule's count starts from, and which event it is. `received` is the
+   counterparty's receipt of the group's request: the latest receipt `actions` records on the group's first `sent` entry
+   when one is held, else that entry itself, saying so; `filed` is the first `sent` entry; `served` is the latest
+   service recorded on any `sent` entry, and with none the count is undetermined. `receipts` are `actions`' records,
+   `{ord, kind, at, ...}`, as its read answers them (null when none can be read). */
+const isDayLike = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}/.test(v);
+function startOf(starts, ledger, receipts) {
+  const firstSent = ledger.findIndex((x) => x && x.direction === "sent" && isDayLike(x.at));
+  const recs = (Array.isArray(receipts) ? receipts : []).filter((x) => isObj(x) && isDayLike(x.at) && Number.isInteger(Number(x.ord))
+    && ledger[Number(x.ord)] && ledger[Number(x.ord)].direction === "sent");
+  const latest = (list) => list.reduce((a, x) => (a === null || String(x.recorded_at ?? x.at) >= String(a.recorded_at ?? a.at) ? x : a), null);
+  if (starts === "served") {
+    const s = latest(recs.filter((x) => x.kind === "service"));
+    return s ? { day: s.at.slice(0, 10), from: "service" }
+      : { why: "no service of the group's papers on that party is recorded on this action, the event this rule starts from" };
+  }
+  if (firstSent === -1) return { why: starts === "received"
+    ? "the action's ledger holds no sent entry: the counterparty's receipt of the group's request is counted from it"
+    : "the action's ledger holds no sent entry, the event this rule starts from" };
+  if (starts === "received") {
+    const r = latest(recs.filter((x) => x.kind === "receipt" && Number(x.ord) === firstSent));
+    if (r) return { day: r.at.slice(0, 10), from: "receipt" };
+    return { day: ledger[firstSent].at.slice(0, 10), from: "sent", note: "receipt not recorded: counted from sending" };
+  }
+  return { day: ledger[firstSent].at.slice(0, 10), from: "sent" };
+}
+
 const dayOf = (dt) => (dt && typeof dt.value === "string" ? dt.value.slice(0, 10) : null);
 const earliestDay = (due) => (due && Array.isArray(due.candidates) ? dayOf(due.candidates[0]) : dayOf(due));
 
@@ -242,29 +270,31 @@ function whyOf(r) {
 
 /**
  * R2, R10 (C-1, C-2, C-4; K1444, K1445, K1519): a deadline's date from its profile rule `d` (`jurisdictions` R26),
- * counted by `civil-time.evaluateRule` from the event the rule names in the action's ledger: `received` (the
- * counterparty's receipt of the group's request) and `filed` are both counted from the group's own first `sent`
- * entry, never from a `received` entry; any other start is not a ledger event, so the answer is undetermined. The
+ * counted by `civil-time.evaluateRule` from the event the rule names (`startOf`): `received` (the counterparty's receipt
+ * of the group's request) from the receipt `actions` records (`receipts`, its R80) when one is held, else from the
+ * group's own first `sent` entry, saying so, and never from a `received` entry; `filed` from that `sent` entry; `served`
+ * from the recorded service, undetermined with none (T45); any other start is not an event of the action, so the answer
+ * is undetermined. `start_from` (and `start_note`) say which, in the answer and its trace. The
  * office whose calendar governs is the action's one office (`actionOffices`). A rule whose basis is `UNMEASURED` is no
  * basis (K1445). `factOf` reads each holiday entry's confirmation (`factReader`), a named closure list's at its own path
  * (R12, N562). Answers `{date, start, due, candidates?, extension?, observed?, trace, calendar?}` (`date` the earliest
  * candidate when the date is uncertain, K1444 (i)) or `{date: null, start?, why, code?, calendar?}`; `calendar` is the
  * statement of what the count read (R10), present when the rule reads a calendar. Nothing is written; never throws.
  */
-export function computeDeadline(d, fm, view, { factOf = null } = {}) {
+export function computeDeadline(d, fm, view, { factOf = null, receipts = null } = {}) {
   try {
     const rule = d && typeof d === "object" ? d : {};
     const ledger = fm && Array.isArray(fm.correspondence) ? fm.correspondence : [];
-    if (rule.starts !== "received" && rule.starts !== "filed")
+    if (rule.starts !== "received" && rule.starts !== "filed" && rule.starts !== "served")
       return { date: null, why: `the rule starts from '${textOf(rule.starts)}', an event the action's ledger does not record` };
-    const e = ledger.find((x) => x && x.direction === "sent" && typeof x.at === "string" && /^\d{4}-\d{2}-\d{2}/.test(x.at));
-    if (!e) return { date: null, why: rule.starts === "received"
-      ? "the action's ledger holds no sent entry: the counterparty's receipt of the group's request is counted from it"
-      : "the action's ledger holds no sent entry, the event this rule starts from" };
-    const start = e.at.slice(0, 10);
-    if (!isCalendarDate(start)) return { date: null, start, why: `the sent entry's date '${start}' is not a calendar day` };
+    const from = startOf(rule.starts, ledger, receipts);
+    if (from.why) return { date: null, why: from.why };
+    const start = from.day;
+    if (!isCalendarDate(start)) return { date: null, start, why: `the ${from.from === "sent" ? "sent entry" : `recorded ${from.from}`}'s date '${start}' is not a calendar day` };
+    /* R2 (T45): which event the count started from, said in the answer and its trace. */
+    const said = { start_from: from.from, ...(from.note ? { start_note: from.note } : {}) };
     if (rule.basis === "UNMEASURED")
-      return { date: null, start, code: "UNMEASURED", why: "the rule is not held with a primary source: UNMEASURED is not a basis (K1445)" };
+      return { date: null, start, ...said, code: "UNMEASURED", why: "the rule is not held with a primary source: UNMEASURED is not a basis (K1445)" };
     const v = view && typeof view === "object" ? view : {};
     const office = civilOffice(actionOffices(fm, v)[0]);
     const zone = actionZone(fm, v) || "UTC";
@@ -281,11 +311,12 @@ export function computeDeadline(d, fm, view, { factOf = null } = {}) {
       /* R10: a disputed year names who disputed it and when, as local-facts answered them. */
       const disputed = r && r.code === "FACT_DISPUTED" ? rec.calls.find((c) => c.f.status === "disputed") : null;
       const by = disputed ? `${disputed.f.by ? ` by ${disputed.f.by}` : ""}${disputed.f.at ? `, ${disputed.f.at}` : ""}` : "";
-      return { date: null, start, why: `${whyOf(r)}${by}`, code: (r && (r.code || r.refused)) || null, ...calendar };
+      return { date: null, start, ...said, why: `${whyOf(r)}${by}`, code: (r && (r.code || r.refused)) || null, ...calendar };
     }
-    const out = { date: earliestDay(r.due), start, due: r.due,
+    const out = { date: earliestDay(r.due), start, ...said, due: r.due,
                   ...(Array.isArray(r.due && r.due.candidates) ? { candidates: r.due.candidates.map(dayOf) } : {}),
-                  ...(r.extension ? { extension: r.extension } : {}), trace: r.trace, ...calendar };
+                  ...(r.extension ? { extension: r.extension } : {}),
+                  trace: isObj(r.trace) ? { ...r.trace, ...said } : r.trace, ...calendar };
     if (!out.date) return { date: null, start, why: "the count answered no day", ...calendar };
     /* R2 (K1504 (1); civil-time R10): a body's observed practice, counted on its own list and labelled as practice,
        answered beside the rule's date and never as it. */
