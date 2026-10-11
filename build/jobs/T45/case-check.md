@@ -1,6 +1,6 @@
 # case-check (T45)
 
-**Status** · session_0147VSsrfyRUc6H7GZeANVWi · depth 2 · WAITING ON BOB (B1: case-authoring's merge) · handled B4
+**Status** · session_0147VSsrfyRUc6H7GZeANVWi · depth 2 · WAITING ON BOB (B1: case-authoring's merge) · handled B5
 
 ## J1 · QUESTION
 
