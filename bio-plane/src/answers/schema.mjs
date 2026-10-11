@@ -29,7 +29,8 @@ CREATE TABLE IF NOT EXISTS standing_questions (
   last_ids_json TEXT,
   last_occ_json TEXT,
   last_digest   TEXT,
-  find_json     TEXT
+  find_json     TEXT,
+  ends_changes_json TEXT
 );
 CREATE INDEX IF NOT EXISTS standing_questions_author ON standing_questions(author, stq_id);
 CREATE TABLE IF NOT EXISTS standing_runs (
@@ -56,10 +57,11 @@ export const ANSWERS_TABLES = Object.freeze([
   cls("standing_runs", { export: "never", sight: "owner" }),
 ]);
 
-/** Creates the tables where absent, and adds a column a store made before it lacks (R28's `find_json`, T35).
- *  Idempotent. */
+/** Creates the tables where absent, and adds a column a store made before it lacks (R28's `find_json`, T35; R34's
+ *  `ends_changes_json`, T45: each earlier end date with who changed it and when). Idempotent. */
 export function migrateAnswers(sql) {
   for (const s of ANSWERS_SCHEMA.split(";").map((x) => x.trim()).filter(Boolean)) sql.exec(s);
   const cols = [...sql.exec(`PRAGMA table_info(standing_questions)`)].map((c) => c.name);
   if (!cols.includes("find_json")) sql.exec(`ALTER TABLE standing_questions ADD COLUMN find_json TEXT`);
+  if (!cols.includes("ends_changes_json")) sql.exec(`ALTER TABLE standing_questions ADD COLUMN ends_changes_json TEXT`);
 }

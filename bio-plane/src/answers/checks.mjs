@@ -46,6 +46,9 @@ export const ANSWERS_CHECKS = Object.freeze({
   ANSWER_CAUSE_UNESTABLISHED: row(15, "sentences.mjs checkSentences", "is-cause-established",
     "This sentence stated a cause that no finding it quotes establishes, so it is not shown: the cause is not "
     + "established. A cause a body gave is shown only in its own quoted words."),
+  STANDING_ENDED: row(16, "standing.mjs standingQuestionEndSet", "is-standing-open",
+    "This standing question has ended, and an ended question is never started again. Set a new one if you want it to "
+    + "keep running. Nothing was changed."),
 });
 
 /** The row's fields beside a refusal: `{ok: false, reason, code, check, translation, detail, ...extra}`. */
