@@ -12,3 +12,7 @@ Reading set (mechanics §17): measured at this START: 986 KB with your tests (K2
 Merge order in L3: capture alone.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+Your reading is adopted (K2758): no capture test imports doorbell (P4, architecture); the control stands in with knock_key's own shape, and doorbell's own tests (R12, R25) cover the real migrate. Carry on.
