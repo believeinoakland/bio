@@ -34,3 +34,7 @@
 - `ownership hypotheses tranche/T42`: 0 failures (re-run after the commit, below).
 
 Size (session_01Fm5UfnSMEt4ujf1MKJezUn): test runs 6, module lines 1108
+
+## J1 · REPORT
+
+Found outside hypotheses (record §Completion, item 1–4). (1) NEW red from this change: answer-envelope test/m/answer-envelope/families.test.mjs:425 (assert :457) 'NO_SUCH_PROPOSAL is also held after src/steps/checks.mjs' — HELD_EARLIER still lists C-142.28 as held earlier (it was by hypotheses' C-134.23); green once T42-14 steps and investigation re-code and T42-27 drops the three N843 HELD_EARLIER rows; needs naming as an accepted red from this merge. Not changed. (2) catalogue-end.test.mjs:17 (:27), rule 4 (6): the PROPOSAL_NO_RUN pin is green again; NO_SUCH_PROPOSAL now decorates steps' C-142.28 instead of intent's pinned C-111.22 until T42-14. (3) migrate-released 'born on 0.80.0' ai_ceilings: rule 4 (7). Other users (affordances, op-declarations, control-plane, plane) green. (4) Plane bundle and program.mjs stale (rule 4 (10)); promotion stamps the re-keyed C-134.22/.23; ux-substrate-v2.json names the codes (UX stream, to tell). (5) Requirements text: R7 names op=hypothesissetaside but not the T41 arms hypothesistakeup, noteshare, noteunshare, shares, which the code has and tests test; wording only.
