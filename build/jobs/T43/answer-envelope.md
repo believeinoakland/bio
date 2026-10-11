@@ -1,6 +1,6 @@
 # answer-envelope (T43)
 
-**Status** · session_01NrTsqzXz9Abjh9zWaPQcvE · depth 2 · RUNNING until 2026-10-11T11:48:23Z (plane migrate-released test) · handled B1
+**Status** · session_01NrTsqzXz9Abjh9zWaPQcvE · depth 2 · COMPLETE · handled B1
 
 ## Record (T43-14; N851)
 
@@ -32,12 +32,12 @@
 - store-door: 44 pass, 0 fail.
 - control-plane: 223 tests, 222 pass, 1 fail. The fail is `envelope.test.mjs`:391 (TypeError reading capture's `NO_SUCH_KNOCK`). It is T43-23's, under rule 4 (12).
 - plane `test/m/plane/`: 184 pass, 0 fail.
-- plane `migrate-released`: MIGRATE_RESULT
+- plane `migrate-released`: 1 pass, 0 fail.
 
 **Checks** (process repository):
 - format: 147 modules, 0 failures.
 - architecture answer-envelope: 9 product files, 0 failures.
 - coverage answer-envelope: 12 of 12 ids, 0 failures.
-- ownership answer-envelope `tranche/T43`: 0 failures.
+- ownership answer-envelope `tranche/T43`: 3 files, 0 failures.
 
 Size (session_01NrTsqzXz9Abjh9zWaPQcvE): test runs 9, module lines 843
