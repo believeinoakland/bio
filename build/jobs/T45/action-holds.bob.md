@@ -18,3 +18,7 @@ Merge order in L9: conformance, consequences, action-grammar, action-holds, acti
 ## B2 · ANSWER · re J1
 
 All eight readings confirmed (K2845). On (3): action-grammar R9 now says your codes are C-149 only and the moved hold rows in C-117 retire by a CHANGE I send ACTION-GRAMMAR at actions' merge, so you need not REPORT it. Merge tranche/T45 when convenient (action-grammar R9 and actions R80 wording only).
+
+## B3 · CHANGE
+
+K2848: R11 re-worded: export holdNotInPlace(place), the one minter of HOLD_NOT_IN_PLACE (C-149); filings R47 calls it (K231: one code, one site). Merge tranche/T45 before continuing.
