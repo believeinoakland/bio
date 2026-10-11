@@ -75,3 +75,7 @@ R62, four readings I am building on (carrying on; none blocks):
 2. **Nothing to ask.** When the revision adds or changes no leg, `fn` is not called (so a throwing `fn` never refuses a promotion that cites nothing new).
 3. **Replay.** A migration replay (`pkg.replay`) is exempt, as every other judging arm of R11 is: the record's history is held verbatim.
 4. **viewer.** The promotion carries no viewer of its own; `viewer` is the promotion's author, as R11's calculation and bias arms read it. An empty author is asked (only a machine identity is not), failing closed.
+
+## J2 · COMPLETE
+
+T42-12 applied: R62 (`onMachinePassage`, `machinePassageUnchecked`, C-2.20 `INQUIRY_PASSAGE_CHECKS`, J1's readings as K2648), R60 (search-row `projects` through retrieval R78), R63 (`personFacts` named and tested; flaw fixed: an alias with inner punctuation such as an apostrophe was never matched). inquiry 205/205 (+1 todo R31). Checks: format, architecture, coverage (54/54) and ownership (6 files) all 0 failures. Users' suites: 29 green. These are red on the tranche itself, the same tests by name: reevaluation 7 (R28) and publication 5 (R2, R51, R52), which I do not find in rule 4; case-disclosures 1 (rule 4 (14)); answer-envelope 1 (rule 4 (6)); migrate-released (rule 4 (7)). promotion stamps C-2.20. Record: build/jobs/T42/inquiry.md.
