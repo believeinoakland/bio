@@ -1,6 +1,6 @@
 # BOB to escalation (T45)
 
-**Read** · handled J4
+**Read** · handled J6
 
 ## B1 · START
 
@@ -29,3 +29,7 @@ conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, cu
 ## B5 · CHANGE
 
 action-grammar (T45-25) is merged into tranche/T45 (K2855): rows C-117.30–.58, flat-key readers (entryFieldFindings, premiseOverrideOf, the press holder as text), SUCCESS_RECORD_ID_RE, bearingFindings/BEARINGS and the R15–R25 grammars are real. Merge tranche/T45, switch any stand-in to the real module, re-run, then continue or post COMPLETE again.
+
+## B6 · CHANGE
+
+consequences (T45-24) is merged into tranche/T45 (K2857): successRecordRead, registerOwnActReader(fn, module), the R9 addressed words and outcomeCarry are real. Merge tranche/T45, drop any stand-in, re-run, then continue or post COMPLETE again.
