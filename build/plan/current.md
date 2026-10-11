@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #151 · session_01TNKsMjSu49MiEhsdjBhpvT · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #13 session_01TfvYox4Sw4X6dSjqk6M1oK; bundler: BUNDLER #14 session_01X5bkceFD2GHGbfimdSRiKL
+**Jobs** · record-grammar: RECORD-GRAMMAR #13 session_01TfvYox4Sw4X6dSjqk6M1oK; bundler: BUNDLER #14 session_01X5bkceFD2GHGbfimdSRiKL; record-core: RECORD-CORE #20 session_013PmyJwtkkmXmvfs4xFhWb6; membership: MEMBERSHIP #33 session_01RzYrca5P3xs9xcgtmKsFnL; credentials: CREDENTIALS #12 session_01SmVin6JuSDfPb4PyoweFzP; promotion: PROMOTION #40 session_0152YS47KdFKKexnY73o2BzS
 
 **At T42's opening (K2607):** opened 2026-10-10 from `main` @ 65490c5e33 (T41 closed, K2603), with `tranche/T41`'s later build state merged in (K1703); Bob: "keep going until I tell you to pause" (K2605). Bob's meter at the opening: 18% weekly (primary; K2615). Development runs through every layer; the 80% pause (K2341) and the account-switch rule stand.
 
@@ -81,7 +81,7 @@ No merge order (independent).
 - **T42-14 · steps** · (N843) its own `NO_SUCH_PROPOSAL` row.
 - **T42-15 · citation** · (N834, K2608) no seam of its own: `cite` writes legs through inquiry's check, so R1's relayed refusals gain inquiry R62's `MACHINE_PASSAGE_UNCHECKED`.
 - **T42-16 · basis-versions** · (N834) `onMachinePassage` seam.
-- **T42-17 · ai-use** · (N848, K2592) `migrate()` drops `ai_ceilings` after the carry (clears rule 4 (7)); (N831) reads `explore` through `credentials.accountUsesOf`.
+- **T42-17 · ai-use** · (N848, K2592) `migrate()` drops `ai_ceilings` after the carry (clears rule 4 (7)); (N831) reads `explore` through `credentials.accountUsesOf`, reading `held` (a `group` answer of `held: false` still carries `uses`, so `held` is read, never `uses` alone; CREDENTIALS #12 J1).
 - **T42-18 · run-productions** · (N834) fills the three seams with `acceptedFor` (R22).
 - **T42-19 · question-explorer** · (N845, K2571) its factory migrates at creation.
 - **T42-19a · agent-model** · (N832, K2611) R1 amended, R14: a model entry for `transcribe` and page images inside tool results · req: `draft-T42-transcribe.md` §4 · before T42-20.
