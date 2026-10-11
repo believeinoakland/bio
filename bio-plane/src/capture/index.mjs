@@ -90,6 +90,10 @@ const WITHIN_FAULT = Symbol("within's fault");
 export const PULL_WITHIN_FAILED_DETAIL =
   "the act run with the pull did not complete, so the pull was rolled back and nothing was written";
 
+/* R87: `declareTables`' two answers, the same on every call. */
+const DECLARED = Object.freeze({ ok: true, module: "capture", declared: true });
+const NO_DECLARATION_SEAM = Object.freeze({ ok: false, module: "capture", declared: false, reason: "NO_DECLARATION_SEAM" });
+
 /* R76 (K2455): the routes by which a capture is received, never fetched (provenance R51, R63). */
 const RECEIVED_VIAS = Object.freeze([DOORBELL_VIA, UPLOAD_VIA]);
 /* R86: the parts an upload is held in, `acquisition` R10's form. */
@@ -401,14 +405,27 @@ export class Capture {
     this.declareTables();
   }
 
+  /** R87 (K2629): declares capture's tables to record-core (R74's purge declarations: the purged and the exempt) once
+   *  per storage, and answers the same, `DECLARED`, on this and every later call, never throwing for a table it already
+   *  holds: a second call, a second instance over the same record (record-core holds every one of these tables as
+   *  `capture`'s) and `doorbell` R25's call before its own declaration all answer it. A record with no declaration seam
+   *  answers `NO_DECLARATION_SEAM`, every time. Only a refusal for a table another module holds, or a malformed
+   *  declaration, is a wiring fault and throws. */
   declareTables() {
-    if (this.#declared || !this.core || typeof this.core.declarePurge !== "function") return false;
-    const answer = this.core.declarePurge("capture", CAPTURE_PURGED_TABLES.map((name) => ({ name, keys: [] })),
-                                          { exempt: CAPTURE_EXEMPT_TABLES });
-    if (answer && answer.ok === false)
-      throw new Error(`capture: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
+    if (this.#declared) return DECLARED;
+    if (!this.core || typeof this.core.declarePurge !== "function") return NO_DECLARATION_SEAM;
+    const mine = [...CAPTURE_PURGED_TABLES, ...CAPTURE_EXEMPT_TABLES];
+    let held = [];
+    try { held = typeof this.core.declaredTables === "function" ? this.core.declaredTables() : []; } catch { held = []; }
+    const byCapture = new Set(held.filter((d) => d && d.module === "capture").map((d) => d.name));
+    if (!mine.every((t) => byCapture.has(t))) {
+      const answer = this.core.declarePurge("capture", CAPTURE_PURGED_TABLES.map((name) => ({ name, keys: [] })),
+                                            { exempt: CAPTURE_EXEMPT_TABLES });
+      if (answer && answer.ok === false)
+        throw new Error(`capture: record-core refused its purge declaration: ${answer.reason} (${answer.table})`);
+    }
     this.#declared = true;
-    return true;
+    return DECLARED;
   }
 
   /* ---- listeners (R44, R55) ---- */

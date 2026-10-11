@@ -207,7 +207,7 @@ test("R68 (R63): reattest refuses BAD_SHA, and R63's absence when no bytes are h
   assert.equal(captureOps(rw.c, new URL(`http://x/lateattestations?capture=${rw.d}`), null, rw.c.env).lateattestations().late_attestations[0].by, "m9");
 });
 
-test("R37 (K2607, K2609): capture's own rows are C-118.1, .5, .6, .8, .9 and .10, each at the site in capture that raises it, with the translations the requirements state; the rows that moved to doorbell keep their codes and numbers and are defined here once; C-118 runs 1 to 10 with no gap", () => {
+test("R37 (K2607, K2609): capture's own rows are C-118.1, .5, .6, .8, .9 and .10, each at the site in capture that raises it, with the translations the requirements state; the rows that moved to doorbell keep their codes and numbers, are defined here once and name doorbell's raisers; C-118 runs 1 to 10 with no gap", () => {
   const want = {
     EVIDENCE_NOT_HELD: ["C-118.1", "The record holds no stored copy of a document under this fingerprint.", /^src\/capture\/ops\.mjs evidenceAbsent > is-evidence-held$/],
     NOT_THE_CAPTURING_ACTOR: ["C-118.5", "An account of how a document was captured is added only by the member who captured it, and that is not you, or no member captured it. Nothing was written.",
@@ -235,6 +235,18 @@ test("R37 (K2607, K2609): capture's own rows are C-118.1, .5, .6, .8, .9 and .10
   const moved = { NO_SUCH_KNOCK: "C-118.2", KNOCKER_SECRET_WEAK: "C-118.3", KNOCK_DISCARDED: "C-118.4", RESOLVE_NO_REASON: "C-118.7" };
   for (const [code, check] of Object.entries(moved)) assert.equal(CAPTURE_CHECKS[code].check, check, code);
   assert.deepEqual(Object.values(KNOCK_CHECKS).map((r) => r.check).sort(), ["C-85.1", "C-85.2", "C-85.3", "C-85.4", "C-85.5"]);
+  /* each moved row names its live raiser, doorbell's (K2627; the map's §2) */
+  const raisers = {
+    NO_SUCH_KNOCK: "src/doorbell/index.mjs #noSuchKnock > is-knock-held",
+    KNOCKER_SECRET_WEAK: "src/doorbell/door.mjs knockerSecretWeak > is-knocker-secret-strong",
+    KNOCK_DISCARDED: "src/doorbell/index.mjs pullKnock > is-knock-pullable",
+    RESOLVE_NO_REASON: "src/doorbell/index.mjs inboxResolve > is-resolve-reasoned",
+  };
+  for (const [code, where] of Object.entries(raisers)) assert.equal(CAPTURE_CHECKS[code].where, where, code);
+  assert.deepEqual(Object.values(KNOCK_CHECKS).map((r) => r.where),
+                   ["src/doorbell/index.mjs #knockRateRefusal > is-knock-rate", "src/doorbell/index.mjs #knockRateRefusal > is-knock-rate",
+                    "src/doorbell/door.mjs knockEnvelopeTooLarge > is-knock-envelope-too-large",
+                    "src/doorbell/door.mjs knockPayloadTooLarge > is-knock-payload-too-large", "src/doorbell/door.mjs knockEmpty > is-knock-empty"]);
   /* C-118's numbers: one row each, 1 to 10, so the next free number capture mints is C-118.11 */
   const nums = Object.values(CAPTURE_CHECKS).map((r) => Number(/^C-118\.(\d+)$/.exec(r.check)[1])).sort((a, b) => a - b);
   assert.deepEqual(nums, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
