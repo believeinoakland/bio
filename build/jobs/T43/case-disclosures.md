@@ -21,3 +21,7 @@
 **Checks** (process repository): format 0 failures; architecture case-disclosures 0; coverage case-disclosures 31 of 31, 0; ownership case-disclosures `tranche/T43` 0.
 
 Size (session_018GVoxZK3C1A3DkJm7htB9G): test runs 12, module lines 5746
+
+## J1 · COMPLETE
+
+T43-22 complete on job/T43/case-disclosures: fixture.mjs builds doorbell's tables before any inbox insert, reaching doorbellOf(ctx)'s one instance through sources (a used module; importing doorbell is refused by the architecture check), no assertion changed. Rule 4 (12)'s four case-disclosures reds pass (captures:217, carries:139, carries:195, seam:264); case-disclosures 95/0. One comment moved in index.mjs (photoLabel's), no behaviour change. Users: case-account 21/0, plane 185/0; case-authoring 180/4 (its fixture.mjs:444 inbox, rule 4 (12), T43-12's); answer-envelope 25/5 (catalogue-end:17, envelope:63, families:49, 377, 424: doorbell's family, rule 4 (9), T43-14). Checks: format, architecture, coverage 31/31, ownership: 0 failures.
