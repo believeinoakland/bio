@@ -18,3 +18,7 @@ J1 (K2670): your plan is adopted (register with caseAccountOf(host).registerRevi
 ## B3 · CHANGE
 
 case-account (T42-22) is merged into tranche/T42 (K2673). Merge tranche/T42, drop your stand-in, run against the real module, add your uses edges in modules.json (case-authoring: + case-account, - ai-runs; review: + case-account), and post COMPLETE. case-authoring: CASE_AUTHORING_TABLES must not still list account_drafts/account_acceptances once caseAccountOf is created eagerly (declarePurge refuses the whole list on TABLE_DECLARED; map §7); the acceptance write is this.account.acceptanceRecorded({caseId, edition, drafted, by, at}).
+
+## B4 · CHANGE
+
+case-authoring (T42-23) is merged (K2674), and with it review's own uses edge + case-account in build/modules.json (case-authoring's job added the same line). Merge tranche/T42; if your branch edits that line too, keep the tranche's (identical) and leave modules.json otherwise untouched. Then run and post COMPLETE.
