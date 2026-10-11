@@ -14,3 +14,7 @@ Reading set (mechanics §17): measured at this START: 2,839 KB with your tests, 
 Merge order in L11: affordances, notice-producers, op-declarations, admission, answer-envelope, control-plane (after answer-envelope), plane last (modules.json order): merge `tranche/T43` into your branch after the others' merges, re-run, then complete.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+CHANGE: every other L11 job is merged on `tranche/T43` but affordances, which is re-reading and may merge again (no change to its outputs expected). Merge the tranche into your branch now, re-run your tests and the release suite, and COMPLETE; your findings are K2726's (N874 in T44; R36's Uses wording done). If affordances re-merges after you, BOB tells you.
