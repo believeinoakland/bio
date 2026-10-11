@@ -17,3 +17,11 @@ T43-13, my best readings; I carry on with them. One answer changes a line or two
    - review-comment-left-out: `{case}` is the case's title, otherwise its id.
    - The `{owner}` of `ai.label.explored`: `ai.owner.group` for the group, the project's name, or the owner's handle for a member's own account (the viewer is that owner).
 7. **Confirmed, no question:** ai-use R5's `limitsReached` cannot list an unjudged entry. R3's unjudged refusal writes nothing and carries no scope, unit or period, and R5 lists only limits first reached, each with scope, unit, period, `period_start` and `reached_at`. I also drop any entry whose period is not `day`/`month`, and treat `unreadable` as ai-use's failure. So `LIMIT_WHEN_FILL.unjudged` is not needed.
+
+## J2 · QUESTION
+
+Replaces J1. Everything in J1 stands except one fill in its point 6.
+
+The `{owner}` of `ai.label.explored` for a member's own account is now `ai.account.own.inline` ("your own account"), not the owner's handle. That label reads "… enabled by your own account" and names no member. It goes only to the account's owner. For the group the fill stays `ai.owner.group`, and for a project it stays the project's name.
+
+The work is built on all of J1's readings plus this one. It is complete and tested, and its COMPLETE follows. An ANSWER that changes a reading reopens the job for a line or two.
