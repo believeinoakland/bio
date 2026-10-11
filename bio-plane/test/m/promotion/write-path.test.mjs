@@ -223,6 +223,21 @@ test("R17: through the whole write path, an unreadable revision gets the readabi
   assert.deepEqual([blob.reason, blob.why], ["BUNDLE_MD_UNREADABLE", "blob"]);
   const nofm = await rev([{ path: "bundle.md", text: "no front matter here" }]);
   assert.deepEqual([nofm.reason, nofm.why], ["BUNDLE_MD_UNREADABLE", "front_matter"]);
+  /* R38 (N854): any C-2.1 finding of record-grammar's parser refuses the revision (a key given twice); the clean document,
+     the control, lands. */
+  const twice = await rev([{ path: "bundle.md", text: action(id, ["risk_tier: 3"]).replace("annotations_open: 0\n", "annotations_open: 0\nannotations_open: 0\n") }]);
+  assert.deepEqual([twice.reason, twice.check, twice.why], ["BUNDLE_MD_UNREADABLE", "C-2.1", "front_matter"], JSON.stringify(twice).slice(0, 300));
+  assert.match(twice.grammar[0], /duplicate top-level key 'annotations_open'/);
+  const clean = await rev([{ path: "bundle.md", text: action(id, ["risk_tier: 3"]).replace("## Plan\n\nAsk.", "## Plan\n\nAsk again.") }]);
+  assert.equal(clean.ok, true, JSON.stringify(clean).slice(0, 300));
+});
+
+test("R38 (N854): through the whole write path, a padded id is refused BUNDLE_ID_DISAGREES (record-grammar's idDisagrees); the exact id lands", async () => {
+  const id = "INFO-2026-0141-z";
+  const padded = await promote(id, info(id).replace(`id: ${id}`, `id: " ${id}"`));
+  assert.deepEqual([padded.reason, padded.check, padded.document_id], ["BUNDLE_ID_DISAGREES", "C-1.1", ` ${id}`], JSON.stringify(padded).slice(0, 300));
+  const exact = await promote(id, info(id).replace(`id: ${id}`, `id: "${id}"`));
+  assert.equal(exact.ok, true, JSON.stringify(exact).slice(0, 300));
 });
 
 test("R16 (rec-181): through the whole write path, an item a live edge cites is refused its retirement CITED, naming the citer and `to: retired`; with no edge it retires", async () => {

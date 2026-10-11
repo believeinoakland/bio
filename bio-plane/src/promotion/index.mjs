@@ -15,7 +15,7 @@
  *               membership's `MODULE_ORDER` unless a test passes its own. Unknown modules run last, in the order they registered.
  */
 
-import { parseFrontmatter, normalizeType, vocabFor, STATES,
+import { parseFrontmatter, idDisagrees, normalizeType, vocabFor, STATES,
          deriveInquiryTitle, inquiryQuestionOf, isMachineIdentity } from "../record-grammar/index.mjs";
 import { recordOf, fileDigestOf, inlineBytesOf, EMPTY_STRING_SHA, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, noSuchProject, notAParticipant, listenerRefusal, MODULE_ORDER, CUSTODIAL_CHECKS } from "../membership/index.mjs";
@@ -374,8 +374,11 @@ class Promotion {
 
     /* R9, R11, R12: the document is the record's word on itself; the envelope only where it states nothing. */
     const sentMd = Array.isArray(files) ? files.find((f) => isObj(f) && f.path === "bundle.md") : null;
-    const sentFm0 = sentMd && typeof sentMd.text === "string" ? parseFrontmatter(sentMd.text).data : null;
-    const sentFm = isObj(sentFm0) ? sentFm0 : null;
+    const sentParsed = sentMd && typeof sentMd.text === "string" ? parseFrontmatter(sentMd.text) : null;
+    const sentFm = sentParsed && isObj(sentParsed.data) ? sentParsed.data : null;
+    /* R17, R38 (N854): every C-2.1 finding record-grammar's parser answers for the sent document, the catalogue's own
+       arm, so the door and the catalogue never disagree about whether these bytes are readable. */
+    const sentGrammar = sentParsed ? sentParsed.findings.filter((x) => x && x.check === "C-2.1").map((x) => x.message) : [];
     const envelope = isObj(meta) ? meta : null;
     const documentType = sentFm ? typeStated(sentFm.object_type) : null;
     const envelopeType = envelope ? typeStated(envelope.object_type) : null;
@@ -457,13 +460,17 @@ class Promotion {
     if (!sentMd) return { ok: false, reason: "NO_BUNDLE_MD", detail: "a promotion carries its bundle.md" };
     /* DEC-49 REGION is-promote-readable */
     if (base !== null) {
-      if (typeof sentMd.text !== "string" || !sentFm)
+      if (typeof sentMd.text !== "string")
         return refusal("BUNDLE_MD_UNREADABLE",
-          typeof sentMd.text !== "string"
-            ? "this revision's bundle.md is held as a blob, so no rule about the revision can read it. Nothing was written."
-            : "this revision's bundle.md has no readable front matter block, so no rule about the revision can read it. "
-              + "Nothing was written.",
-          { why: typeof sentMd.text !== "string" ? "blob" : "front_matter" });
+          "this revision's bundle.md is held as a blob, so no rule about the revision can read it. Nothing was written.",
+          { why: "blob" });
+      /* R38 (N854): any C-2.1 finding refuses, not only a block the parser answers no data for (a key given twice, a
+         line outside the grammar), since the catalogue refuses the same bytes. */
+      if (!sentFm || sentGrammar.length)
+        return refusal("BUNDLE_MD_UNREADABLE",
+          `this revision's bundle.md has no front matter block the record's grammar can read (${cut(sentGrammar.join("; "), 300)}), `
+          + "so no rule about the revision can read it. Nothing was written.",
+          { why: "front_matter", grammar: sentGrammar.slice(0, 20) });
     }
     /* END DEC-49 REGION is-promote-readable */
 
@@ -691,7 +698,9 @@ class Promotion {
       const finalFm0 = finalMd && typeof finalMd.text === "string" ? parseFrontmatter(finalMd.text).data : null;
       const finalFm = isObj(finalFm0) ? finalFm0 : null;
       /* DEC-49 REGION is-promote-bundle-id */
-      if (!replay && finalFm && has(finalFm, "id") && finalFm.id !== null && String(finalFm.id).trim() !== bundleId)
+      /* R38 (N854): C-1.1 is record-grammar's `idDisagrees`, the one judgment `checkBundle` runs: a string id not equal,
+         byte for byte, to the bundle it is filed under. A non-string id is C-1.2's, not this refusal's. */
+      if (!replay && finalFm && idDisagrees(finalFm, bundleId))
         return refusal("BUNDLE_ID_DISAGREES",
           `the document states id '${cut(finalFm.id, 80)}' and it is being filed under '${cut(bundleId, 80)}'. A `
           + `document is filed under the id it states. Nothing was written.`,
