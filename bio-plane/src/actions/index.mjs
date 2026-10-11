@@ -4007,14 +4007,13 @@ export function actionsOf(host, deps) {
     if (duties && typeof duties.registerTriggerSource === "function")
       duties.registerTriggerSource("actions", (args) => a.triggerSource(args || {}));
     /* R97 (T45; consequences R19, standards R53): once per host, the reader of the group's own acts and the check of its
-       own sendings. A registration either refuses (this module's already held) leaves the earlier one standing; a host
-       on which either cannot be created registers nothing there. */
-    const consequences = d.consequences === null ? null : a.consequences;
-    if (consequences && typeof consequences.registerOwnActReader === "function") {
-      const reader = (args) => a.ownActIds(args || {});
-      consequences.registerOwnActReader(reader);
-    }
-    const standards = d.standards === null ? null : a.standards;
+       own sendings, each reached as ratification is (the composition root's environment, or given), so this module never
+       makes either before its composer does. A registration either refuses (this module's already held) leaves the
+       earlier one standing; a host on which either cannot be created registers nothing there. */
+    const consequences = d.consequences === null || !(d.consequences || d.env) ? null : a.consequences;
+    if (consequences && typeof consequences.registerOwnActReader === "function")
+      consequences.registerOwnActReader((args) => a.ownActIds(args || {}));
+    const standards = d.standards === null || !(d.standards || d.env) ? null : a.standards;
     if (standards && typeof standards.registerOwnSendingCheck === "function")
       standards.registerOwnSendingCheck("actions", (args) => a.ownSending(args || {}));
     /* R55 (T42; N826): once per host, as the registrations above, with doorbell (its R3), no longer capture. Doorbell's

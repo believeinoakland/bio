@@ -455,7 +455,8 @@ test("R93 a recognition (the view's shape: recognition) answers recognition_basi
 /* ================================================================ registrations, view, events, machine fence, tables */
 
 test("R97 at start actions registers once with consequences.registerOwnActReader and standards.registerOwnSendingCheck; each answers the group's own acts and sendings, names back only what it was given; an id of no action is not answered", () => {
-  const { w, cons } = grounded();
+  /* the composition root's environment: actions reaches the real standards on its host, as the plane does */
+  const { w, cons } = grounded({ deps: { env: {} } });
   const s = w.doc("INFO-2026-0001-d"), other = w.doc("INFO-2026-0002-e");
   w.action(A);
   w.a.actionCorrespond({ target: A, direction: "sent", at: "2026-09-02", artifactSha: s, viewer: M, author: M });
@@ -468,6 +469,9 @@ test("R97 at start actions registers once with consequences.registerOwnActReader
   assert.deepEqual([w.a.ownSending({ captureSha: s }), w.a.ownSending({ captureSha: other })], [true, false]);
   assert.equal(actions.actionsOf(w.host), w.a);
   assert.equal(cons.readers.length, 1, "a second actionsOf registers nothing");
+  /* a host given neither, and no environment, registers with neither (its composer makes them) */
+  const bare = world({ deps: { consequences: undefined } });
+  assert.equal(bare.a.standards.registerOwnSendingCheck("monitoring", () => false).ok, true);
 });
 
 test("R10 the kinds read the group's governing view (local-facts R12): with no group rule, byte-identical to combine's; with no profile, the product's alone", () => {
