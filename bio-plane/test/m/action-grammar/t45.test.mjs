@@ -382,7 +382,7 @@ test("R21: press_terms, absent or {on_record, embargo_until?, release_at?, note?
 
 /* ------------------------------------------------------------------------------------------------ R22 */
 
-test("R22 (K2849): entryFieldFindings over the entry's flat keys: office_words (and office_status, the status token) only on a received entry carrying an outcome, office_words 1 to 500 characters on one line, else OFFICE_STATUS_WITHOUT_OUTCOME; office_status one of facts.responseStatuses, else (or with none handed in) OFFICE_STATUS_UNKNOWN; found_elsewhere (a kind of FOUND_ELSEWHERE_KINDS) and found_elsewhere_note (at most 500 characters) only on a received entry, else FOUND_ELSEWHERE_REFUSED, and with no artifact_sha FOUND_ELSEWHERE_NEEDS_CAPTURE; speaker only on a sent entry, a member id of 1 to 200 characters, else SPEAKER_REFUSED; negative controls: an entry with none of them pushes nothing, words with an outcome and a held status push nothing, without outcome are refused, found_elsewhere on sent and speaker on received are refused", () => {
+test("R22 (K2849): entryFieldFindings over the entry's flat keys: office_words (and office_status, the status token) only on a received entry carrying an outcome, office_words 1 to 500 characters with no quotation mark, backslash or line break (K2859), else OFFICE_STATUS_WITHOUT_OUTCOME; office_status one of facts.responseStatuses, else (or with none handed in) OFFICE_STATUS_UNKNOWN; found_elsewhere (a kind of FOUND_ELSEWHERE_KINDS) and found_elsewhere_note (at most 500 characters, none of those three) only on a received entry, else FOUND_ELSEWHERE_REFUSED, and with no artifact_sha FOUND_ELSEWHERE_NEEDS_CAPTURE; speaker only on a sent entry, a member id of 1 to 200 characters, else SPEAKER_REFUSED; negative controls: an entry with none of them pushes nothing, words with an outcome and a held status push nothing, without outcome are refused, found_elsewhere on sent and speaker on received are refused", () => {
   const ef = (entry, facts, prior = [sent({ stage: "request" })]) => codes(AG.entryFieldFindings([...prior, entry], prior.length, facts));
   const FACTS = { responseStatuses: ["implemented", "declined"] };
   const WORDS = "Will be implemented in the next fiscal year";
@@ -397,7 +397,7 @@ test("R22 (K2849): entryFieldFindings over the entry's flat keys: office_words (
   assert.deepEqual(ef(decided({ outcome: " ", office_words: WORDS }), FACTS), ["OFFICE_STATUS_WITHOUT_OUTCOME"]);
   assert.deepEqual(ef(sent({ outcome: "granted", office_words: WORDS }), FACTS), ["OFFICE_STATUS_WITHOUT_OUTCOME"]);
   assert.deepEqual(ef(decided({ office_status: "implemented" }), FACTS), ["OFFICE_STATUS_WITHOUT_OUTCOME"], "a status with no words");
-  for (const bad of ["", "  ", "w".repeat(501), "a\nb", 5, {}])
+  for (const bad of ["", "  ", "w".repeat(501), "a\nb", "the \"plan\"", "a\\b", 5, {}])
     assert.deepEqual(ef(decided({ office_words: bad }), FACTS), ["OFFICE_STATUS_WITHOUT_OUTCOME"], JSON.stringify(bad));
   /* found_elsewhere */
   const capture = (o) => recv({ account: undefined, author: undefined, artifact_sha: SHA, ...o });
@@ -408,6 +408,8 @@ test("R22 (K2849): entryFieldFindings over the entry's flat keys: office_words (
   assert.deepEqual(ef(sent({ found_elsewhere: "press" })), ["FOUND_ELSEWHERE_REFUSED"]);
   assert.deepEqual(ef({ direction: "no_response", at: "2026-06-20", account: "none", author: "member:a", found_elsewhere: "press" }), ["FOUND_ELSEWHERE_REFUSED", "FOUND_ELSEWHERE_NEEDS_CAPTURE"]);
   for (const bad of [{ found_elsewhere: "rumour" }, { found_elsewhere: "press", found_elsewhere_note: "n".repeat(501) }, { found_elsewhere: "press", found_elsewhere_note: 5 },
+    { found_elsewhere: "press", found_elsewhere_note: "said \"no\"" }, { found_elsewhere: "press", found_elsewhere_note: "a\\b" },
+    { found_elsewhere: "press", found_elsewhere_note: "a\nb" },
     { found_elsewhere_note: "a note with no kind" }, { found_elsewhere: { kind: "press" } }])
     assert.deepEqual(ef(capture(bad)), ["FOUND_ELSEWHERE_REFUSED"], JSON.stringify(bad));
   /* speaker */
@@ -424,19 +426,31 @@ test("R22 (K2849): entryFieldFindings over the entry's flat keys: office_words (
 
 /* ------------------------------------------------------------------------------------------------ R23 */
 
-test("R23: reply_owed absent, true or false, else REPLY_OWED_REFUSED; follows_action absent or {action, ord?}, action an action's record id, ord a non-negative integer, else FOLLOWS_ACTION_REFUSED; equal to ctx.bundleId FOLLOWS_ACTION_SELF; negative controls: reply_owed false and a link to another action push nothing, reply_owed 'no' and a self-link push their codes", () => {
+test("R23 (K2859): reply_owed absent, true or false, else REPLY_OWED_REFUSED, and stated together with reply_owed_reason (1 to 500 characters with no quotation mark, backslash or line break), the reason never alone, else REPLY_OWED_REFUSED (the one site of that condition, actions R82 answering through it); follows_action absent or {action, ord?}, action an action's record id, ord a non-negative integer, else FOLLOWS_ACTION_REFUSED; equal to ctx.bundleId FOLLOWS_ACTION_SELF; negative controls: reply_owed false with a reason and a link to another action push nothing, reply_owed 'no', a reply_owed with no reason and a self-link push their codes", () => {
   const SELF = "ACTN-2026-0009-this";
+  const WHY = "the board answers to nobody here";
   const af = (o, ctx = { bundleId: SELF }) => codes(pushed((f) => AG.actionFieldFindings(base(o), ctx, f)).findings);
-  for (const v of [undefined, null, true, false]) assert.deepEqual(af({ reply_owed: v }), [], String(v));
-  for (const v of ["no", "false", 0, 1, [], {}]) assert.deepEqual(af({ reply_owed: v }), ["REPLY_OWED_REFUSED"], JSON.stringify(v));
+  assert.equal(AG.REPLY_OWED_REASON_MAX, 500);
+  for (const v of [true, false]) assert.deepEqual(af({ reply_owed: v, reply_owed_reason: WHY }), [], String(v));
+  for (const v of [undefined, null]) assert.deepEqual(af({ reply_owed: v }), [], String(v));
+  assert.deepEqual(af({ reply_owed: false, reply_owed_reason: "w".repeat(500) }), []);
+  for (const v of ["no", "false", 0, 1, [], {}]) assert.deepEqual(af({ reply_owed: v, reply_owed_reason: WHY }), ["REPLY_OWED_REFUSED"], JSON.stringify(v));
+  for (const why of [undefined, null, "", "  ", "w".repeat(501), "a \"b\"", "a\\b", "a\nb", 5])
+    assert.deepEqual(af({ reply_owed: false, reply_owed_reason: why }), ["REPLY_OWED_REFUSED"], JSON.stringify(why));
+  assert.deepEqual(af({ reply_owed_reason: WHY }), ["REPLY_OWED_REFUSED"], "a reason alone");
+  assert.equal(pushed((f) => AG.actionFieldFindings({ reply_owed: "no" }, {}, f)).findings.length, 1, "one finding per write");
   const LINK = { action: "ACTN-2026-0005-earlier" };
-  for (const v of [LINK, { ...LINK, ord: 0 }, { ...LINK, ord: 7 }, null, undefined]) assert.deepEqual(af({ reply_owed: false, follows_action: v }), [], JSON.stringify(v));
+  for (const v of [LINK, { ...LINK, ord: 0 }, { ...LINK, ord: 7 }, null, undefined])
+    assert.deepEqual(af({ reply_owed: false, reply_owed_reason: WHY, follows_action: v }), [], JSON.stringify(v));
   for (const v of [{ action: "INQ-2026-0003-question" }, { action: "ACTN-1" }, { action: 5 }, {}, { ...LINK, ord: -1 }, { ...LINK, ord: 1.5 },
     { ...LINK, ord: "1" }, { ...LINK, entry: 1 }, "ACTN-2026-0005-earlier", [LINK]])
     assert.deepEqual(af({ follows_action: v }), ["FOLLOWS_ACTION_REFUSED"], JSON.stringify(v));
   assert.deepEqual(af({ reply_owed: "no", follows_action: { action: SELF } }), ["REPLY_OWED_REFUSED", "FOLLOWS_ACTION_SELF"]);
   assert.deepEqual(af({ follows_action: { action: SELF } }, null), [], "no id handed in: not judged");
   assert.deepEqual(af({ follows_action: { action: SELF } }, {}), []);
+  /* the audit judges the same */
+  assert.deepEqual(codes(audit(base({ reply_owed: false }))), ["REPLY_OWED_REFUSED"]);
+  assert.deepEqual(audit(base({ reply_owed: false, reply_owed_reason: WHY })), []);
   for (const j of JUNK) assert.doesNotThrow(() => AG.actionFieldFindings(j, j, []));
 });
 
@@ -511,7 +525,7 @@ test("R7 (T45): the audit also reports the override's ground (only for a premise
   assert.deepEqual(codes(audit(base({ correspondence: [sent(), recv({ office_words: "In hand" })] }))), ["OFFICE_STATUS_WITHOUT_OUTCOME"]);
   /* well formed, nothing */
   const clean = base({ counterparty: { ...PRESS, holder: "Jo" }, copied: [OFFICE], partners: [{ role: "co-signer", organisation: "Neighbours" }],
-    press_terms: { on_record: "on_record", embargo_until: "2026-08-03T09:00" }, reply_owed: false, follows_action: { action: "ACTN-2026-0005-earlier", ord: 1 },
+    press_terms: { on_record: "on_record", embargo_until: "2026-08-03T09:00" }, reply_owed: false, reply_owed_reason: "an outlet owes us nothing", follows_action: { action: "ACTN-2026-0005-earlier", ord: 1 },
     clock: [{ ...DOCS["clean-records-request"].clock[0], owed_by: "group" }],
     correspondence: [sent({ stage: "request", speaker: "member:a" }), recv({ account: undefined, author: undefined, artifact_sha: SHA, stage: "denial", follows: "0", outcome: "denied",
       office_words: "Refused", office_status: "declined", found_elsewhere: "press", found_elsewhere_note: "in the paper" })] });
