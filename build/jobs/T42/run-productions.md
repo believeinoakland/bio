@@ -29,3 +29,23 @@ R25 is built against stand-ins and run-productions passes 57/57. Two things for 
 2. **Waiting on the two providers.** Until inquiry (T42-12) and basis-versions (T42-16) merge, the registration is guarded: the read registers only where `onMachinePassage` exists. At each CHANGE I merge `tranche/T42`, drop the guard, run R25 against the real slots and post COMPLETE.
 
 Other users: skills, op-declarations, store-door, control-plane, plane and agent-worker are green. answer-envelope `catalogue-end.test.mjs`:17 (rule 4 (6)) and `migrate-released`'s `ai_ceilings` (rule 4 (7)) are inherited reds. C-104.32 joins rule 4 (2). Details are in the record's Progress section.
+
+## Completion (T42-18; N834; B1, B2, B3 K2655, B4 K2660)
+
+**Applied:** R25 as built in Progress above, now against inquiry's real R62 slot (B4): `runProductionsOf` registers `machinePassage` with `inquiry.onMachinePassage` unconditionally. Inquiry is reached through `inquiryOf`, an edge already in `uses`. B2's readings of R62 (unchanged = the same passage as a multiset; no call when nothing changed; an empty author is asked) need nothing here: an empty author's leg on a proposed passage is refused, which is tested. C-104.32 `PROPOSAL_NOT_TAKEN_UP` is added.
+
+**Still guarded: basis-versions' R49 slot.** T42-16 has not merged `onMachinePassage` into `tranche/T42` at this head, so the read registers there only where the slot exists. Dropping that guard now would make every `runProductionsOf` throw. At basis-versions' CHANGE I drop it and add the real-slot test as I did for inquiry. This is the one part of R25 not yet proven against the real provider.
+
+**Deferred:** none.
+
+**Found in other modules:** question-explorer `module.test.mjs`:28 (J1; routed by B3, K2655).
+
+**Tests** (after merging `tranche/T42`, inquiry T42-12 included): run-productions `pass 58, fail 0`. One test was added since Progress: R25 against inquiry's real slot, where a second registration is refused `LISTENER_DECLARED` naming run-productions, with a stand-in world's open slot as the negative control. Users and seam owners:
+- Green: inquiry 205/0, citation 78/0, basis-versions 136/0, skills 105/0, op-declarations 128/0, store-door 43/0, control-plane 216/0, plane 166/0, `migrate-released` 1/0.
+- question-explorer 26/1: `module.test.mjs`:28, J1, with its job.
+- answer-envelope 28/1: `catalogue-end.test.mjs`:17, rule 4 (6).
+- agent-worker 13/1: `requirements.test.mjs` R45, a stale `agent-worker` bundle. The sources named in it are agent-worker's and agent-model's (T42-20), never this module's: rule 4 (10).
+
+**Checks:** `format: 147 modules, 146 requirements files; 0 failures`; `architecture: 10 product files, 59 relative imports; 0 failures`; `coverage: 1 modules, 25 of 25 live requirement ids named by a test; 0 failures`; `ownership: 6 files changed by run-productions between tranche/T42 and HEAD; 0 failures`.
+
+Size (session_014kGdQn9r6yt8hA7AVpanwj): test runs 9, module lines 2205
