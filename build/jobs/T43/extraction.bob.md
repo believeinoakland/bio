@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 reading-pipeline is merged (K2712): merge `tranche/T43` into your branch; `tier4Extend` now answers an account or limit refusal as `aiRefusal` (code, check, translation) beside `aiNote`. It carries no HTTP status: under your R71 you answer it with the status your door gives that refusal (the catalogue row's), never 200.
+
+## B3 · ANSWER · re J1
+
+All five adopted (K2713), one refined: (1) a relayed `aiRefusal` is answered with the HTTP status its catalogue row gives that code (as answer-envelope decorates it); 403 only for a code whose row gives none; never 200. (2) "2, 3" (member's page numbers, ascending, ", "): until the design stream names a form. (3), (4), (5) as you state them. Note B2 (reading-pipeline merged): merge `tranche/T43` first.
