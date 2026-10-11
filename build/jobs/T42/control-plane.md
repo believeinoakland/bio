@@ -74,3 +74,21 @@ Merged `tranche/T42` (op-grades, affordances, op-declarations, answer-envelope m
 ## J3 · REPORT
 
 B2 handled: both items were already applied in J1 (R74 author from the session, tested with a forged author as its negative control; R71 of.caseAccount()). Merged tranche/T42: 219/223. All R74 tests pass on op-declarations' merged spec. The 4 remaining reds are the R36 pull tests, which wait on store-door R7 (deps.doorbell). The J1 asks for BOB still stand (modules.json edges; plane store.mjs:677's caseAccount getter). Pushed.
+
+## B3 · CHANGE handled
+
+B2 item 1 was already covered by J1:
+- the hook's `author` for `pagetranscribe` comes from the session, as for `pdfstructure`;
+- the declined-hook forward stamps it the same way;
+- `t42-door.test.mjs` sends a forged `author` (address and body) as its negative control, and it is not taken.
+
+Item 2 was in J1. Merged `tranche/T42` (store-door merged; my edges are in `modules.json`, K2690).
+
+Results:
+- control-plane: 223/223.
+- plane (users): 167/167.
+- Checks: format, architecture, coverage (47/47) and ownership each 0 failures.
+
+Still open for BOB: plane `store.mjs`:677 hands `caseAccount` (plane R35, T42-30).
+
+Size (session_017Td7k1YMLLrLUpRB4yBYq4): test runs 21, module lines 3529
