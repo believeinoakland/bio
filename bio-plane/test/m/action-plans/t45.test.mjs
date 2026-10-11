@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, opened, option, choose, V, MACHINE, by, OFFICE, ms, FIRST } from "./fixture.mjs";
-import { noSuchPlan, actionPlansOps, ACTION_PLAN_CHECKS } from "../../../src/action-plans/index.mjs";
+import { noSuchPlan, actionPlansOps, ACTION_PLAN_CHECKS, machineCannotPlan } from "../../../src/action-plans/index.mjs";
 
 const code = (r) => r.code ?? r.reason;
 const at = (w, iso) => { w.clock.now = iso; };
@@ -363,4 +363,32 @@ test("R31 (T45; v0.2 rule 9): the planning run never suggests advocacy: a machin
   assert.equal(code(await propose({ lobbying: true, enforces: "STD-2026-0404-none" })), "LOBBYING_NO_REQUIREMENT");
   assert.equal(w.runs.get(run).bounds.proposals.consumed, 0);
   assert.equal((await propose({ lobbying: true, enforces: "STD-2026-0001-a" })).ok, true);
+});
+
+test("R25 R18 (K2851): an action an option starts is in the plan's project, so a member outside it cannot read it through actions (control: a member of the project reads it)", () => {
+  const w = seeded();
+  opened(w);
+  const a = option(w, { addressee: OFFICE });
+  choose(w, [a]);
+  const s = w.ap.optionStart({ plan: w.PL, option: a, kind: "other", ...by("bob"), ...FIRST });
+  assert.equal(s.ok, true, JSON.stringify(s));
+  assert.equal(w.fm(s.action).project, w.P);
+  assert.equal(w.record.bundleInfo(s.action).project, w.P);
+  assert.equal(w.actions.actionRead({ id: s.action, viewer: V("dave") }).ok, false, "dave, outside the project, reads nothing");
+  assert.equal(w.actions.actionRead({ id: s.action, viewer: V("bob") }).ok, true);
+  const p = w.ap.optionStartPreview({ plan: w.PL, option: a, kind: "other", ...by("bob"), ...FIRST });
+  assert.equal(p.ok, true);
+});
+
+test("R33 (K2851): machineCannotPlan is the one site minting MACHINE_CANNOT_PLAN, its row C-124.1; every plan act a machine attempts answers it byte for byte", () => {
+  const w = seeded();
+  opened(w);
+  const one = machineCannotPlan();
+  assert.deepEqual([one.code, one.check, one.translation], ["MACHINE_CANNOT_PLAN", "C-124.1", ACTION_PLAN_CHECKS.MACHINE_CANNOT_PLAN.translation]);
+  assert.deepEqual(machineCannotPlan({ plan: "x", ok: true, reason: "y" }), { ...one, plan: "x" }, "a caller's fields join, never override");
+  const m = { author: MACHINE, viewer: MACHINE };
+  for (const r of [w.ap.planOpen({ project: w.P, subjects: [w.S2], title: "t", ...m }), w.ap.planPause({ id: w.PL, reason: "r", ...m }),
+                   w.ap.scenarioSetAside({ plan: w.PL, scenario: 1, reason: "r", ...m })])
+    assert.deepEqual(r, one);
+  assert.equal(w.ap.planPause({ id: w.PL, reason: "r", ...by("bob") }).ok, true, "control: a member's act lands");
 });

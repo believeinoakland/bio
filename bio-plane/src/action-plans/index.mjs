@@ -63,7 +63,7 @@ import { dutiesOf, noSuchDuty, INTERNAL as DUTIES_INTERNAL } from "../duties/ind
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { runPrincipalGate } from "../run-rules/index.mjs";
 import { isMachineIdentity, proposalLabel, normalizeType } from "../record-grammar/index.mjs";
-import { ACTION_PLAN, planId, planDoc, appendEntry, logOf, logSection, parseFm, q } from "./doc.mjs";
+import { ACTION_PLAN, planId, planDoc, appendEntry, logOf, logSection, parseFm, q, tok } from "./doc.mjs";
 import { ACTION_PLANS_TABLES, migrateActionPlans } from "./schema.mjs";
 import { ACTION_PLAN_CHECKS, refusal } from "./checks.mjs";
 import { CATEGORIES, DISPOSITIONS, NEEDS_REASON, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, TITLE_MAX, REASON_MAX,
@@ -307,14 +307,7 @@ export class ActionPlans {
    * ===================================================================== */
 
   /** R1, R4, R20, R24: the plan's own acts are a named member's. */
-  #member(author) {
-    /* DEC-49 REGION is-plan-member */
-    if (isMachine(author))
-      return refusal("MACHINE_CANNOT_PLAN", "an action plan is opened, changed and closed by a named member; a machine "
-        + "proposes and never acts. Nothing was written.");
-    /* END DEC-49 REGION is-plan-member */
-    return null;
-  }
+  #member(author) { return isMachine(author) ? machineCannotPlan() : null; }
   /** R9, R11: an option is added, revised or adopted by a named member. */
   #optionMember(author) {
     /* DEC-49 REGION is-option-member */
@@ -1453,7 +1446,7 @@ export class ActionPlans {
     /* END DEC-49 REGION is-document-first */
     const reason = override === undefined || override === null ? null : isObj(override) ? override.reason : override;
     const at = this.now();
-    const doc = actionDocument({ fields: opt.fields, kind, plan: p.id, option: opt.id, contact: member,
+    const doc = actionDocument({ fields: opt.fields, kind, project: p.project, plan: p.id, option: opt.id, contact: member,
                                  breach: breach === true, override: reason, at });
     const r = this.record.transact(() => {
       const a = this.actions.actionCreate({ document: doc, author, viewer });
@@ -2106,9 +2099,10 @@ function subjectOfKey(k) {
 
 /** R18: the action document composed from a chosen option: its kind, the option's addressee, its regulated dates as
  *  pending clock entries with their bases, a `rests_on` leg to each subject's inquiry or determination, `plan` and
- *  `option`, `contact`, `breach` and `premise_override` when given. A machine proposal's disclosure is not carried
+ *  `option`, `contact`, `breach` and `premise_override` when given; and the plan's `project`, so the action is fenced
+ *  by the plan's project's sight (promotion R53; R25, DEC-36; K2851). A machine proposal's disclosure is not carried
  *  (R32): the member's adoption made the option the group's. */
-export function actionDocument({ fields, kind, plan, option, contact, breach, override, at }) {
+export function actionDocument({ fields, kind, project = null, plan, option, contact, breach, override, at }) {
   const legs = [...new Set((fields.subjects || []).map((s) => (s.kind === "inquiry" ? s.inquiry : s.determination)))];
   const a = fields.addressee;
   const cp = a ? ["counterparty:", ...Object.entries(a).map(([k, v]) => `  ${k}: ${q(v)}`)] : [];
@@ -2117,7 +2111,8 @@ export function actionDocument({ fields, kind, plan, option, contact, breach, ov
         `    date: "${d.date}"`, `    basis: ${q(d.basis)}`, "    status: pending"])] : ["clock: []"];
   const basis = legs.length ? ["action_basis:", ...legs.flatMap((t) => [`  - target: ${t}`, "    kind: rests_on"])] : ["action_basis: []"];
   return ["---", "id: PENDING", "object_type: action", `title: ${q(fields.summary)}`, "current_state: planned",
-    `created: "${at}"`, `last_updated: "${at}"`, `action_kind: ${q(typeof kind === "string" ? kind : "")}`, ...cp, ...clock,
+    `created: "${at}"`, `last_updated: "${at}"`, ...(project ? [`project: ${tok(project)}`] : []),
+    `action_kind: ${q(typeof kind === "string" ? kind : "")}`, ...cp, ...clock,
     ...basis, `plan: ${plan}`, `option: ${option}`, ...(contact ? [`contact: ${contact}`] : []),
     ...(breach ? ["breach: true"] : []),
     ...(override !== null && override !== undefined ? ["premise_override:", `  reason: ${q(override)}`] : []),
@@ -2146,6 +2141,16 @@ export function noSuchPlan(planIdAsked, extra = null) {
   return { ok: false, reason: "NO_SUCH_PLAN", code: "NO_SUCH_PLAN", check: row.check, translation: row.translation, plan,
            ...Object.fromEntries(own), detail: NO_SUCH_PLAN_DETAIL };
   /* END DEC-49 REGION is-plan-seen */
+}
+
+/** R1, R4, R33, R39, R40 (K2851): the one site that mints MACHINE_CANNOT_PLAN (C-124.1, K231): a plan's own acts are a
+ *  named member's. `plan-work` answers through it. Writes nothing and never throws. */
+export function machineCannotPlan(extra = null) {
+  /* DEC-49 REGION is-plan-member */
+  return refusal("MACHINE_CANNOT_PLAN", "an action plan is opened, changed and closed by a named member; a machine "
+    + "proposes and never acts. Nothing was written.",
+    isObj(extra) ? Object.fromEntries(Object.entries(extra).filter(([k]) => !["ok", "reason", "detail"].includes(k))) : {});
+  /* END DEC-49 REGION is-plan-member */
 }
 
 /** R1: an inquiry absent or unseen is one answer. */

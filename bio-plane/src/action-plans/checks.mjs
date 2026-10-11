@@ -14,7 +14,7 @@ const at = (fn, region) => `src/action-plans/index.mjs ${fn} > ${region}`;
 export const ACTION_PLAN_CHECKS = Object.freeze({
   /* ---- R1, R4: opening a plan and its subjects ---- */
   MACHINE_CANNOT_PLAN: {
-    check: 'C-124.1', where: at("#member", "is-plan-member"),
+    check: 'C-124.1', where: at("machineCannotPlan", "is-plan-member"),
     translation: 'An action plan is the group\'s own working material, and only a member opens it, changes what it is '
       + 'about, sets a scenario aside or restores it, pauses, resumes or closes it. An assistant may propose options; it '
       + 'may not do this. Sign in as a member. Nothing was written.',
