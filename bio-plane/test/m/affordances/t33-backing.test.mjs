@@ -1,4 +1,4 @@
-/* affordances: R19's backing for every op T33 grades `reasoned` (R40), each driven at its owning module's own interface
+/* affordances: R19's backing for every op T33 grades `reasoned` (op-grades R13), each driven at its owning module's own interface
    over that module's own fixture: called well-formed but without its authored account (reason, note, cause, evidence,
    purpose or basis), it is refused with its owner's code, which is in JUSTIFICATION_REFUSALS; called with it, it is
    accepted. The last test holds the list driven here to the ops `t33.mjs` grades `reasoned`. */
@@ -37,7 +37,7 @@ function backed(op, code, refused, accepted) {
 /* ---- events (R13, R14, R20) ---- */
 import * as evFix from "../events/fixture.mjs";
 
-test("R19: events' participantcorrect, eventmerge, eventsplit and eventrelationwithdraw, graded `reasoned` (R40), are "
+test("R19: events' participantcorrect, eventmerge, eventsplit and eventrelationwithdraw, graded `reasoned` (op-grades R13), are "
    + "refused without their reason with a code in JUSTIFICATION_REFUSALS, and accepted with it", () => {
   const M = evFix.MEMBER, doc = { kind: "document" };
   /* participantcorrect */
@@ -79,7 +79,7 @@ test("R19: events' participantcorrect, eventmerge, eventsplit and eventrelationw
 /* ---- lines (R8) ---- */
 import * as lnFix from "../lines/fixture.mjs";
 
-test("R19: lines' linewithdraw, graded `reasoned` (R40), is refused without its reason with a code in "
+test("R19: lines' linewithdraw, graded `reasoned` (op-grades R13), is refused without its reason with a code in "
    + "JUSTIFICATION_REFUSALS, and accepted with it", () => {
   const w = lnFix.world();
   const p = w.ent("person", "Ada Example"), o = w.ent("office", "Harbour Master");
@@ -91,7 +91,7 @@ test("R19: lines' linewithdraw, graded `reasoned` (R40), is refused without its 
 /* ---- money (R7, R12) ---- */
 import * as mnFix from "../money/fixture.mjs";
 
-test("R19: money's moneywithdraw, moneysetinclude and moneysetexclude, graded `reasoned` (R40), are refused without "
+test("R19: money's moneywithdraw, moneysetinclude and moneysetexclude, graded `reasoned` (op-grades R13), are refused without "
    + "their reason with a code in JUSTIFICATION_REFUSALS, and accepted with it", () => {
   const A = mnFix.ANN;
   {
@@ -112,7 +112,7 @@ test("R19: money's moneywithdraw, moneysetinclude and moneysetexclude, graded `r
 /* ---- duties (R6, R12, R13): DUTY_NO_REASON since duties' re-key (N608; K1805) ---- */
 import * as duFix from "../duties/fixture.mjs";
 
-test("R19: duties' dutyrevise, dutywithdraw, dutymatch and dutytransition, graded `reasoned` (R40), are refused without "
+test("R19: duties' dutyrevise, dutywithdraw, dutymatch and dutytransition, graded `reasoned` (op-grades R13), are refused without "
    + "their reason (or, for a transition, its cause) with a code in JUSTIFICATION_REFUSALS, and accepted with it", () => {
   const B = duFix.BOB, ZONE = duFix.ZONE, E = duFix.E;
   {
@@ -151,7 +151,7 @@ test("R19: duties' dutyrevise, dutywithdraw, dutymatch and dutytransition, grade
 import * as ppFix from "../people/fixture.mjs";
 
 test("R19: people's identityclaim, identitywithdraw, personfactwithdraw, personexpunge, membertie, membertiewithdraw and "
-   + "sourcepersonlink, graded `reasoned` (R40), are refused without their reason, note or evidence with a code in "
+   + "sourcepersonlink, graded `reasoned` (op-grades R13), are refused without their reason, note or evidence with a code in "
    + "JUSTIFICATION_REFUSALS, and accepted with it", () => {
   const A = ppFix.ANN, doc = ppFix.doc;
   const valid = { from: "2020-01-01", to: "2030-12-31", precision: "day", zone: "America/Los_Angeles" };
@@ -209,7 +209,7 @@ test("R19: people's identityclaim, identitywithdraw, personfactwithdraw, persone
 /* ---- hypotheses (R2): HYPOTHESIS_NO_REASON (R43; K1807) ---- */
 import * as hyFix from "../hypotheses/fixture.mjs";
 
-test("R19: hypotheses' hypothesisrevise and hypothesiswithdraw, graded `reasoned` (R40), are refused without their "
+test("R19: hypotheses' hypothesisrevise and hypothesiswithdraw, graded `reasoned` (op-grades R13), are refused without their "
    + "reason with a code in JUSTIFICATION_REFUSALS, and accepted with it", () => {
   const A = hyFix.ANN;
   {
@@ -231,7 +231,7 @@ test("R19: hypotheses' hypothesisrevise and hypothesiswithdraw, graded `reasoned
 /* ---- calculations (R14) ---- */
 import * as clFix from "../calculations/fixture.mjs";
 
-test("R19: calculations' moneyingest, graded `reasoned` (R40), is refused for every row of a binding without its reason "
+test("R19: calculations' moneyingest, graded `reasoned` (op-grades R13), is refused for every row of a binding without its reason "
    + "with a code in JUSTIFICATION_REFUSALS, and accepted with it; named rows ask no reason", async () => {
   const w = clFix.seeded();
   const B = clFix.V("bob");
@@ -253,7 +253,7 @@ test("R19: calculations' moneyingest, graded `reasoned` (R40), is refused for ev
 /* ---- workbooks (R3, R9, R10) ---- */
 import * as wbFix from "../workbooks/fixture.mjs";
 
-test("R19: workbooks' workbookunbind, workbooklintexplain and workbookmethodnote, graded `reasoned` (R40), are refused "
+test("R19: workbooks' workbookunbind, workbooklintexplain and workbookmethodnote, graded `reasoned` (op-grades R13), are refused "
    + "without their reason, note or purpose with a code in JUSTIFICATION_REFUSALS, and accepted with it", async () => {
   const B = wbFix.V("bob");
   {
@@ -288,7 +288,7 @@ test("R19: workbooks' workbookunbind, workbooklintexplain and workbookmethodnote
 /* ---- standards (R23, R26, R27) ---- */
 import * as stFix from "../standards/fixture.mjs";
 
-test("R19: standards' lawrelate, lawwithdraw, courtlink and courttreat, graded `reasoned` (R40), are refused without "
+test("R19: standards' lawrelate, lawwithdraw, courtlink and courttreat, graded `reasoned` (op-grades R13), are refused without "
    + "their reason with a code in JUSTIFICATION_REFUSALS, and accepted with it", () => {
   const B = stFix.V("bob"), REASON = stFix.REASON, who = { author: B, viewer: B };
   const two = (w) => {
@@ -332,7 +332,7 @@ test("R19: standards' lawrelate, lawwithdraw, courtlink and courttreat, graded `
 /* ---- entities (R43) ---- */
 import * as enFix from "../entities/fixture.mjs";
 
-test("R19: entities' entityidentify (addIdentifier), graded `reasoned` (R40), is refused by a member without its basis "
+test("R19: entities' entityidentify (addIdentifier), graded `reasoned` (op-grades R13), is refused by a member without its basis "
    + "with a code in JUSTIFICATION_REFUSALS, and accepted with it", () => {
   const w = enFix.world({ profiles: ["test-port-ellery"] });
   const pat = w.e.createEntity({ note: "a subject the test registers", kind: "person", label: "Pat Quill" }).entity_id;
@@ -343,7 +343,7 @@ test("R19: entities' entityidentify (addIdentifier), graded `reasoned` (R40), is
 /* ---- ai-runs (run-rules R19) ---- */
 import * as arFix from "../ai-runs/world.mjs";
 
-test("R19: ai-runs' airunverify (verificationRecord), graded `reasoned` (R40), is refused without the verifying "
+test("R19: ai-runs' airunverify (verificationRecord), graded `reasoned` (op-grades R13), is refused without the verifying "
    + "member's evidence with a code in JUSTIFICATION_REFUSALS, and accepted with it", async () => {
   const w = arFix.world({ deployedModes: ["check", "investigate"] });
   await w.group("ann", "bob");
@@ -355,7 +355,7 @@ test("R19: ai-runs' airunverify (verificationRecord), graded `reasoned` (R40), i
 });
 
 /* ---- the list ---- */
-test("R19 R40: every op T33 grades `reasoned` is driven here", () => {
+test("R19: every op T33 grades (op-grades R13) `reasoned` is driven here", () => {
   const graded = Object.keys(T33_RUNGS).filter((op) => T33_RUNGS[op] === "reasoned").sort();
   assert.deepEqual([...DRIVEN].sort(), graded);
 });

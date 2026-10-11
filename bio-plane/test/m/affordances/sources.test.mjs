@@ -1,9 +1,9 @@
 /* affordances and N364's acts, driven at their own modules' interfaces over their fixtures: `sources` over its real
    record-core, membership, capture and (T42) doorbell (test/m/sources/fixture.mjs), and `capture`'s late co-attestation and account over
    its own (test/m/capture/fixture.mjs), which the plane fixture does not reach (the durable object does not route
-   `sourcesOps`). Measured here: the backing of the source acts graded `reasoned` (R19), of the withdrawal graded
-   `reversible` and the two capture acts graded `attested` (R2), and that `sourceconsent`, an ACTS row, answers a machine with no MACHINE_* code, so it is rightly
-   absent from MACHINE_REFUSALS (R20). */
+   `sourcesOps`). Measured here: the backing (R19) of the source acts graded `reasoned`, of the withdrawal graded
+   `reversible` and of the two capture acts graded `attested` (grades `op-grades`' R1), and that `sourceconsent`, an
+   ACTS row, answers a machine with no MACHINE_* code, so it is rightly absent from MACHINE_REFUSALS (R20). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { seeded, V, MACHINE, SECRET, OTHER_SECRET } from "../sources/fixture.mjs";
@@ -29,7 +29,7 @@ const scene = async () => {
   return { w, source: a.sourceId, other: b.sourceId, entry: d.entry };
 };
 
-test("R19: sourcedisclose, graded `reasoned` (R2, N364), is refused without its evidence with a code in "
+test("R19: sourcedisclose, graded `reasoned` (N364), is refused without its evidence with a code in "
    + "JUSTIFICATION_REFUSALS, and accepted with it", async () => {
   const { w, source } = await scene();
   assert.equal(RUNGS.sourcedisclose, "reasoned");
@@ -38,7 +38,7 @@ test("R19: sourcedisclose, graded `reasoned` (R2, N364), is refused without its 
                                     evidence: "the filing names the occupation" }).ok, true);
 });
 
-test("R19: sourcelink, graded `reasoned` (R2, N364), is refused without its evidence with a code in "
+test("R19: sourcelink, graded `reasoned` (N364), is refused without its evidence with a code in "
    + "JUSTIFICATION_REFUSALS, and accepted with it", async () => {
   const { w, source, other } = await scene();
   assert.equal(RUNGS.sourcelink, "reasoned");
@@ -48,7 +48,7 @@ test("R19: sourcelink, graded `reasoned` (R2, N364), is refused without its evid
   assert.equal(ok.ok, true, JSON.stringify(ok).slice(0, 300));
 });
 
-test("R19: sourceconsent, graded `reasoned` (R2, N364), is refused without its evidence with a code in "
+test("R19: sourceconsent, graded `reasoned` (N364), is refused without its evidence with a code in "
    + "JUSTIFICATION_REFUSALS, and accepted with it", async () => {
   const { w, source, entry } = await scene();
   assert.equal(RUNGS.sourceconsent, "reasoned");
@@ -60,9 +60,9 @@ test("R19: sourceconsent, graded `reasoned` (R2, N364), is refused without its e
   assert.ok(CONSENT_PROMPT.startsWith(ok.statement));
 });
 
-/* R2 (K558): `sourceconsentwithdraw` is `reversible` on R27's rule — it asks no reason (a withdrawal of consent is never
+/* op-grades R1 (K558): `sourceconsentwithdraw` is `reversible` on op-grades R3's rule — it asks no reason (a withdrawal of consent is never
    made to justify itself), and a published act takes it back: a further `sourceconsent` restores the standing. */
-test("R2: sourceconsentwithdraw, graded `reversible` (K558), asks no reason and is taken back by a published act — a "
+test("R19: sourceconsentwithdraw, graded `reversible` (K558), asks no reason and is taken back by a published act — a "
    + "further sourceconsent restores the standing it lowered", async () => {
   const { w, source, entry } = await scene();
   assert.equal(RUNGS.sourceconsentwithdraw, "reversible");
@@ -95,10 +95,10 @@ test("R20 R1: sourceconsent answers a machine credential with no MACHINE_* code 
   assert.equal(w.s.recordConsent({ source, entry, audience: "group", evidence: "in writing", by: V("bob") }).ok, true);
 });
 
-/* R2 (N364): `attested` names an authority the group does not hold alone. captureaccount is refused unless the capturing
+/* op-grades R1 (N364): `attested` names an authority the group does not hold alone. captureaccount is refused unless the capturing
    member's registered key verifies the account; reattest asks the timestamp authority (through attestation's attest,
    capture R68 since N512). */
-test("R2: captureaccount, graded `attested`, is refused unless a registered signing key of the capturing member "
+test("R19: captureaccount, graded `attested`, is refused unless a registered signing key of the capturing member "
    + "verifies the account, and accepted when one does", async () => {
   assert.equal(RUNGS.captureaccount, "attested");
   const { c, s } = fresh({ evidence: bucket(), env: { INSTANCE_NAME: "inst", VERSION: "9.9.9" } });
@@ -119,7 +119,7 @@ test("R2: captureaccount, graded `attested`, is refused unless a registered sign
 /* The authorities answer through a scripted network, as capture's own R68 tests do (attestation is never stood in for):
    a request whose body carries the digest's raw bytes is granted a token bound to it, any other is refused. The
    endpoints are `signatures`' (not in affordances' uses), so they are recognised by what is asked, not by address. */
-test("R2: reattest, graded `attested`, asks the timestamp authority for a fresh token over the digest through "
+test("R19: reattest, graded `attested`, asks the timestamp authority for a fresh token over the digest through "
    + "attestation's attest, and appends what it proves", async () => {
   assert.equal(RUNGS.reattest, "attested");
   const b = bucket();

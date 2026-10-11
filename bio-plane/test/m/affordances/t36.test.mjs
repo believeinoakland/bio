@@ -1,5 +1,5 @@
 /* affordances, T36 (T36-31; N726, DEC-174 (3), DEC-99; T37-27: N776, DEC-182; T38-31: DEC-183, K2300; T41-52: DEC-188 (7), (8), U145, K2484;
-   T43-17: DEC-189, DEC-190, K2704): R48, the one table of what each act does, checked against the design stream's own files entry by entry, and
+   T43-17: DEC-189, DEC-190, K2704; T44-9: DEC-191, N878, K2732): R48, the one table of what each act does, checked against the design stream's own files entry by entry, and
    R49, its publication in the answer with no target, the very object. */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -9,7 +9,7 @@ import * as G from "../../../src/op-grades/index.mjs";
 
 const { ACT_HELP, affordancesAnswer } = A;
 const SCREENS = new URL("../../../../docs/development/ux-substrate/screens/", import.meta.url);
-/* The design's registry as it stands on the tranche (DEC-189's `4455c7fbe5`, DEC-190's `bbf92e344a`), read, never copied: `mock-acts.js`,
+/* The design's registry as PR #25 merged it to `main` (DEC-191, DEC-192), read, never copied: `mock-acts.js`,
    a plain script declaring `const ACT_HELP`, and `words.json`, the word list built from it, which keys each text `act.<key>.does`. */
 const DESIGN = new Function(readFileSync(new URL("mock-acts.js", SCREENS), "utf8") + "; return ACT_HELP;")();
 const WORDS = new Map(JSON.parse(readFileSync(new URL("words.json", SCREENS), "utf8")).words.map((w) => [w.key, w.en]));
@@ -26,12 +26,14 @@ const OWED_DECLARED_IN_T37 = ["subscriptionsignin", "setpassword", "obscuremark"
 const OWED_DECLARED_IN_T38 = ["obscuremarkwithdraw"];
 const OWED_DECLARED_IN_T41 = ["accountusesset", "ailimitset", "projectkeyset", "projectsigninset", "projectaccountswitch",
   "projectaccountremove", "projectkeynoticeseen", "projectaikeepaway", "exploreapprove", "handlechange", "handlecheck"];
-/* declared in T42 (op-declarations R47; op-grades R31), given its text by DEC-190 under `owed_pagetranscribe` */
+/* declared in T42 (op-declarations R47; op-grades R31), given its text by DEC-190 under `owed_pagetranscribe`, re-keyed by DEC-191 (PR #25)
+   as `pagetranscribe`, the op served */
 const OWED_DECLARED_IN_T42 = ["pagetranscribe"];
 const OWED_DECLARED = [...OWED_DECLARED_IN_T36, ...OWED_DECLARED_IN_T37, ...OWED_DECLARED_IN_T38, ...OWED_DECLARED_IN_T41, ...OWED_DECLARED_IN_T42];
 const OWED_UNDECLARED = ["infolevelset"];
-/* The design's `owed_` keys after DEC-189 re-keyed 37 acts to the ops that now serve them; each but the undeclared one is an owed act declared since. */
-const DESIGN_OWED = ["infolevelset", "subscriptionsignin", "projectaikeepaway", "pagetranscribe"];
+/* The design's `owed_` keys after DEC-189 re-keyed 37 acts and DEC-191 `pagetranscribe` to the ops that now serve them; each but the
+   undeclared one is an owed act declared since. */
+const DESIGN_OWED = ["infolevelset", "subscriptionsignin", "projectaikeepaway"];
 /* The design's ops that no `NEEDS` row gates (reads and doors before a session: the install, the self-test, the
    invitation, the searches, the public reads), so `op-grades`' gated totality names none of them. */
 const UNGATED = ["bootstrap", "selftest", "hostingaccess", "invitelook", "search", "frontier", "verify", "publishedcase"];
@@ -51,7 +53,7 @@ const meetsR48 = (table) => {
   try { assert.deepEqual(Object.entries(table), expected()); return true; } catch { return false; }
 };
 
-test("R48: ACT_HELP is a frozen module constant holding all 213 of the design's texts as the registry stands on the tranche (DEC-189, DEC-190), "
+test("R48: ACT_HELP is a frozen module constant holding all 213 of the design's texts as PR #25 merged the registry to main (DEC-191), "
    + "verbatim, each under the key R48 reads it as, in the design's order: aliases under their op, the owed acts declared in T36, T37, T38, T41 "
    + "and T42 under their op, infolevelset still under owed_<op>; the withdrawn texts and the five retired ops nowhere; mock-acts.js and words.json "
    + "give each text alike; a table departing from any of these is seen (K874)", () => {
@@ -90,12 +92,17 @@ test("R48: ACT_HELP is a frozen module constant holding all 213 of the design's 
   for (const [what, table] of Object.entries(variants)) assert.equal(meetsR48(table), false, what);
 });
 
-test("R48 (T43-17; DEC-190): transcribe and pagetranscribe, both declared since T42, are held under their ops with the registry's texts, read by "
-   + "key: act.transcribe.does and act.owed_pagetranscribe.does; an op the registry gives no help is absent, never guessed", () => {
+test("R48 (T43-17, T44-9; DEC-190, DEC-191): transcribe and pagetranscribe, both declared since T42, are held under their ops with the "
+   + "registry's texts, read by key: act.transcribe.does and act.pagetranscribe.does (re-keyed from owed_pagetranscribe, the text unchanged); "
+   + "the design keys neither as owed_; an op the registry gives no help is absent, never guessed", () => {
   for (const op of ["transcribe", "pagetranscribe"]) assert.ok(gradedOrPublished(op), `${op} is declared and graded`);
   const transcribe = WORDS.get("act.transcribe.does");
-  const pagetranscribe = WORDS.get("act.owed_pagetranscribe.does");
+  const pagetranscribe = WORDS.get("act.pagetranscribe.does");
   assert.ok(transcribe && pagetranscribe);
+  /* DEC-191 re-keyed the text: the old key is gone from both files, and the design holds it under the op */
+  assert.equal(WORDS.has("act.owed_pagetranscribe.does"), false);
+  assert.equal(Object.hasOwn(DESIGN, "owed_pagetranscribe"), false);
+  assert.equal(DESIGN.pagetranscribe, pagetranscribe);
   assert.equal(ACT_HELP.transcribe, transcribe);
   assert.equal(ACT_HELP.pagetranscribe, pagetranscribe);
   assert.match(ACT_HELP.transcribe, /^Types the words of a page yourself, from its image\./);

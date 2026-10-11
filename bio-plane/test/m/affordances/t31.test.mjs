@@ -1,6 +1,7 @@
-/* affordances, T31's entries: R36 (every decorated act's advisory `phone` flag, DEC-122 (1)), R37 (`wizard-scripts`' ops
-   graded, DEC-120, DEC-121) and R38 (`case-import`'s watch acts graded, DEC-101 (3)), each at the module's exports, and
-   R38's `reversible` backed at case-import's own interface over its fixture. */
+/* affordances, T31's entries: R36 (every decorated act's advisory `phone` flag, DEC-122 (1)), the ops of `wizard-scripts`
+   (DEC-120, DEC-121) and `case-import`'s watch acts (DEC-101 (3)) held to their op maps and the totality (R12), R37's
+   no-target screens and offered scripts, and the watch acts' `reversible` backed at case-import's own interface over
+   its fixture (R19), each at the module's exports. Their grades are `op-grades`' (its R11, R12), pinned in its tests. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as A from "../../../src/affordances.mjs";
@@ -9,7 +10,7 @@ import { caseImportOps } from "../../../src/case-import/index.mjs";
 import * as ci from "../case-import/fixture.mjs";
 
 const { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS, VOCABULARIES, decorate, unaccounted } = A;
-const { NON_ACTS, RUNGS, RUNG_ABSENT, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, LARGER_SCREEN_ACTS, IRREVERSIBLE_WEIGHT } = G;
+const { NON_ACTS, RUNGS, RUNG_ABSENT, JUSTIFICATION_REFUSALS, LARGER_SCREEN_ACTS, IRREVERSIBLE_WEIGHT } = G;
 const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? ["rung", RUNGS[op]]
   : Object.hasOwn(RUNG_ABSENT, op) ? ["absent", RUNG_ABSENT[op].ground] : null;
 const published = () => [...ACTS, ...CAPTURE_ACTS, ...PER_ITEM_ACTS];
@@ -93,83 +94,51 @@ test("R36 R11 R17: every decorated act, capture act and set act op=affordances c
   assert.equal(t.acts.find((a) => a.id === "cite").phone, true);
 });
 
-/* ============================================================ R37: wizard-scripts' ops */
-const R37_GRADES = {
-  wizardretire: ["rung", "reasoned"],
-  wizarddraft: ["absent", "undetermined"], wizardrevise: ["absent", "undetermined"], wizardpropose: ["absent", "undetermined"],
-  wizardsubmit: ["absent", "undetermined"], wizardapprove: ["absent", "undetermined"],
-  wizardeditorgrant: ["absent", "credential"], wizardeditorrevoke: ["absent", "credential"],
-  wizardprogress: ["absent", "observational"],
-};
-const R37_READS = ["wizards", "wizardread", "wizardsat", "wizarduse", "wizardcandidates", "wizardcheck",
-  "baseupdates" /* R37 (DEC-158 (4)) */, "startfrom" /* R45 (op-declarations R28) */];
-const WIZARD_DIRECTED = "wizard-directed: keyed by a script or one of its versions, reached from the library or a screen's "
-  + "mark; writes this module's rows and moves no bundle";
+/* ============================================================ wizard-scripts' ops (op-grades R11) */
+const WIZARD_WRITES = ["wizardretire", "wizarddraft", "wizardrevise", "wizardpropose", "wizardsubmit", "wizardapprove",
+  "wizardeditorgrant", "wizardeditorrevoke", "wizardprogress"];
+const WIZARD_READS = ["wizards", "wizardread", "wizardsat", "wizarduse", "wizardcandidates", "wizardcheck",
+  "baseupdates" /* op-grades R11 (DEC-158 (4)) */, "startfrom" /* op-grades R17 (op-declarations R28) */];
 
-test("R37 R2 R3 R7 R12 R19 R27: wizard-scripts' ops — wizardretire `reasoned` with WIZARD_REASON_REFUSED in the family, "
-   + "the five drafting acts `undetermined` as the template acts, the editor pair `credential`, wizardprogress "
-   + "`observational`, each with R37's NON_ACTS reason, the six reads `read:`, none in MACHINE_REFUSALS — and with the "
-   + "control plane's rows nothing is unaccounted; a misgraded op or one left out is seen", () => {
-  const grades = Object.fromEntries(Object.keys(R37_GRADES).map((op) => [op, gradeOf(op)]));
-  assert.deepEqual(grades, R37_GRADES);
-  assert.notDeepEqual({ ...grades, wizardretire: ["absent", "undetermined"] }, R37_GRADES);
-  assert.notDeepEqual({ ...grades, wizardprogress: ["absent", "undetermined"] }, R37_GRADES);
-  for (const op of ["wizarddraft", "wizardrevise", "wizardpropose", "wizardsubmit", "wizardapprove"])
-    assert.equal(RUNG_ABSENT[op].ground, RUNG_ABSENT.templatedraft.ground, op);
-  assert.equal(RUNGS.wizardretire, RUNGS.templateretire);
-  for (const op of Object.keys(R37_GRADES)) {
+test("R1 R12 R24: wizard-scripts' ops — each write decorates with a rung or a stated absence, none is an act — and with "
+   + "the control plane's rows nothing is unaccounted; one left out is seen", () => {
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): each stated absence's sentence */
+  for (const op of WIZARD_WRITES) {
     if (Object.hasOwn(RUNG_ABSENT, op)) assert.ok(RUNG_ABSENT[op].is.length > 40, op);
     const d = decorate({ id: op, label: "x" }, null);
     assert.equal((d.rung === null) !== (d.rung_absence === null), true, `R24: ${op}`);
   }
-  assert.ok(JUSTIFICATION_REFUSALS.includes("WIZARD_REASON_REFUSED"));
-  /* the template library's refusals that ask an object, a choice or a form stay out, and so do the wizard's */
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the template library's refusals that ask
+     an object, a choice or a form stay out of the justification family, and so do the wizard's */
   for (const c of ["WIZARD_NAME_REFUSED", "WIZARD_STEP_REFUSED", "WIZARD_WHY_REFUSED", "WIZARD_SCOPE_REFUSED", "NOT_A_DRAFT",
     "MACHINE_CANNOT_APPROVE_WIZARD", "WIZARD_ALREADY_ENDED"]) assert.ok(!JUSTIFICATION_REFUSALS.includes(c), c);
-  /* NON_ACTS: the acts wizard-directed, the tally its own sentence, the reads `read:` writing nothing */
-  for (const op of Object.keys(R37_GRADES).filter((op) => op !== "wizardprogress")) assert.equal(NON_ACTS[op], WIZARD_DIRECTED, op);
-  assert.equal(NON_ACTS.wizardprogress, "tally: unattributed, keyed by a script's version; names no member");
-  for (const op of R37_READS) {
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB): the reads write nothing and carry no grade */
+  for (const op of WIZARD_READS) {
     assert.ok(NON_ACTS[op]?.startsWith("read: ") && NON_ACTS[op].length > 40, op);
     assert.match(NON_ACTS[op], /writes nothing$/, op);
     assert.ok(!Object.hasOwn(RUNGS, op) && !Object.hasOwn(RUNG_ABSENT, op), op);
   }
-  const ALL = [...Object.keys(R37_GRADES), ...R37_READS];
+  const ALL = [...WIZARD_WRITES, ...WIZARD_READS];
   assert.ok(!published().some((a) => ALL.includes(a.id)));
-  assert.deepEqual(ALL.filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), [], "MACHINE_REFUSALS holds only ACTS (R7, R20)");
-  for (const op of ALL) assert.ok(!NON_ACTS[op].startsWith("capture-directed:"), op);
   /* the control plane's rows (op-declarations R15): the nine writes mutating, every op gated (the reads with a NEEDS
      row of no capability) */
-  const table = [...Object.keys(R37_GRADES).map((op) => ({ op, mutating: true, gated: true })),
-    ...R37_READS.map((op) => ({ op, mutating: false, gated: true }))];
+  const table = [...WIZARD_WRITES.map((op) => ({ op, mutating: true, gated: true })),
+    ...WIZARD_READS.map((op) => ({ op, mutating: false, gated: true }))];
   const r = unaccounted(table);
   assert.deepEqual([r.unpublished, r.unranked], [[], []]);
   assert.deepEqual(r.stale.filter((op) => ALL.includes(op)), []);
   assert.deepEqual(ALL.filter((op) => !unaccounted([]).stale.includes(op)), []);
-  for (const op of R37_READS) assert.ok(unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
+  for (const op of WIZARD_READS) assert.ok(unaccounted([{ op, mutating: false, gated: false }]).stale.includes(op), op);
   const left = unaccounted([...table, { op: "wizardunnamed", mutating: true, gated: true }]);
   assert.deepEqual([left.unpublished, left.unranked], [["wizardunnamed"], ["wizardunnamed"]]);
 });
 
-/* ============================================================ R38: case-import's watch acts */
-const IMPORT_DIRECTED = "import-directed: keyed by an imported case (an import, an edition, a finding or a flag), reached "
-  + "from the imported cases; writes this module's rows and moves no bundle";
-
-test("R38 R2 R7 R12 R27: importwatch and importunwatch are `reversible`, each with R35's import-directed reason, neither "
-   + "in MACHINE_REFUSALS, no vocabulary added — case-import's op map holds both — and with the control plane's rows "
-   + "nothing is unaccounted; a misgraded one is seen", () => {
+/* ============================================================ case-import's watch acts (op-grades R12) */
+test("R1 R4 R12: importwatch and importunwatch — case-import's op map holds both, neither is an act, no vocabulary is "
+   + "added — and with the control plane's rows nothing is unaccounted", () => {
   const ops = Object.keys(caseImportOps({}, new URL("http://x/"), {}));
   for (const op of ["importwatch", "importunwatch"]) assert.ok(ops.includes(op), `case-import's op map holds ${op}`);
-  const grades = { importwatch: gradeOf("importwatch"), importunwatch: gradeOf("importunwatch") };
-  assert.deepEqual(grades, { importwatch: ["rung", "reversible"], importunwatch: ["rung", "reversible"] });
-  assert.notDeepEqual({ ...grades, importwatch: ["rung", "reasoned"] }, grades);
-  for (const op of ["importwatch", "importunwatch"]) {
-    assert.equal(NON_ACTS[op], IMPORT_DIRECTED, op);
-    assert.equal(NON_ACTS[op], NON_ACTS.importaccept, "R35's sentence");
-    assert.ok(!Object.hasOwn(MACHINE_REFUSALS, op), op);
-    assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op);
-    assert.ok(!published().some((a) => a.id === op), op);
-  }
+  for (const op of ["importwatch", "importunwatch"]) assert.ok(!published().some((a) => a.id === op), op);
   assert.deepEqual(Object.keys(VOCABULARIES).filter((k) => /watch|import/.test(k)), []);
   /* op-declarations R16: both mutating and gated */
   const table = ["importwatch", "importunwatch"].map((op) => ({ op, mutating: true, gated: true }));
@@ -180,7 +149,8 @@ test("R38 R2 R7 R12 R27: importwatch and importunwatch are `reversible`, each wi
   assert.deepEqual(["importwatch", "importunwatch"].filter((op) => !unaccounted([]).stale.includes(op)), []);
 });
 
-test("R38 R2: importwatch and importunwatch ask no reason — each is accepted with none — and each takes the other back: "
+test("R19: importwatch and importunwatch, graded `reversible`, ask no reason — each is accepted with none — and each "
+   + "takes the other back: "
    + "an end leaves no watch in force, a further watch puts one back, and every watch and end stays in the record", async () => {
   const w = ci.seeded();
   const a = await ci.imp(w);
@@ -202,13 +172,13 @@ test("R38 R2: importwatch and importunwatch ask no reason — each is accepted w
   assert.equal(w.count("case_import_watch_ends"), 1, "and every end");
 });
 
-/* ============================================================ R37: the no-target answer, and wizardretire's backing */
+/* ============================================================ R37: the no-target answer; wizardretire's backing (R19) */
 import * as wz from "../wizard-scripts/fixture.mjs";
 import { wizardScriptsOps } from "../../../src/wizard-scripts/index.mjs";
 
-test("R37 R12: wizard-scripts' op map holds exactly the ops R37 grades and names", () => {
+test("R12: wizard-scripts' op map holds exactly the ops op-grades grades and names for it", () => {
   const ops = Object.keys(wizardScriptsOps({}, new URL("http://x/"), {})).sort();
-  assert.deepEqual(ops, [...Object.keys(R37_GRADES), ...R37_READS].sort());
+  assert.deepEqual(ops, [...WIZARD_WRITES, ...WIZARD_READS].sort());
 });
 
 /* A wizard world: frank's script in P approved by alice (starting on case-home), a second draft of frank's still a
@@ -253,10 +223,9 @@ test("R37: before wizard-scripts is registered, the screens and the offered scri
   assert.deepEqual([r.ok, r.screens, r.wizard_scripts], [true, [], []]);
 });
 
-test("R19 R37: wizardretire, graded `reasoned`, is refused without its reason with WIZARD_REASON_REFUSED (in the family) "
+test("R19: wizardretire, graded `reasoned`, is refused without its reason with WIZARD_REASON_REFUSED (in the family) "
    + "and writes nothing — retiring a whole script by an owner, and withdrawing a draft by its author — and is accepted "
    + "with one", () => {
-  assert.equal(RUNGS.wizardretire, "reasoned");
   const bad = [];
   for (const reason of [undefined, null, "", "   ", "x".repeat(501)]) {
     const w = wz.seeded();
