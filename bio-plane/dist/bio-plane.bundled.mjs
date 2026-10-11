@@ -149439,12 +149439,17 @@ var checks_exports41 = {};
 __export(checks_exports41, {
   AI_USE_CHECKS: () => AI_USE_CHECKS2,
   AI_USE_WORDS: () => AI_USE_WORDS,
-  LIMIT_FIELD_FILL: () => LIMIT_FIELD_FILL,
+  LIMIT_FIELD_WORD: () => LIMIT_FIELD_WORD,
   LIMIT_PERIOD_FILL: () => LIMIT_PERIOD_FILL,
   LIMIT_WHEN_FILL: () => LIMIT_WHEN_FILL,
   LIMIT_WORD_BY_SCOPE: () => LIMIT_WORD_BY_SCOPE,
   MONTH_NAMES: () => MONTH_NAMES,
-  WHOSE_WORD: () => WHOSE_WORD
+  MONTH_WORD: () => MONTH_WORD,
+  PERIOD_WORD: () => PERIOD_WORD,
+  UNJUDGED_WORD: () => UNJUDGED_WORD,
+  WHEN_WORD: () => WHEN_WORD,
+  WHOSE_WORD: () => WHOSE_WORD,
+  useInlineWord: () => useInlineWord
 });
 var at18 = (fn, region) => `src/ai-use/index.mjs ${fn} > ${region}`;
 var AI_USE_WORDS = Object.freeze({
@@ -149452,51 +149457,93 @@ var AI_USE_WORDS = Object.freeze({
   "ai.use.draft.name": "Drafting",
   "ai.use.run.name": "Runs",
   "ai.use.standing.name": "Standing questions",
+  "ai.use.transcribe.name": "Reading page pictures",
   "ai.use.explore.name": "Exploring",
+  "ai.use.ask.inline": "asking",
+  "ai.use.draft.inline": "drafting",
+  "ai.use.run.inline": "runs",
+  "ai.use.standing.inline": "standing questions",
+  "ai.use.transcribe.inline": "reading page pictures",
+  "ai.use.explore.inline": "exploring",
   "ai.whose.group": "your group's",
   "ai.whose.project": "this project's",
   "ai.whose.own": "your own",
+  "ai.period.day": "daily",
+  "ai.period.month": "monthly",
+  "ai.when.day": "tomorrow",
+  "ai.when.month": "on {month} 1",
+  "date.month.january": "January",
+  "date.month.february": "February",
+  "date.month.march": "March",
+  "date.month.april": "April",
+  "date.month.may": "May",
+  "date.month.june": "June",
+  "date.month.july": "July",
+  "date.month.august": "August",
+  "date.month.september": "September",
+  "date.month.october": "October",
+  "date.month.november": "November",
+  "date.month.december": "December",
   "ai.refused.limit": "The assistant stopped here: {whose} {period} limit for {use} is reached. It works again {when}. Everything else works as usual.",
   "ai.refused.limit.overall": "The assistant stopped here: {whose} {period} limit is reached. It works again {when}. Everything else works as usual.",
   "ai.refused.limit.member": "The assistant stopped here: you have used the {period} amount each member may use of {whose} account. It works again {when}. Everything else works as usual.",
+  "ai.refused.limit.unjudged": "The assistant stopped here: Civicsmith couldn't check the use of {whose} account just now, and it spends nothing it can't count. Try again in a moment. Everything else works as usual.",
   "ai.refused.limitinvalid": "That limit can't be set: {field}. A limit is a positive amount in dollars, tokens or calls, for a day or a month.",
+  "ai.limitfield.owner": "it doesn't say which account it is for",
+  "ai.limitfield.scope": "that isn't something a limit can cover",
+  "ai.limitfield.unit": "that isn't a unit a limit takes",
+  "ai.limitfield.period": "that isn't a period a limit takes",
+  "ai.limitfield.amount": "that isn't an amount a limit takes",
+  "ai.limitfield.inclusive": "only a limit on one use can be on top of the overall limit",
+  "ai.limitfield.use": "that isn't one of the assistant's uses",
+  "ai.limitfield.count": "the count is a whole number, one or more",
   "ai.refused.unitunavailable": "A limit in dollars needs an API key: a subscription doesn't report what a use costs. Set it in tokens or calls instead.",
-  "ai.refused.explorenotenabled": "Exploring is off on {whose} account, or has no limit of its own yet: it runs only within an exploring limit its owners set.",
+  "ai.refused.explorenotenabled": "Exploring is off on {whose} account. Its owners can switch it on.",
   "ai.queue.exploreask": "The assistant found something worth exploring in {scope} today: {what}. Explore it today on {account}? If nobody says yes today, it doesn't."
 });
-var LIMIT_PERIOD_FILL = Object.freeze({ day: "daily", month: "monthly" });
-var LIMIT_WHEN_FILL = Object.freeze({ day: "tomorrow", month: "on {month} 1", unjudged: "once its use can be checked" });
-var MONTH_NAMES = Object.freeze([
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December"
-]);
-var LIMIT_FIELD_FILL = Object.freeze({
-  owner: "it names no account it is for",
-  scope: "that isn't something a limit can cover",
-  unit: "that isn't a unit a limit takes",
-  period: "that isn't a period a limit takes",
-  amount: "that isn't an amount a limit takes",
-  inclusive: "only a limit on one kind of use can be on top of the overall limit",
-  use: "that isn't a kind of use",
-  count: "the count is a whole number of one or more"
-});
 var LIMIT_WORD_BY_SCOPE = Object.freeze({ overall: "ai.refused.limit.overall", per_member: "ai.refused.limit.member" });
+var UNJUDGED_WORD = "ai.refused.limit.unjudged";
 var WHOSE_WORD = Object.freeze({ group: "ai.whose.group", project: "ai.whose.project", own: "ai.whose.own" });
+var PERIOD_WORD = Object.freeze({ day: "ai.period.day", month: "ai.period.month" });
+var WHEN_WORD = Object.freeze({ day: "ai.when.day", month: "ai.when.month" });
+var MONTH_WORD = Object.freeze([
+  "january",
+  "february",
+  "march",
+  "april",
+  "may",
+  "june",
+  "july",
+  "august",
+  "september",
+  "october",
+  "november",
+  "december"
+].map((m) => `date.month.${m}`));
+var LIMIT_FIELD_WORD = Object.freeze(Object.fromEntries([
+  "owner",
+  "scope",
+  "unit",
+  "period",
+  "amount",
+  "inclusive",
+  "use",
+  "count"
+].map((f17) => [f17, `ai.limitfield.${f17}`])));
+var useInlineWord = (use) => `ai.use.${use}.inline`;
+var LIMIT_PERIOD_FILL = Object.freeze({ day: AI_USE_WORDS[PERIOD_WORD.day], month: AI_USE_WORDS[PERIOD_WORD.month] });
+var LIMIT_WHEN_FILL = Object.freeze({
+  day: AI_USE_WORDS[WHEN_WORD.day],
+  month: AI_USE_WORDS[WHEN_WORD.month],
+  unjudged: "once its use can be checked"
+});
+var MONTH_NAMES = Object.freeze(MONTH_WORD.map((k) => AI_USE_WORDS[k]));
 var AI_USE_CHECKS2 = Object.freeze({
   /* R3 (D38 C, D39; B3, B5, B7): a limit of the paying account is reached for the current period: its own use's, its
      overall one (over the uses that are not exclusive), or its per-member one. Carries `whose` (`group`, `project` or
-     `own`), `scope` and `period`, and names no cost (K1450). The row's sentence is the use-scope one; the answer reads
-     the one for its scope (R13). */
+     `own`), `scope` and `period`, and names no cost (K1450). (T43; DEC-189 (5)) When the limit cannot be judged, it
+     carries `unjudged: true` and no `scope`, `unit` or `period`. The row's sentence is the use-scope one; the answer
+     reads the one for its scope, or the unjudged one (R13). */
   AI_LIMIT_REACHED: {
     check: "C-143.1",
     where: at18("#limitReached", "is-ai-limit-reached"),
@@ -149668,41 +149715,53 @@ var AiUse = class _AiUse {
     const row12 = AI_USE_CHECKS2[code] || AI_RUNS_CHECKS[code] || { check: null, translation: null };
     return { ok: false, reason: code, code, check: row12.check, translation: row12.translation, detail, ...extra };
   }
-  /** R13 (K2514): `AI_LIMIT_REACHED`'s sentence for `lim` reached in the period starting `start`, read by its scope and
-   *  answered whole, so every caller relays a filled sentence: `{whose}` from `ai.whose.*`, `{use}` from
-   *  `ai.use.<use>.name`, `{period}` and `{when}` from this module's fills; never a cost. With no `lim` (R3 failing
-   *  closed) the overall sentence, `{period}` dropped and `{when}` the unjudged fill. */
-  static #limitSentence(key2, whose, lim, use, start) {
-    const name3 = AI_USE_WORDS[`ai.use.${use}.name`];
-    let when = LIMIT_WHEN_FILL.unjudged;
-    if (lim && lim.period === "day") when = LIMIT_WHEN_FILL.day;
-    if (lim && lim.period === "month" && /^\d{4}-\d{2}/.test(start || ""))
-      when = LIMIT_WHEN_FILL.month.replace("{month}", MONTH_NAMES[Number(start.slice(5, 7)) % 12]);
-    return AI_USE_WORDS[key2].replace("{whose}", AI_USE_WORDS[WHOSE_WORD[whose || "group"]]).replace(lim ? "{period}" : "{period} ", lim ? LIMIT_PERIOD_FILL[lim.period] : "").replace("{use}", name3 ? name3.charAt(0).toLowerCase() + name3.slice(1) : "this use").replace("{when}", when);
+  /** R13 (K2514; T43, DEC-189 (1)): `AI_LIMIT_REACHED`'s sentence for `lim` reached in the period starting `start`,
+   *  answered whole so every caller relays a filled sentence, every fill read by key and none written here: `{whose}`
+   *  from `ai.whose.*`, `{use}` from `ai.use.<use>.inline`, `{period}` from `ai.period.*`, `{when}` from `ai.when.day`,
+   *  or `ai.when.month` with `{month}`, the next period's month, from `date.month.*`; never a cost. */
+  static #limitSentence(key2, whose, lim, start) {
+    const w = (k) => AI_USE_WORDS[k];
+    let when = w(WHEN_WORD.day);
+    if (lim.period === "month") when = w(WHEN_WORD.month).replace("{month}", w(MONTH_WORD[Number(start.slice(5, 7)) % 12]));
+    return w(key2).replace("{whose}", w(WHOSE_WORD[whose])).replace("{period}", w(PERIOD_WORD[lim.period])).replace("{use}", w(useInlineWord(lim.scope)) ?? "").replace("{when}", when);
   }
-  /** R13: `AI_LIMIT_REACHED`, the one site that mints it (K231): its sentence read by its scope and filled whole
-   *  (`#limitSentence`); never a cost. `lim` null is R3's fail-closed answer (no account named, or the counter
-   *  unreadable), read as the overall one. */
+  /** R3, R13: `AI_LIMIT_REACHED`, the one site that mints it (K231), naming no cost. For a limit reached, its sentence
+   *  read by its scope and filled whole (`#limitSentence`); a use's limit whose use has no `ai.use.<use>.inline` key
+   *  yet (`enquire`, `read`, `account`, no AI path in T43; B133) reads the overall sentence, which names no use. With
+   *  no `lim` the limit cannot be judged (T43; N856; DEC-189 (5): no paying account named, the use not a `USE_KINDS`
+   *  entry, or the counter unreadable): still the refusal, failing closed, but `unjudged: true` and no `scope`, `unit`
+   *  or `period`, since nothing was reached; its sentence `ai.refused.limit.unjudged` with `{whose}` only (the group's
+   *  words when no account is named, `whose` then null). */
   #limitReached(p3, lim, use, start, why2 = null) {
     const whose = p3 ? whoseOf(p3) : null;
-    const scope = lim ? lim.scope : "overall";
-    const key2 = LIMIT_WORD_BY_SCOPE[scope] || "ai.refused.limit";
-    const translation = _AiUse.#limitSentence(key2, whose, lim, use, start);
+    if (!lim) {
+      const translation = AI_USE_WORDS[UNJUDGED_WORD].replace("{whose}", AI_USE_WORDS[WHOSE_WORD[whose || "group"]]);
+      return {
+        ...this.#refuse("AI_LIMIT_REACHED", `${why2} Nothing was started.`),
+        translation,
+        word: UNJUDGED_WORD,
+        unjudged: true,
+        whose,
+        use: use ?? null
+      };
+    }
+    const scope = lim.scope;
+    const word2 = LIMIT_WORD_BY_SCOPE[scope] || (AI_USE_WORDS[useInlineWord(scope)] ? "ai.refused.limit" : LIMIT_WORD_BY_SCOPE.overall);
     return {
-      ...this.#refuse("AI_LIMIT_REACHED", lim ? `${p3.owner}'s ${lim.period} limit (${scope}, in ${lim.unit}) is reached for the period from ${start}. Nothing was started.` : `${why2} Nothing was started.`),
-      translation,
-      word: key2,
+      ...this.#refuse("AI_LIMIT_REACHED", `${p3.owner}'s ${lim.period} limit (${scope}, in ${lim.unit}) is reached for the period from ${start}. Nothing was started.`),
+      translation: _AiUse.#limitSentence(word2, whose, lim, start),
+      word: word2,
       whose,
       scope,
-      unit: lim ? lim.unit : null,
-      period: lim ? lim.period : null,
-      period_start: start ?? null,
+      unit: lim.unit,
+      period: lim.period,
+      period_start: start,
       use: use ?? null
     };
   }
-  /** R2: an invalid limit, naming the field, its sentence's `{field}` filled (R13, K2514). */
+  /** R2: an invalid limit, naming the field, its sentence's `{field}` filled from `ai.limitfield.<field>` (R13). */
   #invalid(field3, detail) {
-    const translation = AI_USE_WORDS["ai.refused.limitinvalid"].replace("{field}", LIMIT_FIELD_FILL[field3] || field3);
+    const translation = AI_USE_WORDS["ai.refused.limitinvalid"].replace("{field}", AI_USE_WORDS[LIMIT_FIELD_WORD[field3]]);
     return this.#refuse("AI_LIMIT_INVALID", `${detail} Nothing was changed.`, { field: field3, word: "ai.refused.limitinvalid", translation });
   }
   /** R3, R6, R9: exploring is `no` on the account. */
@@ -150163,8 +150222,8 @@ var AiUse = class _AiUse {
   /** R3 `useCheck({owner, member, use, at})`: null while every limit of the paying account that bears on this use is
    *  under its amount for its current period; else `AI_LIMIT_REACHED` (R13's sentence, naming no cost). For `explore`,
    *  `EXPLORE_NOT_ENABLED` when the owner's `explore` is `no`; with `yes` and no `explore` limit held, the overall limit
-   *  alone judges it. Judges only the paying account's limits (D38). Writes nothing; never throws; a counter that cannot
-   *  be read answers the refusal (fail closed). */
+   *  alone judges it. Judges only the paying account's limits (D38). Writes nothing; never throws; a limit that cannot
+   *  be judged answers the refusal, unjudged (fail closed; T43, DEC-189 (5)). */
   useCheck({ owner = null, member: member2 = null, use = null, at: at43 = null } = {}) {
     const p3 = parseOwner(owner);
     const failClosed = (why2) => this.#limitReached(p3, null, use, null, why2);
