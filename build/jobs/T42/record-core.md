@@ -43,6 +43,6 @@
   - `format`: 147 modules, 146 requirements files; 0 failures
   - `architecture`: 8 product files, 16 relative imports; 0 failures
   - `coverage`: 82 of 82 live requirement ids named by a test; 0 failures
-  - `ownership`: see the line below, run on the commit
+  - `ownership`: 4 files changed by record-core between tranche/T42 and HEAD; 0 failures
 
 Size (session_013PmyJwtkkmXmvfs4xFhWb6): test runs 7, module lines 2296
