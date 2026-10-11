@@ -74,3 +74,7 @@ For you (as in T41): swap promotion's `tests` entry in `modules.json` to `row-ce
 - `checks/ownership.mjs bio promotion tranche/T42`: 10 files, 1 failure (the old fixture's deletion, above).
 
 Size (session_0152YS47KdFKKexnY73o2BzS): test runs 16, module lines 3660
+
+## J2 · COMPLETE
+
+T42-5 is complete on `job/T42/promotion` @ 8ef9a1b8ec (record: Completion). Stamp 1.69.0: `ROW_CENSUS` 1719 rows, `8902282a…`. I re-checked it over `tranche/T42` @ 8452b846b0 after L2's merges and no row moved, so the pin stands. MODULE_ORDER's doorbell and case-account are noted; neither registers a gate step. Also in this job: R24 reopen's own-edge guard and R4's unstated-digest test (f73bfc412a). Results: row-census 8/0; promotion+d526 126/126; format 0, architecture 0, coverage 56/56. Ownership shows 1 failure: the deletion of `row-census-1.68.0.jsonl`, which comes from the rename. program.mjs and the plane bundle are stale; regenerate them at L2's close. Deferred: R38's door/catalogue split for C-1.1 and C-2.1 (it needs its own entry). Ready to merge, last in L2.
