@@ -3,8 +3,8 @@
  * Since T45 layer 9 (T45-25; N858, N861, N879, N880, N882–N884, N892 (b); `BIO_Action_v0_2.md`): the vocabularies R2 adds,
  * the press arm's `holder` (R8), the override's ground (R15), the action's new fields (R20–R25: `copied`, `partners`,
  * `press_terms`, an entry's `office_status`, `found_elsewhere` and `speaker`, `reply_owed`, `follows_action`, the claim
- * bearings, the stages per law), the audit's arms over them and C-11.1's `owed_by` (R7), and C-117.30–.66, the rows of the
- * codes `actions`, `action-holds`, `action-replies` and these arms mint (R9); C-117.22 retired. The phrasing lists and the
+ * bearings, the stages per law), the audit's arms over them and C-11.1's `owed_by` (R7), and C-117.30–.58, the rows of the
+ * codes `actions` and these arms mint (R9; K2845, K2849); C-117.22 retired. The phrasing lists and the
  * finder (R16–R19) are `./phrasings.mjs` and `./finder.mjs`, re-exported here. Each awaiting T46's stamp.
  * Since T41 layer 9 (T41-46a; H30 (1), K2505): R13's `seeks` (`seeksOf`, `seeksFindings`, C-117.29 `SEEKS_REFUSED`) and the
  * outcome `none_exists` (C-94.5's translation names it); R14's C-32.21 `MACHINE_CANNOT_STATE_SEEKS`, `actions`' fence (K2561);
@@ -37,7 +37,7 @@ import { isMachineIdentity, BUNDLE_ID_RE, OBJECT_TYPES, idPattern } from "../rec
 import { ACTION_KINDS, RISK_TIERS, riskTierState, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
          correspondenceFindings, isQuoteEntry, quoteValue, quoteFindings, QUOTE_KEYS, lifecycleFindings,
          CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES, DECISION_STAGES, LIFECYCLE_KEYS, lawProposalLabel,
-         RFC_RESPONSE_WINDOW_PRECEDENT } from "./grammar.mjs";
+         RFC_RESPONSE_WINDOW_PRECEDENT, SUCCESS_RECORD_ID_RE } from "./grammar.mjs";
 import { LAW_LEVELS } from "../../../jurisdictions/index.mjs";
 import { localDay, isCalendarDate } from "../civil-time/index.mjs";
 import { PHRASINGS, PHRASING_KINDS, ASSERTION_RESOLUTIONS, PHRASING_MIN, PHRASING_MAX, SENTENCES_MAX, SENTENCE_MAX,
@@ -47,7 +47,7 @@ import { PHRASINGS, PHRASING_KINDS, ASSERTION_RESOLUTIONS, PHRASING_MIN, PHRASIN
 export { ACTION_KINDS, RISK_TIERS, riskTierState, ACTION_BASIS_KINDS, CORRESPONDENCE_DIRECTIONS, actionBasisFindings,
          correspondenceFindings, isQuoteEntry, quoteValue, quoteFindings, QUOTE_KEYS, lifecycleFindings,
          CORRESPONDENCE_STAGES, CORRESPONDENCE_OUTCOMES, DECISION_STAGES, LIFECYCLE_KEYS, lawProposalLabel, LAW_LEVELS,
-         RFC_RESPONSE_WINDOW_PRECEDENT };
+         RFC_RESPONSE_WINDOW_PRECEDENT, SUCCESS_RECORD_ID_RE };
 /* T45 (R16–R19): the phrasing lists and the finder are `./finder.mjs`' and `./phrasings.mjs`', re-exported here;
    `PHRASING_KINDS` is `jurisdictions`' own binding (its R86), never a copy. */
 export { PHRASINGS, PHRASING_KINDS, ASSERTION_RESOLUTIONS, PHRASING_MIN, PHRASING_MAX, SENTENCES_MAX, SENTENCE_MAX,
@@ -663,10 +663,11 @@ export function counterpartyFindings(fm, findings) {
   }
 }
 /** R8 (T45; N879; Actions D12; v0.2 rule 7 "A reporter's name is kept inside the group as the role's holder"): the press
- *  arm may carry `holder: {name}`, the reporter who holds the role, `name` 1 to `HOLDER_NAME_MAX` characters with no quote,
- *  backslash or line break. A malformed holder, or one on any other arm, is one C-2.10 finding naming the arm `holder`
- *  (`actions` answers it `COUNTERPARTY_REFUSED`, its R9). Absent (or null) pushes nothing, so every finding on a
- *  counterparty without a holder is unchanged. */
+ *  arm may carry the reporter who holds the role, in the bytes the flat text `holder: "<name>"` (K2849: the counterparty
+ *  is a one-level map), presented by the reads as `holder: {name}`, which is read here too; the name is 1 to
+ *  `HOLDER_NAME_MAX` characters with no quote, backslash or line break. A malformed holder, or one on any other arm, is one
+ *  C-2.10 finding naming the arm `holder` (`actions` answers it `COUNTERPARTY_REFUSED`, its R9). Absent (or null) pushes
+ *  nothing, so every finding on a counterparty without a holder is unchanged. */
 export const HOLDER_NAME_MAX = 200;
 function holderFindings(cp, arm, findings, repairs) {
   if (cp.holder === undefined || cp.holder === null) return;
@@ -677,10 +678,10 @@ function holderFindings(cp, arm, findings, repairs) {
     return;
   }
   const h = cp.holder;
-  const ok = h && typeof h === 'object' && !Array.isArray(h) && Object.keys(h).every((k) => k === 'name')
-    && typeof h.name === 'string' && h.name.trim() && h.name.length <= HOLDER_NAME_MAX && !UNWRITABLE.test(h.name);
-  if (!ok)
-    findings.push(f('C-2.10', 'error', `counterparty.holder is not {name} with a name of 1 to ${HOLDER_NAME_MAX} characters `
+  const name = typeof h === 'string' ? h
+    : h && typeof h === 'object' && !Array.isArray(h) && Object.keys(h).every((k) => k === 'name') ? h.name : null;
+  if (!(typeof name === 'string' && name.trim() && name.length <= HOLDER_NAME_MAX && !UNWRITABLE.test(name)))
+    findings.push(f('C-2.10', 'error', `counterparty.holder is not the reporter's name, 1 to ${HOLDER_NAME_MAX} characters `
       + 'and no quote, backslash or line break (R9, arm: holder)', repairs));
 }
 /** D-147: THE LIFECYCLE, READ BACK AS ONE DATED CHAIN — a pure function over one document and a day, so
@@ -846,6 +847,21 @@ const LOCAL_MINUTE_RE = /^(\d{4}-\d{2}-\d{2})T([01]\d|2[0-3]):[0-5]\d$/;
 const isLocalMinute = (v) => typeof v === 'string' && LOCAL_MINUTE_RE.test(v) && isCalendarDate(v.slice(0, 10));
 const coded = (message, code, repairs) => f('C-2.10', 'error', message, repairs, code);
 
+/* R15 (K2849): the flat keys a `premise_override` holds in the bytes, the ground's part each carries. */
+const GROUND_KEYS = Object.freeze({ ground_kind: 'kind', ground_citation: 'citation', ground_date: 'date', ground_what: 'what',
+  ground_when: 'when' });
+/** R15 (K2849): a `premise_override` as the reads present it, `{reason, ground}`, from its bytes' flat keys (`reason`,
+ *  `ground_kind`, `ground_citation`, `ground_date`, or `ground_what`, `ground_when`): `ground` the parts stated, or null
+ *  for an override that states none (one written before T45). An override already presented (`ground` a key) is answered
+ *  as given; anything not a block answers null. Pure; never throws. */
+export function premiseOverrideOf(po) {
+  if (!isBlock(po)) return null;
+  if (Object.prototype.hasOwnProperty.call(po, 'ground')) return { reason: po.reason ?? null, ground: po.ground ?? null };
+  const ground = {};
+  for (const [k, part] of Object.entries(GROUND_KEYS)) if (stated(po[k])) ground[part] = po[k];
+  return { reason: po.reason ?? null, ground: Object.keys(ground).length ? ground : null };
+}
+
 /** R15 (T45; N884; Actions D3, D18; v0.2 rule 2): the gate's override ground. `override.ground` is
  *  `{kind: "legal_deadline", citation, date}` or `{kind: "irreversible_act", what, when}`; with none, or of another kind,
  *  `OVERRIDE_NO_GROUND`, naming both grounds; a part missing or malformed, or a key the kind lacks, `OVERRIDE_GROUND_REFUSED`
@@ -980,11 +996,13 @@ export function pressTermsFindings(fm, findings) {
 }
 
 /** R22 (T45; N879, N880; Actions D12, D13; v0.2 rules 8, 16): the fields T45 adds to correspondence entry `i`, as
- *  `lifecycleFindings` is asked (at `actions`' R15 and in the audit): `office_status: {words, status?}` only on a
- *  `received` entry carrying an `outcome`, `words` 1 to `FIELD_TEXT_MAX` characters with no line break, else
- *  `OFFICE_STATUS_WITHOUT_OUTCOME`; `status` one of `facts.responseStatuses` (strings, or `{status}` entries as
- *  `jurisdictions` R58 holds them), else, or with none handed in, `OFFICE_STATUS_UNKNOWN`; `found_elsewhere: {kind, note?}`
- *  only on a `received` entry, else `FOUND_ELSEWHERE_REFUSED`, and with no `artifact_sha` `FOUND_ELSEWHERE_NEEDS_CAPTURE`;
+ *  `lifecycleFindings` is asked (at `actions`' R15 and in the audit), over the entry's flat keys (K2849: the parser reads
+ *  no map inside a list item; the reads present `office_status: {words, status?}` and `found_elsewhere: {kind, note?}`):
+ *  `office_words` (and `office_status`, the status token) only on a `received` entry carrying an `outcome`, `office_words`
+ *  1 to `FIELD_TEXT_MAX` characters with no line break, else `OFFICE_STATUS_WITHOUT_OUTCOME`; `office_status` one of
+ *  `facts.responseStatuses` (strings, or `{status}` entries as `jurisdictions` R58 holds them), else, or with none handed
+ *  in, `OFFICE_STATUS_UNKNOWN`; `found_elsewhere` (the kind token) and `found_elsewhere_note` only on a `received` entry,
+ *  else `FOUND_ELSEWHERE_REFUSED`, and with no `artifact_sha` `FOUND_ELSEWHERE_NEEDS_CAPTURE`;
  *  `speaker` only on a `sent` entry, a member id (`member:<id>` or bare) of 1 to `SPEAKER_MAX` characters, else
  *  `SPEAKER_REFUSED`. An entry with none of the three answers nothing. Answers the C-2.10 findings, each with its code.
  *  Pure; never throws. */
@@ -995,36 +1013,31 @@ export function entryFieldFindings(entries, i, facts) {
   if (!isBlock(e)) return out;
   const at = `correspondence[${i}]`;
   /* DEC-49 REGION is-entry-fields */
-  if (stated(e.office_status)) {
-    const os = e.office_status;
+  if (stated(e.office_words) || stated(e.office_status)) {
     const outcome = typeof e.outcome === 'string' ? e.outcome.trim() : '';
     if (e.direction !== 'received' || !outcome)
-      out.push(coded(`${at} carries office_status with no outcome: the office's own wording is quoted beside a received `
-        + 'entry\'s outcome, never in its place (R22)', 'OFFICE_STATUS_WITHOUT_OUTCOME', ['record the outcome, then quote the office\'s status beside it']));
-    if (!isBlock(os) || extraKeys(os, ['words', 'status']).length)
-      out.push(coded(`${at}.office_status is not {words, status?} (R22)`, 'OFFICE_STATUS_WITHOUT_OUTCOME'));
-    else {
-      if (!(typeof os.words === 'string' && os.words.trim() && os.words.length <= FIELD_TEXT_MAX && !/[\r\n]/.test(os.words)))
-        out.push(coded(`${at}.office_status.words is not the office's wording of 1 to ${FIELD_TEXT_MAX} characters on one line (R22)`,
-          'OFFICE_STATUS_WITHOUT_OUTCOME'));
-      if (stated(os.status)) {
-        const held = isBlock(facts) && Array.isArray(facts.responseStatuses)
-          ? facts.responseStatuses.map((x) => (isBlock(x) ? x.status : x)).filter((x) => typeof x === 'string') : [];
-        if (!held.includes(os.status))
-          out.push(coded(`${at}.office_status.status '${String(os.status).slice(0, 40)}' is not a status the group's `
-            + 'jurisdiction profile holds for this kind (R22)', 'OFFICE_STATUS_UNKNOWN', ['quote the office\'s words alone, or name a status the profile holds']));
-      }
+      out.push(coded(`${at} carries the office's status with no outcome: the office's own wording is quoted beside a `
+        + 'received entry\'s outcome, never in its place (R22)', 'OFFICE_STATUS_WITHOUT_OUTCOME', ['record the outcome, then quote the office\'s status beside it']));
+    const words = e.office_words;
+    if (!(typeof words === 'string' && words.trim() && words.length <= FIELD_TEXT_MAX && !/[\r\n]/.test(words)))
+      out.push(coded(`${at}.office_words is not the office's wording of 1 to ${FIELD_TEXT_MAX} characters on one line (R22)`,
+        'OFFICE_STATUS_WITHOUT_OUTCOME', ['quote the office\'s own words as office_words']));
+    if (stated(e.office_status)) {
+      const held = isBlock(facts) && Array.isArray(facts.responseStatuses)
+        ? facts.responseStatuses.map((x) => (isBlock(x) ? x.status : x)).filter((x) => typeof x === 'string') : [];
+      if (!held.includes(e.office_status))
+        out.push(coded(`${at}.office_status '${String(e.office_status).slice(0, 40)}' is not a status the group's `
+          + 'jurisdiction profile holds for this kind (R22)', 'OFFICE_STATUS_UNKNOWN', ['quote the office\'s words alone, or name a status the profile holds']));
     }
   }
-  if (stated(e.found_elsewhere)) {
-    const fe = e.found_elsewhere;
+  if (stated(e.found_elsewhere) || stated(e.found_elsewhere_note)) {
     if (e.direction !== 'received')
       out.push(coded(`${at} carries found_elsewhere on a '${String(e.direction).slice(0, 40)}' entry: a response found `
         + 'elsewhere is something received (R22)', 'FOUND_ELSEWHERE_REFUSED'));
-    else if (!isBlock(fe) || extraKeys(fe, ['kind', 'note']).length || !FOUND_ELSEWHERE_KINDS.includes(fe.kind)
-             || (stated(fe.note) && !(typeof fe.note === 'string' && fe.note.length <= FIELD_TEXT_MAX)))
-      out.push(coded(`${at}.found_elsewhere is not {kind, note?}, kind one of ${FOUND_ELSEWHERE_KINDS.join(', ')} and a `
-        + `note of at most ${FIELD_TEXT_MAX} characters (R22)`, 'FOUND_ELSEWHERE_REFUSED'));
+    else if (!FOUND_ELSEWHERE_KINDS.includes(e.found_elsewhere)
+             || (stated(e.found_elsewhere_note) && !(typeof e.found_elsewhere_note === 'string' && e.found_elsewhere_note.length <= FIELD_TEXT_MAX)))
+      out.push(coded(`${at}.found_elsewhere is not one of ${FOUND_ELSEWHERE_KINDS.join(', ')}, with a found_elsewhere_note of `
+        + `at most ${FIELD_TEXT_MAX} characters (R22)`, 'FOUND_ELSEWHERE_REFUSED'));
     if (!(typeof e.artifact_sha === 'string' && e.artifact_sha.trim()))
       out.push(coded(`${at} records a response found elsewhere with no artifact_sha: it is held as a capture, never as `
         + 'an account alone (R22)', 'FOUND_ELSEWHERE_NEEDS_CAPTURE', ['capture where it was found and record its sha256']));
@@ -1069,7 +1082,7 @@ export function actionFieldFindings(fm, ctx, findings) {
 /** R24 (T45; N880; Actions D13; v0.2 rule 16 "laid out claim by claim"): `claims`, 1 to `BEARING_CLAIMS_MAX`
  *  `{claim, bearing, note?}`, `claim` one of `legTargets` (the action's `advances` and `rests_on` targets, handed in), none
  *  twice, `bearing` one of `BEARINGS`, `note` at most `FIELD_TEXT_MAX` characters; each fault `BEARING_REFUSED` naming the
- *  item. Asked for a member's layout and a proposal alike. Pure; never throws. */
+ *  item (its row `action-replies`' C-150, K2845). Asked for a member's layout and a proposal alike. Pure; never throws. */
 export function bearingFindings(claims, legTargets, findings) {
   const legs = Array.isArray(legTargets) ? legTargets.filter((x) => typeof x === 'string') : [];
   /* DEC-49 REGION is-bearing */
@@ -1188,9 +1201,8 @@ export function checkActionExtension(ctx, findings) {
   /* R7 (T45): the fields T45 adds, each pushing nothing on a document written before it. An override written before T45
      states no ground and reads as written; `office_status.status` is judged at the act, against the profile as it stands
      then, never over history (so the audit hands no facts and drops that one code). */
-  const override = fm.premise_override;
-  if (override && typeof override === 'object' && !Array.isArray(override) && override.ground !== undefined && override.ground !== null)
-    overrideGroundFindings(override, findings);
+  const override = premiseOverrideOf(fm.premise_override);
+  if (override && override.ground !== null) overrideGroundFindings(override, findings);
   copiedFindings(fm, findings);
   partnersFindings(fm, findings);
   pressTermsFindings(fm, findings);
@@ -1697,8 +1709,10 @@ export const ACTION_CATALOGUE_CHECKS = {
   PREMISE_OVERRIDE_REFUSED: {
     check: 'C-117.19',
     where: 'src/actions/index.mjs #overrideAndAddressee > is-premise-override',
-    translation: 'A premise override carries one thing, the reason the group acts without a determination: up to 500 '
-      + 'characters with no quotation mark, backslash or line break. This one did not, so nothing was written.',
+    /* T45 (K2849 (4)): the reason's refusal alone; the ground's are R15's (C-117.31, .32). Re-worded, awaiting T46's stamp. */
+    translation: 'The reason the group acts without a determination is written in up to 500 characters with no quotation '
+      + 'mark, backslash or line break. This reason was not, so nothing was written. The ground it rests on is checked on '
+      + 'its own.',
   },
   /* R45 (D5, K590): the group's contact for an action. */
   MACHINE_CANNOT_SET_CONTACT: {
@@ -1827,27 +1841,29 @@ export const ACTION_CATALOGUE_CHECKS = {
       + 'naming a progression, an entity and a stage in at most 200 characters each, and each stage one its progression '
       + 'declares. Only a records request names them. This write named them otherwise, so nothing was written.',
   },
-  /* T45 (T45-25; R9, reconciliation R21): the rows of the codes `actions` (its R8, R74, R77–R88, R94), the action's field
-     grammars here (R15, R20–R25), `action-holds` (its R52, R89) and `action-replies` (its R84, R91) mint, numbered from
-     C-117.30 in R9's order; each `where` names the raising site (a later module's region as its job builds it). Translations
-     the job's drafts for BOB, the UX stream's to revise. New in T45 layer 9; awaiting T46's stamp. */
+  /* T45 (T45-25; R9, reconciliation R21; K2845, K2849): the rows of the codes `actions` mints (its R8, R74, R77–R88, R94,
+     and its copied fence) and of the shape codes this module's field grammars push (R15, R20–R25), numbered from C-117.30
+     in R9's order; each `where` names the raising site, `actions`' as its job names them (K2849 (2)). `action-holds`' and
+     `action-replies`' codes are their own families, C-149 and C-150 (K2845): `BEARING_REFUSED`, which R24 pushes, is
+     C-150's row. Translations the job's drafts for BOB, the UX stream's to revise. New in T45 layer 9; awaiting T46's
+     stamp. */
   DETERMINATION_NOT_NONCOMPLIANT: {
     check: 'C-117.30',
-    where: 'src/actions/index.mjs #breachRefusal > is-breach-noncompliant',
+    where: 'src/actions/index.mjs #breachRefusal > is-breach-not-noncompliant',
     translation: 'An action taken for a breach rests on the group\'s determination that the act was out of conformance. The '
       + 'determination named is in force but finds no breach of any standard it names, so nothing was written. Name a '
       + 'determination that finds the act noncompliant, or record the action without marking it a breach.',
   },
   OVERRIDE_NO_GROUND: {
     check: 'C-117.31',
-    where: 'src/action-grammar/checks.mjs overrideGroundFindings > is-override-ground',
+    where: 'src/actions/index.mjs #overrideAndAddressee > is-override-ground',
     translation: 'Acting on a breach the group has not yet determined is allowed on one of two grounds only: a legal deadline '
       + 'that falls before a determination could be made, with its citation and date, or an imminent act that cannot '
       + 'be undone, saying what and when. No ground was stated, so nothing was written.',
   },
   OVERRIDE_GROUND_REFUSED: {
     check: 'C-117.32',
-    where: 'src/action-grammar/checks.mjs overrideGroundFindings > is-override-ground',
+    where: 'src/actions/index.mjs #overrideAndAddressee > is-override-ground',
     translation: 'The ground stated for acting without a determination was incomplete or not in the form the record keeps: a '
       + 'legal deadline names its citation and a real date; an imminent act says what it is in up to 500 characters '
       + 'and when, as a date or a date and time. Nothing was written.',
@@ -1860,20 +1876,20 @@ export const ACTION_CATALOGUE_CHECKS = {
   },
   MACHINE_CANNOT_SET_PARTNERS: {
     check: 'C-117.34',
-    where: 'src/actions/index.mjs #fieldFences > is-machine-set-partners',
+    where: 'src/actions/index.mjs #t45Fields > is-machine-set-partners',
     translation: 'Which organisations the group acts jointly with is a member\'s statement, and somebody answers for it. The '
       + 'credential that asked here is an automated one, so it cannot state or change the partners. Nothing was '
       + 'written. Sign in to state them yourself.',
   },
   PARTNERS_REFUSED: {
     check: 'C-117.35',
-    where: 'src/action-grammar/checks.mjs partnersFindings > is-partners',
+    where: 'src/actions/index.mjs #t45Fields > is-partners-entity',
     translation: 'A partner on a joint action is an organisation named by a role and its name, at most twenty of them, each '
       + 'once, never a person. One entry was not of that form, so nothing was written.',
   },
   MACHINE_CANNOT_SET_PRESS_TERMS: {
     check: 'C-117.36',
-    where: 'src/actions/index.mjs #fieldFences > is-machine-set-press-terms',
+    where: 'src/actions/index.mjs #t45Fields > is-machine-set-press-terms',
     translation: 'The terms agreed with a reporter, on the record, background or off the record, and any embargo, are a '
       + 'member\'s statement. The credential that asked here is an automated one, so it cannot state or change them. '
       + 'Nothing was written. Sign in to state them yourself.',
@@ -1912,14 +1928,14 @@ export const ACTION_CATALOGUE_CHECKS = {
   },
   MACHINE_CANNOT_SET_REPLY_OWED: {
     check: 'C-117.42',
-    where: 'src/actions/index.mjs #fieldFences > is-machine-set-reply-owed',
+    where: 'src/actions/index.mjs #t45Fields > is-machine-set-reply-owed',
     translation: 'Whether a body owes the group a reply is a member\'s statement, made with a reason. The credential that asked '
       + 'here is an automated one, so it cannot state or change it. Nothing was written. Sign in to state it '
       + 'yourself.',
   },
   NO_REPLY_OWED: {
     check: 'C-117.43',
-    where: 'src/actions/index.mjs actionCorrespond > is-reply-owed',
+    where: 'src/actions/index.mjs actionCorrespond > is-no-reply-owed',
     translation: 'This action is to a body that owes the group no reply, so silence is not recorded as a non-response. Nothing '
       + 'was written. If a reply is owed after all, a member states so first, with a reason.',
   },
@@ -1938,7 +1954,7 @@ export const ACTION_CATALOGUE_CHECKS = {
   },
   FOLLOWS_ACTION_REWRITTEN: {
     check: 'C-117.46',
-    where: 'src/actions/index.mjs #heldLinks > is-follows-action',
+    where: 'src/actions/index.mjs #t45Fields > is-follows-action-rewritten',
     translation: 'The earlier action this one follows is named when it is created and never changed or removed afterwards. '
       + 'This write would have set, changed or removed it, so nothing was written.',
   },
@@ -2012,61 +2028,11 @@ export const ACTION_CATALOGUE_CHECKS = {
       + 'named by one of the record\'s stages of a records request, such as a request, an appeal or a decision. That '
       + 'stage is not read as one the law has.',
   },
-  HOLD_PLACE_REFUSED: {
+  MACHINE_CANNOT_SET_COPIED: {
     check: 'C-117.58',
-    where: 'src/action-holds/index.mjs #holdPlace > is-hold-place',
-    translation: 'A litigation hold is placed on exactly one place: an action, an entry of one, or a project. None, or more '
-      + 'than one, was named, so nothing was written.',
-  },
-  MACHINE_CANNOT_SEND: {
-    check: 'C-117.59',
-    where: 'src/action-holds/index.mjs holdNoticeSent > is-hold-notice',
-    translation: 'Sending the notice that tells members what to keep is a member\'s own act, done by their own hand. The '
-      + 'credential that asked here is an automated one, so it cannot record a sending. Nothing was written. Sign in '
-      + 'to record it yourself.',
-  },
-  HOLD_NOT_IN_PLACE: {
-    check: 'C-117.60',
-    where: 'src/action-holds/index.mjs holdNoticeSent > is-hold-notice',
-    translation: 'A hold notice is recorded for a hold that is in place, and the place named holds none, or its hold is '
-      + 'released. Nothing was written.',
-  },
-  MACHINE_CANNOT_RECORD_BEARING: {
-    check: 'C-117.61',
-    where: 'src/action-replies/index.mjs actionReplyBearing > is-reply-bearing',
-    translation: 'Laying a reply out claim by claim is a member\'s reading of what the reply answers. The credential that asked '
-      + 'here is an automated one, so it can propose a layout and cannot record one. Nothing was written. Sign in to '
-      + 'record it yourself.',
-  },
-  BEARING_NOT_RFC: {
-    check: 'C-117.62',
-    where: 'src/action-replies/index.mjs actionReplyBearing > is-reply-bearing',
-    translation: 'A reply is laid out claim by claim on something received in answer to a request for comment. The entry named '
-      + 'is not one, so nothing was written.',
-  },
-  BEARING_REFUSED: {
-    check: 'C-117.63',
-    where: 'src/action-grammar/checks.mjs bearingFindings > is-bearing',
-    translation: 'A reply is laid out once for each claim the action put: one to fifty entries, each naming a claim the action '
-      + 'rests on or advances, once, with new evidence, disputed without evidence or not addressed, and a note of up '
-      + 'to 500 characters. One entry was not, so nothing was written.',
-  },
-  MACHINE_CANNOT_LINK: {
-    check: 'C-117.64',
-    where: 'src/action-replies/index.mjs aroseFromLink > is-arose-from',
-    translation: 'That a matter or project arose from a response is a member\'s statement, and somebody answers for it. The '
-      + 'credential that asked here is an automated one, so it cannot record the link. Nothing was written. Sign in '
-      + 'to record it yourself.',
-  },
-  AROSE_FROM_NOT_A_RESPONSE: {
-    check: 'C-117.65',
-    where: 'src/action-replies/index.mjs aroseFromLink > is-arose-from',
-    translation: 'A matter or project arises from a response, something the group received. The entry named records something '
-      + 'sent, or a reply that never came, so nothing was written.',
-  },
-  AROSE_FROM_LINKED: {
-    check: 'C-117.66',
-    where: 'src/action-replies/index.mjs aroseFromLink > is-arose-from',
-    translation: 'That link is already recorded, and a link is recorded once. Nothing was written.',
+    where: 'src/actions/index.mjs #t45Fields > is-machine-set-copied',
+    translation: 'Which other offices are copied on an action is a member\'s statement, and somebody answers for it. The '
+      + 'credential that asked here is an automated one, so it cannot state or change them. Nothing was written. Sign in '
+      + 'to state them yourself.',
   },
 };
