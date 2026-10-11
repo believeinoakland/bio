@@ -1,6 +1,6 @@
 # pdf-pixels (T44)
 
-**Status** · session_01HryQFWAv5MrBMYBBygXxEJ · depth 2 · WORKING · handled B2
+**Status** · session_01HryQFWAv5MrBMYBBygXxEJ · depth 2 · WAITING ON BOB (J2) · handled B2
 
 ### Work (kept current by the job)
 
