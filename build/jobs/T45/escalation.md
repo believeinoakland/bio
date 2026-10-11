@@ -60,3 +60,18 @@ Size (session_01HztAVfrFX3rGVayQh2NyNt): test runs 16, module lines 2218
 Tests: escalation 71: pass 69, fail 0, skipped 1 (the void test, as above), todo 1 (R31). Checks: format 0 failures; architecture 18 files, 67 imports, 0 failures; coverage 32 of 32 ids named, 0 failures; ownership 7 files, 0 failures.
 
 Size (session_01HztAVfrFX3rGVayQh2NyNt): test runs 19, module lines 2205
+
+## J5 · COMPLETE
+
+**B4, B5 applied; COMPLETE again.** Head 21b0414349 (tranche/T45 merged at 4923d50588).
+
+- **conformance merged (B4):** `determinationVoided` is now imported by name (no namespace read), and R1/R27's void test runs and passes against it. R14 now also has a test over the real conformance (`real.test.mjs`, "R14 over the real conformance"):
+  - a later act of the same office, determined compliant after the escalation opened and linked through `cureLink`, restores compliance (`exit.compliance` met, `cured_by` names it), and the end then answers `CONSEQUENCES_UNDETERMINED`;
+  - before the link, and for another office's act never linked, the end answers `COMPLIANCE_NOT_RESTORED`.
+  
+  The fixture's `curesOf` stand-in keeps the merged shape for the remaining stand-in tests.
+- **action-grammar merged (B5):** nothing of escalation's reads changed. The `NO_SUCH_ACTION` row check passes.
+
+Tests: escalation 72: pass 71, fail 0, todo 1 (R31, T46). Checks: format 0 failures; architecture 18 files, 66 imports, 0 failures; coverage 32 of 32, 0 failures; ownership 7 files, 0 failures.
+
+Size (session_01HztAVfrFX3rGVayQh2NyNt): test runs 22, module lines 2217
