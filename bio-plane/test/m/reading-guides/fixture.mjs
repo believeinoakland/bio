@@ -48,8 +48,9 @@ export const item = (label = "Fiscal impact", look_for = "Look for the fiscal im
   (where === undefined ? { label, look_for } : { label, look_for, where });
 export const ITEMS = [item(), item("Votes", "Note whether the vote was unanimous", "the minutes' record of the vote")];
 
-/** `slug`: the group's slug (null: none recorded); `civicsmith`: a library of the test's own. */
-export function world({ slug = "test-group", civicsmith } = {}) {
+/** `slug`: the group's slug (null: none recorded); `civicsmith`: a library of the test's own; `profiles`: the active
+ *  jurisdiction profiles, record-core's `jurisdiction_profiles` setting (R13; null: none set). */
+export function world({ slug = "test-group", civicsmith, profiles = ["test-port-ellery"] } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -58,6 +59,7 @@ export function world({ slug = "test-group", civicsmith } = {}) {
   record.migrate();
   const membership = membershipOf(host, { record });
   membership.migrate();
+  if (profiles) assert.equal(record.setSetting("jurisdiction_profiles", profiles, "admin").ok, true);
   for (const [m, role, status] of [["ann", "member", "active"], ["bob", "member", "active"], ["cy", "member", "active"],
                                    ["rev", "member", "revoked"], ["boss", "admin", "active"]])
     st.sql.exec(`INSERT INTO members (member_id, cover, role, status, created, updated) VALUES (?, 'c', ?, ?, '2026-01-01', '2026-01-01')`,

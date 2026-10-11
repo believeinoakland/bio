@@ -13,14 +13,17 @@ export const READING_GUIDES_CHECKS = Object.freeze({
     check: "C-144.1", where: at("check.mjs", "checkGuide", "is-guide-look-for"),
     translation: "A reading guide says only what to look for in a document, and where. Each item opens with \"Look "
       + "for\", \"Note whether\", \"Note where\", \"Check whether\", \"Check that\", \"Watch for\" or \"Compare\", and "
-      + "none tells the assistant what to do, names a tool or an action, or states a rule or a permission. The item "
-      + "named does not. Reword it. Nothing was written.",
+      + "none tells the assistant what to do, names a tool or an action, or states a rule or a permission. A procedure "
+      + "guide may name the acts and duties of a route, but none of its items speaks to the assistant or tells it what "
+      + "to do. The item named does not keep to this. Reword it. Nothing was written.",
   },
   GUIDE_ITEMS_REFUSED: {
     check: "C-144.2", where: at("check.mjs", "checkGuide", "is-guide-shape"),
     translation: "A reading guide holds from 1 to 50 items, each a short label (at most 80 characters), what to look "
-      + "for (at most 500 characters) and, if you like, where to look (at most 200 characters), as plain text. The "
-      + "items given are not of that form. Nothing was written.",
+      + "for (at most 500 characters) and, if you like, where to look (at most 200 characters), as plain text. A "
+      + "procedure guide holds from 1 to 50 items, each a route (at most 500 characters), if you like the reply to "
+      + "expect (at most 500 characters), and the citation the route rests on (at most 200 characters). The items "
+      + "given are not of that form. Nothing was written.",
   },
   GUIDE_MEMBER_ACT: {
     check: "C-144.3", where: at("index.mjs", "memberRefusal", "is-guide-member"),
@@ -32,7 +35,8 @@ export const READING_GUIDES_CHECKS = Object.freeze({
     check: "C-144.4", where: at("index.mjs", "kindRefusal", "is-guide-kind"),
     translation: "A reading guide is for one kind of document your group's Civicsmith recognises (a meeting "
       + "calendar, minutes, an agenda, a staff report, an ordinance or code section, a policy, a staff directory, "
-      + "or any other document). The kind given is not one of them. Nothing was written.",
+      + "or any other document); a procedure guide is for one kind of action your group's jurisdiction profiles list. "
+      + "The kind or purpose given is not one of them. Nothing was written.",
   },
   NO_SUCH_GUIDE: {
     check: "C-144.5", where: at("index.mjs", "noSuchGuide", "is-guide-held"),
@@ -103,6 +107,12 @@ export const READING_GUIDES_CHECKS = Object.freeze({
     check: "C-144.18", where: at("index.mjs", "guidePropose", "is-guide-run"),
     translation: "A proposed guide names the assistant's run that proposed it, so members can see where it came "
       + "from. None was named. Nothing was written.",
+  },
+  GUIDE_ITEM_UNSOURCED: {
+    check: "C-144.19", where: at("check.mjs", "checkGuide", "is-guide-sourced"),
+    translation: "Each route in a procedure guide carries the citation it rests on: the law, rule or published "
+      + "procedure that provides it, so members can read the source. The item named has none. Add its citation. "
+      + "Nothing was written.",
   },
 });
 

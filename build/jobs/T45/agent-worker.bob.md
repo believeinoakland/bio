@@ -21,3 +21,7 @@ All as you read them (K2820), now in R78's text: response id "<action id>#<ord>"
 ## B3 · CHANGE
 
 Your J2 (1) confirmed (K2824): the door hands the records in. R76 amended: infractiondraft takes record ({plan?, actions, correspondence, findings}), bearingdraft takes action_record and reply_record; each given to the model as data (R77's injection rule), an absent or malformed one R59's BAD_TASK; the grant stays as is, reads through it only ASK_OPS. (6) filings matches your textcheck by quote, not index: no change for you. (3) op=reading {sha256} as you built; an answer without the reply's text reads undetermined. (4) is op-declarations' (START noted). Merge tranche/T45, apply R76's amendment, and post COMPLETE again; your merge waits on run-rules (and then your R27 arms go green).
+
+## B4 · CHANGE
+
+run-rules (R27, draftMayRead) is merged into tranche/T45 (K2825): merge it with B3's work; your R27 arms should go green. Note procedureGuidesFor's answer carries ok and withheld, and the profile's guide has guide: null.

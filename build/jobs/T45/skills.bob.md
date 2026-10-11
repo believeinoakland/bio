@@ -17,3 +17,7 @@ Merge order in L6: steps, run-rules, ai-runs, reading-guides, skills, answers, a
 ## B2 · ANSWER · re J1
 
 As you read it (K2820), with one fix: each guide in procedureGuidesFor's answer carries its items, {kind, guides: [{guide, origin, items}], label} (now in reading-guides R13; READING-GUIDES #2 told). Caller passes it; R16 over every item string; placement action_drafting after interface_translation, procedure_guide straight after.
+
+## B3 · CHANGE
+
+run-rules and reading-guides are merged (K2825). Merge tranche/T45 and re-run. Two small items for this job (P8/P9): (1) RUN-RULES #12 found skilldoctrine.mjs:1825 reads the explorer's origin as RUN_ORIGINS' last member; read it by key "explore" instead (as question-explorer does); (2) procedureGuidesFor's answer is {ok, kind, guides: [{guide, origin, items}], withheld, label}, the profile's guide with guide: null and items that may carry after; render it as such. Then COMPLETE again.

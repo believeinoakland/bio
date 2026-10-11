@@ -181,12 +181,13 @@ test("R24: ENQUIRE_MODE describes the mode enquire, frozen — interactive, no r
 });
 
 test("R25: DRAFT_KINDS gains case_account, account_check and bearing_note — each R21's mode in every other respect (no new mode, no new flag), its reach ASK_SCOPE narrowed to the case's or the source's own record (DRAFT_REACH)", () => {
-  assert.deepEqual([...DRAFT_KINDS], ["own_words", "translation", "case_account", "account_check", "bearing_note"]);
+  /* R25's three follow R22's two; R27's action drafts come after them (t45.test.mjs) */
+  assert.deepEqual([...DRAFT_KINDS].slice(0, 5), ["own_words", "translation", "case_account", "account_check", "bearing_note"]);
   assert.ok(Object.isFrozen(DRAFT_KINDS) && Object.isFrozen(DRAFT_REACH));
   assert.equal(DRAFT_MODE.kinds, DRAFT_KINDS);
   assert.equal(DRAFT_MODE.kind_reach, DRAFT_REACH);
   assert.deepEqual(Object.keys(DRAFT_REACH), [...DRAFT_KINDS]);
-  assert.deepEqual(Object.fromEntries(Object.entries(DRAFT_REACH).map(([k, r]) => [k, r.scope])),
+  assert.deepEqual(Object.fromEntries(Object.entries(DRAFT_REACH).slice(0, 5).map(([k, r]) => [k, r.scope])),
     { own_words: "ask_scope", translation: "none", case_account: "case_record", account_check: "case_record", bearing_note: "source_record" });
   for (const k of ["case_account", "account_check", "bearing_note"]) {
     assert.ok(Object.isFrozen(DRAFT_REACH[k]), k);

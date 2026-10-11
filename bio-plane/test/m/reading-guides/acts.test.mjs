@@ -13,7 +13,7 @@ test("R2 a member's draft is usable by its author at once, with its kind, items 
   assert.equal(r.state, "usable_by_author");
   const read = w.g.guideRead({ guide: r.guide, viewer: ANN });
   assert.deepEqual(read.guide, { id: r.guide, kind: "staff_report", origin: "group", items: [{ label: "Fiscal", look_for: "Look for the fiscal impact" }],
-    state: "usable_by_author", author: "ann", reviewed_by: null, based_on: null, offered_by: null });
+    purpose: "reading", state: "usable_by_author", author: "ann", reviewed_by: null, based_on: null, offered_by: null });
   assert.deepEqual(read.history.map((h) => [h.act, h.state, h.by]), [["draft", "usable_by_author", "ann"]]);
   assert.equal(w.g.guideFor({ kind: "staff_report", viewer: ANN }).guide.id, r.guide, "usable by its author at once");
   /* the founder and an administrator are members too */
