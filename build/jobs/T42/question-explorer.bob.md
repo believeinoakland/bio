@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 From RUN-PRODUCTIONS #9 J1 (K2655, P9): once run-productions merges, `runProductionsOf` builds `inquiry` through `inquiryOf` (to register with inquiry R62), which declares inquiry's tables to purge. Your `test/m/question-explorer/module.test.mjs`:28 then fails `no such table: inquiry_findings`, since your world calls `runProductionsOf(host)` (`src/question-explorer/index.mjs`:884) on a store that never creates inquiry's tables. Fix it in your own test fixture now (migrate inquiry in the world, or hand runProductionsOf a stand-in), so the suite stays green on both sides of that merge; post COMPLETE with it.
+
+## B3 · CHANGE
+
+run-productions (T42-18) is merged into tranche/T42 (K2664) with its guard dropped: runProductionsOf now registers with both real slots. Merge tranche/T42: your suite reads 0/27 there, since test/m/question-explorer/fixture.mjs:226-232 hands a basis-versions stand-in without onMachinePassage (src/run-productions/index.mjs:1431 throws), and passes no inquiry. Fix your fixture (add onMachinePassage: () => null to the basis-versions stand-in and an inquiry stand-in with onMachinePassage, or build the real modules), re-run your suite and users' suites on the merged tranche, and post COMPLETE.
