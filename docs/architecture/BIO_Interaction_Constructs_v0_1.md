@@ -971,6 +971,12 @@ group's key, a project's account and a member's own: what it pays for, its limit
 only; part of the overall limit or on top of it), its use summed naming no member, and every change with who and when. The account
 the cascade chooses (the project's, else the member's own, else the group's) is the one used; a project's account is its own API key,
 or its sole member's sign-in. A member stopped by a limit is told whose limit, never a cost; owners are told once a period.
+
+**RULED 2026-10-11 by the design session (DEC-189, amending DEC-188).** Exploring needs no limit of its own: an account's overall limit
+judges it when no exploring limit is set, so a member is refused exploring only because it is switched off. A find made while exploring
+names who enabled it only to the paying account's owners; every other member sees "Machine work · found while exploring". Every fixed
+word a refusal or queue item fills in (the period, when it works again, the use, the account, the month) has its own key, and each
+queue item from steps, milestones, quiet projects and left-out review comments has a summary and a detail.
 ## What this changes about how M8 is built
 
 **Build the constructs, then the capabilities arrive cheaply.** The order that follows:

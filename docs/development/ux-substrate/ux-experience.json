@@ -5638,7 +5638,7 @@
    "requirementIds": "action-plans R11, R21, R24, R30-R34; skills R28-R29; agent-worker R50-R53; run-rules R13-R14",
    "src": "PATH.md §2 step 3; D2, D4 (K590)",
    "basis": "fixed",
-   "coverageNote": "Built at the plane and in the assistant (T18: K683, K711); the assistant's plan mode is not deployed until it runs model turns (run-rules R14; K660 (5)), so only members' own proposals reach the tray today. Suggestions come five at a time, strongest first, with no score, and the member asks for the next five (action-plans R34; Bob, K660 (2)). No member surface yet."
+   "coverageNote": "Built at the plane and in the assistant (T18: K683, K711); the assistant's plan mode is not deployed until it runs model turns (run-rules R14; K660 (5)), so only members' own proposals reach the tray today. Suggestions come all at once, strongest first (K2554), with no score, and the member asks for the next five (action-plans R34; Bob, K660 (2)). No member surface yet."
   },
   {
    "id": "UC-164",
@@ -7074,7 +7074,7 @@
      "step": "Get suggestions",
      "whoIsActing": "member; the assistant proposes",
      "whatTheyKnow": "The subjects, the standards' text, consequences, the project's kind of work, the profile's deadlines, venues and legal organisations, and the same project's earlier plans only.",
-     "decisionTheyMake": "Which suggestions to adopt; whether to ask for the next five.",
+     "decisionTheyMake": "Which suggestions to adopt.",
      "whatCanGoWrong": [
       "A suggestion read as the group's decision (the tray must never).",
       "No assistant suggestions until its plan mode is deployed, as soon as the assistant runs model turns (run-rules R14; K660 (5)); a member may still propose or add options.",
@@ -7086,7 +7086,7 @@
      "src": "PATH.md §2 step 3; action-plans R11, R21, R30-R34; skills R28-R29; agent-worker R50-R53; run-rules R14; Bob, 2026-09-30 (K660)",
      "basis": "fixed, with open points listed",
      "openInThisStep": [
-      "How the tray shows the five strongest first and offers the next five, with no score, rank figure or strength (action-plans R34; K660 (2)): the words and the control are the design's."
+      "How the tray shows every suggestion strongest first (K2554), with no score, rank figure or strength (action-plans R34; K660 (2)): the words and the control are the design's."
      ]
     },
     {
@@ -10470,7 +10470,7 @@
      "src": "DEC-77; DEC-90; AI Roles §3 rule 3"
     },
     {
-     "text": "Five suggestions at a time, strongest first, in the assistant's order, and a way to ask for the next five until none remain.",
+     "text": "Every suggestion of the run, strongest first, in the assistant's order, with no cut-off and no paging (K2554, Bob's Actions D17).",
      "basis": "fixed",
      "src": "action-plans R34; Bob, 2026-09-30 (K660 (2))"
     },
@@ -10547,7 +10547,7 @@
      "basis": "open"
     },
     {
-     "act": "planproposals (the next five)",
+     "act": "planproposals (every proposal of the run)",
      "rung": "off the ladder: a read, writing nothing",
      "weight": "single",
      "src": "action-plans R34; Bob, 2026-09-30 (K660 (2))",

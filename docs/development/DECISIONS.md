@@ -2922,6 +2922,7 @@ reasoning recorded in: this entry; `screens/mock-screens.js` (the ceremony's Pho
 owed: (BOB, T38 L8 or T39) the gate over every carried photo; `obscuremarkwithdraw` open to any member who may see the photo, refused to a machine; the four withdrawal refusals and `photo.refused.changed.signed` read by key from `words.json`.
 
 ### DEC-188 · answered
+amended: 2026-10-11 by DEC-189 (B123–B126): (1) and (8)'s wording of exploring's limit, (6)'s label for members who don't own the account, (7)'s fills keyed, (8)'s acts re-pointed to the served ops
 raised: 2026-10-09 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (BOB's B119, B120 and B121, for T40's N797, N799, N811, N812 and N814)
 for: bob-session
 question: The words and screens T40 owes: AI accounts for the group, a project and a member (N812); the handle check and change; the published labels and refusals; a question a project draws on; and one product word that named a jurisdiction.
@@ -2944,4 +2945,42 @@ response: **Decided by the design session, 2026-10-09.**
 decided: 2026-10-09 · the design session (P17)
 reasoning recorded in: this entry; `screens/mock-screens.js` (the AI panel, Members, The assistant, AI for this project, Your queue, the project, setup); `screens/mock-acts.js`; `screens/mock-kit.js`; `screens/mock-refs.js`; `screens/registry.src.py` (`projectai`); `screens/library.src.py` (Connect your Claude account); `screens/build_words.mjs`, `screens/words.json` (`ai.*`, `handle.*`, `document.*`, `question.*`); `screens/question.html` (S19); `layouts.html`.
 owed: (BOB, T40) the ops behind (8); the panel's reads (`projectAccountState`, `aiUsage`, `aiUsageMine`, the limits with their use in the period); the refusals and queue items read by key from `words.json`; the change history of each account's settings answered to its owners.
+
+### DEC-189 · answered
+raised: 2026-10-11 · the UX design session with Bob on his primary account (session_014uT5e8EjnRxmEeUDDg2cYa; the development process also runs on his primary account since K2511) (BOB's B123, B124 and B126, for T41's K2484, K2486, K2516, K2586)
+for: bob-session
+question: Four wording points on DEC-188's words (B123), the keys for the fills ai-use writes in its own words (B124), and the words notice-producers R16 and R17 still lack (B126).
+why it is Bob's: it is not: word and screen detail beneath Bob's K2350, K2352, K2353, K2400 (A5) and D64, amending DEC-188; decided by the design session (P17) and reported.
+provisional: DEC-188's words; ai-use's `LIMIT_PERIOD_FILL`, `LIMIT_WHEN_FILL`, `LIMIT_FIELD_FILL`; notice-producers' own sentences for R17.
+alternative: leave the fills in each module's own words.
+recommendation: as decided below.
+reversal cost: low; words read by key.
+response: **Decided by the design session, 2026-10-11.**
+(1) `ai.refused.explorenotenabled` reads "Exploring is off on {whose} account. Its owners can switch it on." An exploring limit is never required (ai-use R3, Bob's A5): with none set, the overall limit judges exploring. The AI panel's help for Exploring says the same ("within this account's overall limit, and within an exploring limit if its owners set one"). This amends DEC-188 (1).
+(2) A find made while exploring shows `ai.label.explored` ("… enabled by {owner}") only to the paying account's owners; every other member sees `ai.label.explored.member`, "Machine work · found while exploring", naming no account and no person (question-explorer R5, D64). The project screen's suggested questions now draw it as a member sees it. Answers B126 (1).
+(3) Acts re-pointed: the 37 owed acts whose ops `main` now serves (among them `accountusesset`, `ailimitset`, `projectkeyset`, `projectsigninset`, `projectaccountswitch`, `projectaccountremove`, `projectkeynoticeseen`, `exploreapprove`, `aikeepaway`, `handlechange`, `handlecheck`, `obscuremark`, `obscuremarkwithdraw`, the file-safety, translation and security-tool acts, `setpassword`, `startfrom`, `writinghelp`) name the served op; their `ACT_HELP` and `WEIGHT` keys drop `owed_`, so `words.json` holds `act.<op>.*`. Three stay owed, as `check_library.py` lists: `subscriptionsignin`, `infolevelset` and `projectaikeepaway`.
+(4) The retired acts' texts are removed: `aiceilingset`, `aicopyceilingset`, `accountswitchset`, `groupswitchset` from `ACT_HELP`, and their `WEIGHT` entries.
+(5) Fills keyed (B124, B126 (3)): `ai.period.day|month`; `ai.when.day` ("tomorrow"), `ai.when.month` ("on {month} 1") with `date.month.*`; `ai.limitfield.*` for `AI_LIMIT_INVALID`'s `{field}` (owner, scope, unit, period, amount, inclusive, use, count; ai-use's own wording kept but for owner and use); `ai.use.*.inline` for `{use}` inside a sentence (`ai.use.*.name` at a sentence's start); `ai.account.group|project|own` and their `.inline` forms for `{account}`; `ai.scope.group` ("your group's work") and `ai.scope.own` ("your own questions") for the exploring ask. When a limit can't be judged (R3 failing closed), the member reads `ai.refused.limit.unjudged` instead of a reached limit, since nothing was reached: "The assistant stopped here: Civicsmith couldn't check the use of {whose} account just now, and it spends nothing it can't count. Try again in a moment. Everything else works as usual."
+(6) The limit-reached queue item has one sentence per scope, like the refusals: `ai.queue.limitreached` (a use: "{account} reached its {period} limit for {use} on {date}. It pauses {use} until {when}; its other uses go on."), `ai.queue.limitreached.overall` and `ai.queue.limitreached.member` (naming no member). `{for_use}` and `{Uses}` are gone.
+(7) notice-producers R17's kinds each have `queue.<kind>.summary` and `queue.<kind>.detail` (B126 (2)): question-find, step-later-found, step-date-due, step-reminder, step-cost-shared, step-cost-message, milestone-overdue, milestone-reminder, project-quiet, review-comment-left-out; each says what happened, who else is told, and what the member can do.
+decided: 2026-10-11 · the design session (P17)
+reasoning recorded in: this entry; `docs/architecture/BIO_Interaction_Constructs_v0_1.md` (who pays, RULED 2026-10-11); `screens/build_words.mjs`, `screens/words.json` (1,064 words, 392 protected); `screens/mock-screens.js`; `screens/mock-acts.js`; `screens/mock-kit.js`; `screens/registry.src.py`; `screens/library.src.py`; `screens/mock-journeys.js`; `screens/check_walk.mjs`; `layouts.html`.
+owed: (BOB) ai-use reads its fills by key (`ai.period.*`, `ai.when.*`, `date.month.*`, `ai.limitfield.*`, `ai.refused.limit.unjudged`); notice-producers reads R16's and R17's words by key (`ai.queue.limitreached*`, `ai.account.*`, `ai.use.*.inline`, `ai.scope.*`, `ai.label.explored.member`, `queue.*`); the B123 wording in ai-use's `AI_USE_WORDS`.
+
+### DEC-190 · answered
+raised: 2026-10-11 · the UX design session with Bob on his primary account (session_014uT5e8EjnRxmEeUDDg2cYa; the development process also runs on his primary account since K2511) (BOB's B128 and B129, for T42's N832, K2611, K2613)
+for: bob-session
+question: Where a member is offered the assistant's reading of page pictures (`pagetranscribe`), and its words: its help, its refusal C-51.7 `TRANSCRIBE_NOT_DEPLOYED`, its label and its answers.
+why it is Bob's: it is not: screen and word detail beneath Bob's D21 (the transcription tier) and K2484; decided by the design session (P17) and reported.
+provisional: BOB's draft refusal in `build/plan/draft-T42-transcribe.md` §3.
+alternative: offering it beside a capture on the Add screen.
+recommendation: as decided below.
+reversal cost: low; words read by key, the act owed until T42 serves it.
+response: **Decided by the design session, 2026-10-11.**
+(1) Placement: a reading act, never a capture act. The Document screen gains a section, "Pages Civicsmith couldn't read", shown only when the reading has such pages: it names them, says their words can't be found or cited yet and that the page images are kept, and offers "Have the assistant read pages …" (with the assistant) and "Type a page's words yourself" (`transcribe`, always, so the product works without the assistant). Capture comes before any reading, so the Add screen has nothing to offer it on.
+(2) Words: `act.owed_pagetranscribe.does` (up to 8 pages; the account that pays for the member's acts there pays, within its limits; labelled as the assistant's reading; undetermined until a member checks a passage against the page); `act.transcribe.does`; `transcribe.refused.notdeployed` (replacing BOB's draft: nothing read or sent; not switched on yet; each part is switched on only after it passes Civicsmith's test investigations; type a page's words yourself meanwhile; names no account); `transcribe.label`; `transcribe.done` and `transcribe.none` for the answer; `document.unread.pages`.
+(3) The AI panel lists the use: `ai.use.transcribe.name` "Reading page pictures" (and `.inline`), so owners can switch it and set a limit on it like any other use; the keep-away choices cover it.
+decided: 2026-10-11 · the design session (P17)
+reasoning recorded in: this entry; `screens/mock-screens.js` (Document; the AI panel's uses); `screens/mock-acts.js`; `screens/mock-kit.js`; `screens/registry.src.py`; `screens/check_walk.mjs`; `screens/build_words.mjs`, `screens/words.json` (1,075 words, 395 protected); `layouts.html`.
+owed: (BOB, T42) `op=pagetranscribe` served (the act then re-pointed from `owed:pagetranscribe K2611`); C-51.7's translation read by key `transcribe.refused.notdeployed`; the answer's sentences read by key; the Document read answering which pages its reading could not make out.
 
