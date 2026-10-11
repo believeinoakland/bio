@@ -13,10 +13,11 @@ import { registerAuditOp } from "../provenance/ops.mjs";
 import { attestOp } from "../attestation/index.mjs";
 import { withBiasChecks } from "../bias/index.mjs";
 import { GOVERNOR_OPS, governorOpResponse } from "../host-governor/index.mjs";
-import { capturePublicOp } from "../capture/doorbell.mjs";
+/* R37 (N826; K2630): the knock is doorbell's, never capture's copy (deleted in T43, N849). */
+import { doorbellPublicOp } from "../doorbell/door.mjs";
 import { captureOp } from "../capture/ops.mjs";
 import { monitorOp } from "../monitoring/index.mjs";
-import { EXTRACTION_OPS, extractionOp, acquireReadingOp } from "../extraction/ops.mjs";
+import { EXTRACTION_OPS, extractionOp, acquireReadingOp, pageTranscribeOp } from "../extraction/ops.mjs";
 import { CONNECTIONS_OPS, connectionsOp } from "../connections/ops.mjs";
 import { ratificationOp } from "../ratification/ops.mjs";
 import { ACT_GATE } from "../op-declarations/index.mjs";
@@ -30,7 +31,7 @@ import { SCRATCH, sha256Hex, caseReader, captureKey, storageAbsent } from "../co
 /* The public ops: each owner's handler asked in turn; the bootstrap report answers any other. */
 /* K2062 (control-plane's door, admission R20, R21): the hook is handed the caller's presented `credential` (read from the
    header or body, never the query), the keyed `source` and Cloudflare's `country`. `credential` reaches the readers of a
-   case (`caseReader`, admission's `readerOf`); `country` reaches capture's knock (capture R85). A JSON body's `token` is
+   case (`caseReader`, admission's `readerOf`); `country` reaches doorbell's knock (doorbell R20). A JSON body's `token` is
    the caller's credential and no arm passes it on. */
 export async function publicOp({ req, url, env, op, stub, fp, presentedAi, credential = null, country = null }) {
   { const pr = await publicReadDoorOp(op, url, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer }); if (pr) return pr; }
@@ -39,8 +40,8 @@ export async function publicOp({ req, url, env, op, stub, fp, presentedAi, crede
       /* publication R73 (F1; K2011): the request's body, read on a copy and only when its door asks for it, so the
          review copy's secret arrives in the body and the request stays readable by the arms after it. */
       body: () => req.clone().json() }); if (pd) return pd; }
-  /* Anyone, no token, no session: capture's doorbell, confined to the inbox namespace. */
-  { const knocked = await capturePublicOp(op, req, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer, country }); if (knocked) return knocked; }
+  /* Anyone, no token, no session: the doorbell (R37), confined to the inbox namespace. */
+  { const knocked = await doorbellPublicOp(op, req, env, stub, { json, requiredArgument, storeSilent, storeRefusal, doAnswer, country }); if (knocked) return knocked; }
   return bootstrapOp(url, env, fp, { stub, json, storeSilent, storeRefusal, doAnswer });
 }
 
@@ -49,9 +50,9 @@ export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, 
                                 sessCaps, aiCred, storeName, stub, grantMember }) {
   const store = () => env.STORE.get(env.STORE.idFromName(storeName));
   /* The stamps, from the authenticated caller: a session's member, viewer and identity; an `ai` credential's principal
-     where the act reads its member (REC-134); a binding class as `class:<cls>`, or `token:<cls>` as an author (D-311). */
-  const viewer = viaSession ? sessViewer : `${MACHINE_CLASS_PREFIX}${cls}`;
-  const principalViewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
+     as its viewer and identity (control-plane R17, as its generic forward stamps it; REC-134); a binding class as
+     `class:<cls>`, or `token:<cls>` as an author (D-311). */
+  const viewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
   const identity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
   const author = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
   const by = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
@@ -66,9 +67,9 @@ export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, 
   if (op === "registeraudit") return registerAuditOp(env, store(), { json, doAnswer, storeSilent, storeRefusal, captureKey,
     storeName, cls });
   if (INSTANCE_SETUP_OPS.includes(op)) return instanceSetupOp(op, url, env, storeName, { cls, scratch: SCRATCH, json, doAnswer,
-    storeSilent, storeRefusal, viewer: principalViewer });
+    storeSilent, storeRefusal, viewer });
   if (CONNECTIONS_OPS.includes(op)) return connectionsOp(op, url, store, { json, doAnswer, storeRefusal, storeSilent,
-    viewer: principalViewer, identity });
+    viewer, identity });
   if (GOVERNOR_OPS.includes(op)) return governorOpResponse(op, url, store, { json, doAnswer, storeRefusal, storeSilent });
   {
     const c = await captureOp(op, req, url, env, store, { json, storeSilent, storeRefusal, doAnswer, storageAbsent,
@@ -77,6 +78,10 @@ export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, 
     if (c) return c;
   }
   if (EXTRACTION_OPS.includes(op)) return extractionOp(op, url, env, store, { json, storeSilent, storeRefusal, doAnswer,
+    storageAbsent, requiredArgument, cls, session: viaSession, caps: sessCaps, viewer, author, storeName });
+  /* R36 (K2635, K2656; control-plane R74): a member's transcription of a stored scan's unread pages, extraction's exported
+     handler, beside `pdfstructure`'s arm, with the same stamps. */
+  if (op === "pagetranscribe") return pageTranscribeOp(url, env, store(), { json, storeSilent, storeRefusal, doAnswer,
     storageAbsent, requiredArgument, cls, session: viaSession, caps: sessCaps, viewer, author, storeName });
   if (op === "attest") return attestOp(req, env, store(), { json, doAnswer, storageAbsent, captureKey, storeName, cls });
   if (op === "monitor") return monitorOp(req, store(), { json, storeSilent, storeRefusal, requiredArgument, doAnswer,

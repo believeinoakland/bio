@@ -274,7 +274,7 @@ test("R35 (K2585; control-plane R71, R72): control-plane's owner map is spread i
                           VALUES ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
   const u = new URL("http://do/x?viewer=member:ann&by=member:ann");
   const none = () => { throw new Error("not asked"); };
-  const own = OPS(controlPlaneOwnerOps({ aiUse: none, aiRuns: none, caseAuthoring: none, review: none, legEarning: none,
+  const own = OPS(controlPlaneOwnerOps({ aiUse: none, aiRuns: none, caseAccount: none, review: none, legEarning: none,
                                          capture: none, steps: none, investigation: none, questionExplorer: none }, u, {}));
   assert.ok(own.includes("stepcreate") && own.includes("aiestimate"), own.join());
   const keys = OPS(x.s.routes(u, {}));
