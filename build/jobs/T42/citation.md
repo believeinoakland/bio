@@ -1,6 +1,6 @@
 # citation (T42)
 
-**Status** · session_01Ry8XJgz92P5UcBrruehLrc · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_01Ry8XJgz92P5UcBrruehLrc · depth 2 · WAITING ON BOB (J1) · handled B3
 
 ## J1 · REPORT
 
