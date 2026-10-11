@@ -633,7 +633,7 @@ SCR.plan = c => ({ rail: 'projects', title: 'Action plan', crumbs: ['Pothole rep
    ${acts(btn('optionadd', 'Add an option'), btn('optiondispose', 'Choose'), btn('optiondispose', 'Decline'), btn('optionstartpreview', 'Start…', { tone: 'primary' }))}
    ${c.ai ? `<div class="mk-tray">${origin('machine', 'Suggested by the assistant · for a fixing project · not yet in the plan')}${sheet(row(I('machine'), 'Ask the council\'s public works committee to agendize repair performance', btn('optionadopt', 'Adopt')))}${acts(btn('optionpropose', 'Suggest more'))}</div>` : ''}`)}
   ${sec('Scenarios', `<div class="mk-tabs2"><span aria-selected="true">A · Records first</span><span>B · Go public</span><span class="muted">+ scenario</span></div>${sheet(row('<b>Phase 1</b>', 'Records request → checkpoint: "logs show inspection dates" (judged by a member)', btn('checkpointrecord', 'Judge')))}${acts(btn('scenarioset', 'Lay out a scenario'))}`)}
-  ${sec('Started', sheet(row(I('outward'), 'Records request: inspection logs · to the Office of the City Clerk', due('', 'Response due 14 Oct'))))}
+  ${sec('Started', sheet(row(I('outward'), 'Records request: inspection logs · to the Office of the City Clerk', due('', 'Response due 14 Oct')) + row(I('due'), 'Checkpoint: read the logs when they arrive · <span class="muted">nobody has taken it up</span>', btn('owed:itemtakeup K2780', 'Take this up'))))}
   ${acts(btn('planclose', 'Close plan…'))}` });
 
 SCR['start-send'] = c => ({ rail: 'projects', title: 'Start and send', crumbs: ['Pothole repairs', 'Plans', 'Start'], main: `
@@ -642,6 +642,7 @@ SCR['start-send'] = c => ({ rail: 'projects', title: 'Start and send', crumbs: [
    ${acts(btn('optionstartpreview', 'See what starting does'), btn('optionstart', 'Start the action', { tone: 'primary' }))}`)}
   ${sec('Step 2 · Prepare and send', `${field('mk-ss', 'What the group sends', 'To the Office of the City Clerk:\nWe request copies of the inspection logs for every pothole report closed between 1 July 2025 and 30 June 2026, showing the date of each inspection and of each repair.\nSubmitted by Lakeshore Tenants, by its contact.', { area: true, rec: true, draft: c.ai && !c.wizard ? 'machine' : 'template', act: 'communicationprepare' })}
    ${acts(btn('communicationprepare', 'Prepare what is sent'), btn('filingprepare', 'Prepare the filing'), btn('filingapprove', 'Approve this text'), btn('filingrecordsent', 'I have sent it · record the sending', { tone: 'primary' }))}
+   ${note('If this project needs a second approval before sending, the text shows: “Waiting for a second member\'s approval. Any member of this project other than Dev can give it.”')}${acts(btn('owed:filingsecondapprove K2780', 'Give the second approval'))}
    ${note('Approving fixes the text. Civicsmith sends nothing: you send it by the office\'s own means (its web form, mail, or in person), then record it here.')}`)}` });
 
 SCR.request = c => ({ rail: 'projects', title: 'Request records', crumbs: ['Pothole repairs', 'Request records'], main: `
@@ -660,13 +661,13 @@ SCR.action = c => ({ rail: 'projects', title: 'Action', crumbs: ['Pothole repair
   ${h1('Records request: inspection logs', 'to the Office of the City Clerk · sent 2 October by Mai')}
   <div class="row">${due('near', 'Response due 14 October')}<span class="cs-wait">${I('clock')}Waiting on the City Clerk's reply</span></div>
   ${sec('Replies', sheet(row(I('case'), '<b>3 October</b> · acknowledgment, reference R26-0412', '')) + acts(btn('actioncorrespond', 'Record a reply', { tone: 'primary' }), btn('actionpressure', 'Mark a reply as pressure')))}
-  ${acts(btn('actionmove', 'Move the action'), btn('reminderset', 'Remind me'), btn('actionhold', 'Record a litigation hold'))}` });
+  ${acts(btn('actionmove', 'Move the action'), btn('reminderset', 'Remind me'), btn('actionhold', 'Record a litigation hold'), btn('owed:actionscope K2780', 'Make confidential…'))}` });
 
 SCR.matter = c => ({ rail: 'projects', title: 'Matter', crumbs: ['The Coliseum lease', 'Matter'], main: `
   ${h1('<span class="rec">The 2024 rent adjustment, made without a council vote</span>', 'noncompliant · established · against lease §7.2')}
   ${ladder('stage', ['1 Documentation', '2 Notification', '3 Clock starts', '4 Public', '5 Formal', '6 Political', '7 Legal'], 2)}
   ${sec('Consequences', sheet(row(I('money'), '$38,000 in rent above the schedule, 2024–2026', '<span class="muted">from the rent schedules · ' + grade('capture', 'B') + '</span>')))}
-  ${acts(btn('escalationadvance', 'Advance to stage 3'), btn('declinetoescalate', 'Decline to escalate, with a reason'), btn('escalationopen', 'Open an escalation'), btn('escalationend', 'End'))}` });
+  ${acts(btn('escalationadvance', 'Advance to stage 3'), btn('declinetoescalate', 'Decline to escalate, with a reason'), btn('escalationopen', 'Open an escalation'), btn('escalationend', 'End'), btn('owed:escalationstoppursuing K2780', 'Stop pursuing…'))}` });
 
 /* ---------------- publishing ---------------- */
 SCR['case-editor'] = c => ({ rail: 'projects', title: 'Case', crumbs: ['The Coliseum lease', 'Case · Edition 2'], main: `

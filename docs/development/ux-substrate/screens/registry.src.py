@@ -97,15 +97,15 @@ screen('standard', 'Standard', 'working', 'A requirement the city set itself, he
 # --- deciding and acting (bound sketches: the plan page, start and send)
 screen('plan', 'Action plan', 'working', 'The approved plan page: subjects, options, scenarios, what each option became (K608 (4)).',
   [('plansubjectadd','Add a subject'),('optionadd','Add an option'),('optionpropose','Ask the assistant for options'),('optionadopt','Adopt a suggestion'),('optiondispose','Choose or decline'),
-   ('scenarioset','Lay out a scenario'),('checkpointrecord','Judge a checkpoint'),('optionstartpreview','Start…'),('planclose','Close the plan')], [22])
+   ('scenarioset','Lay out a scenario'),('checkpointrecord','Judge a checkpoint'),('optionstartpreview','Start…'),('planclose','Close the plan'),('owed:itemtakeup K2780','Take an item up yourself')], [22])
 screen('start-send', 'Start and send', 'working', 'The bound start-and-send flow: refusals first, reason in place, approve then record the send (DEC-115).',
-  [('optionstartpreview','See what starting does'),('optionstart','Start the action'),('communicationprepare','Prepare what is sent'),('filingprepare','Prepare the filing'),('filingapprove','Approve this text'),('filingrecordsent','I have sent it')], [7,22])
+  [('optionstartpreview','See what starting does'),('optionstart','Start the action'),('communicationprepare','Prepare what is sent'),('filingprepare','Prepare the filing'),('filingapprove','Approve this text'),('filingrecordsent','I have sent it'),('owed:filingsecondapprove K2780','Give the second approval')], [7,22])
 screen('request', 'Request records', 'working', 'A records request: the office by role, what is wanted, the law, the text, approving and recording the send.',
   [('addresseesuggest','Choose the office'),('actioncreate','Start the request'),('actionlaws','Choose the law it goes under'),('communicationprepare','Prepare the text'),('filingapprove','Approve this text'),('filingrecordsent','I have sent it')], [7])
 screen('action', 'Action', 'working', 'One action: replies, deadlines, pressure, holds.',
-  [('actionmove','Move the action'),('actioncorrespond','Record a reply'),('actionpressure','Mark a reply as pressure'),('reminderset','Remind me'),('actionhold','Record a litigation hold')], [7,22])
+  [('actionmove','Move the action'),('actioncorrespond','Record a reply'),('actionpressure','Mark a reply as pressure'),('reminderset','Remind me'),('actionhold','Record a litigation hold'),('owed:actionscope K2780','Make the action confidential, or not')], [7,22])
 screen('matter', 'Matter', 'working', 'One government act: determination, consequences, escalation, actions.',
-  [('escalationopen','Open an escalation'),('escalationadvance','Advance'),('declinetoescalate','Decline to escalate, with a reason'),('escalationend','End')], [22])
+  [('escalationopen','Open an escalation'),('escalationadvance','Advance'),('declinetoescalate','Decline to escalate, with a reason'),('escalationend','End'),('owed:escalationstoppursuing K2780','Stop pursuing, with a reason')], [22])
 
 # --- publishing
 screen('case-editor', 'Case', 'working', 'Prepare the case: scope, statement, what it leaves out, bias, timeline, people named.',

@@ -11,21 +11,46 @@
   "handle": 9,
   "ai": 73,
   "date": 14,
-  "queue": 20,
+  "queue": 35,
   "transcribe": 19,
   "capture": 1,
   "document": 5,
   "question": 1,
+  "guide": 7,
+  "prepared": 2,
+  "label": 45,
+  "project": 7,
+  "grouprule": 1,
+  "refusal": 126,
+  "signing": 4,
+  "case": 11,
+  "docket": 2,
+  "advocacy": 3,
+  "conformance": 4,
+  "consequences": 2,
+  "actions": 6,
+  "phrasing": 4,
+  "assertion": 3,
+  "packet": 2,
+  "filings": 3,
+  "rfc": 1,
+  "pointer": 7,
+  "voice": 4,
+  "recognition": 1,
+  "plan": 10,
+  "escalation": 8,
+  "monitoring": 2,
+  "following": 5,
+  "door": 11,
   "rail": 14,
   "tab": 2,
   "level": 2,
-  "guide": 6,
   "screen": 95,
-  "act": 483,
+  "act": 529,
   "column": 33,
-  "wizard": 239,
-  "total": 1103,
-  "protected": 395
+  "wizard": 304,
+  "total": 1504,
+  "protected": 550
  },
  "words": [
   {
@@ -1533,6 +1558,1824 @@
    "protected": false,
    "source": "DEC-188",
    "note": "DRAWN_ON_BY_A_PROJECT; names no project"
+  },
+  {
+   "key": "guide.procedure.legalinfo",
+   "en": "Legal information, not legal advice",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "canon; every procedure guide"
+  },
+  {
+   "key": "prepared.rests.held",
+   "en": "Rests on findings checked for publication on {date}, not yet published.",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "canon"
+  },
+  {
+   "key": "prepared.rests.accepted",
+   "en": "Rests on findings of {group} (edition of {date}), accepted by us on {date_accepted}.",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "canon; shown with that group's public identity and declared stake"
+  },
+  {
+   "key": "queue.action-clock-overdue.noreply",
+   "en": "No reply recorded by {date}",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "canon; Noticed; never \"overdue\" or \"violation\" until a member determines noncompliance"
+  },
+  {
+   "key": "label.matterstate.documented",
+   "en": "Documented",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "a plan matter's state (plan-work R2); never a percentage"
+  },
+  {
+   "key": "label.matterstate.fix_offered",
+   "en": "Fix offered",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "a plan matter's state (plan-work R2); never a percentage"
+  },
+  {
+   "key": "label.matterstate.acting",
+   "en": "Acting",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "a plan matter's state (plan-work R2); never a percentage"
+  },
+  {
+   "key": "label.matterstate.fixed",
+   "en": "Fixed",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "a plan matter's state (plan-work R2); never a percentage"
+  },
+  {
+   "key": "label.matterstate.stopped",
+   "en": "Stopped",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "a plan matter's state (plan-work R2); never a percentage"
+  },
+  {
+   "key": "label.matterstate.ended",
+   "en": "Ended",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "a plan matter's state (plan-work R2); never a percentage"
+  },
+  {
+   "key": "label.matterstate.none",
+   "en": "Not started",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "a plan matter's state (plan-work R2); never a percentage"
+  },
+  {
+   "key": "label.projectscope.counsel_matter",
+   "en": "Counsel matter",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "its members alone see its correspondence and dates; never published or used as evidence"
+  },
+  {
+   "key": "label.projectscope.own",
+   "en": "My own project",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "a member's own hidden project"
+  },
+  {
+   "key": "label.projectscope.none",
+   "en": "An ordinary project",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "project.scope.counsel_matter.means",
+   "en": "Only this project's members see its correspondence and dates. Nothing in it is published or used as evidence elsewhere.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "project.scope.own.means",
+   "en": "A hidden project that is yours alone: only you are in it, nobody is invited, and nobody else is ever made its owner.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "project.approval.head",
+   "en": "Acts that need a second member's approval before they are sent",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "the second-approval setting (projectApprovalSet)"
+  },
+  {
+   "key": "project.approval.default",
+   "en": "None: one member approves, as usual.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "project.approval.kind",
+   "en": "Every {kind}",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "an entry naming one kind of action"
+  },
+  {
+   "key": "project.approval.tier",
+   "en": "Every Tier {tier} act",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "an entry naming one tier"
+  },
+  {
+   "key": "project.approval.public",
+   "en": "Every act addressed to the public",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "label.grouprule.drafted",
+   "en": "Drafted, waiting for another member to confirm it",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "a group's own jurisdiction rule (local-facts)"
+  },
+  {
+   "key": "label.grouprule.confirmed",
+   "en": "Confirmed",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "a group's own jurisdiction rule (local-facts)"
+  },
+  {
+   "key": "label.grouprule.withdrawn",
+   "en": "Withdrawn (kept, no longer applied)",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "a group's own jurisdiction rule (local-facts)"
+  },
+  {
+   "key": "grouprule.qualification.prompt",
+   "en": "Your professional qualification to confirm this rule, in your own words (at most 500 characters). It is kept with this confirmation only.",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "Tier 2, Tier 3 or an unknown tier"
+  },
+  {
+   "key": "label.readsas.assertion",
+   "en": "Reads as saying the body broke a rule",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "textcheck: machine work; it points out, never rewrites"
+  },
+  {
+   "key": "label.readsas.position",
+   "en": "Reads as a policy position",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "textcheck: machine work; it points out, never rewrites"
+  },
+  {
+   "key": "label.readsas.own_benefit_ask",
+   "en": "Reads as asking for something for your group",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "textcheck: machine work; it points out, never rewrites"
+  },
+  {
+   "key": "label.readsas.staff_named",
+   "en": "Names staff below the official responsible",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "textcheck: machine work; it points out, never rewrites"
+  },
+  {
+   "key": "label.bearing.new_evidence",
+   "en": "Brings new evidence",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "a reply's bearing on one claim"
+  },
+  {
+   "key": "label.bearing.disputed_without_evidence",
+   "en": "Disputes it, without evidence",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "a reply's bearing on one claim"
+  },
+  {
+   "key": "label.bearing.not_addressed",
+   "en": "Does not address it",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "a reply's bearing on one claim"
+  },
+  {
+   "key": "refusal.PROJECT_SCOPE_UNKNOWN",
+   "en": "A project is a counsel matter, a member's own project, or neither. Choose one of those. Nothing was changed.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.PROJECT_SCOPE_NEEDS_HIDDEN",
+   "en": "Only a hidden project can be a counsel matter or a member's own project. Its owners set it hidden first. Nothing was changed.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.PROJECT_SCOPE_OWN_NOT_SOLE",
+   "en": "Only a project's owner, while they are its one member, can make it their own project or stop it being one. Nothing was changed.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.PROJECT_SCOPE_UNCHANGED",
+   "en": "The project already has that scope. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.PROJECT_SCOPE_OWN",
+   "en": "This is a member's own project: nobody else is invited into it, and nobody is made its owner in that member's place. Nothing was changed.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.PROJECT_SCOPE_KEEPS_HIDDEN",
+   "en": "A counsel matter or a member's own project stays hidden, so it can't be listed for others to find. Remove its scope first if it should be. Nothing was changed.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.APPROVAL_RULE_INVALID",
+   "en": "Each rule for a second approval names one kind of action, one tier (1, 2 or 3), or acts addressed to the public. One of these doesn't. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.APPROVAL_KIND_UNKNOWN",
+   "en": "That kind of action isn't one your group's places list, so a second approval can't be required for it. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.PROJECT_GUARD_UNCHECKED",
+   "en": "Civicsmith couldn't check whether this project's own rules allow that, so nothing was changed. Try again in a moment.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.COMMITMENT_AS_HEARD",
+   "en": "A spoken commitment becomes a standard only once the body confirms it in writing or states it publicly. Every passage named here is a member's account of what was heard, which stays that member's own. Name the body's writing or public statement. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.COMMITMENT_OWN_LETTER",
+   "en": "A commitment becomes a standard only once the body confirms it in writing or states it publicly. Every passage named here is from your group's own letters or members' accounts. Name the body's own confirmation. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.RESPONSE_KIND_UNKNOWN",
+   "en": "An obligation taken from a reply or a report is either a promise the body made or a response the report requires. This is neither. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.RESPONSE_EXTENT_NOT_IN",
+   "en": "The passage quoted isn't part of the reply or report the obligation comes from. Quote a passage of that document. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.PROMISE_DATE_UNREAD",
+   "en": "A promise's date is read from the body's own words, and these don't state one whole calendar date (such as \"by spring\", or a month without its day). The promise is kept as written, with no due date.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.DUTY_SOURCE_NOT_HELD",
+   "en": "This promise rests on a commitment that is still only proposed as a standard. Adopt that commitment first; the obligation then names it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_DRAFT_RULE",
+   "en": "Only a member drafts or withdraws your group's own rule. The assistant may draft one for you to read, but it enters only when you draft it yourself. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.RULE_SECTION_UNKNOWN",
+   "en": "A group's rule is either a deadline or a legal fact, and this is neither. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.RULE_ENTRY_INVALID",
+   "en": "This rule isn't in the form a deadline or a legal fact takes: {errors}. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "{errors}: the fields as validate names them"
+  },
+  {
+   "key": "refusal.RULE_NO_SOURCE",
+   "en": "A rule is drafted from its source: name the captured document and the part of it that states the rule. Either no such capture is held where you can see it, or that part isn't in it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.RULE_IN_PROFILE",
+   "en": "Your places' rules, or a rule your group already applies, hold this already. Dispute that fact, or offer your correction to whoever keeps those rules, instead. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.RULE_SELF_CONFIRM",
+   "en": "A rule is confirmed by a member other than the one who drafted it. Ask another member to check it against its source. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.RULE_NOT_DRAFTED",
+   "en": "Only a drafted rule can be confirmed, and this one is already confirmed or was withdrawn. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.RULE_NEEDS_QUALIFICATION",
+   "en": "A rule for a Tier 2 or Tier 3 matter, or one whose tier isn't known, is confirmed by a professional. State your qualification in your own words, in at most 500 characters. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.NO_SUCH_GROUP_RULE",
+   "en": "Your group has no rule of its own by that name, or none you can see. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "renamed from NO_SUCH_RULE (K2811)"
+  },
+  {
+   "key": "refusal.GUIDE_KIND_UNKNOWN",
+   "en": "A guide is for one kind of action or document your group's places recognise, and this names another. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.GUIDE_ITEM_UNSOURCED",
+   "en": "Each route in a procedure guide cites the law, rule or published procedure it rests on, so members can read the source. This one cites nothing. Add its citation. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.DRAFT_NEEDS_GRANT",
+   "en": "The assistant drafts this only from the record you can read, and only with your permission for this draft, which wasn't given. Nothing was read, and nothing was sent to the assistant. Ask again from the screen you are on.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.AI_RUN_ORIGIN_UNKNOWN",
+   "en": "Nothing was started: a planning run starts from a member's request or from a fresh look after a reply, and this said neither.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.AI_RUN_REEXAM_NEEDS_RESPONSE",
+   "en": "Nothing was started: a fresh look at the plan after a reply needs to know which reply. Record the reply first, then ask from it.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.AI_RUN_REEXAM_OPEN",
+   "en": "Nothing was started: a fresh look at this plan after this reply is already under way. Wait for it, then read what it proposes.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "signing.openrequest.line",
+   "en": "{whom} was asked for comment on {asked_at}. The window for a reply closes on {window_closes}; the reply answers {answered} of the {claims} claims the request laid out.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "signing.openrequest.noreply",
+   "en": "{whom} was asked for comment on {asked_at}. The window for a reply closes on {window_closes}; no reply is recorded.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "signing.openrequest.nowindow",
+   "en": "no date is given for the window to close",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "in place of \"closes on {window_closes}\""
+  },
+  {
+   "key": "signing.openrequest.unread",
+   "en": "Civicsmith couldn't read whether any request for comment on this case is still open, so none is listed here.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "case.check.held",
+   "en": "Checked and held: this case passed every publication check on {date} and waits to be signed.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "case.check.void.document_replaced",
+   "en": "The check no longer holds: the case was prepared again after it was checked. Check it again.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "case.check.void.member_moved",
+   "en": "The check no longer holds: {members} changed after it was checked. Check it again.",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "{members}: the records that moved, by name"
+  },
+  {
+   "key": "case.check.void.source_lapsed",
+   "en": "The check no longer holds: a source it relied on has lapsed. Check it again.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "case.check.void.accepted_work_lapsed",
+   "en": "The check no longer holds: another group's work it relied on has lapsed. Check it again.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "case.check.void.marks_lapsed",
+   "en": "The check no longer holds: a mark on a photo it relied on has changed. Check it again.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "case.check.undetermined",
+   "en": "Undetermined, because Civicsmith couldn't read everything the check rests on. It is not treated as held.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "case.outcomes.head",
+   "en": "Outcomes since the last edition",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "case.outcome.success",
+   "en": "Success",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "case.outcome.cure",
+   "en": "Corrected by the office",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "case.outcome.harm_addressed",
+   "en": "Harm addressed",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "docket.outcome.cure",
+   "en": "Outcome: corrected by the office",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "docket.outcome.harm_addressed",
+   "en": "Outcome: harm addressed",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "advocacy.supported",
+   "en": "Supported by the record: {findings}",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "advocacy.notsupported",
+   "en": "Not supported by the record",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "advocacy.contradicted",
+   "en": "The record contradicts this",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.DOCKET_OUTCOME_UNREADABLE",
+   "en": "An outcome entry says what the outcome was (corrected by the office, or a harm addressed) and the date it happened, no later than today. This one doesn't. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.DOCKET_PRESSURE_REFUSED",
+   "en": "A threat is marked as legal, retaliation, discrediting or other, with a note of at most 500 characters. Nothing was marked.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_CARRY_OUTCOME",
+   "en": "Only a member carries an outcome into a case's next edition, and this came from the assistant or another automated credential. Sign in to carry it. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.CARRY_NOT_A_PARTICIPANT",
+   "en": "Only someone who has joined the project that makes this case can carry an outcome into its next edition. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.BAD_CARRIED_OUTCOME",
+   "en": "An outcome carried into a case needs its kind (a success, a correction by the office, or a harm addressed), your statement in at most 2,000 characters, what it cites, and its date. This lacks {field}. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.NO_SUCH_CARRIED_OUTCOME",
+   "en": "There is no outcome waiting for a case's next edition by that name, or none you can see. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.CARRIED_OUTCOME_SETTLED",
+   "en": "This outcome is no longer waiting: a signed edition already carries it, or it was withdrawn. A signed edition is corrected only by a later one. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.CARRY_NO_REASON",
+   "en": "Say why you are withdrawing this outcome, in at most 2,000 characters. Your reason is kept with it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.ADVOCACY_NOT_OWN_PROJECT",
+   "en": "Your own text is checked only in your own project: a hidden project set as yours, with you its one member. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "conformance.void.reads",
+   "en": "Undetermined, because the finding this rests on has changed since. A member evaluates it again to settle it.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "conformance.cure.link",
+   "en": "This later act corrected it",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "the cure link's form: its heading"
+  },
+  {
+   "key": "conformance.cure.help",
+   "en": "Link a later act of the same office, found compliant, as what corrected this one. Say why if you like; undoing the link needs a reason.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "conformance.cure.unlink",
+   "en": "Remove this link",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "consequences.success.sequence_not_cause",
+   "en": "This is the order things happened in. It doesn't say one caused the other.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "consequences.success.cause_not_stated",
+   "en": "No cause is stated.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "label.harmaddressed.remedied",
+   "en": "Remedied",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "never a percentage or score"
+  },
+  {
+   "key": "label.harmaddressed.mitigated",
+   "en": "Mitigated",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "never a percentage or score"
+  },
+  {
+   "key": "label.harmaddressed.compensated",
+   "en": "Compensated",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "never a percentage or score"
+  },
+  {
+   "key": "label.harmaddressed.acknowledged",
+   "en": "Acknowledged",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "never a percentage or score"
+  },
+  {
+   "key": "label.harmaddressed.cannot_be_undone",
+   "en": "Can't be undone",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "never a percentage or score"
+  },
+  {
+   "key": "refusal.DETERMINATION_VOID",
+   "en": "The determination this rests on no longer holds, because a finding under it changed. Evaluate it again first. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.DETERMINATION_NOT_ADOPTABLE",
+   "en": "Another group's determination is never adopted as yours. Read its findings, and make your own determination from them. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_LINK_CURE",
+   "en": "Only a member links a later act as what corrected an earlier one. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.CURE_TARGET_NOT_NONCOMPLIANT",
+   "en": "Only an act found noncompliant with this standard can be corrected by a later one, and this one wasn't. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.CURE_NOT_COMPLIANT",
+   "en": "The later act must be found compliant with the same standard to count as the correction, and it isn't. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.CURE_OTHER_OFFICE",
+   "en": "Only a later act of the same office can correct this one, and this act is another office's. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.CURE_NOT_LATER",
+   "en": "The correcting act must come after the act it corrects, and this one doesn't, or their order isn't known. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.CURE_LINKED",
+   "en": "That correction is already linked. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.FINDING_NOT_PUBLISHED",
+   "en": "A determination rests on findings your group has published, checked and held for publication, or accepted from another group. The finding named is none of these. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "re-worded for the three kinds"
+  },
+  {
+   "key": "refusal.ADDRESSED_WORD_REFUSED",
+   "en": "A harm addressed is described with the words Remedied, Mitigated, Compensated, Acknowledged or Can't be undone, and a harm not addressed takes none of them. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.ADDRESSED_NO_PERCENTAGE",
+   "en": "How far a harm was addressed is said in words, never as a percentage, share or score. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.ADDRESSED_NO_REASON",
+   "en": "Say why, in your own words. Your reason is kept with the statement. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.ADDRESSED_BAD_REASON",
+   "en": "Your reason is longer than 2,000 characters. Shorten it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_RECORD_SUCCESS",
+   "en": "Only a member records a success. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SUCCESS_NOT_A_PARTICIPANT",
+   "en": "Only someone who has joined this project can record its success. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SUCCESS_NO_STATEMENT",
+   "en": "Say what changed, in your own words (at most 2,000 characters). Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SUCCESS_BAD_DATE",
+   "en": "The date it changed must be a real day, or a range such as a month or a year. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SUCCESS_NO_EVIDENCE",
+   "en": "A success cites what shows it: at least one document or finding you can see. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SUCCESS_TOO_LARGE",
+   "en": "A success cites at most 50 items and 20 figures, and its order of events is at most 1,000 characters. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SUCCESS_FIGURE_NOT_COMPUTED",
+   "en": "A figure in a success is computed from amounts in the record, never typed in. Choose the amounts it comes from. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SUCCESS_CAUSE_UNSTATED",
+   "en": "You named a cause without saying it. State the cause in your own words, or leave it out. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SUCCESS_CAUSE_NOT_EVIDENCED",
+   "en": "A stated cause cites what shows it: at least one document or finding you can see. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SUCCESS_CAUSE_OWN_ACT_ONLY",
+   "en": "Everything cited for the cause is your group's own act, and your own act never shows that it caused the change. Cite what the body did or said, or leave the cause out. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SUCCESS_CAUSE_UNCHECKABLE",
+   "en": "Civicsmith couldn't check whether the cause rests only on your group's own acts, so the success wasn't recorded. Try again in a moment, or leave the cause out.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.NO_SUCH_SUCCESS_RECORD",
+   "en": "There is no success by that name, or none you can see. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SUCCESS_NO_REASON",
+   "en": "Say why you are revising it. Your reason is kept with the change. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SUCCESS_BAD_REASON",
+   "en": "Your reason is longer than 2,000 characters. Shorten it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SUCCESS_SUPERSEDED",
+   "en": "This success was already revised. Revise or carry its latest version. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_CARRY",
+   "en": "Only a member carries an outcome into a case. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "actions.override.ground_not_stated",
+   "en": "No ground was recorded for acting before a determination (this was done before a ground was asked for).",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "actions.reply.not_owed",
+   "en": "No reply is owed: {reason}",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "{reason}: the member's, as recorded"
+  },
+  {
+   "key": "actions.scope.published_stays",
+   "en": "This changes what is published from now on. A case already signed stays as it was.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "actions.openitems.not_office",
+   "en": "Open items are listed only when the action is addressed to an office.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "actions.recognition.promise_only",
+   "en": "This thanks the office for a promise. Nothing yet shows the promise kept.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "phrasing.assertion.pointed",
+   "en": "This sentence reads as saying the body broke a rule. Rewrite it, confirm the act only asks, or treat the act as a breach claim.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "phrasing.position.pointed",
+   "en": "This sentence reads as a policy position. A comment for the group states facts and asks the body to examine or apply them; remove it, or comment as yourself.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "phrasing.own_benefit_ask.pointed",
+   "en": "This sentence asks for something for your group or its members. A notice or demand asks the body to correct its own act. Rewrite it.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "phrasing.no_list",
+   "en": "Civicsmith has no list of phrasings to point out in this language, so no sentence was pointed out. Read it through yourself.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "assertion.resolve.rewrite",
+   "en": "Rewrite the sentence",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "assertion.resolve.only_asks",
+   "en": "It only asks: say so in your own words (at most 500 characters)",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "assertion.resolve.breach_claim",
+   "en": "Treat this act as a breach claim",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "label.overrideground.legal_deadline",
+   "en": "A legal deadline would pass first",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "acting before a determination"
+  },
+  {
+   "key": "label.overrideground.irreversible_act",
+   "en": "The act would be done and couldn't be undone",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "acting before a determination"
+  },
+  {
+   "key": "label.pressterms.on_record",
+   "en": "On the record",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "label.pressterms.background",
+   "en": "On background",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "label.pressterms.off_record",
+   "en": "Off the record",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "label.foundelsewhere.press",
+   "en": "In the press",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "label.foundelsewhere.report",
+   "en": "In a report",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "label.foundelsewhere.decision",
+   "en": "In a decision",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "label.foundelsewhere.statement",
+   "en": "In a public statement",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "label.foundelsewhere.other",
+   "en": "Elsewhere",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "label.promise.embargo",
+   "en": "An embargo",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "a promise the group made to a person"
+  },
+  {
+   "key": "label.promise.anonymity",
+   "en": "Anonymity",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "a promise the group made to a person"
+  },
+  {
+   "key": "label.promise.other",
+   "en": "Another promise",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "a promise the group made to a person"
+  },
+  {
+   "key": "label.clockowedby.group",
+   "en": "Ours to meet",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "label.clockowedby.body",
+   "en": "Theirs to meet",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "label.clockowedby.undetermined",
+   "en": "Not yet known whose",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "label.actionscope.confidential",
+   "en": "Confidential: seen inside the group, never published",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "label.actionscope.none",
+   "en": "Not confidential",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "label.receipt.receipt",
+   "en": "Received by them",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "label.receipt.service",
+   "en": "Served on them",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.DETERMINATION_NOT_NONCOMPLIANT",
+   "en": "An action that claims a breach rests on a determination that the act broke a standard, and this determination found no such breach. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.OVERRIDE_NO_GROUND",
+   "en": "Acting before a determination needs one of two grounds: a legal deadline would pass first, or the act would be done and couldn't be undone. Or make a one-finding case first. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.OVERRIDE_GROUND_REFUSED",
+   "en": "The ground for acting first is missing {part}. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "{part}: the citation, the date, what, or when"
+  },
+  {
+   "key": "refusal.COPIED_IS_ADDRESSEE",
+   "en": "The office the action is addressed to can't also be copied. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_SET_PARTNERS",
+   "en": "Only a member names the organisations acting with your group. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.PARTNERS_REFUSED",
+   "en": "Each partner is a named organisation, listed once. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_SET_PRESS_TERMS",
+   "en": "Only a member sets the terms of talking to the press. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.PRESS_TERMS_NOT_PRESS",
+   "en": "Press terms apply only to an action with the press. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.PRESS_TERMS_REFUSED",
+   "en": "Press terms are on the record, on background or off the record, with any embargo as a real time and a note of at most 500 characters. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.RECEIPT_NOT_ON_SENT",
+   "en": "Only something sent can be received or served. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.OFFICE_STATUS_UNKNOWN",
+   "en": "That isn't one of the statuses this kind of reply takes in your places' rules. Choose one of them. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.OFFICE_STATUS_WITHOUT_OUTCOME",
+   "en": "Record what the reply said before adding the office's own wording of its status. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_SET_REPLY_OWED",
+   "en": "Only a member says that no reply is owed, with a reason. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.NO_REPLY_OWED",
+   "en": "This action owes no reply, so a missing reply isn't recorded on it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.FOUND_ELSEWHERE_NEEDS_CAPTURE",
+   "en": "A reply found elsewhere is captured first, so others can read it. Capture it, then record it. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.FOUND_ELSEWHERE_REFUSED",
+   "en": "A reply found elsewhere was found in the press, a report, a decision, a public statement or elsewhere, with a note of at most 500 characters. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SPEAKER_REFUSED",
+   "en": "Only a member who sent or spoke can be named as the speaker. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.REPLY_OWED_REFUSED",
+   "en": "Whether a reply is owed is yes or no. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.FOLLOWS_ACTION_REFUSED",
+   "en": "Name the earlier action this one follows. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.FOLLOWS_ACTION_REWRITTEN",
+   "en": "Which action this one follows is set once, when it starts. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.FOLLOWS_ACTION_SELF",
+   "en": "An action can't follow itself. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_RECORD_BEARING",
+   "en": "Only a member lays out a reply claim by claim. The assistant may propose a layout for you to check. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.BEARING_NOT_RFC",
+   "en": "A reply is laid out claim by claim only for a request for comment, once its reply is received. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.BEARING_REFUSED",
+   "en": "Each claim is one the request laid out, listed once, with how the reply bears on it and a note of at most 500 characters. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.STAGE_NOT_IN_LAW",
+   "en": "This records law has no such stage. Choose one of the stages it has. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.LAW_STAGE_UNKNOWN",
+   "en": "A records law in your places' rules names a stage Civicsmith doesn't know: {stage}. Tell whoever keeps those rules.",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "shown at setup, not to a member acting"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_SET_SCOPE",
+   "en": "Only a member makes an action confidential or not. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SCOPE_NO_REASON",
+   "en": "Say why. Your reason is kept with the change. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SCOPE_UNCHANGED",
+   "en": "The action is already that. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_RECORD_PROMISE",
+   "en": "Only a member records a promise your group made to a person. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.PROMISE_REFUSED",
+   "en": "A promise is an embargo, anonymity or another promise, said in at most 500 characters; ending one names a promise that stands. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.HOLD_PLACE_REFUSED",
+   "en": "A litigation hold is placed on one thing: an action, the project of a docket entry's case, or a counsel matter. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_SEND",
+   "en": "Only a member records that the hold notice was sent. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.HOLD_NOT_IN_PLACE",
+   "en": "A hold notice is prepared and recorded only while the hold is in place, and this one isn't. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_LINK",
+   "en": "Only a member records what arose from a reply. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.AROSE_FROM_NOT_A_RESPONSE",
+   "en": "Only a received reply can be what something arose from. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.AROSE_FROM_LINKED",
+   "en": "That link is already recorded. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "packet.privileged",
+   "en": "Privileged and confidential: prepared for counsel",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "packet.privileged.warning",
+   "en": "This packet belongs to a counsel matter. Sharing it outside the group may end its privilege. Share it only with your lawyer.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "filings.election.notice",
+   "en": "This names a pending measure or candidate. {fact} ({citation})",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "{fact}: the campaign-spending legal fact from the profile; never refusing"
+  },
+  {
+   "key": "rfc.quoting",
+   "en": "Your reply may be quoted, unless you say otherwise in it.",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "carried by every request for comment"
+  },
+  {
+   "key": "pointer.record.supported",
+   "en": "Supported by the record: {findings}",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "pointer.record.unsupported",
+   "en": "The record doesn't support this sentence. You may still send it.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "pointer.record.contradicted",
+   "en": "The record contradicts this sentence. It is held until you rewrite it, or release it with a reason.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "pointer.position",
+   "en": "Reads as a policy position: remove it, or comment as yourself.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "pointer.selfbenefit",
+   "en": "Asks for something for your group: rewrite it before approving.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "pointer.staff",
+   "en": "Names staff below the official responsible (the assistant's reading).",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "pointer.staff.notrun",
+   "en": "Staff names weren't checked: the assistant is off.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "voice.group",
+   "en": "For the group",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "voice.group.means",
+   "en": "Approved and sent as your group's act.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "voice.self",
+   "en": "As myself",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "voice.self.means",
+   "en": "Your own notes for speaking as yourself. It is not the group's act, and it is never recorded as sent or published.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "recognition.staff_public",
+   "en": "This thanks staff by name in public. Check that they are willing to be named.",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "once per draft; never refusing"
+  },
+  {
+   "key": "plan.close.lessons",
+   "en": "What would your group do differently next time? (optional, at most 4,000 characters)",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "plan.next.head",
+   "en": "What's next",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "plan.offer.document",
+   "en": "Document what happened",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "standing offer, first for a matter that may be an infraction"
+  },
+  {
+   "key": "plan.offer.document.means",
+   "en": "Write down what the office did and what rule it seems to break, before anything else goes out. It can become an option.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "plan.offer.chancetofix",
+   "en": "Give them a chance to fix it",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "standing offer"
+  },
+  {
+   "key": "plan.offer.chancetofix.means",
+   "en": "A notice telling the office what correcting the act and remedying the harm would look like, and by when. Offered again after each later step until it is fixed.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "plan.offer.chancetofix.again",
+   "en": "Offered again",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "plan.documentfirst.prompt",
+   "en": "Why act before documenting what happened? (at most 500 characters)",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "never a gate"
+  },
+  {
+   "key": "actions.noreply.owed",
+   "en": "No reply owed",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "escalation.stopped",
+   "en": "Stopped pursuing, {date}",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "shown without its reason, published output included"
+  },
+  {
+   "key": "escalation.stage.documented",
+   "en": "Is it documented?",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "the stages named as questions"
+  },
+  {
+   "key": "escalation.stage.told",
+   "en": "Did we tell them?",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "the stages named as questions"
+  },
+  {
+   "key": "escalation.stage.time",
+   "en": "How long do we give them?",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "the stages named as questions"
+  },
+  {
+   "key": "escalation.stage.reply",
+   "en": "What did they say?",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "the stages named as questions"
+  },
+  {
+   "key": "escalation.stage.file",
+   "en": "What can we file?",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "the stages named as questions"
+  },
+  {
+   "key": "escalation.stage.watch",
+   "en": "Are we still watching?",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "the stages named as questions"
+  },
+  {
+   "key": "escalation.stage.answers",
+   "en": "Who answers for it?",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "the stages named as questions"
+  },
+  {
+   "key": "plan.scenarios.compare",
+   "en": "Compare scenarios",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "plan.scenarios.compare.means",
+   "en": "Two or three scenarios side by side: their options, dates and what each would start. Set-aside scenarios can be shown too.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.TEMPLATE_NOT_REVIEWED",
+   "en": "This template isn't offered yet: it lacks {missing}.",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "{missing}: its writer, public sources, a professional review, or a separate approver"
+  },
+  {
+   "key": "refusal.TEMPLATE_COURT_PETITION",
+   "en": "Civicsmith offers no templates for filing with a court. Talk to a lawyer.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.CONTRADICTED_HELD",
+   "en": "The record contradicts a sentence in this text. Rewrite it, or release it with a reason, before approving. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SELF_BENEFIT_ASK",
+   "en": "A sentence still asks for something for your group or its members. A notice or demand asks the body to correct its own act; rewrite that sentence before approving. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.RFC_QUOTING_MISSING",
+   "en": "A request for comment says the reply may be quoted unless it says otherwise. Add that sentence before approving. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.ASSERTION_UNRESOLVED",
+   "en": "A sentence that reads as saying the body broke a rule is still open. Rewrite it, confirm the act only asks, or treat the act as a breach claim. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.ASSERTION_RESOLUTION_REFUSED",
+   "en": "Each answer names one sentence that was pointed out, once; \"it only asks\" needs your own words, and a breach claim takes none. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.NOT_A_PARTNER",
+   "en": "That organisation isn't one of this action's partners. Add it as a partner first. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.JOINT_FINGERPRINT_MISMATCH",
+   "en": "The partner's copy isn't the same text your group approved. They sign the same words, or none. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SECOND_APPROVAL_NEEDED",
+   "en": "This project needs a second member's approval before this is sent, and it hasn't been given. Any other member of the project can give it. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SAME_APPROVER",
+   "en": "The second approval comes from a member other than the one who approved first. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.MACHINE_CANNOT_STOP",
+   "en": "Only a member stops or reopens an escalation. Nothing was written.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.NOT_OPEN",
+   "en": "This escalation isn't open: a suspended one is resumed first, and one that has ended or stopped doesn't move. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "widened for a stopped escalation"
+  },
+  {
+   "key": "refusal.NOT_STOPPED",
+   "en": "Only an escalation your group stopped pursuing can be reopened. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SCENARIO_ALREADY_SET_ASIDE",
+   "en": "This scenario is already set aside. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SCENARIO_NOT_SET_ASIDE",
+   "en": "This scenario isn't set aside, so there is nothing to restore. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.NO_SUCH_SCENARIO",
+   "en": "This plan has no such scenario. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.PLAN_NOT_OPEN",
+   "en": "Only an open plan can be paused. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.PLAN_NOT_PAUSED",
+   "en": "Only a paused plan can be resumed. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.DOCUMENT_FIRST_NO_REASON",
+   "en": "What happened isn't documented yet. Say why you are acting first (at most 500 characters), or document it first. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "refusal.SCENARIO_OUT_OF_RANGE",
+   "en": "A scenario is numbered 1, 2, 3 and on. Nothing was written.",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "re-worded: scenarios are no longer capped at three"
+  },
+  {
+   "key": "monitoring.address.ended",
+   "en": "Stopped watching on {date} ({who} set it)",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "monitoring.address.noend",
+   "en": "Watched, with no end date",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "following.watch.question",
+   "en": "Keep watching {what}?",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "following.watch.keep",
+   "en": "Keep watching until {date}",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "following.watch.stop",
+   "en": "Stop now",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "following.watch.reliedon",
+   "en": "Another open plan or project relies on this watch, so it isn't offered for stopping here.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "following.watch.noend",
+   "en": "No end date",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "queue.action-clock-overdue.ours.summary",
+   "en": "Our deadline passed: {what}",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "owed by the group, told once"
+  },
+  {
+   "key": "queue.action-clock-overdue.ours.detail",
+   "en": "Your group's deadline to {what} with {venue} was {date}, and nothing is recorded as done. See what can still be done.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "queue.action-clock-overdue.theirs.summary",
+   "en": "The date they gave has passed: {what}",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "never says it is a legal deadline"
+  },
+  {
+   "key": "queue.action-clock-overdue.theirs.detail",
+   "en": "{office} said it would {what} by {date}, and no reply is recorded since. This is the date they gave, not a legal deadline.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "queue.member-left-items.summary",
+   "en": "{member} left, with {n} dated items",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "queue.member-left-items.detail",
+   "en": "{member} is no longer in {place}, and these were routed to them: {items}. Take up the ones you can.",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "never says why they left"
+  },
+  {
+   "key": "queue.watch-keep-or-stop.summary",
+   "en": "Keep watching {what}?",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "queue.watch-keep-or-stop.detail",
+   "en": "{plan} has closed, or its promises are all met. Keep this watch until a date, or stop it now. You are asked once.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "queue.plan-review-due.summary",
+   "en": "Review due: {plan}",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "queue.plan-review-due.detail",
+   "en": "Your group set {plan} to be reviewed every {rhythm}, and nothing has been reviewed since {date}. See what changed, then record the review.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "queue.plan-look-again.summary",
+   "en": "Look again at {plan}",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "queue.plan-look-again.detail",
+   "en": "{plan} was paused on {date}, to look at again today. What it set running carried on meanwhile.",
+   "protected": false,
+   "source": "DEC-194"
+  },
+  {
+   "key": "queue.litigation-hold.docket.summary",
+   "en": "A legal threat with no hold: {entry}",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "queue.litigation-hold.docket.detail",
+   "en": "A docket entry is marked as a legal threat, and no litigation hold is stated for it. Place a hold, or say why none is needed.",
+   "protected": true,
+   "source": "DEC-194"
+  },
+  {
+   "key": "door.actioncorrespond",
+   "en": "Record a reply",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "a queue item's leading act"
+  },
+  {
+   "key": "door.clockentrystate",
+   "en": "Mark it met or waived",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "a queue item's leading act"
+  },
+  {
+   "key": "door.itemtakeup",
+   "en": "Take this up",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "a queue item's leading act"
+  },
+  {
+   "key": "door.checkpointrecord",
+   "en": "Record the checkpoint",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "a queue item's leading act"
+  },
+  {
+   "key": "door.escalationadvance",
+   "en": "Advance the escalation",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "a queue item's leading act"
+  },
+  {
+   "key": "door.escalationdecline",
+   "en": "Decline to escalate",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "a queue item's leading act"
+  },
+  {
+   "key": "door.reminderanswer",
+   "en": "Answer the reminder",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "a queue item's leading act"
+  },
+  {
+   "key": "door.actionhold",
+   "en": "Place a hold",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "a queue item's leading act"
+  },
+  {
+   "key": "door.watchanswer",
+   "en": "Keep or stop",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "a queue item's leading act"
+  },
+  {
+   "key": "door.planreviewrecord",
+   "en": "Record the review",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "a queue item's leading act"
+  },
+  {
+   "key": "door.planresume",
+   "en": "Resume the plan",
+   "protected": false,
+   "source": "DEC-194",
+   "note": "a queue item's leading act"
+  },
+  {
+   "key": "filings.secondapproval.waiting",
+   "en": "Waiting for a second member's approval. Any member of this project other than {approver} can give it.",
+   "protected": true,
+   "source": "DEC-194",
+   "note": "shown on the filing (DEC-194 (3))"
+  },
+  {
+   "key": "filings.secondapproval.given",
+   "en": "Second approval given by {member} on {date}.",
+   "protected": true,
+   "source": "DEC-194"
   },
   {
    "key": "rail.home.name",
@@ -3582,6 +5425,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_itemtakeup.label.plan",
+   "en": "Take an item up yourself",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.optionstartpreview.label.start-send",
    "en": "See what starting does",
    "protected": true,
@@ -3614,6 +5463,12 @@
   {
    "key": "act.filingrecordsent.label.start-send",
    "en": "I have sent it",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_filingsecondapprove.label.start-send",
+   "en": "Give the second approval",
    "protected": true,
    "source": "registry.json"
   },
@@ -3684,6 +5539,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.owed_actionscope.label.action",
+   "en": "Make the action confidential, or not",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.escalationopen.label.matter",
    "en": "Open an escalation",
    "protected": true,
@@ -3704,6 +5565,12 @@
   {
    "key": "act.escalationend.label.matter",
    "en": "End",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_escalationstoppursuing.label.matter",
+   "en": "Stop pursuing, with a reason",
    "protected": true,
    "source": "registry.json"
   },
@@ -4514,6 +6381,258 @@
   {
    "key": "act.owed_projectaikeepaway.does",
    "en": "Keeps this project's material away from AI, for every use or the ones you choose, with a reason every member sees. It binds every account, whoever pays.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectscopeset.does",
+   "en": "Makes this project a counsel matter, your own project, or neither, with your reason. A counsel matter's correspondence and dates are seen only by its members and never published; your own project is hidden and yours alone.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.projectapprovalset.does",
+   "en": "Chooses which acts in this project need a second member's approval before they are sent: a kind of action, a tier, or anything addressed to the public. Your reason is kept with the setting.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.ruledraft.does",
+   "en": "Drafts a rule of your group's own, a deadline or a legal fact, from the captured document that states it. It applies only after another member confirms it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.ruleconfirm.does",
+   "en": "Confirms a rule another member drafted, after checking it against its source. For a Tier 2 or Tier 3 matter you state your professional qualification.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.rulewithdraw.does",
+   "en": "Withdraws one of your group's own rules, with your reason. It is kept, and no longer applied.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.ruleoffer.does",
+   "en": "Gives you the rule, its source and its confirmation as one exact file, to send to whoever keeps your places' shared rules.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.dutyfromresponse.does",
+   "en": "Proposes an obligation from the body's own reply or report: a promise it made, or a response the report requires, quoting it. A member adopts it before it is tracked.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.dutiesarising.does",
+   "en": "Lists the obligations adopted from these documents, and whether each is met.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.procedureguides.does",
+   "en": "Shows the routes your places' rules and your group give for this kind of action, each with the law or rule it cites. Legal information, not legal advice.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.standingendset.does",
+   "en": "Changes when your standing question stops being asked again.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.declaredstakeset.does",
+   "en": "Records, in your group's own words, what it stands to gain or lose. It is shown beside your group's name wherever its work is published.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.textcheck.does",
+   "en": "Asks the assistant to point out sentences that read as a claim of breach, a policy position, an ask for your group, or naming staff. It never rewrites them; you decide.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.infractiondraft.does",
+   "en": "Asks the assistant to draft a documentation of what happened from the record, labelled as its draft until you make it yours.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.bearingdraft.does",
+   "en": "Asks the assistant to propose how the reply bears on each claim, labelled as its proposal until you lay it out yourself.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.publishcheck.does",
+   "en": "Runs every publication check on this case and holds it, checked and unsigned, until it is signed. Nothing is published.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.casecheck.does",
+   "en": "Shows whether this case's check still holds, and if not, why.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.advocacycheck.does",
+   "en": "Checks your own text, sentence by sentence, against the record: supported, not supported, or contradicted. Only in your own project, and only you see it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.curelink.does",
+   "en": "Links a later act of the same office, found compliant, as what corrected an act found noncompliant. Undoing the link needs a reason.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.successrecord.does",
+   "en": "Records a success in your own words: what changed and when, what shows it, figures computed from the record, and the order of events or a cause you can show.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.outcomecarry.does",
+   "en": "Puts an outcome (a success, a correction by the office, or a harm addressed) into the case's next edition. It is published when that edition is signed.",
+   "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.actionreceipt.does",
+   "en": "Records that what you sent was received by them, or served on them, how and when. A deadline may count from it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_actionscope.does",
+   "en": "Makes this action confidential, or not, with your reason. A confidential action is seen inside the group and never published; the change applies to what is published from now on.",
+   "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.actionpromise.does",
+   "en": "Records a promise your group made to a person, such as an embargo or anonymity, or ends one.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.openitemswith.does",
+   "en": "Lists your group's other open actions with the same office. It is information, never a block.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.actionreplybearing.does",
+   "en": "Lays out the reply claim by claim: for each, whether it brings new evidence, disputes without evidence, or doesn't address it.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.actionbearingpropose.does",
+   "en": "Proposes a claim-by-claim layout of the reply, labelled as a proposal and kept apart until a member lays it out.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.arosefrom.does",
+   "en": "Records that a project or a matter in a plan arose from this reply.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.pressurerecord.does",
+   "en": "Records pressure that arrived outside any action, such as a letter, post or call. A legal threat can carry a litigation hold.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.holdnoticesent.does",
+   "en": "Records that you sent the litigation hold notice, with a copy or your account of how.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.jointsignatory.does",
+   "en": "Records that a partner organisation approved the same text in its own copy. Their copy must match word for word.",
+   "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_filingsecondapprove.does",
+   "en": "Gives the second approval this project requires before sending. Only a member other than the first approver can give it.",
+   "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_escalationstoppursuing.does",
+   "en": "Stops pursuing this escalation, with your reason. It is never recorded as ended or as a success, and it can be reopened where it stopped.",
+   "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.escalationreopen.does",
+   "en": "Reopens an escalation your group stopped pursuing, at the stage where it stopped, with your reason.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.scenariosetaside.does",
+   "en": "Sets this scenario aside, with your reason. It is kept whole, and can be restored.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.scenariorestore.does",
+   "en": "Brings a set-aside scenario back, with your reason.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.planpause.does",
+   "en": "Pauses this plan, with your reason and, if you like, a day to look at it again. What it set running carries on.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.planresume.does",
+   "en": "Resumes a paused plan, with your reason.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.matteroutcomeset.does",
+   "en": "Records, in your group's own words, the outcome it wants for this matter.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_itemtakeup.does",
+   "en": "Takes this item's to-dos for yourself. Nobody assigns anybody; you choose.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.watchlink.does",
+   "en": "Records that this plan set this watch running, so the plan knows to ask whether to keep it when it closes.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.watchanswer.does",
+   "en": "Keeps this watch until a date you choose, or stops it now.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.followend.does",
+   "en": "Sets or removes the date to stop following this.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -6690,6 +8809,396 @@
    "source": "library.json"
   },
   {
+   "key": "wizard.WIZ-f06504b9133b8d61.name",
+   "en": "Comment for the group",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-f06504b9133b8d61.step1.what",
+   "en": "Choose a public comment as the option, and the meeting or comment period it is for.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-f06504b9133b8d61.step1.why",
+   "en": "Choosing records why this option, now.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-f06504b9133b8d61.step2.what",
+   "en": "Start the comment, addressed to the body that holds the meeting.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-f06504b9133b8d61.step2.why",
+   "en": "It goes to the body by role, so it reaches whoever sits there that day.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-f06504b9133b8d61.step3.what",
+   "en": "Choose \"For the group\" or \"As myself\", then write what the record shows and what you ask the body to examine or apply. Start from your group's template for a written comment if it has one.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-f06504b9133b8d61.step3.why",
+   "en": "A comment for the group is the group's act. One as yourself is your own notes, never recorded as sent.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-f06504b9133b8d61.step4.what",
+   "en": "Read any sentence pointed out as a policy position: remove it, or comment as yourself.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-f06504b9133b8d61.step4.why",
+   "en": "A comment for the group states facts and asks. A position is a member's to take as themselves.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-f06504b9133b8d61.step5.what",
+   "en": "Approve the text.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-f06504b9133b8d61.step5.why",
+   "en": "Approving is kept apart from sending, so you can stop between them.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-f06504b9133b8d61.step6.what",
+   "en": "Submit it, or read it at the meeting, then record that it was sent.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-f06504b9133b8d61.step6.why",
+   "en": "The record keeps what the group said, and when.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-bd7bde2c61b6badb.name",
+   "en": "Demand a correction",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-bd7bde2c61b6badb.step1.what",
+   "en": "Choose the demand as the option. Read its advisory first: a demand is a Tier 2 act, and a lawyer's view helps.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-bd7bde2c61b6badb.step1.why",
+   "en": "A demand can lead to a court; knowing that before starting is part of choosing it.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-bd7bde2c61b6badb.step2.what",
+   "en": "See what starting does: the window the law gives the body to correct its act, and anything that would stop it.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-bd7bde2c61b6badb.step2.why",
+   "en": "A demand starts a legal clock. You see it before anything runs.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-bd7bde2c61b6badb.step3.what",
+   "en": "Start the demand, addressed to the body by role.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-bd7bde2c61b6badb.step3.why",
+   "en": "The body's holder that day is shown, so you know who will read it.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-bd7bde2c61b6badb.step4.what",
+   "en": "Write what the body did, the rule it seems to break, and what correcting it would look like. Start from your group's demand template if it has one.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-bd7bde2c61b6badb.step4.why",
+   "en": "A demand asks the body to correct its own act, so it says exactly what correcting it means.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-bd7bde2c61b6badb.step5.what",
+   "en": "Rewrite any sentence pointed out as asking for something for your group.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-bd7bde2c61b6badb.step5.why",
+   "en": "A demand asks nothing for the group. Approval waits until those sentences are gone.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-bd7bde2c61b6badb.step6.what",
+   "en": "Approve the text.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-bd7bde2c61b6badb.step6.why",
+   "en": "Approving is kept apart from sending, so you can stop between them.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-bd7bde2c61b6badb.step7.what",
+   "en": "Send it, then record that you sent it.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-bd7bde2c61b6badb.step7.why",
+   "en": "Recording it starts the body's window to correct the act.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-bd7bde2c61b6badb.step8.what",
+   "en": "The window's end goes into your queue.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-bd7bde2c61b6badb.step8.why",
+   "en": "If the body doesn't correct it, the next stage is ready without anyone remembering.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-33cece8a68e76f58.name",
+   "en": "Take an escalation to its next stage",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-33cece8a68e76f58.step1.what",
+   "en": "Read where the escalation stands. Each stage is a question, such as \"Did we tell them?\" or \"What did they say?\".",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-33cece8a68e76f58.step1.why",
+   "en": "The questions say what each stage needs before the next.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-33cece8a68e76f58.step2.what",
+   "en": "If they replied, record what they said.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-33cece8a68e76f58.step2.why",
+   "en": "The next stage rests on the reply, or on there being none.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-33cece8a68e76f58.step3.what",
+   "en": "Advance to the next stage, or decline to escalate with your reason.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-33cece8a68e76f58.step3.why",
+   "en": "Either way the record keeps why.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-33cece8a68e76f58.step4.what",
+   "en": "If your group is stopping, stop pursuing it, with your reason.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-33cece8a68e76f58.step4.why",
+   "en": "Stopping is never recorded as ended or as a success, and it can be reopened where it stopped.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-33cece8a68e76f58.step5.what",
+   "en": "Set when to look at it again.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-33cece8a68e76f58.step5.why",
+   "en": "An escalation moves only when a member moves it.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-d0cdcee9437b213b.name",
+   "en": "Refer it to an oversight body",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-d0cdcee9437b213b.step1.what",
+   "en": "Choose a referral to the oversight body as the option.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-d0cdcee9437b213b.step1.why",
+   "en": "Choosing records why this option, now.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-d0cdcee9437b213b.step2.what",
+   "en": "Start the referral, addressed to the oversight body by role.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-d0cdcee9437b213b.step2.why",
+   "en": "It goes to the body by role, so it reaches whoever holds it that day.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-d0cdcee9437b213b.step3.what",
+   "en": "Write what happened and ask the body to look into it. Start from your group's referral template if it has one.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-d0cdcee9437b213b.step3.why",
+   "en": "A referral asks for an examination. It doesn't claim a breach the body hasn't found.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-d0cdcee9437b213b.step4.what",
+   "en": "Approve the text.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-d0cdcee9437b213b.step4.why",
+   "en": "Approving is kept apart from sending, so you can stop between them.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-d0cdcee9437b213b.step5.what",
+   "en": "Send it, then record that you sent it. Say if no reply is owed.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-d0cdcee9437b213b.step5.why",
+   "en": "Some oversight bodies don't reply to a referral; saying so keeps a missing reply from being counted against them.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-d0cdcee9437b213b.step6.what",
+   "en": "If the referral shouldn't be published, make the action confidential, with your reason.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-d0cdcee9437b213b.step6.why",
+   "en": "A confidential action is seen inside the group and never published.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-d0cdcee9437b213b.step7.what",
+   "en": "When they reply, record it, with their own words for its status.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-d0cdcee9437b213b.step7.why",
+   "en": "Outcomes are kept in the oversight body's own terms.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-a17835c4d8235f65.name",
+   "en": "Pick up a plan",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-a17835c4d8235f65.step1.what",
+   "en": "Read where it stands: the matters, what each has reached, and what is due next.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-a17835c4d8235f65.step1.why",
+   "en": "Joining midway starts from what is already true, not from the beginning.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-a17835c4d8235f65.step2.what",
+   "en": "Read the latest status report, if a member saved one, and what changed since.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-a17835c4d8235f65.step2.why",
+   "en": "Each line cites what it rests on, so you can check it.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-a17835c4d8235f65.step3.what",
+   "en": "Take up an item you can do. Nobody assigns anybody: you choose.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-a17835c4d8235f65.step3.why",
+   "en": "Taking it up routes its dates and reminders to you.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-a17835c4d8235f65.step4.what",
+   "en": "Set a reminder for your item.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-a17835c4d8235f65.step4.why",
+   "en": "Your reminder is yours alone.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
    "key": "wizard.WIZ-a8c349d7d71b6bb0.name",
    "en": "Start and send",
    "protected": false,
@@ -6733,7 +9242,7 @@
   },
   {
    "key": "wizard.WIZ-a8c349d7d71b6bb0.step4.what",
-   "en": "Prepare what is sent. A template or draft is labelled until you make it yours.",
+   "en": "Prepare what is sent: start from your group's template for this kind of action if it has one, or write it yourself. A template or draft is labelled until you make it yours.",
    "protected": false,
    "source": "library.json"
   },
