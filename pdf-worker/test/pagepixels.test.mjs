@@ -20,7 +20,8 @@ import { readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { renderPageToPixels, REFUSALS } from "../src/pagepixels.mjs";
-import { renderPictureToPixels, PICTURE_FRAME_MAX } from "../src/picturepixels.mjs";
+import { renderPictureToPixels, PICTURE_FRAME_MAX, PNG_REFUSAL_REASONS } from "../src/picturepixels.mjs";
+import { PNG_REFUSES } from "../src/pngdecode.mjs";
 import { CROP_REFUSALS } from "../src/imagecrop.mjs";
 import { openPdf, pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
 import { makePdf, onePage, content, image, readPng, turn, hex, deflateSync, runner } from "./make-pdf.mjs";
@@ -443,8 +444,11 @@ console.log("\n--- R40: pure per call ---");
     const out = await esbuild.build({
       stdin: {
         contents: `import { renderPageToPixels } from ${JSON.stringify(fileURLToPath(new URL("../src/pagepixels.mjs", import.meta.url)))};
+import { renderPictureToPixels } from ${JSON.stringify(fileURLToPath(new URL("../src/picturepixels.mjs", import.meta.url)))};
 export default { async fetch(req) {
-  const r = await renderPageToPixels(new Uint8Array(await req.arrayBuffer()), 0, { decodeDct: new URL(req.url).searchParams.has("dct") });
+  const q = new URL(req.url).searchParams, body = new Uint8Array(await req.arrayBuffer());
+  const r = q.has("edge") ? await renderPictureToPixels(body, 0, { maxEdge: Number(q.get("edge")), grey: true })
+    : await renderPageToPixels(body, 0, { decodeDct: q.has("dct") });
   return Response.json(r.ok ? { ok: true, route: r.route, width: r.width, height: r.height, upright: r.upright, pixels_sha256: r.pixels_sha256 } : r);
 } };`,
         resolveDir: fileURLToPath(new URL(".", import.meta.url)), sourcefile: "pagepixels-under-test.mjs",
@@ -462,6 +466,12 @@ export default { async fetch(req) {
       t("R40 workerd: the CCITT page, upright, the independent decoder's pixels", [j.ok, j.width, j.height, j.upright, j.pixels_sha256], [true, 2550, 3300, true, IND_UPRIGHT_SHA]);
       const jd = await (await mf.dispatchFetch("http://x/?dct=1", { method: "POST", body: DCT_SCAN })).json();
       t("R40 workerd: the DCT page decoded, Pillow's pixels", [jd.ok, jd.route, jd.pixels_sha256], [true, "decoded-dct", DCT_UPRIGHT_SHA]);
+      const PV = JSON.parse(Buffer.from(F("fixtures/picture-variants.json")).toString("utf8")).variants;
+      for (const [name, edge] of [["photo-4032x3024-o6", 1568], ["orient-7", 10], ["png-rgba", 30]]) {
+        const v = PV.find((x) => x.name === name), e = v.expect.find((x) => x.max_edge === edge && x.grey);
+        const jp = await (await mf.dispatchFetch(`http://x/?edge=${edge}`, { method: "POST", body: Buffer.from(v.b64, "base64") })).json();
+        t(`R40 R42 workerd: the picture ${name}, Pillow's pixels`, [jp.ok, jp.route, jp.width, jp.height, jp.pixels_sha256], [true, "decoded-picture", e.width, e.height, e.pillow_sha256]);
+      }
     } finally { await mf.dispose(); }
   }
 }
@@ -561,6 +571,30 @@ console.log("\n--- R42, R43: a picture file, against Pillow 12.3.0 ---");
     const r = await picture(pic(name), 0, { maxEdge: 64, grey: true });
     t(`R42 the JPEG codec's refusal, mapped as R22 maps it: ${name} is ${reason}, no bytes`, fields(r, "ok", "reason", "page", "bytes"), [false, reason, 0, undefined]);
   }
+  /* PNG: the codec's refusals mapped as R25 maps JBIG2's and JPX's, each
+     beside the untouched file, which renders. */
+  const PNG = Buffer.from(pic("png-rgb"));
+  t("R42 (control) the untouched PNG renders", (await picture(new Uint8Array(PNG), 0, { maxEdge: 64, grey: true })).ok, true);
+  const crcOf = (b) => { let c = -1; for (const x of b) { c ^= x; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; } return (c ^ -1) >>> 0; };
+  const chunk = (type, data) => { const b = Buffer.alloc(12 + data.length); b.writeUInt32BE(data.length, 0); b.write(type, 4, "latin1"); Buffer.from(data).copy(b, 8); b.writeUInt32BE(crcOf(b.subarray(4, 8 + data.length)), 8 + data.length); return b; };
+  const afterIhdr = (extra) => new Uint8Array(Buffer.concat([PNG.subarray(0, 33), extra, PNG.subarray(33)]));
+  const interlaced = Buffer.from(PNG); interlaced[28] = 1; interlaced.writeUInt32BE(crcOf(interlaced.subarray(12, 29)), 29);
+  const badCrc = Buffer.from(PNG); badCrc[40] ^= 0xff;
+  for (const [label, bytes, reason] of [
+    ["an interlaced PNG", new Uint8Array(interlaced), PNG_REFUSAL_REASONS["interlaced"]],
+    ["an unknown critical chunk", afterIhdr(chunk("ABCD", [1, 2, 3])), PNG_REFUSAL_REASONS["an unknown critical chunk"]],
+    ["a PNG cut short", new Uint8Array(PNG.subarray(0, PNG.length >> 1)), "TRUNCATED_IMAGE_DATA"],
+    ["a damaged chunk (its CRC)", new Uint8Array(badCrc), "DECODE_FAILED"],
+  ]) {
+    const r = await picture(bytes, 0, { maxEdge: 64, grey: true });
+    t(`R42 the PNG codec's refusal, mapped: ${label} is ${reason}, no bytes`, fields(r, "ok", "reason", "page", "bytes"), [false, reason, 0, undefined]);
+  }
+  t("R42 the mapping is total over PNG_REFUSES: every feature has a declared reason, the memory bound IMAGE_TOO_LARGE",
+    [Object.keys(PNG_REFUSAL_REASONS).sort(), Object.values(PNG_REFUSAL_REASONS).every((x) => x in REFUSALS), PNG_REFUSAL_REASONS["an image past the memory bound"]],
+    [Object.keys(PNG_REFUSES).sort(), true, "IMAGE_TOO_LARGE"]);
+  const withText = await picture(afterIhdr(chunk("tEXt", Buffer.from("Comment\0a member's note"))), 0, { maxEdge: 64, grey: true });
+  t("R42 never the file's own bytes: a PNG's text chunk does not reach the answer",
+    [withText.ok, chunks(withText.bytes), Buffer.from(withText.bytes).includes("member")], [true, ["IHDR", "IDAT", "IEND"], false]);
   for (const bad of [0, -3, 1.5, undefined, "64"]) {
     let threw = null;
     try { await renderPictureToPixels(SMALL, 0, { maxEdge: bad, grey: true }); } catch (e) { threw = e.constructor.name; }

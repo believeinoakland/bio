@@ -45,8 +45,12 @@ const refuse = (reason, detail = {}) => {
 
 /* R42: a codec's refusal mapped as R22 and R25 map them, total over PNG_REFUSES
  * (every declared feature is UNSUPPORTED_FILTER unless named here). */
-const PNG_FEATURE_REASONS = featureReasons(PNG_REFUSES, { "a frame past the memory bound": "IMAGE_TOO_LARGE" });
+const PNG_FEATURE_REASONS = featureReasons(PNG_REFUSES, { "an image past the memory bound": "IMAGE_TOO_LARGE" });
 const PNG_CODE_REASONS = { TRUNCATED: "TRUNCATED_IMAGE_DATA" };
+/** The `REFUSALS` reason each PNG_REFUSES feature answers, declared so a test
+ *  can see the mapping is total. (The memory key is behind `PICTURE_FRAME_MAX`,
+ *  which refuses first.) */
+export const PNG_REFUSAL_REASONS = PNG_FEATURE_REASONS;
 
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 
