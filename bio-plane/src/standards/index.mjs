@@ -2385,6 +2385,23 @@ export class Standards {
              adoption: adopted ? { standard: adopted.standard_id, by: adopted.adopted_by, at: adopted.adopted_at } : null };
   }
 
+  /** R54 (K2806; read by `duties` R30): one proposal (R9) the viewer may see, `{ok: true, proposal: {id, kind, adoption}}`,
+   *  `adoption` null until a member adopts it (R10), then `{standard, by, at}` naming the adopted standard. An id naming
+   *  no proposal, one asked by a viewer the record admits to nothing, and one adopted as a standard the viewer may not
+   *  read (R37) are answered alike, through R10's `STANDARD_NO_SUCH_PROPOSAL` (the bare `NO_SUCH_PROPOSAL` is `intent`'s,
+   *  for another condition: one code, one condition), with nothing read beyond it. Writes nothing and never throws. */
+  standardProposalRead({ proposal = null, viewer = null } = {}) {
+    try {
+      const p = typeof proposal === "string" && proposal.trim() ? this.#proposal(proposal.trim()) : null;
+      const visible = !!p && viewer !== null && viewer !== undefined && viewerPredicate(viewer).scope !== "DENY";
+      const a = visible ? this.#proposalAnswer(p).adoption : null;
+      if (!visible || (a && !this.#readable(a.standard, viewer))) return refuseNoSuchProposal(str(proposal) || null);
+      return { ok: true, proposal: { id: p.proposal_id, kind: p.kind ?? null, adoption: a } };
+    } catch {
+      return refuseNoSuchProposal(typeof proposal === "string" ? proposal.trim().slice(0, 80) || null : null);
+    }
+  }
+
   /** R10: a member adopts a proposal: R1 by that member, naming it. A field the member does not state is the
    *  proposal's, and the answer says which were; the standard records the proposal, and the proposal its adoption. The
    *  reason is never taken from the proposal: the adopting member's own is R1's, and the proposal's `why` is the

@@ -166,3 +166,37 @@ test("R52 R53 the two rows are standards' own family, after C-112.62, each where
   const checks = Object.values(STANDARDS_CHECKS).map((c) => c.check);
   assert.equal(new Set(checks).size, checks.length, "no check id twice");
 });
+
+test("R54 standardProposalRead answers one proposal the viewer may see, {ok, proposal: {id, kind, adoption}}: adoption null until a member adopts it, then {standard, by, at}; an absent id, a viewer the record admits to nothing, and a proposal adopted as a standard the viewer may not read are answered alike (STANDARD_NO_SUCH_PROPOSAL); it writes nothing and never throws", () => {
+  const w = seeded();
+  const letter = w.passage("commission-letter");
+  const p = w.s.standardPropose({ cite: "MCBC 2024-7", kind: "commitment", issuer: "Marlow County Commission", text: [letter.contentId],
+                                  why: "Their letter.", proposer: MACHINE }).proposal;
+  const before = w.snapshot();
+  /* the control: unadopted, adoption null */
+  assert.deepEqual(w.s.standardProposalRead({ proposal: p.id, viewer: V("carol") }), { ok: true, proposal: { id: p.id, kind: "commitment", adoption: null } });
+  const absent = w.s.standardProposalRead({ proposal: "STDP-2026-9999", viewer: V("carol") });
+  refusalRow(absent, "STANDARD_NO_SUCH_PROPOSAL");
+  const strip = (x) => ({ ...x, proposal: null });
+  for (const viewer of [null, undefined, "", "nobody", "member:"])
+    assert.deepEqual(strip(w.s.standardProposalRead({ proposal: p.id, viewer })), strip(absent), String(viewer));
+  for (const proposal of [null, "", 7, {}]) refusalRow(w.s.standardProposalRead({ proposal, viewer: V("carol") }), "STANDARD_NO_SUCH_PROPOSAL");
+  assert.deepEqual(w.snapshot(), before, "the read writes nothing");
+  for (const a of [undefined, null, { proposal: { toString() { throw new Error("x"); } } }]) assert.doesNotThrow(() => w.s.standardProposalRead(a ?? undefined));
+  /* adopted: names the standard, who and when */
+  w.clock.now = "2026-10-01T10:00:00.000Z";
+  const a = w.s.standardAdopt({ proposal: p.id, author: V("bob"), viewer: V("bob"), reason: REASON });
+  assert.equal(a.ok, true, JSON.stringify(a).slice(0, 300));
+  assert.deepEqual(w.s.standardProposalRead({ proposal: p.id, viewer: V("carol") }).proposal,
+                   { id: p.id, kind: "commitment", adoption: { standard: a.id, by: V("bob"), at: "2026-10-01T10:00:00Z" } });
+  /* adopted as a policy held at a hidden project's sight (R37): answered only to who may read that standard */
+  const P = w.project("Source material", "alice");
+  const hidden = w.passage("leaked");
+  w.st.sql.exec(`UPDATE content SET bundle_id=? WHERE content_id=?`, P, hidden.contentId);
+  w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, P, hidden.bundleId);
+  const q = w.s.standardPropose({ cite: "HSO 4/21 para 3", kind: "policy", issuer: "Harbour Master", why: "w", proposer: V("alice") }).proposal;
+  const b = w.s.standardAdopt({ proposal: q.id, author: V("alice"), viewer: V("alice"), reason: REASON, text: [hidden.contentId] });
+  assert.equal(b.ok, true, JSON.stringify(b).slice(0, 300));
+  assert.equal(w.s.standardProposalRead({ proposal: q.id, viewer: V("alice") }).proposal.adoption.standard, b.id);
+  refusalRow(w.s.standardProposalRead({ proposal: q.id, viewer: V("carol") }), "STANDARD_NO_SUCH_PROPOSAL");
+});
