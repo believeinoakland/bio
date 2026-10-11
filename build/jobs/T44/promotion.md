@@ -53,3 +53,7 @@ The used modules' public parts (record-grammar, signatures, record-core, members
 **Deferred:** none of my entries. PROMOTION #40's small items stand as T43 left them: the `where` precision of C-102.4/.5, line numbers in `wording.test.mjs` titles, d526's `D526_SRC` hook, `release.mjs`' alias. None is a requirement failure.
 
 Size (session_015sXXurg5etajFj626NU7kC): test runs 14, module lines 3722
+
+## J1 · COMPLETE
+
+T44-3 complete on job/T44/promotion (record: Completion). Stamp 1.70.0 -> 1.71.0, ROW_CENSUS 1722 rows c6a39c14…: two T43 L3+ rows changed (C-51.7 extraction, C-143.4 ai-use, translations); T44 L1 moved none; rule 4 (2) first half cleared. Own code and tests read whole: one flaw fixed (R44: fork title written as a JSON string, so a quote or backslash was refused ENVELOPE_TITLE_DISAGREES; now quotedScalar, tested). promotion 128/0, row-census 8/0, d526 31/0; users 51 of 53 green, reds: case-checker program.test.mjs:19,:49 (program.mjs stale from the stamp, rule 4 (5), regenerate at close), affordances t36.test.mjs:54,:93 (rule 4 (6), same on tranche). Checks: architecture 0, coverage 56/56; format and ownership 1 each: BOB's modules.json swap row-census-1.70.0.jsonl -> row-census-1.71.0.jsonl (rule 3). Stale for regeneration: plane bundle and case-checker program.mjs. ai-use's T43 record did not name C-143.4 as awaiting stamp.
