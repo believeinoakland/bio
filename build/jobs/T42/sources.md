@@ -1,6 +1,6 @@
 # sources (T42)
 
-**Status** · session_01SnzeWkLZjLCzHaakfd3erC · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_01SnzeWkLZjLCzHaakfd3erC · depth 2 · WAITING ON BOB (doorbell merge) · handled B2
 
 ## J1 · QUESTION
 
