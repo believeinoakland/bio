@@ -53,3 +53,20 @@ Size (session_014kGdQn9r6yt8hA7AVpanwj): test runs 9, module lines 2309
 ## J2 · COMPLETE
 
 T42-18 complete at the branch head (tranche/T42 merged, inquiry T42-12 included): R25 machinePassage, registered unconditionally with inquiry's real R62 slot (tested: a second registration is refused LISTENER_DECLARED naming run-productions); C-104.32 PROPOSAL_NOT_TAKEN_UP. One guard remains: basis-versions' R49 slot is not on tranche/T42 yet, so the read registers there only where the slot exists. Dropping it now would make runProductionsOf throw. Send a CHANGE when T42-16 merges and I drop it and add its real-slot test. run-productions 58/58; inquiry, citation, basis-versions, skills, op-declarations, store-door, control-plane, plane and migrate-released are green. Reds: question-explorer module.test.mjs:28 (J1, with its job); answer-envelope catalogue-end:17 (rule 4 (6)); agent-worker requirements R45, a stale bundle from agent-worker/agent-model sources (rule 4 (10)). Four checks 0 failures. Details in the record's Completion section.
+
+## Completion, re-opened by B5 (K2663)
+
+**Applied:** I merged `tranche/T42` (basis-versions T42-16 included) and dropped the last guard: `runProductionsOf` now registers `machinePassage` with both real slots unconditionally, so a provider missing its slot fails loudly. The test is now "R25 (inquiry R62, basis-versions R49, merged)": with both real providers, a second registration on either slot is refused `LISTENER_DECLARED` naming run-productions. The negative control is a world where run-productions registered with the stand-ins, and there both real slots stay open. The fixture gains `realBasisVersions`. R25 is now met against both providers.
+
+**Found in another module (REPORT, J3):** question-explorer's suite is now red 0/27. Its `test/m/question-explorer/fixture.mjs`:226–232 builds `runProductionsOf` with a basis-versions stand-in that has only `onCandidates`. Every world now throws `slot.onMachinePassage is not a function` at `src/run-productions/index.mjs`:1431. The same fixture passes no `inquiry`, which was J1's cause (`module.test.mjs`:28). Both are fixed there by adding `onMachinePassage: () => ({ ok: true })` to the stand-in and passing an `inquiry: { onMachinePassage: () => ({ ok: true }) }` dep. That is question-explorer's file, so I have not touched it.
+
+**Tests** (merged head): run-productions `pass 58, fail 0`.
+- Green: inquiry 205/0, citation 79/0, basis-versions 145/0, skills 105/0, op-declarations 128/0, store-door 43/0, control-plane 216/0, plane 166/0.
+- question-explorer 0/27: J3 above.
+- answer-envelope 28/1: rule 4 (6).
+- agent-worker 13/1: R45's stale bundle, rule 4 (10).
+- Green also: migrate-released 1/0.
+
+**Checks:** `format: 147 modules, 146 requirements files; 0 failures`; `architecture: 10 product files, 60 relative imports; 0 failures`; `coverage: 1 modules, 25 of 25 live requirement ids named by a test; 0 failures`; `ownership: 6 files changed by run-productions between tranche/T42 and HEAD; 0 failures`.
+
+Size (session_014kGdQn9r6yt8hA7AVpanwj): test runs 12, module lines 2306
