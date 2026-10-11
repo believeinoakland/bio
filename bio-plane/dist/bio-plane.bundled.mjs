@@ -44251,7 +44251,21 @@ var TRANSCRIBE_WORDS = Object.freeze({
   "transcribe.label": "The assistant's reading of the page image \xB7 undetermined until a member checks a passage against the page",
   "transcribe.none": "The assistant read pages {pages} but found no words it could give: {why}",
   "transcribe.done": "The assistant read pages {pages}. Their words can now be found; each passage stays undetermined until a member checks it against the page.",
-  "document.unread.pages": "Pages {pages} are pictures of text that Civicsmith's own reading couldn't make out, so their words can't be found or cited yet. The page images are kept as they are."
+  "document.unread.pages": "Pages {pages} are pictures of text that Civicsmith's own reading couldn't make out, so their words can't be found or cited yet. The page images are kept as they are.",
+  /* (T44; N869, N876; DEC-191 (4), (5), DEC-192 (1), (2), (6); K2719) R71's sentence for each way nothing was filled,
+     and R27's for a photographed page. */
+  "transcribe.notsent": "Nothing was sent to the assistant: {why}. The pages are as they were.",
+  "transcribe.why.unbound": "the assistant can't be reached from your group's Civicsmith just now",
+  "transcribe.why.evidenceabsent": "the document's stored copy can't be read just now",
+  "transcribe.why.norender": "none of these pages could be turned into an image the assistant can read",
+  "transcribe.refused": "The assistant didn't read these pages. {reason}",
+  "transcribe.failed": "The pages were sent to the assistant, but no reading came back: {why}. Nothing was written; you can try again.",
+  "transcribe.why.silent": "it didn't answer in time",
+  "transcribe.why.ended": "the AI service stopped before it finished",
+  "transcribe.picture.unprepared": "This photo can't be prepared for the assistant: {why}. Take it again as an ordinary photo, or type its words yourself.",
+  "transcribe.picture.why.progressive": "it is saved in a form the assistant can't open (a progressive JPEG)",
+  "transcribe.picture.why.toolarge": "it is too large",
+  "capture.picture.unread": "A photographed page, not read yet: its words can't be found or cited until the assistant reads it or a member types them."
 });
 var REEXTRACT_CHECKS = {
   /* The flag is present and is not `1`. Refused rather than read as absent:
@@ -47195,7 +47209,7 @@ var Extraction = class _Extraction {
     if (typeof captureSha !== "string" || !captureSha) return noSha("a reading is read by its capture sha256");
     const row12 = this.#one(
       `SELECT capture_sha, bundle_id, content_type, reader_version, found, entity_count, reading, at,
-              origin, asserted_by, asserted_standing, justification
+              origin, asserted_by, asserted_standing, justification, capture_format
          FROM readings WHERE capture_sha=?`,
       captureSha
     );
@@ -47238,15 +47252,18 @@ var Extraction = class _Extraction {
         why: `this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced`
       },
       reading_history: this.#readingHistoryOf(row12.capture_sha),
-      ...this.#unreadOf(row12.capture_sha, reading2, viewer, row12.bundle_id)
+      ...this.#unreadOf(row12.capture_sha, reading2, viewer, row12.bundle_id, row12.capture_format)
     };
   }
   /** R27 (T43; N862; DEC-190 (1), (2)): the pages a reading with pages could not make out, ascending: those holding no
    *  glyph after every tier, which are the pages `reading-pipeline.tier4Pages` would ask for (the index holds a page's
    *  unit exactly when it holds a glyph, reading-pipeline R15; a page the index skipped over its bound is not unread).
    *  `[]` when none; absent for a reading with no pages (R45). With pages, `unread_says` is `document.unread.pages`
-   *  filled. Both withheld with the bundle. */
-  #unreadOf(captureSha, reading2, viewer, bundleId) {
+   *  filled. Both withheld with the bundle. (T44; N869, N876; DEC-191 (5), DEC-192 (6)) A photographed page, a reading
+   *  of a `jpeg` or `png` capture with its one page unread, says `capture.picture.unread` instead. The capture format
+   *  is the one the reading was written with (R30's `captureFormat`), else, when that names no picture format (a photo
+   *  profiled before its entry was registered), the reading's own `text_container`. */
+  #unreadOf(captureSha, reading2, viewer, bundleId, captureFormat = null) {
     const n2 = reading2 && reading2.page_count;
     if (!(Number.isInteger(n2) && n2 > 0)) return {};
     if (bundleId && this.#redactor(viewer)(bundleId) === null) return {};
@@ -47260,10 +47277,9 @@ var Extraction = class _Extraction {
       if (a && b && Number.isInteger(a.page) && Number.isInteger(b.page)) for (let p3 = a.page; p3 <= b.page; p3++) read3.add(p3);
     }
     const pages = Array.from({ length: n2 }, (_, p3) => p3).filter((p3) => !read3.has(p3));
-    return {
-      unread_pages: pages,
-      ...pages.length ? { unread_says: fillWords("document.unread.pages", { pages: pagesSaid(pages) }) } : {}
-    };
+    const picture = PICTURE_FORMATS.includes(captureFormat) || PICTURE_FORMATS.includes(reading2.text_container);
+    const says = picture && pages.length === 1 && pages[0] === 0 && n2 === 1 ? fillWords("capture.picture.unread") : fillWords("document.unread.pages", { pages: pagesSaid(pages) });
+    return { unread_pages: pages, ...pages.length ? { unread_says: says } : {} };
   }
   /** R28 (`op=readingref`): every captured document whose reading carries `ref` exactly, one entry per document
    *  with its first position and, read at several places, every occurrence in reading order; R48: bounded. */
@@ -47976,13 +47992,16 @@ var Extraction = class _Extraction {
                            FROM bundles WHERE bundle_id=?`, bundleId);
     return r && typeof r.p === "string" && r.p ? r.p : null;
   }
-  /** R71 (`op=pagetranscribe`; N832, D21): a member's act, the AI's reading of the pages of a stored PDF reading that
-   *  Civicsmith's own text recognition could not read (reading-pipeline R29), on the account that pays for that act.
+  /** R71 (`op=pagetranscribe`; N832, D21): a member's act, the AI's reading of the pages of a stored reading (a PDF's,
+   *  or a picture file's one page, R73) that Civicsmith's own text recognition could not read (reading-pipeline R29),
+   *  on the account that pays for that act.
    *  The control plane has refused a malformed digest and an instance with no evidence storage, and stamps `cls`,
    *  `session`, `caps`, `viewer` and `by`. Every refusal comes before any byte is read, any account is read or any page
    *  is rendered (C-51.2, C-51.3, C-51.7, C-51.5, then the transcriber's keep-away refusal relayed as given). Then the
    *  text as R33–R35 compose it (tier 2; tier 3 seeded with the pages the stored reading holds, the OCR member asked
-   *  only when bound), `reading-pipeline.tier4Extend`, and R34's write. Answers `{status, body}`. */
+   *  only when bound), `reading-pipeline.tier4Extend`, and R34's write. Answers `{status, body}`. (T44) With nothing
+   *  filled, `says` is read by key by what the AI path answered (`unfilledOutcome`); a refusal says
+   *  `transcribe.refused` beside its own fields. */
   async pageTranscribe({
     captureSha = null,
     project = null,
@@ -48043,7 +48062,7 @@ var Extraction = class _Extraction {
         detail: `this record holds no reading of that capture that you can see, so there are no pages for the AI to transcribe. A capture is read when a record carrying it is promoted; a capture in a project you are not part of answers exactly as one never filed.`
       } };
     const away = reg.t.keptAway({ project: this.#projectOfBundle(basis.bundleId), use: TRANSCRIBE_USE });
-    if (away) return { status: 403, body: away };
+    if (away) return { status: 403, body: withRefusedSays(away) };
     const ev = this.core && typeof this.core.evidenceStore === "function" ? this.core.evidenceStore() : null;
     const obj = ev ? await ev.get(sha2) : null;
     if (!obj) return evidenceAbsent(sha2, storeName, { tokenClass: cls3 });
@@ -48102,16 +48121,18 @@ var Extraction = class _Extraction {
     } } : tx;
     const t4 = await tier4Extend(handed, { sha: sha2, storeName, i2text: t3.i2text, chain: chain3, wiredTier: t3.wiredTier });
     const refusal36 = t4.aiRefusal && typeof t4.aiRefusal === "object" ? t4.aiRefusal : null;
-    if (refusal36 && !t4.filled.length) return { status: refusalStatus(refusal36), body: refusal36 };
+    if (refusal36 && !t4.filled.length) return { status: refusalStatus(refusal36), body: withRefusedSays(refusal36) };
     if (!t4.filled.length) {
       const why2 = t4.aiNote || "the AI was not asked to transcribe, and nothing about this capture was changed";
-      const posted = asked.pages !== null && !(asked.answer && asked.answer.ok === false && NO_POST_REASONS.includes(asked.answer.reason));
+      const outcome = asked.pages === null ? null : unfilledOutcome(asked.answer, fmt);
+      if (outcome && outcome.refusal) return { status: refusalStatus(outcome.refusal), body: withRefusedSays(outcome.refusal) };
+      const says = !outcome ? null : outcome.none ? fillWords("transcribe.none", { pages: pagesSaid(asked.pages), why: why2 }) : fillWords(outcome.key, { why: fillWords(outcome.why) });
       return { status: 200, body: {
         ok: true,
         op,
         sha256: sha2,
         transcription: { performed: false, written: false, why: why2 },
-        ...posted ? { says: fillWords("transcribe.none", { pages: pagesSaid(asked.pages), why: why2 }) } : {}
+        ...says ? { says } : {}
       } };
     }
     const chain4 = t4.chain;
@@ -48271,7 +48292,40 @@ function unwrittenWhy(w, act2) {
   if (w.ok === true) return {};
   return w.rolledBack === true ? { why: `the record's reading of this capture could not be written: the write was refused while it ran and rolled back whole, so the text above was read and NOT recorded, and nothing the ${act2} would have changed was changed` } : { why: "the record's reading of this capture could not be written (it was no longer held for this caller when the write arrived), so the text above was read and NOT recorded" };
 }
-var NO_POST_REASONS = Object.freeze(["AGENT_WORKER_UNBOUND", "EVIDENCE_ABSENT", "NO_PAGE_RENDERED"]);
+var NOT_SENT_WHY = Object.freeze({
+  AGENT_WORKER_UNBOUND: "transcribe.why.unbound",
+  EVIDENCE_ABSENT: "transcribe.why.evidenceabsent",
+  NO_PAGE_RENDERED: "transcribe.why.norender"
+});
+var ENDINGS = Object.freeze(["silent", "refused"]);
+var ENDING_CODES = Object.freeze(["MODEL_SILENT", "MODEL_REFUSED"]);
+function pictureWhy(refused5) {
+  for (const r of Array.isArray(refused5) ? refused5 : []) {
+    if (!r || typeof r !== "object") continue;
+    if (r.reason === "IMAGE_TOO_LARGE") return "transcribe.picture.why.toolarge";
+    if (r.reason === "UNSUPPORTED_JPEG_PROCESS" && typeof r.process === "string" && r.process.includes("progressive"))
+      return "transcribe.picture.why.progressive";
+  }
+  return null;
+}
+function unfilledOutcome(a, fmt) {
+  if (!a || typeof a !== "object") return null;
+  if (a.ok === true) return { none: true };
+  if (NOT_SENT_WHY[a.reason]) {
+    const picture = a.reason === "NO_PAGE_RENDERED" && PICTURE_FORMATS.includes(fmt) ? pictureWhy(a.refused) : null;
+    return picture ? { key: "transcribe.picture.unprepared", why: picture } : { key: "transcribe.notsent", why: NOT_SENT_WHY[a.reason] };
+  }
+  if (a.reason === "AGENT_WORKER_SILENT") return { key: "transcribe.failed", why: "transcribe.why.silent" };
+  if (ENDINGS.includes(a.ending) || ENDING_CODES.includes(a.code) || ENDING_CODES.includes(a.reason))
+    return { key: "transcribe.failed", why: "transcribe.why.ended" };
+  if (typeof a.translation === "string" && a.translation) return { refusal: a };
+  return null;
+}
+function withRefusedSays(r) {
+  const t2 = r && typeof r.translation === "string" && r.translation ? r.translation : null;
+  return t2 ? { ...r, says: fillWords("transcribe.refused", { reason: t2 }) } : r;
+}
+var PICTURE_FORMATS = Object.freeze(["jpeg", "png"]);
 var refusalStatus = (r) => Number.isInteger(r.status) && r.status >= 400 && r.status < 500 ? r.status : 403;
 var isTranscriber = (t2) => !!t2 && typeof t2 === "object" && typeof t2.deployable === "function" && typeof t2.keptAway === "function" && typeof t2.transcription === "function";
 function extractionOps(x, url, body, env) {
