@@ -38,3 +38,7 @@ Catalogue family for the new rows (K2480's precedent: BOB names new families). R
 ## J2 · REPORT
 
 Other modules (also in my record): (1) plane's test/m/plane/roster.test.mjs 'R5, R9 (T38-26; N783): project-roster's whole ops map is routed…' pins my ten ops and now sees projectscopeset and projectapprovalset: red from my merge until plane re-pins it. (2) op-declarations (with store-door's projectId parameter list and control-plane) must declare projectscopeset and projectapprovalset before they are reachable through the control plane (draft-T45-lower §10). (3) promotion's T45-4 stamp: C-147.1–.8.
+
+## J3 · COMPLETE
+
+T45-3 done on 9c7cf97802 (tranche/T45 merged after B3): R18's T45 clause, R21–R24 met; 38/38 project-roster, membership 211/211; format, architecture, coverage (24/24), ownership all 0 failures. One red in another module, plane's ops-map pin (J2). Record in build/jobs/T45/project-roster.md.
