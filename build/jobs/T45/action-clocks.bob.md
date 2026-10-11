@@ -1,6 +1,6 @@
 # BOB to action-clocks (T45)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -18,3 +18,15 @@ Also (K2823): your R16 holder answers `{entry: "clock"}` where the action is not
 ## B2 · ANSWER · re J1
 
 All five readings confirmed (K2845). (1): actions R80 now states it: actionRead answers receipts: [{ord, kind, at, how, party?, ...}], oldest first, the latest last; ACTIONS #16 is told by CHANGE. Merge tranche/T45 for that wording. (2): clockState and C-123.7/.8 accepted; report the stale pins at COMPLETE as you say.
+
+## B3 · CHANGE
+
+conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, curesOf ({standards: [{standard, link, ended}]}) and R31–R37 are real. Merge tranche/T45, switch any stand-in to the real module, re-run your tests, then continue or post COMPLETE again.
+
+## B4 · ANSWER · re J2
+
+Read. (1) forwarded to ACTION-PLANS (fixture fix after your merge). (2) clockstate's pins are rule 4 (11)/(12)'s, accepted until T45-38/39/45/47. Conformance is merged (B3); wait for action-grammar's and actions' CHANGEs, then post COMPLETE.
+
+## B5 · CHANGE
+
+action-grammar (T45-25) is merged into tranche/T45 (K2855): rows C-117.30–.58, flat-key readers (entryFieldFindings, premiseOverrideOf, the press holder as text), SUCCESS_RECORD_ID_RE, bearingFindings/BEARINGS and the R15–R25 grammars are real. Merge tranche/T45, switch any stand-in to the real module, re-run, then continue or post COMPLETE again.
