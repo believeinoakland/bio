@@ -119,11 +119,15 @@ test("R17 R15: with a target, the door asks the facts with the four stamps exact
   assert.deepEqual(asked.length, 2);
   assert.deepEqual([q.get("target"), q.get("viewer"), q.get("identity"), q.get("author"), q.get("by")],
     [FACTS.target, "member:iris & co", "member:pam", "token:member", "class:member"]);
-  /* an absent author or by is sent empty, which the facts read as null (R15) */
+  /* an absent stamp (undefined or null) is left off the query, so the facts read it null (R15): never sent as "", which
+     actor_is_machine would read as no identity at all; a stamp handed in, "" included, is sent as given */
   const b = door();
-  await affordancesOp(at(`&target=${FACTS.target}`), b.stub, { ...b.deps, author: undefined, by: null });
+  await affordancesOp(at(`&target=${FACTS.target}`), b.stub, { ...b.deps, identity: undefined, author: undefined, by: null });
   const q2 = new URL(b.asked[1]).searchParams;
-  assert.deepEqual([q2.get("author"), q2.get("by")], ["", ""]);
+  assert.deepEqual([q2.has("identity"), q2.has("author"), q2.has("by"), q2.get("viewer")], [false, false, false, "member:iris"]);
+  const c = door();
+  await affordancesOp(at(`&target=${FACTS.target}`), c.stub, { ...c.deps, author: "" });
+  assert.equal(new URL(c.asked[1]).searchParams.get("author"), "");
 });
 
 test("R17 R13: NO_SUCH_BUNDLE answers 404 and any other refusal 400, each as the store gave it, in the envelope", async () => {

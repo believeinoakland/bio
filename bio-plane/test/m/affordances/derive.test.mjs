@@ -82,6 +82,8 @@ const typestates = TYPES.flatMap(([object_type, declared_type]) =>
     .map((current_state) => ({ object_type, declared_type, current_state })));
 const B = [true, false, null];
 const COUNT = [0, 1, null];
+/* R16: facts are counts; a hand-built facts object that still carries ids is read as their number (the oracle's `n`) */
+const COUNT_OR_IDS = [...COUNT, [], ["X-2"]];
 const ROSTERS = [null,
   { owner: true, state: "joined", owner_floor_clear: true, other_owner_committed: true, rescue_open: false },
   /* two owners, the other asked to leave: the floor is clear for owner-remove, and leave is not offered (N45) */
@@ -100,11 +102,11 @@ const DIMS = {
   concluded_for_project: B.map((v) => ({ concluded_for_project: v })),
   edition_warranted_for_project: B.map((v) => ({ edition_warranted_for_project: v })),
   project_owner: B.map((v) => ({ project_owner: v })),
-  basis_legs: COUNT.map((v) => ({ basis_legs: v })),
-  rested_on: [...COUNT.map((w) => ({ rested_on: { working: w, frozen: 0, severed: 0 } })), { rested_on: undefined }],
+  basis_legs: COUNT_OR_IDS.map((v) => ({ basis_legs: v })),
+  rested_on: [...COUNT_OR_IDS.map((w) => ({ rested_on: { working: w, frozen: 0, severed: 0 } })), { rested_on: undefined }],
   cites_in: [0, 2, [], ["INFO-x"], null].map((c) => ({ cites_in: { confirmed: c, severed: 0 } }))
     .concat([{ cites_in: undefined }]),
-  cited_by_case: COUNT.flatMap((c) => COUNT.map((s) => ({ cited_by_case: { confirmed: c, severed: s } })))
+  cited_by_case: COUNT_OR_IDS.flatMap((c) => COUNT_OR_IDS.map((s) => ({ cited_by_case: { confirmed: c, severed: s } })))
     .concat([{ cited_by_case: undefined }]),
   cites_out: COUNT.flatMap((c) => COUNT.map((r) => ({ cites_out: { confirmed: c, severed: 1, severed_reinstatable: r } })))
     .concat([{ cites_out: undefined }]),
@@ -112,7 +114,7 @@ const DIMS = {
   project_target_owner: B.map((v) => ({ project_target_owner: v })),
   roster: ROSTERS.map((roster) => ({ roster })),
   basis_version_states: READINGS.map((v) => ({ basis_version_states: v })),
-  basis_versions: COUNT.map((v) => ({ basis_versions: v })),
+  basis_versions: COUNT_OR_IDS.map((v) => ({ basis_versions: v })),
   actor_is_machine: B.map((v) => ({ actor_is_machine: v })),
   contradiction_inquiry: B.map((v) => ({ contradiction_inquiry: v })),
   contradiction_sides_seen: B.map((v) => ({ contradiction_sides_seen: v })),
