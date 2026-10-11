@@ -21,8 +21,8 @@ CREATE TABLE IF NOT EXISTS published_material_texts (
 );
 
 -- R1, R2 (K1317): WHAT ONE COMMITTED CASE EDITION HELD, in the order held: each SHA-256 and whether its text is held
--- here (inline), its bytes are in the evidence store (evidence), or it is a photo's obscured copy held under
--- <store>/obscured/<sha> (derived, T37; R11), for ratification R39 to copy. Written once per case edition by
+-- here (inline), its bytes are in the evidence store (evidence), or it is a photo's obscured copy or (T39; R15) a member
+-- document's cleaned copy held under <store>/obscured/<sha> (derived, T37; R11), for ratification R39 to copy. Written once per case edition by
 -- holdMaterials, read by heldMaterialsOf for a retried ratification. Published, so exempt (R6).
 CREATE TABLE IF NOT EXISTS published_case_materials (
   case_id  TEXT NOT NULL,
