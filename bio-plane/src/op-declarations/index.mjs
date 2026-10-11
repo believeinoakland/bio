@@ -540,7 +540,9 @@ const OP_FAMILIES = Object.freeze({
      capture's digest) and the optional `project` (whose account the member asks to pay) are read from the request's
      address, as `pdfstructure`'s `sha256`, neither a secret nor a stamp. Distinct from content's manual `transcribe`.
      Its handler is extraction's exported `pageTranscribeOp`, which `EXTRACTION_OPS` does not list (K2635), reached
-     through the plane's gated hook (control-plane R74, plane R36). Not on `AI_GRANT_OPS`. */
+     through the plane's gated hook (control-plane R74, plane R36). Not on `AI_GRANT_OPS`. T44 (R47, R21; DEC-191;
+     K2732): the registry as PR #25 left it marks `pagetranscribe` a served act, no longer `owed:pagetranscribe`, read
+     as this declared op with no alias. */
   extraction: family({ owner: "extraction", cite: "extraction R71; R47; K2611, K2613, K2635, K2656", actor: QUERY("by"),
     ops: { pagetranscribe: "member" } }),
 });
@@ -587,7 +589,8 @@ const OP_STAMPS = Object.freeze(aliasRows(Object.fromEntries([
   ["agentpack", frozenList(["viewer"])],
 ])));
 
-/* BIO plane, control plane entry.
+/* BIO plane, control plane entry (this note came with the table from `control-plane/ops.mjs`; the gates it names are
+ * `admission`'s since the split: `classify`, `scopeFor`).
  *
  * Secret discipline, which is a design constraint rather than a convention:
  *
@@ -610,7 +613,7 @@ const OP_STAMPS = Object.freeze(aliasRows(Object.fromEntries([
  *   daemon  the UNATTENDED PATH, and nothing else: op=monitor and the archive
  *           arm of op=acquire, against the LIVE store. Not scratch-confined,
  *           because what it does is write the real record's reachability. See
- *           `classify()` for DEC-37's reasoning and why it is named for the
+ *           admission's `classify()` for DEC-37's reasoning and why it is named for the
  *           path rather than for either of its two consumers.
  *
  * There is deliberately no public class. A credential handed to the public is
@@ -2319,7 +2322,7 @@ const SESSION_OPS = Object.freeze({
  *
  * Capabilities gate a SESSION and nothing else. A token class has no member
  * behind it and therefore holds no capabilities: a machine credential is bounded
- * by OPS above and by scopeFor below, and asking a capability question about one
+ * by OPS above and by admission's `scopeFor`, and asking a capability question about one
  * would mean inventing a member who does not exist.
  *
  * Section 5 says a capability a member does not hold is ABSENT from their
@@ -3327,7 +3330,9 @@ const UNATTENDED_BY_DECISION = Object.freeze({
    T42 (R34, R47; N832, N862; K2611): `pagetranscribe` is named under the last ground until the design stream's words
    for it land in `ACT_HELP` (BOB's NOTICE to UX-DESIGN).
    T43 (R34, R47; DEC-190; K2725): affordances' T43-17 gives `ACT_HELP` the design's texts for `pagetranscribe` and
-   `transcribe`, so both leave the last ground and are named under none. */
+   `transcribe`, so both leave the last ground and are named under none.
+   T44 (R47; DEC-191; K2732): the registry as PR #25 left it marks `pagetranscribe` a served act, owed no longer; its
+   text stays `ACT_HELP`'s under the op (affordances R48), so it is named under no ground here. */
 const ACT_HELP_ABSENT = Object.freeze({
   alias: Object.freeze({ ground: "An alias of a declared op (R21): its op's explanation serves it.",
     ops: frozenList([
