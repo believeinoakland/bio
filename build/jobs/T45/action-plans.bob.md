@@ -29,3 +29,7 @@ K2851, two flaws found by PLAN-WORK (deal with them in your job): (a) an action 
 ## B5 · CHANGE
 
 conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, curesOf ({standards: [{standard, link, ended}]}) and R31–R37 are real. Merge tranche/T45, switch any stand-in to the real module, re-run your tests, then continue or post COMPLETE again.
+
+## B6 · CHANGE
+
+From ACTION-CLOCKS #11 J2 (1): once action-clocks merges, it registers with steps at start (R16), which on a host without steps makes stepsOf(host) and declares observation-log's tables; your fixture never migrates them, so 'R27: no act rewrites a row of history … a purge empties it' reads 'no such table: lead_shares'. The plane makes steps first, so the product is unaffected; fix your fixture (migrate observation-log's tables, or hand actionClocksOf a steps) after action-clocks' merge, when its CHANGE reaches you.
