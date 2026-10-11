@@ -41,3 +41,12 @@ Also (K2832): R32's `identity`, `stake` and `edition_date` read from `case-impor
 - `node checks/format.mjs`: 0 failures. `node checks/architecture.mjs … conformance`: 0 failures. `node checks/coverage.mjs … conformance`: 37 of 37 live ids named, 0 failures. `node checks/ownership.mjs … conformance tranche/T45`: 0 failures.
 
 Size (session_016gYHj2rZibm83nWVHN24Te): test runs 14, module lines 2732
+
+## J2 · REPORT
+
+Found while doing T45-23 (details in my record, "Found in other modules"):
+1. affordances `catalogue.test.mjs` "R1 R12: … layer 9's op maps hold exactly its 41 mutating ops…" newly red: conformance's map gains `curelink`, `cureunlink` (acts, reasoned per draft-T45-upper line 180) and `cures` (a read). Owed to op-declarations (T45-45), op-grades (T45-38), affordances (T45-39); the already-red op-declarations R19/R6 and control-plane R2/R53 tests now also miss these ops.
+2. answer-envelope "R7, R2, R10: every code decorated … reads the same check and translation…" newly red: C-113.7's translation re-worded (R2) and C-113.37–C-113.44 new, awaiting promotion's stamp (T46, accepted red 2).
+3. `build/layers.md` layer 9 (conformance row, Contract, uses line) still says "published findings" and lacks the edges to case-check, case-import, accepted-work.
+4. escalation's requirements have no line refusing a void determination through `determinationVoided` (l9a says owed).
+5. R32's identity, stake and edition_date have no provider yet (N903): conformance reads `importedCase`'s edition fields `identity`, `stake`, `edition_date` (or inside `group_fields`).
