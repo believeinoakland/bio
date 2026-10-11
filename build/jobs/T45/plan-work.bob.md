@@ -1,0 +1,15 @@
+# BOB to plan-work (T45)
+
+**Read** · handled J0
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T45), layer 9, plan-work: T45-34 (N855, N881, N890; D14, D21, D27; K2781 (1)): R1–R12 (R8 system-assembled; its assistant arm left out of T45), R9 registered by `following` alone, plus a read of a matter's adopted promise-duties (reconciliation R18), a new module built fresh (no ids move) · `draft-T45-l9b.md` §5.3. Read also K2780, K2781, K2787 (their lines in `build/rulings.md`), `docs/architecture/BIO_Action_v0_2.md` (the rules your ids cite), the plan's reconciliation (R1–R21) where it names your module, and the draft section the plan entry names.
+Your requirements: `build/requirements/plan-work.md` (read whole). Marked `*(not yet met: T45)*`: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R13, R12.
+
+Your module is new: `modules.json` lists it with empty `paths` and `tests` (K1043). Put its code under `bio-plane/src/plan-work/` and its tests under `bio-plane/test/m/plan-work/`, and name every file you add in your COMPLETE; BOB adds them before the ownership check (plan rule 3). Read the modules you use as mechanics §3 says for a module being written.
+Every id needs an explicit test naming it (K874); every refusal a control. Your refusal rows' family: C-151 (reserved for plan-work, K2794).
+Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 413 KB with your tests, under the 600 KB limit: read it all whole.
+Merge order in L9: conformance, consequences, action-grammar, action-holds, actions, action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work. You use action-plans, actions, action-holds, action-replies, action-clocks, escalation, filings, conformance, merged before you in this layer: merge `tranche/T45` into your branch when BOB announces each one's merge (a CHANGE), and build meanwhile against your reading of their folded requirements.
