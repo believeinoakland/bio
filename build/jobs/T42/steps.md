@@ -107,3 +107,23 @@ The flaw is fixed in this job, so the Completion section's "Deferred (own module
 - Checks: format, architecture, coverage (27 of 27) and ownership each report 0 failures.
 
 Size (session_01WWPqUf9HsGVbwvRQC3juMx): test runs 31, module lines 9
+
+## J3 · COMPLETE
+
+B2 is done: the flaw from J1 is fixed in this job.
+- A new trigger, steps_gone_proposals, runs AFTER DELETE ON steps. It is separate so that existing stores gain it.
+- An idempotent update clears any step_id that already names a gone step.
+- So stepProposals never names a deleted step, and the decision itself is kept.
+
+New test "R24, R6: …":
+- covers both the trigger and the clean-up of an older store at start
+- has a negative control: a held step is still named
+- fails with the fix stashed
+
+Results after merging tranche/T42 @ 93c845ce53:
+- steps: 35 pass, 0 fail.
+- Users' suites are all green, including migrate-released (1 pass, 0 fail).
+- answer-envelope: 1 red, families.test.mjs:425 (pin at :420), which is expected until T42-27.
+- All four checks: 0 failures.
+
+Wording is yours: no existing R id covers what stepProposals answers about the step. My record suggests a line for R24.
