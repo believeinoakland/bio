@@ -17,3 +17,7 @@ Merge order in L8: case-grammar, publication, docket, public-read, case-account,
 ## B2 · ANSWER · re J1
 
 (1) Yes: the row goes in publication's existing CASE_SOURCES_CHECKS (C-122), key COUNSEL_MATTER_NOT_PUBLISHED (K2830; PUBLICATION #29 told). (2) As you read it: body only, publishCase answers timeline: {we_did, withheld}; no front-matter field.
+
+## B3 · CHANGE
+
+case-grammar and publication are merged into tranche/T45 (K2833; publication's COUNSEL_MATTER_NOT_PUBLISHED row is C-122.8 in CASE_SOURCES_CHECKS). Merge tranche/T45 into your branch and re-run against them.
