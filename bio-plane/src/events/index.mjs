@@ -1139,10 +1139,15 @@ export class Events {
     return { ok: true, entity, count: b.items.length + b.placed_nowhere.length, events: b.items, placed_nowhere: b.placed_nowhere, limit: b.limit, truncated: b.truncated };
   }
 
-  /** R28–R30: the world's events concerning or involving an explicit set, and, apart, what the group's own modules did. */
-  timeline({ set, from = null, to = null, lanes = null, limit = null, viewer = null } = {}) {
+  /** R28–R30: the world's events concerning or involving an explicit set, and, apart, what the group's own modules did.
+   *  `audience` (T45) is `"public"` or absent; this module filters nothing for it and passes it to every source unchanged. */
+  timeline({ set, from = null, to = null, lanes = null, limit = null, viewer = null, audience } = {}) {
     const ids = Array.isArray(set) ? set.filter(said).map((s) => s.trim()) : typeof set === "string" ? set.split(",").filter(said) : [];
     if (!ids.length) return refuse("NO_SET", "a timeline is of an explicit set of entity or event ids; a project's or inquiry's scope is resolved by its caller");
+    /* R28: any audience but "public" or none is refused before anything is read */
+    if (audience !== undefined && audience !== null && audience !== "public")
+      return refuse("AUDIENCE_UNKNOWN", `a timeline's audience is "public", or none for the group's own reading`, { audiences: ["public"] });
+    const told = audience === "public" ? { audience } : {};
     const want = Array.isArray(lanes) && lanes.length ? lanes : ["world", "ours"];
     const answer = { ok: true, set: ids };
     if (want.includes("world")) {
@@ -1167,10 +1172,13 @@ export class Events {
       answer.ours = { label: "what we did", sources: this.#sources.map((s) => {
         try {
           /* R30: the source is asked with the timeline's own viewer, unchanged, so one that fails closed answers what
-             the reader may see; its lane is truncated when it says so or when the limit cuts its items */
-          const got = s.fn({ set: ids, from, to, limit: cap, viewer });
+             the reader may see; its lane is truncated when it says so or when the limit cuts its items. Every source is
+             told the same audience, "public" or no key at all, and what it answers for it is its own (T45) */
+          const got = s.fn({ set: ids, from, to, limit: cap, viewer, ...told });
           const list = Array.isArray(got) ? got : got && Array.isArray(got.items) ? got.items : [];
-          const items = list.filter(isObj).map((x) => ({ at: x.at ?? null, label: x.label ?? null, ref: x.ref ?? null, kind: x.kind ?? null }));
+          /* a source's own public mark is carried as it gave it, never added or dropped here (R28, R30; T45) */
+          const items = list.filter(isObj).map((x) => ({ at: x.at ?? null, label: x.label ?? null, ref: x.ref ?? null, kind: x.kind ?? null,
+                                                         ...(x.public === true ? { public: true } : {}) }));
           const zone = this.zone();
           const withWhen = items.map((x) => { const w = spanOfBound(x.at, zone); return { ...x, when: w && !w.bad ? w : null }; });
           const o = orderByWhen(withWhen, (x) => `${x.ref}`);
@@ -1364,7 +1372,7 @@ export function eventsOps(ev, url, body) {
     datedfacts: () => ev.datedFactsFor({ captureSha: q("sha256"), viewer: q("viewer") }),
     eventsfor: () => ev.eventsFor({ entity: q("entity"), kinds: q("kinds"), from: q("from"), to: q("to"), limit: q("limit"), viewer: q("viewer") }),
     timeline: () => ev.timeline({ set: q("set"), from: q("from"), to: q("to"), lanes: q("lanes") ? q("lanes").split(",") : null,
-                                  limit: q("limit"), viewer: q("viewer") }),
+                                  limit: q("limit"), viewer: q("viewer"), audience: q("audience") ?? undefined }),
     sequence: () => ev.sequence({ a: q("a"), b: q("b"), viewer: q("viewer") }),
     whowassent: () => ev.whoWasSent({ eventId: q("id"), viewer: q("viewer") }),
     statementsof: () => ev.statementsOf({ entity: q("entity"), from: q("from"), to: q("to"), limit: q("limit"), viewer: q("viewer") }),
