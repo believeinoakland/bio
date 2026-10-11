@@ -3103,11 +3103,11 @@ export function makeFetch(hooks = {}) {
       return shaped.body.ok === true ? json({ ok: true, result: shaped.body, store: storeName, tokenClass: cls }, 200)
         : json({ ...shaped.body, store: storeName, tokenClass: cls }, shaped.status);
     }
-    /* K383 (capture's C-118.2): an inbox read or disposition naming no knock answers 404, as NO_SUCH_BUNDLE does. */
+    /* K383 (doorbell's C-118.2, its R21; T43-8): an inbox read or disposition naming no knock answers 404, as NO_SUCH_BUNDLE does. */
     if ((op === "inboxget" || op === "inboxresolve") && body.result?.ok === false && body.result.reason === "NO_SUCH_KNOCK")
       return json({ ...body, store: storeName, tokenClass: cls }, 404);
-    /* R36 (capture R65): the pull's refusals carry their status (400, 403, 404, 409, 500, 502, 503), which its answer takes;
-       so do the resolve's `RESOLVE_NO_REASON` (capture R32, C-118.7) and the held acts' refusals (capture R79, R81: C-118.8,
+    /* R36 (doorbell R13): the pull's refusals carry their status (400, 403, 404, 409, 500, 502, 503), which its answer takes;
+       so do the resolve's `RESOLVE_NO_REASON` (doorbell R3, C-118.7) and the held acts' refusals (capture R79, R81: C-118.8,
        C-118.9, the id count, the named ids). A refusal stating no status in that range answers the forward's own. */
     const hinted = body.result?.status;
     if (STATED_STATUS_OPS.includes(op) && body.result?.ok === false && Number.isInteger(hinted) && hinted >= 400 && hinted < 600)
