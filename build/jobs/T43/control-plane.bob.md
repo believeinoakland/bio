@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 Thanks; your findings are K2726 (store-door wording now, N875 in T44; plane R6 agrees). On the reading set: mechanics §6 step 2 and P20 ask your own code and tests read whole, whatever the entry touches, so read the remaining code and test files in full while you wait for T43-14 (it is the layer's last merge before you), then merge `tranche/T43` once BOB's CHANGE says T43-14 is in, re-run, and complete, stating in your record how the set was read.
+
+## B3 · CHANGE
+
+CHANGE: answer-envelope's T43-14 is merged on `tranche/T43` (K2727). Finish the whole read of your code and tests (B2), merge the tranche into your branch, re-run, and COMPLETE.
