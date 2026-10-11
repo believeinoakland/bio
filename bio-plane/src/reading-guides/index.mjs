@@ -1,5 +1,5 @@
 /* reading-guides — what to look for in one kind of document (requirements: `build/requirements/reading-guides.md`
- * R1–R12; D8, D24, D65; K2405, K2418, K2472).
+ * R1–R13; D8, D24, D65; K2405, K2418, K2472; v0.2 rule 11).
  *
  * A guide is a short list of items, each a label, what to look for and, if given, where: by hand a checklist, for the
  * assistant what to read for, so the two are one text (D65). Civicsmith's library ships with the release (R1,
@@ -14,6 +14,13 @@
  * order written; nothing is deleted. A machine never drafts, reviews or approves: it proposes, apart (R12), and only a
  * member's R2 act naming the proposal (`based_on`) makes a guide of it.
  *
+ * PROCEDURE GUIDES (R13; v0.2 rule 11). A guide's `purpose` is `reading` (the default) or `procedure`: a group's own
+ * guide to the routes of one kind of action, its `kind` an `action_kinds` kind of the active profiles' view, its items
+ * `{route, expect?, citation}`, checked by R4 narrowed for that purpose. R2, R3, R6–R8 and R12 hold for it as for a
+ * reading guide; R5 answers reading guides only. `procedureGuidesFor` answers the profile's guide for a kind
+ * (`jurisdictions` R80, through `combine`) first, then the group's approved procedure guides in the order approved,
+ * unranked, every answer labelled legal information, not legal advice.
+ *
  * SIGHT (R8, R9). A group guide, in any state, and a proposal are the group's: seen by a viewer membership admits as an
  * active member or an administrator, by a machine credential, and by an internal call with no viewer. Any other
  * viewer (one `viewerPredicate` denies, a member not active) sees Civicsmith's alone.
@@ -25,6 +32,8 @@
  *                `promotion`'s `producingGroup` fact). Absent or blank, an offer is refused `GUIDE_NO_GROUP_SLUG`.
  *   civicsmith   Civicsmith's library (default `CIVICSMITH_GUIDES`); a test passes entries of its own.
  *   now          the module's clock, an ISO instant (default: the wall clock).
+ *   profileView  `() → view`, the active profiles combined (R13; default: `jurisdictions.combine` over record-core's
+ *                `jurisdiction_profiles` setting; none combining, an empty view).
  *
  * No place is named here (R11). */
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
@@ -34,14 +43,16 @@ import { canonicalJson } from "../record-grammar/json.mjs";
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
+import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { READING_GUIDES_CHECKS, refusal } from "./checks.mjs";
-import { checkGuide } from "./check.mjs";
+import { checkGuide, GUIDE_PURPOSES } from "./check.mjs";
 import { CIVICSMITH_GUIDES, GUIDE_KINDS } from "./library.mjs";
 import { READING_GUIDES_TABLE_CLASSES, migrateReadingGuides } from "./schema.mjs";
 
 export { READING_GUIDES_CHECKS } from "./checks.mjs";
 export { checkGuide, registerConductCheck, conductCheckHolder, LOOK_FOR_OPENERS, CONDUCT_LISTS, ITEMS_MAX, LABEL_MAX,
-         LOOK_FOR_MAX, WHERE_MAX, ITEM_FIELDS } from "./check.mjs";
+         LOOK_FOR_MAX, WHERE_MAX, ITEM_FIELDS, GUIDE_PURPOSES, PROCEDURE_ITEM_FIELDS, ROUTE_MAX, EXPECT_MAX, CITATION_MAX,
+         PROCEDURE_CONDUCT_LISTS } from "./check.mjs";
 export { CIVICSMITH_GUIDES, GUIDE_KINDS, civicsmithGuideProblems, freezeLibrary } from "./library.mjs";
 export { READING_GUIDES_SCHEMA, READING_GUIDES_TABLES, READING_GUIDES_TABLE_CLASSES } from "./schema.mjs";
 
@@ -57,6 +68,9 @@ export const REASON_MAX = 500, RUN_MAX = 200;
 /** R6: the formats of an offer between groups and of a proposal for Civicsmith's library. */
 export const GUIDE_OFFER_FORMAT = "bio-reading-guide-offer/1";
 export const GUIDE_LIBRARY_PROPOSAL_FORMAT = "bio-reading-guide-library-proposal/1";
+
+/** R13: the label every procedure-guide answer carries, keyed for the surface, in canon's words (v0.2 rule 11). */
+export const PROCEDURE_GUIDE_LABEL = Object.freeze({ key: "guide.procedure.legalinfo", says: "legal information, not legal advice" });
 
 /** R12: what a proposal's label says, in each of `record-grammar`'s three proposal states (shaped as its
  *  `proposalLabel` answers; `lawProposalState` decides the state). */
@@ -80,15 +94,17 @@ const safeJson = (s) => { try { return JSON.parse(s); } catch { return null; } }
 const argsOf = (a) => (isObj(a) ? a : {});
 
 export class ReadingGuides {
-  #sql; #record; #membership; #now; #groupSlug; #civicsmith; #channel = null;
+  #sql; #record; #membership; #now; #groupSlug; #civicsmith; #profileView; #channel = null;
 
-  constructor({ storage, record, membership, now = null, groupSlug = null, civicsmith = CIVICSMITH_GUIDES } = {}) {
+  constructor({ storage, record, membership, now = null, groupSlug = null, civicsmith = CIVICSMITH_GUIDES,
+                profileView = null } = {}) {
     this.#sql = storage.sql;
     this.#record = record;
     this.#membership = membership;
     this.#now = typeof now === "function" ? now : () => new Date().toISOString();
     this.#groupSlug = typeof groupSlug === "function" ? groupSlug : () => null;
     this.#civicsmith = Array.isArray(civicsmith) ? civicsmith : CIVICSMITH_GUIDES;
+    this.#profileView = typeof profileView === "function" ? profileView : null;
     migrateReadingGuides(this.#sql);   // the tables exist once the instance does, so no caller migrates
   }
 
@@ -127,6 +143,29 @@ export class ReadingGuides {
 
   #civic(id) { return this.#civicsmith.find((g) => g.id === id) ?? null; }
 
+  /* R13: the active profiles combined (`jurisdictions` R12–R16), or an empty view when none is set or none combines. */
+  #view() {
+    try {
+      if (this.#profileView) { const v = this.#profileView(); return isObj(v) ? v : {}; }
+      const ids = this.#record.getSetting("jurisdiction_profiles");
+      if (!Array.isArray(ids) || !ids.length) return {};
+      const c = combineProfiles(ids);
+      return c && c.ok && isObj(c.view) ? c.view : {};
+    } catch { return {}; }
+  }
+
+  /* R13: the action kinds of the active profiles' view. */
+  #actionKinds(view = this.#view()) {
+    return Array.isArray(view.action_kinds) ? view.action_kinds.map((k) => (isObj(k) ? k.kind : null)).filter((k) => typeof k === "string") : [];
+  }
+
+  /* R2, R13: `kind`'s refusal for `purpose`, or null when the kind is one of that purpose's. */
+  #kindRefused(kind, purpose) {
+    if (purpose === "reading") return GUIDE_KINDS.includes(kind) ? null : kindRefusal(kind, purpose, GUIDE_KINDS);
+    if (purpose === "procedure") { const k = this.#actionKinds(); return k.includes(kind) ? null : kindRefusal(kind, purpose, k); }
+    return kindRefusal(kind, purpose, null);
+  }
+
   /* A held group guide's row, or null. */
   #held(id) { return isGuideId(id) ? this.#one(`SELECT * FROM reading_guides WHERE guide_id=?`, id) : null; }
 
@@ -151,14 +190,17 @@ export class ReadingGuides {
 
   /* ================================================================ R2: a member's draft */
 
-  /** R2: `{kind, items, based_on?, by}`. Usable by its author at once. `based_on`, when given, names a guide the
-   *  author sees, one of Civicsmith's, or a proposal (R12). Answers `{ok, guide, state}`. */
+  /** R2, R13: `{kind, items, purpose?, based_on?, by}`. Usable by its author at once. `purpose` `reading` (the
+   *  default) or `procedure`. `based_on`, when given, names a guide the author sees, one of Civicsmith's, or a proposal
+   *  (R12). Answers `{ok, guide, state, purpose}`. */
   guideDraft(args) {
-    const { kind, items, based_on: basedOn, by } = argsOf(args);
+    const { kind, items, purpose: p, based_on: basedOn, by } = argsOf(args);
     const member = this.#member(by);
     if (!member) return memberRefusal("writing a reading guide");
-    if (!GUIDE_KINDS.includes(kind)) return kindRefusal(kind);
-    const checked = checkGuide(items);
+    const purpose = purposeOf(p);
+    const badKind = this.#kindRefused(kind, purpose);
+    if (badKind) return badKind;
+    const checked = checkGuide(items, purpose);
     if (!checked.ok) return checked;
     const basis = basedOn === undefined || basedOn === null || basedOn === "" ? null : basedOn;
     /* DEC-49 REGION is-guide-basis */
@@ -171,20 +213,20 @@ export class ReadingGuides {
     return this.#record.transact(() => {
       const m = this.#mint(at);
       if (m.refused) return m.refused;
-      this.#sql.exec(`INSERT INTO reading_guides (guide_id, kind, origin, items_json, state, author, reviewed_by, based_on,
-                        offered_by, created_at, updated_at) VALUES (?,?,'group',?,'usable_by_author',?,NULL,?,NULL,?,?)`,
-        m.id, kind, canonicalJson(checked.items), member, basis, at, at);
+      this.#sql.exec(`INSERT INTO reading_guides (guide_id, kind, purpose, origin, items_json, state, author, reviewed_by,
+                        based_on, offered_by, created_at, updated_at) VALUES (?,?,?,'group',?,'usable_by_author',?,NULL,?,NULL,?,?)`,
+        m.id, kind, purpose, canonicalJson(checked.items), member, basis, at, at);
       this.#history(m.id, "draft", "usable_by_author", member, null, at);
-      return { ok: true, guide: m.id, state: "usable_by_author", at };
+      return { ok: true, guide: m.id, state: "usable_by_author", purpose, at };
     });
   }
 
   /* ================================================================ R12: a machine's proposal, apart */
 
-  /** R12: `{kind, items, run, by}`, `by` a machine credential and `run` the run that proposed it. Stored apart from
-   *  the guides, labelled; it is no guide. Answers `{ok, proposal, label}`. */
+  /** R12, R13: `{kind, items, purpose?, run, by}`, `by` a machine credential and `run` the run that proposed it. Stored
+   *  apart from the guides, labelled; it is no guide. Answers `{ok, proposal, purpose, label}`. */
   guidePropose(args) {
-    const { kind, items, run, by } = argsOf(args);
+    const { kind, items, purpose: p, run, by } = argsOf(args);
     /* DEC-49 REGION is-guide-machine */
     if (!str(by) || !isMachineIdentity(str(by)))
       return refusal("GUIDE_PROPOSAL_NOT_MACHINE", "a proposed guide is a machine credential's work; a member writes a "
@@ -195,16 +237,18 @@ export class ReadingGuides {
       return refusal("GUIDE_RUN_MISSING", `a proposed guide names the run that proposed it, in at most ${RUN_MAX} `
         + "characters. Nothing was written.");
     /* END DEC-49 REGION is-guide-run */
-    if (!GUIDE_KINDS.includes(kind)) return kindRefusal(kind);
-    const checked = checkGuide(items);
+    const purpose = purposeOf(p);
+    const badKind = this.#kindRefused(kind, purpose);
+    if (badKind) return badKind;
+    const checked = checkGuide(items, purpose);
     if (!checked.ok) return checked;
     const at = this.#instant();
     return this.#record.transact(() => {
       const m = this.#mint(at);
       if (m.refused) return m.refused;
-      this.#sql.exec(`INSERT INTO reading_guide_proposals (proposal_id, kind, items_json, run, proposed_by, at)
-                      VALUES (?,?,?,?,?,?)`, m.id, kind, canonicalJson(checked.items), str(run), str(by), at);
-      return { ok: true, proposal: m.id, label: guideProposalLabel(str(by)), at };
+      this.#sql.exec(`INSERT INTO reading_guide_proposals (proposal_id, kind, purpose, items_json, run, proposed_by, at)
+                      VALUES (?,?,?,?,?,?,?)`, m.id, kind, purpose, canonicalJson(checked.items), str(run), str(by), at);
+      return { ok: true, proposal: m.id, purpose, label: guideProposalLabel(str(by)), at };
     });
   }
 
@@ -218,7 +262,7 @@ export class ReadingGuides {
         ? this.#rows(`SELECT * FROM reading_guide_proposals ORDER BY at DESC, proposal_id LIMIT ?`, n + 1)
         : this.#rows(`SELECT * FROM reading_guide_proposals WHERE kind=? ORDER BY at DESC, proposal_id LIMIT ?`, String(kind), n + 1);
       return { ok: true, truncated: rows.length > n,
-               proposals: rows.slice(0, n).map((r) => ({ proposal: r.proposal_id, kind: r.kind, items: safeJson(r.items_json),
+               proposals: rows.slice(0, n).map((r) => ({ proposal: r.proposal_id, kind: r.kind, purpose: r.purpose, items: safeJson(r.items_json),
                  run: r.run, at: r.at, label: guideProposalLabel(r.proposed_by) })) };
     } catch {
       return { ok: true, proposals: [], truncated: false };
@@ -254,7 +298,7 @@ export class ReadingGuides {
       const bad = reasonRefusal(why, verdict === "refuse");
       if (bad) return bad;
     }
-    const checked = checkGuide(safeJson(row.items_json));
+    const checked = checkGuide(safeJson(row.items_json), row.purpose);
     if (!checked.ok) return { ...checked, guide: row.guide_id };
     const at = this.#instant();
     const state = verdict === "approve" ? "group" : row.state;
@@ -322,12 +366,14 @@ export class ReadingGuides {
     const off = offerable(row);
     if (off) return off;
     const items = safeJson(row.items_json);
-    const checked = checkGuide(items);
+    const checked = checkGuide(items, row.purpose);
     if (!checked.ok) return { ...checked, guide: row.guide_id };
     let slug = null;
     try { slug = str(this.#groupSlug()); } catch { slug = null; }
     if (!slug) return slugRefusal();
-    const bytes = canonicalJson({ format, group: slug, guide: row.guide_id, kind: row.kind, items: checked.items });
+    /* a reading guide's bytes are as before R13; a procedure guide's carry its purpose */
+    const bytes = canonicalJson({ format, group: slug, guide: row.guide_id, kind: row.kind, items: checked.items,
+                                  ...(row.purpose === "procedure" ? { purpose: "procedure" } : {}) });
     const digest = `sha256:${sha256HexSync(bytes)}`;
     const at = this.#instant();
     this.#record.transact(() => { this.#history(row.guide_id, act, row.state, member, null, at); });
@@ -344,9 +390,10 @@ export class ReadingGuides {
     return out;
   }
 
-  /** R6: `{bytes, by}`: another group's offer, imported as `adopted`, `based_on` the offer's digest, `draft` until R3's
-   *  review here approves it. An offer already adopted and not retired answers that guide (`already: true`). Answers
-   *  `{ok, guide, state: "draft", based_on, offered_by}`. */
+  /** R6, R13: `{bytes, by}`: another group's offer, imported as `adopted`, `based_on` the offer's digest, `draft` until
+   *  R3's review here approves it; a procedure guide's kind must be an action kind of this group's view. An offer
+   *  already adopted and not retired answers that guide (`already: true`). Answers `{ok, guide, state: "draft",
+   *  purpose, based_on, offered_by}`. */
   guideAdopt(args) {
     const { bytes, by } = argsOf(args);
     const member = this.#member(by);
@@ -354,34 +401,37 @@ export class ReadingGuides {
     const offer = typeof bytes === "string" && bytes.length <= 200000 ? safeJson(bytes) : null;
     const whole = isObj(offer) && canonicalJson(offer) === bytes && offer.format === GUIDE_OFFER_FORMAT
       && str(offer.group) !== "" && str(offer.group).length <= 100 && isGuideId(offer.guide)
-      && Object.keys(offer).sort().join() === "format,group,guide,items,kind";
+      && (Object.keys(offer).sort().join() === "format,group,guide,items,kind"
+          || (Object.keys(offer).sort().join() === "format,group,guide,items,kind,purpose" && offer.purpose === "procedure"));
     /* DEC-49 REGION is-guide-offer */
     if (!whole)
       return refusal("GUIDE_OFFER_UNREADABLE", "what was given is not another group's offer of a reading guide, byte "
         + "for byte as offered. Nothing was written.");
     /* END DEC-49 REGION is-guide-offer */
-    if (!GUIDE_KINDS.includes(offer.kind)) return kindRefusal(offer.kind);
-    const checked = checkGuide(offer.items);
+    const purpose = purposeOf(offer.purpose);
+    const badKind = this.#kindRefused(offer.kind, purpose);
+    if (badKind) return badKind;
+    const checked = checkGuide(offer.items, purpose);
     if (!checked.ok) return checked;
     const digest = `sha256:${sha256HexSync(bytes)}`;
     const held = this.#one(`SELECT guide_id, state FROM reading_guides WHERE origin='adopted' AND based_on=? AND state<>'retired'
                             ORDER BY created_at, guide_id LIMIT 1`, digest);
-    if (held) return { ok: true, already: true, guide: held.guide_id, state: held.state, based_on: digest, offered_by: str(offer.group) };
+    if (held) return { ok: true, already: true, guide: held.guide_id, state: held.state, purpose, based_on: digest, offered_by: str(offer.group) };
     const at = this.#instant();
     return this.#record.transact(() => {
       const m = this.#mint(at);
       if (m.refused) return m.refused;
-      this.#sql.exec(`INSERT INTO reading_guides (guide_id, kind, origin, items_json, state, author, reviewed_by, based_on,
-                        offered_by, created_at, updated_at) VALUES (?,?,'adopted',?,'draft',?,NULL,?,?,?,?)`,
-        m.id, offer.kind, canonicalJson(checked.items), member, digest, str(offer.group), at, at);
+      this.#sql.exec(`INSERT INTO reading_guides (guide_id, kind, purpose, origin, items_json, state, author, reviewed_by,
+                        based_on, offered_by, created_at, updated_at) VALUES (?,?,?,'adopted',?,'draft',?,NULL,?,?,?,?)`,
+        m.id, offer.kind, purpose, canonicalJson(checked.items), member, digest, str(offer.group), at, at);
       this.#history(m.id, "adopt", "draft", member, null, at);
-      return { ok: true, guide: m.id, state: "draft", based_on: digest, offered_by: str(offer.group), at };
+      return { ok: true, guide: m.id, state: "draft", purpose, based_on: digest, offered_by: str(offer.group), at };
     });
   }
 
   /* ================================================================ R5, R8: reads */
 
-  /** R5: the guide in force for `kind`: the viewer's own usable guide, else the group's, else Civicsmith's, else none;
+  /** R5: the reading guide in force for `kind`: the viewer's own usable guide, else the group's, else Civicsmith's, else none;
    *  each candidate passes R4 again, and one that no longer does is passed over and named in `withheld`. Answers
    *  `{ok: true, kind, guide, origin, withheld}`, `guide` null with `origin` null for none. Never throws. */
   guideFor(args) {
@@ -400,14 +450,15 @@ export class ReadingGuides {
       const sees = this.#seesGroup(viewer);
       const member = viewer === undefined || viewer === null ? null : this.#member(viewer);
       if (sees && member) {
-        for (const r of this.#rows(`SELECT * FROM reading_guides WHERE kind=? AND state='usable_by_author' AND author=?
-                                     ORDER BY updated_at DESC, guide_id`, kind, member)) {
+        for (const r of this.#rows(`SELECT * FROM reading_guides WHERE kind=? AND purpose='reading' AND state='usable_by_author'
+                                     AND author=? ORDER BY updated_at DESC, guide_id`, kind, member)) {
           const g = pass(viewOf(r));
           if (g) return { ok: true, kind, guide: g, origin: g.origin, withheld };
         }
       }
       if (sees) {
-        for (const r of this.#rows(`SELECT * FROM reading_guides WHERE kind=? AND state='group' ORDER BY updated_at DESC, guide_id`, kind)) {
+        for (const r of this.#rows(`SELECT * FROM reading_guides WHERE kind=? AND purpose='reading' AND state='group'
+                                     ORDER BY updated_at DESC, guide_id`, kind)) {
           const g = pass(viewOf(r));
           if (g) return { ok: true, kind, guide: g, origin: g.origin, withheld };
         }
@@ -422,21 +473,26 @@ export class ReadingGuides {
     }
   }
 
-  /** R8: `{kind?, state?, viewer, limit?}`: the guides the viewer may see, Civicsmith's first, then the group's in the
-   *  order made; at most 200 (`limit` may lower it), `truncated` when more were held. Never throws. */
+  /** R8, R13: `{kind?, state?, purpose?, viewer, limit?}`: the guides the viewer may see, Civicsmith's first, then the
+   *  group's in the order made; at most 200 (`limit` may lower it), `truncated` when more were held. `purpose` narrows
+   *  to reading or procedure guides (Civicsmith's are reading guides). Never throws. */
   guidesOf(args) {
     try {
-      const { kind, state, viewer, limit } = argsOf(args);
+      const { kind, state, purpose, viewer, limit } = argsOf(args);
       const n = capOf(limit);
-      const kindOk = kind === undefined || kind === null || GUIDE_KINDS.includes(kind);
+      const purposeOk = purpose === undefined || purpose === null || GUIDE_PURPOSES.includes(purpose);
+      const kindOk = kind === undefined || kind === null
+        || (typeof kind === "string" && (GUIDE_KINDS.includes(kind) || (purpose !== "reading" && this.#actionKinds().includes(kind))));
       const stateOk = state === undefined || state === null || GUIDE_STATES.includes(state);
-      if (!kindOk || !stateOk) return { ok: true, guides: [], truncated: false };
-      const civic = this.#civicsmith.filter((g) => (kind == null || g.kind === kind) && (state == null || g.state === state)).map(civicView);
+      if (!kindOk || !stateOk || !purposeOk) return { ok: true, guides: [], truncated: false };
+      const civic = purpose === "procedure" ? []
+        : this.#civicsmith.filter((g) => (kind == null || g.kind === kind) && (state == null || g.state === state)).map(civicView);
       let group = [];
       if (this.#seesGroup(viewer)) {
         const where = [], a = [];
         if (kind != null) { where.push("kind=?"); a.push(kind); }
         if (state != null) { where.push("state=?"); a.push(state); }
+        if (purpose != null) { where.push("purpose=?"); a.push(purpose); }
         group = this.#rows(`SELECT * FROM reading_guides ${where.length ? `WHERE ${where.join(" AND ")}` : ""}
                             ORDER BY created_at, guide_id LIMIT ?`, ...a, n + 1).map(viewOf);
       }
@@ -444,6 +500,44 @@ export class ReadingGuides {
       return { ok: true, guides: all.slice(0, n), truncated: all.length > n };
     } catch {
       return { ok: true, guides: [], truncated: false };
+    }
+  }
+
+  /** R13: the procedure guides for an action `kind`: the profile's (`jurisdictions` R80, from `combine`'s view) first,
+   *  then the group's approved procedure guides in the order approved (the group's when the viewer sees the group, R8),
+   *  each with its origin; no rank, score or preferred route. Each passes R4's procedure check again; one that no
+   *  longer does is passed over and named in `withheld`. Every answer carries `label` (`PROCEDURE_GUIDE_LABEL`).
+   *  Answers `{ok: true, kind, guides, withheld, label}`. Never throws. */
+  procedureGuidesFor(args) {
+    const label = { ...PROCEDURE_GUIDE_LABEL };
+    try {
+      const { kind, viewer } = argsOf(args);
+      const view = this.#view();
+      if (typeof kind !== "string" || !this.#actionKinds(view).includes(kind))
+        return { ok: true, kind: typeof kind === "string" ? kind.slice(0, 100) : null, guides: [], withheld: [], label };
+      const guides = [], withheld = [];
+      const pass = (g, items) => {
+        const c = checkGuide(items, "procedure");
+        if (c.ok) guides.push(g);
+        else withheld.push({ guide: g.id ?? null, origin: g.origin, profile: g.profile ?? null, reason: c.reason, item: c.item ?? null });
+      };
+      for (const pg of (Array.isArray(view.procedure_guides) ? view.procedure_guides : [])) {
+        if (!isObj(pg) || pg.kind !== kind || !Array.isArray(pg.items)) continue;
+        const items = pg.items.map((it) => (isObj(it) ? { ...it, ...(Array.isArray(it.after) ? { after: [...it.after] } : {}) } : it));
+        /* R80's `after` (R87 (d)) is the profile's own field, carried as given; the check reads the route's texts */
+        pass({ origin: "profile", profile: pg.profile ?? null, kind, items, status: pg.status ?? null, basis: pg.basis ?? null },
+             items.map((it) => (isObj(it) ? Object.fromEntries(Object.entries(it).filter(([k]) => k !== "after")) : it)));
+      }
+      if (this.#seesGroup(viewer)) {
+        const rows = this.#rows(`SELECT g.*, a.seq AS approved_seq FROM reading_guides g
+                                   JOIN (SELECT guide_id, MIN(seq) AS seq FROM reading_guide_history WHERE act='approve' GROUP BY guide_id) a
+                                     ON a.guide_id = g.guide_id
+                                 WHERE g.kind=? AND g.purpose='procedure' AND g.state='group' ORDER BY a.seq`, kind);
+        for (const r of rows) { const g = viewOf(r); pass(g, g.items); }
+      }
+      return { ok: true, kind, guides, withheld, label };
+    } catch {
+      return { ok: true, kind: null, guides: [], withheld: [], label };
     }
   }
 
@@ -464,15 +558,18 @@ export class ReadingGuides {
 /* ================================================================ views */
 
 function viewOf(r) {
-  return { id: r.guide_id, kind: r.kind, origin: r.origin, items: safeJson(r.items_json), state: r.state, author: r.author,
+  return { id: r.guide_id, kind: r.kind, purpose: r.purpose ?? "reading", origin: r.origin, items: safeJson(r.items_json), state: r.state, author: r.author,
            reviewed_by: r.reviewed_by ?? null, based_on: r.based_on ?? null, offered_by: r.offered_by ?? null };
 }
 
 function civicView(g) {
-  return { id: g.id, kind: g.kind, origin: "civicsmith", items: g.items.map((it) => ({ ...it })), state: g.state, author: g.author,
+  return { id: g.id, kind: g.kind, purpose: "reading", origin: "civicsmith", items: g.items.map((it) => ({ ...it })), state: g.state, author: g.author,
            reviewed_by: g.reviewed_by, based_on: g.based_on ?? null, approved_by: g.approved_by,
            measured_use: { ...g.measured_use } };
 }
+
+/* R13: a guide's purpose as given, `reading` when absent; anything else is kept, for its refusal. */
+const purposeOf = (p) => (p === undefined || p === null || p === "" ? "reading" : p);
 
 const capOf = (limit) => (Number.isInteger(limit) && limit >= 1 && limit < GUIDES_MAX ? limit : GUIDES_MAX);
 
@@ -486,10 +583,16 @@ function memberRefusal(act) {
   /* END DEC-49 REGION is-guide-member */
 }
 
-function kindRefusal(kind) {
+/* R2, R13: a kind outside its purpose's kinds (`kinds`), or a purpose outside `GUIDE_PURPOSES` (`kinds` null). */
+function kindRefusal(kind, purpose, kinds) {
+  const detail = !kinds ? "a guide's purpose is reading or procedure."
+    : purpose === "procedure"
+      ? (kinds.length ? `a procedure guide is for one of the action kinds of the group's jurisdiction profiles: ${kinds.join(", ")}.`
+                      : "a procedure guide is for an action kind of the group's jurisdiction profiles, and they list none.")
+      : `a reading guide is for one of these kinds of document: ${kinds.join(", ")}.`;
   /* DEC-49 REGION is-guide-kind */
-  return refusal("GUIDE_KIND_UNKNOWN", `a reading guide is for one of these kinds of document: ${GUIDE_KINDS.join(", ")}. `
-    + "Nothing was written.", { kind: typeof kind === "string" ? kind.slice(0, 100) : null });
+  return refusal("GUIDE_KIND_UNKNOWN", `${detail} Nothing was written.`,
+    { kind: typeof kind === "string" ? kind.slice(0, 100) : null, ...(kinds ? {} : { purpose: typeof purpose === "string" ? purpose.slice(0, 100) : null }) });
   /* END DEC-49 REGION is-guide-kind */
 }
 
