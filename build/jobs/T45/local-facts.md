@@ -1,6 +1,6 @@
 # local-facts (T45)
 
-**Status** · session_01WsrEhcFfcP1igCUGdRgwEc · depth 2 · RUNNING until 2026-10-11T20:15:06Z (row-census and migrate-released system tests (mine and base)) · handled B2
+**Status** · session_01WsrEhcFfcP1igCUGdRgwEc · depth 2 · RUNNING until 2026-10-11T20:15:06Z (row-census and migrate-released system tests (mine and base)) · handled B3
 
 ## J1 · QUESTION
 
