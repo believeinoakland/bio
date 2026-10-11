@@ -1,6 +1,6 @@
 # Plan T45
 
-**Status** · OPEN · BOB #156 · session_01L1X4WzJQQ7Sdsh4iWKEui7 · depth 1
+**Status** · OPEN · BOB #157 · session_01WVgWUVdGVxirrZA8mzQf8G · depth 1
 
 **Jobs** · jurisdictions: JURISDICTIONS #10 session_01YbCZYnryu1Ked4QncDkn47; membership: MEMBERSHIP #34 session_019Mx293Q1PFFwRus5nYUaPq; project-roster: PROJECT-ROSTER #3 session_01JnZy4CSrJYv25f2UVq4NE2; promotion: PROMOTION #43 session_01Bdm13v3k1joqVbrjhpKtUZ; events: EVENTS #6 session_01834bxkNUQSs2DdTKq9mwAW; local-facts: LOCAL-FACTS #5 session_01WsrEhcFfcP1igCUGdRgwEc; standards: STANDARDS #12 session_01Jg3rgoArLauFTLhqRQc2MS; duties: DUTIES #4 session_01MExgKh3t6GhAjLf6UXLh5d
 
