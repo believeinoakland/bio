@@ -44187,8 +44187,18 @@ __export(checks_exports12, {
   EXTRACTION_CHECKS: () => EXTRACTION_CHECKS,
   NO_SHA_DETAIL: () => NO_SHA_DETAIL,
   REEXTRACT_CHECKS: () => REEXTRACT_CHECKS,
+  TRANSCRIBE_WORDS: () => TRANSCRIBE_WORDS,
+  fillWords: () => fillWords,
   noSha: () => noSha,
+  pagesSaid: () => pagesSaid,
   reextractRow: () => reextractRow
+});
+var TRANSCRIBE_WORDS = Object.freeze({
+  "transcribe.refused.notdeployed": "Nothing was read or sent: the assistant's reading of page pictures isn't switched on in your group's Civicsmith yet. Each part of the assistant is switched on only after it passes Civicsmith's test investigations. You can type a page's words yourself meanwhile.",
+  "transcribe.label": "The assistant's reading of the page image \xB7 undetermined until a member checks a passage against the page",
+  "transcribe.none": "The assistant read pages {pages} but found no words it could give: {why}",
+  "transcribe.done": "The assistant read pages {pages}. Their words can now be found; each passage stays undetermined until a member checks it against the page.",
+  "document.unread.pages": "Pages {pages} are pictures of text that Civicsmith's own reading couldn't make out, so their words can't be found or cited yet. The page images are kept as they are."
 });
 var REEXTRACT_CHECKS = {
   /* The flag is present and is not `1`. Refused rather than read as absent:
@@ -44235,14 +44245,20 @@ var REEXTRACT_CHECKS = {
   /* R71, R47 (T42; N832, K2611, K2613): `op=pagetranscribe` asked while the AI's part `transcribe` cannot be
      switched on (no transcriber registered, R72, or its `deployable()`, run-rules R19's test bar, not exactly true).
      Refused by name, as C-51.4 refuses an absent tier, before any account or content is read, so it names nothing
-     about any account. The number follows C-51.6, which is R63's `NO_SHA`. BOB's draft words, the design stream's
-     to replace. */
+     about any account. The number follows C-51.6, which is R63's `NO_SHA`. (T43; N862; DEC-190 (2)) Its translation
+     is `words.json`'s `transcribe.refused.notdeployed`, read by key, never a copy (`TRANSCRIBE_WORDS` below). */
   TRANSCRIBE_NOT_DEPLOYED: {
     check: "C-51.7",
     where: "src/extraction/index.mjs pageTranscribe > is-transcribe",
-    translation: "Nothing was read or sent, because reading picture pages with the assistant is not switched on for your group's Civicsmith yet: each part of the assistant is switched on only after it passes Civicsmith's test investigations."
+    translation: TRANSCRIBE_WORDS["transcribe.refused.notdeployed"]
   }
 };
+var pagesSaid = (pages) => [...new Set((Array.isArray(pages) ? pages : []).filter(Number.isInteger))].sort((a, b) => a - b).map((p3) => String(p3 + 1)).join(", ");
+function fillWords(key2, fill = {}) {
+  const en = TRANSCRIBE_WORDS[key2];
+  if (typeof en !== "string" || !en) throw new Error(`fillWords: ${key2} is not one of this module's words (words.json)`);
+  return en.replace(/\{([a-z_]+)\}/g, (m, k) => Object.prototype.hasOwnProperty.call(fill, k) ? String(fill[k]) : m);
+}
 var reextractRow = (code) => {
   const row12 = REEXTRACT_CHECKS[code];
   if (!row12 || typeof row12.translation !== "string" || !row12.translation)
@@ -45484,6 +45500,10 @@ async function tier4Extend(transcription, { sha: sha2, storeName, i2text, chain:
     out.aiNote = `the AI was not asked to transcribe ${describePages(pages)}: ${why2}`;
     return out;
   };
+  const refused5 = (r2) => {
+    if (r2 && typeof r2 === "object") out.aiRefusal = r2;
+    return not(refusalSays(r2));
+  };
   if (!pages.length) {
     out.aiNote = "no page was left that Civicsmith's own text recognition could not read, so the AI was not asked to transcribe";
     return out;
@@ -45503,13 +45523,13 @@ async function tier4Extend(transcription, { sha: sha2, storeName, i2text, chain:
   } catch {
     return not("the account that would pay for it could not be checked");
   }
-  if (!(account && account.ok === true)) return not(refusalSays(account));
+  if (!(account && account.ok === true)) return refused5(account);
   const owner = account.level === "project" ? `project:${account.project}` : account.level === "group" ? "group" : `member:${member2.startsWith("member:") ? member2.slice(7) : member2}`;
   if (typeof useCheck !== "function") return not("the limits of the account that would pay for it could not be checked");
   const at43 = typeof transcription.at === "string" && transcription.at ? transcription.at : (/* @__PURE__ */ new Date()).toISOString();
   try {
     const limit = await useCheck({ owner, member: member2, use: TRANSCRIBE_USE, at: at43 });
-    if (limit) return not(refusalSays(limit));
+    if (limit) return refused5(limit);
   } catch {
     return not("the limits of the account that would pay for it could not be checked");
   }
@@ -47164,7 +47184,32 @@ var Extraction = class _Extraction {
         recorded: false,
         why: `this reading carries no text provenance, which is not the same as its text not having been transcribed -- nobody recorded how it was produced`
       },
-      reading_history: this.#readingHistoryOf(row12.capture_sha)
+      reading_history: this.#readingHistoryOf(row12.capture_sha),
+      ...this.#unreadOf(row12.capture_sha, reading2, viewer, row12.bundle_id)
+    };
+  }
+  /** R27 (T43; N862; DEC-190 (1), (2)): the pages a reading with pages could not make out, ascending: those holding no
+   *  glyph after every tier, which are the pages `reading-pipeline.tier4Pages` would ask for (the index holds a page's
+   *  unit exactly when it holds a glyph, reading-pipeline R15; a page the index skipped over its bound is not unread).
+   *  `[]` when none; absent for a reading with no pages (R45). With pages, `unread_says` is `document.unread.pages`
+   *  filled. Both withheld with the bundle. */
+  #unreadOf(captureSha, reading2, viewer, bundleId) {
+    const n2 = reading2 && reading2.page_count;
+    if (!(Number.isInteger(n2) && n2 > 0)) return {};
+    if (bundleId && this.#redactor(viewer)(bundleId) === null) return {};
+    const read3 = /* @__PURE__ */ new Set();
+    for (const u of this.#rows(`SELECT extent, text FROM capture_text WHERE capture_sha=? AND extent_kind='pdf-page'`, captureSha)) {
+      const e2 = safeJson4(u.extent);
+      if (e2 && Number.isInteger(e2.page) && glyphCount(u.text) > 0) read3.add(e2.page);
+    }
+    for (const k of this.#rows(`SELECT first_extent, last_extent FROM capture_text_skipped WHERE capture_sha=?`, captureSha)) {
+      const a = safeJson4(k.first_extent), b = safeJson4(k.last_extent);
+      if (a && b && Number.isInteger(a.page) && Number.isInteger(b.page)) for (let p3 = a.page; p3 <= b.page; p3++) read3.add(p3);
+    }
+    const pages = Array.from({ length: n2 }, (_, p3) => p3).filter((p3) => !read3.has(p3));
+    return {
+      unread_pages: pages,
+      ...pages.length ? { unread_says: fillWords("document.unread.pages", { pages: pagesSaid(pages) }) } : {}
     };
   }
   /** R28 (`op=readingref`): every captured document whose reading carries `ref` exactly, one entry per document
@@ -47950,16 +47995,20 @@ var Extraction = class _Extraction {
     const obj = ev ? await ev.get(sha2) : null;
     if (!obj) return evidenceAbsent(sha2, storeName, { tokenClass: cls3 });
     const bytes2 = new Uint8Array(await obj.arrayBuffer());
-    const pdfEntry = getFormat("pdf");
-    if (!pdfEntry || typeof pdfEntry.structure !== "function")
-      return { status: 501, body: {
-        ok: false,
-        reason: "FORMAT_UNREGISTERED",
-        format: "pdf",
-        error: 'format "pdf" is not registered in the format registry (formats.mjs), so op=pagetranscribe has no extractor to dispatch to'
-      } };
-    const structure2 = await pdfEntry.structure(bytes2);
-    if (!structure2.ok) return { status: 422, body: structure2 };
+    const fmt = detectFormat(bytes2, null).format;
+    const entry4 = getFormat(fmt);
+    const unread = (why2) => ({ status: 200, body: {
+      ok: true,
+      op,
+      sha256: sha2,
+      format: fmt,
+      transcription: { performed: false, written: false, why: why2 }
+    } });
+    if (!entry4 || typeof entry4.structure !== "function")
+      return unread(`the stored bytes read as ${fmt === "undetermined" ? "no format your group's Civicsmith knows" : `"${fmt}"`}, which has no pages for the AI to transcribe, so nothing was read, sent or changed`);
+    const structure2 = await entry4.structure(bytes2);
+    if (!structure2 || !structure2.ok)
+      return unread(`the stored bytes read as "${fmt}", but its reader could not read their pages${structure2 && structure2.reason ? ` (${structure2.reason})` : ""}, so nothing was sent or changed`);
     let tier = 1, t2PerPage = null, t2Note = null, text7 = structure2.text;
     const notes = [...Array.isArray(structure2.notes) ? structure2.notes : []];
     const t2 = await tier2Escalate(e2, { sha: sha2, storeName, text: text7 });
@@ -47980,11 +48029,11 @@ var Extraction = class _Extraction {
       i2text: text7,
       wiredTier: tier,
       tier2PerPage: t2PerPage,
-      fmt: "pdf",
+      fmt,
       seed: tier3SeedFrom(stored2, basis.units),
       liveCalibration: (q10) => this.#liveCalibration(q10)
     });
-    const chain3 = (t3.chainSet ? t3.chain : null) || layerChainFor(t3.i2text, { tier: t3.wiredTier, container: "pdf" });
+    const chain3 = (t3.chainSet ? t3.chain : null) || layerChainFor(t3.i2text, { tier: t3.wiredTier, container: fmt });
     const at43 = stampInstant("second");
     let tx = null;
     try {
@@ -47992,18 +48041,26 @@ var Extraction = class _Extraction {
     } catch {
       tx = null;
     }
-    const t4 = await tier4Extend(tx, { sha: sha2, storeName, i2text: t3.i2text, chain: chain3, wiredTier: t3.wiredTier });
-    if (!t4.filled.length)
+    const asked = { pages: null, answer: null };
+    const handed = tx && typeof tx === "object" && typeof tx.transcribe === "function" ? { ...tx, transcribe: async (q10) => {
+      asked.pages = Array.isArray(q10 && q10.pages) ? [...q10.pages] : [];
+      asked.answer = await tx.transcribe(q10);
+      return asked.answer;
+    } } : tx;
+    const t4 = await tier4Extend(handed, { sha: sha2, storeName, i2text: t3.i2text, chain: chain3, wiredTier: t3.wiredTier });
+    const refusal36 = t4.aiRefusal && typeof t4.aiRefusal === "object" ? t4.aiRefusal : null;
+    if (refusal36 && !t4.filled.length) return { status: refusalStatus(refusal36), body: refusal36 };
+    if (!t4.filled.length) {
+      const why2 = t4.aiNote || "the AI was not asked to transcribe, and nothing about this capture was changed";
+      const posted = asked.pages !== null && !(asked.answer && asked.answer.ok === false && NO_POST_REASONS.includes(asked.answer.reason));
       return { status: 200, body: {
         ok: true,
         op,
         sha256: sha2,
-        transcription: {
-          performed: false,
-          written: false,
-          why: t4.aiNote || "the AI was not asked to transcribe, and nothing about this capture was changed"
-        }
+        transcription: { performed: false, written: false, why: why2 },
+        ...posted ? { says: fillWords("transcribe.none", { pages: pagesSaid(asked.pages), why: why2 }) } : {}
       } };
+    }
     const chain4 = t4.chain;
     const vw = this.view();
     const wired = readText(decodeView(t4.i2text), {
@@ -48018,7 +48075,7 @@ var Extraction = class _Extraction {
       docType: { type: { key: stored2.content_type ?? null, version: stored2.reader_version ?? null } },
       chain: chain4,
       wiredTier: t4.wiredTier,
-      fmt: "pdf",
+      fmt,
       retrieved: stored2.at ?? null,
       tier2note: t2Note,
       ocrNote: t3.ocrNote,
@@ -48035,7 +48092,7 @@ var Extraction = class _Extraction {
       text: t4.i2text,
       chain: chain4,
       tier: t4.wiredTier,
-      container: "pdf",
+      container: fmt,
       planeVersion: e2.VERSION || null
     });
     {
@@ -48071,7 +48128,7 @@ var Extraction = class _Extraction {
         act: act2,
         text_source: chain4,
         chain: describeChain(chain4),
-        label: AI_READING_LABEL,
+        label: TRANSCRIBE_WORDS["transcribe.label"],
         note: t4.aiNote,
         measured_by: AI_TRANSCRIPTION_SOURCE,
         ocr: t3.filled.length ? { pages: t3.filled, engine: t3.engine } : null,
@@ -48087,7 +48144,8 @@ var Extraction = class _Extraction {
         observed: w.observed ?? null,
         compared: w.compared ?? null,
         after_read: w.afterRead ?? null
-      }
+      },
+      ...w.ok === true ? { says: fillWords("transcribe.done", { pages: pagesSaid(asked.pages ?? t4.filled) }) } : {}
     } };
   }
   /* ---- drift obligations (R38–R40) ---- */
@@ -48160,6 +48218,8 @@ function unwrittenWhy(w, act2) {
   if (w.ok === true) return {};
   return w.rolledBack === true ? { why: `the record's reading of this capture could not be written: the write was refused while it ran and rolled back whole, so the text above was read and NOT recorded, and nothing the ${act2} would have changed was changed` } : { why: "the record's reading of this capture could not be written (it was no longer held for this caller when the write arrived), so the text above was read and NOT recorded" };
 }
+var NO_POST_REASONS = Object.freeze(["AGENT_WORKER_UNBOUND", "EVIDENCE_ABSENT", "NO_PAGE_RENDERED"]);
+var refusalStatus = (r) => Number.isInteger(r.status) && r.status >= 400 && r.status < 500 ? r.status : 403;
 var isTranscriber = (t2) => !!t2 && typeof t2 === "object" && typeof t2.deployable === "function" && typeof t2.keptAway === "function" && typeof t2.transcription === "function";
 function extractionOps(x, url, body, env) {
   const q10 = (k) => url.searchParams.get(k);
