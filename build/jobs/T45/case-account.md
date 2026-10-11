@@ -1,6 +1,34 @@
 # case-account (T45)
 
-**Status** · session_014rdGh7CEjvJUmAgAAPe2kQ · depth 2 · WORKING · handled B1
+**Status** · session_014rdGh7CEjvJUmAgAAPe2kQ · depth 2 · WORKING · handled B2
+
+## Record
+
+**How the reading set was read** (mechanics §17). Read whole by me: `roles/JOB.md`; `build/requirements/case-account.md` (public and private); the public part (Purpose, Provides) of every module in my Uses (`record-grammar`, `record-core`, `membership`, `inquiry`, `content`, `extraction`, `publication`, `case-grammar`, `ai-runs`, `case-disclosures`, `test-support`, `project-roster` (its R21–R24, which sit under its Private heading, read too), `case-checker`); `BIO_Action_v0_2.md` whole; `draft-T45-l8.md` §0, §3, §5–§8; the plan's T45 opening rules, my entry T45-20 and the reconciliation's lines naming case-account (R3, R8, R20, l9b's R34 row); K2780, K2781, K2787. **My own code and tests read whole** (P20, plan rule 2): `index.mjs`, `schema.mjs`, `document.mjs`, and the four test files with the fixture. Read where used: `case-disclosures.accountJudged` and `case-checker/account.mjs` (to confirm (c) below), `basis-versions` R22–R23 and `noProjectConclusionOf`, `project-roster.projectScope`.
+
+**Entries applied (T45-20):**
+- **R13** `advocacyCheck({project, sentences, author, viewer})` and `advocacyChecksOf({project, viewer})`. Refusals in order: `MACHINE_CANNOT_CHECK_ADVOCACY` (C-153.3; absent or machine author, `isMachineIdentity`); `NO_SUCH_PROJECT` through `membership.noSuchProject` (absent, naming nothing, not a project, or not `FULL` to the viewer); `ADVOCACY_NOT_OWN_PROJECT` (C-153.2; `project-roster.projectScope` not `own`, or the author not `isJoinedParticipant`); `BAD_ACCOUNT` naming the field (R5's shape with `account` read as `sentences`, a `bias_statement`, or no sentence). Each sentence judged by `case-checker.checkAccount` with `cited` from the same holdings R6 builds (`#held`, as the author reads the record, R14 applied) in checkAccount's own list shape, `printed` empty, `conclusions` each cited finding's `basis-versions.noProjectConclusionOf` claim (B2 (b), K2829) and its `inquiry.basisFor` legs, read only where the author sees the finding. Answers `{ok, project, at, sentences: [{ord, result, codes, findings, counsel?}]}`; a check that throws or answers anything else answers every sentence `undetermined`. Appended to the new table `advocacy_checks` (keyed by project, declared whole, R8's form); nothing else written. `advocacyChecksOf` lists newest first, at most 200 with `truncated`, only at `FULL` sight; every other caller gets membership's one answer, byte for byte. No answer carries a signature, digest, stamp, label or row id; no service offers a check to another module.
+- **R6** `accountJudged` takes `outcomes: [{outcome, text, cites}]`: one row per outcome after the four statements, `kind: outcome`, `began_as: member`, `outcome` named on the row; a refusal naming an outcome row carries `outcomes`. Absent, null or `[]` read as none (rows and results byte for byte as before). An entry it cannot read is handed on as one with no text, so case-disclosures refuses it (`BAD_COMPLETENESS`), never passed over.
+- **R14** `#held` (behind `citedFor` and R13): a cite of a finding, leg, passage (its content row's bundle) or material held in a project whose scope is `counsel_matter`, other than the act's project (the case's owning project for R6, published or prepared; `project` for R13), gives no holding; R6 answers `ACCOUNT_CITES_COUNSEL_MATTER` (C-153.1, R14's translation verbatim) first among its refusals, naming each sentence and its cites, its code in `results`; R13 answers it among the sentence's codes with `counsel`. A counsel matter the viewer cannot see is never named (its cite reads as any unseen cite). `citedFor` takes an optional fifth argument, the act's project.
+- **Rows:** family C-153 (B2 (a)), `CASE_ACCOUNT_CHECKS` in a new `checks.mjs`, C-153.1–.3, worded gender-neutrally as B2 asked; to promotion's stamp.
+- **Deps** (R12): `roster`, `versions` and `checker` reached lazily on the host unless given.
+
+Not-yet-met marks this job meets: **R6, R13, R14**, named by `t45-judgment.test.mjs` (R6, R14), `advocacy.test.mjs` (R13) and `instance.test.mjs` (R12, R8, R13's table; R11 over R13's answers).
+
+**Flaws found in my own module (P8), fixed:** the draft's next step said "in her own words" (member-facing), now "in their own words". No other flaw found in the code read whole. Tests that pinned the old lists (R8's two tables) re-pinned to three, none loosened. **Readings, no answer needed:** an empty text is `BAD_ACCOUNT` (`sentences`), since a check of nothing keeps nothing; a material's project is read from its `ref` (case-disclosures' material refs are bundle ids). Deferred: none.
+
+**Other modules (REPORT J2):**
+- **N901** (B2 (c), confirmed by BOB): `case-disclosures.accountJudged` hands R6's `cited` (`{holdings, rules, looks}`) to `case-checker.checkAccount` unchanged, whose `cited` is a list or a key map, so through the real modules every cite reads unread: every cited account sentence is refused `ACCOUNT_SENTENCE_UNSUPPORTED`, and a statement's or outcome's figure, date and name arms never run. R6's outcome control is therefore proven through the real case-disclosures handed the same holdings in checkAccount's list (`fixedDisclosures` in `t45-judgment.test.mjs`), as N901's fix will hand them; R13 calls checkAccount itself with its own shape and is unaffected.
+- **answer-envelope:** `CHECK_FAMILY_FILES` must list `src/case-account/checks.mjs` (`CASE_ACCOUNT_CHECKS`) at its `modules.json` place, directly after case-disclosures' file. Until then four of its tests are red from this merge (R2/R7 totality and the three that re-assert totality); 31/31 without my change.
+- **promotion:** stamp C-153.1–.3.
+- **op-declarations / control-plane / affordances (L11):** `op=advocacycheck` (draft §5: mutating, writing only in the member's own project) and a read op for `advocacyChecksOf` are not declared or routed; until then the services are reached in-process only.
+
+**Tests and checks run** (final, on 2eee810f4e, `tranche/T45` merged in after B2):
+- `node --test bio-plane/test/m/case-account/`: tests 32, pass 32, fail 0.
+- Users: `case-authoring` 185/185, `review` 46/46. `answer-envelope` 27 pass, 4 fail (above; 31/31 on the tranche). `control-plane` 220 pass 3 fail, `op-declarations` 132 pass 1 fail, `plane` 194 pass 2 fail: identical on `origin/tranche/T45` without my commit (plan rule 4's accepted reds), none mine.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs case-account`: 8 product files, 0 failures. `checks/coverage.mjs case-account`: 14 of 14 live ids named, 0 failures. `checks/ownership.mjs case-account tranche/T45`: 8 files, 0 failures.
+
+Size (session_014rdGh7CEjvJUmAgAAPe2kQ): test runs 16, module lines 911
 
 ## J1 · QUESTION
 
