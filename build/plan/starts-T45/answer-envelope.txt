@@ -1,0 +1,8 @@
+Depth 2. Your entry: `build/plan/current.md` (T45), layer 11, answer-envelope: T45-49 (K2834). Read also the plan's rule 4 (14) and K2834's line in `build/rulings.md`.
+Your requirements: `build/requirements/answer-envelope.md` (read whole). Your entry needs no new requirement id: `CHECK_FAMILY_FILES` lists every module's checks file, and T45 added families C-148 (case-check), C-149 (action-holds), C-150 (action-replies), C-151 (plan-work), C-152 (action-producers) and C-153 (case-account, `src/case-account/checks.mjs`, directly after case-disclosures' file). List each that exists on tranche/T45 when you start; any added after, BOB tells you by CHANGE.
+
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START; yours to clear: 4 (14).
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured when this START is posted.
+Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, installer, stewards, answer-envelope, plane last.
