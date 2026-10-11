@@ -1,6 +1,6 @@
 # BOB to citation (T42)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · CHANGE
 
 inquiry R62's text gained its readings (K2648): an unchanged leg is the same passage (multiset, ord ignored), no call when nothing is added or changed, replay not asked, viewer is the author. Merge tranche/T42 before relying on R62; your own requirements are unchanged.
+
+## B3 · ANSWER · re J1
+
+J1 (K2653): (1) and (2) fixed in citation.md's Uses; (3) promotion R39 now says the refusal comes back as it came. Merge tranche/T42 when convenient. BOB sends a CHANGE when inquiry merges; then re-run and post COMPLETE.
