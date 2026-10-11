@@ -27,6 +27,7 @@ import { publishScheduleOf } from "../../../src/publish-schedule/index.mjs";
 import { ratificationOf, completenessFields } from "../../../src/ratification/index.mjs";
 import { contradictionOf } from "../../../src/contradiction/index.mjs";
 import { Capture } from "../../../src/capture/index.mjs";
+import { doorbellOf } from "../../../src/doorbell/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
@@ -165,6 +166,9 @@ export function world({ group = "test-group", provider = true, now = null, recor
   const capture = new Capture(st, { record, env: { INSTANCE_NAME: "test", VERSION: "0.0.0" }, governor: null,
                                     provenance: prov, membership });
   capture.migrate();
+  /* doorbell (layer 3, after capture), the real one on this host: it creates the `inbox` its knocks are pulled from
+     (its R25; K2710: capture no longer creates it since T43-8), which `knocked` below writes and capture's R72 reads. */
+  doorbellOf(host, { capture, record, provenance: prov, credentials });
   const sources = sourcesOf(host, { record, membership, capture, now: () => Date.parse(clock.now) });
   const ex = extractionOf(host, { record, membership, calibration: { onCalibration() { return { ok: true }; } } });
   ex.migrate();
@@ -438,8 +442,8 @@ export function world({ group = "test-group", provider = true, now = null, recor
       else w.documentCopy(c.sha, "clean");
       return c.sha;
     },
-    /** A knock the doorbell received, already pulled into `captureSha` (capture R65, R72: the inbox row its read
-     *  answers). */
+    /** A knock the doorbell received, already pulled into `captureSha` (capture R65, R72: the row of doorbell's `inbox`
+     *  its read answers). */
     knocked(captureSha, { knockId = `KNOCK-2026-09-27-${captureSha.slice(0, 8)}`, received = T0, pseudonym = null } = {}) {
       st.sql.exec(`INSERT INTO inbox (knock_id, sha256, bytes, received, status, capture_sha, pulled_by, pulled_at,
                    pseudonym) VALUES (?, ?, 1, ?, 'pulled', ?, 'alice', ?, ?)`,
