@@ -1,6 +1,6 @@
 # case-authoring (T45)
 
-**Status** · session_01GDnDMjDLXJXoDemp1UPqER · depth 2 · RUNNING until 2026-10-11T21:57:05Z (users' tests) · handled B3
+**Status** · session_01GDnDMjDLXJXoDemp1UPqER · depth 2 · RUNNING until 2026-10-11T21:57:05Z (users' tests) · handled B4
 
 ## J1 · QUESTION
 
