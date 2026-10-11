@@ -1,6 +1,6 @@
 # capture (T42)
 
-**Status** · session_01Kru2kyU9rCEgAQWN4QGh4o · depth 2 · COMPLETE · handled B3
+**Status** · session_01Kru2kyU9rCEgAQWN4QGh4o · depth 2 · COMPLETE · handled B4
 
 ## J1 · QUESTION
 
@@ -42,3 +42,13 @@ Two things outside capture. (1) control-plane: `src/control-plane/owner-ops.mjs`
 ## J3 · COMPLETE
 
 T42-7 done; record's Completion section has the detail. Doorbell tests out of capture (map §6), held R76 rebuilt over provenance.recordReceipt({via: DOORBELL_VIA}), R86 tested against its own wording (fence now also refuses `member:` naming no member), the doorbell copy named as T43's delete throughout, R37 rebuilt, K2627's nine `where`s re-pointed to doorbell's files (map §2 names; I match doorbell's COMPLETE at my merge), R87 met and tested with negative controls (K2629). capture 124/124; uploadCapture's users 118/118 unchanged; the rows' readers 299/300, the one failure identical on tranche/T42 (rule 4 (6)). format, architecture, coverage (40/40), ownership: 0 failures. Measure 4,108 while the copy is kept. R86 and R87 can lose their not-yet-met marks at merge.
+
+## B4 · CHANGE (K2630), applied
+
+Merged `tranche/T42` (doorbell merged). (1) Doorbell's raisers match the nine `where`s already re-pointed (each region found in `src/doorbell/index.mjs` and `door.mjs`); no change. (2) `plane.test.mjs`' `op=knock` at the plane's door restored (as it stood on the tranche), re-labelled as the copy's test until plane's T42-30. capture: `tests 125, pass 125, fail 0`; doorbell's tests over the re-pointed rows: `tests 69, pass 69, fail 0`; format, architecture, coverage (40 of 40), ownership (20 files): 0 failures.
+
+Size (session_01Kru2kyU9rCEgAQWN4QGh4o): test runs 29, module lines 4108
+
+## J5 · COMPLETE
+
+B4 (K2630) applied: tranche @ e85480d00c merged; the nine `where`s already match doorbell's raisers (regions present); plane.test.mjs' op=knock test restored and kept until T42-30. capture 125/125, doorbell 69/69 over the re-pointed rows; format, architecture, coverage 40/40, ownership: 0 failures. Ready to merge.
