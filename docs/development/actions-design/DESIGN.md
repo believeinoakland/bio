@@ -102,6 +102,19 @@ Seven stages, a met trigger proposed with its age, a member advances or declines
 - **Status reports**: drafted from the record by a member (assistant where enabled, labelled), never required, never published.
 - **When a member leaves**: the owners are told once which dated items routed to her; any member who can see an item may **take it up** by one act (where its to-dos go); no assignee, no automatic reassignment (closes `queue-producers` R15–R18's "else").
 
+### 2.11 Managing the work as it goes (D27)
+
+Bob asked what support an extended action needs as it progresses; ruled "All as recommended":
+- **Each matter's intended outcome** in the group's own words, and its **state** derived from the record: documented (D25), fix offered (D26), acting, fixed (cure, D5), stopped (D6a), ended; never a percentage or score.
+- **One plan timeline** of the group's acts and every coming date (the other side's, the group's own, phase starts, escalation stages) and a **"what's next"** list by date: a read over `actions`, `action-clocks`, `escalation` and `action-plans`.
+- **Plan reviews** on the group's own rhythm (a member-set repeating reminder or at checkpoints); a review opens with "what changed since the last review" (responses, dates passed, re-examination marks) and records members' decisions as a dated review entry.
+- **Paused** as a plan state with a reason and an optional look-again date; watches and clocks continue, shown.
+- **A decision log**: the plan's append-only history shown as decisions with reasons and dates.
+- **Lessons at close**: the closing note asks what the group would do differently; the planning run reads earlier plans' notes (rule 4's "earlier plans").
+- **A · Preparation items** on an option, each taken up by a member herself with her own target date; the group sees who took up what; no assignment, hours or measures (rule 10 kept: a self-chosen act, as D14's take-up). `action-plans` R26's `assignee` refusal stays for assignment by anyone else.
+- **B · Second approval**: a project's owners may name acts (by kind, tier, or "public") that need a second member's approval before sending; default one member. A project setting, not a member attribute.
+- **C · Notes and comments** on options, actions and drafts, inside the plan, never published (DEC-25), under the plan's sight.
+
 ## 3. Kinds of action
 
 The product's own kinds are those whose rules it enforces; all others come from the profile (Action §5 #6). The design adds **shapes** (what a kind needs from the record and the screens), each a profile kind unless marked product:

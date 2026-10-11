@@ -35,6 +35,7 @@ Bob, 2026-10-09: "we need to dive every bit as deeply into the requirements, cur
 | AC17 | What came of the plan, and success recorded | "What did all this achieve?" | regular | L5 | U12, U16; D6b, D6c |
 | AC18 | A newcomer picks up where things stand | "Maria left; what's due and why?" | regular | L5 | U17; D14 |
 | AC19 | Act with partner groups on one text | "The tenants' union wants to sign on." | occasional | L5 | U14; D16 |
+| AC21 | Manage a long action: what each matter is for, one timeline, reviews, preparation taken up, decisions together | "Where are we on the bond-reports plan, and who's drafting the follow-up?" | core | L1 | D27 |
 | AC20 | Any state, from its own sourced profile | "The same request, but in Houston." | occasional | L2 | U19; D8 |
 
 ### 9A.3 The ladder
@@ -42,7 +43,7 @@ Bob, 2026-10-09: "we need to dive every bit as deeply into the requirements, cur
 | rung | a member can | example | state on 2026-10-11 | planned tranche |
 |---|---|---|---|---|
 | L0 Recorded | Record an action to an office, its correspondence and its resolution | "Records request to the City Clerk, sent 3 Oct, partly granted 28 Oct." | **Usable today, thin** (old interface; addressee only "undetermined") | after the lane's requirements hand-off |
-| L1 Reached | Use everything built through screens: plans, determinations, preparing and sending, clocks and reminders, escalation, the packet, holds; answer to-dos where they appear | "From the action: prepare the follow-up, set a reminder, open the escalation." | **Built, no screen** | with the UX stream's action screens (N821) |
+| L1 Reached | Use everything built through screens: plans, determinations, preparing and sending, clocks and reminders, escalation, the packet, holds; answer to-dos where they appear; manage the plan as it goes (each matter's intended outcome and state, one timeline, reviews, pause, decision log, preparation taken up, second approval, notes) | "From the action: prepare the follow-up, set a reminder, open the escalation." | **Built, no screen** | with the UX stream's action screens (N821) |
 | L2 Guided | Computed dates with their law; approved starting texts and guides; facts on their trigger; next routes; the group's own deadlines; any state's profile | "Due 17 Oct (10 days, Gov. Code §7922.535); template 'Records request (CPRA + Sunshine)'." | **Not built** (rules partly built; no templates, guides or most profile facts) | BOB's |
 | L3 Checked | Asking vs asserting; the record check on what is sent; override grounds; the window and quick route; checked-and-held and accepted findings; the advocacy evidence check; the election notice | "2 sentences assert a breach; 1 contradicted by finding F-12." | **Not built** (the case-account check exists for cases) | BOB's |
 | L4 Responsive | Responses recorded wherever found, claim by claim; the plan re-examined; new matters from responses; pressure and holds anywhere; promises adopted as duties; counsel at any stage | "Reply recorded: the 30-day window now closes 27 Nov; 2 options marked." | **Partly built, not reachable** (correspondence, holds, duties) | BOB's |
