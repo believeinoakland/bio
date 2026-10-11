@@ -18,7 +18,8 @@
  * `jurisdictions.combine`), and one they do not hold reads `absent`.
  *
  * REACHED as `localFactsOf(host, deps)` (K61): one instance per host, created on the first call with `deps`. At
- * creation it creates its table and declares it with its classes (R5, R9). `deps`:
+ * creation it creates its tables and declares them with their classes (R5, R9, R14). The group's own jurisdiction rules
+ * (R10–R14, T45) are `rules.mjs`' `GroupRules`, reached through this class. `deps`:
  *   record, membership   the modules it uses, through their factories on the same host unless a test passes its own.
  *   combine, get, validate   `jurisdictions`' services (default); a test passes its own for profiles it wrote.
  *   lines        an object with `structureAt` (lines R10); absent, `linesOf(host)` (K1563 (1)), reached on the first
@@ -26,6 +27,9 @@
  *                `lines` is not reachable here.
  *   officeOf     `(entityId, profile)` → the profile office `{role, body}` or `{venue}` an entity stands for (ladders
  *                §5.4's bridge: each profile office is seeded as an entity at setup), or null; absent, no entity maps.
+ *   content, provenance   (T45, R10) a group rule's primary source: `content`'s `contentContextFor` (with its pure
+ *                `checkContentExtent`) and `provenance`'s `homeOf`; absent, `contentOf(host)` and `provenanceOf(host)`,
+ *                reached on the first draft that needs them. When neither answers, every source reads not held.
  *   now          the module's clock, an ISO instant (default: the wall clock). */
 
 import { isMachineIdentity } from "../record-grammar/actors.mjs";
@@ -36,13 +40,17 @@ import { combine as combineProfiles, get as getProfile, validate as validateProf
 import { localDay } from "../civil-time/index.mjs";
 import { BOUNDS } from "../connection-grammar/index.mjs";
 import { linesOf } from "../lines/index.mjs";
+import { contentOf, checkContentExtent } from "../content/index.mjs";
+import { provenanceOf } from "../provenance/index.mjs";
 import { LOCAL_FACTS_CHECKS, refusal } from "./checks.mjs";
+import { GroupRules } from "./rules.mjs";
 import { LOCAL_FACTS_TABLE_CLASSES, migrateLocalFacts } from "./schema.mjs";
 import { factPath, parseFactPath, officesToken } from "./paths.mjs";
 
 export { LOCAL_FACTS_CHECKS } from "./checks.mjs";
 export { LOCAL_FACTS_SCHEMA, LOCAL_FACTS_TABLES, LOCAL_FACTS_TABLE_CLASSES } from "./schema.mjs";
 export { LOCAL_FACT_KINDS, factPath, parseFactPath } from "./paths.mjs";
+export { RULE_SECTIONS, RULE_STATES, RULE_REASON_MAX, RULE_STATEMENT_MAX, GROUP_PROFILE } from "./rules.mjs";
 
 /** R7: a member's three acts on a fact. */
 export const LOCAL_FACT_ACTS = Object.freeze(["confirm", "correct", "dispute"]);
@@ -93,7 +101,7 @@ function factIn(p, parts, own = null) {
   if (!isObj(p)) return null;
   const mine = (x) => givers(x, own).includes(parts.profile);
   if (parts.fact === "time_zone") {
-    const z = p.time_zone;
+    const z = parts.office ? (officeIn(p, parts.office) || {}).time_zone : p.time_zone;
     return isObj(z) && mine(z) ? { value: z.value, status: z.status, basis: z.basis } : null;
   }
   if (parts.fact === "holidays") {
@@ -105,15 +113,22 @@ function factIn(p, parts, own = null) {
   }
   if (parts.fact === "hours") {
     const hoursOf = (h) => (isObj(h) && mine(h) ? { value: { weekly: clone(h.weekly) }, status: h.status, basis: h.basis } : null);
-    if (parts.office.venue !== undefined) {
-      const k = (Array.isArray(p.action_kinds) ? p.action_kinds : []).find((e) => isObj(e) && e.kind === parts.office.venue);
-      return k && isObj(k.venue) ? hoursOf(k.venue.hours) : null;
-    }
-    const c = (Array.isArray(p.counterparties) ? p.counterparties : [])
-      .find((e) => isObj(e) && e.role === parts.office.role && e.body === parts.office.body && isObj(e.hours));
-    return c ? hoursOf(c.hours) : null;
+    const o = officeIn(p, parts.office);
+    return o ? hoursOf(o.hours) : null;
   }
   return null;
+}
+
+/* The object that holds an office's own facts in `p`: a counterparty `{role, body}` (jurisdictions R24) or a kind's
+   `venue` (`{venue: <kind>}`, R25), or null. Its `hours` (R42) and its own `time_zone` (R74) are read from it. */
+function officeIn(p, office) {
+  if (!isObj(p) || !isObj(office)) return null;
+  if (office.venue !== undefined) {
+    const k = (Array.isArray(p.action_kinds) ? p.action_kinds : []).find((e) => isObj(e) && e.kind === office.venue);
+    return k && isObj(k.venue) ? k.venue : null;
+  }
+  return (Array.isArray(p.counterparties) ? p.counterparties : [])
+    .find((e) => isObj(e) && e.role === office.role && e.body === office.body) || null;
 }
 
 /** Every fact a held profile gives, as its parts (R2, R4 without a path). */
@@ -124,10 +139,14 @@ function factsOf(p) {
   for (const h of Array.isArray(p.holidays) ? p.holidays : [])
     if (isObj(h)) out.push({ profile: p.id, fact: "holidays", year: Number(h.year), ...(listOf(h) ? { list: h.list } : {}),
                              ...(h.offices ? { offices: h.offices } : {}) });
-  for (const c of Array.isArray(p.counterparties) ? p.counterparties : [])
+  for (const c of Array.isArray(p.counterparties) ? p.counterparties : []) {
     if (isObj(c) && isObj(c.hours)) out.push({ profile: p.id, fact: "hours", office: { role: c.role, body: c.body } });
-  for (const k of Array.isArray(p.action_kinds) ? p.action_kinds : [])
+    if (isObj(c) && isObj(c.time_zone)) out.push({ profile: p.id, fact: "time_zone", office: { role: c.role, body: c.body } });
+  }
+  for (const k of Array.isArray(p.action_kinds) ? p.action_kinds : []) {
     if (isObj(k) && isObj(k.venue) && isObj(k.venue.hours)) out.push({ profile: p.id, fact: "hours", office: { venue: k.kind } });
+    if (isObj(k) && isObj(k.venue) && isObj(k.venue.time_zone)) out.push({ profile: p.id, fact: "time_zone", office: { venue: k.kind } });
+  }
   return out;
 }
 
@@ -137,17 +156,14 @@ function withValue(p, parts, value) {
   const q = clone(p);
   if (parts.fact === "time_zone") {
     if (typeof value !== "string") return null;
-    q.time_zone.value = value;
+    (parts.office ? officeIn(q, parts.office).time_zone : q.time_zone).value = value;
   } else if (parts.fact === "holidays") {
     if (!Array.isArray(value)) return null;
     const h = q.holidays.find((e) => sameEntry(e, parts));
     h.days = clone(value);
   } else {
     if (!isObj(value) || Object.keys(value).join() !== "weekly") return null;
-    const target = parts.office.venue !== undefined
-      ? q.action_kinds.find((k) => k.kind === parts.office.venue).venue
-      : q.counterparties.find((c) => c.role === parts.office.role && c.body === parts.office.body);
-    target.hours.weekly = clone(value.weekly);
+    officeIn(q, parts.office).hours.weekly = clone(value.weekly);
   }
   return q;
 }
@@ -158,7 +174,8 @@ function withValue(p, parts, value) {
 
 export class LocalFacts {
   constructor({ storage, record, membership = null, combine = combineProfiles, get = getProfile,
-                validate = validateProfile, lines = null, officeOf = null, now = null, host = null } = {}) {
+                validate = validateProfile, lines = null, officeOf = null, content = null, provenance = null,
+                now = null, host = null } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
@@ -169,9 +186,65 @@ export class LocalFacts {
     this.lines = lines;
     this.host = host;
     this.officeOf = typeof officeOf === "function" ? officeOf : null;
+    this.content = content;
+    this.provenance = provenance;
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
-    migrateLocalFacts(this.sql);   // the table exists once the instance does, so no caller migrates
+    migrateLocalFacts(this.sql);   // the tables exist once the instance does, so no caller migrates
+    this.rules = new GroupRules({
+      sql: this.sql, record, combine: (ids) => this.combine(ids), validate: (p) => this.validate(p),
+      profileIds: () => this.record.getSetting("jurisdiction_profiles"),
+      sourceRefusal: (src, viewer) => this.#sourceRefusal(src, viewer),
+      instant: () => this.#instant(), dayOf: dayIn,
+    });
   }
+
+  /* R10 (T45; K2807): why a rule's primary source is not a held capture extent the viewer may see, or null. The
+     capture's home (`provenance.homeOf`) judged for sight by membership's one rule over record-core's `bundles` read
+     contract (a capture unseen answers as absent); then `content.checkContentExtent` over the capture's context
+     (`content.contentContextFor`). No viewer sent is a direct internal call and is not fenced. */
+  #sourceRefusal(src, viewer) {
+    const sha = isObj(src) && typeof src.captureSha === "string" ? src.captureSha.trim().toLowerCase() : "";
+    if (!/^[0-9a-f]{64}$/.test(sha) || !isObj(src.extent))
+      return { why: "the source names a capture by its sha256 and the extent of it that states the rule" };
+    if (!this.provenance && this.host) { try { this.provenance = provenanceOf(this.host); } catch { this.provenance = null; } }
+    if (!this.content && this.host) { try { this.content = contentOf(this.host); } catch { this.content = null; } }
+    const unseen = { why: "no such capture is held where you can see it" };
+    let home = null;
+    try { home = this.provenance && typeof this.provenance.homeOf === "function" ? this.provenance.homeOf(sha) : null; } catch { home = null; }
+    if (!isObj(home) || typeof home.bundleId !== "string") return unseen;
+    if (viewer !== undefined && viewer !== null) {
+      const gate = viewerPredicate(viewer);
+      const seen = gate.scope !== "DENY"
+        && this.#rows(`SELECT 1 AS x FROM bundles b WHERE b.bundle_id=? AND (${gate.sql})`, home.bundleId, ...gate.args).length > 0;
+      if (!seen) return unseen;
+    }
+    let bad;
+    try {
+      const ctx = this.content && typeof this.content.contentContextFor === "function" ? this.content.contentContextFor(sha) : null;
+      if (!ctx) return { why: "the capture's content cannot be read here" };
+      bad = checkContentExtent(src.extent, ctx);
+    } catch (e) { return { why: `the extent could not be checked (${String(e && e.message || e).slice(0, 200)})` }; }
+    if (!bad) return null;
+    return { why: String(bad.detail || bad.translation || bad.reason || "the extent is not in the capture").slice(0, 400),
+             code: bad.code || bad.reason || null };
+  }
+
+  /* ===================================================================== *
+   * R10–R13 (T45): the group's own jurisdiction rules (`rules.mjs`)
+   * ===================================================================== */
+
+  /** R10: a member drafts a jurisdiction rule from its primary source. */
+  ruleDraft(a = {}) { return this.rules.ruleDraft(a); }
+  /** R11: a member other than the drafter confirms it; a professional's statement for Tier 2, 3 or undetermined. */
+  ruleConfirm(a = {}) { return this.rules.ruleConfirm(isObj(a) ? a : {}, machineRefusal); }
+  /** R12: the group's rules, to a viewer naming a member. */
+  groupRules(a = {}) { return this.rules.groupRules(a); }
+  /** R12: `combine`'s view of the active profiles with each confirmed, unwithdrawn group rule added. */
+  governingView() { return this.rules.governingView(); }
+  /** R13: any member withdraws a rule with a reason. */
+  ruleWithdraw(a = {}) { return this.rules.ruleWithdraw(a); }
+  /** R13: a confirmed rule as canonical bytes with their digest, for the shared profile's maintainers. */
+  ruleOffer(a = {}) { return this.rules.ruleOffer(a); }
 
   #rows(qs, ...a) { return [...this.sql.exec(qs, ...a)]; }
   #instant() { return stampInstant("second", Date.parse(this.now())); }
@@ -183,6 +256,21 @@ export class LocalFacts {
     if (fixed && typeof fixed.value === "string") return fixed.value;
     const p = active.held.get(profile);
     return isObj(p) && isObj(p.time_zone) && typeof p.time_zone.value === "string" ? p.time_zone.value : null;
+  }
+
+  /* R3 (T45; jurisdictions R74): the zone an office fact's days are counted in. An office's `hours` and its own
+     `time_zone` count on that office's local day when the profile holds its own zone (as it governs here: a member's
+     latest correction of it, else the held value); otherwise on the profile's (`#zone`). Every other fact counts on the
+     profile's. */
+  #zoneOf(parts, active) {
+    if (isObj(parts.office) && (parts.fact === "hours" || parts.fact === "time_zone")) {
+      const path = factPath({ profile: parts.profile, fact: "time_zone", office: parts.office });
+      const fixed = path ? [...this.#acts(path)].reverse().find((a) => a.act === "correct") : null;
+      if (fixed && typeof fixed.value === "string") return fixed.value;
+      const o = officeIn(active.held.get(parts.profile), parts.office);
+      if (o && isObj(o.time_zone) && typeof o.time_zone.value === "string") return o.time_zone.value;
+    }
+    return this.#zone(parts.profile, active);
   }
 
   /** The module's table, created at construction; kept, idempotent, for the composition root's migration pass. */
@@ -221,7 +309,7 @@ export class LocalFacts {
      shows or counts is a local day of the fact's profile's zone (R3); with no zone, an act's instant is shown whole
      and the horizon is undetermined, never read on the UTC day. */
   #status(path, parts, held, inView, active) {
-    const zone = this.#zone(parts.profile, active);
+    const zone = this.#zoneOf(parts, active);
     const when = (at) => dayIn(at, zone) ?? at;
     const acts = this.#acts(path);
     const latest = acts.length ? acts[acts.length - 1] : null;
@@ -435,10 +523,19 @@ export class LocalFacts {
     const p = active.held.get(profile);
     const fact = b.fact;
     if (fact === "time_zone") {
+      /* R6 (T45; jurisdictions R74): an office's own zone when the profile holds one, else the profile's, saying so */
+      const office = isObj(b.office) ? b.office : null;
+      const ownPath = office ? factPath({ profile, fact, office }) : null;
+      if (ownPath && factIn(p, { profile, fact, office }, profile))
+        return { ok: true, path: ownPath, via: "own", lines: [], why: "the profile holds this office's own time zone" };
       const path = factPath({ profile, fact });
+      const whose = office ? "the profile holds no time zone of this office's own, so the profile's governs it"
+        : "the time zone is the profile's, for every office";
       return factIn(p, { profile, fact }, profile)
-        ? { ok: true, path, via: "profile", lines: [], why: "the time zone is the profile's, for every office" }
-        : { ok: true, path: null, via: "none", lines: [], why: "the profile holds no time zone, so it is undetermined" };
+        ? { ok: true, path, via: "profile", lines: [], why: whose }
+        : { ok: true, path: null, via: "none", lines: [], why: office
+            ? "the profile holds no time zone of this office's own nor its own, so it is undetermined"
+            : "the profile holds no time zone, so it is undetermined" };
     }
     if (fact !== "hours" && fact !== "holidays") return noSuchFact(null);
     const at = typeof b.at === "string" ? b.at : null;
@@ -523,12 +620,13 @@ export class LocalFacts {
 
 /* DEC-49: a code several acts answer is minted at one site, its own function here. */
 
-/* R1, R5: a confirmation, correction or dispute is a named member's act. */
+/* R1, R5, R11: a confirmation, correction or dispute, and a rule's confirmation, is a named member's act. */
 function machineRefusal(by) {
   /* DEC-49 REGION is-fact-member */
   if (str(by) && !isMachineIdentity(str(by))) return null;
-  return refusal("MACHINE_CANNOT_CONFIRM", "confirming, correcting or disputing a local fact is a named member's act; "
-                 + "an assistant's re-check reaches a member as its run's output. Nothing was written.");
+  return refusal("MACHINE_CANNOT_CONFIRM", "confirming, correcting or disputing a local fact, or confirming a group's "
+                 + "rule, is a named member's act; an assistant's re-check reaches a member as its run's output. "
+                 + "Nothing was written.");
   /* END DEC-49 REGION is-fact-member */
 }
 
@@ -551,13 +649,18 @@ export function localFactsOps(s, url, body) {
     factconfirm: () => s.factConfirm({ ...b, viewer: qp("viewer") }),
     factstatus: () => s.factStatus({ path: qp("path") ?? b.path, viewer: qp("viewer") }),
     factsdue: () => s.factsDue({ paths: paths(), viewer: qp("viewer") }),
+    /* R10–R13 (T45): the group's own rules; `by` the body's stamp, `viewer` the URL's */
+    ruledraft: () => s.ruleDraft({ ...b, viewer: qp("viewer") }),
+    ruleconfirm: () => s.ruleConfirm({ ...b, viewer: qp("viewer") }),
+    rulewithdraw: () => s.ruleWithdraw({ ...b, viewer: qp("viewer") }),
+    ruleoffer: () => s.ruleOffer({ rule: qp("rule") ?? b.rule, by: b.by, viewer: qp("viewer") }),
   };
 }
 
 const instances = new WeakMap();
 
-/** K61: the one instance per host, created on the first call with `deps`. Its table is created with it and declared
- *  with its classes (R5, R9, K23). */
+/** K61: the one instance per host, created on the first call with `deps`. Its tables are created with it and declared
+ *  with their classes (R5, R9, R14, K23). */
 export function localFactsOf(host, deps) {
   let s = instances.get(host);
   if (!s) {

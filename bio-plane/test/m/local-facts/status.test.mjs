@@ -84,7 +84,7 @@ test("R2 without a path: every fact of the active profiles once, corrections and
   w.act(P.tz, "confirm");
   const all = w.lf.factStatus({ viewer: V("bob") });
   assert.equal(all.ok, true);
-  assert.equal(all.count, 9);
+  assert.equal(all.count, 11);
   assert.deepEqual(new Set(all.facts.map((f) => f.path)), new Set(Object.values(P)));
   assert.deepEqual(all.facts.slice(0, 2).map((f) => f.status).sort(), ["corrected", "disputed"]);
   assert.ok(all.facts.slice(2).every((f) => f.status !== "corrected" && f.status !== "disputed"));
