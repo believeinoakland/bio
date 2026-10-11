@@ -1,6 +1,6 @@
 # duties (T45)
 
-**Status** · session_01MExgKh3t6GhAjLf6UXLh5d · depth 2 · WORKING · handled B2
+**Status** · session_01MExgKh3t6GhAjLf6UXLh5d · depth 2 · RUNNING until 2026-10-11T19:53:04Z (migrate-released system test) · handled B2
 
 ## J1 · QUESTION
 
