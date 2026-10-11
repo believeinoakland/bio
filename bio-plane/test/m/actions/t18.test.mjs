@@ -4,14 +4,14 @@
    union arms; its R40 table is action-grammar's since T19) and `d526-refusal-order` (R2 with no envelope type). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, actionMd, CP, NOW_MS } from "./fixture.mjs";
+import { world, V, MACHINE, actionMd, CP, NOW_MS, NONCOMPLIANT } from "./fixture.mjs";
 import * as actions from "../../../src/actions/index.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
 
 const A = "ACTN-2026-0001-a", B = "ACTN-2026-0002-b";
 const M = V("alice");
 const D1 = "CONF-2026-0001-determination";
-const det = { [D1]: { ok: true, id: D1, live: true, superseded_by: null } };
+const det = { [D1]: { ok: true, id: D1, live: true, superseded_by: null, outcomes: NONCOMPLIANT } };
 const conf = { determinationRead: ({ id }) => det[id] || { ok: false, reason: "NO_SUCH_DETERMINATION" } };
 const md = (id, lines, opts) => actionMd(id, ["action_kind: other", ...lines], opts);
 const named = (kind, role, org) => ["counterparty:", "  state: named", `  kind: ${kind}`, `  role: ${role}`, `  organisation: ${org}`];
@@ -93,7 +93,9 @@ test("R8 a member's premise override stands in for the determination, stamped wh
   const w = world({ conformance: conf });
   w.doc("INFO-2026-0001-d");
   const leg = ["action_basis:", "  - target: INFO-2026-0001-d", "    kind: rests_on"];
-  const ov = (reason) => ["premise_override:", `  reason: "${reason}"`];
+  /* R74 (T45): the override states a ground; its bytes hold it flat (J2's reading). */
+  const GROUND = ["  ground_kind: legal_deadline", '  ground_citation: "Records Act s.6"', "  ground_date: 2026-10-30"];
+  const ov = (reason) => ["premise_override:", `  reason: "${reason}"`, ...GROUND];
   /* without one, a breach action resting on no determination is refused */
   assert.equal(w.promote(A, md(A, [...CP, "breach: true", ...leg])).reason, "ACTION_NO_DETERMINATION");
   /* a machine may not state one */
@@ -109,13 +111,13 @@ test("R8 a member's premise override stands in for the determination, stamped wh
   const ok = w.promote(A, md(A, [...CP, "breach: true", ...leg, ...ov("the deadline will pass before a determination")]));
   assert.equal(ok.ok, true, JSON.stringify(ok));
   const r = w.a.actionRead({ id: A, viewer: M });
-  assert.deepEqual(r.premise_override, { reason: "the deadline will pass before a determination", by: M,
-    at: "2026-09-28T12:00:00Z", says: r.premise_override.says });
+  assert.deepEqual(r.premise_override, { ground: { kind: "legal_deadline", citation: "Records Act s.6", date: "2026-10-30" },
+    reason: "the deadline will pass before a determination", by: M, at: "2026-09-28T12:00:00Z", says: r.premise_override.says });
   assert.match(r.premise_override.says, /Rests on an unestablished premise/);
   /* never edited or removed */
   const edit = w.promote(A, w.text(A).replace("before a determination", "soon"));
   assert.deepEqual([edit.reason, edit.check], ["PREMISE_OVERRIDE_REWRITTEN", "C-117.9"]);
-  assert.equal(w.promote(A, w.text(A).replace(/premise_override:\n  reason: "[^"]*"\n/, "")).reason, "PREMISE_OVERRIDE_REWRITTEN");
+  assert.equal(w.promote(A, w.text(A).replace(/premise_override:\n(  .*\n)+/, "")).reason, "PREMISE_OVERRIDE_REWRITTEN");
   assert.equal(w.promote(A, w.text(A).replace("An action.", "Revised.")).ok, true, "carried forward lands");
   w.clock.ms += 60000;
   w.promote(A, w.text(A).replace("Revised.", "Revised again."));

@@ -38,14 +38,21 @@
  * connections' `refs` (`bundle_id`, `target_id`, `kind`) for R25's `responses`. */
 
 import { recordOf, stampInstant } from "../record-core/index.mjs";
-import { membershipOf, viewerPredicate, noSuchProject } from "../membership/index.mjs";
+import { membershipOf, viewerPredicate, noSuchProject, listenerRefusal } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { contentOf } from "../content/index.mjs";
 import { retrievalOf } from "../retrieval/index.mjs";
 import { conformanceOf, determinationSuperseded } from "../conformance/index.mjs";
+/* T45: names conformance (R33's `determinationVoided`) and action-grammar (R15, R20–R23, R25) add in this tranche,
+   read through their namespaces so this module loads whichever version is beside it. */
+import * as conformanceNs from "../conformance/index.mjs";
+import * as G from "../action-grammar/index.mjs";
+import { consequencesModule } from "../consequences/index.mjs";
+import { projectRosterOf } from "../project-roster/index.mjs";
+import { localFactsOf } from "../local-facts/index.mjs";
 import { doorbellOf } from "../doorbell/index.mjs";
 import { ratificationOf } from "../ratification/index.mjs";
-import { entitiesOf, noSuchEntity } from "../entities/index.mjs";
+import { entitiesOf, noSuchEntity, ORGANISATION_KINDS } from "../entities/index.mjs";
 import { linesOf } from "../lines/index.mjs";
 import { eventsOf } from "../events/index.mjs";
 import { standardsOf, noSuchStandard } from "../standards/index.mjs";
@@ -109,6 +116,40 @@ export const HOLD_PROJECTS_MAX = 50;
 const PROJECT_ID_RE = { test: (x) => BUNDLE_ID_RE.test(x) && x.startsWith("PROJ-") };
 /** R28: the longest basis a proposed tier carries. */
 export const RISK_PROPOSAL_BASIS_MAX = 500;
+/** R74 (T45): the two grounds an override states, carried by `OVERRIDE_NO_GROUND` (action-grammar's `OVERRIDE_GROUNDS`
+ *  once it holds them), and the quick route offered beside it (reconciliation R16). */
+export const OVERRIDE_GROUND_KINDS = Object.freeze(["legal_deadline", "irreversible_act"]);
+export const QUICK_ROUTE = Object.freeze({ kind: "one_finding_case" });
+/** R80 (T45): what a receipt record says happened to a sent entry. */
+export const RECEIPT_KINDS = Object.freeze(["receipt", "service"]);
+/** R80: the longest `how` and `party` of a receipt record. */
+export const RECEIPT_TEXT_MAX = 200;
+/** R88 (T45): the longest promise. */
+export const PROMISE_TEXT_MAX = 500;
+/** R92 (T45): the most open items one read answers. */
+export const OPEN_ITEMS_MAX = 200;
+/** R80, R74: a local date-time, `YYYY-MM-DDTHH:MM`. */
+const LOCAL_DT_RE = /^(\d{4}-\d{2}-\d{2})T([01]\d|2[0-3]):[0-5]\d$/;
+/* R74: the flat keys a premise override's ground is held under (J2's reading). */
+/* R88: the kinds of promise, action-grammar's `PROMISE_KINDS` (its R2) where it holds them. */
+const PROMISE_KINDS_HELD = Object.freeze(["embargo", "anonymity", "other"]);
+/* R81, R83, R94: the flat keys an entry's T45 fields are held under (J2's reading). */
+const ENTRY_FIELD_KEYS = Object.freeze(["speaker", "office_words", "office_status", "found_elsewhere", "found_elsewhere_note"]);
+const OVERRIDE_KEYS = Object.freeze(["ground_kind", "ground_citation", "ground_date", "ground_what", "ground_when"]);
+/* The member-facing sentences T45 adds, each with the key the design stream words it under (filings and the surfaces
+   render the key; `says` is the plane's own reading of it). */
+export const T45_SENTENCES = Object.freeze({
+  ground_not_stated: Object.freeze({ key: "actions.override.ground_not_stated",
+    says: "This override was stated before a ground was asked for; it reads as written, with its reason alone." }),
+  reply_not_owed: Object.freeze({ key: "actions.reply.not_owed",
+    says: "This body owes the group no reply, so silence is never recorded as a non-response." }),
+  scope_published_stays: Object.freeze({ key: "actions.scope.published_stays",
+    says: "This changes what is published from now on; anything already signed and published stays as it was." }),
+  openitems_not_office: Object.freeze({ key: "actions.openitems.not_office",
+    says: "This action is not addressed to an office, so no open items with an office are shown." }),
+  recognition_promise_only: Object.freeze({ key: "actions.recognition.promise_only",
+    says: "This recognition rests on no compliant determination or success record: the fix is only promised." }),
+});
 
 /* D-149: the one write that may set or change an action's governing laws is `actionLaws`, and it says so to `promote`
    under this Symbol. A Symbol: no JSON body a caller sends can carry one, so `op=promote` cannot claim to be the act. */
@@ -278,16 +319,19 @@ const clampLimit = (v, dflt, max) => { const n = Math.floor(Number(v)); return N
 
 export class Actions {
   #deps;
+  /* R95 (T45): the response listeners, one per module (K31's pattern). */
+  #responseListeners = [];
 
   constructor({ storage, record, membership, promotion, host = null, retrieval = null, content = null,
                 conformance = null, entities = null, lines = null, events = null, standards = null, duties = null,
-                progressions = null, now = null, env = null } = {}) {
+                progressions = null, consequences = null, projectRoster = null, localFacts = null, now = null,
+                env = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.#deps = { host, retrieval, content, conformance: conformance ?? undefined, entities, lines, events, standards, duties,
-                   progressions };
+                   progressions, consequences, projectRoster, localFacts };
     this.env = env && typeof env === "object" ? env : {};
     this.now = typeof now === "function" ? now : null;
   }
@@ -313,6 +357,14 @@ export class Actions {
   get duties() { return this.#reach("duties", (h) => dutiesOf(h)); }
   /* R70: the progression definitions (`readProgression`, its R5), reached on the same host unless a test passes its own. */
   get progressions() { return this.#reach("progressions", (h) => progressionsOf(h)); }
+  /* T45: the success records and the own-act registration (consequences R19, R20), the projects' scopes (project-roster
+     R23) and the group's governing view (local-facts R12), each reached on the same host unless a test passes its own. */
+  get consequences() {
+    return this.#reach("consequences", (h) => consequencesModule(h, { record: this.record, membership: this.membership,
+                                                                      promotion: this.promotion }));
+  }
+  get projectRoster() { return this.#reach("projectRoster", (h) => projectRosterOf(h, { record: this.record, membership: this.membership })); }
+  get localFacts() { return this.#reach("localFacts", (h) => localFactsOf(h, { record: this.record, membership: this.membership })); }
 
   /* R9: the kind the registry holds `entityId` as, or null when it holds none or cannot be read. */
   #entityKind(entityId) {
@@ -338,6 +390,9 @@ export class Actions {
     /* R64, R19: a proposed law's held standard, on a table created before it had the column. */
     const pcols = [...this.sql.exec(`PRAGMA table_info(action_law_proposals)`)].map((r) => r.name);
     if (!pcols.includes("standard")) this.sql.exec(`ALTER TABLE action_law_proposals ADD COLUMN standard TEXT`);
+    /* R74 (T45): an override's ground, on a table created before it had the column. */
+    const ocols = [...this.sql.exec(`PRAGMA table_info(action_overrides)`)].map((r) => r.name);
+    if (!ocols.includes("ground")) this.sql.exec(`ALTER TABLE action_overrides ADD COLUMN ground TEXT`);
   }
 
   #rows(q, ...a) { return [...this.sql.exec(q, ...a)]; }
@@ -371,11 +426,47 @@ export class Actions {
   place() {
     try { return this.#view(); } catch { return null; }
   }
+  /** R10 (T45; N858; reconciliation R7): the view this module reads for kinds, counterparties, venues, records laws and
+   *  response statuses: `local-facts.governingView` (its R12), so a group's confirmed rule governs here as in
+   *  `action-clocks`; with no group rule it is `combine`'s own answer. A host on which local-facts cannot be reached, or
+   *  a view it cannot answer, reads the combined view. Null with none. */
+  #governing() {
+    const lf = this.localFacts;
+    let v = null;
+    try { v = lf && typeof lf.governingView === "function" ? lf.governingView() : null; } catch { v = null; }
+    if (v && v.ok === true && v.view && typeof v.view === "object") return v.view;
+    return this.#view();
+  }
+  /* R81 (T45): the response statuses the governing view holds for `kind` (jurisdictions R58, R77: an entry with no
+     `applies_to` applies to every kind), as tokens; null when the view holds none. */
+  #responseStatuses(kind) {
+    const v = this.#governing();
+    const list = v && v.vocabulary && Array.isArray(v.vocabulary.response_statuses) ? v.vocabulary.response_statuses : [];
+    const held = list.filter((s) => s && typeof s.status === "string"
+      && (s.applies_to === undefined || s.applies_to === null || s.applies_to === kind)).map((s) => s.status);
+    return held.length ? held : null;
+  }
+  /* R85 (T45; my reading, J1 7): the stages the governing view's records law for `law` lists (jurisdictions R76): the
+     entry whose citation is `law`, else whose name is; null when none is matched or it lists none. */
+  #lawStages(law) {
+    if (typeof law !== "string" || !law.trim()) return null;
+    const v = this.#governing();
+    const laws = v && Array.isArray(v.records_laws) ? v.records_laws : [];
+    const t = law.trim();
+    const e = laws.find((l) => l && l.citation === t) || laws.find((l) => l && l.name === t);
+    return e && Array.isArray(e.stages) ? e.stages : null;
+  }
+  /* R9, R93 (T45): the governing view's entry for an action kind, or null. */
+  #kindEntry(kind) {
+    const v = this.#governing();
+    const list = v && Array.isArray(v.action_kinds) ? v.action_kinds : [];
+    return list.find((k) => k && k.kind === kind) || null;
+  }
   /** R10, R42 (N231; action-grammar R1's `actionKinds`): the kinds this instance accepts now: the product's own and the active profiles' combined
    *  view. Writes nothing and never throws: a view that cannot be read answers the product's kinds alone. */
   kinds() {
     let view = null;
-    try { view = this.#view(); } catch { view = null; }
+    try { view = this.#governing(); } catch { view = null; }
     try { return actionKinds(view); } catch { return actionKinds(null); }
   }
 
@@ -678,16 +769,24 @@ export class Actions {
     return JSON.stringify(Object.keys(e).filter((k) => k !== "status").sort().map((k) => [k, e[k]]));
   }
 
-  /** R8: the premise override a document states, `{reason}`, or null when it states none. */
+  /** R8, R74 (T45): the premise override a document states, `{ground, reason}`, or null when it states none. The bytes
+   *  hold the ground flat on the override (`ground_kind`, `ground_citation`, `ground_date`, `ground_what`,
+   *  `ground_when`: the restricted grammar holds no map inside a map; J2's reading), presented here as R74's object;
+   *  `ground` is null for an override written before T45 with its reason alone. */
   static overrideOf(fm) {
     const o = fm && typeof fm === "object" ? fm.premise_override : null;
-    return o && typeof o === "object" && !Array.isArray(o) && typeof o.reason === "string" && o.reason.trim()
-      ? { reason: o.reason.trim() } : null;
+    if (!(o && typeof o === "object" && !Array.isArray(o) && typeof o.reason === "string" && o.reason.trim())) return null;
+    return { ground: Actions.#groundOf(o), reason: o.reason.trim() };
+  }
+  static #groundOf(o) {
+    const keys = Object.keys(o).filter((k) => k.startsWith("ground_"));
+    if (!keys.length) return null;
+    return Object.fromEntries(keys.map((k) => [k.slice("ground_".length), o[k]]));
   }
 
-  /* R8 (K600 (a)), R9 (D1): the premise override and a breach action's addressee. The override is stated by a member
-     on the write that first sets `breach: true`, and then never edited, removed or added; a breach action that states
-     its addressee addresses an office. */
+  /* R8 (K600 (a)), R74 (T45), R9 (D1): the premise override and a breach action's addressee. The override is stated by
+     a member on the write that first sets `breach: true`, with a ground and a reason, and then never edited, removed or
+     added; a breach action that states its addressee addresses an office. */
   #overrideAndAddressee(heldFm, nextFm, who) {
     const key = (fm) => JSON.stringify(fm && fm.premise_override !== undefined ? fm.premise_override : null);
     const held = key(heldFm), next = key(nextFm);
@@ -695,8 +794,8 @@ export class Actions {
       /* DEC-49 REGION is-machine-override */
       if (!who || isMachineIdentity(who))
         return refuse("MACHINE_CANNOT_OVERRIDE", "a premise override is a member's open statement that the group acts on "
-          + "a breach it has not determined, with the reason why. A machine credential may not state or change one. "
-          + "Nothing was written.");
+          + "a breach it has not determined, on a stated ground and with the reason why. A machine credential may not "
+          + "state or change one. Nothing was written.");
       /* END DEC-49 REGION is-machine-override */
       const o = nextFm.premise_override;
       /* DEC-49 REGION is-premise-override */
@@ -707,11 +806,14 @@ export class Actions {
           : "a premise override is stated on the creation or revision that first marks the action a breach, and on no "
             + "other write. Nothing was written.");
       const keys = o && typeof o === "object" && !Array.isArray(o) ? Object.keys(o) : null;
-      if (!keys || keys.join() !== "reason" || typeof o.reason !== "string" || !o.reason.trim()
-          || o.reason.length > NOTE_MAX || /["\\\r\n]/.test(o.reason))
-        return refuse("PREMISE_OVERRIDE_REFUSED", `premise_override is {reason}: 1 to ${NOTE_MAX} characters with no quote, `
-          + "backslash or line break. Nothing was written.", { max: NOTE_MAX });
+      if (!keys || keys.some((k) => k !== "reason" && !OVERRIDE_KEYS.includes(k)) || typeof o.reason !== "string"
+          || !o.reason.trim() || o.reason.length > NOTE_MAX || /["\\\r\n]/.test(o.reason))
+        return refuse("PREMISE_OVERRIDE_REFUSED", `premise_override is {ground, reason}: the reason 1 to ${NOTE_MAX} `
+          + "characters with no quote, backslash or line break, and nothing else beside them. Nothing was written.",
+          { max: NOTE_MAX });
       /* END DEC-49 REGION is-premise-override */
+      const ground = this.#groundRefusal(Actions.overrideOf(nextFm));
+      if (ground) return ground;
     }
     const cp = nextFm.counterparty;
     /* DEC-49 REGION is-breach-addressee */
@@ -721,6 +823,29 @@ export class Actions {
         + `${cp && typeof cp === "object" && cp.state === "named" ? `a ${cp.kind}` : `${cp && cp.state ? `an addressee ${cp.state}` : "no office"}`}. `
         + "Nothing was written.", { counterparty_state: cp && typeof cp === "object" ? cp.state ?? null : null });
     /* END DEC-49 REGION is-breach-addressee */
+    return null;
+  }
+
+  /* R74 (T45; N884; v0.2 rule 2): an override states one of two grounds (action-grammar R15). With none, or another
+     kind, the refusal names both and carries the quick route (a case of one finding run through every publication check,
+     on which a member may determine; `action-clocks` answers the deadline's window beside it, reconciliation R16); a
+     malformed ground is the grammar's `OVERRIDE_GROUND_REFUSED`, naming the part. */
+  #groundRefusal(override) {
+    const g = override ? override.ground : null;
+    const found = [];
+    if (g && typeof G.overrideGroundFindings === "function") G.overrideGroundFindings(override, found);
+    const errors = found.filter((x) => x.severity === "error");
+    const noGround = !g || !OVERRIDE_GROUND_KINDS.includes(g.kind) || errors.some((x) => x.code === "OVERRIDE_NO_GROUND");
+    /* DEC-49 REGION is-override-ground */
+    if (noGround)
+      return refuse("OVERRIDE_NO_GROUND", "acting on a breach without a determination needs one of two grounds: a legal "
+        + "deadline that falls before a determination could be made (its citation and date), or an imminent irreversible "
+        + "act (what, and when). A case of one finding, run through every publication check, may instead be determined on. "
+        + "Nothing was written.", { grounds: [...OVERRIDE_GROUND_KINDS], quick_route: { ...QUICK_ROUTE },
+          ...(errors.length ? { findings: findingsOf(errors) } : {}) });
+    if (errors.length)
+      return refuse(errors[0].code || "OVERRIDE_GROUND_REFUSED", errors[0].message, { findings: findingsOf(errors) });
+    /* END DEC-49 REGION is-override-ground */
     return null;
   }
 
@@ -855,6 +980,177 @@ export class Actions {
       ...(unreadable ? { cause: "PROGRESSIONS_UNREADABLE" } : {}) });
   }
 
+  /* T45: action-grammar's pure findings over `args`, run as each arm names (R15, R20–R23, R25): a function that pushes
+     into `findings`, or one that answers its own list; `{code, message}` items are read as errors. A name the grammar
+     beside this module does not export answers none. */
+  static #grammar(name, ...args) {
+    const fn = G[name];
+    if (typeof fn !== "function") return [];
+    const pushed = [];
+    let answered;
+    try { answered = fn(...args, pushed); } catch { answered = null; }
+    return [...pushed, ...(Array.isArray(answered) ? answered : [])]
+      .filter((x) => x && typeof x === "object" && (x.severity === undefined || x.severity === "error"))
+      .map((x) => ({ check: x.check ?? "C-2.10", severity: "error", message: x.message ?? x.detail ?? "", ...(x.code ? { code: x.code } : {}),
+                     ...(x.repairs ? { repairs: x.repairs } : {}) }));
+  }
+  /* T45: the refusal minted from a grammar arm's first finding, every finding carried; `dflt` when it names no code. */
+  static #fromFindings(errors, dflt, extra = {}) {
+    return errors.length ? refuse(errors[0].code || dflt, errors[0].message, { findings: findingsOf(errors), ...extra }) : null;
+  }
+
+  /* T45 (R33, R77–R79, R82, R86, R94; R81, R83 at the write): the fields an action states beside its addressee, each
+     asked only when it moved, so a later revision is never refused for a field it carries forward. A machine or
+     unstamped author states none of them (R33); each shape is action-grammar's (R20–R23), each refusal minted here from
+     its first finding; what only the record can answer (an entity's kind, a member, an action the author may see) is
+     asked here. */
+  #t45Fields(c, heldFm, nextFm, who, viewer) {
+    const machine = !who || isMachineIdentity(who);
+    const moved = (k) => JSON.stringify(heldFm && heldFm[k] !== undefined ? heldFm[k] : null)
+      !== JSON.stringify(nextFm[k] !== undefined ? nextFm[k] : null);
+    const stated = (k) => nextFm[k] !== undefined && nextFm[k] !== null;
+    /* R77: copied offices, checked as the counterparty is; never the addressee. */
+    if (moved("copied")) {
+      /* DEC-49 REGION is-machine-set-copied */
+      if (machine) return refuse("MACHINE_CANNOT_SET_COPIED", "the offices an action copies are a member's statement; a "
+        + "machine credential may not set or change them. Nothing was written.");
+      /* END DEC-49 REGION is-machine-set-copied */
+      if (stated("copied")) {
+        const r = Actions.#fromFindings(Actions.#grammar("copiedFindings", nextFm), "COUNTERPARTY_REFUSED");
+        if (r) return r;
+        const bad = (Array.isArray(nextFm.copied) ? nextFm.copied : []).map((e, i) => ({ e, i }))
+          .find(({ e }) => e && typeof e.entity_id === "string" && e.entity_id.trim()
+            && (this.#entityKind(e.entity_id.trim()) === "person"
+                || (addresseeIsOffice(e) && this.#entityKind(e.entity_id.trim()) !== "office")));
+        if (bad) return refuse("COUNTERPARTY_REFUSED", `copied[${bad.i}].entity_id names a person or no office the subject `
+          + "registry holds: a copied office is an office, never a private individual (R77, R9). Nothing was written.",
+          { findings: [{ check: "C-2.10", detail: `copied[${bad.i}].entity_id: not an office entity (R9, arm: office)` }] });
+      }
+    }
+    /* R78: partners, organisations by role, stated by a member. */
+    if (moved("partners")) {
+      /* DEC-49 REGION is-machine-set-partners */
+      if (machine) return refuse("MACHINE_CANNOT_SET_PARTNERS", "the partner organisations of a joint action are a "
+        + "member's statement; a machine credential may not set or change them. Nothing was written.");
+      /* END DEC-49 REGION is-machine-set-partners */
+      if (stated("partners")) {
+        const r = Actions.#fromFindings(Actions.#grammar("partnersFindings", nextFm), "PARTNERS_REFUSED");
+        if (r) return r;
+        const list = Array.isArray(nextFm.partners) ? nextFm.partners : [];
+        for (let i = 0; i < list.length; i++) {
+          const eid = list[i] && typeof list[i].entity_id === "string" ? list[i].entity_id.trim() : "";
+          if (!eid) continue;
+          const kind = this.#entityKind(eid);
+          /* DEC-49 REGION is-partners-entity */
+          if (!ORGANISATION_KINDS.includes(kind))
+            return refuse("PARTNERS_REFUSED", `partners[${i}].entity_id names ${kind ? `an entity of kind ${kind}` : "no entity "
+              + "the subject registry holds"}: a partner is an organisation, never a person. Nothing was written.`,
+              { entry: i, findings: [{ check: "C-2.10", detail: `partners[${i}].entity_id is not an organisation (R78)` }] });
+          /* END DEC-49 REGION is-partners-entity */
+        }
+      }
+    }
+    /* R79: press terms, on a press action, stated by a member; each change kept in the history (R36). */
+    if (moved("press_terms")) {
+      /* DEC-49 REGION is-machine-set-press-terms */
+      if (machine) return refuse("MACHINE_CANNOT_SET_PRESS_TERMS", "the terms agreed with the press are a member's "
+        + "statement; a machine credential may not set or change them. Nothing was written.");
+      /* END DEC-49 REGION is-machine-set-press-terms */
+      if (stated("press_terms")) {
+        const r = Actions.#fromFindings(Actions.#grammar("pressTermsFindings", nextFm), "PRESS_TERMS_REFUSED");
+        if (r) return r;
+      }
+    }
+    /* R82: whether the body owes the group a reply, with the member's reason (`reply_owed_reason`). */
+    if (moved("reply_owed") || moved("reply_owed_reason")) {
+      /* DEC-49 REGION is-machine-set-reply-owed */
+      if (machine) return refuse("MACHINE_CANNOT_SET_REPLY_OWED", "whether a body owes the group a reply is a member's "
+        + "statement; a machine credential may not set or change it. Nothing was written.");
+      /* END DEC-49 REGION is-machine-set-reply-owed */
+      const r = Actions.#fromFindings(Actions.#grammar("actionFieldFindings", { reply_owed: nextFm.reply_owed },
+        { bundleId: c.bundleId }), "REPLY_OWED_REFUSED");
+      if (r) return r;
+      const why = nextFm.reply_owed_reason;
+      /* DEC-49 REGION is-reply-owed-reason */
+      if (!stated("reply_owed") || typeof why !== "string" || !why.trim() || why.length > NOTE_MAX || /["\\\r\n]/.test(why))
+        return refuse("REPLY_OWED_REFUSED", "reply_owed is true or false, stated with reply_owed_reason: the member's reason, "
+          + `1 to ${NOTE_MAX} characters with no quote, backslash or line break. Nothing was written.`, { max: NOTE_MAX });
+      /* END DEC-49 REGION is-reply-owed-reason */
+    }
+    /* R86: the earlier action this one follows, stated on its creation and never changed. */
+    if (moved("follows_action")) {
+      /* DEC-49 REGION is-follows-action-rewritten */
+      if (heldFm) return refuse("FOLLOWS_ACTION_REWRITTEN", "the action an action follows is stated when it is created "
+        + "and never set, changed or removed by a revision. Nothing was written.");
+      /* END DEC-49 REGION is-follows-action-rewritten */
+      if (stated("follows_action")) {
+        const r = Actions.#fromFindings(Actions.#grammar("actionFieldFindings", { follows_action: nextFm.follows_action },
+          { bundleId: c.bundleId }), "FOLLOWS_ACTION_REFUSED");
+        if (r) return r;
+        const f = nextFm.follows_action;
+        const target = f && typeof f === "object" && typeof f.action === "string" ? f.action.trim() : "";
+        /* the grammar's self arm, asked here too: this module knows the bundle's own id */
+        if (target && target === c.bundleId)
+          return refuse("FOLLOWS_ACTION_SELF", "an action follows another action, never itself. Nothing was written.");
+        const b = target ? this.#visibleAction(target, viewer) : null;
+        if (!b || normalizeType(b.object_type) !== "action") return noSuchAction(target || null);
+      }
+    }
+    /* R81, R83, R94: the fields of an entry new or changed in this version (speaker, office_status, found_elsewhere). */
+    const heldLedger = heldFm && Array.isArray(heldFm.correspondence) ? heldFm.correspondence : [];
+    const ledger = Array.isArray(nextFm.correspondence) ? nextFm.correspondence : [];
+    for (let i = 0; i < ledger.length; i++) {
+      const e = ledger[i];
+      if (!e || typeof e !== "object" || JSON.stringify(e) === JSON.stringify(heldLedger[i] ?? null)) continue;
+      if (!ENTRY_FIELD_KEYS.some((k) => e[k] !== undefined)) continue;
+      const r = this.#entryFieldRefusal(ledger, i, nextFm.action_kind, who,
+        JSON.stringify(e.speaker ?? null) !== JSON.stringify(heldLedger[i] ? heldLedger[i].speaker ?? null : null));
+      if (r) return r;
+    }
+    return null;
+  }
+
+  /* R81, R83, R94 (T45): an entry's T45 fields, as the act and the write judge them: a speaker set by a member only and
+     naming one (`contactNotAMember`), then action-grammar's R22 over the entry with the governing view's response
+     statuses for the action's kind. */
+  #entryFieldRefusal(ledger, i, kind, who, speakerMoved) {
+    const e = ledger[i];
+    if (speakerMoved && e.speaker !== undefined && e.speaker !== null) {
+      /* DEC-49 REGION is-machine-contact-speaker */
+      if (!who || isMachineIdentity(who))
+        return refuse("MACHINE_CANNOT_SET_CONTACT", "who spoke for the group in a sending is a member's statement; a "
+          + "machine credential may not set it. Nothing was written.");
+      /* END DEC-49 REGION is-machine-contact-speaker */
+    }
+    const presented = ledger.map((x, k) => (k === i ? Actions.entryFields(x) : x));
+    const r = Actions.#fromFindings(Actions.#grammar("entryFieldFindings", presented, i,
+      { responseStatuses: this.#responseStatuses(kind) }), "CORRESPONDENCE_REFUSED");
+    if (r) return r;
+    if (speakerMoved && e.speaker !== undefined && e.speaker !== null) {
+      const id = contactId(e.speaker);
+      let facts = null;
+      if (id) { try { facts = this.membership.memberFacts(id); } catch { facts = null; } }
+      if (!facts) return contactNotAMember({ field: `correspondence[${i}].speaker` });
+    }
+    return null;
+  }
+
+  /** R81, R83, R94 (T45): an entry with its T45 fields as R22 names them: `office_status: {words, status?}` and
+   *  `found_elsewhere: {kind, note?}` from the flat keys the bytes hold (`office_words`, `office_status`,
+   *  `found_elsewhere`, `found_elsewhere_note`; J2's reading), `speaker` as written. Other keys as they are. */
+  static entryFields(e) {
+    if (!e || typeof e !== "object") return e;
+    const { office_words, office_status, found_elsewhere, found_elsewhere_note, ...rest } = e;
+    const out = { ...rest };
+    if (office_words !== undefined || office_status !== undefined)
+      out.office_status = { ...(office_words !== undefined ? { words: office_words } : {}),
+                            ...(office_status !== undefined ? { status: office_status } : {}) };
+    if (found_elsewhere !== undefined || found_elsewhere_note !== undefined)
+      out.found_elsewhere = { ...(found_elsewhere !== undefined ? { kind: found_elsewhere } : {}),
+                              ...(found_elsewhere_note !== undefined ? { note: found_elsewhere_note } : {}) };
+    return out;
+  }
+
   /* R3 (N237, K351): a document holding more legs or entries than the projection reads is refused where it is authored
      or revised, with the count and the limit; a replay is never asked (the projection skips it whole). */
   #tooLarge(fm) {
@@ -899,6 +1195,8 @@ export class Actions {
       if (t33) return t33;
       const seeks = this.#seeksFence(heldFm, nextFm, who);
       if (seeks) return seeks;
+      const t45 = this.#t45Fields(c, heldFm, nextFm, who, pkg.actorViewer ?? pkg.viewer ?? c.viewer ?? (who || null));
+      if (t45) return t45;
       const large = this.#tooLarge(nextFm);
       if (large) return large;
       /* REC-24: the legs (ACTION_BASIS_REFUSED), the ledger (CORRESPONDENCE_REFUSED) and what only the record can
@@ -909,7 +1207,8 @@ export class Actions {
       if (cf.some((x) => x.severity === "error")) return refuse("CORRESPONDENCE_REFUSED", undefined, { findings: findingsOf(cf) });
       for (const leg of (Array.isArray(nextFm.action_basis) ? nextFm.action_basis : [])) {
         if (!leg || typeof leg.target !== "string") continue;
-        if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, leg.target))
+        if (!this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id=?`, leg.target)
+            && !(leg.kind === "rests_on" && this.#successRecord(leg.target, pkg.actorViewer ?? pkg.viewer ?? c.viewer ?? (who || null))))
           return refuse("ACTION_BASIS_REFUSED", undefined, { target: leg.target, findings: [{ check: "C-2.10",
             detail: `action_basis target '${leg.target}' does not resolve in this store: an action that names why it `
                   + "exists names something that exists, or it points a reader at nothing while claiming a reason" }] });
@@ -945,27 +1244,51 @@ export class Actions {
     return null;
   }
 
-  /* R8: an action recorded for a breach (`breach: true`) rests on a live conformance determination the author may see.
-     With no conformance provider the determination cannot be read, and the write is refused, never passed. */
+  /* R8 (e), R93 (T45): the live success record `id` names, as the viewer reads it (`consequences.successRecordRead`, its
+     R20), or null when it names none the viewer may see, none is live, or no success record can be read here. */
+  #successRecord(id, viewer) {
+    const cons = this.consequences;
+    if (!cons || typeof cons.successRecordRead !== "function" || typeof id !== "string") return null;
+    let r = null;
+    try { r = cons.successRecordRead({ id, viewer }); } catch { r = null; }
+    return r && r.ok !== false && !r.superseded_by ? r : null;
+  }
+
+  /* R8: an action recorded for a breach (`breach: true`) rests on a live conformance determination the author may see,
+     noncompliant for at least one standard it names (T45 (a); K2781 (4)) and not void (T45 (b), conformance R33). With no
+     conformance provider the determination cannot be read, and the write is refused, never passed. Each leg is asked
+     superseded, then void, then noncompliant (J1 1: a void determination reads every outcome undetermined); the act
+     passes on any leg that is all three, else the first condition found in that order answers. */
   #breachRefusal(fm, viewer) {
     if (fm.breach !== true) return null;
-    /* R8 (K600 (a)): a member's premise override, judged by `#overrideAndAddressee` before this, stands in for the
-       determination; it is disclosed on everything prepared from the action (`filings` R24). */
+    /* R8 (K600 (a)), R74: a member's premise override, judged by `#overrideAndAddressee` before this, stands in for the
+       determination; it is disclosed on everything prepared from the action (`filings` R24, R75 here). */
     if (Actions.overrideOf(fm)) return null;
     const legs = (Array.isArray(fm.action_basis) ? fm.action_basis : [])
       .filter((l) => l && typeof l === "object" && l.kind === "rests_on" && typeof l.target === "string");
     const conf = this.conformance;
     const readable = !!conf && typeof conf.determinationRead === "function";
-    let superseded = null;
+    let superseded = null, voided = null, notNoncompliant = null;
     for (const l of (readable ? legs : [])) {
       let d = null;
       try { d = conf.determinationRead({ id: l.target, viewer }); } catch { d = null; }
       if (!d || d.ok === false) continue;
       if (d.live === false || d.superseded_by) { superseded ||= { id: l.target, by: d.superseded_by ?? null }; continue; }
+      if (d.void) { voided ||= { id: l.target, causes: Array.isArray(d.void.causes) ? d.void.causes : [] }; continue; }
+      if (!Actions.#noncompliant(d)) { notNoncompliant ||= l.target; continue; }
       return null;
     }
     /* N312 (K275): the condition is conformance's, and its answer is minted there (its R20). */
     if (superseded) return determinationSuperseded(superseded.id, superseded.by);
+    /* T45 (b): the void determination's answer is conformance's own (its R33). */
+    if (voided && typeof conformanceNs.determinationVoided === "function")
+      return conformanceNs.determinationVoided(voided.id, voided.causes);
+    /* DEC-49 REGION is-breach-not-noncompliant */
+    if (notNoncompliant || voided)
+      return refuse("DETERMINATION_NOT_NONCOMPLIANT", "an action recorded for a breach rests on a determination that the "
+        + "government acted out of conformance with at least one standard it names; the determination it names records "
+        + "no noncompliant outcome. Nothing was written.", { determination: notNoncompliant || voided.id });
+    /* END DEC-49 REGION is-breach-not-noncompliant */
     /* DEC-49 REGION is-breach-determination */
     return refuse("ACTION_NO_DETERMINATION", readable
       ? "an action recorded for a breach rests on a live conformance determination you may see, as a rests_on leg. "
@@ -974,6 +1297,23 @@ export class Actions {
         + "your group's Civicsmith yet, so none could be found. Nothing was written.",
       readable ? {} : { cause: "CONFORMANCE_UNAVAILABLE" });
     /* END DEC-49 REGION is-breach-determination */
+  }
+  /* R8 (a): a determination noncompliant for at least one standard, as `determinationRead` answers its outcomes. */
+  static #noncompliant(d) {
+    return (Array.isArray(d.outcomes) ? d.outcomes : []).some((o) => o && o.outcome === "noncompliant");
+  }
+  /* R8, R75, R76, R93: each `rests_on` leg's determination as the viewer reads it, `{id, d}`; legs naming none skipped. */
+  #legDeterminations(fm, viewer) {
+    const conf = this.conformance;
+    if (!conf || typeof conf.determinationRead !== "function") return [];
+    const out = [];
+    for (const l of (Array.isArray(fm && fm.action_basis) ? fm.action_basis : [])) {
+      if (!l || typeof l !== "object" || l.kind !== "rests_on" || typeof l.target !== "string") continue;
+      let d = null;
+      try { d = conf.determinationRead({ id: l.target, viewer }); } catch { d = null; }
+      if (d && d.ok !== false) out.push({ id: l.target, d });
+    }
+    return out;
   }
 
   /** R3, R11: this module's projection, in the promotion's transaction after the write: legs, ledger and quotes
@@ -994,9 +1334,21 @@ export class Actions {
     if (promotedType !== "action" || !fm || typeof fm !== "object") return null;
     /* R8: who stated the premise override and when, stamped once, the first time a version carries it. */
     const ov = Actions.overrideOf(fm);
-    if (ov) this.sql.exec(`INSERT INTO action_overrides (bundle_id, reason, stated_by, at) VALUES (?,?,?,?)
-      ON CONFLICT(bundle_id) DO NOTHING`, bundleId, ov.reason, c.author ? String(c.author) : null,
-      stampInstant("second", this.#nowMs(null)));
+    if (ov) this.sql.exec(`INSERT INTO action_overrides (bundle_id, reason, ground, stated_by, at) VALUES (?,?,?,?,?)
+      ON CONFLICT(bundle_id) DO NOTHING`, bundleId, ov.reason, ov.ground ? JSON.stringify(ov.ground) : null,
+      c.author ? String(c.author) : null, stampInstant("second", this.#nowMs(null)));
+    /* R79, R82 (T45): who changed the press terms or the reply-owed state, and when, appended when this version's value
+       differs from the latest held; never rewritten (R36). */
+    for (const [field, value, reason] of [["press_terms", fm.press_terms ?? null, null],
+                                          ["reply_owed", fm.reply_owed ?? null, fm.reply_owed_reason ?? null]]) {
+      const last = this.#one(`SELECT seq, value FROM action_field_history WHERE bundle_id=? AND field=? ORDER BY seq DESC
+        LIMIT 1`, bundleId, field);
+      const v = JSON.stringify(value);
+      if (last ? last.value === v : value === null) continue;
+      this.sql.exec(`INSERT INTO action_field_history (bundle_id, field, seq, value, reason, by, at) VALUES (?,?,?,?,?,?,?)`,
+        bundleId, field, last ? last.seq + 1 : 1, v, typeof reason === "string" ? reason : null,
+        c.author ? String(c.author) : null, stampInstant("second", this.#nowMs(null)));
+    }
     if ((Array.isArray(fm.action_basis) && fm.action_basis.length > ACTION_LEGS_MAX)
         || (Array.isArray(fm.correspondence) && fm.correspondence.length > ACTION_LEDGER_MAX)) return null;
     const alegs = Array.isArray(fm.action_basis) ? fm.action_basis : [];
@@ -1286,6 +1638,7 @@ export class Actions {
                      artifactSha = "", account = "", quoteAmount = "", quoteCurrency = "",
                      quoteBasis = "", quoteAnswers = "", quoteRevises = "",
                      stage = "", follows = "", outcome = "", exemptions = "", dueBy = "", dueCite = "",
+                     speaker = "", officeStatus = null, foundElsewhere = null,
                      pressure = null, viewer = null, author = null } = {}) {
     const who = String(author ?? "").trim();
     /* DEC-49 REGION is-machine-correspond — REC-64/C-32.4. The fence alone. */
@@ -1389,6 +1742,9 @@ export class Actions {
       if (pr) return { ...pr, target };
     }
 
+    /* R81, R83, R94 (T45): the entry's own fields, as given, held flat in the bytes (J2's reading). */
+    const t45 = Actions.#entryT45(speaker, officeStatus, foundElsewhere);
+    if (!t45.ok) return { ...t45, target };
     const gate = viewerPredicate(viewer);
     const b = this.#one(
       `SELECT b.bundle_id, b.object_type, b.current_state FROM bundles b
@@ -1423,6 +1779,14 @@ export class Actions {
                detail: "this action has no readable bundle.md, so nothing can be appended to it" };
     }
     const fm = parseFrontmatter(liveMd.content).data || {};
+    /* R82 (T45; v0.2 rule 6): a body that owes the group no reply is never recorded as not replying. */
+    /* DEC-49 REGION is-no-reply-owed */
+    if (direction === "no_response" && fm.reply_owed === false) {
+      this.#releaseLease(target, who);
+      return refuse("NO_REPLY_OWED", "this action states that the body owes the group no reply, so silence is never "
+        + "recorded as a non-response. Nothing was written.", { target, reply_owed: false, ...T45_SENTENCES.reply_not_owed });
+    }
+    /* END DEC-49 REGION is-no-reply-owed */
     const when = stampInstant("second", this.#nowMs(null));
     const ledgerNow = Array.isArray(fm.correspondence) ? fm.correspondence : [];
     const ord = ledgerNow.length;
@@ -1434,6 +1798,7 @@ export class Actions {
       ...(acct ? { account: acct } : {}),
       ...quote,
       ...life,
+      ...t45.fields,
       /* SERVER-STAMPED. Present on both arms — who put this entry on the record
          is part of the record even when the record is bytes. */
       author: who,
@@ -1504,6 +1869,23 @@ export class Actions {
         { governing_laws: listed });
       /* END DEC-49 REGION is-lifecycle-due-cite */
     }
+    /* R81, R83, R94 (T45): the entry's T45 fields, by action-grammar's R22, then the speaker a member. */
+    if (Object.keys(t45.fields).length) {
+      const r = this.#entryFieldRefusal([...ledgerNow, entryFm], ord, fm.action_kind, who, t45.fields.speaker !== undefined);
+      if (r) { this.#releaseLease(target, who); return { ...r, target }; }
+    }
+    /* R85 (T45; S1 §C 18, §D 15): a records request's stage is one its law lists, where the profile lists them. */
+    if (life.stage !== undefined && fm.action_kind === "records_request") {
+      const inLaw = Actions.#stageInLaw(life.stage, this.#lawStages(fm.law));
+      /* DEC-49 REGION is-stage-in-law */
+      if (inLaw === "not_in_law") {
+        this.#releaseLease(target, who);
+        return refuse("STAGE_NOT_IN_LAW", `stage '${life.stage}' is not one the law this request is made under lists, as `
+          + "your group's jurisdiction states it. Nothing was written.", { target, stage: life.stage,
+            stages: (this.#lawStages(fm.law) || []).map((x) => x && x.stage) });
+      }
+      /* END DEC-49 REGION is-stage-in-law */
+    }
     let text = Actions.#spliceCorrespondence(liveMd.content, entryFm);
     if (!text) this.#releaseLease(target, who);
     if (!text)
@@ -1543,19 +1925,79 @@ export class Actions {
 
     /* REC-24 (g)'s PRODUCER. Only on a RECEIVED entry: a SENT artifact is our
        own letter and responds to nothing. */
-    const responded = direction === "received" && sha
+    /* R83 (T45): a response found elsewhere is linked by the member to the action, never by a responds_to edge. */
+    const responded = direction === "received" && sha && t45.fields.found_elsewhere === undefined
       ? this.#respondsToInto(sha, target, who) : null;
     if (mark) this.sql.exec(`INSERT INTO action_pressure (bundle_id, ord, kind, note, marked_by, at) VALUES (?,?,?,?,?,?)`,
       target, ord, mark.kind, mark.note, who, when);
     const marked = mark ? { kind: mark.kind, note: mark.note } : null;
-    return { ok: true, target, ord, direction, at: day, author: who, recorded_at: when,
+    const answer = { ok: true, target, ord, direction, at: day, author: who, recorded_at: when,
              held_as: sha ? "capture" : "testimony",
              ...(sha ? { artifact_sha: sha } : { account: acct }),
              ...(Object.keys(quote).length ? { quote } : {}),
              ...(Object.keys(life).length ? { lifecycle: life } : {}),
              ...(responded ? { responds_to: responded } : {}),
              ...(marked ? { pressure: marked } : {}),
+             ...(t45.fields.speaker !== undefined ? { speaker: t45.fields.speaker } : {}),
+             ...Actions.#presentedT45(t45.fields),
              weight: "single" };
+    if (direction === "received") this.#tellResponse({ action: target, ord, recorder: who, at: day });
+    return answer;
+  }
+
+  /* R81, R83, R94 (T45): the entry's T45 fields as the act is given them, flat for the bytes: `speaker` a member id;
+     `officeStatus` `{words, status?}` and `foundElsewhere` `{kind, note?}`, each an object or its JSON. A value the
+     restricted grammar cannot hold (a quote, backslash or line break in its text) is refused by the grammar's code
+     before any byte is spliced; the rest of each shape is action-grammar's R22, asked with the ledger. */
+  static #entryT45(speaker, officeStatus, foundElsewhere) {
+    const obj = (v) => {
+      if (v === null || v === undefined || v === "") return null;
+      if (typeof v === "string") { try { v = JSON.parse(v); } catch { return { bad: true }; } }
+      return v && typeof v === "object" && !Array.isArray(v) ? v : { bad: true };
+    };
+    const tok = (x) => (x === undefined || x === null ? undefined : String(x).trim());
+    const fields = {};
+    const sp = String(speaker ?? "").trim();
+    /* DEC-49 REGION is-speaker-writable */
+    if (sp && !/^[^\s"\\]{1,200}$/.test(sp))
+      return refuse("SPEAKER_REFUSED", "speaker is the member id of the member who spoke for the group in this sending. "
+        + "Nothing was written.");
+    /* END DEC-49 REGION is-speaker-writable */
+    if (sp) fields.speaker = sp;
+    const os = obj(officeStatus), fe = obj(foundElsewhere);
+    if (os) {
+      /* DEC-49 REGION is-office-status-writable */
+      if (os.bad || (os.words !== undefined && (typeof os.words !== "string" || /["\\\r\n]/.test(os.words)))
+          || (os.status !== undefined && !/^[a-z0-9_-]{1,40}$/.test(String(os.status))))
+        return refuse("OFFICE_STATUS_WITHOUT_OUTCOME", "office_status is {words, status?}: the office's own wording, 1 to "
+          + `${NOTE_MAX} characters with no quote, backslash or line break, and a status token. Nothing was written.`);
+      /* END DEC-49 REGION is-office-status-writable */
+      if (os.words !== undefined) fields.office_words = os.words.trim();
+      if (os.status !== undefined) fields.office_status = tok(os.status);
+    }
+    if (fe) {
+      /* DEC-49 REGION is-found-elsewhere-writable */
+      if (fe.bad || !/^[a-z0-9_-]{1,40}$/.test(String(fe.kind ?? ""))
+          || (fe.note !== undefined && (typeof fe.note !== "string" || /["\\\r\n]/.test(fe.note))))
+        return refuse("FOUND_ELSEWHERE_REFUSED", "found_elsewhere is {kind, note?}: a kind token and a note of at most "
+          + `${NOTE_MAX} characters with no quote, backslash or line break. Nothing was written.`);
+      /* END DEC-49 REGION is-found-elsewhere-writable */
+      fields.found_elsewhere = tok(fe.kind);
+      if (fe.note !== undefined) fields.found_elsewhere_note = fe.note.trim();
+    }
+    return { ok: true, fields };
+  }
+  /* R25: the T45 fields of an entry, presented as R22 names them. */
+  static #presentedT45(e) {
+    const p = Actions.entryFields(e);
+    return { ...(p.office_status ? { office_status: p.office_status } : {}),
+             ...(p.found_elsewhere ? { found_elsewhere: p.found_elsewhere } : {}) };
+  }
+  /* R85 (T45): action-grammar's `stageInLaw` (its R25) over the law's stages; `undetermined` where no list is held. */
+  static #stageInLaw(stage, stages) {
+    if (typeof G.stageInLaw === "function") { try { return G.stageInLaw(stage, stages); } catch { return "undetermined"; } }
+    if (!Array.isArray(stages)) return "undetermined";
+    return stages.some((x) => x && x.stage === stage) ? "in_law" : "not_in_law";
   }
 
   /** R48: a pressure mark as given (`{kind, note}`, or its JSON), trimmed, or null when it is not one. */
@@ -2518,6 +2960,12 @@ export class Actions {
       ...(e.exemptions !== undefined ? [`    exemptions: "${e.exemptions}"`] : []),
       ...(e.due_by !== undefined ? [`    due_by: "${e.due_by}"`] : []),
       ...(e.due_cite !== undefined ? [`    due_cite: "${e.due_cite}"`] : []),
+      /* R81, R83, R94 (T45): the entry's T45 fields, flat (J2's reading): tokens bare, text quoted. */
+      ...(e.speaker !== undefined ? [`    speaker: ${e.speaker}`] : []),
+      ...(e.office_words !== undefined ? [`    office_words: "${e.office_words}"`] : []),
+      ...(e.office_status !== undefined ? [`    office_status: ${e.office_status}`] : []),
+      ...(e.found_elsewhere !== undefined ? [`    found_elsewhere: ${e.found_elsewhere}`] : []),
+      ...(e.found_elsewhere_note !== undefined ? [`    found_elsewhere_note: "${e.found_elsewhere_note}"`] : []),
       `    author: ${e.author}`,
       `    recorded_at: "${e.recorded_at}"`,
     ];
@@ -2598,7 +3046,107 @@ export class Actions {
       /* T33-73: the action's date (R9, R64, R65), the office addressee's entity and holder on it (R9), each law's held
          standard with its in-force state on it (R64), and the proceeding with its status on it (R65). */
       ...this.#t33Read(fm, viewer),
+      ...this.#t45Read(row.bundle_id, fm, viewer, ledger),
     };
+  }
+
+  /* R25 (T45): what T45 adds to the read: the gate's ground and its disclosures (R74–R76, R8 (d)), the addressing
+     (R9's press holder and venue delivery point, R77–R79), receipt, reply owed and responses (R80–R83, R85, R86, R94),
+     the scope and promises (R87, R88), and recognition's basis (R93). Each derived on read, never written. */
+  #t45Read(id, fm, viewer, ledger) {
+    const dets = this.#legDeterminations(fm, viewer);
+    const live = dets.filter(({ d }) => d.live !== false && !d.superseded_by);
+    const cp = fm.counterparty && typeof fm.counterparty === "object" && !Array.isArray(fm.counterparty) ? fm.counterparty : null;
+    const kindEntry = this.#kindEntry(fm.action_kind);
+    const stages = fm.action_kind === "records_request" ? this.#lawStages(fm.law) : null;
+    const history = (field) => this.#rows(`SELECT seq, value, reason, by, at FROM action_field_history WHERE bundle_id=? AND field=?
+      ORDER BY seq`, id, field).map((r) => { let v = null; try { v = JSON.parse(r.value); } catch { v = null; }
+        return { seq: r.seq, value: v, ...(r.reason !== null ? { reason: r.reason } : {}), by: r.by, at: r.at }; });
+    const owed = fm.reply_owed === false ? false : true;
+    const out = {
+      /* R8 (d): the live noncompliant determinations a breach action rests on, beside any override. */
+      breach_rests_on: live.filter(({ d }) => !d.void && Actions.#noncompliant(d)).map(({ id: x }) => x),
+      disclosures: this.#disclosures(fm, live, id),
+      basis_void: dets.filter(({ d }) => d.void).map(({ id: x, d }) => ({ determination: x,
+        causes: Array.isArray(d.void.causes) ? d.void.causes : [] })),
+      press_holder: cp && cp.kind === "press" && typeof cp.holder === "string" && cp.holder.trim() ? { name: cp.holder.trim() } : null,
+      copied: Array.isArray(fm.copied) ? fm.copied : [],
+      partners: Array.isArray(fm.partners) ? fm.partners : [],
+      press_terms: fm.press_terms && typeof fm.press_terms === "object" ? fm.press_terms : null,
+      press_terms_history: history("press_terms"),
+      reply_owed: { owed, ...(owed ? {} : T45_SENTENCES.reply_not_owed), history: history("reply_owed") },
+      receipts: this.#receiptsOf(id),
+      entries: (Array.isArray(fm.correspondence) ? fm.correspondence : []).map((e, ord) => {
+        const p = Actions.entryFields(e) || {};
+        return { ord, ...(p.speaker !== undefined ? { speaker: p.speaker } : {}),
+                 ...(p.office_status ? { office_status: p.office_status } : {}),
+                 ...(p.found_elsewhere ? { found_elsewhere: p.found_elsewhere } : {}),
+                 ...(fm.action_kind === "records_request" && typeof p.stage === "string"
+                   ? { stage_in_law: Actions.#stageInLaw(p.stage, stages) } : {}) };
+      }).filter((x) => Object.keys(x).length > 1),
+      follows_action: fm.follows_action && typeof fm.follows_action === "object" ? fm.follows_action : null,
+      followed_by: this.#followedBy(id, viewer),
+      scope: this.#scopeOf(id),
+      promises: this.#promisesOf(id),
+    };
+    /* R9 (T45): the venue's delivery point beside an office addressee, where the profile's venue for the kind states one. */
+    const facts = kindEntry && kindEntry.venue && Array.isArray(kindEntry.venue.facts) ? kindEntry.venue.facts : [];
+    const dp = facts.find((f) => f && f.fact === "delivery_point");
+    if (dp && counterpartyOffice(cp))
+      out.delivery_point = { value: dp.value, citation: dp.citation ?? null,
+                             says: "where it is delivered, as the venue states it; never the addressee" };
+    /* R93: a kind the view marks `shape: recognition`: what the recognition rests on. Nothing is refused for it. */
+    if (kindEntry && kindEntry.shape === "recognition") {
+      const compliant = live.some(({ d }) => !d.void && (Array.isArray(d.outcomes) ? d.outcomes : []).some((o) => o && o.outcome === "compliant"));
+      const success = !compliant && (Array.isArray(fm.action_basis) ? fm.action_basis : [])
+        .some((l) => l && l.kind === "rests_on" && typeof l.target === "string" && this.#successRecord(l.target, viewer));
+      out.recognition_basis = compliant ? { basis: "compliant" } : success ? { basis: "success" }
+        : { basis: "promise_only", ...T45_SENTENCES.recognition_promise_only };
+    }
+    void ledger;
+    return out;
+  }
+
+  /* R75 (T45; N828, N883; v0.2 rule 3): one disclosure per distinct held check and per distinct accepted source edition
+     among the live determinations' findings (conformance R9's `basis`, read as the viewer reads each determination,
+     J1 8), and the override's; published findings carry none. */
+  #disclosures(fm, live, id) {
+    const out = [], seen = new Set();
+    for (const { d } of live)
+      for (const f of Array.isArray(d.findings) ? d.findings : []) {
+        const b = f && f.basis && typeof f.basis === "object" ? f.basis : null;
+        if (!b) continue;
+        if (b.kind === "checked_held") {
+          const k = `c\u0000${b.check ?? ""}\u0000${b.checked_at ?? ""}`;
+          if (!seen.has(k)) { seen.add(k); out.push({ kind: "checked_held", checked_at: b.checked_at ?? null }); }
+        } else if (b.kind === "accepted") {
+          const k = `a\u0000${b.group ?? ""}\u0000${b.case ?? ""}\u0000${b.edition ?? ""}`;
+          if (!seen.has(k)) {
+            seen.add(k);
+            out.push({ kind: "accepted", group: b.group ?? null, edition_date: b.edition_date ?? null,
+                       accepted_at: b.accepted_at ?? null, identity: b.identity ?? null, stake: b.stake ?? "undetermined" });
+          }
+        }
+      }
+    const o = this.#overrideRead(id, fm);
+    if (o) out.push({ kind: "override", ground: o.ground, reason: o.reason, by: o.by, at: o.at });
+    return out;
+  }
+
+  /* R86 (T45): the actions the viewer may see that state they follow `id`. */
+  #followedBy(id, viewer) {
+    if (viewer === null || viewer === undefined || viewer === "") return [];
+    const gate = viewerPredicate(viewer);
+    const out = [];
+    for (const r of this.#rows(`SELECT b.bundle_id, f.content FROM bundles b JOIN files f ON f.bundle_id = b.bundle_id
+        AND f.path = 'bundle.md' WHERE b.object_type = 'action' AND (${gate.sql}) AND f.content LIKE '%follows_action%'
+        ORDER BY b.bundle_id`, ...gate.args)) {
+      let fm = null;
+      try { fm = parseFrontmatter(r.content).data; } catch { fm = null; }
+      const f = fm && fm.follows_action;
+      if (f && typeof f === "object" && f.action === id) out.push({ action: r.bundle_id, ...(f.ord !== undefined ? { ord: f.ord } : {}) });
+    }
+    return out;
   }
 
   /** R9, R64, R65: "the action's date": the first `sent` entry's day, else the day it was created; null when neither
@@ -2768,9 +3316,11 @@ export class Actions {
     const o = Actions.overrideOf(fm);
     if (!o) return null;
     const r = this.#one(`SELECT stated_by, at FROM action_overrides WHERE bundle_id=?`, id);
-    return { reason: o.reason, by: r ? r.stated_by : null, at: r ? r.at : null,
+    return { ground: o.ground, reason: o.reason, by: r ? r.stated_by : null, at: r ? r.at : null,
+             /* R74: an override written before T45 reads as written, its ground not stated, never re-asked. */
+             ...(o.ground ? {} : { ground_not_stated: T45_SENTENCES.ground_not_stated }),
              says: "Rests on an unestablished premise: a member chose to act on this breach without a determination, "
-                 + "for the reason stated." };
+                 + "on the ground and for the reason stated." };
   }
 
   /* R5: the recorded author class of the action's creation (record-core R15–R16's manifest, first by `seq`): a law
@@ -2809,7 +3359,7 @@ export class Actions {
 
   /** R30: visible actions by filters, in id order, at most 200 per page, `truncated` by reading one past. */
   actionsFor({ determination = null, counterparty = null, state = null, kind = null, after = null, limit = null,
-               pressure = null, proceeding = null, viewer = null } = {}) {
+               pressure = null, proceeding = null, basis_void = null, follows = null, viewer = null } = {}) {
     const max = clampLimit(limit, ACTIONS_PAGE_MAX, ACTIONS_PAGE_MAX);
     const gate = viewerPredicate(viewer);
     const where = [`b.object_type='action'`, `(${gate.sql})`, `b.bundle_id>?`], fixed = [...gate.args];
@@ -2832,9 +3382,20 @@ export class Actions {
         if (counterparty && counterpartyName(fm.counterparty) !== counterparty) continue;
         /* R65: the actions belonging to a proceeding. */
         if (proceeding && fm.proceeding !== proceeding) continue;
+        /* R86 (T45): the actions that follow `follows`. */
+        if (follows && !(fm.follows_action && typeof fm.follows_action === "object" && fm.follows_action.action === follows)) continue;
+        /* R76 (T45): the actions resting on a determination conformance answers void, derived on this read. */
+        const voids = basis_void === true || basis_void === "true"
+          ? this.#legDeterminations(fm, viewer).filter(({ d }) => d.void).map(({ id: x, d }) =>
+              ({ determination: x, causes: Array.isArray(d.void.causes) ? d.void.causes : [] })) : null;
+        if (voids && !voids.length) continue;
         if (out.length === max) { truncated = true; break; }
+        const cp = fm.counterparty && typeof fm.counterparty === "object" ? fm.counterparty : null;
         out.push({ id: r.bundle_id, state: r.current_state, kind: fm.action_kind ?? null,
-                   counterparty: counterpartyName(fm.counterparty), counterparty_state: fm.counterparty?.state ?? null });
+                   counterparty: counterpartyName(fm.counterparty), counterparty_state: fm.counterparty?.state ?? null,
+                   /* R9 (T45): a press addressee's holder, kept inside the group: the read and this list only. */
+                   ...(cp && cp.kind === "press" && typeof cp.holder === "string" && cp.holder.trim() ? { holder: { name: cp.holder.trim() } } : {}),
+                   ...(voids ? { basis_void: voids } : {}) });
       }
       if (truncated || rows.length <= max) break;
     }
@@ -2929,10 +3490,16 @@ export class Actions {
 
   /** R66 (EVENTS 2a; K1494): "what we did", for `events.timeline`: the group's own acts (each correspondence entry and
    *  each move) on the actions the viewer may see whose office entity, `proceeding` or a leg's target is in `set`, each
-   *  `{at, label, ref, kind}` at the entry's own date, within `from`–`to`, at most `limit`. No viewer: nothing (R36). */
-  eventSource({ set = null, from = null, to = null, limit = null, viewer = null } = {}) {
+   *  `{at, label, ref, kind}` at the entry's own date, within `from`–`to`, at most `limit`. No viewer: nothing (R36).
+   *  (T45; S1 §D 9; v0.2 rule 15) For every caller it never answers a confidential action (R87), an action of a counsel
+   *  matter (`project-roster.projectScope`, its R23), an action never sent (plan deliberation), nor a move before the
+   *  action's first sending; no item carries a contact, speaker, press holder, promise, pressure note or hold. Under
+   *  `audience: "public"` it answers the group's outward acts only (its sent entries and its moves from the first
+   *  sending; J1 9), each marked `public: true` (case-authoring R57). */
+  eventSource({ set = null, from = null, to = null, limit = null, viewer = null, audience = null } = {}) {
     const ids = new Set((Array.isArray(set) ? set : typeof set === "string" ? set.split(",") : []).map((x) => String(x).trim()).filter(Boolean));
     const max = clampLimit(limit, 100, 500);
+    const pub = audience === "public";
     const items = [];
     if (!ids.size) return items;
     for (const { id, fm } of this.#visibleActions(viewer)) {
@@ -2940,20 +3507,37 @@ export class Actions {
       const ends = [office && office.entity_id, typeof fm.proceeding === "string" ? fm.proceeding : null,
                     ...(Array.isArray(fm.action_basis) ? fm.action_basis : []).map((l) => (l && typeof l.target === "string" ? l.target : null))];
       if (!ends.some((x) => x && ids.has(x))) continue;
-      (Array.isArray(fm.correspondence) ? fm.correspondence : []).forEach((e, ord) => {
+      const ledger = Array.isArray(fm.correspondence) ? fm.correspondence : [];
+      const firstSent = ledger.filter((e) => e && typeof e === "object" && e.direction === "sent")
+        .map((e) => String(e.at ?? "").slice(0, 10)).filter(isCalendarDate).sort()[0];
+      if (!firstSent || this.#confidential(id) || this.#counselMatter(id)) continue;
+      ledger.forEach((e, ord) => {
         if (!e || typeof e !== "object" || !Actions.#inWindow(e.at, from, to)) return;
+        if (pub && e.direction !== "sent") return;
         items.push({ at: String(e.at).slice(0, 10), kind: `correspondence_${e.direction}`, ref: `${id}#correspondence/${ord}`,
                      label: `${e.direction === "sent" ? "we sent" : e.direction === "received" ? "we received" : "no response recorded"}`
-                       + ` (${counterpartyName(fm.counterparty) ?? "addressee undetermined"})` });
+                       + ` (${counterpartyName(fm.counterparty) ?? "addressee undetermined"})`, ...(pub ? { public: true } : {}) });
       });
       (Array.isArray(fm.state_history) ? fm.state_history : []).forEach((h, i) => {
         if (!h || typeof h !== "object" || !Actions.#inWindow(h.timestamp, from, to)) return;
+        if (String(h.timestamp).slice(0, 10) < firstSent) return;
         items.push({ at: String(h.timestamp), kind: "move", ref: `${id}#move/${i}`,
-                     label: `we moved the action from ${h.from_state} to ${h.to_state}` });
+                     label: `we moved the action from ${h.from_state} to ${h.to_state}`, ...(pub ? { public: true } : {}) });
       });
     }
     items.sort((p, q) => (String(p.at) < String(q.at) ? -1 : String(p.at) > String(q.at) ? 1 : p.ref < q.ref ? -1 : 1));
     return items.slice(0, max);
+  }
+  /* R66 (T45; reconciliation R8): whether the action's project (record-core R34) is a counsel matter (project-roster
+     R23). A project that cannot be read is read as one, so nothing of a counsel matter is answered by chance. */
+  #counselMatter(id) {
+    try {
+      const project = this.record.bundleInfo(id)?.project ?? null;
+      if (!project) return false;
+      const roster = this.projectRoster;
+      if (!roster || typeof roster.projectScope !== "function") return false;
+      return roster.projectScope(project).scope === "counsel_matter";
+    } catch { return true; }
   }
 
   /** R67 (K1466; duties R16): the items that trigger a body's response duty: each `sent` correspondence entry of an
@@ -2976,6 +3560,250 @@ export class Actions {
       });
     }
     return out;
+  }
+
+  /* ================================================================ T45: receipt, scope, promises, open items, listeners */
+
+  /** R95 (T45; Actions D21; v0.2 rule 16): `registerResponseListener(module, fn)`, one registration per module (K31's
+   *  pattern, `membership.listenerRefusal`). After a `received` entry is promoted by `actionCorrespond`, each `fn({action,
+   *  ord, project, recorder, at})` is called once, after the write's transaction. */
+  registerResponseListener(module, fn) {
+    const refused = listenerRefusal(this.#responseListeners, module, fn, { slot: "response_listener" });
+    if (refused) return refused;
+    this.#responseListeners.push({ module, fn });
+    return { ok: true, module };
+  }
+  /* R95: a listener that throws is logged and never undoes or refuses the entry; a Promise's rejection likewise. */
+  #tellResponse({ action, ord, recorder, at }) {
+    if (!this.#responseListeners.length) return;
+    let project = null;
+    try { project = this.record.bundleInfo(action)?.project ?? null; } catch { project = null; }
+    for (const l of this.#responseListeners) {
+      try {
+        const r = l.fn({ action, ord, project, recorder, at });
+        if (r && typeof r.then === "function") r.then(null, (e) => Actions.#logListener(l.module, e));
+      } catch (e) { Actions.#logListener(l.module, e); }
+    }
+  }
+  static #logListener(module, e) {
+    try { console.error(`actions: response listener of ${module} threw: ${String(e && e.message || e).slice(0, 200)}`); } catch { /* the entry stands */ }
+  }
+
+  /** R80 (T45; S1 §C 9; v0.2 rule 6): a member records that the `sent` entry at `ord` was received by the addressee
+   *  (`receipt`) or that a party was served (`service`), how and when, held as a capture or her account (R34's rule).
+   *  Its own table, appended; the ledger entry is never rewritten. `action-clocks` R2 reads it as the start of a count
+   *  from receipt or service. */
+  actionReceipt({ target, ord = null, kind = "receipt", at = "", how = "", party = "", artifactSha = "", account = "",
+                  viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    if (!who || isMachineIdentity(who))
+      return withRow({ ok: false, reason: "MACHINE_CANNOT_CORRESPOND", target: target ?? null,
+               detail: "a receipt is a named member's record that the group's sending reached its addressee. A machine "
+                     + "credential may not record one. Sign in as a member." });
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    const when = String(at ?? "").trim();
+    const m = LOCAL_DT_RE.exec(when);
+    if (!(isCalendarDate(when) || (m && isCalendarDate(m[1]))))
+      return withRow({ ok: false, reason: "BAD_DATE", at: when, target,
+               detail: "a receipt is dated YYYY-MM-DD, or YYYY-MM-DDTHH:MM in the office's local time, a day the calendar has" });
+    const sha = String(artifactSha ?? "").trim().replace(/^sha256:/, "").toLowerCase();
+    const acct = String(account ?? "").trim();
+    if (sha && acct) return withRow({ ok: false, reason: "CAPTURE_AND_TESTIMONY", target,
+      detail: "a receipt is held as the captured bytes OR a named member's account, never both." });
+    if (!sha && !acct) return withRow({ ok: false, reason: "NEITHER_CAPTURE_NOR_TESTIMONY", target,
+      detail: "a receipt is held as captured bytes the register holds, or as a named member's account." });
+    if (sha && !/^[0-9a-f]{64}$/.test(sha)) return { ok: false, reason: "BAD_SHA", target, detail: "artifact_sha is a sha256 hash (64 hex characters)" };
+    const k = String(kind ?? "").trim() || "receipt";
+    const h = String(how ?? "").trim(), pty = String(party ?? "").trim();
+    for (const [name, v, need] of [["how", h, true], ["party", pty, k === "service"], ["account", acct, false]])
+      if ((need && !v) || v.length > (name === "account" ? NOTE_MAX : RECEIPT_TEXT_MAX))
+        return { ok: false, reason: `BAD_${name.toUpperCase()}`, target,
+                 detail: `${name} is ${need ? "1" : "0"} to ${name === "account" ? NOTE_MAX : RECEIPT_TEXT_MAX} characters` };
+    const b = this.#visibleAction(target, viewer);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    const ledger = (this.#heldFm(target) || {}).correspondence;
+    const n = typeof ord === "number" ? ord : /^\d+$/.test(String(ord ?? "").trim()) ? Number(String(ord).trim()) : NaN;
+    const entry = Array.isArray(ledger) && Number.isInteger(n) ? ledger[n] : undefined;
+    /* DEC-49 REGION is-receipt-on-sent */
+    if (!entry || typeof entry !== "object" || entry.direction !== "sent" || !RECEIPT_KINDS.includes(k))
+      return refuse("RECEIPT_NOT_ON_SENT", `a receipt is recorded on a sent entry of this action, as ${RECEIPT_KINDS.join(" or ")}; `
+        + "the entry named is not a sent one. Nothing was written.", { target, ord: ord ?? null, legal: [...RECEIPT_KINDS] });
+    /* END DEC-49 REGION is-receipt-on-sent */
+    if (sha && !this.#one(`SELECT capture_sha FROM register WHERE capture_sha=?`, sha))
+      return withRow({ ok: false, reason: "UNREGISTERED_ARTIFACT", target, artifact_sha: sha,
+               detail: "this hash names no capture in this store. Capture it first, or record a named account instead." });
+    const recorded = stampInstant("second", this.#nowMs(null));
+    const seq = this.record.transact(() => {
+      const next = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_receipts WHERE bundle_id=? AND ord=?`, target, n).n;
+      this.sql.exec(`INSERT INTO action_receipts (bundle_id, ord, seq, kind, at, how, party, artifact_sha, account, author,
+        recorded_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`, target, n, next, k, when, h, pty || null, sha || null, acct || null,
+        who, recorded);
+      return next;
+    });
+    return { ok: true, target, ord: n, seq, kind: k, at: when, how: h, ...(pty ? { party: pty } : {}),
+             held_as: sha ? "capture" : "testimony", ...(sha ? { artifact_sha: sha } : { account: acct }),
+             author: who, recorded_at: recorded, weight: "single" };
+  }
+  /* R80, R25: each sent entry's receipt records, the latest first. */
+  #receiptsOf(id) {
+    const out = {};
+    for (const r of this.#rows(`SELECT ord, seq, kind, at, how, party, artifact_sha, account, author, recorded_at
+      FROM action_receipts WHERE bundle_id=? ORDER BY ord, seq DESC`, id))
+      (out[r.ord] ||= []).push({ seq: r.seq, kind: r.kind, at: r.at, how: r.how, party: r.party ?? null,
+        held_as: r.artifact_sha ? "capture" : "testimony", ...(r.artifact_sha ? { artifact_sha: r.artifact_sha } : { account: r.account }),
+        by: r.author, recorded_at: r.recorded_at });
+    return Object.entries(out).map(([ord, list]) => ({ ord: Number(ord), latest: list[0], earlier: list.slice(1) }));
+  }
+
+  /** R87 (T45; Actions D4; v0.2 rule 15): a member sets (`true`) or removes (`false`) the action's confidential scope,
+   *  with a reason, each statement appended. A confidential action is seen inside the group as before and never answered
+   *  by R66 or anything that feeds published output; the change never touches a signed edition (`publication` R63). */
+  actionScope({ target, confidential = null, reason = "", viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    const why = String(reason ?? "").trim();
+    /* DEC-49 REGION is-scope */
+    if (!who || isMachineIdentity(who))
+      return refuse("MACHINE_CANNOT_SET_SCOPE", "whether an action is confidential is a member's act; a machine credential "
+        + "may not set or remove it. Nothing was written.", { target: target ?? null });
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    const want = confidential === true || confidential === "true" ? 1 : confidential === false || confidential === "false" ? 0 : null;
+    if (want === null) return { ok: false, reason: "BAD_SCOPE", target, legal: [true, false],
+                                detail: "confidential is true (set the scope) or false (remove it)" };
+    if (!why) return refuse("SCOPE_NO_REASON", "setting or removing an action's confidential scope carries the member's "
+      + "reason. Nothing was written.", { target });
+    if (why.length > NOTE_MAX || /["\\\r\n]/.test(why))
+      return { ok: false, reason: "BAD_REASON", target, detail: `reason is at most ${NOTE_MAX} characters with no quote, backslash or line break` };
+    const b = this.#visibleAction(target, viewer);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    if (this.#confidential(target) === !!want)
+      return refuse("SCOPE_UNCHANGED", `this action is already ${want ? "confidential" : "not confidential"}; nothing was `
+        + "written.", { target, confidential: !!want });
+    /* END DEC-49 REGION is-scope */
+    const at = stampInstant("second", this.#nowMs(null));
+    this.record.transact(() => {
+      const seq = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_scopes WHERE bundle_id=?`, target).n;
+      this.sql.exec(`INSERT INTO action_scopes (bundle_id, seq, confidential, reason, by, at) VALUES (?,?,?,?,?,?)`,
+        target, seq, want, why, who, at);
+    });
+    return { ok: true, target, confidential: !!want, reason: why, by: who, at, scope: this.#scopeOf(target),
+             published: T45_SENTENCES.scope_published_stays, weight: "single" };
+  }
+  /* R87, R66: whether the action's latest scope statement is confidential. */
+  #confidential(id) {
+    const r = this.#one(`SELECT confidential FROM action_scopes WHERE bundle_id=? ORDER BY seq DESC LIMIT 1`, id);
+    return !!(r && r.confidential);
+  }
+  /* R87, R25: the scope and its statements, oldest first. */
+  #scopeOf(id) {
+    const statements = this.#rows(`SELECT seq, confidential, reason, by, at FROM action_scopes WHERE bundle_id=? ORDER BY seq`, id)
+      .map((r) => ({ seq: r.seq, confidential: !!r.confidential, reason: r.reason, by: r.by, at: r.at }));
+    return { confidential: statements.length ? statements[statements.length - 1].confidential : false, statements };
+  }
+
+  /** R88 (T45; Actions D4; v0.2 rule 15): a member records a promise the group made to a person (`PROMISE_KINDS`), or
+   *  one ending an earlier promise (`ends`, its position, with `text` its reason). Appended, never edited; every viewer
+   *  who may see the action reads every promise; nothing published carries one (R66). */
+  actionPromise({ target, kind = "", text = "", ends = null, viewer = null, author = null } = {}) {
+    const who = String(author ?? "").trim();
+    const k = String(kind ?? "").trim(), t = String(text ?? "").trim();
+    const endsAt = ends === null || ends === undefined || ends === "" ? null
+      : Number.isInteger(ends) ? ends : /^\d+$/.test(String(ends).trim()) ? Number(String(ends).trim()) : NaN;
+    const kinds = Array.isArray(G.PROMISE_KINDS) ? G.PROMISE_KINDS : PROMISE_KINDS_HELD;
+    const promiseRefused = (why) => refuse("PROMISE_REFUSED", `${why} Nothing was written.`,
+      { target: target ?? null, legal: [...kinds], max: PROMISE_TEXT_MAX });
+    /* DEC-49 REGION is-promise */
+    if (!who || isMachineIdentity(who))
+      return refuse("MACHINE_CANNOT_RECORD_PROMISE", "a promise the group made to a person is recorded by a member; a "
+        + "machine credential may not record one. Nothing was written.", { target: target ?? null });
+    if (!target) return { ok: false, reason: "NO_TARGET", detail: "one action at a time: pass target=<action id>" };
+    if (!kinds.includes(k) || !t || t.length > PROMISE_TEXT_MAX || Number.isNaN(endsAt))
+      return promiseRefused(`a promise is {kind, text, ends?}: kind one of ${kinds.join(", ")}, the text 1 to `
+        + `${PROMISE_TEXT_MAX} characters, and ends the position of an earlier promise it ends.`);
+    const b = this.#visibleAction(target, viewer);
+    if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target };
+    if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target, object_type: b.object_type };
+    if (endsAt !== null && !this.#promisesOf(target).standing.some((p) => p.seq === endsAt))
+      return promiseRefused(`ends names promise ${endsAt}, and no promise standing on this action is at that position.`);
+    /* END DEC-49 REGION is-promise */
+    const at = stampInstant("second", this.#nowMs(null));
+    const seq = this.record.transact(() => {
+      const next = this.#one(`SELECT COALESCE(MAX(seq), 0) + 1 AS n FROM action_promises WHERE bundle_id=?`, target).n;
+      this.sql.exec(`INSERT INTO action_promises (bundle_id, seq, kind, text, ends, by, at) VALUES (?,?,?,?,?,?,?)`,
+        target, next, k, t, endsAt, who, at);
+      return next;
+    });
+    return { ok: true, target, seq, kind: k, text: t, ...(endsAt !== null ? { ends: endsAt } : {}), by: who, at,
+             promises: this.#promisesOf(target), weight: "single" };
+  }
+  /* R88, R25: every promise on the action, standing apart from ended (one a later statement ends). */
+  #promisesOf(id) {
+    const all = this.#rows(`SELECT seq, kind, text, ends, by, at FROM action_promises WHERE bundle_id=? ORDER BY seq`, id)
+      .map((r) => ({ seq: r.seq, kind: r.kind, text: r.text, ...(r.ends !== null ? { ends: r.ends } : {}), by: r.by, at: r.at }));
+    const ended = new Map(all.filter((p) => p.ends !== undefined).map((p) => [p.ends, p]));
+    const notes = all.filter((p) => p.ends === undefined);
+    return { standing: notes.filter((p) => !ended.has(p.seq)),
+             ended: notes.filter((p) => ended.has(p.seq)).map((p) => ({ ...p, ended_by: ended.get(p.seq) })) };
+  }
+
+  /** R92 (T45; N892 (a); Actions D28a; v0.2 rule 21): the group's open actions the viewer may see addressed to the same
+   *  office as `counterparty` (an addressee, or its JSON) or as `action`'s addressee: equal `entity_id`, else equal role
+   *  and body. Each with its kind, state, first sent date and whether its reply is overdue (R12), and the count of
+   *  overdue replies. Facts, never a block: no act is refused on it. */
+  openItemsWith({ counterparty = null, action = null, viewer = null } = {}) {
+    let cp = counterparty;
+    if (typeof cp === "string") { try { cp = JSON.parse(cp); } catch { cp = null; } }
+    let self = null;
+    if (!cp && action) {
+      const b = this.#visibleAction(String(action), viewer);
+      if (!b) return { ok: false, reason: "NO_SUCH_BUNDLE", target: action };
+      if (normalizeType(b.object_type) !== "action") return { ok: false, reason: "NOT_AN_ACTION", target: action };
+      self = String(action);
+      cp = (this.#heldFm(self) || {}).counterparty ?? null;
+    }
+    if (!cp && !action) return { ok: false, reason: "NO_TARGET", detail: "pass counterparty=<an addressee> or action=<action id>" };
+    const office = counterpartyOffice(cp);
+    if (!office || office.legacy)
+      return { ok: true, items: [], overdue_replies: 0, truncated: false, ...T45_SENTENCES.openitems_not_office };
+    const now = this.#nowMs(null), place = this.place();
+    const items = [];
+    let truncated = false;
+    for (const { id, fm } of this.#visibleActions(viewer)) {
+      if (id === self || !Actions.#sameOffice(office, counterpartyOffice(fm.counterparty))) continue;
+      const st = this.#one(`SELECT current_state FROM bundles WHERE bundle_id=?`, id);
+      const state = st ? st.current_state : fm.current_state ?? null;
+      if (state === "resolved" || state === "abandoned") continue;
+      if (items.length === OPEN_ITEMS_MAX) { truncated = true; break; }
+      const sent = (Array.isArray(fm.correspondence) ? fm.correspondence : []).find((e) => e && e.direction === "sent");
+      items.push({ action: id, kind: fm.action_kind ?? null, state, first_sent: sent ? String(sent.at).slice(0, 10) : null,
+                   clock_overdue: actionOverdue(fm, now, place) });
+    }
+    return { ok: true, office: { role: office.role, body: office.body, entity_id: office.entity_id ?? null }, items,
+             overdue_replies: items.filter((x) => x.clock_overdue === true).length, truncated, limit: OPEN_ITEMS_MAX,
+             says: "the group's open actions with this office, shown as facts. Nothing is refused because of them." };
+  }
+  /* R92: R9's office equality: equal entity ids where both state one, else equal role and body. */
+  static #sameOffice(a, b) {
+    if (!a || !b || b.legacy) return false;
+    if (a.entity_id && b.entity_id) return a.entity_id === b.entity_id;
+    return !!a.role && !!a.body && a.role === b.role && a.body === b.body;
+  }
+
+  /** R97 (T45; consequences R19): of `ids`, those that are an action bundle of this instance or the capture of one of its
+   *  `sent` entries, whatever the viewer; it names nothing back but what it was given, and throws only when it cannot read. */
+  ownActIds({ ids = [] } = {}) {
+    const asked = [...new Set((Array.isArray(ids) ? ids : []).filter((x) => typeof x === "string" && x.trim()).map((x) => x.trim()))];
+    return asked.filter((x) => this.#one(`SELECT 1 AS y FROM bundles WHERE bundle_id=? AND object_type='action'`, x)
+      || this.#one(`SELECT 1 AS y FROM correspondence WHERE direction='sent' AND artifact_sha=?`,
+                   x.replace(/^sha256:/, "").toLowerCase()));
+  }
+  /** R97 (T45; standards R53): whether `captureSha` is the capture of one of this instance's `sent` entries; throws only
+   *  when it cannot read (standards then reads the capture as the group's own). */
+  ownSending({ captureSha = null } = {}) {
+    const sha = typeof captureSha === "string" ? captureSha.trim().replace(/^sha256:/, "").toLowerCase() : "";
+    if (!sha) return false;
+    return !!this.#one(`SELECT 1 AS y FROM correspondence WHERE direction='sent' AND artifact_sha=?`, sha);
   }
 
   /* ================================================================ proposals (R19, R28) */
@@ -3108,6 +3936,7 @@ export class Actions {
 
 /* The acts answer their catalogue-backed refusals with code, check and translation (the Provides' "Terms"). */
 for (const m of ["actionMove", "actionCorrespond", "actionLaws", "actionLawsPropose", "actionRiskTier", "actionQuotes",
+                 "actionReceipt", "actionScope", "actionPromise",
                  "actionRiskPropose", "actionSeeksPropose", "actionPressure", "actionHold", "actionHoldRelease", "holdReleasePreview",
                  "projectHolds", "actionCreate", "check"]) {
   const fn = Actions.prototype[m];
@@ -3175,6 +4004,18 @@ export function actionsOf(host, deps) {
     const duties = d.duties === null ? null : a.duties;
     if (duties && typeof duties.registerTriggerSource === "function")
       duties.registerTriggerSource("actions", (args) => a.triggerSource(args || {}));
+    /* R97 (T45; consequences R19, standards R53): once per host, the reader of the group's own acts and the check of its
+       own sendings. A registration either refuses (this module's already held) leaves the earlier one standing; a host
+       on which either cannot be created registers nothing there. */
+    const consequences = d.consequences === null ? null : a.consequences;
+    if (consequences && typeof consequences.registerOwnActReader === "function") {
+      const reader = (args) => a.ownActIds(args || {});
+      if (consequences.registerOwnActReader.length >= 2) consequences.registerOwnActReader("actions", reader);
+      else consequences.registerOwnActReader(reader);
+    }
+    const standards = d.standards === null ? null : a.standards;
+    if (standards && typeof standards.registerOwnSendingCheck === "function")
+      standards.registerOwnSendingCheck("actions", (args) => a.ownSending(args || {}));
     /* R55 (T42; N826): once per host, as the registrations above, with doorbell (its R3), no longer capture. Doorbell's
        slot takes one registration (membership's `listenerRefusal`); one already held by this module (another host over
        the same storage) stands, and one held by any other module is a defect of the wiring, thrown as the purge
@@ -3241,6 +4082,8 @@ export function actionsOps(a, url, body) {
       quoteAnswers: q("quote_answers"), quoteRevises: q("quote_revises"),
       stage: q("stage"), follows: q("follows"), outcome: q("outcome"), exemptions: q("exemptions"),
       dueBy: q("due_by"), dueCite: q("due_cite"),
+      speaker: q("speaker") ?? b.speaker ?? "", officeStatus: b.office_status ?? q("office_status"),
+      foundElsewhere: b.found_elsewhere ?? q("found_elsewhere"),
       pressure: b.pressure ?? (q("pressure_kind") !== null || q("pressure_note") !== null
         ? { kind: q("pressure_kind") ?? "", note: q("pressure_note") ?? "" } : null),
       viewer: q("viewer"), author: q("author") }),
@@ -3250,7 +4093,8 @@ export function actionsOps(a, url, body) {
     action: () => a.actionRead({ id: q("id") || q("target") || b.id || null, viewer: q("viewer"), now: q("now") }),
     actions: () => a.actionsFor({ determination: q("determination"), counterparty: q("counterparty"), state: q("state"),
                                   kind: q("kind"), after: q("after"), limit: q("limit"), pressure: q("pressure"),
-                                  proceeding: q("proceeding"), viewer: q("viewer") }),
+                                  proceeding: q("proceeding"), basis_void: q("basis_void"), follows: q("follows"),
+                                  viewer: q("viewer") }),
     /* R62: the offices the record holds as custodian of or responsible for a subject, suggested; a read. */
     addresseesuggest: () => a.addresseeSuggest({ action: q("action") || b.action || null, subject: q("subject") || b.subject || null,
                                                  viewer: q("viewer") }),
@@ -3275,5 +4119,17 @@ export function actionsOps(a, url, body) {
     /* R42 (N231): the kinds this instance accepts, a read for every signed-in class (the op's spec is the control
        plane's). */
     actionkinds: () => ({ ok: true, kinds: a.kinds() }),
+    /* T45: receipt or service of a sent entry (R80), the confidential scope (R87), a promise (R88), and the open items
+       with an office (R92, a read), each with the stamps the control plane makes (declared by op-declarations). */
+    actionreceipt: () => a.actionReceipt({ target: q("target") || b.target, ord: q("ord") ?? b.ord ?? null,
+      kind: q("kind") ?? b.kind ?? "receipt", at: q("at") ?? b.at ?? "", how: q("how") ?? b.how ?? "",
+      party: q("party") ?? b.party ?? "", artifactSha: q("artifact_sha") ?? b.artifact_sha ?? "",
+      account: q("account") ?? b.account ?? "", viewer: q("viewer"), author: q("author") }),
+    actionscope: () => a.actionScope({ target: q("target") || b.target, confidential: q("confidential") ?? b.confidential ?? null,
+      reason: q("reason") ?? b.reason ?? "", viewer: q("viewer"), author: q("author") }),
+    actionpromise: () => a.actionPromise({ target: q("target") || b.target, kind: q("kind") ?? b.kind ?? "",
+      text: q("text") ?? b.text ?? "", ends: q("ends") ?? b.ends ?? null, viewer: q("viewer"), author: q("author") }),
+    openitemswith: () => a.openItemsWith({ counterparty: b.counterparty ?? q("counterparty"), action: q("action") ?? b.action ?? null,
+      viewer: q("viewer") }),
   };
 }

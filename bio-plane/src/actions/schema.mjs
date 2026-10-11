@@ -194,6 +194,7 @@ CREATE TABLE IF NOT EXISTS action_risk_proposals (
 CREATE TABLE IF NOT EXISTS action_overrides (
   bundle_id   TEXT PRIMARY KEY, -- the action
   reason      TEXT NOT NULL,    -- as the document states it
+  ground      TEXT,             -- R74 (T45): the ground as stated, JSON, NULL before T45
   stated_by   TEXT,             -- the promotion's author
   at          TEXT NOT NULL     -- when it first landed
 );
@@ -256,12 +257,71 @@ CREATE TABLE IF NOT EXISTS action_seeks_proposals (
   proposed_at  TEXT NOT NULL,
   PRIMARY KEY (bundle_id, proposed_by, ord)
 );
+
+-- R80 (T45; S1 §C 9): RECEIPT OR SERVICE OF A SENT ENTRY, a member's record that
+-- the addressee received it (or a party was served), how and when, held as a
+-- capture or her account. Its own table: the ledger entry is never rewritten
+-- (R34). A second record of the same entry appends; the latest is read first.
+CREATE TABLE IF NOT EXISTS action_receipts (
+  bundle_id    TEXT NOT NULL,    -- the action
+  ord          INTEGER NOT NULL, -- the sent correspondence entry
+  seq          INTEGER NOT NULL, -- the record's place among that entry's, from 1
+  kind         TEXT NOT NULL,    -- receipt | service
+  at           TEXT NOT NULL,    -- a date or a local date-time, as stated
+  how          TEXT NOT NULL,
+  party        TEXT,             -- service: the party served
+  artifact_sha TEXT,             -- the capture, XOR account
+  account      TEXT,
+  author       TEXT NOT NULL,
+  recorded_at  TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, ord, seq)
+);
+
+-- R87 (T45; Actions D4): THE CONFIDENTIAL SCOPE, each member's statement
+-- appended; the latest is the action's scope.
+CREATE TABLE IF NOT EXISTS action_scopes (
+  bundle_id    TEXT NOT NULL,
+  seq          INTEGER NOT NULL,
+  confidential INTEGER NOT NULL, -- 1 set, 0 removed
+  reason       TEXT NOT NULL,
+  by           TEXT NOT NULL,
+  at           TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, seq)
+);
+
+-- R88 (T45; Actions D4): PROMISES THE GROUP MADE TO PEOPLE, notes on the action
+-- every participant sees, appended and never edited; one may end an earlier one.
+CREATE TABLE IF NOT EXISTS action_promises (
+  bundle_id    TEXT NOT NULL,
+  seq          INTEGER NOT NULL,
+  kind         TEXT NOT NULL,    -- of action-grammar's PROMISE_KINDS
+  text         TEXT NOT NULL,
+  ends         INTEGER,          -- the seq of the promise this one ends
+  by           TEXT NOT NULL,
+  at           TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, seq)
+);
+
+-- R79, R82 (T45): WHO CHANGED AN ACTION'S PRESS TERMS OR ITS REPLY-OWED STATE,
+-- AND WHEN. The values are the document's own; the projection appends a row each
+-- time a promotion carries a value that differs from the latest row's.
+CREATE TABLE IF NOT EXISTS action_field_history (
+  bundle_id    TEXT NOT NULL,
+  field        TEXT NOT NULL,    -- press_terms | reply_owed
+  seq          INTEGER NOT NULL,
+  value        TEXT NOT NULL,    -- JSON of the stated value
+  reason       TEXT,             -- reply_owed: the member's reason
+  by           TEXT,
+  at           TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, field, seq)
+);
 `;
 
 /** The tables, each keyed to the action by `bundle_id` (record-core R21, R46). */
 export const ACTIONS_TABLES = Object.freeze(["action_basis", "correspondence", "action_quotes",
   "action_law_proposals", "action_risk_proposals", "action_overrides", "action_pressure", "action_holds",
-  "action_hold_projects", "action_seeks_proposals"]);
+  "action_hold_projects", "action_seeks_proposals", "action_receipts", "action_scopes", "action_promises",
+  "action_field_history"]);
 
 /** Creates the tables; idempotent. */
 export function migrateActions(sql) {
