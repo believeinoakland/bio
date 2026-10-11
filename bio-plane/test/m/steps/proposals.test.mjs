@@ -26,7 +26,7 @@ test("R24: stepAccept, a member's act, in one of record-grammar R52's forms, rec
   const a = prop("Ask the clerk"), b = prop("Read the agenda"), c = prop("Call the vendor");
   assert.equal(w.s.stepAccept({ proposal: a, form: "taken", by: ANN }).code, "STEP_BAD_FORM");
   assert.equal(w.s.stepAccept({ proposal: a, form: "as_proposed", by: AI }).code, "STEP_MEMBER_ONLY");
-  assert.equal(w.s.stepAccept({ proposal: a, form: "as_proposed", by: DAN }).code, "NO_SUCH_PROPOSAL", "one she may not see");
+  assert.equal(w.s.stepAccept({ proposal: a, form: "as_proposed", by: DAN }).code, "NO_SUCH_STEP_PROPOSAL", "one she may not see");
   /* Out sees QP1 only if joined to P1; make an invited member: sees, but is not joined, so refused as R1 refuses */
   w.participant(P1, "out", { state: "invited" });
   const refused = w.s.stepAccept({ proposal: a, form: "as_proposed", by: "member:out" });
@@ -67,4 +67,33 @@ test("R26: acceptanceCounts answers, group-wide only, how many were accepted in 
   const figures = w.record.counts(null);
   assert.deepEqual([figures.stepsAcceptedAsProposed, figures.stepsAcceptedEdited, figures.stepsAcceptedOwnInstead], [2, 1, 0]);
   assert.equal(JSON.stringify(w.s.acceptanceCounts()).includes("ann"), false);
+});
+
+test("R28: stepAccept refuses a proposed step that is absent or unseen with NO_SUCH_STEP_PROPOSAL (C-142.28, its number and translation unchanged), never NO_SUCH_PROPOSAL (intent's)", async () => {
+  const { STEPS_CHECKS } = await import("../../../src/steps/index.mjs");
+  const ROW = { check: "C-142.28", translation: "There is no proposed step here by that id that you can see. Nothing was written." };
+  assert.equal(STEPS_CHECKS.NO_SUCH_STEP_PROPOSAL.check, ROW.check);
+  assert.equal(STEPS_CHECKS.NO_SUCH_STEP_PROPOSAL.translation, ROW.translation);
+  assert.equal(Object.hasOwn(STEPS_CHECKS, "NO_SUCH_PROPOSAL"), false, "intent's code is not held here");
+  const w = world();
+  w.runs();
+  w.draw(QP1, P1);
+  const seen = w.s.stepPropose({ place: { questions: [QP1] }, work: "Ask the clerk", why: "y", run: "RUN-1", by: AI }).proposal;
+  const cases = [
+    ["absent: no such id", { proposal: seen + 1000, by: ANN }],
+    ["absent: null", { proposal: null, by: ANN }],
+    ["absent: not an id", { proposal: "PROP-x", by: ANN }],
+    ["unseen: a member who may not see its question", { proposal: seen, by: DAN }],
+    ["unseen: no viewer stamp", { proposal: seen, by: null }],
+  ];
+  for (const [why, args] of cases) {
+    const r = w.s.stepAccept({ form: "as_proposed", ...args });
+    assert.deepEqual([r.ok, r.code, r.reason, r.check, r.translation], [false, "NO_SUCH_STEP_PROPOSAL", "NO_SUCH_STEP_PROPOSAL", ROW.check, ROW.translation], why);
+    assert.notEqual(r.code, "NO_SUCH_PROPOSAL", why);
+  }
+  assert.equal(w.rows(`SELECT COUNT(*) AS n FROM steps`)[0].n, 0, "nothing was written");
+  /* negative control: the same proposal, seen by a joined member, is not refused so, and is taken up */
+  const ok = w.s.stepAccept({ proposal: seen, form: "as_proposed", by: BOB });
+  assert.equal(ok.ok, true);
+  assert.notEqual(ok.code, "NO_SUCH_STEP_PROPOSAL");
 });

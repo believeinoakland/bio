@@ -62,7 +62,7 @@ export const STEPS_CHECKS = {
     translation: "A step is work done toward an answer, never part of what a finding rests on. Rest the finding on what the step found. Nothing was written." },
   STEP_BAD_FORM: { check: "C-142.27", where: at("stepAccept"),
     translation: "A proposed step is taken up as proposed, taken up with your own wording, or set aside for a step of your own. Nothing was written." },
-  NO_SUCH_PROPOSAL: { check: "C-142.28", where: at("stepAccept"),
+  NO_SUCH_STEP_PROPOSAL: { check: "C-142.28", where: at("stepAccept"),
     translation: "There is no proposed step here by that id that you can see. Nothing was written." },
   STEP_PROPOSAL_DECIDED: { check: "C-142.29", where: at("stepAccept"),
     translation: "This proposed step was already taken up or set aside. Nothing was written." },
