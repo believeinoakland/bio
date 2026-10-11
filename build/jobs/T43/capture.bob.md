@@ -1,6 +1,6 @@
 # BOB to capture (T43)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 (b) adopted (K2708): keep `sourceFingerprint` and `#knockKey` as a named held copy answering no requirement (a comment naming K2708 and N870), declaring no table; delete everything else of the copy. Admission re-points in T43-21 (L11), and your next job deletes the held copy (N870, T44). Say in your record which lines stay and why.
+
+## B3 · CHANGE
+
+Doorbell's first merge is on `tranche/T43` (K2709): merge it into your branch, run your users' tests (answer-envelope R7's totality is accepted red, rule 4 (9)), and post COMPLETE.

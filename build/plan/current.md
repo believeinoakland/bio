@@ -30,7 +30,7 @@ It is the only module marked `legacy` in `modules.json`.
    6. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close;
    7. `fleetbundles` agent-worker's 25-input pin until T43-2;
    8. action-clocks `overdue.test.mjs`:151 and action-plans `invariants.test.mjs`:50 until T43-8 (N864);
-   9. from T43-8's merge (capture's delete): answer-envelope R7's totality and pinned-row tests miss doorbell's family until T43-14 (N851).
+   9. from T43-7's first merge (K2709): answer-envelope R7's totality and pinned-row tests miss doorbell's family until T43-14 (N851).
    10. (found at T43's L1, K2704; red on `main` since T42's close) DEC-189's words merged at T42's close (2bfa372ccc): ai-use `counting`:167, `limits`:198, `reads`:144 until T43-11; notice-producers `accounts`:36, 47, 88 until T43-13; affordances `t36`:55 until T43-17; op-declarations `t34`:68, 145, 307, `t37`:105, 177, 218, `t38`:76, 87 until T43-18; and from T42-8 (636f27bb74), case-carriage `invariants`:66, `rereads`:149, 167, 195, 212 until T43-16.
    11. (from T43-6's merge, K2706: the write door's stricter C-2.1, N854) action-clocks `calendar.test.mjs`:60, 132, 201, 247, 278 and `factreader.test.mjs`:39, 72, 80, 119, 138 (`fixture.mjs`:162 prepends a second `counterparty` key) until T43-20; ratification `converted-b.test.mjs`:166 (:180 prepends `edition` twice) until T43-19.
 
