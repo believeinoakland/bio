@@ -254,7 +254,9 @@ test("R82 (checks.mjs:33, BUILD_FAULT): the sentence reads \"This is a fault in 
 const MINTED = { PROJ: "project", CASE: "case", DRAFT: "draft", RVG: "grant", TASK: "task", SRC: "source", EVT: "event", LIN: "line",
                  MNY: "money fact", PFA: "person fact", IDC: "identity claim", CALC: "calculation",
                  /* T41 (K2431): record-grammar R51, R53 */
-                 STP: "step", GUD: "reading guide" };
+                 STP: "step", GUD: "reading guide",
+                 /* T42 (K2616, K2617): record-grammar R55 */
+                 ACD: "case account draft" };
 
 test("R82 R62 (index.mjs:129, C-59.6): MINT_EXHAUSTED's detail reads \"your group's Civicsmith could not find a free … id\" for every prefix, and the unnamed one", () => {
   for (const [p, what] of Object.entries(MINTED))

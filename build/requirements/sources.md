@@ -15,7 +15,7 @@ Holds each source, meaning the knocker, the person who handed material over, and
 Terms. A **source** is the person behind a capture that was given to the group rather than fetched, held under its own id. A **disclosure** is one entry of its history: what was revealed about the source, how, to whom it is known, with its evidence. An **audience** is `member`, `group` or `public`, lowest to highest. `by` and `viewer` are the control plane's stamps, never a body's. Every refusal names its `reason` and `code`, and carries its row's `check` and `translation`.
 
 **sourceOf({captureSha, viewer})**
-- **R1** A source exists for each pulled knock (`capture` R65): one per pseudonym, and one per knock sent without a secret. `sourceOf({captureSha, viewer})` answers the source as it stood when the capture was received (the capture's own `source`, verbatim) and, beside it, the source's current history (R5 governs which values the viewer reads). A capture's stated source never changes.
+- **R1** A source exists for each pulled knock (`doorbell` R13; T42, K2624): one per pseudonym, and one per knock sent without a secret. `sourceOf({captureSha, viewer})` answers the source as it stood when the capture was received (the capture's own `source`, verbatim) and, beside it, the source's current history (R5 governs which values the viewer reads). A capture's stated source never changes.
 
 **recordDisclosure({source, revealed: {kind, value?}, how, knownTo, evidence, recorded, sight?, by})** (`op=sourcedisclose`)
 - **R2** `kind` is one of `pseudonym_link`, `attribute` (occupation, employer, role), `name`. `how` is one of `self`, `filing`, `third_party`, `hostile`. `knownTo` is one of `member`, `group`, `public`. `evidence` is required. The entry is appended with `by` (a stamp) and the instant, and never edited; a later entry supersedes it on read. Refusals: `NO_SUCH_SOURCE` (C-121.1), `BAD_DISCLOSURE` (C-121.2, naming the field), `NO_EVIDENCE` (C-121.3).
@@ -37,7 +37,7 @@ Terms. A **source** is the person behind a capture that was given to the group r
 - **R10** Each registration goes through `membership.listenerRefusal`, and each listener is called after every R2, R6 or R7 commit with `{source, entry, rung_before, rung_after}`; an R6 `same_secret` link that moves the linked source's rung also calls each listener for that source, with the same entry. A listener's failure never undoes the act.
 
 **consentBySecret({knockerSecret, entry, audience, withdraw?})** (`op=knockerconsent`, no account)
-- **R11** A source proves who they are by presenting their knocker secret (its digest and pseudonym as `capture.knockerDigestOf` answers them), and consents to, or withdraws from, one entry for one audience, as R7 records a consent. `SECRET_NOT_RECOGNISED` (C-121.6) is answered identically for every failure, and the act is rate-bound as a knock is, in the same windows as knocks (`capture` R31): a consent attempt counts as a knock from its source (K530).
+- **R11** A source proves who they are by presenting their knocker secret (its digest and pseudonym as `doorbell.knockerDigestOf` answers them, its R14; T42, K2624), and consents to, or withdraws from, one entry for one audience, as R7 records a consent. `SECRET_NOT_RECOGNISED` (C-121.6) is answered identically for every failure, and the act is rate-bound as a knock is, in the same windows as knocks (`capture` R31): a consent attempt counts as a knock from its source (K530).
 - **R15** (K547) `source_knocks` is a read contract for later modules (`reevaluation` R28), as `inquiry` R40's columns are: one row per pulled knock a source stands behind, `(knock_id, source_id, capture_sha, bytes, received)`, written for every pulled knock of the source's pseudonym when the source is minted, and for one pulled later before any act that moves its rung; it holds no value, secret or contact, and its columns keep these names.
 
 **markKeyedResult({captureSha, service, terms, by}), keyedResultOf(captureSha)** (`op=sourcekeyed`; T33-22; K1492 (3), K1449)
@@ -53,7 +53,7 @@ Terms. A **source** is the person behind a capture that was given to the group r
 - `record-core`: `transact`, `stampInstant`, `mintOpaqueId` (a source's id) and `mintExhausted` (its R62, when no source id can be drawn; N376), `declarePurge` (R13's exemption), and `declareTable` (its R21; R19, T33-22).
 - `provenance`: `captureGrade` (R17), and `record-grammar`'s `BASIS_GRADES` (R17).
 - `membership`: `listenerRefusal` (R10), the member session stamp, `activeAdmins` (R5's administrators).
-- `capture`: the inbox rows (`knocker_digest`, `pseudonym`, status; its R32, R66), `knocksOf` (its R67), `knockerDigestOf` (its R66; R11), the capture's `source` (`acquisition` R16, its R65), the knock's rate (its R31; R11).
+- `doorbell` (T42, K2624; was `capture`): the inbox rows (`knocker_digest`, `pseudonym`, status; its R3, R14), `knocksOf` (its R15), `pulledKnocksOf` (its R18), `knockerDigestOf` (its R14; R11), `knockAttempt` (its R17), the pulled knock's `source` (`acquisition` R16, its R13), the knock's rate (its R2; R11).
 
 ### Invariants
 
@@ -86,7 +86,7 @@ Rows C-121.1–C-121.10 (R14; N364; C-121.7–.10 K1549), a new family, "a sourc
 ### Suggestions
 
 - **Factory.** `sourcesOf(ctx)` answers the one instance per Durable Object storage (K61); the op handlers live in this module's paths, and the control plane routes them and stamps `by` and `viewer`.
-- **Where a source comes from.** `capture` is earlier and cannot call this module, so R1's sources are derived from capture's pulled inbox rows at read (one per pseudonym, one per knock without a secret), or minted on first read and kept; either keeps R1 true.
+- **Where a source comes from.** `doorbell` is earlier and cannot call this module, so R1's sources are derived from the doorbell's pulled inbox rows at read (one per pseudonym, one per knock without a secret), or minted on first read and kept; either keeps R1 true.
 - **Hand-carried material** (K509 (5)) has no intake route yet: R12 is its rule, and its intake is built with the upload redesign.
 - **Callers.** `reevaluation` registers on R10 (its R28); `publication` (its R51, R52) and `case-disclosures` (its R4) read R8; `op-grades` grades the ops (its R1, R2).
 - **Tests.** Each C-121 refusal gets a negative control; R5's withheld value and read log; R3's hostile claim never reads confirmed; R7's withdrawal leaves an earlier publication's statement unchanged; R11's refusal byte-identical for a wrong secret, an unknown entry and a malformed call; R13's exemption declared.

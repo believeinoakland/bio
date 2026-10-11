@@ -1,6 +1,7 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R4–R127; T40's R127 `joinedParticipants` (K2404), R122 `notTheOwner`, R123–R125 the handle check, the
+ * Requirements: build/requirements/membership.md (R4–R127; T42's R83 order (`doorbell`, `case-account`; T42-3, K2607, K2608)
+ * and R60's hold acts at a hidden project's EXISTENCE, met through R44 and R85 (N833, K2484; `actions` asks them); T40's R127 `joinedParticipants` (K2404), R122 `notTheOwner`, R123–R125 the handle check, the
  * handle change and its guard, R126's rows, R16, R17, R55 and R57 as amended, and R83's order with `ai-use` (T40-M; N797,
  * N799, N812; DEC-184, DEC-186; K2373, K2376, K2394); T38's R116–R121, project-roster's seams and N793's
  * `noSuchMember` (T38-4; N783, N793, K2270, K2271, K2275), and R83's order with `project-roster`; T39's R83 order
@@ -248,7 +249,9 @@ export function notTheOwner(by, projectId, extra = null) {
    K657, K2333, K2343): `doc-clean` after `image-cover` in layer 1, `setup-words` before `instance-setup` in layer 11.
    T40-M (N812 B10; K657, K2373, K2389): `ai-use` after `run-rules` in layer 6, before `ai-runs`. T41-3 (N820, N823;
    K657, K2431): `steps` after `hypotheses`, `reading-guides` after `capture-requests` and `question-explorer` after
-   `skills` in layer 6, `investigation` after `intent` in layer 7, `publish-schedule` after `publication` in layer 8. */
+   `skills` in layer 6, `investigation` after `intent` in layer 7, `publish-schedule` after `publication` in layer 8.
+   T42-3 (N826, N839; K657, K2607, K2608): `doorbell` after `capture` in layer 3, `case-account` after
+   `case-disclosures` and before `case-authoring` in layer 8. */
 export const MODULE_ORDER = Object.freeze([
   /* 1 */ "record-grammar", "jurisdictions", "civil-time", "calc-grammar", "connection-grammar", "test-support",
           "runtime-limits", "signatures", "bundler", "court-citations", "id-spaces", "subresources", "ooxml",
@@ -257,7 +260,7 @@ export const MODULE_ORDER = Object.freeze([
           "pdf-pixels", "image-cover", "doc-clean", "pdf-worker", "ocr-worker", "sheet-worker", "file-scanner",
   /* 2 */ "record-core", "membership", "project-roster", "credentials", "promotion",
   /* 3 */ "host-governor", "provenance", "attestation", "provenance-routes", "capture-sources", "acquisition",
-          "capture", "file-safety", "sources",
+          "capture", "doorbell", "file-safety", "sources",
   /* 4 */ "calibration", "reading-pipeline", "extraction", "content",
   /* 5 */ "entities", "events", "lines", "local-facts", "connections", "observation-log", "law-relations", "standards",
           "progressions", "money", "money-checks", "duties", "people", "explore", "bias", "query-language", "retrieval",
@@ -269,7 +272,7 @@ export const MODULE_ORDER = Object.freeze([
   /* 7 */ "intent", "investigation", "reevaluation",
   /* 8 */ "case-grammar", "corpus-export", "case-carriage", "case-tensions", "publication", "publish-schedule",
           "docket", "public-read", "project-stage", "network-notices", "case-catalogue", "ratification", "case-checker", "case-import",
-          "case-disclosures", "case-authoring", "review",
+          "case-disclosures", "case-account", "case-authoring", "review",
   /* 9 */ "conformance", "consequences", "action-grammar", "actions", "action-clocks", "filing-templates", "filings",
           "escalation", "action-plans",
   /* 10 */ "monitoring", "following", "link-sweep", "scheduler",
