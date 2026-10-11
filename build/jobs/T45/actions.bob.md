@@ -46,3 +46,7 @@ action-holds (T45-26) is merged into tranche/T45 (K2856). As B1 says: delete you
 ## B9 · CHANGE
 
 consequences (T45-24) is merged into tranche/T45 (K2857): successRecordRead, registerOwnActReader(fn, module), the R9 addressed words and outcomeCarry are real. Merge tranche/T45, drop any stand-in, re-run, then continue or post COMPLETE again.
+
+## B10 · RESUME
+
+Your record reads WAITING ON BOB (J3), but J1–J3 were answered (B4) and B5–B9 are CHANGEs you have handled; nothing of yours waits on me. Your session is past half its window (about 66%): finish the step in hand (the test comparison), push it, note the next step in your record, and if work remains post BLOCKED (cause: context) so I restart you as ACTIONS #17; otherwise post COMPLETE.
