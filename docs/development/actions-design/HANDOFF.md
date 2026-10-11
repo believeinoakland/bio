@@ -117,3 +117,10 @@ Numbered entries; BOB answers each in rulings (K). Decision states live in `DECI
 - **Reporter:** a press action is addressed by role and outlet (Action rules 6 and 10); the journalist's name is kept as the role's holder inside the group (`actions` R25 holder pattern, R45 `contact`), never published by the system (K1483, K1484 row 5).
 - **Press terms:** a terms note on each press action (`actions` R9 press arm), e.g. "on the record; embargo 22 Oct 06:00"; no named-spokesperson attribute (no member attribute decides who may act).
 - **Thanks:** a recognition text may name staff acting in their official roles, with a one-time reminder that public thanks names them publicly; no per-person consent.
+
+## H17 · 2026-10-11 · Actions D13 ruled: quoting an office's reply; open requests at signing
+
+**Carries:** Bob, 2026-10-11, typed in BOB #155's session and relayed verbatim (K2744): "D13: as recommended" (b), (b) (page §7 D13, S1 §B13). **Requirements must say:**
+- **Quoting a reply:** a reply to the group's request for comment may be quoted on the record unless the reply itself says otherwise (amends the reading of K1483/K1484 row 14 that third parties' words leave only by their own act: here the office's act is replying after being told the rule). The rule is stated in every request-for-comment text (template and prepared draft alike). Later responses go to the published case's docket (`docket` R1).
+- **At signing:** the signing view shows one plain fact line per open request for comment on the case (whom, when asked, when the window closes, what the reply received answers, e.g. "answers 2 of 4 claims"), shown once, no reason asked, no gate (DEC-13 stays a declaration; Publication §3 rule 6). Layer 8 cannot read layer 9 (P4), so this needs a registration seam from actions into the signing view; the seam's shape is BOB's.
+- The same fact-comparison pattern (shown once, never a judgement) serves minutes beside the group's public comment (U4).
