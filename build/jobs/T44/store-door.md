@@ -32,3 +32,14 @@ The fixture cannot drop capture, so the edge holds whatever is done with the neg
 - `ownership store-door tranche/T44`: 3 files changed; 0 failures.
 
 Size (session_01U9FpNxmervkjfMtrigQ23J): test runs 2, module lines 2217
+
+## J1 · COMPLETE
+
+T44-12 done on job/T44/store-door (work commit fe74a20a85, module files only; record has the detail).
+- N875: in pull.test.mjs, :15 and :45 are re-worded so that C-118.7 is the doorbell's alone (doorbell R21; K2609, K2726). The test already reads the row from doorbell's family (DOORBELL_CHECKS.RESOLVE_NO_REASON, src/doorbell/checks.mjs). No assertion changed.
+- capture is still used, so keep the store-door → capture edge. src/store-door imports nothing from capture, but the shared test fixture record.mjs builds, migrates and routes capture as the composition root does (doorbell R25 reads captureOf(ctx).env), and R7's T42 negative control in pull.test.mjs uses captureOf ("never captureOf").
+- I read my own code and tests whole (P20). I found one stale comment and fixed it: dispatch.mjs:272, R10's relayed refusal named AI_NO_ACCOUNT; it is now NO_ACCOUNT (K2577). I found no flaw in behaviour, and nothing is deferred.
+- Reading set (1172 KB): my own files read whole by me. One helper read the public parts of doorbell, capture and answer-envelope and layer 11's contract, and wrote a digest citing sections (K2032).
+- For BOB (requirements are yours): my R7 (store-door.md:30) still says "defined in capture's table until T43". Suggested words: "defined in its table alone since T43, K2609, K2726". The Uses entry for capture (:42) should describe the remaining test-only use (the fixture's composition and R7's negative control).
+- Tests: store-door 44 pass, 0 fail. User plane: 191 pass, 0 fail, no skip.
+- Checks: format, architecture, coverage (13 of 13) and ownership (3 files) all show 0 failures. The plane bundle is staled as usual (rule 4 (5)).
