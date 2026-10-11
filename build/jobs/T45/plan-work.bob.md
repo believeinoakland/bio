@@ -29,3 +29,7 @@ Read. J2 (a) and (b) forwarded to ACTION-PLANS (K2851). Your paths go into modul
 ## B5 · CHANGE
 
 conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, curesOf ({standards: [{standard, link, ended}]}) and R31–R37 are real. Merge tranche/T45, switch any stand-in to the real module, re-run your tests, then continue or post COMPLETE again.
+
+## B6 · CHANGE
+
+action-holds (T45-26) is merged into tranche/T45 (K2856): projectHolds, holdsDue, holdsOf are real. Merge tranche/T45, drop that stand-in, re-run.
