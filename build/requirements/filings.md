@@ -97,6 +97,7 @@ Rows (T45), C-115's next numbers at the job's stamp, translations BOB's drafts a
 - `public-read` (K651): the evidence-package registration it offers (its R8; R15); `inbandQuartet` (its R7; R22); the public reads its tests read (`publishedCase`, `verifySha`, `publishedList`, `publishedManifest`: its R3, R1, R2, R4).
 - `standards`: `standardRead`, `inForce` (R3, R9). (T35) Its `access`, `designation`, `edition` and `adoption` (T35-31), for R8's carriage of a copyrighted or paywalled standard.
 - `conformance`: `determinationRead` (R3, R8, R9, R12).
+- (T45; K2848) `case-checker` (L8): `checkAccount` (its R24), R34's per-sentence judgment, called by this module itself (case-account's check is offered to no other module, its R13); new edge, BOB's.
 - `actions`: `actionRead`, `actionCorrespond`; `noSuchAction` (its R43), through which R1's, R8's and R13's `NO_SUCH_ACTION` is answered, in place of C-115.2 (N217, K275).
 - `action-clocks`: `clockPropose` (its R2; R7, R9), moved from `actions` R32 by K617's split; `factReader` (its R12; R30), in place of this module's own copy (K998, N474).
 - `filing-templates` (K921, K922): `FILING_BLANKS`, `FILING_TEXT_MAX`, `blanksOf` (its R19; R3, R28), `offeredVersion` (its R25; R28, R31), `templateDraft` (its R3; R32), `templateRead` (its R14; R13, R29), `templatesFor` (its R14; R28's `TEMPLATE_NOT_NAMED` list), `TEMPLATE_USES`.

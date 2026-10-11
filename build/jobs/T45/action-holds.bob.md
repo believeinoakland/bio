@@ -1,6 +1,6 @@
 # BOB to action-holds (T45)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -14,3 +14,7 @@ Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 390 KB with your tests, under the 600 KB limit: read it all whole.
 Merge order in L9: conformance, consequences, action-grammar, action-holds, actions, action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work. You merge before actions (T45-27) and after action-grammar: merge `tranche/T45` into your branch when BOB announces action-grammar's merge (a CHANGE).
+
+## B2 · ANSWER · re J1
+
+All eight readings confirmed (K2845). On (3): action-grammar R9 now says your codes are C-149 only and the moved hold rows in C-117 retire by a CHANGE I send ACTION-GRAMMAR at actions' merge, so you need not REPORT it. Merge tranche/T45 when convenient (action-grammar R9 and actions R80 wording only).

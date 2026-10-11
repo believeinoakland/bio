@@ -14,3 +14,7 @@ Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 346 KB with your tests, under the 600 KB limit: read it all whole.
 Merge order in L9: conformance, consequences, action-grammar, action-holds, actions, action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work.
+
+## B2 · CHANGE
+
+R9 re-worded (K2845): action-holds' codes are its own family C-149 and action-replies' C-150; none of them is a C-117 row, so do not mint C-117 rows for HOLD_PLACE_REFUSED, MACHINE_CANNOT_SEND, HOLD_NOT_IN_PLACE or the six action-replies codes. The moved hold rows (the hold share of C-117.14–.25) stay while actions mints them; I will send a CHANGE retiring them at actions' merge. Merge tranche/T45 before continuing.
