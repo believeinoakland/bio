@@ -34,3 +34,7 @@ R36 (T44) `refused`: two cases the clause does not name. (1) A renderer answerin
 ## J2 · COMPLETE
 
 T44-13 done on job/T44/plane (0290a7ada5): R36 `refused` per asked page (K2769's readings), R6 `by` = class:ai/<tokenId> for an ai caller; two stale store.mjs comments fixed from the whole read (own code and tests read whole; used modules' public parts by one helper's cited digest). Plane tests + release suite (migrate-released): 197/197. extraction pageTranscribe tests 22/22. affordances 231/233, the 2 reds rule 4 (6) (t36.test.mjs R48, until T44-9). Checks format, architecture, coverage (38/38), ownership all 0. No reds of mine. I merge tranche/T44 on your CHANGE after the other L11 merges and re-run. Details and Size line in my record.
+
+## J3 · COMPLETE
+
+B3 done: tranche/T44 merged into job/T44/plane, no conflict. Plane tests + release suite 197/197; extraction transcription tests 22/22; affordances 226/226; format, architecture, coverage (38/38), ownership all 0. No reds. Ready to merge (plane last in L11).
