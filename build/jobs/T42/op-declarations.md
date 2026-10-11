@@ -50,3 +50,19 @@
 **Deferred.** None. The `ACT_HELP_ABSENT` comment's "28 aliases" describes the PR #13 reading, so I left it; the list holds 27 today.
 
 Size (session_01Wu8uik71zHTxjU6oJ3EtBz): test runs 9, module lines 3426
+
+## J1 · COMPLETE
+
+T42-26 applied (record: build/jobs/T42/op-declarations.md, Completion).
+- R47: pagetranscribe is declared in a new extraction family (kind member): session only, contribute, by and viewer stamped. sha256 and the optional project are read from the address through pageTranscribeOp, as pdfstructure's sha256. ACT_HELP_ABSENT names it under the unexplained ground.
+- R48: accountpropose and accountdrafts are now in a case-account family, unchanged otherwise; no case-authoring family remains.
+- Edges added to modules.json: op-declarations -> extraction and op-declarations -> case-account. This is ownership's 1 failure, the edit you directed in B1.
+- Tests: new t42.test.mjs (5 tests: R47, R48, R34, R6, each with a negative control). t33 and t41 re-pointed to case-account.
+- Results: op-declarations 133 pass, 0 fail. format, architecture and coverage (47/47) 0 failures.
+- Users' suites:
+  - admission 41/0 and plane 166/0.
+  - control-plane 215/1: test/m/control-plane/totality.test.mjs:17 (R2, R41) lists pagetranscribe as unpublished and unranked. It passes on the tranche tip without my change, and should clear with op-grades R31 (T42-25a) and affordances' merges.
+  - legacy-ui 35/3: statement-ack is inherited (rule 4 (4)). progression-revision.test.mjs and queue-recipients.test.mjs also fail on origin/tranche/T42 without my change, so they are not this job's.
+- Found for other jobs:
+  1. extraction's pageTranscribeOp reads the actor as author (ops.mjs:74, 82; index.mjs:1739). Control-plane R74's hook should hand author from the session, as it does for pdfstructure.
+  2. control-plane's owner-ops.mjs:37-38 still call of.caseAuthoring() for the account ops; this awaits its R71 re-point.
