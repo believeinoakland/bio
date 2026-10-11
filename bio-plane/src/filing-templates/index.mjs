@@ -8,7 +8,8 @@
  * professionals review it through a revocable grant; a member who is not its sole author approves it after the
  * reviews its tier requires. Every approved version is offered for a filing (an earlier one reads `updated`), the
  * latest by default; a retired template offers none. A machine proposes wording and comments, labelled, and nothing
- * else (R22). The profile's templates are read here as approved versions, read-only (R15). It also publishes the
+ * else (R22). The profile's templates are read here as approved versions, read-only (R15), and since T45 offered only
+ * when attributed as v0.2 rule 11 asks, each by its own name (R26), never a court petition (R28). It also publishes the
  * closed set of blanks every template and filing uses (R19, `./blanks.mjs`).
  *
  * A NEW MODULE (T21, layer 9; K921). Copied from `filings` (K624 (1)): `FILING_BLANKS` and `FILING_TEXT_MAX`
@@ -243,22 +244,72 @@ export class FilingTemplates {
     return tiers.length ? Math.max(...tiers) : "undetermined";
   }
 
-  /* R15: the profile's templates, one per active profile and kind, each an approved version of origin `profile`, scope
-     `group`, its profiles the profile it is in. */
+  /* R15: the profile's templates, every template each active profile's kinds carry (T45: a kind's `templates`,
+     `jurisdictions` R81, or its single `template`, read as that set of one), each an approved version of origin
+     `profile`, scope `group`, its profiles the profile it is in. R26 (T45): its name is its own (R87 (b)); a single
+     `template` written without one is named by its kind's label, as before T45. */
   #profileTemplates() {
     const out = [];
     for (const pid of this.#activeIds()) {
       const p = this.#profile(pid);
       for (const k of p && Array.isArray(p.action_kinds) ? p.action_kinds : []) {
-        const t = k && k.template;
-        if (!t || typeof t !== "object" || typeof t.text !== "string" || !str(t.id)) continue;
-        if (out.some((x) => x.id === t.id)) continue;
-        out.push({ id: t.id, origin: "profile", kind: k.kind, use: t.use, profiles: [pid], name: str(k.label) || k.kind,
-                   scope: "group", project: null, bundle_id: null, widened: null, retired: null,
-                   created_at: str(t.approved_at) || "", profileTemplate: t, tier: [1, 2, 3].includes(k.tier) ? k.tier : "undetermined" });
+        if (!k) continue;
+        const set = Array.isArray(k.templates) ? k.templates : k.template ? [{ ...k.template, purpose: "initial" }] : [];
+        for (const t of set) {
+          if (!t || typeof t !== "object" || typeof t.text !== "string" || !str(t.id)) continue;
+          if (out.some((x) => x.id === t.id)) continue;
+          out.push({ id: t.id, origin: "profile", kind: k.kind, use: t.use, profiles: [pid], name: str(t.name) || str(k.label) || k.kind,
+                     scope: "group", project: null, bundle_id: null, widened: null, retired: null,
+                     created_at: str(t.approved_at) || "", profileTemplate: t, court: !!(k.venue && k.venue.how === "court"),
+                     tier: [1, 2, 3].includes(k.tier) ? k.tier : "undetermined" });
+        }
       }
     }
     return out;
+  }
+  /* R28: the first profile, of those a template names (for a `general` one, the active view's), whose venue for the
+     kind is filed with a court (`venue.how: court`), or null. */
+  #courtIn(kind, profiles) {
+    for (const p of Array.isArray(profiles) ? profiles : this.#activeIds()) {
+      const e = this.#kindIn(this.#profile(p), kind);
+      if (e && e.venue && e.venue.how === "court") return p;
+    }
+    return null;
+  }
+  #courtPetition(kind, profile, extra = {}) {
+    /* DEC-49 REGION is-court-petition */
+    return refuse("TEMPLATE_COURT_PETITION", `the kind's venue in the profile '${String(profile).slice(0, 60)}' is a court: no template the `
+      + "group files in its own name is kept for it until a licensed professional can certify one; a brief template may serve it",
+      { kind, profile, ...extra });
+    /* END DEC-49 REGION is-court-petition */
+  }
+  /* R15 (T45; v0.2 rule 11): what a profile template's attribution lacks of a named writer, the public sources it was
+     written from, a professional's review with no concerns, and an approver other than its writer. */
+  static #lacks(p) {
+    const out = [];
+    const writer = str(p.authored_by);
+    if (!writer) out.push("writer");
+    if (!(Array.isArray(p.sources) && p.sources.some((x) => x && str(x.citation)))) out.push("sources");
+    if (!(Array.isArray(p.reviews) && p.reviews.some((r) => r && r.kind === "professional" && r.outcome === "no_concerns" && str(r.reviewer))))
+      out.push("professional_review");
+    if (!str(p.approved_by) || (writer && str(p.approved_by) === writer)) out.push("approver");
+    return out;
+  }
+  /* R15, R28: why a profile template is not offered, as a refusal, or null (a group template: null). In order: a blank
+     outside FILING_BLANKS, a file template on a court's kind, an attribution that lacks a part. */
+  #profileRefusal(t) {
+    if (!t || t.origin !== "profile") return null;
+    const blank = blanksOf(t.profileTemplate.text).unknown;
+    if (blank) return refuse("TEMPLATE_BLANK_UNKNOWN", `{{${blank}}} is not a blank filings fill, so this template is not offered`,
+                             { template: t.id, blank });
+    if (t.use === "file" && t.court) return this.#courtPetition(t.kind, t.profiles[0], { template: t.id });
+    const lacks = FilingTemplates.#lacks(t.profileTemplate);
+    /* DEC-49 REGION is-profile-offered */
+    if (lacks.length)
+      return refuse("TEMPLATE_NOT_REVIEWED", `the profile's template is not offered: its attribution lacks ${lacks.join(", ")}`,
+                    { template: t.id, lacks });
+    /* END DEC-49 REGION is-profile-offered */
+    return null;
   }
 
   /* ================================================================ templates and their sight (R24) */
@@ -418,6 +469,8 @@ export class FilingTemplates {
       approved: { by: { name: p.approved_by }, at: p.approved_at ?? null, tier: t.tier, profiles: t.profiles, reason: null,
                   basis: p.basis ?? null, profile: t.profiles[0] },
       updated_by: null, ended: null, submitted: null, reviewers: [], revisions: [], created_at: p.approved_at ?? null,
+      sources: (Array.isArray(p.sources) ? p.sources : []).filter((x) => x && str(x.citation)).map((x) => ({ citation: x.citation })),
+      purpose: str(p.purpose),
     };
   }
   /* R14: a version as a list shows it. */
@@ -432,8 +485,6 @@ export class FilingTemplates {
     return { id: t.id, kind: t.kind, use: t.use, profiles: t.profiles, name: t.name, scope: t.scope, origin: t.origin,
              ...(t.retired ? { retired: t.retired } : {}), ...extra };
   }
-  /* R15: a profile template whose text names a blank outside FILING_BLANKS is not offered. */
-  static #badBlank(t) { return t.origin === "profile" ? blanksOf(t.profileTemplate.text).unknown : null; }
 
   /* ================================================================ the judges (R1, R2, R12) */
 
@@ -463,6 +514,8 @@ export class FilingTemplates {
     }
     if (use === "file" && this.#tierOf(kind, profiles) === 3)
       return refuse("TEMPLATE_TIER3_FILE", "the kind's tier is 3: no file template is kept for it; a brief template may serve it", { kind });
+    const court = use === "file" ? this.#courtIn(kind, profiles) : null;
+    if (court) return this.#courtPetition(kind, court);
     if (!oneLine(name, TEMPLATE_NAME_MAX))
       return refuse("TEMPLATE_NAME_REFUSED", `a template is named in one line of 1 to ${TEMPLATE_NAME_MAX} characters`, { max: TEMPLATE_NAME_MAX });
     const taken = this.#rows(`SELECT template_id FROM tpl_templates WHERE project IS ? AND name=?`, project, name.trim())
@@ -1078,7 +1131,7 @@ export class FilingTemplates {
       const stateOf = (n) => (t.origin === "profile" ? "approved" : this.#stateOf(events, n));
       let pick;
       if (!st || st === "offered") {
-        if (t.retired || FilingTemplates.#badBlank(t)) continue;
+        if (t.retired || this.#profileRefusal(t)) continue;
         pick = numbers.filter((n) => OFFERED.includes(stateOf(n)));
       } else if (st === "retired") pick = t.retired ? numbers : [];
       else pick = t.retired ? [] : numbers.filter((n) => stateOf(n) === st);
@@ -1113,13 +1166,13 @@ export class FilingTemplates {
     const adopted = this.#rows(`SELECT DISTINCT p.* FROM tpl_proposals p JOIN tpl_revisions r ON r.adopted=p.proposal_id
                                  WHERE r.template_id=? AND r.version=? ORDER BY p.proposal_id`, t.id, n)
       .map((x) => ({ id: x.proposal_id, sha: x.sha, why: x.why, at: x.at, label: proposalLabel(x.proposer, "template") }));
-    const bad = FilingTemplates.#badBlank(t);
+    const not = this.#profileRefusal(t);
     return { ok: true, template: FilingTemplates.#head(t), version: { ...view, proposals_adopted: adopted },
              comments: this.#one(`SELECT COUNT(*) AS c FROM tpl_comments WHERE template_id=? AND version=?`, t.id, n).c,
-             offered: OFFERED.includes(view.state) && !t.retired && !bad,
+             offered: OFFERED.includes(view.state) && !t.retired && !not,
              ...(view.state === "approved" && n === this.#latestApproved(t, events) ? { default: true } : {}),
-             ...(bad ? { blank_unknown: withRow({ ok: false, reason: "TEMPLATE_BLANK_UNKNOWN", blank: bad,
-                                                 detail: `{{${bad}}} is not a blank filings fill, so this template is not offered` }) } : {}) };
+             ...(not ? { not_offered: not } : {}),
+             ...(not && not.reason === "TEMPLATE_BLANK_UNKNOWN" ? { blank_unknown: not } : {}) };
   }
 
   /* ================================================================ R25: offeredVersion */
@@ -1172,9 +1225,8 @@ export class FilingTemplates {
       if (!t) return this.#noTemplate(template);
     }
     if (t.retired) return this.#retired(t);
-    const bad = FilingTemplates.#badBlank(t);
-    if (bad) return refuse("TEMPLATE_BLANK_UNKNOWN", `{{${bad}}} is not a blank filings fill, so this template is not offered`,
-                           { template: t.id, blank: bad });
+    const not = this.#profileRefusal(t);
+    if (not) return not;
     const events = t.origin === "profile" ? [] : this.#events(t.id);
     const latest = this.#latestApproved(t, events);
     const n = version === null || version === undefined || version === "" ? latest : this.#versionOf(t, version);
@@ -1185,8 +1237,8 @@ export class FilingTemplates {
         : `the version is ${state}: only an approved or updated version is offered`,
         { template: t.id, ...(n !== null ? { version: versionId(t.id, n), state } : {}) });
     /* END DEC-49 REGION is-offered-version */
-    const { id, version: number, ...meta } = this.#listed(this.#versionView(t, n, events), n === latest);
     const view = this.#versionView(t, n, events);
+    const { id, version: number, ...meta } = this.#listed(view, n === latest);
     return { ok: true, template: t.id, version: id, number, use: t.use, kind: t.kind, profiles: t.profiles, origin: t.origin,
              name: t.name, sha: view.sha, text: view.text, ...meta };
   }

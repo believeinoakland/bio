@@ -1,8 +1,8 @@
-/* actions' tables (requirements: `build/requirements/actions.md`, R3, R8, R19, R28, R36, R48, R52; K4). Moved from
- * `schema.mjs` (legacy-store) with their comments; `action_risk_proposals` (R28, REC-215) is new;
- * `action_clock_proposals` (R32) moved to `action-clocks` (K617); `action_overrides` (R8) and `action_pressure` (R48)
- * are T18's, `action_holds` (R52) T20's, `action_hold_projects`
- * (R52, R56; DEC-113) T27's. Each is keyed by the action's `bundle_id` and declared to record-core's purge
+/* actions' tables (requirements: `build/requirements/actions.md`, R3, R8, R19, R28, R36, R73, R79, R80, R82, R87, R88;
+ * K4). Moved from `schema.mjs` (legacy-store) with their comments; `action_risk_proposals` (R28, REC-215) is new;
+ * `action_clock_proposals` (R32) moved to `action-clocks` (K617); `action_overrides` (R8) is T18's; T45 adds the receipts,
+ * scopes, promises and field histories, and moves `action_pressure`, `action_holds` and `action_hold_projects` (R48, R52)
+ * to `action-holds` (its R13, K2781 (1)). Each is keyed by the action's `bundle_id` and declared to record-core's purge
  * (K23), so a purge of that action clears its rows. The projection columns on `bundles` are retrieval's; this module
  * only supplies their values (R12). */
 
@@ -194,53 +194,9 @@ CREATE TABLE IF NOT EXISTS action_risk_proposals (
 CREATE TABLE IF NOT EXISTS action_overrides (
   bundle_id   TEXT PRIMARY KEY, -- the action
   reason      TEXT NOT NULL,    -- as the document states it
+  ground      TEXT,             -- R74 (T45): the ground as stated, JSON, NULL before T45
   stated_by   TEXT,             -- the promotion's author
   at          TEXT NOT NULL     -- when it first landed
-);
-
--- R48 (K597 (1)): PRESSURE MARKED ON A RECEIVED ENTRY - a threat, retaliation,
--- discrediting or legal harassment directed at the group. A member's mark, kept
--- in this table and never written into the entry (the ledger is append-only,
--- R34); one mark per entry.
-CREATE TABLE IF NOT EXISTS action_pressure (
-  bundle_id   TEXT NOT NULL,    -- the action
-  ord         INTEGER NOT NULL, -- the received correspondence entry
-  kind        TEXT NOT NULL,    -- legal | retaliation | discrediting | other
-  note        TEXT NOT NULL,
-  marked_by   TEXT NOT NULL,    -- the member who marked it
-  at          TEXT NOT NULL,
-  PRIMARY KEY (bundle_id, ord)
-);
-
--- R52 (K899 (7), DEC-61): A LITIGATION HOLD stated on a received entry marked
--- pressure of kind legal: in_place (the group is preserving what the matter may
--- reach) or released, with the member's reason. Each statement is appended and
--- never rewritten; the latest for an entry (its highest seq) is its hold. While
--- an entry's hold is in_place, no material of a project it covers, and not the
--- action itself, is purged (R60; DEC-113, K1252).
-CREATE TABLE IF NOT EXISTS action_holds (
-  bundle_id   TEXT NOT NULL,    -- the action
-  ord         INTEGER NOT NULL, -- the received entry carrying the legal mark
-  seq         INTEGER NOT NULL, -- the statement's place among that entry's, from 1
-  hold        TEXT NOT NULL,    -- in_place | released
-  reason      TEXT NOT NULL,
-  stated_by   TEXT NOT NULL,    -- the member who stated it
-  at          TEXT NOT NULL,
-  PRIMARY KEY (bundle_id, ord, seq)
-);
-
--- R52, R56 (DEC-113): A HOLD STATEMENT'S PROJECTS. For an in_place statement,
--- the projects it records: the action's own project (filled in by this module)
--- and each project the member named. For a released statement, the projects
--- it restarted (R56's restarted, computed in the release's transaction,
--- whatever the releasing member may see). Appended with its statement and
--- never rewritten.
-CREATE TABLE IF NOT EXISTS action_hold_projects (
-  bundle_id   TEXT NOT NULL,    -- the action
-  ord         INTEGER NOT NULL, -- the entry carrying the hold
-  seq         INTEGER NOT NULL, -- the statement (action_holds.seq)
-  project     TEXT NOT NULL,    -- a project id
-  PRIMARY KEY (bundle_id, ord, seq, project)
 );
 
 -- R73 (K2561): A PROPOSAL OF WHAT A RECORDS REQUEST SEEKS, stored apart from the
@@ -256,12 +212,70 @@ CREATE TABLE IF NOT EXISTS action_seeks_proposals (
   proposed_at  TEXT NOT NULL,
   PRIMARY KEY (bundle_id, proposed_by, ord)
 );
+
+-- R80 (T45; S1 §C 9): RECEIPT OR SERVICE OF A SENT ENTRY, a member's record that
+-- the addressee received it (or a party was served), how and when, held as a
+-- capture or her account. Its own table: the ledger entry is never rewritten
+-- (R34). A second record of the same entry appends; the latest is read first.
+CREATE TABLE IF NOT EXISTS action_receipts (
+  bundle_id    TEXT NOT NULL,    -- the action
+  ord          INTEGER NOT NULL, -- the sent correspondence entry
+  seq          INTEGER NOT NULL, -- the record's place among that entry's, from 1
+  kind         TEXT NOT NULL,    -- receipt | service
+  at           TEXT NOT NULL,    -- a date or a local date-time, as stated
+  how          TEXT NOT NULL,
+  party        TEXT,             -- service: the party served
+  artifact_sha TEXT,             -- the capture, XOR account
+  account      TEXT,
+  author       TEXT NOT NULL,
+  recorded_at  TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, ord, seq)
+);
+
+-- R87 (T45; Actions D4): THE CONFIDENTIAL SCOPE, each member's statement
+-- appended; the latest is the action's scope.
+CREATE TABLE IF NOT EXISTS action_scopes (
+  bundle_id    TEXT NOT NULL,
+  seq          INTEGER NOT NULL,
+  confidential INTEGER NOT NULL, -- 1 set, 0 removed
+  reason       TEXT NOT NULL,
+  by           TEXT NOT NULL,
+  at           TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, seq)
+);
+
+-- R88 (T45; Actions D4): PROMISES THE GROUP MADE TO PEOPLE, notes on the action
+-- every participant sees, appended and never edited; one may end an earlier one.
+CREATE TABLE IF NOT EXISTS action_promises (
+  bundle_id    TEXT NOT NULL,
+  seq          INTEGER NOT NULL,
+  kind         TEXT NOT NULL,    -- of action-grammar's PROMISE_KINDS
+  text         TEXT NOT NULL,
+  ends         INTEGER,          -- the seq of the promise this one ends
+  by           TEXT NOT NULL,
+  at           TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, seq)
+);
+
+-- R79, R82 (T45): WHO CHANGED AN ACTION'S PRESS TERMS OR ITS REPLY-OWED STATE,
+-- AND WHEN. The values are the document's own; the projection appends a row each
+-- time a promotion carries a value that differs from the latest row's.
+CREATE TABLE IF NOT EXISTS action_field_history (
+  bundle_id    TEXT NOT NULL,
+  field        TEXT NOT NULL,    -- press_terms | reply_owed
+  seq          INTEGER NOT NULL,
+  value        TEXT NOT NULL,    -- JSON of the stated value
+  reason       TEXT,             -- reply_owed: the member's reason
+  by           TEXT,
+  at           TEXT NOT NULL,
+  PRIMARY KEY (bundle_id, field, seq)
+);
 `;
 
 /** The tables, each keyed to the action by `bundle_id` (record-core R21, R46). */
 export const ACTIONS_TABLES = Object.freeze(["action_basis", "correspondence", "action_quotes",
-  "action_law_proposals", "action_risk_proposals", "action_overrides", "action_pressure", "action_holds",
-  "action_hold_projects", "action_seeks_proposals"]);
+  "action_law_proposals", "action_risk_proposals", "action_overrides", "action_seeks_proposals", "action_receipts", "action_scopes", "action_promises",
+  "action_field_history"]);
 
 /** Creates the tables; idempotent. */
 export function migrateActions(sql) {

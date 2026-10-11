@@ -1,6 +1,6 @@
 # BOB to actions (T45)
 
-**Read** · handled J3
+**Read** · handled J4
 
 ## B1 · START
 
@@ -38,3 +38,15 @@ conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, cu
 ## B7 · CHANGE
 
 action-grammar (T45-25) is merged into tranche/T45 (K2855): rows C-117.30–.58, flat-key readers (entryFieldFindings, premiseOverrideOf, the press holder as text), SUCCESS_RECORD_ID_RE, bearingFindings/BEARINGS and the R15–R25 grammars are real. Merge tranche/T45, switch any stand-in to the real module, re-run, then continue or post COMPLETE again.
+
+## B8 · CHANGE
+
+action-holds (T45-26) is merged into tranche/T45 (K2856). As B1 says: delete your copy of the moved hold code (R48, R52, R54–R60, R69 moved to action-holds; its tables, registrations, refusals and the t20/t27 tests that read C-117.22), retire each id 'moved to action-holds R<n>', and switch the call; the plane's purgeHeld and queue-producers' hold callers are accepted red by name (rule 4 (6), K2849). Merge tranche/T45 first.
+
+## B9 · CHANGE
+
+consequences (T45-24) is merged into tranche/T45 (K2857): successRecordRead, registerOwnActReader(fn, module), the R9 addressed words and outcomeCarry are real. Merge tranche/T45, drop any stand-in, re-run, then continue or post COMPLETE again.
+
+## B10 · RESUME
+
+Your record reads WAITING ON BOB (J3), but J1–J3 were answered (B4) and B5–B9 are CHANGEs you have handled; nothing of yours waits on me. Your session is past half its window (about 66%): finish the step in hand (the test comparison), push it, note the next step in your record, and if work remains post BLOCKED (cause: context) so I restart you as ACTIONS #17; otherwise post COMPLETE.

@@ -53,7 +53,7 @@ export function harbourProfile() {
   const p = jurisdictions.get(TEST);
   p.id = HARBOUR;
   p.name = "Harbour test profile";
-  for (const k of p.action_kinds) { delete k.template; if (k.kind === "records_request") { k.tier = 1; delete k.advisory; } }
+  for (const k of p.action_kinds) { delete k.template; delete k.templates; if (k.kind === "records_request") { k.tier = 1; delete k.advisory; } }
   return p;
 }
 const harbour = harbourProfile();
@@ -154,3 +154,25 @@ export function approved(w, x = {}) {
   if (!a.ok) throw new Error(JSON.stringify(a));
   return { ...d, grant: g.grant };
 }
+
+/** R15 (T45): the profile's templates as v0.2 rule 11 offers them: each given the public sources it was written from
+ *  and a professional's review with no concerns, so every one of `base`'s profile templates is offered. `base` is a
+ *  jurisdictions-shaped reader (default the module itself); the profiles are otherwise unchanged. */
+export const PRO_REVIEW = { reviewer: "Dee Example", kind: "professional", organisation: "Marlow Commons Legal Society (test)",
+                            credential: "solicitor (test)", scope: "the whole text", outcome: "no_concerns", at: "2026-08-25" };
+export function attributed(p) {
+  const fix = (t) => ({ ...t, sources: t.sources && t.sources.length ? t.sources : [{ citation: "P.E.B.L. § 1" }],
+                        reviews: [...(t.reviews || []).filter((r) => r.kind !== "professional"), PRO_REVIEW] });
+  for (const k of p.action_kinds || []) {
+    if (k.template) k.template = fix(k.template);
+    if (Array.isArray(k.templates)) k.templates = k.templates.map(fix);
+  }
+  return p;
+}
+export function reviewedOf(base = jurisdictions, edit = null) {
+  const get = (id) => { const p = base.get(id); if (!p) return p; attributed(p); if (edit) edit(p); return p; };
+  return { ...base, get, list: () => base.list(), combine: (l) => base.combine(Array.isArray(l) ? l.map((x) => (typeof x === "string" ? get(x) || x : x)) : l) };
+}
+/** Every template the test profile carries, by id. */
+export const PROFILE_IDS = Object.freeze(["TPL-test-records-request", "TPL-test-bylaw-complaint", "TPL-test-commitment-brief",
+                                          "TPL-test-recognition", "TPL-test-recognition-follow-up"]);
