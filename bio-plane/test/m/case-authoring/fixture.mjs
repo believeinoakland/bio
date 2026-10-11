@@ -30,6 +30,7 @@ import { Capture } from "../../../src/capture/index.mjs";
 import { sourcesOf } from "../../../src/sources/index.mjs";
 import { networkNoticesOf } from "../../../src/network-notices/index.mjs";
 import { caseAuthoringOf } from "../../../src/case-authoring/index.mjs";
+import { caseAccountOf } from "../../../src/case-account/index.mjs";
 import { caseDisclosuresOf } from "../../../src/case-disclosures/index.mjs";
 import { caseCarriageOf } from "../../../src/case-carriage/index.mjs";
 import { parseImportedFindingRef, importedFindingRef } from "../../../src/inquiry-grammar/index.mjs";
@@ -309,16 +310,22 @@ export function world({ group = "test-group", provider = true, now = null, recor
   const judgedDisclosures = new Proxy(disclosures, { get: (t, p) => (p === "accountJudged"
     ? (a) => { w.judged.push(a); return w.judgeAccount ? w.judgeAccount(a) : t.accountJudged(a); }
     : typeof t[p] === "function" ? t[p].bind(t) : t[p]) });
-  /* R64: the runs an account draft names, ai-runs' `runFor` over the test's own `runs` (as contradiction's gate above):
-     a run is seen by every viewer but "nobody". */
+  /* R69 (N839, K2608): `case-account`, built first on this host as the plane builds it before case-authoring (its R12),
+     with the runs an account draft names, ai-runs' `runFor` over the test's own `runs` (as contradiction's gate above;
+     a run is seen by every viewer but "nobody"), and the same judged disclosures and inquiry case-authoring reads.
+     case-authoring reaches this one instance on the host and hands it nothing. */
   const aiRuns = { runFor: (id, viewer) => (runs.has(String(id)) && viewer !== "nobody"
     ? { run: String(id), status: runs.get(String(id)).status, mode: "draft" } : null) };
+  const clockOf = now || ((p) => (p === "millisecond" ? clock.ms : clock.now));
+  const caseInquiry = inqWrap ? inqWrap(deps.inquiry || inquiry) : deps.inquiry || inquiry;
+  w.cacc = caseAccountOf(host, { record: caseRecord, membership, inquiry: caseInquiry, runs: aiRuns,
+                                 disclosures: judgedDisclosures, now: clockOf });
   w.ca = caseAuthoringOf(host, { record: caseRecord, membership, basisVersions,
     strength, bias, observations, reevaluation, publication, publishSchedule, ratification: ratWrap ? ratWrap(ratification) : ratification,
-    networkNotices, now: now || ((p) => (p === "millisecond" ? clock.ms : clock.now)),
-    disclosures: judgedDisclosures, events, runs: aiRuns,
+    networkNotices, now: clockOf,
+    disclosures: judgedDisclosures, events,
     ...given((d) => !READ_BY_DISCLOSURES.includes(d) || d === "inquiry" || d === "strength"),
-    inquiry: inqWrap ? inqWrap(deps.inquiry || inquiry) : deps.inquiry || inquiry });
+    inquiry: caseInquiry });
   Object.assign(w, { events, lines, money, people });
   let n = 0;
   Object.assign(w, {
