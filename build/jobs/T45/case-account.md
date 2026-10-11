@@ -28,7 +28,9 @@ Not-yet-met marks this job meets: **R6, R13, R14**, named by `t45-judgment.test.
 - Users: `case-authoring` 185/185, `review` 46/46. `answer-envelope` 27 pass, 4 fail (above; 31/31 on the tranche). `control-plane` 220 pass 3 fail, `op-declarations` 132 pass 1 fail, `plane` 194 pass 2 fail: identical on `origin/tranche/T45` without my commit (plan rule 4's accepted reds), none mine.
 - `checks/format.mjs`: 0 failures. `checks/architecture.mjs case-account`: 8 product files, 0 failures. `checks/coverage.mjs case-account`: 14 of 14 live ids named, 0 failures. `checks/ownership.mjs case-account tranche/T45`: 8 files, 0 failures.
 
-Size (session_014rdGh7CEjvJUmAgAAPe2kQ): test runs 16, module lines 911
+- **After B3** (case-grammar and publication merged; `tranche/T45` merged in at cbde421679): case-account 32/32; case-authoring 185/185; review 46/46; answer-envelope 27 pass, 4 fail (J2 (2), unchanged). format, architecture (11 product files), coverage (14/14), ownership (8 files): 0 failures each. No code change was needed.
+
+Size (session_014rdGh7CEjvJUmAgAAPe2kQ): test runs 22, module lines 911
 
 ## J1 · QUESTION
 
