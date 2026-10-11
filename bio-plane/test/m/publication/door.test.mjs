@@ -1,4 +1,4 @@
-/* publication — the door's half of `op=caseflags` (R6) and `op=casedocument` (R1, R29), moved from `src/index.mjs`
+/* publication — the door's half of `op=caseflags` (`case-tensions` R3, was this module's R6) and `op=casedocument` (R1, R29), moved from `src/index.mjs`
    (`door.mjs`, the legacy-index map's §4.4 move, K649 (7)). The door's helpers are handed in as `control-plane` R23 and
    R25 state them; the store is this module's own op map over a real world, in the envelope the plane reads; the
    reader's resolution is the door's (a stand-in answering the viewer the door would stamp). Driven at the interface. */
@@ -71,7 +71,7 @@ function prepared() {
   return { w, proj, pin };
 }
 
-test("R6 the door's caseflags forwards only case, target, outstanding and limit, and answers the store's read wrapped as `result`, asking no reader", async () => {
+test("case-tensions R3 (was R6) the door's caseflags forwards only case, target, outstanding and limit, and answers the store's read wrapped as `result`, asking no reader", async () => {
   const { w, proj, pin } = prepared();
   w.signCase("CASE-2026-0001", 1, { project: proj, roster: [{ bundle_id: F, version_sha: pin }] });
   w.inquiry(F, { question: "Revised?" });
@@ -87,7 +87,7 @@ test("R6 the door's caseflags forwards only case, target, outstanding and limit,
   assert.equal((await door("caseflags", { outstanding: "yes" }, stubOf(w))).body.result.outstanding, 1);
 });
 
-test("R1 R6 the door relays the store's refusal with its status and sentence, and a reply that is no answer as STORE_DID_NOT_ANSWER, with its correlation id", async () => {
+test("R1 the door relays the store's refusal with its status and sentence, and a reply that is no answer as STORE_DID_NOT_ANSWER, with its correlation id", async () => {
   const refused = () => Response.json({ ok: false, reason: "BAD_JSON", detail: "no" }, { status: 400 });
   const corr = "0f0e0d0c-0b0a-4908-8706-050403020100";
   const internal = () => Response.json({ ok: false, reason: "STORE_INTERNAL_ERROR", correlation: corr }, { status: 500 });

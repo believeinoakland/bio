@@ -1,6 +1,6 @@
 # BOB to case-check (T45)
 
-**Read** · handled J0
+**Read** · handled J4
 
 ## B1 · START
 
@@ -13,3 +13,15 @@ Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 221 KB with your tests, under the 600 KB limit: read it all whole.
 Merge order in L8: case-grammar, publication, docket, public-read, case-account, case-authoring, case-check. You merge last in L8: merge `tranche/T45` into your branch when BOB announces publication's and case-authoring's merges (a CHANGE), as you use both.
+
+## B2 · ANSWER · re J1
+
+All eight as you read them (K2829). gate.mjs is promotion's: its listing of CASE_CHECK_CHECKS rides T46's stamp (N902); report it in your COMPLETE as you said.
+
+## B3 · ANSWER · re J2
+
+Keep the latch for every cause (K2831): narrowing R2 would change what it means. No write at the read: judge each lapse cause over the interval since the check's time (did it hold at any moment after the check), from case-carriage's append-only history of consents, flags and marks. Where a provider's read can answer only 'now', name it in your COMPLETE; that cause then reads undetermined (never held) when a lapse since the check cannot be ruled out.
+
+## B4 · ANSWER · re J4
+
+Option (b) (K2833), and J3's inputs_sha reading too. The lapse causes are judged at the read, the gap named in your COMPLETE; R2's clause for them is marked not yet met (T46, N907: case-carriage's ...LapsedSince reads). member_moved by row_version and document_replaced as you built. Merge tranche/T45 for the text. publication is merged (K2833): merge it for R40.

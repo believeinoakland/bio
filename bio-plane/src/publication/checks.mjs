@@ -8,6 +8,8 @@
  * `photo.refused.changed` since T38 (DEC-183 (4)) and `photo.refused.changed.signed` since T41 (DEC-187 (4): answered at
  * the commit, always after signing), and C-122.7 (R57's member document copy changed since preparation; N806, K2333) at
  * T39, its translation `words.json`'s `document.refused.changed` since T41 (DEC-188 (7)), both read by key.
+ * C-122.8 (R78's counsel matter never published; N892, T45) is the one row for its code: `case-authoring` (its R72) and
+ * `docket` (its R28) answer it through this module's export, holding no copy.
  * C-92.1–.9 and C-92.13 (the attribution act) moved with the act to `case-tensions` (its R9; T33-62, T33-63), numbers
  * and translations unchanged, and left this table, so no row id is held twice.
  *
@@ -87,6 +89,15 @@ export const CASE_SOURCES_CHECKS = {
     check: 'C-122.7',
     where: 'src/publication/index.mjs commitCaseEdition > is-document-copy-current',
     translation: PUBLICATION_WORDS['document.refused.changed'],
+  },
+  /* C-122.8 (R78; T45, N892; Actions D4; v0.2 rule 15): nothing of a counsel matter enters a case or an edition. The
+     commit refuses it before its other refusals; `case-authoring` (its R72) and `docket` (its R28) answer this same row
+     through this module's export (`rowOf`, `publicationRowOf` from `index.mjs`), holding no copy. Its translation BOB's
+     draft, re-wordable by the UX stream. */
+  COUNSEL_MATTER_NOT_PUBLISHED: {
+    check: 'C-122.8',
+    where: 'src/publication/index.mjs commitCaseEdition > is-counsel-matter-published',
+    translation: 'This case rests on a counsel matter, and a counsel matter is never published. Nothing was published.',
   },
 };
 

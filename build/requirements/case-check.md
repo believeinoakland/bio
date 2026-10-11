@@ -34,7 +34,7 @@ Terms are `publication`'s and `case-authoring`'s. A **check** is one record of a
     - `undetermined`, when any of those reads fails. It fails closed: a failed read never answers `held`.
   - It answers `checked_at` and `by` with every state but `none`.
   - With `viewer`, it is fenced as `publication` R1 is (`hasCaseStanding`): no standing in the case's project answers `NO_SUCH_CASE`, the same answer as an absent case. Without `viewer` it is read as the plane.
-  - It writes nothing and never throws. A void check stays void when its cause is undone: re-running R1 makes a new check.
+  - It writes nothing and never throws. A void check stays void when its cause is undone: re-running R1 makes a new check. For `document_replaced` and `member_moved` (latched by the pinned preparation and by record-core's `row_version`); for the three lapse causes the latch needs case-carriage reads over an interval (N907) and until then they are judged at the read, the commit re-reading all three *(not yet met for the lapse causes: T46, N907; K2833)*.
 
   Controls: each `why`, against an untouched check that reads `held`; a re-authored acknowledgement list (`case-authoring` R20) reads `document_replaced` (l8 doubt 3); a failed read reads `undetermined`; after ratification it reads `published`; an outsider gets the same answer as an absent case, byte-identical. *(not yet met: T45)*
 
