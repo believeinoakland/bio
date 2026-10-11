@@ -28,3 +28,7 @@
 **Reading set (mechanics §17)** · Measured by BOB at START at 160 KB, under 300 KB: read whole myself: `requirements/image-codecs.md`, K2611, K2613, K2691, `plan/draft-T43-n853b.md`, the plan's rules and entries T43-4/5, layer 1's contract, test-support's public part, all five codecs and all seven test files, `make-dct-fixtures.py`. PngSuite and the JSON fixtures are data (K2053).
 
 Size (session_01EmjAtfa4SNhFFjZAmrA9eZ): test runs 8, module lines 3326
+
+## J1 · REPORT
+
+pdf-pixels R42 (T43-5), a note for its Pillow reference, not a red: Pillow's convert("L") drops alpha, so exif_transpose -> convert("L") -> reduce(k) over a PNG with transparency will not match R10's samples. R10 is pinned to Image.alpha_composite(white, im.convert("RGBA")) then convert L/RGB, and for 16-bit grey (Pillow I;16, whose convert("L") clips) the high byte of each sample: pdf-worker/test/codecs/fixtures/make-png-fixtures.py reference(). Details in my record.
