@@ -62,6 +62,11 @@
  * signing instant and R76 read, this module naming its table in no SQL; and a commit no member signs reads the criteria as a machine
  * viewer, never the founder's (K2483, D54).
  *
+ * T45 (T45-17; N892, N893): nothing of a counsel matter is published. The commit refuses, before its own other
+ * refusals, a case whose owning project or any member finding's project `project-roster` answers `counsel_matter`
+ * (R78, C-122.8 `COUNSEL_MATTER_NOT_PUBLISHED`, the one row `case-authoring` and `docket` answer through this module's
+ * export); `case-check` joins R40's readers.
+ *
  * REACHED as `publicationOf(host, deps)` (K61): one instance per host (the Durable Object's `ctx`), created on the first
  * call with `deps`, returned to every later caller. At creation it creates its tables and declares them to
  * record-core (R31; plan T33 Rules (6): each with its classes), registers with record-core the published registry as
@@ -88,6 +93,8 @@
  *   reevaluation   `registerCaseParts` (its R26), at creation only (R41, R43).
  *   standards      `standardRead` (its R5) and `bindsAt` (its R43), at a case edition's commit only (R72).
  *   entities       `readEntity` (its R5): a criteria row's body by name (R72).
+ *   roster         project-roster's `projectScope` (its R23), at a case edition's commit only (R78); reached lazily as
+ *                  `projectRosterOf(host)` on this module's record and membership unless given.
  *   corpusExport   created at creation with this module's clock, so `export_log` exists and is declared at every boot
  *                  (its R4); its ops are spread by the plane's op map (`corpusExportOps`, N483), and nothing here calls it.
  *   now            the clock for the instants it writes, an ISO string (default: the wall clock).
@@ -113,6 +120,7 @@ import { PUBLICATION_TABLES, PUBLICATION_EXEMPT, PUBLICATION_DECLARATIONS, migra
 import { corpusExportOf } from "../corpus-export/index.mjs";
 import { caseCarriageOf } from "../case-carriage/index.mjs";
 import { caseTensionsOf } from "../case-tensions/index.mjs";
+import { projectRosterOf } from "../project-roster/index.mjs";
 /* The case document's grammar is `case-grammar`'s (K651): the formats and predicates, the /5 blocks and tension
    section, the attribution run's text, the section locators, the signed citations and the edge set a finding rests on.
    This module reads them from there and re-exports, unchanged, every name it exported before the split, so its
@@ -121,7 +129,7 @@ import { caseDocumentStatesMemberBlocks, caseDocumentBlocks, SECTIONS, REAUTHORA
          publishedGraphEdges, caseDocumentRequiresMaterials, calculationsOf, timelineOf,
          caseFilePath, materialsOf } from "../case-grammar/index.mjs";
 
-export { CASE_SOURCES_CHECKS } from "./checks.mjs";
+export { CASE_SOURCES_CHECKS, rowOf as publicationRowOf } from "./checks.mjs";
 export { CASE_DOCUMENT_FORMAT, CASE_DOCUMENT_FORMAT_V6, CASE_DOCUMENT_FORMAT_V4, CASE_DOCUMENT_FORMAT_V3,
          CASE_DOCUMENT_FORMAT_V2,
          CASE_DOCUMENT_FORMAT_LEGACY, CASE_DOCUMENT_FORMATS_ACCEPTED, caseDocumentStatesMemberBlocks,
@@ -215,13 +223,13 @@ export class Publication {
   constructor({ storage, record, membership, promotion, host = null, inquiry = null, basisVersions = null,
                 contradiction = null, sources = null, credentials = null, corpusExport = null, acceptedWork = null,
                 capture = null, extraction = null, standards = null, entities = null, bucket = null, store = null,
-                now = null } = {}) {
+                roster = null, now = null } = {}) {
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
     this.promotion = promotion;
     this.#deps = { host, storage, inquiry, basisVersions, contradiction, sources, credentials, corpusExport, acceptedWork,
-                   capture, extraction, standards, entities, bucket, store };
+                   capture, extraction, standards, entities, bucket, store, roster };
     this.now = typeof now === "function" ? now : () => new Date().toISOString();
   }
 
@@ -232,6 +240,10 @@ export class Publication {
   get standards() {
     return this.#deps.standards ||= standardsOf(this.#deps.host, { record: this.record, membership: this.membership,
                                                                    promotion: this.promotion });
+  }
+  /* R78: read at a case edition's commit only. */
+  get roster() {
+    return this.#deps.roster ||= projectRosterOf(this.#deps.host, { record: this.record, membership: this.membership });
   }
   get entities() { return this.#deps.entities ||= entitiesOf(this.#deps.host, { record: this.record, membership: this.membership }); }
   get credentials() {
@@ -1001,6 +1013,22 @@ export class Publication {
                declared: owner.project_id, signed: project ?? null,
                detail: `case ${id} is ${owner.project_id}'s production and this signed case document names `
                      + `${project}. A case does not change hands between editions (DEC-72).` };
+    /* R78 (T45; N892; Actions D4; v0.2 rule 15): NOTHING OF A COUNSEL MATTER ENTERS A CASE OR AN EDITION, asked before
+       every other refusal of this commit's own and writing nothing. The scope is project-roster's (its R23), read here, at
+       the commit, and never earlier: an edition already signed answered above whatever its project's scope is now, so a
+       scope changes nothing already committed (R24; project-roster R21). */
+    const counsel = this.#counselMatterIn(owner ? owner.project_id : project, members);
+    if (counsel) {
+      /* DEC-49 REGION is-counsel-matter-published */
+      return { ok: false, reason: "COUNSEL_MATTER_NOT_PUBLISHED", ...rowOf("COUNSEL_MATTER_NOT_PUBLISHED"), caseId: id,
+               edition: ed, ...counsel,
+               detail: (counsel.project ? "the project this case belongs to is a counsel matter" : "")
+                     + (counsel.project && counsel.findings.length ? ", and " : "")
+                     + (counsel.findings.length ? `${counsel.findings.join(", ")} ${counsel.findings.length > 1 ? "were" : "was"} `
+                       + "made in a counsel matter" : "")
+                     + ". A counsel matter is never published, so nothing was committed." };
+      /* END DEC-49 REGION is-counsel-matter-published */
+    }
     /* R58 (DEC-112; K1268, BOB's decision 5): EVERY EDITION COMMITTED FROM T28 ON CARRIES ITS METHOD AND MATERIALS, so a
        preparation made before T28 (any format but /6) is never committed, nothing written: the remedy is a new
        preparation, which carries them. A retry of an edition already signed answered above, whatever its format. A /7
@@ -1140,6 +1168,46 @@ export class Publication {
       this.sql.exec(`INSERT INTO published_shas (sha256,bundle_id,path,kind,bytes,published) VALUES (?,?,?,?,?,?)
                      ON CONFLICT(sha256,bundle_id,path) DO NOTHING`, x.sha, id, x.path, "calculation_input", null, when);
     return { ...outcome(false), materials: this.#withInputs(held.materials, inputs), materials_unheld: held.unheld };
+  }
+
+  /* R78: what of a counsel matter a commit would publish: `project` the case's owning project when project-roster answers
+     it `counsel_matter`, else null; `findings` each roster member (at most 200, in roster order) whose project, the one
+     its pinned bytes were committed with (their front matter's `project:`; record-core's row when those bytes cannot be
+     read), it answers so. Null when neither. Another project is never named: a member's project may be one the signer
+     cannot see. Each project is asked once; a scope that cannot be read is R23's (`none`). */
+  #counselMatterIn(owning, members) {
+    const asked = new Map();
+    const counsel = (p) => {
+      const id = str(p);
+      if (!id) return false;
+      if (!asked.has(id)) {
+        let scope = null;
+        try { const a = this.roster.projectScope(id); scope = a && typeof a.scope === "string" ? a.scope : null; }
+        catch { scope = null; }
+        asked.set(id, scope === "counsel_matter");
+      }
+      return asked.get(id);
+    };
+    const project = counsel(owning) ? str(owning) : null;
+    const findings = [];
+    for (const m of members) {
+      if (findings.includes(m.bundle_id)) continue;
+      if (counsel(this.#committedProject(m.bundle_id, m.version_sha ?? null))) findings.push(m.bundle_id);
+    }
+    return project || findings.length ? { project, findings: findings.slice(0, 200) } : null;
+  }
+
+  /* R78: the project a member finding was committed with at its pin: its pinned bytes' top-level `project:` (promotion
+     R53's field), else, when those bytes cannot be read, the project record-core holds for the bundle; null for none. */
+  #committedProject(bundleId, sha) {
+    let text = null;
+    try { text = this.record.textAtSha(bundleId, sha); } catch { text = null; }
+    if (typeof text === "string") {
+      const fm = parseFrontmatter(text).data || {};
+      return typeof fm.project === "string" ? str(fm.project) || null : null;
+    }
+    try { const info = this.record.bundleInfo(bundleId); return info ? str(info.project) || null : null; }
+    catch { return null; }
   }
 
   /* R72 (N649; K1723, K1739; DEC-145 (2), (6)): THE CRITERIA AN EDITION IS MEASURED AGAINST, read at its commit and
