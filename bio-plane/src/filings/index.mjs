@@ -813,10 +813,10 @@ export class Filings {
     const fromFacts = [];
     for (const id of [...new Set(chosen.map((x) => x.trim()))]) {
       const f = this.#findingRead(id, viewer);
-      /* DEC-49 REGION is-communication-prepare */
+      /* DEC-49 REGION is-communication-from */
       if (!f) return { ok: false, reason: "NO_SUCH_BUNDLE", target: id,
                        detail: "no finding or inquiry by that id is readable here; one you may not see answers the same" };
-      /* END DEC-49 REGION is-communication-prepare */
+      /* END DEC-49 REGION is-communication-from */
       fromFacts.push(f);
     }
     const when = this.#when();

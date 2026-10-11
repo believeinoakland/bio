@@ -213,7 +213,7 @@ export const FILINGS_CHECKS = Object.freeze({
       + "or recorded as sent by the group.",
   },
   NO_SUCH_BUNDLE: {
-    check: "C-115.55", where: at("communicationPrepare", "is-communication-prepare"),
+    check: "C-115.55", where: at("communicationPrepare", "is-communication-from"),
     translation: "A finding or inquiry named to draft from is not one you can read here. One you may not see answers the "
       + "same as one that does not exist.",
   },
