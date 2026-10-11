@@ -104,6 +104,22 @@ test("R4: a re-send under a held snap key is answered idempotent and writes noth
   assert.equal(record.dump(), before);
 });
 
+test("R4: a file whose digest either side does not state makes the two different — the re-send is refused (a creation's, R1's EXISTS), never idempotent", () => {
+  const { p, record } = held();
+  const row = record.db.prepare("SELECT files_json FROM manifest WHERE bundle_id=? AND snap_key='k1'").get(ID);
+  for (const unstated of [undefined, null, ""]) {
+    const files = JSON.parse(row.files_json).map((f) => (f.name === "bundle.md" ? { ...f, sha256: unstated } : f));
+    record.db.prepare("UPDATE manifest SET files_json=? WHERE bundle_id=? AND snap_key='k1'").run(JSON.stringify(files), ID);
+    const before = record.dump();
+    const again = p.promote(create(ID, infoDoc(ID)));
+    assert.equal(again.reason, "EXISTS", `held digest ${JSON.stringify(unstated)}`);
+    assert.notEqual(again.idempotent, true);
+    assert.equal(record.dump(), before);
+  }
+  record.db.prepare("UPDATE manifest SET files_json=? WHERE bundle_id=? AND snap_key='k1'").run(row.files_json, ID);
+  assert.equal(p.promote(create(ID, infoDoc(ID))).idempotent, true, "restored, the same re-send is idempotent again");
+});
+
 test("R5: every stored digest and size is of the stored bytes; a supplied digest that differs is FILE_DIGEST_MISMATCH", () => {
   const { p, record } = makePromotion();
   const text = infoDoc(ID, { title: "Café — ünïcode" });
