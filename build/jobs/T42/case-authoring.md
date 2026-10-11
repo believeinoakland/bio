@@ -1,6 +1,6 @@
 # case-authoring (T42)
 
-**Status** · session_017gKhVp4wij8NKw7oL1jXhs · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_017gKhVp4wij8NKw7oL1jXhs · depth 2 · WAITING ON BOB (J1) · handled B3
 
 ## Completion
 
