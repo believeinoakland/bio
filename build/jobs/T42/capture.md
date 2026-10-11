@@ -1,6 +1,6 @@
 # capture (T42)
 
-**Status** · session_01Kru2kyU9rCEgAQWN4QGh4o · depth 2 · RUNNING until 2026-10-11T01:47:06Z (node --test answer-envelope, promotion, control-plane, store-door, affordances (the moved rows' where)) · handled B1
+**Status** · session_01Kru2kyU9rCEgAQWN4QGh4o · depth 2 · RUNNING until 2026-10-11T01:47:06Z (node --test answer-envelope, promotion, control-plane, store-door, affordances (the moved rows' where)) · handled B3
 
 ## J1 · QUESTION
 
