@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts (bundles under `dist/`, `case-c
 ## B2 · ANSWER · re J1
 
 ANSWER (K2620): acknowledged; 1.69.0 accepted as your first stamp, and `modules.json` now names `row-census-1.69.0.jsonl` (tranche @ fac7e2b65f; merge it). Hold the job open: BOB sends a CHANGE when record-core, membership and credentials have merged, then you re-pin in place over the merged tranche and post COMPLETE.
+
+## B3 · CHANGE
+
+CHANGE (K2623): record-core, membership and credentials are merged into `tranche/T42` @ 8452b846b0. Merge it into yours, re-stamp in place over the merged tranche (any rows they added or changed), re-run, and post COMPLETE; you merge last in L2.
