@@ -25,3 +25,13 @@ Replaces J1. Everything in J1 stands except one fill in its point 6.
 The `{owner}` of `ai.label.explored` for a member's own account is now `ai.account.own.inline` ("your own account"), not the owner's handle. That label reads "… enabled by your own account" and names no member. It goes only to the account's owner. For the group the fill stays `ai.owner.group`, and for a project it stays the project's name.
 
 The work is built on all of J1's readings plus this one. It is complete and tested, and its COMPLETE follows. An ANSWER that changes a reading reopens the job for a line or two.
+
+## J3 · REPORT
+
+A finding in another module, `steps`, measured against its R23 and R4.
+
+`queue.step-later-found.detail` says "You looked for this on {date} …" (DEC-189 (2)). The look's own date is not answered by `laterFound`, whose entry is `{step, look, observation, at, questions, key}` (R23). `step()`'s `later_found` entries (R4), `{look, observation, at}`, do not answer it either. `at` reads as when the arrival was noted, not when the member looked.
+
+Proposed: steps R23's entry also answers `looked_at`, the instant of the look (the observation-log entry `look`). Notice-producers already reads `looked_at` when it is present (J1 (4)), so no change here follows.
+
+No generated artifact went stale: notice-producers is bundled only into the plane bundle, which BOB regenerates at L11's close.
