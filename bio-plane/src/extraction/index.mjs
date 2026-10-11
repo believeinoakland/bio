@@ -18,7 +18,7 @@ import { provenanceOf } from "../provenance/index.mjs";
 import { docxRenumbering } from "../docx.mjs";
 import { pptxRenumbering } from "../pptx.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
-import { getFormat } from "../formats.mjs";
+import { getFormat, detectFormat } from "../formats.mjs";
 import { readText } from "../../../docprofile/registry.mjs";
 import { checkChain, calibrationsOf, isTranscribed, terminalStep, derivationCap, describeChain, glyphCount,
          readingSource, readingSourceJson, readingOccurrenceKey, readingSourceFromColumns, chainKindFor,
@@ -26,17 +26,18 @@ import { checkChain, calibrationsOf, isTranscribed, terminalStep, derivationCap,
 import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { contentMintState } from "../record-grammar/labels.mjs";
 import { EXTRACTION_SCHEMA } from "./schema.mjs";
-import { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL } from "./checks.mjs";
+import { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL, TRANSCRIBE_WORDS, fillWords,
+         pagesSaid } from "./checks.mjs";
 import { evidenceAbsent } from "../capture/ops.mjs";
 import { driftObligations } from "./drift.mjs";
 import { membershipBeside } from "./filemembership.mjs";
 import * as pipeline from "../reading-pipeline/index.mjs";
 import { read as readDocument, tier2Escalate, tier3Extend, tier3SeedFrom, needsTier3, textUnitsFor, layerChainFor,
          readingFromWire, decodeView, textCountsOf, emittedFieldsOf, pageBoxesFrom, bytesOf, CAPTURE_TEXT_UNIT_CAP,
-         compareProvenance, readingProvenance, PROVENANCE_SCHEME, tier4Extend, AI_READING_LABEL,
+         compareProvenance, readingProvenance, PROVENANCE_SCHEME, tier4Extend, tier4Pages,
          AI_TRANSCRIPTION_SOURCE, TRANSCRIBE_USE } from "../reading-pipeline/index.mjs";
 
-export { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL, CAPTURE_TEXT_UNIT_CAP };
+export { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL, CAPTURE_TEXT_UNIT_CAP, TRANSCRIBE_WORDS };
 
 const safeJson = (s) => { try { return s == null ? null : JSON.parse(s); } catch { return null; } };
 
@@ -974,7 +975,31 @@ export class Extraction {
                : { recorded: false,
                    why: `this reading carries no text provenance, which is not the same as its `
                       + `text not having been transcribed -- nobody recorded how it was produced` },
-             reading_history: this.#readingHistoryOf(row.capture_sha) };
+             reading_history: this.#readingHistoryOf(row.capture_sha),
+             ...this.#unreadOf(row.capture_sha, reading, viewer, row.bundle_id) };
+  }
+
+  /** R27 (T43; N862; DEC-190 (1), (2)): the pages a reading with pages could not make out, ascending: those holding no
+   *  glyph after every tier, which are the pages `reading-pipeline.tier4Pages` would ask for (the index holds a page's
+   *  unit exactly when it holds a glyph, reading-pipeline R15; a page the index skipped over its bound is not unread).
+   *  `[]` when none; absent for a reading with no pages (R45). With pages, `unread_says` is `document.unread.pages`
+   *  filled. Both withheld with the bundle. */
+  #unreadOf(captureSha, reading, viewer, bundleId) {
+    const n = reading && reading.page_count;
+    if (!(Number.isInteger(n) && n > 0)) return {};
+    if (bundleId && this.#redactor(viewer)(bundleId) === null) return {};
+    const read = new Set();
+    for (const u of this.#rows(`SELECT extent, text FROM capture_text WHERE capture_sha=? AND extent_kind='pdf-page'`, captureSha)) {
+      const e = safeJson(u.extent);
+      if (e && Number.isInteger(e.page) && glyphCount(u.text) > 0) read.add(e.page);
+    }
+    for (const k of this.#rows(`SELECT first_extent, last_extent FROM capture_text_skipped WHERE capture_sha=?`, captureSha)) {
+      const a = safeJson(k.first_extent), b = safeJson(k.last_extent);
+      if (a && b && Number.isInteger(a.page) && Number.isInteger(b.page)) for (let p = a.page; p <= b.page; p++) read.add(p);
+    }
+    const pages = Array.from({ length: n }, (_, p) => p).filter((p) => !read.has(p));
+    return { unread_pages: pages,
+             ...(pages.length ? { unread_says: fillWords("document.unread.pages", { pages: pagesSaid(pages) }) } : {}) };
   }
 
   /** R28 (`op=readingref`): every captured document whose reading carries `ref` exactly, one entry per document
@@ -1564,12 +1589,20 @@ export class Extraction {
     const obj = ev ? await ev.get(sha) : null;
     if (!obj) return evidenceAbsent(sha, storeName, { tokenClass: cls });
     const bytes = new Uint8Array(await obj.arrayBuffer());
-    const pdfEntry = getFormat("pdf");
-    if (!pdfEntry || typeof pdfEntry.structure !== "function")
-      return { status: 501, body: { ok: false, reason: "FORMAT_UNREGISTERED", format: "pdf",
-        error: 'format "pdf" is not registered in the format registry (formats.mjs), so op=pagetranscribe has no extractor to dispatch to' } };
-    const structure = await pdfEntry.structure(bytes);
-    if (!structure.ok) return { status: 422, body: structure };
+    /* R73 (N853b): the format as the stored bytes answer it now, never the profile recorded at capture (a photo
+       captured before its entry was registered was profiled `undetermined`), read through that format's entry. A
+       format with no `structure`, or whose entry cannot read these bytes, is no refusal: nothing is read or written. */
+    const fmt = detectFormat(bytes, null).format;
+    const entry = getFormat(fmt);
+    const unread = (why) => ({ status: 200, body: { ok: true, op, sha256: sha, format: fmt,
+      transcription: { performed: false, written: false, why } } });
+    if (!entry || typeof entry.structure !== "function")
+      return unread(`the stored bytes read as ${fmt === "undetermined" ? "no format your group's Civicsmith knows" : `"${fmt}"`}, `
+                  + `which has no pages for the AI to transcribe, so nothing was read, sent or changed`);
+    const structure = await entry.structure(bytes);
+    if (!structure || !structure.ok)
+      return unread(`the stored bytes read as "${fmt}", but its reader could not read their pages`
+                  + `${structure && structure.reason ? ` (${structure.reason})` : ""}, so nothing was sent or changed`);
     /* R71 (R31, reading-pipeline R3): tier 2 by the one escalation every path runs. */
     let tier = 1, t2PerPage = null, t2Note = null, text = structure.text;
     const notes = [...(Array.isArray(structure.notes) ? structure.notes : [])];
@@ -1581,17 +1614,32 @@ export class Extraction {
     /* R71, R35 (reading-pipeline R30): tier 3 seeded with the pages the stored reading holds, OCR's and the AI's, so
        none is asked of the OCR member or the AI again; `tier3Extend` asks the OCR member only when it is bound. */
     const stored = basis.reading || {};
-    const t3 = await tier3Extend(e, { sha, storeName, i2text: text, wiredTier: tier, tier2PerPage: t2PerPage, fmt: "pdf",
+    const t3 = await tier3Extend(e, { sha, storeName, i2text: text, wiredTier: tier, tier2PerPage: t2PerPage, fmt,
       seed: tier3SeedFrom(stored, basis.units), liveCalibration: (q) => this.#liveCalibration(q) });
-    const chain3 = (t3.chainSet ? t3.chain : null) || layerChainFor(t3.i2text, { tier: t3.wiredTier, container: "pdf" });
+    const chain3 = (t3.chainSet ? t3.chain : null) || layerChainFor(t3.i2text, { tier: t3.wiredTier, container: fmt });
     const at = stampInstant("second");
     let tx = null;
     try { tx = reg.t.transcription({ member: by, project, at }); } catch { tx = null; }
-    const t4 = await tier4Extend(tx, { sha, storeName, i2text: t3.i2text, chain: chain3, wiredTier: t3.wiredTier });
-    if (!t4.filled.length)
+    /* R71 (N862, K2689): whether the AI path was asked, for which pages, and what it answered, so `transcribe.none`
+       is said only when agent-worker was asked and filled nothing. */
+    const asked = { pages: null, answer: null };
+    const handed = tx && typeof tx === "object" && typeof tx.transcribe === "function"
+      ? { ...tx, transcribe: async (q) => {
+          asked.pages = Array.isArray(q && q.pages) ? [...q.pages] : [];
+          asked.answer = await tx.transcribe(q);
+          return asked.answer; } }
+      : tx;
+    const t4 = await tier4Extend(handed, { sha, storeName, i2text: t3.i2text, chain: chain3, wiredTier: t3.wiredTier });
+    /* R71 (N853a): an account or limit refusal relayed by tier 4 is answered as that refusal; nothing is written. */
+    const refusal = t4.aiRefusal && typeof t4.aiRefusal === "object" ? t4.aiRefusal : null;
+    if (refusal && !t4.filled.length) return { status: refusalStatus(refusal), body: refusal };
+    if (!t4.filled.length) {
+      const why = t4.aiNote || "the AI was not asked to transcribe, and nothing about this capture was changed";
+      const posted = asked.pages !== null && !(asked.answer && asked.answer.ok === false && NO_POST_REASONS.includes(asked.answer.reason));
       return { status: 200, body: { ok: true, op, sha256: sha,
-        transcription: { performed: false, written: false,
-                         why: t4.aiNote || "the AI was not asked to transcribe, and nothing about this capture was changed" } } };
+        transcription: { performed: false, written: false, why },
+        ...(posted ? { says: fillWords("transcribe.none", { pages: pagesSaid(asked.pages), why }) } : {}) } };
+    }
     /* R71 by R34's rule: the stored reading's type, `at` the capture instant, page count and container extent carried,
        reading-pipeline R18's provenance, the read's own counts and emitted fields, and `reextracted`. */
     const chain = t4.chain;
@@ -1600,7 +1648,7 @@ export class Extraction {
                                                     content_type: null, at: stored.at ?? null, ...(vw ? { view: vw } : {}) });
     const reading = readingFromWire({
       wired, docType: { type: { key: stored.content_type ?? null, version: stored.reader_version ?? null } },
-      chain, wiredTier: t4.wiredTier, fmt: "pdf", retrieved: stored.at ?? null,
+      chain, wiredTier: t4.wiredTier, fmt, retrieved: stored.at ?? null,
       tier2note: t2Note, ocrNote: t3.ocrNote, tier3Candidate: t3.stillWanting });
     reading.page_count = Number.isInteger(structure.pages) && structure.pages > 0
       ? structure.pages : (Number.isInteger(stored.page_count) && stored.page_count > 0 ? stored.page_count : null);
@@ -1608,7 +1656,7 @@ export class Extraction {
       if (pb) reading.page_boxes = pb;
       else if (Object.prototype.hasOwnProperty.call(stored, "page_boxes")) reading.page_boxes = stored.page_boxes; }
     if (Object.prototype.hasOwnProperty.call(stored, "container_extent")) reading.container_extent = stored.container_extent;
-    reading.provenance = await readingProvenance({ text: t4.i2text, chain, tier: t4.wiredTier, container: "pdf",
+    reading.provenance = await readingProvenance({ text: t4.i2text, chain, tier: t4.wiredTier, container: fmt,
                                                    planeVersion: e.VERSION || null });
     { const n = textCountsOf(t4.i2text); if (n) Object.assign(reading, n); }
     Object.assign(reading, emittedFieldsOf(t4.i2text));
@@ -1624,13 +1672,14 @@ export class Extraction {
         performed: true, written: w.ok === true, ...unwrittenWhy(w, "transcription"),
         pages: t4.filled, engine: t4.engine.engine, version: t4.engine.version, act,
         text_source: chain, chain: describeChain(chain),
-        label: AI_READING_LABEL, note: t4.aiNote, measured_by: AI_TRANSCRIPTION_SOURCE,
+        label: TRANSCRIBE_WORDS["transcribe.label"], note: t4.aiNote, measured_by: AI_TRANSCRIPTION_SOURCE,
         ocr: t3.filled.length ? { pages: t3.filled, engine: t3.engine } : null,
         reading: { content_type: reading.content_type, read_from_text: reading.read_from_text, found: reading.found,
                    entities: Array.isArray(reading.entities) ? reading.entities.length : 0, text_tier: reading.text_tier },
         staled: w.staled ?? 0, units: w.indexed ?? null, observed: w.observed ?? null, compared: w.compared ?? null,
         after_read: w.afterRead ?? null,
-      } } };
+      },
+      ...(w.ok === true ? { says: fillWords("transcribe.done", { pages: pagesSaid(asked.pages ?? t4.filled) }) } : {}) } };
   }
 
   /* ---- drift obligations (R38–R40) ---- */
@@ -1706,6 +1755,14 @@ function unwrittenWhy(w, act) {
            + "longer held for this caller when the write arrived), so the text above "
            + "was read and NOT recorded" };
 }
+
+/* R71 (N862, K2689): the transcriber's reasons that posted nothing to agent-worker (plane R36), answered with
+   `performed: false` and the reason until the design stream names their words (B133). */
+const NO_POST_REASONS = Object.freeze(["AGENT_WORKER_UNBOUND", "EVIDENCE_ABSENT", "NO_PAGE_RENDERED"]);
+
+/* R71 (N853a): the status a relayed account or limit refusal carries: its own when it states one, else 403, as the
+   keep-away refusal is relayed. */
+const refusalStatus = (r) => (Number.isInteger(r.status) && r.status >= 400 && r.status < 500 ? r.status : 403);
 
 /* R72: a transcriber is `{deployable(), keptAway({project, use}), transcription({member, project, at})}`. */
 const isTranscriber = (t) => !!t && typeof t === "object" && typeof t.deployable === "function"
