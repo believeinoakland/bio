@@ -4,6 +4,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE } from "./fixture.mjs";
 import { noSuchDetermination } from "../../../src/conformance/index.mjs";
+import { ADDRESSED_WORDS, CONSEQUENCES_CHECKS } from "../../../src/consequences/index.mjs";
 
 const S = "STD-2026-0001-law";
 const DOC = "INFO-2026-0001-doc";
@@ -38,7 +39,7 @@ test("R9 (D54): addressedRecord's refusals, with a negative control", () => {
        absent to her. */
     ["NO_SUCH_PART", { author: V("carol") }],
     ["ADDRESSED_UNKNOWN_STATE", { state: "partly" }],
-    ["NO_REASON", { reason: " " }],
+    ["ADDRESSED_NO_REASON", { reason: " " }],
     ["ADDRESSED_NO_EVIDENCE", { evidence: [] }], ["ADDRESSED_NO_EVIDENCE", { evidence: null }],
     ["NO_SUCH_EVIDENCE", { evidence: ["INQ-2026-0099-none"] }],
   ];
@@ -145,4 +146,53 @@ test("R9: addressedRecord is accepted on a superseded determination's parts, and
   /* An absent determination is conformance's one answer (its R19), minted there, never here. */
   assert.deepEqual(w.c.addressed({ determination: "CONF-2026-0099-x", viewer: V("alice") }),
                    noSuchDetermination("CONF-2026-0099-x"));
+});
+
+test("R9 (T45; v0.2 rule 17): plain words, never a percentage, and a reason for both states; each refusal with its control", () => {
+  const w = setup();
+  const id = w.part();
+  const good = { id, state: "addressed", evidence: [w.cid], reason: "the fund was restored", author: V("alice") };
+  const cases = [
+    /* The reason: absent or blank, then over 2,000 characters, for both states. */
+    ["ADDRESSED_NO_REASON", { reason: undefined }], ["ADDRESSED_NO_REASON", { reason: "  " }],
+    ["ADDRESSED_NO_REASON", { state: "not_addressed", evidence: [], reason: "" }],
+    ["ADDRESSED_BAD_REASON", { reason: "x".repeat(2001) }],
+    ["ADDRESSED_BAD_REASON", { state: "not_addressed", evidence: [], reason: "x".repeat(2001) }],
+    /* A percentage, share, ratio or score of redress, as a key anywhere in the statement or a % in words. */
+    ["ADDRESSED_NO_PERCENTAGE", { percent: 60 }], ["ADDRESSED_NO_PERCENTAGE", { percentage: "60" }],
+    ["ADDRESSED_NO_PERCENTAGE", { share: 0.6 }], ["ADDRESSED_NO_PERCENTAGE", { ratio: "3/5" }],
+    ["ADDRESSED_NO_PERCENTAGE", { score: 3 }], ["ADDRESSED_NO_PERCENTAGE", { Percent: 1 }],
+    ["ADDRESSED_NO_PERCENTAGE", { detail: { redress: { share: 0.5 } } }],
+    ["ADDRESSED_NO_PERCENTAGE", { words: ["mitigated", "60%"] }],
+    /* The words: one of the five, each once, at most five, a list, and only on addressed. */
+    ["ADDRESSED_WORD_REFUSED", { words: ["fixed"] }], ["ADDRESSED_WORD_REFUSED", { words: ["Mitigated"] }],
+    ["ADDRESSED_WORD_REFUSED", { words: ["mitigated", "mitigated"] }], ["ADDRESSED_WORD_REFUSED", { words: "mitigated" }],
+    ["ADDRESSED_WORD_REFUSED", { state: "not_addressed", evidence: [], words: ["acknowledged"] }],
+  ];
+  for (const [code, over] of cases) {
+    const before = w.snapshot();
+    const r = w.c.addressedRecord({ ...good, ...over });
+    assert.equal(r.reason, code, `${code} ${JSON.stringify(over)} ${JSON.stringify(r)}`);
+    assert.deepEqual([r.check, r.translation], [CONSEQUENCES_CHECKS[code].check, CONSEQUENCES_CHECKS[code].translation]);
+    assert.deepEqual(w.snapshot(), before, `${code} writes nothing`);
+  }
+  assert.deepEqual(["ADDRESSED_WORD_REFUSED", "ADDRESSED_NO_PERCENTAGE", "ADDRESSED_NO_REASON", "ADDRESSED_BAD_REASON"]
+    .map((c) => CONSEQUENCES_CHECKS[c].check), ["C-114.23", "C-114.24", "C-114.25", "C-114.26"]);
+  /* Controls: the same statement with words: ["mitigated"] and no such key lands; all five words land; a reason of
+     2,000 characters lands; not_addressed with a reason and no words lands. The words are answered with the part. */
+  const m = w.c.addressedRecord({ ...good, words: ["mitigated"] });
+  assert.equal(m.ok, true, JSON.stringify(m));
+  assert.deepEqual(m.words, ["mitigated"]);
+  assert.deepEqual(w.c.consequenceRead({ id, viewer: V("alice") }).part.addressed.words, ["mitigated"]);
+  assert.deepEqual(ADDRESSED_WORDS, ["remedied", "mitigated", "compensated", "acknowledged", "cannot_be_undone"]);
+  const five = w.c.addressedRecord({ ...good, words: [...ADDRESSED_WORDS] });
+  assert.deepEqual([five.ok, five.words], [true, [...ADDRESSED_WORDS]]);
+  assert.equal(w.c.addressedRecord({ ...good, reason: "x".repeat(2000) }).ok, true);
+  const no = w.c.addressedRecord({ ...good, state: "not_addressed", evidence: [], reason: "nothing yet" });
+  assert.equal(no.ok, true);
+  assert.equal("words" in w.c.consequenceRead({ id, viewer: V("alice") }).part.addressed, false, "no words on this one");
+  /* The overall reading is unchanged: words do not make a part addressed, and partial redress stays not addressed. */
+  assert.equal(w.overall().state, "not_addressed");
+  w.c.addressedRecord({ ...good, words: ["cannot_be_undone", "acknowledged"] });
+  assert.equal(w.overall().state, "addressed");
 });

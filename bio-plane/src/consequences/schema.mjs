@@ -78,7 +78,8 @@ CREATE TABLE IF NOT EXISTS consequence_operands (
 );
 -- R9: A MEMBER'S ADDRESSED RECORD, one row per act, append-only; the latest by
 -- seq is the part's state. evidence is the JSON list of content ids or
--- findings.
+-- findings; words (T45, added by migrateConsequences) the JSON list of R9's
+-- plain words, or null.
 CREATE TABLE IF NOT EXISTS consequence_addressed (
   seq        INTEGER PRIMARY KEY AUTOINCREMENT,
   part_id    TEXT NOT NULL,
@@ -89,6 +90,46 @@ CREATE TABLE IF NOT EXISTS consequence_addressed (
   at         TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS consequence_addressed_part ON consequence_addressed (part_id, seq);
+-- R17–R21 (T45): ONE ROW PER SUCCESS RECORD, never updated. id is SUC-<year>-<4
+-- digits> (opaque, minted by record-core); project the project it is recorded in
+-- (every read gates on it); matter the {plan, matter} given, stored unread;
+-- statement the member's words; changed_on a calendar date or an EDTF band;
+-- evidence the JSON list of content ids or findings; figures the JSON list of
+-- R18's computed figures as answered when recorded (label, op, operands, value,
+-- grade); sequence the member's text; cause the JSON {statement, evidence} or
+-- null. supersedes names the record this one revises (R21), at most once
+-- (UNIQUE), with its reason.
+CREATE TABLE IF NOT EXISTS success_records (
+  id          TEXT PRIMARY KEY,
+  project     TEXT NOT NULL,
+  matter      TEXT,
+  statement   TEXT NOT NULL,
+  changed_on  TEXT NOT NULL,
+  evidence    TEXT NOT NULL,
+  figures     TEXT NOT NULL,
+  sequence    TEXT,
+  cause       TEXT,
+  author      TEXT NOT NULL,
+  at          TEXT NOT NULL,
+  supersedes  TEXT UNIQUE,
+  reason      TEXT
+);
+CREATE INDEX IF NOT EXISTS success_records_project ON success_records (project, id);
+-- R22 (T45): ONE ROW PER CARRY, appended to the record carried. kind is
+-- success, harm_addressed or cure; record_id the success record, the part, or
+-- the cured determination; ref the standard of a cure; outcome case-authoring's
+-- id for the carried outcome.
+CREATE TABLE IF NOT EXISTS consequence_carries (
+  seq        INTEGER PRIMARY KEY AUTOINCREMENT,
+  record_id  TEXT NOT NULL,
+  kind       TEXT NOT NULL,
+  ref        TEXT,
+  case_id    TEXT NOT NULL,
+  outcome    TEXT NOT NULL,
+  by         TEXT NOT NULL,
+  at         TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS consequence_carries_record ON consequence_carries (record_id, seq);
 `;
 
 /** R13: the tables, as record-core's purge takes them (its R21, R46): each keyed to the part's bundle. */
@@ -96,6 +137,8 @@ export const CONSEQUENCES_TABLES = Object.freeze([
   "consequence_parts",
   Object.freeze({ name: "consequence_operands", keys: Object.freeze(["part_id"]) }),
   Object.freeze({ name: "consequence_addressed", keys: Object.freeze(["part_id"]) }),
+  Object.freeze({ name: "success_records", keys: Object.freeze(["id"]) }),
+  Object.freeze({ name: "consequence_carries", keys: Object.freeze(["record_id"]) }),
 ]);
 
 /* The columns T33 added to `consequence_operands` (R2's money and calculation operands, exact values), added to a table
@@ -108,4 +151,7 @@ export function migrateConsequences(sql) {
   const have = new Set([...sql.exec(`PRAGMA table_info(consequence_operands)`)].map((r) => r.name));
   for (const [col, type] of OPERAND_COLUMNS_T33)
     if (!have.has(col)) sql.exec(`ALTER TABLE consequence_operands ADD COLUMN ${col} ${type}`);
+  /* T45 (R9): the plain words an addressed statement carries, added to a table created before them. */
+  const addr = new Set([...sql.exec(`PRAGMA table_info(consequence_addressed)`)].map((r) => r.name));
+  if (!addr.has("words")) sql.exec(`ALTER TABLE consequence_addressed ADD COLUMN words TEXT`);
 }

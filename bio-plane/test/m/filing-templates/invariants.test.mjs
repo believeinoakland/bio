@@ -68,7 +68,10 @@ test("R18 no place, law, venue or template wording is in the module's behaviour 
     const p = jurisdictions.get(id);
     for (const c of p.covers) names.add(c);
     for (const k of p.counterparties || []) names.add(k.body);
-    for (const k of p.action_kinds || []) { if (k.venue) names.add(k.venue.name); if (k.template) names.add(k.template.text); }
+    for (const k of p.action_kinds || []) {
+      if (k.venue) names.add(k.venue.name);
+      for (const t of [k.template, ...(k.templates || [])]) if (t) { names.add(t.text); if (t.name) names.add(t.name); }
+    }
     for (const l of p.records_laws || []) names.add(l.name);
   }
   /* no answer, refusal or row names one, except what the active (test) profile itself supplies */
@@ -77,7 +80,8 @@ test("R18 no place, law, venue or template wording is in the module's behaviour 
   const out = JSON.stringify([w.ft.templatesFor({ viewer: A }), approved(w, { name: "Other" }), w.ft.templateRead({ template: d.template, viewer: A }),
     ft.FILING_TEMPLATE_CHECKS, ft.FILING_BLANKS, ft.noTemplateGrant(), w.ft.templateDraft({ author: MACHINE }),
     w.ft.templateApprove({ version: d.version, by: A, viewer: A }), w.ft.offeredVersion({ template: d.template, viewer: A })]);
-  const own = new Set(jurisdictions.get(TEST).action_kinds.flatMap((k) => [k.label, k.template && k.template.text]));
+  const own = new Set(jurisdictions.get(TEST).action_kinds.flatMap((k) => [k.label, k.template && k.template.text,
+    ...(k.templates || []).flatMap((t) => [t.text, t.name])]));
   for (const n of names) if (n && n.length > 3 && !own.has(n)) assert.ok(!out.includes(n), n);
   /* with no profile active, nothing local at all */
   const bare = seeded({ profiles: [] });
