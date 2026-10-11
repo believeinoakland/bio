@@ -386,7 +386,7 @@ export class Store extends DurableObject {
       /* K2586 (its R23): the front door's finder over the plane's steps and retrieval, asked at each `startfrom` */
       findExisting: frontDoorFinder({ steps: () => stepsOf(ctx), retrieval: () => retrievalOf(ctx) }) } }));
     /* K2044, K2054 (admission R21): admission's door window, built at its place in layer 11 so its table is made and
-       declared through record-core before the first request; its fingerprint is capture's (its R56). */
+       declared through record-core before the first request; its fingerprint is doorbell's (its R12; K2719). */
     admissionOf(ctx);
     promotion.registerStep(STEP, promotionStep(ctx));   /* R10 (K861, K2037): store-door's step (its R5), the testimony slot and the sight index */
     observationLogOf(ctx).listenToCapture(capture);
@@ -600,8 +600,8 @@ export class Store extends DurableObject {
       coarchiveset: () => acquisitionOf(ctx).coArchiveSet({ on: body ? body.on : undefined, by: url.searchParams.get("by") }),
       coarchivestate: () => acquisitionOf(ctx).coArchiveState(),
       ...captureOps(captureOf(ctx), url, body, env),
-      /* R37 (N826; K2630): doorbell's nine routes, directly after capture's map, so each name capture's map still carries
-         until its T43 delete is answered by doorbell's instance, never capture's copy. */
+      /* R37 (N826; K2630): doorbell's nine routes, directly after capture's map, each answered by doorbell's instance
+         (capture's copy deleted in T43, N849). */
       ...doorbellOps(doorbellOf(ctx), url, body),
       /* R26: file-safety's ops (op-declarations R32), at its place directly after doorbell's map. */
       ...fileSafetyOps(fileSafetyOf(ctx), url, body, env),
