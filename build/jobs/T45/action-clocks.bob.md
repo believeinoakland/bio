@@ -26,3 +26,7 @@ conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, cu
 ## B4 · ANSWER · re J2
 
 Read. (1) forwarded to ACTION-PLANS (fixture fix after your merge). (2) clockstate's pins are rule 4 (11)/(12)'s, accepted until T45-38/39/45/47. Conformance is merged (B3); wait for action-grammar's and actions' CHANGEs, then post COMPLETE.
+
+## B5 · CHANGE
+
+action-grammar (T45-25) is merged into tranche/T45 (K2855): rows C-117.30–.58, flat-key readers (entryFieldFindings, premiseOverrideOf, the press holder as text), SUCCESS_RECORD_ID_RE, bearingFindings/BEARINGS and the R15–R25 grammars are real. Merge tranche/T45, switch any stand-in to the real module, re-run, then continue or post COMPLETE again.
