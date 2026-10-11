@@ -84,6 +84,13 @@ CREATE TABLE IF NOT EXISTS determination_findings (
   PRIMARY KEY (determination_id, ord)
 );
 CREATE INDEX IF NOT EXISTS determination_findings_finding ON determination_findings (finding_id, determination_id);
+-- R2, R31, R32 (T45): each pin's kind, in additive columns: basis is
+-- published (as above; null on a row written before T45), checked_held (R31:
+-- case_id and edition are the held check's, check_id and checked_at the check
+-- pinned, frozen null) or accepted (R32: finding_id is the imported finding
+-- reference, case_id and edition the source group's case and edition,
+-- source_group that group, accepted_by and accepted_at the acceptance in force
+-- at the write, frozen the source edition's pair as accepted-work answered it).
 -- R6: THE OPEN QUESTIONS, each sent back to an inquiry: one the author named,
 -- or one opened in the same act (opened = 1), in the determination's project.
 CREATE TABLE IF NOT EXISTS determination_questions (
@@ -152,6 +159,31 @@ CREATE TABLE IF NOT EXISTS comparison_proposal_contradictions (
   candidate         TEXT NOT NULL,
   at                TEXT NOT NULL
 );
+-- R36 (T45): A CURE LINK, appended by a member: the curing determination
+-- (cure_id) of determination_id's noncompliant outcome for standard_id, with
+-- who recorded it, when and the member's optional reason. Never edited; its
+-- ending is a row of its own (determination_cure_ends). At most one link per
+-- determination and standard stands at a time (CURE_LINKED, R36).
+CREATE TABLE IF NOT EXISTS determination_cures (
+  link_id           TEXT PRIMARY KEY,
+  determination_id  TEXT NOT NULL,
+  standard_id       TEXT NOT NULL,
+  cure_id           TEXT NOT NULL,
+  reason            TEXT,
+  by                TEXT NOT NULL,
+  at                TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS determination_cures_target ON determination_cures (determination_id, standard_id, link_id);
+CREATE INDEX IF NOT EXISTS determination_cures_cure ON determination_cures (cure_id, link_id);
+-- R36 (T45): A CURE LINK ENDED (cureUnlink), one row per link, its reason.
+CREATE TABLE IF NOT EXISTS determination_cure_ends (
+  link_id           TEXT PRIMARY KEY,
+  determination_id  TEXT NOT NULL,
+  cure_id           TEXT NOT NULL,
+  reason            TEXT NOT NULL,
+  by                TEXT NOT NULL,
+  at                TEXT NOT NULL
+);
 -- R12: THE PROPOSAL RECORDS THAT A DETERMINATION DREW ON IT, one row each.
 CREATE TABLE IF NOT EXISTS comparison_proposal_uses (
   proposal_id       TEXT NOT NULL,
@@ -175,15 +207,20 @@ export const CONFORMANCE_TABLES = Object.freeze([
   { name: "comparison_proposal_uses", keys: ["proposal_id", "determination_id"] },
   { name: "determination_causes", keys: ["determination_id"] },
   { name: "comparison_proposal_contradictions", keys: ["proposal_id", "inquiry_id"] },
+  { name: "determination_cures", keys: ["determination_id", "cure_id"] },
+  { name: "determination_cure_ends", keys: ["determination_id", "cure_id"] },
 ]);
 
 /* R25 (T33-70): the act's columns added to a store made before T33; its rows keep null in them. R27, R29 (T35): the
-   bindingness and measure columns, null on rows written before T35. */
+   bindingness and measure columns, null on rows written before T35. R31, R32 (T45): a pin's kind and what it pins. */
 const ADDITIVE = Object.freeze([
   ["determinations", "act_event", "TEXT"], ["determinations", "act_entity", "TEXT"], ["determinations", "act_when", "TEXT"],
   ["determination_standards", "body", "TEXT"], ["determination_standards", "binds", "TEXT"],
   ["determination_standards", "binds_basis", "TEXT"], ["determination_rows", "measure", "TEXT"],
   ["comparison_proposals", "bindings", "TEXT"],
+  ["determination_findings", "basis", "TEXT"], ["determination_findings", "check_id", "TEXT"],
+  ["determination_findings", "checked_at", "TEXT"], ["determination_findings", "source_group", "TEXT"],
+  ["determination_findings", "accepted_by", "TEXT"], ["determination_findings", "accepted_at", "TEXT"],
 ]);
 
 /** Creates the tables, and the columns a store made before T33 or T35 lacks; idempotent. */

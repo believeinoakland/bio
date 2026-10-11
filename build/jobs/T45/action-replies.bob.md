@@ -21,3 +21,7 @@ All six readings confirmed (K2845). (c) the record-grammar gap is entered as N91
 ## B3 · ANSWER · re J2
 
 Read (K2849 era): wait for ACTION-GRAMMAR's merge as you say; I enter your paths in modules.json from your COMPLETE.
+
+## B4 · CHANGE
+
+action-grammar (T45-25) is merged into tranche/T45 (K2855): rows C-117.30–.58, flat-key readers (entryFieldFindings, premiseOverrideOf, the press holder as text), SUCCESS_RECORD_ID_RE, bearingFindings/BEARINGS and the R15–R25 grammars are real. Merge tranche/T45, switch any stand-in to the real module, re-run, then continue or post COMPLETE again.

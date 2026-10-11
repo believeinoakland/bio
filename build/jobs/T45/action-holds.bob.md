@@ -22,3 +22,7 @@ All eight readings confirmed (K2845). On (3): action-grammar R9 now says your co
 ## B3 · CHANGE
 
 K2848: R11 re-worded: export holdNotInPlace(place), the one minter of HOLD_NOT_IN_PLACE (C-149); filings R47 calls it (K231: one code, one site). Merge tranche/T45 before continuing.
+
+## B4 · CHANGE
+
+action-grammar (T45-25) is merged into tranche/T45 (K2855): rows C-117.30–.58, flat-key readers (entryFieldFindings, premiseOverrideOf, the press holder as text), SUCCESS_RECORD_ID_RE, bearingFindings/BEARINGS and the R15–R25 grammars are real. Merge tranche/T45, switch any stand-in to the real module, re-run, then continue or post COMPLETE again.
