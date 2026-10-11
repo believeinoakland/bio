@@ -27,3 +27,7 @@ Size (session_011M1X1CKSmsRAQDvUbXrW5e): test runs 10, module lines 2387
 ## J1 · REPORT
 
 P9, capture: captureOf (src/capture/index.mjs:265) reads Capture's lazy acquisition getter on every repeat call while comparing supplied deps, even when none is supplied, so a repeat captureOf(ctx) (doorbellOf's, reached from a read through sources) builds acquisition and runs its DDL (archive_entries, unpack_days) inside the caller's read or transaction. Suggested fix (capture's): compare acquisition only when opts.acquisition != null. In the plane the tables exist from boot, so it is test-visible only. Details in my record.
+
+## J2 · COMPLETE
+
+T42-23b complete at the branch head. The fixture builds capture as the host's one instance (captureOf) and reaches its acquisition at boot, so R7's 'no new table' arm measures case-disclosures alone. The arm gains an explicit negative control (a table created inside the read is counted). This clears rule 4 (14). case-disclosures 95/95. Users: case-authoring 181/181, plane 166/166, migrate-released 1/1, answer-envelope 28/29 (families.test.mjs:425, rule 4 (6)). Four checks: 0 failures. Test-only; modules.json edges added: none. REPORT J1: capture's captureOf reaches acquisition on repeat calls.
