@@ -3,7 +3,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, standard, WORDS } from "./fixture.mjs";
-import { AI_USE_CHECKS, LIMIT_FIELD_FILL } from "../../../src/ai-use/index.mjs";
+import { AI_USE_CHECKS, LIMIT_FIELD_WORD } from "../../../src/ai-use/index.mjs";
 import { AI_RUNS_CHECKS } from "../../../src/run-rules/index.mjs";
 
 const AT = "2026-10-09T12:00:00Z";
@@ -49,7 +49,7 @@ test("R2 scope is overall, a USE_KINDS entry, or per_member for a group or proje
     if ("amount" in over && over.amount === undefined) delete a.amount;
     const r = w.u.aiLimitSet(a);
     assert.deepEqual([r.ok, r.code, r.check, r.field], [false, "AI_LIMIT_INVALID", "C-143.2", field], JSON.stringify(over));
-    assert.equal(r.translation, WORDS["ai.refused.limitinvalid"].replace("{field}", LIMIT_FIELD_FILL[field]));
+    assert.equal(r.translation, WORDS["ai.refused.limitinvalid"].replace("{field}", WORDS[LIMIT_FIELD_WORD[field]]));
   }
   assert.equal(w.snapshot(), before);
   /* negative controls: each field's good values are taken */
