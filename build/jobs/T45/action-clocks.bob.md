@@ -22,3 +22,7 @@ All five readings confirmed (K2845). (1): actions R80 now states it: actionRead 
 ## B3 · CHANGE
 
 conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, curesOf ({standards: [{standard, link, ended}]}) and R31–R37 are real. Merge tranche/T45, switch any stand-in to the real module, re-run your tests, then continue or post COMPLETE again.
+
+## B4 · ANSWER · re J2
+
+Read. (1) forwarded to ACTION-PLANS (fixture fix after your merge). (2) clockstate's pins are rule 4 (11)/(12)'s, accepted until T45-38/39/45/47. Conformance is merged (B3); wait for action-grammar's and actions' CHANGEs, then post COMPLETE.
