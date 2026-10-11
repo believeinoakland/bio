@@ -4645,6 +4645,7 @@ function b2(ref, a0, color) {
 var LATIN1 = new TextDecoder("latin1");
 var REFUSALS = {
   NOT_A_PDF: "the bytes do not carry a %PDF- header",
+  NOT_A_PICTURE: "the bytes are neither a JPEG nor a PNG file",
   ENCRYPTED: "the document is encrypted; streams are ciphertext to this reader",
   NO_SUCH_PAGE: "the page index is outside the document",
   PAGE_UNREADABLE: "the page object could not be read",

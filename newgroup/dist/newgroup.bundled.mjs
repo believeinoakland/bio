@@ -2686,8 +2686,10 @@ var SHARED_ACT_CHECKS = Object.freeze({
   NO_BASIS: {
     check: "C-33.40",
     /* (N827, K2467; T42) every site that answers with this row: inquiry's helper (basis-versions raises through it),
-       progressions' and entities' one refusal helpers, each named with the acts it serves. */
-    where: "src/inquiry/index.mjs actNoBasis > is-act-no-basis (inquiry's, and basis-versions' through it), src/progressions/checks.mjs refusal (progressions' first declaration and revision of a declared flow, src/progressions/index.mjs), and src/entities/index.mjs actShapeRefusal (entities' held identifier and grade-D testimony)",
+       progressions' and entities' one refusal helpers, each named with the acts it serves. (T43; N857, K2643) money's
+       and lines' one refusal helpers join them: money's `refusal` for a fund's type (`setFundType`) and lines'
+       `noBasis` for `recordLine`'s basis forms, each of which reads this row and adds none of its own. */
+    where: "src/inquiry/index.mjs actNoBasis > is-act-no-basis (inquiry's, and basis-versions' through it), src/progressions/checks.mjs refusal (progressions' first declaration and revision of a declared flow, src/progressions/index.mjs), src/entities/index.mjs actShapeRefusal (entities' held identifier and grade-D testimony), src/money/index.mjs refusal (money's fund type, `setFundType`), and src/lines/index.mjs noBasis (lines' basis forms, `recordLine`)",
     translation: "This asks the record to stand behind something without saying what it rests on. Say what that is first \u2014 what the question is grounded in, what you personally observed, or why a settled thing is being changed \u2014 and the record carries it beside the claim, in your name, so a later reader can go and disagree with it. If the honest answer is that nothing supports it yet, write that down rather than inventing something: a stated absence is a real answer here, and an empty basis reads as one nobody checked."
   },
   NO_CITATION: {
