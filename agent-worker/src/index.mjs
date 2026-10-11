@@ -150,7 +150,7 @@ import {
 } from "../../agent-harness/src/harness.mjs";
 
 /* R4, R37, R55 — what this member names to the plane: its namespaces, a run's ops, the meaning arm, an ask's reach. */
-import { NAMESPACES, MEANING_ARM } from "./ops.mjs";
+import { NAMESPACES, MEANING_ARM, RESPONSE_ID } from "./ops.mjs";
 /* R63 — what a read hands the model of a file: the readers' text and its `active` list, never its bytes. */
 import { toolContent, droppedNote } from "./reads.mjs";
 /* R54–R56 — `POST /ask`, in its own file. */
@@ -492,6 +492,10 @@ async function driveHarness(env, { runId, store, credential, judgements, maxStep
       : passLimit(session.max_passes),
     /* R51: the plan a plan-mode run proposes to is the run's own (ai-runs R46, R19), never the caller's. */
     planId: typeof session.plan === "string" && session.plan ? session.plan : null,
+    /* R78: a re-examination run's origin and the response it re-examines, the record's (ai-runs R77, R19), never the
+       caller's. */
+    origin: typeof session.origin === "string" ? session.origin : null,
+    response: typeof session.response === "string" && session.response ? session.response : null,
     resumedFrom,
     budget,
     targets: [], reports: [], candidates: [], queue: [],
@@ -1240,9 +1244,13 @@ async function performPlanStep(call, state, runId) {
           if (!(fact in view)) undetermined.push({ op: "profiles", id: fact, code: null,
                                                    why: "the plane's profile answer does not publish it" });
       }
+      /* R78: a re-examination run reads, besides R51's reads, the recorded response and the procedure guide for its
+         action's kind, under the same credential and the same rule: what cannot be read is UNDETERMINED in `why`. */
+      if (state.origin === "reexamination") await reexaminationReads(ask, state.response, undetermined);
       out.note = `${reads.length} read(s) answered under the run's credential, ${undetermined.length} UNDETERMINED `
                + "(refused, silent or not published) and carried into every proposal's why, never as an absence; "
-               + `${earlier.length} earlier plan(s) of the same project`;
+               + `${earlier.length} earlier plan(s) of the same project`
+               + (state.origin === "reexamination" ? "; a re-examination after a recorded response, read with it" : "");
       out.state = { ...state, planDoc, earlier, reads, undetermined };
       return out;
     }
@@ -1315,6 +1323,38 @@ async function performPlanStep(call, state, runId) {
     default:
       return out;
   }
+}
+
+/** R78 (T45; N887; Actions D21; v0.2 rules 16, 19) — WHAT A RE-EXAMINATION RUN READS BESIDES R51's: the recorded
+ *  response, as its correspondence entry on the action (`op=action`) and its capture's extracted text (`op=reading`,
+ *  the readers' text only, R63), and the procedure guide for the action's kind (`op=procedureguides`, `reading-guides`
+ *  R13). `response` is the run's (ai-runs R77), `<action>#<ord>`: the action and the entry's place in its ledger. Each
+ *  read goes through `ask`, R51's one door, so an answer reaches the model only as the row's facts and a refused or
+ *  silent one is UNDETERMINED in `why`; a response this member cannot take apart, an entry the action does not hold,
+ *  an entry with no capture and an action of no kind are each UNDETERMINED and named, never an absence. It writes
+ *  nothing. */
+async function reexaminationReads(ask, response, undetermined) {
+  const m = typeof response === "string" ? RESPONSE_ID.exec(response) : null;
+  if (!m) {
+    undetermined.push({ op: "action", id: typeof response === "string" ? response.slice(0, 200) : null, code: null,
+                        why: "the run's recorded response names no action entry this member can read" });
+    return;
+  }
+  const action = m[1], ord = Number(m[2]);
+  const answered = await ask({ op: "action", query: { id: action } });
+  if (!answered) return;
+  const doc = answered && typeof answered.action === "object" && answered.action ? answered.action : answered;
+  const entry = (Array.isArray(doc.correspondence) ? doc.correspondence : []).find((e) => e && Number(e.ord) === ord);
+  if (!entry)
+    undetermined.push({ op: "action", id: response, code: null, why: "the action answered holds no such correspondence entry" });
+  else if (typeof entry.artifact_sha === "string" && entry.artifact_sha)
+    await ask({ op: "reading", query: { sha256: entry.artifact_sha } });
+  else
+    undetermined.push({ op: "reading", id: response, code: null,
+                        why: "the response is a member's account or a non-response, with no capture to read" });
+  const kind = typeof doc.kind === "string" && doc.kind ? doc.kind : null;
+  if (kind) await ask({ op: "procedureguides", query: { kind } });
+  else undetermined.push({ op: "procedureguides", id: action, code: null, why: "the action answered names no kind" });
 }
 
 /** agent-harness R7 — THE SUB-SESSIONS. Each gets a fresh transcript (nothing shared with the parent or another level), its
