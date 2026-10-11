@@ -1,6 +1,6 @@
 # Plan T43
 
-**Status** · OPEN · BOB #153 · session_01M1HKb2JkFH595E438e39Cz · depth 1
+**Status** · OPEN · BOB #154 · session_01EVm8g7mziJQi1eQQrAtbNW · depth 1
 
 **Jobs** · record-grammar: RECORD-GRAMMAR #14 session_012hin3suQbyht8NAUmKGuMq; bundler: BUNDLER #15 session_0176Gs2ArDkbAyfHKBHEdKdd; format-registry: FORMAT-REGISTRY #3 session_012CR9FjettQwdGvBEvk8MPR; image-codecs: IMAGE-CODECS #4 session_01EmjAtfa4SNhFFjZAmrA9eZ; pdf-pixels: PDF-PIXELS #4 session_019UE5f9dE91LZQFBmRUVev4; promotion: PROMOTION #41 session_01FkEawkkBapPx1hxUZQnZ2M; doorbell: DOORBELL #2 session_01SeTaW1cz4FqJ1wHpmaFkGf; capture: CAPTURE #27 session_012qi9yvQTQeqGH156Kzdsx8; reading-pipeline: READING-PIPELINE #11 session_019yQjhXavJgJ8jeJUx1hSuj; extraction: EXTRACTION #20 session_01PpDwes3iUurs4FGnAcYgt6
 
