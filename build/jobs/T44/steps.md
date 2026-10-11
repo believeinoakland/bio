@@ -28,3 +28,16 @@ No other flaw found. Nothing deferred.
 - `format`: 147 modules, 0 failures. `architecture steps`: 0 failures. `coverage steps`: 27 of 27, 0 failures. `ownership steps tranche/T44`: 4 files, 0 failures.
 
 Size (session_01DFB5ozwU2VhpMC9hsjyxyD): test runs 18, module lines 1651
+
+## J1 · COMPLETE
+
+T44-6 done on `job/T44/steps` (work commit 6ec6c8ca67, module files only; the record's Completion section has the detail).
+
+- R23: each `later_found` entry answers `looked_at`, the look's own `at`, beside `at`. `step()` and `laterFound()` both answer it. An older store gains the column at start, filled from the look's row; an entry whose look is gone answers null.
+- Whole read of my own code (P20): two flaws fixed in `laterFound`. Its `at` is now compared as an instant, not a string. It now says `truncated` past `LATER_FOUND_SCAN` (5,000) entries.
+- Reading set (584 KB) read whole, myself.
+- Tests: steps 38 pass, 0 fail.
+  - Users: notice-producers 92/3, affordances 231/2, op-declarations 132/1. Every red is rule 4 (6)'s inherited set, the same before the change.
+  - Every other user is green.
+- Checks: format, architecture, coverage (27/27) and ownership all show 0 failures.
+- Nothing found in other modules; nothing deferred. The plane bundle is staled as usual (rule 4 (5)).
