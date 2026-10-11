@@ -19,3 +19,7 @@
 **Checks** (from the process repository): format 0 failures (147 modules); architecture 0 failures; coverage 15 of 15 live ids named, 0 failures; ownership 0 failures. Module tests 28/28.
 
 Size (session_01RQyJav79UQDg97kG4FrsPk): test runs 14, module lines 1046
+
+## J1 · COMPLETE
+
+T42-19 (N845) R15 applied: questionExplorerOf migrates before declaring to purge; R15 tested at the interface with a negative control (fails on the old factory). B2 (K2655) applied: the fixture hands runProductionsOf an inquiry stand-in; 28/28 on this branch and on run-productions' branch code, 26/28 there without it. Users' suites: scheduler 129, notice-producers 90, op-declarations 128, control-plane 216, plane 166 all green; reds only inherited: answer-envelope catalogue-end.test.mjs:17 (rule 4 (6)), migrate-released ai_ceilings (rule 4 (7)). Checks: format, architecture, coverage 15/15, ownership: 0 failures. Record: build/jobs/T42/question-explorer.md.
