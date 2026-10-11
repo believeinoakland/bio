@@ -26,3 +26,7 @@
 - `format: 147 modules, 146 requirements files; 0 failures`; `architecture: 10 product files, 41 relative imports; 0 failures`; `coverage: 1 modules, 22 of 22 live requirement ids named by a test; 0 failures`; `ownership: 5 files changed by lines between tranche/T42 and HEAD; 0 failures`.
 
 Size (session_0163snLavE1iNycSFMG4uPJy): test runs 30, module lines 962
+
+## J1 · COMPLETE
+
+T42-11a complete at the branch head (tranche/T42 @ f997b738cd merged): R22: all seven NO_BASIS sites answer with record-grammar's C-33.40 (check, translation) through one helper noBasis; basis-row.test.mjs tests each site via recordLine, recordCurrentThrough and the ops map, with a negative control; mutation fails 2 of 3. Own sample-only tests for R15, R16 and R18 made whole. lines 33/33; the 18 user suites green except case-disclosures carries.test.mjs:156 (159 !== 157, red on tranche/T42 without this change); migrate-released red only on the ai_ceilings arm (rule 4 (7)). The four checks report 0 failures. REPORT: record-grammar R29 needs C-33.40's where to name src/lines/index.mjs noBasis (acts.mjs:43-49), record-grammar's change. modules.json edges added: none. Details in the record's Completion section.
