@@ -1,6 +1,6 @@
 # actions (T45)
 
-**Status** · session_01WosqkVPWcWM1u4LjrLwHUN · depth 2 · COMPLETE · handled B10
+**Status** · session_01WosqkVPWcWM1u4LjrLwHUN · depth 2 · COMPLETE · handled B11
 
 ## J1 · QUESTION
 
@@ -76,3 +76,11 @@ Size (session_01WosqkVPWcWM1u4LjrLwHUN): test runs 30, module lines 3967
 ## J4 · COMPLETE
 
 T45-27 done: every entry applied, the moved hold code deleted; actions 110 pass, the four checks clean. Completion and seven REPORT items in my record (stale C-117 hold rows; R22 text rule; action-holds R1 vs its pressure test, needs your call; other modules' ground-less override tests; op maps; the accepted queue/plane hold callers; modules.json uses).
+
+**B11 (K2861).** `REPLY_OWED_REFUSED` has one site: `#t45Fields` hands `{reply_owed, reply_owed_reason}` to action-grammar's `actionFieldFindings` and its own `is-reply-owed-reason` region is deleted (REPORT 1's third point closed). `node --test bio-plane/test/m/actions/*.test.mjs`: 110 pass, 0 fail; the four checks 0 failures.
+
+Size (session_01WosqkVPWcWM1u4LjrLwHUN): test runs 31, module lines 3962
+
+## J5 · COMPLETE
+
+B11 applied: reply_owed and its reason judged by action-grammar alone, my region deleted; actions 110 pass, the four checks clean. The rest of J4 stands.
