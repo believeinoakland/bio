@@ -41,3 +41,12 @@
 - ownership answer-envelope `tranche/T43`: 3 files, 0 failures.
 
 Size (session_01NrTsqzXz9Abjh9zWaPQcvE): test runs 9, module lines 843
+
+## J1 · COMPLETE
+
+T43-14 (N851) done, pushed on job/T43/answer-envelope; details in the record.
+R12: CHECK_FAMILY_FILES reads src/doorbell/checks.mjs directly after capture's, before file-safety's. families.test.mjs:353 is updated, and a new R12 test pins the nine rows to R7. C-118.7 postdates the snapshot, so it is pinned to capture's row at T43's opening; the row is identical.
+Rule 4 (9) clears: answer-envelope 31/31 pass.
+Users: store-door 44/44, plane 184/184 + migrate-released 1/1. control-plane 222/223: envelope.test.mjs:391 (T43-23, rule 4 (12)).
+Checks: format, architecture, coverage (12/12) and ownership (3 files) report 0 failures.
+REPORT, wording only: store-door R7 still says C-118.7 is in capture's table until T43; file-safety's status line says 'directly after capture'. The plane bundle is staled (rule 4 (6)).
