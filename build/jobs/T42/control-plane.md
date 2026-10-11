@@ -70,3 +70,7 @@ Merged `tranche/T42` (op-grades, affordances, op-declarations, answer-envelope m
 - Item 2 is already met (R71, `of.caseAccount()`).
 - control-plane suite: 219/223. The 5 R74 tests now pass on the real R47 spec (totality's stale red is cleared too). The 4 R36 pull tests still wait on store-door R7's `deps.doorbell`.
 - Checks are as before: architecture shows the 4 failures from the missing `doorbell` edge only.
+
+## J3 · REPORT
+
+B2 handled: both items were already applied in J1 (R74 author from the session, tested with a forged author as its negative control; R71 of.caseAccount()). Merged tranche/T42: 219/223. All R74 tests pass on op-declarations' merged spec. The 4 remaining reds are the R36 pull tests, which wait on store-door R7 (deps.doorbell). The J1 asks for BOB still stand (modules.json edges; plane store.mjs:677's caseAccount getter). Pushed.
