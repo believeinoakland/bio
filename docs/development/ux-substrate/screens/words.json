@@ -9,10 +9,11 @@
   "draft": 4,
   "photo": 13,
   "handle": 9,
-  "ai": 63,
-  "date": 12,
+  "ai": 71,
+  "date": 13,
   "queue": 20,
-  "transcribe": 4,
+  "transcribe": 12,
+  "capture": 1,
   "document": 5,
   "question": 1,
   "rail": 14,
@@ -23,7 +24,7 @@
   "act": 483,
   "column": 33,
   "wizard": 239,
-  "total": 1075,
+  "total": 1093,
   "protected": 395
  },
  "words": [
@@ -649,8 +650,26 @@
    "source": "mock-screens.js AI_USES"
   },
   {
+   "key": "ai.use.enquire.name",
+   "en": "Interviews and planning",
+   "protected": false,
+   "source": "mock-screens.js AI_USES"
+  },
+  {
+   "key": "ai.use.read.name",
+   "en": "Reading inside documents",
+   "protected": false,
+   "source": "mock-screens.js AI_USES"
+  },
+  {
    "key": "ai.use.transcribe.name",
    "en": "Reading page pictures",
+   "protected": false,
+   "source": "mock-screens.js AI_USES"
+  },
+  {
+   "key": "ai.use.account.name",
+   "en": "A case's account",
    "protected": false,
    "source": "mock-screens.js AI_USES"
   },
@@ -1042,8 +1061,29 @@
    "note": "{use} inside a sentence; {Use} at a sentence's start is ai.use.*.name"
   },
   {
+   "key": "ai.use.enquire.inline",
+   "en": "interviews and planning",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{use} inside a sentence; {Use} at a sentence's start is ai.use.*.name"
+  },
+  {
+   "key": "ai.use.read.inline",
+   "en": "reading inside documents",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{use} inside a sentence; {Use} at a sentence's start is ai.use.*.name"
+  },
+  {
    "key": "ai.use.transcribe.inline",
    "en": "reading page pictures",
+   "protected": false,
+   "source": "DEC-189",
+   "note": "{use} inside a sentence; {Use} at a sentence's start is ai.use.*.name"
+  },
+  {
+   "key": "ai.use.account.inline",
+   "en": "a case's account",
    "protected": false,
    "source": "DEC-189",
    "note": "{use} inside a sentence; {Use} at a sentence's start is ai.use.*.name"
@@ -1117,6 +1157,27 @@
    "protected": true,
    "source": "DEC-189",
    "note": "the told-once Noticed item, scope per_member; names no member"
+  },
+  {
+   "key": "ai.refused.exploreoutofscope",
+   "en": "The assistant can't explore this question on {whose} account: it lies outside what the account's owners chose to explore.",
+   "protected": false,
+   "source": "DEC-191",
+   "note": "EXPLORE_OUT_OF_SCOPE (C-143.5)"
+  },
+  {
+   "key": "ai.refused.exploreaskinvalid",
+   "en": "Nothing was recorded: an ask to explore names the day and what is worth exploring that day.",
+   "protected": false,
+   "source": "DEC-191",
+   "note": "EXPLORE_ASK_INVALID (C-143.6); ai-use's sentence kept"
+  },
+  {
+   "key": "date.daymonth",
+   "en": "{day} {month}",
+   "protected": false,
+   "source": "DEC-191",
+   "note": "a local day in a sentence, such as 14 October; {month} from date.month.*; {date} in ai.queue.limitreached* and every queue item"
   },
   {
    "key": "ai.scope.group",
@@ -1291,7 +1352,68 @@
    "en": "The assistant read pages {pages} but found no words it could give: {why}",
    "protected": false,
    "source": "DEC-190",
-   "note": "performed false; {why} the reason as answered"
+   "note": "only when the assistant was asked and read nothing (DEC-191); {why} the reason as answered"
+  },
+  {
+   "key": "transcribe.notsent",
+   "en": "Nothing was sent to the assistant: {why}. The pages are as they were.",
+   "protected": false,
+   "source": "DEC-191",
+   "note": "agent-worker never asked: {why} from transcribe.why.*"
+  },
+  {
+   "key": "transcribe.why.unbound",
+   "en": "the assistant can't be reached from your group's Civicsmith just now",
+   "protected": false,
+   "source": "DEC-191",
+   "note": "AGENT_WORKER_UNBOUND"
+  },
+  {
+   "key": "transcribe.why.evidenceabsent",
+   "en": "the document's stored copy can't be read just now",
+   "protected": false,
+   "source": "DEC-191",
+   "note": "EVIDENCE_ABSENT"
+  },
+  {
+   "key": "transcribe.why.norender",
+   "en": "none of these pages could be turned into an image the assistant can read",
+   "protected": false,
+   "source": "DEC-191",
+   "note": "NO_PAGE_RENDERED"
+  },
+  {
+   "key": "transcribe.refused",
+   "en": "The assistant didn't read these pages: {reason}",
+   "protected": false,
+   "source": "DEC-191",
+   "note": "a refusal came back; {reason} the refusal's own sentence, read by its key"
+  },
+  {
+   "key": "transcribe.picture.unprepared",
+   "en": "This photo can't be prepared for the assistant: {why}. Take it again as an ordinary photo, or type its words yourself.",
+   "protected": false,
+   "source": "DEC-191",
+   "note": "{why} from transcribe.picture.why.*"
+  },
+  {
+   "key": "transcribe.picture.why.progressive",
+   "en": "it is saved in a form the assistant can't open (a progressive JPEG)",
+   "protected": false,
+   "source": "DEC-191"
+  },
+  {
+   "key": "transcribe.picture.why.toolarge",
+   "en": "it is too large",
+   "protected": false,
+   "source": "DEC-191"
+  },
+  {
+   "key": "capture.picture.unread",
+   "en": "A photographed page, not read yet: its words can't be found or cited until the assistant reads it or a member types them.",
+   "protected": false,
+   "source": "DEC-191",
+   "note": "a JPEG or PNG capture read as one picture page (N853b)"
   },
   {
    "key": "transcribe.done",

@@ -132,7 +132,7 @@ add('handle.refused.notmember', 'Only a member can change their own handle.', fa
 
 // 4c. AI accounts and limits (DEC-188; N812): who pays, what for, up to what; protected where they say who sees what
 add('ai.whopays', must(scr, 'mock-screens.js', 'For a member\\\'s act in a project that has its own AI account, that project\\\'s account pays. Otherwise the member\\\'s own account, if they connected one; otherwise the group\\\'s key. The account chosen is the one used: if it has reached a limit, or that use is switched off on it, the assistant stops for that act and says whose setting stopped it.').replace(/\\'/g, "'"), true, 'mock-screens.js AI_WHO_PAYS');
-for (const [k, name] of [['ask', 'Asking'], ['draft', 'Drafting'], ['run', 'Runs'], ['standing', 'Standing questions'], ['transcribe', 'Reading page pictures'], ['explore', 'Exploring'], ['suggestions', 'Suggestions']]) add(`ai.use.${k}.name`, name, false, 'mock-screens.js AI_USES');
+for (const [k, name] of [['ask', 'Asking'], ['draft', 'Drafting'], ['run', 'Runs'], ['standing', 'Standing questions'], ['enquire', 'Interviews and planning'], ['read', 'Reading inside documents'], ['transcribe', 'Reading page pictures'], ['account', 'A case\'s account'], ['explore', 'Exploring'], ['suggestions', 'Suggestions']]) add(`ai.use.${k}.name`, name, false, 'mock-screens.js AI_USES');
 for (const [k, t] of [['no', 'No'], ['ask', 'Ask every day'], ['yes', 'Yes']]) add(`ai.explore.${k}`, t, false, 'mock-screens.js aiExplore');
 add('ai.whose.group', 'your group\'s', false, 'DEC-188', 'whose, in the refusals');
 add('ai.whose.project', 'this project\'s', false, 'DEC-188', 'whose, in the refusals');
@@ -176,7 +176,7 @@ for (const [k, t] of [
   ['use', 'that isn\'t one of the assistant\'s uses'],
   ['count', 'the count is a whole number, one or more'],
 ]) add(`ai.limitfield.${k}`, t, false, 'DEC-189', '{field} in ai.refused.limitinvalid');
-for (const [k, t] of [['ask', 'asking'], ['draft', 'drafting'], ['run', 'runs'], ['standing', 'standing questions'], ['transcribe', 'reading page pictures'], ['explore', 'exploring'], ['suggestions', 'suggestions']])
+for (const [k, t] of [['ask', 'asking'], ['draft', 'drafting'], ['run', 'runs'], ['standing', 'standing questions'], ['enquire', 'interviews and planning'], ['read', 'reading inside documents'], ['transcribe', 'reading page pictures'], ['account', 'a case\'s account'], ['explore', 'exploring'], ['suggestions', 'suggestions']])
   add(`ai.use.${k}.inline`, t, false, 'DEC-189', '{use} inside a sentence; {Use} at a sentence\'s start is ai.use.*.name');
 add('ai.account.group', 'Your group\'s key', false, 'DEC-189', '{account} at a sentence\'s start');
 add('ai.account.project', '{project}\'s account', false, 'DEC-189', '{account} at a sentence\'s start');
@@ -186,6 +186,9 @@ add('ai.account.project.inline', 'the project\'s account', false, 'DEC-189', '{a
 add('ai.account.own.inline', 'your own account', false, 'DEC-189', '{account} inside a sentence');
 add('ai.queue.limitreached.overall', '{account} reached its {period} limit on {date}. Uses counted in its overall limit pause until {when}; uses with their own limit on top of it go on.', true, 'DEC-189', 'the told-once Noticed item, scope overall; names no member');
 add('ai.queue.limitreached.member', '{account}: a member reached the {period} amount each member may use, on {date}. Their uses on it pause until {when}; other members\' go on.', true, 'DEC-189', 'the told-once Noticed item, scope per_member; names no member');
+add('ai.refused.exploreoutofscope', 'The assistant can\'t explore this question on {whose} account: it lies outside what the account\'s owners chose to explore.', false, 'DEC-191', 'EXPLORE_OUT_OF_SCOPE (C-143.5)');
+add('ai.refused.exploreaskinvalid', 'Nothing was recorded: an ask to explore names the day and what is worth exploring that day.', false, 'DEC-191', 'EXPLORE_ASK_INVALID (C-143.6); ai-use\'s sentence kept');
+add('date.daymonth', '{day} {month}', false, 'DEC-191', 'a local day in a sentence, such as 14 October; {month} from date.month.*; {date} in ai.queue.limitreached* and every queue item');
 add('ai.scope.group', 'your group\'s work', false, 'DEC-189', '{scope} in ai.queue.exploreask for the group\'s key');
 add('ai.scope.own', 'your own questions', false, 'DEC-189', '{scope} in ai.queue.exploreask for a member\'s own account; a project\'s is its name');
 
@@ -207,7 +210,16 @@ for (const [k, sum, det, note] of [
 // 4c'''. The assistant's reading of page pictures (DEC-190; BOB's B128, B129; extraction R71, C-51.7)
 add('transcribe.refused.notdeployed', 'Nothing was read or sent: the assistant\'s reading of page pictures isn\'t switched on in your group\'s Civicsmith yet. Each part of the assistant is switched on only after it passes Civicsmith\'s test investigations. You can type a page\'s words yourself meanwhile.', false, 'DEC-190', 'TRANSCRIBE_NOT_DEPLOYED (C-51.7); names no account');
 add('transcribe.label', 'The assistant\'s reading of the page image · undetermined until a member checks a passage against the page', true, 'DEC-190', 'the label on words from pagetranscribe (reading-pipeline R29\'s "the AI\'s reading")');
-add('transcribe.none', 'The assistant read pages {pages} but found no words it could give: {why}', false, 'DEC-190', 'performed false; {why} the reason as answered');
+add('transcribe.none', 'The assistant read pages {pages} but found no words it could give: {why}', false, 'DEC-190', 'only when the assistant was asked and read nothing (DEC-191); {why} the reason as answered');
+add('transcribe.notsent', 'Nothing was sent to the assistant: {why}. The pages are as they were.', false, 'DEC-191', 'agent-worker never asked: {why} from transcribe.why.*');
+add('transcribe.why.unbound', 'the assistant can\'t be reached from your group\'s Civicsmith just now', false, 'DEC-191', 'AGENT_WORKER_UNBOUND');
+add('transcribe.why.evidenceabsent', 'the document\'s stored copy can\'t be read just now', false, 'DEC-191', 'EVIDENCE_ABSENT');
+add('transcribe.why.norender', 'none of these pages could be turned into an image the assistant can read', false, 'DEC-191', 'NO_PAGE_RENDERED');
+add('transcribe.refused', 'The assistant didn\'t read these pages: {reason}', false, 'DEC-191', 'a refusal came back; {reason} the refusal\'s own sentence, read by its key');
+add('transcribe.picture.unprepared', 'This photo can\'t be prepared for the assistant: {why}. Take it again as an ordinary photo, or type its words yourself.', false, 'DEC-191', '{why} from transcribe.picture.why.*');
+add('transcribe.picture.why.progressive', 'it is saved in a form the assistant can\'t open (a progressive JPEG)', false, 'DEC-191');
+add('transcribe.picture.why.toolarge', 'it is too large', false, 'DEC-191');
+add('capture.picture.unread', 'A photographed page, not read yet: its words can\'t be found or cited until the assistant reads it or a member types them.', false, 'DEC-191', 'a JPEG or PNG capture read as one picture page (N853b)');
 add('transcribe.done', 'The assistant read pages {pages}. Their words can now be found; each passage stays undetermined until a member checks it against the page.', false, 'DEC-190', 'performed and written');
 add('document.unread.pages', must(scr, 'mock-screens.js', 'are pictures of text that Civicsmith\\\'s own reading couldn\\\'t make out, so their words can\\\'t be found or cited yet. The page images are kept as they are.').replace(/\\'/g, "'").replace(/^/, 'Pages {pages} '), false, 'DEC-190', 'the Document screen\'s section, shown only when such pages exist');
 
