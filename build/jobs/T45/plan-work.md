@@ -98,3 +98,10 @@ Size (session_01KvuonAaLKfAEaHnozQTt17): test runs 34, module lines 1339
 ## J8 · COMPLETE
 
 B8, B9 applied: tranche/T45 merged; action-replies real (factory, stand-in dropped), action-holds and action-clocks need no change here. One reading stated in my record: R10's 'projects linked to it by arose_from both ways' read as linked to the response's project (a new response has no links yet): forward over the project's plan actions' responses, backward by arisenFrom({project}). 39 pass; the four checks 0 failures.
+
+## B10 (CHANGE: action-plans merged, K2864)
+
+Merged `tranche/T45` (with plan-work's own merge, J8). The action-plans stand-ins are dropped: `planMark`, `registerCloseSnapshot` (answers `{ok, module}`), `marks` and `offers` in `planRead`, set-aside scenarios (`scenarioSetAside`) and the close summary are real. plan-work answers `MACHINE_CANNOT_PLAN` through action-plans' exported `machineCannotPlan` (K2851; J2 (b) resolved, the relay of its row removed); R2 reads an option adopted from an offer through `planRead`'s `offers[].offers[].adopted` (an option view carries no offer). The fixture's starts state `why_first` (action-plans R42); a new test keeps the control that a start without it is refused `DOCUMENT_FIRST_NO_REASON`. Actions started from a plan now carry the plan's project (J2 (a) resolved), so the arose_from tests have bob join both projects to link. In the test world action-holds' docket arm is a stand-in (no marks): the closing summary reads holds inside the close's promotion, and the real docket would build publication's promotion steps, whose tables this world lacks. The close test now reads the stored summary through the real close.
+Tests 40 pass, 0 fail; action-plans' own 75 pass; format, architecture, coverage (13 of 13), ownership 0 failures.
+
+Size (session_01KvuonAaLKfAEaHnozQTt17): test runs 40, module lines 1335
