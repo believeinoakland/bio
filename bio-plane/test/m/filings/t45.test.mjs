@@ -4,8 +4,8 @@
    the assertion gate (R43), "as myself" (R44), recognition (R45), the review copy (R46), the hold notice (R47), junior
    staff (R48), legal facts (R49), and packets without a determination, for defence and in counsel matters (R8–R10).
    Driven at the module's interface over the real modules (action-grammar's phrasing lists, its R16–R19, among them);
-   what a layer-9 provider merging before filings does not yet answer (actions' disclosures, partners and press terms, R75, R78,
-   R79) is a stand-in answering as its requirement states (K2848 (7)); docket's legal marks are a stand-in for its R27 read. */
+   actions' held and accepted disclosures (its R75; they need a held check and an accepted import the fixture does not
+   build) and docket's legal marks (its R27) are stand-ins answering as their requirements state (K2848 (7)). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, MACHINE, STRANGER, F, DOC, CASE, PROFILE, WHY, sha, actionsWith, templatesOver } from "./fixture.mjs";
@@ -136,8 +136,8 @@ test("R23 a communication is drafted from the findings and inquiries the member 
 
 test("R36 jointSignatory: a member records that a partner approved the same text in its own copy: refusals MACHINE_CANNOT_APPROVE, NO_SUCH_FILING, NOT_APPROVED, NOT_A_PARTNER, JOINT_FINGERPRINT_MISMATCH; a matching fingerprint from a listed partner lands and filingsFor lists it; one character changed mismatches", async () => {
   const x = world();
-  const A = x.action();
-  const f = f45(x, { actions: actionsWith(x, { [A]: { partners: [{ role: "chair", organisation: "Harbour Watch" }] } }) });
+  const A = x.action({ partners: [{ role: "chair", organisation: "Harbour Watch" }] });
+  const f = f45(x);
   const d = prep(f, A, { text: "Our joint letter." });
   const js = (o = {}) => f.jointSignatory({ filing: d.id, organisation: "Harbour Watch", body_sha: sha("Our joint letter."), account: "their chair signed at their meeting",
                                             author: V("bo"), viewer: V("bo"), ...o });
@@ -328,8 +328,9 @@ test("R45 a text for a kind the view marks shape: recognition carries, once, the
 test("R46 a press action's review copy carries the embargo and release times on its face and in its stamp's subject; sent before the release time, it is recorded as the review copy, saying so; with no terms, the copy says no embargo is stated", async () => {
   const x = world();
   const press = { state: "named", kind: "press", role: "civic reporter", organisation: "The Port Ellery Ledger" };
-  const P = x.action({ counterparty: press }), N = x.action({ counterparty: press });
-  const f = f45(x, { actions: actionsWith(x, { [P]: { press_terms: { on_record: "on_record", embargo_until: "2026-10-01T09:00", release_at: "2026-10-02T09:00" } } }) });
+  const P = x.action({ counterparty: press, press_terms: { on_record: "on_record", embargo_until: "2026-10-01T09:00", release_at: "2026-10-02T09:00" } });
+  const N = x.action({ counterparty: press });
+  const f = f45(x);
   const d = comm(f, P, { text: "Our findings, for your story." });
   assert.ok(d.text.startsWith("Review copy. Embargoed until 2026-10-01T09:00; for release at 2026-10-02T09:00."));
   const ap = await approve(f, d.id);
@@ -404,10 +405,12 @@ test("R8 R9 a packet needs no determination and no override: with none, the fact
   for (const k of ["challenged", "pressure", "defence_deadlines"]) assert.equal(k in claim.sections, false, `a claim packet has no ${k}`);
   /* a defence packet on an action resting on the determination of the case's finding: the case's docket marks */
   const B = x.action({ kind: "commitment_claim" });
-  /* a pressure mark on the action's correspondence (actions R15, listed by action-holds' pressureFor, its R12) */
+  /* a pressure mark on a received entry (action-holds R1, listed by its pressureFor, R12) */
   const c = x.actions.actionCorrespond({ target: B, direction: "received", at: "2026-09-21", account: "a solicitor's letter arrived",
-                                         pressure: { kind: "legal", note: "a solicitor's letter" }, author: V("bo"), viewer: V("bo") });
+                                         author: V("bo"), viewer: V("bo") });
   assert.equal(c.ok, true, JSON.stringify(c).slice(0, 300));
+  const mark = x.f.actionHolds.actionPressure({ target: B, ord: 0, pressure: { kind: "legal", note: "a solicitor's letter" }, author: V("bo"), viewer: V("bo") });
+  assert.equal(mark.ok, true, JSON.stringify(mark).slice(0, 300));
   const def = f.counselPacket({ reason: WHY, action: B, counsel: COUNSEL, purpose: "defence", author: V("olive"), viewer: V("olive"),
                                 challenged: [{ statement: "The group said the order was let without a vote.", findings: [F] }] });
   assert.equal(def.ok, true, JSON.stringify(def).slice(0, 300));

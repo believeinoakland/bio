@@ -48,8 +48,13 @@ export function actionMd(id, o) {
         `    date: "${c.date}"`, `    basis: ${q(c.basis)}`, `    status: ${c.status}`])] : []),
     ...(o.legs && o.legs.length ? ["action_basis:", ...o.legs.flatMap((l) => [`  - target: ${l.target}`, `    kind: ${l.kind}`])] : []),
     ...(o.law ? [`law: ${q(o.law)}`] : []),
+    /* actions R78, R79 (T45): partners by role and organisation; a press action's terms */
+    ...(o.partners ? ["partners:", ...o.partners.flatMap((x) => Object.entries(x).map(([k, v], i) => `${i ? "    " : "  - "}${k}: ${q(v)}`))] : []),
+    ...(o.press_terms ? ["press_terms:", ...Object.entries(o.press_terms).map(([k, v]) => `  ${k}: ${q(v)}`)] : []),
     ...(o.breach ? ["breach: true"] : []),
-    ...(o.override ? ["premise_override:", `  reason: ${q(o.override)}`] : []),
+    /* actions R74 (T45): an override states its ground, held flat (K2849): a legal deadline unless `ground` says otherwise */
+    ...(o.override ? ["premise_override:", ...Object.entries(o.ground || { kind: "legal_deadline", citation: "Test Stat. § 9.20", date: "2026-04-01" })
+                       .map(([k, v]) => `  ground_${k}: ${q(v)}`), `  reason: ${q(o.override)}`] : []),
     ...(o.state_history && o.state_history.length ? ["state_history:", ...o.state_history.flatMap((h) => [
         `  - timestamp: "${h.at}"`, `    from_state: ${h.from}`, `    to_state: ${h.to}`, `    blurb: ${q(h.reason ?? "moved")}`,
         `    author: ${h.by ?? V("olive")}`])] : []),
