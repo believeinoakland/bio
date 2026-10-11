@@ -1,7 +1,7 @@
 /* actions at the write: its check and projection inside every promotion (R1–R11, R33), driven through promotion. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, actionMd, CP } from "./fixture.mjs";
+import { world, V, MACHINE, actionMd, CP, NONCOMPLIANT, realDetermination } from "./fixture.mjs";
 
 const A = "ACTN-2026-0001-a";
 const md = (lines, opts) => actionMd(A, [...CP, "action_kind: records_request", ...lines], opts);
@@ -148,7 +148,8 @@ test("R8 a breach action rests on a live determination the author may see, read 
     "only a breach action is asked (K102)");
   /* determinations in conformance's R9 shape (K252), for the live and the superseded arms. */
   const D1 = "CONF-2026-0001-determination", D2 = "CONF-2026-0002-determination";
-  const dets = { [D1]: { ok: true, id: D1, live: true, superseded_by: null }, [D2]: { ok: true, id: D2, live: false, superseded_by: D1 } };
+  const dets = { [D1]: { ok: true, id: D1, live: true, superseded_by: null, outcomes: NONCOMPLIANT },
+                 [D2]: { ok: true, id: D2, live: false, superseded_by: D1, outcomes: NONCOMPLIANT } };
   const x = world({ conformance: { determinationRead: ({ id }) => dets[id] || { ok: false, reason: "NO_SUCH_DETERMINATION" } } });
   for (const id of [D1, D2]) {
     const r = x.promote(id, ["---", `id: ${id}`, "object_type: determination", `title: ${id}`, "current_state: recorded",
@@ -203,11 +204,7 @@ test("R8 R15 R16 a correspondence on a breach action resting on a live determina
   /* the determination as conformance's determine act leaves it (its tables and its CONF- document); read back by its
      own determinationRead, as the author sees it. */
   const D = "CONF-2026-0001-determination";
-  w.st.sql.exec(`INSERT INTO determinations (determination_id, project_id, act_id, act_minted, act_description, act_role,
-    act_body, act_at, act_evidence, author, at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-    D, p.bundleId, "ACT-2026-0001", 1, "the act", "Town Clerk", "Town of Port Ellery", "2026-09-01", "[]", V("alice"), "2026-09-02T00:00:00Z");
-  assert.equal(w.promote(D, ["---", `id: ${D}`, "object_type: determination", `title: ${D}`, "current_state: recorded",
-    'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"', "---", "", "d", ""].join("\n"), { extra: { replay: true } }).ok, true);
+  realDetermination(w, D, p.bundleId);
   assert.equal(w.a.conformance.determinationRead({ id: D, viewer: V("alice") }).live, true, "the real module answers it");
   w.action(A, ["breach: true", "action_basis:", `  - target: ${D}`, "    kind: rests_on"]);
   const c = w.a.actionCorrespond({ target: A, direction: "sent", at: "2026-09-03", account: "we notified the office",
