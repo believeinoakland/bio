@@ -57,8 +57,8 @@ const isZipHit = (r, confidence = "likely") => {
   assert.deepEqual(Object.keys(r), ["format", "confidence", "signals"]);
 };
 
-test("R23: the roster is the ten built-in entries, zip last", () => {
-  assert.deepEqual(listFormats(), ["html", "pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "zip"]);
+test("R23: the roster is the twelve built-in entries, zip last", () => {
+  assert.deepEqual(listFormats(), ["html", "pdf", "docx", "xlsx", "pptx", "odt", "ods", "odp", "csv", "jpeg", "png", "zip"]);
   assert.equal(zip.format, "zip");
 });
 
