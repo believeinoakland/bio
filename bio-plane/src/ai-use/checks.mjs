@@ -9,62 +9,101 @@
 
 const at = (fn, region) => `src/ai-use/index.mjs ${fn} > ${region}`;
 
-/* R13 (DEC-188 (7)): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module's refusals
-   and its Ask item read, each `en` verbatim, by key. A refusal reaches its member through every caller as it is
-   answered (ai-runs' open and tick relay it unchanged), so each refusal's sentence is answered whole, every placeholder
-   filled (K2514): `{whose}` from `ai.whose.*` (R13), `{use}` from `ai.use.<use>.name`, and `{period}`, `{when}` and
-   `{field}` from this module's own fills below (`words.json` has no key for them), with the fields that filled it
-   carried beside the sentence. Only the Ask item, a queue item `notice-producers` renders, leaves `{scope}` and
-   `{account}` for the screen. A key the words file lacks fails this module's test. */
+/* R13 (DEC-188 (7); T43, N856, N862: DEC-189, DEC-190): the words of `words.json`
+   (`docs/development/ux-substrate/screens/words.json`) this module's refusals and its Ask item read, each `en` verbatim,
+   by key, a test failing on any difference. A refusal reaches its member through every caller as it is answered
+   (ai-runs' open and tick, answers' ask and standing relay it unchanged), so each refusal's sentence is answered whole,
+   every placeholder filled by key and none by this module (K2514; DEC-189 (1)): `{whose}` from `ai.whose.*`, `{use}`
+   inside a sentence from `ai.use.<use>.inline` (`{Use}` at a sentence's start would read `ai.use.<use>.name`),
+   `{period}` from `ai.period.*`, `{when}` from `ai.when.*` with `{month}` from `date.month.*`, `{field}` from
+   `ai.limitfield.*`; R3's unjudged refusal reads `ai.refused.limit.unjudged`. Only the Ask item, a queue item
+   `notice-producers` renders, leaves `{scope}` and `{account}` for the screen. The `ai.use.*` keys for `enquire`,
+   `read` and `account`, uses with no AI path in T43, are not held until the design stream names them (B133). */
 export const AI_USE_WORDS = Object.freeze({
   'ai.use.ask.name': 'Asking',
   'ai.use.draft.name': 'Drafting',
   'ai.use.run.name': 'Runs',
   'ai.use.standing.name': 'Standing questions',
+  'ai.use.transcribe.name': 'Reading page pictures',
   'ai.use.explore.name': 'Exploring',
+  'ai.use.ask.inline': 'asking',
+  'ai.use.draft.inline': 'drafting',
+  'ai.use.run.inline': 'runs',
+  'ai.use.standing.inline': 'standing questions',
+  'ai.use.transcribe.inline': 'reading page pictures',
+  'ai.use.explore.inline': 'exploring',
   'ai.whose.group': 'your group\'s',
   'ai.whose.project': 'this project\'s',
   'ai.whose.own': 'your own',
+  'ai.period.day': 'daily',
+  'ai.period.month': 'monthly',
+  'ai.when.day': 'tomorrow',
+  'ai.when.month': 'on {month} 1',
+  'date.month.january': 'January',
+  'date.month.february': 'February',
+  'date.month.march': 'March',
+  'date.month.april': 'April',
+  'date.month.may': 'May',
+  'date.month.june': 'June',
+  'date.month.july': 'July',
+  'date.month.august': 'August',
+  'date.month.september': 'September',
+  'date.month.october': 'October',
+  'date.month.november': 'November',
+  'date.month.december': 'December',
   'ai.refused.limit': 'The assistant stopped here: {whose} {period} limit for {use} is reached. It works again {when}. '
     + 'Everything else works as usual.',
   'ai.refused.limit.overall': 'The assistant stopped here: {whose} {period} limit is reached. It works again {when}. '
     + 'Everything else works as usual.',
   'ai.refused.limit.member': 'The assistant stopped here: you have used the {period} amount each member may use of '
     + '{whose} account. It works again {when}. Everything else works as usual.',
+  'ai.refused.limit.unjudged': 'The assistant stopped here: Civicsmith couldn\'t check the use of {whose} account just '
+    + 'now, and it spends nothing it can\'t count. Try again in a moment. Everything else works as usual.',
   'ai.refused.limitinvalid': 'That limit can\'t be set: {field}. A limit is a positive amount in dollars, tokens or calls, '
     + 'for a day or a month.',
+  'ai.limitfield.owner': 'it doesn\'t say which account it is for',
+  'ai.limitfield.scope': 'that isn\'t something a limit can cover',
+  'ai.limitfield.unit': 'that isn\'t a unit a limit takes',
+  'ai.limitfield.period': 'that isn\'t a period a limit takes',
+  'ai.limitfield.amount': 'that isn\'t an amount a limit takes',
+  'ai.limitfield.inclusive': 'only a limit on one use can be on top of the overall limit',
+  'ai.limitfield.use': 'that isn\'t one of the assistant\'s uses',
+  'ai.limitfield.count': 'the count is a whole number, one or more',
   'ai.refused.unitunavailable': 'A limit in dollars needs an API key: a subscription doesn\'t report what a use costs. Set '
     + 'it in tokens or calls instead.',
-  'ai.refused.explorenotenabled': 'Exploring is off on {whose} account, or has no limit of its own yet: it runs only '
-    + 'within an exploring limit its owners set.',
+  'ai.refused.explorenotenabled': 'Exploring is off on {whose} account. Its owners can switch it on.',
   'ai.queue.exploreask': 'The assistant found something worth exploring in {scope} today: {what}. Explore it today on '
     + '{account}? If nobody says yes today, it doesn\'t.',
 });
 
-/* R13 (K2514): this module's own fills for the placeholders `words.json` names but gives no key: `{period}` as the
-   words file's note on `ai.refused.limit` says ("daily or monthly"); `{when}` the start of the next period ("tomorrow",
-   or the 1st of the next month by name); when R3 fails closed (no limit named: the counter unreadable or the use not
-   one), `{period}` is dropped and `{when}` says when it can be judged again. `{field}` names the field R2 refuses. */
-export const LIMIT_PERIOD_FILL = Object.freeze({ day: 'daily', month: 'monthly' });
-export const LIMIT_WHEN_FILL = Object.freeze({ day: 'tomorrow', month: 'on {month} 1', unjudged: 'once its use can be checked' });
-export const MONTH_NAMES = Object.freeze(['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August',
-  'September', 'October', 'November', 'December']);
-export const LIMIT_FIELD_FILL = Object.freeze({
-  owner: 'it names no account it is for', scope: 'that isn\'t something a limit can cover', unit: 'that isn\'t a unit a limit takes',
-  period: 'that isn\'t a period a limit takes', amount: 'that isn\'t an amount a limit takes',
-  inclusive: 'only a limit on one kind of use can be on top of the overall limit', use: 'that isn\'t a kind of use',
-  count: 'the count is a whole number of one or more',
-});
-
-/* R13: the key each refusal reads, `AI_LIMIT_REACHED` by its scope. */
+/* R13: the key each refusal and each fill reads. `AI_LIMIT_REACHED` by its scope (a use's own: `ai.refused.limit`), or
+   `ai.refused.limit.unjudged` when R3 cannot judge it; `{whose}` by the account's kind; `{period}`, `{when}` by the
+   limit's period; `{month}` by the next period's month (0 for January); `{field}` by the field R2 refuses. */
 export const LIMIT_WORD_BY_SCOPE = Object.freeze({ overall: 'ai.refused.limit.overall', per_member: 'ai.refused.limit.member' });
+export const UNJUDGED_WORD = 'ai.refused.limit.unjudged';
 export const WHOSE_WORD = Object.freeze({ group: 'ai.whose.group', project: 'ai.whose.project', own: 'ai.whose.own' });
+export const PERIOD_WORD = Object.freeze({ day: 'ai.period.day', month: 'ai.period.month' });
+export const WHEN_WORD = Object.freeze({ day: 'ai.when.day', month: 'ai.when.month' });
+export const MONTH_WORD = Object.freeze(['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august',
+  'september', 'october', 'november', 'december'].map((m) => `date.month.${m}`));
+export const LIMIT_FIELD_WORD = Object.freeze(Object.fromEntries(['owner', 'scope', 'unit', 'period', 'amount', 'inclusive',
+  'use', 'count'].map((f) => [f, `ai.limitfield.${f}`])));
+export const useInlineWord = (use) => `ai.use.${use}.inline`;
+
+/* Kept only for `notice-producers`, which imports them until its own T43-13 job reads its fills by key (reported to BOB,
+   T43-11): the same words read from the keys above, never used by this module's own sentences. `unjudged` is its
+   fallback's words, not this module's. */
+export const LIMIT_PERIOD_FILL = Object.freeze({ day: AI_USE_WORDS[PERIOD_WORD.day], month: AI_USE_WORDS[PERIOD_WORD.month] });
+export const LIMIT_WHEN_FILL = Object.freeze({ day: AI_USE_WORDS[WHEN_WORD.day], month: AI_USE_WORDS[WHEN_WORD.month],
+  unjudged: 'once its use can be checked' });
+export const MONTH_NAMES = Object.freeze(MONTH_WORD.map((k) => AI_USE_WORDS[k]));
 
 export const AI_USE_CHECKS = Object.freeze({
   /* R3 (D38 C, D39; B3, B5, B7): a limit of the paying account is reached for the current period: its own use's, its
      overall one (over the uses that are not exclusive), or its per-member one. Carries `whose` (`group`, `project` or
-     `own`), `scope` and `period`, and names no cost (K1450). The row's sentence is the use-scope one; the answer reads
-     the one for its scope (R13). */
+     `own`), `scope` and `period`, and names no cost (K1450). (T43; DEC-189 (5)) When the limit cannot be judged, it
+     carries `unjudged: true` and no `scope`, `unit` or `period`. The row's sentence is the use-scope one; the answer
+     reads the one for its scope, or the unjudged one (R13). */
   AI_LIMIT_REACHED: {
     check: 'C-143.1',
     where: at('#limitReached', 'is-ai-limit-reached'),
