@@ -960,7 +960,21 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    with its row). T43's layer 1 changed C-33.40's `where` and no other row; its layer 2 is this job alone.
    ROW_CENSUS (R50) re-pinned to this tree: 1722 rows. Rows a T43 job in layers 3–11 adds or changes are T44's stamp
    (plan T43, rule 4 item 2). */
-export const CATALOG_VERSION = "1.70.0";
+/* 1.71.0 (PROMOTION #42, T44-3, 2026-10-11; T43's rule 4 item 2, T44's rule 4 item 2; K1680, K2717, K2732): MINOR. The
+   stamp of every row awaiting it at T43's close (T43's layers 3–11) and of T44's layers 1 and 2, read by diffing R50's
+   census lines of `tranche/T44` at its layer 2 against 1.70.0's own (`test/fixtures/row-census-1.70.0.jsonl`: 1722 rows,
+   f73c10a3…): two changed, none new, none re-keyed, none retired.
+   CHANGED (2), translation only, code, number and `where` unmoved: extraction C-51.7 TRANSCRIBE_NOT_DEPLOYED (the
+   assistant's reading of page pictures not yet switched on; "You can type a page's words yourself meanwhile"; T43-10,
+   R47, K2717); ai-use C-143.4 EXPLORE_NOT_ENABLED ("Exploring is off on {whose} account. Its owners can switch it on.",
+   DEC-189's `ai.refused.explorenotenabled`, which ai-use's R13 serves verbatim from `words.json`; T43-11, whose record
+   names the words and not the row).
+   CHANGED IN WHAT THE GATES RUN, no row line moving: none a T43 L3–L11 or T44 L1–L2 job record names. T44's layer 1
+   (image-codecs, pdf-pixels) added and changed no row; its layer 2 is this job alone, whose one other change (R44: a
+   fork's title written as the grammar reads it back) moves no row and no gate.
+   ROW_CENSUS (R50) re-pinned to this tree: 1722 rows. Rows a T44 job in layers 3–11 adds or changes are T45's stamp
+   (plan T44, rule 4 item 2). */
+export const CATALOG_VERSION = "1.71.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -1053,7 +1067,7 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
 export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1722,
-  digest: "f73c10a32dc065f1781c666557e31268ca43f3d7cb75b7053a9361ab0dbc84c6" });
+  digest: "c6a39c147c0d39e23be4897ce55c043e5ae5e7fcef5ac58f5d86aa5ff26d3e66" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();

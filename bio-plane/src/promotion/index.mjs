@@ -25,7 +25,7 @@ import { recordChecks } from "./record-checks.mjs";
 import { MECHANICAL_FIELD_SETS } from "./history.mjs";
 import { projectNameKey } from "./names.mjs";
 import { INFO2_GRAMMAR } from "./info2.mjs";
-import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences,
+import { appendStateHistory, setScalar, setOrAddScalar, appendSessionLog, spliceReferences, quotedScalar,
          withProducingGroup } from "./text.mjs";
 import { runCaseGate as runCaseCatalogue, runGate as runBundleGate } from "../gate.mjs";
 
@@ -945,7 +945,9 @@ class Promotion {
                      + "could not be given a recorded origin. A fork with no provenance is not written." };
     /* The origin's id line is removed: promote mints the fork's and writes it before hashing. */
     let text = withEdge.split("\n").filter((l, i, all) => !(l.startsWith("id:") && i > 0 && i < all.indexOf("---", 1))).join("\n");
-    text = setScalar(text, "title", JSON.stringify(title));
+    /* R44 (PROMOTION #42): the title as the grammar reads it back, never a JSON string, whose escapes the grammar keeps
+       as written, so a title holding a quote or a backslash was refused ENVELOPE_TITLE_DISAGREES against its own meta. */
+    text = setScalar(text, "title", quotedScalar(title));
     /* A fork starts at the beginning of the lifecycle, and is created now (the document states it: R12). */
     text = setScalar(text, "current_state", "forming");
     text = setOrAddScalar(text, "created", `"${when}"`);
