@@ -2568,7 +2568,9 @@ const instances = new WeakMap();
 
 /** K61: the one instance per host, created on the first call with `deps`. It creates its tables and declares them to
  *  record-core's purge (R28, K23), and creates `case-account`'s instance on the host (its R12), so that module's tables
- *  exist and are declared at every boot before `plane` names it (the map's doubt 4). */
+ *  exist and are declared at every boot before `plane` names it (the map's doubt 4). R28 (K2675): a declaration
+ *  record-core refuses (`TABLE_DECLARED`: another owner already holds a table, so none of this module's is declared) is
+ *  thrown at creation and no instance is kept, rather than leaving the tables silently outside the purge. */
 export function caseAuthoringOf(host, deps) {
   let c = instances.get(host);
   if (!c) {
@@ -2577,9 +2579,11 @@ export function caseAuthoringOf(host, deps) {
     const record = d.record || recordOf(host);
     const membership = d.membership || membershipOf(host, { record });
     c = new CaseAuthoring({ ...d, host, storage, record, membership });
-    instances.set(host, c);
     c.migrate();
-    record.declarePurge("case-authoring", CASE_AUTHORING_TABLES);
+    const declared = record.declarePurge("case-authoring", CASE_AUTHORING_TABLES);
+    if (declared && declared.ok === false)
+      throw new Error(`case-authoring: record-core refused its table declaration: ${declared.reason} (${declared.table})`);
+    instances.set(host, c);
     void c.account;
   }
   return c;

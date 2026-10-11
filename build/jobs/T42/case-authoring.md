@@ -58,3 +58,23 @@ Size (session_017gKhVp4wij8NKw7oL1jXhs): test runs 27, module lines 3703
 ## J2 · COMPLETE
 
 T42-23 complete on job/T42/case-authoring (tranche/T42 merged after K2673). Against the real case-account: case-authoring 183/183; case-account 21/21, review 45/45, affordances 232/232, op-declarations 128/128, control-plane 216/216, plane 166/166; answer-envelope 28/29 (families.test.mjs:425, accepted red 6, same with the change stashed). Checks: format, architecture, coverage 0 failures; ownership 1, build/modules.json, the edges you directed (B2, B3; K2670): case-authoring uses + case-account (after case-disclosures), - ai-runs; review uses + case-account (before case-authoring). CASE_AUTHORING_TABLES lists only statement_acknowledgements and what_changed_drafts; acceptance written through this.account.acceptanceRecorded({caseId, edition, drafted, by, at}). Three pass-throughs kept until T43. case-authoring 3,703 lines. Nothing deferred; nothing new found in other modules. Record: build/jobs/T42/case-authoring.md.
+
+## B4 · CHANGE (K2675; REVIEW #12 J2)
+
+**Applied.** Before this change, `caseAuthoringOf` ignored `declarePurge`'s answer, so a refused declaration left the module's tables silently outside the purge. It now does what sources and credentials do: a refusal (e.g. `TABLE_DECLARED`) throws `case-authoring: record-core refused its table declaration: <reason> (<table>)` at creation. The instance is cached only after the declaration succeeds, so the next call throws again rather than handing out an undeclared instance (`src/case-authoring/index.mjs`, `caseAuthoringOf`).
+
+**Test.** `invariants.test.mjs` has a new "R28 (K2675)" test: another owner already holds `statement_acknowledgements`, and two calls each throw the named refusal. Negative control: on the fixture's host the instance is created, and the whole-store purge clears its table. With the source change reverted, the test fails (6 pass, 1 fail).
+
+**Re-run after merging `tranche/T42` (review merged).**
+- case-authoring 184/184
+- case-account 21/21
+- review 46/46
+- affordances 232/232
+- op-declarations 128/128
+- control-plane 216/216
+- plane 166/166
+- answer-envelope 28/29 (`families.test.mjs:425`, accepted red 6)
+
+Checks: format, architecture and coverage report 0 failures. Ownership is as before: `build/modules.json`, the edges BOB directed (K2670).
+
+Size (session_017gKhVp4wij8NKw7oL1jXhs): test runs 37, module lines 3706
