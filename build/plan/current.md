@@ -31,7 +31,7 @@ It is the only module marked `legacy` in `modules.json`.
    7. `test/system/migrate-released.test.mjs`'s `ai_ceilings` arm (T41 rule 4 (24)) until T42-17 (N848);
    8. (cleared at T42-2's merge, K2612) `fleetbundles` agent-worker's input count (K2520 (a));
    9. from T42-6's merge: doorbell R25's ownership arm until capture's delete (T43; rule 3 (4));
-   11. (K2617) record-core `t33.test.mjs`:69 (R76) and :162 (R62), which lack `ACD`, from T42-1's merge until T42-2a.
+   11. (cleared at T42-2a's merge, K2622) record-core `t33.test.mjs`:69 (R76) and :162 (R62), which lack `ACD`, from T42-1's merge until T42-2a.
    12. (K2621) format: `modules.json` names promotion's `row-census-1.69.0.jsonl` (K2620) before T42-5 merges it; until that merge.
    10. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close.
 
