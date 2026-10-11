@@ -83,3 +83,7 @@ Size (session_01KvuonAaLKfAEaHnozQTt17): test runs 30, module lines 1329
 ## J6 · REPORT
 
 Found with actions merged (K2859): action-plans R18 composes premise_override {reason} only, which actions R74 now refuses OVERRIDE_NO_GROUND (action-grammar R15's ground_kind/ground_what/ground_when, or legal_deadline's). On the merged tranche action-plans' own tests are red: start.test.mjs 'R18: a breach action on an inquiry-only subject...' and preview.test.mjs 'R37: each refusal is R18's own...' (61 pass, 2 fail). Also: actions R95 passes project = bundleInfo(action).project, null for every plan-started action (J2 (a)); plan-work now takes it from the action's plan.
+
+## J7 · COMPLETE
+
+B7 applied: tranche/T45 merged; actions real (its R95 listener drives R10; R13 on real captures). Two fixes from the real wiring: a plan-started action's project from its plan, and the re-examination claimed before the run's await (new table pw_reexam_runs). 39 pass; the four checks 0 failures. Finding in action-plans: J6.
