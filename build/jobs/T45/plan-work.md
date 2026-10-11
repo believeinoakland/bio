@@ -105,3 +105,7 @@ Merged `tranche/T45` (with plan-work's own merge, J8). The action-plans stand-in
 Tests 40 pass, 0 fail; action-plans' own 75 pass; format, architecture, coverage (13 of 13), ownership 0 failures.
 
 Size (session_01KvuonAaLKfAEaHnozQTt17): test runs 40, module lines 1335
+
+## J9 · COMPLETE
+
+B10 applied: tranche/T45 merged; action-plans real (planMark, close snapshot, marks, offers, set-aside, machineCannotPlan), every stand-in for it dropped; fixture starts state why_first, with the control that one without it is refused DOCUMENT_FIRST_NO_REASON. 40 pass (action-plans' own 75 pass); the four checks 0 failures. Details in my record.
