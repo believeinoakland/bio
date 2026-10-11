@@ -34,7 +34,7 @@ Memory no longer grows with the frame: the decode's own peak is 13–16 MB over 
 **Found in other modules:** none against their requirements. Generated artifacts staled (§14): `ocr-worker/dist/ocr-worker.bundled.mjs` (its inputs `pagepixels.mjs`, `picturepixels.mjs`, and image-codecs' `dctdecode.mjs`), red only in ocr-worker R19's manifest test; the plane bundle likewise (rule 4.5); both regenerated at L1's close.
 **Tests** (on the merged tranche, the real R11): `pagepixels.test.mjs` 382 passed, 0 failed (the 48 MP JPEG at orientations 1, 3, 6, 8, grey k 6 and colour k 5 with partial edge boxes, pixel-exact against Pillow 12.3.0, its bytes checked against the script's digest first; the 4032 × 3024 Orientation-6 photo 1008 × 1344 grey, 155,814 B, the same hash; a header one column past `PICTURE_SOURCE_MAX` refused before decode beside one under that reaches the decoder; a 48 MP header kept whole refused on `PICTURE_FRAME_MAX` beside the same halved; PNGs over `PICTURE_FRAME_MAX` refused beside an equal-size JPEG header that is not). `imagecrop` 54/0, `jbig2` 179/0, `jpx` 205/0. Users: content 132/0; plane `ask` 13/0, `t33` 16/0, `t42` 18/0, `t43` 6/0 (R36's picture path); ocr-worker 198/1, its stale bundle only.
 **Checks:** format 0 failures; architecture 0 failures; coverage 27 of 27 live ids, 0 failures; ownership (tranche/T44) 0 failures.
-Size (session_01HryQFWAv5MrBMYBBygXxEJ): test runs 31, module lines 1324
+Size (session_01HryQFWAv5MrBMYBBygXxEJ): test runs 31, module lines 1398
 
 ## J1 · QUESTION
 
