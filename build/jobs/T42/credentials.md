@@ -20,3 +20,7 @@
 **Found (for BOB).** (1) A revoked member's `account_references` row survives revocation (R16 clears sessions, keys, codes and the sign-in, not the reference: `index.mjs` R16 listener), so `accountUsesOf({owner: "member:<revoked>"})` answers `held: true` with their uses, where R60 refuses every viewer. R62 as worded allows it; whether R16 should also remove the reference (or R62 answer a revoked member `held: false`) is a requirement question for BOB. (2) For `group`, `held: false` still carries `uses` (the defaults or the stored row), as R60 states; `held: true` does not mean the account is on or serving. `ai-use`'s T42-17 must read `held` (and R3's fail-closed wording) accordingly. Generated artifact staled: the plane bundle, regenerated at layer close.
 
 Size (session_01SmVin6JuSDfPb4PyoweFzP): test runs 4, module lines 3857
+
+## J1 · COMPLETE
+
+T42-4 done: R62 accountUsesOf built (shares R60's answer body; unrouted), new t42.test.mjs (6 tests, R62 with negative controls). credentials 174/174; format, architecture, coverage, ownership 0 failures. Two findings for you in the record: a revoked member's reference survives R16, so accountUsesOf answers it held: true (a requirement question); group's held:false carries uses (as R60), for ai-use T42-17 to read held. Plane bundle staled.
