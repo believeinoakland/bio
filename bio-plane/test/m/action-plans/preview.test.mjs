@@ -90,9 +90,12 @@ test("R37: each refusal is R18's own, answered beside the action it would compos
   const breach = w.ap.optionStartPreview(args(w, b, { breach: true }));
   assert.equal(code(breach.refusal), "ACTION_NO_DETERMINATION"); assert.equal(breach.action.breach, true);
   assert.deepEqual(w.ap.optionStart(args(w, b, { breach: true })), breach.refusal);
-  const over = w.ap.optionStartPreview(args(w, b, { breach: true, premise_override: { reason: "The hearing is next week" } }));
+  const ground = { kind: "legal_deadline", citation: "the records statute, section 4", date: "2026-10-09" };
+  const bare = w.ap.optionStartPreview(args(w, b, { breach: true, premise_override: { reason: "The hearing is next week" } }));
+  assert.equal(code(bare.refusal), "OVERRIDE_NO_GROUND", "actions R74: an override states its ground");
+  const over = w.ap.optionStartPreview(args(w, b, { breach: true, premise_override: { ground, reason: "The hearing is next week" } }));
   assert.equal(over.would_start, true);
-  assert.deepEqual(over.action.premise_override, { reason: "The hearing is next week" });
+  assert.deepEqual(over.action.premise_override, { ground, reason: "The hearing is next week" });
   /* not chosen, then started once */
   const c = option(w, { summary: "Not chosen yet" });
   const notChosen = w.ap.optionStartPreview(args(w, c));

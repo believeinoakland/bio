@@ -1444,10 +1444,9 @@ export class ActionPlans {
         + `documented; say why it goes first, in 1 to ${REASON_MAX} characters with no quotation mark, backslash or line break. `
         + "Nothing was written.", { max: REASON_MAX, matters: first.length }));
     /* END DEC-49 REGION is-document-first */
-    const reason = override === undefined || override === null ? null : isObj(override) ? override.reason : override;
     const at = this.now();
     const doc = actionDocument({ fields: opt.fields, kind, project: p.project, plan: p.id, option: opt.id, contact: member,
-                                 breach: breach === true, override: reason, at });
+                                 breach: breach === true, override: overrideOf(override), at });
     const r = this.record.transact(() => {
       const a = this.actions.actionCreate({ document: doc, author, viewer });
       if (!ok(a)) return a;
@@ -1496,7 +1495,7 @@ export class ActionPlans {
     if (!p || !opt) return refused;
     const see = this.#sight(viewer);
     const fields = see.fields(opt.fields);
-    const reason = override === undefined || override === null ? null : isObj(override) ? override.reason ?? null : override;
+    const stated = overrideOf(override);
     const legs = [];
     for (const s of fields.subjects || []) {
       const target = s.kind === "inquiry" ? s.inquiry : s.determination;
@@ -1511,7 +1510,7 @@ export class ActionPlans {
       action: { kind: typeof kind === "string" ? kind : null, addressee: fields.addressee ?? null,
                 clock: (fields.dates || []).map((d) => ({ date: d.date, basis: d.basis, status: "pending" })), legs,
                 plan: p.id, option: opt.id, contact: contact === undefined || contact === null ? null : contactId(contact) || null,
-                breach: breach === true, premise_override: reason === null ? null : { reason } },
+                breach: breach === true, premise_override: stated },
       reminders, would_start: refused === null, ...(refused === null ? {} : { refusal: refused }),
       says: PREVIEW_SAYS, ...(see.withheld ? { out_of_view: true } : {}),
     };
@@ -2097,6 +2096,21 @@ function subjectOfKey(k) {
  * THE ACTION AN OPTION STARTS (R18)
  * ===================================================================== */
 
+/* R18 (actions R74): the member's premise override as given, `{ground, reason}` (a bare string is its reason); null
+   when none. The ground is passed to the action as stated: actions judges it (OVERRIDE_NO_GROUND, OVERRIDE_GROUND_REFUSED). */
+function overrideOf(o) {
+  if (o === undefined || o === null) return null;
+  if (!isObj(o)) return { reason: String(o) };
+  return { ...(o.ground !== undefined ? { ground: o.ground } : {}), reason: typeof o.reason === "string" ? o.reason : o.reason ?? null };
+}
+/* R18: a ground's lines in the action's front matter, as actions writes them (`ground_kind`, `ground_citation`, ...); a
+   ground that is not a flat map is written as its kind, for actions to refuse, never dropped. */
+function groundLines(g) {
+  const word = (v) => q(typeof v === "string" ? v : JSON.stringify(v ?? ""));
+  if (!isObj(g)) return [`  ground_kind: ${word(g)}`];
+  return Object.entries(g).filter(([k]) => /^[a-z]{1,20}$/.test(k)).map(([k, v]) => `  ground_${k}: ${word(v)}`);
+}
+
 /** R18: the action document composed from a chosen option: its kind, the option's addressee, its regulated dates as
  *  pending clock entries with their bases, a `rests_on` leg to each subject's inquiry or determination, `plan` and
  *  `option`, `contact`, `breach` and `premise_override` when given; and the plan's `project`, so the action is fenced
@@ -2115,7 +2129,8 @@ export function actionDocument({ fields, kind, project = null, plan, option, con
     `action_kind: ${q(typeof kind === "string" ? kind : "")}`, ...cp, ...clock,
     ...basis, `plan: ${plan}`, `option: ${option}`, ...(contact ? [`contact: ${contact}`] : []),
     ...(breach ? ["breach: true"] : []),
-    ...(override !== null && override !== undefined ? ["premise_override:", `  reason: ${q(override)}`] : []),
+    ...(override ? ["premise_override:", ...(override.ground !== undefined ? groundLines(override.ground) : []),
+                    `  reason: ${q(override.reason ?? "")}`] : []),
     "correspondence: []", "---", "", "## Action", "", fields.detail ? fields.detail.replace(/\r/g, "") : fields.summary, ""].join("\n");
 }
 

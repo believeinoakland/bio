@@ -63,10 +63,16 @@ test("R18: a breach action on an inquiry-only subject is refused by actions R8, 
   const refused = start(w, a, { breach: true });
   assert.equal(code(refused), "ACTION_NO_DETERMINATION");
   assert.equal(w.count("bundles WHERE object_type='action'"), 0);
-  const r = start(w, a, { breach: true, premise_override: { reason: "The harm is ongoing and the hearing is next week" } });
+  const ground = { kind: "legal_deadline", citation: "the records statute, section 4", date: "2026-10-09" };
+  assert.equal(code(start(w, a, { breach: true, premise_override: { reason: "The harm is ongoing" } })), "OVERRIDE_NO_GROUND",
+    "actions R74: an override with no ground is refused, and passes through");
+  assert.equal(w.count("bundles WHERE object_type='action'"), 0);
+  const r = start(w, a, { breach: true, premise_override: { ground, reason: "The harm is ongoing and the hearing is next week" } });
   assert.equal(r.ok, true, JSON.stringify(r));
   assert.equal(w.fm(r.action).breach, true);
   assert.equal(w.fm(r.action).premise_override.reason, "The harm is ongoing and the hearing is next week");
+  assert.deepEqual(w.actions.actionRead({ id: r.action, viewer: V("bob") }).premise_override.ground, ground,
+    "the ground is the member's, carried to the action as actions reads it");
   /* on a live noncompliant determination, a breach action needs no override */
   const b = option(w, { subjects: [w.S1], addressee: OFFICE });
   choose(w, [b]);
