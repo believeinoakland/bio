@@ -737,18 +737,29 @@ export function startAllowed(asked) {
 
 /* R23 (T41-21; N820) — WHERE A RUN CAME FROM. `member`: a member's own act opened it (every run before T41, and every
    run since that is not the explorer's); `explore`: the system exploring a question unasked, where an account owner
-   turned exploring on (`question-explorer`). Frozen, in that order. */
+   turned exploring on (`question-explorer`). Frozen, in that order. R28 (K2822) leaves it so: a planning run's origins
+   are PLAN_ORIGINS below, and `skills` reads the explorer's origin as this list's last, so nothing is appended here. */
 export const RUN_ORIGINS = Object.freeze(["member", "explore"]);
 
-/** R23 — MAY A RUN OF THIS ORIGIN OPEN? `{ok: true}` for `member`; for `explore` only while `investigate` is deployable
- *  under R19 as amended — its verification chain and its test bar both held — which the caller reads from the record
- *  and hands here as `investigateDeployable` (`partDeployable("investigate", …)`); exactly `true` admits, anything else
- *  is `AI_RUN_EXPLORE_NOT_DEPLOYABLE` (C-22.27). Any other origin, and an absent one, is `AI_RUN_ORIGIN_UNKNOWN`
- *  (C-22.25): an origin is said, never assumed. The one site that mints both; `ai-runs` R73's open relays them (B4,
- *  K2485). Pure; never throws. */
+/* R28 (T45; K2822; ai-runs R77) — THE ORIGINS A RUN IN MODE `plan` MAY HAVE: `member`, a member's planning run, and
+   `reexamination`, the planning run started inside the member's act that records a response (v0.2 rule 16). Frozen. */
+export const PLAN_ORIGINS = Object.freeze(["member", "reexamination"]);
+
+/** R23, R28 — MAY A RUN OF THIS ORIGIN OPEN, IN THIS MODE? In mode `plan` (R28, K2822): `{ok: true}` for an origin of
+ *  PLAN_ORIGINS, any other (`explore` included) `AI_RUN_ORIGIN_UNKNOWN` (C-22.25). In any other mode, or none, R23
+ *  unchanged: `{ok: true}` for `member`; for `explore` only while `investigate` is deployable under R19 as amended — its
+ *  verification chain and its test bar both held — which the caller reads from the record and hands here as
+ *  `investigateDeployable` (`partDeployable("investigate", …)`); exactly `true` admits, anything else is
+ *  `AI_RUN_EXPLORE_NOT_DEPLOYABLE` (C-22.27). Any other origin there (`reexamination` included), and an absent one, is
+ *  `AI_RUN_ORIGIN_UNKNOWN`: an origin is said, never assumed. The one site that mints both; `ai-runs` R73's and R77's
+ *  open relays them (B4, K2485; K2822). Pure; never throws. */
 export function originAllowed(asked) {
-  const { origin = null, investigateDeployable = false } = asked && typeof asked === "object" ? asked : {};
+  const { origin = null, mode = null, investigateDeployable = false } = asked && typeof asked === "object" ? asked : {};
   const o = typeof origin === "string" ? origin : "";
+  if (mode === "plan")
+    return PLAN_ORIGINS.includes(o) ? { ok: true } : refusal("AI_RUN_ORIGIN_UNKNOWN",
+      `${JSON.stringify(String(origin ?? "").slice(0, 40))} is not where a planning run comes from: a planning run is `
+        + `opened by a member, or by recording a reply (${PLAN_ORIGINS.join(", ")}). Nothing was started`, { origin: o || null });
   if (o === "member") return { ok: true };
   if (o === "explore")
     return investigateDeployable === true ? { ok: true } : refusal("AI_RUN_EXPLORE_NOT_DEPLOYABLE",

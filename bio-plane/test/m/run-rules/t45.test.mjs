@@ -1,11 +1,12 @@
-/* run-rules T45-10 (N861, N887; Actions D11b, D21, D25): R27, the action drafts — `DRAFT_KINDS` gains `textcheck`,
+/* run-rules T45-10 (N861, N887; Actions D11b, D21, D25): R28 at the end of this file; R27, the action drafts — `DRAFT_KINDS` gains `textcheck`,
    `infractiondraft` and `bearingdraft`; their reach (`DRAFT_REACH`, `draftMayRead`); their one deploy flag
    `action_drafts` (`ACTION_DRAFTS`, `draftKindDeployed`). No refusal is new: a draft of any kind is R18's to start. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { DRAFT_KINDS, ACTION_DRAFT_KINDS, DRAFT_REACH, DRAFT_MODE, ACTION_DRAFTS, draftMayRead, draftKindDeployed,
          deployedModesFor, DEPLOYED_MODES, RUN_MODES, DEPLOYMENT_SEQUENCE, deployable, startAllowed, ASK_BOUNDS,
-         checkAskBounds, TEST_BAR_PARTS, partDeployableOn } from "../../../src/run-rules/index.mjs";
+         checkAskBounds, TEST_BAR_PARTS, partDeployableOn, AI_RUN_PLAN_CHECKS, AI_RUN_CHECKS, RETIRED_CHECKS, translationOf,
+         RUN_ORIGINS, PLAN_ORIGINS, originAllowed } from "../../../src/run-rules/index.mjs";
 import { refusal } from "./helpers.mjs";
 
 const ACTION = ["textcheck", "infractiondraft", "bearingdraft"];
@@ -146,4 +147,54 @@ test("R27: draftKindDeployed({kind, flags}) — an action draft only when both d
   assert.equal(draftKindDeployed(Object.create({ kind: "own_words", flags: { draft: true } })), false);
   for (const x of [undefined, null, 3, "textcheck", [], () => 1]) assert.equal(draftKindDeployed(x), false, String(x));
   for (const flags of [null, 3, "x", [true]]) assert.equal(draftKindDeployed({ kind: "own_words", flags }), false, String(flags));
+});
+
+/* R28 (K2820, K2822; ai-runs R77): the re-examination run's rows, and originAllowed reading the run's mode. */
+test("R28: C-109 gains AI_RUN_REEXAM_NEEDS_RESPONSE (C-109.13) and AI_RUN_REEXAM_OPEN (C-109.14), each in DEC-83's sentence-then-remedy form, minted by ai-runs at is-airun-open-reexam and read here by key; no other number taken", () => {
+  const want = { AI_RUN_REEXAM_NEEDS_RESPONSE: "C-109.13", AI_RUN_REEXAM_OPEN: "C-109.14" };
+  for (const [code, n] of Object.entries(want)) {
+    const row = AI_RUN_PLAN_CHECKS[code];
+    assert.ok(row, code);
+    assert.deepEqual(Object.keys(row).sort(), ["check", "translation", "where"], code);
+    assert.equal(row.check, n, code);
+    assert.equal(row.where, "src/ai-runs/index.mjs open > is-airun-open-reexam, reached from op=airunopen", code);
+    assert.equal(AI_RUN_CHECKS[code], row, code);
+    assert.equal(translationOf(code), row.translation, code);
+    /* DEC-83: the sentence (what happened), then the remedy (what to do) */
+    const sentences = row.translation.split(/(?<=\.) /);
+    assert.equal(sentences.length, 2, code);
+    assert.match(sentences[0], /^Nothing was run, because /, code);
+    assert.match(sentences[1], /^(Record|Wait)\b/, `${code}: the remedy follows`);
+    assert.doesNotMatch(row.translation, /\b[A-Z][A-Z_]{3,}\b/, `${code}: plain words`);
+  }
+  assert.match(AI_RUN_CHECKS.AI_RUN_REEXAM_NEEDS_RESPONSE.translation, /without saying which reply/);
+  assert.match(AI_RUN_CHECKS.AI_RUN_REEXAM_OPEN.translation, /already under way/);
+  /* one condition per number across the whole map; the retired numbers stay unused */
+  const numbers = Object.values(AI_RUN_CHECKS).map((r) => r.check);
+  assert.equal(new Set(numbers).size, numbers.length);
+  for (const r of Object.values(RETIRED_CHECKS)) assert.equal(numbers.includes(r.check), false, r.check);
+});
+
+test("R28: originAllowed takes the run's mode — in mode plan it admits member and reexamination only, any other origin (explore included, whatever investigateDeployable) AI_RUN_ORIGIN_UNKNOWN (C-22.25); outside plan R23 unchanged, reexamination refused there; RUN_ORIGINS unchanged; never throws", () => {
+  assert.deepEqual([...PLAN_ORIGINS], ["member", "reexamination"]);
+  assert.ok(Object.isFrozen(PLAN_ORIGINS));
+  assert.deepEqual([...RUN_ORIGINS], ["member", "explore"], "R23's list, unchanged");
+  for (const origin of PLAN_ORIGINS) for (const investigateDeployable of [true, false, undefined])
+    assert.deepEqual(originAllowed({ origin, mode: "plan", investigateDeployable }), { ok: true }, `${origin} ${investigateDeployable}`);
+  for (const origin of ["explore", undefined, null, "", "Reexamination", "reexam", "system", 3, ["member"]])
+    for (const investigateDeployable of [true, false]) {
+      const r = refusal(originAllowed({ origin, mode: "plan", investigateDeployable }), "AI_RUN_ORIGIN_UNKNOWN");
+      assert.equal(r.check, "C-22.25");
+      assert.match(r.detail, /is not where a planning run comes from/);
+      assert.match(r.detail, /Nothing was started$/);
+    }
+  /* outside plan: R23 as it was, reexamination refused */
+  for (const mode of ["check", "investigate", "extract", undefined, null, "Plan", " plan"]) {
+    assert.deepEqual(originAllowed({ origin: "member", mode }), { ok: true }, String(mode));
+    assert.deepEqual(originAllowed({ origin: "explore", mode, investigateDeployable: true }), { ok: true }, String(mode));
+    refusal(originAllowed({ origin: "explore", mode, investigateDeployable: false }), "AI_RUN_EXPLORE_NOT_DEPLOYABLE");
+    const r = refusal(originAllowed({ origin: "reexamination", mode, investigateDeployable: true }), "AI_RUN_ORIGIN_UNKNOWN");
+    assert.match(r.detail, /is not where a run comes from/);
+  }
+  for (const x of [null, undefined, 3, "plan"]) refusal(originAllowed(x), "AI_RUN_ORIGIN_UNKNOWN");
 });
