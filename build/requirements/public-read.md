@@ -73,6 +73,18 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
 - **R32** The case file (R23) also carries, for each material it carries whole that is an archive member, the files `publication`'s commit registered for it (its R57, through `case-carriage` R8): its `container` record (kind `container`) and its archive's bytes (kind `archive`), and the same for that archive's archive, outward to the outermost, each read from the published projection only, at the path `case-grammar.caseFilePath` gives it under that material's ref (`case-grammar` R13 as amended). Bytes that do not hash to the digest registered are not carried and are named in `unheld`, as R23's materials are. The archive's timestamp tokens travel as today, as `attestation`. A material that is not a member carries neither file.
 - **R33** The case file also carries the edition's criteria as one file of kind `criteria` (`case-grammar` R13): exactly the rows R31 answers as `criteria` for the edition, in `record-grammar`'s canonical JSON, read from the published projection; an edition whose `criteria` is `null` (committed before T35) carries none.
 
+*The group's public identity and declared stake* (T45; N883, N892 (d); Actions D16, D28d; the plan's reconciliation R12)
+- **R34** (T45; N883, N892 (d); Actions D16, D28d; v0.2 rules 14, 21) Everything the group sends or publishes carries its public identity and declared stake, as per-group fields.
+  - **The identity source.** `registerGroupIdentity({identity})` takes, once at start, the one source of the group's public identity; `instance-setup` fills it with its `groupIdentityPublic` (its R10). A second registration is refused `PROVIDER_DECLARED`, and one without the door `PROVIDER_MALFORMED`, each registering nothing (`publication` R77's pattern).
+  - **The fields.** `groupFields()` answers `{group, name, domain, domain_verified_at, stake, detail}`, synchronously, with no credential and no viewer:
+    - `group`, `name`, `domain` and `domain_verified_at` are exactly what the registered source answers. With none registered, or a source that throws or answers no object, all four are null and `detail` names the identity as undetermined;
+    - `stake` is the value of `record-core`'s setting `declared_stake` (`getSetting`, its R25), the group's own declaration as its administrators set it (`instance-setup`'s act, T45-44), answered as held. Never set, it is null and `detail` says the group has declared no stake. A setting that cannot be read answers `stake: "undetermined"`, never null: an unread stake is never read as none.
+  - **In the stamp.** `inbandQuartet` (R7) also takes `group`, R34's answer as its caller read it (`filings` R22), and answers it unchanged as `group`; with none given it answers `group: null`. The fields sit beside `hash` and are never inside what `hash` covers (the subject's bytes only), so two groups' stamps over the same bytes carry the same `hash.sha256`: the joint text's body fingerprint (`filings` R36) is computed without them. The format stays `bio-inband/1`; the field is additive, and a reader that ignores it still verifies the hash.
+  - **On a published case.** `publishedCase` (R3) also answers `group_fields`, R34's answer at the read: the group's current identity and stake, labelled as current, never read from or written into the signed document or the case file's bytes (R23), so a later declaration changes no published byte.
+  - It writes nothing and never throws.
+
+  Controls: the same subject stamped with two different `group` values answers the same `hash`; with no source registered the identity reads null with its detail, never a guess; an unset setting answers `stake: null`, an unreadable one `"undetermined"`; a second registration is refused. *(not yet met: T45)*
+
 ## Private
 
 ### Uses
@@ -84,12 +96,13 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
 - `publication`: `publishedMaterialText` (its R57, for R23; K1316), `heldMaterialsOf` (its R57, for R23 and R32: the archive pool keeps only what this edition's commit held; K2223), `caseEditionState` (its R53), `soleCase` (its R54), `caseDocMemberFrozen` (its R55), `recordCaseManifest` (its R15), `delivererOf` (its R14), `stampsOf` (its R62, for R28; K1644), `signed_at` and `published_at` (its R70, for R29), and its tables under its R40. The rows this module's refusals carry are its own (R17).
 - `case-grammar` (T33-65): `calculationsOf` (its R18) and `timelineOf` (its R20), for R23, R26 and R27.
 - `calculations` (T33-65): the canonical bytes of a calculation's inputs as `publication` committed them, for R23 (open: the plan names `calculations` for this job; if every byte the case file needs is already in the published projection, the job drops the use and says so in its COMPLETE).
+- `record-core` (T45; N892 (d)): `getSetting` (its R25), the setting `declared_stake`, for R34. A `modules.json` edge (104 → 33). `instance-setup` (layer 11) fills R34's identity source; this module does not use it.
 - `docket` (N520): `withdrawalOf` (its R12), `lastEntryOf`, `docketPublic` (its R14, and its R24's `captures: "omit"` for R25) and `docketFeed` (its R15), for R20, R21 and R25 (K1276; N534).
 
 ### Invariants
 
 - **R9** (was `publication` R48; N339, K421) A store answer this module's Worker handlers relay that is the store's own refusal (`answer-envelope` R3: `ok: false` below 500) is answered with the store's status, code and sentence through `storeRefusal`; only a reply that is no answer is `STORE_DID_NOT_ANSWER`, with the store's correlation id when it gave one (`store-door` R6; N349).
-- **R10** (copied from `publication` R25) The public read path (R1–R5, R18's registered reads, and R20–R21's docket reads) needs no credential and reads the published projection, the published store and `docket`'s public answers only, so it can disclose nothing unpublished; a scratch namespace is not readable there (rule 10).
+- **R10** (copied from `publication` R25) The public read path (R1–R5, R18's registered reads, and R20–R21's docket reads) needs no credential and reads the published projection, the published store and `docket`'s public answers only, so it can disclose nothing unpublished; a scratch namespace is not readable there (rule 10). (T45; v0.2 rule 21) It also reads R34's per-group fields: the registered identity source's public answer and the one setting `declared_stake`, each public by the group's own act; nothing else outside the published projection. *(not yet met: T45)*
 - **R11** (copied from `publication` R26) No answer, document or row this module serves composes a case-level strength: every pair is per member and per axis (DEC-44, DEC-21).
 - **R12** (copied from `publication` R27) Signer and deliverer are two facts, and neither is copied from the other; every authorship field is a stamp or read from a signature.
 - **R13** (copied from `publication` R28) Undetermined is stated and never filled: a deliverer, an acknowledgement list a document is silent about (null, not `[]`), a citation's version in a document older than `/4`.
@@ -110,6 +123,7 @@ Terms are `publication`'s (a case, an edition, the case document, a pin, the pub
 - DEC-180 (4) (Bob, K2108): a marked photo travels as its labelled copy, never whole (R3, R23; N757, K2206).
 - K2333 (N806): R23's wording.
 - DEC-146 (the one line saying what Civicsmith is, on the page the credit links to; K1774): R30 (N660). The installer's use of the same line is `installer`'s (T35-50).
+- `BIO_Action_v0_2.md` §4 rules 14 (the in-band stamp; a joint text's fingerprint) and 21 (everything sent or published carries the group's public identity and declared stake) (K2780; Actions D16, D28d; T45, N893): R34, R10's amendment.
 - DEC-101 and `BIO_Publication_v0_1.md` §5A (R3's `what_changed`); DEC-103 and `BIO_Declared_Bias_v0_1.md`, "RULED 2026-10-01 by Bob (DEC-103)" (R3's `lens`); K1019.
 
 ### Suggestions

@@ -111,7 +111,7 @@ A **member document** is a document capture that is not a photo (R9's term) and 
 - `sources`: `publishableAt` (R8), the `source_knocks` read contract (R15).
 - `extraction`: `unitsOf` (R36).
 - `accepted-work`: `acceptedFinding`, `openFlagsOn` (R2).
-- `case-grammar`: `materialsOf` (R12), `extractedTextOf` (R17), `acceptedWorkOf` (R16), `caseDocumentBlocks` and `sourceRowsStanding` (R1).
+- `case-grammar`: `materialsOf` (R12), `extractedTextOf` (R17), `acceptedWorkOf` (R16), `caseDocumentBlocks` and `sourceRowsStanding` (its R27, R28; T45, N888: re-pointed from R1, wording only).
 - (T37) `image-cover`: `coverAreas`, `COVER_MAX_BYTES` (its R1–R3; R11). `record-core`: `evidenceStore` (its R38; R11), `declareTable`, `stampInstant` (R9, R12). `membership`: the sight of a capture (R9, R10). `record-grammar`: `isMachineIdentity` (R9).
 - `acquisition`: the `archive_entries` read contract (its R45; R8, R1; K2307).
 - `doc-clean` (T39; N806, K2333; a `modules.json` edge): `cleanDocument`, `CLEAN_MAX_BYTES` (its R1–R6; R15).

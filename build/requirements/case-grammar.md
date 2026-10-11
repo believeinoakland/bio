@@ -2,7 +2,7 @@
 
 **Status** · In force: split from `publication` for size (K617, K651), meaning unchanged: R1 is `publication` R20, retired there; R6 and R7 copies of its R28 and R34; DEC folds approved by Bob (K1019), R9's first lens sentence Bob's (DEC-117). R21 is a copy of `case-disclosures` R28's block spelling, so `ratification` R41 reads the signed document's ties (K1816). Last changed T36 (T36-25: R13 `bio-case-file/2`, R22; K2129, K2144) and T37 (T37-40: R12, R13 (`bio-case-file/3`, the `obscured` kind), R14 amended; N757; K2108, K2171, K2206; DEC-180) and T39 (T39-9: R12–R14 worded for a member document's copy; N806; K2333). Last changed T40 (T40-16a: R12, R14 amended; N798; DEC-185; K2394); those marked not yet met (T37, T40), every other requirement met. Last changed T41 (T41-34's text: R23–R26 new, R13 and R14 amended, R14's T40 text kept; N820; D56–D61, D63; K2405, K2417, K2418); marked not yet met (T41).
 
-**Size (P6).** About 425 lines. Pure: it reads no table and holds no store.
+**Size (P6).** About 425 lines. Pure: it reads no table and holds no store. (T45; measured) 2,657 lines (`case-grammar/`) before T45's fold, about 2,740 after it; the 425 above is stale.
 
 ## Public
 
@@ -88,6 +88,8 @@ The case document's grammar, one spelling for every module: the formats and thei
   The product's name in the rendered words (the credit at the foot, the line saying the case can be checked without the product, and the grading method's text, item 8) is chosen by the case document's format: a `bio-case-document/6` document, or an earlier one, renders "CivicOS", byte for byte as before T31; a `/7` document renders "Civicsmith". A test proves that a complete edition rendered from a `/6` case file before T31 re-renders byte-identical, and that a `/7` case file renders "Civicsmith" in those three places. (DEC-124; K1365 (1))
 
   (T41; N820; D56, D58, D59, D60, D61; K2418) The complete edition prints the account (R23) after the claims, each bias-framed sentence marked and its statement named, the included review comments (R25), and the approvals (R26).
+
+  (T45; N855 (6c); Actions D5, D6c; v0.2 §3 Success record, rule 17) The complete edition prints R29's outcomes after the claims (item 1) and before the findings (item 2), each with its kind, its date, its text and its cites. An edition whose document carries no `outcomes:` block renders byte for byte as before. *(not yet met: T45)*
 - **R15** `standingOf({role, bar, pair})` answers `{role, bar, meets, line}`.
   - `bar` gives each declared axis its grade, and null for an undeclared axis.
   - `meets` answers as follows: for a load-bearing member, `true` when the pair reaches the bar on every declared axis, else `false` naming each axis it falls short on; for a supporting member, `not_asked`; with no bar, `no_bar`.
@@ -129,10 +131,50 @@ The case document's grammar, one spelling for every module: the formats and thei
 
 #### The account, bias applications, review comments and approvals (T41; N820; `draft-T41-investigation.md` §3.6; K2405, K2417, K2418; D56–D63)
 
-- **R23** (D56, D58) The case document's `account:` block: one row per sentence `{ord, text, cites, kind, bias_statement?, began_as}`, `cites` the findings, legs, passages or materials it rests on, `kind` `account` or one of the four statements (D63), `bias_statement` set only for framing marked as following a printed bias statement, `began_as` `member` or `machine_draft` with the draft named; `accountLines`, `accountOf`. The body prints the account with each bias-framed sentence marked in the text.
+- **R23** (D56, D58) The case document's `account:` block: one row per sentence `{ord, text, cites, kind, bias_statement?, began_as}`, `cites` the findings, legs, passages or materials it rests on, `kind` `account` or one of the four statements (D63), `bias_statement` set only for framing marked as following a printed bias statement, `began_as` `member` or `machine_draft` with the draft named; `accountLines`, `accountOf`. The body prints the account with each bias-framed sentence marked in the text. (T45; N855 (6c); Actions D6c; the plan's reconciliation R3; l8 doubt 8) `kind` also takes `outcome`: a row carrying the text of an outcome carried into this edition (R29; `case-authoring` R71), with its cites, judged as the four statements are (`case-account` R6). A document without such a row reads as before. *(not yet met: T45)*
 - **R24** (D59) The `bias_applications:` block: one row per application recorded at a leg or conclusion of a finding a member's chain reaches (`inquiry-grammar` R18, `basis-versions` R48), `{finding, ord?, target, statement, effect, from, to}`; `biasApplicationsOf`.
 - **R25** (D61) The `review_comments:` block: the reviewers' comments the publisher chose to include, each `{reviewer, text, at}` as `review` holds it; and `review_comments_left_out`, the count left out, stated, or null when it could not be determined (K2533). `reviewCommentsOf`.
 - **R26** (D60) The `approvals:` block: the group's approval rule in force at signing and each approval `{by, at}`; `approvalsOf`. (K2528) `approvalSubjectSha(text)` answers the sha-256 of a case document with its R26 block (`approval_rule`, `approvals:`) removed, so an approval names the document as the approver saw it, and the same digest is computed before and after the block is written.
+
+#### The blocks read as one, and the sources that still hold (T45; N888; CASE-CARRIAGE #9 J1; K2767; stated as built, P7)
+
+- **R27** (T45; N888; K2767) `caseDocumentBlocks(text)` answers `{captures, sources, detail}` for a case document's text, its front matter parsed by `record-grammar`'s `parseFrontmatter`.
+  - **Before `/5`.** For a document R1's `caseDocumentRequiresTensionSection` does not hold for (any format before `/5`), it answers `captures: null`, `sources: null` and `detail` = `BLOCKS_PREDATE_SENTENCE`.
+  - **`captures`** is null when the `captures:` block is not a list; otherwise one entry per object row, `{capture, member, grade, grade_basis, co_attested, timestamp_at, co_archive, late, self_attested_only, accounts}`:
+    - a value written `null`, or absent, reads null;
+    - `co_attested`, `late` and `self_attested_only` read `true` or `false` from a boolean or its string, else null;
+    - `accounts` is every `capture_accounts:` row naming that capture, in order, as `{by, at, text, signature}`, its text and signature decoded from base64 (null where undecodable);
+    - a row stating `acknowledgement_reason` or `acknowledged_by` also carries `acknowledgement: {reason, acknowledged_by, at, sentence}`.
+  - **`sources`** is null when the `sources:` block is not a list, else one `{capture, stated, basis}` per object row.
+  - **`detail`** is null when both are lists, else `BLOCK_UNREADABLE_SENTENCE`. A text that cannot be parsed answers both null with that sentence.
+  - The two sentences are exported, verbatim:
+    - `BLOCKS_PREDATE_SENTENCE`: "this case document's format predates the statement of each capture's grade, co-attestation and source, so it states none; that is not a statement that there were none";
+    - `BLOCK_UNREADABLE_SENTENCE`: "this case document declares a format that states each capture's grade, co-attestation and source, but carries no readable block for it, so what it stated is undetermined".
+  - It is the one reading of R1's `captures:`, `capture_accounts:` and `sources:` blocks (`case-carriage` R5, `publication`, `public-read`, the complete edition R14). Pure; never throws.
+
+  Stated as built; its tests are owed (controls: a `/4` document answers both null with the predate sentence; a `/7` document with no `sources:` list answers `sources: null` and the unreadable sentence; an undecodable account reads null text; a round trip with R1's line builders). *(not yet met: T45)*
+- **R28** (T45; N888; K2767) `sourceRowsStanding(rows, publishable)` answers the `sources:` rows (R27's) that no longer hold, as `[{capture, stated, basis}]` in input order, and `[]` when `rows` is not a list.
+  - `publishable(capture)` answers, for one capture, `{entries, received}`: the entries `sources.publishableAt` answers now over the sources behind it, and the receipt's time; or null when no source stands behind it.
+  - It is called at most once per distinct capture. A row whose `capture` is not a string is never asked and does not hold. A `publishable` that throws counts as null.
+  - **When a row holds.** `publishable` answered non-null, the row's `stated` is a string, and:
+    - with `basis` null, `stated` (folded by `fmSafe`) equals `unnamedSourceStatement({capture, received})`;
+    - otherwise `basis` is one of `SOURCE_BASES` (`consent`, `public_elsewhere`) and some answered entry has that `basis` and spells `sourceStatement(entry)` equal to `stated`.
+  - Every other row is answered, so nothing is stated that `publishableAt` did not answer at the commit (`publication` R51, R52).
+  - **Fail closed.** An answer whose `entries` is not a list (truthy or not) holds no row of that capture, and the function never throws (today such an answer throws: the one change from the code as built, l8 doubt 12).
+
+  Pure. Controls: a stated row whose `publishableAt` entry was withdrawn is answered; a withheld row with a different `received` is answered; `publishable` throwing makes that capture's rows fail; `entries: "x"` answers the row and does not throw. *(not yet met: T45)*
+
+#### The outcomes carried into an edition (T45; N855 (6c); Actions D5, D6c; v0.2 §3 Success record, rule 17)
+
+- **R29** (T45; N855 (6c); Actions D5, D6c; v0.2 §3 Success record, rule 17) The case document's `outcomes:` block: one flat row (K549) per outcome carried into this edition (`case-authoring` R71), `{outcome, kind, text, cites, on, carried_by, carried_at}`.
+  - `kind` is `success`, `cure` or `harm_addressed`; `on` is the date the outcome occurred.
+  - `cites` is the cites' canonical JSON (`record-grammar`'s) in one quoted value, as R17 writes lists.
+  - `outcomesLines(rows)` writes the block, the one spelling; `outcomesOf(fm)` reads it back in order, answering `[]` for a document without it.
+  - The body prints the outcomes under one heading, its words the UX stream's (key `case.outcomes.head`; until given, "Outcomes since the last edition"), each with its kind (keys `case.outcome.success`, `.cure`, `.harm_addressed`), date, text and cites. No row states a cause (the plan's reconciliation R3).
+  - It is an optional block of the current format with no new version, as R22's `subject_entity` is (l8 doubt 7): a document without it reads `[]` and renders as before.
+  - Pure; never throws. Controls: a document without the block answers `[]`; a round trip keeps the order.
+
+  *(not yet met: T45)*
 
 ## Private
 
@@ -154,6 +196,7 @@ The case document's grammar, one spelling for every module: the formats and thei
 - `docs/development/MEMBER-KNOWLEDGE-DESIGN.md` §4 (MK-7 attribution levels, R2).
 - N345 and N364 (R1's `/5`, its tension section and its `captures:`, `capture_accounts:` and `sources:` blocks): DEC-76 item 4, DEC-78 item 5, DEC-81 items 1 and 3; `CONTRADICTION-PRESENT-RESOLVE-DESIGN.md` §10.
 - D-431, D-442.
+- `BIO_Action_v0_2.md` §3 (Success record) and §4 rule 17 (K2780; T45, N893): the outcomes carried into the next edition (R29, R14, R23's `outcome` rows). N888 (K2767): R27, R28 stated as built.
 - DEC-112 response 4 (1)–(5) and `BIO_Publication_v0_1.md` §5C (R11–R15), with K1134 (1) and Q6, and DEC-119 (R12, R14; K1275); DEC-117 (R9, N524).
 - DEC-96 item 4 (R14's leg on another group's work, R16; N522, K1273).
 - DEC-122 (2) (R14: print and the complete edition are always light; N528).
