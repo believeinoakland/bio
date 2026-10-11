@@ -2,7 +2,7 @@
 
 **Status** · In force: split from `publication` for size (K617, K651), meaning unchanged: R1 is `publication` R20, retired there; R6 and R7 copies of its R28 and R34; DEC folds approved by Bob (K1019), R9's first lens sentence Bob's (DEC-117). R21 is a copy of `case-disclosures` R28's block spelling, so `ratification` R41 reads the signed document's ties (K1816). Last changed T36 (T36-25: R13 `bio-case-file/2`, R22; K2129, K2144) and T37 (T37-40: R12, R13 (`bio-case-file/3`, the `obscured` kind), R14 amended; N757; K2108, K2171, K2206; DEC-180) and T39 (T39-9: R12–R14 worded for a member document's copy; N806; K2333). Last changed T40 (T40-16a: R12, R14 amended; N798; DEC-185; K2394); those marked not yet met (T37, T40), every other requirement met. Last changed T41 (T41-34's text: R23–R26 new, R13 and R14 amended, R14's T40 text kept; N820; D56–D61, D63; K2405, K2417, K2418); marked not yet met (T41).
 
-**Size (P6).** About 425 lines. Pure: it reads no table and holds no store. (T45; measured) 2,657 lines (`case-grammar/`) before T45's fold, about 2,740 after it; the 425 above is stale.
+**Size (P6).** About 2,779 lines (`case-grammar/`, T45, K2833). Pure: it reads no table and holds no store.
 
 ## Public
 
@@ -89,7 +89,7 @@ The case document's grammar, one spelling for every module: the formats and thei
 
   (T41; N820; D56, D58, D59, D60, D61; K2418) The complete edition prints the account (R23) after the claims, each bias-framed sentence marked and its statement named, the included review comments (R25), and the approvals (R26).
 
-  (T45; N855 (6c); Actions D5, D6c; v0.2 §3 Success record, rule 17) The complete edition prints R29's outcomes after the claims (item 1) and before the findings (item 2), each with its kind, its date, its text and its cites. An edition whose document carries no `outcomes:` block renders byte for byte as before. *(not yet met: T45)*
+  (T45; N855 (6c); Actions D5, D6c; v0.2 §3 Success record, rule 17) The complete edition prints R29's outcomes after the claims (item 1) and before the findings (item 2), each with its kind, its date, its text and its cites. An edition whose document carries no `outcomes:` block renders byte for byte as before.
 - **R15** `standingOf({role, bar, pair})` answers `{role, bar, meets, line}`.
   - `bar` gives each declared axis its grade, and null for an undeclared axis.
   - `meets` answers as follows: for a load-bearing member, `true` when the pair reaches the bar on every declared axis, else `false` naming each axis it falls short on; for a supporting member, `not_asked`; with no bar, `no_bar`.
@@ -131,7 +131,7 @@ The case document's grammar, one spelling for every module: the formats and thei
 
 #### The account, bias applications, review comments and approvals (T41; N820; `draft-T41-investigation.md` §3.6; K2405, K2417, K2418; D56–D63)
 
-- **R23** (D56, D58) The case document's `account:` block: one row per sentence `{ord, text, cites, kind, bias_statement?, began_as}`, `cites` the findings, legs, passages or materials it rests on, `kind` `account` or one of the four statements (D63), `bias_statement` set only for framing marked as following a printed bias statement, `began_as` `member` or `machine_draft` with the draft named; `accountLines`, `accountOf`. The body prints the account with each bias-framed sentence marked in the text. (T45; N855 (6c); Actions D6c; the plan's reconciliation R3; l8 doubt 8) `kind` also takes `outcome`: a row carrying the text of an outcome carried into this edition (R29; `case-authoring` R71), with its cites, judged as the four statements are (`case-account` R6). A document without such a row reads as before. *(not yet met: T45)*
+- **R23** (D56, D58) The case document's `account:` block: one row per sentence `{ord, text, cites, kind, bias_statement?, began_as}`, `cites` the findings, legs, passages or materials it rests on, `kind` `account` or one of the four statements (D63), `bias_statement` set only for framing marked as following a printed bias statement, `began_as` `member` or `machine_draft` with the draft named; `accountLines`, `accountOf`. The body prints the account with each bias-framed sentence marked in the text. (T45; N855 (6c); Actions D6c; the plan's reconciliation R3; l8 doubt 8) `kind` also takes `outcome`: a row carrying the text of an outcome carried into this edition (R29; `case-authoring` R71), with its cites, judged as the four statements are (`case-account` R6). A document without such a row reads as before.
 - **R24** (D59) The `bias_applications:` block: one row per application recorded at a leg or conclusion of a finding a member's chain reaches (`inquiry-grammar` R18, `basis-versions` R48), `{finding, ord?, target, statement, effect, from, to}`; `biasApplicationsOf`.
 - **R25** (D61) The `review_comments:` block: the reviewers' comments the publisher chose to include, each `{reviewer, text, at}` as `review` holds it; and `review_comments_left_out`, the count left out, stated, or null when it could not be determined (K2533). `reviewCommentsOf`.
 - **R26** (D60) The `approvals:` block: the group's approval rule in force at signing and each approval `{by, at}`; `approvalsOf`. (K2528) `approvalSubjectSha(text)` answers the sha-256 of a case document with its R26 block (`approval_rule`, `approvals:`) removed, so an approval names the document as the approver saw it, and the same digest is computed before and after the block is written.
@@ -152,7 +152,7 @@ The case document's grammar, one spelling for every module: the formats and thei
     - `BLOCK_UNREADABLE_SENTENCE`: "this case document declares a format that states each capture's grade, co-attestation and source, but carries no readable block for it, so what it stated is undetermined".
   - It is the one reading of R1's `captures:`, `capture_accounts:` and `sources:` blocks (`case-carriage` R5, `publication`, `public-read`, the complete edition R14). Pure; never throws.
 
-  Stated as built; its tests are owed (controls: a `/4` document answers both null with the predate sentence; a `/7` document with no `sources:` list answers `sources: null` and the unreadable sentence; an undecodable account reads null text; a round trip with R1's line builders). *(not yet met: T45)*
+  Stated as built; its tests are owed (controls: a `/4` document answers both null with the predate sentence; a `/7` document with no `sources:` list answers `sources: null` and the unreadable sentence; an undecodable account reads null text; a round trip with R1's line builders).
 - **R28** (T45; N888; K2767) `sourceRowsStanding(rows, publishable)` answers the `sources:` rows (R27's) that no longer hold, as `[{capture, stated, basis}]` in input order, and `[]` when `rows` is not a list.
   - `publishable(capture)` answers, for one capture, `{entries, received}`: the entries `sources.publishableAt` answers now over the sources behind it, and the receipt's time; or null when no source stands behind it.
   - It is called at most once per distinct capture. A row whose `capture` is not a string is never asked and does not hold. A `publishable` that throws counts as null.
@@ -162,7 +162,7 @@ The case document's grammar, one spelling for every module: the formats and thei
   - Every other row is answered, so nothing is stated that `publishableAt` did not answer at the commit (`publication` R51, R52).
   - **Fail closed.** An answer whose `entries` is not a list (truthy or not) holds no row of that capture, and the function never throws (today such an answer throws: the one change from the code as built, l8 doubt 12).
 
-  Pure. Controls: a stated row whose `publishableAt` entry was withdrawn is answered; a withheld row with a different `received` is answered; `publishable` throwing makes that capture's rows fail; `entries: "x"` answers the row and does not throw. *(not yet met: T45)*
+  Pure. Controls: a stated row whose `publishableAt` entry was withdrawn is answered; a withheld row with a different `received` is answered; `publishable` throwing makes that capture's rows fail; `entries: "x"` answers the row and does not throw.
 
 #### The outcomes carried into an edition (T45; N855 (6c); Actions D5, D6c; v0.2 §3 Success record, rule 17)
 
@@ -174,7 +174,7 @@ The case document's grammar, one spelling for every module: the formats and thei
   - It is an optional block of the current format with no new version, as R22's `subject_entity` is (l8 doubt 7): a document without it reads `[]` and renders as before.
   - Pure; never throws. Controls: a document without the block answers `[]`; a round trip keeps the order.
 
-  *(not yet met: T45)*
+ 
 
 ## Private
 

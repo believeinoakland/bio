@@ -25,7 +25,7 @@ const throwing = { format: V7, get account() { throw new Error("boom"); }, get b
 
 test("R23 the account: block round-trips exactly: one flat row per sentence {ord, text, cites, kind, bias_statement, began_as, draft}, read back in ord order", () => {
   assert.deepEqual([...CG.ACCOUNT_FIELDS], ["ord", "text", "cites", "kind", "bias_statement", "began_as", "draft"]);
-  assert.deepEqual([...CG.ACCOUNT_KINDS], ["account", "statement", "subject_justification", "excluded", "what_changed"]);
+  assert.deepEqual([...CG.ACCOUNT_KINDS], ["account", "statement", "subject_justification", "excluded", "what_changed", "outcome"]);
   assert.deepEqual([...CG.ACCOUNT_ORIGINS], ["member", "machine_draft"]);
   assert.deepEqual([...CG.ACCOUNT_CITE_KINDS], ["finding", "leg", "passage", "material"]);
   const rows = [

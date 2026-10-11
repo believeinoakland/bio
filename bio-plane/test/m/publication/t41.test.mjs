@@ -1,6 +1,6 @@
 /* publication — T41 (T41-36): the source of waiting editions (R77; N823, K2438), through which R21's waiting clause and
    R70's set-time signing instant read the editions `publish-schedule` holds (its R8, a later module: each test registers
-   a stand-in answering exactly R77's two doors); and the published-work fact membership's handle guard asks (R76;
+   a stand-in answering exactly R77's three doors); and the published-work fact membership's handle guard asks (R76;
    DEC-186 (1), N799), registered at start with the real membership (its R125). Driven at the module's interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";

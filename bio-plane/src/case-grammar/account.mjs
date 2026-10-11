@@ -32,7 +32,10 @@ import { sha256HexSync } from "../record-grammar/index.mjs";
 export const ACCOUNT_FIELDS = Object.freeze(["ord", "text", "cites", "kind", "bias_statement", "began_as", "draft"]);
 /** R23 (D63): what a row is: a sentence of the account, or one of the four authored statements (what it says, why this
  *  subject, what was left out and why, what changed; `case-authoring` R65's fields), each under the same check. */
-export const ACCOUNT_KINDS = Object.freeze(["account", "statement", "subject_justification", "excluded", "what_changed"]);
+export const ACCOUNT_KINDS = Object.freeze(["account", "statement", "subject_justification", "excluded", "what_changed",
+  /* T45 (N855 (6c); Actions D6c): the text of an outcome carried into this edition (R29; `case-authoring` R71), with its
+     cites, judged as the four statements are (`case-account` R6); printed by the outcomes section, never as the account */
+  "outcome"]);
 /** R23: how a sentence began (R8's two origins). */
 export const ACCOUNT_ORIGINS = Object.freeze(["member", "machine_draft"]);
 /** R23: what a sentence may cite: a finding, a leg of one (with its `ord`), a passage (by its `content_id`) or a material
@@ -76,7 +79,8 @@ const citeOf = (c) => {
   const kind = oneOf(c.kind, ACCOUNT_CITE_KINDS);
   return { kind, ref: str(c.ref), ord: kind === "leg" ? ordOf(c.ord) : null };
 };
-const citesOf = (v) => (Array.isArray(v) ? v.map(citeOf) : []);
+/* Shared with R29's outcomes (`./outcomes.mjs`), whose cites are this shape; `./index.mjs` does not re-export it. */
+export const citesOf = (v) => (Array.isArray(v) ? v.map(citeOf) : []);
 const accountRow = (r) => {
   const began = oneOf(r.began_as, ACCOUNT_ORIGINS);
   return { ord: ordOf(r.ord), text: typeof r.text === "string" ? r.text : null, cites: citesOf(r.cites),
