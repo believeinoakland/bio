@@ -24,3 +24,7 @@
 - `ownership: 1 files changed by publication between tranche/T42 and HEAD; 0 failures`
 
 Size (session_01PoAppEh7TVor7LEbvFgRXU): test runs 22, module lines 6
+
+## J1 · COMPLETE
+
+T42-23c applied, test-only: the fixture's sources stand-in is now `doorbell: {pulledKnocksOf}`. Nothing else changed. publication 134 pass, 0 fail, 1 todo (R30, D-246); this clears rule 4 (16)'s publication half. Users' suites (P11) are green except two reds already accepted: case-disclosures carries.test.mjs:139 (rule 4 (14)) and answer-envelope families.test.mjs:425 (rule 4 (6)). format, architecture, coverage (47/47) and ownership: 0 failures. Details in the record.
