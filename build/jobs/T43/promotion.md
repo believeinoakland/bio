@@ -96,3 +96,7 @@ T43-6 done; record's Completion has it all. R38 (N854) applied at the door, comm
   - No other new red.
 
 Size (session_01FkEawkkBapPx1hxUZQnZ2M): test runs 29, module lines 3698
+
+## J2 · COMPLETE · re B2
+
+B2 applied, commit 47ac97edda: C-2.1's arm refuses a creation as a revision (any parseFrontmatter C-2.1 finding -> BUNDLE_MD_UNREADABLE), tested with negative control; 1.70.0 note updated, census unchanged. promotion 128/0, row-census 8/0, d526 31/0. Users' suites re-run: new reds only (a) action-clocks calendar.test.mjs:278, factreader.test.mjs:39,72,80 — the T43-19 fixture, now refused at its creation; (b) case-checker program.test.mjs:19,49 'program.mjs is stale' — the generated artifact since the stamp (rule 4 (6)). answer-envelope green. Details in the record's 'After B2'.
