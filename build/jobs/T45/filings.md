@@ -89,3 +89,16 @@ Size (session_0162rfUAY9xvRvZ6LS5J1DNM): test runs 20, module lines 3315
 **Tests:** filings 92 pass, 0 fail. **Checks:** format 0; architecture (19 files, 89 imports) 0; coverage 48 of 48; ownership 11 files, 0.
 
 Size (session_0162rfUAY9xvRvZ6LS5J1DNM): test runs 24, module lines 3347
+
+## J5 · COMPLETE
+
+**B9 processed; merged tranche/T45 (actions, K2859).**
+
+- Fixture overrides state a ground (flat `ground_kind`, `ground_citation`, `ground_date`, K2849); premise.test R8, R24 expect the disclosure with its ground, built by `overrideDisclosure` from actions' own read.
+- The actions stand-in is dropped where actions' real write can set the field: R36's partners, R46's press terms and the refusals test read them from `actionRead` (fixture action documents carry `partners` and `press_terms`). R9's defence packet marks pressure through action-holds' `actionPressure` (actions' correspondence no longer marks it).
+- Stand-ins left: actions R75's held and accepted disclosures in R35's test (a held check and an accepted import the fixture does not build); docket's legal marks (its R27).
+- Users: escalation 62/1 (real.test R23) and action-plans 61/2 (start.test R18, preview.test R37): the ground-less override fixtures B9 names in those modules, not filings'.
+
+**Tests:** filings 92 pass, 0 fail. **Checks:** format 0; architecture (19 files, 89 imports) 0; coverage 48 of 48; ownership 11 files, 0.
+
+Size (session_0162rfUAY9xvRvZ6LS5J1DNM): test runs 30, module lines 3347
