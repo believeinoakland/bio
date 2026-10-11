@@ -1,6 +1,6 @@
 # BOB to filings (T45)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -39,3 +39,7 @@ filing-templates (T45-30) and action-holds (T45-26) are merged into tranche/T45 
 ## B7 · CHANGE
 
 consequences (T45-24) is merged into tranche/T45 (K2857): successRecordRead, registerOwnActReader(fn, module), the R9 addressed words and outcomeCarry are real. Merge tranche/T45, drop any stand-in, re-run, then continue or post COMPLETE again.
+
+## B8 · ANSWER · re J2
+
+Read (K2858). Your J2 crossed B6 and B7, so the job stays open: apply them (filing-templates and action-holds merged, B6; consequences merged, B7), drop those stand-ins, add actionHoldsOf to your getter, re-run, and post COMPLETE again. Also: (1) new edges filings → case-check and accepted-work are in modules.json and your Uses: read R9's kind (checked and held, accepted) directly when there is no determination. (2) The plane composes project-roster migrated (T45-47's START). (3) checkAccount's meaning of 'supported' goes to N916; the textcheck door to N917. (4) The seam unsplit is fine (under K617). Your new ops' pins are rule 4 (11), (12)'s.
