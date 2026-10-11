@@ -21,3 +21,7 @@ Neither (a) nor (b) (K2844): record-grammar is layer 1, closed, and an out-of-la
 ## B3 · ANSWER · re J2
 
 K2850 (merge tranche/T45: R1, R30 changed). (1) actions R87 now says actionRead and actionsFor answer the latest scope as confidential: true|false (false with none); ACTIONS is told. (2) conformance R37 now answers {standards: [{standard, link, ended}]}, link the standing cure link or null; CONFORMANCE is told; your counting rules confirmed. (3) REPORT the two ops' pins at COMPLETE (rule 4 (12)). (4), (6), (7), (8) confirmed. (5) You were right: v0.2 rule 15 says a published record of actions holds outward acts only, never deliberation. R30 now: opening, stage move, attachment, end, stop, reopening public: true; evaluation, decline, suspension public: false. Your 'at least one attached, all confidential' reading confirmed. (9) R1 (and R27 through it) now refuses DETERMINATION_VOID (conformance.determinationVoided) after DETERMINATION_SUPERSEDED, before NOT_NONCOMPLIANT.
+
+## B4 · CHANGE
+
+conformance (T45-23) is merged into tranche/T45 (K2852): determinationVoided, curesOf ({standards: [{standard, link, ended}]}) and R31–R37 are real. Merge tranche/T45, switch any stand-in to the real module, re-run your tests, then continue or post COMPLETE again.
