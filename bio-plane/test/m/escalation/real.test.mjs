@@ -126,7 +126,7 @@ test("R1 over the real conformance: NO_SUCH_DETERMINATION (absent and unseen) an
   assert.deepEqual(open(first.id), determinationSuperseded(first.id, second.id));
 });
 
-test("R23 over the real actions (K600 (a)): a member's breach action stating a premise_override, written through actions with no determination to rest on, is refused ACTION_PREMISE_OVERRIDDEN at an attaching stage, ahead of NOT_A_BREACH_ACTION; one resting on the determination without the override attaches", () => {
+test("R23 over the real actions (K600 (a)): a member's breach action stating a premise_override (with its ground, R74), written through actions with no determination to rest on, is refused ACTION_PREMISE_OVERRIDDEN at an attaching stage, ahead of NOT_A_BREACH_ACTION; one resting on the determination without the override attaches; once a revision adds the leg, the overridden action attaches with its override shown", () => {
   const x = real();
   const d = x.w.c.determine(x.input());
   const E = x.esc.escalationOpen({ reason: "Worth pursuing.", determination: d.id, author: V("pat"), viewer: V("pat") }).id;
@@ -142,8 +142,10 @@ test("R23 over the real actions (K600 (a)): a member's breach action stating a p
     assert.equal(r.ok, true, JSON.stringify(r).slice(0, 500));
     return id;
   };
-  const over = make("ACTN-2026-0001-override", ["premise_override:", '  reason: "The office has not answered; we act before a determination."',
-    "action_basis: []"]);
+  /* actions R74 (T45): every override states its ground, flat-keyed in the document */
+  const OVERRIDE = ["premise_override:", '  reason: "The office has not answered; we act before a determination."',
+    "  ground_kind: legal_deadline", '  ground_citation: "Records Act s.6"', "  ground_date: 2026-10-30"];
+  const over = make("ACTN-2026-0001-override", [...OVERRIDE, "action_basis: []"]);
   const read = x.esc.actions.actionRead({ id: over, viewer: V("pat") });
   assert.equal(read.ok, true, JSON.stringify(read).slice(0, 300));
   assert.equal(read.premise_override?.reason, "The office has not answered; we act before a determination.");
@@ -153,6 +155,21 @@ test("R23 over the real actions (K600 (a)): a member's breach action stating a p
   assert.equal(x.w.record.head(E).bundleSha, before, "nothing written");
   const plain = make("ACTN-2026-0002-notice", ["action_basis:", `  - target: ${d.id}`, "    kind: rests_on"]);
   assert.equal(x.esc.escalationAttach({ reason: "This act serves the stage.", id: E, action: plain, author: V("pat"), viewer: V("pat") }).ok, true);
+  /* R23 (T45; actions R8 (d)): a member's revision adds the leg on this determination, the override kept as written;
+     the action then attaches, its override (ground, reason, who, when) recorded with the attachment and in the history */
+  const head = x.w.record.head(over);
+  const rev = x.w.promotion.promote({ bundleId: over, base: head.bundleSha, snapKey: `20260928T010000Z_000000d1`, author: V("pat"),
+    viewer: V("pat"), files: [{ path: "bundle.md", text: md(over, [...OVERRIDE, "action_basis:", `  - target: ${d.id}`, "    kind: rests_on"]) }],
+    meta: { object_type: "action" } });
+  assert.equal(rev.ok, true, JSON.stringify(rev).slice(0, 500));
+  const joined = x.esc.escalationAttach({ reason: "Now it rests on the breach.", id: E, action: over, author: V("pat"), viewer: V("pat") });
+  assert.equal(joined.ok, true, JSON.stringify(joined).slice(0, 500));
+  assert.deepEqual(joined.premise_override.ground, { kind: "legal_deadline", citation: "Records Act s.6", date: "2026-10-30" });
+  assert.equal(joined.premise_override.reason, "The office has not answered; we act before a determination.");
+  assert.equal(joined.premise_override.by, V("pat"));
+  assert.equal(typeof joined.premise_override.at, "string");
+  const h = x.esc.escalationRead({ id: E, viewer: V("pat") }).history.find((e) => e.kind === "attach" && e.action === over);
+  assert.deepEqual(h.premise_override, joined.premise_override);
 });
 
 test("R29 over the real conformance, actions and consequences (their published shapes): the draft states the noncompliant standard with the basis the determination holds, the act, the breach action resting on it with its clock and its date passed at nowMs, and no consequence recorded; writes nothing", () => {
@@ -278,4 +295,100 @@ test("R12 over the real actions and conformance: an oversight request to an offi
   const item = read.actions.find((a) => a.action === A);
   assert.deepEqual([item.oversight.state, item.oversight.lines.map((l) => l.line.line_id)], ["held", [line.line_id]]);
   assert.deepEqual(read.targets.offices.map((o) => [o.entity, o.line.line_id]), [[harbour, line.line_id]]);
+});
+
+test("R14 over the real conformance (T45-23, K2852): a later act of the same office, determined compliant after the escalation opened and linked through conformance.cureLink, restores compliance (escalationEnd then asks the consequences); before the link, and for another office's compliant act never linked, COMPLIANCE_NOT_RESTORED names the standard", () => {
+  const x = real();
+  const { w, std, ev, input } = x;
+  w.clock.now = "2026-09-28T01:00:00Z";
+  const target = w.c.determine(input());
+  assert.equal(target.ok, true, JSON.stringify(target).slice(0, 300));
+  w.clock.now = "2026-09-28T02:00:00Z";
+  const E = x.esc.escalationOpen({ reason: "Worth pursuing.", determination: target.id, author: V("pat"), viewer: V("pat") }).id;
+  const end = () => x.esc.escalationEnd({ id: E, author: V("pat"), viewer: V("pat") });
+  /* control: another office's later act, compliant, never linked */
+  w.clock.now = "2026-09-28T03:00:00Z";
+  const later = w.event(ev, { date: "2026-04-01" });
+  const compliant = (actor) => input({ act: { ...input().act, event: later, actor }, standards: [{ standard: std, outcome: "compliant" }],
+                                       rows: [{ ...input().rows[0], reading: "aligns" }] });
+  const other = w.c.determine(compliant({ role: "City Manager", body: "City Administration" }));
+  assert.equal(other.ok, true, JSON.stringify(other).slice(0, 300));
+  let r = end();
+  assert.equal(r.reason, "COMPLIANCE_NOT_RESTORED");
+  assert.deepEqual(r.standards.filter((s) => !s.met).map((s) => s.standard), [std]);
+  /* the same office's later act, compliant: not restored until a member links it as the cure */
+  const cure = w.c.determine(compliant({ role: "Director of Parks", body: "Parks Department" }));
+  assert.equal(cure.ok, true, JSON.stringify(cure).slice(0, 300));
+  assert.equal(end().reason, "COMPLIANCE_NOT_RESTORED");
+  const linked = w.c.cureLink({ determination: target.id, standard: std, cure: cure.id, author: V("olive"), viewer: V("olive") });
+  assert.equal(linked.ok, true, JSON.stringify(linked).slice(0, 300));
+  const read = x.esc.escalationRead({ id: E, viewer: V("pat") });
+  assert.equal(read.exit.compliance.state, "met", JSON.stringify(read.exit.compliance).slice(0, 400));
+  assert.deepEqual(read.exit.compliance.standards[0].cured_by.map((c) => c.cure), [cure.id]);
+  /* compliance restored: the end now asks the consequences, none recorded (K172) */
+  r = end();
+  assert.equal(r.reason, "CONSEQUENCES_UNDETERMINED");
+});
+
+test("R6 R30 over the real actions (T45-27, K2859): a notification action stating reply_owed: false (with its reason) never triggers 3→4 by its clock, the read saying no reply owed, and the control owing one is triggered by a recorded lack of reply; a confidential attached action (actions.actionScope) leaves the timeline, and an escalation whose only attached action is confidential is not answered", () => {
+  const x = real();
+  const { w, input } = x;
+  const d = x.w.c.determine(input());
+  const E = x.esc.escalationOpen({ reason: "Worth pursuing.", determination: d.id, author: V("pat"), viewer: V("pat") }).id;
+  assert.equal(x.esc.escalationAdvance({ id: E, to: 2, reason: "Notify.", author: V("pat"), viewer: V("pat") }).ok, true);
+  const md = (id, lines) => ["---", `id: ${id}`, "object_type: action", `title: ${id}`, "current_state: planned",
+    'created: "2026-09-28T01:00:00Z"', 'last_updated: "2026-09-28T01:00:00Z"', "action_kind: other",
+    "counterparty:", "  state: named", "  role: Director of Parks", "  body: Parks Department", "breach: true",
+    "action_basis:", `  - target: ${d.id}`, "    kind: rests_on", "clock:", '  - text: "reply due"', '    description: "the reply the rule asks for"', '    date: "2026-09-20"',
+    '    basis: "the rule"', "    status: pending", ...lines, "---", "", "A notice.", ""].join("\n");
+  let k = 0;
+  const make = (id, lines) => {
+    const r = w.promotion.promote({ bundleId: id, base: null, snapKey: `20260928T010000Z_000000e${++k}`, author: V("pat"),
+      viewer: V("pat"), files: [{ path: "bundle.md", text: md(id, lines) }], meta: { object_type: "action" } });
+    assert.equal(r.ok, true, JSON.stringify(r).slice(0, 500));
+    return id;
+  };
+  const quiet = make("ACTN-2026-0011-quiet", ["reply_owed: false", 'reply_owed_reason: "a public statement, no reply sought"']);
+  assert.equal(x.esc.actions.actionRead({ id: quiet, viewer: V("pat") }).reply_owed.owed, false);
+  assert.equal(x.esc.escalationAttach({ reason: "The notice.", id: E, action: quiet, author: V("pat"), viewer: V("pat") }).ok, true);
+  const sent = x.esc.actions.actionCorrespond({ target: quiet, direction: "sent", at: "2026-09-02", account: "we wrote to the office",
+    author: V("pat"), viewer: V("pat") });
+  assert.equal(sent.ok, true, JSON.stringify(sent).slice(0, 400));
+  assert.equal(x.esc.escalationAdvance({ id: E, to: 3, reason: "Sent.", author: V("pat"), viewer: V("pat") }).ok, true);
+  const late = Date.parse("2026-12-01T00:00:00Z");
+  let r = x.esc.escalationRead({ id: E, nowMs: late, viewer: V("pat") });
+  assert.equal(r.triggers.find((t) => t.to === 4).met, false);
+  assert.deepEqual(r.notes.map((n) => [n.action, n.reply_owed]), [[quiet, false]]);
+  /* R30: the attachment is answered; once the action is confidential it is not, and the escalation (its only attached
+     action confidential) is not answered at all */
+  const set = x.w.c.determinationRead({ id: d.id, viewer: V("pat") }).act.event;
+  const items = () => x.esc.timelineSource({ set: [set], viewer: V("pat") }).items;
+  assert.ok(items().some((i) => i.kind === "attach"), JSON.stringify(items()).slice(0, 300));
+  const scoped = x.esc.actions.actionScope({ target: quiet, confidential: true, reason: "Counsel asked us to keep it in the group.",
+    author: V("pat"), viewer: V("pat") });
+  assert.equal(scoped.ok, true, JSON.stringify(scoped).slice(0, 400));
+  assert.deepEqual(items(), []);
+  /* control: an action owing a reply */
+  const y = real();
+  const d2 = y.w.c.determine(y.input());
+  const E2 = y.esc.escalationOpen({ reason: "Worth pursuing.", determination: d2.id, author: V("pat"), viewer: V("pat") }).id;
+  y.esc.escalationAdvance({ id: E2, to: 2, reason: "Notify.", author: V("pat"), viewer: V("pat") });
+  const md2 = (id) => md(id, []).replaceAll(d.id, d2.id);
+  const p = y.w.promotion.promote({ bundleId: "ACTN-2026-0012-owed", base: null, snapKey: "20260928T010000Z_000000f1", author: V("pat"),
+    viewer: V("pat"), files: [{ path: "bundle.md", text: md2("ACTN-2026-0012-owed") }], meta: { object_type: "action" } });
+  assert.equal(p.ok, true, JSON.stringify(p).slice(0, 400));
+  y.esc.escalationAttach({ reason: "The notice.", id: E2, action: "ACTN-2026-0012-owed", author: V("pat"), viewer: V("pat") });
+  y.esc.actions.actionCorrespond({ target: "ACTN-2026-0012-owed", direction: "sent", at: "2026-09-02", account: "we wrote to the office",
+    author: V("pat"), viewer: V("pat") });
+  y.esc.escalationAdvance({ id: E2, to: 3, reason: "Sent.", author: V("pat"), viewer: V("pat") });
+  /* this scene holds no zone for the office's local day, so the owed action's clock reads undetermined, never "no reply
+     owed"; a recorded lack of a reply triggers on it (on the quiet one actions refuses it, NO_REPLY_OWED) */
+  r = y.esc.escalationRead({ id: E2, nowMs: late, viewer: V("pat") });
+  assert.equal(r.notes[0].reply_owed, undefined);
+  assert.doesNotMatch(r.notes[0].says, /no reply owed/);
+  const none = y.esc.actions.actionCorrespond({ target: "ACTN-2026-0012-owed", direction: "no_response", at: "2026-09-25",
+    account: "nothing came back", author: V("pat"), viewer: V("pat") });
+  assert.equal(none.ok, true, JSON.stringify(none).slice(0, 400));
+  r = y.esc.escalationRead({ id: E2, nowMs: late, viewer: V("pat") });
+  assert.equal(r.triggers.find((t) => t.to === 4).met, true, JSON.stringify(r.triggers));
 });

@@ -114,6 +114,23 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [], s
       return { ok: true, items, cursor: items.at(-1)?.id ?? null, truncated: all.length > cap };
     },
   };
+  /* conformance R37 (T45; K2850): the cure links, `curesOf` answering `{standards: [{standard, link, ended}]}`, the
+     standing link or null (a test may set
+     `conformance.curesOf` to another shape, or delete it, to drive escalation R14's defensive read). */
+  const cureLinks = [];
+  conformance.curesOf = ({ determination, standard, viewer }) => {
+    const d = determinations.get(determination);
+    if (!d || !sees(d.project, viewer)) return { ok: false, reason: "NO_SUCH_DETERMINATION" };
+    const mine = cureLinks.filter((l) => l.determination === determination && (!standard || l.standard === standard))
+      .filter((l) => { const c = determinations.get(l.cure); return c && sees(c.project, viewer); });
+    const stds = [...new Set(d.outcomes.map((o) => o.standard))].filter((x) => !standard || x === standard);
+    return { ok: true, determination, standards: stds.map((x) => {
+      const l = mine.filter((y) => y.standard === x && !y.ended).at(-1);
+      return { standard: x, link: l ? { link: l.link, cure: l.cure, standard: x, by: V("alice"), at: l.at,
+                                         cure_standing: !determinations.get(l.cure).superseded_by } : null,
+               ended: mine.filter((y) => y.standard === x && y.ended) };
+    }) };
+  };
   /* consequences' stand-in: `addressed` per determination, `undetermined` "no consequence recorded" by default (K172). */
   const addressedBy = new Map();
   /* and `consequencesOf` (R7): the live parts recorded per determination, in R7's part shape; NO_SUCH_DETERMINATION for
@@ -148,6 +165,9 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [], s
       const fm = parseFrontmatter(record.readFile(id, "bundle.md").text).data || {};
       const legs = (Array.isArray(fm.action_basis) ? fm.action_basis : []).map((l) => ({ target: l.target, kind: l.kind }));
       return { ok: true, id, current_state: fm.current_state ?? null, kind: fm.action_kind ?? null,
+               resolution: fm.resolution ?? null, ...(confidential.has(id) ? { confidential: true } : {}),
+               /* actions R82, as its read answers it: `{owed, ...}`, absent reading owed */
+               ...(!replyFromDocOnly ? { reply_owed: { owed: fm.reply_owed !== false } } : {}),
                correspondence: structuredClone(ledgers.get(id) || []), legs,
                premise_override: fm.premise_override ?? null,
                breach: fm.breach === true, counterparty: fm.counterparty ?? null, clock: Array.isArray(fm.clock) ? fm.clock : [] };
@@ -180,6 +200,10 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [], s
     },
   };
   const actionHidden = new Set();
+  /* actions R87 (T45): the actions whose latest scope statement is confidential, as the read answers them */
+  const confidential = new Set();
+  /* R6: when set, the read carries no reply_owed, so escalation reads the document (actions not yet merged) */
+  let replyFromDocOnly = false;
   /* filings' stand-in. */
   const filings = {
     filingsFor({ action, viewer }) { calls.filingsFor.push({ action, viewer }); return { ok: true, drafts: [{ id: `FD-${action}`, tier: 1 }], packets: [] }; },
@@ -226,6 +250,26 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [], s
     stand: { conformance, consequences, actions, filings },
     parts,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
+    cureLinks, confidential, replyFromDoc(v) { replyFromDocOnly = v; },
+    /** conformance R36's link, as the stand-in holds it: `cure` named the cure of `determination` for `standard`. */
+    linkCure(determination, standard, cure, at = clock.now) {
+      const link = `CURE-${cureLinks.length + 1}`;
+      cureLinks.push({ link, determination, standard, cure, at });
+      return link;
+    },
+    /** A member's revision of an action's document: its legs replaced (actions R8 (d)), everything else kept. */
+    revise(id, { restsOn = [], replyOwed } = {}) {
+      const h = record.head(id);
+      let text = record.readFile(id, "bundle.md").text;
+      const legs = restsOn.length ? ["action_basis:", ...restsOn.flatMap((t) => [`  - target: ${t}`, "    kind: rests_on"])].join("\n") : "action_basis: []";
+      text = text.replace(/action_basis:(?: \[\])?(?:\n  - target: .*\n    kind: rests_on)*/, legs);
+      if (replyOwed !== undefined) text = text.replace(/\n---\n\n## Action/, `\nreply_owed: ${replyOwed}\n---\n\n## Action`);
+      const sha = createHash("sha256").update(text, "utf8").digest("hex");
+      record.transact(() => record.commit({ bundleId: id, type: "action", title: id, project: null, snapKey: `r${++na}`,
+        kind: "promotion", base: h.bundleSha, author: V("alice"), writer: null, operation: null,
+        files: [{ path: "bundle.md", text, sha256: sha, bytes: Buffer.byteLength(text) }], state: "active", priorState: "active",
+        group: "test-group", created: clock.now, lastUpdated: clock.now, criticality: null, at: clock.now }));
+    },
     count: (t) => st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`).one().n,
     text: (id) => record.readFile(id, "bundle.md")?.text ?? null,
     fm: (id) => { const t = record.readFile(id, "bundle.md")?.text; return t ? parseFrontmatter(t).data : null; },
@@ -250,7 +294,7 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [], s
                    VALUES (?, ?, ?, 0, 't', 't')`, projectId, memberId, state);
     },
     /** A determination as conformance records it: per-standard outcomes, an act with an actor office. */
-    determine({ project, outcomes, actor = OFFICE.clerk, act = null, event = null, at = clock.now, supersededBy = null } = {}) {
+    determine({ project, outcomes, actor = OFFICE.clerk, act = null, event = null, at = clock.now, supersededBy = null, findings = [] } = {}) {
       const id = `CONF-2026-${String(++nd).padStart(4, "0")}-determination`;
       /* R9's `standards`: each outcome with its in-force answer, rows and disagreement, as an outcome states them, else
          one diverging row over content `c1` */
@@ -259,15 +303,16 @@ export function world({ now = NOW, profiles = ["test-port-ellery"], omit = [], s
         rows: o.rows ?? [{ requires: `what ${o.standard} requires`, did: "what the act did", reading: "diverges", content: ["c1"] }] }));
       determinations.set(id, { id, project, act: { id: act ?? `ACT-2026-${String(nd).padStart(4, "0")}`, ...(event ? { event } : {}),
         description: "the act", actor, at: "2026-09-01", evidence: ["c1"] }, outcomes: outcomes.map((o) => ({ standard: o.standard, outcome: o.outcome })),
-        standards, at, author: V("alice"), superseded_by: supersededBy });
+        standards, at, author: V("alice"), superseded_by: supersededBy,
+        findings: findings.map((f) => ({ finding: f, case: "CASE-1", edition: 1, version_sha: "0".repeat(8), role: "basis" })) });
       return id;
     },
     supersede(id, by = "CONF-2026-9999-determination") { determinations.get(id).superseded_by = by; },
     /** A real action bundle whose document states the breach, its legs and counterparty; its ledger the stand-in's. */
     action({ project, breach = true, restsOn = [], counterparty = { state: "named", ...OFFICE.clerk }, clock: clk = [],
-             override = null } = {}) {
+             override = null, replyOwed, kind = "request_for_comment", resolution } = {}) {
       const id = `ACTN-2026-${String(++na).padStart(4, "0")}-act`;
-      const text = actionMd({ id, project, breach, restsOn, counterparty, clock: clk, override, at: clock.now });
+      const text = actionMd({ id, project, breach, restsOn, counterparty, clock: clk, override, at: clock.now, replyOwed, kind, resolution });
       const sha = createHash("sha256").update(text, "utf8").digest("hex");
       record.transact(() => record.commit({ bundleId: id, type: "action", title: id, project: null, snapKey: `a${na}`,
         kind: "promotion", base: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", author: V("alice"),
@@ -306,16 +351,17 @@ export function projMd(title) {
           "## Objective", "", "Find out.", ""].join("\n");
 }
 
-function actionMd({ id, project, breach, restsOn, counterparty, clock, override, at }) {
+function actionMd({ id, project, breach, restsOn, counterparty, clock, override, at, replyOwed, kind = "request_for_comment", resolution }) {
   const legs = restsOn.length ? ["action_basis:", ...restsOn.flatMap((t) => [`  - target: ${t}`, "    kind: rests_on"])] : ["action_basis: []"];
   const cp = ["counterparty:", ...Object.entries(counterparty).map(([k, v]) => `  ${k}: "${v}"`)];
   const clk = clock.length ? ["clock:", ...clock.flatMap((c) => [`  - text: "${c.text ?? "reply due"}"`, `    date: "${c.date}"`,
     `    basis: "${c.basis ?? "the rule"}"`, `    status: ${c.status ?? "pending"}`])] : ["clock: []"];
-  return ["---", `id: ${id}`, "object_type: action", `title: "${id}"`, "action_kind: request_for_comment", "current_state: active",
+  return ["---", `id: ${id}`, "object_type: action", `title: "${id}"`, `action_kind: ${kind}`, "current_state: active",
     `project: ${project}`, `created: "${at}"`, `last_updated: "${at}"`, `breach: ${breach ? "true" : "false"}`,
     /* actions R8: a member's override of an unestablished premise, stamped with who and when */
     ...(override ? ["premise_override:", `  reason: "${override}"`, `  by: ${V("alice")}`, `  at: "${at}"`] : []), ...legs, ...cp,
-    ...clk, "correspondence: []", "---", "", "## Action", "", "An action.", ""].join("\n");
+    ...clk, "correspondence: []", ...(replyOwed !== undefined ? [`reply_owed: ${replyOwed}`] : []),
+    ...(resolution ? [`resolution: ${resolution}`] : []), "---", "", "## Action", "", "An action.", ""].join("\n");
 }
 
 /** The common world: alice and bob joined in P, carol a member outside it; a determination noncompliant on two
