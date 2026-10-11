@@ -1,3 +1,22 @@
 # run-productions (T42)
 
 **Status** · session_014kGdQn9r6yt8hA7AVpanwj · depth 2 · WORKING · handled B0
+
+## Progress (T42-18; N834; B1)
+
+**Read whole (the reading set is 618 KB, over 300 KB; K2304):** `requirements/run-productions.md`; layer 6's row of `layers.md`; `plan/current.md` T42-18 and rule 4; K2496, K2608; `draft-T42-reqs.md` section N834 (with its Tests, Users and Doubts); the module's code, all four files (`index.mjs`, `checks.mjs`, `reading.mjs`, `schema.mjs`); the used services the entry calls: `inquiry` R62 and `basis-versions` R49 (as written on `tranche/T42`), `content`'s extent grammar (`canonicalExtent`, `citationExtent`, `legContentId`, `legExtent`, `resolveCitation`, its R45 read contract) and `inquiry`'s factory and leg projection (`index.mjs`:760–795, :2794). A worker read the module's six test files in full and wrote a ~4 KB summary citing file and line.
+
+**Built (commit on `job/T42/run-productions`):**
+1. **R25** `machinePassage({legs, author, viewer})`: for each leg, the content row it names (`content_id`), or the one its part resolves to (a document target, the capture the leg names or the one presented now, its extent canonicalised: a lookup over `content`'s R45 contract, never a mint); the proposals naming that row (`proposed_readings.content_id`); the leg stands only if `acceptedFor` answers `accepted: true` for one of them and `author`. Otherwise `PROPOSAL_NOT_TAKEN_UP` naming each leg `{ord, target, content_id, proposals}` with `remedy: "op=proposalaccept"`. An acceptance that throws refuses the leg (`unread: true`); a lookup that fails refuses every leg given (fail closed). Synchronous, writes nothing, never throws (a null argument included: one of my tests caught that).
+2. **C-104.32** `PROPOSAL_NOT_TAKEN_UP`, `where` `machinePassage > is-machine-passage`. It is rule 4 (2) in the row census until T43's stamp.
+3. **Registration** in `runProductionsOf`: the read goes to `inquiry.onMachinePassage` (inquiry now reached through `inquiryOf`, an edge already in `uses`) and to `basisVersions.onMachinePassage`. **Until both providers merge, it registers only where the slot exists** (`typeof … === "function"`). At their CHANGE I merge, drop the guard so a missing slot fails loudly, and re-run against the real providers.
+
+**Reading taken (stated, not asked):** "a content row a run proposed" is any row some `proposed_readings` row names, whoever minted it first. When several proposals name one row, her acceptance of any one of them lets the leg stand, because they are the same passage. A proposed connection is never a leg target, so R25 judges passages only (the draft's doubt 1).
+
+**Tests:** `reading.test.mjs` +3 (R25: both registrations, each the synchronous read; the verdicts by id, by part and by part at a named capture; a mixed set naming only the proposed leg; another member's acceptance not counting; her own acceptance as the negative control; a blank or machine author; nothing written; fail closed both ways; never throws). `module.test.mjs`: the C-104 family is now 32 rows, the new row's region is listed and the row is driven. Fixture: an `inquiry` stand-in and `basisVersions.onMachinePassage`, both recording into `w.machinePassageSlots`. run-productions: `pass 57, fail 0`.
+
+**Users' suites (P11):** skills 105/0, op-declarations 128/0, store-door 43/0, control-plane 216/0, plane 166/0, agent-worker 13/0. answer-envelope 28/1 (`catalogue-end.test.mjs`:17, rule 4 (6)) and `system/migrate-released.test.mjs` (`ai_ceilings`, rule 4 (7)) are inherited. **question-explorer 26/1: `test/m/question-explorer/module.test.mjs`:28 is caused by this change.** It passes 27/27 on `tranche/T42`. `runProductionsOf` now builds `inquiry` through its factory, which declares inquiry's tables to purge. question-explorer's test store creates none of them, so `record.purge` fails with `no such table: inquiry_findings`. Reported (J1).
+
+**Checks:** `format: 147 modules, 146 requirements files; 0 failures`; `architecture: 10 product files, 57 relative imports; 0 failures`; `coverage: 1 modules, 25 of 25 live requirement ids named by a test; 0 failures`; `ownership: 6 files changed by run-productions between tranche/T42 and HEAD; 0 failures`.
+
+**Next:** on the CHANGEs for inquiry (T42-12) and basis-versions (T42-16), merge `tranche/T42`, drop the guard, run R25 against the real slots, then re-run steps 5–7 and post COMPLETE.
