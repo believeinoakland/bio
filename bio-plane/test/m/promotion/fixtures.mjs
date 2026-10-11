@@ -164,21 +164,36 @@ export function makeMembership() {
   return m;
 }
 
+/** project-roster, as its R23 states `projectScope`: `{scope, since, by}`, `none` for a project with no record and for an
+ *  id naming no project. `scopes` (project id → scope) is the test's to change; `asked` keeps every id asked. */
+export function makeRoster(scopes = {}) {
+  const roster = {
+    scopes, asked: [],
+    projectScope(projectId) {
+      roster.asked.push(projectId);
+      const scope = Object.prototype.hasOwnProperty.call(roster.scopes, projectId) ? roster.scopes[projectId] : null;
+      return scope ? { scope, since: "2026-09-26T11:00:00.000Z", by: "member:ann" } : { scope: "none", since: null, by: null };
+    },
+  };
+  return roster;
+}
+
 /** A fresh promotion over fresh doubles, with the three facts the plane's modules register (instance-setup's
  *  `producingGroup`, connections' `citedBy`, publication's `caseMember`; `legacy-store` held them until T19, and the
  *  registrant's name here is only a label). */
 export function makePromotion({ group = "test-group", citedBy = {}, caseMember = new Set(), facts = true,
-                                now = () => "2026-09-26T12:00:00.000Z" } = {}) {
+                                now = () => "2026-09-26T12:00:00.000Z", scopes = null } = {}) {
   const record = makeRecord(), membership = makeMembership();
   membership.titleOf = (id) => record.bundleInfo(id)?.title ?? null;
   const host = {};
-  const p = promotionOf(host, { record, membership, now });
+  const roster = scopes ? makeRoster(scopes) : null;
+  const p = promotionOf(host, { record, membership, now, ...(roster ? { roster } : {}) });
   if (facts) {
     p.registerFact("producingGroup", "legacy-store", () => group);
     p.registerFact("citedBy", "legacy-store", (id) => citedBy[id] || []);
     p.registerFact("caseMember", "legacy-store", (id) => caseMember.has(id));
   }
-  return { p, record, membership };
+  return { p, record, membership, roster };
 }
 
 /** A bundle.md with the given front-matter fields, in the catalogue's grammar, and a body. */

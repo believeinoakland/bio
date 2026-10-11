@@ -352,7 +352,17 @@ test("R16: a move into retired while a live edge cites the item is CITED, naming
 
 test("R17: readability is judged first: no bundle.md, a blob-held one or no front matter gets the same refusal whatever the type", () => {
   for (const type of Object.keys(STATES)) {
-    const { p, head } = held();
+    /* The head is a bundle of `type` (PROMOTION #43: the head itself varies, not only the request's meta). */
+    const { p } = makePromotion();
+    const state = type === "project" ? "forming" : Object.keys(vocabFor(STATES, type)?.edges || {})[0] ?? "open";
+    const fields = { object_type: type, title: `A ${type}`, current_state: state, prior_state: null, created: T0,
+                     last_updated: T0, group: "test-group" };
+    /* A project's id is minted (R19); every other type is filed under the id it states. */
+    const head = type === "project"
+      ? p.promote({ base: null, snapKey: "k1", author: "member:ann", meta: {}, files: [{ path: "bundle.md", text: doc(fields) }] })
+      : p.promote(create(`X-2026-${type}`, doc({ id: `X-2026-${type}`, ...fields })));
+    assert.equal(head.ok, true, `${type}: ${JSON.stringify(head)}`);
+    const ID = head.bundleId;
     assert.equal(p.promote(revise(ID, head.bundleSha, "", { files: [] })).reason, "NO_BUNDLE_MD");
     assert.equal(p.promote(revise(ID, head.bundleSha, "", { files: [{ path: "n.txt", text: "x" }] })).reason, "NO_BUNDLE_MD");
     const blob = p.promote(revise(ID, head.bundleSha, "", { files: [{ path: "bundle.md", blobSha: "a".repeat(64), bytes: 3 }],
@@ -572,7 +582,7 @@ test("promote, Errors: every refusal names a reason, carrying its catalogue row 
 
 test("promote, Errors (N118): every row of this module's own refusals carries its check, translation and the `where` naming the region of promote that mints it (N118)", () => {
   const rows = Object.entries(PROMOTION_CHECKS);
-  assert.equal(rows.length, 13);
+  assert.equal(rows.length, 14);
   const checks = new Set();
   for (const [code, row] of rows) {
     assert.match(code, /^[A-Z_]+$/);
@@ -599,6 +609,12 @@ test("promote, Errors (N118): every row of this module's own refusals carries it
     STATE_MOVE_UNDECLARED: p.promote(revise(ID, head.bundleSha, infoDoc(ID, { current_state: "nonsense" }))),
     PROJECT_STAGE_COMPUTED: p.promote({ base: null, snapKey: "s", author: "member:ann", meta: {},
       files: [{ path: "bundle.md", text: doc({ object_type: "project", title: "Staged", current_state: "matured", created: T0, last_updated: T0 }) }] }),
+    /* R57: a leg resting on a counsel matter's bundle, from a document of no project. */
+    COUNSEL_MATTER_NOT_EVIDENCE: (() => {
+      const c = makePromotion({ scopes: { "PROJ-2026-0001-counsel": "counsel_matter" } });
+      assert.equal(c.p.promote(create("INFO-2026-0011", infoDoc("INFO-2026-0011", { project: "PROJ-2026-0001-counsel" }))).ok, true);
+      return c.p.promote(create("INFO-2026-0012", infoDoc("INFO-2026-0012").replace("---\n\n", "basis:\n  - target: INFO-2026-0011\n    role: supports\n---\n\n")));
+    })(),
   };
   assert.deepEqual(Object.keys(got).sort(), rows.map(([c]) => c).sort());
   for (const [code, r] of Object.entries(got))
