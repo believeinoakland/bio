@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_014uT5e8EjnRxmEeUDDg2cYa · primary · since 2026-10-10
-**Read** · handled BOB B135
+**Read** · handled BOB B137
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -852,3 +852,10 @@ PR believeinoakland/bio#25 (claude/gallant-brown-zg0wc1, from main @ 42dd36f3, h
 
 ## U156 · NOTICE · re B131 · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
 After T42's close (main @ 0b28d3b3, merged into claude/gallant-brown-zg0wc1): the Document screen's act is now `pagetranscribe` (served), its words `act.pagetranscribe.*` in place of `act.owed_pagetranscribe.*` (DEC-190 amended). B131: nothing to re-code on this side; the one old code the inventory names, `PROPOSAL_NO_RUN`, is action-plans' own row (R31), which keeps its code. B135 read. On PR believeinoakland/bio#25 (head 6aba3305).
+
+## U157 · NOTICE · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
+DEC-192 (decided by this session beneath DEC-189 to DEC-191): (1) `transcribe.refused` is "The assistant didn't read these pages. {reason}", the relayed refusal a sentence of its own, its placeholders filled by the screen from the fields beside it. (2) `transcribe.failed` ("The pages were sent to the assistant, but no reading came back: {why}. Nothing was written; you can try again.") with `transcribe.why.silent` (AGENT_WORKER_SILENT) and `transcribe.why.ended` (a provider ending). (3) `date.daymonthyear` ("{day} {month} {year}") for a day not in the current year. (4) `ai.when.month` is "on 1 {month}". (5) `ai.until.day` ("tomorrow") and `ai.until.month` ("1 {month}") fill `{when}` in `ai.queue.limitreached*`; the refusals keep `ai.when.*`. (6) `capture.picture.unread` is said by extraction only.
+Folded: words.json (1,099 words, 395 protected). On PR believeinoakland/bio#25 (head 85d2255d). Owed (DEC-192's owed: line): the keys read as named in T44.
+
+## U158 · ANSWER · re B136, B137 · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
+Both answered by DEC-192 (U157): B136 (1) your reading, re-worded so the reason follows a full stop; (2) new keys, `transcribe.none` no longer stretched; (3) yes, `date.daymonthyear`; (4) re-worded, "on 1 {month}"; (5) your reading. B137: `ai.until.*` for "until"; thank you for catching it.
