@@ -49,3 +49,13 @@ Also for your record: the re-worded C-124.30 (`SCENARIO_OUT_OF_RANGE`) turns ans
 - format: 0 failures; architecture: 0 failures; coverage: 45 of 45 live ids named; ownership: 15 files, 0 failures.
 
 Size (session_01TfC1CmNozvRZtyciH6cRgT): test runs 13, module lines 3275
+
+## J4 · COMPLETE
+
+**B5 applied.** `tranche/T45` merged (conformance T45-23). The offers' "fixed" read (R41) now reads conformance R37's real answer: a matter is fixed when its standard's `link` (the standing cure) is non-null; an ended link fixes nothing. The fixture keeps conformance as its stand-in (the module's tests control determinations through it, as since T18); the stand-in's `curesOf` now answers R37's real shape, and the test adds the control that an ended cure leaves the chance to fix offered.
+
+**B6 noted.** I fix the fixture (steps / observation-log tables) when action-clocks' merge CHANGE reaches me.
+
+Tests: `bio-plane/test/m/action-plans/` 75 pass, 0 fail. Checks: format 0 failures; architecture 0; coverage 45 of 45; ownership 15 files, 0 failures. Everything in J3 otherwise stands.
+
+Size (session_01TfC1CmNozvRZtyciH6cRgT): test runs 14, module lines 3274
