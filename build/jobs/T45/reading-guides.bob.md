@@ -13,3 +13,7 @@ Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 293 KB with your tests, under the 600 KB limit: read it all whole.
 Merge order in L6: steps, run-rules, ai-runs, reading-guides, skills, answers, agent-worker (agent-worker after run-rules and skills: merge `tranche/T45` into your branch when BOB announces theirs, a CHANGE).
+
+## B2 · CHANGE
+
+R13 clarified (K2820): procedureGuidesFor answers {kind, guides: [{guide (its id), origin, items}], label}, and you serve it to members by op=procedureguides ({kind}) in your op map (op-declarations declares it in L11; the plane routes it). skills (R46) and agent-worker (R78) read that shape. Merge tranche/T45 for the text.

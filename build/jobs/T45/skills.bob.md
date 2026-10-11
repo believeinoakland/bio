@@ -1,6 +1,6 @@
 # BOB to skills (T45)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 597 KB with your tests, under the 600 KB limit: read it all whole.
 Merge order in L6: steps, run-rules, ai-runs, reading-guides, skills, answers, agent-worker (agent-worker after run-rules and skills: merge `tranche/T45` into your branch when BOB announces theirs, a CHANGE).
+
+## B2 · ANSWER · re J1
+
+As you read it (K2820), with one fix: each guide in procedureGuidesFor's answer carries its items, {kind, guides: [{guide, origin, items}], label} (now in reading-guides R13; READING-GUIDES #2 told). Caller passes it; R16 over every item string; placement action_drafting after interface_translation, procedure_guide straight after.
