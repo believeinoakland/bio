@@ -50,11 +50,13 @@ export async function gatedOp({ req, url, env, op, cls, viaSession, sessMember, 
                                 sessCaps, aiCred, storeName, stub, grantMember }) {
   const store = () => env.STORE.get(env.STORE.idFromName(storeName));
   /* The stamps, from the authenticated caller: a session's member, viewer and identity; an `ai` credential's principal
-     as its viewer and identity (control-plane R17, as its generic forward stamps it; REC-134); a binding class as
-     `class:<cls>`, or `token:<cls>` as an author (D-311). */
+     as its viewer and identity, and `class:ai/<tokenId>` as its author (control-plane R17, as its generic forward stamps
+     it; REC-134; N866): no arm below that takes `author` records the `token:` form for an `ai` caller; a binding class
+     as `class:<cls>`, or `token:<cls>` as an author (D-311). */
   const viewer = viaSession ? sessViewer : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
   const identity = viaSession ? sessIdentity : cls === "ai" ? aiCred.principal : `${MACHINE_CLASS_PREFIX}${cls}`;
-  const author = viaSession ? sessMember : `${MACHINE_AUTHOR_PREFIX}${cls}`;
+  const author = viaSession ? sessMember
+    : cls === "ai" ? `${MACHINE_CLASS_PREFIX}ai/${aiCred.tokenId}` : `${MACHINE_AUTHOR_PREFIX}${cls}`;
   const by = viaSession ? sessMember : `${MACHINE_CLASS_PREFIX}${cls}`;
 
   /* B2 (K1674): the ask, a member's own act, carried to agent-worker with the grant and the member's account. */
