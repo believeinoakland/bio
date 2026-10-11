@@ -89,3 +89,24 @@ The fixture's consequences stand-in stays only where a test must set `addressed`
 Tests: escalation 72, pass 71, fail 0, todo 1 (R31). Checks: coverage 32 of 32, 0 failures; ownership 0 failures (format and architecture unchanged since J5, no file of mine changed).
 
 Size (session_01HztAVfrFX3rGVayQh2NyNt): test runs 23, module lines 2217
+
+## J7 · COMPLETE
+
+**B7 applied; COMPLETE again.** Head d060daa0e5 (tranche/T45 merged at c7243c03d0).
+
+- **R23 fixture:** `real.test.mjs`'s override now states its ground (`ground_kind: legal_deadline`, `ground_citation`, `ground_date`, actions R74). The same test now also drives R23's T45 part over the real actions:
+  - a member's revision adds the `rests_on` leg, the override kept as written;
+  - the action then attaches;
+  - the attachment and the history carry `premise_override: {ground: {kind: "legal_deadline", citation, date}, reason, by, at}` from actions' read.
+- **A flaw found and fixed (R6):** the real `actionRead` answers `reply_owed` as `{owed, …}`, not a boolean. My read would have taken `{owed: false}` as owed, and the stand-in had the wrong shape, so no test caught it. The read now takes `reply_owed.owed`, falling back to the document only where the read carries no such answer. The stand-in now answers in actions' shape.
+- **New real test ("R6 R30 over the real actions"):**
+  - `reply_owed: false`, set with its reason through actions, never triggers 3→4 by the clock, and the read notes "no reply owed".
+  - The control, an action owing a reply, is triggered by a recorded `no_response`. The scene holds no zone, so its clock reads undetermined, not "no reply owed".
+  - Once `actions.actionScope` makes the only attached action confidential, the timeline answers nothing for the escalation.
+- **Confidential:** the field `confidential: true|false` on `actionRead` matches what escalation reads, unchanged.
+
+The stand-in stays for the remaining fixture tests that need controlled ledgers and sight (R26's withheld action, ledger timing). Real actions now covers R5–R7, R9, R6, R23 and R30.
+
+Tests: escalation 73: pass 72, fail 0, todo 1 (R31). Checks: format 0; architecture 18 files, 66 imports, 0; coverage 32 of 32, 0; ownership 8 files, 0.
+
+Size (session_01HztAVfrFX3rGVayQh2NyNt): test runs 30, module lines 2218
