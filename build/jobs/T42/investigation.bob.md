@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 625 KB by `build/plan/read
 Merge order in L7: one job. Jobs this layer: investigation, reevaluation.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · CHANGE
+
+J1 read (K2667). T42-21's work is accepted. Your three deferrals are your own module's tests with no hard reason to wait (P7: every requirement fully tested; P8: dealt with in the job): test R1's not-at-FULL clause at the interface with a negative control; make milestones.test.mjs:166 measure behaviour rather than pin a fixture count; make reports.test.mjs's NOWISH case independent of order or clock. Re-run your suite and users' suites and post COMPLETE again.
