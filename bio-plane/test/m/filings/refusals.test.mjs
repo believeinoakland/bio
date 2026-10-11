@@ -3,12 +3,13 @@
    refused, never passed (K248). Driven at the module's interface, over the real modules. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, MACHINE, STRANGER, WORDS, WHY } from "./fixture.mjs";
+import { world, V, MACHINE, STRANGER, WORDS, WHY, grammar, actionsWith } from "./fixture.mjs";
+import { projectRosterOf } from "../../../src/project-roster/index.mjs";
 import { FILINGS_CHECKS, Filings } from "../../../src/filings/index.mjs";
 import { noSuchAction } from "../../../src/actions/index.mjs";
 import { FILING_TEMPLATE_CHECKS } from "../../../src/filing-templates/index.mjs";
 
-test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 each refusal of this module carries its code, its C-115 row and translation; one actions answered passes through as it came", async () => {
+test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 R34 R36 R38 R40 R42 R43 R44 each refusal of this module carries its code, its C-115 row and translation; one actions answered passes through as it came", async () => {
   const x = world();
   const A = x.action();
   const T3 = x.action({ kind: "commitment_claim" });
@@ -95,7 +96,38 @@ test("R1 R6 R7 R8 R11 R13 R14 R21 R23 R28 R31 R32 each refusal of this module ca
     assert.deepEqual([r.check, r.translation], [FILING_TEMPLATE_CHECKS[r.reason].check, FILING_TEMPLATE_CHECKS[r.reason].translation],
                      `${r.reason}: filing-templates' row`);
   }
+  /* T45 (R34, R36, R38, R40, R42–R44, R23): the action layer's rows, the phrasing lists and actions' partners stood in
+     until their providers merge (K2848 (7)) */
+  const P = x.action();
+  const g = x.filingsWith({ grammar, actions: actionsWith(x, { [P]: { partners: [{ role: "chair", organisation: "Harbour Watch" }] } }) });
+  const gp = (text, o = {}) => g.filingPrepare({ action: P, text, language: "en", preparer: V("bo"), viewer: V("bo"), ...o });
+  expect(await g.filingApprove({ filing: gp("The works order was not let without the vote the bylaw requires.").id, author: V("bo"), viewer: V("bo") }), "CONTRADICTED_HELD");
+  expect(await g.filingApprove({ filing: gp("Please fund our newsletter.").id, author: V("bo"), viewer: V("bo") }), "SELF_BENEFIT_ASK");
+  const asserted = gp("The board acted in breach of the bylaw.");
+  expect(await g.filingApprove({ filing: asserted.id, author: V("bo"), viewer: V("bo") }), "ASSERTION_UNRESOLVED");
+  expect(await g.filingApprove({ filing: asserted.id, resolutions: [{ sentence: "none", resolution: "only_asks", words: "w" }], author: V("bo"), viewer: V("bo") }),
+         "ASSERTION_RESOLUTION_REFUSED");
+  expect(gp("Words.", { voice: "loud" }), "FILING_MARK_REFUSED");
+  const self = g.communicationPrepare({ action: P, text: "My notes.", purpose: "notes", voice: "self", preparer: V("bo"), viewer: V("bo") });
+  expect(await g.filingApprove({ filing: self.id, author: V("bo"), viewer: V("bo") }), "NOT_THE_GROUPS_ACT");
+  expect(g.communicationPrepare({ action: P, text: "A word.", purpose: "a word", from: ["INQ-2026-0999"], preparer: V("bo"), viewer: V("bo") }), "NO_SUCH_BUNDLE");
+  const Q = "INQ-2026-0002-quay";
+  x.inquiry(Q, { legs: [{ target: "INFO-2026-0001-minutes" }] });
+  const rfc = g.communicationPrepare({ action: x.action({ kind: "request_for_comment", legs: [{ target: Q, kind: "advances" }] }), text: "Please comment.",
+                                       purpose: "comment", preparer: V("bo"), viewer: V("bo") });
+  expect(await g.filingApprove({ filing: rfc.id, text: "Please comment.", author: V("bo"), viewer: V("bo") }), "RFC_QUOTING_MISSING");
+  const joint = gp("Our joint letter.");
+  await g.filingApprove({ filing: joint.id, author: V("bo"), viewer: V("bo") });
+  const js = (o) => g.jointSignatory({ filing: joint.id, organisation: "Harbour Watch", body_sha: "0".repeat(64), account: "signed", author: V("bo"), viewer: V("bo"), ...o });
+  expect(js({ organisation: "Nobody" }), "NOT_A_PARTNER");
+  expect(js(), "JOINT_FINGERPRINT_MISMATCH");
+  const roster = projectRosterOf(x.host, { record: x.record });
+  roster.migrate();
+  assert.equal(roster.projectApprovalSet({ projectId: x.proj, needs: [{ tier: 1 }], reason: "two eyes", by: "olive", viewer: V("olive") }).ok, true);
+  expect(g.filingRecordSent({ filing: joint.id, at: "2026-09-29", account: "x", author: V("bo"), viewer: V("bo") }), "SECOND_APPROVAL_NEEDED");
+  expect(g.filingSecondApprove({ filing: joint.id, author: V("bo"), viewer: V("bo") }), "SAME_APPROVER");
   assert.deepEqual([...seen].sort(), Object.keys(FILINGS_CHECKS).sort(), "every row of the family is answered");
+  assert.equal("NO_DETERMINATION" in FILINGS_CHECKS, false, "C-115.19 retired (T45, R8), its number never reused");
   assert.equal("NO_SUCH_ACTION" in FILINGS_CHECKS, false, "C-115.2 gave way to actions' row (N217)");
   const checks = Object.values(FILINGS_CHECKS).map((r) => r.check);
   assert.equal(new Set(checks).size, checks.length);
