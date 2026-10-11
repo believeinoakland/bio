@@ -19,7 +19,8 @@
  *   R16 explore-ask              FINDING ("Ask"), ai-use.exploreAsksPending     an account's daily Ask, to its owners
  *       ai-limit-reached         FINDING, ai-use.limitsReached                  a limit reached this period, to its owners
  *       project-account-suspended FINDING, credentials.projectAccountsSuspended a project's sign-in stopped serving
- *       (each item's sentence and fills read by key from `words.json`, `words.mjs`; DEC-189 (5), (6))
+ *       (each item's sentence and fills read by key from `words.json`, `words.mjs`; DEC-189 (5), (6); `{date}` by
+ *       `date.daymonth|daymonthyear`, `{when}` by `ai.until.*`, DEC-191 (3), DEC-192 (3), (5))
  *   R17 the investigation's items, each told once, keyed by its source's own key (N820; K2418, K2484), each kind's summary
  *       and detail `queue.<kind>.summary|detail` by key (DEC-189 (2)):
  *       question-find            FINDING, question-explorer.findsFor   "Hint · machine work"; `ai.label.explored` to the
@@ -36,7 +37,8 @@
  * and holds no check row: it refuses nothing. `deps` (each defaults to its module's instance on the same host, reached
  * lazily when first asked): membership, people, moneyChecks, duties, answers, inquiry, credentials, following, standards,
  * fileSafety, provenance, aiUse (R16), steps (with `step`, R17's step work), questionExplorer, investigation, review (R17);
- * and `view`, the jurisdiction view whose time zone R13's, R14's and R15's dates are read in (the profile's, when not given).
+ * and `view`, the jurisdiction view whose time zone R13's to R17's dates are read in (the profile's, when not given; read
+ * once a read of `noticeItems`).
  *
  * R7 (queue's homes walk) and R12 (queue's options) stay in queue: `noticeItems` takes them as `homesOf(subjectIds)`
  * and `optionsOf(subjectIds)`, closed over the read's viewer and identity by queue, held for one synchronous read.
@@ -63,7 +65,7 @@ import { stepsOf } from "../steps/index.mjs";
 import { questionExplorerOf } from "../question-explorer/index.mjs";
 import { investigationOf } from "../investigation/index.mjs";
 import { reviewOf } from "../review/index.mjs";
-import { wordsOf, hasWords, monthName, dayMonth } from "./words.mjs";
+import { wordsOf, hasWords, untilWords, dayInSentence } from "./words.mjs";
 
 /* The walk queue passes in answers this shape; with none passed, an item is ungrouped rather than given a home. */
 const UNGROUPED = Object.freeze({ state: "determined", ungrouped: true, reasons: [], depth_bound: null, ancestors: [] });
@@ -159,6 +161,8 @@ const capital = (t) => (typeof t === "string" && t ? t[0].toUpperCase() + t.slic
 const bare = (m) => { const t = typeof m === "string" ? m.trim() : ""; const x = /^member:(.+)$/.exec(t); return x ? x[1] : t || null; };
 const isMachine = (m) => typeof m === "string" && (m.startsWith(MACHINE_AUTHOR_PREFIX) || m.startsWith(MACHINE_CLASS_PREFIX));
 const instantOf = (ms) => new Date(ms).toISOString().replace(/\.\d{3}Z$/, "Z");
+/* an ISO date-time: whole or fractional seconds, `Z` or an offset (R16, R17's instants, read by `#localDay`) */
+const INSTANT = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 const dayOf = (v) => { const d = typeof v === "string" ? v.slice(0, 10) : ""; return /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : null; };
 /* An item's age from an instant, or from a day: a day starts at its local midnight in `zone` (civil-time.dayRange),
    never the UTC midnight (K1444 (iii), K1688); with no zone held, a day's age is undetermined. */
@@ -181,6 +185,7 @@ export class NoticeProducers {
   #host; #deps;
   #homesFn = null; #optionsFn = null;
   #works = null;          /* R17: each step's work, read once a read (`#workOf`) */
+  #zoneRead;              /* R13–R17: the profile's zone, read once a read (`#zone`); undefined until read */
   constructor({ host, storage, deps = {} } = {}) {
     this.#host = host;
     this.sql = storage.sql;
@@ -284,6 +289,7 @@ export class NoticeProducers {
       this.#homesFn = null;
       this.#optionsFn = null;
       this.#works = null;
+      this.#zoneRead = undefined;
     }
   }
 
@@ -947,12 +953,13 @@ export class NoticeProducers {
     const r = this.#aiUse.limitsReached({ viewer, at: instantOf(now) });
     if (!r || r.ok !== true || r.unreadable === true || !Array.isArray(r.reached)) throw failure("ai-use");
     const zone = this.#zone();
+    const today = NoticeProducers.#localDay(now, zone);
     const ok = [];
     for (const e of r.reached) {
       if (!e || !filled(e.key) || !filled(e.owner) || !filled(e.scope) || !LIMIT_PERIODS.includes(e.period)) continue;
       const day = NoticeProducers.#localDay(e.reached_at, zone);
       const when = NoticeProducers.#periodEnd(e.period, e.period_start, day);
-      const date = dayMonth(day);
+      const date = dayInSentence(day, today);
       if (when && date) ok.push({ e, when, date });
     }
     const { list, truncated } = cut(ok, ACCOUNT_ITEMS_MAX);
@@ -1032,15 +1039,14 @@ export class NoticeProducers {
     return row && filled(row.title) ? row.title : null;
   }
 
-  /** R16's `{when}`: a day's limit `ai.when.day`; a month's `ai.when.month` with `{month}` the next period's month from
-   *  `date.month.*` (as ai-use R13), the period read from `period_start`, else the local day it was reached; null when
-   *  neither is read. */
+  /** R16's `{when}` after "until" (DEC-192 (5)): a day's limit `ai.until.day`; a month's `ai.until.month` with `{month}`
+   *  the next period's month from `date.month.*` ("… pause until 1 November"), the period read from `period_start`, else
+   *  the local day it was reached; null when neither is read. */
   static #periodEnd(period, start, day) {
-    if (period === "day") return wordsOf("ai.when.day");
+    if (period === "day") return untilWords("day");
     const from = dayOf(start) ?? dayOf(day);
     const m = from ? Number(from.slice(5, 7)) : NaN;
-    const next = Number.isInteger(m) && m >= 1 && m <= 12 ? monthName((m % 12) + 1) : null;
-    return next ? wordsOf("ai.when.month", { month: next }) : null;
+    return Number.isInteger(m) && m >= 1 && m <= 12 ? untilWords(period, (m % 12) + 1) : null;
   }
 
   /* ================================================================== R17 · the investigation's items
@@ -1079,13 +1085,13 @@ export class NoticeProducers {
     const r = this.#steps.laterFound({ viewer, at: instantOf(now) });
     if (!r || r.ok !== true || !Array.isArray(r.found)) throw failure("steps");
     const c = cut(r.found.filter((e) => e && filled(e.key) && filled(e.step)), INVESTIGATION_ITEMS_MAX);
-    const zone = this.#zone();
+    const zone = this.#zone(), today = NoticeProducers.#localDay(now, zone);
     const items = c.list.map((e) => {
       const qs = Array.isArray(e.questions) ? e.questions.filter(filled) : [];
-      /* J1 (4): `{date}` the look's own day (`looked_at`, as steps answers it), else the entry's */
+      /* J1 (4): `{date}` the look's own local day (`looked_at`, steps R23), else the entry's (`at`) */
       return this.#r17Item(me, viewer, now, "FINDING", "step-later-found", e.key, {
         homes: qs, at: e.at,
-        fills: { what: this.#workOf(e.step, viewer), date: dayMonth(NoticeProducers.#localDay(e.looked_at ?? e.at, zone)) },
+        fills: { what: this.#workOf(e.step, viewer), date: dayInSentence(NoticeProducers.#localDay(filled(e.looked_at) ? e.looked_at : e.at, zone), today) },
         subject: { kind: "step", id: e.step, look: e.look ?? null, observation: e.observation ?? null, questions: qs },
         basis: { source: "steps.laterFound", key: e.key, step: e.step, look: e.look ?? null, observation: e.observation ?? null,
                  looked_at: e.looked_at ?? null, at: e.at ?? null,
@@ -1099,12 +1105,13 @@ export class NoticeProducers {
   #stepsDue(me, viewer, now) {
     const r = this.#steps.stepsDue({ viewer, at: instantOf(now) });
     if (!r || r.ok !== true || !Array.isArray(r.due)) throw failure("steps");
+    const today = NoticeProducers.#localDay(now, this.#zone());
     const c = cut(r.due.filter((e) => e && filled(e.key) && filled(e.step) && (e.kind === "past_date" || e.kind === "reminder")), INVESTIGATION_ITEMS_MAX);
     const items = c.list.map((e) => {
       const reminder = e.kind === "reminder";
       return this.#r17Item(me, viewer, now, "OBLIGATION", reminder ? "step-reminder" : "step-date-due", e.key, {
         homes: [], due: dayOf(e.date), day: dayOf(e.date),
-        fills: { step: filled(e.work) ? e.work : this.#workOf(e.step, viewer), date: dayMonth(dayOf(e.date)) },
+        fills: { step: filled(e.work) ? e.work : this.#workOf(e.step, viewer), date: dayInSentence(dayOf(e.date), today) },
         subject: { kind: "step", id: e.step, work: e.work ?? null, date: e.date ?? null },
         basis: { source: "steps.stepsDue", key: e.key, step: e.step, kind: e.kind, date: e.date ?? null,
                  detail: "a step's date and a reminder are steps' (its R12): told once, to the member who set the date or "
@@ -1153,12 +1160,13 @@ export class NoticeProducers {
   #milestones(me, viewer, now) {
     const r = this.#investigation.milestonesOverdue({ viewer, at: instantOf(now) });
     if (!r || r.ok !== true || !Array.isArray(r.due)) throw failure("investigation");
+    const today = NoticeProducers.#localDay(now, this.#zone());
     const c = cut(r.due.filter((e) => e && filled(e.key) && (e.kind === "overdue" || e.kind === "reminder")), INVESTIGATION_ITEMS_MAX);
     const items = c.list.map((e) => {
       const reminder = e.kind === "reminder";
       return this.#r17Item(me, viewer, now, reminder ? "OBLIGATION" : "FINDING", reminder ? "milestone-reminder" : "milestone-overdue", e.key, {
         homes: filled(e.project) ? [e.project] : [], due: dayOf(e.date), day: dayOf(e.date),
-        fills: { milestone: filled(e.name) ? e.name : String(e.milestone ?? ""), date: dayMonth(dayOf(e.date)) },
+        fills: { milestone: filled(e.name) ? e.name : String(e.milestone ?? ""), date: dayInSentence(dayOf(e.date), today) },
         subject: { kind: "milestone", id: e.milestone ?? null, project: e.project ?? null, name: e.name ?? null, date: e.date ?? null },
         basis: { source: "investigation.milestonesOverdue", key: e.key, kind: e.kind, milestone: e.milestone ?? null,
                  project: e.project ?? null, date: e.date ?? null, state: e.state ?? null,
@@ -1241,8 +1249,13 @@ export class NoticeProducers {
     try { return (this.#membership.memberFacts(me) || {}).status === "active"; } catch { throw failure("membership"); }
   }
 
-  /** R13, R14, R15: the profile's time zone (the jurisdiction view's), or null when none is held. */
+  /** R13–R17: the profile's time zone (the jurisdiction view's), or null when none is held; read once a read of
+   *  `noticeItems` (R17 asks it for each dated item). */
   #zone() {
+    if (this.#zoneRead === undefined) this.#zoneRead = this.#readZone();
+    return this.#zoneRead;
+  }
+  #readZone() {
     try {
       let view = this.#deps.view;
       if (typeof view === "function") view = view();
@@ -1257,17 +1270,20 @@ export class NoticeProducers {
     } catch { return null; }
   }
 
-  /** R16, R17: the local day of an instant in `zone` (civil-time), the UTC day when none is held; null when it is no
-   *  instant (a sentence then says no day, never a word of this module's own). */
+  /** R16, R17: the local day of an instant (ms, or an ISO date-time, its fraction of a second or offset read as the same
+   *  instant, since civil-time reads only whole-second UTC) in `zone` (civil-time), the UTC day when none is held; null when
+   *  it is no instant (a sentence then says no day, never a word of this module's own). */
   static #localDay(at, zone) {
-    try { const d = localDay(at, zone || "UTC"); if (typeof d === "string") return d; } catch { /* below */ }
+    const ms = typeof at === "number" ? at : typeof at === "string" && INSTANT.test(at) ? Date.parse(at) : NaN;
+    const t = Number.isFinite(ms) ? instantOf(ms) : at;
+    try { const d = localDay(t, zone || "UTC"); if (typeof d === "string") return d; } catch { /* below */ }
     return null;
   }
 
-  /** R13, R14, R15: the local day of an instant in `zone` (civil-time), as `following` reads it, the UTC day when none is held. */
+  /** R13, R14, R15: the local day of an instant in `zone`, as `following` reads it; its own first ten characters when it
+   *  is no instant civil-time reads, else "an earlier date". */
   static #localDate(at, zone) {
-    try { const d = localDay(at, zone || "UTC"); if (typeof d === "string") return d; } catch { /* below */ }
-    return dayOf(at) ?? "an earlier date";
+    return NoticeProducers.#localDay(at, zone) ?? dayOf(at) ?? "an earlier date";
   }
 }
 

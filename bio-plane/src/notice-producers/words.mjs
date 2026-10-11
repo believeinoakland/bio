@@ -1,4 +1,4 @@
-/* notice-producers' words (R16, R17; DEC-188 (6), (7); DEC-189 (2), (5)–(7); N856): every sentence and every fill this
+/* notice-producers' words (R16, R17; DEC-188 (6), (7); DEC-189 (2), (5)–(7); N856; DEC-191 (3), DEC-192 (3), (5); N869, N876): every sentence and every fill this
  * module's AI-account and investigation items say, each read by key from the design stream's `words.json`
  * (`docs/development/ux-substrate/screens/words.json`), its `en` verbatim. No sentence or fill is written here. A key the
  * words file lacks, or an `en` that differs, fails this module's test (`words.test.mjs`), never a fallback sentence.
@@ -22,8 +22,9 @@ export const NOTICE_WORDS = Object.freeze({
   "ai.scope.own": "your own questions",
   "ai.period.day": "daily",
   "ai.period.month": "monthly",
-  "ai.when.day": "tomorrow",
-  "ai.when.month": "on {month} 1",
+  /* R16 (DEC-192 (5)): `{when}` after "until" in `ai.queue.limitreached*` (the refusals' `ai.when.*` are ai-use's) */
+  "ai.until.day": "tomorrow",
+  "ai.until.month": "1 {month}",
   "ai.use.ask.inline": "asking",
   "ai.use.draft.inline": "drafting",
   "ai.use.run.inline": "runs",
@@ -31,6 +32,12 @@ export const NOTICE_WORDS = Object.freeze({
   "ai.use.transcribe.inline": "reading page pictures",
   "ai.use.explore.inline": "exploring",
   "ai.use.suggestions.inline": "suggestions",
+  "ai.use.enquire.inline": "interviews and planning",
+  "ai.use.read.inline": "reading inside documents",
+  "ai.use.account.inline": "a case's account",
+  /* R16, R17 (DEC-191 (3), DEC-192 (3)): a local day in a sentence, with its year only when not in the current local year */
+  "date.daymonth": "{day} {month}",
+  "date.daymonthyear": "{day} {month} {year}",
   "date.month.january": "January",
   "date.month.february": "February",
   "date.month.march": "March",
@@ -87,10 +94,24 @@ const MONTHS = Object.freeze(["january", "february", "march", "april", "may", "j
 export function monthName(m) {
   return Number.isInteger(m) && m >= 1 && m <= 12 ? wordsOf(`date.month.${MONTHS[m - 1]}`) : null;
 }
-/** A local day `YYYY-MM-DD` as a sentence names it: "{day} {month}", the month from `date.month.*` (R16's `{date}`; J1 (2):
- *  DEC-191 (3)'s `date.daymonth` form, written here only until its key is folded, N869). Null for no day. */
-export function dayMonth(day) {
-  const x = typeof day === "string" ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(day) : null;
-  const name = x ? monthName(Number(x[2])) : null;
-  return name ? `${Number(x[3])} ${name}` : null;
+const DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
+/** A local day `YYYY-MM-DD` as a sentence names it (R16's and R17's `{date}`; DEC-191 (3), DEC-192 (3)): `date.daymonth`,
+ *  `{day}` the day of the month with no leading zero and `{month}` from `date.month.*`; or `date.daymonthyear`, `{year}` in
+ *  four digits, when the day is not in the year of `today` (the current local day, `YYYY-MM-DD`; a `today` that is no day
+ *  names the year). Null for no day. */
+export function dayInSentence(day, today) {
+  const x = typeof day === "string" ? DAY.exec(day) : null;
+  const month = x ? monthName(Number(x[2])) : null;
+  if (!month) return null;
+  const t = typeof today === "string" ? DAY.exec(today) : null;
+  const fills = { day: String(Number(x[3])), month, year: x[1] };
+  return wordsOf(t && t[1] === x[1] ? "date.daymonth" : "date.daymonthyear", fills);
+}
+
+/** R16's `{when}` after "until" (DEC-192 (5)): a day's limit `ai.until.day`; a month's `ai.until.month` with `{month}` the
+ *  name of month `next` (1–12), the period after the one reached. Null for any other period or no month. */
+export function untilWords(period, next) {
+  if (period === "day") return wordsOf("ai.until.day");
+  const name = period === "month" ? monthName(next) : null;
+  return name ? wordsOf("ai.until.month", { month: name }) : null;
 }

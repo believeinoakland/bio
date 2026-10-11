@@ -271,3 +271,47 @@ test("R17 step-later-found's {date} is the look's own local day when steps answe
   assert.deepEqual(ofKind(boom, "step-later-found"), []);
   assert.deepEqual(boom.facts.failed, ["steps"], "a step read that throws is steps' failure");
 });
+
+/* R17 (T44; N869, N876; DEC-191 (3), DEC-192 (3)): every `{date}` in a kind's summary or detail is filled as R16's: the
+   source's local day by `date.daymonth`, or `date.daymonthyear` when not in the current local year. Today that is
+   step-later-found (steps R23's `looked_at`, else `at`: instants, read in the profile's zone), step-date-due (steps R12's
+   date) and milestone-overdue (investigation R3's date): local days. Over each source's entries as it answers them. */
+test("R17 (T44) each {date}: step-later-found, step-date-due and milestone-overdue fill {date} as R16's: the local day by date.daymonth, by date.daymonthyear outside the current local year (control: inside it, no year); a look on the 6th locally and the 7th in UTC reads the 6th (control: in UTC, the 7th)", () => {
+  const w = stepsWorld();
+  duties(w.st);
+  const LA = () => ({ time_zone: { value: "America/Los_Angeles" } });
+  const run = ({ found = [], due = [], milestones = [] }, now, view = LA) => reader(fresh(w.host, { membership: w.membership, view,
+    steps: { laterFound: () => ({ ok: true, found }), stepsDue: () => ({ ok: true, due }), costShares: () => ({ ok: true, shares: [] }),
+             costMessages: () => ({ ok: true, messages: [] }), step: ({ step }) => ({ ok: true, step, work: "Ask the clerk" }) },
+    investigation: { milestonesOverdue: () => ({ ok: true, due: milestones }), quietPrompts: () => ({ ok: true, prompts: [] }) } }))
+    .read("ann", { now: Date.parse(now) });
+  const date = (d, m, y) => (y ? say("date.daymonthyear", { day: d, month: WORDS[`date.month.${m}`], year: y }) : say("date.daymonth", { day: d, month: WORDS[`date.month.${m}`] }));
+  const later = (looked_at, at = "2026-10-09T18:00:00Z") => ({ step: "STP-9", look: 1, observation: 2, at, looked_at, questions: [], key: `k-${looked_at}` });
+  const stepDue = (d) => ({ step: "STP-9", work: "Ask the clerk", kind: "past_date", date: d, key: `k-${d}` });
+  const ms = (d) => ({ kind: "overdue", milestone: 3, project: null, name: "draft out", date: d, key: `m-${d}` });
+  const detail = (r, kind) => ofKind(r, kind).map((i) => i.detail);
+  /* in the current local year: no year; the day with no leading zero */
+  const now = "2026-10-11T18:00:00Z";
+  const inYear = run({ found: [later("2026-10-07T03:00:00Z")], due: [stepDue("2026-10-08")], milestones: [ms("2026-10-01")] }, now);
+  assert.deepEqual(detail(inYear, "step-later-found"), [say("queue.step-later-found.detail", { date: date("6", "october") })], "the look's local day");
+  assert.deepEqual(detail(inYear, "step-date-due"), [say("queue.step-date-due.detail", { date: date("8", "october") })]);
+  assert.deepEqual(detail(inYear, "milestone-overdue"), [say("queue.milestone-overdue.detail", { date: date("1", "october") })]);
+  assert.match(detail(inYear, "milestone-overdue")[0], /due on 1 October\./);
+  for (const t of inYear.items.map((i) => i.detail)) assert.doesNotMatch(t, /\b2026\b|\b0\d /, t);
+  const utc = run({ found: [later("2026-10-07T03:00:00Z")] }, now, UTC);
+  assert.deepEqual(detail(utc, "step-later-found"), [say("queue.step-later-found.detail", { date: date("7", "october") })], "control: in UTC, the 7th");
+  /* outside it: with the year */
+  const early = "2026-01-04T18:00:00Z";
+  const outYear = run({ found: [later("2025-12-20T20:00:00.120Z", "2026-01-03T00:00:00Z")], due: [stepDue("2025-12-30")], milestones: [ms("2025-11-15")] }, early);
+  assert.deepEqual(detail(outYear, "step-later-found"), [say("queue.step-later-found.detail", { date: date("20", "december", "2025") })]);
+  assert.deepEqual(detail(outYear, "step-date-due"), [say("queue.step-date-due.detail", { date: date("30", "december", "2025") })]);
+  assert.deepEqual(detail(outYear, "milestone-overdue"), [say("queue.milestone-overdue.detail", { date: date("15", "november", "2025") })]);
+  assert.match(detail(outYear, "step-date-due")[0], /^You set 30 December 2025 for this step/);
+  /* control: the same sources' days in the year being read name none */
+  const sameYear = run({ due: [stepDue("2026-01-02")], milestones: [ms("2026-01-01")] }, early);
+  assert.deepEqual(detail(sameYear, "step-date-due"), [say("queue.step-date-due.detail", { date: date("2", "january") })]);
+  assert.deepEqual(detail(sameYear, "milestone-overdue"), [say("queue.milestone-overdue.detail", { date: date("1", "january") })]);
+  /* no looked_at: the entry's own instant (steps R23's `at`) */
+  const noLook = run({ found: [later(null, "2026-10-07T03:00:00Z")] }, now);
+  assert.deepEqual(detail(noLook, "step-later-found"), [say("queue.step-later-found.detail", { date: date("6", "october") })]);
+});
