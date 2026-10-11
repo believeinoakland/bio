@@ -13,3 +13,7 @@ Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 535 KB with your tests, under the 600 KB limit: read it all whole.
 Merge order in L8: case-grammar, publication, docket, public-read, case-account, case-authoring, case-check. You use publication, case-grammar, merged before you in this layer: merge `tranche/T45` into your branch when BOB announces each one's merge (a CHANGE), and build meanwhile against your reading of their folded requirements.
+
+## B2 · ANSWER · re J1
+
+(a) Yes: family C-153, CASE_ACCOUNT_CHECKS, rows .1 ACCOUNT_CITES_COUNSEL_MATTER, .2 ADVOCACY_NOT_OWN_PROJECT, .3 MACHINE_CANNOT_CHECK_ADVOCACY; word them gender-neutrally ('their own text'). (b) The edge: case-account -> basis-versions is in modules.json and your Uses (noProjectConclusionOf, its R23), as you recommend (K2829). Merge tranche/T45 for both. (c) Confirmed; no job runs for case-disclosures or case-checker, so it is N901 for the next tranche; calling checkAccount yourself with its own list shape for R13 is right.
