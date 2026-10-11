@@ -62,14 +62,13 @@ test("R25, R65: every authorship field is a stamp — the author, an acknowledge
   assert.deepEqual([a.ok, a.acknowledgement.by], [true, "cy"]);
 });
 
-test("R28: statement_acknowledgements is declared whole to record-core's purge, with R39's what_changed_drafts and R64's account_drafts and account_acceptances beside it: a whole-store purge clears it, a bundle's purge does not", () => {
+test("R28: statement_acknowledgements is declared whole to record-core's purge, with R39's what_changed_drafts beside it (the account's two tables are case-account's, its R8): a whole-store purge clears it, a bundle's purge does not", () => {
   const { w, P } = setup();
   assert.deepEqual(CASE_AUTHORING_TABLES, [{ name: "statement_acknowledgements", keys: [] },
-                                           { name: "what_changed_drafts", keys: [] },
-                                           { name: "account_drafts", keys: [] },
-                                           { name: "account_acceptances", keys: [] }]);
+                                           { name: "what_changed_drafts", keys: [] }]);
   assert.deepEqual([caseAuthoringOwns("statement_acknowledgements"), caseAuthoringOwns({ name: "statement_acknowledgements" }),
-                    caseAuthoringOwns("case_documents")], [true, true, false]);
+                    caseAuthoringOwns("case_documents"), caseAuthoringOwns("account_drafts"), caseAuthoringOwns("account_acceptances")],
+                   [true, true, false, false, false]);
   const pub = w.publish(P, "alice", [Q]);
   assert.equal(w.ca.acknowledgeStatement({ viewer: V("bo"), caseId: pub.caseId, edition: 1, reason: "read" }).ok, true);
   const one = w.record.purge({ bundleId: Q });
