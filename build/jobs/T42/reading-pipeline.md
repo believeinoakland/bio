@@ -53,3 +53,24 @@
 - ownership: 0 failures.
 
 Size (session_01Tc6bhUF3M5vKa36y66nHwL): test runs 6, module lines 1654
+
+## J3 · COMPLETE
+
+**B2 (CHANGE, K2635) complete: already met by J2's commit 7d82bae9fc.** I merged tranche/T42 at 8b76a53f9a and needed no new code.
+
+`tier3Extend` merges a seed's kept pages (their text into `i2text`, their parts into `chain`) in every case. It asks the OCR member only when one is bound, and only for pages that were not kept. Both cases B2 names are covered:
+- **(a) OCR bound and every wanted page kept.** `keepSeeded()` merges the kept pages and the member is not called.
+  - Test: `transcribe.test.mjs`, "R30: the AI's page is never dropped…", the all-kept arm. A member that throws if called gets 0 calls. Page 1 keeps the AI's text and its `ai_transcription` part, wired tier 4, and `tier4Pages` is `[]`.
+- **(b) No OCR bound.** The kept pages are merged, and only the page nobody read is left.
+  - Test: the same test's no-member arm. `tier4Pages` is `[3]`, and the AI is asked only for `[3]`.
+- **The member answers 500 or cannot be reached.** The kept pages are still merged.
+- **Negative controls.**
+  - With no seed, the member-less note is byte for byte unchanged, with no chain set and tier 1.
+  - An OCR-only seed is seeded as before, and the re-read stays at tier 3 with no AI part.
+
+**Re-run on the merged branch:**
+- reading-pipeline: 104 pass, 0 fail.
+- extraction: 139 pass, 0 fail.
+- Checks: format, architecture and ownership 0 failures; coverage 30 of 30 ids named by a test.
+
+Size (session_01Tc6bhUF3M5vKa36y66nHwL): test runs 8, module lines 1654
