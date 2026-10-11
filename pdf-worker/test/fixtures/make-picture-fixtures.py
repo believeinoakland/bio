@@ -174,10 +174,74 @@ cmyk = jpeg_bytes(base.convert("CMYK"))
 add("refuse-cmyk", cmyk, [])
 add("refuse-truncated", red_jpeg[: len(red_jpeg) // 2], [])
 
+# T44 (N868): a 48-megapixel photograph, 8064x6048 colour 4:2:0, decoded while
+# reduced. Kept compact: the file holds a SEED, a Pillow-made JPEG 8064 pixels
+# wide and SEED_ROWS MCU rows tall with a restart marker after every MCU row, so
+# each MCU row is a byte-aligned run of entropy-coded data that starts its DC
+# predictions afresh. The 48 MP JPEG is those runs laid out MCU row by MCU row
+# (row i takes seed row `seq(i)`), the RSTn markers renumbered, the frame
+# height set to 6048 and an Exif orientation inserted; the test assembles the
+# same bytes by the same rule and checks their SHA-256 first. Every expected
+# digest is Pillow's over the assembled file.
+P48_W, P48_H, SEED_ROWS, MCU = 8064, 6048, 8, 16
+
+
+def seq(i):
+    return (5 * i + i // SEED_ROWS) % SEED_ROWS
+
+
+def split_seed(seed):
+    """The seed's header up to its entropy data, and its MCU rows' entropy runs."""
+    p = 2
+    while True:
+        assert seed[p] == 0xFF
+        m, ln = seed[p + 1], (seed[p + 2] << 8) | seed[p + 3]
+        p += 2 + ln
+        if m == 0xDA:
+            break
+    header, runs, start, q = seed[:p], [], p, p
+    while True:
+        if seed[q] == 0xFF and 0xD0 <= seed[q + 1] <= 0xD7 or seed[q] == 0xFF and seed[q + 1] == 0xD9:
+            runs.append(seed[start:q])
+            if seed[q + 1] == 0xD9:
+                break
+            start = q = q + 2
+            continue
+        q += 1
+    return header, runs
+
+
+def assemble48(seed, orientation):
+    header, runs = split_seed(seed)
+    assert len(runs) == SEED_ROWS, len(runs)
+    h = bytearray(header)
+    sof = h.index(b"\xff\xc0")
+    h[sof + 5:sof + 7] = struct.pack(">H", P48_H)
+    app1 = exif_with(orientation)
+    out = bytearray(h[:2]) + b"\xff\xe1" + struct.pack(">H", len(app1) + 2) + app1 + h[2:]
+    n = P48_H // MCU + (1 if P48_H % MCU else 0)
+    for i in range(n):
+        out += runs[seq(i)]
+        if i < n - 1:
+            out += bytes([0xFF, 0xD0 + (i & 7)])
+    return bytes(out + b"\xff\xd9")
+
+
+seed_im = picture(P48_W, SEED_ROWS * MCU, 5)
+seed48 = jpeg_bytes(seed_im, restart_marker_rows=1)
+photo48 = {"seed_b64": b64(seed48), "width": P48_W, "height": P48_H, "seed_rows": SEED_ROWS, "assembled": []}
+for o in (1, 3, 6, 8):
+    data = assemble48(seed48, o)
+    photo48["assembled"].append({
+        "orientation": o, "sha256": sha(data),
+        "expect": [expect(data, 1568, True, False), expect(data, 2000, False, False)],
+    })
+
 OUT.write_text(json.dumps({
     "made_by": "make-picture-fixtures.py",
     "pillow": PIL.__version__,
     "python": sys.version.split()[0],
     "variants": variants,
+    "photo48": photo48,
 }, indent=1) + "\n")
 print(OUT, OUT.stat().st_size, "bytes,", len(variants), "variants")
