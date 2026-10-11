@@ -47,25 +47,39 @@ function base64(bytes) {
 const pagesAsked = (pages) => [...new Set((Array.isArray(pages) ? pages : []).filter((p) => Number.isInteger(p) && p >= 0))]
   .sort((a, b) => a - b).slice(0, TRANSCRIBE_PAGES_MAX);
 
+/* R36 (T44; N869; DEC-191 (4), (5); K2719): an asked page not sent, as `refused` names it: the renderer's refusal key
+   (`pdf-pixels` R39) and, when its detail names one, the JPEG process. */
+function refusalOf(page, r) {
+  const reason = r && typeof r.reason === "string" && r.reason ? r.reason : "DECODE_FAILED";
+  return { page, reason, ...(r && typeof r.process === "string" && r.process ? { process: r.process } : {}) };
+}
+
 /** R36: each asked page rendered by `pdf-pixels` with `decodeDct: true`, as `agent-worker` R72's `{page, media_type,
  *  data}`; a page the page renderer answers `NOT_A_PDF` for is rendered by its picture renderer instead, grey, its long
  *  edge at most TRANSCRIBE_PICTURE_EDGE (T43; N853b). A page either renderer refuses (or that throws), whose picture is
- *  not a PNG, or whose PNG is over TRANSCRIBE_IMAGE_MAX_BYTES is not sent and stays unread. One page is rendered at a
- *  time. */
-export async function renderPages(bytes, pages, render = renderPageToPixels, picture = renderPictureToPixels) {
-  const out = [];
+ *  not a PNG, or whose PNG is over TRANSCRIBE_IMAGE_MAX_BYTES is not sent and stays unread; (T44) each such page is
+ *  answered in `refused` as `{page, reason, process?}`: the renderer's refusal, `DECODE_FAILED` for a renderer that
+ *  throws or answers no PNG, `IMAGE_TOO_LARGE` for a PNG over the cap. One page is rendered at a time. */
+export async function renderAsked(bytes, pages, render = renderPageToPixels, picture = renderPictureToPixels) {
+  const sent = [], refused = [];
   for (const page of pagesAsked(pages)) {
     let r;
     try { r = await render(bytes, page, { decodeDct: true }); } catch { r = null; }
     if (r && r.ok === false && r.reason === "NOT_A_PDF") {
       try { r = await picture(bytes, page, { maxEdge: TRANSCRIBE_PICTURE_EDGE, grey: true }); } catch { r = null; }
     }
-    if (!r || r.ok !== true || r.mediaType !== PNG) continue;
-    const png = r.bytes instanceof Uint8Array ? r.bytes : r.bytes ? new Uint8Array(r.bytes) : null;
-    if (!png || png.length === 0 || png.length > TRANSCRIBE_IMAGE_MAX_BYTES) continue;
-    out.push({ page, media_type: PNG, data: base64(png) });
+    if (!r || r.ok !== true) { refused.push(refusalOf(page, r)); continue; }
+    const png = r.mediaType !== PNG ? null : r.bytes instanceof Uint8Array ? r.bytes : r.bytes ? new Uint8Array(r.bytes) : null;
+    if (!png || png.length === 0) { refused.push({ page, reason: "DECODE_FAILED" }); continue; }
+    if (png.length > TRANSCRIBE_IMAGE_MAX_BYTES) { refused.push({ page, reason: "IMAGE_TOO_LARGE" }); continue; }
+    sent.push({ page, media_type: PNG, data: base64(png) });
   }
-  return out;
+  return { sent, refused };
+}
+
+/** R36: the pages `renderAsked` sends, alone. */
+export async function renderPages(bytes, pages, render = renderPageToPixels, picture = renderPictureToPixels) {
+  return (await renderAsked(bytes, pages, render, picture)).sent;
 }
 
 /** R36's AI path for one act of `member`, on this object: `transcribe({account, capture_sha, store, pages, use})`.
@@ -81,9 +95,9 @@ function aiPath(ctx, env, { member, at, act, onSha }) {
     try { const obj = ev && sha ? await ev.get(sha) : null; bytes = obj ? new Uint8Array(await obj.arrayBuffer()) : null; }
     catch { bytes = null; }
     if (!bytes) return { ok: false, reason: "EVIDENCE_ABSENT" };
-    const rendered = await renderPages(bytes, pages);
-    /* Nothing rendered: nothing is sent, and no account leaves the object. */
-    if (!rendered.length) return { ok: false, reason: "NO_PAGE_RENDERED" };
+    const { sent: rendered, refused } = await renderAsked(bytes, pages);
+    /* Nothing rendered: nothing is sent, and no account leaves the object; (T44) each asked page says why. */
+    if (!rendered.length) return { ok: false, reason: "NO_PAGE_RENDERED", refused };
     const a = account && typeof account === "object" ? account : {};
     /* agent-worker R6's wire shape: `accountFor`'s `key` named `secret`, the acting member, no suggestions; a project's
        account names its project. */

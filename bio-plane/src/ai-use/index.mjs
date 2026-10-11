@@ -26,10 +26,10 @@ import { retrievalOf } from "../retrieval/index.mjs";
 import { AI_RUNS_CHECKS } from "../run-rules/index.mjs";
 import { AI_USE_SCHEMA, AI_USE_TABLES } from "./schema.mjs";
 import { AI_USE_CHECKS, AI_USE_WORDS, LIMIT_WORD_BY_SCOPE, UNJUDGED_WORD, WHOSE_WORD, PERIOD_WORD, WHEN_WORD, MONTH_WORD,
-  LIMIT_FIELD_WORD, useInlineWord } from "./checks.mjs";
+  LIMIT_FIELD_WORD, useInlineWord, useNameWord, fillWords } from "./checks.mjs";
 export { AI_USE_SCHEMA, AI_USE_TABLES } from "./schema.mjs";
 export { AI_USE_CHECKS, AI_USE_WORDS, LIMIT_WORD_BY_SCOPE, UNJUDGED_WORD, WHOSE_WORD, PERIOD_WORD, WHEN_WORD, MONTH_WORD,
-  LIMIT_FIELD_WORD, useInlineWord } from "./checks.mjs";
+  LIMIT_FIELD_WORD, useInlineWord, useNameWord, fillWords } from "./checks.mjs";
 
 /** R1 (was ai-runs R48): the figures of one conversation's `usage`, as `agent-model` returns them (its R5, R6: the sum
  *  over its model calls), plus `estimated_cost_usd` (its R13): token figures whole numbers, the costs dollar amounts,
@@ -168,35 +168,36 @@ export class AiUse {
     return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail, ...extra };
   }
 
-  /** R13 (K2514; T43, DEC-189 (1)): `AI_LIMIT_REACHED`'s sentence for `lim` reached in the period starting `start`,
-   *  answered whole so every caller relays a filled sentence, every fill read by key and none written here: `{whose}`
-   *  from `ai.whose.*`, `{use}` from `ai.use.<use>.inline`, `{period}` from `ai.period.*`, `{when}` from `ai.when.day`,
-   *  or `ai.when.month` with `{month}`, the next period's month, from `date.month.*`; never a cost. */
+  /** R13 (K2514; T43, DEC-189 (1); T44, DEC-191 (2), DEC-192 (4)): `AI_LIMIT_REACHED`'s sentence for `lim` reached in
+   *  the period starting `start`, answered whole so every caller relays a filled sentence, every fill read by key and
+   *  none written here: `{whose}` from `ai.whose.*`, `{use}` from `ai.use.<use>.inline` (`{Use}` from `.name`),
+   *  `{period}` from `ai.period.*`, `{when}` from `ai.when.day`, or `ai.when.month` with `{month}`, the next period's
+   *  month, from `date.month.*`; never a cost. */
   static #limitSentence(key, whose, lim, start) {
     const w = (k) => AI_USE_WORDS[k];
-    let when = w(WHEN_WORD.day);
-    if (lim.period === "month") when = w(WHEN_WORD.month).replace("{month}", w(MONTH_WORD[Number(start.slice(5, 7)) % 12]));
-    return w(key).replace("{whose}", w(WHOSE_WORD[whose])).replace("{period}", w(PERIOD_WORD[lim.period]))
-      .replace("{use}", w(useInlineWord(lim.scope)) ?? "").replace("{when}", when);
+    const when = lim.period === "month"
+      ? fillWords(w(WHEN_WORD.month), { month: w(MONTH_WORD[Number(start.slice(5, 7)) % 12]) }) : w(WHEN_WORD.day);
+    const fills = { whose: w(WHOSE_WORD[whose]), period: w(PERIOD_WORD[lim.period]), when };
+    if (USE_KINDS.includes(lim.scope)) Object.assign(fills, { use: w(useInlineWord(lim.scope)), Use: w(useNameWord(lim.scope)) });
+    return fillWords(w(key), fills);
   }
 
   /** R3, R13: `AI_LIMIT_REACHED`, the one site that mints it (K231), naming no cost. For a limit reached, its sentence
-   *  read by its scope and filled whole (`#limitSentence`); a use's limit whose use has no `ai.use.<use>.inline` key
-   *  yet (`enquire`, `read`, `account`, no AI path in T43; B133) reads the overall sentence, which names no use. With
-   *  no `lim` the limit cannot be judged (T43; N856; DEC-189 (5): no paying account named, the use not a `USE_KINDS`
-   *  entry, or the counter unreadable): still the refusal, failing closed, but `unjudged: true` and no `scope`, `unit`
-   *  or `period`, since nothing was reached; its sentence `ai.refused.limit.unjudged` with `{whose}` only (the group's
-   *  words when no account is named, `whose` then null). */
+   *  read by its scope (a use's own, any of the nine: `ai.refused.limit`; T44, DEC-191 (2)) and filled whole
+   *  (`#limitSentence`). With no `lim` the limit cannot be judged (T43; N856; DEC-189 (5): no paying account named, the
+   *  use not a `USE_KINDS` entry, or the counter unreadable): still the refusal, failing closed, but `unjudged: true` and
+   *  no `scope`, `unit` or `period`, since nothing was reached; its sentence `ai.refused.limit.unjudged` with `{whose}`
+   *  only (the group's words when no account is named, `whose` then null; K2720). */
   #limitReached(p, lim, use, start, why = null) {
     const whose = p ? whoseOf(p) : null;
     if (!lim) {
-      const translation = AI_USE_WORDS[UNJUDGED_WORD].replace("{whose}", AI_USE_WORDS[WHOSE_WORD[whose || "group"]]);
+      const translation = fillWords(AI_USE_WORDS[UNJUDGED_WORD], { whose: AI_USE_WORDS[WHOSE_WORD[whose || "group"]] });
       /* DEC-49 REGION is-ai-limit-reached */
       return { ...this.#refuse("AI_LIMIT_REACHED", `${why} Nothing was started.`), translation, word: UNJUDGED_WORD,
         unjudged: true, whose, use: use ?? null };
     }
     const scope = lim.scope;
-    const word = LIMIT_WORD_BY_SCOPE[scope] || (AI_USE_WORDS[useInlineWord(scope)] ? "ai.refused.limit" : LIMIT_WORD_BY_SCOPE.overall);
+    const word = LIMIT_WORD_BY_SCOPE[scope] || "ai.refused.limit";
     return { ...this.#refuse("AI_LIMIT_REACHED", `${p.owner}'s ${lim.period} limit (${scope}, in ${lim.unit}) is `
       + `reached for the period from ${start}. Nothing was started.`), translation: AiUse.#limitSentence(word, whose, lim, start),
       word, whose, scope, unit: lim.unit, period: lim.period, period_start: start, use: use ?? null };
@@ -205,7 +206,7 @@ export class AiUse {
 
   /** R2: an invalid limit, naming the field, its sentence's `{field}` filled from `ai.limitfield.<field>` (R13). */
   #invalid(field, detail) {
-    const translation = AI_USE_WORDS["ai.refused.limitinvalid"].replace("{field}", AI_USE_WORDS[LIMIT_FIELD_WORD[field]]);
+    const translation = fillWords(AI_USE_WORDS["ai.refused.limitinvalid"], { field: AI_USE_WORDS[LIMIT_FIELD_WORD[field]] });
     /* DEC-49 REGION is-ai-limit-invalid */
     return this.#refuse("AI_LIMIT_INVALID", `${detail} Nothing was changed.`, { field, word: "ai.refused.limitinvalid", translation });
     /* END DEC-49 REGION is-ai-limit-invalid */
@@ -216,15 +217,28 @@ export class AiUse {
     const whose = whoseOf(p);
     /* DEC-49 REGION is-explore-not-enabled */
     return { ...this.#refuse("EXPLORE_NOT_ENABLED", `exploring is set to no on ${p.owner}'s account, so it pays for no `
-      + "exploring. Nothing was started."), translation: AI_USE_WORDS["ai.refused.explorenotenabled"]
-      .replace("{whose}", AI_USE_WORDS[WHOSE_WORD[whose]]), word: "ai.refused.explorenotenabled", whose, owner: p.owner };
+      + "exploring. Nothing was started."), translation: fillWords(AI_USE_WORDS["ai.refused.explorenotenabled"],
+      { whose: AI_USE_WORDS[WHOSE_WORD[whose]] }), word: "ai.refused.explorenotenabled", whose, owner: p.owner };
     /* END DEC-49 REGION is-explore-not-enabled */
   }
 
-  /** R9: an ask or approval naming no day or no thing worth exploring. */
+  /** R6, R8, R13 (T44; N859, N869; DEC-191 (1)): the question lies outside what `p`'s account explores. Carries `whose`
+   *  as `AI_LIMIT_REACHED` does; its sentence `ai.refused.exploreoutofscope`, `{whose}` filled from `ai.whose.*`. */
+  #outOfScope(p) {
+    const whose = whoseOf(p);
+    /* DEC-49 REGION is-explore-out-of-scope */
+    return this.#refuse("EXPLORE_OUT_OF_SCOPE", `the question is not one ${p.owner}'s account explores. Nothing was started.`,
+      { owner: p.owner, whose, word: "ai.refused.exploreoutofscope",
+        translation: fillWords(AI_USE_WORDS["ai.refused.exploreoutofscope"], { whose: AI_USE_WORDS[WHOSE_WORD[whose]] }) });
+    /* END DEC-49 REGION is-explore-out-of-scope */
+  }
+
+  /** R9: an ask or approval naming no day or no thing worth exploring; its sentence `ai.refused.exploreaskinvalid`
+   *  (R13; T44, DEC-191 (1)). */
   #askFault(field, detail) {
     /* DEC-49 REGION is-explore-ask-invalid */
-    return this.#refuse("EXPLORE_ASK_INVALID", `${detail} Nothing was recorded.`, { field });
+    return this.#refuse("EXPLORE_ASK_INVALID", `${detail} Nothing was recorded.`,
+      { field, word: "ai.refused.exploreaskinvalid", translation: AI_USE_WORDS["ai.refused.exploreaskinvalid"] });
     /* END DEC-49 REGION is-explore-ask-invalid */
   }
 
@@ -703,11 +717,7 @@ export class AiUse {
       const c = this.#credentials();
       const away = c.aiKeptAway({ use: "explore", ...(p.kind === "project" ? { project: p.id } : {}) });
       if (away) return away;
-      /* DEC-49 REGION is-explore-out-of-scope */
-      if (!this.#inScope(p, question))
-        return this.#refuse("EXPLORE_OUT_OF_SCOPE", `the question is not one ${p.owner}'s account explores. Nothing was started.`,
-          { owner: p.owner });
-      /* END DEC-49 REGION is-explore-out-of-scope */
+      if (!this.#inScope(p, question)) return this.#outOfScope(p);
       if (p.kind === "group") {
         const drawn = this.#connections().citesInto(question).confirmed
           .filter((b) => { const i = this.record.bundleInfo(b); return i && normalizeType(i.type) === "project"; });
@@ -768,7 +778,7 @@ export class AiUse {
         try { const j = JSON.parse(r.what); if (Array.isArray(j)) what = j; } catch { /* a statement */ }
         const shown = Array.isArray(what) ? what.join("; ") : what;
         asks.push({ key: `explore-ask:${r.owner}:${r.day}`, owner: r.owner, day: r.day, what, asked_at: r.asked_at,
-                    word: "ai.queue.exploreask", text: AI_USE_WORDS["ai.queue.exploreask"].replace("{what}", shown),
+                    word: "ai.queue.exploreask", text: fillWords(AI_USE_WORDS["ai.queue.exploreask"], { what: shown }),
                     estimate: this.#estimate(p, "explore", "explore", 1) });
       }
       return { ok: true, asks };

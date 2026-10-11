@@ -113,7 +113,8 @@ CREATE TABLE IF NOT EXISTS step_later_found (
   step_id       TEXT NOT NULL,
   look_seq      INTEGER NOT NULL,   -- the earlier look, as the log holds it
   observation_seq INTEGER NOT NULL, -- what arrived
-  at            TEXT NOT NULL,
+  at            TEXT NOT NULL,      -- the instant what arrived was logged (the observation's at)
+  looked_at     TEXT,               -- the instant of the look (its at); added T44, older rows filled at start
   UNIQUE (step_id, look_seq, observation_seq)
 );
 CREATE TABLE IF NOT EXISTS step_cost_messages (

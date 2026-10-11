@@ -1,12 +1,14 @@
 /* affordances — ACT_HELP (R48; N726, DEC-174 (3) as amended (U117), DEC-99): the one table of what each act does, one
  * English explanation per op, keyed by op, held for translation (N669 keys the translations by this table's keys).
  *
- * GENERATED, never edited by hand, from the design stream's `docs/development/ux-substrate/screens/mock-acts.js` as it
- * stands on `tranche/T43` (DEC-189's `4455c7fbe5`, DEC-190's `bbf92e344a`), 213 entries (T43-17, K2704; before it PR #19's
- * `3660c18803`, 215, T41-52; PR #15's `c848b56671`, 204, T38-31; PR #14's `e08cd35ecb`, 203, T37-27); a later design text
- * is a re-generation. DEC-189 re-keyed 37 acts from `owed_<op>` (each already held under its op) and removed the four
- * retired acts' texts; DEC-190 gave `transcribe` its text and `owed_pagetranscribe` the assistant's page reading, both
- * held under their ops (declared since T42). Each text is the design's,
+ * GENERATED, never edited by hand, from the design stream's `docs/development/ux-substrate/screens/mock-acts.js` as
+ * PR #25 merged it to `main` (DEC-191, DEC-192), 213 entries (T44-9, K2732; before it `tranche/T43`'s, DEC-189's
+ * `4455c7fbe5` and DEC-190's `bbf92e344a`, 213, T43-17; PR #19's `3660c18803`, 215, T41-52; PR #15's `c848b56671`, 204,
+ * T38-31; PR #14's `e08cd35ecb`, 203, T37-27); a later design text is a re-generation. DEC-189 re-keyed 37 acts from
+ * `owed_<op>` (each already held under its op) and removed the four retired acts' texts; DEC-190 gave `transcribe` its
+ * text and `owed_pagetranscribe` the assistant's page reading, both held under their ops (declared since T42); DEC-191
+ * re-keyed the latter `pagetranscribe` (`act.pagetranscribe.does`), its text unchanged, so the table is byte for byte
+ * as it was. Each text is the design's,
  * verbatim, in the design's order. Its keys are read as R48 reads them:
  *   - a declared op is that op;
  *   - an alias (`op-grades`' OP_ALIASES, `op-declarations` R21's table) is held under its op, never as a second entry;

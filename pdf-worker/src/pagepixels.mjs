@@ -97,7 +97,7 @@ export const REFUSALS = {
   PAGE_UNREADABLE: "the page object could not be read",
   PAGE_HAS_TEXT_LAYER: "the page carries a text layer; it does not need pixels",
   NOT_IMAGE_ONLY: "the page carries marks that are not an embedded image",
-  NO_IMAGE_ON_PAGE: "the page references no image XObject",
+  NO_IMAGE_ON_PAGE: "the page paints no image",
   MULTIPLE_IMAGES_ON_PAGE: "the page composes several images; compositing is not built",
   IMAGE_UNREADABLE: "the image XObject's stream could not be read",
   UNSUPPORTED_FILTER: "the image's filter chain has no decoder here",

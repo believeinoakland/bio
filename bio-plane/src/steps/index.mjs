@@ -29,7 +29,7 @@
  * translation, detail}` and writes nothing. */
 import { isStepId, isMachineIdentity, ACCEPTANCE_FORMS, acceptanceRecord, lawProposalState, sha256HexSync, canonicalJson }
   from "../record-grammar/index.mjs";
-import { recordOf, stampInstant, mintExhausted } from "../record-core/index.mjs";
+import { recordOf, stampInstant, instantOrder, mintExhausted } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate, noSuchProject, listenerRefusal } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { observationLogOf } from "../observation-log/index.mjs";
@@ -64,6 +64,8 @@ export const LIKE_SCAN = 5000;
 /** R17: the recipients' page; and how many drawing projects one read pages through at most. */
 export const RECIPIENTS_LIMIT = Object.freeze({ default: 500, max: 1000 });
 const DRAW_PAGE = 500, DRAW_MAX = 10000;
+/** R23: how many later-found entries one `laterFound` read takes at most, oldest first. */
+export const LATER_FOUND_SCAN = 5000;
 /** R26: the figures registered with record-core's counts, one per acceptance form. */
 export const ACCEPTANCE_COUNT_KEYS = Object.freeze(["stepsAcceptedAsProposed", "stepsAcceptedEdited", "stepsAcceptedOwnInstead"]);
 
@@ -174,6 +176,7 @@ export class Steps {
         for (const st of part.slice(end + 4).split(";")) if (st.trim()) this.#sql.exec(st.trim());
       } else for (const st of part.split(";")) if (st.trim()) this.#sql.exec(st.trim());
     }
+    this.#lookedAtColumn();
     if (this.#declared) return { ok: true, already: true };
     /* R19: working material, never carried in any export to the public; the group's own administrators may export it. */
     const base = { purge: "clear", expunge: "none", export: "admin-only", sight: "bundle", derive: "stored", version_chain: false };
@@ -184,6 +187,18 @@ export class Steps {
     if (d && d.ok === false) throw new Error(`steps: declareTable refused: ${d.reason}`);
     this.#declared = true;
     return { ok: true };
+  }
+
+  /* R23 (T44): a store made before `looked_at` gains the column, and each entry without it is filled from its look's
+     own row (observation-log R29's read contract: `seq`, `at`); the log is append-only, so the look's instant is the
+     one it was logged with. An entry whose look the log no longer holds stays null, answered as not known. */
+  #lookedAtColumn() {
+    const cols = this.#rows(`PRAGMA table_info(step_later_found)`).map((c) => c.name);
+    if (cols.length && !cols.includes("looked_at")) this.#sql.exec(`ALTER TABLE step_later_found ADD COLUMN looked_at TEXT`);
+    try {
+      this.#sql.exec(`UPDATE step_later_found SET looked_at = (SELECT o.at FROM observation_log o WHERE o.seq = step_later_found.look_seq)
+                      WHERE looked_at IS NULL`);
+    } catch { /* no log table yet: filled at the next start */ }
   }
 
   /* ---- registrations (R1, R9, R11) ---- */
@@ -407,9 +422,9 @@ export class Steps {
     return Object.fromEntries(Object.keys(t).sort().map((k) => [k, decStr(t[k])]));
   }
   #laterFoundOf(stepId, viewer) {
-    return this.#rows(`SELECT look_seq, observation_seq, at FROM step_later_found WHERE step_id = ? ORDER BY seq`, stepId)
+    return this.#rows(`SELECT look_seq, observation_seq, at, looked_at FROM step_later_found WHERE step_id = ? ORDER BY seq`, stepId)
       .filter((r) => this.#observationSeen(r.observation_seq, viewer))
-      .map((r) => ({ look: Number(r.look_seq), observation: Number(r.observation_seq), at: r.at }));
+      .map((r) => ({ look: Number(r.look_seq), observation: Number(r.observation_seq), at: r.at, looked_at: r.looked_at ?? null }));
   }
   #observationSeen(seq, viewer) {
     try {
@@ -1183,24 +1198,31 @@ export class Steps {
 
   /* ---- data found later (R23) ---- */
 
-  /** R23 (observation-log R37): an earlier look made for a step, answered by a `PRESENT` at its subject and level. */
+  /** R23 (observation-log R37): an earlier look made for a step, answered by a `PRESENT` at its subject and level. The
+   *  entry keeps both instants: `at`, when what arrived was logged, and `looked_at`, when the step looked (T44). */
   lookAnswered({ earlier = null, observation = null } = {}) {
     if (!isObj(earlier) || !isObj(observation) || earlier.authority_kind !== "step") return;
     if (!this.#held(earlier.authority)) return;
-    this.#sql.exec(`INSERT OR IGNORE INTO step_later_found (step_id, look_seq, observation_seq, at) VALUES (?,?,?,?)`,
-      earlier.authority, Number(earlier.seq), Number(observation.seq), String(observation.at));
+    this.#sql.exec(`INSERT OR IGNORE INTO step_later_found (step_id, look_seq, observation_seq, at, looked_at) VALUES (?,?,?,?,?)`,
+      earlier.authority, Number(earlier.seq), Number(observation.seq), String(observation.at), filled(earlier.at) ? earlier.at : null);
   }
 
   /** R23: `laterFound({viewer, at})`, for `notice-producers`: each entry once, to each of R17's recipients of a
-   *  referring question who sees both the step and what arrived, and to the member who did the step. */
+   *  referring question who sees both the step and what arrived, and to the member who did the step. Each entry answers
+   *  `at` (what arrived) and `looked_at` (the look). Entries logged after `at` wait for a later call; at most
+   *  `LATER_FOUND_SCAN` entries are read, and `truncated` says when more are held. */
   laterFound({ viewer = null, at = null } = {}) {
     const member = this.#memberOf(viewer);
-    if (!member) return { ok: true, found: [] };
+    if (!member) return { ok: true, found: [], truncated: false };
     const found = [];
     const rcache = new Map();
+    let truncated = false;
     try {
-      for (const e of this.#rows(`SELECT f.*, s.doer_member FROM step_later_found f JOIN steps s ON s.step_id = f.step_id ORDER BY f.seq LIMIT 5000`)) {
-        if (filled(at) && e.at > at) continue;
+      const rows = this.#rows(`SELECT f.*, s.doer_member FROM step_later_found f JOIN steps s ON s.step_id = f.step_id ORDER BY f.seq LIMIT ?`, LATER_FOUND_SCAN + 1);
+      truncated = rows.length > LATER_FOUND_SCAN;
+      for (const e of rows.slice(0, LATER_FOUND_SCAN)) {
+        /* compared as instants, never as strings: `…:00Z` and `…:00.000Z` are one instant (record-core R48) */
+        if (filled(at) && !(instantOrder(e.at, at) <= 0)) continue;
         const row = this.#held(e.step_id);
         if (!this.#seen(row, viewer) || !this.#observationSeen(e.observation_seq, viewer)) continue;
         const qs = this.#refs(e.step_id);
@@ -1210,11 +1232,11 @@ export class Steps {
         });
         if (!told) continue;
         found.push({ step: e.step_id, look: Number(e.look_seq), observation: Number(e.observation_seq), at: e.at,
-                     questions: qs.filter((q) => this.#membership.inSight(q, viewer)),
+                     looked_at: e.looked_at ?? null, questions: qs.filter((q) => this.#membership.inSight(q, viewer)),
                      key: sha256HexSync(`steps:later:${e.step_id}:${e.observation_seq}`) });
       }
-    } catch { return { ok: true, found: [] }; }
-    return { ok: true, found };
+    } catch { return { ok: true, found: [], truncated: false }; }
+    return { ok: true, found, truncated };
   }
 
   /* ---- a proposed step, accepted (R24, R26) ---- */

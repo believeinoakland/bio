@@ -93,6 +93,15 @@ test("R44: the fork is a creation through promote — minted id, forming, create
   assert.equal(record.head(f.newId).bundleSha, f.bundleSha);
   /* Absent visibility is hidden. */
   assert.equal(p.forkProject({ projectId: id, title: "Third", by: "bob" }).visibility, "hidden");
+  /* `title` set: the document states the forker's title as the grammar reads it back, whatever characters it holds
+     (PROMOTION #42: a quote or a backslash was written as a JSON string, whose escapes the grammar keeps, and the fork
+     was refused ENVELOPE_TITLE_DISAGREES against its own meta). */
+  for (const t of ['Sewer "Fund", forked', "Back\\slash fund", "It's the fund", "Fund: 東京 #2", '"Quoted" fund']) {
+    const g = p.forkProject({ projectId: id, title: t, by: "bob" });
+    assert.equal(g.ok, true, `${t}: ${JSON.stringify(g)}`);
+    assert.equal(parseFrontmatter(record.readFile(g.newId, "bundle.md").text).data.title, t);
+    assert.equal(g.title, t);
+  }
   /* Every rule of promote applies, its refusal returned. */
   p.registerStep("later", { check: () => ({ ok: false, reason: "LATER_SAYS_NO" }) });
   assert.equal(p.forkProject({ projectId: id, title: "Fourth", by: "bob" }).reason, "LATER_SAYS_NO");

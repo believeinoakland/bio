@@ -1,0 +1,15 @@
+session,role,module,cache_read,cache_write,input,output,turns,test_runs,module_lines
+session_0192ECShmFQefWJ5mQLg6Ptw,job,image-codecs,19424731,322511,6523,66116,,11,3417
+session_01HryQFWAv5MrBMYBBygXxEJ,job,pdf-pixels,19223416,261041,6616,49355,,31,1398
+session_015sXXurg5etajFj626NU7kC,job,promotion,19635328,502196,6533,37203,,14,3722
+session_01K31cLKkb342PaC6HHChFmE,job,capture,24771865,581036,12944,31980,,13,3191
+session_018BewFdRoHKTRNejfX4TPW9,job,extraction,22836882,548673,6577,59098,,8,3229
+session_01H1R4ztdXafotE4yLeiGxhV,job,ai-use,11398319,287174,104,29231,,11,1203
+session_01DFB5ozwU2VhpMC9hsjyxyD,job,steps,13566334,322856,108,22702,,18,1651
+session_01RHnxNfEc1i2Xkd7pgZikrv,job,case-carriage,7269141,375049,100,17253,,2,1382
+session_017fXJJy4Fp2h84wRcexJoGg,BOB-final,,116956473,684255,39555,148574,,,
+session_01YGf42ow4aj8kGUoEYJo7zP,job,affordances,45006473,1423056,7249,169952,,14,2351
+session_01RhbWSRE68A8BuBfXi1xUnS,job,notice-producers,10439538,330741,124,44400,,11,1418
+session_011bQkYjLT4jAwMriti53CXG,job,op-declarations,24939507,825284,700,29772,,7,3433
+session_01U9FpNxmervkjfMtrigQ23J,job,store-door,8101624,286353,6599,23344,,2,2217
+session_01Dwre5v9yYZxVWPCf2yNy66,job,plane,26427283,546525,236,43697,,9,232

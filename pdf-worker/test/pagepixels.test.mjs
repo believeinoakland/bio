@@ -20,7 +20,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { renderPageToPixels, REFUSALS } from "../src/pagepixels.mjs";
-import { renderPictureToPixels, PICTURE_FRAME_MAX, PNG_REFUSAL_REASONS } from "../src/picturepixels.mjs";
+import { renderPictureToPixels, PICTURE_FRAME_MAX, PICTURE_SOURCE_MAX, PNG_REFUSAL_REASONS } from "../src/picturepixels.mjs";
 import { PNG_REFUSES } from "../src/pngdecode.mjs";
 import { CROP_REFUSALS } from "../src/imagecrop.mjs";
 import { openPdf, pdfPageImages, imagePlacementSource } from "../../bio-plane/src/pdfstructure.mjs";
@@ -526,8 +526,53 @@ console.log("\n--- R42, R43: a picture file, against Pillow 12.3.0 ---");
   const php = readPng(ph.bytes);
   t("R42 an 8-bit grey PNG under 5 MiB whose samples are the pixels_sha256",
     [php.bitDepth, php.colorType, ph.bytes.length < 5 * 1048576, hex(php.samples)], [8, 0, true, pe.pillow_sha256]);
+  t("R42 the photograph's PNG is still 155,814 B (T43's, node's deflate)", ph.bytes.length, 155814);
   t("R42 never the file's own bytes: a PNG of IHDR, IDAT and IEND only, carrying no EXIF",
     [chunks(ph.bytes), Buffer.from(ph.bytes).includes("Exif")], [["IHDR", "IDAT", "IEND"], false]);
+
+  console.log("\n--- R42 (T44): a 48-megapixel photograph, decoded while reduced, against Pillow 12.3.0 ---");
+  {
+    /* `make-picture-fixtures.py` keeps a seed: a Pillow-made JPEG 8064 wide with a
+       restart marker after each MCU row. The 48 MP file is those rows' entropy runs
+       laid out by the script's rule, the RSTn renumbered, the height set to 6048 and
+       an Exif orientation inserted; the bytes are checked against the script's
+       digest before any picture is, and every expected picture is Pillow's. */
+    const P = PV.photo48, seed = Buffer.from(P.seed_b64, "base64");
+    const seq = (i) => (5 * i + Math.floor(i / P.seed_rows)) % P.seed_rows;
+    let p = 2;
+    for (;;) { const m = seed[p + 1]; p += 2 + seed.readUInt16BE(p + 2); if (m === 0xda) break; }
+    const header = Buffer.from(seed.subarray(0, p)), runs = [];
+    for (let q = p, start = p; ; q++) {
+      if (seed[q] === 0xff && ((seed[q + 1] >= 0xd0 && seed[q + 1] <= 0xd7) || seed[q + 1] === 0xd9)) {
+        runs.push(seed.subarray(start, q));
+        if (seed[q + 1] === 0xd9) break;
+        start = q + 2; q++;
+      }
+    }
+    header.writeUInt16BE(P.height, header.indexOf(Buffer.from([0xff, 0xc0])) + 5);
+    const exif = (o) => { const b = Buffer.alloc(32); b.write("Exif\0\0II", 0, "latin1"); b.writeUInt16LE(42, 8); b.writeUInt32LE(8, 10);
+      b.writeUInt16LE(1, 14); b.writeUInt16LE(0x0112, 16); b.writeUInt16LE(3, 18); b.writeUInt32LE(1, 20); b.writeUInt16LE(o, 24); return b; };
+    const assemble = (o) => {
+      const n = Math.ceil(P.height / 16), parts = [header.subarray(0, 2), Buffer.from([0xff, 0xe1, 0, 34]), exif(o), header.subarray(2)];
+      for (let i = 0; i < n; i++) { parts.push(runs[seq(i)]); if (i < n - 1) parts.push(Buffer.from([0xff, 0xd0 + (i & 7)])); }
+      parts.push(Buffer.from([0xff, 0xd9]));
+      return new Uint8Array(Buffer.concat(parts));
+    };
+    t("R42 (the seed holds one entropy run per MCU row)", runs.length, P.seed_rows);
+    t("R42 (every orientation the entry names is among them: 1, 3, 6, 8)", P.assembled.map((a) => a.orientation), [1, 3, 6, 8]);
+    for (const a of P.assembled) {
+      const file = assemble(a.orientation);
+      t(`R42 (the 48 MP file, Orientation ${a.orientation}, is the script's, byte for byte)`, hex(file), a.sha256);
+      for (const e of a.expect) {
+        const r = await picture(file, 0, { maxEdge: e.max_edge, grey: e.grey });
+        t(`R42 R43 8064×6048 colour, Orientation ${a.orientation}, maxEdge ${e.max_edge}${e.grey ? ", grey" : ", colour"}: decoded while reduced, Pillow's pixels`,
+          [r.ok ? r.route : r.reason, r.orientation, r.reduced_by, r.width, r.height, r.source, r.pixels_sha256],
+          ["decoded-picture", e.orientation, e.reduced_by, e.width, e.height, { format: "jpeg", width: 8064, height: 6048, comps: 3 }, e.pillow_sha256]);
+      }
+    }
+    t("R42 (partial edge boxes are among them: k = 5 leaves 4 columns and 3 rows over)",
+      P.assembled.some((a) => a.expect.some((e) => e.reduced_by === 5)) && 8064 % 5 === 4 && 6048 % 5 === 3, true);
+  }
 
   console.log("\n--- R42: the refusals, each beside a control that is accepted (K874) ---");
   const SMALL = pic("orient-1");
@@ -550,12 +595,30 @@ console.log("\n--- R42, R43: a picture file, against Pillow 12.3.0 ---");
      exactly at it gets past the bound to the decoder's own refusal. */
   const sof = (() => { for (let p = 2; ; ) { if (SMALL[p + 1] === 0xc0) return p; p += 2 + ((SMALL[p + 2] << 8) | SMALL[p + 3]); } })();
   const jpegSized = (w, h) => { const b = SMALL.slice(); b[sof + 5] = h >> 8; b[sof + 6] = h & 255; b[sof + 7] = w >> 8; b[sof + 8] = w & 255; return b; };
-  const big = await picture(jpegSized(4097, 3072), 0, { maxEdge: 64, grey: true });
-  t("R42 a JPEG header over PICTURE_FRAME_MAX: IMAGE_TOO_LARGE, stating the frame and the bound",
-    fields(big, "ok", "reason", "width", "height", "comps", "samples", "bound"), [false, "IMAGE_TOO_LARGE", 4097, 3072, 3, 4097 * 3072 * 3, PICTURE_FRAME_MAX]);
-  const at = await picture(jpegSized(4096, 3072), 0, { maxEdge: 64, grey: true });
-  t("R42 (control) a JPEG header exactly at the bound reaches the decoder", [at.ok, at.reason !== "IMAGE_TOO_LARGE"], [false, true]);
-  t("R42 (the bound admits the 12-megapixel cameras)", [4032 * 3024, 4000 * 3000, 4080 * 3072].every((n) => n * 3 <= PICTURE_FRAME_MAX), true);
+  /* T44: a JPEG is decoded while reduced, so its header's full frame is judged
+     against PICTURE_SOURCE_MAX and its reduced frame against PICTURE_FRAME_MAX. */
+  const [SW, SH] = [Math.floor(PICTURE_SOURCE_MAX / 3 / 8064), 8064];
+  t("R42 (the source bound admits the 48 MP phone frames, in colour, either way up, and the 200 MP ones)",
+    [[8000, 6000], [6000, 8000], [8064, 6048], [6048, 8064], [16320, 12240], [12240, 16320]].every(([w, h]) => w * h * 3 <= PICTURE_SOURCE_MAX), true);
+  const over = await picture(jpegSized(SW + 1, SH), 0, { maxEdge: 1568, grey: true });
+  t("R42 a JPEG header past PICTURE_SOURCE_MAX: IMAGE_TOO_LARGE before any decode, naming the bound",
+    fields(over, "ok", "reason", "width", "height", "comps", "samples", "bound", "bound_name"),
+    [false, "IMAGE_TOO_LARGE", SW + 1, SH, 3, (SW + 1) * SH * 3, PICTURE_SOURCE_MAX, "PICTURE_SOURCE_MAX"]);
+  t("R42 (that header is past the source bound and the next column under it is not)",
+    [(SW + 1) * SH * 3 > PICTURE_SOURCE_MAX, SW * SH * 3 <= PICTURE_SOURCE_MAX], [true, true]);
+  const under = await picture(jpegSized(SW, SH), 0, { maxEdge: 1568, grey: true });
+  t("R42 (control) a JPEG header one column under it reaches the decoder (its data is a small file's: the decoder's own refusal)",
+    [under.ok, under.reason], [false, "TRUNCATED_IMAGE_DATA"]);
+  const whole = await picture(jpegSized(8064, 6048), 0, { maxEdge: 8064, grey: true });
+  t("R42 a 48 MP JPEG kept whole (k = 1): its reduced frame past PICTURE_FRAME_MAX, IMAGE_TOO_LARGE before any decode",
+    fields(whole, "ok", "reason", "reduced_by", "samples", "bound", "bound_name"),
+    [false, "IMAGE_TOO_LARGE", 1, 8064 * 6048 * 3, PICTURE_FRAME_MAX, "PICTURE_FRAME_MAX"]);
+  const halved = await picture(jpegSized(8064, 6048), 0, { maxEdge: 4032, grey: true });
+  t("R42 (control) the same header halved (k = 2, 4032×3024×3 within PICTURE_FRAME_MAX) reaches the decoder",
+    [halved.ok, halved.reason, 4032 * 3024 * 3 <= PICTURE_FRAME_MAX], [false, "TRUNCATED_IMAGE_DATA", true]);
+  const eq = await picture(jpegSized(4097, 3072), 0, { maxEdge: 1568, grey: true });
+  t("R42 (control) a JPEG header the size of the PNG refused below (4097×3072 colour) is not refused for size: it reaches the decoder",
+    [eq.ok, eq.reason], [false, "TRUNCATED_IMAGE_DATA"]);
   const ihdr = (w, h, ct) => {
     const b = Buffer.alloc(33); Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(b);
     b.writeUInt32BE(13, 8); b.write("IHDR", 12, "latin1"); b.writeUInt32BE(w, 16); b.writeUInt32BE(h, 20); b[24] = 8; b[25] = ct;
@@ -563,7 +626,8 @@ console.log("\n--- R42, R43: a picture file, against Pillow 12.3.0 ---");
   };
   for (const [label, w, h, ct, n] of [["an RGB PNG", 4097, 3072, 2, 3], ["an RGBA PNG (four channels)", 3600, 3000, 6, 4]]) {
     const r = await picture(ihdr(w, h, ct), 0, { maxEdge: 64, grey: true });
-    t(`R42 ${label} header over the bound: IMAGE_TOO_LARGE before any decode`, fields(r, "ok", "reason", "samples"), [false, "IMAGE_TOO_LARGE", w * h * n]);
+    t(`R42 ${label} header over PICTURE_FRAME_MAX (a PNG is judged on its full frame): IMAGE_TOO_LARGE before any decode`,
+      fields(r, "ok", "reason", "samples", "bound", "bound_name"), [false, "IMAGE_TOO_LARGE", w * h * n, PICTURE_FRAME_MAX, "PICTURE_FRAME_MAX"]);
   }
   const atPng = await picture(ihdr(4096, 3072, 2), 0, { maxEdge: 64, grey: true });
   t("R42 (control) a PNG header at the bound reaches the decoder", [atPng.ok, atPng.reason !== "IMAGE_TOO_LARGE"], [false, true]);

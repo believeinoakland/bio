@@ -1,13 +1,14 @@
-/* affordances, T33 (T33-85): R39 (the new closed vocabularies with the members' words), R40 (every op T33's new modules
-   publish, and the ops T33 adds to earlier modules, graded by R7 and R27 with R12's totality holding over them) and R41
-   (a refusal explained from its translation and a dry run), each at the module's exports. Each reasoned op's backing
-   (R19) is driven at its owner's interface in t33-backing.test.mjs. */
+/* affordances, T33 (T33-85): R39 (the new closed vocabularies with the members' words), every op T33's new modules
+   publish and the ops T33 adds to earlier modules, held to their owners' op maps with R12's totality holding over them
+   (their grades are `op-grades`' R13, pinned in its tests), and R41 (a refusal explained from its translation and a dry
+   run), each at the module's exports. Each reasoned op's backing (R19) is driven at its owner's interface in
+   t33-backing.test.mjs. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import * as A from "../../../src/affordances.mjs";
 import * as G from "../../../src/op-grades/index.mjs";
 import { T33_RUNGS, T33_RUNG_ABSENT, T33_NON_ACTS } from "../../../src/op-grades/t33.mjs";
-import { T35_RUNGS, T35_RUNG_ABSENT, T35_NON_ACTS } from "../../../src/op-grades/t35.mjs";
+import { T35_NON_ACTS } from "../../../src/op-grades/t35.mjs";
 import { T36_NON_ACTS } from "../../../src/op-grades/t36.mjs";
 import { T41_NON_ACTS } from "../../../src/op-grades/t41.mjs";
 import { composedVocabularies, plainWord } from "../../../src/affordances/words.mjs";
@@ -37,12 +38,11 @@ import { aiRunsOps } from "../../../src/ai-runs/index.mjs";
 import { world as eventsWorld } from "../events/fixture.mjs";
 
 const { ACTS, CAPTURE_ACTS, PER_ITEM_ACTS } = A;
-const { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS, JUSTIFICATION_REFUSALS, RUNG_ABSENCE_GROUNDS } = G;
+const { RUNGS, RUNG_ABSENT, NON_ACTS, MACHINE_REFUSALS } = G;
 const url = new URL("http://x/");
 const keysOf = (f) => Object.keys(f({}, url, {}, {}));
-const gradeOf = (op) => Object.hasOwn(RUNGS, op) ? RUNGS[op] : Object.hasOwn(RUNG_ABSENT, op) ? RUNG_ABSENT[op].ground : null;
 
-/* ---- R40: each owner's T33 ops, writes with the grade R27's rule gives them, reads apart ------------------------------
+/* ---- op-grades R13: each owner's T33 ops, writes with the grade its R3's rule gives them, reads apart ------------------
    The whole op map of each new module; of an earlier module, the ops T33 adds to it (K1549, K1550, K1571, K1572, K1601,
    K1604, K1609, K1640, K1657, K1658). A grade is the rung, or the ground of a stated absence. */
 const T33 = {
@@ -72,8 +72,8 @@ const T33 = {
       "personstatements", "staffing", "memberties", "sourcepersonlinks", "interestchecks"] },
   explore: { map: exploreOps, writes: {}, reads: ["explore", "explorepreset", "exploreverify", "exploretimeline"] },
   hypotheses: { map: hypothesesOps, writes: { hypothesishold: "reversible", hypothesisrevise: "reasoned",
-      hypothesiswithdraw: "reasoned", /* R43 (T34-75) */ notewrite: "caller-owned", noteturn: "caller-owned" },
-    reads: ["hypotheses", "notes" /* R43 */] },
+      hypothesiswithdraw: "reasoned", /* op-grades R15 (T34-75) */ notewrite: "caller-owned", noteturn: "caller-owned" },
+    reads: ["hypotheses", "notes" /* op-grades R15 */] },
   calculations: { map: calculationsOps, writes: { tabledeclare: "undetermined", bindingadopt: "undetermined",
       moneyingest: "reasoned", calculationcreate: "undetermined", calculationaccept: "undetermined",
       calculationdraw: "undetermined", recordset: "observational", patterngate: "substrate", patternswitch: "reversible" },
@@ -119,25 +119,13 @@ const UNROUTED_READS = ["capturerequestplatformhosts", "assistantstate", "disclo
   "aiusage"];
 /* A write op-declarations gives no NEEDS row (UNATTENDED_BY_DECISION): ranked, never named in NON_ACTS (R12). */
 const UNGATED_WRITES = ["askusage"];
-/* R27's `reversible`: the published act of the owner that takes each result back. */
+/* op-grades R3's `reversible`: the published act of the owner that takes each result back. */
 const TAKEN_BACK_BY = {
   eventgovern: "eventgovern", eventrelate: "eventrelationwithdraw", linerecord: "linewithdraw", moneyrecord: "moneywithdraw",
   moneydetectorswitch: "moneydetectorswitch", dutyadopt: "dutywithdraw", dutydeclare: "dutywithdraw",
   personfact: "personfactwithdraw", interestcheckswitch: "interestcheckswitch", hypothesishold: "hypothesiswithdraw",
   patternswitch: "patternswitch", workbookbind: "workbookunbind", followbody: "unfollow", followregister: "unfollow",
   followpersonquery: "unfollow", followportal: "unfollow", unfollow: "followbody", permeetingbody: "permeetingbody",
-};
-/* R19: the code each reasoned op refuses with when the member's account is absent (driven in t33-backing.test.mjs). */
-const REASON_CODE = {
-  participantcorrect: "NO_REASON", eventmerge: "NO_REASON", eventsplit: "NO_REASON", eventrelationwithdraw: "NO_REASON",
-  linewithdraw: "NO_REASON", moneywithdraw: "NO_REASON", moneysetinclude: "NO_REASON", moneysetexclude: "NO_REASON",
-  dutyrevise: "DUTY_NO_REASON", dutywithdraw: "DUTY_NO_REASON", dutymatch: "DUTY_NO_REASON", dutytransition: "NO_CAUSE",
-  identityclaim: "NO_NOTE", identitywithdraw: "NO_REASON", personfactwithdraw: "NO_REASON", personexpunge: "NO_REASON",
-  membertie: "NO_NOTE", membertiewithdraw: "NO_REASON", sourcepersonlink: "NO_EVIDENCE", hypothesisrevise: "HYPOTHESIS_NO_REASON",
-  hypothesiswithdraw: "HYPOTHESIS_NO_REASON", moneyingest: "NO_REASON", workbookunbind: "NO_REASON", workbooklintexplain: "NO_NOTE",
-  workbookmethodnote: "NO_PURPOSE", lawrelate: "STANDARD_NO_REASON", lawwithdraw: "STANDARD_NO_REASON",
-  courtlink: "STANDARD_NO_REASON", courttreat: "STANDARD_NO_REASON", entityidentify: "NO_BASIS",
-  airunverify: "AI_RUN_VERIFICATION_UNFIT",
 };
 const ALL_WRITES = { ...Object.assign({}, ...Object.values(T33).map((m) => m.writes)), ...UNROUTED };
 const ALL_READS = [...Object.values(T33).flatMap((m) => m.reads), ...UNROUTED_READS];
@@ -149,15 +137,16 @@ const T35_ADDS = { events: ["discretionrecord", "assessmentrecord", "usewithdraw
   duties: ["poweruses", "uselink", "useunlink", "reviewpropose"], hypotheses: ["noterevise", "notedelete"],
   calculations: ["usesfreeze", "applicationrecipes"] };
 /* K2120, K2121 (T36): calculations' spot-check visit and its read (its R38, R39; K2092), graded by op-grades R23 in its
-   `t36.mjs`; pinned here so the map stays closed, each at its grade: the visit `reasoned`, the read none. */
+   `t36.mjs`; pinned here so the map stays closed (the grades, the visit `reasoned` and the read none, are op-grades' tests'). */
 const T36_ADDS = { calculations: { spotcheckvisit: "reasoned", spotcheck: null } };
 /* T41 (op-declarations R43, K2486; hypotheses R17–R20): the ops hypotheses adds, graded by op-grades R30 in its `t41.mjs`;
-   pinned here so the map stays closed, each at its grade (the read `shares` none). */
+   pinned here so the map stays closed (the grades are op-grades' tests'). */
 const T41_ADDS = { hypotheses: { hypothesistakeup: "reversible", hypothesissetaside: "reasoned", noteshare: "reversible",
   noteunshare: "reversible", shares: null } };
 
-test("R40 R12: each new module's op map holds exactly the ops graded for it — T33's, and the ops T35 adds (K2049), each "
-   + "named in op-grades' T35 table — and each earlier module's map holds the ops T33 adds to it", () => {
+test("R12: each new module's op map holds exactly the ops graded for it — T33's, and the ops T35, T36 and T41 add, each "
+   + "named in op-grades' table for its tranche — each earlier module's map holds the ops T33 adds to it, and no owner "
+   + "serves a retired op", () => {
   for (const [name, m] of Object.entries(T33)) {
     const keys = keysOf(m.map);
     const mine = [...Object.keys(m.writes), ...m.reads, ...(T35_ADDS[name] ?? []), ...Object.keys(T36_ADDS[name] ?? {}),
@@ -168,82 +157,52 @@ test("R40 R12: each new module's op map holds exactly the ops graded for it — 
   for (const op of Object.values(T35_ADDS).flat()) {
     assert.ok(Object.hasOwn(T35_NON_ACTS, op), op);
     assert.equal(NON_ACTS[op], T35_NON_ACTS[op], op);
-    /* a write carries a T35 rung or absence, a read (`read:`) neither */
-    const write = !T35_NON_ACTS[op].startsWith("read:");
-    assert.equal(Object.hasOwn(T35_RUNGS, op) || Object.hasOwn(T35_RUNG_ABSENT, op), write, op);
   }
-  for (const [op, rung] of Object.values(T36_ADDS).flatMap((ops) => Object.entries(ops))) {
+  for (const op of Object.values(T36_ADDS).flatMap((ops) => Object.keys(ops))) {
     assert.ok(Object.hasOwn(T36_NON_ACTS, op), op);
     assert.equal(NON_ACTS[op], T36_NON_ACTS[op], op);
-    assert.equal(RUNGS[op], rung ?? undefined, op);
-    assert.ok(!Object.hasOwn(RUNG_ABSENT, op), op);
-    assert.equal(NON_ACTS[op].startsWith("read: "), rung === null, op);
   }
-  for (const [op, rung] of Object.values(T41_ADDS).flatMap((ops) => Object.entries(ops))) {
+  for (const op of Object.values(T41_ADDS).flatMap((ops) => Object.keys(ops))) {
     assert.ok(Object.hasOwn(T41_NON_ACTS, op), op);
     assert.equal(NON_ACTS[op], T41_NON_ACTS[op], op);
-    assert.equal(RUNGS[op], rung ?? undefined, op);
-    assert.equal(NON_ACTS[op].startsWith("read: "), rung === null, op);
   }
-  /* retired: graded and named nowhere, and served by no owner's map */
-  for (const op of RETIRED) assert.equal(gradeOf(op) === null && !Object.hasOwn(NON_ACTS, op), true, op);
+  /* retired: served by no owner's map (op-grades' tests hold them graded and named nowhere) */
   for (const op of RETIRED) assert.ok(!keysOf(credentialsOps).includes(op) && !keysOf(aiRunsOps).includes(op), op);
 });
 
-test("R40 R3 R27: every write T33 adds carries the grade R27's rule gives it — a rung or one ground, never both — and "
-   + "the three tables of t33.mjs are the catalogue's, op for op; a misgraded op is seen", () => {
-  const got = Object.fromEntries(Object.keys(ALL_WRITES).map((op) => [op, gradeOf(op)]));
-  assert.deepEqual(got, ALL_WRITES);
-  for (const op of Object.keys(ALL_WRITES)) {
-    assert.ok(Object.hasOwn(RUNGS, op) !== Object.hasOwn(RUNG_ABSENT, op), op);
-    if (Object.hasOwn(RUNG_ABSENT, op)) {
-      assert.ok(Object.hasOwn(RUNG_ABSENCE_GROUNDS, RUNG_ABSENT[op].ground), op);
-      assert.ok(typeof RUNG_ABSENT[op].is === "string" && RUNG_ABSENT[op].is.length > 40, op);
-    }
-  }
+/* op-grades' content its own tests do not yet pin (N877; reported to BOB): op-grades' merged tables, which this module
+   reads for R12's totality and R11's decoration, carry each of T33's entries op for op — the very entry objects — and
+   each stated absence carries its sentence. T33's grades themselves are pinned in op-grades' tests. */
+test("R12: the registries this module reads (RUNGS, RUNG_ABSENT, NON_ACTS) carry each entry of op-grades' T33 tables, op "
+   + "for op and the very entry object", () => {
   for (const [op, r] of Object.entries(T33_RUNGS)) assert.equal(RUNGS[op], r, op);
-  for (const [op, e] of Object.entries(T33_RUNG_ABSENT)) assert.equal(RUNG_ABSENT[op], e, op);
+  for (const [op, e] of Object.entries(T33_RUNG_ABSENT)) {
+    assert.equal(RUNG_ABSENT[op], e, op);
+    assert.ok(typeof e.is === "string" && e.is.length > 40, op);
+  }
   for (const [op, why] of Object.entries(T33_NON_ACTS)) assert.equal(NON_ACTS[op], why, op);
-  assert.deepEqual([...Object.keys(T33_RUNGS), ...Object.keys(T33_RUNG_ABSENT)].sort(), Object.keys(ALL_WRITES).sort());
-  assert.deepEqual(Object.keys(T33_NON_ACTS).sort(),
-    [...Object.keys(ALL_WRITES).filter((op) => !UNGATED_WRITES.includes(op)), ...ALL_READS].sort());
-  /* negative control */
-  assert.notDeepEqual({ ...got, linewithdraw: "reversible" }, ALL_WRITES);
 });
 
-test("R40 R27 R19: a `reversible` op names the published act of its owner that takes it back, and a `reasoned` op the "
-   + "justification code its owner refuses the absent account with", () => {
+test("R19: each `reversible` T33 op is taken back by a published act of its own owner — an op its owner's map serves", () => {
   const ownerOf = (op) => Object.values(T33).find((m) => Object.hasOwn(m.writes, op));
-  const reversible = Object.keys(ALL_WRITES).filter((op) => ALL_WRITES[op] === "reversible" && !Object.hasOwn(UNROUTED, op));
-  assert.deepEqual(reversible.sort(), Object.keys(TAKEN_BACK_BY).sort());
-  for (const [op, by] of Object.entries(TAKEN_BACK_BY)) {
+  for (const [op, by] of Object.entries(TAKEN_BACK_BY))
     assert.ok(keysOf(ownerOf(op).map).includes(by), `${op}: ${by} is its owner's op`);
-    assert.ok(gradeOf(by) !== null, `${by} is graded`);
-  }
-  const reasoned = Object.keys(ALL_WRITES).filter((op) => ALL_WRITES[op] === "reasoned");
-  assert.deepEqual(reasoned.sort(), Object.keys(REASON_CODE).sort());
-  for (const [op, c] of Object.entries(REASON_CODE)) assert.ok(JUSTIFICATION_REFUSALS.includes(c), `${op}: ${c}`);
-  for (const c of ["NO_CAUSE", "NO_PURPOSE", "AI_RUN_VERIFICATION_UNFIT"]) assert.ok(JUSTIFICATION_REFUSALS.includes(c), c);
 });
 
-test("R40 R7: every T33 op carries its NON_ACTS reason — each read `read: …; writes nothing`, each write a reason that is "
-   + "no read and no capture act — none is an act, and MACHINE_REFUSALS gains none (it holds only ACTS)", () => {
-  for (const op of ALL_READS) {
-    assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWith("read: ") && /writes nothing$/.test(NON_ACTS[op]), op);
-    assert.equal(gradeOf(op), null, op);
-  }
-  for (const op of UNGATED_WRITES) assert.ok(!Object.hasOwn(NON_ACTS, op), op);
+test("R1 R20: no T33 op is an act, and MACHINE_REFUSALS holds only ACTS; each read's reason says it writes nothing and "
+   + "each write's is no read and no capture act", () => {
+  /* op-grades' content its own tests do not yet pin (N877; reported to BOB) */
+  for (const op of ALL_READS) assert.match(NON_ACTS[op], /writes nothing$/, op);
   for (const op of Object.keys(ALL_WRITES).filter((op) => !UNGATED_WRITES.includes(op))) {
     assert.ok(typeof NON_ACTS[op] === "string" && NON_ACTS[op].length > 30, op);
     assert.ok(!NON_ACTS[op].startsWith("read: ") && !NON_ACTS[op].startsWith("capture-directed:"), op);
   }
   const t33 = [...Object.keys(ALL_WRITES), ...ALL_READS];
   assert.deepEqual(t33.filter((op) => published().has(op)), []);
-  assert.deepEqual(t33.filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), []);
   assert.deepEqual(Object.keys(MACHINE_REFUSALS).filter((op) => !ACTS.some((a) => a.id === op)), []);
 });
 
-test("R40 R12 R24: with the control plane's rows for them (op-declarations R17–R20: every write mutating with a NEEDS "
+test("R12 R24: with the control plane's rows for them (op-declarations R17–R20: every write mutating with a NEEDS "
    + "row, every read a NEEDS row of null) nothing is unaccounted; carried by no row each reads stale; one left out is seen", () => {
   const table = [...Object.keys(ALL_WRITES).map((op) => ({ op, mutating: true, gated: !UNGATED_WRITES.includes(op) })),
     ...ALL_READS.map((op) => ({ op, mutating: false, gated: true }))];
@@ -261,12 +220,11 @@ test("R40 R12 R24: with the control plane's rows for them (op-declarations R17�
   }
 });
 
-test("R40 R3 R12: the whole catalogue stays consistent with T33's ops in it", () => {
+test("R12: the whole catalogue stays consistent with T33's ops in it", () => {
   const ops = new Set([...Object.keys(NON_ACTS), ...ACTS.map((a) => a.id), ...Object.keys(RUNGS), ...Object.keys(RUNG_ABSENT)]);
   const table = [...ops].map((op) => ({ op, mutating: Object.hasOwn(RUNGS, op) || Object.hasOwn(RUNG_ABSENT, op),
     gated: Object.hasOwn(NON_ACTS, op) || ACTS.some((a) => a.id === op) }));
   assert.deepEqual(A.unaccounted(table), { unpublished: [], unranked: [], stale: [] });
-  assert.deepEqual(Object.keys(RUNGS).filter((op) => Object.hasOwn(RUNG_ABSENT, op)), []);
 });
 
 /* ---- R39 ---------------------------------------------------------------------------------------------------------- */
@@ -382,7 +340,7 @@ test("R41: a refusal is explained from its catalogue row as its owner holds it, 
   assert.deepEqual([e.rung, e.rung_absence, e.prompt, e.weight], [d.rung, d.rung_absence, d.prompt, d.weight]);
   assert.deepEqual(e.acts, A.deriveActs(inquiryFacts).map((a) => A.decorate(a, GATE)));
   assert.ok(e.acts.some((a) => a.id === "conclude") && e.acts.every((a) => typeof a.rung === "string" || a.rung_absence));
-  /* a write that is no act still answers its grade (R40's) */
+  /* a write that is no act still answers its grade (op-grades R13's) */
   const w = A.explainRefusal({ op: "linewithdraw", code: "NO_REASON", gate: GATE, rowOf });
   assert.deepEqual([w.rung, w.weight, w.acts], ["reasoned", null, null]);
 });

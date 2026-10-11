@@ -1382,8 +1382,9 @@ export const ACTS = [
      record permits the move, not that this caller's parameters will pass.
      `=== true` EVERYWHERE, and it is the shape an ADDITION takes: `f.roster` is null when no
      position could be asked (a DO-internal call, a non-project target), and an undetermined
-     position must not publish an act. A bearer's `by` is `class:<cls>`, which holds no row, so a
-     machine credential is offered none of the seven — each of which its class is refused.
+     position must not publish an act. A credential's `by` is a minted stamp (`class:<cls>`; an assistant's
+     `class:ai/<tokenId>`, N874), which holds no position, so its `f.roster` is null (R15) and a machine credential is
+     offered none of the seven — each of which its class is refused.
      Weight `single`, conclude's precedent: one project's roster at a time, no set to apply. */
   { id: "projectinvite", label: "Invite a member to this project", weight: "single", types: ["project"],
     applies: (f, ty) => ty === "project" && f.roster?.owner === true },

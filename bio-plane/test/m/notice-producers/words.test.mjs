@@ -1,21 +1,22 @@
-/* R16, R17 (DEC-188 (6), (7); DEC-189 (2), (5)–(7); N856; K2704): every sentence and fill this module says is read by key
+/* R16, R17 (DEC-188 (6), (7); DEC-189 (2), (5)–(7); N856; K2704; T44: DEC-191 (2), (3), DEC-192 (3), (5); N869, N876): every sentence and fill this module says is read by key
    from the design stream's `words.json`, its `en` verbatim; a key the file lacks fails, never a fallback sentence. The
    keys DEC-189's owed line names for this module are each held, and the retired `act.owed_exploreapprove.label.queue`
    is not. Each with its negative control (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { WORDS } from "../ai-use/fixture.mjs";
-import { NOTICE_WORDS, wordsOf, hasWords, monthName, dayMonth } from "../../../src/notice-producers/words.mjs";
+import { NOTICE_WORDS, wordsOf, hasWords, monthName, dayInSentence, untilWords } from "../../../src/notice-producers/words.mjs";
 import { EXPLORE_APPROVE } from "../../../src/notice-producers/index.mjs";
 
 const KINDS = ["question-find", "step-later-found", "step-date-due", "step-reminder", "step-cost-shared", "step-cost-message",
   "milestone-overdue", "milestone-reminder", "project-quiet", "review-comment-left-out"];
 const MONTHS = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
-/* DEC-189's owed line, (5)–(7), for notice-producers (draft-T43-words §N856 (c)); the uses `words.json` names on main */
+/* DEC-189's owed line, (5)–(7), for notice-producers (draft-T43-words §N856 (c)); the nine uses and `ai.use.suggestions` (DEC-191
+   (2)); DEC-191 (3)'s and DEC-192 (3), (5)'s keys (T44): the date formats and `{when}` after "until" */
 const OWED = ["ai.queue.limitreached", "ai.queue.limitreached.overall", "ai.queue.limitreached.member", "ai.queue.exploreask",
   "ai.queue.suspended", ...["group", "project", "own"].flatMap((k) => [`ai.account.${k}`, `ai.account.${k}.inline`]),
-  ...["ask", "draft", "run", "standing", "transcribe", "explore", "suggestions"].map((u) => `ai.use.${u}.inline`),
-  "ai.scope.group", "ai.scope.own", "ai.period.day", "ai.period.month", "ai.when.day", "ai.when.month",
+  ...["ask", "draft", "run", "standing", "transcribe", "explore", "enquire", "read", "account", "suggestions"].map((u) => `ai.use.${u}.inline`),
+  "ai.scope.group", "ai.scope.own", "ai.period.day", "ai.period.month", "ai.until.day", "ai.until.month", "date.daymonth", "date.daymonthyear",
   ...MONTHS.map((m) => `date.month.${m}`), "ai.label.explored", "ai.label.explored.member",
   ...KINDS.flatMap((k) => [`queue.${k}.summary`, `queue.${k}.detail`])];
 
@@ -40,10 +41,25 @@ test("R16 the Ask's act reads act.exploreapprove.label.queue; the retired act.ow
   for (const en of Object.values(NOTICE_WORDS)) assert.doesNotMatch(en, /\{(for_use|Uses)\}/, en);
 });
 
-test("R16 {date}: the local day as day then month, the month named from date.month.*; R16 {when}'s month by date.month.*; nothing for no day", () => {
-  assert.equal(dayMonth("2026-10-09"), `9 ${WORDS["date.month.october"]}`);
-  assert.equal(dayMonth("2026-01-31"), `31 ${WORDS["date.month.january"]}`);
+test("R16 R17 (T44) {date}: date.daymonth in the current year, date.daymonthyear in any other, the day with no leading zero and the month from date.month.*; {when} after \"until\" from ai.until.*, never the refusals' ai.when.*; nothing for no day", () => {
+  const fill = (key, f) => WORDS[key].replace(/\{(\w+)\}/g, (m, k) => f[k] ?? m);
+  assert.equal(dayInSentence("2026-10-09", "2026-10-11"), fill("date.daymonth", { day: "9", month: WORDS["date.month.october"] }));
+  assert.equal(dayInSentence("2026-10-09", "2026-10-11"), "9 October");
+  assert.equal(dayInSentence("2026-01-31", "2026-12-31"), `31 ${WORDS["date.month.january"]}`, "the same year, however far");
+  assert.equal(dayInSentence("2025-12-31", "2026-01-01"), fill("date.daymonthyear", { day: "31", month: WORDS["date.month.december"], year: "2025" }));
+  assert.equal(dayInSentence("2027-03-03", "2026-10-11"), "3 March 2027", "a day in a later year names it too");
+  assert.equal(dayInSentence("2026-03-03", null), "3 March 2026", "with no current day read, the year is named");
   for (let m = 1; m <= 12; m++) assert.equal(monthName(m), WORDS[`date.month.${MONTHS[m - 1]}`]);
-  for (const bad of [null, "", "2026-13-01", "9 October", "2026-10-09T12:00:00Z"]) assert.equal(dayMonth(bad), null, String(bad));
+  for (const bad of [null, "", "2026-13-01", "9 October", "2026-10-09T12:00:00Z"]) assert.equal(dayInSentence(bad, "2026-10-11"), null, String(bad));
   assert.equal(monthName(0), null);
+  assert.equal(untilWords("day"), WORDS["ai.until.day"]);
+  assert.equal(untilWords("month", 11), fill("ai.until.month", { month: WORDS["date.month.november"] }));
+  assert.equal(untilWords("month", 11), "1 November");
+  for (const [p, m] of [["week", 11], ["month", 0], ["month", 13], [null, 1]]) assert.equal(untilWords(p, m), null, `${p} ${m}`);
+  /* negative control: the refusals' words are ai-use's; this module holds neither, so no sentence here can say them */
+  for (const k of ["ai.when.day", "ai.when.month"]) {
+    assert.equal(typeof WORDS[k], "string", `${k} is in words.json`);
+    assert.equal(hasWords(k), false, `${k} is not held here`);
+  }
+  assert.notEqual(untilWords("month", 11), WORDS["ai.when.month"].replace("{month}", "November"));
 });

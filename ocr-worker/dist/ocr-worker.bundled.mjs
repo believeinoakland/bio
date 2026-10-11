@@ -1471,6 +1471,48 @@ function colourTransformOf(h) {
   return { ycc: true, why: "libjpeg's default for three components" };
 }
 function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform = null } = {}) {
+  const deg = ((rotate | 0) % 360 + 360) % 360;
+  if (deg % 90) {
+    decodeStrips(d, expectComps, colorTransform, () => {
+    });
+    throw new DctRefusal("UNSUPPORTED_ROTATION", { rotate });
+  }
+  let out = null, W2 = 0, H2 = 0;
+  const info = decodeStrips(d, expectComps, colorTransform, (rows, y0, count, { W: W3, H, nc }) => {
+    if (!out) {
+      [W2, H2] = deg === 90 || deg === 270 ? [H, W3] : [W3, H];
+      out = new Uint8Array(W2 * H2 * nc);
+    }
+    if (deg === 0) {
+      out.set(rows, y0 * W3 * nc);
+      return;
+    }
+    for (let j = 0; j < count; j++) {
+      const y = y0 + j;
+      for (let x = 0; x < W3; x++) {
+        let X, Y;
+        if (deg === 90) {
+          X = H - 1 - y;
+          Y = x;
+        } else if (deg === 180) {
+          X = W3 - 1 - x;
+          Y = H - 1 - y;
+        } else {
+          X = y;
+          Y = W3 - 1 - x;
+        }
+        const o = (Y * W2 + X) * nc, s = (j * W3 + x) * nc;
+        out[o] = rows[s];
+        if (nc === 3) {
+          out[o + 1] = rows[s + 1];
+          out[o + 2] = rows[s + 2];
+        }
+      }
+    }
+  });
+  return { width: W2, height: H2, comps: info.comps, samples: out, source: info.source };
+}
+function decodeStrips(d, expectComps, colorTransform, emit) {
   const h = readJpegHeader(d);
   const { frame, qt, hts, scan } = h;
   const nc = frame.comps.length;
@@ -1494,27 +1536,41 @@ function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform 
     if (!ok || c.h < 1 || c.v < 1) throw new DctRefusal("UNSUPPORTED_SAMPLING", { sampling });
     if (!qt[c.tq]) throw new DctRefusal("CORRUPT_DATA", { note: `quantisation table ${c.tq} missing` });
   }
-  const mcux = Math.ceil(frame.width / (8 * hmax)), mcuy = Math.ceil(frame.height / (8 * vmax));
-  const planes = frame.comps.map((c, i) => {
+  const W2 = frame.width, H = frame.height;
+  const single = nc === 1;
+  const mcux = Math.ceil(W2 / (8 * hmax)), mcuy = Math.ceil(H / (8 * vmax));
+  const unitsPerRow = single ? Math.ceil(W2 / 8) : mcux;
+  const strips = single ? Math.ceil(H / 8) : mcuy;
+  const outPerStrip = single ? 8 : 8 * vmax;
+  const planes = frame.comps.map((c) => {
     const sc = scan.comps.find((s) => s.id === c.id);
     if (!sc || !hts.dc[sc.td] || !hts.ac[sc.ta]) throw new DctRefusal("CORRUPT_DATA", { note: `Huffman table missing for component ${c.id}` });
-    const bw = mcux * c.h, bh = mcuy * c.v;
+    const hx = single ? 1 : hmax / c.h, vx = single ? 1 : vmax / c.v;
+    const stride = mcux * c.h * 8, rowsPer = single ? 8 : 8 * c.v;
+    const dw = Math.ceil(W2 * c.h / hmax);
     return {
       c,
-      i,
       dc: hts.dc[sc.td],
       ac: hts.ac[sc.ta],
       q: qt[c.tq],
       pred: 0,
-      stride: bw * 8,
-      rows: bh * 8,
-      data: new Uint8Array(bw * 8 * bh * 8),
-      dw: Math.ceil(frame.width * c.h / hmax),
-      dh: Math.ceil(frame.height * c.v / vmax)
+      hx,
+      vx,
+      stride,
+      rowsPer,
+      dw,
+      dh: Math.ceil(H * c.v / vmax),
+      base: 0,
+      /* slot 0 the row above this MCU row, slots 1..rowsPer the MCU row's own */
+      data: new Uint8Array((rowsPer + 1) * stride),
+      /* one upsampled row, for a component that is upsampled */
+      tmp: hx === 1 && vx === 1 ? null : new Uint8Array(dw * hx)
     };
   });
+  const waits = planes.some((pl) => pl.vx === 2);
   const br = new Bits(d, scan.dataAt);
   const coef = new Int32Array(64);
+  let fabricated = false;
   const decodeBlock = (pl, bx, by) => {
     coef.fill(0);
     const t = br.decode(pl.dc);
@@ -1536,11 +1592,79 @@ function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform 
       coef[ZIGZAG[k]] = br.receiveExtend(s) << 16 >> 16;
       k++;
     }
-    idctIslow(coef, pl.q, pl.data, by * 8 * pl.stride + bx * 8, pl.stride);
+    if (!fabricated) idctIslow(coef, pl.q, pl.data, (1 + by * 8) * pl.stride + bx * 8, pl.stride);
   };
-  const single = nc === 1;
-  const totalUnits = single ? Math.ceil(frame.width / 8) * Math.ceil(frame.height / 8) : mcux * mcuy;
-  const unitsPerRow = single ? Math.ceil(frame.width / 8) : mcux;
+  const rowAt = (pl, y) => ((y < 0 ? 0 : y >= pl.dh ? pl.dh - 1 : y) - pl.base + 1) * pl.stride;
+  const fullRow = (pl, oy) => {
+    const { hx, vx, data: src, dw, tmp } = pl;
+    if (vx === 1) {
+      if (hx === 1) return [src, rowAt(pl, oy)];
+      h2v1Row(src, rowAt(pl, oy), dw, tmp, 0);
+      return [tmp, 0];
+    }
+    const cy = oy >> 1, below = oy & 1;
+    const r0 = rowAt(pl, cy);
+    if (hx === 1) {
+      const r1 = rowAt(pl, below ? cy + 1 : cy - 1), bias = below ? 2 : 1;
+      for (let x = 0; x < dw; x++) tmp[x] = src[r0 + x] * 3 + src[r1 + x] + bias >> 2;
+    } else if (dw <= 2) {
+      for (let x = 0; x < dw; x++) tmp[2 * x] = tmp[2 * x + 1] = src[r0 + x];
+    } else {
+      const r1 = rowAt(pl, below ? cy + 1 : cy - 1);
+      let thiscol = src[r0] * 3 + src[r1], nextcol = src[r0 + 1] * 3 + src[r1 + 1], lastcol;
+      tmp[0] = thiscol * 4 + 8 >> 4;
+      tmp[1] = thiscol * 3 + nextcol + 7 >> 4;
+      let q = 2;
+      for (let x = 2; x < dw; x++) {
+        lastcol = thiscol;
+        thiscol = nextcol;
+        nextcol = src[r0 + x] * 3 + src[r1 + x];
+        tmp[q++] = thiscol * 3 + lastcol + 8 >> 4;
+        tmp[q++] = thiscol * 3 + nextcol + 7 >> 4;
+      }
+      lastcol = thiscol;
+      thiscol = nextcol;
+      tmp[q++] = thiscol * 3 + lastcol + 8 >> 4;
+      tmp[q] = thiscol * 4 + 7 >> 4;
+    }
+    return [tmp, 0];
+  };
+  const shape = { W: W2, H, nc };
+  const strip = new Uint8Array(outPerStrip * W2 * nc);
+  let emitted = 0;
+  const emitTo = (limit) => {
+    while (limit - emitted > outPerStrip) emitTo(emitted + outPerStrip);
+    if (limit <= emitted) return;
+    const count = limit - emitted, rows = strip.subarray(0, count * W2 * nc);
+    for (let j = 0; j < count; j++) {
+      const oy = emitted + j;
+      let o = j * W2 * nc;
+      if (nc === 1) {
+        const [a2, ao2] = fullRow(planes[0], oy);
+        rows.set(a2.subarray(ao2, ao2 + W2), o);
+        continue;
+      }
+      const [a, ao] = fullRow(planes[0], oy), [b, bo] = fullRow(planes[1], oy), [c, co] = fullRow(planes[2], oy);
+      if (colour.ycc) {
+        for (let x = 0; x < W2; x++, o += 3) {
+          const Y = a[ao + x], cb = b[bo + x], cr = c[co + x];
+          rows[o] = clamp8(Y + CR_R[cr]);
+          rows[o + 1] = clamp8(Y + Math.floor((CB_G[cb] + CR_G[cr]) / 65536));
+          rows[o + 2] = clamp8(Y + CB_B[cb]);
+        }
+      } else {
+        for (let x = 0; x < W2; x++, o += 3) {
+          rows[o] = a[ao + x];
+          rows[o + 1] = b[bo + x];
+          rows[o + 2] = c[co + x];
+        }
+      }
+    }
+    const y0 = emitted;
+    emitted = limit;
+    emit(rows, y0, count, shape);
+  };
+  const totalUnits = unitsPerRow * strips;
   let restartsLeft = h.restart, rstExpect = 0;
   for (let u = 0; u < totalUnits; u++) {
     if (h.restart) {
@@ -1556,58 +1680,27 @@ function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform 
       }
       restartsLeft--;
     }
-    const ux = u % unitsPerRow, uy = (u - ux) / unitsPerRow;
-    if (single) decodeBlock(planes[0], ux, uy);
+    const ux = u % unitsPerRow;
+    if (single) decodeBlock(planes[0], ux, 0);
     else for (const pl of planes)
       for (let v = 0; v < pl.c.v; v++) for (let hh = 0; hh < pl.c.h; hh++)
-        decodeBlock(pl, ux * pl.c.h + hh, uy * pl.c.v + v);
+        decodeBlock(pl, ux * pl.c.h + hh, v);
+    if (ux !== unitsPerRow - 1) continue;
+    if (!fabricated && br.fabricated()) fabricated = true;
+    if (fabricated) continue;
+    const k = (u + 1) / unitsPerRow - 1;
+    emitTo(k === strips - 1 ? H : Math.min(H, (k + 1) * outPerStrip - (waits ? 1 : 0)));
+    for (const pl of planes) {
+      pl.data.copyWithin(0, pl.rowsPer * pl.stride, (pl.rowsPer + 1) * pl.stride);
+      pl.base += pl.rowsPer;
+    }
   }
   if (br.fabricated())
     throw new DctRefusal("TRUNCATED", { note: `entropy-coded data ended before the last MCU (${br.fabricated()} bits zero-filled)` });
-  const W2 = frame.width, H = frame.height;
-  const full = planes.map((pl) => upsample(pl, W2, H, hmax, vmax));
-  const deg = ((rotate | 0) % 360 + 360) % 360;
-  if (deg % 90) throw new DctRefusal("UNSUPPORTED_ROTATION", { rotate });
-  const [W22, H2] = deg === 90 || deg === 270 ? [H, W2] : [W2, H];
-  const out = new Uint8Array(W22 * H2 * nc);
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W2; x++) {
-      let X, Y;
-      if (deg === 0) {
-        X = x;
-        Y = y;
-      } else if (deg === 90) {
-        X = H - 1 - y;
-        Y = x;
-      } else if (deg === 180) {
-        X = W2 - 1 - x;
-        Y = H - 1 - y;
-      } else {
-        X = y;
-        Y = W2 - 1 - x;
-      }
-      const o = (Y * W22 + X) * nc;
-      if (nc === 1) {
-        out[o] = full[0].data[y * full[0].stride + x];
-        continue;
-      }
-      const a = full[0].data[y * full[0].stride + x], b = full[1].data[y * full[1].stride + x], c = full[2].data[y * full[2].stride + x];
-      if (colour.ycc) {
-        out[o] = clamp8(a + CR_R[c]);
-        out[o + 1] = clamp8(a + Math.floor((CB_G[b] + CR_G[c]) / 65536));
-        out[o + 2] = clamp8(a + CB_B[b]);
-      } else {
-        out[o] = a;
-        out[o + 1] = b;
-        out[o + 2] = c;
-      }
-    }
-  }
   return {
-    width: W22,
-    height: H2,
+    width: W2,
+    height: H,
     comps: nc,
-    samples: out,
     source: {
       width: W2,
       height: H,
@@ -1617,56 +1710,6 @@ function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform 
       colour: colour ? colour.why + (colour.ycc ? " -> YCbCr" : " -> no transform") : "grey"
     }
   };
-}
-function upsample(pl, W2, H, hmax, vmax) {
-  const hx = hmax / pl.c.h, vx = vmax / pl.c.v;
-  if (hx === 1 && vx === 1) return { data: pl.data, stride: pl.stride };
-  const { data: src, stride: ss, dw, dh } = pl;
-  const row = (y) => (y < 0 ? 0 : y >= dh ? dh - 1 : y) * ss;
-  const outW = dw * hx;
-  const dst = new Uint8Array(outW * dh * vx);
-  if (vx === 1) {
-    for (let y = 0; y < dh; y++) {
-      const r = row(y), o = y * outW;
-      h2v1Row(src, r, dw, dst, o);
-    }
-  } else if (hx === 1) {
-    for (let y = 0; y < dh; y++) {
-      const r0 = row(y);
-      for (let v = 0; v < 2; v++) {
-        const r1 = row(v === 0 ? y - 1 : y + 1), bias = v === 0 ? 1 : 2, o = (2 * y + v) * outW;
-        for (let x = 0; x < dw; x++) dst[o + x] = src[r0 + x] * 3 + src[r1 + x] + bias >> 2;
-      }
-    }
-  } else if (dw <= 2) {
-    for (let y = 0; y < dh * 2; y++) {
-      const r = row(y >> 1), o = y * outW;
-      for (let x = 0; x < dw; x++) dst[o + 2 * x] = dst[o + 2 * x + 1] = src[r + x];
-    }
-  } else {
-    for (let y = 0; y < dh; y++) {
-      const r0 = row(y);
-      for (let v = 0; v < 2; v++) {
-        const r1 = row(v === 0 ? y - 1 : y + 1), o = (2 * y + v) * outW;
-        let thiscol = src[r0] * 3 + src[r1], nextcol = src[r0 + 1] * 3 + src[r1 + 1], lastcol;
-        dst[o] = thiscol * 4 + 8 >> 4;
-        dst[o + 1] = thiscol * 3 + nextcol + 7 >> 4;
-        let q = o + 2;
-        for (let x = 2; x < dw; x++) {
-          lastcol = thiscol;
-          thiscol = nextcol;
-          nextcol = src[r0 + x] * 3 + src[r1 + x];
-          dst[q++] = thiscol * 3 + lastcol + 8 >> 4;
-          dst[q++] = thiscol * 3 + nextcol + 7 >> 4;
-        }
-        lastcol = thiscol;
-        thiscol = nextcol;
-        dst[q++] = thiscol * 3 + lastcol + 8 >> 4;
-        dst[q] = thiscol * 4 + 7 >> 4;
-      }
-    }
-  }
-  return { data: dst, stride: outW };
 }
 function h2v1Row(src, r, dw, dst, o) {
   if (dw <= 2) {
@@ -4651,7 +4694,7 @@ var REFUSALS = {
   PAGE_UNREADABLE: "the page object could not be read",
   PAGE_HAS_TEXT_LAYER: "the page carries a text layer; it does not need pixels",
   NOT_IMAGE_ONLY: "the page carries marks that are not an embedded image",
-  NO_IMAGE_ON_PAGE: "the page references no image XObject",
+  NO_IMAGE_ON_PAGE: "the page paints no image",
   MULTIPLE_IMAGES_ON_PAGE: "the page composes several images; compositing is not built",
   IMAGE_UNREADABLE: "the image XObject's stream could not be read",
   UNSUPPORTED_FILTER: "the image's filter chain has no decoder here",

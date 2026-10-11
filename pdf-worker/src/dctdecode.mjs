@@ -393,10 +393,81 @@ export function colourTransformOf(h) {
  * `rotate` degrees (a PDF page's /Rotate) as the samples are written, so no
  * second full-size buffer is ever made.
  *
- * Returns `{ width, height, comps, samples, colour, sampling, restart }` where
- * width/height are the ROTATED dimensions. Throws `DctRefusal`.
+ * Returns `{ width, height, comps, samples, source }` where width/height are the
+ * ROTATED dimensions and `source` names the frame as stored. Throws `DctRefusal`.
+ *
+ * Its live set (T44, N868): the input, the output, and the strip-wise decode's
+ * own buffers (`decodeStrips`, below), which hold one MCU row and never a
+ * full-size plane. At 4:2:0 that is about 3 bytes a pixel, where the decode
+ * that upsampled whole chroma planes held about 6.5.
  */
 export function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTransform = null } = {}) {
+  const deg = (((rotate | 0) % 360) + 360) % 360;
+  /* A rotation that is not a quarter turn is refused only once the data has been
+   * read, as it always was, so a stream that is also damaged answers as damaged. */
+  if (deg % 90) {
+    decodeStrips(d, expectComps, colorTransform, () => {});
+    throw new DctRefusal("UNSUPPORTED_ROTATION", { rotate });
+  }
+  let out = null, W2 = 0, H2 = 0;
+  const info = decodeStrips(d, expectComps, colorTransform, (rows, y0, count, { W, H, nc }) => {
+    if (!out) {
+      [W2, H2] = deg === 90 || deg === 270 ? [H, W] : [W, H];
+      out = new Uint8Array(W2 * H2 * nc);
+    }
+    if (deg === 0) { out.set(rows, y0 * W * nc); return; }
+    for (let j = 0; j < count; j++) {
+      const y = y0 + j;
+      for (let x = 0; x < W; x++) {
+        let X, Y;
+        if (deg === 90) { X = H - 1 - y; Y = x; }
+        else if (deg === 180) { X = W - 1 - x; Y = H - 1 - y; }
+        else { X = y; Y = W - 1 - x; }
+        const o = (Y * W2 + X) * nc, s = (j * W + x) * nc;
+        out[o] = rows[s];
+        if (nc === 3) { out[o + 1] = rows[s + 1]; out[o + 2] = rows[s + 2]; }
+      }
+    }
+  });
+  return { width: W2, height: H2, comps: info.comps, samples: out, source: info.source };
+}
+
+/**
+ * image-codecs R11 (T44, N868): decode the same JPEGs as `decodeBaselineJpeg`,
+ * with the same refusals, one MCU row at a time, top to bottom, never rotating.
+ * Each strip's finished rows, interleaved 8-bit samples `width × comps` bytes a
+ * row, are handed to `onRows(rows, y0, count)` in order; joined, they are
+ * `decodeBaselineJpeg(d, {rotate: 0})`'s samples, byte for byte. `rows` is one
+ * buffer reused for every strip: it holds this strip's rows until `onRows`
+ * returns, and a caller that keeps them copies them. Returns `{ width, height,
+ * comps, source }`, as R1 does without its samples.
+ *
+ * A refusal found in the header (every one but a damaged or short scan) is made
+ * before any row is handed over. One found in the scan's data is made where the
+ * data breaks, so `onRows` may already have had the rows above the break; a
+ * caller that is refused discards what it was given. Rows decoded from bits the
+ * data did not hold (libjpeg's zero fill past its end) are never handed over.
+ *
+ * Its live set: the input; per component, one MCU row of samples and the row
+ * above it (the context row its upsampling reads); one row of each upsampled
+ * component; one block of coefficients; and the strip being handed over, at most
+ * 8 × vmax rows of `width × comps` bytes (8 for a single component). Measured in `build/jobs/T44/image-codecs.md`.
+ */
+export function decodeBaselineJpegRows(d, { expectComps = null, colorTransform = null, onRows } = {}) {
+  if (typeof onRows !== "function") throw new TypeError("decodeBaselineJpegRows needs an onRows(rows, y0, count) function");
+  return decodeStrips(d, expectComps, colorTransform, (rows, y0, count) => { onRows(rows, y0, count); });
+}
+
+/* ── the strip-wise decode R1 and R11 share ──────────────────────────────────
+ * The entropy-coded data is read MCU row by MCU row (a block row for a single,
+ * non-interleaved component). Each component keeps only the MCU row just
+ * decoded, plus slot 0: the last sample row of the MCU row before it. That is
+ * all `jdsample.c`'s fancy upsampling reads, as libjpeg's context rows give it:
+ * an output row of a vertically upsampled component reads its own sample row and
+ * the one above or below, edges REPLICATED at the component's own height. So the
+ * last output row of an MCU row, which reads the first sample row of the next,
+ * waits for it, and each strip after the first begins with the one before. */
+function decodeStrips(d, expectComps, colorTransform, emit) {
   const h = readJpegHeader(d);
   const { frame, qt, hts, scan } = h;
   const nc = frame.comps.length;
@@ -424,24 +495,37 @@ export function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTra
     if (!ok || c.h < 1 || c.v < 1) throw new DctRefusal("UNSUPPORTED_SAMPLING", { sampling });
     if (!qt[c.tq]) throw new DctRefusal("CORRUPT_DATA", { note: `quantisation table ${c.tq} missing` });
   }
-  const mcux = Math.ceil(frame.width / (8 * hmax)), mcuy = Math.ceil(frame.height / (8 * vmax));
-  const planes = frame.comps.map((c, i) => {
+  const W = frame.width, H = frame.height;
+  /* A single-component scan is non-interleaved and walks its OWN block grid (for
+   * a grey file, the same grid): its strip is one block row, and it is upsampled
+   * by nothing. */
+  const single = nc === 1;
+  const mcux = Math.ceil(W / (8 * hmax)), mcuy = Math.ceil(H / (8 * vmax));
+  const unitsPerRow = single ? Math.ceil(W / 8) : mcux;
+  const strips = single ? Math.ceil(H / 8) : mcuy;
+  const outPerStrip = single ? 8 : 8 * vmax;
+  const planes = frame.comps.map((c) => {
     const sc = scan.comps.find((s) => s.id === c.id);
     if (!sc || !hts.dc[sc.td] || !hts.ac[sc.ta]) throw new DctRefusal("CORRUPT_DATA", { note: `Huffman table missing for component ${c.id}` });
-    const bw = mcux * c.h, bh = mcuy * c.v;
+    const hx = single ? 1 : hmax / c.h, vx = single ? 1 : vmax / c.v;
+    const stride = mcux * c.h * 8, rowsPer = single ? 8 : 8 * c.v;
+    const dw = Math.ceil((W * c.h) / hmax);
     return {
-      c, i, dc: hts.dc[sc.td], ac: hts.ac[sc.ta], q: qt[c.tq], pred: 0,
-      stride: bw * 8, rows: bh * 8,
-      data: new Uint8Array(bw * 8 * bh * 8),
-      dw: Math.ceil((frame.width * c.h) / hmax), dh: Math.ceil((frame.height * c.v) / vmax),
+      c, dc: hts.dc[sc.td], ac: hts.ac[sc.ta], q: qt[c.tq], pred: 0, hx, vx, stride, rowsPer, dw,
+      dh: Math.ceil((H * c.v) / vmax), base: 0,
+      /* slot 0 the row above this MCU row, slots 1..rowsPer the MCU row's own */
+      data: new Uint8Array((rowsPer + 1) * stride),
+      /* one upsampled row, for a component that is upsampled */
+      tmp: hx === 1 && vx === 1 ? null : new Uint8Array(dw * hx),
     };
   });
+  /* Does any component read the sample row below its own? Then the last output
+   * row of each strip waits for the next strip. */
+  const waits = planes.some((pl) => pl.vx === 2);
 
-  /* Entropy decode, MCU by MCU (interleaved when nc>1; a single-component scan
-   * is non-interleaved and walks its OWN block grid, which for a grey file is
-   * the same grid). */
   const br = new Bits(d, scan.dataAt);
   const coef = new Int32Array(64);
+  let fabricated = false;
   const decodeBlock = (pl, bx, by) => {
     coef.fill(0);
     const t = br.decode(pl.dc);
@@ -457,13 +541,82 @@ export function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTra
       coef[ZIGZAG[k]] = (br.receiveExtend(s) << 16) >> 16;
       k++;
     }
-    idctIslow(coef, pl.q, pl.data, by * 8 * pl.stride + bx * 8, pl.stride);
+    if (!fabricated) idctIslow(coef, pl.q, pl.data, (1 + by * 8) * pl.stride + bx * 8, pl.stride);
   };
-  const single = nc === 1;
-  const totalUnits = single
-    ? Math.ceil(frame.width / 8) * Math.ceil(frame.height / 8)
-    : mcux * mcuy;
-  const unitsPerRow = single ? Math.ceil(frame.width / 8) : mcux;
+
+  /* Sample row `y` of a component (clamped to its own height, as the context
+   * rows replicate the edge) as an offset into its `data`. */
+  const rowAt = (pl, y) => ((y < 0 ? 0 : y >= pl.dh ? pl.dh - 1 : y) - pl.base + 1) * pl.stride;
+  /* Output row `oy` of a component, full width: [array, offset]. */
+  const fullRow = (pl, oy) => {
+    const { hx, vx, data: src, dw, tmp } = pl;
+    if (vx === 1) {
+      if (hx === 1) return [src, rowAt(pl, oy)];
+      h2v1Row(src, rowAt(pl, oy), dw, tmp, 0);
+      return [tmp, 0];
+    }
+    const cy = oy >> 1, below = oy & 1;
+    const r0 = rowAt(pl, cy);
+    if (hx === 1) {                                              // h1v2
+      const r1 = rowAt(pl, below ? cy + 1 : cy - 1), bias = below ? 2 : 1;
+      for (let x = 0; x < dw; x++) tmp[x] = (src[r0 + x] * 3 + src[r1 + x] + bias) >> 2;
+    } else if (dw <= 2) {                                        // h2v2, too narrow for fancy
+      for (let x = 0; x < dw; x++) tmp[2 * x] = tmp[2 * x + 1] = src[r0 + x];
+    } else {                                                     // h2v2
+      const r1 = rowAt(pl, below ? cy + 1 : cy - 1);
+      let thiscol = src[r0] * 3 + src[r1], nextcol = src[r0 + 1] * 3 + src[r1 + 1], lastcol;
+      tmp[0] = (thiscol * 4 + 8) >> 4;
+      tmp[1] = (thiscol * 3 + nextcol + 7) >> 4;
+      let q = 2;
+      for (let x = 2; x < dw; x++) {
+        lastcol = thiscol; thiscol = nextcol;
+        nextcol = src[r0 + x] * 3 + src[r1 + x];
+        tmp[q++] = (thiscol * 3 + lastcol + 8) >> 4;
+        tmp[q++] = (thiscol * 3 + nextcol + 7) >> 4;
+      }
+      lastcol = thiscol; thiscol = nextcol;
+      tmp[q++] = (thiscol * 3 + lastcol + 8) >> 4;
+      tmp[q] = (thiscol * 4 + 7) >> 4;
+    }
+    return [tmp, 0];
+  };
+  const shape = { W, H, nc };
+  /* The one strip buffer, reused for every strip handed over. */
+  const strip = new Uint8Array(outPerStrip * W * nc);
+  let emitted = 0;
+  /* Output rows [emitted, limit): upsampled and colour-converted, row by row,
+   * handed over at most an MCU row's worth at a time (the last strip also carries
+   * the row the one before it held back). */
+  const emitTo = (limit) => {
+    while (limit - emitted > outPerStrip) emitTo(emitted + outPerStrip);
+    if (limit <= emitted) return;
+    const count = limit - emitted, rows = strip.subarray(0, count * W * nc);
+    for (let j = 0; j < count; j++) {
+      const oy = emitted + j;
+      let o = j * W * nc;
+      if (nc === 1) {
+        const [a, ao] = fullRow(planes[0], oy);
+        rows.set(a.subarray(ao, ao + W), o);
+        continue;
+      }
+      const [a, ao] = fullRow(planes[0], oy), [b, bo] = fullRow(planes[1], oy), [c, co] = fullRow(planes[2], oy);
+      if (colour.ycc) {
+        for (let x = 0; x < W; x++, o += 3) {
+          const Y = a[ao + x], cb = b[bo + x], cr = c[co + x];
+          rows[o] = clamp8(Y + CR_R[cr]);
+          rows[o + 1] = clamp8(Y + Math.floor((CB_G[cb] + CR_G[cr]) / 65536));
+          rows[o + 2] = clamp8(Y + CB_B[cb]);
+        }
+      } else {
+        for (let x = 0; x < W; x++, o += 3) { rows[o] = a[ao + x]; rows[o + 1] = b[bo + x]; rows[o + 2] = c[co + x]; }
+      }
+    }
+    const y0 = emitted;
+    emitted = limit;
+    emit(rows, y0, count, shape);
+  };
+
+  const totalUnits = unitsPerRow * strips;
   let restartsLeft = h.restart, rstExpect = 0;
   for (let u = 0; u < totalUnits; u++) {
     if (h.restart) {
@@ -479,11 +632,24 @@ export function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTra
       }
       restartsLeft--;
     }
-    const ux = u % unitsPerRow, uy = (u - ux) / unitsPerRow;
-    if (single) decodeBlock(planes[0], ux, uy);
+    const ux = u % unitsPerRow;
+    if (single) decodeBlock(planes[0], ux, 0);
     else for (const pl of planes)
       for (let v = 0; v < pl.c.v; v++) for (let hh = 0; hh < pl.c.h; hh++)
-        decodeBlock(pl, ux * pl.c.h + hh, uy * pl.c.v + v);
+        decodeBlock(pl, ux * pl.c.h + hh, v);
+    if (ux !== unitsPerRow - 1) continue;
+    /* An MCU row is done. Bits the data did not hold mean this decode will be
+     * refused (TRUNCATED, below or at the next restart): nothing more is handed
+     * over, and the rest is only read through, so the refusal says what R1's
+     * always said. */
+    if (!fabricated && br.fabricated()) fabricated = true;
+    if (fabricated) continue;
+    const k = (u + 1) / unitsPerRow - 1;
+    emitTo(k === strips - 1 ? H : Math.min(H, (k + 1) * outPerStrip - (waits ? 1 : 0)));
+    for (const pl of planes) {
+      pl.data.copyWithin(0, pl.rowsPer * pl.stride, (pl.rowsPer + 1) * pl.stride);
+      pl.base += pl.rowsPer;
+    }
   }
   /* A stream that ran out of data: libjpeg feeds zeros and warns, then emits a
    * picture that is grey past the break. That picture is not the publisher's,
@@ -492,86 +658,11 @@ export function decodeBaselineJpeg(d, { rotate = 0, expectComps = null, colorTra
   if (br.fabricated())
     throw new DctRefusal("TRUNCATED", { note: `entropy-coded data ended before the last MCU (${br.fabricated()} bits zero-filled)` });
 
-  /* Upsample chroma to full size (fancy, as libjpeg does), then write the
-   * interleaved, colour-converted, ROTATED samples. */
-  const W = frame.width, H = frame.height;
-  const full = planes.map((pl) => upsample(pl, W, H, hmax, vmax));
-  const deg = (((rotate | 0) % 360) + 360) % 360;
-  if (deg % 90) throw new DctRefusal("UNSUPPORTED_ROTATION", { rotate });
-  const [W2, H2] = deg === 90 || deg === 270 ? [H, W] : [W, H];
-  const out = new Uint8Array(W2 * H2 * nc);
-  for (let y = 0; y < H; y++) {
-    for (let x = 0; x < W; x++) {
-      let X, Y;
-      if (deg === 0) { X = x; Y = y; }
-      else if (deg === 90) { X = H - 1 - y; Y = x; }
-      else if (deg === 180) { X = W - 1 - x; Y = H - 1 - y; }
-      else { X = y; Y = W - 1 - x; }
-      const o = (Y * W2 + X) * nc;
-      if (nc === 1) { out[o] = full[0].data[y * full[0].stride + x]; continue; }
-      const a = full[0].data[y * full[0].stride + x], b = full[1].data[y * full[1].stride + x], c = full[2].data[y * full[2].stride + x];
-      if (colour.ycc) {
-        out[o] = clamp8(a + CR_R[c]);
-        out[o + 1] = clamp8(a + Math.floor((CB_G[b] + CR_G[c]) / 65536));
-        out[o + 2] = clamp8(a + CB_B[b]);
-      } else { out[o] = a; out[o + 1] = b; out[o + 2] = c; }
-    }
-  }
   return {
-    width: W2, height: H2, comps: nc, samples: out,
+    width: W, height: H, comps: nc,
     source: { width: W, height: H, process: frame.process, sampling, restart: h.restart,
               colour: colour ? colour.why + (colour.ycc ? " -> YCbCr" : " -> no transform") : "grey" },
   };
-}
-
-/* ── upsampling: jdsample.c's fancy filters, edges replicated ─────────────── */
-function upsample(pl, W, H, hmax, vmax) {
-  const hx = hmax / pl.c.h, vx = vmax / pl.c.v;
-  if (hx === 1 && vx === 1) return { data: pl.data, stride: pl.stride };
-  const { data: src, stride: ss, dw, dh } = pl;
-  const row = (y) => (y < 0 ? 0 : y >= dh ? dh - 1 : y) * ss;   // context rows replicate the edge
-  const outW = dw * hx;
-  const dst = new Uint8Array(outW * dh * vx);
-  if (vx === 1) {                                              // h2v1
-    for (let y = 0; y < dh; y++) {
-      const r = row(y), o = y * outW;
-      h2v1Row(src, r, dw, dst, o);
-    }
-  } else if (hx === 1) {                                       // h1v2
-    for (let y = 0; y < dh; y++) {
-      const r0 = row(y);
-      for (let v = 0; v < 2; v++) {
-        const r1 = row(v === 0 ? y - 1 : y + 1), bias = v === 0 ? 1 : 2, o = (2 * y + v) * outW;
-        for (let x = 0; x < dw; x++) dst[o + x] = (src[r0 + x] * 3 + src[r1 + x] + bias) >> 2;
-      }
-    }
-  } else if (dw <= 2) {                                       // h2v2, too narrow for fancy
-    for (let y = 0; y < dh * 2; y++) {
-      const r = row(y >> 1), o = y * outW;
-      for (let x = 0; x < dw; x++) dst[o + 2 * x] = dst[o + 2 * x + 1] = src[r + x];
-    }
-  } else {                                                     // h2v2
-    for (let y = 0; y < dh; y++) {
-      const r0 = row(y);
-      for (let v = 0; v < 2; v++) {
-        const r1 = row(v === 0 ? y - 1 : y + 1), o = (2 * y + v) * outW;
-        let thiscol = src[r0] * 3 + src[r1], nextcol = src[r0 + 1] * 3 + src[r1 + 1], lastcol;
-        dst[o] = (thiscol * 4 + 8) >> 4;
-        dst[o + 1] = (thiscol * 3 + nextcol + 7) >> 4;
-        let q = o + 2;
-        for (let x = 2; x < dw; x++) {
-          lastcol = thiscol; thiscol = nextcol;
-          nextcol = src[r0 + x] * 3 + src[r1 + x];
-          dst[q++] = (thiscol * 3 + lastcol + 8) >> 4;
-          dst[q++] = (thiscol * 3 + nextcol + 7) >> 4;
-        }
-        lastcol = thiscol; thiscol = nextcol;
-        dst[q++] = (thiscol * 3 + lastcol + 8) >> 4;
-        dst[q] = (thiscol * 4 + 7) >> 4;
-      }
-    }
-  }
-  return { data: dst, stride: outW };
 }
 
 /* h2v1: fancy only when the row is wider than 2 samples, as `jinit_upsampler`
