@@ -20,3 +20,7 @@
 **Found in other modules.** None new. (R60's `*(not yet met: T42)*` mark stays in the requirements for BOB to clear.)
 
 Size (session_01RzYrca5P3xs9xcgtmKsFnL): test runs 9, module lines 3693
+
+## J1 · COMPLETE
+
+T42-3 done (commit dfd6926f27; record's Completion). R83: MODULE_ORDER gains doorbell (after capture) and case-account (before case-authoring); the two are tolerated by name until their merges; ai-use and T41's five now held to their paths; negative control verified. R60: no membership service changed; actions' #mayName (T41-47) composes sight+visibilityOf; new t42-hold-reach.test.mjs holds at membership's interface that exactly an administrator neither invited nor joined reaches a hidden project at EXISTENCE and nothing inside it opens (negative controls). R60's not-yet-met mark is yours to clear. Membership 202/202; users' suites (93 modules) 7,572 pass, 5 fail, all red on tranche/T42 too (rule 4 (2), (6), (7); two fixture data files). format, architecture, coverage (94/94), ownership: 0 failures.
