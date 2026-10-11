@@ -31,7 +31,7 @@
 4. **Step 4, the decisions: done 2026-10-11.**
    - **Ruled:** D1, D2, D3, D4, D5, D6 (2026-10-11, H11), D7, D8 (2026-10-11, H12), D9 (H13), D10 (H14), D11 (H15), D12 (H16), D13 (H17), D14 (H18), D15 (H19), D16 (H20; Bob's addition: breach claims may rest on accepted findings; D16a H22), D18 (H21), D19 (H23), D17, D20, D21, D22, D23, D24 (words and readings in `DECISIONS.md`; requirements notes in HANDOFF H4–H8).
    - **Open with Bob:** none. All decisions ruled 2026-10-11 (H23).
-5. **Step 5: in progress.** Done 2026-10-11: `DESIGN.md`; page §8; canon draft `canon-draft/` rendered at https://claude.ai/artifact/8Ke3MafpR8R4knFDtiMEWx, awaiting Bob's approval (H24). Next: on approval, the requirements hand-off H25. Write the design itself on the page (requirements, capabilities, behaviour), folding S1 §C details and §E capabilities, the D20 principles 1–6, D21's re-examination, and a proposed capabilities ladder for actions (none exists in `BIO_Capability_Ladders_v0_1.md`); then a canon draft (amending `BIO_Action_v0_1.md`, including §2/rule 2 for D24, rule 2's classes for D1, the records-request rules D-147/148/149 given a home) for Bob's approval, then a hand-off to BOB for requirements, as the investigation lane's H43.
+5. **Step 5: in progress.** Done 2026-10-11: `DESIGN.md`; page §8; canon draft `canon-draft/` rendered at https://claude.ai/artifact/8Ke3MafpR8R4knFDtiMEWx, awaiting Bob's approval (H24; rewritten clean at his direction, H25). Next: on approval, the module-by-module requirements hand-off (H26). Write the design itself on the page (requirements, capabilities, behaviour), folding S1 §C details and §E capabilities, the D20 principles 1–6, D21's re-examination, and a proposed capabilities ladder for actions (none exists in `BIO_Capability_Ladders_v0_1.md`); then a canon draft (amending `BIO_Action_v0_1.md`, including §2/rule 2 for D24, rule 2's classes for D1, the records-request rules D-147/148/149 given a home) for Bob's approval, then a hand-off to BOB for requirements, as the investigation lane's H43.
 
 ## Next actions for a successor
 
@@ -63,3 +63,4 @@
 - 2026-10-11: D16a ruled, all three as recommended; H22.
 - 2026-10-11: D19 ruled (b), no limit; all decisions ruled; H23; step 5 begins.
 - 2026-10-11: DESIGN.md, page §8 (design, ladder), canon draft v0.2 + ACTIONS ladder published for Bob; H24.
+- 2026-10-11: Bob: the canon draft should reflect the design without change history (like the investigation design); rewritten clean; H25.

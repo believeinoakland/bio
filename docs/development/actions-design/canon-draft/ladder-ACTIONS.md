@@ -3,8 +3,6 @@
 **Status** · DRAFT for Bob's approval with `BIO_Action_v0_2.md`, written 2026-10-11 by ACTIONS-DESIGN #2. BOB places it as a new section after the existing constructs' ladders. Its needs register is the actions lane's twenty use cases (`docs/development/actions-design/research/S1-synthesis.md` §A, traced in `U1`–`U20`).
 
 
-The capability ladders (`BIO_Capability_Ladders_v0_1.md`) have none for actions. Proposed, in the ladders' form (purpose, rungs, interfaces); the needs register is the twenty use cases (`S1` §A).
-
 **Purpose.** How far Civicsmith carries a group from deciding to act to knowing how it ended, for both kinds of member, without ever deciding for them or speaking for policy.
 
 | rung | what a member can do | needs | stands on |
@@ -18,7 +16,7 @@ The capability ladders (`BIO_Capability_Ladders_v0_1.md`) have none for actions.
 | **A7 · Together** | partners; joint approval with matching fingerprints; sign-ons; breach claims on accepted findings | case import and acceptance (DEC-96) | A6 |
 | **A8 · Assisted** (beside every rung, where enabled) | AI proposals at each rung: options, drafts, reading replies, claim bearings, status drafts; never positions | agent-worker modes | each rung |
 
-Later, planned (not now): court-petition templates (await licensed certification, Action §7 (4)); intervenor compensation (D15 (c)); "if this finding holds, what could we do" condition layout (D-165); a body's pattern of late replies across requests (TIME L4).
+Later rungs, planned: court-petition templates (await licensed certification, Action §7 (4)); intervenor compensation (D15 (c)); "if this finding holds, what could we do" condition layout (D-165); a body's pattern of late replies across requests (TIME L4).
 
 **Interfaces.** Reads ORGANISATIONS (addressee, oversight lines), LAW (standards, profile rules), TIME (`civil-time`, duties), EVENTS (meetings, minutes), COURTS (reports, orders), QUESTIONS (standing questions); writes nothing below layer 9; the signing view reads open requests for comment through a registration seam (P4; H17).
 
