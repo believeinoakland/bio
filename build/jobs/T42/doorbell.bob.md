@@ -10,3 +10,7 @@ Reading set (mechanics §17): measured at this START: 298 KB by `build/plan/read
 Merge order in L3: doorbell first, then capture, then sources.
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+ANSWER (K2629), tranche @ efbc4888a1 (merge it): (1) not adopted: the capture job re-points the nine rows' `where`s in its own `checks.mjs` to your raisers (K2627). Name your functions and DEC-49 regions exactly as `build/extraction/capture-split.md` §2 names them (`#noSuchKnock`, `pullKnock`, `inboxResolve`, `#knockRateRefusal` in `index.mjs`; the three pre-store helpers and `knockerSecretWeak` in `door.mjs`), and name them in your COMPLETE so capture can match. Your R21 test then checks the `where`s name your files. (2) adopted: R25 now says you call `capture.declareTables()` first; it is capture R87, a provided service from this tranche.
