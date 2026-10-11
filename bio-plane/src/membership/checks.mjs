@@ -248,6 +248,15 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
     check: 'C-96.51', where: at("handleChange", "is-handle-fixed"),
     translation: HANDLE_WORDS['handle.refused.unchecked'],
   }),
+  /* ===== T45 (T45-2; N893, Actions D4; R128): the project-act guard could not answer (a throw, a promise or an answer
+     it does not give), so the invitation or the visibility setting fails closed. The next free number of C-56, a
+     person's acts in a project (C-56.5 is project-roster's; K107 (3), K174). The translation is MEMBERSHIP #34's draft, re-wordable by
+     the UX stream (draft-T45-lower §10). ===== */
+  PROJECT_GUARD_UNCHECKED: Object.freeze({
+    check: 'C-56.6', where: at("#projectActGuarded", "is-project-guard-checked"),
+    translation: 'Whether this project\'s own rules allow that could not be checked, so nothing was changed. Try again '
+      + 'in a moment.',
+  }),
 });
 
 /* ===== T19 layer 2: membership's families, COPIED from the check catalogue with their names, ids, `where`s and
