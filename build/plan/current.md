@@ -27,7 +27,7 @@ It is the only module marked `legacy` in `modules.json`.
    3. the UI's DEC-88 tests (Bob's), carried;
    4. legacy-ui `statement-ack.test.mjs` (N794, K633);
    5. (cleared at T42-3's merge, K2623) membership R83's `MODULE_ORDER` tests; since then each new module named "not yet built" until its own merge;
-   6. answer-envelope `catalogue-end.test.mjs`'s pins for `PROPOSAL_NO_RUN` and `NO_SUCH_PROPOSAL` (T41 rule 4 (21)) until T42-27 (N843);
+   6. answer-envelope `catalogue-end.test.mjs`'s pins for `PROPOSAL_NO_RUN` and `NO_SUCH_PROPOSAL` (T41 rule 4 (21)) until T42-27 (N843); from T42-13's merge also `families.test.mjs`:425 (`HELD_EARLIER` lists C-142.28 as held earlier) until T42-14, T42-21 and T42-27 (K2651);
    7. `test/system/migrate-released.test.mjs`'s `ai_ceilings` arm (T41 rule 4 (24)) until T42-17 (N848);
    8. (cleared at T42-2's merge, K2612) `fleetbundles` agent-worker's input count (K2520 (a));
    9. from T42-6's merge: doorbell R25's ownership arm until capture's delete (T43; rule 3 (4));
