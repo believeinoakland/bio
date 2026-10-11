@@ -83,6 +83,7 @@ Terms are `publication`'s. A **preparation** is an unsigned case document; a **s
 - `calculations` (T33-69): `read`, `recompute` (R56). `events` (T33-69): `timeline` (R57).
 - `case-disclosures` (N529, K1333): `hunchDebt`, `tensionsJudged`, `tensionsRead`, `tensionsUndetermined`, `restingCaptures`, `captureFacts`, `selfAttestedJudged`, `materialsJudged`, `acceptedWorkJudged`, `flagsJudged`, `sourcesStated`, `withheldOf`, `findingFacts`, `methodOf`, `disclosureBlocks` (its R1–R16; R55); its renderers and `FLAG_SENTENCE`, imported, never copied (R14; K1333); `SELF_ATTESTED_SENTENCE` and `FLAGS_SAY` (R34, R53); `CASE_DISCLOSURE_CHECKS`, re-exported for this module's importers. Index 68, before this module. (T37) `photosOf` (its R29; R34).
 - `case-account` (N839, K2608): `accountShaped`, `accountDraftJudged`, `acceptanceRecorded`, `accountJudged`, `reviewCommentsChosen` (its R4–R7; R63, R65, R67, R69), its renderer `reviewCommentBodyLines`, imported, never copied (R14; K1333), and `caseAccountOf`, created at this module's creation. Directly before this module, after `case-disclosures`. `ai-runs` is no longer used: its one use, R64's run, moved with `case-account` R1.
+- `doorbell` (T43; K2722): `doorbellOf` (its R12's tables), for the test fixture only, which builds doorbell's tables before it inserts into `inbox`; no module code uses it.
 
 ### Invariants
 
