@@ -22,7 +22,8 @@ import { stepsOf } from "../../../src/steps/index.mjs";
 import { captureBound } from "../../../src/textchain.mjs";
 import { strengthOf } from "../../../src/strength/index.mjs";
 import { citationOf } from "../../../src/citation/index.mjs";
-import { versionsIn } from "../../../src/basis-versions/index.mjs";
+import { inquiryOf } from "../../../src/inquiry/index.mjs";
+import { versionsIn, basisVersionsOf as realBasisVersionsOf } from "../../../src/basis-versions/index.mjs";
 import { EXTRACTION_SCHEMA } from "../../../src/extraction/schema.mjs";
 import { runProductionsOf } from "../../../src/run-productions/index.mjs";
 
@@ -126,7 +127,8 @@ export const basisVersionsOf = (fm) => versionsIn(fm);
  *  plane reaches them), strength over an inquiry stand-in (its R13 registry, R14 `legCapped`, R16 `basisFor`) whose
  *  capture ceilings the test sets in `w.ceilings`. `aiRuns: null` leaves ai-runs to this module's factory (the real
  *  module, over its own tables). */
-export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven } = {}) {
+export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven, realInquiry = false,
+                        realBasisVersions = false } = {}) {
   const st = storage();
   const host = { storage: st };
   const bare = RECORD_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
@@ -204,10 +206,17 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven }
   const connections = { citesInto: (id) => ({ confirmed: [...(cites[id] || [])].sort(), severed: [] }) };
 
   const candidateSources = [];
+  /* R25: what registers with inquiry's R62 and basis-versions' R49 `onMachinePassage` slots. */
+  const machinePassageSlots = [];
+  /* `realInquiry`: inquiry's own factory, so R25 registers with its real R62 slot. */
+  const inquiry = realInquiry ? inquiryOf(host, { record, membership, content })
+    : { onMachinePassage(module, fn) { machinePassageSlots.push({ slot: "inquiry", module, fn }); return { ok: true }; } };
   const basisVersions = {
     unsplice: false,
     appended: [],
     onCandidates(module, fn) { candidateSources.push({ module, fn }); return { ok: true }; },
+    /* R25: basis-versions' R49 slot, recorded as the candidate source is. */
+    onMachinePassage(module, fn) { machinePassageSlots.push({ slot: "basis-versions", module, fn }); return { ok: true }; },
     basisVersions({ id, limit, viewer }) {
       note("basisVersions", { id, limit, viewer });
       const rows = [...st.sql.exec(`SELECT * FROM inquiry_basis_versions WHERE bundle_id=? ORDER BY ord LIMIT ?`, id, limit)];
@@ -284,7 +293,10 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven }
   };
   const p = runProductionsOf(host, { record, membership, content, connections, extraction, legEarning,
                                      ...(aiRunsGiven === null ? {} : { aiRuns }),
-                                     basisVersions, steps,
+                                     /* `realBasisVersions`: its own factory, so R25 registers with its real R49 slot. */
+                                     basisVersions: realBasisVersions
+                                       ? realBasisVersionsOf(host, { record, membership, content, inquiry }) : basisVersions,
+                                     inquiry, steps,
                                      ...(real ? {} : { strength, citation }), now: () => Date.parse(clock.now) });
   p.migrate();
 
@@ -307,7 +319,7 @@ export function world({ strengthPair = null, real = false, aiRuns: aiRunsGiven }
 
   const w = {
     st, host, record, membership, prov, registered, content, p, clock, ex, calls, runs, bounds, aiRuns, strength,
-    citation, retired, connections, cites, basisVersions, candidateSources, ceilings, steps, credentials, routes, legEarning,
+    citation, retired, connections, cites, basisVersions, candidateSources, machinePassageSlots, ceilings, steps, credentials, routes, legEarning,
     versions: {}, authors: {}, ats: {}, legsOf: {}, groundsOf: {},
     row: (qq, ...a) => [...st.sql.exec(qq, ...a)][0] ?? null,
     rows: (qq, ...a) => [...st.sql.exec(qq, ...a)],
