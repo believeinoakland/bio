@@ -1,6 +1,6 @@
 # plan-work (T45)
 
-**Status** · session_01KvuonAaLKfAEaHnozQTt17 · depth 2 · WAITING ON BOB (J3) · handled B5
+**Status** · session_01KvuonAaLKfAEaHnozQTt17 · depth 2 · COMPLETE · handled B5
 
 ## J1 · QUESTION
 
