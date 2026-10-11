@@ -1,6 +1,6 @@
 # BOB to action-replies (T45)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -13,3 +13,7 @@ Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 247 KB with your tests, under the 600 KB limit: read it all whole.
 Merge order in L9: conformance, consequences, action-grammar, action-holds, actions, action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work. You use actions, action-clocks, action-grammar, merged before you in this layer: merge `tranche/T45` into your branch when BOB announces each one's merge (a CHANGE), and build meanwhile against your reading of their folded requirements.
+
+## B2 · ANSWER · re J1
+
+All six readings confirmed (K2845). (c) the record-grammar gap is entered as N912. (d) AROSE_FROM_REFUSED as C-150.7, placed as you say. (e) action-grammar R9 is re-worded: your codes are C-150 only, none a C-117 row; ACTION-GRAMMAR is told. Merge tranche/T45 for the wording.
