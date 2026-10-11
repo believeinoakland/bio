@@ -727,13 +727,12 @@ export class Duties {
                           why: said(b.why) ? b.why : "a response the report requires of the body, dated by the profile's rule" });
   }
 
-  /* R30: a `standards` R9 proposal, read through standards' proposal read: `{id, kind, adopted}` or `{refused}`, failing
-     closed when standards cannot answer. */
+  /* R30 (K2806): a `standards` R9 proposal, read through `standards.standardProposalRead` (its R54): `{id, kind, adopted}`,
+     or `{refused}` with standards' own `STANDARD_NO_SUCH_PROPOSAL`; failing closed when standards cannot answer. */
   #standardProposal(id) {
     const s = this.standards;
-    const fn = s && (typeof s.standardProposalRead === "function" ? "standardProposalRead" : typeof s.proposalRead === "function" ? "proposalRead" : null);
     let r = null;
-    if (fn) { try { r = s[fn]({ proposal: id, viewer: SYSTEM_VIEWER }); } catch { r = null; } }
+    if (s && typeof s.standardProposalRead === "function") { try { r = s.standardProposalRead({ proposal: id, viewer: SYSTEM_VIEWER }); } catch { r = null; } }
     if (r && r.ok === false) return { refused: r };
     const p = r && isObj(r.proposal) ? r.proposal : r;
     if (!isObj(p) || !said(p.id ?? id)) {

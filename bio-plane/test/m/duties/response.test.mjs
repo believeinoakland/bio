@@ -147,20 +147,12 @@ const GJ = "Test Grand Jury";
 const gjRule = (rule, amount, over = {}) => ({ rule, applies_to: "claim", units: "days", amount, count: "calendar", starts: "third_party",
   starter: { role: GJ, body: GJ }, owed_by: "body", citation: `Test Penal Code §933(c) (${rule})`, status: "researched", basis: "TEST", ...over });
 
-/* A world whose standards answer a proposal by id the way R30 reads it (`standardProposalRead`): the read standards owes
-   (BOB's, J2), built over the real standards' own propose and adopt answers until it exists. */
+/* A world over the real modules; `proposalRead: false` takes standards' R54 read away, to show duties fails closed. */
 function responseWorld({ view = null, proposalRead = true } = {}) {
   let w = null;
-  const seen = new Map();
-  const standards = () => new Proxy(w.standards, { get: (o, k) => {
-    if (k === "standardPropose") return (a) => { const r = o.standardPropose(a); if (r.ok) seen.set(r.proposal.id, r.proposal); return r; };
-    if (k === "standardAdopt") return (a) => { const r = o.standardAdopt(a); if (r.ok && seen.has(a.proposal)) seen.get(a.proposal).adoption = { standard: r.id, by: a.author }; return r; };
-    if (k === "standardProposalRead") return proposalRead
-      ? ({ proposal }) => (seen.has(proposal) ? { ok: true, proposal: seen.get(proposal) } : { ok: false, reason: "STANDARD_NO_SUCH_PROPOSAL", code: "STANDARD_NO_SUCH_PROPOSAL", proposal })
-      : undefined;
-    return typeof o[k] === "function" ? o[k].bind(o) : o[k];
-  } });
-  w = world({ ...(view ? { view } : {}), deps: { standards } });
+  const standards = proposalRead ? undefined
+    : () => new Proxy(w.standards, { get: (o, k) => (k === "standardProposalRead" ? undefined : typeof o[k] === "function" ? o[k].bind(o) : o[k]) });
+  w = world({ ...(view ? { view } : {}), deps: standards ? { standards } : {} });
   const words = (name, text) => { const p = w.passage(name, { text }); return { ...p, cite: { captureSha: p.capSha, extent: { kind: "pdf-page", page: 0 } } }; };
   const reply = words("reply", "We will publish the audit response by June 30, 2026.");
   const vague = words("vague-reply", "We will publish it by spring.");
@@ -236,7 +228,7 @@ test("R30 a promise: commitment basis, its date the quote's whole date, arising 
 
 test("R30 a promise on a standards proposal: adoption refused DUTY_SOURCE_NOT_HELD until that proposal is adopted, then naming the adopted standard", () => {
   const { w, reply, propose } = responseWorld();
-  const sp = w.duties.standards.standardPropose({ cite: "Clerk's spoken promise, confirmed in writing", kind: "commitment", issuer: "Town Clerk", text: [reply.contentId],
+  const sp = w.standards.standardPropose({ cite: "Clerk's spoken promise, confirmed in writing", kind: "commitment", issuer: "Town Clerk", text: [reply.contentId],
     why: "the clerk's reply states it", proposer: MACHINE, viewer: MACHINE });
   assert.equal(sp.ok, true, JSON.stringify(sp).slice(0, 300));
   const p = propose({ standard: undefined, standardProposal: sp.proposal.id });
@@ -251,7 +243,7 @@ test("R30 a promise on a standards proposal: adoption refused DUTY_SOURCE_NOT_HE
   /* an unknown standards proposal is standards' own answer */
   assert.equal(propose({ standard: undefined, standardProposal: "STDP-2026-0099" }).reason, "STANDARD_NO_SUCH_PROPOSAL");
   /* the member adopts the commitment as a standard; the duty then adopts, naming it */
-  const std = w.duties.standards.standardAdopt({ proposal: sp.proposal.id, reason: "the clerk's written reply confirms it", period: { from: "2026-03-03", to: null },
+  const std = w.standards.standardAdopt({ proposal: sp.proposal.id, reason: "the clerk's written reply confirms it", period: { from: "2026-03-03", to: null },
     author: BOB, viewer: BOB });
   assert.equal(std.ok, true, JSON.stringify(std).slice(0, 300));
   const a = w.duties.adopt({ proposalId: p.proposal_id, clause: "the reply", by: BOB });
@@ -263,13 +255,13 @@ test("R30 a promise on a standards proposal: adoption refused DUTY_SOURCE_NOT_HE
   const ad = w.duties.adopt({ proposalId: again.proposal_id, clause: "c", by: BOB });
   assert.equal(w.duties.readDuty({ dutyId: ad.duty_id, viewer: BOB }).duty.source.standard, std.id);
   /* a proposal of another kind is refused */
-  const pol = w.duties.standards.standardPropose({ cite: "A policy", kind: "policy", text: [reply.contentId], why: "w", proposer: MACHINE, viewer: MACHINE });
+  const pol = w.standards.standardPropose({ cite: "A policy", kind: "policy", text: [reply.contentId], why: "w", proposer: MACHINE, viewer: MACHINE });
   row(propose({ standard: undefined, standardProposal: pol.proposal.id }), "UNKNOWN_SOURCE_KIND");
 });
 
 test("R30 a promise on a standards proposal fails closed where standards cannot answer whether it was adopted", () => {
   const { w, reply, propose } = responseWorld({ proposalRead: false });
-  const sp = w.duties.standards.standardPropose({ cite: "c", kind: "commitment", text: [reply.contentId], why: "w", proposer: MACHINE, viewer: MACHINE });
+  const sp = w.standards.standardPropose({ cite: "c", kind: "commitment", text: [reply.contentId], why: "w", proposer: MACHINE, viewer: MACHINE });
   row(propose({ standard: undefined, standardProposal: sp.proposal.id }), "DUTY_SOURCE_NOT_HELD");
 });
 
