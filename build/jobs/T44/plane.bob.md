@@ -12,3 +12,7 @@ Reading set (mechanics §17): measured at this START: 2865 KB with your tests (K
 Merge order in L11: affordances, notice-producers, op-declarations, store-door, plane last. You merge last; merge `tranche/T44` into your branch when BOB announces the other L11 merges (CHANGE).
 Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
 Not part of any reading set: generated artifacts (bundles under `dist/`, `case-checker/program.mjs`), vendored code and large data fixtures (K2053, K2083).
+
+## B2 · ANSWER · re J1
+
+Both readings adopted (K2769): (1) a renderer answering ok without a PNG is reason DECODE_FAILED; (2) refused lists only the pages R36 takes in (whole, distinct, ascending, within TRANSCRIBE_PAGES_MAX); others are never asked and never listed. Carry on.
