@@ -76663,6 +76663,10 @@ var PROCEEDING_LINKS = ["appeal_of", "consolidated_with", "remanded_to", "arises
 var isObj19 = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 var filled4 = (v) => typeof v === "string" && v.trim() !== "";
 var refuse11 = (reason2, detail, extra = {}) => ({ ok: false, reason: reason2, code: reason2, detail, ...extra });
+var noBasis = (detail) => {
+  const row12 = SHARED_ACT_CHECKS.NO_BASIS;
+  return refuse11("NO_BASIS", detail, { check: row12.check, translation: row12.translation });
+};
 var json5 = (v) => JSON.stringify(v);
 var parse = (s) => {
   try {
@@ -77079,7 +77083,7 @@ var Lines = class _Lines {
   }
   /* A basis read into its form, or a refusal. `by` is the viewer the cited capture is checked against. */
   #basis(basis, by) {
-    if (!isObj19(basis)) return { refusal: refuse11("NO_BASIS", "a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony {statement}") };
+    if (!isObj19(basis)) return { refusal: noBasis("a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony {statement}") };
     if ("captureSha" in basis || "extent" in basis) {
       const sha2 = typeof basis.captureSha === "string" ? basis.captureSha.trim().toLowerCase() : "";
       if (!sha2) return { refusal: refuse11("NO_SHA", "a passage names its capture by its sha256") };
@@ -77104,17 +77108,17 @@ var Lines = class _Lines {
       };
     }
     if ("rule" in basis || "source" in basis) {
-      if (!filled4(basis.rule)) return { refusal: refuse11("NO_BASIS", "a system rule names the rule it applies") };
+      if (!filled4(basis.rule)) return { refusal: noBasis("a system rule names the rule it applies") };
       const ids = isObj19(basis.ids) ? { from: basis.ids.from ?? null, to: basis.ids.to ?? null } : null;
       const recordedAt = basis.recorded_at ?? null;
       if (recordedAt !== null && !(typeof recordedAt === "string" && ISO_TS_RE.test(recordedAt)))
-        return { refusal: refuse11("NO_BASIS", "a register row's own record instant is an instant (YYYY-MM-DDTHH:MM:SSZ)") };
+        return { refusal: noBasis("a register row's own record instant is an instant (YYYY-MM-DDTHH:MM:SSZ)") };
       const system = filled4(basis.system) ? basis.system.trim() : null;
       if (typeof basis.source === "string") {
         const sha2 = basis.source.trim().toLowerCase();
         const home = this.#captureHeld(sha2, by);
         if (!home) return { refusal: refuse11("CAPTURE_NOT_HELD", "the system rule's source is a capture the record does not hold, or it may not be seen") };
-        if (system && !recordedAt) return { refusal: refuse11("NO_BASIS", `a ${system} register row states its own record instant (recorded_at)`) };
+        if (system && !recordedAt) return { refusal: noBasis(`a ${system} register row states its own record instant (recorded_at)`) };
         return {
           form: "rule",
           basis: {
@@ -77144,14 +77148,14 @@ var Lines = class _Lines {
           assertion: PROFILE_ASSERTION_GRADE,
           recordedAt: null
         };
-      return { refusal: refuse11("NO_BASIS", "a system rule's source is a held capture or a profile entry {profile, entry}") };
+      return { refusal: noBasis("a system rule's source is a held capture or a profile entry {profile, entry}") };
     }
     if ("statement" in basis) {
       if (!filled4(basis.statement)) return { refusal: refuse11("NO_STATEMENT", "a member's testimony states what they know, in their own words") };
       let sight = null;
       if (basis.project !== void 0 && basis.project !== null) {
         const p3 = this.#one(`SELECT bundle_id FROM bundles WHERE bundle_id = ? AND object_type = 'project'`, String(basis.project));
-        if (!p3) return { refusal: refuse11("NO_BASIS", "testimony inside a project names a project the record holds") };
+        if (!p3) return { refusal: noBasis("testimony inside a project names a project the record holds") };
         sight = p3.bundle_id;
       }
       return {
@@ -77162,7 +77166,7 @@ var Lines = class _Lines {
         assertion: TESTIMONY_GRADE2
       };
     }
-    return { refusal: refuse11("NO_BASIS", "a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony {statement}") };
+    return { refusal: noBasis("a line rests on a passage {captureSha, extent}, a system rule {rule, source} or a member's testimony {statement}") };
   }
   /* ---- recordLine (R1–R5) ---- */
   recordLine({ kind: kind2, from, to, role, capacity, title, valid, basis, by } = {}) {
@@ -86387,7 +86391,8 @@ var clip = (s, n2 = TEXT_MAX) => String(s).trim().replace(/\s+/g, " ").slice(0, 
 var isMachine2 = (by) => typeof by === "string" && by.startsWith("class:");
 var isMember = (by) => filled5(by) && !isMachine2(by);
 function refusal13(code, detail, extra = {}) {
-  return { ...extra, ok: false, reason: code, code, detail };
+  const row12 = Object.prototype.hasOwnProperty.call(SHARED_ACT_CHECKS, code) ? SHARED_ACT_CHECKS[code] : null;
+  return { ...extra, ok: false, reason: code, code, ...row12 ? { check: row12.check, translation: row12.translation } : {}, detail };
 }
 var list2 = (xs) => xs.join(", ");
 var NO_SUCH_FACT_DETAIL = "no money fact with that id is held here, or it is not visible to the asker; a money fact is recorded with op=moneyrecord before anything can name it";
@@ -95155,6 +95160,8 @@ var Retrieval = class _Retrieval {
   // R12: {module, fn}
   #decorations = [];
   // the single-bundle projection's decorations: {module, fn}
+  #searchDecorations = [];
+  // R78: the search page's decorations: {module, fn, seq}
   #hiddenRuns = null;
   // R39: {module, fn}
   #selectionListeners = [];
@@ -95343,6 +95350,52 @@ var Retrieval = class _Retrieval {
     this.#decorations.push({ module, fn, seq: this.#decorations.length });
     this.#decorations.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
     return { ok: true, module };
+  }
+  /** R78 (N830; K2480; as R56): the `search` page's decorations (`inquiry`'s `projects` on a question's row, its R60):
+   *  `fn(hits, {viewer})` answers synchronously an array holding one object, or null, per hit, in the page's order, whose
+   *  keys are added to that hit. One registration per module, applied in the modules' order; R56's two refusals. */
+  registerSearchDecoration(module, fn) {
+    if (typeof module !== "string" || !module || typeof fn !== "function")
+      return { ok: false, reason: "DECORATION_MALFORMED", detail: "a registration names its module and its function" };
+    if (this.#searchDecorations.some((d) => d.module === module))
+      return { ok: false, reason: "DECORATION_DECLARED", module };
+    this.#searchDecorations.push({ module, fn, seq: this.#searchDecorations.length });
+    this.#searchDecorations.sort((a, b) => this.#rank(a.module) - this.#rank(b.module) || a.seq - b.seq);
+    return { ok: true, module };
+  }
+  /* R78: the page's hits with each registered decoration's keys, in the modules' order. A decoration is handed frozen
+     copies, so it cannot change a hit; an answer that is not an array of one plain object or null per hit (a throw, a
+     promise, a short array) adds nothing; a key R6 answers is never replaced. With nothing added, the hits themselves. */
+  #decorateHits(hits, viewer) {
+    if (!this.#searchDecorations.length || !hits.length) return hits;
+    const own8 = hits.map((h) => new Set(Object.keys(h)));
+    const shown3 = Object.freeze(hits.map((h) => Object.freeze({ ...h })));
+    const plain19 = (v) => v === null || typeof v === "object" && [Object.prototype, null].includes(Object.getPrototypeOf(v));
+    const added = hits.map(() => ({}));
+    let any = false;
+    for (const d of this.#searchDecorations) {
+      let v;
+      try {
+        v = d.fn(shown3, { viewer });
+      } catch {
+        continue;
+      }
+      if (v && typeof v.then === "function") {
+        Promise.resolve(v).catch(() => {
+        });
+        continue;
+      }
+      if (!Array.isArray(v) || v.length !== hits.length || !v.every(plain19)) continue;
+      v.forEach((o, i) => {
+        if (!o) return;
+        const keep2 = Object.keys(o).filter((k) => !own8[i].has(k));
+        if (keep2.length) {
+          added[i] = { ...added[i], ...Object.fromEntries(keep2.map((k) => [k, o[k]])) };
+          any = true;
+        }
+      });
+    }
+    return any ? hits.map((h, i) => Object.keys(added[i]).length ? { ...h, ...added[i] } : h) : hits;
   }
   /** R39, R57 (K80): the rows the frontier tallies leave out for a viewer — a run's rows in a project the viewer cannot
    *  see — as `fn(viewer)` answering a WHERE tail `{sql, args}` over `observation_log` (`ai-runs` registers it). */
@@ -95829,7 +95882,7 @@ var Retrieval = class _Retrieval {
     tally.applied++;
     return this.#rows(stmt.sql, ...stmt.args);
   }
-  /** R6–R9: `op=search`. */
+  /** R6–R9, R78: `op=search`. Synchronous: a page's decorations (R78) answer synchronously too. */
   search(input = {}) {
     const mode = input.mode === "ids" ? "ids" : input.mode === "count" ? "count" : "page";
     const plan = this.#compile(input);
@@ -95852,7 +95905,7 @@ var Retrieval = class _Retrieval {
       offset: plan.offset
     };
     if (mode === "page") {
-      out.hits = this.runQuery(plan.statements.page(), tally);
+      out.hits = this.#decorateHits(this.runQuery(plan.statements.page(), tally), input.viewer ?? null);
     } else if (mode === "ids") {
       const ids = this.runQuery(plan.statements.ids(), tally).map((r) => r.bundle_id);
       out.ids = ids;
