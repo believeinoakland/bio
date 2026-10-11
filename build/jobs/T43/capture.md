@@ -1,6 +1,6 @@
 # capture (T43)
 
-**Status** · session_012qi9yvQTQeqGH156Kzdsx8 · depth 2 · WAITING ON BOB (J2) · handled B2
+**Status** · session_012qi9yvQTQeqGH156Kzdsx8 · depth 2 · WORKING · handled B2
 
 ## J1 · QUESTION
 
