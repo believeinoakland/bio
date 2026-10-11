@@ -208084,7 +208084,7 @@ var Conformance = class _Conformance {
      From T33 it is `{id, event, actor: {role, body, entity_id, entity_why?}, evidence, when}`, `when` the event's as the
      author read it. A pre-T33 act keeps its description, date and period; aliased, `event` is its event, otherwise null
      with `act_unaliased: true` and the sentence saying so. */
-  #actView(r, seen = null) {
+  #actView(r, seen = null, acts3 = null) {
     const all = safeJson29(r.act_evidence, []);
     const evidence = seen ? seen.contents(all) : all;
     const actor = {
@@ -208094,13 +208094,7 @@ var Conformance = class _Conformance {
       ...r.act_entity ? {} : { entity_why: r.act_event ? NO_OFFICE_ENTITY : ACTOR_BEFORE_ENTITIES }
     };
     if (r.act_event) return { id: r.act_id, event: r.act_event, actor, evidence, when: safeJson29(r.act_when, null) };
-    let f17 = null;
-    try {
-      f17 = this.events.eventForAct(r.act_id);
-    } catch {
-      f17 = null;
-    }
-    const event2 = f17 && f17.found && str42(f17.event_id) ? f17.event_id : null;
+    const event2 = this.#aliasOf(r.act_id, acts3);
     return {
       id: r.act_id,
       event: event2,
@@ -208158,32 +208152,41 @@ var Conformance = class _Conformance {
   /* R24 (K903 (4), DEC-36): one read's sight. Each filter keeps what `viewer` may see and leaves the rest out whole (no
      id, no placeholder, no count), noting that something was withheld; the read then states `out_of_view: true`, and
      nothing more. An id or content id the record does not hold (a proposal's free words) is authored, and stands. */
-  #sight(viewer) {
+  #sight(viewer, memo = null) {
     const self = this;
+    const once = (key2, ask2) => {
+      if (!memo) return ask2();
+      if (!memo.has(key2)) memo.set(key2, ask2());
+      return memo.get(key2);
+    };
     return {
       withheld: false,
       sees(id) {
-        if (self.membership.inSight(id, viewer)) return true;
-        let info = null;
-        try {
-          info = self.record.bundleInfo(id);
-        } catch {
-          info = null;
-        }
-        if (!info) return true;
-        this.withheld = true;
-        return false;
+        const v = once(`b:${id}`, () => {
+          if (self.membership.inSight(id, viewer)) return true;
+          let info = null;
+          try {
+            info = self.record.bundleInfo(id);
+          } catch {
+            info = null;
+          }
+          return !info;
+        });
+        if (!v) this.withheld = true;
+        return v;
       },
       seesContent(cid) {
-        let row12 = null;
-        try {
-          row12 = self.content.contentRow(cid);
-        } catch {
-          row12 = null;
-        }
-        if (!row12 || self.membership.inSight(row12.bundle_id, viewer)) return true;
-        this.withheld = true;
-        return false;
+        const v = once(`c:${cid}`, () => {
+          let row12 = null;
+          try {
+            row12 = self.content.contentRow(cid);
+          } catch {
+            row12 = null;
+          }
+          return !row12 || self.membership.inSight(row12.bundle_id, viewer);
+        });
+        if (!v) this.withheld = true;
+        return v;
       },
       contents(list6) {
         return (Array.isArray(list6) ? list6 : []).filter((cid) => this.seesContent(cid));
@@ -208537,16 +208540,24 @@ var Conformance = class _Conformance {
     return { ok: true, prev, reason: why2 };
   }
   /* R7, R11, R26: the event a determination's act is, an `ACT-` id resolved through its alias; null for one not aliased. */
-  #eventOfRow(r) {
+  #eventOfRow(r, acts3 = null) {
     if (r.act_event) return r.act_event;
     if (!ACT_RE2.test(String(r.act_id ?? ""))) return r.act_id ?? null;
+    return this.#aliasOf(r.act_id, acts3);
+  }
+  /* R26: the event an `ACT-` id is an alias of (`events.eventForAct`), or null when none is linked. With `acts`, a
+     page's memo (R11), each distinct id is asked once. */
+  #aliasOf(actId, acts3 = null) {
+    if (acts3 && acts3.has(actId)) return acts3.get(actId);
     let f17 = null;
     try {
-      f17 = this.events.eventForAct(r.act_id);
+      f17 = this.events.eventForAct(actId);
     } catch {
       f17 = null;
     }
-    return f17 && f17.found && str42(f17.event_id) ? f17.event_id : null;
+    const event2 = f17 && f17.found && str42(f17.event_id) ? f17.event_id : null;
+    if (acts3) acts3.set(actId, event2);
+    return event2;
   }
   /* ===================================================================== *
    * R1–R8, R13, R14, R16, R17: determine
@@ -208557,8 +208568,33 @@ var Conformance = class _Conformance {
   determine(input = {}) {
     const rows3 = isObj47(input) && Array.isArray(input.rows) ? input.rows : [];
     if (!rows3.some((r) => isObj47(r) && isObj47(r.did))) return this.#determine(input, null);
+    const head = this.#determineHead(input);
+    if (head) return head;
     const viewer = input.viewer != null ? input.viewer : input.author ?? null;
     return this.#measures(rows3, viewer).then((m) => this.#determine(input, m));
+  }
+  /* R1's refusals that need no measure, in R1's order (R30): a machine or empty author, the project unseen, the author
+     not joined, then R18's size cap (the cause's evidence with it). Answers the first refusal, or null. */
+  #determineHead(input) {
+    const {
+      project = null,
+      act: act2 = null,
+      findings = null,
+      standards = null,
+      rows: rows3 = null,
+      questions = null,
+      cause = null,
+      author = null
+    } = isObj47(input) ? input : {};
+    const viewer = input && input.viewer != null ? input.viewer : author;
+    const byMachine = this.#refuseMachine(author);
+    if (byMachine) return byMachine;
+    const pid = str42(project);
+    const unseen = this.#projectRefusal(pid, viewer);
+    if (unseen) return unseen;
+    const notJoined = this.#participantRefusal(pid, author);
+    if (notJoined) return notJoined;
+    return this.#sizeRefusal({ findings, standards, rows: rows3, questions, evidence: isObj47(act2) ? act2.evidence : null }) || this.#sizeRefusal({ evidence: isObj47(cause) && Array.isArray(cause.evidence) ? cause.evidence : null }, "cause");
   }
   #determine(input, measures) {
     const {
@@ -208575,21 +208611,9 @@ var Conformance = class _Conformance {
       author = null
     } = isObj47(input) ? input : {};
     const viewer = input && input.viewer != null ? input.viewer : author;
-    const byMachine = this.#refuseMachine(author);
-    if (byMachine) return byMachine;
+    const head = this.#determineHead(input);
+    if (head) return head;
     const pid = str42(project);
-    const unseen = this.#projectRefusal(pid, viewer);
-    if (unseen) return unseen;
-    const notJoined = this.#participantRefusal(pid, author);
-    if (notJoined) return notJoined;
-    const large = this.#sizeRefusal({
-      findings,
-      standards,
-      rows: rows3,
-      questions,
-      evidence: isObj47(act2) ? act2.evidence : null
-    }) || this.#sizeRefusal({ evidence: isObj47(cause) && Array.isArray(cause.evidence) ? cause.evidence : null }, "cause");
-    if (large) return large;
     const a = this.#actOf(act2, pid, supersedes, viewer);
     if (!a.ok) return a;
     const f17 = this.#pinFindings(findings, pid);
@@ -209101,7 +209125,9 @@ var Conformance = class _Conformance {
     return { causes, withheld: seen.withheld };
   }
   /** R11: the determinations the filters admit, in id order, at most 200 a page (a lower `limit` honoured), `truncated`
-   *  measured by reading one past; only those in projects the viewer sees in full (R15). */
+   *  measured by reading one past; only those in projects the viewer sees in full (R15). A page's reads do not grow
+   *  with its items (N841): supersessions, standards and findings are read once for the page, each `ACT-` alias and
+   *  each id's sight once per distinct id. */
   determinationsFor({
     project = null,
     act: act2 = null,
@@ -209125,8 +209151,9 @@ var Conformance = class _Conformance {
       where.push(`d.project_id = ?`);
       args.push(pid);
     }
+    const acts3 = /* @__PURE__ */ new Map();
     if (str42(act2)) {
-      const ids = this.#actIds(str42(act2));
+      const ids = this.#actIds(str42(act2), acts3);
       where.push(`d.act_id IN (${ids.map(() => "?").join(",")})`);
       args.push(...ids);
     }
@@ -209154,17 +209181,33 @@ var Conformance = class _Conformance {
       cap + 1
     );
     const truncated5 = page2.length > cap;
-    const items = page2.slice(0, cap).map((r) => {
-      const by = this.#one(`SELECT superseded_by FROM determination_supersessions WHERE superseded=?`, r.determination_id);
-      const seen = this.#sight(viewer);
+    const listed2 = page2.slice(0, cap);
+    const byItem = (sql) => {
+      const out = /* @__PURE__ */ new Map();
+      if (!listed2.length) return out;
+      for (const x of this.#rows(sql, JSON.stringify(listed2.map((r) => r.determination_id)))) {
+        if (!out.has(x.determination_id)) out.set(x.determination_id, []);
+        out.get(x.determination_id).push(x);
+      }
+      return out;
+    };
+    const supersededBy = byItem(`SELECT superseded AS determination_id, superseded_by FROM determination_supersessions
+                                 WHERE superseded IN (SELECT value FROM json_each(?))`);
+    const outcomesOf3 = byItem(`SELECT determination_id, standard_id, outcome FROM determination_standards
+                               WHERE determination_id IN (SELECT value FROM json_each(?)) ORDER BY determination_id, ord`);
+    const findingsOf2 = byItem(`SELECT determination_id, finding_id, case_id, edition, version_sha, role
+                               FROM determination_findings WHERE determination_id IN (SELECT value FROM json_each(?))
+                               ORDER BY determination_id, ord`);
+    const sight = /* @__PURE__ */ new Map();
+    const items = listed2.map((r) => {
+      const [by] = supersededBy.get(r.determination_id) || [];
+      const seen = this.#sight(viewer, sight);
       return seen.mark({
         id: r.determination_id,
         project: r.project_id,
-        act: this.#actView(r, seen),
-        outcomes: this.#rows(`SELECT standard_id, outcome FROM determination_standards WHERE determination_id=?
-                                     ORDER BY ord LIMIT ?`, r.determination_id, LIMITS.standards).filter((s) => seen.sees(s.standard_id)).map((s) => ({ standard: s.standard_id, outcome: s.outcome })),
-        findings: this.#rows(`SELECT finding_id, case_id, edition, version_sha, role FROM determination_findings
-                                     WHERE determination_id=? ORDER BY ord LIMIT ?`, r.determination_id, LIMITS.findings).filter((f17) => seen.sees(f17.finding_id)).map((f17) => ({
+        act: this.#actView(r, seen, acts3),
+        outcomes: (outcomesOf3.get(r.determination_id) || []).slice(0, LIMITS.standards).filter((s) => seen.sees(s.standard_id)).map((s) => ({ standard: s.standard_id, outcome: s.outcome })),
+        findings: (findingsOf2.get(r.determination_id) || []).slice(0, LIMITS.findings).filter((f17) => seen.sees(f17.finding_id)).map((f17) => ({
           finding: f17.finding_id,
           case: f17.case_id,
           edition: Number(f17.edition),
@@ -209182,22 +209225,16 @@ var Conformance = class _Conformance {
   }
   /* R11, R26: the act ids that name the same act as `act`: the event an `ACT-` alias resolves to, and every pre-T33
      `ACT-` id this module holds that resolves to that event (bounded); an id not aliased names only itself. */
-  #actIds(act2) {
+  #actIds(act2, acts3 = null) {
     let event2 = act2;
     if (ACT_RE2.test(act2)) {
-      let f17 = null;
-      try {
-        f17 = this.events.eventForAct(act2);
-      } catch {
-        f17 = null;
-      }
-      if (!f17 || !f17.found || !str42(f17.event_id)) return [act2];
-      event2 = f17.event_id;
+      event2 = this.#aliasOf(act2, acts3);
+      if (!event2) return [act2];
     }
     const out = /* @__PURE__ */ new Set([act2, event2]);
     for (const r of this.#rows(`SELECT DISTINCT act_id FROM determinations WHERE act_event IS NULL AND act_id LIKE 'ACT-%'
                                 ORDER BY act_id LIMIT 1000`))
-      if (this.#eventOfRow(r) === event2) out.add(r.act_id);
+      if (this.#eventOfRow(r, acts3) === event2) out.add(r.act_id);
     return [...out];
   }
   /* ===================================================================== *
@@ -209210,8 +209247,16 @@ var Conformance = class _Conformance {
   comparisonPropose(input = {}) {
     const rows3 = isObj47(input) && Array.isArray(input.rows) ? input.rows : [];
     if (!rows3.some((r) => isObj47(r) && isObj47(r.did))) return this.#propose(input, null);
+    const head = this.#proposeHead(input);
+    if (head) return head;
     const viewer = input.viewer != null ? input.viewer : input.proposer ?? null;
     return this.#measures(rows3, viewer).then((m) => this.#propose(input, m));
+  }
+  /* R12's refusals that need no measure, in order (R30): the project unseen, then R18's cap. Answers one, or null. */
+  #proposeHead(input) {
+    const { project = null, act: act2 = null, standards = null, rows: rows3 = null, questions = null, proposer = null } = isObj47(input) ? input : {};
+    const viewer = input && input.viewer != null ? input.viewer : proposer;
+    return this.#projectRefusal(str42(project), viewer) || this.#sizeRefusal({ standards, rows: rows3, questions, evidence: isObj47(act2) ? act2.evidence : null });
   }
   #propose(input, measures) {
     const {
@@ -209225,10 +209270,8 @@ var Conformance = class _Conformance {
     } = isObj47(input) ? input : {};
     const viewer = input && input.viewer != null ? input.viewer : proposer;
     const pid = str42(project);
-    const unseen = this.#projectRefusal(pid, viewer);
-    if (unseen) return unseen;
-    const large = this.#sizeRefusal({ standards, rows: rows3, questions, evidence: isObj47(act2) ? act2.evidence : null });
-    if (large) return large;
+    const head = this.#proposeHead(input);
+    if (head) return head;
     if (namesOutcome(input))
       return refusal30("PROPOSAL_CANNOT_DETERMINE", "a comparison carries rows and questions and never an outcome: only a member's determination records whether the act complied. Nothing was written.");
     const sig = this.#refuseSignificance(input);
@@ -211901,10 +211944,10 @@ ${life.stage ? `Stage: ${life.stage}${life.follows !== void 0 ? `, following cor
    *  through a viewer's sight (D54: the founder's viewer no longer sees a hidden project, membership R43). */
   purgeHeld({ bundleId = null } = {}) {
     try {
+      const id = bundleId === null || bundleId === void 0 ? "" : String(bundleId).trim();
+      if (!id) return this.holdInPlace();
       const rows3 = this.#standing();
       if (!rows3.length) return false;
-      const id = bundleId === null || bundleId === void 0 ? "" : String(bundleId).trim();
-      if (!id) return true;
       const held2 = new Set(rows3.map((r) => r.project).filter(Boolean));
       if (held2.has(id) || rows3.some((r) => r.bundle_id === id)) return true;
       const info = this.record.bundleInfo(id);
@@ -212999,9 +213042,9 @@ Changes: responds_to edge added to ${actionId}.
     const tail2 = items[items.length - 1];
     return { ok: true, items, limit: max, truncated: truncated5, cursor: truncated5 && tail2 ? `${tail2.action}#${tail2.ord}` : null };
   }
-  /** R55 (DEC-108; capture R32): whether any litigation hold is in place in the group: whether any entry of any action
+  /** R55 (DEC-108; doorbell R3): whether any litigation hold is in place in the group: whether any entry of any action
    *  the instance holds has `in_place` as its latest statement (R52), whatever the viewer. Synchronous; writes nothing
-   *  and never throws: a read that fails answers `true`, so capture clears nothing it cannot rule a hold out for. */
+   *  and never throws: a read that fails answers `true`, so doorbell clears nothing it cannot rule a hold out for. */
   holdInPlace() {
     try {
       const r = this.#one(`SELECT 1 AS held FROM action_holds h WHERE h.hold='in_place'
@@ -213563,11 +213606,11 @@ function actionsOf(host, deps) {
     const duties2 = d.duties === null ? null : a.duties;
     if (duties2 && typeof duties2.registerTriggerSource === "function")
       duties2.registerTriggerSource("actions", (args) => a.triggerSource(args || {}));
-    const capture2 = d.capture === null ? null : d.capture || captureOf(host, d.env ? { env: d.env } : {});
-    if (capture2) {
-      const r = capture2.registerReader("litigation-hold", "actions", () => a.holdInPlace());
+    const doorbell = d.doorbell === null ? null : d.doorbell || doorbellOf(host);
+    if (doorbell) {
+      const r = doorbell.registerReader("litigation-hold", "actions", () => a.holdInPlace());
       if (r && r.ok === false && r.module !== "actions")
-        throw new Error(`actions: capture refused the litigation-hold reader: ${r.reason}${r.module ? ` (held by ${r.module})` : ""}`);
+        throw new Error(`actions: doorbell refused the litigation-hold reader: ${r.reason}${r.module ? ` (held by ${r.module})` : ""}`);
     }
     let ratification = null;
     if (d.ratification !== null && (d.ratification || d.env)) {
