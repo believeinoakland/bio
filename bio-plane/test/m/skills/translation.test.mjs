@@ -31,11 +31,11 @@ const where = (c) => (c.source === INTERACTION_SOURCE && c.section === LANGUAGE_
 const strings = (v) => typeof v === "string" ? [v] : v && typeof v === "object" ? Object.values(v).flatMap(strings) : [];
 const text = (re) => INTERFACE_TRANSLATION_CLAUSES.filter((c) => re.test(c.text));
 
-test("R39 R5 the interface_translation layer, in disclosed after writing_help and before wizard_scripts: authored, its load_when R39's sentence, its body the clauses of §L and the rulings of DEC-127, DEC-157 and DEC-179, each found by R21's normaliser in canon", () => {
+test("R39 R5 the interface_translation layer, in disclosed after writing_help and before action_drafting (R45): authored, its load_when R39's sentence, its body the clauses of §L and the rulings of DEC-127, DEC-157 and DEC-179, each found by R21's normaliser in canon", () => {
   const { disclosed, resident } = renderPack(published({ catalog: translationCatalog() }));
   const keys = Object.keys(disclosed);
   assert.equal(keys.indexOf("interface_translation"), keys.indexOf("writing_help") + 1, "after writing_help");
-  assert.equal(keys.indexOf("wizard_scripts"), keys.indexOf("interface_translation") + 1, "and before wizard_scripts");
+  assert.equal(keys.indexOf("action_drafting"), keys.indexOf("interface_translation") + 1, "and before action_drafting (R45)");
   const layer = disclosed.interface_translation;
   assert.equal(layer.sourcing, "authored");
   assert.equal(SOURCING.interface_translation, "authored");

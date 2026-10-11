@@ -65,8 +65,9 @@
  * So this file holds THREE kinds of thing and says which is which, in
  * `SOURCING` below, mechanically rather than in prose:
  *
- *   `authored` — doctrine. Four sentences, and every one of them is checked
- *                against the design document it is quoted from, so the slowest-
+ *   `authored` — doctrine. Every authored sentence (the four resident ones
+ *                below, and every clause of `skilldoctrine.mjs`) is checked
+ *                against the canon document it is quoted from, so the slowest-
  *                drifting layer still cannot drift SILENTLY.
  *   `imported` — read from the module that ENFORCES the words (`observation-log`,
  *                `run-rules`, `contradiction`). No copy exists here to go
@@ -74,6 +75,8 @@
  *   `driven`   — read from what the plane PUBLISHES on the wire
  *                (`op=affordances`), passed in by the caller as the plane's own
  *                answer and never reshaped.
+ *   `guide`    — a reading or procedure guide's items (R40, R46), passed in by
+ *                the run's caller and scanned for conduct before they render.
  *
  * `test/m/skills/` reads this file's own source and FAILS if any member of a
  * driven or imported vocabulary appears in it as a string literal (R23). That
@@ -152,6 +155,7 @@ import { RUN_BOUNDS, RUN_ENDINGS, AI_RUN_CHECKS } from "./run-rules/index.mjs";
    two suites, and the pack composes them. */
 import { judgementLayers, actionPlanningLayer, filingDraftingLayer, editionStatementLayer, wizardAuthoringLayer,
          legalLookupLayer, askLayer, suggestionsLayer, writingHelpLayer, interfaceTranslationLayer,
+         actionDraftingLayer, procedureGuideLayer,
          readingGuideLayer, enquireLayer, exploreLayer, readingLayer, caseAccountLayer, accountCheckLayer,
          RESEARCH_BOUNDARY_CLAUSES, RESEARCH_BOUNDARY_NOTE, SKILL_CHECKS, SKILL_CHECK_KEYS } from "./skilldoctrine.mjs";
 export { SKILL_CHECKS, SKILL_CHECK_KEYS };
@@ -241,9 +245,9 @@ export const SOURCING = {
   member_only:    "driven",     /* op=affordances .catalog, the mode field */
   contradiction:  "imported",   /* contradiction RECOMMEND_PROMPT + its measured digest (N345) */
   contradiction_unmeasured: "absent", /* while contradiction's RECOMMEND_PROMPT_SHA256 is null (R27) */
-  action_planning: "authored",  /* skilldoctrine.mjs, BIO_Action_v0_1.md §4 (R28) */
+  action_planning: "authored",  /* skilldoctrine.mjs, BIO_Action_v0_2.md §4 (R28; K2780) */
   action_planning_unpublished: "absent", /* while op=affordances publishes no planning act (R29) */
-  filing_drafting: "authored",  /* skilldoctrine.mjs, BIO_Action_v0_1.md §4 rules 1, 7, 11, 13 (R30) */
+  filing_drafting: "authored",  /* skilldoctrine.mjs, BIO_Action_v0_2.md §4 rules 1, 3, 11, 13, 14 (R30; K2780) */
   filing_drafting_unpublished: "absent", /* while op=affordances publishes no template proposal act (R30) */
   edition_statement: "authored", /* skilldoctrine.mjs, BIO_Publication_v0_1.md §5A (R31) */
   edition_statement_unpublished: "absent", /* while op=affordances publishes no edition statement proposal act (R31) */
@@ -259,6 +263,10 @@ export const SOURCING = {
   writing_help_unpublished: "absent", /* while op=affordances publishes no writing help act (R36) */
   interface_translation: "authored", /* skilldoctrine.mjs, Interaction Constructs §L, DEC-127, DEC-157, DEC-179 (R39) */
   interface_translation_unpublished: "absent", /* while op=affordances publishes no translation draft act (R39) */
+  action_drafting: "authored",  /* skilldoctrine.mjs, BIO_Action_v0_2.md §4 rules 1-3, 9, 12, 16, 19, 21 (R45) */
+  action_drafting_unpublished: "absent", /* while op=affordances publishes none of the action draft acts (R45) */
+  procedure_guide: "guide",     /* reading-guides procedureGuidesFor's items, passed by the caller, scanned by R16 (R46) */
+  procedure_guide_none: "absent", /* while the caller passes no procedure guide (R46) */
   research_boundary: "authored", /* skilldoctrine.mjs, ladders §9.4 and Roles §3 rules 11, 12, resident (R2, R37, R38) */
   /* T41 (T41-27; N820): the investigation's layers, every clause quoted from BIO_Investigation_v0_1.md (R43). */
   reading_guide:  "guide",      /* reading-guides guideFor's items, passed by the run's caller, checked for conduct (R40) */
@@ -359,7 +367,7 @@ const MACHINE_MODE = "machine";
  *  precedent: it throws rather than compose a sentence it cannot compose
  *  truthfully. A control that passes while asserting nothing is the failure
  *  D-216's arm 3 measured, and an empty render is how it would arrive here. */
-export function renderPack(published, { reading_guides: readingGuides = null } = {}) {
+export function renderPack(published, { reading_guides: readingGuides = null, procedure_guides: procedureGuides = null } = {}) {
   const p = published && typeof published === "object" ? published : {};
   const vocabularies = p.vocabularies && typeof p.vocabularies === "object" ? p.vocabularies : null;
   const catalog = Array.isArray(p.catalog) ? p.catalog : null;
@@ -408,7 +416,7 @@ export function renderPack(published, { reading_guides: readingGuides = null } =
       + "one of them is empty; a rule stated in words nobody holds is not a rule");
 
   /* THE RESIDENT LAYER. Everything a run must hold from its first token, and
-     nothing else — the four members named in the header, each with the sourcing
+     nothing else — the five members named in the header, each with the sourcing
      it was rendered under so a reader of the PACK can tell an authored sentence
      from an emitted one without reading this file. */
   const resident = {
@@ -449,7 +457,7 @@ export function renderPack(published, { reading_guides: readingGuides = null } =
   if (wizardScripts) validateWizardScripts(wizardScripts, p.screens);
 
   const disclosed = disclosedLayers({ vocabularies, catalog, captureActs: p.capture_acts, wizardScripts, published: p,
-                                     readingGuides });
+                                     readingGuides, procedureGuides });
   resident.disclosable = Object.keys(disclosed).map((k) => ({ layer: k, load_when: disclosed[k].load_when }));
 
   const pack = { id: SKILL_PACK_ID, edition: DOCTRINE_EDITION, resident, disclosed,
@@ -461,7 +469,7 @@ export function renderPack(published, { reading_guides: readingGuides = null } =
  *  it, so "loads when the run reaches work that needs them" is a field a
  *  scheduler can read rather than a sentence a model must interpret. */
 export function disclosedLayers({ vocabularies, catalog, captureActs, wizardScripts = null, published = {},
-                                  readingGuides = null } = {}) {
+                                  readingGuides = null, procedureGuides = null } = {}) {
   return {
     /* SK-2's judgement layers first, so `disclosable` lists what the run is
        INSTRUCTED BY before what it is given to work with. Spread from one
@@ -539,6 +547,13 @@ export function disclosedLayers({ vocabularies, catalog, captureActs, wizardScri
        lacks, or reading a kept word back into English, works under, with its acts read from the published catalogue
        and record-grammar's translation label; a stated absence while the plane publishes no translation draft act. */
     interface_translation: interfaceTranslationLayer(catalog),
+    /* R45 (T45; N861, N887). The doctrine a member's action draft (reading a prepared text, documenting an infraction for
+       an audience, bearings on a reply) works under, with its acts read from the published catalogue; a stated absence
+       while the plane publishes none of them. */
+    action_drafting: actionDraftingLayer(catalog),
+    /* R46 (T45; N858). The procedure guides for the kind of action a run or draft concerns, passed by its caller
+       (`reading-guides.procedureGuidesFor`, its R13), their items only and scanned by R16, or a stated absence. */
+    procedure_guide: procedureGuideLayer(procedureGuides),
     wizard_scripts: Array.isArray(wizardScripts) ? {
       load_when: "the run guides a member through a path to a result, or must say which steps reach it",
       sourcing: SOURCING.wizard_scripts_published,

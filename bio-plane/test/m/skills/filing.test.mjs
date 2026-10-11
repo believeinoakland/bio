@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { renderPack, SOURCING } from "../../../src/skillpack.mjs";
-import { filingDraftingLayer, FILING_RULES, FILING_TEMPLATE_ACTS, FILING_TEMPLATE_ACT, ACTION_RULES, ACTION_SOURCE,
+import { filingDraftingLayer, FILING_RULES, FILING_TEMPLATE_ACTS, FILING_TEMPLATE_ACT, ACTION_RULES, ACTION_RULE_TABLE, ACTION_SOURCE,
          ACTION_SECTION, controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
 import { SRC, read, norm, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
 
@@ -21,7 +21,7 @@ const s4 = () => section(read(ACTION_SOURCE), "4. The rules");
 const ruleText = (n) => (s4().split("\n").find((l) => l.startsWith(`${n}. `)) ?? "");
 const strings = (v) => typeof v === "string" ? [v] : v && typeof v === "object" ? Object.values(v).flatMap(strings) : [];
 
-test("R30 R5 the filing_drafting layer, in disclosed after action_planning: authored, its load_when R30's sentence, its body §4's rules 1, 7, 11 and 13, each heading and sentence found in that rule by R21's normaliser", () => {
+test("R30 R5 the filing_drafting layer, in disclosed after action_planning: authored, its load_when R30's sentence, its body BIO_Action_v0_2.md §4's rules 1, 3, 11, 13 and 14 (v0.1's rule 7 now rule 14; rule 3, the record check, added), each heading and sentence found in that rule by R21's normaliser", () => {
   const { disclosed, resident } = renderPack(published({ catalog: filingCatalog() }));
   const keys = Object.keys(disclosed);
   assert.equal(keys.indexOf("filing_drafting"), keys.indexOf("action_planning") + 1, "after action_planning");
@@ -31,10 +31,10 @@ test("R30 R5 the filing_drafting layer, in disclosed after action_planning: auth
   assert.equal(layer.load_when, LOAD_WHEN);
   assert.ok(resident.disclosable.some((d) => d.layer === "filing_drafting" && d.load_when === LOAD_WHEN));
   assert.equal(layer.body.rules, FILING_RULES);
-  assert.equal(layer.body.source, "docs/architecture/BIO_Action_v0_1.md");
+  assert.equal(layer.body.source, "docs/architecture/BIO_Action_v0_2.md");
   assert.equal(layer.body.section, ACTION_SECTION);
   assert.ok(canonDocuments().has(ACTION_SOURCE), "the Action document is canon");
-  assert.deepEqual(FILING_RULES.map((r) => r.rule), [1, 7, 11, 13], "exactly rules 1, 7, 11 and 13, in §4's order");
+  assert.deepEqual(FILING_RULES.map((r) => r.rule), [1, 3, 11, 13, 14], "exactly rules 1, 3, 11, 13 and 14, in §4's order");
   for (const r of FILING_RULES) {
     const rule = ruleText(r.rule);
     assert.ok(rule.length > 0, `rule ${r.rule} is in §4`);
@@ -42,17 +42,22 @@ test("R30 R5 the filing_drafting layer, in disclosed after action_planning: auth
     assert.ok(r.sentences.length > 0);
     for (const s of r.sentences) assert.ok(foundIn(rule, s), `rule ${r.rule}: "${s}" is in its paragraph`);
   }
-  /* The clauses R30 names: the machine proposes and never acts; nothing leaves by a system path, a counsel packet never
-     fileable as it stands; a missing fact reads undetermined; the venue sets the standard. */
+  /* The clauses R30 names: the machine proposes and never acts; what the group sends is checked against its record;
+     a missing fact reads undetermined; the venue sets the standard; nothing leaves by a system path, a counsel packet
+     never fileable as it stands. */
   const all = FILING_RULES.flatMap((r) => r.sentences).join(" ");
-  for (const re of [/never does any of these acts/, /The instance transmits nothing/, /never fileable as it stands/,
-                    /a missing fact reads undetermined, never a default/, /No action is refused for its evidence grade/])
+  for (const re of [/never does any of these acts/, /sentence-by-sentence account check/,
+                    /one the record contradicts is held back by default/, /a question is never flagged/,
+                    /a missing fact reads undetermined, never a default/, /No action is refused for its evidence grade/,
+                    /The instance transmits nothing/, /never fileable as it stands/])
     assert.match(all, re);
-  /* Rules 1 and 13 are the planning layer's own objects, never a second copy. */
+  /* Rules 1 and 13 are the planning layer's own objects, never a second copy; every rule is the table's own. */
   assert.equal(FILING_RULES[0], ACTION_RULES.find((r) => r.rule === 1));
   assert.equal(FILING_RULES[3], ACTION_RULES.find((r) => r.rule === 13));
-  /* The lookup can miss: a changed word is not found. */
-  assert.ok(!foundIn(ruleText(7), "The instance transmits everything."));
+  for (const r of FILING_RULES) assert.equal(r, ACTION_RULE_TABLE.find((x) => x.rule === r.rule));
+  /* The lookup can miss: a changed word is not found, and v0.1's rule 7 is not v0.2's rule 7. */
+  assert.ok(!foundIn(ruleText(14), "The instance transmits everything."));
+  assert.ok(!foundIn(ruleText(7), "The instance transmits nothing."));
   /* Only canon sentences (K927): the draft's two non-canon clauses are not carried. */
   assert.ok(!/names blanks only|asserts a fact the record does not hold/.test(JSON.stringify(layer)));
 });

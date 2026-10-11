@@ -167,12 +167,12 @@ test("R4 disclosable lists every disclosed key with its load_when, and nothing o
   for (const d of resident.disclosable) assert.deepEqual(Object.keys(d).sort(), ["layer", "load_when"]);
 });
 
-test("R5 disclosed holds the judgement layers, then vocabularies, acts, bounds, refusals, contradiction, action_planning, filing_drafting, edition_statement, wizard_authoring, legal_lookup, ask, suggestions, writing_help, interface_translation, wizard_scripts (no recipes layer), then (T41) reading_guide, enquire, explore, reading, case_account, account_check, each with load_when and sourcing", () => {
+test("R5 disclosed holds the judgement layers, then vocabularies, acts, bounds, refusals, contradiction, action_planning, filing_drafting, edition_statement, wizard_authoring, legal_lookup, ask, suggestions, writing_help, interface_translation, (T45) action_drafting, procedure_guide, wizard_scripts (no recipes layer), then (T41) reading_guide, enquire, explore, reading, case_account, account_check, each with load_when and sourcing", () => {
   const pub = published();
   const { disclosed } = renderPack(pub);
   assert.deepEqual(Object.keys(disclosed), [...JUDGEMENT_KEYS, "vocabularies", "acts", "bounds", "refusals",
     "contradiction", "action_planning", "filing_drafting", "edition_statement", "wizard_authoring", "legal_lookup",
-    "ask", "suggestions", "writing_help", "interface_translation", "wizard_scripts",
+    "ask", "suggestions", "writing_help", "interface_translation", "action_drafting", "procedure_guide", "wizard_scripts",
     "reading_guide", "enquire", "explore", "reading", "case_account", "account_check"]);
   assert.ok(!("recipes" in disclosed), "DEC-120 retires the recipe: no layer carries the word");
   assert.deepEqual(JUDGEMENT_KEYS.map((k) => disclosed[k]), JUDGEMENT_KEYS.map((k) => judgementLayers()[k]));
