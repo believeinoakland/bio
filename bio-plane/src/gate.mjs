@@ -1040,7 +1040,38 @@ import { recordChecks } from "./promotion/record-checks.mjs";
    which registers a gate step, so no gate's order moves.
    ROW_CENSUS (R50) re-pinned to this tree: 1872 rows. Rows a T46 job in layers 3–11 adds or changes are T47's stamp
    (plan T46, rule 5 item 2). */
-export const CATALOG_VERSION = "1.73.0";
+/* 1.74.0 (PROMOTION #45, T47-10, 2026-10-12; T46's rule 5 item 2, T47's rules 5 (2) and 7a; K3027, K3037, K3039, K3040):
+   MINOR. The stamp of every row awaiting it at T46's close (T46's layers 3–11) and of T47's layers 1 and 2, read by
+   diffing R50's census lines of `tranche/T47` after record-core, membership, project-roster and credentials merged
+   against 1.73.0's own (`test/fixtures/row-census-1.73.0.jsonl`: 1872 rows, 65a4bea3…): ten new rows, ninety-two changed,
+   none re-keyed, none retired. Each is one a job record names (T46's ESCALATION's, RUN-RULES', AI-RUNS', INSTANCE-SETUP's,
+   ANSWER-ENVELOPE's, ACTION-GRAMMAR's, ACTION-HOLDS', ACTION-PLANS', ACTION-REPLIES', CASE-ACCOUNT's, CASE-AUTHORING's,
+   CONFORMANCE's, CONSEQUENCES', DUTIES', FILING-TEMPLATES', FILINGS', LOCAL-FACTS', READING-GUIDES' and STANDARDS'; T47's
+   RECORD-CORE's and CREDENTIALS').
+   NO FAMILY ARRIVED since 1.73.0: every new row joins a family its module already held.
+   ARRIVED (10): escalation C-116.47 MACHINE_CANNOT_STOP, C-116.48 NOT_STOPPED (stopping pursuit); run-rules C-22.29
+   AI_PART_NOT_DEPLOYED, C-22.30 MEMBER_RUN_MODE_NOT_ADMITTED (minted at ai-runs' `dispatchMemberRun`); instance-setup
+   C-64.28 MACHINE_CANNOT_SET_INFO_LEVEL, C-64.29 INFO_LEVEL_UNKNOWN; answer-envelope C-69.6 DISCLOSURE_DUE (the door's,
+   until T47-65 retires it, K3030); record-core C-102.33 SETTING_NOT_JSON (its R84, T47-6); credentials C-29.40
+   DISCLOSURE_DUE (an API-key account reference while no disclosure is read, T47-9) and C-29.41
+   AI_RUN_CREDENTIAL_MALFORMED (its R63's mint). C-69.6 and C-29.40 share a code and are two row objects, counted twice.
+   CHANGED (92), code and number unmoved. Translation only (91), DEC-194's words read by key from `words.json` (N913):
+   action-grammar C-117.30, .31, .33–.40, .42–.54, .56 (24); consequences C-114.23–.28, .30–.33, .35, .36, .38–.42 (17);
+   filings C-115.45–.49, .51–.53 (8); local-facts C-126.6–.10, .12, .14, .15 (8); action-replies C-150.1–.6; action-plans
+   C-124.30, .58–.62; conformance C-113.38–.43 (6 each); case-authoring C-136.3, .6–.8 (4); duties C-133.41, .42, .44;
+   reading-guides C-144.4, .19; run-rules C-109.13, .14; standards C-112.63, .64; action-holds C-149.10; case-account
+   C-153.2; filing-templates C-125.33. `where` only (1): escalation C-116.27 NOT_OPEN, now minted at `refuseNotOpen >
+   is-escalation-open`, words unchanged. No row of extraction's C-51 moved.
+   CHANGED IN WHAT THE GATES RUN, no row line moving: record-grammar's `checkBundle` admits a `success_record` object
+   (T47-1, its R62: a `SUC-<year>-<digits>` id with no slug, its type, `success_record@1`), so C-1.2 and C-2.5 pass such a
+   document where they refused it; `PROPOSAL_STATES` gains `status_report` (its R61), no gate's. Membership's
+   `MODULE_ORDER` gains `case-inputs`, `action-records`, `screens-wizards`, `screens-investigate`, `screens-publish` and
+   `screens-action` (T47-7), none of which registers a gate step, so no gate's order moves; membership's R133 froze its
+   row tables, no line moving. T47's layer 1 (jurisdictions, connection-grammar, bundler, odf-reader, file-scanner) and
+   project-roster's T47 job added and changed no row.
+   ROW_CENSUS (R50) re-pinned to this tree: 1882 rows. Rows a T47 job in layers 3–11 adds or changes (case-inputs' and
+   action-records' moved `where`s among them) are T48's stamp (plan T47, rule 5 item 2). */
+export const CATALOG_VERSION = "1.74.0";
 /* D-147 side, kept as history — took 1.30.0 (D-147, 2026-09-25, branch land/worker/D-147): 1.29.0 -> 1.30.0, MINOR — eleven checks ADDED (C-94.1-11, LIFECYCLE_CHECKS, the records-request lifecycle), none changed or removed; the census read from the d470 suite's print (466 -> 477). CONDUCT reconciles the number at integration if another branch takes 1.30.0 first. */
 /* MK-7 side, kept as history — took 1.30.0 (MK-7, 2026-09-25, branch land/worker/MK-7): ONE NEW FAMILY, ATTRIBUTION_CHECKS (C-92.1-.12, the
    attribution act and its gate), and three TESTIMONY_CHECKS rows (C-53.10-.12) re-worded as their fence is narrowed.
@@ -1132,8 +1163,8 @@ export const GATE_VERSION = `plane-gate/1.0 (bio-checks ${CATALOG_VERSION})`;
    this module's own census suite, `bio-plane/test/system/row-census.test.mjs` (legacy-tests' until T22's opening, K1006):
    a test may import every module's tables, which this module's source cannot (P4). The stamp that moves CATALOG_VERSION
    re-pins it. */
-export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1872,
-  digest: "65a4bea39dcb88e4f17a031927e019b2c8c03465fd3a31d34efae75ae41a281f" });
+export const ROW_CENSUS = Object.freeze({ version: CATALOG_VERSION, rows: 1882,
+  digest: "42d2890cf6972389a59f858374e684662c2514d50b6768380774b6c83c3c5319" });
 
 const hex = (buf) => [...new Uint8Array(buf)].map((x) => x.toString(16).padStart(2, "0")).join("");
 const te = new TextEncoder();

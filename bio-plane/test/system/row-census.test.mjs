@@ -209,7 +209,16 @@
    layer 2 rows (membership's C-96.52 new, C-96.49–.51 retired; project-roster's C-147.3–.8 re-worded) stamped in 1.73.0.
    T46's layer 1 moved no row. A row a T46 job in layers 3–11 adds or changes turns this suite red, accepted by name until
    T47's layer-2 stamp (plan T46, rule 5 item 2), so none is declared. Negative control re-run on the stamp commit: its
-   arms in the suite pass. */
+   arms in the suite pass.
+   RE-PINNED 2026-10-12 (PROMOTION #45, T47-10, T46's rule 5 item 2): over 1.74.0, the stamp's own lines
+   (`fixtures/row-census-1.74.0.jsonl`, written by `row-census.mjs`'s own `censusOf`) on the stamp commit (named in
+   `build/jobs/T47/promotion.md`; 1882 rows, 42d2890c…, over `tranche/T47` after its layer 2's record-core, membership,
+   project-roster and credentials merged, K3040); the 1.73.0 snapshot (no stamp reads it) renamed to it; T46's layers 3–11
+   rows (7 new, 92 changed; none declared here, accepted red 2 at T46's close) and T47's layer 2 rows (record-core's
+   C-102.33, credentials' C-29.40 and C-29.41, all new) stamped in 1.74.0. T47's layer 1 moved no row. A row a T47 job in
+   layers 3–11 adds or changes turns this suite red, accepted by name until T48's layer-2 stamp (plan T47, rule 5 item 2),
+   so none is declared. The suite now also fails a missing snapshot and holds the pin's shape (this job). Negative
+   control re-run on the stamp commit: its arms in the suite pass. */
 import "../stdio.mjs";                 /* D-282: a suite's own exit must not discard the suite's own output */
 import assert from "node:assert/strict";
 import { readFileSync, existsSync } from "node:fs";
@@ -227,8 +236,8 @@ const FIXTURE = (v) => fileURLToPath(new URL(`./fixtures/row-census-${v}.jsonl`,
    carries the line as the stamp read it (so the stamp's census can be rebuilt); `arrived` names the row by check and
    code (its line is the tree's). */
 const AWAITING_STAMP = [
-  /* RE-ANCHORED 2026-10-12 (PROMOTION #44, T46-6): over 1.73.0, the stamp's own lines (`fixtures/row-census-1.73.0.jsonl`).
-     T45's layers 3–11 rows were never declared (accepted red 2) and are stamped in 1.73.0. None is open (see the header). */
+  /* RE-ANCHORED 2026-10-12 (PROMOTION #45, T47-10): over 1.74.0, the stamp's own lines (`fixtures/row-census-1.74.0.jsonl`).
+     T46's layers 3–11 rows were never declared (accepted red 2) and are stamped in 1.74.0. None is open (see the header). */
 ];
 /* COMPOSITIONS AWAITING STAMP: a change to which checks a gate runs moves no row, so the census cannot see it; each is
    declared here by name, verified against its record like a row, and listed (R50, K408, K464). Queue's registered step
@@ -238,8 +247,8 @@ const AWAITING_STAMP = [
    retired; no T17 job names a composition change. LEGACY-TESTS #19 (T21, 2026-10-01): intent's registration changed its
    ids after the 1.51.0 stamp (INTENT #9, no row), declared for T22. */
 const COMPOSITIONS_AWAITING = [
-  /* PROMOTION #44 (T46, 2026-10-12): re-anchored at 1.73.0; no T45 L3–L11 or T46 L1–L2 job record names a composition
-     change beyond 1.73.0's note (record-grammar's new state edges; MODULE_ORDER's new modules register no gate step), and
+  /* PROMOTION #45 (T47, 2026-10-12): re-anchored at 1.74.0; no T46 L3–L11 or T47 L1–L2 job record names a composition
+     change beyond 1.74.0's note (record-grammar's `success_record`; MODULE_ORDER's new modules register no gate step), and
      none is open. */
 ];
 /* The plane's suite shape: every arm printed PASS or FAIL with its reason, the tally last, the exit its verdict. */
@@ -328,8 +337,14 @@ test("R50: the digest does not depend on the order rows are read — the sort's 
   assert.equal(censusOf(tree.rows.map((r) => ({ ...r, where: r.where ?? undefined }))).digest, now.digest, "a missing where reads null");
 });
 
-test("R50 R34: the pin names the stamp it moves with — ROW_CENSUS.version is CATALOG_VERSION", () => {
+test("R50 R34: the pin names the stamp it moves with — ROW_CENSUS.version is CATALOG_VERSION, the pin frozen and whole", () => {
   assert.equal(ROW_CENSUS.version, CATALOG_VERSION);
+  /* PROMOTION #45 (T47-10): the version is set by reference, so the arm also holds the pin's own shape (R50: a count
+     and a lowercase SHA-256), which a hand edit could break while the version still agreed. */
+  assert.ok(Object.isFrozen(ROW_CENSUS), "ROW_CENSUS is frozen");
+  assert.deepEqual(Object.keys(ROW_CENSUS).sort(), ["digest", "rows", "version"]);
+  assert.ok(Number.isSafeInteger(ROW_CENSUS.rows) && ROW_CENSUS.rows > 0, `rows ${ROW_CENSUS.rows}`);
+  assert.match(ROW_CENSUS.digest, /^[0-9a-f]{64}$/);
 });
 
 /* LEGACY-TESTS #14 (T16, 2026-09-30), K567: a record may name its row with the exact phrase
@@ -372,7 +387,9 @@ test("R50: every row awaiting stamp is named so by its job record", () => {
 });
 
 test("R50: the stamp's own lines are the pin — the snapshot this suite names rows against is the stamp's", () => {
-  if (!stamped) { console.log(`  no snapshot of ${ROW_CENSUS.version}: a failure below cannot name its rows until one is taken`); return; }
+  /* PROMOTION #45 (T47-10): every stamp since 1.43.0 writes its snapshot, so a missing one is a stamp that missed it,
+     never a pass: without it the arm below cannot name a moved row. */
+  assert.ok(stamped, `no snapshot of ${ROW_CENSUS.version} (${stampedPath}): the stamp writes its own lines there`);
   const c = censusOf(stamped.map((l) => { const [check, code, where, translation] = JSON.parse(l); return { check, code, where, translation }; }));
   assert.deepEqual({ rows: c.rows, digest: c.digest }, { rows: ROW_CENSUS.rows, digest: ROW_CENSUS.digest });
 });
@@ -396,14 +413,16 @@ test("R50 NEGATIVE CONTROL: a row added without a re-pin fails, naming it; so do
   const a = compare([...now.lines, added], ctl);
   assert.equal(a.held, false);
   assert.ok(a.named.includes("arrived with no record: C-999.1 CONTROL_ARRIVAL"), a.named.join("; "));
-  const gone = now.lines.find((l) => l.startsWith('["C-59.6",'));
+  /* PROMOTION #45 (T47-10): the departed and changed row is the tree's first row held once, so the control never depends on one
+     module's row staying where it is (it named C-59.6 until T47). */
+  const gone = now.lines.find((l) => now.lines.filter((x) => keyOfLine(x) === keyOfLine(l)).length === 1), goneKey = keyOfLine(gone);
   const d = compare(now.lines.filter((l) => l !== gone), ctl);
   assert.equal(d.held, false);
-  assert.ok(d.named.includes("departed with no record: C-59.6 MINT_EXHAUSTED"), d.named.join("; "));
+  assert.ok(d.named.includes(`departed with no record: ${goneKey}`), d.named.join("; "));
   const moved = JSON.parse(gone); moved[3] = `${moved[3]} (a control arm's edit)`;
   const m = compare(now.lines.map((l) => (l === gone ? JSON.stringify(moved) : l)), ctl);
   assert.equal(m.held, false);
-  assert.ok(m.named.includes("changed with no record: C-59.6 MINT_EXHAUSTED"), m.named.join("; "));
+  assert.ok(m.named.includes(`changed with no record: ${goneKey}`), m.named.join("; "));
   /* And a declaration the tree does not bear out is itself a failure, not an exemption. */
   const x = compare(now.lines, { ...ctl, awaiting: [
     { after: "control", kind: "arrived", by: "a control arm", record: "-", check: "C-999.2", code: "NOWHERE" }] });
@@ -413,7 +432,7 @@ test("R50 NEGATIVE CONTROL: a row added without a re-pin fails, naming it; so do
   const y = compare(now.lines, { ...ctl, awaiting: [
     { after: "control", kind: "changed", by: "a control arm", record: "-", line: JSON.parse(gone) }] });
   assert.equal(y.held, false);
-  assert.ok(y.problems.some((p) => p.includes("unchanged in the tree: C-59.6 MINT_EXHAUSTED")), y.problems.join("; "));
+  assert.ok(y.problems.some((p) => p.includes(`unchanged in the tree: ${goneKey}`)), y.problems.join("; "));
 });
 
 console.log(`\nrow-census: ${pass} pass, ${fail} fail`);

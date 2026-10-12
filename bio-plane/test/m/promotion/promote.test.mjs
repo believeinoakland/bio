@@ -348,6 +348,16 @@ test("R16: a move into retired while a live edge cites the item is CITED, naming
   const cited = makePromotion({ citedBy: { [ID]: ["INQ-2026-0001"] } });
   const d = cited.p.promote({ ...create(ID, infoDoc(ID, { current_state: "retired" })), replay: true });
   assert.equal(d.reason, "CITED");
+  /* PROMOTION #45 (T47-10): the title's second half, driven. An item already retired, cited since, is edited without
+     the question: the fence asks a MOVE into retired only. Its control above: the same citation refuses the move. */
+  const later = {};
+  const was = makePromotion({ citedBy: later });
+  const e = was.p.promote(create(ID, infoDoc(ID, { current_state: "verified" })));
+  const f = was.p.promote(revise(ID, e.bundleSha, infoDoc(ID, { current_state: "retired" })));
+  assert.equal(f.ok, true);
+  later[ID] = ["INQ-2026-0001"];
+  const g = was.p.promote(revise(ID, f.bundleSha, infoDoc(ID, { current_state: "retired", title: "retired, amended" }), { snapKey: "k3" }));
+  assert.equal(g.ok, true, JSON.stringify(g));
 });
 
 test("R17: readability is judged first: no bundle.md, a blob-held one or no front matter gets the same refusal whatever the type", () => {

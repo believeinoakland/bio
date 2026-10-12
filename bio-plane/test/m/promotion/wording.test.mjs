@@ -28,7 +28,7 @@ test("R28 (gate.mjs runGate): PLANE_HELD_IN_PARTS says the acquisition receipt o
   assert.equal(r.ok, false);
 });
 
-test("R9 (checks.mjs:165, C-86.3): ENVELOPE_TITLE_DISAGREES's translation says names are held unique across your group's Civicsmith", () => {
+test("R9 (C-86.3): ENVELOPE_TITLE_DISAGREES's translation says names are held unique across your group's Civicsmith", () => {
   const { p } = makePromotion();
   const id = "INFO-2026-0001";
   const r = p.promote(create(id, infoDoc(id), { meta: { title: "Another name" } }));
@@ -38,7 +38,7 @@ test("R9 (checks.mjs:165, C-86.3): ENVELOPE_TITLE_DISAGREES's translation says n
   assert.doesNotMatch(r.translation, RETIRED);
 });
 
-test("R13 (checks.mjs:290, :291, C-64.1): GROUP_UNDETERMINED's translation says your group's Civicsmith has not recorded its group, and that it records it once", () => {
+test("R13 (C-64.1): GROUP_UNDETERMINED's translation says your group's Civicsmith has not recorded its group, and that it records it once", () => {
   const { p } = makePromotion({ group: null });
   const id = "INFO-2026-0001";
   const r = p.promote(create(id, infoDoc(id, { group: undefined })));
@@ -50,7 +50,7 @@ test("R13 (checks.mjs:290, :291, C-64.1): GROUP_UNDETERMINED's translation says 
   assert.doesNotMatch(r.translation, RETIRED);
 });
 
-test("R40 (checks.mjs:336, :342, C-102.4, C-102.5): FACT_UNAVAILABLE and FACT_FAILED say no part of your group's Civicsmith answers, or the part that does stopped", () => {
+test("R40 (C-102.4, C-102.5): FACT_UNAVAILABLE and FACT_FAILED say no part of your group's Civicsmith answers, or the part that does stopped", () => {
   const { p } = makePromotion();
   const none = p.fact("nobodyProvides");
   assert.deepEqual([none.reason, none.check], ["FACT_UNAVAILABLE", "C-102.4"]);
@@ -69,7 +69,7 @@ test("R40 (checks.mjs:336, :342, C-102.4, C-102.5): FACT_UNAVAILABLE and FACT_FA
 
 const BUILD_FAULT = "This is a fault in how your group's Civicsmith was built, not in the record, and nothing in the record changed.";
 
-test("R40 (checks.mjs:349, :350, C-102.6): FACT_MALFORMED says a part of your group's Civicsmith offered an unnamed answer, a fault in how your group's Civicsmith was built", () => {
+test("R40 (C-102.6): FACT_MALFORMED says a part of your group's Civicsmith offered an unnamed answer, a fault in how your group's Civicsmith was built", () => {
   const { p } = makePromotion();
   const r = p.registerFact("", "later", () => 1);
   assert.deepEqual([r.reason, r.check], ["FACT_MALFORMED", "C-102.6"]);
@@ -77,7 +77,7 @@ test("R40 (checks.mjs:349, :350, C-102.6): FACT_MALFORMED says a part of your gr
     + `question, itself, or how to answer it, so nothing was registered. ${BUILD_FAULT}`);
 });
 
-test("R39 (checks.mjs:356, :357, C-102.7): STEP_MODULE_UNNAMED says a part of your group's Civicsmith added a check without naming itself, a fault in how your group's Civicsmith was built", () => {
+test("R39 (C-102.7): STEP_MODULE_UNNAMED says a part of your group's Civicsmith added a check without naming itself, a fault in how your group's Civicsmith was built", () => {
   const { p } = makePromotion();
   const r = p.registerStep("", {});
   assert.deepEqual([r.reason, r.check], ["STEP_MODULE_UNNAMED", "C-102.7"]);
@@ -85,7 +85,7 @@ test("R39 (checks.mjs:356, :357, C-102.7): STEP_MODULE_UNNAMED says a part of yo
     + `naming itself, so nothing was registered. ${BUILD_FAULT}`);
 });
 
-test("R39 (checks.mjs:363, :365, C-102.8): STEP_DECLARED says a part of your group's Civicsmith registered twice, a fault in how your group's Civicsmith was built", () => {
+test("R39 (C-102.8): STEP_DECLARED says a part of your group's Civicsmith registered twice, a fault in how your group's Civicsmith was built", () => {
   const { p } = makePromotion();
   p.registerStep("later", {});
   for (const r of [p.registerStep("later", {}), p.registerFact("citedBy", "later", () => [])]) {
@@ -133,7 +133,7 @@ test("R41 (index.mjs is-project-fork-id-supplied): PROJECT_FORK_ID_SUPPLIED says
   assert.doesNotMatch(r.detail, RETIRED);
 });
 
-test("R38 (names.mjs:84): C-77.2's repair for an untitled project says give it a title unique across your group's Civicsmith", () => {
+test("R38 (C-77.2): C-77.2's repair for an untitled project says give it a title unique across your group's Civicsmith", () => {
   const files = new Map([["bundle.md", pd("")]]);
   const r = checkProjectNameUniqueness([{ folderName: "PROJ-2026-0001-x", files }]);
   const w = r.findings.find((x) => x.check === "C-77.2");
