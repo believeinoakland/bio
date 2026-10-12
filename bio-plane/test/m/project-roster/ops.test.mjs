@@ -1,4 +1,4 @@
-/* The ops map (`projectRosterOps`): each of the twelve ops answers what its service answers, every parameter and stamp
+/* The ops map (`projectRosterOps`): each of the thirteen ops answers what its service answers, every parameter and stamp
    read from the query (the control plane's `by` and `viewer` among them), never from a body; and this module's rows. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -7,7 +7,7 @@ import { projectRosterOps, PROJECT_ROSTER_CHECKS, PROJECT_JOIN_REQUEST_CHECKS } 
 
 const q = (o) => Object.entries(o).map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join("&");
 
-test("R1 R3 R4 R5 R8 R9 R10 R11 R12 R14 R21 R24 each op answers its service, its parameters and stamps from the query; a body names nothing", async () => {
+test("R1 R3 R4 R5 R8 R9 R10 R11 R12 R14 R21 R24 R26 each op answers its service, its parameters and stamps from the query; a body names nothing", async () => {
   const w = await world().group("ann", "bob", "cal");
   w.owned("PROJ-P", "ann", ["bob"]);
   w.m.projectVisibilitySet({ projectId: "PROJ-P", setting: "discoverable", by: "ann", viewer: V("ann") });
@@ -16,7 +16,7 @@ test("R1 R3 R4 R5 R8 R9 R10 R11 R12 R14 R21 R24 each op answers its service, its
   assert.deepEqual(Object.keys(projectRosterOps(w.r, new URL("http://x/"), null, {})).sort(),
     ["projectdirectory", "projectowneradd", "projectownerremove", "projectownerrescue", "projectparticipants",
      "projectrequest", "projectrequestanswer", "projectrequests", "projectrequestwithdraw", "projectvisibility",
-     "projectapprovalset", "projectscopeset"].sort());
+     "projectapprovalset", "projectscopeset", "projectlist"].sort());
   /* reads */
   assert.deepEqual(op("projectparticipants", { projectId: "PROJ-P", by: "bob" }),
     w.r.projectParticipants({ projectId: "PROJ-P", by: "bob" }));
@@ -24,6 +24,11 @@ test("R1 R3 R4 R5 R8 R9 R10 R11 R12 R14 R21 R24 each op answers its service, its
     w.r.projectVisibility({ projectId: "PROJ-P", viewer: V("bob") }));
   const dir = op("projectdirectory", { viewer: V("cal"), limit: "1" });
   assert.deepEqual([dir.limit, dir.projects.map((p) => p.id)], [1, ["PROJ-P"]]);
+  /* R26: the stamped viewer and `limit` from the query; no viewer sent is the empty list */
+  assert.deepEqual(op("projectlist", { viewer: V("bob"), limit: "5" }), w.r.projectList({ viewer: V("bob"), limit: 5 }));
+  assert.deepEqual(op("projectlist", { viewer: V("bob") }).projects.map((p) => [p.id, p.stage]), [["PROJ-P", "forming"]]);
+  assert.deepEqual(op("projectlist", {}, { viewer: V("bob") }),
+    { ok: true, projects: [], count: 0, limit: 200, truncated: false }, "a body's viewer names nothing");
   /* the request's life through the ops */
   const asked = op("projectrequest", { projectId: "PROJ-P", comment: "hello", by: "cal", viewer: V("cal") });
   assert.deepEqual([asked.ok, asked.comment], [true, "hello"]);

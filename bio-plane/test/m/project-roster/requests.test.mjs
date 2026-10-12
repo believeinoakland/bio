@@ -187,7 +187,7 @@ test("R14 projectRequests: the caller's own (never the answering owner), or a pr
   const cut = w.r.projectRequests({ projectId: "PROJ-D", by: "ann", viewer: V("ann"), limit: 1 });
   assert.deepEqual([cut.count, cut.truncated, cut.limit, cut.requests[0].handle], [1, true, 1, "cal"]);
   assert.equal(w.r.projectRequests({ projectId: "PROJ-D", by: "ann", viewer: V("ann"), limit: 2 }).truncated, false);
-  for (const asked of [9999, 0, "x", null]) {
+  for (const asked of [9999, 0, "x", null, Symbol("x"), { valueOf() { throw new Error("no"); } }]) {
     assert.equal(w.r.projectRequests({ by: "cal", viewer: V("cal"), limit: asked }).limit, ProjectRoster.PROJECT_REQUESTS_LIMIT);
     assert.equal(w.r.projectRequests({ projectId: "PROJ-D", by: "ann", viewer: V("ann"), limit: asked }).limit, 200);
   }

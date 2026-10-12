@@ -1,10 +1,11 @@
 /* project-roster — the acts on a project's working group that follow its setup: the roster and its removals record,
  * the owners' votes and an administrator's rescue, the visibility history and the directory, and requests to join.
  *
- * Requirements: build/requirements/project-roster.md (R1–R25). T45 adds a project's scope (R21–R23: a counsel matter, a
+ * Requirements: build/requirements/project-roster.md (R1–R26). T45 adds a project's scope (R21–R23: a counsel matter, a
  * member's own project; the guard membership calls before an invitation or a visibility change, its R128) and the
  * second-approval setting (R24), the acts it names checked against the active profiles' `action_kinds`; T46 (R25)
- * reads their refusals' words by key from `words.json` (`checks.mjs`' `PROJECT_SCOPE_WORDS`). Split from membership for
+ * reads their refusals' words by key from `words.json` (`checks.mjs`' `PROJECT_SCOPE_WORDS`); T47 (R26) lists the
+ * projects a viewer sees at FULL with each one's recorded stage. Split from membership for
  * size at T38 (N783; K617, K624, K2270: variant C1′ of `build/plan/membership-split.md`), by copy: each act's
  * behaviour is membership's as T37 left it, its answers byte for byte. Inviting, joining, leaving and removing, the
  * visibility setting, what a caller may see of a project, the fence and the participation record stay `membership`'s.
@@ -612,8 +613,7 @@ export class ProjectRoster {
         + "member. A credential with no member behind it is outside no project, and an empty list would say "
         + "something untrue about the record.");
     /* END DEC-49 REGION is-project-directory-member */
-    const cap = Math.max(1, Math.min(Number(limit) || ProjectRoster.PROJECT_DIRECTORY_LIMIT,
-      ProjectRoster.PROJECT_DIRECTORY_LIMIT));
+    const cap = ProjectRoster.#cap(limit, ProjectRoster.PROJECT_DIRECTORY_LIMIT);
     /* `request` is the caller's own latest request to each listed project, joined in the SAME statement, so the page
        and its requests cannot disagree. Only the caller's own row is joined: whose else has asked is not a fact the
        directory holds. A granted request never appears: a grant makes the caller a participant, at FULL sight. */
@@ -637,6 +637,42 @@ export class ProjectRoster {
   /* D-479: THE DIRECTORY'S PAGE SIZE, a chosen ceiling and never a finding: generous enough that a member browsing for
      one project to ask to join rarely meets it, published whenever it cuts. It may be lowered, never raised (R9). */
   static PROJECT_DIRECTORY_LIMIT = 200;
+
+  /** R26 (T47; N972): THE PROJECTS A VIEWER SEES AT FULL, each `{id, name, stage}`, in id order: the read Home draws
+   *  "What the group is working on" from, and the complement of R9's directory. Which projects is membership's one rule
+   *  (its R43, compiled by `viewerPredicate`), never a copy: a member's own projects in any state, an active
+   *  administrator's and the founder's discoverable ones too (and a hidden one only when invited or joined, D54), every
+   *  project for a machine credential, and none for a viewer the rule admits to nothing (none sent, or unrecognised),
+   *  which is an empty list and never a refusal: an empty list is true of what that viewer sees.
+   *
+   *  `stage` is the project document's recorded `current_state` (record-core R37) as recorded, null when none is: not
+   *  `project-stage`'s derived stage, a later module this one cannot use. `name` is its title (record-core R34). No
+   *  question count: Home takes it from basis-versions' read. `limit` and `truncated` are R9's rule. Writes nothing. */
+  projectList(asked = {}) {
+    const { viewer = null, limit = null } = asked && typeof asked === "object" ? asked : {};
+    const gate = viewerPredicate(viewer);
+    const cap = ProjectRoster.#cap(limit, ProjectRoster.PROJECT_LIST_LIMIT);
+    const rows = this.#rows(
+      `SELECT b.bundle_id AS id, b.current_state AS state FROM bundles b
+        WHERE b.object_type = 'project' AND (${gate.sql})
+        ORDER BY b.bundle_id
+        LIMIT ?`, ...gate.args, cap + 1);
+    const truncated = rows.length > cap;
+    const projects = (truncated ? rows.slice(0, cap) : rows).map((r) => ({ id: r.id,
+      name: this.#bundle(r.id)?.title ?? null, stage: typeof r.state === "string" && r.state !== "" ? r.state : null }));
+    return { ok: true, projects, count: projects.length, limit: cap, truncated };
+  }
+
+  /* R26's page size, R9's rule: a chosen ceiling, lowered by the caller and never raised. */
+  static PROJECT_LIST_LIMIT = 200;
+
+  /* The cap APPLIED for an asked `limit` under a ceiling (R9, R14, R26): the ceiling when none is asked or it is not a
+     positive number, never more than it, never less than one. Reads any value without throwing. */
+  static #cap(limit, ceiling) {
+    let n;
+    try { n = Number(limit); } catch { n = NaN; }
+    return Math.max(1, Math.min(n || ceiling, ceiling));
+  }
 
   /* ===== R10–R16 — THE REQUEST TO JOIN (§7.14, "The request to join"; Bob, 2026-09-18: *"somebody who sees the
    * project can ask to be added as a member"*) =====
@@ -855,8 +891,7 @@ export class ProjectRoster {
    *  not already seen. Its answering owner is NOT in the requester's view: who owns a project is contents. Both lists
    *  are bounded as R9's directory is (the first `limit` in the order made). */
   projectRequests({ projectId = null, by, viewer = null, limit = null } = {}) {
-    const cap = Math.max(1, Math.min(Number(limit) || ProjectRoster.PROJECT_REQUESTS_LIMIT,
-      ProjectRoster.PROJECT_REQUESTS_LIMIT));
+    const cap = ProjectRoster.#cap(limit, ProjectRoster.PROJECT_REQUESTS_LIMIT);
     const refusal = (code, detail) => {
       const row = PROJECT_JOIN_REQUEST_CHECKS[code];
       return { ok: false, reason: code, code, check: row.check, translation: row.translation, detail,
@@ -938,6 +973,8 @@ export function projectRosterOps(r, url, body, env) {
     projectvisibility: () => r.projectVisibility({ projectId: q("projectId"), viewer: q("viewer") }),
     /* D-479: `limit` reaches the directory's page (the cap is the caller's to LOWER, not to raise). */
     projectdirectory: () => r.projectDirectory({ viewer: q("viewer"), limit: q("limit") }),
+    /* T47 (R26): the projects the stamped viewer sees at FULL, with each one's recorded stage. */
+    projectlist: () => r.projectList({ viewer: q("viewer"), limit: q("limit") }),
     projectparticipants: () => r.projectParticipants({ projectId: q("projectId"), by: q("by") }),
     /* REC-150: `by` and `viewer` are the control plane's stamps. */
     projectrequest: () => r.projectRequest({ projectId: q("projectId"), comment: q("comment"), by: q("by"),

@@ -110,9 +110,13 @@ CREATE TABLE IF NOT EXISTS ai_credentials (
   confined_to     TEXT,
   -- R42 (F15): the instant the credential expires, whole days after it was minted (1 to 365, 90 by default). A
   -- credential minted before this column existed is given 90 days after the migration that adds it (K1934 (5)).
-  expires_at      TEXT
+  expires_at      TEXT,
+  -- R63 (T47; N955): the run a segment's credential is bound to, minted by the plane at the member's act
+  -- (aiRunCredentialMint); NULL for every credential R12 mints. Never back-filled.
+  run             TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_credentials_secret ON ai_credentials(secret_sha);
+CREATE INDEX IF NOT EXISTS ai_credentials_run ON ai_credentials(run);
 CREATE INDEX IF NOT EXISTS ai_credentials_principal ON ai_credentials(principal_kind, principal);
 
 -- R22-R25 (T33-20; K1502): each member's own Claude account reference, one row per member, held only by that
@@ -413,6 +417,8 @@ export const CREDENTIALS_ADDITIVE_COLUMNS = [
   ["ai_grants", "kind", "TEXT"],
   ["ai_credentials", "expires_at", "TEXT"],
   ["keyed_services", "form", "TEXT"],
+  /* R63 (T47): the run a segment's credential is bound to; NULL for every earlier credential */
+  ["ai_credentials", "run", "TEXT"],
   /* R55 (T40; N812): every account's switch for each kind of use. The defaults keep today's behaviour (ask, draft and
      run on; explore 'no'); `standing` and `suggestions` keep their stored values (R25, R37). */
   ["account_references", "use_ask", "INTEGER NOT NULL DEFAULT 1"],

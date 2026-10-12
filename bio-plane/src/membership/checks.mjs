@@ -35,6 +35,11 @@
 
 const at = (fn, region) => `src/membership/index.mjs ${fn} > ${region}`;
 
+/* R133 (T47; K3037): every refusal-row table this module exports is a frozen map from a code to a frozen row, read by
+   promotion's row census and answer-envelope and written by no one. */
+const frozenRows = (table) => Object.freeze(Object.fromEntries(
+  Object.entries(table).map(([code, row]) => [code, Object.freeze({ ...row })])));
+
 /* R123 (DEC-184, DEC-186): the handle words of `words.json` (`docs/development/ux-substrate/screens/words.json`), each
    `en` verbatim, read by key; placeholders (`{handle}`, `{group}`, `{suggestion}`, `{minutes}`) are left for the screen.
    `handle.changeable` and `handle.formerly` are the screens' own words and are not held here (R123). T41-3 (DEC-188 (7)):
@@ -48,7 +53,7 @@ export const HANDLE_WORDS = Object.freeze({
   'handle.refused.paused': 'Too many handles checked in a short time. Try again in {minutes} minutes.',
 });
 
-export const MEMBERSHIP_CHECKS = Object.freeze({
+export const MEMBERSHIP_CHECKS = frozenRows({
   NOT_AN_ADMIN: Object.freeze({
     check: 'C-96.1', where: at("notAnAdmin", "is-custodial-admin"),
     translation: 'Only an active administrator of this group can do that, and the account asking is not '
@@ -266,7 +271,7 @@ export const MEMBERSHIP_CHECKS = Object.freeze({
  * instance already holding such a member is REPORTED by `op=audit`, never renamed.
  * The reservation is the ID, exactly: `administrator`, `admins` and `admin-2` are
  * ordinary ids. */
-export const MEMBER_ID_CHECKS = {
+export const MEMBER_ID_CHECKS = frozenRows({
   MEMBER_ID_RESERVED: {
     check: 'C-55.1',
     where: 'src/membership/index.mjs memberAdd > is-member-id-reserved',
@@ -275,7 +280,7 @@ export const MEMBER_ID_CHECKS = {
       + 'read a member enrolled as `admin` as the founder. Nothing was written. Choose a different id '
       + 'for this person.',
   },
-};
+});
 
 /* D-134 / C-96 — THE CUSTODIAL ACTS' REFUSALS, SAID IN WORDS (Membership Architecture v2 §4.9, *"What
  * an administrator does"*; DEC-49). D-134 gave an administrator's session a surface over `memberadd`,
@@ -303,7 +308,7 @@ export const MEMBER_ID_CHECKS = {
  * likewise, because the surface never sends `expertise`. NO_SUCH_MEMBER has its row since T38 (N793, K231): it is
  * minted by several modules for one condition, so it is minted at one site, `noSuchMember`, and its row is
  * MEMBERSHIP_CHECKS' C-96.47. */
-export const CUSTODIAL_CHECKS = {
+export const CUSTODIAL_CHECKS = frozenRows({
   BAD_MEMBER_ID: {
     check: 'C-96.2',
     where: 'src/membership/index.mjs memberAdd > is-member-add-id',
@@ -365,7 +370,7 @@ export const CUSTODIAL_CHECKS = {
     translation: 'Whether a member\'s cover is shown beside their handle is theirs to decide, or an '
       + 'administrator\'s, and you are neither for this member. Nothing was changed.',
   },
-};
+});
 
 /* REC-134 / C-56 — SIGHT IS NOT AUTHORITY (Membership Architecture v2 §7, the block of that
  * name, BOB #15, 2026-09-18; §4.9: *"the custodial role can audit everything and direct
@@ -378,7 +383,7 @@ export const CUSTODIAL_CHECKS = {
  * owner. §7.13's add-an-owner is the one administrator path and is NOT behind this family.
  * A machine credential carries no position and is not asked (the fences on machines are
  * their own and unchanged). */
-export const PROJECT_AUTHORITY_CHECKS = {
+export const PROJECT_AUTHORITY_CHECKS = frozenRows({
   PROJECT_ACT_NOT_A_PARTICIPANT: {
     check: 'C-56.1',
     where: 'src/membership/index.mjs projectAuthority > is-project-authority',
@@ -394,7 +399,7 @@ export const PROJECT_AUTHORITY_CHECKS = {
     translation: 'Only an owner of this project can do that. You are not one of its owners, and seeing '
       + 'a project does not let you direct it — administrators included. Nothing was changed.',
   },
-};
+});
 
 /* REC-149 / C-70 — A DISCOVERABLE PROJECT SHOWS ITS EXISTENCE, NOT ITS DOORS (Membership Architecture
  * v2 §7, item 7.14, BOB #16 from Bob's ruling of 2026-09-18, *"each project chooses"*). A member who
@@ -406,7 +411,7 @@ export const PROJECT_AUTHORITY_CHECKS = {
  * T41-3): an administrator neither invited nor joined to a HIDDEN project is at its EXISTENCE too, and this
  * code then also carries its owners' handles (membership R77). C-70.1's translation is true of both forms.
  * Minted in ONE region, `Membership#existenceOnly`, which every act's sight check relays. */
-export const PROJECT_VISIBILITY_CHECKS = {
+export const PROJECT_VISIBILITY_CHECKS = frozenRows({
   PROJECT_SEEN_NOT_A_PARTICIPANT: {
     check: 'C-70.1',
     where: 'src/membership/index.mjs #existenceOnly > is-project-existence-only',
@@ -428,7 +433,7 @@ export const PROJECT_VISIBILITY_CHECKS = {
     translation: 'A project is either discoverable or hidden, and nothing else. Nothing was changed. '
       + 'Choose one of the two.',
   },
-};
+});
 
 /* REC-137 / C-57 — A CASE RATIFICATION'S AUTHORITY IS ITS SIGNATURES, AND THEY MUST INCLUDE AN
  * OWNER OF THE PUBLISHING PROJECT (Membership Architecture v2 §7, the bullet *"A CASE
@@ -440,7 +445,7 @@ export const PROJECT_VISIBILITY_CHECKS = {
  * behind the project's case. The DELIVERY half of the same bullet (an enrolled administrator with
  * no role in the project may not carry the signature in) is NOT in this family: it is REC-134's
  * one positional check, `projectAuthority`, asked of the deliverer, and answers C-56.1. */
-export const CASE_AUTHORITY_CHECKS = {
+export const CASE_AUTHORITY_CHECKS = frozenRows({
   CASE_SIGNER_NOT_AN_OWNER: {
     check: 'C-57.1',
     /* REC-140 (2026-09-18): the region moved into `caseAuthority`, the ONE helper both ratify
@@ -453,4 +458,4 @@ export const CASE_AUTHORITY_CHECKS = {
       + 'signed by an owner of that project. This signature belongs to someone who is not one of its '
       + 'owners. Nothing was committed. Ask an owner of the project to review it and sign it.',
   },
-};
+});

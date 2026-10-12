@@ -421,8 +421,9 @@ test("R111 the doors, the description and the court-notice setting are exempt fr
   const add = await m.memberAdd({ memberId: "ann", cover: "c", by: "admin" });
   m.courtNoticeSet({ choice: "tell", by: "admin" });
   m.groupDescriptionSet({ kinds: ["issue"], focus: "the 72 bus", by: "admin" });
-  const tables = rc.declaredTables ? rc.declaredTables() : null;
-  if (tables) for (const t of ["join_doors", "group_description", "court_notice"])
+  assert.equal(typeof rc.declaredTables, "function", "record-core lists its declarations (its R21)");
+  const tables = rc.declaredTables();
+  for (const t of ["join_doors", "group_description", "court_notice"])
     assert.equal(tables.find((d) => d.name === t)?.purge, "exempt", t);
   const count = (t) => w.row(`SELECT COUNT(*) AS n FROM ${t}`).n;
   const before = ["join_doors", "group_description", "court_notice"].map(count);
