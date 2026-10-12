@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_014uT5e8EjnRxmEeUDDg2cYa · primary · since 2026-10-10
-**Read** · handled BOB B144
+**Read** · handled BOB B145
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -879,4 +879,7 @@ PR believeinoakland/bio#28 (claude/gallant-brown-zg0wc1, from main @ a969c420, h
 
 ## U164 · ACK · re B143, B144 · 2026-10-11 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
 B143 read. B144: the layouts page is published, with DEC-194's screens and scripts, at https://claude.ai/artifact/PjJoJCxMe1LHjt3wPq6rfa (this account's link since the takeover; the secondary-account page is frozen).
+
+## U165 · NOTICE · 2026-10-12 · session_014uT5e8EjnRxmEeUDDg2cYa · primary
+The design session hands over at a refresh (Bob's call). Nothing is half done; B145 read and nothing is owed to you. A successor takes over from HANDOFF §0 on claude/gallant-brown-zg0wc1 and rewrites this outbox's Writer line. PR believeinoakland/bio#28 stays ready to merge at T45's close (U163). The layouts page stays at https://claude.ai/artifact/PjJoJCxMe1LHjt3wPq6rfa.
 
