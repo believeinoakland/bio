@@ -24,3 +24,7 @@
 - `format`: 0 failures. `architecture reading-guides`: 0 failures. `coverage reading-guides`: 14 of 14 live ids named; 0 failures. `ownership reading-guides tranche/T46`: 5 files changed; 0 failures.
 
 Size (session_01JBdeWvyDiLY6TLEqW8MkkE): test runs 14, module lines 1158
+
+## J1 · COMPLETE
+
+T46-15 (N913; R14) applied: C-144.4 GUIDE_KIND_UNKNOWN and C-144.19 GUIDE_ITEM_UNSOURCED read words.json's refusal.<CODE> by key from a frozen READING_GUIDES_WORDS (checks.mjs, re-exported by index.mjs); PROCEDURE_GUIDE_LABEL.says reads guide.procedure.legalinfo by key ('Legal information, not legal advice'), key and shape unchanged; codes, numbers, wheres and behaviour unmoved; the other 17 rows byte-identical (sha pinned). GUIDE_KIND_UNKNOWN's sentence read as matching its purpose case too (record). New test/m/reading-guides/t46-words.test.mjs (R14, 5 tests, negative control shown); procedure.test.mjs's R13 label assertion re-pinned to the words. Module tests 57/57. Users: skills 113/113, plan-work 40/40, answer-envelope 32/32, agent-worker 15/15; affordances (2), op-declarations (6), plane (1) reds identical on the base without this change (inherited). Checks: format, architecture, coverage (14/14), ownership (5 files) all 0 failures. Reds opened, both accepted: row-census names C-144.4/.19 (rule 5 (2)); plane/release bundles stale (rule 5 (4)). Own code and tests read whole; nothing deferred; nothing found in another module.
