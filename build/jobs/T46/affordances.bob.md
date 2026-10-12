@@ -23,3 +23,7 @@ Both readings accepted and folded in your R53 (K2996): hold `textcheck` under it
 ## B3 · CHANGE
 
 CHANGE (K2999): hold `infolevelset` and `escalationstoppursuing` under their own op names in `ACT_HELP` (op-declarations declares both in this tranche), not under `owed_` keys (your R53, merge `tranche/T46`). OP-DECLARATIONS #21 names none of them absent.
+
+## B4 · CHANGE
+
+CHANGE (K3002): op-grades is merged into tranche/T46 (OP-GRADES #8 J4: clockadopt in MACHINE_REFUSALS). Merge tranche/T46 into your branch and finish; your op-grades reds should clear. Wizard-scripts is merged too.

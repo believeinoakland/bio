@@ -3,6 +3,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { world, E, BOB, ZONE } from "../duties/fixture.mjs";
+import { world as followingWorld, MEMBER, T0 } from "../following/fixture.mjs";
 import { producers, fresh, reader, ofKind, sentences, JUDGMENT, notHintFailures } from "./fixture.mjs";
 import { HINT_MARK } from "../../../src/notice-producers/index.mjs";
 
@@ -210,4 +211,84 @@ test("R5 (T45) R1: a following whose dutyWatchEnd throws contributes no duty ite
   const before = w.st.sql.exec(`SELECT COUNT(*) AS n FROM duties`).one().n;
   run(() => "2026-02-11");
   assert.equal(w.st.sql.exec(`SELECT COUNT(*) AS n FROM duties`).one().n, before);
+});
+
+/* R18 (T46; N927; amends R5; queue R16; following R25; K2996): an occurrence already told keeps its item until its
+   recipient disposes of it (queue's, by its key: the same key on every read) or it is met, met late or no longer overdue; a
+   later end of the duty's watch never removes it. R5's end of telling holds only for an occurrence not yet told. Over the
+   real `following` (its R24–R25 on its own test world, the profile's zone America/Halifax): a plan's watch on the duty,
+   the plan closed, the watch stopped on the day of the answer, `dutyWatchEnd` answering that day. `duties` answers one
+   occurrence undetermined between 2026-10-01 and 2026-10-20 (UTC), possibly overdue from the start of 2 October. Read on
+   the end day alone (following answers no instant, K2996), told means its told state began on or before the end day:
+   exact for a stop; a keep answered before an occurrence whose candidates span its day reads as told (N967, T47). */
+const PRJ = "PRJ-2026-0001-a";
+function stopped(answeredAt) {
+  const fw = followingWorld();
+  fw.project(PRJ);
+  fw.plan("PL-1", { project: PRJ });
+  fw.duty("DUT-R18", { project: PRJ, met: [null] });
+  const link = fw.f.watchLink({ plan: "PL-1", watch: { kind: "duty", id: "DUT-R18" }, author: MEMBER, viewer: MEMBER });
+  assert.equal(link.ok, true, JSON.stringify(link));
+  if (answeredAt) {
+    fw.t = Date.parse(answeredAt);
+    fw.close("PL-1", answeredAt);
+    const a = fw.f.watchAnswer({ link: link.link, stop: true, author: MEMBER });
+    assert.equal(a.ok, true, JSON.stringify(a));
+  }
+  return fw.f;
+}
+function toldWorld(following) {
+  const w = world();
+  w.declare();                                             /* one obligor row for dutiesOf's walk */
+  const occ = { key: "OCC-R18", trigger: { kind: "date", ref: "2026-09-01" }, state: "undetermined", evidence: [],
+                due: { date: { candidates: [{ value: "2026-10-01", precision: "day", zone: "UTC" }, { value: "2026-10-20", precision: "day", zone: "UTC" }] }, basis_kind: "rule" },
+                why: "possibly overdue: undetermined, because the due date is uncertain" };
+  const duty = { duty_id: "DUT-R18", adoption: { by: BOB }, performance: { act: "answer the request" } };
+  const duties = { dutiesOf: () => ({ ok: true, duties: [duty], truncated: false }), occurrencesOf: () => ({ ok: true, occurrences: [occ] }) };
+  const read = (now, f = following) => reader(fresh(w.host, { membership: w.membership, duties, following: f })).read("bob", { now });
+  return { occ, read, items: (now, f) => ofKind(read(now, f), KIND) };
+}
+
+test("R18 an occurrence told while undetermined, then a stop whose end day falls before its latest candidate, still answers its item, the same key on every read until disposed; control: the same stop before the occurrence was told raises no item", () => {
+  const unlinked = stopped(null);
+  assert.equal(unlinked.dutyWatchEnd("DUT-R18"), null, "linked, unanswered: no end");
+  const { items } = toldWorld(unlinked);
+  const now = "2026-10-08T12:00:00Z";
+  const told = items(now);
+  assert.equal(told.length, 1, "told with no end");
+  assert.match(told[0].id, /::DUT-R18::OCC-R18::undetermined$/);
+  const after = stopped("2026-10-06T12:00:00Z");                        /* stopped on 6 October, after it was told */
+  assert.equal(after.dutyWatchEnd("DUT-R18"), "2026-10-06");
+  const kept = toldWorld(after);
+  assert.deepEqual(kept.items(now).map((i) => i.id), told.map((i) => i.id), "still answered, the same key: it leaves only by its disposition");
+  assert.deepEqual(kept.items("2026-10-15T12:00:00Z").map((i) => i.id), told.map((i) => i.id), "and on later reads");
+  assert.deepEqual(kept.items(now)[0].basis.watch_end, { day: "2026-10-06", told_before: true });
+  assert.deepEqual(kept.read(now).facts.failed, []);
+  const before = stopped("2026-09-28T12:00:00Z");                       /* control: stopped before it came due */
+  assert.equal(before.dutyWatchEnd("DUT-R18"), "2026-09-28");
+  assert.deepEqual(toldWorld(before).items(now), [], "control: not yet told when the stop took hold: no item (R5)");
+  const onFirst = stopped("2026-10-01T12:00:00Z");                      /* control: stopped on its first candidate */
+  assert.deepEqual(toldWorld(onFirst).items(now), [], "control: possibly overdue only from the next day: not told");
+  const onSecond = stopped("2026-10-02T12:00:00Z");                     /* possibly overdue from the start of that day */
+  assert.equal(toldWorld(onSecond).items(now).length, 1, "told on the end day itself: kept");
+  void T0;
+});
+
+test("R18 a told occurrence is exempt from the end of telling whole: once overdue after its latest candidate its overdue item is raised, as R5 raises it; control: an occurrence not told raises none", () => {
+  const kept = toldWorld(stopped("2026-10-06T12:00:00Z"));
+  kept.occ.state = "overdue";
+  const now = "2026-10-22T12:00:00Z";
+  assert.deepEqual(kept.items(now).map((i) => i.id), ["FINDING::temporal-expectation-due::DUT-R18::OCC-R18::overdue"]);
+  const none = toldWorld(stopped("2026-09-28T12:00:00Z"));
+  none.occ.state = "overdue";
+  assert.deepEqual(none.items(now), [], "control");
+});
+
+test("R18 a told occurrence still leaves when it is met, met late or no longer overdue, whatever the end", () => {
+  const kept = toldWorld(stopped("2026-10-06T12:00:00Z"));
+  assert.equal(kept.items("2026-10-08T12:00:00Z").length, 1, "control: kept while possibly overdue");
+  for (const state of ["met", "met_late", "pending"]) {
+    kept.occ.state = state;
+    assert.deepEqual(kept.items("2026-10-08T12:00:00Z"), [], state);
+  }
 });

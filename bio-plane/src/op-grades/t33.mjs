@@ -353,7 +353,8 @@ export const T33_NON_ACTS = {
   /* actions, action-clocks */
   addresseesuggest: R("the offices the record holds as responsible for an action's subject on its date, as a suggestion"),
   clockpropose: "action-directed: keyed by (action, rule, proposer); a proposal stored apart, never a clock entry until a member adopts it",
-  clockadopt: "action-directed: keyed by (action, proposal); a new revision of the action's clock",
+  /* `clockadopt` (T46; R33, K2998): an ACTS row on an action (`affordances` R52), so it has no row here; its absence stands
+     above, and it is in MACHINE_REFUSALS (`./index.mjs`) */
   clocksics: R("an iCalendar file of named actions' pending dated clock entries"),
   clocklateness: R("the group's own lateness: commitments met on time, met late, or pending past their date"),
   /* ai-use (R30: `ai-use` R4; no ceiling remains, its limits are `ailimitset`'s, ./t41.mjs) */
