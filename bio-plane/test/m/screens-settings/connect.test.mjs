@@ -72,7 +72,7 @@ test("R5 the two notices, each outward, before the first question: groupkeynotic
   assert.ok(!ops(seen).includes("groupkeynoticeseen"), "once seen, not again");
 });
 
-test("R5 connecting, in DEC-156's order: the subscription (only while bootstrap's parts holds the sign-in), then an API key, then skip", async () => {
+test("R4, R5 connecting, in DEC-156's order: the subscription (only while bootstrap's parts holds the sign-in), then an API key, then skip", async () => {
   const a = await open("connect", { me: MEMBER, table: connectTable(MEMBER, "none") });
   const order = acts(a.tree).map((b) => b.attrs["data-act"] + (b.attrs["data-step"] ? ":" + b.attrs["data-step"] : ""));
   assert.deepEqual(order, ["subscriptionsignin:start", "subscriptionsignin:code", "accountreferenceset"]);
