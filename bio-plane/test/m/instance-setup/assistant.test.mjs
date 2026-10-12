@@ -207,7 +207,7 @@ test("R55 R65 (T37) the draft (R65) is refused AI_KEPT_AWAY with the reason whil
   assert.equal(past.reason, "ASSISTANT_DRAFT_UNAVAILABLE", "no turn handed in: past every refusal");
 });
 
-test("R28 R41 R53 R54 every table is declared explicitly to record-core (declareTable, its R21) exempt from purge, the retired switch's kept rows and the disclosures among them, the disclosures never exported", async () => {
+test("R28 R41 R53 R54 every table is declared explicitly to record-core (declareTable, its R21), each of INSTANCE_SETUP_TABLES exempt from purge and only the four seed ledgers cleared, the retired switch's kept rows and the disclosures among them, the disclosures never exported", async () => {
   const w = await boot();
   assert.equal(w.started.purge.ok, true);
   const mine = w.record.declaredTables().filter((d) => d.module === "instance-setup");
