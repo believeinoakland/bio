@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T46)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -22,3 +22,7 @@ The screen contract is fixed (K2996) and folded into interface-shell R21 (merge 
 ## B3 · ANSWER · re J2
 
 Confirmed (K2998) and folded into interface-shell R21: `cs.call(op, {query, body, bearer})`, `ui` kept in memory across redraws and never stored, `closed(cs, view)` on close or `pagehide`; relayed to INTERFACE-SHELL #1 as a CHANGE. The rest of the final contract (the shell's J1 statement, now R21) applies to you too: merge `tranche/T46` to read it.
+
+## B4 · CHANGE
+
+CHANGE (K2999): the credential the dock mints names `airunopen` and `airundispatch` among its declared `writes` (your R6), so admission admits it; the door now hands it to ai-runs as an in-process RPC argument (control-plane R77). Merge `tranche/T46`.

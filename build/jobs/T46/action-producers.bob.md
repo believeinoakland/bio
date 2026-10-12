@@ -18,3 +18,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, no
 ## B2 · ANSWER · re J1
 
 All three readings accepted (K2996): (1) R1's group arm reads `.ours.summary` by key and keeps its present detail; (2) `.summary` by key, the detail kept; both until N968 (T47: the providers answer venue, recurrence and last review). No new Uses edge. (3) canon's "Noticed: no reply recorded by {date}" unchanged. Your note on action-holds R14's retirement is recorded.
+
+## B3 · CHANGE
+
+CHANGE (K3000), re-opening the job: SCREENS-DAILY #1 reports that action-clocks' `reminderSet`/`reminderAnswer` store `set_by` as `member:<id>` (control-plane stamps `author` so), while your `action-reminder` producer keeps an item only when `x.set_by === me`, `me` the queue's bare member stamp (index.mjs:655), and your tests use bare fakes. Verify with a test through the real action-clocks; if real, compare both forms (one helper), with a control, and record completion again. Merge `tranche/T46` first.
