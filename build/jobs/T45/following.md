@@ -61,3 +61,19 @@ Found while building T45-36 (none blocks this job):
 - ownership: 7 files, 0 failures.
 
 Size (session_01GFBw9f24M2axfCAsVCYFd3): test runs 19, module lines 1840
+
+## J4 · COMPLETE
+
+**B4 (K2875) applied.** `tranche/T45` (with monitoring) is merged into `job/T45/following`.
+
+**Against the real monitoring:**
+- `WATCH_END_REFUSED` now carries monitoring's row C-18.19, its check and translation, in every R22/R25 refusal. The test reads the row from `MONITORING_CHECKS`. My C-137 family test confirms no code is held twice.
+- **One fix:** an address watch is now held as monitoring's own normalised address (R32's `address`), not my query key. R25's `addressWatchEnd` and R24's `addressWatchers` then name exactly monitoring's subject. My key is still used only to match a member's spelling.
+- **New test over monitoring's fixture and the real `Monitoring`.** An address is linked as monitoring holds it, and is relied on while another project's document asks for it (R72), with no project named. Another is stopped through R71, and its R32 row then reads `state: "ended"`, `until` today. `watchesOfPlan` lists it ended with its end day.
+
+**Tests and checks:**
+- `test/m/following/`: 73 pass, 0 fail.
+- monitoring, scheduler and notice-producers: 360 pass, 0 fail.
+- format, architecture, coverage (26 of 26) and ownership (7 files): 0 failures.
+
+Size (session_01GFBw9f24M2axfCAsVCYFd3): test runs 25, module lines 1841
