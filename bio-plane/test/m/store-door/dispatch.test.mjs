@@ -145,12 +145,12 @@ test("R2 (T36-48; K2063, K2152; file-safety R2, R6, R9, R11, R15, R31, R33, R38)
   assert.equal((await go(n, `image?viewer=member:ann&id=${P}`)).json.result.reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
 });
 
-test("R2 (T45-50; K2891; op-declarations R49): T45's reads whose parameters carry a bundle id are among the reads naming a project, each with exactly its own parameters — `successrecords` (`project`, `plan`), `cures` (`determination`), `openitemswith` and `templatesforaction` (`action`), and plan-work's ten reads (`plan`) — so a project the viewer sees only at EXISTENCE, named in any of them, query or body, is answered C-70.1 before the route; T45's other reads are listed as naming none, each with its reason (controls: a project the viewer sees whole is admitted to the route; a hidden one is never asked; a listed-as-none read is never asked)", async () => {
+test("R2 (T45-50; K2891; op-declarations R49): T45's reads whose parameters carry a bundle id are among the reads naming a project, each with exactly its own parameters — `successrecords` (`project`, `plan`), `cures` (`determination`), `openitemswith` and `templatesforaction` (`action`), plan-work's ten reads (`plan`) and (K2900) `advocacychecks` (`project`) — so a project the viewer sees only at EXISTENCE, named in any of them, query or body, is answered C-70.1 before the route; T45's other reads are listed as naming none, each with its reason (controls: a project the viewer sees whole is admitted to the route; a hidden one is never asked; a listed-as-none read is never asked)", async () => {
   const NAMING = {
     successrecords: ["project", "plan"], cures: ["determination"], openitemswith: ["action"], templatesforaction: ["action"],
     matters: ["plan"], plantimeline: ["plan"], planreviewopen: ["plan"], planreviews: ["plan"], prepitems: ["plan"],
     plancomments: ["plan"], whereitstands: ["plan"], statusreportdraft: ["plan"], statusreports: ["plan"],
-    matterpromiseduties: ["plan"],
+    matterpromiseduties: ["plan"], advocacychecks: ["project"],
   };
   const NONE = { watchquestions: ["after", "limit"], dutiesarising: ["captures", "as_of"], procedureguides: ["kind"],
                  successread: ["id"], casecheck: ["case", "edition", "check"], ruleoffer: ["rule"], grouprules: ["section"] };

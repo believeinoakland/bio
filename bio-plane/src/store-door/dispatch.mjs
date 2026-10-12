@@ -84,6 +84,8 @@ export const PROJECT_NAMING_READS = Object.freeze({
   matters: ["plan"], plantimeline: ["plan"], planreviewopen: ["plan"], planreviews: ["plan"], prepitems: ["plan"],
   plancomments: ["plan"], whereitstands: ["plan"], statusreportdraft: ["plan"], statusreports: ["plan"],
   matterpromiseduties: ["plan"],
+  /* K2900: case-account's checks of a member's own text name her project (the query's, else the body's; plane's route). */
+  advocacychecks: ["project"],
 });
 export const PROJECT_NAMING_READS_NOT = Object.freeze({
   content: "`id` is a content row's fixed key, hash(capture, extent, chain) — never a bundle id",
