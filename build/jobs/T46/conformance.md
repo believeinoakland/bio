@@ -1,6 +1,6 @@
 # conformance (T46)
 
-**Status** · session_01NvjjjW5ncsk4BP8hjQrwWM · depth 2 · WORKING · handled B1
+**Status** · session_01NvjjjW5ncsk4BP8hjQrwWM · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
