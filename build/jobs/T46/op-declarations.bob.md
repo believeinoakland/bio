@@ -19,3 +19,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, no
 ## B2 · CHANGE
 
 CHANGE (K2996): R51 no longer names `textcheck` in `ACT_HELP_ABSENT` (its text is in `mock-acts.js`; affordances holds it). Merge `tranche/T46` and apply.
+
+## B3 · ANSWER · re J1
+
+Both readings accepted (K2999). (1) Name none of the three in `ACT_HELP_ABSENT`: affordances now holds `infolevelset` and `escalationstoppursuing` under their own op names (its R53, a CHANGE to it), and `escalationreopen` already, so R34's partition holds once both merge; your partition tests stay red only until affordances' merge (name that in your COMPLETE). (2) `airundispatch` `{classes: ["admin", "member"], mutating: true}`, no `machineClasses`, NEEDS null, `by` and `viewer` stamped, in ai-runs' family: CONTROL-PLANE #31 reads it the same (its R77). J2: `modules.json` now gives you `uses` `escalation`; merge `tranche/T46`.
