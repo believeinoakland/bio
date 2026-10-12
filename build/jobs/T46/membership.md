@@ -60,3 +60,7 @@ Other modules' tests my change turns red (details in my record): (1) publication
 ## J3 · COMPLETE
 
 T46-4 done, pushed on job/T46/membership (tranche/T46 merged). R129: handlechange refuses every call HANDLE_FIXED, new row C-96.52 (your DEC-149 form of DEC-198's sentence). C-96.49, C-96.50 and C-96.51 retired; for promotion's T46-6: 3 departures, 1 arrival. R125: slot stands, never called. R16: a revoked member's and the history's handles stay taken (tested). R17: no formerly. R83: the six L11 modules after store-door, tolerated and pinned; N936: T45 negative control re-pinned to filled paths. R130: joinDoors / op=joindoors, admin-only, no secret, R113 bound. Membership 217/217 (START: 211 with 4 inherited reds, now green). Format, architecture, coverage (96/96) and ownership: 0 failures. Other modules: see J2 REPORT. Module 3,729 lines. Details in my record.
+
+## J4 · REPORT
+
+project-roster: its test fixture stubs record-core with declarePurge only. Membership now declares join_doors through declareTable (R131); with no declareTable it falls back to the default form (tested), so project-roster's tests stay green. Its stub may gain declareTable so its runs see R131's declaration.
