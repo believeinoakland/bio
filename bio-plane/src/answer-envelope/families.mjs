@@ -115,19 +115,29 @@ import * as CASE_IMPORT from "../case-import/checks.mjs";
 /* N529, K1333 (R7): case-disclosures' C-120 (`CASE_DISCLOSURE_CHECKS`), moved whole from case-authoring's file, in its
    place in the module order (after case-import, directly before case-authoring). */
 import * as CASE_DISCLOSURES from "../case-disclosures/checks.mjs";
+/* T45-49 (K2834; R2, R7): T45's new families, each in its module's place in the module order: case-account's C-153
+   (directly after case-disclosures, before case-authoring), case-check's C-148 (after review, before conformance),
+   action-holds' C-149 (after action-grammar, `actions` holding no file of families, before action-clocks; the rows moved
+   from actions' C-117 with their raisers), action-replies' C-150 (after action-clocks, before filing-templates) and
+   plan-work's C-151 (after action-plans, before monitoring). */
+import * as CASE_ACCOUNT from "../case-account/checks.mjs";
 import * as CASE_AUTHORING from "../case-authoring/checks.mjs";
 import * as REVIEW from "../review/checks.mjs";
+import * as CASE_CHECK from "../case-check/checks.mjs";
 import * as CONFORMANCE from "../conformance/checks.mjs";
 import * as CONSEQUENCES from "../consequences/checks.mjs";
 /* K835, K837, K914: the action layer's eight families are action-grammar's, read from there; `actions` holds no file of
    them (its re-export was deleted, K914). */
 import * as ACTION_GRAMMAR from "../action-grammar/checks.mjs";
+import * as ACTION_HOLDS from "../action-holds/checks.mjs";
 import * as ACTION_CLOCKS from "../action-clocks/checks.mjs";
+import * as ACTION_REPLIES from "../action-replies/checks.mjs";
 /* K921 (R7): filing-templates' C-125 and local-facts' C-126, each in its place in the module order. */
 import * as FILING_TEMPLATES from "../filing-templates/checks.mjs";
 import * as FILINGS from "../filings/checks.mjs";
 import * as ESCALATION from "../escalation/checks.mjs";
 import * as ACTION_PLANS from "../action-plans/checks.mjs";
+import * as PLAN_WORK from "../plan-work/checks.mjs";
 import * as MONITORING from "../monitoring/checks.mjs";
 /* K1836 (T34-70, T34-60): following's C-137, in its place in the module order (after monitoring, before link-sweep). */
 import * as FOLLOWING from "../following/checks.mjs";
@@ -207,16 +217,21 @@ export const CHECK_FAMILY_FILES = Object.freeze([
   ["src/ratification/checks.mjs", RATIFICATION],
   ["src/case-import/checks.mjs", CASE_IMPORT],
   ["src/case-disclosures/checks.mjs", CASE_DISCLOSURES],
+  ["src/case-account/checks.mjs", CASE_ACCOUNT],
   ["src/case-authoring/checks.mjs", CASE_AUTHORING],
   ["src/review/checks.mjs", REVIEW],
+  ["src/case-check/checks.mjs", CASE_CHECK],
   ["src/conformance/checks.mjs", CONFORMANCE],
   ["src/consequences/checks.mjs", CONSEQUENCES],
   ["src/action-grammar/checks.mjs", ACTION_GRAMMAR],
+  ["src/action-holds/checks.mjs", ACTION_HOLDS],
   ["src/action-clocks/checks.mjs", ACTION_CLOCKS],
+  ["src/action-replies/checks.mjs", ACTION_REPLIES],
   ["src/filing-templates/checks.mjs", FILING_TEMPLATES],
   ["src/filings/checks.mjs", FILINGS],
   ["src/escalation/checks.mjs", ESCALATION],
   ["src/action-plans/checks.mjs", ACTION_PLANS],
+  ["src/plan-work/checks.mjs", PLAN_WORK],
   ["src/monitoring/checks.mjs", MONITORING],
   ["src/following/checks.mjs", FOLLOWING],
   ["src/link-sweep/checks.mjs", LINK_SWEEP],
