@@ -32,3 +32,7 @@ CHANGE (K3004): instance-setup is merged (its R79 adds routes infolevelset, info
 ## B5 · CHANGE
 
 CHANGE (K3017): control-plane is merged; every L11 job but you is merged (screens-intake re-opened for one fix). Merge tranche/T46, run your suite (R75 brings interface-assets into the route path), and record completion again; you merge last.
+
+## B6 · CHANGE
+
+CHANGE (K3018): screens-intake is merged again; every L11 job but you is merged and green (control-plane 242/242). Merge tranche/T46, run your suite, record completion; you merge last.
