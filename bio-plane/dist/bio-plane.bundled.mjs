@@ -152942,7 +152942,12 @@ __export(checks_exports42, {
   AI_RUN_PLAN_CHECKS: () => AI_RUN_PLAN_CHECKS,
   AI_USE_CHECKS: () => AI_USE_CHECKS,
   RETIRED_CHECKS: () => RETIRED_CHECKS,
+  RUN_RULES_WORDS: () => RUN_RULES_WORDS,
   SURFACE_RUN_CHECKS: () => SURFACE_RUN_CHECKS
+});
+var RUN_RULES_WORDS = Object.freeze({
+  "refusal.AI_RUN_REEXAM_NEEDS_RESPONSE": "Nothing was started: a fresh look at the plan after a reply needs to know which reply. Record the reply first, then ask from it.",
+  "refusal.AI_RUN_REEXAM_OPEN": "Nothing was started: a fresh look at this plan after this reply is already under way. Wait for it, then read what it proposes."
 });
 var AI_RUN_OWN_CHECKS = {
   /* §14b.6 IS THIS ITEM: "when a bound stops a run, the observation log says
@@ -153201,6 +153206,26 @@ var AI_RUN_OWN_CHECKS = {
     check: "C-22.28",
     where: "src/ai-runs/index.mjs open > is-airun-open-step and its own step's steps check, reached from op=airunopen; and openMany, for each step of a member's batch she cannot see",
     translation: "Nothing was started, because the step this investigation names is not one the record holds here. Something you cannot see is answered exactly as something that does not exist."
+  },
+  /* R30 (T46; K231; K2816 (2)): AN AI PART NOT ADMITTED by the one deploy gate, `partAdmittedOn` (R29): its test bar is
+     not held on Civicsmith's set and the instance is not a test instance, or the chain before it is not verified. Minted
+     only by `partRefusal(part)`, the gate's refusal form, and relayed unchanged by the doors that had no refusal of their
+     own (`plane` R40: the ask and the drafts). C-22.29, the next free number. `AI_RUN_MODE_NOT_DEPLOYED` (C-109.1) and
+     `TRANSCRIBE_NOT_DEPLOYED` (C-51.7) keep their codes, numbers and sites. DEC-83's form: what happened, then what
+     still works. */
+  AI_PART_NOT_DEPLOYED: {
+    check: "C-22.29",
+    where: "src/run-rules/test-bar.mjs partRefusal, called from the doors partAdmittedOn does not admit (plane R40's ask and drafts)",
+    translation: "This part of the assistant has not yet passed Civicsmith's tests, so it is not switched on in your group's Civicsmith. Everything else works without it."
+  },
+  /* R32 (T46; K2947; `ai-runs` R18): A MEMBER'S OWN SIGN-IN RUN IN A MODE IT DOES NOT SERVE. On her own Claude sign-in
+     a member's run is dispatched for her only in `check` or `plan` (Bob's K2892); any other mode is refused by `ai-runs`
+     at its dispatch and read here by key. C-22.30, the next free number after R30's. DEC-83's form. Its translation is
+     interim, until `words.json` holds `refusal.MEMBER_RUN_MODE_NOT_ADMITTED`. */
+  MEMBER_RUN_MODE_NOT_ADMITTED: {
+    check: "C-22.30",
+    where: "src/ai-runs/index.mjs dispatchMemberRun > is-airun-member-dispatch, reached from op=airundispatch",
+    translation: "Nothing was started, because on your own Claude sign-in the assistant only checks and plans for you; this kind of work needs your group's Civicsmith to run it."
   }
 };
 var AI_RUN_ACT_SHAPE_CHECKS = {
@@ -153434,16 +153459,18 @@ var AI_RUN_PLAN_CHECKS = {
   },
   /* R28 (T45; K2820, K2822; ai-runs R77): A RE-EXAMINATION RUN, the planning run started inside the member's act that
      records a response (v0.2 rule 16). Minted by ai-runs at its open after R46 and the origin (`originAllowed`, R23 as
-     R28 amends it), read here by key. DEC-83's form: the sentence, then the remedy. */
+     R28 amends it), read here by key. DEC-83's form: the sentence, then the remedy. R31 (T46; DEC-194; N913): each
+     translation is `words.json`'s `refusal.<CODE>`, read by key (RUN_RULES_WORDS above); code, number and `where`
+     unmoved. */
   AI_RUN_REEXAM_NEEDS_RESPONSE: {
     check: "C-109.13",
     where: "src/ai-runs/index.mjs open > is-airun-open-reexam, reached from op=airunopen",
-    translation: "Nothing was run, because a fresh look at the plan after a reply was asked for without saying which reply it is about. Record the reply first; the fresh look starts from that reply."
+    translation: RUN_RULES_WORDS["refusal.AI_RUN_REEXAM_NEEDS_RESPONSE"]
   },
   AI_RUN_REEXAM_OPEN: {
     check: "C-109.14",
     where: "src/ai-runs/index.mjs open > is-airun-open-reexam, reached from op=airunopen",
-    translation: "Nothing was run, because a fresh look at this plan after this reply is already under way. Wait for it to finish and read what it proposes."
+    translation: RUN_RULES_WORDS["refusal.AI_RUN_REEXAM_OPEN"]
   }
 };
 var AI_USE_CHECKS = {
@@ -153895,10 +153922,15 @@ var DEPLOYMENT_SEQUENCE = {
   /* R14: THE MODES THAT DEPLOY APART FROM THE CHAIN, each with its own flag and the condition that sets it. A mode here
      takes no part in the chain's verification: `DEPLOYED_MODES` below reads the chain from `order` without it, and
      adds it only when its flag is true. `false` until the change that meets its condition flips it under review. */
+  /* R14 (T46; N919; Bob's K2892, K2914): `plan`'s act is MADE, by this change together with `agent-worker`'s `MODES.plan`
+     (its R53) and `agent-harness`' copy (its R10), because a member's own planning run is now served end to end (`ai-runs`
+     R18 as T46 amends it). The flag marks served code and lifts no bar: a run in mode `plan` is admitted only through
+     `partAdmittedOn` (R29, `./test-bar.mjs`), so D14's test bar still gates it on every instance but a test instance. */
   deploys_apart: {
     plan: {
-      deployed: false,
-      when: "only by an explicit reviewed change of its own, which sets this flag and agent-worker's MODES.plan together; never as a side effect of model turns running, and whether or not investigate or extract is deployed"
+      deployed: true,
+      when: "only by an explicit reviewed change of its own, which sets this flag and agent-worker's MODES.plan together; never as a side effect of model turns running, and whether or not investigate or extract is deployed",
+      made: "T46 (K2892): set by its own reviewed change with agent-worker's MODES.plan, because a member's own planning run is served end to end; the flag marks served code and lifts no bar, so a run in mode plan is admitted only through partAdmittedOn (R29), D14's test bar gating it on every instance but a test instance"
     }
   },
   /* R40 (K102, K182): THE RECORD'S EDGE NOW REFUSES TOO. Until ai-runs' extraction nothing in the check catalogue
@@ -153921,8 +153953,9 @@ var ASK_MODE = Object.freeze({
   writes_run_row: false,
   why: "it answers one member's question inside that member's act and is no run: it writes no run row and no observation, and keeps nothing but the member's own device-local transcript (K1450)",
   deploys_apart: true,
-  deployed: false,
+  deployed: true,
   when: "only by a reviewed change of its own that sets this flag, whatever the run modes' state",
+  made: `T46 (N897 (2); K2816): set by its own reviewed change, because agent-worker's /ask is served end to end (since T33); the flag marks served code and lifts no bar, so an ask is admitted only through partAdmittedOn(set, "ask", \u2026) (R29), D14's test bar gating it on every instance but a test instance`,
   bounds: "ASK_BOUNDS (R17), declared when the ask starts"
 });
 var DRAFT_KINDS = Object.freeze([
@@ -153933,9 +153966,10 @@ var DRAFT_KINDS = Object.freeze([
   "bearing_note",
   "textcheck",
   "infractiondraft",
-  "bearingdraft"
+  "bearingdraft",
+  "statusreport"
 ]);
-var ACTION_DRAFT_KINDS = Object.freeze(DRAFT_KINDS.slice(-3));
+var ACTION_DRAFT_KINDS = Object.freeze(["textcheck", "infractiondraft", "bearingdraft"]);
 var DRAFT_REACH = Object.freeze({
   own_words: Object.freeze({ scope: "ask_scope", means: "within answers' ASK_SCOPE (its R1); a firsthand field reads nothing" }),
   translation: Object.freeze({ scope: "none", means: "nothing of the record: only the interface words it is asked about" }),
@@ -153944,7 +153978,8 @@ var DRAFT_REACH = Object.freeze({
   bearing_note: Object.freeze({ scope: "source_record", means: "within answers' ASK_SCOPE, narrowed to the source's own record (run-productions R23)" }),
   textcheck: Object.freeze({ scope: "none", means: "nothing of the record: only the prepared text it is asked about, as a translation draft is given only its words" }),
   infractiondraft: Object.freeze({ scope: "matter_record", means: "through the asking member's grant, only the matter's own record the member may see: its plan, actions, correspondence and findings, through the record reads the grant already admits (credentials' AI_GRANT_OPS, no op added); no write op of any module" }),
-  bearingdraft: Object.freeze({ scope: "action_reply", means: "through the asking member's grant, only the action and the reply it is asked about, with the request's claims, through the record reads the grant already admits (credentials' AI_GRANT_OPS, no op added); no write op of any module" })
+  bearingdraft: Object.freeze({ scope: "action_reply", means: "through the asking member's grant, only the action and the reply it is asked about, with the request's claims, through the record reads the grant already admits (credentials' AI_GRANT_OPS, no op added); no write op of any module" }),
+  statusreport: Object.freeze({ scope: "none", means: "nothing of the record: only the items plan-work R8 assembled for the plan's status report, handed in by the door" })
 });
 var ACTION_DRAFTS = Object.freeze({
   flag: "action_drafts",
@@ -153968,8 +154003,9 @@ var DRAFT_MODE = Object.freeze({
   keeps: "nothing: the draft is answered into the member's field, never stored, and is the member's words only by the member's own act of keeping or editing it",
   why: "it answers one member's request for help with their own words inside that member's act and is no run: it writes no run row and keeps nothing (K1364, K1450)",
   deploys_apart: true,
-  deployed: false,
+  deployed: true,
   when: "only by a reviewed change of its own that sets this flag, the change that serves agent-worker's POST /draft, whatever the run modes' state and whatever ask's flag",
+  made: "T46 (N897 (2); K2816): set by its own reviewed change, because agent-worker's POST /draft is served (since T35 and T37); the flag marks served code and lifts no bar, so each draft kind is admitted only through partAdmittedOn for its part draft:<kind> (R29), D14's test bar gating it on every instance but a test instance; the action drafts still wait on their own flag, action_drafts (R27)",
   bounds: "ASK_BOUNDS (R17), declared when the draft starts"
 });
 var ENQUIRE_MODE = Object.freeze({
@@ -154137,6 +154173,29 @@ function partDeployableOn(set, part, held2) {
   const { verifications = [], testBars = [] } = held2 && typeof held2 === "object" ? held2 : {};
   if (!testBarHeldOn(set, part, testBars)) return false;
   return DEPLOYMENT_SEQUENCE.order.includes(part) ? deployable(part, verifications) : true;
+}
+var UNTESTED_WORDS = "ai.label.untested";
+function untestedLabel(part) {
+  if (typeof part !== "string" || !TEST_BAR_PARTS.includes(part)) return null;
+  return Object.freeze({
+    kind: "untested",
+    part,
+    set: CIVICSMITH_TEST_SET.id,
+    set_version: CIVICSMITH_TEST_SET.version,
+    words: UNTESTED_WORDS
+  });
+}
+var ADMITTED = Object.freeze({ admitted: true, untested: null });
+var NOT_ADMITTED = Object.freeze({ admitted: false, untested: null });
+function partAdmittedOn(set, part, held2, opts) {
+  if (partDeployableOn(set, part, held2)) return ADMITTED;
+  const testInstance = opts != null && typeof opts === "object" && Object.prototype.hasOwnProperty.call(opts, "testInstance") ? opts.testInstance : false;
+  if (testInstance !== true || typeof part !== "string" || !TEST_BAR_PARTS.includes(part)) return NOT_ADMITTED;
+  if (DEPLOYMENT_SEQUENCE.order.includes(part)) {
+    const { verifications = [] } = held2 && typeof held2 === "object" ? held2 : {};
+    if (!deployable(part, verifications)) return NOT_ADMITTED;
+  }
+  return Object.freeze({ admitted: true, untested: untestedLabel(part) });
 }
 
 // src/ai-use/schema.mjs
@@ -155856,6 +155915,7 @@ var RECIPIENTS_LIMIT = Object.freeze({ default: 500, max: 1e3 });
 var DRAW_PAGE = 500;
 var DRAW_MAX = 1e4;
 var LATER_FOUND_SCAN = 5e3;
+var DUE_READ_MAX = 1e3;
 var WAITING_ON_MAX = 200;
 var ACCEPTANCE_COUNT_KEYS = Object.freeze(["stepsAcceptedAsProposed", "stepsAcceptedEdited", "stepsAcceptedOwnInstead"]);
 var HEX6417 = /^[0-9a-f]{64}$/;
@@ -156958,25 +157018,30 @@ var Steps = class _Steps {
   /** R12: `stepsDue({viewer, at})`, for `notice-producers`: to the member who set each date only, each step past its
    *  date and not closed, and each reminder she asked for, from its day; each with a stable key. R29: a step whose
    *  date the registered holder holds draws no past-date item (the action's clock entry is the one item); her own
-   *  reminders stay. */
+   *  reminders stay. T46: each read takes at most `DUE_READ_MAX` rows (her dated steps not closed, in step order; her
+   *  reminders due by that day, in the order she asked them); when either holds more, the answer carries
+   *  `truncated: true` beside `due`, and otherwise no `truncated`, so a bound reached is never silent. */
   stepsDue({ viewer = null, at: at47 = null } = {}) {
     const member2 = this.#memberOf(viewer);
     const today2 = filled8(at47) ? this.#today(at47) : null;
     if (!member2) return { ok: true, due: [] };
     if (!today2) return { ok: true, due: [], undetermined: true, why: "no time zone is held for your group's Civicsmith, or no instant was given" };
     const due2 = [];
-    for (const r of this.#rows(`SELECT * FROM steps WHERE by_when_by = ? AND state NOT IN ('ended', 'set_aside') ORDER BY step_id LIMIT 1000`, member2)) {
+    const dated = this.#rows(`SELECT * FROM steps WHERE by_when_by = ? AND state NOT IN ('ended', 'set_aside') ORDER BY step_id LIMIT ?`, member2, DUE_READ_MAX + 1);
+    const reminders = this.#rows(`SELECT m.seq, m.day, s.* FROM step_reminders m JOIN steps s ON s.step_id = m.step_id
+                                  WHERE m.member = ? AND m.day <= ? AND s.state NOT IN ('ended', 'set_aside') ORDER BY m.seq LIMIT ?`, member2, today2, DUE_READ_MAX + 1);
+    const truncated6 = dated.length > DUE_READ_MAX || reminders.length > DUE_READ_MAX;
+    for (const r of dated.slice(0, DUE_READ_MAX)) {
       const b = parse6(r.by_when_json);
       if (!isObj36(b) || !(b.date < today2) || !this.#seen(r, viewer)) continue;
       if (this.#heldBy(r)) continue;
       due2.push({ step: r.step_id, work: r.work, kind: "past_date", date: b.date, key: sha256HexSync(`steps:due:${r.step_id}:${b.date}`) });
     }
-    for (const m of this.#rows(`SELECT m.seq, m.day, s.* FROM step_reminders m JOIN steps s ON s.step_id = m.step_id
-                                 WHERE m.member = ? AND m.day <= ? AND s.state NOT IN ('ended', 'set_aside') ORDER BY m.seq LIMIT 1000`, member2, today2)) {
+    for (const m of reminders.slice(0, DUE_READ_MAX)) {
       if (!this.#seen(m, viewer)) continue;
       due2.push({ step: m.step_id, work: m.work, kind: "reminder", date: m.day, key: sha256HexSync(`steps:reminder:${m.seq}`) });
     }
-    return { ok: true, due: due2 };
+    return truncated6 ? { ok: true, due: due2, truncated: true } : { ok: true, due: due2 };
   }
   /* ---- money cost (R13–R15) ---- */
   /** R13: `stepCostAdd({step, kind, amount, currency, what, by})`, appended with who and when. */
@@ -157367,7 +157432,9 @@ var AI_RUNS_ADDED_COLUMNS = Object.freeze([
   "origin",
   "own_step",
   /* R77 (T45): a re-examination run's response, stored verbatim; NULL for every other run */
-  "response"
+  "response",
+  /* R78 (T46): the test-instance exception's label a run was admitted under, JSON; NULL for a run the bar admitted */
+  "untested"
 ]);
 var AI_RUNS_SCHEMA = `
 
@@ -157430,7 +157497,10 @@ CREATE TABLE IF NOT EXISTS ai_runs (
   origin                TEXT,
   own_step              TEXT,
   -- R77 (T45): the recorded response a re-examination run re-examines its plan after, verbatim; NULL otherwise.
-  response              TEXT
+  response              TEXT,
+  -- R78 (T46): the 'untested' label (run-rules R29's untestedLabel) a run admitted on the test-instance exception
+  -- carries, recorded at the open and never derived later (R32); NULL for a run the bar admitted.
+  untested              TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_runs_expires ON ai_runs(status, expires);
 CREATE INDEX IF NOT EXISTS ai_runs_context ON ai_runs(context_id);
@@ -157782,12 +157852,36 @@ var AiRuns = class _AiRuns {
   #deployedModes() {
     return Array.isArray(this.#deps.deployedModes) ? this.#deps.deployedModes : DEPLOYED_MODES;
   }
-  /** run-rules R19 as amended (B6, K2489): MAY THIS AI PART DEPLOY, on what this record holds: its verification chain
-   *  (`verifications`) and its test bar (`testBarRecords`, R75) on Civicsmith's set (a module test's own set through
-   *  `deps.testSet`). `partDeployable`'s one computation, never a second here. */
-  #partDeployable(part) {
-    const set = this.#deps.testSet || CIVICSMITH_TEST_SET;
-    return partDeployableOn(set, part, { verifications: this.verifications(), testBars: this.testBarRecords() });
+  /** R78 (T46; K2816 (2)): WHETHER THIS IS A TEST INSTANCE, a fact of the deployment and of nothing else: true exactly
+   *  when the Worker environment's `CIVICSMITH_TEST_INSTANCE` is a string equal to its `INSTANCE_NAME`, both non-empty;
+   *  false otherwise, and when either cannot be read. Only `env` is read: no op, body, query or table reaches it. */
+  testInstance() {
+    try {
+      const env = this.env || {};
+      const flag2 = env.CIVICSMITH_TEST_INSTANCE, name3 = env.INSTANCE_NAME;
+      return typeof flag2 === "string" && typeof name3 === "string" && flag2 !== "" && name3 !== "" && flag2 === name3;
+    } catch {
+      return false;
+    }
+  }
+  /** R78, run-rules R19, R29 (B6, K2489; K2816 (2)): MAY THIS AI PART RUN HERE, on what this record holds: its
+   *  verification chain (`verifications`) and its test bar (`testBarRecords`, R75) on Civicsmith's set (a module test's
+   *  own set through `deps.testSet`), with the test-instance exception (`testInstance`). `run-rules`' `partAdmittedOn`
+   *  is the one computation: `{admitted, untested}`, the label set only for a part admitted on the exception. The one
+   *  gate of this module (R40, R23's input), and what later modules ask (question-explorer, instance-setup, plane). */
+  partAdmitted(part) {
+    try {
+      const set = this.#deps.testSet || CIVICSMITH_TEST_SET;
+      const said11 = partAdmittedOn(
+        set,
+        part,
+        { verifications: this.verifications(), testBars: this.testBarRecords() },
+        { testInstance: this.testInstance() }
+      );
+      return said11 && said11.admitted === true ? { admitted: true, untested: said11.untested ?? null } : { admitted: false, untested: null };
+    } catch {
+      return { admitted: false, untested: null };
+    }
   }
   #captureRequestConfigured() {
     const w = this.#wait();
@@ -158358,13 +158452,15 @@ var AiRuns = class _AiRuns {
         note: badSkill.detail
       };
     const runMode = mode === void 0 || mode === null ? DEFAULT_MODE : String(mode).trim();
-    const deployed = this.#deployedModes().filter((m) => RUN_MODES.includes(m) && this.#partDeployable(m));
+    const admissions = new Map(this.#deployedModes().filter((m) => RUN_MODES.includes(m)).map((m) => [m, this.partAdmitted(m)]));
+    const deployed = [...admissions.keys()].filter((m) => admissions.get(m).admitted);
     if (!deployed.includes(runMode))
       return refusal38("AI_RUN_MODE_NOT_DEPLOYED", {
         mode: String(mode).slice(0, 60),
         deployed: [...deployed],
         note: `the mode '${String(mode).slice(0, 60)}' is not deployed in your group's Civicsmith: the modes deploy in one order, each only after the one before it is verified live, and today ${deployed.join(", ")} ${deployed.length === 1 ? "is" : "are"} deployed. Nothing was written`
       });
+    const untested = admissions.get(runMode).untested ?? null;
     const planRefusal = (code, detail, extra = {}) => refusal38(code, { detail, ...extra, note: "Nothing was written" });
     const planNamed = typeof plan === "string" && plan.trim() !== "";
     const who3 = actor == null ? "" : String(actor).trim();
@@ -158383,7 +158479,7 @@ var AiRuns = class _AiRuns {
     const originSaid = originAllowed({
       origin: runOrigin,
       mode: runMode,
-      investigateDeployable: this.#partDeployable("investigate")
+      investigateDeployable: this.partAdmitted("investigate").admitted
     });
     if (!originSaid || originSaid.ok !== true)
       return {
@@ -158514,8 +158610,8 @@ var AiRuns = class _AiRuns {
           `INSERT INTO ai_runs (run, status, label, mode, context_type, context_id,
            principal_plane, principal_claude, principal_claude_ref, skill_version,
            bias_manifest, standard_pair, created, updated, expires, ticks, state, lens_at_open,
-           rerun_of, plan, step, origin, response)
-         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?)`,
+           rerun_of, plan, step, origin, response, untested)
+         VALUES (?, 'running', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?)`,
           run2,
           label,
           runMode,
@@ -158547,7 +158643,9 @@ var AiRuns = class _AiRuns {
           /* R73: the step and the origin, judged above; R77: a re-examination's response, verbatim (trimmed, as judged) */
           stepId,
           runOrigin,
-          responseId
+          responseId,
+          /* R78: the exception's label, as admitted above */
+          untested ? JSON.stringify(untested) : null
         );
         for (const b of Array.isArray(bounds2) ? bounds2 : []) {
           if (!b || !Object.prototype.hasOwnProperty.call(RUN_BOUNDS, String(b.bound))) continue;
@@ -158609,6 +158707,8 @@ var AiRuns = class _AiRuns {
       ...systemStep ? { step: systemStep } : stepId ? { step: stepId } : {},
       ...runOrigin !== "member" ? { origin: runOrigin } : {},
       ...responseId ? { response: responseId } : {},
+      /* R78: the label, null for a run the bar admitted */
+      untested,
       ..._AiRuns.#aiRunGateStated(gate)
     };
   }
@@ -159270,25 +159370,35 @@ var AiRuns = class _AiRuns {
     if (!cred.token) return { ready: false, withheld: cred.reason };
     const store = this.#ownNamespace();
     if (!store) return { ready: false, withheld: "NAMESPACE_UNDETERMINED" };
-    const sha2 = await sha256hex(cred.token);
-    let look = null;
-    if (store === "bio") look = credentialsOf(this.ctx).aiCredentialLook({ secretSha: sha2 });
-    else {
-      try {
-        const res = await env.STORE.get(env.STORE.idFromName("bio")).fetch(`http://do/aicredentiallook?sha=${sha2}`);
-        const out = await res.json().catch(() => null);
-        look = out && out.ok === true ? out.result : null;
-      } catch {
-        look = null;
-      }
-      if (!look) return { ready: false, withheld: "CREDENTIAL_RECORD_SILENT" };
-    }
+    const look = await this.#credentialLook(cred.token, store);
+    if (!look) return { ready: false, withheld: "CREDENTIAL_RECORD_SILENT" };
     const c = look && look.found ? look.credential : null;
     if (!c) return { ready: false, withheld: "INSTANCE_AI_CREDENTIAL_NOT_ON_RECORD" };
     if (c.revoked) return { ready: false, withheld: "INSTANCE_AI_CREDENTIAL_REVOKED", tokenId: c.tokenId };
     if (c.principalKind !== "organisation")
       return { ready: false, withheld: "INSTANCE_AI_CREDENTIAL_NOT_ORGANISATION", tokenId: c.tokenId };
     return { ready: true, stamp: `${c.principal}/${c.tokenId}`, tokenId: c.tokenId, token: cred.token, store };
+  }
+  /** An `ai` credential's record row, looked up by its hash (credentials R15) where `ai_credentials` lives: this object
+   *  when it is `bio`, else the `bio` object (`aicredentiallook`). `{found, credential}`, or null when the record did not
+   *  answer. The value is hashed here and kept nowhere. */
+  async #credentialLook(token, store) {
+    const sha2 = await sha256hex(token);
+    if (store === "bio") {
+      try {
+        return credentialsOf(this.ctx).aiCredentialLook({ secretSha: sha2 });
+      } catch {
+        return null;
+      }
+    }
+    try {
+      const env = this.env || {};
+      const res = await env.STORE.get(env.STORE.idFromName("bio")).fetch(`http://do/aicredentiallook?sha=${sha2}`);
+      const out = await res.json().catch(() => null);
+      return out && out.ok === true ? out.result : null;
+    } catch {
+      return null;
+    }
   }
   /** THE GATE, and the sentence the wake entry carries. `dispatch` is true ONLY on equality of the two stamps. The
    *  sentence (`says`) is served to a member in the run's log (R24), so it calls the group's own Civicsmith "your group's
@@ -159320,6 +159430,8 @@ var AiRuns = class _AiRuns {
     let outcome, timer;
     let ref = d.payer ? await this.#accountFor(d.payer, "run", d.project) : null;
     if (ref && !ref.refusal && d.owner && ref.owner !== d.owner) ref = { refusal: { code: "NO_ACCOUNT", reason: "NO_ACCOUNT" } };
+    if (d.signinOnly && !(ref && !ref.refusal && ref.kind === "signin" && ref.level === "member"))
+      return { state: "WITHHELD", status: null, withheld: "MEMBER_PRINCIPAL_RUN" };
     if (!ref || ref.refusal)
       outcome = {
         state: "REFUSED",
@@ -159384,6 +159496,112 @@ var AiRuns = class _AiRuns {
       if (refusal38) outcome.unwritable = refusal38;
     }
     return outcome;
+  }
+  /** R18 (T46; N919; Bob's, K2892: a member's own sign-in runs check and plan for that member only): A MEMBER'S OWN RUN,
+   *  DISPATCHED AT HER OWN ACT. The wake never dispatches a member's run (`MEMBER_PRINCIPAL_RUN`, above); this is the one
+   *  door that does, called by `control-plane`'s door (op `airundispatch`, T46-59). `by` is the door's stamp of who acts,
+   *  `viewer` its sight (`by` when not given), and `credential` the member's own `ai` credential the door was presented
+   *  with, handed in-process and never read from a body, query or record: the segment `agent-worker` runs acts under it
+   *  (its R5), so it must be the credential that opened the run (`<principal>/<tokenId>` equal to its `principal_plane`),
+   *  on record and unrevoked. Its value is used for the one call and kept nowhere, never written or answered.
+   *
+   *  In order, nothing sent on any: absent or invisible, `{found: false}`; `by` not the member the run's principal names,
+   *  `AI_RUN_NOT_PRINCIPAL` (run-rules R5, relayed); not running, `{dispatched: false, status}`; a mode other than
+   *  `check` or `plan`, `MEMBER_RUN_MODE_NOT_ADMITTED`; then withheld by name as the wake's dispatch is
+   *  (`AGENT_WORKER_UNBOUND`, `NAMESPACE_UNDETERMINED`, `CREDENTIAL_RECORD_SILENT`); no credential presented, or a run
+   *  opened without one (a session's `member:<id>`), `MEMBER_PRINCIPAL_RUN`; a credential not on record, revoked or not
+   *  the run's own, `AI_RUN_NOT_PRINCIPAL`; an account other than her own sign-in, `MEMBER_PRINCIPAL_RUN`. Then the
+   *  wake's call (`#aiRunDispatch`): the 30 s wait, `RUNNING` past it, and one log entry for a refused or incomplete call. */
+  async dispatchMemberRun({ run: run2 = null, by = null, viewer = null, credential = null, at: at47 = null } = {}) {
+    const iso8 = _AiRuns.#aiIso(at47 ? Date.parse(at47) : Date.now());
+    const id = run2 == null ? "" : String(run2).trim();
+    const sight = viewer == null || viewer === "" ? by : viewer;
+    const row12 = id ? this.#one(`SELECT run, status, mode, context_type, context_id, principal_plane, principal_claude,
+                                       principal_claude_ref, step FROM ai_runs WHERE run = ?`, id) : null;
+    if (!row12 || !this.#aiRunInSight(id, sight))
+      return { run: run2 || null, found: false, note: "no such run: it either never existed or was purged" };
+    const owner = String(row12.principal_plane ?? "");
+    const member2 = memberIdOf3(by);
+    const act2 = "continuing a run";
+    const notPrincipal = owner.startsWith("member:") && member2 ? runPrincipalGate({ caller: `member:${member2}`, principal: owner, act: act2 }) : runPrincipalGate({ caller: "", principal: owner, act: act2 });
+    if (notPrincipal)
+      return {
+        run: run2,
+        dispatched: false,
+        found: true,
+        status: row12.status,
+        code: notPrincipal.code,
+        check: notPrincipal.check,
+        translation: notPrincipal.translation,
+        detail: notPrincipal.detail,
+        note: "a run is continued by its principal alone. Nothing was sent"
+      };
+    if (row12.status !== "running")
+      return {
+        run: run2,
+        found: true,
+        dispatched: false,
+        status: row12.status,
+        note: "this run has ended; a later dispatch does not reopen it. Nothing was sent"
+      };
+    if (row12.mode !== "check" && row12.mode !== "plan")
+      return {
+        run: run2,
+        found: true,
+        dispatched: false,
+        status: row12.status,
+        ..._AiRuns.#shed(this.#refuse("MEMBER_RUN_MODE_NOT_ADMITTED", `on a member's own sign-in the assistant runs checks and plans for that member only; this run is in mode '${String(row12.mode).slice(0, 40)}'. Nothing was sent.`)),
+        mode: row12.mode
+      };
+    const withheld = (w, extra = {}) => ({
+      run: run2,
+      found: true,
+      dispatched: false,
+      status: row12.status,
+      withheld: w,
+      ...extra,
+      note: "Nothing was sent"
+    });
+    const env = this.env || {};
+    if (!env.AGENT_WORKER || typeof env.AGENT_WORKER.fetch !== "function") return withheld("AGENT_WORKER_UNBOUND");
+    const store = this.#ownNamespace();
+    if (!store) return withheld("NAMESPACE_UNDETERMINED");
+    const token = typeof credential === "string" ? credential.trim() : "";
+    if (!token || !owner.includes("/")) return withheld("MEMBER_PRINCIPAL_RUN");
+    const look = await this.#credentialLook(token, store);
+    if (!look) return withheld("CREDENTIAL_RECORD_SILENT");
+    const c = look.found ? look.credential : null;
+    if (!c || c.revoked || `${c.principal}/${c.tokenId}` !== String(row12.principal_plane)) {
+      const r = runPrincipalGate({ caller: "", principal: owner, act: act2 });
+      return {
+        run: run2,
+        found: true,
+        dispatched: false,
+        status: row12.status,
+        code: r.code,
+        check: r.check,
+        translation: r.translation,
+        detail: "the credential presented is not the one this run was opened on, or it is revoked or not on record. Nothing was sent"
+      };
+    }
+    const d = {
+      run: row12.run,
+      context_id: row12.context_id,
+      payer: _AiRuns.#memberOfRun(row12),
+      step: row12.step || null,
+      project: row12.context_type === "project" ? row12.context_id : null,
+      owner: row12.principal_claude,
+      signinOnly: true
+    };
+    const outcome = await this.#aiRunDispatch(d, { store, token, tokenId: c.tokenId }, iso8);
+    if (outcome.state === "WITHHELD") return withheld(outcome.withheld);
+    return {
+      run: run2,
+      found: true,
+      dispatched: outcome.state === "DISPATCHED" || outcome.state === "RUNNING",
+      status: row12.status,
+      dispatch: outcome
+    };
   }
   /** op=airun — THE RUNNING-SESSION SURFACE'S READ (UI-38's rider).
    *
@@ -159525,6 +159743,8 @@ var AiRuns = class _AiRuns {
          viewer can see that run too, through the same sight; else null — a run that re-runs nothing and one whose
          earlier run is out of view answer alike, so the field never says a hidden run exists. */
       rerun_of: row12.rerun_of != null && String(row12.rerun_of).trim() !== "" && this.#aiRunInSight(String(row12.rerun_of), viewer) ? String(row12.rerun_of) : null,
+      /* R78: the label recorded at the open (null for a run the bar admitted, and for one opened before T46) */
+      untested: _AiRuns.#untestedOf(row12),
       /* R73: the step a step-run works on, and its origin; the keys exist only on a run that names a step or explores. */
       ...row12.step ? { step: row12.step } : {},
       ...row12.origin && row12.origin !== "member" ? { origin: row12.origin } : {},
@@ -160045,7 +160265,7 @@ var AiRuns = class _AiRuns {
       if (!id) return null;
       const seen = this.#bundleGate("r.context_id", viewer);
       const r = this.#one(`SELECT r.run, r.status, r.mode, r.context_type, r.context_id, r.principal_plane, r.principal_claude,
-                                  r.plan, r.origin, r.response FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, id, ...seen.args);
+                                  r.plan, r.origin, r.response, r.untested FROM ai_runs r WHERE r.run = ? AND ${seen.sql}`, id, ...seen.args);
       return r ? {
         run: r.run,
         status: r.status,
@@ -160054,6 +160274,8 @@ var AiRuns = class _AiRuns {
         context_id: r.context_id,
         principal_plane: r.principal_plane,
         principal_claude: r.principal_claude,
+        /* R78: the label recorded at the open */
+        untested: _AiRuns.#untestedOf(r),
         ...r.mode === "plan" ? { plan: r.plan ?? null } : {},
         /* R77: a re-examination run's response, as `read` answers it */
         ...r.origin === "reexamination" ? { response: r.response ?? null } : {}
@@ -160061,6 +160283,12 @@ var AiRuns = class _AiRuns {
     } catch {
       return null;
     }
+  }
+  /** R78: a run's recorded `untested` label, read back as stored at the open; null when none was recorded or it cannot be
+   *  read (never derived from the bar or the instance now, R32). */
+  static #untestedOf(row12) {
+    const v = row12 && row12.untested != null ? safeJson26(String(row12.untested)) : null;
+    return v && typeof v === "object" && !Array.isArray(v) ? v : null;
   }
   /** R29: one bound's `{allowed, consumed}`, or null when the run declared none. */
   boundOf(run2, bound) {
@@ -160306,7 +160534,7 @@ var AiRuns = class _AiRuns {
       verified_by: v.verified_by,
       at: existed ? prior.at : now,
       existed,
-      next: next ? { mode: next, deployable: this.#partDeployable(next) } : null
+      next: next ? { mode: next, deployable: this.partAdmitted(next).admitted } : null
     };
   }
   /* ---- R75 (T41; D14, D11): THE TEST BAR, written here, where runs are, and read by run-rules R19's deploy gate ---- */
@@ -206251,9 +206479,15 @@ function actionRepliesOps(r, url, body) {
 var checks_exports62 = {};
 __export(checks_exports62, {
   READING_GUIDES_CHECKS: () => READING_GUIDES_CHECKS,
+  READING_GUIDES_WORDS: () => READING_GUIDES_WORDS,
   refusal: () => refusal32
 });
 var at36 = (file, fn, region) => `src/reading-guides/${file} ${fn} > ${region}`;
+var READING_GUIDES_WORDS = Object.freeze({
+  "refusal.GUIDE_KIND_UNKNOWN": "A guide is for one kind of action or document your group's places recognise, and this names another. Nothing was written.",
+  "refusal.GUIDE_ITEM_UNSOURCED": "Each route in a procedure guide cites the law, rule or published procedure it rests on, so members can read the source. This one cites nothing. Add its citation. Nothing was written.",
+  "guide.procedure.legalinfo": "Legal information, not legal advice"
+});
 var READING_GUIDES_CHECKS = Object.freeze({
   GUIDE_CARRIES_CONDUCT: {
     check: "C-144.1",
@@ -206273,7 +206507,7 @@ var READING_GUIDES_CHECKS = Object.freeze({
   GUIDE_KIND_UNKNOWN: {
     check: "C-144.4",
     where: at36("index.mjs", "kindRefusal", "is-guide-kind"),
-    translation: "A reading guide is for one kind of document your group's Civicsmith recognises (a meeting calendar, minutes, an agenda, a staff report, an ordinance or code section, a policy, a staff directory, or any other document); a procedure guide is for one kind of action your group's jurisdiction profiles list. The kind or purpose given is not one of them. Nothing was written."
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_KIND_UNKNOWN"]
   },
   NO_SUCH_GUIDE: {
     check: "C-144.5",
@@ -206348,7 +206582,7 @@ var READING_GUIDES_CHECKS = Object.freeze({
   GUIDE_ITEM_UNSOURCED: {
     check: "C-144.19",
     where: at36("check.mjs", "checkGuide", "is-guide-sourced"),
-    translation: "Each route in a procedure guide carries the citation it rests on: the law, rule or published procedure that provides it, so members can read the source. The item named has none. Add its citation. Nothing was written."
+    translation: READING_GUIDES_WORDS["refusal.GUIDE_ITEM_UNSOURCED"]
   }
 });
 function refusal32(code, detail, extra) {
@@ -209591,7 +209825,10 @@ var REASON_MAX16 = 500;
 var RUN_MAX = 200;
 var GUIDE_OFFER_FORMAT = "bio-reading-guide-offer/1";
 var GUIDE_LIBRARY_PROPOSAL_FORMAT = "bio-reading-guide-library-proposal/1";
-var PROCEDURE_GUIDE_LABEL = Object.freeze({ key: "guide.procedure.legalinfo", says: "legal information, not legal advice" });
+var PROCEDURE_GUIDE_LABEL = Object.freeze({
+  key: "guide.procedure.legalinfo",
+  says: READING_GUIDES_WORDS["guide.procedure.legalinfo"]
+});
 var GUIDE_PROPOSAL_STATES = Object.freeze({
   machine_proposed: "a machine credential proposed this reading guide. That is machine work, labelled as machine work: it can propose what to look for and it can never write, review or approve a guide. It is not a guide until a member writes one based on it.",
   member_proposed: "a member proposed this reading guide. It is not a guide until a member writes one based on it.",
@@ -227722,6 +227959,7 @@ __export(skilldoctrine_exports, {
   PILOT_WIZARD_SECTION: () => PILOT_WIZARD_SECTION,
   PLANNING_ACT: () => PLANNING_ACT,
   PLANNING_ACTS: () => PLANNING_ACTS,
+  PLANNING_INPUTS: () => PLANNING_INPUTS,
   PROHIBITIONS: () => PROHIBITIONS,
   PROHIBITION_SET_IS_STANDING: () => PROHIBITION_SET_IS_STANDING,
   PUBLICATION_SOURCE: () => PUBLICATION_SOURCE,
@@ -227734,6 +227972,8 @@ __export(skilldoctrine_exports, {
   SEQUENCING_SOURCE: () => SEQUENCING_SOURCE,
   SKILL_CHECKS: () => SKILL_CHECKS,
   SKILL_CHECK_KEYS: () => SKILL_CHECK_KEYS,
+  STATUS_REPORT_ACT: () => STATUS_REPORT_ACT,
+  STATUS_REPORT_TASK: () => STATUS_REPORT_TASK,
   SUGGESTION_CLAUSES: () => SUGGESTION_CLAUSES,
   SURVEY_SOURCE: () => SURVEY_SOURCE,
   TABLE_SOURCE: () => TABLE_SOURCE,
@@ -230460,6 +230700,14 @@ var PLANNING_ACTS = Object.freeze({
   ])
 });
 var PLANNING_ACT = PLANNING_ACTS.proposes[0].id;
+var PLANNING_INPUTS = Object.freeze([
+  Object.freeze({
+    id: "closingNotesOf",
+    defined_by: "action-plans R45",
+    answered_in: "planRead's closed block, and plansFor",
+    is: "the closing notes of the project's closed plans, as members recorded them when each plan closed: the run reads them and weighs them beside the matter when it proposes options, as the group's own earlier plans (rule 4)"
+  })
+]);
 var catalogueById = (catalog) => new Map((Array.isArray(catalog) ? catalog : []).filter((a) => a && typeof a.id === "string").map((a) => [a.id, a]));
 var actReader = (byId, layer, proposal) => (a) => {
   if (!byId.has(a.id))
@@ -230487,6 +230735,8 @@ function actionPlanningLayer(catalog) {
         proposes: PLANNING_ACTS.proposes.map(read3),
         leaves_to_a_member: PLANNING_ACTS.leaves_to_a_member.map(read3)
       },
+      /* R47: the closing notes of the project's closed plans, an input the run reads, named and never read here. */
+      inputs: PLANNING_INPUTS,
       /* R28 (T35; K1880; T36: N731): a standard it proposes rests only on captured text, so the run works under R38
          (a)'s and (c)'s clauses, the same objects the resident layer and the law lookup carry. */
       capture: CAPTURE_CLAUSES,
@@ -230989,19 +231239,26 @@ var ACTION_DRAFTING_ACTS = Object.freeze({
     Object.freeze({ id: "bearingdraft", defined_by: "agent-worker R76" })
   ])
 });
+var STATUS_REPORT_ACT = Object.freeze({ id: "statusreportassist", defined_by: "plan-work R8" });
+var STATUS_REPORT_TASK = "the assistant drafts a plan's status report from the items handed to it, the sourced list of where the plan stands that plan-work R8 assembles: each sentence of the report comes from one of those items and says no more than it does, and nothing is read, neither the record nor any document or page (run-rules R27's reach none). The report is a labelled machine draft, and it is a member's report only when she keeps or rewrites it.";
+var ACTION_DRAFTING_LOAD_WHEN = "the member asks the assistant to read a prepared text, draft an infraction's documentation for an audience, or propose bearings on a reply";
+var STATUS_REPORT_LOAD_WHEN = "asks the assistant to draft a plan's status report from the items handed to it";
 function actionDraftingLayer(catalog) {
   const byId = catalogueById(catalog);
   const named2 = ACTION_DRAFTING_ACTS.drafts;
-  if (!named2.some((a) => byId.has(a.id))) return {
+  const drafts = named2.some((a) => byId.has(a.id));
+  const statusReport = byId.has(STATUS_REPORT_ACT.id);
+  const draftsAbsentBecause = `the plane's published catalogue holds none of the acts ${named2.map((a) => a.id).join(", ")}, the drafts through which a member asks the assistant to read a prepared text, document an infraction or propose bearings on a reply, so this layer carries no doctrine for work no draft can do.`;
+  if (!drafts && !statusReport) return {
     load_when: "never, in this edition",
     sourcing: "absent",
     body: {},
     /* THE ABSENCE, STATED IN THE PACK ITSELF, as the wizard scripts layer states its own. */
-    absent_because: `the plane's published catalogue holds none of the acts ${named2.map((a) => a.id).join(", ")}, the drafts through which a member asks the assistant to read a prepared text, document an infraction or propose bearings on a reply, so this layer carries no doctrine for work no draft can do.`
+    absent_because: draftsAbsentBecause
   };
   const read3 = actReader(byId, "action drafting", "an action draft act");
   return {
-    load_when: "the member asks the assistant to read a prepared text, draft an infraction's documentation for an audience, or propose bearings on a reply",
+    load_when: drafts && statusReport ? `${ACTION_DRAFTING_LOAD_WHEN}, or ${STATUS_REPORT_LOAD_WHEN}` : drafts ? ACTION_DRAFTING_LOAD_WHEN : `the member ${STATUS_REPORT_LOAD_WHEN}`,
     sourcing: "authored",
     body: {
       rules: ACTION_DRAFTING_RULES,
@@ -231009,7 +231266,16 @@ function actionDraftingLayer(catalog) {
       section: ACTION_SECTION,
       /* The mode a draft is answered in, run-rules' (its R21, R27), read and never typed, as writing help's. */
       mode: DRAFT_MODE.mode,
-      acts: { drafts: named2.map(read3) },
+      acts: {
+        drafts: drafts ? named2.map(read3) : [],
+        status_report: statusReport ? [read3(STATUS_REPORT_ACT)] : []
+      },
+      /* R48: with none of the three published, the status report renders alone and the three are stated absent. */
+      ...drafts ? {} : { drafts_absent_because: draftsAbsentBecause },
+      /* run-rules R27: the status report's reach, read by key and never typed, as the case's account reads its own. */
+      status_report: statusReport ? { task: STATUS_REPORT_TASK, reach: DRAFT_REACH.statusreport } : {
+        absent_because: `the plane's published catalogue holds no ${STATUS_REPORT_ACT.id} act, the one act through which a member asks the assistant to draft a plan's status report from the items handed to it, so this layer carries no task for work no draft can do.`
+      },
       note: "this layer is INSTRUCTION. A draft is answered to the member who asked for it, labelled as machine work, and stored nowhere; it never rewrites the member's text, and what it reads is fenced by the modules that serve it. It becomes the group's only by a member's own acts, which refuse a machine. A run ignoring every word here gets past nothing."
     }
   };
@@ -254702,9 +254968,9 @@ var SOURCING = {
   interface_translation_unpublished: "absent",
   /* while op=affordances publishes no translation draft act (R39) */
   action_drafting: "authored",
-  /* skilldoctrine.mjs, BIO_Action_v0_2.md §4 rules 1-3, 9, 12, 16, 19, 21 (R45) */
+  /* skilldoctrine.mjs, BIO_Action_v0_2.md §4 rules 1-3, 9, 12, 16, 19, 21 (R45), the status report task (R48) */
   action_drafting_unpublished: "absent",
-  /* while op=affordances publishes none of the action draft acts (R45) */
+  /* while op=affordances publishes none of the action draft acts nor the status report act (R45, R48) */
   procedure_guide: "guide",
   /* reading-guides procedureGuidesFor's items, passed by the caller, scanned by R16 (R46) */
   procedure_guide_none: "absent",
@@ -254929,8 +255195,8 @@ function disclosedLayers({
        and record-grammar's translation label; a stated absence while the plane publishes no translation draft act. */
     interface_translation: interfaceTranslationLayer(catalog),
     /* R45 (T45; N861, N887). The doctrine a member's action draft (reading a prepared text, documenting an infraction for
-       an audience, bearings on a reply) works under, with its acts read from the published catalogue; a stated absence
-       while the plane publishes none of them. */
+       an audience, bearings on a reply) works under, with its acts read from the published catalogue; R48 (T46; N920):
+       and the status report task, its act read on its own; a stated absence while the plane publishes none of them. */
     action_drafting: actionDraftingLayer(catalog),
     /* R46 (T45; N858). The procedure guides for the kind of action a run or draft concerns, passed by its caller
        (`reading-guides.procedureGuidesFor`, its R13), their items only and scanned by R16, or a stated absence. */
@@ -263613,7 +263879,9 @@ CREATE INDEX IF NOT EXISTS explore_refusals_run ON explore_refusals(run);
 -- R4, R5: a find, gauged. kind capture | content | connection, or page (an address the record does not hold, named to
 -- the members, R3). bundle_id and bundle_b are the documents it rests on (sight, purge). bearing and how are the run's
 -- gauge; false_alarm_rate and gold_set the gate's record it was gauged under (R7); against the live basis it was
--- gauged against (each drawing project's CURRENT version, or the question's projected legs). No score column.
+-- gauged against (each drawing project's CURRENT version, or the question's projected legs). untested the label the
+-- gate opened under on the test-instance exception (R16, run-rules R29's untestedLabel, canonical JSON), recorded
+-- at the find and never removed by a later bar; null when the bar was held. No score column.
 CREATE TABLE IF NOT EXISTS explore_finds (
   find             TEXT PRIMARY KEY,
   run              TEXT NOT NULL,
@@ -263627,6 +263895,7 @@ CREATE TABLE IF NOT EXISTS explore_finds (
   false_alarm_rate REAL,
   gold_set         TEXT,
   against          TEXT,
+  untested         TEXT,
   owner            TEXT NOT NULL,
   at               TEXT NOT NULL,
   UNIQUE (run, kind, ref)
@@ -263667,6 +263936,8 @@ var QUESTION_EXPLORER_TABLES = Object.freeze([
 function migrateQuestionExplorer(sql) {
   const bare5 = QUESTION_EXPLORER_SCHEMA.split("\n").filter((l2) => !l2.trim().startsWith("--")).join("\n");
   for (const stmt of bare5.split(";")) if (stmt.trim()) sql.exec(stmt);
+  const cols = [...sql.exec(`PRAGMA table_info(explore_finds)`)].map((c) => c.name);
+  if (!cols.includes("untested")) sql.exec(`ALTER TABLE explore_finds ADD COLUMN untested TEXT`);
 }
 
 // src/question-explorer/index.mjs
@@ -263746,7 +264017,7 @@ var QuestionExplorer = class {
     this.now = typeof now === "function" ? now : () => Date.now();
     this.held = typeof held2 === "function" ? held2 : () => ({
       verifications: aiRuns && typeof aiRuns.verifications === "function" ? aiRuns.verifications() : [],
-      testBars: aiRuns && typeof aiRuns.testBars === "function" ? aiRuns.testBars() : []
+      testBars: aiRuns && typeof aiRuns.testBarRecords === "function" ? aiRuns.testBarRecords() : []
     });
     this.testSet = testSet;
   }
@@ -263921,21 +264192,38 @@ var QuestionExplorer = class {
     return { run: r };
   }
   /* ---------------------------------------------------------------- R7: the gate */
+  /** R7, R16: whether an AI part is admitted, `{admitted, untested}`: `ai-runs.partAdmitted` (its R78, the one gate,
+   *  `run-rules` R29 on what the record holds, with the deployment's test-instance fact); where that provider is not
+   *  in place, R19's gate alone, `run-rules.partDeployableOn`, with no exception. Anything unreadable is not admitted. */
+  #admitted(part, held2) {
+    if (this.aiRuns && typeof this.aiRuns.partAdmitted === "function") {
+      const a = this.aiRuns.partAdmitted(part);
+      const label = a && a.untested && typeof a.untested === "object" ? a.untested : null;
+      return { admitted: !!a && a.admitted === true, untested: a && a.admitted === true ? label : null };
+    }
+    return { admitted: partDeployableOn(this.testSet, part, held2) === true, untested: null };
+  }
   /** R7: the gauge's gate. Open only when Civicsmith's test bar for the explorer is recorded passed with a false-alarm
-   *  rate at most 20%, and `run-rules` R19 lets `investigate` deploy and the explorer's use. A group's own test
+   *  rate at most 20%, and `run-rules` R19 lets `investigate` deploy and the explorer's use. R16: also open, on the
+   *  test-instance exception, when `ai-runs.partAdmitted` admits both `investigate` and `explore` and the explorer's
+   *  own bar is not held: then `false_alarm_rate` and `gold_set` are null and `untested` is `explore`'s label. Whenever
+   *  the explorer's bar is held, R7's rate applies and no label is carried. The exception lifts only the bar: the
+   *  verification chain stands (it is `partAdmitted`'s), and nothing here counts toward any bar. A group's own test
    *  investigations are never read here (R11). Never throws; anything unreadable shuts it. */
   gate() {
-    const shut = (why2) => ({ open: false, why: why2, false_alarm_rate: null, gold_set: null });
+    const shut = (why2) => ({ open: false, why: why2, false_alarm_rate: null, gold_set: null, untested: null });
     try {
       if (!this.steps || !this.aiUse) return shut("a provider the explorer needs is not in place");
       const held2 = this.held() || {};
-      if (partDeployableOn(this.testSet, EXPLORE_MODE, held2) !== true || partDeployableOn(this.testSet, EXPLORE_TEST_PART, held2) !== true)
+      const inv2 = this.#admitted(EXPLORE_MODE, held2), use = this.#admitted(EXPLORE_TEST_PART, held2);
+      if (!inv2.admitted || !use.admitted)
         return shut("the investigate mode and the explorer's use are not both deployable on the test investigations");
+      if (use.untested) return { open: true, why: null, false_alarm_rate: null, gold_set: null, untested: use.untested };
       const tb = (Array.isArray(held2.testBars) ? held2.testBars : []).find((r) => checkTestBarRecord(r) === null && r.part === EXPLORE_TEST_PART && r.passed === true && r.set === this.testSet.id && r.set_version === this.testSet.version);
       const far = tb ? tb.false_alarm_rate : NaN;
       if (!(far >= 0 && far <= EXPLORE_FALSE_ALARM_MAX))
         return shut("the explorer's false-alarm rate on the test investigations is not recorded at or under 20%");
-      return { open: true, why: null, false_alarm_rate: far, gold_set: `${tb.set}@${tb.set_version}` };
+      return { open: true, why: null, false_alarm_rate: far, gold_set: `${tb.set}@${tb.set_version}`, untested: null };
     } catch {
       return shut("the gate could not be read");
     }
@@ -264270,8 +264558,9 @@ var QuestionExplorer = class {
     return { currents, legs };
   }
   /** R4: a find the run located, with the run's gauge of how it bears on the question's live basis: `supports`,
-   *  `cuts_against` or `unclear`, with its account of how. Recorded with the gate's false-alarm rate and gold set, the
-   *  label `machine` and the account that enabled it, under the run's step. The same find
+   *  `cuts_against` or `unclear`, with its account of how. Recorded with the gate's false-alarm rate and gold set (R16:
+   *  on the exception, both null and `untested` the label, kept with the find), the label `machine` and the account
+   *  that enabled it, under the run's step. The same find
    *  under the same run answers the first record, writing nothing. Never a grade, never a score. */
   find({ run: run2, kind: kind2, ref, bearing, how, caller = null, at: at47 = null } = {}) {
     const live7 = this.#liveRun(run2, caller);
@@ -264294,7 +264583,7 @@ var QuestionExplorer = class {
     const find2 = `XFD-${sha256HexSync(`${r.run}|${kind2}|${loc.ref}`).slice(0, 16)}`;
     this.sql.exec(
       `INSERT INTO explore_finds (find, run, question, kind, ref, bundle_id, bundle_b, bearing, how,
-                     false_alarm_rate, gold_set, against, owner, at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                     false_alarm_rate, gold_set, against, untested, owner, at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       find2,
       r.run,
       r.question,
@@ -264307,6 +264596,7 @@ var QuestionExplorer = class {
       g.false_alarm_rate,
       g.gold_set,
       json21(this.#liveBasis(r.question)),
+      json21(g.untested),
       r.owner,
       iso8
     );
@@ -264327,7 +264617,8 @@ var QuestionExplorer = class {
         false_alarm_rate: f17.false_alarm_rate,
         gold_set: f17.gold_set,
         label: "machine",
-        enabled_by: f17.owner
+        enabled_by: f17.owner,
+        untested: parse21(f17.untested)
       },
       against: parse21(f17.against)
     };
@@ -264352,13 +264643,14 @@ var QuestionExplorer = class {
       const find2 = `XFD-${sha256HexSync(`${r.run}|page|${ref}`).slice(0, 16)}`;
       this.sql.exec(
         `INSERT INTO explore_finds (find, run, question, kind, ref, bundle_id, bundle_b, bearing, how,
-                       false_alarm_rate, gold_set, against, owner, at)
-                     VALUES (?,?,?,?,?,NULL,NULL,NULL,NULL,NULL,NULL,NULL,?,?) ON CONFLICT(run, kind, ref) DO NOTHING`,
+                       false_alarm_rate, gold_set, against, untested, owner, at)
+                     VALUES (?,?,?,?,?,NULL,NULL,NULL,NULL,NULL,NULL,NULL,?,?,?) ON CONFLICT(run, kind, ref) DO NOTHING`,
         find2,
         r.run,
         r.question,
         "page",
         ref,
+        json21(this.gate().untested),
         r.owner,
         iso8
       );
@@ -264535,7 +264827,8 @@ var QuestionExplorer = class {
   /** R5, R7, R14: for `notice-producers`: each find, once (a stable key per find and question), to each of the
    *  question's recipients who may see both the find and the question, less those she muted or accepted. Every find
    *  is the same item in the same order (newest first, then by id) whatever its bearing: nothing here orders, groups
-   *  or filters by bearing (R14). Labelled the system's work; which account paid is answered only to its owners (D64).
+   *  or filters by bearing (R14). Labelled the system's work, and with the label a find was gauged under on the
+   *  test-instance exception (R16); which account paid is answered only to its owners (D64).
    *  While the gate is shut it answers nothing and counts nothing (R7). Never throws. */
   findsFor({ viewer = null, at: at47 = null, limit = 200 } = {}) {
     const n2 = Math.max(1, Math.min(1e3, Math.floor(Number(limit)) || 200));
@@ -264574,6 +264867,7 @@ var QuestionExplorer = class {
       how: f17.how,
       false_alarm_rate: f17.false_alarm_rate,
       gold_set: f17.gold_set,
+      untested: parse21(f17.untested),
       label: "machine",
       by: "system",
       says: EXPLORE_FIND_SAYS,
@@ -272649,7 +272943,9 @@ var Hypotheses = class _Hypotheses {
   /* R14 (T36; N727): a copy whose notes were numbered from one sequence shared across members (`note_id` the table's
      own AUTOINCREMENT key, T34–T35) is renumbered here, once, in one act: each member's notes from 1 in their present
      order, their turns following them, each member's mark set to their last number. The old numbers, and the shared
-     sequence's own high-water mark, are kept nowhere. Idempotent: a copy already keyed by `(member, note_id)` is left. */
+     sequence's own high-water mark, are kept nowhere. Idempotent: a copy already keyed by `(member, note_id)` is left.
+     R23 (T46; K2926): only statements a Durable Object's SQLite authorizes; the working map is an ordinary table made and
+     dropped inside the one transaction, never a `TEMP` one, which workerd refuses `SQLITE_AUTH` (0.82.0's cut). */
   #renumberNotes() {
     const keyed4 = this.#rows(`PRAGMA table_info(member_notes)`).filter((c) => Number(c.pk) > 0).map((c) => c.name);
     if (keyed4.length !== 1 || keyed4[0] !== "note_id") return;
