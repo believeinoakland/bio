@@ -1,4 +1,4 @@
-/* The ops map (`projectRosterOps`): each of the ten ops answers what its service answers, every parameter and stamp
+/* The ops map (`projectRosterOps`): each of the twelve ops answers what its service answers, every parameter and stamp
    read from the query (the control plane's `by` and `viewer` among them), never from a body; and this module's rows. */
 import { test } from "node:test";
 import assert from "node:assert/strict";

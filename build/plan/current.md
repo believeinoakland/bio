@@ -2,7 +2,7 @@
 
 **Status** · OPEN · BOB #160 · session_0142MWQ3cnvPRHcMekstsf5g · depth 1
 
-**Jobs** · record-grammar: RECORD-GRAMMAR #15 session_01WTxZEji9hScnnv3kyz3xtf; bundler: BUNDLER #16 session_01SHEYtEvhTCnEvXN1xWJ1iY
+**Jobs** · record-grammar: RECORD-GRAMMAR #15 session_01WTxZEji9hScnnv3kyz3xtf; bundler: BUNDLER #16 session_01SHEYtEvhTCnEvXN1xWJ1iY; record-core: RECORD-CORE #21 session_01U4VpUHnYKCeaZcQvK8i5XD; membership: MEMBERSHIP #35 session_01NYNAzwK9hYtCvE5CTuZxYA; project-roster: PROJECT-ROSTER #4 session_01QUJPgnjkqLzkfXN1KCUCmG; promotion: PROMOTION #44 session_01QFUJsskb7hnNteGSP3z9cY
 
 **At T46's opening:** T45 closed by PR #29 (`main` @ 8e5f57fad0, K2907); PR #28 (the design stream, DEC-193–DEC-197) merged into `main` at T45's close (`main` @ 3f40899950, K2904), so its `words.json` (1,503 words, 549 protected), `words-actions.json`, `registry.json` and `library.json` are on `main`. `tranche/T46` from `main`. Release 0.82.0 is being cut from `tranche/T45` (K2910–K2912: steps 0–5 done, `dist/cut-0.82.0` @ 985fbefc88; signing waits on Bob's act). T46 opens before the release finishes (P19: no idle wait on Bob's act); the cut, once signed, is merged into `tranche/T46` (K2911), and any live-check failure joins a layer not yet started (P10). Development runs (K2605); the 80% pause (K2341) and the account-switch rule stand. Provisional ids of the drafts are renumbered here (K2872, doubt 1).
 
@@ -43,7 +43,7 @@ It is the only module marked `legacy` in `modules.json`.
 
 ### L2
 - **T46-3 · record-core** · (N904) R25: `getSetting` tells a stored value that is not valid JSON (unreadable) from unset · text BOB's.
-- **T46-4 · membership** · (I1; K657) R83 `MODULE_ORDER` gains the six new modules after `store-door` (rule 3); (N934; DEC-197, K2903) R124 retired by refusal: `op=handlechange` stays declared and routed and refuses every change `HANDLE_FIXED` (a new row in membership's family), the change path's tests retired; R17's `formerly` retired; R16 states that a departed member's handle stays taken; (N936) `module-order.test.mjs`' T45 negative control re-pinned to the T45 modules' filled paths; (N913) `PROJECT_GUARD_UNCHECKED` re-worded (1 row); (N654, re-tested below) a read of the live website key's and join link's settings and history, never their secrets, to administrators · interface §5 I1; DEC-197's owed line; N654's text BOB's · first in L2's users.
+- **T46-4 · membership** · (I1; K657) R83 `MODULE_ORDER` gains the six new modules after `store-door` (rule 3); (N934; DEC-197, K2903) R124 retired by refusal: `op=handlechange` stays declared and routed and refuses every change `HANDLE_FIXED` (a new row in membership's family), the change path's tests retired; R17's `formerly` retired; R16 states that a departed member's handle stays taken; (N936) `module-order.test.mjs`' T45 negative control re-pinned to the T45 modules' filled paths; (N913) `PROJECT_GUARD_UNCHECKED` kept in T46 until its word conforms (K2917); (N654, re-tested below) a read of the live website key's and join link's settings and history, never their secrets, to administrators · interface §5 I1; DEC-197's owed line; N654's text BOB's · first in L2's users.
 - **T46-5 · project-roster** · (N913) the C-147 rows re-worded (6: `PROJECT_SCOPE_OWN_NOT_SOLE`, `_UNCHANGED`, `_OWN`, `_KEEPS_HIDDEN`, `APPROVAL_RULE_INVALID`, `APPROVAL_KIND_UNKNOWN`) · words.json.
 - **T46-6 · promotion** · (N902; rule 5 (2)) **the stamp**: rows T45's L3+ jobs added or changed and T46's L1–L2 rows (membership's `HANDLE_FIXED` and re-wording, project-roster's); `src/gate.mjs`' aggregate lists `CASE_CHECK_CHECKS` C-148, `CASE_ACCOUNT_CHECKS` C-153 and C-149–C-151 (no C-152: action-producers holds no family, K2891) · text BOB's · last in L2.
 
@@ -69,15 +69,17 @@ It is the only module marked `legacy` in `modules.json`.
 - **T46-15 · reading-guides** · (N913) `GUIDE_KIND_UNKNOWN`, `GUIDE_ITEM_UNSOURCED` re-worded; `PROCEDURE_GUIDE_LABEL` reads `guide.procedure.legalinfo` · words.json.
 - **T46-16 · skills** · (N915) the planning layer names `closingNotesOf`'s notes as planning input; (N920) R45's `action_drafting` layer names the status-report task (each sentence from a handed item, nothing read) · text BOB's · after T46-15.
 - **T46-17 · question-explorer** · (N897 (2)) R16 new: the gate open on the exception, finds labelled · trial §1.2 · after T46-14.
+- **T46-65 · hypotheses** · (K2926; 0.82.0 regression) R23 new: R14's renumbering runs without a `TEMP` table (the one-word fix made on the cut, reaching the tranche with its merge), tested on workerd with a store holding notes and turns · text BOB's.
 - **T46-63 · agent-harness** · (N919; K2892) R10 new: `MODES.plan` deployed, the harness's copy agreeing with run-rules R14 and agent-worker R53 (K2920: the copy lives in `harness.mjs`, agent-harness's file) · text BOB's · after T46-13.
 - **T46-64 · agent-model** · (N852) R15 new (amends R14): on the sign-in path an image block is relayed through the runner (agent-runner R24), `IMAGE_NOT_RELAYED` kept for a runner without it · text BOB's · before T46-18.
 - **T46-18 · agent-runner** · (N852; K2816 (3), (4)) a sign-in transcribes: the runner passes page images as `agent-worker` R72 does for API keys (its dependency met for `biosmoke7` by K2816 (4)'s copy) · text BOB's (trial §6 B4 A) · before T46-19.
 - **T46-19 · agent-worker** · (N897 (2)–(4)) R79 new (`untested` on `/ask`'s last answer event and `/draft`'s); R6 amended (a sign-in's `suggestions` boolean); R34 amended (`/version` `runner`); (N852) `TRANSCRIBE_NEEDS_API_KEY` lifted for a sign-in; (N915) R51 names `closingNotesOf`; (N920) R76's fourth task `{op: "statusreportdraft", plan, items}` → `{text, sources}`, `grant` present `DRAFT_READ_NOT_ALLOWED`, R77, R79 applying; (K2892) R53's reviewed act: `MODES.plan` deployed with run-rules R14; `/run` taking a member's sign-in principal if M-T46-4 finds it refused. N886 asks no change here: R72's six codes are answered with their HTTP status already (verified at START) · trial §1.2, §3.2; study §2; rest BOB's · after T46-13, -16, -18.
 
-**L6 merge order:** steps, run-rules, ai-runs, reading-guides, skills, question-explorer, agent-harness, agent-model, agent-runner, agent-worker.
+**L6 merge order:** hypotheses, steps, run-rules, ai-runs, reading-guides, skills, question-explorer, agent-harness, agent-model, agent-runner, agent-worker (`modules.json` order).
 
 ### L8
 - **T46-20 · case-carriage** · (N907) new reads `acceptedWorkLapsedSince`, `marksLapsedSince`, `sourcesLapsedSince(…, since)` over its append-only histories · text BOB's.
+- **T46-66 · publication** · (K2928; MEMBERSHIP #35 J2) test only: `t41.test.mjs` R76's handle-change arm re-pinned to membership R129 (every change refused `HANDLE_FIXED`, no case named); no requirement or capability changes, so N909's hold before a split is not engaged · text none.
 - **T46-21 · docket** · (N913) `DOCKET_OUTCOME_UNREADABLE` re-worded · words.json.
 - **T46-22 · public-read** · (N904) R34 reads a stored stake that record-core's strict `getSetting` answers `SETTING_UNREADABLE` (record-core R83) as undetermined, never as unset; (N906) R5 reworded to the lowercasing behaviour (callers unchanged: a 64-hex argument is lowercased, never refused); the sampling tests deepened (R13, R15, R19, R22, R27, R29, R30) · text BOB's.
 - **T46-23 · case-checker** · (N916) R24 states that a sentence with nothing checkable reads `supported` when it cites anything (behaviour kept); `filings` and `case-account` told (P5) · text BOB's.
@@ -87,7 +89,7 @@ It is the only module marked `legacy` in `modules.json`.
 - **T46-27 · case-authoring** · (N913) 5 rows re-worded (`MACHINE_CANNOT_CARRY_OUTCOME`, `BAD_CARRIED_OUTCOME`, `NO_SUCH_CARRIED_OUTCOME`, `CARRIED_OUTCOME_SETTLED`, `CARRY_NO_REASON`) and R70's `signing.openrequest.line`, `.noreply`, `.unread` sentences (and `.nowindow` where R70 has no window) read by key. Wording only: no capability, so N908's hold before a split is not engaged · words.json.
 - **T46-28 · case-check** · (N907) R2 latches a void check for the lapse causes through T46-20's reads (its clause's T46 mark struck) · text BOB's · after T46-20.
 
-**L8 merge order:** case-carriage, docket, public-read, case-checker, case-import, case-disclosures, case-account, case-authoring, case-check.
+**L8 merge order:** case-carriage, docket, publication (by `modules.json` order, checked at L8's START), public-read, case-checker, case-import, case-disclosures, case-account, case-authoring, case-check.
 
 ### L9
 - **T46-29 · conformance** · (N913) 9 rows re-worded, `FINDING_NOT_PUBLISHED` (C-113.7, pinned by answer-envelope: rule 5) among them · words.json.
@@ -135,7 +137,7 @@ It is the only module marked `legacy` in `modules.json`.
 
 **L11 merge order:** wizard-scripts, op-grades, affordances, action-producers, notice-producers, setup-words, instance-setup, setup-page (after instance-setup, doubt 14), op-declarations, answer-envelope, interface-assets, interface-shell, screens-settings, screens-intake, screens-daily, screens-inquiry, control-plane, installer, stewards, plane last.
 
-**Counts:** L1 2 · L2 4 · L3 1 · L4 1 · L5 3 · L6 10 · L8 9 · L9 12 · L10 2 · L11 20 (T46-61 conditional) = 64.
+**Counts:** L1 2 · L2 4 · L3 1 · L4 1 · L5 3 · L6 11 · L8 10 · L9 12 · L10 2 · L11 20 (T46-61 conditional) = 66.
 
 ### New modules: places (K617, K657, K1043)
 

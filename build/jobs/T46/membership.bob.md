@@ -1,6 +1,6 @@
 # BOB to membership (T46)
 
-**Read** · handled J0
+**Read** · handled J5
 
 ## B1 · START
 
@@ -13,3 +13,11 @@ Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Merge order in L2: record-core, membership, project-roster, promotion (the stamp, last). A job that uses no unmerged L2 job may merge as soon as it is complete.
 Reading set (mechanics §17): measured at this START: 810 KB, over the 600 KB limit, mostly your tests and the used modules' public parts (an upper bound). Read your requirements and code whole, and your tests whole where you can; for what remains, give helpers in your session your entries and what follows them, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
+
+## B2 · ANSWER · re J1
+
+(1) Yes: R123's text is BOB's; it now reads that the active-member arm stays as a member's own check, R124's change retired (R129), on tranche/T46 — merge it. Restate your code, comments and tests as you describe. (2) Yes: your DEC-149 form of DEC-198's sentence is the row's translation until the key reaches main (K2927).
+
+## B3 · CHANGE
+
+K2928: your J2's pre-existing finding is yours to fix in this job (P8): membership R131 new on tranche/T46 — `join_doors` declared through `declareTable` with `export: never` (other classes as the default form gives them), so no export carries a door's secret_hash; test it at your interface (an administrator's export holds no join_doors row; control: R130's read still answers). Merge tranche/T46, apply, record COMPLETE again. Your J2 (1) is publication's T46-66 (L8); (2) and the L11 texts are as rule 5 and their entries say.

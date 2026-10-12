@@ -122,14 +122,17 @@ test("R71 projectCreated: the sole initial owner, the creation visibility record
   assert.equal(w.m.participation("PROJ-B", "ann"), null, "nothing written on a refusal");
 });
 
-test("R115 R111 R124 members' tables are declared exempt from purge; participation, visibility, the sight index and removals are cleared with the project", async () => {
+test("R115 R111 R57 members' tables are declared exempt from purge; participation, visibility, the sight index and removals are cleared with the project", async () => {
   const w = world();
   assert.equal(w.declared.length, 1);
   const [d] = w.declared;
   assert.equal(d.module, "membership");
   assert.deepEqual(new Set(d.opts.exempt), new Set(["members", "member_expertise", "admin_votes", "hosting_access",
-    "join_doors", "group_description", "court_notice", "handle_history", "handle_check_window"]),
-    "R111's tables and R124's handle history (with R123's check window) beside R115's");
+    "group_description", "court_notice", "handle_history", "handle_check_window"]),
+    "R111's tables and the handle history (R57, R16) (with R123's check window) beside R115's; join_doors is R131's");
+  /* R131 (T46): join_doors is declared apart, with its own classes, exempt from purge as R111 states */
+  assert.deepEqual(w.tablesDeclared.map((x) => [x.module, x.entries.map((e) => [e.name, e.purge])]),
+    [["membership", [["join_doors", "exempt"]]]]);
   assert.deepEqual(new Set(MEMBERSHIP_PROJECT_TABLES), new Set(["project_participants", "project_removals", "project_visibility",
     "project_sight"]), "R115: the owner votes, decisions and requests are project-roster's (its R18), not declared here");
   assert.deepEqual(d.tables, MEMBERSHIP_PROJECT_TABLES.map((name) => ({ name, keys: ["project_id"] })),
@@ -137,9 +140,12 @@ test("R115 R111 R124 members' tables are declared exempt from purge; participati
   for (const t of MEMBERSHIP_PROJECT_TABLES)
     assert.ok(w.rows(`PRAGMA table_info(${t})`).some((c) => c.name === "project_id"), `${t} is keyed by project`);
   const owned = w.rows(`SELECT name FROM sqlite_master WHERE type='table' AND name NOT IN ('bundles','sqlite_sequence')`).map((r) => r.name);
-  assert.deepEqual(new Set(owned), new Set([...d.tables.map((t) => t.name), ...d.opts.exempt]), "every table the module owns is declared");
+  const apart = w.tablesDeclared.flatMap((x) => x.entries.map((e) => e.name));
+  assert.deepEqual(new Set(owned), new Set([...d.tables.map((t) => t.name), ...d.opts.exempt, ...apart]),
+    "every table the module owns is declared");
+  assert.equal(owned.length, d.tables.length + d.opts.exempt.length + apart.length, "and each once");
   w.m.migrate();
-  assert.equal(w.declared.length, 1, "declared once");
+  assert.deepEqual([w.declared.length, w.tablesDeclared.length], [1, 1], "declared once");
 });
 
 test("R115 through the real record-core: a purge clears the project's rows and never a member's", async () => {

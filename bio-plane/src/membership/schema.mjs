@@ -255,6 +255,16 @@ export const MEMBERSHIP_EXEMPT_TABLES = ["members", "member_expertise", "admin_v
   "join_doors", "group_description", "court_notice",
   /* R124, R123 (T40): the handle history and the handle check's window. */
   "handle_history", "handle_check_window"];
+/* R131 (T46; K2928): the tables declared through record-core's `declareTable` (its R21) with classes of their own rather
+   than its default form. `join_doors` holds each door's `secret_hash`, so it is `export: never`: no export, an
+   administrator's included, carries a door's secret or its hash (R130's read is the only way its settings and history
+   leave); its other classes are the ones the default form gives it (exempt from purge, R111; keyed to no bundle, so
+   `sight: group`). It stays in MEMBERSHIP_EXEMPT_TABLES, the list of what purge keeps, and is left out of the default
+   form's declaration. */
+export const MEMBERSHIP_DECLARED_TABLES = Object.freeze([
+  Object.freeze({ name: "join_doors", purge: "exempt", expunge: "none", export: "never", sight: "group", derive: "stored",
+                  version_chain: false }),
+]);
 /* R115 (T38): participation, visibility and the sight index, with R36's removals; the owner votes, decisions and requests
    to join are `project-roster`'s, declared by it (its R18). */
 export const MEMBERSHIP_PROJECT_TABLES = ["project_participants", "project_removals", "project_visibility", "project_sight"];

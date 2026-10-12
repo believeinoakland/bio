@@ -88,48 +88,62 @@ export const PROJECT_JOIN_REQUEST_CHECKS = Object.freeze({
   }),
 });
 
+/* T46 (R25; DEC-194, N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) the C-147
+   rows translate by, each `en` verbatim, read by key (`refusal.<CODE>`), as membership's `HANDLE_WORDS` are. The
+   design stream's words: re-worded there, then re-taken here by key; a row never holds a copy of its sentence. */
+export const PROJECT_SCOPE_WORDS = Object.freeze({
+  'refusal.PROJECT_SCOPE_UNKNOWN': 'A project is a counsel matter, a member\'s own project, or neither. Choose one of '
+    + 'those. Nothing was changed.',
+  'refusal.PROJECT_SCOPE_NEEDS_HIDDEN': 'Only a hidden project can be a counsel matter or a member\'s own project. Its '
+    + 'owners set it hidden first. Nothing was changed.',
+  'refusal.PROJECT_SCOPE_OWN_NOT_SOLE': 'Only a project\'s owner, while they are its one member, can make it their own '
+    + 'project or stop it being one. Nothing was changed.',
+  'refusal.PROJECT_SCOPE_UNCHANGED': 'The project already has that scope. Nothing was changed.',
+  'refusal.PROJECT_SCOPE_OWN': 'This is a member\'s own project: nobody else is invited into it, and nobody is made its '
+    + 'owner in that member\'s place. Nothing was changed.',
+  'refusal.PROJECT_SCOPE_KEEPS_HIDDEN': 'A counsel matter or a member\'s own project stays hidden, so it can\'t be listed '
+    + 'for others to find. Remove its scope first if it should be. Nothing was changed.',
+  'refusal.APPROVAL_RULE_INVALID': 'Each rule for a second approval names one kind of action, one tier (1, 2 or 3), or '
+    + 'acts addressed to the public. One of these doesn\'t. Nothing was changed.',
+  'refusal.APPROVAL_KIND_UNKNOWN': 'That kind of action isn\'t one your group\'s places list, so a second approval '
+    + 'can\'t be required for it. Nothing was changed.',
+});
+
 /* T45 (R21, R22, R24; Actions D4, D27; v0.2 rules 15, 20): A PROJECT'S SCOPE AND ITS SECOND-APPROVAL SETTING. A new
- * family, C-147 (J1's reading; the census's highest was C-146). The translations are BOB's drafts, re-wordable by the UX
- * design stream (draft-T45-lower §10). `PROJECT_SCOPE_OWN` is said at two sites, the guard and the rescue; its row names
- * the guard, where it is minted, and the rescue relays it. */
+ * family, C-147 (J1's reading; the census's highest was C-146). `PROJECT_SCOPE_OWN` is said at two sites, the guard and
+ * the rescue; its row names the guard, where it is minted, and the rescue relays it. T46 (R25): each row's translation
+ * is `PROJECT_SCOPE_WORDS`' `refusal.<CODE>`, read by key; codes, numbers and `where`s unmoved. */
 export const PROJECT_SCOPE_CHECKS = Object.freeze({
   PROJECT_SCOPE_UNKNOWN: Object.freeze({
     check: 'C-147.1', where: at("projectScopeSet", "is-project-scope-set"),
-    translation: 'A project is a counsel matter, a member\'s own project, or neither. Choose one of those. Nothing '
-      + 'was changed.',
+    translation: PROJECT_SCOPE_WORDS['refusal.PROJECT_SCOPE_UNKNOWN'],
   }),
   PROJECT_SCOPE_NEEDS_HIDDEN: Object.freeze({
     check: 'C-147.2', where: at("projectScopeSet", "is-project-scope-set"),
-    translation: 'Only a hidden project can be a counsel matter or a member\'s own project. Its owners set it '
-      + 'hidden first. Nothing was changed.',
+    translation: PROJECT_SCOPE_WORDS['refusal.PROJECT_SCOPE_NEEDS_HIDDEN'],
   }),
   PROJECT_SCOPE_OWN_NOT_SOLE: Object.freeze({
     check: 'C-147.3', where: at("projectScopeSet", "is-project-scope-set"),
-    translation: 'A project is made, or stops being, a member\'s own project only by its owner while that owner is '
-      + 'its one participant. Nothing was changed.',
+    translation: PROJECT_SCOPE_WORDS['refusal.PROJECT_SCOPE_OWN_NOT_SOLE'],
   }),
   PROJECT_SCOPE_UNCHANGED: Object.freeze({
     check: 'C-147.4', where: at("projectScopeSet", "is-project-scope-set"),
-    translation: 'The project already has that scope, so there is nothing to change. Nothing was changed.',
+    translation: PROJECT_SCOPE_WORDS['refusal.PROJECT_SCOPE_UNCHANGED'],
   }),
   PROJECT_SCOPE_OWN: Object.freeze({
     check: 'C-147.5', where: at("#guard", "is-project-scope-guard"),
-    translation: 'This is a member\'s own project: nobody else is invited to it, and nobody is made its owner in '
-      + 'that member\'s place. Nothing was changed.',
+    translation: PROJECT_SCOPE_WORDS['refusal.PROJECT_SCOPE_OWN'],
   }),
   PROJECT_SCOPE_KEEPS_HIDDEN: Object.freeze({
     check: 'C-147.6', where: at("#guard", "is-project-scope-guard"),
-    translation: 'A counsel matter and a member\'s own project stay hidden, so this one cannot be listed for others '
-      + 'to find. Remove its scope first if it should be. Nothing was changed.',
+    translation: PROJECT_SCOPE_WORDS['refusal.PROJECT_SCOPE_KEEPS_HIDDEN'],
   }),
   APPROVAL_RULE_INVALID: Object.freeze({
     check: 'C-147.7', where: at("projectApprovalSet", "is-project-approval-set"),
-    translation: 'Each rule for a second approval names one kind of action, one tier (1, 2 or 3), or acts '
-      + 'addressed to the public. One of these does not. Nothing was changed.',
+    translation: PROJECT_SCOPE_WORDS['refusal.APPROVAL_RULE_INVALID'],
   }),
   APPROVAL_KIND_UNKNOWN: Object.freeze({
     check: 'C-147.8', where: at("projectApprovalSet", "is-project-approval-set"),
-    translation: 'That kind of action is not one your group\'s places list, so a second approval cannot be '
-      + 'required for it. Nothing was changed.',
+    translation: PROJECT_SCOPE_WORDS['refusal.APPROVAL_KIND_UNKNOWN'],
   }),
 });

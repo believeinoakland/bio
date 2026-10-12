@@ -1,7 +1,9 @@
 /* T40 (T40-M; N797, N799, N812; DEC-184, DEC-186; K1881, K2373, K2376, K2394): R122 `notTheOwner` and R55's owner
-   refusal through it; R123 `handleCheck`, R124 `handleChange` with the handle history, R125 `registerHandleGuard`, R126's
-   rows; R16, R17 and R57 as amended. Each id is tested here explicitly, with a negative control (K874: older tests name
-   some of these ids already). Every test drives the module at its interface. */
+   refusal through it; R123 `handleCheck`, R125 `registerHandleGuard`, R126's rows; R16, R17 and R57 as amended. T46
+   (T46-4; DEC-196, DEC-197; K2903): R124's change of handle is retired (its refusal, R129, is `t46-handles-doors.test.mjs`'s),
+   so the handle history these tests read is seeded as the changes made before its retirement left it. Each id is tested
+   here explicitly, with a negative control (K874: older tests name some of these ids already). Every test drives the
+   module at its interface. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
@@ -17,6 +19,15 @@ const wordsJson = async () =>
 const snapshot = (w, skip = []) => Object.fromEntries(
   w.rows(`SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`).map((r) => r.name)
     .filter((t) => !skip.includes(t)).map((t) => [t, JSON.stringify(w.rows(`SELECT * FROM ${t}`))]));
+
+/* A change of handle made before R124 was retired (T46): the member's handle moved and the history row it appended. No
+   act of the module makes one any longer (R129), so a test that needs an earlier handle writes what such a change left. */
+function earlierHandle(w, memberId, to) {
+  const from = w.row(`SELECT handle FROM members WHERE member_id=?`, memberId).handle;
+  const at = new Date().toISOString();
+  w.sql.exec(`UPDATE members SET handle=?, updated=? WHERE member_id=?`, to, at, memberId);
+  w.sql.exec(`INSERT INTO handle_history (member_id, from_handle, to_handle, at) VALUES (?,?,?,?)`, memberId, from, to, at);
+}
 
 /* A group: the founder, `second` (an administrator), ann and bob active; `inv` an invitation not yet used. */
 async function handleWorld({ guard = () => null, omitGuard = false } = {}) {
@@ -83,7 +94,7 @@ test("R123 handleCheck with a live invitation: free, taken (with the smallest fr
   const w = await handleWorld();
   const words = await wordsJson();
   const en = (k) => words.find((x) => x.key === k).en;
-  for (const k of ["handle.free", "handle.taken", "handle.characters", "handle.fixed"]) assert.equal(HANDLE_WORDS[k], en(k), k);
+  for (const k of ["handle.free", "handle.taken", "handle.characters"]) assert.equal(HANDLE_WORDS[k], en(k), k);
   const free = await w.m.handleCheck({ invite: w.inv, handle: "cal-k" });
   assert.deepEqual(free, { ok: true, handle: "cal-k", state: "free", problems: [], suggestion: null,
                            words: { key: "handle.free", en: en("handle.free") } });
@@ -113,12 +124,12 @@ test("R123 handleCheck with a live invitation: free, taken (with the smallest fr
 
 test("R123 handleCheck never says who holds a handle or that it was someone's earlier one: taken is one answer", async () => {
   const w = await handleWorld();
-  assert.equal(w.m.handleChange({ handle: "ann-new", by: "ann" }).ok, true);   // "ann" is now ann's earlier handle
+  earlierHandle(w, "ann", "ann-new");   // "ann" is ann's earlier handle, from a change made before T46
   const current = await w.m.handleCheck({ invite: w.inv, handle: "bob" });
   const earlier = await w.m.handleCheck({ invite: w.inv, handle: "ann" });
   assert.deepEqual({ ...earlier, handle: "x", suggestion: "x" }, { ...current, handle: "x", suggestion: "x" });
   for (const a of [current, earlier]) assert.doesNotMatch(JSON.stringify(a), /"(member|memberId|member_id|by|holder|formerly)"/);
-  /* a member's own earlier handle is free to them (they may take it back), taken to everyone else */
+  /* a member's own earlier handle reads free to them, taken to everyone else (no change is made, R129) */
   assert.equal((await w.m.handleCheck({ viewer: V("ann"), handle: "ann" })).state, "free");
   assert.equal((await w.m.handleCheck({ viewer: V("bob"), handle: "ann" })).state, "taken");
   /* negative control: a handle nobody held is free */
@@ -193,92 +204,7 @@ test("R123 op=handlecheck reads the invitation and the handle from the body and 
   assert.equal((await w.ops(`invite=${w.inv}&handle=bob`, null).handlecheck()).reason, "NO_SUCH_INVITATION");
 });
 
-/* ---------------------------------------------------------------- R124, R125 --------------------------------------- */
-
-test("R124 handleChange refuses in order, each refusal writing nothing", async () => {
-  const w = await handleWorld();
-  const before = snapshot(w);
-  const row = (code) => MEMBERSHIP_CHECKS[code];
-  for (const by of [null, "", "admin", `${MACHINE_CLASS_PREFIX}admin`, "nobody", "cal"]) {
-    const r = w.m.handleChange({ handle: "Bad!", by });
-    assert.deepEqual([r.ok, r.reason, r.code, r.check, r.translation],
-      [false, "HANDLE_CHANGE_NOT_A_MEMBER", "HANDLE_CHANGE_NOT_A_MEMBER", "C-96.49", row("HANDLE_CHANGE_NOT_A_MEMBER").translation],
-      String(by));
-  }
-  assert.equal(w.m.handleChange({ handle: "  ", by: "ann" }).reason, "NO_HANDLE");
-  assert.equal(w.m.handleChange({ handle: "Ann!", by: "ann" }).reason, "BAD_HANDLE");
-  assert.equal(w.m.handleChange({ handle: "a", by: "ann" }).reason, "BAD_HANDLE");
-  assert.equal(w.m.handleChange({ handle: "bob", by: "ann" }).reason, "HANDLE_TAKEN");
-  assert.deepEqual(snapshot(w), before, "nothing written");
-  /* a revoked member is no longer a member who may change */
-  w.m.memberSet({ memberId: "bob", status: "revoked", by: "admin" });
-  assert.equal(w.m.handleChange({ handle: "bob-x", by: "bob" }).reason, "HANDLE_CHANGE_NOT_A_MEMBER");
-  /* negative control: the same call from an active member with a free handle succeeds */
-  assert.equal(w.m.handleChange({ handle: "ann-x", by: "ann" }).ok, true);
-});
-
-test("R124 R125 a member whose work is in a published case is refused HANDLE_FIXED naming the case; with no guard, or one that cannot answer, HANDLE_CHANGE_UNCHECKED (fail closed)", async () => {
-  const words = await wordsJson();
-  let answer = { case: "CASE-7", edition: 2 };
-  const asked = [];
-  const w = await handleWorld({ guard: (a) => { asked.push(a); return typeof answer === "function" ? answer() : answer; } });
-  const before = snapshot(w);
-  const f = w.m.handleChange({ handle: "ann-x", by: "ann" });
-  assert.deepEqual([f.ok, f.reason, f.code, f.check, f.case, f.edition],
-    [false, "HANDLE_FIXED", "HANDLE_FIXED", "C-96.50", "CASE-7", 2]);
-  assert.equal(f.translation, words.find((x) => x.key === "handle.fixed").en, "handle.fixed, read by key");
-  assert.match(f.detail, /CASE-7/);
-  assert.deepEqual(asked, [{ memberId: "ann" }], "the guard is asked with the member, once");
-  /* HANDLE_FIXED comes before HANDLE_TAKEN */
-  assert.equal(w.m.handleChange({ handle: "bob", by: "ann" }).reason, "HANDLE_FIXED");
-  for (const a of [{ unreadable: true }, undefined, 0, false, "CASE-7", {}, { case: "" }, { edition: 1 },
-                   { case: "CASE-7", unreadable: true }, () => { throw new Error("down"); }, () => Promise.resolve(null)]) {
-    answer = a;
-    const u = w.m.handleChange({ handle: "ann-x", by: "ann" });
-    assert.deepEqual([u.reason, u.code, u.check, u.translation],
-      ["HANDLE_CHANGE_UNCHECKED", "HANDLE_CHANGE_UNCHECKED", "C-96.51", MEMBERSHIP_CHECKS.HANDLE_CHANGE_UNCHECKED.translation],
-      String(a));
-  }
-  assert.deepEqual(snapshot(w), before, "nothing written");
-  const none = await handleWorld({ omitGuard: true });
-  assert.equal(none.m.handleChange({ handle: "ann-x", by: "ann" }).reason, "HANDLE_CHANGE_UNCHECKED", "no guard registered");
-  /* negative control: the guard answering null lets the change through */
-  answer = null;
-  assert.equal(w.m.handleChange({ handle: "ann-x", by: "ann" }).ok, true);
-});
-
-test("R124 a change: one act, the history appended, earlier handles kept for their member, unchanged writes nothing; the next request reads the new handle", async () => {
-  const w = await handleWorld();
-  const before = snapshot(w);
-  assert.deepEqual(w.m.handleChange({ handle: " ann ", by: "ann" }), { ok: true, unchanged: true });
-  assert.deepEqual(snapshot(w), before, "unchanged writes nothing");
-  const c = w.m.handleChange({ handle: "mai-k", by: "ann" });
-  assert.deepEqual(c, { ok: true, handle: "mai-k", formerly: ["ann"] });
-  const h = w.rows(`SELECT member_id, from_handle, to_handle, at FROM handle_history`);
-  assert.equal(h.length, 1);
-  assert.deepEqual([h[0].member_id, h[0].from_handle, h[0].to_handle], ["ann", "ann", "mai-k"]);
-  assert.ok(!Number.isNaN(Date.parse(h[0].at)));
-  assert.equal(w.m.sessionRights("member:ann").handle, "mai-k", "credentials R5 reads R92 at each call");
-  assert.deepEqual(w.m.memberFacts("ann").handle, "mai-k");
-  assert.equal(w.m.memberByHandle("mai-k").member_id, "ann");
-  assert.equal(w.m.memberByHandle("ann"), null, "R119 answers the current handle only");
-  /* an earlier handle stays taken for every other member, at a change and at enrolment */
-  assert.equal(w.m.handleChange({ handle: "ann", by: "bob" }).reason, "HANDLE_TAKEN");
-  assert.equal((await w.m.enroll({ invite: w.inv, handle: "ann", password: "cal-passphrase-x" })).reason, "HANDLE_TAKEN");
-  /* and its member may take it back */
-  assert.deepEqual(w.m.handleChange({ handle: "ann", by: "ann" }), { ok: true, handle: "ann", formerly: ["mai-k"] });
-  /* negative control: a handle no one held is free to another */
-  assert.equal(w.m.handleChange({ handle: "bob-2", by: "bob" }).ok, true);
-});
-
-test("R124 op=handlechange takes the handle from the body and `by` from the control plane's stamp", async () => {
-  const w = await handleWorld();
-  assert.equal(w.ops("by=ann", { handle: "ann-z", by: "bob" }).handlechange().ok, true);
-  assert.equal(w.m.memberFacts("ann").handle, "ann-z");
-  assert.equal(w.m.memberFacts("bob").handle, "bob", "a body's `by` is never the stamp");
-  /* negative control: with no stamp the caller is no member */
-  assert.equal(w.ops("", { handle: "bob-z", by: "bob" }).handlechange().reason, "HANDLE_CHANGE_NOT_A_MEMBER");
-});
+/* ---------------------------------------------------------------- R125 --------------------------------------------- */
 
 test("R125 registerHandleGuard: one registration whoever makes it, refusals through R81", async () => {
   const w = await world();
@@ -294,26 +220,19 @@ test("R125 registerHandleGuard: one registration whoever makes it, refusals thro
 
 /* ---------------------------------------------------------------- R126 --------------------------------------------- */
 
-test("R126 the handle codes are rows of C-96, the next free numbers (C-96.48 to C-96.51), each answered at its act", async () => {
-  const words = await wordsJson();
-  const want = { HANDLE_CHECK_PAUSED: "C-96.48", HANDLE_CHANGE_NOT_A_MEMBER: "C-96.49", HANDLE_FIXED: "C-96.50",
-                 HANDLE_CHANGE_UNCHECKED: "C-96.51" };
-  for (const [code, check] of Object.entries(want)) {
-    const row = MEMBERSHIP_CHECKS[code];
-    assert.ok(Object.isFrozen(row), code);
-    assert.equal(row.check, check, code);
-    assert.match(row.where, /^src\/membership\/index\.mjs (handleCheck|handleChange) > is-/, code);
-    assert.ok(typeof row.translation === "string" && row.translation.length > 20, code);
-  }
-  assert.equal(MEMBERSHIP_CHECKS.HANDLE_FIXED.translation, words.find((x) => x.key === "handle.fixed").en);
-  assert.equal(MEMBERSHIP_CHECKS.HANDLE_FIXED.translation, "Your handle is fixed: your work is in a published case ({case}).");
-  /* T41-3 (DEC-188 (7)): the UX stream re-worded BOB's draft; the row reads `handle.refused.unchecked` by key
-     (t41-sight-words.test.mjs holds all three keys). */
-  assert.equal(MEMBERSHIP_CHECKS.HANDLE_CHANGE_UNCHECKED.translation,
-    words.find((x) => x.key === "handle.refused.unchecked").en);
-  /* negative control: no other row of this module holds those numbers, and C-96.47 is still NO_SUCH_MEMBER's */
+test("R126 HANDLE_CHECK_PAUSED is C-96.48, answered at its act; T46: C-96.49, C-96.50 and C-96.51 are retired, their numbers never reused, and HANDLE_FIXED holds C-96.52", async () => {
+  const row = MEMBERSHIP_CHECKS.HANDLE_CHECK_PAUSED;
+  assert.ok(Object.isFrozen(row));
+  assert.deepEqual([row.check, row.where], ["C-96.48", "src/membership/index.mjs handleCheck > is-handle-check-window"]);
+  assert.ok(typeof row.translation === "string" && row.translation.length > 20);
   const all = Object.entries(MEMBERSHIP_CHECKS);
-  for (const check of Object.values(want)) assert.equal(all.filter(([, r]) => r.check === check).length, 1, check);
+  assert.equal(all.filter(([, r]) => r.check === "C-96.48").length, 1);
+  /* the retired: no code and no row */
+  for (const code of ["HANDLE_CHANGE_NOT_A_MEMBER", "HANDLE_CHANGE_UNCHECKED"]) assert.equal(code in MEMBERSHIP_CHECKS, false, code);
+  for (const check of ["C-96.49", "C-96.50", "C-96.51"])
+    assert.equal(all.filter(([, r]) => r.check === check).length, 0, `${check} is never reused`);
+  /* negative control: HANDLE_FIXED's one row is C-96.52, and C-96.47 is still NO_SUCH_MEMBER's */
+  assert.equal(MEMBERSHIP_CHECKS.HANDLE_FIXED.check, "C-96.52");
   assert.equal(MEMBERSHIP_CHECKS.NO_SUCH_MEMBER.check, "C-96.47");
 });
 
@@ -321,7 +240,7 @@ test("R126 the handle codes are rows of C-96, the next free numbers (C-96.48 to 
 
 test("R16 enroll refuses HANDLE_TAKEN against every member's current handle and every handle a member held before", async () => {
   const w = await handleWorld();
-  w.m.handleChange({ handle: "ann-new", by: "ann" });
+  earlierHandle(w, "ann", "ann-new");
   for (const h of ["ann", "ann-new", "bob"])
     assert.deepEqual(await w.m.enroll({ invite: w.inv, handle: h, password: "cal-passphrase-x" }),
       { ok: false, reason: "HANDLE_TAKEN", handle: h }, h);
@@ -331,42 +250,24 @@ test("R16 enroll refuses HANDLE_TAKEN against every member's current handle and 
     { ok: true, memberId: "cal", handle: "cal" });
 });
 
-test("R17 memberList's rows carry `formerly`, the member's earlier handles latest first, [] for none, to every caller", async () => {
+test("R57 a handle history row is never deleted or rewritten: a revocation, a reactivation and a refused change leave it", async () => {
   const w = await handleWorld();
-  w.m.handleChange({ handle: "ann-2", by: "ann" });
-  w.m.handleChange({ handle: "ann-3", by: "ann" });
-  w.m.handleChange({ handle: "ann", by: "ann" });   // back to the first: it is current, so not "formerly"
-  for (const administer of [undefined, true]) {
-    const rows = w.m.memberList({ administer }).members;
-    const of = (id) => rows.find((r) => r.member_id === id);
-    assert.deepEqual(of("ann").formerly, ["ann-3", "ann-2"], String(administer));
-    assert.deepEqual(of("bob").formerly, [], "none");
-    assert.deepEqual(of("cal").formerly, [], "an invitee holds none");
-  }
-  assert.deepEqual(w.ops("").memberlist().members.find((r) => r.member_id === "ann").formerly, ["ann-3", "ann-2"]);
-  /* negative control: formerly never names another member's handle, and R92 and R68 answer the current handle only */
-  assert.ok(!w.m.memberList({}).members.find((r) => r.member_id === "bob").formerly.includes("ann-2"));
-  assert.equal(w.m.sessionRights("member:ann").handle, "ann");
-  assert.equal("formerly" in w.m.memberFacts("ann"), false);
-});
-
-test("R57 a handle history row is never deleted or rewritten: a revocation, a reactivation and later changes leave it", async () => {
-  const w = await handleWorld();
-  w.m.handleChange({ handle: "ann-2", by: "ann" });
+  earlierHandle(w, "ann", "ann-2");
+  earlierHandle(w, "ann", "ann");
   const first = w.rows(`SELECT * FROM handle_history ORDER BY seq`);
-  w.m.handleChange({ handle: "ann", by: "ann" });
   w.m.memberSet({ memberId: "ann", status: "revoked", by: "admin" });
   w.m.memberSet({ memberId: "ann", status: "active", by: "admin" });
-  const after = w.rows(`SELECT * FROM handle_history ORDER BY seq`);
-  assert.deepEqual(after.slice(0, first.length), first, "earlier rows unchanged");
-  assert.equal(after.length, 2, "appended, never replaced");
+  w.m.handleChange({ handle: "ann-3", by: "ann" });
+  w.m.migrate();
+  assert.deepEqual(w.rows(`SELECT * FROM handle_history ORDER BY seq`), first, "unchanged, nothing appended");
+  assert.equal(first.length, 2);
   assert.ok(w.declared[0].opts.exempt.includes("handle_history"), "exempt from purge with the members (R115)");
   /* negative control: the member row stays, with its handle (R57's first sentence) */
   assert.equal(w.row(`SELECT handle FROM members WHERE member_id='ann'`).handle, "ann");
 });
 
-test("R126 R124 the handle words name no plane, server, copy or instance (R112)", () => {
-  for (const code of ["HANDLE_CHECK_PAUSED", "HANDLE_CHANGE_NOT_A_MEMBER", "HANDLE_FIXED", "HANDLE_CHANGE_UNCHECKED"])
+test("R126 R112 the handle words name no plane, server, copy or instance", () => {
+  for (const code of ["HANDLE_CHECK_PAUSED", "HANDLE_FIXED"])
     assert.doesNotMatch(MEMBERSHIP_CHECKS[code].translation, /\b(cop(y|ies)|instances?|planes?|servers?)\b/i, code);
   assert.equal(typeof Membership.HANDLE_CHECK_STATED, "string");
 });
