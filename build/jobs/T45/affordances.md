@@ -1,6 +1,6 @@
 # affordances (T45)
 
-**Status** · session_01CRGRQChAdRhfopqhzspuKx · depth 2 · WAITING ON BOB (J1) · handled B4
+**Status** · session_01CRGRQChAdRhfopqhzspuKx · depth 2 · WAITING ON BOB (J1) · handled B5
 
 ## Record (AFFORDANCES #30, T45-39)
 
