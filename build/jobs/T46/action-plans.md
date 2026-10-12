@@ -45,3 +45,7 @@ T46-39 complete: R46 (a), R46 (b) and R47 applied and tested (t46.test.mjs); act
 B2 done: tranche/T46 merged into job/T46/action-plans; action-plans 79/79 on the merge, users' tests and checks unchanged from J2, so the merge opens no red. Record updated.
 
 **After B3 (CHANGE, K2987): `tranche/T46` merged again** (action-clocks, action-replies, filings, escalation). On the merge: action-plans 79/79; plan-work 40/0, following 73/0, action-producers 36/0, migrate-released 1/0; answer-envelope 31/1 (C-124.30, named); op-declarations 133/7, control-plane 221/2, plane 210/1, as before. **One red the merge opens, not mine:** affordances 231/3, its new failure "R1 R12: layer 9's op maps hold exactly its 41 writes…", naming three ops absent from its table: `escalationstoppursuing` and `escalationreopen` (escalation R31, rule 5's named red until T46-45) and `clockproposals` (action-clocks'; not in rule 5's list, so named here for BOB). No action-plans op is among them. format 0, architecture 0, coverage 47 of 47, ownership 7 files, 0 failures.
+
+## J4 · COMPLETE
+
+B3 done: tranche/T46 merged again; action-plans 79/79 and my users' tests as before. The merge opens one red, not mine: affordances 'R1 R12: layer 9's op maps…' names escalationstoppursuing, escalationreopen (rule 5, until T46-45) and clockproposals (action-clocks'; not in rule 5's list). Record updated.
