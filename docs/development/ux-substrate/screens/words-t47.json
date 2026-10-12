@@ -46,5 +46,101 @@
   "en": "Not yet tested: this help with writing hasn't yet passed Civicsmith's tests on real matters. Read it through before you use any of it.",
   "protected": true,
   "note": "on writinghelp's marked answer on a test instance"
+ },
+ {
+  "key": "refusal.SIGN_IN_REFUSED",
+  "en": "That handle and password don't match. Check both and try again; after several tries, sign-in pauses for a while to keep others from guessing.",
+  "protected": false,
+  "note": "credentials R4; never says which handles exist"
+ },
+ {
+  "key": "refusal.SIGN_IN_PAUSED",
+  "en": "Sign-in is paused for a while after too many tries from here. This keeps others from guessing passwords; it isn't a judgement on you. Try again at {time}.",
+  "protected": false,
+  "note": "credentials R38; {time} the local time the pause ends"
+ },
+ {
+  "key": "refusal.RECOVERY_REFUSED",
+  "en": "That didn't work: the handle, the code or both aren't right, or the code was already used. Check them and try again. Nothing was changed.",
+  "protected": false,
+  "note": "credentials R47; one answer for every arm"
+ },
+ {
+  "key": "refusal.NOT_SIGNED_IN",
+  "en": "You aren't signed in here any more: your sign-in ended, or you signed out on another device. Sign in again to go back to where you were.",
+  "protected": false,
+  "note": "credentials R39"
+ },
+ {
+  "key": "refusal.PASSWORD_TOO_SHORT",
+  "en": "A password needs at least 12 characters. A short sentence you can remember works well. Nothing was changed.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "refusal.CURRENT_PASSWORD_WRONG",
+  "en": "Your current password isn't right, so it wasn't changed. Check it and try again.",
+  "protected": false,
+  "note": "credentials R3"
+ },
+ {
+  "key": "refusal.ALREADY_CLAIMED",
+  "en": "Your group's Civicsmith already has its first administrator, so this one-time password no longer works. If that was you, sign in instead.",
+  "protected": false,
+  "note": "credentials R1"
+ },
+ {
+  "key": "refusal.NO_SUCH_INVITATION",
+  "en": "This invitation link doesn't work: it may have been used, passed its seven days, or been withdrawn. Ask whoever sent it for a new one.",
+  "protected": false,
+  "note": "one answer for each arm"
+ },
+ {
+  "key": "refusal.NO_SUCH_JOIN_LINK",
+  "en": "This join link doesn't work: it may have been replaced or turned off. Ask the group for its current link.",
+  "protected": false,
+  "note": "membership R104; one answer for each arm"
+ },
+ {
+  "key": "refusal.JOIN_LINK_DAILY_CAP",
+  "en": "The group's join link has let in as many people as it allows today. Try again tomorrow.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "refusal.NO_COVER",
+  "en": "Say the name the group will know you by. Only its administrators see it. Nothing was changed.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "session.signedout",
+  "en": "You are signed out on this device. Your work is saved in your group's Civicsmith, not here.",
+  "protected": false,
+  "note": "the front door after signing out"
+ },
+ {
+  "key": "session.ended",
+  "en": "Your sign-in ended, as it does after the time you chose, or when you signed out everywhere or changed your password on another device. Sign in again to go back to the page you were on.",
+  "protected": false,
+  "note": "the front door after an expiry"
+ },
+ {
+  "key": "session.keep",
+  "en": "Keep me signed in for 30 days (your own phone or computer)",
+  "protected": false,
+  "note": "DEC-201, pending Bob's question on how long a sign-in lasts"
+ },
+ {
+  "key": "session.shared",
+  "en": "Sign me out when I close the browser (a shared or public computer)",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "signin.founderhint",
+  "en": "Did you set this group up? Your handle is admin.",
+  "protected": false,
+  "note": ""
  }
 ]

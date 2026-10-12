@@ -2,7 +2,13 @@
    act does and how it fits the larger work, at the guidance level (DEC-162). The pips keep their own explanation of the
    act's weight. Keyed by op (an owed act by its `owed_` key). */
 const ACT_HELP = {
-  bootstrap: 'Installs Civicsmith in your group\'s own Cloudflare account under this short name. The short name is permanent: it appears in every address and beside every signature.',
+  bootstrap: 'Takes you to Cloudflare\'s own page to allow this installer into your account, then sets up your group\'s Civicsmith there under your short name, or updates it. The short name is permanent: it appears in every address and beside every signature.',
+  login: 'Signs you in on this device with your handle and password, for as long as you chose. Several wrong tries pause sign-in from here for a while.',
+  recover: 'Sets a new password for an administrator with one of their recovery codes. The code is spent, and every other sign-in of theirs ends.',
+  signout: 'Signs you out on this device. Your work stays in your group\'s Civicsmith.',
+  signouteverywhere: 'Signs you out on every phone and computer you are signed in on, this one included.',
+  joinlinkinvite: 'Starts joining through the group\'s join link: the name the group will know you by, then your handle and password.',
+  owed_passwordresetlink: 'Makes a one-time link for this member to choose a new password, valid for seven days. You send it yourself; Civicsmith sends no email. Their other sign-ins end when they use it.',
   selftest: 'Runs Civicsmith\'s own checks on what was just installed, so you know it works before anyone joins.',
   claim: 'Makes you the group\'s first administrator, using the one-time password from installing. Until it is claimed, nobody can use the group\'s Civicsmith.',
   groupnameset: 'Sets the name members and readers see. It can be changed later; the short name cannot.',

@@ -21,7 +21,7 @@
   "label": 52,
   "project": 7,
   "grouprule": 1,
-  "refusal": 145,
+  "refusal": 156,
   "signing": 7,
   "case": 11,
   "docket": 2,
@@ -46,15 +46,17 @@
   "statusreport": 1,
   "members": 6,
   "ref": 26,
+  "session": 4,
+  "signin": 1,
   "rail": 14,
   "tab": 2,
   "level": 2,
-  "screen": 99,
-  "act": 553,
+  "screen": 115,
+  "act": 575,
   "column": 33,
   "wizard": 306,
-  "total": 1636,
-  "protected": 580
+  "total": 1690,
+  "protected": 596
  },
  "words": [
   {
@@ -4065,6 +4067,113 @@
    "note": "on writinghelp's marked answer on a test instance"
   },
   {
+   "key": "refusal.SIGN_IN_REFUSED",
+   "en": "That handle and password don't match. Check both and try again; after several tries, sign-in pauses for a while to keep others from guessing.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "credentials R4; never says which handles exist"
+  },
+  {
+   "key": "refusal.SIGN_IN_PAUSED",
+   "en": "Sign-in is paused for a while after too many tries from here. This keeps others from guessing passwords; it isn't a judgement on you. Try again at {time}.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "credentials R38; {time} the local time the pause ends"
+  },
+  {
+   "key": "refusal.RECOVERY_REFUSED",
+   "en": "That didn't work: the handle, the code or both aren't right, or the code was already used. Check them and try again. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "credentials R47; one answer for every arm"
+  },
+  {
+   "key": "refusal.NOT_SIGNED_IN",
+   "en": "You aren't signed in here any more: your sign-in ended, or you signed out on another device. Sign in again to go back to where you were.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "credentials R39"
+  },
+  {
+   "key": "refusal.PASSWORD_TOO_SHORT",
+   "en": "A password needs at least 12 characters. A short sentence you can remember works well. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-200"
+  },
+  {
+   "key": "refusal.CURRENT_PASSWORD_WRONG",
+   "en": "Your current password isn't right, so it wasn't changed. Check it and try again.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "credentials R3"
+  },
+  {
+   "key": "refusal.ALREADY_CLAIMED",
+   "en": "Your group's Civicsmith already has its first administrator, so this one-time password no longer works. If that was you, sign in instead.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "credentials R1"
+  },
+  {
+   "key": "refusal.NO_SUCH_INVITATION",
+   "en": "This invitation link doesn't work: it may have been used, passed its seven days, or been withdrawn. Ask whoever sent it for a new one.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "one answer for each arm"
+  },
+  {
+   "key": "refusal.NO_SUCH_JOIN_LINK",
+   "en": "This join link doesn't work: it may have been replaced or turned off. Ask the group for its current link.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "membership R104; one answer for each arm"
+  },
+  {
+   "key": "refusal.JOIN_LINK_DAILY_CAP",
+   "en": "The group's join link has let in as many people as it allows today. Try again tomorrow.",
+   "protected": false,
+   "source": "DEC-200"
+  },
+  {
+   "key": "refusal.NO_COVER",
+   "en": "Say the name the group will know you by. Only its administrators see it. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-200"
+  },
+  {
+   "key": "session.signedout",
+   "en": "You are signed out on this device. Your work is saved in your group's Civicsmith, not here.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "the front door after signing out"
+  },
+  {
+   "key": "session.ended",
+   "en": "Your sign-in ended, as it does after the time you chose, or when you signed out everywhere or changed your password on another device. Sign in again to go back to the page you were on.",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "the front door after an expiry"
+  },
+  {
+   "key": "session.keep",
+   "en": "Keep me signed in for 30 days (your own phone or computer)",
+   "protected": false,
+   "source": "DEC-200",
+   "note": "DEC-201, pending Bob's question on how long a sign-in lasts"
+  },
+  {
+   "key": "session.shared",
+   "en": "Sign me out when I close the browser (a shared or public computer)",
+   "protected": false,
+   "source": "DEC-200"
+  },
+  {
+   "key": "signin.founderhint",
+   "en": "Did you set this group up? Your handle is admin.",
+   "protected": false,
+   "source": "DEC-200"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -4211,13 +4320,49 @@
   },
   {
    "key": "screen.install.name",
-   "en": "Install Civicsmith",
+   "en": "Create your Civicsmith group",
    "protected": false,
    "source": "registry.json"
   },
   {
    "key": "screen.install.purpose",
-   "en": "Installs Civicsmith in a Cloudflare account your group controls. Here you choose the group's permanent short name and let the installation test itself.",
+   "en": "Creates your group's Civicsmith in a Cloudflare account your group controls: what you need, a permanent short name, Cloudflare's permission, then your one-time password.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.update.name",
+   "en": "Update your group's Civicsmith",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.update.purpose",
+   "en": "Updates your group's Civicsmith to a new signed release. Records, members and settings are kept.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.front.name",
+   "en": "Sign in",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.front.purpose",
+   "en": "Your group's address for anyone not signed in: members sign in here; anyone may read the group's published cases or hand it material.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.forgot.name",
+   "en": "Forgot your password",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.forgot.purpose",
+   "en": "How to get back in without email: an administrator uses a recovery code; a member asks an administrator for a reset link.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
@@ -4342,6 +4487,30 @@
    "source": "mock-refs.js SCREEN_HELP"
   },
   {
+   "key": "screen.group.name",
+   "en": "Your group",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.group.purpose",
+   "en": "Administrators only: your group's name, website, languages, court notice, hosting account and bar.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.settings.name",
+   "en": "Settings",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.settings.purpose",
+   "en": "Every setting in one list: yours first, then the group's.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
    "key": "screen.ties.name",
    "en": "Your ties",
    "protected": false,
@@ -4386,6 +4555,30 @@
   {
    "key": "screen.wizards.purpose",
    "en": "Step-by-step walk-throughs of the real screens. Civicsmith's own come with each release; your group can write its own or copy one and change the copy.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.projects.name",
+   "en": "Projects",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.projects.purpose",
+   "en": "Every project you can see, with its owner and how far it has come.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
+   "key": "screen.unavailable.name",
+   "en": "Can't open this",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.unavailable.purpose",
+   "en": "What you see when an address leads nowhere, when something isn't yours to see, or when your group's Civicsmith can't be reached.",
    "protected": false,
    "source": "mock-refs.js SCREEN_HELP"
   },
@@ -4744,6 +4937,18 @@
    "source": "mock-refs.js SCREEN_HELP"
   },
   {
+   "key": "screen.review-outside.name",
+   "en": "A review copy, from outside",
+   "protected": false,
+   "source": "registry.json"
+  },
+  {
+   "key": "screen.review-outside.purpose",
+   "en": "What someone outside the group sees when asked to review a draft case: the draft and a place to comment.",
+   "protected": false,
+   "source": "mock-refs.js SCREEN_HELP"
+  },
+  {
    "key": "screen.published.name",
    "en": "Published case",
    "protected": false,
@@ -4805,13 +5010,31 @@
   },
   {
    "key": "act.bootstrap.label.install",
-   "en": "Install with this short name",
+   "en": "Continue to Cloudflare",
    "protected": true,
    "source": "registry.json"
   },
   {
    "key": "act.selftest.label.install",
-   "en": "Let it test itself",
+   "en": "Run the checks again",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.bootstrap.label.update",
+   "en": "Continue to Cloudflare to update",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.login.label.front",
+   "en": "Sign in",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.recover.label.forgot",
+   "en": "Set a new password with a recovery code",
    "protected": true,
    "source": "registry.json"
   },
@@ -4906,6 +5129,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.recoverycodesissue.label.setup",
+   "en": "Show my recovery codes",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.groupdescriptionset.label.group-identity",
    "en": "Save who your group is, and who sees it",
    "protected": true,
@@ -4942,6 +5171,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.joinlinkinvite.label.join",
+   "en": "Join through the group's join link",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.promote.label.home",
    "en": "Start a project",
    "protected": true,
@@ -4956,6 +5191,12 @@
   {
    "key": "act.memberadd.label.members",
    "en": "Invite a member",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.owed_passwordresetlink.label.members",
+   "en": "Make a reset link for a member",
    "protected": true,
    "source": "registry.json"
   },
@@ -5074,6 +5315,18 @@
    "source": "registry.json"
   },
   {
+   "key": "act.signout.label.account",
+   "en": "Sign out on this device",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.signouteverywhere.label.account",
+   "en": "Sign out everywhere",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.setpassword.label.account",
    "en": "Change your password",
    "protected": true,
@@ -5182,6 +5435,42 @@
    "source": "registry.json"
   },
   {
+   "key": "act.groupnameset.label.group",
+   "en": "Save the name",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.groupdomainset.label.group",
+   "en": "Verify the website",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.profilesset.label.group",
+   "en": "Choose the languages",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.courtnoticeset.label.group",
+   "en": "Show the court notice",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.hostingaccess.label.group",
+   "en": "Record who holds the hosting account",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.strengthbarset.label.group",
+   "en": "Set the group's bar",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.declaretie.label.ties",
    "en": "Add a tie",
    "protected": true,
@@ -5286,6 +5575,12 @@
   {
    "key": "act.wizardretire.label.wizards",
    "en": "Retire",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.promote.label.projects",
+   "en": "Start a project",
    "protected": true,
    "source": "registry.json"
   },
@@ -6442,6 +6737,12 @@
    "source": "registry.json"
   },
   {
+   "key": "act.reviewcomment.label.review-outside",
+   "en": "Send your comment",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
    "key": "act.verify.label.published",
    "en": "Check the signature",
    "protected": true,
@@ -6515,8 +6816,44 @@
   },
   {
    "key": "act.bootstrap.does",
-   "en": "Installs Civicsmith in your group's own Cloudflare account under this short name. The short name is permanent: it appears in every address and beside every signature.",
+   "en": "Takes you to Cloudflare's own page to allow this installer into your account, then sets up your group's Civicsmith there under your short name, or updates it. The short name is permanent: it appears in every address and beside every signature.",
    "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.login.does",
+   "en": "Signs you in on this device with your handle and password, for as long as you chose. Several wrong tries pause sign-in from here for a while.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.recover.does",
+   "en": "Sets a new password for an administrator with one of their recovery codes. The code is spent, and every other sign-in of theirs ends.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.signout.does",
+   "en": "Signs you out on this device. Your work stays in your group's Civicsmith.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.signouteverywhere.does",
+   "en": "Signs you out on every phone and computer you are signed in on, this one included.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.joinlinkinvite.does",
+   "en": "Starts joining through the group's join link: the name the group will know you by, then your handle and password.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.owed_passwordresetlink.does",
+   "en": "Makes a one-time link for this member to choose a new password, valid for seven days. You send it yourself; Civicsmith sends no email. Their other sign-ins end when they use it.",
+   "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {

@@ -418,7 +418,15 @@ const TITLE_HELP = {
   "doorbell": "<b>Hand material to Lakeshore Tenants</b>: the page where anyone can give the group documents or information, without an account. It says exactly what happens to what is sent.",
 };
 const SCREEN_HELP = {
-  install: 'Installs Civicsmith in a Cloudflare account your group controls. Here you choose the group\'s permanent short name and let the installation test itself.',
+  install: 'Creates your group\'s Civicsmith in a Cloudflare account your group controls: what you need, a permanent short name, Cloudflare\'s permission, then your one-time password.',
+  update: 'Updates your group\'s Civicsmith to a new signed release. Records, members and settings are kept.',
+  front: 'Your group\'s address for anyone not signed in: members sign in here; anyone may read the group\'s published cases or hand it material.',
+  forgot: 'How to get back in without email: an administrator uses a recovery code; a member asks an administrator for a reset link.',
+  group: 'Administrators only: your group\'s name, website, languages, court notice, hosting account and bar.',
+  settings: 'Every setting in one list: yours first, then the group\'s.',
+  projects: 'Every project you can see, with its owner and how far it has come.',
+  unavailable: 'What you see when an address leads nowhere, when something isn\'t yours to see, or when your group\'s Civicsmith can\'t be reached.',
+  'review-outside': 'What someone outside the group sees when asked to review a draft case: the draft and a place to comment.',
   setup: 'The first administrator\'s setup: claim the installation, then name the group, choose its places and languages, and decide how members reach the assistant.',
   'group-identity': 'What kind of group yours is, what it focuses on and why it exists. It shapes how members are welcomed and locks nothing.',
   join: 'Your invitation to join a group. Choose your language, the name the group will know you by, and a password.',

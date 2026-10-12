@@ -4,13 +4,13 @@
  "screens": [
   {
    "id": "install",
-   "name": "Install Civicsmith",
+   "name": "Create your Civicsmith group",
    "frame": "setup",
-   "purpose": "The installer page: what is needed, the short name, installing the signed release into the group's own account.",
+   "purpose": "The founder's link and the installer, in order: what Civicsmith is and what is needed, the short name and places, Cloudflare's permission, the progress and any stop, the checks and the one-time password, the hand-over to setup (DEC-201).",
    "acts": [
     {
      "op": "bootstrap",
-     "label": "Install with this short name",
+     "label": "Continue to Cloudflare",
      "status": "declared",
      "modules": [
       "installer",
@@ -20,7 +20,7 @@
     },
     {
      "op": "selftest",
-     "label": "Let it test itself",
+     "label": "Run the checks again",
      "status": "declared",
      "modules": [
       "installer",
@@ -29,7 +29,68 @@
     }
    ],
    "journeys": [
+    1,
+    28
+   ]
+  },
+  {
+   "id": "update",
+   "name": "Update your group's Civicsmith",
+   "frame": "setup",
+   "purpose": "The hosting account's holder updates the group's Civicsmith to a signed release; records, members and settings are kept (installer R1, DEC-201).",
+   "acts": [
+    {
+     "op": "bootstrap",
+     "label": "Continue to Cloudflare to update",
+     "status": "declared",
+     "modules": [
+      "installer",
+      "instance-setup",
+      "setup-page"
+     ]
+    }
+   ],
+   "journeys": [
     1
+   ]
+  },
+  {
+   "id": "front",
+   "name": "Sign in",
+   "frame": "public",
+   "purpose": "The group's address for anyone not signed in: sign-in for members and administrators, with how long to stay signed in; signed out and ended sign-ins; published cases and the doorbell for everyone else (credentials R4, R38; DEC-201).",
+   "acts": [
+    {
+     "op": "login",
+     "label": "Sign in",
+     "status": "declared",
+     "modules": [
+      "setup-page"
+     ]
+    }
+   ],
+   "journeys": [
+    3,
+    28
+   ]
+  },
+  {
+   "id": "forgot",
+   "name": "Forgot your password",
+   "frame": "public",
+   "purpose": "Getting back in without email: an administrator with a recovery code; a member through an administrator's reset link (credentials R47; DEC-201).",
+   "acts": [
+    {
+     "op": "recover",
+     "label": "Set a new password with a recovery code",
+     "status": "declared",
+     "modules": [
+      "setup-page"
+     ]
+    }
+   ],
+   "journeys": [
+    3
    ]
   },
   {
@@ -161,10 +222,19 @@
      "modules": [
       "setup-page"
      ]
+    },
+    {
+     "op": "recoverycodesissue",
+     "label": "Show my recovery codes",
+     "status": "declared",
+     "modules": [
+      "setup-page"
+     ]
     }
    ],
    "journeys": [
-    1
+    1,
+    28
    ]
   },
   {
@@ -237,10 +307,20 @@
       "admission",
       "setup-page"
      ]
+    },
+    {
+     "op": "joinlinkinvite",
+     "label": "Join through the group's join link",
+     "status": "declared",
+     "modules": [
+      "admission",
+      "setup-page"
+     ]
     }
    ],
    "journeys": [
-    3
+    3,
+    28
    ]
   },
   {
@@ -287,6 +367,11 @@
      "modules": [
       "setup-page"
      ]
+    },
+    {
+     "op": "owed:passwordresetlink DEC-201",
+     "label": "Make a reset link for a member",
+     "status": "owed"
     },
     {
      "op": "membercaps",
@@ -465,6 +550,22 @@
      "status": "function",
      "modules": [
       "membership"
+     ]
+    },
+    {
+     "op": "signout",
+     "label": "Sign out on this device",
+     "status": "declared",
+     "modules": [
+      "interface-shell"
+     ]
+    },
+    {
+     "op": "signouteverywhere",
+     "label": "Sign out everywhere",
+     "status": "function",
+     "modules": [
+      "credentials"
      ]
     },
     {
@@ -657,6 +758,76 @@
    ]
   },
   {
+   "id": "group",
+   "name": "Your group",
+   "frame": "working",
+   "purpose": "Administrators: the settings chosen at setup, changeable here: name and logo, website, languages, the court notice, the hosting account's holder, the group's bar (DEC-201).",
+   "acts": [
+    {
+     "op": "groupnameset",
+     "label": "Save the name",
+     "status": "declared",
+     "modules": [
+      "instance-setup"
+     ]
+    },
+    {
+     "op": "groupdomainset",
+     "label": "Verify the website",
+     "status": "declared",
+     "modules": [
+      "instance-setup"
+     ]
+    },
+    {
+     "op": "profilesset",
+     "label": "Choose the languages",
+     "status": "declared",
+     "modules": [
+      "setup-page"
+     ]
+    },
+    {
+     "op": "courtnoticeset",
+     "label": "Show the court notice",
+     "status": "declared",
+     "modules": [
+      "setup-page"
+     ]
+    },
+    {
+     "op": "hostingaccess",
+     "label": "Record who holds the hosting account",
+     "status": "function",
+     "modules": [
+      "membership"
+     ]
+    },
+    {
+     "op": "strengthbarset",
+     "label": "Set the group's bar",
+     "status": "function",
+     "modules": [
+      "strength"
+     ]
+    }
+   ],
+   "journeys": [
+    2
+   ]
+  },
+  {
+   "id": "settings",
+   "name": "Settings",
+   "frame": "working",
+   "purpose": "Every setting in one list: the member's own, then the group's for administrators (DEC-201).",
+   "acts": [],
+   "journeys": [
+    2,
+    3
+   ]
+  },
+  {
    "id": "ties",
    "name": "Your ties",
    "frame": "working",
@@ -841,6 +1012,38 @@
     }
    ],
    "journeys": []
+  },
+  {
+   "id": "projects",
+   "name": "Projects",
+   "frame": "working",
+   "purpose": "Every project the member may see, with its owner, questions and stage (projectlist; DEC-201).",
+   "acts": [
+    {
+     "op": "promote",
+     "label": "Start a project",
+     "status": "declared",
+     "modules": [
+      "action-producers",
+      "basis-versions",
+      "control-plane",
+      "promotion"
+     ]
+    }
+   ],
+   "journeys": [
+    6
+   ]
+  },
+  {
+   "id": "unavailable",
+   "name": "Can't open this",
+   "frame": "working",
+   "purpose": "An address that leads nowhere, something the member may not see, and the group's Civicsmith out of reach (DEC-201).",
+   "acts": [],
+   "journeys": [
+    3
+   ]
   },
   {
    "id": "queue",
@@ -2782,6 +2985,25 @@
    "journeys": [
     15,
     24
+   ]
+  },
+  {
+   "id": "review-outside",
+   "name": "A review copy, from outside",
+   "frame": "published",
+   "purpose": "What an outside reviewer sees from a review link: the draft, how long the link works, and their comment (journey 21; DEC-201).",
+   "acts": [
+    {
+     "op": "reviewcomment",
+     "label": "Send your comment",
+     "status": "declared",
+     "modules": [
+      "review"
+     ]
+    }
+   ],
+   "journeys": [
+    21
    ]
   },
   {

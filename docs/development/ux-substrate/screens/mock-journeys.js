@@ -1,4 +1,4 @@
-/* The twenty-seven journeys of step 3 (journeys.html), walked through the mockups. A journey either walks a wizard from
+/* The twenty-seven journeys of step 3 (journeys.html), and journey 28 (DEC-201: the founder's link to a new member's first work), walked through the mockups. A journey either walks a wizard from
    the library (its steps are the script's, unchanged) or lists its own steps. Each step: s (screen), act (the control
    it points at, an op of that screen), say (what happens, in Bob's words), only ('ai' or 'noai': a step that exists on
    one path only), alt (what the member without the assistant does instead), dock (open the assistant panel), v (the screen's variant, as "Find in this"'s scope). */
@@ -112,6 +112,23 @@ const J = [
  { n: 27, t: 'Changing the administrators', who: 'Administrators', steps: [
    { s: 'members', act: 'memberset', say: 'Rosa proposes a second administrator.' },
    { s: 'members', act: 'adminendorse', say: 'Administrators endorse; a refusal explains the arithmetic. Only the last administrator is stopped from stepping down.' } ] },
+ { n: 28, t: 'From the founder\'s link to a new member\'s first work', who: 'The founder, then a new member (DEC-201; Bob\'s K3053)', steps: [
+   { s: 'install', v: 'start', act: 'bootstrap', say: 'Rosa clicks “Create your new Civicsmith group”. The page says what Civicsmith is and what she needs: a Cloudflare account on Workers Paid, twenty minutes, no Claude account. She picks the short name lakeshore-tenants, reads that it is permanent, and chooses Oakland as the group\'s place.' },
+   { s: 'install', v: 'cloudflare', act: 'bootstrap', say: 'She reads what Cloudflare will ask her to allow, and that whoever holds the Cloudflare account controls the group\'s Civicsmith. She goes to Cloudflare\'s own page, signs in there and allows it.' },
+   { s: 'install', v: 'progress', act: null, say: 'Back from Cloudflare, she watches each step finish in plain words. Had one stopped it, the page would say why, what to do, and that nothing was created.' },
+   { s: 'install', v: 'done', act: 'selftest', say: 'The checks pass. She saves the one-time password in her password manager and continues to her group\'s address.' },
+   { s: 'setup', act: 'claim', say: 'The one-time password is already filled in. She chooses her own password and claims: she is the group\'s first administrator.' },
+   { s: 'setup', act: 'recoverycodesissue', say: 'She saves her ten recovery codes, shown once: her way back in if she ever loses her password.' },
+   { s: 'setup', act: 'groupnameset', say: 'She names the group, decides how members reach the assistant, and finishes. “Open your group\'s Civicsmith” takes her in.' },
+   { s: 'home', v: 'newgroup', act: null, say: 'Her group\'s home says nothing is here yet, and offers inviting members and saying who the group is.' },
+   { s: 'members', act: 'memberadd', say: 'She makes an invitation link for Mai, with the cover the group knows her by, and sends it herself: Civicsmith sends no email.' },
+   { s: 'join', v: 'free', act: 'enroll', say: 'Mai opens the link. She chooses her language, a handle (mai-k is free) and a password, and joins. She is signed in.' },
+   { s: 'home', v: 'firstvisit', act: null, say: 'Her home offers the guided welcome she began when she joined. She continues it.' },
+   { s: 'account', act: 'expertisedeclare', say: 'In her account she checks her language and declares that she interprets Spanish and English, so members can ask her to check work in that field.' },
+   { s: 'home', act: 'startfrom', say: 'Back on Home she answers “What happened?” with “A problem I live with”.' },
+   { s: 'capture', act: 'testify', say: 'Her first piece of work: she records what she saw on Seminary Avenue, where and when, with a photo. It is her testimony, labelled as hers.' },
+   { s: 'account', act: 'signout', say: 'At the end of the day she signs out on the library computer she used.' },
+   { s: 'front', v: 'signedout', act: 'login', say: 'Next morning, on her own phone, she opens the group\'s address, signs in, and keeps herself signed in on that phone.' } ] },
 ];
 /* expand a journey into its steps for the path chosen (ai true or false) */
 function journeySteps(j, ai) {
