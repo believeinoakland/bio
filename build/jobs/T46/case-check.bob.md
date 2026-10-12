@@ -14,3 +14,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 301 KB with your tests (K2700), under the 600 KB limit; read it whole.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
 Merge order in L8: case-carriage, publication, public-read, case-checker, case-import, case-disclosures, case-account, case-authoring, case-check; each that uses no unmerged L8 job merges as soon as it is complete.
+
+## B2 · CHANGE
+
+K2967: case-carriage (R19-R21) is merged into tranche/T46. Merge it, re-run (real.test.mjs should now read the reads), and post COMPLETE. Note: a since must be record-core's instant (R47's spelling), else each read fails closed; ties at since count as after it.
