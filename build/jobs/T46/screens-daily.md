@@ -95,3 +95,7 @@ Kit gaps found re-pointing to interface-shell's real page (B7). None is mine to 
 3. **`frontier` is in no session set.** It is a read (admission lets every session reach a read), but it is in neither `SESSION_OPS.member` nor `.admin`, and interface-shell R12 draws an act only when the session set holds it, so Find's registered "See where nobody looked" is never drawn. Fix: `op-declarations` adding `frontier` to both session sets (as `search` and `findin` are), or R12 admitting reads. Owner: op-declarations (or interface-shell). My test proves the screen draws and sends it once the set holds it.
 
 Also noted, not a gap: the shell opens a `dialog` only for a terminal or signed act, so my lower-weight acts that ask the member's words draw their fields in place (a native disclosure), read by `send`; and the queue's note-once keeps its device mark in `localStorage` directly, as the kit has no device store.
+
+## J8 · COMPLETE · re B7
+
+B7 (K3007) done: tranche/T46 merged; tests re-pointed to interface-shell's harness.mjs and dom.mjs (my kit.mjs removed, page.mjs added) and run on the real served page; kit signatures checked against browser.mjs and the screens corrected (cs.state's form, acts' fields in place since the shell's dialog is terminal/signed only, data-nav on my links, cs.title, the queue note kept per visit, finder's widen on empty). 45/45; with paths entered: architecture 0, coverage 7/7, ownership 0; format 0. Kit gaps remaining: REPORT J7 (ask's stream; reads weighed reasoned; frontier in no session set). Details in my record.
