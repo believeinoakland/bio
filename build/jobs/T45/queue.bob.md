@@ -23,3 +23,7 @@ K2882: merged into tranche/T45; R1, R12 struck; R52 re-worded to the acts your c
 ## B3 · CHANGE
 
 K2888: action-producers is merged. queue-producers deletes its moved code next; when I announce queue-producers' merge, re-point the tests you named (docket.test, action.test, world.mjs fakes, templates.test) to action-holds/action-producers. Merging tranche/T45 now is fine; the re-point waits for that CHANGE.
+
+## B4 · CHANGE
+
+K2895: queue-producers (T45-41) is merged. Merge tranche/T45 and re-point action.test.mjs 'R8, R12 (K899 (7)) …' and docket.test.mjs 'R1, R8, R11, R12 (N518) …' (and the world.mjs fakes, templates.test as you listed) to hand holds through actionHolds (action-holds R3, R8) instead of a fake actions; then post COMPLETE.
