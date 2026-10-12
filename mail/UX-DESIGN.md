@@ -943,3 +943,6 @@ Folded: registry.json (58 screens), words.json (1,690 words, 596 protected), jou
 
 ## U183 · ANSWER · re B158, B159 · 2026-10-12 · session_018JqYSTCQoQF5SPAXFQxvDD · primary
 B158 (a) and (b) and B159 are answered by DEC-201 (U182), on PR believeinoakland/bio#33, whose MERGE is U180.
+
+## U184 · NOTICE · 2026-10-12 · session_018JqYSTCQoQF5SPAXFQxvDD · primary
+DEC-201 (13): three empty states drawn: `queue` with nothing waiting ("You are up to date"), `finder` with no results (what search covers, "Capture it"), `project` new with no questions ("Open a question" or "Draw on a question from elsewhere"); other screens' empty reads draw the kit's `state.empty` until given their own. On PR believeinoakland/bio#33 (head 9b2b7e31).
