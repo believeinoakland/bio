@@ -69,8 +69,9 @@ export function lawProposalState(proposedBy) {
  * (filing-templates R6; K921, T21), a draft of a new edition's statement of what changed (case-authoring R39;
  * DEC-101) and an escalation's pre-assembled opening reason (escalation R29; DEC-89; both K1019, T23), and steps proposed
  * for a wizard script (wizard-scripts R5; N543, T32), a law relation, court link or treatment (standards R23, R26,
- * R27, R30; N568, T34), a draft translation of an interface word (N669, T37), and a draft of a case's account and a
- * check of a member's account (case-authoring R64; N838, T42) are each machine work or a member's
+ * R27, R30; N568, T34), a draft translation of an interface word (N669, T37), a draft of a case's account and a
+ * check of a member's account (case-authoring R64; N838, T42), and a layout of how a reply bears on an action's claims
+ * (action-replies R1; N912, T46) are each machine work or a member's
  * suggestion, never the thing itself, and each is labelled by `lawProposalState`'s three states. ONE CLOSED
  * TABLE, keyed by what was proposed: `governing_laws` is REC-195's table above, the same object, so its words
  * cannot drift from it; each other subject says, in each state, what the proposal is not. A subject the table does
@@ -225,6 +226,19 @@ export const PROPOSAL_STATES = Object.freeze({
       + 'It is a draft and never a finding of the group, and the record holds who proposed it',
     unstated: 'the record does not say who flagged these sentences of a member\'s account as not supported by the evidence '
       + 'they cite. It is a draft and never a finding of the group',
+  }),
+  /* N912 (K2845; T46, R60): a layout of how a reply to a request for comment bears on each claim of the action
+     (`action-replies` R1, `actionBearingPropose`) is a proposed reading, stored apart, and never the group's reading until a
+     member records a layout themselves; a machine can propose one and never record one (action-replies R4). Before this
+     subject action-replies labelled its proposals through `lawProposalState` with its own sentences. */
+  bearing: Object.freeze({
+    machine_proposed: 'a machine credential proposed this layout of how a reply bears on each claim of an action. That is '
+      + 'machine work, labelled as machine work: it can propose a layout and it can never record one. It is a proposed '
+      + 'reading and never the group\'s reading until a member records it',
+    member_proposed: 'a member proposed this layout of how a reply bears on each claim of an action. It is a proposed reading '
+      + 'and never the group\'s reading until a member records it, and the record holds who proposed it',
+    unstated: 'the record does not say who proposed this layout of how a reply bears on each claim of an action. It is a '
+      + 'proposed reading and never the group\'s reading until a member records it',
   }),
 });
 

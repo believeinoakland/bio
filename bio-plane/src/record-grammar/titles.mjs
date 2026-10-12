@@ -27,8 +27,11 @@ export const deriveInquiryTitle = (question) => {
 /* The `## Question` section of an inquiry's bundle.md, for the projection's
    use of the rule above. Returns '' when the document has no such section
    (every legacy focus/problem document), so callers fall back to the title
-   the document already carries instead of inventing one. */
+   the document already carries instead of inventing one.
+   T46-1 (R31, P8): the heading line may end in spaces or tabs and nothing else, then its line break (`\n` or `\r\n`).
+   It took any white space but a newline, so `## Question` followed by a form feed, a vertical tab or a no-break space was
+   read as the heading. */
 export const inquiryQuestionOf = (markdown) => {
-  const m = /\n## Question[^\S\n]*\n([\s\S]*?)(?=\n## |$)/.exec('\n' + String(markdown == null ? '' : markdown));
+  const m = /\n## Question[ \t]*\r?\n([\s\S]*?)(?=\n## |$)/.exec('\n' + String(markdown == null ? '' : markdown));
   return m ? m[1] : '';
 };

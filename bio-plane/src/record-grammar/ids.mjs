@@ -73,6 +73,12 @@ export const ID_TABLE = Object.freeze([
      sequential shape; so its row carries `legacy: 'sequential'` as `CALC`'s does (K1728): those ids stay readable, and
      minting through `allocId` follows `form` alone. Its owner is named before it holds code (P8). */
   row('ACD', 'case-account', 'opaque', 'sequential'),
+  /* T46-1 (R59; N911, K2845): a success record (`consequences`, v0.2 §3 Success record), sequential, as the Action
+     layer's other record objects are. `consequences` has minted `SUC-<year>-<4 digits>` in its own rows since T45, which is
+     this form, so every one of those ids stays valid. It is a record object promoted with history like a finding, so it
+     has a type (`success_record`, types.mjs) and a machine (`STATES`, document.mjs), and it is not a bundle prefix (R1):
+     no heading set and no `checkBundle` schema. */
+  row('SUC', 'consequences'),
 ]);
 
 const YEAR = '\\d{4}';
@@ -105,6 +111,10 @@ export const isStepId = (v) => typeof v === 'string' && STP_RE.test(v);
 const GUD_RE = idPattern('GUD');
 /** R53: is `v` a reading guide id? (`reading-guides`, D8.) */
 export const isGuideId = (v) => typeof v === 'string' && GUD_RE.test(v);
+
+const SUC_RE = idPattern('SUC');
+/** R59: is `v` a success record id? (`consequences`, N911.) */
+export const isSuccessRecordId = (v) => typeof v === 'string' && SUC_RE.test(v);
 
 /** Every bundle id prefix, in the order the patterns spell them (R1): the sequential prefixes `ID_TABLE` gives the
  *  bundle records. */
