@@ -25,3 +25,7 @@ K2951: reading-guides, agent-model (R15: a sign-in picture relayed once the runn
 ## B4 · CHANGE
 
 run-rules is merged into tranche/T46 (K2954: R29 partAdmittedOn/partAdmitted/untestedLabel, R30, R32 MEMBER_RUN_MODE_NOT_ADMITTED C-22.30, plan in DEPLOYED_MODES). Merge tranche/T46 into your branch, re-run your tests on it, and post COMPLETE (again) when green.
+
+## B5 · CHANGE
+
+K2955: agent-harness (MODES.plan deployed, R10) and steps are merged into tranche/T46. With run-rules (B4) your R53 and R79 dependencies are all in: merge tranche/T46, finish, and post COMPLETE.
