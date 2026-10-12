@@ -29,6 +29,7 @@ It is the only module marked `legacy` in `modules.json`.
    4. the plane bundle and `program.mjs`, staled by any merge, regenerated at each layer's close;
    5. bundler `fleetbundles.test.mjs` agent-worker inputs pin (N950) until T47-4;
    6. membership `MODULE_ORDER` tests from the opening's act until T47-7; membership R83's T46-4 tolerance (N991) until T47-7; membership REC-41 `members.test.mjs` (2, N989) until T47-75 (instance-setup's flat `parts`, K3027);
+   7c. (K3039) membership `members.test.mjs` R132 (3, REC-41's flat keys) until T47-75; op-declarations R49/R6 (`projectlist` has no spec) until T47-53; plane `test/m/plane/` R5, R9 (project-roster's ops map pinned at twelve) until T47-66;
    7b. answer-envelope `envelope.test.mjs` R8's family-order pins while `DISCLOSURE_DUE` is held by both credentials' C-29.40 and the door's C-69.6, from T47-9's merge until T47-65 retires C-69.6 (K3030);
    7a. **T46's close reds (K3022, K3023):** the design files PR #30 and PR #31 changed, read directly by tests: affordances (2), op-declarations (8), answer-envelope (1), ai-use (5), run-rules (1), action-replies (2), case-authoring (1), each until its N992 entry (T47-49, -53, -54, -70, -71, -40, -32); file-scanner R10 (2, N990) until T47-67; promotion's row census until T47-10;
    7. consequences R24's T47 clause (`test.todo`, N958) until T47-35; case-carriage R19, R21's T47 marks (N947) until T47-26;
