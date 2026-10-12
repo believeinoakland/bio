@@ -1,11 +1,13 @@
 /* action-grammar — the action document's arms, readers and rows (requirements: `build/requirements/action-grammar.md`,
- * R1, R2, R3, R7–R15, R20–R25; K6, K64).
+ * R1, R2, R3, R7–R15, R20–R26; K6, K64).
  * Since T45 layer 9 (T45-25; N858, N861, N879, N880, N882–N884, N892 (b); `BIO_Action_v0_2.md`): the vocabularies R2 adds,
  * the press arm's `holder` (R8), the override's ground (R15), the action's new fields (R20–R25: `copied`, `partners`,
  * `press_terms`, an entry's `office_status`, `found_elsewhere` and `speaker`, `reply_owed`, `follows_action`, the claim
  * bearings, the stages per law), the audit's arms over them and C-11.1's `owed_by` (R7), and C-117.30–.58, the rows of the
  * codes `actions` and these arms mint (R9; K2845, K2849); C-117.22 retired. The phrasing lists and the
  * finder (R16–R19) are `./phrasings.mjs` and `./finder.mjs`, re-exported here. Each awaiting T46's stamp.
+ * Since T46 layer 9 (T46-31; R26; DEC-194, N913; K2953): twenty-four of the C-117.30–.58 rows take their translations from
+ * `words.json` by key (`ACTION_GRAMMAR_WORDS`), codes, numbers and `where`s unmoved; awaiting T47's stamp.
  * Since T41 layer 9 (T41-46a; H30 (1), K2505): R13's `seeks` (`seeksOf`, `seeksFindings`, C-117.29 `SEEKS_REFUSED`) and the
  * outcome `none_exists` (C-94.5's translation names it); R14's C-32.21 `MACHINE_CANNOT_STATE_SEEKS`, `actions`' fence (K2561);
  * each awaiting T42's stamp.
@@ -1613,6 +1615,54 @@ export const RECORDS_LAW_FENCE_CHECKS = {
   },
 };
 
+/* T46 (R26; DEC-194, N913; K2953, K2959): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) the
+   twenty-four C-117 rows R26 names translate by, each `en` verbatim, read by key (`refusal.<CODE>`), as membership's
+   `HANDLE_WORDS` and extraction's `TRANSCRIBE_WORDS` are. The design stream's words: re-worded there, then re-taken here
+   by key; a row never holds a copy of its sentence. Codes, numbers, `where`s and behaviour are unmoved. Four rows keep
+   their T45 translations in T46, returned to BOB until the sentence and the requirement agree: C-117.32
+   `OVERRIDE_GROUND_REFUSED` and C-117.41 `OFFICE_STATUS_WITHOUT_OUTCOME` (each refuses more than its sentence says),
+   C-117.55 `REPLY_OWED_REFUSED` (it also refuses a reply_owed stated without its reason, K2859) and C-117.57
+   `LAW_STAGE_UNKNOWN` (its sentence names "Civicsmith" bare, DEC-149). `BEARING_REFUSED` is `action-replies'` row
+   (C-150.3), re-worded at its one minting site (K231, K2953). C-117.58, which `words.json` does not hold, keeps its own.
+   Changed translations, awaiting T47's stamp. */
+export const ACTION_GRAMMAR_WORDS = Object.freeze({
+  "refusal.DETERMINATION_NOT_NONCOMPLIANT": "An action that claims a breach rests on a determination that the act broke "
+    + "a standard, and this determination found no such breach. Nothing was written.",
+  "refusal.OVERRIDE_NO_GROUND": "Acting before a determination needs one of two grounds: a legal deadline would pass "
+    + "first, or the act would be done and couldn't be undone. Or make a one-finding case first. Nothing was written.",
+  "refusal.COPIED_IS_ADDRESSEE": "The office the action is addressed to can't also be copied. Nothing was written.",
+  "refusal.MACHINE_CANNOT_SET_PARTNERS": "Only a member names the organisations acting with your group. Nothing was "
+    + "written.",
+  "refusal.PARTNERS_REFUSED": "Each partner is a named organisation, listed once. Nothing was written.",
+  "refusal.MACHINE_CANNOT_SET_PRESS_TERMS": "Only a member sets the terms of talking to the press. Nothing was written.",
+  "refusal.PRESS_TERMS_NOT_PRESS": "Press terms apply only to an action with the press. Nothing was written.",
+  "refusal.PRESS_TERMS_REFUSED": "Press terms are on the record, on background or off the record, with any embargo as a "
+    + "real time and a note of at most 500 characters. Nothing was written.",
+  "refusal.RECEIPT_NOT_ON_SENT": "Only something sent can be received or served. Nothing was written.",
+  "refusal.OFFICE_STATUS_UNKNOWN": "That isn't one of the statuses this kind of reply takes in your places' rules. "
+    + "Choose one of them. Nothing was written.",
+  "refusal.MACHINE_CANNOT_SET_REPLY_OWED": "Only a member says that no reply is owed, with a reason. Nothing was "
+    + "written.",
+  "refusal.NO_REPLY_OWED": "This action owes no reply, so a missing reply isn't recorded on it. Nothing was written.",
+  "refusal.FOUND_ELSEWHERE_NEEDS_CAPTURE": "A reply found elsewhere is captured first, so others can read it. Capture "
+    + "it, then record it. Nothing was written.",
+  "refusal.STAGE_NOT_IN_LAW": "This records law has no such stage. Choose one of the stages it has. Nothing was "
+    + "written.",
+  "refusal.FOLLOWS_ACTION_REWRITTEN": "Which action this one follows is set once, when it starts. Nothing was written.",
+  "refusal.FOLLOWS_ACTION_SELF": "An action can't follow itself. Nothing was written.",
+  "refusal.MACHINE_CANNOT_SET_SCOPE": "Only a member makes an action confidential or not. Nothing was written.",
+  "refusal.SCOPE_NO_REASON": "Say why. Your reason is kept with the change. Nothing was written.",
+  "refusal.SCOPE_UNCHANGED": "The action is already that. Nothing was changed.",
+  "refusal.MACHINE_CANNOT_RECORD_PROMISE": "Only a member records a promise your group made to a person. Nothing was "
+    + "written.",
+  "refusal.PROMISE_REFUSED": "A promise is an embargo, anonymity or another promise, said in at most 500 characters; "
+    + "ending one names a promise that stands. Nothing was written.",
+  "refusal.FOUND_ELSEWHERE_REFUSED": "A reply found elsewhere was found in the press, a report, a decision, a public "
+    + "statement or elsewhere, with a note of at most 500 characters. Nothing was written.",
+  "refusal.SPEAKER_REFUSED": "Only a member who sent or spoke can be named as the speaker. Nothing was written.",
+  "refusal.FOLLOWS_ACTION_REFUSED": "Name the earlier action this one follows. Nothing was written.",
+});
+
 /* =========================================================================
  * D-717 / C-101 (R7): THE ACTION CATALOGUE AT THE ACT. Five arms of C-2.10 that ran only in the audit are enforced
  * at the write, each under its own name; `findings[]` carries the arm's own C-2.10 / C-11.1 sentences, so the act and
@@ -1813,20 +1863,17 @@ export const ACTION_CATALOGUE_CHECKS = {
      in R9's order; each `where` names the raising site, `actions`' as its job names them (K2849 (2)). `action-holds`' and
      `action-replies`' codes are their own families, C-149 and C-150 (K2845): `BEARING_REFUSED`, which R24 pushes, is
      C-150's row. Translations the job's drafts for BOB, the UX stream's to revise. New in T45 layer 9; awaiting T46's
-     stamp. */
+     stamp. Since T46 (R26; N913) twenty-four of them read their translation by key from `ACTION_GRAMMAR_WORDS` above;
+     C-117.32, .41, .55, .57 and .58 keep the T45 drafts. */
   DETERMINATION_NOT_NONCOMPLIANT: {
     check: 'C-117.30',
     where: 'src/actions/index.mjs #breachRefusal > is-breach-not-noncompliant',
-    translation: 'An action taken for a breach rests on the group\'s determination that the act was out of conformance. The '
-      + 'determination named is in force but finds no breach of any standard it names, so nothing was written. Name a '
-      + 'determination that finds the act noncompliant, or record the action without marking it a breach.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.DETERMINATION_NOT_NONCOMPLIANT"],
   },
   OVERRIDE_NO_GROUND: {
     check: 'C-117.31',
     where: 'src/actions/index.mjs #overrideAndAddressee > is-override-ground',
-    translation: 'Acting on a breach the group has not yet determined is allowed on one of two grounds only: a legal deadline '
-      + 'that falls before a determination could be made, with its citation and date, or an imminent act that cannot '
-      + 'be undone, saying what and when. No ground was stated, so nothing was written.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.OVERRIDE_NO_GROUND"],
   },
   OVERRIDE_GROUND_REFUSED: {
     check: 'C-117.32',
@@ -1838,53 +1885,42 @@ export const ACTION_CATALOGUE_CHECKS = {
   COPIED_IS_ADDRESSEE: {
     check: 'C-117.33',
     where: 'src/action-grammar/checks.mjs copiedFindings > is-copied',
-    translation: 'The office the action is addressed to is also listed among the offices copied on it. One action is made per '
-      + 'office addressed, and the others are copied. Remove the addressee from the copied list. Nothing was written.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.COPIED_IS_ADDRESSEE"],
   },
   MACHINE_CANNOT_SET_PARTNERS: {
     check: 'C-117.34',
     where: 'src/actions/index.mjs #t45Fields > is-machine-set-partners',
-    translation: 'Which organisations the group acts jointly with is a member\'s statement, and somebody answers for it. The '
-      + 'credential that asked here is an automated one, so it cannot state or change the partners. Nothing was '
-      + 'written. Sign in to state them yourself.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.MACHINE_CANNOT_SET_PARTNERS"],
   },
   PARTNERS_REFUSED: {
     check: 'C-117.35',
     where: 'src/actions/index.mjs #t45Fields > is-partners-entity',
-    translation: 'A partner on a joint action is an organisation named by a role and its name, at most twenty of them, each '
-      + 'once, never a person. One entry was not of that form, so nothing was written.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.PARTNERS_REFUSED"],
   },
   MACHINE_CANNOT_SET_PRESS_TERMS: {
     check: 'C-117.36',
     where: 'src/actions/index.mjs #t45Fields > is-machine-set-press-terms',
-    translation: 'The terms agreed with a reporter, on the record, background or off the record, and any embargo, are a '
-      + 'member\'s statement. The credential that asked here is an automated one, so it cannot state or change them. '
-      + 'Nothing was written. Sign in to state them yourself.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.MACHINE_CANNOT_SET_PRESS_TERMS"],
   },
   PRESS_TERMS_NOT_PRESS: {
     check: 'C-117.37',
     where: 'src/action-grammar/checks.mjs pressTermsFindings > is-press-terms',
-    translation: 'Press terms are noted on an action addressed to a reporter. This action is addressed to someone else, so '
-      + 'nothing was written. Remove the press terms, or address the action to the press.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.PRESS_TERMS_NOT_PRESS"],
   },
   PRESS_TERMS_REFUSED: {
     check: 'C-117.38',
     where: 'src/action-grammar/checks.mjs pressTermsFindings > is-press-terms',
-    translation: 'Press terms say whether the exchange is on the record, background or off the record, with an embargo and a '
-      + 'release time each as a date and time, and a note of up to 500 characters with no quotation mark, backslash '
-      + 'or line break. These were not of that form, so nothing was written.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.PRESS_TERMS_REFUSED"],
   },
   RECEIPT_NOT_ON_SENT: {
     check: 'C-117.39',
     where: 'src/actions/index.mjs actionReceipt > is-receipt-on-sent',
-    translation: 'Receipt is recorded for something the group sent: when and how the addressee received it. The entry named '
-      + 'records something received, or a reply that never came, so nothing was written.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.RECEIPT_NOT_ON_SENT"],
   },
   OFFICE_STATUS_UNKNOWN: {
     check: 'C-117.40',
     where: 'src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields',
-    translation: 'The office\'s own status was named with a status the group\'s jurisdiction profile does not hold for this kind '
-      + 'of action. Quote the office\'s words alone, or name a status the profile lists. Nothing was written.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.OFFICE_STATUS_UNKNOWN"],
   },
   OFFICE_STATUS_WITHOUT_OUTCOME: {
     check: 'C-117.41',
@@ -1896,85 +1932,67 @@ export const ACTION_CATALOGUE_CHECKS = {
   MACHINE_CANNOT_SET_REPLY_OWED: {
     check: 'C-117.42',
     where: 'src/actions/index.mjs #t45Fields > is-machine-set-reply-owed',
-    translation: 'Whether a body owes the group a reply is a member\'s statement, made with a reason. The credential that asked '
-      + 'here is an automated one, so it cannot state or change it. Nothing was written. Sign in to state it '
-      + 'yourself.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.MACHINE_CANNOT_SET_REPLY_OWED"],
   },
   NO_REPLY_OWED: {
     check: 'C-117.43',
     where: 'src/actions/index.mjs actionCorrespond > is-no-reply-owed',
-    translation: 'This action is to a body that owes the group no reply, so silence is not recorded as a non-response. Nothing '
-      + 'was written. If a reply is owed after all, a member states so first, with a reason.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.NO_REPLY_OWED"],
   },
   FOUND_ELSEWHERE_NEEDS_CAPTURE: {
     check: 'C-117.44',
     where: 'src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields',
-    translation: 'A response found elsewhere, in the press, a report, a decision or a statement, is held as the captured '
-      + 'material where it was found, never as an account alone. Capture it first and record it with its capture. '
-      + 'Nothing was written.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.FOUND_ELSEWHERE_NEEDS_CAPTURE"],
   },
   STAGE_NOT_IN_LAW: {
     check: 'C-117.45',
     where: 'src/actions/index.mjs actionCorrespond > is-stage-in-law',
-    translation: 'The law this records request is made under has no such stage, as the group\'s jurisdiction profile lists that '
-      + 'law\'s stages. Record the entry as the stage the law has, or with no stage. Nothing was written.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.STAGE_NOT_IN_LAW"],
   },
   FOLLOWS_ACTION_REWRITTEN: {
     check: 'C-117.46',
     where: 'src/actions/index.mjs #t45Fields > is-follows-action-rewritten',
-    translation: 'The earlier action this one follows is named when it is created and never changed or removed afterwards. '
-      + 'This write would have set, changed or removed it, so nothing was written.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.FOLLOWS_ACTION_REWRITTEN"],
   },
   FOLLOWS_ACTION_SELF: {
     check: 'C-117.47',
     where: 'src/action-grammar/checks.mjs actionFieldFindings > is-action-fields',
-    translation: 'An action follows an earlier action, and this one named itself. Name the action it follows. Nothing was '
-      + 'written.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.FOLLOWS_ACTION_SELF"],
   },
   MACHINE_CANNOT_SET_SCOPE: {
     check: 'C-117.48',
     where: 'src/actions/index.mjs actionScope > is-scope',
-    translation: 'Whether an action is kept confidential inside the group is a member\'s decision, made with a reason. The '
-      + 'credential that asked here is an automated one, so it cannot set or remove it. Nothing was written. Sign in '
-      + 'to do it yourself.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.MACHINE_CANNOT_SET_SCOPE"],
   },
   SCOPE_NO_REASON: {
     check: 'C-117.49',
     where: 'src/actions/index.mjs actionScope > is-scope',
-    translation: 'Keeping an action confidential, or ending that, is recorded with a reason in your own words, up to 500 '
-      + 'characters with no quotation mark, backslash or line break. No such reason was given, so nothing was '
-      + 'written.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.SCOPE_NO_REASON"],
   },
   SCOPE_UNCHANGED: {
     check: 'C-117.50',
     where: 'src/actions/index.mjs actionScope > is-scope',
-    translation: 'The action already has that scope, so there is nothing to change. Nothing was written.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.SCOPE_UNCHANGED"],
   },
   MACHINE_CANNOT_RECORD_PROMISE: {
     check: 'C-117.51',
     where: 'src/actions/index.mjs actionPromise > is-promise',
-    translation: 'A promise the group made to a person, an embargo or a source\'s anonymity, is recorded by a member who '
-      + 'answers for it. The credential that asked here is an automated one, so it cannot record one. Nothing was '
-      + 'written. Sign in to record it yourself.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.MACHINE_CANNOT_RECORD_PROMISE"],
   },
   PROMISE_REFUSED: {
     check: 'C-117.52',
     where: 'src/actions/index.mjs actionPromise > is-promise',
-    translation: 'A promise is recorded as an embargo, anonymity or other, with words of up to 500 characters; one that ends '
-      + 'an earlier promise names a promise still standing. This one was not of that form, so nothing was written.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.PROMISE_REFUSED"],
   },
   FOUND_ELSEWHERE_REFUSED: {
     check: 'C-117.53',
     where: 'src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields',
-    translation: 'A response found elsewhere is something received, and says where it was found: the press, a report, a '
-      + 'decision, a statement or other, with a note of up to 500 characters. This entry was not of that form, so '
-      + 'nothing was written.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.FOUND_ELSEWHERE_REFUSED"],
   },
   SPEAKER_REFUSED: {
     check: 'C-117.54',
     where: 'src/action-grammar/checks.mjs entryFieldFindings > is-entry-fields',
-    translation: 'The member who spoke for the group is recorded on something the group sent, by their member id. This entry '
-      + 'was received or named no member id, so nothing was written.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.SPEAKER_REFUSED"],
   },
   REPLY_OWED_REFUSED: {
     check: 'C-117.55',
@@ -1985,8 +2003,7 @@ export const ACTION_CATALOGUE_CHECKS = {
   FOLLOWS_ACTION_REFUSED: {
     check: 'C-117.56',
     where: 'src/action-grammar/checks.mjs actionFieldFindings > is-action-fields',
-    translation: 'The earlier action this one follows is named by its record id and, optionally, the position of the entry it '
-      + 'follows, a whole number counted from zero. It was named in another form, so nothing was written.',
+    translation: ACTION_GRAMMAR_WORDS["refusal.FOLLOWS_ACTION_REFUSED"],
   },
   LAW_STAGE_UNKNOWN: {
     check: 'C-117.57',
