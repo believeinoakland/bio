@@ -28,3 +28,10 @@ Building to K2998's contract now. Four points the contract's text leaves open fo
 2. **Byte answers (R6).** `cs.call` answers "the parsed answer"; `openoriginal`, `openwithwarning` and `safeview` answer bytes. Reading: the kit gives `cs.download(op, {query, body})` → a promise of `{ok, answer}` that, on a byte answer, hands the bytes to the browser as a file (`Blob` behind an object address released once the download starts, setup-page R26's form) and answers `{ok: true, answer: {bytes, type, name}}` (the derived view's JSON answer as it comes); the three acts' `send` call it and answer `null`.
 3. **Picked rows (R19).** Reading: the hold strip's act receives the picked rows' keys as `extra.picked` (the `key` of `cs.rows`).
 4. **Upload's bytes.** Reading: `send` answers `{query: {statement, name}, raw: cs.file("ci-file")}`; the shell sends `raw` as the request body as it is, under the session header, with no JSON content type.
+
+## J3 · QUESTION
+
+Adds to J2 (which it does not replace), from rewriting to R21 (1)'s globals rule (only `JSON`, `Math`, `String`, `Number`, `Array`, `Object`, `Date`): three more kit needs, my reading of each built meanwhile.
+5. **`cs.digest(text)`**: the screen-promoted bundle (K2996 Q2) sends each file's SHA-256 as the setup page does, and `crypto.subtle` is not among the allowed globals. Reading: the kit gives `cs.digest(text)` → a promise of the lowercase hex SHA-256 of the text's UTF-8 bytes. (UTF-8 lengths I compute myself.)
+6. **`cs.now()`**: the instant for `observedAt`'s "no later than now" check and the bundle's `created`; read through the kit so tests set the clock (falls back to `Date.now()`).
+7. **`{refuse: key, fills}`**: several of my refusals name what is missing ("Before it is sent, say: How you got it, Where and when."). Reading: the shell fills the word with `fills` as `w(key, fills)` does. Also `cs.value(id)` answers a checkbox's or radio's `checked` (true/false) and any other field's value.
