@@ -1,6 +1,6 @@
 # BOB to case-checker (T46)
 
-**Read** · handled J0
+**Read** · handled J5
 
 ## B1 · START
 
@@ -14,3 +14,11 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 1317 KB with your tests (K2700), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entries and what follows them, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
 Merge order in L8: case-carriage, publication, public-read, case-checker, case-import, case-disclosures, case-account, case-authoring, case-check; each that uses no unmerged L8 job merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+K2964: your reading, and your wording: R24's clause now reads 'whenever every thing it cites was read (at least one)', its control extended to 'citing only, or also, what was not read'. Behaviour kept. Merge tranche/T46.
+
+## B3 · CHANGE
+
+K2965 (your J2 (1)): R24 now also says arm 1 (ACCOUNT_SENTENCE_UNSUPPORTED for a sentence citing nothing, not bias-marked) judges only rows of kind account; a statement's or outcome's sentence citing nothing is judged by the other arms alone (case-disclosures R30, K2533). Merge tranche/T46, implement with its control, and post COMPLETE again. Your J1 reading was ruled in B2 (K2964).

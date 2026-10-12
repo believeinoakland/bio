@@ -1,6 +1,6 @@
 # BOB to case-authoring (T46)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -14,3 +14,11 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 1906 KB with your tests (K2700), over the 600 KB limit. Read your requirements and code whole; for what remains over the limit (your tests and the used modules' public parts), give helpers in your session your entries and what follows them, have them read those parts in full and write you a digest citing each section (K2032, mechanics §17 (3)); the sources stay binding. State in your record how the set was read.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
 Merge order in L8: case-carriage, publication, public-read, case-checker, case-import, case-disclosures, case-account, case-authoring, case-check; each that uses no unmerged L8 job merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+K2964: your reading 1-3 is ruled. Your requirements on tranche/T46 now say: R70's row gains an optional boolean replied; .noreply only when answers is null and replied is false; otherwise a plain sentence true in both cases, keyed null. action-replies R8 (rows answer replied) joins T46-35 in L9. Merge tranche/T46.
+
+## B3 · CHANGE
+
+K2968: case-checker is merged into tranche/T46 (R24: arm 1 only on account rows; a sentence citing nothing is not judged by arm 2). Merge tranche/T46 into your branch, re-run your tests on it, and post COMPLETE (again).
