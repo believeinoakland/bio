@@ -75,7 +75,11 @@ function render(cs, view) {
       cs.call(op, { query }).then((a) => {
         const r = a && a.result !== undefined ? a.result : a;
         if (!a || a.ok === false || (r && r.ok === false))
-          settle({ state: "failed", refusal: { code: (r && (r.code || r.reason)) || (a && (a.code || a.reason)) || "" } });
+          {
+          const f = r && r.ok === false ? r : a || {};
+          const code = String(f.code || f.reason || "");
+          settle({ state: "failed", refusal: { code, words: cs.esc(f.translation || code) } });
+        }
         else settle({ state: "ok", value: r });
       }, () => settle({ state: "failed", refusal: null }));
     }
@@ -89,7 +93,7 @@ function render(cs, view) {
         && d.directory.value.projects.some((p) => p && p.id === id));
   const title = doc ? (doc.title || id) : id;
   const out = [];
-  out.push(cs.title(cs.esc(title), { thing: "project" }));
+  out.push(cs.title(title, { thing: "project" }));
   if (doc && doc.objective && doc.objective !== title)
     out.push(`<p class="cs-sub"><span class="cs-label">${cs.w("screen.project.objective")}</span> ${cs.esc(doc.objective)}</p>`);
 
@@ -141,7 +145,7 @@ function render(cs, view) {
         return `<span class="cs-strength" title="">${ax("capture")}${ax("connection")}</span>`;
       });
       const facts = [titles[q] || q];
-      return cs.row("", cs.ref("question", q, cs.esc(titles[q] || q), facts), grades);
+      return cs.row("", cs.ref("question", q, titles[q] || q, facts), grades);
     }).join(""));
   }, { empty: "screen.project.questions.empty" });
   const fieldQ = cs.field("project-question", "screen.project.question.label", { area: true, rec: true, help: "screen.project.question.help" });
@@ -154,7 +158,11 @@ function render(cs, view) {
 
   /* plans: opened here; the plan screen is T47's, so the screen says the plan was opened and lists it */
   const plans = Array.isArray(ui.plans) ? ui.plans : [];
-  const choices = cited.map((q) => ({ value: q, text: q }));
+  /* a choice's option is [value, word key]; a question's title, record data, stands in the key's place (the kit draws an
+     unknown key as itself, escaped): J6's kit gap */
+  const qTitles = d.questions && d.questions.state === "ok" && Array.isArray(d.questions.value.bundles)
+    ? Object.fromEntries(d.questions.value.bundles.map((b) => [b.bundle_id, b.title || b.bundle_id])) : {};
+  const choices = cited.map((q) => [q, qTitles[q] || q]);
   out.push(cs.sec("screen.project.plan.head",
     (plans.length ? cs.sheet(plans.map((p) => cs.row("", `<span class="cs-rec">${cs.esc(p.title)}</span>`, `<span class="cs-meta">${cs.esc(p.id)}</span>`)).join("")) : "")
     + cs.field("project-plan", "screen.project.plan.label", {})
@@ -240,7 +248,7 @@ const acts = [
     } },
   { op: "projectjoin", label: "act.projectjoin.label.project",
     send(view) { return { query: { projectId: String(view.subject || "") } }; } },
-  { op: "planopen", label: "act.planopen.label.project",
+  { op: "planopen", label: "act.planopen.label.project", reasonField: "title",
     send(view, el, cs) {
       const title = String(cs.value("project-plan") || "").trim();
       const inquiry = String(cs.value("project-plan-about") || "").trim();

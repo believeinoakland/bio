@@ -41,7 +41,11 @@ function render(cs, view) {
       cs.call(op, { query }).then((a) => {
         const r = a && a.result !== undefined ? a.result : a;
         if (!a || a.ok === false || (r && r.ok === false))
-          settle({ state: "failed", refusal: { code: (r && (r.code || r.reason)) || (a && (a.code || a.reason)) || "" } });
+          {
+          const f = r && r.ok === false ? r : a || {};
+          const code = String(f.code || f.reason || "");
+          settle({ state: "failed", refusal: { code, words: cs.esc(f.translation || code) } });
+        }
         else if (r && r.found === false) settle({ state: "empty" });
         else settle({ state: "ok", value: r });
       }, () => settle({ state: "failed", refusal: null }));
@@ -198,6 +202,8 @@ const acts = [
           }
           const rec = r.record || r;
           cs.set("suggestions", (Array.isArray(view.ui.suggestions) ? view.ui.suggestions : []).concat([String(rec.description || rec.name || name)]));
+          /* the run read again: a run that ended since is seen ended, and its credential revoked */
+          cs.set("seq", (view.ui.seq || 0) + 1);
         }, () => cs.set("said", { op: "suggest", html: cs.w("state.failed", { reason: "" }) }));
       return null;
     } },

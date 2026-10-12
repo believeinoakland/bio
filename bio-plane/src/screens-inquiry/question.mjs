@@ -63,7 +63,11 @@ function render(cs, view) {
       cs.call(op, { query }).then((a) => {
         const r = a && a.result !== undefined ? a.result : a;
         if (!a || a.ok === false || (r && r.ok === false))
-          settle({ state: "failed", refusal: { code: (r && (r.code || r.reason)) || (a && (a.code || a.reason)) || "" } });
+          {
+          const f = r && r.ok === false ? r : a || {};
+          const code = String(f.code || f.reason || "");
+          settle({ state: "failed", refusal: { code, words: cs.esc(f.translation || code) } });
+        }
         else settle({ state: "ok", value: r });
       }, () => settle({ state: "failed", refusal: null }));
     }
@@ -73,7 +77,7 @@ function render(cs, view) {
   const project = doc && /^PROJ-/.test(String(doc.project || "")) ? String(doc.project) : "";
   const out = [];
   const heading = doc ? (doc.question || doc.title || id) : id;
-  out.push(cs.title(`<span class="cs-rec">${cs.esc(heading)}</span>`, { thing: "question" }));
+  out.push(cs.title(heading, { thing: "question" }));
   if (doc) {
     const date = doc.created ? cs.date(String(doc.created), { year: true }) : "";
     if (project) {
@@ -81,12 +85,13 @@ function render(cs, view) {
       const pm = pr.state === "ok" && pr.value && typeof pr.value["bundle.md"] === "string" ? /^title:\s*(.*)$/m.exec(pr.value["bundle.md"]) : null;
       let pt = pm ? pm[1].trim() : project;
       try { if (pt.startsWith("\"")) pt = JSON.parse(pt); } catch { /* raw */ }
-      out.push(`<p class="cs-sub">${cs.w("screen.question.opened", { date, project: "" })}${cs.ref("project", project, cs.esc(pt), [])}</p>`);
-    } else out.push(`<p class="cs-sub">${cs.w("screen.question.opened.noproject", { date })}</p>`);
+      out.push(`<p class="cs-sub">${cs.w("screen.question.opened", { date: { html: date }, project: "" })}${cs.ref("project", project, pt, [])}</p>`);
+    } else out.push(`<p class="cs-sub">${cs.w("screen.question.opened.noproject", { date: { html: date } })}</p>`);
   }
 
   /* strength against the bar: two grades and the phrase, the weakest part and what would raise it */
-  const bar = later("bar", "strengthbarof", project ? { project } : {});
+  /* the bar once the inquiry has said whose it is: the project's, else the group's */
+  const bar = d.inquiry && d.inquiry.state !== "loading" ? later("bar", "strengthbarof", project ? { project } : {}) : { state: "loading" };
   const barOf = bar.state === "ok" && bar.value && bar.value.bar && (bar.value.bar.capture || bar.value.bar.connection)
     && (project ? bar.value.bar.declared !== false : true) ? bar.value.bar : null;
   const rank = { A: 4, B: 3, C: 2, D: 1 };
@@ -125,7 +130,7 @@ function render(cs, view) {
         ? cs.w("screen.question.waits.setaside", { document: x.title || doc2, who, reason: x.reason || "" })
         : cs.w("screen.question.waits.item", { text: x.text || x.what || "" });
       return `<div class="cs-wait" data-wait="${i}">${said}`
-        + (x.date || x.at ? `<span class="cs-meta">${cs.w("screen.question.waits.since", { who, date: cs.date(String(x.date || x.at)) })}</span>` : "")
+        + (x.date || x.at ? `<span class="cs-meta">${cs.w("screen.question.waits.since", { who, date: { html: cs.date(String(x.date || x.at), { year: false }) } })}</span>` : "")
         + (doc2 ? cs.act("heldrestore", { label: "act.heldrestore.label.question", data: { doc: doc2 } }) : "")
         + cs.act("search", { label: "act.search.label.question", data: { q: heading } }) + "</div>";
     }).join("");
@@ -149,7 +154,7 @@ function render(cs, view) {
       const severed = l.status === "severed" || l.severed === true;
       return cs.row(g ? cs.grade(scale, g) : cs.mark("gap", "unrated"),
         (l.words ? `<span class="cs-rec">“${cs.esc(l.words)}”</span>` : "")
-        + `<span class="cs-meta">${cs.ref("document", target, cs.esc(l.target_title || target), facts)}`
+        + `<span class="cs-meta">${cs.ref("document", target, l.target_title || target, facts)}`
         + (severed ? ` · ${cs.w("screen.question.leg.severed")}` : "") + "</span>",
         /* not drawn in T46: `sever` and `reinstate`, which act only on a project's `cites` edges (K3003; N977) */
         "");
@@ -166,7 +171,7 @@ function render(cs, view) {
       + `<span class="cs-rec">${cs.esc(x.statement || "")}</span></p>`).join(""), { empty: "screen.question.hunches.empty" })
     + cs.field("question-hunch", "screen.question.hunch.label", { area: true, rec: true })
     + cs.choice("question-hunch-kind", "screen.question.hunch.kind",
-        [{ value: "other", key: "screen.question.hunch.kind.other" }, { value: "flow", key: "screen.question.hunch.kind.flow" }], { value: "other" })
+        [["other", "screen.question.hunch.kind.other"], ["flow", "screen.question.hunch.kind.flow"]], { value: "other" })
     + cs.act("hypothesishold", { label: "act.hypothesishold.label.question", data: { inquiry: id } }), { help: "mark.hunch.means" }));
 
   /* concluding: the conclusion as held; narrow, conclude, withdraw; a check by expertise; a plan */
@@ -181,12 +186,17 @@ function render(cs, view) {
   const concluded = d.basis && d.basis.state === "ok" && d.basis.value && d.basis.value.conclusion
     && d.basis.value.conclusion_stance !== "withdrawn";
   out.push(cs.sec("screen.question.concluding.head", concl
+    + cs.field("question-narrow-name", "screen.question.narrow.name", {})
+    + cs.field("question-narrow-description", "screen.question.narrow.description", { area: true, rec: true })
     + cs.act("narrow", { label: "act.narrow.label.question", data: { inquiry: id } })
     + (concluded ? cs.act("withdrawconclusion", { label: "act.withdrawconclusion.label.question", data: { inquiry: id } })
-                 : cs.act("conclude", { label: "act.conclude.label.question", data: { inquiry: id } }))
+                 : (project ? "" : cs.field("question-conclude-claim", "screen.question.conclude.claim", { area: true, rec: true }))
+                   + cs.field("question-conclude-falsifier", "screen.question.conclude.falsifier", { area: true, rec: true })
+                   + cs.field("question-conclude-commentary", "screen.question.conclude.commentary", { area: true, rec: true })
+                   + cs.act("conclude", { label: "act.conclude.label.question", data: { inquiry: id } }))
     + `<p class="cs-meta">${cs.w("screen.question.conclude.who")}</p>`
     + cs.field("question-check", "screen.question.check.label", { help: "screen.question.check.help" })
-    + cs.field("question-check-note", "screen.question.check.note", { area: true })
+    + cs.field("question-check-note", "screen.question.check.note", { area: true, rec: true })
     + cs.act("checkrequest", { label: "act.checkrequest.label.question", data: { inquiry: id } })
     + cs.field("question-plan", "screen.question.plan.label", {})
     + cs.act("planopen", { label: "act.planopen.label.question", data: { inquiry: id } })
@@ -206,38 +216,39 @@ const acts = [
       if (m) cs.go("find-in", m[1]); else cs.go("finder", el.dataset.q || "");
       return null;
     } },
-  { op: "narrow", label: "act.narrow.label.question",
-    dialog: [{ name: "name", label: "screen.question.narrow.name" }, { name: "description", label: "screen.question.narrow.description" }],
-    send(view, el, cs, extra) {
-      const f = (extra && extra.fields) || {};
+  /* narrow, conclude and withdraw are reasoned (op-grades): narrow's and conclude's own words serve as their reason
+     (interface-shell R11, DEC-88); withdraw asks the shell's reason, carried in the query, where its owner reads it
+     (`raw` makes the shell put the reason there; an empty body reaches the door as none) */
+  { op: "narrow", label: "act.narrow.label.question", reasonField: "description",
+    send(view, el, cs) {
+      const name = String(cs.value("question-narrow-name") || "").trim();
+      const description = String(cs.value("question-narrow-description") || "").trim();
+      if (!name || !description) return { refuse: "screen.question.narrow.empty" };
       const b = view.data.basis && view.data.basis.state === "ok" ? view.data.basis.value : {};
       const version = b && b.current && typeof b.current === "object" ? b.current.name : (b && b.current) || "";
-      return { query: { target: String(view.subject || ""), ...(version ? { version: String(version) } : {}),
-                        name: String(f.name || ""), description: String(f.description || "") } };
+      return { body: { target: String(view.subject || ""), ...(version ? { version: String(version) } : {}), name, description } };
     } },
-  { op: "conclude", label: "act.conclude.label.question",
-    dialog: [{ name: "claim", label: "screen.question.conclude.claim" }, { name: "falsifier", label: "screen.question.conclude.falsifier" },
-             { name: "commentary", label: "screen.question.conclude.commentary" }],
-    send(view, el, cs, extra) {
-      const f = (extra && extra.fields) || {};
+  { op: "conclude", label: "act.conclude.label.question", reasonField: "commentary",
+    send(view, el, cs) {
       const text = view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "";
       const m = typeof text === "string" ? /^project:\s*(\S+)\s*$/m.exec(text) : null;
       const b = view.data.basis && view.data.basis.state === "ok" ? view.data.basis.value : {};
       const version = b && b.current && typeof b.current === "object" ? b.current.name : (b && b.current) || "";
+      const claim = String(cs.value("question-conclude-claim") || "").trim();
+      const falsifier = String(cs.value("question-conclude-falsifier") || "").trim();
+      const commentary = String(cs.value("question-conclude-commentary") || "").trim();
       const q = { target: String(view.subject || "") };
-      if (m) q.project = m[1]; else if (f.claim) q.conclusion = String(f.claim);
+      if (m) q.project = m[1]; else if (claim) q.conclusion = claim;
       if (version) q.version = String(version);
-      if (String(f.falsifier || "").trim()) q.falsifier = String(f.falsifier).trim(); else q.no_falsifier = "1";
-      if (String(f.commentary || "").trim()) q.commentary = String(f.commentary).trim();
-      return { query: q };
+      if (falsifier) q.falsifier = falsifier; else q.no_falsifier = "1";
+      if (commentary) q.commentary = commentary;
+      return { query: q, raw: "" };
     } },
   { op: "withdrawconclusion", label: "act.withdrawconclusion.label.question",
-    dialog: [{ name: "reason", label: "screen.question.withdraw.reason" }],
-    send(view, el, cs, extra) {
-      const f = (extra && extra.fields) || {};
+    send(view) {
       const text = view.data.inquiry && view.data.inquiry.state === "ok" ? view.data.inquiry.value["bundle.md"] : "";
       const m = typeof text === "string" ? /^project:\s*(\S+)\s*$/m.exec(text) : null;
-      return { query: { target: String(view.subject || ""), ...(m ? { project: m[1] } : {}), reason: String(f.reason || "") } };
+      return { query: { target: String(view.subject || ""), ...(m ? { project: m[1] } : {}) }, raw: "" };
     } },
   { op: "hypothesishold", label: "act.hypothesishold.label.question",
     send(view, el, cs) {
@@ -246,7 +257,7 @@ const acts = [
       const kind = cs.value("question-hunch-kind") === "flow" ? "flow" : "other";
       return { body: { inquiry: String(view.subject || ""), kind, statement } };
     } },
-  { op: "planopen", label: "act.planopen.label.question",
+  { op: "planopen", label: "act.planopen.label.question", reasonField: "title",
     send(view, el, cs) {
       const title = String(cs.value("question-plan") || "").trim();
       if (!title) return { refuse: "screen.question.plan.empty" };
@@ -258,12 +269,12 @@ const acts = [
       const r = answer && answer.result !== undefined ? answer.result : answer;
       cs.set("plans", (Array.isArray(view.ui.plans) ? view.ui.plans : []).concat([{ id: (r && r.id) || "", title: (r && r.title) || "" }]));
     } },
-  { op: "checkrequest", label: "act.checkrequest.label.question",
+  { op: "checkrequest", label: "act.checkrequest.label.question", reasonField: "note",
     send(view, el, cs) {
       const label = String(cs.value("question-check") || "").trim();
-      if (!label) return { refuse: "screen.question.check.empty" };
       const note = String(cs.value("question-check-note") || "").trim();
-      return { body: { target: String(view.subject || ""), label, ...(note ? { note } : {}) } };
+      if (!label || !note) return { refuse: "screen.question.check.empty" };
+      return { body: { target: String(view.subject || ""), label, note } };
     } },
   { op: "heldrestore", label: "act.heldrestore.label.question",
     send(view, el) { return { body: { ids: [el.dataset.doc || ""] } }; } },

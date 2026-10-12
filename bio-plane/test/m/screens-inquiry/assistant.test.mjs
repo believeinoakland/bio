@@ -1,250 +1,240 @@
-/* screens-inquiry R4, R6, R7: the assistant dock, through the test stand-in kit over a stub plane. The stub plane plays
- * credentials (`aicredentialmint`, `aicredentialrevoke`), ai-runs (`airunopen`, `airun`, `airunlog`, `airunclose`),
- * run-productions (`suggest`) and control-plane's member-run door (`airundispatch`), and records every request with its
- * `Authorization` header, so the tests can follow the minted credential's value through every request and every draw. */
+/* screens-inquiry R4, R6, R7: the assistant dock, on interface-shell's served page, opened from the masthead while the
+ * assistant is reachable (its R20). The scripted plane plays credentials (`aicredentialmint`, `aicredentialrevoke`),
+ * ai-runs (`airunopen`, `airun`, `airunlog`, `airunclose`), run-productions (`suggest`) and control-plane's member-run
+ * door (`airundispatch`), recording every request with its address, body and `Authorization` header, so the tests follow
+ * the minted credential's value through every request and every draw. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { SCREENS } from "../../../src/screens-inquiry/index.mjs";
-import { harness, okd, answer, refusal, SESSION } from "./kit.mjs";
+import { ok, refusedIn, SESSION } from "../interface-shell/harness.mjs";
+import { open, plane, button, fill, P, Q, D } from "./fixtures.mjs";
 
-const DOCK = SCREENS.find((s) => s.id === "assistant");
-const Q = "INQ-2026-0001-seven-days";
 const TOKEN = "aik-" + "7".repeat(64);
 const UNTESTED = { kind: "untested", part: "check", set: "s", set_version: 1, words: "ai.label.untested" };
-const DATA = (o = {}) => ({
-  own: okd({ ok: true, reference: o.own === false ? null : { kind: "key", last4: "4f2a" } }),
-  signin: okd({ ok: true, connected: false }),
-  groupkey: okd({ ok: true, held: true, on: true }),
-  usage: okd({ ok: true, today: { used: "$0.42", limit: "$2.00" } }),
-  pack: okd({ ok: true, pack: { version: "civicsmith@3+ab12cd" } }),
-});
-/* a stub plane: the run is held as the plane would hold it; `status` moves when the run is closed or ends */
-function stub({ untested = UNTESTED, dispatch = null, open = null, mint = null } = {}) {
+const SESSION_HEADER = "Bearer " + SESSION.t;
+
+/* the run as the plane holds it; `status` moves when the run is closed or ends */
+function stub({ untested = UNTESTED, dispatch = null, open: opened = null, mint = null, own = true } = {}) {
   const held = { status: "running", ticks: 1, entries: [] };
   return {
     held,
-    plane: {
-      aicredentialmint: (r) => mint || ({ ok: true, result: { ok: true, minted: true, credential: { tokenId: r.body.tokenId }, token: TOKEN, tokenIsShownOnce: true } }),
-      aicredentialrevoke: (r) => answer({ ok: true, revoked: true, credential: { tokenId: r.query.tokenId } }),
-      airunopen: (r) => open || answer({ run: r.body.run, started: true, status: "running", ticks: 1, untested }),
-      airundispatch: (r) => dispatch || answer({ run: r.body.run, found: true, dispatched: true, status: "running" }),
-      airun: (r) => answer({ found: true, session: { id: r.query.run, status: held.status, ticks: held.ticks, untested, condition: held.condition } }),
-      airunlog: (r) => answer({ run: r.query.run, found: true, entries: held.entries }),
-      airunclose: () => { held.status = "terminated"; held.condition = "cancelled"; return answer({ found: true, terminated: true, status: "terminated" }); },
-      suggest: (r) => answer({ record: { name: r.body.name, description: r.body.description } }),
+    ops: {
+      assistantstate: ok({ on: true }),
+      accountreference: ok({ held: own }),
+      groupkeystate: ok({ held: true, on: true }),
+      aiusage: ok({ ok: true, today: { used: "$0.42", limit: "$2.00" } }),
+      agentpack: ok({ ok: true, pack: { version: "civicsmith@3+ab12cd" } }),
+      aicredentialmint: (r) => mint || ok({ ok: true, minted: true, credential: { tokenId: r.body.tokenId }, token: TOKEN, tokenIsShownOnce: true }),
+      aicredentialrevoke: (r) => ok({ ok: true, revoked: true, credential: { tokenId: r.query.tokenId } }),
+      airunopen: (r) => opened || ok({ run: r.body.run, started: true, status: "running", ticks: 1, untested }),
+      airundispatch: (r) => dispatch || ok({ run: r.body.run, found: true, dispatched: true, status: "running" }),
+      airun: (r) => ok({ found: true, session: { id: r.query.run, status: held.status, ticks: held.ticks, untested, condition: held.condition } }),
+      airunlog: (r) => ok({ run: r.query.run, found: true, entries: held.entries }),
+      airunclose: () => { held.status = "terminated"; held.condition = "cancelled"; return ok({ found: true, terminated: true, status: "terminated" }); },
+      suggest: (r) => ok({ record: { name: r.body.name, description: r.body.description } }),
     },
   };
 }
-const leaks = (h, value) => {
+async function dock(subject, s, extra = {}) {
+  const screen = /^PROJ-/.test(subject) ? "project" : /^INFO-/.test(subject) ? "document" : "question";
+  const p = await open(`/app/${screen}/${subject}`, { boot: { plane: { ...plane(), ...s.ops, ...extra } } });
+  await p.click(p.root().querySelector('.cs-mast [data-shell="dock"]'));
+  await p.settle();
+  return p;
+}
+const panel = (p) => p.root().querySelector(".cs-dock");
+const dockActs = (p) => panel(p).querySelectorAll("button[data-act]").map((b) => b.getAttribute("data-act"));
+const workOn = async (p) => { await p.click(button(p, "airunopen", panel(p))); await p.settle(); };
+const leaks = (p, value) => {
   const out = [];
-  for (const r of h.requests) {
-    if (JSON.stringify(r.query || {}).includes(value)) out.push(`${r.op} query`);
+  for (const r of p.requests) {
+    if (r.url.includes(value)) out.push(`${r.op} address`);
     if (r.body !== undefined && JSON.stringify(r.body).includes(value)) out.push(`${r.op} body`);
   }
-  if (h.html.includes(value)) out.push("drawn text");
+  if (p.root().innerHTML.includes(value)) out.push("drawn");
+  for (const v of p.store.values()) if (String(v).includes(value)) out.push("session storage");
+  for (const v of p.local.values()) if (String(v).includes(value)) out.push("local storage");
+  if (p.location.pathname.includes(value)) out.push("address bar");
   return out;
 };
 
-test("R4 the panel says once what it is and never does, and whose account serves her (ai.account.*)", () => {
-  const h = harness(DOCK, { subject: Q, data: DATA() });
-  const html = h.render();
-  assert.equal([...html.matchAll(/data-key="screen.assistant.says"/g)].length, 1);
-  assert.match(html, /never concludes, signs or sends/);
-  assert.match(html, /serves you here on:<\/span> <span data-key="ai.account.own.inline">your own account/);
-  assert.match(html, /\$0\.42 of your \$2\.00 today/);
-  const g = harness(DOCK, { subject: Q, data: DATA({ own: false }) });
-  assert.match(g.render(), /data-key="ai.account.group.inline"/);
-  assert.deepEqual(Object.fromEntries(Object.entries(DOCK.reads({ subject: Q })).map(([k, v]) => [k, v.op])),
-    { own: "accountreference", signin: "subscriptionsignin", groupkey: "groupkeystate", usage: "aiusage", pack: "agentpack" });
+test("R4 the panel says once what it is and never does, and whose account serves her (ai.account.*)", async () => {
+  const p = await dock(Q, stub());
+  const t = panel(p).textContent;
+  assert.equal(t.split("never concludes, signs or sends").length - 1, 1);
+  assert.match(t, /serves you here on: your own account/);
+  assert.match(t, /\$0\.42 of your \$2\.00 today/);
+  const g = await dock(Q, stub({ own: false }));
+  assert.match(panel(g).textContent, /serves you here on: your group's key/);
 });
 
 test("R4 a project's own account serves her in its project; a document's run is its project's", async () => {
-  const P = "PROJ-2026-0007";
-  const h = harness(DOCK, { subject: "INFO-2026-0004", data: DATA(), plane: {
-    image: () => answer({ "bundle.md": `---\nid: INFO-2026-0004\nproject: ${P}\n---\n` }),
-    projectaccountstate: () => answer({ ok: true, on: true, serving: "project" }) } });
-  h.render();
-  const html = await h.settle();
-  assert.match(html, /data-key="ai.account.project.inline"/);
-  assert.match(html, /data-act="airunopen" data-tone="primary" data-ctx-type="project" data-ctx-id="PROJ-2026-0007"/);
-  const none = harness(DOCK, { subject: "INFO-2026-0005", data: DATA(), plane: { image: () => answer({ "bundle.md": "---\nid: INFO-2026-0005\n---\n" }) } });
-  none.render();
-  await none.settle();
-  assert.ok(!none.drawn().includes("airunopen"));
-  assert.match(none.html, /screen.assistant.run.nocontext/);
+  const p = await dock(D, stub(), { projectaccountstate: ok({ ok: true, on: true, serving: "project" }) });
+  assert.match(panel(p).textContent, /serves you here on: the project's account/);
+  const b = button(p, "airunopen", panel(p));
+  assert.deepEqual([b.getAttribute("data-ctx-type"), b.getAttribute("data-ctx-id")], ["project", P]);
+  const none = await dock(D, stub(), { image: (r) => ok(r.query.id === D ? { "bundle.md": `---\nid: ${D}\n---\n` } : null) });
+  assert.ok(!dockActs(none).includes("airunopen"));
+  assert.match(panel(none).textContent, /works on a question or a project/);
 });
 
 test("R6 Work on this, on her own sign-in: a one-day member credential minted, the run opened and dispatched presenting it in the header only", async () => {
-  const s = stub();
-  const h = harness(DOCK, { subject: Q, data: DATA(), plane: s.plane });
-  h.render();
-  assert.deepEqual(h.drawn(), ["airunopen"]);
-  assert.equal((await h.press("airunopen", { data: { ctxType: "inquiry", ctxId: Q, pack: "civicsmith@3+ab12cd" } })).sent, null);
-  const [mint, open, dispatch] = ["aicredentialmint", "airunopen", "airundispatch"].map((op) => h.requests.find((r) => r.op === op));
-  /* the mint: her session, a member credential, one day, its writes naming the ops it is presented to (K2999) */
-  assert.equal(mint.authorization, `Bearer ${SESSION}`);
+  const p = await dock(Q, stub());
+  assert.deepEqual(dockActs(p), ["airunopen"]);
+  await workOn(p);
+  const [mint, opened, dispatch] = ["aicredentialmint", "airunopen", "airundispatch"].map((op) => p.byOp(op)[0]);
+  /* the mint: under her session, a member credential, one day, its writes naming the ops it is presented to (K2999) */
+  assert.equal(mint.headers.Authorization, SESSION_HEADER);
   assert.equal(mint.body.principalKind, "member");
   assert.equal(mint.body.expiresInDays, 1);
   assert.match(mint.body.tokenId, /^dock-[0-9a-f]{16}$/);
-  assert.ok(mint.body.writes.includes("airunopen") && mint.body.writes.includes("airundispatch"));
+  assert.deepEqual(mint.body.writes, ["airunopen", "airundispatch", "airunclose", "suggest"]);
   /* the open and the dispatch present the credential, and only in the header; neither carries the session */
-  assert.equal(open.authorization, `Bearer ${TOKEN}`);
-  assert.equal(dispatch.authorization, `Bearer ${TOKEN}`);
-  assert.deepEqual(Object.keys(open.body).sort(), ["bounds", "contextId", "contextType", "mode", "principalClaude", "run", "skillVersion"]);
-  assert.deepEqual([open.body.contextType, open.body.contextId, open.body.mode, open.body.principalClaude, open.body.skillVersion],
-                   ["inquiry", Q, "check", "member:m1", "civicsmith@3+ab12cd"]);
-  assert.deepEqual(dispatch.body, { run: open.body.run });
-  /* controls: no request address or body, and no drawn text, carries the value */
-  assert.deepEqual(leaks(h, TOKEN), []);
-  assert.deepEqual(leaks(h, TOKEN.slice(4)), []);
-  assert.match(h.html, /data-run="running">.*Started: the assistant is working on this/s);
-  assert.deepEqual(h.drawn().sort(), ["airunclose", "suggest"]);
-  /* held in the dock's memory alone (the shell's `ui`, never stored) */
-  assert.equal(h.view.ui.cred.token, TOKEN);
+  assert.equal(opened.headers.Authorization, "Bearer " + TOKEN);
+  assert.equal(dispatch.headers.Authorization, "Bearer " + TOKEN);
+  assert.deepEqual(Object.keys(opened.body).sort(), ["bounds", "contextId", "contextType", "mode", "principalClaude", "run", "skillVersion"]);
+  assert.deepEqual([opened.body.contextType, opened.body.contextId, opened.body.mode, opened.body.principalClaude, opened.body.skillVersion],
+                   ["inquiry", Q, "check", "member:mai", "civicsmith@3+ab12cd"]);
+  assert.deepEqual(opened.body.bounds, [{ bound: "wallclock", allowed: 1800000, unit: "ms" }, { bound: "fetches", allowed: 0 }, { bound: "subsessions", allowed: 0 }]);
+  assert.match(opened.body.run, /^RUN-[0-9a-f]{16}$/);
+  assert.deepEqual(dispatch.body, { run: opened.body.run });
+  for (const r of p.requests) assert.ok(!(r.body && typeof r.body === "object" && "at" in r.body), `${r.op} sends at`);
+  /* controls: no request address or body, no drawn text and no storage carries the value */
+  assert.deepEqual(leaks(p, TOKEN), []);
+  assert.deepEqual(leaks(p, TOKEN.slice(4)), []);
+  assert.match(panel(p).textContent, /Started: the assistant is working on this/);
+  assert.deepEqual(dockActs(p).sort(), ["airunclose", "suggest"]);
 });
 
 test("R6 the credential is revoked when the run is stopped, and when the run ends by itself", async () => {
   const s = stub();
-  const h = harness(DOCK, { subject: Q, data: DATA(), plane: s.plane });
-  h.render();
-  await h.press("airunopen", { data: { ctxType: "inquiry", ctxId: Q, pack: "p@1" } });
-  const tokenId = h.requests.find((r) => r.op === "aicredentialmint").body.tokenId;
-  await h.press("airunclose");
-  const close = h.requests.find((r) => r.op === "airunclose");
-  assert.equal(close.authorization, `Bearer ${TOKEN}`);
-  assert.deepEqual(close.body.run, h.view.ui.run.id);
-  const rev = h.requests.filter((r) => r.op === "aicredentialrevoke");
+  const p = await dock(Q, s);
+  await workOn(p);
+  const tokenId = p.byOp("aicredentialmint")[0].body.tokenId;
+  await p.click(button(p, "airunclose", panel(p)));
+  await p.settle();
+  const close = p.byOp("airunclose")[0];
+  assert.equal(close.headers.Authorization, "Bearer " + TOKEN);
+  assert.deepEqual(close.body, { run: p.byOp("airunopen")[0].body.run, bound: "cancelled" });
+  const rev = p.byOp("aicredentialrevoke");
   assert.equal(rev.length, 1);
-  assert.deepEqual(rev[0].query, { tokenId });
-  assert.equal(rev[0].authorization, `Bearer ${SESSION}`);
-  assert.equal(h.view.ui.cred, null);
-  assert.match(h.html, /data-run="ended"/);
-  assert.deepEqual(h.drawn(), ["airunopen"], "a new run may be started");
-  assert.deepEqual(leaks(h, TOKEN), []);
+  assert.equal(rev[0].query.tokenId, tokenId);
+  assert.equal(rev[0].headers.Authorization, SESSION_HEADER);
+  assert.match(panel(p).textContent, /The run ended/);
+  assert.deepEqual(dockActs(p), ["airunopen"], "a new run may be started");
+  assert.deepEqual(leaks(p, TOKEN), []);
 
-  /* a run that ends by itself: seen ended at the next read, its credential revoked once */
+  /* a run that ends by itself: seen ended at the next read of the run (after her next act), its credential revoked once,
+     the dock still open */
   const s2 = stub();
-  const h2 = harness(DOCK, { subject: Q, data: DATA(), plane: s2.plane });
-  h2.render();
-  await h2.press("airunopen", { data: { ctxType: "inquiry", ctxId: Q, pack: "p@1" } });
+  const q = await dock(Q, s2);
+  await workOn(q);
   s2.held.status = "completed"; s2.held.condition = "completed";
-  h2.cs.set("seq", 9);
-  h2.render();
-  await h2.settle();
-  await h2.settle();
-  assert.equal(h2.requests.filter((r) => r.op === "aicredentialrevoke").length, 1);
-  assert.equal(h2.view.ui.cred, null);
+  fill(q, { "assistant-suggest-name": "x", "assistant-suggest-description": "y" });
+  await q.click(button(q, "suggest", panel(q)));
+  await q.settle();
+  assert.ok(panel(q), "the dock is still open");
+  assert.equal(q.byOp("aicredentialrevoke").length, 1);
+  assert.equal(q.byOp("airunclose").length, 0, "nothing to stop: the run ended by itself");
+  assert.match(panel(q).textContent, /The run ended: completed/);
 });
 
 test("R6 the dock closed, or the page left: the run stopped under its credential and the credential revoked", async () => {
-  const s = stub();
-  const h = harness(DOCK, { subject: Q, data: DATA(), plane: s.plane });
-  h.render();
-  await h.press("airunopen", { data: { ctxType: "inquiry", ctxId: Q, pack: "p@1" } });
-  h.screen.closed(h.cs, h.view);
-  await h.settle();
-  assert.equal(h.requests.find((r) => r.op === "airunclose").authorization, `Bearer ${TOKEN}`);
-  assert.equal(h.requests.filter((r) => r.op === "aicredentialrevoke").length, 1);
-  assert.equal(h.view.ui.cred, null);
-  /* a closed dock that holds none sends nothing */
-  const idle = harness(DOCK, { subject: Q, data: DATA(), plane: s.plane });
-  idle.screen.closed(idle.cs, idle.view);
-  assert.equal(idle.requests.length, 0);
+  for (const leave of ["dock", "pagehide", "navigate"]) {
+    const p = await dock(Q, stub());
+    await workOn(p);
+    if (leave === "dock") await p.click(p.root().querySelector('.cs-mast [data-shell="dock"]'));
+    if (leave === "pagehide") for (const f of p.win.listeners.pagehide || []) f({});
+    if (leave === "navigate") await p.click(p.root().querySelector('a[href="/app/project/' + P + '"]'));
+    await p.settle();
+    assert.equal(p.byOp("airunclose")[0].headers.Authorization, "Bearer " + TOKEN, leave);
+    assert.equal(p.byOp("aicredentialrevoke").length, 1, leave);
+  }
+  const idle = await dock(Q, stub());
+  for (const f of idle.win.listeners.pagehide || []) f({});
+  await idle.settle();
+  assert.equal(idle.byOp("aicredentialrevoke").length + idle.byOp("airunclose").length, 0, "a dock holding none sends nothing");
 });
 
-test("R6 a reloaded dock offers a new run; one holding a running run without its credential says it can't continue it", async () => {
-  const fresh = harness(DOCK, { subject: Q, data: DATA(), plane: stub().plane, ui: {} });
-  const html = fresh.render();
-  assert.match(html, /screen.assistant.run.none/);
-  assert.deepEqual(fresh.drawn(), ["airunopen"]);
-  const lost = harness(DOCK, { subject: Q, data: DATA(), plane: stub().plane, ui: { run: { id: "RUN-1", status: "running" } } });
-  lost.render();
-  await lost.settle();
-  assert.match(lost.html, /data-run="lost"/);
-  assert.deepEqual(lost.drawn(), ["airunopen"], "a new run is offered; the old one is neither stopped nor continued");
+test("R6 a reloaded dock offers a new run, the old one left on the record", async () => {
+  const s = stub();
+  const p = await dock(Q, s);
+  await workOn(p);
+  /* the page reloaded: a fresh page over the same plane holds no credential and no run */
+  const again = await dock(Q, s);
+  assert.match(panel(again).textContent, /No run yet/);
+  assert.deepEqual(dockActs(again), ["airunopen"]);
+  assert.equal(again.byOp("airunclose").length, 0);
 });
 
 test("R6 the door's withholdings and refusals drawn by their words; a refused open revokes the credential minted for it", async () => {
-  const cases = [
-    ["MEMBER_PRINCIPAL_RUN", "screen.assistant.dispatch.principal"], ["MEMBER_RUN_MODE_NOT_ADMITTED", "screen.assistant.dispatch.mode"],
-    ["AI_RUN_NOT_PRINCIPAL", "screen.assistant.dispatch.notprincipal"], ["AGENT_WORKER_UNBOUND", "screen.assistant.dispatch.unbound"],
-  ];
-  for (const [code, key] of cases) {
-    const h = harness(DOCK, { subject: Q, data: DATA(), plane: stub({ dispatch: answer({ run: "x", found: true, dispatched: false, reason: code }) }).plane });
-    h.render();
-    await h.press("airunopen", { data: { ctxType: "inquiry", ctxId: Q, pack: "p@1" } });
-    assert.match(h.html, new RegExp(`data-refusal="airundispatch"><span data-key="${key.replace(/\./g, "\\.")}"`), code);
+  const cases = [["MEMBER_PRINCIPAL_RUN", /not opened on your own credential/], ["MEMBER_RUN_MODE_NOT_ADMITTED", /Only a check or a plan/],
+                 ["AI_RUN_NOT_PRINCIPAL", /not yours to start/], ["AGENT_WORKER_UNBOUND", /worker isn't connected/]];
+  for (const [code, says] of cases) {
+    const p = await dock(Q, stub({ dispatch: ok({ run: "x", found: true, dispatched: false, reason: code }) }));
+    await workOn(p);
+    assert.match(panel(p).querySelector('[data-refusal="airundispatch"]').textContent, says, code);
   }
-  const ended = harness(DOCK, { subject: Q, data: DATA(), plane: stub({ dispatch: answer({ found: false }) }).plane });
-  ended.render();
-  await ended.press("airunopen", { data: { ctxType: "inquiry", ctxId: Q, pack: "p@1" } });
-  assert.match(ended.html, /data-refusal="airundispatch">/);
-  const refused = harness(DOCK, { subject: Q, data: DATA(), plane: stub({ open: refusal("AI_RUN_MODE_NOT_DEPLOYED") }).plane });
-  refused.render();
-  await refused.press("airunopen", { data: { ctxType: "inquiry", ctxId: Q, pack: "p@1" } });
-  assert.match(refused.html, /data-key="ai.refused.modenotdeployed"/);
-  assert.equal(refused.requests.filter((r) => r.op === "aicredentialrevoke").length, 1);
-  assert.equal(refused.requests.filter((r) => r.op === "airundispatch").length, 0);
-  assert.equal(refused.view.ui.cred, null);
+  const gone = await dock(Q, stub({ dispatch: ok({ found: false }) }));
+  await workOn(gone);
+  assert.ok(panel(gone).querySelector('[data-refusal="airundispatch"]'));
+  const refused = await dock(Q, stub({ open: refusedIn("AI_RUN_MODE_NOT_DEPLOYED") }));
+  await workOn(refused);
+  assert.match(panel(refused).textContent, /can't do this kind of work yet/);
+  assert.equal(refused.byOp("aicredentialrevoke").length, 1);
+  assert.equal(refused.byOp("airundispatch").length, 0);
 });
 
-test("R6 only a check is started (the dock offers no other mode), and only on a member's own sign-in", async () => {
-  const h = harness(DOCK, { subject: Q, data: DATA(), plane: stub().plane });
-  h.render();
-  await h.press("airunopen", { data: { ctxType: "inquiry", ctxId: Q, pack: "p@1" } });
-  assert.equal(h.requests.find((r) => r.op === "airunopen").body.mode, "check");
-  const founder = harness(DOCK, { subject: Q, data: DATA(), me: { member: "", session: true, tokenClass: "admin" }, plane: stub().plane });
-  founder.render();
-  assert.ok(!founder.drawn().includes("airunopen"));
-  const nopack = harness(DOCK, { subject: Q, data: { ...DATA(), pack: { state: "failed", refusal: { code: "PACK_UNDETERMINED" } } }, plane: stub().plane });
-  nopack.render();
-  assert.ok(!nopack.drawn().includes("airunopen"));
-  assert.match(nopack.html, /screen.assistant.run.notready/);
+test("R6 only a check is started, and only with the pack named", async () => {
+  const p = await dock(Q, stub());
+  await workOn(p);
+  assert.equal(p.byOp("airunopen")[0].body.mode, "check");
+  const nopack = await dock(Q, stub(), { agentpack: refusedIn("PACK_UNDETERMINED") });
+  assert.ok(!dockActs(nopack).includes("airunopen"));
+  assert.match(panel(nopack).textContent, /isn't ready to work here/);
 });
 
 test("R4 refusals by their words: mode not deployed, kept away, no account, use switched off, limit reached", async () => {
-  const cases = [["AI_RUN_MODE_NOT_DEPLOYED", "ai.refused.modenotdeployed"], ["AI_KEPT_AWAY", "ai.refused.keptaway"], ["AI_NO_ACCOUNT", "ai.refused.noaccount"],
-                 ["AI_USE_SWITCHED_OFF", "ai.refused.off"], ["AI_LIMIT_REACHED", "ai.refused.limit"]];
-  for (const [code, key] of cases) {
-    for (const where of ["mint", "open"]) {
-      const s = stub(where === "mint" ? { mint: refusal(code, { whose: "your", period: "daily", use: "Runs", when: "tomorrow" }) } : { open: refusal(code, { whose: "your", period: "daily", use: "Runs", when: "tomorrow" }) });
-      const h = harness(DOCK, { subject: Q, data: DATA(), plane: s.plane });
-      h.render();
-      await h.press("airunopen", { data: { ctxType: "inquiry", ctxId: Q, pack: "p@1" } });
-      assert.match(h.html, new RegExp(`data-key="${key.replace(/\./g, "\\.")}"`), `${code} at ${where}`);
-      assert.ok(h.drawn().includes("airunopen"), "the screen stays, the act stays");
-    }
+  const cases = [["AI_RUN_MODE_NOT_DEPLOYED", /can't do this kind of work yet/], ["AI_KEPT_AWAY", /keeps its material away from AI/],
+                 ["AI_NO_ACCOUNT", /No account serves you/], ["AI_USE_SWITCHED_OFF", /switched off on your account/], ["AI_LIMIT_REACHED", /limit for Runs is reached/]];
+  const fields = { whose: "your", period: "daily", use: "Runs", when: "tomorrow" };
+  for (const [code, says] of cases) for (const where of ["mint", "open"]) {
+    const refusal = { status: 200, json: { ok: true, result: { ok: false, reason: code, code, ...fields } } };
+    const p = await dock(Q, stub(where === "mint" ? { mint: refusal } : { open: refusal }));
+    await workOn(p);
+    assert.match(panel(p).textContent, says, `${code} at ${where}`);
+    assert.ok(dockActs(p).includes("airunopen"), "the panel stays, the act stays");
   }
 });
 
 test("R4 R7 the run's productions drawn as machine work, never evidence, each carrying the run's untested label", async () => {
   const s = stub();
   s.held.entries = [{ says: "The work orders cite \"AI 4.12\" in their category field." }];
-  const h = harness(DOCK, { subject: Q, data: DATA(), plane: s.plane, fields: { "assistant-suggest-name": "Cite the column", "assistant-suggest-description": "Cite the category column" } });
-  h.render();
-  await h.press("airunopen", { data: { ctxType: "inquiry", ctxId: Q, pack: "p@1" } });
-  await h.press("suggest", { data: { target: Q } });
-  const sug = h.requests.find((r) => r.op === "suggest");
-  assert.equal(sug.authorization, `Bearer ${TOKEN}`);
-  assert.deepEqual(sug.body, { target: Q, kind: "sharpen-question", run: h.view.ui.run.id, name: "Cite the column", description: "Cite the category column" });
-  const items = [...h.html.matchAll(/<div class="cs-machine" data-origin="machine">([\s\S]*?)<\/div>/g)].map((m) => m[1]);
+  const p = await dock(Q, s);
+  await workOn(p);
+  fill(p, { "assistant-suggest-name": "Cite the column", "assistant-suggest-description": "Cite the category column" });
+  await p.click(button(p, "suggest", panel(p)));
+  await p.settle();
+  const sug = p.byOp("suggest")[0];
+  assert.equal(sug.headers.Authorization, "Bearer " + TOKEN);
+  assert.deepEqual(sug.body, { target: Q, kind: "sharpen-question", run: p.byOp("airunopen")[0].body.run, name: "Cite the column", description: "Cite the category column" });
+  const items = panel(p).querySelectorAll(".cs-machine");
   assert.equal(items.length, 2, "the log's production and the suggestion");
   for (const it of items) {
-    assert.match(it, /data-mark="origin.machine"/);
-    assert.match(it, /data-label="untested"><span data-key="ai.label.untested">Not yet tested/);
-    assert.match(it, /data-key="screen.assistant.notevidence"/);
+    assert.ok(it.querySelector('.cs-origin[data-origin="machine"]'));
+    assert.match(it.querySelector('[data-label="untested"]').textContent, /^Not yet tested: this part of the assistant/);
+    assert.match(it.textContent, /counts only once a member accepts it/);
+    assert.equal(it.querySelector(".cs-grade"), null, "never drawn as evidence, with a grade");
   }
-  assert.ok(!/data-grade=/.test(h.html), "no production is drawn with a grade, as evidence would be");
-  assert.match(items[0], /category field/);
-  assert.match(items[1], /Cite the category column/);
+  assert.match(items[0].textContent, /category field/);
+  assert.match(items[1].textContent, /Cite the category column/);
 });
 
 test("R7 control: an output of a run the plane did not mark untested carries no such label", async () => {
   const s = stub({ untested: null });
   s.held.entries = [{ says: "A production." }];
-  const h = harness(DOCK, { subject: Q, data: DATA(), plane: s.plane });
-  h.render();
-  await h.press("airunopen", { data: { ctxType: "inquiry", ctxId: Q, pack: "p@1" } });
-  assert.match(h.html, /A production\./);
-  assert.ok(!/ai\.label\.untested/.test(h.html));
+  const p = await dock(Q, s);
+  await workOn(p);
+  assert.match(panel(p).textContent, /A production\./);
+  assert.equal(panel(p).querySelector('[data-label="untested"]'), null);
+  assert.ok(!/Not yet tested/.test(panel(p).textContent));
 });

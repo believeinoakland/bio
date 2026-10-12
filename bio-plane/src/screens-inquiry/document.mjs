@@ -64,7 +64,11 @@ function render(cs, view) {
       cs.call(op, { query }).then((a) => {
         const r = a && a.result !== undefined ? a.result : a;
         if (!a || a.ok === false || (r && r.ok === false))
-          settle({ state: "failed", refusal: { code: (r && (r.code || r.reason)) || (a && (a.code || a.reason)) || "" } });
+          {
+          const f = r && r.ok === false ? r : a || {};
+          const code = String(f.code || f.reason || "");
+          settle({ state: "failed", refusal: { code, words: cs.esc(f.translation || code) } });
+        }
         else if (r && r.found === false) settle({ state: "empty" });
         else settle({ state: "ok", value: r });
       }, () => settle({ state: "failed", refusal: null }));
@@ -85,10 +89,10 @@ function render(cs, view) {
   const sha = doc && /^sha256:[0-9a-f]{64}$/.test(String(doc.content_hash || "")) ? String(doc.content_hash).slice(7) : "";
   const locator = doc && doc.source ? String(doc.source.locator || "") : "";
   const out = [];
-  out.push(cs.title(`<span class="cs-rec">${cs.esc(doc ? (doc.title || id) : id)}</span>`, { thing: "document" }));
+  out.push(cs.title(doc ? (doc.title || id) : id, { thing: "document" }));
   if (!doc) { out.push(cs.state("capture", view, () => "")); return out.join(""); }
   out.push(`<p class="cs-sub">${cs.w("screen.document.captured", {
-    date: doc.source.retrieved ? cs.date(String(doc.source.retrieved), { year: true }) : (doc.created ? cs.date(String(doc.created), { year: true }) : ""),
+    date: { html: doc.source.retrieved ? cs.date(String(doc.source.retrieved)) : doc.created ? cs.date(String(doc.created)) : "" },
     source: locator || (doc.source.authority || "") })}</p>`);
 
   /* this copy: its grade as one mark with "Why B?", its fingerprint, the original through open-file */
@@ -103,7 +107,7 @@ function render(cs, view) {
     const n = ui.gradenote.note;
     out.push(cs.sec("screen.document.gradenote.head", n
       ? `<p>${cs.esc(typeof n === "string" ? n : (n.says || n.text || n.how || JSON.stringify(n)))}</p>`
-      : `<p>${cs.w("screen.document.gradenote.none")}</p>`));
+      : `<p>${cs.w("screen.document.gradenote.none")}</p>`, { fills: { letter: letter || (n && n.grade) || "" } }));
   }
   if (sha) out.push(cs.act("findin", { label: "act.findin.label.document", data: { capture: sha } }));
 
@@ -118,9 +122,9 @@ function render(cs, view) {
     const list = passages.filter((p) => p && String(p.text || p.words || "").trim());
     if (!list.length) return `<p>${cs.w("screen.document.passages.empty")}</p>`;
     const pick = qs.length
-      ? cs.choice("document-cite-question", "screen.document.cite.question", qs.map((q) => ({ value: q.bundle_id, text: q.title || q.bundle_id })), {})
+      ? cs.choice("document-cite-question", "screen.document.cite.question", qs.map((q) => [q.bundle_id, q.title || q.bundle_id]), {})
         + cs.choice("document-cite-role", "screen.document.cite.role",
-            [{ value: "supports", key: "screen.question.supports.head" }, { value: "cuts_against", key: "screen.question.against.head" }], { value: "supports" })
+            [["supports", "screen.question.supports.head"], ["cuts_against", "screen.question.against.head"]], { value: "supports" })
       : `<p class="cs-meta">${cs.w("screen.document.cite.noquestion")}</p>`;
     return list.map((p, i) => {
       const extent = p.extent && typeof p.extent === "object" ? p.extent : null;
@@ -138,7 +142,7 @@ function render(cs, view) {
     out.push(cs.sec("screen.document.unread.head",
       `<p>${cs.w("document.unread.pages", { pages: pagesText(un) })}</p>`
       + (view.reachable ? cs.act("pagetranscribe", { label: "act.pagetranscribe.label.document", data: { sha } }) : "")
-      + cs.choice("document-unread-page", "screen.document.unread.page", un.map((p) => ({ value: String(p), text: String(p) })), { value: String(un[0]) })
+      + cs.choice("document-unread-page", "screen.document.unread.page", un.map((p) => [String(p), String(p)]), { value: String(un[0]) })
       + cs.field("document-unread-words", "screen.document.unread.words", { area: true, rec: true })
       + cs.act("transcribe", { label: "act.transcribe.label.document", data: { document: id } })));
   }
@@ -155,8 +159,7 @@ function render(cs, view) {
           { label: "act.identityclaim.label.document", data: { entity: String(p.id || p.entity || "") } }))).join(""))
         + cs.field("document-claim-person", "screen.document.claim.label", {})
         + cs.choice("document-claim-basis", "screen.document.claim.basis",
-            [{ value: "name", key: "screen.document.claim.basis.name" }, { value: "corroborated_name", key: "screen.document.claim.basis.corroborated" },
-             { value: "identifier", key: "screen.document.claim.basis.identifier" }], { value: "name" })
+            [["name", "screen.document.claim.basis.name"], ["corroborated_name", "screen.document.claim.basis.corroborated"], ["identifier", "screen.document.claim.basis.identifier"]], { value: "name" })
         + cs.field("document-claim-note", "screen.document.claim.note", { area: true, rec: true }) + own("identityclaim")
       : `<p>${cs.w("screen.document.people.empty")}</p>`));
   }
@@ -178,13 +181,15 @@ function render(cs, view) {
   /* what cites it */
   out.push(cs.sec("screen.document.backlinks.head", cs.state("backlinks", view, (b) =>
     cs.sheet((b.backlinks || []).map((x) => cs.row("", cs.ref(x.from_type === "project" ? "project" : x.from_type === "inquiry" ? "question" : "document",
-      String(x.from || ""), cs.esc(x.from_title || x.from || ""), [x.from_title || x.from || ""]), "")).join(""))
+      String(x.from || ""), x.from_title || x.from || "", [x.from_title || x.from || ""]), "")).join(""))
     + (b.out_of_view ? `<p class="cs-meta">${cs.w("screen.document.backlinks.hidden")}</p>` : ""),
   { empty: "screen.document.backlinks.empty" })));
 
   /* this copy's acts: vouch (by its weight), attest (signed), watch for changes, retire (terminal) */
   out.push(cs.sec("screen.document.copyacts.head",
-    cs.act("release", { label: "act.release.label.document", data: { document: id } }) + own("release")
+    cs.field("document-release-ack", "screen.document.release.ack", { area: true, rec: true })
+    + cs.field("document-release-mitigation", "screen.document.release.mitigation", { area: true, rec: true })
+    + cs.act("release", { label: "act.release.label.document", data: { document: id } }) + own("release")
     + cs.act("attest", { label: "act.attest.label.document", data: { sha } }) + own("attest")
     + cs.act("monitor", { label: "act.monitor.label.document", data: { document: id } }) + own("monitor")
     + cs.act("retire", { label: "act.retire.label.document", data: { document: id } }) + own("retire")));
@@ -207,10 +212,11 @@ const acts = [
       const role = cs.value("document-cite-role") === "cuts_against" ? "cuts_against" : "supports";
       return { query: { project: question, role, found: el.dataset.found || "" } };
     } },
-  { op: "release", label: "act.release.label.document",
-    dialog: [{ name: "acknowledgment", label: "screen.document.release.ack" }, { name: "mitigation", label: "screen.document.release.mitigation" }],
-    send(view, el, cs, extra) {
-      const f = (extra && extra.fields) || {};
+  /* reasoned: the member's own acknowledgment is its reason (interface-shell R11, DEC-88), so no second one is asked */
+  { op: "release", label: "act.release.label.document", reasonField: "acknowledgment",
+    send(view, el, cs) {
+      const f = { acknowledgment: String(cs.value("document-release-ack") || "").trim(), mitigation: String(cs.value("document-release-mitigation") || "").trim() };
+      if (!f.acknowledgment || !f.mitigation) return { refuse: "screen.document.release.empty" };
       const said = (key, a) => {
         const r = a && a.result !== undefined ? a.result : a;
         const ok = !!(a && a.ok !== false && r && r.ok !== false);
@@ -250,7 +256,7 @@ const acts = [
   { op: "monitor", label: "act.monitor.label.document",
     send(view) { return { body: { bundleId: String(view.subject || "") } }; },
     done(view, answer, cs) { cs.set("outcome", Object.assign({}, view.ui.outcome, { monitor: { ok: true, html: cs.w("screen.document.monitor.done") } })); } },
-  { op: "identityclaim", label: "act.identityclaim.label.document",
+  { op: "identityclaim", label: "act.identityclaim.label.document", reasonField: "note",
     send(view, el, cs) {
       const b = String(cs.value("document-claim-person") || "").trim();
       const note = String(cs.value("document-claim-note") || "").trim();
@@ -260,7 +266,7 @@ const acts = [
       const basis = ["name", "corroborated_name", "identifier"].includes(cs.value("document-claim-basis")) ? cs.value("document-claim-basis") : "name";
       return { body: { a: el.dataset.entity, b, kind: "same_as", basis, evidence: { a: { captureSha: m ? m[1] : "" } }, note } };
     } },
-  { op: "transcribe", label: "act.transcribe.label.document",
+  { op: "transcribe", label: "act.transcribe.label.document", reasonField: "text",
     send(view, el, cs) {
       const text = String(cs.value("document-unread-words") || "");
       const page = Number(cs.value("document-unread-page"));
