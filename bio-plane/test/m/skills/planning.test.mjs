@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { renderPack } from "../../../src/skillpack.mjs";
+import { renderPack, packVersion } from "../../../src/skillpack.mjs";
 import { actionPlanningLayer, ACTION_RULES, ACTION_RULE_TABLE, ACTION_SOURCE, ACTION_SECTION, PLANNING_ACTS, PLANNING_ACT,
-         controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
+         PLANNING_INPUTS, controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
 import { SRC, read, norm, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
 
 /* The acts R28 names, as `op=affordances` would publish them once their modules land: each a catalogue entry of
@@ -144,4 +144,41 @@ test("R29 the layer names the plan mode in its load_when; with no optionpropose 
   assert.ok(r12.sentences.some((s) => /every plan is checked for a branch that answers a hostile response/.test(s)));
   for (const s of r12.sentences) assert.ok(foundIn(ruleText(12), s), s);
   assert.equal(present.body.rules.find((r) => r.rule === 12), r12);
+});
+
+test("R47 the action_planning layer names, beside its acts, the closing notes of the project's closed plans as an input the planning run reads and weighs: closingNotesOf with action-plans R45, named once as a selector, carrying no control-flow authority, and the pack's version moves; control: with no optionpropose, R29's stated absence is unchanged", () => {
+  const catalog = planningCatalog();
+  const { body } = renderPack(published({ catalog })).disclosed.action_planning;
+  assert.equal(body.inputs, PLANNING_INPUTS, "the one object, named once");
+  assert.equal(body.inputs.length, 1);
+  const [notes] = body.inputs;
+  assert.equal(notes.id, "closingNotesOf");
+  assert.equal(notes.defined_by, "action-plans R45", "keyed by the requirement that defines it");
+  assert.match(notes.answered_in, /planRead's closed block/);
+  assert.match(notes.answered_in, /plansFor/);
+  assert.match(notes.is, /closing notes of the project's closed plans/);
+  assert.match(notes.is, /reads them and weighs them .* when it proposes options/);
+  assert.ok(Object.isFrozen(PLANNING_INPUTS) && Object.isFrozen(notes), "frozen");
+  /* Named, never authored as a clause: it is not among the rules R21 binds, and the rules are unchanged. */
+  assert.equal(body.rules, ACTION_RULES);
+  assert.ok(!ACTION_RULES.some((r) => [r.heading, ...r.sentences].some((t) => /closingNotesOf/.test(t))));
+  /* R23: the selector appears in the module's source once. */
+  const lits = SRC.flatMap((f) => stringLiterals(read(f)));
+  assert.equal(lits.filter((l) => l === "closingNotesOf").length, 1, "closingNotesOf is named once");
+  /* R16, R24: no text of it carries control-flow authority. */
+  for (const s of strings(PLANNING_INPUTS)) assert.deepEqual(controlFlowAuthority(s), [], s);
+  /* R11: the pack's version moves with the input's words. */
+  const pack = renderPack(published({ catalog }));
+  const { inputs, ...without } = body;
+  const prior = { ...pack, disclosed: { ...pack.disclosed, action_planning: { ...pack.disclosed.action_planning, body: without } } };
+  assert.notEqual(packVersion(prior), pack.version, "the input is part of what the version is computed over");
+  assert.equal(renderPack(published({ catalog })).version, pack.version, "the control: the same render, the same version");
+  /* The control: with no optionpropose, R29's stated absence carries no input. */
+  for (const c of [published().catalog, planningCatalog(["optionpropose"])]) {
+    const layer = actionPlanningLayer(c);
+    assert.deepEqual(Object.keys(layer).sort(), ["absent_because", "body", "load_when", "sourcing"]);
+    assert.deepEqual(layer.body, {});
+    assert.equal(layer.sourcing, "absent");
+    assert.ok(!JSON.stringify(layer).includes("closingNotesOf"));
+  }
 });
