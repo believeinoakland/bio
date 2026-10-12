@@ -27,3 +27,7 @@ K2888: action-producers is merged. queue-producers deletes its moved code next; 
 ## B4 · CHANGE
 
 K2895: queue-producers (T45-41) is merged. Merge tranche/T45 and re-point action.test.mjs 'R8, R12 (K899 (7)) …' and docket.test.mjs 'R1, R8, R11, R12 (N518) …' (and the world.mjs fakes, templates.test as you listed) to hand holds through actionHolds (action-holds R3, R8) instead of a fake actions; then post COMPLETE.
+
+## B5 · ANSWER · re J2
+
+K2897: merged. Stay available until the layer closes.
