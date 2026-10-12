@@ -108,7 +108,9 @@ function answerFor(names, prompt, seen = "", tools = []) {
     const props = tools.find((x) => x.name === "draft")?.input_schema?.properties ?? {};
     if (props.sources?.items?.type === "integer") {
       const inj = /INJECT:say ([^"\\]+)/.exec(seen);
-      return ["draft", { text: inj ? `The plan stands. ${inj[1]}` : "Two items stand: the clerk's reply is awaited.", sources: [0, 1] }];
+      /* A model that cites an item it was not handed (one past the list) when an item asks it to. */
+      const far = /SOURCES:far/.test(seen) ? [99] : null;
+      return ["draft", { text: inj ? `The plan stands. ${inj[1]}` : "Two items stand: the clerk's reply is awaited.", sources: far ?? [0, 1] }];
     }
     if (props.english) return ["draft", { english: "the minutes" }];
     if (props.sentences) return ["draft", { sentences: [] }];
@@ -281,6 +283,9 @@ section("R76 (T46) · POST /draft's fourth task: a plan's status report from the
     [inj.status, inj.out?.draft?.text.includes("the office is in breach"), Object.keys(inj.out || {}), inj.plane.length],
     [200, true, ["ok", "task", "draft", "label", "usage", "calls"], 0]);
 
+  const far = await drive("draft", srBody(SR({ items: [...ITEMS, { section: "next", text: "SOURCES:far" }] })));
+  t("R76 (control): a report citing an item not handed is DRAFT_UNFORMED, nothing returned but its ending",
+    [far.status, far.out?.code, far.out?.ending, "draft" in (far.out || {})], [502, "DRAFT_UNFORMED", "unformed", false]);
   const grant = await drive("draft", srBody(SR(), { grant: GRANT }));
   t("R76 (control): a grant present is DRAFT_READ_NOT_ALLOWED, before any model call",
     [grant.status, grant.out?.code, grant.model.length, grant.plane.length], [400, "DRAFT_READ_NOT_ALLOWED", 0, 0]);
