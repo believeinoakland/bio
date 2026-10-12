@@ -57,3 +57,7 @@ K2891: op-grades (T45-38) and op-declarations (T45-45) are merged into tranche/T
 ## B9 · CHANGE
 
 K2894: store-door (T45-50) joins L11 and merges before you; merge tranche/T45 when I announce it.
+
+## B10 · CHANGE
+
+K2895: queue-producers is merged (its holdsDue callers gone: rule 4 (6)'s queue-producers half cleared). Merge tranche/T45 when convenient.
