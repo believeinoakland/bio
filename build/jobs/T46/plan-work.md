@@ -16,11 +16,11 @@ My best reading, which I am building now: `from` takes, besides today's one-line
 - (N920) R14: `statusReportAssist({plan, nowMs, viewer})`, op `statusreportassist` in `planWorkOps` (read as the stamped viewer, like `statusreportdraft`). Past sight it answers `{ok, plan, as_of, items}` (and `out_of_view` where R7 withholds), `items` exactly R8's, assembled by the one helper `reportItems` that `statusReportDraft` now uses too; a plan the viewer may not see answers `noSuchPlan`. No AI refusal, no model call, no run, no edge to `run-rules` (K2953: the door gates; control-plane's `draftDue` is to recognise this items answer, plan note on T46-59). `statusReportSave`'s `from` takes, besides R8's one line, `{assistant: true, as_of?}`, kept as `{draft: "assistant", as_of, label: ASSIST_LABEL}`, the label shaped as `proposalLabel` answers, its state `lawProposalState("class:ai")` (`machine_proposed`), its sentence this module's (J1: record-grammar holds no status-report subject; one site to switch when it does). Any other `from` is `PLAN_WORK_TEXT_REFUSED` (field `from`), writing nothing.
 - (N921) R15: `matterPromiseDuties` answers `met_at`: when `all_met`, for each occurrence of each duty, the start of the run of `met`/`met_late` readings ending its recorded transitions (`duties.transitionsOf`, its R13/R14, at the reader's sight, `DUTIES_INTERNAL` for the module's own read), its `as_of`; the latest over all occurrences. Null when not all met; null with `met_at_why` when an occurrence's recorded readings do not end met (derivation ahead of the recorder), or cannot be read. Never derived from `occurrencesOf` or evidence (following R27).
 
-**Deferred.** None. One reading open with BOB: J1 (the label's subject).
+**Deferred.** None. J1's reading accepted (B2, K2978): `ASSIST_LABEL` is the interim, one site, until record-grammar's `status_report` subject (N956, T47).
 
 **Found in other modules / for BOB.**
 - `plan-work` requirements' Uses names `duties`: `dutiesArisingIn` only; R15 reads `duties.transitionsOf` (R14) too, same edge. The Uses line could name it.
-- `record-grammar`: no `PROPOSAL_STATES` subject fits a status report (J1).
+- `record-grammar`: no `PROPOSAL_STATES` subject fits a status report (J1; N956, T47).
 - Generated artifact made stale: `bio-plane/dist/bio-plane.bundled.mjs` (the plane bundles plan-work's source); BOB regenerates at the layer close.
 - The new op `statusreportassist` opens the reds plan rule 5 already names (op-declarations, op-grades, affordances, control-plane and plane totality and route-map tests) until T46-51, -44, -45, -59, -62.
 
