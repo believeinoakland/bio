@@ -1,5 +1,5 @@
 /* reading-guides — what to look for in one kind of document (requirements: `build/requirements/reading-guides.md`
- * R1–R13; D8, D24, D65; K2405, K2418, K2472; v0.2 rule 11).
+ * R1–R14; D8, D24, D65; K2405, K2418, K2472; v0.2 rule 11).
  *
  * A guide is a short list of items, each a label, what to look for and, if given, where: by hand a checklist, for the
  * assistant what to read for, so the two are one text (D65). Civicsmith's library ships with the release (R1,
@@ -44,12 +44,12 @@ import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { recordOf, stampInstant } from "../record-core/index.mjs";
 import { membershipOf, viewerPredicate } from "../membership/index.mjs";
 import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
-import { READING_GUIDES_CHECKS, refusal } from "./checks.mjs";
+import { READING_GUIDES_WORDS, refusal } from "./checks.mjs";
 import { checkGuide, GUIDE_PURPOSES } from "./check.mjs";
 import { CIVICSMITH_GUIDES, GUIDE_KINDS } from "./library.mjs";
 import { READING_GUIDES_TABLE_CLASSES, migrateReadingGuides } from "./schema.mjs";
 
-export { READING_GUIDES_CHECKS } from "./checks.mjs";
+export { READING_GUIDES_CHECKS, READING_GUIDES_WORDS } from "./checks.mjs";
 export { checkGuide, registerConductCheck, conductCheckHolder, LOOK_FOR_OPENERS, CONDUCT_LISTS, ITEMS_MAX, LABEL_MAX,
          LOOK_FOR_MAX, WHERE_MAX, ITEM_FIELDS, GUIDE_PURPOSES, PROCEDURE_ITEM_FIELDS, ROUTE_MAX, EXPECT_MAX, CITATION_MAX,
          PROCEDURE_CONDUCT_LISTS } from "./check.mjs";
@@ -69,8 +69,10 @@ export const REASON_MAX = 500, RUN_MAX = 200;
 export const GUIDE_OFFER_FORMAT = "bio-reading-guide-offer/1";
 export const GUIDE_LIBRARY_PROPOSAL_FORMAT = "bio-reading-guide-library-proposal/1";
 
-/** R13: the label every procedure-guide answer carries, keyed for the surface, in canon's words (v0.2 rule 11). */
-export const PROCEDURE_GUIDE_LABEL = Object.freeze({ key: "guide.procedure.legalinfo", says: "legal information, not legal advice" });
+/** R13, R14: the label every procedure-guide answer carries, keyed for the surface, in canon's words (v0.2 rule 11):
+ *  `words.json`'s `guide.procedure.legalinfo` (protected), read by that key, never a copy. */
+export const PROCEDURE_GUIDE_LABEL = Object.freeze({ key: "guide.procedure.legalinfo",
+                                                     says: READING_GUIDES_WORDS["guide.procedure.legalinfo"] });
 
 /** R12: what a proposal's label says, in each of `record-grammar`'s three proposal states (shaped as its
  *  `proposalLabel` answers; `lawProposalState` decides the state). */

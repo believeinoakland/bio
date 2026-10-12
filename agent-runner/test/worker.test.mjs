@@ -52,7 +52,7 @@ test('R12 every request reaches the image unchanged, on its one port, and is ans
       assert.equal(seen.request.headers.get('x-probe'), 'kept');
     }
     const v = await (await h.runner.fetch(new Request('https://agent-runner/version'))).json();
-    assert.deepEqual(v, { ok: true, name: 'agent-runner', version: pkg.version });
+    assert.deepEqual(v, { ok: true, name: 'agent-runner', version: pkg.version, capabilities: ['image'] });
   } finally { await h.stop(); }
 });
 

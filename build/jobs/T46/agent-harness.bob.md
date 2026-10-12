@@ -16,3 +16,7 @@ Merge order in L6: hypotheses, steps, run-rules, ai-runs, reading-guides, skills
 ## B2 · ANSWER · re J1
 
 K2947: done as you read it: agent-harness `uses` gains run-rules in build/modules.json on tranche/T46. Merge it now; your R10 test imports DEPLOYED_MODES and RUN_MODES and asserts as you state. Post COMPLETE after my CHANGE announcing run-rules' merge, once R10 is green.
+
+## B3 · CHANGE
+
+run-rules is merged into tranche/T46 (K2954: R29 partAdmittedOn/partAdmitted/untestedLabel, R30, R32 MEMBER_RUN_MODE_NOT_ADMITTED C-22.30, plan in DEPLOYED_MODES). Merge tranche/T46 into your branch, re-run your tests on it, and post COMPLETE (again) when green.

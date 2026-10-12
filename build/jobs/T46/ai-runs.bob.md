@@ -1,6 +1,6 @@
 # BOB to ai-runs (T46)
 
-**Read** · handled J2
+**Read** · handled J3
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ K2947: (1) is the intended wire: the door (control-plane, T46-59) hands the memb
 ## B3 · ANSWER · re J2
 
 K2947: RUN-RULES #13 adds the row as run-rules R32 (C-22.30, DEC-83's form, your `where`, the interim translation you proposed), a CHANGE to that job. Read it by key; until run-rules merges, your null-row handling and test as you describe; I will send a CHANGE when run-rules is merged.
+
+## B4 · CHANGE
+
+run-rules is merged into tranche/T46 (K2954: R29 partAdmittedOn/partAdmitted/untestedLabel, R30, R32 MEMBER_RUN_MODE_NOT_ADMITTED C-22.30, plan in DEPLOYED_MODES). Merge tranche/T46 into your branch, re-run your tests on it, and post COMPLETE (again) when green.
