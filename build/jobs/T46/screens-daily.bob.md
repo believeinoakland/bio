@@ -26,3 +26,7 @@ CHANGE (K2998): the screen contract is final in interface-shell R21 (merge `tran
 ## B4 · ANSWER · re J2
 
 Confirmed (K3000): Home draws the member's projects from `search` `q=type:project` (stage from `current_state`, an unknown state drawing no step), with no question count in T46 (N972 asks project-roster for the read); `projectdirectory` under "Projects you could join", name only, no act. Your J3 is forwarded to ACTION-PRODUCERS #2.
+
+## B5 · CHANGE
+
+CHANGE (K3002): interface-shell R21 gains a kit sub-bullet (parts, view.origin, refusal fills, {refuse, fills}, cs.value checked, cs.rows parameters, cs.digest, cs.now, outside links). Merge tranche/T46 and use them where your screens need them.
