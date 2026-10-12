@@ -22,6 +22,7 @@ import { eventsOf } from "../../../src/events/index.mjs";
 import { combine } from "../../../../jurisdictions/index.mjs";
 import { followingOf } from "../../../src/following/index.mjs";
 import { monitoringOf, MONITOR_PAUSE_SETTING } from "../../../src/monitoring/index.mjs";
+import { noSuchPlan } from "../../../src/action-plans/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(typeof s === "string" ? s : Buffer.from(s)).digest("hex");
 export const MACHINE = "class:daemon";
@@ -205,8 +206,100 @@ export function world({ view = testView(), now = T0 } = {}) {
     return contentId;
   };
   w.standards = standards;
+  /* ---- the plans, duties, standing questions and watched addresses the watches of R22–R26 read, each a stand-in coded
+     to its provider's requirements (action-plans R6/R22 planRead, noSuchPlan, refusePlanClosed; plan-work R9's door,
+     R13's matterPromiseDuties; duties R7 readDuty, R9–R11 occurrencesOf; answers R16, R34; monitoring R32, R71, R72) ---- */
+  w.plans = new Map();           /* id → {id, project, state, closed?: {at}, subjects: [{key}]} */
+  w.plan = (id, { project, state = "open", closedAt = null, matters = ["inquiry:I-1"] } = {}) => {
+    w.plans.set(id, { id, project, state, ...(closedAt ? { closed: { at: closedAt } } : {}), subjects: matters.map((key) => ({ key })) });
+    return id;
+  };
+  w.close = (id, at) => { const p = w.plans.get(id); p.state = "closed"; p.closed = { at }; };
+  const actionPlans = {
+    planRead({ id, viewer }) {
+      const p = w.plans.get(id);
+      if (!p || (viewer != null && !membership.inSight(p.project, viewer))) return noSuchPlan(id ?? null);
+      return { ok: true, ...structuredClone(p) };
+    },
+  };
+  w.promises = new Map();        /* `${plan} ${matter}` → [duty ids] (the matter's adopted promise-duties) */
+  w.dutiesHeld = new Map();      /* id → {act, project?, withdrawn?, occurrences: [{state, at?}]} */
+  w.duty = (id, { act = "publish the audit", project = null, met = [] } = {}) => {
+    w.dutiesHeld.set(id, { act, project, occurrences: met.map((at) => (at ? { state: "met", at } : { state: "pending" })) });
+    return id;
+  };
+  const dutySeen = (d, viewer) => viewer === MACHINE || (!!d && (!d.project || membership.inSight(d.project, viewer)));
+  const duties = {
+    readDuty({ dutyId, viewer }) {
+      const d = w.dutiesHeld.get(dutyId);
+      return d && dutySeen(d, viewer) ? { ok: true, found: true, duty: { duty_id: dutyId, performance: { act: d.act }, withdrawn: d.withdrawn || null } }
+        : { ok: true, found: false, duty_id: dutyId };
+    },
+    occurrencesOf({ dutyId, viewer }) {
+      const d = w.dutiesHeld.get(dutyId);
+      if (!d || !dutySeen(d, viewer)) return { ok: false, reason: "NO_SUCH_DUTY" };
+      return { ok: true, duty_id: dutyId, occurrences: d.occurrences.map((o, i) => ({ key: `k${i}`, state: o.state,
+        evidence: o.at ? [{ kind: "event", event_id: "EV", at: o.at }] : [] })) };
+    },
+  };
+  w.watchReaders = [];
+  const planWork = {
+    registerWatchReader(module, fn) {
+      if (typeof fn !== "function" || !module) return { ok: false, reason: "LISTENER_MALFORMED", code: "LISTENER_MALFORMED" };
+      if (w.watchReaders.length) return { ok: false, reason: "LISTENER_DECLARED", code: "LISTENER_DECLARED", module: w.watchReaders[0].module };
+      w.watchReaders.push({ module, fn });
+      return { ok: true, module };
+    },
+    matterPromiseDuties({ plan, matter, viewer }) {
+      const p = actionPlans.planRead({ id: plan, viewer });
+      if (!p.ok) return p;
+      const key = typeof matter === "string" ? matter : matter && matter.key;
+      if (!p.subjects.some((x) => x.key === key))
+        return { ok: false, reason: "MATTER_NOT_OF_PLAN", code: "MATTER_NOT_OF_PLAN", check: "C-151.1", detail: "the plan is not about that matter. Nothing was written.", plan };
+      const ids = w.promises.get(`${plan} ${key}`) || [];
+      const ds = ids.map((id) => ({ duty_id: id, occurrences: w.dutiesHeld.get(id).occurrences }));
+      return { ok: true, plan, matter: key, duties: ds,
+               all_met: ds.length > 0 && ds.every((d) => d.occurrences.length && d.occurrences.every((o) => o.state === "met")), partial: false };
+    },
+  };
+  w.questions = new Map();       /* id → {id, author, question, ends, ended} */
+  w.question = (id, author, { ends = "2026-12-31", question = "Anything new on the budget?" } = {}) => {
+    w.questions.set(id, { id, author, question, ends, ended: null });
+    return id;
+  };
+  const answers = {
+    standingQuestionsOf({ viewer }) { return { ok: true, questions: [...w.questions.values()].filter((q) => q.author === viewer).map((q) => ({ ...q })) }; },
+    standingQuestionEnd({ id, author }) {
+      const q = w.questions.get(id);
+      if (!q || q.author !== author) return { ok: false, reason: "NO_SUCH_STANDING_QUESTION", code: "NO_SUCH_STANDING_QUESTION" };
+      q.ended = { at: new Date(w.t).toISOString().replace(/\.\d{3}Z$/, "Z"), by: author };
+      return { ok: true, id, ended: q.ended };
+    },
+    standingQuestionEndSet({ id, ends, author }) {
+      const q = w.questions.get(id);
+      if (!q || q.author !== author) return { ok: false, reason: "NO_SUCH_STANDING_QUESTION", code: "NO_SUCH_STANDING_QUESTION" };
+      if (q.ended) return { ok: false, reason: "STANDING_ENDED", code: "STANDING_ENDED" };
+      const was = q.ends; q.ends = ends;
+      return { ok: true, id, ends, was };
+    },
+  };
+  w.addresses = [];              /* {address, bundle, until, projects} */
+  w.address = (address, bundle, { projects = [] } = {}) => { w.bundle(bundle); w.addresses.push({ address, bundle, until: null, projects }); return address; };
+  w.addressEnds = [];
+  monitoring.monitoring = ({ viewer }) => ({ ok: true, items: w.addresses.filter((a) => membership.inSight(a.bundle, viewer))
+    .map((a) => ({ state: "scheduled", address: a.address, bundle: a.bundle, until: a.until, ...(a.until ? {} : { ends: "none_set" }) })) });
+  monitoring.addressWatchers = (address) => (w.addresses.find((a) => a.address === address) || { projects: [] }).projects;
+  monitoring.addressWatchEnd = ({ address, until, by, viewer }) => {
+    const a = w.addresses.find((x) => x.address === address && membership.inSight(x.bundle, viewer));
+    if (!a) return { ok: false, reason: "NO_SUCH_ADDRESS", code: "NO_SUCH_ADDRESS" };
+    if (w.addressRefusal) return w.addressRefusal;
+    w.addressEnds.push({ address, until, by });
+    a.until = until;
+    return { ok: true, address, until };
+  };
+  Object.assign(w, { actionPlans, duties, planWork, answers });
   w.f = followingOf(host, { record, membership, capture, entities: ents, events: ev, monitoring, standards, view: () => view,
-                            now: () => w.t, bytes: async (s) => w.store.get(s) || null });
+                            actionPlans, planWork, duties, answers, now: () => w.t, bytes: async (s) => w.store.get(s) || null });
   w.capture = capture;
   w.monitoring = monitoring;
   w.sweepHost = sweepHost;
