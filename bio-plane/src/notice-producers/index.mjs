@@ -1,4 +1,4 @@
-/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R17).
+/* notice-producers — the feed's newer producers (requirements: `build/requirements/notice-producers.md`, R1–R19).
  * A new seam after `queue-producers` with no copy (plan T33-82; Choices 8 and 23): each producer derives, on read and
  * writing nothing, the items one provider's facts earn for a viewer, naming each item's subjects and homes for `queue`
  * to home, offer, mint and publish, exactly as `queue-producers` does for the rest.
@@ -11,7 +11,8 @@
  *   R3  money-detector-noticed   FINDING, money-checks.noticed           the machine's, "Noticed", hypothesis layer; a hint (R11)
  *   R4  standing-answer          FINDING, answers.standingAnswersFor     the assistant's machine work, told once
  *   R5  temporal-expectation-due FINDING, duties.dutiesOf/occurrencesOf  a question, never a violation; keyed per state;
- *                                none due after following.dutyWatchEnd's day (T45)
+ *                                none due after following.dutyWatchEnd's day (T45), unless already told before
+ *                                that end took hold: then it stays until disposed (R18, T46)
  *   R6  inquiry-recheck-due      OBLIGATION (K1505 (15), K1522), inquiry.datedWaits, to the wait's setter alone
  *   R12 security-level-high      FINDING, credentials.securityLevel/securityMap  once per High episode, to administrators
  *   R13 policy-changed-noticed   FINDING, following.policyChanges        a policy's silent change, DEC-145 (5)'s words
@@ -28,7 +29,8 @@
  *                                paying account's owners, `ai.label.explored.member` to every other viewer (DEC-189 (7))
  *       step-later-found         FINDING, steps.laterFound
  *       step-date-due, step-reminder  OBLIGATION, steps.stepsDue     to the setter, to the member who asked; none for a
- *                                step whose date an action's clock entry holds (steps R29: stepsDue leaves it out; T45)
+ *                                step whose date an action's clock entry holds (steps R29: stepsDue leaves it out; T45);
+ *                                stepsDue's `truncated` carried into `facts.step_due` (R19, T46)
  *       step-cost-shared         FINDING, steps.costShares             to the sharing projects' owners
  *       step-cost-message        FINDING, steps.costMessages           to the owners it was relayed to
  *       milestone-overdue        FINDING, investigation.milestonesOverdue (and milestone-reminder, OBLIGATION)
@@ -517,7 +519,8 @@ export class NoticeProducers {
    * (only after the latest candidate) or possibly overdue (between the candidates, civil-time R19) is one item, a
    * question and never a violation. The group's own checkpoint is never one (D234; action-plans R23). (T45) An occurrence
    * whose due day (the latest candidate's, when undetermined) falls after the day `following.dutyWatchEnd` answers for the
-   * duty is no item; one due on or before it is raised as before. An occurrence with no due day read stays told. */
+   * duty is no item; one due on or before it is raised as before. An occurrence with no due day read stays told. (T46, R18)
+   * An occurrence already told before that end took hold is not cut: its item stays until disposed or no longer due. */
   #dutiesDue(me, viewer, now) {
     const asOf = instantOf(now);
     const obligors = this.#rows(`SELECT DISTINCT obligor FROM duties WHERE obligor IS NOT NULL ORDER BY obligor`).map((r) => r.obligor);
@@ -539,23 +542,63 @@ export class NoticeProducers {
         const ends = this.#watchEnd(d.duty_id);
         for (const occ of o.occurrences) {
           const it = this.#occurrenceItem(d, occ, to, asOf, viewer, now);
-          /* (T45) told only up to the day a plan's watch on the duty ends: an occurrence due after it is no item */
-          if (it && !(ends && it.due && it.due > ends)) items.push(it);
+          if (!it) continue;
+          /* (T45) told only up to the day a plan's watch on the duty ends: an occurrence due after it is no item;
+             (T46, R18) unless it was already told before that end took hold: then it stays until disposed */
+          if (ends && it.due && it.due > ends.day) {
+            if (!NoticeProducers.#toldBefore(it, ends)) continue;
+            it.basis.watch_end = { day: ends.day, at: ends.at, told_before: true };
+          }
+          items.push(it);
         }
       }
     }
     return { items, facts: { truncated } };
   }
 
-  /** R5 (T45; following R25): the day after which this duty is no longer told, `following.dutyWatchEnd(duty)`: null while
-   *  no plan's watch on it is answered (R5 as before), else that day. A following that throws fails R5's read (R1); an
-   *  answer that is no day is read as no end, so the duty is still told. */
+  /** R5 (T45; following R25): the end of this duty's telling, `{day, at}`: `day` the day after which the duty is no longer
+   *  told (`following.dutyWatchEnd(duty)`), null while no plan's watch on it is answered (R5 as before). R18 (T46): `at`
+   *  the instant that end took hold, from `following.dutyWatchEndAt(duty)` (`{day, at}`) where following answers it, else
+   *  null. A following that throws fails R5's read (R1); an answer that is no day is read as no end (the duty still told),
+   *  and an `at` that is no instant as none. */
   #watchEnd(duty) {
     const f = this.#following;
-    if (!f || typeof f.dutyWatchEnd !== "function") return null;
-    let end;
-    try { end = f.dutyWatchEnd(duty); } catch { throw failure("following"); }
-    return typeof end === "string" && /^\d{4}-\d{2}-\d{2}$/.test(end) ? end : null;
+    if (!f) return null;
+    const isDay = (v) => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+    try {
+      if (typeof f.dutyWatchEndAt === "function") {
+        const e = f.dutyWatchEndAt(duty);
+        if (!e || typeof e !== "object" || !isDay(e.day)) return null;
+        return { day: e.day, at: typeof e.at === "string" && INSTANT.test(e.at) && Number.isFinite(Date.parse(e.at)) ? e.at : null };
+      }
+      if (typeof f.dutyWatchEnd !== "function") return null;
+      const end = f.dutyWatchEnd(duty);
+      return isDay(end) ? { day: end, at: null } : null;
+    } catch { throw failure("following"); }
+  }
+
+  /** R18 (T46; N927; queue R16): whether an occurrence was already told before its duty's end of telling took hold, so it
+   *  keeps its item (and is told as R5 tells it) until disposed, met, met late or no longer overdue. It was told from the
+   *  end of its first told day (civil-time, in that day's own zone): the first candidate's, when undetermined, else its
+   *  due day's; it is possibly overdue, or overdue, from then. With the instant the end took hold (`at`), told when that
+   *  start came before it; with the end day alone, told when it came no later than the end day's start (exact for a
+   *  stop, whose day is its answer's own; J1). A start that cannot be read is not told. */
+  static #toldBefore(item, ends) {
+    const due = item && item.subject ? item.subject.due : null;
+    const first = due && Array.isArray(due.candidates) ? due.candidates[0] : due;
+    const day = first && typeof first === "object" ? dayOf(first.value) : null;
+    const zone = first && typeof first === "object" && filled(first.zone) ? first.zone : null;
+    if (!day || !zone) return false;
+    let from = NaN, endStart = NaN;
+    try {
+      const r = dayRange(day, day, zone);
+      from = r && filled(r.end) ? Date.parse(r.end) : NaN;
+      const e = dayRange(ends.day, ends.day, zone);
+      endStart = e && filled(e.start) ? Date.parse(e.start) : NaN;
+    } catch { return false; }
+    if (!Number.isFinite(from)) return false;
+    if (ends.at) return from < Date.parse(ends.at);
+    return Number.isFinite(endStart) && from <= endStart;
   }
 
   /** Who a duty's item goes to: the member who adopted it, else its project's owners (membership R65), else the
@@ -1135,7 +1178,8 @@ export class NoticeProducers {
                        + "asked for the reminder, and to nobody else." },
       });
     });
-    return { items, facts: { truncated: c.truncated, ...(r.undetermined === true ? { undetermined: r.why ?? true } : {}) } };
+    /* R19 (T46; steps R12): `stepsDue` read its 1,000 dated steps or 1,000 reminders: a bound reached is never silent */
+    return { items, facts: { truncated: c.truncated || r.truncated === true, ...(r.undetermined === true ? { undetermined: r.why ?? true } : {}) } };
   }
 
   #costShares(me, viewer, now) {
