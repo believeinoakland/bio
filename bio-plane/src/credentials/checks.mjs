@@ -109,6 +109,14 @@ export const AI_CREDENTIAL_CHECKS = Object.freeze({
       + 'fingerprint of its secret, and a credential without one could never be used. Nothing was created. Try again; '
       + 'if it keeps happening, tell whoever hosts your group\'s Civicsmith.',
   }),
+  /* R63 (T47-9; N955, K2976): a run segment's credential asked for without its run, or with writes that are not the
+     runner's, the next free number of C-29 after R64's C-29.40. A new row, awaiting promotion's stamp (T47-10). */
+  AI_RUN_CREDENTIAL_MALFORMED: Object.freeze({
+    check: 'C-29.41', where: at("aiRunCredentialMint", "is-ai-run-credential-shape"),
+    translation: 'The assistant\'s run could not be given its credential, because the request did not name the run, or '
+      + 'asked for something a run does not do. Nothing was created. Start the run again; if it keeps happening, tell '
+      + 'whoever hosts your group\'s Civicsmith.',
+  }),
 });
 
 /* C-96's rows for the acts on a member's keys: R6's key shape (C-96.8) and R9's three (C-96.15–.17). */

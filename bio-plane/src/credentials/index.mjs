@@ -16,10 +16,12 @@
  * N820, N796, DEC-188 (1), (7), (8)), four more kinds of use, `accountUsesSet` the one act that sets an account's
  * switches, a sign-in's own standing switch, the refusals' words read by key from `words.json`, and each account's
  * panel reads: its uses and keep-aways, and its change history; and, from T42 (T42-4; N831), the in-plane read of
- * an account's uses for a caller that does not own it. A project's name (R58) is its bundle's title, read
- * through record-core's `bundleInfo` (its R34).
+ * an account's uses for a caller that does not own it; and, from T47 (T47-9; N981, N955, K231, K2976), the
+ * disclosure-first order held here (an API-key reference refused `DISCLOSURE_DUE` until the disclosure is recorded,
+ * through the one disclosure read a later module registers) and a run segment's credential minted in the plane. A
+ * project's name (R58) is its bundle's title, read through record-core's `bundleInfo` (its R34).
  *
- * Requirements: build/requirements/credentials.md (R1–R62; R26 retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
+ * Requirements: build/requirements/credentials.md (R1–R64; R26 retired). Split from `membership` (K617, K636 BOB-1, K637; T19 layer
  * 2, CREDENTIALS #1): the code is copied from `membership/index.mjs` and `schema.mjs`, without change of meaning, and
  * reads `members` only through membership's services (`memberFacts`, `sessionRights`, `isAdministrator`,
  * `activeAdmins`, `notAnAdmin`), never by SQL. Who the members are, and what each may do, is membership's; this module
@@ -93,6 +95,14 @@ export const KEEP_AWAY_REASON = Object.freeze({ min: 1, max: 2000 });
 export const SIGN_IN_WINDOW = Object.freeze({ perSource: 10, perRole: 10, windowMs: 10 * 60 * 1000 });
 export const SIGN_IN_STATED = `at most ${SIGN_IN_WINDOW.perSource} refused attempts from one place, and `
   + `${SIGN_IN_WINDOW.perRole} for one account, in any ${SIGN_IN_WINDOW.windowMs / 60000} minutes`;
+/* R63 (T47; N955, K2976, K3033): the write ops the runner makes on a run, in every deployed mode: `check`'s (agent-worker
+   R37) and `plan`'s (agent-worker R53, `optionpropose` with `airuntick` and `airunclose`). A run segment's credential
+   holds a non-empty list of these and nothing else; `ai-runs` passes the run's mode's own. A mode deployed later adds
+   its writes here in its own entry. */
+export const AI_RUN_WRITES = Object.freeze(["airuntick", "suggest", "capturerequest", "airunclose", "optionpropose"]);
+/* R63: a run segment's credential's life, in seconds: under one day (the job's value, six hours, well past any one
+   segment's wall-clock bound), never renewed; the next segment mints its own. */
+export const AI_RUN_CREDENTIAL_TTL_SECONDS = 6 * 3600;
 /* R42 (F15; K1934 (2)): an agent credential's life in whole days, and its default. */
 export const AI_CREDENTIAL_EXPIRY_DAYS = Object.freeze({ min: 1, max: 365, default: 90 });
 /* R44 (N703; DEC-165, DEC-166; K1934 (2)): the tally's kinds, and how long its counts are kept. */
@@ -160,6 +170,8 @@ export class Credentials {
     this.sql.exec(`UPDATE recovery_codes SET spent_at=? WHERE role=? AND spent_at IS NULL`, Credentials.#instant(at),
       `member:${memberId}`);
     this.#signinCleared(memberId, by, "revoked");
+    /* R63: her run segments' credentials are revoked with her (a cleared sign-in revokes them too, above) */
+    this.#revokeRunCredentials(`principal=?`, [`member:${memberId}`], stampSecond(), Credentials.#memberOf(by));
     /* REC-159: the cascade is the revoking act's, so the keys it revokes name its actor. R21: a key it revokes takes
        the act's own time (the notice's `at`) as `status_at`; a key already revoked keeps its own. */
     this.sql.exec(
@@ -1059,7 +1071,81 @@ export class Credentials {
              confinedTo: row.confined_to || null,
              /* R42: when it expires, and whether it has, from `expiresAt` on; never renewed. */
              expiresAt: row.expires_at || null,
-             expired: typeof row.expires_at === "string" && row.expires_at !== "" && Date.now() >= Date.parse(row.expires_at) };
+             expired: typeof row.expires_at === "string" && row.expires_at !== "" && Date.now() >= Date.parse(row.expires_at),
+             /* R63: the run a segment's credential is bound to, null for every credential R12 mints */
+             run: row.run || null };
+  }
+
+  /* ===== A RUN SEGMENT'S CREDENTIAL (R63; T47, N955; K2976, K2999, K3027, K3033) =====
+   *
+   * The `ai` credential one segment of a member's own run is dispatched under, minted HERE, in the plane, at her act
+   * (`ai-runs`' dispatch), so no credential is ever minted by or held in her page. In-plane only: no route reaches it
+   * and no viewer is answered. Member-scoped (its principal the member, R14), recorded as R12 records one (`minted_by`
+   * the member, only its token's SHA-256 kept), with the run on its row; its writes a non-empty list of AI_RUN_WRITES;
+   * it expires AI_RUN_CREDENTIAL_TTL_SECONDS after minting, never renewed. At most one is live per run: a new mint
+   * revokes every earlier one of the same run, and the run's end (`aiRunCredentialsEnd`), the member's revocation (R16)
+   * and her sign-in's disconnection (R43) revoke them, changing nothing else. The token has the shape the gate reads
+   * (`aik-` and 64 hexadecimal characters, admission's AI_TOKEN_SHAPE) and is answered once, never logged or stored. */
+  aiRunCredentialMint({ member = null, run = null, writes = null } = {}) {
+    const id = Credentials.#memberOf(member);
+    if (id === null || isMachineIdentity(member) || isMachineIdentity(id) || this.#memberFacts(id)?.status !== "active")
+      return Credentials.#row(ACCOUNT_CHECKS, "ACCOUNT_MEMBER_NOT_ACTIVE", "a run's credential is minted only for an "
+        + "active member's own run. Nothing was minted.", { member: id });
+    const malformed = Credentials.#runCredentialFault(run, writes);
+    if (malformed) return malformed;
+    /* R35 (K231): the one keep-away read, asked with no use or project (R63: `aiKeptAway()`), as R27 is refused */
+    const away = this.aiKeptAway();
+    if (away) return away;
+    const token = `aik-${Credentials.#rand(32)}`;
+    const tokenId = `run-${Credentials.#rand(12)}`;
+    const nowMs = Date.now();
+    const now = stampSecond(nowMs);
+    const expiresAt = stampSecond(nowMs + AI_RUN_CREDENTIAL_TTL_SECONDS * 1000);
+    const declared = AI_RUN_WRITES.filter((w) => writes.includes(w));
+    this.#tx(() => {
+      this.#revokeRunCredentials(`run=?`, [run], now, id);   /* the next segment: every earlier one of this run */
+      this.sql.exec(
+        `INSERT INTO ai_credentials (token_id, secret_sha, principal_kind, principal, task_scope, scope_writes, scope_note,
+           minted_by, minted_at, confined_to, expires_at, run)
+         VALUES (?, ?, 'member', ?, 'run', ?, ?, ?, ?, NULL, ?, ?)`,
+        tokenId, sha256HexSync(token), `member:${id}`, JSON.stringify(declared),
+        "minted by your group's Civicsmith for one segment of your run", id, now, expiresAt, run);
+    });
+    return { ok: true, tokenId, token, run, writes: declared, expiresAt };
+  }
+
+  /* R63: AI_RUN_CREDENTIAL_MALFORMED, minted here alone, naming what: `run` a non-empty string, `writes` a non-empty
+     list of AI_RUN_WRITES entries. */
+  static #runCredentialFault(run, writes) {
+    const what = typeof run !== "string" || run.trim() === "" ? "run"
+      : !Array.isArray(writes) || !writes.length || !writes.every((w) => typeof w === "string" && AI_RUN_WRITES.includes(w))
+        ? "writes" : null;
+    if (what === null) return null;
+    /* DEC-49 REGION is-ai-run-credential-shape */
+    return Credentials.#row(AI_CREDENTIAL_CHECKS, "AI_RUN_CREDENTIAL_MALFORMED", what === "run"
+      ? "a run's credential names the run it is bound to, a non-empty string, and none was given. Nothing was minted."
+      : `a run's credential holds a non-empty list of the runner's writes, each one of ${AI_RUN_WRITES.join(", ")}, and `
+        + "this was not one. Nothing was minted.", { what });
+    /* END DEC-49 REGION is-ai-run-credential-shape */
+  }
+
+  /* R63: the live run credentials `where` names revoked at `at`, `by` recorded (null when no one's act ends them);
+     every other credential, and everything else, unchanged. Answers how many. Inside the caller's act. */
+  #revokeRunCredentials(where, args, at, by = null) {
+    const live = this.#rows(`SELECT token_id FROM ai_credentials WHERE run IS NOT NULL AND revoked_at IS NULL AND ${where}`,
+      ...args);
+    for (const r of live)
+      this.sql.exec(`UPDATE ai_credentials SET revoked_at=?, revoked_by=? WHERE token_id=?`, at, by, r.token_id);
+    return live.length;
+  }
+
+  /* R63: the run's end, the in-plane call `ai-runs` makes when the run leaves `running` (its R14): every credential of
+     `run` revoked. Answers `{ok: true, revoked}`; never throws (a store that cannot be written answers `ok: false`). */
+  aiRunCredentialsEnd({ run = null } = {}) {
+    if (typeof run !== "string" || run.trim() === "") return { ok: true, revoked: 0 };
+    try {
+      return { ok: true, revoked: this.#tx(() => this.#revokeRunCredentials(`run=?`, [run], stampSecond())) };
+    } catch { return { ok: false, revoked: 0, unreadable: true }; }
   }
 
   /* ===== EACH MEMBER'S OWN CLAUDE ACCOUNT (R22–R25; T33-20, K1502, K1503) =====
@@ -1421,6 +1507,8 @@ export class Credentials {
       /* R32 (T41): a standing question's grant her sign-in served ends with it (none when a reference of hers served it) */
       if (!this.#reference(id, "member_id")) this.sql.exec(`DELETE FROM ai_grants WHERE member_id=? AND kind='standing'`, id);
       this.#change(`member:${id}`, "removed", { account: "signin", why }, by);
+      /* R63: her run segments' credentials end with her sign-in */
+      this.#revokeRunCredentials(`principal=?`, [`member:${id}`], stampSecond(), Credentials.#memberOf(by));
     }
     for (const p of this.#rows(`SELECT project_id FROM project_accounts WHERE kind='signin' AND member_id=?`, id)) {
       this.sql.exec(`DELETE FROM project_accounts WHERE project_id=?`, p.project_id);
