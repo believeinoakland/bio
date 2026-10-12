@@ -82,3 +82,17 @@ Size (session_01V6ChUsecnpQgZeXHEMdaCi): test runs 24, module lines 1031.
 ## J4 · COMPLETE
 
 COMPLETE after B5 (K3004): tranche/T46 merged (instance-setup, setup-page, answer-envelope, action-producers in). R4's new sub-bullet was already met: connect reads op=bootstrap's parts and offers the subscription sign-in only while signin is present: true (else says it is not installed, or could not be read, and offers the API key); checked against the merged instance-setup's PARTS shape [{part, present}] (setup.mjs:142, :156). Its test now names R4 too (connect.test.mjs). 51 pass, 0 fail. Files and checks as J3. infolevel/infolevelset still not in OPS on the tranche (op-declarations R50 unmerged). Size (session_01V6ChUsecnpQgZeXHEMdaCi): test runs 26, module lines 1031.
+
+## J5 · COMPLETE
+
+COMPLETE after B6 (K3007). tranche/T46 merged; my stand-in kit is gone: all 51 tests boot the real page (`interfacePage(SCREENS)`) through interface-shell's harness and dom.mjs, clicking each act and answering the shell's friction: 51 pass, 0 fail. Kit signatures checked against browser.mjs and the screens corrected (cs.title heads each screen; cs.rows with id/name, first cell plain text; the level through cs.setLevel/cs.level, the infolevel read dropped; appearance through the shell's theme control; reasonField per K3002's R11 for adminremove, aikeepaway and writinghelp). Fixed in my module: a typed key, code or password stayed in its field after success (the shell restores values by id); those fields now come back empty (R10, tested).
+
+REPORT, kit gaps (interface-shell):
+1. `done` is not awaited and has no re-read: groupkeyset's follow-up switch then re-opens the screen with cs.go to re-read (else the re-read races the switch). An awaited `done` promise would remove this.
+2. Field values survive redraws by id, password fields included: every screen must change ids to clear a secret. A shell rule clearing a succeeded act's password fields, or cs.clear(id), would be safer.
+3. cs.rows makes the first cell the row's button, so a row's name cannot also be its reference link (R16).
+4. No kit call for a screen's appearance control: I draw the shell's own data-shell="theme" buttons.
+
+REPORT, op-grades: `writinghelp` has no rung, so the shell would ask a reason to ask for help (worked around with reasonField "told"); `aikeepaway` is reasoned both ways, so turning the keep-away off asks a reason too.
+
+Files and paths as J3 (still empty in modules.json on the tranche); with them set locally: architecture 0, coverage 10/10, ownership 0. Size (session_01V6ChUsecnpQgZeXHEMdaCi): test runs 44, module lines 1042.
