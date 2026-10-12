@@ -109,3 +109,56 @@ test("R12: byWhen is {date, basis, source?}; nearing within 7 local days changes
   assert.equal(z.s.stepsDue({ viewer: ANN, at: "2026-10-20T00:00:00Z" }).undetermined, true);
   void Q; void DAN;
 });
+
+test("R12 (T46): stepsDue reads at most 1,000 of her dated steps not ended, in step order, and at most 1,000 of her reminders due by that day, in the order she asked them; past either bound the answer carries truncated: true beside due, otherwise no truncated (controls: 1,000 exactly, an ended step, a reminder not yet due, another member's)", async () => {
+  const { DUE_READ_MAX } = await import("../../../src/steps/index.mjs");
+  assert.equal(DUE_READ_MAX, 1000);
+  const AT = "2026-10-10T06:30:00Z";                       /* 9 October in Los Angeles */
+  const many = (w, n, by, args = {}) => {
+    const ids = [];
+    w.st.db.exec("BEGIN");
+    for (let i = 0; i < n; i++) ids.push(w.step({ work: `dated ${i}`, byWhen: { date: "2026-10-01", basis: "own" }, by, ...args }));
+    w.st.db.exec("COMMIT");
+    return ids;
+  };
+  /* dated steps: 1,001 open is truncated, the 1,001st in step order left unread */
+  const w = world();
+  const ids = many(w, 1001, ANN);
+  const r = w.s.stepsDue({ viewer: ANN, at: AT });
+  assert.equal(r.truncated, true);
+  assert.equal(r.due.length, 1000);
+  const sorted = [...ids].sort();
+  assert.deepEqual(r.due.map((d) => d.step), sorted.slice(0, 1000), "the first 1,000 in step order");
+  /* control: ended, the 1,001st is not counted: 1,000 exactly carries no truncated */
+  assert.equal(w.s.stepEnd({ step: sorted[0], end: "ended", by: ANN }).ok, true);
+  const c = w.s.stepsDue({ viewer: ANN, at: AT });
+  assert.equal("truncated" in c, false);
+  assert.equal(c.due.length, 1000);
+  /* the bound is hers: another member's steps neither count nor are told */
+  assert.equal("truncated" in w.s.stepsDue({ viewer: BOB, at: AT }), false);
+  /* dated steps not yet past their date are read too (the read is of her dated steps not ended) */
+  const f = world();
+  many(f, 1001, ANN, { byWhen: { date: "2099-01-01", basis: "own" } });
+  const fr = f.s.stepsDue({ viewer: ANN, at: AT });
+  assert.deepEqual([fr.truncated, fr.due.length], [true, 0]);
+
+  /* reminders: 1,001 due by that day is truncated, the last asked left unread; 1,000 is not */
+  const m = world();
+  const s = m.step({ work: "reminded" });
+  m.st.db.exec("BEGIN");
+  for (let i = 0; i < 1001; i++) m.s.stepReminder({ step: s, at: "2026-10-09", by: BOB });
+  m.st.db.exec("COMMIT");
+  const later = m.s.stepReminder({ step: s, at: "2026-10-30", by: BOB });   /* not due by that day: not read */
+  assert.equal(later.ok, true);
+  const rr = m.s.stepsDue({ viewer: BOB, at: AT });
+  assert.equal(rr.truncated, true);
+  assert.equal(rr.due.length, 1000);
+  const seqs = m.rows(`SELECT seq FROM step_reminders WHERE day = '2026-10-09' ORDER BY seq`).map((x) => x.seq);
+  assert.equal(new Set(rr.due.map((d) => d.key)).size, 1000, "each reminder its own key");
+  m.st.sql.exec(`DELETE FROM step_reminders WHERE seq = ?`, seqs[seqs.length - 1]);
+  const rc = m.s.stepsDue({ viewer: BOB, at: AT });
+  assert.equal("truncated" in rc, false, "1,000 due reminders: no truncated");
+  assert.deepEqual(rc.due.map((d) => d.key), rr.due.map((d) => d.key), "the one left unread was the last she asked");
+  /* the reminder not yet due counts once due, and the bound is reached again */
+  assert.equal(m.s.stepsDue({ viewer: BOB, at: "2026-10-31T06:30:00Z" }).truncated, true);
+});
