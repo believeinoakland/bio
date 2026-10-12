@@ -1,6 +1,6 @@
 # notice-producers (T46)
 
-**Status** · session_014SC3rCBPTNFj9KFcNmLCLT · depth 2 · WAITING ON BOB (J1) · handled B2
+**Status** · session_014SC3rCBPTNFj9KFcNmLCLT · depth 2 · COMPLETE · handled B2
 
 ## Completion (T46-47)
 
