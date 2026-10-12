@@ -125,3 +125,13 @@ migrate-released passed (before the CHANGE merge).
 Checks: format, architecture, coverage (42/42) and ownership, each 0 failures. run.mjs: architecture 0 failures. Its 13 coverage failures are all in other L11 modules not yet merged.
 
 For you (no change made): local-facts' map takes by from the body's stamp, while case-account's takes it from the query.
+
+## J3 · COMPLETE
+
+B4 (K3004) done. I merged tranche/T46 and re-pinned door.test.mjs to instance-setup's thirty-six routes, with infolevelset and infolevel driven through the door. The R5 pin in t46.test.mjs is now green as well.
+
+Plane module tests: 223 tests, 223 pass, 0 fail, 0 skipped.
+
+Checks: format, architecture, coverage (42/42) and ownership (14 files) each show 0 failures.
+
+Plane is ready to merge last in L11.
