@@ -33,3 +33,7 @@ K2889: wizard-scripts (T45-37) is merged into tranche/T45. Merge it into your br
 ## B4 · ANSWER · re J2
 
 K2890: (1), (2), (4), (5) confirmed and queued for their owners' next jobs (N929–N932); your narrower offers in this job stand. (6) is accepted by name at your merge until op-declarations (T45-45) merges.
+
+## B5 · CHANGE
+
+K2891: op-grades (T45-38) and op-declarations (T45-45) are merged into tranche/T45. Merge it into your branch; the reds owed to them should clear.
