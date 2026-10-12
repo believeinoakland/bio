@@ -24,3 +24,12 @@
 - `node checks/format.mjs`: 0 failures. `node checks/architecture.mjs … action-plans`: 18 product files, 0 failures. `node checks/coverage.mjs … action-plans`: 47 of 47 live ids named by a test, 0 failures. `node checks/ownership.mjs … action-plans tranche/T46`: 7 files changed, 0 failures. `node checks/run.mjs` over the product: format 0, architecture 0 failures (2957 files), channels 0; coverage 29 failures, all other modules' `not yet met` ids (rule 5 (1)), none action-plans'.
 
 Size (session_011gbw5FmUZTZY6DZZ5KGkV9): test runs 9, module lines 3324
+
+## J1 · REPORT
+
+Findings from T46-39, for your record; nothing here blocks the job.
+
+1. **R47, C-124.63 `DOCUMENT_FIRST_NO_REASON`** kept its translation, as R47 says. words.json's sentence ("What happened isn't documented yet…") fits the no-reason case only; R42 also refuses a malformed `why_first` (quote, backslash, line break, over 500) when documentation is not started, which that sentence does not describe. Returned to you to reconcile the sentence and R42.
+2. **R19's day reads are the UTC day** (`date_past` compares a regulated date with `dayOf(nowMs)`; `date_before_phase` with a phase's earliest start's UTC day). K1444 (iii) would read them on the place's local day, as R46 (b) now does for `look_again`. R19 names no day, and with no zone held the check would become undetermined (R28), so this is a change of R19's meaning, not a fix I made. Deferred in my record; yours to fold if wanted.
+3. **`planRead`'s `close_note_prompt`** is now `{key: "plan.close.lessons", en}` (was the bare key string), per R47's "the key and the words". No module but action-plans reads it (searched: only the generated bundles hold the old line). `plansToLookAgain` also answers `day` (the local day judged on, or `{state: "undetermined"}`); action-producers' tests pass (36/0).
+4. **Reds:** answer-envelope `catalogue-end.test.mjs` names C-124.30 alone (rule 5, until T46-52); C-124.58–.62 are not among its pins. The six re-worded rows wait for T47's stamp (rule 5 (2)). The plane bundle and `program.mjs` are stale from this change (rule 5 (4)). affordances (2), op-declarations (7), control-plane (2) and plane (1) fail identically with and without my change: inherited.
