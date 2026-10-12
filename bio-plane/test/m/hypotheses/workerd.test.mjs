@@ -1,10 +1,12 @@
-/* hypotheses R23 where workerd runs it (T46-65; K2926, the 0.82.0 regression): the plane's own Durable Object, booted
-   under Miniflare over a store an earlier release left, renumbers its notes (R14) using only statements Durable Object
-   SQLite authorizes. 0.82.0's cut made the working map with `CREATE TEMP TABLE`, which workerd refuses `SQLITE_AUTH`
-   (node:sqlite, the other suites' engine, allows it), so the plane's constructor threw on every 0.81.0 store holding
-   notes. Here the plane boots over such a store (`workerd-entry.mjs`: the notes numbered from one sequence shared across
-   members, with turns; the same before T35's `revised`; none), answers each member's notes renumbered, keeps going
-   after a real restart over the same storage, and the runtime itself is shown to refuse a `TEMP` table. */
+/* hypotheses R23 where workerd runs it (T46-65; K2926, the 0.82.0 regression; K2950): a Durable Object of this module's
+   own (`workerd-entry.mjs`), booting `hypotheses` over Durable Object SQLite under Miniflare as the plane boots it, over a
+   store an earlier release left, renumbers its notes (R14) using only statements Durable Object SQLite authorizes.
+   0.82.0's cut made the working map with `CREATE TEMP TABLE`, which workerd refuses `SQLITE_AUTH` (node:sqlite, the
+   other suites' engine, allows it), so the plane's constructor threw on every 0.81.0 store holding notes. Here the
+   module boots over such a store (the notes numbered from one sequence shared across members, with turns; the same
+   before T35's `revised`; none), answers each member's notes renumbered, keeps going after a real restart over the same
+   storage, and the runtime itself is shown to refuse a `TEMP` table. Nothing later in the order is booted (P4): the
+   whole store at the plane's shape is the plane's own test (T46-62). */
 import "../../stdio.mjs";
 import "../../sandbox.mjs";
 import { test, after } from "node:test";
@@ -24,9 +26,7 @@ const options = () => ({
   compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
   durableObjects: { SHARED: { className: "StoreShared", useSQLite: true }, T34: { className: "StoreT34", useSQLite: true },
                     FRESH: { className: "StoreFresh", useSQLite: true } },
-  durableObjectsPersist: PERSIST, r2Buckets: ["CAPTURES", "PUBLISHED"],
-  bindings: { ADMIN_TOKEN: "adm-r23", PROBE_TOKEN: "prb-r23", DAEMON_TOKEN: "dmn-r23", VERSION: "1.0.0", INSTANCE_NAME: "r23-plane",
-              ACCOUNT_SEAL_SECRET: "r23-plane-seal-secret", CAPTURE_REQUEST_TICK_MS: "3600000", MONITOR_TICK_MS: "3600000" },
+  durableObjectsPersist: PERSIST,
 });
 let mf = new Miniflare(options());
 after(async () => { await mf.dispose(); });
@@ -51,7 +51,7 @@ const OUTSIDER_RENUMBERED = [
 ];
 const OBJECTS = ["member_note_numbers", "member_note_told", "member_note_turns", "member_note_turns_member", "member_notes"];
 
-test("R23 the runtime the plane runs on refuses a TEMP table (SQLITE_AUTH), so a migration that made one could not boot there; the plane's Durable Object boots over a fresh store", async () => {
+test("R23 the runtime the plane runs on refuses a TEMP table (SQLITE_AUTH), so a migration that made one could not boot there; the module's Durable Object boots over a fresh store", async () => {
   const s = await store("FRESH");
   assert.match(s.temp, /SQLITE_AUTH|not authorized/i, "workerd's authorizer, the one R23 names");
   assert.deepEqual(s.keyed, ["member", "note_id"]);
@@ -59,7 +59,7 @@ test("R23 the runtime the plane runs on refuses a TEMP table (SQLITE_AUTH), so a
   assert.deepEqual((await act("FRESH", "noteWrite", { text: "first", by: ANN })).note, 1);
 });
 
-test("R23 R14 on workerd, the plane's own Durable Object boots over a store numbered from the shared sequence, holding notes and turns, and renumbers it with no TEMP table: each member's notes from 1, turns following, the shared sequence's mark and the working map kept nowhere", async () => {
+test("R23 R14 on workerd, the module boots in its own Durable Object over a store numbered from the shared sequence, holding notes and turns, and renumbers it with no TEMP table: each member's notes from 1, turns following, the shared sequence's mark and the working map kept nowhere", async () => {
   const s = await store("SHARED");
   assert.deepEqual(s.keyed, ["member", "note_id"], "keyed by (member, note_id): the renumbering ran");
   assert.deepEqual(s.notes.map((n) => [n.member, n.note_id, n.text]),
@@ -85,7 +85,7 @@ test("R23 R14 on workerd, after the renumbering the acts carry on from each memb
   assert.deepEqual(await act("SHARED", "noteDelete", { note: 2, by: ANN }), { ok: true, note: 2, deleted: true });
   const before = await store("SHARED");
   assert.deepEqual(before.turns.filter((t) => t.member === "ann").map((t) => t.note_id), [3], "the deleted note's turns went with it");
-  /* the restart: workerd stopped and started again over the persisted storage; the plane's constructor runs again */
+  /* the restart: workerd stopped and started again over the persisted storage; the module boots again */
   await mf.dispose();
   mf = new Miniflare(options());
   const again = await store("SHARED");

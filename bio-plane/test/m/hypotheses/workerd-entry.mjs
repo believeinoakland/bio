@@ -1,12 +1,16 @@
-/* R23's world on workerd (`workerd.test.mjs`): the plane's own Durable Object, `Store` from `src/plane/store.mjs`,
-   unchanged, over a store an earlier release left. Each class here is that Store with one seed laid into its storage
-   BEFORE the plane's constructor runs, so the plane boots over it as it boots over a group's copy: the notes as T34–T35
+/* R23's world on workerd (`workerd.test.mjs`): a Durable Object of this module's own, over Durable Object SQLite, that
+   boots `hypotheses` as the plane does (record-core migrated, membership migrated, then `hypothesesOf(ctx)`, whose
+   making runs every migration this module runs at boot, R14's renumbering among them), and nothing later in the order
+   (P4; the whole store at the plane's shape is the plane's own test, T46-62, K2950). Each class here lays one seed into
+   its storage BEFORE that boot, so the module boots over it as it boots over a group's copy: the notes as T34–T35
    numbered them, from one AUTOINCREMENT sequence shared across members (`shared`), the same before T35's `revised`
    column (`t34`), or none (`fresh`). A seed is laid only into a store that holds no notes table, so a second boot over
    the same storage finds what the first left. Its one door, `POST /r23` with `{act, args}`, calls this module's act or
-   read on the plane's own instance and answers it; `GET /r23` answers the notes tables as stored and what workerd
+   read on the module's one instance over that storage and answers it; `GET /r23` answers the notes tables as stored and what workerd
    answers a `TEMP` table (the authorizer R23 names), so the test reads at the module's interface and the store. */
-import { Store as PlaneStore } from "../../../src/plane/store.mjs";
+import { DurableObject } from "cloudflare:workers";
+import { recordOf } from "../../../src/record-core/index.mjs";
+import { membershipOf } from "../../../src/membership/index.mjs";
 import { hypothesesOf } from "../../../src/hypotheses/index.mjs";
 
 const NOTES_SHARED = `CREATE TABLE member_notes (note_id INTEGER PRIMARY KEY AUTOINCREMENT, member TEXT NOT NULL, text TEXT NOT NULL,
@@ -56,14 +60,18 @@ const json = (v, status = 200) => new Response(JSON.stringify(v), { status, head
 const ACTS = new Set(["noteWrite", "noteRevise", "notesOf", "noteTurn", "noteDelete", "migrate"]);
 
 function seeded(shape) {
-  return class extends PlaneStore {
+  return class extends DurableObject {
     constructor(ctx, env) {
-      seed(ctx.storage.sql, shape);
       super(ctx, env);
+      seed(ctx.storage.sql, shape);
+      const record = recordOf(ctx, { evidence: null, evidencePrefix: "bio/captures/" });
+      record.migrate();
+      membershipOf(ctx, { record }).migrate();
+      hypothesesOf(ctx, { record });
     }
     async fetch(req) {
       const url = new URL(req.url);
-      if (url.pathname !== "/r23") return super.fetch(req);
+      if (url.pathname !== "/r23") return new Response("not found", { status: 404 });
       const sql = this.ctx.storage.sql;
       if (req.method === "POST") {
         const { act, args } = await req.json();
