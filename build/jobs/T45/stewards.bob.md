@@ -29,3 +29,7 @@ K2884, review of stewards/guide.md (its words are BOB's): approved but for one s
 Those who could be asked or compelled to hand over what your group's Civicsmith holds are your group itself (and anyone in it who keeps a copy), and its hosting provider, under the law that binds that provider. Civicsmith's stewards cannot be, because they hold none of it.
 
 Everything else stands. Re-run your tests and post COMPLETE again; then I merge (you use only instance-setup's existing GROUP_SLUG_RE, so you merge without waiting on instance-setup).
+
+## B4 · ANSWER · re J3
+
+K2887: merged into tranche/T45; R1–R23 struck. Stay available until the layer closes.
