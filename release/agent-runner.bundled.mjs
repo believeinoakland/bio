@@ -1495,7 +1495,7 @@ var fleet_member_default = {
   entry: "src/entry.mjs",
   testDir: "test",
   surface: {
-    "GET /version": 'R5: 200 {ok: true, name: "agent-runner", version}',
+    "GET /version": 'R5: 200 {ok: true, name: "agent-runner", version, capabilities}',
     "GET /conversation (WebSocket upgrade)": "R1-R4: one conversation request, its relays and its answer",
     "POST /signin": "R17: {member} -> 200 {ok: true, address}, the sign-in address the binary states",
     "POST /signin/code": "R18: {member, code} -> 200 {ok: true, connected: true, member}, or 409 SIGNIN_REFUSED",
@@ -1505,7 +1505,7 @@ var fleet_member_default = {
   },
   image: {
     repository: "ghcr.io/believeinoakland/agent-runner",
-    digest: "sha256:e56253c57212ea7585ee00aea01d1287682fee44c8203f00372be07dc53f2228",
+    digest: "sha256:9fcf5ee5556972a9974c44585e9e8e789ef1a9c93aae94a79b2fdd1084873c28",
     platform: "linux/amd64",
     port: 8080,
     schedulingPolicy: "default"
