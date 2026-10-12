@@ -62,3 +62,39 @@ Kit gaps that remain after re-pointing to interface-shell's kit (K3007). The fir
 2. **Reads drawn as acts weigh as reasoned.** `findin`, `search` and `gradenote` have no rung in `op-grades`' `RUNGS` or `RUNG_ABSENT`, so the shell asks a reason before Find in opens, before Find opens, and before "Why B?" reads the grade note. Each still works once a reason is given, but the reason is asked to no purpose. op-grades could name them `RUNG_ABSENT` (observational), as `openoriginal` is; a registry or op-grades ruling, not mine.
 3. **No timer in the contract.** The dock cannot watch a run. It re-reads the run after each act of the member's in the dock, so a run that ends by itself is seen ended (and its credential revoked) at her next act, when the dock closes, when she leaves the page, or when the one-day credential expires, whichever comes first. A kit `cs.later(ms, fn)` (the fake clock in tests) would let it poll.
 4. Adapted, not a gap: dialog fields show only for terminal and signed acts. So conclude's and narrow's words, release's acknowledgment and mitigation, and a transcription's text are screen fields serving as `reasonField`. Withdraw's reason is the shell's, carried in the query (`raw: ""`) where `basis-versions` reads it.
+
+## J7 · COMPLETE
+
+CHANGEs B7 and B8 applied (K3004, K3007): `tranche/T46` merged; tests re-pointed from my stand-in kit (deleted) to interface-shell's served page (`harness.mjs` `boot`, `dom.mjs`); screens corrected to the real kit.
+
+**Signatures corrected.**
+- `cs.title` and `cs.ref` now get raw labels (they escape).
+- `cs.choice` options are `[value, key]`.
+- Dates go into words as `{html}` fills.
+- A failed later read's refusal now carries its `words`.
+- `cs.call`'s answers are read as the kit gives them: the envelope on success, the refusal's fields on refusal, null when nothing answers.
+
+**Friction by each op's weight (op-grades), as interface-shell R11 draws it.**
+- Reasoned acts whose words are the member's own name a `reasonField`: `planopen` (title), `narrow` (description), `conclude` (commentary, in the query with `raw`), `checkrequest` (note, now required), `release` (acknowledgment), `identityclaim` (note), `transcribe` (text).
+- `withdrawconclusion` and `heldrestore` take the shell's reason.
+- `retire` keeps its terminal dialog; `attest` confirms its signed dialog.
+
+**Flaws found and fixed on the real page.**
+- The question screen read the group's bar before the inquiry named its project.
+- The grade note's heading drew `{letter}` unfilled.
+- The question screen's `planopen` lacked its reasonField.
+- The dock now re-reads its run after a suggestion, so a run that ended by itself has its credential revoked without closing the dock.
+
+**Files.** Unchanged paths. Tests: `bio-plane/test/m/screens-inquiry/` (`fixtures.mjs` new; `kit.mjs` deleted; the five test files rewritten). Modules and words as in J5, plus K3003 applied (no `strengthbarset` on the project; no `sever` or `reinstate` on the question).
+
+**Kit gaps that remain:** J6 (REPORT). `cs.choice` has no plain-text option; `findin`, `search` and `gradenote` weigh as reasoned for want of a rung; there is no timer for watching a run.
+
+**Still deferred:** `narrow` sends no narrower extent (no passage picker in T46), so the plane refuses it `NARROW_NO_EXTENT`, drawn beside the act.
+
+**Tests and checks.**
+- `node --test bio-plane/test/m/screens-inquiry/`: tests 46, pass 46, fail 0, all over the served page.
+- Each requirement R1–R7 is named, with controls.
+- From the process repository, with a local uncommitted `modules.json` entry for my paths: format 0 failures; architecture 12 product files, 26 relative imports, 0 failures; coverage 7 of 7; ownership 13 files, 0 failures.
+- `checks/run.mjs`: architecture 0 failures; coverage 4 failures, none mine.
+
+Size (session_01YMxGacVK3G14cDwVAkXxu7): test runs 29, module lines 1338
