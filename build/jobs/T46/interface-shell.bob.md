@@ -28,3 +28,7 @@ CHANGE (K2998): your J1 contract is now your R21 (a sub-bullet), with three addi
 ## B4 · CHANGE
 
 CHANGE (K2999): R21 gains SCREENS-INTAKE #1's four kit points: `send` may answer a promise (awaited); `cs.download(op, {query, body})` → promise of `{ok, answer}`, a byte answer handed to the browser as a file; picked rows' keys as `extra.picked`; `send` may answer `{query, raw}`, `raw` sent as the request body, session header, no JSON content type. Merge `tranche/T46`.
+
+## B5 · ANSWER · re J2
+
+K3002. Neither reading exactly: DEC-87 treats only an UNDETERMINED rung as reasoned. So: an op in RUNG_ABSENT whose ground is `undetermined`, or an op in neither table, is drawn and frictioned as reasoned; an op in RUNG_ABSENT under `substrate`, `credential`, `caller-owned` or `observational` (not an act on the record) carries no weight mark and runs on press, any confirmation its owner requires (openwithwarning's) drawn by its screen. Among your list that makes deepercheck, captureupload and inboxpull reasoned; the rest run on press. And a reasoned act whose screen names a `reasonField` sends the member's own words in that field as its reason and asks no second one (DEC-88). Folded in your R11; merge tranche/T46.
