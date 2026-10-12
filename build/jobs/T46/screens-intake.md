@@ -2,6 +2,15 @@
 
 **Status** · session_01JBa3sUqEAyKhi388Z2gNjX · depth 2 · COMPLETE · handled B4
 
+## Completion again (SCREENS-INTAKE #1, B5; K3002)
+
+**Re-opened by B5** · `tranche/T46` merged; aligned to interface-shell R21's K3002 sub-bullet: `cs.rows` takes `cols` as header word keys (new row `screen.held.col`) and `acts(item)` as a row's panel, so held's hold strip (`heldsetaside`, `release`, receiving `extra.picked`) is drawn by the screen after the rows; `cs.digest`, `cs.now`, `{refuse, fills}` and `cs.value` on checkboxes and radios are now the kit's (J3 accepted), so nothing remains open on the kit. J4's two reports are N979 and N980 (T47). Still to do at the shell's merge: re-point the tests to its DOM stand-in (B5).
+- `node --test bio-plane/test/m/screens-intake/`: tests 42, pass 42, fail 0.
+- With `modules.json` patched locally (paths, tests, the `wizard-scripts` use; not committed): format 0; architecture 0; coverage 9 of 9; ownership 0 (13 files). `checks/run.mjs`: format 0, architecture 0 over 2,988 files, channels 0; coverage 8 failures, none screens-intake's.
+- `SCREEN_WORDS` now 168 rows.
+
+Size (session_01JBa3sUqEAyKhi388Z2gNjX): test runs 13, module lines 836
+
 ## Completion (SCREENS-INTAKE #1)
 
 **Entry applied** · T46-56 (N897 (1); N821; N714's screen side; N747): R1–R9 met, a new module built to interface-shell R21 as K2996, K2998 and K2999 fixed it (B2–B4), against my own stand-in kit; re-pointed to the shell's shared DOM stand-in at its merge (B3).

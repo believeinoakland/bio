@@ -6,10 +6,10 @@
  * The contract is interface-shell R21's (K2996, K2998): every function is self-contained (its parameters, the kit `cs`
  * and the language's own globals), so the shell composes the page's one script from their text and the same functions
  * run in node for the tests. `reads(view)` answers `{name: {op, query, empty?}}`; `render(cs, view)` the screen's HTML;
- * each act `{op, label, send(view, el, cs, extra), done?(view, answer, cs), rereads?, refusals?, dialog?}`. Beyond
- * R21's kit this module reads three parts it asked the shell for (J2): `cs.download(op, {query, body})`, a byte answer
- * handed to the browser as a file (R6); `cs.digest(text)`, the SHA-256 of a text (the bundle an acquire promotes, R1);
- * and `cs.now()`. A `send` may answer a promise (J2 (1)); `{refuse: key, fills}` draws this module's word beside the act.
+ * each act `{op, label, send(view, el, cs, extra), done?(view, answer, cs), rereads?, refusals?, dialog?}`. It also
+ * reads the parts K2999 and K3002 added to R21: `cs.download(op, {query, body})`, a byte answer handed to the browser
+ * as a file (R6); `cs.digest(text)`, the SHA-256 of a text (the bundle an acquire promotes, R1); `cs.now()`; a `send`
+ * answering a promise; `extra.picked`, the picked rows' keys; and `{refuse: key, fills}`, this module's word beside the act.
  * `words`: the `WORD_ROWS` keys a screen draws, and its own `SCREEN_WORDS` rows. */
 
 import { SCREEN_WORDS } from "./words.mjs";

@@ -90,9 +90,12 @@ export function kit(screen, view, opts = {}) {
     hint: () => "",
     date: (iso) => `<time data-iso="${esc(iso)}">${esc(String(iso).slice(0, 10))}</time>`,
     row: (...c) => `<div class="cs-row">${c.join("")}</div>`,
-    rows({ items, key, cells, pick, acts }) {
-      return `<div class="cs-rows" data-acts="${(acts || []).join(" ")}">${(items || []).map((it) => `<div class="cs-row" data-key="${esc(key(it))}">`
-        + (pick ? `<input type="checkbox" data-pick="${esc(key(it))}" aria-label="pick">` : "") + cells(it).join("") + "</div>").join("")}</div>`;
+    /* K3002: `cols` the header word keys, `cells(item)` the row's cell HTML, `acts(item)` its panel's HTML, `key(item)` */
+    rows({ cols, items, key, cells, pick, acts }) {
+      return `<div class="cs-rows"><div class="cs-head">${(cols || []).map((c) => `<span>${word(c)}</span>`).join("")}</div>`
+        + (items || []).map((it) => `<div class="cs-row" data-key="${esc(key(it))}">`
+        + (pick ? `<input type="checkbox" data-pick="${esc(key(it))}" aria-label="pick">` : "") + cells(it).join("")
+        + (acts ? `<div class="cs-panel">${acts(it)}</div>` : "") + "</div>").join("") + "</div>";
     },
     sec: (titleKey, inner) => `<section class="cs-section"><h2>${word(titleKey)}</h2>${inner}</section>`,
     sheet: (inner) => `<div class="cs-sheet">${inner}</div>`,

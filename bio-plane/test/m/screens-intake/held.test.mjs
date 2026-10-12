@@ -48,7 +48,7 @@ test("R4 each row with its title, age and project; questions it was captured for
 test("R4 rows are picked (shell R19), the hold strip offering release and heldsetaside; an archive's files open open-file", () => {
   const html = draw(viewOf(S, { data: { held: ok({ held: ROWS }) } }));
   assert.equal((html.match(/data-pick=/g) || []).length, ROWS.length);
-  assert.match(html, /data-acts="release heldsetaside"/);
+  assert.match(html, /data-hold="picked"><span class="acts"><button[^>]*data-act="heldsetaside"[\s\S]*data-act="release"/);
   assert.match(html, new RegExp(`data-ref="open-file:${"e".repeat(64)}"[^>]*>01_Agenda\\.pdf<`));
   assert.match(html, /An archive: 36 files filed and held beside it, 2 not filed/);
   assert.match(html, /1 of 36 files shown/);

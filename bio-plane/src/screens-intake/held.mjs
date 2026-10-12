@@ -34,16 +34,17 @@ function renderHeld(cs, view) {
       + (r.files_truncated ? `<span class="meta">${cs.w("screen.held.archivemore", { shown: (r.files || []).length, total: r.files_total })}</span>` : "");
   };
   const list = cs.state(view.data.held, (v) => cs.rows({
-    cols: ["screen.held.archivefiles"],
+    cols: ["screen.held.col"],
     items: v.held,
     key: (r) => r.bundle_id,
     pick: true,
-    acts: ["release", "heldsetaside"],
     cells: (r) => [`${cs.ref("document", r.bundle_id, cs.esc(r.title || cs.w("screen.held.untitled")), [])}`
       + `<span class="meta">${age(r.age_days)} · ${r.project ? cs.w("screen.held.project", { project: r.project }) : cs.w("screen.held.noproject")}`
       + (r.source && r.source.address ? ` · ${cs.w("screen.held.from", { address: r.source.address })}` : "") + "</span>"
       + eligibility(r) + asked(r) + files(r)],
-  }) + (v.truncated ? `<p class="mk-small">${cs.w("screen.held.more", { count: v.held.length })}</p>` : ""), { empty: "screen.held.empty" });
+  }) + (v.truncated ? `<p class="mk-small">${cs.w("screen.held.more", { count: v.held.length })}</p>` : "")
+    + `<div class="cs-hold mk-hold" data-hold="picked"><span class="acts">${cs.act("heldsetaside")}${cs.act("release", { tone: "primary" })}</span></div>`,
+  { empty: "screen.held.empty" });
   const aside = Array.isArray(U.setAside) && U.setAside.length
     ? cs.sec("screen.held.setaside", said("screen.held.setasidecount", { count: U.setAside.length })
       + (Array.isArray(U.waiting) ? U.waiting : []).map((q) => said("screen.held.waiting", { asker: q.asker || "", title: q.title || "" })).join("")

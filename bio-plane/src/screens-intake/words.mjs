@@ -82,6 +82,7 @@ export const SCREEN_WORDS = Object.freeze([
   ["screen.held.from", "From {address}", false],
   ["screen.held.project", "Project: {project}", false],
   ["screen.held.noproject", "No project yet", false],
+  ["screen.held.col", "Capture", false],
   ["screen.held.untitled", "Untitled capture", false],
   ["screen.held.for", "For {asker}'s question: “{title}”", false],
   ["screen.held.withheld", "Captured for a question you may not see.", false],
