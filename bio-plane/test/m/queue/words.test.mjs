@@ -60,8 +60,10 @@ test("R48: no member-facing sentence of the feed, over one item of every catalog
   // one project's set-aside of a project-scoped item, so a home's `disposed_by` sentence is in the answer too
   w.run(`INSERT INTO finding_dispositions VALUES ('PRJ-A', 'FINDING::source-modified::0', 'source-modified', 'deferred', 'later', 'alice', ?)`, iso(NOW));
   w.run(`INSERT INTO queue_state (member_id, case_id, muted_kinds) VALUES ('alice','PRJ-B','render-deferred')`);
-  const f = w.feed("alice");
+  /* every kind twice and a task is past the default limit (200) since T45, so the sweep asks for R6's most, and is not cut */
+  const f = w.feed("alice", "member:alice", 500);
   assert.equal(f.ok, true, JSON.stringify(f).slice(0, 300));
+  assert.equal(f.truncated, false, "the sweep is not cut at the limit");
   const items = byId(f);
   // the sweep reaches what it claims to: every kind, both homings, the task, the set-aside, every block's detail
   for (const it of EVERY) assert.ok(items[it.id] || f.mute.suppressed.some((s) => s.id === it.id), it.id);
