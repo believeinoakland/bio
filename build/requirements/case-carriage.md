@@ -1,6 +1,6 @@
 # case-carriage — requirements
 
-**Status** · In force: split from `publication` for size, BOB's (N532, K617, K1332), meaning unchanged. Last changed T35 (T35-53: R8) and T37 (T37-34: Purpose, R1, R8 amended; R9–R13 new; N757, N768; K2108, K2145, K2171, K2206; DEC-180) and T39 (T39-10: Purpose, R1, R8, R13 amended; R15–R17 new; N806; K2333). Last changed T40 (T40-12: R11, R14, R15 amended; R18 new; N798, N811, N816, N818; DEC-185, DEC-187; K2380, K2383); those marked not yet met (T37, T39, T40), every other requirement met (K2004).
+**Status** · In force: split from `publication` for size, BOB's (N532, K617, K1332), meaning unchanged. Last changed T35 (T35-53: R8) and T37 (T37-34: Purpose, R1, R8 amended; R9–R13 new; N757, N768; K2108, K2145, K2171, K2206; DEC-180) and T39 (T39-10: Purpose, R1, R8, R13 amended; R15–R17 new; N806; K2333). Last changed T40 (T40-12: R11, R14, R15 amended; R18 new; N798, N811, N816, N818; DEC-185, DEC-187; K2380, K2383); those marked not yet met (T37, T39, T40), every other requirement met (K2004). Last changed T46 (T46-20: R19–R21 new, the three lapse reads over an interval, for `case-check` R2's latch; N907; K2833); marked not yet met (T46).
 
 **Size (P6).** About 270 lines.
 
@@ -64,6 +64,14 @@ Terms. A **material** is a row of the case document's `materials:` block (`case-
 
   Writes nothing.
 
+#### What lapsed since an instant (T46; N907; K2833)
+
+R4, R5 and R13 answer what has lapsed at one instant. A check held unsigned (`case-check` R1) stays void once any of them has lapsed after it was made, even when the lapse is later undone, so `case-check` R2 asks these three reads, each over the interval from `since` (the check's `checked_at`, an instant as `record-core` stamps it) through the read. Each answers in the shape of the read it widens, every row that read answers now among them; each is synchronous, writes nothing and never throws, and each fails closed as the read it widens does.
+
+- **R19** (T46; N907; K2833, K2949; amends R4 for `case-check` R2) `acceptedWorkLapsedSince(fm, signer, since)` answers R4's answer over the interval from `since` through the read, as far as `accepted-work` answers it: a row of the `accepted_work:` block is **withdrawn** when R4 reads it withdrawn at the read, or when an acceptance withdrawal recorded after `since` names its `(ref, edition)` (`accepted-work.acceptanceWithdrawals`, its R2), although an acceptance stands again at the read; a flag on a row's `(ref, edition)` that the `accepted_work_flags:` block does not state is **undisclosed** when it is open at the read (R4). It answers null when no row lapsed, else `{withdrawn, undisclosed}` (R4's bounds). A withdrawal history that cannot be read, or a `since` that is not such an instant, answers every row of the block withdrawn. *(not yet met: T46)* A flag opened after `since` and cleared before the read also answers undisclosed once `accepted-work` answers the flags' history *(not yet met: T47, N947)*.
+- **R20** (T46; N907; K2833; amends R13 for `case-check` R2) `marksLapsedSince(fm, since)` answers R13's rows over the interval: each `materials:` row R13 answers at the read, and each row stating `obscured` whose photo's copy (R11) or member document's copy (R16) was, at any instant after `since`, other than the copy the row states, read from the marks, withdrawals and copies this module holds append-only (R12). A copy that changed after `since` and was later derived again at the stated digest still answers the row lapsed, its `why` saying the copy changed since. A photo's or document's history that cannot be read, or a `since` that is not such an instant, answers the row lapsed (fail closed). At most 200 rows, `[]` when none. *(not yet met: T46)*
+- **R21** (T46; N907; K2833, K2949; amends R5 for `case-check` R2) `sourcesLapsedSince(text, since)` answers R5's rows over the interval, as far as `sources` answers it: each `sources:` row that did not hold, judged as R5 judges it (`case-grammar` R28's `sourceRowsStanding` over `sources.publishableAt`, its R8), at `since` or at the read. A source whose entries cannot be read, or a `since` that is not such an instant, answers its rows lapsed (fail closed). A document stating no `sources:` row answers `[]`. *(not yet met: T46)* A row that lapsed only between `since` and the read (a consent withdrawn and given again) also answers lapsed once `sources` answers the instants its disclosures and consents changed *(not yet met: T47, N947)*.
+
 #### The marks on a photo and its copy (T37; N757; DEC-180 (2)–(5); K2108, K2206)
 
 A **photo** is a document whose capture is an image. A **mark** is one `obscureMark` act; an **area** one rectangle of it. A photo is **marked** when any of its marks has an area.
@@ -111,6 +119,7 @@ A **member document** is a document capture that is not a photo (R9's term) and 
 - `sources`: `publishableAt` (R8), the `source_knocks` read contract (R15).
 - `extraction`: `unitsOf` (R36).
 - `accepted-work`: `acceptedFinding`, `openFlagsOn` (R2).
+- (T46; N907) `accepted-work`: `acceptanceWithdrawals` (its R2), and the flags' history with each flag's opening and clearing instants (R19). `sources`: `publishableAt` at an instant (its R8) and the instants at which a source's disclosures and consents changed (R21). Neither history is a read either provider offers today: R19 and R21 latch what is readable now, the rest waits on N947 (K2949).
 - `case-grammar`: `materialsOf` (R12), `extractedTextOf` (R17), `acceptedWorkOf` (R16), `caseDocumentBlocks` and `sourceRowsStanding` (its R27, R28; T45, N888: re-pointed from R1, wording only).
 - (T37) `image-cover`: `coverAreas`, `COVER_MAX_BYTES` (its R1–R3; R11). `record-core`: `evidenceStore` (its R38; R11), `declareTable`, `stampInstant` (R9, R12). `membership`: the sight of a capture (R9, R10). `record-grammar`: `isMachineIdentity` (R9).
 - `acquisition`: the `archive_entries` read contract (its R45; R8, R1; K2307).
@@ -135,6 +144,7 @@ A **member document** is a document capture that is not a photo (R9's term) and 
 - DEC-183 (1), (2) (K2220), N779 (K2248), N788, N790 (K2238): R1, R8–R14; K2291.
 - K2315 (Bob's C), K2333, K2334 (N806): R1, R8, R13, R15–R17.
 - DEC-185, DEC-187 (R11, R14); K2380 (R15); K2383 (R18).
+- `BIO_Action_v0_2.md` §3 (Determination: findings checked for publication and held; Actions D23, D24), through `case-check` R2: R19–R21 (N907; K2833).
 
 ### Suggestions
 
@@ -155,4 +165,5 @@ A **member document** is a document capture that is not a photo (R9's term) and 
   - `copyWake`'s three answers;
   - a member archive carried for no material (R8).
 - **Tests.** A negative control for each withdrawn and undisclosed arm of R4, and for each lapse of R5. An arm that R1 writes nothing for a material not included. A purge arm for R6.
+- **(T46) The reads over an interval (R19–R21).** The marks, withdrawals, photo copies and document copies are this module's own append-only tables, so R20 reads them directly (a copy row after `since`; a withdrawal after `since`). R19 and R21 need two histories their providers do not answer today: `accepted-work`'s registered `openFlags` answers open flags only, not a flag opened and cleared since `since` (`case-import` R8 keeps the clears); `sources` offers `publishableAt` at one instant and no read of the instants its consents and disclosures changed. K2949 narrows R19 and R21 to what is readable in T46 (withdrawals after `since`, flags open at the read; sources judged at `since` and at the read); N947 adds the two histories in T47. Tests: for each read, a lapse made after `since` and undone before the read answers the row, its control (no lapse in the interval) answers none, and with nothing changed since `since` each answers exactly what R4, R5 or R13 answers at the read; the fail-closed arms.
 
