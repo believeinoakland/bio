@@ -111,9 +111,10 @@
  *   3. node bio-plane/scripts/release-assemble.mjs --version <V> --dry-run
  *        every R22 check; writes nothing; no seed
  *   4. node bio-plane/scripts/release-assemble.mjs --version <V> --sign
- *        in the environment holding BIO_RELEASE_SEED: re-runs every check on this commit, signs the plane asset
- *        (bio-release) and the payload (bio-release-fleet), refuses unless stock ssh-keygen accepts both for
- *        RELEASE.json's signer, and only then writes `release/`
+ *        in the environment holding BIO_RELEASE_SEED: re-runs every check on this commit, takes the release's
+ *        signer from the seed's own key (refusing SIGNER_DISAGREES when RELEASE.json names another), signs the plane
+ *        asset (bio-release) and the payload (bio-release-fleet), refuses unless stock ssh-keygen accepts both for
+ *        that signer, and only then writes `release/`
  *   5. node bio-plane/scripts/release-advisories.mjs --out <file>
  *        R29's report over what the release ships, for the operator (it refuses nothing)
  *
@@ -141,7 +142,7 @@ import {
 import { NS_FLEET, fleetStatement } from "../src/sshsig.mjs";
 import { parseJsonc } from "./jsonc.mjs";
 import { resolveVersion } from "./resolve-version.mjs";
-import { signSshsig } from "./sign-sshsig.mjs";   /* signatures' release signer (its R33) */
+import { signSshsig, signerPublicLine } from "./sign-sshsig.mjs";   /* signatures' release signer (its R33, R35) */
 
 const argv = process.argv.slice(2);
 const flag = (n) => { const i = argv.indexOf(n); return i === -1 ? null : (argv[i + 1] ?? ""); };
@@ -467,6 +468,41 @@ console.log("\n──── the payload fleetSig covers ────");
 process.stdout.write(payload);
 console.log("─────────────────────────────────────");
 
+const existing = existsSync(RELEASE_JSON) ? JSON.parse(readFileSync(RELEASE_JSON, "utf8")) : {};
+
+/* ---- THE SIGNER IS THE SEED'S OWN KEY (bundler R30, T47; N944, K2937) ------
+   0.82.0's first signing run signed with Bob's new key and then refused itself as PLANE_SIG_DOES_NOT_COVER_ASSET:
+   this file verified against, and would have written, the `signer` RELEASE.json already named, still the development
+   key. So with --sign the signer is DERIVED from the seed in use (signatures R35), and both signatures are verified
+   against that key and written with its line. A RELEASE.json naming another key is refused HERE, naming both keys and
+   nothing secret, before anything is signed or written: a key rotation is the act that edits `signer` (Distribution
+   §10), never a signing run. No signer named at all is no disagreement: the derived line is written. */
+const keyOf = (line) => (typeof line === "string" ? line.trim().split(/\s+/).slice(0, 2).join(" ") : JSON.stringify(line));
+const named = (line) => line !== undefined && line !== null && !(typeof line === "string" && !line.trim());
+let seed = null;
+let signer = existing.signer;
+if (SIGN) {
+  seed = process.env.BIO_RELEASE_SEED;
+  if (!seed) die("NO_SEED", "--sign needs BIO_RELEASE_SEED and it is not set.",
+    "It is the signing environment's secret and is never printed (R30).");
+  let derived;
+  try { derived = signerPublicLine(seed); }
+  catch (e) {
+    die("SIGNING_FAILED", "could not read the release key from BIO_RELEASE_SEED.",
+      `  ${String(e.message || e)}\n`
+      + "BIO_RELEASE_SEED must be the BIOKEY-RAW1 envelope this project mints.");
+  }
+  if (named(existing.signer) && keyOf(existing.signer) !== keyOf(derived))
+    die("SIGNER_DISAGREES", "release/RELEASE.json names a signer whose key is not the key of the seed in use.",
+      `  RELEASE.json's signer: ${keyOf(existing.signer)}\n`
+      + `  the seed's key       : ${keyOf(derived)}\n`
+      + "Nothing was signed or written. If the release key was rotated, set `signer` in release/RELEASE.json to the new\n"
+      + "key's line (the rotation's own act, Distribution §10) and sign again; otherwise the signing environment holds\n"
+      + "the wrong seed.");
+  signer = derived;
+  console.log(`signer: ${keyOf(signer)} — the key of the seed in use${named(existing.signer) ? ", as RELEASE.json names it" : ""}`);
+}
+
 if (EMIT) { writeFileSync(EMIT, payload); console.log(`payload written to ${EMIT}`); }
 /* R30: the other thing to be signed, the plane asset the payload names, byte for byte. */
 if (EMIT_PLANE) { copyFileSync(planeEntry.from, EMIT_PLANE); console.log(`plane asset written to ${EMIT_PLANE}`); }
@@ -479,8 +515,6 @@ if (DRY) {
 
 /* ---- signing, and the acceptance is STOCK ssh-keygen ---------------------- */
 
-const existing = existsSync(RELEASE_JSON) ? JSON.parse(readFileSync(RELEASE_JSON, "utf8")) : {};
-
 const NS_RELEASE = "bio-release";
 
 /** Sign `bytes` in `ns` with the release seed.
@@ -490,7 +524,7 @@ const NS_RELEASE = "bio-release";
  *  directory". The doctrine is unaffected: stock ssh-keygen remains the
  *  ACCEPTANCE authority and `verifyWith` below is run on everything signed here,
  *  including immediately after signing it. See ./sign-sshsig.mjs (signatures). */
-function signWith(seed, bytes, ns) {
+function signWith(bytes, ns) {
   try { return signSshsig(seed, bytes, ns); }
   catch (e) {
     die("SIGNING_FAILED", `could not sign in namespace ${ns}.`,
@@ -524,11 +558,8 @@ let planeSig = flag("--plane-sig") ? readFileSync(flag("--plane-sig"), "utf8") :
 const planeBytes = readFileSync(planeEntry.from);
 
 if (SIGN) {
-  const seed = process.env.BIO_RELEASE_SEED;
-  if (!seed) die("NO_SEED", "--sign needs BIO_RELEASE_SEED and it is not set.",
-    "It is the signing environment's secret and is never printed (R30).");
-  fleetSig = signWith(seed, payload, NS_FLEET);
-  planeSig = signWith(seed, planeBytes, NS_RELEASE);
+  fleetSig = signWith(payload, NS_FLEET);
+  planeSig = signWith(planeBytes, NS_RELEASE);
   console.log("signed: the plane asset and the fleet payload, with the release key");
 }
 
@@ -544,7 +575,7 @@ if (SIGN) {
 {
   if (!planeSig) die("NO_PLANE_SIG", "there is no plane signature to publish.",
     "Pass --plane-sig <file> (made in the signing environment), or restore release/RELEASE.json's `sig`.");
-  const v = verifyWith(existing.signer, planeSig, planeBytes, NS_RELEASE);
+  const v = verifyWith(signer, planeSig, planeBytes, NS_RELEASE);
   if (!v.ok) {
     die("PLANE_SIG_DOES_NOT_COVER_ASSET",
       "the plane signature does not verify over the plane asset being released.",
@@ -562,7 +593,7 @@ if (!fleetSig) die("NO_FLEET_SIG", "no fleet signature supplied.",
 /* The fleet signature, checked by the same stock verifier — never by the code
    that produced it. A signature only its own author can check is worth nothing. */
 {
-  const v = verifyWith(existing.signer, fleetSig, payload, NS_FLEET);
+  const v = verifyWith(signer, fleetSig, payload, NS_FLEET);
   if (!v.ok) die("FLEET_SIG_REJECTED", "stock ssh-keygen did NOT accept the fleet signature.", v.reason);
   console.log("verified: stock ssh-keygen accepts fleetSig over this payload");
 }
@@ -595,7 +626,7 @@ const out = {
   bytes: planeEntry.bytes,
   asset: "bio-plane.bundled.mjs",
   sig: planeSig,              // the PLANE signature, verified above over THIS asset
-  signer: existing.signer,
+  signer,                     // with --sign, the seed's own key (R30); otherwise RELEASE.json's
   fleet: fleetEntries.map(({ member, asset, sha256: s, bytes, compat, services, parts }) =>
     ({ member, asset, sha256: s, bytes, compat, services,
        parts: (parts || []).map(({ path, type, sha256: ps, bytes: pb }) => ({ path, type, sha256: ps, bytes: pb })) })),

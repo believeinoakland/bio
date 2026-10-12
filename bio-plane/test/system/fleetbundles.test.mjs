@@ -255,7 +255,11 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
   /* RE-PINNED 2026-10-12 (BUNDLER #16, T46-2; N900, K2828, T46 rule 5 (5)): 26 -> 27 inputs, from the committed
      manifest this suite reads (`agent-worker/dist/agent-worker.bundle.json`, rebuilt by T45; its staleness arm green).
      One arrives and none leaves: the member's own `src/action-drafts.mjs`, which its `index.mjs` imports since T45. */
-  t("agent-worker's 27 inputs are all recorded — its nine own modules, agent-harness and agent-model across trees, the plane's denylist, run-rules with what it imports, and record-grammar through observation-log",
+  /* RE-PINNED 2026-10-12 (BUNDLER #17, T47-4; N950, T47 rule 5 (5)): 27 -> 28 inputs, by name as the committed manifest
+     this suite reads records them (`agent-worker/dist/agent-worker.bundle.json`, rebuilt by T46-19; its staleness arm
+     green). One arrives and none leaves: the member's own `src/untested.mjs` (R79's test-instance label), which its
+     `index.mjs` imports since T46-19. */
+  t("agent-worker's 28 inputs are all recorded — its ten own modules, agent-harness and agent-model across trees, the plane's denylist, run-rules with what it imports, and record-grammar through observation-log",
     (agent?.inputs || []).map((i) => i.path).sort(),
     [
      "../agent-harness/src/harness.mjs", "../agent-harness/src/subsession.mjs",
@@ -267,7 +271,7 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      "../bio-plane/src/run-rules/rules.mjs", "../bio-plane/src/run-rules/skill-version.mjs",
      "../bio-plane/src/run-rules/test-bar.mjs", "../bio-plane/src/run-rules/test-set.mjs",
      "../bio-plane/src/tokens.mjs", "src/action-drafts.mjs", "src/ask.mjs", "src/cascade.mjs", "src/draft.mjs", "src/index.mjs", "src/ops.mjs",
-     "src/reads.mjs", "src/signin.mjs", "src/transcribe.mjs",
+     "src/reads.mjs", "src/signin.mjs", "src/transcribe.mjs", "src/untested.mjs",
     ]);
   t("and it vendors nothing: the member still imports NOTHING from npm",
     (agent?.vendoredInputs || []).length, 0);

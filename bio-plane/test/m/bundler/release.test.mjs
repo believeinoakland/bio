@@ -49,19 +49,12 @@ test("R11: stripJsonc removes line and block comments, keeps each line comment's
   assert.equal(stripJsonc("no comments at all"), "no comments at all");
 });
 
-test("R11: parseJsonc returns the parsed object, or throws naming what did not parse; one implementation serves every caller", () => {
+test("R11: parseJsonc returns the parsed object, or throws naming what did not parse", () => {
   assert.deepEqual(parseJsonc('// x\n{ "u": "https://a.test//b", /* y */ "n": [1, 2] }\n'), { u: "https://a.test//b", n: [1, 2] });
   const e = tryThrow(() => parseJsonc("{ broken", "agent-worker/wrangler.jsonc"));
   assert.ok(e instanceof Error);
   assert.match(e.message, /^agent-worker\/wrangler\.jsonc did not parse as JSONC: /);
   assert.match(tryThrow(() => parseJsonc("[")).message, /^config did not parse as JSONC: /);
-  /* One implementation: no second copy anywhere in the module's paths, and every reader imports this one. */
-  assert.equal(existsSync(join(PLANE, "..", "tools", "jsonc.mjs")), false, "tools/jsonc.mjs is gone");
-  for (const f of ["deploy.mjs", "resolve-version.mjs", "deploy-fleet.mjs", "release-assemble.mjs"]) {
-    const text = readFileSync(join(PLANE, "scripts", f), "utf8");
-    assert.match(text, /from "\.\/jsonc\.mjs"/, `${f} reads JSONC through ./jsonc.mjs`);
-    assert.doesNotMatch(text, /function stripJsonc|function parseJsonc/, `${f} has no copy`);
-  }
 });
 
 /* ------------------------------------------------------------------------ R12 */
@@ -402,6 +395,52 @@ test("R18: already-deployed bytes serving the version with matching limits uploa
   } finally { rm(root); }
 });
 
+/* ------------------------------------------------------------------------ R11, driven */
+
+/* RE-WRITTEN 2026-10-12 (BUNDLER #17, T47-4; P20): R11's "one implementation" was tested by reading the four callers'
+   SOURCE TEXT for an import line and for no `function parseJsonc`. It is now driven at the interface: in a fixture
+   repository the module's reader is replaced by a MARKED one that also reads a `#` line, a syntax no other JSONC
+   reader accepts, and every config carries such a line. A caller reading any config through a copy of its own would
+   refuse or crash on it; each command runs as it always does, and the marked reader records that each called it. */
+test("R11: one implementation serves every caller in the module: deploy, resolve-version, deploy-fleet and release-assemble each read every config through it", async () => {
+  const root = await makeRepo({ plane: { config: { services: [{ binding: "SELF", service: "bio-plane" }, { binding: "AGENT", service: "alpha-worker" }] } } });
+  const work = mkdtempSync(join(tmpdir(), "bundler-r11-"));
+  try {
+    const scripts = join(root, "bio-plane/scripts");
+    writeFileSync(join(scripts, "jsonc-real.mjs"), readFileSync(join(scripts, "jsonc.mjs")));
+    writeFileSync(join(scripts, "jsonc.mjs"), [
+      'import { appendFileSync } from "node:fs";',
+      'import { stripJsonc as real } from "./jsonc-real.mjs";',
+      'export function stripJsonc(text) { return real(text.split("\\n").filter((l) => !l.startsWith("#")).join("\\n")); }',
+      "export function parseJsonc(text, what = \"config\") {",
+      '  const caller = (new Error().stack.split("\\n").slice(2).find((l) => /scripts\\/[\\w-]+\\.mjs/.test(l)) || "").match(/scripts\\/([\\w-]+\\.mjs)/);',
+      '  if (process.env.JSONC_LOG) appendFileSync(process.env.JSONC_LOG, JSON.stringify({ caller: caller && caller[1], what }) + "\\n");',
+      "  try { return JSON.parse(stripJsonc(text)); } catch (e) { throw new Error(`${what} did not parse as JSONC: ${e.message}`); }",
+      "}", ""].join("\n"));
+    const configs = ["bio-plane", "alpha-worker", "beta-worker"].map((d) => join(root, d, "wrangler.jsonc"));
+    for (const c of configs) writeFileSync(c, "# read only by the module's one JSONC reader\n" + readFileSync(c, "utf8"));
+    const log = join(work, "jsonc.log");
+    const read = () => (existsSync(log) ? readFileSync(log, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l)) : []);
+    const commands = [
+      ["resolve-version.mjs", ".", ["bio-plane/scripts/resolve-version.mjs"], {}, /every site agrees/],
+      ["deploy.mjs", "bio-plane", ["scripts/deploy.mjs", SLUG, VERSION, ASSET], { stub: okStub(), env: CF }, /verified: deployed bytes/],
+      ["deploy-fleet.mjs", ".", ["bio-plane/scripts/deploy-fleet.mjs", "alpha-worker", "--instance", SLUG, "--dry-run"],
+        { stub: { subdomain: "sub", scripts: { [SLUG]: {} } }, env: { CF_TOKEN: "t" } }, /--dry-run: nothing was deployed/],
+      ["release-assemble.mjs", ".", ["bio-plane/scripts/release-assemble.mjs", "--dry-run"], {}, /--dry-run: nothing written/],
+    ];
+    for (const [script, cwd, args, opts, done] of commands) {
+      rmSync(log, { force: true });
+      const r = run(root, cwd, args, { ...opts, env: { ...(opts.env || {}), JSONC_LOG: log } });
+      assert.equal(r.status, 0, `${script}: a config with the marked syntax is read as it always is\n${r.stdout}${r.stderr}`);
+      assert.match(r.stdout, done, script);
+      assert.ok(read().some((x) => x.caller === script), `${script} itself reads through the module's reader: ${JSON.stringify(read())}`);
+    }
+    /* The marker is no ordinary JSONC: without the module's reader, a config carrying it does not parse. */
+    assert.throws(() => JSON.parse(stripJsonc(readFileSync(configs[0], "utf8"))));
+    assert.equal(existsSync(join(PLANE, "..", "tools", "jsonc.mjs")), false, "the old process's tools/jsonc.mjs is gone");
+  } finally { rm(root); rmSync(work, { recursive: true, force: true }); }
+});
+
 /* --------------------------------------------------------------- R19, R20 */
 
 const fleet = (root, args, { env = { CF_TOKEN: "cf-secret-token-value" }, stub = { subdomain: "sub", scripts: { [SLUG]: {} } } } = {}) =>
@@ -726,8 +765,8 @@ test("R23: without --sign the fleet signature comes from --fleet-sig and the pla
     expectRefused("SIGNING_FAILED", { signer }, ["--sign"], { BIO_RELEASE_SEED: "not-an-envelope", ...SIGNING });
     expectRefused("NO_PLANE_SIG", { signer }, []);
     expectRefused("PLANE_SIG_DOES_NOT_COVER_ASSET", { signer, sig: signSshsig(seed, Buffer.from("older plane"), NS_RELEASE) }, []);
-    expectRefused("PLANE_SIG_DOES_NOT_COVER_ASSET", { signer: signerPublicLine(envelope()) }, ["--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING });
-    expectRefused("PLANE_SIG_DOES_NOT_COVER_ASSET", {}, ["--sign"], { BIO_RELEASE_SEED: seed, ...SIGNING });
+    /* With --sign the signer is the seed's own key (R30's T47 clause): another key in RELEASE.json is SIGNER_DISAGREES
+       and none is written from the seed, each tested under R30 below. */
     expectRefused("NO_FLEET_SIG", { signer, sig: goodPlane }, []);
     writeFileSync(sigFile, signSshsig(seed, payload + "member dropped\n", NS_FLEET));
     expectRefused("FLEET_SIG_REJECTED", { signer, sig: goodPlane }, ["--fleet-sig", sigFile]);
@@ -1279,6 +1318,68 @@ test("R30: a release is completed from signatures made elsewhere only when R23's
     const rel = readJson(relPath);
     assert.equal(rel.sig, good, "--plane-sig, not RELEASE.json's older sig");
     assert.ok(sshVerify(signer, rel.sig, plane.buf, NS_RELEASE) && sshVerify(signer, rel.fleetSig, Buffer.from(payload), NS_FLEET));
+  } finally { rm(root); rmSync(work, { recursive: true, force: true }); }
+});
+
+test("R30 (T47, N944): with --sign the signer is the seed's own key: a RELEASE.json naming that key, or none, is signed, verified against it and written with its line; another key is refused SIGNER_DISAGREES naming both, before anything is signed or written", async () => {
+  const root = await makeRepo();
+  const work = mkdtempSync(join(tmpdir(), "bundler-r30s-"));
+  try {
+    const seed = envelope(), derived = signerPublicLine(seed);
+    const key = (line) => line.split(" ").slice(0, 2).join(" ");
+    const relPath = join(root, "release/RELEASE.json");
+    const { payload, plane } = expectedPayload(root);
+    const emit = join(work, "p.txt"), emitPlane = join(work, "plane.mjs");
+    const sign = (rel) => {
+      if (rel === undefined) rmSync(relPath, { force: true }); else writeJson(relPath, rel);
+      const before = snapshot(root);
+      const r = assemble(root, ["--sign", "--emit-payload", emit, "--emit-plane", emitPlane], { BIO_RELEASE_SEED: seed, ...SIGNING });
+      return { r, unchanged: JSON.stringify(snapshot(root)) === JSON.stringify(before) };
+    };
+
+    /* Another key: refused by name, both keys named and nothing secret; nothing signed, nothing written, not even the
+       payload or the plane asset --emit-payload and --emit-plane would have written. */
+    const other = signerPublicLine(envelope());
+    for (const named of [other, `${key(other)} release-key-of-another`, { not: "a line" }]) {
+      const { r, unchanged } = sign({ version: "1.2.2", signer: named });
+      refused(r, "SIGNER_DISAGREES");
+      assert.ok(r.stderr.includes(key(derived)), `the seed's key named:\n${r.stderr}`);
+      assert.ok(r.stderr.includes(typeof named === "string" ? key(named) : JSON.stringify(named)), `RELEASE.json's key named:\n${r.stderr}`);
+      assert.doesNotMatch(r.stderr, /PLANE_SIG_DOES_NOT_COVER_ASSET/, "never refused as a signature that does not cover the asset");
+      assert.doesNotMatch(r.stdout, /^signed:/m, "nothing signed");
+      assert.ok(!(r.stdout + r.stderr).includes("BEGIN SSH SIGNATURE"), "no signature made or printed");
+      assert.ok(!(r.stdout + r.stderr).includes(seed.split(".")[2]), "the seed is never printed");
+      assert.ok(unchanged, "nothing in the repository written");
+      assert.equal(existsSync(emit) || existsSync(emitPlane), false, "nothing emitted either");
+    }
+
+    /* The control: the same key, under any comment, is no disagreement. Signed, verified by stock ssh-keygen against
+       the seed's key, and written with the seed's own line. */
+    for (const [why, rel] of [["the same line", { version: "1.2.2", signer: derived }],
+      ["the same key under another comment", { version: "1.2.2", signer: `${key(derived)} bob@release` }],
+      ["no signer named", { version: "1.2.2" }], ["an empty signer", { version: "1.2.2", signer: "" }],
+      ["no RELEASE.json at all", undefined]]) {
+      const { r } = sign(rel);
+      assert.equal(r.status, 0, `${why}:\n${r.stdout}${r.stderr}`);
+      assert.doesNotMatch(r.stderr, /REFUSED/, why);
+      const out = readJson(relPath);
+      assert.equal(out.signer, derived, `${why}: written with the seed's own line`);
+      assert.ok(sshVerify(derived, out.sig, plane.buf, NS_RELEASE), `${why}: the plane signature verifies for the seed's key`);
+      assert.ok(sshVerify(derived, out.fleetSig, Buffer.from(payload), NS_FLEET), `${why}: the fleet signature verifies for it`);
+      assert.match(r.stdout, /^verified: stock ssh-keygen accepts `sig` over the plane asset$/m, why);
+      assert.equal(readFileSync(emit, "utf8"), payload, `${why}: the emitted payload is the one signed`);
+      assert.ok(!(r.stdout + r.stderr).includes(seed.split(".")[2]), "the seed is never printed");
+      rmSync(emit); rmSync(emitPlane);
+    }
+
+    /* Without --sign nothing is derived: the release is completed for the signer RELEASE.json names, as R23 says. */
+    const otherSeed = envelope();
+    writeFileSync(join(work, "fleet.sig"), signSshsig(otherSeed, payload, NS_FLEET));
+    writeFileSync(join(work, "plane.sig"), signSshsig(otherSeed, plane.buf, NS_RELEASE));
+    writeJson(relPath, { version: "1.2.2", signer: signerPublicLine(otherSeed) });
+    const done = assemble(root, ["--fleet-sig", join(work, "fleet.sig"), "--plane-sig", join(work, "plane.sig")], { BIO_RELEASE_SEED: seed });
+    assert.equal(done.status, 0, done.stdout + done.stderr);
+    assert.equal(readJson(relPath).signer, signerPublicLine(otherSeed), "RELEASE.json's signer kept");
   } finally { rm(root); rmSync(work, { recursive: true, force: true }); }
 });
 
