@@ -72,3 +72,11 @@ T46-26 applied: R15 and R16. I read my code and tests whole (record: Working not
 - Fixed in my module: the T45 test's N901 workaround now probes whether case-disclosures translates `cited` by itself, so it stays green once T46-25 merges.
 - Found outside: op-declarations t42.test.mjs:186 pins "case-account exports no ops map". R15 makes it red (the only new red; for T46-51). plane store.mjs 701–710 should spread caseAccountOps (T46-62).
 - Checks: case-account tests 38/38; users 282/282; format, architecture, coverage (16/16) and ownership each 0 failures.
+
+## J2 · COMPLETE
+
+B2 (K2965) processed.
+- Fixed: one leg convention end to end. A leg cite numbers legs from 1 (R5). The conclusions I hand over (R6's accountJudged and R13's check) now number each leg by its place plus one, in place of basisFor's 0-based ord. Leg n is now the nth leg in the cite, its holding and the conclusion. Tested on a two-leg basis for R6 and R13: leg 1, which supports, read as support stands; on leg 2, which cuts against, the same sentence is ACCOUNT_CONTRADICTED_BY_RECORD (that is the control).
+- Held: case-disclosures R30's control, through the real case-account, case-disclosures and case-checker with no stand-in: a sentence citing a held finding passes; the same sentence on an unread cite is ACCOUNT_SENTENCE_UNSUPPORTED. It is red on my branch until T46-25 merges. With job/T46/case-disclosures and job/T46/case-checker overlaid, my tests pass 41/41 and theirs pass apart from program.test.mjs, which needs esbuild and could not run in the scratch tree. Merge case-disclosures before me (the L8 order) and the control goes green on merging the tranche.
+- case-checker R24's arm 1 (account rows only): my tests already agree.
+- Checks: format, architecture, coverage (16/16) and ownership each 0 failures. case-authoring and review 250/250.
