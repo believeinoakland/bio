@@ -67,7 +67,9 @@ Size (session_012KrF4pcZDor4ebZmdfWuBk): test runs 8, module lines 3618
 - Users' tests: run-rules, run-productions, plane t41–t43, affordances t33 and question-explorer, 0 failures. op-declarations fails only its 6 inherited tests.
 - `format`, `architecture ai-runs`: 0 failures. `coverage ai-runs`: 48 of 48; 0 failures. `ownership ai-runs tranche/T46`: 9 files changed; 0 failures.
 
-Size (session_012KrF4pcZDor4ebZmdfWuBk): test runs 12, module lines 3618
+**Re-run after B5 (CHANGE: steps merged, K2955).** I merged `tranche/T46` again. ai-runs' tests: 98/98, no change needed. steps, run-rules, question-explorer and run-productions: 191 pass, 0 fail. format, architecture, coverage (48/48) and ownership (9 files): 0 failures.
+
+Size (session_012KrF4pcZDor4ebZmdfWuBk): test runs 14, module lines 3618
 
 ## J1 · QUESTION
 
