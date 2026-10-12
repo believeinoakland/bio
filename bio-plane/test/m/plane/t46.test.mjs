@@ -1,0 +1,369 @@
+/* plane T46's composition (T46-62; N897 (2), (3), N886, N920, N935; K2816, K2940, K2946, K2950, K2960): the ask and
+   draft doors and the transcriber gated by `ai-runs.partAdmitted`, the test-instance label on their outputs, the status
+   report's draft (R40); the serving account's suggestions switch and no secret for a sign-in (R33); agent-worker's HTTP
+   status relayed by the transcriber (R36); case-account's and local-facts' ops maps spread (R39); the route map re-pinned
+   to T46's ops (R5); and the plane's own `Store` booted on workerd over a store holding notes (R42). Each test drives
+   the plane at its interface (construction over a storage, the object's RPC and door, the transcriber it registers, the
+   Worker under Miniflare) and carries a negative control (K874). */
+import { test, after } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
+import { Miniflare } from "miniflare";
+import { store, deployed, GATE_FLAGS, GATE_SET, GATE_PARTS } from "./fixture.mjs";
+import { MODULE_MAPS, ownMaps } from "./maps.mjs";
+import { assistantGateOf, draftOnObject, DRAFT_KIND_OF } from "../../../src/plane/ask.mjs";
+import { transcriberOf } from "../../../src/plane/transcribe.mjs";
+import { credentialsOf } from "../../../src/credentials/index.mjs";
+import { answersOf } from "../../../src/answers/index.mjs";
+import { aiRunsOf } from "../../../src/ai-runs/index.mjs";
+import { extractionOf } from "../../../src/extraction/index.mjs";
+import { caseAccountOf, caseAccountOps } from "../../../src/case-account/index.mjs";
+import { localFactsOf, localFactsOps } from "../../../src/local-facts/index.mjs";
+import { untestedLabel, partRefusal } from "../../../src/run-rules/index.mjs";
+
+const SESSION = "s".repeat(64);
+const SEAL = "a-long-seal-secret-for-the-t46-test";
+const TEST_COPY = { CIVICSMITH_TEST_INSTANCE: "t46-copy", INSTANCE_NAME: "t46-copy" };
+const DRAFT_ANSWER = { ok: true, draft: { text: "t" }, label: { kind: "machine" } };
+
+/* ann and an administrator, ann's live session, the group's keep-away off; `account`: ann's API-key reference
+   (`apikey`), her sign-in alone (`signin`), or none. agent-worker records every post. The gate deps (`gate`) are handed
+   before construction (K61), the bar recorded for `parts` on the gate's set. */
+async function doors({ gate = null, parts = [], env: extra = {}, account = "apikey", worker = null } = {}) {
+  const asks = [];
+  const env = { ACCOUNT_SEAL_SECRET: SEAL, ...extra, AGENT_WORKER: worker || { fetch: async (u, init) => {
+    asks.push([u, JSON.parse(init.body)]);
+    if (u === "https://agent-worker/draft") {
+      const b = JSON.parse(init.body);
+      return new Response(JSON.stringify({ ...DRAFT_ANSWER, ...(b.untested ? { untested: b.untested } : {}) }),
+                          { status: 200, headers: { "content-type": "application/json" } });
+    }
+    return new Response('{"event":"answer","ok":true}\n', { status: 200, headers: { "content-type": "application/x-ndjson" } }); } } };
+  const x = await store({ env, before: gate ? (ctx) => assistantGateOf(ctx, gate) : null });
+  if (parts.length) await deployed(x.ctx, parts);
+  const sql = x.ctx.storage.sql;
+  sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+            VALUES ('ada', 'Cover ada', 'h_ada', 'admin', 'active', '["contribute"]', 't', 't')`);
+  assert.equal(credentialsOf(x.ctx).aiKeepAwaySet({ on: false, by: "ada" }).ok, true);
+  sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
+            VALUES ('ann', 'Cover ann', 'h_ann', 'member', 'active', '["contribute"]', 't', 't')`);
+  sql.exec(`INSERT INTO sessions (token_sha, role, expires, created) VALUES (?, 'member:ann', ?, 'x')`,
+           createHash("sha256").update(SESSION).digest("hex"), Date.now() + 3600e3);
+  const c = credentialsOf(x.ctx);
+  if (account === "apikey")
+    assert.equal((await c.accountReferenceSet({ member: "member:ann", kind: "apikey", secret: "sk-ant-zz-ann", by: "member:ann" })).ok, true);
+  if (account === "signin") assert.equal(c.subscriptionConnected({ member: "member:ann" }).ok, true);
+  const grants = () => [...sql.exec(`SELECT count(*) c FROM ai_grants`)][0].c;
+  const ask = async () => { const r = await x.s.ask({ member: "member:ann", session: SESSION, question: "q" }); return { status: r.status, r }; };
+  const draft = async (a) => { const r = await x.s.draft({ member: "ann", session: SESSION, pack: { layers: [] }, ...a }); return { status: r.status, body: await r.json() }; };
+  return { ...x, asks, grants, ask, draft };
+}
+const WRITING = { op: "writinghelp", told: "t", act: "conclude", field: "reason" };
+const ITEMS = [{ kind: "action", says: "the request was sent" }];
+
+/* ===== R40 (T46): partAdmitted, the test-instance exception and its label ===== */
+
+test("R40 (T46; N897 (2); run-rules R29, R30; ai-runs R78; agent-worker R79): on Civicsmith's empty set with no test instance, an ask and a writing-help draft are refused AI_PART_NOT_DEPLOYED as run-rules' partRefusal answers it, nothing posted; control: with CIVICSMITH_TEST_INSTANCE equal to INSTANCE_NAME the same posts are made, the ask's request carrying the label and the draft's answer carrying it beside grant, suggestions and read", async () => {
+  /* the flags on, no bar anywhere (Civicsmith's set holds no matter), INSTANCE_NAME set but no test instance */
+  const off = await doors({ gate: { flags: GATE_FLAGS }, env: { INSTANCE_NAME: "t46-copy" } });
+  const a = await off.ask();
+  assert.equal(a.status, 403);
+  assert.deepEqual(await a.r.json(), partRefusal("ask"), "relayed unchanged");
+  const d = await off.draft(WRITING);
+  assert.equal(d.status, 403);
+  const { grant, suggestions, read, ...given } = d.body;
+  assert.deepEqual(given, partRefusal("draft:own_words"));
+  assert.deepEqual([grant, suggestions, read, d.body.untested], [null, false, [], undefined]);
+  assert.equal(off.asks.length, 0, "nothing posted to the binding");
+  assert.equal(off.grants(), 0, "no grant minted");
+  /* a value the deployer did not set as the instance's own name is no test instance */
+  const other = await doors({ gate: { flags: GATE_FLAGS }, env: { CIVICSMITH_TEST_INSTANCE: "elsewhere", INSTANCE_NAME: "t46-copy" } });
+  assert.equal((await other.ask()).status, 403);
+  assert.equal(other.asks.length, 0);
+  /* control: the test instance */
+  const on = await doors({ gate: { flags: GATE_FLAGS }, env: TEST_COPY });
+  const ok = await on.ask();
+  assert.equal(ok.status, 200);
+  assert.equal(on.asks.length, 1);
+  assert.deepEqual(on.asks[0][1].untested, untestedLabel("ask"), "the ask's request carries the label (agent-worker R79)");
+  const dr = await on.draft(WRITING);
+  assert.equal(dr.status, 200, JSON.stringify(dr.body));
+  assert.deepEqual(dr.body.untested, untestedLabel("draft:own_words"), "the draft's answer carries the label");
+  assert.deepEqual(Object.keys(dr.body).filter((k) => ["grant", "suggestions", "read", "untested"].includes(k)).sort(),
+                   ["grant", "read", "suggestions", "untested"]);
+  assert.deepEqual(on.asks[1][1].untested, untestedLabel("draft:own_words"), "and is sent with the draft");
+});
+
+test("R40 (T46; run-rules R29): admitted by the bar, neither the ask nor the draft carries a label, on a test instance or not; the exception never lifts a flag: with the flag off a test instance is refused AI_RUN_MODE_NOT_DEPLOYED", async () => {
+  for (const env of [{}, TEST_COPY]) {
+    const w = await doors({ gate: { flags: GATE_FLAGS, testSet: GATE_SET }, parts: GATE_PARTS, env });
+    assert.equal((await w.ask()).status, 200);
+    assert.equal(w.asks[0][1].untested, undefined, "the bar held: no label");
+    const d = await w.draft(WRITING);
+    assert.equal(d.status, 200);
+    assert.equal(d.body.untested, undefined);
+    assert.equal(w.asks[1][1].untested, undefined);
+  }
+  const flagOff = await doors({ gate: { flags: { ...GATE_FLAGS, ask: false } }, env: TEST_COPY });
+  const r = await flagOff.ask();
+  assert.equal(r.status, 403);
+  assert.equal((await r.r.json()).code, "AI_RUN_MODE_NOT_DEPLOYED");
+  assert.equal(flagOff.asks.length, 0);
+});
+
+test("R40, R36 (T46; extraction R74): the transcriber's deployable() is partAdmitted(\"transcribe\").admitted and its transcription() answers `untested`, the label, when the part runs on the test instance; off it, not deployable and no label", async () => {
+  const on = await doors({ env: TEST_COPY });
+  const t = transcriberOf(on.ctx, on.env);
+  assert.equal(t.deployable(), true);
+  assert.equal(t.deployable(), aiRunsOf(on.ctx).partAdmitted("transcribe").admitted);
+  assert.deepEqual(t.transcription({ member: "member:ann", at: "2026-10-12T00:00:00Z" }).untested, untestedLabel("transcribe"));
+  /* negative control: no test instance, Civicsmith's empty set */
+  const off = await doors({ env: { INSTANCE_NAME: "t46-copy" } });
+  const u = transcriberOf(off.ctx, off.env);
+  assert.equal(u.deployable(), false);
+  assert.equal(u.transcription({ member: "member:ann", at: "2026-10-12T00:00:00Z" }).untested, null);
+});
+
+/* ===== R40 (T46; N920): the status report's draft ===== */
+
+/* The object's draft path asked as control-plane's door asks it, with `read` answering the plan as the member reads it,
+   and every collaborator the gate must not reach before its time spied in order. */
+async function statusReport(w, { plan = "PLAN-2026-0007-harbour", project = "PROJ-2026-0007-harbour", keptAway = null, read = null } = {}) {
+  const order = [];
+  const c = credentialsOf(w.ctx), a = answersOf(w.ctx);
+  const ka = c.aiKeptAway.bind(c), acc = a.askAccount.bind(a);
+  /* the group's own keep-away (instance-setup's `assistantGate`, asked with no project) is answered as it stands */
+  c.aiKeptAway = (q) => { if (q === undefined) return ka(); order.push(["aiKeptAway", q]); return keptAway ?? ka(q); };
+  a.askAccount = async (q) => { order.push(["askAccount", q.kind]); return acc(q); };
+  try {
+    const res = await draftOnObject(w.ctx, w.env, { op: "statusreportdraft", member: "ann", session: SESSION, plan, items: ITEMS },
+      { read: read || ((op, p) => (op === "plan" ? { ok: true, id: p.id, project, viewer: p.viewer } : null)) });
+    return { status: res.status, body: await res.json(), order };
+  } finally { c.aiKeptAway = ka; a.askAccount = acc; }
+}
+
+test("R40 (T46; N920; study-T46-assistant §2): a status-report draft for a plan whose project is kept away from drafts is refused as credentials.aiKeptAway answers it, asked with the plan's project and use `draft`, before any account is read, nothing posted and no grant; control: not kept away, it is posted as {task: {op, plan, items}, account}, with no told and no grant", async () => {
+  const w = await doors({ gate: { flags: GATE_FLAGS, testSet: GATE_SET }, parts: GATE_PARTS });
+  assert.equal((await credentialsOf(w.ctx).accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "member:ann" })).ok, true);
+  const AWAY = { ok: false, reason: "PROJECT_AI_KEPT_AWAY", code: "PROJECT_AI_KEPT_AWAY", detail: "kept away for the test" };
+  const r = await statusReport(w, { keptAway: AWAY });
+  assert.equal(r.status, 403);
+  assert.deepEqual([r.body.reason, r.body.grant, r.body.read], ["PROJECT_AI_KEPT_AWAY", null, []]);
+  assert.deepEqual(r.order, [["aiKeptAway", { project: "PROJ-2026-0007-harbour", use: "draft" }]], "kept away before any account is read");
+  assert.equal(w.asks.length, 0);
+  assert.equal(w.grants(), 0);
+  /* control */
+  const ok = await statusReport(w);
+  assert.equal(ok.status, 200, JSON.stringify(ok.body));
+  /* the plan's keep-away first, then the account (credentials' own cascade reads its keep-away again inside it) */
+  assert.deepEqual(ok.order.slice(0, 2).map(([k]) => k), ["aiKeptAway", "askAccount"]);
+  assert.equal(ok.order[1][1], "draft", "the account judged for a draft");
+  assert.deepEqual([ok.body.grant, ok.body.read], [null, []], "it reads nothing of the record, whatever the switch");
+  const [u, body] = w.asks.at(-1);
+  assert.equal(u, "https://agent-worker/draft");
+  assert.deepEqual(body.task, { op: "statusreportdraft", plan: "PLAN-2026-0007-harbour", items: ITEMS });
+  assert.equal(body.told, undefined);
+  assert.equal(body.grant, undefined);
+  assert.equal(body.account.level, "member");
+  assert.equal(w.grants(), 0);
+});
+
+test("R40 (T46; N920): a status-report draft is refused AI_PART_NOT_DEPLOYED while partAdmitted(\"draft:statusreport\") does not admit it, before the plan, the keep-away or any account is read; a plan the member cannot read ends it with that read's refusal, and a task naming no plan or items is BAD_TASK, each before any account is read", async () => {
+  const bar = await doors({ gate: { flags: GATE_FLAGS, testSet: GATE_SET }, parts: GATE_PARTS.filter((p) => p !== "draft:statusreport") });
+  let reads = 0;
+  const g = await statusReport(bar, { read: () => { reads++; return { ok: true, project: null }; } });
+  assert.equal(g.status, 403);
+  const { grant: _g, suggestions: _s, read: _r, ...given } = g.body;
+  assert.deepEqual(given, partRefusal("draft:statusreport"));
+  assert.deepEqual([g.order, reads], [[], 0]);
+  /* the real route map's read, through the object's own draft RPC: no such plan */
+  const w = await doors({ gate: { flags: GATE_FLAGS, testSet: GATE_SET }, parts: GATE_PARTS });
+  const a = answersOf(w.ctx), acc = a.askAccount.bind(a);
+  let accounts = 0;
+  a.askAccount = async (q) => { accounts++; return acc(q); };
+  const none = await w.draft({ op: "statusreportdraft", plan: "PLAN-2026-0009-none", items: ITEMS });
+  assert.equal(none.status, 409);
+  assert.equal(none.body.ok, false);
+  assert.match(JSON.stringify(none.body), /NO_SUCH_PLAN/);
+  for (const t of [{ op: "statusreportdraft", plan: null, items: ITEMS }, { op: "statusreportdraft", plan: "PLAN-1", items: null }]) {
+    const b = await w.draft(t);
+    assert.deepEqual([b.status, b.body.reason], [400, "BAD_TASK"]);
+  }
+  assert.equal(accounts, 0, "no account read");
+  assert.equal(w.asks.length, 0, "nothing posted");
+  assert.equal(DRAFT_KIND_OF.statusreportdraft, "statusreport");
+  /* control: a plan read that answers it is posted */
+  a.askAccount = acc;
+  assert.equal((await statusReport(w)).status, 200);
+});
+
+/* ===== R33 (T46; N897 (3); M-T46-6, K2946): the serving account's switch, no secret for a sign-in ===== */
+
+test("R33 (T46; trial finding 4; credentials R55; agent-worker R6): a member served by her own sign-in is sent as {kind: signin, level: member, member, suggestions} with no secret, on the ask and the draft path alike, its suggestions the sign-in's own switch; with it on a draft gets a grant; control: off, false; an API-key reference's switch is read as before", async () => {
+  const w = await doors({ gate: { flags: GATE_FLAGS, testSet: GATE_SET }, parts: GATE_PARTS, account: "signin" });
+  const c = credentialsOf(w.ctx);
+  assert.equal((await c.accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "member:ann" })).ok, true);
+  assert.equal(c.accountReferenceState({ member: "member:ann", viewer: "member:ann" }).subscription.uses.suggestions, true);
+  assert.equal((await w.ask()).status, 200);
+  assert.deepEqual(w.asks[0][1].account, { kind: "signin", level: "member", member: "member:ann", suggestions: true });
+  const d = await w.draft(WRITING);
+  assert.equal(d.status, 200, JSON.stringify(d.body));
+  assert.deepEqual(w.asks[1][1].account, { kind: "signin", level: "member", member: "member:ann", suggestions: true });
+  assert.equal(Object.hasOwn(w.asks[1][1].account, "secret"), false, "M-T46-6: no secret for a sign-in on the draft path");
+  assert.equal(d.body.suggestions, true);
+  assert.match(d.body.grant, /^[0-9a-f]{64}$/);
+  /* control: the sign-in's switch off */
+  assert.equal((await c.accountUsesSet({ owner: "member:ann", switch: "suggestions", on: false, by: "member:ann" })).ok, true);
+  await w.ask();
+  assert.deepEqual(w.asks[2][1].account, { kind: "signin", level: "member", member: "member:ann", suggestions: false });
+  /* an API-key reference: its own switch, its key carried as `secret` */
+  const k = await doors({ gate: { flags: GATE_FLAGS, testSet: GATE_SET }, parts: GATE_PARTS });
+  assert.equal((await credentialsOf(k.ctx).accountUsesSet({ owner: "member:ann", switch: "suggestions", on: true, by: "member:ann" })).ok, true);
+  await k.ask();
+  assert.deepEqual(k.asks[0][1].account, { kind: "apikey", level: "member", secret: "sk-ant-zz-ann", member: "member:ann", suggestions: true });
+});
+
+/* ===== R36 (T46; N886; extraction R75): agent-worker's HTTP status relayed ===== */
+
+const ONE_MATTER = Object.freeze({ id: "t46-set", version: 1, matters: Object.freeze([{ id: "m1" }]) });
+const SCAN = new Uint8Array(readFileSync(fileURLToPath(new URL("../../../../pdf-worker/test/fixtures/scan-dct-page.pdf", import.meta.url))));
+const shaOf = (b) => createHash("sha256").update(b).digest("hex");
+function bucket() {
+  const held = new Map();
+  const object = (k, b) => ({ key: k, size: b.length, arrayBuffer: async () => b.buffer.slice(b.byteOffset, b.byteOffset + b.length) });
+  return { async put(k, v) { held.set(k, v); return { key: k, size: v.length }; },
+           async get(k) { return held.has(k) ? object(k, held.get(k)) : null; },
+           async head(k) { return held.has(k) ? { key: k, size: held.get(k).length } : null; },
+           async delete(k) { held.delete(k); }, async list() { return { objects: [...held.keys()].map((key) => ({ key })), truncated: false }; } };
+}
+/* agent-worker's `/transcribe` answering `answer` at `status`. */
+const worker = (status, answer) => ({ seen: 0, async fetch() { this.seen++;
+  return new Response(JSON.stringify(answer), { status, headers: { "content-type": "application/json" } }); } });
+/* A stored scan's reading, filed in a bundle, as a promotion leaves them; the transcriber admitted on a one-matter set. */
+async function scanned(w) {
+  const x = await doors({ gate: { testSet: ONE_MATTER }, env: { CAPTURES: bucket() }, worker: w });
+  assert.equal(aiRunsOf(x.ctx).testBarRecord({ part: "transcribe", set: "t46-set", set_version: 1, false_alarm_rate: 0, passed: true,
+                                                graded_by: "harness", at: "2026-10-01T00:00:00Z" }).ok, true);
+  const d = shaOf(SCAN);
+  await x.env.CAPTURES.put(`bio/captures/${d}`, SCAN);
+  x.ctx.storage.sql.exec(`INSERT INTO bundles (bundle_id, object_type, group_id, title, current_state, created, last_updated, bundle_sha, row_version)
+                          VALUES ('B-T46', 'information', 'g', 't', 'collected', '2026-01-01', '2026-01-01', 'x', 1)`);
+  extractionOf(x.ctx).writeReading({ bundleId: "B-T46", captureSha: d, reading: { content_type: "generic", reader_version: 1,
+    read_from_text: false, found: false, entities: [], facts: {}, at: "2026-09-01T00:00:00Z", basis: "b", text_source: null, page_count: 1 } });
+  const res = await x.fetch(`/pagetranscribe?sha256=${d}&cls=member&session=1&caps=contribute&viewer=member:ann&author=member:ann&store=bio`,
+                            { method: "POST", body: "{}" });
+  return { x, status: res.status, text: await res.text() };
+}
+
+test("R36 (T46; N886; K2940; extraction R75; agent-worker R72): a refusal agent-worker answers after the post is relayed with its own HTTP status: a stub answering 400 BAD_PAGES is answered 400 with that code, and 409 NO_ACCOUNT 409; control: an answer of 200 is performed", async () => {
+  const bad = worker(400, { ok: false, code: "BAD_PAGES", detail: "no page" });
+  /* the store's door answers the owner's answer in its envelope, `{ok, result: {status, body}}`, the status the Worker's
+     door gives the member */
+  const r = await scanned(bad);
+  assert.equal(bad.seen, 1, "posted");
+  const rb = JSON.parse(r.text).result;
+  assert.deepEqual([rb.status, rb.body.code], [400, "BAD_PAGES"], r.text);
+  const none = worker(409, { ok: false, code: "NO_ACCOUNT", detail: "none" });
+  const n = JSON.parse((await scanned(none)).text).result;
+  assert.deepEqual([n.status, n.body.code], [409, "NO_ACCOUNT"]);
+  /* the AI path itself answers the status beside the code */
+  const p = await transcriberOf(r.x.ctx, r.x.env).transcription({ member: "member:ann", at: "2026-10-12T00:00:00Z" })
+    .transcribe({ account: { ok: true, kind: "apikey", level: "member", key: "sk" }, capture_sha: shaOf(SCAN), pages: [0] });
+  assert.deepEqual([p.ok, p.reason, p.status], [false, "BAD_PAGES", 400]);
+  /* control */
+  const fine = worker(200, { ok: true, engine: "claude-test", version: null, pages: [{ page: 0, text: "words" }], not_transcribed: [] });
+  const ok = JSON.parse((await scanned(fine)).text).result;
+  assert.equal(ok.status, 200, JSON.stringify(ok));
+  assert.equal(ok.body.transcription.performed, true, JSON.stringify(ok));
+});
+
+/* ===== R39 (T46; N935) and R5 (T46): the route map ===== */
+
+const mask = (text) => text.replace(/\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d+)?Z/g, "<instant>");
+
+test("R39 (T46; N935; case-account R15, local-facts R15): case-account's and local-facts' own ops maps are spread whole into the route map at their places, so advocacycheck, advocacychecks and grouprules each answer through the door what the owner's own map answers called directly; the plane names no entry of either", async () => {
+  const u = new URL("http://do/");
+  const x = await store(), twin = await store();
+  const keys = Object.keys(x.s.routes(u, null));
+  const own = { "case-account": caseAccountOps(caseAccountOf(x.ctx), u, null), "local-facts": localFactsOps(localFactsOf(x.ctx), u, null) };
+  assert.deepEqual(Object.keys(own["case-account"]).sort(), ["advocacycheck", "advocacychecks"]);
+  assert.ok(Object.keys(own["local-facts"]).includes("grouprules"));
+  for (const [mod, map] of Object.entries(own)) {
+    const entry = ownMaps(x.ctx, u, null).find(([m]) => m === mod);
+    assert.deepEqual(Object.keys(entry[1]), Object.keys(map), `${mod}: the map at its place is the owner's own, nothing added`);
+    for (const op of Object.keys(map)) assert.ok(keys.includes(op), `${mod}: the route map lacks ${op}`);
+  }
+  for (const [mod, path] of [["case-account", "advocacychecks?project=PROJ-2026-none&viewer=member:nobody"],
+                             ["case-account", "advocacycheck?project=PROJ-2026-none&viewer=member:nobody&by=member:nobody"],
+                             ["local-facts", "grouprules?viewer=member:nobody"]]) {
+    const op = path.split("?")[0], url = new URL(`http://do/${path}`);
+    const res = await x.fetch(`/${path}`, { method: "POST", body: "{}" });
+    const ops = mod === "case-account" ? caseAccountOps(caseAccountOf(twin.ctx), url, {}) : localFactsOps(localFactsOf(twin.ctx), url, {});
+    const direct = await ops[op]();
+    assert.equal(res.status, 200, op);
+    assert.deepEqual(JSON.parse(mask(await res.text())), JSON.parse(mask(JSON.stringify({ ok: true, result: direct }))), op);
+  }
+  /* negative control: an op neither map holds is no route */
+  assert.equal(keys.includes("advocacyzz"), false);
+});
+
+/* T46's new ops served through owners' maps (op-declarations R50, R51), each to be reached through the door. */
+const T46_OPS = ["escalationstoppursuing", "escalationreopen", "statusreportassist", "joindoors", "clockproposals", "infolevelset", "infolevel"];
+
+test("R5 (T46): the route map is re-pinned to T46's new ops: each is in the map of the module that serves it, in the route map, and answers through control-plane's door what that map answers called directly; `textcheck` is the draft door's (R41); an op no map serves is no route", async () => {
+  const u = new URL("http://do/");
+  const x = await store(), twin = await store();
+  const keys = Object.keys(x.s.routes(u, null));
+  for (const op of T46_OPS) {
+    const owner = ownMaps(x.ctx, u, null).find(([, m]) => Object.hasOwn(m, op));
+    assert.ok(owner, `no module's map serves ${op}`);
+    assert.ok(keys.includes(op), `the route map lacks ${op}`);
+    const path = `${op}?viewer=member:nobody&by=member:nobody&author=member:nobody&plan=PLAN-2026-none&id=ESC-2026-none`;
+    const res = await x.fetch(`/${path}`, { method: "POST", body: "{}" });
+    const fn = MODULE_MAPS.find(([m]) => m === owner[0])[1];
+    let direct;
+    try { direct = await fn(twin.ctx, new URL(`http://do/${path}`), {}, twin.env)[op](); } catch (e) { direct = { threw: String(e) }; }
+    assert.equal(res.status, 200, `${op} (${owner[0]})`);
+    assert.deepEqual(JSON.parse(mask(await res.text())), JSON.parse(mask(JSON.stringify({ ok: true, result: direct ?? null }))), op);
+  }
+  assert.equal(DRAFT_KIND_OF.textcheck, "textcheck");
+  assert.equal(keys.includes("zzprobe46"), false);
+});
+
+/* ===== R42 (T46; K2950; hypotheses R23 at the plane's shape) ===== */
+
+const ENTRY = fileURLToPath(new URL("./r42-entry.mjs", import.meta.url));
+const mf = new Miniflare({
+  modules: true, modulesRoot: "/", scriptPath: ENTRY, script: readFileSync(ENTRY, "utf8"),
+  modulesRules: [{ type: "ESModule", include: ["**/*.mjs"] }],
+  compatibilityDate: "2026-07-01", compatibilityFlags: ["nodejs_compat"],
+  durableObjects: { STORE: { className: "Seeded", useSQLite: true }, TEMPBOOT: { className: "TempBoot", useSQLite: true } },
+  r2Buckets: ["CAPTURES", "PUBLISHED"], bindings: { INSTANCE_NAME: "t46-r42", VERSION: "test" },
+  durableObjectsPersist: mkdtempSync(join(tmpdir(), "plane-r42-")),
+});
+after(() => mf.dispose());
+const stubOf = async (binding) => { const ns = await mf.getDurableObjectNamespace(binding); return ns.get(ns.idFromName("bio")); };
+
+test("R42 (T46; K2950; hypotheses R23, R14): the plane's own Store, booted on workerd over a store numbered from the shared sequence and holding notes and turns, runs hypotheses' renumbering and every boot migration without a TEMP table and answers its first request; the notes and turns read back renumbered. Negative control: a boot migration that makes a TEMP table is refused there, and that object does not answer", async () => {
+  const s = await stubOf("STORE");
+  const first = await s.fetch("http://do/notes?viewer=member:ann");
+  const text = await first.text();
+  assert.equal(first.status, 200, text);
+  const ann = JSON.parse(text).result.notes.map((n) => [n.note, n.text]);
+  assert.deepEqual(ann, [[3, "ann third"], [2, "ann second"], [1, "ann first"]], "her notes from 1, in their order");
+  const held = await (await s.fetch("http://do/r42")).json();
+  assert.deepEqual(held.keyed, ["member", "note_id"], "renumbered: keyed by (member, note_id)");
+  assert.deepEqual(held.notes.map((n) => [n.member, n.note_id, n.text]),
+    [["ann", 1, "ann first"], ["ann", 2, "ann second"], ["ann", 3, "ann third"], ["outsider", 1, "outsider first"], ["outsider", 2, "outsider second"]]);
+  assert.deepEqual(held.turns.map((t) => [t.note_id, t.member, t.made_id]), [[2, "ann", "INQ-2026-0002-q"], [1, "outsider", "INFO-2026-0001-doc"],
+    [3, "ann", "INFO-2026-0002-doc"], [2, "ann", "HYP-2026-0001"], [2, "outsider", "INQ-2026-0003-q"]], "turns follow their notes");
+  assert.match(held.temp, /SQLITE_AUTH|not authorized/i, "workerd refuses a TEMP table");
+  /* negative control: the same Store with one more boot migration making a TEMP table */
+  let answered;
+  try { answered = (await (await stubOf("TEMPBOOT")).fetch("http://do/notes?viewer=member:ann")).status; } catch (e) { answered = String(e && e.message || e); }
+  assert.notEqual(answered, 200, `a TEMP table at boot: ${answered}`);
+});

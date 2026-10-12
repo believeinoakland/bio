@@ -13,6 +13,7 @@ import { storage, Store } from "./fixture.mjs";
 import { SCREENS } from "../../../src/plane/screens.mjs";
 import { screenFailures } from "../../../src/plane/wizards.mjs";
 import { OPS } from "../../../src/op-declarations/index.mjs";
+import { assistantGateOf } from "../../../src/plane/ask.mjs";
 import { transcriberOf, renderPages, TRANSCRIBE_PICTURE_EDGE, TRANSCRIBE_IMAGE_MAX_BYTES } from "../../../src/plane/transcribe.mjs";
 import { gatedOp } from "../../../src/plane/door.mjs";
 import { aiRunsOf } from "../../../src/ai-runs/index.mjs";
@@ -150,7 +151,7 @@ async function planeHolding(bytes, worker) {
   const st = storage(), evidence = bucket();
   const env = { STORE: { idFromName: (n) => n }, ACCOUNT_SEAL_SECRET: "a-long-seal-secret-for-the-t43-test", CAPTURES: evidence,
                 AGENT_WORKER: worker };
-  transcriberOf(st.ctx, env, { testSet: ONE_MATTER });
+  assistantGateOf(st.ctx, { testSet: ONE_MATTER });   /* R40 (T46): the set ai-runs is built with */
   const s = new Store(st.ctx, env);
   for (const p of st.blocked) await p;
   const ctx = st.ctx, sql = ctx.storage.sql;

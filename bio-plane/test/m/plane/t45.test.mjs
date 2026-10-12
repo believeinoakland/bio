@@ -149,7 +149,7 @@ import { createHash } from "node:crypto";
 import { deployed, GATE_FLAGS, GATE_SET, GATE_PARTS } from "./fixture.mjs";
 import { assistantGateOf, assembleRecords, DRAFT_KIND_OF } from "../../../src/plane/ask.mjs";
 import { credentialsOf } from "../../../src/credentials/index.mjs";
-import { AI_RUN_OPEN_CHECKS } from "../../../src/run-rules/index.mjs";
+import { AI_RUN_OPEN_CHECKS, partRefusal, deployedModesFor, draftKindDeployed } from "../../../src/run-rules/index.mjs";
 
 const SESSION = "s".repeat(64);
 /* ann with her own account and a live session, the assistant's keep-away off, agent-worker recording every post; the
@@ -183,20 +183,35 @@ const refusedUndeployed = (body, mode, label) => {
   assert.deepEqual([body.ok, body.reason, body.code, body.check, body.translation, body.mode],
                    [false, "AI_RUN_MODE_NOT_DEPLOYED", "AI_RUN_MODE_NOT_DEPLOYED", ROW.check, ROW.translation, mode], label);
 };
+/* R40 (T46; run-rules R30): a part its flag deploys and `ai-runs.partAdmitted` does not admit, refused as run-rules'
+   `partRefusal(part)` answers it, unchanged. */
+const refusedPart = (body, part, label) => {
+  const { grant: _g, suggestions: _s, read: _r, ...given } = body;
+  assert.deepEqual(given, partRefusal(part), label);
+};
+/* R40: the refusal run-rules' own flags give (no flags handed): the flag's when it does not deploy, else the bar's. */
+const refusedOwnFlags = (body, mode, kind, label) => {
+  const flagged = mode === "ask" ? deployedModesFor().includes("ask") : draftKindDeployed({ kind });
+  if (flagged) refusedPart(body, mode === "ask" ? "ask" : `draft:${kind}`, label);
+  else refusedUndeployed(body, mode, label);
+};
 const DRAFTS = Object.freeze({ writinghelp: { told: "t", act: "conclude", field: "reason" }, groupdescriptiondraft: { told: [] },
   translationdraft: { direction: "to_language", language: "es", words: [] }, textcheck: { text: "We demand the council act." },
   infractiondraft: { matter: { actions: ["ACTN-2026-0009-none"] }, audience: "members" },
-  bearingdraft: { action: "ACTN-2026-0009-none", reply: 1 } });
+  bearingdraft: { action: "ACTN-2026-0009-none", reply: 1 },
+  statusreportdraft: { plan: "PLN-2026-0009-none", items: [{ kind: "action", says: "sent" }] } });
 
-test("R40 (K2853; run-rules R16, R19): the ask door refuses AI_RUN_MODE_NOT_DEPLOYED (403, run-rules' C-109.1 row, mode `ask`) while `ask`'s flag is off or its bar is not held, before the keep-away read, any account read or grant, nothing posted; deployed and held, it is asked", async () => {
-  for (const [label, w] of [["run-rules' own flags (ask false today)", await doors({ parts: GATE_PARTS })],
-                            ["the flag on, no bar held", await doors({ gate: { flags: GATE_FLAGS, testSet: GATE_SET } })],
-                            ["the bar held, the flag off", await doors({ gate: { flags: { ...GATE_FLAGS, ask: false }, testSet: GATE_SET }, parts: GATE_PARTS })]]) {
+test("R40 (K2853; run-rules R16, R19, R30; T46): the ask door refuses AI_RUN_MODE_NOT_DEPLOYED (403, run-rules' C-109.1 row, mode `ask`) while `ask`'s flag is off, and AI_PART_NOT_DEPLOYED (run-rules' partRefusal, 403) while its flag is on and ai-runs' partAdmitted does not admit it, before the keep-away read, any account read or grant, nothing posted; deployed and admitted, it is asked", async () => {
+  for (const [label, w, check] of [
+    ["run-rules' own flags, Civicsmith's set", await doors({ parts: GATE_PARTS }), (b, l) => refusedOwnFlags(b, "ask", null, l)],
+    ["the flag on, no bar held", await doors({ gate: { flags: GATE_FLAGS, testSet: GATE_SET } }), (b, l) => refusedPart(b, "ask", l)],
+    ["the bar held, the flag off", await doors({ gate: { flags: { ...GATE_FLAGS, ask: false }, testSet: GATE_SET }, parts: GATE_PARTS }),
+     (b, l) => refusedUndeployed(b, "ask", l)]]) {
     /* the keep-away on: the gate is asked first, so its refusal, not AI_KEPT_AWAY, answers */
     assert.equal(credentialsOf(w.ctx).aiKeepAwaySet({ on: true, reason: "r", by: "ada" }).ok, true);
     const { status, r } = await w.ask();
     assert.equal(status, 403, label);
-    refusedUndeployed(await r.json(), "ask", label);
+    check(await r.json(), label);
     assert.equal(w.asks.length, 0, `${label}: nothing posted`);
     assert.equal(w.grants(), 0, `${label}: no grant minted`);
   }
@@ -206,14 +221,13 @@ test("R40 (K2853; run-rules R16, R19): the ask door refuses AI_RUN_MODE_NOT_DEPL
   assert.equal(ok.asks.length, 1);
 });
 
-test("R40 (K2853; run-rules R21, R22, R27): the draft door refuses each kind while its flag (draft's for own words and translation; draft's and action_drafts' for the three action drafts) or its bar `draft:<kind>` does not admit it, before anything is read or minted; an op of no kind is refused; admitted, it is posted", async () => {
+test("R40 (K2853; run-rules R21, R22, R27, R30; T46): the draft door refuses each kind while its flag (draft's for own words, translation and the status report; draft's and action_drafts' for the three action drafts) does not deploy it (AI_RUN_MODE_NOT_DEPLOYED), or ai-runs' partAdmitted(`draft:<kind>`) does not admit it (AI_PART_NOT_DEPLOYED), before anything is read or minted; an op of no kind is refused; admitted, it is posted", async () => {
   assert.deepEqual(Object.keys(DRAFT_KIND_OF).sort(), Object.keys(DRAFTS).sort());
   const plain = await doors({ parts: GATE_PARTS });
   for (const op of Object.keys(DRAFTS)) {
     const r = await plain.draft({ op, ...DRAFTS[op] });
     assert.equal(r.status, 403, op);
-    refusedUndeployed(r.body, "draft", op);
-    assert.equal(r.body.kind, DRAFT_KIND_OF[op], op);
+    refusedOwnFlags(r.body, "draft", DRAFT_KIND_OF[op], op);
     assert.deepEqual([r.body.grant, r.body.read], [null, []], op);
   }
   /* `draft` on, `action_drafts` off: own words and translation admitted, the action drafts refused */
@@ -225,8 +239,8 @@ test("R40 (K2853; run-rules R21, R22, R27): the draft door refuses each kind whi
   /* both flags on, the bar held for own words only: every other kind refused for its bar */
   const bar = await doors({ gate: { flags: GATE_FLAGS, testSet: GATE_SET }, parts: ["draft:own_words"] });
   assert.equal((await bar.draft({ op: "writinghelp", ...DRAFTS.writinghelp })).status, 200);
-  for (const op of ["translationdraft", "textcheck"])
-    refusedUndeployed((await bar.draft({ op, ...DRAFTS[op] })).body, "draft", `${op}: no bar`);
+  for (const op of ["translationdraft", "textcheck", "statusreportdraft"])
+    refusedPart((await bar.draft({ op, ...DRAFTS[op] })).body, `draft:${DRAFT_KIND_OF[op]}`, `${op}: no bar`);
   const unknown = await bar.draft({ op: "zzdraft" });
   assert.equal(unknown.status, 403);
   refusedUndeployed(unknown.body, "draft", "an op of no kind");

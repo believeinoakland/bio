@@ -11,8 +11,8 @@ import { instanceSetupOf } from "../setup.mjs";
 import { answersOf } from "../answers/index.mjs";
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { membershipOf } from "../membership/index.mjs";
-import { deployedModesFor, draftKindDeployed, draftMayRead, partDeployableOn, CIVICSMITH_TEST_SET, AI_RUN_OPEN_CHECKS,
-         ASK_MODE, DRAFT_MODE } from "../run-rules/index.mjs";
+import { deployedModesFor, draftKindDeployed, draftMayRead, partRefusal, AI_RUN_OPEN_CHECKS, ASK_MODE,
+         DRAFT_MODE } from "../run-rules/index.mjs";
 
 const json = (body, status) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 const idOf = (m) => (typeof m === "string" && m.startsWith("member:") ? m.slice(7) : m);
@@ -113,29 +113,36 @@ export function draftUse(ctx, grant) {
   return until !== undefined && until > Date.now() ? "draft" : null;
 }
 
-/* R40 (T45; K2853; run-rules R16, R19, R21, R27; D14): THE DEPLOY GATE of the two doors. An ask, or a draft of a kind, is
-   posted only while run-rules' own flag deploys it (`ask` in `deployedModesFor`; a draft's kind by `draftKindDeployed`)
-   AND its test bar is held on Civicsmith's set (`partDeployableOn`, on ai-runs' R75 records, the chain empty: neither
-   part is in the order). Both are run-rules' and ai-runs' answers, read here, never a second rule. The flags and the set
-   are the record's; a module test alone hands its own through `assistantGateOf` before the object is built (K61, as
-   `transcriberOf`'s `testSet`), never `env`. */
+/* R40 (T45; K2853; run-rules R16, R21, R27, R29, R30; D14; T46: N897 (2), K2816 (2)): THE DEPLOY GATE of the two doors.
+   An ask, or a draft of a kind, is posted only while run-rules' own flag deploys it (`ask` in `deployedModesFor`; a
+   draft's kind by `draftKindDeployed`) AND `ai-runs.partAdmitted(part)` admits it (part `ask`, or `draft:<kind>`): the
+   bar held on Civicsmith's set, or, on a test instance the deployer marked, the test-instance exception, which lifts the
+   bar alone and never a flag. A flag that does not deploy it is refused AI_RUN_MODE_NOT_DEPLOYED; a part the flag
+   deploys and `partAdmitted` does not admit is refused as run-rules' `partRefusal(part)` answers it
+   (AI_PART_NOT_DEPLOYED), relayed unchanged. Each is run-rules' and ai-runs' answer, read here, never a second rule.
+   The flags are the record's; a module test alone hands its own through `assistantGateOf` before the object is built
+   (K61), and the test set it names is the one the composition root builds ai-runs with (ai-runs' `deps.testSet`), never
+   `env`. */
 const GATES = new WeakMap();
 /** R40: this storage's gate deps, `{flags, testSet}`: `flags` as `deployedModesFor`/`draftKindDeployed` take them (null:
- *  run-rules' own), `testSet` in place of `CIVICSMITH_TEST_SET`. Read on the first call only. */
+ *  run-rules' own), `testSet` the set the composition root hands ai-runs in place of `CIVICSMITH_TEST_SET` (null: its
+ *  own). Read on the first call only. */
 export function assistantGateOf(ctx, deps = {}) {
   const k = ctx && ctx.storage ? ctx.storage : ctx;
   let g = GATES.get(k);
   if (!g) {
     g = Object.freeze({ flags: deps && deps.flags && typeof deps.flags === "object" ? deps.flags : null,
-                        testSet: (deps && deps.testSet) || CIVICSMITH_TEST_SET });
+                        testSet: (deps && deps.testSet) || null });
     GATES.set(k, g);
   }
   return g;
 }
-/** R40: the draft kind (run-rules R22, R25, R27) each draft op is: a member's own words, a translation, or one of the
- *  action drafts. An op not named is no kind, and so never deployed (fail closed). */
+/** R40: the draft kind (run-rules R22, R25, R27) each draft op is: a member's own words, a translation, one of the
+ *  action drafts, or (T46; N920) a plan's status report. An op not named is no kind, and so never deployed (fail
+ *  closed). */
 export const DRAFT_KIND_OF = Object.freeze({ writinghelp: "own_words", groupdescriptiondraft: "own_words",
-  translationdraft: "translation", textcheck: "textcheck", infractiondraft: "infractiondraft", bearingdraft: "bearingdraft" });
+  translationdraft: "translation", textcheck: "textcheck", infractiondraft: "infractiondraft", bearingdraft: "bearingdraft",
+  statusreportdraft: "statusreport" });
 const NOT_DEPLOYED = "AI_RUN_MODE_NOT_DEPLOYED";
 /* R40: the refusal, as ai-runs refuses an undeployed run mode: run-rules' row (C-109.1), read by key, with the mode. */
 function notDeployed(mode, kind = null) {
@@ -143,32 +150,65 @@ function notDeployed(mode, kind = null) {
   return { ok: false, reason: NOT_DEPLOYED, code: NOT_DEPLOYED, check: row.check, translation: row.translation, mode,
            ...(kind !== null ? { kind } : {}) };
 }
-/** R40: null when `mode` (`ask`, or `draft` of `kind`) is deployed by its flag and its bar is held; else the refusal.
+/** R40: `{refusal: null, untested}` when `mode` (`ask`, or `draft` of `kind`) is deployed by its flag and admitted by
+ *  `ai-runs.partAdmitted`, `untested` the test-instance label (run-rules R29) when it is admitted on the exception, else
+ *  null; otherwise `{refusal}`, AI_RUN_MODE_NOT_DEPLOYED for the flag, run-rules' `partRefusal(part)` for the bar.
  *  Anything that throws refuses. */
 export function deployGate(ctx, env, mode, kind = null) {
-  let ok = false;
+  let flagged = false;
   try {
     const g = assistantGateOf(ctx);
-    const flagged = mode === ASK_MODE.mode ? deployedModesFor(g.flags ?? undefined).includes(ASK_MODE.mode)
+    flagged = (mode === ASK_MODE.mode ? deployedModesFor(g.flags ?? undefined).includes(ASK_MODE.mode)
       : mode === DRAFT_MODE.mode && typeof kind === "string"
-        ? draftKindDeployed({ kind, ...(g.flags ? { flags: g.flags } : {}) }) : false;
-    const part = mode === ASK_MODE.mode ? ASK_MODE.mode : `draft:${kind}`;
-    ok = flagged === true
-      && partDeployableOn(g.testSet, part, { verifications: [], testBars: aiRunsOf(ctx, env).testBarRecords() }) === true;
-  } catch { ok = false; }
-  return ok ? null : notDeployed(mode, mode === ASK_MODE.mode ? null : kind);
+        ? draftKindDeployed({ kind, ...(g.flags ? { flags: g.flags } : {}) }) : false) === true;
+  } catch { flagged = false; }
+  if (!flagged) return { refusal: notDeployed(mode, mode === ASK_MODE.mode ? null : kind), untested: null };
+  const part = mode === ASK_MODE.mode ? ASK_MODE.mode : `draft:${kind}`;
+  let said = null;
+  try { said = aiRunsOf(ctx, env).partAdmitted(part); } catch { said = null; }
+  if (!said || said.admitted !== true) return { refusal: partRefusal(part), untested: null };
+  return { refusal: null, untested: said.untested ?? null };
 }
 
-/* R33: `answers.askAccount`'s account, read once into agent-worker R6's account shape. */
+/* R33: `answers.askAccount`'s account, read once. */
 const accountOf = (a) => (a && a.account && typeof a.account === "object" ? a.account : {});
+
+/** R33 (K1806, K2500; T46: N897 (3), credentials R55, agent-worker R6, M-T46-6, K2946): the account that serves the
+ *  member's act in agent-worker R6's wire shape, with the suggestions switch of THAT account: a sign-in's own
+ *  (`accountReferenceState().subscription.uses.suggestions`, read for the member it serves, the asking member's own;
+ *  a project's sign-in serving another member has no in-plane read for this act, so none is offered, K1798), the
+ *  member's reference's for an API key at level `member`, the group key's for `group`; a project's API key offers none.
+ *  A `signin` account carries no `secret` (that member's sign-in serves; agent-worker R6 refuses one present
+ *  BAD_ACCOUNT); a project's account names its project. Anything that throws reads the switch as off. */
+export function wireAccount(c, ref, who) {
+  let suggestions = false;
+  try {
+    if (ref.kind === "signin") {
+      if (idOf(ref.member) === idOf(who)) {
+        const st = c.accountReferenceState({ member: who, viewer: who });
+        suggestions = !!(st && st.ok === true && st.subscription && st.subscription.uses && st.subscription.uses.suggestions === true);
+      }
+    } else if (ref.level === "member") {
+      const st = c.accountReferenceState({ member: who, viewer: who });
+      suggestions = !!(st && st.ok === true && st.suggestions === true);
+    } else if (ref.level === "group") {
+      const g = c.groupKeySwitches();
+      suggestions = !!(g && g.suggestions === true);
+    }
+  } catch { suggestions = false; }
+  const account = { kind: ref.kind, level: ref.level, ...(ref.level === "project" ? { project: ref.project } : {}),
+                    ...(ref.kind === "signin" ? {} : { secret: ref.key }), member: who, suggestions };
+  return { account, suggestions };
+}
 
 /** On the `bio` object: judge the account and its limit (`answers.askAccount`), mint the grant (unless one was
  *  presented), unseal the account, read the suggestions switch, and post the ask. */
 export async function askOnObject(ctx, env, { member, session = null, grant = null, question, conversation, store = null,
                                               project = null }) {
-  /* R40 (K2853): first, before the keep-away read, any account read or any grant: the mode deployed and its bar held. */
-  const undeployed = deployGate(ctx, env, ASK_MODE.mode);
-  if (undeployed) return json(undeployed, 403);
+  /* R40 (K2853; T46): first, before the keep-away read, any account read or any grant: the mode deployed by its flag and
+     admitted by ai-runs' `partAdmitted`; `untested` the test-instance label when admitted on the exception. */
+  const gate = deployGate(ctx, env, ASK_MODE.mode);
+  if (gate.refusal) return json(gate.refusal, 403);
   const w = env && env.AGENT_WORKER;
   if (!w || typeof w.fetch !== "function")
     return json({ ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "your group's Civicsmith has no assistant bound to it. Nothing was asked." }, 503);
@@ -189,19 +229,13 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
     if (!g || g.ok !== true) return json(g, 403);
     token = g.token;
   }
-  /* K1806 (agent-worker R6, R54; credentials R35; K1755, K1798): the account that serves this ask, carried as
-     `{kind, level, secret, member, suggestions}`: R35's `key` named `secret`, `level` `member` for the member's own
-     reference, `group` for the group's API key, `project` for a project's. The member's own switch is read from their
-     reference's state (credentials R25); another account's switch has no in-plane read for a member's act (K1798), so an
-     ask it serves offers no suggestion, as by default. */
-  let ref = accountOf(judged);
-  let suggestions = false;
-  if (ref.level === "member")
-    try { const st = c.accountReferenceState({ member, viewer: member }); suggestions = !!(st && st.ok === true && st.suggestions === true); }
-    catch { suggestions = false; }
+  /* K1806, R33 (agent-worker R6, R54; credentials R35, R55; T46): the account that serves this ask in R6's wire shape,
+     with that account's own suggestions switch, and no secret for a sign-in (`wireAccount`). R40 (agent-worker R79): the
+     test-instance label, when the ask was admitted on the exception. */
+  let { account } = wireAccount(c, accountOf(judged), member);
   const out = JSON.stringify({ question, ...(conversation !== undefined ? { conversation } : {}), ...(store ? { store } : {}),
-                               grant: token, account: { kind: ref.kind, level: ref.level, secret: ref.key, member, suggestions } });
-  ref = null;
+                               grant: token, account, ...(gate.untested ? { untested: gate.untested } : {}) });
+  account = null;
   let res;
   try {
     res = await w.fetch("https://agent-worker/ask", { method: "POST", headers: { "content-type": "application/json" }, body: out });
@@ -238,35 +272,50 @@ export async function askOnObject(ctx, env, { member, session = null, grant = nu
 export async function draftOnObject(ctx, env, { op = null, member = null, session = null, told = null, act = null, field = null,
                                                 firsthand = false, pack = null, direction = null, language = null,
                                                 words = null, text = null, matter = null, audience = null, action = null,
-                                                reply = null } = {}, { read = null } = {}) {
+                                                reply = null, plan = null, items = null } = {}, { read = null } = {}) {
   const who = member === null || member === undefined || member === "" ? null : `member:${idOf(member)}`;
   const readOf = (grant) => {
     if (!grant) return [];
     try { return [...answersOf(ctx).readLog(grant).index.keys()]; } catch { return []; }
   };
+  /* R40 (T46): `untested`, the test-instance label, beside `grant`, `suggestions` and `read` once the draft is admitted
+     on the exception; never otherwise. */
+  let untested = null;
   const out = (status, answer, grant = null, suggestions = false) =>
     json({ ...(answer && typeof answer === "object" && !Array.isArray(answer) ? answer : { ok: false, answer }),
-           grant, suggestions, read: readOf(grant) }, status);
-  /* R40 (K2853): the kind deployed and its bar held, before anything else is read */
+           grant, suggestions, read: readOf(grant), ...(untested ? { untested } : {}) }, status);
+  /* R40 (K2853; T46): the kind deployed by its flag and admitted by ai-runs' `partAdmitted`, before anything else is read */
   const kind = Object.hasOwn(DRAFT_KIND_OF, op ?? "") ? DRAFT_KIND_OF[op] : null;
-  const undeployed = deployGate(ctx, env, DRAFT_MODE.mode, kind);
-  if (undeployed) return out(403, undeployed);
+  const gate = deployGate(ctx, env, DRAFT_MODE.mode, kind);
+  if (gate.refusal) return out(403, gate.refusal);
+  untested = gate.untested;
   const w = env && env.AGENT_WORKER;
   if (!w || typeof w.fetch !== "function")
     return out(503, { ok: false, reason: "AGENT_WORKER_UNBOUND", detail: "your group's Civicsmith has no assistant bound to it. Nothing was drafted." });
   const off = instanceSetupOf(ctx, env).assistantGate();   /* N765: `AI_KEPT_AWAY`, as for an ask, before any account */
   if (off) return out(403, off);
   const c = credentialsOf(ctx);
+  /* R40 (T46; N920; study-T46-assistant §2): a plan's status report. The plan is read as the member reads it (`op=plan`,
+     her viewer stamp), and the keep-away of its project for drafts (`credentials.aiKeptAway({project, use: "draft"})`)
+     refuses as given, both before any account is read; a refused read ends the draft with that refusal. */
+  if (kind === "statusreport") {
+    if (!said(plan) || !Array.isArray(items)) return out(400, badTask("a status report's draft names its plan and hands the items its report is drawn from"));
+    if (typeof read !== "function" || !said(who)) return out(400, badTask("the plan this draft is about cannot be read here"));
+    let p;
+    try { p = read("plan", { id: plan, viewer: who }); } catch { p = null; }
+    if (!p || typeof p !== "object") p = { ok: false, reason: "UNDETERMINED", detail: "the plan could not be read. Nothing was drafted." };
+    if (p.ok !== true) return out(409, p);
+    const project = said(p.project) ? p.project : p.plan && said(p.plan.project) ? p.plan.project : null;
+    let away;
+    try { away = c.aiKeptAway({ project, use: "draft" }); } catch { away = { ok: false, reason: "UNDETERMINED", detail: "whether this plan's project keeps its material away could not be read. Nothing was drafted." }; }
+    if (away) return out(403, away);
+  }
   /* R33 (K2500, K2508; answers R30): the account and its limit judged by answers for kind `draft`; its refusal answered
      as given, before any grant is minted or anything posted. */
   const judged = await answersOf(ctx).askAccount({ member: who, kind: "draft" });
   if (!judged || judged.ok !== true) return out(409, judged);
-  let ref = accountOf(judged);
-  let suggestions = false;
-  try {
-    if (ref.level === "member") { const st = c.accountReferenceState({ member: who, viewer: who }); suggestions = !!(st && st.ok === true && st.suggestions === true); }
-    else if (ref.level === "group") { const g = c.groupKeySwitches(); suggestions = !!(g && g.suggestions === true); }
-  } catch { suggestions = false; }
+  /* R33 (T46; M-T46-6, K2946): the serving account's own switch, and no secret for a sign-in (`wireAccount`) */
+  let { account, suggestions } = wireAccount(c, accountOf(judged), who);
   /* R41 (K2824): an action draft's records, from the member's own reads, before any grant is minted */
   let records = {};
   if (kind === "infractiondraft" || kind === "bearingdraft") {
@@ -286,13 +335,15 @@ export async function draftOnObject(ctx, env, { op = null, member = null, sessio
   }
   const task = op === "writinghelp" ? { op, act, field } : kind === "translation" ? { op, direction, language, words }
     : kind === "textcheck" ? { op, text } : kind === "infractiondraft" ? { op, matter, audience }
-    : kind === "bearingdraft" ? { op, action, reply } : { op };
-  const account = { kind: ref.kind, level: ref.level, secret: ref.key, member: who, suggestions };
-  const actionDraft = kind === "textcheck" || kind === "infractiondraft" || kind === "bearingdraft";
-  const body = JSON.stringify(kind === "translation" ? { task, account, ...(pack != null ? { pack } : {}) }
-    : actionDraft ? { task, account, ...(grant ? { grant } : pack != null ? { pack } : {}), ...records }
-    : { task, told, account, ...(grant ? { grant } : pack != null ? { pack } : {}), ...(firsthand === true ? { firsthand: true } : {}) });
-  ref = null;
+    : kind === "bearingdraft" ? { op, action, reply } : kind === "statusreport" ? { op, plan, items } : { op };
+  const actionDraft = kind === "textcheck" || kind === "infractiondraft" || kind === "bearingdraft" || kind === "statusreport";
+  /* R40 (agent-worker R79): the label rides with the draft when it was admitted on the exception */
+  const label = untested ? { untested } : {};
+  const body = JSON.stringify(kind === "translation" ? { task, account, ...(pack != null ? { pack } : {}), ...label }
+    : actionDraft ? { task, account, ...(grant ? { grant } : pack != null ? { pack } : {}), ...records, ...label }
+    : { task, told, account, ...(grant ? { grant } : pack != null ? { pack } : {}), ...(firsthand === true ? { firsthand: true } : {}),
+        ...label });
+  account = null;
   let res;
   try {
     res = await w.fetch("https://agent-worker/draft", { method: "POST", headers: { "content-type": "application/json" }, body });
