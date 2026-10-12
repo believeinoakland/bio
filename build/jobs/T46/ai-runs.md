@@ -74,3 +74,23 @@ Separate from J1. R18 names `MEMBER_RUN_MODE_NOT_ADMITTED` as "a row of this mod
 My best reading: RUN-RULES adds the row in T46-13. It would be C-22.30 (C-22.29 is R30's `AI_PART_NOT_DEPLOYED`), in DEC-83's form. `where`: `src/ai-runs/index.mjs dispatchMemberRun > is-airun-member-dispatch, reached from op=airundispatch`. Interim translation, until the design stream's `refusal.MEMBER_RUN_MODE_NOT_ADMITTED` lands on main (K2929): "Nothing was started, because on your own Claude sign-in the assistant only checks and plans for you; this kind of work needs your group's Civicsmith to run it." I mint it at that region and read the row by key. Until the row merges, my code reads it with `check`/`translation` null, as `#refuse` already does for a missing row, and my test asserts the code and that nothing was sent. Once the row is on the tranche, it asserts the row too.
 
 Question: should RUN-RULES add it in T46-13, in a CHANGE to that job, or do you want another arrangement?
+
+## J3 · COMPLETE
+
+T46-14 applied.
+
+- **R78.** `testInstance()` reads only env. `partAdmitted(part)` is run-rules' `partAdmittedOn` with `{testInstance}`, the one gate for R40, R23's input and `verificationRecord`'s next. A run admitted on the exception records `untested` at the open (new nullable column `ai_runs.untested`). The label is answered by the open (R10), `session.untested` (R19) and `runFor` (R28); it is null for a run the bar admitted.
+- **R18.** `dispatchMemberRun({run, by, viewer, credential, at})`, on the K2947 wire (B2). Refusals in order, nothing sent: `found:false`; `AI_RUN_NOT_PRINCIPAL`; `{dispatched:false, status}`; `MEMBER_RUN_MODE_NOT_ADMITTED` (row read by key from run-rules R32 per B3, null until it merges); the wake's withheld grounds; `MEMBER_PRINCIPAL_RUN` (no credential, or not her own sign-in); `AI_RUN_NOT_PRINCIPAL` (credential not the run's, not on record, or revoked). Then the wake's bounded call. The wake still withholds member runs.
+
+**Depends on run-rules R29.** `index.mjs` imports `partAdmittedOn`, which is not yet on the tranche. Module tests ran 98/98 against an uncommitted local stand-in of R29, written from its text and reverted. I re-run on the tranche at your CHANGE.
+
+New tests: `t46.test.mjs`, 11 tests naming R78 and R18. `open`/`reads`/`producers` tests were amended for the new key and also assert `untested: null`. Checks: format, architecture and coverage (48/48) 0 failures; ownership 7 files, 0 failures.
+
+For you:
+- (a) I declare no `airundispatch` op in `aiRunsOps`, because the credential must stay out of the query and body. The control-plane door calls `dispatchMemberRun` in process. If it must cross the internal fetch instead, that is control-plane's to define, and I would add the entry on a CHANGE.
+- (b) question-explorer's code still calls `partDeployableOn` directly (its T46-17).
+- (c) R18's withheld list omits `NO_INSTANCE_AI_CREDENTIAL` and `NO_ACCOUNT`, which the code already answers.
+- (d) The plane, release and newgroup bundles are stale (rule 5 (4)).
+- (e) op-declarations' 6 failures are inherited, identical on the clean tranche.
+
+Details are in my record.
