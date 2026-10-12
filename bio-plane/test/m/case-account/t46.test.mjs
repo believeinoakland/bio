@@ -134,3 +134,57 @@ test("R13 (case-checker R24 as T46 states it): a sentence stating nothing checka
     [1, "supported", []], [2, "supported", []],
     [3, "not_supported", ["ACCOUNT_SENTENCE_UNSUPPORTED"]], [4, "not_supported", ["ACCOUNT_SENTENCE_UNSUPPORTED"]]]);
 });
+
+/* ---------------------------------------------------------------- K2965: one leg convention end to end */
+
+/* A finding on a two-leg basis: leg 1 supports it, leg 2 cuts against it (R5: a leg cite's ord is 1-based). */
+function twoLegs() {
+  const s = setup();
+  s.w.doc("INFO-2026-0002-b", "bytes of INFO-2026-0002-b");
+  s.w.finding("INQ-2026-0003-l", [{ target: DOC }, { target: "INFO-2026-0002-b", role: "cuts_against" }]);
+  return s;
+}
+const L = "INQ-2026-0003-l";
+const leg = (ord) => ({ kind: "leg", ref: L, ord });
+const AS_SUPPORT = "That record supports the finding.";
+
+test("R6 (K2965): a leg cite and the conclusions handed with it name the same leg — leg n is the basis's nth leg in the holding and in the conclusion's legs alike (ord n), so a sentence reading leg 1 (which supports) as support stands, and the same sentence on leg 2 (which cuts against) is ACCOUNT_CONTRADICTED_BY_RECORD; it holds through the real case-disclosures R30 and case-checker R24", () => {
+  const { w } = twoLegs();
+  const basis = w.inquiry.basisFor(L).legs;
+  assert.deepEqual(basis.map((l) => l.role), ["supports", "cuts_against"]);
+  const judge = (ord) => w.cacc.accountJudged({ sentences: [{ text: AS_SUPPORT, cites: [leg(ord)], bias_statement: null }], statementCites: null,
+    statement: null, justification: null, excluded: [], prepared: [{ id: L }], reached: null, lens: null, caseId: null, viewer: V("alice") });
+  const one = judge(1);
+  const handed = w.judged.at(-1);
+  assert.deepEqual(handed.cited.holdings, [{ address: `leg:${L}#1`, quote: JSON.stringify(basis[0]) }], "leg 1 is the first leg");
+  assert.deepEqual(handed.conclusions[0].legs.map((l) => [l.ord, l.role]), [[1, "supports"], [2, "cuts_against"]], "numbered as the cites are");
+  assert.equal(one.results.get(1).includes("ACCOUNT_CONTRADICTED_BY_RECORD"), false, JSON.stringify(one.refusals));
+  const two = judge(2);
+  assert.deepEqual(w.judged.at(-1).cited.holdings, [{ address: `leg:${L}#2`, quote: JSON.stringify(basis[1]) }], "leg 2 is the second leg");
+  assert.ok(two.results.get(1).includes("ACCOUNT_CONTRADICTED_BY_RECORD"), JSON.stringify(two.refusals));
+});
+
+test("R13 (K2965): in a member's own text the same convention holds — a sentence reading leg 1 (which supports) as support is supported; control: on leg 2 (which cuts against) it is contradicted", () => {
+  const { w, MINE } = twoLegs();
+  const r = w.cacc.advocacyCheck({ project: MINE, author: V("alice"), viewer: V("alice"),
+    sentences: [{ text: AS_SUPPORT, cites: [leg(1)] }, { text: AS_SUPPORT, cites: [leg(2)] }] });
+  assert.deepEqual(r.sentences.map((x) => [x.ord, x.result, x.codes, x.findings]), [
+    [1, "supported", [], [L]], [2, "contradicted", ["ACCOUNT_CONTRADICTED_BY_RECORD"], [L]]]);
+});
+
+/* ---------------------------------------------------------------- case-disclosures R30's control, under R6 */
+
+test("R6 (case-disclosures R30's control, T46; N901): through the real case-account, case-disclosures and case-checker, with no stand-in, an account sentence citing a held finding whose words hold its facts passes; control: the same sentence whose cite the viewer cannot read answers ACCOUNT_SENTENCE_UNSUPPORTED", () => {
+  const { w } = setup();
+  const H = w.project("Hidden", "bo");
+  const HID = "INQ-2026-0009-h";
+  w.finding(HID, [{ target: DOC }]);
+  w.st.sql.exec(`UPDATE bundles SET project=? WHERE bundle_id=?`, H, HID);
+  const judge = (ref, text) => w.cacc.accountJudged({ sentences: [{ text, cites: [{ kind: "finding", ref, ord: null }], bias_statement: null }],
+    statementCites: null, statement: null, justification: null, excluded: [], prepared: [], reached: null, lens: null, caseId: null,
+    viewer: V("alice") });
+  const held = judge(Q, `The finding asks "Was ${Q} answered?"`);
+  assert.deepEqual(held.results.get(1), [], JSON.stringify(held.refusals));
+  const unread = judge(HID, `The finding asks "Was ${HID} answered?"`);
+  assert.deepEqual(unread.results.get(1), ["ACCOUNT_SENTENCE_UNSUPPORTED"], JSON.stringify(unread.refusals));
+});

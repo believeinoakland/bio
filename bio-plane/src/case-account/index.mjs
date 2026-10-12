@@ -162,6 +162,12 @@ export function accountShaped(account, statementCites, excludedCount = 0) {
   }
   return { ok: true, sentences, statementCites: sc };
 }
+/* R6, R13 (K2965): a finding's legs in the one convention a leg cite is spelled by (R5: `ord` 1-based, the first leg 1),
+   so the conclusions handed to the judgment name each leg as the cites and their holdings do (`#held` reads a cite's leg
+   as `basis.legs[ord - 1]`): `inquiry.basisFor`'s own 0-based `ord` is replaced by the leg's place plus one. A basis
+   that cannot be read has no legs. */
+const legsCited = (basis) => (basis && basis.ok !== false && Array.isArray(basis.legs)
+  ? basis.legs.map((l, k) => ({ ...(l && typeof l === "object" ? l : {}), ord: k + 1 })) : []);
 /* R6: a cite's holding address, `kind:ref`, a leg's `#ord` after it. */
 const citeAddress = (c) => `${c.kind}:${c.ref}${c.kind === "leg" ? `#${c.ord}` : ""}`;
 /* R6 (case-authoring R14's body): an exclusion row as the body prints it, the sentence R30 judges. */
@@ -292,9 +298,10 @@ export class CaseAccount {
    *  order), then the four statements (`statement`, `subject_justification`, one `excluded` row per exclusion as the body
    *  prints it, `what_changed` for an edition above 1), each with its cites — judged by `case-disclosures` R30
    *  (`accountJudged`) against what they cite as `viewer` reads it, the lens in force the caller passes, the members'
-   *  conclusions and the system's `account_check` flags on this case. Answers `{rows, refusals, results, flags, refusal}`:
-   *  `results` maps each row's `ord` to the codes naming it (empty: it passed); `refusal` the first, or null. A judgment
-   *  that throws or answers no list is `ACCOUNT_CHECK_UNDETERMINED` (fail closed, K2531). Writes nothing.
+   *  conclusions (their legs numbered as leg cites are, K2965) and the system's `account_check` flags on this case.
+   *  Answers `{rows, refusals, results, flags, refusal}`: `results` maps each row's `ord` to the codes naming it (empty:
+   *  it passed); `refusal` the first, or null. A judgment that throws or answers no list is `ACCOUNT_CHECK_UNDETERMINED`
+   *  (fail closed, K2531). Writes nothing.
    *  (T45; D6c, D63) `outcomes: [{outcome, text, cites}]`, the outcomes case-authoring R71 carries into this edition, are
    *  rows after the four statements, `kind: outcome`, judged as a statement is; a refusal naming one carries `outcomes`,
    *  the outcomes it names. (T45; R14) A cite of something held in a counsel matter other than the case's owning project
@@ -340,7 +347,7 @@ export class CaseAccount {
       try { basis = this.inquiry.basisFor(p.id); } catch { basis = null; }
       const claim = p.conclusion && p.conclusion.claim ? p.conclusion.claim : null;
       return { finding: p.id, claim: claim && claim.text != null ? claim.text : null, claim_state: claim ? claim.state ?? null : null,
-               legs: basis && basis.ok !== false && Array.isArray(basis.legs) ? basis.legs : [] };
+               legs: legsCited(basis) };
     });
     const flags = caseId ? this.accountFlags(caseId, drafted && drafted.draft ? drafted.draft : null) : [];
     let judged = null;
@@ -638,7 +645,7 @@ export class CaseAccount {
         const basis = this.inquiry.basisFor(f);
         conclusions.push({ finding: f, claim: c && c.claim && c.claim.text != null ? c.claim.text : null,
                            claim_state: c && c.claim ? c.claim.state ?? null : null,
-                           legs: basis && basis.ok !== false && Array.isArray(basis.legs) ? basis.legs : [] });
+                           legs: legsCited(basis) });
       } catch { /* R12: a finding whose conclusion or legs cannot be read states none */ }
     }
     const counsel = new Set(held.filter((h) => h.counsel).map((h) => h.address));
