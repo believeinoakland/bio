@@ -49,3 +49,7 @@ Size (session_01Ewqc3hwvUSkbtBS4noGEft): test runs 3, module lines 4005
 ## J1 · REPORT
 
 Found in other modules (details in my record's Completion): (1) action-grammar R8 says clockMovesNotMechanical answers R33's mechanical rule exactly; since R98 it has no time-of-day arm and actions filters its answer. Amend R8's sentence, or give action-grammar the arm. (2) Zone: R12 names the office's profile zone first, as action-clocks' actionZone reads it; actions reads only the combined view's time_zone (R68, pinned by t34). The two differ only with several active profiles of different zones; yours to rule which reading governs. (3) Reds opened or seen: monitoring ends.test.mjs R34 '(T45, while actions R33 reads the date alone)' fails by design with R98 and is closed by T46-41. escalation invariants.test.mjs R21 fails on record-grammar's stopped_pursuing (T46-1), not this module's. (4) P6: the module is now 4,005 lines.
+
+## J2 · COMPLETE
+
+T46-32 applied: R98 (a timed clock entry is moved pending to overdue by the mechanical recheck once its instant passes, in due_zone else R12's zone; dueInstant exported) and R99 (ACTIONS_WORDS: the five keys verbatim from words.json, read by key; reply.not_owed answers its {reason} with the member's reason beside it). actions tests 121/0. format, architecture, coverage (72/72) and ownership checks: 0 failures. run.mjs: architecture 0, coverage reds only other modules' not-yet-met ids. Uses no unmerged L9 service: ready to merge. Record: build/jobs/T46/actions.md on job/T46/actions.
