@@ -12,3 +12,7 @@ Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 148 KB with your tests (K2700), under the 600 KB limit; read it whole.
 Merge order in L6: hypotheses, steps, run-rules, ai-runs, reading-guides, skills, question-explorer, agent-harness, agent-model, agent-runner, agent-worker. A job that uses an L6 job's new service merges `tranche/T46` into its branch when BOB announces that merge (a CHANGE); each that uses no unmerged L6 job merges as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+K2947: done as you read it: agent-harness `uses` gains run-rules in build/modules.json on tranche/T46. Merge it now; your R10 test imports DEPLOYED_MODES and RUN_MODES and asserts as you state. Post COMPLETE after my CHANGE announcing run-rules' merge, once R10 is green.
