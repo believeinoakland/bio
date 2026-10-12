@@ -143,7 +143,8 @@ test("B3, B4 (K2482, K2485; ai-runs R73, R75): the rows of ai-runs' T41 acts are
   assert.equal(AI_RUN_CHECKS.AI_TEST_BAR_UNFIT.check, "C-22.22");
   /* control: no code of a later module sneaks in under C-22 */
   const c22 = Object.values(AI_RUN_CHECKS).map((r) => r.check).filter((c) => /^C-22\.2\d$/.test(c)).sort();
-  assert.deepEqual(c22, ["C-22.20", "C-22.21", "C-22.22", "C-22.23", "C-22.24", "C-22.25", "C-22.26", "C-22.27", "C-22.28"]);
+  assert.deepEqual(c22, ["C-22.20", "C-22.21", "C-22.22", "C-22.23", "C-22.24", "C-22.25", "C-22.26", "C-22.27", "C-22.28",
+                         "C-22.29"], "T46's C-22.29 is this module's own (R30)");
 });
 
 test("R24: ENQUIRE_MODE describes the mode enquire, frozen — interactive, no run, read-only within ASK_SCOPE, bounded by ASK_BOUNDS, writing nothing itself; deployed apart by its own flag (false today), set once R19's test bar is held for it; startAllowed admits it only at a member's act", () => {
@@ -161,11 +162,11 @@ test("R24: ENQUIRE_MODE describes the mode enquire, frozen — interactive, no r
   assert.equal(DEPLOYMENT_SEQUENCE.order.includes("enquire"), false);
   /* its own flag alone deploys it */
   assert.equal(DEPLOYED_MODES.includes("enquire"), false);
-  assert.deepEqual([...deployedModesFor({ enquire: true })], ["check", "enquire"]);
+  assert.deepEqual([...deployedModesFor({ plan: false, ask: false, draft: false, enquire: true })], ["check", "enquire"]);
   for (const f of [{ ask: true }, { draft: true }, { plan: true }, { verification_recorded: { at: "t" } }, { enquire: "true" }, { enquire: 1 }])
     assert.equal(deployedModesFor(f).includes("enquire"), false, JSON.stringify(f));
   assert.equal(deployedModesFor({ enquire: true, ask: true }).includes("ask"), true);
-  assert.equal(deployedModesFor({ enquire: true }).includes("ask"), false, "enquire's flag never deploys ask");
+  assert.equal(deployedModesFor({ enquire: true, ask: false }).includes("ask"), false, "enquire's flag never deploys ask");
   assert.equal(deployable("enquire", []), true, "the chain never decides it");
   assert.equal(partDeployableOn(SET, "enquire", { testBars: [bar("enquire")] }), true);
   assert.equal(partDeployableOn(SET, "enquire", { testBars: [bar("ask")] }), false, "its own bar, not ask's");
@@ -203,7 +204,7 @@ test("R25: DRAFT_KINDS gains case_account, account_check and bearing_note — ea
   assert.match(DRAFT_REACH.account_check.means, /skills R44/);
   assert.match(DRAFT_REACH.bearing_note.means, /run-productions R23/);
   assert.deepEqual([DRAFT_MODE.interactive, DRAFT_MODE.writes_run_row, DRAFT_MODE.read_only], [true, false, true]);
-  assert.deepEqual([...deployedModesFor({ draft: true })], ["check", "draft"]);
+  assert.deepEqual([...deployedModesFor({ plan: false, ask: false, draft: true })], ["check", "draft"]);
   /* a draft of any kind starts only at a member's act */
   for (const kind of ["case_account", "account_check", "bearing_note"]) {
     assert.deepEqual(startAllowed({ startedBy: "member:ann", mode: "draft", kind }), { ok: true });

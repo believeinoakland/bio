@@ -27,6 +27,7 @@ const MINTED_HERE = {
   AI_RUN_READ_NO_AI: ["C-22.23", "src/run-rules/rules.mjs checkPagesRead"],
   AI_RUN_ORIGIN_UNKNOWN: ["C-22.25", "src/run-rules/rules.mjs originAllowed"],
   AI_RUN_EXPLORE_NOT_DEPLOYABLE: ["C-22.27", "src/run-rules/rules.mjs originAllowed"],
+  AI_PART_NOT_DEPLOYED: ["C-22.29", "src/run-rules/test-bar.mjs partRefusal"],
 };
 /** The C-22 rows of ai-runs' T41 acts (B3, B4; K2482, K2485), minted by ai-runs (its R73, R75) and read here by key. */
 const AI_RUNS_C22 = { AI_GROUP_TEST_INVALID: "C-22.24", AI_RUN_EXPLORE_NEEDS_STEP: "C-22.26", AI_RUN_STEP_UNKNOWN: "C-22.28" };
@@ -81,14 +82,14 @@ test("R11: the table holds exactly the rows the pure rules mint (each where nami
   assert.deepEqual(Object.keys(AI_RUN_OPEN_CHECKS), ["AI_RUN_MODE_NOT_DEPLOYED"]);
   for (const fam of [AI_RUN_OWN_CHECKS, AI_RUN_ACT_SHAPE_CHECKS, AI_RUNS_CONTEXT_CHECKS, SURFACE_RUN_CHECKS, AI_RUN_OPEN_CHECKS, AI_RUN_PLAN_CHECKS, AI_USE_CHECKS])
     for (const [code, row] of Object.entries(fam)) assert.equal(AI_RUNS_CHECKS[code], row, code);
-  /* each refusal R2–R8, R10, R17–R19, R23 and R26 mint is built from its row here */
+  /* each refusal R2–R8, R10, R17–R19, R23, R26 and R30 mint is built from its row here */
   const minted = [RR.checkBound("x"), RR.checkSkillVersion(""), RR.projectGate({ actor: "a", contextType: "project" }),
     RR.checkRunContextKind({ contextType: "x" }), RR.runPrincipalGate({}), RR.checkConsume({ fetches: -1 }, { map: true }),
     RR.checkConsume({ lease: 0 }, { map: true }), RR.checkConsume({ x: 1 }, { map: true }),
     RR.checkConsume([{ bound: "fetches" }], { list: true }), RR.checkRunState("x".repeat(262144)),
     RR.startAllowed({}), RR.checkVerification(null), RR.checkAskBounds({ turns: 13, bytes: 1, wall_ms: 1, reads: 1 }),
     RR.checkTestBarRecord(null), RR.checkPagesRead({ limits: [{ on: true }] }), RR.originAllowed({}),
-    RR.originAllowed({ origin: "explore" })];
+    RR.originAllowed({ origin: "explore" }), RR.partRefusal("ask")];
   assert.deepEqual(minted.map((r) => r.code), Object.keys(MINTED_HERE));
   for (const r of minted) assert.deepEqual([r.ok, r.check, r.translation], [false, AI_RUNS_CHECKS[r.code].check, AI_RUNS_CHECKS[r.code].translation]);
 });
@@ -114,7 +115,9 @@ test("R15: the rows of ai-runs R46–R47's codes join the table, each with its n
     assert.equal(AI_RUN_CHECKS[code], row);
     assert.equal(translationOf(code), row.translation);
     assert.equal(row.where, `src/ai-runs/index.mjs open > is-airun-open-${REGION[code] ?? "plan"}, reached from op=airunopen`);
-    assert.match(row.translation, /^Nothing was run, because /, `${code}: says nothing ran`);
+    /* R31 (T46): the re-examination rows are words.json's, which say it as "Nothing was started:" */
+    assert.match(row.translation, code.startsWith("AI_RUN_REEXAM_") ? /^Nothing was started: / : /^Nothing was run, because /,
+                 `${code}: says nothing ran`);
   }
   /* no two planning codes share a sentence: each names its own condition */
   const texts = Object.values(AI_RUN_PLAN_CHECKS).map((r) => r.translation);
@@ -149,6 +152,7 @@ test("R12: no place is named in the module's behaviour or outward text — its r
     RR.checkTestBarRecord({}).detail, RR.checkPagesRead({ limits: [{}] }).detail, RR.originAllowed({ origin: "explore" }).detail,
     RR.originAllowed({ origin: "x" }).detail, RR.startAllowed({ mode: "enquire" }).detail,
     RR.originAllowed({ origin: "x", mode: "plan" }).detail, JSON.stringify(RR.ACTION_DRAFTS), ...RR.PLAN_ORIGINS,
+    RR.partRefusal("ask").detail, JSON.stringify(RR.untestedLabel("ask")), RR.UNTESTED_WORDS, ...Object.values(RR.RUN_RULES_WORDS),
   ];
   for (const t of texts) assert.equal(PLACE.test(String(t)), false, String(t).slice(0, 80));
   /* control: the pattern does catch a place */

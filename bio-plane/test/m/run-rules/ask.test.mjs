@@ -11,7 +11,7 @@ import { refusal } from "./helpers.mjs";
 const NAMES = ["turns", "bytes", "wall_ms", "reads"];
 const DEFAULTS = Object.fromEntries(NAMES.map((k) => [k, ASK_BOUNDS[k].default]));
 
-test("R16: ASK_MODE describes the mode ask, frozen — read-only with answers' ASK_SCOPE its whole reach, interactive and no run (no run row), deploys apart: not in DEPLOYMENT_SEQUENCE.order, deployed only by its own flag in DEPLOYED_MODES, not deployed today", () => {
+test("R16: ASK_MODE describes the mode ask, frozen — read-only with answers' ASK_SCOPE its whole reach, interactive and no run (no run row), deploys apart: not in DEPLOYMENT_SEQUENCE.order, deployed only by its own flag in DEPLOYED_MODES, deployed since T46 (its own reviewed change, the bar asked through R29)", () => {
   assert.ok(Object.isFrozen(ASK_MODE));
   assert.equal(ASK_MODE.mode, "ask");
   assert.equal(ASK_MODE.read_only, true);
@@ -27,21 +27,24 @@ test("R16: ASK_MODE describes the mode ask, frozen — read-only with answers' A
   assert.deepEqual(RUN_MODES, DEPLOYMENT_SEQUENCE.order);
   assert.ok(Object.isFrozen(RUN_MODES));
   assert.equal(RUN_MODES.includes("ask"), false);
-  /* its own flag decides its place in DEPLOYED_MODES: false today, so absent; the run modes' state is not consulted */
-  assert.equal(ASK_MODE.deployed, false);
+  /* its own flag decides its place in DEPLOYED_MODES: true since T46, so present; the run modes' state is not consulted */
+  assert.equal(ASK_MODE.deployed, true);
+  assert.match(ASK_MODE.made, /^T46 \(N897 \(2\); K2816\): set by its own reviewed change, because agent-worker's \/ask is served end to end/);
+  assert.match(ASK_MODE.made, /lifts no bar, so an ask is admitted only through partAdmittedOn\(set, "ask", …\) \(R29\)/);
   assert.equal(DEPLOYED_MODES.includes("ask"), DEPLOYMENT_SEQUENCE.order.includes("ask") || ASK_MODE.deployed);
-  assert.equal(DEPLOYED_MODES.includes("ask"), false);
+  assert.equal(DEPLOYED_MODES.includes("ask"), true);
+  assert.equal(deployedModesFor({ ask: false }).includes("ask"), false, "its own flag alone");
   /* control: the run chain's first mode is still deployed */
   assert.equal(DEPLOYED_MODES.includes("check"), true);
 });
 
 test("R16 (T35): ask and draft each deploy apart by a flag of their own — DEPLOYED_MODES holds each exactly when its own flag is true: draft's flag alone adds draft and not ask, ask's flag alone adds ask and not draft, both add both, and neither flag, nor the chain's verification, nor plan's flag moves the other", () => {
-  /* today: both flags false, so neither is deployed, and DEPLOYED_MODES is the one computation with today's flags */
-  assert.deepEqual([ASK_MODE.deployed, DRAFT_MODE.deployed], [false, false]);
+  /* today (T46): both flags true, so both are deployed, and DEPLOYED_MODES is the one computation with today's flags */
+  assert.deepEqual([ASK_MODE.deployed, DRAFT_MODE.deployed], [true, true]);
   assert.deepEqual([...DEPLOYED_MODES], [...deployedModesFor()]);
   assert.deepEqual([...deployedModesFor({})], [...DEPLOYED_MODES]);
   assert.ok(Object.isFrozen(deployedModesFor()) && Object.isFrozen(deployedModesFor({ draft: true })));
-  for (const m of ["ask", "draft"]) assert.equal(DEPLOYED_MODES.includes(m), false, m);
+  for (const m of ["ask", "draft"]) assert.equal(DEPLOYED_MODES.includes(m), true, m);
   /* every combination of every flag: ask and draft are each in exactly when their own flag is true */
   const states = [undefined, null, { at: "t" }];
   for (const verification_recorded of states) for (const plan of [false, true]) for (const ask of [false, true]) for (const draft of [false, true]) {
@@ -56,10 +59,10 @@ test("R16 (T35): ask and draft each deploy apart by a flag of their own — DEPL
     assert.equal(got.includes("extract"), false, why);
     assert.equal(new Set(got).size, got.length, `each mode once: ${why}`);
   }
-  /* draft's flag flipped alone */
-  assert.deepEqual([...deployedModesFor({ draft: true })], ["check", "draft"]);
-  /* control: ask's flag flipped alone leaves draft out */
-  assert.deepEqual([...deployedModesFor({ ask: true })], ["check", "ask"]);
+  /* draft's flag alone (the others false) */
+  assert.deepEqual([...deployedModesFor({ plan: false, ask: false, draft: true })], ["check", "draft"]);
+  /* control: ask's flag alone leaves draft out */
+  assert.deepEqual([...deployedModesFor({ plan: false, ask: true, draft: false })], ["check", "ask"]);
   /* only a literal true deploys: a truthy word is no reviewed flag */
   for (const v of [1, "true", "yes", {}, [true]]) {
     assert.equal(deployedModesFor({ draft: v }).includes("draft"), false, JSON.stringify(v));
@@ -67,8 +70,8 @@ test("R16 (T35): ask and draft each deploy apart by a flag of their own — DEPL
   }
   /* never throws: no flags at all is today's flags */
   for (const x of [null, undefined, 3, "draft", []]) assert.deepEqual([...deployedModesFor(x)], [...DEPLOYED_MODES], String(x));
-  /* inherited keys are no flags */
-  assert.equal(deployedModesFor(Object.create({ draft: true, ask: true })).some((m) => m === "draft" || m === "ask"), false);
+  /* inherited keys are no flags: an inherited false leaves today's true standing, an inherited true lifts no false */
+  assert.deepEqual([...deployedModesFor(Object.create({ plan: false, draft: false, ask: false }))], [...DEPLOYED_MODES]);
 });
 
 test("R17: ASK_BOUNDS names turns, bytes, wall_ms and reads, each with a provisional positive default; checkAskBounds refuses an unknown name (C-22.15), a missing or zero figure (C-22.16), a non-positive or non-integer figure (C-22.13), a figure above its default's ceiling (C-22.21); never throws", () => {
@@ -191,7 +194,7 @@ test("R18 (T35): a draft starts only at a member's own act — startAllowed({sta
     { ok: true, exception: "standing_question", author: "member:ann" });
 });
 
-test("R21: DRAFT_MODE describes the mode draft, frozen — interactive and no run (writes no run row, keeps nothing, the draft answered and never stored), read-only within answers' ASK_SCOPE with no write op, a firsthand field reading nothing, bounded by ASK_BOUNDS; deploys apart: not in DEPLOYMENT_SEQUENCE.order, no part of R19's chain, deployed only by its own flag, false today; RUN_MODES does not hold it", () => {
+test("R21: DRAFT_MODE describes the mode draft, frozen — interactive and no run (writes no run row, keeps nothing, the draft answered and never stored), read-only within answers' ASK_SCOPE with no write op, a firsthand field reading nothing, bounded by ASK_BOUNDS; deploys apart: not in DEPLOYMENT_SEQUENCE.order, no part of R19's chain, deployed only by its own flag, true since T46 (each kind admitted through R29); RUN_MODES does not hold it", () => {
   assert.ok(Object.isFrozen(DRAFT_MODE));
   assert.equal(DRAFT_MODE.mode, "draft");
   assert.notEqual(DRAFT_MODE, ASK_MODE);
@@ -210,12 +213,16 @@ test("R21: DRAFT_MODE describes the mode draft, frozen — interactive and no ru
   assert.equal(checkAskBounds(declared), null);
   refusal(checkAskBounds({ ...declared, turns: declared.turns + 1 }), "AI_ASK_BOUND_ABOVE_CEILING");
   assert.equal(askBoundReached(declared, { reads: declared.reads }), "reads");
-  /* deploys apart, by its own flag, false until the change that serves agent-worker's POST /draft */
+  /* deploys apart, by its own flag, set in T46 by the change that marks agent-worker's POST /draft served */
   assert.equal(DRAFT_MODE.deploys_apart, true);
-  assert.equal(DRAFT_MODE.deployed, false);
+  assert.equal(DRAFT_MODE.deployed, true);
   assert.match(DRAFT_MODE.when, /^only by a reviewed change of its own that sets this flag, the change that serves agent-worker's POST \/draft/);
   assert.match(DRAFT_MODE.when, /whatever the run modes' state and whatever ask's flag$/);
-  assert.equal(DEPLOYED_MODES.includes("draft"), false);
+  assert.match(DRAFT_MODE.made, /^T46 \(N897 \(2\); K2816\): set by its own reviewed change, because agent-worker's POST \/draft is served/);
+  assert.match(DRAFT_MODE.made, /each draft kind is admitted only through partAdmittedOn for its part draft:<kind> \(R29\)/);
+  assert.match(DRAFT_MODE.made, /the action drafts still wait on their own flag, action_drafts \(R27\)$/);
+  assert.equal(DEPLOYED_MODES.includes("draft"), true);
+  assert.equal(deployedModesFor({ draft: false }).includes("draft"), false, "its own flag alone");
   /* not in the order, not one of the order's apart modes, not a run mode: a run opened in mode draft is refused (ai-runs R40) */
   assert.equal(DEPLOYMENT_SEQUENCE.order.includes("draft"), false);
   assert.equal(Object.prototype.hasOwnProperty.call(DEPLOYMENT_SEQUENCE.deploys_apart, "draft"), false);
@@ -259,15 +266,17 @@ test("R22: DRAFT_KINDS begins [own_words, translation], frozen and named by DRAF
   assert.match(DRAFT_MODE.bounds, /^ASK_BOUNDS \(R17\)/);
   /* no new mode, no new flag */
   assert.deepEqual([...RUN_MODES], ["check", "investigate", "extract", "plan"]);
-  assert.deepEqual([...DEPLOYED_MODES], ["check"]);
+  assert.deepEqual([...DEPLOYED_MODES], ["check", "plan", "ask", "draft"]);
   assert.deepEqual(Object.keys(DEPLOYMENT_SEQUENCE.deploys_apart), ["plan"]);
-  assert.deepEqual([ASK_MODE.deployed, DRAFT_MODE.deployed], [false, false]);
+  assert.deepEqual([ASK_MODE.deployed, DRAFT_MODE.deployed], [true, true]);
   for (const flag of ["translation", "own_words", "translation_draft"])
-    assert.deepEqual([...deployedModesFor({ [flag]: true })], [...DEPLOYED_MODES], `${flag} is no flag`);
-  /* the translation draft runs on draft's flag: flipping it deploys the mode draft, and nothing named for a kind */
-  assert.deepEqual([...deployedModesFor({ draft: true })], ["check", "draft"]);
+    assert.deepEqual([...deployedModesFor({ [flag]: false })], [...DEPLOYED_MODES], `${flag} is no flag`);
+  /* the translation draft runs on draft's flag: it alone deploys the mode draft, and nothing named for a kind */
+  const off = { plan: false, ask: false, draft: false };
+  assert.deepEqual([...deployedModesFor({ ...off, draft: true })], ["check", "draft"]);
+  assert.deepEqual([...deployedModesFor({ ...off, translation: true })], ["check"]);
   /* control: ask's flag alone still leaves draft out */
-  assert.equal(deployedModesFor({ ask: true }).includes("draft"), false);
+  assert.equal(deployedModesFor({ ...off, ask: true }).includes("draft"), false);
 });
 
 test("R22: a translation draft's reach is nothing of the record — no read op of any module, ASK_SCOPE included, whatever the suggestions switch — so it is given only the words asked about, at most 100 a draft (K2201); the draft is answered to the plane and never kept by the mode, the words stored being instance-setup's", () => {
