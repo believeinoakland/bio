@@ -25,9 +25,10 @@
  *   view                 the jurisdiction view, or a function answering it (default: `jurisdictions.combine` of the
  *                        instance's active profiles, record-core R26).
  *   actionPlans, planWork the plan read (state, closing instant, matters, project; `NO_SUCH_PLAN`, `PLAN_CLOSED`), each
- *                        matter's adopted promise-duties (`matterPromiseDuties`) and the watch-reader door this module
+ *                        matter's adopted promise-duties with the instant they were all read met (`matterPromiseDuties`,
+ *                        its R13, R15: R27's one source) and the watch-reader door this module
  *                        registers with at start (`registerWatchReader`) (R23, R24, R26).
- *   duties, answers      a duty's sight, words and occurrences; a standing question's sight, words and `ends`, and
+ *   duties, answers      a duty's sight and words; a standing question's sight, words and `ends`, and
  *                        its author's acts ending it or moving its end (R23–R26).
  *   monitoring           also an address's rows with their end date (its R32), `addressWatchEnd` (R71) and
  *                        `addressWatchers` (R72) (R23–R25).
@@ -46,7 +47,7 @@ import { planWorkOf } from "../plan-work/index.mjs";
 import { dutiesOf } from "../duties/index.mjs";
 import { answersOf } from "../answers/index.mjs";
 import { isMachineIdentity, isPublicHttpsLocator } from "../record-grammar/index.mjs";
-import { isCalendarDate, validAt, localDay, dayRange, bounds } from "../civil-time/index.mjs";
+import { isCalendarDate, validAt, localDay, dayRange } from "../civil-time/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parse as parseLegistar, KEY as LEGISTAR_KEY } from "../../../legistar-reader/index.mjs";
 import { FOLLOWING_TABLES, migrateFollowing } from "./schema.mjs";
@@ -1069,34 +1070,24 @@ export class Following {
     return false;
   }
 
-  /* R24: the instant every promise-duty of the link's matters read met, each matter holding at least one, read with no
-     member's sight (plan-work R13, duties R10, R31); or null. The instant is the latest at which an occurrence's
-     matching was recorded (duties R12); measured evidence counts at its latest bound. */
+  /* R24 (b), R27: the instant every promise-duty of the link's matters read met, from one source: plan-work's
+     `matterPromiseDuties` (its R13, R15), read with no member's sight. Each matter (all the plan's when the link names
+     none) must answer `all_met`, not `partial`, with a `met_at`; the latest `met_at` is the instant, in the record's
+     whole-second spelling. Any matter that does not makes it null: never derived here, never guessed. `nowMs` is the
+     instant the read is as of (the asker's `now`). */
   #promisesMetAt(l, p, nowMs) {
     const keys = json(l.matters) || (Array.isArray(p.subjects) ? p.subjects.map((x) => x.key) : []);
     if (!keys.length) return null;
-    const asOf = instant(nowMs);
     let last = null;
     for (const k of keys) {
       let r;
-      try { r = this.planWork.matterPromiseDuties({ plan: p.id, matter: k, viewer: null }); } catch { return null; }
-      if (!r || r.ok !== true || r.all_met !== true || r.partial === true || !Array.isArray(r.duties) || !r.duties.length) return null;
-      for (const d of r.duties) {
-        let o;
-        try { o = this.duties.occurrencesOf({ dutyId: d.duty_id, asOf, viewer: MACHINE }); } catch { o = null; }
-        for (const occ of o && Array.isArray(o.occurrences) ? o.occurrences : []) {
-          if (!["met", "met_late"].includes(occ.state)) continue;
-          let t = null;
-          for (const e of Array.isArray(occ.evidence) ? occ.evidence : []) {
-            if (e.kind === "event" && typeof e.at === "string") t = e.at;
-            else if (e.kind === "measured" && e.when && !t) { try { t = bounds(e.when).latest || null; } catch { t = null; } }
-          }
-          const tt = t ? wholeSecondFrom(t) : null;
-          if (tt && (!last || tt > last)) last = tt;
-        }
-      }
+      try { r = this.planWork.matterPromiseDuties({ plan: p.id, matter: k, nowMs, viewer: null }); } catch { return null; }
+      if (!r || r.ok !== true || r.all_met !== true || r.partial === true) return null;
+      const t = wholeSecondFrom(r.met_at);
+      if (!t) return null;
+      if (!last || t > last) last = t;
     }
-    return last || asOf;
+    return last;
   }
 
   /* R24: a link's question, `{due_at, cause}`, or null when it is not due (its watch ended, or neither cause holds). */
