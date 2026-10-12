@@ -35,11 +35,12 @@ const BATTERY = `async (RG) => {
   out.push(RG.BUNDLE_ID_RE.test("PLN-2026-0001-a"), RG.ANN_ID_RE.source, RG.UNREACHABLE_CAPTURE_GRADE);
   out.push(RG.ID_TABLE, String(RG.idPattern("EVT")), RG.isHypothesisId("HYP-2026-10000"));
   out.push(RG.isStepId("STP-2026-a1b2c3d4e5f6g7h8"), RG.isGuideId("GUD-2026-0001"), RG.ACCEPTANCE_FORMS, RG.ACCEPT_MUST_REAUTHOR);
+  out.push(RG.isSuccessRecordId("SUC-2026-0001"), RG.STATES.escalation, RG.STATES.action_plan, RG.STATES.success_record);
   out.push(RG.acceptanceRecord({ proposal: "p", form: "edited", by: "alice", at: "2026-10-09T00:00:00Z", kind: "step" }));
   out.push(RG.idDisagrees({ id: "INFO-2026-0001-a" }, "INFO-2026-0001-a"), RG.idDisagrees({ id: " INFO-2026-0001-a" }, "INFO-2026-0001-a"));
   out.push(RG.deriveInquiryTitle("  a   question\\nmore"), RG.inquiryQuestionOf("x\\n## Question\\nq\\n## B"), RG.vocabFor(RG.STATES, "problem"));
   out.push(RG.sectionText("## A\\na\\n## B", "## A"), RG.isCaseMemberBytes({ published_strength: [{ axis: "a" }, { axis: "b" }] }));
-  for (const w of ["token:x", "alice", "", "plane"]) out.push(RG.proposalLabel(w, "standard"), RG.contentMintState(w));
+  for (const w of ["token:x", "alice", "", "plane"]) out.push(RG.proposalLabel(w, "standard"), RG.proposalLabel(w, "bearing"), RG.contentMintState(w));
   const sha = async (v) => RG.createSha256().update(typeof v === "string" ? new TextEncoder().encode(v) : v).hex();
   const files = new Map([["bundle.md", "---\\nid: INFO-2026-0001-a\\nobject_type: information\\n---\\n## Summary\\n## Odd"],
     ["PROMOTING-x.json", "{}"], ["PENDING_PROMOTION.json", JSON.stringify({ created: "2026-01-01T00:00:00Z" })]]);
@@ -79,9 +80,10 @@ const MOVED = ["BUNDLE_ID_RE", "ANN_ID_RE", "FILENAME_RE", "ISO_TS_RE", "OBJECT_
   "isCaseMemberBytes", "vocabFor", "STATES", "sectionText", "LAW_PROPOSAL_STATES", "lawProposalState", "PROPOSAL_STATES",
   "proposalLabel", "CONTENT_MINTED_BY_PLANE", "CONTENT_MINT_STATES", "contentMintState"];
 /* Provided here from the first without a catalogue twin: `checkBundle`, `EXTENSION_ARMS`, the shared act rows (R29) and
-   T33's id table (R46–R48); T41's step and guide ids and the one accepting act (R51–R53); T43's C-1.1 judgment (R56). */
+   T33's id table (R46–R48); T41's step and guide ids and the one accepting act (R51–R53); T43's C-1.1 judgment (R56);
+   T46's success record id (R59). */
 const OWN = ["b64ToBytes", "SHARED_ACT_CHECKS", "EXTENSION_ARMS", "checkBundle", "ID_TABLE", "idPattern", "isHypothesisId",
-  "isStepId", "isGuideId", "ACCEPTANCE_FORMS", "ACCEPT_MUST_REAUTHOR", "acceptanceRecord", "idDisagrees"];
+  "isStepId", "isGuideId", "ACCEPTANCE_FORMS", "ACCEPT_MUST_REAUTHOR", "acceptanceRecord", "idDisagrees", "isSuccessRecordId"];
 
 test("one binding per name: the module's entry answers each provided name with the one binding its part holds", () => {
   assert.deepEqual(Object.keys(RG).sort(), [...MOVED, ...OWN].sort());

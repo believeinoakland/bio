@@ -32,7 +32,7 @@ const FOCUS = M(["surfaced", "elevated", "deferred", "dismissed"], { surfaced: [
   deferred: ["surfaced", "elevated", "dismissed"], dismissed: ["surfaced", "elevated", "deferred"], elevated: [] });
 const ONE = M(["recorded"], { recorded: [] });
 
-test("R35 STATES: every type's legal states and edges, inquiry's legacy `published`, project's legacy `investigating` and `matured`, and problem the same machine as focus", () => {
+test("R35 R57 R58 R59 STATES: every type's legal states and edges, inquiry's legacy `published`, project's legacy `investigating` and `matured`, escalation's `stopped_pursuing`, action_plan's `paused`, success_record's `recorded`, and problem the same machine as focus", () => {
   assert.deepEqual({ ...STATES }, {
     information: M(["collected", "verified", "retired"], { collected: ["verified"], verified: ["retired"], retired: [] }),
     inquiry: M(["open", "deferred", "dismissed", "surfaced", "concluded", "divided"], {
@@ -48,18 +48,22 @@ test("R35 STATES: every type's legal states and edges, inquiry's legacy `publish
     bias: M(["draft", "proposed", "adopted", "retired"], { draft: ["proposed", "retired"], proposed: ["draft", "adopted", "retired"],
       adopted: ["retired"], retired: [] }),
     standard: ONE, determination: ONE, consequence: ONE,
-    escalation: M(["open", "suspended", "ended"], { open: ["suspended", "ended"], suspended: ["open", "ended"], ended: [] }),
+    escalation: M(["open", "suspended", "ended", "stopped_pursuing"], { open: ["suspended", "ended", "stopped_pursuing"],
+      suspended: ["open", "ended", "stopped_pursuing"], ended: [], stopped_pursuing: ["open"] }),
     aspiration: M(["held", "retired"], { held: ["retired"], retired: [] }),
     goal: M(["open", "closed"], { open: ["closed"], closed: [] }),
-    action_plan: M(["open", "closed"], { open: ["closed"], closed: [] }),
+    action_plan: M(["open", "paused", "closed"], { open: ["paused", "closed"], paused: ["open", "closed"], closed: [] }),
+    success_record: ONE,
     problem: FOCUS });
   assert.ok(STATES.problem === STATES.focus);
   assert.ok(!Object.isFrozen(STATES));
   /* Every bundle type has a machine, every edge lands on a state its machine reads, and nothing enters a legacy state.
-     T33's new objects are table rows, not bundles, and have none (R3). */
+     T33's new objects are table rows, not bundles, and have none (R3); T46's success record, promoted with history, has a
+     machine and no headings (R59). */
   const BUNDLE = ["INFO", "PROB", "FOCUS", "INQ", "PROJ", "ACTN", "BIAS", "STD", "CONF", "CONS", "ESC", "ASP", "GOAL", "PLN"];
   for (const t of new Set(BUNDLE.map((p) => OBJECT_TYPES[p]))) assert.ok(STATES[t], t);
-  for (const [p, t] of Object.entries(OBJECT_TYPES)) if (!BUNDLE.includes(p)) assert.ok(!(t in STATES) && !(t in HEADINGS), t);
+  for (const [p, t] of Object.entries(OBJECT_TYPES))
+    if (!BUNDLE.includes(p)) assert.ok((p === "SUC") === (t in STATES) && !(t in HEADINGS), t);
   for (const [t, m] of Object.entries(STATES)) {
     const readable = [...m.legal, ...(m.legacy || [])];
     assert.deepEqual(Object.keys(m.edges).sort(), [...readable].sort(), t);
@@ -108,6 +112,16 @@ test("R36 sectionText: from the heading to the next `## ` line or the end; null 
   for (const b of [undefined, null, 1, {}]) assert.throws(() => sectionText(b, "## A"), TypeError);
 });
 
+/* T46 (P8): R36 says only a non-string throws, and only a string is sliced. An array or a String object answered indexOf
+   and slice too, and was sliced as if it were text; each is a TypeError now. */
+test("R36 sectionText throws a TypeError for every non-string body, an array and a String object among them; a string never throws", () => {
+  for (const b of [["## A", "x"], ["## A"], [], new String("## A\nx"), { indexOf: () => 0, slice: () => "## A" }, Symbol("s"), 10n, true])
+    assert.throws(() => sectionText(b, "## A"), TypeError, String(typeof b));
+  /* Control: the same text as a string is sliced. */
+  assert.equal(sectionText("## A\nx", "## A"), "## A\nx");
+  for (const b of ["", "## A", "no heading", "\n## A\n## A"]) assert.doesNotThrow(() => sectionText(b, "## A"));
+});
+
 test("R30 deriveInquiryTitle: the first non-empty line, whitespace collapsed, cut at a word boundary before 120 with an ellipsis", () => {
   assert.equal(INQUIRY_TITLE_MAX, 120);
   assert.equal(deriveInquiryTitle("  Why   is it\tso?  \nmore"), "Why is it so?");
@@ -148,4 +162,45 @@ test("R30 R31 never throw, whatever they are handed that String() accepts", () =
   }
   assert.equal(inquiryQuestionOf("## Question\t \nq"), "q");
   assert.equal(inquiryQuestionOf("## Question x\nq"), "");
+});
+
+/* T46 (P8): R31's heading line may end in spaces or tabs and nothing else. It took any white space but a newline. */
+test("R31 inquiryQuestionOf: a `## Question` line ending in spaces or tabs only, then \\n or \\r\\n, is the heading; any other trailing character is not", () => {
+  for (const tail of ["", " ", "\t", " \t  ", "\r", " \t\r"]) assert.equal(inquiryQuestionOf(`x\n## Question${tail}\nq\n## B`), "q", JSON.stringify(tail));
+  for (const tail of ["\f", "\v", "\u00a0", "\u2003", "\u3000", "\ufeff", "\u2028", " \f", "\r\r", "\r ", "x", " ?"])
+    assert.equal(inquiryQuestionOf(`x\n## Question${tail}\nq\n## B`), "", JSON.stringify(tail));
+  /* Control: a CRLF document's question is read, the CR of its own lines kept as written. */
+  assert.equal(inquiryQuestionOf("## Question\r\nWhy?\r\n## B"), "Why?\r");
+});
+
+/* T46 (R57; N910): an escalation the group stops pursuing (escalation R31). Each new state and edge by name, with the
+   controls (K874): `ended` is not reachable from it, nothing but `open` leaves it, and the earlier states keep every edge. */
+test("R57 STATES.escalation: legal open suspended ended stopped_pursuing; open and suspended reach stopped_pursuing; stopped_pursuing reaches open alone; ended none", () => {
+  const e = STATES.escalation;
+  assert.deepEqual(e.legal, ["open", "suspended", "ended", "stopped_pursuing"]);
+  assert.equal(e.legal[0], "open");
+  assert.ok(!("legacy" in e));
+  assert.deepEqual(e.edges.open, ["suspended", "ended", "stopped_pursuing"]);
+  assert.deepEqual(e.edges.suspended, ["open", "ended", "stopped_pursuing"]);
+  assert.deepEqual(e.edges.stopped_pursuing, ["open"]);
+  assert.deepEqual(e.edges.ended, []);
+  /* Negative controls: a stopped escalation is never ended or suspended from there, and nothing leaves ended. */
+  for (const to of ["ended", "suspended", "stopped_pursuing"]) assert.ok(!e.edges.stopped_pursuing.includes(to), to);
+  assert.ok(!e.edges.ended.includes("stopped_pursuing") && !e.edges.ended.includes("open"));
+  /* The edges before R57, each kept. */
+  for (const [from, to] of [["open", "suspended"], ["open", "ended"], ["suspended", "open"], ["suspended", "ended"]])
+    assert.ok(e.edges[from].includes(to), `${from} -> ${to}`);
+});
+
+/* T46 (R58; N914): a paused action plan (action-plans R40). `goal`, which shared the machine's shape, keeps its own. */
+test("R58 STATES.action_plan: legal open paused closed; open reaches paused and closed; paused reaches open and closed; closed none; goal keeps open to closed", () => {
+  const p = STATES.action_plan;
+  assert.deepEqual(p.legal, ["open", "paused", "closed"]);
+  assert.equal(p.legal[0], "open");
+  assert.ok(!("legacy" in p));
+  assert.deepEqual(p.edges, { open: ["paused", "closed"], paused: ["open", "closed"], closed: [] });
+  /* Negative controls: nothing reopens a closed plan, nor pauses it; goal gains no pause. */
+  assert.deepEqual(p.edges.closed, []);
+  assert.deepEqual(STATES.goal, { legal: ["open", "closed"], edges: { open: ["closed"], closed: [] } });
+  assert.ok(!STATES.goal.legal.includes("paused") && STATES.goal !== p);
 });
