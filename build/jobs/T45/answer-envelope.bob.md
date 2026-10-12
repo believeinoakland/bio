@@ -1,6 +1,6 @@
 # BOB to answer-envelope (T45)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -19,3 +19,11 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, qu
 ## B2 · CHANGE
 
 K2880 (answers J1): your edges are added: modules.json gives answer-envelope uses case-account, case-check, action-holds, action-replies, plan-work and action-producers (all earlier in the order), and your requirements' Uses gains the T45 line. R7 gains a T45 sentence: a row moved to another family keeps its code and words under its new number, its old number held by no code (C-117.17/.18 → C-149.6/.7); your changed.moved key matches it. Merge tranche/T45 into your branch. action-producers' C-152 file comes by CHANGE when it merges.
+
+## B3 · ANSWER · re J2
+
+K2882: merged into tranche/T45; R7 struck. Stay available: action-producers' C-152 comes by CHANGE at its merge.
+
+## B4 · CHANGE
+
+K2888: action-producers is merged; its checks file (C-152) is on tranche/T45 if it added one. Merge tranche/T45, list it in CHECK_FAMILY_FILES after machinery-producers' place in modules.json order, re-run, and post COMPLETE.

@@ -1,0 +1,29 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "stewards",
+  // The project's Cloudflare account, PINNED (R21, as the installer's): the repository, not the machine's sign-in,
+  // decides where this Worker goes.
+  "account_id": "20b533579290b9b93168345edd3b7f72",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-07-01",
+
+  // Exactly these bindings and nothing else (R16): the service's own store, its one mail binding, its plain-text
+  // variables, and (set with `wrangler secret put`, never here) the secrets STEWARD_KEYS and SOURCE_KEY. No service
+  // binding, bucket or other store, and no credential of any group's Civicsmith or of any hosting account: the
+  // stewards' remedies are limited by construction.
+  "durable_objects": { "bindings": [{ "name": "STORE", "class_name": "StewardsStore" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["StewardsStore"] }],
+  // The address the notice goes to is verified in the account's Email Routing at deploy (DEPLOY.md). Once Bob names
+  // it, `destination_address` is set here to exactly STEWARDS_ADDRESS.
+  "send_email": [{ "name": "NOTIFY" }],
+  "vars": {
+    // Bob's ruling (K2819 (2)): the contact 90 days and the report 1 year after its latest decision.
+    "CONTACT_RETENTION_DAYS": "90",
+    "REPORT_RETENTION_DAYS": "365"
+    // STEWARDS_ADDRESS is Bob's to name (K2799). Until it is set the service is not yet open and the deploy refuses.
+    // NOTIFY_FROM: the sender of the notice, on a domain with Email Routing in this account (DEPLOY.md).
+  },
+  // R15: the purge, daily.
+  "triggers": { "crons": ["17 3 * * *"] },
+  "observability": { "enabled": true }
+}

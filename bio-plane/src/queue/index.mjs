@@ -112,8 +112,12 @@ export class Queue {
   static PRODUCER_DEPS = Object.freeze(["record", "membership", "governor", "provenance", "capture", "captureRequests",
     "basisVersions", "progressions", "aiRuns", "bias", "publication", "corpusExport", "reevaluation", "intent", "monitoring",
     "contradiction",
-    /* queue-producers R15–R19 (K608, K728; K899 (7)): the Action layer's providers, `actions` for R19's holds. */
+    /* queue-producers R15–R19 (K608, K728; K899 (7)): the Action layer's providers, `actions` for R19's holds; from T45
+       `action-producers`' (its R1–R8, K2781 (1)), which `queue-producers` builds over these same deps. */
     "actionClocks", "escalation", "actionPlans", "actions",
+    /* T45 (action-producers R5, R9, R10, R12): the hold read moved to `action-holds`, the watch question `following`'s,
+       the take-ups and review days `plan-work`'s; queue passes them and calls none of their reads. */
+    "actionHolds", "following", "planWork",
     /* queue-producers R20, R21 (K921): the review requests and the facts due; queue passes them and calls neither. */
     "filingTemplates", "localFacts",
     /* queue-producers R2 (N483) and R27 (DEC-111): corpus-export's export log; network-notices' notices of a project. */
@@ -575,8 +579,10 @@ export class Queue {
   static TASK_LIVE_STATUSES = Object.freeze(["open", "forwarded"]);
   /** R12, R28 (K607, K608): the door an OBLIGATION not held in `tasks` leaves by, by kind; every other obligation is a
    *  task (taskresolve). The Action layer's four: a checkpoint is judged (action-plans R16), a proposed stage advanced
-   *  or declined (escalation R13), a reminder answered (action-clocks R6), a litigation hold placed (actions R52;
-   *  K899 (7); its release, actions R56, the other answer, named in its detail); K921's two: a template version reviewed
+   *  or declined (escalation R13), a reminder answered (action-clocks R6), a litigation hold placed (action-holds R2,
+   *  was actions R52; K899 (7); its release, action-holds R5, the other answer, named in its detail); T45's three: a
+   *  watch kept or stopped (following R25), a plan's review recorded (plan-work R4), a paused plan resumed (action-plans
+   *  R40); K921's two: a template version reviewed
    *  (filing-templates R9), a local fact confirmed (local-facts R1); a credit level chosen (publication R17;
    *  queue-producers R23, DEC-102 item 3); and (R50, DEC-116 item 2) the docket's core item placed or declined, two
    *  doors. The contradiction duties' doors are R46's, read off the item's subject (`#contradictionDisposition`); the
@@ -591,6 +597,8 @@ export class Queue {
     /* R52 (N820; steps R12, investigation R3): a step past the date its setter gave it leaves when the step is ended; a
        reminder on a step or a milestone is answered as `action-reminder`'s is, with another reminder or none. */
     "step-date-due": "stepend", "step-reminder": "stepreminder", "milestone-reminder": "milestonereminder",
+    /* T45 (action-producers R10, R12; N855, N890): each is the op its owner serves for the act that makes it leave. */
+    "watch-keep-or-stop": "watchanswer", "plan-review-due": "planreviewrecord", "plan-look-again": "planresume",
     "docket-core-due": Object.freeze(["docketprepare", "docketdecline"]),
     "contradiction-duty": Object.freeze(["contradictionclarify", "contradictiontakeup"]),
     "contradiction-duty-unseen": Object.freeze(["contradictionoptin"]) });
@@ -635,7 +643,8 @@ export class Queue {
       + "(op=reminderanswer), and it also leaves when the entry is no longer pending or the action is closed.",
     "litigation-hold": " This one is a reply your group marked as legal pressure, keyed by the action and the entry "
       + "rather than by a task: it leaves when a member records the hold in place or released, with a reason: in place "
-      + "by placing it (op=actionhold), released by releasing it (op=actionholdrelease), its own act.",
+      + "by placing it (op=actionhold), released by releasing it (op=actionholdrelease), its own act. A legal mark on a "
+      + "docket entry, or a legal pressure record, is keyed by the mark instead, and leaves the same way.",
     "template-review-requested": " This one is a review a member asked of you on a filing template's version, keyed by "
       + "the version and by you rather than by a task: it leaves when you review the version's present text "
       + "(op=templatereview), or when the version is no longer in review.",
@@ -663,6 +672,15 @@ export class Queue {
     "milestone-reminder": " This one is a reminder you asked for on a milestone, keyed by the reminder rather than by a "
       + "task, and it is yours alone: you answer it with another reminder or with none (op=milestonereminder), and it "
       + "is told on its day only.",
+    /* T45 (action-producers R10, R12; following R25, plan-work R4, action-plans R40). */
+    "watch-keep-or-stop": " This one is a watch a plan set running, asked about once because the plan closed or every "
+      + "promise it watched is met, keyed by the watch rather than by a task: it leaves when you answer it, keeping the "
+      + "watch until a date or stopping it (op=watchanswer), or when the watch ends. A watch relied on elsewhere is shown "
+      + "with no door.",
+    "plan-review-due": " This one is a review day your group set for a plan, keyed by the plan and the day rather than by "
+      + "a task: it leaves when a member records a review of the plan (op=planreviewrecord), or when the plan is closed.",
+    "plan-look-again": " This one is the date your group set to look again at a paused plan, keyed by the plan and the "
+      + "day rather than by a task: it leaves when a member resumes the plan (op=planresume) or closes it.",
     /* T34-53 (tasks R3, R14, R15; DEC-135): a task like any other, so its door is taskresolve, which closes only this
        member's own; taking it and recording the check are its other ways out. */
     "check-requested": " This one is a check a project owner asked for: take it (op=checktake) and record your check or a "
@@ -693,6 +711,10 @@ export class Queue {
    *  holds them: an explore ask is answered by its own act, the other two are quieted by their recipient. */
   static ACCOUNT_DOORS = Object.freeze({ "explore-ask": "exploreapprove", "ai-limit-reached": "queuemute",
     "project-account-suspended": "queuemute" });
+  /** R12 (T45; action-producers R9, R11; upper doubt 15): FINDINGs that no project-scoped decision answers, quieted by
+   *  their recipient for themselves as a CONDITION is: a member who left is told to the project's owners, and its doors
+   *  are the take-ups its options lead with. */
+  static QUIETED_FINDINGS = Object.freeze(["member-left-items"]);
   /** R52: the FINDINGs a member quiets for themselves when no project home holds them (a personal mute). */
   static MUTED_OUTSIDE_A_PROJECT = Object.freeze(["question-find"]);
 
@@ -796,6 +818,14 @@ export class Queue {
                    + "team for a disposition to speak for. Quiet it for yourself (op=queuemute, naming this item) once "
                    + "you have read it." };
     }
+    /* R12 (T45; action-producers R9): a member who left had items routed to them; the take-ups lead its options, so
+       there is no finding for a team to decide, and its recipient quiets it once read. */
+    if (Queue.QUIETED_FINDINGS.includes(item.kind))
+      return { available: false, op: null, scope: null, keyed_on: KEYED_ON, key: null,
+               reason: "a_departure_is_taken_up_not_disposed", instead: "queuemute",
+               detail: "this tells the project's owners that a member who left had items routed to them. There is "
+                     + "nothing here for a team to set aside: take up the items you choose (the acts this item offers "
+                     + "first), and quiet it for yourself (op=queuemute, naming this item) once you have read it." };
     if (item.kind === "newer-capture-affects-reference") {
       const notice = item.subject && typeof item.subject.id === "string" ? item.subject.id : null;
       return { available: notice !== null, op: null, scope: "notice", keyed_on: ["notice"], key: notice,

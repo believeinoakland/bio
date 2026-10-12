@@ -1,6 +1,6 @@
 # BOB to notice-producers (T45)
 
-**Read** · handled J0
+**Read** · handled J2
 
 ## B1 · START
 
@@ -16,3 +16,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, qu
 (K2874) following's read for the duty-watch line (T45-42): `dutyWatchEnd(duty)` (FOLLOWING #5 J2 (4)).
 
 (K2878) At this START: installer (T45-46) does not run in T45 (the stewards' contact address is Bob's to name and is not yet named, K2799); T45-46 moves to T46. The L11 merge order is therefore: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, stewards, answer-envelope, plane last.
+
+## B2 · ANSWER · re J2
+
+K2888: merged early. J1: (1) is N926 (action-clocks R17), (2) is N927 (your R5 against queue R16), both T46; your T45 build as written stands. Stay available until the layer closes.
