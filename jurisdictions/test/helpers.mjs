@@ -99,6 +99,16 @@ export function walkFacts(p, fn) {
     fn(n, `local_names[${i}]`);
     each(n.explanations, `local_names[${i}].explanations`); each(n.translations, `local_names[${i}].translations`);
   });
+  /* T45 (R74, R76, R79–R82, R86): an office's and a venue's own zone, who may request, a kind's templates and venue
+     facts, the legal facts, the procedure guides and the phrasings */
+  (p.counterparties || []).forEach((c, i) => { if (c.time_zone) fn(c.time_zone, `counterparties[${i}].time_zone`); });
+  (p.records_laws || []).forEach((l, i) => { if (l.requesters) fn(l.requesters, `records_laws[${i}].requesters`); });
+  (p.action_kinds || []).forEach((k, i) => {
+    each(k.templates, `action_kinds[${i}].templates`);
+    if (k.venue && k.venue.time_zone) fn(k.venue.time_zone, `action_kinds[${i}].venue.time_zone`);
+    if (k.venue) each(k.venue.facts, `action_kinds[${i}].venue.facts`);
+  });
+  for (const s of ["legal_facts", "procedure_guides", "phrasings"]) each(p[s], s);
 }
 /** The object at a walkFacts path. */
 walkFacts.at = (p, path) => path.split(/\.|\[|\]\.?/).filter(Boolean)

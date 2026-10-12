@@ -152,7 +152,11 @@ export function world({ profiles = ["test-port-ellery"], omit = [], duties } = {
   const retrievalStub = { registerActionFacts: () => ({ ok: true }), registerProjectionDecoration: () => ({ ok: true }) };
   const actions = actionsOf(host, { record, membership, promotion, retrieval: retrievalStub, conformance,
                                     content: { captureFor: () => null }, now: nowMs });
-  const clocks = actionClocksOf(host, { record, membership, actions, conformance, now: nowMs });
+  /* action-clocks' steps (its R16), in the shape of steps' Provides: no step stands for any entry here. Built on this
+     host it would declare observation-log's tables, which the plane builds first (K2862, B6). */
+  const steps = { registerDueHolder: () => ({ ok: true }), productsOf: () => ({ ok: true, steps: [] }),
+                  stepsOf: () => ({ ok: true, steps: [] }), stepsWaitingOn: () => ({ ok: true, steps: [] }), step: () => null };
+  const clocks = actionClocksOf(host, { record, membership, actions, conformance, steps, now: nowMs });
   const given = Object.fromEntries(Object.entries(stand).filter(([k]) => !omit.includes(k)).map(([k, v]) => [k, v]));
   for (const k of omit) given[k] = null;
   const seenActions = new Proxy(actions, { get: (t, k) => (k === "actionRead"
@@ -297,3 +301,5 @@ export function choose(w, options, extra = {}) {
 }
 
 export const by = (who, extra = {}) => ({ author: V(who), viewer: V(who), ...extra });
+/** R42: a member's reason for taking an outward step before the infraction it serves is documented. */
+export const FIRST = Object.freeze({ why_first: "A deadline comes first" });

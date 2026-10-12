@@ -12,7 +12,10 @@
  * copy"; both rows read changed until T35's promotion stamp moves `CATALOG_VERSION`. At T35 (N685, K1834) the two
  * rows say what `network-notices`' C-127.4 and C-127.12 say, the same way: C-129.16 "Your group has no name recorded
  * yet", as C-127.4; C-129.22 already has C-127.12's form, its third clause (the docket has moved since) being R5's own
- * condition. Both await the stamp (T36's promotion job). */
+ * condition. Both await the stamp (T36's promotion job).
+ * At T45 (N855, N880; K2781 (3)) C-129.29 arrived for an outcome entry's own statement (R1), awaiting the stamp, and
+ * C-129.19 (DOCKET_NO_SUMMARY) re-worded to cover an outcome's summary too (R1), reading changed until the stamp. A
+ * counsel matter's refusal (R28) is `publication`'s row C-122 (its R78), answered from its export, never copied here. */
 
 const at = (fn, region) => `src/docket/index.mjs ${fn} > ${region}`;
 const FILER = at("#filerRefusal", "is-docket-filer");
@@ -118,8 +121,8 @@ export const DOCKET_CHECKS = Object.freeze({
   },
   DOCKET_NO_SUMMARY: {
     check: "C-129.19", where: KIND,
-    translation: "A reaction elsewhere is shown with a short summary in the group's own words: one paragraph of at "
-      + "most 600 characters. Nothing was published.",
+    translation: "A summary is one paragraph of at most 600 characters: a reaction elsewhere is shown with one in the "
+      + "group's own words, and an outcome is filed with one in yours. Nothing was written.",
   },
   DOCKET_NO_ARCHIVE_COPY: {
     check: "C-129.20", where: KIND,
@@ -168,6 +171,12 @@ export const DOCKET_CHECKS = Object.freeze({
     check: "C-129.28", where: ORDER,
     translation: "An unsealing order names a part that no sealing order on this case's docket names. Nothing was "
       + "published.",
+  },
+  /* R1 (T45; N855, N880): an outcome entry's own statement; a row awaiting promotion's stamp. */
+  DOCKET_OUTCOME_UNREADABLE: {
+    check: "C-129.29", where: FORM,
+    translation: "An outcome entry says what the outcome was (a cure, or a harm addressed) and the date it happened, "
+      + "no later than today; an entry of any other kind says neither. Nothing was written.",
   },
 });
 

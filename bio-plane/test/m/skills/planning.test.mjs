@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { renderPack } from "../../../src/skillpack.mjs";
-import { actionPlanningLayer, ACTION_RULES, ACTION_SOURCE, ACTION_SECTION, PLANNING_ACTS, PLANNING_ACT,
+import { actionPlanningLayer, ACTION_RULES, ACTION_RULE_TABLE, ACTION_SOURCE, ACTION_SECTION, PLANNING_ACTS, PLANNING_ACT,
          controlFlowAuthority } from "../../../src/skilldoctrine.mjs";
 import { SRC, read, norm, foundIn, section, canonDocuments, published, stringLiterals } from "./fixture.mjs";
 
@@ -23,27 +23,55 @@ const s4 = () => section(read(ACTION_SOURCE), "4. The rules");
 const ruleText = (n) => (s4().split("\n").find((l) => l.startsWith(`${n}. `)) ?? "");
 const strings = (v) => typeof v === "string" ? [v] : v && typeof v === "object" ? Object.values(v).flatMap(strings) : [];
 
-test("R28 the action_planning layer: authored, its load_when R28's sentence, its body the rules of §4 1–3, 6, 8–10 and 13, each heading and sentence found in that rule by R21's normaliser", () => {
+test("R28 the action_planning layer: authored, its load_when R28's sentence with the re-examination, its body BIO_Action_v0_2.md §4 rules 1, 2, 4, 7, 9, 10, 12, 13, 16, 19 and 21 (canon; v0.1 is history), each heading and sentence found in that rule by R21's normaliser", () => {
   const catalog = planningCatalog();
   const layer = renderPack(published({ catalog })).disclosed.action_planning;
   assert.equal(layer.sourcing, "authored");
   assert.ok(layer.load_when.startsWith(LOAD_WHEN), layer.load_when);
+  assert.match(layer.load_when, /, or re-examines a plan after a recorded response$/, "R28 (T45): the re-examination");
   assert.equal(layer.body.rules, ACTION_RULES, "the doctrine's own rules, unchanged");
-  assert.equal(layer.body.source, "docs/architecture/BIO_Action_v0_1.md");
+  assert.equal(layer.body.source, "docs/architecture/BIO_Action_v0_2.md");
+  assert.equal(ACTION_SOURCE, "docs/architecture/BIO_Action_v0_2.md");
   assert.equal(layer.body.section, ACTION_SECTION);
   assert.ok(canonDocuments().has(ACTION_SOURCE), "the Action document is canon");
+  assert.ok(!canonDocuments().has("docs/architecture/BIO_Action_v0_1.md"), "v0.1 is history, not canon (K2780)");
   assert.ok(s4().length > 0, "§4 is where it was");
-  const numbers = ACTION_RULES.map((r) => r.rule);
-  for (const n of [1, 2, 3, 6, 8, 9, 10, 13]) assert.ok(numbers.includes(n), `rule ${n} is carried`);
+  assert.deepEqual(ACTION_RULES.map((r) => r.rule), [1, 2, 4, 7, 9, 10, 12, 13, 16, 19, 21],
+    "exactly R28's rules, in §4's order");
   for (const r of ACTION_RULES) {
     const rule = ruleText(r.rule);
     assert.ok(rule.length > 0, `rule ${r.rule} is in §4`);
     assert.ok(norm(rule).startsWith(`${r.rule}. ${norm(r.heading)}`), `rule ${r.rule}'s heading is its own: ${r.heading}`);
     assert.ok(r.sentences.length > 0);
     for (const s of r.sentences) assert.ok(foundIn(rule, s), `rule ${r.rule}: "${s}" is in its paragraph`);
+    assert.ok(Object.isFrozen(r) && Object.isFrozen(r.sentences), `rule ${r.rule} is frozen`);
+    assert.equal(r, ACTION_RULE_TABLE.find((x) => x.rule === r.rule), `rule ${r.rule} is the table's own object`);
   }
-  /* The lookup can miss: a changed word is not found. */
-  assert.ok(!foundIn(ruleText(3), "No field holds significance, severity, priority or a rank."));
+  /* What R28 names, rule by rule (T45; v0.2 §4). */
+  const of = (n) => ACTION_RULES.find((r) => r.rule === n).sentences.join(" ");
+  for (const [n, re] of [
+    [1, /never does any of these acts/],
+    [2, /The gate is at the outward act/], [2, /Sentences that read as assertions are pointed out before approval/],
+    [4, /lists every option it proposes, with no cut-off/], [4, /No field holds significance, severity, priority or a score/],
+    [4, /never from a fixed catalogue/],
+    [7, /never a private individual/],
+    [9, /never take or propose a policy or vote position, and the planning run never suggests advocacy/],
+    [9, /lobbying is an option only for that/],
+    [10, /shapes what the assistant suggests and nothing else/],
+    [12, /every plan is checked for a branch that answers a hostile response/],
+    [12, /A packet never says "you have a claim" nor whether a protection applies/],
+    [13, /No action is refused for its evidence grade/],
+    [16, /What the group chose changes only by a member's act/],
+    [19, /the first option the plan offers is to describe and document it/], [19, /the plan never withdraws it/],
+    [21, /nothing is prepared that asks anything for the benefit of the group or its members/],
+    [21, /names the office and the official responsible in that role/],
+  ]) assert.match(n === 2 ? ACTION_RULES[1].heading + " " + of(2) : of(n), re, `rule ${n}: ${re}`);
+  /* No place is named in what the layer carries (R26): rule 3's example sentences, which name one, are not carried. */
+  for (const place of ["Hayward", "Oakland", "Alameda", "California"]) assert.ok(!JSON.stringify(layer).includes(place), place);
+  /* The lookup can miss: a changed word is not found, and v0.1's wording is not v0.2's. */
+  assert.ok(!foundIn(ruleText(4), "No field holds significance, severity, priority or a rank."));
+  assert.ok(!foundIn(ruleText(1), "assessing a consequence, choosing an option, approving, sending, advancing a stage, resolving, closing."),
+    "v0.1's rule 1 is not v0.2's");
 });
 
 test("R28 acts: each proposal act and each act left to a member is the published catalogue's own entry, read by id with the requirement that defines it; the ids are named once, as selectors", () => {
@@ -92,7 +120,7 @@ test("R28 R16 R24 no string of the layer, present or absent, carries control-flo
   assert.ok(controlFlowAuthority("Keep searching until every plan has a branch.").length > 0, "the scan can fire");
 });
 
-test("R29 the layer names the plan mode in its load_when; with no optionpropose published it is a stated absence in R9's form; rule 12's clause is carried, found in §4", () => {
+test("R29 the layer names the plan mode in its load_when; with no optionpropose published it is a stated absence in R9's form; v0.2 rule 12's clause is carried, found in §4", () => {
   const present = renderPack(published({ catalog: planningCatalog() })).disclosed.action_planning;
   assert.match(present.load_when, /\bplan mode\b/);
   /* The absence: today's catalogue publishes no planning act, and neither does one that drops only it. */

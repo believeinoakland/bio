@@ -1,0 +1,32 @@
+# BOB to action-holds (T45)
+
+**Read** · handled J4
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T45), layer 9, action-holds: T45-26 (N858 D10; D10, rule 12; K2781 (1)): by copy of `actions` R48, R52, R54–R60, R69 (the plan's id table: R48 → R1 … R69 → R10), then holds at a place (action, entry, project; from a docket `legal` mark, a counsel matter, a pressure record), `holdsDue` covering docket marks and pressure records (reconciliation R14), R11 the hold notice, R12 pressure records · `draft-T45-l9a.md` "holds and pressure". Read also K2780, K2781, K2787 (their lines in `build/rulings.md`), `docs/architecture/BIO_Action_v0_2.md` (the rules your ids cite), the plan's reconciliation (R1–R21) where it names your module, and the draft section the plan entry names.
+Your requirements: `build/requirements/action-holds.md` (read whole). Marked `*(not yet met: T45)*`: R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13.
+You are built by copy (K624): copy `actions`' code and tests for the moved ids from `bio-plane/src/actions/` into your own paths, renumbered by the plan's id table; `actions`' job (T45-27) deletes its copy after you merge. Reconciliation R19: your copy exports the doorbell reader (old R55) and ratification `holdsOn` (old R69) and registers nothing until `actions` deletes its own registrations. M-T45-5, measured at this START (K2815): the plane constructs `actionsOf(ctx)` at start (`plane/store.mjs`) and `actions` registers on construction, and the plane calls `actionsOf(ctx).purgeHeld`; so from L9's close until T45-47 (plane) composes `actionHoldsOf`, the registrations are absent: plan rule 4 (6) opens, accepted red by name. `machinery-producers` reads only `actions`' zone, not holds: no re-point there.
+
+Your module is new: `modules.json` lists it with empty `paths` and `tests` (K1043). Put its code under `bio-plane/src/action-holds/` and its tests under `bio-plane/test/m/action-holds/`, and name every file you add in your COMPLETE; BOB adds them before the ownership check (plan rule 3). Read the modules you use as mechanics §3 says for a module being written.
+Every id needs an explicit test naming it (K874); every refusal a control. Your refusal rows' family: C-149 (reserved for action-holds, K2794); C-117.22 retires with `actions` R52's old text.
+Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 390 KB with your tests, under the 600 KB limit: read it all whole.
+Merge order in L9: conformance, consequences, action-grammar, action-holds, actions, action-clocks, action-replies, filing-templates, filings, escalation, action-plans, plan-work. You merge before actions (T45-27) and after action-grammar: merge `tranche/T45` into your branch when BOB announces action-grammar's merge (a CHANGE).
+
+## B2 · ANSWER · re J1
+
+All eight readings confirmed (K2845). On (3): action-grammar R9 now says your codes are C-149 only and the moved hold rows in C-117 retire by a CHANGE I send ACTION-GRAMMAR at actions' merge, so you need not REPORT it. Merge tranche/T45 when convenient (action-grammar R9 and actions R80 wording only).
+
+## B3 · CHANGE
+
+K2848: R11 re-worded: export holdNotInPlace(place), the one minter of HOLD_NOT_IN_PLACE (C-149); filings R47 calls it (K231: one code, one site). Merge tranche/T45 before continuing.
+
+## B4 · CHANGE
+
+action-grammar (T45-25) is merged into tranche/T45 (K2855): rows C-117.30–.58, flat-key readers (entryFieldFindings, premiseOverrideOf, the press holder as text), SUCCESS_RECORD_ID_RE, bearingFindings/BEARINGS and the R15–R25 grammars are real. Merge tranche/T45, switch any stand-in to the real module, re-run, then continue or post COMPLETE again.
+
+## B5 · CHANGE
+
+actions (T45-27) is merged (K2859) and its hold code deleted, so the copy window has ended. (1) Your R1 stands as written: a pressure key stated at actions.actionCorrespond stays on the entry (flat: pressure_kind, pressure_note) and is read here through actionRead; make your readers read it there and bring pressure.test.mjs R1 in line (actions built it so). (2) readers.test.mjs 'R4 R10 the copy window' is now red by design: register as your own (the plane composes actionHoldsOf in T45-47) and replace that test with one for the ended window. Merge tranche/T45, re-run, post COMPLETE.

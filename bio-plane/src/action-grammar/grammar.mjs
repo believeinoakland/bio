@@ -29,6 +29,9 @@ function f(check, severity, message, repairs, code) {
   return out;
 }
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+/** T45 (K2845, K2849 (5)): a success record's id as `consequences` mints it, `SUC-<year>-<4 digits>`, which a `rests_on`
+ *  leg may name until record-grammar registers the prefix (N911). */
+export const SUCCESS_RECORD_ID_RE = /^SUC-\d{4}-\d{4}$/;
 /* A captured artifact's content hash (`sha256:` and 64 hex), the shape `correspondenceFindings` accepts beside bare hex. */
 const CONTENT_HASH_RE = /^sha256:[0-9a-f]{64}$/;
 
@@ -150,7 +153,12 @@ export function actionBasisFindings(fm, findings) {
     /* D-162 / C-81.1: an action resting on a THEME rests on a member's lens, not on anything found. */
     if (themeLegFindings(`action_basis[${i}]`, l, findings)) return;
     const target = typeof l.target === 'string' ? l.target : '';
-    if (!BUNDLE_ID_RE.test(target)) {
+    /* T45 (K2845, K2849 (5); `actions` R93): a `rests_on` leg may name a success record, `consequences`' own row, by its id;
+       accepted here until record-grammar's id table registers the prefix (N911). Whether it is live and visible is
+       `actions`' read (`successRecordRead`). */
+    const success = l.kind === 'rests_on' && SUCCESS_RECORD_ID_RE.test(target);
+    if (success) { /* a success record: no canonical-id finding */ }
+    else if (!BUNDLE_ID_RE.test(target)) {
       findings.push(f('C-2.10', 'error',
         `action_basis[${i}].target '${String(l.target).slice(0, 40)}' is not a canonical record id`, REPAIRS));
     } else if (OBJECT_TYPES[target.split('-')[0]] === 'action') {

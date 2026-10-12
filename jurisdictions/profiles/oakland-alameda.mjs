@@ -38,6 +38,16 @@
  *                                  on elected and appointed holders alike (R60, K1729). No `vote_values`: two captured
  *                                  roll calls show only Aye and Excused, not the whole set (R58). No institution scheme
  *                                  until a registry is measured (N632, K1729).
+ *   T45's action facts (R85)       each read on its primary source on 2026-10-11 (the operative text quoted, with its
+ *                                  worked examples, in `test/fixtures/actions-law.mjs` and the job record
+ *                                  `build/jobs/T45/jurisdictions.md`): whose duty each deadline is; the Brown Act's
+ *                                  cure-and-correct demand and its periods; the grand jury's comment periods and the
+ *                                  statuses Penal Code § 933.05 sets; the anti-SLAPP motion's period; the Claims Act
+ *                                  board's 45 days; FOIA's appeal; the legal facts shown at their moment; the stages and
+ *                                  requesters of each records law; FAC's defence scope; the federal 2027 list. What no
+ *                                  source supports is absent, never `UNMEASURED` (R44, R83): no office keeps another time
+ *                                  zone (M-T45-3); no 2027 judicial or City list is published; no procedure guide,
+ *                                  template, venue fact or phrasing is written here.
  *
  * Plain data: patterns are `{re, flags?}` with a JavaScript regular-expression source. */
 const R = String.raw;
@@ -327,6 +337,16 @@ export default {
        Order's SUBJECT, EFFECTIVE DATE or DATE; OUSD's type lines. Measured on the families' primary pages (2026-10-07
        policies) and on the 50 policies doctypes captured from them the same day (K1930; `test/fixtures/policies.mjs`).
        Written without a trailing colon: a reader takes the label with or without one. */
+    /* R77 (T45): Penal Code § 933.05 sets the statuses in which a body answers a grand jury report: one of two per
+       finding ((a)), one of four per recommendation ((b)). */
+    response_statuses: [
+      { status: "finding_agreed", label: "The respondent agrees with the finding", citation: "Cal. Penal Code § 933.05(a)(1)", applies_to: "grand_jury", basis: "2026-10-11 actions-law" },
+      { status: "finding_disputed", label: "The respondent disagrees wholly or partially with the finding", citation: "Cal. Penal Code § 933.05(a)(2)", applies_to: "grand_jury", basis: "2026-10-11 actions-law" },
+      { status: "recommendation_implemented", label: "The recommendation has been implemented", citation: "Cal. Penal Code § 933.05(b)(1)", applies_to: "grand_jury", basis: "2026-10-11 actions-law" },
+      { status: "recommendation_will_be_implemented", label: "The recommendation has not yet been implemented, but will be implemented in the future", citation: "Cal. Penal Code § 933.05(b)(2)", applies_to: "grand_jury", basis: "2026-10-11 actions-law" },
+      { status: "recommendation_requires_analysis", label: "The recommendation requires further analysis", citation: "Cal. Penal Code § 933.05(b)(3)", applies_to: "grand_jury", basis: "2026-10-11 actions-law" },
+      { status: "recommendation_not_implemented", label: "The recommendation will not be implemented because it is not warranted or is not reasonable", citation: "Cal. Penal Code § 933.05(b)(4)", applies_to: "grand_jury", basis: "2026-10-11 actions-law" },
+    ],
     policy_headers: [
       { field: "type", pattern: { re: R`\bADMINISTRATIVE\s+INSTRUCTION\b` }, basis: "2026-10-07 policies" },
       { field: "type", pattern: { re: R`\bDEPARTMENTAL\s+GENERAL\s+ORDER\b` }, basis: "2026-10-07 policies" },
@@ -369,11 +389,43 @@ export default {
     { term: "police", basis: "UNMEASURED" },
   ],
   records_laws: [
+    /* R76 (T45): each law's stages in its own order, in the product's stage names, with the law's own term; a stage the
+       law lacks is absent: the CPRA has no fee waiver and no administrative appeal, and charges direct costs of
+       duplication with no estimate stage (§ 7922.530(a)); mediation under OMC 2.20.270(C) is an action of its own (v0.2 §5). */
     { level: "state", name: "California Public Records Act", citation: "Cal. Gov. Code § 7920.000 et seq.",
+      stages: [
+        { stage: "request", label: "request for a copy of records", citation: "Cal. Gov. Code § 7922.530(a)" },
+        { stage: "extension_notice", label: "written notice extending the time limit in unusual circumstances", citation: "Cal. Gov. Code § 7922.535(b)" },
+        { stage: "production", label: "records made promptly available", citation: "Cal. Gov. Code § 7922.530(a)" },
+        { stage: "denial", label: "written determination that the request is denied", citation: "Cal. Gov. Code § 7922.540(a)" },
+        { stage: "court_filing", label: "verified petition to the superior court", citation: "Cal. Gov. Code §§ 7923.000, 7923.100" }],
+      requesters: { text: "any person, including a corporation, partnership, firm or association; no purpose need be given",
+        citation: "Cal. Gov. Code §§ 7920.520, 7921.300, 7922.530(a)", status: "researched", basis: "2026-10-11 actions-law" },
       basis: "D-149" },
     /* The City's own records law, whose Immediate Disclosure Request is OMC 2.20.230 (time-law §2). */
-    { level: "city", name: "Oakland Sunshine Ordinance", citation: "Oakland Mun. Code ch. 2.20", basis: "2026-10-05 time-law" },
-    { level: "federal", name: "Freedom of Information Act", citation: "5 U.S.C. § 552", basis: "2026-10-05 time-law" },
+    { level: "city", name: "Oakland Sunshine Ordinance", citation: "Oakland Mun. Code ch. 2.20",
+      stages: [
+        { stage: "request", label: "Immediate Disclosure Request", citation: "Oakland Mun. Code § 2.20.230(A), (B)" },
+        { stage: "extension_notice", label: "advice that additional time is needed", citation: "Oakland Mun. Code § 2.20.230(A), (B)" },
+        { stage: "production", label: "disclosable records provided for inspection or copying", citation: "Oakland Mun. Code § 2.20.230(B)" },
+        { stage: "denial", label: "withholding justified in writing", citation: "Oakland Mun. Code § 2.20.250" },
+        { stage: "court_filing", label: "proceedings for injunctive relief, declaratory relief, or writ of mandate", citation: "Oakland Mun. Code § 2.20.270(B)(1)" }],
+      requesters: { text: "any person; no reason or use need be stated", citation: "Oakland Mun. Code §§ 2.20.230(D), 2.20.270(B)(1)",
+        status: "researched", basis: "2026-10-11 actions-law" },
+      basis: "2026-10-05 time-law" },
+    { level: "federal", name: "Freedom of Information Act", citation: "5 U.S.C. § 552",
+      stages: [
+        { stage: "request", label: "request for records", citation: "5 U.S.C. § 552(a)(3)(A)" },
+        { stage: "fee_waiver_request", label: "request for a waiver or reduction of fees", citation: "5 U.S.C. § 552(a)(4)(A)(iii)" },
+        { stage: "extension_notice", label: "written notice of unusual circumstances", citation: "5 U.S.C. § 552(a)(6)(B)(i)" },
+        { stage: "production", label: "records made promptly available", citation: "5 U.S.C. § 552(a)(3)(A)" },
+        { stage: "denial", label: "determination denying the request", citation: "5 U.S.C. § 552(a)(6)(A)(i)" },
+        { stage: "appeal", label: "appeal of an adverse determination", citation: "5 U.S.C. § 552(a)(6)(A)(i), (ii)" },
+        { stage: "appeal_decision", label: "determination on the appeal", citation: "5 U.S.C. § 552(a)(6)(A)(ii)" },
+        { stage: "court_filing", label: "complaint in the district court", citation: "5 U.S.C. § 552(a)(4)(B)" }],
+      requesters: { text: "any person; an element of the intelligence community does not make records available to a foreign government entity or its representative",
+        citation: "5 U.S.C. § 552(a)(3)(A), (E)", status: "researched", basis: "2026-10-11 actions-law" },
+      basis: "2026-10-05 time-law" },
   ],
 
   standard_sources: [
@@ -461,7 +513,8 @@ export default {
       basis: "D-182" },
     { kind: "grand_jury", label: "complaint to the civil grand jury", tier: 1, basis: "D-182" },
     { kind: "controller_referral", label: "referral to the State Controller", tier: 1, basis: "D-182" },
-    { kind: "public_comment", label: "public comment to a body", basis: "UNMEASURED" },
+    /* Design Requirement 8 names "public comment at government meetings" Tier 1 (K2785). */
+    { kind: "public_comment", label: "public comment to a body", tier: 1, basis: "K2785" },
     { kind: "media", label: "media outreach", tier: 1, basis: "D-182" },
     { kind: "litigation_support", label: "support for litigation", basis: "UNMEASURED" },
     { kind: "request_for_comment", label: "request for comment on specific claims", basis: "DEC-13" },
@@ -479,6 +532,18 @@ export default {
       advisory: "File with caution: a procedural error can have the petition dismissed, usually without "
         + "prejudice, so refiling is possible but costs time and money. Legal review before filing is recommended.",
       basis: "D-182" },
+    /* R85 (T45): the Brown Act's demand to cure or correct, a precondition of an action to void (Gov. Code § 54960.1(b)),
+       at Tier 2 (K2785); and taking part as a formal party before a venue, Tier 2 with its advisory (v0.2 rule 13, K2780). */
+    { kind: "brown_act_demand", label: "demand to cure or correct an action taken in violation of the Brown Act", tier: 2,
+      laws: ["California Government Code"],
+      advisory: "File with caution: the demand must be made in writing within the period the law sets, and an action to "
+        + "void must follow within 15 days of the body's answer, or be barred (Gov. Code § 54960.1(c)). Legal review before "
+        + "filing is recommended.",
+      basis: "K2785" },
+    { kind: "party_participation", label: "taking part as a formal party before a venue", tier: 2,
+      advisory: "File with caution: a party's filings are bound by the venue's own rules of practice and deadlines, and a "
+        + "procedural error can cost the party its standing. Legal review before filing is recommended.",
+      basis: "K2780" },
     { kind: "assessment_challenge", label: "challenge to a tax, assessment or fee under Proposition 218", tier: 3, basis: "D-182" },
     { kind: "taxpayer_action", label: "taxpayer action (Code of Civil Procedure § 526a)", tier: 3, basis: "D-182" },
     { kind: "consent_decree_motion", label: "motion under a federal consent decree", tier: 3, basis: "D-182" },
@@ -494,30 +559,30 @@ export default {
       extension: { days: 14, count: "calendar", when: "unusual circumstances (Gov. Code § 7922.535(c)(1)–(6)), by written notice to the requester",
         citation: "Cal. Gov. Code § 7922.535(b)" },
       observed: { closures: "city", status: "researched", basis: "2026-10-05 time-law" },
-      citation: "Cal. Gov. Code § 7922.535(a)", status: "researched", basis: "2026-10-05 time-law" },
+      owed_by: "body", citation: "Cal. Gov. Code § 7922.535(a)", status: "researched", basis: "2026-10-05 time-law" },
     { rule: "immediate_disclosure", applies_to: "records_request", units: "days", amount: 3, count: "business", direction: "forward",
-      starts: "received", closures: "city", citation: "Oakland Mun. Code § 2.20.230", status: "researched", basis: "2026-10-05 time-law" },
+      starts: "received", closures: "city", owed_by: "body", citation: "Oakland Mun. Code § 2.20.230", status: "researched", basis: "2026-10-05 time-law" },
     /* The Brown Act and OMC 2.20.070 bind a body's notice of its meeting, counted back from the meeting (the act);
        they bear on the group's comment to that body. Clock hours do not roll. */
     { rule: "agenda_posting_regular", applies_to: "public_comment", units: "hours", amount: 72, direction: "backward", starts: "act",
-      citation: "Cal. Gov. Code § 54954.2(a)(1)", status: "researched", basis: "2026-10-05 time-law" },
+      owed_by: "body", citation: "Cal. Gov. Code § 54954.2(a)(1)", status: "researched", basis: "2026-10-05 time-law" },
     { rule: "special_meeting_notice", applies_to: "public_comment", units: "hours", amount: 24, direction: "backward", starts: "act",
-      citation: "Cal. Gov. Code § 54956(a)", status: "researched", basis: "2026-10-05 time-law" },
+      owed_by: "body", citation: "Cal. Gov. Code § 54956(a)", status: "researched", basis: "2026-10-05 time-law" },
     /* "at least forty-eight (48) hours (excluding Saturdays, Sundays and holidays) before the time of the meeting". */
     { rule: "omc_special_meeting_notice", applies_to: "public_comment", units: "business_hours", amount: 48, direction: "backward",
-      starts: "act", closures: "city", citation: "Oakland Mun. Code § 2.20.070", status: "researched", basis: "2026-10-05 time-law" },
+      starts: "act", closures: "city", owed_by: "body", citation: "Oakland Mun. Code § 2.20.070", status: "researched", basis: "2026-10-05 time-law" },
     /* (C): "if a special meeting is called for a Monday, notice shall be deemed timely made if … made no later than
        12:00 p.m. (noon) on the preceding Friday". Held beside the general rule; the later answer is the safe harbour
        (K1514). */
     { rule: "omc_special_meeting_monday", applies_to: "public_comment", units: "days", amount: 3, count: "calendar", direction: "backward",
-      starts: "act", applies_on: ["mon"], due_at: "12:00", citation: "Oakland Mun. Code § 2.20.070(C)", status: "researched", basis: "2026-10-05 time-law" },
+      starts: "act", applies_on: ["mon"], due_at: "12:00", owed_by: "body", citation: "Oakland Mun. Code § 2.20.070(C)", status: "researched", basis: "2026-10-05 time-law" },
     { rule: "claim_presentation_injury", applies_to: "claim", units: "months", amount: 6, direction: "forward", starts: "act",
       roll: true, closures: "judicial",
-      citation: "Cal. Gov. Code § 911.2(a) (death, personal injury, personal property, growing crops)", status: "researched", basis: "2026-10-05 time-law" },
+      owed_by: "group", citation: "Cal. Gov. Code § 911.2(a) (death, personal injury, personal property, growing crops)", status: "researched", basis: "2026-10-05 time-law" },
     { rule: "claim_presentation_other", applies_to: "claim", units: "years", amount: 1, direction: "forward", starts: "act",
-      roll: true, closures: "judicial", citation: "Cal. Gov. Code § 911.2(a) (any other claim)", status: "researched", basis: "2026-10-05 time-law" },
+      roll: true, closures: "judicial", owed_by: "group", citation: "Cal. Gov. Code § 911.2(a) (any other claim)", status: "researched", basis: "2026-10-05 time-law" },
     { rule: "claim_suit_after_rejection", applies_to: "claim", units: "months", amount: 6, direction: "forward", starts: "served",
-      roll: true, closures: "judicial", citation: "Cal. Gov. Code § 945.6(a)(1)", status: "researched", basis: "2026-10-05 time-law" },
+      roll: true, closures: "judicial", owed_by: "group", citation: "Cal. Gov. Code § 945.6(a)(1)", status: "researched", basis: "2026-10-05 time-law" },
     /* "within 20 days (excepting Saturdays, Sundays, and legal public holidays) after the receipt". */
     { rule: "foia_response", applies_to: "records_request", units: "days", amount: 20, count: "business", direction: "forward",
       starts: "received", closures: "federal",
@@ -525,7 +590,58 @@ export default {
         citation: "5 U.S.C. § 552(a)(6)(B)(i)" },
       tolling: [{ when: "the agency awaits information it reasonably requested from the requester", citation: "5 U.S.C. § 552(a)(6)(A)(ii)(I)" },
         { when: "the agency awaits clarification of the requester's fee assessment", citation: "5 U.S.C. § 552(a)(6)(A)(ii)(II)" }],
-      citation: "5 U.S.C. § 552(a)(6)(A)(i)", status: "researched", basis: "2026-10-05 time-law" },
+      owed_by: "body",
+      consequence: { text: "shall be deemed to have exhausted his administrative remedies with respect to such request if the agency fails to comply with the applicable time limit provisions of this paragraph",
+        citation: "5 U.S.C. § 552(a)(6)(C)(i)" },
+      citation: "5 U.S.C. § 552(a)(6)(A)(i)", status: "researched", basis: "2026-10-05 time-law, 2026-10-11 actions-law" },
+    /* T45 (R75, R85): each with its primary source (2026-10-11 actions-law). Day periods under California law count by
+       CCP § 12 and roll on its § 12a closures, as the rules above do. Where the law states what failing a period means,
+       its words are quoted as the consequence. Whose duty each earlier rule is (`owed_by`) is read off the operative text
+       time-law quotes ("the legislative body shall post", "each agency … shall … determine", a claim "shall be
+       presented"). */
+    { rule: "claim_board_action", applies_to: "claim", units: "days", amount: 45, count: "calendar", direction: "forward", starts: "filed",
+      roll: true, closures: "judicial", computation: "ccp_12", owed_by: "body",
+      consequence: { text: "the claim shall be deemed to have been rejected by the board on the last day of the period within which the board was required to act upon the claim",
+        citation: "Cal. Gov. Code § 912.4(c)" },
+      citation: "Cal. Gov. Code § 912.4(a)", status: "researched", basis: "2026-10-11 actions-law" },
+    { rule: "foia_appeal_response", applies_to: "records_request", units: "days", amount: 20, count: "business", direction: "forward",
+      starts: "received", closures: "federal", owed_by: "body",
+      consequence: { text: "shall be deemed to have exhausted his administrative remedies with respect to such request if the agency fails to comply with the applicable time limit provisions of this paragraph",
+        citation: "5 U.S.C. § 552(a)(6)(C)(i)" },
+      citation: "5 U.S.C. § 552(a)(6)(A)(ii)", status: "researched", basis: "2026-10-11 actions-law" },
+    /* Gov. Code § 54960.1(c)(1): the demand within 90 days of the action, or 30 when an open-session action violated
+       § 54954.2 (the agenda); (c)(2)–(3): the body's 30 days to cure or correct. The 15 days to sue ((c)(4)) run from the
+       group's receipt of the body's answer or from the end of the 30 days, whichever is earlier: no anchor of R26 names
+       that, so it is absent and named in the job's record. */
+    { rule: "brown_act_demand", applies_to: "brown_act_demand", units: "days", amount: 90, count: "calendar", direction: "forward", starts: "act",
+      roll: true, closures: "judicial", computation: "ccp_12", owed_by: "group",
+      citation: "Cal. Gov. Code § 54960.1(c)(1)", status: "researched", basis: "2026-10-11 actions-law" },
+    { rule: "brown_act_demand_agenda", applies_to: "brown_act_demand", units: "days", amount: 30, count: "calendar", direction: "forward", starts: "act",
+      roll: true, closures: "judicial", computation: "ccp_12", owed_by: "group",
+      citation: "Cal. Gov. Code § 54960.1(c)(1) (an action in open session in violation of § 54954.2)", status: "researched", basis: "2026-10-11 actions-law" },
+    { rule: "brown_act_cure", applies_to: "brown_act_demand", units: "days", amount: 30, count: "calendar", direction: "forward", starts: "received",
+      roll: true, closures: "judicial", computation: "ccp_12", owed_by: "body",
+      consequence: { text: "the inaction shall be deemed a decision not to cure or correct the challenged action", citation: "Cal. Gov. Code § 54960.1(c)(3)" },
+      citation: "Cal. Gov. Code § 54960.1(c)(2)", status: "researched", basis: "2026-10-11 actions-law" },
+    /* Penal Code § 933(c): the governing body's comment within 90 days after the grand jury submits its final report, an
+       elected county officer's or agency head's within 60; § 933.05(b)(3): further analysis within six months of the
+       report's publication. The grand jury's act starts each count. */
+    { rule: "grand_jury_body_comment", applies_to: "grand_jury", units: "days", amount: 90, count: "calendar", direction: "forward",
+      starts: "third_party", starter: { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury" },
+      roll: true, closures: "judicial", computation: "ccp_12", owed_by: "body",
+      citation: "Cal. Penal Code § 933(c)", status: "researched", basis: "2026-10-11 actions-law" },
+    { rule: "grand_jury_officer_comment", applies_to: "grand_jury", units: "days", amount: 60, count: "calendar", direction: "forward",
+      starts: "third_party", starter: { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury" },
+      roll: true, closures: "judicial", computation: "ccp_12", owed_by: "body",
+      citation: "Cal. Penal Code § 933(c) (an elected county officer or agency head)", status: "researched", basis: "2026-10-11 actions-law" },
+    { rule: "grand_jury_further_analysis", applies_to: "grand_jury", units: "months", amount: 6, direction: "forward",
+      starts: "third_party", starter: { role: "Civil Grand Jury", body: "Alameda County Civil Grand Jury" },
+      roll: true, closures: "judicial", owed_by: "body",
+      citation: "Cal. Penal Code § 933.05(b)(3)", status: "researched", basis: "2026-10-11 actions-law" },
+    /* Code Civ. Proc. § 425.16(f): the special motion to strike, the group's own defence. */
+    { rule: "anti_slapp_motion", applies_to: "claim", units: "days", amount: 60, count: "calendar", direction: "forward", starts: "served",
+      roll: true, closures: "judicial", computation: "ccp_12", owed_by: "group", defends: true,
+      citation: "Cal. Code Civ. Proc. § 425.16(f)", status: "researched", basis: "2026-10-11 actions-law" },
   ],
   weekend: { days: ["sat", "sun"], citation: "Cal. Code Civ. Proc. § 12a(a); Cal. Gov. Code § 6700(a); 5 U.S.C. § 552(a)(6)(A)(i)",
     status: "researched", basis: "2026-10-05 time-law" },
@@ -565,13 +681,41 @@ export default {
       covers: ["home_address", "phone"], within: { amount: 48, units: "hours" }, citation: "Cal. Gov. Code § 7928.215",
       status: "ruled", basis: "K1493" },
   ],
+  /* R79 (T45): the legal facts shown, with their citations, at the moment they matter (each read 2026-10-11 on its primary
+     source; quoted in `test/fixtures/actions-law.mjs`). Legal information, never advice: whether one applies is the
+     member's to judge. */
+  legal_facts: [
+    { key: "recording_open_meeting", trigger: "recording",
+      statement: "Anyone attending an open and public meeting of a local legislative body may record it, unless the body reasonably finds that the recording would persistently disrupt the meeting through noise, light or blocking the view.",
+      citation: "Cal. Gov. Code § 54953.5(a)", status: "researched", basis: "2026-10-11 actions-law" },
+    { key: "recording_consent", trigger: "recording",
+      statement: "Recording a confidential communication without the consent of every party to it is a crime in California; a communication in a public gathering or an open public proceeding is not confidential.",
+      citation: "Cal. Penal Code § 632(a), (c)", status: "researched", basis: "2026-10-11 actions-law" },
+    { key: "lobbyist_registration", trigger: "paid_attendee",
+      statement: "Anyone paid $1,000 or more in a calendar month to communicate with City officials to influence a City decision, or a salaried employee, officer or director of an organisation whose duties include doing so, is a local governmental lobbyist and must register with the Public Ethics Commission before lobbying.",
+      citation: "Oakland Mun. Code §§ 3.20.030(D), 3.20.040(A)", threshold: { amount: 1000, unit: "USD in a calendar month" },
+      status: "researched", basis: "2026-10-11 actions-law" },
+    { key: "serial_meeting", trigger: "serial_meeting",
+      statement: "A majority of a legislative body's members may not, outside a noticed meeting, use a series of communications of any kind, directly or through intermediaries, to discuss, deliberate or act on business within the body's jurisdiction.",
+      citation: "Cal. Gov. Code § 54952.2(b)(1)", status: "researched", basis: "2026-10-11 actions-law" },
+    { key: "campaign_spending", trigger: "pending_measure_or_candidate",
+      statement: "Spending $1,000 or more in a calendar year on communications that expressly advocate for or against a clearly identified candidate or measure, not made at a candidate's or committee's behest, makes the spender a committee under the Political Reform Act.",
+      citation: "Cal. Gov. Code §§ 82013(b), 82031", threshold: { amount: 1000, unit: "USD in a calendar year" },
+      status: "researched", basis: "2026-10-11 actions-law" },
+    { key: "anti_slapp", trigger: "threat_letter",
+      statement: "A lawsuit arising from a statement made before, or about an issue under review by, a legislative, executive or judicial body, or in a public forum on an issue of public interest, may be met by a special motion to strike, filed within 60 days of service of the complaint.",
+      citation: "Cal. Code Civ. Proc. § 425.16(b)(1), (e), (f)", status: "researched", basis: "2026-10-11 actions-law" },
+  ],
   /* Design Requirement 8's legal organisations, as Bob named them (K283 (2), K303): each takes up the
-     Tier 3 kinds given here; none takes up consent_decree_motion. Their public websites are unmeasured. */
+     Tier 3 kinds given here; none takes up consent_decree_motion. HJTA's public website is unmeasured. FAC's Legal
+     Hotline page (read 2026-10-11) states its scope: public records, open meetings, court access, and "First Amendment
+     protections for freedom of speech and freedom of the press", a journalist facing a subpoena named among its urgent
+     requests; so it is held as one that advises a group facing legal pressure against itself (R78, R85). */
   legal_organisations: [
     { name: "Howard Jarvis Taxpayers Association", evaluates: ["assessment_challenge", "taxpayer_action"],
       contacts: [{ how: "web", value: "https://www.hjta.org" }], basis: "UNMEASURED" },
-    { name: "First Amendment Coalition", evaluates: ["constitutional_claim"],
-      contacts: [{ how: "web", value: "https://firstamendmentcoalition.org" }], basis: "UNMEASURED" },
+    { name: "First Amendment Coalition", evaluates: ["constitutional_claim"], defends: true,
+      contacts: [{ how: "web", value: "https://firstamendmentcoalition.org" }], basis: "K303, 2026-10-11 actions-law" },
   ],
   /* Each office's published closure days for 2026, by the list that governs it (K925). The City's and the
      State's are employers' paid-holiday lists, read as closure days (K925 (2)); the City's 09-09 and 11-11,
@@ -634,6 +778,20 @@ export default {
       { date: "2026-11-11", name: "Veterans Day" }, { date: "2026-11-26", name: "Thanksgiving Day" },
       { date: "2026-12-25", name: "Christmas Day" }],
       status: "researched", basis: "2026-10-05 time-law; 2026-10-05 holidays-extra" },
+    /* The legal public holidays of 5 U.S.C. § 6103(a) for 2027 (R85, M-T45-1), with the days OPM's 2027 schedule observes in
+       their place (§ 6103(b); E.O. 11582 § 3(a)): Juneteenth and Christmas fall on a Saturday, Independence Day on a
+       Sunday, and 2028's New Year's Day on a Saturday, observed 2027-12-31 (OPM's 2028 table). Neither the court (M-189's
+       page lists 2026 only) nor the City (M-190) has published 2027: those lists stay without 2027, undetermined. */
+    { year: 2027, list: "federal", citation: "5 U.S.C. § 6103(a), (b)", days: [
+      { date: "2027-01-01", name: "New Year's Day" }, { date: "2027-01-18", name: "Birthday of Martin Luther King, Jr." },
+      { date: "2027-02-15", name: "Washington's Birthday" }, { date: "2027-05-31", name: "Memorial Day" },
+      { date: "2027-06-18", name: "Juneteenth National Independence Day (observed)" }, { date: "2027-06-19", name: "Juneteenth National Independence Day" },
+      { date: "2027-07-04", name: "Independence Day" }, { date: "2027-07-05", name: "Independence Day (observed)" },
+      { date: "2027-09-06", name: "Labor Day" }, { date: "2027-10-11", name: "Columbus Day" },
+      { date: "2027-11-11", name: "Veterans Day" }, { date: "2027-11-25", name: "Thanksgiving Day" },
+      { date: "2027-12-24", name: "Christmas Day (observed)" }, { date: "2027-12-25", name: "Christmas Day" },
+      { date: "2027-12-31", name: "New Year's Day 2028 (observed)" }],
+      status: "researched", basis: "2026-10-11 actions-law" },
     /* The judicial holidays of 2018 and 2020, as the superior courts published them (San Diego Superior Court's
        schedules, agreeing with a statewide calendar; holidays-extra): Columbus Day was then a judicial holiday. */
     { year: 2018, list: "judicial", citation: "Cal. Code Civ. Proc. § 135 (as in force in 2018); San Diego Super. Ct. holiday schedule 2018", days: [

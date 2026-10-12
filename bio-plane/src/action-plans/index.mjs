@@ -1,8 +1,11 @@
-/* action-plans — the action plan (requirements: `build/requirements/action-plans.md`; `BIO_Action_v0_1.md` §3, §4):
+/* action-plans — the action plan (requirements: `build/requirements/action-plans.md`; `BIO_Action_v0_2.md` §3, §4):
  * a project's working material for deciding what to do about one or more matters, an inquiry still open (suspected)
  * or a determination's outcomes (determined). It holds options the assistant suggests or a member adds, each bound to
- * the matters it serves; the member's choice of which to pursue; up to three scenarios laying the chosen options out
- * over time, with checkpoints a member judges; and the link from each started option to the Action it created.
+ * the matters it serves; the member's choice of which to pursue; any number of scenarios laying the chosen options out
+ * over time, with checkpoints a member judges, each in use or set aside; and the link from each started option to the
+ * Action it created. Since T45 (`BIO_Action_v0_2.md`) a plan may be paused, offers the infraction's two standing options
+ * (R41, R42), holds the re-examination's machine marks apart (R43), and keeps a frozen summary and a note at its close
+ * (R20, R44, R45). A pause is its log's, the document staying `open` (record-grammar's `action_plan` states).
  *
  * A new module (T18, layer 9, last): nothing moves from the legacy modules. Escalation's record-object pattern is the
  * model (its index.mjs and doc.mjs).
@@ -46,7 +49,7 @@
  *   now            the instance clock, an ISO string (default: the wall clock, to the second). */
 
 import { recordOf, stampInstant, instantOrder } from "../record-core/index.mjs";
-import { membershipOf, noSuchProject } from "../membership/index.mjs";
+import { membershipOf, noSuchProject, listenerRefusal } from "../membership/index.mjs";
 import { promotionOf } from "../promotion/index.mjs";
 import { legEarningOf } from "../leg-earning/index.mjs";
 import { strengthOf } from "../strength/index.mjs";
@@ -60,17 +63,19 @@ import { dutiesOf, noSuchDuty, INTERNAL as DUTIES_INTERNAL } from "../duties/ind
 import { aiRunsOf } from "../ai-runs/index.mjs";
 import { runPrincipalGate } from "../run-rules/index.mjs";
 import { isMachineIdentity, proposalLabel, normalizeType } from "../record-grammar/index.mjs";
-import { ACTION_PLAN, planId, planDoc, appendEntry, logOf, logSection, parseFm, q } from "./doc.mjs";
+import { ACTION_PLAN, planId, planDoc, appendEntry, logOf, logSection, parseFm, q, tok } from "./doc.mjs";
 import { ACTION_PLANS_TABLES, migrateActionPlans } from "./schema.mjs";
 import { ACTION_PLAN_CHECKS, refusal } from "./checks.mjs";
 import { CATEGORIES, DISPOSITIONS, NEEDS_REASON, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, TITLE_MAX, REASON_MAX,
-         SUMMARY_MAX, DETAIL_MAX, WHY_MAX, NOTE_MAX, SUBJECTS_MAX, SCENARIOS_MAX, DATES_MAX, PLANS_PAGE_MAX, DUE_MAX,
+         SUMMARY_MAX, DETAIL_MAX, WHY_MAX, NOTE_MAX, SUBJECTS_MAX, DATES_MAX, PLANS_PAGE_MAX, DUE_MAX,
          SOURCES_MAX, isObj, str, isDay, isLine, isToken, normSubject, subjectKey, addresseeArm, addresseeOf,
-         checkPhases, phaseTimes, unbranched, dayOf, DUTY_STATES } from "./values.mjs";
+         checkPhases, phaseTimes, unbranched, dayOf, DUTY_STATES, OFFER_KINDS, INFRACTION_OUTCOMES, MARK_KINDS, CLOSE_NOTE_MAX,
+         CLOSING_NOTES_MAX, MARKS_MAX } from "./values.mjs";
 
 export { ACTION_PLANS_SCHEMA, ACTION_PLANS_TABLES } from "./schema.mjs";
 export { ACTION_PLAN_CHECKS } from "./checks.mjs";
-export { CATEGORIES, DISPOSITIONS, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, DUTY_STATES } from "./values.mjs";
+export { CATEGORIES, DISPOSITIONS, WORK_KINDS, REFUSED_KEYS, TIERS, JUDGEMENTS, DUTY_STATES, PLAN_STATES, OFFER_KINDS,
+         MARK_KINDS } from "./values.mjs";
 
 /** R1, R8: an inquiry still open is live; these states are closed. (`published` is read, never entered.) */
 export const CLOSED_INQUIRY_STATES = Object.freeze(["concluded", "dismissed", "divided", "published"]);
@@ -80,6 +85,15 @@ export const DISCLOSURE = (run, skill) => `Suggested by the assistant (machine w
 const PROPOSAL_SAYS = "this is a proposal, not an option: it is stored apart from the plan's options and becomes one only "
   + "when a member adopts it, in their own words for any reason the plan asks.";
 const CHECK_SAYS = "a check informs; it never refuses or changes anything.";
+/* R41: the offers' default words, which a member may change when adopting one; the surface's keyed sentences are the
+   design stream's (`plan.offer.document_infraction`, `plan.offer.chance_to_fix`). */
+const OFFER_WORDS = Object.freeze({
+  document_infraction: Object.freeze({ summary: "Document the infraction", category: "other", key: "plan.offer.document_infraction" }),
+  chance_to_fix: Object.freeze({ summary: "Offer the chance to fix it", category: "mitigation", key: "plan.offer.chance_to_fix" }),
+});
+/* R40: what a paused plan's read says of it. */
+const PAUSED_SAYS = "the plan is paused: what it set running continues (its actions' dates, escalations and watches), and "
+  + "its own checkpoints are not due until it is resumed. Every act stays open to members.";
 /* R37: the preview's own mode of R18's path, and what it says. */
 const PREVIEW = Symbol("action-plans start preview");
 const PREVIEW_SAYS = "a preview of starting this option: what the action would be, the matters it would rest on and the "
@@ -98,6 +112,9 @@ const iso = (ms) => stampInstant("second", ms);
 const ok = (r) => r && r.ok !== false;
 
 export class ActionPlans {
+  /* R44: the one reader of a plan's closing summary, `{module, fn}`. */
+  #closeHolder = null;
+
   constructor(deps) {
     this.record = deps.record;
     this.membership = deps.membership;
@@ -290,14 +307,7 @@ export class ActionPlans {
    * ===================================================================== */
 
   /** R1, R4, R20, R24: the plan's own acts are a named member's. */
-  #member(author) {
-    /* DEC-49 REGION is-plan-member */
-    if (isMachine(author))
-      return refusal("MACHINE_CANNOT_PLAN", "an action plan is opened, changed and closed by a named member; a machine "
-        + "proposes and never acts. Nothing was written.");
-    /* END DEC-49 REGION is-plan-member */
-    return null;
-  }
+  #member(author) { return isMachine(author) ? machineCannotPlan() : null; }
   /** R9, R11: an option is added, revised or adopted by a named member. */
   #optionMember(author) {
     /* DEC-49 REGION is-option-member */
@@ -311,7 +321,7 @@ export class ActionPlans {
   #openPlan(id, author, viewer, act) {
     const p = this.#plan(id, viewer);
     if (!p) return { r: noSuchPlan(id) };
-    if (p.state !== "open") return { r: refusePlanClosed(p.id) };
+    if (p.state === "closed") return { r: refusePlanClosed(p.id) };
     const fence = this.membership.projectAuthority(p.project, author, "joined", act);
     if (fence) return { r: fence };
     return { p };
@@ -372,7 +382,7 @@ export class ActionPlans {
     }
     for (let i = 0; i < items.length; i++) {
       const held = this.#one(`SELECT s.plan_id FROM plan_subjects s JOIN plans p ON p.plan_id = s.plan_id
-                              WHERE s.skey=? AND s.removed_seq IS NULL AND p.project_id=? AND p.state='open'
+                              WHERE s.skey=? AND s.removed_seq IS NULL AND p.project_id=? AND p.state<>'closed'
                               ORDER BY s.plan_id LIMIT 1`, items[i].key, project);
       /* DEC-49 REGION is-subject-free */
       if (held)
@@ -571,7 +581,11 @@ export class ActionPlans {
     const from = heldRow ? heldRow.log_len : 0;
     for (const x of log.filter((y) => y.seq > from)) this.#apply(id, x);
     const fm = parseFm(text) || {};
-    this.sql.exec(`UPDATE plans SET state=?, log_len=? WHERE plan_id=?`, String(fm.current_state ?? "open"), log.length, id);
+    /* R40: the document holds open and closed (record-grammar's `action_plan` table); a pause is the log's, so an open
+       document's plan is paused from a pause until a resume. */
+    const last = this.#one(`SELECT kind FROM plan_history WHERE plan_id=? AND kind IN ('pause', 'resume') ORDER BY seq DESC LIMIT 1`, id);
+    const state = fm.current_state === "closed" ? "closed" : last && last.kind === "pause" ? "paused" : String(fm.current_state ?? "open");
+    this.sql.exec(`UPDATE plans SET state=?, log_len=? WHERE plan_id=?`, state, log.length, id);
     return null;
   }
 
@@ -730,13 +744,15 @@ export class ActionPlans {
     return this.#addOption(o.p, f.fields, { author });
   }
 
-  #addOption(p, fields, { author, proposal = null }) {
+  #addOption(p, fields, { author, proposal = null, offer = null }) {
     const n = (this.#one(`SELECT COUNT(*) AS n FROM plan_options WHERE plan_id=?`, p.id) || { n: 0 }).n + 1;
     const option = `opt-${n}`;
-    const entry = { kind: "option_add", option, fields, ...(proposal ? { proposal } : {}), author, at: this.now() };
-    const w = this.#append(p, entry, { blurb: proposal ? "Option adopted" : "Option added" });
+    const entry = { kind: "option_add", option, fields, ...(proposal ? { proposal } : {}), ...(offer ? { offer } : {}),
+                    author, at: this.now() };
+    const w = this.#append(p, entry, { blurb: proposal || offer ? "Option adopted" : "Option added" });
     if (!w.ok) return w;
-    return { ok: true, plan: p.id, option, fields, disposition: "open", ...(proposal ? { proposal } : {}), author, at: entry.at };
+    return { ok: true, plan: p.id, option, fields, disposition: "open", ...(proposal ? { proposal } : {}),
+             ...(offer ? { offer } : {}), author, at: entry.at };
   }
 
   /** R9: revise an option, with a reason; earlier revisions stay readable. */
@@ -781,7 +797,7 @@ export class ActionPlans {
     /* END DEC-49 REGION is-proposer-stamped */
     const p = this.#plan(plan, viewer);
     if (!p) return noSuchPlan(plan);
-    if (p.state !== "open") return refusePlanClosed(p.id);
+    if (p.state === "closed") return refusePlanClosed(p.id);
     const machine = isMachineIdentity(who);
     let gate = null;
     if (machine) {
@@ -911,14 +927,13 @@ export class ActionPlans {
     const { proposal, author, viewer } = args;
     const m = this.#optionMember(author);
     if (m) return m;
+    if (args.offer !== undefined && args.offer !== null) return this.#adoptOffer(args);
     const row = this.#proposalRow(proposal);
     const p = row ? this.#plan(row.plan_id, viewer) : null;
-    /* DEC-49 REGION is-proposal-seen */
     if (!row || !p)
-      return refusal("NO_SUCH_PLAN_PROPOSAL", "no proposal answers to that id in a plan this caller may see. Nothing was written.",
+      return refuseNoSuchProposal("no proposal answers to that id in a plan this caller may see. Nothing was written.",
         { proposal: typeof proposal === "string" ? proposal : null });
-    /* END DEC-49 REGION is-proposal-seen */
-    if (p.state !== "open") return refusePlanClosed(p.id);
+    if (p.state === "closed") return refusePlanClosed(p.id);
     const fence = this.membership.projectAuthority(p.project, author, "joined", "optionAdopt");
     if (fence) return fence;
     /* DEC-49 REGION is-proposal-once */
@@ -936,6 +951,117 @@ export class ActionPlans {
     if (!r.ok) return r;
     return { ...r, ...this.#origin(this.#proposalRow(row.proposal_id)) };
   }
+  /* R41: a member adopts one of a matter's standing offers as an option (R11's act): the offer's default words, which the
+     member may change, through R9's fields. An offer the plan does not stand ready to make answers as an unknown
+     proposal does. An offer may be adopted as often as a member chooses; the option records the offer it came from. */
+  #adoptOffer(args) {
+    const { plan, offer, author, viewer } = args;
+    const p = this.#plan(plan, viewer);
+    if (!p) return noSuchPlan(plan);
+    if (p.state === "closed") return refusePlanClosed(p.id);
+    const fence = this.membership.projectAuthority(p.project, author, "joined", "optionAdopt");
+    if (fence) return fence;
+    const s = isObj(offer) ? (typeof offer.subject === "string" ? subjectOfKey(offer.subject) : normSubject(offer.subject)) : null;
+    const held = s ? this.#subjectsOf(p.id).find((x) => x.key === subjectKey(s)) : null;
+    const standing = held && OFFER_KINDS.includes(offer.kind) && this.#mayBeInfraction(held.subject, viewer)
+      && (offer.kind !== "chance_to_fix" || this.#fixed(held.subject, viewer) !== true);
+    if (!standing)
+      return refuseNoSuchProposal("the plan stands ready to make no such offer: an offer names a matter of the plan that may "
+        + "be an infraction, and document_infraction or chance_to_fix (while the matter is not fixed). Nothing was written.",
+        { offer: isObj(offer) ? { kind: typeof offer.kind === "string" ? offer.kind.slice(0, 40) : null } : null });
+    const merged = { summary: OFFER_WORDS[offer.kind].summary, category: OFFER_WORDS[offer.kind].category, subjects: [held.subject] };
+    for (const k of Object.keys(args)) if (!["proposal", "offer", "author", "viewer", "plan"].includes(k)) merged[k] = args[k];
+    const f = this.#optionFields(merged, p, viewer);
+    if (!f.fields) return f;
+    return this.#addOption(p, f.fields, { author, offer: { subject: held.subject, kind: offer.kind } });
+  }
+
+  /* R41: whether a matter may be an infraction: a suspected matter naming standards, or a determined outcome
+     noncompliant or unclear. */
+  #mayBeInfraction(s, viewer) {
+    if (s.kind === "inquiry") return Array.isArray(s.standards) && s.standards.length > 0;
+    const d = this.#determination(s.determination, viewer);
+    const o = d && Array.isArray(d.outcomes) ? d.outcomes.find((x) => x && x.standard === s.standard) : null;
+    return !!o && INFRACTION_OUTCOMES.includes(o.outcome);
+  }
+  /* R41: whether a determined matter is fixed (a standing cure, conformance R37); null when it cannot be read, which
+     never withdraws the offer. A suspected matter is never fixed. */
+  #fixed(s, viewer) {
+    if (s.kind !== "outcome") return false;
+    const c = this.conformance;
+    if (typeof c.curesOf !== "function") return null;
+    try {
+      const r = c.curesOf({ determination: s.determination, standard: s.standard, viewer });
+      if (!ok(r)) return null;
+      /* conformance R37: per standard, `link` the standing cure or null; the ended links are apart. */
+      return (Array.isArray(r.standards) ? r.standards : []).some((x) => x && x.standard === s.standard && isObj(x.link));
+    } catch { return null; }
+  }
+  /* R41, R42: each option adopted from an offer, by option id, `{subject, kind}`; from the history. */
+  #offerOptions(planId) {
+    const out = new Map();
+    for (const h of this.#rows(`SELECT entry_json FROM plan_history WHERE plan_id=? AND kind='option_add' ORDER BY seq`, planId)) {
+      const e = unjson(h.entry_json, {});
+      if (isObj(e.offer)) out.set(e.option, e.offer);
+    }
+    return out;
+  }
+  /* R41: the standing offers of each matter the viewer sees that may be an infraction, derived on read, never stored:
+     `document_infraction` first, then `chance_to_fix` while the matter is not fixed, with `offered_again` after the
+     latest later step on the matter. */
+  #offers(p, subjects, held, viewer, see) {
+    const adopted = this.#offerOptions(p.id);
+    const out = [];
+    for (const s of subjects) {
+      if (!this.#mayBeInfraction(s.subject, viewer)) continue;
+      const from = (kind) => held.filter((o) => { const f = adopted.get(o.id); return f && f.kind === kind && subjectKey(f.subject) === s.key; })
+        .map((o) => ({ option: o.id, started: !!o.action }));
+      const offers = [{ kind: "document_infraction", ...OFFER_WORDS.document_infraction, adopted: from("document_infraction") }];
+      const fixed = this.#fixed(s.subject, viewer);
+      if (fixed !== true) {
+        const again = this.#laterStep(p, s.subject, held, viewer, see);
+        offers.push({ kind: "chance_to_fix", ...OFFER_WORDS.chance_to_fix, adopted: from("chance_to_fix"),
+                      ...(fixed === null && s.subject.kind === "outcome" ? { fixed: { state: "undetermined", says: "whether a cure stands could not be read; the offer stands" } } : {}),
+                      ...(again ? { offered_again: again } : {}) });
+      }
+      out.push({ subject: s.subject, key: s.key, offers });
+    }
+    return out;
+  }
+  /* R41: the latest later step on a matter: an action of the plan serving it sent, a filing on one sent, or its
+     escalation's stage advanced; null when none. A step the viewer may not read is not counted. */
+  #laterStep(p, subj, held, viewer, see) {
+    const key = subjectKey(subj);
+    let best = null;
+    const take = (step, at, ref) => { if (typeof at === "string" && at && (!best || instantOrder(at, best.at) > 0)) best = { step, at, ref }; };
+    for (const o of held) {
+      if (!o.action || !(o.fields.subjects || []).some((x) => subjectKey(x) === key) || !see.action(o.action)) continue;
+      try {
+        const a = this.actions.actionRead({ id: o.action, viewer });
+        for (const c of ok(a) && Array.isArray(a.correspondence) ? a.correspondence : [])
+          if (c && c.direction === "sent") take("action_sent", c.recorded_at ?? c.at, o.action);
+      } catch (e) { if (e instanceof ProviderAbsent) throw e; }
+      const fl = this.deps.filings ? this.filings : null;
+      if (fl && typeof fl.filingsFor === "function") {
+        try {
+          const r = fl.filingsFor({ action: o.action, viewer });
+          for (const d of ok(r) && Array.isArray(r.drafts) ? r.drafts : [])
+            if (d && d.sending) take("filing_sent", d.sending.at ?? d.sending.sent_on, d.filing ?? o.action);
+        } catch (e) { if (e instanceof ProviderAbsent) throw e; }
+      }
+    }
+    if (subj.kind === "outcome") {
+      try {
+        const l = this.escalation.escalationsFor({ determination: subj.determination, viewer });
+        for (const e of ok(l) ? l.items || [] : []) {
+          const r = this.escalation.escalationRead({ id: e.id, viewer });
+          for (const h of ok(r) ? r.history || [] : []) if (h && h.kind === "advance") take("escalation_advanced", h.at, e.id);
+        }
+      } catch (e) { if (e instanceof ProviderAbsent) throw e; }
+    }
+    return best;
+  }
+
   /* R32: an option adopted from a machine proposal answers its disclosure and origin, for as long as the plan is read. */
   #origin(row) {
     if (!row || row.machine !== 1) return {};
@@ -1017,9 +1143,9 @@ export class ActionPlans {
     if (o.r) return o.r;
     const n = /^[0-9]+$/.test(String(scenario ?? "")) ? Number(scenario) : NaN;
     /* DEC-49 REGION is-scenario-numbered */
-    if (!(Number.isInteger(n) && n >= 1 && n <= SCENARIOS_MAX))
-      return refusal("SCENARIO_OUT_OF_RANGE", `a scenario is numbered 1 to ${SCENARIOS_MAX}. Nothing was written.`,
-        { max: SCENARIOS_MAX });
+    if (!(Number.isSafeInteger(n) && n >= 1))
+      return refusal("SCENARIO_OUT_OF_RANGE", "a scenario is numbered with a positive whole number (1, 2, 3 and on); a plan "
+        + "holds any number of them. Nothing was written.");
     /* END DEC-49 REGION is-scenario-numbered */
     /* DEC-49 REGION is-scenario-named */
     if (!isLine(name, TITLE_MAX))
@@ -1037,6 +1163,53 @@ export class ActionPlans {
     return { ok: true, plan: o.p.id, scenario: n, version: v ? v.version : 1, name: entry.name, phases: ph.phases,
              author, at: entry.at };
   }
+  /** R39: set a scenario aside, with a reason; it is kept whole and readable, its checkpoints never due (R17) and its
+   *  checks not run (R19). */
+  scenarioSetAside(args = {}) { return this.#scenarioAct("aside", args); }
+  /** R39: restore a scenario set aside, with a reason; its checkpoints are due again. */
+  scenarioRestore(args = {}) { return this.#scenarioAct("restore", args); }
+  #scenarioAct(kind, { plan, scenario, reason, author, viewer } = {}) {
+    const m = this.#member(author);
+    if (m) return m;
+    const o = this.#openPlan(plan, author, viewer, kind === "aside" ? "scenarioSetAside" : "scenarioRestore");
+    if (o.r) return o.r;
+    const n = /^[0-9]+$/.test(String(scenario ?? "")) ? Number(scenario) : NaN;
+    const held = this.#scenarios(o.p.id).some((x) => x.scenario === n);
+    /* DEC-49 REGION is-scenario-held */
+    if (!held)
+      return refusal("NO_SUCH_SCENARIO", `the plan holds no scenario ${String(scenario ?? "(none named)").slice(0, 40)}. `
+        + "Nothing was written.", { scenario: Number.isFinite(n) ? n : null });
+    /* END DEC-49 REGION is-scenario-held */
+    const bad = refuseReason(reason, true);
+    if (bad) return bad;
+    const aside = this.#asides(o.p.id).get(n) || null;
+    /* DEC-49 REGION is-scenario-in-use */
+    if (kind === "aside" && aside)
+      return refusal("SCENARIO_ALREADY_SET_ASIDE", `scenario ${n} was set aside on ${aside.at} by ${aside.by}. Nothing was written.`,
+        { scenario: n });
+    /* END DEC-49 REGION is-scenario-in-use */
+    /* DEC-49 REGION is-scenario-aside */
+    if (kind === "restore" && !aside)
+      return refusal("SCENARIO_NOT_SET_ASIDE", `scenario ${n} is in use, not set aside. Nothing was written.`, { scenario: n });
+    /* END DEC-49 REGION is-scenario-aside */
+    const entry = { kind: kind === "aside" ? "scenario_set_aside" : "scenario_restore", scenario: n, reason: reason.trim(),
+                    author, at: this.now() };
+    const w = this.#append(o.p, entry, { blurb: kind === "aside" ? `Scenario ${n} set aside` : `Scenario ${n} restored` });
+    if (!w.ok) return w;
+    return { ok: true, plan: o.p.id, scenario: n, set_aside: kind === "aside", reason: entry.reason, author, at: entry.at };
+  }
+  /* R39: the scenarios set aside now, each with the act that set it aside; derived from the history. */
+  #asides(planId) {
+    const out = new Map();
+    for (const h of this.#rows(`SELECT * FROM plan_history WHERE plan_id=? AND kind IN ('scenario_set_aside', 'scenario_restore')
+                                ORDER BY seq`, planId)) {
+      const e = unjson(h.entry_json, {});
+      if (h.kind === "scenario_set_aside") out.set(e.scenario, { reason: h.reason ?? null, by: h.author, at: h.at });
+      else out.delete(e.scenario);
+    }
+    return out;
+  }
+
   #scenarioPhases(p, phases, viewer) {
     const chosen = new Set(this.#options(p.id).filter((x) => x.disposition === "chosen").map((x) => x.id));
     const subjects = new Map(this.#subjectsOf(p.id).map((s) => [s.key, s.subject]));
@@ -1200,10 +1373,12 @@ export class ActionPlans {
     const { judged: held, times } = this.#timed(o.p, sc, viewer);
     const t = times.get(ph.id);
     const nowMs = this.#nowMs();
+    const aside = this.#asides(o.p.id).has(sc.scenario);
     /* DEC-49 REGION is-checkpoint-due */
-    if (!t.due || msOf(t.due) > nowMs)
-      return refusal("CHECKPOINT_NOT_DUE", t.started ? `the checkpoint is due ${t.due}. Nothing was written.`
-        : "the phase has not started, so its checkpoint is not due. Nothing was written.", { due: t.due });
+    if (aside || !t.due || msOf(t.due) > nowMs)
+      return refusal("CHECKPOINT_NOT_DUE", aside ? "the scenario is set aside, and its checkpoints are never due until it is "
+        + "restored. Nothing was written." : t.started ? `the checkpoint is due ${t.due}. Nothing was written.`
+        : "the phase has not started, so its checkpoint is not due. Nothing was written.", { due: aside ? null : t.due });
     /* END DEC-49 REGION is-checkpoint-due */
     /* DEC-49 REGION is-checkpoint-once */
     if (held.has(ph.id))
@@ -1258,10 +1433,20 @@ export class ActionPlans {
       if (member) { try { facts = this.membership.memberFacts(member); } catch { facts = null; } }
       if (!facts) return done(contactNotAMember());
     }
-    const reason = override === undefined || override === null ? null : isObj(override) ? override.reason : override;
+    /* R42: an outward option serving a matter that may be an infraction whose documentation is not started takes the
+       member's reason for going first; documenting is the default, never a gate. */
+    const whyFirst = args.why_first;
+    const first = this.#documentFirst(p, opt, viewer);
+    const givenWhy = whyFirst !== undefined && whyFirst !== null && whyFirst !== "";
+    /* DEC-49 REGION is-document-first */
+    if ((first.length && !givenWhy) || (givenWhy && !isLine(whyFirst, REASON_MAX)))
+      return done(refusal("DOCUMENT_FIRST_NO_REASON", `${opt.id} goes outside the group before the infraction it serves is `
+        + `documented; say why it goes first, in 1 to ${REASON_MAX} characters with no quotation mark, backslash or line break. `
+        + "Nothing was written.", { max: REASON_MAX, matters: first.length }));
+    /* END DEC-49 REGION is-document-first */
     const at = this.now();
-    const doc = actionDocument({ fields: opt.fields, kind, plan: p.id, option: opt.id, contact: member,
-                                 breach: breach === true, override: reason, at });
+    const doc = actionDocument({ fields: opt.fields, kind, project: p.project, plan: p.id, option: opt.id, contact: member,
+                                 breach: breach === true, override: overrideOf(override), at });
     const r = this.record.transact(() => {
       const a = this.actions.actionCreate({ document: doc, author, viewer });
       if (!ok(a)) return a;
@@ -1272,7 +1457,8 @@ export class ActionPlans {
         if (!ok(s)) return s;
         set.push({ entry, date: rem.date, on: rem.on, set_by: opt.chosenBy || author });
       }
-      const w = this.#append(p, { kind: "start", option: opt.id, action: a.id, author, at }, { blurb: "Option started" });
+      const w = this.#append(p, { kind: "start", option: opt.id, action: a.id, ...(first.length && givenWhy ? { why_first: whyFirst.trim() } : {}),
+                                  author, at }, { blurb: "Option started" });
       if (!w.ok) return w;
       /* R37: the act went through whole; the preview rolls every row of it back, so no id is spent. */
       if (preview) return { ok: false, [PREVIEW]: true };
@@ -1281,6 +1467,18 @@ export class ActionPlans {
     if (preview) return done(r && r[PREVIEW] ? null : r);
     if (!ok(r)) return r;
     return { ok: true, plan: p.id, option: opt.id, action: r.action, reminders: r.reminders, author, at };
+  }
+
+  /* R42: the matters of R41 an option going outward would get ahead of: it addresses someone, it is not itself a
+     documentation option, and a matter it serves that may be an infraction has no started documentation option. */
+  #documentFirst(p, opt, viewer) {
+    if (!opt.fields.addressee) return [];
+    const offers = this.#offerOptions(p.id);
+    const own = offers.get(opt.id);
+    if (own && own.kind === "document_infraction") return [];
+    const started = this.#options(p.id).filter((o) => o.action && (offers.get(o.id) || {}).kind === "document_infraction")
+      .map((o) => subjectKey(offers.get(o.id).subject));
+    return (opt.fields.subjects || []).filter((s) => !started.includes(subjectKey(s)) && this.#mayBeInfraction(s, viewer));
   }
 
   /** R37: what `optionStart` (R18) would do with the same arguments, at this instant, writing nothing: R18's own path,
@@ -1297,7 +1495,7 @@ export class ActionPlans {
     if (!p || !opt) return refused;
     const see = this.#sight(viewer);
     const fields = see.fields(opt.fields);
-    const reason = override === undefined || override === null ? null : isObj(override) ? override.reason ?? null : override;
+    const stated = overrideOf(override);
     const legs = [];
     for (const s of fields.subjects || []) {
       const target = s.kind === "inquiry" ? s.inquiry : s.determination;
@@ -1312,7 +1510,7 @@ export class ActionPlans {
       action: { kind: typeof kind === "string" ? kind : null, addressee: fields.addressee ?? null,
                 clock: (fields.dates || []).map((d) => ({ date: d.date, basis: d.basis, status: "pending" })), legs,
                 plan: p.id, option: opt.id, contact: contact === undefined || contact === null ? null : contactId(contact) || null,
-                breach: breach === true, premise_override: reason === null ? null : { reason } },
+                breach: breach === true, premise_override: stated },
       reminders, would_start: refused === null, ...(refused === null ? {} : { refusal: refused }),
       says: PREVIEW_SAYS, ...(see.withheld ? { out_of_view: true } : {}),
     };
@@ -1330,10 +1528,156 @@ export class ActionPlans {
     if (o.r) return o.r;
     const bad = refuseReason(reason, true);
     if (bad) return bad;
-    const entry = { kind: "close", reason: reason.trim(), author, at: this.now() };
-    const w = this.#append(o.p, entry, { state: "closed", blurb: "Plan closed" });
+    const { note } = args;
+    const noted = note !== undefined && note !== null && note !== "";
+    /* DEC-49 REGION is-close-note */
+    if (noted && (typeof note !== "string" || !note.trim() || note.length > CLOSE_NOTE_MAX))
+      return refusal("CLOSE_NOTE_TOO_LONG", `a closing note is words of 1 to ${CLOSE_NOTE_MAX} characters. Nothing was written.`,
+        { max: CLOSE_NOTE_MAX });
+    /* END DEC-49 REGION is-close-note */
+    const r = this.record.transact(() => {
+      /* R44: the registered reader's answer at the instant of closing, frozen with the plan; never a refusal. */
+      const entry = { kind: "close", reason: reason.trim(), note: noted ? note : null, summary: this.#closeSummary(o.p.id),
+                      author, at: this.now() };
+      const w = this.#append(o.p, entry, { state: "closed", blurb: "Plan closed" });
+      return w.ok ? { ok: true, entry } : w;
+    });
+    if (!r.ok) return r;
+    return { ok: true, id: o.p.id, state: "closed", reason: r.entry.reason, note: r.entry.note, summary: r.entry.summary,
+             closed_by: author, at: r.entry.at };
+  }
+
+  /** R44: the one reader of a plan's closing summary (`plan-work` R7 fills it). A second registration is refused. */
+  registerCloseSnapshot(module, fn) {
+    const refused = listenerRefusal(this.#closeHolder ? { module: this.#closeHolder.module } : null, module, fn);
+    if (refused) return refused;
+    this.#closeHolder = { module, fn };
+    return { ok: true, module };
+  }
+  /* R20, R44: the summary the reader answers now, as JSON, or undetermined with why; a throwing reader never undoes the
+     close. */
+  #closeSummary(planId) {
+    const h = this.#closeHolder;
+    if (!h) return { state: "undetermined", says: "no reader of where the plan stands is registered, so no summary was kept" };
+    try {
+      const v = h.fn({ plan: planId });
+      if (v === undefined) throw new Error("no answer");
+      return { state: "stated", by: h.module, value: JSON.parse(JSON.stringify(v)) };
+    } catch {
+      return { state: "undetermined", says: "where the plan stands could not be read at the close, so no summary was kept" };
+    }
+  }
+  /* R20: a closed plan's close: who, when, why, the note and the frozen summary. */
+  #closedView(p) {
+    const h = this.#one(`SELECT * FROM plan_history WHERE plan_id=? AND kind='close' ORDER BY seq DESC LIMIT 1`, p.id);
+    const e = h ? unjson(h.entry_json, {}) : {};
+    return { by: p.closedBy, at: p.closedAt, reason: p.closeReason, note: e.note ?? null,
+             summary: e.summary ?? { state: "undetermined", says: "this plan was closed before closing summaries were kept" } };
+  }
+
+  /** R45: the closing notes of the project's closed plans the viewer may see, newest first, at most 50; the planning run
+   *  reads them when the group plans again. */
+  closingNotesOf({ project, viewer } = {}) {
+    if (typeof project !== "string" || !project || !this.#sees(project, viewer)) return { ok: true, project: project ?? null, items: [] };
+    const items = this.#rows(`SELECT * FROM plans WHERE project_id=? AND state='closed' ORDER BY closed_at DESC, plan_id DESC LIMIT ?`,
+      project, CLOSING_NOTES_MAX).map((r) => {
+      const c = this.#closedView({ id: r.plan_id, closedBy: r.closed_by, closedAt: r.closed_at, closeReason: r.close_reason });
+      return { plan: r.plan_id, title: r.title, closed_by: c.by, closed_at: c.at, reason: c.reason, note: c.note };
+    });
+    return { ok: true, project, items };
+  }
+
+  /** R43 (in process, for `plan-work` R10 only): write the re-examination's machine marks on a plan, each labelled
+   *  machine work with its cause, the response recorded (`{action, ord}`, or `"<action>#<ord>"`). A mark decides
+   *  nothing: it never changes a disposition, scenario, judgement or start (R24), and is answered apart. A mark that is
+   *  not one is skipped and named, never written. */
+  planMark({ plan, marks, cause } = {}) {
+    const p = this.#plan(plan, null);
+    if (!p) return noSuchPlan(plan);
+    if (p.state === "closed") return refusePlanClosed(p.id);
+    const c = causeOf(cause);
+    const list = Array.isArray(marks) ? marks.slice(0, MARKS_MAX) : [];
+    const skipped = [];
+    const good = [];
+    list.forEach((m, index) => {
+      const why = c ? markFault(m) : "a mark names the response that caused it: {action, ord}";
+      if (why) skipped.push({ index, why }); else good.push(normMark(m));
+    });
+    if (Array.isArray(marks) && marks.length > MARKS_MAX) skipped.push({ index: MARKS_MAX, why: `at most ${MARKS_MAX} marks in one act` });
+    const at = this.now();
+    this.record.transact(() => {
+      let n = (this.#one(`SELECT MAX(n) AS n FROM plan_marks WHERE plan_id=?`, p.id) || {}).n || 0;
+      for (const m of good)
+        this.sql.exec(`INSERT INTO plan_marks (plan_id, n, kind, mark_json, cause_json, at) VALUES (?,?,?,?,?,?)`,
+          p.id, ++n, m.kind, JSON.stringify(m), JSON.stringify(c), at);
+    });
+    return { ok: true, plan: p.id, written: good.length, skipped, at };
+  }
+  /* R43: the plan's marks, apart from what members decided, oldest first; one about an option or a phase the viewer
+     reads with the plan. */
+  #marksView(planId) {
+    return this.#rows(`SELECT * FROM plan_marks WHERE plan_id=? ORDER BY n`, planId).map((r) => ({
+      ...unjson(r.mark_json, {}), cause: unjson(r.cause_json, null), at: r.at, label: MARK_LABEL }));
+  }
+
+  /** R40: a member pauses an open plan, with a reason and perhaps a day to look at it again. What the plan set running
+   *  (its actions' clocks, escalations, watches) continues; its own checkpoints are not due (R17). */
+  planPause(args = {}) { return this.#pauseAct("pause", args); }
+  /** R40: a member resumes a paused plan, with a reason. */
+  planResume(args = {}) { return this.#pauseAct("resume", args); }
+  #pauseAct(kind, { id, plan, reason, look_again: lookAgain, author, viewer } = {}) {
+    const m = this.#member(author);
+    if (m) return m;
+    const o = this.#openPlan(id ?? plan, author, viewer, kind === "pause" ? "planPause" : "planResume");
+    if (o.r) return o.r;
+    const bad = refuseReason(reason, true);
+    if (bad) return bad;
+    const given = lookAgain !== undefined && lookAgain !== null && lookAgain !== "";
+    /* DEC-49 REGION is-look-again-day */
+    if (given && (kind !== "pause" || !isDay(lookAgain)))
+      return refusal("LOOK_AGAIN_REFUSED", kind !== "pause" ? "a day to look again is set when a plan is paused. Nothing was written."
+        : "look_again is a day written YYYY-MM-DD. Nothing was written.");
+    /* END DEC-49 REGION is-look-again-day */
+    /* DEC-49 REGION is-plan-pausable */
+    if (kind === "pause" && o.p.state !== "open")
+      return refusal("PLAN_NOT_OPEN", `plan ${o.p.id} is ${o.p.state}, not open. Nothing was written.`, { state: o.p.state });
+    /* END DEC-49 REGION is-plan-pausable */
+    /* DEC-49 REGION is-plan-paused */
+    if (kind === "resume" && o.p.state !== "paused")
+      return refusal("PLAN_NOT_PAUSED", `plan ${o.p.id} is ${o.p.state}, not paused. Nothing was written.`, { state: o.p.state });
+    /* END DEC-49 REGION is-plan-paused */
+    const entry = { kind, reason: reason.trim(), ...(kind === "pause" ? { look_again: given ? lookAgain : null } : {}),
+                    author, at: this.now() };
+    const w = this.#append(o.p, entry, { blurb: kind === "pause" ? "Plan paused" : "Plan resumed" });
     if (!w.ok) return w;
-    return { ok: true, id: o.p.id, state: "closed", reason: entry.reason, closed_by: author, at: entry.at };
+    return { ok: true, id: o.p.id, state: kind === "pause" ? "paused" : "open", reason: entry.reason,
+             ...(kind === "pause" ? { look_again: entry.look_again } : {}), author, at: entry.at };
+  }
+  /* R40: the plan's current pause (the latest pause act, when the plan is paused), else null. */
+  #pause(p) {
+    if (p.state !== "paused") return null;
+    const h = this.#one(`SELECT * FROM plan_history WHERE plan_id=? AND kind='pause' ORDER BY seq DESC LIMIT 1`, p.id);
+    if (!h) return null;
+    const e = unjson(h.entry_json, {});
+    return { seq: h.seq, since: h.at, by: h.author, reason: h.reason ?? null, look_again: e.look_again ?? null };
+  }
+
+  /** R40: each paused plan whose `look_again` day has come at `nowMs`, oldest day first, for `action-producers`
+   *  (`plan-look-again`). One item per pause (`pause` names it), so a reader tells it once. Writes nothing. */
+  plansToLookAgain({ nowMs, limit } = {}) {
+    const now = Number.isFinite(nowMs) ? nowMs : this.#nowMs();
+    const cap = Number.isInteger(limit) && limit > 0 ? Math.min(limit, DUE_MAX) : DUE_MAX;
+    const today = dayOf(now);
+    const items = [];
+    for (const r of this.#rows(`SELECT plan_id FROM plans WHERE state='paused' ORDER BY plan_id`)) {
+      const p = this.#plan(r.plan_id, null);
+      const pz = this.#pause(p);
+      if (!pz || !pz.look_again || pz.look_again > today) continue;
+      items.push({ plan: p.id, project: p.project, title: p.title, look_again: pz.look_again, paused_by: pz.by,
+                   paused_at: pz.since, reason: pz.reason, pause: `${p.id}#${pz.seq}` });
+    }
+    items.sort((a, b) => (a.look_again < b.look_again ? -1 : a.look_again > b.look_again ? 1 : a.plan < b.plan ? -1 : 1));
+    return { ok: true, as_of: iso(now), items: items.slice(0, cap), truncated: items.length > cap, limit: cap };
   }
 
   /* ===================================================================== *
@@ -1374,12 +1718,27 @@ export class ActionPlans {
       .map((s) => ({ subject: s.subject, key: s.key }));
     const checks = this.#checks(p, options, scenarios, live, now, viewer, new Map(held.map((o) => [o.id, o.fields])));
     const history = this.#historyView(p.id, see);
+    const pz = this.#pause(p);
     return {
       ok: true, id: p.id, project: p.project, title: p.title, state: p.state, opened_by: p.openedBy, opened_at: p.openedAt,
-      ...(p.state === "closed" ? { closed: { by: p.closedBy, at: p.closedAt, reason: p.closeReason } } : {}),
+      ...(p.state === "closed" ? { closed: this.#closedView(p) } : { close_note_prompt: "plan.close.lessons" }),
+      pause: pz ? { since: pz.since, by: pz.by, reason: pz.reason, look_again: pz.look_again,
+                    running: this.#running(options, subjects), says: PAUSED_SAYS } : null,
       as_of: iso(now), work_kinds: this.#workKinds(p.project), subjects, removed_subjects: removed,
-      options, proposals, planning_runs: runs, scenarios, checks, history, ...(see.withheld ? { out_of_view: true } : {}),
+      offers: this.#offers(p, subjects, held, viewer, see),
+      options, proposals, planning_runs: runs, scenarios, checks, marks: this.#marksView(p.id), history,
+      decisions: decisionsOf(history), ...(see.withheld ? { out_of_view: true } : {}),
     };
+  }
+
+  /* R40: what a paused plan set running and which continues: its started options' actions not yet ended, with their
+     states, and its determined matters' escalations not ended. Watches are `plan-work`'s (its R7, R9). */
+  #running(options, subjects) {
+    const actions = options.filter((o) => o.action && !["resolved", "abandoned"].includes(o.action.state))
+      .map((o) => ({ option: o.id, action: o.action.id, state: o.action.state }));
+    const escalations = subjects.filter((s) => s.escalation && s.escalation.id && s.escalation.state !== "ended")
+      .map((s) => ({ subject: s.subject, escalation: s.escalation.id, state: s.escalation.state, stage: s.escalation.stage }));
+    return { actions, escalations };
   }
 
   /* R6, R35: the plan's history as the viewer may read it. An act about a subject the viewer may not see leaves the
@@ -1472,7 +1831,9 @@ export class ActionPlans {
   #scenarioView(p, sc, viewer, see, now) {
     const { judged, times, starts } = this.#timed(p, sc, viewer, now);
     const shown = see.phases(sc.phases);
+    const aside = this.#asides(p.id).get(sc.scenario) || null;
     return { scenario: sc.scenario, version: sc.version, versions: sc.versions, name: sc.name, set_by: sc.author, set_at: sc.at,
+             set_aside: aside,
              phases: shown.map((ph) => {
                const t = times.get(ph.id), j = judged.get(ph.id) || null;
                /* R38: a duty start with its occurrence, state, derivation and whether it holds; withheld with its duty (R35). */
@@ -1517,7 +1878,8 @@ export class ActionPlans {
       }
     }
     const byId = new Map(options.map((o) => [o.id, o]));
-    for (const sc of scenarios) {
+    /* R39: a scenario set aside is not checked. */
+    for (const sc of scenarios.filter((x) => !x.set_aside)) {
       for (const ph of sc.phases) {
         const start = ph.earliest ? dayOf(msOf(ph.earliest)) : null;
         for (const oid of ph.options) {
@@ -1564,8 +1926,11 @@ export class ActionPlans {
         if (items.length === cap) { truncated = true; break; }
         const held = this.#subjectsOf(r.plan_id).map((x) => x.subject);
         const shown = see.subjects(held);
+        /* R45: a closed plan's closing note answers here too, so the planning run reads it through the read it has. */
+        const closing = r.state === "closed" ? { closing_note: this.#closedView({ id: r.plan_id, closedBy: r.closed_by,
+          closedAt: r.closed_at, closeReason: r.close_reason }).note } : {};
         items.push({ id: r.plan_id, project: r.project_id, title: r.title, state: r.state, opened_by: r.opened_by,
-                     opened_at: r.opened_at, subjects: shown, ...(shown.length !== held.length ? { out_of_view: true } : {}) });
+                     opened_at: r.opened_at, subjects: shown, ...closing, ...(shown.length !== held.length ? { out_of_view: true } : {}) });
       }
       if (truncated || rows.length <= cap) break;
     }
@@ -1579,7 +1944,8 @@ export class ActionPlans {
     const items = [];
     for (const r of this.#rows(`SELECT plan_id FROM plans WHERE state='open' ORDER BY plan_id`)) {
       const p = this.#plan(r.plan_id, null);
-      for (const sc of this.#scenarios(p.id)) {
+      const asides = this.#asides(p.id);
+      for (const sc of this.#scenarios(p.id).filter((x) => !asides.has(x.scenario))) {
         const { judged, times } = this.#timed(p, sc, null, now);
         for (const ph of sc.phases) {
           const t = times.get(ph.id);
@@ -1633,7 +1999,7 @@ export class ActionPlans {
       return refusal("PLAN_NOT_OF_PROJECT", `plan ${p.id} belongs to ${p.project}, and the run is opened over `
         + `${String(contextId ?? "").slice(0, 80) || "no project"}. Nothing was written.`, { plan: p.id });
     /* END DEC-49 REGION is-plan-of-context */
-    if (p.state !== "open") return refusePlanClosed(p.id);
+    if (p.state === "closed") return refusePlanClosed(p.id);
     return this.membership.projectAuthority(p.project, actor, "joined", "opening a planning run") || null;
   }
 
@@ -1672,6 +2038,52 @@ function derivedSince(occ, nowMs) {
   return nowMs;
 }
 
+/* R6 (T45): the decision log, from the history as the viewer reads it: each choice and decline, scenario set aside or
+   restored, pause and resume, start-first reason and the close, with its reason and date, oldest first. */
+function decisionsOf(history) {
+  const out = [];
+  for (const h of history) {
+    const base = { by: h.author, at: h.at };
+    if (h.kind === "dispose" && (h.disposition === "chosen" || h.disposition === "declined"))
+      out.push({ decision: h.disposition, options: h.options || [], reason: h.reason ?? null, ...base });
+    else if (h.kind === "scenario_set_aside" || h.kind === "scenario_restore")
+      out.push({ decision: h.kind === "scenario_set_aside" ? "set_aside" : "restored", scenario: h.scenario, reason: h.reason ?? null, ...base });
+    else if (h.kind === "pause" || h.kind === "resume")
+      out.push({ decision: h.kind === "pause" ? "paused" : "resumed", reason: h.reason ?? null,
+                 ...(h.kind === "pause" ? { look_again: h.look_again ?? null } : {}), ...base });
+    else if (h.kind === "start" && typeof h.why_first === "string")
+      out.push({ decision: "started_first", option: h.option, reason: h.why_first, ...base });
+    else if (h.kind === "close")
+      out.push({ decision: "closed", reason: h.reason ?? null, ...base });
+  }
+  return out;
+}
+
+/* R43: a mark's label: machine work, written by the plan's re-examination; it decides nothing. */
+const MARK_LABEL = Object.freeze({ machine_work: true, by: "plan-work", says: "marked by the plan's re-examination (machine "
+  + "work) after a response was recorded; it decides nothing, and what the group chose changes only by a member's act" });
+/* R43: the response that caused a mark, `{action, ord}`; null when it is not one. */
+function causeOf(c) {
+  if (typeof c === "string") { const m = /^([^#\s]{1,120})#(\d{1,6})$/.exec(c); return m ? { action: m[1], ord: Number(m[2]) } : null; }
+  return isObj(c) && isToken(c.action) && Number.isInteger(Number(c.ord)) && Number(c.ord) >= 0 ? { action: c.action, ord: Number(c.ord) } : null;
+}
+/* R43: what is wrong with a mark, or null. */
+function markFault(m) {
+  if (!isObj(m) || !MARK_KINDS.includes(m.kind)) return `a mark's kind is one of ${MARK_KINDS.join(", ")}`;
+  if (typeof m.why !== "string" || !m.why.trim() || m.why.length > WHY_MAX) return `a mark says why, in 1 to ${WHY_MAX} characters`;
+  if (m.kind === "option_changed" && !isToken(m.option)) return "an option_changed mark names the option";
+  if (m.kind === "phase_start_holds" && !(Number.isSafeInteger(Number(m.scenario)) && Number(m.scenario) >= 1 && isToken(m.phase)))
+    return "a phase_start_holds mark names the scenario and the phase";
+  if (m.kind === "next_routes" && !(Array.isArray(m.routes) && m.routes.length >= 1 && m.routes.length <= 20 && m.routes.every((r) => isLine(r, 200))))
+    return "a next_routes mark names 1 to 20 routes";
+  return null;
+}
+function normMark(m) {
+  return { kind: m.kind, why: m.why, ...(m.kind === "option_changed" ? { option: m.option } : {}),
+           ...(m.kind === "phase_start_holds" ? { scenario: Number(m.scenario), phase: m.phase } : {}),
+           ...(m.kind === "next_routes" ? { routes: [...m.routes] } : {}) };
+}
+
 /* R7, R35: the subject a key (R3's identity) names; null for a string that is not one. */
 function subjectOfKey(k) {
   const m = /^inquiry:(.+)$/.exec(k) || /^outcome:([^#]+)#(.+)$/.exec(k);
@@ -1684,11 +2096,27 @@ function subjectOfKey(k) {
  * THE ACTION AN OPTION STARTS (R18)
  * ===================================================================== */
 
+/* R18 (actions R74): the member's premise override as given, `{ground, reason}` (a bare string is its reason); null
+   when none. The ground is passed to the action as stated: actions judges it (OVERRIDE_NO_GROUND, OVERRIDE_GROUND_REFUSED). */
+function overrideOf(o) {
+  if (o === undefined || o === null) return null;
+  if (!isObj(o)) return { reason: String(o) };
+  return { ...(o.ground !== undefined ? { ground: o.ground } : {}), reason: typeof o.reason === "string" ? o.reason : o.reason ?? null };
+}
+/* R18: a ground's lines in the action's front matter, as actions writes them (`ground_kind`, `ground_citation`, ...); a
+   ground that is not a flat map is written as its kind, for actions to refuse, never dropped. */
+function groundLines(g) {
+  const word = (v) => q(typeof v === "string" ? v : JSON.stringify(v ?? ""));
+  if (!isObj(g)) return [`  ground_kind: ${word(g)}`];
+  return Object.entries(g).filter(([k]) => /^[a-z]{1,20}$/.test(k)).map(([k, v]) => `  ground_${k}: ${word(v)}`);
+}
+
 /** R18: the action document composed from a chosen option: its kind, the option's addressee, its regulated dates as
  *  pending clock entries with their bases, a `rests_on` leg to each subject's inquiry or determination, `plan` and
- *  `option`, `contact`, `breach` and `premise_override` when given. A machine proposal's disclosure is not carried
+ *  `option`, `contact`, `breach` and `premise_override` when given; and the plan's `project`, so the action is fenced
+ *  by the plan's project's sight (promotion R53; R25, DEC-36; K2851). A machine proposal's disclosure is not carried
  *  (R32): the member's adoption made the option the group's. */
-export function actionDocument({ fields, kind, plan, option, contact, breach, override, at }) {
+export function actionDocument({ fields, kind, project = null, plan, option, contact, breach, override, at }) {
   const legs = [...new Set((fields.subjects || []).map((s) => (s.kind === "inquiry" ? s.inquiry : s.determination)))];
   const a = fields.addressee;
   const cp = a ? ["counterparty:", ...Object.entries(a).map(([k, v]) => `  ${k}: ${q(v)}`)] : [];
@@ -1697,10 +2125,12 @@ export function actionDocument({ fields, kind, plan, option, contact, breach, ov
         `    date: "${d.date}"`, `    basis: ${q(d.basis)}`, "    status: pending"])] : ["clock: []"];
   const basis = legs.length ? ["action_basis:", ...legs.flatMap((t) => [`  - target: ${t}`, "    kind: rests_on"])] : ["action_basis: []"];
   return ["---", "id: PENDING", "object_type: action", `title: ${q(fields.summary)}`, "current_state: planned",
-    `created: "${at}"`, `last_updated: "${at}"`, `action_kind: ${q(typeof kind === "string" ? kind : "")}`, ...cp, ...clock,
+    `created: "${at}"`, `last_updated: "${at}"`, ...(project ? [`project: ${tok(project)}`] : []),
+    `action_kind: ${q(typeof kind === "string" ? kind : "")}`, ...cp, ...clock,
     ...basis, `plan: ${plan}`, `option: ${option}`, ...(contact ? [`contact: ${contact}`] : []),
     ...(breach ? ["breach: true"] : []),
-    ...(override !== null && override !== undefined ? ["premise_override:", `  reason: ${q(override)}`] : []),
+    ...(override ? ["premise_override:", ...(override.ground !== undefined ? groundLines(override.ground) : []),
+                    `  reason: ${q(override.reason ?? "")}`] : []),
     "correspondence: []", "---", "", "## Action", "", fields.detail ? fields.detail.replace(/\r/g, "") : fields.summary, ""].join("\n");
 }
 
@@ -1726,6 +2156,16 @@ export function noSuchPlan(planIdAsked, extra = null) {
   return { ok: false, reason: "NO_SUCH_PLAN", code: "NO_SUCH_PLAN", check: row.check, translation: row.translation, plan,
            ...Object.fromEntries(own), detail: NO_SUCH_PLAN_DETAIL };
   /* END DEC-49 REGION is-plan-seen */
+}
+
+/** R1, R4, R33, R39, R40 (K2851): the one site that mints MACHINE_CANNOT_PLAN (C-124.1, K231): a plan's own acts are a
+ *  named member's. `plan-work` answers through it. Writes nothing and never throws. */
+export function machineCannotPlan(extra = null) {
+  /* DEC-49 REGION is-plan-member */
+  return refusal("MACHINE_CANNOT_PLAN", "an action plan is opened, changed and closed by a named member; a machine "
+    + "proposes and never acts. Nothing was written.",
+    isObj(extra) ? Object.fromEntries(Object.entries(extra).filter(([k]) => !["ok", "reason", "detail"].includes(k))) : {});
+  /* END DEC-49 REGION is-plan-member */
 }
 
 /** R1: an inquiry absent or unseen is one answer. */
@@ -1791,6 +2231,14 @@ export function refuseNoSuchOption(option) {
   /* END DEC-49 REGION is-option-held */
 }
 
+/** R11, R41: no proposal, or no standing offer, of a plan the caller may see answers to what was named. */
+export function refuseNoSuchProposal(detail, extra = null) {
+  /* DEC-49 REGION is-proposal-seen */
+  return refusal("NO_SUCH_PLAN_PROPOSAL", detail || "no proposal answers to that id in a plan this caller may see. Nothing was "
+    + "written.", extra || {});
+  /* END DEC-49 REGION is-proposal-seen */
+}
+
 /** R31, R34: a run that is not a planning run of this plan. */
 export function refuseRunOtherPlan(run) {
   /* DEC-49 REGION is-run-of-plan */
@@ -1816,7 +2264,8 @@ class ProviderAbsent extends Error {
    absent (K248). */
 for (const name of ["planOpen", "planSubjectAdd", "planSubjectRemove", "planRead", "plansFor", "optionAdd", "optionRevise",
                     "optionAdopt", "optionDispose", "scenarioSet", "checkpointRecord", "optionStart", "optionStartPreview", "planClose",
-                    "checkpointsDue", "planProposals", "planRunCheck"]) {
+                    "checkpointsDue", "planProposals", "planRunCheck", "scenarioSetAside", "scenarioRestore", "planPause",
+                    "planResume", "plansToLookAgain", "planMark", "closingNotesOf"]) {
   const f = ActionPlans.prototype[name];
   Object.defineProperty(ActionPlans.prototype, name, { configurable: true, writable: true, value: function (...a) {
     try { return f.apply(this, a); }
@@ -1906,5 +2355,9 @@ export function actionPlansOps(m, url, body) {
     optionstartpreview: () => m.optionStartPreview(stamped({ plan: pick("plan"), option: pick("option"), kind: pick("kind") })),
     planclose: () => m.planClose(stamped({ id: pick("id") ?? pick("plan"), reason: pick("reason") })),
     planproposals: () => m.planProposals({ plan: pick("plan"), run: pick("run"), viewer: qp("viewer") }),
+    scenariosetaside: () => m.scenarioSetAside(stamped({ plan: pick("plan"), scenario: pick("scenario"), reason: pick("reason") })),
+    scenariorestore: () => m.scenarioRestore(stamped({ plan: pick("plan"), scenario: pick("scenario"), reason: pick("reason") })),
+    planpause: () => m.planPause(stamped({ id: pick("id") ?? pick("plan"), reason: pick("reason"), look_again: pick("look_again") })),
+    planresume: () => m.planResume(stamped({ id: pick("id") ?? pick("plan"), reason: pick("reason") })),
   };
 }

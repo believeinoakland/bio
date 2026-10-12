@@ -7,6 +7,7 @@ import assert from "node:assert/strict";
 import { get, validate, combine, SECTIONS } from "../index.mjs";
 import { walkFacts } from "./helpers.mjs";
 import { FIXTURES, OMC_48, BROWN_72 } from "./fixtures/time-law.mjs";
+import { FACTS } from "./fixtures/actions-law.mjs";
 
 const FIRST = "oakland-alameda";
 const TEST = "test-port-ellery";
@@ -151,7 +152,8 @@ test("R26 T33 deadlines: units and amount (days: n read as days), count with day
   const seen = { units: new Set(), starts: new Set(), direction: new Set() };
   for (const d of t.deadlines) { seen.units.add(d.units || "days"); seen.starts.add(d.starts); seen.direction.add(d.direction || "forward"); }
   assert.deepEqual([...seen.units].sort(), ["business_hours", "days", "hours", "months", "years"]);
-  assert.deepEqual([...seen.starts].sort(), ["act", "entered", "filed", "hearing", "known", "received", "served"]);
+  /* R75 (T45) adds the start by a third party's act */
+  assert.deepEqual([...seen.starts].sort(), ["act", "entered", "filed", "hearing", "known", "received", "served", "third_party"]);
   assert.deepEqual([...seen.direction].sort(), ["backward", "forward"]);
 });
 
@@ -251,7 +253,8 @@ test("R47 closure lists: a holiday entry's list and citation; a year once per li
   /* the view keeps each list's year, with its list and citation */
   const v = combine([FIRST]).view;
   const lists = v.holidays.filter((h) => h.list).map((h) => [h.list, h.year, h.citation]);
-  assert.deepEqual(lists.map((x) => `${x[0]} ${x[1]}`), ["judicial 2026", "city 2026", "federal 2026", "judicial 2018", "judicial 2020"]);
+  /* R85 (T45, M-T45-1): 2027 only where a primary source states it, the federal list (OPM's schedule under 5 U.S.C. § 6103) */
+  assert.deepEqual(lists.map((x) => `${x[0]} ${x[1]}`), ["judicial 2026", "city 2026", "federal 2026", "federal 2027", "judicial 2018", "judicial 2020"]);
   assert.ok(lists.every((x) => typeof x[2] === "string" && x[2].length));
   assert.deepEqual(v.deadlines.find((d) => d.rule === "records_response").observed.closures, "city");
 });
@@ -445,12 +448,15 @@ test("R56 the first profile's sourced rule set: each rule with its primary sourc
     claim_suit_after_rejection: ["claim", "months", 6, undefined, "forward", "served", /945\.6\(a\)\(1\)/],
     foia_response: ["records_request", "days", 20, "business", "forward", "received", /552\(a\)\(6\)\(A\)\(i\)/],
   };
-  assert.deepEqual(Object.keys(rows).sort(), Object.keys(want).sort());
+  /* R56's set, and beyond it only R85's (T45), each on its own measurement (R85's test, t45.test.mjs) */
+  const T45_RULES = FACTS.filter((x) => x.at === "deadlines").map((x) => x.rule);
+  assert.deepEqual(Object.keys(rows).sort(), [...Object.keys(want), ...T45_RULES].sort());
   for (const [rule, [applies, units, amount, count, direction, starts, cite]] of Object.entries(want)) {
     const d = rows[rule];
     assert.deepEqual([d.applies_to, d.units, d.amount, d.count, d.direction, d.starts], [applies, units, amount, count, direction, starts], rule);
     assert.match(d.citation, cite, rule);
-    assert.deepEqual([d.status, d.basis], ["researched", "2026-10-05 time-law"], rule);
+    /* FOIA's stated consequence (R75) was read on T45's measurement, named beside time-law's */
+    assert.deepEqual([d.status, d.basis], ["researched", rule === "foia_response" ? "2026-10-05 time-law, 2026-10-11 actions-law" : "2026-10-05 time-law"], rule);
   }
   /* CPRA: CCP §12, rolling on CCP §12a's closures (the §135 list), the 14-day extension by written notice, the
      portal's City list observed beside it (K1504 (1)) */

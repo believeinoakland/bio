@@ -145,6 +145,48 @@ test("R2 (T36-48; K2063, K2152; file-safety R2, R6, R9, R11, R15, R31, R33, R38)
   assert.equal((await go(n, `image?viewer=member:ann&id=${P}`)).json.result.reason, "PROJECT_SEEN_NOT_A_PARTICIPANT");
 });
 
+test("R2 (T45-50; K2891; op-declarations R49): T45's reads whose parameters carry a bundle id are among the reads naming a project, each with exactly its own parameters — `successrecords` (`project`, `plan`), `cures` (`determination`), `openitemswith` and `templatesforaction` (`action`), plan-work's ten reads (`plan`) and (K2900) `advocacychecks` (`project`) — so a project the viewer sees only at EXISTENCE, named in any of them, query or body, is answered C-70.1 before the route; T45's other reads are listed as naming none, each with its reason (controls: a project the viewer sees whole is admitted to the route; a hidden one is never asked; a listed-as-none read is never asked)", async () => {
+  const NAMING = {
+    successrecords: ["project", "plan"], cures: ["determination"], openitemswith: ["action"], templatesforaction: ["action"],
+    matters: ["plan"], plantimeline: ["plan"], planreviewopen: ["plan"], planreviews: ["plan"], prepitems: ["plan"],
+    plancomments: ["plan"], whereitstands: ["plan"], statusreportdraft: ["plan"], statusreports: ["plan"],
+    matterpromiseduties: ["plan"], advocacychecks: ["project"],
+  };
+  const NONE = { watchquestions: ["after", "limit"], dutiesarising: ["captures", "as_of"], procedureguides: ["kind"],
+                 successread: ["id"], casecheck: ["case", "edition", "check"], ruleoffer: ["rule"], grouprules: ["section"] };
+  const P = "PROJ-seen", F = "PROJ-full", H = "PROJ-hidden";
+  for (const [op, params] of Object.entries(NAMING)) {
+    assert.deepEqual(PROJECT_NAMING_READS[op], params, `${op}'s row`);
+    assert.equal(Object.hasOwn(PROJECT_NAMING_READS_NOT, op), false, `${op} in both tables`);
+    for (const p of params) for (const where of ["query", "body"]) {
+      /* refused at EXISTENCE: the project the caller sees only exists, before the route */
+      const s = fakeStore({ discoverable: [P, F], existence: [P] });
+      const init = where === "body" ? { method: "POST", body: JSON.stringify({ [p]: P }) } : undefined;
+      const r = await go(s, `${op}?viewer=member:ann${where === "query" ? `&${p}=${P}` : ""}`, init);
+      assert.deepEqual([r.status, r.json.result.reason, r.json.result.project], [200, "PROJECT_SEEN_NOT_A_PARTICIPANT", P], `${op}.${p} ${where}`);
+      assert.equal(s.log.some((e) => e.kind === "route"), false, `${op}.${p} ${where}: the route ran`);
+      /* controls: one she sees whole, admitted (asked, then routed); a hidden one, routed and never asked */
+      for (const [id, asked] of [[F, true], [H, false]]) {
+        const t = fakeStore({ discoverable: [P, F], existence: [P] });
+        const tinit = where === "body" ? { method: "POST", body: JSON.stringify({ [p]: id }) } : undefined;
+        const r2 = await go(t, `${op}?viewer=member:ann${where === "query" ? `&${p}=${id}` : ""}`, tinit);
+        assert.deepEqual(r2.json.result, { answered: op }, `${op}.${p}=${id} ${where}`);
+        assert.equal(t.log.some((e) => e.kind === "existence"), asked, `${op}.${p}=${id} ${where}`);
+      }
+    }
+  }
+  for (const [op, params] of Object.entries(NONE)) {
+    assert.equal(Object.hasOwn(PROJECT_NAMING_READS, op), false, `${op} names no project`);
+    for (const p of params) assert.match(PROJECT_NAMING_READS_NOT[op], new RegExp("`" + p + "`"), `${op}'s reason names ${p}`);
+    for (const p of params) {
+      const s = fakeStore({ discoverable: [P], existence: [P] });
+      const r = await go(s, `${op}?viewer=member:ann&${p}=${P}`, { method: "POST", body: JSON.stringify({ [p]: P }) });
+      assert.deepEqual([r.status, r.json.result], [200, { answered: op }], `${op}.${p}`);
+      assert.equal(s.log.some((e) => e.kind === "membership"), false, `${op}.${p}: membership asked`);
+    }
+  }
+});
+
 test("R3 (DEC-113, DEC-36; actions R58): `projectholds` is among the reads naming no project, with the reason that a project not seen at FULL is answered `held: null`, so its existence answer is not run; `actionholdrelease`, `actionholdpreview` and `projectholds` pass R1's frame to the map they are routed through, with the request's own parameters and body and nothing of the door's added (negative control: a read naming a project is still asked)", async () => {
   assert.equal(typeof PROJECT_NAMING_READS_NOT.projectholds, "string");
   assert.match(PROJECT_NAMING_READS_NOT.projectholds, /held: null/);

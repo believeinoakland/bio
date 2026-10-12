@@ -1,0 +1,112 @@
+# escalation (T45)
+
+**Status** · session_01HztAVfrFX3rGVayQh2NyNt · depth 2 · COMPLETE · handled B7
+
+## J1 · QUESTION
+
+R31's state `stopped_pursuing` is not a state of the `escalation` type in `record-grammar` R35 (`STATES.escalation`: legal `open suspended ended`; edges open→suspended ended, suspended→open ended). An escalation is a promoted document (R21) and promotion R15 refuses a `current_state` outside the catalogue's table, and promotion's history check (C-4.2) marks an undeclared edge an error; escalation's own R21 test asserts `STATES.escalation.legal` too. So R31 cannot land as written without a `record-grammar` change, and no T45 entry gives one (K2780 amended State Rules §4.4; `affordances` R?'s vocabulary list already names "escalation states with `stopped_pursuing`").
+
+My best reading, which I am building on now: `record-grammar` R35 gains `stopped_pursuing` for `escalation`: legal `open suspended ended stopped_pursuing`; edges open→suspended ended stopped_pursuing; suspended→open ended stopped_pursuing; stopped_pursuing→open; ended none. Until that lands my R31 test (the stop written as the document's `current_state`) is red, as an inherited red named to `record-grammar`'s change. Options for you: (a) a small `record-grammar` job/addition in T45 (or BOB's own act on that table) with the edges above — my recommendation; (b) R31 amended so the document stays `open`/`suspended` and `stopped_pursuing` lives only in escalation's own row and log (I would not recommend: the record's state would disagree with the module's). Which one?
+
+## J2 · REPORT
+
+Built on my branch (pushed): R6, R14, R23, R25, R30, R32 and R31's code; R31's tests red only on J1 (record-grammar's `escalation` states). Readings I am building on — each yours to change by a CHANGE; the first three need another module's text or code:
+
+1. **R30 needs a read of `actions` R87's scope.** R87 makes "confidential" an appended act (`actionScope`) and names no field in `actionRead` (R25/R29) or `actionsFor`. I read `actionRead(...).confidential === true` (or a `scope` stating it). Please have `actions` (T45-27) answer the latest scope on `actionRead` as `confidential: true|false`, or tell me the field.
+2. **R14 reads `conformance.curesOf` (R37), whose top-level shape is not stated.** I accept per-standard entries `{standard, link: {link, cure, standard, by, at, cure_standing}}` under `standards` (also `links`/`items`/`cures`, array or map). Only `cure_standing: true` links count; the cure determination must be live, compliant for that standard, recorded after the escalation opened (the determination's own `at`, not the link's), and of the same office (conformance R36's rule). With no `curesOf` held yet, only the same act restores (never read as restored). If the escalation's determination is superseded, I read cures on it only, not on its successor. Please pin R37's shape with T45-23.
+3. **New ops `escalationstoppursuing`, `escalationreopen`** need specs, grades and stamps in `op-declarations`, `op-grades`, `affordances`, and routes in the plane, as rule 4 (12) does for other new ops (their suites show no new red today: 653 pass, 11 fail, the same with and without my change).
+4. **R31:** a stopped escalation also refuses `escalationEnd` and `escalationSuspend` with `NOT_OPEN` (now minted once, at `refuseNotOpen`; `where` changed from `#edgeArgs` to `refuseNotOpen > is-escalation-open`; translation widened), and resume answers `NOT_SUSPENDED`. Attach and evaluate stay allowed while stopped, as while suspended. Reopen's order: MACHINE_CANNOT_STOP, NO_SUCH_ESCALATION, NOT_STOPPED, ESCALATION_NO_REASON. Log kinds and timeline kinds are the literal `stopped_pursuing`, `reopened`. Rows: C-116.47 MACHINE_CANNOT_STOP, C-116.48 NOT_STOPPED.
+5. **R30:** "every attached action confidential" read as "at least one attached, all confidential" (one with none attached is answered). Every item is `public: true` for every caller, as R30 says; note this publishes deliberation (declines "for now", suspensions, evaluation readings) into cases through case-authoring R57, which v0.2 rule 15 and R57's "leaving out deliberation… is the producers'" may not intend. If you want only outward acts public (as actions R66), amend R30 and I follow.
+6. **R6:** `reply_owed: false` read from `actionRead` where it carries the field, else from the document (actions R82 not yet built); a `no_response` entry then does not trigger, a `received` one still does.
+7. **R23:** the attachment records `premise_override: {ground, reason, by, at}` from `actionRead`'s `premise_override` (ground null until actions R74).
+8. **R32:** context lists actions resting on the determination or on any finding in `determinationRead().findings[].finding`, excluding every `breach: true` action, each `{action, kind, sent_at, resolution, state}`.
+9. Not in my requirements but named by conformance R33: refusing a void determination through `determinationVoided` at R1/R27/R29. Today a void one (outcomes read undetermined) answers `NOT_NONCOMPLIANT`. Add a line if you want `DETERMINATION_VOID`.
+
+## J3 · COMPLETE
+
+**Completion (T45-32), head bbf7750cd7 on `job/T45/escalation` (tranche/T45 merged at d9df7faade).**
+
+**Applied:** R6 (no reply owed: neither the clock nor a `no_response` entry triggers; the read's note says "no reply owed"), R14 (a curing act of the same office linked through `conformance.curesOf`, `cure_standing: true`, restores compliance per standard; `COMPLIANCE_NOT_RESTORED` names per standard what is missing), R23 (an overridden action attaches once it rests on this determination; the attachment entry records `premise_override: {ground, reason, by, at}`, shown in the history), R30 (every item `public: true`; an escalation whose attached actions are all confidential is not answered; a confidential attachment never is), R32 (`context` in the read). R16's and R25's T45 sentences and R30's stop sentence depend on R31.
+
+**Deferred:** R31, as B2 directs (T46, N910, K2844). Its built version (stop, reopen, C-116.47 `MACHINE_CANNOT_STOP`, C-116.48 `NOT_STOPPED`, `NOT_OPEN` widened, two ops arms, tests) is in commit f0c0e4574d. It was reverted here and is named by a `test.todo`. Items 3 and 4 of J2 are void with it: no new op, no new row and no `where` change ship in T45. Its parts in R16 (never listing a stopped escalation), R25 (the two arms) and R30 (the stop and reopening) go with it to T46. Their *(not yet met: T45)* marks may want T46 too; that is your fold.
+
+**Found in other modules (also in J2):** (1) `actions` R87 exposes no read of the confidential scope, so I read `actionRead().confidential === true`. (2) `conformance` R37's answer shape is not stated, and my read tolerates several shapes. (5) R30 makes deliberation public through case-authoring R57. (9) `conformance` R33 names escalation among the refusers of a void determination, which escalation's requirements do not say. No artifact made stale by me: no new op ships.
+
+**Own code read whole** (index, checks, doc, ops, schema) and all tests read whole. The reading set was read as K2700 allows: requirements, code and tests whole by me; the used modules' public parts and the later users' lines read whole by a helper, whose digest cites each section. Flaws: none found beyond the above. `#compliance` now also skips a void compliant determination.
+
+**Tests:** `node --test bio-plane/test/m/escalation/`: tests 70, pass 69, fail 0, todo 1. Users of my services:
+- `test/m/monitoring`, `legacy-store`, `plane`, `action-plans`, `queue-producers`: 465 pass, 2 fail. Both are inherited reds (rule 4 (9), (11)).
+- `affordances`, `control-plane`, `op-declarations`, `op-grades`, `answer-envelope`: 653 pass, 11 fail, identical with and without my change (inherited reds).
+
+**Checks:**
+- format: 153 modules, 152 requirements files; 0 failures.
+- architecture escalation: 18 product files, 65 relative imports; 0 failures.
+- coverage escalation: 32 of 32 live requirement ids named by a test; 0 failures.
+- ownership escalation tranche/T45: 10 files changed; 0 failures.
+
+New test files: `stopped.test.mjs` (the todo) and `t45.test.mjs`, under my tests path.
+
+Size (session_01HztAVfrFX3rGVayQh2NyNt): test runs 16, module lines 2218
+
+## J4 · COMPLETE
+
+**B3 applied (K2850); completion stands as J3 with these changes.** Head 2fb120eb76 (tranche/T45 merged).
+
+- **R1, R27:** a void determination (`d.void` set) is refused through `conformance.determinationVoided(determination, causes)`, after `DETERMINATION_SUPERSEDED` and before `NOT_NONCOMPLIANT`. Conformance does not export it yet (T45-23), so escalation reads it off the module namespace and loads without it. Its test (`t45.test.mjs`, "R1 R27 a void determination…") is skipped, naming why, until conformance merges; it compares the answer to `determinationVoided` itself. Merge conformance first, as the order already says, and it runs.
+- **R30:** opening, stage move, attachment and end are `public: true`; evaluation, decline and suspension are `public: false`. A **resumption is also `public: false`**, my reading: R30 names neither list for it, and it is the second half of a suspension, so it fails closed. Change it if you read otherwise.
+- **R14:** `curesOf` is read as `{standards: [{standard, link, ended}]}` only.
+- **(3) The two ops' pins:** none are needed. R31 and its arms are not built in T45 (B2), so no new op ships from escalation.
+
+Tests: escalation 71: pass 69, fail 0, skipped 1 (the void test, as above), todo 1 (R31). Checks: format 0 failures; architecture 18 files, 67 imports, 0 failures; coverage 32 of 32 ids named, 0 failures; ownership 7 files, 0 failures.
+
+Size (session_01HztAVfrFX3rGVayQh2NyNt): test runs 19, module lines 2205
+
+## J5 · COMPLETE
+
+**B4, B5 applied; COMPLETE again.** Head 21b0414349 (tranche/T45 merged at 4923d50588).
+
+- **conformance merged (B4):** `determinationVoided` is now imported by name (no namespace read), and R1/R27's void test runs and passes against it. R14 now also has a test over the real conformance (`real.test.mjs`, "R14 over the real conformance"):
+  - a later act of the same office, determined compliant after the escalation opened and linked through `cureLink`, restores compliance (`exit.compliance` met, `cured_by` names it), and the end then answers `CONSEQUENCES_UNDETERMINED`;
+  - before the link, and for another office's act never linked, the end answers `COMPLIANCE_NOT_RESTORED`.
+  
+  The fixture's `curesOf` stand-in keeps the merged shape for the remaining stand-in tests.
+- **action-grammar merged (B5):** nothing of escalation's reads changed. The `NO_SUCH_ACTION` row check passes.
+
+Tests: escalation 72: pass 71, fail 0, todo 1 (R31, T46). Checks: format 0 failures; architecture 18 files, 66 imports, 0 failures; coverage 32 of 32, 0 failures; ownership 7 files, 0 failures.
+
+Size (session_01HztAVfrFX3rGVayQh2NyNt): test runs 22, module lines 2217
+
+## J6 · COMPLETE
+
+**B6 applied; COMPLETE again.** tranche/T45 merged at fd64203743; no code change.
+
+Escalation reads only `consequences.addressed` (R14) and `consequencesOf` (R29), both unchanged by T45-24. The real module is already exercised:
+- `exit.test.mjs`: "consequences, merged (K250), is reached through consequencesModule";
+- `real.test.mjs`: R29 over the real modules, and R14 over the real conformance, ending at the real `CONSEQUENCES_UNDETERMINED`.
+
+The fixture's consequences stand-in stays only where a test must set `addressed` to `addressed` or `not_addressed` directly: building those states through the real module means recording and assessing parts, which those tests do not exercise.
+
+Tests: escalation 72, pass 71, fail 0, todo 1 (R31). Checks: coverage 32 of 32, 0 failures; ownership 0 failures (format and architecture unchanged since J5, no file of mine changed).
+
+Size (session_01HztAVfrFX3rGVayQh2NyNt): test runs 23, module lines 2217
+
+## J7 · COMPLETE
+
+**B7 applied; COMPLETE again.** Head d060daa0e5 (tranche/T45 merged at c7243c03d0).
+
+- **R23 fixture:** `real.test.mjs`'s override now states its ground (`ground_kind: legal_deadline`, `ground_citation`, `ground_date`, actions R74). The same test now also drives R23's T45 part over the real actions:
+  - a member's revision adds the `rests_on` leg, the override kept as written;
+  - the action then attaches;
+  - the attachment and the history carry `premise_override: {ground: {kind: "legal_deadline", citation, date}, reason, by, at}` from actions' read.
+- **A flaw found and fixed (R6):** the real `actionRead` answers `reply_owed` as `{owed, …}`, not a boolean. My read would have taken `{owed: false}` as owed, and the stand-in had the wrong shape, so no test caught it. The read now takes `reply_owed.owed`, falling back to the document only where the read carries no such answer. The stand-in now answers in actions' shape.
+- **New real test ("R6 R30 over the real actions"):**
+  - `reply_owed: false`, set with its reason through actions, never triggers 3→4 by the clock, and the read notes "no reply owed".
+  - The control, an action owing a reply, is triggered by a recorded `no_response`. The scene holds no zone, so its clock reads undetermined, not "no reply owed".
+  - Once `actions.actionScope` makes the only attached action confidential, the timeline answers nothing for the escalation.
+- **Confidential:** the field `confidential: true|false` on `actionRead` matches what escalation reads, unchanged.
+
+The stand-in stays for the remaining fixture tests that need controlled ledgers and sight (R26's withheld action, ledger timing). Real actions now covers R5–R7, R9, R6, R23 and R30.
+
+Tests: escalation 73: pass 72, fail 0, todo 1 (R31). Checks: format 0; architecture 18 files, 66 imports, 0; coverage 32 of 32, 0; ownership 8 files, 0.
+
+Size (session_01HztAVfrFX3rGVayQh2NyNt): test runs 30, module lines 2218

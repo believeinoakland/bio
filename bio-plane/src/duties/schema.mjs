@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS duties (
 CREATE INDEX IF NOT EXISTS duties_obligor ON duties(obligor, duty_id);
 CREATE INDEX IF NOT EXISTS duties_obligee ON duties(obligee, duty_id);
 CREATE INDEX IF NOT EXISTS duties_enforcer ON duties(enforcer, duty_id);
+-- R31: the duties arising in a capture.
+CREATE INDEX IF NOT EXISTS duties_arising ON duties(arising_in, duty_id);
 -- R6: every version of a duty, kept; version 1 is its adoption.
 CREATE TABLE IF NOT EXISTS duty_versions (
   duty_id       TEXT NOT NULL,

@@ -23,6 +23,9 @@ const adoption = (name) => (ADOPTED_T41.includes(name) ? { file: LIB_T41, commit
   : { file: LIB_NEW, commit: "e08cd35ecb", approved: { by: "BOB", at: "2026-10-08", ruling: "K2241" } });
 /* DEC-188 (8): the acts PR #19 removed from the registry */
 const RETIRED_ACTS = ["aiceilingset", "aicopyceilingset", "accountswitchset", "groupswitchset"];
+/* R22 (T45; K1883; plan T45 "Left out"): the library scripts a `{template}` draft withholds in this fixture, whose test
+   profile offers "Records request" (`@records-request`) and no template of the handle `communication`. */
+const NO_TEMPLATE = ["Start and send"];
 const OWED = /^owed:([a-z][a-z0-9]*)(?:\s+(DEC-\d+|K\d+))?$/;   /* a ruling owes it: a DEC or a K (PR #13) */
 /* Every op the registry names, owed ones as their op: the member op table once each owed op is declared. */
 const ALL_OPS = [...new Set(REG_FILE.screens.flatMap((s) => s.acts.map((a) => (a.status === "owed" ? OWED.exec(a.op)[1] : a.op))))];
@@ -297,7 +300,8 @@ test("R22 (T37, T41; K2241) the six adopted scripts carry version 2 in place of 
   w.wz.wizardRegister({ ops: ALL_OPS });
   for (const e of wz.CIVICSMITH_LIBRARY) {
     const r = w.wz.wizardRead({ script: e.id, viewer: F });
-    assert.deepEqual([r.version.id, r.version.state, r.version.updated_by, r.offered], [`${e.id}@${e.version}`, "approved", null, true], e.name);
+    assert.deepEqual([r.version.id, r.version.state, r.version.updated_by, r.offered],
+                     [`${e.id}@${e.version}`, "approved", null, !NO_TEMPLATE.includes(e.name)], e.name);
     if (!e.earlier) { assert.equal(w.wz.wizardRead({ script: e.id, version: `${e.id}@2`, viewer: F }).reason, "NO_SUCH_WIZARD", e.name); continue; }
     const one = w.wz.wizardRead({ script: e.id, version: `${e.id}@1`, viewer: F });
     assert.deepEqual([one.ok, one.version.state, one.version.updated_by, one.offered, one.version.approved],
@@ -350,7 +354,8 @@ test("R23 startFrom answers the offered scripts this viewer may start, the libra
   w2.member("frank");
   w2.wz.wizardRegister({ ops: ALL_OPS });
   assert.deepEqual(w2.wz.startFrom({ viewer: F }).scripts.map((s) => s.name),
-                   wz.CIVICSMITH_LIBRARY.filter((e) => !e.required).map((e) => e.name), "every optional script, Follow a proceeding's version 2 included");
+                   wz.CIVICSMITH_LIBRARY.filter((e) => !e.required && !NO_TEMPLATE.includes(e.name)).map((e) => e.name),
+                   "every optional script, Follow a proceeding's version 2 and Get a record included; Start and send withheld (R22)");
 });
 
 test("R11 (K1883) a library script that fails R12 against the registration is not offered until it passes, as R13 withholds a group's: absent from wizardsAt, the registry form, startFrom and the offered reads; a passing one offered; the library data unchanged", () => {

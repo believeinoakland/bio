@@ -17,7 +17,10 @@
  *   entities, standards, events, lines, money, provenance, content
  *                          the services of the modules this one uses, as their requirements state them; `plane` wires
  *                          the real ones (T33-90). A service a call needs and does not have answers undetermined.
- *   view()                 the active jurisdiction view (default: record-core's `jurisdiction_profiles` combined).
+ *   localFacts             `local-facts` on the same host (default: its factory, reached on first use), whose
+ *                          `governingView()` (its R12) is the view R5 and R30 read: the active profiles combined, with
+ *                          the group's confirmed rules added (T45; N858).
+ *   view()                 a test's own view in place of `local-facts.governingView` (absent in the plane).
  *   registry               connection-grammar's registry (default: the plane's default registry).
  *   factOf(entry)          a calendar entry's status on this instance (`local-facts`' R2, as `civil-time` R9 takes it;
  *                          plane wires it), so a disputed or corrected closure list moves the due date.
@@ -38,6 +41,7 @@ import { linesOf } from "../lines/index.mjs";
 import { noSuchFact, moneyOf } from "../money/index.mjs";
 import { provenanceOf } from "../provenance/index.mjs";
 import { contentOf, checkContentExtent } from "../content/index.mjs";
+import { localFactsOf } from "../local-facts/index.mjs";
 import { noSha } from "../extraction/index.mjs";
 import { OBSERVATION_LEVELS } from "../observation-log/index.mjs";
 import { compare, bounds, due as civilDue, overdueOn, expandRecurrence, isCalendarDate, validAt as civilValidAt } from "../civil-time/index.mjs";
@@ -47,7 +51,7 @@ import { combine as combineProfiles } from "../../../jurisdictions/index.mjs";
 import { DUTIES_CHECKS, refusal } from "./checks.mjs";
 import { DUTIES_TABLES, migrateDuties } from "./schema.mjs";
 import { MODALITIES, SOURCE_KINDS, TRIGGER_KINDS, BASIS_KINDS, OCCURRENCE_STATES, PUBLIC_KINDS, ORGANISATION_KINDS,
-         ACTING_LINES, LEVEL_SEARCHED, CONNECTION_KINDS, OCCURRENCE_KEY_RE, USE_KINDS, NOTICED } from "./vocab.mjs";
+         ACTING_LINES, LEVEL_SEARCHED, CONNECTION_KINDS, OCCURRENCE_KEY_RE, USE_KINDS, NOTICED, STATED_BASIS } from "./vocab.mjs";
 
 export { DUTIES_CHECKS } from "./checks.mjs";
 export { DUTIES_SCHEMA, DUTIES_TABLES, DUTIES_TABLE_NAMES } from "./schema.mjs";
@@ -62,6 +66,8 @@ export const TRACK_BACK_DAYS = 366;
 export const SCHEDULER_STAMP = "class:scheduler";
 /** Bounds on a member's words, in characters. */
 export const WORDS_MAX = 4000, CLAUSE_MAX = 2000, REASON_MAX = 2000;
+/** R31: the captures one `dutiesArisingIn` read names, at most. */
+export const CAPTURES_MAX = 200;
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
 const str = (v) => (typeof v === "string" ? v.trim() : "");
@@ -150,13 +156,13 @@ export class Duties {
   #tracked = [];   /* R26: [{module, fn}] */
 
   constructor({ storage, record, membership = null, entities = null, standards = null, events = null, lines = null,
-                money = null, provenance = null, content = null, view = null, registry = defaultRegistry,
+                money = null, provenance = null, content = null, localFacts = null, view = null, registry = defaultRegistry,
                 now = null, clockMs = null, factOf = null } = {}) {
     this.storage = storage;
     this.sql = storage.sql;
     this.record = record;
     this.membership = membership;
-    this.#deps = { entities, standards, events, lines, money, provenance, content };
+    this.#deps = { entities, standards, events, lines, money, provenance, content, localFacts };
     this.registry = registry;
     this.factOf = typeof factOf === "function" ? factOf : null;
     this.viewFn = typeof view === "function" ? view : null;
@@ -173,6 +179,7 @@ export class Duties {
   get money() { return this.#dep("money"); }
   get provenance() { return this.#dep("provenance"); }
   get content() { return this.#dep("content"); }
+  get localFacts() { return this.#dep("localFacts"); }
 
   /* N581: the viewer this module's reads of other modules carry: the caller's own, or `SYSTEM_VIEWER` for an internal
      read (`INTERNAL`) or an act's own checks (no viewer). */
@@ -183,9 +190,17 @@ export class Duties {
   #stamp() { return stampInstant("second", Date.parse(this.now())); }
   migrate() { migrateDuties(this.sql); }
 
-  /** The active jurisdiction view (record-core R26, jurisdictions R12–R16); `{}` when none combines. */
+  /** R5 (T45; N858): the view every rule, calendar and vocabulary here is read from: `local-facts.governingView()` (its
+   *  R12), the active profiles combined with the group's confirmed rules added, so a group's confirmed rule governs here
+   *  as in `action-clocks`; with no group rule it equals `combine`'s. Where no `local-facts` answers (a store built
+   *  without it), the active profiles combined (record-core R26, jurisdictions R12–R16). `{}` when none combines. */
   view() {
     if (this.viewFn) { try { return this.viewFn() || {}; } catch { return {}; } }
+    const lf = this.localFacts;
+    if (lf && typeof lf.governingView === "function") {
+      /* combine's answer, `{ok, view, conflicts}`: its view, or nothing when it does not combine */
+      try { const v = lf.governingView(); return !isObj(v) || v.ok === false ? {} : v.ok === true ? (isObj(v.view) ? v.view : {}) : v; } catch { return {}; }
+    }
     const ids = this.record.getSetting("jurisdiction_profiles");
     if (!Array.isArray(ids) || !ids.length) return {};
     const c = combineProfiles(ids);
@@ -247,7 +262,7 @@ export class Duties {
    * ===================================================================== */
 
   /** R1 (and R4, R22): `null` when the fields stand, else the first refusal. The fields are normalised into `out`. */
-  fieldRefusal(f, out = {}) {
+  fieldRefusal(f, out = {}, { pending = false } = {}) {
     const view = this.view();
     /* DEC-49 REGION is-duty-modality */
     if (!MODALITIES.includes(f.modality))
@@ -300,17 +315,20 @@ export class Duties {
       /* END DEC-49 REGION is-duty-enforcer */
       out.acting_for = acting;
     }
-    const s = this.#sourceRefusal(src);
+    const s = this.#sourceRefusal(src, pending);
     if (s) return s;
     const t = this.#triggerRefusal(isObj(f.trigger) ? f.trigger : {}, view);
     if (t) return t;
     const tm = isObj(f.time) ? f.time : {};
     /* DEC-49 REGION is-duty-basis */
     if (!BASIS_KINDS.includes(tm.basis))
-      return refusal("UNKNOWN_BASIS_KIND", `a due date's basis is one of ${BASIS_KINDS.join(", ")}.`, { bases: [...BASIS_KINDS] });
+      return refusal("UNKNOWN_BASIS_KIND", `a due date's basis is one of ${BASIS_KINDS.join(", ")}.${tm.basis === STATED_BASIS
+        ? " A deadline the other side has stated is a deadline on the group, as are the group's own obligations to a venue: "
+          + "they are the group's own deadlines on its actions, never a body's obligation here." : ""}`, { bases: [...BASIS_KINDS] });
     /* END DEC-49 REGION is-duty-basis */
     /* DEC-49 REGION is-duty-time */
-    if (tm.basis === "rule" && !said(tm.rule)) return refusal("BAD_TIME", "a rule basis names the rule (time.rule) it is computed from.");
+    if (tm.basis === "rule" && !said(tm.rule) && !isObj(tm.response_to))
+      return refusal("BAD_TIME", "a rule basis names the rule (time.rule) it is computed from.");
     if ((tm.basis === "commitment" || tm.basis === "window") && tm.date !== undefined && !this.#dt(tm.date))
       return refusal("BAD_TIME", "a commitment's or window's date is a calendar day or a date-time.");
     if (tm.basis === "dependency" && (tm.lead === undefined || tm.lead === null || !said(tm.why)))
@@ -393,11 +411,19 @@ export class Duties {
   }
 
   /* R1: the source union. */
-  #sourceRefusal(src) {
+  #sourceRefusal(src, pending = false) {
     /* DEC-49 REGION is-duty-source */
     if (!SOURCE_KINDS.includes(src.kind))
       return refusal("UNKNOWN_SOURCE_KIND", `a source is one of ${SOURCE_KINDS.join(", ")}.`, { kinds: [...SOURCE_KINDS] });
     /* END DEC-49 REGION is-duty-source */
+    /* R30: a promise resting on a `standards` R9 proposal not yet adopted is held only as a proposal here */
+    if (src.kind === "standard" && !said(src.standard) && said(src.standard_proposal)) {
+      if (pending) return null;
+      /* DEC-49 REGION is-duty-source-held */
+      return refusal("DUTY_SOURCE_NOT_HELD", "the commitment this obligation rests on is still a proposal; adopt it as a standard first.",
+                     { standard_proposal: src.standard_proposal.slice(0, 80) });
+      /* END DEC-49 REGION is-duty-source-held */
+    }
     if (src.kind === "standard" || src.kind === "court") {
       const std = this.#standard(src.standard);
       if (!std) return noSuchStandard(said(src.standard) ? src.standard : null);
@@ -500,7 +526,7 @@ export class Duties {
   /* The fields a duty holds (Terms), normalised: only the known keys, never a due date or an amount (R21). */
   static #fields(f) {
     const keys = ["modality", "obligor", "obligee", "performance", "source", "trigger", "time", "exceptions", "enforcer",
-                  "observed_by", "arising_in", "reported_status", "delegation", "project", "review"];
+                  "observed_by", "arising_in", "reported_status", "delegation", "project", "review", "response"];
     const out = {};
     for (const k of keys) if (f[k] !== undefined && f[k] !== null) out[k] = clone(f[k]);
     if (!Array.isArray(out.exceptions)) out.exceptions = out.exceptions === undefined ? [] : [out.exceptions];
@@ -517,7 +543,7 @@ export class Duties {
     const b = isObj(a) ? a : {};
     if (!said(b.by)) return memberOnly(b.by, "proposing an obligation with no stamp");
     const fields = Duties.#fields(b);
-    const r = this.fieldRefusal(fields);
+    const r = this.fieldRefusal(fields, {}, { pending: true });
     if (r) return r;
     const at = this.#stamp();
     return this.record.transact(() => {
@@ -592,6 +618,21 @@ export class Duties {
      `capture_sha` passing as it is), refused as `content` refuses an extent; minted through `content.mint` and read with
      `content.passageText`. `{ok, words, cite}` or the refusal. */
   #policyWords(std, cite, field, by) {
+    return this.#extentWords(cite, field, by, (sha) => {
+      const ids = Array.isArray(std.text) ? std.text : Array.isArray(std.texts) ? std.texts.map((t) => t && t.content_id) : [];
+      const held = new Set(ids.map((id) => { const r = said(id) ? this.content.contentRow(id) : null; return r ? r.capture_sha : null; }).filter(Boolean));
+      /* DEC-49 REGION is-duty-review-extent */
+      if (!held.has(sha))
+        return refusal("REVIEW_EXTENT_NOT_HELD", `${field} cites a capture that is not the policy's held text.`, { [field]: sha.slice(0, 80) });
+      /* END DEC-49 REGION is-duty-review-extent */
+      return null;
+    });
+  }
+
+  /* R28, R30 (K1941, K1965): the words of an extent `{captureSha, extent}` of a held capture the stamp may see, refused
+     as `content` refuses an extent, then by `own(sha)` (the caller's test that the capture is the one it must be);
+     minted through `content.mint` and read with `content.passageText`. `{ok, words, cite}` or the refusal. */
+  #extentWords(cite, field, by, own) {
     const c = isObj(cite) ? cite : {};
     const sha = str(c.captureSha ?? c.capture_sha).toLowerCase();
     if (!sha) return noSha(`${field} cites an extent of the policy's text, named by its capture sha256`);
@@ -603,18 +644,123 @@ export class Duties {
     try { bad = checkContentExtent(c.extent, this.content.contentContextFor(sha)); }
     catch (e) { bad = { code: "CONTENT_EXTENT_UNREADABLE", detail: String(e && e.message || e).slice(0, 200) }; }
     if (bad) return { ok: false, reason: "EXTENT_NOT_IN_CAPTURE", detail: "the extent names no part of that capture", extent_refusal: bad };
-    const ids = Array.isArray(std.text) ? std.text : Array.isArray(std.texts) ? std.texts.map((t) => t && t.content_id) : [];
-    const held = new Set(ids.map((id) => { const r = said(id) ? this.content.contentRow(id) : null; return r ? r.capture_sha : null; }).filter(Boolean));
-    /* DEC-49 REGION is-duty-review-extent */
-    if (!held.has(sha))
-      return refusal("REVIEW_EXTENT_NOT_HELD", `${field} cites a capture that is not the policy's held text.`, { [field]: sha.slice(0, 80) });
-    /* END DEC-49 REGION is-duty-review-extent */
+    const mine = own(sha);
+    if (mine) return mine;
     const m = this.content.mint({ bundleId: home.bundleId, captureSha: sha, extent: c.extent, mintedBy: str(by) });
     if (!m || m.ok === false || !said(m.content_id))
       return { ok: false, reason: "EXTENT_NOT_IN_CAPTURE", detail: "the extent names no part of that capture", extent_refusal: m || null };
     let words = null;
     try { words = this.content.passageText(m.content_id); } catch { words = null; }
     return { ok: true, words, cite: { capture_sha: sha, extent: clone(c.extent), content_id: m.content_id } };
+  }
+
+  /** R30 (T45; Actions D7; v0.2 rule 16): a proposal (R2) of one duty from a body's reply (`promise`) or a report
+   *  (`required_response`), arising in its held capture (R4), quoting an extent of it word for word. A promise is the
+   *  body's commitment, dated by the whole calendar date its words state, resting on a held `commitment` standard or a
+   *  `standards` R9 proposal (adoption then waits on that proposal's). A required response rests on the report held as
+   *  a `court` standard, its date by the governing view's rule (R5) for a body answering that report, else undetermined.
+   *  Refused under R1 and R29 as any duty is. */
+  proposeFromResponse(a = {}) {
+    const b = isObj(a) ? a : {};
+    if (!said(b.by)) return memberOnly(b.by, "proposing an obligation from a response with no stamp");
+    /* DEC-49 REGION is-duty-response-kind */
+    if (!RESPONSE_KINDS.includes(b.kind))
+      return refusal("RESPONSE_KIND_UNKNOWN", `the kind is one of ${RESPONSE_KINDS.join(", ")}.`, { kinds: [...RESPONSE_KINDS] });
+    /* END DEC-49 REGION is-duty-response-kind */
+    const ai = str(b.arisingIn).toLowerCase();
+    const home = /^[0-9a-f]{64}$/.test(ai) && this.provenance ? this.provenance.homeOf(ai) : null;
+    /* DEC-49 REGION is-duty-arising */
+    if (!home || (this.membership && !this.membership.inSight(home.bundleId, isMember(b.by) ? str(b.by) : SYSTEM_VIEWER)))
+      return refusal("ARISING_IN_NOT_HELD", "arisingIn names the held capture of the reply or report.", { arising_in: said(b.arisingIn) ? b.arisingIn.slice(0, 80) : null });
+    /* END DEC-49 REGION is-duty-arising */
+    const q = this.#extentWords(b.quote, "quote", b.by, (sha) => {
+      /* DEC-49 REGION is-duty-response-extent */
+      if (sha !== ai) return refusal("RESPONSE_EXTENT_NOT_IN", "the quote is an extent of another capture than the one the obligation arises in.",
+                                     { quote: sha.slice(0, 80), arising_in: ai });
+      /* END DEC-49 REGION is-duty-response-extent */
+      return null;
+    });
+    if (!q.ok) return q;
+    const base = { modality: "duty", obligor: b.obligor, performance: isObj(b.performance) ? b.performance : { act: b.performance },
+                   arising_in: ai, response: { kind: b.kind, quote: q.cite }, by: b.by };
+    if (b.kind === "promise") {
+      const day = reviewDay(q.words);
+      /* DEC-49 REGION is-duty-promise-date */
+      if (!day.ok) return refusal("PROMISE_DATE_UNREAD", q.words === null ? "the quote's words are not held as read text."
+                                    : `${day.why}; the words are kept as written: "${String(q.words).slice(0, 200)}".`,
+                                  { quote: q.cite, words: q.words === null ? null : String(q.words).slice(0, 500) });
+      /* END DEC-49 REGION is-duty-promise-date */
+      let source;
+      if (said(b.standard)) {
+        const std = this.#standard(b.standard);
+        if (!std) return noSuchStandard(b.standard);
+        const k = commitmentRefusal(std.kind, b.standard);
+        if (k) return k;
+        source = { kind: "standard", standard: b.standard };
+      } else if (said(b.standardProposal)) {
+        const sp = this.#standardProposal(b.standardProposal);
+        if (sp.refused) return sp.refused;
+        source = sp.adopted ? { kind: "standard", standard: sp.adopted } : { kind: "standard", standard_proposal: sp.id };
+        const k = commitmentRefusal(sp.adopted ? (this.#standard(sp.adopted) || {}).kind : sp.kind ?? "commitment", sp.adopted || sp.id);
+        if (k) return k;
+      } else return noSuchStandard(null, { why: "a promise rests on a held commitment (standard) or a proposed one (standardProposal)" });
+      return this.propose({ ...base, source, trigger: { kind: "date", date: day.date }, time: { basis: "commitment", citation: q.cite.content_id },
+                            why: said(b.why) ? b.why : `the body's own promise in its reply, dated ${day.date}` });
+    }
+    const std = said(b.standard) ? this.#standard(b.standard) : null;
+    if (!std) return noSuchStandard(said(b.standard) ? b.standard : null);
+    if (std.kind !== "court") return this.#sourceRefusal({ kind: "court", standard: b.standard });
+    const from = isObj(std.period) && typeof std.period.from === "string" ? std.period.from.slice(0, 10) : null;
+    /* DEC-49 REGION is-duty-trigger */
+    if (!from || !isCalendarDate(from))
+      return refusal("UNKNOWN_TRIGGER", "a required response is started by the report's date, and the report held as a standard states none (its period's start).",
+                     { standard: b.standard });
+    /* END DEC-49 REGION is-duty-trigger */
+    const time = { basis: "rule", response_to: { standard: b.standard, issuer: issuerNames(std) } };
+    if (said(b.rule)) {
+      const named = responseRules(this.view(), time.response_to).find((d) => d.rule === b.rule);
+      /* DEC-49 REGION is-duty-time */
+      if (!named) return refusal("BAD_TIME", "the rule named is not one the governing view holds for a body answering this report.", { rule: b.rule.slice(0, 80) });
+      /* END DEC-49 REGION is-duty-time */
+      Object.assign(time, { rule: named.rule, ...(said(named.applies_to) ? { applies_to: named.applies_to } : {}) });
+    }
+    return this.propose({ ...base, source: { kind: "court", standard: b.standard }, trigger: { kind: "date", date: from }, time,
+                          why: said(b.why) ? b.why : "a response the report requires of the body, dated by the profile's rule" });
+  }
+
+  /* R30 (K2806): a `standards` R9 proposal, read through `standards.standardProposalRead` (its R54): `{id, kind, adopted}`,
+     or `{refused}` with standards' own `STANDARD_NO_SUCH_PROPOSAL`; failing closed when standards cannot answer. */
+  #standardProposal(id) {
+    const s = this.standards;
+    let r = null;
+    if (s && typeof s.standardProposalRead === "function") { try { r = s.standardProposalRead({ proposal: id, viewer: SYSTEM_VIEWER }); } catch { r = null; } }
+    if (r && r.ok === false) return { refused: r };
+    const p = r && isObj(r.proposal) ? r.proposal : r;
+    if (!isObj(p) || !said(p.id ?? id)) {
+      /* DEC-49 REGION is-duty-source-held */
+      return { refused: refusal("DUTY_SOURCE_NOT_HELD", "the proposed commitment cannot be read here, so whether it is adopted is not known.",
+                                { standard_proposal: String(id).slice(0, 80) }) };
+      /* END DEC-49 REGION is-duty-source-held */
+    }
+    const ad = isObj(p.adoption) ? p.adoption : null;
+    return { id: p.id ?? id, kind: p.kind ?? null, adopted: ad && said(ad.standard) ? ad.standard : null };
+  }
+
+  /* R30: at adoption, a duty resting on a standards proposal names the standard it was adopted as, or is refused. */
+  #heldSource(fields) {
+    const src = isObj(fields.source) ? fields.source : null;
+    if (!src || said(src.standard) || !said(src.standard_proposal)) return null;
+    const sp = this.#standardProposal(src.standard_proposal);
+    if (sp.adopted) {
+      const k = commitmentRefusal((this.#standard(sp.adopted) || {}).kind, sp.adopted);
+      if (k) return k;
+      fields.source = { kind: "standard", standard: sp.adopted, adopted_from: src.standard_proposal };
+      return null;
+    }
+    /* DEC-49 REGION is-duty-source-held */
+    return refusal("DUTY_SOURCE_NOT_HELD", `the commitment ${src.standard_proposal} is still a proposal; adopt it as a standard first.`,
+                   { standard_proposal: src.standard_proposal });
+    /* END DEC-49 REGION is-duty-source-held */
   }
 
   /** R2, R3: a member adopts a proposal in one act, naming the clause. */
@@ -630,6 +776,8 @@ export class Duties {
     if (p.adopted_duty) return refusal("ALREADY_ADOPTED", "the proposal was adopted.", { duty_id: p.adopted_duty });
     /* END DEC-49 REGION is-duty-proposal */
     const fields = safeJson(p.fields_json);
+    const held = this.#heldSource(fields);
+    if (held) return held;
     const r = this.fieldRefusal(fields);
     if (r) return r;
     return this.#adoptFields(fields, { by: str(b.by), clause: b.clause, proposal: p.proposal_id });
@@ -927,8 +1075,19 @@ export class Duties {
     try {
       if (tm.basis === "rule") {
         const rules = Array.isArray(view.deadlines) ? view.deadlines : [];
-        const rule = rules.find((d) => d && d.rule === tm.rule && (!said(tm.applies_to) || d.applies_to === tm.applies_to));
-        if (!rule) return { undetermined: true, why: `the active jurisdiction profiles hold no rule ${tm.rule}${said(tm.applies_to) ? ` for ${tm.applies_to}` : ""}`, basis_kind: "rule", law_set: true };
+        let rule;
+        if (said(tm.rule)) {
+          rule = rules.find((d) => d && d.rule === tm.rule && (!said(tm.applies_to) || d.applies_to === tm.applies_to));
+          if (!rule) return { undetermined: true, why: `the active jurisdiction profiles hold no rule ${tm.rule}${said(tm.applies_to) ? ` for ${tm.applies_to}` : ""}`, basis_kind: "rule", law_set: true };
+        } else {
+          /* R30: a report's required response, its rule chosen on each read from the governing view (R5): the deadlines
+             a body owes, started by the report's issuer; one is used, several or none leave the date undetermined */
+          const c = responseRules(view, tm.response_to);
+          if (c.length !== 1) return { undetermined: true, basis_kind: "rule", law_set: true, ...(c.length ? { candidates: c.map((d) => d.rule) } : {}),
+            why: c.length ? `the active jurisdiction profiles hold ${c.length} deadlines a body owes in response to ${responseWho(tm.response_to)} (${c.map((d) => d.rule).join(", ")}), and none is named for this office`
+                          : `the active jurisdiction profiles hold no deadline a body owes in response to ${responseWho(tm.response_to)}` };
+          rule = c[0];
+        }
         return civilDue({ basis: "rule", rule, anchor: date, view, office: tm.office ?? null, factOf: this.factOf });
       }
       if (tm.basis === "commitment" || tm.basis === "window") {
@@ -1375,6 +1534,46 @@ export class Duties {
   }
 
   /* ===================================================================== *
+   * R31: the duties arising in named captures, and whether all are met
+   * ===================================================================== */
+
+  /** R31 (T45; N855; Actions D6d; v0.2 rule 17): the adopted, unwithdrawn duties whose `arising_in` is one of
+   *  `captures`, each with its occurrences' states as R9 derives them as of `asOf`, and `all_met`: at least one such
+   *  duty, every one with at least one occurrence, every occurrence `met` or `met_late` (a promise kept late is kept).
+   *  A duty the viewer may not see is neither answered nor counted (`partial: true`). Writes nothing; never throws. */
+  dutiesArisingIn(a = {}) {
+    try {
+      const b = isObj(a) ? a : {};
+      const caps = Array.isArray(b.captures) ? b.captures : null;
+      /* DEC-49 REGION is-duty-captures */
+      if (!caps || caps.length < 1 || caps.length > CAPTURES_MAX || !caps.every((c) => said(c) && /^[0-9a-f]{64}$/.test(c)))
+        return refusal("BAD_CAPTURES", `name 1 to ${CAPTURES_MAX} captures, each by its sha256.`, { max: CAPTURES_MAX });
+      /* END DEC-49 REGION is-duty-captures */
+      if (!said(b.asOf) || !ISO_TS_RE.test(b.asOf)) return refusal("NO_AS_OF", "asOf is an instant (YYYY-MM-DDTHH:MM:SSZ); nothing reads now itself.");
+      const set = [...new Set(caps)];
+      const rows = this.#rows(`SELECT * FROM duties WHERE arising_in IN (${set.map(() => "?").join(",")}) AND withdrawn_at IS NULL ORDER BY duty_id`, ...set);
+      const duties = [];
+      let partial = false;
+      for (const d of rows) {
+        const fields = this.#fieldsOf(d.duty_id, d.version);
+        if (!this.visible(fields, b.viewer)) { partial = true; continue; }
+        const from = addDays(d.adopted_at.slice(0, 10), -TRACK_BACK_DAYS), to = b.asOf.slice(0, 10);
+        const { occurrences, source_errors } = this.#derive(d, fields, from, to, b.asOf, b.viewer);
+        duties.push({ duty_id: d.duty_id, arising_in: d.arising_in, response_kind: isObj(fields.response) ? fields.response.kind : null,
+                      modality: fields.modality, obligor: fields.obligor,
+                      performance: fields.performance, time: fields.time,
+                      occurrences: occurrences.map((o) => ({ key: o.key, trigger: o.trigger, due: o.due, state: o.state, why: o.why })),
+                      ...(source_errors.length ? { source_errors } : {}) });
+      }
+      const all_met = duties.length > 0
+        && duties.every((x) => x.occurrences.length > 0 && x.occurrences.every((o) => o.state === "met" || o.state === "met_late"));
+      return { ok: true, captures: set, as_of: b.asOf, duties, count: duties.length, all_met, ...(partial ? { partial: true } : {}) };
+    } catch (e) {
+      return { ok: true, captures: [], as_of: null, duties: [], count: 0, all_met: false, undetermined: { why: `the read failed: ${String(e && e.message || e).slice(0, 200)}` } };
+    }
+  }
+
+  /* ===================================================================== *
    * R17: restrictions and thresholds set against money facts
    * ===================================================================== */
 
@@ -1526,6 +1725,34 @@ const SYSTEM_VIEWER = "class:daemon";
  *  route: the ops map always passes the control plane's stamp. */
 export const INTERNAL = Symbol("duties-internal-reader");
 
+/** R30: the kinds of response a duty may be proposed from. */
+export const RESPONSE_KINDS = Object.freeze(["promise", "required_response"]);
+
+/* R30: a promise rests on a standard of kind commitment. */
+function commitmentRefusal(kind, id) {
+  if (kind === "commitment") return null;
+  /* DEC-49 REGION is-duty-source */
+  return refusal("UNKNOWN_SOURCE_KIND", `a promise rests on a standard of kind commitment, and ${String(id).slice(0, 80)} is of kind ${kind ?? "undetermined"}.`,
+                 { standard: String(id).slice(0, 80), kind: kind ?? null });
+  /* END DEC-49 REGION is-duty-source */
+}
+/* R30: the names a report's issuer goes by in the record (its issuer as held, its owner's label). */
+function issuerNames(std) {
+  const out = new Set();
+  const add = (v) => { if (said(v)) out.add(v.trim()); };
+  add(typeof std.issuer === "string" ? std.issuer : null);
+  if (isObj(std.issuer)) { add(std.issuer.label); add(std.issuer.name); }
+  if (isObj(std.owner)) { add(std.owner.issuer); add(std.owner.label); }
+  return [...out];
+}
+/* R30 (jurisdictions R26, R75): the deadlines of the view a body owes, started by the report's issuer (`starter`). */
+function responseRules(view, rt) {
+  const names = new Set(isObj(rt) && Array.isArray(rt.issuer) ? rt.issuer.map((x) => String(x).toLowerCase()) : []);
+  return (Array.isArray(view.deadlines) ? view.deadlines : []).filter((d) => d && d.owed_by === "body" && isObj(d.starter)
+    && [d.starter.body, d.starter.role].some((n) => said(n) && names.has(n.trim().toLowerCase())));
+}
+const responseWho = (rt) => (isObj(rt) && Array.isArray(rt.issuer) && rt.issuer.length ? rt.issuer[0] : "the report's issuer");
+
 function validAtOf(c, at) { return civilValidAt({ valid: c.valid, basis: null }, at); }
 
 /* ===================================================================== *
@@ -1613,6 +1840,8 @@ export function dutiesOps(s, url, body) {
     uselink: () => s.linkUse(act()),
     useunlink: () => s.unlinkUse(act()),
     reviewpropose: () => s.proposeReview(act()),
+    dutyfromresponse: () => s.proposeFromResponse(act()),
+    dutiesarising: () => s.dutiesArisingIn({ captures: (q("captures") || "").split(",").filter(Boolean), asOf: q("as_of"), viewer: q("viewer") }),
   };
 }
 
@@ -1651,10 +1880,12 @@ export function dutiesOf(host, deps) {
       money: () => moneyOf(host, { record, membership }),
       provenance: () => provenanceOf(host, { record, membership }),
       content: () => contentOf(host, { record, membership }),
+      localFacts: () => localFactsOf(host, { record, membership }),
     };
     const pick = (k) => (d[k] !== undefined ? d[k] : real[k]);
     s = new Duties({ ...d, storage, record, membership, entities: pick("entities"), standards: pick("standards"), events: pick("events"),
-                     lines: pick("lines"), money: pick("money"), provenance: pick("provenance"), content: pick("content") });
+                     lines: pick("lines"), money: pick("money"), provenance: pick("provenance"), content: pick("content"),
+                     localFacts: pick("localFacts") });
     instances.set(host, s);
     if (s.registry === defaultRegistry) live.add(s);   /* the plane's instances, which the default registry serves */
     record.declareTable(MODULE, DUTIES_TABLES.map((t) => ({ ...t })));

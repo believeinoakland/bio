@@ -63,11 +63,29 @@ Terms are `case-authoring`'s and `publication`'s. An **account** is a list of se
   - `conclusions`, each prepared member's claim and legs (`inquiry.basisFor`);
   - `flags`, R2's `accountFlags(caseId, drafted.draft)`.
 
-  It answers `{rows, refusals, results, flags, refusal}`: `results` maps each row's `ord` to the codes naming it (empty when it passed), `refusal` the first refusal or null. A judgment that throws or answers no list is `ACCOUNT_CHECK_UNDETERMINED` (fail closed). It writes nothing.
+  It answers `{rows, refusals, results, flags, refusal}`: `results` maps each row's `ord` to the codes naming it (empty when it passed), `refusal` the first refusal or null. A judgment that throws or answers no list is `ACCOUNT_CHECK_UNDETERMINED` (fail closed). It writes nothing. (T45; N855 (6c); Actions D6c; the plan's reconciliation R3; l8 doubt 8) It also takes `outcomes: [{outcome, text, cites}]`, the outcomes `case-authoring` R71 carries into this edition, and builds one row per outcome after the four statements, `kind: outcome`, with its cites (`case-grammar` R23 as amended), judged as a statement is: a carried outcome is authored text added to the case, and "a story has no place" (D63). An outcome row's refusal is answered among `refusals` naming the outcome, as a statement's is. Absent `outcomes` is read as none, and the rows and results are then as before. Control: an outcome whose text states a figure not in what it cites is answered `ACCOUNT_FACT_NOT_IN_CITED` naming the outcome; the same act without it answers as before.
 
 #### The reviewers' comments: registerReviewComments(fn), reviewCommentsChosen(reviewComments, caseId, edition, viewer, draft), reviewCommentBodyLines(given)
 
 - **R7** (was `case-authoring` R66; D61; K2483) `registerReviewComments(fn)` takes the one reader of a case's review-copy comments (`review` R33, registered at its start; K31's pattern), once: a second registration is `REVIEW_COMMENTS_DECLARED`, one that is not a function `MALFORMED`, each changing nothing. `reviewCommentsChosen` reads `reviewComments: {included: [comment ids]}` (absent is none) and answers `{ok: true, carried, left_out, block, body}`: the chosen comments, each `{reviewer, text, at}`; `left_out` the count of the case's comments not chosen, or null when undetermined (no reader registered, a list cut at its bound, or a list unread with nothing chosen); `block` `case-grammar` R25's lines (`reviewCommentsLines`). With no reader registered no comment travels. Refusals, each writing nothing: `BAD_REVIEW_COMMENTS` (not `{included}`, not a list of non-blank ids, or more than `REVIEW_COMMENTS_INCLUDED_MAX` (500)); `REVIEW_COMMENTS_UNREAD` (comments chosen and the reader threw or answered no list); `REVIEW_COMMENT_NOT_FOUND`, naming each chosen id not among the case's comments. An objection does not travel unless chosen. `reviewCommentBodyLines(given)` answers the body section a reader reads: each carried comment with its reviewer and when, then how many were left out and that a reviewer left out may file a response in the case's docket, or that the count is undetermined; none when `given` is null. `case-authoring`'s document imports it and keeps no copy (K1333).
+
+#### A member's own text, checked against the evidence: advocacyCheck({project, sentences, author, viewer}) (`op=advocacycheck`) (T45; N861; Actions D11a; v0.2 rule 9)
+
+- **R13** (T45; N861; Actions D11a; v0.2 rule 9) A member brings text she wrote; each claim and position sentence is shown as supported, not supported or contradicted by the record, and the text and its check are kept in her own hidden project only.
+  - **Refusals**, in order, each writing nothing:
+    - `author` absent or a machine identity: `MACHINE_CANNOT_CHECK_ADVOCACY`;
+    - a `project` that is absent, or that `viewer` does not see in full (`membership` R44): `NO_SUCH_PROJECT`, one answer (`membership.noSuchProject`);
+    - `ADVOCACY_NOT_OWN_PROJECT`: `project-roster.projectScope(project)` (its R23) does not answer `own`, or `author` is not a joined participant of it (`membership` R54);
+    - `BAD_ACCOUNT` naming the field: `sentences` not R5's account shape, a `bias_statement` included (no bias mark is taken here).
+  - **The judgment.** Each sentence is judged by `case-checker.checkAccount` (its R24) with `cited` built as R6 builds it (`citedFor`, as `author` reads the record, R14 applied), `printed` empty, and `conclusions` the cited findings' claims and legs (`inquiry.basisFor`). It answers per sentence, in order, `{ord, result, codes, findings}`: `supported` (no code; `findings` the findings it cites), `not_supported` (`ACCOUNT_SENTENCE_UNSUPPORTED`, `ACCOUNT_FACT_NOT_IN_CITED` or `ACCOUNT_CITES_COUNSEL_MATTER`) or `contradicted` (`ACCOUNT_CONTRADICTED_BY_RECORD`). A judgment that throws answers every sentence `undetermined`, never `supported`.
+  - **Kept in her project.** The text and its result are appended to a table of this module keyed by `project`, declared whole to `record-core`'s purge as working material (R8's form), and nothing else is written. `advocacyChecksOf({project, viewer})` lists them, newest first, only to a viewer with full sight of the project (`membership` R44); every other viewer, and an absent project, receives `NO_SUCH_PROJECT`, byte-identical.
+  - **No mark.** No answer carries a signature, digest, stamp, label or anything usable as a mark outside; nothing reads the check to prepare, send, record, certify or publish anything (no service of this module offers it to another module).
+
+  Controls: each refusal, with the same act in an `own` project as its control; a sentence citing a finding whose conclusion it misstates answers `contradicted`; an outsider's `advocacyChecksOf` is byte-identical to an absent project's.
+
+#### A counsel matter is never evidence (T45; N892; Actions D4; v0.2 rule 15; the plan's reconciliation R8)
+
+- **R14** (T45; N892; Actions D4; v0.2 rule 15; `project-roster` R23) A cite naming a finding, a leg of one, a passage or a material held in a project whose scope `project-roster.projectScope` answers `counsel_matter`, other than the project the act is for (the case's owning project for R6; `project` for R13), is never read as evidence: `citedFor` gives it no holding, and the sentence citing it is answered `ACCOUNT_CITES_COUNSEL_MATTER` naming the cite (among R6's `refusals`; R13's `not_supported`), a new row of this module's table, numbered at its stamp, its translation BOB's draft: "This sentence cites something from a counsel matter, which is never used as evidence outside it. Cite something else, or leave it out. Nothing was written." Controls: the same cite into a project of scope `none` is read as before; a cite into the act's own project is read as before.
 
 #### The instance: caseAccountOf(host, deps)
 
@@ -87,8 +105,12 @@ Terms are `case-authoring`'s and `publication`'s. An **account** is a list of se
 - `case-grammar`: `ACCOUNT_CITE_KINDS` (R5), `reviewCommentsLines` (its R25; R7).
 - `ai-runs`: `runFor` (R1).
 - `case-disclosures`: `accountJudged` (its R30; R6). Earlier in the order: this module sits directly after it and directly before `case-authoring` (K2608).
+- `project-roster` (T45; N861, N892): `projectScope` (its R23), for R13 and R14. A `modules.json` edge (112 → 35).
+- `case-checker` (T45; N861): `checkAccount` (its R24), for R13. A `modules.json` edge (112 → 109).
+- `membership` (T45): `sight` (its R44), `isJoinedParticipant` (its R54) and `noSuchProject`, for R13.
 - `test-support`: the tests' fixtures.
 - Its users: `case-authoring` calls R4–R7 from `publishCase` and `publishPreflight` (its R63, R67, R68, R69), imports `reviewCommentBodyLines`, and creates this module at its own creation; `review` registers R7's reader (its R33; T42-23a); `control-plane` reaches R1 and R3 through `of.caseAccount()` (T42-29); `plane` builds it before `caseAuthoringOf` (T42-30); `op-declarations` names it as the two ops' owner (T42-26).
+- (T45; K2829) `basis-versions` (layer 6, earlier): `noProjectConclusionOf` (its R23), the claim of each finding R13 reads, asked only where `author` sees the finding.
 
 ### Invariants
 
@@ -101,6 +123,7 @@ Terms are `case-authoring`'s and `publication`'s. An **account** is a list of se
 
 - D56 (the account: drafted by the system in framings and labelled, written by the member, checked sentence by sentence against what it cites), D57 and D63 (the four statements under the same check; no stories), D58 (framing only under a printed bias statement), D61 (reviewers' comments chosen by the publisher; an objection does not travel), as case-authoring cites them (`draft-T41-investigation.md` §3.6; N820; K2405, K2417, K2418): R1–R7. In the canon: `docs/architecture/BIO_Investigation_v0_1.md` §11 ("The case's account, and nothing but evidence"; "The case's statements about itself"; "Reviewers").
 - `docs/architecture/BIO_Publication_v0_1.md` §3 rules 4, 12, 13, 15, 16, 18 (preparing the case, its statement, its citations), as `case-authoring` cites them for the moved ids: R5, R6.
+- `BIO_Action_v0_2.md` §4 rules 9 (a member's own text checked, kept in her hidden project, no mark) and 15 (a counsel matter never evidence), and §3 Success record (a carried outcome judged as a statement) (K2780; Actions D4, D6c, D11a; T45, N893): R13, R14, R6's amendment.
 - K2536 (the `account_check` flags held with the drafts): R2, R6. K2483 (the review comments read through a registered reader): R7. K2540, N838 (the drafts' labels through `proposalLabel`'s subjects): R1, R2. N839 (case-authoring's second split for size, K617; the map adopted, K2608): R8, R12.
 
 ### Suggestions

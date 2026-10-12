@@ -77,6 +77,10 @@ Terms. An **ask** is one member's question, answered under a **grant**: `credent
 - **R32** (D20, H30 (4)) In Civicsmith's voice an answer gives no verdict, likelihood or rating word (the closed list in this file's Suggestions, BOB's, K2472) and states a cause only quoting a concluded finding that establishes it, else "cause not established"; a sentence that does is withheld `ANSWER_VERDICT_WORD` or `ANSWER_CAUSE_UNESTABLISHED`. A cause a body gave is shown quoted as theirs.
 - **R33** (D56) `checkSentences(sentences, {cited, readLog})` exports R4's checks over sentences that each name what they cite, for `case-disclosures` R30; pure, never throws.
 
+#### A standing question's end, changed by its author (T45-14; N855 (6d); Actions D6d; R-reconciliation R11)
+
+- **R34** (T45; N855; Actions D6d; v0.2 rule 17) `standingQuestionEndSet({id, ends, author})` (`op=standingendset`) changes a standing question's end date (R15's `ends`) by its author's own act: called by the author, or inside the author's own act by `following` (its R25's `keep`, a standing question being one of the four watches). Refusals in order, each writing nothing: a machine or empty author `MACHINE_CANNOT_AUTHOR` (R15's); no question of the author's answers to `id`, an absent one and another member's (an administrator's ask included) answered alike, `NO_SUCH_STANDING_QUESTION` (R16); a question already ended, by its author's act or by passing its end date (R16), `STANDING_ENDED`, a new row of this module's table (R24): an ended question is never revived, its author sets a new one (R15); `ends` absent, not a calendar date, or not after today's local day (`civil-time`) `STANDING_NEEDS_END` (R15's rule). An `ends` equal to the present one answers `{ok: true, id, ends, unchanged: true}` and writes nothing. Otherwise it records the new `ends` with who and when, keeping each earlier end date readable on the question to its author alone (R16's sight); from then R16's ending by date and R17's due read the new date, and R27's listeners are told once, after the act's transaction, as for R15. It answers `{ok: true, id, ends, was}`, calls no model and needs no account (R26).
+
 ## Private
 
 ### Uses
@@ -100,6 +104,7 @@ Rule 3's list: `retrieval`, `query-language` (the saved-query form; search), `ob
 - `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §3, §5.
 - `docs/development/ASSISTANT-PILOT.md` §1 (self-description from the plane), §4 (read-only scope).
 - DEC-8, DEC-27, DEC-49, DEC-55, DEC-94; D9, D13 (lifted for standing questions by K1481), D40, D59, D275; K1444 (i), K1445, K1450, K1474 (i)–(iii), K1481, K1489, K1500, K1502, K1504, K1755.
+- `BIO_Action_v0_2.md` rule 17 (K2780; T45, N893): a watch's end date set by its owner's act, a standing question being one of the four watches (R34; `following` R25).
 - DEC-153 and K1837 (the draft mode's reach, R1); DEC-164 (6) and K1865 (the standing find, R28); DEC-149, K1779, K1785 (R29); DEC-172 and K231 (R19's `kept_away`, read from credentials' one site; N765, K2130, K2200); DEC-127 (5), DEC-157 (2) (R1's translation draft; N669, K2200).
 
 ### Suggestions

@@ -6,7 +6,9 @@ export const AI_RUNS_TABLES = Object.freeze(["ai_runs", "ai_run_bounds", "inquir
 /* T41 (T41-23): `step` and `origin` (R73), and `own_step` ('1' when `step` is the run's own system step, made by this
    module after the open, R73, R74) are additive columns, added by `migrate` to a table created before them. A run's
    cost is not kept here: its figures are `ai-use`'s, one store (R76, K2482). */
-export const AI_RUNS_ADDED_COLUMNS = Object.freeze(["lens_at_open", "rerun_of", "plan", "step", "origin", "own_step"]);
+export const AI_RUNS_ADDED_COLUMNS = Object.freeze(["lens_at_open", "rerun_of", "plan", "step", "origin", "own_step",
+  /* R77 (T45): a re-examination run's response, stored verbatim; NULL for every other run */
+  "response"]);
 
 export const AI_RUNS_SCHEMA = `
 
@@ -67,7 +69,9 @@ CREATE TABLE IF NOT EXISTS ai_runs (
   plan                  TEXT,
   step                  TEXT,
   origin                TEXT,
-  own_step              TEXT
+  own_step              TEXT,
+  -- R77 (T45): the recorded response a re-examination run re-examines its plan after, verbatim; NULL otherwise.
+  response              TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_runs_expires ON ai_runs(status, expires);
 CREATE INDEX IF NOT EXISTS ai_runs_context ON ai_runs(context_id);

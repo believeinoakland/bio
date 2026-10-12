@@ -41,7 +41,14 @@ Terms (`membership`'s, which hold here). *Administrators* are the founder (the r
 
 ## Private
 
+- **R21** (T45; N892; Actions D4, D11a; v0.2 rules 9, 15) `projectScopeSet({projectId, scope, reason, by, viewer})` (`op=projectscopeset`) records a project's scope: `counsel_matter` (a counsel matter: its members alone see its correspondence and dates; never published or used as evidence), `own` (a member's own hidden project: her source role, and her own text with its evidence check, kept there) or `none` (removing a scope). After the Terms' sight answers, refusals in order, each writing nothing: `PROJECT_ACT_NOT_A_PARTICIPANT` (`membership` R55 `joined`); `PROJECT_SCOPE_UNKNOWN`; `NO_REASON` (absent, blank or over 2,000 characters); `PROJECT_SCOPE_NEEDS_HIDDEN` when the project's setting is not `hidden` (`membership` R85); for `own`, and for removing `own`, `PROJECT_SCOPE_OWN_NOT_SOLE` unless `by` is an owner and the project's only participant in any state; `PROJECT_SCOPE_UNCHANGED` when `scope` is the current one. Otherwise it appends `{scope, reason, by, at}`; the latest record is the scope; a project with none is `none`. Every participant reads the history (R6's form). A scope changes nothing already published, sent or cited: it is read at the act that would publish, cite or send, never applied to an earlier one.
+- **R22** (T45; Actions D4; v0.2 rule 15; Bob, K2782: a member's own project is never rescued) At start this module registers once in `membership`'s project-act guard (`membership` R128). Its guard refuses, writing nothing: an invitation (`membership` R32) to a project whose scope is `own`, `PROJECT_SCOPE_OWN`; setting `discoverable` (`membership` R45) on a project whose scope is `counsel_matter` or `own`, `PROJECT_SCOPE_KEEPS_HIDDEN`. R5's rescue of a project whose scope is `own` is refused `PROJECT_SCOPE_OWN` before its own refusals but `NOT_AN_ADMIN`. Controls: each act lands on a project of scope `none`.
+- **R23** (T45; Actions D4; v0.2 rule 15) `projectScope(projectId)` answers `{scope, since, by}` (`since` the instant of the latest record), `{scope: "none", since: null, by: null}` for a project with no record and for an id that names no project. It asks no viewer (it states only the scope, as `membership` R85 states only the setting; its callers gate by sight), writes nothing and never throws. Read by `promotion`, `publication`, `docket`, `case-account`, `actions` and `filings` (see 9).
+- **R24** (T45; N890; Actions D27 B; v0.2 rule 20) `projectApprovalSet({projectId, needs, reason, by, viewer})` (`op=projectapprovalset`) records which acts need a second member's approval before sending. `needs` is a list, each entry exactly one of `{kind}` (an `action_kinds` kind of the active profiles' view, `jurisdictions` R25), `{tier}` (1, 2 or 3) or `{public: true}` (an act whose audience is the public); `[]` restores the default, one member approves. Refusals in order, each writing nothing: `NOT_THE_OWNER` (an owner of the project; administrators and the founder included, as R3); `APPROVAL_RULE_INVALID` naming the entry; `APPROVAL_KIND_UNKNOWN` for a kind the view does not hold; `NO_REASON`. It appends `{needs, reason, by, at}`; the latest governs; every participant reads the history. `secondApprovalNeeded({projectId, kind, tier, public})` answers `{needed, matched}`, `matched` the entries that apply; a `tier` that is null or undetermined matches every `{tier}` entry (an undetermined tier is never read as Tier 1, v0.2 §6). It is a project setting, never a member attribute: no entry names a member. Never throws. Enforcement at approval is `filings`' (see 9).
+
 ### Uses
+
+- `jurisdictions.combine` (R14, R25): the active profiles' `action_kinds`, for R24's `{kind}` entries; the profiles read through `record-core` `getSetting`. (T45)
 
 - `membership.existenceAct` (R77), `membership.inSight` (R80), `membership.sight` and its `SIGHT_*` constants (R44), `membership.viewerPredicate` (R43; the directory's gate), `membership.visibilityOf` (R85; R7's setting).
 - `membership.isProjectOwner` (R54), `membership.participation` (R74), `membership.projectOwners` (R65), `membership.isAdministrator` (R64), `membership.memberFacts` (R68), `membership.ROOT_ADMIN`.
@@ -53,11 +60,13 @@ Terms (`membership`'s, which hold here). *Administrators* are the founder (the r
 
 ### Invariants
 
-- **R18** (was membership R59's project-roster half) Owner votes and requests (with the ownership decisions, R6) are keyed by project and cleared with it.
+- **R18** (was membership R59's project-roster half) Owner votes and requests (with the ownership decisions, R6) are keyed by project and cleared with it. (T45) The scope records (R21) and approval settings (R24) are keyed by project and cleared with it.
 - **R19** (membership R61, held for this module's acts) Every act naming a project the caller cannot see answers byte for byte as an id that names nothing, and sight is asked before position.
 - **R20** (DEC-149, Bob's "S4: B"; membership R112's rule, held for this module's strings; K2278) Every member- or founder-facing string this module answers (each row's `translation`, every refusal's `detail`, `message` and `remedy`) calls the group's own Civicsmith "your group's Civicsmith", or is reworded so it needs no name, and never "copy", "instance", "plane" or "server" for it. Codes, op names, field names and comments are not member-facing.
 
 ### Satisfies
+
+- `BIO_Action_v0_2.md` rules 9, 15, 20 (K2780; T45, N893): a counsel matter, a member's own project, the second-approval setting (R21–R24); K2782.
 
 - `BIO_Membership_Architecture_v2.md` §7 (7.7 and 7.8 for the roster and its removals; 7.10 for ownership, 7.13 for the rescue; 7.14, the directory and the request to join), §11 item 5 (a removal is an owner's act, recorded).
 - Bob's ruling of 2026-09-26 recorded as membership R63 (now R2 here): every removal kept with its reason, readable by every participant.

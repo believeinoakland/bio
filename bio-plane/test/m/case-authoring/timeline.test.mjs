@@ -27,8 +27,8 @@ function eventsStandIn(calls = []) {
             participants: [] },
   };
   return {
-    timeline: ({ set, viewer }) => {
-      calls.push({ set, viewer });
+    timeline: ({ set, viewer, audience }) => {
+      calls.push({ set, viewer, audience });
       return { ok: true, set,
         world: { label: "what they did", items: [
           { event_id: E1, kind: "meeting", status: "held", when: { value: "2026-03-04", precision: "day", zone: "Z/Somewhere" }, roles: [], concerns: true },
@@ -36,8 +36,8 @@ function eventsStandIn(calls = []) {
           { event_id: E3, kind: "award", status: "held", when: { value: "2026-04-01", precision: "day" }, roles: [], concerns: true }],
           placed_nowhere: [{ event_id: E4, kind: "signing", status: "held", when: null, roles: [], concerns: true }] },
         ours: { label: "what we did", sources: [
-          { source: "docket", items: [{ at: "2026-05-01", label: "filed a records request", ref: "DKT-2026-0001", kind: "request" },
-                                      { at: "2026-05-02", label: "no ref", ref: null, kind: "note" }] },
+          { source: "docket", items: [{ at: "2026-05-01", label: "filed a records request", ref: "DKT-2026-0001", kind: "request", public: true },
+                                      { at: "2026-05-02", label: "no ref", ref: null, kind: "note", public: true }] },
           { source: "actions", error: "it threw" }] } };
     },
     readEvent: ({ eventId }) => (held[eventId] ? { ok: true, found: true, event: held[eventId] } : { ok: true, found: false }),
@@ -66,7 +66,7 @@ test("R57: the timeline is read through events.timeline over the members' subjec
   const { w, P, calls } = setup();
   const r = publish(w, P);
   assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
-  assert.deepEqual(calls, [{ set: [SUBJ, E1], viewer: V("alice") }]);
+  assert.deepEqual(calls, [{ set: [SUBJ, E1], viewer: V("alice"), audience: "public" }]);
   /* negative control: no subject and no event leg, and events is not asked; the block is written empty */
   const n = setup({ subjects: {}, eventLegs: {} });
   const r2 = publish(n.w, n.P);
@@ -193,4 +193,45 @@ test("R57, R26: a lane events cut at its limit (truncated) is stated as stopping
   const fb = bodyOf(docOf(f.w, fr));
   assert.ok(fb.includes("The timeline could not be read when this case was published (NO_SET). It is stated as not read, not as empty"));
   assert.deepEqual(timelineBodyLines([], 0, { cut: [] }), [], "nothing to say, no section");
+});
+
+test("R57 (T45; v0.2 rules 15, 17): the we_did lane is the case's published record of actions: events.timeline is asked with audience \"public\", only items their source marks public: true are written, any other is left out and counted in the lane's withheld count, never written, and no word is added to a label", () => {
+  const calls = [];
+  const stub = eventsStandIn(calls);
+  stub.timeline = (a) => { calls.push(a); return { ok: true, set: a.set, world: { label: "what they did", items: [], placed_nowhere: [] },
+    ours: { label: "what we did", sources: [{ source: "actions", items: [
+      { at: "2026-06-01", label: "met counsel about the matter", ref: "ACT-2026-0001", kind: "meeting" },
+      { at: "2026-06-02", label: "sent the request for comment", ref: "ACT-2026-0002", kind: "request", public: true },
+      { at: "2026-06-03", label: "drafted a reply", ref: "ACT-2026-0003", kind: "draft", public: "true" },
+      { at: "2026-06-04", label: "stopped pursuing the escalation", ref: "ESC-2026-0001", kind: "escalation", public: true }] }] } }; };
+  const { w, P } = setup({ events: stub });
+  const r = publish(w, P);
+  assert.equal(r.ok, true, JSON.stringify(r).slice(0, 300));
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].audience, "public");
+  const text = docOf(w, r);
+  const lanes = timelineOf(w.fm(text));
+  assert.deepEqual(lanes.we_did.map((x) => [x.ref, x.label, x.when]),
+    [["ACT-2026-0002", "sent the request for comment", "2026-06-02"],
+     ["ESC-2026-0001", "stopped pursuing the escalation", "2026-06-04"]], "the label as the source put it, nothing added");
+  assert.deepEqual(r.timeline, { we_did: 2, withheld: 2 });
+  for (const hidden of ["ACT-2026-0001", "met counsel", "ACT-2026-0003", "drafted a reply"])
+    assert.equal(text.includes(hidden), false, `${hidden} is never written`);
+  assert.ok(bodyOf(text).includes("2 of the group's own act(s) were not marked public by the record that holds them and are left out of this published record of what we did."));
+  /* control: one item without the mark and one with it: only the second is written, withheld: 1 */
+  const c = [];
+  const one = eventsStandIn(c);
+  one.timeline = (a) => { c.push(a); return { ok: true, set: a.set, world: { items: [], placed_nowhere: [] },
+    ours: { sources: [{ source: "actions", items: [{ at: "2026-06-01", label: "a", ref: "ACT-2026-0001" },
+                                                   { at: "2026-06-02", label: "b", ref: "ACT-2026-0002", public: true }] }] } }; };
+  const k = setup({ events: one });
+  const kr = publish(k.w, k.P);
+  assert.deepEqual(timelineOf(k.w.fm(docOf(k.w, kr))).we_did.map((x) => x.ref), ["ACT-2026-0002"]);
+  assert.deepEqual(kr.timeline, { we_did: 1, withheld: 1 });
+  assert.equal(c[0].audience, "public");
+  /* and with nothing withheld no such sentence is written */
+  const n = setup();
+  const nr = publish(n.w, n.P);
+  assert.equal(nr.timeline.withheld, 0);
+  assert.equal(bodyOf(docOf(n.w, nr)).includes("not marked public"), false);
 });

@@ -2,7 +2,7 @@
    release through record-core (N261), R42 `kinds()` and its read op (N231), R43 `noSuchAction` (N217, K275). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { world, V, actionMd, CP } from "./fixture.mjs";
+import { world, V, actionMd, CP, realDetermination } from "./fixture.mjs";
 import * as actions from "../../../src/actions/index.mjs";
 import * as grammar from "../../../src/action-grammar/index.mjs";
 
@@ -82,11 +82,7 @@ test("R8 a member's breach action written through op=promote reads the determina
       "references: []", "state_history: []", "---", "", "## Objective", "", "Find out.", ""].join("\n") }], meta: { object_type: "project" } });
   assert.equal(p.ok, true, JSON.stringify(p));
   const D = "CONF-2026-0001-determination";
-  w.st.sql.exec(`INSERT INTO determinations (determination_id, project_id, act_id, act_minted, act_description, act_role,
-    act_body, act_at, act_evidence, author, at) VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-    D, p.bundleId, "ACT-2026-0001", 1, "the act", "Town Clerk", "Town of Port Ellery", "2026-09-01", "[]", M, "2026-09-02T00:00:00Z");
-  assert.equal(w.promote(D, ["---", `id: ${D}`, "object_type: determination", `title: ${D}`, "current_state: recorded",
-    'created: "2026-09-01T00:00:00Z"', 'last_updated: "2026-09-01T00:00:00Z"', "---", "", "d", ""].join("\n"), { extra: { replay: true } }).ok, true);
+  realDetermination(w, D, p.bundleId, { author: M });
   const text = (x) => actionMd(x, [...CP, "action_kind: other", "breach: true", "action_basis:", `  - target: ${D}`, "    kind: rests_on"]);
   /* op=promote as the control plane stamps it for a member's session: the bare member as author, the session's viewer. */
   const asSession = (x, extra) => w.promotion.promote({ bundleId: x, base: null, snapKey: `s-${x}`, author: "alice",

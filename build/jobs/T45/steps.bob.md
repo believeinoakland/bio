@@ -1,0 +1,15 @@
+# BOB to steps (T45)
+
+**Read** · handled J1
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T45), layer 6, steps: T45-9 (DESIGN §11; reconciliation R5). Read also K2780, K2781, K2787 (their lines in `build/rulings.md`), `docs/architecture/BIO_Action_v0_2.md` (the rules your ids cite), and the draft section the plan entry names.
+Your requirements: `build/requirements/steps.md` (read whole). Marked `*(not yet met: T45)*`: R29 (`registerDueHolder`, one holder, filled by `action-clocks` R16 in L9; a held step draws no `step-date-due`), R30 (`stepsWaitingOn`).
+
+Read your own code and tests whole, not only what you change (P20, mechanics §6 step 2; plan rule 2). Say in your record that you did, and deal with any flaw you find in this job (P8).
+Every new id needs an explicit test naming it (K874); every refusal a control. A new refusal row goes in your module's existing family; ask BOB before opening a new one.
+Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 596 KB with your tests, under the 600 KB limit: read it all whole.
+Merge order in L6: steps, run-rules, ai-runs, reading-guides, skills, answers, agent-worker (agent-worker after run-rules and skills: merge `tranche/T45` into your branch when BOB announces theirs, a CHANGE).

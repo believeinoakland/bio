@@ -74,7 +74,8 @@ test("R1 R6 R7 R9 R11 R13 R14 R16 R18 R20 R31 R34: actionPlansOps reaches each s
   const w = seeded();
   const ops = (q, body) => actionPlansOps(w.ap, url(q), body);
   assert.deepEqual(Object.keys(ops({}, {})).sort(), ["checkpointrecord", "optionadd", "optionadopt", "optiondispose", "optionpropose",
-    "optionrevise", "optionstart", "optionstartpreview", "plan", "planclose", "planopen", "planproposals", "plans", "plansubjectadd", "plansubjectremove", "scenarioset"]);
+    "optionrevise", "optionstart", "optionstartpreview", "plan", "planclose", "planopen", "planpause", "planproposals", "planresume", "plans",
+    "plansubjectadd", "plansubjectremove", "scenariorestore", "scenarioset", "scenariosetaside"]);
   const stamp = { author: V("bob"), viewer: V("bob") };
   const forged = { author: V("alice"), viewer: V("alice") };
   const o = op(ops({ ...stamp }, { project: w.P, subjects: [w.SI, w.S1], title: "Via op", ...forged }), "planopen");
@@ -102,7 +103,7 @@ test("R1 R6 R7 R9 R11 R13 R14 R16 R18 R20 R31 R34: actionPlansOps reaches each s
   assert.equal(op(ops({ ...stamp, plan: w.PL, scenario: "1" }, { name: "S", phases: [{ id: "a", name: "A", options: [add.option], starts: "plan_start", checkpoint: { after_days: 1 } }] }), "scenarioset").ok, true);
   w.clock.now = "2026-10-03T00:00:00Z";
   assert.equal(op(ops({ ...stamp, plan: w.PL, scenario: "1", phase: "a", judged: "met" }, {}), "checkpointrecord").ok, true);
-  assert.equal(op(ops({ ...stamp, plan: w.PL, option: add.option, kind: "other" }, {}), "optionstart").ok, true);
+  assert.equal(op(ops({ ...stamp, plan: w.PL, option: add.option, kind: "other" }, { why_first: "A deadline comes first" }), "optionstart").ok, true);
   assert.equal(op(ops({ viewer: V("bob"), id: w.PL }, {}), "plan").id, w.PL);
   assert.equal(op(ops({ viewer: V("dave"), id: w.PL }, {}), "plan").code, "NO_SUCH_PLAN");
   assert.equal(op(ops({ viewer: V("bob") }, {}), "plans").items.length, 1);

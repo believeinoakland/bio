@@ -12,7 +12,11 @@
  * body, a seat and an institution. T35's (R68): policy series of a government issuer at a level and at none, a company's,
  * a standard whose designation reads an edition, a series whose normal form removes formatting, and policy headers. T37's
  * (R73): an official local name of each kind, one explained in two languages and one with an official translation and
- * its source. */
+ * its source. T45's (R84): an office's and a venue's own time zones, deadlines owed by a body and by the group (one with
+ * the law's stated consequence, one the group meets in its own defence), a start by a third party's act, a law whose
+ * stages omit one (no fee waiver), who may request, response statuses for one kind, a defending legal organisation, one
+ * legal fact per trigger, a procedure guide with routes after outcomes, a kind with two templates, a recognition kind,
+ * venue facts, and phrasings. */
 const R = String.raw;
 
 /* R40: a template's whole attribution, as filing-templates reads a profile template (its R15); every blank in
@@ -236,6 +240,9 @@ export default {
       { status: "implemented", label: "Implemented", citation: "Test Stat. § 3.40", basis: "TEST" },
       { status: "in_hand", label: "In hand", citation: "Test Stat. § 3.40", basis: "TEST" },
       { status: "declined", label: "Will not be implemented", citation: "Test Stat. § 3.41", basis: "TEST" },
+      /* R77: the statuses the Selectboard reports a bylaw complaint in */
+      { status: "upheld", label: "Complaint upheld", citation: "P.E.B.L. § 9(4)", applies_to: "bylaw_complaint", basis: "TEST" },
+      { status: "not_upheld", label: "Complaint not upheld", citation: "P.E.B.L. § 9(4)", applies_to: "bylaw_complaint", basis: "TEST" },
     ],
     member_types: [
       { member_type: "Selectperson", capacity: "elected", basis: "TEST" },
@@ -250,7 +257,15 @@ export default {
   time_zone: { value: "America/Halifax", status: "researched", basis: "TEST" },
   search_terms: [{ term: "harbour", basis: "TEST" }],
   records_laws: [
-    { level: "state", name: "Freedom of Records Act (test)", citation: "Test Stat. § 1.100", basis: "TEST" },
+    /* R84: its stages omit the fee waiver this law has none of */
+    { level: "state", name: "Freedom of Records Act (test)", citation: "Test Stat. § 1.100",
+      stages: [
+        { stage: "request", label: "application for records", citation: "Test Stat. § 1.101" },
+        { stage: "denial", label: "notice of refusal", citation: "Test Stat. § 1.120" },
+        { stage: "appeal", label: "application for internal review", citation: "Test Stat. § 1.130" },
+        { stage: "appeal_decision", label: "decision on internal review", citation: "Test Stat. § 1.131" }],
+      requesters: { text: "any resident of the state, or a body corporate registered in it", citation: "Test Stat. § 1.102", status: "researched", basis: "TEST" },
+      basis: "TEST" },
     { level: "city", name: "Port Ellery Open Government Bylaw", citation: "P.E.B.L. § 4", basis: "TEST" },
     { level: "federal", name: "National Records Access Act (test)", citation: "Test U.S.C. § 552", basis: "TEST" },
   ],
@@ -289,7 +304,9 @@ export default {
       within: { label: "City of Port Ellery", kind: "institution", ids: [{ scheme: "port_ellery_registry", id: "MR0001" }] },
       organisation: "selectboard", basis: "TEST" },
     { role: "Harbour District Board", body: "Port Ellery Harbour District", level: "district", elected: true, oversight: false, basis: "TEST" },
-    { role: "Examiner of Accounts", body: "Marlow County Audit Office", level: "county", elected: false, oversight: true, basis: "TEST" },
+    /* R74: an office keeping its own zone, unlike the profile's */
+    { role: "Examiner of Accounts", body: "Marlow County Audit Office", level: "county", elected: false, oversight: true,
+      time_zone: { value: "America/St_Johns", status: "ruled", basis: "TEST" }, basis: "TEST" },
   ],
   action_kinds: [
     { kind: "records_request", label: "request under the records act", tier: 2,
@@ -305,18 +322,37 @@ export default {
           credential: "solicitor (test)", scope: "the whole text", outcome: "no_concerns", at: "2026-08-20" }),
       advisory: "A test advisory: have a solicitor read the request before it is sent.", basis: "TEST" },
     { kind: "bylaw_complaint", label: "complaint under the bylaws", tier: 1, laws: ["Port Ellery Bylaws"],
-      venue: { name: "the Selectboard", how: "in_person", basis: "TEST" },
+      venue: { name: "the Selectboard", how: "in_person", basis: "TEST",
+        /* R82, R87 (e) */
+        facts: [
+          { fact: "speaker_limit", value: "three minutes for each speaker, once on each item", citation: "P.E.B.L. § 7(4)", status: "researched", basis: "TEST" },
+          { fact: "comment_cutoff", value: "written comment is taken until one hour before the sitting", amount: { amount: 1, units: "hours" },
+            citation: "P.E.B.L. § 7(5)", status: "researched", basis: "TEST" },
+          { fact: "delivery_point", value: "the front counter of Port Ellery Town Hall", citation: "P.E.B.L. § 7(1)", status: "ruled", basis: "TEST" }] },
       template: attributed("TPL-test-bylaw-complaint", "file", "To the {{counterparty_role}}: {{act}} does not conform to {{standards}}.",
         { reviewer: "Dee Example", kind: "member", scope: "the whole text", outcome: "no_concerns", at: "2026-08-21" }),
       basis: "TEST" },
     { kind: "commitment_claim", label: "claim on a budget commitment", tier: 3,
-      venue: { name: "Marlow County Court", how: "court", basis: "TEST" },
+      venue: { name: "Marlow County Court", how: "court", basis: "TEST",
+        time_zone: { value: "America/Glace_Bay", status: "researched", basis: "TEST" } },
       evidence: { standard: "Marlow County Court Rule 9.02 (test): a record authenticated by its custodian",
         accepts: [{ grade: "A", coattested: true }, { grade: "B" }], contestable: [{ grade: "C" }], basis: "TEST" },
       /* A Tier 3 kind takes a briefing to counsel, never a `file` template (K921). */
       template: attributed("TPL-test-commitment-brief", "brief", "For counsel: {{group}} asks whether {{act}} ({{act_date}}) breaches {{standards}}, on {{findings}}.",
         { reviewer: "Dee Example", kind: "professional", organisation: "Marlow Commons Legal Society (test)",
           credential: "solicitor (test)", scope: "the whole text", outcome: "concerns", at: "2026-08-22" }),
+      basis: "TEST" },
+    /* R81, R87: a kind of recognition's shape (R87 (a)) holding its Tier 1 set, each template with its purpose, name and
+       sources (R87 (b)) */
+    { kind: "recognition_letter", label: "letter of recognition", tier: 1, shape: "recognition",
+      venue: { name: "the Harbour District office", how: "mail", basis: "TEST" },
+      templates: [
+        { ...attributed("TPL-test-recognition", "file", "To the {{counterparty_role}}: {{group}} recognises {{act}}.",
+            { reviewer: "Dee Example", kind: "member", scope: "the whole text", outcome: "no_concerns", at: "2026-08-23" }),
+          purpose: "initial", name: "Letter of recognition", sources: [{ citation: "P.E.B.L. § 11" }] },
+        { ...attributed("TPL-test-recognition-follow-up", "file", "To the {{counterparty_role}}: {{group}} thanks you again for {{act}}.",
+            { reviewer: "Dee Example", kind: "member", scope: "the whole text", outcome: "no_concerns", at: "2026-08-24" }),
+          purpose: "follow_up", name: "Follow-up letter of recognition", sources: [{ citation: "P.E.B.L. § 11(3)" }, { citation: "Test Stat. § 2.7" }] }],
       basis: "TEST" },
   ],
   deadlines: [
@@ -344,6 +380,15 @@ export default {
       citation: "Marlow Ct. R. 30.9", status: "researched", basis: "TEST" },
     { rule: "filing_reply", applies_to: "commitment_claim", units: "days", amount: 7, count: "calendar", direction: "backward", starts: "filed",
       roll: true, closures: "court", computation: "clear_days", citation: "Marlow Ct. R. 31.2", status: "researched", basis: "TEST" },
+    /* R75, R87 (c) (T45): owed by the group with the law's consequence; started by a third party's act; the group's defence */
+    { rule: "complaint_particulars", applies_to: "claim", units: "days", amount: 14, count: "calendar", direction: "forward",
+      starts: "filed", owed_by: "group", consequence: { text: "the claim shall be considered withdrawn", citation: "P.E.B.L. § 9(3)" },
+      citation: "P.E.B.L. § 9(2)", status: "researched", basis: "TEST" },
+    { rule: "examiner_reply", applies_to: "claim", units: "days", amount: 28, count: "calendar", direction: "forward",
+      starts: "third_party", starter: { role: "Examiner of Accounts", body: "Marlow County Audit Office" }, owed_by: "body",
+      citation: "Test Stat. § 6.12", status: "ruled", basis: "TEST" },
+    { rule: "defence_filing", applies_to: "claim", units: "days", amount: 21, count: "calendar", direction: "forward", starts: "served",
+      owed_by: "group", defends: true, citation: "Marlow Ct. R. 15.1", status: "researched", basis: "TEST" },
   ],
   weekend: { days: ["sun"], citation: "Test Stat. § 0.12", status: "researched", basis: "TEST" },
   computation: [
@@ -401,6 +446,35 @@ export default {
     { name: "Marlow Commons Legal Society (test)", evaluates: ["commitment_claim"],
       contacts: [{ how: "web", value: "https://legal.marlow-county.example" }, { how: "phone", value: "+1 555 0100" }],
       basis: "TEST" },
+    /* R78: an organisation that defends a group (and evaluates a Tier 3 kind; one evaluating none is R78's test's) */
+    { name: "Ellery Free Speech Clinic (test)", evaluates: ["commitment_claim"], defends: true,
+      contacts: [{ how: "email", value: "clinic@free-speech.port-ellery.example" }], basis: "TEST" },
+  ],
+  /* R79: one legal fact per trigger */
+  legal_facts: [
+    { key: "paid_speaker_register", trigger: "paid_attendee", statement: "A person paid to address the Selectboard registers with the Town Clerk first.",
+      citation: "P.E.B.L. § 14", threshold: { amount: 250, unit: "GBP in a year" }, status: "researched", basis: "TEST" },
+    { key: "sitting_recordings", trigger: "recording", statement: "Anyone may film a public sitting from the gallery.",
+      citation: "P.E.B.L. § 7(6)", applies_to: ["bylaw_complaint"], status: "researched", basis: "TEST" },
+    { key: "solicitor_letter", trigger: "threat_letter", statement: "A letter threatening suit over a complaint to the Selectboard does not stop the complaint.",
+      citation: "Test Stat. § 8.3", status: "ruled", basis: "TEST" },
+    { key: "referendum_notice", trigger: "pending_measure_or_candidate", statement: "Spending on a pending referendum is declared to the Returning Officer.",
+      citation: "Test Stat. § 10.2", threshold: { amount: 500, unit: "GBP" }, status: "researched", basis: "TEST" },
+    { key: "board_quorum_messages", trigger: "serial_meeting", statement: "Board members may not settle business by a chain of messages outside a sitting.",
+      citation: "P.E.B.L. § 6(4)", status: "researched", basis: "TEST" },
+  ],
+  /* R80, R87 (d): a sourced guide, in the profile's order, a route offered after an outcome */
+  procedure_guides: [
+    { kind: "bylaw_complaint", items: [
+      { route: "Ask the Town Clerk to place the complaint before the Selectboard", expect: "an acknowledgement within five days", citation: "P.E.B.L. § 9(1)" },
+      { route: "Ask the Examiner of Accounts to review the Selectboard's answer", citation: "Test Stat. § 6.10", after: ["denied", "none_stated"] }],
+      status: "researched", basis: "TEST" },
+  ],
+  /* R86: phrasings added to Civicsmith's own lists */
+  phrasings: [
+    { locale: "en-GB", kind: "assertion", phrase: "is in clear breach of", basis: "TEST" },
+    { locale: "en-GB", kind: "position", phrase: "the town ought to", basis: "TEST" },
+    { locale: "en-GB", kind: "own_benefit_ask", phrase: "a grant for our society", basis: "TEST" },
   ],
   /* The entries for one office and one venue come first: each adds its days to the year every office keeps (R43). */
   holidays: [

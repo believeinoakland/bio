@@ -56,7 +56,7 @@ Terms. A **material** is a row of the case document's `materials:` block (`case-
   - otherwise each open flag whose `(ref, edition, flag)` the flags block does not state is **undisclosed**: `{ref, edition, flag, issue}`.
 
   It answers null when the block states no row or every row stands, else `{withdrawn: [{ref, edition}], undisclosed}` (at most 200 undisclosed). Writes nothing. (K1316 (3), (4))
-- **R5** `sourcesLapsed(text, at)` answers the `sources:` rows of a case document (`case-grammar` R1's `caseDocumentBlocks`) that no longer hold at `at`, judged by `case-grammar`'s `sourceRowsStanding`.
+- **R5** `sourcesLapsed(text, at)` answers the `sources:` rows of a case document (`case-grammar` R27's `caseDocumentBlocks`) that no longer hold at `at`, judged by `case-grammar` R28's `sourceRowsStanding`.
   - The sources behind a capture are the pulled knocks `sources` minted for it (its `source_knocks` read contract, R15), first received first.
   - Each is asked `sources.publishableAt({source, audience: "public", at})` (its R8).
   - A capture with no knock, or a source whose answer is not `ok` with a list of entries, answers nothing, so its rows lapse (fail closed).
@@ -111,7 +111,7 @@ A **member document** is a document capture that is not a photo (R9's term) and 
 - `sources`: `publishableAt` (R8), the `source_knocks` read contract (R15).
 - `extraction`: `unitsOf` (R36).
 - `accepted-work`: `acceptedFinding`, `openFlagsOn` (R2).
-- `case-grammar`: `materialsOf` (R12), `extractedTextOf` (R17), `acceptedWorkOf` (R16), `caseDocumentBlocks` and `sourceRowsStanding` (R1).
+- `case-grammar`: `materialsOf` (R12), `extractedTextOf` (R17), `acceptedWorkOf` (R16), `caseDocumentBlocks` and `sourceRowsStanding` (its R27, R28; T45, N888: re-pointed from R1, wording only).
 - (T37) `image-cover`: `coverAreas`, `COVER_MAX_BYTES` (its R1–R3; R11). `record-core`: `evidenceStore` (its R38; R11), `declareTable`, `stampInstant` (R9, R12). `membership`: the sight of a capture (R9, R10). `record-grammar`: `isMachineIdentity` (R9).
 - `acquisition`: the `archive_entries` read contract (its R45; R8, R1; K2307).
 - `doc-clean` (T39; N806, K2333; a `modules.json` edge): `cleanDocument`, `CLEAN_MAX_BYTES` (its R1–R6; R15).

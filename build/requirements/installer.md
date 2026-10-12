@@ -74,6 +74,14 @@ Terms. The **slug** is the copy's name, and becomes its worker name, its address
 **The copy's own hosts** (N745, its share; K2038)
 - **R47** The install binds `OWN_HOSTS`, plain text: the copy's own host names, comma-separated (its `workers.dev` address, R14, and any other address the installer gave it), so the copy knows its own hosts before a group domain is claimed (`plane` R28; `capture` R73, `capture-sources` R65). The update restates it from the address it finds. When R14 left the copy without an address, `OWN_HOSTS` is not written and the page says so.
 
+**Reporting abuse of Civicsmith, and what a group holds** (T45; N894; v0.2 rule 21; Bob, K2782)
+- **R48** (T45; N894; Actions D28e; v0.2 rule 21; K2782) The installer's README (`newgroup/README.md`) publishes, in plain words a founder can read before installing:
+  - **The stewards' contact.** The address Bob names (K2782) for reporting abuse of Civicsmith itself (fabricated evidence, harassment, impersonation) to Civicsmith's stewards, given exactly as he names it; no other address is given for it, and none is invented.
+  - **What the stewards may do.** They may withdraw shared services (shared profiles, the template library, a public listing) and never edit a group's record; a group's Civicsmith transmits nothing to them and they hold no way into it. While no shared service exists, a report is received and answered at that address only (the stewards' service waits, N895).
+  - **What a group holds, and who could compel it.** A plain guide: what your group's Civicsmith holds and where (its record and evidence in the group's own hosting account, R10, R27), who controls that account (R34's words), and who could be asked or compelled to hand it over (the group itself, and its hosting provider under the law that binds it), Civicsmith's stewards holding no copy of it. Its words are BOB's, checked against v0.2 rule 21 at the job's START; it gives no legal advice.
+
+  The same text is in the product's public documentation (K2782); both follow R40's words. A test reads the README and finds the three parts and the address as named (control: a README without the contact fails it). *(not yet met: T46; moved at L11's START, the address Bob's to name, N923, K2878)*
+
 **The embed step: `resolveVersion({packageJson, wranglerJsonc})`, `checkSignedAsset({manifest, bytes, version, signers})`**
 - **R25** `resolveVersion` returns `bio-plane/package.json`'s version. It throws, naming the files and what to change, when that version is not semver, when the plane's config declares no `VERSION`, or when that `VERSION` differs.
 - **R26** `checkSignedAsset` returns `null` only for the signed release of that version: the manifest's version equals it, the bytes hash to the manifest's `sha256`, signers are armed, the manifest carries a `sig`, and the signature verifies against `ARMED_SIGNERS`. Otherwise it returns the reason in words. The embed also refuses a release containing any published token value, and writes `release.mjs` as generated.
@@ -99,6 +107,7 @@ Terms. The **slug** is the copy's name, and becomes its worker name, its address
 
 - `docs/architecture/BIO_Distribution_v0_1.md` §1–§2 (the sovereign instance; Workers Paid required, DEC-42), §3 (the release: one version authority, D-106; signing and namespaces), §4 (the fleet: D-292, D-297, per-member degradation stated), §5 (the installer's steps; the three-act binding order, DIST-6; the one act an update leaves, D-436), §6 rung 8 (each part's own build, D-116), §7 (several instances: planned).
 - `docs/development/MULTI-INSTANCE-ISOLATION.md` (rows 1, 2, 5, 6, 7; the ordering constraints).
+- `BIO_Action_v0_2.md` rule 21 (K2780; T45, N893, N894) and Bob's K2782 ("2. A": a plain contact address published now, the stewards' service built with the first shared service): R48.
 - `docs/architecture/BIO_Membership_Architecture_v2.md` §4.6 (the one-time password is the root of trust's credential), §4.8 (hosting access is not enforced at install).
 - `docs/architecture/BIO_Assistant_and_AI_Roles_v0_1.md` §6 (the instance `ai` credential, carried and never generated; D-260, DIST-9).
 - `build/layers.md`, "No jurisdiction in the product", rules 2 and 4.
@@ -114,6 +123,7 @@ Terms. The **slug** is the copy's name, and becomes its worker name, its address
 - **DIST-15's format.** A separately signed plane-limits statement in its own namespace, so the fleet statement (`bio-release-fleet/2`), and every older installer's check of it, is unchanged.
 - **The invitation page** (`bio-plane/public/newgroup/`) is static and has no logic. R22, R23 and R35 are its only requirements; R35 removes its Google Fonts load (a system font stack, as the Worker's own pages use).
 - **Callers' obligations.** `instance-setup` records the slug and the profiles at first boot. The installer only binds them.
+- **T45 (N894; K2782).** The contact address is Bob's to name, one act asked at T45's opening; the job writes R48 only once he has named it, and until then R48 stays not met. The public documentation's copy of R48's text is BOB's commit, outside this module's paths.
 
 ## Open for Bob
 

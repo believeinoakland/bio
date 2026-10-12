@@ -2,6 +2,10 @@
    plane's route map spreads them (today's order: `src/plane/store.mjs`' `routes`, then instance-setup's, admission's, then store-door's, K2043). */
 import { actionsOf, actionsOps } from "../../../src/actions/index.mjs";
 import { actionClocksOf, actionClocksOps } from "../../../src/action-clocks/index.mjs";
+import { actionHoldsOf, actionHoldsOps } from "../../../src/action-holds/index.mjs";
+import { actionRepliesOf, actionRepliesOps } from "../../../src/action-replies/index.mjs";
+import { planWorkOf, planWorkOps } from "../../../src/plan-work/index.mjs";
+import { caseCheckOf, caseCheckOps } from "../../../src/case-check/index.mjs";
 import { localFactsOf, localFactsOps } from "../../../src/local-facts/index.mjs";
 import { filingTemplatesOf, filingTemplatesOps } from "../../../src/filing-templates/index.mjs";
 import { standardsOf, standardsOps } from "../../../src/standards/index.mjs";
@@ -121,6 +125,13 @@ export const MODULE_MAPS = [
   ["strength", (c, u, b) => strengthOps(strengthOf(c), u, b)],
   ["reevaluation", (c, u, b) => reevaluationOps(reevaluationOf(c), u, b)],
   ["case-authoring", (c, u, b) => caseAuthoringOps(caseAuthoringOf(c), u, b)],
+  /* plane R39 (K2834): case-account exports no ops map, so its advocacy check and list are named here as the module's
+     whose methods answer them, as acquisition's pair is (plane R9) */
+  ["case-account", (c, u, b) => ({
+    advocacycheck: () => caseAccountOf(c).advocacyCheck({ project: u.searchParams.get("project") ?? b?.project ?? null,
+      sentences: b?.sentences ?? null, author: u.searchParams.get("by"), viewer: u.searchParams.get("viewer") }),
+    advocacychecks: () => caseAccountOf(c).advocacyChecksOf({ project: u.searchParams.get("project") ?? b?.project ?? null,
+      viewer: u.searchParams.get("viewer") }) })],
   ["ratification", (c, u, b) => ratificationOps(ratificationOf(c), u, b)],
   ["case-import", (c, u, b) => caseImportOps(caseImportOf(c), u, b)],
   ["corpus-export", (c, u) => corpusExportOps(corpusExportOf(c), (k) => u.searchParams.get(k))],
@@ -147,19 +158,25 @@ export const MODULE_MAPS = [
   ["answers", (c, u, b) => answersOps(answersOf(c), u, b)],
   ["retrieval", (c, u, b) => retrievalRoutes(retrievalOf(c), u, b)],
   ["actions", (c, u, b) => actionsOps(actionsOf(c), u, b)],
+  ["action-holds", (c, u, b) => actionHoldsOps(actionHoldsOf(c), u, b)],   /* plane R39 (T45): directly after actions' */
   ["action-clocks", (c, u, b) => actionClocksOps(actionClocksOf(c), u, b)],
-  ["local-facts", (c, u, b) => localFactsOps(localFactsOf(c), u, b)],
+  ["action-replies", (c, u, b) => actionRepliesOps(actionRepliesOf(c), u, b)],   /* plane R39: after action-clocks' */
+  ["local-facts", (c, u, b) => ({ ...localFactsOps(localFactsOf(c), u, b),
+    /* plane R39 (op-declarations R49): `grouprules`, local-facts R12's read, named here as the module's (plane R9) */
+    grouprules: () => localFactsOf(c).groupRules({ section: u.searchParams.get("section") ?? undefined, viewer: u.searchParams.get("viewer") }) })],
   ["standards", (c, u, b) => standardsOps(standardsOf(c), u, b)],
   ["conformance", (c, u, b) => conformanceOps(conformanceOf(c), u, b)],
   ["consequences", (c, u, b) => consequencesOps(consequencesModule(c), u, b)],
   ["filings", (c, u, b) => filingsOps(filingsOf(c), u, b)],
   ["filing-templates", (c, u, b) => filingTemplatesOps(filingTemplatesOf(c), u, b)],
   ["action-plans", (c, u, b) => actionPlansOps(actionPlansOf(c), u, b)],
+  ["plan-work", (c, u, b) => planWorkOps(planWorkOf(c), u, b)],   /* plane R39: directly after action-plans' */
   ["escalation", (c, u, b) => escalationOps(escalationOf(c), u, b)],
   ["monitoring", (c, u, b) => monitoringOps(monitoringOf(c), u, b)],
   ["link-sweep", (c, u) => linkSweepOps(linkSweepOf(c), u)],
   ["following", (c, u, b) => followingOps(followingOf(c), u, b)],
   ["review", (c, u, b) => reviewOps(reviewOf(c), u, b)],
+  ["case-check", (c, u, b) => caseCheckOps(caseCheckOf(c), u, b)],   /* plane R39 (K2839): after review's */
   ["wizard-scripts", (c, u, b) => wizardScriptsOps(wizardScriptsOf(c), u, b)],
   ["instance-setup", (c, u, b, e) => instanceSetupOps(instanceSetupOf(c, e), u, b)],
   ["admission", (c, u, b) => admissionOps(admissionOf(c), u, b)],

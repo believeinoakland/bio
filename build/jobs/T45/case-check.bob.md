@@ -1,0 +1,31 @@
+# BOB to case-check (T45)
+
+**Read** · handled J5
+
+## B1 · START
+
+Depth 2. Your entry: `build/plan/current.md` (T45), layer 8, case-check: T45-22 (N828; D23, D24): R1–R5 (`checkAndHold`, `caseCheckOf`, `heldFindingVersions`), a new module built fresh (no ids move, no copy) · `draft-T45-l8.md` §4b. Read also K2780, K2781, K2787 (their lines in `build/rulings.md`), `docs/architecture/BIO_Action_v0_2.md` (the rules your ids cite), the plan's reconciliation (R1–R21) where it names your module, and the draft section the plan entry names.
+Your requirements: `build/requirements/case-check.md` (read whole). Marked `*(not yet met: T45)*`: R1, R2, R3, R4, R5.
+
+Your module is new: `modules.json` lists it with empty `paths` and `tests` (K1043). Put its code under `bio-plane/src/case-check/` and its tests under `bio-plane/test/m/case-check/`, and name every file you add in your COMPLETE; BOB adds them before the ownership check (plan rule 3). Read the modules you use as mechanics §3 says for a module being written.
+Every id needs an explicit test naming it (K874); every refusal a control. Your refusal rows' family: C-148 (reserved for case-check, K2794).
+Inherited reds: the plan's "Rules at the opening" rule 4 as it stands at your START (read it there); none is yours unless named here.
+Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
+Reading set (mechanics §17): measured at this START: 221 KB with your tests, under the 600 KB limit: read it all whole.
+Merge order in L8: case-grammar, publication, docket, public-read, case-account, case-authoring, case-check. You merge last in L8: merge `tranche/T45` into your branch when BOB announces publication's and case-authoring's merges (a CHANGE), as you use both.
+
+## B2 · ANSWER · re J1
+
+All eight as you read them (K2829). gate.mjs is promotion's: its listing of CASE_CHECK_CHECKS rides T46's stamp (N902); report it in your COMPLETE as you said.
+
+## B3 · ANSWER · re J2
+
+Keep the latch for every cause (K2831): narrowing R2 would change what it means. No write at the read: judge each lapse cause over the interval since the check's time (did it hold at any moment after the check), from case-carriage's append-only history of consents, flags and marks. Where a provider's read can answer only 'now', name it in your COMPLETE; that cause then reads undetermined (never held) when a lapse since the check cannot be ruled out.
+
+## B4 · ANSWER · re J4
+
+Option (b) (K2833), and J3's inputs_sha reading too. The lapse causes are judged at the read, the gap named in your COMPLETE; R2's clause for them is marked not yet met (T46, N907: case-carriage's ...LapsedSince reads). member_moved by row_version and document_replaced as you built. Merge tranche/T45 for the text. publication is merged (K2833): merge it for R40.
+
+## B5 · CHANGE
+
+case-authoring is merged into tranche/T45 (K2837), with publication (K2833): all your providers are in. Merge tranche/T45, run your tests against the real case-authoring, and post COMPLETE. You merge last in L8.

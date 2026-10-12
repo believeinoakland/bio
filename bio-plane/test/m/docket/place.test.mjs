@@ -2,7 +2,7 @@
    (R11) and withdrawal (R12), at the module's interface. Every refusal is shown with its negative control. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { seeded, world, file, prepare, sign, post, fileAndPlace, V, MACHINE, CASE, SUBJECT, SUBJECT_NAME, NOW, HOUR, DAY, sha, keyFor }
+import { seeded, world, file, prepare, sign, post, fileAndPlace, V, MACHINE, CASE, SUBJECT, SUBJECT_NAME, NOW, HOUR, DAY, sha, keyFor, OUTCOME }
   from "./fixture.mjs";
 import { DOCKET_CHECKS, ENTRY_FORMAT, ENTRY_KINDS, OUTWARD_ACT_WARNING, RECEIPT_REASON, RESEND_INVITATION }
   from "../../../src/docket/index.mjs";
@@ -177,7 +177,7 @@ test("R6 every kind carries only R6's fields, and no member's name, handle or id
   add((await fileAndPlace(w)).posted);
   add((await fileAndPlace(w, { kind: "statement", capture: w.swept.sha })).posted);
   add((await fileAndPlace(w, { kind: "reaction", from: { kind: "other", name: "The Daily Example" } }, { summary: "A column." })).posted);
-  add((await fileAndPlace(w, { kind: "outcome", from: { kind: "other", name: "The council" } })).posted);
+  add((await fileAndPlace(w, { ...OUTCOME, from: { kind: "other", name: "The council" } })).posted);
   add(await post(w, { kind: "edition", edition: 2 }));
   add(await post(w, { kind: "disclosure", edition: 2, candidate: "CAND-1", summary: "An open conflict on F1." }));
   const rec = file(w).entry;
@@ -188,7 +188,7 @@ test("R6 every kind carries only R6's fields, and no member's name, handle or id
   add(await post(w, { kind: "court-order", order: { effect: "seal", editions: [1, 2], parts: ["Exhibit 3"] }, capture: w.bare.sha,
                       reason: "The court sealed Exhibit 3." }));
   const ALLOWED = new Set(["format", "group", "case", "seq", "previous", "shelf", "kind", "edition", "date", "received", "from", "capture",
-                           "summary", "what_changed", "reason", "holder", "answers", "takes_back", "order"]);
+                           "summary", "what_changed", "reason", "holder", "answers", "takes_back", "order", "outcome"]);
   assert.deepEqual(seen.map((j) => j.kind).sort(), [...ENTRY_KINDS].sort(), "every kind was published");
   for (const j of seen) {
     for (const k of Object.keys(j)) assert.ok(ALLOWED.has(k), `${j.kind} carries ${k}`);
@@ -255,7 +255,7 @@ test("R8 R19 a receipt lists a reply naming a private person by date, from and r
   const w = seeded();
   const e = file(w).entry;
   rowOk(prepare(w, { kind: "receipt", entry: e }), "DOCKET_NO_REASON");
-  const other = file(w, { kind: "outcome", from: { kind: "other", name: "The council" } }).entry;
+  const other = file(w, { ...OUTCOME, from: { kind: "other", name: "The council" } }).entry;
   rowOk(prepare(w, { kind: "receipt", entry: other, reason: "names a neighbour" }), "DOCKET_NO_STANDING");
   const r = await post(w, { kind: "receipt", entry: e, reason: "Its second page names a neighbour." });
   const j = fields(r.prepared);

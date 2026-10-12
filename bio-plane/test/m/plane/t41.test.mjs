@@ -8,7 +8,8 @@ import { test } from "node:test";
 import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import { DatabaseSync } from "node:sqlite";
-import { store, storage } from "./fixture.mjs";
+import { store, storage, deployed, GATE_FLAGS, GATE_SET } from "./fixture.mjs";
+import { assistantGateOf } from "../../../src/plane/ask.mjs";
 import { stepsOf, STEPS_TABLES, ACCEPTANCE_COUNT_KEYS } from "../../../src/steps/index.mjs";
 import { readingGuidesOf, readingGuidesOps, READING_GUIDES_TABLES } from "../../../src/reading-guides/index.mjs";
 import { questionExplorerOf, QUESTION_EXPLORER_TABLES } from "../../../src/question-explorer/index.mjs";
@@ -181,7 +182,9 @@ async function world() {
     if (u === "https://agent-worker/draft")
       return new Response(JSON.stringify({ ok: true, draft: { text: "t" } }), { status: 200, headers: { "content-type": "application/json" } });
     return new Response('{"event":"answer","ok":true}\n', { status: 200, headers: { "content-type": "application/x-ndjson" } }); } } };
-  const x = await store({ env });
+  /* R40 (K2853): the doors deployed for this test */
+  const x = await store({ env, before: (ctx) => assistantGateOf(ctx, { flags: GATE_FLAGS, testSet: GATE_SET }) });
+  await deployed(x.ctx);
   const sql = x.ctx.storage.sql;
   sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, capabilities, created, updated)
             VALUES ('ada', 'Cover ada', 'h_ada', 'admin', 'active', '["contribute"]', 't', 't')`);

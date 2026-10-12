@@ -7,7 +7,8 @@
    (id → {project, sees: [viewers]}), and content a stand-in presenting no capture; local-facts is the real one (R10, R11),
    and so are promotion (R13's revision) and standards (R7, R13; created on first use). `override` maps a profile id to
    a profile object the instance resolves in its place (both this module and local-facts take `combine`, local-facts
-   `get`), so a test can run on a variant of the test profile. Every test drives `action-clocks` at its interface. */
+   `get`), so a test can run on a variant of the test profile. T45: steps is the real one (R16), registered with at start.
+   Every test drives `action-clocks` at its interface. */
 import { recordOf, RECORD_SCHEMA } from "../../../src/record-core/index.mjs";
 import { membershipOf } from "../../../src/membership/index.mjs";
 import { promotionOf } from "../../../src/promotion/index.mjs";
@@ -17,6 +18,7 @@ import { localFactsOf } from "../../../src/local-facts/index.mjs";
 import { provenanceOf } from "../../../src/provenance/index.mjs";
 import { Retrieval, PROJECTION_TABLE } from "../../../src/retrieval/index.mjs";
 import { standardsOf } from "../../../src/standards/index.mjs";
+import { stepsOf } from "../../../src/steps/index.mjs";
 import { parseFrontmatter } from "../../../src/record-grammar/frontmatter.mjs";
 import { combine, get } from "../../../../jurisdictions/index.mjs";
 import { DatabaseSync } from "node:sqlite";
@@ -133,11 +135,20 @@ export function world({ profiles = ["test-port-ellery"], override = null } = {})
   /* local-facts, the real one (R10, R11): a member's confirmations are recorded through its `factConfirm`. */
   const localFacts = localFactsOf(host, { record, membership, now: () => new Date(clock.ms).toISOString(), combine: combineOver,
                                           get: getOver });
-  const c = actionClocksOf(host, { record, membership, promotion, actions, conformance, localFacts, combine: combineOver,
+  /* steps, the real one (R16), over a stand-in for the observation log it registers with at start (its R18, R23: no look
+     is made here); members alice and bob may take steps. */
+  const observationLog = { registerAuthority: () => ({ ok: true }), onLookAnswered: () => ({ ok: true }), byAuthority: () => [],
+                           rowVisible: () => false };
+  for (const m of ["alice", "bob"])
+    st.sql.exec(`INSERT INTO members (member_id, cover, handle, role, status, created, updated) VALUES (?, 'c', ?, 'member', 'active', '2026-01-01', '2026-01-01')`, m, `${m}-h`);
+  const zoneView = () => { const g = localFacts.governingView(); return g && g.ok ? g.view : null; };
+  const steps = stepsOf(host, { record, membership, promotion, observationLog, legEarning: null, view: zoneView,
+                                now: () => new Date(clock.ms).toISOString() });
+  const c = actionClocksOf(host, { record, membership, promotion, actions, conformance, localFacts, steps, combine: combineOver,
                                    now: () => clock.ms });
   let n = 0;
   const w = {
-    st, host, record, membership, promotion, actions, localFacts, c, clock, determinations,
+    st, host, record, membership, promotion, actions, localFacts, c, clock, determinations, steps,
     /** The real standards module on this host (R7, R13), created on first use; its text's content ids resolve, through a
      *  content stand-in, to the document `INFO-2026-0099-std`, which the first call promotes. */
     standards: () => {

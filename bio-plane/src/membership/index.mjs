@@ -1,6 +1,7 @@
 /* membership — who the members are and what each may do; projects as working groups, sight, and the fence.
  *
- * Requirements: build/requirements/membership.md (R4–R127; T42's R83 order (`doorbell`, `case-account`; T42-3, K2607, K2608)
+ * Requirements: build/requirements/membership.md (R4–R128; T45's R128 `registerProjectActGuard` and R83 order (`case-check`,
+ * `action-holds`, `action-replies`, `plan-work`, `action-producers`, `stewards`; T45-2, K2781, K2799, K657); T42's R83 order (`doorbell`, `case-account`; T42-3, K2607, K2608)
  * and R60's hold acts at a hidden project's EXISTENCE, met through R44 and R85 (N833, K2484; `actions` asks them); T40's R127 `joinedParticipants` (K2404), R122 `notTheOwner`, R123–R125 the handle check, the
  * handle change and its guard, R126's rows, R16, R17, R55 and R57 as amended, and R83's order with `ai-use` (T40-M; N797,
  * N799, N812; DEC-184, DEC-186; K2373, K2376, K2394); T38's R116–R121, project-roster's seams and N793's
@@ -128,7 +129,7 @@ export function noSuchProject(projectId, extra = null) {
 
 /* R84 (N324, K275, K403; N327, DEC-83). THE ONE ANSWER TO ONE CONDITION: the stamped caller `by` is not an administrator
    (R64) where the act is an administrator's. Every act refusing that condition answers through here (R6, R7, R9, R10,
-   R11, R12, R20, R22, R41 and R75; T34's R98–R100, R102, R103, R107 and R109; credentials' R6, R7 and R13; monitoring's R30, intent's R9, bias's R11), so
+   R11, R12, R20, R22 and R75, `project-roster` R5; T34's R98–R100, R102, R103, R107 and R109; credentials' R6, R7 and R13; monitoring's R30, intent's R9, bias's R11), so
    `NOT_AN_ADMIN` is minted at one site and its one row is this module's (C-96.1). Who is admitted stays each act's own
    rule; this only answers the refusal. `act` is the caller's fixed phrase for its act, never a request's words; the
    detail is one fixed sentence around it. `extra` adds a caller's own fields beside these and never replaces one of them. An act with a
@@ -251,7 +252,9 @@ export function notTheOwner(by, projectId, extra = null) {
    K657, K2431): `steps` after `hypotheses`, `reading-guides` after `capture-requests` and `question-explorer` after
    `skills` in layer 6, `investigation` after `intent` in layer 7, `publish-schedule` after `publication` in layer 8.
    T42-3 (N826, N839; K657, K2607, K2608): `doorbell` after `capture` in layer 3, `case-account` after
-   `case-disclosures` and before `case-authoring` in layer 8. */
+   `case-disclosures` and before `case-authoring` in layer 8. T45-2 (K2781 (1), K2784, K657): `case-check` after `review`
+   in layer 8, `action-holds` after `actions`, `action-replies` after `action-clocks` and `plan-work` after `action-plans`
+   in layer 9, `action-producers` after `machinery-producers` in layer 11; `stewards` last, after `installer`, in layer 11 (K2799). */
 export const MODULE_ORDER = Object.freeze([
   /* 1 */ "record-grammar", "jurisdictions", "civil-time", "calc-grammar", "connection-grammar", "test-support",
           "runtime-limits", "signatures", "bundler", "court-citations", "id-spaces", "subresources", "ooxml",
@@ -272,13 +275,14 @@ export const MODULE_ORDER = Object.freeze([
   /* 7 */ "intent", "investigation", "reevaluation",
   /* 8 */ "case-grammar", "corpus-export", "case-carriage", "case-tensions", "publication", "publish-schedule",
           "docket", "public-read", "project-stage", "network-notices", "case-catalogue", "ratification", "case-checker", "case-import",
-          "case-disclosures", "case-account", "case-authoring", "review",
-  /* 9 */ "conformance", "consequences", "action-grammar", "actions", "action-clocks", "filing-templates", "filings",
-          "escalation", "action-plans",
+          "case-disclosures", "case-account", "case-authoring", "review", "case-check",
+  /* 9 */ "conformance", "consequences", "action-grammar", "actions", "action-holds", "action-clocks", "action-replies",
+          "filing-templates", "filings", "escalation", "action-plans", "plan-work",
   /* 10 */ "monitoring", "following", "link-sweep", "scheduler",
-  /* 11 */ "wizard-scripts", "op-grades", "affordances", "tasks", "machinery-producers", "queue-producers",
+  /* 11 */ "wizard-scripts", "op-grades", "affordances", "tasks", "machinery-producers", "action-producers",
+           "queue-producers",
            "notice-producers", "queue", "setup-page", "setup-words", "instance-setup", "op-declarations", "admission",
-           "answer-envelope", "store-door", "control-plane", "plane", "legacy-ui", "installer",
+           "answer-envelope", "store-door", "control-plane", "plane", "legacy-ui", "installer", "stewards",
 ]);
 
 const isObj = (v) => !!v && typeof v === "object" && !Array.isArray(v);
@@ -854,6 +858,42 @@ export class Membership {
       return Number.isInteger(r) && r >= 1 ? r : 0;
     } catch { return 0; }
   }
+
+  /* ===== R128 (T45; Actions D4; v0.2 rule 15; R125's form) — THE ONE GUARD ON A PROJECT'S SETUP ACTS =====
+   *
+   * A project's scope (`project-roster` R21–R22: a counsel matter, a member's own project) limits who may be invited to it
+   * and whether it may be set discoverable; that rule is `project-roster`'s, so membership never reads its tables. One
+   * later module registers, once at start, the guard R32 and R45 call synchronously inside their act, after their own
+   * refusals and before any write: `fn({act, projectId, by, setting?})`, `act` `invite` or `visibility`. A refusal it
+   * answers is answered unchanged and nothing is written; null lets the act proceed; a throw, a promise or anything else
+   * refuses PROJECT_GUARD_UNCHECKED (fail closed, as R124). With none registered the acts proceed as before. The slot
+   * takes one registration whoever makes it, so its refusals are R81's, naming the holder. */
+  #projectActGuard = null;   // {module, fn}
+
+  registerProjectActGuard(module, fn) {
+    const refused = listenerRefusal(this.#projectActGuard, module, fn);
+    if (refused) return refused;
+    this.#projectActGuard = { module, fn };
+    return { ok: true, module };
+  }
+
+  /* R128: null to proceed, the guard's own refusal, or PROJECT_GUARD_UNCHECKED. */
+  #projectActGuarded(act, projectId, by, setting) {
+    const guard = this.#projectActGuard;
+    if (!guard) return null;
+    let r;
+    try {
+      r = guard.fn({ act, projectId, by: by ?? null, ...(act === "visibility" ? { setting } : {}) });
+      if (r === null) return null;
+      if (r && typeof r.then === "function") r.then(null, () => {});
+      else if (isObj(r) && r.ok === false && typeof r.reason === "string" && r.reason) return r;
+    } catch { /* fail closed below */ }
+    /* DEC-49 REGION is-project-guard-checked */
+    return Membership.#rowRefusal("PROJECT_GUARD_UNCHECKED",
+      "whether this project's own rules allow the act could not be read, so it was not made: a project act is not made "
+      + "on a guess. Nothing was written.", { project: Membership.#echo(projectId ?? null), act });
+    /* END DEC-49 REGION is-project-guard-checked */
+  }
 /* Membership Architecture v2 section 7: authority over a project belongs to its
    OWNERS, and to nobody else. An administrator sees every discoverable project, and
    a hidden one only as a participant (7.3, 7.8, 7.9 as D54 amended them), and
@@ -1208,6 +1248,7 @@ export class Membership {
     /* REC-197: the value check moved into ONE helper, which a creation's `visibility` asks too, so the two
        doors cannot disagree about what a setting is. Still asked AFTER the owner check here, as before. */
     { const unknown = this.visibilitySettingRefusal(want, projectId); if (unknown) return unknown; }
+    { const guarded = this.#projectActGuarded("visibility", projectId, by, want); if (guarded) return guarded; }   /* R128 */
     const why = reason === null || reason === undefined || String(reason).trim() === ""
       ? null : String(reason).slice(0, 280);
     const at = new Date().toISOString();
@@ -1356,6 +1397,7 @@ export class Membership {
     if (target.status !== "active") return { ok: false, reason: "NOT_ACTIVE", handle };
     if (this.participation(projectId, target.member_id))
       return { ok: false, reason: "ALREADY_A_PARTICIPANT", handle };
+    { const guarded = this.#projectActGuarded("invite", projectId, by); if (guarded) return guarded; }   /* R128 */
     const now = new Date().toISOString();
     this.participationWrite("invite", { projectId, memberId: target.member_id, by, at: now });
     /* R33, R116 (REC-226; N783): the same act answers the invitee's open request to join, if they have one: R116's

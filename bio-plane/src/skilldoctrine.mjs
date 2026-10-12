@@ -760,88 +760,177 @@ export const PERMITTED_AUTO_COMPOSITION = {
  * ========================================================================= */
 
 /* =========================================================================
- * THE ACTION PLANNING LAYER (R28, R29; K608, K660)
+ * THE ACTION PLANNING LAYER (R28, R29; K608, K660; T45: K2780, N861, N887)
  *
- * `BIO_Action_v0_1.md` §4, the rules a run works under when it proposes plan
- * options, standards, comparisons, candidate theories or communication drafts.
- * Each clause is the rule's own heading and sentences, quoted and pinned to §4
- * by R21's normaliser, as the resident sentences are; nothing here rewords a
- * rule. The layer holds no gate: every act it names is fenced by the module
- * that performs it (the proposal is stored apart and labelled; the member's
- * act refuses a machine), and a run ignoring every word here gets past nothing.
+ * `BIO_Action_v0_2.md` §4 (canon since K2780; v0.1 is history), the rules a run
+ * works under when it proposes plan options, standards, comparisons, candidate
+ * theories or communication drafts, or re-examines a plan after a recorded
+ * response. Each clause is the rule's own heading and sentences, quoted and
+ * pinned to §4 by R21's normaliser, as the resident sentences are; nothing here
+ * rewords a rule. The layer holds no gate: every act it names is fenced by the
+ * module that performs it (the proposal is stored apart and labelled; the
+ * member's act refuses a machine), and a run ignoring every word here gets past
+ * nothing.
  * ========================================================================= */
 
-/** Where the Action layer's rules are quoted from: canon, whole (K608 (1)). */
-export const ACTION_SOURCE = "docs/architecture/BIO_Action_v0_1.md";
+/** Where the Action layer's rules are quoted from: canon, whole (K608 (1); v0.2 in place of v0.1, K2780). */
+export const ACTION_SOURCE = "docs/architecture/BIO_Action_v0_2.md";
 export const ACTION_SECTION = "§4";
 
-/** The rules of §4 the run works under (R28: rules 1–3, 6, 8–10, 13; R29: rule
- *  12), each `{rule, heading, sentences}`, every string a span of §4. Rules 4,
- *  5, 7 and 11 are the record's (compliance, reminders, the sending, the
- *  profile), not a planning run's; 7 and 11 bind a run drafting a filing
- *  template's wording, and the `filing_drafting` layer carries them (R30). */
-export const ACTION_RULES = [
+/** Every rule of §4 a layer here carries, once, in §4's order, each `{rule, heading, sentences}`, every string a span
+ *  of its rule's paragraph. The layers select from it by number, so a rule two layers carry is one object (R28, R30,
+ *  R45). Rules 5, 6, 8, 15, 17, 18 and 20 are the record's (compliance, deadlines, who speaks, scopes, endings, carrying
+ *  on, managing the work), held by the modules that keep them, and no layer here names them. Sentences carrying a
+ *  place's name (rule 3's examples) are left out (R26). */
+export const ACTION_RULE_TABLE = Object.freeze([
   { rule: 1, heading: "Humans decide.",
     sentences: [
-      "A member takes every act that commits the group: declaring a standard, determining, assessing a "
-      + "consequence, choosing an option, approving, sending, advancing a stage, resolving, closing.",
-      "The machine may find, compare, compute, propose and draft, always labelled as machine work, and never "
-      + "does any of these acts (DEC-24, DEC-27; Roadmap §10).",
+      "A member takes every act that commits the group: declaring a standard, determining, assessing a consequence or "
+      + "a success, choosing an option, approving, sending, advancing or stopping a stage, resolving, closing.",
+      "The machine may find, compare, compute, propose and draft, always labelled as machine work, and never does any "
+      + "of these acts.",
     ] },
-  { rule: 2, heading: "The gate is at the outward act, not the reasoning (DEC-26), and a member may pass it "
-      + "openly (Bob, 2026-09-30).",
+  { rule: 2, heading: "The gate is at the outward act, not the reasoning, and a member may pass it openly on stated "
+      + "grounds.",
     sentences: [
       "A plan may rest on premises not yet established, shown as hunch debt.",
-      "An action that asserts a breach is refused by default unless it rests on a live noncompliant "
-      + "determination; a member may proceed anyway only by an attributed act with a stated reason, and the "
-      + "action and everything prepared from it carry that disclosure.",
-      "An action that seeks evidence (a records request, a request for comment) is never gated.",
+      "Outward acts are classed by what their text does: asking an office to examine something, seeking evidence (a "
+      + "records request, a request for comment), and enforcing the group's own request on its own dated record are "
+      + "never held back.",
+      "A sentence that asserts a breach as the group's finding needs a live noncompliant determination.",
+      "Sentences that read as assertions are pointed out before approval, from a list of phrasings Civicsmith holds for "
+      + "each language, which a profile may extend, for every member, and by the assistant where enabled; the member "
+      + "resolves each one: she rewrites it, confirms in her own recorded words that the act only asks, or treats the "
+      + "act as a breach claim.",
+      "Without a determination, an act asserting a breach may proceed only on one of two grounds, a legal deadline that "
+      + "falls before a determination could be made (cited, with its date) or an imminent irreversible act (what, and "
+      + "when), together with the member's reason; ground and reason are disclosed on the action and on everything "
+      + "prepared from it, and an override without a ground is refused, naming the two grounds.",
     ] },
-  { rule: 3, heading: "No significance, no score.",
+  { rule: 3, heading: "What the group sends is checked against its record.",
     sentences: [
-      "Whether a matter warrants action, and how urgently, is a member's judgment, recorded only in acts and "
-      + "their reasons: a declined option's reason, an escalation stage declined with a reason.",
+      "Every filing and communication gets the case's sentence-by-sentence account check: a sentence the record does "
+      + "not support is pointed out; one the record contradicts is held back by default and sent only by a member's "
+      + "open act with a reason; a question is never flagged.",
+      "Claims about a body rest on findings of the three kinds in §3 or on the group's own dated correspondence; "
+      + "statements about what the group itself is doing need neither.",
+      "Everything prepared from an action resting on held findings says so",
+      "everything resting on accepted findings names them",
+    ] },
+  { rule: 4, heading: "No significance, no score.",
+    sentences: [
+      "Whether a matter warrants action, and how urgently, is a member's judgment, recorded only in acts and their "
+      + "reasons.",
       "No field holds significance, severity, priority or a score.",
+      "The planning run lists every option it proposes, with no cut-off, collapsed to its summary; an option left "
+      + "unticked is undecided, and declining one is an act with a reason.",
+      "Suggested options come from reasoning over the matter, the routes the profile's guides list and the group's own "
+      + "earlier plans, never from a fixed catalogue; the plan holds no costs, assignees or hours (members take up work "
+      + "themselves, rule 20).",
     ] },
-  { rule: 6, heading: "Addressees are roles, not people.",
+  { rule: 7, heading: "Addressees are roles, not people.",
     sentences: [
-      "An action is addressed to a government office by role and body, a reporter or outlet, an organisation "
-      + "or another civic group by role and organisation, or a described audience; never a private individual; "
-      + "the page may show who holds the office on the date, from the record (K1484, C2 row 5).",
+      "An action is addressed to a government office by role and body, a reporter by role and outlet, an organisation "
+      + "or another civic group by role, or a described audience; never a private individual; the page may show who "
+      + "holds the office on the date, from the record.",
       "An action asserting a breach is addressed to an office.",
-    ] },
-  { rule: 8, heading: "No catalogue, no budgets.",
-    sentences: [
-      "Suggested options come from reasoning over the matter and from the group's own earlier plans, never "
-      + "from a fixed list; the plan holds no costs, assignees or hours (Bob, 2026-09-29).",
+      "An action about a person's statutory duty is addressed to the office that enforces it.",
+      "Partners on a joint action are organisations by role.",
     ] },
   { rule: 9, heading: "The doctrine's limits.",
     sentences: [
-      "Civicsmith takes no position on what policy should be (Operational Principle 1).",
-      "Political accountability asks officials to act on a breach, requests oversight and audits, testifies, "
-      + "and supports legislation that restores or enforces an existing requirement; lobbying is an option "
-      + "only for that.",
+      "Civicsmith takes no position on what policy should be, and does not rule on policy even when members or groups "
+      + "do.",
+      "Its outputs (published cases, which hold evidence, not narrative; suggested options; templates; guides; the "
+      + "assistant's drafts) never take or propose a policy or vote position, and the planning run never suggests "
+      + "advocacy.",
+      "Political accountability asks officials to act on a breach, requests oversight and audits, testifies to facts and "
+      + "asks a body to examine or apply an existing requirement, and supports legislation that restores or enforces an "
+      + "existing requirement; lobbying is an option only for that.",
       "Policy advocacy and candidate support are not actions.",
+      "its only involvement in material that supports a policy position is assessing whether the positions taken are "
+      + "supported by the evidence in the record, and pointing out where they are not.",
     ] },
   { rule: 10, heading: "The work varies, not the person.",
     sentences: [
-      "A project may declare the kind of work it does (reporting, fixing, legal, oversight, other), which "
-      + "shapes what the assistant suggests and nothing else.",
-      "No attribute of a member or user gates, filters or orders anything (DEC-17, DEC-54)",
+      "A project may declare the kind of work it does (reporting, fixing, legal, oversight, other), which shapes what the "
+      + "assistant suggests and nothing else.",
+      "No attribute of a member or user gates, filters or orders anything; no member is named spokesperson; no one's "
+      + "reading of a notice is tracked.",
     ] },
-  /* R29 (K660): the planning skill's own addition, the hostile-response branch. */
-  { rule: 12, heading: "Hope for good faith; prepare for opposition",
+  { rule: 11, heading: "Jurisdiction lives in data.",
+    sentences: [
+      "Kinds, venues, templates, offices, legal organisations, deadlines, holidays and the stages each law has come from "
+      + "a jurisdiction profile; a missing fact reads undetermined, never a default.",
+      "Each profile carries an approved set of starting templates, written by a named person from public sources, "
+      + "reviewed by a professional, approved and attributed, and offered only after a member has chosen the act",
+      "Legal facts are shown with their citations at the moment they matter.",
+    ] },
+  /* R29 (K660): the planning skill's own addition, the hostile-response branch; v0.2's rule 12 (T45). */
+  { rule: 12, heading: "Hope for good faith; prepare for opposition.",
     sentences: [
       "People are presumed to want better outcomes, and a bad actor is identified by evidence, never by role.",
-      "every plan is checked for a branch that answers a hostile response",
+      "The system is nonetheless prepared for stonewalling, retaliation, discrediting and legal harassment: every plan "
+      + "is checked for a branch that answers a hostile response; pressure against the group or its supporters is "
+      + "recorded as evidence wherever it arrives, and can open an inquiry of its own; lawful demands are complied with "
+      + "openly.",
+      "Counsel may be briefed at any stage, for a claim or for the group's defence, without a determination",
+      "A packet never says \"you have a claim\" nor whether a protection applies.",
     ] },
-  { rule: 13, heading: "The venue sets the standard of evidence",
+  { rule: 13, heading: "The venue sets the standard of evidence.",
     sentences: [
       "No action is refused for its evidence grade.",
-      "Where a filing rests on a grade the opposition could contest, it says so, so counsel and members can "
-      + "prepare (rule 12).",
+      "Every filing and counsel packet shows each exhibit's grade and, where the profile states it, the venue's standard "
+      + "beside it; where a filing rests on a grade the opposition could contest, it says so.",
+      "Taking part as a formal party before a venue is a Tier 2 action, with its advisory and the counsel packet "
+      + "offered; Civicsmith never says whether to become a party.",
     ] },
-];
+  { rule: 14, heading: "Nothing leaves by a system path.",
+    sentences: [
+      "The instance transmits nothing.",
+      "A member sends by the venue's own means and records the sending with the bytes sent; anything addressed carries "
+      + "the in-band stamp.",
+      "A plan is never published; a counsel packet is never published and never fileable as it stands.",
+    ] },
+  { rule: 16, heading: "Responses change the plan only through members.",
+    sentences: [
+      "Each recorded response sets off a re-examination of every action taken or planned in the project and in projects "
+      + "linked to it by a response: dates recomputed, phases whose start now holds opened with their options offered, "
+      + "options whose premise or date changed marked with why, the profile's next routes for that reply offered, and, "
+      + "where enabled, the assistant's labelled proposals",
+      "What the group chose changes only by a member's act.",
+      "a reply that is slow or unwelcome is not by itself an infraction, though a missed date a rule sets may be "
+      + "determined noncompliant (rule 6)",
+    ] },
+  { rule: 19, heading: "Infractions: document first, and always offer the chance to fix.",
+    sentences: [
+      "For a matter that may be an infraction, the first option the plan offers is to describe and document it: what was "
+      + "done and by which office, the standard it is measured against, the evidence for each point with its grade, and "
+      + "what is still uncertain.",
+      "A version may be written for a particular audience (the violating party, the group's members, an oversight "
+      + "office, the public) or broadly for all.",
+      "Documenting is first and the default, never a gate: a member who takes another step first records why (a "
+      + "confidential complaint the office must not learn of; a deadline that comes first).",
+      "Every plan for an infraction also offers the violating party the chance to fix and remediate: a notice saying what "
+      + "correcting the act and remedying its harm would look like, with the law's period or a time the group sets.",
+      "It is offered before any other step and again after each later step, and the plan never withdraws it.",
+    ] },
+  { rule: 21, heading: "Power without misuse.",
+    sentences: [
+      "A notice offering the chance to fix, or a demand, asks only for what the rule requires, for remedy of the harm, "
+      + "and for the routes the law provides; nothing is prepared that asks anything for the benefit of the group or its "
+      + "members.",
+      "A write-up or letter names the office and the official responsible in that role; staff below that level are "
+      + "named only where the evidence turns on their own act, each such name pointed out for the member to confirm.",
+    ] },
+].map((r) => Object.freeze({ ...r, sentences: Object.freeze(r.sentences) })));
+
+/** One rule of the table, by its number in §4. */
+const actionRule = (n) => ACTION_RULE_TABLE.find((r) => r.rule === n);
+
+/** The rules of §4 the planning run works under (R28: v0.2 rules 1, 2, 4, 7, 9, 10, 12, 13, 16, 19 and 21; R29: rule
+ *  12), in §4's order, each the table's own object. */
+export const ACTION_RULES = Object.freeze([1, 2, 4, 7, 9, 10, 12, 13, 16, 19, 21].map(actionRule));
 
 /* THE ACTS THE LAYER NAMES, EACH BY THE REQUIREMENT THAT DEFINES IT (R28). The
    modules that hold them are later in the order (P4), so no import can carry
@@ -910,7 +999,7 @@ export function actionPlanningLayer(catalog) {
   const read = actReader(byId, "action planning", "the planning act");
   return {
     load_when: "the run proposes plan options, standards, comparisons, candidate theories or communication "
-      + "drafts for an action or a plan, in the plan mode",
+      + "drafts for an action or a plan, in the plan mode, or re-examines a plan after a recorded response",
     sourcing: "authored",
     body: {
       rules: ACTION_RULES,
@@ -931,40 +1020,23 @@ export function actionPlanningLayer(catalog) {
 }
 
 /* =========================================================================
- * THE FILING DRAFTING LAYER (R30; K921, K927)
+ * THE FILING DRAFTING LAYER (R30; K921, K927; T45: K2780)
  *
- * `BIO_Action_v0_1.md` §4, the rules a run works under when it proposes a filing
+ * `BIO_Action_v0_2.md` §4, the rules a run works under when it proposes a filing
  * template's wording or critiques one in a comment: rule 1 (humans decide),
- * rule 7 (nothing leaves by a system path), rule 11 (jurisdiction lives in
- * data) and rule 13 (the venue sets the standard of evidence). Rules 1 and 13
- * are the planning layer's own objects, carried unchanged; 7 and 11 are quoted
- * here, each a span of its rule's paragraph found by R21's normaliser. Canon
- * sentences only (K927): what a template's blanks may be is `filing-templates`'
- * refusal (its R2), and wording that asserts a fact the record does not hold is
- * `filings`' (its R18), so neither is restated here as doctrine. The layer
- * holds no gate, as the planning layer holds none.
+ * rule 3 (what the group sends is checked against its record), rule 11
+ * (jurisdiction lives in data), rule 13 (the venue sets the standard of
+ * evidence) and rule 14 (nothing leaves by a system path; v0.1's rule 7). Each
+ * is the table's own object (`ACTION_RULE_TABLE`), so the planning and drafting
+ * layers carry the same words. Canon sentences only (K927): what a template's
+ * blanks may be is `filing-templates`' refusal (its R2), and wording that asserts
+ * a fact the record does not hold is `filings`' (its R18), so neither is restated
+ * here as doctrine. The layer holds no gate, as the planning layer holds none.
  * ========================================================================= */
 
-const actionRule = (n) => ACTION_RULES.find((r) => r.rule === n);
-
-/** The rules of §4 a run drafting a filing template's wording works under (R30),
- *  in §4's order, each `{rule, heading, sentences}`, every string a span of §4. */
-export const FILING_RULES = [
-  actionRule(1),
-  { rule: 7, heading: "Nothing leaves by a system path.",
-    sentences: [
-      "The instance transmits nothing.",
-      "A member sends by the venue's own means and records the sending with the bytes sent; anything addressed "
-      + "carries the in-band stamp (Publication §3 rule 9).",
-      "A plan is never published (DEC-25); a counsel packet is never published and never fileable as it stands.",
-    ] },
-  { rule: 11, heading: "Jurisdiction lives in data.",
-    sentences: [
-      "Kinds, venues, templates, offices, legal organisations, deadlines and holidays come from a jurisdiction "
-      + "profile; a missing fact reads undetermined, never a default",
-    ] },
-  actionRule(13),
-];
+/** The rules of §4 a run drafting a filing template's wording works under (R30: v0.2 rules 1, 3, 11, 13 and 14), in
+ *  §4's order, each the table's own object. */
+export const FILING_RULES = Object.freeze([1, 3, 11, 13, 14].map(actionRule));
 
 /* THE ACTS THE LAYER NAMES, EACH BY THE REQUIREMENT THAT DEFINES IT (R30), and
    named once here as a SELECTOR over the published catalogue, as R28's are:
@@ -1670,6 +1742,139 @@ export function interfaceTranslationLayer(catalog) {
 }
 
 /* =========================================================================
+ * THE ACTION DRAFTING LAYER (R45; T45-13; N861, N887; Actions D1, D11b, D25)
+ *
+ * The doctrine a draft works under when the member asks the assistant to read a
+ * prepared text (pointing out each sentence that reads as an assertion of breach,
+ * a policy position, an ask for the group's own benefit, or a name of staff below
+ * the responsible official), to draft an infraction's documentation for an
+ * audience, or to propose bearings on a reply: `BIO_Action_v0_2.md` §4 rules 1, 2,
+ * 3, 9, 12, 16, 19 and 21, each the table's own object, so the planning, filing
+ * and drafting layers carry the same words. The three drafts are R21's mode, of
+ * kinds of their own (`run-rules` R27): each is answered as a labelled proposal and
+ * never stored, and their reach is `run-rules`' and `agent-worker`'s, never this
+ * text's. The layer holds no gate.
+ * ========================================================================= */
+
+/** The rules of §4 an action draft works under (R45), in §4's order, each the table's own object. */
+export const ACTION_DRAFTING_RULES = Object.freeze([1, 2, 3, 9, 12, 16, 19, 21].map(actionRule));
+
+/* THE ACTS THE LAYER NAMES (R45), each by the requirement that defines it and named once here as a SELECTOR over the
+   published catalogue, as R28's are: `agent-worker` is later in the order (P4). Each is a draft the member asks for;
+   none commits the group, so the layer names no act left to a member beside them (rule 1 names those). */
+export const ACTION_DRAFTING_ACTS = Object.freeze({
+  drafts: Object.freeze([
+    Object.freeze({ id: "textcheck",       defined_by: "agent-worker R76" }),
+    Object.freeze({ id: "infractiondraft", defined_by: "agent-worker R76" }),
+    Object.freeze({ id: "bearingdraft",    defined_by: "agent-worker R76" }),
+  ]),
+});
+
+/** THE `action_drafting` LAYER over the published catalogue (R45). Absent in R9's form while the catalogue holds none
+ *  of its three acts; with any of them, every one must be published, or the render throws naming the missing one (R1,
+ *  R39's form): a half layer is never rendered as a whole one. */
+export function actionDraftingLayer(catalog) {
+  const byId = catalogueById(catalog);
+  const named = ACTION_DRAFTING_ACTS.drafts;
+  if (!named.some((a) => byId.has(a.id))) return {
+    load_when: "never, in this edition",
+    sourcing: "absent",
+    body: {},
+    /* THE ABSENCE, STATED IN THE PACK ITSELF, as the wizard scripts layer states its own. */
+    absent_because: `the plane's published catalogue holds none of the acts ${named.map((a) => a.id).join(", ")}, the `
+      + "drafts through which a member asks the assistant to read a prepared text, document an infraction or propose "
+      + "bearings on a reply, so this layer carries no doctrine for work no draft can do.",
+  };
+  const read = actReader(byId, "action drafting", "an action draft act");
+  return {
+    load_when: "the member asks the assistant to read a prepared text, draft an infraction's documentation for an "
+      + "audience, or propose bearings on a reply",
+    sourcing: "authored",
+    body: {
+      rules: ACTION_DRAFTING_RULES,
+      source: ACTION_SOURCE,
+      section: ACTION_SECTION,
+      /* The mode a draft is answered in, run-rules' (its R21, R27), read and never typed, as writing help's. */
+      mode: DRAFT_MODE.mode,
+      acts: { drafts: named.map(read) },
+      note: "this layer is INSTRUCTION. A draft is answered to the member who asked for it, labelled as machine work, "
+        + "and stored nowhere; it never rewrites the member's text, and what it reads is fenced by the modules that "
+        + "serve it. It becomes the group's only by a member's own acts, which refuse a machine. A run ignoring every "
+        + "word here gets past nothing.",
+    },
+  };
+}
+
+/* =========================================================================
+ * THE PROCEDURE GUIDE LAYER (R46; T45-13; N858; Actions D8; v0.2 rule 11)
+ *
+ * When a run or draft concerns an action of a kind, the procedure guides for that
+ * kind (`reading-guides.procedureGuidesFor`, its R13: the profile's guide first,
+ * then the group's approved ones, unranked, each with its origin, and the
+ * legal-information label) are rendered as the layer's body, the items only. The
+ * answer arrives from the run's caller, which reads it for the viewer, as R40's
+ * reading guides do; this pack reads no viewer and imports nothing of it. A guide
+ * lists routes and the replies to expect, never how the AI may behave: R16 runs
+ * over every item, and an item it fires on throws, naming the guide and the item,
+ * so nothing renders (R40's form).
+ * ========================================================================= */
+
+/** The text fields of a procedure guide's item R16 reads (`reading-guides` R13: `{route, expect?, citation}`). */
+const PROCEDURE_ITEM_FIELDS = Object.freeze(["route", "expect", "citation"]);
+
+/** THE `procedure_guide` LAYER over what the caller passed (R46): `procedureGuidesFor`'s answer, `{ok, kind, guides:
+ *  [{guide, origin, items}], withheld, label}` (`guide` the guide's id, null for the profile's, whose items may carry
+ *  `after`, carried as given; reading-guides R13, K2820, K2825), or a list of them (one per action kind). A guide R13
+ *  withheld is not passed in its `guides`, and is not rendered.
+ *  A stated absence in R9's form with no guide; with guides, `sourcing` `guide`, each named with its kind and origin in
+ *  the answer's order, its items only, and each answer's label carried unchanged. Throws naming the guide and the item
+ *  when an item carries a control-flow pattern (R16). */
+export function procedureGuideLayer(answers) {
+  const list = Array.isArray(answers) ? answers : answers && typeof answers === "object" ? [answers] : [];
+  const sets = list.filter((a) => a && typeof a === "object").map((a) => ({
+    kind: typeof a.kind === "string" ? a.kind : null,
+    label: a.label ?? null,
+    guides: (Array.isArray(a.guides) ? a.guides : []).filter((g) => g && typeof g === "object" && Array.isArray(g.items)),
+  })).filter((a) => a.guides.length > 0);
+  if (sets.length === 0) return {
+    load_when: "never, in this edition",
+    sourcing: "absent",
+    body: {},
+    absent_because: "no procedure guide was passed to this render: a procedure guide is the profile's or the group's, "
+      + "read for the kind of action a run or draft concerns by its caller, and with none this layer carries no routes "
+      + "to name.",
+  };
+  return {
+    load_when: "the run or draft concerns an action of a kind a procedure guide below is for",
+    sourcing: "guide",
+    body: {
+      procedures: sets.map(({ kind, label, guides }) => ({
+        kind,
+        label,
+        guides: guides.map(({ guide, origin, items }) => {
+          /* The profile's guide has no id (`guide: null`, reading-guides R13; K2825): it is named by its kind. */
+          const id = typeof guide === "string" && guide ? guide : null;
+          const name = id ?? (origin === "profile" ? `the profile's guide for ${kind ?? "an unnamed kind"}` : "an unnamed guide");
+          items.forEach((item, i) => {
+            const texts = PROCEDURE_ITEM_FIELDS.map((f) => item?.[f]).filter((t) => typeof t === "string");
+            const found = [...new Set(texts.flatMap(controlFlowAuthority))];
+            if (found.length > 0)
+              throw new Error(`the procedure guide ${id ?? `(${name})`} item ${i + 1} (${JSON.stringify(item?.route ?? null)}) carries `
+                + `a clause of conduct (${found.join("; ")}): a guide lists routes and replies to expect, never how the `
+                + "AI may behave");
+          });
+          return { kind, guide: id, origin: origin ?? null, items };
+        }),
+      })),
+      note: "a procedure guide lists the routes the profile or the group knows for one kind of action, in its order and "
+        + "unranked, with the replies to expect and each route's citation; it is legal information, not legal advice, "
+        + "and never how the AI may behave: the AI's rules of conduct come only from the rules Bob approves, no guide "
+        + "can loosen them, and code checks that none does.",
+    },
+  };
+}
+
+/* =========================================================================
  * THE INVESTIGATION LAYERS (R40–R44; T41-27; N820; D1, D2, D8, D13, D19, D20, D24, D33, D56, D65; K2405, K2418,
  * K2420, K2472)
  *
@@ -1820,9 +2025,10 @@ export function exploreLayer() {
     load_when: "the system explores a question no member asked it to, where an account owner has turned exploring on",
     sourcing: "authored",
     body: {
-      /* run-rules R23: the explorer's runs carry the origin after every member-started run's (`RUN_ORIGINS`' first),
-         in the mode the law lookup reads from the order, the one after the first deployed (R18). */
-      origin: RUN_ORIGINS[RUN_ORIGINS.length - 1],
+      /* run-rules R23: the explorer's runs carry the origin `explore`, read from `RUN_ORIGINS` by key (as
+         question-explorer reads it), never by position, in the mode the law lookup reads from the order, the one after
+         the first deployed (R18). */
+      origin: RUN_ORIGINS.find((o) => o === "explore"),
       mode: LEGAL_LOOKUP_MODE,
       reuses: Object.keys(judgementLayers()),
       clauses: EXPLORE_CLAUSES,

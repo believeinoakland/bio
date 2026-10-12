@@ -216,7 +216,8 @@ test("R13 (D54): parts, revisions and addressed records are append-only, declare
   assert.equal(w.count("consequence_addressed"), 2, "a later record is a new row");
   /* Declared to purge, and a purge of one part's bundle clears only its rows. */
   assert.deepEqual(CONSEQUENCES_TABLES.map((t) => (typeof t === "string" ? t : t.name)),
-                   ["consequence_parts", "consequence_operands", "consequence_addressed"]);
+                   ["consequence_parts", "consequence_operands", "consequence_addressed", "success_records",
+                    "consequence_carries"]);
   assert.equal(CONSEQUENCES_TABLES.every((t) => consequencesOwns(t)), true);
   assert.equal(w.record.declarePurge("other", ["consequence_parts"]).reason, "TABLE_DECLARED");
   const p = w.record.purge({ bundleId: rev.id });

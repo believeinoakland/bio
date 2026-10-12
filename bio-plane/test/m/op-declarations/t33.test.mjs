@@ -120,7 +120,13 @@ const SERVED_ELSEWHERE = { clockpropose: "control-plane (T33-89)", capturereques
      K2560, K2569) — ai-use's estimate and actual, ai-runs' run over steps and group test (and inquiry, hypotheses,
      actions and run-productions serve theirs in their own maps) */
   aiestimate: "control-plane (T41-62)", aiactual: "control-plane (T41-62)", stepsrunai: "control-plane (T41-62)",
-  grouptestset: "control-plane (T41-62)", grouptestresults: "control-plane (T41-62)" };
+  grouptestset: "control-plane (T41-62)", grouptestresults: "control-plane (T41-62)",
+  /* T45 (R49): the ops whose owner exports no arm for them yet — the group's rules (local-facts R12) and case-account's
+     two (its R13, K2834), routed by the plane's job; the declared stake, built by instance-setup's job (its R77) */
+  grouprules: "plane (T45-47)", advocacycheck: "plane (T45-47)", advocacychecks: "plane (T45-47)",
+  /* the assistant's two drafts, whose doors the plane builds (K2824, K2881) */
+  infractiondraft: "plane (T45-47)", bearingdraft: "plane (T45-47)",
+  declaredstakeset: "instance-setup (T45-44)" };
 
 test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — owner, citation, the actor and proposer stamps as {key, at}, its kinds, and the acts, proposals and reads derived from them — each op in exactly one family and every kind one of OP_KINDS", () => {
   assert.deepEqual(Object.keys(OP_FAMILIES).sort(), ["acquisition", "action-clocks", "actions", "ai-runs", "ai-use", "answers",
@@ -128,11 +134,16 @@ test("R19, R17, R18, R20, R5: OP_FAMILIES holds one frozen entry per owner — o
     "entities", "events", "explore", "extraction", "file-safety", "following", "hypotheses", "inquiry", "instance-setup", "investigation",
     "leg-earning", "lines", "membership", "money", "money-checks", "people", "public-read", "publish-schedule",
     "question-explorer", "reading-guides", "retrieval", "review", "run-productions", "sources", "standards", "steps", "tasks",
-    "wizard-scripts", "workbooks"]);
+    "wizard-scripts", "workbooks",
+    /* T45 (R49): the owners T45 gives a family */
+    "action-holds", "action-plans", "action-replies", "agent-worker", "case-check", "conformance", "consequences", "filings", "local-facts",
+    "plan-work", "project-roster"].sort());
   assert.deepEqual(Object.keys(OP_KINDS).sort(), ["admin", "daemonact", "door", "member", "open", "own", "ownread",
     "plainread", "proposal", "public", "publicread", "publishact", "read", "roster", "runact", "sessionact", "sessionend",
     "sessionread", "sessionrunact",
-    "settingread", "sightact", "tally"]);
+    "settingread", "sightact", "tally",
+    /* T45 (R49) */
+    "owners", "publishgate"].sort());
   const seen = new Set();
   for (const [owner, f] of Object.entries(OP_FAMILIES)) {
     for (const v of [f, f.kinds, f.acts, f.proposals, f.reads, f.extra, ...Object.values(f.extra)]) assert.ok(Object.isFrozen(v), owner);
@@ -192,6 +203,9 @@ test("R19, R2, R3: every family op has the spec and NEEDS row its kind gives —
     /* T41 (R42, R43; K2574, K2496) */
     publicread: [{ classes: null, mutating: false }, null],
     runact: [{ classes: MP, mutating: true }, "contribute"],
+    /* T45 (R49): a project's setting by its owner's predicate, projectvisibilityset's; a held check, publish's */
+    owners: [{ classes: MP, mutating: true }, null],
+    publishgate: [{ classes: MP, mutating: true }, "publish"],
   };
   const PUBLIC = ["door", "public", "publicread"];
   let n = 0;
@@ -251,7 +265,7 @@ test("R19, R6: each new module's ops map and each family's share of an earlier m
       assert.ok(served.includes(op) || Object.hasOwn(SERVED_ELSEWHERE, op), `${owner}: ${op} is declared and served by nobody`);
   }
   /* the families no map holds are instance-setup's (its job builds them) */
-  for (const op of Object.keys(OP_FAMILIES["instance-setup"].kinds)) assert.match(SERVED_ELSEWHERE[op], /instance-setup/);
+  for (const op of Object.keys(OP_FAMILIES["instance-setup"].kinds)) assert.match(SERVED_ELSEWHERE[op] ?? "", /instance-setup/, op);
   /* T34: membership's, publication's and credentials' new ops are served by their merged owners now */
   for (const op of [...Object.keys(OP_FAMILIES.membership.kinds), ...Object.keys(OP_FAMILIES["publish-schedule"].kinds),
                     "groupkeyset", "groupkeyremove", "groupkeyswitch", "groupkeystate", "groupkeynotice",

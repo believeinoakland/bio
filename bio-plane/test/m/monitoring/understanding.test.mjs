@@ -378,7 +378,8 @@ test("R44 the mark reads action-clocks.pendingClocks and moves an entry only fro
   const orig = w.clocks.pendingClocks.bind(w.clocks);
   w.clocks.pendingClocks = (q) => { read = q; return orig(q); };
   const r = await w.m.deadlineRecheck(NOW_MS);
-  assert.deepEqual(read, { before: "2026-09-28", limit: 500, viewer: MONITOR_VIEWER }, "through action-clocks R1");
+  assert.deepEqual(read, { before: "2026-09-30", limit: 500, viewer: MONITOR_VIEWER },
+    "through action-clocks R1, today's entries and the next day's read too (T45: a time of day passes at its instant)");
   assert.deepEqual(r.marked.map((m) => m.ords), [[3]]);
   const clock = w.fm(id).clock;
   assert.deepEqual(clock.map((e) => [e.text, e.date, e.status]),
@@ -561,7 +562,7 @@ test("R34 R50 (K1444 (iii)) an entry's date passes on the local day of the actio
   assert.equal(w.m.deadlineRecheckDue(start - HOUR), null);
   const early = await w.m.deadlineRecheck(start - HOUR);
   assert.deepEqual([early.ok, early.zone, early.day, early.marked, early.failed], [true, "America/Halifax", "2026-10-03", [], []]);
-  assert.equal(reads.at(-1), "2026-10-03", "pendingClocks is asked for entries before the local day");
+  assert.equal(reads.at(-1), "2026-10-05", "pendingClocks is asked from the local day, never the UTC day (the 3rd, two days on: T45's timed entries)");
   assert.equal(w.fm(id).clock[0].status, "pending");
   /* at the start of the local 4th it is past, due and marked */
   w.clock.ms = start;

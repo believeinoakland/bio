@@ -52,6 +52,15 @@ test("R29 the refusals' details and the not-held reasons it answers: the rule se
     w.a.standingQuestionRead({ id: "STQ-2026-0999", viewer: V("bob") }),
     w.a.tallies({ viewer: V("bob") }),
   ];
+  /* (T45; R34) the end date's change: each of its refusals */
+  const sq = w.a.standingQuestionSet({ author: V("bob"), question: "q", query: "title:x", cadence: "daily", ends: "2026-12-31" });
+  answers.push(w.a.standingQuestionEndSet({ id: sq.id, author: "class:ai", ends: "2027-01-31" }),
+               w.a.standingQuestionEndSet({ id: "STQ-2026-0999", author: V("bob"), ends: "2027-01-31" }),
+               w.a.standingQuestionEndSet({ id: sq.id, author: V("bob"), ends: "2026-01-01" }));
+  w.a.standingQuestionEnd({ id: sq.id, author: V("bob") });
+  const ended = w.a.standingQuestionEndSet({ id: sq.id, author: V("bob"), ends: "2027-01-31" });
+  assert.equal(ended.code, "STANDING_ENDED");
+  answers.push(ended);
   for (const a of answers) for (const s of said(a)) assert.doesNotMatch(s, BANNED, s);
   /* (T37; N765) the kept_away condition and the translation it carries, credentials' row (its R35), as a run answers it */
   assert.equal(w.a.standingAiSwitch({ on: true, by: V("alice") }).ok, true);

@@ -25,7 +25,7 @@ const correspond = (x, id, e) => {
 const supersede = (x, id) => x.determine({ supersedes: id, reason: "corrected",
   act: { ...x.act, id: x.conformance.determinationRead({ id, viewer: MACHINE }).act.id } });
 
-test("R8 refusals in order: MACHINE_CANNOT_NAME_COUNSEL, NO_SUCH_ACTION, NO_COUNSEL (at Tier 3 or an undetermined tier; a counsel given at any tier without both name and organisation), NO_DETERMINATION; a packet at every governing tier, NOT_TIER3 retired; negative controls", async () => {
+test("R8 refusals in order: MACHINE_CANNOT_NAME_COUNSEL, NO_SUCH_ACTION, NO_COUNSEL (at Tier 3 or an undetermined tier; a counsel given at any tier without both name and organisation); a packet at every governing tier, NOT_TIER3 and NO_DETERMINATION retired (T45: a packet needs no determination); negative controls", async () => {
   const x = tier3();
   assert.equal(pack(x, { author: MACHINE, action: "ACTION-NONE" }).reason, "MACHINE_CANNOT_NAME_COUNSEL");
   assert.equal(pack(x, { author: "" }).reason, "MACHINE_CANNOT_NAME_COUNSEL");
@@ -49,17 +49,21 @@ test("R8 refusals in order: MACHINE_CANNOT_NAME_COUNSEL, NO_SUCH_ACTION, NO_COUN
   for (const c of [null, { name: "A. Counsel" }, { organisation: "Test Chambers" }, { name: " ", organisation: "x" },
                    { name: "A", organisation: "B", contact: "x".repeat(201) }])
     assert.equal(pack(x, { counsel: c }).reason, "NO_COUNSEL", JSON.stringify(c));
-  assert.equal(pack(x).reason, "NO_DETERMINATION", "contact is optional; the action rests on nothing");
-  assert.equal(pack(x, { action: x.action({ legs: [] }), counsel: null }).reason, "NO_DETERMINATION", "at Tier 1 too, after counsel");
-  assert.equal(pack(x, { action: x.action({ kind: "commitment_claim" }), viewer: V("quinn"), author: V("quinn") }).reason,
-               "NO_DETERMINATION", "a determination the author may not see is none");
+  /* T45 (R8): an action resting on nothing assembles a packet; NO_DETERMINATION is never answered */
+  const bare = pack(x);
+  assert.deepEqual([bare.ok, bare.sections.facts.items], [true, []], "contact is optional; the action rests on nothing");
+  assert.equal(pack(x, { action: x.action({ legs: [] }), counsel: null }).ok, true, "at Tier 1 too");
+  const unseen = pack(x, { action: x.action({ kind: "commitment_claim" }), viewer: V("quinn"), author: V("quinn") });
+  assert.deepEqual([unseen.ok, unseen.sections.facts.items], [true, []], "a determination the author may not see sets out nothing of it");
   const ok = pack(x, { action: x.action({ kind: "bylaw_complaint", risk_tier: 3 }),
                        counsel: { ...COUNSEL, contact: "counsel@example.org" } });
   assert.deepEqual([ok.ok, ok.version, ok.fileable], [true, 1, false], "a Tier 1 kind raised to 3 gets a packet");
   assert.match(ok.id, /^CPK-2026-\d{4}$/);
   const y = tier3();
   supersede(y, y.D);
-  assert.equal(pack(y).reason, "NO_DETERMINATION", "a superseded determination is not live");
+  const sup = pack(y);
+  assert.deepEqual([sup.ok, sup.sections.facts.items, sup.basis_changed], [true, [], null], "a superseded determination is not live: nothing of it is set out");
+  assert.equal("NO_DETERMINATION" in FILINGS_CHECKS, false, "retired, its number never reused");
 });
 
 test("R8 PACKET_NO_REASON (C-115.44): a reason absent, not a string, blank or only whitespace, or over 2,000 characters is refused with nothing written, asked after MACHINE_CANNOT_NAME_COUNSEL and before NO_SUCH_ACTION; a reasoned packet at Tier 1 and at Tier 3 reads its reason back with its version through counselPacketRead, filingsFor and the op", async () => {
@@ -150,10 +154,13 @@ test("R9 the six sections, each item naming its record source: facts, the chrono
   /* theories: empty, said in words */
   assert.deepEqual(s.theories.items, []);
   assert.match(s.theories.says, /no candidate theory/);
-  /* deadlines: the profile's claim deadline, whose start ("known") the record does not hold */
-  assert.deepEqual(s.deadlines.items.map((d) => [d.rule, d.days, d.count, d.starts, d.citation, d.date.state]),
-                   [["claim_notice", 90, "calendar", "known", "Test Stat. § 9.20", "undetermined"]]);
-  assert.match(s.deadlines.items[0].start.why, /no date on which the group knew/);
+  /* deadlines: every profile deadline that applies to a claim (a defence deadline, `defends: true`, is no claim's) */
+  const claimRules = combine([PROFILE]).view.deadlines.filter((r) => r.applies_to === "claim" && r.defends !== true).map((r) => r.rule);
+  assert.deepEqual(s.deadlines.items.map((d) => d.rule), claimRules);
+  assert.ok(claimRules.length >= 1 && !claimRules.includes("defence_filing"));
+  const notice = s.deadlines.items.find((d) => d.rule === "claim_notice");
+  assert.deepEqual([notice.days, notice.count, notice.starts, notice.citation, notice.date.state], [90, "calendar", "known", "Test Stat. § 9.20", "undetermined"]);
+  assert.match(notice.start.why, /no date on which the group knew/);
   /* consequences as recorded, states kept apart */
   const rec = s.consequences.items[0].recorded;
   assert.deepEqual(rec, x.consequences.consequencesOf({ determination: x.D, viewer: V("olive") }), "whole, as recorded");

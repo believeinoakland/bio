@@ -69,7 +69,33 @@ const R9 = {
 /* N364 (R1, R5, K530): `sourceconsent` is an act on a source's entry, which no bundle's facts describe: never offered
    beside a bundle, on any type, state or fact. */
 const SOURCE = { sourceconsent: () => false };
-const ORACLE = { ...R8, ...R9, ...SOURCE };
+/* R51 (T45; v0.2 rule 1): each act an action offers, offered on an action exactly where its own refusal admits the caller,
+   read off R14's `action` facts (a stated count above zero, a stated `true` or `false`; an absent `action` offers none). */
+const has = (v) => n(v) !== null && n(v) > 0;
+const R51 = {
+  actionhold: (f, t) => t === "action" && !!f.action,
+  actionholdrelease: (f, t) => t === "action" && has(f.action?.holds_in_place),
+  actionpressure: (f, t) => t === "action" && has(f.action?.entries?.received_unmarked),
+  holdnoticeprepare: (f, t) => t === "action" && has(f.action?.holds_in_place),
+  holdnoticesent: (f, t) => t === "action" && has(f.action?.holds_in_place),
+  actionreceipt: (f, t) => t === "action" && has(f.action?.entries?.sent),
+  actionscope: (f, t) => t === "action" && !!f.action,
+  actionpromise: (f, t) => t === "action" && !!f.action,
+  actionreplybearing: (f, t) => t === "action" && f.action?.request_for_comment === true && has(f.action?.entries?.received),
+  actionbearingpropose: (f, t) => t === "action" && f.action?.request_for_comment === true && has(f.action?.entries?.received),
+  arosefrom: (f, t) => t === "action" && has(f.action?.entries?.received),
+  escalationopen: (f, t) => t === "action" && f.action?.escalation?.openable === true,
+  escalationattach: (f, t) => t === "action" && f.action?.escalation?.attachable === true,
+  filingprepare: (f, t) => t === "action" && f.action?.closed === false && f.action?.preparable === true,
+  communicationprepare: (f, t) => t === "action" && f.action?.closed === false,
+  filingapprove: (f, t) => t === "action" && has(f.action?.drafts?.unapproved),
+  filingsent: (f, t) => t === "action" && has(f.action?.drafts?.approved_unsent),
+  counselpacket: (f, t) => t === "action" && !!f.action,
+  clockstate: (f, t) => t === "action" && !!f.action,
+  reminderset: (f, t) => t === "action" && has(f.action?.clock?.dated) && f.action?.clock?.reminders_room === true,
+  itemtakeup: (f, t) => t === "action" && (has(f.action?.clock?.entries) || has(f.action?.holds_in_place)),
+};
+const ORACLE = { ...R8, ...R9, ...SOURCE, ...R51 };
 /* R10: a machine is withheld what its class is refused, on a stated true only. */
 const expected = (f, id) => ORACLE[id](f, normalizeType(f.object_type))
   && !(f.actor_is_machine === true && id in MACHINE_REFUSALS);
@@ -96,6 +122,15 @@ const ROSTERS = [null,
   { owner: null, state: null, owner_floor_clear: null, other_owner_committed: null, rescue_open: null }];
 const READINGS = [null, [], ["suggested"], ["considering"], ["accepted"], ["rejected"], ["accepted", "rejected"]];
 /* Each dimension sets one or more keys of the facts object; `undefined` removes a key. */
+/* R51: an action's facts with every act's condition met, with none met, and with every sub-fact null. */
+const ACTION_ALL = { closed: false, request_for_comment: true, entries: { all: 2, sent: 1, received: 1, received_unmarked: 1 },
+  holds_in_place: 1, preparable: true, drafts: { unapproved: 1, approved_unsent: 1 },
+  clock: { entries: 1, dated: 1, reminders_room: true }, escalation: { openable: true, attachable: true } };
+const ACTION_NONE = { closed: true, request_for_comment: false, entries: { all: 0, sent: 0, received: 0, received_unmarked: 0 },
+  holds_in_place: 0, preparable: false, drafts: { unapproved: 0, approved_unsent: 0 },
+  clock: { entries: 0, dated: 0, reminders_room: false }, escalation: { openable: false, attachable: false } };
+const ACTION_NULL = { closed: null, request_for_comment: null, entries: null, holds_in_place: null, preparable: null,
+  drafts: null, clock: null, escalation: null };
 const DIMS = {
   case_member: B.map((v) => ({ case_member: v })),
   concludes_for_project: B.map((v) => ({ concludes_for_project: v })),
@@ -118,6 +153,9 @@ const DIMS = {
   actor_is_machine: B.map((v) => ({ actor_is_machine: v })),
   contradiction_inquiry: B.map((v) => ({ contradiction_inquiry: v })),
   contradiction_sides_seen: B.map((v) => ({ contradiction_sides_seen: v })),
+  /* R51: an action's facts, each sub-fact stated, zero or null, and the whole absent */
+  action: [undefined, null, ...[ACTION_ALL, ACTION_NONE, ACTION_NULL].flatMap((base) => Object.keys(ACTION_ALL)
+    .map((k) => ({ ...ACTION_ALL, [k]: base[k] }))), ACTION_NONE, ACTION_NULL].map((action) => ({ action })),
 };
 const NAMES = {
   release: [], retire: ["cites_in"], dispose: ["case_member"],
@@ -137,6 +175,7 @@ const NAMES = {
   projectleave: ["roster"], projectownerremove: ["roster"], projectownerrescue: ["roster"],
   projectvisibilityset: ["project_target_owner"],
   sourceconsent: ["contradiction_inquiry", "case_member", "roster"],
+  ...Object.fromEntries(Object.keys(R51).map((id) => [id, ["action"]])),
 };
 const PERMISSIVE = { case_member: false, concludes_for_project: true, concluded_for_project: true,
   edition_warranted_for_project: true, project_owner: true, basis_legs: 2,
@@ -185,7 +224,14 @@ function checkActs(ids) {
   return { wrong, rows };
 }
 
-test("R8 R9 R10: the oracle covers exactly the acts in ACTS", () => {
+test("R51: each act an action offers is returned exactly when its owner's refusal would admit the caller, on every type, "
+   + "state and combination of the action's facts — and a machine is offered none in MACHINE_REFUSALS", () => {
+  const { wrong, rows } = checkActs(Object.keys(R51));
+  assert.ok(rows > 1000, `a real corpus (${rows} rows)`);
+  assert.deepEqual(wrong.slice(0, 5), []);
+});
+
+test("R8 R9 R10 R51: the oracle covers exactly the acts in ACTS", () => {
   assert.deepEqual(Object.keys(ORACLE).sort(), ACTS.map((a) => a.id).sort());
   assert.deepEqual(Object.keys(NAMES).sort(), ACTS.map((a) => a.id).sort());
 });

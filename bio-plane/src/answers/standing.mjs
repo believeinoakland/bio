@@ -6,8 +6,9 @@
  * call (R17); a run finds something new only when its result holds an id the previous run's did not, or an occurrence
  * it reads changed state (R18). Only then may the AI half answer, and only when every condition of R19 holds; it is
  * built switched off (plan Rules (7)). A question, its runs
- * and its finds are seen by its author alone (R16), and it reads nothing outside the asking scope (R21). Setting or
- * ending one tells each module listening (R27), so the scheduler re-arms its wake.
+ * and its finds are seen by its author alone (R16), and it reads nothing outside the asking scope (R21). Its author may
+ * move its end date while it runs, never revive it once ended (R34). Setting, ending or moving the end of one tells each
+ * module listening (R27), so the scheduler re-arms its wake.
  *
  * A standing find (R28; DEC-164 (6), K1865) keeps a find in place of a saved query: "Keep finding this as documents
  * arrive", over a scope as `retrieval.findIn` takes it. Each run calls `findIn` under its author's sight, page by page,
@@ -88,7 +89,7 @@ function today(self, now) {
 function questionAnswer(r) {
   const find = parse(r.find_json);
   return { id: r.stq_id, question: find && r.question === "" ? null : r.question, query: find ? null : parse(r.form_json),
-           ...(find ? { find } : {}), cadence: r.cadence, ends: r.ends,
+           ...(find ? { find } : {}), cadence: r.cadence, ends: r.ends, ends_changes: parse(r.ends_changes_json) || [],
            created_at: r.created_at, ended: r.ended_at ? { at: r.ended_at, by: r.ended_by } : null,
            last_run_at: r.last_run_at, next_due: r.ended_at ? null : r.next_due };
 }
@@ -213,9 +214,46 @@ export function standingQuestionEnd(self, { id = null, author = null } = {}) {
   if (!r) return noSuch(id);
   if (r.ended_at) return { ok: true, id, already: true, ended: { at: r.ended_at, by: r.ended_by } };
   const at = self.now();
-  self.sql.exec(`UPDATE standing_questions SET ended_at=?, ended_by=? WHERE stq_id=?`, at, r.author, id);
+  self.record.transact(() => {
+    self.sql.exec(`UPDATE standing_questions SET ended_at=?, ended_by=? WHERE stq_id=?`, at, r.author, id);
+    return { ok: true };
+  });
   self.tellStanding(id, null);   /* R27 */
   return { ok: true, id, ended: { at, by: r.author } };
+}
+
+/** R34 (T45; N855; Actions D6d; v0.2 rule 17): the author changes their own question's end date, by their own act or
+ *  inside it by `following` (its R25's `keep`). Refusals in order, each writing nothing: a machine or empty author; a
+ *  question not the author's, answered as for none (R16); an ended one, by its author or by its date, never revived
+ *  (`STANDING_ENDED`); an end not a calendar day after today's local day (R15's rule). The same end answers
+ *  `unchanged` and writes nothing. Otherwise the new end is recorded, each earlier one kept on the question with who
+ *  changed it and when (seen by its author alone, R16), and R27's listeners are told once after the act commits. No
+ *  model, no account (R26). */
+export function standingQuestionEndSet(self, { id = null, ends = null, author = null } = {}) {
+  if (!memberOf(author) || isMachineIdentity(author))
+    return refusal("MACHINE_CANNOT_AUTHOR", "a standing question's end date is changed only by its author's own act");
+  const r = own(self, id, author);
+  if (!r) return noSuch(id);
+  const now = self.now();
+  const day = today(self, now);
+  /* R16: ended by its author, or past its end date (it ends itself; that write is the tick's or a read's, not this
+     refusal's) */
+  if (r.ended_at || day > r.ends)
+    return refusal("STANDING_ENDED", "this standing question has ended and is never revived; set a new one", { id });
+  if (!isDay(ends) || ends <= day) return refusal("STANDING_NEEDS_END", "the end date is a date after today");
+  if (ends === r.ends) return { ok: true, id, ends, unchanged: true };
+  const changes = [...(parse(r.ends_changes_json) || []), { ends, was: r.ends, at: now, by: r.author }];
+  const done = self.record.transact(() => {
+    self.sql.exec(`UPDATE standing_questions SET ends=?, ends_changes_json=? WHERE stq_id=? AND ended_at IS NULL`,
+                  ends, json(changes), id);
+    return { ok: true };
+  });
+  if (!done || done.ok !== true) return done;
+  /* R27: the next due day the scheduler re-arms on: the one held, or today for a question not yet run; none when it
+     falls after the new end */
+  const due = r.next_due ?? day;
+  self.tellStanding(id, due <= ends ? due : null);
+  return { ok: true, id, ends, was: r.ends };
 }
 
 /* R16: a question past its end date ends itself. */
