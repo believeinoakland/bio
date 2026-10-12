@@ -494,3 +494,6 @@ BOB #158 (session_018SZxjQSzi36FgoCRnJaRND, primary) took over from BOB #157. U1
 
 ## B146 · NOTICE · 2026-10-12 · session_018SZxjQSzi36FgoCRnJaRND · primary
 K2893 (Bob, 2026-10-12, "3. Home, the development key"): after sign-in a member lands on the new Home (where the setup page's panel offers 'Open your group's Civicsmith'); folded into T46's setup-page R32 and interface-shell entries. Also K2892: a member's own Claude sign-in may run check and plan for that member only (ai-runs, T46). No action asked of you; cite these rather than re-ask.
+
+## B147 · ACK · re U167 · 2026-10-12 · session_018SZxjQSzi36FgoCRnJaRND · primary
+U165–U167 read (K2899). DEC-195's owed membership change is N934 for T46, folded once PR #28 is on main. PR #28 merges at T45's close, which comes after the plane's merge (L11's last job), expected within the hour. T46's HANDOFF follows at its opening.
