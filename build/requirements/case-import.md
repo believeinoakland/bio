@@ -1,6 +1,6 @@
 # case-import — requirements
 
-**Status** · In force: a new product module, placed by BOB (K1256, K1257); folded at T28's opening (N520, DEC-96; K1268, K1277), R16 and R6–R9's changes N522's (K1273); N534 reviewed (K1369). Last changed T34 (T34-94: R5, K1828); every requirement met (K1833). Last changed T41 (T41-41's text: R22, R23 new; N820; D59, D62; K2405, K2417, K2418); marked not yet met (T41). Last changed T46 (T46-24: R4 amended, the source group's `group_fields` recorded at import and answered from `importedCase`, for `conformance` R32; N903; K2832); met (K2969).
+**Status** · In force: a new product module, placed by BOB (K1256, K1257); folded at T28's opening (N520, DEC-96; K1268, K1277), R16 and R6–R9's changes N522's (K1273); N534 reviewed (K1369). Last changed T34 (T34-94: R5, K1828); every requirement met (K1833). Last changed T41 (T41-41's text: R22, R23 new; N820; D59, D62; K2405, K2417, K2418); marked not yet met (T41). Last changed T46 (T46-24: R4 amended, the source group's `group_fields` recorded at import and answered from `importedCase`, for `conformance` R32; N903; K2832); met (K2969). Last changed T47 (T47-30: R17's citation of the docket address corrected, wording only, N951; R24 new, amending R16, `flagHistory` registered with `accepted-work` (its R9), R8's flags with their opening and clearing instants, N947, K3033); R17 and R24 marked not yet met (T47).
 
 **Size (P6).** About 1,600–2,300 lines: the import and its tables, recreation, completion, the reads, the four acts and its catalogue rows. Acceptance is split out if it grows (K1256).
 
@@ -96,6 +96,8 @@ Terms.
 
   A viewer who is not an active member is answered null, as R4 answers. (DEC-96 items 1, 4; P4)
 
+- **R24** (T47; N947; K3033, K2949; amends R16; `accepted-work` R9; `case-carriage` R19) The registration R16 makes also carries `flagHistory({ref, edition, since, viewer})`, read as the plane: for the imported finding reference `ref` (`inquiry-grammar.importedFindingRef`) at `edition`, every flag R8 recorded on that edition, its own and the named finding's (as R16's `openFlags` answers them), that was open at any instant from `since` through the read (recorded at or before the read and not cleared before `since`), open now or cleared since, in the order flagged, each `{flag, finding, issue, opened_at, cleared_at}`: `opened_at` the instant R8 recorded the flag, `cleared_at` the instant of its clear, null while it is open; and `complete: true` when every such flag is answered. A `since` that is not an instant `record-core` stamps answers `complete: false` and no flags, so a reader fails closed. A viewer who is not an active member is answered null, as R4 answers. It writes nothing and never throws. So `case-carriage` R19's interval clause holds in the composed plane: a flag opened and cleared after a check was made is still seen. Controls: a flag flagged and cleared after `since` is answered with both instants; one cleared before `since` is not; one open is answered with `cleared_at: null`. *(not yet met: T47)*
+
 **watchImport({import, publisher, by, viewer})** (`op=importwatch`) **and unwatchImport({import, by, viewer})** (`op=importunwatch`); member session; each mutating (N534)
 
 - **R17** Refusals, in order, each writing nothing:
@@ -104,7 +106,7 @@ Terms.
   - for `watchImport`, a `publisher` that is not a public https locator (`record-grammar.isPublicHttpsLocator`), or that carries a query or a fragment, is `IMPORT_WATCH_BAD_ADDRESS`;
   - for `unwatchImport`, an import with no watch in force is `IMPORT_NOT_WATCHED`.
 
-  Otherwise `watchImport` records a watch with `by`, the instant, `publisher` and the docket address. The docket address is `publisher` with the query `op=docketpublic&case=<the import's case, percent-encoded>&captures=omit` (`docket` R23, R24; `public-read` R25). A watch with the same docket address already in force answers `existed: true` and writes nothing. A different address replaces the watch in force. `unwatchImport` records the end of the watch, with `by` and the instant. Every watch and every end stays in the history. A watch is never a default: an import is not watched until a member asks. A case is watched only once it is imported, since the import holds the case's id and keys, against which its entries are verified (K1339 F2: "cites or follows" read as imported). (DEC-101 (3): "can be configured"; Publication §5A)
+  Otherwise `watchImport` records a watch with `by`, the instant, `publisher` and the docket address. The docket address is `publisher` with the query `op=docketpublic&case=<the import's case, percent-encoded>&captures=omit`: the route `public-read` R21 and R25 serve, answering `docket` R24's public answer (T47; N951: was cited as `docket` R23, which states the addresses the docket itself answers, not this one). A watch with the same docket address already in force answers `existed: true` and writes nothing. A different address replaces the watch in force. `unwatchImport` records the end of the watch, with `by` and the instant. Every watch and every end stays in the history. A watch is never a default: an import is not watched until a member asks. A case is watched only once it is imported, since the import holds the case's id and keys, against which its entries are verified (K1339 F2: "cites or follows" read as imported). (DEC-101 (3): "can be configured"; Publication §5A) *(not yet met: T47)*
 
 **watchedImports({after, limit}) and recordDocketRead({import, docket, at, outcome, reason?, answer?})** (services for `monitoring`; read as the plane)
 
@@ -153,7 +155,7 @@ Terms.
 - `bias` (T41; D59; K2471): `statementInForce` (its R49; R23). A new `modules.json` edge; `bias` is earlier (layer 5).
 - `calc-grammar` (T33-67; K2534): `evaluate` (R21).
 - `inquiry-grammar`: `importedFindingRef` (its R11; R6).
-- `accepted-work`: `registerAcceptedWork` (its R1, with its R8's `moves`; R16).
+- `accepted-work`: `registerAcceptedWork` (its R1, with its R8's `moves`; R16; with its R9's `flagHistory`, R24, T47).
 - `reevaluation`: `acceptanceWithdrawn` (its R31; R7); `citedCaseMoved` (its R33; R18; N534).
 - `signatures` (N534): `verifySshsig` (its R2), `NS_DOCKET` (its R39), `docketStatement` (its R40), for R18's check 2.
 - `docket` (N534): `DOCKET_UNREADABLE` (its R15), for R19; the public answer's form (its R24) that R18 reads, and the entry format's two labels (its R6).

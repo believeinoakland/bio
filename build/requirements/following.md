@@ -1,7 +1,7 @@
 # following — requirements
 
 
-**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-79), a seam beside `monitoring` with no copy (K617): no `monitoring` requirement moved. Following a whole policy portal and a standard's new editions is not here. Last changed T35 (T35-65: R20, R21; K1727, K1740); every requirement met (K2027). Last changed T46 (T46-42: R27 new, amending R24, `promises_met`'s instant read from `plan-work.matterPromiseDuties`' `met_at`, one source, N921; K2874, K2960); marked not yet met (T46).
+**Status** · In force: a new module, reviewed with T33's new modules (K1505; T33-79), a seam beside `monitoring` with no copy (K617): no `monitoring` requirement moved. Following a whole policy portal and a standard's new editions is not here. Last changed T35 (T35-65: R20, R21; K1727, K1740); every requirement met (K2027). Last changed T46 (T46-42: R27 new, amending R24, `promises_met`'s instant read from `plan-work.matterPromiseDuties`' `met_at`, one source, N921; K2874, K2960); marked not yet met (T46). Last changed T47 (T47-46: R28 new, amending R25, `dutyWatchEndAt(duty)` answering the end day with the instant it took hold, N967); marked not yet met (T47).
 
 **Size (P6).** Estimated 1,500–2,500 lines (T33-79, est 15 requirements). Under 4,000.
 
@@ -80,6 +80,9 @@ Terms. A **follow** is a member's standing act naming what is followed and for w
 
 **When the promises were met, from one source** (T46)
 - **R27** (T46; N921; amends R24 (b); `plan-work` R15) R24's `promises_met` is read from `plan-work.matterPromiseDuties` alone (its R13, R15), as this module reads it with no member's sight: a link's question is due on `promises_met` when, for each of the link's matters (all the plan's matters when it names none), the read answers `all_met` and not `partial`, and its `due_at` is the latest of those matters' `met_at`. This module no longer derives that instant from `duties.occurrencesOf` or an occurrence's evidence; a matter whose read answers no `met_at` makes the question not due by this cause. R24's other terms (the `closed` cause, the first of the two, an ended watch never due) are unchanged. Control: a matter whose two duties were read met on different days makes the question due at the later instant; with one of them unmet, the link is not listed on `promises_met`.
+
+**When a duty's end took hold** (T47)
+- **R28** (T47; N967; amends R25; `notice-producers` R18) `dutyWatchEndAt(duty)` (in process, for `notice-producers` R18) answers null exactly when R25's `dutyWatchEnd(duty)` does, and otherwise `{day, at}`: `day` the day `dutyWatchEnd` answers, and `at` the recorded instant of the answer (R25) that made that end hold, the last of the duty's links' answers to be recorded, from which no link of it stood unanswered; so a reader tells a notice told before the end took hold from one told after, for a `keep` as for a `stop`. `dutyWatchEnd` is unchanged. It writes nothing and never throws: a link it cannot read answers null, as `dutyWatchEnd` does. Controls: a duty with two links answered on different days answers the later answer's instant, with the latest end day; with one link unanswered it answers null. *(not yet met: T47)*
 
 ## Private
 
