@@ -56,7 +56,7 @@ import { standardsOf, noSuchStandard } from "../standards/index.mjs";
 import { dutiesOf } from "../duties/index.mjs";
 import { progressionsOf } from "../progressions/index.mjs";
 import { intentOf } from "../intent/index.mjs";
-import { localDay, overdueOn, isCalendarDate } from "../civil-time/index.mjs";
+import { localDay, overdueOn, isCalendarDate, bounds } from "../civil-time/index.mjs";
 import { combine } from "../../../jurisdictions/index.mjs";
 import { parseFrontmatter, normalizeType, vocabFor, STATES, OBJECT_TYPES, isMachineIdentity,
          createSha256, BUNDLE_ID_RE, idPattern } from "../record-grammar/index.mjs";
@@ -121,20 +121,32 @@ const LOCAL_DT_RE = /^(\d{4}-\d{2}-\d{2})T([01]\d|2[0-3]):[0-5]\d$/;
 /* R81, R83, R94: the flat keys an entry's T45 fields are held under (K2849). */
 const ENTRY_FIELD_KEYS = Object.freeze(["speaker", "office_words", "office_status", "found_elsewhere", "found_elsewhere_note"]);
 const OVERRIDE_KEYS = Object.freeze(["ground_kind", "ground_citation", "ground_date", "ground_what", "ground_when"]);
-/* The member-facing sentences T45 adds, each with the key the design stream words it under (filings and the surfaces
-   render the key; `says` is the plane's own reading of it). */
-export const T45_SENTENCES = Object.freeze({
-  ground_not_stated: Object.freeze({ key: "actions.override.ground_not_stated",
-    says: "This override was stated before a ground was asked for; it reads as written, with its reason alone." }),
-  reply_not_owed: Object.freeze({ key: "actions.reply.not_owed",
-    says: "This body owes the group no reply, so silence is never recorded as a non-response." }),
-  scope_published_stays: Object.freeze({ key: "actions.scope.published_stays",
-    says: "This changes what is published from now on; anything already signed and published stays as it was." }),
-  openitems_not_office: Object.freeze({ key: "actions.openitems.not_office",
-    says: "This action is not addressed to an office, so no open items with an office are shown." }),
-  recognition_promise_only: Object.freeze({ key: "actions.recognition.promise_only",
-    says: "This recognition rests on no compliant determination or success record: the fix is only promised." }),
+/* R99 (T46; DEC-194, N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) this module
+   answers its keyed sentences with, each `en` verbatim, read by key, as membership's `HANDLE_WORDS` and extraction's
+   `TRANSCRIBE_WORDS` are. The design stream's words: re-worded there, then re-taken here by key, never a copy.
+   `{reason}` is left for the screen, with the member's reason as recorded answered beside it (R82). */
+export const ACTIONS_WORDS = Object.freeze({
+  "actions.override.ground_not_stated": "No ground was recorded for acting before a determination (this was done before "
+    + "a ground was asked for).",
+  "actions.reply.not_owed": "No reply is owed: {reason}",
+  "actions.scope.published_stays": "This changes what is published from now on. A case already signed stays as it was.",
+  "actions.openitems.not_office": "Open items are listed only when the action is addressed to an office.",
+  "actions.recognition.promise_only": "This thanks the office for a promise. Nothing yet shows the promise kept.",
 });
+/* The member-facing sentences T45 added (R74, R82, R87, R92, R93), each answered as its key and the words `words.json`
+   holds for it (R99): filings and the surfaces render the key, `says` its words. */
+const keyed = (key) => Object.freeze({ key, says: ACTIONS_WORDS[key] });
+export const T45_SENTENCES = Object.freeze({
+  ground_not_stated: keyed("actions.override.ground_not_stated"),
+  reply_not_owed: keyed("actions.reply.not_owed"),
+  scope_published_stays: keyed("actions.scope.published_stays"),
+  openitems_not_office: keyed("actions.openitems.not_office"),
+  recognition_promise_only: keyed("actions.recognition.promise_only"),
+});
+/** R82, R99: the member's reason for `reply_owed: false` as recorded, the `{reason}` beside `actions.reply.not_owed`;
+ *  null when none is held. */
+const replyOwedReason = (fm) => (fm && typeof fm.reply_owed_reason === "string" && fm.reply_owed_reason.trim()
+  ? fm.reply_owed_reason.trim() : null);
 
 /* D-149: the one write that may set or change an action's governing laws is `actionLaws`, and it says so to `promote`
    under this Symbol. A Symbol: no JSON body a caller sends can carry one, so `op=promote` cannot claim to be the act. */
@@ -279,6 +291,31 @@ export function actionOverdue(fm, nowMs, place = null) {
     if (r !== "not_overdue") undetermined = true;
   }
   return undetermined ? null : false;
+}
+
+const DUE_AT_RE = /^(\d{4}-\d{2}-\d{2})T([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/;
+/** R98 (T46; N922; `action-clocks` R3, its `dueAtOf`): the instant, in milliseconds, a clock entry's time of day
+ *  (`due_at`, `YYYY-MM-DDTHH:MM[:SS]` on the entry's own date) falls at in the entry's `due_zone` where it states one,
+ *  else in `zone` (R12's); null for an entry with a date only, or one whose time of day cannot be read, or whose wall
+ *  time that zone skips or repeats that day (read by its date alone, never moved early). Pure; never throws. */
+export function dueInstant(e, zone) {
+  try {
+    const m = e && typeof e === "object" && typeof e.due_at === "string" ? DUE_AT_RE.exec(e.due_at) : null;
+    if (!m || m[1] !== e.date) return null;
+    const z = typeof e.due_zone === "string" && e.due_zone.trim() ? e.due_zone.trim() : zone;
+    if (typeof z !== "string" || !z) return null;
+    const precision = m[3] ? "second" : "minute";
+    const b = bounds({ value: m[0], precision, zone: z });
+    const lo = b && typeof b.earliest === "string" ? Date.parse(b.earliest) : NaN;
+    const hi = b && typeof b.latest === "string" ? Date.parse(b.latest) : NaN;
+    return Number.isFinite(lo) && hi - lo === (precision === "minute" ? 60000 : 1000) ? lo : null;
+  } catch { return null; }
+}
+/* R98: whether a held entry's time of day has passed at `nowMs`: the instant is reached (`monitoring` R34 marks an entry
+   due at it). */
+function timedEntryPassed(e, zone, nowMs) {
+  const at = dueInstant(e, zone);
+  return at !== null && Number.isFinite(nowMs) && nowMs >= at;
 }
 
 /** R12: the six facts retrieval projects for an action, pure; all null for another type or an unparsable document.
@@ -729,16 +766,20 @@ export class Actions {
     /* DEC-49 REGION is-promote-clock-mechanical */
     if (!creation && (!who || isMachineIdentity(who) || writer === "mechanical")) {
       /* R33 (K1444 (iii)): "passed" on the office's local day; with no zone held no entry has passed. */
-      const today = localToday(this.#nowMs(null), zoneOf(this.place())) ?? "0000-00-00";
+      const nowMs = this.#nowMs(null), zone = zoneOf(this.place());
+      const today = localToday(nowMs, zone) ?? "0000-00-00";
       const heldClock = heldFm && Array.isArray(heldFm.clock) ? heldFm.clock : [];
       const nextClock = Array.isArray(clock) ? clock : [];
       const recheck = writer === "mechanical" && operation === "deadline-recheck";
-      const moved = clockMovesNotMechanical(heldClock, nextClock, today);
+      /* R98 (N922): a pending entry carrying a time of day is also moved once that instant has passed in its zone. */
+      const moved = clockMovesNotMechanical(heldClock, nextClock, today).filter((m) => !(m.from === "pending"
+        && m.to === "overdue" && timedEntryPassed(heldClock[m.ord], zone, nowMs)));
       const reshaped = heldClock.length !== nextClock.length
         || heldClock.some((e, i) => Actions.#clockShape(e) !== Actions.#clockShape(nextClock[i]));
       if (moved.length || reshaped || (!recheck && JSON.stringify(heldClock) !== JSON.stringify(nextClock)))
-        return refuse("CLOCK_STATUS_NOT_MECHANICAL", "a machine write may move a pending clock entry whose date has "
-          + "passed to overdue, and nothing else: it never adds, removes or re-dates an entry or sets another status. "
+        return refuse("CLOCK_STATUS_NOT_MECHANICAL", "a machine write may move a pending clock entry whose date, or "
+          + "stated time of day, has passed to overdue, and nothing else: it never adds, removes or re-dates an entry or "
+          + "sets another status. "
           + "Nothing was written.", { moves: moved });
     }
     /* END DEC-49 REGION is-promote-clock-mechanical */
@@ -1730,7 +1771,8 @@ export class Actions {
     if (direction === "no_response" && fm.reply_owed === false) {
       this.#releaseLease(target, who);
       return refuse("NO_REPLY_OWED", "this action states that the body owes the group no reply, so silence is never "
-        + "recorded as a non-response. Nothing was written.", { target, reply_owed: false, ...T45_SENTENCES.reply_not_owed });
+        + "recorded as a non-response. Nothing was written.", { target, reply_owed: false, ...T45_SENTENCES.reply_not_owed,
+          reply_owed_reason: replyOwedReason(fm) });
     }
     /* END DEC-49 REGION is-no-reply-owed */
     const when = stampInstant("second", this.#nowMs(null));
@@ -2723,7 +2765,8 @@ export class Actions {
       partners: Array.isArray(fm.partners) ? fm.partners : [],
       press_terms: fm.press_terms && typeof fm.press_terms === "object" ? fm.press_terms : null,
       press_terms_history: history("press_terms"),
-      reply_owed: { owed, ...(owed ? {} : T45_SENTENCES.reply_not_owed), history: history("reply_owed") },
+      reply_owed: { owed, ...(owed ? {} : { ...T45_SENTENCES.reply_not_owed, reason: replyOwedReason(fm) }),
+                    history: history("reply_owed") },
       receipts: this.#receiptsOf(id),
       entries: (Array.isArray(fm.correspondence) ? fm.correspondence : []).map((e, ord) => {
         const p = Actions.entryFields(e) || {};
