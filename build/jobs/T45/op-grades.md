@@ -47,3 +47,7 @@ Four readings of R32, each my best reading; I am building on them now and will b
 ## J2 · REPORT
 
 My change moves users' suites as owed by later L11 jobs, none their fault (record, 'Found in other modules'): affordances (T45-39): catalogue.test.mjs's closed-set copies (RUNGS closed, terminal set, undetermined ground) and plane.test.mjs 'the two drives reach every op RUNGS grades reasoned' turn red (T45's 11 reasoned acts need its R19 drives); backing.test.mjs R19 on addressedrecord (K2857) turns green. control-plane totality.test.mjs reads T45's 61 ops stale until op-declarations R49 (T45-45). The N891 pins are now in op-grades' pins.test.mjs, so affordances may drop its copies.
+
+## J3 · COMPLETE
+
+T45-38 complete on job/T45/op-grades (pushed): R32 graded (61 ops, t45.mjs), N891 pins (pins.test.mjs), hold-op citations re-pointed. op-grades 67/67; format, architecture, coverage 32/32, ownership (6 files) 0 failures. J1 (four readings) is still open: each is built as my best reading and I will bring the job in line with your answer by CHANGE. Details in my record.
