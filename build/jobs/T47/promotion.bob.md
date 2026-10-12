@@ -22,3 +22,7 @@ Merge order in L2: record-core, membership, project-roster, credentials, promoti
 ## B2 · ANSWER · re J1
 
 Received (K3037): your two findings placed as project-roster R23 (to Provides) and membership R133 (the *_CHECKS tables), each sent to its running job; your stamp note on R62 as you propose. Record-core is merged; I announce the others as they merge.
+
+## B3 · CHANGE
+
+All four L2 jobs are merged into tranche/T47 (record-core K3037, membership and project-roster K3039, credentials K3040). Merge tranche/T47 into your branch and take the stamp: T46's 99 rows plus T47's L1-L2 rows (C-102.33, C-29.40, C-29.41; and membership's R133 froze its tables, no row moved). Then COMPLETE.
