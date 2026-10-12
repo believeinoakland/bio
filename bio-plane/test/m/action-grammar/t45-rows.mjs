@@ -1,6 +1,9 @@
 /* action-grammar R9 (T45-25; reconciliation R21; K2845, K2849): the rows C-117.30–.58 this job adds, as drafted, each
    {check, where, translation} exactly; pinned here so a later change to one is a change to a test. New in T45 layer 9,
-   awaiting T46's stamp. */
+   awaiting T46's stamp. Since T46 (R26; N913) twenty-four of them translate by `words.json`'s `refusal.<CODE>`: `ROWS_NOW`
+   below is each row as it now reads, `T45_ROWS` the record of T45's drafts. */
+import { readFileSync } from "node:fs";
+
 export const T45_ROWS = {
   DETERMINATION_NOT_NONCOMPLIANT: {
     check: "C-117.30",
@@ -148,3 +151,22 @@ export const T45_ROWS = {
     translation: "Which other offices are copied on an action is a member's statement, and somebody answers for it. The credential that asked here is an automated one, so it cannot state or change them. Nothing was written. Sign in to state them yourself.",
   },
 };
+
+/* R26 (T46; DEC-194, N913; K2953): the twenty-four rows that take their translation from `words.json`'s `refusal.<CODE>`, in
+   R26's order, and the four that keep their T45 drafts in T46 (each returned to BOB). C-117.58 MACHINE_CANNOT_SET_COPIED,
+   which `words.json` does not hold, keeps its own; `BEARING_REFUSED` is action-replies' row (C-150.3). */
+export const T46_TAKEN = ["DETERMINATION_NOT_NONCOMPLIANT", "OVERRIDE_NO_GROUND", "COPIED_IS_ADDRESSEE", "MACHINE_CANNOT_SET_PARTNERS",
+  "PARTNERS_REFUSED", "MACHINE_CANNOT_SET_PRESS_TERMS", "PRESS_TERMS_NOT_PRESS", "PRESS_TERMS_REFUSED", "RECEIPT_NOT_ON_SENT",
+  "OFFICE_STATUS_UNKNOWN", "MACHINE_CANNOT_SET_REPLY_OWED", "NO_REPLY_OWED", "FOUND_ELSEWHERE_NEEDS_CAPTURE", "STAGE_NOT_IN_LAW",
+  "FOLLOWS_ACTION_REWRITTEN", "FOLLOWS_ACTION_SELF", "MACHINE_CANNOT_SET_SCOPE", "SCOPE_NO_REASON", "SCOPE_UNCHANGED",
+  "MACHINE_CANNOT_RECORD_PROMISE", "PROMISE_REFUSED", "FOUND_ELSEWHERE_REFUSED", "SPEAKER_REFUSED", "FOLLOWS_ACTION_REFUSED"];
+export const T46_KEPT = ["OVERRIDE_GROUND_REFUSED", "OFFICE_STATUS_WITHOUT_OUTCOME", "REPLY_OWED_REFUSED", "LAW_STAGE_UNKNOWN"];
+
+/* The design stream's words, read from the file itself (never from the module under test). */
+const WORDS = JSON.parse(readFileSync(new URL("../../../../docs/development/ux-substrate/screens/words.json", import.meta.url), "utf8")).words;
+/** `words.json`'s `en` for `key`, or undefined when it holds none. */
+export const wordsEn = (key) => WORDS.find((w) => w.key === key)?.en;
+
+/** Each C-117.30–.58 row as it reads since T46: a taken row with `words.json`'s sentence, every other as T45 drafted it. */
+export const ROWS_NOW = Object.fromEntries(Object.entries(T45_ROWS).map(([code, row]) =>
+  [code, T46_TAKEN.includes(code) ? { ...row, translation: wordsEn(`refusal.${code}`) } : row]));

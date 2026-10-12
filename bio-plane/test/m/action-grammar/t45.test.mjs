@@ -10,7 +10,7 @@ import * as J from "../../../../jurisdictions/index.mjs";
 import { isCalendarDate } from "../../../src/civil-time/index.mjs";
 import { pushed, ZONE } from "./fixture.mjs";
 import { DOCS, NOW } from "./corpus.mjs";
-import { T45_ROWS } from "./t45-rows.mjs";
+import { ROWS_NOW } from "./t45-rows.mjs";
 
 const codes = (list) => list.map((x) => x.code);
 const audit = (fm, o = {}) => pushed((f) => AG.checkActionExtension({ fm, nowMs: NOW, zone: ZONE, ...o }, f)).findings;
@@ -546,8 +546,9 @@ test("R9 (T45; K2845, K2849): the rows C-117.30–.58 are held in ACTION_CATALOG
     "FOUND_ELSEWHERE_NEEDS_CAPTURE", "STAGE_NOT_IN_LAW", "FOLLOWS_ACTION_REWRITTEN", "FOLLOWS_ACTION_SELF", "MACHINE_CANNOT_SET_SCOPE",
     "SCOPE_NO_REASON", "SCOPE_UNCHANGED", "MACHINE_CANNOT_RECORD_PROMISE", "PROMISE_REFUSED", "FOUND_ELSEWHERE_REFUSED", "SPEAKER_REFUSED",
     "REPLY_OWED_REFUSED", "FOLLOWS_ACTION_REFUSED", "LAW_STAGE_UNKNOWN", "MACHINE_CANNOT_SET_COPIED"]);
+  /* each row as it reads since T46 (R26: twenty-four translate by words.json; t46-words.test.mjs) */
   t45.forEach((code, i) => {
-    assert.deepEqual(C[code], T45_ROWS[code], code);
+    assert.deepEqual(C[code], ROWS_NOW[code], code);
     assert.equal(C[code].check, `C-117.${30 + i}`, code);
     assert.doesNotMatch(C[code].translation, /\b(bundle|op=|DEC-|C-\d|ENT-|ACTN-|Oakland|Alameda|California)/, code);
   });
