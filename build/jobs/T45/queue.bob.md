@@ -15,3 +15,7 @@ Reading set (mechanics §17): measured at this START: 1051 KB with your tests (K
 Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, installer, stewards, plane. You use affordances, queue-producers, notice-producers, merged before you in this layer: merge `tranche/T45` into your branch when BOB announces each one's merge (a CHANGE), and build meanwhile against your reading of their folded requirements.
 
 (K2878) At this START: installer (T45-46) does not run in T45 (the stewards' contact address is Bob's to name and is not yet named, K2799); T45-46 moves to T46. The L11 merge order is therefore: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, stewards, answer-envelope, plane last.
+
+## B2 · ANSWER · re J1
+
+K2882: merged into tranche/T45; R1, R12 struck; R52 re-worded to the acts your code serves. Stay available: at queue-producers' merge I send a CHANGE for the tests you named (docket.test, action.test, world.mjs fakes, templates.test) to re-point to action-holds/action-producers.
