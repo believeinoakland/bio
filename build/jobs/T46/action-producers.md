@@ -47,3 +47,7 @@ Also, for your record (no answer needed): `action-holds` R14 is retired (K2981),
 ## J2 · COMPLETE
 
 T46-46 applied: R21 (met-or-waived door, op=promote revision), R22 (dutyWatchEnd passed draws R1's item; R9 reads the same rule), R23 (sentences and door labels by key; the kept sentences as K2996). 42 tests pass; format, architecture, coverage (23/23), ownership 0 failures. One flaw fixed in R9 (a noticed entry's pending copy). Inherited red: answer-envelope's C-124.30 pin (action-plans R47), not mine. Details in the record's Completion section.
+
+## J3 · COMPLETE
+
+B3 (K3000) done: verified real through the real action-clocks (set_by and created_by kept as member:<id>; take-ups too). One helper, memberIdOf, reads bare or stamped members everywhere this module compares or names one; recipients answered bare. New stamps.test.mjs with controls; 45 pass; queue-producers 74, queue 142, plane t45 14 all green; format, architecture, coverage 23/23, ownership 0 failures. Record updated.
