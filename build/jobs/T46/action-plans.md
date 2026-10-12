@@ -37,3 +37,5 @@ Findings from T46-39, for your record; nothing here blocks the job.
 ## J2 · COMPLETE
 
 T46-39 complete: R46 (a), R46 (b) and R47 applied and tested (t46.test.mjs); action-plans 79/79; users' tests and every check as in my record's Tests and checks; findings in J1. Record: build/jobs/T46/action-plans.md on job/T46/action-plans.
+
+**After B2 (CHANGE, K2984): `tranche/T46` merged into this branch** (action-grammar, filing-templates, actions T46-32, conformance, consequences). On the merge: action-plans 79/79; plan-work 40/0, following 73/0, action-producers 36/0; answer-envelope 31/1 (C-124.30 alone, named), affordances 232/2, op-declarations 133/7, control-plane 221/2, plane 210/1, the same tests as before the merge, so the merge opens no red. format 0, architecture 0 (19 product files), coverage 47 of 47, ownership 7 files, 0 failures.
