@@ -29,3 +29,7 @@
 - format: 159 modules, 0 failures. architecture: 0 failures. coverage: 31 of 31 live ids named, 0 failures. ownership: 12 files, 0 failures.
 
 Size (session_016rtHXktFUtkGX8nXhc548v): test runs 7, module lines 2523
+
+## J1 · COMPLETE
+
+Complete (commits 1ae003ff03, record). R29 partAdmittedOn/partAdmitted/untestedLabel, R30 AI_PART_NOT_DEPLOYED C-22.29 via partRefusal, R16/R21/R14 flags true (DEPLOYED_MODES check, plan, ask, draft), R27 statusreport (action_drafts stays false per M-T46-5), R31 two C-109 rows read by key; ACTION_DRAFT_KINDS no longer sliced off DRAFT_KINDS' end. run-rules 59/0; format, architecture, coverage (31/31), ownership clean. Newly red elsewhere, owned by later L6 jobs: ai-runs 4 (R40, R46, converts R9/R40, R54: DEPLOYED_MODES/plan pins and the mode note listing check, plan) for T46-14; agent-worker requirements R44/R53 x2 (MODES.plan) and R45 x2 (bundle stale, run-rules an input) for T46-19. Other users unchanged. Details in my record.
