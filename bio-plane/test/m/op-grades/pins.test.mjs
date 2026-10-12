@@ -80,7 +80,7 @@ test("R1 R3 (N891): RUNGS is a closed partition — every op it ranks is one a r
   want.reasoned.push("scenariosetaside", "scenariorestore", "planpause", "planresume", "actionscope", "projectscopeset",
     "projectapprovalset", "successrevise", "cureunlink", "ruledraft", "rulewithdraw");
   want.reversible.push("followend", "actionpromise", "actionreplybearing", "actionbearingpropose", "curelink",
-    "matteroutcomeset", "plancomment");
+    "matteroutcomeset", "plancomment", "declaredstakeset" /* B6, K2896 */);
   want.irreversible.push("publishcheck");
   want.terminal.push("filingsecondapprove");
   for (const [a, op] of Object.entries(OP_ALIASES)) if (Object.hasOwn(RUNGS, op)) want[RUNGS[op]].push(a);
