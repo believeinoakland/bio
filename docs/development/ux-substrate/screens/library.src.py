@@ -168,11 +168,56 @@ wiz('Translate the interface', 'translations', False, [
  ('translations', 'translationconfirm', 'A protected word you changed, or typed without a draft, waits for a second check.', 'A second granted speaker, or an administrator reading the assistant\'s back-translation, confirms it. Until then members see the English.'),
 ], [3])
 
+wiz('Comment for the group', 'plan', False, [
+ ('plan', 'optiondispose', 'Choose a public comment as the option, and the meeting or comment period it is for.', 'Choosing records why this option, now.'),
+ ('start-send', 'optionstart', 'Start the comment, addressed to the body that holds the meeting.', 'It goes to the body by role, so it reaches whoever sits there that day.'),
+ ('start-send', 'communicationprepare', 'Choose "For the group" or "As myself", then write what the record shows and what you ask the body to examine or apply. Start from your group\'s template for a written comment if it has one.', 'A comment for the group is the group\'s act. One as yourself is your own notes, never recorded as sent.'),
+ ('start-send', None, 'Read any sentence pointed out as a policy position: remove it, or comment as yourself.', 'A comment for the group states facts and asks. A position is a member\'s to take as themselves.'),
+ ('start-send', 'filingapprove', 'Approve the text.', 'Approving is kept apart from sending, so you can stop between them.'),
+ ('start-send', 'filingrecordsent', 'Submit it, or read it at the meeting, then record that it was sent.', 'The record keeps what the group said, and when.'),
+], [22], 'DEC-194 (B140): public comment')
+
+wiz('Demand a correction', 'plan', False, [
+ ('plan', 'optiondispose', 'Choose the demand as the option. Read its advisory first: a demand is a Tier 2 act, and a lawyer\'s view helps.', 'A demand can lead to a court; knowing that before starting is part of choosing it.'),
+ ('start-send', 'optionstartpreview', 'See what starting does: the window the law gives the body to correct its act, and anything that would stop it.', 'A demand starts a legal clock. You see it before anything runs.'),
+ ('start-send', 'optionstart', 'Start the demand, addressed to the body by role.', 'The body\'s holder that day is shown, so you know who will read it.'),
+ ('start-send', 'communicationprepare', 'Write what the body did, the rule it seems to break, and what correcting it would look like. Start from your group\'s demand template if it has one.', 'A demand asks the body to correct its own act, so it says exactly what correcting it means.'),
+ ('start-send', None, 'Rewrite any sentence pointed out as asking for something for your group.', 'A demand asks nothing for the group. Approval waits until those sentences are gone.'),
+ ('start-send', 'filingapprove', 'Approve the text.', 'Approving is kept apart from sending, so you can stop between them.'),
+ ('start-send', 'filingrecordsent', 'Send it, then record that you sent it.', 'Recording it starts the body\'s window to correct the act.'),
+ ('due-date', 'reminderset', 'The window\'s end goes into your queue.', 'If the body doesn\'t correct it, the next stage is ready without anyone remembering.'),
+], [22], 'DEC-194 (B140): demand to cure')
+
+wiz('Take an escalation to its next stage', 'matter', False, [
+ ('matter', None, 'Read where the escalation stands. Each stage is a question, such as "Did we tell them?" or "What did they say?".', 'The questions say what each stage needs before the next.'),
+ ('action', 'actioncorrespond', 'If they replied, record what they said.', 'The next stage rests on the reply, or on there being none.'),
+ ('matter', 'escalationadvance', 'Advance to the next stage, or decline to escalate with your reason.', 'Either way the record keeps why.'),
+ ('matter', 'owed:escalationstoppursuing K2780', 'If your group is stopping, stop pursuing it, with your reason.', 'Stopping is never recorded as ended or as a success, and it can be reopened where it stopped.'),
+ ('due-date', 'reminderset', 'Set when to look at it again.', 'An escalation moves only when a member moves it.'),
+], [22], 'DEC-194 (B140): escalation stage')
+
+wiz('Refer it to an oversight body', 'plan', False, [
+ ('plan', 'optiondispose', 'Choose a referral to the oversight body as the option.', 'Choosing records why this option, now.'),
+ ('start-send', 'optionstart', 'Start the referral, addressed to the oversight body by role.', 'It goes to the body by role, so it reaches whoever holds it that day.'),
+ ('start-send', 'communicationprepare', 'Write what happened and ask the body to look into it. Start from your group\'s referral template if it has one.', 'A referral asks for an examination. It doesn\'t claim a breach the body hasn\'t found.'),
+ ('start-send', 'filingapprove', 'Approve the text.', 'Approving is kept apart from sending, so you can stop between them.'),
+ ('start-send', 'filingrecordsent', 'Send it, then record that you sent it. Say if no reply is owed.', 'Some oversight bodies don\'t reply to a referral; saying so keeps a missing reply from being counted against them.'),
+ ('action', 'owed:actionscope K2780', 'If the referral shouldn\'t be published, make the action confidential, with your reason.', 'A confidential action is seen inside the group and never published.'),
+ ('action', 'actioncorrespond', 'When they reply, record it, with their own words for its status.', 'Outcomes are kept in the oversight body\'s own terms.'),
+], [22], 'DEC-194 (B140): oversight referral')
+
+wiz('Pick up a plan', 'plan', False, [
+ ('plan', None, 'Read where it stands: the matters, what each has reached, and what is due next.', 'Joining midway starts from what is already true, not from the beginning.'),
+ ('plan', None, 'Read the latest status report, if a member saved one, and what changed since.', 'Each line cites what it rests on, so you can check it.'),
+ ('plan', 'owed:itemtakeup K2780', 'Take up an item you can do. Nobody assigns anybody: you choose.', 'Taking it up routes its dates and reminders to you.'),
+ ('due-date', 'reminderset', 'Set a reminder for your item.', 'Your reminder is yours alone.'),
+], [22], 'DEC-194 (B140): pick up a plan')
+
 wiz('Start and send', 'plan', False, [
  ('plan', 'optiondispose', 'Choose the option, and say when to be reminded.', 'Choosing records why this option, now.'),
  ('start-send', 'optionstartpreview', 'See what starting does, and anything that would stop it.', 'Refusals are shown before anything runs.'),
  ('start-send', 'optionstart', 'Start the action, addressed to the office by role.', 'The office\'s holder that day is shown, so you know who will read it.'),
- ('start-send', 'communicationprepare', 'Prepare what is sent. A template or draft is labelled until you make it yours.', 'The words that leave the group are always a member\'s.', {'draft': {'template': '@communication'}}),
+ ('start-send', 'communicationprepare', 'Prepare what is sent: start from your group\'s template for this kind of action if it has one, or write it yourself. A template or draft is labelled until you make it yours.', 'The words that leave the group are always a member\'s.'),
  ('start-send', 'filingapprove', 'Approve the text.', 'Approving is kept apart from sending, so you can stop between them.'),
  ('start-send', 'filingrecordsent', 'Send it, then record that you sent it.', 'This tells the office what your group is looking at, and starts the clock.'),
  ('due-date', 'reminderset', 'The due date and next checkpoint go into your queue. A next step can wait on the reply.', 'If no reply comes, the next step is ready without anyone remembering.'),

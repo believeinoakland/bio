@@ -466,14 +466,6 @@
      ]
     },
     {
-     "op": "handlechange",
-     "label": "Change your handle",
-     "status": "declared",
-     "modules": [
-      "membership"
-     ]
-    },
-    {
      "op": "setpassword",
      "label": "Change your password",
      "status": "declared",
@@ -2237,6 +2229,11 @@
      "modules": [
       "action-plans"
      ]
+    },
+    {
+     "op": "owed:itemtakeup K2780",
+     "label": "Take an item up yourself",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -2296,6 +2293,11 @@
      "modules": [
       "filings"
      ]
+    },
+    {
+     "op": "owed:filingsecondapprove K2780",
+     "label": "Give the second approval",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -2407,6 +2409,11 @@
      "modules": [
       "actions"
      ]
+    },
+    {
+     "op": "owed:actionscope K2780",
+     "label": "Make the action confidential, or not",
+     "status": "owed"
     }
    ],
    "journeys": [
@@ -2451,6 +2458,11 @@
      "modules": [
       "escalation"
      ]
+    },
+    {
+     "op": "owed:escalationstoppursuing K2780",
+     "label": "Stop pursuing, with a reason",
+     "status": "owed"
     }
    ],
    "journeys": [

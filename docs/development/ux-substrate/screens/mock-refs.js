@@ -40,7 +40,7 @@ const SCREEN_REFS = {
   "join": [
     ["13 October 2026",null,"<b>Expires 13 October 2026</b> · an invitation lasts seven days · this one created by Rosa on 6 October · works once","After that the link stops working and Rosa must create a new one."],
     ["contribute",null,"<b>Contribute</b> · what this invitation lets you do · add to the record, open questions, take part in projects","It sets what you can do once you join; an administrator can change it later."],
-    ["handle",null,"<b>Handle</b> · the name the record shows on your work · not your legal name unless you choose · changeable until your work first appears in a published case","Once your work is in a published case it is fixed, so choose it with that in mind."],
+    ["handle",null,"<b>Handle</b> · the name the record shows on your work · not your legal name unless you choose · chosen when you join and never changed","No other member can ever take it, so a handle always means the same person."],
     ["pen name",null,"<b>Pen name</b> · a handle that is not the name people know you by · the administrators still know who you are","Shields you from pressure if a published case names your work."],
     ["administrators",null,"<b>Administrators</b> · members who invite and manage members · Lakeshore Tenants has one, Rosa","They know who you are even under a pen name, and see the ties you declare."],
     ["public cases","published","<b>Public cases</b> · a group's signed, published findings · permanent, corrected only by a new edition","A handle on your work there is public too; that is the choice the guidance weighs."]

@@ -960,6 +960,286 @@
    ]
   },
   {
+   "id": "WIZ-f06504b9133b8d61",
+   "origin": "civicsmith",
+   "scope": "group",
+   "name": "Comment for the group",
+   "start": "plan",
+   "required": false,
+   "journeys": [
+    22
+   ],
+   "note": "DEC-194 (B140): public comment",
+   "versions": [
+    {
+     "version": 1,
+     "state": "draft",
+     "steps": [
+      {
+       "screen": "plan",
+       "act": "optiondispose",
+       "what": "Choose a public comment as the option, and the meeting or comment period it is for.",
+       "why": "Choosing records why this option, now."
+      },
+      {
+       "screen": "start-send",
+       "act": "optionstart",
+       "what": "Start the comment, addressed to the body that holds the meeting.",
+       "why": "It goes to the body by role, so it reaches whoever sits there that day."
+      },
+      {
+       "screen": "start-send",
+       "act": "communicationprepare",
+       "what": "Choose \"For the group\" or \"As myself\", then write what the record shows and what you ask the body to examine or apply. Start from your group's template for a written comment if it has one.",
+       "why": "A comment for the group is the group's act. One as yourself is your own notes, never recorded as sent."
+      },
+      {
+       "screen": "start-send",
+       "act": null,
+       "what": "Read any sentence pointed out as a policy position: remove it, or comment as yourself.",
+       "why": "A comment for the group states facts and asks. A position is a member's to take as themselves."
+      },
+      {
+       "screen": "start-send",
+       "act": "filingapprove",
+       "what": "Approve the text.",
+       "why": "Approving is kept apart from sending, so you can stop between them."
+      },
+      {
+       "screen": "start-send",
+       "act": "filingrecordsent",
+       "what": "Submit it, or read it at the meeting, then record that it was sent.",
+       "why": "The record keeps what the group said, and when."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "WIZ-bd7bde2c61b6badb",
+   "origin": "civicsmith",
+   "scope": "group",
+   "name": "Demand a correction",
+   "start": "plan",
+   "required": false,
+   "journeys": [
+    22
+   ],
+   "note": "DEC-194 (B140): demand to cure",
+   "versions": [
+    {
+     "version": 1,
+     "state": "draft",
+     "steps": [
+      {
+       "screen": "plan",
+       "act": "optiondispose",
+       "what": "Choose the demand as the option. Read its advisory first: a demand is a Tier 2 act, and a lawyer's view helps.",
+       "why": "A demand can lead to a court; knowing that before starting is part of choosing it."
+      },
+      {
+       "screen": "start-send",
+       "act": "optionstartpreview",
+       "what": "See what starting does: the window the law gives the body to correct its act, and anything that would stop it.",
+       "why": "A demand starts a legal clock. You see it before anything runs."
+      },
+      {
+       "screen": "start-send",
+       "act": "optionstart",
+       "what": "Start the demand, addressed to the body by role.",
+       "why": "The body's holder that day is shown, so you know who will read it."
+      },
+      {
+       "screen": "start-send",
+       "act": "communicationprepare",
+       "what": "Write what the body did, the rule it seems to break, and what correcting it would look like. Start from your group's demand template if it has one.",
+       "why": "A demand asks the body to correct its own act, so it says exactly what correcting it means."
+      },
+      {
+       "screen": "start-send",
+       "act": null,
+       "what": "Rewrite any sentence pointed out as asking for something for your group.",
+       "why": "A demand asks nothing for the group. Approval waits until those sentences are gone."
+      },
+      {
+       "screen": "start-send",
+       "act": "filingapprove",
+       "what": "Approve the text.",
+       "why": "Approving is kept apart from sending, so you can stop between them."
+      },
+      {
+       "screen": "start-send",
+       "act": "filingrecordsent",
+       "what": "Send it, then record that you sent it.",
+       "why": "Recording it starts the body's window to correct the act."
+      },
+      {
+       "screen": "due-date",
+       "act": "reminderset",
+       "what": "The window's end goes into your queue.",
+       "why": "If the body doesn't correct it, the next stage is ready without anyone remembering."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "WIZ-33cece8a68e76f58",
+   "origin": "civicsmith",
+   "scope": "group",
+   "name": "Take an escalation to its next stage",
+   "start": "matter",
+   "required": false,
+   "journeys": [
+    22
+   ],
+   "note": "DEC-194 (B140): escalation stage",
+   "versions": [
+    {
+     "version": 1,
+     "state": "draft",
+     "steps": [
+      {
+       "screen": "matter",
+       "act": null,
+       "what": "Read where the escalation stands. Each stage is a question, such as \"Did we tell them?\" or \"What did they say?\".",
+       "why": "The questions say what each stage needs before the next."
+      },
+      {
+       "screen": "action",
+       "act": "actioncorrespond",
+       "what": "If they replied, record what they said.",
+       "why": "The next stage rests on the reply, or on there being none."
+      },
+      {
+       "screen": "matter",
+       "act": "escalationadvance",
+       "what": "Advance to the next stage, or decline to escalate with your reason.",
+       "why": "Either way the record keeps why."
+      },
+      {
+       "screen": "matter",
+       "act": "owed:escalationstoppursuing K2780",
+       "what": "If your group is stopping, stop pursuing it, with your reason.",
+       "why": "Stopping is never recorded as ended or as a success, and it can be reopened where it stopped."
+      },
+      {
+       "screen": "due-date",
+       "act": "reminderset",
+       "what": "Set when to look at it again.",
+       "why": "An escalation moves only when a member moves it."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "WIZ-d0cdcee9437b213b",
+   "origin": "civicsmith",
+   "scope": "group",
+   "name": "Refer it to an oversight body",
+   "start": "plan",
+   "required": false,
+   "journeys": [
+    22
+   ],
+   "note": "DEC-194 (B140): oversight referral",
+   "versions": [
+    {
+     "version": 1,
+     "state": "draft",
+     "steps": [
+      {
+       "screen": "plan",
+       "act": "optiondispose",
+       "what": "Choose a referral to the oversight body as the option.",
+       "why": "Choosing records why this option, now."
+      },
+      {
+       "screen": "start-send",
+       "act": "optionstart",
+       "what": "Start the referral, addressed to the oversight body by role.",
+       "why": "It goes to the body by role, so it reaches whoever holds it that day."
+      },
+      {
+       "screen": "start-send",
+       "act": "communicationprepare",
+       "what": "Write what happened and ask the body to look into it. Start from your group's referral template if it has one.",
+       "why": "A referral asks for an examination. It doesn't claim a breach the body hasn't found."
+      },
+      {
+       "screen": "start-send",
+       "act": "filingapprove",
+       "what": "Approve the text.",
+       "why": "Approving is kept apart from sending, so you can stop between them."
+      },
+      {
+       "screen": "start-send",
+       "act": "filingrecordsent",
+       "what": "Send it, then record that you sent it. Say if no reply is owed.",
+       "why": "Some oversight bodies don't reply to a referral; saying so keeps a missing reply from being counted against them."
+      },
+      {
+       "screen": "action",
+       "act": "owed:actionscope K2780",
+       "what": "If the referral shouldn't be published, make the action confidential, with your reason.",
+       "why": "A confidential action is seen inside the group and never published."
+      },
+      {
+       "screen": "action",
+       "act": "actioncorrespond",
+       "what": "When they reply, record it, with their own words for its status.",
+       "why": "Outcomes are kept in the oversight body's own terms."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "WIZ-a17835c4d8235f65",
+   "origin": "civicsmith",
+   "scope": "group",
+   "name": "Pick up a plan",
+   "start": "plan",
+   "required": false,
+   "journeys": [
+    22
+   ],
+   "note": "DEC-194 (B140): pick up a plan",
+   "versions": [
+    {
+     "version": 1,
+     "state": "draft",
+     "steps": [
+      {
+       "screen": "plan",
+       "act": null,
+       "what": "Read where it stands: the matters, what each has reached, and what is due next.",
+       "why": "Joining midway starts from what is already true, not from the beginning."
+      },
+      {
+       "screen": "plan",
+       "act": null,
+       "what": "Read the latest status report, if a member saved one, and what changed since.",
+       "why": "Each line cites what it rests on, so you can check it."
+      },
+      {
+       "screen": "plan",
+       "act": "owed:itemtakeup K2780",
+       "what": "Take up an item you can do. Nobody assigns anybody: you choose.",
+       "why": "Taking it up routes its dates and reminders to you."
+      },
+      {
+       "screen": "due-date",
+       "act": "reminderset",
+       "what": "Set a reminder for your item.",
+       "why": "Your reminder is yours alone."
+      }
+     ]
+    }
+   ]
+  },
+  {
    "id": "WIZ-a8c349d7d71b6bb0",
    "origin": "civicsmith",
    "scope": "group",
@@ -996,11 +1276,8 @@
       {
        "screen": "start-send",
        "act": "communicationprepare",
-       "what": "Prepare what is sent. A template or draft is labelled until you make it yours.",
-       "why": "The words that leave the group are always a member's.",
-       "draft": {
-        "template": "@communication"
-       }
+       "what": "Prepare what is sent: start from your group's template for this kind of action if it has one, or write it yourself. A template or draft is labelled until you make it yours.",
+       "why": "The words that leave the group are always a member's."
       },
       {
        "screen": "start-send",

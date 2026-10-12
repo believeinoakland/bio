@@ -77,7 +77,7 @@ SCR.join = c => { const st = JOIN_ST[c.v] || 'a'; const sel = v => v === st ? ' 
   <div class="mk-setuphead"><span class="grp mk-grp">Lakeshore Tenants</span></div>
   ${h1('You\'re invited to Lakeshore Tenants', 'Rosa invited you to contribute. This link works once and expires on 13 October 2026.')}
   ${choice('mk-lang', 'Your language', ['English', 'Español', 'Tiếng Việt'], 'English', { act: 'memberlanguageset', help: 'Chosen from your device\'s setting. You can change it any time.' })}
-  ${field('mk-handle', 'Your handle', 'mai-k', { act: 'handlecheck', help: 'The record shows your handle on your work. You can change it until your work first appears in a published case; after that it is fixed. It needn\'t be your legal name. Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. <a href="#" onclick="return false">Choosing a handle</a>: a name people know lends your work credibility and lets reporters reach you, but puts it on public cases; a pen name shields you from pressure, while the administrators still know who you are.' })}
+  ${field('mk-handle', 'Your handle', 'mai-k', { act: 'handlecheck', help: 'The record shows your handle on your work. Choose it with care: it can\'t be changed after you join, and no one else can ever take it. It needn\'t be your legal name. Lower-case letters, digits and hyphens, 2 to 41 of them, starting with a letter or digit. <a href="#" onclick="return false">Choosing a handle</a>: a name people know lends your work credibility and lets reporters reach you, but puts it on public cases; a pen name shields you from pressure, while the administrators still know who you are.' })}
   <div class="st st-a"><span class="cs-due" data-due="met" data-act="handlecheck">${I('accepted')}mai-k is free in Lakeshore Tenants</span></div>
   <div class="st st-b"><span class="cs-due" data-due="near">${I('refused')}mai-k is already taken in Lakeshore Tenants. Try another, such as mai-k2 or mai-seminary.</span></div>
   <div class="st st-c"><span class="cs-due" data-due="near">${I('refused')}A handle uses only lower-case letters, digits and hyphens: “Mai.K” has a capital and a full stop. Try mai-k.</span></div>
@@ -117,7 +117,7 @@ SCR.members = c => ({ rail: 'settings', title: 'Members', crumbs: ['Settings', '
   ${h1('Members', '6 members · 1 administrator')}
   ${note('With one administrator, the group depends on Rosa and the hosting account. <a href="#" onclick="return false">Add a second administrator</a>.')}
   ${sheet(row(I('subject'), '<b>Rosa</b> · administrator · <span class="muted">cover: R. Medina</span>', '<span class="muted">contribute, administer</span>') +
-    row(I('subject'), '<b>Dev</b> · member · <span class="muted">formerly dev-o</span>', '<span class="muted">contribute</span>') +
+    row(I('subject'), '<b>Dev</b> · member', '<span class="muted">contribute</span>') +
     row(I('subject'), '<b>Ana</b> · member · declared: CPA', `<span>${btn('expertiseconfirm', 'Confirm expertise')}</span>`) +
     row(I('subject'), '<b>Teo</b> · member · declared: reporter', '<span class="muted">contribute</span>') +
     row(I('clock'), '<i>Invited</i> · cover: Mai K.', '<span>' + btn('invitewithdraw', 'Withdraw') + '</span>'))}
@@ -191,7 +191,7 @@ SCR.security = c => ({ rail: 'settings', title: 'Security', main: `
 SCR.account = c => ({ rail: 'settings', title: 'Your account', crumbs: ['Settings', 'Your account'], main: `
   ${h1('Your account', 'mai-k · member since 6 October 2026')}
   ${sec('Language and appearance', `${choice('mk-l2', 'Language', ['English', 'Español', 'Tiếng Việt'], 'English', { act: 'memberlanguageset' })}${choice('mk-th', 'Appearance', ['Follow my device', 'Light', 'Dark'], 'Follow my device')}${choice('mk-lvl', 'Explanations', ['Explain promptly', 'On a longer pause'], 'Explain promptly', { act: 'owed:infolevelset DEC-162', help: 'Promptly: every explanation opens when you rest on something for half a second. On a longer pause: marks and names still do; what screens, sections, the rail and acts are waits a second and a half, so less opens while you move. Nothing is ever hidden, and keyboard focus or a tap shows everything at once. New members start with promptly; after a month Civicsmith asks once whether to keep it. Alt+Shift+I or the masthead switches it at any time.' })}${acts(btn('memberlanguageset', 'Save'))}`)}
-  ${sec('Your handle', `${field('mk-hn', 'Your handle', 'mai-k', { act: 'handlechange', help: 'You can change it until your work first appears in a published case; after that it is fixed, because published cases are signed. Members see your earlier handle beside the new one, as “formerly mai-k”, and it stays reserved for you: no one else can take it.' })}<span class="cs-due" data-due="met">${I('accepted')}You can still change it: none of your work is in a published case yet.</span>${acts(btn('handlechange', 'Change your handle'))}`)}
+  ${sec('Your handle', `<p><b>mai-k</b></p><p class="muted">Your handle is fixed: it names your work in the group and in published cases, and no one else can ever take it.</p>`)}
   ${sec('What you know', `${field('mk-exp', 'Your expertise (optional)', 'Tenant organiser; Spanish–English interpreter', { help: 'The group can ask you to check work in your field. An administrator may confirm it; it gates nothing.' })}${acts(btn('expertisedeclare', 'Declare your expertise'))}`)}
   ${sec('Password and signing key', acts(btn('setpassword', 'Change your password'), btn('signerregisterown', 'Register a signing key in this browser'), btn('signerrevokeown', 'Revoke your signing key')))}
   ${sec('Elsewhere in your settings', `<div class="mk-links"><a href="#" onclick="return false">${I('machine')}Your Claude account${c.ai ? ' · connected' : ' · not connected'}</a><a href="#" onclick="return false">${I('group')}Your ties</a><a href="#" onclick="return false">${I('case')}Your notes</a></div>`)}` });
@@ -633,7 +633,7 @@ SCR.plan = c => ({ rail: 'projects', title: 'Action plan', crumbs: ['Pothole rep
    ${acts(btn('optionadd', 'Add an option'), btn('optiondispose', 'Choose'), btn('optiondispose', 'Decline'), btn('optionstartpreview', 'Start…', { tone: 'primary' }))}
    ${c.ai ? `<div class="mk-tray">${origin('machine', 'Suggested by the assistant · for a fixing project · not yet in the plan')}${sheet(row(I('machine'), 'Ask the council\'s public works committee to agendize repair performance', btn('optionadopt', 'Adopt')))}${acts(btn('optionpropose', 'Suggest more'))}</div>` : ''}`)}
   ${sec('Scenarios', `<div class="mk-tabs2"><span aria-selected="true">A · Records first</span><span>B · Go public</span><span class="muted">+ scenario</span></div>${sheet(row('<b>Phase 1</b>', 'Records request → checkpoint: "logs show inspection dates" (judged by a member)', btn('checkpointrecord', 'Judge')))}${acts(btn('scenarioset', 'Lay out a scenario'))}`)}
-  ${sec('Started', sheet(row(I('outward'), 'Records request: inspection logs · to the Office of the City Clerk', due('', 'Response due 14 Oct'))))}
+  ${sec('Started', sheet(row(I('outward'), 'Records request: inspection logs · to the Office of the City Clerk', due('', 'Response due 14 Oct')) + row(I('due'), 'Checkpoint: read the logs when they arrive · <span class="muted">nobody has taken it up</span>', btn('owed:itemtakeup K2780', 'Take this up'))))}
   ${acts(btn('planclose', 'Close plan…'))}` });
 
 SCR['start-send'] = c => ({ rail: 'projects', title: 'Start and send', crumbs: ['Pothole repairs', 'Plans', 'Start'], main: `
@@ -642,6 +642,7 @@ SCR['start-send'] = c => ({ rail: 'projects', title: 'Start and send', crumbs: [
    ${acts(btn('optionstartpreview', 'See what starting does'), btn('optionstart', 'Start the action', { tone: 'primary' }))}`)}
   ${sec('Step 2 · Prepare and send', `${field('mk-ss', 'What the group sends', 'To the Office of the City Clerk:\nWe request copies of the inspection logs for every pothole report closed between 1 July 2025 and 30 June 2026, showing the date of each inspection and of each repair.\nSubmitted by Lakeshore Tenants, by its contact.', { area: true, rec: true, draft: c.ai && !c.wizard ? 'machine' : 'template', act: 'communicationprepare' })}
    ${acts(btn('communicationprepare', 'Prepare what is sent'), btn('filingprepare', 'Prepare the filing'), btn('filingapprove', 'Approve this text'), btn('filingrecordsent', 'I have sent it · record the sending', { tone: 'primary' }))}
+   ${note('If this project needs a second approval before sending, the text shows: “Waiting for a second member\'s approval. Any member of this project other than Dev can give it.”')}${acts(btn('owed:filingsecondapprove K2780', 'Give the second approval'))}
    ${note('Approving fixes the text. Civicsmith sends nothing: you send it by the office\'s own means (its web form, mail, or in person), then record it here.')}`)}` });
 
 SCR.request = c => ({ rail: 'projects', title: 'Request records', crumbs: ['Pothole repairs', 'Request records'], main: `
@@ -660,13 +661,13 @@ SCR.action = c => ({ rail: 'projects', title: 'Action', crumbs: ['Pothole repair
   ${h1('Records request: inspection logs', 'to the Office of the City Clerk · sent 2 October by Mai')}
   <div class="row">${due('near', 'Response due 14 October')}<span class="cs-wait">${I('clock')}Waiting on the City Clerk's reply</span></div>
   ${sec('Replies', sheet(row(I('case'), '<b>3 October</b> · acknowledgment, reference R26-0412', '')) + acts(btn('actioncorrespond', 'Record a reply', { tone: 'primary' }), btn('actionpressure', 'Mark a reply as pressure')))}
-  ${acts(btn('actionmove', 'Move the action'), btn('reminderset', 'Remind me'), btn('actionhold', 'Record a litigation hold'))}` });
+  ${acts(btn('actionmove', 'Move the action'), btn('reminderset', 'Remind me'), btn('actionhold', 'Record a litigation hold'), btn('owed:actionscope K2780', 'Make confidential…'))}` });
 
 SCR.matter = c => ({ rail: 'projects', title: 'Matter', crumbs: ['The Coliseum lease', 'Matter'], main: `
   ${h1('<span class="rec">The 2024 rent adjustment, made without a council vote</span>', 'noncompliant · established · against lease §7.2')}
   ${ladder('stage', ['1 Documentation', '2 Notification', '3 Clock starts', '4 Public', '5 Formal', '6 Political', '7 Legal'], 2)}
   ${sec('Consequences', sheet(row(I('money'), '$38,000 in rent above the schedule, 2024–2026', '<span class="muted">from the rent schedules · ' + grade('capture', 'B') + '</span>')))}
-  ${acts(btn('escalationadvance', 'Advance to stage 3'), btn('declinetoescalate', 'Decline to escalate, with a reason'), btn('escalationopen', 'Open an escalation'), btn('escalationend', 'End'))}` });
+  ${acts(btn('escalationadvance', 'Advance to stage 3'), btn('declinetoescalate', 'Decline to escalate, with a reason'), btn('escalationopen', 'Open an escalation'), btn('escalationend', 'End'), btn('owed:escalationstoppursuing K2780', 'Stop pursuing…'))}` });
 
 /* ---------------- publishing ---------------- */
 SCR['case-editor'] = c => ({ rail: 'projects', title: 'Case', crumbs: ['The Coliseum lease', 'Case · Edition 2'], main: `
