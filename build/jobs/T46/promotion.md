@@ -54,3 +54,11 @@
 - T46 L1 moved no row. record-grammar's R35 table changes (escalation `stopped_pursuing`; action_plan `paused`) change what C-4.1 and the R15 fence admit.
 
 **Next:** wait for BOB's CHANGE announcing membership's and project-roster's merges. Then merge `tranche/T46`, re-diff, and stamp 1.73.0 over the merged tree. That covers `gate.mjs`' note (families C-148, C-149, C-150, C-151, C-153; no C-152), `ROW_CENSUS`, the fixture `row-census-1.73.0.jsonl`, the census suite's header, and the requirements' Status line (K2917).
+
+## J1 · REPORT
+
+Started; reading set read (record: Working notes). Before L2's merges the census over `tranche/T46` shows T45's L3+ rows only: 151 arrived, 9 departed, 13 changed, all attributable to T45 records. No gate composition changed. I am ready to stamp 1.73.0 as soon as your CHANGE announces membership's and project-roster's merges.
+
+Two readings I will apply unless you say otherwise. I stamp what the merged tree holds, so neither blocks the stamp:
+1. **C-56.6.** Plan T46-4 says `PROJECT_GUARD_UNCHECKED` is "re-worded". Membership R128, as K2917 folded it, says it keeps its present translation in T46. If membership's merge leaves the line unmoved, my note says so and stamps no change for C-56.6.
+2. **C-96.50.** B1 names the retired C-96.49 and C-96.51 and the new C-96.52 `HANDLE_FIXED`. Membership R126 also retires C-96.50, the old `HANDLE_FIXED` row. I expect the stamp to record three departures (C-96.49–.51) and one arrival (C-96.52), as R126 says.
