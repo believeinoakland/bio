@@ -47,6 +47,22 @@ The set is over the limit only with the used modules' public parts. I did not re
 
 Size (session_01Xn37tqsLSaaQvhHtapo2Nd): test runs 7, module lines 935
 
+**CHANGE B2 (K2965, from CASE-DISCLOSURES #11).**
+- **The leg convention, fixed.** A leg cite numbers legs from 1 (R5: `ord` ≥ 1, read by `#held` as `basis.legs[ord - 1]`). The conclusions I handed over carried `inquiry.basisFor`'s 0-based leg `ord`, and case-checker matches `l.ord === n`. So arm 3's cuts-against check on cited leg n read leg n+1. I reproduced it on a two-leg basis: citing leg 1, which supports, read as `ACCOUNT_CONTRADICTED_BY_RECORD`. Fix: one helper, `legsCited(basis)`, numbers each leg by its place plus one. Both conclusion sites use it (R6's `accountJudged` and R13's `#advocacyJudged`). Now the cite, its holding and the conclusion's legs all name leg n as the nth leg. The R6 test that pinned `basisFor`'s raw legs now expects them numbered from 1.
+- **New tests in `t46.test.mjs`:**
+  - R6 on a two-leg basis: each holding is the right leg, the handed legs are numbered 1 and 2, leg 1 read as support stands, and the same sentence on leg 2 is contradicted.
+  - R13, the same pair.
+  - case-disclosures R30's control through the real modules, with no stand-in: a sentence citing a held finding whose quotation it holds passes; the same sentence citing a finding the viewer cannot read is `ACCOUNT_SENTENCE_UNSUPPORTED`.
+- **case-checker R24's arm 1 judges only account rows.** My R6 arm "an outcome citing nothing is not refused for citing nothing" already agrees. R13's rows are all account rows.
+- **Red until case-disclosures merges.** The R30 control is red on this branch, because case-disclosures' translation (T46-25) is not on the tranche yet. With `job/T46/case-disclosures` and `job/T46/case-checker` overlaid in a scratch worktree, my tests pass 41 of 41, and their tests pass 170 of 171. The one failure is `program.test.mjs`, which needs esbuild, absent from the scratch worktree. My module merges after case-disclosures (the L8 order), so merging the tranche then turns this control green.
+
+**Tests and checks after B2:**
+- On this branch: case-account tests 40 pass, 1 fail (the R30 control above). case-authoring and review: 250 of 250.
+- `format`: 0 failures. `architecture`: 0 failures. `coverage`: 16 of 16 live ids named by a test, 0 failures. `ownership`: 7 files changed by case-account, 0 failures.
+- `checks/run.mjs` over the product: architecture 0 failures.
+
+Size (session_01Xn37tqsLSaaQvhHtapo2Nd, after B2): test runs 13, module lines 942
+
 ## J1 · COMPLETE
 
 T46-26 applied: R15 and R16. I read my code and tests whole (record: Working notes).
