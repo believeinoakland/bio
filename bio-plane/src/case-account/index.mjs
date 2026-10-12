@@ -12,7 +12,8 @@
  *
  * (T45; v0.2 rules 9, 15; Actions D4, D6c, D11a) It also judges the outcomes a case carries into an edition as it judges
  * a statement (R6), checks a member's own text against the record and keeps it in their own hidden project only
- * (`advocacyCheck`, R13), and never reads anything held in a counsel matter as evidence outside it (R14).
+ * (`advocacyCheck`, R13), and never reads anything held in a counsel matter as evidence outside it (R14). (T46) Its ops
+ * map, `caseAccountOps`, carries R13's two ops, which the plane spreads (R15).
  *
  * Split from `case-authoring` by copy (K624; N839, K2608; `build/extraction/case-account-split.md` §2): its R64, R66 and
  * R63's account share, each private method made public with its body unchanged (N529's form), the acceptance write as
@@ -61,7 +62,7 @@ import { CASE_ACCOUNT_TABLES, migrateCaseAccount } from "./schema.mjs";
 import { CASE_ACCOUNT_CHECKS } from "./checks.mjs";
 
 export { CASE_ACCOUNT_SCHEMA, CASE_ACCOUNT_TABLES } from "./schema.mjs";
-export { CASE_ACCOUNT_CHECKS } from "./checks.mjs";
+export { CASE_ACCOUNT_CHECKS, ADVOCACY_WORDS } from "./checks.mjs";
 export { reviewCommentBodyLines } from "./document.mjs";
 
 /** R5: a sentence's longest text, in code points: case-authoring's R3 bound, a K57 copy (as `case-disclosures` holds one). */
@@ -759,6 +760,20 @@ export class CaseAccount {
              drafts: rows.slice(0, ACCOUNT_DRAFTS_MAX).map((x) => ({ id: x.draft_id, kind: x.kind, framing: x.framing ?? null,
                text: x.text ?? null, flags: x.flags ? JSON.parse(x.flags) : null, run: x.run, label: JSON.parse(x.label), at: x.at })) };
   }
+}
+
+/** R15 (T46; N935; plane R39): the ops whose handlers are this module's (K3), one arm per act and read, each answering
+ *  exactly what R13 answers. The control plane routes, authenticates and stamps them: `author` is the door's `by` stamp
+ *  and `viewer` the URL's, both read from the query, so a caller's own copy in the body never wins; `project` is the
+ *  query's, else the body's. `plane` spreads the map and names no entry of it. */
+export function caseAccountOps(c, url, body) {
+  const qp = (k) => url.searchParams.get(k);
+  const b = body && typeof body === "object" && !Array.isArray(body) ? body : {};
+  const project = () => qp("project") ?? b.project ?? null;
+  return {
+    advocacycheck: () => c.advocacyCheck({ project: project(), sentences: b.sentences ?? null, author: qp("by"), viewer: qp("viewer") }),
+    advocacychecks: () => c.advocacyChecksOf({ project: project(), viewer: qp("viewer") }),
+  };
 }
 
 const instances = new WeakMap();

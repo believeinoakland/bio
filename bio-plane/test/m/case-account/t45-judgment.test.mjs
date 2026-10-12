@@ -2,12 +2,13 @@
    a counsel matter never read as evidence outside it (R14; N892; Actions D4; v0.2 rule 15), driven at the module's
    interface: `accountJudged` and `citedFor` as `publishCase` asks them, and `advocacyCheck` (R13).
 
-   N901 (J1 (c), B2): case-disclosures R30 hands R6's `cited` (`{holdings, rules, looks}`) to case-checker's
-   `checkAccount` unchanged, whose `cited` is a list, so through the real modules today every cite reads unread and a
-   statement's figure arm never runs. The arms that need the cites read are therefore driven through `fixedDisclosures`:
-   the real case-disclosures R30, handed the same holdings translated into `checkAccount`'s own list, as N901's fix will
-   hand them. What case-account itself does (the rows, the outcomes named, the counsel refusal, the holdings) is
-   asserted on what it hands over and answers, never on that translation. */
+   N901 (J1 (c), B2; case-disclosures R30 as T46-25 amends it): case-disclosures R30 translates R6's `cited`
+   (`{holdings, rules, looks}`) into case-checker's `checkAccount` list at its one site. Until that fix reaches the
+   branch these tests run on, the real R30 hands the holdings on unchanged and every cite reads unread, so the arms
+   that need the cites read are driven through `fixedDisclosures`: the real case-disclosures R30, handed R6's `cited`
+   as built when it translates it itself (probed once per world), else the same holdings translated as R30 does. What
+   case-account itself does (the rows, the outcomes named, the counsel refusal, the holdings) is asserted on what it
+   hands over and answers, never on that translation. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { world, V, sha } from "./fixture.mjs";
@@ -24,7 +25,18 @@ const asList = (holdings) => holdings.map((h) => {
   const m = /^(finding|leg|passage|material):(.+?)(?:#(\d+))?$/.exec(h.address);
   return { kind: m[1], ref: m[2], ...(m[3] ? { ord: Number(m[3]) } : {}), text: h.quote };
 });
-const fixedDisclosures = (w) => (a) => w.disclosures.accountJudged({ ...a, cited: asList(a.cited.holdings) });
+/* whether the real case-disclosures R30 reads R6's `cited` itself: a sentence stating the very figure its one holding
+   quotes is judged clean only when it does */
+const translates = (w) => {
+  const probe = w.disclosures.accountJudged({ account: [{ ord: 1, text: "It paid $40,000.", cites: [passage("CNT-P")], kind: "account",
+    bias_statement: null, began_as: "member", draft: null }], statements: [], lens: null, conclusions: [], flags: [], viewer: V("alice"),
+    cited: { holdings: [{ address: "passage:CNT-P", quote: "It paid $40,000." }], rules: [], looks: [] } });
+  return Array.isArray(probe?.refusals) && probe.refusals.filter(Boolean).length === 0;
+};
+const fixedDisclosures = (w) => {
+  const own = translates(w);
+  return (a) => w.disclosures.accountJudged(own ? a : { ...a, cited: asList(a.cited.holdings) });
+};
 
 function setup() {
   const w = world();
