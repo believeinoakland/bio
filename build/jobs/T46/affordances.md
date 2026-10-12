@@ -29,3 +29,17 @@ stale:       (none)
 - `infractiondraft`, `bearingdraft` (`agent-worker` R76's drafts, `NEEDS` null), `advocacycheck` (mutating, `NEEDS` `contribute`) and `advocacychecks` (`case-account` R15) are T45 ops; `grouprules` is `local-facts` R15 (T46-9). None is in `RUNGS`, `RUNG_ABSENT` or `NON_ACTS`, and none is an act here (none is directed at an object's state: drafts and own reads), so each needs `op-grades` rows: `NON_ACTS` for all five and a rung or stated absence for `advocacycheck`. `op-grades` R33 (T46-44) names T46's new ops but none of these. Suggest folding them into T46-44 (or its next entry); my tests that enumerate the owners' op maps (`local-facts`' `grouprules`) stay red on this until `op-grades` grades them.
 
 Not a red of my own making; nothing for my module to change once they are graded.
+
+## J3 · REPORT
+
+**R52 needs two `op-grades` changes for `clockadopt` that R33 (T46-44) does not state; please route them to OP-GRADES while its job is open.**
+
+R52 makes `clockadopt` an `ACTS` row on an action (offered once per standing dated proposal). On `tranche/T46` today `op-grades` holds:
+- `NON_ACTS.clockadopt` = "action-directed: keyed by (action, proposal); a new revision of the action's clock" — an act published here is never also a non-act (my R1/R12 tests, R32's rule "where affordances R51 makes them ACTS rows, they leave NON_ACTS");
+- no `MACHINE_REFUSALS.clockadopt`, while `action-clocks.clockAdopt` refuses a machine author `MACHINE_CANNOT_ADOPT_CLOCK` first (R20: `MACHINE_REFUSALS` equals, both ways, the acts whose method answers a machine with a `MACHINE_*` code). Without it a machine caller would be offered `clockadopt` and refused (R18).
+
+Asked of `op-grades` (the R33 pattern it already states for `escalationstoppursuing`/`escalationreopen`): `clockadopt` leaves `NON_ACTS`, and `MACHINE_REFUSALS.clockadopt = "MACHINE_CANNOT_ADOPT_CLOCK"`. Its `RUNG_ABSENT` (ground `undetermined`) stands.
+
+Until it lands, my R20 and R1/R12 tests over `clockadopt` are red on `op-grades`' tables alone; I build to the end state and merge `tranche/T46` on op-grades' CHANGE.
+
+Also for the record (R52, my reading, no answer needed unless you differ): `clockadopt` is offered only for a standing proposal **with a date** — `clockAdopt` refuses an undated one `CLOCK_PROPOSAL_UNDETERMINED`, so R18 withholds it; each offered act carries the proposal's key as `proposal` (one decorated act per dated proposal; R11's keys otherwise unchanged).
