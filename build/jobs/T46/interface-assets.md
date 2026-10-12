@@ -21,3 +21,7 @@
 - `checks/run.mjs` over the product: architecture 2970 product files, 0 failures; format 0; channels 0; coverage 15 failures, all other L11 modules' ids not yet built (interface-shell, the four screens, control-plane, installer, instance-setup, notice-producers, op-grades, setup-page, setup-words, wizard-scripts), none of this module's.
 
 Size (session_01DGngQktvGFPxRhvzigguEP): test runs 4, module lines 286
+
+## J1 · COMPLETE
+
+T46-53 applied: R1–R4 met and tested (8 pass, 0 fail; format, architecture, coverage, ownership 0 failures for this module). Add to modules.json: paths ["bio-plane/src/interface-assets/"] (index.mjs, generated; generate.mjs, its generator, not imported), tests ["bio-plane/test/m/interface-assets/"] (assets.test.mjs). No stale artifact; nothing deferred; nothing found in another module. Details in my record.
