@@ -8,7 +8,7 @@
   "state": 4,
   "draft": 4,
   "photo": 13,
-  "handle": 9,
+  "handle": 10,
   "ai": 73,
   "date": 14,
   "queue": 35,
@@ -49,7 +49,7 @@
   "act": 529,
   "column": 33,
   "wizard": 304,
-  "total": 1504,
+  "total": 1505,
   "protected": 550
  },
  "words": [
@@ -616,6 +616,12 @@
    "en": "formerly {handle}",
    "protected": false,
    "source": "mock-screens.js members"
+  },
+  {
+   "key": "handle.formerly.until",
+   "en": "formerly {handle}, until {year}",
+   "protected": false,
+   "source": "DEC-195"
   },
   {
    "key": "handle.characters",
@@ -6656,7 +6662,7 @@
   },
   {
    "key": "act.handlechange.does",
-   "en": "Changes the handle the record shows on your work. Members see your earlier handle beside it. Allowed until your work first appears in a published case; after that it is fixed.",
+   "en": "Changes the handle the record shows on your work. Members see your earlier handle beside it, and it stays reserved for you for five years. Allowed until your work first appears in a published case; after that it is fixed.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },

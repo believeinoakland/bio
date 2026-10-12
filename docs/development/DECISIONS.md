@@ -2894,6 +2894,7 @@ reasoning recorded in: this entry; `screens/mock-screens.js` (the Photos step); 
 owed: (BOB, N779 in T38) the two labels on published photos, read by key; the Photos step's sentence.
 
 ### DEC-186 · answered
+amended: 2026-10-12 by DEC-195 (Bob, S19 point 1): a handle a member gives up is reserved for five years, then free for others.
 raised: 2026-10-08 · the UX design session with Bob on his secondary account (session_01SCHPX2mpSDpBNA9wprUm5H; the development process runs on the same account since K1891) (found answering Bob's comment on the handle field, DEC-184: no op changes a handle after joining, while the screens had said it could be; question S18)
 for: bob
 question: Whether a member may change their handle after joining, and until when.
@@ -3059,3 +3060,16 @@ decided: 2026-10-11 · the design session (P17)
 reasoning recorded in: this entry; `screens/words-actions.src.py`, `screens/words-actions.json`; `screens/build_words.mjs`, `screens/words.json` (1,504 words, 550 protected); `screens/mock-acts.js`; `screens/mock-kit.js`; `screens/mock-screens.js` (Plan, Start and send, Action, Matter); `screens/registry.src.py`; `screens/library.src.py` (22 scripts); `layouts.html`.
 owed: (BOB, T45) each key read by its module; the five scripts adopted under R22 and Start and send's re-pointed step; the owed acts re-pointed once served.
 
+### DEC-195 · answered
+raised: 2026-10-12 · the UX design session with Bob on his primary account (session_018JqYSTCQoQF5SPAXFQxvDD; the development process also runs on his primary account since K2511) (question S19, point 1, from BOB's B121 §Z1 on DEC-186)
+for: bob
+question: Whether another member may take a handle a member gave up (S19, point 1).
+why it is Bob's: the meaning of his own ruling (DEC-186): what "formerly" promises members about who a name refers to (P17).
+provisional: 1A, membership as built at T40 (R124: an earlier handle stays taken for every other member for good).
+alternative: 1A, reserved for good; 1B, freed after a waiting period such as 90 days.
+recommendation: 1A.
+reversal cost: low; one clause of membership R124 and one word.
+response: **Bob, 2026-10-12: "S19: No reuse for 5 years or more".** Ruled: (1) a handle a member gives up stays reserved for five years from the day they change it: it is taken for every other member (at joining, at a change and in the handle check, which still says only "taken"), and the member who gave it up may take it back; (2) after five years it is free for any member. The design session reads "or more" as the floor and uses five years. (3) Design's detail beneath it: once a reservation has ended, members see that earlier handle with the year it was given up, "formerly mai-k, until 2026" (`handle.formerly.until`), so two members' histories are never confused; while it is reserved, "formerly mai-k" as before. Point 2 of S19 (what makes a handle fixed: shown in a published case, 2A, or any work carried, 2B) stays open with Bob.
+decided: 2026-10-12 · Bob
+reasoning recorded in: this entry; `screens/question.html` (S19); `screens/mock-screens.js` (Your account's "Your handle"); `screens/mock-acts.js` (`handlechange`); `screens/build_words.mjs`, `screens/words.json` (`handle.formerly.until`); BIO_Interaction_Constructs_v0_1.md §V.
+owed: (BOB) membership R124's "Earlier handles" clause: an earlier handle stays taken for every other member for five years from its change, then is free (R16, R124 and the handle check alike); R17's `formerly` entries carry the date each was given up, so the screen can show `handle.formerly.until` once the five years have passed.

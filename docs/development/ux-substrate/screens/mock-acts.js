@@ -156,7 +156,7 @@ const ACT_HELP = {
   pagetranscribe: 'Has the assistant read up to 8 pages of this document that Civicsmith\'s own reading couldn\'t make out. The account that pays for your acts here pays, within its limits. Its words arrive labelled as the assistant\'s reading and stay undetermined until a member checks a passage against the page; the page images stay as they are.',
   transcribe: 'Types the words of a page yourself, from its image. Your typing is labelled as yours, and a second member can check it against the page.',
   exploreapprove: 'Lets the assistant explore today, on this account, what it said is worth exploring. Without a yes today, it doesn\'t.',
-  handlechange: 'Changes the handle the record shows on your work. Members see your earlier handle beside it. Allowed until your work first appears in a published case; after that it is fixed.',
+  handlechange: 'Changes the handle the record shows on your work. Members see your earlier handle beside it, and it stays reserved for you for five years. Allowed until your work first appears in a published case; after that it is fixed.',
   handlecheck: 'Checks, as you type, whether this handle can be used in the group: free, already taken, or using characters a handle can\'t have. It never says who has a handle.',
   obscuremarkwithdraw: 'Withdraws a mark on a photo, with your reason, for example when it covers what the finding shows. The withdrawal is recorded beside the mark; the public copy follows the marks that stand.',
   obscuremark: 'Marks anyone in a photo who is not part of a finding, and any number plate, so the copy a published case carries shows them obscured, labelled. The original stays inside the group.',
