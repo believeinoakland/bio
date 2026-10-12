@@ -35,3 +35,7 @@ If you read either edge the other way, say so and I will change it. Nothing else
 - `checks/run.mjs`: format 0, architecture 0 (3060 files), channels 0. Coverage has 12 failures, all in other modules' T47 ids (rule 5.1) and none in record-core.
 
 Size (session_01UoXK9QPNAj5jdUwKRxUk56): test runs 16, module lines 2372
+
+## J2 · COMPLETE
+
+T47-6 done, pushed (36a922de9b): R84 built. setSetting refuses SETTING_NOT_JSON (row C-102.33, awaiting T47-10's stamp), asked after SETTING_VALUE_REQUIRED and before SETTING_INVALID, recording nothing. B2's edges (K3036) are tested by name. Results: record-core 178/178, stats-disclosure 31/0, neighbours green (answers, acquisition, monitoring, instance-setup, public-read, control-plane envelope). answer-envelope's one failure is the accepted red 7a (DISCLOSURE_DUE words pin). format, architecture, coverage (84/84) and ownership show 0 failures; run.mjs shows no record-core failure. Nothing deferred: #21's deferred setSetting flaw is closed by R84. Uses no unmerged L2 job, so it may merge now.
