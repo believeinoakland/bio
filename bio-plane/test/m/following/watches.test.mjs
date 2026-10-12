@@ -471,3 +471,49 @@ test("R26 with the real plan-work and action-plans: where it stands lists the pl
   assert.equal(code(f.registerWatches()), "LISTENER_DECLARED");
   assert.equal(MACHINE, "class:daemon");
 });
+
+/* ---------------------------------------------------------------- R23–R26 over the real monitoring (K2875) */
+
+test("R23 R24 R25 R26 an address watch over the real monitoring: linked as monitoring holds it, relied on while another project's document asks for it (its R72), stopped through its R71 so its R32 row is ended today, and listed ended in the plan's watches", async () => {
+  const { world: monWorld, sha: msha, V: MV, NOW_MS } = await import("../monitoring/fixture.mjs");
+  const m = monWorld();
+  const P = "PROJ-2026-0950-p", Q = "PROJ-2026-0951-q", ADDR = "https://records.example.org/agenda", OTHER = "https://records.example.org/other";
+  const rec = (addr, cap, at) => m.prov.recordReceipt({ address: addr, addressNorm: addr, captureSha: cap, retrieved: at, via: "direct",
+    retrievalLocator: addr, context: { authorityKind: "sweep", authority: "x", actorClass: "plane", actor: null, observe: false } });
+  m.inProject(P, { owner: "carol" });
+  m.inProject(Q, { owner: "erin", joined: ["carol"] });
+  const a = m.monitored("INFO-2026-0950-a", ADDR, "agenda v1", { freq: "daily", lines: [`project: ${P}`] });
+  const b = m.monitored("INFO-2026-0951-b", ADDR, "agenda v2", { freq: "daily", lines: [`project: ${Q}`] });
+  const o = m.monitored("INFO-2026-0952-o", OTHER, "other v1", { freq: "daily", lines: [`project: ${P}`] });
+  rec(ADDR, a.cap, "2026-09-01T00:00:00Z"); rec(ADDR, b.cap, "2026-09-02T00:00:00Z"); rec(OTHER, o.cap, "2026-09-01T00:00:00Z");
+  for (const id of ["carol", "erin"])
+    m.st.sql.exec(`INSERT OR IGNORE INTO members (member_id, cover, role, status, created, updated) VALUES (?, 'c', 'member', 'active', '2026-01-01', '2026-01-01')`, id);
+  /* one plan of P, read as action-plans answers it (its sight is its project's participants) */
+  const plan = { id: "PL-1", project: P, state: "open", subjects: [{ key: "inquiry:I-1" }] };
+  const sees = (v) => v == null || m.rows(`SELECT 1 FROM project_participants WHERE project_id=? AND member_id=?`, P, String(v).replace(/^member:/, "")).length > 0;
+  const actionPlans = { planRead: ({ id, viewer }) => (id === plan.id && sees(viewer) ? { ok: true, ...structuredClone(plan) } : noSuchPlan(id ?? null)) };
+  const readers = [];
+  const f = followingOf(m.host, { record: m.record, membership: m.membership, monitoring: m.m, actionPlans,
+    planWork: { registerWatchReader: (mod, fn) => (readers.push(fn), { ok: true, module: mod }), matterPromiseDuties: () => ({ ok: true, duties: [], all_met: false }) },
+    duties: { readDuty: () => ({ ok: true, found: false }) }, answers: { standingQuestionsOf: () => ({ ok: true, questions: [] }) },
+    standards: { standardsIn: () => ({ ok: true, items: [] }) }, view: () => ({ time_zone: { value: "America/Halifax" } }), now: () => m.clock.ms });
+  const carol = MV("carol");
+  const la = f.watchLink({ plan: "PL-1", watch: { kind: "address", id: ADDR }, author: carol, viewer: carol });
+  const lo = f.watchLink({ plan: "PL-1", watch: { kind: "address", id: "https://RECORDS.example.org/other" }, author: carol, viewer: carol });
+  assert.deepEqual([la.ok, la.watch.id, lo.ok, lo.watch.id], [true, ADDR, true, OTHER], "linked as monitoring holds the address");
+  assert.equal(code(f.watchLink({ plan: "PL-1", watch: { kind: "address", id: ADDR }, author: MV("zed"), viewer: MV("zed") })), "NO_SUCH_PLAN");
+  plan.state = "closed"; plan.closed = { at: "2026-09-28T10:00:00Z" };
+  const q = f.watchQuestions({ viewer: carol }).questions;
+  assert.deepEqual(q.map((x) => [x.watch.id, x.relied_on, x.offered, x.recipients]),
+                   [[ADDR, true, [], [carol]], [OTHER, false, ["keep", "stop"], [carol]]], "Q's document asks for ADDR: relied on");
+  assert.doesNotMatch(JSON.stringify(q), new RegExp(Q));
+  assert.equal(code(f.watchAnswer({ link: la.link, stop: true, author: carol })), "WATCH_RELIED_ON");
+  const s = f.watchAnswer({ link: lo.link, stop: true, author: carol });
+  assert.deepEqual([s.ok, s.until, s.owner.ok, s.owner.setting.until], [true, "2026-09-28", true, "2026-09-28"]);
+  const row = m.m.monitoring({ viewer: carol, now: NOW_MS }).items.find((r) => r.address === OTHER);
+  assert.deepEqual([row.state, row.until], ["ended", "2026-09-28"], "monitoring's own row: ended today");
+  const listed = readers[0]({ plan: "PL-1", viewer: carol });
+  assert.deepEqual(listed.map((x) => [x.watch, x.ends ?? x.ends_state, x.ended, x.relied_on]),
+                   [[ADDR, "none_set", false, true], [OTHER, "2026-09-28", true, false]]);
+  assert.equal(typeof msha, "function");
+});

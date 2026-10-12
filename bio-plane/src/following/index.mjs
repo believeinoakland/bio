@@ -983,7 +983,8 @@ export class Following {
       const row = this.#addressRow(id, v);
       if (!row) return null;
       const until = row.until ?? null;
-      return { kind, id: String(id).trim(), words: row.address, ends: until,
+      /* the address as monitoring holds it (its normalised form, R15), so R25's act and R72's read name its subject */
+      return { kind, id: row.address, words: row.address, ends: until,
                ended: row.state === "ended" || (typeof until === "string" && until < this.#today()) };
     }
     if (kind === "duty") {
@@ -1042,7 +1043,7 @@ export class Following {
       if (!keys.length) keys = null;
     }
     if (w.ended) return refuse("WATCH_ENDED", "that watch has already ended");
-    const id = kind === "address" ? portalKey(wid) : w.id;
+    const id = w.id;
     const had = this.#one(`SELECT * FROM watch_links WHERE plan=? AND watch_kind=? AND watch_id=?`, p.id, kind, id);
     if (had) return { ok: true, existed: true, ...this.#linkView(had) };
     const at = instant(this.now());
