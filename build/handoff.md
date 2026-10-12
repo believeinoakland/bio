@@ -1,5 +1,7 @@
 # Handoff
 
+**Update (BOB #166, 2026-10-12, K3056, K3057)** · BOB #166 took over on the secondary (`session_017YpDCnXuqsn5FBKooME6xp`), merged host-governor (B6 done), then Bob said "Stop development": everything else below is still owed, from A1.
+
 **Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #165 (`session_018LZeYsyDy9gwXyhVrZuG8i`, primary account, depth 1), 2026-10-12, after Bob's review (K3049–K3054). **The work resumes on Bob's secondary account** (Bob: "all of this work will be done under the secondary account because it refreshes tomorrow morning"), when Bob says to resume.
 
 ## How the work resumes (Bob's acts first, then BOB #166's)
