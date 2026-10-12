@@ -34,7 +34,10 @@ test("R17 op=bootstrap: service, this isolate's version (0.0.0 unset), bootstrap
                                              { stub, ...io }));
   assert.equal(r.status, 200);
   assert.deepEqual(r.body, { ok: true, service: "bio-plane", version: "plane-3", bootstrapConfigured: true,
-                             claimed: false, rearmed: false, consumedAt: null, storeVersion: "store-7" });
+                             claimed: false, rearmed: false, consumedAt: null, storeVersion: "store-7",
+                             /* T46: R80's test_instance and R81's parts, always answered (none bound here) */
+                             test_instance: false, parts: [{ part: "signin", present: false }, { part: "scanner", present: false },
+                                                           { part: "safe_view", present: false }] });
   assert.equal(stub.seen[0], "http://do/bootstrap?fp=fp9");
   assert.equal((await read(await bootstrapReport({}, "x", { stub, ...io }))).body.version, "0.0.0");
   for (const tok of [undefined, ""]) assert.equal((await read(await bootstrapReport({ ADMIN_TOKEN: tok }, "x", { stub, ...io }))).body.bootstrapConfigured, false);
@@ -51,7 +54,9 @@ test("R17 op=bootstrap: service, this isolate's version (0.0.0 unset), bootstrap
     "pdf-worker": { binding: "PDF_WORKER", state: "MISNAMED", name: "ocr-worker", version: "o-1" },
     "ocr-worker": { binding: "OCR_WORKER", state: "UNBOUND" },
     "sheet-worker": { binding: "SHEET_WORKER", state: "SERVING", version: "s-1" },
-    "agent-runner": { binding: "AGENT_RUNNER", state: "UNBOUND" },
+    /* T46 (R17): read through agent-worker's /version, which here says nothing of its runner, so the runner is unread */
+    "agent-runner": { binding: "AGENT_WORKER", via: "agent-worker", state: "SILENT",
+                      why: "agent-worker answered its version without saying whether the runner is bound" },
     "file-scanner": { binding: "FILE_SCANNER", state: "SERVING", version: "f-1" } });
   assert.equal("memberVersions" in (await read(await bootstrapReport(env, "x", { stub, ...io }))).body, false);
   const silent = await read(await bootstrapReport(env, "x", { stub: { fetch: async () => new Response("x", { status: 500 }) }, ...io }));

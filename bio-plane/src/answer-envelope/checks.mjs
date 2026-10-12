@@ -5,7 +5,8 @@
  * Copied whole from `control-plane/checks.mjs` at the split (T35-80; K617, K1907, K1974), each row keeping its code,
  * check id and words. Each `where` names the file whose code raises the row: this module's for C-61.1, C-69.2 and C-69.3
  * (`requiredArgument`, `storeSilent`, `planeInternalAnswer`); `store-door`'s `dispatch.mjs` for C-69.4 and C-69.5 (its
- * R6, R4); `control-plane/index.mjs` for C-69.1, C-68.2–.4 and C-66.6, whose sites stay there. Each check's invariant
+ * R6, R4); `control-plane/index.mjs` for C-69.1, C-68.2–.4, C-66.6 and, since T46, C-69.6 (`DISCLOSURE_DUE`, its R65),
+ * whose sites stay there. Each check's invariant
  * and its test stay where its code is raised.
  *
  * History, from `control-plane`: moved from the check catalogue (`checks/bio-checks.mjs`) at control-plane's extraction
@@ -13,6 +14,13 @@
  * keeps C-68.1, minted at acquisition's one region); the unverified replay C-66.6; and, at T18 (K621, K636), the argument
  * complaint C-61.1 with R39's gate. The admission rows (C-38, C-78, C-29.6–.10, C-32.17, C-64.4) left with the gates
  * that raise them for `admission`'s own table at the split (K617, K624 (1), (2); admission R14). */
+
+/* The door's sentences under the UX stream's keys, read by key as `extraction`'s `TRANSCRIBE_WORDS` is: `control-plane`
+   R65's interim sentence until `words.json` holds `refusal.DISCLOSURE_DUE`, then that sentence verbatim. */
+export const DOOR_WORDS = Object.freeze({
+  'refusal.DISCLOSURE_DUE': 'Read what connecting means first: your questions and what is read to answer them go to '
+    + 'Anthropic under your own account.',
+});
 
 /* ===========================================================================
    D-278 (C-69) — NO OPERATION BY THAT NAME.
@@ -80,6 +88,14 @@ export const DISPATCH_CHECKS = {
       + 'material the '
       + 'hold covers, or could not be shown to stay clear of it. Nothing was removed. A removal ordered while a hold '
       + 'stands waits until the hold is released.',
+  },
+  /* T46 (`control-plane` R65; N897 (3); K2960) — A SIGN-IN STARTED BEFORE THE DISCLOSURE WAS SHOWN. The door refuses a
+     subscription sign-in's `start` while the member has not been shown what connecting means; nothing is sent to the
+     runner. The next free C-69 number, raised by the door's `subscriptionsignin` branch; its words read by key. */
+  DISCLOSURE_DUE: {
+    check: 'C-69.6',
+    where: 'src/control-plane/index.mjs fetch > is-disclosure-due',
+    translation: DOOR_WORDS['refusal.DISCLOSURE_DUE'],
   },
 };
 

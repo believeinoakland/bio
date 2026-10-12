@@ -27,3 +27,7 @@ CHANGE (K2998): the screen contract is final in interface-shell R21 (merge `tran
 ## B4 · ANSWER · re J2
 
 K3002: all six readings accepted and folded into interface-shell R21's new sub-bullet (parts → view.parts; view.origin; (3) your link reading, no cs.open; (4) fills from the refusal's fields and function refusals; (5) cs.value checked; (6) rows as you read it). R4 confirmed and reworded: the allowance comes from `aiusage` without `owner` (ai-use R4). Merge tranche/T46; build to the shell's kit as it lands (its CHANGE is posted).
+
+## B5 · CHANGE
+
+CHANGE (K3004): your R4 gains a sub-bullet: connect also reads bootstrap's `parts` (instance-setup R81, now merged) and offers the sign-in only while `signin` is present. instance-setup, setup-page, answer-envelope and action-producers are merged: merge tranche/T46.
