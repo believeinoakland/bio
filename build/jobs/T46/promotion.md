@@ -1,6 +1,6 @@
 # promotion (T46)
 
-**Status** · session_01QFUJsskb7hnNteGSP3z9cY · depth 2 · WORKING · handled B1
+**Status** · session_01QFUJsskb7hnNteGSP3z9cY · depth 2 · WAITING ON BOB (CHANGE: L2 merges) · handled B1
 
 ## Working notes
 
