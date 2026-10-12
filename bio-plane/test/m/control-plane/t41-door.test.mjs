@@ -112,7 +112,9 @@ const R71_SESSION_OPS = ["stepcreate", "stepstart", "stepend", "stepdelete", "st
   "stepproposals", "costmessages", "questionfollowstate", "stepproducts", "recordsteps", "finddoors"];
 
 test("R71 (op-declarations R43; N820; K2496, K2498, K2486, K2560, K2569, K2570): each of R43's session ops reaches the store's route of its own name for a member's session only, each declared stamp from the session and none the caller's; every machine credential is refused before any store request; an owner's refusal is answered as given", async () => {
-  await routesForSessions(R71_SESSION_OPS, () => ({ project: "prj-1", question: "INQ-1", step: "STP-1", milestone: 1, at: "2026-11-02" }));
+  /* (T46; K3003, K3006) `stepsrunai` and `grouptestset` record their own clock, so a caller's `at` never reaches it (R17; t46-door.test.mjs) */
+  await routesForSessions(R71_SESSION_OPS, (op) => ({ project: "prj-1", question: "INQ-1", step: "STP-1", milestone: 1,
+                                                      ...(["stepsrunai", "grouptestset"].includes(op) ? {} : { at: "2026-11-02" }) }));
 });
 
 test("R71 (K2496): `readpages` is a run's read, its `principal` and `viewer` the caller's as `extractpropose`'s, never the caller's own (negative control: the request's `run` is passed)", async () => {
