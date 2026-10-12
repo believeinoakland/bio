@@ -1,6 +1,6 @@
 # monitoring (T45)
 
-**Status** · session_0133TTPPm1mQzJwK2WwH5Yij · depth 2 · WORKING · handled B2
+**Status** · session_0133TTPPm1mQzJwK2WwH5Yij · depth 2 · RUNNING until 2026-10-12T00:36:50Z (users' suites, mine vs tranche base) · handled B2
 
 ## J1 · QUESTION
 
