@@ -61,3 +61,11 @@ Adds to J2 (which it does not replace), from rewriting to R21 (1)'s globals rule
 5. **`cs.digest(text)`**: the screen-promoted bundle (K2996 Q2) sends each file's SHA-256 as the setup page does, and `crypto.subtle` is not among the allowed globals. Reading: the kit gives `cs.digest(text)` → a promise of the lowercase hex SHA-256 of the text's UTF-8 bytes. (UTF-8 lengths I compute myself.)
 6. **`cs.now()`**: the instant for `observedAt`'s "no later than now" check and the bundle's `created`; read through the kit so tests set the clock (falls back to `Date.now()`).
 7. **`{refuse: key, fills}`**: several of my refusals name what is missing ("Before it is sent, say: How you got it, Where and when."). Reading: the shell fills the word with `fills` as `w(key, fills)` does. Also `cs.value(id)` answers a checkbox's or radio's `checked` (true/false) and any other field's value.
+
+## J4 · COMPLETE
+
+T46-56 complete: R1–R9 met, built to interface-shell R21 (K2996, K2998, K2999) over my own stand-in kit; 42/42; the record's "Completion" section has the detail.
+- **Files for `modules.json` (K1043):** paths `bio-plane/src/screens-intake/`; tests `bio-plane/test/m/screens-intake/`. **Uses** gain `wizard-scripts` (tests only, `SCREEN_REGISTRY`). With those patched locally: architecture 0, coverage 9/9, ownership 0 (13 files); run.mjs architecture 0, coverage failures none mine.
+- **Open for the shell's merge (J3, unanswered):** `cs.digest(text)` (R1's promoted bundle; `crypto` is not an allowed global), `cs.now()`, `{refuse, fills}` filled, `cs.value` answering a checkbox's `checked`. I re-point to the shell's DOM stand-in at its merge (your CHANGE).
+- **REPORT, other modules (beyond N969):** (a) capture R77's `heldCaptures` rows carry no grade and no capture digest, so a held row (not an archive's file) can draw neither its grade nor a thumbnail opening `open-file`, as R4 asks; (b) no member-session read answers a knock's source id (`sourceof`, `sourcerung` not in `SESSION_OPS.member`), so `sourcelink` needs both ids typed and the ladder stops at "Same knocker".
+- `SCREEN_WORDS`: 167 rows for the design stream's HANDOFF.
