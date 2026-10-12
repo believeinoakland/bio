@@ -1,5 +1,5 @@
 /* question-explorer — the system exploring a question on its own where an account owner turned exploring on
- * (requirements: `build/requirements/question-explorer.md`, R1–R15; D33, D36, D39, D11–D14, D66; N815).
+ * (requirements: `build/requirements/question-explorer.md`, R1–R16; D33, D36, D39, D11–D14, D66; N815).
  *
  * `questionExplorerOf(host, deps)` answers the one instance per Durable Object storage (K61). What it does:
  *   - chooses (R1, R2, R9): each tick reads at most 200 open or surfaced questions, keeps those worth exploring, and
@@ -11,7 +11,9 @@
  *     look aimed at a person (R9, R10), a find with its gauge (R4), a capture asked through `capture-requests` (R3), a
  *     read inside a held document (R13), and the run's end (R8, R12);
  *   - offers (R5, R7, R14): each find once to each member following the question, only while the gate is open, every
- *     find alike whatever its bearing; and the member's own doors (R6).
+ *     find alike whatever its bearing; and the member's own doors (R6);
+ *   - on a test instance (R16): the gate also opens on `ai-runs.partAdmitted`'s exception, every find then carrying the
+ *     label it was gauged under.
  *
  * WHAT THIS MODULE DOES NOT DO: it writes no leg, no grade, no conclusion, no hypothesis and no score (R4, R6); it
  * computes no bearing (the run's work gauges; this module records the gauge with the gate's false-alarm rate); it
@@ -111,11 +113,11 @@ export class QuestionExplorer {
     this.principal = principal;
     this.now = typeof now === "function" ? now : () => Date.now();
     /* R7: what the record holds for the deploy gate, `{verifications, testBars}` (the shape `run-rules`' `partDeployable`
-       takes), read from `ai-runs` (its R19 verification acts and R75 records) by those names until it merges; absent,
-       nothing is held and the gate is shut (fail closed). The set is Civicsmith's (`run-rules` R19, K2489). */
+       takes), read from `ai-runs` (its R19 `verifications()` and R75 `testBarRecords()`); absent, nothing is held and
+       the gate is shut (fail closed). The set is Civicsmith's (`run-rules` R19, K2489). */
     this.held = typeof held === "function" ? held : () => ({
       verifications: aiRuns && typeof aiRuns.verifications === "function" ? aiRuns.verifications() : [],
-      testBars: aiRuns && typeof aiRuns.testBars === "function" ? aiRuns.testBars() : [] });
+      testBars: aiRuns && typeof aiRuns.testBarRecords === "function" ? aiRuns.testBarRecords() : [] });
     this.testSet = testSet;
   }
 
@@ -271,17 +273,34 @@ export class QuestionExplorer {
 
   /* ---------------------------------------------------------------- R7: the gate */
 
+  /** R7, R16: whether an AI part is admitted, `{admitted, untested}`: `ai-runs.partAdmitted` (its R78, the one gate,
+   *  `run-rules` R29 on what the record holds, with the deployment's test-instance fact); where that provider is not
+   *  in place, R19's gate alone, `run-rules.partDeployableOn`, with no exception. Anything unreadable is not admitted. */
+  #admitted(part, held) {
+    if (this.aiRuns && typeof this.aiRuns.partAdmitted === "function") {
+      const a = this.aiRuns.partAdmitted(part);
+      const label = a && a.untested && typeof a.untested === "object" ? a.untested : null;
+      return { admitted: !!a && a.admitted === true, untested: a && a.admitted === true ? label : null };
+    }
+    return { admitted: runRules.partDeployableOn(this.testSet, part, held) === true, untested: null };
+  }
+
   /** R7: the gauge's gate. Open only when Civicsmith's test bar for the explorer is recorded passed with a false-alarm
-   *  rate at most 20%, and `run-rules` R19 lets `investigate` deploy and the explorer's use. A group's own test
+   *  rate at most 20%, and `run-rules` R19 lets `investigate` deploy and the explorer's use. R16: also open, on the
+   *  test-instance exception, when `ai-runs.partAdmitted` admits both `investigate` and `explore` and the explorer's
+   *  own bar is not held: then `false_alarm_rate` and `gold_set` are null and `untested` is `explore`'s label. Whenever
+   *  the explorer's bar is held, R7's rate applies and no label is carried. The exception lifts only the bar: the
+   *  verification chain stands (it is `partAdmitted`'s), and nothing here counts toward any bar. A group's own test
    *  investigations are never read here (R11). Never throws; anything unreadable shuts it. */
   gate() {
-    const shut = (why) => ({ open: false, why, false_alarm_rate: null, gold_set: null });
+    const shut = (why) => ({ open: false, why, false_alarm_rate: null, gold_set: null, untested: null });
     try {
       if (!this.steps || !this.aiUse) return shut("a provider the explorer needs is not in place");
       const held = this.held() || {};
-      if (runRules.partDeployableOn(this.testSet, EXPLORE_MODE, held) !== true
-          || runRules.partDeployableOn(this.testSet, EXPLORE_TEST_PART, held) !== true)
+      const inv = this.#admitted(EXPLORE_MODE, held), use = this.#admitted(EXPLORE_TEST_PART, held);
+      if (!inv.admitted || !use.admitted)
         return shut("the investigate mode and the explorer's use are not both deployable on the test investigations");
+      if (use.untested) return { open: true, why: null, false_alarm_rate: null, gold_set: null, untested: use.untested };
       /* The record that holds the explorer's bar on the set's current version (`run-rules`' `checkTestBarRecord`). */
       const tb = (Array.isArray(held.testBars) ? held.testBars : []).find((r) => runRules.checkTestBarRecord(r) === null
         && r.part === EXPLORE_TEST_PART && r.passed === true && r.set === this.testSet.id
@@ -289,7 +308,7 @@ export class QuestionExplorer {
       const far = tb ? tb.false_alarm_rate : NaN;
       if (!(far >= 0 && far <= EXPLORE_FALSE_ALARM_MAX))
         return shut("the explorer's false-alarm rate on the test investigations is not recorded at or under 20%");
-      return { open: true, why: null, false_alarm_rate: far, gold_set: `${tb.set}@${tb.set_version}` };
+      return { open: true, why: null, false_alarm_rate: far, gold_set: `${tb.set}@${tb.set_version}`, untested: null };
     } catch { return shut("the gate could not be read"); }
   }
 
@@ -566,8 +585,9 @@ export class QuestionExplorer {
   }
 
   /** R4: a find the run located, with the run's gauge of how it bears on the question's live basis: `supports`,
-   *  `cuts_against` or `unclear`, with its account of how. Recorded with the gate's false-alarm rate and gold set, the
-   *  label `machine` and the account that enabled it, under the run's step. The same find
+   *  `cuts_against` or `unclear`, with its account of how. Recorded with the gate's false-alarm rate and gold set (R16:
+   *  on the exception, both null and `untested` the label, kept with the find), the label `machine` and the account
+   *  that enabled it, under the run's step. The same find
    *  under the same run answers the first record, writing nothing. Never a grade, never a score. */
   find({ run, kind, ref, bearing, how, caller = null, at = null } = {}) {
     const live = this.#liveRun(run, caller);
@@ -586,9 +606,9 @@ export class QuestionExplorer {
     const g = this.gate();
     const find = `XFD-${sha256HexSync(`${r.run}|${kind}|${loc.ref}`).slice(0, 16)}`;
     this.sql.exec(`INSERT INTO explore_finds (find, run, question, kind, ref, bundle_id, bundle_b, bearing, how,
-                     false_alarm_rate, gold_set, against, owner, at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+                     false_alarm_rate, gold_set, against, untested, owner, at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
                   find, r.run, r.question, kind, loc.ref, loc.bundle_id, loc.bundle_b, bearing, String(how).trim(),
-                  g.false_alarm_rate, g.gold_set, json(this.#liveBasis(r.question)), r.owner, iso);
+                  g.false_alarm_rate, g.gold_set, json(this.#liveBasis(r.question)), json(g.untested), r.owner, iso);
     return { ...this.#findAnswer(find, r), step: r.step, already: false };
   }
 
@@ -596,7 +616,7 @@ export class QuestionExplorer {
     const f = this.#one(`SELECT * FROM explore_finds WHERE find=?`, find);
     return { ok: true, find, run: r.run, question: f.question, kind: f.kind, ref: f.ref,
              gauge: { bearing: f.bearing, how: f.how, false_alarm_rate: f.false_alarm_rate, gold_set: f.gold_set,
-                      label: "machine", enabled_by: f.owner },
+                      label: "machine", enabled_by: f.owner, untested: parse(f.untested) },
              against: parse(f.against) };
   }
 
@@ -618,10 +638,11 @@ export class QuestionExplorer {
       const iso = this.#iso(at);
       const ref = address.trim().slice(0, 2048);
       const find = `XFD-${sha256HexSync(`${r.run}|page|${ref}`).slice(0, 16)}`;
+      /* R16: a page named on the exception carries the label as every find does. */
       this.sql.exec(`INSERT INTO explore_finds (find, run, question, kind, ref, bundle_id, bundle_b, bearing, how,
-                       false_alarm_rate, gold_set, against, owner, at)
-                     VALUES (?,?,?,?,?,NULL,NULL,NULL,NULL,NULL,NULL,NULL,?,?) ON CONFLICT(run, kind, ref) DO NOTHING`,
-                    find, r.run, r.question, "page", ref, r.owner, iso);
+                       false_alarm_rate, gold_set, against, untested, owner, at)
+                     VALUES (?,?,?,?,?,NULL,NULL,NULL,NULL,NULL,NULL,NULL,?,?,?) ON CONFLICT(run, kind, ref) DO NOTHING`,
+                    find, r.run, r.question, "page", ref, json(this.gate().untested), r.owner, iso);
       return { ...asked, named_to_members: true, find };
     }
     return asked;
@@ -755,7 +776,8 @@ export class QuestionExplorer {
   /** R5, R7, R14: for `notice-producers`: each find, once (a stable key per find and question), to each of the
    *  question's recipients who may see both the find and the question, less those she muted or accepted. Every find
    *  is the same item in the same order (newest first, then by id) whatever its bearing: nothing here orders, groups
-   *  or filters by bearing (R14). Labelled the system's work; which account paid is answered only to its owners (D64).
+   *  or filters by bearing (R14). Labelled the system's work, and with the label a find was gauged under on the
+   *  test-instance exception (R16); which account paid is answered only to its owners (D64).
    *  While the gate is shut it answers nothing and counts nothing (R7). Never throws. */
   findsFor({ viewer = null, at = null, limit = 200 } = {}) {
     const n = Math.max(1, Math.min(1000, Math.floor(Number(limit)) || 200));
@@ -783,7 +805,7 @@ export class QuestionExplorer {
   #item(f, viewer) {
     return { key: `explore-find:${f.find}:${f.question}`, find: f.find, question: f.question, kind: f.kind, ref: f.ref,
              bearing: f.bearing, how: f.how, false_alarm_rate: f.false_alarm_rate, gold_set: f.gold_set,
-             label: "machine", by: "system", says: EXPLORE_FIND_SAYS, at: f.at,
+             untested: parse(f.untested), label: "machine", by: "system", says: EXPLORE_FIND_SAYS, at: f.at,
              ...(this.#ownsAccount(viewer, f.owner) ? { enabled_by: f.owner } : {}) };
   }
 
