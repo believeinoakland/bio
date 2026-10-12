@@ -1,4 +1,4 @@
-/* K921's two OBLIGATIONs at queue's interface, over a stubbed `queue-producers.feedItems` (its R8, R20, R21) minting each
+/* K921's two OBLIGATIONs at queue's interface, over a stubbed `queue-producers.feedItems` (its R8; the producers are `action-producers` R6, R7 since T45) minting each
    as its requirement keys it: `template-review-requested` and `local-fact-due` pass the mint (R1, R11), name the door
    each leaves by (R12) and the bridge names the same one (R28), and neither is ever muted (R19, R26, R31). queue hands
    `filingTemplates` and `localFacts` to the producers and calls neither (K921). */

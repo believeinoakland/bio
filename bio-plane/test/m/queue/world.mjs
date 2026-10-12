@@ -147,10 +147,17 @@ export function defaultFakes() {
     linkSweep: { sweepConditions: () => ({ ok: true, conditions: [] }) },
     contradiction: { candidatesFor: () => ({ ok: true, candidates: [], truncated: false, cursor: null }),
                      conflictNotices: () => ({ ok: true, notices: [], truncated: false, cursor: null }) },
-    /* actions R54 (queue-producers R19): no legal pressure mark awaits a hold until a test says otherwise. */
-    actions: { holdsDue: () => ({ ok: true, items: [], truncated: false, cursor: null }),
-               /* actions R59 (queue-producers R29): no hold released until a test says otherwise. */
-               holdsReleased: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
+    /* action-holds R3 (action-producers R5, T45): no legal pressure mark awaits a hold until a test says otherwise. */
+    actionHolds: { holdsDue: () => ({ ok: true, items: [], truncated: false, cursor: null }),
+                   /* action-holds R8 (action-producers R8): no hold released until a test says otherwise. */
+                   holdsReleased: () => ({ ok: true, items: [], limit: 500, truncated: false, cursor: null }) },
+    /* following R24, plan-work R4, R11, action-plans R40 (action-producers R10, R12, R1's rule; T45): no watch asked about,
+       no review day or look-again date come, nothing taken up until a test says otherwise. */
+    following: { watchQuestions: () => ({ ok: true, questions: [], truncated: false, cursor: null }) },
+    planWork: { planReviewsDue: () => ({ ok: true, items: [], limit: 500, truncated: false }),
+                takeUpsFor: () => ({ ok: true, items: [], truncated: false, cursor: null }) },
+    actionPlans: { checkpointsDue: () => ({ ok: true, items: [], truncated: false, cursor: null }),
+                   plansToLookAgain: () => ({ ok: true, items: [], limit: 500, truncated: false }) },
     /* docket R9 (queue-producers R30): no core item due on any case until a test says otherwise. */
     docket: { coreDue: () => ({ ok: true, items: [], count: 0, wrote: false }) },
     /* case-import R20 (queue-producers R35, N545): no followed docket gained, refused or failed a read. */
