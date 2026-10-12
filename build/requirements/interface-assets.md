@@ -13,9 +13,9 @@ The visual language every member screen uses (DEC-138), as frozen data copied fr
 ### Provides
 
 **The files: `ASSET_FILES`, `ASSETS_COMMIT`** (DEC-138; DEC-122 (3))
-- **R1** `ASSETS_COMMIT` names the commit of `main` the files are read at: the merge of the design stream's PR #28 at T45's close (`3f40899950`, K2904), or a later `main` commit only by a later requirement naming it. `ASSET_FILES` maps each published name to `{type, body}` (`body` a string; a face's bytes as base64, with `encoding: "base64"`): `civicsmith.css` (`docs/development/ux-substrate/visual-language/civicsmith.css`'s bytes, followed by `faces.css`'s with each `url("fonts/<f>")` rewritten to `url("/app/assets/fonts/<f>")`), type `text/css`; `icons.svg`, type `image/svg+xml`; `fonts/<f>` for each of the 15 `woff2` faces of `visual-language/fonts/`, type `font/woff2`; and `fonts/OFL-source-serif-4.txt`, `fonts/OFL-source-sans-3.txt`, `fonts/OFL-source-code-pro.txt`, type `text/plain`; and no other name. A test reads each file from git at `ASSETS_COMMIT` and finds each entry equal to it byte for byte (a face base64-decoded; the stylesheet as the two files joined with only the stated rewriting). *(not yet met: T46)*
-- **R2** No file of `ASSET_FILES` names a resource on another origin in any `url()`, `@import`, `href` or `src`: every resource it names is `/app/assets/…` on the page's own origin (an XML namespace declaration, as `icons.svg`'s, names no resource). A test scans every entry. *(not yet met: T46)*
-- **R3** `ASSET_FILES` and each of its entries are frozen: no write changes the map, an entry or a field. *(not yet met: T46)*
+- **R1** `ASSETS_COMMIT` names the commit of `main` the files are read at: the merge of the design stream's PR #28 at T45's close (`3f40899950`, K2904), or a later `main` commit only by a later requirement naming it. `ASSET_FILES` maps each published name to `{type, body}` (`body` a string; a face's bytes as base64, with `encoding: "base64"`): `civicsmith.css` (`docs/development/ux-substrate/visual-language/civicsmith.css`'s bytes, followed by `faces.css`'s with each `url("fonts/<f>")` rewritten to `url("/app/assets/fonts/<f>")`), type `text/css`; `icons.svg`, type `image/svg+xml`; `fonts/<f>` for each of the 15 `woff2` faces of `visual-language/fonts/`, type `font/woff2`; and `fonts/OFL-source-serif-4.txt`, `fonts/OFL-source-sans-3.txt`, `fonts/OFL-source-code-pro.txt`, type `text/plain`; and no other name. A test reads each file from git at `ASSETS_COMMIT` and finds each entry equal to it byte for byte (a face base64-decoded; the stylesheet as the two files joined with only the stated rewriting).
+- **R2** No file of `ASSET_FILES` names a resource on another origin in any `url()`, `@import`, `href` or `src`: every resource it names is `/app/assets/…` on the page's own origin (an XML namespace declaration, as `icons.svg`'s, names no resource). A test scans every entry.
+- **R3** `ASSET_FILES` and each of its entries are frozen: no write changes the map, an entry or a field.
 
 ## Private
 
@@ -25,7 +25,7 @@ None. It imports nothing. For its tests only: the design stream's files at `ASSE
 
 ### Invariants
 
-- **R4** The module imports nothing and does nothing when loaded beyond defining its two exports: no I/O, no store, no registration, no time or randomness; every read of it answers the same. *(not yet met: T46)*
+- **R4** The module imports nothing and does nothing when loaded beyond defining its two exports: no I/O, no store, no registration, no time or randomness; every read of it answers the same.
 
 ### Satisfies
 

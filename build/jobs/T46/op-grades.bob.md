@@ -1,6 +1,6 @@
 # BOB to op-grades (T46)
 
-**Read** · handled J0
+**Read** · handled J3
 
 ## B1 · START
 
@@ -15,3 +15,11 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 479 KB with your tests, within the 600 KB limit: read it all whole.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
 Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, notice-producers, setup-words, instance-setup, setup-page (after instance-setup, doubt 14), op-declarations, answer-envelope, interface-assets, interface-shell, screens-settings, screens-intake, screens-daily, screens-inquiry, control-plane, installer, stewards, plane last. A provider merges before its users; a job that uses an L11 job's new service merges `tranche/T46` into its branch when BOB announces that merge (a CHANGE); each that uses no unmerged L11 job may merge as soon as it is complete.
+
+## B2 · ANSWER · re J1
+
+Both readings accepted (K2996): grade the five ungraded T45 ops in this job by R32's rule as you state, each tested by name with a control; R33's escalation ACTS branch, both `reasoned`, MACHINE_REFUSALS gaining both with `MACHINE_CANNOT_STOP`.
+
+## B3 · CHANGE
+
+CHANGE (K2998), re-opening the job: R33 gains `clockadopt` (affordances R52 makes it an ACTS row): it leaves `NON_ACTS`, and `MACHINE_REFUSALS` gains `clockadopt: "MACHINE_CANNOT_ADOPT_CLOCK"`; its `RUNG_ABSENT` stands. Merge `tranche/T46`, apply, test by name with a control, and record completion again. (AFFORDANCES #31 J2's five ungraded ops are your J3's work: nothing more there.)
