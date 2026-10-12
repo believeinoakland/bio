@@ -193,7 +193,9 @@ export class Hypotheses {
   /* R14 (T36; N727): a copy whose notes were numbered from one sequence shared across members (`note_id` the table's
      own AUTOINCREMENT key, T34–T35) is renumbered here, once, in one act: each member's notes from 1 in their present
      order, their turns following them, each member's mark set to their last number. The old numbers, and the shared
-     sequence's own high-water mark, are kept nowhere. Idempotent: a copy already keyed by `(member, note_id)` is left. */
+     sequence's own high-water mark, are kept nowhere. Idempotent: a copy already keyed by `(member, note_id)` is left.
+     R23 (T46; K2926): only statements a Durable Object's SQLite authorizes; the working map is an ordinary table made and
+     dropped inside the one transaction, never a `TEMP` one, which workerd refuses `SQLITE_AUTH` (0.82.0's cut). */
   #renumberNotes() {
     const keyed = this.#rows(`PRAGMA table_info(member_notes)`).filter((c) => Number(c.pk) > 0).map((c) => c.name);
     if (keyed.length !== 1 || keyed[0] !== "note_id") return;
