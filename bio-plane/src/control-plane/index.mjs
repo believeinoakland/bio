@@ -487,7 +487,10 @@ const BODY_DROPPED = Object.freeze({ setpassword: Object.freeze(["role"]) });
 /* R17 (T46; K3003): the acts whose owner reads `at` as the time the act is recorded (its clock, now when absent): that
    time is the record's, never the caller's, so a caller's `at` leaves the address and the body before the owner reads
    either. An op whose `at` is a date the caller states (a letter's, a reminder's day, a read's as-of) keeps it. */
-const ACT_CLOCK_OPS = Object.freeze(["aicredentialmint", "transcribe", "airunopen", "airunclose"]);
+const ACT_CLOCK_OPS = Object.freeze(["aicredentialmint", "transcribe", "transcriptionattest", "contentmint", "attesttext",
+  "airunopen", "airuntick", "airunclose", "airunverify", "stepsrunai", "grouptestset", "ailimitset", "exploreapprove",
+  "biasdebtresolve", "captureaccount", "queuemute", "queuesnooze", "contradictionpropose", "contradictionrecommend",
+  "extractpropose", "scanbatch"]);
 /* R60, R29 (K1687; op-declarations' families): the acts whose owner reads its actor from the BODY under a key that is not
    `by` (`bodyBy`, R53, sets that one) — standards' `author`, its proposals' `proposer` — op → key, derived once from the
    families, so a family's new act is stamped as its others are. */

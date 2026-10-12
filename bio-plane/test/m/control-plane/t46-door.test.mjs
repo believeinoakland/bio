@@ -331,12 +331,17 @@ test("R76 (T46; DEC-162; instance-setup R79; op-declarations R50): `infolevelset
 
 /* ================================================================ R17 (K3003) */
 
-test("R17, R29 (T46; K3003): the acts that record their own clock (`aicredentialmint`, `transcribe`, `airunopen`, `airunclose`) never receive a caller's `at`, in the address or the body, so no caller dates its own act; the rest of the body reaches the owner; an op whose `at` is a date the caller states (`milestonereminder`'s day) keeps it (negative control)", async () => {
+test("R17, R29 (T46; K3003): the acts that record their own clock (`aicredentialmint`, `transcribe`, `airunopen`, `airunclose` and the seventeen others whose owner reads `at` as its record's time) never receive a caller's `at`, in the address or the body, so no caller dates its own act; the rest of the body reaches the owner; an op whose `at` is a date the caller states (`milestonereminder`'s day) keeps it (negative control)", async () => {
   const AT = "1999-01-01T00:00:00Z";
   const { w } = callers();
-  for (const op of ["aicredentialmint", "transcribe", "airunopen", "airunclose"]) {
+  const ACT_CLOCK = ["aicredentialmint", "transcribe", "transcriptionattest", "contentmint", "attesttext", "airunopen", "airuntick",
+    "airunclose", "airunverify", "stepsrunai", "grouptestset", "ailimitset", "exploreapprove", "biasdebtresolve", "captureaccount",
+    "queuemute", "queuesnooze", "contradictionpropose", "contradictionrecommend", "extractpropose", "scanbatch"];
+  for (const op of ACT_CLOCK) {
     w.env.calls.length = 0;
-    const r = await call(w.env, { op, token: w.S.ann, method: "POST", params: { at: AT },
+    /* each by a caller its row admits: a member's session, else the daemon (the scan's) */
+    const machine = OPS[op].classes && !OPS[op].classes.includes("member");
+    const r = await call(w.env, { op, token: machine ? w.env.DAEMON_TOKEN : w.S.founder, method: "POST", params: { at: AT },
                                   body: { at: AT, note: "kept", writes: [], run: "RUN-1", bundleId: "B", extent: {}, text: "t" } });
     const inner = opCalls(w.env).filter((c) => c.route === op);
     assert.equal(inner.length, 1, `${op}: ${r.text.slice(0, 200)}`);
