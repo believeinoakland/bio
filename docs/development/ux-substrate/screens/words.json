@@ -8,20 +8,20 @@
   "state": 4,
   "draft": 4,
   "photo": 13,
-  "handle": 9,
-  "ai": 73,
+  "handle": 7,
+  "ai": 79,
   "date": 14,
-  "queue": 35,
+  "queue": 47,
   "transcribe": 19,
   "capture": 1,
   "document": 5,
   "question": 1,
   "guide": 7,
   "prepared": 2,
-  "label": 45,
+  "label": 52,
   "project": 7,
   "grouprule": 1,
-  "refusal": 126,
+  "refusal": 136,
   "signing": 4,
   "case": 11,
   "docket": 2,
@@ -41,16 +41,20 @@
   "escalation": 8,
   "monitoring": 2,
   "following": 5,
-  "door": 11,
+  "door": 25,
+  "instance": 9,
+  "statusreport": 1,
+  "members": 6,
+  "ref": 26,
   "rail": 14,
   "tab": 2,
   "level": 2,
   "screen": 95,
-  "act": 528,
+  "act": 535,
   "column": 33,
-  "wizard": 304,
-  "total": 1503,
-  "protected": 549
+  "wizard": 306,
+  "total": 1601,
+  "protected": 567
  },
  "words": [
   {
@@ -607,9 +611,9 @@
   },
   {
    "key": "handle.fixed",
-   "en": "Your handle is fixed: your work is in a published case ({case}).",
+   "en": "Your handle can't be changed: it names your work for good, and no one else can ever take it.",
    "protected": false,
-   "source": "DEC-186"
+   "source": "DEC-197 (was DEC-186); kept while membership reads it"
   },
   {
    "key": "handle.formerly",
@@ -624,25 +628,11 @@
    "source": "mock-screens.js join"
   },
   {
-   "key": "handle.refused.unchecked",
-   "en": "Civicsmith couldn't check whether your work is in a published case, so your handle wasn't changed. Try again in a moment.",
-   "protected": false,
-   "source": "DEC-188",
-   "note": "HANDLE_CHANGE_UNCHECKED"
-  },
-  {
    "key": "handle.refused.paused",
    "en": "Too many handles checked in a short time. Try again in {minutes} minutes.",
    "protected": false,
    "source": "DEC-188",
    "note": "HANDLE_CHECK_PAUSED"
-  },
-  {
-   "key": "handle.refused.notmember",
-   "en": "Only a member can change their own handle.",
-   "protected": false,
-   "source": "DEC-188",
-   "note": "HANDLE_CHANGE_NOT_A_MEMBER"
   },
   {
    "key": "ai.whopays",
@@ -1010,7 +1000,7 @@
   },
   {
    "key": "ai.refused.limit.unjudged",
-   "en": "The assistant stopped here: Civicsmith couldn't check the use of {whose} account just now, and it spends nothing it can't count. Try again in a moment. Everything else works as usual.",
+   "en": "The assistant stopped here: your group's Civicsmith couldn't check the use of {whose} account just now, and it spends nothing it can't count. Try again in a moment. Everything else works as usual.",
    "protected": true,
    "source": "DEC-189",
    "note": "AI_LIMIT_REACHED when the limit can't be judged (ai-use R3 failing closed); in place of a {period} and {when}"
@@ -1458,7 +1448,7 @@
   },
   {
    "key": "transcribe.reason.requestfault",
-   "en": "Civicsmith sent the assistant a request it couldn't use. The fault is Civicsmith's, not yours: try again, and if it happens again, tell an administrator.",
+   "en": "Your group's Civicsmith sent the assistant a request it couldn't use. That is a fault in your group's Civicsmith, not anything you did: try again, and if it happens again, tell an administrator.",
    "protected": false,
    "source": "DEC-193",
    "note": "{reason} in transcribe.refused for BAD_BODY, BAD_SHA, BAD_PAGES (agent-worker R72)"
@@ -1828,7 +1818,7 @@
   },
   {
    "key": "refusal.PROJECT_GUARD_UNCHECKED",
-   "en": "Civicsmith couldn't check whether this project's own rules allow that, so nothing was changed. Try again in a moment.",
+   "en": "Your group's Civicsmith couldn't check whether this project's own rules allow that, so nothing was changed. Try again in a moment.",
    "protected": true,
    "source": "DEC-194"
   },
@@ -1858,7 +1848,7 @@
   },
   {
    "key": "refusal.PROMISE_DATE_UNREAD",
-   "en": "A promise's date is read from the body's own words, and these don't state one whole calendar date (such as \"by spring\", or a month without its day). The promise is kept as written, with no due date.",
+   "en": "A promise's date is read from the body's own words, and these don't state one whole calendar date (such as \"by spring\", or a month without its day), so no duty was proposed. Nothing was written. Quote it in a note, or ask the body for a date and propose the duty from its answer.",
    "protected": false,
    "source": "DEC-194"
   },
@@ -1937,12 +1927,6 @@
    "source": "DEC-194"
   },
   {
-   "key": "refusal.DRAFT_NEEDS_GRANT",
-   "en": "The assistant drafts this only from the record you can read, and only with your permission for this draft, which wasn't given. Nothing was read, and nothing was sent to the assistant. Ask again from the screen you are on.",
-   "protected": false,
-   "source": "DEC-194"
-  },
-  {
    "key": "refusal.AI_RUN_ORIGIN_UNKNOWN",
    "en": "Nothing was started: a planning run starts from a member's request or from a fresh look after a reply, and this said neither.",
    "protected": false,
@@ -1981,7 +1965,7 @@
   },
   {
    "key": "signing.openrequest.unread",
-   "en": "Civicsmith couldn't read whether any request for comment on this case is still open, so none is listed here.",
+   "en": "Your group's Civicsmith couldn't read whether any request for comment on this case is still open, so none is listed here.",
    "protected": true,
    "source": "DEC-194"
   },
@@ -2024,7 +2008,7 @@
   },
   {
    "key": "case.check.undetermined",
-   "en": "Undetermined, because Civicsmith couldn't read everything the check rests on. It is not treated as held.",
+   "en": "Undetermined, because your group's Civicsmith couldn't read everything the check rests on. It is not treated as held.",
    "protected": true,
    "source": "DEC-194"
   },
@@ -2349,7 +2333,7 @@
   },
   {
    "key": "refusal.SUCCESS_CAUSE_UNCHECKABLE",
-   "en": "Civicsmith couldn't check whether the cause rests only on your group's own acts, so the success wasn't recorded. Try again in a moment, or leave the cause out.",
+   "en": "Your group's Civicsmith couldn't check whether the cause rests only on your group's own acts, so the success wasn't recorded. Try again in a moment, or leave the cause out.",
    "protected": true,
    "source": "DEC-194"
   },
@@ -3378,6 +3362,614 @@
    "source": "DEC-194"
   },
   {
+   "key": "refusal.NO_SIGNIN_WAITING",
+   "en": "No sign-in was waiting for that code: it timed out, or was started on another page. Open Anthropic's sign-in page again and paste the new code it gives you.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "subscriptionsignin, step code"
+  },
+  {
+   "key": "refusal.SIGNIN_REFUSED",
+   "en": "Anthropic's page didn't accept that code ({detail}). Open the sign-in page again and paste the new code it gives you.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "{detail} the runner's own words"
+  },
+  {
+   "key": "refusal.SIGNIN_UNAVAILABLE",
+   "en": "Anthropic's sign-in couldn't be reached just now. Try again in a few minutes, or connect with an API key instead.",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "refusal.SIGNIN_ADDRESS_UNEXPECTED",
+   "en": "The sign-in answered with an address that isn't Anthropic's, so Civicsmith didn't open it. Nothing was sent. Tell whoever installed your group's Civicsmith.",
+   "protected": true,
+   "source": "DEC-198",
+   "note": "a safety stop: says what was not opened"
+  },
+  {
+   "key": "ai.refused.signinabsent",
+   "en": "Signing in with Claude is not installed in your group's Civicsmith yet. An API key works instead; whoever installed your group's Civicsmith can add it.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "the translation control-plane R65 relays with agent-worker's runner-not-configured answer"
+  },
+  {
+   "key": "refusal.AGENT_WORKER_UNBOUND",
+   "en": "The assistant isn't installed in your group's Civicsmith yet, so signing in can't finish here. Everything else works without it; whoever installed your group's Civicsmith can add it.",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "refusal.DISCLOSURE_DUE",
+   "en": "Read what connecting means first: your questions, and what is read to answer them, go to Anthropic under your own account. Then open the sign-in page again.",
+   "protected": true,
+   "source": "DEC-198",
+   "note": "says who sees what; the start of a sign-in before the disclosure is shown"
+  },
+  {
+   "key": "ai.refused.keptaway",
+   "en": "Your group keeps its material away from AI, so no assistant works here, the group's or your own. {member} set this on {date}: “{reason}”. Everything else works as usual.",
+   "protected": true,
+   "source": "DEC-198",
+   "note": "the group-level keep-away; says who sees what"
+  },
+  {
+   "key": "ai.refused.noaccount",
+   "en": "No account serves the assistant for you yet: your group doesn't offer its key, and you haven't connected your own. Connect one in Settings › The assistant, or carry on without it.",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "ai.refused.notdeployed",
+   "en": "This part of the assistant isn't switched on in your group's Civicsmith yet. Nothing was sent. Everything else works as usual.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a run mode or an assistant part not deployed"
+  },
+  {
+   "key": "ai.label.untested",
+   "en": "Not yet tested: this part of the assistant hasn't yet passed Civicsmith's tests on real matters. Check what it says against the record.",
+   "protected": true,
+   "source": "DEC-198",
+   "note": "on every assistant output a part makes on a test instance; never removed"
+  },
+  {
+   "key": "instance.test.notice",
+   "en": "This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.",
+   "protected": true,
+   "source": "DEC-198",
+   "note": "every visitor, first view and healthy panel; no act changes it"
+  },
+  {
+   "key": "instance.part.signin.present",
+   "en": "Signing in with Claude: installed",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "the healthy panel; parts"
+  },
+  {
+   "key": "instance.part.signin.absent",
+   "en": "Signing in with Claude: not installed yet. Members can connect with an API key instead.",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "instance.part.scanner.present",
+   "en": "File scanner: installed",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "instance.part.scanner.absent",
+   "en": "File scanner: not installed yet. Files are kept and shown, but not scanned.",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "instance.part.safeview.present",
+   "en": "Safe view: installed",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "instance.part.safeview.absent",
+   "en": "Safe view: not installed yet. A high-risk file can't be opened until it is.",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "instance.part.unknown",
+   "en": "{part}: couldn't be checked just now. It is checked again when this page is opened.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "{part} one of the part names above"
+  },
+  {
+   "key": "instance.scanner.absent.step",
+   "en": "Your group's Civicsmith has no file scanner installed yet: files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made.",
+   "protected": true,
+   "source": "DEC-198",
+   "note": "setup-page R30, in place of the scanning sentences while no scanner is present"
+  },
+  {
+   "key": "refusal.SCANNER_ABSENT",
+   "en": "Your group's Civicsmith has no file scanner installed, so this file wasn't scanned. It is kept and shown; whoever installed your group's Civicsmith can add a scanner.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "file-safety R42"
+  },
+  {
+   "key": "refusal.RENDERER_ABSENT",
+   "en": "Your group's Civicsmith has no safe view installed, so this file can't be shown safely here. The original stays held; whoever installed your group's Civicsmith can add a safe view.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "file-safety R42"
+  },
+  {
+   "key": "refusal.HANDLE_FIXED",
+   "en": "Handles don't change in Civicsmith: yours names your work for good, and no one else can ever take it. Nothing was changed.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "DEC-197; membership R124 refuses every change"
+  },
+  {
+   "key": "refusal.ASSISTANT_DRAFT_UNAVAILABLE",
+   "en": "The assistant can't draft this report for you right now. The plan's items are listed below: write the report from them, as you would without the assistant.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "answers carrying R8's items"
+  },
+  {
+   "key": "statusreport.assist.label",
+   "en": "A first draft by the assistant, from the plan's items. Each line cites what it rests on; edit it, then save it as yours.",
+   "protected": true,
+   "source": "DEC-198",
+   "note": "machine work, labelled until saved (statusReportSave's from)"
+  },
+  {
+   "key": "ai.run.ownsignin",
+   "en": "This run works on your own Claude sign-in, for you alone. What it produces is labelled machine work and changes nothing until a member acts on it.",
+   "protected": true,
+   "source": "DEC-198",
+   "note": "shown before \"Work on this\" starts on a member's own sign-in"
+  },
+  {
+   "key": "refusal.MEMBER_RUN_MODE_NOT_ADMITTED",
+   "en": "A run on your own Claude sign-in can check or plan, and this one asks for more. Nothing was sent. A project's or the group's account can run it, where one serves you.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "ai-runs R18 (K2920): any mode other than check or plan on a member's own sign-in"
+  },
+  {
+   "key": "members.websitekey.live",
+   "en": "Website key: live. Lets in up to {cap} people a day, as {capabilities}, until {expires}. Created by {member} on {date}.",
+   "protected": true,
+   "source": "DEC-198",
+   "note": "says who may join and see the group's shared work"
+  },
+  {
+   "key": "members.websitekey.none",
+   "en": "No website key. Your website can't invite anyone until an administrator creates one.",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "members.joinlink.live",
+   "en": "Reusable join link: on. Up to {cap} people a day may join with it, as {capabilities}, until {expires}. Turned on by {member} on {date}.",
+   "protected": true,
+   "source": "DEC-198"
+  },
+  {
+   "key": "members.joinlink.off",
+   "en": "Reusable join link: off. Only invitation links an administrator makes let people join.",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "members.join.today",
+   "en": "{n} of {cap} joined through it today.",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "members.join.history.entry",
+   "en": "{date} · {member} {change}",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "{change} one of label.joinchange.*"
+  },
+  {
+   "key": "label.joinchange.keycreated",
+   "en": "created the website key",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "label.joinchange.keychanged",
+   "en": "changed the website key's settings",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "label.joinchange.keyrevoked",
+   "en": "revoked the website key",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "label.joinchange.linkon",
+   "en": "turned the join link on",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "label.joinchange.linkchanged",
+   "en": "changed the join link's settings",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "label.joinchange.linkreplaced",
+   "en": "replaced the join link",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "label.joinchange.linkoff",
+   "en": "turned the join link off",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "door.front.head",
+   "en": "What happened?",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "Home; the one door for every first step"
+  },
+  {
+   "key": "door.front.intro",
+   "en": "Choose what fits, or describe it in your own words. Nothing here is the one right way in.",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "door.front.problem.name",
+   "en": "A problem I live with",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "door.front.problem.hint",
+   "en": "Potholes, dumping, a bill, a service",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "door.front.person.name",
+   "en": "A person",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "door.front.person.hint",
+   "en": "An official, a name in the news",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "door.front.money.name",
+   "en": "A payment or contract",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "door.front.money.hint",
+   "en": "A budget line, a lease, a change order",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "door.front.read.name",
+   "en": "Something I read",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "door.front.read.hint",
+   "en": "A code, a court case, a story, minutes",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "door.front.tip.name",
+   "en": "A tip or documents",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "door.front.tip.hint",
+   "en": "Something someone handed you",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "door.front.matching",
+   "en": "Already in your group: {items}",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "existing work that matches what the member wrote"
+  },
+  {
+   "key": "door.front.blank",
+   "en": "None of these: start a project from a blank page.",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "ref.here.project.waiting",
+   "en": "{n} items in it wait on you.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.project.mainquestion",
+   "en": "The project's main question, and the one closest to the bar.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.held.waits",
+   "en": "Held until a member vouches for it; {question} waits for it.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.held.vouch",
+   "en": "Held until a member vouches for it. Until then it supports nothing.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.held.crucial",
+   "en": "It carries a finding in {project}, so it gets its own look.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.held.withheld",
+   "en": "Can't be released here: part of it is withheld by its source.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.held.archive",
+   "en": "Its {n} files wait here beside it; vouching for the archive doesn't vouch for them.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.setaside",
+   "en": "{member} set it aside on {date}; the reason, “{reason}”, stays on the record.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.cited.support",
+   "en": "Cited by {member} as support for this question.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.cited.against",
+   "en": "Cited by {member} as cutting against this question.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.standard",
+   "en": "The standard this question tests {office} against.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.calculation.rerun",
+   "en": "Anyone can rerun it from {source} and get the same result.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.calculation.inputchanged",
+   "en": "One of its inputs changed: check whether the result still holds.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.input.changed",
+   "en": "The input that changed.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.checked",
+   "en": "Checked {thing} on {date}.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.testimony",
+   "en": "{member}'s own account, recorded {date}: testimony, grade {grade}.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.search.match",
+   "en": "What your search matched: {where}.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.answer.source",
+   "en": "This answer counts from it.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.answer.calculation",
+   "en": "The same count as {calculation}: open it to see the method rather than rely on this answer.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.action.reply",
+   "en": "Its reply decides the next step of {plan}.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.due.reply",
+   "en": "If no reply is recorded by then, your queue says so once.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.queue.project",
+   "en": "Waiting on you here: {items}.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.machine",
+   "en": "What the assistant does with it is labelled machine work; only a member's act changes the record.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.inbox.doorbell",
+   "en": "Everything here came through it, so the sender may be anyone.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.version.newer",
+   "en": "A newer version exists: decide whether it changes what {case} says.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "ref.here.person.unfollowed",
+   "en": "Named here, but not a person your group follows yet.",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "a card's Here: line"
+  },
+  {
+   "key": "queue.temporal-expectation-due.overdue.summary",
+   "en": "Nothing recorded by {date}: {duty}",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "R5, state overdue (after the latest due date)"
+  },
+  {
+   "key": "queue.temporal-expectation-due.overdue.detail",
+   "en": "{office} was due to {what} by {date} ({basis}). Nothing in the record shows it was done. This is what the record shows, not a finding that a rule was broken.",
+   "protected": true,
+   "source": "DEC-198"
+  },
+  {
+   "key": "queue.temporal-expectation-due.undetermined.summary",
+   "en": "Possibly overdue: {duty}",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "R5, state undetermined (between candidate dates)"
+  },
+  {
+   "key": "queue.temporal-expectation-due.undetermined.detail",
+   "en": "Possibly overdue: undetermined, because {reason}. {office} was due to {what} between {from} and {to} ({basis}).",
+   "protected": true,
+   "source": "DEC-198"
+  },
+  {
+   "key": "queue.inquiry-recheck-due.summary",
+   "en": "Look again: {question}",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "R6; only the member who set the wait"
+  },
+  {
+   "key": "queue.inquiry-recheck-due.detail",
+   "en": "You set today to look again at what {question} waits on: {what}, from {who}, by {date}. Record a look, set a new date, or remove the wait. Only you are told.",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
+   "key": "queue.policy-changed-noticed.summary",
+   "en": "Changed without notice: {policy}",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "R13"
+  },
+  {
+   "key": "queue.policy-changed-noticed.detail",
+   "en": "Changed without notice: the text differs from the copy captured on {date}, and no amendment was announced.",
+   "protected": true,
+   "source": "DEC-198",
+   "note": "DEC-145 (5), exactly"
+  },
+  {
+   "key": "queue.scan-found.summary",
+   "en": "A scan found something in {document}",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "R14; names no member"
+  },
+  {
+   "key": "queue.scan-found.detail",
+   "en": "{engine} found {names} in this file on {date}: {meanings}. The file is held: its safe view stays open, and the original opens again only when two members each release the hold with a reason, or when a second, different scanner finds it clean. The machine never can.",
+   "protected": true,
+   "source": "DEC-198"
+  },
+  {
+   "key": "queue.security-tool-off.summary",
+   "en": "Switched off: {tool}",
+   "protected": false,
+   "source": "DEC-198",
+   "note": "R15; administrators only"
+  },
+  {
+   "key": "queue.security-tool-off.detail",
+   "en": "{tool} was switched off because it didn't confirm the private mode its handling requires. It stays off until an administrator tests it again.",
+   "protected": false,
+   "source": "DEC-198"
+  },
+  {
    "key": "rail.home.name",
    "en": "Home",
    "protected": false,
@@ -4387,7 +4979,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_infolevelset.label.account",
+   "key": "act.infolevelset.label.account",
    "en": "Choose how much is explained",
    "protected": true,
    "source": "registry.json"
@@ -4405,14 +4997,20 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_subscriptionsignin.label.connect",
+   "key": "act.subscriptionsignin.label.connect",
    "en": "Open Anthropic's sign-in page",
    "protected": true,
    "source": "registry.json"
   },
   {
    "key": "act.accountreferenceset.label.connect",
-   "en": "Connect with your own subscription or key",
+   "en": "Connect with your own API key",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.subscriptiondisconnect.label.connect",
+   "en": "Disconnect your subscription",
    "protected": true,
    "source": "registry.json"
   },
@@ -4651,7 +5249,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.capture.label.capture",
+   "key": "act.captureupload.label.capture",
    "en": "Capture a file or photo",
    "protected": true,
    "source": "registry.json"
@@ -5023,8 +5621,14 @@
    "source": "registry.json"
   },
   {
-   "key": "act.ruleanswer.label.answers",
+   "key": "act.ask.label.answers",
    "en": "Ask",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.ruleanswer.label.answers",
+   "en": "Show how this was counted",
    "protected": true,
    "source": "registry.json"
   },
@@ -5419,7 +6023,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_itemtakeup.label.plan",
+   "key": "act.itemtakeup.label.plan",
    "en": "Take an item up yourself",
    "protected": true,
    "source": "registry.json"
@@ -5461,7 +6065,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_filingsecondapprove.label.start-send",
+   "key": "act.filingsecondapprove.label.start-send",
    "en": "Give the second approval",
    "protected": true,
    "source": "registry.json"
@@ -5533,7 +6137,7 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_actionscope.label.action",
+   "key": "act.actionscope.label.action",
    "en": "Make the action confidential, or not",
    "protected": true,
    "source": "registry.json"
@@ -5563,8 +6167,14 @@
    "source": "registry.json"
   },
   {
-   "key": "act.owed_escalationstoppursuing.label.matter",
+   "key": "act.escalationstoppursuing.label.matter",
    "en": "Stop pursuing, with a reason",
+   "protected": true,
+   "source": "registry.json"
+  },
+  {
+   "key": "act.escalationreopen.label.matter",
+   "en": "Reopen where it stopped",
    "protected": true,
    "source": "registry.json"
   },
@@ -5959,7 +6569,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_infolevelset.does",
+   "key": "act.infolevelset.does",
    "en": "Chooses how quickly explanations open: promptly, or guidance on a longer pause so less opens while you move. Nothing is ever hidden.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -5977,20 +6587,26 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_subscriptionsignin.does",
-   "en": "Opens Anthropic's own sign-in page in a new tab. It gives you a code to paste here; Civicsmith never sees your password.",
+   "key": "act.subscriptionsignin.does",
+   "en": "Opens Anthropic's own sign-in page in a new tab, then connects your subscription with the code it gives you. Civicsmith never sees your password, and the code is used once and never kept.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
+   "key": "act.subscriptiondisconnect.does",
+   "en": "Disconnects your Claude subscription from your group's Civicsmith. The group's key serves you instead, if the group has one.",
+   "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
    "key": "act.accountreferenceset.does",
-   "en": "Connects your own Claude subscription or API key. It serves only you, before the group's key.",
+   "en": "Connects your own Claude API key. It serves only you, before the group's key, and Anthropic bills you for each use.",
    "protected": true,
    "source": "mock-acts.js ACT_HELP"
   },
   {
    "key": "act.accountreferenceremove.does",
-   "en": "Disconnects your own account. The group's key serves you instead, if the group has one.",
+   "en": "Disconnects your own API key and removes it from your group's Civicsmith. The group's key serves you instead, if the group has one.",
    "protected": true,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -6193,7 +6809,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.capture.does",
+   "key": "act.captureupload.does",
    "en": "Adds this file or photo to the record, with who made or obtained it and how. It waits in Held captures until vouched for.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -6505,7 +7121,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_actionscope.does",
+   "key": "act.actionscope.does",
    "en": "Makes this action confidential, or not, with your reason. A confidential action is seen inside the group and never published; the change applies to what is published from now on.",
    "protected": true,
    "source": "mock-acts.js ACT_HELP"
@@ -6559,15 +7175,27 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_filingsecondapprove.does",
+   "key": "act.filingsecondapprove.does",
    "en": "Gives the second approval this project requires before sending. Only a member other than the first approver can give it.",
    "protected": true,
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_escalationstoppursuing.does",
+   "key": "act.escalationstoppursuing.does",
    "en": "Stops pursuing this escalation, with your reason. It is never recorded as ended or as a success, and it can be reopened where it stopped.",
    "protected": true,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.statusreportassist.does",
+   "en": "Asks the assistant for a first draft of this status report from the plan's items. The draft is labelled machine work, each line cites what it rests on, and nothing is saved until you save it as yours.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.airundispatch.does",
+   "en": "Starts a run on your own Claude sign-in, for you alone: checking this, or planning how to look into it. What it produces is labelled machine work and changes nothing until a member acts on it.",
+   "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
   {
@@ -6607,7 +7235,7 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.owed_itemtakeup.does",
+   "key": "act.itemtakeup.does",
    "en": "Takes this item's to-dos for yourself. Nobody assigns anybody; you choose.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
@@ -6757,8 +7385,14 @@
    "source": "mock-acts.js ACT_HELP"
   },
   {
-   "key": "act.ruleanswer.does",
+   "key": "act.ask.does",
    "en": "Asks in plain words. The assistant answers only from what your group holds and says where it looked.",
+   "protected": false,
+   "source": "mock-acts.js ACT_HELP"
+  },
+  {
+   "key": "act.ruleanswer.does",
+   "en": "Shows how this answer was counted: the rule it applies, the rows it counted and the method, so you can check it rather than rely on it.",
    "protected": false,
    "source": "mock-acts.js ACT_HELP"
   },
@@ -8342,49 +8976,61 @@
   },
   {
    "key": "wizard.WIZ-74328804ddae3503.step4.what",
-   "en": "Copy the code Anthropic's page shows you, paste it here, and connect.",
+   "en": "Copy the code Anthropic's page shows you, paste it under \"The code from Anthropic's page\", and connect with it.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-74328804ddae3503.step4.why",
-   "en": "Your subscription then serves only your own questions. You can disconnect at any time.",
+   "en": "The code is used once and never kept. Your subscription then serves only your own questions, and you can disconnect at any time.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-74328804ddae3503.step5.what",
-   "en": "Set a limit on your account, if you want one: for everything or for one use, a day or a month.",
+   "en": "Using an API key instead? Paste it under \"Using an API key instead\" and connect with it.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-74328804ddae3503.step5.why",
-   "en": "It binds only your own account. The group's and a project's limits never bind it.",
+   "en": "Anthropic bills you for each use of your own key; it serves only your questions.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-74328804ddae3503.step6.what",
-   "en": "Choose what your account pays for, and whether the assistant may suggest things without being asked. Suggestions are off unless you turn them on.",
+   "en": "Set a limit on your account, if you want one: for everything or for one use, a day or a month.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-74328804ddae3503.step6.why",
-   "en": "Some members want suggestions; others want quiet.",
+   "en": "It binds only your own account. The group's and a project's limits never bind it.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-74328804ddae3503.step7.what",
-   "en": "You can disconnect at any time, here.",
+   "en": "Choose what your account pays for, and whether the assistant may suggest things without being asked. Suggestions are off unless you turn them on.",
    "protected": false,
    "source": "library.json"
   },
   {
    "key": "wizard.WIZ-74328804ddae3503.step7.why",
-   "en": "Disconnecting removes the key or token from your group's Civicsmith.",
+   "en": "Some members want suggestions; others want quiet.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-74328804ddae3503.step8.what",
+   "en": "You can disconnect at any time, here: your subscription, or your API key.",
+   "protected": false,
+   "source": "library.json"
+  },
+  {
+   "key": "wizard.WIZ-74328804ddae3503.step8.why",
+   "en": "Disconnecting removes the sign-in or the key from your group's Civicsmith.",
    "protected": false,
    "source": "library.json"
   },

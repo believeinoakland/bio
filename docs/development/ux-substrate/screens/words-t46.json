@@ -1,0 +1,554 @@
+[
+ {
+  "key": "refusal.NO_SIGNIN_WAITING",
+  "en": "No sign-in was waiting for that code: it timed out, or was started on another page. Open Anthropic's sign-in page again and paste the new code it gives you.",
+  "protected": false,
+  "note": "subscriptionsignin, step code"
+ },
+ {
+  "key": "refusal.SIGNIN_REFUSED",
+  "en": "Anthropic's page didn't accept that code ({detail}). Open the sign-in page again and paste the new code it gives you.",
+  "protected": false,
+  "note": "{detail} the runner's own words"
+ },
+ {
+  "key": "refusal.SIGNIN_UNAVAILABLE",
+  "en": "Anthropic's sign-in couldn't be reached just now. Try again in a few minutes, or connect with an API key instead.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "refusal.SIGNIN_ADDRESS_UNEXPECTED",
+  "en": "The sign-in answered with an address that isn't Anthropic's, so Civicsmith didn't open it. Nothing was sent. Tell whoever installed your group's Civicsmith.",
+  "protected": true,
+  "note": "a safety stop: says what was not opened"
+ },
+ {
+  "key": "ai.refused.signinabsent",
+  "en": "Signing in with Claude is not installed in your group's Civicsmith yet. An API key works instead; whoever installed your group's Civicsmith can add it.",
+  "protected": false,
+  "note": "the translation control-plane R65 relays with agent-worker's runner-not-configured answer"
+ },
+ {
+  "key": "refusal.AGENT_WORKER_UNBOUND",
+  "en": "The assistant isn't installed in your group's Civicsmith yet, so signing in can't finish here. Everything else works without it; whoever installed your group's Civicsmith can add it.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "refusal.DISCLOSURE_DUE",
+  "en": "Read what connecting means first: your questions, and what is read to answer them, go to Anthropic under your own account. Then open the sign-in page again.",
+  "protected": true,
+  "note": "says who sees what; the start of a sign-in before the disclosure is shown"
+ },
+ {
+  "key": "ai.refused.keptaway",
+  "en": "Your group keeps its material away from AI, so no assistant works here, the group's or your own. {member} set this on {date}: “{reason}”. Everything else works as usual.",
+  "protected": true,
+  "note": "the group-level keep-away; says who sees what"
+ },
+ {
+  "key": "ai.refused.noaccount",
+  "en": "No account serves the assistant for you yet: your group doesn't offer its key, and you haven't connected your own. Connect one in Settings › The assistant, or carry on without it.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "ai.refused.notdeployed",
+  "en": "This part of the assistant isn't switched on in your group's Civicsmith yet. Nothing was sent. Everything else works as usual.",
+  "protected": false,
+  "note": "a run mode or an assistant part not deployed"
+ },
+ {
+  "key": "ai.label.untested",
+  "en": "Not yet tested: this part of the assistant hasn't yet passed Civicsmith's tests on real matters. Check what it says against the record.",
+  "protected": true,
+  "note": "on every assistant output a part makes on a test instance; never removed"
+ },
+ {
+  "key": "instance.test.notice",
+  "en": "This is a test Civicsmith. Parts of its assistant haven't yet passed Civicsmith's tests, and each answer they give says so.",
+  "protected": true,
+  "note": "every visitor, first view and healthy panel; no act changes it"
+ },
+ {
+  "key": "instance.part.signin.present",
+  "en": "Signing in with Claude: installed",
+  "protected": false,
+  "note": "the healthy panel; parts"
+ },
+ {
+  "key": "instance.part.signin.absent",
+  "en": "Signing in with Claude: not installed yet. Members can connect with an API key instead.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "instance.part.scanner.present",
+  "en": "File scanner: installed",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "instance.part.scanner.absent",
+  "en": "File scanner: not installed yet. Files are kept and shown, but not scanned.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "instance.part.safeview.present",
+  "en": "Safe view: installed",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "instance.part.safeview.absent",
+  "en": "Safe view: not installed yet. A high-risk file can't be opened until it is.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "instance.part.unknown",
+  "en": "{part}: couldn't be checked just now. It is checked again when this page is opened.",
+  "protected": false,
+  "note": "{part} one of the part names above"
+ },
+ {
+  "key": "instance.scanner.absent.step",
+  "en": "Your group's Civicsmith has no file scanner installed yet: files are kept and shown but not scanned, and a high-risk file opens only in its safe view once one can be made.",
+  "protected": true,
+  "note": "setup-page R30, in place of the scanning sentences while no scanner is present"
+ },
+ {
+  "key": "refusal.SCANNER_ABSENT",
+  "en": "Your group's Civicsmith has no file scanner installed, so this file wasn't scanned. It is kept and shown; whoever installed your group's Civicsmith can add a scanner.",
+  "protected": false,
+  "note": "file-safety R42"
+ },
+ {
+  "key": "refusal.RENDERER_ABSENT",
+  "en": "Your group's Civicsmith has no safe view installed, so this file can't be shown safely here. The original stays held; whoever installed your group's Civicsmith can add a safe view.",
+  "protected": false,
+  "note": "file-safety R42"
+ },
+ {
+  "key": "refusal.HANDLE_FIXED",
+  "en": "Handles don't change in Civicsmith: yours names your work for good, and no one else can ever take it. Nothing was changed.",
+  "protected": false,
+  "note": "DEC-197; membership R124 refuses every change"
+ },
+ {
+  "key": "refusal.ASSISTANT_DRAFT_UNAVAILABLE",
+  "en": "The assistant can't draft this report for you right now. The plan's items are listed below: write the report from them, as you would without the assistant.",
+  "protected": false,
+  "note": "answers carrying R8's items"
+ },
+ {
+  "key": "statusreport.assist.label",
+  "en": "A first draft by the assistant, from the plan's items. Each line cites what it rests on; edit it, then save it as yours.",
+  "protected": true,
+  "note": "machine work, labelled until saved (statusReportSave's from)"
+ },
+ {
+  "key": "ai.run.ownsignin",
+  "en": "This run works on your own Claude sign-in, for you alone. What it produces is labelled machine work and changes nothing until a member acts on it.",
+  "protected": true,
+  "note": "shown before \"Work on this\" starts on a member's own sign-in"
+ },
+ {
+  "key": "refusal.MEMBER_RUN_MODE_NOT_ADMITTED",
+  "en": "A run on your own Claude sign-in can check or plan, and this one asks for more. Nothing was sent. A project's or the group's account can run it, where one serves you.",
+  "protected": false,
+  "note": "ai-runs R18 (K2920): any mode other than check or plan on a member's own sign-in"
+ },
+ {
+  "key": "members.websitekey.live",
+  "en": "Website key: live. Lets in up to {cap} people a day, as {capabilities}, until {expires}. Created by {member} on {date}.",
+  "protected": true,
+  "note": "says who may join and see the group's shared work"
+ },
+ {
+  "key": "members.websitekey.none",
+  "en": "No website key. Your website can't invite anyone until an administrator creates one.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "members.joinlink.live",
+  "en": "Reusable join link: on. Up to {cap} people a day may join with it, as {capabilities}, until {expires}. Turned on by {member} on {date}.",
+  "protected": true,
+  "note": ""
+ },
+ {
+  "key": "members.joinlink.off",
+  "en": "Reusable join link: off. Only invitation links an administrator makes let people join.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "members.join.today",
+  "en": "{n} of {cap} joined through it today.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "members.join.history.entry",
+  "en": "{date} · {member} {change}",
+  "protected": false,
+  "note": "{change} one of label.joinchange.*"
+ },
+ {
+  "key": "label.joinchange.keycreated",
+  "en": "created the website key",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "label.joinchange.keychanged",
+  "en": "changed the website key's settings",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "label.joinchange.keyrevoked",
+  "en": "revoked the website key",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "label.joinchange.linkon",
+  "en": "turned the join link on",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "label.joinchange.linkchanged",
+  "en": "changed the join link's settings",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "label.joinchange.linkreplaced",
+  "en": "replaced the join link",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "label.joinchange.linkoff",
+  "en": "turned the join link off",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "door.front.head",
+  "en": "What happened?",
+  "protected": false,
+  "note": "Home; the one door for every first step"
+ },
+ {
+  "key": "door.front.intro",
+  "en": "Choose what fits, or describe it in your own words. Nothing here is the one right way in.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "door.front.problem.name",
+  "en": "A problem I live with",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "door.front.problem.hint",
+  "en": "Potholes, dumping, a bill, a service",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "door.front.person.name",
+  "en": "A person",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "door.front.person.hint",
+  "en": "An official, a name in the news",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "door.front.money.name",
+  "en": "A payment or contract",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "door.front.money.hint",
+  "en": "A budget line, a lease, a change order",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "door.front.read.name",
+  "en": "Something I read",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "door.front.read.hint",
+  "en": "A code, a court case, a story, minutes",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "door.front.tip.name",
+  "en": "A tip or documents",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "door.front.tip.hint",
+  "en": "Something someone handed you",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "door.front.matching",
+  "en": "Already in your group: {items}",
+  "protected": false,
+  "note": "existing work that matches what the member wrote"
+ },
+ {
+  "key": "door.front.blank",
+  "en": "None of these: start a project from a blank page.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "ref.here.project.waiting",
+  "en": "{n} items in it wait on you.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.project.mainquestion",
+  "en": "The project's main question, and the one closest to the bar.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.held.waits",
+  "en": "Held until a member vouches for it; {question} waits for it.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.held.vouch",
+  "en": "Held until a member vouches for it. Until then it supports nothing.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.held.crucial",
+  "en": "It carries a finding in {project}, so it gets its own look.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.held.withheld",
+  "en": "Can't be released here: part of it is withheld by its source.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.held.archive",
+  "en": "Its {n} files wait here beside it; vouching for the archive doesn't vouch for them.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.setaside",
+  "en": "{member} set it aside on {date}; the reason, “{reason}”, stays on the record.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.cited.support",
+  "en": "Cited by {member} as support for this question.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.cited.against",
+  "en": "Cited by {member} as cutting against this question.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.standard",
+  "en": "The standard this question tests {office} against.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.calculation.rerun",
+  "en": "Anyone can rerun it from {source} and get the same result.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.calculation.inputchanged",
+  "en": "One of its inputs changed: check whether the result still holds.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.input.changed",
+  "en": "The input that changed.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.checked",
+  "en": "Checked {thing} on {date}.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.testimony",
+  "en": "{member}'s own account, recorded {date}: testimony, grade {grade}.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.search.match",
+  "en": "What your search matched: {where}.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.answer.source",
+  "en": "This answer counts from it.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.answer.calculation",
+  "en": "The same count as {calculation}: open it to see the method rather than rely on this answer.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.action.reply",
+  "en": "Its reply decides the next step of {plan}.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.due.reply",
+  "en": "If no reply is recorded by then, your queue says so once.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.queue.project",
+  "en": "Waiting on you here: {items}.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.machine",
+  "en": "What the assistant does with it is labelled machine work; only a member's act changes the record.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.inbox.doorbell",
+  "en": "Everything here came through it, so the sender may be anyone.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.version.newer",
+  "en": "A newer version exists: decide whether it changes what {case} says.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "ref.here.person.unfollowed",
+  "en": "Named here, but not a person your group follows yet.",
+  "protected": false,
+  "note": "a card's Here: line"
+ },
+ {
+  "key": "queue.temporal-expectation-due.overdue.summary",
+  "en": "Nothing recorded by {date}: {duty}",
+  "protected": false,
+  "note": "R5, state overdue (after the latest due date)"
+ },
+ {
+  "key": "queue.temporal-expectation-due.overdue.detail",
+  "en": "{office} was due to {what} by {date} ({basis}). Nothing in the record shows it was done. This is what the record shows, not a finding that a rule was broken.",
+  "protected": true,
+  "note": ""
+ },
+ {
+  "key": "queue.temporal-expectation-due.undetermined.summary",
+  "en": "Possibly overdue: {duty}",
+  "protected": false,
+  "note": "R5, state undetermined (between candidate dates)"
+ },
+ {
+  "key": "queue.temporal-expectation-due.undetermined.detail",
+  "en": "Possibly overdue: undetermined, because {reason}. {office} was due to {what} between {from} and {to} ({basis}).",
+  "protected": true,
+  "note": ""
+ },
+ {
+  "key": "queue.inquiry-recheck-due.summary",
+  "en": "Look again: {question}",
+  "protected": false,
+  "note": "R6; only the member who set the wait"
+ },
+ {
+  "key": "queue.inquiry-recheck-due.detail",
+  "en": "You set today to look again at what {question} waits on: {what}, from {who}, by {date}. Record a look, set a new date, or remove the wait. Only you are told.",
+  "protected": false,
+  "note": ""
+ },
+ {
+  "key": "queue.policy-changed-noticed.summary",
+  "en": "Changed without notice: {policy}",
+  "protected": false,
+  "note": "R13"
+ },
+ {
+  "key": "queue.policy-changed-noticed.detail",
+  "en": "Changed without notice: the text differs from the copy captured on {date}, and no amendment was announced.",
+  "protected": true,
+  "note": "DEC-145 (5), exactly"
+ },
+ {
+  "key": "queue.scan-found.summary",
+  "en": "A scan found something in {document}",
+  "protected": false,
+  "note": "R14; names no member"
+ },
+ {
+  "key": "queue.scan-found.detail",
+  "en": "{engine} found {names} in this file on {date}: {meanings}. The file is held: its safe view stays open, and the original opens again only when two members each release the hold with a reason, or when a second, different scanner finds it clean. The machine never can.",
+  "protected": true,
+  "note": ""
+ },
+ {
+  "key": "queue.security-tool-off.summary",
+  "en": "Switched off: {tool}",
+  "protected": false,
+  "note": "R15; administrators only"
+ },
+ {
+  "key": "queue.security-tool-off.detail",
+  "en": "{tool} was switched off because it didn't confirm the private mode its handling requires. It stays off until an administrator tests it again.",
+  "protected": false,
+  "note": ""
+ }
+]

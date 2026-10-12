@@ -18,7 +18,7 @@ screen('group-identity', 'Who your group is', 'working', 'Kinds, focus and purpo
   [('groupdescriptionset','Save who your group is, and who sees it'),('groupdescriptiondraft','Ask the assistant to help write it')], [2])
 screen('join', 'Your invitation', 'setup', 'The invitation link opens here: language, handle, password.',
   [('invitelook','Read the invitation'),('memberlanguageset','Choose your language'),('handlecheck','See whether a handle is free'),('enroll','Join with a handle and password')], [3])
-screen('home', 'Your group\'s home', 'working', 'What the group is working on, what waits on you, and "What brought you here?".',
+screen('home', 'Your group\'s home', 'working', 'What the group is working on, what waits on you, and "What happened?", the door to a first step.',
   [('promote','Start a project'),('startfrom','Start from…')], [3,6])
 screen('members', 'Members', 'working', 'The roster: invitations, capabilities, expertise, administrators, joining through the website.',
   [('memberadd','Invite a member'),('membercaps','Change what a member may do'),('memberset','Change a member\'s status'),('adminendorse','Endorse an administrator'),
@@ -27,9 +27,9 @@ screen('members', 'Members', 'working', 'The roster: invitations, capabilities, 
 screen('security', 'Security', 'working', 'Administrators only: how hard the group\'s Civicsmith is being tried over a period they choose, by kind and hour against its usual; counts only; told only when risk is high (K1875, K1874, DEC-165).',
   [('securitymap','Show the level for a period'),('securitytooladd','Add a security tool'),('securitytooltest','Test a security tool'),('securitytoolremove','Remove a security tool')], [27])
 screen('account', 'Your account', 'working', 'Handle, password, language, expertise, signing key, theme.',
-  [('expertisedeclare','Declare your expertise'),('setpassword','Change your password'),('signerregisterown','Register your signing key'),('signerrevokeown','Revoke your signing key'),('memberlanguageset','Choose your language'),('owed:infolevelset DEC-162','Choose how much is explained')], [3,16])
+  [('expertisedeclare','Declare your expertise'),('setpassword','Change your password'),('signerregisterown','Register your signing key'),('signerrevokeown','Revoke your signing key'),('memberlanguageset','Choose your language'),('infolevelset','Choose how much is explained')], [3,16])
 screen('connect', 'The assistant', 'working', 'The member\'s own API key or subscription token, or the group\'s key where it offers one, or none; which account pays for an act; their own account\'s uses and limits; their own use across every payer (K1547, K1755, DEC-188).',
-  [('groupkeynoticeseen','Read what the group\'s key means'),('disclosureshown','Read what connecting means'),('owed:subscriptionsignin DEC-156','Open Anthropic\'s sign-in page'),('accountreferenceset','Connect with your own subscription or key'),('accountusesset','Set what your account pays for'),('ailimitset','Set a limit on your account'),('accountreferenceremove','Disconnect')], [4,17])
+  [('groupkeynoticeseen','Read what the group\'s key means'),('disclosureshown','Read what connecting means'),('subscriptionsignin','Open Anthropic\'s sign-in page'),('accountreferenceset','Connect with your own API key'),('subscriptiondisconnect','Disconnect your subscription'),('accountusesset','Set what your account pays for'),('ailimitset','Set a limit on your account'),('accountreferenceremove','Disconnect')], [4,17])
 screen('ties', 'Your ties', 'working', 'The member\'s own ties, seen only by them and administrators (K1490).',
   [('declaretie','Add a tie'),('withdrawtie','Remove a tie')], [5])
 screen('notes', 'Your notes', 'working', 'A member\'s own notes, seen only by them (DEC-136).',
@@ -46,7 +46,7 @@ screen('queue', 'Your queue', 'working', 'To do, Noticed and Status, grouped by 
 screen('finder', 'Find', 'working', 'Search what the group holds; hold a set together; see where nobody looked.',
   [('search','Search'),('select','Hold these together'),('findin','Find in these'),('selectionrelease','Let the set go'),('frontier','See where nobody looked'),('calculationcreate','Count')], [6,7])
 screen('capture', 'Add', 'working', 'Capture a document from an address or a file, photograph a handout, or record what you saw.',
-  [('acquire','Capture from an address'),('capture','Capture a file or photo'),('testify','Record what you saw or heard'),('capturerequest','Ask for a capture later'),('monitor','Watch this address'),('writinghelp','Help me write this')], [6,7,9,15])
+  [('acquire','Capture from an address'),('captureupload','Capture a file or photo'),('testify','Record what you saw or heard'),('capturerequest','Ask for a capture later'),('monitor','Watch this address'),('writinghelp','Help me write this')], [6,7,9,15])
 screen('held', 'Held captures', 'working', 'Captures not yet vouched for, per member and project (DEC-97).',
   [('heldcaptures','See held captures'),('release','Vouch for them'),('heldsetaside','Set aside with a reason'),('heldrestore','Restore')], [15])
 screen('archive', 'Archive', 'working', 'A captured ZIP: every file with its state (filed with the archive\'s grade and held for review, already held, or not filed with its reason); vouching or setting files aside; an archive refused whole (K1852, DEC-167).',
@@ -69,7 +69,7 @@ screen('question', 'Question', 'working', 'A question and what supports it or cu
    ('hypothesishold','Keep a hunch'),('planopen','Plan what to do'),('checkrequest','Ask for a check by expertise'),
    ('heldrestore','Restore a set-aside document, with a reason'),('search','Find another source')], [6,9,15,16])
 screen('answers', 'Ask', 'working', 'Ask in plain words (with the assistant) or by search (without); keep asking.',
-  [('ruleanswer','Ask'),('search','Search instead'),('standingquestionset','Keep asking this'),('standingquestionend','Stop asking')], [17,18])
+  [('ask','Ask'),('ruleanswer','Show how this was counted'),('search','Search instead'),('standingquestionset','Keep asking this'),('standingquestionend','Stop asking')], [17,18])
 screen('assistant', 'The assistant panel', 'dock', 'Docked beside the screen it serves; runs only on the member\'s own account.',
   [('airunopen','Ask the assistant to work on this'),('suggest','Suggest'),('airunclose','Stop the run')], [17])
 
@@ -97,15 +97,15 @@ screen('standard', 'Standard', 'working', 'A requirement the city set itself, he
 # --- deciding and acting (bound sketches: the plan page, start and send)
 screen('plan', 'Action plan', 'working', 'The approved plan page: subjects, options, scenarios, what each option became (K608 (4)).',
   [('plansubjectadd','Add a subject'),('optionadd','Add an option'),('optionpropose','Ask the assistant for options'),('optionadopt','Adopt a suggestion'),('optiondispose','Choose or decline'),
-   ('scenarioset','Lay out a scenario'),('checkpointrecord','Judge a checkpoint'),('optionstartpreview','Start…'),('planclose','Close the plan'),('owed:itemtakeup K2780','Take an item up yourself')], [22])
+   ('scenarioset','Lay out a scenario'),('checkpointrecord','Judge a checkpoint'),('optionstartpreview','Start…'),('planclose','Close the plan'),('itemtakeup','Take an item up yourself')], [22])
 screen('start-send', 'Start and send', 'working', 'The bound start-and-send flow: refusals first, reason in place, approve then record the send (DEC-115).',
-  [('optionstartpreview','See what starting does'),('optionstart','Start the action'),('communicationprepare','Prepare what is sent'),('filingprepare','Prepare the filing'),('filingapprove','Approve this text'),('filingrecordsent','I have sent it'),('owed:filingsecondapprove K2780','Give the second approval')], [7,22])
+  [('optionstartpreview','See what starting does'),('optionstart','Start the action'),('communicationprepare','Prepare what is sent'),('filingprepare','Prepare the filing'),('filingapprove','Approve this text'),('filingrecordsent','I have sent it'),('filingsecondapprove','Give the second approval')], [7,22])
 screen('request', 'Request records', 'working', 'A records request: the office by role, what is wanted, the law, the text, approving and recording the send.',
   [('addresseesuggest','Choose the office'),('actioncreate','Start the request'),('actionlaws','Choose the law it goes under'),('communicationprepare','Prepare the text'),('filingapprove','Approve this text'),('filingrecordsent','I have sent it')], [7])
 screen('action', 'Action', 'working', 'One action: replies, deadlines, pressure, holds.',
-  [('actionmove','Move the action'),('actioncorrespond','Record a reply'),('actionpressure','Mark a reply as pressure'),('reminderset','Remind me'),('actionhold','Record a litigation hold'),('owed:actionscope K2780','Make the action confidential, or not')], [7,22])
+  [('actionmove','Move the action'),('actioncorrespond','Record a reply'),('actionpressure','Mark a reply as pressure'),('reminderset','Remind me'),('actionhold','Record a litigation hold'),('actionscope','Make the action confidential, or not')], [7,22])
 screen('matter', 'Matter', 'working', 'One government act: determination, consequences, escalation, actions.',
-  [('escalationopen','Open an escalation'),('escalationadvance','Advance'),('declinetoescalate','Decline to escalate, with a reason'),('escalationend','End'),('owed:escalationstoppursuing K2780','Stop pursuing, with a reason')], [22])
+  [('escalationopen','Open an escalation'),('escalationadvance','Advance'),('declinetoescalate','Decline to escalate, with a reason'),('escalationend','End'),('escalationstoppursuing','Stop pursuing, with a reason'),('escalationreopen','Reopen where it stopped')], [22])
 
 # --- publishing
 screen('case-editor', 'Case', 'working', 'Prepare the case: scope, statement, what it leaves out, bias, timeline, people named.',

@@ -119,14 +119,12 @@ must(scr, 'mock-screens.js', 'mai-k is free in Lakeshore Tenants');
 add('handle.taken', '{handle} is already taken in {group}. Try another, such as {suggestion}.', false, 'mock-screens.js join');
 must(scr, 'mock-screens.js', 'is already taken in Lakeshore Tenants. Try another, such as');
 add('handle.changeable', 'You can still change it: none of your work is in a published case yet.', false, 'DEC-186; kept until handlechange is retired (DEC-197)');
-add('handle.fixed', 'Your handle is fixed: your work is in a published case ({case}).', false, 'DEC-186');
+add('handle.fixed', 'Your handle can\'t be changed: it names your work for good, and no one else can ever take it.', false, 'DEC-197 (was DEC-186); kept while membership reads it');
 add('handle.formerly', 'formerly {handle}', false, 'DEC-186; kept until handlechange is retired (DEC-197)');
 add('handle.characters', 'A handle uses only lower-case letters, digits and hyphens.', false, 'mock-screens.js join');
 must(scr, 'mock-screens.js', 'A handle uses only lower-case letters, digits and hyphens');
 
-add('handle.refused.unchecked', 'Civicsmith couldn\'t check whether your work is in a published case, so your handle wasn\'t changed. Try again in a moment.', false, 'DEC-188', 'HANDLE_CHANGE_UNCHECKED');
 add('handle.refused.paused', 'Too many handles checked in a short time. Try again in {minutes} minutes.', false, 'DEC-188', 'HANDLE_CHECK_PAUSED');
-add('handle.refused.notmember', 'Only a member can change their own handle.', false, 'DEC-188', 'HANDLE_CHANGE_NOT_A_MEMBER');
 
 // 4c. AI accounts and limits (DEC-188; N812): who pays, what for, up to what; protected where they say who sees what
 add('ai.whopays', must(scr, 'mock-screens.js', 'For a member\\\'s act in a project that has its own AI account, that project\\\'s account pays. Otherwise the member\\\'s own account, if they connected one; otherwise the group\\\'s key. The account chosen is the one used: if it has reached a limit, or that use is switched off on it, the assistant stops for that act and says whose setting stopped it.').replace(/\\'/g, "'"), true, 'mock-screens.js AI_WHO_PAYS');
@@ -165,7 +163,7 @@ add('ai.until.day', 'tomorrow', false, 'DEC-192', '{when} after "until" in ai.qu
 add('ai.until.month', '1 {month}', false, 'DEC-192', '{when} after "until" in ai.queue.limitreached*, for a monthly limit: "pause until 1 November"');
 ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december']
   .forEach(m => add(`date.month.${m}`, m[0].toUpperCase() + m.slice(1), false, 'DEC-189', 'a month\'s name in a sentence'));
-add('ai.refused.limit.unjudged', 'The assistant stopped here: Civicsmith couldn\'t check the use of {whose} account just now, and it spends nothing it can\'t count. Try again in a moment. Everything else works as usual.', true, 'DEC-189', 'AI_LIMIT_REACHED when the limit can\'t be judged (ai-use R3 failing closed); in place of a {period} and {when}');
+add('ai.refused.limit.unjudged', 'The assistant stopped here: your group\'s Civicsmith couldn\'t check the use of {whose} account just now, and it spends nothing it can\'t count. Try again in a moment. Everything else works as usual.', true, 'DEC-189', 'AI_LIMIT_REACHED when the limit can\'t be judged (ai-use R3 failing closed); in place of a {period} and {when}');
 for (const [k, t] of [
   ['owner', 'it doesn\'t say which account it is for'],
   ['scope', 'that isn\'t something a limit can cover'],
@@ -220,7 +218,7 @@ add('transcribe.refused', 'The assistant didn\'t read these pages. {reason}', fa
 add('transcribe.failed', 'The pages were sent to the assistant, but no reading came back: {why}. Nothing was written; you can try again.', false, 'DEC-192', 'after the post: the worker silent or the provider ending; {why} from transcribe.why.silent or .ended');
 add('transcribe.why.silent', 'it didn\'t answer in time', false, 'DEC-192', 'AGENT_WORKER_SILENT');
 add('transcribe.why.ended', 'the AI service stopped before it finished', false, 'DEC-192', 'a provider ending');
-add('transcribe.reason.requestfault', 'Civicsmith sent the assistant a request it couldn\'t use. The fault is Civicsmith\'s, not yours: try again, and if it happens again, tell an administrator.', false, 'DEC-193', '{reason} in transcribe.refused for BAD_BODY, BAD_SHA, BAD_PAGES (agent-worker R72)');
+add('transcribe.reason.requestfault', 'Your group\'s Civicsmith sent the assistant a request it couldn\'t use. That is a fault in your group\'s Civicsmith, not anything you did: try again, and if it happens again, tell an administrator.', false, 'DEC-193', '{reason} in transcribe.refused for BAD_BODY, BAD_SHA, BAD_PAGES (agent-worker R72)');
 add('transcribe.reason.noaccount', 'No AI account pays for this here. Connect your own in Settings › The assistant, or ask an administrator about the group\'s key.', false, 'DEC-193', '{reason} for NO_ACCOUNT');
 add('transcribe.reason.badaccount', 'The AI account that pays for this here can\'t be used as it is set up. Its owners can check it in its settings.', false, 'DEC-193', '{reason} for BAD_ACCOUNT');
 add('transcribe.reason.needsapikey', 'Reading page pictures needs an Anthropic API key, and the account that pays here is a Claude sign-in. Its owners can add an API key; meanwhile you can type a page\'s words yourself.', false, 'DEC-193', '{reason} for TRANSCRIBE_NEEDS_API_KEY');
@@ -242,6 +240,8 @@ add('question.refused.drawnon', 'This question can\'t be set aside for the whole
 
 // 4f. The Action layer's words for T45 (DEC-194; BOB's B140): written in words-actions.src.py, which writes words-actions.json
 for (const x of JSON.parse(R('words-actions.json'))) add(x.key, x.en, x.protected, 'DEC-194', x.note || undefined);
+// 4g. T46's words (DEC-198; BOB's B149): written in words-t46.src.py, which writes words-t46.json
+for (const x of JSON.parse(R('words-t46.json'))) add(x.key, x.en, x.protected, 'DEC-198', x.note || undefined);
 
 // 5. The frame: rail, phone tabs, explanation levels
 for (const [k, name] of W.RAIL) { add(`rail.${k}.name`, name, false, 'mock-shell.js RAIL'); if (W.RAIL_HELP[k]) add(`rail.${k}.holds`, W.RAIL_HELP[k], false, 'mock-refs.js RAIL_HELP'); }
