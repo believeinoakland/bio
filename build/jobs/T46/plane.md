@@ -1,6 +1,6 @@
 # plane (T46)
 
-**Status** · session_01WBHFsYLZ58Mve6wWPYGz5k · depth 2 · COMPLETE · handled B4
+**Status** · session_01WBHFsYLZ58Mve6wWPYGz5k · depth 2 · WORKING · handled B4
 
 ## Work
 
