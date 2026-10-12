@@ -54,3 +54,7 @@ T45-49 applied on job/T45/answer-envelope (pushed): `CHECK_FAMILY_FILES` lists c
 - moved: `PRESSURE_MARKED` and `PRESSURE_NO_ENTRY` go from C-117.17 and C-117.18 to C-149.6 and C-149.7, with code and words kept. They are recorded under a new `changed.moved` key and asserted, with the old numbers held by no code.
 
 R7 names re-wordings and retirements as exceptions, but it does not name a row that moves to a new number. I read the T45 plan's id-move table (K2845, K2859) as authorising the move. R7's text could gain a T45 sentence naming these exceptions, as R10 did for T41; that is yours to decide.
+
+## J2 · COMPLETE
+
+T45-49 done (B2 merged): CHECK_FAMILY_FILES lists case-account C-153, case-check C-148, action-holds C-149, action-replies C-150, plan-work C-151 at their modules.json places; R7 snapshot re-pinned (C-113.7, C-124.1, C-124.30, C-117.19 re-worded; C-115.19 retired; PRESSURE_MARKED/PRESSURE_NO_ENTRY moved to C-149.6/.7 under changed.moved, meeting R7's T45 sentence). Clears rule 4 (14) and (15)'s answer-envelope items. answer-envelope 32/32; store-door 44/44; control-plane 219/4 and plane 188/8 identical to tranche/T45 without my commits. format, architecture (9 files), coverage (12/12), ownership (5 files): 0 failures. Deferred: action-producers' C-152 until its checks.mjs lands (your CHANGE). Record in build/jobs/T45/answer-envelope.md.
