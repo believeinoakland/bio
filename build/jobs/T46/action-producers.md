@@ -2,6 +2,16 @@
 
 **Status** · session_01RtAxjH3XdN1UyVL6cBpQ1K · depth 2 · WORKING · handled B3
 
+## Completion again (B3 · CHANGE, K3000)
+
+`tranche/T46` merged first. **Verified real** through the real `action-clocks` (its own test fixture: record-core, membership, promotion and actions real): `reminderSet` keeps `set_by` as the stamp `member:alice`, and an action's `created_by` (its first manifest entry's author) is `member:alice` too, while queue passes `member` bare. Before the fix the reminder was nobody's item, and R1's creator arm failed (`memberFacts("member:alice")` is null, so the item fell to the owners). The same stamp reaches me from `plan-work`'s take-ups (`member`), so every arm of R1's rule was exposed.
+
+**Fix (one helper):** `memberIdOf(x)` (exported) reads a member named bare (`alice`) or stamped (`member:alice`) as the bare id, and a machine (`token:`, `class:`) or an empty stamp as none. Every member this module compares, counts or names goes through it: the reader `member`; take-ups; creators and setters (R1–R4, R7, R12); openers (R3); markers (R5); placers (R8); asked reviewers (R6); following's recipients (R10); R9's routed members and departures; the owners and administrators read from membership. Recipients are answered bare, as queue reads them.
+
+**Tests:** new `stamps.test.mjs` (three tests, each with controls): R4 through the real action-clocks, read bare and stamped (control: bob is not told); R1's creator as action-clocks answers it (control: revoked, passed over); R1–R3, R5–R10, R12 with every provider's member in the stamped form (control: a machine's stamp names no member, so the owners receive it). `action-producers` 45 pass, 0 fail; `queue-producers` 74/0; `queue` 142/0; `plane/t45` 14/0. Checks: format, architecture, coverage (23/23), ownership 0 failures; `run.mjs` architecture 0, coverage 12 failures, none this module's.
+
+Size (session_01RtAxjH3XdN1UyVL6cBpQ1K): test runs 18, module lines 1470
+
 ## Completion
 
 **Read whole** (P20; mechanics §6 step 2): the requirements (public and private); the public parts of every module in Uses (membership, civil-time, record-grammar, record-core, actions, action-holds, action-clocks, escalation, action-plans, plan-work, filing-templates, local-facts, following) as merged on `tranche/T46`; layer 11's contract in `build/layers.md`; my entry in `build/plan/current.md`; this module's code (`index.mjs`, `words.mjs`) and every test, not only what changed. `words.json`'s keys read for R23.
