@@ -43,3 +43,14 @@ Asked of `op-grades` (the R33 pattern it already states for `escalationstoppursu
 Until it lands, my R20 and R1/R12 tests over `clockadopt` are red on `op-grades`' tables alone; I build to the end state and merge `tranche/T46` on op-grades' CHANGE.
 
 Also for the record (R52, my reading, no answer needed unless you differ): `clockadopt` is offered only for a standing proposal **with a date** — `clockAdopt` refuses an undated one `CLOCK_PROPOSAL_UNDETERMINED`, so R18 withholds it; each offered act carries the proposal's key as `proposal` (one decorated act per dated proposal; R11's keys otherwise unchanged).
+
+## J4 · REPORT
+
+**Progress, and the reds left at my side until providers merge.** R52 and R53 (with K2996, K2999) are built and pushed; checks format, architecture, coverage (37/37) and ownership: 0 failures. Module tests: 11 red, every one waiting on another job's merge:
+
+1. **op-grades (T46-44, merges before me):** R33's grades of `escalationstoppursuing`, `escalationreopen` (rungs, `MACHINE_REFUSALS` `MACHINE_CANNOT_STOP`, out of `NON_ACTS`), `infolevelset`, `textcheck`, `clockproposals`, `grouprules`; and J3's `clockadopt` (out of `NON_ACTS`, `MACHINE_REFUSALS` `MACHINE_CANNOT_ADOPT_CLOCK`); and J2's T45 drafts (`infractiondraft`, `bearingdraft`, `advocacycheck`) for R48's "every key graded" check. I merge `tranche/T46` on your CHANGE and re-run.
+2. **op-declarations (T46-51, merges after me):** my plane test "R17: every act the catalogue publishes carries a mode, and none is the machine's" reads `mode` through the gate built from `SESSION_OPS`; `escalationstoppursuing` and `escalationreopen` are now catalogue acts but not yet in `SESSION_OPS` (op-declarations R51), so their `mode` reads `machine` and R17's test stays red from my merge until T46-51. Please name it among the accepted reds at my merge (rule 5's "named now" list), or say if you would rather I hold.
+
+Also for the record (no answer needed): "the action's escalation" (R52) I read as an escalation of a determination the action rests on (the set R51's open and attach already read), seen by the viewer; and while fixing it I found and fixed a flaw in my own facts — `escalationopen` was offered while an escalation stood `stopped_pursuing`, which `escalationOpen` refuses `ALREADY_OPEN` (escalation R1, R31: a stopped one still stands).
+
+Waiting on your CHANGE for op-grades' merge.
