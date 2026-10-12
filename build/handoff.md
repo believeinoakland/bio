@@ -1,31 +1,37 @@
 # Handoff
 
-**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #160 (`session_0142MWQ3cnvPRHcMekstsf5g`, primary account, depth 1), 2026-10-12 ~05:10 UTC, refreshing at about 51% of its window with no step half done. Read `build/rulings-active.md` first; this BOB's rulings are K2909–K2943.
+**Status** · Replaced whole at each handoff; holds only where things stand and what comes next. Written by BOB #161 (`session_015Mryfo5hN6kMnVMxYBTy4W`, primary account, depth 1), 2026-10-12 ~06:52 UTC, refreshing at about 54% of its window with no step half done. Read `build/rulings-active.md` first; this BOB's rulings are K2945–K2970.
 
 ## Where things stand
 
-- **T46 is open** (K2914), plan `build/plan/current.md` (66 entries after K2920, K2926, K2928). L1–L4 closed and merged (K2924, K2932, K2934, K2940). **L5 runs**: local-facts (LOCAL-FACTS #6 `session_0132BkHEZ5G69QAFjomHQvCD`), standards (STANDARDS #13 `session_019UztuJhDzVGDoL16zsLyc7`), duties (DUTIES #5 `session_0139ZFtgTvp1mhcekkFjucSn`), START B1 each (K2941). This BOB's backstop `trig_013yap27khbus9bPLRTncJti` (05:13) and WATCH #160 `trig_01T6KDLrv9djoU7WuWAfZHiT` (into ROOT #5, 05:53) are live: delete both at takeover and arm your own.
-- **Requirements folded** through L6 (K2917, K2919, K2920, K2926, K2928). **L8–L11 are not yet folded**: fold each layer before its START (plan rule 1), as K2917–K2920 did (a worker drafts into the requirements files, BOB reviews, commits with a ruling). L6's START must name M-T46-3/4/5 and T46-65 hypotheses first (`modules.json` order).
-- **Release 0.82.0 is live on biosmoke7** (K2943): signed with Bob's fresh release key (K2922, K2930, K2938; signing run 38204897645), verified 7/7, every member deployed, the 0.81.0 store migrated. The signed cut is merged into tranche/T46 (K2939). Open from it: the signed-in live checks need a member credential (K2110's refusal stands); N945 (`op=bootstrap` reads `rearmed: true`).
-- **Release keys** (K2930): `ARMED_SIGNERS` holds Bob's release and recovery lines; the ratify key's public line is in K2930, its environment use later. N944: the signing tool should take the signer from the seed.
-- **Channel**: UX-DESIGN read to U174, ACK B153. DEC-198 (PR #30, its MERGE U172) is merged at T46's close (§5.7 (1)); L11's words entries decide at their START whether to read it early (K2921). Lanes: investigation H43, actions H31, nothing new.
-- **Container**: `npm ci` done in every bundled member; the worktree `/home/user/cut` (the cut) and a Docker daemon exist only in this container (K1980).
-- **ROOT #5** read 38% at takeover; Bob's threshold is 55% (K2679). Ring ROOT #5, not a ROOT #7.
+- **T46 is open** (plan `build/plan/current.md`, 65 entries after K2949 dropped T46-21). L1–L6 closed and merged (L5 K2946, L6 K2962). **L8 runs**: eight of its nine jobs merged (K2967, K2968, K2969); **PUBLIC-READ #20** (`session_01SvLLNk2gSBYe3EG6QavHFX`) is the last, `RUNNING until 07:10` (its users' tests), its question answered (K2966). When it completes: ownership check, merge, strike R5 and R34's T46 clause, then close L8 (§5.6: artifacts in K1540's order, `checks/run.mjs`, archive the nine L8 sessions with their rows from each record's `Size` line).
+- **L8 sessions to archive at its close:** CASE-CARRIAGE #10 `session_01F4upNJ1CzCkptPjBadjCPt`, PUBLICATION #30 `session_015HY6DrM4gxmJtgrtDXma3h`, PUBLIC-READ #20 (above), CASE-CHECKER #11 `session_018KyvpjWpStPQKywDPCaAeL`, CASE-IMPORT #7 `session_018a3dXcqAa5fykfa4cLba4t`, CASE-DISCLOSURES #11 `session_016tFh3EWvxLbakE52DL24QM`, CASE-ACCOUNT #3 `session_01Xn37tqsLSaaQvhHtapo2Nd`, CASE-AUTHORING #27 `session_015ySFNDd18mdxT5E8Xsc9u6`, CASE-CHECK #2 `session_01BBg9JuWWPT7LYa7vpffQYT`.
+- **Requirements are folded for every remaining layer**: L9 (K2953, K2959), L10–L11 (K2960, reviewed; six new interface modules' requirements written). **START bodies are written** for L9 (`build/plan/starts-T46/<module>.txt`, twelve; action-replies' carries R8, K2964). L10 and L11 START bodies are not yet written: write them before each START, with the plan's section "For L11's STARTs (K2960)".
+- **One open point BOB settles before L11's START** (plan, "For L11's STARTs"): a run the dock opens by a member's session has no `ai` credential, so `dispatchMemberRun` withholds it (K2947's wire needs a presented credential); choose a per-run credential minted at her act (credentials R13) held in memory only, or `ai-runs` admitting a session-opened run, and fold it into control-plane R77, ai-runs R18 and op-declarations R51 before T46-59's START.
+- **Accepted reds added this BOB**: bundler fleetbundles "agent-worker's 27 inputs" until bundler's next job (N950, K2962). Rule 5's catalogue-end red narrowed to C-124.30 (K2959).
+- **New next.md entries**: N946–N951.
+- **Channel**: UX-DESIGN read to U174, nothing new; lanes investigation H43, actions H31, nothing new. The words returned to the design stream at L8–L11's folds (K2949, K2953, K2960) go into BOB's channel act (plan "BOB's acts").
+- **Container**: `npm ci` done in agent-runner (`--ignore-scripts`), sheet-worker, file-scanner; `newgroup/node_modules` was a tracked symlink, now untracked (K2946).
+- **Timers**: backstop `trig_01AnpnFfYSqSLhnrBtM9CF7C` (07:07) and WATCH #161 `trig_01UqQaUvHFQwpDEptpj3uyWS` (into ROOT #5, 07:47): delete both at takeover and arm your own.
+
+## ROOT
+
+ROOT #5 (`session_0187SrKsqhqzSTqwDk2hzcXy`) read 39% at BOB #161's takeover (Bob's threshold 55%, K2679); it told BOB #161 that Bob would start a ROOT #7 and gave him its prompt. Bob has not yet named ROOT #7's session: until he does, ring ROOT #5. When he names it, record its id in `build/manifest.md` ("Starting a session") with a ruling, and archive ROOT #5 once ROOT #7 runs (ROOT is replaced only by Bob, mechanics §2; archiving the replaced ROOT is BOB's, K2511's pattern).
 
 ## Bob's rulings since the last handoff
 
-- K2913: weekly meter 65%.
-- K2922: a fresh release key now (replacing K2893's interim), keys kept in Mac Passwords (amends K2277 (3)).
-- K2942: approved the 0.82.0 deploy to biosmoke7 (standing list: not added).
+None.
 
 ## Next steps, in order
 
-1. Take over (§5.1): archive BOB #160 once idle, its `BOB-final` row under T46; delete its backstop and WATCH.
-2. Watch L5; merge local-facts, standards, duties as they complete (L5 merge order); close L5 (§5.6: artifacts in K1540's order, checks, archive, rows).
-3. Start L6 from its folded text (K2920, K2926): eleven jobs; measure reading sets; agent-worker's size (M-T46-1).
-4. Fold L8, then L9, L10, L11 ahead of their STARTs (P18); write the N908/N909/N943 split maps (case-authoring, publication, file-safety) during T46.
-5. Report release 0.82.0 to Bob in plain words (done in this BOB's last turn); ask nothing more of him unless the address below.
+1. Take over (§5.1): archive BOB #161 once idle, its `BOB-final` row under T46; delete its backstop and WATCH.
+2. Merge PUBLIC-READ #20 when complete; close L8 (§5.6).
+3. Start L9 from its START bodies (twelve jobs; `mail addjob` each; job numbers by the highest `<MODULE> #n` in the archive, plan and rulings, plus one).
+4. Write L10's and L11's START bodies; settle the dock's member-run credential (above) before L11.
+5. At T46's close (§5.7): merge DEC-198's PR #30 (UX-DESIGN's MERGE U172) into `main` first, then the tranche PR; release 0.83.0 (plan "BOB's acts").
 
 ## Open with Bob
 
-- The stewards' contact address (K2799): needed for T46-60's README part and T46-61, before L11's START.
+- ROOT #7's session id (he was to start it; ring ROOT #5 until he names it).
+- The stewards' contact address (K2799): needed for T46-60's README part and T46-61 (installer R48, stewards R7), before L11's START.
+- Bob asked how to make an account on biosmoke7 (0.82.0); BOB #161 walked him through setting a fresh `ADMIN_TOKEN` in the Cloudflare dashboard and claiming the founder seat on the setup page (`op=bootstrap` reads `rearmed: true`, N945). Nothing is owed unless he reports a problem.
