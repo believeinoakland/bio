@@ -212,7 +212,9 @@ const clockWorld = () => world({ realActions: true, escalation: { escalationsDue
 /* 12:00 on the 28th in Halifax (UTC-3) is 15:00 UTC */
 const NOON = Date.parse(`${TODAY}T15:00:00Z`);
 
-test("R34 an entry due 12:00 in the office's zone is marked at a tick at 12:01 that day (control: at 11:59 it is not); a date-only entry is still marked on the next local day", async () => {
+/* K208, K2874 (B3): todo until actions R33's machine bound admits a timed entry's move once its due_at has passed
+   (N922, T46); today actions refuses it CLOCK_STATUS_NOT_MECHANICAL on its own day. */
+test.todo("R34 (todo: actions R33, N922) an entry due 12:00 in the office's zone is marked at a tick at 12:01 that day (control: at 11:59 it is not); a date-only entry is still marked on the next local day", async () => {
   const w = clockWorld();
   const id = "ACTN-2026-0960-noon";
   createAction(w, id, [{ text: "noon", date: TODAY, at: "12:00" }, { text: "day", date: TODAY }]);
@@ -235,7 +237,25 @@ test("R34 an entry due 12:00 in the office's zone is marked at a tick at 12:01 t
 
 const MINUTE = 60000;
 
-test("R34 the time of day is read in the entry's own zone when it names one (due_zone), else the office's; a wall time the zone skips or repeats that day is read by its date alone, never marked early", async () => {
+test("R34 (T45, while actions R33 reads the date alone: N922) a timed entry is never marked early: before its instant nothing is sent; on its day the mark actions refuses is reported failed and nothing moves; it lands at the start of the next local day as a date-only entry does", async () => {
+  const w = clockWorld();
+  const id = "ACTN-2026-0966-early";
+  createAction(w, id, [{ text: "noon", date: TODAY, at: "12:00" }]);
+  w.clock.ms = NOON - MINUTE;
+  assert.deepEqual((await w.m.deadlineRecheck(NOON - MINUTE)).marked, []);
+  assert.equal(w.manifest(id).length, 1, "nothing sent before its instant");
+  w.clock.ms = NOON + MINUTE;
+  const r = await w.m.deadlineRecheck(NOON + MINUTE);
+  assert.deepEqual([r.marked, r.failed.map((f) => [f.action, f.reason])], [[], [[id, "CLOCK_STATUS_NOT_MECHANICAL"]]]);
+  assert.equal(w.fm(id).clock[0].status, "pending", "nothing moved");
+  const next = Date.parse(`${TOMORROW}T03:00:00Z`);
+  assert.equal(w.m.deadlineRecheckWake(NOON + MINUTE), next, "held to the next local day (N429), never a loop");
+  w.clock.ms = next;
+  assert.deepEqual((await w.m.deadlineRecheck(next)).marked.map((m) => [m.action, m.ords]), [[id, [0]]]);
+  assert.equal(w.fm(id).clock[0].status, "overdue");
+});
+
+test.todo("R34 (todo: actions R33, N922) the time of day is read in the entry's own zone when it names one (due_zone), else the office's; a wall time the zone skips or repeats that day is read by its date alone, never marked early", async () => {
   const w = clockWorld();
   const id = "ACTN-2026-0961-zone";
   /* 12:00 in Los Angeles (UTC-7 in September) is 19:00 UTC */
