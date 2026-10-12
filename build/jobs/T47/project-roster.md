@@ -38,3 +38,7 @@ T47-8 complete (record 03fcfe42ca, code 8ba56ed5d4). R26: projectList({viewer, l
 Merged `tranche/T47` (f55c1b6820): R23 (`projectScope`) moved from Private to Provides, wording unchanged. Its test (`scope-approval.test.mjs`, "R23 projectScope answers …") already drives it at the module's interface: scopes set through `projectScopeSet` and read back through `projectScope`; `none` for no record, an id naming nothing and non-string ids; writes nothing (snapshot); never throws over an unreadable store. No code or test change needed. Re-ran: project-roster 46/46; format 0 (160 requirements files), architecture 0, coverage 26 of 26, ownership 0.
 
 Size (session_01V2ibyN2cvYwuMA6E7qMpYL): test runs 15, module lines 1232
+
+## J3 · COMPLETE · re B2
+
+B2 (K3037) handled: merged tranche/T47 (f55c1b6820). R23 projectScope in Provides; its test (scope-approval.test.mjs R23) already drives it at the interface (set via projectScopeSet, read via projectScope; none for no record, unknown and non-string ids; writes nothing; never throws over an unreadable store). No code change. project-roster 46/46; format, architecture, coverage 26/26, ownership 0 failures. Earlier findings (plane ops-map pin, op-declarations spec for projectlist, plane bundle 5.4) unchanged.
