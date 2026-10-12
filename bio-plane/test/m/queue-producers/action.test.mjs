@@ -126,3 +126,27 @@ test("R14: OBLIGATIONs signer-self-registered, one per active self-registered ke
   w.run(`UPDATE signers SET status='revoked' WHERE key_b64='KEY-A'`);
   assert.deepEqual(ids(w.read("ada")), [], "it leaves when the key is no longer active");
 });
+
+test("R8 (T45; K2888): handed no action-producers, feedItems builds the real one over its own deps, as machinery-producers, and answers its items through the walk and options this read was handed", async () => {
+  const { defaultFakes: theirs } = await import("../action-producers/world.mjs");
+  const { QueueProducers } = await import("../../../src/queue-producers/index.mjs");
+  const w = world();
+  w.member("alice"); w.bundle("PRJ-1", "project"); w.bundle("ACT-1", "action"); w.join("PRJ-1", "alice", { owner: true });
+  const { actionProducers, ...ours } = w.fakes;
+  void actionProducers;
+  const providers = theirs();
+  providers.actionClocks.overdueClocks = () => page([{ action: "ACT-1", ord: 0, date: "2026-08-20", basis: "b", text: "t",
+    status: "pending", past: true, project: "PRJ-1", created_by: "alice" }]);
+  const p = new QueueProducers({ host: w.host, storage: w.host.storage,
+    deps: { ...ours, ...providers, record: w.record, membership: w.membership, credentials: w.credentials } });
+  const asked = [];
+  const r = p.feedItems({ member: "alice", viewer: "member:alice", now: NOW,
+    homesOf: (s) => { asked.push(["homes", ...s]); return { state: "determined", ungrouped: false, reasons: [], depth_bound: 6, ancestors: [], of: [...s] }; },
+    optionsOf: (s) => { asked.push(["options", ...s]); return [{ id: "opt", on: [...s] }]; } });
+  const it = byId(r)["CONDITION::action-clock-overdue::ACT-1::0"];
+  assert.ok(it, "the real action-producers' item, in this module's one answer");
+  assert.ok(asked.some((a) => a[0] === "homes" && a.includes("ACT-1")), "homed through the walk this read was handed");
+  assert.ok(it.options.some((o) => o.id === "opt"), "offered this read's options");
+  assert.equal(typeof r.facts.action, "object", "its facts beside the others");
+  assert.ok(!("disposition" in it) && !("catalogue_id" in it));
+});
