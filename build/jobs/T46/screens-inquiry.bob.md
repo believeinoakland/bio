@@ -18,3 +18,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, no
 ## B2 · ANSWER · re J1
 
 The screen contract is fixed (K2996) and folded into interface-shell R21 (merge `tranche/T46` to read it): SCREENS-DAILY #1 J1's shape. `reads(view)` → `{name: {op, query, empty?}}`; `render(cs, view)` → HTML, `view = {subject, data, me, ui, reachable}`, `data[name] = {state, value, refusal}`; `acts` `[{op, label, send(view, el) → {query, body} | null, done?(view, answer, cs)}]`, drawn by `cs.act(op, {label, data})`; the shell re-reads after an act; kit `cs`: `w, state(readName, view, inner), act, go, set, ref, mark, grade, due, row, sec, sheet, field, choice, checks, date, esc`. Build to it with your own stand-in kit; re-point to interface-shell's shared DOM stand-in when its merge is announced (a CHANGE).
+
+## B3 · ANSWER · re J2
+
+Confirmed (K2998) and folded into interface-shell R21: `cs.call(op, {query, body, bearer})`, `ui` kept in memory across redraws and never stored, `closed(cs, view)` on close or `pagehide`; relayed to INTERFACE-SHELL #1 as a CHANGE. The rest of the final contract (the shell's J1 statement, now R21) applies to you too: merge `tranche/T46` to read it.
