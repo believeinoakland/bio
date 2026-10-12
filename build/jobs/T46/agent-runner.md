@@ -41,3 +41,7 @@ Detail I am applying (mine unless you rule otherwise): an `image` block not in R
 ## J2 · COMPLETE
 
 T46-18 (R24) applied and tested: 38/38 pass, all four checks 0 failures; completion section in my record. J1 stays open (R5 unchanged on my reading). The image needs the release's rebuild for R24 to be live; the Worker bundle is not stale.
+
+## J3 · COMPLETE
+
+B2 (K2947) applied: /version answers capabilities ["image"]; R5's test checks it with an image passing. 38/38 pass, four checks 0 failures. REPORT: fleet-member.json's surface line for /version now names capabilities, so my Worker bundle is STALE (fleetbundles: agent-runner only); yours to regenerate at L6 close.
