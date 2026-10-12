@@ -452,8 +452,11 @@ export class Store extends DurableObject {
        so neither builds it bare. */
     /* R32: publish-schedule for queue-producers R37's scheduled items (passed on once queue lists it among its deps). */
     /* K2580 (QUEUE #22 J2): queue reads investigation (its project arm); handed the plane's one instance (R30). */
+    /* R39 (T45; action-producers R5, R9, R10, R12): the deps action-producers reads, the plane's own instances:
+       action-holds (the hold read moved from actions), following (the watch question) and plan-work (take-ups, review
+       days). */
     const queueDeps = { env, filingTemplates, localFacts, docket, caseImport, noticeProducers, publishSchedule,
-                        investigation: investigationOf(ctx) };
+                        investigation: investigationOf(ctx), actionHolds, following: followingOf(ctx), planWork: planWorkOf(ctx) };
     const queueProducers = queueProducersOf(ctx, Object.fromEntries(
       Queue.PRODUCER_DEPS.filter((k) => queueDeps[k] !== undefined).map((k) => [k, queueDeps[k]])));
     queueOf(ctx, { ...queueDeps, producers: queueProducers }).migrate();
