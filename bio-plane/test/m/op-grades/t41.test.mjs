@@ -14,12 +14,12 @@ const isRead = (op) => typeof NON_ACTS[op] === "string" && NON_ACTS[op].startsWi
 const grades = (ops) => Object.fromEntries(Object.keys(ops).map((op) => [op, gradeOf(op)]));
 
 /* ---- R29 ----------------------------------------------------------------------------------------------------------- */
-test("R29: handlechange `caller-owned` as setpassword with its member-directed sentence; handlecheck a read that never "
-   + "names who holds a handle; neither a machine refusal; both phone acts", () => {
+test("R29 R34: handlechange `caller-owned` as setpassword, its member-directed sentence stating the refusal it is (T46, "
+   + "R34); handlecheck a read that never names who holds a handle; neither a machine refusal; both phone acts", () => {
   assert.equal(gradeOf("handlechange"), "caller-owned");
   assert.equal(gradeOf("handlechange"), gradeOf("setpassword"));
-  assert.equal(NON_ACTS.handlechange, "member-directed: the caller's own handle, changeable until their work is first in "
-    + "a published case; earlier handles kept and shown as formerly; moves no bundle");
+  assert.equal(NON_ACTS.handlechange, "member-directed: a handle is fixed at joining; this act refuses every change, "
+    + "`HANDLE_FIXED`, and writes nothing");
   assert.equal(NON_ACTS.handlecheck, "read: whether a handle is free, taken or not allowed, never who holds it");
   assert.equal(gradeOf("handlecheck"), null, "a read takes no grade");
   assert.deepEqual(["handlechange", "handlecheck"].filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), []);

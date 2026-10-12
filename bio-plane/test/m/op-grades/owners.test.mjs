@@ -196,8 +196,10 @@ const REASON_CODE = {
   lawrelate: "STANDARD_NO_REASON", lawwithdraw: "STANDARD_NO_REASON", courtlink: "STANDARD_NO_REASON",
   courttreat: "STANDARD_NO_REASON", entityidentify: "NO_BASIS", airunverify: "AI_RUN_VERIFICATION_UNFIT",
 };
-/* a write op-declarations gives no NEEDS row (UNATTENDED_BY_DECISION): graded, never named in NON_ACTS */
+/* a write op-declarations gives no NEEDS row (UNATTENDED_BY_DECISION): graded, never named in NON_ACTS; and (T46, R33,
+   K2998) `clockadopt`, an ACTS row on an action (affordances R52), graded and named in MACHINE_REFUSALS instead */
 const UNGATED_WRITES = ["askusage"];
+const ACTS_NOW = ["clockadopt"];
 
 test("R13 R3: every op T33 publishes is graded — each write its rung or one ground, each read a `read:` NON_ACT, every "
    + "gated op its reason; each `reversible` taken back by a graded act and each `reasoned` backed by a code of the family; "
@@ -205,10 +207,11 @@ test("R13 R3: every op T33 publishes is graded — each write its rung or one gr
   assert.deepEqual(grades(T33_WRITES), T33_WRITES);
   assert.deepEqual([...Object.keys(T33_RUNGS), ...Object.keys(T33_RUNG_ABSENT)].sort(), Object.keys(T33_WRITES).sort());
   assert.deepEqual(Object.keys(T33_NON_ACTS).sort(),
-    [...Object.keys(T33_WRITES).filter((op) => !UNGATED_WRITES.includes(op)), ...T33_READS].sort());
+    [...Object.keys(T33_WRITES).filter((op) => !UNGATED_WRITES.includes(op) && !ACTS_NOW.includes(op)), ...T33_READS].sort());
   for (const op of T33_READS) { assert.ok(isRead(op), op); assert.equal(gradeOf(op), null, op); }
-  for (const op of Object.keys(T33_WRITES).filter((op) => !UNGATED_WRITES.includes(op)))
+  for (const op of Object.keys(T33_WRITES).filter((op) => !UNGATED_WRITES.includes(op) && !ACTS_NOW.includes(op)))
     assert.ok(!isRead(op) && NON_ACTS[op].length > 20, op);
+  for (const op of ACTS_NOW) assert.ok(!Object.hasOwn(NON_ACTS, op) && Object.hasOwn(MACHINE_REFUSALS, op), op);
   for (const op of UNGATED_WRITES) assert.ok(!Object.hasOwn(NON_ACTS, op), op);
   assert.deepEqual(Object.keys(T33_WRITES).filter((op) => T33_WRITES[op] === "reversible").sort(),
     Object.keys(TAKEN_BACK_BY).sort(), "every reversible T33 op names the act that takes it back");
@@ -219,7 +222,7 @@ test("R13 R3: every op T33 publishes is graded — each write its rung or one gr
   const reasoned = Object.keys(T33_WRITES).filter((op) => T33_WRITES[op] === "reasoned");
   assert.deepEqual(reasoned.sort(), Object.keys(REASON_CODE).sort());
   for (const [op, code] of Object.entries(REASON_CODE)) assert.ok(JUSTIFICATION_REFUSALS.includes(code), `${op}: ${code}`);
-  notMachine([...Object.keys(T33_WRITES), ...T33_READS]);
+  notMachine([...Object.keys(T33_WRITES).filter((op) => !ACTS_NOW.includes(op)), ...T33_READS]);
   /* negative control */
   assert.notDeepEqual(grades({ ...T33_WRITES, notewrite: "x" }), { ...T33_WRITES, notewrite: "undetermined" });
 });
