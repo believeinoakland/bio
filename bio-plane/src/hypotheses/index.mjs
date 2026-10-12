@@ -200,7 +200,7 @@ export class Hypotheses {
     this.#record.transact(() => {
       this.#sql.exec(`CREATE TABLE member_notes_renumbered (member TEXT NOT NULL, note_id INTEGER NOT NULL, text TEXT NOT NULL,
                       at TEXT NOT NULL, revised TEXT, PRIMARY KEY (member, note_id))`);
-      this.#sql.exec(`CREATE TEMP TABLE member_notes_map AS SELECT member, note_id AS old,
+      this.#sql.exec(`CREATE TABLE member_notes_map AS SELECT member, note_id AS old,
                       ROW_NUMBER() OVER (PARTITION BY member ORDER BY note_id) AS new FROM member_notes`);
       this.#sql.exec(`INSERT INTO member_notes_renumbered (member, note_id, text, at, revised)
                       SELECT n.member, m.new, n.text, n.at, n.revised FROM member_notes n JOIN member_notes_map m ON m.old = n.note_id`);
