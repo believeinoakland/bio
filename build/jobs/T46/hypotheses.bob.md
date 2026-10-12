@@ -13,3 +13,7 @@ Inherited reds: the plan's "Rules at the opening" rule 5 as it stands at your ST
 Not part of any reading set: generated artifacts, vendored code and large data fixtures (K2053, K2083).
 Reading set (mechanics §17): measured at this START: 467 KB with your tests (K2700), under the 600 KB limit; read it whole.
 Merge order in L6: hypotheses, steps, run-rules, ai-runs, reading-guides, skills, question-explorer, agent-harness, agent-model, agent-runner, agent-worker. A job that uses an L6 job's new service merges `tranche/T46` into its branch when BOB announces that merge (a CHANGE); each that uses no unmerged L6 job merges as soon as it is complete.
+
+## B2 · CHANGE
+
+K2950: after your merge the architecture check on tranche/T46 fails 3, all yours: workerd.test.mjs imports test-support (stdio.mjs, sandbox.mjs), undeclared, and workerd-entry.mjs imports bio-plane/src/plane/store.mjs, the plane's (layer 11, later in the order; P4). I have added test-support to your uses (merge tranche/T46). For the plane import: rewrite R23's workerd test so it boots only your own code (and earlier modules) — a Durable Object of your test fixture over SQL storage that runs your renumbering (the same seeded shapes: interleaved members, deletions, turns, T34's shape, fresh; the TEMP refusal and the negative control kept) — never the plane's Store. The whole-store test at the plane's shape now belongs to T46-62 (plane). Run node checks/run.mjs (architecture 0 for your files) and post COMPLETE again.
