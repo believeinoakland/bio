@@ -29,21 +29,6 @@ export const TEST_SET = Object.freeze({ id: "civicsmith", version: 1, matters: [
 export const bar = (part, over = {}) => ({ part, set: "civicsmith", set_version: 1, false_alarm_rate: 0.1, passed: true,
                                             graded_by: "harness", at: "2026-10-01T00:00:00Z", ...over });
 export const VERIFIED_CHECK = { mode: "check", run: "RUN-0", verified_by: "member:dana", at: "2026-10-01T00:00:00Z", evidence: "seen" };
-/* run-rules R29's `partAdmittedOn`, as ai-runs R78 asks it. Until run-rules' T46 job merges into this branch, the rule
-   R29 states is computed here from R19's parts: the bar held (`partDeployableOn`), admitted unlabelled; else, for a part
-   in TEST_BAR_PARTS whose chain is held (`deployable` for a mode of the order, nothing more for any other part) and
-   `testInstance` exactly true, admitted with `untestedLabel`'s shape; else not admitted. Dropped at the merge
-   (QUESTION-EXPLORER #3's record). */
-export function partAdmittedOn(set, part, held, { testInstance } = {}) {
-  if (typeof runRules.partAdmittedOn === "function") return runRules.partAdmittedOn(set, part, held, { testInstance });
-  if (runRules.partDeployableOn(set, part, held) === true) return { admitted: true, untested: null };
-  const chain = runRules.TEST_BAR_PARTS.includes(part)
-    && (!runRules.DEPLOYMENT_SEQUENCE.order.includes(part) || runRules.deployable(part, held.verifications || []) === true);
-  if (testInstance === true && chain)
-    return { admitted: true, untested: Object.freeze({ kind: "untested", part, set: set.id, set_version: set.version,
-                                                       words: "ai.label.untested" }) };
-  return { admitted: false, untested: null };
-}
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
 export const NOW = "2026-10-10T09:00:00Z";
@@ -193,7 +178,7 @@ export function world({ gateOpen = true, testSet = TEST_SET, migrate = true } = 
     /* R78: `partAdmitted(part)`, run-rules R29 on what the record holds, with the deployment's test-instance fact. */
     partAdmitted(part) {
       note("partAdmitted", { part });
-      return partAdmittedOn(testSet, part, { verifications: w.verifications, testBars: w.testBars }, { testInstance: w.testInstance });
+      return runRules.partAdmittedOn(testSet, part, { verifications: w.verifications, testBars: w.testBars }, { testInstance: w.testInstance });
     },
   };
   const connections = {

@@ -2,7 +2,7 @@
    test-instance fact is ai-runs R78's, handed to the stand-in as `w.testInstance`; each with a negative control (K874). */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { CIVICSMITH_TEST_SET } from "../../../src/run-rules/index.mjs";
+import { CIVICSMITH_TEST_SET, untestedLabel } from "../../../src/run-rules/index.mjs";
 import { world, bar, VERIFIED_CHECK, Q, DOC2, CAP, CAP2, CALLER } from "./fixture.mjs";
 
 const label = (set = { id: "civicsmith", version: 1 }) =>
@@ -17,6 +17,7 @@ test("R16: on a test instance with no record and investigate's chain held, the g
     w.verifications = [VERIFIED_CHECK];
     w.testInstance = true;
     const L = label(set || undefined);
+    assert.deepEqual(L, { ...untestedLabel("explore") }, "run-rules R29's label for the explorer's use");
     assert.deepEqual(w.p.gate(), { open: true, why: null, false_alarm_rate: null, gold_set: null, untested: L });
     assert.deepEqual(w.calledAs("partAdmitted").slice(-2).map((a) => a.part), ["investigate", "explore"], "ai-runs R78, the one gate");
     const o = await w.openRun("group");
