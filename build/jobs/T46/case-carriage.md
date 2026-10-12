@@ -1,6 +1,6 @@
 # case-carriage (T46)
 
-**Status** · session_01F4upNJ1CzCkptPjBadjCPt · depth 2 · WORKING · handled B1
+**Status** · session_01F4upNJ1CzCkptPjBadjCPt · depth 2 · COMPLETE · handled B1
 
 ## Completion
 
