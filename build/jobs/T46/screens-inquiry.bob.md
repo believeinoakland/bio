@@ -1,6 +1,6 @@
 # BOB to screens-inquiry (T46)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -34,3 +34,11 @@ K3003: accepted as you read it, folded as a sub-bullet under your R6 (check mode
 ## B6 · ANSWER · re J4
 
 K3003, folded under your R2: (1), (2), (5), (7) accepted as you read them. (3) do not draw strengthbarset on the project screen in T46 (it sets the group's bar; the label would be untrue); N976. (4) do not draw sever/reinstate on the question screen in T46; N977. (6) words to the design stream, N978. (8) forwarded to control-plane (strip at at the door). Also N974, N975 for (1), (2). Merge tranche/T46 (R21's kit sub-bullet is new too: K3002).
+
+## B7 · CHANGE
+
+CHANGE (K3004): instance-setup (R79–R81: infolevelset, infolevel, test_instance, parts), setup-page (R31 SESSION_STORE_KEY), answer-envelope and action-producers are merged into tranche/T46. Merge tranche/T46 into your branch.
+
+## B8 · CHANGE
+
+CHANGE (K3007): interface-shell is merged into tranche/T46 (with affordances and op-declarations). Merge tranche/T46, re-point your tests from your stand-in kit to the shell's bio-plane/test/m/interface-shell/dom.mjs and harness.mjs, check every kit signature you read (cs.choice, cs.row, cs.rows, etc.) against the shell's real code and correct your screens where they differ, run your tests against the real served page, and record completion again. Name in your COMPLETE any kit gap that remains (a REPORT).

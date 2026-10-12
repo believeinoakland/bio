@@ -1,32 +1,27 @@
-/* affordances — ACT_HELP (R48; N726, DEC-174 (3) as amended (U117), DEC-99): the one table of what each act does, one
- * English explanation per op, keyed by op, held for translation (N669 keys the translations by this table's keys).
+/* affordances — ACT_HELP (R48, R53; N726, DEC-174 (3) as amended (U117), DEC-99): the one table of what each act does,
+ * one English explanation per op, keyed by op, held for translation (N669 keys the translations by this table's keys).
  *
  * GENERATED, never edited by hand, from the design stream's `docs/development/ux-substrate/screens/mock-acts.js` as
- * PR #25 merged it to `main` (DEC-191, DEC-192), 213 entries (T44-9, K2732; before it `tranche/T43`'s, DEC-189's
- * `4455c7fbe5` and DEC-190's `bbf92e344a`, 213, T43-17; PR #19's `3660c18803`, 215, T41-52; PR #15's `c848b56671`, 204,
- * T38-31; PR #14's `e08cd35ecb`, 203, T37-27); a later design text is a re-generation. DEC-189 re-keyed 37 acts from
- * `owed_<op>` (each already held under its op) and removed the four retired acts' texts; DEC-190 gave `transcribe` its
- * text and `owed_pagetranscribe` the assistant's page reading, both held under their ops (declared since T42); DEC-191
- * re-keyed the latter `pagetranscribe` (`act.pagetranscribe.does`), its text unchanged, so the table is byte for byte
- * as it was. Each text is the design's,
- * verbatim, in the design's order. Its keys are read as R48 reads them:
+ * PR #28 merged it to `main` (`3f40899950`; DEC-194 (2), DEC-197), 255 entries (T46-45, N937, K2960; before it PR #25's,
+ * 213, T44-9; `tranche/T43`'s, 213, T43-17; PR #19's `3660c18803`, 215, T41-52; PR #15's `c848b56671`, 204, T38-31;
+ * PR #14's `e08cd35ecb`, 203, T37-27); a later design text is a re-generation. PR #28 gave the 42 ops T45 serves their
+ * texts (DEC-194 (2)) and escalation's stop and reopening theirs. Each text is the design's, verbatim, in the design's
+ * order, but one (below). Its keys are read as R48 reads them:
  *   - a declared op is that op;
  *   - an alias (`op-grades`' OP_ALIASES, `op-declarations` R21's table) is held under its op, never as a second entry;
- *   - `owed_<op>` is held under `<op>` for the nineteen owed acts declared in T36 (`aikeepaway`, `openoriginal`,
- *     `openwithwarning`, `safeview`, `deepercheck`, `releasescanhold`, `securitytooladd`, `securitytooltest`,
- *     `securitytoolremove`, `archivelist`, `findin`, `groupdescriptiondraft`, `memberlanguageset`, `notedelete`,
- *     `noterevise`, `publishat`, `securitymap`, `startfrom`, `writinghelp`), the eight op-declarations declares in T37
- *     (T37-31, K2249: `subscriptionsignin`, `setpassword`, `obscuremark`, `translationgrant`, `translationdraft`,
- *     `translationadopt`, `translationconfirm`, `translationrevert`), the one it declares in T38 (T38-15, its R40:
- *     `obscuremarkwithdraw`) and the eleven it declares in T41 (its R41: `accountusesset`, `ailimitset`,
- *     `projectkeyset`, `projectsigninset`, `projectaccountswitch`, `projectaccountremove`, `projectkeynoticeseen`,
- *     `projectaikeepaway`, `exploreapprove`; its R42: `handlechange`, `handlecheck`), `pagetranscribe` (declared in T42),
- *     and under `owed_<op>` for the one still undeclared (`infolevelset`);
- *   - a retired op is not held (DEC-188 (8)'s `aiceilingset`, `aicopyceilingset`, `accountswitchset`, `groupswitchset`,
- *     whose texts DEC-189 removed from the file).
- * PR #14 withdrew `projectcreated`, `countask`, `registerproceeding`, `deadlinecompute` and `claimidentity` and dropped
- * `assistantset` (DEC-182 (1)–(3)); PR #19 re-worded `aikeepaway` (its `owed_` text) and `groupkeyset`. So all 213 of
- * its entries are held. */
+ *   - `owed_<op>` is held under `<op>` for every owed act declared since T36 (the nineteen of T36, the eight of T37,
+ *     `obscuremarkwithdraw` of T38, the eleven of T41, `pagetranscribe` of T42; still keyed `owed_` in the file:
+ *     `subscriptionsignin`, `projectaikeepaway`), for the three of T45 (R53: `actionscope`, `itemtakeup`,
+ *     `filingsecondapprove`) and for the two `op-declarations` declares in T46 (R53, K2999: `infolevelset`,
+ *     `escalationstoppursuing`, its R50, R51), so no `owed_` key is held;
+ *   - `escalationreopen` and `textcheck`, served in T46 and declared by `op-declarations` R51 (T46-51), are held under
+ *     their own names (R53; K2996 for `textcheck`, whose text the file gives);
+ *   - `handlechange`: the file's text still describes a change of handle, which `membership` R129 now refuses whatever
+ *     is asked (DEC-197), so it is not held; the help states the refusal, `membership`'s own `HANDLE_FIXED` row read by
+ *     reference (R53), and the file's text is named back to BOB for the design stream.
+ * A retired op is not held (DEC-188 (8)'s four, DEC-182's withdrawn texts; none is in the file). */
+import { MEMBERSHIP_CHECKS } from "../membership/index.mjs";
+
 export const ACT_HELP = Object.freeze({
   bootstrap: 'Installs Civicsmith in your group\'s own Cloudflare account under this short name. The short name is permanent: it appears in every address and beside every signature.',
   selftest: 'Runs Civicsmith\'s own checks on what was just installed, so you know it works before anyone joins.',
@@ -66,7 +61,7 @@ export const ACT_HELP = Object.freeze({
   setpassword: 'Changes your password. Every other session signed in as you ends, so anyone using an old one must sign in again with the new password.',
   signerregister: 'Registers the key you sign published cases with. Readers check a signature against it.',
   signerrevoke: 'Withdraws your signing key, for example if it was lost. Cases already signed keep a record that it was withdrawn.',
-  owed_infolevelset: 'Chooses how quickly explanations open: promptly, or guidance on a longer pause so less opens while you move. Nothing is ever hidden.',
+  infolevelset: 'Chooses how quickly explanations open: promptly, or guidance on a longer pause so less opens while you move. Nothing is ever hidden.',
   groupkeynoticeseen: 'Confirms you have read that your questions go to Anthropic under the group\'s account. Asked once, before your first question.',
   disclosureshown: 'Confirms you have read what connecting your own account means: your questions go to Anthropic under your own account and terms.',
   subscriptionsignin: 'Opens Anthropic\'s own sign-in page in a new tab. It gives you a code to paste here; Civicsmith never sees your password.',
@@ -136,10 +131,53 @@ export const ACT_HELP = Object.freeze({
   projectaccountremove: 'Removes the project\'s account. Members\' own accounts, then the group\'s key, serve in the project from then on.',
   projectkeynoticeseen: 'Records that you have read what the project\'s key means, before the first act it pays for.',
   projectaikeepaway: 'Keeps this project\'s material away from AI, for every use or the ones you choose, with a reason every member sees. It binds every account, whoever pays.',
+  projectscopeset: 'Makes this project a counsel matter, your own project, or neither, with your reason. A counsel matter\'s correspondence and dates are seen only by its members and never published; your own project is hidden and yours alone.',
+  projectapprovalset: 'Chooses which acts in this project need a second member\'s approval before they are sent: a kind of action, a tier, or anything addressed to the public. Your reason is kept with the setting.',
+  ruledraft: 'Drafts a rule of your group\'s own, a deadline or a legal fact, from the captured document that states it. It applies only after another member confirms it.',
+  ruleconfirm: 'Confirms a rule another member drafted, after checking it against its source. For a Tier 2 or Tier 3 matter you state your professional qualification.',
+  rulewithdraw: 'Withdraws one of your group\'s own rules, with your reason. It is kept, and no longer applied.',
+  ruleoffer: 'Gives you the rule, its source and its confirmation as one exact file, to send to whoever keeps your places\' shared rules.',
+  dutyfromresponse: 'Proposes an obligation from the body\'s own reply or report: a promise it made, or a response the report requires, quoting it. A member adopts it before it is tracked.',
+  dutiesarising: 'Lists the obligations adopted from these documents, and whether each is met.',
+  procedureguides: 'Shows the routes your places\' rules and your group give for this kind of action, each with the law or rule it cites. Legal information, not legal advice.',
+  standingendset: 'Changes when your standing question stops being asked again.',
+  declaredstakeset: 'Records, in your group\'s own words, what it stands to gain or lose. It is shown beside your group\'s name wherever its work is published.',
+  textcheck: 'Asks the assistant to point out sentences that read as a claim of breach, a policy position, an ask for your group, or naming staff. It never rewrites them; you decide.',
+  infractiondraft: 'Asks the assistant to draft a documentation of what happened from the record, labelled as its draft until you make it yours.',
+  bearingdraft: 'Asks the assistant to propose how the reply bears on each claim, labelled as its proposal until you lay it out yourself.',
+  publishcheck: 'Runs every publication check on this case and holds it, checked and unsigned, until it is signed. Nothing is published.',
+  casecheck: 'Shows whether this case\'s check still holds, and if not, why.',
+  advocacycheck: 'Checks your own text, sentence by sentence, against the record: supported, not supported, or contradicted. Only in your own project, and only you see it.',
+  curelink: 'Links a later act of the same office, found compliant, as what corrected an act found noncompliant. Undoing the link needs a reason.',
+  successrecord: 'Records a success in your own words: what changed and when, what shows it, figures computed from the record, and the order of events or a cause you can show.',
+  outcomecarry: 'Puts an outcome (a success, a correction by the office, or a harm addressed) into the case\'s next edition. It is published when that edition is signed.',
+  actionreceipt: 'Records that what you sent was received by them, or served on them, how and when. A deadline may count from it.',
+  actionscope: 'Makes this action confidential, or not, with your reason. A confidential action is seen inside the group and never published; the change applies to what is published from now on.',
+  actionpromise: 'Records a promise your group made to a person, such as an embargo or anonymity, or ends one.',
+  openitemswith: 'Lists your group\'s other open actions with the same office. It is information, never a block.',
+  actionreplybearing: 'Lays out the reply claim by claim: for each, whether it brings new evidence, disputes without evidence, or doesn\'t address it.',
+  actionbearingpropose: 'Proposes a claim-by-claim layout of the reply, labelled as a proposal and kept apart until a member lays it out.',
+  arosefrom: 'Records that a project or a matter in a plan arose from this reply.',
+  pressurerecord: 'Records pressure that arrived outside any action, such as a letter, post or call. A legal threat can carry a litigation hold.',
+  holdnoticesent: 'Records that you sent the litigation hold notice, with a copy or your account of how.',
+  jointsignatory: 'Records that a partner organisation approved the same text in its own copy. Their copy must match word for word.',
+  filingsecondapprove: 'Gives the second approval this project requires before sending. Only a member other than the first approver can give it.',
+  escalationstoppursuing: 'Stops pursuing this escalation, with your reason. It is never recorded as ended or as a success, and it can be reopened where it stopped.',
+  escalationreopen: 'Reopens an escalation your group stopped pursuing, at the stage where it stopped, with your reason.',
+  scenariosetaside: 'Sets this scenario aside, with your reason. It is kept whole, and can be restored.',
+  scenariorestore: 'Brings a set-aside scenario back, with your reason.',
+  planpause: 'Pauses this plan, with your reason and, if you like, a day to look at it again. What it set running carries on.',
+  planresume: 'Resumes a paused plan, with your reason.',
+  matteroutcomeset: 'Records, in your group\'s own words, the outcome it wants for this matter.',
+  itemtakeup: 'Takes this item\'s to-dos for yourself. Nobody assigns anybody; you choose.',
+  watchlink: 'Records that this plan set this watch running, so the plan knows to ask whether to keep it when it closes.',
+  watchanswer: 'Keeps this watch until a date you choose, or stops it now.',
+  followend: 'Sets or removes the date to stop following this.',
   pagetranscribe: 'Has the assistant read up to 8 pages of this document that Civicsmith\'s own reading couldn\'t make out. The account that pays for your acts here pays, within its limits. Its words arrive labelled as the assistant\'s reading and stay undetermined until a member checks a passage against the page; the page images stay as they are.',
   transcribe: 'Types the words of a page yourself, from its image. Your typing is labelled as yours, and a second member can check it against the page.',
   exploreapprove: 'Lets the assistant explore today, on this account, what it said is worth exploring. Without a yes today, it doesn\'t.',
-  handlechange: 'Changes the handle the record shows on your work. Members see your earlier handle beside it. Allowed until your work first appears in a published case; after that it is fixed.',
+  /* R53 (DEC-197; N934): the act refuses every change, so its help is membership R129's refusal, read from its row. */
+  handlechange: MEMBERSHIP_CHECKS.HANDLE_FIXED.translation,
   handlecheck: 'Checks, as you type, whether this handle can be used in the group: free, already taken, or using characters a handle can\'t have. It never says who has a handle.',
   obscuremarkwithdraw: 'Withdraws a mark on a photo, with your reason, for example when it covers what the finding shows. The withdrawal is recorded beside the mark; the public copy follows the marks that stand.',
   obscuremark: 'Marks anyone in a photo who is not part of a finding, and any number plate, so the copy a published case carries shows them obscured, labelled. The original stays inside the group.',
