@@ -79,6 +79,7 @@ It is the only module marked `legacy` in `modules.json`.
 
 ### L8
 - **T46-20 · case-carriage** · (N907) new reads `acceptedWorkLapsedSince`, `marksLapsedSince`, `sourcesLapsedSince(…, since)` over its append-only histories · text BOB's.
+- **T46-66 · publication** · (K2928; MEMBERSHIP #35 J2) test only: `t41.test.mjs` R76's handle-change arm re-pinned to membership R129 (every change refused `HANDLE_FIXED`, no case named); no requirement or capability changes, so N909's hold before a split is not engaged · text none.
 - **T46-21 · docket** · (N913) `DOCKET_OUTCOME_UNREADABLE` re-worded · words.json.
 - **T46-22 · public-read** · (N904) R34 reads a stored stake that record-core's strict `getSetting` answers `SETTING_UNREADABLE` (record-core R83) as undetermined, never as unset; (N906) R5 reworded to the lowercasing behaviour (callers unchanged: a 64-hex argument is lowercased, never refused); the sampling tests deepened (R13, R15, R19, R22, R27, R29, R30) · text BOB's.
 - **T46-23 · case-checker** · (N916) R24 states that a sentence with nothing checkable reads `supported` when it cites anything (behaviour kept); `filings` and `case-account` told (P5) · text BOB's.
@@ -88,7 +89,7 @@ It is the only module marked `legacy` in `modules.json`.
 - **T46-27 · case-authoring** · (N913) 5 rows re-worded (`MACHINE_CANNOT_CARRY_OUTCOME`, `BAD_CARRIED_OUTCOME`, `NO_SUCH_CARRIED_OUTCOME`, `CARRIED_OUTCOME_SETTLED`, `CARRY_NO_REASON`) and R70's `signing.openrequest.line`, `.noreply`, `.unread` sentences (and `.nowindow` where R70 has no window) read by key. Wording only: no capability, so N908's hold before a split is not engaged · words.json.
 - **T46-28 · case-check** · (N907) R2 latches a void check for the lapse causes through T46-20's reads (its clause's T46 mark struck) · text BOB's · after T46-20.
 
-**L8 merge order:** case-carriage, docket, public-read, case-checker, case-import, case-disclosures, case-account, case-authoring, case-check.
+**L8 merge order:** case-carriage, docket, publication (by `modules.json` order, checked at L8's START), public-read, case-checker, case-import, case-disclosures, case-account, case-authoring, case-check.
 
 ### L9
 - **T46-29 · conformance** · (N913) 9 rows re-worded, `FINDING_NOT_PUBLISHED` (C-113.7, pinned by answer-envelope: rule 5) among them · words.json.
@@ -136,7 +137,7 @@ It is the only module marked `legacy` in `modules.json`.
 
 **L11 merge order:** wizard-scripts, op-grades, affordances, action-producers, notice-producers, setup-words, instance-setup, setup-page (after instance-setup, doubt 14), op-declarations, answer-envelope, interface-assets, interface-shell, screens-settings, screens-intake, screens-daily, screens-inquiry, control-plane, installer, stewards, plane last.
 
-**Counts:** L1 2 · L2 4 · L3 1 · L4 1 · L5 3 · L6 11 · L8 9 · L9 12 · L10 2 · L11 20 (T46-61 conditional) = 65.
+**Counts:** L1 2 · L2 4 · L3 1 · L4 1 · L5 3 · L6 11 · L8 10 · L9 12 · L10 2 · L11 20 (T46-61 conditional) = 66.
 
 ### New modules: places (K617, K657, K1043)
 
