@@ -120,3 +120,7 @@ B4 done. I merged tranche/T46 (run-rules merged, K2954), and ai-runs' tests now 
 - Checks: format, architecture, coverage (48/48), ownership (9 files): 0 failures.
 
 Ready to merge, per the L6 order (after run-rules). Record updated.
+
+## J5 · COMPLETE
+
+B5 done. I merged tranche/T46 (steps and run-rules merged, K2955). ai-runs: 98/98 with no change needed. steps, run-rules, question-explorer and run-productions: 191 pass, 0 fail. format, architecture, coverage (48/48) and ownership (9 files): 0 failures. Ready to merge after run-rules in the L6 order.
