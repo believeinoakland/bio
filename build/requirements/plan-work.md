@@ -1,6 +1,6 @@
 # plan-work — requirements
 
-**Status** · New at T45 (K2781 (1)): a new product module after `action-plans` and before `monitoring`, built fresh (no ids move): `action-plans` keeps the plan itself, this module the work of managing it. R1–R12 from the L9 (b) draft §5.3 (R8 system-assembled only, its assistant arm left out of T45; R9 registered by `following` alone, reconciliation R13), R13 from reconciliation R18. Not yet met (T45).
+**Status** · New at T45 (K2781 (1)): a new product module after `action-plans` and before `monitoring`, built fresh (no ids move): `action-plans` keeps the plan itself, this module the work of managing it. R1–R12 from the L9 (b) draft §5.3 (R8 system-assembled only, its assistant arm left out of T45; R9 registered by `following` alone, reconciliation R13), R13 from reconciliation R18. Not yet met (T45). Last changed T46 (T46-40: R14 new, amending R8, the assistant's status report arm, op `statusreportassist`, N920; R15 new, amending R13, `matterPromiseDuties` answers `met_at`, N921; K2873, K2874, K2953); marked not yet met (T46).
 
 **Size (P6).** About 1,800–2,300 lines: per-matter outcome and state, the timeline, reviews, preparation items, comments, where it stands, status reports, taking up, the watch registration, the re-examination driver and the promise-duties read.
 
@@ -39,6 +39,10 @@ Terms. A **plan**, its matters (subjects), options, scenarios, phases and checkp
 
 **A matter's promise-duties** (reconciliation R18)
 - **R13** (T45; N855 (D6d); Actions D6d, D7; v0.2 rule 17; reconciliation R18) `matterPromiseDuties({plan, matter, viewer})` answers the adopted duties arising in the captures of the `received` entries of the plan's actions serving the matter, through `duties.dutiesArisingIn` (its R31), with its `all_met` and `partial`; `MATTER_NOT_OF_PLAN` for a matter the plan does not hold. `following` reads it for the once-only watch question. Writes nothing; never throws. Control: a matter with no promise answers `all_met: false` with no duties.
+
+**The assistant's status report; when the promises were met** (T46)
+- **R14** (T46; N920; amends R8; `build/plan/study-T46-assistant.md` §2) R8's assistant arm: `statusReportAssist({plan, nowMs, viewer})` (`op=statusreportassist`, an `ownread`, apart from `statusreportdraft`, R8's system list) gathers the items the assistant drafts a status report from: past sight (a plan the viewer may not see answers `NO_SUCH_PLAN`, absent alike) it answers R8's items, each with its source, exactly as `statusReportDraft` assembles them, and nothing else. This module answers no AI refusal, drafts nothing itself, calls no model and has no edge to `run-rules`: the plane's draft door gates the draft (its part, flag, account and limits; `plane` R40) and answers its refusals, `AI_PART_NOT_DEPLOYED` among them, then hands these items to the assistant. `statusReportSave`'s `from` records that the text began as the assistant's draft, labelled machine work (`record-grammar`'s `proposalLabel`); the report kept is the member's, never required, never published (R8). Control: a plan the viewer sees answers exactly R8's items; one she does not see answers `NO_SUCH_PLAN`. *(not yet met: T46)*
+- **R15** (T46; N921; amends R13; `following` R24) `matterPromiseDuties` also answers `met_at`: when `all_met`, the instant the last of those duties was read met (the latest of their occurrences' `met` or `met_late` readings, as `duties` answers their recorded transitions, its R9), else null; so `following` R24's `promises_met` reads one source here, never deriving it from `duties.occurrencesOf`. Control: two duties met on different days answer the later instant; with one unmet, null. *(not yet met: T46)*
 
 ## Private
 
