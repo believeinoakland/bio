@@ -1,6 +1,6 @@
 # publication (T46)
 
-**Status** · session_015HY6DrM4gxmJtgrtDXma3h · depth 2 · WORKING · handled B0
+**Status** · session_015HY6DrM4gxmJtgrtDXma3h · depth 2 · COMPLETE · handled B0
 
 ## Record
 
