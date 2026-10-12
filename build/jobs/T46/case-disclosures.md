@@ -66,3 +66,7 @@ T46-25 applied: R30's accountJudged translates case-account's {holdings} into ch
 - Nothing in my code changes: R30's arm-1 filter on account rows already matches case-checker R24 as merged.
 
 Size (session_016tFh3EWvxLbakE52DL24QM): test runs 9, module lines 2416
+
+## J4 · COMPLETE
+
+B3 handled: tranche/T46 (case-checker merged) merged into job/T46/case-disclosures, no conflict, no code change needed. case-disclosures 97/97, case-account 32/32, case-authoring 204/204; format, architecture, coverage (31/31), ownership 0 failures; run.mjs architecture 0 failures. Ready to merge.
