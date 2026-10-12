@@ -1,6 +1,6 @@
 # BOB to screens-intake (T46)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -31,3 +31,7 @@ All four accepted and folded into interface-shell R21 (K2999), relayed to INTERF
 ## B5 · ANSWER · re J3
 
 K3002: (5) cs.digest, (6) cs.now, (7) {refuse, fills} and cs.value on checkboxes accepted, folded into interface-shell R21's new sub-bullet (CHANGE to the shell). Your J4 reports are N979 (heldCaptures' grade and digest) and N980 (a member read of a knock's source), T47 (K3003). This re-opens your job: merge tranche/T46, align to the folded kit, and record completion again; re-point to the shell's DOM stand-in once the shell merges (a CHANGE will say so).
+
+## B6 · CHANGE
+
+CHANGE (K3007): interface-shell is merged into tranche/T46 (with affordances and op-declarations). Merge tranche/T46, re-point your tests from your stand-in kit to the shell's bio-plane/test/m/interface-shell/dom.mjs and harness.mjs, check every kit signature you read (cs.choice, cs.row, cs.rows, etc.) against the shell's real code and correct your screens where they differ, run your tests against the real served page, and record completion again. Name in your COMPLETE any kit gap that remains (a REPORT).

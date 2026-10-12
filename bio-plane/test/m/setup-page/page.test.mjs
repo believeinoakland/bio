@@ -26,6 +26,13 @@ function load({ hash = "", answer = () => ({ ok: true }), session = null } = {})
   };
   return { ...pageOver({ html: PAGE_HTML, hash, session, fetch }), calls };
 }
+/* R33: an invitation's or a join link's first view reads op=bootstrap for the test-instance notice; that read carries
+   nothing (no body, no query, no session), so R2's checks read every other call. */
+const beyondNotice = (calls) => {
+  for (const c of calls.filter((x) => x.op === "bootstrap"))
+    assert.deepEqual([c.method, c.body, c.query, c.token], ["GET", null, null, null], "the notice's read carries nothing");
+  return calls.filter((x) => x.op !== "bootstrap");
+};
 
 test("R1 pageOf returns the page with one group line from one read: recorded (name · slug · your group's Civicsmith, domain with its date only when dated), none, unread; every value escaped", () => {
   const rec = (result) => groupLine({ answered: true, result: { ok: true, ...result } });
@@ -55,7 +62,7 @@ test("R2 the page removes the fragment on load: #boot= pre-fills the one-time pa
   const live = load({ hash: "#invite=tok-1", answer: (op) => (op === "invitelook" ? { result: { ok: true, cover: "volunteer-7", role: "member", capabilities: ["read"] } } : {}) });
   await settle();
   assert.equal(live.replaced(), 1);
-  assert.deepEqual(live.calls.map((c) => [c.op, c.body]), [["invitelook", { invite: "tok-1" }]]);
+  assert.deepEqual(beyondNotice(live.calls).map((c) => [c.op, c.body]), [["invitelook", { invite: "tok-1" }]]);
   assert.match(live.el("#en-who").innerHTML, /volunteer-7/);
   assert.equal(live.el("#en-go").hidden, false);
   const dead = load({ hash: "#invite=tok-2", answer: () => ({ result: { ok: false } }) });
@@ -314,16 +321,16 @@ test("R2 #join= strips the fragment, asks the name the person chooses, and sends
   await settle();
   assert.equal(p.replaced(), 1);
   assert.equal(p.sandbox.location.hash, "");
-  assert.deepEqual(p.calls, [], "nothing is sent before the person names themselves");
+  assert.deepEqual(beyondNotice(p.calls), [], "nothing is sent before the person names themselves");
   assert.deepEqual([p.el("#en-join").hidden, p.el("#en-form").hidden], [false, true]);
   /* a blank name sends nothing */
   p.el("#jn-cover").value = "   ";
   await p.el("#jn-go").fire(); await settle();
-  assert.deepEqual(p.calls, []);
+  assert.deepEqual(beyondNotice(p.calls), []);
   assert.match(p.el("#jn-err").textContent, /what the group should call you/);
   p.el("#jn-cover").value = " Sam from the block ";
   await p.el("#jn-go").fire(); await settle();
-  assert.deepEqual(p.calls.map((c) => [c.op, c.method, c.body]), [
+  assert.deepEqual(beyondNotice(p.calls).map((c) => [c.op, c.method, c.body]), [
     ["joinlinkinvite", "POST", { link: "jl-secret/1", cover: "Sam from the block" }],
     ["invitelook", "POST", { invite: "inv-from-link" }]]);
   for (const c of p.calls) assert.equal(new URL(`https://copy.example/api/?op=${c.op}`).search.includes("jl-secret"), false);
@@ -340,7 +347,7 @@ test("R2 #join= refused: NO_SUCH_JOIN_LINK says the link is not live and JOIN_LI
     await p.el("#jn-go").fire(); await settle();
     assert.match(p.el("#en-lede").textContent, words, reason);
     assert.deepEqual([p.el("#en-go").hidden, p.el("#en-form").hidden, p.el("#en-join").hidden, p.el("#jn-go").hidden], [true, true, true, true], reason);
-    assert.deepEqual(p.calls.map((c) => c.op), ["joinlinkinvite"], reason);
+    assert.deepEqual(beyondNotice(p.calls).map((c) => c.op), ["joinlinkinvite"], reason);
   }
 });
 

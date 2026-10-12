@@ -1,6 +1,6 @@
 # BOB to plane (T46)
 
-**Read** · handled J1
+**Read** · handled J2
 
 ## B1 · START
 
@@ -24,3 +24,7 @@ Confirmed (K2996, folded in control-plane R57): the door hands your draft door `
 ## B3 · CHANGE
 
 CHANGE (K2999): your R40 gains two Store RPC methods beside `ask` and `draft`: `dispatchMemberRun(args)` (ai-runs' in the object addressed; the credential an in-process argument only) and `groupFields()` (public-read's, of the `bio` object). CONTROL-PLANE #31 calls both. Merge `tranche/T46` and build them.
+
+## B4 · CHANGE
+
+CHANGE (K3004): instance-setup is merged (its R79 adds routes infolevelset, infolevel): your door.test.mjs 'instance-setup's thirty-four routes' is now red (36 routes) until your job re-pins it and drives the two (INSTANCE-SETUP #21 J2). action-producers, setup-page and answer-envelope are merged too. Merge tranche/T46.

@@ -23,6 +23,7 @@ import { T36_RUNGS } from "../../../src/op-grades/t36.mjs";
 import { T38_RUNGS } from "../../../src/op-grades/t38.mjs";
 import { T41_RUNGS } from "../../../src/op-grades/t41.mjs";
 import { T45_RUNGS } from "../../../src/op-grades/t45.mjs";
+import { T46_RUNGS } from "../../../src/op-grades/t46.mjs";
 import { OP_ALIASES } from "../../../src/op-grades/t34.mjs";
 /* R39's vocabularies, by name. */
 const R39_KEYS = ["event_kinds", "dated_fact_kinds", "event_statuses", "participant_roles", "event_relation_kinds",
@@ -182,7 +183,7 @@ const FACT_KEYS = ["ok", "target", "object_type", "declared_type", "current_stat
 /* R51: an action's facts, with their sub-keys */
 const ACTION_KEYS = ["clock", "closed", "drafts", "entries", "escalation", "holds_in_place", "preparable",
   "request_for_comment"];
-test("R14 R51: the answer carries exactly R14's facts, with their sub-keys, and an action's own facts only on an action", async () => {
+test("R14 R51 R52: the answer carries exactly R14's facts, with their sub-keys, and an action's own facts only on an action", async () => {
   for (const id of [W.INFO, W.INQ, W.ACTN, W.PA]) {
     const f = await facts(id, { viewer: "member:iris", identity: "member:iris", author: "member:iris", by: "iris" });
     assert.deepEqual(Object.keys(f).sort(), FACT_KEYS, id);
@@ -194,8 +195,10 @@ test("R14 R51: the answer carries exactly R14's facts, with their sub-keys, and 
     if (id === W.ACTN) {
       assert.deepEqual(Object.keys(f.action).sort(), ACTION_KEYS);
       assert.deepEqual(Object.keys(f.action.entries).sort(), ["all", "received", "received_unmarked", "sent"]);
-      assert.deepEqual(Object.keys(f.action.clock).sort(), ["dated", "entries", "reminders_room"]);
-      assert.deepEqual(Object.keys(f.action.escalation).sort(), ["attachable", "openable"]);
+      /* R52: the standing dated proposals' keys, and escalation's stop, reopening and stage-7 purposes */
+      assert.deepEqual(Object.keys(f.action.clock).sort(), ["dated", "entries", "proposals", "reminders_room"]);
+      assert.deepEqual(Object.keys(f.action.escalation).sort(),
+        ["attach_purposes", "attachable", "openable", "reopenable", "stoppable"]);
     } else assert.equal(f.action, null, id);
   }
 });
@@ -780,7 +783,9 @@ test("R19: together the two drives reach every op RUNGS grades `reasoned`", () =
     /* op-grades R30 (T41): T41's eight, each at its owner's interface over its fixture, t41-backing.test.mjs */
     ...Object.keys(T41_RUNGS).filter((op) => T41_RUNGS[op] === "reasoned"),
     /* op-grades R32 (T45): T45's eleven, each at its owner's interface over its fixture, t45-backing.test.mjs */
-    ...Object.keys(T45_RUNGS).filter((op) => T45_RUNGS[op] === "reasoned")];
+    ...Object.keys(T45_RUNGS).filter((op) => T45_RUNGS[op] === "reasoned"),
+    /* op-grades R33 (T46): escalation's stop and reopening, at escalation's interface over its fixture, t46-backing.test.mjs */
+    ...Object.keys(T46_RUNGS).filter((op) => T46_RUNGS[op] === "reasoned")];
   /* R45: an alias is its op's handler (op-declarations R21, control-plane R55), so its op's drive is its backing */
   driven.push(...Object.keys(OP_ALIASES).filter((a) => driven.includes(OP_ALIASES[a])));
   /* R45: tasks' checkrecord (CHECK_NO_REASON, tasks R15): tasks is later in the order (P4), so this module's tests cannot
@@ -847,6 +852,12 @@ test("R20: MACHINE_REFUSALS equals, both ways, the acts whose method answers a m
     filingsent: () => POST(`op=filingsent&token=${ADM}`, { filing: "FIL-2026-0001", at: "2026-09-02", account: "a" }),
     counselpacket: () => POST(`op=counselpacket&token=${ADM}`, { action: ACTN, reason: "r" }),
     reminderset: () => POST(`op=reminderset&token=${ADM}&target=${E(ACTN)}`, { entry: 0 }),
+    /* R52 (T46): escalation's stop and reopening, on its route in the durable object (the control plane routes them at
+       T46-59), with a machine credential's author stamp; and clockadopt on its route there too */
+    escalationstoppursuing: () => DO(`escalationstoppursuing?viewer=admin&author=${E("token:member")}`,
+      { id: "ESC-2026-0001-x", reason: "r" }),
+    escalationreopen: () => DO(`escalationreopen?viewer=admin&author=${E("token:member")}`, { id: "ESC-2026-0001-x", reason: "r" }),
+    clockadopt: () => DO(`clockadopt?viewer=admin&author=${E("token:member")}`, { target: ACTN, proposal: "deadline@member:iris" }),
   };
   const ROSTER = ["projectinvite", "projectjoin", "projectleave", "projectremove", "projectowneradd",
     "projectownerremove", "projectownerrescue"];
