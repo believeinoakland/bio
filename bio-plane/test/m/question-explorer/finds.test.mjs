@@ -10,7 +10,7 @@ import { ACCEPTANCE_FORMS } from "../../../src/record-grammar/index.mjs";
 const gauge = (w, run, over = {}) =>
   w.p.find({ run, kind: "capture", ref: CAP, bearing: "supports", how: "the minutes record the vote", caller: CALLER, ...over });
 
-test("R4: each find (a capture, content row or connection the run located) is gauged supports, cuts_against or unclear against the question's live basis, answered {bearing, how, false_alarm_rate, gold_set, label: machine, enabled_by}", async () => {
+test("R4: each find (a capture, content row or connection the run located) is gauged supports, cuts_against or unclear against the question's live basis, answered {bearing, how, false_alarm_rate, gold_set, label: machine, enabled_by} (R16: untested null under the bar)", async () => {
   const w = await world().standard();
   w.project(PROJ, ["alice"], { owners: ["alice"], setting: "discoverable" });
   w.draw(Q, PROJ);
@@ -18,7 +18,7 @@ test("R4: each find (a capture, content row or connection the run located) is ga
   const o = await w.openRun("group");
   const a = gauge(w, o.run);
   assert.deepEqual(a.gauge, { bearing: "supports", how: "the minutes record the vote", false_alarm_rate: 0.1,
-                              gold_set: "civicsmith@1", label: "machine", enabled_by: "group" });
+                              gold_set: "civicsmith@1", label: "machine", enabled_by: "group", untested: null });
   assert.deepEqual(a.against, { currents: [{ project: PROJ, current: `reading of ${PROJ}` }], legs: 1 }, "the live basis it was gauged against");
   assert.equal(a.step, o.step, "found under the run's step");
   w.content("CNT-1", DOC2, CAP2);

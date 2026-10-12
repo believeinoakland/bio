@@ -3,7 +3,8 @@
    written to its requirements' Provides as `questionExplorerOf`'s deps take them (K61, K120): `steps` (R1 `stepCreate`,
    R5 `stepEnd`, R6 `stepDelete`, R9 `recordProduct`, R17 `findRecipients`), `ai-use` (R6 `exploreAllowed`, R9
    `exploreAsk`, R10 `estimate`), `ai-runs` (R9 `open` with T41's `step` and `origin`, R13 `close` answering R76's
-   actual cost, R29 `boundOf`/`consumeBound`, R75's test bar and group results), `run-rules` R19's deploy gate,
+   actual cost, R29 `boundOf`/`consumeBound`, R75's test bar and group results, R78's `partAdmitted` over `run-rules`
+   R29 with the deployment's test-instance fact `w.testInstance`), `run-rules` R19's deploy gate,
    `capture-requests` (its door, R49's refusal, R55's `step`), `connections` (R4 `read`, R54 `asserted`), `retrieval`
    (R23 `contentAxis`, R69 `zone`), `inquiry` (R43 `subjectEntityOf`), `leg-earning` (R4 `basisFor`, R13
    `projectsDrawingOnPaged`) and `basis-versions` (`currentOf`). Every stand-in records the calls made to it. Bundles,
@@ -20,6 +21,7 @@ import { aiUseOf } from "../../../src/ai-use/index.mjs";
 import { runProductionsOf } from "../../../src/run-productions/index.mjs";
 import { captureRequestsOf } from "../../../src/capture-requests/index.mjs";
 import { questionExplorerOf } from "../../../src/question-explorer/index.mjs";
+import * as runRules from "../../../src/run-rules/index.mjs";
 
 export const sha = (s) => createHash("sha256").update(String(s)).digest("hex");
 /* A test set with one matter (Civicsmith's own holds none yet, so it opens nothing), and the records that hold its bar. */
@@ -27,6 +29,21 @@ export const TEST_SET = Object.freeze({ id: "civicsmith", version: 1, matters: [
 export const bar = (part, over = {}) => ({ part, set: "civicsmith", set_version: 1, false_alarm_rate: 0.1, passed: true,
                                             graded_by: "harness", at: "2026-10-01T00:00:00Z", ...over });
 export const VERIFIED_CHECK = { mode: "check", run: "RUN-0", verified_by: "member:dana", at: "2026-10-01T00:00:00Z", evidence: "seen" };
+/* run-rules R29's `partAdmittedOn`, as ai-runs R78 asks it. Until run-rules' T46 job merges into this branch, the rule
+   R29 states is computed here from R19's parts: the bar held (`partDeployableOn`), admitted unlabelled; else, for a part
+   in TEST_BAR_PARTS whose chain is held (`deployable` for a mode of the order, nothing more for any other part) and
+   `testInstance` exactly true, admitted with `untestedLabel`'s shape; else not admitted. Dropped at the merge
+   (QUESTION-EXPLORER #3's record). */
+export function partAdmittedOn(set, part, held, { testInstance } = {}) {
+  if (typeof runRules.partAdmittedOn === "function") return runRules.partAdmittedOn(set, part, held, { testInstance });
+  if (runRules.partDeployableOn(set, part, held) === true) return { admitted: true, untested: null };
+  const chain = runRules.TEST_BAR_PARTS.includes(part)
+    && (!runRules.DEPLOYMENT_SEQUENCE.order.includes(part) || runRules.deployable(part, held.verifications || []) === true);
+  if (testInstance === true && chain)
+    return { admitted: true, untested: Object.freeze({ kind: "untested", part, set: set.id, set_version: set.version,
+                                                       words: "ai.label.untested" }) };
+  return { admitted: false, untested: null };
+}
 const bind = (v) => (v === undefined ? null : typeof v === "boolean" ? (v ? 1 : 0) : v);
 
 export const NOW = "2026-10-10T09:00:00Z";
@@ -114,6 +131,8 @@ export function world({ gateOpen = true, testSet = TEST_SET, migrate = true } = 
     /* What the record holds for the deploy gate (run-rules R19, R75's records) over a test set with one matter. */
     testBars: [bar("investigate"), bar("explore")], verifications: [VERIFIED_CHECK],
     groupResults: [], openRefuse: null,
+    /* ai-runs R78's `testInstance()`: the deployment's fact, false unless a test sets it. */
+    testInstance: false,
     row: (q, ...a) => [...st.sql.exec(q, ...a)][0] ?? null,
     rows: (q, ...a) => [...st.sql.exec(q, ...a)],
     count: (t) => [...st.sql.exec(`SELECT COUNT(*) AS n FROM ${t}`)][0].n,
@@ -171,6 +190,11 @@ export function world({ gateOpen = true, testSet = TEST_SET, migrate = true } = 
       return null;
     },
     groupTestResults(a) { note("groupTestResults", a); return { ok: true, part: a.part, results: w.groupResults }; },
+    /* R78: `partAdmitted(part)`, run-rules R29 on what the record holds, with the deployment's test-instance fact. */
+    partAdmitted(part) {
+      note("partAdmitted", { part });
+      return partAdmittedOn(testSet, part, { verifications: w.verifications, testBars: w.testBars }, { testInstance: w.testInstance });
+    },
   };
   const connections = {
     edgeSevered: () => false,

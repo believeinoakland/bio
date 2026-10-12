@@ -46,7 +46,9 @@ CREATE INDEX IF NOT EXISTS explore_refusals_run ON explore_refusals(run);
 -- R4, R5: a find, gauged. kind capture | content | connection, or page (an address the record does not hold, named to
 -- the members, R3). bundle_id and bundle_b are the documents it rests on (sight, purge). bearing and how are the run's
 -- gauge; false_alarm_rate and gold_set the gate's record it was gauged under (R7); against the live basis it was
--- gauged against (each drawing project's CURRENT version, or the question's projected legs). No score column.
+-- gauged against (each drawing project's CURRENT version, or the question's projected legs). untested the label the
+-- gate opened under on the test-instance exception (R16, run-rules R29's untestedLabel, canonical JSON), recorded
+-- at the find and never removed by a later bar; null when the bar was held. No score column.
 CREATE TABLE IF NOT EXISTS explore_finds (
   find             TEXT PRIMARY KEY,
   run              TEXT NOT NULL,
@@ -60,6 +62,7 @@ CREATE TABLE IF NOT EXISTS explore_finds (
   false_alarm_rate REAL,
   gold_set         TEXT,
   against          TEXT,
+  untested         TEXT,
   owner            TEXT NOT NULL,
   at               TEXT NOT NULL,
   UNIQUE (run, kind, ref)
@@ -105,4 +108,7 @@ export const QUESTION_EXPLORER_TABLES = Object.freeze([
 export function migrateQuestionExplorer(sql) {
   const bare = QUESTION_EXPLORER_SCHEMA.split("\n").filter((l) => !l.trim().startsWith("--")).join("\n");
   for (const stmt of bare.split(";")) if (stmt.trim()) sql.exec(stmt);
+  /* R16 (T46): a store made before the column gains it. */
+  const cols = [...sql.exec(`PRAGMA table_info(explore_finds)`)].map((c) => c.name);
+  if (!cols.includes("untested")) sql.exec(`ALTER TABLE explore_finds ADD COLUMN untested TEXT`);
 }
