@@ -211,3 +211,23 @@ test("R32: affordances R12's totality holds over a stand-in of op-declarations R
   assert.deepEqual([left.unranked, left.unpublished], [["plannew"], ["plannew"]]);
   assert.deepEqual(unaccountedOver(STAND_IN.map((r) => r.op === "curelink" ? { ...r, mutating: false } : r)).stale, ["curelink"]);
 });
+
+/* ---- R32 (T46; K2881, K2996): the five ops op-declarations declared after the T45 merge, each by name ------------- */
+test("R32 (K2881, K2996): grouprules and advocacychecks reads, advocacycheck `undetermined` and project-directed, "
+   + "infractiondraft and bearingdraft drafts with no rung; none an act or a machine refusal; every one a phone act", () => {
+  assert.equal(gradeOf("advocacycheck"), "undetermined");
+  assert.match(RUNG_ABSENT.advocacycheck.is, /\(case-account R13\)$/);
+  assert.match(NON_ACTS.advocacycheck, /^project-directed: keyed by the member's own hidden project/);
+  for (const op of ["grouprules", "advocacychecks"]) { assert.ok(isRead(op), op); assert.equal(gradeOf(op), null, op); }
+  for (const op of ["infractiondraft", "bearingdraft"]) {
+    assert.ok(NON_ACTS[op].startsWith("draft: ") && /writes nothing of the record/.test(NON_ACTS[op]), op);
+    assert.equal(gradeOf(op), null, op);
+  }
+  const FIVE = ["grouprules", "advocacycheck", "advocacychecks", "infractiondraft", "bearingdraft"];
+  assert.deepEqual(FIVE.filter((op) => Object.hasOwn(MACHINE_REFUSALS, op)), []);
+  assert.deepEqual(FIVE.map(phoneOf), [true, true, true, true, true]);
+  /* negative controls: the check is no read and no draft; a draft graded as a write would be seen */
+  assert.ok(!isRead("advocacycheck") && !NON_ACTS.advocacycheck.startsWith("draft: "));
+  assert.notEqual(gradeOf("advocacycheck"), "caller-owned");
+  assert.ok(!Object.hasOwn(RUNGS, "infractiondraft") && !Object.hasOwn(RUNG_ABSENT, "bearingdraft"));
+});
