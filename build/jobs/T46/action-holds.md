@@ -36,6 +36,11 @@ Size (session_01KoRoRu2gZWmcRcS7HdgM6n): test runs 7, module lines 1223
 
 Size (session_01KoRoRu2gZWmcRcS7HdgM6n): test runs 10, module lines 1217
 
+
+**After B3** (CHANGE, K2984: `action-grammar`, `filing-templates`, `actions`, `conformance` and `consequences` merged; `tranche/T46` merged into this branch, fab21527cc). No red opened: `action-holds` tests 37, pass 37, fail 0; `actions`, `filings`, `action-producers` tests 249, pass 249, fail 0. `checks/format.mjs`, `architecture.mjs action-holds`, `coverage.mjs action-holds` (15 of 15) and `ownership.mjs action-holds tranche/T46`: 0 failures.
+
+Size (session_01KoRoRu2gZWmcRcS7HdgM6n): test runs 12, module lines 1219
+
 ## J1 · REPORT
 
 A flaw R14 opens in another module (`action-producers`; also the `litigation-hold` kind texts in `queue` and `queuestate`), against its R5/R11:
