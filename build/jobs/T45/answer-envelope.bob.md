@@ -15,3 +15,7 @@ Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, qu
 (K2874) following's rows C-137.21–.25 and monitoring's C-18.19 are in existing families: no new file to list.
 
 (K2878) At this START: installer (T45-46) does not run in T45 (the stewards' contact address is Bob's to name and is not yet named, K2799); T45-46 moves to T46. The L11 merge order is therefore: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, stewards, answer-envelope, plane last.
+
+## B2 · CHANGE
+
+K2880 (answers J1): your edges are added: modules.json gives answer-envelope uses case-account, case-check, action-holds, action-replies, plan-work and action-producers (all earlier in the order), and your requirements' Uses gains the T45 line. R7 gains a T45 sentence: a row moved to another family keeps its code and words under its new number, its old number held by no code (C-117.17/.18 → C-149.6/.7); your changed.moved key matches it. Merge tranche/T45 into your branch. action-producers' C-152 file comes by CHANGE when it merges.
