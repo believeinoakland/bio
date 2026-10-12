@@ -21,3 +21,7 @@
 - `checks/run.mjs`: format 0, architecture 0 (3057 files), channels 0; coverage 3 failures, none odf-reader's: connection-grammar R21, jurisdictions R88, record-grammar R61 R62 (the T47 marks rule 5 (1) accepts until their merges).
 
 Size (session_01Jn5rD2YHo9oPrridu4wiX2): test runs 3, module lines 2412
+
+## J1 · COMPLETE
+
+T47-5 applied: R47 in Provides, tested at the interface (active.test.mjs drives the public entries file-safety calls; one test added for structure()/text() given parts() output). Flaw fixed: dead walkTextBody state removed, no behaviour change. odf-reader 70/70; format-registry + file-safety 97/97; format, architecture, coverage (47/47), ownership 0 failures; run.mjs architecture 0 (coverage reds only other L1 modules' T47 ids). Nothing deferred, nothing found elsewhere. Record: build/jobs/T47/odf-reader.md on job/T47/odf-reader.
