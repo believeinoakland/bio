@@ -53,3 +53,16 @@ REPORT (found in other modules while building R51; none is mine to change).
 4. **escalation R9**: `ALREADY_ATTACHED` is not limited to the viewer's sight, while `escalationRead(...).actions` is; an action attached to an escalation the viewer cannot see would be offered `escalationattach` and refused. Also, stage 7's counterparty conditions have no read, so I offer the attachment at stages 2 and 5 only.
 5. **action-replies R2**: `aroseFromLink` asks the *author's* sight of `{project}` (NO_SUCH_PROJECT), and refuses `AROSE_FROM_REFUSED`, a code R2 does not list.
 6. **Accepted red at my merge until T45-45 (op-declarations)**: plane.test.mjs "R17: every act the catalogue publishes carries a mode" — the ops not yet declared (`holdnoticeprepare`, `holdnoticesent`, `actionreceipt`, `actionscope`, `actionpromise`, `actionreplybearing`, `actionbearingpropose`, `arosefrom`, `clockstate`, `itemtakeup`) have no mode until they are declared.
+
+## J3 · COMPLETE
+
+COMPLETE (T45-39). Branch `job/T45/affordances`, tranche/T45 merged through B5 (op-grades, op-declarations).
+- **N891**: the copies of op-grades' table content dropped from catalogue, t31, t33, t34 (t33's merged-table identity test removed); backing, the machine set and the totality kept.
+- **R51**: 21 acts on an action in `ACTS`, R14's `action` facts, 13 vocabularies by reference (K2885). Deferred: clockadopt (N925), the three vocabularies with no owner, the promotion fields, escalation stop/reopen, attach at stage 7.
+- **Rule 4 (11)** red cleared (filing-templates/local-facts; `ruleoffer` a read per op-grades R32); rule 4 (12)'s affordances t33 reds cleared; K2857 consequences, K2874 following pinned.
+- `unaccounted` (R12): an alias of a published act is published with it (`filingrecordsent` after `filingsent` became an act). `publishcheck` irreversible per K2839 in R19's test.
+- **Edges my code added** (all already in modules.json uses): actions, action-holds, escalation, conformance, filings, action-clocks (facts.mjs); action-plans, plan-work, consequences, project-roster (affordances.mjs). Test-only fixture reads: action-holds, escalation, action-plans, actions, project-roster, consequences, conformance, local-facts fixtures (t45, t45-backing, backing).
+- **New test files** (inside my tests path): `t45.test.mjs`, `t45-backing.test.mjs`.
+- Tests: 234/234 pass; format, architecture, coverage (35/35), ownership: 0 failures. R51's `*(not yet met: T45)*` is yours to clear.
+- Reported in J2 (K2890, N929–N932).
+Size (session_01CRGRQChAdRhfopqhzspuKx): test runs 14, module lines 2575.
