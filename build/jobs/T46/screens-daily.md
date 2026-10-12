@@ -68,3 +68,20 @@ B5 (K3002) applied after merging tranche/T46: cs.now() is the clock throughout; 
 ## J6 · COMPLETE · re B6
 
 B6 (K3004): tranche/T46 merged (145c1cfcd8). None of the merged services is one these screens call directly or change; nothing to change. Re-run: 42/42; with paths entered: architecture 0, coverage 7/7, ownership 0; format 0.
+
+## Completion of B7 (CHANGE, K3007: interface-shell merged)
+
+`tranche/T46` merged (3eb60f7750). Tests re-pointed: `kit.mjs` (my stand-in) is removed; `page.mjs` boots the real page `interfacePage(SCREENS)` over the shell's `harness.mjs` and `dom.mjs`, and every test now drives the served page (the shell's kit, gate, friction, refusals and re-reads). Checked each kit signature I use against `browser.mjs` and corrected the screens:
+- `cs.state`: the four-argument form I used dropped its options (the shell reads `(name, view, inner)` or `(name, inner, opts)`): now `cs.state(name, inner, {empty})`, so each screen's own empty words are drawn.
+- Dialogs: the shell opens an act's `dialog` only for a terminal or signed act (R11); none of mine is. Every act that asks the member's words (queue: forward, snooze, adopt's why, reminder date, question from a hint, project key; finder: Count; find-in: each recording act's fields) now draws its fields in place, with the act, in a native disclosure (`<details>`, no script), read by `send` through `cs.value`; an empty required field answers `{refuse}` in the screen's words. `adoptversion` and `standarddeclare` name their field as `reasonField` (R11, DEC-88).
+- Links I draw myself (the queue's sorts, "Open", Home's "Your queue (n)") carry `data-nav`, so the shell routes them with history.
+- `cs.title(undefined)` draws the screen's own name; a project, document or question is the kit's reference (`ref`), a link once its screen is registered beside these (screens-inquiry), its card meanwhile.
+- The queue's three-kinds note is decided once per visit and kept in page memory, so redraws keep it (found by the real page's repeated draws).
+- Finder: the "no document holds all the words" note is drawn when the search reads empty (found by the real page).
+New own row: `screen.queue.fieldfirst`. Files: `bio-plane/test/m/screens-daily/kit.mjs` removed, `page.mjs` added; the rest as J4.
+
+Tests: 45/45 over the served page (the words check proven by a planted raw string failing it). With paths entered locally: architecture 0, coverage 7/7, ownership 0; format 0.
+
+**Kit gaps remaining (REPORT J7):** `ask`'s stream; reads weighed as reasoned; `frontier` in no session set. Each is described in J7.
+
+Size (session_01RJBRXS3sxyhSh6P5LL6g9S): test runs 27, module lines 1135 (tests 693)

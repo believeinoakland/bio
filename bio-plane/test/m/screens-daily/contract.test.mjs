@@ -1,5 +1,5 @@
-/* screens-daily against interface-shell R21's screen contract and R7's common rules, at the module's interface:
-   `SCREENS` and `SCREEN_WORDS`. The registry and the word list are read from git at 3f40899950 (setup-words R5,
+/* screens-daily against interface-shell R21's screen contract and R7's common rules, at the module's interface
+   (`SCREENS`, `SCREEN_WORDS`) and on the real served page (interface-shell's harness). The registry and the word list are read from git at 3f40899950 (setup-words R5,
    wizard-scripts R29), so a later edit of the working copy does not move them. */
 import test from "node:test";
 import assert from "node:assert/strict";
@@ -10,7 +10,9 @@ import { dirname, join } from "node:path";
 import { SCREENS, SCREEN_WORDS } from "../../../src/screens-daily/index.mjs";
 import { OPS, OP_ALIASES } from "../../../src/op-declarations/index.mjs";
 import { WORD_ROWS } from "../../../src/setup-words/index.mjs";
-import { kit, viewOf, keys } from "./kit.mjs";
+import { checkScreens, interfacePage } from "../../../src/interface-shell/index.mjs";
+import { nestedTips, accessibleName, controls } from "../interface-shell/harness.mjs";
+import { open, main, text, ops, ok, refused, textNodes, wordChecker, MEMBER } from "./page.mjs";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "../../../..");
 const COMMIT = "3f40899950";
@@ -78,41 +80,58 @@ test("R7 (interface-shell R5): every word a screen lists is a WORD_ROWS key or i
   }
 });
 
-// The views each screen is drawn in for the self-containment and word checks below.
-const VIEWS = {
-  home: viewOf({ data: { group: { display_name: "Lakeshore Tenants", description: "Rents and leases." }, queue: { items: [], item_count: 0 }, projects: { hits: [] }, directory: { projects: [] } } }),
-  queue: viewOf({ subject: "due", data: { queue: { items: [{ id: "TSK-1", class: "OBLIGATION", kind: "x", summary: "s", options: [] }], item_count: 1 } } }),
-  finder: viewOf({ subject: "lease", data: { search: { hits: [{ bundle_id: "INF-1", title: "Lease" }], total: 1 } } }),
-  "find-in": viewOf({ subject: "PROJ-1", data: { questions: { hits: [] } } }),
-  answers: viewOf({ reachable: true, ui: { answer: { summary: { text: "x" }, sentences: [], holdings: [], looks: [] } } }),
+// Each screen drawn with data, as the harness's plane answers its reads.
+const DATA_PLANE = {
+  groupidentity: ok({ ok: true, group: "lakeshore", display_name: "Lakeshore Tenants", description: "Rents." }),
+  queue: ok({ items: [{ id: "TSK-1", class: "OBLIGATION", kind: "x", summary: "Vouch for photos", options: [], disposition: { instead: "taskresolve" },
+    case: { ancestors: [{ id: "PROJ-1", type: "project", title: "Pothole repairs" }] }, due: "2026-10-20" }], item_count: 1 }),
+  search: ok({ total: 1, hits: [{ bundle_id: "PROJ-1", title: "Pothole repairs", current_state: "forming" }] }),
+  projectdirectory: ok({ projects: [{ id: "PROJ-9", name: "Library hours" }] }),
 };
+const ROUTES = { home: "/app", queue: "/app/queue", finder: "/app/finder/pothole", "find-in": "/app/find-in/PROJ-1", answers: "/app/answers" };
+const DATA = ["River Town", "Lakeshore Tenants", "Rents.", "Vouch for photos", "Pothole repairs", "Library hours", "PROJ-1", "pothole", "20 October 2026", "mai", "M"];
 
-test("R7 (interface-shell R21 (1)): every function is self-contained: rebuilt from its own text with nothing in scope, it draws the same", () => {
-  const rebuild = (fn) => new Function(`return (${fn.toString()});`)();
-  for (const s of SCREENS) {
-    const view = VIEWS[s.id];
-    const a = kit(), b = kit();
-    const v1 = structuredClone({ ...view, data: view.data });
-    assert.equal(rebuild(s.render)(b.cs, view), a.render(s, view), s.id);
-    assert.deepEqual(Object.keys(rebuild(s.reads)(view)), Object.keys(s.reads(v1)), s.id);
-    for (const act of s.acts) {
-      rebuild(act.send);
-      if (act.done) rebuild(act.done);
-    }
-    if (s.place) rebuild(s.place);
+test("R1–R7 (interface-shell R21): the shell accepts the five screens and serves them: each route draws its screen under its path", async () => {
+  assert.equal(checkScreens(SCREENS), true);
+  assert.match(interfacePage(SCREENS), /<script nonce="__CSP_NONCE__">/);
+  for (const [id, path] of Object.entries(ROUTES)) {
+    const p = await open(path, DATA_PLANE);
+    assert.ok(main(p).querySelector("nav.cs-crumbs [aria-current]"), `${id} under its path (interface-shell R8)`);
+    assert.ok(main(p).querySelector("h1"), `${id} has its heading`);
   }
 });
 
-test("R7 (interface-shell R5, R12): every key drawn is a listed word, and an act the gate refuses is absent, never greyed", () => {
-  for (const s of SCREENS) {
-    const k = kit();
-    const html = k.render(s, VIEWS[s.id]);
-    assert.deepEqual(k.log.missing, [], s.id);
-    const listed = new Set(s.words.map((w) => (typeof w === "string" ? w : w[0])));
-    for (const key of keys(html)) assert.ok(listed.has(key), `${s.id} draws ${key}, which it lists`);
-    const none = kit({ allow: () => false });
-    const shut = none.render(s, VIEWS[s.id]);
-    assert.doesNotMatch(shut, /data-act=/, `${s.id}: no act drawn when the gate refuses every op`);
+test("R7 (interface-shell R21 (1)): every function is self-contained: the page runs each from its own text, with nothing else in scope", async () => {
+  // The page holds each screen's functions by their source (`toSource`), run in the page's scope, where no import of this
+  // module exists: a function reaching outside its parameters and `cs` would throw there, and the screen not draw.
+  for (const [id, path] of Object.entries(ROUTES)) {
+    const p = await open(path, DATA_PLANE);
+    assert.ok(text(p).length > 20, `${id} drew from its own source`);
+  }
+});
+
+test("R7 (interface-shell R5): every text node each screen draws, with data, empty and failed, is a word (filled) or the record's own data", async () => {
+  const isWord = wordChecker(DATA);
+  const planes = {
+    data: DATA_PLANE,
+    empty: { groupidentity: ok({ ok: true, display_name: "Lakeshore Tenants" }), queue: ok({ items: [] }), search: ok({ hits: [] }), projectdirectory: ok({ projects: [] }) },
+    failed: { queue: refused("STORE_DID_NOT_ANSWER", null, 502), search: refused("STORE_DID_NOT_ANSWER", null, 502), projectdirectory: refused("STORE_DID_NOT_ANSWER", null, 502) },
+  };
+  for (const [state, plane] of Object.entries(planes)) for (const [id, path] of Object.entries(ROUTES)) {
+    const p = await open(path, plane);
+    for (const t of textNodes(main(p)).map((n) => n.textContent.trim()).filter((t) => t && !/^[·:,.()›→\s]+$/.test(t)))
+      assert.ok(isWord(t), `${id} (${state}) draws "${t}", which is no word`);
+  }
+});
+
+test("R7 (interface-shell R12, R15, R22): an act the gate refuses is absent, never greyed; no explanation sits inside another; every control has a name and every field a label", async () => {
+  for (const [id, path] of Object.entries(ROUTES)) {
+    const p = await open(path, DATA_PLANE);
+    assert.equal(main(p).querySelectorAll("button[disabled]").length, 0, id);
+    assert.deepEqual(nestedTips(main(p)).map((e) => e.outerHTML.slice(0, 80)), [], `${id}: no explanation inside another`);
+    for (const c of controls(main(p))) assert.ok(accessibleName(c, p.doc), `${id}: ${c.outerHTML.slice(0, 80)} has a name`);
+    const shut = await open(path, { ...DATA_PLANE, whoami: ok({ ...MEMBER, capabilities: [] }) });
+    for (const op of ops(shut)) assert.ok(!["promote", "proposedispose", "adoptversion", "keepversion", "calculationcreate", "cite", "standarddeclare", "recordfact"].includes(op), `${id}: ${op} needs contribute`);
   }
 });
 

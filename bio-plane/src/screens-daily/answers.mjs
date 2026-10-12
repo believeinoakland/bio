@@ -70,7 +70,7 @@ export const answers = Object.freeze({
           + '<p class="mk-note">' + cs.w("screen.answers.legal") + "</p>" + untested
           + '<span class="by">' + cs.w("screen.answers.machine") + "</span></div>";
       }
-      return cs.title(cs.w("screen.answers.name"), {}) + '<p class="mk-sub">' + cs.w("screen.answers.sub") + "</p>"
+      return cs.title(undefined, {}) + '<p class="mk-sub">' + cs.w("screen.answers.sub") + "</p>"
         + cs.field("answers-q", "screen.answers.question", { area: true, rec: true, value: ui.q || "" })
         + '<div class="mk-acts">' + cs.act("ask", { label: "act.ruleanswer.label.answers", tone: "primary" })
         + cs.act("search", { label: "act.search.label.answers" }) + "</div>"
@@ -78,7 +78,7 @@ export const answers = Object.freeze({
     }
 
     // Not reachable: "Find and count".
-    const results = view.data.search ? cs.state("search", view, function (s) {
+    const results = view.data.search ? cs.state("search", function (s) {
       return cs.sheet((Array.isArray(s.hits) ? s.hits : []).map(function (h) {
         const id = String(h.bundle_id);
         return cs.row(cs.mark("origin", "search"), cs.ref("document", id, h.title || id, []) + (h.snippet ? '<span class="meta">' + cs.esc(String(h.snippet)) + "</span>" : ""), "", "");

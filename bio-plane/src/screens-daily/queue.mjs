@@ -38,6 +38,22 @@ export const queue = Object.freeze({
     // The screens T46 builds, by the kind of subject an item names (R3's "Open").
     const OPENS = { project: "project", inquiry: "question", question: "question", bundle: "document", information: "document", capture: "document", document: "document" };
     const sort = SORTS.indexOf(String(view.subject || "")) >= 0 ? String(view.subject) : "case";
+    // The fields an act needs from the member, drawn in place in a disclosure with the act (interface-shell R11's dialog is
+    // a terminal or signed act's; these are not), each read by the act's `send` through `cs.value`.
+    const FIELDS = {
+      taskforward: [["to", "screen.queue.forward.to"]], adoptversion: [["why", "screen.queue.why"]],
+      reminderanswer: [["on", "screen.queue.reminder.on"]], promote: [["question", "screen.queue.question"]],
+      projectkeyset: [["key", "screen.queue.projectkey"]], queuesnooze: [["until", "screen.queue.snooze.until"]],
+    };
+    let seq = 0;
+    const actOf = function (op, data) {
+      const fields = FIELDS[op];
+      if (!fields) return cs.act(op, { label: "act." + op + ".label.queue", data: data });
+      const f = "qa-" + (seq++);
+      const button = cs.act(op, { label: "act." + op + ".label.queue", data: Object.assign({}, data, { f: f }) });
+      return button ? '<details class="mk-actd"><summary>' + cs.w("act." + op + ".label.queue") + "</summary>"
+        + fields.map(function (x) { return cs.field(f + "-" + x[0], x[1], {}); }).join("") + button + "</details>" : "";
+    };
 
     const caseOf = function (it) {
       const c = it.case || {};
@@ -95,10 +111,10 @@ export const queue = Object.freeze({
         finding: d.finding ? String(d.finding) : "",
         project: d.project ? String(d.project) : (Array.isArray(d.projects) && d.projects[0] ? String(d.projects[0]) : (cas ? String(cas.id) : "")),
       };
-      const drawn = ops.map(function (op) { return cs.act(op, { label: "act." + op + ".label.queue", data: data }); }).join("");
+      const drawn = ops.map(function (op) { return actOf(op, data); }).join("");
       const screen = it.subject && OPENS[it.subject.kind];
       const open = other && screen && it.subject.id
-        ? '<a class="cs-btn" data-tone="quiet" href="/app/' + screen + "/" + encodeURIComponent(String(it.subject.id)) + '">' + cs.w("screen.queue.open") + "</a>"
+        ? '<a class="cs-btn" data-tone="quiet" data-nav href="/app/' + screen + "/" + encodeURIComponent(String(it.subject.id)) + '">' + cs.w("screen.queue.open") + "</a>"
         : "";
       return drawn + open;
     };
@@ -114,24 +130,28 @@ export const queue = Object.freeze({
         it.due ? dueOf(it.due) : "", "");
     };
 
-    // The three-kinds note: once per member, on the device (R2).
-    let note = "";
-    try {
-      const store = globalThis.localStorage;
-      const k = "bio-queue-kinds-note:" + (view.me && view.me.member ? view.me.member : "");
-      if (store && !store.getItem(k)) {
-        note = '<p class="mk-note">' + cs.w("screen.queue.note") + ' <span class="muted">' + cs.w("screen.queue.note.once") + "</span></p>";
-        store.setItem(k, "shown");
-      }
-    } catch (e) { note = ""; }
+    // The three-kinds note: once per member, on the device (R2). Decided once per visit and kept in the screen's page
+    // memory, so the page's redraws keep it while the member is here.
+    const ui = view.ui || {};
+    if (ui.kindsNote === undefined) {
+      let show = false;
+      try {
+        const store = globalThis.localStorage;
+        const k = "bio-queue-kinds-note:" + (view.me && view.me.member ? view.me.member : "");
+        if (store && !store.getItem(k)) { store.setItem(k, "shown"); show = true; }
+      } catch (e) { show = false; }
+      ui.kindsNote = show;
+    }
+    const note = ui.kindsNote
+      ? '<p class="mk-note">' + cs.w("screen.queue.note") + ' <span class="muted">' + cs.w("screen.queue.note.once") + "</span></p>" : "";
 
     const sorts = '<nav class="mk-sorts" aria-label="' + cs.w("screen.queue.sort") + '"><span>' + cs.w("screen.queue.sort") + "</span> "
       + SORTS.map(function (s) {
         return s === sort ? '<b aria-current="true">' + cs.w("screen.queue.sort." + s) + "</b>"
-          : '<a href="/app/queue/' + s + '">' + cs.w("screen.queue.sort." + s) + "</a>";
+          : '<a data-nav href="/app/queue/' + s + '">' + cs.w("screen.queue.sort." + s) + "</a>";
       }).join(" · ") + "</nav>";
 
-    const body = cs.state("queue", view, function (q) {
+    const body = cs.state("queue", function (q) {
       const items = Array.isArray(q.items) ? q.items : [];
       const groups = [];
       const at = {};
@@ -146,54 +166,54 @@ export const queue = Object.freeze({
         + '</span><span class="sep"> · </span><span>' + cs.w("screen.queue.grouped") + "</span></p>";
       return head + groups.map(function (g) {
         const title = g.c ? cs.ref("project", g.c.id, g.c.title || g.c.id, []) : cs.w("screen.queue.nocase");
-        const snooze = g.c ? '<span class="mk-acts">' + cs.act("queuesnooze", { label: "act.queuesnooze.label.queue", data: { project: String(g.c.id) } }) + "</span>" : "";
+        const snooze = g.c ? '<span class="mk-acts">' + actOf("queuesnooze", { project: String(g.c.id) }) + "</span>" : "";
         return '<section class="cs-section mk-sec"><h2>' + title + "</h2>" + snooze + cs.sheet(g.items.map(itemRow).join("")) + "</section>";
       }).join("") + (q.truncated ? '<p class="mk-note">' + cs.w("screen.queue.more", { n: String(Math.max(0, n - items.length)) }) + "</p>" : "");
     }, { empty: "screen.queue.empty" });
 
-    return cs.title(cs.w("screen.queue.name"), {}) + note + sorts + body;
+    return cs.title(undefined, {}) + note + sorts + body;
   },
 
   // R3: each act's body from the item it was drawn on (`el.dataset`, the data `cs.act` was handed).
   acts: [
     { op: "taskresolve", label: "act.taskresolve.label.queue",
       send: function (view, el) { return { body: { id: el.dataset.item } }; } },
-    { op: "taskforward", label: "act.taskforward.label.queue", dialog: [{ name: "to", label: "screen.queue.forward.to" }],
-      send: function (view, el, cs, extra) {
-        const to = String((extra && extra.fields && extra.fields.to) || "").trim().replace(/^@/, "");
-        return to ? { body: { id: el.dataset.item, to: to } } : null;
+    { op: "taskforward", label: "act.taskforward.label.queue",
+      send: function (view, el, cs) {
+        const to = String(cs.value(el.dataset.f + "-to") || "").trim().replace(/^@/, "");
+        return to ? { body: { id: el.dataset.item, to: to } } : { refuse: "screen.queue.fieldfirst" };
       } },
     { op: "proposedispose", label: "act.proposedispose.label.queue",
       send: function (view, el) {
         return { body: { project: el.dataset.project, finding: el.dataset.finding || el.dataset.item, to: "dismissed" } };
       } },
-    { op: "queuesnooze", label: "act.queuesnooze.label.queue", dialog: [{ name: "until", label: "screen.queue.snooze.until" }],
-      send: function (view, el, cs, extra) {
-        const until = String((extra && extra.fields && extra.fields.until) || "").trim();
-        return until ? { body: { case: el.dataset.project, until: until } } : null;
+    { op: "queuesnooze", label: "act.queuesnooze.label.queue",
+      send: function (view, el, cs) {
+        const until = String(cs.value(el.dataset.f + "-until") || "").trim();
+        return until ? { body: { case: el.dataset.project, until: until } } : { refuse: "screen.queue.fieldfirst" };
       } },
     { op: "queuemute", label: "act.queuemute.label.queue",
       send: function (view, el) { return { body: { item: el.dataset.item } }; } },
     // Adopting asks why (reevaluation R15); the member's words are the act's reason (interface-shell R11, K3002).
-    { op: "adoptversion", label: "act.adoptversion.label.queue", reasonField: "why", dialog: [{ name: "why", label: "screen.queue.why" }],
-      send: function (view, el, cs, extra) {
-        const why = String((extra && extra.fields && extra.fields.why) || "").trim();
-        return why ? { body: { notice: el.dataset.notice, why: why } } : null;
+    { op: "adoptversion", label: "act.adoptversion.label.queue", reasonField: "why",
+      send: function (view, el, cs) {
+        const why = String(cs.value(el.dataset.f + "-why") || "").trim();
+        return why ? { body: { notice: el.dataset.notice, why: why } } : { refuse: "screen.queue.fieldfirst" };
       } },
     { op: "keepversion", label: "act.keepversion.label.queue",
       send: function (view, el) { return { body: { notice: el.dataset.notice } }; } },
-    { op: "reminderanswer", label: "act.reminderanswer.label.queue", dialog: [{ name: "on", label: "screen.queue.reminder.on" }],
-      send: function (view, el, cs, extra) {
-        const on = String((extra && extra.fields && extra.fields.on) || "").trim();
+    { op: "reminderanswer", label: "act.reminderanswer.label.queue",
+      send: function (view, el, cs) {
+        const on = String(cs.value(el.dataset.f + "-on") || "").trim();
         const body = { target: el.dataset.subject, entry: Number(el.dataset.entry || 0) };
         if (on) body.on = on;
         return { body: body };
       } },
     // A hint becomes a question in its case's project (R3; promotion's inquiry), opened on success.
-    { op: "promote", label: "act.promote.label.queue", dialog: [{ name: "question", label: "screen.queue.question" }],
-      send: function (view, el, cs, extra) {
-        const q = String((extra && extra.fields && extra.fields.question) || "").trim();
-        if (!q) return null;
+    { op: "promote", label: "act.promote.label.queue",
+      send: function (view, el, cs) {
+        const q = String(cs.value(el.dataset.f + "-question") || "").trim();
+        if (!q) return { refuse: "screen.queue.fieldfirst" };
         const iso = new Date(cs.now()).toISOString().replace(/\.\d{3}Z$/, "Z");
         const nonce = Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, "0");
         const text = "---\nobject_type: inquiry\nquestion: " + JSON.stringify(q) + "\ncurrent_state: open\ncreated: \"" + iso
@@ -212,12 +232,12 @@ export const queue = Object.freeze({
         const id = answer && (answer.bundleId || (answer.result && answer.result.bundleId));
         if (id) cs.go("question", id);
       } },
-    { op: "projectkeyset", label: "act.projectkeyset.label.queue", dialog: [{ name: "key", label: "screen.queue.projectkey" }],
-      send: function (view, el, cs, extra) {
-        const key = String((extra && extra.fields && extra.fields.key) || "").trim();
+    { op: "projectkeyset", label: "act.projectkeyset.label.queue",
+      send: function (view, el, cs) {
+        const key = String(cs.value(el.dataset.f + "-key") || "").trim();
         const owner = String(el.dataset.owner || "");
         const project = owner.indexOf("project:") === 0 ? owner.slice(8) : el.dataset.project;
-        return key && project ? { body: { project: project, key: key } } : null;
+        return key && project ? { body: { project: project, key: key } } : { refuse: "screen.queue.fieldfirst" };
       } },
     { op: "exploreapprove", label: "act.exploreapprove.label.queue",
       send: function (view, el) { return { body: { owner: el.dataset.owner, day: el.dataset.day } }; } },

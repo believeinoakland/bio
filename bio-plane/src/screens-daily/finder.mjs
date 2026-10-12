@@ -34,11 +34,11 @@ export const finder = Object.freeze({
       const s = view.data.search;
       return s && s.state === "ok" && s.value && Array.isArray(s.value.hits) ? s.value.hits : [];
     };
-    const head = cs.title(cs.w("screen.finder.name"), {}) + '<p class="mk-sub">' + cs.w("screen.finder.sub") + "</p>";
+    const head = cs.title(undefined, {}) + '<p class="mk-sub">' + cs.w("screen.finder.sub") + "</p>";
     const box = '<div class="mk-search">' + cs.field("finder-q", "screen.finder.words", { value: q })
       + '<span class="mk-acts">' + cs.act("search", { label: "act.search.label.finder", tone: "primary" }) + "</span></div>";
 
-    const results = view.data.search ? cs.state("search", view, function (s) {
+    const results = view.data.search ? cs.state("search", function (s) {
       const hits = Array.isArray(s.hits) ? s.hits : [];
       const total = typeof s.total === "number" ? s.total : hits.length;
       return '<p class="mk-sub">' + (total === 1 ? cs.w("screen.finder.total.one") : cs.w("screen.finder.total.many", { n: String(total) })) + "</p>"
@@ -52,12 +52,12 @@ export const finder = Object.freeze({
         }).join(""));
     }, { empty: "screen.finder.none" }) + (function () {
       const s = view.data.search;
-      const w = s && s.state === "ok" && s.value && s.value.widen;
+      const w = s && (s.state === "ok" || s.state === "empty") && s.value && s.value.widen;
       return w && typeof w.total === "number" && w.total > 0 && (!s.value.hits || !s.value.hits.length)
         ? '<p class="mk-note">' + cs.w("screen.finder.widen", { n: String(w.total) }) + "</p>" : "";
     })() : "";
 
-    const nobody = (ui.frontier && view.data.frontier ? cs.state("frontier", view, function (f) {
+    const nobody = (ui.frontier && view.data.frontier ? cs.state("frontier", function (f) {
       const n = typeof f.never_looked_count === "number" ? f.never_looked_count : (f.never_looked || []).length;
       return '<p class="mk-note">' + cs.mark("gap", "nobody") + " " + cs.w("screen.finder.nobody", { n: String(n) }) + "</p>"
         + '<ul class="mk-list">' + (f.never_looked || []).slice(0, 20).map(function (x) {
@@ -70,7 +70,7 @@ export const finder = Object.freeze({
     // The hold strip (interface-shell R19's): how many documents are held together and until when, from `selection`.
     const sel = view.data.selection;
     const strip = '<div class="cs-hold mk-hold">'
-      + (ui.handle && sel ? cs.state("selection", view, function (v) {
+      + (ui.handle && sel ? cs.state("selection", function (v) {
         const n = typeof v.n === "number" ? v.n : (v.members || []).length;
         return '<span class="n">' + (n === 1 ? cs.w("screen.finder.held.one") : cs.w("screen.finder.held.many", { n: String(n) })) + "</span>"
           + (function () {
@@ -83,7 +83,13 @@ export const finder = Object.freeze({
       }) : "")
       + '<span class="acts">' + (hitsOf().length ? cs.act("select", { label: "act.select.label.finder" }) : "")
       + (ui.handle ? cs.act("findin", { label: "act.findin.label.finder", data: { handle: String(ui.handle) } })
-        + cs.act("calculationcreate", { label: "act.calculationcreate.label.finder", data: { handle: String(ui.handle) } })
+        + (function () {
+          // "Count" asks what is counted and over which period, in place, with the act (read by its `send`).
+          const button = cs.act("calculationcreate", { label: "act.calculationcreate.label.finder", data: { handle: String(ui.handle), f: "fc" } });
+          return button ? '<details class="mk-actd"><summary>' + cs.w("act.calculationcreate.label.finder") + "</summary>"
+            + cs.field("fc-question", "screen.finder.count.question", {}) + cs.field("fc-from", "screen.finder.count.from", {})
+            + cs.field("fc-to", "screen.finder.count.to", {}) + button + "</details>" : "";
+        })()
         + cs.act("selectionrelease", { label: "act.selectionrelease.label.finder", data: { handle: String(ui.handle) } }) : "")
       + "</span></div>";
     const counted = ui.counted ? '<p class="mk-note">' + cs.w("screen.finder.counted", { result: String(ui.counted) }) + "</p>" : "";
@@ -130,9 +136,8 @@ export const finder = Object.freeze({
       send: function (view, el, cs) { cs.set("frontier", true); return { query: { level: "document" } }; } },
     // "Count": a count over the held set, as a calculation with its method shown (calculations R4).
     { op: "calculationcreate", label: "act.calculationcreate.label.finder", rereads: [],
-      dialog: [{ name: "question", label: "screen.finder.count.question" }, { name: "from", label: "screen.finder.count.from" }, { name: "to", label: "screen.finder.count.to" }],
-      send: function (view, el, cs, extra) {
-        const f = (extra && extra.fields) || {};
+      send: function (view, el, cs) {
+        const f = { question: cs.value("fc-question"), from: cs.value("fc-from"), to: cs.value("fc-to") };
         if (!el.dataset.handle) return { refuse: "screen.finder.holdfirst" };
         return {
           body: {

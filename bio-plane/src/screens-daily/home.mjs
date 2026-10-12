@@ -41,7 +41,7 @@ export const home = Object.freeze({
     const gv = g && g.state === "ok" ? g.value : null;
     const name = gv && (gv.display_name || gv.group);
     const description = gv && typeof gv.description === "string" && gv.description.trim() ? gv.description : null;
-    const heading = cs.state("group", view, function () {
+    const heading = cs.state("group", function () {
       return cs.title(name || "", { thing: "group" })
         + (description ? '<p class="mk-sub">' + cs.esc(description) + "</p>" : '<p class="mk-sub muted">' + cs.w("screen.home.nodescription") + "</p>");
     });
@@ -50,17 +50,17 @@ export const home = Object.freeze({
       + cs.field("home-title", "screen.home.title", { rec: true, help: "screen.home.title.help" })
       + '<div class="mk-acts">' + cs.act("promote", { label: "act.promote.label.home", tone: "primary" }) + "</div></div>";
 
-    const waiting = cs.sec("screen.home.waiting", cs.state("queue", view, function (q) {
+    const waiting = cs.sec("screen.home.waiting", cs.state("queue", function (q) {
       const items = (q.items || []).slice(0, 5);
       const total = typeof q.item_count === "number" ? q.item_count : items.length;
       return cs.sheet(items.map(function (it) {
         const kind = CLASS_KIND[it.class] || "status";
         const due = it.due ? cs.due(String(it.due), "") : "";
         return cs.row(cs.mark("kind", kind), cs.esc(it.summary || ""), due, "");
-      }).join("")) + '<a class="mk-more" href="/app/queue">' + cs.w("screen.home.queuelink", { n: String(total) }) + "</a>";
+      }).join("")) + '<a class="mk-more" data-nav href="/app/queue">' + cs.w("screen.home.queuelink", { n: String(total) }) + "</a>";
     }, { empty: "screen.home.nothingwaiting" }));
 
-    const working = cs.sec("screen.home.working", cs.state("projects", view, function (s) {
+    const working = cs.sec("screen.home.working", cs.state("projects", function (s) {
       return cs.sheet((s.hits || []).map(function (h) {
         return cs.row("", cs.ref("project", h.bundle_id, h.title || h.bundle_id, []), ladder(h.current_state), "");
       }).join(""));
