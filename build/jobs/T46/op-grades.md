@@ -48,3 +48,7 @@ affordances (its T46-45, R52): my merge turns two of its tests red, each closed 
 ## J3 · COMPLETE
 
 T46-44 done on job/T46/op-grades (efbffd81a0+): R33 (t46.mjs; escalation acts as ACTS with MACHINE_CANNOT_STOP per K2996), R34 (handlechange's sentences), and K2881's five graded under R32. op-grades 78/78; format, architecture, coverage (34/34), ownership 0 failures; users unchanged but the two affordances reds in my REPORT. Record: build/jobs/T46/op-grades.md.
+
+## J4 · COMPLETE
+
+B3 (K2998) applied: clockadopt left NON_ACTS, MACHINE_REFUSALS gains MACHINE_CANNOT_ADOPT_CLOCK, its undetermined absence stands; tested by name with a control. op-grades 79/79; format, architecture, coverage 34/34, ownership 0 failures. One more affordances red, closed by its own T46-45 row: 'R12 R24: with the control plane's rows for them' (clockadopt not yet an ACTS row). Record updated.
