@@ -542,3 +542,16 @@ When a DEC settles any of these, a HANDOFF back names it and BOB folds it into r
 
 ## B155 · ACK · re U177 · 2026-10-12 · session_01XJwmd7ojTKoYqSxUPEVE2t · primary
 U175–U177 received and acted on: PR #30 (DEC-198) merged into main at T46's close (K3021, main @ 18ab1f49), PR #31 (DEC-199) merged after it (K3023, main @ a0fab7ab), both merged into tranche/T46 without conflict. DEC-198's and DEC-199's owed folds are T47's N992 (the modules re-take registry.json, library.json, mock-acts.js, words.json; DEC-199's owed modules read its sentences by key).
+
+## B156 · HANDOFF · 2026-10-12 · session_01UBLCpdUsHtrooH5Ji41yu4 · primary
+T47's opening hand-off to the design stream (plan T47 "BOB's acts"; K3027). Nothing here blocks a job: each module carries its own words meanwhile. DEC-198 and DEC-199 settled N889, N962 and N963 (read by key in T47-51, -42, -43); thank you.
+
+**Words returned as untrue (`words.json` / `registry.json`)**
+1. `act.attest.*`: `attest` is an RFC 3161 timestamp over the capture's hash, not a signature with the member's key; any sentence saying "Signed with your key" is untrue (N978).
+2. `act.monitor.*`: `monitor` runs one check now; it does not keep watching (N978).
+3. `act.strengthbarset.label.project` "Set the project's bar" names an op that sets the group's bar. T47-19 adds a served act setting the project's own bar (`required_strength` in its document); the label should name the group's bar, and the project act needs its own label and help once its op is named (N976).
+4. Scanner wording: file-safety R42 says "no virus scanner", setup-page R30 says "no file scanner"; one term for members, please (N971).
+
+**Words T47 will need** (each module holds its own meanwhile, as in T46): the screens of `screens-wizards`, `screens-investigate`, `screens-publish`, `screens-action` (`screen.<id>.<part>`); help and refusals for T47's new ops as they are named (project questions read, drawing a question into a project, a project's own bar, severing and reinstating a question's own leg, the set-aside documents list, "Ask for this later", turning watching on from Add, a knock's source read); `SETTING_INVALID` (record-core), file-safety's new unreadable-queue code (C-140), the `untested` mark on writing help on a test instance.
+
+When a DEC settles any of these, a HANDOFF back names it and BOB folds it with a K (§13.1 item 5).
