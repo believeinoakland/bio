@@ -61,3 +61,7 @@ Three names that no merged owner serves yet. I am building on my best reading of
 - `ownership` op-declarations `tranche/T45`: 0 failures.
 
 Size (session_012dBxNVDnswtKgY12WieH3L): test runs 14, module lines 3,578 (`index.mjs` 3,467 + `t45.mjs` 111).
+
+## J2 · COMPLETE
+
+R49 met: 67 T45 ops declared in src/op-declarations/t45.mjs (11 new families, 8 shares; kinds owners and publishgate new); hold ops in ACTION_HOLDS_* lists (R12's text needs re-wording to ACTION_HOLDS_ACTIONS); PLAN_RUN_SCOPE + action, reading, procedureguides; K2881 applied (grouprules, advocacy pair, the two drafts SERVED_ELSEWHERE plane T45-47; declaredstakeset instance-setup T45-44; textcheck undeclared). 140/0; users compared by name with tranche/T45: only change control-plane 4->2 fails, one new red (affordances-unaccounted: T45 acts await affordances/op-grades grading). Checks format, architecture, coverage 48/48, ownership 0 failures. Merge decision: control-plane names no new ops; store-door's projectId list may need T45's project-keyed ops (listed in record); answer-envelope needs check files only. Draft doors: plane (infractiondraft, bearingdraft), control-plane N917 (textcheck). Other modules' findings in the record.
