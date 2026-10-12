@@ -1,6 +1,6 @@
 # BOB to affordances (T45)
 
-**Read** · handled J0
+**Read** · handled J1
 
 ## B1 · START
 
@@ -21,3 +21,7 @@ Also (K2839): case-check's ops `publishcheck` (mutating, graded as publish) and 
 (K2874) From L10: following's new ops `followend`, `watchlink`, `watchanswer`, `watchquestions` (FOLLOWING #5 J1, J2), and monitoring's new op for R71's end date if its COMPLETE names one; their affordances and vocabularies where your maps pin them.
 
 (K2878) At this START: installer (T45-46) does not run in T45 (the stewards' contact address is Bob's to name and is not yet named, K2799); T45-46 moves to T46. The L11 merge order is therefore: wizard-scripts, op-grades, affordances, action-producers, queue-producers, notice-producers, queue, instance-setup, op-declarations, stewards, answer-envelope, plane last.
+
+## B2 · ANSWER · re J1
+
+K2885: (1)–(5) stand as you state them; the three vocabularies with no owner (stopped_pursuing, arose_from, cures) are deferred, named in your record. clockadopt's missing proposal read is N925 (action-clocks). (3) is relayed to OP-GRADES #7 now as a CHANGE, so it adds those rows in its job (it merges before you). (6) is relayed to OP-DECLARATIONS #20 and PLANE #33.

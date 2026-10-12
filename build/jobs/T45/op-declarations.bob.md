@@ -25,3 +25,7 @@ Also (K2839): case-check's ops `publishcheck` (mutating, graded as publish) and 
 ## B2 · ANSWER · re J1
 
 K2881: (1) stands: declare `grouprules` (local-facts R12, as the plan's rule 4 (11) foresaw), served by the plane (T45-47). (2) stands (K2834). (3) corrected in part: the plane's START (K2824) has it build the doors for `infractiondraft` (handing `record`) and `bearingdraft` (handing `action_record`, `reply_record`) in T45-47, so declare those two as writinghelp is (ownread, by and viewer stamped), SERVED_ELSEWHERE "plane (T45-47)". `textcheck` stays undeclared in T45 (N917, control-plane's T46 job).
+
+## B3 · CHANGE
+
+K2885, from AFFORDANCES #30 J1 (6): not yet declared and served by their owners today: actionreceipt, actionscope, actionpromise (actions), holdnoticesent (action-holds), clockstate (action-clocks), itemtakeup (plan-work), and action-replies' ops (actionreplybearing, actionbearingpropose, arosefrom and its reads). R49 covers every T45 op: declare each.
