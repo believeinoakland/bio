@@ -46588,6 +46588,7 @@ CREATE TABLE IF NOT EXISTS reading_migrations (
 // src/extraction/checks.mjs
 var checks_exports13 = {};
 __export(checks_exports13, {
+  AGENT_WORKER_REASONS: () => AGENT_WORKER_REASONS,
   EXTRACTION_CHECKS: () => EXTRACTION_CHECKS,
   NO_SHA_DETAIL: () => NO_SHA_DETAIL,
   REEXTRACT_CHECKS: () => REEXTRACT_CHECKS,
@@ -46616,7 +46617,22 @@ var TRANSCRIBE_WORDS = Object.freeze({
   "transcribe.picture.unprepared": "This photo can't be prepared for the assistant: {why}. Take it again as an ordinary photo, or type its words yourself.",
   "transcribe.picture.why.progressive": "it is saved in a form the assistant can't open (a progressive JPEG)",
   "transcribe.picture.why.toolarge": "it is too large",
-  "capture.picture.unread": "A photographed page, not read yet: its words can't be found or cited until the assistant reads it or a member types them."
+  "capture.picture.unread": "A photographed page, not read yet: its words can't be found or cited until the assistant reads it or a member types them.",
+  /* (T46; N886; DEC-193; K2836) R75: the reasons of agent-worker R72's six refusals, the `{reason}` of
+     `transcribe.refused`. Words, not rows: no check row is minted for them. `transcribe.reason.requestfault` is held as
+     R75's interim word in DEC-149's form ("your group's Civicsmith") until the design stream conforms the key (K2919). */
+  "transcribe.reason.requestfault": "Your group's Civicsmith sent the assistant a request it couldn't use. The fault is your group's Civicsmith's, not yours: try again, and if it happens again, tell an administrator.",
+  "transcribe.reason.noaccount": "No AI account pays for this here. Connect your own in Settings \u203A The assistant, or ask an administrator about the group's key.",
+  "transcribe.reason.badaccount": "The AI account that pays for this here can't be used as it is set up. Its owners can check it in its settings.",
+  "transcribe.reason.needsapikey": "Reading page pictures needs an Anthropic API key, and the account that pays here is a Claude sign-in. Its owners can add an API key; meanwhile you can type a page's words yourself."
+});
+var AGENT_WORKER_REASONS = Object.freeze({
+  BAD_BODY: "transcribe.reason.requestfault",
+  BAD_SHA: "transcribe.reason.requestfault",
+  BAD_PAGES: "transcribe.reason.requestfault",
+  NO_ACCOUNT: "transcribe.reason.noaccount",
+  BAD_ACCOUNT: "transcribe.reason.badaccount",
+  TRANSCRIBE_NEEDS_API_KEY: "transcribe.reason.needsapikey"
 });
 var REEXTRACT_CHECKS = {
   /* The flag is present and is not `1`. Refused rather than read as absent:
@@ -50234,6 +50250,7 @@ var Extraction = class _Extraction {
           if (n2) Object.assign(reading3, n2);
         }
         Object.assign(reading3, emittedFieldsOf(t3.i2text));
+        keepUntested(reading3, stored2, null);
         structureChain = chain3;
         reading3.reextracted = {
           at: stampInstant("second"),
@@ -50525,6 +50542,8 @@ var Extraction = class _Extraction {
       if (n2) Object.assign(reading3, n2);
     }
     Object.assign(reading3, emittedFieldsOf(t4.i2text));
+    const untested = untestedOf(tx);
+    keepUntested(reading3, stored2, untested);
     const act2 = tx && typeof tx.act === "string" && tx.act ? tx.act : null;
     reading3.reextracted = {
       at: at47,
@@ -50551,6 +50570,7 @@ var Extraction = class _Extraction {
         engine: t4.engine.engine,
         version: t4.engine.version,
         act: act2,
+        ...untested ? { untested } : {},
         text_source: chain4,
         chain: describeChain(chain4),
         label: TRANSCRIBE_WORDS["transcribe.label"],
@@ -50670,6 +50690,9 @@ function unfilledOutcome(a, fmt) {
   if (ENDINGS.includes(a.ending) || ENDING_CODES.includes(a.code) || ENDING_CODES.includes(a.reason))
     return { key: "transcribe.failed", why: "transcribe.why.ended" };
   if (typeof a.translation === "string" && a.translation) return { refusal: a };
+  const code = typeof a.code === "string" && a.code ? a.code : a.reason;
+  if (Object.prototype.hasOwnProperty.call(AGENT_WORKER_REASONS, code))
+    return { refusal: { ...a, code, translation: fillWords(AGENT_WORKER_REASONS[code]) } };
   return null;
 }
 function withRefusedSays(r) {
@@ -50678,6 +50701,15 @@ function withRefusedSays(r) {
 }
 var PICTURE_FORMATS = Object.freeze(["jpeg", "png"]);
 var refusalStatus = (r) => Number.isInteger(r.status) && r.status >= 400 && r.status < 500 ? r.status : 403;
+function untestedOf(tx) {
+  const u = tx && typeof tx === "object" ? tx.untested : null;
+  return u && typeof u === "object" && !Array.isArray(u) ? u : null;
+}
+function keepUntested(reading3, stored2, untested) {
+  const kept = untestedOf(stored2);
+  if (kept) reading3.untested = kept;
+  else if (untested) reading3.untested = untested;
+}
 var isTranscriber = (t2) => !!t2 && typeof t2 === "object" && typeof t2.deployable === "function" && typeof t2.keptAway === "function" && typeof t2.transcription === "function";
 function extractionOps(x, url, body, env) {
   const q10 = (k) => url.searchParams.get(k);
