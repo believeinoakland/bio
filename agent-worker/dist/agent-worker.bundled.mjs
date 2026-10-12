@@ -874,7 +874,13 @@ var ID_TABLE = Object.freeze([
      are. Since T41 case-authoring has minted it through record-core's `mintOpaqueId`, four random digits, which is the
      sequential shape; so its row carries `legacy: 'sequential'` as `CALC`'s does (K1728): those ids stay readable, and
      minting through `allocId` follows `form` alone. Its owner is named before it holds code (P8). */
-  row("ACD", "case-account", "opaque", "sequential")
+  row("ACD", "case-account", "opaque", "sequential"),
+  /* T46-1 (R59; N911, K2845): a success record (`consequences`, v0.2 §3 Success record), sequential, as the Action
+     layer's other record objects are. `consequences` has minted `SUC-<year>-<4 digits>` in its own rows since T45, which is
+     this form, so every one of those ids stays valid. It is a record object promoted with history like a finding, so it
+     has a type (`success_record`, types.mjs) and a machine (`STATES`, document.mjs), and it is not a bundle prefix (R1):
+     no heading set and no `checkBundle` schema. */
+  row("SUC", "consequences")
 ]);
 var YEAR = "\\d{4}";
 var CORE = { sequential: "\\d{4,}", opaque: "[a-z0-9]{16}" };
@@ -889,6 +895,7 @@ function idPattern(prefix) {
 var HYP_RE = idPattern("HYP");
 var STP_RE = idPattern("STP");
 var GUD_RE = idPattern("GUD");
+var SUC_RE = idPattern("SUC");
 var ID_PREFIXES = Object.freeze([
   "INFO",
   "PROB",

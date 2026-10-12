@@ -2619,7 +2619,13 @@ var ID_TABLE = Object.freeze([
      are. Since T41 case-authoring has minted it through record-core's `mintOpaqueId`, four random digits, which is the
      sequential shape; so its row carries `legacy: 'sequential'` as `CALC`'s does (K1728): those ids stay readable, and
      minting through `allocId` follows `form` alone. Its owner is named before it holds code (P8). */
-  row("ACD", "case-account", "opaque", "sequential")
+  row("ACD", "case-account", "opaque", "sequential"),
+  /* T46-1 (R59; N911, K2845): a success record (`consequences`, v0.2 §3 Success record), sequential, as the Action
+     layer's other record objects are. `consequences` has minted `SUC-<year>-<4 digits>` in its own rows since T45, which is
+     this form, so every one of those ids stays valid. It is a record object promoted with history like a finding, so it
+     has a type (`success_record`, types.mjs) and a machine (`STATES`, document.mjs), and it is not a bundle prefix (R1):
+     no heading set and no `checkBundle` schema. */
+  row("SUC", "consequences")
 ]);
 var YEAR = "\\d{4}";
 var CORE = { sequential: "\\d{4,}", opaque: "[a-z0-9]{16}" };
@@ -2634,6 +2640,7 @@ function idPattern(prefix) {
 var HYP_RE = idPattern("HYP");
 var STP_RE = idPattern("STP");
 var GUD_RE = idPattern("GUD");
+var SUC_RE = idPattern("SUC");
 var ID_PREFIXES = Object.freeze([
   "INFO",
   "PROB",
@@ -2685,7 +2692,11 @@ var OBJECT_TYPES = {
   CHK: "interest_check",
   HYP: "hypothesis",
   DUT: "duty",
-  STQ: "standing_question"
+  STQ: "standing_question",
+  /* T46-1 (R59; N911): the success record (`consequences`). Not a bundle prefix either (R1), but, unlike the rows above, a
+     record object promoted with history, so `STATES` holds its one state (document.mjs); `HEADINGS` and `checkBundle`'s
+     schemas still gain nothing. */
+  SUC: "success_record"
 };
 
 // ../bio-plane/src/record-grammar/grades.mjs
@@ -3059,13 +3070,18 @@ var STATES = {
   },
   /* An escalation (escalation R21) is `open` while its stages run and `suspended` while a member has set it
      aside; `escalationResume` restores it at the same stage (R15). It is `ended` only by `escalationEnd`, once
-     compliance is restored and the consequences are addressed (R14), and nothing leaves `ended`. */
+     compliance is restored and the consequences are addressed (R14), and nothing leaves `ended`.
+     T46-1 (R57; N910, K2844; State Rules §4.4): `stopped_pursuing` is the group's decision to stop pursuing it
+     (`escalationStopPursuing`, escalation R31), from `open` or `suspended`, with a reason. It is never `ended` and never
+     read as success, so it has no edge to `ended`; `escalationReopen` is its one way out, back to `open` at the stage
+     where it stopped. Appended last, so `legal[0]` stays `open`. */
   escalation: {
-    legal: ["open", "suspended", "ended"],
+    legal: ["open", "suspended", "ended", "stopped_pursuing"],
     edges: {
-      open: ["suspended", "ended"],
-      suspended: ["open", "ended"],
-      ended: []
+      open: ["suspended", "ended", "stopped_pursuing"],
+      suspended: ["open", "ended", "stopped_pursuing"],
+      ended: [],
+      stopped_pursuing: ["open"]
     }
   },
   /* K198 (2) (T8, N159): intent's two pursuit documents (intent R26). An aspiration is held until it is retired;
@@ -3081,10 +3097,22 @@ var STATES = {
     edges: { open: ["closed"], closed: [] }
   },
   /* N-A1 (T18, K608): `action-plans`' plan (its R2, `PLN-`, `action_plan` in record-grammar's `OBJECT_TYPES`). A plan
-     is `open` while the group works it and `closed` when a member closes it with a reason; nothing reopens it. */
+     is `open` while the group works it and `closed` when a member closes it with a reason; nothing reopens it.
+     T46-1 (R58; N914, K2848; State Rules §4.4): `paused` is a member setting the plan down with a reason (`planPause`,
+     action-plans R40) while what it set running continues; `planResume` returns it to `open`, and a paused plan may be
+     closed. It sits between the two in `legal`, the order R58 states; `legal[0]` stays `open`. `goal` keeps its own
+     machine, `open` to `closed` alone. */
   action_plan: {
-    legal: ["open", "closed"],
-    edges: { open: ["closed"], closed: [] }
+    legal: ["open", "paused", "closed"],
+    edges: { open: ["paused", "closed"], paused: ["open", "closed"], closed: [] }
+  },
+  /* T46-1 (R59; N911, K2845): `consequences`' success record (its R17, `SUC-`, `success_record` in `OBJECT_TYPES`). It is
+     RECORDED once and never moves, as a standard, a determination and a consequence part are: a correction is a successor
+     (`successRevise`). Promoted with history like a finding (consequences R14's pattern), so it has this machine; it is not
+     a bundle prefix (R1), so `HEADINGS` and `checkBundle`'s schemas gain nothing. */
+  success_record: {
+    legal: ["recorded"],
+    edges: { recorded: [] }
   }
 };
 STATES.problem = STATES.focus;
@@ -3192,6 +3220,15 @@ var PROPOSAL_STATES = Object.freeze({
     machine_proposed: "a machine credential flagged these sentences of a member's account as not supported by the evidence they cite. That is machine work, labelled as machine work: it is a draft, which can point at a sentence and can never find against one. It is never a finding of the group",
     member_proposed: "a member flagged these sentences of a member's account as not supported by the evidence they cite. It is a draft and never a finding of the group, and the record holds who proposed it",
     unstated: "the record does not say who flagged these sentences of a member's account as not supported by the evidence they cite. It is a draft and never a finding of the group"
+  }),
+  /* N912 (K2845; T46, R60): a layout of how a reply to a request for comment bears on each claim of the action
+     (`action-replies` R1, `actionBearingPropose`) is a proposed reading, stored apart, and never the group's reading until a
+     member records a layout themselves; a machine can propose one and never record one (action-replies R4). Before this
+     subject action-replies labelled its proposals through `lawProposalState` with its own sentences. */
+  bearing: Object.freeze({
+    machine_proposed: "a machine credential proposed this layout of how a reply bears on each claim of an action. That is machine work, labelled as machine work: it can propose a layout and it can never record one. It is a proposed reading and never the group's reading until a member records it",
+    member_proposed: "a member proposed this layout of how a reply bears on each claim of an action. It is a proposed reading and never the group's reading until a member records it, and the record holds who proposed it",
+    unstated: "the record does not say who proposed this layout of how a reply bears on each claim of an action. It is a proposed reading and never the group's reading until a member records it"
   })
 });
 
