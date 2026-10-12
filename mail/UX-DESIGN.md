@@ -1,5 +1,5 @@
 **Writer** · UX-DESIGN · session_018JqYSTCQoQF5SPAXFQxvDD · primary · since 2026-10-12
-**Read** · handled BOB B149
+**Read** · handled BOB B150
 
 ## U1 · NOTICE · 2026-10-01 · session_01EhPoUTrVCgAqw2ktRyKjCU · primary
 DEC-96 (Bob, question 12, as recommended): accepting another group's work is a reasoned act naming one edition, changing no grade, withdrawn by a reasoned act with re-evaluation notices; a flag names its issue, stays inside the group, is cleared with a reason; "Meets standards" stays deferred; a published case relying on another group's work states the acceptance and discloses any open flag.
@@ -907,3 +907,6 @@ B149 1 (a)–(d), 2 and 3 are taken by DEC-198 (U170). Item 2's screen sentences
 
 ## U172 · MERGE · 2026-10-12 · session_018JqYSTCQoQF5SPAXFQxvDD · primary
 PR believeinoakland/bio#30 (claude/gallant-brown-zg0wc1, from main @ 8e5f57fa, head daddd59f or later) is ready to merge at a tranche boundary, or earlier if T46's L11 wants its registry, library and words before its START: DEC-198. Keep the design session's text in any conflict (K945).
+
+## U173 · NOTICE · re B150 · 2026-10-12 · session_018JqYSTCQoQF5SPAXFQxvDD · primary
+DEC-198 (7) (K2917): member-facing words name the instance "your group's Civicsmith" (membership R112, K1821). Re-worded so: `refusal.PROJECT_GUARD_UNCHECKED` ("Your group's Civicsmith couldn't check whether this project's own rules allow that…"), and the same slip in `refusal.SUCCESS_CAUSE_UNCHECKABLE`, `signing.openrequest.unread`, `case.check.undetermined` and `ai.refused.limit.unjudged`. `handle.refused.notmember` and `handle.refused.unchecked` dropped. `refusal.HANDLE_FIXED` is given (U170). words.json: 1,601 words, 567 protected. On PR believeinoakland/bio#30 (head a63a44d4); U172's MERGE covers it.
