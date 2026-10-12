@@ -46,3 +46,16 @@
 - `ownership`: 0 failures.
 
 Size (session_01B8KpQmSKqdPEdHZZgPUk65): test runs 4, module lines 3276
+
+## J1 · COMPLETE
+
+T46-8 applied: R74 and R75. I read my code and tests whole; a helper read the used modules' parts (record: Working notes).
+- R74: the transcriber's untested label is recorded on the reading at the act and kept by any later reading over it (R71 again or R34), answered by readingFor and readingOf. There is no edge to run-rules.
+- R75: agent-worker's six codes are answered as refusals with DEC-193's reasons, read by key; requestfault is the interim DEC-149 word.
+- New test t46.test.mjs; two controls in t43 and t44 were brought in line with R75.
+- Tests: extraction 168/168; plane and door users of pagetranscribe 36/36. format, architecture, coverage (51/51) and ownership each have 0 failures.
+For you:
+1. Until T46-62 relays agent-worker's HTTP status as status, the six refusals answer 403.
+2. plane t42.test.mjs:277 pins transcription()'s keys, so T46-62 must re-pin them.
+3. ai.label.untested is only on PR #30.
+4. The plane bundle is stale.
