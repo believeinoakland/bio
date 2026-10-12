@@ -53,7 +53,7 @@ import { DUTIES_TABLES, migrateDuties } from "./schema.mjs";
 import { MODALITIES, SOURCE_KINDS, TRIGGER_KINDS, BASIS_KINDS, OCCURRENCE_STATES, PUBLIC_KINDS, ORGANISATION_KINDS,
          ACTING_LINES, LEVEL_SEARCHED, CONNECTION_KINDS, OCCURRENCE_KEY_RE, USE_KINDS, NOTICED, STATED_BASIS } from "./vocab.mjs";
 
-export { DUTIES_CHECKS } from "./checks.mjs";
+export { DUTIES_CHECKS, DUTIES_WORDS } from "./checks.mjs";
 export { DUTIES_SCHEMA, DUTIES_TABLES, DUTIES_TABLE_NAMES } from "./schema.mjs";
 export * from "./vocab.mjs";
 

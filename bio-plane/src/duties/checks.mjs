@@ -7,6 +7,20 @@
 const at = (fn, region) => `src/duties/index.mjs ${fn} > ${region}`;
 const row = (n, fn, region, translation) => Object.freeze({ check: `C-133.${n}`, where: at(fn, region), translation });
 
+/* T46 (R32; DEC-194, N913): the words of `words.json` (`docs/development/ux-substrate/screens/words.json`) the C-133
+   rows R32 names translate by, each `en` verbatim, read by key (`refusal.<CODE>`), as membership's `HANDLE_WORDS` and
+   extraction's `TRANSCRIBE_WORDS` are. The design stream's words: re-worded there, then re-taken here by key; a row
+   never holds a copy of its sentence. `refusal.PROMISE_DATE_UNREAD` is not taken in T46: its sentence describes a
+   promise held with no due date, while R30 refuses it and writes nothing (R32; K2919). */
+export const DUTIES_WORDS = Object.freeze({
+  "refusal.RESPONSE_KIND_UNKNOWN": "An obligation taken from a reply or a report is either a promise the body made or a "
+    + "response the report requires. This is neither. Nothing was written.",
+  "refusal.RESPONSE_EXTENT_NOT_IN": "The passage quoted isn't part of the reply or report the obligation comes from. "
+    + "Quote a passage of that document. Nothing was written.",
+  "refusal.DUTY_SOURCE_NOT_HELD": "This promise rests on a commitment that is still only proposed as a standard. Adopt "
+    + "that commitment first; the obligation then names it. Nothing was written.",
+});
+
 export const DUTIES_CHECKS = Object.freeze({
   UNKNOWN_MODALITY: row(1, "fieldRefusal", "is-duty-modality",
     "A duty is one of three things: an obligation (something owed), a prohibition (something not to be done) or a "
@@ -115,23 +129,21 @@ export const DUTIES_CHECKS = Object.freeze({
   NOT_A_POWER: row(39, "usesOfPower", "is-duty-power",
     "The uses of a power are read for a power: something an office may do. This obligation is not one. Nothing was "
     + "read or written."),
-  /* T45 (N855, N882; Actions D6d, D7): R30's and R31's own rows. */
+  /* T45 (N855, N882; Actions D6d, D7): R30's and R31's own rows. T46 (R32): C-133.41, .42 and .44 read their
+     translations from `DUTIES_WORDS` by key; C-133.43 keeps its own until its sentence and R30 agree. */
   BAD_CAPTURES: row(40, "dutiesArisingIn", "is-duty-captures",
     "The obligations arising in documents are read for 1 to 200 captured documents, each named by its fingerprint "
     + "(sha256). Nothing was read."),
   RESPONSE_KIND_UNKNOWN: row(41, "proposeFromResponse", "is-duty-response-kind",
-    "An obligation proposed from a reply or a report is either a promise the body made or a response the report "
-    + "requires. This is neither. Nothing was written."),
+    DUTIES_WORDS["refusal.RESPONSE_KIND_UNKNOWN"]),
   RESPONSE_EXTENT_NOT_IN: row(42, "proposeFromResponse", "is-duty-response-extent",
-    "The passage quoted is not part of the reply or report the obligation arises in. Quote a passage of that "
-    + "document. Nothing was written."),
+    DUTIES_WORDS["refusal.RESPONSE_EXTENT_NOT_IN"]),
   PROMISE_DATE_UNREAD: row(43, "proposeFromResponse", "is-duty-promise-date",
     "A promise's date is read from the body's own words, and those words must state one whole calendar date. These "
     + "do not (such as \"by spring\", a month without its day, or more than one date): they are kept as written and "
     + "never completed. Nothing was written."),
   DUTY_SOURCE_NOT_HELD: row(44, "adopt", "is-duty-source-held",
-    "This promise rests on a commitment that is still only proposed as a standard. Adopt that commitment as a "
-    + "standard first; the obligation then names it. Nothing was written."),
+    DUTIES_WORDS["refusal.DUTY_SOURCE_NOT_HELD"]),
 });
 
 /** A refusal carrying its row. Called with the code as a literal at each site, so the DEC-49 guard reads which code
