@@ -73,3 +73,7 @@ B5/B6 (K3002) applied: R11's ground rule and reasonField; R21's parts, origin, f
 **Tests and checks:** `node --test bio-plane/test/m/interface-shell/`: tests 61, pass 61, fail 0 (new: R21 K3009, with its controls: a refused act keeps the typed password, a plain field is kept; and, run once with the `await` removed, the test fails). The screen modules' tests over this shell: screens-settings (merged, on the tranche) 51/51; screens-intake 42/42, screens-daily 45/45, screens-inquiry 44/44 (each its job branch's head in a scratch worktree over this branch). `format` 0 failures; `architecture … interface-shell` 13 product files, 0 failures; `coverage … interface-shell` 26 of 26; `ownership … interface-shell tranche/T46` 0 failures.
 
 Size (session_01XVWdr7BFN9RvWdPQ9aPzuZ): test runs 27, module lines 1102 (src)
+
+## J5 · COMPLETE
+
+B8 (K3009) applied: done awaited before re-reads; every password field cleared after a successful act (refused acts keep typed text). R21 wording proposed in the record's 'Re-opened by B8'. Tests 61/61; screen modules over this shell: settings 51/51 (tranche), intake 42/42, daily 45/45, inquiry 44/44 (branch heads). format, architecture, coverage, ownership 0 failures.
