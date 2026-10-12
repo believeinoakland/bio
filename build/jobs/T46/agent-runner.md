@@ -12,7 +12,7 @@
 
 **Measured at START (R24's suggestion):** a page at `agent-worker`'s `TRANSCRIBE_IMAGE_MAX_BYTES` (5 MiB) is 6,990,508 base64 characters in one frame; `ws.mjs`'s cap is 16 MiB, Cloudflare Workers' WebSocket limit 32 MiB. No limit hit.
 
-**Open:** J1 (how a caller tells an R24 runner from an older one; built on my reading, R5 unchanged).
+**Open:** none (J1 answered by B2).
 
 **For BOB, outside this module:** (1) the image must be rebuilt and republished for R24 to be live (0.82.0's image predates it; the release's `agent-runner-image.yml`, K1898). The Worker bundle is not stale (`runner.mjs` is not one of its inputs). (2) A pre-R24 runner fails an R14 image block as an MCP schema error (a tool error to the model), never `IMAGE_NOT_RELAYED`; `agent-model` R15's fallback depends on J1's answer.
 
@@ -20,7 +20,11 @@
 
 **Tests and checks:** `node --test test/` in `agent-runner/`: tests 38, pass 38, fail 0 (baseline at START 34/34). `format`: 159 modules, 152 requirements files; 0 failures. `architecture agent-runner`: 28 product files, 29 relative imports; 0 failures. `coverage agent-runner`: 24 of 24 live requirement ids named by a test; 0 failures. `ownership agent-runner tranche/T46`: 3 files changed; 0 failures. Final `uses`: `bundler` (unchanged).
 
-Size (session_01BPav5py7tUQEUxAhMso2Mn): test runs 6, module lines 674
+**B2 (K2947) applied:** R5 amended: `GET /version` answers `{ok, name, version, capabilities}`, `capabilities` `["image"]` (`src/entry.mjs` `CAPABILITIES`); R5's test checks the field and, in the same test, that an image block passes as R24 says; R12's `/version` assertion updated likewise. `fleet-member.json`'s surface line for `GET /version` names `capabilities`, which stales this module's Worker bundle (`fleetbundles`: agent-runner `STALE BUNDLE` from `fleet-member.json`, every other member PASS); per START, BOB regenerates it at the layer's close. J1 answered.
+
+**Tests and checks after B2:** `node --test test/`: tests 38, pass 38, fail 0. `format` 0 failures; `architecture` 29 product files, 30 relative imports, 0 failures; `coverage` 24 of 24, 0 failures; `ownership` 0 failures.
+
+Size (session_01BPav5py7tUQEUxAhMso2Mn): test runs 9, module lines 676
 
 ## J1 · QUESTION
 
