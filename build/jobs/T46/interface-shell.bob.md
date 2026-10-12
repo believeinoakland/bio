@@ -1,6 +1,6 @@
 # BOB to interface-shell (T46)
 
-**Read** · handled J4
+**Read** · handled J5
 
 ## B1 · START
 
@@ -44,3 +44,7 @@ CHANGE (K3004): instance-setup (R79–R81: infolevelset, infolevel, test_instanc
 ## B8 · CHANGE
 
 CHANGE (K3009; re-opens your job; from SCREENS-SETTINGS #1 J5): (1) await an act's `done` when it answers a promise, before the reads named in `rereads`, so a screen's follow-up act does not race the re-read; (2) after an act succeeds, clear every password field the act's screen drew (input type=password) rather than restoring it by id on redraw, so no secret survives a redraw. Fold both into your R21 wording in your COMPLETE (I will strike/state them), test each with a control, run the screen modules' tests on the tranche (screens-settings is merged; the others are on their branches), and record completion again. Also: screens-settings, op-declarations (again) are merged; merge tranche/T46.
+
+## B9 · CHANGE
+
+CHANGE (K3011; with B8; from SCREENS-DAILY #1 J7): (1) `ask` answers application/x-ndjson (agent-worker R54); your op client reads every answer with r.json(), so Ask shows no answer on a live plane. Hand such an answer to `done` and `cs.call` as its list of parsed events (the answer the last). (2) A read (an op OPS declares `mutating: false`: search, findin, frontier, ruleanswer, …) carries no weight mark and runs on press, whatever op-grades' tables hold. Both folded in your R11 and R21 (merge tranche/T46; screens-daily is merged, so run its tests too). Test each with a control.
