@@ -1,6 +1,6 @@
 # project-roster — requirements
 
-**Status** · In force: a new helper module split from membership at T38's opening (N783; K617, K624, K2270); R1–R19 met at PROJECT-ROSTER #1's merge (K2278); R20 added then. Last changed T41 (T41-4: R5 reachable at an administrator's `EXISTENCE` of a hidden project; N822, D54, K2408); marked not yet met (T41).
+**Status** · In force: a new helper module split from membership at T38's opening (N783; K617, K624, K2270); R1–R19 met at PROJECT-ROSTER #1's merge (K2278); R20 added then. Last changed T46 (T46-5: R25 new, the C-147 rows' words read by key from `words.json`; DEC-194, N913, K2914); marked not yet met (T46). Before that T45 (R21–R24; N892, N890). Before that T41 (T41-4: R5 reachable at an administrator's `EXISTENCE` of a hidden project; N822, D54, K2408); marked not yet met (T41).
 
 ## Public
 
@@ -45,6 +45,7 @@ Terms (`membership`'s, which hold here). *Administrators* are the founder (the r
 - **R22** (T45; Actions D4; v0.2 rule 15; Bob, K2782: a member's own project is never rescued) At start this module registers once in `membership`'s project-act guard (`membership` R128). Its guard refuses, writing nothing: an invitation (`membership` R32) to a project whose scope is `own`, `PROJECT_SCOPE_OWN`; setting `discoverable` (`membership` R45) on a project whose scope is `counsel_matter` or `own`, `PROJECT_SCOPE_KEEPS_HIDDEN`. R5's rescue of a project whose scope is `own` is refused `PROJECT_SCOPE_OWN` before its own refusals but `NOT_AN_ADMIN`. Controls: each act lands on a project of scope `none`.
 - **R23** (T45; Actions D4; v0.2 rule 15) `projectScope(projectId)` answers `{scope, since, by}` (`since` the instant of the latest record), `{scope: "none", since: null, by: null}` for a project with no record and for an id that names no project. It asks no viewer (it states only the scope, as `membership` R85 states only the setting; its callers gate by sight), writes nothing and never throws. Read by `promotion`, `publication`, `docket`, `case-account`, `actions` and `filings` (see 9).
 - **R24** (T45; N890; Actions D27 B; v0.2 rule 20) `projectApprovalSet({projectId, needs, reason, by, viewer})` (`op=projectapprovalset`) records which acts need a second member's approval before sending. `needs` is a list, each entry exactly one of `{kind}` (an `action_kinds` kind of the active profiles' view, `jurisdictions` R25), `{tier}` (1, 2 or 3) or `{public: true}` (an act whose audience is the public); `[]` restores the default, one member approves. Refusals in order, each writing nothing: `NOT_THE_OWNER` (an owner of the project; administrators and the founder included, as R3); `APPROVAL_RULE_INVALID` naming the entry; `APPROVAL_KIND_UNKNOWN` for a kind the view does not hold; `NO_REASON`. It appends `{needs, reason, by, at}`; the latest governs; every participant reads the history. `secondApprovalNeeded({projectId, kind, tier, public})` answers `{needed, matched}`, `matched` the entries that apply; a `tier` that is null or undetermined matches every `{tier}` entry (an undetermined tier is never read as Tier 1, v0.2 §6). It is a project setting, never a member attribute: no entry names a member. Never throws. Enforcement at approval is `filings`' (see 9).
+- **R25** (T46; DEC-194; N913) Every row of this module's `PROJECT_SCOPE_CHECKS` family (C-147.1–C-147.8) takes its translation from `words.json`'s `refusal.<CODE>`, read by key (as `membership`'s `HANDLE_WORDS` are), never a copy of the sentence; codes, numbers and `where`s are unmoved. Six rows' translations change by it: C-147.3 `PROJECT_SCOPE_OWN_NOT_SOLE`, C-147.4 `PROJECT_SCOPE_UNCHANGED`, C-147.5 `PROJECT_SCOPE_OWN`, C-147.6 `PROJECT_SCOPE_KEEPS_HIDDEN`, C-147.7 `APPROVAL_RULE_INVALID`, C-147.8 `APPROVAL_KIND_UNKNOWN`; C-147.1 `PROJECT_SCOPE_UNKNOWN` and C-147.2 `PROJECT_SCOPE_NEEDS_HIDDEN` already read as their keys. Promotion's T46-6 stamps the six changed rows. *(not yet met: T46)*
 
 ### Uses
 
@@ -66,7 +67,7 @@ Terms (`membership`'s, which hold here). *Administrators* are the founder (the r
 
 ### Satisfies
 
-- `BIO_Action_v0_2.md` rules 9, 15, 20 (K2780; T45, N893): a counsel matter, a member's own project, the second-approval setting (R21–R24); K2782.
+- `BIO_Action_v0_2.md` rules 9, 15, 20 (K2780; T45, N893): a counsel matter, a member's own project, the second-approval setting (R21–R24); K2782. DEC-194 (their refusals' words by key; N913): R25.
 
 - `BIO_Membership_Architecture_v2.md` §7 (7.7 and 7.8 for the roster and its removals; 7.10 for ownership, 7.13 for the rescue; 7.14, the directory and the request to join), §11 item 5 (a removal is an owner's act, recorded).
 - Bob's ruling of 2026-09-26 recorded as membership R63 (now R2 here): every removal kept with its reason, readable by every participant.

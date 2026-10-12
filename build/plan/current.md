@@ -77,7 +77,7 @@ It is the only module marked `legacy` in `modules.json`.
 ### L8
 - **T46-20 · case-carriage** · (N907) new reads `acceptedWorkLapsedSince`, `marksLapsedSince`, `sourcesLapsedSince(…, since)` over its append-only histories · text BOB's.
 - **T46-21 · docket** · (N913) `DOCKET_OUTCOME_UNREADABLE` re-worded · words.json.
-- **T46-22 · public-read** · (N906) R5 reworded to the lowercasing behaviour (callers unchanged: a 64-hex argument is lowercased, never refused); the sampling tests deepened (R13, R15, R19, R22, R27, R29, R30) · text BOB's.
+- **T46-22 · public-read** · (N904) R34 reads a stored stake that record-core's strict `getSetting` answers `SETTING_UNREADABLE` (record-core R83) as undetermined, never as unset; (N906) R5 reworded to the lowercasing behaviour (callers unchanged: a 64-hex argument is lowercased, never refused); the sampling tests deepened (R13, R15, R19, R22, R27, R29, R30) · text BOB's.
 - **T46-23 · case-checker** · (N916) R24 states that a sentence with nothing checkable reads `supported` when it cites anything (behaviour kept); `filings` and `case-account` told (P5) · text BOB's.
 - **T46-24 · case-import** · (N903) R4: the source group's `group_fields` (public-read R34's identity and declared stake, with the time read) recorded at import and answered from `importedCase`, for `conformance` R32 · text BOB's.
 - **T46-25 · case-disclosures** · (N901) R30: `accountJudged` translates case-account's `cited` holdings into `checkAccount`'s shape (one site) · text BOB's · after T46-23.
