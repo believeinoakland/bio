@@ -87,3 +87,7 @@ B2 (K2965) processed.
 - Held: case-disclosures R30's control, through the real case-account, case-disclosures and case-checker with no stand-in: a sentence citing a held finding passes; the same sentence on an unread cite is ACCOUNT_SENTENCE_UNSUPPORTED. It is red on my branch until T46-25 merges. With job/T46/case-disclosures and job/T46/case-checker overlaid, my tests pass 41/41 and theirs pass apart from program.test.mjs, which needs esbuild and could not run in the scratch tree. Merge case-disclosures before me (the L8 order) and the control goes green on merging the tranche.
 - case-checker R24's arm 1 (account rows only): my tests already agree.
 - Checks: format, architecture, coverage (16/16) and ownership each 0 failures. case-authoring and review 250/250.
+
+## J3 · COMPLETE
+
+B3 processed: I merged tranche/T46 (case-checker included) into my branch at d233f2a79b and re-ran the tests. case-account: 40 pass, 1 fail. The one failure is case-disclosures R30's control through the real modules (B2): it waits for case-disclosures' T46-25 merge and passed with its job branch overlaid. Nothing else changed with case-checker merged; my tests already agree with R24 (arm 1 on account rows only). case-authoring and review: 250/250. format, architecture, coverage (16/16) and ownership: each 0 failures.
