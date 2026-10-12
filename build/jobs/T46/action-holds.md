@@ -37,3 +37,14 @@ The litigation-hold to-do (fed by my `holdsDue`, R3, which lists a legal mark on
 Not mine to change. Options as I see them: (a) drop the release door from the to-do and its texts (a hold is placed, then released); (b) give "no hold needed" its own statement in this module (a new requirement), which R3 would read as resolving the mark. My reading of N929's intent favours (a), but it is a requirement call.
 
 Also: `holdNotInPlace`'s one fixed `detail` is re-worded to be true of a release too; its row is unchanged, and `filings` (which relays it) asserts the reason only and passes.
+
+## J2 · COMPLETE
+
+T46-33 complete on `job/T46/action-holds` (pushed). R14 and R15 met, each named by `t46.test.mjs`.
+- R14: a release where no statement stands is refused `HOLD_NOT_IN_PLACE` through `holdNotInPlace`, asked where `HOLD_ALREADY_RELEASED` is, writing nothing, at every place; a released place still answers `HOLD_ALREADY_RELEASED`.
+- R15: C-149.10 reads `refusal.MACHINE_CANNOT_SEND` by key from the new `ACTION_HOLDS_WORDS`; C-149.11 and C-149.8 keep their translations; every other row pinned unchanged.
+- Read my code and tests whole (P20); no other flaw found in my module.
+- action-holds 38/38. Users' suites: 11 reds, all present on the tree before my change, none naming this module. format, architecture, coverage (15/15) and ownership: 0 failures for action-holds; `checks/run.mjs` architecture 0 failures.
+- One REPORT (J2): `action-producers`' litigation-hold to-do still offers `actionholdrelease`, now always refused for its case.
+- The plane bundle is staled (accepted red 4). No file outside my paths.
+Details in my record.
