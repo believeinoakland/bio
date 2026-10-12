@@ -305,7 +305,7 @@ test("R44 a public comment or testimony prepared as myself (voice: self) is the 
   const f = f45(x);
   const A = x.action();
   const s = comm(f, A, { voice: "self", text: "My own notes for the meeting." });
-  assert.deepEqual([s.ok, s.voice_says.key], [true, "filings.voice.self"]);
+  assert.deepEqual([s.ok, s.voice_says.key, s.voice_says.voice.key], [true, "voice.self.means", "voice.self"], "R52's keys (T46)");
   const ap = await approve(f, s.id);
   assert.deepEqual([ap.reason, ap.check], ["NOT_THE_GROUPS_ACT", "C-115.54"]);
   assert.equal(f.filingRecordSent({ filing: s.id, at: "2026-09-29", account: "read aloud", author: V("bo"), viewer: V("bo") }).reason, "NOT_THE_GROUPS_ACT");
@@ -369,7 +369,7 @@ test("R48 a sentence naming staff below the responsible official is pointed out 
   const f = f45(x);
   const A = x.action();
   const off = prep(f, A, { text: "The clerk, Ann Example, refused." });
-  assert.deepEqual([off.outward.pointed.staff_named.ran, off.outward.pointed.staff_named.key], [false, "filings.staff.not_run"]);
+  assert.deepEqual([off.outward.pointed.staff_named.ran, off.outward.pointed.staff_named.key], [false, "pointer.staff.notrun"], "R52's key (T46)");
   const tc = { sentences: [{ index: 0, quote: "Ann Example", reads_as: "staff_named", why: "a junior clerk" }] };
   const on = prep(f, A, { text: "The clerk, Ann Example, refused.", textcheck: tc });
   assert.deepEqual(on.outward.pointed.staff_named.items.map((i) => [i.index, i.label.machine_work]), [[0, true]]);
