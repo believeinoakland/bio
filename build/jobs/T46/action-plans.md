@@ -33,3 +33,7 @@ Findings from T46-39, for your record; nothing here blocks the job.
 2. **R19's day reads are the UTC day** (`date_past` compares a regulated date with `dayOf(nowMs)`; `date_before_phase` with a phase's earliest start's UTC day). K1444 (iii) would read them on the place's local day, as R46 (b) now does for `look_again`. R19 names no day, and with no zone held the check would become undetermined (R28), so this is a change of R19's meaning, not a fix I made. Deferred in my record; yours to fold if wanted.
 3. **`planRead`'s `close_note_prompt`** is now `{key: "plan.close.lessons", en}` (was the bare key string), per R47's "the key and the words". No module but action-plans reads it (searched: only the generated bundles hold the old line). `plansToLookAgain` also answers `day` (the local day judged on, or `{state: "undetermined"}`); action-producers' tests pass (36/0).
 4. **Reds:** answer-envelope `catalogue-end.test.mjs` names C-124.30 alone (rule 5, until T46-52); C-124.58–.62 are not among its pins. The six re-worded rows wait for T47's stamp (rule 5 (2)). The plane bundle and `program.mjs` are stale from this change (rule 5 (4)). affordances (2), op-declarations (7), control-plane (2) and plane (1) fail identically with and without my change: inherited.
+
+## J2 · COMPLETE
+
+T46-39 complete: R46 (a), R46 (b) and R47 applied and tested (t46.test.mjs); action-plans 79/79; users' tests and every check as in my record's Tests and checks; findings in J1. Record: build/jobs/T46/action-plans.md on job/T46/action-plans.
