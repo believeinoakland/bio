@@ -15,7 +15,10 @@
  * NON_ACTS row here, and eight of them are in `MACHINE_REFUSALS` (`./index.mjs`) with their owners' codes; every other op
  * here is a non-act, refused a machine by its owner's own code where it is. By R18 `phone` follows the rung. No consequence
  * statement is added (R32: which acts take one is the UX stream's to propose); `publishcheck`, graded as `publish`
- * (case-check's Uses; K2839), carries the Irreversible weight by R21's rule. */
+ * (case-check's Uses; K2839), carries the Irreversible weight by R21's rule. (T46; K2881) The five ops `op-declarations`
+ * declared under R49 after this module's T45 merge (`grouprules`, `advocacycheck`, `advocacychecks`, `infractiondraft`,
+ * `bearingdraft`) are graded here by the same rule; none is an act of `affordances` or a machine refusal (`case-account`
+ * refuses a machine itself, `MACHINE_CANNOT_CHECK_ADVOCACY`). */
 
 const R = (s) => `read: ${s}; writes nothing`;
 const PLAN = (s) => `plan-directed: ${s}; kept in the plan's history, never published; moves no bundle`;
@@ -78,6 +81,9 @@ export const T45_RUNG_ABSENT = {
   prepitemdone:     { ground: "undetermined", is: "a member marks a plan's preparation item done; marked once, as checkpointrecord is judged once (plan-work R5)" },
   statusreportsave: { ground: "undetermined", is: "a member keeps a status report with a plan, never required and never published, as reportkeep (plan-work R8)" },
   ruleconfirm:      { ground: "undetermined", is: "a member other than its drafter confirms a group rule, with her qualification where its tier asks one; the confirmation stands, and a withdrawal ends the rule, as templateapprove (local-facts R11)" },
+  /* (T46; K2881) case-account R13, declared after this module's T45 merge: the text and its check kept in her own hidden
+     project; it asks no authored reason and no published act takes it back */
+  advocacycheck:    { ground: "undetermined", is: "a member checks text she wrote against the record, each claim and position sentence answered supported, not supported or contradicted, the text and its check kept in her own hidden project only and usable as no mark (case-account R13)" },
 };
 
 /* ---- every op's NON_ACTS reason (R5; R32: a read "read: …", a draft "draft: …") ---- */
@@ -171,4 +177,16 @@ export const T45_NON_ACTS = {
   rulewithdraw: RULE("keyed by group rule; a member withdraws it with a reason, kept and never deleted"),
   ruleoffer: R("a confirmed group rule's entry and primary source as canonical bytes with their digest, for a member to "
     + "carry to the shared profile's maintainers; transmits nothing"),
+  /* (T46; K2881) the five ops op-declarations declared under R49 after this module's T45 merge, graded on R32's rule:
+     local-facts R12's read, case-account R13's check and its list, and agent-worker R76's two record drafts */
+  grouprules: R("the group's rules with their state, source, drafter, confirmer and dates, to a viewer naming a member"),
+  advocacycheck: "project-directed: keyed by the member's own hidden project; her own text checked against the record "
+    + "sentence by sentence, kept there and never a mark, never evidence; moves no bundle",
+  advocacychecks: R("a member's kept text checks in her own hidden project, newest first, to a viewer with full sight of "
+    + "it"),
+  infractiondraft: "draft: answers a documented account of an infraction for one audience, drafted by the assistant from "
+    + "what the member may see of the matter, each point with its source, labelled machine work; writes nothing of the "
+    + "record; the member's words only by her own act",
+  bearingdraft: "draft: answers the assistant's proposed bearing of each claim of an action on a reply, each with its "
+    + "quote, labelled machine work; writes nothing of the record; a bearing only by a member's own act",
 };
