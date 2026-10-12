@@ -17,7 +17,7 @@
 - **Found in another module:** `steps.laterFound` answers `truncated` (src/steps), but steps R23 does not state it. So this module does not carry it into `facts.step_later_found`: a bound reached there is silent, against R1's intent. Suggest steps R23 state it; this module would then carry it as R19 does for `stepsDue`.
 - **Tests:** `node --test bio-plane/test/m/notice-producers/`: 106 pass, 0 fail. Users: `queue` (`test/m/queue/`, `conclude-project.test.mjs`): 143 pass, 0 fail.
 - **Checks:** format 0 failures; architecture (15 files) 0 failures; coverage 19 of 19 ids, 0 failures; ownership (4 files) 0 failures. `run.mjs`: format, architecture and channels 0 failures; its coverage failures are other L11 modules' unbuilt ids, none mine.
-- Size (session_014SC3rCBPTNFj9KFcNmLCLT): test runs 9, module lines 1376
+- Size (session_014SC3rCBPTNFj9KFcNmLCLT): test runs 9, module lines 1465
 
 ## J1 · QUESTION
 
