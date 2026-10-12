@@ -28,3 +28,7 @@
 - Generated artifact staled: the plane bundle (rule 5.4).
 
 Size (session_01V2ibyN2cvYwuMA6E7qMpYL): test runs 14, module lines 1232
+
+## J1 · COMPLETE
+
+T47-8 complete (record 03fcfe42ca, code 8ba56ed5d4). R26: projectList({viewer, limit}) / op=projectlist, one statement over bundles' projects through membership's viewerPredicate (R43), id order, {id, name, stage} (name R34's title, stage current_state as recorded, null when none), {ok, projects, count, limit, truncated}, PROJECT_LIST_LIMIT 200 as R9, empty list (never a refusal) for any viewer R43 admits to nothing; writes nothing, never throws. N940: fixture stub gains declareTable (membership's join_doors declared explicitly) and bundles.current_state. Fixed in my module: R9/R14 limit threw on a Symbol or throwing valueOf; one #cap now serves R9, R14, R26. project-roster 46/46; format, architecture, coverage (26/26), ownership 0 failures; run.mjs format/architecture/channels 0, coverage 12 none mine (rule 5.1). Two new reds in other modules, both their pins of this op list: plane R5/R9 (T38-26) ops-map pin until T47-66; op-declarations R49/R6 (every served op has a spec) until T47-53. Plane bundle staled (5.4); worker bundles and newgroup not. Deferred: none.
