@@ -10,9 +10,19 @@ My best reading, on which I am carrying on: you add `run-rules` (earlier in L6's
 
 Consequence: R10's test is red on my branch until run-rules' T46-13 (which sets `plan` in `DEPLOYED_MODES`) is merged into `tranche/T46`. I make the harness change now and will post COMPLETE after you announce run-rules' merge (CHANGE) and I have merged the tranche and seen R10 green. Say if you want it otherwise.
 
-## Progress (not a message)
+## Completion
 
-- Read whole: `build/requirements/agent-harness.md`; L6's row of `build/layers.md`; `agent-harness/src/harness.mjs`, `src/subsession.mjs`, `test/agent-harness.test.mjs`; my plan entry T46-63 and T46-13/T46-19 for the act it shares; run-rules R14 and agent-worker R53 for the agreement. Uses: none declared.
-- Done (uncompleted): `MODES.plan` deployed with its comment; header R1–R10; stale old-agent-worker ids in comments corrected (gate R14→R2, pass count R15→R3, PLAN_FLOW R50→R6). Tests: R2's deployed-list and gate-wording cases follow; R6's toggle of `MODES.plan` removed (no longer needed); R10 two tests new.
-- Red, by design until run-rules' T46-13 merges: the R10 agreement test (plan deployed here, not yet in `DEPLOYED_MODES`). Architecture fails on the run-rules import until Q1 is answered.
-- Next: on BOB's answer to J1 and the CHANGE for run-rules' merge, merge `tranche/T46`, re-run steps 5–7.
+- **Read whole** (P20): `build/requirements/agent-harness.md`; L6's row and contract in `build/layers.md`; my code and tests whole (`agent-harness/src/harness.mjs`, `src/subsession.mjs`, `test/agent-harness.test.mjs`); plan entries T46-63 and, for the shared act, T46-13 and T46-19; run-rules R14 and agent-worker R53. My Uses (now `run-rules`, K2947): its `DEPLOYED_MODES` and `RUN_MODES`.
+- **Applied T46-63 (R10):** `MODES.plan` deployed in `harness.mjs`, its comment and `does` updated (no "not yet deployed"); `check` stays deployed, `investigate` and `extract` unchanged. The gate's `why` now names `deployed now: check, plan`.
+- **Flaws fixed in my module (P8):** comments citing the old `agent-worker` ids for what are now this module's requirements corrected (gate R14→R2; pass count R15→R3; `PLAN_FLOW` R50→R6); header R1–R9→R1–R10. The R6 test no longer flips `MODES.plan` in-process to walk a plan run.
+- **Tests:** R2's cases follow the new deployed set; R10 two new tests: the deployed set exactly, and agreement with run-rules (`MODES` keys = `RUN_MODES`; each `deployed` equals `DEPLOYED_MODES.includes`; the gate answers each run mode as run-rules does). Control: before run-rules' merge this test failed naming `plan` as the disagreement (seen at 984c528953).
+- **Deferred:** none.
+- **Another module's generated artifact made stale (mechanics §14):** `agent-worker/dist/agent-worker.bundled.mjs` (and `.bundle.json`), built by `bundler` from agent-worker's sources including this module, still carries `MODES.plan` `deployed: false` with "not yet deployed". Not written by me; BOB regenerates at layer close.
+- **Tests and checks run** (on `tranche/T46` merged after B3):
+  - `node --test agent-harness/test/`: tests 33, pass 33, fail 0
+  - `node --test bio-plane/test/m/run-rules/` (the module I use): tests 60, pass 60, fail 0
+  - `node checks/format.mjs`: 159 modules, 152 requirements files; 0 failures
+  - `node checks/architecture.mjs … agent-harness`: 3 product files, 4 relative imports; 0 failures
+  - `node checks/coverage.mjs … agent-harness`: 10 of 10 live requirement ids named by a test; 0 failures
+  - `node checks/ownership.mjs … agent-harness tranche/T46`: 3 files changed; 0 failures
+- Size (session_01PB3YZExYaDASn4QJXKFYwe): test runs 5, module lines 1774
