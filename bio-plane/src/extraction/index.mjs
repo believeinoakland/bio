@@ -27,7 +27,7 @@ import { sha256HexSync } from "../record-grammar/sha256.mjs";
 import { contentMintState } from "../record-grammar/labels.mjs";
 import { EXTRACTION_SCHEMA } from "./schema.mjs";
 import { REEXTRACT_CHECKS, reextractRow, EXTRACTION_CHECKS, noSha, NO_SHA_DETAIL, TRANSCRIBE_WORDS, fillWords,
-         pagesSaid } from "./checks.mjs";
+         pagesSaid, AGENT_WORKER_REASONS } from "./checks.mjs";
 import { evidenceAbsent } from "../capture/ops.mjs";
 import { driftObligations } from "./drift.mjs";
 import { membershipBeside } from "./filemembership.mjs";
@@ -1800,8 +1800,9 @@ function pictureWhy(refused) {
 /* R71 (T44): what the AI path answered when it was called and nothing was filled, read from the transcriber's own
    answer (`tier4Extend` keeps only a sentence of it): `{key, why}` for a sentence with a `{why}` key, `{none: true}`
    for a post agent-worker answered `ok: true` filling nothing, `{refusal}` for a refusal agent-worker answered after
-   the post with its row's translation, or null when no key says it (the transcriber threw, or a refusal with no row to
-   translate it, which is reported, never given a sentence of this module's own). `fmt` is R73's detected format. */
+   the post with its row's translation, or with no row one of R72's six codes (R75, its DEC-193 reason), or null when no
+   key says it (the transcriber threw, or another refusal with no row to translate it, which is reported, never given a
+   sentence of this module's own). `fmt` is R73's detected format. */
 function unfilledOutcome(a, fmt) {
   if (!a || typeof a !== "object") return null;
   if (a.ok === true) return { none: true };
@@ -1813,6 +1814,11 @@ function unfilledOutcome(a, fmt) {
   if (ENDINGS.includes(a.ending) || ENDING_CODES.includes(a.code) || ENDING_CODES.includes(a.reason))
     return { key: "transcribe.failed", why: "transcribe.why.ended" };
   if (typeof a.translation === "string" && a.translation) return { refusal: a };
+  /* R75 (T46; N886; DEC-193): one of agent-worker R72's six codes, which carry no row, is that refusal with DEC-193's
+     reason as its translation, read by key; its code and status as answered, no check of this module's own. */
+  const code = typeof a.code === "string" && a.code ? a.code : a.reason;
+  if (Object.prototype.hasOwnProperty.call(AGENT_WORKER_REASONS, code))
+    return { refusal: { ...a, code, translation: fillWords(AGENT_WORKER_REASONS[code]) } };
   return null;
 }
 

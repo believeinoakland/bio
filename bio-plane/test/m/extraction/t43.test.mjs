@@ -58,7 +58,9 @@ const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x4
 
 test("R47 (T43, N862): C-51.7's translation is words.json's transcribe.refused.notdeployed, verbatim; it names no account", async () => {
   assert.equal(REEXTRACT_CHECKS.TRANSCRIBE_NOT_DEPLOYED.translation, WORD("transcribe.refused.notdeployed"));
-  for (const [k, en] of Object.entries(TRANSCRIBE_WORDS)) assert.equal(en, WORD(k), `${k} is the list's word`);
+  /* (T46; K2919) R75's interim request-fault word is the one held apart, checked in t46.test.mjs */
+  for (const [k, en] of Object.entries(TRANSCRIBE_WORDS))
+    if (k !== "transcribe.reason.requestfault") assert.equal(en, WORD(k), `${k} is the list's word`);
   const { w, d } = await heldScan();
   const r = await w.x.pageTranscribe({ captureSha: d, ...member1 });
   assert.deepEqual([r.status, r.body.reason, r.body.check, r.body.translation], [501, "TRANSCRIBE_NOT_DEPLOYED", "C-51.7", WORD("transcribe.refused.notdeployed")]);
