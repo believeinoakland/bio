@@ -1,6 +1,6 @@
 # case-account (T46)
 
-**Status** · session_01Xn37tqsLSaaQvhHtapo2Nd · depth 2 · WORKING · handled B0
+**Status** · session_01Xn37tqsLSaaQvhHtapo2Nd · depth 2 · COMPLETE · handled B0
 
 ## Working notes
 
