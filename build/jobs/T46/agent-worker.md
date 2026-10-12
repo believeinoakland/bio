@@ -39,3 +39,7 @@ B4 handled: tranche/T46 merged; R79 done (t46 69/0). Not yet green, by one depen
 **Read:** as in Progress above (requirements and source whole; tests and the used modules' public parts through three helper digests, mechanics §17 (3)).
 **Tests and checks:** `npm test` 16 suites, 16 pass 0 fail (t46 70/0); controls: t46 13/0, t41 9/0, t42 17/0, cascade 4/4, agent-worker.control 15/15 as declared, harness.control 13/13 as declared. `format`: 0 failures; `architecture`: 0 failures; `coverage`: 72 of 72 live ids named, 0 failures; `ownership` (tranche/T46): 19 files, 0 failures. New file: `agent-worker/src/untested.mjs`, `agent-worker/test/t46.test.mjs`, `agent-worker/test/t46.control.mjs` (all under the module's paths).
 Size (session_018akUZcPceLXkFDzzdQL8Tr): test runs 34, module lines 3394
+
+## J4 · COMPLETE
+
+T46-19 complete on job/T46/agent-worker (tranche/T46 @ B5 merged): R6, R30, R51, R53, R72, R76, R79, R80 applied and tested (t46 70/0, 16/16 suites, every control as declared; format, architecture, coverage 72/72, ownership 0 failures). Marks *(not yet met: T46)* are yours to strike. Details, deferred items and findings for other modules' wording in the record's Completion section.
