@@ -1,5 +1,5 @@
 /* host-governor — the per-host request governor (layer 3; D-95). Requirements: build/requirements/host-governor.md
-   (R1–R27). Extracted from `legacy-store` (store.mjs, schema.mjs) and `legacy-index` (index.mjs) in T4 (T4-1, N25).
+   (R1–R28). Extracted from `legacy-store` (store.mjs, schema.mjs) and `legacy-index` (index.mjs) in T4 (T4-1, N25).
 
    Our APPETITE is a configured constant because it is ours. Their CAPACITY is discovered by being refused and
    recorded, the pattern capture_limits proved. The governor lives in the Durable Object because the object
@@ -194,7 +194,8 @@ export class HostGovernor {
     return { configured: true, host, appetite_per_min: appetite };
   }
 
-  /** R13: one host's row, or every row by host; never creates one. Never throws. */
+  /** R13: one host's row, or every row by host; never creates one. Never throws. R28: it reads only `host`, so a
+   *  `now` or `nowMs` a caller sends is never read, and the rows it answers are as recorded, judging no instant. */
   governorState(q) {
     const host = q && q.host != null && q.host !== "" ? String(q.host) : null;
     return { hosts: host ? this.#rows(`SELECT * FROM host_governor WHERE host = ?`, host)
