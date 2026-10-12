@@ -160,8 +160,8 @@ const CFG = {
   t("the real config derives without refusal and SELF targets the instance",
     named(b, "SELF")?.service, "biosmoke7");
   /* N696 (K1864): SHEET_WORKER/sheet-worker joined the real config; five service bindings since T34.
-     T36-2 (BUNDLER #10; rev. 2 §2 R10, plane uses file-scanner): FILE_SCANNER/file-scanner is named ahead of the plane's
-     job adding it (T36-49): red 10 of T36's opening, accepted by name, in both assertions, until it lands. */
+     T36-2 (BUNDLER #10; rev. 2 §2 R10, plane uses file-scanner): FILE_SCANNER/file-scanner, which the plane's config
+     has carried since T36-49; six since. */
   t("the real config's six service bindings all derive",
     (Array.isArray(b) ? b : [b]).filter((x) => x.type === "service").map((x) => x.name).sort(),
     ["AGENT_WORKER", "FILE_SCANNER", "OCR_WORKER", "PDF_WORKER", "SELF", "SHEET_WORKER"]);

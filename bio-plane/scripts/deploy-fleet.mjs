@@ -25,23 +25,16 @@
  * arbitrary group accounts, which is the same defect inverted. The fix is to
  * SUBSTITUTE the instance slug at deploy time, which is what this does.
  *
- * WHY IT SHELLS OUT TO WRANGLER INSTEAD OF PUTTING BYTES LIKE deploy.mjs DOES,
- * and this is a constraint rather than a preference. `agent-worker/wrangler.jsonc`
- * records a deliberate FLEET decision at its `main` key: THE SOURCE DEPLOYS, NOT
- * A BUNDLE, because a committed bundle is "a second place its version lives and a
- * committed artifact that can drift from its source (D-106's class)". The member
- * is three modules (`index.mjs` imports `./harness.mjs` and `./subsession.mjs`),
- * so a raw REST upload of one part cannot resolve them — a REST deployer would
- * therefore FORCE a build step and silently reverse FLEET's decision. Wrangler
- * bundles from source at deploy, so routing through it keeps that decision
- * intact. The generated config below is a TEMP FILE, deleted in a finally, and
- * the tracked config is never written to.
- *
- * (The INSTALLER cannot do any of this — it is a Worker and cannot run wrangler,
- * so DS-1's installer half needs a bundled, hashed, signed asset per member in
- * the release. That is a release-format change and is where FLEET's no-build-step
- * decision has to be revisited deliberately, with FLEET told. It is NOT decided
- * here; see D-297.)
+ * WHY IT SHELLS OUT TO WRANGLER INSTEAD OF PUTTING BYTES LIKE deploy.mjs DOES.
+ * Each member's `wrangler.jsonc` names its committed, guarded bundle as `main`
+ * (D-297 settled that a member ships one bundled, hashed, signed artifact, which
+ * `fleet-bundle.mjs` guards), and wrangler carries everything else a member's
+ * config states — its upload parts' module rules, its containers, its buckets and
+ * crons — from that one file, so this tool substitutes the slug and hands the
+ * config over rather than re-deriving each class of binding. The generated config
+ * below is a TEMP FILE, deleted in a finally, and the tracked config is never
+ * written to. (The INSTALLER cannot run wrangler: it installs the release's
+ * signed assets and parts, bundler R22–R25.)
  *
  * A CONTAINER MEMBER (bundler R26; N624, K1705) deploys the same way, with one step
  * before it: its image, named by digest in its own marker, is pulled and pushed to

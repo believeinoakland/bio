@@ -117,14 +117,17 @@ console.log("\n--- 1 · every fleet member is DISCOVERED, and every one of them 
    classes (T36-5), is listed with each class's image: a two-class member answers its classes' repositories, in its
    marker's order; a one-class member its one image, as before.
    RE-POINTED 2026-10-08 (BUNDLER #11, T37-3 B2; K2176, N773): file-scanner's images moved from `ghcr.io`, which
-   Containers cannot pull, to Docker Hub (file-scanner R10). */
+   Containers cannot pull, to Docker Hub (file-scanner R10).
+   RE-PINNED 2026-10-12 (BUNDLER #16, T46-2; K2266, K2912): the 0.82.0 cut (`dist/cut-0.82.0` @ 985fbefc88) names all
+   three images under `ghcr.io/believeinoakland/`, where it published them and wrote their digests; red until the cut is
+   merged into the tranche (T46 rule 5 (5)). */
 t("members discovered by their own marker file, never a list kept here",
   members.map((m) => m.name), ["agent-runner", "agent-worker", "file-scanner", "ocr-worker", "pdf-worker", "sheet-worker"]);
 t("agent-runner and file-scanner are listed as container members, each with its images (R24)",
   members.filter(isContainer).map((m) => [m.name, m.kind,
     ...(m.containers ? m.containers.map((c) => c.image.repository) : [m.image.repository])]),
-  [["agent-runner", "container", "docker.io/civicos/agent-runner"],
-   ["file-scanner", "container", "docker.io/civicos/file-scanner-scanner", "docker.io/civicos/file-scanner-renderer"]]);
+  [["agent-runner", "container", "ghcr.io/believeinoakland/agent-runner"],
+   ["file-scanner", "container", "ghcr.io/believeinoakland/file-scanner-scanner", "ghcr.io/believeinoakland/file-scanner-renderer"]]);
 
 /* D-238. `git stash` is REPOSITORY-WIDE across every worktree and `push -u`
    carries untracked files, so a `pop` can deposit a whole fleet directory —
@@ -249,7 +252,10 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      manifest this suite reads (`agent-worker/dist/agent-worker.bundle.json`, rebuilt at T42's L6 close; its staleness
      arm green). One arrives and none leaves: the member's own `src/transcribe.mjs`, which its `index.mjs` imports since
      T42-20. */
-  t("agent-worker's 26 inputs are all recorded — its eight own modules, agent-harness and agent-model across trees, the plane's denylist, run-rules with what it imports, and record-grammar through observation-log",
+  /* RE-PINNED 2026-10-12 (BUNDLER #16, T46-2; N900, K2828, T46 rule 5 (5)): 26 -> 27 inputs, from the committed
+     manifest this suite reads (`agent-worker/dist/agent-worker.bundle.json`, rebuilt by T45; its staleness arm green).
+     One arrives and none leaves: the member's own `src/action-drafts.mjs`, which its `index.mjs` imports since T45. */
+  t("agent-worker's 27 inputs are all recorded — its nine own modules, agent-harness and agent-model across trees, the plane's denylist, run-rules with what it imports, and record-grammar through observation-log",
     (agent?.inputs || []).map((i) => i.path).sort(),
     [
      "../agent-harness/src/harness.mjs", "../agent-harness/src/subsession.mjs",
@@ -260,7 +266,7 @@ console.log("\n--- 2a · the manifest records the inputs it actually has, includ
      "../bio-plane/src/run-rules/checks.mjs", "../bio-plane/src/run-rules/deployment.mjs", "../bio-plane/src/run-rules/index.mjs",
      "../bio-plane/src/run-rules/rules.mjs", "../bio-plane/src/run-rules/skill-version.mjs",
      "../bio-plane/src/run-rules/test-bar.mjs", "../bio-plane/src/run-rules/test-set.mjs",
-     "../bio-plane/src/tokens.mjs", "src/ask.mjs", "src/cascade.mjs", "src/draft.mjs", "src/index.mjs", "src/ops.mjs",
+     "../bio-plane/src/tokens.mjs", "src/action-drafts.mjs", "src/ask.mjs", "src/cascade.mjs", "src/draft.mjs", "src/index.mjs", "src/ops.mjs",
      "src/reads.mjs", "src/signin.mjs", "src/transcribe.mjs",
     ]);
   t("and it vendors nothing: the member still imports NOTHING from npm",
