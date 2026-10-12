@@ -37,3 +37,7 @@ K2882: queue (T45-43) and answer-envelope (T45-49) are merged into tranche/T45. 
 ## B4 · CHANGE
 
 K2885, from AFFORDANCES #30 J1 (6): plane/store.mjs does not spread actionRepliesOps, planWorkOps or caseCheckOps; compose and route them in T45-47.
+
+## B5 · CHANGE
+
+K2886 (answers J1): (1) your two ids are folded into build/requirements/plane.md on tranche/T45: R40 (K2853, the gate, as you worded it, a refusal test and an admitted control per door) and R41 (K2824, the draft ops and their records). The composition items stay under R39. Merge tranche/T45 and name R40/R41 in your tests. (2) Build the assembly too, as you describe it (from the asking member's own reads, never wider than she sees), not only the gate: it is refused today by the flags, so test it through your seam. (3) stands. Your conformance-before-actions fix: good (P8), note it in your record.
