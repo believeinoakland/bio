@@ -86,7 +86,8 @@ test("R10: success writes the run, its bounds, the handed manifest and bar verba
   const r = await w.runs.open(OPEN({ label: "fees", bounds: [{ bound: "fetches", allowed: 5, unit: "fetch" },
     { bound: "surfaces", allowed: 2, consumed: 0 }], biasManifest: handed, standardPair: bar, state: { todo: [1] },
     actor: "bob", viewer: "member:bob", principalPlane: "member:bob/t1" }));
-  assert.deepEqual(Object.keys(r), ["run", "started", "status", "ticks", "created", "expires", "projectGate"]);
+  assert.deepEqual(Object.keys(r), ["run", "started", "status", "ticks", "created", "expires", "untested", "projectGate"]);
+  assert.equal(r.untested, null, "R78: a run the bar admitted carries no label");
   assert.deepEqual([r.started, r.status, r.ticks, r.created, r.expires], [true, "running", 1, T0, "2026-07-01T01:00:00Z"]);
   /* INQ is cited by PROJ (bob sees it) and HIDDEN (he does not): the stated count is the sighted one */
   assert.deepEqual(r.projectGate, { applied: false, ground: "INQUIRY", why: r.projectGate.why, projects: 1 });
@@ -139,15 +140,15 @@ test("R32: a run's conditions are recorded at the open and never derived later â
 
 test("R40: the open refuses a mode that is not a deployed member of the one deployment order (C-109.1), after R8 and before anything is written; no mode opens in the deployed one", async () => {
   const w = await openWorld();
-  assert.deepEqual(DEPLOYED_MODES, ["check"]);
-  assert.deepEqual(DEPLOYMENT_SEQUENCE.order.slice(0, 1), DEPLOYED_MODES);
+  /* run-rules R14 (T46; K2892): plan is deployed by its own flag; ask and draft deploy apart and are no run modes */
+  assert.deepEqual(DEPLOYED_MODES, ["check", "plan", "ask", "draft"]);
   assert.equal(DEPLOYMENT_SEQUENCE.verification_recorded, null);
   const before = w.dump();
-  for (const mode of [...DEPLOYMENT_SEQUENCE.order.slice(1), "", "   ", "CHECK", "anything", 0]) {
+  for (const mode of ["investigate", "extract", "ask", "draft", "", "   ", "CHECK", "anything", 0]) {
     const r = await w.runs.open(OPEN({ mode }));
     refused(r, "AI_RUN_MODE_NOT_DEPLOYED");
     assert.equal(r.check, "C-109.1");
-    assert.deepEqual(r.deployed, ["check"]);
+    assert.deepEqual(r.deployed, ["check", "plan"]);
   }
   /* after R8: a bad skill version is asked first; before R3: a bad mode is answered before bad bounds */
   refused(await w.runs.open(OPEN({ mode: "investigate", skillVersion: "" })), "AI_RUN_SKILL_VERSION_UNNAMED");

@@ -46,8 +46,8 @@ test("R46: in mode plan — no plan AI_RUN_PLAN_REQUIRED, a context other than p
   refused(await open({ run: "R2", plan: PLN, ...BOB, bounds: [{ bound: "proposals", allowed: 5 }, { bound: "wallclock", allowed: 60000 }] }), "AI_RUN_MODE_UNCHECKED");
 });
 
-test("R46: today plan is not deployed — an open in mode plan is refused C-109.1 by R40 whatever it names; a check-mode open naming no plan still lands", async () => {
-  const w = world();
+test("R46, R40, R78 (T46; run-rules R14, K2892): plan is deployed by its own flag yet admitted only through partAdmitted — with no bar held (and no test instance) an open in mode plan is refused C-109.1 whatever it names; with its bar held it passes R40 and, no check registered, is refused AI_RUN_MODE_UNCHECKED; a check-mode open naming no plan still lands", async () => {
+  const w = world({ bars: ["check"] });
   await w.group("ann", "bob");
   w.project(PROJ, "ann", { joined: ["bob"] });
   w.bundle(INQ);
@@ -55,6 +55,11 @@ test("R46: today plan is not deployed — an open in mode plan is refused C-109.
   refused(await w.runs.open(OPEN({ mode: "plan" })), "AI_RUN_MODE_NOT_DEPLOYED");
   assert.equal(w.count("ai_runs"), 0);
   assert.equal((await w.runs.open(OPEN())).started, true);
+  const held = world();
+  await held.group("ann", "bob");
+  held.project(PROJ, "ann", { joined: ["bob"] });
+  refused(await held.runs.open(OPEN({ mode: "plan", plan: PLN, ...BOB })), "AI_RUN_MODE_UNCHECKED");
+  assert.equal(held.count("ai_runs"), 0);
 });
 
 test("R46, R47: a plan run passing the registered check lands with its plan stored verbatim, answered by read and runFor; no other run carries the key", async () => {

@@ -8,7 +8,9 @@ export const AI_RUNS_TABLES = Object.freeze(["ai_runs", "ai_run_bounds", "inquir
    cost is not kept here: its figures are `ai-use`'s, one store (R76, K2482). */
 export const AI_RUNS_ADDED_COLUMNS = Object.freeze(["lens_at_open", "rerun_of", "plan", "step", "origin", "own_step",
   /* R77 (T45): a re-examination run's response, stored verbatim; NULL for every other run */
-  "response"]);
+  "response",
+  /* R78 (T46): the test-instance exception's label a run was admitted under, JSON; NULL for a run the bar admitted */
+  "untested"]);
 
 export const AI_RUNS_SCHEMA = `
 
@@ -71,7 +73,10 @@ CREATE TABLE IF NOT EXISTS ai_runs (
   origin                TEXT,
   own_step              TEXT,
   -- R77 (T45): the recorded response a re-examination run re-examines its plan after, verbatim; NULL otherwise.
-  response              TEXT
+  response              TEXT,
+  -- R78 (T46): the 'untested' label (run-rules R29's untestedLabel) a run admitted on the test-instance exception
+  -- carries, recorded at the open and never derived later (R32); NULL for a run the bar admitted.
+  untested              TEXT
 );
 CREATE INDEX IF NOT EXISTS ai_runs_expires ON ai_runs(status, expires);
 CREATE INDEX IF NOT EXISTS ai_runs_context ON ai_runs(context_id);

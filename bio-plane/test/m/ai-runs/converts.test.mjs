@@ -259,8 +259,9 @@ test("R9, R40 (convert extractrun, skillpack): the mode refusal echoes the mode 
   const w = world();
   await w.group("ann"); w.bundle(INQ);
   const r = await w.runs.open(OPEN({ mode: "extract" }));
-  assert.deepEqual([r.started, r.code, r.mode, r.deployed], [false, "AI_RUN_MODE_NOT_DEPLOYED", "extract", ["check"]]);
-  assert.match(r.note, /the mode 'extract' is not deployed in your group's Civicsmith.*today check is deployed\. Nothing was written/);
+  assert.deepEqual([r.started, r.code, r.mode, r.deployed], [false, "AI_RUN_MODE_NOT_DEPLOYED", "extract", ["check", "plan"]]);
+  /* run-rules R14 (T46; K2892): plan deployed by its own flag, its bar held in this world */
+  assert.match(r.note, /the mode 'extract' is not deployed in your group's Civicsmith.*today check, plan are deployed\. Nothing was written/);
   const long = await w.runs.open(OPEN({ mode: "m".repeat(80) }));
   assert.equal(long.mode, "m".repeat(60));
   const s = await w.runs.open(OPEN({ skillVersion: "3" }));
@@ -296,7 +297,7 @@ test("R54: every member-facing string the sweep names says \"your group's Civics
   await w0.group("ann"); w0.bundle(INQ);
   const m = await w0.runs.open(OPEN({ mode: "extract" }));
   assert.equal(m.note, "the mode 'extract' is not deployed in your group's Civicsmith: the modes deploy in one order, each only "
-    + "after the one before it is verified live, and today check is deployed. Nothing was written", "index.mjs:895");
+    + "after the one before it is verified live, and today check, plan are deployed. Nothing was written", "index.mjs:895");
   assert.equal(OLD.test(m.note), false, m.note);
   /* :1688, :1694, :1698 */
   const TOKEN = "instance-ai-secret-value-r54";
