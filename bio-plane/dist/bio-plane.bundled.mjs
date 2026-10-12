@@ -79398,10 +79398,22 @@ function linesOps(lines2, url, body) {
 var checks_exports18 = {};
 __export(checks_exports18, {
   LOCAL_FACTS_CHECKS: () => LOCAL_FACTS_CHECKS,
+  RULE_WORDS: () => RULE_WORDS,
   refusal: () => refusal9
 });
 var at7 = (fn, region) => `src/local-facts/index.mjs ${fn} > ${region}`;
 var atRule = (fn, region) => `src/local-facts/rules.mjs ${fn} > ${region}`;
+var RULE_WORDS = Object.freeze({
+  "refusal.MACHINE_CANNOT_DRAFT_RULE": "Only a member drafts or withdraws your group's own rule. The assistant may draft one for you to read, but it enters only when you draft it yourself. Nothing was written.",
+  "refusal.RULE_SECTION_UNKNOWN": "A group's rule is either a deadline or a legal fact, and this is neither. Nothing was written.",
+  "refusal.RULE_ENTRY_INVALID": "This rule isn't in the form a deadline or a legal fact takes: {errors}. Nothing was written.",
+  "refusal.RULE_NO_SOURCE": "A rule is drafted from its source: name the captured document and the part of it that states the rule. Either no such capture is held where you can see it, or that part isn't in it. Nothing was written.",
+  "refusal.RULE_IN_PROFILE": "Your places' rules, or a rule your group already applies, hold this already. Dispute that fact, or offer your correction to whoever keeps those rules, instead. Nothing was written.",
+  "refusal.NO_SUCH_GROUP_RULE": "Your group has no rule of its own by that name, or none you can see. Nothing was written.",
+  "refusal.RULE_SELF_CONFIRM": "A rule is confirmed by a member other than the one who drafted it. Ask another member to check it against its source. Nothing was written.",
+  "refusal.RULE_NOT_DRAFTED": "Only a drafted rule can be confirmed, and this one is already confirmed or was withdrawn. Nothing was written.",
+  "refusal.RULE_NEEDS_QUALIFICATION": "A rule for a Tier 2 or Tier 3 matter, or one whose tier isn't known, is confirmed by a professional. State your qualification in your own words, in at most 500 characters. Nothing was written."
+});
 var LOCAL_FACTS_CHECKS = Object.freeze({
   MACHINE_CANNOT_CONFIRM: {
     check: "C-126.1",
@@ -79432,27 +79444,27 @@ var LOCAL_FACTS_CHECKS = Object.freeze({
   MACHINE_CANNOT_DRAFT_RULE: {
     check: "C-126.6",
     where: atRule("machineRuleRefusal", "is-rule-member"),
-    translation: "Drafting or withdrawing your group's own jurisdiction rule is a member's act. An assistant may draft one for you to read; it enters only when a member drafts it. Sign in as a member. Nothing was written."
+    translation: RULE_WORDS["refusal.MACHINE_CANNOT_DRAFT_RULE"]
   },
   RULE_SECTION_UNKNOWN: {
     check: "C-126.7",
     where: atRule("ruleDraft", "is-rule-section"),
-    translation: "A group's rule is a deadline or a legal fact; this names neither. Nothing was written."
+    translation: RULE_WORDS["refusal.RULE_SECTION_UNKNOWN"]
   },
   RULE_ENTRY_INVALID: {
     check: "C-126.8",
     where: atRule("ruleDraft", "is-rule-entry"),
-    translation: "The rule is not in the form a jurisdiction profile holds a deadline or a legal fact in; the errors say which field. Nothing was written."
+    translation: RULE_WORDS["refusal.RULE_ENTRY_INVALID"]
   },
   RULE_NO_SOURCE: {
     check: "C-126.9",
     where: atRule("ruleDraft", "is-rule-source"),
-    translation: "A rule is drafted from its primary source: name the captured document and the part of it that states the rule. No such capture is held where you can see it, or that part is not in it. Nothing was written."
+    translation: RULE_WORDS["refusal.RULE_NO_SOURCE"]
   },
   RULE_IN_PROFILE: {
     check: "C-126.10",
     where: atRule("ruleDraft", "is-rule-new"),
-    translation: "Your jurisdiction profiles, or a rule your group already applies, hold this rule already. Dispute the profile's fact, or offer your correction to the profile's maintainers, instead. Nothing was written."
+    translation: RULE_WORDS["refusal.RULE_IN_PROFILE"]
   },
   RULE_NO_REASON: {
     check: "C-126.11",
@@ -79462,22 +79474,22 @@ var LOCAL_FACTS_CHECKS = Object.freeze({
   NO_SUCH_GROUP_RULE: {
     check: "C-126.12",
     where: atRule("noSuchRule", "is-rule-named"),
-    translation: "Your group holds no rule of its own by that name. Nothing was written."
+    translation: RULE_WORDS["refusal.NO_SUCH_GROUP_RULE"]
   },
   RULE_SELF_CONFIRM: {
     check: "C-126.13",
     where: atRule("ruleConfirm", "is-rule-other"),
-    translation: "A rule is confirmed by a member other than the one who drafted it. Ask another member to check it against its source. Nothing was written."
+    translation: RULE_WORDS["refusal.RULE_SELF_CONFIRM"]
   },
   RULE_NOT_DRAFTED: {
     check: "C-126.14",
     where: atRule("ruleConfirm", "is-rule-drafted"),
-    translation: "This rule is already confirmed, or it was withdrawn; only a drafted rule is confirmed. Nothing was written."
+    translation: RULE_WORDS["refusal.RULE_NOT_DRAFTED"]
   },
   RULE_NEEDS_QUALIFICATION: {
     check: "C-126.15",
     where: atRule("ruleConfirm", "is-rule-qualified"),
-    translation: "A rule for a Tier 2 or Tier 3 matter, or one whose tier is not known, is confirmed by a professional: state your qualification in your own words, in at most 500 characters. It is kept on this confirmation only. Nothing was written."
+    translation: RULE_WORDS["refusal.RULE_NEEDS_QUALIFICATION"]
   },
   RULE_NOT_CONFIRMED: {
     check: "C-126.16",
@@ -80717,7 +80729,9 @@ function localFactsOps(s, url, body) {
     ruledraft: () => s.ruleDraft({ ...b, viewer: qp("viewer") }),
     ruleconfirm: () => s.ruleConfirm({ ...b, viewer: qp("viewer") }),
     rulewithdraw: () => s.ruleWithdraw({ ...b, viewer: qp("viewer") }),
-    ruleoffer: () => s.ruleOffer({ rule: qp("rule") ?? b.rule, by: b.by, viewer: qp("viewer") })
+    ruleoffer: () => s.ruleOffer({ rule: qp("rule") ?? b.rule, by: b.by, viewer: qp("viewer") }),
+    /* R15 (T46; N935): R12's read, `section` the query's (absent read as none), `viewer` the URL's */
+    grouprules: () => s.groupRules({ section: qp("section") ?? void 0, viewer: qp("viewer") })
   };
 }
 var instances15 = /* @__PURE__ */ new WeakMap();
@@ -84101,10 +84115,15 @@ function interval({ frame_size: N2, sample_size: n2, successes: x, confidence } 
 // src/standards/checks.mjs
 var checks_exports21 = {};
 __export(checks_exports21, {
+  REFUSAL_WORDS: () => REFUSAL_WORDS,
   STANDARDS_CHECKS: () => STANDARDS_CHECKS,
   refusal: () => refusal11
 });
 var at8 = (fn, region, file = "index.mjs") => `src/standards/${file} ${fn} > ${region}`;
+var REFUSAL_WORDS = Object.freeze({
+  "refusal.COMMITMENT_AS_HEARD": "A spoken commitment becomes a standard only once the body confirms it in writing or states it publicly. Every passage named here is a member's account of what was heard, which stays that member's own. Name the body's writing or public statement. Nothing was written.",
+  "refusal.COMMITMENT_OWN_LETTER": "A commitment becomes a standard only once the body confirms it in writing or states it publicly. Every passage named here is from your group's own letters or members' accounts. Name the body's own confirmation. Nothing was written."
+});
 var STANDARDS_CHECKS = Object.freeze({
   MACHINE_CANNOT_DECLARE_STANDARD: {
     check: "C-112.1",
@@ -84370,16 +84389,17 @@ var STANDARDS_CHECKS = Object.freeze({
     where: at8("inForceThroughWithdraw", "is-through-record-held"),
     translation: "No record of a version known in force through a date answers to that id here. Nothing was written."
   },
-  /* T45-7 (R52, R53; Actions D7; v0.2 §3 Standard): rows minted in T45, awaiting promotion's stamp (T46). */
+  /* T45-7 (R52, R53; Actions D7; v0.2 §3 Standard): rows minted in T45. T46-10 (R55; DEC-194, N913): their translations
+     are `words.json`'s `refusal.<CODE>`, read by key (`REFUSAL_WORDS` above), never a copy; awaiting T47's stamp. */
   COMMITMENT_AS_HEARD: {
     check: "C-112.63",
     where: at8("#commitmentRefusal", "is-commitment-confirmed"),
-    translation: "A spoken commitment becomes a standard only once it is confirmed in writing or stated publicly. Every passage named for this one is a member's account of what was heard, which stays that member's own observation. Name the body's letter, its minutes, a recording or its own publication that states it. Nothing was written."
+    translation: REFUSAL_WORDS["refusal.COMMITMENT_AS_HEARD"]
   },
   COMMITMENT_OWN_LETTER: {
     check: "C-112.64",
     where: at8("#commitmentRefusal", "is-commitment-not-own-letter"),
-    translation: "A commitment becomes a standard once the body confirms it in writing or states it publicly. Every passage named for this one is from your group's own letters or members' accounts, and your group's confirming letter is not the body's confirmation. Name the body's reply, its minutes, a recording or its own publication that states it. Nothing was written."
+    translation: REFUSAL_WORDS["refusal.COMMITMENT_OWN_LETTER"]
   }
 });
 function refusal11(code, detail, extra) {
@@ -92711,10 +92731,16 @@ function sourcesOps(s, url, body) {
 var checks_exports25 = {};
 __export(checks_exports25, {
   DUTIES_CHECKS: () => DUTIES_CHECKS,
+  DUTIES_WORDS: () => DUTIES_WORDS,
   refusal: () => refusal14
 });
 var at11 = (fn, region) => `src/duties/index.mjs ${fn} > ${region}`;
 var row2 = (n2, fn, region, translation) => Object.freeze({ check: `C-133.${n2}`, where: at11(fn, region), translation });
+var DUTIES_WORDS = Object.freeze({
+  "refusal.RESPONSE_KIND_UNKNOWN": "An obligation taken from a reply or a report is either a promise the body made or a response the report requires. This is neither. Nothing was written.",
+  "refusal.RESPONSE_EXTENT_NOT_IN": "The passage quoted isn't part of the reply or report the obligation comes from. Quote a passage of that document. Nothing was written.",
+  "refusal.DUTY_SOURCE_NOT_HELD": "This promise rests on a commitment that is still only proposed as a standard. Adopt that commitment first; the obligation then names it. Nothing was written."
+});
 var DUTIES_CHECKS = Object.freeze({
   UNKNOWN_MODALITY: row2(
     1,
@@ -92942,7 +92968,8 @@ var DUTIES_CHECKS = Object.freeze({
     "is-duty-power",
     "The uses of a power are read for a power: something an office may do. This obligation is not one. Nothing was read or written."
   ),
-  /* T45 (N855, N882; Actions D6d, D7): R30's and R31's own rows. */
+  /* T45 (N855, N882; Actions D6d, D7): R30's and R31's own rows. T46 (R32): C-133.41, .42 and .44 read their
+     translations from `DUTIES_WORDS` by key; C-133.43 keeps its own until its sentence and R30 agree. */
   BAD_CAPTURES: row2(
     40,
     "dutiesArisingIn",
@@ -92953,13 +92980,13 @@ var DUTIES_CHECKS = Object.freeze({
     41,
     "proposeFromResponse",
     "is-duty-response-kind",
-    "An obligation proposed from a reply or a report is either a promise the body made or a response the report requires. This is neither. Nothing was written."
+    DUTIES_WORDS["refusal.RESPONSE_KIND_UNKNOWN"]
   ),
   RESPONSE_EXTENT_NOT_IN: row2(
     42,
     "proposeFromResponse",
     "is-duty-response-extent",
-    "The passage quoted is not part of the reply or report the obligation arises in. Quote a passage of that document. Nothing was written."
+    DUTIES_WORDS["refusal.RESPONSE_EXTENT_NOT_IN"]
   ),
   PROMISE_DATE_UNREAD: row2(
     43,
@@ -92971,7 +92998,7 @@ var DUTIES_CHECKS = Object.freeze({
     44,
     "adopt",
     "is-duty-source-held",
-    "This promise rests on a commitment that is still only proposed as a standard. Adopt that commitment as a standard first; the obligation then names it. Nothing was written."
+    DUTIES_WORDS["refusal.DUTY_SOURCE_NOT_HELD"]
   )
 });
 function refusal14(code, detail, extra) {
