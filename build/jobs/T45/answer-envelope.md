@@ -40,7 +40,11 @@
 - Deferred: action-producers' C-152, until its `checks.mjs` lands (BOB's CHANGE).
 - Other modules: nothing new to report. Rule 4 (14) and (15)'s answer-envelope items are cleared by this job.
 
-Size (session_01V6aaxFDYEfw6Q7h7zHh9zL): test runs 14, module lines 858
+**After B4** (K2888; `tranche/T45` merged in): action-producers merged with no `checks.mjs` and no exported `*_CHECKS` family. Its `reason` fields are undetermined states and relayed reasons, not refusal codes. There is nothing to list, so C-152 does not exist yet, and the T45 Uses line's action-producers clause stays unused until a family lands. If one does later, the totality test turns red until it is listed. No change was needed.
+- `node --test bio-plane/test/m/answer-envelope/`: 32/32.
+- `checks/format.mjs`: 0 failures. `checks/architecture.mjs`: 9 files, 0 failures. `checks/coverage.mjs`: 12 of 12. `checks/ownership.mjs`: 1 file, 0 failures.
+
+Size (session_01V6aaxFDYEfw6Q7h7zHh9zL): test runs 15, module lines 858
 
 ## J1 · QUESTION
 
