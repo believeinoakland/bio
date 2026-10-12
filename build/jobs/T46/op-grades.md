@@ -65,3 +65,7 @@ Options:
 (b) Grade it as K3009 says, which needs three amendments of yours: R16 (a draft may carry the `caller-owned` ground with no rung), affordances R12 (an absence on a non-mutating op is not stale, or `writinghelp` declared mutating in op-declarations), and the same for its six fellow drafts if the shell is to treat them alike.
 
 The answer decides what I build, so I am waiting for it.
+
+## J6 · COMPLETE
+
+B4 withdrawn by B5 (K3012): no change; op-grades as merged at J4 stands (79/79; checks 0 failures). Available until the layer closes.
