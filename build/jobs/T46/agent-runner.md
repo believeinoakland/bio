@@ -33,3 +33,7 @@ If you want an explicit signal, the smallest is R5 amended: `/version` answers `
 Also measured at START (as R24's suggestion asks): a page at agent-worker's `TRANSCRIBE_IMAGE_MAX_BYTES` (5 MiB decoded) is 6,990,508 base64 characters in one relay frame; the runner's own frame cap (`ws.mjs` MAX_MESSAGE) is 16 MiB and Cloudflare Workers' WebSocket limit is 32 MiB (changelog 2025-10-31). No limit is hit; a test sends a 5 MiB page through the connection.
 
 Detail I am applying (mine unless you rule otherwise): an `image` block not in R14's shape at all (no `source`, `source.type` not `base64`, or MCP's own `{data, mimeType}` shape) is treated like R24's bad media type: the tool's error result naming the fault, no bytes passed.
+
+## J2 · COMPLETE
+
+T46-18 (R24) applied and tested: 38/38 pass, all four checks 0 failures; completion section in my record. J1 stays open (R5 unchanged on my reading). The image needs the release's rebuild for R24 to be live; the Worker bundle is not stale.
