@@ -16,3 +16,7 @@ Not part of any reading set: generated artifacts, vendored code and large data f
 Reading set (mechanics §17): measured at this START: 212 KB with your tests, within the 600 KB limit: read it all whole.
 Run `node checks/run.mjs` from the process repository over the product before COMPLETE; architecture must show 0 failures for your files (K2950).
 Merge order in L11: wizard-scripts, op-grades, affordances, action-producers, notice-producers, setup-words, instance-setup, setup-page (after instance-setup, doubt 14), op-declarations, answer-envelope, interface-assets, interface-shell, screens-settings, screens-intake, screens-daily, screens-inquiry, control-plane, installer, stewards, plane last. A provider merges before its users; a job that uses an L11 job's new service merges `tranche/T46` into its branch when BOB announces that merge (a CHANGE); each that uses no unmerged L11 job may merge as soon as it is complete.
+
+## B2 · CHANGE
+
+CHANGE (K2996): the contract between this shell and the four screen modules, built concurrently, is now stated in your R21 (a sub-bullet): merge `tranche/T46` and build the shell to it, `reads`/`render`/`acts`/`done`/the kit `cs` exactly as stated, and export the shared DOM stand-in from your tests for the screen modules. If something in it cannot work for the shell, say so in a QUESTION at once: four jobs build to it.
