@@ -27,7 +27,7 @@
  *                  and `docketFeed` (its R15), for R20, R21 and R25:
  *                  the docket's public answers, which this module serves and never composes (N520; default:
  *                  `docketOf(host)`).
- *   record         `record-core`, for its `getSetting` (its R25) of the one setting `declared_stake`, for R34 (default:
+ *   record         `record-core`, for its strict `getSetting` (its R25, R83) of the one setting `declared_stake`, for R34 (default:
  *                  `recordOf(host)`, reached at the read, so a world without it reads the stake undetermined).
  *   storage        the Durable Object's storage (default: the host's).
  *
@@ -35,7 +35,7 @@
  * `published_case_members`, `cases`, `published_edges` and `published_shas`. */
 
 import { publicationOf } from "../publication/index.mjs";
-import { recordOf } from "../record-core/index.mjs";
+import { recordOf, SETTING_UNREADABLE } from "../record-core/index.mjs";
 import { docketOf } from "../docket/index.mjs";
 import { caseTensionsOf, caseDocumentBlocks, whatChangedOf, lensOf, LENS_HEAD,
          LENS_CLOSING_SENTENCES, workingOnOf, methodOf, materialsOf, standingOf, gradingFactsOf, passagesOf,
@@ -116,6 +116,9 @@ export function standingsOf(fm) {
 /* R23: a text held by `publication`'s `publishedMaterialText` (its R57), whichever shape it answers in. */
 const heldText = (v) => (typeof v === "string" ? v : v && typeof v.text === "string" ? v.text : null);
 const HEX64 = /^[0-9a-f]{64}$/;
+/* R5 (T46; N906, K2832): a SHA-256 of 64 hexadecimal digits in upper or mixed case is read as its lowercase form, by
+   the store as by the Worker, never refused for its case; anything else is answered as given. */
+const lowerSha = (v) => (typeof v === "string" && /^[0-9a-fA-F]{64}$/.test(v) ? v.toLowerCase() : v);
 /* R28 with R32 (K2145): a carried archive member's archives hold its bytes, so when an order withholds a material's
    `document` file, every `archive` and `container` file the case file carries under that material's ref (its record and
    each enclosing archive, outward) is withheld too, by the same orders. Mutates `withheld` (`withholdingOf`'s map). */
@@ -306,7 +309,10 @@ export class PublicRead {
     try {
       const record = this.#record();
       if (!record || typeof record.getSetting !== "function") throw new Error("no record");
-      const v = record.getSetting(DECLARED_STAKE_SETTING);
+      /* T46 (N904; record-core R83): the strict read, so a stored value that cannot be read is told from one never
+         set; `SETTING_UNREADABLE` (compared by identity) is an unread stake, never none. */
+      const v = record.getSetting(DECLARED_STAKE_SETTING, { strict: true });
+      if (v === SETTING_UNREADABLE) throw new Error("declared_stake unreadable");
       stake = v === undefined ? null : v;
       if (stake === null) said.push(STAKE_NONE_SENTENCE);
     } catch {
@@ -642,6 +648,7 @@ export class PublicRead {
      consulted, so there is nothing to leak: a hash that was never ratified
      is indistinguishable from a hash that never existed. */
   verifySha(sha) {
+    sha = lowerSha(sha);
     const matches = this.#rows(
       `SELECT bundle_id, path, kind, published FROM published_shas WHERE sha256=? ORDER BY published`, sha);
     /* R23 (T38): the original of a material carried as its copy answers as a hash never published, whatever registered it (R3's NO_PUBLISHED_PART
@@ -823,6 +830,7 @@ export class PublicRead {
        loose-bundle fallback below reads `published_bundles` — which is keyed on
        the finding's number and would have been handed the case's. */
     let askedEdition = null;
+    sha256 = lowerSha(sha256);
     if (sha256) {
       const r = this.#one(`SELECT bundle_id, edition FROM published_bundles WHERE bundle_sha=? ORDER BY edition LIMIT 1`,
                           sha256);

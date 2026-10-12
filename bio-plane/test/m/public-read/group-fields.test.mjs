@@ -9,6 +9,7 @@ import { world, publishedSix } from "./fixture.mjs";
 import { PublicRead, DECLARED_STAKE_SETTING, GROUP_FIELDS_SENTENCE, GROUP_IDENTITY_UNDETERMINED_SENTENCE,
          STAKE_NONE_SENTENCE, STAKE_UNDETERMINED_SENTENCE, GROUP_FIELDS_CURRENT_SENTENCE } from "../../../src/public-read/index.mjs";
 import { inbandQuartet, canonicalBytes } from "../../../src/inband.mjs";
+import { SETTING_UNREADABLE } from "../../../src/record-core/index.mjs";
 
 const KEYS = ["group", "name", "domain", "domain_verified_at", "stake", "detail"];
 /* instance-setup R10's public answer, as its `groupIdentityPublic` spells it */
@@ -186,4 +187,51 @@ test("R34 R3 R23 publishedCase answers group_fields, the group's current identit
   const none = w2.read("publishedcase", { id: C2 });
   assert.deepEqual([none.group_fields.group, none.group_fields.current], [null, true]);
   assert.ok(none.group_fields.detail.includes(GROUP_IDENTITY_UNDETERMINED_SENTENCE));
+});
+
+test("R34 (T46; N904; record-core R83) a stored declared_stake that is not valid JSON answers \"undetermined\" through the strict getSetting, never null; the same setting never set answers null", () => {
+  const planted = ["{not json", "", "undefined", "'single'", "[1,", "NaN"];
+  for (const value of planted) {
+    const w = world();
+    w.member("olive");
+    /* control: the same setting never set answers null, with the none-declared detail */
+    const unset = w.pr.groupFields();
+    assert.equal(unset.stake, null, "never set");
+    assert.ok(unset.detail.includes(STAKE_NONE_SENTENCE));
+    assert.equal(unset.detail.includes(STAKE_UNDETERMINED_SENTENCE), false);
+    /* a value held that is not valid JSON, planted as record-core's own table holds a setting */
+    w.st.sql.exec(`INSERT INTO settings (name,value,set_by,set_at) VALUES (?,?,?,?)`, DECLARED_STAKE_SETTING, value,
+                  "hand", "2026-10-12T00:00:00Z");
+    assert.equal(w.record.getSetting(DECLARED_STAKE_SETTING), null, "the lenient read would have answered null (the flaw)");
+    const g = w.pr.groupFields();
+    assert.equal(g.stake, "undetermined", `${JSON.stringify(value)} is unreadable, never none`);
+    assert.ok(g.detail.includes(STAKE_UNDETERMINED_SENTENCE), "the detail says the declared stake could not be read");
+    assert.equal(g.detail.includes(STAKE_NONE_SENTENCE), false);
+    /* negative control: a readable value set after it is answered as held */
+    assert.equal(w.record.setSetting(DECLARED_STAKE_SETTING, "We run the park.", "olive").ok, true);
+    assert.equal(w.pr.groupFields().stake, "We run the park.");
+  }
+  /* a value held that is not text at all is unreadable too */
+  const w = world();
+  w.st.sql.exec(`INSERT INTO settings (name,value,set_by,set_at) VALUES (?,?,?,?)`, DECLARED_STAKE_SETTING,
+                new Uint8Array([0x22, 0x78, 0x22]), "hand", "2026-10-12T00:00:00Z");
+  assert.equal(w.pr.groupFields().stake, "undetermined");
+  /* the stake is asked strictly: a stand-in is handed {strict: true}, and its own SETTING_UNREADABLE answer is undetermined */
+  const seen = [];
+  const strictOn = (answer) => ({ getSetting(name, options) { seen.push([name, options]); return answer; } });
+  assert.equal(bare(strictOn(SETTING_UNREADABLE)).groupFields().stake, "undetermined");
+  assert.deepEqual(seen[0], [DECLARED_STAKE_SETTING, { strict: true }]);
+  /* negative control: a stored object that merely looks like the marker is a value as held, not the marker */
+  assert.deepEqual(bare(strictOn({ unreadable: true })).groupFields().stake, { unreadable: true });
+  assert.equal(bare(strictOn(null)).groupFields().stake, null);
+});
+
+test("R34 (T46) a published case answers group_fields' stake \"undetermined\" when the stored declared_stake is not valid JSON", () => {
+  const { w, CASE } = publishedSix();
+  assert.equal(w.read("publishedcase", { id: CASE }).group_fields.stake, null, "control: never set");
+  w.st.sql.exec(`INSERT INTO settings (name,value,set_by,set_at) VALUES (?,?,?,?)`, DECLARED_STAKE_SETTING, "{oops",
+                "hand", "2026-10-12T00:00:00Z");
+  const a = w.read("publishedcase", { id: CASE });
+  assert.equal(a.group_fields.stake, "undetermined");
+  assert.ok(a.group_fields.detail.includes(STAKE_UNDETERMINED_SENTENCE));
 });
